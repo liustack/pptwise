@@ -4,6 +4,10 @@
  * addImage 需要真实字节（data URI）——单源重构时丢了这一步，URL 资产在
  * 导出产物里整体缺失（页面只剩遮罩，视觉上是黑/灰底）。
  *
+ * 只处理被页面引用的资产（`@/ir/asset-references` 的 `assetReferences`）：
+ * 没有任何页面、背景或品牌 logo 指向的资产原样留在 ir.assets.images 里，
+ * 不下载、不解码、不重编码。没人画它，它的字节也不会进 ppt/media。
+ *
  * 失败语义与 image-export 一致：显式抛错，不生成残缺文档。
  *
  * 另做 Office 安全 MIME 归一化：webp 等非 png/jpeg/gif 资产（典型是
@@ -11,6 +15,7 @@
  * data URL 的 MIME 原样写进 pptx，PowerPoint 打不开 webp。
  */
 import type { PptxIR } from "@/ir"
+import { assetReferences } from "@/ir/asset-references"
 import { dataUriMime, decodeDataUriBytes, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "@/ir/asset-sniff"
 import { PptwiseError } from "../errors"
 import { decodeImageInBrowser, hasBrowserImageDecoder } from "./browser"
@@ -153,50 +158,9 @@ export async function maybeCompressBackground(dataUrl: string): Promise<string> 
  */
 export const MAX_DECODE_BYTES = 25 * 1024 * 1024
 
-/** `slide.id` plus its 1-based page number, the same reference shape the
- *  content-drop gate in `../pptx/generate.ts` prints. */
-function slideRef(slide: PptxIR["slides"][number], index: number): string {
-  const page = index + 1
-  return slide.id ? `${slide.id} (page ${page})` : `page ${page}`
-}
-
-/**
- * Every place the deck refers to an asset id, so a decode failure can name
- * the pages that would have shown the broken picture. Walks the same fields
- * `validate-core.ts`'s `checkAssetReferences` walks (backgrounds, `image`,
- * `image_grid`, `image_compare`, `device_mockup`) plus the optional ids on
- * `logo_wall` and `product_cards` items and the deck-level brand logo.
- */
-export function assetReferences(ir: PptxIR): Map<string, string[]> {
-  const refs = new Map<string, string[]>()
-  const add = (assetId: string | undefined, where: string) => {
-    if (!assetId) return
-    const list = refs.get(assetId)
-    if (!list) refs.set(assetId, [where])
-    else if (!list.includes(where)) list.push(where)
-  }
-  add(ir.brand?.logo_asset_id, "brand logo")
-  ir.slides.forEach((slide, i) => {
-    const where = slideRef(slide, i)
-    if (slide.background?.kind === "asset") add(slide.background.asset_id, where)
-    for (const c of slide.components) {
-      if (c.type === "image" || c.type === "device_mockup") {
-        add(c.asset_id, where)
-      } else if (c.type === "image_grid" || c.type === "logo_wall" || c.type === "product_cards") {
-        for (const item of c.items) add(item.asset_id, where)
-      } else if (c.type === "image_compare") {
-        add(c.left.asset_id, where)
-        add(c.right.asset_id, where)
-      }
-    }
-  })
-  return refs
-}
-
 function describeAsset(id: string, pages: string[], url?: string): string {
-  const used = pages.length > 0 ? `used on ${pages.join(", ")}` : "not referenced by any page"
   const origin = url ? `, fetched from ${url}` : ""
-  return `asset "${id}" (${used}${origin})`
+  return `asset "${id}" (used on ${pages.join(", ")}${origin})`
 }
 
 /**
@@ -276,11 +240,12 @@ export async function inlinePptxAssets(ir: PptxIR): Promise<PptxIR> {
   const images: Record<string, (typeof entries)[number][1]> = {}
   await Promise.all(
     entries.map(async ([id, asset]) => {
-      if (!asset.src) {
+      const pages = refs.get(id)
+      // 未被任何页面引用的资产不参与导出：不取回、不解码，原样保留。
+      if (!asset.src || !pages) {
         images[id] = asset
         return
       }
-      const pages = refs.get(id) ?? []
       if (asset.src.startsWith("data:")) {
         await assertDecodableImage(id, pages, asset.src)
         const normalized = await normalizeAssetDataUrl(id, asset.src)

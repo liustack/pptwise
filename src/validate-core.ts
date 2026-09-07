@@ -18,6 +18,7 @@
  */
 import { PptwiseError } from "./errors"
 import { OLD_IR_VERSION_ERROR, PptxIRSchema, themeIssueMessage, type PptxIR } from "./ir"
+import { listAssetReferences } from "./ir/asset-references"
 import { decodeDataUriBytes, dataUriMime, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "./ir/asset-sniff"
 import { normalizeComponentAliases, normalizeDeckRootAliases } from "./ir/field-aliases"
 import { isSlideLevelPath, renameHintsFor, SLIDE_LEVEL_UNKNOWN_KEY_HINT } from "./ir/rename-hints"
@@ -637,10 +638,10 @@ function checkAssetBytes(ir: PptxIR): ValidationIssue[] {
 }
 
 /**
- * Every `asset_id` reference in the deck (an `image`/`image_grid`/
- * `image_compare`/`device_mockup` component, an `"asset"`-kind slide background,
- * `brand.logo_asset_id`) against the keys actually present in
- * `assets.images` (borrow wave, Task 2 — B5). A reference to a key that
+ * Every `asset_id` reference in the deck (the full field inventory lives in
+ * `ir/asset-references.ts`, shared with the export-time asset inliner so the
+ * two never disagree about what counts as a reference) against the keys
+ * actually present in `assets.images` (borrow wave, Task 2 — B5). A reference to a key that
  * doesn't exist renders as pptwise's documented graceful placeholder — a
  * gray rect, `svg/components/image.tsx`'s `src ? <image> : <rect>` fallback,
  * a deliberate "never crash" design — with zero error or warning text
@@ -657,39 +658,17 @@ function checkAssetReferences(ir: PptxIR): ValidationIssue[] {
   const known = Object.keys(ir.assets.images)
   const available = known.length > 0 ? known.map((k) => `"${k}"`).join(", ") : "(none defined)"
   const issues: ValidationIssue[] = []
-  // Every call site below passes a distinct `path` (one per asset_id-bearing
+  // Every reference carries a distinct `path` (one per asset_id-bearing
   // field in the deck), so no separate dedup bookkeeping is needed here.
-  const check = (assetId: string | undefined, path: string, page?: number, slideId?: string) => {
-    if (!assetId || known.includes(assetId)) return
+  for (const ref of listAssetReferences(ir)) {
+    if (known.includes(ref.asset_id)) continue
     issues.push({
-      path,
-      message: `asset_id "${assetId}" is not defined in assets.images — available: ${available}`,
-      ...(page !== undefined ? { page } : {}),
-      ...(slideId !== undefined ? { slideId } : {}),
+      path: ref.path,
+      message: `asset_id "${ref.asset_id}" is not defined in assets.images — available: ${available}`,
+      ...(ref.slide !== undefined ? { page: ref.slide + 1 } : {}),
+      ...(ref.slideId !== undefined ? { slideId: ref.slideId } : {}),
     })
   }
-  if (ir.brand?.logo_asset_id) check(ir.brand.logo_asset_id, "brand.logo_asset_id")
-  ir.slides.forEach((slide, i) => {
-    const page = i + 1
-    const slideId = slide.id
-    if (slide.background?.kind === "asset") {
-      check(slide.background.asset_id, `slides.${i}.background.asset_id`, page, slideId)
-    }
-    slide.components.forEach((c, ci) => {
-      if (c.type === "image") {
-        check(c.asset_id, `slides.${i}.components.${ci}.asset_id`, page, slideId)
-      } else if (c.type === "image_grid") {
-        c.items.forEach((item, ii) =>
-          check(item.asset_id, `slides.${i}.components.${ci}.items.${ii}.asset_id`, page, slideId),
-        )
-      } else if (c.type === "image_compare") {
-        check(c.left.asset_id, `slides.${i}.components.${ci}.left.asset_id`, page, slideId)
-        check(c.right.asset_id, `slides.${i}.components.${ci}.right.asset_id`, page, slideId)
-      } else if (c.type === "device_mockup") {
-        check(c.asset_id, `slides.${i}.components.${ci}.asset_id`, page, slideId)
-      }
-    })
-  })
   return issues
 }
 

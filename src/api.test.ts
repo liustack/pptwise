@@ -2389,6 +2389,55 @@ describe("checkAssetReferences: dangling asset_id warning (Task 2, borrow wave â
     expect(v.warnings?.[0]!.path).toBe("brand.logo_asset_id")
     expect(v.warnings?.[0]!.message).toMatch(/asset_id "missing-logo" is not defined/)
   })
+
+  // fix/inline-only-referenced-assets: validate and export now walk the
+  // same reference list (`ir/asset-references.ts`), so the optional ids on
+  // logo_wall items and the required ids on product_cards items get the
+  // same dangling-reference warning as `image`.
+  it("catches a dangling asset_id on a logo_wall item", () => {
+    const v = validateIr({
+      ...raw,
+      slides: [
+        raw.slides[0],
+        {
+          type: "content",
+          kind: "evidence",
+          heading: "x",
+          components: [
+            {
+              type: "logo_wall",
+              items: [{ name: "One", asset_id: "missing-mark" }, { name: "Two" }, { name: "Three" }, { name: "Four" }],
+            },
+          ],
+        },
+      ],
+    })
+    expect(v.ok).toBe(true)
+    const w = v.warnings?.find((x) => x.path === "slides.1.components.0.items.0.asset_id")
+    expect(w?.message).toMatch(/asset_id "missing-mark" is not defined/)
+  })
+
+  it("catches a dangling asset_id on a product_cards item", () => {
+    const v = validateIr({
+      ...raw,
+      assets: { images: { p1: { src: realPngDataUri } } },
+      slides: [
+        raw.slides[0],
+        {
+          type: "content",
+          kind: "evidence",
+          heading: "x",
+          components: [
+            { type: "product_cards", items: [{ asset_id: "p1", name: "A" }, { asset_id: "p2", name: "B" }] },
+          ],
+        },
+      ],
+    })
+    expect(v.ok).toBe(true)
+    const dangling = (v.warnings ?? []).filter((x) => /is not defined in assets.images/.test(x.message))
+    expect(dangling.map((x) => x.path)).toEqual(["slides.1.components.0.items.1.asset_id"])
+    expect(dangling[0]?.message).toBe('asset_id "p2" is not defined in assets.images â€” available: "p1"')
+  })
 })
 
 describe("listThemes", () => {

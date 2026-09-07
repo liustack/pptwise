@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { PptxIR } from "@/ir"
-import { assetReferences, inlinePptxAssets, MAX_DECODE_BYTES } from "./inline-assets"
+import { assetReferences } from "@/ir/asset-references"
+import { inlinePptxAssets, MAX_DECODE_BYTES } from "./inline-assets"
 import { PptwiseError } from "../errors"
 import { installPlatform } from "./registry"
 
@@ -14,6 +15,10 @@ const RED_PNG =
 const FAKE_WEBP_BYTES = new Uint8Array([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50])
 const FAKE_JPEG_BYTES = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0])
 
+// Only assets a page refers to are fetched and decoded
+// (fix/inline-only-referenced-assets), so the fixture puts every declared
+// asset on one photo page as an `image` component. Tests about the
+// unreferenced case build their own slides.
 function ir(images: Record<string, { src: string }>): PptxIR {
   return {
     version: "5",
@@ -23,6 +28,12 @@ function ir(images: Record<string, { src: string }>): PptxIR {
     assets: { images },
     slides: [
       { type: "cover", heading: "标题", components: [] },
+      {
+        type: "content",
+        kind: "photo",
+        heading: "Photos",
+        components: Object.keys(images).map((asset_id) => ({ type: "image", asset_id })),
+      },
       { type: "ending", components: [] },
     ],
   } as PptxIR
@@ -101,6 +112,83 @@ describe("inlinePptxAssets", () => {
     const input = ir({})
     const out = await inlinePptxAssets(input)
     expect(out).toBe(input)
+  })
+})
+
+// fix/inline-only-referenced-assets: `assets.images` may carry pictures no
+// page uses (a deck that dropped a photo page but kept the upload, a shared
+// asset table). Downloading and decoding those costs time and network for
+// nothing, and a dead URL among them used to fail the whole export.
+describe("only referenced assets are materialized", () => {
+  const pngBytes = Uint8Array.from(atob(RED_PNG.split(",")[1]!), (c) => c.charCodeAt(0))
+  const okPng = async () => new Response(pngBytes, { headers: { "content-type": "image/png" } })
+
+  it("never fetches or decodes an http asset no page refers to, and keeps it in assets.images as is", async () => {
+    const fetchSpy = vi.fn(okPng)
+    const decode = vi.fn(acceptAnyImage)
+    installPlatform({ fetch: fetchSpy, decodeImage: decode })
+    const input = ir({ orphan: { src: "https://example.com/orphan.png" } })
+    input.slides = [
+      { type: "cover", heading: "标题", components: [] },
+      { type: "ending", components: [] },
+    ] as PptxIR["slides"]
+    const out = await inlinePptxAssets(input)
+    expect(fetchSpy).not.toHaveBeenCalled()
+    expect(decode).not.toHaveBeenCalled()
+    expect(out.assets.images.orphan).toBe(input.assets.images.orphan)
+    expect(out.assets.images.orphan?.src).toBe("https://example.com/orphan.png")
+  })
+
+  it("leaves an unreferenced data URL asset untouched as well (no decode, no re-encode)", async () => {
+    const decode = vi.fn(acceptAnyImage)
+    installPlatform({ decodeImage: decode })
+    const webpDataUrl = `data:image/webp;base64,${btoa(String.fromCharCode(...FAKE_WEBP_BYTES))}`
+    const input = ir({ orphan: { src: webpDataUrl } })
+    input.slides = [{ type: "cover", heading: "标题", components: [] }] as PptxIR["slides"]
+    const out = await inlinePptxAssets(input)
+    expect(decode).not.toHaveBeenCalled()
+    expect(out.assets.images.orphan?.src).toBe(webpDataUrl)
+  })
+
+  it("still fetches the referenced remote asset next to an unreferenced one", async () => {
+    const fetchSpy = vi.fn(async (_input: URL | RequestInfo) => okPng())
+    installPlatform({ fetch: fetchSpy })
+    const input = ir({
+      hero: { src: "https://example.com/hero.png" },
+      orphan: { src: "https://example.com/orphan.png" },
+    })
+    input.slides = [
+      { type: "cover", heading: "标题", components: [] },
+      { type: "content", kind: "photo", heading: "Photo", components: [{ type: "image", asset_id: "hero" }] },
+    ] as PptxIR["slides"]
+    const out = await inlinePptxAssets(input)
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe("https://example.com/hero.png")
+    expect(out.assets.images.hero?.src.startsWith("data:image/png;base64,")).toBe(true)
+    expect(out.assets.images.orphan?.src).toBe("https://example.com/orphan.png")
+  })
+
+  it("counts a cover background as a reference", async () => {
+    const fetchSpy = vi.fn(okPng)
+    installPlatform({ fetch: fetchSpy })
+    const input = ir({ bg: { src: "https://example.com/bg.png" } })
+    input.slides = [
+      { type: "cover", heading: "标题", components: [], background: { kind: "asset", asset_id: "bg" } },
+    ] as PptxIR["slides"]
+    const out = await inlinePptxAssets(input)
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    expect(out.assets.images.bg?.src.startsWith("data:image/png;base64,")).toBe(true)
+  })
+
+  it("counts the deck-level brand logo as a reference", async () => {
+    const fetchSpy = vi.fn(okPng)
+    installPlatform({ fetch: fetchSpy })
+    const input = ir({ mark: { src: "https://example.com/mark.png" } })
+    input.brand = { logo_asset_id: "mark" }
+    input.slides = [{ type: "cover", heading: "标题", components: [] }] as PptxIR["slides"]
+    const out = await inlinePptxAssets(input)
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    expect(out.assets.images.mark?.src.startsWith("data:image/png;base64,")).toBe(true)
   })
 })
 
