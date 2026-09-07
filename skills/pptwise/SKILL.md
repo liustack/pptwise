@@ -26,7 +26,7 @@ The launcher tries a compatible `pptwise` on `PATH`, then `npx`, then `bunx`. It
 
 If scripts are unavailable, use the first available route:
 
-1. `pptwise <args>` when the installed major version matches this skill and is at least the pinned version.
+1. `pptwise <args>` when the installed version is compatible with the pin: on a 0.x pin, the same major and minor and a patch at or above it. On 1.0 and later, the same major and at or above the pin.
 2. `npx --yes --package @liustack/pptwise@0.35.0 pptwise <args>`.
 3. `bunx --bun @liustack/pptwise@0.35.0 <args>`.
 4. Otherwise ask the user to install Node 22.19+ or Bun.

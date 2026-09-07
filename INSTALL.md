@@ -219,7 +219,9 @@ pptwise --version
 ```
 
 The skill's launcher picks up such an install automatically, as long as its
-version is at the same major as the pin and no older.
+version is compatible with the pin: on a 0.x pin, the same major and minor
+with a patch no older (every 0.x minor is a breaking release). From 1.0 on,
+the same major and no older.
 
 Building from source is for working on pptwise itself, not for using it:
 

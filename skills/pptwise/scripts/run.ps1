@@ -50,20 +50,37 @@ function Get-CliVersion {
     if ($m.Success) { return $m.Value } else { return '' }
 }
 
-# Compatible = same major version as $Pinned AND not older than $Pinned.
-# Same major keeps a globally installed CLI usable without a forced re-download;
-# not-older refuses a stale build that predates the version this skill needs.
+# Compatible = a PATH build this skill's IR guidance still holds for.
+#   major 0:  same major AND same minor as $Pinned, patch not older. Every 0.x
+#             minor is a breaking release (components come and go), so a skill
+#             pinned to 0.34 must not hand its IR to a 0.35 CLI.
+#   major 1+: same major as $Pinned AND not older than $Pinned. Semver promises
+#             a newer minor still accepts everything the older one did.
+# Not-older in both cases refuses a stale build that predates what this skill
+# needs; a compatible PATH build keeps a global install usable without a forced
+# re-download. Kept identical to compatible() in run.sh.
 function Test-Compatible {
     param([string] $Ver)
+    if ($Ver -notmatch '^\d+\.\d+\.\d+$') { return $false }
     $f = $Ver -split '\.'
     $p = $Pinned -split '\.'
-    if ($f.Count -lt 3 -or $p.Count -lt 3) { return $false }
     $fMaj = [int]$f[0]; $fMin = [int]$f[1]; $fPat = [int]$f[2]
     $pMaj = [int]$p[0]; $pMin = [int]$p[1]; $pPat = [int]$p[2]
     if ($fMaj -ne $pMaj) { return $false }
+    if ($pMaj -eq 0) {
+        if ($fMin -ne $pMin) { return $false }
+        return ($fPat -ge $pPat)
+    }
     if ($fMin -gt $pMin) { return $true }
     if ($fMin -lt $pMin) { return $false }
     return ($fPat -ge $pPat)
+}
+
+# Human wording of what Test-Compatible accepts, for the diagnosis text.
+function Get-CompatibleRange {
+    $p = $Pinned -split '\.'
+    if ([int]$p[0] -eq 0) { return "$($p[0]).$($p[1]).x at or above $Pinned" }
+    return "major $($p[0]), at or above $Pinned"
 }
 
 # The npx path runs the CLI on this machine's node, so npx is only usable when
@@ -142,14 +159,13 @@ function Build-DiagnosisJson {
     }
     $steps = @()
     if ($script:Selected -eq 'none') {
-        $major = $Pinned.Split('.')[0]
         $first = "Install Node 22.19+ from https://nodejs.org so npx can run $Package@$Pinned, then re-run this launcher."
         if ($script:NpxPresent -and (-not $script:NodeFloorOk)) {
             $first = "npx is present but node $(if ($script:NodeVer) { $script:NodeVer } else { 'missing' }) is below the $NodeFloor floor this CLI needs. Upgrade Node at https://nodejs.org, then re-run this launcher."
         }
         $steps = @(
             $first,
-            "No JavaScript runtime? Install Bun from https://bun.sh to use bunx, or put a compatible $Bin (major $major, at or above $Pinned) on PATH."
+            "No JavaScript runtime? Install Bun from https://bun.sh to use bunx, or put a compatible $Bin ($(Get-CompatibleRange)) on PATH."
         )
     }
     $obj = [ordered]@{

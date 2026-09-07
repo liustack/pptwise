@@ -43,19 +43,52 @@ parse_semver() {
   case "$_PAT" in '' | *[!0-9]*) _PAT=0 ;; esac
 }
 
-# Compatible = same major version as PINNED AND not older than PINNED.
-# Same major keeps a globally installed CLI usable without a forced re-download;
-# not-older refuses a stale build that predates the version this skill needs.
+# True for a plain "X.Y.Z" with three numeric components and nothing else.
+# Anything looser is not a version this launcher can reason about.
+is_semver() {
+  case "$1" in
+    '' | *[!0-9.]* | .* | *. | *..*) return 1 ;;
+  esac
+  _tail="${1#*.*.}"
+  [ "$_tail" != "$1" ] || return 1
+  case "$_tail" in *.*) return 1 ;; esac
+}
+
+# Compatible = a PATH build this skill's IR guidance still holds for.
+#   major 0:  same major AND same minor as PINNED, patch not older. Every 0.x
+#             minor is a breaking release (components come and go), so a skill
+#             pinned to 0.34 must not hand its IR to a 0.35 CLI.
+#   major 1+: same major as PINNED AND not older than PINNED. Semver promises
+#             a newer minor still accepts everything the older one did.
+# Not-older in both cases refuses a stale build that predates what this skill
+# needs; a compatible PATH build keeps a global install usable without a forced
+# re-download.
 compatible() {
+  is_semver "$1" || return 1
   parse_semver "$1"
   _f_maj=$_MAJ
   _f_min=$_MIN
   _f_pat=$_PAT
   parse_semver "$PINNED"
   [ "$_f_maj" = "$_MAJ" ] || return 1
+  if [ "$_MAJ" -eq 0 ]; then
+    [ "$_f_min" = "$_MIN" ] || return 1
+    [ "$_f_pat" -ge "$_PAT" ]
+    return
+  fi
   if [ "$_f_min" -gt "$_MIN" ]; then return 0; fi
   if [ "$_f_min" -lt "$_MIN" ]; then return 1; fi
   [ "$_f_pat" -ge "$_PAT" ]
+}
+
+# Human wording of what compatible() accepts, for the diagnosis text.
+compatible_range() {
+  parse_semver "$PINNED"
+  if [ "$_MAJ" -eq 0 ]; then
+    printf '%s' "$_MAJ.$_MIN.x at or above $PINNED"
+  else
+    printf '%s' "major $_MAJ, at or above $PINNED"
+  fi
 }
 
 # First "X.Y.Z" token printed by `$BIN --version`.
@@ -174,7 +207,7 @@ compute_next_steps() {
     else
       _s1="Install Node 22.19+ from https://nodejs.org so npx can run $PKG@$PINNED, then re-run this launcher."
     fi
-    _s2="No JavaScript runtime? Install Bun from https://bun.sh to use bunx, or put a compatible $BIN (major ${PINNED%%.*}, at or above $PINNED) on PATH."
+    _s2="No JavaScript runtime? Install Bun from https://bun.sh to use bunx, or put a compatible $BIN ($(compatible_range)) on PATH."
     G_NEXTSTEPS="$(printf '"%s", "%s"' "$(json_escape "$_s1")" "$(json_escape "$_s2")")"
   else
     G_NEXTSTEPS=""
@@ -219,11 +252,15 @@ run() {
   esac
 }
 
-case "${1:-}" in
-  where)
-    resolve
-    ;;
-  *)
-    run "$@"
-    ;;
-esac
+# PPTWISE_LAUNCHER_LIB=1 sources this file for its functions only (the
+# compatibility tests in scripts/launcher-compat.test.mts); nothing runs.
+if [ "${PPTWISE_LAUNCHER_LIB:-}" != 1 ]; then
+  case "${1:-}" in
+    where)
+      resolve
+      ;;
+    *)
+      run "$@"
+      ;;
+  esac
+fi

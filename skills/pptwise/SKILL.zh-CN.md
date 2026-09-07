@@ -28,7 +28,7 @@ powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\run.ps1 <args>  # W
 
 无法执行脚本时，使用第一条可行路径：
 
-1. 已安装版本的主版本与本 skill 一致，且不低于钉定版本时，运行 `pptwise <args>`。
+1. 已安装版本与钉定版本兼容时，运行 `pptwise <args>`。钉定版本为 0.x 时要求主版本和次版本都相同，补丁版本不低于钉定值。1.0 及以后要求主版本相同，且不低于钉定版本。
 2. `npx --yes --package @liustack/pptwise@0.35.0 pptwise <args>`。
 3. `bunx --bun @liustack/pptwise@0.35.0 <args>`。
 4. 都不可用时，请用户安装 Node 22.19+ 或 Bun。
