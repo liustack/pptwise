@@ -195,6 +195,8 @@ Preview writes one SVG per page. `--html` also writes an inlined review interfac
 
 Serve watches the IR or project sources, including deck-local `theme.json`, and refreshes the browser. Agents should pass `--no-open`, report the exact URL, and stop only the process they started.
 
+`GET /status` returns a JSON object with `latestRevision`, `servedRevision`, `latestOk`, and an optional `error` message. `GET /` carries three response headers: `X-Pptwise-Build-Status` (`ok` or `failed`), `X-Pptwise-Served-Revision`, and `X-Pptwise-Latest-Revision`. When a rebuild fails, the browser shows an error banner and keeps serving the last good HTML without passing it off as current.
+
 ## Configuration and health
 
 ```bash

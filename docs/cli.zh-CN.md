@@ -195,6 +195,8 @@ Preview 为每页写一个 SVG。`--html` 还会写一个内联评审界面，�
 
 Serve 监听 IR 或项目源文件，包括 deck 本地的 `theme.json`，并刷新浏览器。Agent 应传 `--no-open`，报告准确 URL，结束时只停止自己启动的进程。
 
+`GET /status` 返回 JSON 对象，包含 `latestRevision`、`servedRevision`、`latestOk` 和可选的 `error` 消息。`GET /` 带三个响应头：`X-Pptwise-Build-Status`（`ok` 或 `failed`）、`X-Pptwise-Served-Revision`、`X-Pptwise-Latest-Revision`。重建失败时浏览器显示错误横幅，继续提供上一次成功的 HTML，不会把旧结果冒充最新。
+
 ## 配置与体检
 
 ```bash

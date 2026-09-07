@@ -172,6 +172,8 @@ For a browser session that refreshes when the spec, page files, assets, or deck-
 pptwise serve my-deck/ --no-open
 ```
 
+Watching is directory-level, so atomic saves (write-tmp-then-rename) and directories created after startup (`pages/`, `assets/`) trigger a rebuild. When a rebuild fails, the page shows the failure and keeps the last good result without treating it as current.
+
 Preview output is read-only. A reviewer describes a change, and the author edits the smallest owning source file. Content revisions belong to one page file. Order, type, kind, heading, and theme changes belong to the spec.
 
 ## Disassemble an IR
