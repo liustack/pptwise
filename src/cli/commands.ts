@@ -53,6 +53,7 @@ import {
 import {
   assertThemeId,
   assertThemeRebind,
+  deckThemeCandidates,
   resolveThemeSelection,
   resolveThemeByName,
   themeFileFromPreset,
@@ -796,7 +797,9 @@ export interface SchemaCommandOptions {
    *  `themes/`, then the presets. */
   theme?: string
   /** With `theme`: the deck project directory to read a deck-local theme
-   *  from. Omitted, `cwd` counts as the deck when it holds `deck.spec.json`. */
+   *  from. Omitted, `cwd` counts as the deck when it holds `deck.spec.json`
+   *  or a deck-local file for that name (`theme.json`, `<name>.theme.json`,
+   *  `<name>.json`). */
   deck?: string
   /** Indent the JSON. Default output is one line. */
   pretty?: boolean
@@ -810,16 +813,24 @@ export interface SchemaCommandOptions {
  * The deck directory a `schema --kind --theme` lookup reads first. `--deck`
  * names it outright. Otherwise the cwd is the deck when it holds
  * `deck.spec.json`, the same file `validate <dir>` requires of a deck
- * project (`./deck-dir.ts`'s `readDeckDir`), so an agent standing in its
- * deck gets the answer validate will give.
+ * project (`./deck-dir.ts`'s `readDeckDir`), or when it holds any of the
+ * deck-local files the name could resolve to (`deckThemeCandidates`,
+ * `./theme-resolve.ts`): `validate deck.json` reads a bare IR's theme from
+ * the IR file's own directory, spec or no spec, so a cwd with only
+ * `deck.json` and `theme.json` beside it is that directory. Either way an
+ * agent standing in its deck gets the answer validate will give.
  */
-async function schemaDeckDir(cwd: string, deck: string | undefined): Promise<string | undefined> {
+async function schemaDeckDir(cwd: string, deck: string | undefined, themeName: string): Promise<string | undefined> {
   if (deck !== undefined) {
     const dir = resolve(cwd, deck)
     if (!(await isDeckDirectory(dir))) throw new PptwiseError(`--deck ${deck}: ${dir} is not a directory`)
     return dir
   }
-  return (await pathExists(join(cwd, SPEC_FILENAME))) ? cwd : undefined
+  if (await pathExists(join(cwd, SPEC_FILENAME))) return cwd
+  for (const candidate of deckThemeCandidates(cwd, themeName)) {
+    if (await pathExists(candidate.path)) return cwd
+  }
+  return undefined
 }
 
 /** `pptwise schema [--spec | --component <type> | --kind <kind> [--theme <name> [--deck <dir>]]] [--pretty] [--full]`. */
@@ -837,7 +848,13 @@ export async function runSchema(opts: SchemaCommandOptions = {}): Promise<string
     schema = componentJsonSchema(opts.component, { full: opts.full })
   } else if (opts.kind !== undefined) {
     const cwd = opts.cwd ?? process.cwd()
-    const deckDir = await schemaDeckDir(cwd, opts.deck)
+    let deckDir: string | undefined
+    if (opts.theme !== undefined && opts.theme.length > 0) {
+      // Same gate the resolver runs first: a name it would refuse never
+      // reaches the filesystem as part of a candidate path.
+      assertThemeId(opts.theme)
+      deckDir = await schemaDeckDir(cwd, opts.deck, opts.theme)
+    }
     const resolved = await resolveThemeSelection(opts.theme, { startDir: cwd, deckDir })
     schema = kindJsonSchema(opts.kind, { theme: resolved?.definition, full: opts.full })
   } else {

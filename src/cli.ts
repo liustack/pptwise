@@ -133,7 +133,7 @@ program
   .option("--component <type>", "print one component's schema with the $defs it needs")
   .option("--kind <kind>", "print the components a page of this kind may hold, with their schemas")
   .option("--theme <name>", "with --kind: answer for one theme instead of every installed theme (deck theme.json, then workspace themes/, then presets)")
-  .option("--deck <dir>", "with --theme: the deck project directory to read a deck-local theme from (default: the cwd when it holds deck.spec.json)")
+  .option("--deck <dir>", "with --theme: the deck project directory to read a deck-local theme from (default: the cwd when it holds deck.spec.json or a deck-local theme file for the name)")
   .option("--pretty", "indent the JSON (default output is one line)")
   .option("--full", "print the closed icon-name enum instead of the `pptwise icons` pointer")
   .addHelpText(

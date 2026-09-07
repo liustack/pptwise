@@ -30,6 +30,7 @@ import {
   runThemes,
   runValidate,
 } from "./commands"
+import { THEME_FILENAME } from "./deck-dir"
 
 const execFile = promisify(execFileCb)
 
@@ -678,6 +679,49 @@ describe("runSchema / runThemes", () => {
     it("falls back to the preset when the cwd is not a deck", async () => {
       const cwd = await mkdtemp(join(tmpdir(), "pptwise-schema-plain-"))
       await expect(runSchema({ kind: "quote", theme: "brief", cwd })).rejects.toThrow(/not offered by theme "brief"/)
+    })
+
+    // `validate deck.json` reads a bare IR's theme from the IR file's own
+    // directory, spec or no spec. A cwd holding only `deck.json` and a
+    // deck-local theme file is that directory, so the kind query takes it
+    // as the deck too.
+    async function bareIrWithLocalTheme(id: string, themeFile: string): Promise<string> {
+      const cwd = await mkdtemp(join(tmpdir(), "pptwise-schema-bare-"))
+      await runThemeNew({ from: "thesis", output: join(cwd, themeFile), id, cwd })
+      await writeFile(
+        join(cwd, "deck.json"),
+        JSON.stringify({
+          version: "5",
+          filename: "q",
+          theme: { id },
+          slides: [
+            { type: "cover", heading: "Q" },
+            { type: "content", kind: "quote", heading: "Said", components: [{ type: "blockquote", text: "Said so." }] },
+          ],
+        }),
+      )
+      return cwd
+    }
+
+    it("takes the cwd as the deck when a bare IR sits beside theme.json, agreeing with validate", async () => {
+      const cwd = await bareIrWithLocalTheme("brief", THEME_FILENAME)
+      expect(await runValidate(join(cwd, "deck.json"), cwd)).toMatch(/^OK/)
+      const doc = JSON.parse(await runSchema({ kind: "quote", theme: "brief", cwd })) as {
+        components: string[]
+        themes: Record<string, { face: string }>
+      }
+      expect(doc.themes.brief!.face).toBe(thesisQuote().face)
+      expect(doc.components).toContain("blockquote")
+    })
+
+    it("takes the cwd as the deck when a bare IR sits beside <id>.theme.json with a custom id", async () => {
+      const cwd = await bareIrWithLocalTheme("acme", "acme.theme.json")
+      expect(await runValidate(join(cwd, "deck.json"), cwd)).toMatch(/^OK/)
+      const doc = JSON.parse(await runSchema({ kind: "quote", theme: "acme", cwd })) as {
+        themes: Record<string, { face: string }>
+      }
+      expect(Object.keys(doc.themes)).toEqual(["acme"])
+      expect(doc.themes.acme!.face).toBe(thesisQuote().face)
     })
 
     it("refuses --deck that is not a directory, and --deck without --theme", async () => {
