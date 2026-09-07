@@ -51,7 +51,12 @@
  * every directory from `cwd` up to the project root, existing or not, and
  * any `themes/` above that which already exists; see {@link themeWatchRoots}
  * for the ceiling), so a theme file that appears after startup and shadows
- * the built-in the deck started on is seen the moment it lands. That list
+ * the built-in the deck started on is seen the moment it lands. The
+ * candidates above the project root whose `themes/` does not exist yet
+ * cannot be watched without sitting on `/Users` or the like, so those few
+ * specific paths are checked for existence every {@link THEME_POLL_MS}
+ * instead ({@link themePollPaths}), and one that appears triggers the same
+ * rebuild. That list
  * is recomputed after
  * every build from the theme the spec binds *now*, and the watcher set is
  * updated to match, so rebinding the spec to another name follows along.
@@ -96,7 +101,7 @@ import { PptwiseError } from "../errors"
 import { spawnHidden } from "./child"
 import { buildDeckPreview } from "./commands"
 import { findConfig } from "./config"
-import { ASSETS_DIRNAME, PAGES_DIRNAME, SPEC_FILENAME, THEME_FILENAME } from "./deck-dir"
+import { ASSETS_DIRNAME, PAGES_DIRNAME, pathExists, SPEC_FILENAME, THEME_FILENAME } from "./deck-dir"
 import { themeCandidates, themeNameFromUnknown, WORKSPACE_THEMES_DIRNAME } from "./theme-resolve"
 import { resolveWorkspaceLocation } from "./workspace"
 
@@ -110,6 +115,9 @@ export const DEFAULT_PORT = 4400
 
 const DEBOUNCE_MS = 200
 const HEARTBEAT_MS = 30_000
+/** How often the theme candidates above the watch ceiling are checked for
+ *  existence — see {@link themePollPaths}. */
+export const THEME_POLL_MS = 2_000
 
 
 
@@ -201,28 +209,54 @@ export function watchRoots(resolvedTarget: string, isDir: boolean, extra: WatchR
  * firehose on macOS, where the FSEvents backend is recursive and every
  * event on the volume is delivered before the name filter runs. Above the
  * ceiling a `themes/` directory is watched only when it already exists at
- * the time of the call, and the list is recomputed after every build, so
- * one created later is picked up on the next rebuild rather than at once.
- * A name the resolver would refuse (bad shape) has no files to watch.
+ * the time of the call. The candidates left out are the ones
+ * {@link themePollPaths} returns: `createServeServer` checks those for
+ * existence on a timer instead, and the list is recomputed after every
+ * build, so a `themes/` that appears up there moves from the timer to a
+ * real watcher on the rebuild its appearance triggers. A name the resolver
+ * would refuse (bad shape) has no files to watch.
  */
 export function themeWatchRoots(
   themeName: string | undefined,
   opts: { startDir: string; deckDir: string; ceilingDir: string },
 ): WatchRoot[] {
-  if (themeName === undefined || !THEME_ID_PATTERN.test(themeName)) return []
+  return splitThemeCandidates(themeName, opts).watch.map((path) => ({ path, kind: "file" }))
+}
+
+/**
+ * The other half of {@link themeWatchRoots}: the candidate files above the
+ * watch ceiling whose `themes/` directory does not exist yet. No watcher
+ * can wait for these without sitting on an ancestor like `/Users`, so
+ * `createServeServer` stats each one every {@link THEME_POLL_MS} instead.
+ * These are specific file paths, a handful per ancestor, never a
+ * directory listing, so the check costs a few stats and nothing scales
+ * with what else lives under those ancestors.
+ */
+export function themePollPaths(
+  themeName: string | undefined,
+  opts: { startDir: string; deckDir: string; ceilingDir: string },
+): string[] {
+  return splitThemeCandidates(themeName, opts).poll
+}
+
+function splitThemeCandidates(
+  themeName: string | undefined,
+  opts: { startDir: string; deckDir: string; ceilingDir: string },
+): { watch: string[]; poll: string[] } {
+  const out: { watch: string[]; poll: string[] } = { watch: [], poll: [] }
+  if (themeName === undefined || !THEME_ID_PATTERN.test(themeName)) return out
   const ceiling = resolve(opts.ceilingDir)
   const withinCeiling = new Set<string>()
   for (let dir = resolve(opts.startDir); ; dir = dirname(dir)) {
     withinCeiling.add(dir)
     if (dir === ceiling || dirname(dir) === dir) break
   }
-  const roots: WatchRoot[] = []
   for (const candidate of themeCandidates(themeName, opts)) {
     const waitForIt = candidate.deck || withinCeiling.has(resolve(candidate.anchor))
-    if (!waitForIt && !isDirectory(join(candidate.anchor, WORKSPACE_THEMES_DIRNAME))) continue
-    roots.push({ path: candidate.path, kind: "file" })
+    const watchable = waitForIt || isDirectory(join(candidate.anchor, WORKSPACE_THEMES_DIRNAME))
+    ;(watchable ? out.watch : out.poll).push(candidate.path)
   }
-  return roots
+  return out
 }
 
 function isDirectory(path: string): boolean {
@@ -570,7 +604,8 @@ export function injectServeClient(html: string): string {
  * The testable factory (serve wave, task S1). Builds once up front — a
  * failure here rejects the whole call, see this module's own doc comment —
  * then starts listening and watching. Every fs/network resource this
- * function opens (the watchers, the heartbeat timer, the HTTP server) is
+ * function opens (the watchers, the heartbeat and theme-poll timers, the
+ * HTTP server) is
  * torn down by the returned {@link ServeHandle.close} and by nothing else:
  * this function has no other side effect a caller would need to separately
  * clean up, which is what makes it safe to call directly from a test without
@@ -645,6 +680,29 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     ])
   }
 
+  /** The theme candidates no watcher covers ({@link themePollPaths}), each
+   *  with whether it existed when last looked at. Replaced after every
+   *  build alongside the watcher set, so a file the timer found is handed
+   *  to a real watcher on the rebuild it triggered and drops out of here. */
+  let polledThemeFiles = new Map<string, boolean>()
+  async function snapshotPolledThemeFiles(): Promise<Map<string, boolean>> {
+    const next = new Map<string, boolean>()
+    for (const path of themePollPaths(boundThemeName, { startDir: cwd, deckDir, ceilingDir: watchCeiling })) {
+      next.set(path, await pathExists(path))
+    }
+    return next
+  }
+  async function pollThemeFiles(): Promise<void> {
+    let changed = false
+    for (const [path, present] of polledThemeFiles) {
+      const now = await pathExists(path)
+      if (now === present) continue
+      polledThemeFiles.set(path, now)
+      changed = true
+    }
+    if (changed) scheduleRebuild()
+  }
+
   async function buildOnce(): Promise<void> {
     const revision = ++latestRevision
     try {
@@ -662,6 +720,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     // `watchers` is assigned below, before the server listens. No build
     // runs before that: the initial one is awaited above this function.
     watchers.update(currentWatchRoots())
+    polledThemeFiles = await snapshotPolledThemeFiles()
   }
 
   // Builds run strictly one after another. Two overlapping builds could
@@ -732,9 +791,27 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   )
 
   const watchers = watchTree(currentWatchRoots(), scheduleRebuild)
+  polledThemeFiles = await snapshotPolledThemeFiles()
+  // One check in flight at a time: a slow stat (a network mount up the
+  // chain) must not stack ticks behind it.
+  let themePollInFlight = false
+  const themePoll = setInterval(() => {
+    if (themePollInFlight) return
+    themePollInFlight = true
+    void pollThemeFiles()
+      .catch(() => {
+        // `pathExists` refuses anything but ENOENT (a permission wall up
+        // the chain, say). The build reports what matters about such a
+        // directory. The timer keeps going.
+      })
+      .finally(() => {
+        themePollInFlight = false
+      })
+  }, THEME_POLL_MS)
 
   function teardownWatchersAndTimers(): void {
     clearInterval(heartbeat)
+    clearInterval(themePoll)
     if (debounceTimer) clearTimeout(debounceTimer)
     debounceTimer = undefined
     watchers.close()

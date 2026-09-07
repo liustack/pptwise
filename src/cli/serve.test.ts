@@ -2,7 +2,7 @@
 import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises"
 import http from "node:http"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { __resetRegisteredThemes } from "../themes/definitions"
@@ -14,6 +14,7 @@ import {
   SERVE_CLIENT_SCRIPT_ID,
   type ServeBuildStatus,
   type ServeHandle,
+  themePollPaths,
   themeWatchRoots,
   watchRoots,
 } from "./serve"
@@ -795,6 +796,31 @@ describe("themeWatchRoots", () => {
   })
 })
 
+describe("themePollPaths", () => {
+  it("lists the candidates above the ceiling whose themes/ does not exist, and nothing the tree watches", async () => {
+    const dir = await makeDir("pptwise-poll-paths-")
+    await mkdir(join(dir, "a", "b"), { recursive: true })
+    await mkdir(join(dir, "themes"))
+    const opts = { startDir: join(dir, "a", "b"), deckDir: join(dir, "a", "b"), ceilingDir: join(dir, "a") }
+    const polled = themePollPaths("acme", opts)
+    const watched = new Set(themeWatchRoots("acme", opts).map((root) => root.path))
+    // `dir/themes/` exists and is watched. `dir/a/themes/` is inside the
+    // ceiling and watched. Everything above `dir` is polled.
+    expect(polled).not.toContain(join(dir, "themes", "acme.theme.json"))
+    expect(polled).not.toContain(join(dir, "a", "themes", "acme.theme.json"))
+    expect(polled).toContain(join(dirname(dir), "themes", "acme.theme.json"))
+    expect(polled).toContain(join(dirname(dir), "themes", "acme.json"))
+    expect(polled).toContain(join(dirname(dir), "themes", "acme", THEME_FILENAME))
+    expect(polled.some((path) => watched.has(path))).toBe(false)
+    expect(polled.some((path) => path.startsWith("/themes/"))).toBe(true)
+  })
+
+  it("polls nothing for a name the resolver would refuse", () => {
+    expect(themePollPaths("../secret", { startDir: "/ws", deckDir: "/ws", ceilingDir: "/ws" })).toEqual([])
+    expect(themePollPaths(undefined, { startDir: "/ws", deckDir: "/ws", ceilingDir: "/ws" })).toEqual([])
+  })
+})
+
 describe("createServeServer — theme files that appear after startup", () => {
   // The watch set used to hold only the theme file the *first* build had
   // resolved. A deck started on a built-in had none, so a `themes/` created
@@ -887,5 +913,32 @@ describe("createServeServer — theme files that appear after startup", () => {
 
     await writeFile(join(dir, "brief.theme.json"), briefWithPrimary("brief", "#0B5FFF"))
     await servedWith(handle, "0B5FFF", BUILTIN_BRIEF_PRIMARY)
+  })
+
+  it("above the project root, a themes/ that does not exist yet is found by the 2s existence check, then watched", async () => {
+    // No pptwise.config.json anywhere: the watch ceiling is the cwd itself,
+    // and `parent/themes/` sits above it. The resolver still looks there.
+    const parent = await makeDir("pptwise-serve-above-ceiling-")
+    const cwd = join(parent, "deck")
+    await mkdir(cwd)
+    const irPath = join(cwd, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+    const timeoutsBefore = process.getActiveResourcesInfo().filter((name) => name === "Timeout").length
+    const handle = await startServe(irPath, { cwd })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain(BUILTIN_BRIEF_PRIMARY)
+
+    await mkdir(join(parent, "themes"))
+    const themePath = join(parent, "themes", "brief.theme.json")
+    await writeFile(themePath, briefWithPrimary("brief", "#0B5FFF"))
+    await servedWith(handle, "0B5FFF", BUILTIN_BRIEF_PRIMARY)
+
+    // The directory exists now, so its file watcher took over from the
+    // existence check: removal comes back through the file event.
+    await rm(themePath)
+    await servedWith(handle, BUILTIN_BRIEF_PRIMARY, "0B5FFF")
+
+    await handle.close()
+    const timeoutsAfter = process.getActiveResourcesInfo().filter((name) => name === "Timeout").length
+    expect(timeoutsAfter).toBeLessThanOrEqual(timeoutsBefore)
   })
 })
