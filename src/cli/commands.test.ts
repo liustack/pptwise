@@ -623,6 +623,12 @@ describe("runSchema / runThemes", () => {
     const anyTheme = JSON.parse(await runSchema({ kind: "quote" })) as { themes: Record<string, unknown> }
     expect(Object.keys(anyTheme.themes)).toContain("thesis")
   })
+  it("never prints an empty oneOf for a kind whose face takes no component", async () => {
+    const doc = JSON.parse(await runSchema({ kind: "statement", theme: "playbill" })) as Record<string, unknown>
+    expect(doc.components).toEqual([])
+    expect(doc.oneOf).toBeUndefined()
+    expect(doc.not).toEqual({})
+  })
   it("keeps the icon enum out of the model view and prints it under --full", async () => {
     expect(await runSchema()).not.toContain('"alarm-clock"')
     expect(await runSchema({ full: true })).toContain('"alarm-clock"')

@@ -87,18 +87,29 @@ export interface KindJsonSchemaOptions extends JsonSchemaOptions, KindComponents
  * JSON Schema for one component on a page of `kind` (`pptwise schema --kind`):
  * the legal component list, the theme faces behind it, a `oneOf` over those
  * components, and only the `$defs` they need.
+ *
+ * A face that draws no authored component (playbill's statement page, for
+ * one) leaves the list empty. Draft 2020-12 requires a non-empty `oneOf`,
+ * so that case is written as `not: {}`, the schema that matches nothing,
+ * with a description saying why.
  */
 export function kindJsonSchema(kind: string, options: KindJsonSchemaOptions = {}): JsonSchemaDocument {
   const offer = componentsForKind(kind, { theme: options.theme })
   const full = irJsonSchema({ full: options.full })
+  const head = { $schema: full.$schema, kind: offer.kind, components: offer.components, themes: offer.themes }
+  if (offer.components.length === 0) {
+    const themes = Object.keys(offer.themes).map((id) => `"${id}"`).join(", ")
+    return {
+      ...head,
+      description: `A "${offer.kind}" page under theme ${themes} takes no component: its face draws the heading alone.`,
+      not: {},
+    }
+  }
   const defs = full.$defs ?? {}
   const oneOf = offer.components.map((type) => ({ $ref: `#/$defs/${type}` }))
   const needed = reachableDefs(defs, oneOf)
   return {
-    $schema: full.$schema,
-    kind: offer.kind,
-    components: offer.components,
-    themes: offer.themes,
+    ...head,
     oneOf,
     ...(Object.keys(needed).length > 0 ? { $defs: needed } : {}),
   }

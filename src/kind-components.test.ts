@@ -122,6 +122,17 @@ describe("kindJsonSchema", () => {
     expect(Object.keys(doc.$defs as object).sort()).toEqual(["IconName", "kpi_cards", "paragraph"])
   })
 
+  it("prints a legal refusal instead of an empty oneOf when the face takes no component", () => {
+    // Draft 2020-12 requires a non-empty `oneOf` array, so an empty list
+    // must be expressed as `not: {}` (matches nothing) with a description.
+    const doc = kindJsonSchema("statement", { theme: "playbill" })
+    expect(doc.components).toEqual([])
+    expect(doc).not.toHaveProperty("oneOf")
+    expect(doc.not).toEqual({})
+    expect(doc.description).toMatch(/statement.*playbill.*no component/i)
+    expect(doc).not.toHaveProperty("$defs")
+  })
+
   it("keeps the icon enum out of the model view and in under --full", () => {
     const defs = kindJsonSchema("fact", { theme: "brief" }).$defs as Record<string, { enum?: unknown[] }>
     expect(defs.IconName!.enum).toBeUndefined()

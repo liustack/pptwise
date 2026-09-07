@@ -109,7 +109,7 @@ pptwise spec validate deck-dir/deck.spec.json
 
 The IR schema keeps every shared piece in `$defs` once: each component under its own type name, the component union as `Component`, and the icon-name enum as `IconName`. Output is one line unless `--pretty` is passed.
 
-`--component` prints one component's schema with only the `$defs` it needs. `--kind` prints the components a page of that kind may hold, the face each installed theme binds to it, a `oneOf` over those components, and their `$defs`. Add `--theme` to answer for the bound theme alone. The list comes from the same theme-menu route validate uses, so a component outside it fails `validate`. An unknown type, kind, or theme fails and lists the valid names.
+`--component` prints one component's schema with only the `$defs` it needs. `--kind` prints the components a page of that kind may hold, the face each installed theme binds to it, a `oneOf` over those components, and their `$defs`. Add `--theme` to answer for the bound theme alone. A face that draws no component prints an empty list and `not: {}` in place of the `oneOf`. The list comes from the same theme-menu route validate uses, so a component outside it fails `validate`. An unknown type, kind, or theme fails and lists the valid names.
 
 Icon fields print as a string that points at `pptwise icons`. `--full` prints the closed enum instead, for programs that validate against the schema. Validation always checks the closed enum.
 
