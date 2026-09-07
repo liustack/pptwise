@@ -38,7 +38,14 @@ import { loadIrFile, resolveLocalAssets } from "../../src/cli/load-ir"
 import { assertThemeRebind, resolveThemeByName, themeNameFromUnknown } from "../../src/cli/theme-resolve"
 import type { ThemeDefinition } from "../../src/themes/definitions"
 import { installNodePlatform } from "../../src/platform/node"
-import { HARNESS_FILES, META_FILENAME, isThemeFileName } from "./harness-files.mts"
+import {
+  HARNESS_FILES,
+  META_FILENAME,
+  PLACEMENT_FILENAME,
+  isThemeFileName,
+  parsePlacementRecord,
+  type PlacementRecord,
+} from "./harness-files.mts"
 
 installNodePlatform()
 
@@ -177,8 +184,37 @@ function isMissingThemeError(message: string): boolean {
  * (codex review R3) the scorer never resolved a theme at all: a custom id
  * scored "unknown theme", and a forked built-in kept under the built-in's
  * name silently rendered under the built-in.
+ *
+ * A `placement` record short-circuits the lookup entirely: the runner
+ * already ran this same lookup where the CLI ran it and the CLI refused,
+ * so the record's error is the outcome — resolving again from the result
+ * directory, where the refused file never travelled, would land on a
+ * built-in of the same name and pass what the CLI rejected (codex review
+ * R9). The one exception is a name that exists nowhere: `validateIr`
+ * reports that itself as a validate error (the same contract as a missing
+ * name with no record, see {@link isMissingThemeError}), so the record is
+ * honoured by handing validate no theme rather than by a reason.
  */
-async function resolveArtifactTheme(name: string | undefined, dir: string): Promise<ThemeLookup> {
+async function resolveArtifactTheme(
+  name: string | undefined,
+  dir: string,
+  placement: PlacementRecord | undefined,
+): Promise<ThemeLookup> {
+  if (placement !== undefined) {
+    if (name !== placement.themeName) {
+      return {
+        error: relativizeToRepoRoot(
+          `${PLACEMENT_FILENAME} in ${dir} records theme "${placement.themeName}" but the artifact binds ${name === undefined ? "none" : `"${name}"`}`,
+        ),
+      }
+    }
+    if (isMissingThemeError(placement.themeError)) return { theme: undefined }
+    return {
+      error: relativizeToRepoRoot(
+        `theme "${placement.themeName}" could not be resolved: ${placement.themeError} (the CLI's own ${placement.stage} error, recorded by the runner at placement)`,
+      ),
+    }
+  }
   if (name === undefined) return { theme: undefined }
   try {
     const resolved = await resolveThemeByName(name, { startDir: dir, deckDir: dir })
@@ -205,7 +241,8 @@ async function resolveArtifactTheme(name: string | undefined, dir: string): Prom
  * will use. Never throws —
  * every failure path (missing directory, missing/ambiguous artifact file,
  * malformed JSON, a `readDeckDir`/`assembleDeck` structural error, a theme
- * file that will not load) returns `{ error }` instead.
+ * file that will not load, a theme lookup the runner recorded the CLI
+ * refusing in `placement.json`) returns `{ error }` instead.
  *
  * A deck project is identified only by the current `deck.spec.json` entry.
  * Older project names are ordinary unsupported artifacts under the v5
@@ -219,6 +256,19 @@ export async function loadArtifact(resultDir: string): Promise<ArtifactResult> {
     return { error: relativizeToRepoRoot(`no result directory found at ${resultDir}`) }
   }
 
+  // The runner's record of a theme lookup the CLI refused — read first, so
+  // the theme resolution below never gets to disagree with the CLI. Absent
+  // after a clean placement; a file that is not the record is a harness
+  // bug, surfaced as a reason rather than skipped.
+  let placement: PlacementRecord | undefined
+  if (entries.some((e) => e.isFile() && e.name === PLACEMENT_FILENAME)) {
+    try {
+      placement = parsePlacementRecord(await readFile(join(resultDir, PLACEMENT_FILENAME), "utf8"))
+    } catch (e) {
+      return { error: relativizeToRepoRoot(`unreadable ${PLACEMENT_FILENAME} in ${resultDir}: ${(e as Error).message}`) }
+    }
+  }
+
   const isDeckProjectDir = entries.some((e) => e.isFile() && e.name === SPEC_FILENAME)
   if (isDeckProjectDir) {
     let specTheme: string | undefined
@@ -227,7 +277,7 @@ export async function loadArtifact(resultDir: string): Promise<ArtifactResult> {
     } catch (e) {
       return { error: relativizeToRepoRoot(`deck project directory failed to assemble: ${(e as Error).message}`) }
     }
-    const lookup = await resolveArtifactTheme(specTheme, resultDir)
+    const lookup = await resolveArtifactTheme(specTheme, resultDir, placement)
     if ("error" in lookup) return lookup
     try {
       const { ir } = await readDeckDir(resultDir, { theme: lookup.theme })
@@ -238,7 +288,8 @@ export async function loadArtifact(resultDir: string): Promise<ArtifactResult> {
   }
 
   // Bare IR: exactly one *.json file that is neither harness bookkeeping
-  // (meta.json, transcript.json — `HARNESS_FILES`, shared with the runner)
+  // (meta.json, transcript.json, placement.json — `HARNESS_FILES`, shared
+  // with the runner)
   // nor a theme file the runner copied alongside (`isThemeFileName`).
   const candidates = entries
     .filter((e) => e.isFile() && e.name.endsWith(".json") && !HARNESS_FILES.has(e.name) && !isThemeFileName(e.name))
@@ -272,7 +323,7 @@ export async function loadArtifact(resultDir: string): Promise<ArtifactResult> {
   } catch (e) {
     return { error: relativizeToRepoRoot(`malformed JSON in ${filePath}: ${(e as Error).message}`) }
   }
-  const lookup = await resolveArtifactTheme(irThemeId(ir), resultDir)
+  const lookup = await resolveArtifactTheme(irThemeId(ir), resultDir, placement)
   if ("error" in lookup) return lookup
   return { ir, theme: lookup.theme }
 }

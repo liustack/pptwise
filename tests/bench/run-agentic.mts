@@ -92,10 +92,14 @@ import {
 } from "node:fs"
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
-import { SPEC_FILENAME, THEME_FILENAME } from "../../src/cli/deck-dir"
-import { loadIrFile } from "../../src/cli/load-ir"
-import { assertThemeRebind, resolveThemeByName, themeNameFromUnknown } from "../../src/cli/theme-resolve"
-import { META_FILENAME, TRANSCRIPT_FILENAME, isThemeFileName } from "./harness-files.mts"
+import {
+  META_FILENAME,
+  PLACEMENT_FILENAME,
+  TRANSCRIPT_FILENAME,
+  isThemeFileName,
+  type PlacementRecord,
+  type PlacementStage,
+} from "./harness-files.mts"
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
 const CLI = join(ROOT, "dist/cli.js")
@@ -598,20 +602,44 @@ type ThemeCarry =
   | { kind: "none" }
   | { kind: "builtin"; id: string }
   | { kind: "file"; id: string; source: string; dest: string }
-  | { kind: "failed"; id: string; error: string; carried: string | undefined }
+  | { kind: "failed"; record: PlacementRecord }
+
+/** The CLI's own deck and theme lookup, imported only when placement runs:
+ *  a static `src/cli/*` import drags the IR, theme, layout, and render
+ *  modules into every runner start (measured at ~200 ms and ~70 MiB before
+ *  the first API call, codex review of dba8070a), and placement — once per
+ *  question, after the tool loop — is the only step here that needs them. */
+async function cliThemeLookup() {
+  const [deckDir, loadIr, themeResolve] = await Promise.all([
+    import("../../src/cli/deck-dir"),
+    import("../../src/cli/load-ir"),
+    import("../../src/cli/theme-resolve"),
+  ])
+  return {
+    SPEC_FILENAME: deckDir.SPEC_FILENAME,
+    loadIrFile: loadIr.loadIrFile,
+    assertThemeRebind: themeResolve.assertThemeRebind,
+    resolveThemeByName: themeResolve.resolveThemeByName,
+    themeNameFromUnknown: themeResolve.themeNameFromUnknown,
+  }
+}
+type CliThemeLookup = Awaited<ReturnType<typeof cliThemeLookup>>
 
 /** The name an artifact binds, read loosely the way the CLI reads it before
  *  validation: `ir.theme.id` for a bare IR, `spec.theme` for a deck
  *  project. `undefined` when the file is unreadable or names none — that is
  *  the scorer's finding to make, not placement's. */
-async function boundThemeName(located: Exclude<LocatedArtifact, { kind: "none" }>): Promise<string | undefined> {
+async function boundThemeName(
+  located: Exclude<LocatedArtifact, { kind: "none" }>,
+  cli: CliThemeLookup,
+): Promise<string | undefined> {
   try {
     if (located.kind === "bare-ir") {
-      const raw = (await loadIrFile(located.file)) as { theme?: unknown } | null
+      const raw = (await cli.loadIrFile(located.file)) as { theme?: unknown } | null
       const id = (raw?.theme as { id?: unknown } | null | undefined)?.id
       return typeof id === "string" ? id : undefined
     }
-    return themeNameFromUnknown(await loadIrFile(join(located.dir, SPEC_FILENAME), "spec"))
+    return cli.themeNameFromUnknown(await cli.loadIrFile(join(located.dir, cli.SPEC_FILENAME), "spec"))
   } catch {
     return undefined
   }
@@ -627,36 +655,44 @@ async function boundThemeName(located: Exclude<LocatedArtifact, { kind: "none" }
  *   `<id>.theme.json` beside the artifact. The scorer's lookup is rooted at
  *   the result directory, where `theme.json` is absent and this is the next
  *   candidate, so it is hit before any `themes/` or built-in;
- * - a lookup the CLI itself refused (unknown name, malformed hit, rebind
- *   guard): nothing resolved, so nothing to carry — except the deck's own
- *   bound `theme.json`, which is what the rebind guard and a malformed-bound-
- *   file error are about, so the scorer fails the same way instead of
- *   quietly resolving the built-in of that name.
+ * - a lookup the CLI itself refused (unknown name, a theme file it found
+ *   but could not load, the rebind guard): nothing resolved, so no theme
+ *   file travels. The refusal itself does, as `placement.json`
+ *   ({@link PlacementRecord}): the scorer reads that record before it
+ *   resolves anything and fails the artifact on the CLI's own error. Before
+ *   this record existed (codex review R9) the failure lived only in the
+ *   placement note, the result directory held just the IR, and the scorer's
+ *   fresh lookup passed the artifact under the built-in of the same name.
  */
 async function carryResolvedTheme(
   located: Exclude<LocatedArtifact, { kind: "none" }>,
   workspaceDir: string,
   resultDir: string,
 ): Promise<ThemeCarry> {
-  const id = await boundThemeName(located)
+  const cli = await cliThemeLookup()
+  const id = await boundThemeName(located, cli)
   if (id === undefined) return { kind: "none" }
   const deckDir = located.kind === "bare-ir" ? dirname(located.file) : located.dir
-  try {
-    const resolved = await resolveThemeByName(id, { startDir: workspaceDir, deckDir })
-    await assertThemeRebind(deckDir, resolved)
-    if (resolved.kind === "builtin") return { kind: "builtin", id }
-    const dest = `${id}.theme.json`
-    cpSync(resolved.path, join(resultDir, dest))
-    return { kind: "file", id, source: resolved.path, dest }
-  } catch (e) {
-    const bound = join(deckDir, THEME_FILENAME)
-    let carried: string | undefined
-    if (existsSync(bound)) {
-      cpSync(bound, join(resultDir, THEME_FILENAME))
-      carried = THEME_FILENAME
-    }
-    return { kind: "failed", id, error: (e as Error).message, carried }
+  const refused = (stage: PlacementStage, e: unknown): ThemeCarry => {
+    const record: PlacementRecord = { themeName: id, stage, themeError: (e as Error).message }
+    writeFileSync(join(resultDir, PLACEMENT_FILENAME), JSON.stringify(record, null, 2) + "\n")
+    return { kind: "failed", record }
   }
+  let resolved: Awaited<ReturnType<CliThemeLookup["resolveThemeByName"]>>
+  try {
+    resolved = await cli.resolveThemeByName(id, { startDir: workspaceDir, deckDir })
+  } catch (e) {
+    return refused("resolve", e)
+  }
+  try {
+    await cli.assertThemeRebind(deckDir, resolved)
+  } catch (e) {
+    return refused("rebind", e)
+  }
+  if (resolved.kind === "builtin") return { kind: "builtin", id }
+  const dest = `${id}.theme.json`
+  cpSync(resolved.path, join(resultDir, dest))
+  return { kind: "file", id, source: resolved.path, dest }
 }
 
 function describeThemeCarry(carry: ThemeCarry, resultDir: string): string {
@@ -668,8 +704,8 @@ function describeThemeCarry(carry: ThemeCarry, resultDir: string): string {
       return ` (+ theme "${carry.id}" ${relative(resultDir, carry.source)} -> ${carry.dest})`
     case "failed":
       return (
-        ` (theme "${carry.id}" did not resolve for the CLI either: ${carry.error}` +
-        (carry.carried !== undefined ? `; carried ${carry.carried} so the scorer sees the same failure)` : ")")
+        ` (theme "${carry.record.themeName}" did not resolve for the CLI either, at ${carry.record.stage}: ` +
+        `${carry.record.themeError}; recorded in ${PLACEMENT_FILENAME} so the scorer fails the same way)`
       )
   }
 }

@@ -512,3 +512,94 @@ describe("scoreQuestion — custom theme files beside the artifact (codex review
     expect(score.renderOk).toBe(false)
   })
 })
+
+// ── placement.json: the runner's record of a theme lookup the CLI refused
+// (codex review R9). The scorer reads it before resolving anything, so a
+// broken theme file that never travelled cannot be papered over by a
+// built-in of the same name. ──
+
+describe("scoreQuestion — placement.json records a theme lookup the CLI refused (codex review R9)", () => {
+  let tmp: string
+
+  afterEach(() => {
+    if (tmp) rmSync(tmp, { recursive: true, force: true })
+  })
+
+  function bareIr(): void {
+    tmp = mkdtempSync(join(tmpdir(), "bench-score-placement-"))
+    writeFileSync(join(tmp, "deck.json"), readFileSync(join(RESULTS_DIR, "green-model", "fx01", "answer.json")))
+  }
+
+  it("a recorded resolve error is the scoring reason, and the built-in of that name is never consulted", async () => {
+    bareIr()
+    const themeError = "theme file /elsewhere/workspace/brief.theme.json is not valid JSON: Expected property name"
+    writeFileSync(join(tmp, "placement.json"), JSON.stringify({ themeName: "brief", stage: "resolve", themeError }))
+
+    const loaded = await loadArtifact(tmp)
+    expect("error" in loaded ? loaded.error : "resolved a theme").toContain(themeError)
+    const score = await scoreQuestion("p1", tmp, { id: "p1" })
+    expect(score.reason).toMatch(/theme "brief" could not be resolved/)
+    expect(score.reason).toContain(themeError)
+    expect(score.validatePass).toBe(false)
+    expect(score.validateErrorCount).toBe(0)
+    expect(score.renderOk).toBe(false)
+    expect(score.deterministic).toBeNull()
+  })
+
+  it("a recorded rebind refusal is the scoring reason verbatim", async () => {
+    tmp = mkdtempSync(join(tmpdir(), "bench-score-placement-"))
+    cpSync(join(RESULTS_DIR, "green-model", "fx02"), tmp, { recursive: true })
+    const spec = JSON.parse(readFileSync(join(tmp, "deck.spec.json"), "utf8")) as { theme: string }
+    spec.theme = "sketch"
+    writeFileSync(join(tmp, "deck.spec.json"), JSON.stringify(spec))
+    const themeError = 'cannot rebind theme "brief" to "sketch": menus differ. A same-menu color fork is allowed.'
+    writeFileSync(join(tmp, "placement.json"), JSON.stringify({ themeName: "sketch", stage: "rebind", themeError }))
+
+    const score = await scoreQuestion("p2", tmp, { id: "p2" })
+    expect(score.reason).toContain(themeError)
+    expect(score.validatePass).toBe(false)
+    expect(score.renderOk).toBe(false)
+  })
+
+  it("a recorded unknown-theme error stays a validate error, the way validateIr reports it on its own", async () => {
+    bareIr()
+    const ir = JSON.parse(readFileSync(join(tmp, "deck.json"), "utf8")) as { theme: unknown }
+    ir.theme = { id: "nonesuch" }
+    writeFileSync(join(tmp, "deck.json"), JSON.stringify(ir))
+    writeFileSync(
+      join(tmp, "placement.json"),
+      JSON.stringify({ themeName: "nonesuch", stage: "resolve", themeError: 'unknown theme "nonesuch". Themes available: brief' }),
+    )
+
+    const score = await scoreQuestion("p3", tmp, { id: "p3" })
+    expect(score.reason).toBeUndefined()
+    expect(score.validatePass).toBe(false)
+    expect(score.validateErrorCount).toBeGreaterThan(0)
+  })
+
+  it("a placement.json that is not the runner's record is a scoring reason, not ignored", async () => {
+    bareIr()
+    writeFileSync(join(tmp, "placement.json"), "{ not json")
+    const broken = await scoreQuestion("p4", tmp, { id: "p4" })
+    expect(broken.validatePass).toBe(false)
+    expect(broken.reason).toMatch(/unreadable placement\.json/)
+
+    writeFileSync(join(tmp, "placement.json"), JSON.stringify({ themeName: "brief" }))
+    const wrongShape = await scoreQuestion("p5", tmp, { id: "p5" })
+    expect(wrongShape.validatePass).toBe(false)
+    expect(wrongShape.reason).toMatch(/unreadable placement\.json .*no stage/)
+
+    // the record names a theme the artifact does not bind: a harness bug, not a lookup to trust
+    writeFileSync(join(tmp, "placement.json"), JSON.stringify({ themeName: "sketch", stage: "resolve", themeError: "x is not valid JSON" }))
+    const wrongName = await scoreQuestion("p6", tmp, { id: "p6" })
+    expect(wrongName.validatePass).toBe(false)
+    expect(wrongName.reason).toMatch(/placement\.json .*records theme "sketch" but the artifact binds "brief"/)
+  })
+
+  it("placement.json is never a bare-IR candidate", async () => {
+    bareIr()
+    writeFileSync(join(tmp, "placement.json"), JSON.stringify({ themeName: "brief", stage: "resolve", themeError: "x is not valid JSON" }))
+    const loaded = await loadArtifact(tmp)
+    expect("error" in loaded ? loaded.error : "").not.toMatch(/ambiguous artifact/)
+  })
+})

@@ -817,7 +817,7 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
     expect(readdirSync(resultDir).filter((n) => n !== "workspace")).toEqual(["deck.json"])
   })
 
-  it("a lookup the CLI itself failed is noted, and the deck's bound theme.json still travels so the scorer fails the same way", async () => {
+  it("a rebind the CLI refused (bound theme.json vs a built-in) is recorded, not re-derived from a carried theme.json", async () => {
     setup()
     const deckDir = join(workspace, "deck")
     save(join(deckDir, "deck.spec.json"), fx02Spec("thesis"))
@@ -827,10 +827,157 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
 
     const note = await placeArtifact(locateArtifact(workspace), resultDir, workspace)
     expect(note).toMatch(/cannot rebind theme "brief" to "thesis"/)
-    expect(existsSync(join(resultDir, "theme.json"))).toBe(true)
+    expect(existsSync(join(resultDir, "theme.json"))).toBe(false)
+    expect(readPlacement()).toMatchObject({ themeName: "thesis", stage: "rebind" })
     const score = await scoreQuestion("rebind", resultDir, { id: "rebind" })
     expect(score.reason).toMatch(/cannot rebind theme "brief" to "thesis"/)
     expect(score.validatePass).toBe(false)
+  })
+
+  // ── R9: a lookup the CLI refused must fail scoring the same way, whatever
+  // file it tripped on. Before this, only a broken deck-local `theme.json`
+  // travelled; a broken named or workspace theme left `deck.json` alone in
+  // the result directory, the scorer re-resolved the bound name, hit the
+  // built-in of that name, and passed an artifact the CLI had rejected.
+  // Placement now records the CLI's own error as `placement.json`, and the
+  // scorer reads that record before it resolves anything. ──
+
+  function readPlacement(): unknown {
+    return JSON.parse(readFileSync(join(resultDir, "placement.json"), "utf8"))
+  }
+
+  /** A named theme file with the whole `menu` missing — parses, fails the schema. */
+  function menulessTheme(id: string): unknown {
+    const file = themeFileFromPreset("thesis", { id }) as unknown as Record<string, unknown>
+    delete file.menu
+    return file
+  }
+
+  /** The theme-file shapes the CLI's lookup consults before the built-ins, each written
+   *  as a broken file. `path` is relative to the lookup anchor: the IR's own directory for
+   *  a bare IR, the workspace root for a deck project. */
+  const brokenShapes: Array<{ shape: string; path: (id: string) => string; content: (id: string) => unknown; error: RegExp }> = [
+    { shape: "<id>.theme.json beside the deck", path: (id) => `${id}.theme.json`, content: () => "{", error: /is not valid JSON/ },
+    { shape: "loose <id>.json beside the deck", path: (id) => `${id}.json`, content: () => "{", error: /is not valid JSON/ },
+    { shape: "workspace themes/<id>.theme.json", path: (id) => `themes/${id}.theme.json`, content: () => "{", error: /is not valid JSON/ },
+    { shape: "workspace themes/<id>/theme.json", path: (id) => `themes/${id}/theme.json`, content: () => "{", error: /is not valid JSON/ },
+    { shape: "<id>.theme.json missing its menu", path: (id) => `${id}.theme.json`, content: menulessTheme, error: /invalid theme file .*\nmenu: /s },
+  ]
+
+  function writeBroken(dir: string, id: string, shape: (typeof brokenShapes)[number]): void {
+    const content = shape.content(id)
+    const file = join(dir, shape.path(id))
+    mkdirSync(dirname(file), { recursive: true })
+    writeFileSync(file, typeof content === "string" ? content : JSON.stringify(content))
+  }
+
+  describe("R9: a theme file the CLI could not load fails scoring with the CLI's own error", () => {
+    it.each(brokenShapes)("bare IR bound to thesis, $shape", async (shape) => {
+      setup()
+      const target = join(workspace, "deck.json")
+      save(target, quoteIr("thesis"))
+      writeBroken(workspace, "thesis", shape)
+      await expect(cliTheme(target)).rejects.toThrow(shape.error)
+
+      const located = locateArtifact(workspace)
+      expect(located).toEqual({ kind: "bare-ir", file: target })
+      const note = await placeArtifact(located, resultDir, workspace)
+      expect(note).toMatch(shape.error)
+      expect(readdirSync(resultDir).filter((n) => n !== "workspace").sort()).toEqual(["deck.json", "placement.json"])
+      expect(readPlacement()).toMatchObject({ themeName: "thesis", stage: "resolve", themeError: expect.stringMatching(shape.error) })
+
+      const loaded = await loadArtifact(resultDir)
+      expect("error" in loaded ? loaded.error : "resolved a theme").toMatch(shape.error)
+      const score = await scoreQuestion("r9", resultDir, { id: "r9" })
+      expect(score.validatePass).toBe(false)
+      expect(score.renderOk).toBe(false)
+      expect(score.deterministic).toBeNull()
+      expect(score.reason).toMatch(/theme "thesis" could not be resolved/)
+      expect(score.reason).toMatch(shape.error)
+    })
+
+    it.each(brokenShapes)("deck project bound to brief, $shape", async (shape) => {
+      setup()
+      save(join(workspace, "deck.spec.json"), fx02Spec("brief"))
+      for (const id of ["p-cover", "p-kpi", "p-detail", "p-ending"]) save(join(workspace, "pages", `${id}.json`), {})
+      writeBroken(workspace, "brief", shape)
+      await expect(cliTheme(workspace)).rejects.toThrow(shape.error)
+
+      const located = locateArtifact(workspace)
+      expect(located).toEqual({ kind: "deck-project", dir: workspace })
+      const note = await placeArtifact(located, resultDir, workspace)
+      expect(note).toMatch(shape.error)
+      expect(existsSync(join(resultDir, "themes"))).toBe(false)
+      expect(existsSync(join(resultDir, "brief.theme.json"))).toBe(false)
+      expect(readPlacement()).toMatchObject({ themeName: "brief", stage: "resolve", themeError: expect.stringMatching(shape.error) })
+
+      const score = await scoreQuestion("r9", resultDir, { id: "r9" })
+      expect(score.validatePass).toBe(false)
+      expect(score.renderOk).toBe(false)
+      expect(score.reason).toMatch(/theme "brief" could not be resolved/)
+      expect(score.reason).toMatch(shape.error)
+    })
+
+    it("bare IR rebound from a bound theme.json to a custom sketch the CLI refused (menus differ)", async () => {
+      setup()
+      const target = join(workspace, "deck.json")
+      save(target, { ...(quoteIr("sketch") as object), slides: [{ id: "cover-1", type: "cover", heading: "Probe" }] })
+      save(join(workspace, "theme.json"), themeFileFromPreset("brief", { id: "brief" }))
+      save(join(workspace, "sketch.theme.json"), themeFileFromPreset("thesis", { id: "sketch" }))
+      const refused = /cannot rebind theme "brief" to "sketch": menus differ/
+      await expect(cliTheme(target)).rejects.toThrow(refused)
+
+      const note = await placeArtifact(locateArtifact(workspace), resultDir, workspace)
+      expect(note).toMatch(refused)
+      expect(readPlacement()).toMatchObject({ themeName: "sketch", stage: "rebind", themeError: expect.stringMatching(refused) })
+      expect(existsSync(join(resultDir, "sketch.theme.json"))).toBe(false)
+      expect(existsSync(join(resultDir, "theme.json"))).toBe(false)
+
+      const score = await scoreQuestion("r9", resultDir, { id: "r9" })
+      expect(score.validatePass).toBe(false)
+      expect(score.renderOk).toBe(false)
+      // the CLI's own refusal, not the scorer's "unknown theme" for a target it never saw
+      expect(score.reason).toMatch(refused)
+      expect(score.renderError).toBeUndefined()
+    })
+
+    it("deck project rebound from a bound theme.json to a custom sketch the CLI refused (menus differ)", async () => {
+      setup()
+      save(join(workspace, "deck.spec.json"), fx02Spec("sketch"))
+      for (const id of ["p-cover", "p-kpi", "p-detail", "p-ending"]) save(join(workspace, "pages", `${id}.json`), {})
+      save(join(workspace, "theme.json"), themeFileFromPreset("brief", { id: "brief" }))
+      save(join(workspace, "sketch.theme.json"), themeFileFromPreset("thesis", { id: "sketch" }))
+      const refused = /cannot rebind theme "brief" to "sketch": menus differ/
+      await expect(cliTheme(workspace)).rejects.toThrow(refused)
+
+      await placeArtifact(locateArtifact(workspace), resultDir, workspace)
+      expect(readPlacement()).toMatchObject({ themeName: "sketch", stage: "rebind" })
+      const score = await scoreQuestion("r9", resultDir, { id: "r9" })
+      expect(score.validatePass).toBe(false)
+      expect(score.reason).toMatch(refused)
+    })
+
+    it("a binding the CLI resolved writes no placement.json", async () => {
+      setup()
+      const target = join(workspace, "deck.json")
+      save(target, quoteIr("thesis"))
+      await placeArtifact(locateArtifact(workspace), resultDir, workspace)
+      expect(existsSync(join(resultDir, "placement.json"))).toBe(false)
+    })
+
+    it("an unknown theme id is recorded too, and still scores as the validate error validateIr reports", async () => {
+      setup()
+      const target = join(workspace, "deck.json")
+      save(target, quoteIr("nonesuch"))
+      await expect(cliTheme(target)).rejects.toThrow(/unknown theme "nonesuch"/)
+
+      await placeArtifact(locateArtifact(workspace), resultDir, workspace)
+      expect(readPlacement()).toMatchObject({ themeName: "nonesuch", stage: "resolve", themeError: expect.stringMatching(/unknown theme "nonesuch"/) })
+      const score = await scoreQuestion("r9", resultDir, { id: "r9" })
+      expect(score.validatePass).toBe(false)
+      expect(score.reason).toBeUndefined()
+      expect(score.validateErrorCount).toBeGreaterThan(0)
+    })
   })
 
   it("does not pick a theme file as the bare IR when the IR has an unconventional name", () => {

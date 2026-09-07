@@ -9,7 +9,49 @@
  */
 export const META_FILENAME = "meta.json"
 export const TRANSCRIPT_FILENAME = "transcript.json"
-export const HARNESS_FILES: ReadonlySet<string> = new Set([META_FILENAME, TRANSCRIPT_FILENAME])
+export const PLACEMENT_FILENAME = "placement.json"
+export const HARNESS_FILES: ReadonlySet<string> = new Set([META_FILENAME, TRANSCRIPT_FILENAME, PLACEMENT_FILENAME])
+
+/** Which step of the CLI's own theme lookup refused the artifact's binding:
+ *  `resolve` is `resolveThemeByName` (no theme of that name, or a theme file
+ *  it found but could not load), `rebind` is `assertThemeRebind` (the deck's
+ *  bound `theme.json` and the named theme carry different menus). */
+export type PlacementStage = "resolve" | "rebind"
+
+/**
+ * `placement.json`: the runner's record of a theme lookup the CLI refused,
+ * written by `placeArtifact` (`run-agentic.mts`) only when the artifact's
+ * bound theme did not resolve the way the CLI resolves it — a clean
+ * placement writes no such file. `score.mts` reads it before it resolves
+ * anything and treats `themeError` as the validate failure, so the scorer
+ * can never re-resolve the name from the result directory, land on a
+ * built-in of the same name, and pass an artifact the CLI rejected (codex
+ * review R9: a broken `<id>.theme.json`, `<id>.json`, or `themes/` entry
+ * never travelled, so only the CLI ever saw it fail).
+ */
+export interface PlacementRecord {
+  /** The name the artifact binds (`ir.theme.id`, or a deck project's `spec.theme`). */
+  themeName: string
+  stage: PlacementStage
+  /** The CLI's own error message, verbatim. */
+  themeError: string
+}
+
+const PLACEMENT_STAGES: ReadonlySet<string> = new Set<PlacementStage>(["resolve", "rebind"])
+
+/** Parses a `placement.json` body, throwing on anything but the exact
+ *  {@link PlacementRecord} shape: the file is a contract between two files
+ *  in this directory, so a wrong shape is a harness bug to surface, not a
+ *  record to guess at. */
+export function parsePlacementRecord(text: string): PlacementRecord {
+  const raw = JSON.parse(text) as unknown
+  if (typeof raw !== "object" || raw === null) throw new Error("placement record is not an object")
+  const { themeName, stage, themeError } = raw as Record<string, unknown>
+  if (typeof themeName !== "string") throw new Error("placement record has no string themeName")
+  if (typeof stage !== "string" || !PLACEMENT_STAGES.has(stage)) throw new Error("placement record has no stage of resolve | rebind")
+  if (typeof themeError !== "string") throw new Error("placement record has no string themeError")
+  return { themeName, stage: stage as PlacementStage, themeError }
+}
 
 /**
  * A theme file by the CLI's own naming (`resolveThemeByName`,

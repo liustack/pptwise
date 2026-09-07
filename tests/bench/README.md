@@ -21,6 +21,8 @@ tests/bench/
   results/<model-tag>/<question-id>/
     ...         the model-under-test's artifact (created by a run, not checked in here)
     meta.json   optional self-reported run stats (tokens/duration/model), pass-through only
+    placement.json  agentic runs only, and only when the artifact's bound theme did not resolve
+                for the CLI — the CLI's own error, which the scorer fails the artifact on
   results-probe/<model-tag>/<question-id>/   probe-bank runs (see "Probe bank" below)
   results-archive/<YYYY-MM-DD>/              kept snapshots of a past run, for cross-round comparison
   README.md     this file
@@ -228,8 +230,10 @@ comparable to one from after — some answers that used to fail purely on an edi
 (no structural or render-safety problem) now pass.
 
 A missing result directory, malformed JSON, an ambiguous artifact (more than one candidate `.json`
-file — the harness's own `meta.json` and `transcript.json` are never candidates, see
-`tests/bench/harness-files.mts`), or a `readDeckDir`/`assembleDeck` structural error scores as a fail for that question with
+file — the harness's own `meta.json`, `transcript.json`, and `placement.json` are never candidates,
+see `tests/bench/harness-files.mts`), a `readDeckDir`/`assembleDeck` structural error, or a theme
+lookup the runner recorded the CLI refusing (`placement.json`, see "Agentic API run mode" below)
+scores as a fail for that question with
 a `reason` in the report's notes column, without aborting the rest of the batch. Self-reported
 `meta.json` (`{ tokens?, duration_seconds?, model? }`, run protocol step 4) passes through into
 the report's `tokens`/`duration_s` columns verbatim when present, blank otherwise — never scored.
@@ -324,9 +328,18 @@ loose `<id>.json`, or any `themes/` entry). A built-in hit copies nothing. No th
 by name and no `themes/` directory is copied whole: a theme file that sat near the artifact but
 was never on the CLI's lookup path (a `themes/` inside a nested deck directory, say) would become
 a candidate at scoring time and silently change the result (codex review R8). When the CLI's own
-lookup failed (unknown name, malformed hit, rebind refused), nothing resolved and nothing is
-carried except the deck's bound `theme.json` if there is one, so the scorer reports the same
-failure the model saw. `theme.json` / `<id>.theme.json` names are never taken for the IR itself.
+lookup failed (unknown name, a theme file it found but could not load, rebind refused), nothing
+resolved and no theme file is carried. The refusal itself is: placement writes `placement.json`
+beside the artifact, `{ themeName, stage, themeError }` — the name the artifact binds, which step
+refused it (`"resolve"` for `resolveThemeByName`, `"rebind"` for the rebind guard), and the CLI's
+error message verbatim. The scorer reads that record before it resolves anything and fails the
+artifact on it (`validatePass` false, `reason` = the CLI's error, no render), so a broken
+`<id>.theme.json`, loose `<id>.json`, or `themes/` entry that never travelled cannot be papered
+over by the built-in of the same name at scoring time (codex review R9). A clean placement writes
+no `placement.json` at all — its absence means the lookup succeeded. The one recorded error the
+scorer does not turn into a `reason` is an unknown name: `validateIr` reports that on its own as a
+validate error, exactly as it does without a record. `theme.json` / `<id>.theme.json` names are
+never taken for the IR itself.
 
 The system prompt also explicitly warns the model not to call `write_file` on a path already
 under `assets/` — added after the round-2 smoke (q12, QWEN) showed the provisioning path working
