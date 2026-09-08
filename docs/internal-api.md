@@ -41,8 +41,9 @@ contract *is* covered by semver.
 
 ## Theme handling inside the package
 
-`validateIr`, `renderSlideSvg`, `generatePptx`, `auditDeck`, `buildAssetBrief`,
-and `validateSpec` accept a `theme` option carrying a `ThemeDefinition` by
+`validateIr`, `renderSlideSvg`, `generatePptx`, `auditDeck`,
+`runPixelContrastAudit`, `buildAssetBrief`, `validateSpec`, `assembleDeck`,
+and `readDeckDir` accept a `theme` option carrying a `ThemeDefinition` by
 value. The CLI compiles a deck or workspace theme file once per command
 (`resolveThemeByName` returns it as `definition`) and passes that object
 down. Without the option, `ir.theme.id` must name a factory preset or a theme
@@ -50,6 +51,16 @@ installed through `registerTheme`, which is process-level configuration for an
 embedder, never per-request state. There is no replace-in-place install: a
 file is never written into a lookup table, so nothing lingers after the file
 is deleted and two callers can use different definitions under one id.
+
+Each of those entry points resolves the option once, at its own front door,
+through `resolveIrTheme` (`src/themes/resolve-ir-theme.ts`) — the single
+place in the package where a bound theme id is looked up in a table. A
+supplied definition must answer to the id the deck binds, or resolution
+fails. Everything below the entry point takes `ThemeDefinition` as a
+required argument: `FullSlideSvg`, `slideToSvgMarkup` / `slideToRender` /
+`slideToOps`, `resolveEffectiveFace`, `checkIrQuality`, and `Branding` have
+no id fallback to reach for, so a deck theme file that keeps a built-in id
+cannot be silently swapped for the factory preset halfway down the chain.
 
 ## The former browser bundles
 
