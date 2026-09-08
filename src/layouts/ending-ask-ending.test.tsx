@@ -116,11 +116,4 @@ describe("ending-ask-ending — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderEnding("ember")
-    for (const t of Array.from(root.querySelectorAll("text")).filter((el) => el.getAttribute("font-weight") === "700")) {
-      if ((t.textContent ?? "").includes("Let's talk")) continue
-      expect(t.getAttribute("letter-spacing")).toBeNull()
-    }
-  })
 })

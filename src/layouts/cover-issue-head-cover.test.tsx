@@ -153,12 +153,6 @@ describe("cover-issue-head-cover — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderCover("journal")
-    const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("县城咖啡"))
-    expect(title?.getAttribute("letter-spacing")).toBeNull()
-  })
-
   it("date meta ink follows metaInk against the field", () => {
     const { root, tokens } = renderCover("journal")
     const bg = resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)

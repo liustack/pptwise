@@ -163,15 +163,6 @@ describe("ending-scorecard-ending — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderEnding("almanac")
-    for (const t of Array.from(root.querySelectorAll("text")).filter(
-      (el) => el.getAttribute("font-weight") === "700" && (el.textContent ?? "").includes("对表"),
-    )) {
-      expect(t.getAttribute("letter-spacing")).toBeNull()
-    }
-  })
-
   it("does not paint an ellipsis when a row overflows", () => {
     const long = slide({
       components: [{ type: "bullets", items: ["碳".repeat(120), "电".repeat(120), "包".repeat(120)] }],

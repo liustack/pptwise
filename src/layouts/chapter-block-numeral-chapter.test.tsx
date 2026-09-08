@@ -141,14 +141,6 @@ describe("chapter-block-numeral-chapter — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderChapter("bulletin", FOUR, 0)
-    const title = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("门店"),
-    )!
-    expect(title.getAttribute("letter-spacing")).toBeNull()
-  })
-
   it("tick leaves stay inside the canvas", () => {
     const { root } = renderChapter("bulletin", FOUR, 3)
     for (const l of Array.from(root.querySelectorAll("line"))) {

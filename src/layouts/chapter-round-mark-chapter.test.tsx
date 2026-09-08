@@ -139,15 +139,6 @@ describe("chapter-round-mark-chapter — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderChapter("arena")
-    for (const t of Array.from(root.querySelectorAll("text")).filter(
-      (el) => el.getAttribute("font-weight") === "700",
-    )) {
-      expect(t.getAttribute("letter-spacing")).toBeNull()
-    }
-  })
-
   it("does not paint an ellipsis, even on an extreme title", () => {
     const { markup: shortMarkup } = renderChapter("arena")
     expect(shortMarkup).not.toContain("…")

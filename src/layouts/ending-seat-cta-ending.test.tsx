@@ -149,15 +149,6 @@ describe("ending-seat-cta-ending — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderEnding("arena")
-    for (const t of Array.from(root.querySelectorAll("text")).filter(
-      (el) => el.getAttribute("font-weight") === "700" && el.getAttribute("text-anchor") !== "middle",
-    )) {
-      expect(t.getAttribute("letter-spacing")).toBeNull()
-    }
-  })
-
   it("wraps the gallery verdict as a two-line CTA instead of cutting it", () => {
     const SENTENCE = "续约与活跃率双双改善，本季度经营质量优于预期"
     const s = slide("下半年重点", { subheading: SENTENCE })

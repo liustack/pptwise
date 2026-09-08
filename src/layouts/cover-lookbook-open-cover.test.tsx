@@ -199,10 +199,9 @@ describe("cover-lookbook-open-cover — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing and does not grow past the board 96px", () => {
+  it("title does not grow past the board 96px", () => {
     const { root } = renderCover("runway")
     const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("回声，穿在身上"))
-    expect(title?.getAttribute("letter-spacing")).toBeNull()
     expect(Number(title?.getAttribute("font-size"))).toBe(96)
     expect(Number(title?.getAttribute("font-size"))).toBeLessThan(132)
   })

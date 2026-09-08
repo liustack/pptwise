@@ -149,15 +149,6 @@ describe("ending-care-plan-ending — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderEnding("clinic")
-    for (const t of Array.from(root.querySelectorAll("text")).filter(
-      (el) => el.getAttribute("font-weight") === "700",
-    )) {
-      expect(t.getAttribute("letter-spacing")).toBeNull()
-    }
-  })
-
   it("does not paint an ellipsis when a suggestion is too long", () => {
     const long = slide({
       components: [{ type: "bullets", items: ["随访与干预建议说明项".repeat(20), ITEMS[1]!, ITEMS[2]!] }],

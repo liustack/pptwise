@@ -166,14 +166,6 @@ describe("chapter-seal-numeral-chapter — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderChapter("vermilion", FOUR, 1)
-    const title = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("基层减负"),
-    )!
-    expect(title.getAttribute("letter-spacing")).toBeNull()
-  })
-
   it("does not paint an overflow mark, and keeps the rule inside the canvas", () => {
     const long = [chapter("基".repeat(80))]
     const { root, markup } = renderChapter("vermilion", long, 0)

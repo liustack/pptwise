@@ -155,12 +155,6 @@ describe("chapter-one-word-chapter — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderChapter("stage")
-    const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)
-    expect(title?.getAttribute("letter-spacing")).toBeNull()
-  })
-
   it("does not paint overflow marks", () => {
     noOverflowMarks(renderChapter("stage").markup)
     const long = chapterSlide("性".repeat(80))

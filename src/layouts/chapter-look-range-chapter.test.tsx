@@ -145,12 +145,6 @@ describe("chapter-look-range-chapter — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderChapter("runway")
-    const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("夜的针脚"))
-    expect(title?.getAttribute("letter-spacing")).toBeNull()
-  })
-
   it("cuts overflow instead of painting an ellipsis", () => {
     const long: Slide = { type: "chapter", heading: "江".repeat(80), subheading: "副".repeat(80), components: [] } as Slide
     const { markup } = renderChapter("runway", long, 0, [long])

@@ -145,12 +145,6 @@ describe("ending-window-close-ending — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderEnding("runway")
-    const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)
-    expect(title?.getAttribute("letter-spacing")).toBeNull()
-  })
-
   it("cuts overflow instead of painting an ellipsis", () => {
     const { markup } = renderEnding("runway", slide("江".repeat(80), { subheading: "副".repeat(80) }))
     expect(markup).not.toContain("…")

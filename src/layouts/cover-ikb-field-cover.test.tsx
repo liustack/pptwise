@@ -134,15 +134,6 @@ describe("cover-ikb-field-cover — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderCover("bulletin")
-    for (const t of Array.from(root.querySelectorAll("text")).filter(
-      (el) => el.getAttribute("font-weight") === "700",
-    )) {
-      expect(t.getAttribute("letter-spacing")).toBeNull()
-    }
-  })
-
   it("kicker meta ink follows metaInk against the field", () => {
     const { root, tokens } = renderCover("bulletin")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) =>

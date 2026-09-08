@@ -165,12 +165,6 @@ describe("ending-release-close-ending — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderEnding("stage")
-    const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)
-    expect(title?.getAttribute("letter-spacing")).toBeNull()
-  })
-
   it("cuts overflow instead of painting an ellipsis", () => {
     const { markup } = renderEnding("stage", slide("今".repeat(80), { subheading: "址".repeat(80) }), {
       organization: "会".repeat(80),

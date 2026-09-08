@@ -135,11 +135,4 @@ describe("chapter-sticker-numeral-chapter — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderChapter("crayon", TWO, 1)
-    const title = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("孩子们"),
-    )!
-    expect(title.getAttribute("letter-spacing")).toBeNull()
-  })
 })

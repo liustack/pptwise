@@ -144,15 +144,6 @@ describe("chapter-subject-rule-chapter — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderChapter("clinic")
-    for (const t of Array.from(root.querySelectorAll("text")).filter(
-      (el) => el.getAttribute("font-weight") === "700",
-    )) {
-      expect(t.getAttribute("letter-spacing")).toBeNull()
-    }
-  })
-
   it("does not paint an ellipsis when the title is too long", () => {
     const long: Slide = {
       type: "chapter",

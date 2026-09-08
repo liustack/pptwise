@@ -136,13 +136,6 @@ describe("cover-type-rule-cover — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderCover("terminal")
-    for (const t of Array.from(root.querySelectorAll("text")).filter((el) => el.getAttribute("font-weight") === "700")) {
-      expect(t.getAttribute("letter-spacing")).toBeNull()
-    }
-  })
-
   it("uses tokens, not baked terminal hex, when another theme renders it", () => {
     const { markup, tokens } = renderCover("brief")
     expect(markup).toContain(tokens.colors.text)

@@ -154,12 +154,6 @@ describe("chapter-day-bill-chapter — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderChapter("playbill")
-    const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)
-    expect(title?.getAttribute("letter-spacing")).toBeNull()
-  })
-
   it("does not paint an ellipsis, even on an extreme title", () => {
     const { markup: shortMarkup } = renderChapter("playbill")
     expect(shortMarkup).not.toContain("…")

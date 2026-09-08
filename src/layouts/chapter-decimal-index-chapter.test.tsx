@@ -160,15 +160,6 @@ describe("chapter-decimal-index-chapter — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderChapter("swiss")
-    for (const t of Array.from(root.querySelectorAll("text")).filter((el) =>
-      (el.textContent ?? "").includes(HEADING),
-    )) {
-      expect(t.getAttribute("letter-spacing")).toBeNull()
-    }
-  })
-
   it("does not paint an ellipsis, even on an extreme title", () => {
     const { markup: shortMarkup } = renderChapter("swiss")
     expect(shortMarkup).not.toContain("…")

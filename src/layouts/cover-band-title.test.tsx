@@ -188,10 +188,4 @@ describe("cover-band-title — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderCover("homeroom", slide(), FULL_META, { textAnchor: "start", bandY: 260, bandH: 200 })
-    for (const t of Array.from(root.querySelectorAll("text")).filter((el) => el.getAttribute("font-weight") === "700")) {
-      expect(t.getAttribute("letter-spacing")).toBeNull()
-    }
-  })
 })

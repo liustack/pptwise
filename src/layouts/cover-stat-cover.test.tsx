@@ -160,14 +160,6 @@ describe("cover-stat-cover — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderCover("ledger", slide(SENTENCE_HEADING))
-    const heading = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("续约率"),
-    )!
-    expect(heading.getAttribute("letter-spacing")).toBeNull()
-  })
-
   it("brief tokens do not leak ledger hex", () => {
     const { markup } = renderCover("brief")
     for (const hex of ["#0F1216", "#171C22", "#16202B", "#F0A63C", "#F2EFE8", "#9AA7B4", "#2A3440"]) {

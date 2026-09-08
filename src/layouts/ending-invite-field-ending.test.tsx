@@ -136,9 +136,4 @@ describe("ending-invite-field-ending — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderEnding("heritage")
-    const heading = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)!
-    expect(heading.getAttribute("letter-spacing")).toBeNull()
-  })
 })

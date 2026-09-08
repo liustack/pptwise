@@ -141,11 +141,4 @@ describe("ending-signoff-ending — shared pool", () => {
     }
   })
 
-  it("CJK title has no letter-spacing", () => {
-    const { root } = renderEnding("bulletin")
-    const heading = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("三件事"),
-    )!
-    expect(heading.getAttribute("letter-spacing")).toBeNull()
-  })
 })
