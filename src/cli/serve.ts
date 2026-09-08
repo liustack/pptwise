@@ -352,7 +352,18 @@ export function watchTree(roots: WatchRoot[], onChange: () => void): WatchTreeHa
       if (parent !== undefined) attach(parent)
       return
     }
-    const ino = inodeOf(dir)
+    // From here the watcher is open and this function owns it until it is
+    // in `watchers`: whatever the stat says, or throws (the directory
+    // swapped for a plain file since the `watch` call gives ENOTDIR), the
+    // watcher is closed before this returns or throws, so nothing `close`
+    // cannot reach is left running.
+    let ino: bigint | undefined
+    try {
+      ino = inodeOf(dir)
+    } catch (e) {
+      watcher.close()
+      throw e
+    }
     if (ino === undefined) {
       // Vanished between the `watch` call and the stat — treat it like the
       // ENOENT branch above, the parent's event brings it back.

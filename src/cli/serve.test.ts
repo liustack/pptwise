@@ -1,10 +1,12 @@
 // @vitest-environment node
 import { spawn } from "node:child_process"
+import { renameSync, writeFileSync } from "node:fs"
 import { mkdir, mkdtemp, readFile, rename, rm, stat, utimes, writeFile } from "node:fs/promises"
 import http from "node:http"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import type * as FsModule from "node:fs"
 import { installNodePlatform } from "@/platform/node"
 import { __resetRegisteredThemes } from "../themes/definitions"
 import { buildThmxBytes, DEFAULT_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
@@ -19,6 +21,7 @@ import {
   THEME_POLL_MS,
   themeWatchRoots,
   watchRoots,
+  watchTree,
 } from "./serve"
 import type * as ThemeResolveModule from "./theme-resolve"
 import { themeFileFromPreset, type ThemeLookupOptions } from "./theme-resolve"
@@ -44,6 +47,23 @@ interface LookupHold {
   released: Promise<void>
 }
 const resolveGate = vi.hoisted(() => ({ hold: undefined as LookupHold | undefined, inBuild: false }))
+/** A pass-through over `node:fs` with one hook: runs after a real
+ *  `fs.watch` call has succeeded, with the path it opened, before the
+ *  caller gets the watcher back. A test that needs the filesystem to
+ *  change between a watcher opening and the stat that follows it sets
+ *  `afterWatch`; nothing else about `node:fs` is touched. */
+const fsGate = vi.hoisted(() => ({ afterWatch: undefined as ((path: string) => void) | undefined }))
+vi.mock("node:fs", async (importOriginal) => {
+  const original = await importOriginal<typeof FsModule>()
+  // `fs.watch` is overloaded, and a spread of one overload's parameters
+  // does not satisfy the others; the hook only ever forwards.
+  const watch = ((...args: any[]) => {
+    const watcher = (original.watch as (...a: any[]) => FsModule.FSWatcher)(...args)
+    fsGate.afterWatch?.(String(args[0]))
+    return watcher
+  }) as typeof original.watch
+  return { ...original, watch }
+})
 vi.mock("./commands", async (importOriginal) => {
   const original = await importOriginal<typeof CommandsModule>()
   return {
@@ -366,6 +386,7 @@ async function startServe(
 }
 
 afterEach(async () => {
+  fsGate.afterWatch = undefined
   await Promise.all(openHandles.splice(0).map((h) => h.close()))
   __resetRegisteredThemes()
 })
@@ -1487,5 +1508,32 @@ describe("pptwise serve — the CLI process", () => {
       if (child.exitCode === null) child.kill("SIGTERM")
       await exited
     }
+  })
+})
+
+describe("watchTree — a watcher opened, then failed before it was registered", () => {
+  it("closes the watcher when the stat after fs.watch throws, so nothing outlives the rejected tree", async () => {
+    // `attach` opens the watcher, then stats the directory for its inode,
+    // then registers it. A directory swapped for a plain file between the
+    // first two steps makes the stat throw ENOTDIR with the watcher open
+    // and in no map, where `close()` could not reach it.
+    const dir = await makeDir("pptwise-serve-post-open-")
+    const themes = join(dir, "themes")
+    const target = join(themes, "brief")
+    await mkdir(target, { recursive: true })
+    const count = () => process.getActiveResourcesInfo().filter((name) => name === "FSEventWrap").length
+    const before = count()
+
+    let rotated = false
+    fsGate.afterWatch = (path) => {
+      if (path !== target || rotated) return
+      rotated = true
+      renameSync(themes, `${themes}-moved`)
+      writeFileSync(themes, "not a directory\n")
+    }
+    expect(() => watchTree([{ path: join(target, THEME_FILENAME), kind: "file" }], () => {})).toThrow(/ENOTDIR/)
+    expect(rotated).toBe(true)
+    // A closed FSEvents handle is released a tick later, not on `close()`.
+    await pollUntil(async () => (count() <= before ? true : undefined))
   })
 })
