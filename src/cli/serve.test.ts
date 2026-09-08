@@ -2039,6 +2039,49 @@ describe("createServeServer — a watcher event whose handling throws", () => {
     expect(recovered.servedRevision).toBe(recovered.latestRevision)
   })
 
+  it("recovers when the file is removed only after the rebuild's own watcher update has failed too", async () => {
+    // The rebuild the event failure schedules ends with a watcher update,
+    // and that update fails on the same plain file. The tree used to keep
+    // the old `themes` watcher, on a directory no longer at that path,
+    // and the deck directory's own watcher had never been told to report
+    // `themes`, since it existed at startup. The file going away was then
+    // an event nobody acted on, and the failure stood until a rebuild by
+    // hand. The tree now checks every watcher it keeps against the path
+    // on each update, and a watched directory always reports the watched
+    // directories under it, present or not.
+    const dir = await makeDir("pptwise-serve-event-throw-late-")
+    await writeFile(join(dir, THEME_FILENAME), briefWithPrimary("brief", "#0A3D91"))
+    const irPath = join(dir, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+    const themes = join(dir, "themes")
+    await mkdir(themes)
+    const handle = await startServe(irPath, { cwd: dir })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain("0A3D91")
+    const settled = await settledRevision(handle)
+    let watchCalls = 0
+    fsGate.afterWatch = () => watchCalls++
+
+    const rotated = swapThemesOnBriefEvent(themes)
+    await mkdir(join(themes, "brief"))
+    // First the event's own failure, then the rebuild it scheduled, whose
+    // update fails on the same file.
+    const failed = await statusWhere(handle, (status) => !status.latestOk && status.latestRevision === settled + 1)
+    expect(rotated()).toBe(true)
+    expect(failed.error).toMatch(/ENOTDIR/)
+    expect(failed.servedRevision).toBe(settled + 1)
+    // Nothing changes while the file stays: no rebuild, no watcher churn.
+    await sleep(2 * THEME_POLL_MS + DEBOUNCE_GRACE_MS)
+    expect(handle.status()).toMatchObject({ latestOk: false, latestRevision: settled + 1 })
+    const watchCallsWhileBroken = watchCalls
+
+    await rm(themes)
+    const recovered = await statusWhere(handle, (status) => status.latestOk)
+    expect(recovered).toMatchObject({ latestRevision: settled + 2, servedRevision: settled + 2 })
+    expect(watchCalls - watchCallsWhileBroken).toBeLessThanOrEqual(12)
+    await sleep(THEME_POLL_MS + DEBOUNCE_GRACE_MS)
+    expect(handle.status()).toMatchObject({ latestOk: true, latestRevision: settled + 2 })
+  })
+
   it("watchTree hands the error to onError instead of throwing out of the callback", async () => {
     const dir = await makeDir("pptwise-serve-tree-event-throw-")
     const themes = join(dir, "themes")

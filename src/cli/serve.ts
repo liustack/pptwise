@@ -261,10 +261,17 @@ interface WatchRule {
  * moment the segment appears (then descends into whatever children it was
  * waiting for). A directory that is removed or swapped for a new one (same
  * name, new inode) is detected on its parent's event and re-attached the
- * same way, so a watcher never sits on a dead inode. The root list is not
- * fixed at creation: {@link WatchTreeHandle.update} takes a new list,
- * attaches what is new and closes what is no longer named, keeping every
- * watcher both lists share. `close` closes every watcher the tree ever
+ * same way, so a watcher never sits on a dead inode. A watched directory
+ * reports every watched directory directly under it by name, whether that
+ * one exists yet, exists now, or was there at startup and has since been
+ * removed or replaced: the entry's appearance, removal, or replacement is
+ * never filtered out on the parent. The root list is not fixed at
+ * creation: {@link WatchTreeHandle.update} takes a new list, checks every
+ * watcher it keeps against what now sits at its path (one whose directory
+ * was removed or replaced is closed and attached afresh, or hung off its
+ * parent when nothing is there), attaches what is new and closes what is
+ * no longer named, keeping every watcher both lists share that still sits
+ * on its directory. `close` closes every watcher the tree ever
  * opened, and a later `update` is a no-op, so a rebuild that finishes after
  * shutdown cannot reopen anything. Attaching is one directory at a time,
  * and a directory that cannot be watched for any reason other than not
@@ -272,10 +279,13 @@ interface WatchRule {
  * throws; when that happens while the tree is being created, every watcher
  * opened before it is closed first, so a caller that never receives a
  * handle has nothing left to close. When it happens inside a later
- * `update`, the watchers that call opened are closed again and the tree
- * stays exactly as the last successful update left it, so the caller keeps
- * hearing about the paths it already watched (the parent that reports the
- * offending entry going away included) and can try the new list again.
+ * `update`, the watchers that call opened for directories the old list
+ * did not name are closed again and the old rules come back, so the tree
+ * is as the last successful update left it, except that a watcher found
+ * sitting on a dead directory is gone and one reopened on a replaced
+ * directory the old list also named stays. The caller keeps hearing about
+ * the paths it already watched (the parent that reports the offending
+ * entry going away included) and can try the new list again.
  * The other way the tree touches watchers is inside an `fs.watch` callback,
  * where a child entry's event makes it stat and possibly re-attach that
  * child. The same failures are possible there (the parent swapped for a
@@ -321,6 +331,18 @@ export function watchTree(roots: WatchRoot[], onChange: () => void, onError: (er
       return st.isDirectory() ? st.ino : undefined
     } catch (e) {
       if (isEnoent(e)) return undefined
+      throw e
+    }
+  }
+
+  /** Whether a watcher the tree holds still sits on the directory at its
+   *  path. A path with a plain file somewhere along it (ENOTDIR) has no
+   *  directory there any more than a missing one does. */
+  function stillWatchesItsDirectory(dir: string, ino: bigint): boolean {
+    try {
+      return inodeOf(dir) === ino
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === "ENOTDIR") return false
       throw e
     }
   }
@@ -433,18 +455,41 @@ export function watchTree(roots: WatchRoot[], onChange: () => void, onError: (er
         linkToParent(abs)
       }
     }
-    // Attach first: a directory that does not exist links its ancestors
-    // into `rules` on the way, and those must survive the sweep below.
-    // Nothing the old list had is closed until everything the new list
-    // names is open, so a list that cannot be attached in full leaves the
-    // tree exactly as the last successful update left it: the watchers
-    // this call opened are closed again and the old rules come back.
+    // A watched directory hears about every watched directory directly
+    // under it. `linkToParent` covers the ones that are missing when they
+    // are attached; this covers the ones that exist, so a `themes/` that
+    // was there at startup and is later removed or swapped for a plain
+    // file is an event on the deck directory that names it, not one the
+    // name filter drops.
+    for (const dir of [...rules.keys()]) {
+      const parent = dirname(dir)
+      if (parent !== dir && rules.has(parent)) ruleFor(parent).children.add(basename(dir))
+    }
+    // A watcher kept from the last update is kept only while it still
+    // sits on the directory the new list names: one whose directory was
+    // removed or replaced is closed here, subtree included, and attached
+    // afresh below, where a path with nothing to watch hangs off its
+    // parent like any missing directory. Then attach: a directory that
+    // does not exist links its ancestors into `rules` on the way, and
+    // those must survive the sweep below. Nothing the old list had is
+    // closed until everything the new list names is open, so a list that
+    // cannot be attached in full leaves the tree as the last successful
+    // update left it: the watchers this call opened for directories the
+    // old list did not name are closed again and the old rules come back.
+    // A watcher this call reopened on a directory the old list did name
+    // stays, since the old rules want one there and the one they had is
+    // gone.
     const opened: string[] = []
     opening = opened
     try {
+      for (const [dir, entry] of [...watchers]) {
+        if (!rules.has(dir) || !watchers.has(dir)) continue
+        if (!stillWatchesItsDirectory(dir, entry.ino)) detach(dir)
+      }
       for (const dir of [...rules.keys()]) attach(dir)
     } catch (e) {
       for (const dir of opened) {
+        if (previous.has(dir)) continue
         watchers.get(dir)?.watcher.close()
         watchers.delete(dir)
       }
