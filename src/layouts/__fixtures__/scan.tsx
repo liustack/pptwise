@@ -14,9 +14,14 @@
  * registered face is scanned whether or not anyone remembered — and a face
  * added without a test file is scanned too.
  *
- * Fixture content is deliberately generic: the per-face tests beside each
- * layout own that face's own slots, capacity, and step-aside behaviour, and
- * nothing here should try to repeat them.
+ * Two fixture shapes live here. The generic one below feeds every face the
+ * same boundary page, which is all the CJK title scan needs — it looks at
+ * one heading. The other comes from `face-samples.ts`, where the input each
+ * of the 74 deleted per-face tests actually used is registered by face id:
+ * the scans that care what a face draws (export-safe primitives, byte
+ * repeatability, holding its own composition) render that instead, because a
+ * page with an empty `components` array never reaches the branches those
+ * tests were written for.
  */
 
 import type { ReactElement } from "react"
@@ -28,6 +33,8 @@ import { CHAPTER_LAYOUTS } from "../index-chapter"
 import { CONTENT_LAYOUTS } from "../index-content"
 import { ENDING_LAYOUTS } from "../index-ending"
 import type { SvgTemplateProps } from "../types"
+import { LEGACY_FACE_SAMPLES_BY_ID } from "./face-samples"
+import type { FaceSampleInput, FaceSampleOrigin } from "./face-samples"
 import type { PptxIR, Slide } from "@/ir"
 
 type PageLayout = (p: SvgTemplateProps) => ReactElement
@@ -77,16 +84,19 @@ function fixtureSlide(slideType: SlideType): Slide {
   return { type: slideType, heading: SCAN_HEADING, subheading: SCAN_SUBHEADING, components: [] } as Slide
 }
 
-function fixtureIr(themeId: string, slides: Slide[]): PptxIR {
+/** The deck meta the generic fixture carries, for faces that print a byline. */
+const GENERIC_META = {
+  organization: "云觅科技 · 战略与运营部",
+  authors: [{ name: "陈砚清", role: "首席技术官" }],
+  date: "2026 年 7 月",
+}
+
+function fixtureIr(themeId: string, slides: readonly Slide[], meta: PptxIR["meta"]): PptxIR {
   return {
     version: "5",
     filename: "layout-scan.pptx",
     theme: { id: themeId },
-    meta: {
-      organization: "云觅科技 · 战略与运营部",
-      authors: [{ name: "陈砚清", role: "首席技术官" }],
-      date: "2026 年 7 月",
-    },
+    meta,
     assets: { images: {} },
     slides,
   } as unknown as PptxIR
@@ -104,7 +114,7 @@ export function renderScannedLayout(layout: ScannedLayout, themeId: string): str
   const slides = layout.slideType === "content" ? [CHAPTER_ONE, slide] : [slide]
   const index = slides.length - 1
   const tokens = resolveStyle(themeId)
-  const ir = fixtureIr(themeId, slides)
+  const ir = fixtureIr(themeId, slides, GENERIC_META as PptxIR["meta"])
   const ctx = buildCtx(
     tokens,
     ir.assets.images,
@@ -125,5 +135,75 @@ export function renderScannedLayoutRoot(layout: ScannedLayout, themeId: string):
   root: Element
 } {
   const markup = renderScannedLayout(layout, themeId)
+  return { markup, root: parseSvgRoot(markup) }
+}
+
+/**
+ * One registered face plus the sample the content scans render it with.
+ *
+ * `origin` says where that sample came from: `legacy` is the input the
+ * face's own deleted test used, `generic` is the filler above, used by the
+ * faces that never had a test of their own.
+ */
+export interface ScannedFace extends ScannedLayout {
+  readonly origin: FaceSampleOrigin
+  readonly sample: FaceSampleInput
+}
+
+/** The generic sample, in the same shape a registered one has. */
+function genericSample(layout: ScannedLayout): FaceSampleInput {
+  const slide = fixtureSlide(layout.slideType)
+  // A chapter page ahead of the content page so faces that number or name
+  // the current section have a section to find.
+  const slides = layout.slideType === "content" ? [CHAPTER_ONE, slide] : [slide]
+  return {
+    id: layout.id,
+    slideType: layout.slideType,
+    index: slides.length - 1,
+    meta: GENERIC_META as PptxIR["meta"],
+    slides,
+  }
+}
+
+/** Every registered face paired with its sample, registered one preferred. */
+export const SCANNED_FACES: readonly ScannedFace[] = SCANNED_LAYOUTS.map((layout) => {
+  const registered = LEGACY_FACE_SAMPLES_BY_ID.get(layout.id)
+  return registered && registered.slideType === layout.slideType
+    ? { ...layout, origin: "legacy" as const, sample: registered }
+    : { ...layout, origin: "generic" as const, sample: genericSample(layout) }
+})
+
+/**
+ * Renders a face against its own sample, the way that sample's original test
+ * did: the component mounted directly under an `svg` root, a context built
+ * from the named theme and the page type's default background, and no
+ * component list on the context — all 74 deleted tests built theirs that way.
+ */
+export function renderFaceSample(face: ScannedFace, themeId: string): string {
+  const { sample } = face
+  const slide = sample.slides[sample.index]!
+  const tokens = resolveStyle(themeId)
+  const ir = fixtureIr(themeId, sample.slides, sample.meta)
+  const ctx = buildCtx(
+    tokens,
+    {},
+    undefined,
+    resolveBackgroundHex(tokens.defaultBackgrounds[face.slideType], tokens.colors.surface),
+  )
+  // `StyleShape` only declares knobs for the page types that have them, so
+  // read it as a plain record and let the sample say which faces take any.
+  const shape = tokens.shape as Record<string, SvgTemplateProps["params"]> | undefined
+  const params = sample.paramsSource === "theme-shape" ? shape?.[face.slideType] : undefined
+  const { Component } = face
+  return renderSvgMarkup(
+    <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+      <Component ir={ir} slide={slide} index={sample.index} ctx={ctx} params={params} />
+    </svg>,
+  )
+}
+
+/** {@link renderFaceSample} plus the parsed root, for attribute-level scans. */
+export function renderFaceSampleRoot(face: ScannedFace, themeId: string): { markup: string; root: Element } {
+  const markup = renderFaceSample(face, themeId)
   return { markup, root: parseSvgRoot(markup) }
 }

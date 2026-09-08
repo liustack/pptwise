@@ -1,0 +1,134 @@
+// @vitest-environment jsdom
+//
+// One scan for the three properties every face owes on every theme:
+// it emits only export-safe primitives, it renders the same bytes twice,
+// and it draws its own composition instead of stepping aside.
+//
+// These used to be 74 copies of the same `it`, one pasted into each face's
+// own test file — a copy proved nothing the copy next door had not, and a
+// face whose author forgot to paste it was never checked at all. Deleting
+// the copies in favour of a registry walk was right; feeding that walk a
+// generic page was not. A page with `components: []` never reaches the
+// branches those copies rendered, so a mutation inside one of them passed
+// unnoticed while the diff looked like pure deduplication.
+//
+// The fix keeps the single scan and gives it real input: the sample each of
+// the 74 faces was tested with is registered in `__fixtures__/face-samples`,
+// and every face — the 56 that never had a test of their own included — is
+// rendered against all 24 canonical themes. That is 3,120 face x theme
+// combinations, over the 1,776 the deleted copies held between them.
+import { describe, expect, it } from "vitest"
+import { SCANNED_FACES, renderFaceSampleRoot } from "./__fixtures__/scan"
+import { LEGACY_FACE_SAMPLES } from "./__fixtures__/face-samples"
+import { assertSubset } from "../render/subset-validate"
+import { CANONICAL_THEME_IDS } from "../themes"
+import { COVER_LAYOUTS } from "./index-cover"
+import { CHAPTER_LAYOUTS } from "./index-chapter"
+import { CONTENT_LAYOUTS } from "./index-content"
+import { ENDING_LAYOUTS } from "./index-ending"
+
+/**
+ * Faces whose sample is more than the face will take, so it hands the page
+ * to a rendering that can draw it.
+ *
+ * Only the generic sample provokes this, and only here: `quote-stage` wants
+ * a quote and the generic content page carries bullets and prose. Stepping
+ * aside is the correct answer to that page, so it is asserted rather than
+ * tolerated — every other face must hold its own composition.
+ */
+const STEPS_ASIDE = new Set(["quote-stage"])
+
+const ASIDE_MARKER = "data-face-stepped-aside"
+
+describe("every registered face, on every canonical theme", () => {
+  it.each(SCANNED_FACES.map((face) => [`${face.slideType}/${face.id} (${face.origin} sample)`, face] as const))(
+    "%s renders export-safe, repeatable bytes and holds its own composition",
+    (_label, face) => {
+      for (const themeId of CANONICAL_THEME_IDS) {
+        const where = `${face.slideType}/${face.id} @ ${themeId}`
+        const { markup, root } = renderFaceSampleRoot(face, themeId)
+
+        expect(() => assertSubset(root), `${where} emits an unexportable primitive`).not.toThrow()
+
+        // A face that drew nothing would pass the byte comparison below
+        // without testing anything, so hold the scan to a page that painted.
+        expect(markup, `${where} painted nothing`).toContain("<text")
+
+        const second = renderFaceSampleRoot(face, themeId).markup
+        expect(second, `${where} is not byte-identical on repeat`).toBe(markup)
+
+        if (STEPS_ASIDE.has(face.id)) {
+          expect(markup, `${where} was expected to step aside`).toContain(`${ASIDE_MARKER}="${face.id}"`)
+        } else {
+          expect(markup, `${where} stepped aside instead of drawing its own page`).not.toContain(ASIDE_MARKER)
+        }
+      }
+    },
+  )
+})
+
+describe("what the scan covers", () => {
+  // Coverage floor. The 74 deleted copies covered 74 face ids; every one of
+  // them is a key of one of these four registries, so scanning the registries
+  // whole cannot cover less than the copies did. The floors are the family
+  // sizes at the time of this refactor — a face may be added, and a retired
+  // face is removed here deliberately, with the count updated in the same
+  // commit as `registry.count-guard.test.ts`.
+  it("scans every registered face, at least the 130 that were registered when the copies were deleted", () => {
+    expect(Object.keys(COVER_LAYOUTS).length).toBeGreaterThanOrEqual(37)
+    expect(Object.keys(CHAPTER_LAYOUTS).length).toBeGreaterThanOrEqual(36)
+    expect(Object.keys(CONTENT_LAYOUTS).length).toBeGreaterThanOrEqual(23)
+    expect(Object.keys(ENDING_LAYOUTS).length).toBeGreaterThanOrEqual(34)
+    expect(SCANNED_FACES.length).toBeGreaterThanOrEqual(130)
+    expect(new Set(SCANNED_FACES.map((f) => `${f.slideType}/${f.id}`)).size).toBe(SCANNED_FACES.length)
+  })
+
+  it("renders each of the 74 registered samples, not the generic filler", () => {
+    const legacy = SCANNED_FACES.filter((f) => f.origin === "legacy")
+    expect(legacy.length).toBe(LEGACY_FACE_SAMPLES.length)
+    // A sample whose face left the registry would silently stop being
+    // rendered, so match the registration list both ways.
+    expect(new Set(legacy.map((f) => f.id))).toEqual(new Set(LEGACY_FACE_SAMPLES.map((s) => s.id)))
+    for (const face of legacy) {
+      expect(face.sample.slides[face.sample.index]?.type, face.id).toBe(face.slideType)
+    }
+  })
+
+  it("covers at least the 1,776 face x theme combinations the deleted copies held", () => {
+    expect(CANONICAL_THEME_IDS.length).toBe(24)
+    const legacy = SCANNED_FACES.filter((f) => f.origin === "legacy").length
+    expect(legacy * CANONICAL_THEME_IDS.length).toBeGreaterThanOrEqual(1776)
+    expect(SCANNED_FACES.length * CANONICAL_THEME_IDS.length).toBeGreaterThanOrEqual(3120)
+  })
+})
+
+/**
+ * The samples above are only worth registering if a theme can change what a
+ * face draws with them, which is exactly what the two-theme subset sample
+ * used to assume it could not. These six are the counter-examples: brief
+ * sets `emphasis: "pad"` and lecture sets `emphasis: "underline"`, and both
+ * turn an emphasis run into a `path`; brief's cover knobs switch on
+ * `verdict-index`'s foot rule, which is a `line`. Neither primitive appears
+ * on these faces under bulletin or rally, so a scan that stopped at those
+ * two themes never rendered them.
+ */
+describe("a theme can change the primitives a face emits", () => {
+  const NAILS = [
+    { id: "look-range-chapter", tag: "path", themes: ["brief", "lecture"] },
+    { id: "chalk-band-cover", tag: "path", themes: ["brief", "lecture"] },
+    { id: "pledge-open-cover", tag: "path", themes: ["brief", "lecture"] },
+    { id: "ask-ending", tag: "path", themes: ["brief", "lecture"] },
+    { id: "scorecard-ending", tag: "path", themes: ["brief", "lecture"] },
+    { id: "verdict-index", tag: "line", themes: ["brief"] },
+  ] as const
+
+  it.each(NAILS.map((n) => [n.id, n] as const))("%s emits its theme-only primitive", (_id, nail) => {
+    const face = SCANNED_FACES.find((f) => f.id === nail.id)
+    expect(face, `${nail.id} left the registry`).toBeDefined()
+    expect(face!.origin, `${nail.id} lost its registered sample`).toBe("legacy")
+    for (const themeId of nail.themes) {
+      const { root } = renderFaceSampleRoot(face!, themeId)
+      expect(root.querySelectorAll(nail.tag).length, `${nail.id} @ ${themeId} drew no <${nail.tag}>`).toBeGreaterThan(0)
+    }
+  })
+})
