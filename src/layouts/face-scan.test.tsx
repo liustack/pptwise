@@ -51,91 +51,104 @@ const ASIDE_MARKER = "data-face-stepped-aside"
 const SCANNED_COMBINATIONS = new Set<string>()
 const LEGACY_COMBINATIONS = new Set<string>()
 
-describe("every registered face, on every canonical theme", () => {
-  it.each(SCANNED_FACES.map((face) => [`${face.label} (${face.origin} sample)`, face] as const))(
-    "%s renders export-safe, repeatable bytes and holds its own composition",
-    (_label, face) => {
-      for (const themeId of CANONICAL_THEME_IDS) {
-        const where = `${face.label} @ ${themeId}`
-        const { markup, root } = renderFaceSampleRoot(face, themeId)
+/**
+ * The scan and the coverage floors it feeds, in one suite that runs its
+ * children in order.
+ *
+ * The floors below read the two Sets the scan writes, so they are only
+ * meaningful once the scan has finished. `describe.sequential` is what makes
+ * that a dependency the runner honours: under `--sequence.concurrent` every
+ * suite in a file is otherwise scheduled together, and the floors read two
+ * empty Sets before the scan has added anything to them.
+ */
+describe.sequential("the registry scan and what it covers", () => {
+  describe("every registered face, on every canonical theme", () => {
+    it.each(SCANNED_FACES.map((face) => [`${face.label} (${face.origin} sample)`, face] as const))(
+      "%s renders export-safe, repeatable bytes and holds its own composition",
+      (_label, face) => {
+        for (const themeId of CANONICAL_THEME_IDS) {
+          const where = `${face.label} @ ${themeId}`
+          const { markup, root } = renderFaceSampleRoot(face, themeId)
 
-        expect(() => assertSubset(root), `${where} emits an unexportable primitive`).not.toThrow()
+          expect(() => assertSubset(root), `${where} emits an unexportable primitive`).not.toThrow()
 
-        // A face that drew nothing would pass the byte comparison below
-        // without testing anything, so hold the scan to a page that painted.
-        expect(markup, `${where} painted nothing`).toContain("<text")
+          // A face that drew nothing would pass the byte comparison below
+          // without testing anything, so hold the scan to a page that painted.
+          expect(markup, `${where} painted nothing`).toContain("<text")
 
-        const second = renderFaceSampleRoot(face, themeId).markup
-        expect(second, `${where} is not byte-identical on repeat`).toBe(markup)
+          const second = renderFaceSampleRoot(face, themeId).markup
+          expect(second, `${where} is not byte-identical on repeat`).toBe(markup)
 
-        if (STEPS_ASIDE.has(face.id)) {
-          expect(markup, `${where} was expected to step aside`).toContain(`${ASIDE_MARKER}="${face.id}"`)
-        } else {
-          expect(markup, `${where} stepped aside instead of drawing its own page`).not.toContain(ASIDE_MARKER)
-        }
-
-        // Words the sample's own test proved a branch by. `branding: "full"`
-        // is what puts the date and confidentiality line on a cover, and a
-        // sample that lost the posture would still pass every check above.
-        for (const text of face.sample.requiredText ?? []) {
-          expect(root.textContent ?? "", `${where} did not print ${text}`).toContain(text)
-        }
-
-        // A hex from another theme's palette is a legal primitive, stable on
-        // repeat, and drawn by the face itself, so nothing above rejects it.
-        const forbidden = face.sample.forbiddenHex
-        if (forbidden && themeId !== forbidden.ownerTheme) {
-          for (const hex of forbidden.hexes) {
-            expect(markup, `${where} baked ${forbidden.ownerTheme}'s ${hex}`).not.toContain(hex)
+          if (STEPS_ASIDE.has(face.id)) {
+            expect(markup, `${where} was expected to step aside`).toContain(`${ASIDE_MARKER}="${face.id}"`)
+          } else {
+            expect(markup, `${where} stepped aside instead of drawing its own page`).not.toContain(ASIDE_MARKER)
           }
+
+          // Words the sample's own test proved a branch by. `branding: "full"`
+          // is what puts the date and confidentiality line on a cover, and a
+          // sample that lost the posture would still pass every check above.
+          for (const text of face.sample.requiredText ?? []) {
+            expect(root.textContent ?? "", `${where} did not print ${text}`).toContain(text)
+          }
+
+          // A hex from another theme's palette is a legal primitive, stable on
+          // repeat, and drawn by the face itself, so nothing above rejects it.
+          const forbidden = face.sample.forbiddenHex
+          if (forbidden && themeId !== forbidden.ownerTheme) {
+            for (const hex of forbidden.hexes) {
+              expect(markup, `${where} baked ${forbidden.ownerTheme}'s ${hex}`).not.toContain(hex)
+            }
+          }
+
+          SCANNED_COMBINATIONS.add(`${face.id}@${themeId}`)
+          if (face.origin === "legacy") LEGACY_COMBINATIONS.add(`${face.id}@${themeId}`)
         }
+      },
+    )
+  })
 
-        SCANNED_COMBINATIONS.add(`${face.id}@${themeId}`)
-        if (face.origin === "legacy") LEGACY_COMBINATIONS.add(`${face.id}@${themeId}`)
+  describe("what the scan covers", () => {
+    // Coverage floor. The 74 deleted copies covered 74 face ids; every one of
+    // them is a key of one of these four registries, so scanning the registries
+    // whole cannot cover less than the copies did. The floors are the family
+    // sizes at the time of this refactor — a face may be added, and a retired
+    // face is removed here deliberately, with the count updated in the same
+    // commit as `registry.count-guard.test.ts`.
+    it("scans every registered face, at least the 130 that were registered when the copies were deleted", () => {
+      expect(Object.keys(COVER_LAYOUTS).length).toBeGreaterThanOrEqual(37)
+      expect(Object.keys(CHAPTER_LAYOUTS).length).toBeGreaterThanOrEqual(36)
+      expect(Object.keys(CONTENT_LAYOUTS).length).toBeGreaterThanOrEqual(23)
+      expect(Object.keys(ENDING_LAYOUTS).length).toBeGreaterThanOrEqual(34)
+      expect(SCANNED_FACES.length).toBeGreaterThanOrEqual(130)
+      expect(new Set(SCANNED_FACES.map((f) => `${f.slideType}/${f.id}`)).size).toBeGreaterThanOrEqual(130)
+      expect(new Set(SCANNED_FACES.map((f) => f.label)).size).toBe(SCANNED_FACES.length)
+    })
+
+    it("renders every registered sample, not the generic filler", () => {
+      const legacy = SCANNED_FACES.filter((f) => f.origin === "legacy")
+      expect(legacy.length).toBe(LEGACY_FACE_SAMPLES.length)
+      // A sample whose face left the registry would silently stop being
+      // rendered, so match the registration list both ways.
+      expect(new Set(legacy.map((f) => f.id))).toEqual(new Set(LEGACY_FACE_SAMPLES.map((s) => s.id)))
+      // The 74 faces, plus the second input the three faces whose subset sweep
+      // and determinism check rendered different pages were each written with.
+      expect(new Set(legacy.map((f) => f.id)).size).toBe(74)
+      for (const face of legacy) {
+        expect(face.sample.slides[face.sample.index]?.type, face.label).toBe(face.slideType)
       }
-    },
-  )
-})
+      // Two samples for one face are only two samples if they differ by name.
+      expect(new Set(legacy.map((f) => f.label)).size).toBe(legacy.length)
+    })
 
-describe("what the scan covers", () => {
-  // Coverage floor. The 74 deleted copies covered 74 face ids; every one of
-  // them is a key of one of these four registries, so scanning the registries
-  // whole cannot cover less than the copies did. The floors are the family
-  // sizes at the time of this refactor — a face may be added, and a retired
-  // face is removed here deliberately, with the count updated in the same
-  // commit as `registry.count-guard.test.ts`.
-  it("scans every registered face, at least the 130 that were registered when the copies were deleted", () => {
-    expect(Object.keys(COVER_LAYOUTS).length).toBeGreaterThanOrEqual(37)
-    expect(Object.keys(CHAPTER_LAYOUTS).length).toBeGreaterThanOrEqual(36)
-    expect(Object.keys(CONTENT_LAYOUTS).length).toBeGreaterThanOrEqual(23)
-    expect(Object.keys(ENDING_LAYOUTS).length).toBeGreaterThanOrEqual(34)
-    expect(SCANNED_FACES.length).toBeGreaterThanOrEqual(130)
-    expect(new Set(SCANNED_FACES.map((f) => `${f.slideType}/${f.id}`)).size).toBeGreaterThanOrEqual(130)
-    expect(new Set(SCANNED_FACES.map((f) => f.label)).size).toBe(SCANNED_FACES.length)
-  })
-
-  it("renders every registered sample, not the generic filler", () => {
-    const legacy = SCANNED_FACES.filter((f) => f.origin === "legacy")
-    expect(legacy.length).toBe(LEGACY_FACE_SAMPLES.length)
-    // A sample whose face left the registry would silently stop being
-    // rendered, so match the registration list both ways.
-    expect(new Set(legacy.map((f) => f.id))).toEqual(new Set(LEGACY_FACE_SAMPLES.map((s) => s.id)))
-    // The 74 faces, plus the second input the three faces whose subset sweep
-    // and determinism check rendered different pages were each written with.
-    expect(new Set(legacy.map((f) => f.id)).size).toBe(74)
-    for (const face of legacy) {
-      expect(face.sample.slides[face.sample.index]?.type, face.label).toBe(face.slideType)
-    }
-    // Two samples for one face are only two samples if they differ by name.
-    expect(new Set(legacy.map((f) => f.label)).size).toBe(legacy.length)
-  })
-
-  // Runs after the scan above, and counts the combinations that scan finished
-  // asserting on rather than the ones the registration table promises.
-  it("covers at least the 1,776 face x theme combinations the deleted copies held", () => {
-    expect(CANONICAL_THEME_IDS.length).toBe(24)
-    expect(LEGACY_COMBINATIONS.size).toBeGreaterThanOrEqual(1776)
-    expect(SCANNED_COMBINATIONS.size).toBeGreaterThanOrEqual(3120)
+    // Runs after the scan above — the parent suite is sequential — and counts
+    // the combinations that scan finished asserting on rather than the ones the
+    // registration table promises.
+    it("covers at least the 1,776 face x theme combinations the deleted copies held", () => {
+      expect(CANONICAL_THEME_IDS.length).toBe(24)
+      expect(LEGACY_COMBINATIONS.size).toBeGreaterThanOrEqual(1776)
+      expect(SCANNED_COMBINATIONS.size).toBeGreaterThanOrEqual(3120)
+    })
   })
 })
 
