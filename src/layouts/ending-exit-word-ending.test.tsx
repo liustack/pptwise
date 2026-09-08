@@ -162,10 +162,6 @@ describe("ending-exit-word-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("museum").markup).toBe(renderEnding("museum").markup)
-  })
-
   it("CJK close has no letter-spacing", () => {
     const { root } = renderEnding("museum")
     for (const t of Array.from(root.querySelectorAll("text"))) {

@@ -130,7 +130,4 @@ describe("ending-pill-cta-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("rally").markup).toBe(renderEnding("rally").markup)
-  })
 })

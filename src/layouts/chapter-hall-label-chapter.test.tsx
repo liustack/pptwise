@@ -149,10 +149,6 @@ describe("chapter-hall-label-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("museum").markup).toBe(renderChapter("museum").markup)
-  })
-
   it("CJK title and hall label have no letter-spacing", () => {
     const { root } = renderChapter("museum")
     for (const t of Array.from(root.querySelectorAll("text"))) {

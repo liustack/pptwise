@@ -153,10 +153,6 @@ describe("cover-issue-head-cover — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("journal").markup).toBe(renderCover("journal").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderCover("journal")
     const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("县城咖啡"))

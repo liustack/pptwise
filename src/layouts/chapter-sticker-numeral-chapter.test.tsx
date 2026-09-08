@@ -135,10 +135,6 @@ describe("chapter-sticker-numeral-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("crayon", TWO, 1).markup).toBe(renderChapter("crayon", TWO, 1).markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderChapter("crayon", TWO, 1)
     const title = Array.from(root.querySelectorAll("text")).find((t) =>

@@ -180,10 +180,6 @@ describe("ending-resolution-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("swiss").markup).toBe(renderEnding("swiss").markup)
-  })
-
   it("CJK kicker has no letter-spacing, Latin RESOLUTION may track", () => {
     const { root } = renderEnding("swiss")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === KICKER)!

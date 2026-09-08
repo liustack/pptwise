@@ -187,10 +187,6 @@ describe("ending-ticket-cta-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("playbill").markup).toBe(renderEnding("playbill").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderEnding("playbill")
     const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)

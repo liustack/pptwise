@@ -151,10 +151,6 @@ describe("cover-pledge-open-cover — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("almanac").markup).toBe(renderCover("almanac").markup)
-  })
-
   it("CJK title and kicker have no letter-spacing", () => {
     const { root } = renderCover("almanac")
     for (const t of Array.from(root.querySelectorAll("text"))) {

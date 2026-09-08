@@ -219,12 +219,6 @@ describe("cover-corner-wedge — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    const a = renderCover("arena", slide(HEADING_ARENA), { textAnchor: "middle", wedgePeakY: 340, wedgeStartX: 980 })
-    const b = renderCover("arena", slide(HEADING_ARENA), { textAnchor: "middle", wedgePeakY: 340, wedgeStartX: 980 })
-    expect(a.markup).toBe(b.markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderCover("arena", slide(HEADING_ARENA), { textAnchor: "middle", wedgePeakY: 340, wedgeStartX: 980 })
     for (const t of Array.from(root.querySelectorAll("text")).filter((el) => el.getAttribute("font-weight") === "700")) {

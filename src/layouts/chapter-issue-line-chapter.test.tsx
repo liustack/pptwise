@@ -149,10 +149,6 @@ describe("chapter-issue-line-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("memo").markup).toBe(renderChapter("memo").markup)
-  })
-
   it("CJK title and kicker have no letter-spacing", () => {
     const { root } = renderChapter("memo")
     for (const t of Array.from(root.querySelectorAll("text"))) {

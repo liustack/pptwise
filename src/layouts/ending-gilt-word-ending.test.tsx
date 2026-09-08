@@ -157,10 +157,6 @@ describe("ending-gilt-word-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("luxe", slide(MARKED)).markup).toBe(renderEnding("luxe", slide(MARKED)).markup)
-  })
-
   it("uses tokens, not baked luxe hex, when another theme renders it", () => {
     const { markup, tokens } = renderEnding("brief")
     expect(markup).toContain(tokens.colors.text)

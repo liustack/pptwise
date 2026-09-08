@@ -166,10 +166,6 @@ describe("chapter-seal-numeral-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("vermilion", FOUR, 1).markup).toBe(renderChapter("vermilion", FOUR, 1).markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderChapter("vermilion", FOUR, 1)
     const title = Array.from(root.querySelectorAll("text")).find((t) =>

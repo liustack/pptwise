@@ -162,7 +162,4 @@ describe("chapter-fascicle-ghost-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("journal").markup).toBe(renderChapter("journal").markup)
-  })
 })

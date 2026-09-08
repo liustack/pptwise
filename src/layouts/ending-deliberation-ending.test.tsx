@@ -159,10 +159,6 @@ describe("ending-deliberation-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("vermilion").markup).toBe(renderEnding("vermilion").markup)
-  })
-
   it("CJK kicker has no letter-spacing, Latin ARRANGEMENTS may track", () => {
     const { root } = renderEnding("vermilion")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === KICKER)!

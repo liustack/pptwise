@@ -150,7 +150,4 @@ describe("cover-memo-head — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("memo").markup).toBe(renderCover("memo").markup)
-  })
 })

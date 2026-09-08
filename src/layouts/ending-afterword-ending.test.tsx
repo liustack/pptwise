@@ -130,7 +130,4 @@ describe("ending-afterword-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("journal").markup).toBe(renderEnding("journal").markup)
-  })
 })

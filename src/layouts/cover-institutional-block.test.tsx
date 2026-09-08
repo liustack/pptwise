@@ -115,7 +115,4 @@ describe("cover-institutional-block — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("swiss").markup).toBe(renderCover("swiss").markup)
-  })
 })

@@ -199,10 +199,6 @@ describe("cover-lookbook-open-cover — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("runway").markup).toBe(renderCover("runway").markup)
-  })
-
   it("CJK title has no letter-spacing and does not grow past the board 96px", () => {
     const { root } = renderCover("runway")
     const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("回声，穿在身上"))

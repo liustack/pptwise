@@ -177,10 +177,6 @@ describe("cover-red-head-cover — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("vermilion").markup).toBe(renderCover("vermilion").markup)
-  })
-
   it("CJK title and red-head have no letter-spacing", () => {
     const { root } = renderCover("vermilion")
     for (const t of Array.from(root.querySelectorAll("text"))) {

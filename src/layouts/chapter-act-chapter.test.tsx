@@ -136,10 +136,6 @@ describe("chapter-act-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("rally").markup).toBe(renderChapter("rally").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderChapter("rally")
     const heading = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)!

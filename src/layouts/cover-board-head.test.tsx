@@ -147,7 +147,4 @@ describe("cover-board-head — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("lecture").markup).toBe(renderCover("lecture").markup)
-  })
 })

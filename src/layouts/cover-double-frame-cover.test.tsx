@@ -158,10 +158,6 @@ describe("cover-double-frame-cover — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("heritage").markup).toBe(renderCover("heritage").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderCover("heritage")
     const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)!

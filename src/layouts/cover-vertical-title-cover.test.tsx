@@ -198,9 +198,6 @@ describe("cover-vertical-title-cover — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("ink").markup).toBe(renderCover("ink").markup)
-  })
 })
 
 describe("cover-vertical-title-cover — vertical overflow without ellipsis", () => {

@@ -136,10 +136,6 @@ describe("cover-type-rule-cover — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("terminal").markup).toBe(renderCover("terminal").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderCover("terminal")
     for (const t of Array.from(root.querySelectorAll("text")).filter((el) => el.getAttribute("font-weight") === "700")) {

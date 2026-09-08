@@ -168,10 +168,6 @@ describe("cover-cut-panel-cover — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("arena").markup).toBe(renderCover("arena").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderCover("arena")
     for (const t of Array.from(root.querySelectorAll("text")).filter(

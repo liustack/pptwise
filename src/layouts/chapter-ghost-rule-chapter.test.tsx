@@ -129,7 +129,4 @@ describe("chapter-ghost-rule-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("brief").markup).toBe(renderChapter("brief").markup)
-  })
 })

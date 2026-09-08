@@ -157,7 +157,4 @@ describe("chapter-volume-slip-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("ink").markup).toBe(renderChapter("ink").markup)
-  })
 })

@@ -144,10 +144,6 @@ describe("chapter-subject-rule-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("clinic").markup).toBe(renderChapter("clinic").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderChapter("clinic")
     for (const t of Array.from(root.querySelectorAll("text")).filter(

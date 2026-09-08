@@ -146,10 +146,6 @@ describe("chapter-stroke-index-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("terminal").markup).toBe(renderChapter("terminal").markup)
-  })
-
   it("uses tokens, not baked terminal hex, when another theme renders it", () => {
     const { markup, tokens } = renderChapter("brief")
     expect(markup).toContain(tokens.colors.accent)

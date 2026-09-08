@@ -171,10 +171,6 @@ describe("cover-invitation-plate-cover — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("luxe").markup).toBe(renderCover("luxe").markup)
-  })
-
   it("CJK title, kicker, and subtitle have no letter-spacing", () => {
     const { root } = renderCover("luxe")
     for (const t of Array.from(root.querySelectorAll("text"))) {

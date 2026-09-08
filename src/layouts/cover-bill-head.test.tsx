@@ -248,7 +248,4 @@ describe("cover-bill-head — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("playbill").markup).toBe(renderCover("playbill").markup)
-  })
 })

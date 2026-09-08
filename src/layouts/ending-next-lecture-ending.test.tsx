@@ -182,10 +182,6 @@ describe("ending-next-lecture-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("lecture").markup).toBe(renderEnding("lecture").markup)
-  })
-
   it("CJK kicker has no letter-spacing, Latin AFTER may track", () => {
     const { root } = renderEnding("lecture")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "课后")!

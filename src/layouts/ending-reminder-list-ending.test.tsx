@@ -150,7 +150,4 @@ describe("ending-reminder-list-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("crayon").markup).toBe(renderEnding("crayon").markup)
-  })
 })

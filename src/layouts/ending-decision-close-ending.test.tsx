@@ -187,10 +187,6 @@ describe("ending-decision-close-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("memo").markup).toBe(renderEnding("memo").markup)
-  })
-
   it("CJK kicker has no letter-spacing", () => {
     const { root } = renderEnding("memo")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "决定")!

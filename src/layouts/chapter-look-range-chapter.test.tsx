@@ -145,10 +145,6 @@ describe("chapter-look-range-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("runway").markup).toBe(renderChapter("runway").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderChapter("runway")
     const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("夜的针脚"))

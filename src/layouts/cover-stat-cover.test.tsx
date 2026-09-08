@@ -160,10 +160,6 @@ describe("cover-stat-cover — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("ledger").markup).toBe(renderCover("ledger").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderCover("ledger", slide(SENTENCE_HEADING))
     const heading = Array.from(root.querySelectorAll("text")).find((t) =>

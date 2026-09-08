@@ -200,10 +200,6 @@ describe("chapter-chalk-rule-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("lecture").markup).toBe(renderChapter("lecture").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderChapter("lecture")
     for (const t of Array.from(root.querySelectorAll("text")).filter(

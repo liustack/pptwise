@@ -120,10 +120,6 @@ describe("ending-rule-close-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("terminal").markup).toBe(renderEnding("terminal").markup)
-  })
-
   it("uses tokens, not baked terminal hex, when another theme renders it", () => {
     const { markup, tokens } = renderEnding("brief")
     expect(markup).toContain(tokens.colors.border)

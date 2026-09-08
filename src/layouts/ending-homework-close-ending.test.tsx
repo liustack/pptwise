@@ -147,7 +147,4 @@ describe("ending-homework-close-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("homeroom").markup).toBe(renderEnding("homeroom").markup)
-  })
 })

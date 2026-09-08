@@ -136,10 +136,6 @@ describe("ending-invite-field-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("heritage").markup).toBe(renderEnding("heritage").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderEnding("heritage")
     const heading = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)!

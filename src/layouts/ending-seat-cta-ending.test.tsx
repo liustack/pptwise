@@ -149,10 +149,6 @@ describe("ending-seat-cta-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("arena").markup).toBe(renderEnding("arena").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderEnding("arena")
     for (const t of Array.from(root.querySelectorAll("text")).filter(

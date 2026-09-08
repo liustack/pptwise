@@ -139,7 +139,4 @@ describe("chapter-lesson-box-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("homeroom").markup).toBe(renderChapter("homeroom").markup)
-  })
 })

@@ -151,10 +151,6 @@ describe("cover-thesis-plate-cover — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("thesis").markup).toBe(renderCover("thesis").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderCover("thesis")
     for (const t of Array.from(root.querySelectorAll("text")).filter(

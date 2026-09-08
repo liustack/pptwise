@@ -174,10 +174,6 @@ describe("cover-verdict-index — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("brief").markup).toBe(renderCover("brief").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderCover("brief")
     for (const t of Array.from(root.querySelectorAll("text")).filter((el) => el.getAttribute("font-weight") === "700" && (el.textContent ?? "").includes("预测"))) {

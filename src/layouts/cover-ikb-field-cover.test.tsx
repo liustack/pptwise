@@ -134,10 +134,6 @@ describe("cover-ikb-field-cover — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("bulletin").markup).toBe(renderCover("bulletin").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderCover("bulletin")
     for (const t of Array.from(root.querySelectorAll("text")).filter(

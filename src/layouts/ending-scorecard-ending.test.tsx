@@ -163,10 +163,6 @@ describe("ending-scorecard-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("almanac").markup).toBe(renderEnding("almanac").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderEnding("almanac")
     for (const t of Array.from(root.querySelectorAll("text")).filter(

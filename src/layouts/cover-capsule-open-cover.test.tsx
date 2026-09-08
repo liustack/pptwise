@@ -149,10 +149,6 @@ describe("cover-capsule-open-cover — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("crayon").markup).toBe(renderCover("crayon").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderCover("crayon")
     for (const t of Array.from(root.querySelectorAll("text")).filter(

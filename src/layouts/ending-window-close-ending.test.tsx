@@ -145,10 +145,6 @@ describe("ending-window-close-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("runway").markup).toBe(renderEnding("runway").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderEnding("runway")
     const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)

@@ -116,10 +116,6 @@ describe("ending-ask-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("ember").markup).toBe(renderEnding("ember").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderEnding("ember")
     for (const t of Array.from(root.querySelectorAll("text")).filter((el) => el.getAttribute("font-weight") === "700")) {

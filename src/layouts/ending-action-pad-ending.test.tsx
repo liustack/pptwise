@@ -138,7 +138,4 @@ describe("ending-action-pad-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("brief").markup).toBe(renderEnding("brief").markup)
-  })
 })

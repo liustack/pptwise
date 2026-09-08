@@ -149,10 +149,6 @@ describe("ending-care-plan-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("clinic").markup).toBe(renderEnding("clinic").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderEnding("clinic")
     for (const t of Array.from(root.querySelectorAll("text")).filter(

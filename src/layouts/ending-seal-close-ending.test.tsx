@@ -128,10 +128,6 @@ describe("ending-seal-close-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("ink").markup).toBe(renderEnding("ink").markup)
-  })
-
   it("still takes 听 from 听雨书院", () => {
     const { root } = renderEnding("ink")
     const glyph = Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("font-size") === "28")

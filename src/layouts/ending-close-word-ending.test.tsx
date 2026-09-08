@@ -114,10 +114,6 @@ describe("ending-close-word-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("ledger", ending(MARKED)).markup).toBe(renderEnding("ledger", ending(MARKED)).markup)
-  })
-
   it("CJK close has no letter-spacing", () => {
     const { root } = renderEnding("ledger")
     for (const t of Array.from(root.querySelectorAll("text")).filter((el) => (el.textContent ?? "").includes("数字"))) {

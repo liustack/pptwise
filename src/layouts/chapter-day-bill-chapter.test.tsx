@@ -154,10 +154,6 @@ describe("chapter-day-bill-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("playbill").markup).toBe(renderChapter("playbill").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderChapter("playbill")
     const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)

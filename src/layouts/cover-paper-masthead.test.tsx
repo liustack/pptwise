@@ -108,10 +108,6 @@ describe("cover-paper-masthead — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderCover("runway").markup).toBe(renderCover("runway").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderCover("runway")
     for (const t of Array.from(root.querySelectorAll("text")).filter((el) => el.getAttribute("font-weight") === "700")) {

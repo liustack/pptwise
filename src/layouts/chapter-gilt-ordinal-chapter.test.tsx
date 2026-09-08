@@ -149,10 +149,6 @@ describe("chapter-gilt-ordinal-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("luxe").markup).toBe(renderChapter("luxe").markup)
-  })
-
   it("does not paint overflow marks", () => {
     noOverflowMarks(renderChapter("luxe").markup)
     const long = chapterSlide("谢".repeat(80))

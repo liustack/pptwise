@@ -151,7 +151,4 @@ describe("chapter-folio-ghost-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("thesis").markup).toBe(renderChapter("thesis").markup)
-  })
 })

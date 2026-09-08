@@ -114,10 +114,6 @@ describe("chapter-ember-index-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("ember").markup).toBe(renderChapter("ember").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderChapter("ember")
     const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)!

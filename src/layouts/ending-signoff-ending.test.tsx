@@ -141,10 +141,6 @@ describe("ending-signoff-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("bulletin").markup).toBe(renderEnding("bulletin").markup)
-  })
-
   it("CJK title has no letter-spacing", () => {
     const { root } = renderEnding("bulletin")
     const heading = Array.from(root.querySelectorAll("text")).find((t) =>

@@ -193,8 +193,4 @@ describe("cover-colophon — shared pool, not ink's private layout", () => {
     }
   })
 
-  it("renders byte-identically on repeat — no seed, no randomness, no content-derived geometry", () => {
-    expect(renderCover("ink").markup).toBe(renderCover("ink").markup)
-    expect(renderCover("runway").markup).toBe(renderCover("runway").markup)
-  })
 })

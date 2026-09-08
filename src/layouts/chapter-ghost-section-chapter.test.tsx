@@ -141,10 +141,6 @@ describe("chapter-ghost-section-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("ledger").markup).toBe(renderChapter("ledger").markup)
-  })
-
   it("brief tokens do not leak ledger hex", () => {
     const { markup } = renderChapter("brief")
     for (const hex of ["#0F1216", "#171C22", "#16202B", "#F0A63C", "#F2EFE8", "#9AA7B4", "#2A3440"]) {

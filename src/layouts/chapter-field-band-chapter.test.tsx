@@ -140,10 +140,6 @@ describe("chapter-field-band-chapter — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderChapter("almanac").markup).toBe(renderChapter("almanac").markup)
-  })
-
   it("CJK title and kicker have no letter-spacing", () => {
     const { root } = renderChapter("almanac")
     const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "第二部分")

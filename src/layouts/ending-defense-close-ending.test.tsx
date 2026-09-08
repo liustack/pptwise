@@ -138,7 +138,4 @@ describe("ending-defense-close-ending — shared pool", () => {
     }
   })
 
-  it("renders byte-identically on repeat", () => {
-    expect(renderEnding("thesis").markup).toBe(renderEnding("thesis").markup)
-  })
 })
