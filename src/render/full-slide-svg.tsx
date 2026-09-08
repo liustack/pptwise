@@ -17,7 +17,8 @@ import { CONTENT_LAYOUTS } from "../layouts/index-content"
 import { ENDING_LAYOUTS } from "../layouts/index-ending"
 import { MOTIFS } from "../motifs"
 import { treeStepsAside } from "./step-aside"
-import { resolveThemeEmphasis, type ThemeDefinition } from "../themes/definitions"
+import type { ThemeDefinition } from "../themes/definitions"
+import type { EmphasisTreatment } from "../themes/schema"
 import { resolveEffectiveFace } from "./layout-selection"
 import { partitionSvgDepth, type SvgDepthLayers } from "./depth-contract/partition"
 import { enforceMidgroundContract, resolveMidgroundBackground } from "./depth-contract/safety"
@@ -151,6 +152,13 @@ export function resolveOverrideBackgroundHex(
  * so a test that doesn't care about body-text sizing still gets the
  * ambient value a caller with an omitted/default narrative would.
  *
+ * `emphasis`: the bound theme's declared stroke for a `**marked**` run,
+ * taken from the definition the caller holds. `FullSlideSvg` passes
+ * `themeDef.emphasis`. A test that builds a context from style tokens alone
+ * has no definition and passes nothing, which reads as the `"tint"` default
+ * — `layouts/__fixtures__/scan.tsx` binds the real one for the registry
+ * scans that need it.
+ *
  * `chartPaletteOffset` (`./chart-palette.ts`): passed through as its own
  * `ComponentCtx` field so `components/chart.tsx` can rotate
  * `colors.chartPalette` at the chart seam. `colors.chartPalette` itself is
@@ -165,6 +173,7 @@ export function buildCtx(
   defaultBg?: string,
   bodyFontPx?: number,
   chartPaletteOffset?: number,
+  emphasis?: EmphasisTreatment,
 ): ComponentCtx {
   return {
     colors: tokens.colors,
@@ -180,9 +189,7 @@ export function buildCtx(
     bodyFontPx: bodyFontPx ?? PACING_BUDGETS.balanced.bodyBaselinePx,
     chartPaletteOffset,
     themeId: tokens.id,
-    // The bound theme's own emphasis stroke, resolved once here so no
-    // renderer downstream has to reach back into the theme registry.
-    emphasis: resolveThemeEmphasis(tokens.id),
+    emphasis,
   }
 }
 
@@ -292,20 +299,18 @@ export function FullSlideSvg({
   // Theme `chartPalette` declared order is the series order. Offset 0 is
   // the identity rotation (`./chart-palette.ts`).
   const chartPaletteOffset = 0
-  // The emphasis stroke comes from the definition in hand, not from a lookup
-  // by id: a deck or workspace theme file that keeps a built-in id may
-  // declare a different stroke from the factory preset.
-  const ctx: ComponentCtx = {
-    ...buildCtx(
-      tokens,
-      ir.assets.images,
-      ir.meta.animation?.elements === "auto" ? slide.components : undefined,
-      defaultBg,
-      bodyFontPx,
-      chartPaletteOffset,
-    ),
-    emphasis: themeDef.emphasis,
-  }
+  // The emphasis stroke comes from the definition in hand, never from a
+  // lookup by id: a deck or workspace theme file that keeps a built-in id
+  // may declare a different stroke from the factory preset.
+  const ctx: ComponentCtx = buildCtx(
+    tokens,
+    ir.assets.images,
+    ir.meta.animation?.elements === "auto" ? slide.components : undefined,
+    defaultBg,
+    bodyFontPx,
+    chartPaletteOffset,
+    themeDef.emphasis,
+  )
   // This is the only face resolution performed by the renderer. Capacity
   // checks and validation consume the same route record from
   // `layout-selection.ts`, so takeover precedence cannot drift between

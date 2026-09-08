@@ -186,4 +186,35 @@ describe("theme default backgrounds passed by value", () => {
       },
     ])
   })
+
+  /**
+   * Counts every read of the built-in table's `brief` entry for the length
+   * of one call. `getThemeDefinition` and `resolveThemeEmphasis` both reach
+   * the theme through this property, so a count of zero means nothing in
+   * the call resolved a theme by id.
+   */
+  async function builtinReadsDuring(call: () => unknown | Promise<unknown>): Promise<number> {
+    const original = Object.getOwnPropertyDescriptor(THEME_DEFINITIONS, "brief")!
+    let reads = 0
+    Object.defineProperty(THEME_DEFINITIONS, "brief", {
+      configurable: true,
+      enumerable: original.enumerable,
+      get() {
+        reads += 1
+        return original.value
+      },
+    })
+    try {
+      await call()
+    } finally {
+      Object.defineProperty(THEME_DEFINITIONS, "brief", original)
+    }
+    return reads
+  }
+
+  it("renders a page from a supplied definition without reading the built-in table once", async () => {
+    const v = validateIr(raw, { theme: THEME_A })
+    expect(v.ok).toBe(true)
+    expect(await builtinReadsDuring(() => renderSlideSvg(v.ir!, 0, { theme: THEME_A }))).toBe(0)
+  })
 })

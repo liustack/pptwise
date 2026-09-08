@@ -28,6 +28,7 @@ import type { ReactElement } from "react"
 import { buildCtx, resolveBackgroundHex } from "../../render/full-slide-svg"
 import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
 import { resolveStyle } from "../../themes"
+import { resolveThemeEmphasis } from "../../themes/definitions"
 import { COVER_LAYOUTS } from "../index-cover"
 import { CHAPTER_LAYOUTS } from "../index-chapter"
 import { CONTENT_LAYOUTS } from "../index-content"
@@ -128,6 +129,9 @@ export function renderScannedLayout(layout: ScannedLayout, themeId: string): str
     ir.assets.images,
     slide.components,
     resolveBackgroundHex(tokens.defaultBackgrounds[layout.slideType], tokens.colors.surface),
+    undefined,
+    undefined,
+    resolveThemeEmphasis(themeId),
   )
   const { Component } = layout
   return renderSvgMarkup(
@@ -238,6 +242,9 @@ export function renderFaceSample(face: ScannedFace, themeId: string): string {
     {},
     undefined,
     resolveBackgroundHex(tokens.defaultBackgrounds[face.slideType], tokens.colors.surface),
+    undefined,
+    undefined,
+    resolveThemeEmphasis(themeId),
   )
   // `StyleShape` only declares knobs for the page types that have them, so
   // read it as a plain record and let the sample say which faces take any.
