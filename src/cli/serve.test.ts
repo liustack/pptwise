@@ -1248,4 +1248,23 @@ describe("createServeServer — the theme source is compared by content", () => 
     const recovered = await statusWhere(handle, (status) => status.latestOk)
     expect(recovered).toMatchObject({ latestRevision: settled + 2, servedRevision: settled + 2 })
   })
+
+  it("rejects when a watcher cannot be attached, leaving no watcher or timer behind", async () => {
+    // The deck's own theme.json answers the lookup, so the build succeeds.
+    // The watch set still names `<deck>/themes/brief.theme.json`, and
+    // `fs.watch` on `<deck>/themes` — a plain file — throws ENOTDIR after
+    // the deck directory's own watcher is already open.
+    const dir = await makeDir("pptwise-serve-watch-enotdir-")
+    await writeFile(join(dir, THEME_FILENAME), briefWithPrimary("brief", "#0B5FFF"))
+    await writeFile(join(dir, "themes"), "not a directory\n")
+    const irPath = join(dir, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+
+    const count = (kind: string) => process.getActiveResourcesInfo().filter((name) => name === kind).length
+    const watchersBefore = count("FSEventWrap")
+    const timeoutsBefore = count("Timeout")
+    await expect(createServeServer({ target: irPath, port: 0, cwd: dir })).rejects.toThrow(/ENOTDIR/)
+    await pollUntil(async () => (count("FSEventWrap") <= watchersBefore ? true : undefined))
+    expect(count("Timeout")).toBeLessThanOrEqual(timeoutsBefore)
+  })
 })

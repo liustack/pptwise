@@ -268,7 +268,12 @@ interface WatchRule {
  * attaches what is new and closes what is no longer named, keeping every
  * watcher both lists share. `close` closes every watcher the tree ever
  * opened, and a later `update` is a no-op, so a rebuild that finishes after
- * shutdown cannot reopen anything.
+ * shutdown cannot reopen anything. Attaching is one directory at a time,
+ * and a directory that cannot be watched for any reason other than not
+ * existing (a plain file where a directory was expected gives ENOTDIR)
+ * throws; when that happens while the tree is being created, every watcher
+ * opened before it is closed first, so a caller that never receives a
+ * handle has nothing left to close.
  */
 export function watchTree(roots: WatchRoot[], onChange: () => void): WatchTreeHandle {
   let rules = new Map<string, WatchRule>()
@@ -405,16 +410,20 @@ export function watchTree(roots: WatchRoot[], onChange: () => void): WatchTreeHa
     }
   }
 
-  update(roots)
-
-  return {
-    update,
-    close: () => {
-      closed = true
-      for (const entry of watchers.values()) entry.watcher.close()
-      watchers.clear()
-    },
+  function close(): void {
+    closed = true
+    for (const entry of watchers.values()) entry.watcher.close()
+    watchers.clear()
   }
+
+  try {
+    update(roots)
+  } catch (e) {
+    close()
+    throw e
+  }
+
+  return { update, close }
 }
 
 export interface WatchTreeHandle {
@@ -602,10 +611,11 @@ export function themeSourceKey(resolved: ResolvedTheme | undefined): string {
  * then starts listening and watching. Every fs/network resource this
  * function opens (the watchers, the heartbeat and theme-poll timers, the
  * HTTP server) is opened as the last step, after every `await` that could
- * reject, and torn down by the returned {@link ServeHandle.close} and by
- * nothing else: this function has no other side effect a caller would need
- * to separately clean up, which is what makes it safe to call directly from
- * a test without going through the CLI at all.
+ * reject, inside one `try` whose `catch` tears down whatever had been
+ * opened before rethrowing. A caller that gets a handle tears the rest down
+ * through {@link ServeHandle.close}, and a caller that gets an error has
+ * nothing left to clean up, which is what makes this safe to call directly
+ * from a test without going through the CLI at all.
  */
 export async function createServeServer(options: ServeOptions): Promise<ServeHandle> {
   const cwd = options.cwd ?? process.cwd()
@@ -748,6 +758,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     }
     // `watchers` is assigned below, before the server listens. No build
     // runs before that: the initial one is awaited above this function.
+    if (watchers === undefined) throw new Error("pptwise serve: a rebuild ran before the watchers were attached")
     watchers.update(currentWatchRoots())
     buildGeneration++
     building = false
@@ -826,22 +837,27 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   })
 
   // Everything that holds a resource starts here, after the last `await`
-  // that could reject. Nothing above leaves a watcher or a timer behind
-  // when it throws.
-  const watchers = watchTree(currentWatchRoots(), scheduleRebuild)
-  const heartbeat = setInterval(() => writeToAll(": heartbeat\n\n"), HEARTBEAT_MS)
-  const themePoll = setInterval(() => void checkThemeSource(), THEME_POLL_MS)
+  // that could reject, and inside one `try`: whichever step fails, what
+  // the earlier steps opened is torn down before the error leaves. A
+  // watcher set that cannot be attached (`watchTree` throws, having closed
+  // its own partial set) is the first way out, a port in use the last.
+  let watchers: WatchTreeHandle | undefined
+  let heartbeat: NodeJS.Timeout | undefined
+  let themePoll: NodeJS.Timeout | undefined
 
   function teardownWatchersAndTimers(): void {
     closed = true
-    clearInterval(heartbeat)
-    clearInterval(themePoll)
+    if (heartbeat) clearInterval(heartbeat)
+    if (themePoll) clearInterval(themePoll)
     if (debounceTimer) clearTimeout(debounceTimer)
     debounceTimer = undefined
-    watchers.close()
+    watchers?.close()
   }
 
   try {
+    watchers = watchTree(currentWatchRoots(), scheduleRebuild)
+    heartbeat = setInterval(() => writeToAll(": heartbeat\n\n"), HEARTBEAT_MS)
+    themePoll = setInterval(() => void checkThemeSource(), THEME_POLL_MS)
     await new Promise<void>((resolveListen, rejectListen) => {
       const onError = (err: NodeJS.ErrnoException) => {
         server.removeListener("listening", onListening)
