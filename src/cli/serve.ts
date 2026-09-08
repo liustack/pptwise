@@ -279,13 +279,20 @@ interface WatchRule {
  * throws; when that happens while the tree is being created, every watcher
  * opened before it is closed first, so a caller that never receives a
  * handle has nothing left to close. When it happens inside a later
- * `update`, the watchers that call opened for directories the old list
- * did not name are closed again and the old rules come back, so the tree
- * is as the last successful update left it, except that a watcher found
- * sitting on a dead directory is gone and one reopened on a replaced
- * directory the old list also named stays. The caller keeps hearing about
- * the paths it already watched (the parent that reports the offending
- * entry going away included) and can try the new list again.
+ * `update`, the new rules stay, and so does every watcher that update
+ * opened or kept: a watcher found sitting on a dead directory is gone, one
+ * reopened on a replaced directory stays, and the directories after the
+ * failing one in that update are not attached until the next. The caller
+ * keeps hearing about every directory attached so far, the ancestor that
+ * reports the offending entry going away included, and can try the list
+ * again. Every directory between a watched one and `ceilingDir` (the
+ * project root, or the start directory without a project) has a rule of
+ * its own that names the watched directory under it, so that ancestor
+ * exists whether or not the list named it: a `themes/` at the project
+ * root has the root itself watching its name while the deck is served
+ * from two levels down, not only when the deck is the root. Without a
+ * ceiling, an ancestor gets a rule only when the list names it too or a
+ * missing directory hangs off it.
  * The other way the tree touches watchers is inside an `fs.watch` callback,
  * where a child entry's event makes it stat and possibly re-attach that
  * child. The same failures are possible there (the parent swapped for a
@@ -296,12 +303,15 @@ interface WatchRule {
  * caller's next `update` (the rebuild it schedules on that error) is the
  * one place the whole set is put right again.
  */
-export function watchTree(roots: WatchRoot[], onChange: () => void, onError: (error: unknown) => void): WatchTreeHandle {
+export function watchTree(
+  roots: WatchRoot[],
+  onChange: () => void,
+  onError: (error: unknown) => void,
+  options: { ceilingDir?: string } = {},
+): WatchTreeHandle {
   let rules = new Map<string, WatchRule>()
   const watchers = new Map<string, { watcher: FSWatcher; ino: bigint }>()
-  /** While `update` attaches: every directory it registered so far, so a
-   *  failure part way can close exactly those. */
-  let opening: string[] | undefined
+  const ceiling = options.ceilingDir === undefined ? undefined : resolve(options.ceilingDir)
   const isEnoent = (e: unknown) => (e as NodeJS.ErrnoException).code === "ENOENT"
   const isDenied = (e: unknown) => {
     const code = (e as NodeJS.ErrnoException).code
@@ -323,6 +333,28 @@ export function watchTree(roots: WatchRoot[], onChange: () => void, onError: (er
     if (parent === dir) return undefined
     ruleFor(parent).children.add(basename(dir))
     return parent
+  }
+
+  /** Whether `dir` sits strictly inside the ceiling. The ceiling itself
+   *  is the last directory to get a rule; nothing above it is watched. */
+  function insideCeiling(dir: string): boolean {
+    if (ceiling === undefined || dir === ceiling) return false
+    return dir.startsWith(ceiling.endsWith(sep) ? ceiling : ceiling + sep)
+  }
+
+  /** Gives every directory from `dir`'s parent up to the ceiling a rule
+   *  that names the next step down, whether or not the list named any of
+   *  them, so a watched directory's appearance, removal, or replacement is
+   *  reported by whichever ancestor is there to see it. Past the ceiling,
+   *  or with none, the chain continues only through directories the
+   *  rules already know. */
+  function linkAncestors(dir: string): void {
+    for (let child = dir; ; child = dirname(child)) {
+      const parent = dirname(child)
+      if (parent === child) return
+      if (!insideCeiling(child) && !rules.has(parent)) return
+      ruleFor(parent).children.add(basename(child))
+    }
   }
 
   function inodeOf(dir: string): bigint | undefined {
@@ -409,7 +441,6 @@ export function watchTree(roots: WatchRoot[], onChange: () => void, onError: (er
     }
     watcher.on("error", () => detach(dir))
     watchers.set(dir, { watcher, ino })
-    opening?.push(dir)
     for (const child of rule.children) attach(join(dir, child))
   }
 
@@ -444,7 +475,6 @@ export function watchTree(roots: WatchRoot[], onChange: () => void, onError: (er
 
   function update(list: WatchRoot[]): void {
     if (closed) return
-    const previous = rules
     rules = new Map()
     for (const root of list) {
       const abs = resolve(root.path)
@@ -456,52 +486,38 @@ export function watchTree(roots: WatchRoot[], onChange: () => void, onError: (er
       }
     }
     // A watched directory hears about every watched directory directly
-    // under it. `linkToParent` covers the ones that are missing when they
-    // are attached; this covers the ones that exist, so a `themes/` that
-    // was there at startup and is later removed or swapped for a plain
-    // file is an event on the deck directory that names it, not one the
-    // name filter drops.
-    for (const dir of [...rules.keys()]) {
-      const parent = dirname(dir)
-      if (parent !== dir && rules.has(parent)) ruleFor(parent).children.add(basename(dir))
-    }
-    // A watcher kept from the last update is kept only while it still
-    // sits on the directory the new list names: one whose directory was
-    // removed or replaced is closed here, subtree included, and attached
-    // afresh below, where a path with nothing to watch hangs off its
-    // parent like any missing directory. Then attach: a directory that
-    // does not exist links its ancestors into `rules` on the way, and
-    // those must survive the sweep below. Nothing the old list had is
-    // closed until everything the new list names is open, so a list that
-    // cannot be attached in full leaves the tree as the last successful
-    // update left it: the watchers this call opened for directories the
-    // old list did not name are closed again and the old rules come back.
-    // A watcher this call reopened on a directory the old list did name
-    // stays, since the old rules want one there and the one they had is
-    // gone.
-    const opened: string[] = []
-    opening = opened
+    // under it, and so does every ancestor up to the ceiling, whether the
+    // list named it or not: a `themes/` that was there at startup and is
+    // later removed or swapped for a plain file is an event on its parent
+    // that names it, not one the name filter drops, and that parent has a
+    // watcher whether it is the deck directory, the project root two
+    // levels above the deck, or something in between.
+    for (const dir of [...rules.keys()]) linkAncestors(dir)
+    // Every watcher held is checked against what now sits at its path:
+    // one whose directory was removed or replaced is closed here, subtree
+    // included, and attached afresh below, where a path with nothing to
+    // watch hangs off its parent like any missing directory. Then attach:
+    // a directory that does not exist links its ancestors into `rules` on
+    // the way, and those survive the sweep at the end. A list that cannot
+    // be attached in full leaves the new rules in place with every watcher
+    // attaching got to, and throws: nothing opened is closed again, since
+    // the ancestors that report the offending entry going away are among
+    // them, and the sweep in `finally` closes what neither the new rules
+    // nor the attaching so far wanted. So after any update, whether it
+    // threw or not, every open watcher has a rule, and the tree listens by
+    // the newest list as far as it could be attached.
     try {
       for (const [dir, entry] of [...watchers]) {
-        if (!rules.has(dir) || !watchers.has(dir)) continue
+        if (!watchers.has(dir)) continue
         if (!stillWatchesItsDirectory(dir, entry.ino)) detach(dir)
       }
       for (const dir of [...rules.keys()]) attach(dir)
-    } catch (e) {
-      for (const dir of opened) {
-        if (previous.has(dir)) continue
-        watchers.get(dir)?.watcher.close()
+    } finally {
+      for (const [dir, entry] of watchers) {
+        if (rules.has(dir)) continue
+        entry.watcher.close()
         watchers.delete(dir)
       }
-      rules = previous
-      throw e
-    } finally {
-      opening = undefined
-    }
-    for (const [dir, entry] of watchers) {
-      if (rules.has(dir)) continue
-      entry.watcher.close()
-      watchers.delete(dir)
     }
   }
 
@@ -795,10 +811,10 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
    * page, and so does a build that rendered but could not re-attach its
    * watchers, since the page it rendered is still the newest good one), the
    * generation moves, and `building` clears. A watcher update that throws
-   * (a plain file named `themes` inside the deck gives ENOTDIR) leaves the
-   * tree as it was ({@link watchTree}), so the parent directory that
-   * reports the offending file going away is still heard, and the build it
-   * triggers attaches the new set.
+   * (a plain file named `themes` at the project root gives ENOTDIR) leaves
+   * the tree attached as far as it got ({@link watchTree}), so the parent
+   * directory that reports the offending file going away is still heard,
+   * and the build it triggers attaches the rest.
    */
   async function buildOnce(): Promise<void> {
     const revision = ++latestRevision
@@ -952,7 +968,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   }
 
   try {
-    watchers = watchTree(currentWatchRoots(), scheduleRebuild, onWatchError)
+    watchers = watchTree(currentWatchRoots(), scheduleRebuild, onWatchError, { ceilingDir: watchCeiling })
     heartbeat = setInterval(() => writeToAll(": heartbeat\n\n"), HEARTBEAT_MS)
     themePoll = setInterval(() => void checkThemeSource(), THEME_POLL_MS)
     await new Promise<void>((resolveListen, rejectListen) => {
