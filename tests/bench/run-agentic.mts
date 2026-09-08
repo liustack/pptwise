@@ -1291,13 +1291,20 @@ async function placeRun(workspace: string, resultDir: string, finalText: () => s
 /** The question's existing `meta.json`, parsed loosely: `undefined` when
  *  there is none (the question has not run), an object otherwise. A file
  *  that is not JSON still means "has run" — it is a harness-written file,
- *  and resume never overwrites one it cannot read. */
+ *  and resume never overwrites one it cannot parse. Only ENOENT means "not
+ *  run": a meta that is there but cannot be read (EACCES, EISDIR, an I/O
+ *  error) throws with the path and errno, because treating it as absent
+ *  would send the question back through the tool loop and bill the model
+ *  for a run whose record exists (codex review R26). */
 function readExistingMeta(resultDir: string): Record<string, unknown> | undefined {
+  const path = join(resultDir, META_FILENAME)
   let text: string
   try {
-    text = readFileSync(join(resultDir, META_FILENAME), "utf8")
-  } catch {
-    return undefined
+    text = readFileSync(path, "utf8")
+  } catch (e) {
+    const code = (e as NodeJS.ErrnoException).code
+    if (code === "ENOENT") return undefined
+    throw new Error(`cannot read ${path} (${code ?? "unknown errno"}) — resume cannot tell whether this question has run; fix the file and resume again`, { cause: e })
   }
   try {
     const parsed = JSON.parse(text) as unknown

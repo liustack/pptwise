@@ -489,7 +489,11 @@ apart from the model's numbers (see "Scoring" above).
 
 **Resume.** The harness skips any question whose `meta.json` already exists, so a failed question
 is not silently re-run and re-billed when a batch is restarted, delete its result directory to
-redo it. The one exception is a `placement` failure: the model's run finished and its
+redo it. Only a missing `meta.json` (ENOENT) counts as "not run": one that is there but cannot be
+read (a permission error, say) stops the batch with the path and errno rather than re-running the
+question, since the record exists and re-running would bill the model again (codex review R26).
+A `meta.json` that reads but is not JSON still counts as run and is skipped. The one exception to
+skipping is a `placement` failure: the model's run finished and its
 `workspace/` is intact, only the harness's own step after it threw, so on resume the harness
 retries placement from that workspace without calling the model. The placement failure may have
 copied part of the artifact before it threw (`deck.json` without its theme, say), and a plain
