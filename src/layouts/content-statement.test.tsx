@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { accessibleInk } from "../render/ink"
 import { StatementContent, layoutDef } from "./content-statement"
 import type { PptxIR, Slide } from "@/ir"
@@ -53,7 +52,7 @@ describe("layoutDef", () => {
 
 describe("StatementContent", () => {
   it("CJK verse: centered italic heading, weight 500, colors.text, no accent bar", () => {
-    const ctx = buildCtx(resolveStyle("crayon"), {})
+    const ctx = boundThemeCtx("crayon", {})
     const { markup, root } = render(
       <StatementContent ir={ir("crayon", [zeroSlide])} slide={zeroSlide} index={0} ctx={ctx} />,
     )
@@ -71,7 +70,7 @@ describe("StatementContent", () => {
   })
 
   it("English verse renders on brief without a crash", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = { ...zeroSlide, heading: EN_VERSE } as Slide
     const { markup, root } = render(
       <StatementContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
@@ -81,7 +80,7 @@ describe("StatementContent", () => {
   })
 
   it("mixed long heading shrinks/wraps to at most 4 lines and never dumps the raw source verbatim", () => {
-    const ctx = buildCtx(resolveStyle("crayon"), {})
+    const ctx = boundThemeCtx("crayon", {})
     const extreme = `${CJK_LONG}${CJK_LONG}${MIXED_LONG}`
     const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: extreme, components: [] } as Slide
     const { markup, root } = render(
@@ -100,7 +99,7 @@ describe("StatementContent", () => {
     // The quote used to be named "unused body" here and asserted absent: a
     // blockquote carries two authored texts and this face set one, putting a
     // speaker's name on a page that never showed what they said.
-    const ctx = buildCtx(resolveStyle("crayon"), {})
+    const ctx = boundThemeCtx("crayon", {})
     const slide: Slide = {
       ...zeroSlide,
       components: [
@@ -128,7 +127,7 @@ describe("StatementContent", () => {
   })
 
   it("empty subheading and 0 components: no empty text node, heading still renders", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const { root } = render(
       <StatementContent ir={ir("brief", [zeroSlide])} slide={zeroSlide} index={0} ctx={ctx} />,
     )
@@ -138,7 +137,7 @@ describe("StatementContent", () => {
   })
 
   it("brief tokens: no luxe baked hex leaks", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const out = renderSvgMarkup(
       <StatementContent ir={ir("brief", [zeroSlide])} slide={zeroSlide} index={0} ctx={ctx} />,
     )

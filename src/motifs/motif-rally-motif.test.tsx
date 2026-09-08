@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx } from "../render/full-slide-svg"
@@ -49,7 +50,7 @@ function render(body: React.ReactElement | null): { markup: string; root: Elemen
 }
 
 function draw(theme: string, slide: Slide, filename?: string) {
-  const ctx = buildCtx(resolveStyle(theme), {})
+  const ctx = boundThemeCtx(theme, {})
   return render(<RallyMotif ir={ir(theme, filename)} slide={slide} ctx={ctx} />)
 }
 

@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { QuietFrameContent } from "./content-quiet-frame"
 import type { Slide, PptxIR } from "@/ir"
 
@@ -46,7 +45,7 @@ function ir(slides: Slide[]): PptxIR {
 }
 
 function render(deck: PptxIR, slide: Slide, index: number): string {
-  const ctx = buildCtx(resolveStyle(deck.theme.id), deck.assets.images)
+  const ctx = boundThemeCtx(deck.theme.id, deck.assets.images)
   return renderSvgMarkup(<QuietFrameContent ir={deck} slide={slide} index={index} ctx={ctx} />)
 }
 

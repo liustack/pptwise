@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
-import { buildCtx } from "../render/full-slide-svg"
-import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
+import { CANONICAL_THEME_IDS } from "../themes"
 import { THEME_DEFINITIONS } from "../themes/definitions"
 import { fitHeadingLines } from "../render/heading-fit"
 import { SplitDiagonalCover } from "./cover-split-diagonal"
@@ -26,14 +26,14 @@ const ir = (theme: string): PptxIR =>
 
 describe("SplitDiagonalCover", () => {
   it("thesis tokens 下：标题存在、色块用 ctx.colors.primary", () => {
-    const ctx = buildCtx(resolveStyle("thesis"), {})
+    const ctx = boundThemeCtx("thesis", {})
     const out = renderSvgMarkup(<SplitDiagonalCover ir={ir("thesis")} slide={slide} index={0} ctx={ctx} />)
     expect(out).toContain("对角分割封面")
     expect(out).toContain(ctx.colors.primary) // #006A4E
   })
 
   it("terminal tokens 下：色块颜色随 tokens 变化（证明零烤色）", () => {
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
     const out = renderSvgMarkup(<SplitDiagonalCover ir={ir("terminal")} slide={slide} index={0} ctx={ctx} />)
     expect(out).toContain("#14294A") // terminal primary
     expect(out).not.toContain("#006A4E") // thesis primary 不得残留
@@ -57,7 +57,7 @@ describe("SplitDiagonalCover", () => {
     const RUN = "Brandxxxxxxxxxxxxxxx"
     const literalPin = `${RUN}：让工程团队将大模型推理性能提升`
     const literalSlide: Slide = { type: "cover", heading: literalPin, components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("thesis"), {})
+    const ctx = boundThemeCtx("thesis", {})
     const out = renderSvgMarkup(
       <SplitDiagonalCover ir={ir("thesis")} slide={literalSlide} index={0} ctx={ctx} />,
     )
@@ -95,7 +95,7 @@ describe("SplitDiagonalCover", () => {
     const RUN = "Brandxxxxxxxxxx"
     const heading15 = `${RUN}：让工程团队将大模型推理性能提升`
     const slide15: Slide = { type: "cover", heading: heading15, components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("thesis"), {})
+    const ctx = boundThemeCtx("thesis", {})
     const out = renderSvgMarkup(
       <SplitDiagonalCover ir={ir("thesis")} slide={slide15} index={0} ctx={ctx} />,
     )
@@ -130,7 +130,7 @@ describe("SplitDiagonalCover", () => {
     const RUN = "Brandxxxxxxxxxxxxxxxxxxx"
     const heading24 = `${RUN}：让工程团队将大模型推理性能提升`
     const slide24: Slide = { type: "cover", heading: heading24, components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("thesis"), {})
+    const ctx = boundThemeCtx("thesis", {})
     const out = renderSvgMarkup(
       <SplitDiagonalCover ir={ir("thesis")} slide={slide24} index={0} ctx={ctx} />,
     )
@@ -160,7 +160,7 @@ describe("SplitDiagonalCover", () => {
     const RUN = "OpenAPIGateway"
     const fusedHeading = "统一接入层OpenAPIGateway让跨团队协作效率显著提升"
     const fusedSlide: Slide = { type: "cover", heading: fusedHeading, components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("thesis"), {})
+    const ctx = boundThemeCtx("thesis", {})
     const out = renderSvgMarkup(
       <SplitDiagonalCover ir={ir("thesis")} slide={fusedSlide} index={0} ctx={ctx} />,
     )

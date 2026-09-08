@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
 import { assertSubset } from "../../render/subset-validate"
-import { buildCtx } from "../../render/full-slide-svg"
-import { resolveStyle } from "../../themes"
 import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
 import { PullQuoteContent } from "../content-pull-quote"
@@ -34,7 +33,7 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 }
 
 describe("heritage sparse faces", () => {
-  const ctx = buildCtx(resolveStyle("heritage"), {})
+  const ctx = boundThemeCtx("heritage", {})
 
   it("pull-quote sits between burgundy double rules with a caramel underline", () => {
     const slide: Slide = {

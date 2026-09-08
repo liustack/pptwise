@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { BoundSlideSvg } from "../render/__fixtures__/bound-slide"
 import { render } from "@testing-library/react"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
-import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
+import { resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
 import { accessibleInk, contrastRatio, metaInk, requiredContrastRatio } from "../render/ink"
 import { measureTextUnits } from "../lib/svg-text-layout"
@@ -20,8 +21,8 @@ function chapterCtx(themeId: string) {
   const tokens = resolveStyle(themeId)
   return {
     tokens,
-    ctx: buildCtx(
-      tokens,
+    ctx: boundThemeCtx(
+      themeId,
       {},
       undefined,
       resolveBackgroundHex(tokens.defaultBackgrounds.chapter, tokens.colors.surface),

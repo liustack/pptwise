@@ -1,12 +1,11 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest"
+import { boundThemeCtx } from "./__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { SvgContent } from "./svg-content"
 import type { ComponentCtx } from "../components/types"
 import type { Component } from "@/ir"
 import { measureTextUnits } from "../lib/svg-text-layout"
-import { buildCtx } from "./full-slide-svg"
-import { resolveStyle } from "../themes"
 
 const ctx: ComponentCtx = {
   colors: {
@@ -50,7 +49,7 @@ describe("big_number variant", () => {
   })
 
   it("renders the hero value and unit in one text-derived ink", () => {
-    const themeCtx = buildCtx(resolveStyle("brief"), {})
+    const themeCtx = boundThemeCtx("brief", {})
     const { container } = renderBig(components, themeCtx)
     const hero = Array.from(container.querySelectorAll("text")).find((text) =>
       (text.textContent ?? "").includes("82"),

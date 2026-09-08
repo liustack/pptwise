@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { StatHeroContent, layoutDef } from "./content-stat-hero"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -44,7 +43,7 @@ describe("layoutDef", () => {
 
 describe("StatHeroContent", () => {
   it("kpi value is the giant number, its own label is the caption, source is kpi.source", () => {
-    const ctx = buildCtx(resolveStyle("crayon"), {})
+    const ctx = boundThemeCtx("crayon", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -75,7 +74,7 @@ describe("StatHeroContent", () => {
   })
 
   it("heading is the hero when there is no kpi", () => {
-    const ctx = buildCtx(resolveStyle("crayon"), {})
+    const ctx = boundThemeCtx("crayon", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -99,7 +98,7 @@ describe("StatHeroContent", () => {
   })
 
   it("English short stat renders on brief without a crash", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = { type: "content", kind: "points", layout: "stat-hero", heading: EN_STAT, components: [] } as Slide
     const { markup, root } = render(
       <StatHeroContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
@@ -109,7 +108,7 @@ describe("StatHeroContent", () => {
   })
 
   it("mixed long heading shrinks/wraps to at most 2 lines and never dumps the raw source verbatim", () => {
-    const ctx = buildCtx(resolveStyle("crayon"), {})
+    const ctx = boundThemeCtx("crayon", {})
     const extreme = `${CJK_LONG}${CJK_LONG}${MIXED_LONG}`
     const slide: Slide = { type: "content", kind: "points", layout: "stat-hero", heading: extreme, components: [] } as Slide
     const { markup, root } = render(
@@ -125,7 +124,7 @@ describe("StatHeroContent", () => {
   })
 
   it("empty meta fields degrade: no empty text node, hero still renders", () => {
-    const ctx = buildCtx(resolveStyle("thesis"), {})
+    const ctx = boundThemeCtx("thesis", {})
     const slide: Slide = { type: "content", kind: "points", layout: "stat-hero", heading: CJK_STAT, components: [] } as Slide
     const { root } = render(
       <StatHeroContent ir={ir("thesis", [slide])} slide={slide} index={0} ctx={ctx} />,
@@ -136,7 +135,7 @@ describe("StatHeroContent", () => {
   })
 
   it("brief tokens: no luxe baked hex leaks", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = { type: "content", kind: "points", layout: "stat-hero", heading: EN_STAT, components: [] } as Slide
     const out = renderSvgMarkup(
       <StatHeroContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
@@ -146,7 +145,7 @@ describe("StatHeroContent", () => {
   })
 
   it("steps aside when the page carries more than one metric, and draws them all", () => {
-    const ctx = buildCtx(resolveStyle("crayon"), {})
+    const ctx = boundThemeCtx("crayon", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -179,7 +178,7 @@ describe("StatHeroContent", () => {
   })
 
   it("a single metric keeps the hero construction", () => {
-    const ctx = buildCtx(resolveStyle("crayon"), {})
+    const ctx = boundThemeCtx("crayon", {})
     const slide: Slide = {
       type: "content",
       kind: "points",

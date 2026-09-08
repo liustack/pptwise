@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
 import { assertSubset } from "../../render/subset-validate"
-import { buildCtx } from "../../render/full-slide-svg"
-import { resolveStyle } from "../../themes"
 import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
 import { MonoBleedContent } from "../content-mono-bleed"
@@ -46,8 +45,8 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 }
 
 describe("playbill sparse faces", () => {
-  const ctx = buildCtx(resolveStyle("playbill"), {})
-  const shotCtx = buildCtx(resolveStyle("playbill"), SHOTS)
+  const ctx = boundThemeCtx("playbill", {})
+  const shotCtx = boundThemeCtx("playbill", SHOTS)
 
   it("statement is three-line heavy type with an accent run and a closer bar", () => {
     const chapter: Slide = { type: "chapter", heading: "工作区订阅 · 开演", components: [] } as Slide

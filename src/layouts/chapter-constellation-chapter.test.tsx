@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
@@ -51,7 +52,7 @@ const CHAPTER_TECH_2_MARKUP =
 
 describe("ConstellationChapter", () => {
   it("terminal tokens 下与旧 BentoTechChapter 输出逐字节一致（档位一，含章节序号）", () => {
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
     const deck = ir("terminal")
 
     const next1 = renderSvgMarkup(
@@ -78,7 +79,7 @@ describe("ConstellationChapter", () => {
   })
 
   it("renders markup that passes assertSubset (no forbidden elements)", () => {
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
     const deck = ir("terminal")
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
@@ -99,7 +100,7 @@ describe("ConstellationChapter", () => {
     } as Slide
     // Single-chapter deck so chapterNumberFor derives "01" unambiguously.
     const soloDeck: PptxIR = { ...ir("terminal"), slides: [slide] }
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <ConstellationChapter ir={soloDeck} slide={slide} index={0} ctx={ctx} />
@@ -118,7 +119,7 @@ describe("ConstellationChapter", () => {
   it("shrinks a pathologically long heading instead of overflowing", () => {
     const slide: Slide = { type: "chapter", heading: CJK_LONG, components: [] } as Slide
     const deck: PptxIR = { ...ir("terminal"), slides: [slide] }
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
         <ConstellationChapter ir={deck} slide={slide} index={0} ctx={ctx} />

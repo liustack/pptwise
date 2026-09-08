@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { PullQuoteContent, layoutDef } from "./content-pull-quote"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -44,7 +43,7 @@ describe("layoutDef", () => {
 
 describe("PullQuoteContent", () => {
   it("sets the authored quote as the page, with the heading demoted to a context line", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const chapter: Slide = { type: "chapter", heading: "第六章 · 羽毛下的智识", components: [] } as Slide
     const slide: Slide = {
       type: "content",
@@ -78,7 +77,7 @@ describe("PullQuoteContent", () => {
   })
 
   it("takes the attribution from the component and never from the subheading", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = {
       type: "content",
       kind: "quote",
@@ -99,7 +98,7 @@ describe("PullQuoteContent", () => {
   })
 
   it("a paragraph stays the prose slot and the heading is the quote when no blockquote exists", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = {
       type: "content",
       kind: "quote",
@@ -121,7 +120,7 @@ describe("PullQuoteContent", () => {
   })
 
   it("kicker uppercases a Latin section name from the preceding chapter", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const chapter: Slide = { type: "chapter", heading: "Mind", components: [] } as Slide
     const slide: Slide = {
       type: "content",
@@ -137,7 +136,7 @@ describe("PullQuoteContent", () => {
   })
 
   it("empty meta fields degrade: no kicker, no context, no attribution, quote remains", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = { type: "content", kind: "quote", layout: "pull-quote", heading: CJK_QUOTE, components: [] } as Slide
     const { root } = render(
       <PullQuoteContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,
@@ -148,7 +147,7 @@ describe("PullQuoteContent", () => {
   })
 
   it("a quote far past the page's measure wraps to at most 4 italic lines", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = {
       type: "content",
       kind: "quote",
@@ -167,7 +166,7 @@ describe("PullQuoteContent", () => {
   })
 
   it("a forty-character CJK quote still reads at full size, not shrunk to the floor", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const long = "群众不关心事项归哪个部门，只关心这件事今天能不能办成。窗口的全部改革，都是围绕这句话做的。"
     const slide: Slide = {
       type: "content",

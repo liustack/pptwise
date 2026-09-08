@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { kpi, rowValueFontSize, splitKpiValueWidths } from "./kpi"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import type { ComponentCtx } from "./types"
-import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
-import { buildCtx } from "../render/full-slide-svg"
+import { CANONICAL_THEME_IDS } from "../themes"
 import { accessibleInk } from "../render/ink"
 
 const ctx: ComponentCtx = {
@@ -217,7 +217,7 @@ describe("kpi semantic color tokens", () => {
     // silently rendering neutral ink, and any drift needs a deliberate
     // re-capture of the `migrate-equivalence` goldens (they cover kpi_cards).
     for (const id of CANONICAL_THEME_IDS) {
-      const themeCtx = buildCtx(resolveStyle(id), {})
+      const themeCtx = boundThemeCtx(id, {})
       const { success, danger, muted, surface } = themeCtx.colors
       expect(success, `${id} declares no success color`).toBeTruthy()
       expect(danger, `${id} declares no danger color`).toBeTruthy()
@@ -251,7 +251,7 @@ describe("kpi card stroke (Task 5d)", () => {
 
   it("regression lock: only bulletin/runway's real tokens set cardStroke — the other canonical themes stay stroke-free", () => {
     for (const id of CANONICAL_THEME_IDS) {
-      const themeCtx = buildCtx(resolveStyle(id), {})
+      const themeCtx = boundThemeCtx(id, {})
       const { container } = svg(kpi.render(component, { x: 0, y: 0, w: 1120 }, themeCtx))
       const rect = container.querySelector("rect")!
       if (id === "bulletin" || id === "runway") {

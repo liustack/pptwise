@@ -1,17 +1,12 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle } from "../themes"
 import { LuxeMotif } from "./motif-luxe-motif"
-import {
-  CONTENT_DECOR_CONTRAST_CEILING,
-  countDecorPieces,
-  leafOpacity,
-  leafPaint,
-  paintedLeaves,
-} from "./decor-budget"
+import { CONTENT_DECOR_CONTRAST_CEILING, countDecorPieces, leafOpacity, leafPaint, paintedLeaves } from "./decor-budget"
 import { blendOver, contrastRatio } from "../render/ink"
 import { textInkBox } from "../render/depth-contract/geometry"
 import type { PptxIR, Slide } from "@/ir"
@@ -197,7 +192,7 @@ describe("LuxeMotif（请柬金框）", () => {
   })
 
   it("装饰位置写死：换 filename 输出逐字节不变", () => {
-    const ctx = buildCtx(resolveStyle("luxe"), {})
+    const ctx = boundThemeCtx("luxe", {})
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>
         renderSvgMarkup(

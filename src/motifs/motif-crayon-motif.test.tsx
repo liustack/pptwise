@@ -1,19 +1,13 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx } from "../render/full-slide-svg"
 import { blendOver, contrastRatio } from "../render/ink"
 import { resolveStyle } from "../themes"
 import { CrayonMotif, CONTENT_STICKER_COUNT, COVER_SUN } from "./motif-crayon-motif"
-import {
-  CONTENT_DECOR_CONTRAST_CEILING,
-  countDecorPieces,
-  countSlantedTiles,
-  leafOpacity,
-  leafPaint,
-  paintedLeaves,
-} from "./decor-budget"
+import { CONTENT_DECOR_CONTRAST_CEILING, countDecorPieces, countSlantedTiles, leafOpacity, leafPaint, paintedLeaves } from "./decor-budget"
 import type { Component, PptxIR, Slide } from "@/ir"
 
 const para = (text: string): Component => ({ type: "paragraph", text }) as Component
@@ -55,7 +49,7 @@ function render(body: React.ReactElement | null): { markup: string; root: Elemen
 }
 
 function draw(theme: string, slide: Slide, filename?: string) {
-  const ctx = buildCtx(resolveStyle(theme), {})
+  const ctx = boundThemeCtx(theme, {})
   return { ...render(<CrayonMotif ir={ir(theme, filename)} slide={slide} ctx={ctx} />), ctx }
 }
 

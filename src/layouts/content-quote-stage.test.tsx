@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { QuoteStageContent, layoutDef } from "./content-quote-stage"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -60,7 +59,7 @@ describe("layoutDef", () => {
 
 describe("QuoteStageContent", () => {
   it("0 components: renders the heading as a centered, oversized main visual with no crash", () => {
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const { markup, root } = render(
       <QuoteStageContent ir={ir("ledger", [zeroComponentSlide])} slide={zeroComponentSlide} index={0} ctx={ctx} />,
     )
@@ -76,7 +75,7 @@ describe("QuoteStageContent", () => {
   })
 
   it("1 component: renders as a small centered attribution annotation below the heading, not a full-width body", () => {
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const { markup, root } = render(
       <QuoteStageContent ir={ir("ledger", [oneComponentSlide])} slide={oneComponentSlide} index={0} ctx={ctx} />,
     )
@@ -88,7 +87,7 @@ describe("QuoteStageContent", () => {
   })
 
   it("accent hairline is the only primary-filled element; heading uses colors.text, never accent, unwrapped (no accessibleInk needed)", () => {
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const { root } = render(
       <QuoteStageContent ir={ir("ledger", [zeroComponentSlide])} slide={zeroComponentSlide} index={0} ctx={ctx} />,
     )
@@ -103,7 +102,7 @@ describe("QuoteStageContent", () => {
   })
 
   it("subheading renders as a small muted annotation (never accent, never emphasis tspans)", () => {
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const slide: Slide = { ...zeroComponentSlide, subheading: "**强调** 的附注" } as Slide
     const { root } = render(<QuoteStageContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />)
     const sub = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("附注"))!
@@ -118,7 +117,7 @@ describe("QuoteStageContent", () => {
   })
 
   it("footnote renders as a small italic muted caption, independent of the body annotation slot", () => {
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const slide: Slide = { ...oneComponentSlide, footnote: "数据来源：内部审计" } as Slide
     const { root } = render(<QuoteStageContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />)
     const footnote = Array.from(root.querySelectorAll("text")).find((t) =>
@@ -129,7 +128,7 @@ describe("QuoteStageContent", () => {
   })
 
   it("no kicker/section-label text is rendered even when preceded by a chapter — quote-stage is deliberately uninterrupted", () => {
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const chapter: Slide = { type: "chapter", heading: "第一章", components: [] } as Slide
     const { root } = render(
       <QuoteStageContent
@@ -146,7 +145,7 @@ describe("QuoteStageContent", () => {
 
   describe("pathological long-quote content (CJK_LONG / MIXED_LONG)", () => {
     it("a single CJK_LONG heading shrinks/wraps via fitHeadingLines but does not truncate (well within budget)", () => {
-      const ctx = buildCtx(resolveStyle("ledger"), {})
+      const ctx = boundThemeCtx("ledger", {})
       const slide: Slide = { type: "content", kind: "points", layout: "quote-stage", heading: CJK_LONG, components: [] } as Slide
       const { markup, root } = render(<QuoteStageContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />)
       expect(() => assertSubset(root)).not.toThrow()
@@ -163,7 +162,7 @@ describe("QuoteStageContent", () => {
     })
 
     it("a pathologically long heading (2x CJK_LONG + MIXED_LONG) still renders without throwing, shrinks to minPt, wraps to at most maxLines, and never dumps the raw source string verbatim", () => {
-      const ctx = buildCtx(resolveStyle("ledger"), {})
+      const ctx = boundThemeCtx("ledger", {})
       const extreme = `${CJK_LONG}${CJK_LONG}${MIXED_LONG}`
       const slide: Slide = { type: "content", kind: "points", layout: "quote-stage", heading: extreme, components: [] } as Slide
       const { markup, root } = render(<QuoteStageContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />)
@@ -188,7 +187,7 @@ describe("QuoteStageContent", () => {
     })
 
     it("0-component + 1-component variants both stay within the SVG page bounds for extreme content (body rect never runs past y=720)", () => {
-      const ctx = buildCtx(resolveStyle("ledger"), {})
+      const ctx = boundThemeCtx("ledger", {})
       const extreme = `${CJK_LONG}${CJK_LONG}${MIXED_LONG}`
       for (const components of [[], [{ type: "paragraph", text: MIXED_LONG }]] as Slide["components"][]) {
         const slide: Slide = { type: "content", kind: "points", layout: "quote-stage", heading: extreme, subheading: MIXED_LONG, components } as Slide
@@ -235,7 +234,7 @@ describe("QuoteStageContent", () => {
   })
 
   it("CJK two-line heading does not overlap itself, and the annotation sits below last ink with air", () => {
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -260,7 +259,7 @@ describe("QuoteStageContent", () => {
   })
 
   it("English three-line heading shrinks or wraps so the last line clears the annotation", () => {
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -281,7 +280,7 @@ describe("QuoteStageContent", () => {
   })
 
   it("brief tokens: no creative/ledger baked hex leaks (token discipline)", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const out = renderSvgMarkup(
       <QuoteStageContent ir={ir("brief", [zeroComponentSlide])} slide={zeroComponentSlide} index={0} ctx={ctx} />,
     )

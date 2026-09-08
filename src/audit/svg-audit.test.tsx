@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderToStaticMarkup } from "react-dom/server"
 import { code } from "../components/code"
 import { resolveFontStack } from "../render/fonts"
 import type { ComponentCtx } from "../components/types"
 import { auditSvgMarkup } from "./svg-audit"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { renderSvgMarkup } from "../render/serialize"
 import { FashionMastheadCover } from "../layouts/cover-fashion-masthead"
 import type { PptxIR, Slide } from "@/ir"
@@ -300,7 +299,7 @@ describe("auditSvgMarkup — bold-weight alignment with the real exporter (bold-
   // could never disagree (a tautology); after this fix, they use the same
   // bold-aware formula on real bold text and must still agree.
   it("real renderer + real auditor agree: the fixed heading's own chosen fontSize is judged fitting for the same box it was sized against", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = { type: "cover", heading: "Structure Components Demo", components: [] } as Slide
     const ir: PptxIR = {
       version: "3",

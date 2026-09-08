@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
 import { assertSubset } from "../../render/subset-validate"
-import { buildCtx } from "../../render/full-slide-svg"
-import { resolveStyle } from "../../themes"
 import { __pathBoundingBox } from "../../audit/deck-audit"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { StatementContent } from "../content-statement"
@@ -37,7 +36,7 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 }
 
 describe("terminal sparse faces", () => {
-  const ctx = buildCtx(resolveStyle("terminal"), {})
+  const ctx = boundThemeCtx("terminal", {})
 
   it("stat-hero is a cyan numeral with a four-dot star chain, none of the constellation", () => {
     const slide: Slide = {

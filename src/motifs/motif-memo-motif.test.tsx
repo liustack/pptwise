@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx } from "../render/full-slide-svg"
@@ -43,7 +44,7 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 }
 
 function draw(theme: string, slide: Slide) {
-  const ctx = buildCtx(resolveStyle(theme), {})
+  const ctx = boundThemeCtx(theme, {})
   return { ...render(<MemoMotif ir={ir(theme)} slide={slide} ctx={ctx} />), ctx }
 }
 
@@ -179,7 +180,7 @@ describe("MemoMotif（打字机眉行）", () => {
   })
 
   it("装饰位置写死：换 filename 输出逐字节不变", () => {
-    const ctx = buildCtx(resolveStyle("memo"), {})
+    const ctx = boundThemeCtx("memo", {})
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>
         renderSvgMarkup(
@@ -200,8 +201,8 @@ describe("MemoMotif（打字机眉行）", () => {
 describe("memo vs heritage vs vermilion（字族用法分家）", () => {
   it("三家顶缘双线不是同一张几何：memo 3px@y26，heritage 退役双线，vermilion 金线 2px@y22", () => {
     const memo = parts(draw("memo", contentSlide).root)
-    const heritageCtx = buildCtx(resolveStyle("heritage"), {})
-    const vermilionCtx = buildCtx(resolveStyle("vermilion"), {})
+    const heritageCtx = boundThemeCtx("heritage", {})
+    const vermilionCtx = boundThemeCtx("vermilion", {})
     const heritageRoot = render(<HeritageMotif ir={ir("heritage")} slide={coverSlide} ctx={heritageCtx} />).root
     const vermilionRoot = render(<VermilionMotif ir={ir("vermilion")} slide={contentSlide} ctx={vermilionCtx} />).root
     const vermilionThick = Array.from(vermilionRoot.querySelectorAll("line")).find((l) => l.getAttribute("stroke-width") === "2")!
@@ -216,13 +217,13 @@ describe("memo vs heritage vs vermilion（字族用法分家）", () => {
 
   it("只有 memo 在顶缘写下 MEMORANDUM，heritage motif 四页空，vermilion chapter 整页退让", () => {
     expect(parts(draw("memo", contentSlide).root).eyebrow).toBeTruthy()
-    const heritageCtx = buildCtx(resolveStyle("heritage"), {})
+    const heritageCtx = boundThemeCtx("heritage", {})
     const heritageRoot = render(<HeritageMotif ir={ir("heritage")} slide={coverSlide} ctx={heritageCtx} />).root
     expect(heritageRoot.querySelector("text")).toBeNull()
     expect(heritageRoot.querySelector("rect")).toBeNull()
 
     const vermilionChapter = render(
-      <VermilionMotif ir={ir("vermilion")} slide={chapterSlide} ctx={buildCtx(resolveStyle("vermilion"), {})} />,
+      <VermilionMotif ir={ir("vermilion")} slide={chapterSlide} ctx={boundThemeCtx("vermilion", {})} />,
     ).root
     expect(vermilionChapter.querySelector("line")).toBeNull()
     expect(parts(draw("memo", chapterSlide).root).thickRule).toBeTruthy()

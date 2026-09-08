@@ -1,18 +1,17 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { assertSubset } from "../render/subset-validate"
 import { parseSvgRoot } from "../render/serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { fishbone } from "./fishbone"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { FORM_BODY_FLOOR } from "./legibility"
 import type { ComponentCtx } from "./types"
 
 function themed(id: string): ComponentCtx {
-  return buildCtx(resolveStyle(id), {})
+  return boundThemeCtx(id, {})
 }
 
 function svg(node: React.ReactElement) {

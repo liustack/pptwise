@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx } from "../render/full-slide-svg"
@@ -46,7 +47,7 @@ describe("PosterChapter", () => {
     // big-number spacing」一案——PosterChapter 与旧 EditorialDarkChapter 是
     // 同一份构图逻辑做 token 替换，几何值不变，这里固化为字面量而非与已删除
     // 的旧模板逐字节比较。
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const deck = ir("ledger")
 
     const { root: root1 } = render(<PosterChapter ir={deck} slide={chapter1} index={0} ctx={ctx} />)
@@ -88,7 +89,7 @@ describe("PosterChapter", () => {
       assets: { images: {} },
       slides: [longSlide],
     } as unknown as PptxIR
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const { root } = render(<PosterChapter ir={deck} slide={longSlide} index={0} ctx={ctx} />)
     expect(() => assertSubset(root)).not.toThrow()
 

@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
-import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
+import { CANONICAL_THEME_IDS } from "../themes"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { FashionMastheadCover } from "./cover-fashion-masthead"
 import { FashionChapter } from "./chapter-fashion-chapter"
@@ -39,7 +39,7 @@ function ir(slides: Slide[]): PptxIR {
   } as PptxIR
 }
 
-const ctx = buildCtx(resolveStyle("runway"), {})
+const ctx = boundThemeCtx("runway", {})
 
 describe("fashion 家族（runway）", () => {
   it("cover：满版 primary 色块 + readableOn 白字报头 + accent 色带", () => {
@@ -78,7 +78,7 @@ describe("fashion 家族（runway）", () => {
     expect(markup).toMatch(/fill-opacity="1"[^>]*>时尚编辑部</)
 
     // 达标的一家保留 0.85——thesis 的 accent 上，深墨 @0.85 混完 5.28:1。
-    const academicCtx = buildCtx(resolveStyle("thesis"), {})
+    const academicCtx = boundThemeCtx("thesis", {})
     const academicMarkup = renderSvgMarkup(
       <FashionChapter ir={deck} slide={chapter} index={0} ctx={academicCtx} />,
     )
@@ -109,7 +109,7 @@ describe("fashion 家族（runway）", () => {
     // ember：白字混到 #BC4620 上，org @0.72 只有 3.44:1、meta @0.6 只有
     // 2.84:1，两处都退回全不透明
     const emberMarkup = renderSvgMarkup(
-      <FashionEnding ir={deck} slide={ending} index={0} ctx={buildCtx(resolveStyle("ember"), {})} />,
+      <FashionEnding ir={deck} slide={ending} index={0} ctx={boundThemeCtx("ember", {})} />,
     )
     expect(emberMarkup).toMatch(/fill-opacity="1"[^>]*letter-spacing="8"[^>]*>时尚编辑部</)
     expect(emberMarkup).toMatch(/fill-opacity="1"[^>]*letter-spacing="3"[^>]*>时尚编辑部</)
@@ -118,7 +118,7 @@ describe("fashion 家族（runway）", () => {
     // 达标、19px 的 meta @0.6 混完只有 3.75:1 不达标——两处必须各判各的，
     // 一处失守不该把另一处也一起顶满。
     const terraMarkup = renderSvgMarkup(
-      <FashionEnding ir={deck} slide={ending} index={0} ctx={buildCtx(resolveStyle("almanac"), {})} />,
+      <FashionEnding ir={deck} slide={ending} index={0} ctx={boundThemeCtx("almanac", {})} />,
     )
     expect(terraMarkup).toMatch(/fill-opacity="0\.72"[^>]*letter-spacing="8"[^>]*>时尚编辑部</)
     expect(terraMarkup).toMatch(/fill-opacity="1"[^>]*letter-spacing="3"[^>]*>时尚编辑部</)
@@ -135,7 +135,7 @@ describe("fashion 家族（runway）", () => {
     const shortDeck = ir([ending])
     for (const themeId of CANONICAL_THEME_IDS) {
       const markup = renderSvgMarkup(
-        <FashionEnding ir={shortDeck} slide={ending} index={0} ctx={buildCtx(resolveStyle(themeId), {})} />,
+        <FashionEnding ir={shortDeck} slide={ending} index={0} ctx={boundThemeCtx(themeId, {})} />,
       )
       expect(markup, themeId).toMatch(/font-size="28"[^>]*fill-opacity="0\.72"[^>]*letter-spacing="4"/)
     }
@@ -162,7 +162,7 @@ describe("fashion 家族（runway）", () => {
     const longDeck = ir([endingLongSub])
     for (const themeId of CANONICAL_THEME_IDS) {
       const markup = renderSvgMarkup(
-        <FashionEnding ir={longDeck} slide={endingLongSub} index={0} ctx={buildCtx(resolveStyle(themeId), {})} />,
+        <FashionEnding ir={longDeck} slide={endingLongSub} index={0} ctx={boundThemeCtx(themeId, {})} />,
       )
       const expected = FLIPPED.includes(themeId) ? 'fill-opacity="1"' : 'fill-opacity="0.72"'
       expect(markup, themeId).toMatch(

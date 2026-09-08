@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { iconCards } from "./icon-cards"
 import { FORM_BODY_FLOOR } from "./legibility"
-import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
-import { buildCtx } from "../render/full-slide-svg"
+import { CANONICAL_THEME_IDS } from "../themes"
 import { PPTX_ICON_NAMES } from "@/icons/catalog"
 import type { ComponentCtx } from "./types"
 
@@ -41,7 +41,7 @@ const six = {
 const BOX = { x: 80, y: 100, w: 1088 }
 
 function themeCtx(id: string): ComponentCtx {
-  return buildCtx(resolveStyle(id), {})
+  return boundThemeCtx(id, {})
 }
 
 function isInsideScaledIcon(el: Element): boolean {

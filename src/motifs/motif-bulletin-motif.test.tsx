@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx } from "../render/full-slide-svg"
@@ -34,7 +35,7 @@ function render(body: React.ReactElement | null): { markup: string; root: Elemen
 }
 
 function draw(theme: string, slide: Slide) {
-  const ctx = buildCtx(resolveStyle(theme), {})
+  const ctx = boundThemeCtx(theme, {})
   return { ...render(<BulletinMotif ir={ir(theme)} slide={slide} ctx={ctx} />), ctx }
 }
 
@@ -185,7 +186,7 @@ describe("BulletinMotif（方块秩序 v3）", () => {
   })
 
   it("装饰位置写死：换 filename 输出逐字节不变", () => {
-    const ctx = buildCtx(resolveStyle("bulletin"), {})
+    const ctx = boundThemeCtx("bulletin", {})
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>
         renderSvgMarkup(

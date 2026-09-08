@@ -1,10 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { SvgContent } from "../render/svg-content"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { CANONICAL_THEME_IDS } from "../themes"
 import { assignedThemeIds } from "../render/heading-treatments/assignments"
 import { auditDeck } from "../audit/deck-audit"
@@ -53,7 +52,7 @@ function ir(slides: Slide[]): PptxIR {
 }
 
 function render(deck: PptxIR, slide: Slide, index = 0): { markup: string; root: Element } {
-  const ctx = buildCtx(resolveStyle(deck.theme.id), deck.assets.images)
+  const ctx = boundThemeCtx(deck.theme.id, deck.assets.images)
   const markup = renderSvgMarkup(
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
       <SplitBandContent ir={deck} slide={slide} index={index} ctx={ctx} />
@@ -250,7 +249,7 @@ describe("SplitBandContent lower-band capacity (the ratio the measurement chose)
 
     it(`${pacing} pacing (n=${n} components, bodyFontPx=${budget.bodyBaselinePx}): zero data-dropped, no footnote (h=400)`, () => {
       const slide: Slide = { type: "content", kind: "points", heading: "容量压测", components: contentFor(n) } as Slide
-      const ctx = buildCtx(resolveStyle("brief"), {}, undefined, undefined, budget.bodyBaselinePx)
+      const ctx = boundThemeCtx("brief", {}, undefined, undefined, budget.bodyBaselinePx)
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
           <SplitBandContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />
@@ -269,7 +268,7 @@ describe("SplitBandContent lower-band capacity (the ratio the measurement chose)
         footnote: "来源：内部数据",
         components: contentFor(n),
       } as Slide
-      const ctx = buildCtx(resolveStyle("brief"), {}, undefined, undefined, budget.bodyBaselinePx)
+      const ctx = boundThemeCtx("brief", {}, undefined, undefined, budget.bodyBaselinePx)
       const markup = renderSvgMarkup(
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
           <SplitBandContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />
@@ -307,7 +306,7 @@ describe("SplitBandContent candidate-ratio comparison (why 70/30, not 60/40 or 5
 
   function dropCountAt(pacing: "dense" | "balanced", h: number): number {
     const budget = PACING_BUDGETS[pacing]
-    const ctx = buildCtx(resolveStyle("brief"), {}, undefined, undefined, budget.bodyBaselinePx)
+    const ctx = boundThemeCtx("brief", {}, undefined, undefined, budget.bodyBaselinePx)
     const markup = renderSvgMarkup(
       SvgContent({ components: moderateComponents(4), rect: { x: 96, y: 250, w: 1088, h }, ctx }),
     )

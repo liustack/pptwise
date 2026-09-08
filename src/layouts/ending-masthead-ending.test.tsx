@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { MastheadEnding } from "./ending-masthead-ending"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -46,7 +45,7 @@ const MAGAZINE_EXPECTED_BARE =
 
 describe("MastheadEnding", () => {
   it("magazine tokens 下与固化的基准 markup 逐字节一致（档位一，有 heading，不兜底副题，档案来自旧 EditorialSerifEnding）", () => {
-    const ctx = buildCtx(resolveStyle("journal"), {})
+    const ctx = boundThemeCtx("journal", {})
     const deck = ir("journal", endingWithHeading)
 
     const next = renderSvgMarkup(<MastheadEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />)
@@ -56,7 +55,7 @@ describe("MastheadEnding", () => {
   })
 
   it("magazine tokens 下无 heading 时与固化的基准 markup 逐字节一致（档位一，双重兜底）", () => {
-    const ctx = buildCtx(resolveStyle("journal"), {})
+    const ctx = boundThemeCtx("journal", {})
     const deck = ir("journal", endingBare)
 
     const next = renderSvgMarkup(<MastheadEnding ir={deck} slide={endingBare} index={0} ctx={ctx} />)
@@ -74,7 +73,7 @@ describe("MastheadEnding", () => {
   it("底部 meta 行给 motif 的页脚装饰让开 >=12px（em 框顶不早于 645）", () => {
     /** 与本版式配对的 motif 里，页脚装饰的最低墨点（heritage 的中点金菱）。 */
     const FOOTER_ORNAMENT_INK_BOTTOM = 633.07
-    const ctx = buildCtx(resolveStyle("journal"), {})
+    const ctx = boundThemeCtx("journal", {})
     const deck = ir("journal", endingWithHeading)
     const root = parseSvgRoot(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${renderSvgMarkup(
@@ -93,7 +92,7 @@ describe("MastheadEnding", () => {
   })
 
   it("brief tokens 下用 brief 的色（证明 token 化成立，无 baked hex）", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const deck = ir("brief", endingWithHeading)
     const out = renderSvgMarkup(<MastheadEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />)
     expect(out).toContain("#1C1E23") // brief text
@@ -103,7 +102,7 @@ describe("MastheadEnding", () => {
   })
 
   it("passes assertSubset (no forbidden elements)", () => {
-    const ctx = buildCtx(resolveStyle("journal"), {})
+    const ctx = boundThemeCtx("journal", {})
     const deck = ir("journal", endingWithHeading)
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
@@ -116,7 +115,7 @@ describe("MastheadEnding", () => {
   })
 
   it("falls back to 「Thank You」/「We appreciate your time.」 when heading/subheading are absent, with italic centered fallback subheading", () => {
-    const ctx = buildCtx(resolveStyle("journal"), {})
+    const ctx = boundThemeCtx("journal", {})
     const slide: Slide = { type: "ending", heading: "", components: [] } as Slide
     const deck = ir("journal", slide)
     const markup = renderSvgMarkup(
@@ -135,7 +134,7 @@ describe("MastheadEnding", () => {
   })
 
   it("renders an explicit subheading instead of the default when provided (heading present)", () => {
-    const ctx = buildCtx(resolveStyle("journal"), {})
+    const ctx = boundThemeCtx("journal", {})
     const slide: Slide = { type: "ending", heading: "致谢", subheading: "感谢聆听与支持", components: [] } as Slide
     const deck = ir("journal", slide)
     const markup = renderSvgMarkup(
@@ -149,7 +148,7 @@ describe("MastheadEnding", () => {
 
   describe("two-line title reflow (S3b addendum, 2026-07-07 — regression lock for six-theme consistency)", () => {
     it("last-line-anchored (pre-existing design, unchanged by this task): a 2-line heading's last line lands at the same y (340) as the 1-line case, so the subheading/meta below is byte-identical regardless of line count", () => {
-      const ctx = buildCtx(resolveStyle("journal"), {})
+      const ctx = boundThemeCtx("journal", {})
       // "从今天开始用声明式管理你的整个" (15 CJK chars) is the shortest input
       // that forces wrapping here (maxWidth=1088/fontSize=76 -> ~14.3
       // units/line) while staying at the *nominal* 76px (not shrunk).

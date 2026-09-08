@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx } from "../render/full-slide-svg"
@@ -59,7 +60,7 @@ describe("PosterCenterCover", () => {
     expect(out).not.toContain("#666670") // META_MUTED 并入 muted 后不得残留
   })
   it("brief tokens 下用 brief 的 primary 色（token 化成立）", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const out = renderSvgMarkup(<PosterCenterCover ir={ir("brief")} slide={slide} index={0} ctx={ctx} />)
     expect(out).toContain("#1E2A4A") // brief primary
     expect(out).not.toContain("#16202B") // ledger primary 不得残留

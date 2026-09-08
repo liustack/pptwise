@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { assertSubset } from "../render/subset-validate"
 import { RailEnding } from "./ending-rail-ending"
 import type { PptxIR, Slide } from "@/ir"
@@ -46,7 +45,7 @@ const ir = (theme: string, slide: Slide): PptxIR =>
 // 新裁决要断言的属性：派生色随背景变，不是钉死不变。
 describe("RailEnding", () => {
   it("thesis tokens 下渲染角块 + 联系区块 + B 层版权行（data-contrast-tier=meta），heading 存在时不兜底", () => {
-    const ctx = buildCtx(resolveStyle("thesis"), {})
+    const ctx = boundThemeCtx("thesis", {})
     const deck = ir("thesis", endingWithHeading)
     const out = renderSvgMarkup(
       <RailEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
@@ -86,7 +85,7 @@ describe("RailEnding", () => {
   })
 
   it("terminal tokens 下用 terminal 的 primary/accent/text/muted/border，thesis 烤色不残留，版权行随主题派生（不再跨主题固定同一 hex）", () => {
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
     const deck = ir("terminal", endingWithHeading)
     const out = renderSvgMarkup(
       <RailEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
@@ -125,7 +124,7 @@ describe("RailEnding", () => {
   // 假象。两个主题的 colors.muted 相对各自真实渲染背景（`ctx.defaultBg`，
   // ending 页 defaultBackgrounds）都远超 B 层 3:1 门槛，metaInk 原样保留。
   it("ledger tokens（深底）下版权行随主题派生，实测远超 B 层门槛", () => {
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const deck = ir("ledger", endingWithHeading)
     const out = renderSvgMarkup(
       <RailEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
@@ -148,7 +147,7 @@ describe("RailEnding", () => {
   })
 
   it("luxe tokens（深底）下版权行随主题派生，实测远超 B 层门槛", () => {
-    const ctx = buildCtx(resolveStyle("luxe"), {})
+    const ctx = boundThemeCtx("luxe", {})
     const deck = ir("luxe", endingWithHeading)
     const out = renderSvgMarkup(
       <RailEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
@@ -170,7 +169,7 @@ describe("RailEnding", () => {
   })
 
   it("thesis tokens 下无 heading 时标题兜底为“Thank you”，副标题没有独立兜底文案（不渲染任何斜体副标题元素）", () => {
-    const ctx = buildCtx(resolveStyle("thesis"), {})
+    const ctx = boundThemeCtx("thesis", {})
     const deck = ir("thesis", endingBare)
     const out = renderSvgMarkup(<RailEnding ir={deck} slide={endingBare} index={0} ctx={ctx} />)
 
@@ -186,7 +185,7 @@ describe("RailEnding", () => {
   // 无 subheading"这一常见组合下，副标题槽位不渲染任何元素，且不影响标题
   // 正常渲染。
   it("heading 存在但 subheading 缺省：标题正常渲染，副标题槽位不渲染任何元素", () => {
-    const ctx = buildCtx(resolveStyle("thesis"), {})
+    const ctx = boundThemeCtx("thesis", {})
     const slide: Slide = { type: "ending", heading: "衷心感谢", components: [] } as Slide
     const deck = ir("thesis", slide)
     const out = renderSvgMarkup(<RailEnding ir={deck} slide={slide} index={0} ctx={ctx} />)
@@ -197,7 +196,7 @@ describe("RailEnding", () => {
   })
 
   it("标题过长时收缩字号、不整段输出原文，Ending body 通过 subset validation（迁移自 thesis.test.tsx）", () => {
-    const ctx = buildCtx(resolveStyle("thesis"), {})
+    const ctx = boundThemeCtx("thesis", {})
     const slide: Slide = { type: "ending", heading: CJK_LONG, subheading: CJK_LONG, components: [] } as Slide
     const deck = ir("thesis", slide)
     const markup = renderSvgMarkup(<RailEnding ir={deck} slide={slide} index={0} ctx={ctx} />)
@@ -210,7 +209,7 @@ describe("RailEnding", () => {
 
   describe("两行标题重排（S3b addendum，迁移自 thesis.test.tsx 的 'Ending: two-line title reflow' 分支）", () => {
     it("1 行标题：headingY=356，hairline y1=476（S3b 修复前的基线值，未触发重排逻辑）", () => {
-      const ctx = buildCtx(resolveStyle("thesis"), {})
+      const ctx = boundThemeCtx("thesis", {})
       const slide: Slide = { type: "ending", heading: "谢谢", components: [] } as Slide
       const deck = ir("thesis", slide)
       const markup = renderSvgMarkup(<RailEnding ir={deck} slide={slide} index={0} ctx={ctx} />)
@@ -224,7 +223,7 @@ describe("RailEnding", () => {
     })
 
     it("2 行标题最坏情形（“从今天开始用声”，nominal 120px 字号下恰好换行的最大 lineHeight）：首行上移封顶 88px，hairline 间距收紧到 100，末行/所有文字 y 均不越过页面底部", () => {
-      const ctx = buildCtx(resolveStyle("thesis"), {})
+      const ctx = boundThemeCtx("thesis", {})
       const slide: Slide = { type: "ending", heading: "从今天开始用声", components: [] } as Slide
       const deck = ir("thesis", slide)
       const markup = renderSvgMarkup(<RailEnding ir={deck} slide={slide} index={0} ctx={ctx} />)

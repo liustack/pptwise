@@ -31,10 +31,9 @@
 // classes (informally observed ~4 before this wave, using the old,
 // first-box-only reading).
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import type { PptxIR, Slide } from "@/ir"
 import { CONTENT_LAYOUTS, type ContentLayoutId } from "../layouts/index-content"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { parseSvgRoot, renderSvgMarkup } from "../render/serialize"
 
 /**
@@ -124,7 +123,7 @@ function skeletonFor(id: ContentLayoutId): readonly RegionTuple[] {
   const Component = CONTENT_LAYOUTS[id]
   const ir = fixedIr()
   const slide = ir.slides[0]
-  const ctx = buildCtx(resolveStyle(ir.theme.id), ir.assets.images)
+  const ctx = boundThemeCtx(ir.theme.id, ir.assets.images)
   const markup = renderSvgMarkup(
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
       <Component ir={ir} slide={slide} index={0} ctx={ctx} />

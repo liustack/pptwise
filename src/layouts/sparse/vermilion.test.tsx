@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
 import { assertSubset } from "../../render/subset-validate"
-import { buildCtx } from "../../render/full-slide-svg"
-import { resolveStyle } from "../../themes"
 import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
 import { OneEvidenceContent } from "../content-one-evidence"
@@ -34,7 +33,7 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 }
 
 describe("vermilion sparse faces", () => {
-  const ctx = buildCtx(resolveStyle("vermilion"), {})
+  const ctx = boundThemeCtx("vermilion", {})
 
   it("statement is a centered red line between gold doubles, with org · date at the end", () => {
     const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide

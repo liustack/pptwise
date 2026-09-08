@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { donutArcPath, progressDonuts } from "./progress-donuts"
@@ -8,14 +9,13 @@ import { validateIr } from "@/api"
 import { PptwiseError } from "../errors"
 import type { Component } from "@/ir"
 import type { ComponentCtx } from "./types"
-import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
-import { buildCtx } from "../render/full-slide-svg"
+import { CANONICAL_THEME_IDS } from "../themes"
 import { accessibleInk } from "../render/ink"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 
 function themeCtx(id: string): ComponentCtx {
-  return buildCtx(resolveStyle(id), {})
+  return boundThemeCtx(id, {})
 }
 
 function svg(node: React.ReactElement) {

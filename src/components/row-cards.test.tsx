@@ -1,12 +1,11 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup } from "../render/serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { rowCards } from "./row-cards"
 import type { ComponentCtx } from "./types"
 import { layoutContentFit } from "../render/layout"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { renderSlideSvg } from "../api"
 import { installNodePlatform } from "../platform/node"
 import { COMPONENT_BUILDERS } from "../../evals/gallery/corpus/components"
@@ -185,7 +184,7 @@ describe("row_cards title-to-source air", () => {
 })
 
 describe("row_cards EN gallery trio is not silently dropped (r2 A6)", () => {
-  const brief = buildCtx(resolveStyle("brief"), {})
+  const brief = boundThemeCtx("brief", {})
   const BENTO_BODY = { x: 96, y: 234, w: 1088, h: 378 }
 
   it("three EN cards plus the lead-in paragraph fit the 378px bento body", () => {

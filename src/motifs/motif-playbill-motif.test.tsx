@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { PlaybillMotif } from "./motif-playbill-motif"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -34,7 +33,7 @@ function render(body: React.ReactElement | null): { markup: string; root: Elemen
 }
 
 function draw(theme: string, slide: Slide, date?: string) {
-  const ctx = buildCtx(resolveStyle(theme), {})
+  const ctx = boundThemeCtx(theme, {})
   return { ...render(<PlaybillMotif ir={ir(theme, date)} slide={slide} ctx={ctx} />), ctx }
 }
 

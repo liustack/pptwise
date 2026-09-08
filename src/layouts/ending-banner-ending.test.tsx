@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { BannerEnding } from "./ending-banner-ending"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -48,7 +47,7 @@ const ir = (theme: string, slide: Slide): PptxIR =>
 // 新裁决要断言的属性：派生色随背景变，不是钉死不变。
 describe("BannerEnding", () => {
   it("brief tokens 下渲染 org 标 + 联系区块 + B 层版权行（data-contrast-tier=meta），heading 存在时不兜底", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const deck = ir("brief", endingWithHeading)
     const out = renderSvgMarkup(
       <BannerEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
@@ -88,7 +87,7 @@ describe("BannerEnding", () => {
   })
 
   it("terminal tokens 下用 terminal 的 primary/accent/muted，brief 烤色不残留，版权行随主题派生（不再跨主题固定同一 hex）", () => {
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
     const deck = ir("terminal", endingWithHeading)
     const out = renderSvgMarkup(
       <BannerEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
@@ -127,7 +126,7 @@ describe("BannerEnding", () => {
   // 假象。两个主题的 colors.muted 相对各自真实渲染背景（`ctx.defaultBg`，
   // ending 页 defaultBackgrounds）都远超 B 层 3:1 门槛，metaInk 原样保留。
   it("ledger tokens（深底）下版权行随主题派生，实测远超 B 层门槛", () => {
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const deck = ir("ledger", endingWithHeading)
     const out = renderSvgMarkup(
       <BannerEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
@@ -150,7 +149,7 @@ describe("BannerEnding", () => {
   })
 
   it("luxe tokens（深底）下版权行随主题派生，实测远超 B 层门槛", () => {
-    const ctx = buildCtx(resolveStyle("luxe"), {})
+    const ctx = boundThemeCtx("luxe", {})
     const deck = ir("luxe", endingWithHeading)
     const out = renderSvgMarkup(
       <BannerEnding ir={deck} slide={endingWithHeading} index={0} ctx={ctx} />,
@@ -172,7 +171,7 @@ describe("BannerEnding", () => {
   })
 
   it("brief tokens 下无 heading 时标题兜底为“Thank you.”，副题兜底“We appreciate your time.”（双重兜底）", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const deck = ir("brief", endingBare)
     const out = renderSvgMarkup(<BannerEnding ir={deck} slide={endingBare} index={0} ctx={ctx} />)
 
@@ -184,7 +183,7 @@ describe("BannerEnding", () => {
   // overflowing」（旧文件 brief.test.tsx L373-384）：超长 heading 必须被
   // 压缩，不能原样溢出，且 assertSubset 通过。
   it("超长 heading 会被压缩（assertSubset 通过），不会原样渲染整段长文本", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = { type: "ending", heading: CJK_LONG, subheading: CJK_LONG, components: [] } as Slide
     const deck = ir("brief", slide)
     const markup = renderSvgMarkup(
@@ -201,7 +200,7 @@ describe("BannerEnding", () => {
   // 1 行分支（旧文件 brief.test.tsx L387-402）：单行 heading 时
   // headingY=356、分隔线间距=164（修复前的基准行为不变）。
   it("单行 heading：headingY=356、分隔线间距=164", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = { type: "ending", heading: "Thank you.", components: [] } as Slide
     const deck = ir("brief", slide)
     const markup = renderSvgMarkup(
@@ -221,7 +220,7 @@ describe("BannerEnding", () => {
   // 首行上移（封顶 85px）、分隔线间距收紧到 128、且所有文字 y 不超出页面
   // （<=714）。
   it("2 行 heading 最坏情形（恰好 2 行、132px 未收缩）：首行上移封顶 85、分隔线间距收紧为 128、版权不超出页面", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = { type: "ending", heading: "从今天开始用声明式", components: [] } as Slide
     const deck = ir("brief", slide)
     const markup = renderSvgMarkup(

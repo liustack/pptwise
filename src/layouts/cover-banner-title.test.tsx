@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { parseSvgRoot, renderSvgMarkup } from "../render/serialize"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { BannerTitleCover } from "./cover-banner-title"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -47,7 +46,7 @@ describe("BannerTitleCover", () => {
   // 要求与旧模板逐字节相同，因为这次几何差异是有意的正确性修复，不是迁移
   // 期间的意外行为漂移。
   it("brief tokens 下与旧 MckinseyNavyCover 观感等价（2026-07-09 有意偏离旧模板修叠压 bug，不再逐字节锁）", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const legacy = LEGACY_COVER_MARKUP
     const next = renderSvgMarkup(<BannerTitleCover ir={ir("brief", "full")} slide={slide} index={0} ctx={ctx} />)
 
@@ -69,14 +68,14 @@ describe("BannerTitleCover", () => {
   })
 
   it("terminal tokens 下用 terminal 的色（证明 token 化成立，无 baked hex）", () => {
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
     const out = renderSvgMarkup(<BannerTitleCover ir={ir("terminal")} slide={slide} index={0} ctx={ctx} />)
     expect(out).toContain("#53E0D2") // terminal accent
     expect(out).not.toContain("#FFC72C") // brief accent 不得残留
   })
 
   it("修复后 accent 条与副题首行不再叠压（accent 条底边 y 明显小于副题首行 y，留出副题字号的可视 ascent + 目标间距）", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
         <BannerTitleCover ir={ir("brief", "full")} slide={slide} index={0} ctx={ctx} />

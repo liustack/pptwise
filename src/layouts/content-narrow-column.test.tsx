@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { measureTextUnits } from "../lib/svg-text-layout"
@@ -111,7 +112,7 @@ describe("NarrowColumnContent", () => {
   })
 
   it("brief tokens 下用 brief 的色（证明 token 化成立，无 baked hex）", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const deck = ir("brief")
     const out = renderSvgMarkup(<NarrowColumnContent ir={deck} slide={content} index={1} ctx={ctx} />)
     expect(out).toContain(ctx.colors.text)
@@ -120,7 +121,7 @@ describe("NarrowColumnContent", () => {
   })
 
   it("falls an unreadable kicker back to the theme text ink without a heading treatment", () => {
-    const baseCtx = buildCtx(resolveStyle("brief"), {})
+    const baseCtx = boundThemeCtx("brief", {})
     const ctx = { ...baseCtx, themeId: undefined }
     const deck = ir("unassigned")
     const markup = renderSvgMarkup(

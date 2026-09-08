@@ -6,6 +6,7 @@
  * is a top/bottom bar. No hairline substitute.
  */
 import { describe, it, expect } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { insightPanel } from "./insight-panel"
 import { rowCards } from "./row-cards"
@@ -14,8 +15,7 @@ import { numberedCards } from "./numbered-cards"
 import { iconCards } from "./icon-cards"
 import { callout } from "./callout"
 import type { ComponentCtx } from "./types"
-import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
-import { buildCtx } from "../render/full-slide-svg"
+import { CANONICAL_THEME_IDS } from "../themes"
 
 function svg(node: React.ReactElement) {
   return render(<svg>{node}</svg>)
@@ -119,7 +119,7 @@ describe("single-edge emphasis bar ban", () => {
   it("callout on every canonical theme has no edge bar", () => {
     const component = { type: "callout" as const, variant: "warn" as const, text: "警告" }
     for (const id of CANONICAL_THEME_IDS) {
-      const themeCtx = buildCtx(resolveStyle(id), {})
+      const themeCtx = boundThemeCtx(id, {})
       const { container } = svg(callout.render(component, { x: 0, y: 0, w: 800 }, themeCtx))
       const h = callout.measure(component, 800, themeCtx)
       assertNoEdgeBar(container, 800, h, `callout/${id}`)

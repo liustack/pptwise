@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
-import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
+import { resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
 import { contrastRatio, requiredContrastRatio } from "../render/ink"
 import { VerdictIndexCover, layoutDef } from "./cover-verdict-index"
@@ -43,11 +44,14 @@ function renderCover(
   tokens: StyleTokens = resolveStyle(themeId),
   params: SvgTemplateProps["params"] = tokens.shape?.cover as SvgTemplateProps["params"],
 ) {
-  const ctx = buildCtx(
-    tokens,
+  const ctx = boundThemeCtx(
+    themeId,
     {},
     undefined,
     resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface),
+    undefined,
+    undefined,
+    tokens,
   )
   const markup = renderSvgMarkup(
     <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">

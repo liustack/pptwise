@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { callout } from "./callout"
@@ -106,7 +107,7 @@ describe("callout TintPanel has no card stroke", () => {
 
   it("no canonical TintPanel theme strokes the panel, including bulletin/runway", () => {
     for (const id of CANONICAL_THEME_IDS) {
-      const themeCtx = buildCtx(resolveStyle(id), {})
+      const themeCtx = boundThemeCtx(id, {})
       const { container } = svg(callout.render(component, { x: 80, y: 100, w: 1120 }, themeCtx))
       for (const rect of container.querySelectorAll("rect")) {
         expect(rect.getAttribute("stroke"), id).toBeNull()
@@ -184,7 +185,7 @@ describe("callout semantic color tokens", () => {
 
   it("every canonical theme paints no left bar and no top/bottom hairline", () => {
     for (const id of CANONICAL_THEME_IDS) {
-      const themeCtx = buildCtx(resolveStyle(id), {})
+      const themeCtx = boundThemeCtx(id, {})
       const { container } = svg(callout.render(warn, { x: 0, y: 0, w: 800 }, themeCtx))
       const cardH = callout.measure(warn, 800, themeCtx)
       for (const rect of container.querySelectorAll("rect")) {

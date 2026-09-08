@@ -1,11 +1,10 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { timeline } from "./timeline"
 import type { ComponentCtx } from "./types"
 import { contrastRatio } from "../render/ink"
-import { resolveStyle } from "../themes"
-import { buildCtx } from "../render/full-slide-svg"
 
 const ctx: ComponentCtx = {
   colors: {
@@ -87,7 +86,7 @@ describe("timeline component", () => {
   })
 
   it("uses muted ink for horizontal dates and the quiet primary for unmarked dots", () => {
-    const themeCtx = buildCtx(resolveStyle("bulletin"), {})
+    const themeCtx = boundThemeCtx("bulletin", {})
     const { container } = svg(
       timeline.render(component, { x: 0, y: 0, w: 1000 }, themeCtx),
     )
@@ -116,7 +115,7 @@ describe("timeline component", () => {
     // `highlight` is one field with one meaning. The horizontal row read it
     // nowhere: every dot came out the same size and the same color, so the
     // turn an author marked reached the page as nothing at all.
-    const themeCtx = buildCtx(resolveStyle("brief"), {})
+    const themeCtx = boundThemeCtx("brief", {})
     const milestones = [
       { date: "第一季度", title: "基线" },
       { date: "第二季度", title: "转折", highlight: true },
@@ -209,7 +208,7 @@ describe("timeline component", () => {
     })
 
     it("keeps the highlight on the dot while its date and title share the theme text ink", () => {
-      const themeCtx = buildCtx(resolveStyle("brief"), {})
+      const themeCtx = boundThemeCtx("brief", {})
       const highlighted = {
         type: "timeline" as const,
         layout: "vertical" as const,

@@ -1,10 +1,8 @@
 import { readFileSync, readdirSync } from "node:fs"
+import { boundThemeCtx } from "../__fixtures__/theme-ctx"
 import { dirname, extname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
-import { buildCtx } from "../full-slide-svg"
-import { resolveStyle } from "../../themes"
-import { resolveThemeEmphasis } from "../../themes/definitions"
 import { renderSvgMarkup, parseSvgRoot } from "../serialize"
 import { contrastRatio, readableOn, requiredContrastRatio } from "../ink"
 import { measureTextUnits } from "../../lib/svg-text-layout"
@@ -57,9 +55,7 @@ function treat(
   fonts: ComponentCtx["fonts"]
 } {
   const ir = deck(themeId, slides)
-  // The emphasis stroke travels with the theme definition now, so an
-  // id-built context binds it the way an entry point would.
-  const ctx = buildCtx(resolveStyle(themeId), {}, undefined, undefined, undefined, undefined, resolveThemeEmphasis(themeId))
+  const ctx = boundThemeCtx(themeId)
   return {
     treated: tryContentHeadingTreatment({ ir, slide: ir.slides[index], index, ctx }),
     ctx,

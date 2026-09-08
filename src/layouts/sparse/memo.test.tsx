@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
 import { assertSubset } from "../../render/subset-validate"
-import { buildCtx } from "../../render/full-slide-svg"
-import { resolveStyle } from "../../themes"
 import { StatementContent } from "../content-statement"
 import { PullQuoteContent } from "../content-pull-quote"
 import { StatHeroContent } from "../content-stat-hero"
@@ -52,7 +51,7 @@ function countHorizontalRuleGroups(root: Element): number {
 }
 
 describe("memo sparse faces", () => {
-  const ctx = buildCtx(resolveStyle("memo"), {})
+  const ctx = boundThemeCtx("memo", {})
 
   it("does not redraw MEMORANDUM or the motif's top red double rule", () => {
     const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide

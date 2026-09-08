@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { assertSubset } from "../render/subset-validate"
@@ -9,8 +10,6 @@ import { cycle } from "./cycle"
 import { FORM_BODY_FLOOR, FORM_BODY_TITLE_CAP, capFormBody } from "./legibility"
 import { mixHex } from "./color-mix"
 import { accessibleInk, readableOn } from "../render/ink"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import type { ComponentCtx } from "./types"
 
 const ctx: ComponentCtx = {
@@ -28,7 +27,7 @@ const ctx: ComponentCtx = {
 }
 
 function themed(id: string): ComponentCtx {
-  return buildCtx(resolveStyle(id), {})
+  return boundThemeCtx(id, {})
 }
 
 function svg(node: React.ReactElement) {

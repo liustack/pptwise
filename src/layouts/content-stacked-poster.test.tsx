@@ -1,10 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
 import { accessibleInk } from "../render/ink"
-import { resolveStyle } from "../themes"
 import { measureComponent } from "../components"
 import { StackedPosterContent } from "./content-stacked-poster"
 import { footnoteBaselineFor } from "../render/branding-geometry"
@@ -95,7 +94,7 @@ function parseAudit(attr: string | null | undefined): { x: number; y: number; w:
 // 锚点 + 内容存在 + 归并掉的孤儿色不再出现，而非逐字节 toBe。
 describe("StackedPosterContent", () => {
   it("creative tokens 下 1 块：居中海报——muted kicker、accent 短横条走 primary、800-weight 居中标题（text）、单个主视觉 rect 到 y=640", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const deck = ir("homeroom", [chapter1, oneComponentSlide])
     const { markup, root } = render(
       <StackedPosterContent ir={deck} slide={oneComponentSlide} index={1} ctx={ctx} />,
@@ -152,7 +151,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("creative tokens 下 2 块：主视觉在 y=520 让位，图下不画分隔线，标注条 rect y=532->640", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const deck = ir("homeroom", [twoComponentSlide])
     const { root } = render(<StackedPosterContent ir={deck} slide={twoComponentSlide} index={0} ctx={ctx} />)
 
@@ -175,7 +174,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("creative tokens 下 ≥3 块：降级为左对齐 kicker(primary)/500-weight 标题(text)/border 分隔线/满宽堆叠，无海报短横条", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const deck = ir("homeroom", [chapter1, threeComponentSlide])
     const { markup, root } = render(
       <StackedPosterContent ir={deck} slide={threeComponentSlide} index={1} ctx={ctx} />,
@@ -230,7 +229,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("degrade path (≥3 components) self-arranges as one full-width stack", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const deck = ir("homeroom", [chapter1, threeComponentSlide])
     const { root } = render(
       <StackedPosterContent ir={deck} slide={threeComponentSlide} index={1} ctx={ctx} />,
@@ -247,7 +246,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("footnote 存在时海报/降级两条路径都走 muted（孤儿色 META_MUTED 已并入，#666670 不残留）", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
 
     const posterFootnoteSlide: Slide = { ...oneComponentSlide, footnote: "数据来源：内部审计" } as Slide
     const { markup: posterOut, root: posterRoot } = render(
@@ -267,7 +266,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("brief tokens 下用 brief 自己的 primary/text/muted/border，ledger 烤死色不残留（token 化成立）", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const deck = ir("brief", [oneComponentSlide])
     const out = renderSvgMarkup(<StackedPosterContent ir={deck} slide={oneComponentSlide} index={0} ctx={ctx} />)
 
@@ -289,7 +288,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("1 scalable (chart) component: uniformly scales to fill the hero, capped at 1.3x", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const chartSlide: Slide = {
       type: "content",
       kind: "points",
@@ -332,7 +331,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("1 component + footnote: hero rect shrinks to bottom=600, leaving room above the footnote's own baseline", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const slide: Slide = { ...oneComponentSlide, footnote: "数据来源：内部审计" } as Slide
     const { root } = render(<StackedPosterContent ir={ir("homeroom", [slide])} slide={slide} index={0} ctx={ctx} />)
 
@@ -350,7 +349,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("2 components + footnote: strip bottom shrinks to 600 while the hero split (520) stays put", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const slide: Slide = { ...twoComponentSlide, footnote: "数据来源：内部审计" } as Slide
     const { root } = render(<StackedPosterContent ir={ir("homeroom", [slide])} slide={slide} index={0} ctx={ctx} />)
 
@@ -371,7 +370,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("a 2-component deck whose second component can't fit the 108px caption strip degrades to the full-width stack", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -398,7 +397,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("a chart as the second component degrades: the caption strip is below the readable floor for a plot", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const slide: Slide = {
       type: "content",
       kind: "data",
@@ -429,7 +428,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("a chart as the *first* component still takes the hero: the hero clears the readable floor", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const slide: Slide = {
       type: "content",
       kind: "data",
@@ -454,7 +453,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("a 0-component content slide degrades without crashing", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const slide: Slide = { type: "content", kind: "points", heading: "空白页", components: [] } as Slide
     expect(() =>
       render(<StackedPosterContent ir={ir("homeroom", [slide])} slide={slide} index={0} ctx={ctx} />),
@@ -462,7 +461,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("kicker accent bar and hero/strip rects stay clear of all four Branding logo bands", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -498,7 +497,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("Content body passes subset validation in both 1-component and 2-component mode", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const oneComponent: Slide = {
       type: "content",
       kind: "points",
@@ -520,7 +519,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("poster path: 超长标题（40+ 字）经 fitHeadingLines 收缩/换行渲染，不整段输出原文，通过 subset validation（补齐迁移前遗漏的长标题边缘场景）", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -552,7 +551,7 @@ describe("StackedPosterContent", () => {
   })
 
   it("degrade path（≥3 块）：超长标题同样收缩/换行渲染，不整段输出原文，通过 subset validation", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -596,7 +595,7 @@ describe("StackedPosterContent", () => {
 
 describe("StackedPosterContent subheading", () => {
   it("poster path, no subheading: hero rect bottom edge stays at the pre-subheading formula", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const { root } = render(
       <StackedPosterContent ir={ir("homeroom", [oneComponentSlide])} slide={oneComponentSlide} index={0} ctx={ctx} />,
     )
@@ -615,7 +614,7 @@ describe("StackedPosterContent subheading", () => {
   })
 
   it("poster path, with subheading: centered accent text at titleLastY+46, heroY (and hero rect fits gate) shift down 34", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const slide: Slide = { ...oneComponentSlide, subheading: "效率提升三成，风险敞口下降" } as Slide
     const { root } = render(<StackedPosterContent ir={ir("homeroom", [slide])} slide={slide} index={0} ctx={ctx} />)
     const sub = Array.from(root.querySelectorAll("text")).find((t) =>
@@ -637,7 +636,7 @@ describe("StackedPosterContent subheading", () => {
   })
 
   it("emphasis markup: ** ** segments invert to colors.text at fontWeight 700 in the poster subheading", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const slide: Slide = { ...oneComponentSlide, subheading: "**效率提升三成**，风险敞口下降" } as Slide
     const { root } = render(<StackedPosterContent ir={ir("homeroom", [slide])} slide={slide} index={0} ctx={ctx} />)
     const tspan = Array.from(root.querySelectorAll("tspan")).find((t) =>
@@ -654,7 +653,7 @@ describe("StackedPosterContent subheading", () => {
   })
 
   it("overly long poster subheading shrinks to 16px then truncates", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const slide: Slide = { ...oneComponentSlide, subheading: CJK_LONG.repeat(2) } as Slide
     const { root } = render(<StackedPosterContent ir={ir("homeroom", [slide])} slide={slide} index={0} ctx={ctx} />)
     const sub = Array.from(root.querySelectorAll("text")).find(
@@ -667,7 +666,7 @@ describe("StackedPosterContent subheading", () => {
   })
 
   it("a component that fits the old (no-subheading) hero budget stops fitting once the subheading eats 34px — falls back to the stacked layout", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     // HERO_W=900; posterBottom=640 (no footnote, 1 component ⇒ not isPair).
     // No-subheading heroY = titleLastY(184)+HERO_TITLE_GAP(48) = 232 ⇒
     // budget 408. With-subheading heroY = 232+34 = 266 ⇒ budget 374.
@@ -718,7 +717,7 @@ describe("StackedPosterContent subheading", () => {
   })
 
   it("degrade path, no subheading: content rect y stays at the pre-subheading formula (180 + headingExtra)", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const { root } = render(
       <StackedPosterContent ir={ir("homeroom", [threeComponentSlide])} slide={threeComponentSlide} index={0} ctx={ctx} />,
     )
@@ -736,7 +735,7 @@ describe("StackedPosterContent subheading", () => {
   })
 
   it("degrade path, with subheading: left-aligned accent text at headingLastY+50, content rect shifts down 46", () => {
-    const ctx = buildCtx(resolveStyle("homeroom"), {})
+    const ctx = boundThemeCtx("homeroom", {})
     const slide: Slide = { ...threeComponentSlide, subheading: "效率提升三成，风险敞口下降" } as Slide
     const { root } = render(<StackedPosterContent ir={ir("homeroom", [slide])} slide={slide} index={0} ctx={ctx} />)
     const sub = Array.from(root.querySelectorAll("text")).find((t) =>

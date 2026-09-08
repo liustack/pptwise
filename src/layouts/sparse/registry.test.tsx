@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
-import { buildCtx } from "../../render/full-slide-svg"
-import { resolveStyle } from "../../themes"
 import { StatementContent } from "../content-statement"
 import { OneEvidenceContent } from "../content-one-evidence"
 import { sparseFace } from "./registry"
@@ -43,7 +42,7 @@ describe("sparseFace dispatch", () => {
   it("the same statement IR is centered on stage, left on lecture, italic 500 on crayon", () => {
     const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
 
-    const stageCtx = buildCtx(resolveStyle("stage"), {})
+    const stageCtx = boundThemeCtx("stage", {})
     const stageRoot = render(
       <StatementContent ir={ir("stage", [slide])} slide={slide} index={0} ctx={stageCtx} />,
     )
@@ -54,7 +53,7 @@ describe("sparseFace dispatch", () => {
     expect(stageHeading.getAttribute("text-anchor")).toBe("middle")
     expect(stageHeading.getAttribute("font-style")).not.toBe("italic")
 
-    const lectureCtx = buildCtx(resolveStyle("lecture"), {})
+    const lectureCtx = boundThemeCtx("lecture", {})
     const lectureRoot = render(
       <StatementContent ir={ir("lecture", [slide])} slide={slide} index={0} ctx={lectureCtx} />,
     )
@@ -63,7 +62,7 @@ describe("sparseFace dispatch", () => {
     )!
     expect(lectureHeading.getAttribute("x")).toBe("120")
 
-    const crayonCtx = buildCtx(resolveStyle("crayon"), {})
+    const crayonCtx = boundThemeCtx("crayon", {})
     const crayonRoot = render(
       <StatementContent ir={ir("crayon", [slide])} slide={slide} index={0} ctx={crayonCtx} />,
     )
@@ -74,7 +73,7 @@ describe("sparseFace dispatch", () => {
     expect(crayonHeading.getAttribute("font-style")).toBe("italic")
     expect(crayonHeading.getAttribute("font-weight")).toBe("500")
 
-    const consultingCtx = buildCtx(resolveStyle("brief"), {})
+    const consultingCtx = boundThemeCtx("brief", {})
     const consultingRoot = render(
       <StatementContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={consultingCtx} />,
     )
@@ -94,7 +93,7 @@ describe("sparseFace dispatch", () => {
       heading: "迁徙路线在十年里缩短了四成",
       components: [],
     } as Slide
-    const ctx = buildCtx(resolveStyle("stage"), {})
+    const ctx = boundThemeCtx("stage", {})
     const root = render(
       <OneEvidenceContent ir={ir("stage", [slide])} slide={slide} index={0} ctx={ctx} />,
     )

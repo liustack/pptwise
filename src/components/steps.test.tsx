@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { steps } from "./steps"
-import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
-import { buildCtx } from "../render/full-slide-svg"
+import { CANONICAL_THEME_IDS } from "../themes"
 import { readableOn } from "../render/ink"
 
 function svg(node: React.ReactElement) {
@@ -48,7 +48,7 @@ describe("steps component", () => {
   const three = threeSteps
 
   it("draws one chevron per step, an 01/02/03 badge, the title on the arrow and the sentence under it", () => {
-    const themeCtx = buildCtx(resolveStyle("runway"), {})
+    const themeCtx = boundThemeCtx("runway", {})
     const { container } = svg(steps.render(three, box, themeCtx))
     const arrows = Array.from(container.querySelectorAll("path")).filter(
       (p) => p.getAttribute("fill") === themeCtx.colors.primary,
@@ -74,7 +74,7 @@ describe("steps component", () => {
 
 
   it("four gallery steps stay on one row in a 640-wide slot and stay inside the box", () => {
-    const themeCtx = buildCtx(resolveStyle("runway"), {})
+    const themeCtx = boundThemeCtx("runway", {})
     const four = {
       type: "steps" as const,
       items: [
@@ -106,7 +106,7 @@ describe("steps component", () => {
   })
 
   it("number badges stay inside the chevron instead of hanging off the left", () => {
-    const themeCtx = buildCtx(resolveStyle("runway"), {})
+    const themeCtx = boundThemeCtx("runway", {})
     const { container } = svg(steps.render(three, box, themeCtx))
     for (const c of Array.from(container.querySelectorAll("circle"))) {
       const cx = Number(c.getAttribute("cx"))
@@ -117,7 +117,7 @@ describe("steps component", () => {
   })
 
   it("narrow width stacks the same chevrons rather than switching drawing", () => {
-    const themeCtx = buildCtx(resolveStyle("runway"), {})
+    const themeCtx = boundThemeCtx("runway", {})
     const narrow = { x: 0, y: 0, w: 600, h: 900 }
     const { container } = svg(steps.render(fiveSteps, narrow, themeCtx))
     expect(Array.from(container.querySelectorAll("rect")).filter((r) => r.getAttribute("rx") === "8")).toHaveLength(0)
@@ -131,7 +131,7 @@ describe("steps component", () => {
 
 
   it("n=2 and n=5 stay inside the box, and the tree is subset-safe", () => {
-    const themeCtx = buildCtx(resolveStyle("runway"), {})
+    const themeCtx = boundThemeCtx("runway", {})
     for (const ir of [
       { type: "steps" as const, items: [step("甲", "说明甲"), step("乙", "说明乙")] },
       fiveSteps,
@@ -168,7 +168,7 @@ describe("steps component", () => {
 describe("steps on every theme", () => {
   it("renders the same shapes everywhere — only the tokens differ", () => {
     const shapesOf = (id: string) => {
-      const { container } = svg(steps.render(threeSteps, { x: 0, y: 0, w: 1088, h: 360 }, buildCtx(resolveStyle(id), {})))
+      const { container } = svg(steps.render(threeSteps, { x: 0, y: 0, w: 1088, h: 360 }, boundThemeCtx(id, {})))
       return Array.from(container.querySelectorAll("circle, rect, path, line, polygon"))
         .map((el) => el.tagName.toLowerCase())
         .join(",")

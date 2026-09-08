@@ -1,19 +1,12 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx } from "../render/full-slide-svg"
 import { resolveStyle } from "../themes"
 import { blendOver, contrastRatio } from "../render/ink"
-import {
-  CONTENT_DECOR_CONTRAST_CEILING,
-  countDecorPieces,
-  DECOR_PIECE_ATTR,
-  leafOpacity,
-  leafPaint,
-  MAX_DECOR_PIECES,
-  paintedLeaves,
-} from "./decor-budget"
+import { CONTENT_DECOR_CONTRAST_CEILING, countDecorPieces, DECOR_PIECE_ATTR, leafOpacity, leafPaint, MAX_DECOR_PIECES, paintedLeaves } from "./decor-budget"
 import { AlmanacMotif } from "./motif-almanac-motif"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -52,7 +45,7 @@ function render(body: React.ReactElement | null): { markup: string; root: Elemen
 }
 
 function draw(theme: string, slide: Slide) {
-  const ctx = buildCtx(resolveStyle(theme), {})
+  const ctx = boundThemeCtx(theme, {})
   return { ...render(<AlmanacMotif ir={ir(theme)} slide={slide} ctx={ctx} />), ctx }
 }
 
@@ -220,7 +213,7 @@ describe("AlmanacMotif（等高线）", () => {
   })
 
   it("装饰位置写死：换 filename 输出逐字节不变", () => {
-    const ctx = buildCtx(resolveStyle("almanac"), {})
+    const ctx = boundThemeCtx("almanac", {})
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>
         renderSvgMarkup(

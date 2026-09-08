@@ -1,13 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { numberedCards } from "./numbered-cards"
 import type { ComponentCtx } from "./types"
-import { resolveStyle } from "../themes"
-import { buildCtx } from "../render/full-slide-svg"
 import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR } from "./legibility"
 
 function svg(node: React.ReactElement) {
@@ -45,7 +44,7 @@ const BADGE_DIAMETER_RATIO = 0.8
 const DISC_PILL_GAP = 12
 
 function themeCtx(id: string): ComponentCtx {
-  return buildCtx(resolveStyle(id), {})
+  return boundThemeCtx(id, {})
 }
 
 function markupOf(component: Parameters<typeof numberedCards.render>[0], box: { x: number; y: number; w: number; h?: number }, c: ComponentCtx) {

@@ -1,14 +1,13 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../__fixtures__/theme-ctx"
 import { listThemes, renderSlideSvg } from "../../api"
 import type { PptxIR, Slide } from "../../ir"
 import { measureMonoTextUnits, measureTextUnits } from "../../lib/svg-text-layout"
 import { installNodePlatform } from "../../platform/node"
 import { parseTransform } from "../../audit/svg-audit"
 import { isBold, isMonoFontFamily } from "../fonts"
-import { buildCtx } from "../full-slide-svg"
 import { parseSvgRoot, renderSvgMarkup } from "../serialize"
-import { resolveStyle } from "../../themes"
 import { corpusAssets, themeDeck } from "../../../evals/gallery/corpus/decks"
 import { LEXICONS } from "../../../evals/gallery/corpus/lexicon"
 import { nativeLexiconFor } from "../../../evals/gallery/corpus/native"
@@ -323,7 +322,7 @@ describe("gallery theme-table rail-numbered pages", () => {
 describe("no-reserve path", () => {
   it("playbill title still starts at x=96 when tryContentHeadingTreatment is called without a reserve", () => {
     const ir = deck("playbill", [chapterSlide(), contentSlide()])
-    const ctx = buildCtx(resolveStyle("playbill"), {})
+    const ctx = boundThemeCtx("playbill", {})
     const treated = tryContentHeadingTreatment({ ir, slide: ir.slides[1]!, index: 1, ctx })
     expect(treated).not.toBeNull()
     const root = parseSvgRoot(

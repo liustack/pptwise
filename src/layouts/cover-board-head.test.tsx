@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
-import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
+import { resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
 import { contrastRatio, requiredContrastRatio } from "../render/ink"
 import { measureTextUnits } from "../lib/svg-text-layout"
@@ -35,8 +36,8 @@ const FULL_META: PptxIR["meta"] = {
 
 function renderCover(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] = FULL_META) {
   const tokens = resolveStyle(themeId)
-  const ctx = buildCtx(
-    tokens,
+  const ctx = boundThemeCtx(
+    themeId,
     {},
     undefined,
     resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface),

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx } from "../render/full-slide-svg"
@@ -71,7 +72,7 @@ describe("ConstellationCover", () => {
   })
 
   it("brief tokens 下用 brief 的色（证明 token 化成立，无 baked hex）", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const out = renderSvgMarkup(<ConstellationCover ir={ir("brief")} slide={slide} index={0} ctx={ctx} />)
     expect(out).toContain("#F5C518") // brief accent
     expect(out).not.toContain("#53E0D2") // terminal accent 不得残留

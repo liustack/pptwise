@@ -1,30 +1,16 @@
 // @vitest-environment jsdom
 import { createElement } from "react"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import { iconCards } from "./icon-cards"
 import { numberedCards } from "./numbered-cards"
 import { kpi } from "./kpi"
 import { cycle } from "./cycle"
-import { resolveStyle } from "../themes"
-import { buildCtx } from "../render/full-slide-svg"
 import type { ComponentCtx } from "./types"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { contrastRatio, requiredContrastRatio } from "../render/ink"
-import {
-  fitFormUnit,
-  boardTypeScale,
-  capFormBody,
-  fillCardType,
-  formLegibleInk,
-  formIconColumnCols,
-  layoutAtSize,
-  layoutFormBody,
-  BOARD_CARD_W,
-  FORM_BODY_FLOOR,
-  FORM_BODY_TITLE_CAP,
-  FORM_TITLE_FLOOR,
-} from "./legibility"
+import { fitFormUnit, boardTypeScale, capFormBody, fillCardType, formLegibleInk, formIconColumnCols, layoutAtSize, layoutFormBody, BOARD_CARD_W, FORM_BODY_FLOOR, FORM_BODY_TITLE_CAP, FORM_TITLE_FLOOR } from "./legibility"
 
 describe("form text contrast", () => {
   it("replaces unreadable white on brief yellow with a passing ink", () => {
@@ -37,7 +23,7 @@ describe("form text contrast", () => {
 })
 
 function themeCtx(id: string): ComponentCtx {
-  return buildCtx(resolveStyle(id), {})
+  return boundThemeCtx(id, {})
 }
 
 function svg(node: React.ReactElement) {

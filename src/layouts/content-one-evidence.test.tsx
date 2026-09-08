@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { OneEvidenceContent, layoutDef } from "./content-one-evidence"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import type { PptxIR, Slide } from "@/ir"
@@ -69,7 +68,7 @@ describe("layoutDef", () => {
 
 describe("OneEvidenceContent", () => {
   it("CJK claim is left-aligned, chart is the evidence, y-title sits as a horizontal pair", () => {
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -96,7 +95,7 @@ describe("OneEvidenceContent", () => {
   })
 
   it("picks chart over image when both are present (shared pickEvidence order)", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -112,7 +111,7 @@ describe("OneEvidenceContent", () => {
   })
 
   it("English claim renders on thesis without a crash", () => {
-    const ctx = buildCtx(resolveStyle("thesis"), {})
+    const ctx = boundThemeCtx("thesis", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -128,7 +127,7 @@ describe("OneEvidenceContent", () => {
   })
 
   it("mixed long heading shrinks/wraps to at most 3 lines and never dumps the raw source verbatim", () => {
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const extreme = `${CJK_LONG}${MIXED_LONG}`
     const slide: Slide = {
       type: "content",
@@ -150,7 +149,7 @@ describe("OneEvidenceContent", () => {
   })
 
   it("0 components: heading still renders, no empty text node", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -167,7 +166,7 @@ describe("OneEvidenceContent", () => {
   })
 
   it("brief tokens: no luxe baked hex leaks", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -227,7 +226,7 @@ function textBox(el: Element): { x: number; y: number; w: number; h: number; tex
 
 describe("one-evidence evidence vs assertion partition", () => {
   it.each(ONE_EVIDENCE_FACES)("%s: assertion text does not overlap the evidence rect", (theme) => {
-    const ctx = buildCtx(resolveStyle(theme), {})
+    const ctx = boundThemeCtx(theme, {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -251,7 +250,7 @@ describe("one-evidence evidence vs assertion partition", () => {
   })
 
   it("generic face keeps heading at x=80 / y=72 and parks evidence below the claim", () => {
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -272,7 +271,7 @@ describe("one-evidence evidence vs assertion partition", () => {
   })
 
   it("museum with evidence gives the chart a band at least 140px below the claim", () => {
-    const ctx = buildCtx(resolveStyle("museum"), {})
+    const ctx = boundThemeCtx("museum", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -300,7 +299,7 @@ describe("one-evidence evidence vs assertion partition", () => {
   // mark of any kind. The face now steps aside for content it cannot place.
   it("steps aside for a component the evidence frame cannot place, and draws it whole", () => {
     for (const themeId of ["brief", "terminal", "swiss", "vermilion", "thesis"]) {
-      const ctx = buildCtx(resolveStyle(themeId), {})
+      const ctx = boundThemeCtx(themeId, {})
       const slide: Slide = {
         type: "content",
         kind: "evidence",
@@ -334,7 +333,7 @@ describe("one-evidence evidence vs assertion partition", () => {
   })
 
   it("draws a code listing line by line rather than dropping it", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = {
       type: "content",
       kind: "evidence",
@@ -350,7 +349,7 @@ describe("one-evidence evidence vs assertion partition", () => {
   })
 
   it("keeps the evidence frame when the component is one the frame can hold", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = {
       type: "content",
       kind: "evidence",

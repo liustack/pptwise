@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
@@ -52,7 +53,7 @@ const MAGAZINE_EXPECTED_2 =
 
 describe("MastheadChapter", () => {
   it("magazine tokens 下输出与固化的基准 markup 逐字节一致（档位一，含章节序号，档案来自旧 EditorialSerifChapter）", () => {
-    const ctx = buildCtx(resolveStyle("journal"), {})
+    const ctx = boundThemeCtx("journal", {})
     const deck = ir("journal")
 
     const next1 = renderSvgMarkup(<MastheadChapter ir={deck} slide={chapter1} index={0} ctx={ctx} />)
@@ -65,7 +66,7 @@ describe("MastheadChapter", () => {
   })
 
   it("brief tokens 下用 brief 的色（证明 token 化成立，无 baked hex）", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const deck = ir("brief")
     const out = renderSvgMarkup(<MastheadChapter ir={deck} slide={chapter1} index={0} ctx={ctx} />)
     expect(out).toContain("#F5C518") // brief accent
@@ -120,7 +121,7 @@ describe("MastheadChapter", () => {
   })
 
   it("Cover / Chapter body passes assertSubset (no forbidden elements)", () => {
-    const ctx = buildCtx(resolveStyle("journal"), {})
+    const ctx = boundThemeCtx("journal", {})
     const deck = ir("journal")
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
@@ -133,7 +134,7 @@ describe("MastheadChapter", () => {
   })
 
   it("keeps the watermark digit (anchored x=1184, end) horizontally clear of the title (maxWidth 720)", () => {
-    const ctx = buildCtx(resolveStyle("journal"), {})
+    const ctx = boundThemeCtx("journal", {})
     const slide: Slide = { type: "chapter", heading: "增长战略", subheading: "从 0 到 1", components: [] } as Slide
     const deck = ir("journal", [slide])
     const markup = renderSvgMarkup(
@@ -157,7 +158,7 @@ describe("MastheadChapter", () => {
   })
 
   it("shrinks a pathologically long heading instead of overflowing", () => {
-    const ctx = buildCtx(resolveStyle("journal"), {})
+    const ctx = boundThemeCtx("journal", {})
     const slide: Slide = { type: "chapter", heading: CJK_LONG, components: [] } as Slide
     const deck = ir("journal", [slide])
     const markup = renderSvgMarkup(

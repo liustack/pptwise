@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
 import { assertSubset } from "../../render/subset-validate"
-import { buildCtx } from "../../render/full-slide-svg"
-import { resolveStyle } from "../../themes"
 import { StatementContent } from "../content-statement"
 import { PullQuoteContent } from "../content-pull-quote"
 import { StatHeroContent } from "../content-stat-hero"
@@ -37,7 +36,7 @@ function render(body: React.ReactElement): { markup: string; root: Element } {
 }
 
 describe("stage sparse faces", () => {
-  const ctx = buildCtx(resolveStyle("stage"), {})
+  const ctx = boundThemeCtx("stage", {})
 
   it("statement is centered light type with a border hairline, accent only on **runs**", () => {
     const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide

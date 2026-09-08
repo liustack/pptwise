@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { readableOn } from "../render/ink"
 import { MonoBleedContent, layoutDef } from "./content-mono-bleed"
 import type { PptxIR, Slide } from "@/ir"
@@ -46,7 +45,7 @@ describe("layoutDef", () => {
 
 describe("MonoBleedContent", () => {
   it("paints a full-bleed primary field and inverts type with readableOn", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -74,7 +73,7 @@ describe("MonoBleedContent", () => {
   })
 
   it("English heading renders on thesis against thesis primary, not brief navy", () => {
-    const ctx = buildCtx(resolveStyle("thesis"), {})
+    const ctx = boundThemeCtx("thesis", {})
     const slide: Slide = { type: "content", kind: "points", layout: "mono-bleed", heading: EN_LINE, components: [] } as Slide
     const { markup, root } = render(
       <MonoBleedContent ir={ir("thesis", [slide])} slide={slide} index={0} ctx={ctx} />,
@@ -86,7 +85,7 @@ describe("MonoBleedContent", () => {
   })
 
   it("ledger primary field is not luxe champagne gold", () => {
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const slide: Slide = { type: "content", kind: "points", layout: "mono-bleed", heading: CJK_LINE, components: [] } as Slide
     const { markup, root } = render(
       <MonoBleedContent ir={ir("ledger", [slide])} slide={slide} index={0} ctx={ctx} />,
@@ -97,7 +96,7 @@ describe("MonoBleedContent", () => {
   })
 
   it("mixed long heading shrinks/wraps to at most 3 lines and never dumps the raw source verbatim", () => {
-    const ctx = buildCtx(resolveStyle("ledger"), {})
+    const ctx = boundThemeCtx("ledger", {})
     const extreme = `${CJK_LONG}${MIXED_LONG}`
     const slide: Slide = { type: "content", kind: "points", layout: "mono-bleed", heading: extreme, components: [] } as Slide
     const { markup, root } = render(
@@ -113,7 +112,7 @@ describe("MonoBleedContent", () => {
   })
 
   it("empty subheading: no empty text node, heading still renders", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const slide: Slide = { type: "content", kind: "points", layout: "mono-bleed", heading: CJK_LINE, components: [] } as Slide
     const { root } = render(
       <MonoBleedContent ir={ir("brief", [slide])} slide={slide} index={0} ctx={ctx} />,

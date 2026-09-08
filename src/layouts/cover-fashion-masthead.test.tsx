@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { renderSlideSvg } from "../api"
 import { contrastRatio } from "../render/ink"
@@ -41,7 +40,7 @@ function coverIr(heading: string): PptxIR {
 }
 
 describe("cover-fashion-masthead — bold-metrics fix red-first (user-reported cover-overflow defect)", () => {
-  const ctx = buildCtx(resolveStyle("brief"), {})
+  const ctx = boundThemeCtx("brief", {})
 
   it("sanity: brief's heading face resolves to Georgia (the defect's own trigger face)", () => {
     expect(ctx.fonts.heading.split(",")[0].trim()).toBe("Georgia")
@@ -125,7 +124,7 @@ describe("cover-fashion-masthead — bold-metrics fix red-first (user-reported c
 
     for (const [theme, expectFace] of cases) {
       it(`${theme} (${expectFace}): renders with every line's bold-math width inside the 1168px budget`, () => {
-        const tctx = buildCtx(resolveStyle(theme), {})
+        const tctx = boundThemeCtx(theme, {})
         expect(tctx.fonts.heading.split(",")[0].trim()).toBe(expectFace)
         const out = renderSvgMarkup(
           <FashionMastheadCover
@@ -165,7 +164,7 @@ describe("cover-fashion-masthead — bold-metrics fix red-first (user-reported c
     // the envelope (structurally incapable of per-string exactness) does
     // not.
     it("YaHei (rally) exact model matches the genuine hmtx reading; the conservative envelope alone would not have (face-awareness's real payoff is accuracy, not just a smaller number)", () => {
-      const campaignCtx = buildCtx(resolveStyle("rally"), {})
+      const campaignCtx = boundThemeCtx("rally", {})
       const faceAware = measureTextUnits("Components Demo", { bold: true, fontFamily: campaignCtx.fonts.heading })
       const envelopeOnly = measureTextUnits("Components Demo", { bold: true, fontFamily: undefined })
       // real_em 9.7319 -- this fix's own direct fontTools re-measurement
@@ -216,7 +215,7 @@ describe("cover-fashion-masthead — letter-spacing wrap budget (round-3 D-clust
   }
 
   function subtitleLines(theme: string): Element[] {
-    const ctx = buildCtx(resolveStyle(theme), {})
+    const ctx = boundThemeCtx(theme, {})
     const ir = coverIrWithSubheading(theme)
     const out = renderSvgMarkup(<FashionMastheadCover ir={ir} slide={ir.slides[0]} index={0} ctx={ctx} />)
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`)
@@ -260,7 +259,7 @@ describe("cover-fashion-masthead — letter-spacing wrap budget (round-3 D-clust
   })
 
   it("the meta line budgets its own 3px tracking too (same blind spot, same page)", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const ir = coverIrWithSubheading("brief")
     const out = renderSvgMarkup(<FashionMastheadCover ir={ir} slide={ir.slides[0]} index={0} ctx={ctx} />)
     const root = parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`)
@@ -304,7 +303,7 @@ describe("cover-fashion-masthead — no leftover top-left motif stub", () => {
 // the green a reader actually sees.
 describe("cover-fashion-masthead — an emphasis run measured against the panel it lands on", () => {
   function markedCover(themeId: string) {
-    const ctx = buildCtx(resolveStyle(themeId), {})
+    const ctx = boundThemeCtx(themeId, {})
     const slide = { type: "cover", heading: "The **decisive** year", components: [] } as Slide
     const ir = {
       version: "5",

@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
+import { CANONICAL_THEME_IDS } from "../themes"
 import { contrastRatio, requiredContrastRatio } from "../render/ink"
 import { ConstellationEnding } from "./ending-constellation-ending"
 import type { PptxIR, Slide } from "@/ir"
@@ -53,7 +53,7 @@ const ENDING_TECH_BARE_MARKUP =
 
 describe("ConstellationEnding", () => {
   it("terminal tokens 下与旧 BentoTechEnding 输出逐字节一致（档位一，有 heading，不兜底）", () => {
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
     const deck = ir("terminal", endingWithHeading)
 
     const next = renderSvgMarkup(
@@ -65,7 +65,7 @@ describe("ConstellationEnding", () => {
   })
 
   it("terminal tokens 下无 heading 时与旧 BentoTechEnding 输出逐字节一致（档位一，兜底 + 句号拆分）", () => {
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
     const deck = ir("terminal", endingBare)
 
     const next = renderSvgMarkup(
@@ -80,7 +80,7 @@ describe("ConstellationEnding", () => {
   })
 
   it("brief tokens 下用 brief 的色（证明 token 化成立，无 baked hex）", () => {
-    const ctx = buildCtx(resolveStyle("brief"), {})
+    const ctx = boundThemeCtx("brief", {})
     const deck = ir("brief", endingBare)
     const out = renderSvgMarkup(<ConstellationEnding ir={deck} slide={endingBare} index={0} ctx={ctx} />)
     expect(out).toContain("#1C1E23") // brief text
@@ -90,7 +90,7 @@ describe("ConstellationEnding", () => {
   })
 
   it("renders markup that passes assertSubset (no forbidden elements)", () => {
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
     const deck = ir("terminal", endingWithHeading)
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
@@ -107,7 +107,7 @@ describe("ConstellationEnding", () => {
     // replaced by a plain 60x3 accent bar (no card) plus bare centered meta
     // text.
     const slide: Slide = { type: "ending", heading: "谢谢", components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
 
     const docWithMeta = ir("terminal", slide)
     const markupWithMeta = renderSvgMarkup(
@@ -148,7 +148,7 @@ describe("ConstellationEnding", () => {
       subheading: "感谢聆听与支持",
       components: [],
     } as Slide
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
     const doc = ir("terminal", slide)
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
@@ -182,7 +182,7 @@ describe("ConstellationEnding", () => {
 
   it("a heading that doesn't end in '。' renders unchanged — no split accent tspan", () => {
     const customSlide: Slide = { type: "ending", heading: "Thank you", components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
     const customDoc = ir("terminal", customSlide)
     const customMarkup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
@@ -207,7 +207,7 @@ describe("ConstellationEnding", () => {
   // Chinese-language decks benefited from.
   it("an explicit heading ending in ASCII '.' also splits the trailing period into an accent tspan (not just the CJK '。' the helper originally supported)", () => {
     const customSlide: Slide = { type: "ending", heading: "Let's grow together.", components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
     const customDoc = ir("terminal", customSlide)
     const customMarkup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
@@ -243,7 +243,7 @@ describe("ConstellationEnding", () => {
     // Ending, so anchoring the last line is unconditionally safe.
     const twoLineSlide: Slide = { type: "ending", heading: "从今天开始用声明式管理你的", components: [] } as Slide
     const oneLineSlide: Slide = { type: "ending", heading: "谢谢", components: [] } as Slide
-    const ctx = buildCtx(resolveStyle("terminal"), {})
+    const ctx = boundThemeCtx("terminal", {})
 
     const twoLineRoot = parseSvgRoot(
       renderSvgMarkup(
@@ -298,7 +298,7 @@ describe("ConstellationEnding", () => {
   // accent 实测压 ending 背景 `#FBF5EE` 只有 2.02:1（旧值 1.57:1），仍在
   // 3:1 大字门槛之下，句点照旧落回本句自己的 `colors.text` 墨。
   it("ember: charcoal field lets accent keep the period (wave 8 batch 1, no longer a light-paper fallback)", () => {
-    const ctx = buildCtx(resolveStyle("ember"), {})
+    const ctx = boundThemeCtx("ember", {})
     const slide: Slide = { type: "ending", heading: "Thank you.", components: [] } as Slide
     const markup = renderSvgMarkup(<ConstellationEnding ir={ir("ember", slide)} slide={slide} index={0} ctx={ctx} />)
     expect(markup).toContain(`<tspan fill="${ctx.colors.accent}">.</tspan>`)
@@ -314,7 +314,7 @@ describe("ConstellationEnding", () => {
   // pass/fail split across all 17 themes is measured and recorded in
   // `deck-audit.test.ts`'s dedicated 16-theme sweep, not repeated here).
   it("bulletin: the accent-colored period keeps the theme's own accent fill (already clears 3:1 — accessibleInk is a no-op)", () => {
-    const ctx = buildCtx(resolveStyle("bulletin"), {})
+    const ctx = boundThemeCtx("bulletin", {})
     const slide: Slide = { type: "ending", heading: "Thank you.", components: [] } as Slide
     const markup = renderSvgMarkup(
       <ConstellationEnding ir={ir("bulletin", slide)} slide={slide} index={0} ctx={ctx} />,
@@ -335,7 +335,7 @@ describe("ConstellationEnding", () => {
   // rendered background.
   it("coherence property, all 17 themes: the period's fill is always colors.accent or colors.text, and always clears the 3:1 large-text floor", () => {
     for (const themeId of CANONICAL_THEME_IDS) {
-      const ctx = buildCtx(resolveStyle(themeId), {})
+      const ctx = boundThemeCtx(themeId, {})
       const slide: Slide = { type: "ending", heading: "Thank you.", components: [] } as Slide
       const markup = renderSvgMarkup(
         <ConstellationEnding ir={ir(themeId, slide)} slide={slide} index={0} ctx={ctx} />,
