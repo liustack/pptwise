@@ -276,8 +276,17 @@ interface WatchRule {
  * stays exactly as the last successful update left it, so the caller keeps
  * hearing about the paths it already watched (the parent that reports the
  * offending entry going away included) and can try the new list again.
+ * The other way the tree touches watchers is inside an `fs.watch` callback,
+ * where a child entry's event makes it stat and possibly re-attach that
+ * child. The same failures are possible there (the parent swapped for a
+ * plain file between the event and the stat gives ENOTDIR), and a throw
+ * out of an `fs.watch` callback is an uncaught exception that ends the
+ * process, so nothing is allowed out: whatever the callback throws goes to
+ * `onError` instead, with the tree left as the callback got to, and the
+ * caller's next `update` (the rebuild it schedules on that error) is the
+ * one place the whole set is put right again.
  */
-export function watchTree(roots: WatchRoot[], onChange: () => void): WatchTreeHandle {
+export function watchTree(roots: WatchRoot[], onChange: () => void, onError: (error: unknown) => void): WatchTreeHandle {
   let rules = new Map<string, WatchRule>()
   const watchers = new Map<string, { watcher: FSWatcher; ino: bigint }>()
   /** While `update` attaches: every directory it registered so far, so a
@@ -330,7 +339,13 @@ export function watchTree(roots: WatchRoot[], onChange: () => void): WatchTreeHa
     const rule = ruleFor(dir)
     let watcher: FSWatcher
     try {
-      watcher = watch(dir, (_event, filename) => onEvent(dir, filename))
+      watcher = watch(dir, (_event, filename) => {
+        try {
+          onEvent(dir, filename)
+        } catch (e) {
+          onError(e)
+        }
+      })
     } catch (e) {
       // Not there yet (a brand-new deck project has no `pages/` or `assets/`
       // until something fills them, and the workspace's pinned-asset
@@ -879,8 +894,20 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     watchers?.close()
   }
 
+  /** A watcher event the tree could not act on ({@link watchTree}'s
+   *  `onError`): the failure is the status until the rebuild it schedules
+   *  says otherwise, and that rebuild's watcher update, the same one a
+   *  build always ends with, is what repairs the set or fails the same
+   *  way for the same reason. */
+  function onWatchError(e: unknown): void {
+    if (closed) return
+    latestError = messageOf(e)
+    broadcast("error", { revision: latestRevision, message: latestError })
+    scheduleRebuild()
+  }
+
   try {
-    watchers = watchTree(currentWatchRoots(), scheduleRebuild)
+    watchers = watchTree(currentWatchRoots(), scheduleRebuild, onWatchError)
     heartbeat = setInterval(() => writeToAll(": heartbeat\n\n"), HEARTBEAT_MS)
     themePoll = setInterval(() => void checkThemeSource(), THEME_POLL_MS)
     await new Promise<void>((resolveListen, rejectListen) => {
