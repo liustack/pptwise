@@ -50,7 +50,12 @@ interface ReadHold {
   entered: () => void
   released: Promise<void>
 }
-const resolveGate = vi.hoisted(() => ({ hold: undefined as ReadHold | undefined, inBuild: false }))
+const resolveGate = vi.hoisted(() => ({
+  hold: undefined as ReadHold | undefined,
+  inBuild: false,
+  /** The kind of every read made inside `buildDeckPreview`, in order. */
+  buildReads: [] as string[],
+}))
 /** A pass-through over `node:fs` with two hooks. `afterWatch` runs after
  *  a real `fs.watch` call has succeeded, with the path it opened, before
  *  the caller gets the watcher back, for a test that needs the filesystem
@@ -115,6 +120,7 @@ vi.mock("./load-ir", async (importOriginal) => {
   return {
     ...original,
     loadIrFile: async (path: string, kind = "IR") => {
+      if (resolveGate.inBuild) resolveGate.buildReads.push(kind)
       await waitAt("before", kind)
       const raw = await original.loadIrFile(path, kind)
       await waitAt("after", kind)
@@ -1415,6 +1421,106 @@ describe("createServeServer — what a failed build records as its theme", () =>
     await sleep(2 * THEME_POLL_MS + DEBOUNCE_GRACE_MS)
     expect(handle.status()).toMatchObject({ latestOk: false, latestRevision: settled + 1, servedRevision: settled })
     expect((await get(handle.port, "/")).body.toUpperCase()).toContain("1E2A4A")
+  })
+})
+
+describe("createServeServer — the source is read once per build", () => {
+  // A build used to read the spec twice: once for the name it binds, once
+  // more for assembly. A spec rebound between the two reads was assembled
+  // under the second binding, checked against the theme the first had
+  // resolved, and the failure carried the first binding's record, so a
+  // spec put back the way it was matched that record and the failure never
+  // cleared. A build now reads its source once and assembles that object.
+
+  function briefWithPrimary(id: string, primary: string): string {
+    const file = themeFileFromPreset("brief", { id })
+    file.style.colors.primary = primary
+    return JSON.stringify(file, null, 2) + "\n"
+  }
+
+  function statusWhere(handle: ServeHandle, accept: (status: ServeBuildStatus) => boolean): Promise<ServeBuildStatus> {
+    return pollUntil(async () => {
+      const current = handle.status()
+      return accept(current) ? current : undefined
+    }, THEME_POLL_MS + 3000)
+  }
+
+  /** A deck project whose spec is a symlink to a file above the watch
+   *  ceiling, bound to a `brief` file up there too, so neither the spec's
+   *  content nor the theme is covered by an event, only by the timed check.
+   *  Started, settled, and with a check parked before its read. */
+  async function startWithSharedSpec(prefix: string): Promise<{
+    handle: ServeHandle
+    shared: string
+    settled: number
+    tick: { entered: Promise<void>; release: () => void }
+  }> {
+    const parent = await makeDir(prefix)
+    const cwd = join(parent, "deck")
+    await mkdir(join(cwd, "pages"), { recursive: true })
+    const shared = join(parent, "shared-spec.json")
+    await writeFile(shared, JSON.stringify(makeDeckPlan()))
+    await symlink(shared, join(cwd, "deck.spec.json"))
+    await mkdir(join(parent, "themes"))
+    await writeFile(join(parent, "themes", "brief.theme.json"), briefWithPrimary("brief", "#0A3D91"))
+    const handle = await startServe(cwd, { cwd })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain("0A3D91")
+    const settled = await settledRevision(handle)
+    const tick = holdNextThemeCheck()
+    await tick.entered
+    return { handle, shared, settled, tick }
+  }
+
+  it("a spec rebound after the build read it is assembled as read, with one spec read in the build", async () => {
+    const { handle, shared, settled, tick } = await startWithSharedSpec("pptwise-serve-source-once-")
+
+    // The build is held once it has the spec in hand, bound to `brief`. The
+    // shared file then binds `thesis`, and the build carries on.
+    resolveGate.buildReads.length = 0
+    const gate = holdReads({ phase: "after", scope: "build", kind: "source", once: true })
+    const building = handle.rebuild()
+    await gate.entered
+    await writeFile(shared, JSON.stringify({ ...makeDeckPlan(), theme: "thesis" }))
+    gate.release()
+    await building
+    expect(handle.status()).toMatchObject({ latestOk: true, latestRevision: settled + 1, servedRevision: settled + 1 })
+    expect(resolveGate.buildReads.filter((kind) => kind === "spec")).toHaveLength(1)
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain("0A3D91")
+
+    // Put back before any check runs: the record holds the spec the build
+    // read, which is this one, so there is nothing to rebuild.
+    await writeFile(shared, JSON.stringify(makeDeckPlan()))
+    tick.release()
+    await sleep(2 * THEME_POLL_MS + DEBOUNCE_GRACE_MS)
+    expect(handle.status()).toMatchObject({ latestOk: true, latestRevision: settled + 1 })
+  })
+
+  it("a spec rebound and put back between two checks is rebuilt within one check", async () => {
+    const { handle, shared, settled, tick } = await startWithSharedSpec("pptwise-serve-source-back-")
+
+    // One build reads the spec bound to a name that resolves nowhere.
+    await writeFile(shared, JSON.stringify({ ...makeDeckPlan(), theme: "no-such-theme" }))
+    await handle.rebuild()
+    expect(handle.status()).toMatchObject({ latestOk: false, latestRevision: settled + 1, error: expect.stringContaining("no-such-theme") })
+
+    // The spec is whole again before the next check. The record says the
+    // build read the rebound spec, so this is a change.
+    await writeFile(shared, JSON.stringify(makeDeckPlan()))
+    tick.release()
+    const recovered = await statusWhere(handle, (status) => status.latestOk)
+    expect(recovered).toMatchObject({ latestRevision: settled + 2, servedRevision: settled + 2 })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain("0A3D91")
+  })
+
+  it("a symlinked spec edited without changing its binding still reaches the preview", async () => {
+    const { handle, shared, settled, tick } = await startWithSharedSpec("pptwise-serve-source-digest-")
+    // No watcher sees the file behind the symlink: only the record's own
+    // digest of the source can say it changed.
+    await writeFile(shared, JSON.stringify({ ...makeDeckPlan(), filename: "edited-behind-symlink" }))
+    tick.release()
+    const rebuilt = await statusWhere(handle, (status) => status.latestRevision === settled + 1)
+    expect(rebuilt.latestOk).toBe(true)
+    expect((await get(handle.port, "/")).body).toContain("edited-behind-symlink")
   })
 })
 

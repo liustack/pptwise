@@ -278,6 +278,17 @@ describe("readDeckDir", () => {
     ])
   })
 
+  it("assembles the spec handed in and does not read deck.spec.json again", async () => {
+    // The theme-input record reads the spec for the name it binds and hands
+    // that object on, so a spec rewritten between the two would otherwise
+    // be assembled under a binding the record never saw. No spec file on
+    // disk at all: a second read would fail loudly.
+    const dir = await tmp()
+    const { ir } = await readDeckDir(dir, { spec: { parsed: makePlan({ filename: "handed-in" }) } })
+    expect(ir.filename).toBe("handed-in")
+    expect(ir.slides.map((s) => s.id)).toEqual(["p-cover", "p-kpi", "p-detail", "p-ending"])
+  })
+
   it("does not generate a seed (seed is no longer a spec or IR field)", async () => {
     const dir = await tmp()
     await writeDeckSpec(dir)

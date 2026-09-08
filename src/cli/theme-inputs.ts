@@ -1,18 +1,19 @@
 /**
  * Everything a build reads to decide which theme it draws with, read once
  * and kept as one record. Three reads, in the order a build makes them:
- * the name the target binds (`spec.theme` for a deck project, `theme.id`
- * for a bare IR), where that name resolves to (`resolveThemeByName`,
- * `./theme-resolve.ts`), and the deck's own `theme.json` when the rebind
- * guard would read it. Every step that fails is recorded in place of its
- * answer rather than thrown, so a record exists whatever happened, and
- * `key` folds the whole record into one string: two builds with equal keys
- * read the same theme inputs.
+ * the target's own source (the spec of a deck project, the bare IR file)
+ * for the name it binds (`spec.theme`, `theme.id`), where that name
+ * resolves to (`resolveThemeByName`, `./theme-resolve.ts`), and the deck's
+ * own `theme.json` when the rebind guard would read it. Every step that
+ * fails is recorded in place of its answer rather than thrown, so a record
+ * exists whatever happened, and `key` folds the whole record into one
+ * string: two builds with equal keys read the same theme inputs.
  *
  * The build pipeline (`renderDeckSlides`, `./commands.ts`) collects this
  * record first and carries it on its result and on every failure it
- * raises (`DeckBuildError`), passing the resolved definition down instead
- * of looking the theme up again at each step. `pptwise serve`
+ * raises (`DeckBuildError`), passing the parsed source on to assembly and
+ * the resolved definition down instead of reading the source or looking
+ * the theme up again at each step. `pptwise serve`
  * (`./serve.ts`) keeps the last build's key and, every few seconds,
  * collects the same record again and compares keys: any difference, a
  * theme file rewritten, a lookup that starts or stops failing, a rebind
@@ -22,7 +23,7 @@
 import { createHash } from "node:crypto"
 import { dirname, join, resolve } from "node:path"
 import type { ThemeFile } from "../themes/schema"
-import { pathExists, readSpecFile, THEME_FILENAME } from "./deck-dir"
+import { pathExists, readSpecFile, SPEC_FILENAME, THEME_FILENAME } from "./deck-dir"
 import { loadIrFile } from "./load-ir"
 import {
   type ResolvedTheme,
@@ -42,7 +43,20 @@ export interface ThemeInputsTarget {
   isDir: boolean
 }
 
+/** The target's own file as a record read it, parsed: the spec of a deck
+ *  project or the bare IR. Assembly and validation take this object, so a
+ *  build binds the name this record holds and no other. */
+export interface SourceRead {
+  kind: "spec" | "ir"
+  path: string
+  parsed: unknown
+}
+
 export interface ThemeInputs {
+  /** The source the name was read off, or `undefined` when the read
+   *  failed (`bound` holds the error) or the record started from a name
+   *  already in hand ({@link resolveThemeInputs}). */
+  source: SourceRead | undefined
   /** The name the target binds, `undefined` when it names none, or the
    *  error reading the target. */
   bound: { name: string | undefined } | { error: unknown }
@@ -61,20 +75,21 @@ export interface ThemeInputs {
 
 export async function collectThemeInputs(target: ThemeInputsTarget): Promise<ThemeInputs> {
   const deckDir = target.isDir ? target.resolvedTarget : dirname(target.resolvedTarget)
-  let bound: ThemeInputs["bound"]
+  let source: SourceRead
   try {
-    bound = { name: await readBoundName(target) }
+    source = await readSource(target)
   } catch (e) {
-    bound = { error: e }
+    return withKey({ source: undefined, bound: { error: e }, resolved: undefined, localTheme: undefined })
   }
-  return resolveThemeInputs(bound, { startDir: target.startDir, deckDir })
+  const name = source.kind === "spec" ? themeNameFromUnknown(source.parsed) : irThemeIdOf(source.parsed)
+  return resolveThemeInputs({ name }, { startDir: target.startDir, deckDir }, source)
 }
 
 /** The record of a build that failed before it could read any of its
  *  theme inputs: a target that could not be located, a config that could
  *  not be read. The failure stands in for the name. */
 export function unreadThemeInputs(error: unknown): ThemeInputs {
-  return withKey({ bound: { error }, resolved: undefined, localTheme: undefined })
+  return withKey({ source: undefined, bound: { error }, resolved: undefined, localTheme: undefined })
 }
 
 /**
@@ -85,17 +100,33 @@ export function unreadThemeInputs(error: unknown): ThemeInputs {
 export async function resolveThemeInputs(
   bound: ThemeInputs["bound"],
   opts: { startDir: string; deckDir: string },
+  source?: SourceRead,
 ): Promise<ThemeInputs> {
   if ("error" in bound || bound.name === undefined) {
-    return withKey({ bound, resolved: undefined, localTheme: undefined })
+    return withKey({ source, bound, resolved: undefined, localTheme: undefined })
   }
   let resolved: ResolvedTheme
   try {
     resolved = await resolveThemeByName(bound.name, opts)
   } catch (e) {
-    return withKey({ bound, resolved: { error: e }, localTheme: undefined })
+    return withKey({ source, bound, resolved: { error: e }, localTheme: undefined })
   }
-  return withKey({ bound, resolved, localTheme: await readLocalTheme(opts.deckDir, resolved) })
+  return withKey({ source, bound, resolved, localTheme: await readLocalTheme(opts.deckDir, resolved) })
+}
+
+/**
+ * The source a build assembles or validates: the object the record read
+ * the name off, never a second read of the file, so what the build binds
+ * is what the record says it bound. A read that failed is thrown as the
+ * build's own failure, the way {@link themeFromInputs} throws a lookup
+ * that failed. A record without a source was built from a name in hand
+ * and has nothing to assemble: that is a caller's mistake, not a state a
+ * build can be in.
+ */
+export function sourceFromInputs(inputs: ThemeInputs): SourceRead {
+  if ("error" in inputs.bound) throw inputs.bound.error
+  if (inputs.source === undefined) throw new Error("theme inputs were collected without their source")
+  return inputs.source
 }
 
 /**
@@ -131,9 +162,11 @@ export async function checkThemeRebind(deckDir: string, resolved: ResolvedTheme)
   guardThemeRebind(await readLocalTheme(deckDir, resolved), resolved)
 }
 
-async function readBoundName(target: ThemeInputsTarget): Promise<string | undefined> {
-  if (target.isDir) return themeNameFromUnknown(await readSpecFile(target.resolvedTarget))
-  return irThemeIdOf(await loadIrFile(target.resolvedTarget))
+async function readSource(target: ThemeInputsTarget): Promise<SourceRead> {
+  if (target.isDir) {
+    return { kind: "spec", path: join(target.resolvedTarget, SPEC_FILENAME), parsed: await readSpecFile(target.resolvedTarget) }
+  }
+  return { kind: "ir", path: target.resolvedTarget, parsed: await loadIrFile(target.resolvedTarget) }
 }
 
 /** `theme.id` off a raw IR, the authored selection a bare target carries.
@@ -167,28 +200,36 @@ function messageOf(e: unknown): string {
   return e instanceof Error ? e.message : String(e)
 }
 
-/** A digest over a theme file's parsed content with its keys in a fixed
- *  order: what the page is drawn from, never the file's path, timestamp,
- *  or size. A rewrite that keeps the metadata, an atomic replace, and a
+/** A digest over a file's parsed content with its keys in a fixed order:
+ *  what the page is drawn from, never the file's path, timestamp, or
+ *  size. A rewrite that keeps the metadata, an atomic replace, and a
  *  symlink pointed elsewhere all change it; a whitespace-only save does
  *  not. */
-function contentDigest(file: ThemeFile): string {
-  return createHash("sha256").update(JSON.stringify(sortKeysDeep(file))).digest("hex")
+function contentDigest(parsed: unknown): string {
+  return createHash("sha256").update(JSON.stringify(sortKeysDeep(parsed)) ?? "").digest("hex")
 }
 
 /**
- * `source:error:<message>` when the target could not be read,
- * `source:none` when it binds no theme, otherwise `bound:<name>` followed
- * by the lookup (`theme:builtin:<id>`, `theme:file:<sha256>`, or
- * `theme:error:<message>`) and, after a lookup that succeeded, the guard's
- * read (`local:none`, `local:file:<sha256>`, or `local:error:<message>`),
- * joined with `|`.
+ * `source:error:<message>` when the target could not be read. Otherwise
+ * the source's own digest when the record holds one (`source:spec:<sha256>`
+ * or `source:ir:<sha256>`), then `bound:none` when it binds no theme, or
+ * `bound:<name>` followed by the lookup (`theme:builtin:<id>`,
+ * `theme:file:<sha256>`, or `theme:error:<message>`) and, after a lookup
+ * that succeeded, the guard's read (`local:none`, `local:file:<sha256>`,
+ * or `local:error:<message>`), joined with `|`. The source digest is what
+ * makes a rebind and back between two checks a difference: the build's
+ * record carries the binding it read, and a source edited back is not it.
  */
 export function themeInputsKey(inputs: Omit<ThemeInputs, "key">): string {
-  const { bound, resolved, localTheme } = inputs
+  const { source, bound, resolved, localTheme } = inputs
   if ("error" in bound) return `source:error:${messageOf(bound.error)}`
-  if (bound.name === undefined) return "source:none"
-  const parts = [`bound:${bound.name}`]
+  const parts: string[] = []
+  if (source !== undefined) parts.push(`source:${source.kind}:${contentDigest(source.parsed)}`)
+  if (bound.name === undefined) {
+    parts.push("bound:none")
+    return parts.join("|")
+  }
+  parts.push(`bound:${bound.name}`)
   if (resolved === undefined) return parts.join("|")
   if ("error" in resolved) {
     parts.push(`theme:error:${messageOf(resolved.error)}`)

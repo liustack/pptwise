@@ -376,10 +376,19 @@ function specThemeFromRaw(spec: unknown): string | undefined {
   return typeof theme === "string" ? theme : undefined
 }
 
-export async function readDeckDir(dir: string, opts?: { theme?: ThemeDefinition }): Promise<DeckDirResult> {
+/**
+ * `opts.spec` is the spec as the caller already read it (the theme-input
+ * record, `./theme-inputs.ts`): assembly takes that object and the file is
+ * not read again, so a caller that read the binding off it assembles the
+ * binding it read. Without it, the spec is read here.
+ */
+export async function readDeckDir(
+  dir: string,
+  opts?: { theme?: ThemeDefinition; spec?: { parsed: unknown } },
+): Promise<DeckDirResult> {
   const deckDir = resolve(dir)
   const specPath = join(deckDir, SPEC_FILENAME)
-  const spec = await readSpecFile(deckDir)
+  const spec = opts?.spec !== undefined ? opts.spec.parsed : await readSpecFile(deckDir)
   const specTheme = specThemeFromRaw(spec)
   const pages = await readPages(deckDir)
   const { ir } = assembleDeck(spec, pages as Record<string, PageContent>, opts)

@@ -63,6 +63,7 @@ import {
 import {
   collectThemeInputs,
   guardThemeRebind,
+  sourceFromInputs,
   themeFromInputs,
   unreadThemeInputs,
   type ThemeInputs,
@@ -157,13 +158,14 @@ export async function applyDeckConfig(raw: unknown, themeInputs: ThemeInputs): P
  *
  * - directory → `readDeckDir` (assemble in memory — spec + pages/ + assets/,
  *   `./deck-dir.ts`), asset paths resolve against the deck directory itself.
- * - file → the pre-existing single-file path, byte-for-byte: `loadIrFile`
- *   then the same `dirname(resolve(...))` asset base every caller already
- *   used. When `arg` is an explicit path (has a separator, or exists
- *   locally — true of every pre-W5 caller, since every existing test passes
- *   a full path), `resolveDeckTarget` returns it completely unchanged with
- *   no `fs` call at all, so this branch degenerates to exactly the old
- *   inline code — single-file behavior stays byte-identical.
+ * - file → the pre-existing single-file path, byte-for-byte: the IR as the
+ *   theme-input record read it (`loadIrFile`, one read per build), then the
+ *   same `dirname(resolve(...))` asset base every caller already used.
+ *   When `arg` is an explicit path (has a separator, or exists locally —
+ *   true of every pre-W5 caller, since every existing test passes a full
+ *   path), `resolveDeckTarget` returns it completely unchanged with no
+ *   `fs` call at all, so this branch degenerates to exactly the old inline
+ *   code — single-file behavior stays byte-identical.
  *
  * `isDir` is threaded back so `runValidate` can gate its dir-only placeholder
  * note on it (single-file mode must never grow that note, even for a
@@ -262,8 +264,11 @@ interface LoadedDeckTarget {
 
 /** The read half of {@link loadDeckTarget}, for a target already located
  *  and a theme-input record already collected: assembly (deck project) or
- *  the IR file, with the record's theme definition handed to assembly so
- *  the spec is validated against the definition render will use. */
+ *  the IR itself, both from the source the record read (`sourceFromInputs`,
+ *  `./theme-inputs.ts`), never a second read of the file, with the record's
+ *  theme definition handed to assembly so the spec is validated against
+ *  the definition render will use. The one file this half reads for
+ *  itself is a page or an asset, neither of which binds a theme. */
 async function readDeckTarget(
   location: DeckLocation,
   themeInputs: ThemeInputs,
@@ -271,9 +276,10 @@ async function readDeckTarget(
   projectHit: ProjectConfigHit,
 ): Promise<LoadedDeckTarget> {
   const { resolvedTarget, isDir } = location
+  const source = sourceFromInputs(themeInputs)
   if (isDir) {
     const theme = themeFromInputs(themeInputs)?.definition
-    const { ir, deckDir } = await readDeckDir(resolvedTarget, { theme })
+    const { ir, deckDir } = await readDeckDir(resolvedTarget, { theme, spec: source })
     const stock = await loadWorkspaceStock(cwd, projectHit, deckDir, true)
     return {
       raw: mergeWorkspaceImages(ir, stock.images),
@@ -284,10 +290,9 @@ async function readDeckTarget(
       themeInputs,
     }
   }
-  const raw = await loadIrFile(resolvedTarget)
   const stock = await loadWorkspaceStock(cwd, projectHit, resolvedTarget, false)
   return {
-    raw: mergeWorkspaceImages(raw, stock.images),
+    raw: mergeWorkspaceImages(source.parsed, stock.images),
     baseDir: dirname(resolvedTarget),
     isDir: false,
     resolvedTarget,
@@ -1641,12 +1646,15 @@ export async function runAssemble(target: string, opts: AssembleOptions = {}): P
     throw new PptwiseError(`expected a deck project directory: ${dir}`)
   }
   // Same theme-input read `loadDeckTarget` performs (brand-extract wave):
-  // assemble bypasses that helper but hands the same definition to
-  // readDeckDir's assemble step, whose spec gate reads it.
-  const theme = (await isDeckDirectory(dir))
-    ? themeFromInputs(await collectThemeInputs({ startDir: cwd, resolvedTarget: dir, isDir: true }))?.definition
+  // assemble bypasses that helper but hands the same spec and definition
+  // to readDeckDir's assemble step, whose spec gate reads them.
+  const themeInputs = (await isDeckDirectory(dir))
+    ? await collectThemeInputs({ startDir: cwd, resolvedTarget: dir, isDir: true })
     : undefined
-  const { ir, deckDir } = await readDeckDir(dir, { theme })
+  const { ir, deckDir } = await readDeckDir(dir, {
+    theme: themeInputs && themeFromInputs(themeInputs)?.definition,
+    spec: themeInputs && sourceFromInputs(themeInputs),
+  })
   const outPath = opts.output ? resolve(cwd, opts.output) : join(deckDir, "deck.json")
   const outDir = dirname(outPath)
   const outIr = outDir === deckDir ? ir : withRewrittenAssetPaths(ir, deckDir, outDir)
