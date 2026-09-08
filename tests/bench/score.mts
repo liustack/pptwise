@@ -118,6 +118,19 @@ export interface SelfReportedMeta {
   tool_calls?: number
   tool_rejections?: number
   tool_errors?: number
+  /** The runner's own failure record (`run-agentic.mts`'s `FailedRunMeta`):
+   *  present only when the harness could not finish the question. `stage`
+   *  names the step that threw (`tool-loop`, `placement`), `error` its
+   *  message. Unlike every field above this one is read before scoring: a
+   *  failed run is not scored at all ({@link QuestionScore.infraFailed}),
+   *  because what its result directory holds is whatever the failing step
+   *  left behind, not the model's finished answer (codex review R20: a
+   *  placement that threw between copying the IR and carrying its theme
+   *  left an artifact that scored clean under the built-in of the same
+   *  name). */
+  status?: "failed"
+  stage?: string
+  error?: string
 }
 
 export interface QuestionScore {
@@ -136,6 +149,13 @@ export interface QuestionScore {
   reason?: string
   /** Set only when `generatePptx` threw — the caught error's message. */
   renderError?: string
+  /** True when the runner's own `meta.json` says the run failed
+   *  (`self.status === "failed"`): the question was not scored, every
+   *  pass/fail field above is its "did not run" value, and `reason` names
+   *  the stage and error. The reports count these on their own line and
+   *  leave them out of every rate, so a harness or API failure is never
+   *  read as the model failing. */
+  infraFailed?: true
   self?: SelfReportedMeta
   coverage?: QuestionCoverage
 }
@@ -330,7 +350,10 @@ export async function loadArtifact(resultDir: string): Promise<ArtifactResult> {
 
 /** Optional self-reported run stats — absent, unparseable, or wrong-shaped
  *  reads as "no self-reported meta" rather than a scoring failure (it is
- *  pass-through only, never scored, per the README's own schema note). */
+ *  pass-through only, never scored, per the README's own schema note). The
+ *  one exception is the runner's failure record: `status: "failed"` with
+ *  its `stage` and `error` is kept so {@link scoreQuestion} can refuse to
+ *  score the question. */
 async function loadSelfReportedMeta(resultDir: string): Promise<SelfReportedMeta | undefined> {
   let text: string
   try {
@@ -341,7 +364,8 @@ async function loadSelfReportedMeta(resultDir: string): Promise<SelfReportedMeta
   try {
     const parsed = JSON.parse(text) as unknown
     if (typeof parsed !== "object" || parsed === null) return undefined
-    const { tokens, duration_seconds, model, tool_calls, tool_rejections, tool_errors } = parsed as Record<string, unknown>
+    const { tokens, duration_seconds, model, tool_calls, tool_rejections, tool_errors, status, stage, error } =
+      parsed as Record<string, unknown>
     const out: SelfReportedMeta = {}
     if (typeof tokens === "number") out.tokens = tokens
     if (typeof duration_seconds === "number") out.duration_seconds = duration_seconds
@@ -349,9 +373,37 @@ async function loadSelfReportedMeta(resultDir: string): Promise<SelfReportedMeta
     if (typeof tool_calls === "number") out.tool_calls = tool_calls
     if (typeof tool_rejections === "number") out.tool_rejections = tool_rejections
     if (typeof tool_errors === "number") out.tool_errors = tool_errors
+    if (status === "failed") {
+      out.status = status
+      if (typeof stage === "string") out.stage = stage
+      if (typeof error === "string") out.error = error
+    }
     return out
   } catch {
     return undefined
+  }
+}
+
+/** The runner recorded that it could not finish this question: nothing in
+ *  the result directory is the model's finished answer, so the question is
+ *  not scored. A placement failure in particular can leave the IR copied
+ *  but its theme behind in the workspace, and scoring that as usual would
+ *  resolve the built-in of the same name and pass what the model never
+ *  rendered (codex review R20). */
+function runnerFailedScore(qid: string, meta: QuestionMeta | undefined, self: SelfReportedMeta): QuestionScore {
+  return {
+    id: qid,
+    validatePass: false,
+    validateErrorCount: 0,
+    auditFindingCount: 0,
+    renderOk: false,
+    deterministic: null,
+    coverageHits: [],
+    expectedComponents: meta?.coverage?.expects_components ?? [],
+    reason: `runner failed at ${self.stage ?? "unknown stage"}: ${self.error ?? "no error recorded"}`,
+    infraFailed: true,
+    self,
+    coverage: meta?.coverage,
   }
 }
 
@@ -458,6 +510,7 @@ export async function scoreQuestion(
 ): Promise<QuestionScore> {
   const expected = meta?.coverage?.expects_components ?? []
   const self = await loadSelfReportedMeta(resultDir)
+  if (self?.status === "failed") return runnerFailedScore(qid, meta, self)
   const loaded = await loadArtifact(resultDir)
 
   if ("error" in loaded) {
@@ -608,6 +661,13 @@ export async function scoreModel(
 // ── aggregates ──
 
 interface Aggregates {
+  /** Questions the runner attempted, runner failures included. */
+  attempted: number
+  /** Questions whose run the harness could not finish (`infraFailed`) —
+   *  counted here, left out of every rate below. */
+  infraFailed: number
+  /** Questions actually scored: `attempted - infraFailed`, the denominator
+   *  of every rate below. */
   total: number
   validatePassRate: number
   meanValidateErrorCount: number
@@ -632,7 +692,8 @@ function hasToolCounters(s: QuestionScore): boolean {
   return s.self?.tool_calls !== undefined || s.self?.tool_rejections !== undefined || s.self?.tool_errors !== undefined
 }
 
-function computeAggregates(scores: QuestionScore[]): Aggregates {
+function computeAggregates(all: QuestionScore[]): Aggregates {
+  const scores = all.filter((s) => !s.infraFailed)
   const total = scores.length
   const validatePassCount = scores.filter((s) => s.validatePass).length
   const renderOkScores = scores.filter((s) => s.renderOk)
@@ -642,6 +703,8 @@ function computeAggregates(scores: QuestionScore[]): Aggregates {
   const totalHits = scores.reduce((n, s) => n + s.coverageHits.length, 0)
   const toolLoop = scores.filter(hasToolCounters)
   return {
+    attempted: all.length,
+    infraFailed: all.length - total,
     toolLoopQuestions: toolLoop.length,
     toolRejectionTotal: toolLoop.reduce((n, s) => n + (s.self?.tool_rejections ?? 0), 0),
     toolRejectionQuestions: toolLoop.filter((s) => (s.self?.tool_rejections ?? 0) > 0).length,
@@ -682,9 +745,9 @@ export function renderModelReport(modelTag: string, scores: QuestionScore[]): st
   )
   lines.push("")
   lines.push(
-    "| id | strategy | pacing | workflow | validatePass | validateErrors | auditFindings | renderOk | deterministic | coverageHits | tokens | duration_s | toolCalls | toolRejections | toolErrors | notes |",
+    "| id | strategy | pacing | workflow | validatePass | validateErrors | auditFindings | renderOk | deterministic | coverageHits | tokens | duration_s | toolCalls | toolRejections | toolErrors | runnerFailed | notes |",
   )
-  lines.push("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+  lines.push("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
   for (const s of scores) {
     const notes = [s.reason, s.renderError].filter((x): x is string => !!x).join(" / ")
     lines.push(
@@ -692,13 +755,16 @@ export function renderModelReport(modelTag: string, scores: QuestionScore[]): st
         `${s.validatePass} | ${s.validateErrorCount} | ${s.auditFindingCount} | ${s.renderOk} | ` +
         `${s.deterministic === null ? "n/a" : s.deterministic} | ${mdCell(s.coverageHits.join(", "))} | ` +
         `${mdCell(s.self?.tokens)} | ${mdCell(s.self?.duration_seconds)} | ${mdCell(s.self?.tool_calls)} | ` +
-        `${mdCell(s.self?.tool_rejections)} | ${mdCell(s.self?.tool_errors)} | ${mdCell(notes)} |`,
+        `${mdCell(s.self?.tool_rejections)} | ${mdCell(s.self?.tool_errors)} | ${mdCell(s.infraFailed)} | ${mdCell(notes)} |`,
     )
   }
   lines.push("")
   lines.push("## Aggregates")
   lines.push("")
-  lines.push(`- questions scored: ${agg.total}`)
+  lines.push(`- questions scored: ${agg.total}${agg.infraFailed > 0 ? ` (${agg.attempted} attempted)` : ""}`)
+  lines.push(
+    `- runner failures (the harness or the API failed before the question finished, not scored): ${agg.infraFailed}`,
+  )
   lines.push(
     `- validate first-pass rate: ${pct(agg.validatePassRate)} (mean ${agg.meanValidateErrorCount.toFixed(2)} errors/question)`,
   )
@@ -727,16 +793,17 @@ export function renderSummaryReport(reports: ModelReport[]): string {
   )
   lines.push("")
   lines.push(
-    "| model | questions | validate pass rate | mean audit findings | render pass rate | determinism rate | coverage hit rate | tool rejections | tool errors |",
+    "| model | questions | validate pass rate | mean audit findings | render pass rate | determinism rate | coverage hit rate | tool rejections | tool errors | runner failures |",
   )
-  lines.push("|---|---|---|---|---|---|---|---|---|")
+  lines.push("|---|---|---|---|---|---|---|---|---|---|")
   const sorted = [...reports].sort((a, b) => a.modelTag.localeCompare(b.modelTag))
   for (const r of sorted) {
     const agg = computeAggregates(r.scores)
     lines.push(
       `| ${mdCell(r.modelTag)} | ${agg.total} | ${pct(agg.validatePassRate)} | ${agg.meanAuditFindingCount.toFixed(2)} | ` +
         `${pct(agg.renderPassRate)} | ${pct(agg.determinismRate)} | ${pct(agg.coverageHitRate)} | ` +
-        `${agg.toolLoopQuestions > 0 ? agg.toolRejectionTotal : ""} | ${agg.toolLoopQuestions > 0 ? agg.toolErrorTotal : ""} |`,
+        `${agg.toolLoopQuestions > 0 ? agg.toolRejectionTotal : ""} | ${agg.toolLoopQuestions > 0 ? agg.toolErrorTotal : ""} | ` +
+        `${agg.infraFailed} |`,
     )
   }
   lines.push("")
@@ -800,8 +867,9 @@ async function main(): Promise<void> {
   for (const r of reports) {
     const agg = computeAggregates(r.scores)
     console.log(
-      `${r.modelTag}: ${r.scores.length} questions — validate ${pct(agg.validatePassRate)}, ` +
-        `render ${pct(agg.renderPassRate)}, determinism ${pct(agg.determinismRate)}`,
+      `${r.modelTag}: ${agg.total} questions — validate ${pct(agg.validatePassRate)}, ` +
+        `render ${pct(agg.renderPassRate)}, determinism ${pct(agg.determinismRate)}` +
+        (agg.infraFailed > 0 ? `, ${agg.infraFailed} runner failure(s) not scored` : ""),
     )
   }
 }

@@ -86,6 +86,7 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
+  rmSync,
   statSync,
   writeFileSync,
   type Dirent,
@@ -1258,6 +1259,97 @@ async function callRound(
 
 // ── per-question run ──
 
+/**
+ * The placement step on its own, shared by a fresh run and a resumed
+ * retry: copy whatever the model left in `workspace` up into `resultDir`
+ * (`placeArtifact`), or, with no workspace artifact, save the model's final
+ * message as `answer.json` when it parses as JSON. Returns the note the run
+ * log prints. Whatever throws here is the harness's own failure, decided by
+ * the caller.
+ */
+async function placeRun(workspace: string, resultDir: string, finalText: string | undefined): Promise<string> {
+  const located = locateArtifact(workspace)
+  if (located.kind !== "none") return placeArtifact(located, resultDir, workspace)
+  if (finalText !== undefined && stripFence(finalText).length > 0) {
+    const text = stripFence(finalText)
+    try {
+      JSON.parse(text)
+    } catch {
+      return "no workspace artifact and final message text is not parseable JSON — nothing saved"
+    }
+    writeFileSync(join(resultDir, "answer.json"), text + "\n")
+    return "no workspace artifact — saved final message text as answer.json (single-shot convention)"
+  }
+  return "no workspace artifact and no final message text — nothing saved"
+}
+
+/** The question's existing `meta.json`, parsed loosely: `undefined` when
+ *  there is none (the question has not run), an object otherwise. A file
+ *  that is not JSON still means "has run" — it is a harness-written file,
+ *  and resume never overwrites one it cannot read. */
+function readExistingMeta(resultDir: string): Record<string, unknown> | undefined {
+  let text: string
+  try {
+    text = readFileSync(join(resultDir, META_FILENAME), "utf8")
+  } catch {
+    return undefined
+  }
+  try {
+    const parsed = JSON.parse(text) as unknown
+    return typeof parsed === "object" && parsed !== null ? (parsed as Record<string, unknown>) : {}
+  } catch {
+    return {}
+  }
+}
+
+function isPlacementFailure(meta: Record<string, unknown>): meta is FailedRunMeta & Record<string, unknown> {
+  return meta.status === "failed" && meta.stage === "placement"
+}
+
+/** The model's final message as the finished run saw it, read back from
+ *  `transcript.json` for a placement retry: the last message, when it is an
+ *  assistant turn with text and no tool call. Any other ending (a tool
+ *  result, a scripted reply, an output-limit cut) means the run had no
+ *  final text, exactly as the original run decided. */
+function finalTextFromTranscript(resultDir: string): string | undefined {
+  const transcript = JSON.parse(readFileSync(join(resultDir, TRANSCRIPT_FILENAME), "utf8")) as { messages?: ChatMessage[] }
+  const last = transcript.messages?.at(-1)
+  if (last?.role !== "assistant" || typeof last.content !== "string" || last.tool_calls?.length) return undefined
+  return last.content
+}
+
+/**
+ * Resume for a question whose last run failed at placement (codex review
+ * R20): the model's run finished and its workspace is intact, only the
+ * harness's own step after it threw. Re-running the whole question would
+ * bill the model again for nothing, and skipping it (what resume did
+ * before) left a result root with whatever placement had copied before it
+ * threw — an IR without its theme, say — that the scorer would read as the
+ * model's answer. So placement is retried from the existing workspace, with
+ * no model call: a success rewrites `meta.json` as the completed run it
+ * already recorded (minus `status`/`stage`/`error`), a second failure
+ * rewrites the failed meta with the new error and re-throws, as the first
+ * run did.
+ */
+async function retryPlacement(qid: string, resultDir: string, workspace: string, previous: FailedRunMeta): Promise<void> {
+  console.log(`${qid}: placement failed on the last run — retrying placement from the existing workspace, no model call (resume mode)`)
+  // A record the failed attempt may have written before it threw would
+  // otherwise outlive a lookup that now succeeds.
+  rmSync(join(resultDir, PLACEMENT_FILENAME), { force: true })
+  let placementNote: string
+  try {
+    placementNote = await placeRun(workspace, resultDir, finalTextFromTranscript(resultDir))
+  } catch (e) {
+    const failed: FailedRunMeta = { ...previous, status: "failed", stage: "placement", error: describeError(e) }
+    writeFileSync(join(resultDir, META_FILENAME), JSON.stringify(failed, null, 2) + "\n")
+    console.error(`${qid}: placement failed again — ${describeError(e, 200)}`)
+    throw e
+  }
+  const { status: _status, stage: _stage, error: _error, ...completed } = previous
+  writeFileSync(join(resultDir, META_FILENAME), JSON.stringify(completed, null, 2) + "\n")
+  console.log(`${qid}: placement retried — ${placementNote}`)
+}
+
 export async function runOneAgentic(
   cfg: { baseUrl: string; apiKey: string; model: string },
   providerPrefix: string,
@@ -1271,7 +1363,12 @@ export async function runOneAgentic(
   const prompt = readFileSync(join(dirs.questionsDir, qid, "prompt.md"), "utf8")
   const resultDir = join(dirs.resultsDir, modelTag, qid)
   const workspace = join(resultDir, "workspace")
-  if (existsSync(join(resultDir, META_FILENAME))) {
+  const existing = readExistingMeta(resultDir)
+  if (existing !== undefined) {
+    if (isPlacementFailure(existing)) {
+      await retryPlacement(qid, resultDir, workspace, existing)
+      return
+    }
     console.log(`${qid}: already run, skipping (resume mode)`)
     return
   }
@@ -1432,24 +1529,11 @@ export async function runOneAgentic(
   // whatever throws here (the deferred CLI module load, a copy) is an
   // infrastructure error the batch entry decides about, but the run's own
   // record lands first — the same meta a clean finish would write, marked
-  // failed at this stage (codex review R17).
+  // failed at this stage (codex review R17). A resumed batch retries just
+  // this step from the workspace ({@link retryPlacement}).
   let placementNote: string
   try {
-    const located = locateArtifact(workspace)
-    if (located.kind !== "none") {
-      placementNote = await placeArtifact(located, resultDir, workspace)
-    } else if (finalText !== undefined && stripFence(finalText).length > 0) {
-      const text = stripFence(finalText)
-      try {
-        JSON.parse(text)
-        writeFileSync(join(resultDir, "answer.json"), text + "\n")
-        placementNote = "no workspace artifact — saved final message text as answer.json (single-shot convention)"
-      } catch {
-        placementNote = "no workspace artifact and final message text is not parseable JSON — nothing saved"
-      }
-    } else {
-      placementNote = "no workspace artifact and no final message text — nothing saved"
-    }
+    placementNote = await placeRun(workspace, resultDir, finalText)
   } catch (e) {
     const failed: FailedRunMeta = { ...metaNow(), status: "failed", stage: "placement", error: describeError(e) }
     writeFileSync(join(resultDir, META_FILENAME), JSON.stringify(failed, null, 2) + "\n")

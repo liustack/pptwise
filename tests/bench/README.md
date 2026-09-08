@@ -20,7 +20,8 @@ tests/bench/
                 (round-2 addition, see "Question bank schema" below)
   results/<model-tag>/<question-id>/
     ...         the model-under-test's artifact (created by a run, not checked in here)
-    meta.json   optional self-reported run stats (tokens/duration/model), pass-through only
+    meta.json   optional self-reported run stats (tokens/duration/model), pass-through only,
+                except a harness-written `status: "failed"`, which makes the question unscored
     placement.json  agentic runs only, and only when the artifact's bound theme did not resolve
                 for the CLI — the CLI's own error, which the scorer fails the artifact on
   results-probe/<model-tag>/<question-id>/   probe-bank runs (see "Probe bank" below)
@@ -53,7 +54,9 @@ For each question:
    model? }`. This is passed through into reports verbatim — it is never scored, never used to
    adjust any pass/fail outcome. An agentic harness adds `tool_calls`, `tool_rejections`, and
    `tool_errors` (see "Agentic API run mode" below); the reports print the last two in separate
-   columns so a call the harness refused is never read as a mistake the model made.
+   columns so a call the harness refused is never read as a mistake the model made. The one
+   `meta.json` field the scorer does act on is a harness-written `"status": "failed"` (with its
+   `stage` and `error`): that question is not scored at all, see "Scoring" below.
 
 **Hard rule: no manual touch-ups after generation.** Whatever the model produced on its own is
 what gets scored — no hand-editing a `pages/*.json` to fix a `validate` error, no re-running a
@@ -237,6 +240,23 @@ scores as a fail for that question with
 a `reason` in the report's notes column, without aborting the rest of the batch. Self-reported
 `meta.json` (`{ tokens?, duration_seconds?, model? }`, run protocol step 4) passes through into
 the report's `tokens`/`duration_s` columns verbatim when present, blank otherwise — never scored.
+
+**A run the harness could not finish is not scored.** When `meta.json` carries `"status":
+"failed"` (the agentic runner writes it with a `stage` and an `error`, see "Agentic API run
+mode" below), the scorer reads that before it looks at any artifact and returns the question as
+a runner failure: `infraFailed: true`, `validatePass` false, `renderOk` false, `deterministic`
+null, no coverage hits, and `reason` = `runner failed at <stage>: <error>`. The artifact is never
+loaded. The reason is that what such a result directory holds is whatever the failing step left
+behind, not the model's finished answer: a placement that threw between copying the IR and
+carrying its theme leaves `deck.json` bound to a name the built-ins also answer to, and scoring
+it as usual would resolve that built-in, pass validate and render, and make the failure vanish
+(codex review R20). `report.md` marks these in a `runnerFailed` column, counts them on their own
+`runner failures` aggregate line, and leaves them out of every rate (`questions scored` is the
+count actually scored, with the attempted count beside it whenever the two differ); `summary.md`
+carries a `runner failures` column. A runner failure is the harness's or the API's, never the
+model's, and is not read as a model failure anywhere in either report. Delete the result
+directory to redo the question, or, for a placement-stage failure, just resume the batch (see
+"Agentic API run mode": resume retries placement without calling the model).
 Both `report.md` files and `summary.md` are byte-identical across two scoring runs of the same
 result set — no timestamps or other non-deterministic content in the report body.
 
@@ -463,10 +483,24 @@ loader's own wrapper does not hide the root reason. Both stages record the `roun
 token totals, a `placement` failure with the complete meta a clean finish would have written.
 The two differ in what happens next: a `tool-loop` failure is the model's run ending badly, so the
 batch logs it and moves on, while a `placement` failure is the harness's own, so it is re-thrown
-to the batch entry after the meta is on disk. Either way the question counts as run: the harness
-skips any question whose `meta.json` already exists (resume mode), so a failed question is not
-silently re-run and re-billed when a batch is restarted, delete its result directory to redo it.
-A completed run's meta carries neither `status` nor `stage`.
+to the batch entry after the meta is on disk. Either way the question counts as run, and
+`score.mts` scores neither: a `status: "failed"` meta makes the question a runner failure, kept
+apart from the model's numbers (see "Scoring" above).
+
+**Resume.** The harness skips any question whose `meta.json` already exists, so a failed question
+is not silently re-run and re-billed when a batch is restarted, delete its result directory to
+redo it. The one exception is a `placement` failure: the model's run finished and its
+`workspace/` is intact, only the harness's own step after it threw, so on resume the harness
+retries placement from that workspace without calling the model. The placement failure may have
+copied part of the artifact before it threw (`deck.json` without its theme, say), and a plain
+skip would leave that partial result in place for good. A successful retry rewrites `meta.json`
+as the completed run it already recorded (the same counts and token totals, minus
+`status`/`stage`/`error`) and logs `placement retried`; a retry that fails again rewrites the
+failed meta with the new error and re-throws, exactly as the first run did. The final message the
+retry hands placement (for the `answer.json` fallback) is read back from `transcript.json`. No
+flag is needed: retrying placement costs no model call and produces exactly what the original
+run would have produced had its placement not thrown. A completed run's meta carries neither
+`status` nor `stage`.
 
 **Tool rejections are not model errors.** A call the harness refused before running it — a path
 outside the workspace, a subcommand off the whitelist, a write to a provisioned input, malformed

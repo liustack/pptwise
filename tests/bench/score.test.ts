@@ -603,3 +603,136 @@ describe("scoreQuestion — placement.json records a theme lookup the CLI refuse
     expect("error" in loaded ? loaded.error : "").not.toMatch(/ambiguous artifact/)
   })
 })
+
+// ── meta.json's own failure record gates scoring (codex review R20). A
+// placement that threw part way can leave the result root with the IR but
+// not the theme it was rendered under and no placement.json; scored as
+// usual, the same-named built-in takes over and the failure vanishes. The
+// runner's `status: "failed"` is read first and the question is not scored
+// at all. ──
+
+describe("scoreQuestion — a failed run's meta.json makes the question unscorable (codex review R20)", () => {
+  let tmp: string
+
+  afterEach(() => {
+    if (tmp) rmSync(tmp, { recursive: true, force: true })
+  })
+
+  const THESIS_PRIMARY = "#0E6245"
+  const BUILTIN_BRIEF_PRIMARY = "#1E2A4A"
+
+  it("a placement-stage failure is a runner failure with the stage and error as the reason, and the artifact is never loaded", async () => {
+    tmp = mkdtempSync(join(tmpdir(), "bench-score-runner-failed-"))
+    // What a placement failure leaves behind: deck.json copied, the local
+    // theme.json (id brief, menu and colors from thesis) not carried, no
+    // placement.json. Scored as usual this would resolve the built-in brief.
+    writeFileSync(join(tmp, "deck.json"), readFileSync(join(RESULTS_DIR, "green-model", "fx01", "answer.json")))
+    const stranded = themeFileFromPreset("thesis", { id: "brief" })
+    expect(stranded.style.colors.primary).toBe(THESIS_PRIMARY)
+    const loaded = await loadArtifact(tmp)
+    expect("error" in loaded ? loaded.error : loaded.theme?.style.colors.primary).toBe(BUILTIN_BRIEF_PRIMARY)
+    const error = "Error: injected: deferred CLI module could not load"
+    writeFileSync(
+      join(tmp, "meta.json"),
+      JSON.stringify({ mode: "agentic", rounds: 2, tool_calls: 2, tool_rejections: 0, tool_errors: 0, status: "failed", stage: "placement", error }),
+    )
+
+    const score = await scoreQuestion("r1", tmp, { id: "r1", coverage: { expects_components: ["kpi_cards"] } })
+    expect(score.infraFailed).toBe(true)
+    expect(score.reason).toBe(`runner failed at placement: ${error}`)
+    expect(score.validatePass).toBe(false)
+    expect(score.validateErrorCount).toBe(0)
+    expect(score.auditFindingCount).toBe(0)
+    expect(score.renderOk).toBe(false)
+    expect(score.deterministic).toBeNull()
+    expect(score.coverageHits).toEqual([])
+    expect(score.expectedComponents).toEqual(["kpi_cards"])
+    expect(score.self).toMatchObject({ status: "failed", stage: "placement", error, tool_calls: 2 })
+  })
+
+  it("a tool-loop failure is a runner failure too, not a 'no artifact found' model failure", async () => {
+    tmp = mkdtempSync(join(tmpdir(), "bench-score-runner-failed-"))
+    writeFileSync(
+      join(tmp, "meta.json"),
+      JSON.stringify({ mode: "agentic", rounds: 1, tool_calls: 0, status: "failed", stage: "tool-loop", error: "Error: HTTP 502: bad gateway" }),
+    )
+    const score = await scoreQuestion("r2", tmp, { id: "r2" })
+    expect(score.infraFailed).toBe(true)
+    expect(score.reason).toBe("runner failed at tool-loop: Error: HTTP 502: bad gateway")
+    expect(score.validatePass).toBe(false)
+    expect(score.renderOk).toBe(false)
+  })
+
+  it("a completed run's meta (no status) scores as before, and a status other than failed is not a failure record", async () => {
+    tmp = mkdtempSync(join(tmpdir(), "bench-score-runner-failed-"))
+    writeFileSync(join(tmp, "deck.json"), readFileSync(join(RESULTS_DIR, "green-model", "fx01", "answer.json")))
+    writeFileSync(join(tmp, "meta.json"), JSON.stringify({ mode: "agentic", rounds: 3, tool_calls: 2, status: "ok" }))
+    const score = await scoreQuestion("r3", tmp, { id: "r3" })
+    expect(score.infraFailed).toBeUndefined()
+    expect(score.reason).toBeUndefined()
+    expect(score.validatePass).toBe(true)
+    expect(score.self?.status).toBeUndefined()
+  })
+
+  function scored(id: string, validatePass: boolean, self?: QuestionScore["self"]): QuestionScore {
+    return {
+      id,
+      validatePass,
+      validateErrorCount: validatePass ? 0 : 1,
+      auditFindingCount: 0,
+      renderOk: validatePass,
+      deterministic: validatePass ? true : null,
+      coverageHits: validatePass ? ["kpi_cards"] : [],
+      expectedComponents: ["kpi_cards"],
+      self,
+    }
+  }
+
+  function runnerFailed(id: string, stage: string): QuestionScore {
+    return {
+      id,
+      validatePass: false,
+      validateErrorCount: 0,
+      auditFindingCount: 0,
+      renderOk: false,
+      deterministic: null,
+      coverageHits: [],
+      expectedComponents: ["kpi_cards"],
+      reason: `runner failed at ${stage}: Error: boom`,
+      infraFailed: true,
+      self: { tool_calls: 2, tool_rejections: 0, tool_errors: 0, status: "failed", stage, error: "Error: boom" },
+    }
+  }
+
+  it("the per-model report counts runner failures on their own line and keeps them out of every rate", () => {
+    const md = renderModelReport("m", [
+      scored("q01", true, { tool_calls: 4, tool_rejections: 0, tool_errors: 0 }),
+      scored("q02", false, { tool_calls: 6, tool_rejections: 0, tool_errors: 1 }),
+      runnerFailed("q03", "placement"),
+    ])
+    const header = md.split("\n").find((l) => l.startsWith("| id |"))!
+    expect(header).toContain("| runnerFailed |")
+    expect(md.split("\n").find((l) => l.startsWith("| q03 |"))).toContain("| true | runner failed at placement: Error: boom |")
+    // a scored question leaves the runnerFailed cell blank
+    expect(md.split("\n").find((l) => l.startsWith("| q01 |"))!.endsWith("| 4 | 0 | 0 |  |  |")).toBe(true)
+    expect(md).toContain("- questions scored: 2 (3 attempted)")
+    expect(md).toContain("- runner failures (the harness or the API failed before the question finished, not scored): 1")
+    // rates over the two scored questions only: 1 of 2 validates, 1 of 2 renders
+    expect(md).toContain("- validate first-pass rate: 50.0%")
+    expect(md).toContain("- render success rate: 50.0%")
+    expect(md).toContain("- coverage hit rate (reporting only, never scored): 50.0%")
+    // the tool-loop denominators stay over the runs that had a loop
+    expect(md).toContain("- tool errors (call ran, reported failure): 1 across 1 of 2 questions with a tool loop")
+  })
+
+  it("the cross-model summary carries a runner failures column", () => {
+    const md = renderSummaryReport([
+      { modelTag: "m", scores: [scored("q01", true, { tool_calls: 4, tool_rejections: 0, tool_errors: 0 }), runnerFailed("q02", "tool-loop")] },
+    ])
+    const header = md.split("\n").find((l) => l.startsWith("| model |"))!
+    expect(header).toContain("| runner failures |")
+    const row = md.split("\n").find((l) => l.startsWith("| m |"))!
+    expect(row).toContain("| 1 | 100.0% |")
+    expect(row.trim().endsWith("| 1 |")).toBe(true)
+  })
+})
