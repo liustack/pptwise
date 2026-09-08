@@ -21,6 +21,11 @@ import { OLD_IR_VERSION_ERROR, PptxIRSchema, themeIssueMessage, type PptxIR } fr
 import { listAssetReferences } from "./ir/asset-references"
 import { decodeDataUriBytes, dataUriMime, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "./ir/asset-sniff"
 import { normalizeComponentAliases, normalizeDeckRootAliases } from "./ir/field-aliases"
+import {
+  findOverflowVocabulary,
+  OVERFLOW_VOCABULARY_MESSAGE,
+  visitStringLeaves,
+} from "./ir/overflow-vocabulary"
 import { isSlideLevelPath, renameHintsFor, SLIDE_LEVEL_UNKNOWN_KEY_HINT } from "./ir/rename-hints"
 import { normalizeNarrativeShape, resolveNarrative, type NarrativeProfile } from "./narrative"
 import { CAPACITY } from "./audit/capacity"
@@ -548,6 +553,26 @@ function checkDuplicateSlideIds(ir: PptxIR): ValidationIssue[] {
   ]
 }
 
+function checkOverflowVocabulary(ir: PptxIR): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  const consider = (root: unknown, prefix: string, page?: number, slideId?: string) => {
+    visitStringLeaves(root, prefix, (path, text) => {
+      if (!text || !findOverflowVocabulary(text)) return
+      errors.push({
+        path,
+        message: OVERFLOW_VOCABULARY_MESSAGE,
+        ...(page !== undefined ? { page } : {}),
+        ...(slideId !== undefined ? { slideId } : {}),
+      })
+    })
+  }
+  consider(ir.meta, "meta")
+  ir.slides.forEach((slide, i) => {
+    consider(slide, `slides.${i}`, i + 1, slide.id)
+  })
+  return errors
+}
+
 /**
  * Byte-level validation of every inline (`data:`) image asset in
  * `assets.images` (borrow wave, Task 2 — D3): magic-byte sniffing catches a
@@ -814,6 +839,8 @@ export function validateIr(input: unknown, opts?: { theme?: ThemeDefinition }): 
   if (boundaryItemErrors.length > 0) return withNormalized({ ok: false, errors: boundaryItemErrors })
   const duplicateIdErrors = checkDuplicateSlideIds(r.data)
   if (duplicateIdErrors.length > 0) return withNormalized({ ok: false, errors: duplicateIdErrors })
+  const overflowVocabularyErrors = checkOverflowVocabulary(r.data)
+  if (overflowVocabularyErrors.length > 0) return withNormalized({ ok: false, errors: overflowVocabularyErrors })
   // Asset byte validation (borrow wave, Task 2 — D3): a broken image is
   // content loss, so this is a hard gate at the same short-circuiting
   // position as the other structural checks above, not folded into

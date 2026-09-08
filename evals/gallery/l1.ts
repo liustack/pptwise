@@ -9,6 +9,7 @@
  */
 
 import { META_FONT_FLOOR_PT, META_FONT_FLOOR_PX, pxToPt } from "@/constants"
+import { findOverflowVocabulary } from "@/ir/overflow-vocabulary"
 import { measureMonoTextUnits, measureTextUnits } from "@/lib/svg-text-layout"
 import { getPlatform } from "@/platform/registry"
 import { __pathBoundingBox, findOverlapIssues } from "@/audit/deck-audit"
@@ -108,9 +109,6 @@ const ISOLATED_DOT_SQUARE_MAX = 8
 const DOT_SEQUENCE_ALIGN = 4
 const DOT_SEQUENCE_MIN = 3
 
-const OVERFLOW_MARKER = /\+\d+\s*(…|\.{3}|more|项)/i
-const OVERFLOW_MARKER_ZH = /另有\s*\d+\s*项/
-const OVERFLOW_ELLIPSIS = /…|(?<![.])\.\.\.(?![.])/
 const VERTICAL_WM = /^(tb|tb-rl|vertical-rl|vertical-lr)$/i
 const LATIN = /[A-Za-z]/
 const PUNCT_ONLY = /^[\s"'“”‘’「」『』（）()[\]【】…·•、，。！？：:;,.!?/-]+$/
@@ -833,11 +831,7 @@ function walkText(
         const bottom = ty + fontSize * 0.25
         const decor = hasDecor(el)
 
-        if (
-          OVERFLOW_MARKER.test(content) ||
-          OVERFLOW_MARKER_ZH.test(content) ||
-          OVERFLOW_ELLIPSIS.test(content)
-        ) {
+        if (findOverflowVocabulary(content)) {
           findings.push({
             code: "overflow-marker",
             message: `overflow marker "${label}" is banned`,

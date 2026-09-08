@@ -311,3 +311,39 @@ describe("spec JSON schema", () => {
     expect(schema).not.toContain('"layout"')
   })
 })
+
+describe("validateSpec leftover phrasing in headings", () => {
+  const MESSAGE = "overflow-vocabulary: write the value itself as data, not a count of what was left out"
+
+  it.each([
+    ["leftover plus-count with more", "+3 more"],
+    ["remainder-count", "另有 2 项"],
+    ["ellipsis", "Cut short…"],
+  ])("rejects a page heading that uses %s", (_label, heading) => {
+    const result = validateSpec(
+      valid({
+        pages: [cover(), content("a", { heading }), content("b"), content("c"), content("d"), ending()],
+      }),
+    )
+    expect(result.ok).toBe(false)
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: "pages.1.heading",
+          pageId: "a",
+          message: MESSAGE,
+        }),
+      ]),
+    )
+  })
+
+  it("does not reject a heading that writes the value itself", () => {
+    const result = validateSpec(
+      valid({
+        pages: [cover(), content("a", { heading: "+4 pp" }), content("b"), content("c"), content("d"), ending()],
+      }),
+    )
+    expect(result.ok).toBe(true)
+  })
+})
+

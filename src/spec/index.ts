@@ -20,6 +20,11 @@ import {
 } from "../ir"
 import { normalizeDeckRootAliases } from "../ir/field-aliases"
 import {
+  findOverflowVocabulary,
+  OVERFLOW_VOCABULARY_MESSAGE,
+  visitStringLeaves,
+} from "../ir/overflow-vocabulary"
+import {
   normalizeNarrativeShape,
   resolveNarrative,
   type NarrativeProfile,
@@ -349,6 +354,25 @@ function checkHeadings(spec: DeckSpec): SpecValidationIssue[] {
   return errors
 }
 
+function checkOverflowVocabulary(spec: DeckSpec): SpecValidationIssue[] {
+  const errors: SpecValidationIssue[] = []
+  const consider = (root: unknown, prefix: string) => {
+    visitStringLeaves(root, prefix, (path, text) => {
+      if (!text || !findOverflowVocabulary(text)) return
+      const m = /^pages\.(\d+)/.exec(path)
+      const page = m ? spec.pages[Number(m[1])] : undefined
+      errors.push({
+        path,
+        message: OVERFLOW_VOCABULARY_MESSAGE,
+        ...(page?.id !== undefined ? { pageId: page.id } : {}),
+      })
+    })
+  }
+  consider(spec.meta, "meta")
+  consider(spec.pages, "pages")
+  return errors
+}
+
 // ── hard gate: theme resolution ─────────────────────────────────────────
 
 /**
@@ -602,6 +626,9 @@ export function validateSpec(input: unknown, opts?: { theme?: ThemeDefinition })
 
   const headingErrors = checkHeadings(spec)
   if (headingErrors.length > 0) return withNormalized({ ok: false, errors: headingErrors })
+
+  const overflowVocabularyErrors = checkOverflowVocabulary(spec)
+  if (overflowVocabularyErrors.length > 0) return withNormalized({ ok: false, errors: overflowVocabularyErrors })
 
   const boundTheme = resolveSpecTheme(spec, opts?.theme)
   if (!boundTheme.ok) return withNormalized({ ok: false, errors: boundTheme.errors })
