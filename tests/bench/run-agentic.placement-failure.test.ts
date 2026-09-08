@@ -16,7 +16,7 @@ import { describeError, runOneAgentic, type ChatCompletionResponse, type CliThem
 
 const INJECTED_ERROR = "injected: deferred CLI module could not load"
 const failCliLoad: CliThemeLookupFn = async () => {
-  throw new Error(INJECTED_ERROR)
+  throw new Error("injected: deferred CLI wrapper", { cause: new Error(INJECTED_ERROR) })
 }
 
 describe("runOneAgentic records a placement-stage failure in meta.json", () => {
