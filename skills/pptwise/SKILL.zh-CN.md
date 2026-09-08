@@ -161,6 +161,7 @@ pptwise render deck-dir/
 - 从不在作者内容中加入坐标、SVG、页面脸名或几何控制。
 - 面向用户的 deck 文案跟随用户语言。schema 键与枚举值使用英文。
 - 不声称 `chart` 或 `data_table` 的数字是原生 PowerPoint 数据对象。它们导出为可编辑的成组图形与文字。改数字要改源文件并重新渲染。
+- 把数值本身写出来。不要用剩余条数或省略号代替内容。validate 会拒绝。
 - preview 全程只读。修订回到 `deck.spec.json`、`pages/*.json`、资产或绑定主题文件。
 
 ## 何时阅读

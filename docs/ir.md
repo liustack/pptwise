@@ -153,6 +153,12 @@ Each `assets.images` entry contains `src` and may include `alt` or `error`. `src
 
 Backgrounds are `color`, `gradient`, or `asset`. Cover and chapter asset backgrounds use the dedicated readable image treatment. Run `pptwise asset-brief <target>` before sourcing image content so the real frame and crop are known.
 
+## Validation
+
+`pptwise validate` is the live contract. Authored strings must write the value itself. Never stand in for content with a leftover count or an ellipsis. validate rejects it.
+
+The check walks every string leaf under `slides` and `meta`, so a new component field is covered automatically. Spec headings get the same check.
+
 ## Deck project or bare IR
 
 Use a bare IR for a small generated input or a direct API boundary. Use a deck project for iterative work. A project keeps theme binding and page semantics in `deck.spec.json`, stores content in `pages/<id>.json`, and assembles the same IR v5 without writing rendering choices back into source files.

@@ -153,6 +153,12 @@ pptwise schema --kind data --theme brief
 
 背景分为 `color`、`gradient` 与 `asset`。封面和章节页的资产背景会采用专门的可读压图处理。为图片内容找素材前先运行 `pptwise asset-brief <target>`，取得真实画框与裁切方式。
 
+## 校验
+
+`pptwise validate` 是现行契约。作者写的字符串必须把数值本身写出来。不要用剩余条数或省略号代替内容。validate 会拒绝。
+
+这项检查会遍历 `slides` 与 `meta` 下的每一个字符串叶子，所以新的组件字段会自动被覆盖。spec 的标题走同一项检查。
+
 ## Deck 项目还是裸 IR
 
 小型生成输入或直接 API 边界可以使用裸 IR。迭代工作建议使用 deck 项目。项目把主题绑定与页面语义放在 `deck.spec.json`，把内容放在 `pages/<id>.json`，再组装为同一个 IR v5，不把渲染选择写回源文件。

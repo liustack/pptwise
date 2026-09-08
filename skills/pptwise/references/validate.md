@@ -15,7 +15,7 @@ pptwise validate deck-dir/
 
 `assemble` merges the locked semantics and page content into IR v5. It does not write face choices or any other rendering decision into the project. A missing page file remains an accepted placeholder. An orphan page file, a locked-field conflict, an unknown theme, or a kind absent from the bound theme menu is a hard error.
 
-`validate` applies schema, component, asset, narrative, physical capacity, and editorial checks. Fix errors until it prints `OK`. Warnings do not block output, but long headings, excessive density, dangling assets, and repetitive choices should normally be tightened before delivery.
+`validate` applies schema, component, asset, narrative, physical capacity, and editorial checks. Authored leftover-count phrasing and ellipsis substitutes are rejected here, before a page is painted. Fix errors until it prints `OK`. Warnings do not block output, but long headings, excessive density, dangling assets, and repetitive choices should normally be tightened before delivery.
 
 Speaker `notes` export as native PowerPoint notes and never paint on the slide.
 

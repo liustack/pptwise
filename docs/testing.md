@@ -93,7 +93,7 @@ pnpm evals:gallery --l1-only
 pnpm evals:gallery --only=cross-language
 ```
 
-Default mode compares current page fingerprints with `evals/gallery/hashes.json` and audits changed or added pages. L1 is deterministic. L2 runs only when its local vision CLI is available and the environment permits it. Live findings are written to a gitignored verdict report.
+Default mode compares current page fingerprints with `evals/gallery/hashes.json` and audits changed or added pages. L1 is deterministic. Authored leftover-count phrasing and ellipsis substitutes are rejected by validate before a page is painted, so L1 `overflow-marker` is the renderer-side backstop. L2 runs only when its local vision CLI is available and the environment permits it. Live findings are written to a gitignored verdict report.
 
 The same command also runs the full 24-theme Latin and mixed-script capacity sweep (every component, chart, and device variant, plus adjacency pairings). A ratchet mismatch fails the process. `pnpm evals:gallery --only=cross-language` runs only that section. Vitest `evals/gallery/cross-language-capacity.test.mts` samples four themes (swiss, thesis, crayon, ink). Same assertions, smaller theme axis.
 

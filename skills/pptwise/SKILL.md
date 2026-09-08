@@ -159,6 +159,7 @@ Use `--draft` or `--allow-dropped-content` only when the user explicitly request
 - Never add coordinates, SVG, page face names, or geometry controls to authored content.
 - Keep public deck copy in the user's language. Keep schema keys and enum values in English.
 - Never claim that `chart` or `data_table` values are native PowerPoint data objects. They export as editable grouped shapes and text. Change figures in the source and rerender.
+- Write the value itself. Never stand in for content with a leftover count or an ellipsis. validate rejects it.
 - Preview is read-only. Revisions go back into `deck.spec.json`, `pages/*.json`, assets, or the bound theme file.
 
 ## Read when
