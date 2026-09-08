@@ -106,7 +106,7 @@ describe("RallyMotif（右上一簇纸屑）", () => {
     expect(draw("rally", coverSlide).markup).toBe(draw("rally", coverSlide).markup)
   })
 
-  it("装饰位置写死：换 seed（filename）输出逐字节不变", () => {
+  it("装饰位置写死：换 filename 输出逐字节不变", () => {
     const markups = new Set(Array.from({ length: 12 }, (_, i) => draw("rally", coverSlide, `probe-${i}.pptx`).markup))
     expect(markups.size).toBe(1)
   })

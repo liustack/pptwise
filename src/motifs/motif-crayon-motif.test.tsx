@@ -222,7 +222,7 @@ describe("CrayonMotif（太阳涂鸦）", () => {
     expect(draw("crayon", contentSlide).markup).toBe(draw("crayon", contentSlide).markup)
   })
 
-  it("装饰位置写死：换 seed（filename）输出逐字节不变", () => {
+  it("装饰位置写死：换 filename 输出逐字节不变", () => {
     const markups = new Set(Array.from({ length: 12 }, (_, i) => draw("crayon", coverSlide, `probe-${i}.pptx`).markup))
     expect(markups.size).toBe(1)
     const contentMarkups = new Set(

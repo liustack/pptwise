@@ -226,7 +226,7 @@ describe("HomeroomMotif（横线簿格线）", () => {
     }
   })
 
-  it("装饰位置写死：换 seed（filename）输出逐字节不变", () => {
+  it("装饰位置写死：换 filename 输出逐字节不变", () => {
     const ctx = buildCtx(resolveStyle("homeroom"), {})
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>

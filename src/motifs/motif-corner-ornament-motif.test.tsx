@@ -366,7 +366,7 @@ describe("CornerOrnamentMotif（报头双线）", () => {
     }
   })
 
-  it("装饰位置写死：换 seed（filename）输出逐字节不变（v1 的三档 seed 变体已删）", () => {
+  it("装饰位置写死：换 filename 输出逐字节不变（v1 的三档随机变体已删）", () => {
     const ctx = buildCtx(resolveStyle("journal"), {})
     const markups = new Set(
       Array.from({ length: 12 }, (_, i) =>
