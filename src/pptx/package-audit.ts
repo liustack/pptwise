@@ -562,9 +562,7 @@ function slideNumberFromPart(slidePart: string): number | null {
 
 async function checkSlideParts(
   reader: PptxPackageReader,
-  ir?: PptxIR,
-  imageOpsBySlide?: ReadonlyArray<readonly ImageOp[]>,
-  theme?: ThemeDefinition,
+  source?: AuditIrSource,
 ): Promise<PackageAuditViolation[]> {
   const violations: PackageAuditViolation[] = []
   const slideParts = reader.listParts().filter((p) => SLIDE_PART_RE.test(p)).sort()
@@ -578,17 +576,14 @@ async function checkSlideParts(
   // same ops via the same pure `slideToOps` seam `generatePptxBlob` itself
   // calls — not a new rendering pass, just the one this rule already
   // depends on, run again from the (deterministic, pure) IR.
-  let resolvedImageOpsBySlide: ReadonlyArray<readonly ImageOp[]> | undefined
-  if (ir !== undefined) {
-    if (imageOpsBySlide !== undefined) {
-      resolvedImageOpsBySlide = imageOpsBySlide
-    } else {
-      const boundTheme = resolveIrTheme(ir, theme)
-      resolvedImageOpsBySlide = ir.slides.map((slide, index) =>
-        slideToOps(ir, slide, index, boundTheme).filter((op): op is ImageOp => op.kind === "image"),
-      )
-    }
-  }
+  const ir = source?.ir
+  const resolvedImageOpsBySlide: ReadonlyArray<readonly ImageOp[]> | undefined =
+    source === undefined
+      ? undefined
+      : (source.imageOpsBySlide ??
+        source.ir.slides.map((slide, index) =>
+          slideToOps(source.ir, slide, index, source.theme).filter((op): op is ImageOp => op.kind === "image"),
+        ))
   for (const slidePart of slideParts) {
     let doc: Document
     try {
@@ -623,11 +618,24 @@ async function checkSlideParts(
 // Orchestration + entry point.
 // ────────────────────────────────────────────────────────────────────────
 
+/**
+ * The source deck this audit was handed, with its theme already resolved.
+ *
+ * Resolution happens once, in {@link auditPptxPackage}, for every call that
+ * carries an `ir` — including one that also supplies `imageOpsBySlide`.
+ * Supplied ops only decide whether the image ops are recomputed. They never
+ * decide whether the theme a caller passed answers to the deck it binds:
+ * that check belongs to the entry point, not to a rendering shortcut.
+ */
+interface AuditIrSource {
+  ir: PptxIR
+  theme: ThemeDefinition
+  imageOpsBySlide?: ReadonlyArray<readonly ImageOp[]>
+}
+
 async function collectViolations(
   reader: PptxPackageReader,
-  ir?: PptxIR,
-  imageOpsBySlide?: ReadonlyArray<readonly ImageOp[]>,
-  theme?: ThemeDefinition,
+  source?: AuditIrSource,
 ): Promise<PackageAuditViolation[]> {
   const coreViolations = checkCoreParts(reader)
   if (coreViolations.length > 0) return coreViolations // nothing else is safely checkable without these
@@ -638,7 +646,7 @@ async function collectViolations(
   const violations: PackageAuditViolation[] = []
   violations.push(...(await checkSlideListConsistency(reader)))
   violations.push(...(await checkRelationshipTargets(reader)))
-  violations.push(...(await checkSlideParts(reader, ir, imageOpsBySlide, theme)))
+  violations.push(...(await checkSlideParts(reader, source)))
   return violations
 }
 
@@ -719,6 +727,11 @@ function formatViolations(violations: PackageAuditViolation[]): string {
  * re-derives the same ops itself via the same `slideToOps` seam, so the
  * rule still runs correctly off `ir` alone, just without the production
  * path's single-computation optimization.
+ *
+ * `theme` (fourth parameter) is the deck's bound theme by value, resolved
+ * here once for every call carrying an `ir` — see {@link AuditIrSource}.
+ * Whether the caller also brought image ops changes what gets recomputed,
+ * never whether the binding is checked.
  */
 export async function auditPptxPackage(
   input: JSZip | Blob | ArrayBuffer | Uint8Array,
@@ -740,6 +753,11 @@ export async function auditPptxPackage(
     }
   }
   const reader = createPptxPackageReader(zip)
-  const violations = await collectViolations(reader, ir, imageOpsBySlide, theme)
+  // One resolution for the whole audit, before any rule runs: a theme that
+  // does not answer to the deck's own binding is refused here whether or
+  // not the caller brought its own image ops.
+  const source: AuditIrSource | undefined =
+    ir === undefined ? undefined : { ir, theme: resolveIrTheme(ir, theme), imageOpsBySlide }
+  const violations = await collectViolations(reader, source)
   if (violations.length > 0) throw new PptwiseError(formatViolations(violations))
 }

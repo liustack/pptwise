@@ -25,7 +25,7 @@ import { generatePptxBlob } from "./generate"
 import { auditPptxPackage } from "./package-audit"
 import { svgToOps } from "./svg2pptx/dispatch"
 import type { ImageOp } from "./svg2pptx/image"
-import { __resetRegisteredThemes } from "../themes/definitions"
+import { __resetRegisteredThemes, THEME_DEFINITIONS } from "../themes/definitions"
 import { registerTestTheme } from "../themes/test-fixtures"
 
 beforeAll(() => {
@@ -705,5 +705,25 @@ describe("auditPptxPackage — image-alt-dropped, rekeyed on rendered ops (alt-e
     imageOpsBySlide[contentIndex] = strippedImageOps
 
     await expect(auditPptxPackage(zip, ir, imageOpsBySlide)).rejects.toThrow(/image-alt-dropped/)
+  })
+})
+
+describe("auditPptxPackage — the deck's theme binding", () => {
+  it("refuses a theme that does not answer to the deck's binding, supplied image ops or not", async () => {
+    const ir = makeIr()
+    const zip = await renderCleanZip(ir)
+    // The deck carries no images, so the ops a caller would have computed
+    // are empty — what matters is that they were supplied at all.
+    const imageOpsBySlide: ImageOp[][] = ir.slides.map(() => [])
+    const mismatch = THEME_DEFINITIONS.ledger
+
+    // Bringing your own image ops skips the recompute, never the binding check.
+    await expect(auditPptxPackage(zip, ir, undefined, mismatch)).rejects.toThrow(
+      /deck binds theme "brief" but the supplied theme definition is "ledger"/,
+    )
+    await expect(auditPptxPackage(zip, ir, imageOpsBySlide, mismatch)).rejects.toThrow(
+      /deck binds theme "brief" but the supplied theme definition is "ledger"/,
+    )
+    await expect(auditPptxPackage(zip, ir, imageOpsBySlide, THEME_DEFINITIONS.brief)).resolves.toBeUndefined()
   })
 })
