@@ -59,7 +59,8 @@ export function assertThemeId(id: string): void {
   assertNotRetiredThemeId(id)
 }
 
-async function readThemeFile(path: string): Promise<ThemeFile> {
+/** A theme file read strictly: a malformed file is an error. */
+export async function readThemeFile(path: string): Promise<ThemeFile> {
   const raw = await loadIrFile(path, "theme")
   return parseBrandThemeFile(raw, path)
 }
@@ -242,17 +243,17 @@ export async function resolveThemeByName(name: string, opts: ThemeLookupOptions)
 const REBIND_SUFFIX =
   "A same-menu color fork is allowed. A different menu is a new theme. Start over from the theme layer (keep intent, narrative, and harvested materials, rewrite the spec)."
 
-export async function assertThemeRebind(deckDir: string | undefined, resolved: ResolvedTheme): Promise<void> {
-  if (deckDir === undefined) return
-  const boundPath = resolve(join(deckDir, THEME_FILENAME))
-  if (!(await pathExists(boundPath))) return
-  if (resolved.kind === "file" && resolve(resolved.path) === boundPath) return
-
-  const bound = parseBrandThemeFile(await loadIrFile(boundPath, "theme"), boundPath)
-  const nextId = resolved.id
-  const nextMenu = resolved.definition.menu
-  if (menusEqual(bound.menu, nextMenu)) return
-  throw new PptwiseError(`cannot rebind theme "${bound.id}" to "${nextId}": menus differ. ${REBIND_SUFFIX}`)
+/**
+ * The rebind guard: a deck whose own `theme.json` is `bound` may only be
+ * drawn with a theme of the same menu. Reads nothing: `bound` is the file
+ * as the theme-input record read it (`./theme-inputs.ts`, which also
+ * decides when there is nothing to compare against), so the guard's
+ * verdict is a function of that record alone.
+ */
+export function assertThemeRebind(bound: ThemeFile | undefined, resolved: ResolvedTheme): void {
+  if (bound === undefined) return
+  if (menusEqual(bound.menu, resolved.definition.menu)) return
+  throw new PptwiseError(`cannot rebind theme "${bound.id}" to "${resolved.id}": menus differ. ${REBIND_SUFFIX}`)
 }
 
 /** Resolve the requested theme through the ordinary lookup route. A missing

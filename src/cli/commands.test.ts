@@ -31,6 +31,7 @@ import {
   runValidate,
 } from "./commands"
 import { THEME_FILENAME } from "./deck-dir"
+import { resolveThemeInputs } from "./theme-inputs"
 
 const execFile = promisify(execFileCb)
 
@@ -959,14 +960,14 @@ describe("applyDeckConfig resolution (spec/IR theme id)", () => {
   it("resolves an authored IR theme", async () => {
     const d = await freshDir()
     const raw: any = structuredClone(VALID_IR)
-    await applyDeckConfig(raw, { cwd: d })
+    await applyDeckConfig(raw, await resolveThemeInputs({ name: "terminal" }, { startDir: d, deckDir: d }))
     expect(raw.theme.id).toBe("terminal")
   })
 
   it("leaves the IR untouched when there is no flag and no config", async () => {
     const d = await freshDir()
     const raw: any = structuredClone(VALID_IR)
-    await applyDeckConfig(raw, { cwd: d })
+    await applyDeckConfig(raw, await resolveThemeInputs({ name: "terminal" }, { startDir: d, deckDir: d }))
     expect(raw).toEqual(VALID_IR)
   })
 

@@ -35,7 +35,8 @@ import JSZip from "jszip"
 import { auditDeck, generatePptx, validateIr, type PptxIR } from "../../src/index"
 import { SPEC_FILENAME, readDeckDir } from "../../src/cli/deck-dir"
 import { loadIrFile, resolveLocalAssets } from "../../src/cli/load-ir"
-import { assertThemeRebind, resolveThemeByName, themeNameFromUnknown } from "../../src/cli/theme-resolve"
+import { checkThemeRebind } from "../../src/cli/theme-inputs"
+import { resolveThemeByName, themeNameFromUnknown } from "../../src/cli/theme-resolve"
 import type { ThemeDefinition } from "../../src/themes/definitions"
 import { installNodePlatform } from "../../src/platform/node"
 import {
@@ -238,7 +239,7 @@ async function resolveArtifactTheme(
   if (name === undefined) return { theme: undefined }
   try {
     const resolved = await resolveThemeByName(name, { startDir: dir, deckDir: dir })
-    await assertThemeRebind(dir, resolved)
+    await checkThemeRebind(dir, resolved)
     return { theme: resolved.definition }
   } catch (e) {
     const message = (e as Error).message

@@ -9,6 +9,7 @@ import { buildThmxBytes } from "../themes/extract/__fixtures__/thmx"
 import { getThemeDefinition } from "../themes/definitions"
 import { DEFAULT_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
 import { applyDeckConfig, runBrandExtract, runPreview, runSpecValidate, runValidate } from "./commands"
+import { resolveThemeInputs } from "./theme-inputs"
 import { resolveThemeByName } from "./theme-resolve"
 
 installNodePlatform()
@@ -139,13 +140,7 @@ describe("theme selection chain", () => {
     await expect(runValidate(deckDir, cwd)).rejects.not.toThrow(/theme "brief"/)
     const raw: Record<string, unknown> = { ...IR_NO_THEME }
     await expect(
-      applyDeckConfig(raw, {
-        cwd,
-        specTheme: "not-a-real-theme",
-        specPath: join(deckDir, "deck.spec.json"),
-        fromDeckDir: true,
-        deckDir,
-      }),
+      applyDeckConfig(raw, await resolveThemeInputs({ name: "not-a-real-theme" }, { startDir: cwd, deckDir })),
     ).rejects.toThrow(/unknown theme "not-a-real-theme"/)
   })
 

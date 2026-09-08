@@ -52,7 +52,6 @@ import {
 } from "./workspace"
 import {
   assertThemeId,
-  assertThemeRebind,
   deckThemeCandidates,
   resolveThemeSelection,
   resolveThemeByName,
@@ -61,6 +60,13 @@ import {
   WORKSPACE_THEMES_DIRNAME,
   type ResolvedTheme,
 } from "./theme-resolve"
+import {
+  collectThemeInputs,
+  guardThemeRebind,
+  themeFromInputs,
+  unreadThemeInputs,
+  type ThemeInputs,
+} from "./theme-inputs"
 import { forkTheme } from "./theme-fork"
 import { THEME_TRY_SAMPLE_IR } from "./fixtures/theme-try-sample"
 
@@ -74,19 +80,6 @@ type UserConfigHit = Awaited<ReturnType<typeof findUserConfig>>
  *  (W5 task 6: `loadDeckTarget` now needs the project layer too, for
  *  `decksDir` — see {@link resolveDecksDirSource}). */
 type ProjectConfigHit = Awaited<ReturnType<typeof findConfig>>
-
-/** The compiled definition of the theme a spec file binds, or `undefined`
- *  when there is no spec or it names none. It is handed to `readDeckDir` so
- *  assembly validates the spec against the same definition render will use. */
-async function resolveThemeFromSpecSource(
-  specPath: string,
-  opts: { startDir: string; deckDir?: string },
-): Promise<ThemeDefinition | undefined> {
-  if (!(await pathExists(specPath))) return undefined
-  const specRaw = await loadIrFile(specPath, "spec")
-  const resolved = await resolveThemeSelection(themeNameFromUnknown(specRaw), opts)
-  return resolved?.definition
-}
 
 /**
  * The `config` argument `resolveDeckTarget` (`./deck-dir.ts`) and its
@@ -121,59 +114,30 @@ function resolveDecksDirSource(
 }
 
 /**
- * Resolve deck defaults onto the raw (pre-validation) IR and return the
- * bound theme as the lookup resolved it: `definition` is the compiled theme
- * every later step (`validateIr`, `generatePptx`, `renderSlideSvg`,
- * `auditDeck`, `buildAssetBrief`) takes as its `theme` option, and the rest
- * says where it came from (which built-in, or which file with its parsed
- * content), which `pptwise serve` keeps as the record of what a build used.
- * Returns `undefined` only when nothing named a theme, in which case
- * `validateIr` reports the missing binding itself.
- * Selection authority is spec.theme (deck project) or authored IR theme.id
- * (bare file). Assembled deck-dir IR always carries theme.id from the
- * required spec theme. Pass
- * `fromDeckDir: true` and `specTheme` from the raw spec instead of reading
- * `ir.theme.id` after assemble.
+ * Resolve deck defaults onto the raw (pre-validation) IR from the theme
+ * inputs the build has already read (`collectThemeInputs`,
+ * `./theme-inputs.ts`), and return the bound theme as that record resolved
+ * it: `definition` is the compiled theme every later step (`validateIr`,
+ * `generatePptx`, `renderSlideSvg`, `auditDeck`, `buildAssetBrief`) takes
+ * as its `theme` option. Reads nothing itself: an error the record holds
+ * is thrown here as the build's own failure, and the rebind guard runs on
+ * the deck-local `theme.json` as the record read it. Returns `undefined`
+ * only when nothing named a theme, in which case `validateIr` reports the
+ * missing binding itself. Selection authority is spec.theme (deck project)
+ * or authored IR theme.id (bare file), which is what the record's `bound`
+ * holds; assembled deck-dir IR always carries theme.id from the required
+ * spec theme, and is never read for it here.
  */
-function deckLookupDir(resolvedTarget: string, isDir: boolean): string {
-  return isDir ? resolvedTarget : dirname(resolvedTarget)
-}
-
-export async function applyDeckConfig(
-  raw: unknown,
-  opts: {
-    /** Raw `deck.spec.json` `theme` when the target is a deck project and
-     *  the spec actually named one. Omitted when the spec omitted `theme`. */
-    specTheme?: string
-    specPath?: string
-    /** True when `raw` came from assembling a deck project directory.
-     *  Assembled IR's filled `theme.id` is not an authored selection layer. */
-    fromDeckDir?: boolean
-    /** Deck project directory, used for three-level lookup and the rebind guard. */
-    deckDir?: string
-    cwd: string
-    projectHit?: ProjectConfigHit
-    userHit?: UserConfigHit
-  },
-): Promise<ResolvedTheme | undefined> {
+export async function applyDeckConfig(raw: unknown, themeInputs: ThemeInputs): Promise<ResolvedTheme | undefined> {
   if (typeof raw !== "object" || raw === null) return undefined // schema error surfaces in validateIr
   const deck = raw as Record<string, unknown>
   const irTheme =
     typeof deck.theme === "object" && deck.theme !== null
       ? (deck.theme as Record<string, unknown>)
       : {}
-  const authoredName =
-    opts.specTheme
-    ?? (opts.fromDeckDir ? undefined : (typeof irTheme.id === "string" ? irTheme.id : undefined))
-  if (authoredName === undefined) return undefined
-  const resolved = await resolveThemeByName(authoredName, { startDir: opts.cwd, deckDir: opts.deckDir })
-  try {
-    await assertThemeRebind(opts.deckDir, resolved)
-  } catch (e) {
-    // The lookup itself succeeded: a caller that records what this build
-    // saw of the theme must record that theme, not the guard's refusal.
-    throw new DeckBuildError(e, { resolved })
-  }
+  const resolved = themeFromInputs(themeInputs)
+  if (resolved === undefined) return undefined
+  guardThemeRebind(themeInputs.localTheme, resolved)
   deck.theme = {
     ...irTheme,
     id: resolved.id,
@@ -209,6 +173,14 @@ export async function applyDeckConfig(
  * `findConfig(cwd)`/`findUserConfig()` results (see `applyDeckConfig`'s doc
  * comment above for why both are threaded rather than fetched here too).
  *
+ * `themeInputs` is the record of every theme input this load read
+ * (`collectThemeInputs`, `./theme-inputs.ts`), collected once the target is
+ * located and before anything is assembled or parsed for rendering. The
+ * resolved definition in it is what assembly validates the spec against,
+ * and the record itself is what `applyDeckConfig` applies, so no later
+ * step looks the theme up again: a build reads its theme inputs exactly
+ * once, and what it reports having read is what it built with.
+ *
  * `resolvedTarget` (serve wave, task S1) is the absolute path `target` itself
  * resolved to — the deck directory (`isDir: true`) or the single IR file
  * (`isDir: false`). `runRender`/`runPreview` use it as the slug source when
@@ -242,24 +214,66 @@ async function loadWorkspaceStock(
   return { workspaceAssetsDir, images }
 }
 
-async function loadDeckTarget(
+/** Where `arg` resolved to: the deck project directory or the bare IR
+ *  file, with the directory the theme lookup and rebind guard anchor at. */
+interface DeckLocation {
+  resolvedTarget: string
+  isDir: boolean
+}
+
+async function locateDeckTarget(
   arg: string,
   cwd: string,
   projectHit: ProjectConfigHit,
   userHit: UserConfigHit,
-): Promise<{
+): Promise<DeckLocation> {
+  const target = await resolveDeckTarget(arg, resolveDecksDirSource(projectHit, userHit), cwd)
+  if (await isDeckDirectory(target)) return { resolvedTarget: resolve(target), isDir: true }
+  return { resolvedTarget: resolve(target), isDir: false }
+}
+
+/**
+ * The theme inputs a build of `arg` reads right now, collected the way a
+ * build collects them and never thrown: a target that cannot be located
+ * is recorded in the name's place ({@link unreadThemeInputs}). `pptwise
+ * serve` (`./serve.ts`) asks this on a timer and compares the key with the
+ * one its last build recorded.
+ */
+export async function collectDeckThemeInputs(arg: string, opts: { cwd?: string } = {}): Promise<ThemeInputs> {
+  const cwd = opts.cwd ?? process.cwd()
+  let location: DeckLocation
+  try {
+    const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
+    location = await locateDeckTarget(arg, cwd, projectHit, userHit)
+  } catch (e) {
+    return unreadThemeInputs(e)
+  }
+  return collectThemeInputs({ startDir: cwd, ...location })
+}
+
+interface LoadedDeckTarget {
   raw: unknown
   baseDir: string
   isDir: boolean
   resolvedTarget: string
   workspaceAssetsDir: string
-  specTheme?: string
-  specPath?: string
-}> {
-  const target = await resolveDeckTarget(arg, resolveDecksDirSource(projectHit, userHit), cwd)
-  if (await isDeckDirectory(target)) {
-    const theme = await resolveThemeFromSpecSource(join(target, SPEC_FILENAME), { startDir: cwd, deckDir: target })
-    const { ir, deckDir, specTheme, specPath } = await readDeckDir(target, { theme })
+  themeInputs: ThemeInputs
+}
+
+/** The read half of {@link loadDeckTarget}, for a target already located
+ *  and a theme-input record already collected: assembly (deck project) or
+ *  the IR file, with the record's theme definition handed to assembly so
+ *  the spec is validated against the definition render will use. */
+async function readDeckTarget(
+  location: DeckLocation,
+  themeInputs: ThemeInputs,
+  cwd: string,
+  projectHit: ProjectConfigHit,
+): Promise<LoadedDeckTarget> {
+  const { resolvedTarget, isDir } = location
+  if (isDir) {
+    const theme = themeFromInputs(themeInputs)?.definition
+    const { ir, deckDir } = await readDeckDir(resolvedTarget, { theme })
     const stock = await loadWorkspaceStock(cwd, projectHit, deckDir, true)
     return {
       raw: mergeWorkspaceImages(ir, stock.images),
@@ -267,20 +281,30 @@ async function loadDeckTarget(
       isDir: true,
       resolvedTarget: deckDir,
       workspaceAssetsDir: stock.workspaceAssetsDir,
-      specTheme,
-      specPath,
+      themeInputs,
     }
   }
-  const raw = await loadIrFile(target)
-  const resolvedFile = resolve(target)
-  const stock = await loadWorkspaceStock(cwd, projectHit, resolvedFile, false)
+  const raw = await loadIrFile(resolvedTarget)
+  const stock = await loadWorkspaceStock(cwd, projectHit, resolvedTarget, false)
   return {
     raw: mergeWorkspaceImages(raw, stock.images),
-    baseDir: dirname(resolvedFile),
+    baseDir: dirname(resolvedTarget),
     isDir: false,
-    resolvedTarget: resolvedFile,
+    resolvedTarget,
     workspaceAssetsDir: stock.workspaceAssetsDir,
+    themeInputs,
   }
+}
+
+async function loadDeckTarget(
+  arg: string,
+  cwd: string,
+  projectHit: ProjectConfigHit,
+  userHit: UserConfigHit,
+): Promise<LoadedDeckTarget> {
+  const location = await locateDeckTarget(arg, cwd, projectHit, userHit)
+  const themeInputs = await collectThemeInputs({ startDir: cwd, ...location })
+  return readDeckTarget(location, themeInputs, cwd, projectHit)
 }
 
 /** Load, apply deck config, validate, and resolve local assets — the same
@@ -291,16 +315,8 @@ export async function loadValidatedDeckIr(
   cwd: string,
 ): Promise<{ ir: PptxIR; theme: ThemeDefinition | undefined }> {
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
-  const { raw, baseDir, workspaceAssetsDir, isDir, resolvedTarget, specTheme, specPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
-  const theme = (await applyDeckConfig(raw, {
-    cwd,
-    projectHit,
-    userHit,
-    specTheme,
-    specPath,
-    fromDeckDir: isDir,
-    deckDir: deckLookupDir(resolvedTarget, isDir),
-  }))?.definition
+  const { raw, baseDir, workspaceAssetsDir, themeInputs } = await loadDeckTarget(target, cwd, projectHit, userHit)
+  const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme })
   if (!v.ok) {
     throw new PptwiseError(
@@ -356,16 +372,8 @@ export interface RenderOptions {
 export async function runRender(irPath: string, opts: RenderOptions): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
-  const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, specTheme, specPath } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
-  const theme = (await applyDeckConfig(raw, {
-    specTheme,
-    specPath,
-    fromDeckDir: isDir,
-    deckDir: deckLookupDir(resolvedTarget, isDir),
-    cwd,
-    projectHit,
-    userHit,
-  }))?.definition
+  const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, themeInputs } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
+  const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme })
   if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
   await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
@@ -499,16 +507,8 @@ export async function runValidate(
   cwd = process.cwd(),
 ): Promise<string> {
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
-  const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, specTheme, specPath } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
-  const theme = (await applyDeckConfig(raw, {
-    specTheme,
-    specPath,
-    fromDeckDir: isDir,
-    deckDir: deckLookupDir(resolvedTarget, isDir),
-    cwd,
-    projectHit,
-    userHit,
-  }))?.definition
+  const { raw, baseDir, isDir, workspaceAssetsDir, themeInputs } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
+  const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme })
   if (!v.ok)
     throw new PptwiseError(
@@ -635,16 +635,8 @@ export interface AuditCliResult {
 export async function runAudit(target: string, opts: AuditOptions = {}): Promise<AuditCliResult> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
-  const { raw, baseDir, workspaceAssetsDir, isDir, resolvedTarget, specTheme, specPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
-  const theme = (await applyDeckConfig(raw, {
-    specTheme,
-    specPath,
-    fromDeckDir: isDir,
-    deckDir: deckLookupDir(resolvedTarget, isDir),
-    cwd,
-    projectHit,
-    userHit,
-  }))?.definition
+  const { raw, baseDir, workspaceAssetsDir, themeInputs } = await loadDeckTarget(target, cwd, projectHit, userHit)
+  const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme })
   if (!v.ok) {
     throw new PptwiseError(
@@ -734,16 +726,8 @@ export interface AssetBriefOptions {
 export async function runAssetBrief(target: string, opts: AssetBriefOptions = {}): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
-  const { raw, baseDir, workspaceAssetsDir, isDir, resolvedTarget, specTheme, specPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
-  const theme = (await applyDeckConfig(raw, {
-    specTheme,
-    specPath,
-    fromDeckDir: isDir,
-    deckDir: deckLookupDir(resolvedTarget, isDir),
-    cwd,
-    projectHit,
-    userHit,
-  }))?.definition
+  const { raw, baseDir, workspaceAssetsDir, themeInputs } = await loadDeckTarget(target, cwd, projectHit, userHit)
+  const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme })
   if (!v.ok) {
     throw new PptwiseError(
@@ -1309,12 +1293,14 @@ interface DeckRenderResult {
   /** The bound theme's compiled definition, carried so the audit half of the
    *  preview draws from the same object the slides were rendered with. */
   theme: ThemeDefinition | undefined
-  /** The same theme as the lookup resolved it (`theme` is its
-   *  `definition`): which built-in, or which file with its parsed content.
-   *  `createServeServer` (`./serve.ts`) records this as the theme source
-   *  the served page was built from, so the record can never describe a
-   *  file that changed after this build had already read it. */
-  resolvedTheme: ResolvedTheme | undefined
+  /** Every theme input this build read, as it read them (`theme` is the
+   *  resolved definition among them): the bound name, where it resolved
+   *  to, and the deck-local `theme.json` the rebind guard saw
+   *  (`./theme-inputs.ts`). `createServeServer` (`./serve.ts`) keeps its
+   *  key as the record of what the served page was built from, so the
+   *  record can never describe a file that changed after this build had
+   *  already read it. */
+  themeInputs: ThemeInputs
   svgs: string[]
   /** The deck directory (`isDir: true`) or the single IR file (`isDir:
    *  false`) `target` resolved to — see {@link loadDeckTarget}'s own doc
@@ -1325,30 +1311,23 @@ interface DeckRenderResult {
 }
 
 /**
- * What a build saw of its theme by the time it failed: the theme the
- * lookup handed it (`undefined` when the target binds none), or the error
- * the lookup itself raised. A failed build has no `resolvedTheme` to hand
- * back, and a caller that records the theme each build was drawn from
- * (`createServeServer`, `./serve.ts`) needs this in its place: the record
- * has to describe what the build actually read, not what stood on disk
- * before or after it, or a theme file that was broken only for the length
- * of one save is recorded as its restored self and never rebuilt.
- */
-export type ThemeLookupOutcome = { resolved: ResolvedTheme | undefined } | { error: unknown }
-
-/**
- * A build failure raised after the theme lookup ran, carrying that
- * lookup's {@link ThemeLookupOutcome}. Same message as the failure it
- * wraps, which stays reachable as `cause`, and a `PptwiseError` like every
- * build failure, so `run*` commands print it exactly as before. A failure
- * before the lookup (a target that cannot be read) is not wrapped: there
- * is no outcome to carry.
+ * A build failure, carrying the theme inputs the build read
+ * ({@link ThemeInputs}). Same message as the failure it wraps, which stays
+ * reachable as `cause`, and a `PptwiseError` like every build failure, so
+ * `run*` commands print it exactly as before. Every failure
+ * {@link buildDeckPreview} raises is one of these: a build collects its
+ * theme inputs before it does anything else, and a build that fails even
+ * before that (a target it cannot locate) carries the record of that
+ * ({@link unreadThemeInputs}), so a caller keeping the record of each
+ * build (`createServeServer`, `./serve.ts`) always has one that describes
+ * what this build actually read, not what stood on disk before or after
+ * it.
  */
 export class DeckBuildError extends PptwiseError {
-  readonly themeLookup: ThemeLookupOutcome
-  constructor(cause: unknown, themeLookup: ThemeLookupOutcome) {
+  readonly themeInputs: ThemeInputs
+  constructor(cause: unknown, themeInputs: ThemeInputs) {
     super(cause instanceof Error ? cause.message : String(cause), { cause })
-    this.themeLookup = themeLookup
+    this.themeInputs = themeInputs
   }
 }
 
@@ -1357,34 +1336,27 @@ async function renderDeckSlides(
   opts: { cwd?: string } = {},
 ): Promise<DeckRenderResult> {
   const cwd = opts.cwd ?? process.cwd()
-  const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
-  const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, specTheme, specPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
-  let resolvedTheme: ResolvedTheme | undefined
+  let location: DeckLocation
+  let projectHit: ProjectConfigHit
   try {
-    resolvedTheme = await applyDeckConfig(raw, {
-      specTheme,
-      specPath,
-      fromDeckDir: isDir,
-      deckDir: deckLookupDir(resolvedTarget, isDir),
-      cwd,
-      projectHit,
-      userHit,
-    })
+    let userHit: UserConfigHit
+    ;[projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
+    location = await locateDeckTarget(target, cwd, projectHit, userHit)
   } catch (e) {
-    // The rebind guard already wraps its own refusal with the theme it
-    // resolved. Anything else here is the lookup failing.
-    throw e instanceof DeckBuildError ? e : new DeckBuildError(e, { error: e })
+    throw new DeckBuildError(e, unreadThemeInputs(e))
   }
+  const themeInputs = await collectThemeInputs({ startDir: cwd, ...location })
   try {
-    const theme = resolvedTheme?.definition
+    const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir } = await readDeckTarget(location, themeInputs, cwd, projectHit)
+    const theme = (await applyDeckConfig(raw, themeInputs))?.definition
     const v = validateIr(raw, { theme })
     if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
     await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
     const ir = v.ir!
     const svgs = ir.slides.map((_, i) => renderSlideSvg(ir, i, { theme }))
-    return { ir, theme, resolvedTheme, svgs, resolvedTarget, isDir, normalized: v.normalized }
+    return { ir, theme, themeInputs, svgs, resolvedTarget, isDir, normalized: v.normalized }
   } catch (e) {
-    throw new DeckBuildError(e, { resolved: resolvedTheme })
+    throw new DeckBuildError(e, themeInputs)
   }
 }
 
@@ -1448,7 +1420,7 @@ function buildDeckAuditAndHtml(
  * for `GET /` and pushing an SSE `reload` once it succeeds. A thrown
  * `PptwiseError` (invalid IR, a mid-edit malformed JSON save, ...) propagates
  * straight out of this function either way, as a {@link DeckBuildError}
- * carrying what the build saw of its theme once the lookup has run — it is
+ * carrying the theme inputs the build read — it is
  * `createServeServer`'s job
  * to catch the *rebuild* case and turn it into an SSE `error` event instead
  * of letting it kill the server; the *first* call (before serve starts
@@ -1471,7 +1443,7 @@ export async function buildDeckPreview(
     const { html, findings, checks } = buildDeckAuditAndHtml(rendered.ir, rendered.svgs, rendered.theme)
     return { ...rendered, html, findings, checks }
   } catch (e) {
-    throw new DeckBuildError(e, { resolved: rendered.resolvedTheme })
+    throw new DeckBuildError(e, rendered.themeInputs)
   }
 }
 
@@ -1668,11 +1640,11 @@ export async function runAssemble(target: string, opts: AssembleOptions = {}): P
   if ((await pathExists(dir)) && !(await isDeckDirectory(dir))) {
     throw new PptwiseError(`expected a deck project directory: ${dir}`)
   }
-  // Same deck-local theme.json lookup `loadDeckTarget` performs (brand-
-  // extract wave) — assemble bypasses that helper but hands the same
-  // definition to readDeckDir's assemble step, whose spec gate reads it.
+  // Same theme-input read `loadDeckTarget` performs (brand-extract wave):
+  // assemble bypasses that helper but hands the same definition to
+  // readDeckDir's assemble step, whose spec gate reads it.
   const theme = (await isDeckDirectory(dir))
-    ? await resolveThemeFromSpecSource(join(dir, SPEC_FILENAME), { startDir: cwd, deckDir: dir })
+    ? themeFromInputs(await collectThemeInputs({ startDir: cwd, resolvedTarget: dir, isDir: true }))?.definition
     : undefined
   const { ir, deckDir } = await readDeckDir(dir, { theme })
   const outPath = opts.output ? resolve(cwd, opts.output) : join(deckDir, "deck.json")

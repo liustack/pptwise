@@ -651,15 +651,16 @@ type ThemeCarry =
  *  the first API call, codex review of dba8070a), and placement — once per
  *  question, after the tool loop — is the only step here that needs them. */
 async function cliThemeLookup() {
-  const [deckDir, loadIr, themeResolve] = await Promise.all([
+  const [deckDir, loadIr, themeResolve, themeInputs] = await Promise.all([
     import("../../src/cli/deck-dir"),
     import("../../src/cli/load-ir"),
     import("../../src/cli/theme-resolve"),
+    import("../../src/cli/theme-inputs"),
   ])
   return {
     SPEC_FILENAME: deckDir.SPEC_FILENAME,
     loadIrFile: loadIr.loadIrFile,
-    assertThemeRebind: themeResolve.assertThemeRebind,
+    assertThemeRebind: themeInputs.checkThemeRebind,
     resolveThemeByName: themeResolve.resolveThemeByName,
     themeNameFromUnknown: themeResolve.themeNameFromUnknown,
   }

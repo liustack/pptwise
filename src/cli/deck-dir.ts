@@ -20,7 +20,7 @@
  * ```
  *
  */
-import { copyFile, mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises"
+import { copyFile, mkdir, readdir, stat, writeFile } from "node:fs/promises"
 import { basename, extname, isAbsolute, join, relative, resolve } from "node:path"
 import { PptwiseError } from "../errors"
 import { assembleDeck, type AssembleResult, type PageContent } from "../spec/assemble"
@@ -215,25 +215,18 @@ function expectedLayoutHint(): string {
   return rows.map(([name, desc]) => `  ${name.padEnd(width)}${desc}`).join("\n")
 }
 
-/** Reads `deck.spec.json` and reports the current expected layout when absent. */
-async function readSpecFile(dir: string): Promise<unknown> {
+/** Reads `deck.spec.json` and reports the current expected layout when
+ *  absent. The read itself is `loadIrFile`'s, the one every spec, IR, and
+ *  theme file goes through, so the theme-input record (`./theme-inputs.ts`)
+ *  reads the spec exactly as assembly does. */
+export async function readSpecFile(dir: string): Promise<unknown> {
   const specPath = join(dir, SPEC_FILENAME)
-  let text: string
-  try {
-    text = await readFile(specPath, "utf8")
-  } catch (e) {
-    if ((e as NodeJS.ErrnoException).code === "ENOENT") {
-      throw new PptwiseError(
-        `no ${SPEC_FILENAME} in ${dir} — expected a deck project directory:\n${expectedLayoutHint()}`,
-      )
-    }
-    throw new PptwiseError(`cannot read spec file: ${specPath}`)
+  if (!(await pathExists(specPath))) {
+    throw new PptwiseError(
+      `no ${SPEC_FILENAME} in ${dir} — expected a deck project directory:\n${expectedLayoutHint()}`,
+    )
   }
-  try {
-    return JSON.parse(text) as unknown
-  } catch (e) {
-    throw new PptwiseError(`spec file ${specPath} is not valid JSON: ${(e as Error).message}`)
-  }
+  return loadIrFile(specPath, "spec")
 }
 
 // ── pages/<id>.json ──────────────────────────────────────────────────────
