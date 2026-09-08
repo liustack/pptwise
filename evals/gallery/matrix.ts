@@ -229,7 +229,7 @@ interface ComponentEntry {
  * `hierarchy` face that gives it the full width rather than
  * asymmetric-triptych's 424px side panel, which is crayon and runway.
  * Spacing against a neighbour stays under review, and the pairing stays
- * pinned at zero drops by `no-drops.test.mts` and the cross-language sweep.
+ * pinned at zero drops by `corpus-scan.test.mts` and the cross-language sweep.
  */
 export const ADJACENCY_PAGES: readonly { readonly component: string; readonly theme: string }[] = [
   { component: "data_table", theme: "thesis" },

@@ -32,6 +32,13 @@ export default defineConfig({
     //
     // 60s keeps ~3.5x headroom over the worst measured run and still surfaces
     // a real hang loudly (the whole suite takes 85-140s).
+    //
+    // evals/gallery/corpus-scan.test.mts renders the ~2450-page matrix once
+    // in beforeAll (hook timeout 300s). The six original gallery files each
+    // used to render that matrix on their own. Those six re-renders are now
+    // one shared render. Each `it` in that file still uses this default 60s.
+    // The `gallery.test.mts / gallery corpus` 4.8s measurement above is
+    // still valid.
     testTimeout: 60_000,
   },
 })
