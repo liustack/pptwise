@@ -39,6 +39,7 @@ import { ENDING_LAYOUTS } from "./index-ending"
 const STEPS_ASIDE = new Set(["quote-stage"])
 
 const ASIDE_MARKER = "data-face-stepped-aside"
+const DROP_MARKER = "data-dropped"
 
 /**
  * Every `face @ theme` this run actually rendered and asserted on.
@@ -84,6 +85,13 @@ describe.sequential("the registry scan and what it covers", () => {
           } else {
             expect(markup, `${where} stepped aside instead of drawing its own page`).not.toContain(ASIDE_MARKER)
           }
+
+          // Every sample fits the face it is registered for, so a face here
+          // draws all of it. Keeping part of a page and declaring the rest
+          // lost is a legal posture, but not one a scan sample should provoke:
+          // it says the sample is wrong for the face, and the four checks
+          // above all pass on the page that was left over.
+          expect(markup, `${where} declared part of its page dropped`).not.toContain(DROP_MARKER)
 
           // Words the sample's own test proved a branch by. `branding: "full"`
           // is what puts the date and confidentiality line on a cover, and a

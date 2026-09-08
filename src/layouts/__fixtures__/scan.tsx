@@ -160,9 +160,30 @@ export interface ScannedFace extends ScannedLayout {
   readonly label: string
 }
 
+/**
+ * Faces whose declaration says the generic content page is more than they
+ * take, with the page they were built for instead.
+ *
+ * `mono-bleed` declares `body` with `capacity: 0` and puts the words in the
+ * heading, so the filler's bullets and paragraph have nowhere to go: under
+ * `playbill` the face paints its type field and marks `data-dropped="2"`,
+ * which is the declared limit working, not the face drawing the page. A face
+ * is scanned on a page it can hold whole — the drop path is covered by
+ * `sparse/playbill.test.tsx`, which renders it directly.
+ */
+const DECLARED_PAGE: Partial<Record<string, Slide>> = {
+  "mono-bleed": {
+    type: "content",
+    kind: "statement",
+    heading: SCAN_HEADING,
+    subheading: SCAN_SUBHEADING,
+    components: [],
+  } as Slide,
+}
+
 /** The generic sample, in the same shape a registered one has. */
 function genericSample(layout: ScannedLayout): FaceSampleInput {
-  const slide = fixtureSlide(layout.slideType)
+  const slide = DECLARED_PAGE[layout.id] ?? fixtureSlide(layout.slideType)
   // A chapter page ahead of the content page so faces that number or name
   // the current section have a section to find.
   const slides = layout.slideType === "content" ? [CHAPTER_ONE, slide] : [slide]
