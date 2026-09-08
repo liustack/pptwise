@@ -33,7 +33,8 @@ import { findImageSelection } from "./layouts/find-image"
 import type { LayoutDefinition } from "./layouts/registry"
 import { CANONICAL_THEME_IDS, THEME_LABELS, THEME_STYLES } from "./themes"
 import { retiredThemeHint } from "./themes/retired-ids"
-import { getInstalledThemeIds, getThemeDefinition, type ThemeDefinition } from "./themes/definitions"
+import type { ThemeDefinition } from "./themes/definitions"
+import { resolveBoundThemeResult } from "./themes/resolve-ir-theme"
 
 export interface ValidationIssue {
   path: string
@@ -789,36 +790,16 @@ export function validateIr(input: unknown, opts?: { theme?: ThemeDefinition }): 
   // A definition passed by value is the theme, full stop: it must answer to
   // the id the IR binds, and no table is consulted for it. Without one, the
   // id must name a built-in or an SDK-registered theme.
-  let theme: ThemeDefinition
-  if (opts?.theme !== undefined) {
-    if (opts.theme.id !== r.data.theme.id) {
-      return withNormalized({
-        ok: false,
-        errors: [
-          {
-            path: "theme.id",
-            message: `IR binds theme "${r.data.theme.id}" but the supplied theme definition is "${opts.theme.id}"`,
-          },
-        ],
-      })
-    }
-    theme = opts.theme
-  } else {
-    const installedThemeIds = getInstalledThemeIds()
-    if (!installedThemeIds.includes(r.data.theme.id)) {
-      const themeId = r.data.theme.id
-      return withNormalized({
-        ok: false,
-        errors: [
-          {
-            path: "theme.id",
-            message: `unknown theme "${themeId}"${retiredThemeHint(themeId)}. Themes available: ${installedThemeIds.join(", ")} (see \`pptwise themes\`)`,
-          },
-        ],
-      })
-    }
-    theme = getThemeDefinition(r.data.theme.id)
+  const themeId = r.data.theme.id
+  const resolved = resolveBoundThemeResult(themeId, opts?.theme)
+  if (!resolved.ok) {
+    const message =
+      resolved.reason === "mismatch"
+        ? `IR binds theme "${themeId}" but the supplied theme definition is "${resolved.suppliedId}"`
+        : `unknown theme "${themeId}"${retiredThemeHint(themeId)}. Themes available: ${resolved.installed.join(", ")} (see \`pptwise themes\`)`
+    return withNormalized({ ok: false, errors: [{ path: "theme.id", message }] })
   }
+  const theme = resolved.theme
   const menuFaceErrors = checkThemeMenuFaces(r.data, theme)
   if (menuFaceErrors.length > 0) return withNormalized({ ok: false, errors: menuFaceErrors })
   const contentSlotErrors = checkContentPageSlots(r.data, theme)

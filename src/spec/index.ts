@@ -28,7 +28,8 @@ import {
 import { CAPACITY } from "../audit/capacity"
 import { type SlideType } from "../layouts/registry"
 import { offeredContentKinds, resolveLayoutId } from "../render/layout-selection"
-import { getInstalledThemeIds, getThemeDefinition, type ThemeDefinition } from "../themes/definitions"
+import type { ThemeDefinition } from "../themes/definitions"
+import { resolveBoundThemeResult } from "../themes/resolve-ir-theme"
 import { RETIRED_THEME_IDS } from "../themes/retired-ids"
 
 // ── schema ───────────────────────────────────────────────────────────────
@@ -355,27 +356,32 @@ function checkHeadings(spec: DeckSpec): SpecValidationIssue[] {
  * `theme` stays an open string at the schema layer (like IR's `theme.id`),
  * this hard gate is where an unknown id is actually rejected.
  */
-function checkTheme(spec: DeckSpec, theme: ThemeDefinition | undefined): SpecValidationIssue[] {
+function resolveSpecTheme(
+  spec: DeckSpec,
+  theme: ThemeDefinition | undefined,
+): { ok: true; theme: ThemeDefinition } | { ok: false; errors: SpecValidationIssue[] } {
   const themeId = resolveSpecThemeId(spec)
-  if (theme !== undefined) {
-    if (theme.id === themeId) return []
-    return [
-      {
-        path: "theme",
-        message: `spec binds theme "${themeId}" but the supplied theme definition is "${theme.id}"`,
-      },
-    ]
+  const resolved = resolveBoundThemeResult(themeId, theme)
+  if (resolved.ok) return resolved
+  if (resolved.reason === "mismatch") {
+    return {
+      ok: false,
+      errors: [
+        {
+          path: "theme",
+          message: `spec binds theme "${themeId}" but the supplied theme definition is "${resolved.suppliedId}"`,
+        },
+      ],
+    }
   }
-  const installed = getInstalledThemeIds()
-  if (installed.includes(themeId)) return []
   const renamed = RETIRED_THEME_IDS[themeId]
   const message =
     themeId === "bloom"
       ? 'theme id "bloom" was removed — current format uses an installed theme id (see `pptwise themes`)'
       : renamed !== undefined
         ? `theme id "${themeId}" was renamed to "${renamed}" — bind the spec to the new id (see \`pptwise themes\`)`
-        : `unknown theme "${themeId}" — available: ${installed.join(", ")} (see \`pptwise themes\`)`
-  return [{ path: "theme", message }]
+        : `unknown theme "${themeId}" — available: ${resolved.installed.join(", ")} (see \`pptwise themes\`)`
+  return { ok: false, errors: [{ path: "theme", message }] }
 }
 
 // ── hard gate: focus vocabulary ─────────────────────────────────────────
@@ -597,10 +603,10 @@ export function validateSpec(input: unknown, opts?: { theme?: ThemeDefinition })
   const headingErrors = checkHeadings(spec)
   if (headingErrors.length > 0) return withNormalized({ ok: false, errors: headingErrors })
 
-  const themeErrors = checkTheme(spec, opts?.theme)
-  if (themeErrors.length > 0) return withNormalized({ ok: false, errors: themeErrors })
+  const boundTheme = resolveSpecTheme(spec, opts?.theme)
+  if (!boundTheme.ok) return withNormalized({ ok: false, errors: boundTheme.errors })
 
-  const menuErrors = checkThemeMenuKinds(spec, opts?.theme ?? getThemeDefinition(resolveSpecThemeId(spec)))
+  const menuErrors = checkThemeMenuKinds(spec, boundTheme.theme)
   if (menuErrors.length > 0) return withNormalized({ ok: false, errors: menuErrors })
 
   // Narrative resolution (spec §5's defaults chain), same open-schema/

@@ -17,7 +17,7 @@ import { CONTENT_LAYOUTS } from "../layouts/index-content"
 import { ENDING_LAYOUTS } from "../layouts/index-ending"
 import { MOTIFS } from "../motifs"
 import { treeStepsAside } from "./step-aside"
-import { getThemeDefinition, resolveThemeEmphasis, type ThemeDefinition } from "../themes/definitions"
+import { resolveThemeEmphasis, type ThemeDefinition } from "../themes/definitions"
 import { resolveEffectiveFace } from "./layout-selection"
 import { partitionSvgDepth, type SvgDepthLayers } from "./depth-contract/partition"
 import { enforceMidgroundContract, resolveMidgroundBackground } from "./depth-contract/safety"
@@ -191,12 +191,11 @@ export interface FullSlideSvgProps {
   slide: Slide
   index: number
   /**
-   * The bound theme's definition, carried from the entry point that
-   * resolved it. Every production caller passes it. Omitted, the built-in
-   * (or SDK-registered) theme under `ir.theme.id` is used, which is what
-   * an isolated layout test wants.
+   * The bound theme's definition. Resolved once at the entry point that
+   * took the deck in (`resolveIrTheme`, `../themes/resolve-ir-theme.ts`)
+   * and carried down by value, so nothing here consults a table by id.
    */
-  theme?: ThemeDefinition
+  theme: ThemeDefinition
   className?: string
   preserveAspectRatio?: string
 }
@@ -250,11 +249,10 @@ export function FullSlideSvg({
   ir,
   slide,
   index,
-  theme,
+  theme: themeDef,
   className,
   preserveAspectRatio,
 }: FullSlideSvgProps) {
-  const themeDef = theme ?? getThemeDefinition(ir.theme.id)
   const tokens = themeDef.style
   // The theme's own default background for this slide type, independent of
   // any per-slide `slide.background` override — still needed below as

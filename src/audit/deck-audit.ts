@@ -1,6 +1,7 @@
 import type { PptxIR } from "@/ir"
 import { renderSlideSvg } from "../api"
 import type { ThemeDefinition } from "../themes/definitions"
+import { resolveIrTheme } from "../themes/resolve-ir-theme"
 import { PptwiseError } from "../errors"
 import { measureMonoTextUnits, measureTextUnits } from "../lib/svg-text-layout"
 import { getPlatform } from "../platform/registry"
@@ -60,7 +61,7 @@ export interface AuditReport {
 export interface AuditDeckOptions {
   pixels?: boolean
   /** The bound theme, by value. Omitted, `ir.theme.id` names a built-in or
-   *  SDK-registered theme. */
+   *  SDK-registered theme (`resolveIrTheme`). */
   theme?: ThemeDefinition
 }
 
@@ -2573,7 +2574,7 @@ function monotonyFindings(ir: PptxIR): AuditFinding[] {
  */
 function runDeterministicAudit(
   ir: PptxIR,
-  theme: ThemeDefinition | undefined,
+  theme: ThemeDefinition,
 ): { findings: AuditFinding[]; pagesAudited: number; pagesSkipped: number } {
   const findings: AuditFinding[] = []
   let pagesAudited = 0
@@ -2668,10 +2669,11 @@ export function auditDeck(ir: PptxIR, opts?: { pixels?: false; theme?: ThemeDefi
 export function auditDeck(ir: PptxIR, opts: { pixels: true; theme?: ThemeDefinition }): Promise<AuditReport>
 export function auditDeck(ir: PptxIR, opts: AuditDeckOptions = {}): AuditReport | Promise<AuditReport> {
   assertValidatedIrShape(ir)
-  const { findings, pagesAudited, pagesSkipped } = runDeterministicAudit(ir, opts.theme)
+  const theme = resolveIrTheme(ir, opts.theme)
+  const { findings, pagesAudited, pagesSkipped } = runDeterministicAudit(ir, theme)
   const report: AuditReport = { findings, pagesAudited, pagesSkipped, checks: { svg: "completed", pixels: "not-requested" } }
   if (!opts.pixels) return report
-  return runPixelPass(ir, report, opts.theme)
+  return runPixelPass(ir, report, theme)
 }
 
 /**
@@ -2692,7 +2694,7 @@ export function auditDeck(ir: PptxIR, opts: AuditDeckOptions = {}): AuditReport 
  * — is never even loaded for the far more common call that never passes
  * `pixels: true`.
  */
-async function runPixelPass(ir: PptxIR, report: AuditReport, theme: ThemeDefinition | undefined): Promise<AuditReport> {
+async function runPixelPass(ir: PptxIR, report: AuditReport, theme: ThemeDefinition): Promise<AuditReport> {
   const { runPixelContrastAudit } = await import("./pixel-audit")
   const pixelFindings = await runPixelContrastAudit(ir, theme)
   return {

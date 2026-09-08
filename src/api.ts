@@ -23,6 +23,7 @@ import type { PptxIR } from "./ir"
 import { generatePptxBlob } from "./pptx/generate"
 import { slideToSvgMarkup } from "./render/render-slide"
 import type { ThemeDefinition } from "./themes/definitions"
+import { resolveIrTheme } from "./themes/resolve-ir-theme"
 import { formatIssues, validateIr } from "./validate-core"
 
 /**
@@ -30,6 +31,8 @@ import { formatIssues, validateIr } from "./validate-core"
  * theme's definition, passed by value from whoever resolved it (the CLI's
  * name lookup, or an SDK caller's own object). Omitted, `ir.theme.id` names
  * a built-in or an SDK-registered theme, and an unknown id is an error.
+ * Either way the entry point resolves it once (`resolveIrTheme`) and the
+ * render chain below only ever sees the definition.
  */
 export interface RenderThemeOptions {
   theme?: ThemeDefinition
@@ -41,7 +44,7 @@ export function renderSlideSvg(ir: PptxIR, slideIndex: number, opts?: RenderThem
   if (!slide) {
     throw new PptwiseError(`slide index ${slideIndex} out of range — deck has ${ir.slides.length} slides`)
   }
-  return slideToSvgMarkup(ir, slide, slideIndex, opts?.theme)
+  return slideToSvgMarkup(ir, slide, slideIndex, resolveIrTheme(ir, opts?.theme))
 }
 
 /**

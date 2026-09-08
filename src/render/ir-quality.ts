@@ -6,7 +6,7 @@
  */
 
 import type { PptxIR, Slide } from "@/ir"
-import { PACING_BUDGETS, resolveNarrative, type NarrativeProfile, type Pacing } from "@/narrative"
+import { PACING_BUDGETS, type NarrativeProfile, type Pacing } from "@/narrative"
 import { CAPACITY } from "../audit/capacity"
 import { findImageSelection } from "../layouts/find-image"
 import { resolveEffectiveFace } from "./layout-selection"
@@ -163,7 +163,7 @@ function checkSlide(
   slide: Slide,
   index: number,
   resolvedAxes: NarrativeProfile,
-  theme: ThemeDefinition | undefined,
+  theme: ThemeDefinition,
 ): QualityIssue[] {
   const issues: QualityIssue[] = []
   const budget = PACING_BUDGETS[resolvedAxes.pacing]
@@ -498,14 +498,16 @@ function checkSlide(
  * split), bullets reads the same pacing's bullets budget. `api.ts`'s
  * `validateIr` resolves narrative for its own error handling and passes the
  * result through here so there is exactly one `resolveNarrative` call per
- * validate pass. Defaults to the `general` preset's axes so this file's own
- * single-argument test call sites keep compiling and behave the same as
- * every other caller that hasn't resolved a narrative of its own.
+ * validate pass.
+ *
+ * `theme` is the bound theme's definition, resolved once at the entry point
+ * and carried by value — the same object the render chain draws with, so
+ * the capacity this gate measures is the capacity the page will have.
  */
 export function checkIrQuality(
   ir: PptxIR,
-  resolvedAxes: NarrativeProfile = resolveNarrative(undefined),
-  theme?: ThemeDefinition,
+  resolvedAxes: NarrativeProfile,
+  theme: ThemeDefinition,
 ): QualityIssue[] {
   const issues: QualityIssue[] = []
 

@@ -1,6 +1,7 @@
 import type { PptxIR } from "@/ir"
 import { renderSlideSvg } from "../api"
 import type { ThemeDefinition } from "../themes/definitions"
+import { resolveIrTheme } from "../themes/resolve-ir-theme"
 import { CANVAS_H_PX, CANVAS_W_PX } from "../constants"
 import { rasterizeSvgInBrowser } from "../platform/browser"
 import { getPlatform, type RasterizedImage } from "../platform/registry"
@@ -383,6 +384,7 @@ export const __pixelFindingsForPage = pixelFindingsForPage
  * is an explicit failure, never a partial "clean".
  */
 export async function runPixelContrastAudit(ir: PptxIR, theme?: ThemeDefinition): Promise<AuditFinding[]> {
+  const boundTheme = resolveIrTheme(ir, theme)
   const rasterize = resolveRasterizer()
   const findings: AuditFinding[] = []
   for (let i = 0; i < ir.slides.length; i++) {
@@ -390,7 +392,7 @@ export async function runPixelContrastAudit(ir: PptxIR, theme?: ThemeDefinition)
     if (slide.placeholder) continue
     const page = i + 1
     const slideId = slide.id
-    const markup = renderSlideSvg(ir, i, { theme })
+    const markup = renderSlideSvg(ir, i, { theme: boundTheme })
     findings.push(...(await pixelFindingsForPage(markup, page, slideId, rasterize)))
   }
   return findings

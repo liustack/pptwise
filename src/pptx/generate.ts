@@ -11,7 +11,8 @@ import type pptxgen from "pptxgenjs"
 import { PptxIRSchema, type PptxIR } from "@/ir"
 import { PptwiseError } from "../errors"
 import { inlinePptxAssets } from "../platform/inline-assets"
-import { getThemeDefinition, type ThemeDefinition } from "../themes/definitions"
+import type { ThemeDefinition } from "../themes/definitions"
+import { resolveIrTheme } from "../themes/resolve-ir-theme"
 import { defineMastersForIR } from "./master-builder"
 import {
   renderOps,
@@ -109,7 +110,7 @@ export async function generatePptxBlob(
   // parse rather than failing every caller that includes it.
   const { kind: _kind, ...irInput } = input as PptxIR & { kind?: unknown }
   const parsed = PptxIRSchema.parse(irInput)
-  const theme = opts?.theme ?? getThemeDefinition(parsed.theme.id)
+  const theme = resolveIrTheme(parsed, opts?.theme)
   // 导出需要真实字节：把签名 URL 资产取回内联成 data URL（预览不需要这一步）。
   // 主题默认背景也可能指向资产，所以主题先于内联解析。
   const ir = await inlinePptxAssets(parsed, theme)
@@ -234,7 +235,7 @@ export async function generatePptxBlob(
     // `PptwiseError` — this `instanceof` check is the reason.
     if (e instanceof PptxSealViolationError) throw e
   }
-  await auditPptxPackage(zip, ir, imageOpsBySlide)
+  await auditPptxPackage(zip, ir, imageOpsBySlide, theme)
   // Whole-file byte determinism (P0 hardening Task 4 — see
   // pptx-fixed-timestamps.ts's header comment for the full root cause):
   // every entry's zip-metadata date and docProps/core.xml's created/modified

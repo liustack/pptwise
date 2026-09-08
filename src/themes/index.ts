@@ -144,8 +144,9 @@ export const THEME_STYLES = Object.fromEntries(
  * `registered-themes.ts`'s docstring for why this function reads that shared
  * map directly instead of calling `getThemeDefinition` itself).
  *
- * The render chain no longer calls this: it reads `theme.style` off the
- * definition it was handed. This stays for callers that only hold an id
+ * The render chain never calls this: it reads `theme.style` off the
+ * definition it was handed, which entry points resolve once through
+ * `resolve-ir-theme.ts`. This stays for callers that only hold an id
  * (tests, tooling). Recolor by compiling a complete theme file, not by
  * passing a partial overlay.
  */

@@ -2,7 +2,8 @@ import type { Component, PptxIR, Slide } from "@/ir"
 import { renderSlideSvg } from "../api"
 import { getPlatform } from "../platform/registry"
 import { CANONICAL_THEME_IDS, THEME_LABELS, type CanonicalThemeId } from "../themes/index"
-import { getThemeDefinition, type ThemeDefinition } from "../themes/definitions"
+import type { ThemeDefinition } from "../themes/definitions"
+import { resolveIrTheme } from "../themes/resolve-ir-theme"
 import type { StyleColors } from "../themes/tokens"
 import { parseTransform } from "../audit/svg-audit"
 
@@ -353,7 +354,7 @@ function buildPrompt(mood: AssetBriefMood, palette: AssetBriefPalette, frame: As
  * fully visible to a reader of the brief.
  */
 export function buildAssetBrief(ir: PptxIR, opts?: { theme?: ThemeDefinition }): AssetBrief {
-  const themeDef = opts?.theme ?? getThemeDefinition(ir.theme.id)
+  const themeDef = resolveIrTheme(ir, opts?.theme)
   const palette = buildPalette(themeDef.style.colors)
   const mood = buildMood(ir.theme.id, themeDef)
 

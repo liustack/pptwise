@@ -2,6 +2,8 @@ import JSZip from "jszip"
 import type { PptxIR } from "@/ir"
 import { slideToOps } from "@/render/render-slide"
 import { PptwiseError } from "../errors"
+import type { ThemeDefinition } from "../themes/definitions"
+import { resolveIrTheme } from "../themes/resolve-ir-theme"
 import { createPptxPackageReader, type PptxPackageReader, type PackageRelationship } from "./package-reader"
 import type { ImageOp } from "./svg2pptx/image"
 
@@ -562,6 +564,7 @@ async function checkSlideParts(
   reader: PptxPackageReader,
   ir?: PptxIR,
   imageOpsBySlide?: ReadonlyArray<readonly ImageOp[]>,
+  theme?: ThemeDefinition,
 ): Promise<PackageAuditViolation[]> {
   const violations: PackageAuditViolation[] = []
   const slideParts = reader.listParts().filter((p) => SLIDE_PART_RE.test(p)).sort()
@@ -575,12 +578,17 @@ async function checkSlideParts(
   // same ops via the same pure `slideToOps` seam `generatePptxBlob` itself
   // calls — not a new rendering pass, just the one this rule already
   // depends on, run again from the (deterministic, pure) IR.
-  const resolvedImageOpsBySlide: ReadonlyArray<readonly ImageOp[]> | undefined = ir
-    ? (imageOpsBySlide ??
-        ir.slides.map((slide, index) =>
-          slideToOps(ir, slide, index).filter((op): op is ImageOp => op.kind === "image"),
-        ))
-    : undefined
+  let resolvedImageOpsBySlide: ReadonlyArray<readonly ImageOp[]> | undefined
+  if (ir !== undefined) {
+    if (imageOpsBySlide !== undefined) {
+      resolvedImageOpsBySlide = imageOpsBySlide
+    } else {
+      const boundTheme = resolveIrTheme(ir, theme)
+      resolvedImageOpsBySlide = ir.slides.map((slide, index) =>
+        slideToOps(ir, slide, index, boundTheme).filter((op): op is ImageOp => op.kind === "image"),
+      )
+    }
+  }
   for (const slidePart of slideParts) {
     let doc: Document
     try {
@@ -619,6 +627,7 @@ async function collectViolations(
   reader: PptxPackageReader,
   ir?: PptxIR,
   imageOpsBySlide?: ReadonlyArray<readonly ImageOp[]>,
+  theme?: ThemeDefinition,
 ): Promise<PackageAuditViolation[]> {
   const coreViolations = checkCoreParts(reader)
   if (coreViolations.length > 0) return coreViolations // nothing else is safely checkable without these
@@ -629,7 +638,7 @@ async function collectViolations(
   const violations: PackageAuditViolation[] = []
   violations.push(...(await checkSlideListConsistency(reader)))
   violations.push(...(await checkRelationshipTargets(reader)))
-  violations.push(...(await checkSlideParts(reader, ir, imageOpsBySlide)))
+  violations.push(...(await checkSlideParts(reader, ir, imageOpsBySlide, theme)))
   return violations
 }
 
@@ -715,6 +724,7 @@ export async function auditPptxPackage(
   input: JSZip | Blob | ArrayBuffer | Uint8Array,
   ir?: PptxIR,
   imageOpsBySlide?: ReadonlyArray<readonly ImageOp[]>,
+  theme?: ThemeDefinition,
 ): Promise<void> {
   let zip: JSZip
   if (input instanceof JSZip) {
@@ -730,6 +740,6 @@ export async function auditPptxPackage(
     }
   }
   const reader = createPptxPackageReader(zip)
-  const violations = await collectViolations(reader, ir, imageOpsBySlide)
+  const violations = await collectViolations(reader, ir, imageOpsBySlide, theme)
   if (violations.length > 0) throw new PptwiseError(formatViolations(violations))
 }

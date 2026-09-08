@@ -11,7 +11,7 @@ import type { ThemeDefinition } from "../themes/definitions"
  * is the same component the preview mounts, so the exported DrawingML matches the
  * preview by construction. Lives in a `.tsx` so `pptx-generate.ts` stays JSX-free.
  */
-export function slideToSvgMarkup(ir: PptxIR, slide: Slide, index: number, theme?: ThemeDefinition): string {
+export function slideToSvgMarkup(ir: PptxIR, slide: Slide, index: number, theme: ThemeDefinition): string {
   return renderSvgMarkup(createElement(FullSlideSvg, { ir, slide, index, theme }))
 }
 
@@ -43,7 +43,7 @@ export interface SlideRender {
  * does — and why it reads the exact markup that becomes the file, rather
  * than a second render that could in principle disagree with it.
  */
-export function slideToRender(ir: PptxIR, slide: Slide, index: number, theme?: ThemeDefinition): SlideRender {
+export function slideToRender(ir: PptxIR, slide: Slide, index: number, theme: ThemeDefinition): SlideRender {
   const root = parseSvgRoot(slideToSvgMarkup(ir, slide, index, theme))
   const byKind = new Map<DropKind, number>()
   let dropped = 0
@@ -59,6 +59,6 @@ export function slideToRender(ir: PptxIR, slide: Slide, index: number, theme?: T
 }
 
 /** Render a slide to pptxgenjs ops via single-source SVG → svg2pptx. */
-export function slideToOps(ir: PptxIR, slide: Slide, index: number, theme?: ThemeDefinition): Op[] {
+export function slideToOps(ir: PptxIR, slide: Slide, index: number, theme: ThemeDefinition): Op[] {
   return slideToRender(ir, slide, index, theme).ops
 }

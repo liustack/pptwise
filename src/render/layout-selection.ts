@@ -11,7 +11,7 @@
  */
 import { COMPONENT_TYPES, KIND_VALUES, type PageKind, type PptxIR, type Slide } from "@/ir"
 import { getLayout, type LayoutDefinition } from "../layouts/registry"
-import { getThemeDefinition, type ThemeDefinition } from "../themes/definitions"
+import type { ThemeDefinition } from "../themes/definitions"
 import type { Menu, MenuEntry } from "../themes/schema"
 
 /** Resolve one menu entry without consulting registry or render state. */
@@ -76,17 +76,11 @@ function pageKind(slide: Slide): PageKind | undefined {
  * the page. Registered image takeovers are ordinary menu faces and are
  * classified from their layout declaration here.
  *
- * `theme` is the bound theme's definition, carried by the caller. Every
- * production caller passes the one it was handed. Omitting it looks
- * `ir.theme.id` up in the built-in table plus SDK-registered themes, which
- * is what an isolated test wants and what a deck or workspace theme file
- * must never rely on.
+ * `theme` is the bound theme's definition, resolved once at the entry point
+ * and carried by value. No id is looked up here: a deck or workspace theme
+ * file can bind a built-in id and still be a different theme.
  */
-export function resolveEffectiveFace(
-  ir: PptxIR,
-  slide: Slide,
-  theme: ThemeDefinition = getThemeDefinition(ir.theme.id),
-): EffectiveFace {
+export function resolveEffectiveFace(ir: PptxIR, slide: Slide, theme: ThemeDefinition): EffectiveFace {
   if (theme.menu === undefined) {
     return {
       route: "unresolved",
@@ -150,7 +144,7 @@ export interface EffectiveLayoutBodyCapacity {
 export function resolveEffectiveLayoutBodyCapacity(
   ir: PptxIR,
   slide: Slide,
-  theme?: ThemeDefinition,
+  theme: ThemeDefinition,
 ): EffectiveLayoutBodyCapacity {
   const effective = resolveEffectiveFace(ir, slide, theme)
   const capacity = effective.layout?.slots.find((slot) => slot.name === "body")?.capacity

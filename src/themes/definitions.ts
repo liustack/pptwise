@@ -81,11 +81,6 @@ export const THEME_DEFINITIONS: Record<CanonicalThemeId, ThemeDefinition> = Obje
   CANONICAL_THEME_IDS.map((id) => [id, compileBuiltinTheme(BUILTIN_THEME_FILES[id])]),
 ) as Record<CanonicalThemeId, ThemeDefinition>
 
-/** Theme brand config from the installed definition. Brand is not overlaid from IR. */
-export function resolveBrand(id: string): BrandConfig {
-  return getThemeDefinition(id).brand
-}
-
 // ── Theme compilation and the SDK registration seam ──────────────────────
 //
 // Two ways a theme reaches the render chain:
@@ -99,7 +94,9 @@ export function resolveBrand(id: string): BrandConfig {
 //   process, next to the factory presets, for an embedder that configures
 //   its own preset shelf once at startup. It is process-level configuration,
 //   never per-request state: it refuses an id that is already installed and
-//   there is no replace-in-place channel.
+//   there is no replace-in-place channel. An entry point handed only an id
+//   reads this shelf exactly once, through `resolve-ir-theme.ts`, and hands
+//   the definition down from there.
 
 /**
  * Reduce a `BackgroundSpec` to one representative hex color — a color spec
@@ -460,10 +457,10 @@ function assertMenuContract(themeId: string, menu: Menu): void {
  * registration that clears every check above.
  *
  * Once registered, the theme participates in `getInstalledThemeIds`,
- * `getThemeDefinition`, and `themes/index.ts`'s `resolveStyle`: the id
- * lookups every entry point falls back to when no definition is passed.
- * A built-in id can never be shadowed here, and a registered id is never
- * replaced. There is no uninstall outside the test-only reset.
+ * `getThemeDefinition`, and `themes/index.ts`'s `resolveStyle`: the shelf
+ * `resolveIrTheme` reads when an entry point is handed an id and no
+ * definition. A built-in id can never be shadowed here, and a registered id
+ * is never replaced. There is no uninstall outside the test-only reset.
  */
 export function registerTheme(input: unknown): void {
   const file = parseThemeFile(input)
@@ -533,10 +530,13 @@ export function getInstalledThemeIds(): readonly string[] {
  * so a misspelled theme surfaces at once instead of rendering as some other
  * theme.
  *
- * This is the fallback every entry point uses when no `theme` option is
- * passed. A deck or workspace theme file never goes through here: the CLI
- * compiles it and passes the definition by value, so this table only ever
- * answers for factory presets and process-level `registerTheme` calls.
+ * Only `resolveIrTheme` (`./resolve-ir-theme.ts`) calls this on the render
+ * path, and only for a deck that supplied no definition of its own — plus
+ * the theme catalog queries (`kind-components.ts`, the gallery), which ask
+ * about installed themes rather than about a bound deck. A deck or
+ * workspace theme file never goes through here: the CLI compiles it and
+ * passes the definition by value, so this table only ever answers for
+ * factory presets and process-level `registerTheme` calls.
  */
 export function getThemeDefinition(id: string): ThemeDefinition {
   return REGISTERED_THEMES.get(id) ?? THEME_DEFINITIONS[resolveThemeId(id)]

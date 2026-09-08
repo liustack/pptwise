@@ -9,7 +9,6 @@ import {
   getThemeDefinition,
   compileThemeDefinition,
   registerTheme,
-  resolveBrand,
   THEME_DEFINITIONS,
 } from "./definitions"
 import { THEME_OCCASIONS } from "./occasions"
@@ -208,15 +207,6 @@ describe("emphasis run ink", () => {
       if (colors.emphasisInk === undefined) continue
       expect(contrastRatio(colors.emphasisInk, colors.bg), id).toBeGreaterThanOrEqual(4.5)
     }
-  })
-})
-
-describe("resolveBrand", () => {
-  it("returns the theme definition brand", () => {
-    expect(resolveBrand("ink")).toEqual({ suppressFooterRule: true, suppressFooterMeta: true })
-  })
-  it("throws for an unknown id instead of borrowing brief's brand frame", () => {
-    expect(() => resolveBrand("nope")).toThrow(/unknown theme "nope"/)
   })
 })
 
