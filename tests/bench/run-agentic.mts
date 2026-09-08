@@ -497,6 +497,46 @@ export function buildMeta(params: {
   }
 }
 
+/** Which step of one question's run an error escaped from, recorded as
+ *  `stage` in a failed `meta.json` next to `status: "failed"`:
+ *  `tool-loop` is the completion/tool loop itself (an API error, a scripted
+ *  reply that threw), `placement` is everything after the loop that copies
+ *  the artifact up into the result root — `placeArtifact` together with the
+ *  deferred CLI module load it starts with ({@link cliThemeLookup}). A
+ *  placement error is the harness's own, not the model's, so it is
+ *  re-thrown to the batch entry once the meta is on disk (codex review R17:
+ *  before that, the rounds and tool calls the question had already spent
+ *  were recorded nowhere, and a resumed batch re-ran it as if it had never
+ *  started). */
+export type RunFailureStage = "tool-loop" | "placement"
+
+/** A failed run's `meta.json`: the fields the run had collected by the time
+ *  it failed (a `tool-loop` failure has no token totals, a `placement`
+ *  failure carries the complete {@link RunMeta}), plus the failure itself. A
+ *  completed run's meta carries neither `status` nor `stage`. */
+export type FailedRunMeta = Partial<RunMeta> &
+  Pick<RunMeta, "provider_prefix" | "base_url_host" | "model_requested" | "mode" | "rounds" | "tool_calls"> & {
+    status: "failed"
+    stage: RunFailureStage
+    error: string
+  }
+
+/** `String(e)` followed by every `cause` beneath it, so an error a module
+ *  loader wrapped in its own message (vitest's mocker, Node's ESM loader)
+ *  still records the root reason. Each link is capped at `max` characters
+ *  on its own — one verbose wrapper must not crowd the root cause out of
+ *  the meta. */
+export function describeError(e: unknown, max = 300): string {
+  const parts: string[] = []
+  const seen = new Set<unknown>()
+  for (let cur: unknown = e; cur !== undefined && cur !== null && !seen.has(cur); cur = (cur as { cause?: unknown }).cause) {
+    seen.add(cur)
+    const text = String(cur).slice(0, max)
+    parts.push(parts.length === 0 ? text : `cause: ${text}`)
+  }
+  return parts.join(" <- ")
+}
+
 // ── artifact placement: score.mts reads `<resultsDir>/<model-tag>/<qid>/`
 // directly (a bare *.json or a deck.spec.json project), not the workspace/
 // subdirectory the model actually worked in — so after the run ends, the
@@ -1346,69 +1386,78 @@ export async function runOneAgentic(
     }
   } catch (e) {
     writeTranscript(resultDir, roundRecords, messages)
-    writeFileSync(
-      join(resultDir, META_FILENAME),
-      JSON.stringify(
-        {
-          provider_prefix: providerPrefix,
-          base_url_host: new URL(cfg.baseUrl).host,
-          model_requested: cfg.model,
-          mode: "agentic",
-          rounds: roundsCompleted,
-          tool_calls: toolCalls,
-          tool_rejections: toolRejections.length,
-          tool_rejection_details: toolRejections,
-          tool_errors: toolErrors,
-          error: String(e).slice(0, 300),
-        },
-        null,
-        2,
-      ) + "\n",
-    )
-    console.error(`${qid}: failed after ${roundsCompleted} round(s) — ${String(e).slice(0, 200)}`)
+    const failed: FailedRunMeta = {
+      provider_prefix: providerPrefix,
+      base_url_host: new URL(cfg.baseUrl).host,
+      model_requested: cfg.model,
+      mode: "agentic",
+      rounds: roundsCompleted,
+      tool_calls: toolCalls,
+      tool_rejections: toolRejections.length,
+      tool_rejection_details: toolRejections,
+      tool_errors: toolErrors,
+      status: "failed",
+      stage: "tool-loop",
+      error: describeError(e),
+    }
+    writeFileSync(join(resultDir, META_FILENAME), JSON.stringify(failed, null, 2) + "\n")
+    console.error(`${qid}: failed after ${roundsCompleted} round(s) — ${describeError(e, 200)}`)
     return
   }
 
   const capHit = !deadlineHit && finalText === undefined && roundsCompleted >= ROUND_CAP
   writeTranscript(resultDir, roundRecords, messages)
+  const metaNow = (): RunMeta =>
+    buildMeta({
+      providerPrefix,
+      baseUrl: cfg.baseUrl,
+      modelRequested: cfg.model,
+      modelReported,
+      rounds: roundsCompleted,
+      toolCalls,
+      promptTokens,
+      completionTokens,
+      startedAt,
+      finishedAt: Date.now(),
+      capHit,
+      deadlineHit,
+      scriptedReplies,
+      cachedPromptTokens,
+      toolRejections,
+      toolErrors,
+      lengthCutoffs,
+    })
 
-  const located = locateArtifact(workspace)
+  // Placement is the harness's own work on a run the model has finished:
+  // whatever throws here (the deferred CLI module load, a copy) is an
+  // infrastructure error the batch entry decides about, but the run's own
+  // record lands first — the same meta a clean finish would write, marked
+  // failed at this stage (codex review R17).
   let placementNote: string
-  if (located.kind !== "none") {
-    placementNote = await placeArtifact(located, resultDir, workspace)
-  } else if (finalText !== undefined && stripFence(finalText).length > 0) {
-    const text = stripFence(finalText)
-    try {
-      JSON.parse(text)
-      writeFileSync(join(resultDir, "answer.json"), text + "\n")
-      placementNote = "no workspace artifact — saved final message text as answer.json (single-shot convention)"
-    } catch {
-      placementNote = "no workspace artifact and final message text is not parseable JSON — nothing saved"
+  try {
+    const located = locateArtifact(workspace)
+    if (located.kind !== "none") {
+      placementNote = await placeArtifact(located, resultDir, workspace)
+    } else if (finalText !== undefined && stripFence(finalText).length > 0) {
+      const text = stripFence(finalText)
+      try {
+        JSON.parse(text)
+        writeFileSync(join(resultDir, "answer.json"), text + "\n")
+        placementNote = "no workspace artifact — saved final message text as answer.json (single-shot convention)"
+      } catch {
+        placementNote = "no workspace artifact and final message text is not parseable JSON — nothing saved"
+      }
+    } else {
+      placementNote = "no workspace artifact and no final message text — nothing saved"
     }
-  } else {
-    placementNote = "no workspace artifact and no final message text — nothing saved"
+  } catch (e) {
+    const failed: FailedRunMeta = { ...metaNow(), status: "failed", stage: "placement", error: describeError(e) }
+    writeFileSync(join(resultDir, META_FILENAME), JSON.stringify(failed, null, 2) + "\n")
+    console.error(`${qid}: placement failed after ${roundsCompleted} round(s) — ${describeError(e, 200)}`)
+    throw e
   }
 
-  const meta = buildMeta({
-    providerPrefix,
-    baseUrl: cfg.baseUrl,
-    modelRequested: cfg.model,
-    modelReported,
-    rounds: roundsCompleted,
-    toolCalls,
-    promptTokens,
-    completionTokens,
-    startedAt,
-    finishedAt: Date.now(),
-    capHit,
-    deadlineHit,
-    scriptedReplies,
-    cachedPromptTokens,
-    toolRejections,
-    toolErrors,
-    lengthCutoffs,
-  })
-  writeFileSync(join(resultDir, META_FILENAME), JSON.stringify(meta, null, 2) + "\n")
+  writeFileSync(join(resultDir, META_FILENAME), JSON.stringify(metaNow(), null, 2) + "\n")
   console.log(
     `${qid}: done — ${roundsCompleted} round(s), ${toolCalls} tool call(s) (${toolRejections.length} rejected by the harness, ` +
       `${toolErrors} failed), ${scriptedReplies} scripted repl(y/ies), ${lengthCutoffs} output-limit cutoff(s), ` +

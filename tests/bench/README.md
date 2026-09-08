@@ -452,6 +452,22 @@ and what the API actually returned, side by side, without reconciling them:
 }
 ```
 
+**A run that fails still writes `meta.json`, with `status` and `stage`.** Two more fields appear
+only when the harness could not finish the question: `"status": "failed"` and `"stage"`, one of
+`"tool-loop"` (the completion/tool loop itself threw: an API error the retry did not absorb, a
+scripted reply that failed) or `"placement"` (the loop finished, and the step after it that
+copies the artifact up into the result root threw, the deferred load of the CLI's deck/theme
+modules included). `error` carries the message, followed by every `cause` beneath it, so a module
+loader's own wrapper does not hide the root reason. Both stages record the `rounds` and
+`tool_calls` the question actually spent, a `tool-loop` failure with the counts above and no
+token totals, a `placement` failure with the complete meta a clean finish would have written.
+The two differ in what happens next: a `tool-loop` failure is the model's run ending badly, so the
+batch logs it and moves on, while a `placement` failure is the harness's own, so it is re-thrown
+to the batch entry after the meta is on disk. Either way the question counts as run: the harness
+skips any question whose `meta.json` already exists (resume mode), so a failed question is not
+silently re-run and re-billed when a batch is restarted, delete its result directory to redo it.
+A completed run's meta carries neither `status` nor `stage`.
+
 **Tool rejections are not model errors.** A call the harness refused before running it — a path
 outside the workspace, a subcommand off the whitelist, a write to a provisioned input, malformed
 arguments, an unknown tool name — says the model bumped into the harness, not that it got
