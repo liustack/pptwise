@@ -108,7 +108,7 @@ import { basename, dirname, join, resolve, sep } from "node:path"
 import { THEME_ID_PATTERN } from "@/ir"
 import { PptwiseError } from "../errors"
 import { spawnHidden } from "./child"
-import { buildDeckPreview } from "./commands"
+import { buildDeckPreview, DeckBuildError, type ThemeLookupOutcome } from "./commands"
 import { findConfig } from "./config"
 import { ASSETS_DIRNAME, PAGES_DIRNAME, SPEC_FILENAME, THEME_FILENAME } from "./deck-dir"
 import {
@@ -686,6 +686,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
 
   const deckDir = initial.isDir ? initial.resolvedTarget : dirname(initial.resolvedTarget)
   let boundThemeName: string | undefined = initial.ir.theme.id
+  const messageOf = (e: unknown): string => (e instanceof Error ? e.message : String(e))
 
   /** The theme name the target binds right now, read off the spec or IR
    *  file without building. Asked before every build, for the record a
@@ -741,7 +742,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     try {
       return themeSourceKey(await resolveThemeByName(boundThemeName, { startDir: cwd, deckDir }))
     } catch (e) {
-      return `error:${e instanceof Error ? e.message : String(e)}`
+      return `error:${messageOf(e)}`
     }
   }
 
@@ -758,7 +759,12 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   let building = false
   let closed = false
 
-  const messageOf = (e: unknown): string => (e instanceof Error ? e.message : String(e))
+  /** What a failed build saw of its theme, as the same comparable string
+   *  {@link themeSourceFingerprint} answers with, so a lookup that fails
+   *  the same way on the next tick compares equal. */
+  function themeLookupKey(outcome: ThemeLookupOutcome): string {
+    return "resolved" in outcome ? themeSourceKey(outcome.resolved) : `error:${messageOf(outcome.error)}`
+  }
 
   /**
    * One build attempt, start to finish: the page, the record the timed
@@ -777,12 +783,18 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     const revision = ++latestRevision
     building = true
     try {
-      // A failed build reports no theme, and the record still has to move
+      // A failed build renders no theme, and the record still has to move
       // or the check finds the same difference every tick and rebuilds
-      // forever. What stands before the build starts, for the name the
-      // source binds now, is the answer to keep in that case: a change that
-      // lands after this point differs from it and costs at most one extra
-      // rebuild, where an answer read after the failure could swallow it.
+      // forever. What the build actually read is the answer to keep: the
+      // theme its lookup handed it, or the error that lookup raised
+      // (`DeckBuildError`). A file that was broken only for the length of
+      // one save is then recorded as the broken read, the next tick finds
+      // the restored file different from that and rebuilds, while a file
+      // that stays broken is found the same and left alone. A build that
+      // failed before its lookup ran never read the theme at all, and for
+      // it the answer taken just before the build, for the name the source
+      // binds now, stands: a change that lands after that read differs
+      // from it and costs at most one extra rebuild.
       boundThemeName = await peekBoundThemeName()
       const beforeBuild = await themeSourceFingerprint()
       try {
@@ -794,7 +806,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
         lastThemeSource = themeSourceKey(result.resolvedTheme)
       } catch (e) {
         latestError = messageOf(e)
-        lastThemeSource = beforeBuild
+        lastThemeSource = e instanceof DeckBuildError ? themeLookupKey(e.themeLookup) : beforeBuild
       }
       // `watchers` is assigned below, before the server listens. No build
       // runs before that: the initial one is awaited above this function.

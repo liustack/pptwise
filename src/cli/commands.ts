@@ -167,7 +167,13 @@ export async function applyDeckConfig(
     ?? (opts.fromDeckDir ? undefined : (typeof irTheme.id === "string" ? irTheme.id : undefined))
   if (authoredName === undefined) return undefined
   const resolved = await resolveThemeByName(authoredName, { startDir: opts.cwd, deckDir: opts.deckDir })
-  await assertThemeRebind(opts.deckDir, resolved)
+  try {
+    await assertThemeRebind(opts.deckDir, resolved)
+  } catch (e) {
+    // The lookup itself succeeded: a caller that records what this build
+    // saw of the theme must record that theme, not the guard's refusal.
+    throw new DeckBuildError(e, { resolved })
+  }
   deck.theme = {
     ...irTheme,
     id: resolved.id,
@@ -1318,6 +1324,34 @@ interface DeckRenderResult {
   normalized?: string[]
 }
 
+/**
+ * What a build saw of its theme by the time it failed: the theme the
+ * lookup handed it (`undefined` when the target binds none), or the error
+ * the lookup itself raised. A failed build has no `resolvedTheme` to hand
+ * back, and a caller that records the theme each build was drawn from
+ * (`createServeServer`, `./serve.ts`) needs this in its place: the record
+ * has to describe what the build actually read, not what stood on disk
+ * before or after it, or a theme file that was broken only for the length
+ * of one save is recorded as its restored self and never rebuilt.
+ */
+export type ThemeLookupOutcome = { resolved: ResolvedTheme | undefined } | { error: unknown }
+
+/**
+ * A build failure raised after the theme lookup ran, carrying that
+ * lookup's {@link ThemeLookupOutcome}. Same message as the failure it
+ * wraps, which stays reachable as `cause`, and a `PptwiseError` like every
+ * build failure, so `run*` commands print it exactly as before. A failure
+ * before the lookup (a target that cannot be read) is not wrapped: there
+ * is no outcome to carry.
+ */
+export class DeckBuildError extends PptwiseError {
+  readonly themeLookup: ThemeLookupOutcome
+  constructor(cause: unknown, themeLookup: ThemeLookupOutcome) {
+    super(cause instanceof Error ? cause.message : String(cause), { cause })
+    this.themeLookup = themeLookup
+  }
+}
+
 async function renderDeckSlides(
   target: string,
   opts: { cwd?: string } = {},
@@ -1325,22 +1359,33 @@ async function renderDeckSlides(
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
   const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, specTheme, specPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
-  const resolvedTheme = await applyDeckConfig(raw, {
-    specTheme,
-    specPath,
-    fromDeckDir: isDir,
-    deckDir: deckLookupDir(resolvedTarget, isDir),
-    cwd,
-    projectHit,
-    userHit,
-  })
-  const theme = resolvedTheme?.definition
-  const v = validateIr(raw, { theme })
-  if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
-  await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
-  const ir = v.ir!
-  const svgs = ir.slides.map((_, i) => renderSlideSvg(ir, i, { theme }))
-  return { ir, theme, resolvedTheme, svgs, resolvedTarget, isDir, normalized: v.normalized }
+  let resolvedTheme: ResolvedTheme | undefined
+  try {
+    resolvedTheme = await applyDeckConfig(raw, {
+      specTheme,
+      specPath,
+      fromDeckDir: isDir,
+      deckDir: deckLookupDir(resolvedTarget, isDir),
+      cwd,
+      projectHit,
+      userHit,
+    })
+  } catch (e) {
+    // The rebind guard already wraps its own refusal with the theme it
+    // resolved. Anything else here is the lookup failing.
+    throw e instanceof DeckBuildError ? e : new DeckBuildError(e, { error: e })
+  }
+  try {
+    const theme = resolvedTheme?.definition
+    const v = validateIr(raw, { theme })
+    if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
+    await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
+    const ir = v.ir!
+    const svgs = ir.slides.map((_, i) => renderSlideSvg(ir, i, { theme }))
+    return { ir, theme, resolvedTheme, svgs, resolvedTarget, isDir, normalized: v.normalized }
+  } catch (e) {
+    throw new DeckBuildError(e, { resolved: resolvedTheme })
+  }
 }
 
 /**
@@ -1402,7 +1447,9 @@ function buildDeckAuditAndHtml(
  * and again on every debounced `fs.watch` rebuild, caching `.html` in memory
  * for `GET /` and pushing an SSE `reload` once it succeeds. A thrown
  * `PptwiseError` (invalid IR, a mid-edit malformed JSON save, ...) propagates
- * straight out of this function either way — it is `createServeServer`'s job
+ * straight out of this function either way, as a {@link DeckBuildError}
+ * carrying what the build saw of its theme once the lookup has run — it is
+ * `createServeServer`'s job
  * to catch the *rebuild* case and turn it into an SSE `error` event instead
  * of letting it kill the server; the *first* call (before serve starts
  * listening) is deliberately allowed to reject the whole command, same
@@ -1420,8 +1467,12 @@ export async function buildDeckPreview(
   opts: { cwd?: string } = {},
 ): Promise<DeckPreviewResult> {
   const rendered = await renderDeckSlides(target, opts)
-  const { html, findings, checks } = buildDeckAuditAndHtml(rendered.ir, rendered.svgs, rendered.theme)
-  return { ...rendered, html, findings, checks }
+  try {
+    const { html, findings, checks } = buildDeckAuditAndHtml(rendered.ir, rendered.svgs, rendered.theme)
+    return { ...rendered, html, findings, checks }
+  } catch (e) {
+    throw new DeckBuildError(e, { resolved: rendered.resolvedTheme })
+  }
 }
 
 /**

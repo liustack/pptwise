@@ -1270,6 +1270,93 @@ describe("createServeServer — the theme source is compared by content", () => 
   })
 })
 
+describe("createServeServer — what a failed build records as its theme", () => {
+  // A failed build used to record the answer taken just before it
+  // started. That answer is a separate read, not what the build read: a
+  // theme that was valid before the build, broken while the build read
+  // it, and valid again after it was recorded as the valid file, so the
+  // next check found nothing new and the error never cleared. The record
+  // is now what the build's own lookup saw, through the error it throws.
+
+  function briefWithPrimary(id: string, primary: string): string {
+    const file = themeFileFromPreset("brief", { id })
+    file.style.colors.primary = primary
+    return JSON.stringify(file, null, 2) + "\n"
+  }
+
+  function servedWith(handle: ServeHandle, present: string, absent?: string): Promise<string> {
+    return pollUntil(async () => {
+      const body = (await get(handle.port, "/")).body.toUpperCase()
+      if (!body.includes(present)) return undefined
+      if (absent !== undefined && body.includes(absent)) return undefined
+      return body
+    }, THEME_POLL_MS + 3000)
+  }
+
+  /** A bare IR bound to `brief` in `parent/deck`, with the theme file in
+   *  `parent/themes/` above the watch ceiling, so only the timed check can
+   *  bring a change there to the preview. Started, settled, and with a
+   *  check parked before its read so no tick runs during the setup. */
+  async function startAboveCeiling(prefix: string): Promise<{
+    handle: ServeHandle
+    themePath: string
+    settled: number
+    tick: { entered: Promise<void>; release: () => void }
+  }> {
+    const parent = await makeDir(prefix)
+    const cwd = join(parent, "deck")
+    await mkdir(cwd)
+    const irPath = join(cwd, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+    await mkdir(join(parent, "themes"))
+    const themePath = join(parent, "themes", "brief.theme.json")
+    await writeFile(themePath, briefWithPrimary("brief", "#1E2A4A"))
+    const handle = await startServe(irPath, { cwd })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain("1E2A4A")
+    const settled = await settledRevision(handle)
+    const tick = holdNextThemeCheck()
+    await tick.entered
+    return { handle, themePath, settled, tick }
+  }
+
+  /** One build whose own read of the theme file sees `{`: the answer taken
+   *  before the build sees the valid file `before`, the file is broken
+   *  while that answer is in hand, and the build reads the broken file. */
+  async function buildOverBrokenRead(handle: ServeHandle, themePath: string, before: string): Promise<void> {
+    await writeFile(themePath, before)
+    const gate = holdThemeLookups({ phase: "after", scope: "any", once: true })
+    const building = handle.rebuild()
+    await gate.entered
+    await writeFile(themePath, "{")
+    gate.release()
+    await building
+    expect(handle.status()).toMatchObject({ latestOk: false, error: expect.stringMatching(/not valid JSON/) })
+  }
+
+  it("a theme broken only while the build read it, then restored, is rebuilt within one check", async () => {
+    const { handle, themePath, settled, tick } = await startAboveCeiling("pptwise-serve-failed-record-")
+    await buildOverBrokenRead(handle, themePath, briefWithPrimary("brief", "#0A3D91"))
+
+    // The file is whole again before any check runs. The record says the
+    // build read a broken file, so this is a change, and the page catches up.
+    await writeFile(themePath, briefWithPrimary("brief", "#0A3D91"))
+    tick.release()
+    await servedWith(handle, "0A3D91", "1E2A4A")
+    expect(handle.status()).toMatchObject({ latestOk: true, latestRevision: settled + 2, servedRevision: settled + 2 })
+  })
+
+  it("a theme that stays broken is not rebuilt again", async () => {
+    const { handle, themePath, settled, tick } = await startAboveCeiling("pptwise-serve-stable-failure-")
+    await buildOverBrokenRead(handle, themePath, briefWithPrimary("brief", "#0A3D91"))
+
+    // Every check reads the same broken file the build read.
+    tick.release()
+    await sleep(2 * THEME_POLL_MS + DEBOUNCE_GRACE_MS)
+    expect(handle.status()).toMatchObject({ latestOk: false, latestRevision: settled + 1, servedRevision: settled })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain("1E2A4A")
+  })
+})
+
 describe("createServeServer — a watcher set that cannot be attached at runtime", () => {
   // After every build the tree is handed the paths the bound theme could
   // resolve to now. A plain file named `themes` created inside the deck
