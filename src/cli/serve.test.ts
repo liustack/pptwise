@@ -1,10 +1,11 @@
 // @vitest-environment node
 import { spawn } from "node:child_process"
 import { renameSync, writeFileSync } from "node:fs"
-import { mkdir, mkdtemp, readFile, rename, rm, stat, utimes, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, realpath, rename, rm, stat, symlink, utimes, writeFile } from "node:fs/promises"
 import http from "node:http"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { basename, join } from "node:path"
+import { pathToFileURL } from "node:url"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type * as FsModule from "node:fs"
 import { installNodePlatform } from "@/platform/node"
@@ -23,43 +24,60 @@ import {
   watchRoots,
   watchTree,
 } from "./serve"
-import type * as ThemeResolveModule from "./theme-resolve"
-import { themeFileFromPreset, type ThemeLookupOptions } from "./theme-resolve"
+import type * as LoadIrModule from "./load-ir"
+import { themeFileFromPreset } from "./theme-resolve"
 
 /**
- * A pass-through over `./theme-resolve` with one hook: a test can hold a
- * name lookup either before it reads anything (the answer it brings back is
- * whatever the disk says once released) or after it has read (the answer is
- * already in hand while the disk changes underneath it). The build pipeline
- * (`commands.ts`) and `createServeServer`'s own checks go through this one
- * function, so a test arms the gate at a moment it knows which is next, or
- * scopes the hold to lookups made inside `buildDeckPreview` (the second
- * pass-through below marks that span) and holds every one of those until it
- * releases them together.
+ * A pass-through over `./load-ir` with one hook: a test can hold a file
+ * read either before it reads anything (what it brings back is whatever the
+ * disk says once released) or after it has read (the content is already in
+ * hand while the disk changes underneath it). Every spec, IR, and theme
+ * file the build pipeline (`commands.ts`) and `createServeServer`'s own
+ * checks read goes through `loadIrFile`, so a test arms the gate at a
+ * moment it knows which read is next, narrows it to one kind of file, or
+ * scopes the hold to reads made inside `buildDeckPreview` (the second
+ * pass-through below marks that span) and holds every one of those until
+ * it releases them together.
  */
-interface LookupHold {
+interface ReadHold {
   phase: "before" | "after"
-  /** Every lookup, or only those a `buildDeckPreview` call makes. */
+  /** Every read, or only those a `buildDeckPreview` call makes. */
   scope: "any" | "build"
-  /** Hold only the next lookup, or every lookup until released. */
+  /** The target's own spec or IR file, a theme file, or any file. */
+  kind: "source" | "theme" | "any"
+  /** Hold only the next read, or every read until released. */
   once: boolean
   entered: () => void
   released: Promise<void>
 }
-const resolveGate = vi.hoisted(() => ({ hold: undefined as LookupHold | undefined, inBuild: false }))
-/** A pass-through over `node:fs` with one hook: runs after a real
- *  `fs.watch` call has succeeded, with the path it opened, before the
- *  caller gets the watcher back. A test that needs the filesystem to
- *  change between a watcher opening and the stat that follows it sets
- *  `afterWatch`; nothing else about `node:fs` is touched. */
-const fsGate = vi.hoisted(() => ({ afterWatch: undefined as ((path: string) => void) | undefined }))
+const resolveGate = vi.hoisted(() => ({ hold: undefined as ReadHold | undefined, inBuild: false }))
+/** A pass-through over `node:fs` with two hooks. `afterWatch` runs after
+ *  a real `fs.watch` call has succeeded, with the path it opened, before
+ *  the caller gets the watcher back, for a test that needs the filesystem
+ *  to change between a watcher opening and the stat that follows it.
+ *  `beforeEvent` runs inside a real watcher's callback, with the watched
+ *  path and the event, before the production callback sees it, for a test
+ *  that needs the filesystem to change between an event being raised and
+ *  the code that acts on it. Nothing else about `node:fs` is touched. */
+const fsGate = vi.hoisted(() => ({
+  afterWatch: undefined as ((path: string) => void) | undefined,
+  beforeEvent: undefined as ((path: string, event: string, filename: string | Buffer | null) => void) | undefined,
+}))
 vi.mock("node:fs", async (importOriginal) => {
   const original = await importOriginal<typeof FsModule>()
   // `fs.watch` is overloaded, and a spread of one overload's parameters
   // does not satisfy the others; the hook only ever forwards.
   const watch = ((...args: any[]) => {
+    const path = String(args[0])
+    const callback = args.at(-1)
+    if (typeof callback === "function") {
+      args[args.length - 1] = (event: string, filename: string | Buffer | null) => {
+        fsGate.beforeEvent?.(path, event, filename)
+        return callback(event, filename)
+      }
+    }
     const watcher = (original.watch as (...a: any[]) => FsModule.FSWatcher)(...args)
-    fsGate.afterWatch?.(String(args[0]))
+    fsGate.afterWatch?.(path)
     return watcher
   }) as typeof original.watch
   return { ...original, watch }
@@ -78,30 +96,36 @@ vi.mock("./commands", async (importOriginal) => {
     },
   }
 })
-vi.mock("./theme-resolve", async (importOriginal) => {
-  const original = await importOriginal<typeof ThemeResolveModule>()
-  async function waitAt(phase: "before" | "after"): Promise<void> {
+vi.mock("./load-ir", async (importOriginal) => {
+  const original = await importOriginal<typeof LoadIrModule>()
+  function kindMatches(hold: ReadHold["kind"], kind: string): boolean {
+    if (hold === "any") return true
+    if (hold === "theme") return kind === "theme"
+    return kind === "IR" || kind === "spec"
+  }
+  async function waitAt(phase: "before" | "after", kind: string): Promise<void> {
     const hold = resolveGate.hold
     if (hold === undefined || hold.phase !== phase) return
     if (hold.scope === "build" && !resolveGate.inBuild) return
+    if (!kindMatches(hold.kind, kind)) return
     if (hold.once) resolveGate.hold = undefined
     hold.entered()
     await hold.released
   }
   return {
     ...original,
-    resolveThemeByName: async (name: string, opts: ThemeLookupOptions) => {
-      await waitAt("before")
-      const hit = await original.resolveThemeByName(name, opts)
-      await waitAt("after")
-      return hit
+    loadIrFile: async (path: string, kind = "IR") => {
+      await waitAt("before", kind)
+      const raw = await original.loadIrFile(path, kind)
+      await waitAt("after", kind)
+      return raw
     },
   }
 })
 
-/** Arms the gate: resolves `entered` when a lookup reaches `phase`, and
+/** Arms the gate: resolves `entered` when a read reaches `phase`, and
  *  keeps it waiting there until `release()` is called. */
-function holdThemeLookups(opts: { phase: "before" | "after"; scope: "any" | "build"; once: boolean }): {
+function holdReads(opts: { phase: "before" | "after"; scope: "any" | "build"; kind: ReadHold["kind"]; once: boolean }): {
   entered: Promise<void>
   release: () => void
 } {
@@ -109,7 +133,7 @@ function holdThemeLookups(opts: { phase: "before" | "after"; scope: "any" | "bui
   let releaseHold!: () => void
   const enteredPromise = new Promise<void>((resolvePromise) => (entered = resolvePromise))
   const released = new Promise<void>((resolvePromise) => (releaseHold = resolvePromise))
-  resolveGate.hold = { phase: opts.phase, scope: opts.scope, once: opts.once, entered, released }
+  resolveGate.hold = { phase: opts.phase, scope: opts.scope, kind: opts.kind, once: opts.once, entered, released }
   return {
     entered: enteredPromise,
     release: () => {
@@ -119,10 +143,11 @@ function holdThemeLookups(opts: { phase: "before" | "after"; scope: "any" | "bui
   }
 }
 
-/** The next lookup — the timed check's, when nothing else is building —
- *  held before it reads. */
+/** The next timed check, when nothing else is building, held before its
+ *  first read: every check starts by reading the target's own spec or IR
+ *  for the theme it binds. */
 function holdNextThemeCheck(): { entered: Promise<void>; release: () => void } {
-  return holdThemeLookups({ phase: "before", scope: "any", once: true })
+  return holdReads({ phase: "before", scope: "any", kind: "source", once: true })
 }
 
 installNodePlatform()
@@ -387,6 +412,7 @@ async function startServe(
 
 afterEach(async () => {
   fsGate.afterWatch = undefined
+  fsGate.beforeEvent = undefined
   await Promise.all(openHandles.splice(0).map((h) => h.close()))
   __resetRegisteredThemes()
 })
@@ -1230,9 +1256,9 @@ describe("createServeServer — the theme source is compared by content", () => 
     expect((await get(handle.port, "/")).body.toUpperCase()).toContain("0A3D91")
     const settled = await settledRevision(handle)
 
-    // Every lookup the build makes is held once it has read the file. The
+    // Every theme read the build makes is held once it has the file. The
     // build reads A, then B lands, then the build carries on with A in hand.
-    const gate = holdThemeLookups({ phase: "after", scope: "build", once: false })
+    const gate = holdReads({ phase: "after", scope: "build", kind: "theme", once: false })
     const building = handle.rebuild()
     await gate.entered
     await writeFile(themePath, briefWithPrimary("brief", "#8B1A1A"))
@@ -1296,8 +1322,10 @@ describe("createServeServer — what a failed build records as its theme", () =>
   // started. That answer is a separate read, not what the build read: a
   // theme that was valid before the build, broken while the build read
   // it, and valid again after it was recorded as the valid file, so the
-  // next check found nothing new and the error never cleared. The record
-  // is now what the build's own lookup saw, through the error it throws.
+  // next check found nothing new and the error never cleared. A deck
+  // project read its theme once more before assembly, and that read was
+  // never on record either. A build now reads its theme inputs once, at
+  // the start, and every failure carries that one record.
 
   function briefWithPrimary(id: string, primary: string): string {
     const file = themeFileFromPreset("brief", { id })
@@ -1314,11 +1342,13 @@ describe("createServeServer — what a failed build records as its theme", () =>
     }, THEME_POLL_MS + 3000)
   }
 
-  /** A bare IR bound to `brief` in `parent/deck`, with the theme file in
+  type TargetMode = "bare IR file" | "deck project"
+
+  /** A target bound to `brief` in `parent/deck`, with the theme file in
    *  `parent/themes/` above the watch ceiling, so only the timed check can
    *  bring a change there to the preview. Started, settled, and with a
    *  check parked before its read so no tick runs during the setup. */
-  async function startAboveCeiling(prefix: string): Promise<{
+  async function startAboveCeiling(prefix: string, mode: TargetMode): Promise<{
     handle: ServeHandle
     themePath: string
     settled: number
@@ -1327,12 +1357,19 @@ describe("createServeServer — what a failed build records as its theme", () =>
     const parent = await makeDir(prefix)
     const cwd = join(parent, "deck")
     await mkdir(cwd)
-    const irPath = join(cwd, "deck.json")
-    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+    let target: string
+    if (mode === "deck project") {
+      await mkdir(join(cwd, "pages"))
+      await writeFile(join(cwd, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
+      target = cwd
+    } else {
+      target = join(cwd, "deck.json")
+      await writeFile(target, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+    }
     await mkdir(join(parent, "themes"))
     const themePath = join(parent, "themes", "brief.theme.json")
     await writeFile(themePath, briefWithPrimary("brief", "#1E2A4A"))
-    const handle = await startServe(irPath, { cwd })
+    const handle = await startServe(target, { cwd })
     expect((await get(handle.port, "/")).body.toUpperCase()).toContain("1E2A4A")
     const settled = await settledRevision(handle)
     const tick = holdNextThemeCheck()
@@ -1340,12 +1377,12 @@ describe("createServeServer — what a failed build records as its theme", () =>
     return { handle, themePath, settled, tick }
   }
 
-  /** One build whose own read of the theme file sees `{`: the answer taken
-   *  before the build sees the valid file `before`, the file is broken
-   *  while that answer is in hand, and the build reads the broken file. */
+  /** One build whose own read of the theme file sees `{`: the file holds
+   *  the valid `before` when the build starts, is broken just before the
+   *  build's lookup reads it, and the build reads the broken file. */
   async function buildOverBrokenRead(handle: ServeHandle, themePath: string, before: string): Promise<void> {
     await writeFile(themePath, before)
-    const gate = holdThemeLookups({ phase: "after", scope: "any", once: true })
+    const gate = holdReads({ phase: "before", scope: "build", kind: "theme", once: true })
     const building = handle.rebuild()
     await gate.entered
     await writeFile(themePath, "{")
@@ -1354,20 +1391,23 @@ describe("createServeServer — what a failed build records as its theme", () =>
     expect(handle.status()).toMatchObject({ latestOk: false, error: expect.stringMatching(/not valid JSON/) })
   }
 
-  it("a theme broken only while the build read it, then restored, is rebuilt within one check", async () => {
-    const { handle, themePath, settled, tick } = await startAboveCeiling("pptwise-serve-failed-record-")
-    await buildOverBrokenRead(handle, themePath, briefWithPrimary("brief", "#0A3D91"))
+  it.each<TargetMode>(["bare IR file", "deck project"])(
+    "%s: a theme broken only while the build read it, then restored, is rebuilt within one check",
+    async (mode) => {
+      const { handle, themePath, settled, tick } = await startAboveCeiling("pptwise-serve-failed-record-", mode)
+      await buildOverBrokenRead(handle, themePath, briefWithPrimary("brief", "#0A3D91"))
 
-    // The file is whole again before any check runs. The record says the
-    // build read a broken file, so this is a change, and the page catches up.
-    await writeFile(themePath, briefWithPrimary("brief", "#0A3D91"))
-    tick.release()
-    await servedWith(handle, "0A3D91", "1E2A4A")
-    expect(handle.status()).toMatchObject({ latestOk: true, latestRevision: settled + 2, servedRevision: settled + 2 })
-  })
+      // The file is whole again before any check runs. The record says the
+      // build read a broken file, so this is a change, and the page catches up.
+      await writeFile(themePath, briefWithPrimary("brief", "#0A3D91"))
+      tick.release()
+      await servedWith(handle, "0A3D91", "1E2A4A")
+      expect(handle.status()).toMatchObject({ latestOk: true, latestRevision: settled + 2, servedRevision: settled + 2 })
+    },
+  )
 
-  it("a theme that stays broken is not rebuilt again", async () => {
-    const { handle, themePath, settled, tick } = await startAboveCeiling("pptwise-serve-stable-failure-")
+  it.each<TargetMode>(["bare IR file", "deck project"])("%s: a theme that stays broken is not rebuilt again", async (mode) => {
+    const { handle, themePath, settled, tick } = await startAboveCeiling("pptwise-serve-stable-failure-", mode)
     await buildOverBrokenRead(handle, themePath, briefWithPrimary("brief", "#0A3D91"))
 
     // Every check reads the same broken file the build read.
@@ -1375,6 +1415,133 @@ describe("createServeServer — what a failed build records as its theme", () =>
     await sleep(2 * THEME_POLL_MS + DEBOUNCE_GRACE_MS)
     expect(handle.status()).toMatchObject({ latestOk: false, latestRevision: settled + 1, servedRevision: settled })
     expect((await get(handle.port, "/")).body.toUpperCase()).toContain("1E2A4A")
+  })
+})
+
+describe("createServeServer — the rebind guard's own input is on record", () => {
+  // The guard that refuses a rebind to a different menu reads the deck's
+  // own theme.json. A failed build used to record only the theme it had
+  // resolved, so when that file changed while the resolved theme did not,
+  // the timed check saw nothing new. With the file a symlink to somewhere
+  // no watcher sits, the refusal never cleared.
+
+  function statusWhere(handle: ServeHandle, accept: (status: ServeBuildStatus) => boolean): Promise<ServeBuildStatus> {
+    return pollUntil(async () => {
+      const current = handle.status()
+      return accept(current) ? current : undefined
+    }, THEME_POLL_MS + 3000)
+  }
+
+  it("a refusal lifted by rewriting the symlink's target recovers within one check", async () => {
+    const parent = await makeDir("pptwise-serve-guard-symlink-")
+    const cwd = join(parent, "deck")
+    const shared = join(parent, "shared")
+    await mkdir(cwd)
+    await mkdir(shared)
+    const irPath = join(cwd, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+    const boundSource = join(shared, "bound.json")
+    const bound = themeFileFromPreset("brief", { id: "brief" })
+    bound.style.colors.primary = "#0A3D91"
+    await writeFile(boundSource, JSON.stringify(bound))
+    await symlink(boundSource, join(cwd, THEME_FILENAME))
+    const chosen = themeFileFromPreset("thesis", { id: "chosen" })
+    await writeFile(join(cwd, "chosen.theme.json"), JSON.stringify(chosen))
+    const handle = await startServe(irPath, { cwd })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain("0A3D91")
+    const settled = await settledRevision(handle)
+
+    // Rebinding to a theme with another menu is refused, and stays refused
+    // without a rebuild loop while nothing changes.
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "chosen" } }))
+    const refused = await statusWhere(handle, (status) => !status.latestOk)
+    expect(refused).toMatchObject({ latestRevision: settled + 1, error: expect.stringMatching(/menus differ/) })
+    await sleep(2 * THEME_POLL_MS + DEBOUNCE_GRACE_MS)
+    expect(handle.status()).toMatchObject({ latestOk: false, latestRevision: settled + 1 })
+
+    // Only the symlink's target changes: the bound file keeps its id and
+    // takes the chosen theme's menu. No watcher sees the write.
+    await writeFile(boundSource, JSON.stringify(themeFileFromPreset("thesis", { id: "brief" })))
+    const recovered = await statusWhere(handle, (status) => status.latestOk)
+    expect(recovered).toMatchObject({ latestRevision: settled + 2, servedRevision: settled + 2 })
+    // The page is drawn with the chosen theme now, not the bound file's brief.
+    expect((await get(handle.port, "/")).body.toUpperCase()).not.toContain("0A3D91")
+  })
+})
+
+describe("createServeServer — recovery sequences count their revisions", () => {
+  function briefWithPrimary(id: string, primary: string): string {
+    const file = themeFileFromPreset("brief", { id })
+    file.style.colors.primary = primary
+    return JSON.stringify(file, null, 2) + "\n"
+  }
+
+  function statusWhere(handle: ServeHandle, accept: (status: ServeBuildStatus) => boolean): Promise<ServeBuildStatus> {
+    return pollUntil(async () => {
+      const current = handle.status()
+      return accept(current) ? current : undefined
+    }, THEME_POLL_MS + 3000)
+  }
+
+  /** The two revisions a break-and-repair sequence is allowed: one that
+   *  fails, one that recovers, and no rebuild while the break stands. */
+  async function expectOneFailureThenOneRecovery(
+    handle: ServeHandle,
+    settled: number,
+    breakIt: () => Promise<void>,
+    failure: RegExp,
+    repairIt: () => Promise<void>,
+  ): Promise<void> {
+    await breakIt()
+    const failed = await statusWhere(handle, (status) => !status.latestOk)
+    expect(failed).toMatchObject({ latestRevision: settled + 1, servedRevision: settled, error: expect.stringMatching(failure) })
+    await sleep(2 * THEME_POLL_MS + DEBOUNCE_GRACE_MS)
+    expect(handle.status()).toMatchObject({ latestOk: false, latestRevision: settled + 1 })
+
+    await repairIt()
+    const recovered = await statusWhere(handle, (status) => status.latestOk)
+    expect(recovered).toMatchObject({ latestRevision: settled + 2, servedRevision: settled + 2 })
+    await sleep(THEME_POLL_MS + DEBOUNCE_GRACE_MS)
+    expect(handle.status()).toMatchObject({ latestOk: true, latestRevision: settled + 2 })
+  }
+
+  it("a spec broken mid-edit, then repaired", async () => {
+    const dir = await makeDir("pptwise-serve-spec-repair-")
+    const deckDir = join(dir, "deck")
+    await mkdir(join(deckDir, "pages"), { recursive: true })
+    const specPath = join(deckDir, "deck.spec.json")
+    await writeFile(specPath, JSON.stringify(makeDeckPlan()))
+    const handle = await startServe(deckDir, { cwd: dir })
+    const settled = await settledRevision(handle)
+
+    await expectOneFailureThenOneRecovery(
+      handle,
+      settled,
+      () => writeFile(specPath, "{"),
+      /not valid JSON/,
+      () => writeFile(specPath, JSON.stringify({ ...makeDeckPlan(), filename: "repaired-deck" })),
+    )
+    expect((await get(handle.port, "/")).body).toContain("repaired-deck")
+  })
+
+  it("a rebind refused, then reverted", async () => {
+    const dir = await makeDir("pptwise-serve-rebind-revert-")
+    await writeFile(join(dir, THEME_FILENAME), briefWithPrimary("brief", "#0A3D91"))
+    await writeFile(join(dir, "chosen.theme.json"), JSON.stringify(themeFileFromPreset("thesis", { id: "chosen" })))
+    const irPath = join(dir, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+    const handle = await startServe(irPath, { cwd: dir })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain("0A3D91")
+    const settled = await settledRevision(handle)
+
+    await expectOneFailureThenOneRecovery(
+      handle,
+      settled,
+      () => writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "chosen" } })),
+      /menus differ/,
+      () => writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" }, filename: "reverted-deck" })),
+    )
+    expect((await get(handle.port, "/")).body).toContain("reverted-deck")
   })
 })
 
@@ -1461,52 +1628,229 @@ describe("pptwise serve — the CLI process", () => {
     return (await res.json()) as T
   }
 
-  it("stays up when a plain file named themes/ appears in the deck, and recovers once it is gone", async () => {
-    const dir = await makeDir("pptwise-serve-cli-enotdir-")
-    await writeFile(join(dir, THEME_FILENAME), briefWithPrimary("brief", "#0A3D91"))
-    const irPath = join(dir, "deck.json")
-    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+  interface CliServe {
+    url: string
+    exitCode: () => number | null
+    stderr: () => string
+    stop: () => Promise<void>
+  }
 
+  /** A real `pptwise serve` on `irPath`, started from `dir`, up and
+   *  serving. `env` is laid over the test's own environment. */
+  async function startCli(dir: string, irPath: string, env: NodeJS.ProcessEnv = {}): Promise<CliServe> {
     const child = spawn(process.execPath, [TSX, "--tsconfig", TSCONFIG, CLI, "serve", irPath, "--port", "0", "--no-open"], {
       cwd: dir,
-      env: process.env,
+      env: { ...process.env, ...env },
       stdio: ["ignore", "pipe", "pipe"],
     })
     let stdout = ""
     let stderr = ""
     child.stdout.on("data", (chunk: Buffer) => (stdout += chunk.toString()))
     child.stderr.on("data", (chunk: Buffer) => (stderr += chunk.toString()))
-    const exited = new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolvePromise) =>
-      child.on("exit", (code, signal) => resolvePromise({ code, signal })),
-    )
+    const exited = new Promise<void>((resolvePromise) => child.on("exit", () => resolvePromise()))
+    const stop = async () => {
+      if (child.exitCode === null) child.kill("SIGTERM")
+      await exited
+    }
     try {
       const url = await pollUntil(async () => {
         if (child.exitCode !== null) throw new Error(`pptwise serve exited during startup: ${stderr}`)
         return stdout.match(/http:\/\/127\.0\.0\.1:\d+/)?.[0]
       }, 30_000)
-      expect((await (await fetch(url)).text()).toUpperCase()).toContain("0A3D91")
+      return { url, exitCode: () => child.exitCode, stderr: () => stderr, stop }
+    } catch (e) {
+      await stop()
+      throw e
+    }
+  }
+
+  /** Polls `probe` while the process is still up, and fails at once with
+   *  the process's stderr when it has exited. */
+  function pollWhileUp<T>(cli: CliServe, probe: () => Promise<T | undefined>): Promise<T> {
+    return pollUntil(async () => {
+      if (cli.exitCode() !== null) throw new Error(`pptwise serve exited: ${cli.stderr()}`)
+      return probe()
+    }, THEME_POLL_MS + 3000)
+  }
+
+  it("stays up when a plain file named themes/ appears in the deck, and recovers once it is gone", async () => {
+    const dir = await makeDir("pptwise-serve-cli-enotdir-")
+    await writeFile(join(dir, THEME_FILENAME), briefWithPrimary("brief", "#0A3D91"))
+    const irPath = join(dir, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+
+    const cli = await startCli(dir, irPath)
+    try {
+      expect((await (await fetch(cli.url)).text()).toUpperCase()).toContain("0A3D91")
       await sleep(DEBOUNCE_GRACE_MS)
 
       await writeFile(join(dir, "themes"), "not a directory\n")
-      const failed = await pollUntil(async () => {
-        if (child.exitCode !== null) throw new Error(`pptwise serve exited: ${stderr}`)
-        const status = await getJson<ServeBuildStatus>(`${url}/status`)
+      const failed = await pollWhileUp(cli, async () => {
+        const status = await getJson<ServeBuildStatus>(`${cli.url}/status`)
         return status.latestOk ? undefined : status
-      }, THEME_POLL_MS + 3000)
+      })
       expect(failed.error).toMatch(/ENOTDIR/)
-      expect(child.exitCode).toBeNull()
+      expect(cli.exitCode()).toBeNull()
 
       await rm(join(dir, "themes"))
       await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" }, slides: [{ type: "cover", heading: "Recovered heading" }] }))
-      await pollUntil(async () => {
-        if (child.exitCode !== null) throw new Error(`pptwise serve exited: ${stderr}`)
-        return (await (await fetch(url)).text()).includes("Recovered heading") ? true : undefined
-      }, THEME_POLL_MS + 3000)
-      expect(await getJson<ServeBuildStatus>(`${url}/status`)).toMatchObject({ latestOk: true })
-      expect(child.exitCode).toBeNull()
+      await pollWhileUp(cli, async () => ((await (await fetch(cli.url)).text()).includes("Recovered heading") ? true : undefined))
+      expect(await getJson<ServeBuildStatus>(`${cli.url}/status`)).toMatchObject({ latestOk: true })
+      expect(cli.exitCode()).toBeNull()
     } finally {
-      if (child.exitCode === null) child.kill("SIGTERM")
-      await exited
+      await cli.stop()
+    }
+  })
+
+  it("stays up when a watcher event's handling throws, and recovers once the file is gone", async () => {
+    // The same swap the embedded test above makes inside the callback,
+    // made here by a preload that wraps `fs.watch` in the real process:
+    // the moment the `themes/` watcher reports `brief` appearing, and
+    // before serve's own callback runs, `themes/` becomes a plain file.
+    const dir = await makeDir("pptwise-serve-cli-event-")
+    await writeFile(join(dir, THEME_FILENAME), briefWithPrimary("brief", "#0A3D91"))
+    const irPath = join(dir, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+    const themes = join(dir, "themes")
+    await mkdir(themes)
+    const hookPath = join(dir, "watch-event-hook.mjs")
+    await writeFile(
+      hookPath,
+      [
+        'import fs from "node:fs"',
+        'import { syncBuiltinESMExports } from "node:module"',
+        'import { basename } from "node:path"',
+        "const target = process.env.PPTWISE_TEST_EVENT_PARENT",
+        "const original = fs.watch",
+        "let rotated = false",
+        "fs.watch = (path, ...args) => {",
+        "  const callback = args.at(-1)",
+        '  if (typeof callback === "function") {',
+        "    args[args.length - 1] = (event, filename) => {",
+        '      if (String(path) === target && basename(String(filename)) === "brief" && !rotated) {',
+        "        rotated = true",
+        '        fs.renameSync(target, target + "-moved")',
+        '        fs.writeFileSync(target, "not a directory\\n")',
+        "      }",
+        "      return callback(event, filename)",
+        "    }",
+        "  }",
+        "  return original(path, ...args)",
+        "}",
+        "syncBuiltinESMExports()",
+        "",
+      ].join("\n"),
+    )
+
+    // The process resolves the workspace `themes/` under its own `cwd`,
+    // which is the physical path even when the temp directory is reached
+    // through a symlink (`/var` on macOS), so the hook compares that.
+    const cli = await startCli(dir, irPath, {
+      NODE_OPTIONS: `--import=${pathToFileURL(hookPath).href}`,
+      PPTWISE_TEST_EVENT_PARENT: await realpath(themes),
+    })
+    try {
+      expect((await (await fetch(cli.url)).text()).toUpperCase()).toContain("0A3D91")
+      await sleep(DEBOUNCE_GRACE_MS)
+
+      await mkdir(join(themes, "brief"))
+      const failed = await pollWhileUp(cli, async () => {
+        const status = await getJson<ServeBuildStatus>(`${cli.url}/status`)
+        return status.latestOk ? undefined : status
+      })
+      expect(failed.error).toMatch(/ENOTDIR/)
+      expect(cli.exitCode()).toBeNull()
+      expect((await (await fetch(cli.url)).text()).toUpperCase()).toContain("0A3D91")
+
+      await rm(themes)
+      await pollWhileUp(cli, async () => {
+        const status = await getJson<ServeBuildStatus>(`${cli.url}/status`)
+        return status.latestOk ? status : undefined
+      })
+      expect(cli.exitCode()).toBeNull()
+    } finally {
+      await cli.stop()
+    }
+  })
+})
+
+describe("createServeServer — a watcher event whose handling throws", () => {
+  // `fs.watch` hands an event to the tree, and the tree stats the entry
+  // the event names to decide whether a child watcher must be replaced.
+  // That stat can throw: the directory swapped for a plain file between
+  // the event and the stat gives ENOTDIR. A throw out of an `fs.watch`
+  // callback is an uncaught exception, and the process went down on it.
+  // The tree now hands such a failure to its owner, and serve records it
+  // and rebuilds, the same path a failed watcher update already took.
+
+  function briefWithPrimary(id: string, primary: string): string {
+    const file = themeFileFromPreset("brief", { id })
+    file.style.colors.primary = primary
+    return JSON.stringify(file, null, 2) + "\n"
+  }
+
+  function statusWhere(handle: ServeHandle, accept: (status: ServeBuildStatus) => boolean): Promise<ServeBuildStatus> {
+    return pollUntil(async () => {
+      const current = handle.status()
+      return accept(current) ? current : undefined
+    }, THEME_POLL_MS + 3000)
+  }
+
+  /** Swaps `themes` for a plain file the moment its watcher reports
+   *  `brief` appearing, before serve's callback runs. */
+  function swapThemesOnBriefEvent(themes: string): () => boolean {
+    let rotated = false
+    fsGate.beforeEvent = (path, _event, filename) => {
+      if (path !== themes || rotated || filename === null || basename(filename.toString()) !== "brief") return
+      rotated = true
+      renameSync(themes, `${themes}-moved`)
+      writeFileSync(themes, "not a directory\n")
+    }
+    return () => rotated
+  }
+
+  it("records the failure, keeps serving, and recovers once the file is gone", async () => {
+    const dir = await makeDir("pptwise-serve-event-throw-")
+    await writeFile(join(dir, THEME_FILENAME), briefWithPrimary("brief", "#0A3D91"))
+    const irPath = join(dir, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+    const themes = join(dir, "themes")
+    await mkdir(themes)
+    const handle = await startServe(irPath, { cwd: dir })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain("0A3D91")
+    await settledRevision(handle)
+
+    const rotated = swapThemesOnBriefEvent(themes)
+    await mkdir(join(themes, "brief"))
+    const failed = await statusWhere(handle, (status) => !status.latestOk)
+    expect(rotated()).toBe(true)
+    expect(failed.error).toMatch(/ENOTDIR/)
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain("0A3D91")
+
+    await rm(themes)
+    const recovered = await statusWhere(handle, (status) => status.latestOk)
+    expect(recovered.servedRevision).toBe(recovered.latestRevision)
+  })
+
+  it("watchTree hands the error to onError instead of throwing out of the callback", async () => {
+    const dir = await makeDir("pptwise-serve-tree-event-throw-")
+    const themes = join(dir, "themes")
+    await mkdir(themes)
+    const errors: unknown[] = []
+    let changes = 0
+    const tree = watchTree(
+      [{ path: join(themes, "brief", THEME_FILENAME), kind: "file" }],
+      () => changes++,
+      (e) => errors.push(e),
+    )
+    try {
+      const rotated = swapThemesOnBriefEvent(themes)
+      await mkdir(join(themes, "brief"))
+      await pollUntil(async () => (errors.length > 0 ? true : undefined))
+      expect(rotated()).toBe(true)
+      expect(errors[0]).toMatchObject({ code: "ENOTDIR" })
+    } finally {
+      tree.close()
     }
   })
 })
@@ -1531,7 +1875,7 @@ describe("watchTree — a watcher opened, then failed before it was registered",
       renameSync(themes, `${themes}-moved`)
       writeFileSync(themes, "not a directory\n")
     }
-    expect(() => watchTree([{ path: join(target, THEME_FILENAME), kind: "file" }], () => {})).toThrow(/ENOTDIR/)
+    expect(() => watchTree([{ path: join(target, THEME_FILENAME), kind: "file" }], () => {}, () => {})).toThrow(/ENOTDIR/)
     expect(rotated).toBe(true)
     // A closed FSEvents handle is released a tick later, not on `close()`.
     await pollUntil(async () => (count() <= before ? true : undefined))
