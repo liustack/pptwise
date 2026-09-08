@@ -70,6 +70,17 @@ export interface FaceSampleInput {
    * proved a branch by the words it printed.
    */
   readonly requiredText?: readonly string[]
+  /**
+   * A theme whose palette this face must not bake in.
+   *
+   * The deleted test swept all 24 themes asserting that under any theme but
+   * `ownerTheme` none of `hexes` appears. A legal hex from the wrong theme
+   * passes every other check in this scan, so it is carried here.
+   */
+  readonly forbiddenHex?: {
+    readonly ownerTheme: string
+    readonly hexes: readonly string[]
+  }
 }
 
 /**
@@ -83,6 +94,10 @@ export const LEGACY_FACE_SAMPLES = [
     slideType: "chapter",
     index: 0,
     meta: {},
+    forbiddenHex: {
+      ownerTheme: "rally",
+      hexes: ["#E84F8A", "#2A1E3F"],
+    },
     slides: [
       {
         type: "chapter",
@@ -460,6 +475,10 @@ export const LEGACY_FACE_SAMPLES = [
   {
     id: "mirror-volume-chapter",
     slideType: "chapter",
+    forbiddenHex: {
+      ownerTheme: "heritage",
+      hexes: ["#6E1F2A", "#B8742C", "#F4EDE2"],
+    },
     index: 1,
     meta: {},
     slides: [
@@ -1549,6 +1568,10 @@ export const LEGACY_FACE_SAMPLES = [
   {
     id: "pill-cta-ending",
     slideType: "ending",
+    forbiddenHex: {
+      ownerTheme: "rally",
+      hexes: ["#E84F8A", "#2A1E3F"],
+    },
     index: 0,
     meta: {},
     slides: [

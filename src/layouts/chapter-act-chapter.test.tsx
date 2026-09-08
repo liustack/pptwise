@@ -126,14 +126,13 @@ describe("chapter-act-chapter — shared pool", () => {
     }
   })
 
-  it("emits only export-safe primitives and no baked rally hex under another theme", () => {
+  // Rally's own hex must not follow this face onto another theme. That guard
+  // needs every theme, not a sample of two, so it lives on the registry entry
+  // in `__fixtures__/face-samples` and runs in `face-scan.test.tsx`.
+  it("emits only export-safe primitives", () => {
     for (const themeId of SUBSET_SAMPLE_THEME_IDS) {
-      const { root, markup } = renderChapter(themeId)
+      const { root } = renderChapter(themeId)
       expect(() => assertSubset(root), themeId).not.toThrow()
-      if (themeId !== "rally") {
-        expect(markup, themeId).not.toContain("#E84F8A")
-        expect(markup, themeId).not.toContain("#2A1E3F")
-      }
     }
   })
 })

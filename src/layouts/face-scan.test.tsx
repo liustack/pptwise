@@ -81,6 +81,15 @@ describe("every registered face, on every canonical theme", () => {
           expect(root.textContent ?? "", `${where} did not print ${text}`).toContain(text)
         }
 
+        // A hex from another theme's palette is a legal primitive, stable on
+        // repeat, and drawn by the face itself, so nothing above rejects it.
+        const forbidden = face.sample.forbiddenHex
+        if (forbidden && themeId !== forbidden.ownerTheme) {
+          for (const hex of forbidden.hexes) {
+            expect(markup, `${where} baked ${forbidden.ownerTheme}'s ${hex}`).not.toContain(hex)
+          }
+        }
+
         SCANNED_COMBINATIONS.add(`${face.id}@${themeId}`)
         if (face.origin === "legacy") LEGACY_COMBINATIONS.add(`${face.id}@${themeId}`)
       }

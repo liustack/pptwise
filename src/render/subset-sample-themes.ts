@@ -16,6 +16,12 @@
  * register with the plainest tokens, and `rally` is `high`, a costume-grade
  * palette whose baked hexes several face tests also watch for.
  *
+ * A hex guard is one of the checks two themes cannot carry: a palette that
+ * leaks only under a third theme's emphasis mode passes both of these. The
+ * three faces whose guard shared this loop declare their forbidden hexes on
+ * their registry entry in `layouts/__fixtures__/face-samples` instead, and
+ * the scan runs them on all 24 themes.
+ *
  * They are not a substitute for the sweep, and the earlier claim that a
  * theme never adds or removes a primitive was wrong: `brief` sets
  * `emphasis: "pad"` and `lecture` sets `emphasis: "underline"`, both of

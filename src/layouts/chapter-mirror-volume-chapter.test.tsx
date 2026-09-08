@@ -150,14 +150,13 @@ describe("chapter-mirror-volume-chapter — shared pool", () => {
     }
   })
 
-  it("emits only export-safe primitives and no baked heritage hex under another theme", () => {
-    // Neither sample theme is heritage, so every baked-hex check below runs.
+  // Heritage's own hex must not follow this face onto another theme. That
+  // guard needs every theme, not a sample of two, so it lives on the registry
+  // entry in `__fixtures__/face-samples` and runs in `face-scan.test.tsx`.
+  it("emits only export-safe primitives", () => {
     for (const themeId of SUBSET_SAMPLE_THEME_IDS) {
-      const { root, markup } = renderChapter(themeId)
+      const { root } = renderChapter(themeId)
       expect(() => assertSubset(root), themeId).not.toThrow()
-      expect(markup, themeId).not.toContain("#6E1F2A")
-      expect(markup, themeId).not.toContain("#B8742C")
-      expect(markup, themeId).not.toContain("#F4EDE2")
     }
   })
 })
