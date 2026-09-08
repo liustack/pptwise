@@ -267,32 +267,18 @@ function textContents(svg: string): string[] {
   return Array.from(root.querySelectorAll("text")).map((el) => el.textContent ?? "")
 }
 
-/**
- * L1 `overflow-marker` findings the original ellipsis regex never saw.
- *
- * `OVERFLOW_MARKER` in `l1.ts` also matches a plus-count with a 项 suffix.
- * Vermilion's scorecard gap for 一窗受理事项 is authored `+40 项` (500 → 540),
- * a delta, not a plus-count pill. The regex below still holds the original
- * ellipsis nail. This list is the L1 extra and it can only shrink.
- */
-const KNOWN_OVERFLOW_MARKERS: readonly string[] = [
-  'vermilion--comp--scorecard--zh: overflow marker "+40 项" is banned',
-]
-
-// Constitutional nail: no gallery page may paint an overflow ellipsis.
-// Academic statement gold dots are <circle>s, not text, so this test has
-// no page exclusion list.
+// Zero-hit nail: no gallery page may paint leftover-count phrasing or an
+// ellipsis substitute. Academic statement gold dots are <circle>s, not text,
+// so this test has no page exclusion list. validate already rejects the same
+// phrasing in authored strings. L1 overflow-marker is the renderer-side backstop.
 //
 // Two assertions, because they do not see the same things:
 //
-//   - L1 `overflow-marker` is the superset. Besides `…` and a standalone
-//     `...`, it also flags the plus-count pills and count-style suffixes
-//     named by `OVERFLOW_MARKER` and `OVERFLOW_MARKER_ZH` in
-//     `evals/gallery/l1.ts` (`OVERFLOW_ELLIPSIS` is the ellipsis half).
-//     L1 trims each text node and skips empty ones.
-//   - The regex below only looks at each `<text>` node's raw `textContent`
-//     for `…` or a standalone `...`. It does not trim, and it does not look
-//     at those bookkeeping phrases.
+//   - L1 overflow-marker walks trimmed <text> nodes and flags leftover
+//     plus-count phrasing, remainder-count phrasing, and ellipsis substitutes.
+//   - The regex below only looks at each <text> node's raw textContent for a
+//     unicode ellipsis or a standalone three-dot ellipsis. It does not trim,
+//     and it does not look at leftover-count phrases.
 describe("gallery SVG text never paints an overflow ellipsis", () => {
   it("scans every theme/layout/component/density page in zh/en/mixed", () => {
     expect(corpus.svgs.size).toBeGreaterThan(0)
@@ -304,7 +290,7 @@ describe("gallery SVG text never paints an overflow ellipsis", () => {
         overflowMarkers.push(`${page.id}: ${finding.message}`)
       }
     }
-    expect(overflowMarkers.sort()).toEqual([...KNOWN_OVERFLOW_MARKERS].sort())
+    expect(overflowMarkers).toEqual([])
 
     const hits: string[] = []
     for (const [id, svg] of corpus.svgs) {
