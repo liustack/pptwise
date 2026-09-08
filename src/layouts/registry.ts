@@ -16,9 +16,9 @@
  * files use) — so "take one layout away whole" is a single-file operation
  * instead of a two-file archaeology dig. This file's own job is now purely
  * computational aggregation: import every `layoutDef`, assemble the five
- * Records below (`{ [def.id]: def }`-style, preserving the exact key order
- * the pre-migration literals held — order is load-bearing, not cosmetic, see
- * `registry.migration-guard.test.ts`'s own header comment), merge them into
+ * Records below (`{ [def.id]: def }`-style, preserving the key order the
+ * pre-migration literals held — new members still go on the end, a
+ * discipline that outlived the `weightedPickBySeed` lottery it once fed), merge them into
  * `LAYOUT_REGISTRY`, and keep every type and query function
  * (`getLayout`/`layoutsForSlideType`) that reads the result. Never a re-export relay
  * — every line below either constructs a Record or queries/validates one
@@ -323,11 +323,8 @@ export interface LayoutDefinition {
    *
    * `"standard"` is the standard tier's fossilized spelling. The two words
    * merged into one vocabulary — a layout is the registry entry plus the JSX
-   * that draws it — but this literal is serialized into
-   * `__fixtures__/layout-registry.golden.json`, which
-   * `registry.migration-guard.test.ts` deep-equals against the live registry,
-   * so renaming it to `"standard"` means re-recording a golden fixture. That
-   * belongs in its own change, not in a rename.
+   * that draws it — but this literal stays `"standard"` rather than being
+   * renamed in place.
    */
   kind: "standard" | "takeover"
   /**
