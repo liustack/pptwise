@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 import { afterEach, describe, it, expect, vi } from "vitest"
+import { BoundSlideSvg } from "./__fixtures__/bound-slide"
 import { render } from "@testing-library/react"
-import { FullSlideSvg, resolveBackgroundHex, resolveOverrideBackgroundHex } from "./full-slide-svg"
+import { resolveBackgroundHex, resolveOverrideBackgroundHex } from "./full-slide-svg"
 import { renderSvgMarkup, parseSvgRoot } from "./serialize"
 import { assertSubset } from "./subset-validate"
 import { svgToOps } from "../pptx/svg2pptx/dispatch"
 import { MOTIFS } from "../motifs"
-import { __resetRegisteredThemes, THEME_DEFINITIONS } from "../themes/definitions"
+import { __resetRegisteredThemes, getThemeDefinition, THEME_DEFINITIONS } from "../themes/definitions"
 import { registerTestTheme, type TestThemeFaces } from "../themes/test-fixtures"
 import { accessibleInk, blendOver, contrastRatio, readableOn } from "./ink"
 import { resolveStyle } from "../themes"
@@ -64,7 +65,7 @@ const contentSlide: Slide = {
 
 describe("FullSlideSvg", () => {
   it("renders a single svg root with no foreignObject", () => {
-    const { container } = render(<FullSlideSvg ir={ir([coverSlide])} slide={coverSlide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={ir([coverSlide])} slide={coverSlide} index={0} />)
     const svgs = container.querySelectorAll("svg")
     expect(svgs.length).toBe(1)
     expect(container.querySelector("foreignObject")).toBeNull()
@@ -75,7 +76,7 @@ describe("FullSlideSvg", () => {
 
   it("emits one bg, mid, and fg group in fixed paint order", () => {
     const doc: PptxIR = { ...irWithFace(contentSlide, "thesis", {}), branding: "full" }
-    const { container } = render(<FullSlideSvg ir={doc} slide={contentSlide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={contentSlide} index={0} />)
     const groups = Array.from(container.querySelectorAll("svg > g[data-depth]"))
 
     expect(groups.map((group) => group.getAttribute("data-depth"))).toEqual(["bg", "mid", "fg"])
@@ -95,7 +96,7 @@ describe("FullSlideSvg", () => {
       components: [],
     }
     const doc = irWithFace(chapter, "thesis", { chapter: "masthead-chapter" })
-    const { container } = render(<FullSlideSvg ir={doc} slide={chapter} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={chapter} index={0} />)
     const ghost = Array.from(container.querySelectorAll("text")).find(
       (text) => text.textContent === "01" && Number(text.getAttribute("font-size")) >= 160,
     )
@@ -115,7 +116,7 @@ describe("FullSlideSvg", () => {
       components: [],
     }
     const doc = irWithFace(chapter, "brief", { chapter: "masthead-chapter" })
-    const { container } = render(<FullSlideSvg ir={doc} slide={chapter} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={chapter} index={0} />)
     const depths = Array.from(container.querySelectorAll("[data-depth]")).map((el) => el.getAttribute("data-depth"))
     expect(depths).toEqual(["bg", "mid", "fg"])
     const ghost = Array.from(container.querySelectorAll("text")).find(
@@ -128,7 +129,7 @@ describe("FullSlideSvg", () => {
   it("enforces the shared contrast and saturation ceilings on final midground paint", () => {
     const slide: Slide = { type: "cover", heading: "封面", components: [] }
     const doc = irWithFace(slide, "rally", {})
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     const tokens = resolveStyle("rally")
     const ground = resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)
     const mid = container.querySelector('[data-depth="mid"]')!
@@ -151,7 +152,7 @@ describe("FullSlideSvg", () => {
   it("paints the swiss red bar in the foreground at the theme accent", () => {
     const slide: Slide = { type: "cover", heading: "年度战略回顾", components: [] }
     const doc = irWithFace(slide, "swiss", {})
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     const accent = resolveStyle("swiss").colors.accent
     const bar = container.querySelector('[data-decor-piece="red-bar"] rect')!
     expect(bar.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
@@ -171,7 +172,7 @@ describe("FullSlideSvg", () => {
       ...irWithFace(slide, "ink", {}),
       meta: { organization: "云觅", date: "2026-08-15" },
     }
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     const accent = resolveStyle("ink").colors.accent
     const seals = Array.from(container.querySelectorAll('[data-depth="mid"] [data-identity] rect'))
     expect(seals.length).toBeGreaterThan(0)
@@ -185,7 +186,7 @@ describe("FullSlideSvg", () => {
   it("paints the memo masthead in the foreground at the theme accent", () => {
     const slide: Slide = { type: "content", kind: "points", heading: "决定", components: [{ type: "paragraph", text: "正文" }] }
     const doc = irWithFace(slide, "memo", {})
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     const piece = container.querySelector('[data-decor-piece="masthead"]')!
     expect(piece.getAttribute("data-decor-role")).toBe("structure")
     expect(piece.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
@@ -199,7 +200,7 @@ describe("FullSlideSvg", () => {
   it("paints the luxe invitation frame in the foreground at the theme accent", () => {
     const slide: Slide = { type: "cover", heading: "封面", components: [] }
     const doc = irWithFace(slide, "luxe", {})
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     const piece = container.querySelector('[data-decor-piece="invitation"]')!
     expect(piece.getAttribute("data-decor-role")).toBe("structure")
     expect(piece.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
@@ -212,7 +213,7 @@ describe("FullSlideSvg", () => {
   it("keeps the clinic heartbeat in midground at the theme accent", () => {
     const slide: Slide = { type: "cover", heading: "封面", components: [] }
     const doc = irWithFace(slide, "clinic", {})
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     const piece = container.querySelector('[data-decor-piece="heartbeat"]')!
     expect(piece.getAttribute("data-decor-role")).toBe("identity")
     expect(piece.closest("[data-depth]")?.getAttribute("data-depth")).toBe("mid")
@@ -230,7 +231,7 @@ describe("FullSlideSvg", () => {
       components: [{ type: "paragraph", text: "正文" }],
     }
     const doc: PptxIR = { ...ir([chapter, content]), theme: { id: "brief" } }
-    const { container } = render(<FullSlideSvg ir={doc} slide={content} index={1} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={content} index={1} />)
     const ghost = Array.from(container.querySelectorAll('[data-depth="mid"] text')).find(
       (text) => text.textContent === "01" && Number(text.getAttribute("font-size")) >= 200,
     )!
@@ -254,7 +255,7 @@ describe("FullSlideSvg", () => {
   it("renders content components for a content slide (omitted branding draws no footer)", () => {
     const doc = ir([contentSlide])
     const { container } = render(
-      <FullSlideSvg ir={doc} slide={contentSlide} index={0} />,
+      <BoundSlideSvg ir={doc} slide={contentSlide} index={0} />,
     )
     expect(container.textContent).toContain("三大支柱")
     // bullets markers + kpi card present
@@ -266,7 +267,7 @@ describe("FullSlideSvg", () => {
 
   it("serializes to an export-safe svg that round-trips to ops", () => {
     const doc = ir([contentSlide])
-    const markup = renderSvgMarkup(<FullSlideSvg ir={doc} slide={contentSlide} index={0} />)
+    const markup = renderSvgMarkup(<BoundSlideSvg ir={doc} slide={contentSlide} index={0} />)
     expect(markup).not.toContain("foreignObject")
     const root = parseSvgRoot(markup)
     expect(() => assertSubset(root)).not.toThrow()
@@ -277,7 +278,7 @@ describe("FullSlideSvg", () => {
 
   it("omits the page number for export (native slide number takes over)", () => {
     const doc = ir([contentSlide])
-    const markup = renderSvgMarkup(<FullSlideSvg ir={doc} slide={contentSlide} index={0} />)
+    const markup = renderSvgMarkup(<BoundSlideSvg ir={doc} slide={contentSlide} index={0} />)
     expect(markup).not.toContain("1 / 1")
   })
 
@@ -289,19 +290,19 @@ describe("FullSlideSvg", () => {
   describe("data-blk tagging (wave-C S3)", () => {
     it("never emits data-blk when meta.animation is unset", () => {
       const doc = ir([contentSlide])
-      const markup = renderSvgMarkup(<FullSlideSvg ir={doc} slide={contentSlide} index={0} />)
+      const markup = renderSvgMarkup(<BoundSlideSvg ir={doc} slide={contentSlide} index={0} />)
       expect(markup).not.toContain("data-blk")
     })
 
     it('never emits data-blk when meta.animation.elements is "none"', () => {
       const doc: PptxIR = { ...ir([contentSlide]), meta: { animation: { elements: "none" } } }
-      const markup = renderSvgMarkup(<FullSlideSvg ir={doc} slide={contentSlide} index={0} />)
+      const markup = renderSvgMarkup(<BoundSlideSvg ir={doc} slide={contentSlide} index={0} />)
       expect(markup).not.toContain("data-blk")
     })
 
     it('tags each component\'s content with data-blk="{index}" when elements is "auto"', () => {
       const doc: PptxIR = { ...ir([contentSlide]), meta: { animation: { elements: "auto" } } }
-      const markup = renderSvgMarkup(<FullSlideSvg ir={doc} slide={contentSlide} index={0} />)
+      const markup = renderSvgMarkup(<BoundSlideSvg ir={doc} slide={contentSlide} index={0} />)
       // contentSlide has 3 components (paragraph, bullets, kpi_cards) at indices 0-2.
       expect(markup).toContain('data-blk="0"')
       expect(markup).toContain('data-blk="1"')
@@ -310,7 +311,7 @@ describe("FullSlideSvg", () => {
 
     it("does not tag the slide heading/subheading (S3: 标题/副题句 不动画)", () => {
       const doc: PptxIR = { ...ir([contentSlide]), meta: { animation: { elements: "auto" } } }
-      const markup = renderSvgMarkup(<FullSlideSvg ir={doc} slide={contentSlide} index={0} />)
+      const markup = renderSvgMarkup(<BoundSlideSvg ir={doc} slide={contentSlide} index={0} />)
       const root = parseSvgRoot(markup)
       const headingText = Array.from(root.querySelectorAll("text")).find((t) =>
         (t.textContent ?? "").includes("三大支柱"),
@@ -327,7 +328,7 @@ describe("FullSlideSvg", () => {
 
     it("round-trips through svg2pptx: exported shapes carry a blk-marker-shaped blockIndex", () => {
       const doc: PptxIR = { ...ir([contentSlide]), meta: { animation: { elements: "auto" } } }
-      const markup = renderSvgMarkup(<FullSlideSvg ir={doc} slide={contentSlide} index={0} />)
+      const markup = renderSvgMarkup(<BoundSlideSvg ir={doc} slide={contentSlide} index={0} />)
       const ops = svgToOps(parseSvgRoot(markup))
       const blockIndices = new Set(ops.map((o) => o.blockIndex).filter((b) => b != null))
       expect(blockIndices).toEqual(new Set([0, 1, 2]))
@@ -356,7 +357,7 @@ describe("asset background auto scrim (image-layouts P1)", () => {
     // cover 压图页由 ImageCoverPage 接管：暗遮罩（低透，图清晰可辨）+ 白字，
     // 模型的 overlay 被忽略，P1 的雾面 scrim 不再用于 cover/chapter。
     const { container } = render(
-      <FullSlideSvg ir={withAsset("thesis")} slide={bgSlide} index={0} />,
+      <BoundSlideSvg ir={withAsset("thesis")} slide={bgSlide} index={0} />,
     )
     const rects = Array.from(container.querySelectorAll("rect"))
     expect(rects.some((r) => r.getAttribute("fill") === "#000000")).toBe(false)
@@ -378,7 +379,7 @@ describe("asset background auto scrim (image-layouts P1)", () => {
     }
     const doc: PptxIR = { ...withAsset("thesis"), slides: [slide] }
 
-    expect(slideToRender(doc, slide, 0).dropped).toBe(1)
+    expect(slideToRender(doc, slide, 0, getThemeDefinition(doc.theme.id)).dropped).toBe(1)
   })
 
   it("design theme content page keeps the frosted page-color scrim", () => {
@@ -391,7 +392,7 @@ describe("asset background auto scrim (image-layouts P1)", () => {
     }
     const ir2: PptxIR = { ...withAsset("thesis"), slides: [contentBg] }
     const { container } = render(
-      <FullSlideSvg ir={ir2} slide={contentBg} index={0} />,
+      <BoundSlideSvg ir={ir2} slide={contentBg} index={0} />,
     )
     const scrims = Array.from(container.querySelectorAll("rect")).filter((r) => {
       const o = r.getAttribute("fill-opacity")
@@ -482,7 +483,7 @@ describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlo
 
   it("invariant: a slide with no background override still picks the theme's own default-background ink (byte-identical to before this fix)", () => {
     const slide = railChapter()
-    const markup = renderSvgMarkup(<FullSlideSvg ir={classroomIr(slide)} slide={slide} index={0} />)
+    const markup = renderSvgMarkup(<BoundSlideSvg ir={classroomIr(slide)} slide={slide} index={0} />)
     // readableOn("#ECF0F2") — homeroom's paper chapter default after wave 8 batch 2.
     expect(headingFill(markup)).toBe(readableOn("#ECF0F2"))
     expect(headingFill(markup)).toBe("#0A0E14")
@@ -492,7 +493,7 @@ describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlo
     // A dark override against homeroom's paper chapter default: the pick has
     // to flip to white, which it only can if the override is really read.
     const slide = railChapter({ kind: "color", value: "#4A6B8A" })
-    const markup = renderSvgMarkup(<FullSlideSvg ir={classroomIr(slide)} slide={slide} index={0} />)
+    const markup = renderSvgMarkup(<BoundSlideSvg ir={classroomIr(slide)} slide={slide} index={0} />)
     expect(readableOn("#ECF0F2")).not.toBe(readableOn("#4A6B8A"))
     expect(headingFill(markup)).toBe(readableOn("#4A6B8A"))
     expect(headingFill(markup)).toBe("#FFFFFF")
@@ -506,7 +507,7 @@ describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlo
     expect(readableOn("#000000")).toBe("#FFFFFF")
     expect(readableOn("#808080")).toBe("#0A0E14")
     const slide = railChapter({ kind: "gradient", from: "#000000", to: "#FFFFFF" })
-    const markup = renderSvgMarkup(<FullSlideSvg ir={classroomIr(slide)} slide={slide} index={0} />)
+    const markup = renderSvgMarkup(<BoundSlideSvg ir={classroomIr(slide)} slide={slide} index={0} />)
     expect(headingFill(markup)).toBe("#0A0E14")
   })
 
@@ -521,7 +522,7 @@ describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlo
       background: { kind: "asset", asset_id: "bg1" },
     } as Slide
     const doc: PptxIR = { ...classroomIr(slide), assets: { images: { bg1: { src: "data:image/png;base64,AAAA" } } } }
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     // homeroom's own content default background, resolveBackgroundHex-reduced — unchanged scrim source.
     const scrim = Array.from(container.querySelectorAll("rect")).find(
       (r) => r.getAttribute("fill") === "#ECF0F2" && Number(r.getAttribute("fill-opacity")) > 0.6,
@@ -563,7 +564,7 @@ describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlo
       assets: { images: { bg1: { src: "data:image/png;base64,AAAA" } } },
       slides: [slide],
     }
-    const markup = renderSvgMarkup(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const markup = renderSvgMarkup(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     const root = parseSvgRoot(markup)
     const subheadingText = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === SUBHEADING)
     expect(subheadingText).toBeDefined()
@@ -595,7 +596,7 @@ describe("image_grid / image_compare export round-trip (image-layouts P2)", () =
   }
   const roundTrip = (slide: Slide) => {
     const doc: PptxIR = { ...ir([slide]), assets }
-    const markup = renderSvgMarkup(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const markup = renderSvgMarkup(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     const root = parseSvgRoot(markup)
     expect(() => assertSubset(root)).not.toThrow()
     return svgToOps(root)
@@ -645,20 +646,20 @@ describe("theme menu cover dispatch", () => {
     ({ version: "5", filename: "m.pptx", theme: { id: theme }, meta: {}, assets: { images: {} }, slides: [coverSlide] }) as unknown as PptxIR
 
   it("brief cover 命中菜单唯一脸", () => {
-    const { container } = render(<FullSlideSvg ir={mkIr("brief")} slide={coverSlide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={mkIr("brief")} slide={coverSlide} index={0} />)
     const g = container.querySelector("[data-face]")
     expect(g).not.toBeNull()
     expect(g!.getAttribute("data-face")).toBe(THEME_DEFINITIONS.brief.menu.cover.face)
   })
   it("terminal cover 命中菜单唯一脸", () => {
-    const { container } = render(<FullSlideSvg ir={mkIr("terminal")} slide={coverSlide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={mkIr("terminal")} slide={coverSlide} index={0} />)
     const id = container.querySelector("[data-face]")?.getAttribute("data-face")
     expect(id).toBe(THEME_DEFINITIONS.terminal.menu.cover.face)
   })
   it("asset 背景 cover 仍走 ImageCoverPage 接管（优先级高于 manifest）", () => {
     const bgCover: Slide = { ...coverSlide, background: { kind: "asset", asset_id: "a" } } as Slide
     const ir = { ...mkIr("brief"), assets: { images: { a: { src: "data:image/png;base64,iVBORw0KGgo=" } } }, slides: [bgCover] } as unknown as PptxIR
-    const { container } = render(<FullSlideSvg ir={ir} slide={bgCover} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={ir} slide={bgCover} index={0} />)
     expect(container.querySelector("image")).not.toBeNull()
   })
   it("content photo 菜单脸为 image-split 时走图文版式接管", () => {
@@ -673,7 +674,7 @@ describe("theme menu cover dispatch", () => {
       assets: { images: { a: { src: "data:image/png;base64,iVBORw0KGgo=" } } },
       slides: [splitContent],
     } as unknown as PptxIR
-    const { container } = render(<FullSlideSvg ir={doc} slide={splitContent} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={splitContent} index={0} />)
     expect(container.querySelector("[data-face]")).toBeNull()
     expect(container.querySelector("image")).not.toBeNull()
   })
@@ -693,7 +694,7 @@ describe("主题菜单四页型分发", () => {
   it("chapter 命中 thesis 菜单唯一脸", () => {
     const chapterSlide: Slide = { type: "chapter", heading: "第一章", components: [] } as Slide
     const { container } = render(
-      <FullSlideSvg ir={mkIr("thesis", chapterSlide)} slide={chapterSlide} index={0} />,
+      <BoundSlideSvg ir={mkIr("thesis", chapterSlide)} slide={chapterSlide} index={0} />,
     )
     const id = container.querySelector("[data-face]")?.getAttribute("data-face")
     expect(id).toBe(THEME_DEFINITIONS.thesis.menu.chapter.face)
@@ -707,7 +708,7 @@ describe("主题菜单四页型分发", () => {
       components: [{ type: "paragraph", text: "正文" }],
     } as Slide
     const { container } = render(
-      <FullSlideSvg ir={mkIr("terminal", contentSlide2)} slide={contentSlide2} index={0} />,
+      <BoundSlideSvg ir={mkIr("terminal", contentSlide2)} slide={contentSlide2} index={0} />,
     )
     const id = container.querySelector("[data-face]")?.getAttribute("data-face")
     expect(id).toBe(THEME_DEFINITIONS.terminal.menu.content.points?.face)
@@ -716,7 +717,7 @@ describe("主题菜单四页型分发", () => {
   it("ending 命中 journal 菜单唯一脸", () => {
     const endingSlide: Slide = { type: "ending", heading: "谢谢", components: [] } as Slide
     const { container } = render(
-      <FullSlideSvg ir={mkIr("journal", endingSlide)} slide={endingSlide} index={0} />,
+      <BoundSlideSvg ir={mkIr("journal", endingSlide)} slide={endingSlide} index={0} />,
     )
     const id = container.querySelector("[data-face]")?.getAttribute("data-face")
     expect(id).toBe(THEME_DEFINITIONS.journal.menu.ending.face)
@@ -729,7 +730,7 @@ describe("主题菜单四页型分发", () => {
     const spy = vi.spyOn(MOTIFS, "gauge-motif")
     const slide: Slide = { type: "cover", heading: "标题", components: [] } as Slide
     const doc = irWithFace(slide, "brief", {})
-    render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     expect(spy).toHaveBeenCalled()
     spy.mockRestore()
   })
@@ -755,7 +756,7 @@ describe("content kind 确定性菜单分发", () => {
     }))
     const doc: PptxIR = { ...ir(slides), theme: { id: "thesis" } }
     const ids = slides.map((slide, index) => {
-      const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={index} />)
+      const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={index} />)
       return container.querySelector("[data-face]")?.getAttribute("data-face")
     })
     expect(ids).toEqual(Array(3).fill(THEME_DEFINITIONS.thesis.menu.content.points?.face))
@@ -774,7 +775,7 @@ describe("content kind 确定性菜单分发", () => {
       heading: "标题",
       components: [{ type: "paragraph", text: "正文" }],
     }
-    const { container } = render(<FullSlideSvg ir={mkIr("thesis", slide)} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={mkIr("thesis", slide)} slide={slide} index={0} />)
     expect(container.querySelector(`[data-face="${face}"]`)).not.toBeNull()
   })
 })
@@ -783,7 +784,7 @@ describe("registered theme menu faces", () => {
   it("通过 cover 菜单承载指定边界脸", () => {
     const slide: Slide = { type: "cover", heading: "标题", components: [] }
     const doc = irWithFace(slide, "brief", { cover: "poster-center" })
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     expect(container.querySelector('[data-face="poster-center"]')).not.toBeNull()
   })
 
@@ -795,7 +796,7 @@ describe("registered theme menu faces", () => {
       components: [{ type: "paragraph", text: "正文" }],
     }
     const doc = irWithFace(slide, "luxe", { content: { points: "split-band" } })
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     expect(container.querySelector('[data-face="split-band"]')).not.toBeNull()
   })
 })
@@ -826,7 +827,7 @@ describe("pacing bodyFontPx injection seam (W4 task 3 fix round — Major)", () 
 
   function renderProbeFontSize(narrative: Record<string, unknown>): string | null {
     const doc: PptxIR = { ...ir([probeSlide]), narrative }
-    const { container } = render(<FullSlideSvg ir={doc} slide={probeSlide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={probeSlide} index={0} />)
     const probeText = Array.from(container.querySelectorAll("text")).find(
       (t) => t.textContent === PROBE_TEXT,
     )
@@ -847,7 +848,7 @@ describe("menu decoration determinism", () => {
     const doc: PptxIR = { ...ir([]), theme: { id: themeId } } as PptxIR
     const slide: Slide = { type: "content", kind: "points", id: pageId, heading: "x", components: [] } as Slide
     doc.slides = [slide]
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     return container.querySelector("[data-decor]")?.innerHTML ?? null
   }
 
@@ -883,7 +884,7 @@ describe("menu decoration determinism", () => {
           components: [],
         } as Slide
         doc.slides = [slide]
-        return render(<FullSlideSvg ir={doc} slide={slide} index={0} />).container.querySelector("[data-decor]")?.innerHTML
+        return render(<BoundSlideSvg ir={doc} slide={slide} index={0} />).container.querySelector("[data-decor]")?.innerHTML
       }),
     )
     expect(markups.size, "rally decor varied across repeated renders").toBe(1)
@@ -894,10 +895,10 @@ describe("menu decoration determinism", () => {
     const doc: PptxIR = { ...ir([]), theme: { id: themeId } } as PptxIR
     const slide: Slide = { type: "chapter", id: "p1", heading: "x", components: [] } as Slide
     doc.slides = [slide]
-    const first = render(<FullSlideSvg ir={doc} slide={slide} index={0} />).container.querySelector(
+    const first = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />).container.querySelector(
       "[data-decor]",
     )?.innerHTML
-    const second = render(<FullSlideSvg ir={doc} slide={slide} index={0} />).container.querySelector(
+    const second = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />).container.querySelector(
       "[data-decor]",
     )?.innerHTML
     expect(first).toBe(second)
@@ -932,7 +933,7 @@ describe("chart palette determinism", () => {
 
   function pieFills(): string[] {
     const doc: PptxIR = { ...ir([pieSlide]), theme: { id: "runway" } } as PptxIR
-    const { container } = render(<FullSlideSvg ir={doc} slide={pieSlide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={pieSlide} index={0} />)
     return Array.from(container.querySelectorAll("path"))
       .map((p) => p.getAttribute("fill"))
       .filter((f): f is string => !!f && RUNWAY_CHART_PALETTE.includes(f))
@@ -957,7 +958,7 @@ describe("chart palette determinism", () => {
     ]
     const doc: PptxIR = { ...ir(twoPageDeck), theme: { id: "runway" } } as PptxIR
     const fillsFor = (index: number) => {
-      const { container } = render(<FullSlideSvg ir={doc} slide={doc.slides[index]!} index={index} />)
+      const { container } = render(<BoundSlideSvg ir={doc} slide={doc.slides[index]!} index={index} />)
       return Array.from(container.querySelectorAll("path"))
         .map((p) => p.getAttribute("fill"))
         .filter((f): f is string => !!f && RUNWAY_CHART_PALETTE.includes(f))
@@ -1004,7 +1005,7 @@ describe("layouts that paint their own full-bleed field (LayoutDefinition.paints
       const faces: TestThemeFaces =
         type === "content" ? { content: { statement: layout } } : { [type]: layout }
       const doc = irWithFace(slide, theme, faces)
-      const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+      const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
       expect(container.querySelector(`[data-face="${layout}"]`)).not.toBeNull()
       expect(fullBleedFills(container)).toHaveLength(1)
     })
@@ -1013,7 +1014,7 @@ describe("layouts that paint their own full-bleed field (LayoutDefinition.paints
   it("an ordinary layout still gets the theme background under it", () => {
     const slide: Slide = { type: "cover", heading: "标题", components: [] }
     const doc = irWithFace(slide, "ink", { cover: "poster-center" })
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     expect(fullBleedFills(container)).toContain("#F7F2E7")
   })
 })
@@ -1028,7 +1029,7 @@ describe("deck branding posture vs theme motif", () => {
 
   it("cover-only leaves the theme motif on a content page (motif is not brand frame)", () => {
     const doc: PptxIR = { ...ir([pinnedContent]), branding: "cover-only" }
-    const { container } = render(<FullSlideSvg ir={doc} slide={pinnedContent} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={pinnedContent} index={0} />)
     expect(container.querySelector("[data-decor]")).not.toBeNull()
     expect(container.textContent).toContain("三大支柱")
     expect(container.querySelector('line[y1="664"]')).toBeNull()
@@ -1037,14 +1038,14 @@ describe("deck branding posture vs theme motif", () => {
   it("omitted branding and explicit cover-only serialize to the same content-page SVG", () => {
     const omitted = ir([pinnedContent])
     const coverOnly: PptxIR = { ...omitted, branding: "cover-only" }
-    const a = renderSvgMarkup(<FullSlideSvg ir={omitted} slide={pinnedContent} index={0} />)
-    const b = renderSvgMarkup(<FullSlideSvg ir={coverOnly} slide={pinnedContent} index={0} />)
+    const a = renderSvgMarkup(<BoundSlideSvg ir={omitted} slide={pinnedContent} index={0} />)
+    const b = renderSvgMarkup(<BoundSlideSvg ir={coverOnly} slide={pinnedContent} index={0} />)
     expect(a).toBe(b)
   })
 
   it("explicit branding full still draws the content-page footer rule", () => {
     const full: PptxIR = { ...ir([pinnedContent]), branding: "full" }
-    const markup = renderSvgMarkup(<FullSlideSvg ir={full} slide={pinnedContent} index={0} />)
+    const markup = renderSvgMarkup(<BoundSlideSvg ir={full} slide={pinnedContent} index={0} />)
     expect(markup).toContain('y1="664"')
     expect(markup).toContain("ACME")
   })
@@ -1061,7 +1062,7 @@ describe("deck branding posture vs theme motif", () => {
       theme: { id: "lecture" },
       branding: "full",
     }
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     const frame = container.querySelector('[data-decor-piece="frame"] rect')
 
     expect(frame?.getAttribute("height")).toBe(String(694 - 26))

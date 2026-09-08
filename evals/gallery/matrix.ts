@@ -314,7 +314,7 @@ export function buildMatrix(
         // image-cover page is drawn by the dedicated image route with the
         // menu's face retained only for slot validation, so it names no face
         // rather than crediting one that never ran.
-        const routed = resolveEffectiveFace(ir, slide)
+        const routed = resolveEffectiveFace(ir, slide, def)
         const face = routed.route === "layout" || routed.route === "takeover" ? routed.layoutId : null
         push({
           id: `${safe(themeId)}--deck--p${String(i + 1).padStart(2, "0")}`,

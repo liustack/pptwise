@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { BoundSlideSvg } from "../render/__fixtures__/bound-slide"
 import { render } from "@testing-library/react"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
-import { buildCtx, FullSlideSvg, resolveBackgroundHex } from "../render/full-slide-svg"
+import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
 import { accessibleInk, contrastRatio, metaInk, requiredContrastRatio } from "../render/ink"
 import { measureTextUnits } from "../lib/svg-text-layout"
@@ -224,7 +225,7 @@ describe("chapter-chalk-rule-chapter — shared pool", () => {
       components: [],
     } as Slide
     const deck = ir("lecture", [slide])
-    const { container } = render(<FullSlideSvg ir={deck} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={deck} slide={slide} index={0} />)
     const arc = container.querySelector("[data-emphasis-underline]")
     expect(arc).not.toBeNull()
     expect(arc?.closest("[data-depth='fg']")).not.toBeNull()

@@ -25,6 +25,7 @@ import { getPlatform } from "@/platform/registry"
 import { parseEmphasis, renderEmphasisTspans, stripEmphasis } from "@/render/emphasis"
 import { renderSvgMarkup } from "@/render/serialize"
 import { assertSubset } from "@/render/subset-validate"
+import { getThemeDefinition } from "@/themes/definitions"
 import { COMPONENT_BUILDERS } from "./corpus/components"
 import { corpusAssets, layoutPage, type CorpusAssets } from "./corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "./corpus/lexicon"
@@ -705,7 +706,7 @@ describe("every face renders the content it was given, or says what it dropped",
     const losses: string[] = []
     for (const page of pages) {
       const slide = page.ir.slides[page.slideIndex]!
-      const face = faceOf(page.ir, slide)
+      const face = faceOf(page.ir, slide, getThemeDefinition(page.ir.theme.id))
       const fieldPicking = scanned(face)
       if (fieldPicking) scannedPages += 1
       else widenedPages += 1

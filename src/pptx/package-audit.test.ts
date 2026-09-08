@@ -15,11 +15,11 @@
 // an already-broken zip *through* the generator; corruption always happens
 // after the fact, standing in for "what if a future patch bug did this."
 import { readFileSync } from "node:fs"
+import { boundSlideToSvgMarkup, boundSlideToOps } from "../render/__fixtures__/bound-slide"
 import { afterEach, describe, it, expect, beforeAll } from "vitest"
 import JSZip from "jszip"
 import type { PptxIR } from "@/ir"
 import { installNodePlatform } from "../platform/node"
-import { slideToOps, slideToSvgMarkup } from "@/render/render-slide"
 import { parseSvgRoot } from "@/render/serialize"
 import { generatePptxBlob } from "./generate"
 import { auditPptxPackage } from "./package-audit"
@@ -692,7 +692,7 @@ describe("auditPptxPackage — image-alt-dropped, rekeyed on rendered ops (alt-e
     const zip = await renderCleanZip(ir)
 
     const contentIndex = 1
-    const realMarkup = slideToSvgMarkup(ir, ir.slides[contentIndex]!, contentIndex)
+    const realMarkup = boundSlideToSvgMarkup(ir, ir.slides[contentIndex]!, contentIndex)
     const strippedMarkup = realMarkup.replace(/ aria-label="[^"]*"/, "")
     expect(strippedMarkup).not.toBe(realMarkup)
     const strippedImageOps = svgToOps(parseSvgRoot(strippedMarkup)).filter(
@@ -700,7 +700,7 @@ describe("auditPptxPackage — image-alt-dropped, rekeyed on rendered ops (alt-e
     )
 
     const imageOpsBySlide: ImageOp[][] = ir.slides.map((slide, index) =>
-      slideToOps(ir, slide, index).filter((op): op is ImageOp => op.kind === "image"),
+      boundSlideToOps(ir, slide, index).filter((op): op is ImageOp => op.kind === "image"),
     )
     imageOpsBySlide[contentIndex] = strippedImageOps
 

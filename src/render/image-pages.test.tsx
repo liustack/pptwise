@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest"
+import { boundSlideToSvgMarkup, boundSlideToRender } from "./__fixtures__/bound-slide"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { CANVAS_W_PX } from "../constants"
 import { isBold } from "./fonts"
 import { parseSvgRoot } from "./serialize"
-import { slideToRender, slideToSvgMarkup } from "./render-slide"
 import type { PptxIR, Slide } from "@/ir"
 import type { CanonicalThemeId } from "../themes"
 import { __resetRegisteredThemes } from "../themes/definitions"
@@ -55,7 +55,7 @@ afterEach(() => {
 
 function renderRoot(theme: CanonicalThemeId, face: "image-split" | "image-top", slide: Slide): Element {
   const themeId = registerTestTheme(`image-pages-${themeSerial++}`, theme, { content: { photo: face } })
-  return parseSvgRoot(slideToSvgMarkup(makeIr(themeId, slide), slide, 0))
+  return parseSvgRoot(boundSlideToSvgMarkup(makeIr(themeId, slide), slide, 0))
 }
 
 function titleNodes(root: Element, heading: string): Element[] {
@@ -209,7 +209,7 @@ describe("image takeover dropped-content propagation", () => {
       })
       const doc = makeIr(themeId, slide)
 
-      expect(slideToRender(doc, slide, 0).dropped).toBeGreaterThan(0)
+      expect(boundSlideToRender(doc, slide, 0).dropped).toBeGreaterThan(0)
     },
   )
 
@@ -228,7 +228,7 @@ describe("image takeover dropped-content propagation", () => {
     })
     const doc = makeIr(themeId, slide)
 
-    expect(slideToRender(doc, slide, 0).dropped).toBe(1)
+    expect(boundSlideToRender(doc, slide, 0).dropped).toBe(1)
   })
 
   // This used to assert the opposite — one `<image>`, neither label on the
@@ -255,12 +255,12 @@ describe("image takeover dropped-content propagation", () => {
         content: { photo: face },
       })
       const doc = makeIr(themeId, slide)
-      const root = parseSvgRoot(slideToSvgMarkup(doc, slide, 0))
+      const root = parseSvgRoot(boundSlideToSvgMarkup(doc, slide, 0))
 
       expect(root.querySelectorAll("image")).toHaveLength(2)
       expect(root.textContent).toContain("Before")
       expect(root.textContent).toContain("After")
-      expect(slideToRender(doc, slide, 0).dropped).toBe(0)
+      expect(boundSlideToRender(doc, slide, 0).dropped).toBe(0)
     },
   )
 
@@ -286,12 +286,12 @@ describe("image takeover dropped-content propagation", () => {
         content: { photo: face },
       })
       const doc = makeIr(themeId, slide)
-      const root = parseSvgRoot(slideToSvgMarkup(doc, slide, 0))
+      const root = parseSvgRoot(boundSlideToSvgMarkup(doc, slide, 0))
 
       for (const caption of ["First frame", "Second frame", "Third frame"]) {
         expect(root.textContent).toContain(caption)
       }
-      expect(slideToRender(doc, slide, 0).dropped).toBe(0)
+      expect(boundSlideToRender(doc, slide, 0).dropped).toBe(0)
     },
   )
 
@@ -305,7 +305,7 @@ describe("image takeover dropped-content propagation", () => {
     const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: "image-top" },
     })
-    const root = parseSvgRoot(slideToSvgMarkup(makeIr(themeId, slide), slide, 0))
+    const root = parseSvgRoot(boundSlideToSvgMarkup(makeIr(themeId, slide), slide, 0))
 
     expect(root.querySelector("g[data-takeover-mode]")).toBeNull()
     expect(root.querySelectorAll("image")).toHaveLength(1)
@@ -330,7 +330,7 @@ describe("image takeover dropped-content propagation", () => {
     })
     const doc = makeIr(themeId, slide)
 
-    expect(slideToRender(doc, slide, 0).dropped).toBe(0)
+    expect(boundSlideToRender(doc, slide, 0).dropped).toBe(0)
   })
 
   it("image-annotate marks annotation overflow and unsupported sibling components", () => {
@@ -352,7 +352,7 @@ describe("image takeover dropped-content propagation", () => {
     // Two losses, two units. They used to be added together and declared as
     // two content blocks, which was true of neither: one annotation past the
     // fourth is a bullet item, and the paragraph is the only block that went.
-    const render = slideToRender(doc, slide, 0)
+    const render = boundSlideToRender(doc, slide, 0)
     expect(render.dropped).toBe(2)
     expect(render.drops).toEqual(
       expect.arrayContaining([
@@ -379,7 +379,7 @@ describe("image takeover dropped-content propagation", () => {
     const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: "image-annotate" },
     })
-    const render = slideToRender(makeIr(themeId, slide), slide, 0)
+    const render = boundSlideToRender(makeIr(themeId, slide), slide, 0)
     expect(render.drops).toEqual([{ kind: "item", count: 1 }])
   })
 
@@ -402,8 +402,8 @@ describe("image takeover dropped-content propagation", () => {
     // Four items or fewer, so nothing is dropped. The one item the face
     // accepted is set into one or two lines and the tail is gone, which the
     // page has to say on the line that carries the cut.
-    expect(slideToRender(doc, slide, 0).dropped).toBe(0)
-    expect(slideToSvgMarkup(doc, slide, 0)).toContain('data-truncated="1"')
+    expect(boundSlideToRender(doc, slide, 0).dropped).toBe(0)
+    expect(boundSlideToSvgMarkup(doc, slide, 0)).toContain('data-truncated="1"')
   })
 
   it("image-bottom propagates components rejected by layoutContentFit", () => {
@@ -424,7 +424,7 @@ describe("image takeover dropped-content propagation", () => {
     })
     const doc = makeIr(themeId, slide)
 
-    expect(slideToRender(doc, slide, 0).dropped).toBeGreaterThan(0)
+    expect(boundSlideToRender(doc, slide, 0).dropped).toBeGreaterThan(0)
   })
 })
 
@@ -462,10 +462,10 @@ describe("device_mockup keeps its frame", () => {
       content: { photo: face },
     })
     const doc = makeIr(themeId, slide)
-    const root = parseSvgRoot(slideToSvgMarkup(doc, slide, 0))
+    const root = parseSvgRoot(boundSlideToSvgMarkup(doc, slide, 0))
 
     expect(root.querySelector("[data-device-mockup='browser']")).not.toBeNull()
-    expect(slideToRender(doc, slide, 0).dropped).toBe(0)
+    expect(boundSlideToRender(doc, slide, 0).dropped).toBe(0)
   })
 
   it.each(TAKEOVERS)("%s draws the device frame for a phone mockup", (face) => {
@@ -474,10 +474,10 @@ describe("device_mockup keeps its frame", () => {
       content: { photo: face },
     })
     const doc = makeIr(themeId, slide)
-    const root = parseSvgRoot(slideToSvgMarkup(doc, slide, 0))
+    const root = parseSvgRoot(boundSlideToSvgMarkup(doc, slide, 0))
 
     expect(root.querySelector("[data-device-mockup='phone']")).not.toBeNull()
-    expect(slideToRender(doc, slide, 0).dropped).toBe(0)
+    expect(boundSlideToRender(doc, slide, 0).dropped).toBe(0)
   })
 
   // A device that is not the bleed source is ordinary body content. The guard
@@ -507,13 +507,13 @@ describe("device_mockup keeps its frame", () => {
         content: { photo: face },
       })
       const doc = makeIr(themeId, slide)
-      const root = parseSvgRoot(slideToSvgMarkup(doc, slide, 0))
+      const root = parseSvgRoot(boundSlideToSvgMarkup(doc, slide, 0))
 
       expect(root.querySelector("[data-takeover-mode='fallback']")).toBeNull()
       expect(root.querySelector("[data-device-mockup='browser']")).not.toBeNull()
       expect(root.textContent).toContain("Delivery floor")
       expect(root.textContent).toContain("The console behind it")
-      expect(slideToRender(doc, slide, 0).dropped).toBe(0)
+      expect(boundSlideToRender(doc, slide, 0).dropped).toBe(0)
     },
   )
 
@@ -524,7 +524,7 @@ describe("device_mockup keeps its frame", () => {
     const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: face },
     })
-    const root = parseSvgRoot(slideToSvgMarkup(makeIr(themeId, slide), slide, 0))
+    const root = parseSvgRoot(boundSlideToSvgMarkup(makeIr(themeId, slide), slide, 0))
     expect(root.querySelector("[data-takeover-mode='fallback']")).not.toBeNull()
   })
 
@@ -536,7 +536,7 @@ describe("device_mockup keeps its frame", () => {
     const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: "image-annotate" },
     })
-    const root = parseSvgRoot(slideToSvgMarkup(makeIr(themeId, slide), slide, 0))
+    const root = parseSvgRoot(boundSlideToSvgMarkup(makeIr(themeId, slide), slide, 0))
     expect(root.querySelector("[data-takeover-mode='fallback']")).toBeNull()
     expect(root.querySelector("[data-device-mockup='browser']")).not.toBeNull()
     // The caption belongs to the screen, and it is printed once.

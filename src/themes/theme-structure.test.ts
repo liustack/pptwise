@@ -20,7 +20,7 @@ import { auditDeck, type AuditFinding } from "../audit/deck-audit"
 import { CJK_LONG, MIXED_LONG, STRESS_DECKS } from "../audit/stress-fixtures"
 import { resolveEffectiveFace } from "../render/layout-selection"
 import { BUILTIN_THEME_FILES, CANONICAL_THEME_IDS, type CanonicalThemeId } from "./index"
-import { THEME_DEFINITIONS } from "./definitions"
+import { getThemeDefinition, THEME_DEFINITIONS } from "./definitions"
 import type { Menu, MenuEntry } from "./schema"
 
 // ── shared fixture: one deck shape reused by the divergence, determinism,
@@ -137,9 +137,9 @@ describe("determinism", () => {
   it("same theme + same fixed IR, resolved repeatedly, is always identical", () => {
     for (const themeId of CANONICAL_THEME_IDS) {
       const ir = makeFixedIr(themeId)
-      const first = ir.slides.map((slide) => resolveEffectiveFace(ir, slide).layoutId)
+      const first = ir.slides.map((slide) => resolveEffectiveFace(ir, slide, getThemeDefinition(ir.theme.id)).layoutId)
       for (let n = 0; n < 20; n++) {
-        const again = ir.slides.map((slide) => resolveEffectiveFace(ir, slide).layoutId)
+        const again = ir.slides.map((slide) => resolveEffectiveFace(ir, slide, getThemeDefinition(ir.theme.id)).layoutId)
         expect(again, `${themeId} run ${n}`).toEqual(first)
       }
     }
@@ -163,7 +163,7 @@ describe("hard boundary: a bound theme never reaches outside its own menu", () =
       const ir = makeFixedIr(themeId)
       const faces = menuFaces(BUILTIN_THEME_FILES[themeId].menu)
       ir.slides.forEach((slide, i) => {
-        const resolved = resolveEffectiveFace(ir, slide).layoutId
+        const resolved = resolveEffectiveFace(ir, slide, getThemeDefinition(ir.theme.id)).layoutId
         expect(resolved, `${themeId} page ${i} (${slide.type}) resolved "${resolved}"`).not.toBeNull()
         expect([...faces], `${themeId} page ${i} (${slide.type})`).toContain(resolved)
       })
@@ -174,9 +174,9 @@ describe("hard boundary: a bound theme never reaches outside its own menu", () =
     for (const themeId of CANONICAL_THEME_IDS) {
       const ir = makeFixedIr(themeId)
       const menu = BUILTIN_THEME_FILES[themeId].menu
-      expect(resolveEffectiveFace(ir, ir.slides[0]!).layoutId, `${themeId} cover`).toBe(menu.cover.face)
-      expect(resolveEffectiveFace(ir, ir.slides[1]!).layoutId, `${themeId} chapter`).toBe(menu.chapter.face)
-      expect(resolveEffectiveFace(ir, ir.slides[6]!).layoutId, `${themeId} ending`).toBe(menu.ending.face)
+      expect(resolveEffectiveFace(ir, ir.slides[0]!, getThemeDefinition(ir.theme.id)).layoutId, `${themeId} cover`).toBe(menu.cover.face)
+      expect(resolveEffectiveFace(ir, ir.slides[1]!, getThemeDefinition(ir.theme.id)).layoutId, `${themeId} chapter`).toBe(menu.chapter.face)
+      expect(resolveEffectiveFace(ir, ir.slides[6]!, getThemeDefinition(ir.theme.id)).layoutId, `${themeId} ending`).toBe(menu.ending.face)
     }
   })
 })

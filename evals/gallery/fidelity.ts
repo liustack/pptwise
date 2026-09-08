@@ -52,6 +52,7 @@ import type { LayoutDefinition } from "@/layouts/registry"
 import { stripEmphasis } from "@/render/emphasis"
 import { resolveEffectiveFace } from "@/render/layout-selection"
 import { getPlatform } from "@/platform/registry"
+import type { ThemeDefinition } from "@/themes/definitions"
 
 /**
  * Component keys whose string value is machinery, not prose: a discriminator,
@@ -679,8 +680,8 @@ export function scanned(layout: LayoutDefinition | undefined): boolean {
 }
 
 /** The face a page actually renders through, or undefined when unresolved. */
-export function faceOf(ir: PptxIR, slide: Slide): LayoutDefinition | undefined {
-  return resolveEffectiveFace(ir, slide).layout
+export function faceOf(ir: PptxIR, slide: Slide, theme: ThemeDefinition): LayoutDefinition | undefined {
+  return resolveEffectiveFace(ir, slide, theme).layout
 }
 
 /**

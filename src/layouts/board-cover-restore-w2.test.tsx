@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest"
+import { BoundSlideSvg } from "../render/__fixtures__/bound-slide"
 import { render } from "@testing-library/react"
-import { FullSlideSvg } from "../render/full-slide-svg"
 import { getLayout } from "./registry"
 import { __resetRegisteredThemes, getThemeDefinition, THEME_DEFINITIONS } from "../themes/definitions"
 import { registerTestTheme } from "../themes/test-fixtures"
@@ -82,7 +82,7 @@ describe("board-cover-restore wave 2 — locked cover faces", () => {
   it.each(WAVE2)("$id cover renders the menu face and decor", ({ id, face }) => {
     expect(THEME_DEFINITIONS[id].menu.cover.face).toBe(face)
     const doc = materializedIr(id)
-    const { container } = render(<FullSlideSvg ir={doc} slide={COVER} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={COVER} index={0} />)
     expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe(face)
     const decor = container.querySelector("[data-decor]")
     const menuDecor = getThemeDefinition(doc.theme.id).menu.cover.decor
@@ -135,7 +135,7 @@ describe("wave 8 batch 2 — locked cover / chapter / ending faces", () => {
       slides: type === "chapter" ? [COVER, slide] : [slide],
     } as PptxIR
     const index = type === "chapter" ? 1 : 0
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={index} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={index} />)
     expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe(face)
     expect(getThemeDefinition(doc.theme.id).menu[type].decor).toEqual(materializedDecor(id, type, face))
   })
@@ -176,7 +176,7 @@ describe("wave 8 batch 3 — locked cover / chapter / ending faces", () => {
       slides: type === "chapter" ? [COVER, slide] : [slide],
     } as PptxIR
     const index = type === "chapter" ? 1 : 0
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={index} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={index} />)
     expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe(face)
     expect(getThemeDefinition(doc.theme.id).menu[type].decor).toEqual(expectedDecor(id, type))
   })
@@ -217,7 +217,7 @@ describe("wave 8 batch 4 — locked cover / chapter / ending faces", () => {
       slides: type === "chapter" ? [COVER, slide] : [slide],
     } as PptxIR
     const index = type === "chapter" ? 1 : 0
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={index} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={index} />)
     expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe(face)
     expect(getThemeDefinition(doc.theme.id).menu[type].decor).toEqual(expectedDecor(id, type))
   })
@@ -236,7 +236,7 @@ function renderPage(themeId: string, type: "cover" | "chapter" | "content" | "en
     slides: type === "chapter" ? [COVER, slide] : [slide],
   } as PptxIR
   const index = type === "chapter" ? 1 : 0
-  const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={index} />)
+  const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={index} />)
   const mid = container.querySelector('[data-depth="mid"]')!
   return { container, mid, doc, slide, index }
 }
@@ -313,7 +313,7 @@ describe("wave 8 batch 3 — midground identity survives FullSlideSvg", () => {
       components: [{ type: "paragraph", text: "证据。" }],
     } as Slide
     const doc = { ...ir("arena"), slides: [chapter, slide] } as PptxIR
-    const { container } = render(<FullSlideSvg ir={doc} slide={slide} index={1} />)
+    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={1} />)
     expect(container.textContent).toContain("ROUND")
     expect(container.querySelectorAll("path")).toHaveLength(0)
     expect(container.innerHTML).not.toContain("M 96 56 l 0 -8 l 8 0")

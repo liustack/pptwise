@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
-import { slideToSvgMarkup } from "../render/render-slide"
+import { boundSlideToSvgMarkup } from "../render/__fixtures__/bound-slide"
 import { auditSvgMarkup } from "./svg-audit"
 import { STRESS_DECKS } from "./stress-fixtures"
 
@@ -41,7 +41,7 @@ describe("overflow audit baseline", () => {
       it(`${theme} / ${name}`, () => {
         const ir = { ...deck, theme: { ...deck.theme, id: theme } }
         const issues = ir.slides.flatMap((slide, i) =>
-          auditSvgMarkup(slideToSvgMarkup(ir, slide, i)).map(
+          auditSvgMarkup(boundSlideToSvgMarkup(ir, slide, i)).map(
             (iss) => `s${i} ${iss.kind} ${iss.text}`,
           ),
         )

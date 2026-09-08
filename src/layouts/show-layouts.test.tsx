@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { render } from "@testing-library/react"
+import { BoundSlideSvg } from "../render/__fixtures__/bound-slide"
 import { afterEach, describe, expect, it } from "vitest"
 import type { PptxIR, Slide } from "@/ir"
 import { resolveStyle } from "../themes"
 import { contrastRatio } from "../render/ink"
-import { FullSlideSvg } from "../render/full-slide-svg"
 import { __resetRegisteredThemes } from "../themes/definitions"
 import { registerTestTheme, type TestThemeFaces } from "../themes/test-fixtures"
 
@@ -130,7 +130,7 @@ function draw(index: number, slide: Slide = slides[index]!) {
   const themeId = registerTestTheme(`show-layout-${themeSerial++}`, "runway", faces)
   const doc = { ...ir, theme: { id: themeId }, slides: slide === slides[index] ? slides : [slide] }
   return render(
-    <FullSlideSvg ir={doc} slide={slide} index={slide === slides[index] ? index : 0} />,
+    <BoundSlideSvg ir={doc} slide={slide} index={slide === slides[index] ? index : 0} />,
   ).container
 }
 

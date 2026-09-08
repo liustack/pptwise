@@ -7,7 +7,7 @@ import type { ComponentCtx } from "../components/types"
 import { PACING_BUDGETS, resolveNarrative, type Pacing, type NarrativeProfile } from "@/narrative"
 import type { Component, PptxIR, Slide } from "@/ir"
 import { CONSULTING_TOKENS } from "../themes/builtin/brief"
-import { __resetRegisteredThemes, registerTheme } from "../themes/definitions"
+import { __resetRegisteredThemes, getThemeDefinition, registerTheme } from "../themes/definitions"
 import type { Menu } from "../themes/schema"
 
 // ── helpers ──
@@ -21,6 +21,14 @@ function makeIR(slides: Slide[], themeId: PptxIR["theme"]["id"] = "brief"): Pptx
     assets: { images: {} },
     slides,
   }
+}
+
+/**
+ * `checkIrQuality` with the theme the deck binds resolved for it. The render
+ * chain takes a theme definition by value; these fixtures bind one by id.
+ */
+function quality(ir: PptxIR, resolvedAxes: NarrativeProfile = resolveNarrative(undefined)): QualityIssue[] {
+  return checkIrQuality(ir, resolvedAxes, getThemeDefinition(ir.theme.id))
 }
 
 function codes(issues: QualityIssue[]): string[] {
@@ -78,13 +86,13 @@ describe("checkIrQuality", () => {
         ],
       },
     ])
-    expect(checkIrQuality(ir)).toEqual([])
+    expect(quality(ir)).toEqual([])
   })
 
   // ── empty_deck ──
 
   it("reports error for empty deck", () => {
-    const issues = checkIrQuality(makeIR([]))
+    const issues = quality(makeIR([]))
     expect(issues).toHaveLength(1)
     expect(issues[0].severity).toBe("error")
     expect(issues[0].code).toBe("empty_deck")
@@ -106,7 +114,7 @@ describe("checkIrQuality", () => {
         ],
         "quality-capacity-four",
       )
-      const issue = checkIrQuality(ir, pacingAxes("dense")).find((candidate) => candidate.code === "density")
+      const issue = quality(ir, pacingAxes("dense")).find((candidate) => candidate.code === "density")
 
       expect(issue?.density).toEqual({
         limit: 4,
@@ -132,7 +140,7 @@ describe("checkIrQuality", () => {
         ],
         "quality-capacity-six",
       )
-      const issue = checkIrQuality(ir, pacingAxes("dense")).find((candidate) => candidate.code === "density")
+      const issue = quality(ir, pacingAxes("dense")).find((candidate) => candidate.code === "density")
 
       expect(issue?.density).toEqual({
         limit: 5,
@@ -156,7 +164,7 @@ describe("checkIrQuality", () => {
         ],
         "quality-takeover",
       )
-      const issue = checkIrQuality(ir, pacingAxes("dense")).find((candidate) => candidate.code === "density")
+      const issue = quality(ir, pacingAxes("dense")).find((candidate) => candidate.code === "density")
 
       expect(issue?.density).toEqual({
         limit: 5,
@@ -188,14 +196,14 @@ describe("checkIrQuality", () => {
         "quality-takeover-selection",
       )
 
-      expect(codes(checkIrQuality(ir, pacingAxes("balanced")))).not.toContain("density")
+      expect(codes(quality(ir, pacingAxes("balanced")))).not.toContain("density")
     })
 
     it("does not apply the content density gate to boundary pages", () => {
       installMenuTheme("quality-boundary", { points: { face: "two-column" } })
       const ir = makeIR([{ type: "cover", heading: "Cover", components: paragraphs(8) }], "quality-boundary")
 
-      expect(codes(checkIrQuality(ir, pacingAxes("spacious")))).not.toContain("density")
+      expect(codes(quality(ir, pacingAxes("spacious")))).not.toContain("density")
     })
   })
 
@@ -219,7 +227,7 @@ describe("checkIrQuality", () => {
             ],
           },
         ])
-        expect(codes(checkIrQuality(ir, axes))).not.toContain("bullets_overflow")
+        expect(codes(quality(ir, axes))).not.toContain("bullets_overflow")
       })
 
       it(`${pacing} pacing: warns bullets_overflow at ${budget.bullets.maxItems + 1} items, naming the pacing`, () => {
@@ -233,7 +241,7 @@ describe("checkIrQuality", () => {
             ],
           },
         ])
-        const issues = checkIrQuality(ir, axes)
+        const issues = quality(ir, axes)
         expect(codes(issues)).toContain("bullets_overflow")
         const issue = issues.find((i) => i.code === "bullets_overflow")!
         expect(issue.message).toContain(String(budget.bullets.maxItems))
@@ -249,7 +257,7 @@ describe("checkIrQuality", () => {
         const ir = makeIR([
           { type: "content", kind: "points", heading: "列表页", components: [{ type: "bullets", items: [ok] }] },
         ])
-        expect(codes(checkIrQuality(ir, axes))).not.toContain("bullet_item_long")
+        expect(codes(quality(ir, axes))).not.toContain("bullet_item_long")
       })
 
       it(`${pacing} pacing: warns bullet_item_long over ${budget.bullets.maxUnitsPerItem} measureTextUnits`, () => {
@@ -257,7 +265,7 @@ describe("checkIrQuality", () => {
         const ir = makeIR([
           { type: "content", kind: "points", heading: "列表页", components: [{ type: "bullets", items: [long] }] },
         ])
-        const issues = checkIrQuality(ir, axes)
+        const issues = quality(ir, axes)
         expect(codes(issues)).toContain("bullet_item_long")
         const issue = issues.find((i) => i.code === "bullet_item_long")!
         expect(issue.severity).toBe("warn")
@@ -274,7 +282,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "bullets", items: Array.from({ length: 6 }, (_, i) => String(i)) }],
         },
       ])
-      const issues = checkIrQuality(ir)
+      const issues = quality(ir)
       expect(codes(issues)).toContain("bullets_overflow")
       expect(issues.find((i) => i.code === "bullets_overflow")!.bulletsBudget).toEqual({
         pacing: "balanced",
@@ -299,7 +307,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         { type: "content", kind: "points", heading: "列表页", components: [{ type: "bullets", items: [atCeiling] }] },
       ])
-      expect(codes(checkIrQuality(ir))).not.toContain("bullet_item_overflow")
+      expect(codes(quality(ir))).not.toContain("bullet_item_overflow")
     })
 
     it(`reports bullet_item_overflow (severity error) over ${CAPACITY.bullets.itemOverflowUnits} measureTextUnits, alongside bullet_item_long (different questions, neither supersedes the other)`, () => {
@@ -307,7 +315,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         { type: "content", kind: "points", heading: "列表页", components: [{ type: "bullets", items: [over] }] },
       ])
-      const issues = checkIrQuality(ir)
+      const issues = quality(ir)
       expect(codes(issues)).toContain("bullet_item_overflow")
       expect(issues.find((i) => i.code === "bullet_item_overflow")!.severity).toBe("error")
       expect(codes(issues)).toContain("bullet_item_long")
@@ -319,7 +327,7 @@ describe("checkIrQuality", () => {
         { type: "content", kind: "points", heading: "列表页", components: [{ type: "bullets", items: [over] }] },
       ])
       for (const pacing of ["dense", "balanced", "spacious"] as Pacing[]) {
-        const issues = checkIrQuality(ir, pacingAxes(pacing))
+        const issues = quality(ir, pacingAxes(pacing))
         expect(codes(issues)).toContain("bullet_item_overflow")
       }
     })
@@ -346,7 +354,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "bullets", items: Array.from({ length: threshold }, (_, i) => String(i)) }],
         },
       ])
-      const issues = checkIrQuality(ir)
+      const issues = quality(ir)
       expect(codes(issues)).not.toContain("bullets_count_overflow")
       // Still over the ordinary editorial budget — bullets_overflow (warn)
       // stays a separate, lower-severity finding, untouched by this gate.
@@ -362,7 +370,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "bullets", items: Array.from({ length: threshold + 1 }, (_, i) => String(i)) }],
         },
       ])
-      const issues = checkIrQuality(ir)
+      const issues = quality(ir)
       expect(codes(issues)).toContain("bullets_count_overflow")
       const issue = issues.find((i) => i.code === "bullets_count_overflow")!
       expect(issue.severity).toBe("error")
@@ -378,7 +386,7 @@ describe("checkIrQuality", () => {
         },
       ])
       for (const pacing of ["dense", "balanced", "spacious"] as Pacing[]) {
-        const issues = checkIrQuality(ir, pacingAxes(pacing))
+        const issues = quality(ir, pacingAxes(pacing))
         expect(codes(issues)).toContain("bullets_count_overflow")
       }
     })
@@ -398,7 +406,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "bullets", items: Array.from({ length: 500 }, (_, i) => `item ${i}`) }],
         },
       ])
-      expect(codes(checkIrQuality(ir))).not.toContain("bullets_count_overflow")
+      expect(codes(quality(ir))).not.toContain("bullets_count_overflow")
     })
 
     it("reports bullets_count_overflow for the 20000-item D1 repro (must block)", () => {
@@ -410,7 +418,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "bullets", items: Array.from({ length: 20_000 }, (_, i) => `item ${i}`) }],
         },
       ])
-      expect(codes(checkIrQuality(ir))).toContain("bullets_count_overflow")
+      expect(codes(quality(ir))).toContain("bullets_count_overflow")
     })
   })
 
@@ -444,7 +452,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "comparison", columns: ["A", "B"], rows: comparisonRows(threshold) }],
         },
       ])
-      expect(codes(checkIrQuality(ir))).not.toContain("comparison_overflow")
+      expect(codes(quality(ir))).not.toContain("comparison_overflow")
     })
 
     it(`warns (severity warn) at ${threshold + 1} rows`, () => {
@@ -456,7 +464,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "comparison", columns: ["A", "B"], rows: comparisonRows(threshold + 1) }],
         },
       ])
-      const issues = checkIrQuality(ir)
+      const issues = quality(ir)
       expect(codes(issues)).toContain("comparison_overflow")
       expect(issues.find((i) => i.code === "comparison_overflow")!.severity).toBe("warn")
     })
@@ -474,7 +482,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "comparison", columns: ["A", "B"], rows: comparisonRows(threshold) }],
         },
       ])
-      expect(codes(checkIrQuality(ir))).not.toContain("comparison_count_overflow")
+      expect(codes(quality(ir))).not.toContain("comparison_count_overflow")
     })
 
     it(`reports (severity error) over ${threshold} rows`, () => {
@@ -486,7 +494,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "comparison", columns: ["A", "B"], rows: comparisonRows(threshold + 1) }],
         },
       ])
-      const issues = checkIrQuality(ir)
+      const issues = quality(ir)
       expect(codes(issues)).toContain("comparison_count_overflow")
       expect(issues.find((i) => i.code === "comparison_count_overflow")!.severity).toBe("error")
     })
@@ -504,7 +512,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "comparison", columns: ["A", "B"], rows: comparisonRows(300) }],
         },
       ])
-      expect(codes(checkIrQuality(ir))).not.toContain("comparison_count_overflow")
+      expect(codes(quality(ir))).not.toContain("comparison_count_overflow")
     })
 
     // Upper bracket anchor: clearly pathological scale (same order of
@@ -518,7 +526,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "comparison", columns: ["A", "B"], rows: comparisonRows(20_000) }],
         },
       ])
-      expect(codes(checkIrQuality(ir))).toContain("comparison_count_overflow")
+      expect(codes(quality(ir))).toContain("comparison_count_overflow")
     })
   })
 
@@ -538,7 +546,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "architecture", layers: architectureLayers(threshold) }],
         },
       ])
-      expect(codes(checkIrQuality(ir))).not.toContain("architecture_overflow")
+      expect(codes(quality(ir))).not.toContain("architecture_overflow")
     })
 
     it(`warns (severity warn) at ${threshold + 1} layers`, () => {
@@ -550,7 +558,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "architecture", layers: architectureLayers(threshold + 1) }],
         },
       ])
-      const issues = checkIrQuality(ir)
+      const issues = quality(ir)
       expect(codes(issues)).toContain("architecture_overflow")
       expect(issues.find((i) => i.code === "architecture_overflow")!.severity).toBe("warn")
     })
@@ -568,7 +576,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "architecture", layers: architectureLayers(threshold) }],
         },
       ])
-      expect(codes(checkIrQuality(ir))).not.toContain("architecture_count_overflow")
+      expect(codes(quality(ir))).not.toContain("architecture_count_overflow")
     })
 
     it(`reports (severity error) over ${threshold} layers`, () => {
@@ -580,7 +588,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "architecture", layers: architectureLayers(threshold + 1) }],
         },
       ])
-      const issues = checkIrQuality(ir)
+      const issues = quality(ir)
       expect(codes(issues)).toContain("architecture_count_overflow")
       expect(issues.find((i) => i.code === "architecture_count_overflow")!.severity).toBe("error")
     })
@@ -594,7 +602,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "architecture", layers: architectureLayers(150) }],
         },
       ])
-      expect(codes(checkIrQuality(ir))).toContain("architecture_count_overflow")
+      expect(codes(quality(ir))).toContain("architecture_count_overflow")
     })
 
     it("reports for 20000 layers (clearly pathological, must reject)", () => {
@@ -606,7 +614,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "architecture", layers: architectureLayers(20_000) }],
         },
       ])
-      expect(codes(checkIrQuality(ir))).toContain("architecture_count_overflow")
+      expect(codes(quality(ir))).toContain("architecture_count_overflow")
     })
   })
 
@@ -614,7 +622,7 @@ describe("checkIrQuality", () => {
 
   it("a placeholder page reports no issues even though it is missing a heading", () => {
     const ir = makeIR([{ type: "content", kind: "points", placeholder: true, components: [] }])
-    expect(checkIrQuality(ir)).toEqual([])
+    expect(quality(ir)).toEqual([])
   })
 
   it("a placeholder page skips density/long_heading too, even when it looks overloaded", () => {
@@ -627,7 +635,7 @@ describe("checkIrQuality", () => {
         components: paragraphs(20),
       },
     ])
-    expect(checkIrQuality(ir)).toEqual([])
+    expect(quality(ir)).toEqual([])
   })
 
   it("does not let placeholder:true on one slide suppress a real issue on another slide", () => {
@@ -635,7 +643,7 @@ describe("checkIrQuality", () => {
       { type: "content", kind: "points", placeholder: true, components: [] },
       { type: "content", kind: "points", components: [{ type: "paragraph", text: "hi" }] }, // no heading — real issue
     ])
-    const issues = checkIrQuality(ir)
+    const issues = quality(ir)
     expect(issues).toHaveLength(1)
     expect(issues[0].slide).toBe(1)
     expect(issues[0].code).toBe("missing_heading")
@@ -651,7 +659,7 @@ describe("checkIrQuality", () => {
         components: [{ type: "paragraph", text: "hi" }],
       },
     ])
-    expect(codes(checkIrQuality(ir))).toContain("missing_heading")
+    expect(codes(quality(ir))).toContain("missing_heading")
   })
 
   it("warns when cover slide has no heading", () => {
@@ -661,7 +669,7 @@ describe("checkIrQuality", () => {
         components: [],
       },
     ])
-    expect(codes(checkIrQuality(ir))).toContain("missing_heading")
+    expect(codes(quality(ir))).toContain("missing_heading")
   })
 
   it("warns when chapter slide has no heading", () => {
@@ -671,7 +679,7 @@ describe("checkIrQuality", () => {
         components: [],
       },
     ])
-    expect(codes(checkIrQuality(ir))).toContain("missing_heading")
+    expect(codes(quality(ir))).toContain("missing_heading")
   })
 
   it("does NOT warn missing_heading for ending slide", () => {
@@ -681,7 +689,7 @@ describe("checkIrQuality", () => {
         components: [],
       },
     ])
-    expect(codes(checkIrQuality(ir))).not.toContain("missing_heading")
+    expect(codes(quality(ir))).not.toContain("missing_heading")
   })
 
   it("does NOT warn missing_heading for background-image-only pages", () => {
@@ -692,7 +700,7 @@ describe("checkIrQuality", () => {
         components: [{ type: "image", asset_id: "hero", fit: "cover" }],
       },
     ])
-    expect(codes(checkIrQuality(ir))).not.toContain("missing_heading")
+    expect(codes(quality(ir))).not.toContain("missing_heading")
   })
 
   // ── long_heading ──
@@ -707,7 +715,7 @@ describe("checkIrQuality", () => {
         components: [],
       },
     ])
-    const issues = checkIrQuality(ir)
+    const issues = quality(ir)
     expect(codes(issues)).toContain("long_heading")
     expect(issues.find((i) => i.code === "long_heading")!.message).toContain(
       "断言式短句"
@@ -723,7 +731,7 @@ describe("checkIrQuality", () => {
         components: [],
       },
     ])
-    expect(codes(checkIrQuality(ir))).not.toContain("long_heading")
+    expect(codes(quality(ir))).not.toContain("long_heading")
   })
 
   // ── chart_axes_ignored (chart-axes feature) ──
@@ -748,7 +756,7 @@ describe("checkIrQuality", () => {
         ],
       },
     ])
-    expect(codes(checkIrQuality(ir))).toContain("chart_axes_ignored")
+    expect(codes(quality(ir))).toContain("chart_axes_ignored")
   })
 
   it("warns when a funnel or dumbbell chart sets axes", () => {
@@ -774,7 +782,7 @@ describe("checkIrQuality", () => {
           ],
         },
       ])
-      expect(codes(checkIrQuality(ir))).toContain("chart_axes_ignored")
+      expect(codes(quality(ir))).toContain("chart_axes_ignored")
     }
   })
 
@@ -795,7 +803,7 @@ describe("checkIrQuality", () => {
           ],
         },
       ])
-      expect(codes(checkIrQuality(ir))).not.toContain("chart_axes_ignored")
+      expect(codes(quality(ir))).not.toContain("chart_axes_ignored")
     }
   })
 
@@ -814,7 +822,7 @@ describe("checkIrQuality", () => {
         ],
       },
     ])
-    expect(codes(checkIrQuality(ir))).not.toContain("chart_axes_ignored")
+    expect(codes(quality(ir))).not.toContain("chart_axes_ignored")
   })
 
   it("does NOT warn for a pie chart with axes present but every sub-field undefined (axes: {})", () => {
@@ -833,7 +841,7 @@ describe("checkIrQuality", () => {
         ],
       },
     ])
-    expect(codes(checkIrQuality(ir))).not.toContain("chart_axes_ignored")
+    expect(codes(quality(ir))).not.toContain("chart_axes_ignored")
   })
 
   // ── F3 (review round): renderer-vs-validator agreement tripwire ──
@@ -885,7 +893,7 @@ describe("checkIrQuality", () => {
       const renders = markup.includes("Probe")
 
       const ir = makeIR([{ type: "content", kind: "points", heading: "h", components: [component] }])
-      const warns = codes(checkIrQuality(ir)).includes("chart_axes_ignored")
+      const warns = codes(quality(ir)).includes("chart_axes_ignored")
 
       expect(renders).toBe(!warns)
     })
@@ -913,7 +921,7 @@ describe("checkIrQuality", () => {
         ],
       },
     ])
-    expect(codes(checkIrQuality(ir))).toContain("chart_duplicate_category")
+    expect(codes(quality(ir))).toContain("chart_duplicate_category")
   })
 
   it("does NOT warn when every series has distinct category values", () => {
@@ -931,7 +939,7 @@ describe("checkIrQuality", () => {
         ],
       },
     ])
-    expect(codes(checkIrQuality(ir))).not.toContain("chart_duplicate_category")
+    expect(codes(quality(ir))).not.toContain("chart_duplicate_category")
   })
 
   it("does NOT warn when the same category appears across different series (cross-series sharing is normal, not a duplicate)", () => {
@@ -952,7 +960,7 @@ describe("checkIrQuality", () => {
         ],
       },
     ])
-    expect(codes(checkIrQuality(ir))).not.toContain("chart_duplicate_category")
+    expect(codes(quality(ir))).not.toContain("chart_duplicate_category")
   })
 
   it("reports one issue per repeated key, not one per repeat occurrence (a key repeated 3x in one series is one issue)", () => {
@@ -970,7 +978,7 @@ describe("checkIrQuality", () => {
         ],
       },
     ])
-    const issues = checkIrQuality(ir).filter((i) => i.code === "chart_duplicate_category")
+    const issues = quality(ir).filter((i) => i.code === "chart_duplicate_category")
     expect(issues).toHaveLength(1)
   })
 
@@ -986,7 +994,7 @@ describe("checkIrQuality", () => {
       const ir = makeIR([
         { type: "content", kind: "points", heading: "h", components: [{ type: "chart", chart_type, series }] },
       ])
-      expect(codes(checkIrQuality(ir))).toContain("chart_duplicate_category")
+      expect(codes(quality(ir))).toContain("chart_duplicate_category")
     }
   })
 
@@ -1005,7 +1013,7 @@ describe("checkIrQuality", () => {
         ],
       },
     ])
-    const issue = checkIrQuality(ir).find((i) => i.code === "chart_duplicate_category")
+    const issue = quality(ir).find((i) => i.code === "chart_duplicate_category")
     expect(issue?.severity).toBe("warn")
     // The chart type travels with the issue, because what a repeat costs
     // depends on it: bar folds the category and keeps the first value,
@@ -1039,7 +1047,7 @@ describe("checkIrQuality", () => {
         ],
       },
     ])
-    const issue = checkIrQuality(ir).find((i) => i.code === "chart_duplicate_category")
+    const issue = quality(ir).find((i) => i.code === "chart_duplicate_category")
     expect(issue?.severity).toBe("warn")
     expect(issue?.chartDuplicateCategory?.chartType).toBe("pie")
     expect(issue?.message).toContain("两条都会画出来")
@@ -1072,7 +1080,7 @@ describe("checkIrQuality", () => {
         components: [{ type: "chart", chart_type: "line", series: nSeries(9) }],
       },
     ])
-    const issue = checkIrQuality(ir).find((i) => i.code === "chart_line_too_many_series")
+    const issue = quality(ir).find((i) => i.code === "chart_line_too_many_series")
     expect(issue).toBeTruthy()
     expect(issue?.severity).toBe("warn")
     expect(issue?.message).toMatch(/8/)
@@ -1088,7 +1096,7 @@ describe("checkIrQuality", () => {
         components: [{ type: "chart", chart_type: "line", series: nSeries(8) }],
       },
     ])
-    expect(codes(checkIrQuality(ir))).not.toContain("chart_line_too_many_series")
+    expect(codes(quality(ir))).not.toContain("chart_line_too_many_series")
   })
 
   it("warns for an area chart too, which now names its series in the same one column", () => {
@@ -1100,7 +1108,7 @@ describe("checkIrQuality", () => {
         components: [{ type: "chart", chart_type: "area", series: nSeries(9) }],
       },
     ])
-    expect(codes(checkIrQuality(ir))).toContain("chart_line_too_many_series")
+    expect(codes(quality(ir))).toContain("chart_line_too_many_series")
   })
 
   it("does NOT warn for a bar or scatter chart with the same many series", () => {
@@ -1113,7 +1121,7 @@ describe("checkIrQuality", () => {
           components: [{ type: "chart", chart_type, series: nSeries(9) }],
         },
       ])
-      expect(codes(checkIrQuality(ir)), chart_type).not.toContain("chart_line_too_many_series")
+      expect(codes(quality(ir)), chart_type).not.toContain("chart_line_too_many_series")
     }
   })
 
@@ -1146,17 +1154,17 @@ describe("checkIrQuality", () => {
 
   it("warns when a row's cells omit a declared column's key", () => {
     const ir = dataTableIR([{ cells: { metric: "Revenue" } }])
-    expect(codes(checkIrQuality(ir))).toContain("data_table_missing_cell")
+    expect(codes(quality(ir))).toContain("data_table_missing_cell")
   })
 
   it("does NOT warn when every row's cells cover every declared column", () => {
     const ir = dataTableIR([{ cells: { metric: "Revenue", q1: "120" } }])
-    expect(codes(checkIrQuality(ir))).not.toContain("data_table_missing_cell")
+    expect(codes(quality(ir))).not.toContain("data_table_missing_cell")
   })
 
   it("reports one issue per missing key, not one per row (a row missing 2 of 2 keys produces 2 issues)", () => {
     const ir = dataTableIR([{ cells: {} }])
-    const issues = checkIrQuality(ir).filter((i) => i.code === "data_table_missing_cell")
+    const issues = quality(ir).filter((i) => i.code === "data_table_missing_cell")
     expect(issues).toHaveLength(2)
   })
 
@@ -1165,7 +1173,7 @@ describe("checkIrQuality", () => {
       { cells: { metric: "Revenue", q1: "120" } },
       { cells: { metric: "Costs" } }, // row index 1, missing "q1"
     ])
-    const issue = checkIrQuality(ir).find((i) => i.code === "data_table_missing_cell")
+    const issue = quality(ir).find((i) => i.code === "data_table_missing_cell")
     expect(issue?.severity).toBe("warn")
     expect(issue?.dataTableMissingCell).toEqual({ rowIndex: 1, key: "q1" })
   })
@@ -1185,7 +1193,7 @@ describe("checkIrQuality", () => {
         ],
       },
     ])
-    const c = codes(checkIrQuality(ir))
+    const c = codes(quality(ir))
     expect(c).toContain("density")
     expect(c).toContain("bullets_overflow")
     expect(c).toContain("missing_heading")
@@ -1203,7 +1211,7 @@ describe("checkIrQuality", () => {
         components: [{ type: "paragraph", text: "x" }],
       },
     ])
-    const issues = checkIrQuality(ir)
+    const issues = quality(ir)
     expect(issues).toHaveLength(1)
     expect(issues[0].slide).toBe(1)
   })

@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
+import { BoundSlideSvg } from "../render/__fixtures__/bound-slide"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
-import { buildCtx, FullSlideSvg, resolveBackgroundHex } from "../render/full-slide-svg"
+import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
 import { accessibleInk, contrastRatio, requiredContrastRatio, readableOn } from "../render/ink"
 import { textInkBox } from "../render/depth-contract/geometry"
@@ -383,7 +384,7 @@ describe("cover-vertical-title-cover — seal rules", () => {
 describe("cover-vertical-title-cover — FullSlideSvg remnant", () => {
   it("keeps the left remnant mountain when the org foot is present", () => {
     const s = slide(HEADING, {  })
-    const markup = renderSvgMarkup(<FullSlideSvg ir={ir("ink", FULL_META, s)} slide={s} index={0} />)
+    const markup = renderSvgMarkup(<BoundSlideSvg ir={ir("ink", FULL_META, s)} slide={s} index={0} />)
     const root = parseSvgRoot(markup)
     const remnant = root.querySelector('[data-decor-piece="remnant"]')
     expect(remnant).not.toBeNull()

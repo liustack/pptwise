@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { render } from "@testing-library/react"
+import { BoundSlideSvg } from "./__fixtures__/bound-slide"
 import { afterEach, describe, expect, it } from "vitest"
 import type { PptxIR, Slide } from "@/ir"
-import { __resetRegisteredThemes, registerTheme } from "../themes/definitions"
+import { __resetRegisteredThemes, getThemeDefinition, registerTheme } from "../themes/definitions"
 import { CONSULTING_TOKENS } from "../themes/builtin/brief"
 import { resolveNarrative } from "../narrative"
 import type { Menu } from "../themes/schema"
-import { FullSlideSvg } from "./full-slide-svg"
 import { checkIrQuality } from "./ir-quality"
 import { resolveEffectiveFace, resolveEffectiveLayoutBodyCapacity, resolveLayoutId } from "./layout-selection"
 
@@ -80,16 +80,16 @@ describe("theme-menu layout lookup", () => {
     }
     const ir = deck(id, [slide])
 
-    expect(resolveEffectiveFace(ir, slide)).toMatchObject({
+    expect(resolveEffectiveFace(ir, slide, getThemeDefinition(ir.theme.id))).toMatchObject({
       route: "layout",
       layoutId: "bento-panel",
     })
-    expect(resolveEffectiveLayoutBodyCapacity(ir, slide)).toEqual({
+    expect(resolveEffectiveLayoutBodyCapacity(ir, slide, getThemeDefinition(ir.theme.id))).toEqual({
       layoutId: "bento-panel",
       capacity: 6,
     })
 
-    const { container } = render(<FullSlideSvg ir={ir} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={ir} slide={slide} index={0} />)
     expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe("bento-panel")
   })
 
@@ -108,7 +108,12 @@ describe("theme-menu layout lookup", () => {
         text: `Block ${i + 1}`,
       })),
     }
-    const issue = checkIrQuality(deck(id, [slide]), resolveNarrative({ pacing: "dense" })).find(
+    const capacityDeck = deck(id, [slide])
+    const issue = checkIrQuality(
+      capacityDeck,
+      resolveNarrative({ pacing: "dense" }),
+      getThemeDefinition(capacityDeck.theme.id),
+    ).find(
       (candidate) => candidate.code === "density",
     )
 
@@ -135,16 +140,16 @@ describe("theme-menu layout lookup", () => {
     }
     const ir = deck(id, [slide])
 
-    expect(resolveEffectiveFace(ir, slide)).toMatchObject({
+    expect(resolveEffectiveFace(ir, slide, getThemeDefinition(ir.theme.id))).toMatchObject({
       route: "takeover",
       layoutId: "image-top",
     })
-    expect(resolveEffectiveLayoutBodyCapacity(ir, slide)).toEqual({
+    expect(resolveEffectiveLayoutBodyCapacity(ir, slide, getThemeDefinition(ir.theme.id))).toEqual({
       layoutId: "image-top",
       capacity: undefined,
     })
 
-    const { container } = render(<FullSlideSvg ir={ir} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={ir} slide={slide} index={0} />)
     expect(container.querySelector("[data-face]")).toBeNull()
     expect(container.querySelector("image")?.getAttribute("href")).toContain("data:image/png")
   })
@@ -162,7 +167,8 @@ describe("theme-menu layout lookup", () => {
       components: [],
     }
 
-    expect(resolveEffectiveFace(deck(id, [slide]), slide)).toMatchObject({
+    const imageDeck = deck(id, [slide])
+    expect(resolveEffectiveFace(imageDeck, slide, getThemeDefinition(imageDeck.theme.id))).toMatchObject({
       route: "image-cover",
       layoutId: "verdict-index",
       layout: { id: "verdict-index" },
@@ -180,7 +186,7 @@ describe("theme-menu layout lookup", () => {
     }
     const ir = deck(id, [slide])
 
-    expect(() => render(<FullSlideSvg ir={ir} slide={slide} index={0} />)).toThrow(
+    expect(() => render(<BoundSlideSvg ir={ir} slide={slide} index={0} />)).toThrow(
       /kind "data" is not offered.*points, comparison, photo/i,
     )
   })
@@ -206,7 +212,7 @@ describe("theme-menu layout lookup", () => {
       heading: "Menu decor",
       components: [{ type: "paragraph", text: "Body" }],
     }
-    const { container } = render(<FullSlideSvg ir={deck(id, [slide])} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={deck(id, [slide])} slide={slide} index={0} />)
     const locator = container.querySelector('[data-decor-piece="locator-corner"]')
 
     // A structure-role piece lifts to the foreground bare; the data-decor
@@ -242,8 +248,8 @@ describe("theme-menu layout lookup", () => {
       meta: { organization: "ACME" },
     })
 
-    const ordinary = render(<FullSlideSvg ir={branded(ordinaryId)} slide={slide} index={0} />).container
-    const silent = render(<FullSlideSvg ir={branded(silentId)} slide={slide} index={0} />).container
+    const ordinary = render(<BoundSlideSvg ir={branded(ordinaryId)} slide={slide} index={0} />).container
+    const silent = render(<BoundSlideSvg ir={branded(silentId)} slide={slide} index={0} />).container
 
     expect(ordinary.textContent).toContain("ACME")
     expect(ordinary.querySelector('line[y1="664"]')).not.toBeNull()

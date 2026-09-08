@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, it, expect } from "vitest"
-import { slideToSvgMarkup } from "./render-slide"
+import { boundSlideToSvgMarkup } from "./__fixtures__/bound-slide"
 import type { PptxIR, Slide } from "@/ir"
 import { __resetRegisteredThemes } from "../themes/definitions"
 import { registerTestTheme } from "../themes/test-fixtures"
@@ -61,18 +61,18 @@ function bandYs(markup: string): number[] {
 
 describe("image-bottom caption band vs branding posture", () => {
   it("sits flush at the page edge under the default cover-only posture", () => {
-    expect(bandYs(slideToSvgMarkup(makeIr(), slide, 0))).toEqual([680])
+    expect(bandYs(boundSlideToSvgMarkup(makeIr(), slide, 0))).toEqual([680])
   })
 
   it("sits flush under minimal (no content-page footer meta)", () => {
-    expect(bandYs(slideToSvgMarkup(makeIr("minimal"), slide, 0))).toEqual([680])
+    expect(bandYs(boundSlideToSvgMarkup(makeIr("minimal"), slide, 0))).toEqual([680])
   })
 
   it('lifts 40px above the drawn footer only under branding:"full"', () => {
-    expect(bandYs(slideToSvgMarkup(makeIr("full"), slide, 0))).toContain(640)
+    expect(bandYs(boundSlideToSvgMarkup(makeIr("full"), slide, 0))).toContain(640)
   })
 
   it("stays flush when the menu entry silences full deck branding", () => {
-    expect(bandYs(slideToSvgMarkup(makeIr("full", SILENT_THEME_ID), slide, 0))).toEqual([680])
+    expect(bandYs(boundSlideToSvgMarkup(makeIr("full", SILENT_THEME_ID), slide, 0))).toEqual([680])
   })
 })

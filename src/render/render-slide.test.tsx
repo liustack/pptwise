@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest"
-import { slideToOps, slideToSvgMarkup } from "./render-slide"
+import { boundSlideToSvgMarkup, boundSlideToOps } from "./__fixtures__/bound-slide"
 import { SLIDE_W_IN, SLIDE_H_IN } from "../constants"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -26,13 +26,13 @@ const ir: PptxIR = {
 
 describe("slideToOps export entry", () => {
   it("produces a markup string with no foreignObject", () => {
-    const markup = slideToSvgMarkup(ir, slide, 0)
+    const markup = boundSlideToSvgMarkup(ir, slide, 0)
     expect(markup).toContain("<svg")
     expect(markup).not.toContain("foreignObject")
   })
 
   it("produces in-bounds pptxgenjs ops including text", () => {
-    const ops = slideToOps(ir, slide, 0)
+    const ops = boundSlideToOps(ir, slide, 0)
     expect(ops.length).toBeGreaterThan(3)
     expect(new Set(ops.map((o) => o.kind)).has("text")).toBe(true)
     for (const op of ops) {
@@ -69,7 +69,7 @@ describe("slideToOps export entry", () => {
       ],
     }
     const doc: PptxIR = { ...ir, slides: [flowSlide] }
-    const ops = slideToOps(doc, flowSlide, 0)
+    const ops = boundSlideToOps(doc, flowSlide, 0)
     for (const op of ops) {
       const bottom = op.y + ("h" in op ? op.h : 0)
       expect(bottom, `op ${op.kind} bottom=${bottom}in overflows slide`).toBeLessThanOrEqual(SLIDE_H_IN + 0.1)

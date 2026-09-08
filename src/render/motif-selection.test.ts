@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import type { PptxIR, Slide } from "@/ir"
 import { CANONICAL_THEME_IDS } from "../themes"
 import { MOTIFS } from "../motifs"
-import { __resetRegisteredThemes, THEME_DEFINITIONS } from "../themes/definitions"
+import { __resetRegisteredThemes, getThemeDefinition, THEME_DEFINITIONS } from "../themes/definitions"
 import { registerTestTheme } from "../themes/test-fixtures"
 import { resolveEffectiveFace } from "./layout-selection"
 
@@ -30,7 +30,7 @@ describe("当前渲染契约", () => {
   it("注册主题的装饰由命中的菜单条目携带", () => {
     const id = registerTestTheme("menu-motif-contract", "ledger")
     const deck = makeIR(id)
-    expect(resolveEffectiveFace(deck, deck.slides[0]!).entry?.decor).toEqual({
+    expect(resolveEffectiveFace(deck, deck.slides[0]!, getThemeDefinition(deck.theme.id)).entry?.decor).toEqual({
       kind: "motif",
       id: "poster-motif",
     })

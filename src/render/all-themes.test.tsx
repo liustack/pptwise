@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest"
-import { slideToSvgMarkup, slideToOps } from "./render-slide"
+import { boundSlideToSvgMarkup, boundSlideToOps } from "./__fixtures__/bound-slide"
 import { parseSvgRoot } from "./serialize"
 import { assertSubset } from "./subset-validate"
 import { BUILTIN_THEME_IDS, type PptxIR, type Slide, type Component } from "@/ir"
@@ -57,12 +57,12 @@ describe("single-source export across every theme and slide type", () => {
     it(`${themeId}: every slide is subset-clean and round-trips to ops`, () => {
       const { ir, slides } = deck(themeId)
       slides.forEach((slide, index) => {
-        const markup = slideToSvgMarkup(ir, slide, index)
+        const markup = boundSlideToSvgMarkup(ir, slide, index)
         expect(markup, `${themeId} ${slide.type} has no foreignObject`).not.toContain("foreignObject")
         // every slide stays inside the exportable subset
         expect(() => assertSubset(parseSvgRoot(markup)), `${themeId} ${slide.type} subset`).not.toThrow()
         // and yields drawable ops
-        const ops = slideToOps(ir, slide, index)
+        const ops = boundSlideToOps(ir, slide, index)
         expect(ops.length, `${themeId} ${slide.type} ops`).toBeGreaterThan(0)
       })
     })

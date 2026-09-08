@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { render } from "@testing-library/react"
+import { BoundSlideSvg } from "../render/__fixtures__/bound-slide"
 import { afterEach, describe, expect, it } from "vitest"
 import type { PptxIR, Slide } from "@/ir"
-import { FullSlideSvg } from "../render/full-slide-svg"
 import { CONSULTING_TOKENS } from "../themes/builtin/brief"
 import { __resetRegisteredThemes, registerTheme } from "../themes/definitions"
 import type { Menu } from "../themes/schema"
@@ -49,7 +49,7 @@ describe("menu face parameters", () => {
       slides: [slide],
     }
 
-    const { container } = render(<FullSlideSvg ir={ir} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={ir} slide={slide} index={0} />)
     const band = container.querySelector('rect[x="0"][y="180"][width="1280"]')
     expect(band).not.toBeNull()
     expect(band).toHaveAttribute("height", "240")

@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { render } from "@testing-library/react"
+import { BoundSlideSvg } from "../render/__fixtures__/bound-slide"
 import { afterEach, describe, expect, it } from "vitest"
 import type { PptxIR, Slide } from "@/ir"
 import { resolveStyle } from "../themes"
-import { FullSlideSvg } from "../render/full-slide-svg"
 import { MAX_DECOR_PIECES } from "../motifs/decor-budget"
 import {
   CANDY_PINK,
@@ -31,7 +31,7 @@ function deck(slide: Slide, theme = "crayon"): PptxIR {
 }
 
 function draw(slide: Slide, theme = "crayon") {
-  return render(<FullSlideSvg ir={deck(slide, theme)} slide={slide} index={0} />).container
+  return render(<BoundSlideSvg ir={deck(slide, theme)} slide={slide} index={0} />).container
 }
 
 const dedicatedSlides: readonly Slide[] = [
