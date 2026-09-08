@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
+import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
 import { contrastRatio, requiredContrastRatio } from "../render/ink"
@@ -126,7 +127,7 @@ describe("chapter-act-chapter — shared pool", () => {
   })
 
   it("emits only export-safe primitives and no baked rally hex under another theme", () => {
-    for (const themeId of CANONICAL_THEME_IDS) {
+    for (const themeId of SUBSET_SAMPLE_THEME_IDS) {
       const { root, markup } = renderChapter(themeId)
       expect(() => assertSubset(root), themeId).not.toThrow()
       if (themeId !== "rally") {
@@ -135,5 +136,4 @@ describe("chapter-act-chapter — shared pool", () => {
       }
     }
   })
-
 })

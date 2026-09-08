@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
+import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
 import { contrastRatio, readableOn, requiredContrastRatio } from "../render/ink"
@@ -136,7 +137,7 @@ describe("chapter-block-numeral-chapter — shared pool", () => {
   })
 
   it("emits only export-safe primitives", () => {
-    for (const themeId of CANONICAL_THEME_IDS) {
+    for (const themeId of SUBSET_SAMPLE_THEME_IDS) {
       expect(() => assertSubset(renderChapter(themeId, FOUR, 0).root), themeId).not.toThrow()
     }
   })

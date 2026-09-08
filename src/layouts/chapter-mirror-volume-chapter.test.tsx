@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
+import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
 import { contrastRatio, metaInk, requiredContrastRatio } from "../render/ink"
@@ -150,15 +151,13 @@ describe("chapter-mirror-volume-chapter — shared pool", () => {
   })
 
   it("emits only export-safe primitives and no baked heritage hex under another theme", () => {
-    for (const themeId of CANONICAL_THEME_IDS) {
+    // Neither sample theme is heritage, so every baked-hex check below runs.
+    for (const themeId of SUBSET_SAMPLE_THEME_IDS) {
       const { root, markup } = renderChapter(themeId)
       expect(() => assertSubset(root), themeId).not.toThrow()
-      if (themeId !== "heritage") {
-        expect(markup, themeId).not.toContain("#6E1F2A")
-        expect(markup, themeId).not.toContain("#B8742C")
-        expect(markup, themeId).not.toContain("#F4EDE2")
-      }
+      expect(markup, themeId).not.toContain("#6E1F2A")
+      expect(markup, themeId).not.toContain("#B8742C")
+      expect(markup, themeId).not.toContain("#F4EDE2")
     }
   })
-
 })

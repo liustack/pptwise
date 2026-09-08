@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
+import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
 import { buildCtx, FullSlideSvg, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
 import { accessibleInk, contrastRatio, requiredContrastRatio, readableOn } from "../render/ink"
@@ -193,7 +194,7 @@ describe("cover-vertical-title-cover — shared pool", () => {
   })
 
   it("emits only export-safe primitives", () => {
-    for (const themeId of CANONICAL_THEME_IDS) {
+    for (const themeId of SUBSET_SAMPLE_THEME_IDS) {
       expect(() => assertSubset(renderCover(themeId).root), themeId).not.toThrow()
     }
   })

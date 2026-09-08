@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
+import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
 import { contrastRatio, requiredContrastRatio } from "../render/ink"
@@ -187,10 +188,9 @@ describe("cover-colophon — shared pool, not ink's private layout", () => {
     }
   })
 
-  it("emits only export-safe primitives, on every theme", () => {
-    for (const themeId of CANONICAL_THEME_IDS) {
+  it("emits only export-safe primitives", () => {
+    for (const themeId of SUBSET_SAMPLE_THEME_IDS) {
       expect(() => assertSubset(renderCover(themeId).root), themeId).not.toThrow()
     }
   })
-
 })

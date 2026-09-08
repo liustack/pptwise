@@ -24,6 +24,7 @@ import { installNodePlatform } from "@/platform/node"
 import { getPlatform } from "@/platform/registry"
 import { parseEmphasis, renderEmphasisTspans, stripEmphasis } from "@/render/emphasis"
 import { renderSvgMarkup } from "@/render/serialize"
+import { assertSubset } from "@/render/subset-validate"
 import { COMPONENT_BUILDERS } from "./corpus/components"
 import { corpusAssets, layoutPage, type CorpusAssets } from "./corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "./corpus/lexicon"
@@ -212,6 +213,43 @@ describe("the gallery corpus", () => {
     expect(declared, "a page lost authored content").toEqual([])
     expect(sentences, "a page says the same sentence twice").toEqual([])
     expect(labels.sort(), "a page repeats a label the pinned list does not name").toEqual([...KNOWN_LABEL_REPEATS].sort())
+  })
+})
+
+// ---------------------------------------------------------------------------
+// the export subset, on the whole matrix
+// ---------------------------------------------------------------------------
+
+/**
+ * `assertSubset` is the gate that decides whether a page can be exported at
+ * all: it reads the vocabulary of SVG primitives the renderer emitted and
+ * throws on anything DrawingML has no equivalent for.
+ *
+ * It used to be run per face, each of the 74 face tests sweeping all 24
+ * canonical themes for a verdict a theme cannot change — a theme supplies
+ * colours, fonts, and parameters, never a new primitive. Those tests now run
+ * two themes each (`render/subset-sample-themes.ts`), and the full sweep
+ * lives here, where the whole 24-theme matrix is already painted: every
+ * theme, every face, every component, every language track, one parse per
+ * page. That is more pages under the gate than the per-face sweeps ever
+ * reached, not fewer.
+ */
+describe("every page in the corpus stays inside the exportable SVG subset", () => {
+  it("scans every theme/layout/component/density page in zh/en/mixed", () => {
+    const Parser = getPlatform().domParser ?? globalThis.DOMParser
+    if (!Parser) throw new Error("DOMParser unavailable")
+    expect(corpus.svgs.size).toBeGreaterThan(0)
+
+    const violations: string[] = []
+    for (const [id, svg] of corpus.svgs) {
+      const root = new Parser().parseFromString(svg, "image/svg+xml").documentElement
+      try {
+        assertSubset(root)
+      } catch (error) {
+        violations.push(`${id}: ${(error as Error).message}`)
+      }
+    }
+    expect(violations, "a page paints a primitive svg2pptx cannot export").toEqual([])
   })
 })
 

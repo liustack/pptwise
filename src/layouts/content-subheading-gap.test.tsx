@@ -240,5 +240,4 @@ describe("S3b: title-bottom vs subheading-top gap stays >=14px (shared helper, s
       expect(gap).toBeGreaterThanOrEqual(14)
     })
   })
-
 })
