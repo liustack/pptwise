@@ -12,7 +12,7 @@
  *
  * So the input each of those 74 faces was tested with is registered here,
  * verbatim: its slide list, the index of the page under test, and the deck
- * meta the face reads. `face-scan.test.tsx` renders every entry against all
+ * meta and branding posture the face reads. `face-scan.test.tsx` renders every entry against all
  * 24 canonical themes, which restores the 1,776 face x theme combinations the
  * per-file copies used to cover.
  *
@@ -32,6 +32,15 @@ export interface FaceSampleInput {
   /** Which slide of `slides` is the page under test. */
   readonly index: number
   readonly meta: PptxIR["meta"]
+  /**
+   * The deck-level branding posture the original IR carried.
+   *
+   * It is a render switch, not decoration: `showsDocumentMeta` resolves an
+   * omitted value to `cover-only`, which leaves date and confidentiality off
+   * the canvas however full `meta` is. Four covers declared `"full"` and drew
+   * a date line because of it.
+   */
+  readonly branding?: PptxIR["branding"]
   readonly slides: readonly Slide[]
   /**
    * Where the face's `params` come from, when it takes any.
@@ -42,6 +51,11 @@ export interface FaceSampleInput {
    * draws. The other 72 passed no params at all, and neither does the scan.
    */
   readonly paramsSource?: "theme-shape"
+  /**
+   * Text the render must still contain, for a sample whose original test
+   * proved a branch by the words it printed.
+   */
+  readonly requiredText?: readonly string[]
 }
 
 /**
@@ -659,6 +673,8 @@ export const LEGACY_FACE_SAMPLES = [
     id: "band-title",
     slideType: "cover",
     index: 0,
+    branding: "full",
+    requiredText: ["Internal · 2026 年 7 月"],
     meta: {
       organization: "云觅科技 · 战略与运营部",
       authors: [
@@ -820,6 +836,8 @@ export const LEGACY_FACE_SAMPLES = [
     id: "double-frame-cover",
     slideType: "cover",
     index: 0,
+    branding: "full",
+    requiredText: ["一九〇六 · 二〇二六"],
     meta: {
       organization: "明川大学建校一百二十周年",
       date: "一九〇六 · 二〇二六",
@@ -842,6 +860,8 @@ export const LEGACY_FACE_SAMPLES = [
     id: "header-band",
     slideType: "cover",
     index: 0,
+    branding: "full",
+    requiredText: ["2026 春"],
     meta: {
       organization: "星芽美术 · 春季招生",
       authors: [
@@ -1004,6 +1024,8 @@ export const LEGACY_FACE_SAMPLES = [
     id: "paper-masthead",
     slideType: "cover",
     index: 0,
+    branding: "full",
+    requiredText: ["二〇二六年七月"],
     meta: {
       organization: "CLOUDSEEK COLLABORATION · Q2 REVIEW",
       authors: [

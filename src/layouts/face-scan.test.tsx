@@ -62,6 +62,13 @@ describe("every registered face, on every canonical theme", () => {
         } else {
           expect(markup, `${where} stepped aside instead of drawing its own page`).not.toContain(ASIDE_MARKER)
         }
+
+        // Words the sample's own test proved a branch by. `branding: "full"`
+        // is what puts the date and confidentiality line on a cover, and a
+        // sample that lost the posture would still pass every check above.
+        for (const text of face.sample.requiredText ?? []) {
+          expect(root.textContent ?? "", `${where} did not print ${text}`).toContain(text)
+        }
       }
     },
   )

@@ -91,11 +91,19 @@ const GENERIC_META = {
   date: "2026 年 7 月",
 }
 
-function fixtureIr(themeId: string, slides: readonly Slide[], meta: PptxIR["meta"]): PptxIR {
+function fixtureIr(
+  themeId: string,
+  slides: readonly Slide[],
+  meta: PptxIR["meta"],
+  branding?: PptxIR["branding"],
+): PptxIR {
   return {
     version: "5",
     filename: "layout-scan.pptx",
     theme: { id: themeId },
+    // Omitted is not the same posture as `cover-only`: the schema never bakes
+    // a default, so only the samples whose IR declared one carry the key.
+    ...(branding === undefined ? {} : { branding }),
     meta,
     assets: { images: {} },
     slides,
@@ -183,7 +191,7 @@ export function renderFaceSample(face: ScannedFace, themeId: string): string {
   const { sample } = face
   const slide = sample.slides[sample.index]!
   const tokens = resolveStyle(themeId)
-  const ir = fixtureIr(themeId, sample.slides, sample.meta)
+  const ir = fixtureIr(themeId, sample.slides, sample.meta, sample.branding)
   const ctx = buildCtx(
     tokens,
     {},
