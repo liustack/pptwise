@@ -40,6 +40,17 @@ const STEPS_ASIDE = new Set(["quote-stage"])
 
 const ASIDE_MARKER = "data-face-stepped-aside"
 
+/**
+ * Every `face @ theme` this run actually rendered and asserted on.
+ *
+ * The coverage floors below read this, not the length of the registration
+ * table: a floor computed from the table stays green when the loop that walks
+ * it is cut down to two themes, which is the exact regression the floors exist
+ * to catch.
+ */
+const SCANNED_COMBINATIONS = new Set<string>()
+const LEGACY_COMBINATIONS = new Set<string>()
+
 describe("every registered face, on every canonical theme", () => {
   it.each(SCANNED_FACES.map((face) => [`${face.label} (${face.origin} sample)`, face] as const))(
     "%s renders export-safe, repeatable bytes and holds its own composition",
@@ -69,6 +80,9 @@ describe("every registered face, on every canonical theme", () => {
         for (const text of face.sample.requiredText ?? []) {
           expect(root.textContent ?? "", `${where} did not print ${text}`).toContain(text)
         }
+
+        SCANNED_COMBINATIONS.add(`${face.id}@${themeId}`)
+        if (face.origin === "legacy") LEGACY_COMBINATIONS.add(`${face.id}@${themeId}`)
       }
     },
   )
@@ -107,11 +121,12 @@ describe("what the scan covers", () => {
     expect(new Set(legacy.map((f) => f.label)).size).toBe(legacy.length)
   })
 
+  // Runs after the scan above, and counts the combinations that scan finished
+  // asserting on rather than the ones the registration table promises.
   it("covers at least the 1,776 face x theme combinations the deleted copies held", () => {
     expect(CANONICAL_THEME_IDS.length).toBe(24)
-    const legacy = SCANNED_FACES.filter((f) => f.origin === "legacy").length
-    expect(legacy * CANONICAL_THEME_IDS.length).toBeGreaterThanOrEqual(1776)
-    expect(SCANNED_FACES.length * CANONICAL_THEME_IDS.length).toBeGreaterThanOrEqual(3120)
+    expect(LEGACY_COMBINATIONS.size).toBeGreaterThanOrEqual(1776)
+    expect(SCANNED_COMBINATIONS.size).toBeGreaterThanOrEqual(3120)
   })
 })
 
