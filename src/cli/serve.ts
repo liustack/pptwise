@@ -57,13 +57,16 @@
  * another name follows along. Everything else about the theme source is the
  * resolver's own business: every {@link THEME_POLL_MS} the bound name is
  * resolved again, the way a build would resolve it, and the answer (which
- * built-in, or which file at what mtime and size, or which error) is
- * compared with the answer recorded after the last build. A different
- * answer is a rebuild. That one comparison covers a `themes/` appearing,
- * disappearing, being moved away whole, or being replaced by a plain file
- * anywhere on the lookup chain, including above the project root where
- * no watcher can sit without listening to `/Users` or the like. There is
- * no hand-over between the two mechanisms: the watcher only makes the
+ * built-in, or a digest of the theme file's content, or which error) is
+ * compared with the theme the last build was actually drawn with. A
+ * different answer is a rebuild. That one comparison covers a `themes/`
+ * appearing, disappearing, being moved away whole, or being replaced by a
+ * plain file anywhere on the lookup chain, including above the project
+ * root where no watcher can sit without listening to `/Users` or the like.
+ * It also covers a theme file rewritten with its timestamp and size kept
+ * (a restore, a save that preserves mtime, a symlink pointed elsewhere),
+ * because what is compared is the content, never the file's metadata. There
+ * is no hand-over between the two mechanisms: the watcher only makes the
  * project-local case fast, and the comparison is always the last word.
  * None of the watched paths is ever handed to `fs.watch` directly, though.
  * Every `fs.watch` here is on a *directory*, with the callback filtering by
@@ -96,8 +99,9 @@
  * `run*` command already has (`./commands.ts`), since there is no
  * previous-good HTML yet to fall back to.
  */
+import { createHash } from "node:crypto"
 import { type FSWatcher, statSync, watch } from "node:fs"
-import { readFile, stat } from "node:fs/promises"
+import { readFile } from "node:fs/promises"
 import { createServer, type Server, type ServerResponse } from "node:http"
 import { platform as osPlatform } from "node:os"
 import { basename, dirname, join, resolve, sep } from "node:path"
@@ -107,7 +111,13 @@ import { spawnHidden } from "./child"
 import { buildDeckPreview } from "./commands"
 import { findConfig } from "./config"
 import { ASSETS_DIRNAME, PAGES_DIRNAME, SPEC_FILENAME, THEME_FILENAME } from "./deck-dir"
-import { resolveThemeByName, themeCandidates, themeNameFromUnknown } from "./theme-resolve"
+import {
+  type ResolvedTheme,
+  resolveThemeByName,
+  sortKeysDeep,
+  themeCandidates,
+  themeNameFromUnknown,
+} from "./theme-resolve"
 import { resolveWorkspaceLocation } from "./workspace"
 
 /** `pptwise serve`'s own default (spec-plan.md §2's worked example,
@@ -567,6 +577,26 @@ export function injectServeClient(html: string): string {
 
 
 /**
+ * One theme source as one comparable string, for `createServeServer`'s
+ * timed check: `none` when nothing is bound, `builtin:<id>` for a factory
+ * preset, and `file:<sha256>` for a theme file, where the digest is over
+ * the parsed file's content (`ResolvedTheme.file`, serialized with its keys
+ * in a fixed order) rather than over the raw bytes or the file's path,
+ * mtime, and size. Content is what the page is drawn from: a rewrite that
+ * keeps the timestamp and size, an atomic replace, or a symlink pointed at
+ * another file all change this digest and nothing else, while a
+ * whitespace-only save changes nothing the page would show and leaves it
+ * alone. The lookup's error case is the check's own business
+ * (`error:<message>`), since a build that fails has no theme to report.
+ */
+export function themeSourceKey(resolved: ResolvedTheme | undefined): string {
+  if (resolved === undefined) return "none"
+  if (resolved.kind === "builtin") return `builtin:${resolved.id}`
+  const digest = createHash("sha256").update(JSON.stringify(sortKeysDeep(resolved.file))).digest("hex")
+  return `file:${digest}`
+}
+
+/**
  * The testable factory (serve wave, task S1). Builds once up front — a
  * failure here rejects the whole call, see this module's own doc comment —
  * then starts listening and watching. Every fs/network resource this
@@ -622,10 +652,11 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   let boundThemeName: string | undefined = initial.ir.theme.id
 
   /** The theme name the target binds right now, read off the spec or IR
-   *  file without building. For the watcher set after a failed build: a
-   *  spec rebound to a name whose file does not exist yet fails to build,
-   *  and the file that will fix it has to be watched for before it exists.
-   *  A file that cannot be read or parsed mid-edit keeps the last name. */
+   *  file without building. Asked before every build, for the record a
+   *  failed one leaves behind: a spec rebound to a name whose file does not
+   *  exist yet fails to build, and the file that will fix it has to be
+   *  watched and checked for before it exists. A file that cannot be read
+   *  or parsed mid-edit keeps the last name. */
   async function peekBoundThemeName(): Promise<string | undefined> {
     const source = initial.isDir ? join(initial.resolvedTarget, SPEC_FILENAME) : initial.resolvedTarget
     try {
@@ -660,34 +691,33 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   }
 
   /**
-   * Where the bound name resolves to right now, as one comparable string:
-   * the built-in it names, or the file it lands on with that file's mtime
-   * and size, or the error the lookup raises. Asked the same way a build
-   * asks (`resolveThemeByName`, same `startDir`/`deckDir`), so whatever
-   * the resolver would do differently next build shows up here first. The
-   * lenient lookup skips a candidate it cannot even stat (ENOTDIR under a
-   * plain file named `themes`, EACCES up the chain) instead of failing, so
-   * one unrelated ancestor cannot turn every tick into an error. Never
-   * throws: an error is itself an answer, and the change from one answer
-   * to another is what matters.
+   * Where the bound name resolves to right now, as one comparable string
+   * ({@link themeSourceKey}), or the error the lookup raises. Asked the same
+   * way a build asks (`resolveThemeByName`, same `startDir`/`deckDir`, same
+   * strictness), so whatever the resolver would do differently next build
+   * shows up here first, a failure included: a plain file named `themes`
+   * on the chain fails a build with ENOTDIR, and it fails this the same
+   * way. Never throws: an error is itself an answer, and the change from
+   * one answer to another is what matters, into the failure and back out.
    */
   async function themeSourceFingerprint(): Promise<string> {
-    if (boundThemeName === undefined) return "none"
+    if (boundThemeName === undefined) return themeSourceKey(undefined)
     try {
-      const hit = await resolveThemeByName(boundThemeName, { startDir: cwd, deckDir, lenient: true })
-      if (hit.kind === "builtin") return `builtin:${hit.id}`
-      const st = await stat(hit.path)
-      return `file:${hit.path}:${st.mtimeMs}:${st.size}`
+      return themeSourceKey(await resolveThemeByName(boundThemeName, { startDir: cwd, deckDir }))
     } catch (e) {
       return `error:${e instanceof Error ? e.message : String(e)}`
     }
   }
 
-  /** The answer recorded after the last build, and how many builds have
-   *  recorded one. A tick that started before a build finished compares
-   *  against an answer that build has since replaced, so it checks the
-   *  count on return and drops its result when the count moved. */
-  let lastThemeSource = await themeSourceFingerprint()
+  /** The theme the served page was built with, as the build itself reported
+   *  it (never read off the disk a second time after the build: a file that
+   *  changed between the build's read and such a re-read would be recorded
+   *  as already built, and the next check would find nothing new), and how
+   *  many builds have recorded one. A tick that started before a build
+   *  finished compares against an answer that build has since replaced, so
+   *  it checks the count on return and drops its result when the count
+   *  moved. */
+  let lastThemeSource = themeSourceKey(initial.resolvedTheme)
   let buildGeneration = 0
   let building = false
   let closed = false
@@ -695,22 +725,30 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   async function buildOnce(): Promise<void> {
     const revision = ++latestRevision
     building = true
+    // A failed build reports no theme, and the record still has to move
+    // or the check finds the same difference every tick and rebuilds
+    // forever. What stands before the build starts, for the name the
+    // source binds now, is the answer to keep in that case: a change that
+    // lands after this point differs from it and costs at most one extra
+    // rebuild, where an answer read after the failure could swallow it.
+    boundThemeName = await peekBoundThemeName()
+    const beforeBuild = await themeSourceFingerprint()
     try {
       const result = await buildDeckPreview(options.target, { cwd })
       cachedHtml = injectServeClient(result.html)
       servedRevision = revision
       latestError = undefined
       boundThemeName = result.ir.theme.id
+      lastThemeSource = themeSourceKey(result.resolvedTheme)
       broadcast("reload", { revision })
     } catch (e) {
       latestError = e instanceof Error ? e.message : String(e)
-      boundThemeName = await peekBoundThemeName()
+      lastThemeSource = beforeBuild
       broadcast("error", { revision, message: latestError })
     }
     // `watchers` is assigned below, before the server listens. No build
     // runs before that: the initial one is awaited above this function.
     watchers.update(currentWatchRoots())
-    lastThemeSource = await themeSourceFingerprint()
     buildGeneration++
     building = false
   }

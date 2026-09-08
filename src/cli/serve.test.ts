@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, rename, rm, stat, utimes, writeFile } from "node:fs/promises"
 import http from "node:http"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { __resetRegisteredThemes } from "../themes/definitions"
 import { buildThmxBytes, DEFAULT_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
+import type * as CommandsModule from "./commands"
 import { runBrandExtract } from "./commands"
 import { THEME_FILENAME } from "./deck-dir"
 import {
@@ -22,40 +23,85 @@ import type * as ThemeResolveModule from "./theme-resolve"
 import { themeFileFromPreset, type ThemeLookupOptions } from "./theme-resolve"
 
 /**
- * A pass-through over `./theme-resolve` with one hook: a test can hold the
- * next lookup `createServeServer`'s timed check makes (the only caller that
- * passes `lenient`) at the point a build or a `close()` would race it.
- * Every other import of that module, `commands.ts` included, sees the
- * original behaviour.
+ * A pass-through over `./theme-resolve` with one hook: a test can hold a
+ * name lookup either before it reads anything (the answer it brings back is
+ * whatever the disk says once released) or after it has read (the answer is
+ * already in hand while the disk changes underneath it). The build pipeline
+ * (`commands.ts`) and `createServeServer`'s own checks go through this one
+ * function, so a test arms the gate at a moment it knows which is next, or
+ * scopes the hold to lookups made inside `buildDeckPreview` (the second
+ * pass-through below marks that span) and holds every one of those until it
+ * releases them together.
  */
-const resolveGate = vi.hoisted(() => ({
-  hold: undefined as { entered: () => void; released: Promise<void> } | undefined,
-}))
+interface LookupHold {
+  phase: "before" | "after"
+  /** Every lookup, or only those a `buildDeckPreview` call makes. */
+  scope: "any" | "build"
+  /** Hold only the next lookup, or every lookup until released. */
+  once: boolean
+  entered: () => void
+  released: Promise<void>
+}
+const resolveGate = vi.hoisted(() => ({ hold: undefined as LookupHold | undefined, inBuild: false }))
+vi.mock("./commands", async (importOriginal) => {
+  const original = await importOriginal<typeof CommandsModule>()
+  return {
+    ...original,
+    buildDeckPreview: async (...args: Parameters<typeof original.buildDeckPreview>) => {
+      resolveGate.inBuild = true
+      try {
+        return await original.buildDeckPreview(...args)
+      } finally {
+        resolveGate.inBuild = false
+      }
+    },
+  }
+})
 vi.mock("./theme-resolve", async (importOriginal) => {
   const original = await importOriginal<typeof ThemeResolveModule>()
+  async function waitAt(phase: "before" | "after"): Promise<void> {
+    const hold = resolveGate.hold
+    if (hold === undefined || hold.phase !== phase) return
+    if (hold.scope === "build" && !resolveGate.inBuild) return
+    if (hold.once) resolveGate.hold = undefined
+    hold.entered()
+    await hold.released
+  }
   return {
     ...original,
     resolveThemeByName: async (name: string, opts: ThemeLookupOptions) => {
-      if (opts.lenient === true && resolveGate.hold !== undefined) {
-        const { entered, released } = resolveGate.hold
-        resolveGate.hold = undefined
-        entered()
-        await released
-      }
-      return original.resolveThemeByName(name, opts)
+      await waitAt("before")
+      const hit = await original.resolveThemeByName(name, opts)
+      await waitAt("after")
+      return hit
     },
   }
 })
 
-/** Arms the gate: resolves `entered` when the timed check reaches the
- *  lookup, and keeps that lookup waiting until `release()` is called. */
-function holdNextThemeCheck(): { entered: Promise<void>; release: () => void } {
+/** Arms the gate: resolves `entered` when a lookup reaches `phase`, and
+ *  keeps it waiting there until `release()` is called. */
+function holdThemeLookups(opts: { phase: "before" | "after"; scope: "any" | "build"; once: boolean }): {
+  entered: Promise<void>
+  release: () => void
+} {
   let entered!: () => void
-  let release!: () => void
+  let releaseHold!: () => void
   const enteredPromise = new Promise<void>((resolvePromise) => (entered = resolvePromise))
-  const released = new Promise<void>((resolvePromise) => (release = resolvePromise))
-  resolveGate.hold = { entered, released }
-  return { entered: enteredPromise, release }
+  const released = new Promise<void>((resolvePromise) => (releaseHold = resolvePromise))
+  resolveGate.hold = { phase: opts.phase, scope: opts.scope, once: opts.once, entered, released }
+  return {
+    entered: enteredPromise,
+    release: () => {
+      resolveGate.hold = undefined
+      releaseHold()
+    },
+  }
+}
+
+/** The next lookup — the timed check's, when nothing else is building —
+ *  held before it reads. */
+function holdNextThemeCheck(): { entered: Promise<void>; release: () => void } {
+  return holdThemeLookups({ phase: "before", scope: "any", once: true })
 }
 
 installNodePlatform()
@@ -1071,5 +1117,135 @@ describe("createServeServer — theme files that appear after startup", () => {
     gate.release()
     await sleep(THEME_POLL_MS + DEBOUNCE_GRACE_MS)
     expect(handle.status()).toMatchObject({ latestOk: true, latestRevision: built })
+  })
+})
+
+describe("createServeServer — the theme source is compared by content", () => {
+  // The timed check used to compare a file's path, modification time, and
+  // size, and the answer recorded after a build was read off the disk a
+  // second time once the build had finished. Three holes, one cause: the
+  // record described the file's metadata, not the theme the page was drawn
+  // with. The record is now a digest of the theme the build actually used,
+  // and the check's own answer is a digest of what it resolves to right now.
+
+  const BUILTIN_BRIEF_PRIMARY = "1E2A4A"
+  const STAMP = new Date("2026-09-01T00:00:00Z")
+
+  function briefWithPrimary(id: string, primary: string): string {
+    const file = themeFileFromPreset("brief", { id })
+    file.style.colors.primary = primary
+    return JSON.stringify(file, null, 2) + "\n"
+  }
+
+  function servedWith(handle: ServeHandle, present: string, absent?: string): Promise<string> {
+    return pollUntil(async () => {
+      const body = (await get(handle.port, "/")).body.toUpperCase()
+      if (!body.includes(present)) return undefined
+      if (absent !== undefined && body.includes(absent)) return undefined
+      return body
+    }, THEME_POLL_MS + 3000)
+  }
+
+  function statusWhere(handle: ServeHandle, accept: (status: ServeBuildStatus) => boolean): Promise<ServeBuildStatus> {
+    return pollUntil(async () => {
+      const current = handle.status()
+      return accept(current) ? current : undefined
+    }, THEME_POLL_MS + 3000)
+  }
+
+  /** A bare IR bound to `brief`, in `parent/deck`, with `parent/themes/`
+   *  above the watch ceiling: only the timed check can see changes there. */
+  async function makeAboveCeilingDeck(prefix: string): Promise<{ parent: string; cwd: string; irPath: string }> {
+    const parent = await makeDir(prefix)
+    const cwd = join(parent, "deck")
+    await mkdir(cwd)
+    const irPath = join(cwd, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+    return { parent, cwd, irPath }
+  }
+
+  it.each([
+    [
+      "written in place",
+      async (path: string, content: string) => {
+        await writeFile(path, content)
+        await utimes(path, STAMP, STAMP)
+      },
+    ],
+    [
+      "replaced atomically",
+      async (path: string, content: string) => {
+        const tmp = `${path}.tmp`
+        await writeFile(tmp, content)
+        await utimes(tmp, STAMP, STAMP)
+        await rename(tmp, path)
+      },
+    ],
+  ])("a theme %s with the same size and modification time still reaches the preview", async (_label, overwrite) => {
+    const { parent, cwd, irPath } = await makeAboveCeilingDeck("pptwise-serve-same-stat-")
+    await mkdir(join(parent, "themes"))
+    const themePath = join(parent, "themes", "brief.theme.json")
+    await writeFile(themePath, briefWithPrimary("brief", "#0A3D91"))
+    await utimes(themePath, STAMP, STAMP)
+    const handle = await startServe(irPath, { cwd })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain("0A3D91")
+    const before = await stat(themePath)
+
+    // Same length, so the size is unchanged; the timestamp is put back.
+    await overwrite(themePath, briefWithPrimary("brief", "#8B1A1A"))
+    const after = await stat(themePath)
+    expect([after.size, after.mtimeMs]).toEqual([before.size, before.mtimeMs])
+
+    await servedWith(handle, "8B1A1A", "0A3D91")
+  })
+
+  it("records the theme the build rendered with, not what the disk says once the build is done", async () => {
+    const { parent, cwd, irPath } = await makeAboveCeilingDeck("pptwise-serve-build-race-")
+    await mkdir(join(parent, "themes"))
+    const themePath = join(parent, "themes", "brief.theme.json")
+    await writeFile(themePath, briefWithPrimary("brief", "#0A3D91"))
+    const handle = await startServe(irPath, { cwd })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain("0A3D91")
+    const settled = await settledRevision(handle)
+
+    // Every lookup the build makes is held once it has read the file. The
+    // build reads A, then B lands, then the build carries on with A in hand.
+    const gate = holdThemeLookups({ phase: "after", scope: "build", once: false })
+    const building = handle.rebuild()
+    await gate.entered
+    await writeFile(themePath, briefWithPrimary("brief", "#8B1A1A"))
+    gate.release()
+    await building
+    expect(handle.status()).toMatchObject({ latestOk: true, latestRevision: settled + 1 })
+    const served = (await get(handle.port, "/")).body.toUpperCase()
+    expect(served).toContain("0A3D91")
+    expect(served).not.toContain("8B1A1A")
+
+    // The next check finds B on disk, which is not what the page shows.
+    await servedWith(handle, "8B1A1A", "0A3D91")
+    expect(handle.status()).toMatchObject({ latestOk: true, latestRevision: settled + 2 })
+    await sleep(THEME_POLL_MS + DEBOUNCE_GRACE_MS)
+    expect(handle.status().latestRevision).toBe(settled + 2)
+  })
+
+  it("on a built-in, a plain file named themes/ above the project root fails the build within one check, and its removal recovers", async () => {
+    const { parent, cwd, irPath } = await makeAboveCeilingDeck("pptwise-serve-strict-check-")
+    const handle = await startServe(irPath, { cwd })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain(BUILTIN_BRIEF_PRIMARY)
+    const settled = await settledRevision(handle)
+
+    // The lookup for `brief` now has to stat `parent/themes/brief.theme.json`
+    // before it can fall back to the built-in, and that stat is ENOTDIR. A
+    // build fails the same way, so the check must say so too.
+    await writeFile(join(parent, "themes"), "not a directory\n")
+    const failed = await statusWhere(handle, (status) => !status.latestOk)
+    expect(failed).toMatchObject({ latestRevision: settled + 1, error: expect.stringMatching(/ENOTDIR/) })
+    // The failure is the answer on record now: no rebuild loop.
+    await sleep(THEME_POLL_MS + DEBOUNCE_GRACE_MS)
+    expect(handle.status()).toMatchObject({ latestOk: false, latestRevision: settled + 1 })
+
+    await rm(join(parent, "themes"))
+    const recovered = await statusWhere(handle, (status) => status.latestOk)
+    expect(recovered).toMatchObject({ latestRevision: settled + 2, servedRevision: settled + 2 })
   })
 })

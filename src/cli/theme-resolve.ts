@@ -27,7 +27,10 @@ export type ResolvedTheme =
   | { kind: "file"; id: string; path: string; file: ThemeFile; definition: ThemeDefinition }
   | { kind: "builtin"; id: string; definition: ThemeDefinition }
 
-function sortKeysDeep(value: unknown): unknown {
+/** The same JSON for the same data whatever order the keys were written
+ *  in. Arrays keep their order: a menu entry list or a font stack is
+ *  ordered data. */
+export function sortKeysDeep(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(sortKeysDeep)
   if (value !== null && typeof value === "object") {
     const sorted: Record<string, unknown> = {}
@@ -195,37 +198,24 @@ export function themeCandidates(name: string, opts: { startDir: string; deckDir?
 }
 
 /**
- * Options every name lookup takes. `lenient` is for a caller that asks the
- * same question over and over in the background (`pptwise serve` re-resolves
- * the bound name on a timer): a candidate whose existence cannot be checked
- * (a plain file named `themes` up the chain gives ENOTDIR, a directory this
- * user cannot traverse gives EACCES) is skipped as unusable instead of
- * failing the lookup. The CLI's own commands leave it off and report such a
- * path, since a lookup that cannot say whether a file is there should not
- * quietly answer with the built-in.
+ * Options every name lookup takes. There is one lookup behaviour: a
+ * candidate whose existence cannot be checked (a plain file named `themes`
+ * up the chain gives ENOTDIR, a directory this user cannot traverse gives
+ * EACCES) fails the lookup, since a lookup that cannot say whether a file is
+ * there should not quietly answer with the built-in. `pptwise serve`'s timed
+ * check asks exactly this question and records the failure as its answer.
  */
 export interface ThemeLookupOptions {
   startDir: string
   deckDir?: string
-  lenient?: boolean
-}
-
-async function candidateExists(path: string, lenient: boolean): Promise<boolean> {
-  try {
-    return await pathExists(path)
-  } catch (e) {
-    if (lenient) return false
-    throw e
-  }
 }
 
 async function resolveThemeFileFrom(
   candidates: ThemeCandidate[],
   name: string,
-  lenient: boolean,
 ): Promise<ResolvedTheme | undefined> {
   for (const candidate of candidates) {
-    if (!(await candidateExists(candidate.path, lenient))) continue
+    if (!(await pathExists(candidate.path))) continue
     const file = candidate.loose ? await tryParseThemeFile(candidate.path) : await readThemeFile(candidate.path)
     if (file === undefined) continue
     const hit = await acceptIfNameMatches(candidate.path, name, file)
@@ -236,7 +226,7 @@ async function resolveThemeFileFrom(
 
 export async function resolveThemeByName(name: string, opts: ThemeLookupOptions): Promise<ResolvedTheme> {
   assertThemeId(name)
-  const fileHit = await resolveThemeFileFrom(themeCandidates(name, opts), name, opts.lenient === true)
+  const fileHit = await resolveThemeFileFrom(themeCandidates(name, opts), name)
   if (fileHit !== undefined) return fileHit
 
   if (isCanonicalThemeId(name)) return { kind: "builtin", id: name, definition: THEME_DEFINITIONS[name] }
