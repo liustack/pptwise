@@ -39,6 +39,10 @@ export default defineConfig({
     // one shared render. Each `it` in that file still uses this default 60s.
     // The `gallery.test.mts / gallery corpus` 4.8s measurement above is
     // still valid.
+    //
+    // evals/gallery/cross-language-capacity.test.mts used to need 600s as a
+    // single 24-theme `it`. It now samples four themes on this default 60s.
+    // The full sweep is `pnpm evals:gallery`.
     testTimeout: 60_000,
   },
 })

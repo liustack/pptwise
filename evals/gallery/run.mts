@@ -3,6 +3,9 @@
  *
  * Default is incremental: render (or --from), diff hashes.json, audit
  * changed ∪ added. Live corpus findings are reported, not a process failure.
+ * After that audit (and on `--only=cross-language` with no gallery paint),
+ * the 24-theme Latin+mixed capacity sweep runs. A ratchet mismatch fails
+ * the process.
  */
 
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
@@ -13,6 +16,7 @@ import { listThemes } from "@/api"
 import { findOnPath } from "@/cli/image-generators"
 import { installNodePlatform } from "@/platform/node"
 import { HELP, parseEvalArgs } from "./args"
+import { KNOWN_OVERFLOWS, scanCrossLanguage } from "./cross-language"
 import { corpusAssets, type CorpusAssets } from "./corpus/decks"
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "./corpus/lexicon"
 import { diffAffectedPages, hashesFromManifest, loadGoldHashes } from "./hashes"
@@ -44,6 +48,34 @@ function loadFromGallery(dir: string): { manifest: Manifest; svgs: Map<string, s
   return { manifest, svgs }
 }
 
+async function runCrossLanguageSection(): Promise<void> {
+  const themeIds = listThemes()
+    .map((t) => t.id)
+    .sort()
+  const found = await scanCrossLanguage(themeIds)
+  console.log(`evals:gallery: cross-language scanned ${themeIds.length} theme(s)`)
+
+  const expected = new Set(KNOWN_OVERFLOWS)
+  const foundSet = new Set(found)
+  const unexpected = found.filter((line) => !expected.has(line)).sort()
+  const missing = KNOWN_OVERFLOWS.filter((line) => !foundSet.has(line)).sort()
+
+  if (unexpected.length === 0 && missing.length === 0) {
+    console.log(`evals:gallery: cross-language ok (${KNOWN_OVERFLOWS.length} known overflow(s))`)
+    return
+  }
+
+  if (unexpected.length > 0) {
+    console.log("evals:gallery: cross-language unexpected:")
+    for (const line of unexpected) console.log(`  ${line}`)
+  }
+  if (missing.length > 0) {
+    console.log("evals:gallery: cross-language missing:")
+    for (const line of missing) console.log(`  ${line}`)
+  }
+  process.exitCode = 1
+}
+
 function metaOf(page: ManifestPage): GalleryPageMeta {
   return {
     id: page.id,
@@ -64,6 +96,11 @@ async function main(): Promise<void> {
   }
 
   await installNodePlatform()
+
+  if (args.only === "cross-language") {
+    await runCrossLanguageSection()
+    return
+  }
 
   let manifest: Manifest
   let svgs: Map<string, string>
@@ -156,6 +193,8 @@ async function main(): Promise<void> {
   const limit = verdicts.filter((v) => v.verdict === "limit").length
   console.log(`evals:gallery: ${verdicts.length} verdicts (${rework} rework, ${limit} limit)`)
   console.log(`evals:gallery: wrote ${outPath}`)
+
+  await runCrossLanguageSection()
 }
 
 await main()

@@ -63,8 +63,29 @@ describe("parseEvalArgs", () => {
       pages: ["a", "b"],
       from: "/tmp/g",
       out: "/tmp/v.json",
+      only: undefined,
       help: false,
     })
+  })
+
+  it("parses --only=cross-language", () => {
+    expect(parseEvalArgs(["--only=cross-language"])).toEqual({
+      full: false,
+      l1Only: false,
+      pages: undefined,
+      from: undefined,
+      out: undefined,
+      only: "cross-language",
+      help: false,
+    })
+  })
+
+  it("parses --only cross-language", () => {
+    expect(parseEvalArgs(["--only", "cross-language"]).only).toBe("cross-language")
+  })
+
+  it("rejects an unknown --only value", () => {
+    expect(() => parseEvalArgs(["--only=l1"])).toThrow(/unknown --only/)
   })
 
   it("parses -h as help", () => {

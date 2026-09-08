@@ -20,7 +20,7 @@
 // `.gallery/`, nothing here is reviewed by eye, and the point is coverage of
 // the space rather than a specimen of it.
 //
-// The list below is a ratchet, not an allowance. A page that starts dropping
+// `KNOWN_OVERFLOWS` is a ratchet, not an allowance. A page that starts dropping
 // fails this test, and a page that stops dropping fails it too, so the list
 // can only be shortened deliberately. Every entry is one shape: a face on
 // `crayon` or `runway` gives a component less than its measured minimum once
@@ -31,78 +31,27 @@
 // headings moves the failures around instead of removing them, and refitting
 // every component page's heading changed 1196 of the 1849 pages a human
 // actually reviews, which is not a price this buys.
+//
+// Vitest samples `CROSS_LANGUAGE_SAMPLE_THEME_IDS`. The 24-theme sweep is
+// `pnpm evals:gallery` (`--only=cross-language`, or the cross-language
+// section of a normal or --full run).
 
 import { describe, expect, it } from "vitest"
-import { listThemes, renderSlideSvg } from "@/api"
 import { installNodePlatform } from "@/platform/node"
-import { CHART_VARIANTS, COMPONENT_BUILDERS, DEVICE_VARIANTS } from "./corpus/components"
-import { componentPage, corpusAssets } from "./corpus/decks"
-import { ADJACENCY_PAGES } from "./matrix"
-import { LEXICONS } from "./corpus/lexicon"
+import {
+  CROSS_LANGUAGE_SAMPLE_THEME_IDS,
+  knownOverflowsFor,
+  scanCrossLanguage,
+} from "./cross-language"
 
 await installNodePlatform()
 
-/** Theme/component/language triples known to overflow, with what they lose. */
-const KNOWN_OVERFLOWS: readonly string[] = [
-  // `playbill` and `stage` route the `comparison` kind to a two-column face,
-  // which hands its body 528px. A from_to table is three columns and a
-  // gutter: a row name, a number with its unit, and a delta beside the second
-  // number, all on one line. Under about 600px they stop holding their own
-  // content, so the component declines the box rather than printing three
-  // columns of stubs (`from-to.tsx`'s own `MIN_W`). Both themes read Chinese
-  // on their own gallery pages, where the same face is wide enough; this is
-  // the English pairing an author can still reach, and closing it needs the
-  // step-aside this file's header already names.
-  "playbill · from_to · en: 1×component",
-  "stage · from_to · en: 1×component",
-]
-
 describe("every theme holds every component in Latin and mixed script", () => {
-  it("drops exactly the shapes the ratchet already names", { timeout: 600_000 }, async () => {
-    const themeIds = listThemes()
-      .map((t) => t.id)
-      .sort()
-    const builders: Record<string, (typeof COMPONENT_BUILDERS)[string]> = {
-      ...COMPONENT_BUILDERS,
-      ...CHART_VARIANTS,
-      ...DEVICE_VARIANTS,
-    }
-    // Same two exclusions the component band makes: `chart` and
-    // `device_mockup` are each several unrelated drawings behind one type
-    // name, and the variants above stand in for them.
-    delete builders.chart
-    delete builders.device_mockup
-
-    const dropsOf = (svg: string) =>
-      [...svg.matchAll(/data-dropped="(\d+)" data-dropped-kind="([a-z-]+)"/g)]
-        .filter((m) => Number(m[1]) > 0)
-        .map((m) => `${m[1]}×${m[2]}`)
-
-    const found: string[] = []
-    for (const language of ["en", "mixed"] as const) {
-      const lex = LEXICONS[language]
-      const assets = await corpusAssets(lex)
-      for (const themeId of themeIds) {
-        for (const [id, build] of Object.entries(builders)) {
-          const drops = dropsOf(renderSlideSvg(componentPage(id, build!, lex, assets, themeId), 0))
-          if (drops.length > 0) found.push(`${themeId} · ${id} · ${language}: ${drops.join(", ")}`)
-        }
-      }
-
-      // The adjacency pairings too. The gallery draws those five pages in
-      // each theme's own language, so this is the only place they meet Latin
-      // and mixed script — and a component beside a neighbour is the shape
-      // with the least room to spare.
-      for (const adj of ADJACENCY_PAGES) {
-        const build = builders[adj.component]
-        if (!build) throw new Error(`adjacency page names unknown component "${adj.component}"`)
-        const ir = componentPage(adj.component, build, lex, assets, adj.theme, { solo: false })
-        const drops = dropsOf(renderSlideSvg(ir, 0))
-        if (drops.length > 0) {
-          found.push(`${adj.theme} · ${adj.component} beside a lead-in · ${language}: ${drops.join(", ")}`)
-        }
-      }
-    }
-    expect(found.sort()).toEqual([...KNOWN_OVERFLOWS].sort())
-  })
+  it.each(CROSS_LANGUAGE_SAMPLE_THEME_IDS)(
+    "%s drops exactly the shapes the ratchet already names",
+    async (themeId) => {
+      const found = await scanCrossLanguage([themeId])
+      expect(found.sort()).toEqual(knownOverflowsFor([themeId]).sort())
+    },
+  )
 })
