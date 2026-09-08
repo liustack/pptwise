@@ -133,10 +133,9 @@ describe("kindJsonSchema", () => {
     expect(doc).not.toHaveProperty("$defs")
   })
 
-  it("keeps the icon enum out of the model view and in under --full", () => {
-    const defs = kindJsonSchema("fact", { theme: "brief" }).$defs as Record<string, { enum?: unknown[] }>
+  it("keeps the icon enum out of the printed schema", () => {
+    const defs = kindJsonSchema("fact", { theme: "brief" }).$defs as Record<string, { enum?: unknown[]; type?: string }>
     expect(defs.IconName!.enum).toBeUndefined()
-    const full = kindJsonSchema("fact", { theme: "brief", full: true }).$defs as Record<string, { enum?: unknown[] }>
-    expect(full.IconName!.enum!.length).toBeGreaterThan(1000)
+    expect(defs.IconName!.type).toBe("string")
   })
 })

@@ -12,7 +12,7 @@
  */
 import { PptwiseError } from "./errors"
 import { COMPONENT_TYPES, KIND_VALUES, type PageKind } from "./ir"
-import { irJsonSchema, reachableDefs, type JsonSchemaDocument, type JsonSchemaOptions } from "./ir/json-schema"
+import { irJsonSchema, reachableDefs, type JsonSchemaDocument } from "./ir/json-schema"
 import { getLayout } from "./layouts/registry"
 import { faceAcceptedComponentTypes, offeredContentKinds } from "./render/layout-selection"
 import { getInstalledThemeIds, getThemeDefinition, type ThemeDefinition } from "./themes/definitions"
@@ -81,8 +81,6 @@ export function componentsForKind(kind: string, options: KindComponentsOptions =
   return { kind, components: COMPONENT_TYPES.filter((type) => union.has(type)), themes }
 }
 
-export interface KindJsonSchemaOptions extends JsonSchemaOptions, KindComponentsOptions {}
-
 /**
  * JSON Schema for one component on a page of `kind` (`pptwise schema --kind`):
  * the legal component list, the theme faces behind it, a `oneOf` over those
@@ -93,9 +91,9 @@ export interface KindJsonSchemaOptions extends JsonSchemaOptions, KindComponents
  * so that case is written as `not: {}`, the schema that matches nothing,
  * with a description saying why.
  */
-export function kindJsonSchema(kind: string, options: KindJsonSchemaOptions = {}): JsonSchemaDocument {
+export function kindJsonSchema(kind: string, options: KindComponentsOptions = {}): JsonSchemaDocument {
   const offer = componentsForKind(kind, { theme: options.theme })
-  const full = irJsonSchema({ full: options.full })
+  const full = irJsonSchema()
   const head = { $schema: full.$schema, kind: offer.kind, components: offer.components, themes: offer.themes }
   if (offer.components.length === 0) {
     const themes = Object.keys(offer.themes).map((id) => `"${id}"`).join(", ")

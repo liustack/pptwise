@@ -29,7 +29,7 @@ export type {
   BackgroundSpec,
   BrandConfig,
 } from "./ir"
-export { componentJsonSchema, type JsonSchemaDocument, type JsonSchemaOptions } from "./ir/json-schema"
+export { componentJsonSchema, type JsonSchemaDocument } from "./ir/json-schema"
 export { componentsForKind, kindJsonSchema, type KindComponents, type KindThemeOffer } from "./kind-components"
 export { registerTheme, compileThemeDefinition, getInstalledThemeIds, getThemeDefinition } from "./themes/definitions"
 export type { ThemeDefinition } from "./themes/definitions"

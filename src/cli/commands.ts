@@ -822,8 +822,6 @@ export interface SchemaCommandOptions {
   deck?: string
   /** Indent the JSON. Default output is one line. */
   pretty?: boolean
-  /** Print the closed icon enum instead of the `pptwise icons` pointer. */
-  full?: boolean
   /** Where a workspace theme name is resolved from. Defaults to `process.cwd()`. */
   cwd?: string
 }
@@ -852,19 +850,18 @@ async function schemaDeckDir(cwd: string, deck: string | undefined, themeName: s
   return undefined
 }
 
-/** `pptwise schema [--spec | --component <type> | --kind <kind> [--theme <name> [--deck <dir>]]] [--pretty] [--full]`. */
+/** `pptwise schema [--spec | --component <type> | --kind <kind> [--theme <name> [--deck <dir>]]] [--pretty]`. */
 export async function runSchema(opts: SchemaCommandOptions = {}): Promise<string> {
   const modes = [opts.spec ? "--spec" : undefined, opts.component !== undefined ? "--component" : undefined, opts.kind !== undefined ? "--kind" : undefined]
     .filter((flag): flag is string => flag !== undefined)
   if (modes.length > 1) throw new PptwiseError(`pass one of --spec, --component, --kind (got ${modes.join(" and ")})`)
   if (opts.theme !== undefined && opts.kind === undefined) throw new PptwiseError("--theme requires --kind")
   if (opts.deck !== undefined && opts.theme === undefined) throw new PptwiseError("--deck requires --theme")
-  if (opts.spec && opts.full) throw new PptwiseError("--full applies to the IR schema, not --spec")
   let schema: Record<string, unknown>
   if (opts.spec) {
     schema = specJsonSchema()
   } else if (opts.component !== undefined) {
-    schema = componentJsonSchema(opts.component, { full: opts.full })
+    schema = componentJsonSchema(opts.component)
   } else if (opts.kind !== undefined) {
     const cwd = opts.cwd ?? process.cwd()
     let deckDir: string | undefined
@@ -875,9 +872,9 @@ export async function runSchema(opts: SchemaCommandOptions = {}): Promise<string
       deckDir = await schemaDeckDir(cwd, opts.deck, opts.theme)
     }
     const resolved = await resolveThemeSelection(opts.theme, { startDir: cwd, deckDir })
-    schema = kindJsonSchema(opts.kind, { theme: resolved?.definition, full: opts.full })
+    schema = kindJsonSchema(opts.kind, { theme: resolved?.definition })
   } else {
-    schema = irJsonSchema({ full: opts.full })
+    schema = irJsonSchema()
   }
   return opts.pretty ? JSON.stringify(schema, null, 2) : JSON.stringify(schema)
 }

@@ -469,13 +469,9 @@ const schemaOut = sh("node", ["dist/cli.js", "schema"])
 if (schemaOut.trim().includes("\n") || schemaOut.length >= 200_000) {
   throw new Error(`e2e: schema leg — expected one compact line under 200,000 chars, got ${schemaOut.length} chars`)
 }
-const schemaDoc = JSON.parse(schemaOut) as { $defs?: Record<string, { enum?: unknown[] }> }
-if (schemaDoc.$defs?.IconName?.enum !== undefined || schemaDoc.$defs?.bullets === undefined) {
-  throw new Error("e2e: schema leg — expected named $defs with the icon enum replaced by a pointer")
-}
-const fullDoc = JSON.parse(sh("node", ["dist/cli.js", "schema", "--full"])) as { $defs: Record<string, { enum?: unknown[] }> }
-if ((fullDoc.$defs.IconName?.enum?.length ?? 0) < 1000) {
-  throw new Error("e2e: schema leg — expected `schema --full` to keep the closed icon enum")
+const schemaDoc = JSON.parse(schemaOut) as { $defs?: Record<string, { enum?: unknown[]; type?: string }> }
+if (schemaDoc.$defs?.IconName?.type !== "string" || schemaDoc.$defs?.IconName?.enum !== undefined || schemaDoc.$defs?.bullets === undefined) {
+  throw new Error("e2e: schema leg — expected named $defs with icon fields as a string")
 }
 const componentDoc = JSON.parse(sh("node", ["dist/cli.js", "schema", "--component", "callout", "--pretty"])) as { component?: string; $defs?: Record<string, unknown> }
 if (componentDoc.component !== "callout" || Object.keys(componentDoc.$defs ?? {}).join() !== "IconName") {
@@ -494,8 +490,8 @@ if (!/unknown component type "quote"/.test(badComponentStderr) || !/blockquote/.
   throw new Error(`e2e: schema leg — expected the valid component types after a bad --component, got: ${badComponentStderr}`)
 }
 const iconLines = sh("node", ["dist/cli.js", "icons"]).trim().split("\n")
-if (iconLines.length < 1000 || !iconLines.includes("alarm-clock")) {
-  throw new Error(`e2e: schema leg — expected \`pptwise icons\` to list the icon catalog, got ${iconLines.length} lines`)
+if (iconLines.length !== 1758 || !iconLines.includes("alarm-clock")) {
+  throw new Error(`e2e: schema leg — expected \`pptwise icons\` to list 1758 names, got ${iconLines.length} lines`)
 }
 console.log(`schema slice leg OK (default ${schemaOut.length} chars, ${iconLines.length} icons)`)
 

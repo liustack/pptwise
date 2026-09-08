@@ -24,14 +24,9 @@ export const ICON_NAME_DEF_ID = "IconName"
 
 /** What the model view says where the closed enum used to be. */
 export const ICON_NAME_MODEL_DESCRIPTION =
-  "One icon name from the bundled catalog. Run `pptwise icons` for the full list, or `pptwise schema --full` to print the closed enum."
+  "One icon name from the bundled catalog. Run `pptwise icons` for the full list."
 
 export type JsonSchemaDocument = Record<string, unknown> & { $defs?: Record<string, unknown> }
-
-export interface JsonSchemaOptions {
-  /** Print the closed icon enum instead of the `pptwise icons` pointer. */
-  full?: boolean
-}
 
 let idsRegistered = false
 
@@ -56,10 +51,10 @@ function replaceIconEnum(ctx: { zodSchema: unknown; jsonSchema: Record<string, u
 }
 
 /** JSON Schema for the IR — feed this to a model before it writes IR. */
-export function irJsonSchema(options: JsonSchemaOptions = {}): JsonSchemaDocument {
+export function irJsonSchema(): JsonSchemaDocument {
   registerDefIds()
   return z.toJSONSchema(PptxIRSchema, {
-    override: options.full ? undefined : replaceIconEnum,
+    override: replaceIconEnum,
   }) as JsonSchemaDocument
 }
 
@@ -108,9 +103,9 @@ export function assertComponentType(type: string): void {
  * component's own object schema at the top, plus only the `$defs` it refers
  * to. Cut from the same emitted schema as {@link irJsonSchema}.
  */
-export function componentJsonSchema(type: string, options: JsonSchemaOptions = {}): JsonSchemaDocument {
+export function componentJsonSchema(type: string): JsonSchemaDocument {
   assertComponentType(type)
-  const full = irJsonSchema(options)
+  const full = irJsonSchema()
   const defs = full.$defs ?? {}
   const component = defs[type] as Record<string, unknown> | undefined
   if (component === undefined) throw new Error(`component "${type}" is missing from the schema $defs`)

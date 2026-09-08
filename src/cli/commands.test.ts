@@ -737,16 +737,15 @@ describe("runSchema / runThemes", () => {
     expect(doc.oneOf).toBeUndefined()
     expect(doc.not).toEqual({})
   })
-  it("keeps the icon enum out of the model view and prints it under --full", async () => {
+  it("does not offer --full", async () => {
+    const source = await readFile(join(process.cwd(), "src/cli.ts"), "utf8")
+    expect(source).not.toMatch(/\.option\("--full"/)
     expect(await runSchema()).not.toContain('"alarm-clock"')
-    expect(await runSchema({ full: true })).toContain('"alarm-clock"')
-    expect(await runSchema({ component: "callout", full: true })).toContain('"alarm-clock"')
   })
   it("refuses conflicting flags and unknown names with the valid values", async () => {
     await expect(runSchema({ spec: true, component: "callout" })).rejects.toThrow(/one of --spec, --component, --kind/)
     await expect(runSchema({ component: "callout", kind: "fact" })).rejects.toThrow(/one of --spec, --component, --kind/)
     await expect(runSchema({ theme: "brief" })).rejects.toThrow(/--theme requires --kind/)
-    await expect(runSchema({ spec: true, full: true })).rejects.toThrow(/--full/)
     await expect(runSchema({ component: "quote" })).rejects.toThrow(/unknown component type "quote".*blockquote/s)
     await expect(runSchema({ kind: "bullets" })).rejects.toThrow(/unknown kind "bullets".*points, list/s)
     await expect(runSchema({ kind: "fact", theme: "nope" })).rejects.toThrow(/unknown theme "nope"/)

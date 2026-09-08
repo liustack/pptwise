@@ -99,10 +99,10 @@ Audit 渲染确定性 SVG，并检查：
 ## Schema 与 spec
 
 ```bash
-pptwise schema [--pretty] [--full]
+pptwise schema [--pretty]
 pptwise schema --spec [--pretty]
-pptwise schema --component <type> [--pretty] [--full]
-pptwise schema --kind <kind> [--theme <name> [--deck <dir>]] [--pretty] [--full]
+pptwise schema --component <type> [--pretty]
+pptwise schema --kind <kind> [--theme <name> [--deck <dir>]] [--pretty]
 pptwise icons [--json]
 pptwise spec validate deck-dir/deck.spec.json
 ```
@@ -111,7 +111,7 @@ IR schema 把每个共享片段只放进 `$defs` 一次：每个组件用自己�
 
 `--component` 打印一个组件的 schema，只带它用到的 `$defs`。`--kind` 打印该 kind 页面可以放的组件、每个已安装主题为它绑定的脸、这些组件的 `oneOf` 以及它们的 `$defs`。加 `--theme` 只回答绑定主题的情况。主题名按 `validate` 解析 spec 主题的同一顺序查找：先 deck 目录（`theme.json`、`<name>.theme.json`），再工作区 `themes/`，最后内置预设。deck 目录取 `--deck <dir>`，没给时当前目录含 `deck.spec.json`，或含该主题名的 deck 本地文件（`theme.json`、`<name>.theme.json`、`<name>.json`）就算 deck，`validate deck.json` 也是从裸 IR 所在目录读主题的。脸不画任何组件时，列表为空，`oneOf` 的位置换成 `not: {}`。列表来自 validate 用的同一条主题菜单路线，列表之外的组件会被 `validate` 拒绝。未知的类型、kind 或主题会失败并列出合法名字。
 
-图标字段打印为一个指向 `pptwise icons` 的字符串。`--full` 改为打印完整枚举，供按 schema 校验的程序使用。校验始终按完整枚举检查。
+图标字段打印为一个指向 `pptwise icons` 的字符串。校验始终按完整枚举检查。
 
 IR 版本是 `"5"`，deck spec 版本是 `"1"`，主题文件版本是数字 `2`。当前 IR 没有 `seed`、`layout`、`beat` 或 `arrangement` 字段。
 

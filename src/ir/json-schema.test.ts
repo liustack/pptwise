@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { validateIr } from "@/api"
 import { COMPONENT_TYPES } from "@/ir"
-import { PPTX_ICON_NAMES } from "@/icons/catalog"
 import {
   COMPONENT_UNION_DEF_ID,
   ICON_NAME_DEF_ID,
@@ -129,7 +128,6 @@ describe("irJsonSchema", () => {
 
   it("resolves every $ref against its own $defs", () => {
     expectRefsResolve(irJsonSchema())
-    expectRefsResolve(irJsonSchema({ full: true }))
   })
 
   it("replaces the icon enum with a string that points at `pptwise icons` in the model view", () => {
@@ -139,12 +137,6 @@ describe("irJsonSchema", () => {
     expect(String(icon.description)).toContain("pptwise icons")
     const callout = defsOf(irJsonSchema()).callout as { properties: Record<string, unknown> }
     expect(callout.properties.icon).toEqual({ $ref: `#/$defs/${ICON_NAME_DEF_ID}` })
-  })
-
-  it("keeps the closed icon enum under --full for programs", () => {
-    const icon = defsOf(irJsonSchema({ full: true }))[ICON_NAME_DEF_ID] as Record<string, unknown>
-    expect(icon.enum).toEqual([...PPTX_ICON_NAMES])
-    expect(JSON.stringify(irJsonSchema({ full: true })).length).toBeLessThan(200_000)
   })
 
   it("still carries component-level and field-level descriptions", () => {
@@ -184,11 +176,6 @@ describe("componentJsonSchema", () => {
     const bullets = componentJsonSchema("bullets")
     expect(bullets.$defs).toBeUndefined()
     expect((bullets.properties as Record<string, unknown>).items).toEqual({ type: "array", items: { type: "string" } })
-  })
-
-  it("honors --full for the icon enum", () => {
-    const icon = defsOf(componentJsonSchema("kpi_cards", { full: true }))[ICON_NAME_DEF_ID] as Record<string, unknown>
-    expect(icon.enum).toHaveLength(PPTX_ICON_NAMES.length)
   })
 
   it("slices every component type without a dangling reference", () => {
