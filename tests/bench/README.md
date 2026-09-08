@@ -497,10 +497,16 @@ skip would leave that partial result in place for good. A successful retry rewri
 as the completed run it already recorded (the same counts and token totals, minus
 `status`/`stage`/`error`) and logs `placement retried`; a retry that fails again rewrites the
 failed meta with the new error and re-throws, exactly as the first run did. The final message the
-retry hands placement (for the `answer.json` fallback) is read back from `transcript.json`. No
-flag is needed: retrying placement costs no model call and produces exactly what the original
-run would have produced had its placement not thrown. A completed run's meta carries neither
-`status` nor `stage`.
+retry hands placement (for the `answer.json` fallback) is read back from `transcript.json`, and
+only when the workspace holds no artifact: a deck in the workspace is placed without touching the
+transcript. That read trusts nothing but the record the harness wrote (a JSON object with a
+`rounds` array and a non-empty `messages` array of `role`/`content` messages). A transcript that
+is missing, unreadable, cut short, or any other shape is a placement failure of its own, not a
+run with no final text: the meta stays `failed` with the transcript named in `error`, since
+clearing it on a damaged record would turn a harness fault into a model "no artifact" score
+(codex review R25). No flag is needed: retrying placement costs no model call and produces
+exactly what the original run would have produced had its placement not thrown. A completed
+run's meta carries neither `status` nor `stage`.
 
 **Tool rejections are not model errors.** A call the harness refused before running it — a path
 outside the workspace, a subcommand off the whitelist, a write to a provisioned input, malformed

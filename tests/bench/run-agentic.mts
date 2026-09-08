@@ -1267,11 +1267,16 @@ async function callRound(
  * log prints. Whatever throws here is the harness's own failure, decided by
  * the caller.
  */
-async function placeRun(workspace: string, resultDir: string, finalText: string | undefined): Promise<string> {
+async function placeRun(workspace: string, resultDir: string, finalText: () => string | undefined): Promise<string> {
   const located = locateArtifact(workspace)
   if (located.kind !== "none") return placeArtifact(located, resultDir, workspace)
-  if (finalText !== undefined && stripFence(finalText).length > 0) {
-    const text = stripFence(finalText)
+  // The final message is only asked for once the workspace has turned up
+  // nothing: a fresh run has it in hand, a resumed retry reads it back from
+  // transcript.json, and that read must not stand between an intact
+  // workspace artifact and its placement (codex review R25).
+  const text0 = finalText()
+  if (text0 !== undefined && stripFence(text0).length > 0) {
+    const text = stripFence(text0)
     try {
       JSON.parse(text)
     } catch {
@@ -1306,15 +1311,58 @@ function isPlacementFailure(meta: Record<string, unknown>): meta is FailedRunMet
   return meta.status === "failed" && meta.stage === "placement"
 }
 
-/** The model's final message as the finished run saw it, read back from
- *  `transcript.json` for a placement retry: the last message, when it is an
- *  assistant turn with text and no tool call. Any other ending (a tool
- *  result, a scripted reply, an output-limit cut) means the run had no
- *  final text, exactly as the original run decided. */
+const CHAT_ROLES: ReadonlySet<string> = new Set(["system", "user", "assistant", "tool"])
+
+/** One `transcript.json` message as `writeTranscript` records it: a known
+ *  role and a string-or-null content. `tool_calls`, when present, is an
+ *  array. */
+function isChatMessage(value: unknown): value is ChatMessage {
+  if (typeof value !== "object" || value === null) return false
+  const m = value as Record<string, unknown>
+  if (typeof m.role !== "string" || !CHAT_ROLES.has(m.role)) return false
+  if (typeof m.content !== "string" && m.content !== null) return false
+  return m.tool_calls === undefined || Array.isArray(m.tool_calls)
+}
+
+/**
+ * The model's final message as the finished run saw it, read back from
+ * `transcript.json` for a placement retry: the last message, when it is an
+ * assistant turn with text and no tool call. Any other ending (a tool
+ * result, a scripted reply, an output-limit cut) means the run had no
+ * final text, exactly as the original run decided.
+ *
+ * That verdict is only trusted when the file is the record `writeTranscript`
+ * wrote: JSON with a `rounds` array and a non-empty `messages` array of
+ * well-formed messages. A missing, unreadable, truncated, or misshapen
+ * transcript throws instead of answering "no text" — an answer built on a
+ * damaged record would let the retry finish with nothing saved and clear
+ * the placement failure, turning a harness fault into a model score
+ * (codex review R25).
+ */
 function finalTextFromTranscript(resultDir: string): string | undefined {
-  const transcript = JSON.parse(readFileSync(join(resultDir, TRANSCRIPT_FILENAME), "utf8")) as { messages?: ChatMessage[] }
-  const last = transcript.messages?.at(-1)
-  if (last?.role !== "assistant" || typeof last.content !== "string" || last.tool_calls?.length) return undefined
+  const path = join(resultDir, TRANSCRIPT_FILENAME)
+  const unusable = (why: string, cause?: unknown): Error =>
+    new Error(`${TRANSCRIPT_FILENAME} is unusable for the answer.json fallback (${path}): ${why}`, cause === undefined ? undefined : { cause })
+  let text: string
+  try {
+    text = readFileSync(path, "utf8")
+  } catch (e) {
+    throw unusable(`cannot read (${(e as NodeJS.ErrnoException).code ?? "unknown errno"})`, e)
+  }
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(text)
+  } catch (e) {
+    throw unusable("not valid JSON", e)
+  }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw unusable("top level is not an object")
+  const { rounds, messages } = parsed as Record<string, unknown>
+  if (!Array.isArray(rounds)) throw unusable("no rounds array")
+  if (!Array.isArray(messages) || messages.length === 0) throw unusable("no messages array, or an empty one")
+  const bad = messages.findIndex((m) => !isChatMessage(m))
+  if (bad !== -1) throw unusable(`message ${bad} is not a chat message`)
+  const last = messages.at(-1) as ChatMessage
+  if (last.role !== "assistant" || typeof last.content !== "string" || last.tool_calls?.length) return undefined
   return last.content
 }
 
@@ -1329,7 +1377,10 @@ function finalTextFromTranscript(resultDir: string): string | undefined {
  * no model call: a success rewrites `meta.json` as the completed run it
  * already recorded (minus `status`/`stage`/`error`), a second failure
  * rewrites the failed meta with the new error and re-throws, as the first
- * run did.
+ * run did. A retry that needs the final message (no workspace artifact) and
+ * cannot read it back from a sound `transcript.json` is such a failure: the
+ * meta stays failed with the transcript named as the reason, never cleared
+ * on the strength of a record that may say nothing (codex review R25).
  */
 async function retryPlacement(qid: string, resultDir: string, workspace: string, previous: FailedRunMeta): Promise<void> {
   console.log(`${qid}: placement failed on the last run — retrying placement from the existing workspace, no model call (resume mode)`)
@@ -1338,7 +1389,7 @@ async function retryPlacement(qid: string, resultDir: string, workspace: string,
   rmSync(join(resultDir, PLACEMENT_FILENAME), { force: true })
   let placementNote: string
   try {
-    placementNote = await placeRun(workspace, resultDir, finalTextFromTranscript(resultDir))
+    placementNote = await placeRun(workspace, resultDir, () => finalTextFromTranscript(resultDir))
   } catch (e) {
     const failed: FailedRunMeta = { ...previous, status: "failed", stage: "placement", error: describeError(e) }
     writeFileSync(join(resultDir, META_FILENAME), JSON.stringify(failed, null, 2) + "\n")
@@ -1533,7 +1584,7 @@ export async function runOneAgentic(
   // this step from the workspace ({@link retryPlacement}).
   let placementNote: string
   try {
-    placementNote = await placeRun(workspace, resultDir, finalText)
+    placementNote = await placeRun(workspace, resultDir, () => finalText)
   } catch (e) {
     const failed: FailedRunMeta = { ...metaNow(), status: "failed", stage: "placement", error: describeError(e) }
     writeFileSync(join(resultDir, META_FILENAME), JSON.stringify(failed, null, 2) + "\n")

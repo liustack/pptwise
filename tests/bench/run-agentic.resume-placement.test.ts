@@ -40,6 +40,8 @@ describe("runOneAgentic resume retries placement after a placement-stage failure
   let base: string
 
   afterEach(() => {
+    // The second test below leaves the mock registered on purpose.
+    restoreCliLoad()
     if (base) rmSync(base, { recursive: true, force: true })
   })
 
@@ -176,6 +178,40 @@ describe("runOneAgentic resume retries placement after a placement-stage failure
     expect(meta.status).toBe("failed")
     expect(meta.stage).toBe("placement")
     expect(meta.error).toContain(INJECTED_ERROR)
+    expect(meta.rounds).toBe(2)
+  })
+
+  // The transcript is read only once the workspace has turned up nothing
+  // (codex review R25): a deck sitting in the workspace is placed even with
+  // transcript.json gone. The damaged-transcript cases live in
+  // run-agentic.resume-transcript.test.ts, which needs no module mock.
+  it("a workspace artifact is placed without reading the transcript, even when it is gone", async () => {
+    base = mkdtempSync(join(tmpdir(), "bench-agentic-resume-placement-"))
+    const questionsDir = join(base, "questions")
+    const resultsDir = join(base, "results")
+    mkdirSync(join(questionsDir, "q01"), { recursive: true })
+    writeFileSync(join(questionsDir, "q01", "prompt.md"), "Make a one-quote deck.")
+    const resultDir = join(resultsDir, "fake-agentic", "q01")
+
+    failNextCliLoad()
+    const firstRun = scripted([toolReply([{ name: "write_file", args: { path: "deck.json", content: JSON.stringify(quoteIr) } }]), textReply("Done.")])
+    await runOneAgentic(cfg, "FAKE", "q01", { skill: "playbook" }, { questionsDir, resultsDir }, "fake-agentic", { complete: firstRun }).catch(() => undefined)
+    expect(JSON.parse(readFileSync(join(resultDir, "meta.json"), "utf8")).stage).toBe("placement")
+    rmSync(join(resultDir, "transcript.json"))
+
+    restoreCliLoad()
+    let modelCalls = 0
+    await runOneAgentic(cfg, "FAKE", "q01", { skill: "playbook" }, { questionsDir, resultsDir }, "fake-agentic", {
+      complete: async () => {
+        modelCalls++
+        throw new Error("resume must not call the model")
+      },
+    })
+    expect(modelCalls).toBe(0)
+    expect(existsSync(join(resultDir, "deck.json"))).toBe(true)
+    const meta = JSON.parse(readFileSync(join(resultDir, "meta.json"), "utf8"))
+    expect(meta.status).toBeUndefined()
+    expect(meta.error).toBeUndefined()
     expect(meta.rounds).toBe(2)
   })
 })
