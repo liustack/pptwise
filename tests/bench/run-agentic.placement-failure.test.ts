@@ -2,8 +2,8 @@
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { afterEach, describe, expect, it, vi } from "vitest"
-import { describeError, runOneAgentic, type ChatCompletionResponse, type CompleteFn } from "./run-agentic.mts"
+import { afterEach, describe, expect, it } from "vitest"
+import { describeError, runOneAgentic, type ChatCompletionResponse, type CliThemeLookupFn, type CompleteFn } from "./run-agentic.mts"
 
 // ── Placement-stage failures land in the question's own meta.json (codex
 // review R17). `placeArtifact` loads the CLI's deck/theme lookup lazily,
@@ -11,19 +11,13 @@ import { describeError, runOneAgentic, type ChatCompletionResponse, type Complet
 // `runOneAgentic`: a module that failed to load threw straight to the batch
 // entry with the rounds and tool calls already spent recorded nowhere, and
 // a resumed batch re-ran the question as if it had never started. This file
-// lives apart from run-agentic.test.ts because the mock below is hoisted
-// over the whole file and that file imports src/cli/commands, whose own
-// import graph reaches the same module. ──
+// lives apart from run-agentic.test.ts so a lookup failure can be injected
+// without touching that file's import of src/cli/commands. ──
 
-// `vi.mock` is hoisted above every import, so the factory's one input is
-// hoisted with it. Vitest wraps a throwing factory in its own message and
-// keeps the original as `cause`, which is exactly the shape a real module
-// loader failure has too — the assertions read the cause chain.
-const { INJECTED_ERROR } = vi.hoisted(() => ({ INJECTED_ERROR: "injected: deferred CLI module could not load" }))
-
-vi.mock("../../src/cli/deck-dir", () => {
+const INJECTED_ERROR = "injected: deferred CLI module could not load"
+const failCliLoad: CliThemeLookupFn = async () => {
   throw new Error(INJECTED_ERROR)
-})
+}
 
 describe("runOneAgentic records a placement-stage failure in meta.json", () => {
   let base: string
@@ -76,6 +70,7 @@ describe("runOneAgentic records a placement-stage failure in meta.json", () => {
 
     const thrown = await runOneAgentic(cfg, "FAKE", "q01", { skill: "playbook" }, { questionsDir, resultsDir }, "fake-agentic", {
       complete,
+      cliThemeLookup: failCliLoad,
     }).then(
       () => undefined,
       (e: unknown) => e,

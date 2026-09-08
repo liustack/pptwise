@@ -649,7 +649,14 @@ type ThemeCarry =
  *  a static `src/cli/*` import drags the IR, theme, layout, and render
  *  modules into every runner start (measured at ~200 ms and ~70 MiB before
  *  the first API call, codex review of dba8070a), and placement — once per
- *  question, after the tool loop — is the only step here that needs them. */
+ *  question, after the tool loop — is the only step here that needs them.
+ *
+ *  Tests that need the load to fail pass a throwing stand-in through
+ *  {@link runOneAgentic}'s `deps.cliThemeLookup`. They do not mock
+ *  `src/cli/deck-dir`: vitest 4's `doMock` / `doUnmock` only enqueue work
+ *  on `pendingIds`, `resetModules` does not wait or clear `mock:` cache,
+ *  and this function's `Promise.all` of four dynamic imports is the case
+ *  vitest's mocker itself documents as broken. */
 async function cliThemeLookup() {
   const [deckDir, loadIr, themeResolve, themeInputs] = await Promise.all([
     import("../../src/cli/deck-dir"),
@@ -666,6 +673,7 @@ async function cliThemeLookup() {
   }
 }
 type CliThemeLookup = Awaited<ReturnType<typeof cliThemeLookup>>
+export type CliThemeLookupFn = () => Promise<CliThemeLookup>
 
 /** The name an artifact binds, read loosely the way the CLI reads it before
  *  validation: `ir.theme.id` for a bare IR, `spec.theme` for a deck
@@ -710,8 +718,9 @@ async function carryResolvedTheme(
   located: Exclude<LocatedArtifact, { kind: "none" }>,
   workspaceDir: string,
   resultDir: string,
+  lookup: CliThemeLookupFn,
 ): Promise<ThemeCarry> {
-  const cli = await cliThemeLookup()
+  const cli = await lookup()
   const id = await boundThemeName(located, cli)
   if (id === undefined) return { kind: "none" }
   const deckDir = located.kind === "bare-ir" ? dirname(located.file) : located.dir
@@ -758,7 +767,12 @@ function describeThemeCarry(carry: ThemeCarry, resultDir: string): string {
  *  (`score.mts`'s "no artifact found" reason), not a thrown error.
  *  `workspaceDir` is the root the CLI ran in during the tool loop, the
  *  `startDir` of its theme lookup (see {@link carryResolvedTheme}). */
-export async function placeArtifact(located: LocatedArtifact, resultDir: string, workspaceDir: string): Promise<string> {
+export async function placeArtifact(
+  located: LocatedArtifact,
+  resultDir: string,
+  workspaceDir: string,
+  lookup: CliThemeLookupFn = cliThemeLookup,
+): Promise<string> {
   if (located.kind === "none") return "no artifact found in workspace"
   if (located.kind === "bare-ir") {
     const dest = join(resultDir, "deck.json")
@@ -775,7 +789,7 @@ export async function placeArtifact(located: LocatedArtifact, resultDir: string,
     const assetsSrc = join(artifactDir, "assets")
     const hadAssets = existsSync(assetsSrc)
     if (hadAssets) cpSync(assetsSrc, join(resultDir, "assets"), { recursive: true })
-    const theme = await carryResolvedTheme(located, workspaceDir, resultDir)
+    const theme = await carryResolvedTheme(located, workspaceDir, resultDir, lookup)
     return (
       `copied bare IR ${relative(resultDir, located.file)} -> deck.json` +
       (hadAssets ? ` (+ ${relative(resultDir, assetsSrc)} -> assets/)` : "") +
@@ -789,7 +803,7 @@ export async function placeArtifact(located: LocatedArtifact, resultDir: string,
     const src = join(located.dir, name)
     if (existsSync(src)) cpSync(src, join(resultDir, name), { recursive: true })
   }
-  const theme = await carryResolvedTheme(located, workspaceDir, resultDir)
+  const theme = await carryResolvedTheme(located, workspaceDir, resultDir, lookup)
   return `copied deck project ${relative(resultDir, located.dir)} -> result root` + describeThemeCarry(theme, resultDir)
 }
 
@@ -1190,7 +1204,9 @@ export interface ChatCompletionResponse {
 /** One chat-completion round: the whole conversation so far in, the API's
  *  reply out. `callRound` below is the production one; the test suite hands
  *  `runOneAgentic` a scripted stand-in so the loop, the artifact placement,
- *  and the files it leaves for the scorer can be driven without a network. */
+ *  and the files it leaves for the scorer can be driven without a network.
+ *  A placement-stage CLI-load failure is a throwing `cliThemeLookup` on the
+ *  same `deps` object, not a module mock. */
 export type CompleteFn = (
   cfg: { baseUrl: string; apiKey: string; model: string },
   messages: ChatMessage[],
@@ -1268,9 +1284,14 @@ async function callRound(
  * log prints. Whatever throws here is the harness's own failure, decided by
  * the caller.
  */
-async function placeRun(workspace: string, resultDir: string, finalText: () => string | undefined): Promise<string> {
+async function placeRun(
+  workspace: string,
+  resultDir: string,
+  finalText: () => string | undefined,
+  lookup: CliThemeLookupFn = cliThemeLookup,
+): Promise<string> {
   const located = locateArtifact(workspace)
-  if (located.kind !== "none") return placeArtifact(located, resultDir, workspace)
+  if (located.kind !== "none") return placeArtifact(located, resultDir, workspace, lookup)
   // The final message is only asked for once the workspace has turned up
   // nothing: a fresh run has it in hand, a resumed retry reads it back from
   // transcript.json, and that read must not stand between an intact
@@ -1390,14 +1411,20 @@ function finalTextFromTranscript(resultDir: string): string | undefined {
  * meta stays failed with the transcript named as the reason, never cleared
  * on the strength of a record that may say nothing (codex review R25).
  */
-async function retryPlacement(qid: string, resultDir: string, workspace: string, previous: FailedRunMeta): Promise<void> {
+async function retryPlacement(
+  qid: string,
+  resultDir: string,
+  workspace: string,
+  previous: FailedRunMeta,
+  lookup: CliThemeLookupFn,
+): Promise<void> {
   console.log(`${qid}: placement failed on the last run — retrying placement from the existing workspace, no model call (resume mode)`)
   // A record the failed attempt may have written before it threw would
   // otherwise outlive a lookup that now succeeds.
   rmSync(join(resultDir, PLACEMENT_FILENAME), { force: true })
   let placementNote: string
   try {
-    placementNote = await placeRun(workspace, resultDir, () => finalTextFromTranscript(resultDir))
+    placementNote = await placeRun(workspace, resultDir, () => finalTextFromTranscript(resultDir), lookup)
   } catch (e) {
     const failed: FailedRunMeta = { ...previous, status: "failed", stage: "placement", error: describeError(e) }
     writeFileSync(join(resultDir, META_FILENAME), JSON.stringify(failed, null, 2) + "\n")
@@ -1416,16 +1443,17 @@ export async function runOneAgentic(
   shared: { skill: string },
   dirs: { questionsDir: string; resultsDir: string },
   modelTag: string,
-  deps: { complete?: CompleteFn } = {},
+  deps: { complete?: CompleteFn; cliThemeLookup?: CliThemeLookupFn } = {},
 ): Promise<void> {
   const complete = deps.complete ?? callRound
+  const lookup = deps.cliThemeLookup ?? cliThemeLookup
   const prompt = readFileSync(join(dirs.questionsDir, qid, "prompt.md"), "utf8")
   const resultDir = join(dirs.resultsDir, modelTag, qid)
   const workspace = join(resultDir, "workspace")
   const existing = readExistingMeta(resultDir)
   if (existing !== undefined) {
     if (isPlacementFailure(existing)) {
-      await retryPlacement(qid, resultDir, workspace, existing)
+      await retryPlacement(qid, resultDir, workspace, existing, lookup)
       return
     }
     console.log(`${qid}: already run, skipping (resume mode)`)
@@ -1592,7 +1620,7 @@ export async function runOneAgentic(
   // this step from the workspace ({@link retryPlacement}).
   let placementNote: string
   try {
-    placementNote = await placeRun(workspace, resultDir, () => finalText)
+    placementNote = await placeRun(workspace, resultDir, () => finalText, lookup)
   } catch (e) {
     const failed: FailedRunMeta = { ...metaNow(), status: "failed", stage: "placement", error: describeError(e) }
     writeFileSync(join(resultDir, META_FILENAME), JSON.stringify(failed, null, 2) + "\n")

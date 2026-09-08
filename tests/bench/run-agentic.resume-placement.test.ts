@@ -2,9 +2,9 @@
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import { themeFileFromPreset } from "../../src/cli/theme-resolve"
-import { describeError, runOneAgentic, type ChatCompletionResponse, type CompleteFn } from "./run-agentic.mts"
+import { describeError, runOneAgentic, type ChatCompletionResponse, type CliThemeLookupFn, type CompleteFn } from "./run-agentic.mts"
 
 // ── A placement-stage failure is retried on resume without a model call
 // (codex review R20). The first run's placement throws after deck.json is
@@ -13,35 +13,21 @@ import { describeError, runOneAgentic, type ChatCompletionResponse, type Complet
 // `stage: "placement"` in meta.json, re-runs placement from the workspace
 // that is still there, and rewrites the meta as a completed run.
 //
-// The failure is injected with `vi.doMock`, not the hoisted `vi.mock`
-// run-agentic.placement-failure.test.ts uses: the mock must be on for the
-// first run's deferred CLI load and off for the second's, and this file
-// needs the real module before either (to write the theme the model
-// saves). `vi.resetModules()` before each phase makes the next dynamic
-// import inside `placeArtifact` resolve afresh under whichever mock is
-// registered. ──
+// The failure is a throwing `deps.cliThemeLookup`, not a `vi.doMock` of
+// `src/cli/deck-dir`. That mock had to be on for the first run's deferred
+// CLI load and off for the second's, and vitest 4's doMock/doUnmock queue
+// plus `resetModules` does not apply that switch before the next
+// `Promise.all` of dynamic imports (or a later `import("./score.mts")`). ──
 
 const INJECTED_ERROR = "injected: deferred CLI module could not load"
-const CLI_DECK_DIR = "../../src/cli/deck-dir"
-
-function failNextCliLoad(): void {
-  vi.doMock(CLI_DECK_DIR, () => {
-    throw new Error(INJECTED_ERROR)
-  })
-  vi.resetModules()
-}
-
-function restoreCliLoad(): void {
-  vi.doUnmock(CLI_DECK_DIR)
-  vi.resetModules()
+const failCliLoad: CliThemeLookupFn = async () => {
+  throw new Error(INJECTED_ERROR)
 }
 
 describe("runOneAgentic resume retries placement after a placement-stage failure", () => {
   let base: string
 
   afterEach(() => {
-    // The second test below leaves the mock registered on purpose.
-    restoreCliLoad()
     if (base) rmSync(base, { recursive: true, force: true })
   })
 
@@ -94,7 +80,6 @@ describe("runOneAgentic resume retries placement after a placement-stage failure
     expect(theme.style.colors.primary).toBe(THESIS_PRIMARY)
 
     // Phase 1: the deferred CLI load fails at placement.
-    failNextCliLoad()
     const firstRun = scripted([
       toolReply([
         { name: "write_file", args: { path: "deck.json", content: JSON.stringify(quoteIr) } },
@@ -102,7 +87,10 @@ describe("runOneAgentic resume retries placement after a placement-stage failure
       ]),
       textReply("Done."),
     ])
-    const thrown = await runOneAgentic(cfg, "FAKE", "q01", { skill: "playbook" }, { questionsDir, resultsDir }, "fake-agentic", { complete: firstRun }).then(
+    const thrown = await runOneAgentic(cfg, "FAKE", "q01", { skill: "playbook" }, { questionsDir, resultsDir }, "fake-agentic", {
+      complete: firstRun,
+      cliThemeLookup: failCliLoad,
+    }).then(
       () => undefined,
       (e: unknown) => e,
     )
@@ -120,7 +108,6 @@ describe("runOneAgentic resume retries placement after a placement-stage failure
 
     // Phase 2: resume. The module loads, placement runs from the workspace,
     // and the model is never asked anything.
-    restoreCliLoad()
     let modelCalls = 0
     const resumed: CompleteFn = async () => {
       modelCalls++
@@ -157,17 +144,19 @@ describe("runOneAgentic resume retries placement after a placement-stage failure
     mkdirSync(join(questionsDir, "q01"), { recursive: true })
     writeFileSync(join(questionsDir, "q01", "prompt.md"), "Make a one-quote deck.")
 
-    failNextCliLoad()
     const firstRun = scripted([toolReply([{ name: "write_file", args: { path: "deck.json", content: JSON.stringify(quoteIr) } }]), textReply("Done.")])
-    await runOneAgentic(cfg, "FAKE", "q01", { skill: "playbook" }, { questionsDir, resultsDir }, "fake-agentic", { complete: firstRun }).catch(() => undefined)
+    await runOneAgentic(cfg, "FAKE", "q01", { skill: "playbook" }, { questionsDir, resultsDir }, "fake-agentic", {
+      complete: firstRun,
+      cliThemeLookup: failCliLoad,
+    }).catch(() => undefined)
     const resultDir = join(resultsDir, "fake-agentic", "q01")
     expect(JSON.parse(readFileSync(join(resultDir, "meta.json"), "utf8")).stage).toBe("placement")
 
-    failNextCliLoad()
     const thrown = await runOneAgentic(cfg, "FAKE", "q01", { skill: "playbook" }, { questionsDir, resultsDir }, "fake-agentic", {
       complete: async () => {
         throw new Error("resume must not call the model")
       },
+      cliThemeLookup: failCliLoad,
     }).then(
       () => undefined,
       (e: unknown) => e,
@@ -184,7 +173,7 @@ describe("runOneAgentic resume retries placement after a placement-stage failure
   // The transcript is read only once the workspace has turned up nothing
   // (codex review R25): a deck sitting in the workspace is placed even with
   // transcript.json gone. The damaged-transcript cases live in
-  // run-agentic.resume-transcript.test.ts, which needs no module mock.
+  // run-agentic.resume-transcript.test.ts, which needs no lookup stand-in.
   it("a workspace artifact is placed without reading the transcript, even when it is gone", async () => {
     base = mkdtempSync(join(tmpdir(), "bench-agentic-resume-placement-"))
     const questionsDir = join(base, "questions")
@@ -193,13 +182,14 @@ describe("runOneAgentic resume retries placement after a placement-stage failure
     writeFileSync(join(questionsDir, "q01", "prompt.md"), "Make a one-quote deck.")
     const resultDir = join(resultsDir, "fake-agentic", "q01")
 
-    failNextCliLoad()
     const firstRun = scripted([toolReply([{ name: "write_file", args: { path: "deck.json", content: JSON.stringify(quoteIr) } }]), textReply("Done.")])
-    await runOneAgentic(cfg, "FAKE", "q01", { skill: "playbook" }, { questionsDir, resultsDir }, "fake-agentic", { complete: firstRun }).catch(() => undefined)
+    await runOneAgentic(cfg, "FAKE", "q01", { skill: "playbook" }, { questionsDir, resultsDir }, "fake-agentic", {
+      complete: firstRun,
+      cliThemeLookup: failCliLoad,
+    }).catch(() => undefined)
     expect(JSON.parse(readFileSync(join(resultDir, "meta.json"), "utf8")).stage).toBe("placement")
     rmSync(join(resultDir, "transcript.json"))
 
-    restoreCliLoad()
     let modelCalls = 0
     await runOneAgentic(cfg, "FAKE", "q01", { skill: "playbook" }, { questionsDir, resultsDir }, "fake-agentic", {
       complete: async () => {
