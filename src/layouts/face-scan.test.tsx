@@ -41,11 +41,11 @@ const STEPS_ASIDE = new Set(["quote-stage"])
 const ASIDE_MARKER = "data-face-stepped-aside"
 
 describe("every registered face, on every canonical theme", () => {
-  it.each(SCANNED_FACES.map((face) => [`${face.slideType}/${face.id} (${face.origin} sample)`, face] as const))(
+  it.each(SCANNED_FACES.map((face) => [`${face.label} (${face.origin} sample)`, face] as const))(
     "%s renders export-safe, repeatable bytes and holds its own composition",
     (_label, face) => {
       for (const themeId of CANONICAL_THEME_IDS) {
-        const where = `${face.slideType}/${face.id} @ ${themeId}`
+        const where = `${face.label} @ ${themeId}`
         const { markup, root } = renderFaceSampleRoot(face, themeId)
 
         expect(() => assertSubset(root), `${where} emits an unexportable primitive`).not.toThrow()
@@ -87,18 +87,24 @@ describe("what the scan covers", () => {
     expect(Object.keys(CONTENT_LAYOUTS).length).toBeGreaterThanOrEqual(23)
     expect(Object.keys(ENDING_LAYOUTS).length).toBeGreaterThanOrEqual(34)
     expect(SCANNED_FACES.length).toBeGreaterThanOrEqual(130)
-    expect(new Set(SCANNED_FACES.map((f) => `${f.slideType}/${f.id}`)).size).toBe(SCANNED_FACES.length)
+    expect(new Set(SCANNED_FACES.map((f) => `${f.slideType}/${f.id}`)).size).toBeGreaterThanOrEqual(130)
+    expect(new Set(SCANNED_FACES.map((f) => f.label)).size).toBe(SCANNED_FACES.length)
   })
 
-  it("renders each of the 74 registered samples, not the generic filler", () => {
+  it("renders every registered sample, not the generic filler", () => {
     const legacy = SCANNED_FACES.filter((f) => f.origin === "legacy")
     expect(legacy.length).toBe(LEGACY_FACE_SAMPLES.length)
     // A sample whose face left the registry would silently stop being
     // rendered, so match the registration list both ways.
     expect(new Set(legacy.map((f) => f.id))).toEqual(new Set(LEGACY_FACE_SAMPLES.map((s) => s.id)))
+    // The 74 faces, plus the second input the three faces whose subset sweep
+    // and determinism check rendered different pages were each written with.
+    expect(new Set(legacy.map((f) => f.id)).size).toBe(74)
     for (const face of legacy) {
-      expect(face.sample.slides[face.sample.index]?.type, face.id).toBe(face.slideType)
+      expect(face.sample.slides[face.sample.index]?.type, face.label).toBe(face.slideType)
     }
+    // Two samples for one face are only two samples if they differ by name.
+    expect(new Set(legacy.map((f) => f.label)).size).toBe(legacy.length)
   })
 
   it("covers at least the 1,776 face x theme combinations the deleted copies held", () => {

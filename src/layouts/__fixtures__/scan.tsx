@@ -156,6 +156,8 @@ export function renderScannedLayoutRoot(layout: ScannedLayout, themeId: string):
 export interface ScannedFace extends ScannedLayout {
   readonly origin: FaceSampleOrigin
   readonly sample: FaceSampleInput
+  /** `slideType/id`, plus the variant name when the face has more than one. */
+  readonly label: string
 }
 
 /** The generic sample, in the same shape a registered one has. */
@@ -173,12 +175,30 @@ function genericSample(layout: ScannedLayout): FaceSampleInput {
   }
 }
 
-/** Every registered face paired with its sample, registered one preferred. */
-export const SCANNED_FACES: readonly ScannedFace[] = SCANNED_LAYOUTS.map((layout) => {
-  const registered = LEGACY_FACE_SAMPLES_BY_ID.get(layout.id)
-  return registered && registered.slideType === layout.slideType
-    ? { ...layout, origin: "legacy" as const, sample: registered }
-    : { ...layout, origin: "generic" as const, sample: genericSample(layout) }
+function labelOf(layout: ScannedLayout, sample: FaceSampleInput): string {
+  const base = `${layout.slideType}/${layout.id}`
+  return sample.variant ? `${base} [${sample.variant}]` : base
+}
+
+/**
+ * Every registered face paired with the samples it is scanned with:
+ * the registered ones when it has any — three faces have two — and the
+ * generic filler when it has none.
+ */
+export const SCANNED_FACES: readonly ScannedFace[] = SCANNED_LAYOUTS.flatMap((layout): ScannedFace[] => {
+  const registered = (LEGACY_FACE_SAMPLES_BY_ID.get(layout.id) ?? []).filter(
+    (sample) => sample.slideType === layout.slideType,
+  )
+  if (registered.length === 0) {
+    const sample = genericSample(layout)
+    return [{ ...layout, origin: "generic" as const, sample, label: labelOf(layout, sample) }]
+  }
+  return registered.map((sample) => ({
+    ...layout,
+    origin: "legacy" as const,
+    sample,
+    label: labelOf(layout, sample),
+  }))
 })
 
 /**
@@ -201,7 +221,7 @@ export function renderFaceSample(face: ScannedFace, themeId: string): string {
   // `StyleShape` only declares knobs for the page types that have them, so
   // read it as a plain record and let the sample say which faces take any.
   const shape = tokens.shape as Record<string, SvgTemplateProps["params"]> | undefined
-  const params = sample.paramsSource === "theme-shape" ? shape?.[face.slideType] : undefined
+  const params = sample.paramsSource === "theme-shape" ? shape?.[face.slideType] : sample.params
   const { Component } = face
   return renderSvgMarkup(
     <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">

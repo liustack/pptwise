@@ -11,15 +11,18 @@
  * those branches went unnoticed.
  *
  * So the input each of those 74 faces was tested with is registered here,
- * verbatim: its slide list, the index of the page under test, and the deck
- * meta and branding posture the face reads. `face-scan.test.tsx` renders every entry against all
- * 24 canonical themes, which restores the 1,776 face x theme combinations the
- * per-file copies used to cover.
+ * verbatim: its slide list, the index of the page under test, the deck meta
+ * and branding posture the face reads, and any params its test passed. Three
+ * faces ran their two checks on two different pages, so both are registered.
+ * `face-scan.test.tsx` renders every entry against all 24 canonical themes,
+ * which restores the 1,776 face x theme combinations the per-file copies used
+ * to cover.
  *
  * A face with no entry here falls back to the generic sample in `scan.tsx`,
  * marked `generic`, and is scanned all the same.
  */
 
+import type { SvgTemplateProps } from "../types"
 import type { PptxIR, Slide } from "@/ir"
 
 /** Where a sample came from: a deleted per-face test, or the shared filler. */
@@ -28,6 +31,14 @@ export type FaceSampleOrigin = "legacy" | "generic"
 export interface FaceSampleInput {
   /** Registry id of the face this sample was written for. */
   readonly id: string
+  /**
+   * Which of a face's samples this is, when its deleted test checked more
+   * than one input. `corner-wedge` ran its subset sweep with no `params` and
+   * its determinism check with fixed ones; `close-word-ending` and
+   * `gilt-word-ending` swept a plain heading and pinned an emphasised one.
+   * Both inputs are registered, and both are scanned on all 24 themes.
+   */
+  readonly variant?: string
   readonly slideType: Slide["type"]
   /** Which slide of `slides` is the page under test. */
   readonly index: number
@@ -45,12 +56,15 @@ export interface FaceSampleInput {
   /**
    * Where the face's `params` come from, when it takes any.
    *
-   * Two of the deleted tests defaulted the prop to `tokens.shape?.[type]`,
-   * the theme's own constructor knobs for that page type — which is how
-   * `verdict-index` gets brief's `verdictFootRule` and the `line` that rule
-   * draws. The other 72 passed no params at all, and neither does the scan.
+   * `verdict-index`'s deleted helper defaulted the prop to
+   * `tokens.shape?.[type]`, the theme's own constructor knobs for that page
+   * type — which is how it gets brief's `verdictFootRule` and the `line`
+   * that rule draws. Every other deleted helper either passed nothing or
+   * passed a literal, registered as `params` below.
    */
   readonly paramsSource?: "theme-shape"
+  /** Fixed `params`, for a sample whose test passed a literal. */
+  readonly params?: SvgTemplateProps["params"]
   /**
    * Text the render must still contain, for a sample whose original test
    * proved a branch by the words it printed.
@@ -59,8 +73,9 @@ export interface FaceSampleInput {
 }
 
 /**
- * One entry per face that owned a determinism and a subset check before the
- * deduplication, carrying that check's exact input.
+ * One entry per input a face was checked with before the deduplication: one
+ * for each of the 74 faces that owned a determinism and a subset check, plus
+ * a second for the three whose two checks did not render the same page.
  */
 export const LEGACY_FACE_SAMPLES = [
   {
@@ -793,10 +808,43 @@ export const LEGACY_FACE_SAMPLES = [
     ],
   },
   {
+    // The subset sweep passed no params at all, so the face fell back to its
+    // own defaults — a centred title on every theme.
     id: "corner-wedge",
+    variant: "no-params",
     slideType: "cover",
-    paramsSource: "theme-shape",
     index: 0,
+    meta: {
+      organization: "云觅电竞 · 赛事运营部",
+      authors: [
+        {
+          name: "陈砚清",
+          role: "首席技术官",
+        },
+      ],
+    },
+    slides: [
+      {
+        type: "cover",
+        heading: "巅峰之夜",
+        subheading: "八强出炉 · 决赛日程与观赛指南",
+        components: [],
+      },
+    ],
+  },
+  {
+    // The determinism check pinned arena's board wedge as literals. Reading
+    // them off `tokens.shape` instead only happens to match on arena, and
+    // changes the input on 15 other themes.
+    id: "corner-wedge",
+    variant: "board-wedge-params",
+    slideType: "cover",
+    index: 0,
+    params: {
+      textAnchor: "middle",
+      wedgePeakY: 340,
+      wedgeStartX: 980,
+    },
     meta: {
       organization: "云觅电竞 · 赛事运营部",
       authors: [
@@ -1300,6 +1348,22 @@ export const LEGACY_FACE_SAMPLES = [
   },
   {
     id: "close-word-ending",
+    variant: "plain-heading",
+    slideType: "ending",
+    index: 0,
+    meta: {},
+    slides: [
+      {
+        type: "ending",
+        heading: "数字都在牌面上，下一季看兑现。",
+        subheading: "附录与数据口径备查 · 经营分析部",
+        components: [],
+      },
+    ],
+  },
+  {
+    id: "close-word-ending",
+    variant: "marked-heading",
     slideType: "ending",
     index: 0,
     meta: {},
@@ -1390,6 +1454,28 @@ export const LEGACY_FACE_SAMPLES = [
   },
   {
     id: "gilt-word-ending",
+    variant: "plain-heading",
+    slideType: "ending",
+    index: 0,
+    meta: {
+      organization: "璟园",
+      authors: [
+        {
+          name: "礼宾处",
+        },
+      ],
+    },
+    slides: [
+      {
+        type: "ending",
+        heading: "这一年最好的作品，\n是与各位的交情。",
+        components: [],
+      },
+    ],
+  },
+  {
+    id: "gilt-word-ending",
+    variant: "marked-heading",
     slideType: "ending",
     index: 0,
     meta: {
@@ -1682,7 +1768,8 @@ export const LEGACY_FACE_SAMPLES = [
   },
 ] as unknown as readonly FaceSampleInput[]
 
-/** Legacy sample by face id, for the scans to look up. */
-export const LEGACY_FACE_SAMPLES_BY_ID: ReadonlyMap<string, FaceSampleInput> = new Map(
-  LEGACY_FACE_SAMPLES.map((sample) => [sample.id, sample]),
+/** Legacy samples by face id, in registration order, for the scans to look up. */
+export const LEGACY_FACE_SAMPLES_BY_ID: ReadonlyMap<string, readonly FaceSampleInput[]> = LEGACY_FACE_SAMPLES.reduce(
+  (byId, sample) => byId.set(sample.id, [...(byId.get(sample.id) ?? []), sample]),
+  new Map<string, FaceSampleInput[]>(),
 )
