@@ -231,10 +231,10 @@ function textContents(svg: string): string[] {
 /**
  * L1 `overflow-marker` findings the original ellipsis regex never saw.
  *
- * `OVERFLOW_MARKER` in `l1.ts` also matches `+N 项`. Vermilion's scorecard
- * gap for 一窗受理事项 is authored `+40 项` (500 → 540), a delta, not a
- * "+N more" pill. The regex below still holds the original ellipsis nail.
- * This list is the L1 extra and it can only shrink.
+ * `OVERFLOW_MARKER` in `l1.ts` also matches a plus-count with a 项 suffix.
+ * Vermilion's scorecard gap for 一窗受理事项 is authored `+40 项` (500 → 540),
+ * a delta, not a plus-count pill. The regex below still holds the original
+ * ellipsis nail. This list is the L1 extra and it can only shrink.
  */
 const KNOWN_OVERFLOW_MARKERS: readonly string[] = [
   'vermilion--comp--scorecard--zh: overflow marker "+40 项" is banned',
@@ -247,9 +247,10 @@ const KNOWN_OVERFLOW_MARKERS: readonly string[] = [
 // Two assertions, because they do not see the same things:
 //
 //   - L1 `overflow-marker` is the superset. Besides `…` and a standalone
-//     `...`, it also flags `+N more` / `+N 项` / `另有 N 项` (see
-//     `OVERFLOW_MARKER`, `OVERFLOW_MARKER_ZH`, `OVERFLOW_ELLIPSIS` in
-//     `evals/gallery/l1.ts`). L1 trims each text node and skips empty ones.
+//     `...`, it also flags the plus-count pills and count-style suffixes
+//     named by `OVERFLOW_MARKER` and `OVERFLOW_MARKER_ZH` in
+//     `evals/gallery/l1.ts` (`OVERFLOW_ELLIPSIS` is the ellipsis half).
+//     L1 trims each text node and skips empty ones.
 //   - The regex below only looks at each `<text>` node's raw `textContent`
 //     for `…` or a standalone `...`. It does not trim, and it does not look
 //     at those bookkeeping phrases.
