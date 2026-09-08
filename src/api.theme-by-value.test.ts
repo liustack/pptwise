@@ -217,4 +217,8 @@ describe("theme default backgrounds passed by value", () => {
     expect(v.ok).toBe(true)
     expect(await builtinReadsDuring(() => renderSlideSvg(v.ir!, 0, { theme: THEME_A }))).toBe(0)
   })
+
+  it("resolves the theme exactly once when generatePptx is handed no definition", async () => {
+    expect(await builtinReadsDuring(() => generatePptx(raw))).toBe(1)
+  })
 })

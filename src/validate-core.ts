@@ -96,6 +96,15 @@ export interface ValidateResult {
    * `"warning: ..."` lines.
    */
   warnings?: ValidationIssue[]
+  /**
+   * The theme this deck resolved to, present on every `ok: true` result:
+   * the definition the caller supplied, or the installed theme
+   * `ir.theme.id` names. Validation has to resolve it to check the menu, so
+   * it hands the object back and a caller that goes on to render (see
+   * `api.ts`'s `generatePptx`) passes this down instead of resolving the
+   * same id a second time. Absent on failure — nothing was resolved.
+   */
+  theme?: ThemeDefinition
 }
 
 /**
@@ -905,7 +914,7 @@ export function validateIr(input: unknown, opts?: { theme?: ThemeDefinition }): 
   if (errorFindings.length > 0) {
     return withNormalized({ ok: false, errors: errorFindings.map(toIssue), ...(warnings ? { warnings } : {}) })
   }
-  return withNormalized({ ok: true, ir: r.data, errors: [], ...(warnings ? { warnings } : {}) })
+  return withNormalized({ ok: true, ir: r.data, theme, errors: [], ...(warnings ? { warnings } : {}) })
 }
 
 /**

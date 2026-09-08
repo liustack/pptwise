@@ -112,6 +112,10 @@ export async function generatePptx(
   const v = validateIr(input, { theme: opts?.theme })
   if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
   if (!opts?.draft) checkDraftGate(v.ir!)
-  const blob = await generatePptxBlob(v.ir!, { allowDroppedContent: opts?.allowDroppedContent, theme: opts?.theme })
+  // `v.theme` is what validation just resolved — the caller's own
+  // definition, or the installed theme `ir.theme.id` names. Passing it on
+  // keeps the omitted-option path to a single table read for the whole
+  // export instead of one here and one inside `generatePptxBlob`.
+  const blob = await generatePptxBlob(v.ir!, { allowDroppedContent: opts?.allowDroppedContent, theme: v.theme })
   return new Uint8Array(await blob.arrayBuffer())
 }
