@@ -273,11 +273,18 @@ interface WatchRule {
  * existing (a plain file where a directory was expected gives ENOTDIR)
  * throws; when that happens while the tree is being created, every watcher
  * opened before it is closed first, so a caller that never receives a
- * handle has nothing left to close.
+ * handle has nothing left to close. When it happens inside a later
+ * `update`, the watchers that call opened are closed again and the tree
+ * stays exactly as the last successful update left it, so the caller keeps
+ * hearing about the paths it already watched (the parent that reports the
+ * offending entry going away included) and can try the new list again.
  */
 export function watchTree(roots: WatchRoot[], onChange: () => void): WatchTreeHandle {
   let rules = new Map<string, WatchRule>()
   const watchers = new Map<string, { watcher: FSWatcher; ino: bigint }>()
+  /** While `update` attaches: every directory it registered so far, so a
+   *  failure part way can close exactly those. */
+  let opening: string[] | undefined
   const isEnoent = (e: unknown) => (e as NodeJS.ErrnoException).code === "ENOENT"
   const isDenied = (e: unknown) => {
     const code = (e as NodeJS.ErrnoException).code
@@ -356,6 +363,7 @@ export function watchTree(roots: WatchRoot[], onChange: () => void): WatchTreeHa
     }
     watcher.on("error", () => detach(dir))
     watchers.set(dir, { watcher, ino })
+    opening?.push(dir)
     for (const child of rule.children) attach(join(dir, child))
   }
 
@@ -390,6 +398,7 @@ export function watchTree(roots: WatchRoot[], onChange: () => void): WatchTreeHa
 
   function update(list: WatchRoot[]): void {
     if (closed) return
+    const previous = rules
     rules = new Map()
     for (const root of list) {
       const abs = resolve(root.path)
@@ -402,7 +411,24 @@ export function watchTree(roots: WatchRoot[], onChange: () => void): WatchTreeHa
     }
     // Attach first: a directory that does not exist links its ancestors
     // into `rules` on the way, and those must survive the sweep below.
-    for (const dir of [...rules.keys()]) attach(dir)
+    // Nothing the old list had is closed until everything the new list
+    // names is open, so a list that cannot be attached in full leaves the
+    // tree exactly as the last successful update left it: the watchers
+    // this call opened are closed again and the old rules come back.
+    const opened: string[] = []
+    opening = opened
+    try {
+      for (const dir of [...rules.keys()]) attach(dir)
+    } catch (e) {
+      for (const dir of opened) {
+        watchers.get(dir)?.watcher.close()
+        watchers.delete(dir)
+      }
+      rules = previous
+      throw e
+    } finally {
+      opening = undefined
+    }
     for (const [dir, entry] of watchers) {
       if (rules.has(dir)) continue
       entry.watcher.close()
@@ -732,43 +758,75 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   let building = false
   let closed = false
 
+  const messageOf = (e: unknown): string => (e instanceof Error ? e.message : String(e))
+
+  /**
+   * One build attempt, start to finish: the page, the record the timed
+   * check compares against, and the watcher set for the theme the source
+   * binds now. Whatever fails, this settles the attempt: the failure
+   * becomes the attempt's status (a build that failed keeps the last good
+   * page, and so does a build that rendered but could not re-attach its
+   * watchers, since the page it rendered is still the newest good one), the
+   * generation moves, and `building` clears. A watcher update that throws
+   * (a plain file named `themes` inside the deck gives ENOTDIR) leaves the
+   * tree as it was ({@link watchTree}), so the parent directory that
+   * reports the offending file going away is still heard, and the build it
+   * triggers attaches the new set.
+   */
   async function buildOnce(): Promise<void> {
     const revision = ++latestRevision
     building = true
-    // A failed build reports no theme, and the record still has to move
-    // or the check finds the same difference every tick and rebuilds
-    // forever. What stands before the build starts, for the name the
-    // source binds now, is the answer to keep in that case: a change that
-    // lands after this point differs from it and costs at most one extra
-    // rebuild, where an answer read after the failure could swallow it.
-    boundThemeName = await peekBoundThemeName()
-    const beforeBuild = await themeSourceFingerprint()
     try {
-      const result = await buildDeckPreview(options.target, { cwd })
-      cachedHtml = injectServeClient(result.html)
-      servedRevision = revision
-      latestError = undefined
-      boundThemeName = result.ir.theme.id
-      lastThemeSource = themeSourceKey(result.resolvedTheme)
-      broadcast("reload", { revision })
+      // A failed build reports no theme, and the record still has to move
+      // or the check finds the same difference every tick and rebuilds
+      // forever. What stands before the build starts, for the name the
+      // source binds now, is the answer to keep in that case: a change that
+      // lands after this point differs from it and costs at most one extra
+      // rebuild, where an answer read after the failure could swallow it.
+      boundThemeName = await peekBoundThemeName()
+      const beforeBuild = await themeSourceFingerprint()
+      try {
+        const result = await buildDeckPreview(options.target, { cwd })
+        cachedHtml = injectServeClient(result.html)
+        servedRevision = revision
+        latestError = undefined
+        boundThemeName = result.ir.theme.id
+        lastThemeSource = themeSourceKey(result.resolvedTheme)
+      } catch (e) {
+        latestError = messageOf(e)
+        lastThemeSource = beforeBuild
+      }
+      // `watchers` is assigned below, before the server listens. No build
+      // runs before that: the initial one is awaited above this function.
+      if (watchers === undefined) throw new Error("pptwise serve: a rebuild ran before the watchers were attached")
+      watchers.update(currentWatchRoots())
     } catch (e) {
-      latestError = e instanceof Error ? e.message : String(e)
-      lastThemeSource = beforeBuild
-      broadcast("error", { revision, message: latestError })
+      // The build's own failure, when there was one, names the cause the
+      // author can act on; a watcher failure on top of it says the same
+      // thing about the same path.
+      latestError ??= messageOf(e)
+    } finally {
+      buildGeneration++
+      building = false
     }
-    // `watchers` is assigned below, before the server listens. No build
-    // runs before that: the initial one is awaited above this function.
-    if (watchers === undefined) throw new Error("pptwise serve: a rebuild ran before the watchers were attached")
-    watchers.update(currentWatchRoots())
-    buildGeneration++
-    building = false
+    if (latestError === undefined) broadcast("reload", { revision })
+    else broadcast("error", { revision, message: latestError })
   }
 
   // Builds run strictly one after another. Two overlapping builds could
   // otherwise finish out of order and leave the older result in the cache.
+  // The chain must never hold a rejection: a rejected link would skip
+  // every `then` queued after it, and the timer that calls `rebuild()`
+  // has no handler for it either, so the process would go down on an
+  // unhandled rejection. `buildOnce` settles every failure itself; the
+  // `catch` here is the guarantee for anything that still gets past it.
   let buildQueue: Promise<void> = Promise.resolve()
   function rebuild(): Promise<void> {
-    const run = buildQueue.then(buildOnce)
+    const run = buildQueue.then(buildOnce).catch((e: unknown) => {
+      latestError = messageOf(e)
+      building = false
+      broadcast("error", { revision: latestRevision, message: latestError })
+    })
     buildQueue = run
     return run
   }

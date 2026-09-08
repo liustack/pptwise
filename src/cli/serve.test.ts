@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { spawn } from "node:child_process"
 import { mkdir, mkdtemp, readFile, rename, rm, stat, utimes, writeFile } from "node:fs/promises"
 import http from "node:http"
 import { tmpdir } from "node:os"
@@ -1266,5 +1267,138 @@ describe("createServeServer — the theme source is compared by content", () => 
     await expect(createServeServer({ target: irPath, port: 0, cwd: dir })).rejects.toThrow(/ENOTDIR/)
     await pollUntil(async () => (count("FSEventWrap") <= watchersBefore ? true : undefined))
     expect(count("Timeout")).toBeLessThanOrEqual(timeoutsBefore)
+  })
+})
+
+describe("createServeServer — a watcher set that cannot be attached at runtime", () => {
+  // After every build the tree is handed the paths the bound theme could
+  // resolve to now. A plain file named `themes` created inside the deck
+  // while the server runs makes `fs.watch` on `<deck>/themes` throw
+  // ENOTDIR on that update. That throw used to leave `buildOnce` rejected
+  // with `building` stuck, lodge the rejection in the build chain so no
+  // later rebuild ran, and reach the timer's `void rebuild()` as an
+  // unhandled rejection that took the CLI process down.
+
+  function briefWithPrimary(id: string, primary: string): string {
+    const file = themeFileFromPreset("brief", { id })
+    file.style.colors.primary = primary
+    return JSON.stringify(file, null, 2) + "\n"
+  }
+
+  /** A bare IR next to a `theme.json` that answers the lookup, so the
+   *  build itself keeps succeeding and only the watcher update fails. */
+  async function makeDeckWithLocalTheme(prefix: string): Promise<{ dir: string; irPath: string }> {
+    const dir = await makeDir(prefix)
+    await writeFile(join(dir, THEME_FILENAME), briefWithPrimary("brief", "#0A3D91"))
+    const irPath = join(dir, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+    return { dir, irPath }
+  }
+
+  function statusWhere(handle: ServeHandle, accept: (status: ServeBuildStatus) => boolean): Promise<ServeBuildStatus> {
+    return pollUntil(async () => {
+      const current = handle.status()
+      return accept(current) ? current : undefined
+    }, THEME_POLL_MS + 3000)
+  }
+
+  it("records the failure, keeps serving, and recovers through the watchers it kept once the file is gone", async () => {
+    const { dir, irPath } = await makeDeckWithLocalTheme("pptwise-serve-runtime-enotdir-")
+    const handle = await startServe(irPath, { cwd: dir })
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain("0A3D91")
+    await settledRevision(handle)
+
+    await writeFile(join(dir, "themes"), "not a directory\n")
+    const failed = await statusWhere(handle, (status) => !status.latestOk)
+    expect(failed.error).toMatch(/ENOTDIR/)
+    expect(failed.error).toContain(join(dir, "themes"))
+    // The page rendered before the watcher update failed is the newest good one.
+    expect(failed.servedRevision).toBe(failed.latestRevision)
+    expect((await get(handle.port, "/")).body.toUpperCase()).toContain("0A3D91")
+    // The chain is still open: a rebuild by hand resolves, and it fails the
+    // same way for the same reason while the file is there.
+    await expect(handle.rebuild()).resolves.toBeUndefined()
+    expect(handle.status()).toMatchObject({ latestOk: false, error: expect.stringMatching(/ENOTDIR/) })
+
+    // The theme on record is the local theme.json the build used, so the
+    // timed check sees no change: only the deck directory's own watcher,
+    // kept across the failed update, can report the file going away.
+    await rm(join(dir, "themes"))
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" }, slides: [{ type: "cover", heading: "Recovered heading" }] }))
+    await pollUntil(async () => ((await get(handle.port, "/")).body.includes("Recovered heading") ? true : undefined))
+    expect(handle.status().latestOk).toBe(true)
+  })
+})
+
+describe("pptwise serve — the CLI process", () => {
+  // The factory tests above run with vitest's own unhandled-rejection
+  // handling in place. Only a real `pptwise serve` process shows whether
+  // a rejection escapes the build loop: Node exits with code 1 on one.
+
+  const REPO_ROOT = join(import.meta.dirname, "..", "..")
+  const TSX = join(REPO_ROOT, "node_modules", "tsx", "dist", "cli.mjs")
+  const CLI = join(REPO_ROOT, "src", "cli.ts")
+  /** tsx reads the tsconfig from the cwd, and the child runs inside the
+   *  fixture directory: the repo's own config carries the `@/` alias. */
+  const TSCONFIG = join(REPO_ROOT, "tsconfig.json")
+
+  function briefWithPrimary(id: string, primary: string): string {
+    const file = themeFileFromPreset("brief", { id })
+    file.style.colors.primary = primary
+    return JSON.stringify(file, null, 2) + "\n"
+  }
+
+  async function getJson<T>(url: string): Promise<T> {
+    const res = await fetch(url)
+    return (await res.json()) as T
+  }
+
+  it("stays up when a plain file named themes/ appears in the deck, and recovers once it is gone", async () => {
+    const dir = await makeDir("pptwise-serve-cli-enotdir-")
+    await writeFile(join(dir, THEME_FILENAME), briefWithPrimary("brief", "#0A3D91"))
+    const irPath = join(dir, "deck.json")
+    await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" } }))
+
+    const child = spawn(process.execPath, [TSX, "--tsconfig", TSCONFIG, CLI, "serve", irPath, "--port", "0", "--no-open"], {
+      cwd: dir,
+      env: process.env,
+      stdio: ["ignore", "pipe", "pipe"],
+    })
+    let stdout = ""
+    let stderr = ""
+    child.stdout.on("data", (chunk: Buffer) => (stdout += chunk.toString()))
+    child.stderr.on("data", (chunk: Buffer) => (stderr += chunk.toString()))
+    const exited = new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolvePromise) =>
+      child.on("exit", (code, signal) => resolvePromise({ code, signal })),
+    )
+    try {
+      const url = await pollUntil(async () => {
+        if (child.exitCode !== null) throw new Error(`pptwise serve exited during startup: ${stderr}`)
+        return stdout.match(/http:\/\/127\.0\.0\.1:\d+/)?.[0]
+      }, 30_000)
+      expect((await (await fetch(url)).text()).toUpperCase()).toContain("0A3D91")
+      await sleep(DEBOUNCE_GRACE_MS)
+
+      await writeFile(join(dir, "themes"), "not a directory\n")
+      const failed = await pollUntil(async () => {
+        if (child.exitCode !== null) throw new Error(`pptwise serve exited: ${stderr}`)
+        const status = await getJson<ServeBuildStatus>(`${url}/status`)
+        return status.latestOk ? undefined : status
+      }, THEME_POLL_MS + 3000)
+      expect(failed.error).toMatch(/ENOTDIR/)
+      expect(child.exitCode).toBeNull()
+
+      await rm(join(dir, "themes"))
+      await writeFile(irPath, JSON.stringify({ ...VALID_IR, theme: { id: "brief" }, slides: [{ type: "cover", heading: "Recovered heading" }] }))
+      await pollUntil(async () => {
+        if (child.exitCode !== null) throw new Error(`pptwise serve exited: ${stderr}`)
+        return (await (await fetch(url)).text()).includes("Recovered heading") ? true : undefined
+      }, THEME_POLL_MS + 3000)
+      expect(await getJson<ServeBuildStatus>(`${url}/status`)).toMatchObject({ latestOk: true })
+      expect(child.exitCode).toBeNull()
+    } finally {
+      if (child.exitCode === null) child.kill("SIGTERM")
+      await exited
+    }
   })
 })
