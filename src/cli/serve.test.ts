@@ -12,7 +12,8 @@ import { installNodePlatform } from "@/platform/node"
 import { __resetRegisteredThemes } from "../themes/definitions"
 import { buildThmxBytes, DEFAULT_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
 import type * as CommandsModule from "./commands"
-import { runBrandExtract } from "./commands"
+import { collectDeckThemeInputs, runBrandExtract } from "./commands"
+import type * as ConfigModule from "./config"
 import { THEME_FILENAME } from "./deck-dir"
 import {
   createServeServer,
@@ -86,6 +87,26 @@ vi.mock("node:fs", async (importOriginal) => {
     return watcher
   }) as typeof original.watch
   return { ...original, watch }
+})
+/** A pass-through over `./config` with one hook: `delay` names how long
+ *  each layer's read is held after it has its answer (or its error), so a
+ *  test can decide which of the two settles first. */
+const configGate = vi.hoisted(() => ({ delay: undefined as ((layer: "project" | "user") => number) | undefined }))
+vi.mock("./config", async (importOriginal) => {
+  const original = await importOriginal<typeof ConfigModule>()
+  async function held<T>(layer: "project" | "user", read: () => Promise<T>): Promise<T> {
+    const ms = configGate.delay?.(layer) ?? 0
+    try {
+      return await read()
+    } finally {
+      if (ms > 0) await new Promise((resolvePromise) => setTimeout(resolvePromise, ms))
+    }
+  }
+  return {
+    ...original,
+    findConfig: (startDir: string) => held("project", () => original.findConfig(startDir)),
+    findUserConfig: () => held("user", () => original.findUserConfig()),
+  }
 })
 vi.mock("./commands", async (importOriginal) => {
   const original = await importOriginal<typeof CommandsModule>()
@@ -419,6 +440,7 @@ async function startServe(
 afterEach(async () => {
   fsGate.afterWatch = undefined
   fsGate.beforeEvent = undefined
+  configGate.delay = undefined
   await Promise.all(openHandles.splice(0).map((h) => h.close()))
   __resetRegisteredThemes()
 })
@@ -1521,6 +1543,85 @@ describe("createServeServer — the source is read once per build", () => {
     const rebuilt = await statusWhere(handle, (status) => status.latestRevision === settled + 1)
     expect(rebuilt.latestOk).toBe(true)
     expect((await get(handle.port, "/")).body).toContain("edited-behind-symlink")
+  })
+})
+
+describe("createServeServer — two broken configs are one failure, in one order", () => {
+  // The project and user configs are read together. When both were broken,
+  // the failure a build recorded was whichever read rejected first, so the
+  // same two files read as one error on one tick and the other error on the
+  // next, and the page was rebuilt every check with nothing changed.
+
+  /** Alternates which layer settles last: the project read on odd pairs,
+   *  the user read on even ones, so consecutive reads of the same two
+   *  files reject in opposite orders. */
+  function alternateSettleOrder(): void {
+    let pair = 0
+    configGate.delay = (layer) => {
+      if (layer === "project") pair++
+      return (pair % 2 === 1) === (layer === "project") ? 20 : 0
+    }
+  }
+
+  async function withHome<T>(home: string, run: () => Promise<T>): Promise<T> {
+    const previous = process.env.PPTWISE_HOME
+    process.env.PPTWISE_HOME = home
+    try {
+      return await run()
+    } finally {
+      if (previous === undefined) delete process.env.PPTWISE_HOME
+      else process.env.PPTWISE_HOME = previous
+    }
+  }
+
+  async function makeDeckWithConfigs(prefix: string): Promise<{ cwd: string; irPath: string; project: string; user: string }> {
+    const parent = await makeDir(prefix)
+    const cwd = join(parent, "deck")
+    const home = join(parent, "home")
+    await mkdir(cwd)
+    await mkdir(home)
+    const irPath = join(cwd, "deck.json")
+    await writeFile(irPath, JSON.stringify(VALID_IR))
+    const project = join(cwd, "pptwise.config.json")
+    const user = join(home, "config.json")
+    await writeFile(project, "{}")
+    await writeFile(user, "{}")
+    return { cwd, irPath, project, user }
+  }
+
+  it("collects the same key ten times over, naming the project error before the user error", async () => {
+    const { cwd, irPath, project, user } = await makeDeckWithConfigs("pptwise-serve-config-key-")
+    await withHome(join(cwd, "..", "home"), async () => {
+      await writeFile(project, "{")
+      await writeFile(user, "{")
+      alternateSettleOrder()
+      const keys = new Set<string>()
+      for (let i = 0; i < 10; i++) keys.add((await collectDeckThemeInputs(irPath, { cwd })).key)
+      expect([...keys]).toHaveLength(1)
+      const [key] = keys
+      expect(key).toMatch(/^source:error:/)
+      expect(key!.indexOf(project)).toBeGreaterThan(0)
+      expect(key!.indexOf(user)).toBeGreaterThan(key!.indexOf(project))
+    })
+  })
+
+  it("fails the build once and does not rebuild while both files stay broken", async () => {
+    const { cwd, irPath, project, user } = await makeDeckWithConfigs("pptwise-serve-config-stable-")
+    await withHome(join(cwd, "..", "home"), async () => {
+      const handle = await startServe(irPath, { cwd })
+      const settled = await settledRevision(handle)
+      alternateSettleOrder()
+      await writeFile(project, "{")
+      await writeFile(user, "{")
+      const failed = await pollUntil(async () => (handle.status().latestOk ? undefined : handle.status()), THEME_POLL_MS + 3000)
+      expect(failed).toMatchObject({ latestRevision: settled + 1, servedRevision: settled })
+      expect(failed.error).toContain(project)
+      expect(failed.error).toContain(user)
+      // Every later check reads the same two broken files in whichever
+      // order they settle, and finds the same failure on record.
+      await sleep(3 * THEME_POLL_MS + DEBOUNCE_GRACE_MS)
+      expect(handle.status()).toMatchObject({ latestOk: false, latestRevision: settled + 1 })
+    })
   })
 })
 

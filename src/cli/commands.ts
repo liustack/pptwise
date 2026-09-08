@@ -83,6 +83,27 @@ type UserConfigHit = Awaited<ReturnType<typeof findUserConfig>>
 type ProjectConfigHit = Awaited<ReturnType<typeof findConfig>>
 
 /**
+ * Both config layers, read together and reported in one fixed order:
+ * project first, then user. Each read settles on its own, so a failure is
+ * never "whichever rejected first": one broken file is its own error, and
+ * two broken files are one error naming both, project before user. The
+ * message is what a build that fails here records as its theme inputs
+ * (`unreadThemeInputs`, `./theme-inputs.ts`), and `pptwise serve` compares
+ * that record with its next read of the same two files, so the same two
+ * broken files have to read as the same failure every time.
+ */
+async function readConfigs(cwd: string): Promise<[ProjectConfigHit, UserConfigHit]> {
+  const [project, user] = await Promise.allSettled([findConfig(cwd), findUserConfig()])
+  const failures = [project, user].filter((r): r is PromiseRejectedResult => r.status === "rejected")
+  if (failures.length === 1) throw failures[0]!.reason
+  if (failures.length === 2) {
+    const message = (e: unknown) => (e instanceof Error ? e.message : String(e))
+    throw new PptwiseError(failures.map((f) => message(f.reason)).join("\n"), { cause: failures[0]!.reason })
+  }
+  return [(project as PromiseFulfilledResult<ProjectConfigHit>).value, (user as PromiseFulfilledResult<UserConfigHit>).value]
+}
+
+/**
  * The `config` argument `resolveDeckTarget` (`./deck-dir.ts`) and its
  * `decksRoot` (`./home.ts`) expect: an object exposing `decksDir`, resolved
  * against whichever base that value's own layer implies. Project
@@ -245,7 +266,7 @@ export async function collectDeckThemeInputs(arg: string, opts: { cwd?: string }
   const cwd = opts.cwd ?? process.cwd()
   let location: DeckLocation
   try {
-    const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
+    const [projectHit, userHit] = await readConfigs(cwd)
     location = await locateDeckTarget(arg, cwd, projectHit, userHit)
   } catch (e) {
     return unreadThemeInputs(e)
@@ -319,7 +340,7 @@ export async function loadValidatedDeckIr(
   target: string,
   cwd: string,
 ): Promise<{ ir: PptxIR; theme: ThemeDefinition | undefined }> {
-  const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
+  const [projectHit, userHit] = await readConfigs(cwd)
   const { raw, baseDir, workspaceAssetsDir, themeInputs } = await loadDeckTarget(target, cwd, projectHit, userHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme })
@@ -376,7 +397,7 @@ export interface RenderOptions {
  */
 export async function runRender(irPath: string, opts: RenderOptions): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
-  const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
+  const [projectHit, userHit] = await readConfigs(cwd)
   const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, themeInputs } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme })
@@ -511,7 +532,7 @@ export async function runValidate(
   irPath: string,
   cwd = process.cwd(),
 ): Promise<string> {
-  const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
+  const [projectHit, userHit] = await readConfigs(cwd)
   const { raw, baseDir, isDir, workspaceAssetsDir, themeInputs } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme })
@@ -639,7 +660,7 @@ export interface AuditCliResult {
  */
 export async function runAudit(target: string, opts: AuditOptions = {}): Promise<AuditCliResult> {
   const cwd = opts.cwd ?? process.cwd()
-  const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
+  const [projectHit, userHit] = await readConfigs(cwd)
   const { raw, baseDir, workspaceAssetsDir, themeInputs } = await loadDeckTarget(target, cwd, projectHit, userHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme })
@@ -730,7 +751,7 @@ export interface AssetBriefOptions {
  */
 export async function runAssetBrief(target: string, opts: AssetBriefOptions = {}): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
-  const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
+  const [projectHit, userHit] = await readConfigs(cwd)
   const { raw, baseDir, workspaceAssetsDir, themeInputs } = await loadDeckTarget(target, cwd, projectHit, userHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme })
@@ -1345,7 +1366,7 @@ async function renderDeckSlides(
   let projectHit: ProjectConfigHit
   try {
     let userHit: UserConfigHit
-    ;[projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
+    ;[projectHit, userHit] = await readConfigs(cwd)
     location = await locateDeckTarget(target, cwd, projectHit, userHit)
   } catch (e) {
     throw new DeckBuildError(e, unreadThemeInputs(e))
@@ -1640,7 +1661,7 @@ function withRewrittenAssetPaths(ir: PptxIR, deckDir: string, outDir: string): P
  */
 export async function runAssemble(target: string, opts: AssembleOptions = {}): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
-  const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
+  const [projectHit, userHit] = await readConfigs(cwd)
   const dir = await resolveDeckTarget(target, resolveDecksDirSource(projectHit, userHit), cwd)
   if ((await pathExists(dir)) && !(await isDeckDirectory(dir))) {
     throw new PptwiseError(`expected a deck project directory: ${dir}`)
