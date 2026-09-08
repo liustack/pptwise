@@ -5,9 +5,9 @@
 // The gallery renders each theme on its home ground: the deck, face and
 // component bands all read that theme's own Chinese lexicon, and only
 // `brief` carries the shared three-language duty. That is a deliberate
-// editorial choice (`corpus/native/index.ts`) and it is why `no-drops.test.mts`
-// can promise nothing about, say, an English business model canvas on
-// `rally` — the gallery never draws one.
+// editorial choice (`corpus/native/index.ts`) and it is why
+// `corpus-scan.test.mts` (`the gallery corpus`) can promise nothing about,
+// say, an English business model canvas on `rally` — the gallery never draws one.
 //
 // Authors do. A theme's menu is a choice an author makes, the language is
 // another, and nothing stops the two combining. Latin text is wider per
