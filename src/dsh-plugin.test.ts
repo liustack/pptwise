@@ -7,7 +7,13 @@
 import { mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
-import { DENIED_READ_CODES, denyFileRead } from "./test-permissions"
+import {
+  DENIED_READ_CODES,
+  denyFileRead,
+  denyFilesInNewDirs,
+  denyTreeRead,
+  removeWindowsDenies,
+} from "./test-permissions"
 
 // The plugin is plain dependency-free JS by design (no build step, no dsh
 // type imports) — see dsh/index.js's own header comment.
@@ -1307,6 +1313,7 @@ describe("who can see whose previews", () => {
  * route starts no process" is checked rather than asserted.
  */
 const FAKE_CLI_SOURCE = [
+  'import { execFileSync } from "node:child_process"',
   'import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"',
   'import { dirname, join } from "node:path"',
   "",
@@ -1400,7 +1407,17 @@ const FAKE_CLI_SOURCE = [
   "    // Take write permission off the preview root on the way out, so the",
   "    // publish that runs next fails the way a full disk would: everything",
   "    // rendered, nothing able to land under its final name.",
-  "    chmodSync(dirname(dirname(out)), 0o500)",
+  '    if (process.platform === "win32") {',
+  "      // Windows has no mode bits to take. An ACL denies Everyone what a move",
+  "      // out of the staging name needs instead: delete on the staging",
+  "      // directory itself, and delete-child and add-subdirectory on the root.",
+  "      // Neither is inherited, so the record written into the staging",
+  "      // directory after this still lands.",
+  '      execFileSync("icacls", [dirname(out), "/deny", "*S-1-1-0:(DE)"], { stdio: "ignore" })',
+  '      execFileSync("icacls", [dirname(dirname(out)), "/deny", "*S-1-1-0:(DC,AD)"], { stdio: "ignore" })',
+  "    } else {",
+  "      chmodSync(dirname(dirname(out)), 0o500)",
+  "    }",
   "  }",
   "} else {",
   '  process.stderr.write("unsupported command " + cmd + "\\n")',
@@ -2178,19 +2195,31 @@ describe("preview route (the handler DSH actually calls)", () => {
     // look" is the bug this whole round removed, but it is defence, not a
     // reachable path, and the mutation list says so rather than pretending
     // otherwise.
-    const { chmod, mkdir } = await import("node:fs/promises")
-    const { PREVIEW_ROUTE, FAILURE_CODES } = await loadPreviewTool()
+    //
+    // A real preview sits under the root, so there is a card to lose. Windows
+    // needs it to: it checks no rights on the way through a directory, so a
+    // shut root there still answers "not found" for an id that was never
+    // written, truthfully, and only a read of a preview that is there can fail.
+    const { readFile } = await import("node:fs/promises")
+    const { join } = await import("node:path")
+    const { PREVIEW_ROUTE, FAILURE_CODES, __testing } = await loadPreviewTool()
     const svc = await makeService("unreadable-root")
     const id = previewId("a5")
-    await mkdir(svc.root, { recursive: true, mode: 0o700 })
+    await seedPreview(svc.root, id)
 
-    await chmod(svc.root, 0o000)
+    const restore = await denyTreeRead(svc.root)
     try {
+      const denied = await readFile(join(svc.root, id, __testing.RECORD_FILE)).then(
+        () => "",
+        (error: NodeJS.ErrnoException) => error.code ?? "",
+      )
+      expect(DENIED_READ_CODES, "the preview root was not denied to this process").toContain(denied)
+
       const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${id}`)
       expect(res.status).toBe(503)
       expect(JSON.parse(res.body.toString("utf8")).code).toBe(FAILURE_CODES.unreadable)
     } finally {
-      await chmod(svc.root, 0o700).catch(() => {})
+      await restore().catch(() => {})
     }
   })
 
@@ -2904,17 +2933,28 @@ describe("publishing a preview", () => {
     const { deck } = await deckFixture("LOGO-V1")
 
     try {
-      await expect(svc.tool.execute({ target: deck })).rejects.toThrow(/EACCES|EPERM/)
+      const failure = await svc.tool.execute({ target: deck }).then(
+        () => undefined,
+        (error: Error) => error,
+      )
+      expect(failure?.message).toMatch(/EACCES|EPERM/)
+      // It is the move out of the staging name that failed, not the render
+      // before it.
+      expect(failure?.message).toMatch(/rename .*\.partial/)
 
       const left = await readdir(svc.root)
       expect(left.length).toBe(1)
       const staged = left[0]!
       expect(staged.endsWith(__testing.PARTIAL_SUFFIX)).toBe(true)
-      // The whole deck really is in there — this is not passing because the
-      // render failed early.
-      expect(await readdir(join(svc.root, staged))).toEqual(
-        expect.arrayContaining([__testing.RECORD_FILE, __testing.MANIFEST_FILE, "e2e.pptx"]),
-      )
+      if (process.platform !== "win32") {
+        // The whole deck really is in there — this is not passing because the
+        // render failed early. Windows lets the cleanup empty the directory,
+        // since a file there is deleted on its own rights rather than its
+        // directory's; the rename in the message above is the proof there.
+        expect(await readdir(join(svc.root, staged))).toEqual(
+          expect.arrayContaining([__testing.RECORD_FILE, __testing.MANIFEST_FILE, "e2e.pptx"]),
+        )
+      }
 
       const id = staged.slice(0, -__testing.PARTIAL_SUFFIX.length)
       const handler = routeHandlerOf(svc)
@@ -2922,7 +2962,8 @@ describe("publishing a preview", () => {
         expect((await request(handler, `${PREVIEW_ROUTE}/${id}${path}`)).status, path).toBe(404)
       }
     } finally {
-      await chmod(svc.root, 0o700).catch(() => {})
+      if (process.platform === "win32") await removeWindowsDenies(svc.root).catch(() => {})
+      else await chmod(svc.root, 0o700).catch(() => {})
     }
   })
 
@@ -2973,15 +3014,17 @@ describe("publishing a preview", () => {
     const dir = __testing.partialDir(root, previewId("c3"))
     // The root has to exist and be writable *before* the umask goes on, or the
     // leaf `mkdir` is what fails and this test proves nothing about the marker.
+    // (Windows has no umask; the same shape comes from an inherited deny, see
+    // `denyFilesInNewDirs`.)
     await mkdir(root, { recursive: true, mode: 0o700 })
 
-    const previous = process.umask(0o200)
+    const restore = await denyFilesInNewDirs(root)
     let created: string[] = []
     try {
       await expect(__testing.createOwnedDir(root, dir)).rejects.toThrow(/EACCES|EPERM/)
       created = await readdir(root)
     } finally {
-      process.umask(previous)
+      await restore()
     }
     // The directory it made on the way is gone with it.
     expect(created).toEqual([])
@@ -2996,12 +3039,12 @@ describe("publishing a preview", () => {
     await mkdir(root, { recursive: true, mode: 0o700 })
     const dir = join(root, "probe")
 
-    const previous = process.umask(0o200)
+    const restore = await denyFilesInNewDirs(root)
     try {
       await mkdir(dir, { mode: 0o700 })
       await expect(writeFile(join(dir, "x"), "x")).rejects.toThrow(/EACCES|EPERM/)
     } finally {
-      process.umask(previous)
+      await restore()
       await rm(dir, { recursive: true, force: true }).catch(() => {})
     }
   })
