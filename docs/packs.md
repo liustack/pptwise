@@ -84,6 +84,8 @@ Errors are JSON with one human sentence, `{"error": "..."}`, which the CLI repea
 }
 ```
 
+Pack ids are lowercase letters, digits, and inner hyphens (`^[a-z0-9][a-z0-9-]*$`). Versions are runs of letters and digits joined by `.` or `-` (`^[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*$`, such as `2026.1.0`). Both become part of the download path and of a directory name on disk, and the CLI reports a catalog entry outside those shapes as failed. Theme ids are unique across the whole catalog: no two packs ship the same theme id.
+
 `engine` is an npm semver range. The CLI installs a pack only when the range includes its own version. It reads unions (`||`), comparators, partial and `x` versions, `~`, `^`, and hyphen ranges, and treats a range it cannot read as one it does not meet.
 
 | status | meaning |
@@ -92,11 +94,11 @@ Errors are JSON with one human sentence, `{"error": "..."}`, which the CLI repea
 | `403` | The key has been revoked. |
 | `503` | The server is not configured to serve packs. |
 
+A revoked key only stops new downloads. Nothing is deleted remotely: packs already installed stay installed and keep working.
+
 ### `GET /api/packs/<id>/<version>.zip`
 
 `200` returns the archive as `application/zip`. Its bytes hash to the `sha256` of the same catalog entry. `401` and `403` mean what they mean for the catalog. `404` means there is no such pack or version.
-
-The CLI builds this path from the catalog entry, so it accepts only ids of lowercase letters, digits, and inner hyphens (`^[a-z0-9][a-z0-9-]*$`) and versions made of letter-and-digit runs joined by `.` or `-` (such as `2026.1.0`). An entry outside those shapes is reported as failed.
 
 ## Pack archive
 
@@ -113,7 +115,7 @@ The archive's root holds `pack.json`:
 }
 ```
 
-Each entry of `themes` is a path inside the archive to one complete version 2 theme file, the same format as a workspace theme (see [Themes](./themes.md)). Fields a version 1 client does not know are ignored. `examples` (example deck project directories) and `assets` (an image library) are reserved for later versions.
+Every field shown is required, `themes` included. `id`, `version`, `title`, and `engine` are the same as in the pack's catalog entry. Each entry of `themes` is a path inside the archive to one complete version 2 theme file, the same format as a workspace theme (see [Themes](./themes.md)). Fields a version 1 client does not know are ignored. `examples` (example deck project directories) and `assets` (an image library) are reserved for later versions.
 
 Every path in the archive, and every path in `themes`, is relative and uses `/`. `..` segments, absolute paths, drive letters, backslashes, and symbolic links are not allowed.
 
