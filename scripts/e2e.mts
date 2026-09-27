@@ -1104,6 +1104,68 @@ if (!Object.keys(stockZip.files).some((k) => k.startsWith("ppt/media/"))) {
 rmSync(stockRoot, { recursive: true, force: true })
 console.log("workspace stock-asset render leg OK")
 
+// Content packs through the built binary: sync without a license is a quiet
+// success, a licensed sync against an in-process pack server installs the
+// pack, and a deck binds and renders its theme by name. The child runs
+// asynchronously because the server answers from this same process.
+console.log("--- content packs leg ---")
+{
+  const { createServer } = await import("node:http")
+  const { execFile } = await import("node:child_process")
+  const { promisify } = await import("node:util")
+  const { buildPackZip, sha256Hex } = await import("../src/cli/packs/__fixtures__/pack-zip")
+  const run = promisify(execFile)
+  const key = "ptw_e2eaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  const packsHome = mkdtempSync(join(tmpdir(), "pptwise-e2e-packs-home-"))
+  const packsWork = mkdtempSync(join(tmpdir(), "pptwise-e2e-packs-work-"))
+  const bytes = await buildPackZip({ id: "e2e", version: "2026.1.0", engine: "*", themes: ["e2e-brief"] })
+  const server = createServer((req, res) => {
+    if (req.headers.authorization !== `Bearer ${key}`) {
+      res.writeHead(401, { "content-type": "application/json" }).end(JSON.stringify({ error: "Unknown license key." }))
+    } else if (req.url === "/api/packs/catalog") {
+      const entry = { id: "e2e", version: "2026.1.0", title: "E2E pack", size: bytes.length, sha256: sha256Hex(bytes), engine: "*" }
+      res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ catalog: 1, packs: [entry] }))
+    } else if (req.url === "/api/packs/e2e/2026.1.0.zip") {
+      res.writeHead(200, { "content-type": "application/zip" }).end(bytes)
+    } else {
+      res.writeHead(404, { "content-type": "application/json" }).end(JSON.stringify({ error: "No such pack." }))
+    }
+  })
+  await new Promise<void>((done) => server.listen(0, "127.0.0.1", done))
+  const address = server.address() as { port: number }
+  const env: NodeJS.ProcessEnv = { ...process.env, PPTWISE_HOME: packsHome, PPTWISE_PACKS_URL: `http://127.0.0.1:${address.port}` }
+  for (const name of ["HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy"]) delete env[name]
+  const pptwise = (args: string[]) => run("node", [cli, ...args], { env, cwd: packsWork, encoding: "utf8" })
+  try {
+    const quiet = await pptwise(["packs", "sync"])
+    if (!quiet.stdout.includes("No license configured") || quiet.stdout.trim().split("\n").length !== 1) {
+      throw new Error(`e2e: content packs leg — sync without a license should print one line, got:\n${quiet.stdout}`)
+    }
+    await pptwise(["license", "set", key])
+    const synced = JSON.parse((await pptwise(["packs", "sync", "--json"])).stdout) as { ok: boolean; packs: { status: string }[] }
+    if (!synced.ok || synced.packs[0]?.status !== "installed") {
+      throw new Error(`e2e: content packs leg — sync did not install the pack: ${JSON.stringify(synced)}`)
+    }
+    const again = JSON.parse((await pptwise(["packs", "sync", "--json"])).stdout) as { packs: { status: string }[] }
+    if (again.packs[0]?.status !== "current") throw new Error(`e2e: content packs leg — second sync was not current: ${JSON.stringify(again)}`)
+    const themes = JSON.parse((await pptwise(["themes", "--json"])).stdout) as { id: string; source: string; pack?: string }[]
+    if (!themes.some((t) => t.id === "e2e-brief" && t.source === "pack" && t.pack === "e2e")) {
+      throw new Error("e2e: content packs leg — themes --json does not list e2e-brief as a pack theme")
+    }
+    const packDeck = join(packsWork, "deck")
+    mkdirSync(packDeck)
+    writeFileSync(join(packDeck, "deck.spec.json"), JSON.stringify({ ...deckSpec, theme: "e2e-brief", filename: "pack-deck" }))
+    const packPptx = join(packsWork, "pack-deck.pptx")
+    await pptwise(["render", packDeck, "--draft", "-o", packPptx])
+    if (!existsSync(packPptx)) throw new Error("e2e: content packs leg — a deck bound to a pack theme did not render")
+  } finally {
+    await new Promise<void>((done) => server.close(() => done()))
+    rmSync(packsHome, { recursive: true, force: true })
+    rmSync(packsWork, { recursive: true, force: true })
+  }
+  console.log("content packs leg OK (quiet without a license, installed then current, listed as a pack theme, bound and rendered)")
+}
+
 console.log("e2e OK")
 } finally {
   rmSync(e2eHome, { recursive: true, force: true })
