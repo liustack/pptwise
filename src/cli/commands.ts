@@ -71,7 +71,7 @@ import {
   WORKSPACE_THEMES_DIRNAME,
   type ResolvedTheme,
 } from "./theme-resolve"
-import { listInstalledPacks } from "./packs/store"
+import { damagedPackError, installedPackIds, packsRoot, readInstalledPack } from "./packs/store"
 import {
   collectThemeInputs,
   guardThemeRebind,
@@ -1000,23 +1000,27 @@ interface ThemeListRow {
   pack?: string
 }
 
-/** `pptwise themes [--json]`: the factory presets, then the themes of every
- *  installed content pack in pack order. */
-export async function runThemes(asJson: boolean): Promise<string> {
-  const rows: ThemeListRow[] = listThemes().map((t) => {
-    const rec = Object.hasOwn(THEME_OCCASIONS, t.id) ? THEME_OCCASIONS[t.id as keyof typeof THEME_OCCASIONS] : undefined
-    return {
-      id: t.id,
-      label: t.label,
-      colors: t.colors,
-      occasions: rec?.occasions ?? [],
-      identity: rec?.identity ?? null,
-      source: "builtin",
-    }
-  })
-  for (const pack of await listInstalledPacks()) {
+/** An installed pack that could not be read, listed in place of its themes. */
+interface PackErrorRow {
+  source: "pack"
+  pack: string
+  error: string
+}
+
+/** One pack's rows: its themes, or a single error entry when the pack or
+ *  any of its theme files cannot be read. */
+async function packThemeRows(id: string): Promise<(ThemeListRow | PackErrorRow)[]> {
+  const dir = join(packsRoot(), id)
+  try {
+    const pack = await readInstalledPack(dir, id)
+    const rows: ThemeListRow[] = []
     for (const theme of pack.themes) {
-      const file = await readThemeFile(theme.path)
+      let file: ThemeFile
+      try {
+        file = await readThemeFile(theme.path)
+      } catch (e) {
+        throw damagedPackError(dir, e instanceof Error ? e.message : String(e))
+      }
       rows.push({
         id: file.id,
         label: file.label ?? file.id,
@@ -1027,10 +1031,36 @@ export async function runThemes(asJson: boolean): Promise<string> {
         pack: pack.id,
       })
     }
+    return rows
+  } catch (e) {
+    if (!(e instanceof PptwiseError)) throw e
+    return [{ source: "pack", pack: id, error: e.message }]
   }
+}
+
+/**
+ * `pptwise themes [--json]`: the factory presets, then the themes of every
+ * installed content pack in pack order. A pack that cannot be read does not
+ * fail the list: it appears as one entry with an `error` in place of its
+ * themes, so the presets and every readable pack are still listed.
+ */
+export async function runThemes(asJson: boolean): Promise<string> {
+  const rows: (ThemeListRow | PackErrorRow)[] = listThemes().map((t) => {
+    const rec = Object.hasOwn(THEME_OCCASIONS, t.id) ? THEME_OCCASIONS[t.id as keyof typeof THEME_OCCASIONS] : undefined
+    return {
+      id: t.id,
+      label: t.label,
+      colors: t.colors,
+      occasions: rec?.occasions ?? [],
+      identity: rec?.identity ?? null,
+      source: "builtin" as const,
+    }
+  })
+  for (const id of await installedPackIds()) rows.push(...(await packThemeRows(id)))
   if (asJson) return JSON.stringify(rows, null, 2)
   return rows
     .map((t) => {
+      if ("error" in t) return `(pack ${t.pack}) ${t.error.replace(/\s*\n\s*/g, " ")}`
       const line = `${t.id.padEnd(12)} ${t.label}`
       return t.pack === undefined ? line : `${line}  (pack ${t.pack})`
     })

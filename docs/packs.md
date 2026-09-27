@@ -141,7 +141,12 @@ $PPTWISE_HOME/                 (default ~/.pptwise)
 
 An install unpacks into a hidden directory beside `packs/<id>/` and then swaps the whole directory in, so a pack is always one complete version, never half of two. Entries of `packs/` whose names start with `.` are installs in progress and are never read as packs.
 
-A directory under `packs/` that is not a readable pack (no `pack.json`, a manifest naming another id, a listed theme file missing) makes theme lookup and `packs list` fail with its path. `packs sync` reinstalls a pack the catalog still lists. Remove any other such directory by hand.
+A directory under `packs/` that is not a readable pack (no `pack.json`, a manifest naming another id, a listed theme file missing or failing the theme file checks) is reported with its path and the way to repair it. `packs sync` reinstalls a pack the catalog still lists. Remove any other such directory by hand. Until then:
+
+- A lookup for a factory preset's name never reads the packs, since no pack may ship that id, so presets keep working.
+- A lookup for any other name fails, since the name may be in the damaged pack.
+- `pptwise themes --json` still lists the presets and every readable pack. The damaged pack appears once, in place of its themes, as `{"source": "pack", "pack": "<directory name>", "error": "<message>"}`. The plain listing prints it as a `(pack <name>)` line.
+- `packs list` fails with the damaged directory's path.
 
 ## Theme lookup
 
@@ -152,6 +157,6 @@ Theme names resolve in four levels, first hit wins:
 3. Installed packs, `$PPTWISE_HOME/packs/*/`.
 4. The factory presets.
 
-A deck binds a pack theme by name, the same way it binds any other: `"theme": "sample-brief"` in `deck.spec.json`. A deck or workspace file with the same id shadows the pack theme, which is how a user freezes or edits one: `pptwise theme new --from sample-brief -o deck-dir/theme.json --id sample-brief`. A pack theme never shares an id with a preset, so a preset name always means the preset unless a deck or workspace file says otherwise.
+A deck binds a pack theme by name, the same way it binds any other: `"theme": "sample-brief"` in `deck.spec.json`. A deck or workspace file with the same id shadows the pack theme, which is how a user freezes or edits one: `pptwise theme new --from sample-brief -o deck-dir/theme.json --id sample-brief`. A pack theme never shares an id with a preset, so a preset name always means the preset unless a deck or workspace file says otherwise, and its lookup skips the packs.
 
-`pptwise themes --json` lists the presets with `"source": "builtin"`, then every installed pack theme with `"source": "pack"` and `"pack": "<id>"`. An unknown name fails and lists every place searched, including each installed pack directory. `pptwise serve` picks up a sync that installs or updates a bound pack theme within its regular two-second theme check.
+`pptwise themes --json` lists the presets with `"source": "builtin"`, then every installed pack theme with `"source": "pack"` and `"pack": "<id>"`, and an entry with an `error` field for a pack it cannot read (see [Local state](#local-state)). An unknown name fails and lists every place searched, including each installed pack directory. `pptwise serve` picks up a sync that installs or updates a bound pack theme within its regular two-second theme check.

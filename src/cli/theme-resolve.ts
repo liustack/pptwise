@@ -13,7 +13,7 @@ import {
 } from "../themes/schema"
 import { THEME_FILENAME, pathExists } from "./deck-dir"
 import { loadIrFile } from "./load-ir"
-import { listInstalledPacks, packsRoot } from "./packs/store"
+import { damagedPackError, listInstalledPacks, packsRoot } from "./packs/store"
 
 export const WORKSPACE_THEMES_DIRNAME = "themes"
 
@@ -253,7 +253,12 @@ async function resolvePackTheme(name: string): Promise<{ hit: ResolvedTheme | un
   }
   const found = hits[0]
   if (found === undefined) return { hit: undefined, searched: packs.map((pack) => pack.dir) }
-  const file = await readThemeFile(found.theme.path)
+  let file: ThemeFile
+  try {
+    file = await readThemeFile(found.theme.path)
+  } catch (e) {
+    throw damagedPackError(found.pack.dir, e instanceof Error ? e.message : String(e))
+  }
   // The store read the id a moment ago. A file rewritten since then must
   // not answer to a name it no longer carries.
   if (file.id !== name) {
@@ -266,16 +271,23 @@ async function resolvePackTheme(name: string): Promise<{ hit: ResolvedTheme | un
 /**
  * Four levels, first hit wins: the deck directory, workspace `themes/`
  * walking up, the installed content packs, then the factory presets.
+ *
+ * A preset's name skips the pack level. `packs sync` refuses a pack theme
+ * with a preset's id, so no pack can answer it, and a damaged pack must not
+ * stand between a deck and a built-in theme. (A retired id never gets this
+ * far: `assertThemeId` refuses it first.) Any other name reads every pack,
+ * and a pack that cannot be read fails the lookup, since the name may be
+ * in it.
  */
 export async function resolveThemeByName(name: string, opts: ThemeLookupOptions): Promise<ResolvedTheme> {
   assertThemeId(name)
   const fileHit = await resolveThemeFileFrom(themeCandidates(name, opts), name)
   if (fileHit !== undefined) return fileHit
 
+  if (isCanonicalThemeId(name)) return { kind: "builtin", id: name, definition: THEME_DEFINITIONS[name] }
+
   const packs = await resolvePackTheme(name)
   if (packs.hit !== undefined) return packs.hit
-
-  if (isCanonicalThemeId(name)) return { kind: "builtin", id: name, definition: THEME_DEFINITIONS[name] }
 
   const places = [
     opts.deckDir !== undefined ? `deck directory ${opts.deckDir}` : undefined,

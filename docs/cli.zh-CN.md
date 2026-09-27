@@ -173,7 +173,7 @@ pptwise theme try <id,id,...> [-o <dir>]
 
 `theme try` 要求两个到四个互不重复的名称。默认把对比图写到 `.pptwise/theme-try/`。它永远不会修改 deck 绑定。
 
-`themes --json` 为每一行标出 `source`：出厂预设是 `builtin`，已装内容包提供的主题是 `pack`，并带上 `pack` id。
+`themes --json` 为每一行标出 `source`：出厂预设是 `builtin`，已装内容包提供的主题是 `pack`，并带上 `pack` id。读不出来的包列为一条带 `error` 字段的条目，不影响其余条目。
 
 主题名称先从 deck 目录解析，再从向上查找的工作区 `themes/` 目录解析，再查已装内容包，最后查出厂预设。未知名称报错，并列出查过的每个位置，包括每个已装包的目录。Deck 与工作区文件可以保名遮蔽出厂预设或包内主题。主题 id 必须匹配 `^[a-z0-9-]+$`。覆盖已有主题文件需要 `--force`。
 

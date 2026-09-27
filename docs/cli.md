@@ -173,7 +173,7 @@ pptwise theme try <id,id,...> [-o <dir>]
 
 `theme try` requires two to four distinct names. It writes a contact sheet under `.pptwise/theme-try/` by default. It never changes a deck binding.
 
-`themes --json` marks each row's `source`: `builtin` for a factory preset, `pack` for a theme an installed content pack ships (with its `pack` id).
+`themes --json` marks each row's `source`: `builtin` for a factory preset, `pack` for a theme an installed content pack ships (with its `pack` id). A pack that cannot be read is listed as one entry with an `error` field, and the rest of the list is unaffected.
 
 Theme names resolve from the deck directory, then workspace `themes/` directories while walking upward, then installed content packs, then factory presets. Unknown names fail and list every place searched, each installed pack directory included. Deck and workspace files may keep a factory or pack id and shadow that theme. A theme id is `^[a-z0-9-]+$`. Pass `--force` to overwrite an existing theme file.
 

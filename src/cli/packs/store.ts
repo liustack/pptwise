@@ -37,7 +37,9 @@ export interface InstalledPack {
   themes: InstalledPackTheme[]
 }
 
-function damaged(dir: string, detail: string): PptwiseError {
+/** The one message for an installed pack that cannot be read: where it is,
+ *  what is wrong, and how to repair it. */
+export function damagedPackError(dir: string, detail: string): PptwiseError {
   return new PptwiseError(
     `installed pack ${dir} cannot be read: ${detail}. Run \`pptwise packs sync\` to reinstall it, or remove the directory.`,
   )
@@ -49,12 +51,12 @@ async function readJson(path: string, dir: string): Promise<unknown> {
     text = await readFile(path, "utf8")
   } catch (e) {
     const code = (e as NodeJS.ErrnoException).code
-    throw damaged(dir, code === "ENOENT" ? `${path} is missing` : `${path}: ${(e as Error).message}`)
+    throw damagedPackError(dir, code === "ENOENT" ? `${path} is missing` : `${path}: ${(e as Error).message}`)
   }
   try {
     return JSON.parse(text) as unknown
   } catch {
-    throw damaged(dir, `${path} is not valid JSON`)
+    throw damagedPackError(dir, `${path} is not valid JSON`)
   }
 }
 
@@ -66,17 +68,17 @@ export async function readInstalledPack(dir: string, id: string): Promise<Instal
   try {
     manifest = parsePackManifest(raw, manifestPath)
   } catch (e) {
-    throw damaged(dir, (e as Error).message)
+    throw damagedPackError(dir, (e as Error).message)
   }
-  if (manifest.id !== id) throw damaged(dir, `its pack.json names pack "${manifest.id}", not "${id}"`)
+  if (manifest.id !== id) throw damagedPackError(dir, `its pack.json names pack "${manifest.id}", not "${id}"`)
   const themes: InstalledPackTheme[] = []
   for (const rel of manifest.themes) {
     const unsafe = unsafePackPathReason(rel)
-    if (unsafe !== undefined) throw damaged(dir, `theme path "${rel}" ${unsafe}`)
+    if (unsafe !== undefined) throw damagedPackError(dir, `theme path "${rel}" ${unsafe}`)
     const path = join(dir, ...rel.split("/"))
     const raw = await readJson(path, dir)
     const themeId = typeof raw === "object" && raw !== null ? (raw as { id?: unknown }).id : undefined
-    if (typeof themeId !== "string") throw damaged(dir, `${path} has no theme id`)
+    if (typeof themeId !== "string") throw damagedPackError(dir, `${path} has no theme id`)
     themes.push({ id: themeId, path })
   }
   return { id, version: manifest.version, title: manifest.title, engine: manifest.engine, dir, themes }
