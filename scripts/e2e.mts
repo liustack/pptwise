@@ -373,6 +373,28 @@ if (!existsSync(join(deckDir, "deck.json"))) {
   throw new Error("e2e: deck-dir leg — assemble did not write deck.json")
 }
 
+// inspect reads one page's contract from the built CLI: the unwritten page
+// reports itself as not filled and still lists what its face draws.
+const inspectPlaceholder = JSON.parse(sh("node", ["dist/cli.js", "inspect", deckDir, "--page", "p-roadmap", "--json"])) as {
+  page?: { id?: string; filled?: boolean; file?: string }
+  components?: { legal?: string[] }
+}
+if (
+  inspectPlaceholder.page?.id !== "p-roadmap" ||
+  inspectPlaceholder.page.filled !== false ||
+  inspectPlaceholder.page.file !== "pages/p-roadmap.json" ||
+  !inspectPlaceholder.components?.legal?.includes("kpi_cards")
+) {
+  throw new Error(`e2e: inspect leg — unexpected contract for the unwritten page: ${JSON.stringify(inspectPlaceholder)}`)
+}
+const inspectComponent = JSON.parse(
+  sh("node", ["dist/cli.js", "inspect", deckDir, "--page", "p-roadmap", "--component", "kpi_cards", "--json"]),
+) as { component?: string; schema?: { properties?: Record<string, unknown> } }
+if (inspectComponent.component !== "kpi_cards" || inspectComponent.schema?.properties?.items === undefined) {
+  throw new Error(`e2e: inspect leg — --component did not expand kpi_cards: ${JSON.stringify(inspectComponent)}`)
+}
+console.log("deck-dir inspect leg OK (page contract + one component)")
+
 // render without --draft must refuse: one plan page (p-roadmap) is still an
 // unfilled placeholder.
 const draftGateStderr = shExpectFail("node", [
@@ -417,6 +439,14 @@ writeFileSync(
     ],
   }),
 )
+// The filled page is drawn by the built CLI and fits.
+const inspectFit = JSON.parse(sh("node", ["dist/cli.js", "inspect", deckDir, "--page", "p-roadmap", "--fit", "--json"])) as {
+  fit?: { checked?: boolean; fits?: boolean; dropped?: unknown[] }
+}
+if (inspectFit.fit?.checked !== true || inspectFit.fit.fits !== true || inspectFit.fit.dropped?.length !== 0) {
+  throw new Error(`e2e: inspect leg — expected the filled page to fit: ${JSON.stringify(inspectFit)}`)
+}
+console.log("deck-dir inspect --fit leg OK (filled page drawn and fits)")
 const reassembleOut = sh("node", ["dist/cli.js", "assemble", deckDir])
 console.log(reassembleOut)
 if (!reassembleOut.includes("(4 slides, 0 placeholders)")) {
