@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isCjk, stacksVertically } from "./text-script"
+import { isCjk, mostlyCjk, stacksVertically } from "./text-script"
 
 describe("stacksVertically", () => {
   it("stacks pure Chinese", () => {
@@ -87,5 +87,21 @@ describe("stacksVertically purity", () => {
       expect(stacksVertically(sample)).toBe(first)
       expect(stacksVertically(sample)).toBe(first)
     }
+  })
+})
+
+describe("mostlyCjk", () => {
+  it("follows the majority of the written items", () => {
+    expect(mostlyCjk(["强大的品牌", "稳定现金流", "Apple 生态"])).toBe(true)
+    expect(mostlyCjk(["Strong brand", "Cash flow", "进入中国"])).toBe(false)
+  })
+
+  it("needs more than half, so a tie stays English", () => {
+    expect(mostlyCjk(["品牌", "Brand"])).toBe(false)
+  })
+
+  it("ignores empty items and says no to nothing at all", () => {
+    expect(mostlyCjk(["品牌", "", "  "])).toBe(true)
+    expect(mostlyCjk([])).toBe(false)
   })
 })

@@ -46,25 +46,6 @@ describe("five_forces component", () => {
     expect(container.querySelectorAll("line")).toHaveLength(0)
   })
 
-  it("default labels are the classic Porter's-five-forces English full names", () => {
-    const { container } = svg(fiveForces.render(basic, { x: 0, y: 0, w: 1000 }, ctx))
-    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
-    expect(texts).toContain("Competitive Rivalry")
-    expect(texts).toContain("Threat of New Entrants")
-    expect(texts).toContain("Supplier Power")
-    expect(texts).toContain("Buyer Power")
-    expect(texts).toContain("Threat of Substitutes")
-  })
-
-  it("a panel's own inline label overrides only that panel's default", () => {
-    const withLabel = { ...basic, rivalry: { ...basic.rivalry, label: "竞争烈度" } }
-    const { container } = svg(fiveForces.render(withLabel, { x: 0, y: 0, w: 1000 }, ctx))
-    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
-    expect(texts).toContain("竞争烈度")
-    expect(texts).not.toContain("Competitive Rivalry")
-    expect(texts).toContain("Supplier Power") // untouched panel keeps the default
-  })
-
   it("renders every item across all five panels", () => {
     const { container } = svg(fiveForces.render(basic, { x: 0, y: 0, w: 1000 }, ctx))
     const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
@@ -290,5 +271,38 @@ describe("five_forces component", () => {
     }
     const { container } = svg(fiveForces.render(longItem, { x: 0, y: 0, w: 1000 }, ctx))
     expect(container.querySelector('text[data-truncated="1"]')).not.toBeNull()
+  })
+})
+
+describe("five_forces panel titles follow the language of the content", () => {
+  const titles = (c: Parameters<typeof fiveForces.render>[0]) =>
+    Array.from(svg(fiveForces.render(c, { x: 0, y: 0, w: 1000 }, ctx)).container.querySelectorAll("text")).map(
+      (t) => t.textContent ?? "",
+    )
+
+  it("titles Chinese content in Chinese", () => {
+    const text = titles(basic)
+    for (const title of ["同业竞争", "新进入者威胁", "供应商议价能力", "买方议价能力", "替代品威胁"]) {
+      expect(text).toContain(title)
+    }
+    expect(text).not.toContain("Supplier Power")
+  })
+
+  it("titles English content in English", () => {
+    const text = titles({
+      type: "five_forces",
+      rivalry: { items: ["Three players hold 60%"] },
+      new_entrants: { items: ["Licensing barriers"] },
+      supplier_power: { items: ["Single source chips"] },
+      buyer_power: { items: ["Concentrated buyers"] },
+      substitutes: { items: ["Free open source"] },
+    })
+    expect(text).toContain("Supplier Power")
+  })
+
+  it("keeps a title the author wrote", () => {
+    const text = titles({ ...basic, supplier_power: { ...basic.supplier_power, label: "上游" } })
+    expect(text).toContain("上游")
+    expect(text).toContain("买方议价能力")
   })
 })

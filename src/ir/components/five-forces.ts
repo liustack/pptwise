@@ -12,6 +12,8 @@ import type { DesignStory } from "../../design-story"
 // design would have done.
 const FiveForcesPanelSchema = z
   .object({
+    /** 面板标题覆写。缺省标题跟随五个面板条目的语言：以中文为主时用
+     * 同业竞争/新进入者威胁/供应商议价能力/买方议价能力/替代品威胁，否则用英文全称。 */
     label: z.string().optional(),
     intensity: z.enum(["low", "medium", "high"]).optional(),
     items: z.array(z.string()).min(1).max(5),

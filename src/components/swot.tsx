@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine } from "../lib/svg-text-layout"
+import { mostlyCjk } from "../lib/text-script"
 import { accessibleInk } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -72,6 +73,13 @@ const DEFAULT_LABELS: Record<QuadrantKey, string> = {
   weaknesses: "Weaknesses",
   opportunities: "Opportunities",
   threats: "Threats",
+}
+/** The titles when the quadrants are written in Chinese (`mostlyCjk`). */
+const DEFAULT_LABELS_CJK: Record<QuadrantKey, string> = {
+  strengths: "优势",
+  weaknesses: "劣势",
+  opportunities: "机会",
+  threats: "威胁",
 }
 const LETTERS: Record<QuadrantKey, string> = {
   strengths: "S",
@@ -249,8 +257,9 @@ function quadrantLayout(
 
 function gridGeom(component: SwotComponent, w: number, rhythmScale: number = 1, fontFamily?: string) {
   const quadW = (w - GRID_GAP) / 2
+  const defaults = mostlyCjk(QUADRANTS.flatMap((q) => component[q])) ? DEFAULT_LABELS_CJK : DEFAULT_LABELS
   const layouts = QUADRANTS.map((q) =>
-    quadrantLayout(component[q], component.labels?.[q] ?? DEFAULT_LABELS[q], quadW, rhythmScale, fontFamily),
+    quadrantLayout(component[q], component.labels?.[q] ?? defaults[q], quadW, rhythmScale, fontFamily),
   )
   const cellH = Math.max(...layouts.map((l) => l.contentH))
   return { quadW, cellH, layouts }

@@ -88,3 +88,14 @@ export function stacksVertically(text: string): boolean {
 export function isCjk(text: string): boolean {
   return HAS_SQUARE_GLYPH_RE.test(text)
 }
+
+/**
+ * True when more than half of the non-empty `texts` carry a square-script
+ * glyph. A component's built-in titles (SWOT quadrants, the five forces)
+ * follow the language its own items are written in, so one English brand
+ * name inside Chinese content, or the reverse, does not flip them.
+ */
+export function mostlyCjk(texts: readonly string[]): boolean {
+  const written = texts.filter((text) => text.trim() !== "")
+  return written.filter(isCjk).length * 2 > written.length
+}

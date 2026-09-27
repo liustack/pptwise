@@ -16,9 +16,9 @@ export const schema = z
     weaknesses: z.array(z.string()).min(1).max(5),
     opportunities: z.array(z.string()).min(1).max(5),
     threats: z.array(z.string()).min(1).max(5),
-    /** 象限标题覆写（国际化/自定义措辞）——缺省用固定英文 S/W/O/T 全称
-     * （Strengths/Weaknesses/Opportunities/Threats），四键均可选，缺的键
-     * 落回默认值。 */
+    /** 象限标题覆写（自定义措辞）。缺省标题跟随四个象限条目的语言：以中文为主
+     * 时用 优势/劣势/机会/威胁，否则用 Strengths/Weaknesses/Opportunities/Threats。
+     * 四键均可选，缺的键落回默认值。 */
     labels: z
       .object({
         strengths: z.string().optional(),
