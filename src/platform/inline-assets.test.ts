@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { PptxIR } from "@/ir"
 import { assetReferences } from "@/ir/asset-references"
-import { inlinePptxAssets, MAX_DECODE_BYTES } from "./inline-assets"
+import { FETCH_TIMEOUT_MS, inlinePptxAssets, MAX_DECODE_BYTES } from "./inline-assets"
 import { PptwiseError } from "../errors"
 import { installPlatform } from "./registry"
 import { getThemeDefinition } from "../themes/definitions"
@@ -530,5 +530,96 @@ describe("theme default backgrounds", () => {
     const promise = inlinePptxAssets(deck("data:image/png;base64,iVBORw0KGgo="), themeWithCoverAsset("hero"))
     await expect(promise).rejects.toThrow(PptwiseError)
     await expect(promise).rejects.toThrow(/asset "hero" \(used on cover-1 \(page 1\)\)/)
+  })
+})
+
+describe("remote asset fetch limits", () => {
+  const PNG_BYTES = Uint8Array.from(atob(RED_PNG.split(",")[1]!), (c) => c.charCodeAt(0))
+
+  it("refuses a source with a scheme other than http or https, and never fetches it", async () => {
+    const fetchSpy = vi.fn()
+    installPlatform({ fetch: fetchSpy, decodeImage: acceptAnyImage })
+    for (const src of ["file:///etc/passwd", "ftp://example.com/a.png", "javascript:alert(1)"]) {
+      await expect(inlinePptxAssets(ir({ hero: { src } }), BULLETIN)).rejects.toThrow(/only http and https/)
+    }
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  it("gives up on a response that does not arrive in time", async () => {
+    vi.useFakeTimers()
+    try {
+      const hanging = vi.fn(
+        (_url: string, init?: RequestInit) =>
+          new Promise<Response>((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")))
+          }),
+      )
+      installPlatform({ fetch: hanging as unknown as typeof fetch, decodeImage: acceptAnyImage })
+      const run = inlinePptxAssets(ir({ hero: { src: "https://slow.example.com/a.png" } }), BULLETIN)
+      const settled = expect(run).rejects.toThrow(new RegExp(`timed out after ${FETCH_TIMEOUT_MS / 1000} s`))
+      await vi.advanceTimersByTimeAsync(FETCH_TIMEOUT_MS + 1)
+      await settled
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("refuses a declared size above the limit before reading the body", async () => {
+    // highWaterMark 0: the stream pulls only when someone reads, never to
+    // fill its own queue, so `pulled` means the body was actually read.
+    let pulled = false
+    const body = new ReadableStream<Uint8Array>(
+      {
+        pull(controller) {
+          pulled = true
+          controller.enqueue(PNG_BYTES)
+        },
+      },
+      { highWaterMark: 0 },
+    )
+    installPlatform({
+      fetch: vi.fn(
+        async () =>
+          new Response(body, {
+            headers: { "content-type": "image/png", "content-length": String(MAX_DECODE_BYTES + 1) },
+          }),
+      ) as unknown as typeof fetch,
+      decodeImage: acceptAnyImage,
+    })
+    await expect(inlinePptxAssets(ir({ hero: { src: "https://big.example.com/a.png" } }), BULLETIN)).rejects.toThrow(
+      /above the 25\.0 MB limit/,
+    )
+    expect(pulled).toBe(false)
+  })
+
+  it("stops reading a body that grows past the limit without saying its size", async () => {
+    const chunk = new Uint8Array(1024 * 1024)
+    let sent = 0
+    let cancelled = false
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        sent += chunk.byteLength
+        controller.enqueue(chunk)
+      },
+      cancel() {
+        cancelled = true
+      },
+    })
+    installPlatform({
+      fetch: vi.fn(async () => new Response(body, { headers: { "content-type": "image/png" } })) as unknown as typeof fetch,
+      decodeImage: acceptAnyImage,
+    })
+    await expect(inlinePptxAssets(ir({ hero: { src: "https://endless.example.com/a.png" } }), BULLETIN)).rejects.toThrow(
+      /above the 25\.0 MB limit/,
+    )
+    expect(cancelled).toBe(true)
+    expect(sent).toBeLessThanOrEqual(MAX_DECODE_BYTES + 2 * chunk.byteLength)
+  })
+
+  it("still resolves a relative source the way the platform fetch does", async () => {
+    const platformFetch = vi.fn(async () => new Response(PNG_BYTES, { headers: { "content-type": "image/png" } }))
+    installPlatform({ fetch: platformFetch as unknown as typeof fetch, decodeImage: acceptAnyImage })
+    await inlinePptxAssets(ir({ hero: { src: "assets/hero.png" } }), BULLETIN)
+    expect(platformFetch).toHaveBeenCalledTimes(1)
   })
 })
