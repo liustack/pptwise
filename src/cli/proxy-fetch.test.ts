@@ -48,10 +48,12 @@ describe("proxyFetch", () => {
   })
 
   it("routes through undici EnvHttpProxyAgent and closes the dispatcher", async () => {
-    process.env.HTTPS_PROXY = "http://127.0.0.1:8080"
+    // Clear first, set last. Windows environment names ignore case, so
+    // deleting `https_proxy` there deletes `HTTPS_PROXY` too.
     delete process.env.HTTP_PROXY
     delete process.env.http_proxy
     delete process.env.https_proxy
+    process.env.HTTPS_PROXY = "http://127.0.0.1:8080"
     const res = await proxyFetch("https://example.com/api")
     expect(undici.fetch).toHaveBeenCalledTimes(1)
     const init = vi.mocked(undici.fetch).mock.calls[0]?.[1] as { dispatcher?: { close: typeof close } }
