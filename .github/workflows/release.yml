@@ -1,27 +1,18 @@
-# npm publish via trusted publishing (OIDC).
+# Publishes to npm and cuts the GitHub Release when a v* tag is pushed.
 #
-# No npm token, no repository secret: trusted publishing exchanges this
-# workflow's GitHub OIDC identity (the `id-token: write` permission below) for
-# a short-lived npm credential at publish time. npm matches this exact file
-# name: the trusted publisher on npmjs.com for @liustack/pptwise is
-# registered as GitHub Actions, liustack/pptwise, workflow file release.yml,
-# no environment. Renaming this file breaks publishing until the npm side is
-# changed to match: the exchange then answers "package not found", npm falls
-# back to setup-node's placeholder token, and the upload dies with E404.
+# The tag is normally pushed by scripts/release.mts (`pnpm release`), which
+# pushes the tag alone, waits for this run, and pushes main only once npm has
+# the version. This workflow is the one place that publishes. It runs every
+# gate before the one irreversible step, then writes the Release from the
+# matching CHANGELOG section.
 #
-# Trigger: release tags (v1.2.3). The changesets flow stays local/manual
-# (`pnpm release:version`, commit, tag, push the tag).
-#
-# `npm publish` (npm 11, installed explicitly) does the OIDC exchange — the
-# proven pattern from modlens's release.yml. The first tag attempt used
-# `pnpm publish`, which skipped the OIDC exchange and died with E404 on the
-# unauthenticated PUT (2026-08-15); npm 11.5.1+ handles trusted publishing
-# natively.
-#
-# `prepublishOnly` runs `pnpm check && pnpm e2e` automatically at publish
-# time, so LibreOffice is installed here for the same reason as ci.yml's e2e
-# job: without soffice the e2e visual gate self-skips silently, and a release
-# gate should not be quietly weaker than the main-branch gate.
+# Trusted publishing (OIDC): no npm token, no repository secret. npm matches
+# this exact file name. The trusted publisher on npmjs.com for
+# @liustack/pptwise is registered as GitHub Actions, liustack/pptwise,
+# workflow file release.yml, no environment. Renaming this file breaks
+# publishing until the npm side is changed to match: the exchange then answers
+# "package not found", npm falls back to setup-node's placeholder token, and
+# the upload dies with E404.
 name: Release
 
 on:
@@ -30,9 +21,10 @@ on:
       - "v*"
 
 permissions:
-  contents: read
-  # Required for npm trusted publishing — this is what npm exchanges for the
-  # short-lived publish credential.
+  # write creates the GitHub Release from the pushed tag.
+  contents: write
+  # What npm exchanges for the short-lived publish credential, and what signs
+  # the provenance statement.
   id-token: write
 
 jobs:
@@ -48,12 +40,60 @@ jobs:
           node-version: 22
           cache: pnpm
           registry-url: "https://registry.npmjs.org"
-      - name: Install LibreOffice (soffice) for prepublishOnly's e2e visual gate
+      # Without soffice the e2e visual gate skips itself silently, and a
+      # release gate must not be quietly weaker than the main-branch gate.
+      - name: Install LibreOffice (soffice) for the e2e visual gate
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libreoffice-impress
+      # Trusted publishing and --provenance need npm 11.5.1+, newer than what
+      # Node 22 ships with.
       - run: npm install -g npm@11
       - run: pnpm install --frozen-lockfile
-      # prepublishOnly still runs the full check + e2e gate before anything
-      # is uploaded. npm has no branch check, so no --no-git-checks needed.
-      - run: npm publish --provenance --access public
+      - name: The tag must be the version the tree says it is
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$VERSION" != "$PKG_VERSION" ]; then
+            echo "tag v$VERSION does not match package.json version $PKG_VERSION" >&2
+            exit 1
+          fi
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm e2e
+      # Everything that can refuse the release runs before the one
+      # irreversible step, the notes included: a tag with no CHANGELOG section
+      # must fail here, not after the package is already on npm.
+      - name: Extract release notes from CHANGELOG
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v ver="$version" '
+            $0 == "## " ver || index($0, "## " ver " ") == 1 { grab=1; next }
+            grab && /^## / { exit }
+            grab { print }
+          ' CHANGELOG.md > "$RUNNER_TEMP/release-notes.md"
+          if [ ! -s "$RUNNER_TEMP/release-notes.md" ]; then
+            echo "No CHANGELOG section for $version" >&2
+            exit 1
+          fi
+      # Idempotent: a version a maintainer already published by hand (a
+      # registry or Actions incident) must not turn this run red.
+      - name: Publish to npm (skipped when the version is already live)
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PKG="$(node -p "require('./package.json').name")"
+          if npm view "$PKG@$VERSION" version >/dev/null 2>&1; then
+            echo "$PKG@$VERSION is already on the registry; skipping publish."
+          else
+            npm publish --provenance --access public
+          fi
+      - name: Create the GitHub Release from the tag and CHANGELOG
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists; skipping."
+          else
+            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/release-notes.md" --latest
+          fi
