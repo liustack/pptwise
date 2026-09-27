@@ -1,5 +1,11 @@
 # @liustack/pptwise
 
+## 0.37.1
+
+### Patch Changes
+
+- 87a819b: On Windows, the DSH plugin's preview record store now retries a replace that fails because another reader still holds the old record open. Windows refuses to rename over a file that is open, and the write used to fail outright with EPERM. The retry is bounded, applies only to that lock error, and changes nothing on macOS or Linux.
+
 ## 0.37.0
 
 ### Minor Changes
