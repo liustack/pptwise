@@ -258,6 +258,15 @@ interface PreviewModule {
     exportName: (bundle: { title?: string; draft?: boolean } | undefined, target: string) => string
     readRecord: (root: string, id: string) => Promise<PreviewRecord | undefined>
     writeRecord: (root: string, id: string, record: unknown) => Promise<void>
+    replaceByRename: (
+      from: string,
+      to: string,
+      options?: {
+        platform?: string
+        renameFile?: (from: string, to: string) => Promise<void>
+        delaysMs?: readonly number[]
+      },
+    ) => Promise<void>
     entryFromRecord: (dir: string, record: PreviewRecord) => PreviewEntry
     fileInside: (dir: string, name: unknown) => string | undefined
     previewDir: (root: string, id: unknown) => string | undefined
@@ -911,6 +920,71 @@ describe("preview recall across restarts", () => {
       expect(["a", "b"]).toContain(record.target)
       expect((record as unknown as { filler: string }).filler.length).toBe(200_000)
     }
+  })
+
+  it("waits for a reader to let go of the old record on Windows, and only there", async () => {
+    // Windows will not rename over a file another handle has open. While any
+    // reader is still inside the old record the rename fails with EPERM, where
+    // POSIX would swap the name out from under it. The fight above is exactly
+    // that shape, and on Windows the writers lost it to their own readers. So
+    // the rename is retried there, briefly. Everywhere else an EPERM from
+    // rename is a real permission problem, and waiting would only delay it.
+    const { __testing } = await loadPreviewTool()
+    const failingFirst = (failures: number, code = "EPERM") => {
+      let calls = 0
+      const renameFile = async () => {
+        calls += 1
+        if (calls <= failures) throw Object.assign(new Error(`${code}: rename refused`), { code })
+      }
+      return { renameFile, calls: () => calls }
+    }
+
+    const held = failingFirst(3)
+    await __testing.replaceByRename("a.tmp", "record.json", {
+      platform: "win32",
+      renameFile: held.renameFile,
+      delaysMs: [1, 1, 1, 1],
+    })
+    expect(held.calls()).toBe(4)
+
+    for (const code of ["EACCES", "EBUSY"]) {
+      const other = failingFirst(1, code)
+      await __testing.replaceByRename("a.tmp", "record.json", {
+        platform: "win32",
+        renameFile: other.renameFile,
+        delaysMs: [1],
+      })
+      expect(other.calls(), code).toBe(2)
+    }
+
+    const posix = failingFirst(1)
+    await expect(
+      __testing.replaceByRename("a.tmp", "record.json", { platform: "linux", renameFile: posix.renameFile, delaysMs: [1] }),
+    ).rejects.toThrow(/EPERM/)
+    expect(posix.calls()).toBe(1)
+
+    // A handle that never closes is still an error in the end, not a hang.
+    const forever = failingFirst(Infinity)
+    await expect(
+      __testing.replaceByRename("a.tmp", "record.json", {
+        platform: "win32",
+        renameFile: forever.renameFile,
+        delaysMs: [1, 1],
+      }),
+    ).rejects.toThrow(/EPERM/)
+    expect(forever.calls()).toBe(3)
+
+    // Only what an open handle produces is waited out. A missing source is not
+    // going to appear.
+    const missing = failingFirst(1, "ENOENT")
+    await expect(
+      __testing.replaceByRename("a.tmp", "record.json", {
+        platform: "win32",
+        renameFile: missing.renameFile,
+        delaysMs: [1],
+      }),
+    ).rejects.toThrow(/ENOENT/)
+    expect(missing.calls()).toBe(1)
   })
 
   it("rejects an id that is not the shape it hands out, since ids become filenames", async () => {
