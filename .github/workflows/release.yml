@@ -1,13 +1,13 @@
-# npm publish via trusted publishing (OIDC) — skeleton.
+# npm publish via trusted publishing (OIDC).
 #
 # No npm token, no repository secret: trusted publishing exchanges this
 # workflow's GitHub OIDC identity (the `id-token: write` permission below) for
-# a short-lived npm credential at publish time. Before this workflow can
-# actually publish, someone with npm publish rights must register this exact
-# repo + workflow as a trusted publisher for @liustack/pptwise on npmjs.com
-# (package Settings → Trusted Publisher: GitHub Actions, liustack/pptwise,
-# workflow file publish.yml). Until then a tag push simply fails at the
-# publish step — nothing is released, by design.
+# a short-lived npm credential at publish time. npm matches this exact file
+# name: the trusted publisher on npmjs.com for @liustack/pptwise is
+# registered as GitHub Actions, liustack/pptwise, workflow file release.yml,
+# no environment. Renaming this file breaks publishing until the npm side is
+# changed to match: the exchange then answers "package not found", npm falls
+# back to setup-node's placeholder token, and the upload dies with E404.
 #
 # Trigger: release tags (v1.2.3). The changesets flow stays local/manual
 # (`pnpm release:version`, commit, tag, push the tag).
@@ -22,7 +22,7 @@
 # time, so LibreOffice is installed here for the same reason as ci.yml's e2e
 # job: without soffice the e2e visual gate self-skips silently, and a release
 # gate should not be quietly weaker than the main-branch gate.
-name: Publish
+name: Release
 
 on:
   push:

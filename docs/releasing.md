@@ -10,7 +10,7 @@ read_when:
 
 Versioning uses [changesets](https://github.com/changesets/changesets) in
 local mode: version bumps are cut on a machine, not by a CI bot. Publishing
-runs in CI from a pushed tag (the Publish workflow, trusted publishing), with
+runs in CI from a pushed tag (the Release workflow, trusted publishing), with
 a maintainer's `npm publish` as the fallback while that is not registered on
 npm. See "Publishing" below. The version's single source of truth is
 `package.json`. `src/version.ts` mirrors it, pinned by
@@ -64,7 +64,7 @@ and the publish failed on npm.
 ```bash
 v=$(node -p "require('./package.json').version")
 git tag -a "v$v" -m "v$v"
-git push origin "v$v"                     # the Publish workflow runs from the tag
+git push origin "v$v"                     # the Release workflow runs from the tag
 npm view @liustack/pptwise@"$v" version   # wait until this answers $v
 git push origin main
 ```
@@ -84,12 +84,13 @@ has changed. Fix the cause and re-run the workflow for the same tag.
    skipping the gate, and isolate-rerun any failing file first to confirm
    it is contention, not a regression.
 
-The Publish workflow (`.github/workflows/publish.yml`) publishes from a
-pushed `v*` tag through npm trusted publishing (OIDC), with provenance. It
-only works once the package's npm settings register a trusted publisher:
-GitHub Actions, owner `liustack`, repository `pptwise`, workflow
-`publish.yml`, no environment. Without that registration the job gets as far
-as the upload and fails with `E404` on the `PUT`, which is npm refusing the
-write, not a missing package. Until it is registered, publish by hand as
-above, then re-run nothing: the tag and `main` order in "Cutting a release"
-still applies.
+The Release workflow (`.github/workflows/release.yml`) publishes from a
+pushed `v*` tag through npm trusted publishing (OIDC), with provenance. npm
+matches the workflow by file name: the package's trusted publisher is
+registered as GitHub Actions, owner `liustack`, repository `pptwise`,
+workflow `release.yml`, no environment. If the two ever disagree (a renamed
+file, an environment added on one side), the OIDC exchange answers "package
+not found", npm quietly falls back to setup-node's placeholder token, and the
+job fails with `E404` on the `PUT`. That E404 is npm refusing the write, not
+a missing package. Until CI publishing works again, publish by hand as
+above; the tag and `main` order in "Cutting a release" still applies.
