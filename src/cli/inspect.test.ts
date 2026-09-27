@@ -4,6 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
+import { componentJsonSchema } from "../ir/json-schema"
 import { pageContract } from "../inspect/page-contract"
 import { getThemeDefinition } from "../themes/definitions"
 import { runInspect, runValidate } from "./commands"
@@ -143,5 +144,36 @@ describe("runInspect --page", () => {
     await expect(runInspect(dir, { page: "nope" })).rejects.toThrow(/no page "nope" in this deck\. Pages: open, growth, number, later, close/)
     await expect(runInspect(dir, { page: "../deck.spec" })).rejects.toThrow(/not a safe file name/)
     await expect(runInspect(join(dir, "deck.spec.json"), { page: "growth" })).rejects.toThrow(/deck project directory/)
+  })
+})
+
+describe("runInspect --component", () => {
+  it("expands one component for the page: its schema cut, its story, and the page's limits on it", async () => {
+    const dir = await deck({})
+    const { output, failed } = await runInspect(dir, { page: "growth", component: "chart", json: true })
+    expect(failed).toBe(false)
+    expect(output).not.toContain("\n")
+    const expanded = JSON.parse(output)
+    expect(expanded.page.id).toBe("growth")
+    expect(expanded.component).toBe("chart")
+    expect(expanded.fullBody).toBe(false)
+    expect(expanded.schema).toEqual(componentJsonSchema("chart"))
+    expect(expanded.story.name).toBeTruthy()
+    expect(expanded.limits.map((limit: { measure: string }) => limit.measure)).toEqual(["series"])
+  })
+
+  it("prints the story and the schema without --json", async () => {
+    const dir = await deck({})
+    const { output } = await runInspect(dir, { page: "growth", component: "sankey" })
+    expect(output).toContain("component sankey on page growth (2 of 5)")
+    expect(output).toContain("full-body: yes, it must be the page's only component")
+    expect(output).toContain("choose it: ")
+    expect(output).toContain('"const": "sankey"')
+  })
+
+  it("refuses a component the page's face does not draw, and an unknown type", async () => {
+    const dir = await deck({})
+    await expect(runInspect(dir, { page: "number", component: "chart" })).rejects.toThrow(/page "number" does not draw chart\. It draws: /)
+    await expect(runInspect(dir, { page: "number", component: "quote" })).rejects.toThrow(/unknown component type "quote"/)
   })
 })

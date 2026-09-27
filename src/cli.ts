@@ -155,11 +155,12 @@ program
   )
   .argument("<deck>", "deck project directory, or bare name under ~/.pptwise/decks")
   .requiredOption("--page <id>", "the page id in deck.spec.json")
+  .option("--component <type>", "expand one component the page may hold: its story, its limits on this page, and its schema")
   .option("--json", "print the contract as one line of JSON")
-  .addHelpText("after", "\nExample:\n  $ pptwise inspect my-deck/ --page growth")
-  .action(async (target: string, opts: { page: string; json?: boolean }) => {
+  .addHelpText("after", "\nExamples:\n  $ pptwise inspect my-deck/ --page growth\n  $ pptwise inspect my-deck/ --page growth --component chart")
+  .action(async (target: string, opts: { page: string; component?: string; json?: boolean }) => {
     try {
-      const { output, failed } = await runInspect(target, { page: opts.page, json: opts.json })
+      const { output, failed } = await runInspect(target, { page: opts.page, component: opts.component, json: opts.json })
       console.log(output)
       if (failed) process.exit(1)
     } catch (e) {

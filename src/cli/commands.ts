@@ -20,7 +20,7 @@ import { PPTX_ICON_NAMES } from "../icons/catalog"
 import { kindJsonSchema } from "../kind-components"
 import { disassembleDeck, type PageContent } from "../spec/assemble"
 import { formatInvalidSpecError, specJsonSchema, resolveSpecThemeId, validateSpec, type DeckSpec } from "../spec"
-import { pageContract } from "../inspect/page-contract"
+import { pageComponentContract, pageContract } from "../inspect/page-contract"
 import { AUDIENCE_VALUES, PACING_BUDGETS, STRATEGY_DEFINITIONS, NARRATIVE_PRESETS, resolveNarrative, type NarrativeProfile } from "../narrative"
 import { auditDeck, type AuditChecks, type AuditFinding, type AuditReport } from "../audit/deck-audit"
 import { buildAssetBrief, type AssetBrief, type AssetBriefItem } from "../render/asset-brief"
@@ -41,7 +41,7 @@ import {
   SPEC_FILENAME,
   THEME_FILENAME,
 } from "./deck-dir"
-import { formatPageContract } from "./inspect-format"
+import { formatPageComponentContract, formatPageContract } from "./inspect-format"
 import { writeThemeFile } from "./theme-write"
 import { loadIrFile, resolveLocalAssets } from "./load-ir"
 import { buildContactSheetHtml, buildPreviewHtml } from "./preview-html"
@@ -688,6 +688,8 @@ export async function runAudit(target: string, opts: AuditOptions = {}): Promise
 export interface InspectOptions {
   /** The spec page id to inspect. Required. */
   page?: string
+  /** Expand this one component for the page instead of the whole contract. */
+  component?: string
   /** Print the contract object as one line of JSON. */
   json?: boolean
   cwd?: string
@@ -700,8 +702,9 @@ export interface InspectCliResult {
 }
 
 /**
- * `pptwise inspect <deck> --page <id> [--json]`: one page's fill contract
- * (`../inspect/page-contract.ts`).
+ * `pptwise inspect <deck> --page <id> [--component <type>] [--json]`: one
+ * page's fill contract (`../inspect/page-contract.ts`), or one component of
+ * it expanded with its schema.
  *
  * The deck resolves the way `validate` resolves it: the same target lookup,
  * the same theme inputs, the same workspace stock images. Only the page's
@@ -729,7 +732,12 @@ export async function runInspect(target: string, opts: InspectOptions): Promise<
   const ir = loaded.raw as PptxIR
   const validation = validateIr(ir, { theme })
   const pageSpec = loaded.spec?.pages.find((page) => page.id === opts.page)
-  const contract = pageContract(ir, opts.page, { theme, validation, ...(pageSpec !== undefined ? { pageSpec } : {}) })
+  const contractOpts = { theme, validation, ...(pageSpec !== undefined ? { pageSpec } : {}) }
+  if (opts.component !== undefined) {
+    const expanded = pageComponentContract(ir, opts.page, opts.component, contractOpts)
+    return { output: opts.json ? JSON.stringify(expanded) : formatPageComponentContract(expanded), failed: false }
+  }
+  const contract = pageContract(ir, opts.page, contractOpts)
   const file = `${PAGES_DIRNAME}/${opts.page}.json`
   const output = opts.json
     ? JSON.stringify({ ...contract, page: { ...contract.page, file } })

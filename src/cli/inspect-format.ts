@@ -3,7 +3,7 @@
  * objects themselves (`../inspect/page-contract.ts`); these render the same
  * facts as lines a person can scan.
  */
-import type { InspectedPage, PageContract, PageIssue, PageLimit } from "../inspect/page-contract"
+import type { InspectedPage, PageComponentContract, PageContract, PageIssue, PageLimit } from "../inspect/page-contract"
 
 /** `page growth (2 of 5): content, kind "data", theme "brief"` plus the locked heading and hints. */
 function pageHeader(page: InspectedPage, theme: string | undefined, file: string): string[] {
@@ -70,5 +70,31 @@ export function formatPageContract(contract: PageContract, file: string): string
   if (contract.limits.length > 0) lines.push("")
   lines.push(...issueBlock("errors", contract.errors), ...issueBlock("warnings", contract.warnings))
   lines.push("fit: counts are not a drawing; --fit draws this page and reports what it loses")
+  return lines.join("\n")
+}
+
+/** The one-component report `pptwise inspect <deck> --page <id> --component <type>` prints without `--json`. */
+export function formatPageComponentContract(expanded: PageComponentContract): string {
+  const { page } = expanded
+  const kind = page.kind !== undefined ? `, kind "${page.kind}"` : ""
+  const lines = [`component ${expanded.component} on page ${page.id} (${page.number} of ${page.of}): ${page.type}${kind}`]
+  if (expanded.story !== undefined) {
+    lines.push(
+      `name: ${expanded.story.name}`,
+      `what it is: ${expanded.story.story}`,
+      `choose it: ${expanded.story.positioning}`,
+      `not for: ${expanded.story.notFor}`,
+    )
+  }
+  lines.push(`full-body: ${expanded.fullBody ? "yes, it must be the page's only component" : "no"}`)
+  if (expanded.limits.length > 0) {
+    lines.push(
+      "limits on this page:",
+      ...expanded.limits.map(
+        (limit) => `  ${formatLimit(limit)} (validate ${limit.level === "error" ? "refuses" : "warns"} past it)`,
+      ),
+    )
+  }
+  lines.push("schema:", JSON.stringify(expanded.schema, null, 2))
   return lines.join("\n")
 }
