@@ -2706,7 +2706,7 @@ describe("publishing a preview", () => {
     const { spawn } = await import("node:child_process")
     const { writeFile } = await import("node:fs/promises")
     const { join } = await import("node:path")
-    const { fileURLToPath } = await import("node:url")
+    const { fileURLToPath, pathToFileURL } = await import("node:url")
 
     const cliPath = await fakeCli()
     if (!options.killBeforePublish) await writeFile(join(dirname(cliPath), "kill-parent-at"), at)
@@ -2719,7 +2719,10 @@ describe("publishing a preview", () => {
     await writeFile(
       driver,
       [
-        `import { createPreviewService } from ${JSON.stringify(modulePath)}`,
+        // A file URL, not the path: an ES module specifier is a URL, and a
+        // Windows path (`C:\...`) reads as one with a `c:` scheme, so the
+        // driver died on its import before it rendered anything.
+        `import { createPreviewService } from ${JSON.stringify(pathToFileURL(modulePath).href)}`,
         `const svc = createPreviewService(${JSON.stringify(cliPath)})`,
         `await svc.tool.execute({ target: ${JSON.stringify(deck)} })`,
       ].join("\n"),
