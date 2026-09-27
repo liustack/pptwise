@@ -46,6 +46,8 @@ Browser services are isolated behind `src/platform`. The Node installer provides
 
 `pnpm check` runs typecheck, lint, and tests and is the default acceptance gate. `pnpm e2e` builds and drives the real CLI, with a LibreOffice probe when available. `pnpm docs:list` lists operational docs. `pnpm gallery` produces the visual review matrix.
 
+Model-driven benchmarks (`pnpm bench:run`, `pnpm bench:agentic`, probe rounds, or any run that calls an external model API) are off limits without the maintainer's explicit go-ahead. They spend real API tokens and cannot measure the subjective aesthetics that decide whether a deck is good, so their yield rarely justifies the cost. Deterministic gates (`pnpm check`, `pnpm e2e`, `pnpm gallery`) are unaffected.
+
 ## Workflow
 
 - Work on a topic branch with a `feat/`, `fix/`, `docs/`, or `chore/` prefix, then merge to main.
