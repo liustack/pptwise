@@ -2736,11 +2736,19 @@ describe("publishing a preview", () => {
     // machine is loaded, which is exactly when several of these run at once —
     // emits `error` and no `exit`, and waiting only for `exit` turns that into
     // a hang that surfaces as a timeout with no explanation.
-    const signal = await new Promise<string | null>((resolve, reject) => {
+    const exit = await new Promise<{ code: number | null; signal: string | null }>((resolve, reject) => {
       child.on("error", reject)
-      child.on("exit", (_code, sig) => resolve(sig))
+      child.on("exit", (code, signal) => resolve({ code, signal }))
     })
-    expect(signal, `the driver was supposed to be killed at ${at}`).toBe("SIGKILL")
+    // How a kill looks from the parent. POSIX delivers SIGKILL as a signal.
+    // Windows has no signals to deliver: `process.kill` there is
+    // `TerminateProcess` with exit code 1, and the parent sees that code and
+    // no signal at all. An uncaught error exits with 1 as well, so on Windows
+    // this alone does not prove a kill. The staging directory the caller
+    // checks next does: a thrown error runs `execute`'s cleanup, which
+    // removes it, and a kill runs nothing.
+    const killed = process.platform === "win32" ? { code: 1, signal: null } : { code: null, signal: "SIGKILL" }
+    expect(exit, `the driver was supposed to be killed at ${at}`).toEqual(killed)
     const { previewRoot } = await loadPreviewTool()
     const original = process.env.PPTWISE_HOME
     process.env.PPTWISE_HOME = home
