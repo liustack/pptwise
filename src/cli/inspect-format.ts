@@ -28,7 +28,7 @@ function pageHeader(page: InspectedPage, theme: string | undefined, file: string
   return lines
 }
 
-/** `at most 3 items in each bullets — the face's body slot`. The caller groups lines by level. */
+/** `at most 3 items in each bullets (the face's body slot)`. The caller groups lines by level. */
 export function formatLimit(limit: PageLimit): string {
   const of = limit.of?.join(" or ")
   let what: string
@@ -39,13 +39,13 @@ export function formatLimit(limit: PageLimit): string {
   } else {
     what = `at most ${limit.max} width units in each ${of ?? "component"} item`
   }
-  return `${what} — ${limit.source}`
+  return `${what} (${limit.source})`
 }
 
-/** `page components — message`, `deck narrative — message`. */
+/** `page components: message`, `deck narrative: message`. */
 export function formatIssue(issue: PageIssue): string {
   const where = issue.path === "" ? issue.scope : `${issue.scope} ${issue.path}`
-  return `${where} — ${issue.message}`
+  return `${where}: ${issue.message}`
 }
 
 function issueBlock(label: string, issues: readonly PageIssue[]): string[] {
@@ -81,7 +81,7 @@ export function formatPageContract(contract: PageContract, file: string): string
   }
   if (contract.limits.length > 0) lines.push("")
   lines.push(...issueBlock("errors", contract.errors), ...issueBlock("warnings", contract.warnings))
-  lines.push("fit: counts are not a drawing; --fit draws this page and reports what it loses")
+  lines.push("fit: not checked here. Run --fit to draw this page and see what it would lose")
   return lines.join("\n")
 }
 
@@ -103,7 +103,7 @@ export function formatPageComponentContract(expanded: PageComponentContract): st
     lines.push(
       "limits on this page:",
       ...expanded.limits.map(
-        (limit) => `  ${formatLimit(limit)} (validate ${limit.level === "error" ? "refuses" : "warns"} past it)`,
+        (limit) => `  ${formatLimit(limit)}, validate ${limit.level === "error" ? "refuses" : "warns"} past it`,
       ),
     )
   }
@@ -121,7 +121,7 @@ export function formatPageFitReport(report: PageFitReport, theme: string): strin
     lines.push("fit: fits, nothing dropped")
   } else {
     lines.push(
-      `fit: does not fit — ${fit.dropped.map((drop) => drop.what).join(", ")} dropped. ` +
+      `fit: does not fit, ${fit.dropped.map((drop) => drop.what).join(", ")} dropped. ` +
         "render refuses a deck that drops content: shorten the page or split it in two",
     )
   }

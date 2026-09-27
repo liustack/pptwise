@@ -239,7 +239,7 @@ function pageLimits(ir: PptxIR, slide: Slide, theme: ThemeDefinition, pacing: Pa
     const sources = [`${pacing} pacing allows ${density.pacingBudget}`]
     if (density.layoutCapacity !== undefined) sources.push(`the face's body holds ${density.layoutCapacity}`)
     if (density.takeoverImage) sources.push("the page's picture is not counted")
-    limits.push({ level: "warning", measure: "components", per: "page", max: density.limit, source: sources.join("; ") })
+    limits.push({ level: "warning", measure: "components", per: "page", max: density.limit, source: sources.join(", ") })
     const itemSlot = density.itemSlot
     if (itemSlot !== undefined) {
       limits.push({
@@ -278,13 +278,13 @@ function pageLimits(ir: PptxIR, slide: Slide, theme: ThemeDefinition, pacing: Pa
       }
     }
   }
-  const width = "a CJK character is 1 width unit, a Latin letter less"
+  const width = "where a CJK character is 1 width unit and a Latin letter less"
   if (legal.includes("bullets")) {
     limits.push(
       { level: "warning", measure: "items", per: "component", of: ["bullets"], max: budget.bullets.maxItems, source: `${pacing} pacing` },
-      { level: "warning", measure: "item width", per: "item", of: ["bullets"], max: budget.bullets.maxUnitsPerItem, source: `${pacing} pacing; ${width}` },
+      { level: "warning", measure: "item width", per: "item", of: ["bullets"], max: budget.bullets.maxUnitsPerItem, source: `${pacing} pacing, ${width}` },
       { level: "error", measure: "items", per: "component", of: ["bullets"], max: CAPACITY.bullets.countOverflowItems, source: "engine ceiling" },
-      { level: "error", measure: "item width", per: "item", of: ["bullets"], max: CAPACITY.bullets.itemOverflowUnits, source: `render-safety limit; ${width}` },
+      { level: "error", measure: "item width", per: "item", of: ["bullets"], max: CAPACITY.bullets.itemOverflowUnits, source: `render-safety limit, ${width}` },
     )
   }
   if (legal.includes("comparison")) {

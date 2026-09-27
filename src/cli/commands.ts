@@ -755,7 +755,7 @@ export async function runInspect(target: string, opts: InspectOptions): Promise<
     if (!contract.page.filled) {
       fit = { checked: false, reason: "the page is not written yet" }
     } else if (!validation.ok) {
-      fit = { checked: false, reason: "the page has validate errors; fix them first" }
+      fit = { checked: false, reason: "fix the page's validate errors first" }
     } else {
       // The input the export draws: the validated deck, local assets read in.
       await resolveLocalAssets(validation.ir!, loaded.baseDir, loaded.workspaceAssetsDir)

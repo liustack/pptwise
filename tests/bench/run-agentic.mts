@@ -1480,7 +1480,7 @@ export async function runOneAgentic(
     `${TOOL_RESULTS_DIR}/ and the result ends with a [truncated: ...] line giving the exact read_file call (path and`,
     "offset) that continues it. read_file pages the same way, so keep reading until no [truncated: ...] line remains",
     "when you need the rest.",
-    "The spec schema, narrative presets, and theme catalog are not preloaded below — run",
+    "The spec schema, narrative presets, and theme catalog are not preloaded below. Run",
     "run_pptwise(['schema', '--spec']) / run_pptwise(['narratives', '--json']) / run_pptwise(['themes', '--json'])",
     "yourself, and read each page's contract with run_pptwise(['inspect', '<deck-dir>', '--page', '<id>']) while",
     "filling it, the same way the SKILL playbook expects.",
