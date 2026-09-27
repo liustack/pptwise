@@ -46,7 +46,7 @@ import {
   fixtureRecipeDigest,
   fixtureSourceDigest,
   renderFixtureJpeg,
-  resolvedFixtureFace,
+  fixtureFaceIdentity,
   type FixtureSpec,
 } from "../../../scripts/make-screenshot-fixture.mts"
 import { readJpegMarkers } from "./jpeg-markers"
@@ -114,13 +114,21 @@ describe.each(Object.entries(FIXTURES))("%s fixture", (_name, spec: FixtureSpec)
   })
 
   it("is byte-identical to what the generator produces today", { timeout: 120_000 }, async (ctx) => {
-    const recorded = JSON.parse(readFileSync(jsonPath, "utf8")).rendered_with_face
-    const here = await resolvedFixtureFace(spec)
-    if (here !== recorded) {
-      // Not a failure: the page would render correctly, in other glyphs.
+    const provenance = JSON.parse(readFileSync(jsonPath, "utf8"))
+    const here = await fixtureFaceIdentity(spec)
+    // Neither is a failure: the page would render correctly, in other glyphs.
+    if (here.face !== provenance.rendered_with_face) {
       ctx.skip(
-        `font stack resolves to "${here}" here, the committed bytes were drawn with "${recorded}" — ` +
-          `byte identity needs the same face`,
+        `font stack resolves to "${here.face}" here, the committed bytes were drawn with ` +
+          `"${provenance.rendered_with_face}" — byte identity needs the same face`,
+      )
+      return
+    }
+    if (here.fingerprint !== provenance.rendered_with_face_fingerprint) {
+      ctx.skip(
+        `"${here.face}" resolves here too, but draws in other glyphs than the build the committed ` +
+          `bytes were drawn with (another release of the face or of the rasterizer) — ` +
+          `byte identity needs the same glyphs`,
       )
       return
     }
@@ -162,5 +170,8 @@ describe.each(Object.entries(FIXTURES))("%s fixture", (_name, spec: FixtureSpec)
     expect(provenance.source_sha256).toBe(fixtureSourceDigest(spec))
     // A regenerated bundle is byte-stable, so no run date lives in here.
     expect(provenance.date).toBeUndefined()
+    // The byte check gates on both, so neither may go missing quietly.
+    expect(typeof provenance.rendered_with_face).toBe("string")
+    expect(provenance.rendered_with_face_fingerprint).toMatch(/^[0-9a-f]{64}$/)
   })
 })
