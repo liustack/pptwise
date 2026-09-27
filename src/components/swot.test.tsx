@@ -135,6 +135,30 @@ describe("swot quadrant titles follow the language of the content", () => {
   it("keeps a title the author wrote, whatever the content's language", () => {
     const text = titles({ ...basic, labels: { strengths: "Our edge" } })
     expect(text).toContain("Our edge")
+    expect(text).not.toContain("优势")
     expect(text).toContain("劣势")
+    const english = titles({
+      type: "swot",
+      strengths: ["Strong brand"],
+      weaknesses: ["One product line"],
+      opportunities: ["Emerging markets"],
+      threats: ["Price war"],
+      labels: { strengths: "优势" },
+    })
+    expect(english).toContain("优势")
+    expect(english).not.toContain("Strengths")
+    expect(english).toContain("Weaknesses")
+  })
+
+  it("keeps English titles for English content that names places in Chinese", () => {
+    const text = titles({
+      type: "swot",
+      strengths: ["Strong brand in 中国"],
+      weaknesses: ["Thin margins in 上海"],
+      opportunities: ["Expansion into 深圳"],
+      threats: ["Price war"],
+    })
+    expect(text).toContain("Strengths")
+    expect(text).not.toContain("优势")
   })
 })

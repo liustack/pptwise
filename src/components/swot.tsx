@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { mostlyCjk } from "../lib/text-script"
+import { mostlyChinese } from "../lib/text-script"
 import { accessibleInk } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -74,7 +74,7 @@ const DEFAULT_LABELS: Record<QuadrantKey, string> = {
   opportunities: "Opportunities",
   threats: "Threats",
 }
-/** The titles when the quadrants are written in Chinese (`mostlyCjk`). */
+/** The titles when the quadrants are written in Chinese (`mostlyChinese`). */
 const DEFAULT_LABELS_CJK: Record<QuadrantKey, string> = {
   strengths: "优势",
   weaknesses: "劣势",
@@ -257,7 +257,7 @@ function quadrantLayout(
 
 function gridGeom(component: SwotComponent, w: number, rhythmScale: number = 1, fontFamily?: string) {
   const quadW = (w - GRID_GAP) / 2
-  const defaults = mostlyCjk(QUADRANTS.flatMap((q) => component[q])) ? DEFAULT_LABELS_CJK : DEFAULT_LABELS
+  const defaults = mostlyChinese(QUADRANTS.flatMap((q) => component[q])) ? DEFAULT_LABELS_CJK : DEFAULT_LABELS
   const layouts = QUADRANTS.map((q) =>
     quadrantLayout(component[q], component.labels?.[q] ?? defaults[q], quadW, rhythmScale, fontFamily),
   )
