@@ -1104,7 +1104,7 @@ describe("who can see whose previews", () => {
     // which would put a user's decks wherever the harness happened to be
     // started from, and would make the root move when the cwd did.
     const { previewRoot, __testing } = await loadPreviewTool()
-    const { isAbsolute, join } = await import("node:path")
+    const { isAbsolute, join, resolve } = await import("node:path")
     const original = process.env.PPTWISE_HOME
     const originalPress = process.env.PPTPRESS_HOME
     const originalLegacy = process.env.PPTFAST_HOME
@@ -1119,8 +1119,11 @@ describe("who can see whose previews", () => {
       expect(previewRoot({ homedir: () => fakeHome })).toBe(fallback)
       process.env.PPTWISE_HOME = "relative/home"
       expect(isAbsolute(previewRoot())).toBe(true)
-      process.env.PPTWISE_HOME = "/somewhere/else"
-      expect(previewRoot()).toBe(join("/somewhere/else", __testing.PREVIEW_DIR))
+      // Resolved first, so it is absolute on every platform: `/somewhere/else`
+      // alone has no drive on Windows.
+      const elsewhere = resolve("/somewhere/else")
+      process.env.PPTWISE_HOME = elsewhere
+      expect(previewRoot()).toBe(join(elsewhere, __testing.PREVIEW_DIR))
     } finally {
       if (original === undefined) delete process.env.PPTWISE_HOME
       else process.env.PPTWISE_HOME = original

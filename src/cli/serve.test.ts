@@ -4,7 +4,7 @@ import { renameSync, writeFileSync } from "node:fs"
 import { mkdir, mkdtemp, readFile, realpath, rename, rm, stat, symlink, utimes, writeFile } from "node:fs/promises"
 import http from "node:http"
 import { tmpdir } from "node:os"
-import { basename, join } from "node:path"
+import { basename, join, parse, resolve, sep } from "node:path"
 import { pathToFileURL } from "node:url"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type * as FsModule from "node:fs"
@@ -938,29 +938,34 @@ describe("createServeServer — theme-file live reload", () => {
 })
 
 describe("themeWatchRoots", () => {
+  // Built with node:path rather than written as `/ws/...`: on Windows `/ws`
+  // has no drive, the lookup resolves it onto one, and the separator is `\`.
+  const ws = resolve("/ws")
+  const deckDir = join(ws, "decks", "my-deck")
+
   it("lists the deck directory's three shapes first, then themes/ from startDir up to the ceiling, as file roots", () => {
-    const roots = themeWatchRoots("acme", { startDir: "/ws/decks", deckDir: "/ws/decks/my-deck", ceilingDir: "/ws" })
+    const roots = themeWatchRoots("acme", { startDir: join(ws, "decks"), deckDir, ceilingDir: ws })
     expect(roots.slice(0, 3)).toEqual([
-      { path: "/ws/decks/my-deck/theme.json", kind: "file" },
-      { path: "/ws/decks/my-deck/acme.theme.json", kind: "file" },
-      { path: "/ws/decks/my-deck/acme.json", kind: "file" },
+      { path: join(deckDir, "theme.json"), kind: "file" },
+      { path: join(deckDir, "acme.theme.json"), kind: "file" },
+      { path: join(deckDir, "acme.json"), kind: "file" },
     ])
-    expect(roots).toContainEqual({ path: "/ws/decks/themes/acme.theme.json", kind: "file" })
-    expect(roots).toContainEqual({ path: "/ws/themes/acme/theme.json", kind: "file" })
+    expect(roots).toContainEqual({ path: join(ws, "decks", "themes", "acme.theme.json"), kind: "file" })
+    expect(roots).toContainEqual({ path: join(ws, "themes", "acme", "theme.json"), kind: "file" })
     expect(roots.every((root) => root.kind === "file")).toBe(true)
   })
 
   it("above the ceiling, waits for no themes/ that does not exist yet", () => {
-    const roots = themeWatchRoots("acme", { startDir: "/ws/decks", deckDir: "/ws/decks/my-deck", ceilingDir: "/ws" })
-    expect(roots.some((root) => root.path.startsWith("/themes/"))).toBe(false)
-    expect(roots.some((root) => root.path === "/ws/themes/acme.theme.json")).toBe(true)
+    const roots = themeWatchRoots("acme", { startDir: join(ws, "decks"), deckDir, ceilingDir: ws })
+    expect(roots.some((root) => root.path.startsWith(join(parse(ws).root, "themes") + sep))).toBe(false)
+    expect(roots.some((root) => root.path === join(ws, "themes", "acme.theme.json"))).toBe(true)
   })
 
   it("above the ceiling, watches no themes/ even when one already exists (the timed check covers it)", async () => {
     const dir = await makeDir("pptwise-serve-far-themes-")
     await mkdir(join(dir, "themes"))
     const roots = themeWatchRoots("acme", { startDir: join(dir, "a", "b"), deckDir: join(dir, "a", "b"), ceilingDir: join(dir, "a") })
-    expect(roots.some((root) => root.path.startsWith(join(dir, "themes") + "/"))).toBe(false)
+    expect(roots.some((root) => root.path.startsWith(join(dir, "themes") + sep))).toBe(false)
     expect(roots.some((root) => root.path === join(dir, "a", "themes", "acme.theme.json"))).toBe(true)
   })
 

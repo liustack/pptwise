@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { join, parse, resolve, sep } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { __resetRegisteredThemes, getThemeDefinition, THEME_DEFINITIONS } from "../themes/definitions"
@@ -118,34 +118,45 @@ describe("a theme file resolved by name is carried by value", () => {
 })
 
 describe("themeCandidates", () => {
+  // Built with node:path rather than written as `/ws/...`: on Windows `/ws`
+  // has no drive, the walk resolves it onto one, and the separator is `\`.
+  const ws = resolve("/ws")
+  const top = parse(ws).root
+
   it("lists the deck directory first, then themes/ in every directory up to the root, nearest first", () => {
-    const paths = themeCandidates("acme", { startDir: "/ws/decks", deckDir: "/ws/decks/my-deck" }).map((c) => c.path)
+    const deckDir = join(ws, "decks", "my-deck")
+    const paths = themeCandidates("acme", { startDir: join(ws, "decks"), deckDir }).map((c) => c.path)
     expect(paths.slice(0, 3)).toEqual([
-      "/ws/decks/my-deck/theme.json",
-      "/ws/decks/my-deck/acme.theme.json",
-      "/ws/decks/my-deck/acme.json",
+      join(deckDir, "theme.json"),
+      join(deckDir, "acme.theme.json"),
+      join(deckDir, "acme.json"),
     ])
     expect(paths.slice(3, 6)).toEqual([
-      "/ws/decks/themes/acme.theme.json",
-      "/ws/decks/themes/acme.json",
-      "/ws/decks/themes/acme/theme.json",
+      join(ws, "decks", "themes", "acme.theme.json"),
+      join(ws, "decks", "themes", "acme.json"),
+      join(ws, "decks", "themes", "acme", "theme.json"),
     ])
-    expect(paths.slice(-3)).toEqual(["/themes/acme.theme.json", "/themes/acme.json", "/themes/acme/theme.json"])
-    expect(paths.indexOf("/ws/themes/acme.theme.json")).toBe(6)
+    expect(paths.slice(-3)).toEqual([
+      join(top, "themes", "acme.theme.json"),
+      join(top, "themes", "acme.json"),
+      join(top, "themes", "acme", "theme.json"),
+    ])
+    expect(paths.indexOf(join(ws, "themes", "acme.theme.json"))).toBe(6)
   })
 
   it("marks only the <name>.json shape as loose, and only the first three as deck-level", () => {
-    const candidates = themeCandidates("acme", { startDir: "/ws", deckDir: "/ws/deck" })
-    for (const c of candidates) expect(c.loose).toBe(c.path.endsWith("/acme.json"))
+    const deckDir = join(ws, "deck")
+    const candidates = themeCandidates("acme", { startDir: ws, deckDir })
+    for (const c of candidates) expect(c.loose).toBe(c.path.endsWith(`${sep}acme.json`))
     expect(candidates.map((c) => c.deck)).toEqual([true, true, true, ...candidates.slice(3).map(() => false)])
-    expect(candidates.slice(0, 3).map((c) => c.anchor)).toEqual(["/ws/deck", "/ws/deck", "/ws/deck"])
-    expect(candidates.slice(3, 6).map((c) => c.anchor)).toEqual(["/ws", "/ws", "/ws"])
-    expect(candidates.at(-1)?.anchor).toBe("/")
+    expect(candidates.slice(0, 3).map((c) => c.anchor)).toEqual([deckDir, deckDir, deckDir])
+    expect(candidates.slice(3, 6).map((c) => c.anchor)).toEqual([ws, ws, ws])
+    expect(candidates.at(-1)?.anchor).toBe(top)
   })
 
   it("has no deck level without a deck directory", () => {
-    const paths = themeCandidates("acme", { startDir: "/ws" }).map((c) => c.path)
-    expect(paths[0]).toBe("/ws/themes/acme.theme.json")
+    const paths = themeCandidates("acme", { startDir: ws }).map((c) => c.path)
+    expect(paths[0]).toBe(join(ws, "themes", "acme.theme.json"))
   })
 })
 
