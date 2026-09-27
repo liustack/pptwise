@@ -156,6 +156,11 @@
       "geometry": "1broph2",
       "color": "1duzipq"
     },
+    "almanac--comp--chart-combo--zh": {
+      "hash": "1hz4npo",
+      "geometry": "19p03l1",
+      "color": "17t9le3"
+    },
     "almanac--comp--chart-donut--zh": {
       "hash": "9zagkm",
       "geometry": "1xloskt",
@@ -181,6 +186,11 @@
       "geometry": "1yi1rvz",
       "color": "1dtmvar"
     },
+    "almanac--comp--chart-percent-stacked--zh": {
+      "hash": "t80lxa",
+      "geometry": "54wt1c",
+      "color": "12xaq2s"
+    },
     "almanac--comp--chart-pie--zh": {
       "hash": "1ldogkl",
       "geometry": "kcy43n",
@@ -190,6 +200,11 @@
       "hash": "n0ui59",
       "geometry": "18feaqh",
       "color": "n15zvt"
+    },
+    "almanac--comp--chart-stacked--zh": {
+      "hash": "e0w8dr",
+      "geometry": "6e0giw",
+      "color": "1r7itkk"
     },
     "almanac--comp--chevron-process--zh": {
       "hash": "hiemoc",
@@ -631,6 +646,11 @@
       "geometry": "khxah1",
       "color": "oix9aj"
     },
+    "arena--comp--chart-combo--zh": {
+      "hash": "fa2ot6",
+      "geometry": "1fejh7r",
+      "color": "9xui8s"
+    },
     "arena--comp--chart-donut--zh": {
       "hash": "1sm8z7t",
       "geometry": "229839",
@@ -656,6 +676,11 @@
       "geometry": "1n0k1sa",
       "color": "noszd6"
     },
+    "arena--comp--chart-percent-stacked--zh": {
+      "hash": "uzng49",
+      "geometry": "18sc06d",
+      "color": "11vit19"
+    },
     "arena--comp--chart-pie--zh": {
       "hash": "weft34",
       "geometry": "v8a038",
@@ -665,6 +690,11 @@
       "hash": "j5m1cw",
       "geometry": "sw575a",
       "color": "1tr6vqy"
+    },
+    "arena--comp--chart-stacked--zh": {
+      "hash": "1lfexkt",
+      "geometry": "15n1rlq",
+      "color": "66mxax"
     },
     "arena--comp--chevron-process--zh": {
       "hash": "1uty95h",
@@ -1191,6 +1221,21 @@
       "geometry": "1bvr8f5",
       "color": "1u8uloj"
     },
+    "brief--comp--chart-combo--zh": {
+      "hash": "1gnyem6",
+      "geometry": "b6wbc6",
+      "color": "h3zsqu"
+    },
+    "brief--comp--chart-combo--en": {
+      "hash": "1flmj1c",
+      "geometry": "x52e8s",
+      "color": "h3zsqu"
+    },
+    "brief--comp--chart-combo--mixed": {
+      "hash": "12kx8zd",
+      "geometry": "akprkr",
+      "color": "h3zsqu"
+    },
     "brief--comp--chart-donut--zh": {
       "hash": "1lw1v8z",
       "geometry": "jxba4v",
@@ -1266,6 +1311,21 @@
       "geometry": "qabsl0",
       "color": "bg55l6"
     },
+    "brief--comp--chart-percent-stacked--zh": {
+      "hash": "vnbk7x",
+      "geometry": "1ok00cf",
+      "color": "1njdjpi"
+    },
+    "brief--comp--chart-percent-stacked--en": {
+      "hash": "qf50s0",
+      "geometry": "ov50mo",
+      "color": "1njdjpi"
+    },
+    "brief--comp--chart-percent-stacked--mixed": {
+      "hash": "yxplfc",
+      "geometry": "kuglpe",
+      "color": "1njdjpi"
+    },
     "brief--comp--chart-pie--zh": {
       "hash": "of0e46",
       "geometry": "19fyt7f",
@@ -1295,6 +1355,21 @@
       "hash": "qzhe9u",
       "geometry": "34fp7v",
       "color": "bxi2by"
+    },
+    "brief--comp--chart-stacked--zh": {
+      "hash": "1rgk9z1",
+      "geometry": "1xp60k2",
+      "color": "1vejlq4"
+    },
+    "brief--comp--chart-stacked--en": {
+      "hash": "19bxb7x",
+      "geometry": "10uqnz2",
+      "color": "1vejlq4"
+    },
+    "brief--comp--chart-stacked--mixed": {
+      "hash": "1jh0mgl",
+      "geometry": "19upr3s",
+      "color": "1vejlq4"
     },
     "brief--comp--chevron-process--zh": {
       "hash": "193wo32",
@@ -2291,6 +2366,11 @@
       "geometry": "1vvq8q6",
       "color": "bdhusk"
     },
+    "bulletin--comp--chart-combo--zh": {
+      "hash": "1ej1v9r",
+      "geometry": "11dd5ch",
+      "color": "1yjtkzc"
+    },
     "bulletin--comp--chart-donut--zh": {
       "hash": "29y2qt",
       "geometry": "15uxr4",
@@ -2316,6 +2396,11 @@
       "geometry": "6i6zmq",
       "color": "nh0300"
     },
+    "bulletin--comp--chart-percent-stacked--zh": {
+      "hash": "1m1pwxg",
+      "geometry": "yrqfk0",
+      "color": "1vrilj2"
+    },
     "bulletin--comp--chart-pie--zh": {
       "hash": "1s6b765",
       "geometry": "1fd1j77",
@@ -2325,6 +2410,11 @@
       "hash": "1m1130f",
       "geometry": "26d0vd",
       "color": "8rg83f"
+    },
+    "bulletin--comp--chart-stacked--zh": {
+      "hash": "1wbqae6",
+      "geometry": "9g47l3",
+      "color": "1hqyody"
     },
     "bulletin--comp--chevron-process--zh": {
       "hash": "inohcf",
@@ -2751,6 +2841,11 @@
       "geometry": "1eskg0m",
       "color": "2bga0a"
     },
+    "clinic--comp--chart-combo--zh": {
+      "hash": "1tx6z5u",
+      "geometry": "ekutea",
+      "color": "woo0qs"
+    },
     "clinic--comp--chart-donut--zh": {
       "hash": "126bx49",
       "geometry": "10a2hhj",
@@ -2776,6 +2871,11 @@
       "geometry": "1yvxpck",
       "color": "1pek1lu"
     },
+    "clinic--comp--chart-percent-stacked--zh": {
+      "hash": "39iro",
+      "geometry": "qrkdqx",
+      "color": "1rg1oep"
+    },
     "clinic--comp--chart-pie--zh": {
       "hash": "1jisrn7",
       "geometry": "1vl6gjn",
@@ -2785,6 +2885,11 @@
       "hash": "1hhs8f5",
       "geometry": "1i1aj7y",
       "color": "cyuydy"
+    },
+    "clinic--comp--chart-stacked--zh": {
+      "hash": "go0fal",
+      "geometry": "1a4vh5u",
+      "color": "1imu1ve"
     },
     "clinic--comp--chevron-process--zh": {
       "hash": "3w8fdr",
@@ -3211,6 +3316,11 @@
       "geometry": "1dim3tk",
       "color": "rzl361"
     },
+    "crayon--comp--chart-combo--zh": {
+      "hash": "11coltc",
+      "geometry": "10hu6rb",
+      "color": "1lwkmf8"
+    },
     "crayon--comp--chart-donut--zh": {
       "hash": "1276s61",
       "geometry": "4ccqnd",
@@ -3236,6 +3346,11 @@
       "geometry": "bcx6v2",
       "color": "jxq8yf"
     },
+    "crayon--comp--chart-percent-stacked--zh": {
+      "hash": "uf0qyp",
+      "geometry": "pzst2c",
+      "color": "iabh4g"
+    },
     "crayon--comp--chart-pie--zh": {
       "hash": "a62gie",
       "geometry": "3j9r07",
@@ -3245,6 +3360,11 @@
       "hash": "f9v1ph",
       "geometry": "4jfjyb",
       "color": "1l6mmm8"
+    },
+    "crayon--comp--chart-stacked--zh": {
+      "hash": "yedly2",
+      "geometry": "2fl2oy",
+      "color": "1xvl36a"
     },
     "crayon--comp--chevron-process--zh": {
       "hash": "1sff23o",
@@ -3676,6 +3796,11 @@
       "geometry": "150pm9f",
       "color": "1jfp62h"
     },
+    "ember--comp--chart-combo--zh": {
+      "hash": "16asx3x",
+      "geometry": "h07pus",
+      "color": "p0gmp"
+    },
     "ember--comp--chart-donut--zh": {
       "hash": "13pu32b",
       "geometry": "1t3lswv",
@@ -3701,6 +3826,11 @@
       "geometry": "1oq41pt",
       "color": "19l2s7x"
     },
+    "ember--comp--chart-percent-stacked--zh": {
+      "hash": "54qpuw",
+      "geometry": "72n539",
+      "color": "rmqsej"
+    },
     "ember--comp--chart-pie--zh": {
       "hash": "1ugbca6",
       "geometry": "xmfio7",
@@ -3710,6 +3840,11 @@
       "hash": "r0qe96",
       "geometry": "1i8r53x",
       "color": "12quibe"
+    },
+    "ember--comp--chart-stacked--zh": {
+      "hash": "1vnt9yg",
+      "geometry": "k2tuef",
+      "color": "n0a4i4"
     },
     "ember--comp--chevron-process--zh": {
       "hash": "lho1fr",
@@ -4151,6 +4286,11 @@
       "geometry": "y00bcy",
       "color": "1ermtej"
     },
+    "heritage--comp--chart-combo--zh": {
+      "hash": "1ayhlwx",
+      "geometry": "uhp4mb",
+      "color": "331m5h"
+    },
     "heritage--comp--chart-donut--zh": {
       "hash": "q2inq4",
       "geometry": "g9mrnm",
@@ -4176,6 +4316,11 @@
       "geometry": "1cvlkkm",
       "color": "2q3h0p"
     },
+    "heritage--comp--chart-percent-stacked--zh": {
+      "hash": "s7spje",
+      "geometry": "1tt8ha4",
+      "color": "1krrhvt"
+    },
     "heritage--comp--chart-pie--zh": {
       "hash": "g9hixs",
       "geometry": "11a4r3t",
@@ -4185,6 +4330,11 @@
       "hash": "js8dju",
       "geometry": "1ikd6y9",
       "color": "1n6037h"
+    },
+    "heritage--comp--chart-stacked--zh": {
+      "hash": "j997oa",
+      "geometry": "soaoio",
+      "color": "1rx46t4"
     },
     "heritage--comp--chevron-process--zh": {
       "hash": "1m64cmp",
@@ -4611,6 +4761,11 @@
       "geometry": "1v5n09a",
       "color": "fu52rt"
     },
+    "homeroom--comp--chart-combo--zh": {
+      "hash": "1vamlgm",
+      "geometry": "6lb0d5",
+      "color": "864o7r"
+    },
     "homeroom--comp--chart-donut--zh": {
       "hash": "15a4bhr",
       "geometry": "15nn5kf",
@@ -4636,6 +4791,11 @@
       "geometry": "1qz0g94",
       "color": "1bxm7pq"
     },
+    "homeroom--comp--chart-percent-stacked--zh": {
+      "hash": "18046dv",
+      "geometry": "1yvm46a",
+      "color": "1hq8kvz"
+    },
     "homeroom--comp--chart-pie--zh": {
       "hash": "1mwlon9",
       "geometry": "9yn35a",
@@ -4645,6 +4805,11 @@
       "hash": "voguxl",
       "geometry": "pvg4ga",
       "color": "1sureuw"
+    },
+    "homeroom--comp--chart-stacked--zh": {
+      "hash": "1k87j3a",
+      "geometry": "1s8qlqx",
+      "color": "qi40i6"
     },
     "homeroom--comp--chevron-process--zh": {
       "hash": "nh0h1o",
@@ -5086,6 +5251,11 @@
       "geometry": "shixzj",
       "color": "95uc03"
     },
+    "ink--comp--chart-combo--zh": {
+      "hash": "vsadtd",
+      "geometry": "skuq8h",
+      "color": "wex766"
+    },
     "ink--comp--chart-donut--zh": {
       "hash": "1r6996l",
       "geometry": "r6rj3d",
@@ -5111,6 +5281,11 @@
       "geometry": "b4202p",
       "color": "12y9rv1"
     },
+    "ink--comp--chart-percent-stacked--zh": {
+      "hash": "1dc5bfs",
+      "geometry": "130hg2h",
+      "color": "km6hpj"
+    },
     "ink--comp--chart-pie--zh": {
       "hash": "e3fdx8",
       "geometry": "1669pn0",
@@ -5120,6 +5295,11 @@
       "hash": "f8n8z1",
       "geometry": "1tlf3ce",
       "color": "9wleom"
+    },
+    "ink--comp--chart-stacked--zh": {
+      "hash": "teinny",
+      "geometry": "i7j5lh",
+      "color": "zzb98e"
     },
     "ink--comp--chevron-process--zh": {
       "hash": "1ovj0a9",
@@ -5561,6 +5741,11 @@
       "geometry": "als1nr",
       "color": "18p71s9"
     },
+    "journal--comp--chart-combo--zh": {
+      "hash": "1vadum1",
+      "geometry": "11jfaby",
+      "color": "1efswbn"
+    },
     "journal--comp--chart-donut--zh": {
       "hash": "uw4k4d",
       "geometry": "10gxmv8",
@@ -5586,6 +5771,11 @@
       "geometry": "m1pmdj",
       "color": "vfusxm"
     },
+    "journal--comp--chart-percent-stacked--zh": {
+      "hash": "1lw8jmp",
+      "geometry": "1d8djz7",
+      "color": "vxknby"
+    },
     "journal--comp--chart-pie--zh": {
       "hash": "1ya29cy",
       "geometry": "yjp3l3",
@@ -5595,6 +5785,11 @@
       "hash": "2awiip",
       "geometry": "1jfy7k0",
       "color": "9w4wq2"
+    },
+    "journal--comp--chart-stacked--zh": {
+      "hash": "1t5tacj",
+      "geometry": "1dkhpev",
+      "color": "rwfaxf"
     },
     "journal--comp--chevron-process--zh": {
       "hash": "13jd607",
@@ -6036,6 +6231,11 @@
       "geometry": "11nbvk1",
       "color": "1ukdyrw"
     },
+    "lecture--comp--chart-combo--zh": {
+      "hash": "9u54z0",
+      "geometry": "cdfgib",
+      "color": "l9bj6y"
+    },
     "lecture--comp--chart-donut--zh": {
       "hash": "1l5gr0b",
       "geometry": "1rvptje",
@@ -6061,6 +6261,11 @@
       "geometry": "1m887jy",
       "color": "1pq7n6n"
     },
+    "lecture--comp--chart-percent-stacked--zh": {
+      "hash": "1npg6x8",
+      "geometry": "fqrw5e",
+      "color": "zyps0v"
+    },
     "lecture--comp--chart-pie--zh": {
       "hash": "rykoxz",
       "geometry": "3gdm8u",
@@ -6070,6 +6275,11 @@
       "hash": "1j7zbj0",
       "geometry": "9xvfk9",
       "color": "1bo2xge"
+    },
+    "lecture--comp--chart-stacked--zh": {
+      "hash": "1pyyxid",
+      "geometry": "598yls",
+      "color": "1nmhx99"
     },
     "lecture--comp--chevron-process--zh": {
       "hash": "ksh0bn",
@@ -6506,6 +6716,11 @@
       "geometry": "1yk61da",
       "color": "1i3biqp"
     },
+    "ledger--comp--chart-combo--zh": {
+      "hash": "bujvcz",
+      "geometry": "1dshe3",
+      "color": "1mi4lh6"
+    },
     "ledger--comp--chart-donut--zh": {
       "hash": "12zrd8j",
       "geometry": "19hcgdt",
@@ -6531,6 +6746,11 @@
       "geometry": "cgcgye",
       "color": "ja2p8v"
     },
+    "ledger--comp--chart-percent-stacked--zh": {
+      "hash": "1srobi4",
+      "geometry": "12pop84",
+      "color": "10llg4q"
+    },
     "ledger--comp--chart-pie--zh": {
       "hash": "1hbav8f",
       "geometry": "3stq6v",
@@ -6540,6 +6760,11 @@
       "hash": "1moycis",
       "geometry": "1jstzpv",
       "color": "15spc3i"
+    },
+    "ledger--comp--chart-stacked--zh": {
+      "hash": "1r35alz",
+      "geometry": "10hul7y",
+      "color": "1om0wde"
     },
     "ledger--comp--chevron-process--zh": {
       "hash": "1lc7ibi",
@@ -6981,6 +7206,11 @@
       "geometry": "kl2px3",
       "color": "17x6ixw"
     },
+    "luxe--comp--chart-combo--zh": {
+      "hash": "1ufvqz0",
+      "geometry": "1qm8dzj",
+      "color": "12qlqlt"
+    },
     "luxe--comp--chart-donut--zh": {
       "hash": "pgbodr",
       "geometry": "uhd64b",
@@ -7006,6 +7236,11 @@
       "geometry": "odlgwc",
       "color": "svbqji"
     },
+    "luxe--comp--chart-percent-stacked--zh": {
+      "hash": "3ahemm",
+      "geometry": "gaoe1x",
+      "color": "1rv2t3f"
+    },
     "luxe--comp--chart-pie--zh": {
       "hash": "j4t1b3",
       "geometry": "4r2znu",
@@ -7015,6 +7250,11 @@
       "hash": "1gigp55",
       "geometry": "1gvgczy",
       "color": "167sae8"
+    },
+    "luxe--comp--chart-stacked--zh": {
+      "hash": "gyikz8",
+      "geometry": "jkq8wx",
+      "color": "wzslao"
     },
     "luxe--comp--chevron-process--zh": {
       "hash": "1mb1gj0",
@@ -7451,6 +7691,11 @@
       "geometry": "1g4trii",
       "color": "l8tgek"
     },
+    "memo--comp--chart-combo--zh": {
+      "hash": "fi9bak",
+      "geometry": "an0yus",
+      "color": "12zjlka"
+    },
     "memo--comp--chart-donut--zh": {
       "hash": "13mekwa",
       "geometry": "17lqlru",
@@ -7476,6 +7721,11 @@
       "geometry": "1vyu47k",
       "color": "1jx822c"
     },
+    "memo--comp--chart-percent-stacked--zh": {
+      "hash": "3x6ykj",
+      "geometry": "wyr2e9",
+      "color": "58tnde"
+    },
     "memo--comp--chart-pie--zh": {
       "hash": "z52lg1",
       "geometry": "1cop28z",
@@ -7485,6 +7735,11 @@
       "hash": "ptywdx",
       "geometry": "3ya4bn",
       "color": "1rhr4tf"
+    },
+    "memo--comp--chart-stacked--zh": {
+      "hash": "c4oguf",
+      "geometry": "17y8rpl",
+      "color": "1w2xkx5"
     },
     "memo--comp--chevron-process--zh": {
       "hash": "1q1x06s",
@@ -7926,6 +8181,11 @@
       "geometry": "13suvtm",
       "color": "qr82qd"
     },
+    "museum--comp--chart-combo--zh": {
+      "hash": "1fnbpbn",
+      "geometry": "qdmd2n",
+      "color": "1xoogj8"
+    },
     "museum--comp--chart-donut--zh": {
       "hash": "1vh0f0z",
       "geometry": "ktemfo",
@@ -7951,6 +8211,11 @@
       "geometry": "qyre69",
       "color": "10obmll"
     },
+    "museum--comp--chart-percent-stacked--zh": {
+      "hash": "h371m4",
+      "geometry": "zpcxrj",
+      "color": "1504jnr"
+    },
     "museum--comp--chart-pie--zh": {
       "hash": "1mnkcy5",
       "geometry": "61f34n",
@@ -7960,6 +8225,11 @@
       "hash": "1o510pf",
       "geometry": "29ehgy",
       "color": "nzt8l4"
+    },
+    "museum--comp--chart-stacked--zh": {
+      "hash": "138s9jr",
+      "geometry": "1u4aus2",
+      "color": "jv1pfm"
     },
     "museum--comp--chevron-process--zh": {
       "hash": "14o042h",
@@ -8396,6 +8666,11 @@
       "geometry": "i3tmcc",
       "color": "dwsn3d"
     },
+    "playbill--comp--chart-combo--zh": {
+      "hash": "k4ygn",
+      "geometry": "3glans",
+      "color": "1hnqndl"
+    },
     "playbill--comp--chart-donut--zh": {
       "hash": "19kh89l",
       "geometry": "1c0jfha",
@@ -8421,6 +8696,11 @@
       "geometry": "oya0nj",
       "color": "1e5cmdl"
     },
+    "playbill--comp--chart-percent-stacked--zh": {
+      "hash": "5mozgv",
+      "geometry": "j901uo",
+      "color": "5aztgz"
+    },
     "playbill--comp--chart-pie--zh": {
       "hash": "1oj5bvm",
       "geometry": "1fpvvn0",
@@ -8430,6 +8710,11 @@
       "hash": "69n6b9",
       "geometry": "1cemodp",
       "color": "k5cj1k"
+    },
+    "playbill--comp--chart-stacked--zh": {
+      "hash": "e6tyvl",
+      "geometry": "1sns2sy",
+      "color": "mchbys"
     },
     "playbill--comp--chevron-process--zh": {
       "hash": "12o7zg2",
@@ -8871,6 +9156,11 @@
       "geometry": "1qjmcfd",
       "color": "17iu23o"
     },
+    "rally--comp--chart-combo--zh": {
+      "hash": "mjyagq",
+      "geometry": "1p5z07a",
+      "color": "135nrz0"
+    },
     "rally--comp--chart-donut--zh": {
       "hash": "1j2nucp",
       "geometry": "a4lhpr",
@@ -8896,6 +9186,11 @@
       "geometry": "pk4j0i",
       "color": "ze558f"
     },
+    "rally--comp--chart-percent-stacked--zh": {
+      "hash": "yq4lr",
+      "geometry": "1che5uh",
+      "color": "jrcyfy"
+    },
     "rally--comp--chart-pie--zh": {
       "hash": "1owp3yl",
       "geometry": "144so2y",
@@ -8905,6 +9200,11 @@
       "hash": "ddic70",
       "geometry": "11e0evu",
       "color": "insk4d"
+    },
+    "rally--comp--chart-stacked--zh": {
+      "hash": "18khk8",
+      "geometry": "q25dov",
+      "color": "8kle2i"
     },
     "rally--comp--chevron-process--zh": {
       "hash": "c1yrk",
@@ -9336,6 +9636,11 @@
       "geometry": "v3jj4v",
       "color": "5qntva"
     },
+    "runway--comp--chart-combo--zh": {
+      "hash": "1n6swqw",
+      "geometry": "pgfm0o",
+      "color": "t6toq2"
+    },
     "runway--comp--chart-donut--zh": {
       "hash": "1g09p52",
       "geometry": "r603jf",
@@ -9361,6 +9666,11 @@
       "geometry": "9manl0",
       "color": "au9e4w"
     },
+    "runway--comp--chart-percent-stacked--zh": {
+      "hash": "ma8bo3",
+      "geometry": "1m12is7",
+      "color": "1rx96di"
+    },
     "runway--comp--chart-pie--zh": {
       "hash": "qfsti7",
       "geometry": "1kmhrh8",
@@ -9370,6 +9680,11 @@
       "hash": "19n9x3j",
       "geometry": "17z1bal",
       "color": "1k8i6xl"
+    },
+    "runway--comp--chart-stacked--zh": {
+      "hash": "1wjw8qt",
+      "geometry": "9wew82",
+      "color": "141fhqi"
     },
     "runway--comp--chevron-process--zh": {
       "hash": "1na65n5",
@@ -9811,6 +10126,11 @@
       "geometry": "54lqky",
       "color": "1y01ihq"
     },
+    "stage--comp--chart-combo--zh": {
+      "hash": "ruwmpl",
+      "geometry": "12y0et1",
+      "color": "1y1shtw"
+    },
     "stage--comp--chart-donut--zh": {
       "hash": "12dtk41",
       "geometry": "ls16eb",
@@ -9836,6 +10156,11 @@
       "geometry": "1hwqkh5",
       "color": "l3k59s"
     },
+    "stage--comp--chart-percent-stacked--zh": {
+      "hash": "7dlidb",
+      "geometry": "1g77ywh",
+      "color": "7wmhvk"
+    },
     "stage--comp--chart-pie--zh": {
       "hash": "1jymmkh",
       "geometry": "1b0zf09",
@@ -9845,6 +10170,11 @@
       "hash": "wu4ndo",
       "geometry": "1wf6yj1",
       "color": "iamf2q"
+    },
+    "stage--comp--chart-stacked--zh": {
+      "hash": "kx00t2",
+      "geometry": "1otsngd",
+      "color": "haifj4"
     },
     "stage--comp--chevron-process--zh": {
       "hash": "h22ul0",
@@ -10286,6 +10616,11 @@
       "geometry": "lxavo5",
       "color": "dekykb"
     },
+    "swiss--comp--chart-combo--zh": {
+      "hash": "18ro7do",
+      "geometry": "yasalf",
+      "color": "1lh8zmg"
+    },
     "swiss--comp--chart-donut--zh": {
       "hash": "149dvvf",
       "geometry": "6stcjo",
@@ -10311,6 +10646,11 @@
       "geometry": "1rdwifl",
       "color": "ozaee9"
     },
+    "swiss--comp--chart-percent-stacked--zh": {
+      "hash": "quo3gm",
+      "geometry": "1c48782",
+      "color": "1hqeuaj"
+    },
     "swiss--comp--chart-pie--zh": {
       "hash": "k0okh5",
       "geometry": "gx50lz",
@@ -10320,6 +10660,11 @@
       "hash": "1qq6fxr",
       "geometry": "f6dxbi",
       "color": "12ggpud"
+    },
+    "swiss--comp--chart-stacked--zh": {
+      "hash": "1te31iy",
+      "geometry": "flmfz5",
+      "color": "1ifv0yd"
     },
     "swiss--comp--chevron-process--zh": {
       "hash": "ju803z",
@@ -10761,6 +11106,11 @@
       "geometry": "16zpuqr",
       "color": "1fc4atf"
     },
+    "terminal--comp--chart-combo--zh": {
+      "hash": "jnmezh",
+      "geometry": "1dtl6m3",
+      "color": "9bewyh"
+    },
     "terminal--comp--chart-donut--zh": {
       "hash": "l1qu52",
       "geometry": "hv7nwr",
@@ -10786,6 +11136,11 @@
       "geometry": "1rsq1sm",
       "color": "1d4jhwe"
     },
+    "terminal--comp--chart-percent-stacked--zh": {
+      "hash": "jgapn4",
+      "geometry": "xj9p6f",
+      "color": "9l9hou"
+    },
     "terminal--comp--chart-pie--zh": {
       "hash": "ccdq1u",
       "geometry": "a796qk",
@@ -10795,6 +11150,11 @@
       "hash": "gx8dal",
       "geometry": "uzyz1p",
       "color": "1chn7q"
+    },
+    "terminal--comp--chart-stacked--zh": {
+      "hash": "1jikgfg",
+      "geometry": "dbfwlf",
+      "color": "1ps8a11"
     },
     "terminal--comp--chevron-process--zh": {
       "hash": "1w5700v",
@@ -11241,6 +11601,11 @@
       "geometry": "1btgxw9",
       "color": "10dx7t2"
     },
+    "thesis--comp--chart-combo--zh": {
+      "hash": "ot1o3z",
+      "geometry": "yrjinr",
+      "color": "1jtcv80"
+    },
     "thesis--comp--chart-donut--zh": {
       "hash": "plncr2",
       "geometry": "1vf4xnv",
@@ -11266,6 +11631,11 @@
       "geometry": "4zgp2",
       "color": "1xl14pc"
     },
+    "thesis--comp--chart-percent-stacked--zh": {
+      "hash": "2yoxfb",
+      "geometry": "14wxtub",
+      "color": "1axvx7m"
+    },
     "thesis--comp--chart-pie--zh": {
       "hash": "5w6dxy",
       "geometry": "kazp2y",
@@ -11275,6 +11645,11 @@
       "hash": "kqyyui",
       "geometry": "18arrxw",
       "color": "11spjf9"
+    },
+    "thesis--comp--chart-stacked--zh": {
+      "hash": "w6bsmd",
+      "geometry": "19yhis",
+      "color": "r0xp6q"
     },
     "thesis--comp--chevron-process--zh": {
       "hash": "f45ol0",
@@ -11731,6 +12106,11 @@
       "geometry": "1szio4a",
       "color": "1wnho91"
     },
+    "vermilion--comp--chart-combo--zh": {
+      "hash": "ji1opb",
+      "geometry": "zhk1cn",
+      "color": "s9gzvg"
+    },
     "vermilion--comp--chart-donut--zh": {
       "hash": "1udg0ok",
       "geometry": "12x946",
@@ -11756,6 +12136,11 @@
       "geometry": "110t0pi",
       "color": "ba91me"
     },
+    "vermilion--comp--chart-percent-stacked--zh": {
+      "hash": "e3kwvw",
+      "geometry": "115yg7n",
+      "color": "9nbak3"
+    },
     "vermilion--comp--chart-pie--zh": {
       "hash": "am676z",
       "geometry": "n3yywg",
@@ -11765,6 +12150,11 @@
       "hash": "1d42pbj",
       "geometry": "1dcambw",
       "color": "aar2iu"
+    },
+    "vermilion--comp--chart-stacked--zh": {
+      "hash": "vgmj5",
+      "geometry": "1qbet6n",
+      "color": "5fz3o3"
     },
     "vermilion--comp--chevron-process--zh": {
       "hash": "11n8eg3",

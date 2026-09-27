@@ -16,7 +16,8 @@
  */
 
 import type { Component } from "@/ir"
-import type { Lexicon } from "./lexicon"
+import { measureTextUnits } from "@/lib/svg-text-layout"
+import type { Lexicon, Metric } from "./lexicon"
 
 /** Asset ids the corpus declares — see `deck.ts`, which materializes them. */
 export const PHOTO_ASSETS = ["photo-1", "photo-2", "photo-3", "photo-4"] as const
@@ -791,10 +792,38 @@ export const DEVICE_VARIANTS: Record<string, (lex: Lexicon) => Component> = {
 }
 
 /**
- * Extra chart shapes. `chart` is one IR type but nine visually unrelated
- * drawings, and reviewing only the bar form would leave eight untouched —
+ * Room a legend gives one series name: `chart.tsx`'s 160px `LEGEND_NAME_MAX_W`
+ * at its 16px legend size, less a margin for the theme's own body face, which
+ * the corpus does not know when it builds a component.
+ */
+const LEGEND_NAME_FIT_PX = 148
+
+/**
+ * The metric a combo page draws as its line: the first after `metrics[0]`
+ * (the bars' own measure) whose label fits a legend entry whole.
+ *
+ * A combo names its line in the legend, and the legend cuts a name past its
+ * per-entry budget and marks the cut. `metrics[1]` is the natural pick and
+ * fits on most tracks, but the mixed track's runs a Latin word and four CJK
+ * glyphs past the budget, so that page reviewed a truncated legend instead of
+ * the chart. Taking the next metric the track itself wrote keeps the register
+ * the lexicon authored, the same trade `headingThatFitsAnywhere` makes for the
+ * device pages' heading.
+ */
+function legendFitMetric(lex: Lexicon): Metric {
+  const fits = (m: Metric) => measureTextUnits(m.label, {}) * 16 <= LEGEND_NAME_FIT_PX
+  return lex.metrics.slice(1).find(fits) ?? lex.metrics[1]!
+}
+
+/**
+ * Extra chart shapes. `chart` is one IR type but twelve visually unrelated
+ * drawings, and reviewing only the bar form would leave eleven untouched —
  * the exact "count the types, miss the surfaces" gap the review exists to
  * close. Keyed by the label the gallery shows, values build the component.
+ *
+ * The three column-and-line pages (stacked, percent stacked, combo) reuse
+ * the bar page's own segments and periods, so a reviewer comparing the four
+ * reads the same quarters and the same customer groups drawn four ways.
  */
 export const CHART_VARIANTS: Record<string, (lex: Lexicon) => Component> = {
   "chart · bar": (lex) => COMPONENT_BUILDERS.chart!(lex),
@@ -875,6 +904,58 @@ export const CHART_VARIANTS: Record<string, (lex: Lexicon) => Component> = {
       },
     ],
   }),
+
+  "chart · stacked": (lex) => ({
+    type: "chart",
+    chart_type: "stacked",
+    axes: { x_title: lex.periodAxis, y_title: lex.metrics[0]!.label, y_unit: lex.metrics[0]!.unit },
+    series: [
+      { name: lex.labels[8]!, data: slice(lex.periods, 4).map((x, i) => ({ x, y: 42 + i * 6 })) },
+      { name: lex.labels[9]!, data: slice(lex.periods, 4).map((x, i) => ({ x, y: 30 + i * 4 })) },
+      { name: lex.labels[10]!, data: slice(lex.periods, 4).map((x, i) => ({ x, y: 18 + i * 3 })) },
+    ],
+  }),
+
+  "chart · percent stacked": (lex) => ({
+    type: "chart",
+    chart_type: "percent_stacked",
+    axes: { x_title: lex.periodAxis, y_title: lex.metrics[0]!.label },
+    series: [
+      { name: lex.labels[8]!, data: slice(lex.periods, 4).map((x, i) => ({ x, y: 38 + i * 5 })) },
+      { name: lex.labels[9]!, data: slice(lex.periods, 4).map((x, i) => ({ x, y: 41 - i * 4 })) },
+      { name: lex.labels[10]!, data: slice(lex.periods, 4).map((x, i) => ({ x, y: 21 - i })) },
+    ],
+  }),
+
+  // The line is a second metric, on its own axis and unit, running up to
+  // that metric's own headline value so the right-hand scale reads as the
+  // figure the rest of the deck quotes. Which metric: see `legendFitMetric`.
+  "chart · combo": (lex) => {
+    const metric = legendFitMetric(lex)
+    const rate = Number.parseFloat(metric.value)
+    const end = Number.isFinite(rate) && rate > 0 ? rate : 50
+    return {
+      type: "chart",
+      chart_type: "combo",
+      axes: {
+        x_title: lex.periodAxis,
+        y_title: lex.metrics[0]!.label,
+        y_unit: lex.metrics[0]!.unit,
+        y2_title: metric.label,
+        y2_unit: metric.unit,
+      },
+      series: [
+        { name: lex.labels[8]!, data: slice(lex.periods, 4).map((x, i) => ({ x, y: 42 + i * 6 })) },
+        { name: lex.labels[9]!, data: slice(lex.periods, 4).map((x, i) => ({ x, y: 30 + i * 4 })) },
+        {
+          name: metric.label,
+          plot: "line",
+          axis: "right",
+          data: slice(lex.periods, 4).map((x, i) => ({ x, y: Number((end * (0.88 + i * 0.04)).toPrecision(3)) })),
+        },
+      ],
+    }
+  },
 
   "chart · gauge": (lex) => ({
     type: "chart",

@@ -87,6 +87,8 @@ const NON_TEXT_KEYS = new Set([
   "image_side",
   "device",
   "chart_type",
+  "plot", // combo series: drawn as bars or as a line
+  "axis", // combo series: read against the left or the right value axis
   // Handles and pointers, not prose.
   "asset_id", // asset handle
   "icon", // icon name from a fixed set

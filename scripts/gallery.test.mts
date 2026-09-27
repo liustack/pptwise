@@ -21,6 +21,7 @@
 import { describe, expect, it } from "vitest"
 import { listThemes } from "@/api"
 import { COMPONENT_TYPES, type Component } from "@/ir"
+import { schema as chartSchema } from "@/ir/components/chart"
 import { CHART_VARIANTS, COMPONENT_BUILDERS } from "../evals/gallery/corpus/components"
 import { THEME_TABLE_REQUIRED_SURFACES } from "../evals/gallery/corpus/theme-slots"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
@@ -73,17 +74,20 @@ describe("gallery coverage", () => {
   })
 
   it("covers every chart_type, which one `chart` builder alone would not", () => {
-    // `chart` is one IR type and nine unrelated drawings. Counting it once
+    // `chart` is one IR type and a dozen unrelated drawings. Counting it once
     // is exactly the "count the types, miss the surfaces" gap the review
     // exists to close, so the variant table is checked against the schema's
-    // own enum rather than a hand-kept list.
+    // own enum rather than a hand-kept list: a chart_type added to the
+    // schema without a gallery page fails here.
     const drawn = new Set<string>(
       Object.values(CHART_VARIANTS).map((build) => {
         const c = build(LEXICONS.zh)
         return c.type === "chart" ? c.chart_type : ""
       }),
     )
-    for (const chartType of ["bar", "line", "pie", "funnel", "dumbbell", "scatter", "area", "donut", "gauge"]) {
+    const chartTypes: readonly string[] = chartSchema.shape.chart_type.options
+    expect(chartTypes.length).toBeGreaterThanOrEqual(12)
+    for (const chartType of chartTypes) {
       expect(drawn.has(chartType), `no gallery page draws chart_type "${chartType}"`).toBe(true)
     }
   })
