@@ -32,7 +32,7 @@ import { CAPACITY } from "./audit/capacity"
 import { CATEGORY_FOLDING_TYPES } from "./ir/components/chart"
 import { FULL_BODY_TYPES } from "./render/component-traits"
 import { checkIrQuality, type QualityIssue } from "./render/ir-quality"
-import { resolveEffectiveFace } from "./render/layout-selection"
+import { componentFace, resolveEffectiveFace } from "./render/layout-selection"
 import { boundarySlotBlocks, drawableItems } from "./layouts/boundary-content"
 import { findImageSelection } from "./layouts/find-image"
 import type { LayoutDefinition } from "./layouts/registry"
@@ -333,12 +333,6 @@ function checkFullBodyExclusivity(ir: PptxIR): ValidationIssue[] {
   return errors
 }
 
-/** Resolve the component surface that actually paints a boundary page. */
-function boundBoundaryLayout(ir: PptxIR, slide: PptxIR["slides"][number], theme: ThemeDefinition) {
-  const effective = resolveEffectiveFace(ir, slide, theme)
-  return effective.route === "image-cover" ? undefined : effective.layout
-}
-
 function layoutAcceptsComponent(layout: LayoutDefinition, componentType: string): boolean {
   return layout.slots.some((slot) => slot.accepts === "any" || slot.accepts.includes(componentType))
 }
@@ -348,7 +342,7 @@ function checkContentPageSlots(ir: PptxIR, theme: ThemeDefinition): ValidationIs
   const errors: ValidationIssue[] = []
   ir.slides.forEach((slide, i) => {
     if (slide.placeholder || slide.type !== "content") return
-    const layout = resolveEffectiveFace(ir, slide, theme).layout
+    const layout = componentFace(ir, slide, theme)
     if (!layout) return
     const imageSlot = layout.kind === "takeover"
       ? layout.slots.find((slot) => slot.name === "image" && slot.selection === "first")
@@ -408,7 +402,7 @@ function checkBoundaryPageContent(ir: PptxIR, theme: ThemeDefinition): Validatio
     if (slide.placeholder) return
     if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
     const ignored: string[] = []
-    const layout = boundBoundaryLayout(ir, slide, theme)
+    const layout = componentFace(ir, slide, theme)
     const stray = slide.components.filter((component) => !layout || !layoutAcceptsComponent(layout, component.type))
     if (stray.length > 0) ignored.push("components")
     if (slide.footnote) ignored.push("footnote")
@@ -443,7 +437,7 @@ function checkBoundarySlotCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
   ir.slides.forEach((slide, i) => {
     if (slide.placeholder) return
     if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
-    const layout = boundBoundaryLayout(ir, slide, theme)
+    const layout = componentFace(ir, slide, theme)
     if (!layout) return
     for (const slot of layout.slots) {
       if (slot.capacity === undefined || slot.accepts === "any") continue
@@ -481,7 +475,7 @@ function checkBoundarySlotCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
  * is bound, what it holds, and how many items the page has, and decides what
  * to cut. The render is not the place that decision gets made silently.
  *
- * Only the exact bound face is consulted (`boundBoundaryLayout`), so a page
+ * Only the exact bound face is consulted (`componentFace`), so a page
  * whose theme routes it to an asset cover — which draws no bullets at all —
  * is never measured against a cap it does not use.
  */
@@ -490,7 +484,7 @@ function checkBoundaryItemCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
   ir.slides.forEach((slide, i) => {
     if (slide.placeholder) return
     if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
-    const layout = boundBoundaryLayout(ir, slide, theme)
+    const layout = componentFace(ir, slide, theme)
     if (!layout) return
     for (const slot of layout.slots) {
       if (slot.itemCapacity === undefined || slot.accepts === "any") continue

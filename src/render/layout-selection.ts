@@ -134,6 +134,22 @@ export function resolveEffectiveFace(ir: PptxIR, slide: Slide, theme: ThemeDefin
   }
 }
 
+/**
+ * The face whose slots decide which authored components a page may hold.
+ *
+ * That is the effective face, except on the image-cover route: a cover or
+ * chapter over an asset background is drawn by a bespoke renderer that takes
+ * no authored component, so no slot is offered there. Undefined too when the
+ * menu resolves no registered face, which validate reports on its own.
+ *
+ * Every one of validate's slot gates, content and boundary alike, reads this
+ * one answer rather than deciding the route again for itself.
+ */
+export function componentFace(ir: PptxIR, slide: Slide, theme: ThemeDefinition): LayoutDefinition | undefined {
+  const effective = resolveEffectiveFace(ir, slide, theme)
+  return effective.route === "image-cover" ? undefined : effective.layout
+}
+
 export interface EffectiveLayoutBodyCapacity {
   layoutId: string | null
   /** Missing means the selected face declares no geometric body ceiling. */
