@@ -156,6 +156,59 @@ function pushItemCountOverflow(
   }
 }
 
+/**
+ * The component budget a content page is held to, read once from the face
+ * the menu binds (`resolveEffectiveFace`) and the narrative's pacing.
+ *
+ * `limit` is spec §5's dual-attribute capacity: the smaller of pacing's
+ * editorial budget and the face's `body` slot capacity. A face that declares
+ * no body capacity (the image takeovers) leaves pacing alone to bind.
+ * `takeoverImage` says the face's takeover picture slot consumes the page's
+ * first picture outside that count. `itemSlot` is the face slot, if any,
+ * that counts the items inside the components it accepts rather than the
+ * components themselves.
+ *
+ * The density check below is this record's consumer, so the numbers any
+ * other reader reports are the numbers that check applies.
+ */
+export interface ContentPageDensity {
+  layoutId: string | null
+  pacingBudget: number
+  layoutCapacity: number | undefined
+  limit: number
+  takeoverImage: boolean
+  itemSlot?: { name: string; capacity: number; accepts: readonly string[] }
+}
+
+export function contentPageDensity(
+  ir: PptxIR,
+  slide: Slide,
+  theme: ThemeDefinition,
+  pacing: Pacing,
+): ContentPageDensity {
+  const effective = resolveEffectiveFace(ir, slide, theme)
+  const pacingBudget = PACING_BUDGETS[pacing].maxComponentsPerSlide
+  const layoutCapacity = effective.layout?.slots.find((slot) => slot.name === "body")?.capacity
+  const takeoverImage =
+    effective.route === "takeover" &&
+    (effective.layout?.slots.some((slot) => slot.name === "image" && slot.selection === "first") ?? false)
+  const itemCapacitySlot = effective.layout?.slots.find(
+    (slot) => slot.capacity !== undefined && slot.capacityUnit === "items" && slot.accepts !== "any",
+  )
+  const itemSlot =
+    itemCapacitySlot?.capacity !== undefined && itemCapacitySlot.accepts !== "any"
+      ? { name: itemCapacitySlot.name, capacity: itemCapacitySlot.capacity, accepts: itemCapacitySlot.accepts }
+      : undefined
+  return {
+    layoutId: effective.layoutId,
+    pacingBudget,
+    layoutCapacity,
+    limit: Math.min(pacingBudget, layoutCapacity ?? Infinity),
+    takeoverImage,
+    ...(itemSlot !== undefined ? { itemSlot } : {}),
+  }
+}
+
 // ── per-slide checks ──
 
 function checkSlide(
@@ -213,51 +266,43 @@ function checkSlide(
   // four image-family takeovers. In that case only the editorial budget
   // applies.
   if (slide.type === "content") {
-    const effective = resolveEffectiveFace(ir, slide, theme)
-    const layoutId = effective.layoutId
-    const layoutCapacity = effective.layout?.slots.find((slot) => slot.name === "body")?.capacity
-    const hasTakeoverImageSlot = effective.route === "takeover" && effective.layout?.slots.some(
-      (slot) => slot.name === "image" && slot.selection === "first",
-    )
-    const imageSelection = hasTakeoverImageSlot ? findImageSelection(slide) : undefined
+    const density = contentPageDensity(ir, slide, theme, resolvedAxes.pacing)
+    const imageSelection = density.takeoverImage ? findImageSelection(slide) : undefined
     const bodyComponentCount = slide.components.length - (imageSelection === undefined ? 0 : 1)
-    const limit = Math.min(budget.maxComponentsPerSlide, layoutCapacity ?? Infinity)
-    if (bodyComponentCount > limit) {
+    if (bodyComponentCount > density.limit) {
       issues.push({
         slide: index,
         severity: "warn",
         code: "density",
-        message: `每页至多 ~${limit} 个块，建议拆页`,
+        message: `每页至多 ~${density.limit} 个块，建议拆页`,
         density: {
-          limit,
+          limit: density.limit,
           pacing: resolvedAxes.pacing,
-          pacingBudget: budget.maxComponentsPerSlide,
-          layoutId,
-          layoutCapacity,
+          pacingBudget: density.pacingBudget,
+          layoutId: density.layoutId,
+          layoutCapacity: density.layoutCapacity,
         },
       })
     }
 
-    const itemCapacitySlot = effective.layout?.slots.find(
-      (slot) => slot.capacity !== undefined && slot.capacityUnit === "items" && slot.accepts !== "any",
-    )
-    if (itemCapacitySlot?.capacity !== undefined && itemCapacitySlot.accepts !== "any") {
+    const itemSlot = density.itemSlot
+    if (itemSlot !== undefined) {
       const itemCount = slide.components
-        .filter((component) => itemCapacitySlot.accepts.includes(component.type))
+        .filter((component) => itemSlot.accepts.includes(component.type))
         .reduce((count, component) => count + ("items" in component ? component.items.length : 0), 0)
-      if (itemCount > itemCapacitySlot.capacity) {
+      if (itemCount > itemSlot.capacity) {
         issues.push({
           slide: index,
           severity: "warn",
           code: "density",
-          message: `每页至多 ~${itemCapacitySlot.capacity} 个标注，建议精简`,
+          message: `每页至多 ~${itemSlot.capacity} 个标注，建议精简`,
           density: {
-            limit: itemCapacitySlot.capacity,
+            limit: itemSlot.capacity,
             pacing: resolvedAxes.pacing,
-            pacingBudget: budget.maxComponentsPerSlide,
-            layoutId: effective.layoutId,
-            layoutCapacity: itemCapacitySlot.capacity,
-            slotName: itemCapacitySlot.name,
+            pacingBudget: density.pacingBudget,
+            layoutId: density.layoutId,
+            layoutCapacity: itemSlot.capacity,
+            slotName: itemSlot.name,
             unit: "items",
           },
         })
