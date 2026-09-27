@@ -18,6 +18,14 @@
  * rejects the page. A `limit` of level `warning` is writing advice: past it
  * validate warns and the page still renders. Neither says the content will
  * fit the drawn page. Only drawing it answers that (`./page-fit.ts`).
+ *
+ * Only limits a drawn page can reach are listed. The rule, in one sentence:
+ * a limit is left out when it sits above the most one whole 1280×720 canvas
+ * can show of that unit ({@link CANVAS_BOUND}), because content is dropped
+ * in the drawing long before the count gets there, and render refuses the
+ * deck for that drop first. Those ceilings (1000 bullet items, 1000
+ * comparison rows) exist to reject pathological input, and a model reading
+ * them as room to write into is misled. Every other limit stays.
  */
 import { PptwiseError } from "../errors"
 import { COMPONENT_TYPES, type PptxIR, type Slide } from "../ir"
@@ -124,6 +132,27 @@ export interface PageContractOptions {
    * already ran it. Omitted, it is run here.
    */
   validation?: ValidateResult
+}
+
+/**
+ * The most of one unit a single component shows on a whole 1280×720 canvas,
+ * with no heading, no margin, and its body at the smallest size any pacing
+ * sets. No face gives a component that much room, so a count past it has
+ * already lost content in the drawing. Keyed `"<component> <measure>"`.
+ * `page-contract.test.ts` measures each figure with the component's own
+ * `measure`, so a change to a row height shows up there.
+ */
+export const CANVAS_BOUND: Readonly<Record<string, number>> = {
+  "bullets items": 16,
+  "comparison rows": 15,
+  "architecture layers": 11,
+}
+
+/** Whether a page can reach this limit with all of its content still drawn. */
+function reachable(limit: PageLimit): boolean {
+  if (limit.of?.length !== 1) return true
+  const bound = CANVAS_BOUND[`${limit.of[0]} ${limit.measure}`]
+  return bound === undefined || limit.max <= bound
 }
 
 /** The 0-based index of the page with this id, or an error naming the ids there are. */
@@ -302,7 +331,7 @@ function pageLimits(
   if (legal.includes("architecture")) {
     limits.push(
       { level: "warning", measure: "layers", per: "component", of: ["architecture"], max: CAPACITY.architecture.warnLayers, source: "layers the narrowest face holds" },
-      { level: "error", measure: "layers", per: "component", of: ["architecture"], max: CAPACITY.architecture.errorLayers, source: "engine ceiling" },
+      { level: "error", measure: "layers", per: "component", of: ["architecture"], max: CAPACITY.architecture.errorLayers, source: "the most layers a page holds under its heading" },
     )
   }
   if (legal.includes("chart")) {
@@ -315,7 +344,8 @@ function pageLimits(
       source: "line and area charts, past which the lines stop reading apart",
     })
   }
-  return limits.filter((limit) => !limits.some((other) => other !== limit && outranks(other, limit)))
+  const kept = limits.filter(reachable)
+  return kept.filter((limit) => !kept.some((other) => other !== limit && outranks(other, limit)))
 }
 
 /** Whether a component type carries an `items` list, the list a face's item capacity counts. */
