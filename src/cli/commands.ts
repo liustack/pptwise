@@ -28,6 +28,8 @@ import { buildAssetBrief, type AssetBrief, type AssetBriefItem } from "../render
 import { extractBrandTheme, slugify } from "../themes/extract/brand-extract"
 import { ThemeFileSchema, type ThemeFile } from "../themes/schema"
 import { THEME_OCCASIONS } from "../themes/occasions"
+import { CANONICAL_THEME_IDS } from "../themes/index"
+import { RETIRED_THEME_IDS } from "../themes/retired-ids"
 import { LAYOUT_REGISTRY } from "../layouts/registry"
 import { CONFIG_FILENAME, findConfig, findUserConfig } from "./config"
 import {
@@ -1010,65 +1012,97 @@ interface PackErrorRow {
   error: string
 }
 
+type InstalledPackRead =
+  | { ok: true; id: string; themes: { file: ThemeFile; definition: ThemeDefinition }[] }
+  | { ok: false; id: string; error: string }
+
 /**
- * Every theme of every installed pack that can be read, compiled, for
- * `schema --kind` without a theme. A pack that cannot be read is left out
- * with a note on stderr, the way `themes` lists it as an error rather than
- * failing: the answer for the presets and the readable packs still stands,
- * and `pptwise themes` or `packs list` names what is wrong with it.
+ * Every installed pack, read the way a lookup of one of its themes reads it:
+ * each theme file parsed and fully compiled (schema, menu contract, contrast
+ * floor). A pack is unreadable as a whole when any of its themes fails, when
+ * it ships a factory preset's or a retired id, or when another installed
+ * pack ships one of its ids too. `packs sync` refuses all of these, so they
+ * only arise from a pack edited or copied by hand. `themes` and `schema
+ * --kind` both list from here, so the two never disagree about which packs
+ * count. Only the expected failures (a `PptwiseError`) mark a pack
+ * unreadable: anything else is a bug and propagates.
  */
-async function readablePackDefinitions(): Promise<ThemeDefinition[]> {
-  const definitions: ThemeDefinition[] = []
+async function readInstalledPackThemes(): Promise<InstalledPackRead[]> {
+  const reads: InstalledPackRead[] = []
   for (const id of await installedPackIds()) {
     const dir = join(packsRoot(), id)
     try {
       const pack = await readInstalledPack(dir, id)
-      const compiled: ThemeDefinition[] = []
+      const themes: { file: ThemeFile; definition: ThemeDefinition }[] = []
       for (const theme of pack.themes) {
+        let file: ThemeFile
+        let definition: ThemeDefinition
         try {
-          compiled.push(compileThemeDefinition(await readThemeFile(theme.path)))
+          file = await readThemeFile(theme.path)
+          definition = compileThemeDefinition(file)
         } catch (e) {
-          throw damagedPackError(dir, e instanceof Error ? e.message : String(e))
+          if (!(e instanceof PptwiseError)) throw e
+          throw damagedPackError(dir, e.message)
         }
+        if ((CANONICAL_THEME_IDS as readonly string[]).includes(file.id)) {
+          throw damagedPackError(dir, `it ships theme "${file.id}", which is a factory preset name`)
+        }
+        const renamed = RETIRED_THEME_IDS[file.id]
+        if (renamed !== undefined) {
+          throw damagedPackError(dir, `it ships theme "${file.id}", a retired id (now "${renamed}")`)
+        }
+        themes.push({ file, definition })
       }
-      definitions.push(...compiled)
+      reads.push({ ok: true, id, themes })
     } catch (e) {
       if (!(e instanceof PptwiseError)) throw e
-      process.stderr.write(`schema --kind: left out ${e.message}\n`)
+      reads.push({ ok: false, id, error: e.message })
     }
+  }
+  const owners = new Map<string, string[]>()
+  for (const read of reads) {
+    if (!read.ok) continue
+    for (const { file } of read.themes) owners.set(file.id, [...(owners.get(file.id) ?? []), read.id])
+  }
+  return reads.map((read) => {
+    if (!read.ok) return read
+    const shared = read.themes.find(({ file }) => (owners.get(file.id) ?? []).length > 1)
+    if (shared === undefined) return read
+    const where = owners.get(shared.file.id)!.map((owner) => join(packsRoot(), owner)).join(" and ")
+    const error = damagedPackError(
+      join(packsRoot(), read.id),
+      `theme "${shared.file.id}" is shipped by more than one installed pack (${where})`,
+    ).message
+    return { ok: false, id: read.id, error }
+  })
+}
+
+/** Every readable pack theme, for `schema --kind` without a theme. An
+ *  unreadable pack is left out with its reason on stderr, the way `themes`
+ *  lists it as an error row: the answer for the presets and the readable
+ *  packs still stands. */
+async function readablePackDefinitions(): Promise<ThemeDefinition[]> {
+  const definitions: ThemeDefinition[] = []
+  for (const read of await readInstalledPackThemes()) {
+    if (read.ok) definitions.push(...read.themes.map(({ definition }) => definition))
+    else process.stderr.write(`schema --kind: left out ${read.error}\n`)
   }
   return definitions
 }
 
-/** One pack's rows: its themes, or a single error entry when the pack or
- *  any of its theme files cannot be read. */
-async function packThemeRows(id: string): Promise<(ThemeListRow | PackErrorRow)[]> {
-  const dir = join(packsRoot(), id)
-  try {
-    const pack = await readInstalledPack(dir, id)
-    const rows: ThemeListRow[] = []
-    for (const theme of pack.themes) {
-      let file: ThemeFile
-      try {
-        file = await readThemeFile(theme.path)
-      } catch (e) {
-        throw damagedPackError(dir, e instanceof Error ? e.message : String(e))
-      }
-      rows.push({
-        id: file.id,
-        label: file.label ?? file.id,
-        colors: { ...file.style.colors },
-        occasions: file.occasions ?? [],
-        identity: file.identity ?? null,
-        source: "pack",
-        pack: pack.id,
-      })
-    }
-    return rows
-  } catch (e) {
-    if (!(e instanceof PptwiseError)) throw e
-    return [{ source: "pack", pack: id, error: e.message }]
-  }
+/** One pack's rows: its themes, or a single error entry when the pack
+ *  cannot be read (see {@link readInstalledPackThemes}). */
+function packThemeRows(read: InstalledPackRead): (ThemeListRow | PackErrorRow)[] {
+  if (!read.ok) return [{ source: "pack", pack: read.id, error: read.error }]
+  return read.themes.map(({ file }) => ({
+    id: file.id,
+    label: file.label ?? file.id,
+    colors: { ...file.style.colors },
+    occasions: file.occasions ?? [],
+    identity: file.identity ?? null,
+    source: "pack",
+    pack: read.id,
+  }))
 }
 
 /**
@@ -1089,7 +1123,7 @@ export async function runThemes(asJson: boolean): Promise<string> {
       source: "builtin" as const,
     }
   })
-  for (const id of await installedPackIds()) rows.push(...(await packThemeRows(id)))
+  for (const read of await readInstalledPackThemes()) rows.push(...packThemeRows(read))
   if (asJson) return JSON.stringify(rows, null, 2)
   return rows
     .map((t) => {

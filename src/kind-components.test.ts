@@ -139,3 +139,24 @@ describe("kindJsonSchema", () => {
     expect(defs.IconName!.type).toBe("string")
   })
 })
+
+describe("extraThemes", () => {
+  const brief = getThemeDefinition("brief")
+  const extra = { ...brief, id: "extra-brief", menu: { ...brief.menu } }
+
+  it("joins the union when no theme is named", () => {
+    const offer = componentsForKind("points", { extraThemes: [extra] })
+    expect(Object.keys(offer.themes)).toContain("extra-brief")
+    expect(offer.themes["extra-brief"]).toEqual(offer.themes.brief)
+  })
+
+  it("is ignored when a theme is named", () => {
+    const offer = componentsForKind("points", { theme: "brief", extraThemes: [extra] })
+    expect(Object.keys(offer.themes)).toEqual(["brief"])
+  })
+
+  it("reaches kindJsonSchema too", () => {
+    const schema = kindJsonSchema("points", { extraThemes: [extra] }) as { themes: Record<string, unknown> }
+    expect(Object.keys(schema.themes)).toContain("extra-brief")
+  })
+})
