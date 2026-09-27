@@ -18,11 +18,14 @@ import {
   type DomainPadMode,
 } from "./cartesian-axis"
 import { buildChartModel, zeroAxisRatio, type ChartDomain } from "./chart-model"
+import { boxesIntersect, type DepthBox } from "../render/depth-contract/geometry"
 import {
   labelLinePitch,
   resolveValueLabelCollisions,
   stackLabelColumn,
+  valueLabelBox,
   type ColumnLabelSpec,
+  type PlacedValueLabel,
   type ValueLabelSpec,
 } from "./label-collision"
 
@@ -2821,6 +2824,46 @@ function formatStackTotal(value: number): string {
   return String(Number(value.toPrecision(12)))
 }
 
+/**
+ * Place a stacked chart's column totals together, or not at all.
+ *
+ * A total belongs on the page background above its own column. Below that
+ * spot is its own column, so the pairwise resolver may only move a total up
+ * (`yMax` is where it started) and never into the legend row above the plot
+ * (`yMin`). What the resolver cannot settle inside that band it hides, and
+ * what it settles by stepping a label sideways can still land on a
+ * neighbouring column. So the result is checked against the real geometry:
+ * every total shown, none on a segment, none on another total, all inside
+ * `bounds`. One failure and no total is painted. A row of numbers with gaps in
+ * it reads as columns that have no total, and a reader cannot tell which gap
+ * is which, so the whole row goes and the caller declares every one of them.
+ *
+ * The same crowding pushes `renderBar`'s value labels down onto its bars.
+ * That renderer is left as it is here, since changing its placement would
+ * move the pages of every existing bar chart that crowds.
+ */
+function placeStackTotals(
+  specs: readonly ValueLabelSpec[],
+  segments: readonly DepthBox[],
+  bounds: { readonly left: number; readonly right: number; readonly top: number; readonly bottom: number },
+): PlacedValueLabel[] | null {
+  const placed = resolveValueLabelCollisions(
+    specs.map((spec) => ({ ...spec, yMin: bounds.top + spec.fontSize * 0.75, yMax: spec.y })),
+  )
+  if (placed.some((label) => label.hidden)) return null
+  const boxes = placed.map(valueLabelBox)
+  for (let i = 0; i < boxes.length; i++) {
+    const box = boxes[i]!
+    if (box.x < bounds.left || box.x + box.w > bounds.right) return null
+    if (box.y < bounds.top || box.y + box.h > bounds.bottom) return null
+    if (segments.some((seg) => boxesIntersect(box, seg))) return null
+    for (let j = i + 1; j < boxes.length; j++) {
+      if (boxesIntersect(box, boxes[j]!)) return null
+    }
+  }
+  return placed
+}
+
 export function renderStacked(
   series: ChartSeries[],
   palette: string[],
@@ -2898,6 +2941,7 @@ export function renderStacked(
     }
   })
 
+  const segmentBoxes: DepthBox[] = []
   const columns = categories.map((cat, i) => {
     const colX = geom.plotX + i * groupW + (groupW - colW) / 2
     let up = 0
@@ -2913,6 +2957,7 @@ export function renderStacked(
       else down = to
       const top = yOf(Math.max(from, to))
       const bottom = yOf(Math.min(from, to))
+      segmentBoxes.push({ x: colX, y: top, w: colW, h: bottom - top })
       rects.push(
         <rect
           key={s.seriesIndex}
@@ -2941,7 +2986,14 @@ export function renderStacked(
         fontFamily,
         priority: 100,
       }))
-  const placedTotals = resolveValueLabelCollisions(totals)
+  // The totals may use the chart body between the legend row and the x-axis,
+  // across the plot's own width. The y-tick labels sit left of it.
+  const placedTotals = placeStackTotals(totals, segmentBoxes, {
+    left: geom.plotX,
+    right: geom.plotX + geom.plotW,
+    top: y0,
+    bottom: geom.plotY + geom.plotH,
+  })
   const totalInk = directLabelInk(textColor, bgHex)
 
   return (
@@ -2973,24 +3025,25 @@ export function renderStacked(
           strokeWidth={1}
         />
       ) : null}
-      {placedTotals
-        .filter((label) => !label.hidden)
-        .map((label) => (
-          <text
-            key={label.id}
-            data-value-label="1"
-            x={label.x}
-            y={label.y}
-            textAnchor="middle"
-            fontSize={VALUE_FONT_SIZE}
-            fontWeight={VALUE_FONT_WEIGHT}
-            fill={totalInk}
-            fontFamily={fontFamily}
-            dominantBaseline="alphabetic"
-          >
-            {label.text}
-          </text>
-        ))}
+      {placedTotals === null ? (
+        <g data-dropped={totals.length} data-dropped-kind="value-label" />
+      ) : null}
+      {(placedTotals ?? []).map((label) => (
+        <text
+          key={label.id}
+          data-value-label="1"
+          x={label.x}
+          y={label.y}
+          textAnchor="middle"
+          fontSize={VALUE_FONT_SIZE}
+          fontWeight={VALUE_FONT_WEIGHT}
+          fill={totalInk}
+          fontFamily={fontFamily}
+          dominantBaseline="alphabetic"
+        >
+          {label.text}
+        </text>
+      ))}
       {renderCartesianAxisTitles({
         plotX: geom.plotX,
         plotBottom: geom.titleY,

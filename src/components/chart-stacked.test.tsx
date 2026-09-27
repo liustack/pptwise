@@ -7,6 +7,7 @@ import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { chart } from "./chart"
 import { renderStacked } from "./chart-svg"
+import { valueLabelBox } from "./label-collision"
 import type { ComponentCtx } from "./types"
 
 type ChartComponent = Extract<Component, { type: "chart" }>
@@ -104,6 +105,67 @@ describe("stacked chart: schema", () => {
     const issues = issuesOf({ ...TWO_REGIONS, direction: "horizontal" })
     expect(issues.map((i) => i.path.join("."))).toEqual(["direction"])
     expect(issues[0]!.message).toMatch(/chart_type "bar"/)
+  })
+})
+
+describe("stacked chart: crowded totals", () => {
+  // Every column the same height, so every total wants the same row, and
+  // more categories than the labels have width for. Moving a total down puts
+  // it on its own column, and nothing else is background.
+  const crowded = (n: number): ChartComponent => ({
+    type: "chart",
+    chart_type: "stacked",
+    series: ["A", "B"].map((name) => ({
+      name,
+      data: Array.from({ length: n }, (_, i) => ({ x: String(i), y: 1000000 })),
+    })),
+  })
+
+  function labelBoxes(container: HTMLElement) {
+    return Array.from(container.querySelectorAll('[data-value-label="1"]')).map((t) =>
+      valueLabelBox({
+        text: t.textContent!,
+        x: Number(t.getAttribute("x")),
+        y: Number(t.getAttribute("y")),
+        anchor: (t.getAttribute("text-anchor") as "start" | "middle" | "end" | null) ?? "start",
+        fontSize: Number(t.getAttribute("font-size")),
+        fontFamily: t.getAttribute("font-family") ?? undefined,
+      }),
+    )
+  }
+
+  for (const [n, w] of [
+    [20, 1120],
+    [10, 400],
+  ] as const) {
+    it(`${n} equal columns at ${w}px: no total on a column or outside the chart, and the loss is declared`, () => {
+      const component = crowded(n)
+      const h = chart.measure(component, w, ctx)
+      const container = draw(component, w)
+      const segs = segments(container)
+      expect(segs).toHaveLength(n * 2)
+      for (const box of labelBoxes(container)) {
+        for (const seg of segs) {
+          const hit = box.x < seg.x + seg.w && box.x + box.w > seg.x && box.y < seg.y + seg.h && box.y + box.h > seg.y
+          expect(hit, `total at ${box.x},${box.y} sits on a segment`).toBe(false)
+        }
+        expect(box.x).toBeGreaterThanOrEqual(0)
+        expect(box.x + box.w).toBeLessThanOrEqual(w)
+        expect(box.y).toBeGreaterThanOrEqual(0)
+        expect(box.y + box.h).toBeLessThanOrEqual(h)
+      }
+      // All or nothing: the row of totals does not fit, so none is painted,
+      // and every one of them is declared where the export gate reads it.
+      expect(valueLabels(container)).toEqual([])
+      const marker = container.querySelector('[data-dropped-kind="value-label"]')!
+      expect(marker.getAttribute("data-dropped")).toBe(String(n))
+    })
+  }
+
+  it("keeps every total, and declares nothing, when the row fits", () => {
+    const container = draw(crowded(4))
+    expect(valueLabels(container)).toEqual(["2000000", "2000000", "2000000", "2000000"])
+    expect(container.querySelector("[data-dropped]")).toBeNull()
   })
 })
 
