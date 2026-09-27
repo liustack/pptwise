@@ -17,6 +17,20 @@ function tmp(): Promise<string> {
   return mkdtemp(join(tmpdir(), "pptwise-deckdir-"))
 }
 
+/**
+ * A path under `base` whose `stat` fails with something other than ENOENT.
+ *
+ * On POSIX that is a plain file used as a directory, which answers ENOTDIR.
+ * Windows answers the same path with ERROR_PATH_NOT_FOUND, which libuv
+ * reports as ENOENT: the path simply does not exist there, and "false" is
+ * the right reading of it. So on Windows the path carries a NUL byte, which
+ * Node refuses (ERR_INVALID_ARG_VALUE) before it asks the filesystem at all.
+ */
+async function unstattablePath(base: string): Promise<string> {
+  await writeFile(join(base, "notadir"), "x")
+  return process.platform === "win32" ? join(base, "nul\u0000byte") : join(base, "notadir", "sub")
+}
+
 /** 4 pages clears the "spacious" pacing's page-count floor (spec §5:
  *  4-16), same fixture-sizing rationale as `spec/assemble.test.ts`'s own
  *  `makePlan` helper. */
@@ -92,8 +106,7 @@ describe("isDeckDirectory", () => {
 
   it("rethrows a non-ENOENT stat error instead of reading it as false (W5 review fix: ENOTDIR via a file as an intermediate segment)", async () => {
     const base = await tmp()
-    await writeFile(join(base, "notadir"), "x")
-    await expect(isDeckDirectory(join(base, "notadir", "sub"))).rejects.toThrow()
+    await expect(isDeckDirectory(await unstattablePath(base))).rejects.toThrow(/cannot check/)
   })
 })
 
@@ -182,9 +195,9 @@ describe("resolveDeckTarget", () => {
   describe("non-ENOENT stat errors rethrow instead of silently falling back (W5 review fix)", () => {
     it("rethrows when the local candidate's path is broken (ENOTDIR via a file as an intermediate segment)", async () => {
       const base = await tmp()
-      await writeFile(join(base, "notadir"), "x")
-      const brokenCwd = join(base, "notadir")
-      await expect(resolveDeckTarget("bare-name", undefined, brokenCwd)).rejects.toThrow()
+      // `bare-name` resolves inside this cwd, so the candidate is the broken path.
+      const brokenCwd = await unstattablePath(base)
+      await expect(resolveDeckTarget("bare-name", undefined, brokenCwd)).rejects.toThrow(/cannot check/)
     })
   })
 })
@@ -207,8 +220,7 @@ describe("pathExists", () => {
 
   it("rethrows a non-ENOENT stat error (ENOTDIR via a file as an intermediate segment)", async () => {
     const base = await tmp()
-    await writeFile(join(base, "notadir"), "x")
-    await expect(pathExists(join(base, "notadir", "sub"))).rejects.toThrow()
+    await expect(pathExists(await unstattablePath(base))).rejects.toThrow(/cannot check/)
   })
 })
 

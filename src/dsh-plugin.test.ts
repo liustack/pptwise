@@ -2325,15 +2325,26 @@ describe("preview route (the handler DSH actually calls)", () => {
     // the length limit answers here on its own.
     const { __testing } = await loadPreviewTool()
     const { mkdir } = await import("node:fs/promises")
+    const { join } = await import("node:path")
     const root = await scratchRoot("too-long")
     await mkdir(root, { recursive: true, mode: 0o700 })
-    const absurd = `${root}/${"x".repeat(4096)}`
+    // A name with a NUL byte in it is refused everywhere, by Node itself,
+    // before any system call. A name over the length limit is refused by a
+    // POSIX kernel with ENAMETOOLONG. Windows answers that one with
+    // ERROR_INVALID_NAME, which libuv reports as ENOENT: there the system
+    // itself says nothing is at that name, and "absent" is the honest reading.
+    const tooLong = join(root, "x".repeat(4096))
+    const refused: [string, string][] = [["a NUL byte", join(root, "nul\u0000byte")]]
+    if (process.platform !== "win32") refused.push(["an over-long name", tooLong])
 
     expect(await __testing.directoryState(root)).toBe("directory")
-    await expect(__testing.directoryState(absurd)).rejects.toBeInstanceOf(__testing.PreviewDamaged)
-    // ...and it is not silently reported as "nothing is there", which is what a
-    // two-way answer would have to do with it.
-    await expect(__testing.directoryState(absurd)).rejects.toThrow(/cannot be used/)
+    for (const [what, absurd] of refused) {
+      await expect(__testing.directoryState(absurd), what).rejects.toBeInstanceOf(__testing.PreviewDamaged)
+      // ...and it is not silently reported as "nothing is there", which is what a
+      // two-way answer would have to do with it.
+      await expect(__testing.directoryState(absurd), what).rejects.toThrow(/cannot be used/)
+    }
+    if (process.platform === "win32") expect(await __testing.directoryState(tooLong)).toBe("absent")
   })
 
   it("never phrases a read failure as a deletion, even where nothing routes there today", async () => {
