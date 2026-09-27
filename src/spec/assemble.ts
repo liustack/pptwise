@@ -13,8 +13,16 @@ export interface PageContent {
   notes?: string
 }
 
+/**
+ * The fields a page file may fill, in the order assembly copies them onto
+ * the slide. Everything else a slide carries is the spec's.
+ */
+export const PAGE_FILL_FIELDS = ["components", "background", "image_side", "footnote", "notes"] as const satisfies readonly (keyof PageContent)[]
+
 export interface AssembleResult {
   ir: PptxIR
+  /** The spec as validation parsed it, the source of every locked field. */
+  spec: DeckSpec
 }
 
 const LOCKED_KEYS = ["type", "kind", "heading"] as const
@@ -33,14 +41,14 @@ function buildSlide(page: PageSpec, content: PageContent | undefined): Record<st
       ...(page.summary !== undefined ? { subheading: page.summary } : {}),
     }
   }
+  const filled: Record<string, unknown> = {}
+  for (const field of PAGE_FILL_FIELDS) {
+    if (content[field] !== undefined) filled[field] = content[field]
+  }
   return {
     ...locked,
     ...(page.type !== "content" && page.summary !== undefined ? { subheading: page.summary } : {}),
-    ...(content.components !== undefined ? { components: content.components } : {}),
-    ...(content.background !== undefined ? { background: content.background } : {}),
-    ...(content.image_side !== undefined ? { image_side: content.image_side } : {}),
-    ...(content.footnote !== undefined ? { footnote: content.footnote } : {}),
-    ...(content.notes !== undefined ? { notes: content.notes } : {}),
+    ...filled,
   }
 }
 
@@ -95,7 +103,7 @@ export function assembleDeck(
     const detail = parsed.error.issues.map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`).join("\n")
     throw new PptwiseError(`assembled deck did not produce valid IR:\n${detail}`)
   }
-  return { ir: parsed.data }
+  return { ir: parsed.data, spec: deckSpec }
 }
 
 const UNTITLED_HEADING = "Untitled"

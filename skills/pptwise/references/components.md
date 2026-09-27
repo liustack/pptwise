@@ -4,15 +4,22 @@ Read this when choosing the typed content units that fill a page after its theme
 
 ## Read the live contract
 
-Ask the installed CLI for exact fields before writing a page. One kind or one component at a time, never the whole schema:
+Ask the installed CLI for exact fields before writing a page. One page, or one component on that page, at a time, never the whole schema:
+
+```bash
+pptwise inspect deck-dir/ --page <id>
+pptwise inspect deck-dir/ --page <id> --component <type>
+pptwise icons
+```
+
+The page query lists the components the bound theme's face draws on that page, with the counts `validate` holds it to, and `validate` rejects a component outside that list. The component query prints one component's story, its limits on that page, and its fields. Icon fields take a name from `pptwise icons`.
+
+Without a deck project, for example on a bare IR file, cut the same contract by kind or by component:
 
 ```bash
 pptwise schema --kind <kind> --theme <theme>
 pptwise schema --component <type>
-pptwise icons
 ```
-
-The kind query lists the components the bound theme's face can draw, one schema each, and `validate` rejects a component outside that list. The component query prints one component's fields. Icon fields take a name from `pptwise icons`.
 
 ## Naming
 

@@ -1,8 +1,9 @@
 ---
-summary: '当前 CLI 命令面：IR v5、主题 v2、deck 项目、固定样张主题对比、验证、审计、图片、预览与安装体检'
+summary: '当前 CLI 命令面：IR v5、主题 v2、deck 项目、逐页检查、固定样张主题对比、验证、审计、图片、预览与安装体检'
 read_when:
   - 查询受支持的命令或参数
   - 给 agent 接上 spec、填充、validate、audit 与 render 回路
+  - 读取一页的填写契约，或在 render 前检查一页放不放得下
   - 创建、分叉、对比、抽取或解析主题
   - 排查 audit 输出、图片获取或安装状态
 ---
@@ -24,7 +25,7 @@ pptwise render deck-dir/
 pptwise preview deck-dir/ --html
 ```
 
-每轮验证之间最多填四页。需要用户在浏览器中实时评审时使用 `serve`。
+每轮验证之间最多填四页，写每一页之前先用 `inspect` 读它的契约。需要用户在浏览器中实时评审时使用 `serve`。
 
 ## 命令索引
 
@@ -35,6 +36,7 @@ pptwise preview deck-dir/ --html
 | `audit <target>` | 运行确定性视觉与几何检查。 |
 | `asset-brief <target>` | 报告真实图片画框、裁切、配色、安全区与提示词。 |
 | `schema` | 打印 IR 或 spec JSON Schema，或从中切出一个组件或一个 kind。 |
+| `inspect <deck> --page <id>` | 显示一页的填写契约，为它展开一个组件，或检查它放不放得下。 |
 | `spec validate <file>` | 验证主题形状的 deck spec。 |
 | `assemble <dir|name>` | 把 deck 项目合并成派生 IR v5。 |
 | `disassemble <ir.json>` | 把 IR v5 拆成 spec、页面文件与资产。 |
@@ -114,6 +116,24 @@ IR schema 把每个共享片段只放进 `$defs` 一次：每个组件用自己�
 图标字段打印为一个指向 `pptwise icons` 的字符串。校验始终按完整枚举检查。
 
 IR 版本是 `"5"`，deck spec 版本是 `"1"`，主题文件版本是数字 `2`。当前 IR 没有 `seed`、`layout`、`beat` 或 `arrangement` 字段。
+
+## 逐页检查
+
+```bash
+pptwise inspect <deck> --page <id> [--json]
+pptwise inspect <deck> --page <id> --component <type> [--json]
+pptwise inspect <deck> --page <id> --fit [--json]
+```
+
+`inspect` 按 `validate` 读整份 deck 的方式读 deck 项目里的一页，只有一处不同：它只读这一页的页面文件，其他页都按占位页组装。deck 里别处有坏掉或还没写的页面，不会改变这一页的答案。
+
+默认报告列出 spec 锁定的字段与填写提示、页面文件及其是否已存在、页面文件可以填的字段及其 schema、绑定主题的脸在这一页能画的组件（并标出其中的全页组件和必需组件）、来自 spec `focus` 与页面已有内容的候选、`validate` 对这一页的计数要求，以及 `validate` 对这一页或整份 deck 的结论。计数分两级。超过 `error` 上限时 `validate` 拒绝这一页，超过 `warning` 上限时它只警告。同一计数上有更严的错误先触发、因而永远到不了的上限不列出。页面有错误时命令以 1 退出。
+
+`--component <type>` 展开这一页可以放的一个组件：它的设计说明、这一页对它的上限、它是否必须独占整页，以及 `schema --component` 为它打印的同一份 schema。这一页的脸不画的类型会失败，并列出它能画的类型。
+
+计数不能证明内容在画出来的页面上放得下。`--fit` 用同一个渲染器画这一页，读取与 `render` 内容丢弃门禁相同的丢弃计数，所以它报告放得下的页面，`render` 一定接受。它还报告为了放下而被截断的文字（`render` 允许，`audit` 会报告），以及主题的脸让位、改由更朴素版式画完整页的情况。会丢内容或页面有 validate 错误时以 1 退出。还没写的页面，或 `validate` 拒绝的页面，不会被画出来，报告会说明原因。
+
+`--json` 把报告打印成一行 JSON。
 
 ## Assemble 与 disassemble
 

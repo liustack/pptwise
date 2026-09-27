@@ -8,6 +8,7 @@ import {
   runBrandExtract,
   runDisassemble,
   runIcons,
+  runInspect,
   runInit,
   runLayouts,
   runNarratives,
@@ -142,6 +143,35 @@ program
   .action(async (opts: { spec?: boolean; component?: string; kind?: string; theme?: string; deck?: string; pretty?: boolean }) => {
     try {
       console.log(await runSchema(opts))
+    } catch (e) {
+      fail(e)
+    }
+  })
+
+program
+  .command("inspect")
+  .description(
+    "Show one page's fill contract: the spec's locked fields, the page file's fields, the components its face draws, the counts validate holds it to, and validate's findings on it. Exits 1 when the page has an error",
+  )
+  .argument("<deck>", "deck project directory, or bare name under ~/.pptwise/decks")
+  .requiredOption("--page <id>", "the page id in deck.spec.json")
+  .option("--component <type>", "expand one component the page may hold: its story, its limits on this page, and its schema")
+  .option("--fit", "draw the page and report whether its content fits, as render's content-drop gate would judge it. Exits 1 when it does not")
+  .option("--json", "print the report as one line of JSON")
+  .addHelpText(
+    "after",
+    "\nExamples:\n  $ pptwise inspect my-deck/ --page growth\n  $ pptwise inspect my-deck/ --page growth --component chart\n  $ pptwise inspect my-deck/ --page growth --fit",
+  )
+  .action(async (target: string, opts: { page: string; component?: string; fit?: boolean; json?: boolean }) => {
+    try {
+      const { output, failed } = await runInspect(target, {
+        page: opts.page,
+        component: opts.component,
+        fit: opts.fit,
+        json: opts.json,
+      })
+      console.log(output)
+      if (failed) process.exit(1)
     } catch (e) {
       fail(e)
     }

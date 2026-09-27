@@ -9,15 +9,22 @@ mirror_of: skills/pptwise/references/components.md
 
 ## 读取现场契约
 
-写页面前先向已安装的 CLI 查精确字段。一次查一个 kind 或一个组件，不读整份 schema：
+写页面前先向已安装的 CLI 查精确字段。一次查一页，或这一页上的一个组件，不读整份 schema：
+
+```bash
+pptwise inspect deck-dir/ --page <id>
+pptwise inspect deck-dir/ --page <id> --component <type>
+pptwise icons
+```
+
+页面查询列出绑定主题的脸在这一页能画的组件，以及 `validate` 对这一页的计数要求，列表之外的组件会被 `validate` 拒绝。组件查询打印一个组件的设计说明、它在这一页的上限和它的字段。图标字段的名字来自 `pptwise icons`。
+
+没有 deck 项目时，比如直接写一个 IR 文件，按 kind 或按组件切出同一份契约：
 
 ```bash
 pptwise schema --kind <kind> --theme <theme>
 pptwise schema --component <type>
-pptwise icons
 ```
-
-kind 查询列出绑定主题的脸能画的组件，每个组件一份 schema，列表之外的组件会被 `validate` 拒绝。组件查询打印一个组件的字段。图标字段的名字来自 `pptwise icons`。
 
 ## 命名
 

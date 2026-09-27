@@ -19,7 +19,9 @@ import { componentJsonSchema } from "../ir/json-schema"
 import { PPTX_ICON_NAMES } from "../icons/catalog"
 import { kindJsonSchema } from "../kind-components"
 import { disassembleDeck, type PageContent } from "../spec/assemble"
-import { formatInvalidSpecError, specJsonSchema, resolveSpecThemeId, validateSpec } from "../spec"
+import { formatInvalidSpecError, specJsonSchema, resolveSpecThemeId, validateSpec, type DeckSpec } from "../spec"
+import { pageComponentContract, pageContract } from "../inspect/page-contract"
+import { pageFit } from "../inspect/page-fit"
 import { AUDIENCE_VALUES, PACING_BUDGETS, STRATEGY_DEFINITIONS, NARRATIVE_PRESETS, resolveNarrative, type NarrativeProfile } from "../narrative"
 import { auditDeck, type AuditChecks, type AuditFinding, type AuditReport } from "../audit/deck-audit"
 import { buildAssetBrief, type AssetBrief, type AssetBriefItem } from "../render/asset-brief"
@@ -36,9 +38,17 @@ import {
   resolveDeckTarget,
   writeDeckAssets,
   ASSETS_DIRNAME,
+  PAGES_DIRNAME,
   SPEC_FILENAME,
   THEME_FILENAME,
 } from "./deck-dir"
+import {
+  formatPageComponentContract,
+  formatPageContract,
+  formatPageFitReport,
+  type InspectFit,
+  type PageFitReport,
+} from "./inspect-format"
 import { writeThemeFile } from "./theme-write"
 import { loadIrFile, resolveLocalAssets } from "./load-ir"
 import { buildContactSheetHtml, buildPreviewHtml } from "./preview-html"
@@ -281,6 +291,8 @@ interface LoadedDeckTarget {
   resolvedTarget: string
   workspaceAssetsDir: string
   themeInputs: ThemeInputs
+  /** The deck project's spec as assembly parsed it. Absent for a bare IR file. */
+  spec?: DeckSpec
 }
 
 /** The read half of {@link loadDeckTarget}, for a target already located
@@ -295,12 +307,13 @@ async function readDeckTarget(
   themeInputs: ThemeInputs,
   cwd: string,
   projectHit: ProjectConfigHit,
+  page?: string,
 ): Promise<LoadedDeckTarget> {
   const { resolvedTarget, isDir } = location
   const source = sourceFromInputs(themeInputs)
   if (isDir) {
     const theme = themeFromInputs(themeInputs)?.definition
-    const { ir, deckDir } = await readDeckDir(resolvedTarget, { theme, spec: source })
+    const { ir, spec, deckDir } = await readDeckDir(resolvedTarget, { theme, spec: source, ...(page !== undefined ? { page } : {}) })
     const stock = await loadWorkspaceStock(cwd, projectHit, deckDir, true)
     return {
       raw: mergeWorkspaceImages(ir, stock.images),
@@ -309,6 +322,7 @@ async function readDeckTarget(
       resolvedTarget: deckDir,
       workspaceAssetsDir: stock.workspaceAssetsDir,
       themeInputs,
+      spec,
     }
   }
   const stock = await loadWorkspaceStock(cwd, projectHit, resolvedTarget, false)
@@ -674,6 +688,94 @@ export async function runAudit(target: string, opts: AuditOptions = {}): Promise
   const hasFindings = report.findings.length > 0
   const output = opts.json ? JSON.stringify(report, null, 2) : formatAuditReport(report, v.ir!)
   return { output, hasFindings }
+}
+
+// ── inspect ──────────────────────────────────────────────────────────────
+
+export interface InspectOptions {
+  /** The spec page id to inspect. Required. */
+  page?: string
+  /** Expand this one component for the page instead of the whole contract. */
+  component?: string
+  /** Draw the page and report whether its content fits, instead of the whole contract. */
+  fit?: boolean
+  /** Print the contract object as one line of JSON. */
+  json?: boolean
+  cwd?: string
+}
+
+export interface InspectCliResult {
+  output: string
+  /** True when the report carries an error. The CLI exits 1 on it. */
+  failed: boolean
+}
+
+/**
+ * `pptwise inspect <deck> --page <id> [--component <type> | --fit] [--json]`:
+ * one page's fill contract (`../inspect/page-contract.ts`), one component of
+ * it expanded with its schema, or the page drawn and checked for what it
+ * loses (`../inspect/page-fit.ts`).
+ *
+ * The deck resolves the way `validate` resolves it: the same target lookup,
+ * the same theme inputs, the same workspace stock images. Only the page's
+ * own file is read, and every other page assembles as a placeholder
+ * (`readDeckDir`'s `page` option), so the page answers the same way whether
+ * the rest of the deck is finished, unwritten, or broken. Validation then
+ * runs on that deck exactly as `validate` runs it, and the contract carries
+ * the findings that land on this page or on the deck as a whole.
+ */
+export async function runInspect(target: string, opts: InspectOptions): Promise<InspectCliResult> {
+  if (opts.page === undefined || opts.page.length === 0) {
+    throw new PptwiseError("pass --page <id>: the id of one page in deck.spec.json")
+  }
+  if (opts.component !== undefined && opts.fit) throw new PptwiseError("pass --component or --fit, not both")
+  const cwd = opts.cwd ?? process.cwd()
+  const [projectHit, userHit] = await readConfigs(cwd)
+  const location = await locateDeckTarget(target, cwd, projectHit, userHit)
+  if (!location.isDir) {
+    throw new PptwiseError(`pptwise inspect reads a deck project directory (deck.spec.json plus pages/), and ${target} is not one`)
+  }
+  assertSafeFileSegment(opts.page, "page id")
+  const themeInputs = await collectThemeInputs({ startDir: cwd, ...location })
+  const loaded = await readDeckTarget(location, themeInputs, cwd, projectHit, opts.page)
+  const theme = (await applyDeckConfig(loaded.raw, themeInputs))?.definition
+  if (theme === undefined) throw new PptwiseError(`${SPEC_FILENAME} binds no theme`)
+  const ir = loaded.raw as PptxIR
+  const validation = validateIr(ir, { theme })
+  const pageSpec = loaded.spec?.pages.find((page) => page.id === opts.page)
+  const contractOpts = { theme, validation, ...(pageSpec !== undefined ? { pageSpec } : {}) }
+  if (opts.component !== undefined) {
+    const expanded = pageComponentContract(ir, opts.page, opts.component, contractOpts)
+    return { output: opts.json ? JSON.stringify(expanded) : formatPageComponentContract(expanded), failed: false }
+  }
+  const contract = pageContract(ir, opts.page, contractOpts)
+  const file = `${PAGES_DIRNAME}/${opts.page}.json`
+  if (opts.fit) {
+    let fit: InspectFit
+    if (!contract.page.filled) {
+      fit = { checked: false, reason: "the page is not written yet" }
+    } else if (!validation.ok) {
+      fit = { checked: false, reason: "fix the page's validate errors first" }
+    } else {
+      // The input the export draws: the validated deck, local assets read in.
+      await resolveLocalAssets(validation.ir!, loaded.baseDir, loaded.workspaceAssetsDir)
+      fit = { checked: true, ...pageFit(validation.ir!, opts.page, { theme }) }
+    }
+    const report: PageFitReport = {
+      page: { ...contract.page, file },
+      errors: contract.errors,
+      warnings: contract.warnings,
+      fit,
+    }
+    return {
+      output: opts.json ? JSON.stringify(report) : formatPageFitReport(report, contract.theme),
+      failed: contract.errors.length > 0 || (fit.checked && !fit.fits),
+    }
+  }
+  const output = opts.json
+    ? JSON.stringify({ ...contract, page: { ...contract.page, file } })
+    : formatPageContract(contract, file)
+  return { output, failed: contract.errors.length > 0 }
 }
 
 // ── asset-brief ──────────────────────────────────────────────────────────

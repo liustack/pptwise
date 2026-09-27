@@ -1,8 +1,9 @@
 ---
-summary: 'Current CLI surface for IR v5, theme v2, deck projects, fixed-sample theme comparison, validation, audit, images, preview, and installation health'
+summary: 'Current CLI surface for IR v5, theme v2, deck projects, per-page inspection, fixed-sample theme comparison, validation, audit, images, preview, and installation health'
 read_when:
   - looking up a supported command or flag
   - wiring an agent around the spec, fill, validate, audit, and render loop
+  - reading one page's fill contract or checking whether a page fits before render
   - creating, forking, comparing, extracting, or resolving themes
   - diagnosing audit output, image sourcing, or an installation
 ---
@@ -24,7 +25,7 @@ pptwise render deck-dir/
 pptwise preview deck-dir/ --html
 ```
 
-Fill no more than four pages between validation passes. Use `serve` when a reviewer needs a live browser round.
+Fill no more than four pages between validation passes, and read each page's contract with `inspect` before writing it. Use `serve` when a reviewer needs a live browser round.
 
 ## Command index
 
@@ -35,6 +36,7 @@ Fill no more than four pages between validation passes. Use `serve` when a revie
 | `audit <target>` | Run deterministic visual and geometry checks. |
 | `asset-brief <target>` | Report real image frames, crop, palette, safe zones, and prompts. |
 | `schema` | Print the IR or spec JSON Schema, or one component or kind cut from it. |
+| `inspect <deck> --page <id>` | Show one page's fill contract, expand one component for it, or check whether it fits. |
 | `spec validate <file>` | Validate a theme-shaped deck spec. |
 | `assemble <dir|name>` | Merge a deck project into derived IR v5. |
 | `disassemble <ir.json>` | Split IR v5 into a spec, page files, and assets. |
@@ -114,6 +116,24 @@ The IR schema keeps every shared piece in `$defs` once: each component under its
 Icon fields print as a string that points at `pptwise icons`. Validation always checks the closed enum.
 
 IR is version `"5"`. The deck spec is version `"1"`. Theme files are numeric version `2`. Current IR has no `seed`, `layout`, `beat`, or `arrangement` fields.
+
+## Inspect one page
+
+```bash
+pptwise inspect <deck> --page <id> [--json]
+pptwise inspect <deck> --page <id> --component <type> [--json]
+pptwise inspect <deck> --page <id> --fit [--json]
+```
+
+`inspect` reads one page of a deck project the way `validate` reads the deck, with one difference: it reads only that page's file, and every other page assembles as a placeholder. A broken or unwritten page elsewhere in the deck does not change the answer.
+
+The default report shows the spec's locked fields and fill hints, the page file and whether it exists yet, the fields the page file may carry with their schema, the components the bound theme's face draws on this page (with the full-body and required ones among them), candidates from the spec's `focus` and from what the page already holds, the counts `validate` applies to the page, and `validate`'s findings on the page or on the deck as a whole. Counts come in two levels. Past an `error` limit `validate` refuses the page, and past a `warning` limit it warns. A limit that a stricter error on the same count makes unreachable is left out. The command exits 1 when the page has an error.
+
+`--component <type>` expands one component the page may hold: its design story, the page's limits on it, whether it must be the page's only component, and the schema `schema --component` prints for it. A type the page's face does not draw fails and lists the types it does draw.
+
+Counts do not prove that content fits the drawn page. `--fit` draws the page with the same renderer and reads the same drop count as the content-drop gate in `render`, so a page it reports as fitting is a page `render` accepts. It also reports text cut to fit, which `render` allows and `audit` reports, and a face that stepped aside so a plainer layout could draw the whole page. It exits 1 when content would be dropped or the page has a validate error. A page not written yet, or one `validate` refuses, is not drawn, and the report says why.
+
+`--json` prints the report as one line of JSON.
 
 ## Assemble and disassemble
 

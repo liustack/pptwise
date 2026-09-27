@@ -28,8 +28,9 @@
  *
  * No pre-injected vocabulary (schema/narratives/themes JSON) in the system
  * prompt — unlike `run.mts`, whose model has no tools and depends entirely
- * on injection. This runner's model can call `run_pptwise schema` /
- * `narratives --json` / `themes --json` itself, exactly what
+ * on injection. This runner's model can call `run_pptwise schema --spec` /
+ * `narratives --json` / `themes --json`, and `inspect` for each page it
+ * fills, itself, exactly what
  * `tests/bench/README.md`'s run protocol and the SKILL playbook already
  * describe ("give the model SKILL.md + prompt.md, let it run the SKILL's
  * workflow"). Injecting the vocabulary anyway would be a convenience that
@@ -237,11 +238,11 @@ function pathishToken(token: string): string | null {
  *  every `pptwise` invocation in `skills/pptwise/SKILL.md` — by a test now
  *  (`run-agentic.test.ts`, "covers every command SKILL.md asks for"), after
  *  `icons` was added to the playbook and missed here (codex review R6): the
- *  playbook runs `schema`, `schema --spec|--kind|--component`, `icons`,
- *  `narratives`, `themes`, `theme try|new|fork`, `brand extract`, `spec
- *  validate`, `assemble`, `validate`, `audit`, `preview`, `render`,
- *  `doctor`, and `serve` — everything but `serve` (interactive/long-running)
- *  is reachable. `layouts` is a plain listing and comes along. Excluded on
+ *  playbook runs `schema`, `schema --spec|--kind|--component`, `inspect
+ *  --page [--component|--fit]`, `icons`, `narratives`, `themes`, `theme
+ *  try|new|fork`, `brand extract`, `spec validate`, `assemble`, `validate`,
+ *  `audit`, `preview`, `render`, `doctor`, and `serve` — everything but
+ *  `serve` (interactive/long-running) is reachable. `layouts` is a plain listing and comes along. Excluded on
  *  purpose: `plan`/`scenarios`
  *  (removed vocabulary-v4 aliases that only exist to print a rename
  *  error), `check-update`/`self-update`/`images` (network side effects
@@ -255,6 +256,7 @@ const ALLOWED_SUBCOMMANDS = new Set([
   "audit",
   "asset-brief",
   "schema",
+  "inspect",
   "assemble",
   "disassemble",
   "themes",
@@ -1478,9 +1480,10 @@ export async function runOneAgentic(
     `${TOOL_RESULTS_DIR}/ and the result ends with a [truncated: ...] line giving the exact read_file call (path and`,
     "offset) that continues it. read_file pages the same way, so keep reading until no [truncated: ...] line remains",
     "when you need the rest.",
-    "The IR JSON Schema, narrative presets, and theme catalog are not preloaded below — run",
-    "run_pptwise(['schema']) / run_pptwise(['narratives', '--json']) / run_pptwise(['themes', '--json']) yourself",
-    "whenever you need them, the same way the SKILL playbook expects.",
+    "The spec schema, narrative presets, and theme catalog are not preloaded below. Run",
+    "run_pptwise(['schema', '--spec']) / run_pptwise(['narratives', '--json']) / run_pptwise(['themes', '--json'])",
+    "yourself, and read each page's contract with run_pptwise(['inspect', '<deck-dir>', '--page', '<id>']) while",
+    "filling it, the same way the SKILL playbook expects.",
     "The playbook's references/ files (references/spec.md, references/layouts.md, ...) are in your workspace at",
     "those exact paths — read them with read_file when the playbook points at one.",
     "Use the SKILL playbook below to design and build the deck: write your IR (or deck-project files) with",

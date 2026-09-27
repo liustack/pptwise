@@ -118,6 +118,13 @@ describe("checkPptwiseArgs", () => {
     }
   })
 
+  it("allows the per-page inspect entry in all three of its forms", () => {
+    expect(checkPptwiseArgs(["inspect", "deck", "--page", "growth"], workspace)).toEqual({ ok: true })
+    expect(checkPptwiseArgs(["inspect", "deck", "--page", "growth", "--component", "chart", "--json"], workspace)).toEqual({ ok: true })
+    expect(checkPptwiseArgs(["inspect", "deck", "--page", "growth", "--fit"], workspace)).toEqual({ ok: true })
+    expect(checkPptwiseArgs(["inspect", "../outside", "--page", "growth"], workspace).ok).toBe(false)
+  })
+
   it("allows the one permitted spec sub-subcommand", () => {
     expect(checkPptwiseArgs(["spec", "validate", "deck.spec.json"], workspace)).toEqual({ ok: true })
   })

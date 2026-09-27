@@ -15,9 +15,8 @@ export function slideToSvgMarkup(ir: PptxIR, slide: Slide, index: number, theme:
   return renderSvgMarkup(createElement(FullSlideSvg, { ir, slide, index, theme }))
 }
 
-/** One slide's export render: what svg2pptx will draw, and what got lost doing it. */
-export interface SlideRender {
-  ops: Op[]
+/** What one slide's drawing lost: the content-drop verdict for that page. */
+export interface SlideDrops {
   /**
    * How much this slide lost — the sum of every `data-dropped` marker in its
    * markup, whether the page-level drop path (`DroppedContentMarker`) or a
@@ -35,15 +34,27 @@ export interface SlideRender {
   drops: readonly { kind: DropKind; count: number }[]
 }
 
+/** One slide's export render: what svg2pptx will draw, and what got lost doing it. */
+export interface SlideRender extends SlideDrops {
+  ops: Op[]
+}
+
+/** One slide drawn and parsed: the root svg2pptx converts, and what it lost. */
+export interface DrawnSlide extends SlideDrops {
+  root: Element
+}
+
 /**
- * Render a slide to pptxgenjs ops via single-source SVG → svg2pptx, and
- * count the content the layout dropped on the way. Both come out of one
- * render and one parse, which is why `generatePptxBlob`'s content-drop gate
- * (`../pptx/generate.ts`) costs nothing beyond the work the export already
- * does — and why it reads the exact markup that becomes the file, rather
- * than a second render that could in principle disagree with it.
+ * Draw one slide through the single source, parse it once, and count the
+ * content the layout dropped on the way.
+ *
+ * This is the one place a page's drop verdict is read. The export converts
+ * this root to ops and gates on these counts (`slideToRender` below), and
+ * `pptwise inspect --fit` (`../inspect/page-fit.ts`) reports the same counts
+ * for one page, so the single-page check and the export cannot disagree
+ * about what a page loses.
  */
-export function slideToRender(ir: PptxIR, slide: Slide, index: number, theme: ThemeDefinition): SlideRender {
+export function drawSlide(ir: PptxIR, slide: Slide, index: number, theme: ThemeDefinition): DrawnSlide {
   const root = parseSvgRoot(slideToSvgMarkup(ir, slide, index, theme))
   const byKind = new Map<DropKind, number>()
   let dropped = 0
@@ -55,6 +66,20 @@ export function slideToRender(ir: PptxIR, slide: Slide, index: number, theme: Th
     dropped += count
   }
   const drops = Array.from(byKind, ([kind, count]) => ({ kind, count }))
+  return { root, dropped, drops }
+}
+
+/**
+ * Render a slide to pptxgenjs ops via single-source SVG → svg2pptx, and
+ * count the content the layout dropped on the way. Both come out of one
+ * render and one parse ({@link drawSlide}), which is why
+ * `generatePptxBlob`'s content-drop gate (`../pptx/generate.ts`) costs
+ * nothing beyond the work the export already does — and why it reads the
+ * exact markup that becomes the file, rather than a second render that could
+ * in principle disagree with it.
+ */
+export function slideToRender(ir: PptxIR, slide: Slide, index: number, theme: ThemeDefinition): SlideRender {
+  const { root, dropped, drops } = drawSlide(ir, slide, index, theme)
   return { ops: svgToOps(root), dropped, drops }
 }
 

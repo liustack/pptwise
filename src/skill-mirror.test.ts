@@ -134,11 +134,13 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
       expect(text).toContain("pptwise narratives --json")
       expect(text).toContain("pptwise themes --json")
       // The whole IR schema is never an opening read: the component contract
-      // is cut per kind or per component while filling, and icons come from
+      // is read one page at a time while filling, one component expanded on
+      // demand, the page drawn when its fit is in doubt, and icons come from
       // their own list.
       expect(text).not.toMatch(/^pptwise schema$/m)
-      expect(text).toContain("pptwise schema --kind <kind> --theme <theme>")
-      expect(text).toContain("pptwise schema --component <type>")
+      expect(text).toContain("pptwise inspect deck-dir/ --page <id>")
+      expect(text).toContain("pptwise inspect deck-dir/ --page <id> --component <type>")
+      expect(text).toContain("pptwise inspect deck-dir/ --page <id> --fit")
       expect(text).toContain("pptwise icons")
       expect(text).toContain("deck.spec.json")
       expect(text).toContain("theme.json")

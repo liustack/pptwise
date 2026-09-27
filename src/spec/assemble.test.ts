@@ -123,10 +123,15 @@ describe("assembleDeck", () => {
 
   it("never materializes selection state", () => {
     const result = assembleDeck(spec(), {}) as unknown as Record<string, unknown>
-    expect(result).toEqual({ ir: expect.any(Object) })
+    // The IR, and the spec it was assembled from as validation parsed it.
+    expect(result).toEqual({ ir: expect.any(Object), spec: expect.any(Object) })
     for (const slide of (result.ir as { slides: Array<Record<string, unknown>> }).slides) {
       expect(slide).not.toHaveProperty("layout")
       expect(slide).not.toHaveProperty("beat")
+    }
+    for (const page of (result.spec as { pages: Array<Record<string, unknown>> }).pages) {
+      expect(page).not.toHaveProperty("layout")
+      expect(page).not.toHaveProperty("beat")
     }
     expect(result.ir).not.toHaveProperty("seed")
     expect(result).not.toHaveProperty("generatedSeed")
