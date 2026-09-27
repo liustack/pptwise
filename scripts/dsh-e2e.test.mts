@@ -58,7 +58,9 @@ describe("dsh e2e preflight", () => {
         "export const name = 'pptwise'",
         "export const inject = ['skills', 'tools']",
         "export function apply(ctx) {",
-        `  ctx.skills.register({ name: 'pptwise', content: 'node "${join(pluginDir, "dist", "cli.js")}" <args>' })`,
+        // A string literal built by JSON.stringify, so a Windows path keeps its
+        // backslashes: spliced in raw, `\node_modules` became a newline.
+        `  ctx.skills.register({ name: 'pptwise', content: ${JSON.stringify(`node "${join(pluginDir, "dist", "cli.js")}" <args>`)} })`,
         "  ctx.tools.register({",
         "    name: 'pptwise_preview',",
         "    execute: async () => ({}),",

@@ -847,7 +847,9 @@ function recordFrom(entry) {
  * read-modify-write meant two previews finishing at once lost one of them, and
  * a reader catching the file mid-write fell back to `{}` and then overwrote
  * everything in it. The scratch name carries its own uuid so two writers for
- * one id cannot collide on the scratch file either.
+ * one id cannot collide on the scratch file either. On Windows the rename
+ * also has to wait for anyone still reading the old record, which
+ * `replaceByRename` does.
  *
  * Takes a directory rather than an id because `execute` writes this into
  * `<id>.partial` — the record has to be inside the directory being published,
@@ -856,7 +858,51 @@ function recordFrom(entry) {
 async function writeRecordInto(dir, record) {
   const scratch = join(dir, `.${RECORD_FILE}.${randomUUID()}.tmp`)
   await writeFile(scratch, JSON.stringify(record))
-  await rename(scratch, join(dir, RECORD_FILE))
+  await replaceByRename(scratch, join(dir, RECORD_FILE))
+}
+
+/**
+ * What Windows answers a rename with while another handle still has the file
+ * it would replace open. `MoveFileEx` refuses to replace a file that anyone
+ * is reading, where POSIX swaps the name and lets the reader finish the old
+ * one, so on Windows a record being read cannot be replaced until the read is
+ * done. `EBUSY` is the same refusal from a handle opened without sharing.
+ */
+const HELD_OPEN_ERRNOS = new Set(['EPERM', 'EACCES', 'EBUSY'])
+
+/**
+ * The pauses between attempts, about a second and a quarter in all. A read of
+ * a record takes milliseconds, so this is room for a queue of readers to
+ * drain, not for a file that stays locked. That one still fails, with the
+ * error the last attempt got.
+ */
+const HELD_OPEN_DELAYS_MS = [10, 20, 40, 80, 160, 320, 640]
+
+/**
+ * `rename`, waiting out readers where the platform makes it wait.
+ *
+ * Only on Windows, and only for the errnos an open handle produces. On POSIX a
+ * rename never waits for a reader, so an `EPERM` there is a real permission
+ * problem and is thrown at once. Anything else (`ENOENT` above all) is thrown
+ * at once everywhere: no amount of waiting brings back a missing source.
+ *
+ * The options exist for the tests, which have no Windows to run on and need
+ * to hand this a rename that fails the way Windows does.
+ */
+async function replaceByRename(from, to, options = {}) {
+  const platform = options.platform ?? process.platform
+  const renameFile = options.renameFile ?? rename
+  const delays = options.delaysMs ?? HELD_OPEN_DELAYS_MS
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      await renameFile(from, to)
+      return
+    } catch (error) {
+      const pause = delays[attempt]
+      if (platform !== 'win32' || pause === undefined || !HELD_OPEN_ERRNOS.has(error && error.code)) throw error
+      await new Promise((done) => setTimeout(done, pause))
+    }
+  }
 }
 
 /**
@@ -1896,6 +1942,7 @@ export const __testing = {
   exportName,
   readRecord,
   writeRecord,
+  replaceByRename,
   entryFromRecord,
   fileInside,
   previewDir,

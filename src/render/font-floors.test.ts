@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync, statSync } from "node:fs"
-import { dirname, join } from "node:path"
+import { dirname, join, relative, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
 import {
@@ -95,7 +95,8 @@ describe("type floors on the 1280×720 canvas", () => {
         if (raw == null) continue
         const value = Number(raw)
         if (value < META_FONT_FLOOR_PX) {
-          const hit = `${file.replace(SRC + "/", "")}: ${match[0]}`
+          // Named the same way on every platform: relative to src/, with `/`.
+          const hit = `${relative(SRC, file).split(sep).join("/")}: ${match[0]}`
           if (SHOW_SPEC_UNDER_FLOOR_SET.has(hit)) adjudicatedShowHits.push(hit)
           else hits.push(hit)
         }

@@ -7,6 +7,13 @@
 import { mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
+import {
+  DENIED_READ_CODES,
+  denyFileRead,
+  denyFilesInNewDirs,
+  denyTreeRead,
+  removeWindowsDenies,
+} from "./test-permissions"
 
 // The plugin is plain dependency-free JS by design (no build step, no dsh
 // type imports) — see dsh/index.js's own header comment.
@@ -258,6 +265,15 @@ interface PreviewModule {
     exportName: (bundle: { title?: string; draft?: boolean } | undefined, target: string) => string
     readRecord: (root: string, id: string) => Promise<PreviewRecord | undefined>
     writeRecord: (root: string, id: string, record: unknown) => Promise<void>
+    replaceByRename: (
+      from: string,
+      to: string,
+      options?: {
+        platform?: string
+        renameFile?: (from: string, to: string) => Promise<void>
+        delaysMs?: readonly number[]
+      },
+    ) => Promise<void>
     entryFromRecord: (dir: string, record: PreviewRecord) => PreviewEntry
     fileInside: (dir: string, name: unknown) => string | undefined
     previewDir: (root: string, id: unknown) => string | undefined
@@ -913,6 +929,71 @@ describe("preview recall across restarts", () => {
     }
   })
 
+  it("waits for a reader to let go of the old record on Windows, and only there", async () => {
+    // Windows will not rename over a file another handle has open. While any
+    // reader is still inside the old record the rename fails with EPERM, where
+    // POSIX would swap the name out from under it. The fight above is exactly
+    // that shape, and on Windows the writers lost it to their own readers. So
+    // the rename is retried there, briefly. Everywhere else an EPERM from
+    // rename is a real permission problem, and waiting would only delay it.
+    const { __testing } = await loadPreviewTool()
+    const failingFirst = (failures: number, code = "EPERM") => {
+      let calls = 0
+      const renameFile = async () => {
+        calls += 1
+        if (calls <= failures) throw Object.assign(new Error(`${code}: rename refused`), { code })
+      }
+      return { renameFile, calls: () => calls }
+    }
+
+    const held = failingFirst(3)
+    await __testing.replaceByRename("a.tmp", "record.json", {
+      platform: "win32",
+      renameFile: held.renameFile,
+      delaysMs: [1, 1, 1, 1],
+    })
+    expect(held.calls()).toBe(4)
+
+    for (const code of ["EACCES", "EBUSY"]) {
+      const other = failingFirst(1, code)
+      await __testing.replaceByRename("a.tmp", "record.json", {
+        platform: "win32",
+        renameFile: other.renameFile,
+        delaysMs: [1],
+      })
+      expect(other.calls(), code).toBe(2)
+    }
+
+    const posix = failingFirst(1)
+    await expect(
+      __testing.replaceByRename("a.tmp", "record.json", { platform: "linux", renameFile: posix.renameFile, delaysMs: [1] }),
+    ).rejects.toThrow(/EPERM/)
+    expect(posix.calls()).toBe(1)
+
+    // A handle that never closes is still an error in the end, not a hang.
+    const forever = failingFirst(Infinity)
+    await expect(
+      __testing.replaceByRename("a.tmp", "record.json", {
+        platform: "win32",
+        renameFile: forever.renameFile,
+        delaysMs: [1, 1],
+      }),
+    ).rejects.toThrow(/EPERM/)
+    expect(forever.calls()).toBe(3)
+
+    // Only what an open handle produces is waited out. A missing source is not
+    // going to appear.
+    const missing = failingFirst(1, "ENOENT")
+    await expect(
+      __testing.replaceByRename("a.tmp", "record.json", {
+        platform: "win32",
+        renameFile: missing.renameFile,
+        delaysMs: [1],
+      }),
+    ).rejects.toThrow(/ENOENT/)
+    expect(missing.calls()).toBe(1)
+  })
+
   it("rejects an id that is not the shape it hands out, since ids become filenames", async () => {
     // The id is the value that becomes a directory name, so the id is the value
     // whose shape is enforced. The tool's `target` is deliberately not checked
@@ -926,9 +1007,10 @@ describe("preview recall across restarts", () => {
     }
     // Every path the module builds from an accepted id stays under the root,
     // staging directory included — that one is where the single `rm` points.
+    const { sep } = await import("node:path")
     const id = previewId("d0")
-    expect(__testing.previewDir(root, id)!.startsWith(`${root}/`)).toBe(true)
-    expect(__testing.partialDir(root, id).startsWith(`${root}/`)).toBe(true)
+    expect(__testing.previewDir(root, id)!.startsWith(`${root}${sep}`)).toBe(true)
+    expect(__testing.partialDir(root, id).startsWith(`${root}${sep}`)).toBe(true)
     expect(() => __testing.partialDir(root, "../../victim")).toThrow(/unsafe id/)
   })
 
@@ -1030,7 +1112,7 @@ describe("who can see whose previews", () => {
     // which would put a user's decks wherever the harness happened to be
     // started from, and would make the root move when the cwd did.
     const { previewRoot, __testing } = await loadPreviewTool()
-    const { isAbsolute, join } = await import("node:path")
+    const { isAbsolute, join, resolve } = await import("node:path")
     const original = process.env.PPTWISE_HOME
     const originalPress = process.env.PPTPRESS_HOME
     const originalLegacy = process.env.PPTFAST_HOME
@@ -1045,8 +1127,11 @@ describe("who can see whose previews", () => {
       expect(previewRoot({ homedir: () => fakeHome })).toBe(fallback)
       process.env.PPTWISE_HOME = "relative/home"
       expect(isAbsolute(previewRoot())).toBe(true)
-      process.env.PPTWISE_HOME = "/somewhere/else"
-      expect(previewRoot()).toBe(join("/somewhere/else", __testing.PREVIEW_DIR))
+      // Resolved first, so it is absolute on every platform: `/somewhere/else`
+      // alone has no drive on Windows.
+      const elsewhere = resolve("/somewhere/else")
+      process.env.PPTWISE_HOME = elsewhere
+      expect(previewRoot()).toBe(join(elsewhere, __testing.PREVIEW_DIR))
     } finally {
       if (original === undefined) delete process.env.PPTWISE_HOME
       else process.env.PPTWISE_HOME = original
@@ -1228,6 +1313,7 @@ describe("who can see whose previews", () => {
  * route starts no process" is checked rather than asserted.
  */
 const FAKE_CLI_SOURCE = [
+  'import { execFileSync } from "node:child_process"',
   'import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"',
   'import { dirname, join } from "node:path"',
   "",
@@ -1321,7 +1407,17 @@ const FAKE_CLI_SOURCE = [
   "    // Take write permission off the preview root on the way out, so the",
   "    // publish that runs next fails the way a full disk would: everything",
   "    // rendered, nothing able to land under its final name.",
-  "    chmodSync(dirname(dirname(out)), 0o500)",
+  '    if (process.platform === "win32") {',
+  "      // Windows has no mode bits to take. An ACL denies Everyone what a move",
+  "      // out of the staging name needs instead: delete on the staging",
+  "      // directory itself, and delete-child and add-subdirectory on the root.",
+  "      // Neither is inherited, so the record written into the staging",
+  "      // directory after this still lands.",
+  '      execFileSync("icacls", [dirname(out), "/deny", "*S-1-1-0:(DE)"], { stdio: "ignore" })',
+  '      execFileSync("icacls", [dirname(dirname(out)), "/deny", "*S-1-1-0:(DC,AD)"], { stdio: "ignore" })',
+  "    } else {",
+  "      chmodSync(dirname(dirname(out)), 0o500)",
+  "    }",
   "  }",
   "} else {",
   '  process.stderr.write("unsupported command " + cmd + "\\n")',
@@ -1909,7 +2005,6 @@ describe("preview route (the handler DSH actually calls)", () => {
     // sitting right there is retired for the life of the page. Take the errno
     // check out of `readRecord`, `recallAnywhere` or the two file branches and
     // the matching row below goes red.
-    const { chmod } = await import("node:fs/promises")
     const { join } = await import("node:path")
     const { __testing } = await loadPreviewTool()
 
@@ -1924,7 +2019,7 @@ describe("preview route (the handler DSH actually calls)", () => {
     for (const [what, file, suffix] of unreadable) {
       const { handler, route, value } = await servedPreview(`unreadable-${file}`)
       const path = join(value.outDir, file)
-      await chmod(path, 0o000)
+      const restore = await denyFileRead(path)
       try {
         // Prove the environment can actually express this before trusting the
         // result — running as root would read it anyway and the assertion below
@@ -1932,19 +2027,22 @@ describe("preview route (the handler DSH actually calls)", () => {
         const { readFile } = await import("node:fs/promises")
         let denied = false
         await readFile(path).catch((error: NodeJS.ErrnoException) => {
-          denied = error.code === "EACCES" || error.code === "EPERM"
+          denied = DENIED_READ_CODES.includes(error.code ?? "")
         })
-        expect(denied, `${what}: chmod 000 did not deny this process a read`).toBe(true)
+        expect(denied, `${what}: the file was not denied to this process`).toBe(true)
 
         const res = await request(handler, `${route}/${value.previewId}${suffix}`)
         expect(res.status, what).toBe(503)
         const body = res.body.toString("utf8")
-        expect(body, what).toMatch(/could not be read right now/)
-        expect(body, what).toContain(path)
+        // Read out of the JSON rather than off its text: a JSON string doubles
+        // every backslash, so a Windows path is never found in the raw body.
+        const message: string = suffix === "/html" ? body : JSON.parse(body).error
+        expect(message, what).toMatch(/could not be read right now/)
+        expect(message, what).toContain(path)
         // The words that would be a lie about a file that is present.
-        expect(body, what).not.toMatch(/is missing|unknown preview id/)
+        expect(message, what).not.toMatch(/is missing|unknown preview id/)
       } finally {
-        await chmod(path, 0o600).catch(() => {})
+        await restore().catch(() => {})
       }
     }
   })
@@ -1953,13 +2051,12 @@ describe("preview route (the handler DSH actually calls)", () => {
     // The 503 reaches the iframe as a document, so it has to be a different
     // document. Handing a permission blip the "no longer on disk" page sends a
     // user off to rebuild a deck that never went anywhere.
-    const { chmod } = await import("node:fs/promises")
     const { join } = await import("node:path")
     const { __testing } = await loadPreviewTool()
     const { handler, route, value } = await servedPreview("unreadable-html-page")
     const path = join(value.outDir, __testing.PREVIEW_HTML_FILE)
 
-    await chmod(path, 0o000)
+    const restore = await denyFileRead(path)
     try {
       const res = await request(handler, `${route}/${value.previewId}/html`)
       expect(res.status).toBe(503)
@@ -1970,7 +2067,7 @@ describe("preview route (the handler DSH actually calls)", () => {
       expect(page).not.toContain("no longer on disk")
       expect(page).not.toContain("until you delete them")
     } finally {
-      await chmod(path, 0o600).catch(() => {})
+      await restore().catch(() => {})
     }
   })
 
@@ -1985,13 +2082,14 @@ describe("preview route (the handler DSH actually calls)", () => {
     // Exhaustive and mutually exclusive: every row below produces exactly one
     // status and one code, and no two rows produce the same pair for different
     // reasons.
-    const { chmod, rm, writeFile } = await import("node:fs/promises")
+    const { rm, writeFile } = await import("node:fs/promises")
     const { join } = await import("node:path")
     const { __testing, PREVIEW_ROUTE, FAILURE_CODES } = await loadPreviewTool()
     const svc = await makeService("classification")
     const handler = routeHandlerOf(svc)
 
-    const cases: [string, (dir: string) => Promise<void>, number, string][] = [
+    // A row that takes something away returns what gives it back.
+    const cases: [string, (dir: string) => Promise<void | (() => Promise<void>)>, number, string][] = [
       ["intact", async () => {}, 200, ""],
       [
         "the whole directory is gone",
@@ -2021,13 +2119,13 @@ describe("preview route (the handler DSH actually calls)", () => {
       ],
       [
         "the record cannot be read",
-        async (dir) => chmod(join(dir, __testing.RECORD_FILE), 0o000),
+        async (dir) => denyFileRead(join(dir, __testing.RECORD_FILE)),
         503,
         FAILURE_CODES.unreadable,
       ],
       [
         "a page cannot be read",
-        async (dir) => chmod(join(dir, "001.svg"), 0o000),
+        async (dir) => denyFileRead(join(dir, "001.svg")),
         503,
         FAILURE_CODES.unreadable,
       ],
@@ -2038,7 +2136,7 @@ describe("preview route (the handler DSH actually calls)", () => {
       const id = previewId(`7${index}a`)
       const dir = join(svc.root, id)
       await seedPreview(svc.root, id)
-      await breakIt(dir)
+      const restore = await breakIt(dir)
       try {
         const res = await request(handler, `${PREVIEW_ROUTE}/${id}`)
         expect(res.status, what).toBe(status)
@@ -2047,9 +2145,7 @@ describe("preview route (the handler DSH actually calls)", () => {
           seen.set(what, `${res.status} ${code}`)
         }
       } finally {
-        await chmod(dir, 0o700).catch(() => {})
-        await chmod(join(dir, __testing.RECORD_FILE), 0o600).catch(() => {})
-        await chmod(join(dir, "001.svg"), 0o600).catch(() => {})
+        if (restore) await restore().catch(() => {})
       }
     }
 
@@ -2099,19 +2195,31 @@ describe("preview route (the handler DSH actually calls)", () => {
     // look" is the bug this whole round removed, but it is defence, not a
     // reachable path, and the mutation list says so rather than pretending
     // otherwise.
-    const { chmod, mkdir } = await import("node:fs/promises")
-    const { PREVIEW_ROUTE, FAILURE_CODES } = await loadPreviewTool()
+    //
+    // A real preview sits under the root, so there is a card to lose. Windows
+    // needs it to: it checks no rights on the way through a directory, so a
+    // shut root there still answers "not found" for an id that was never
+    // written, truthfully, and only a read of a preview that is there can fail.
+    const { readFile } = await import("node:fs/promises")
+    const { join } = await import("node:path")
+    const { PREVIEW_ROUTE, FAILURE_CODES, __testing } = await loadPreviewTool()
     const svc = await makeService("unreadable-root")
     const id = previewId("a5")
-    await mkdir(svc.root, { recursive: true, mode: 0o700 })
+    await seedPreview(svc.root, id)
 
-    await chmod(svc.root, 0o000)
+    const restore = await denyTreeRead(svc.root)
     try {
+      const denied = await readFile(join(svc.root, id, __testing.RECORD_FILE)).then(
+        () => "",
+        (error: NodeJS.ErrnoException) => error.code ?? "",
+      )
+      expect(DENIED_READ_CODES, "the preview root was not denied to this process").toContain(denied)
+
       const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${id}`)
       expect(res.status).toBe(503)
       expect(JSON.parse(res.body.toString("utf8")).code).toBe(FAILURE_CODES.unreadable)
     } finally {
-      await chmod(svc.root, 0o700).catch(() => {})
+      await restore().catch(() => {})
     }
   })
 
@@ -2247,15 +2355,26 @@ describe("preview route (the handler DSH actually calls)", () => {
     // the length limit answers here on its own.
     const { __testing } = await loadPreviewTool()
     const { mkdir } = await import("node:fs/promises")
+    const { join } = await import("node:path")
     const root = await scratchRoot("too-long")
     await mkdir(root, { recursive: true, mode: 0o700 })
-    const absurd = `${root}/${"x".repeat(4096)}`
+    // A name with a NUL byte in it is refused everywhere, by Node itself,
+    // before any system call. A name over the length limit is refused by a
+    // POSIX kernel with ENAMETOOLONG. Windows answers that one with
+    // ERROR_INVALID_NAME, which libuv reports as ENOENT: there the system
+    // itself says nothing is at that name, and "absent" is the honest reading.
+    const tooLong = join(root, "x".repeat(4096))
+    const refused: [string, string][] = [["a NUL byte", join(root, "nul\u0000byte")]]
+    if (process.platform !== "win32") refused.push(["an over-long name", tooLong])
 
     expect(await __testing.directoryState(root)).toBe("directory")
-    await expect(__testing.directoryState(absurd)).rejects.toBeInstanceOf(__testing.PreviewDamaged)
-    // ...and it is not silently reported as "nothing is there", which is what a
-    // two-way answer would have to do with it.
-    await expect(__testing.directoryState(absurd)).rejects.toThrow(/cannot be used/)
+    for (const [what, absurd] of refused) {
+      await expect(__testing.directoryState(absurd), what).rejects.toBeInstanceOf(__testing.PreviewDamaged)
+      // ...and it is not silently reported as "nothing is there", which is what a
+      // two-way answer would have to do with it.
+      await expect(__testing.directoryState(absurd), what).rejects.toThrow(/cannot be used/)
+    }
+    if (process.platform === "win32") expect(await __testing.directoryState(tooLong)).toBe("absent")
   })
 
   it("never phrases a read failure as a deletion, even where nothing routes there today", async () => {
@@ -2632,7 +2751,7 @@ describe("publishing a preview", () => {
     const { spawn } = await import("node:child_process")
     const { writeFile } = await import("node:fs/promises")
     const { join } = await import("node:path")
-    const { fileURLToPath } = await import("node:url")
+    const { fileURLToPath, pathToFileURL } = await import("node:url")
 
     const cliPath = await fakeCli()
     if (!options.killBeforePublish) await writeFile(join(dirname(cliPath), "kill-parent-at"), at)
@@ -2645,7 +2764,10 @@ describe("publishing a preview", () => {
     await writeFile(
       driver,
       [
-        `import { createPreviewService } from ${JSON.stringify(modulePath)}`,
+        // A file URL, not the path: an ES module specifier is a URL, and a
+        // Windows path (`C:\...`) reads as one with a `c:` scheme, so the
+        // driver died on its import before it rendered anything.
+        `import { createPreviewService } from ${JSON.stringify(pathToFileURL(modulePath).href)}`,
         `const svc = createPreviewService(${JSON.stringify(cliPath)})`,
         `await svc.tool.execute({ target: ${JSON.stringify(deck)} })`,
       ].join("\n"),
@@ -2659,11 +2781,19 @@ describe("publishing a preview", () => {
     // machine is loaded, which is exactly when several of these run at once —
     // emits `error` and no `exit`, and waiting only for `exit` turns that into
     // a hang that surfaces as a timeout with no explanation.
-    const signal = await new Promise<string | null>((resolve, reject) => {
+    const exit = await new Promise<{ code: number | null; signal: string | null }>((resolve, reject) => {
       child.on("error", reject)
-      child.on("exit", (_code, sig) => resolve(sig))
+      child.on("exit", (code, signal) => resolve({ code, signal }))
     })
-    expect(signal, `the driver was supposed to be killed at ${at}`).toBe("SIGKILL")
+    // How a kill looks from the parent. POSIX delivers SIGKILL as a signal.
+    // Windows has no signals to deliver: `process.kill` there is
+    // `TerminateProcess` with exit code 1, and the parent sees that code and
+    // no signal at all. An uncaught error exits with 1 as well, so on Windows
+    // this alone does not prove a kill. The staging directory the caller
+    // checks next does: a thrown error runs `execute`'s cleanup, which
+    // removes it, and a kill runs nothing.
+    const killed = process.platform === "win32" ? { code: 1, signal: null } : { code: null, signal: "SIGKILL" }
+    expect(exit, `the driver was supposed to be killed at ${at}`).toEqual(killed)
     const { previewRoot } = await loadPreviewTool()
     const original = process.env.PPTWISE_HOME
     process.env.PPTWISE_HOME = home
@@ -2803,17 +2933,28 @@ describe("publishing a preview", () => {
     const { deck } = await deckFixture("LOGO-V1")
 
     try {
-      await expect(svc.tool.execute({ target: deck })).rejects.toThrow(/EACCES|EPERM/)
+      const failure = await svc.tool.execute({ target: deck }).then(
+        () => undefined,
+        (error: Error) => error,
+      )
+      expect(failure?.message).toMatch(/EACCES|EPERM/)
+      // It is the move out of the staging name that failed, not the render
+      // before it.
+      expect(failure?.message).toMatch(/rename .*\.partial/)
 
       const left = await readdir(svc.root)
       expect(left.length).toBe(1)
       const staged = left[0]!
       expect(staged.endsWith(__testing.PARTIAL_SUFFIX)).toBe(true)
-      // The whole deck really is in there — this is not passing because the
-      // render failed early.
-      expect(await readdir(join(svc.root, staged))).toEqual(
-        expect.arrayContaining([__testing.RECORD_FILE, __testing.MANIFEST_FILE, "e2e.pptx"]),
-      )
+      if (process.platform !== "win32") {
+        // The whole deck really is in there — this is not passing because the
+        // render failed early. Windows lets the cleanup empty the directory,
+        // since a file there is deleted on its own rights rather than its
+        // directory's; the rename in the message above is the proof there.
+        expect(await readdir(join(svc.root, staged))).toEqual(
+          expect.arrayContaining([__testing.RECORD_FILE, __testing.MANIFEST_FILE, "e2e.pptx"]),
+        )
+      }
 
       const id = staged.slice(0, -__testing.PARTIAL_SUFFIX.length)
       const handler = routeHandlerOf(svc)
@@ -2821,7 +2962,8 @@ describe("publishing a preview", () => {
         expect((await request(handler, `${PREVIEW_ROUTE}/${id}${path}`)).status, path).toBe(404)
       }
     } finally {
-      await chmod(svc.root, 0o700).catch(() => {})
+      if (process.platform === "win32") await removeWindowsDenies(svc.root).catch(() => {})
+      else await chmod(svc.root, 0o700).catch(() => {})
     }
   })
 
@@ -2872,15 +3014,17 @@ describe("publishing a preview", () => {
     const dir = __testing.partialDir(root, previewId("c3"))
     // The root has to exist and be writable *before* the umask goes on, or the
     // leaf `mkdir` is what fails and this test proves nothing about the marker.
+    // (Windows has no umask; the same shape comes from an inherited deny, see
+    // `denyFilesInNewDirs`.)
     await mkdir(root, { recursive: true, mode: 0o700 })
 
-    const previous = process.umask(0o200)
+    const restore = await denyFilesInNewDirs(root)
     let created: string[] = []
     try {
       await expect(__testing.createOwnedDir(root, dir)).rejects.toThrow(/EACCES|EPERM/)
       created = await readdir(root)
     } finally {
-      process.umask(previous)
+      await restore()
     }
     // The directory it made on the way is gone with it.
     expect(created).toEqual([])
@@ -2895,12 +3039,12 @@ describe("publishing a preview", () => {
     await mkdir(root, { recursive: true, mode: 0o700 })
     const dir = join(root, "probe")
 
-    const previous = process.umask(0o200)
+    const restore = await denyFilesInNewDirs(root)
     try {
       await mkdir(dir, { mode: 0o700 })
       await expect(writeFile(join(dir, "x"), "x")).rejects.toThrow(/EACCES|EPERM/)
     } finally {
-      process.umask(previous)
+      await restore()
       await rm(dir, { recursive: true, force: true }).catch(() => {})
     }
   })
@@ -3400,7 +3544,6 @@ describe("what the card does with a bad answer", () => {
     // The other half of the errno work, checked across the seam: the server
     // answers a file it could not read with 503, and the card has to read that
     // as "try again" rather than as a deck that is gone.
-    const { chmod } = await import("node:fs/promises")
     const { join } = await import("node:path")
     const { PREVIEW_ROUTE, __testing } = await loadPreviewTool()
     const client = await loadClientBundle(() => ({}))
@@ -3410,14 +3553,14 @@ describe("what the card does with a bad answer", () => {
     const value = await svc.tool.execute({ target: deck })
     const path = join(value.outDir, __testing.RECORD_FILE)
 
-    await chmod(path, 0o000)
+    const restore = await denyFileRead(path)
     try {
       const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${value.previewId}`)
       expect(res.status).toBe(503)
       expect(await client.__testing.verdictOf(asResponse(res))).toBe("unreachable")
       expect(client.__testing.isRetryable(await client.__testing.verdictOf(asResponse(res)))).toBe(true)
     } finally {
-      await chmod(path, 0o600).catch(() => {})
+      await restore().catch(() => {})
     }
   })
 

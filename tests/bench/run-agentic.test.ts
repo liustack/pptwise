@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { existsSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { dirname, join, sep } from "node:path"
+import { dirname, join, resolve, sep } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import { loadValidatedDeckIr } from "../../src/cli/commands"
 import { themeFileFromPreset } from "../../src/cli/theme-resolve"
@@ -35,7 +35,9 @@ import { loadArtifact, scoreQuestion } from "./score.mts"
 // ── checkPathSafety — the tool-surface escape guard (plan 裁定 1) ──
 
 describe("checkPathSafety", () => {
-  const workspace = join(sep, "fake", "workspace")
+  // Resolved, not joined: `\fake\workspace` has no drive on Windows, and
+  // checkPathSafety compares it with paths that `resolve` gives one.
+  const workspace = resolve(sep, "fake", "workspace")
 
   it("accepts a plain relative path inside the workspace", () => {
     const result = checkPathSafety(workspace, "deck.json")
@@ -106,7 +108,9 @@ describe("checkPathSafety", () => {
 // ── checkPptwiseArgs — run_pptwise subcommand whitelist + path safety ──
 
 describe("checkPptwiseArgs", () => {
-  const workspace = join(sep, "fake", "workspace")
+  // Resolved, not joined: `\fake\workspace` has no drive on Windows, and
+  // checkPathSafety compares it with paths that `resolve` gives one.
+  const workspace = resolve(sep, "fake", "workspace")
 
   it("allows a whitelisted read-only subcommand with an in-workspace path", () => {
     expect(checkPptwiseArgs(["validate", "deck.json"], workspace)).toEqual({ ok: true })
@@ -217,7 +221,9 @@ describe("checkPptwiseArgs", () => {
 // is one of the commands the runner keeps off on purpose. ──
 
 describe("checkPptwiseArgs covers every command SKILL.md asks for", () => {
-  const workspace = join(sep, "fake", "workspace")
+  // Resolved, not joined: `\fake\workspace` has no drive on Windows, and
+  // checkPathSafety compares it with paths that `resolve` gives one.
+  const workspace = resolve(sep, "fake", "workspace")
   /** Kept off the whitelist on purpose — see run-agentic.mts's
    *  ALLOWED_SUBCOMMANDS doc comment for each one's reason. */
   const EXCLUDED = new Set(["serve", "check-update", "self-update", "init", "images", "config"])
