@@ -756,20 +756,22 @@ describe("runSchema / runThemes", () => {
     expect(lines).toContain("alarm-clock")
     expect(JSON.parse(runIcons(true))).toEqual(lines)
   })
-  it("prints 24 themes, json mode parses", () => {
-    expect(runThemes(false).split("\n")).toHaveLength(24)
-    expect(JSON.parse(runThemes(true))).toHaveLength(24)
+  it("prints 24 themes, json mode parses", async () => {
+    expect((await runThemes(false)).split("\n")).toHaveLength(24)
+    expect(JSON.parse(await runThemes(true))).toHaveLength(24)
   })
-  it("JSON objects include occasions and identity without replacing listThemes label", () => {
-    const rows = JSON.parse(runThemes(true)) as Array<{
+  it("JSON objects include occasions and identity without replacing listThemes label", async () => {
+    const rows = JSON.parse(await runThemes(true)) as Array<{
       id: string
       label: string
       colors: unknown
       occasions: unknown
       identity: unknown
+      source: unknown
     }>
     expect(rows).toHaveLength(24)
-    expect(Object.keys(rows[0]!)).toEqual(expect.arrayContaining(["id", "label", "colors", "occasions", "identity"]))
+    expect(Object.keys(rows[0]!)).toEqual(expect.arrayContaining(["id", "label", "colors", "occasions", "identity", "source"]))
+    expect(rows.every((row) => row.source === "builtin")).toBe(true)
     for (const row of rows) {
       const rec = THEME_OCCASIONS[row.id as keyof typeof THEME_OCCASIONS]
       expect(row.occasions).toEqual(rec.occasions)

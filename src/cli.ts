@@ -135,7 +135,7 @@ program
   .option("--spec", "print the deck spec schema instead")
   .option("--component <type>", "print one component's schema with the $defs it needs")
   .option("--kind <kind>", "print the components a page of this kind may hold, with their schemas")
-  .option("--theme <name>", "with --kind: answer for one theme instead of every installed theme (deck theme.json, then workspace themes/, then presets)")
+  .option("--theme <name>", "with --kind: answer for one theme instead of every built-in theme (deck theme.json, then workspace themes/, then installed packs, then presets)")
   .option("--deck <dir>", "with --theme: the deck project directory to read a deck-local theme from (default: the cwd when it holds deck.spec.json or a deck-local theme file for the name)")
   .option("--pretty", "indent the JSON (default output is one line)")
   .addHelpText(
@@ -226,9 +226,15 @@ program
 
 program
   .command("themes")
-  .description("List built-in themes")
-  .option("--json", "machine-readable output")
-  .action((opts: { json?: boolean }) => console.log(runThemes(Boolean(opts.json))))
+  .description("List the built-in presets and the themes of installed content packs")
+  .option("--json", "machine-readable output (each theme's source is builtin or pack)")
+  .action(async (opts: { json?: boolean }) => {
+    try {
+      console.log(await runThemes(Boolean(opts.json)))
+    } catch (e) {
+      fail(e)
+    }
+  })
 
 const theme = program.command("theme").description("Copy, fork, and compare themes")
 theme

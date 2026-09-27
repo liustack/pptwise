@@ -13,6 +13,7 @@ import {
 } from "../themes/schema"
 import { THEME_FILENAME, pathExists } from "./deck-dir"
 import { loadIrFile } from "./load-ir"
+import { listInstalledPacks, packsRoot } from "./packs/store"
 
 export const WORKSPACE_THEMES_DIRNAME = "themes"
 
@@ -21,10 +22,18 @@ export const WORKSPACE_THEMES_DIRNAME = "themes"
  * caller passes down the render chain as the `theme` option of `validateIr`,
  * `renderSlideSvg`, `generatePptx`, `auditDeck`, and `buildAssetBrief`. A
  * built-in carries its factory definition. A file carries the definition
- * compiled from that file, owned by this call alone.
+ * compiled from that file, owned by this call alone. A file found in an
+ * installed content pack also names that pack.
  */
 export type ResolvedTheme =
-  | { kind: "file"; id: string; path: string; file: ThemeFile; definition: ThemeDefinition }
+  | {
+      kind: "file"
+      id: string
+      path: string
+      file: ThemeFile
+      definition: ThemeDefinition
+      pack?: { id: string; version: string }
+    }
   | { kind: "builtin"; id: string; definition: ThemeDefinition }
 
 /** The same JSON for the same data whatever order the keys were written
@@ -126,7 +135,7 @@ async function tryParseThemeFile(path: string): Promise<ThemeFile | undefined> {
 /** Compile an accepted file into the definition this lookup hands back.
  *  Every gate runs here (contrast floor, menu contract). Nothing is stored:
  *  the caller owns the result and passes it down the render chain. */
-async function acceptThemeFile(path: string, file: ThemeFile): Promise<ResolvedTheme> {
+async function acceptThemeFile(path: string, file: ThemeFile): Promise<Extract<ResolvedTheme, { kind: "file" }>> {
   const definition = compileThemeDefinition(file)
   return { kind: "file", id: file.id, path, file, definition }
 }
@@ -186,12 +195,15 @@ export function workspaceThemeCandidates(startDir: string, name: string): ThemeC
 }
 
 /**
- * Every file path `resolveThemeByName` would look at for `name`, in lookup
- * order, whether or not it exists. This is the list the resolver walks and
- * the list `pptwise serve` watches, so a theme file that appears after
- * startup at any of these places is seen by both. `name` is not validated
- * here. Callers that take the name from user input run {@link assertThemeId}
- * first, as the resolver does.
+ * Every file path the deck and workspace levels of `resolveThemeByName`
+ * would look at for `name`, in lookup order, whether or not it exists.
+ * This is the list the resolver walks before the installed packs, and the
+ * list `pptwise serve` watches, so a theme file that appears after startup
+ * at any of these places is seen by both. A pack's theme files are named by
+ * its manifest rather than by the theme name, so they are not on this list:
+ * serve's timed re-resolution sees a pack installed or updated. `name` is
+ * not validated here. Callers that take the name from user input run
+ * {@link assertThemeId} first, as the resolver does.
  */
 export function themeCandidates(name: string, opts: { startDir: string; deckDir?: string }): ThemeCandidate[] {
   const deck = opts.deckDir !== undefined ? deckThemeCandidates(opts.deckDir, name) : []
@@ -225,16 +237,52 @@ async function resolveThemeFileFrom(
   return undefined
 }
 
+/**
+ * The installed-pack level: the theme with this id among the packs under
+ * `$PPTWISE_HOME/packs`, or `undefined` with the pack directories that
+ * were searched. A pack directory that cannot be read fails the lookup
+ * (`listInstalledPacks`), and so does an id two packs both ship, which
+ * `packs sync` never installs.
+ */
+async function resolvePackTheme(name: string): Promise<{ hit: ResolvedTheme | undefined; searched: string[] }> {
+  const packs = await listInstalledPacks()
+  const hits = packs.flatMap((pack) => pack.themes.filter((theme) => theme.id === name).map((theme) => ({ pack, theme })))
+  if (hits.length > 1) {
+    const where = hits.map(({ pack }) => pack.dir).join(" and ")
+    throw new PptwiseError(`theme "${name}" is shipped by more than one installed pack (${where}). Remove one of them.`)
+  }
+  const found = hits[0]
+  if (found === undefined) return { hit: undefined, searched: packs.map((pack) => pack.dir) }
+  const file = await readThemeFile(found.theme.path)
+  // The store read the id a moment ago. A file rewritten since then must
+  // not answer to a name it no longer carries.
+  if (file.id !== name) {
+    throw new PptwiseError(`installed pack theme ${found.theme.path} no longer has id "${name}". Run \`pptwise packs sync\` to reinstall its pack.`)
+  }
+  const accepted = await acceptThemeFile(found.theme.path, file)
+  return { hit: { ...accepted, pack: { id: found.pack.id, version: found.pack.version } }, searched: [] }
+}
+
+/**
+ * Four levels, first hit wins: the deck directory, workspace `themes/`
+ * walking up, the installed content packs, then the factory presets.
+ */
 export async function resolveThemeByName(name: string, opts: ThemeLookupOptions): Promise<ResolvedTheme> {
   assertThemeId(name)
   const fileHit = await resolveThemeFileFrom(themeCandidates(name, opts), name)
   if (fileHit !== undefined) return fileHit
+
+  const packs = await resolvePackTheme(name)
+  if (packs.hit !== undefined) return packs.hit
 
   if (isCanonicalThemeId(name)) return { kind: "builtin", id: name, definition: THEME_DEFINITIONS[name] }
 
   const places = [
     opts.deckDir !== undefined ? `deck directory ${opts.deckDir}` : undefined,
     `workspace ${WORKSPACE_THEMES_DIRNAME}/ walking up from ${resolve(opts.startDir)}`,
+    packs.searched.length > 0
+      ? `installed packs (${packs.searched.join(", ")})`
+      : `installed packs in ${packsRoot()} (none installed)`,
     "built-in presets",
   ].filter((place): place is string => place !== undefined)
   throw new PptwiseError(`unknown theme "${name}". Searched ${places.join(", ")}.`)

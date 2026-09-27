@@ -63,6 +63,7 @@ import {
 import {
   assertThemeId,
   deckThemeCandidates,
+  readThemeFile,
   resolveThemeSelection,
   resolveThemeByName,
   themeFileFromPreset,
@@ -70,6 +71,7 @@ import {
   WORKSPACE_THEMES_DIRNAME,
   type ResolvedTheme,
 } from "./theme-resolve"
+import { listInstalledPacks } from "./packs/store"
 import {
   collectThemeInputs,
   guardThemeRebind,
@@ -986,27 +988,53 @@ export function runIcons(asJson: boolean): string {
   return asJson ? JSON.stringify([...PPTX_ICON_NAMES], null, 2) : PPTX_ICON_NAMES.join("\n")
 }
 
-export function runThemes(asJson: boolean): string {
-  const themes = listThemes()
-  if (asJson) {
-    return JSON.stringify(
-      themes.map((t) => {
-        const rec = Object.hasOwn(THEME_OCCASIONS, t.id)
-          ? THEME_OCCASIONS[t.id as keyof typeof THEME_OCCASIONS]
-          : undefined
-        return {
-          id: t.id,
-          label: t.label,
-          colors: t.colors,
-          occasions: rec?.occasions ?? [],
-          identity: rec?.identity ?? null,
-        }
-      }),
-      null,
-      2,
-    )
+interface ThemeListRow {
+  id: string
+  label: string
+  colors: Record<string, unknown>
+  occasions: readonly string[]
+  identity: string | null
+  /** `builtin` for a factory preset, `pack` for a theme an installed content pack ships. */
+  source: "builtin" | "pack"
+  /** The pack id, for a pack theme. */
+  pack?: string
+}
+
+/** `pptwise themes [--json]`: the factory presets, then the themes of every
+ *  installed content pack in pack order. */
+export async function runThemes(asJson: boolean): Promise<string> {
+  const rows: ThemeListRow[] = listThemes().map((t) => {
+    const rec = Object.hasOwn(THEME_OCCASIONS, t.id) ? THEME_OCCASIONS[t.id as keyof typeof THEME_OCCASIONS] : undefined
+    return {
+      id: t.id,
+      label: t.label,
+      colors: t.colors,
+      occasions: rec?.occasions ?? [],
+      identity: rec?.identity ?? null,
+      source: "builtin",
+    }
+  })
+  for (const pack of await listInstalledPacks()) {
+    for (const theme of pack.themes) {
+      const file = await readThemeFile(theme.path)
+      rows.push({
+        id: file.id,
+        label: file.label ?? file.id,
+        colors: { ...file.style.colors },
+        occasions: file.occasions ?? [],
+        identity: file.identity ?? null,
+        source: "pack",
+        pack: pack.id,
+      })
+    }
   }
-  return themes.map((t) => `${t.id.padEnd(12)} ${t.label}`).join("\n")
+  if (asJson) return JSON.stringify(rows, null, 2)
+  return rows
+    .map((t) => {
+      const line = `${t.id.padEnd(12)} ${t.label}`
+      return t.pack === undefined ? line : `${line}  (pack ${t.pack})`
+    })
+    .join("\n")
 }
 
 interface LayoutDiscoverySlot {
