@@ -1,8 +1,8 @@
-<p align="center"><img src="assets/banner.png" alt="pptwise：真正的 PPT，不是图片也不是 HTML" width="100%"></p>
+<p align="center"><img src="assets/banner.png" alt="pptwise：真正的 PPT，不是图片" width="100%"></p>
 
 <h1 align="center">pptwise</h1>
 
-<p align="center"><b>真正的 PPT，不是图片也不是 HTML</b></p>
+<p align="center"><b>真正的 PPT，不是图片</b></p>
 
 <p align="center">🥇 <b>全网第一个 DeepSeek Harness PPT 生成插件</b> 🥇</p>
 
@@ -25,6 +25,15 @@
   <img src="https://img.shields.io/badge/Not%20backed%20by-Y%20Combinator-FF6600?style=flat-square&logo=ycombinator&logoColor=white" alt="Not backed by Y Combinator">
   <img src="https://img.shields.io/badge/no%20API%20key-to%20render-4c1?style=flat-square" alt="No API key to render">
 </p>
+
+## 做出来长这样
+
+<table>
+  <tr><td><img src="assets/gallery/data-charts-02.png" alt="按季度对比营收与目标的分组柱状图"></td><td><img src="assets/gallery/quarterly-review-zh-05.png" alt="中文利润桥瀑布图，从 Q1 到 Q2"></td><td><img src="assets/gallery/strategy-analysis-02.png" alt="市场进入分析的 SWOT 四象限"></td></tr>
+  <tr><td><img src="assets/gallery/team-onboarding-04.png" alt="变更上线流程的四段箭头"></td><td><img src="assets/gallery/data-charts-04.png" alt="按客群拆分营收的环形图"></td><td><img src="assets/gallery/team-onboarding-02.png" alt="带姓名、职位与小组的团队卡片"></td></tr>
+</table>
+
+以上是 [`examples/`](./examples) 里几份样例经引擎渲染出的页面。导出的文件里，每根柱子、每个标签、每张卡片都是 PowerPoint 原生形状，文字都能改。其中三份可以直接下载打开：[季度业务评审](https://pptwise.com/samples/quarterly-review-zh.pptx) · [产品提案（英文）](https://pptwise.com/samples/product-pitch.pptx) · [图表样例（英文）](https://pptwise.com/samples/data-charts.pptx)。
 
 ## 交流
 
