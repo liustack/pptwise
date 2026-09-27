@@ -38,12 +38,14 @@ const basic = {
 }
 
 describe("waterfall component", () => {
-  it("auto-appends a closing Total bar when the last item isn't kind:'total'", () => {
+  it("auto-appends a closing total bar when the last item isn't kind:'total'", () => {
     const { container } = svg(waterfall.render(basic, { x: 0, y: 0, w: 1000, h: 400 }, ctx))
     // 3 authored bars + 1 auto total = 4 rects.
     expect(container.querySelectorAll("rect")).toHaveLength(4)
     const t = texts(container)
-    expect(t).toContain("Total")
+    // The labels are Chinese, so the automatic bar is 合计 (see the language
+    // describe below for the English case).
+    expect(t).toContain("合计")
     // Running total: 220 - 150 + 80 = 150 (unsigned — a total bar shows the
     // absolute value, not a delta).
     expect(t).toContain("150")
@@ -223,5 +225,30 @@ describe("waterfall component", () => {
       <svg xmlns="http://www.w3.org/2000/svg">{waterfall.render(basic, { x: 0, y: 0, w: 1000, h: 400 }, ctx)}</svg>,
     )
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
+  })
+})
+
+describe("waterfall automatic total follows the language of the labels", () => {
+  const texts = (c: Parameters<typeof waterfall.render>[0]) =>
+    Array.from(
+      svg(waterfall.render(c, { x: 0, y: 0, w: 1000, h: 400 }, ctx)).container.querySelectorAll("text"),
+    ).map((t) => t.textContent ?? "")
+
+  it("names the automatic total 合计 for Chinese labels", () => {
+    const text = texts(basic)
+    expect(text).toContain("合计")
+    expect(text).not.toContain("Total")
+  })
+
+  it("names it Total for English labels", () => {
+    const text = texts({
+      type: "waterfall",
+      items: [
+        { label: "New", value: 220 },
+        { label: "Churn", value: -150 },
+      ],
+    })
+    expect(text).toContain("Total")
+    expect(text).not.toContain("合计")
   })
 })

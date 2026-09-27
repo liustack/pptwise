@@ -88,3 +88,37 @@ export function stacksVertically(text: string): boolean {
 export function isCjk(text: string): boolean {
   return HAS_SQUARE_GLYPH_RE.test(text)
 }
+
+const HAN_RE = /\p{Script=Han}/gu
+const KANA_HANGUL_RE = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u
+const LATIN_WORD_RE = /[A-Za-z]+/g
+
+/**
+ * True when `text` counts as Chinese for picking built-in titles: it has Han
+ * characters, no Japanese kana or Korean hangul, and at least as many Han
+ * characters as ASCII letter runs. So "Apple 生态" counts and "Sales grew in
+ * 中国" does not. It is a count, not language detection: a short English
+ * phrase around a long Chinese name ("Visit 上海", "Made in 中华人民共和国")
+ * counts as Chinese, and Japanese written in kanji alone cannot be told
+ * apart from Chinese. An author who needs other titles writes them. Which
+ * language the titles speak is a different question from how to lay out
+ * square glyphs, which is what {@link isCjk} answers.
+ */
+export function isChineseText(text: string): boolean {
+  if (KANA_HANGUL_RE.test(text)) return false
+  const han = text.match(HAN_RE)?.length ?? 0
+  if (han === 0) return false
+  return han >= (text.match(LATIN_WORD_RE)?.length ?? 0)
+}
+
+/**
+ * True when more than half of the non-empty `texts` count as Chinese
+ * ({@link isChineseText}). Components with built-in titles (SWOT, PEST, the
+ * five forces, the business model canvas, a waterfall's automatic total)
+ * pick their Chinese set from this. A tie, or items of digits and symbols
+ * only, stay English. The vote inherits the per-item count's limits.
+ */
+export function mostlyChinese(texts: readonly string[]): boolean {
+  const written = texts.filter((text) => text.trim() !== "")
+  return written.filter(isChineseText).length * 2 > written.length
+}

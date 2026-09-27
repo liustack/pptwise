@@ -55,23 +55,6 @@ describe("swot component", () => {
     }
   })
 
-  it("default quadrant titles are the fixed English full words", () => {
-    const { container } = svg(swot.render(basic, { x: 0, y: 0, w: 1000 }, ctx))
-    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
-    for (const label of ["Strengths", "Weaknesses", "Opportunities", "Threats"]) {
-      expect(texts).toContain(label)
-    }
-  })
-
-  it("labels override replaces only the overridden quadrant's title", () => {
-    const withLabels = { ...basic, labels: { strengths: "优势" } }
-    const { container } = svg(swot.render(withLabels, { x: 0, y: 0, w: 1000 }, ctx))
-    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
-    expect(texts).toContain("优势")
-    expect(texts).not.toContain("Strengths")
-    expect(texts).toContain("Weaknesses") // untouched quadrant keeps the default
-  })
-
   it("renders every item across all four quadrants (5 total here)", () => {
     const { container } = svg(swot.render(basic, { x: 0, y: 0, w: 1000 }, ctx))
     const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
@@ -123,5 +106,59 @@ describe("swot component", () => {
       <svg xmlns="http://www.w3.org/2000/svg">{swot.render(basic, { x: 0, y: 0, w: 1000 }, ctx)}</svg>,
     )
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
+  })
+})
+
+describe("swot quadrant titles follow the language of the content", () => {
+  const titles = (c: Parameters<typeof swot.render>[0]) =>
+    Array.from(svg(swot.render(c, { x: 0, y: 0, w: 1000 }, ctx)).container.querySelectorAll("text")).map(
+      (t) => t.textContent ?? "",
+    )
+
+  it("titles Chinese content in Chinese", () => {
+    const text = titles(basic)
+    for (const title of ["优势", "劣势", "机会", "威胁"]) expect(text).toContain(title)
+    expect(text).not.toContain("Strengths")
+  })
+
+  it("titles English content in English", () => {
+    const text = titles({
+      type: "swot",
+      strengths: ["Strong brand"],
+      weaknesses: ["One product line"],
+      opportunities: ["Emerging markets"],
+      threats: ["Price war"],
+    })
+    for (const title of ["Strengths", "Weaknesses", "Opportunities", "Threats"]) expect(text).toContain(title)
+  })
+
+  it("keeps a title the author wrote, whatever the content's language", () => {
+    const text = titles({ ...basic, labels: { strengths: "Our edge" } })
+    expect(text).toContain("Our edge")
+    expect(text).not.toContain("优势")
+    expect(text).toContain("劣势")
+    const english = titles({
+      type: "swot",
+      strengths: ["Strong brand"],
+      weaknesses: ["One product line"],
+      opportunities: ["Emerging markets"],
+      threats: ["Price war"],
+      labels: { strengths: "优势" },
+    })
+    expect(english).toContain("优势")
+    expect(english).not.toContain("Strengths")
+    expect(english).toContain("Weaknesses")
+  })
+
+  it("keeps English titles for English content that names places in Chinese", () => {
+    const text = titles({
+      type: "swot",
+      strengths: ["Strong brand in 中国"],
+      weaknesses: ["Thin margins in 上海"],
+      opportunities: ["Expansion into 深圳"],
+      threats: ["Price war"],
+    })
+    expect(text).toContain("Strengths")
+    expect(text).not.toContain("优势")
   })
 })

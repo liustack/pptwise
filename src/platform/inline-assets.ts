@@ -28,15 +28,105 @@ import { type DecodedImageSize, getPlatform } from "./registry"
  * 手工构造 data URL（不走 FileReader）：MIME 取 Content-Type，兜底 image/png。
  * pptxgenjs 依赖 data URL 的 MIME 头识别媒体类型，不能容忍 octet-stream。
  */
-async function responseToDataUrl(resp: Response): Promise<string> {
-  const mime = resp.headers.get("content-type")?.split(";")[0] || "image/png"
-  const bytes = new Uint8Array(await resp.arrayBuffer())
+function bytesToDataUrl(bytes: Uint8Array, contentType: string | null): string {
+  const mime = contentType?.split(";")[0] || "image/png"
   let bin = ""
   const CHUNK = 0x8000
   for (let i = 0; i < bytes.length; i += CHUNK) {
     bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK))
   }
   return `data:${mime};base64,${btoa(bin)}`
+}
+
+/** How long one remote asset may take, from the request to its last byte.
+ *  The URL comes from IR a model wrote, and a server that never answers
+ *  must not hold the render forever. */
+export const FETCH_TIMEOUT_MS = 30_000
+
+/** Schemes whose bytes may be read: the network, and a browser's own
+ *  in-memory object URLs (`blob:`), which never leave the machine. */
+const FETCHABLE_PROTOCOLS = new Set(["http:", "https:", "blob:"])
+
+/** A base no real source uses, so a relative source classifies as `http:`
+ *  without ever being fetched against it. */
+const CLASSIFY_BASE = "http://relative.invalid/"
+
+/**
+ * The protocol `fetch` would really use for `src`, decided by URL parsing
+ * rather than a pattern on the raw string: the parser drops leading
+ * whitespace and control characters, and tabs and newlines anywhere, so
+ * `"\tfile:///etc/passwd"` and `"fi\nle:///etc/passwd"` are both `file:`.
+ */
+function sourceProtocol(src: string): string {
+  try {
+    return new URL(src, CLASSIFY_BASE).protocol
+  } catch {
+    return "unparseable"
+  }
+}
+
+/**
+ * The bytes of one remote asset, or a plain-language reason there are none.
+ * Only `http`, `https`, and `blob` sources are fetched. A relative source is
+ * handed to the platform fetch unchanged (a browser resolves it against the
+ * page). The download is bounded in time and in size: a declared
+ * `content-length` above {@link MAX_DECODE_BYTES} is refused before the body
+ * is read, and the body is counted as it arrives and cancelled once it
+ * crosses the line, whatever it declared. The Node CLI's proxy path buffers
+ * the whole response before handing it over (`../cli/proxy-fetch`), so
+ * behind a proxy only the time bound applies during the download, and the
+ * size is checked after it.
+ */
+async function fetchRemoteAsset(src: string): Promise<{ bytes: Uint8Array; contentType: string | null }> {
+  const protocol = sourceProtocol(src)
+  if (!FETCHABLE_PROTOCOLS.has(protocol)) {
+    throw new Error(`the source uses "${protocol}", and only http, https, and blob sources are fetched`)
+  }
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+  const timedOut = () => new Error(`timed out after ${FETCH_TIMEOUT_MS / 1000} s`)
+  try {
+    const resp = await (getPlatform().fetch ?? globalThis.fetch)(src, { signal: controller.signal })
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+    const declared = Number(resp.headers.get("content-length") ?? NaN)
+    if (Number.isFinite(declared) && declared > MAX_DECODE_BYTES) {
+      await resp.body?.cancel()
+      throw tooLarge(`declares ${mb(declared)} MB`)
+    }
+    return { bytes: await readCapped(resp), contentType: resp.headers.get("content-type") }
+  } catch (e) {
+    throw controller.signal.aborted ? timedOut() : e
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+function tooLarge(what: string): Error {
+  return new Error(`${what}, above the ${mb(MAX_DECODE_BYTES)} MB limit for one slide image`)
+}
+
+async function readCapped(resp: Response): Promise<Uint8Array> {
+  if (!resp.body) return new Uint8Array(await resp.arrayBuffer())
+  const reader = resp.body.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.byteLength
+    if (total > MAX_DECODE_BYTES) {
+      await reader.cancel()
+      throw tooLarge(`sent more than ${mb(MAX_DECODE_BYTES)} MB`)
+    }
+    chunks.push(value)
+  }
+  const bytes = new Uint8Array(total)
+  let offset = 0
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return bytes
 }
 
 /** 收集所有被页面背景引用的 asset id（仅这些参与背景压缩）：页面自己的
@@ -162,6 +252,8 @@ export async function maybeCompressBackground(dataUrl: string): Promise<string> 
  */
 export const MAX_DECODE_BYTES = 25 * 1024 * 1024
 
+const mb = (n: number) => (n / (1024 * 1024)).toFixed(1)
+
 function describeAsset(id: string, pages: string[], url?: string): string {
   const origin = url ? `, fetched from ${url}` : ""
   return `asset "${id}" (used on ${pages.join(", ")}${origin})`
@@ -215,7 +307,6 @@ async function assertDecodableImage(id: string, pages: string[], dataUrl: string
     )
   }
   if (bytes.length > MAX_DECODE_BYTES) {
-    const mb = (n: number) => (n / (1024 * 1024)).toFixed(1)
     throw new PptwiseError(
       `${who} is ${mb(bytes.length)} MB, above the ${mb(MAX_DECODE_BYTES)} MB limit for one slide image, cannot produce a complete PPT: downscale or recompress the image`,
     )
@@ -264,11 +355,8 @@ export async function inlinePptxAssets(ir: PptxIR, theme: ThemeDefinition): Prom
       }
       let dataUrl: string
       try {
-        const resp = await (getPlatform().fetch ?? globalThis.fetch)(asset.src)
-        if (!resp.ok) {
-          throw new Error(`HTTP ${resp.status}`)
-        }
-        dataUrl = await responseToDataUrl(resp)
+        const { bytes, contentType } = await fetchRemoteAsset(asset.src)
+        dataUrl = bytesToDataUrl(bytes, contentType)
       } catch (e) {
         throw new PptwiseError(
           `background/illustration asset "${id}" fetch failed (${e instanceof Error ? e.message : String(e)}), cannot produce a complete PPT — please retry or regenerate the image`,

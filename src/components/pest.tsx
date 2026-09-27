@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine } from "../lib/svg-text-layout"
+import { mostlyChinese } from "../lib/text-script"
 import { accessibleInk } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -77,6 +78,13 @@ const DEFAULT_TITLES: Record<QuadrantKey, string> = {
   economic: "Economic",
   social: "Social",
   technological: "Technological",
+}
+/** The titles when the quadrants are written in Chinese (`mostlyChinese`). */
+const DEFAULT_TITLES_ZH: Record<QuadrantKey, string> = {
+  political: "政治",
+  economic: "经济",
+  social: "社会",
+  technological: "技术",
 }
 const LETTERS: Record<QuadrantKey, string> = {
   political: "P",
@@ -252,8 +260,9 @@ function quadrantLayout(
 
 function gridGeom(component: PestComponent, w: number, rhythmScale: number = 1, fontFamily?: string) {
   const quadW = (w - GRID_GAP) / 2
+  const defaults = mostlyChinese(QUADRANTS.flatMap((q) => component[q].items)) ? DEFAULT_TITLES_ZH : DEFAULT_TITLES
   const layouts = QUADRANTS.map((q) =>
-    quadrantLayout(component[q].items, component[q].title ?? DEFAULT_TITLES[q], quadW, rhythmScale, fontFamily),
+    quadrantLayout(component[q].items, component[q].title ?? defaults[q], quadW, rhythmScale, fontFamily),
   )
   const cellH = Math.max(...layouts.map((l) => l.contentH))
   return { quadW, cellH, layouts }

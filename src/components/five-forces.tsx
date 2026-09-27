@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine } from "../lib/svg-text-layout"
+import { mostlyChinese } from "../lib/text-script"
 import { accessibleInk } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -96,6 +97,14 @@ const DEFAULT_LABELS: Record<ForceKey, string> = {
   supplier_power: "Supplier Power",
   buyer_power: "Buyer Power",
   substitutes: "Threat of Substitutes",
+}
+/** The titles when the panels are written in Chinese (`mostlyChinese`). */
+const DEFAULT_LABELS_CJK: Record<ForceKey, string> = {
+  rivalry: "同业竞争",
+  new_entrants: "新进入者威胁",
+  supplier_power: "供应商议价能力",
+  buyer_power: "买方议价能力",
+  substitutes: "替代品威胁",
 }
 
 const GAP = 14
@@ -279,8 +288,8 @@ interface PanelLayout {
 // `.label`, only the `contentH` derived from the fixed declared
 // `labelSize`, so it doesn't need a real value.
 function panelLayout(
-  key: ForceKey,
   panel: { label?: string; intensity?: Intensity; items: string[] },
+  defaultLabel: string,
   w: number,
   rhythmScale: number = 1,
   airScale: number = 1,
@@ -303,7 +312,7 @@ function panelLayout(
   const markerDotR = MARKER_DOT_R
   const markerDotGap = MARKER_DOT_GAP
 
-  const label = fitSvgLine(panel.label ?? DEFAULT_LABELS[key], {
+  const label = fitSvgLine(panel.label ?? defaultLabel, {
     maxWidth: contentW,
     fontSize: labelSize,
     minFontSize: LABEL_SIZE_MIN,
@@ -365,12 +374,16 @@ function crossGeom(
   const rightW = usableW * SIDE_COL_RATIO
   const centerW = usableW - leftW - rightW
 
+  const forces: readonly ForceKey[] = ["rivalry", "new_entrants", "supplier_power", "buyer_power", "substitutes"]
+  const labels = mostlyChinese(forces.flatMap((key) => component[key].items)) ? DEFAULT_LABELS_CJK : DEFAULT_LABELS
+  const panel = (key: ForceKey, width: number) =>
+    panelLayout(component[key], labels[key], width, rhythmScale, airScale, fontFamily)
   const layouts: Record<ForceKey, PanelLayout> = {
-    rivalry: panelLayout("rivalry", component.rivalry, centerW, rhythmScale, airScale, fontFamily),
-    new_entrants: panelLayout("new_entrants", component.new_entrants, centerW, rhythmScale, airScale, fontFamily),
-    supplier_power: panelLayout("supplier_power", component.supplier_power, leftW, rhythmScale, airScale, fontFamily),
-    buyer_power: panelLayout("buyer_power", component.buyer_power, rightW, rhythmScale, airScale, fontFamily),
-    substitutes: panelLayout("substitutes", component.substitutes, centerW, rhythmScale, airScale, fontFamily),
+    rivalry: panel("rivalry", centerW),
+    new_entrants: panel("new_entrants", centerW),
+    supplier_power: panel("supplier_power", leftW),
+    buyer_power: panel("buyer_power", rightW),
+    substitutes: panel("substitutes", centerW),
   }
 
   const topH = layouts.new_entrants.contentH

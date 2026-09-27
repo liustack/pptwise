@@ -143,7 +143,7 @@ $PPTWISE_HOME/                 (default ~/.pptwise)
 
 An install unpacks into a hidden directory beside `packs/<id>/` and then swaps the whole directory in, so a pack is always one complete version, never half of two. Entries of `packs/` whose names start with `.` are installs in progress and are never read as packs.
 
-A directory under `packs/` that is not a readable pack (no `pack.json`, a manifest naming another id, a listed theme file missing or failing the theme file checks) is reported with its path and the way to repair it. `packs sync` reinstalls a pack the catalog still lists. Remove any other such directory by hand. Until then:
+A directory under `packs/` that is not a readable pack (no `pack.json`, a manifest naming another id, a listed theme file missing or failing the theme file checks, a theme with a factory preset's or a retired id, or a theme id another installed pack also ships) is reported with its path and the way to repair it. `packs sync` never installs any of these, so they come from a pack edited or copied by hand. `themes` and `schema --kind` judge a pack by the same checks. `packs sync` reinstalls a pack the catalog still lists. Remove any other such directory by hand. Until then:
 
 - A lookup for a factory preset's name never reads the packs, since no pack may ship that id, so presets keep working.
 - A lookup for any other name fails, since the name may be in the damaged pack.
