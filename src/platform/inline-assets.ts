@@ -43,23 +43,44 @@ function bytesToDataUrl(bytes: Uint8Array, contentType: string | null): string {
  *  must not hold the render forever. */
 export const FETCH_TIMEOUT_MS = 30_000
 
-const SCHEME = /^([a-z][a-z0-9+.-]*):/i
+/** Schemes whose bytes may be read: the network, and a browser's own
+ *  in-memory object URLs (`blob:`), which never leave the machine. */
+const FETCHABLE_PROTOCOLS = new Set(["http:", "https:", "blob:"])
+
+/** A base no real source uses, so a relative source classifies as `http:`
+ *  without ever being fetched against it. */
+const CLASSIFY_BASE = "http://relative.invalid/"
+
+/**
+ * The protocol `fetch` would really use for `src`, decided by URL parsing
+ * rather than a pattern on the raw string: the parser drops leading
+ * whitespace and control characters, and tabs and newlines anywhere, so
+ * `"\tfile:///etc/passwd"` and `"fi\nle:///etc/passwd"` are both `file:`.
+ */
+function sourceProtocol(src: string): string {
+  try {
+    return new URL(src, CLASSIFY_BASE).protocol
+  } catch {
+    return "unparseable"
+  }
+}
 
 /**
  * The bytes of one remote asset, or a plain-language reason there are none.
- * Only `http` and `https` sources are fetched. A source with no scheme is a
- * relative URL and goes to the platform fetch unchanged (a browser resolves
- * it against the page). The download is bounded in time and in size: a
- * declared `content-length` above {@link MAX_DECODE_BYTES} is refused before
- * the body is read, and a body that grows past it without declaring its
- * size is cancelled once it crosses the line. The Node CLI's proxy path
- * buffers the whole response before handing it over (`../cli/proxy-fetch`),
- * so behind a proxy only the time bound applies during the download.
+ * Only `http`, `https`, and `blob` sources are fetched. A relative source is
+ * handed to the platform fetch unchanged (a browser resolves it against the
+ * page). The download is bounded in time and in size: a declared
+ * `content-length` above {@link MAX_DECODE_BYTES} is refused before the body
+ * is read, and the body is counted as it arrives and cancelled once it
+ * crosses the line, whatever it declared. The Node CLI's proxy path buffers
+ * the whole response before handing it over (`../cli/proxy-fetch`), so
+ * behind a proxy only the time bound applies during the download, and the
+ * size is checked after it.
  */
 async function fetchRemoteAsset(src: string): Promise<{ bytes: Uint8Array; contentType: string | null }> {
-  const scheme = SCHEME.exec(src)?.[1]?.toLowerCase()
-  if (scheme !== undefined && scheme !== "http" && scheme !== "https") {
-    throw new Error(`the source uses "${scheme}:", and only http and https sources are fetched`)
+  const protocol = sourceProtocol(src)
+  if (!FETCHABLE_PROTOCOLS.has(protocol)) {
+    throw new Error(`the source uses "${protocol}", and only http, https, and blob sources are fetched`)
   }
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)

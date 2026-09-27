@@ -94,11 +94,15 @@ const KANA_HANGUL_RE = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}
 const LATIN_WORD_RE = /[A-Za-z]+/g
 
 /**
- * True when `text` reads as Chinese: it has Han characters, no Japanese kana
- * or Korean hangul, and at least as many Han characters as Latin words. So
- * "Apple 生态" is Chinese and "Sales grew in 中国" is not. Deciding which
- * language a component's built-in titles speak is a different question from
- * how to lay out square glyphs, which is what {@link isCjk} answers.
+ * True when `text` counts as Chinese for picking built-in titles: it has Han
+ * characters, no Japanese kana or Korean hangul, and at least as many Han
+ * characters as ASCII letter runs. So "Apple 生态" counts and "Sales grew in
+ * 中国" does not. It is a count, not language detection: a short English
+ * phrase around a long Chinese name ("Visit 上海", "Made in 中华人民共和国")
+ * counts as Chinese, and Japanese written in kanji alone cannot be told
+ * apart from Chinese. An author who needs other titles writes them. Which
+ * language the titles speak is a different question from how to lay out
+ * square glyphs, which is what {@link isCjk} answers.
  */
 export function isChineseText(text: string): boolean {
   if (KANA_HANGUL_RE.test(text)) return false
@@ -108,11 +112,11 @@ export function isChineseText(text: string): boolean {
 }
 
 /**
- * True when more than half of the non-empty `texts` read as Chinese
+ * True when more than half of the non-empty `texts` count as Chinese
  * ({@link isChineseText}). Components with built-in titles (SWOT, PEST, the
  * five forces, the business model canvas, a waterfall's automatic total)
- * pick their Chinese set from this, so one Chinese name inside English
- * content, or one English brand inside Chinese content, does not flip them.
+ * pick their Chinese set from this. A tie, or items of digits and symbols
+ * only, stay English. The vote inherits the per-item count's limits.
  */
 export function mostlyChinese(texts: readonly string[]): boolean {
   const written = texts.filter((text) => text.trim() !== "")
