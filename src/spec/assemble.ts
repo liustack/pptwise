@@ -13,6 +13,12 @@ export interface PageContent {
   notes?: string
 }
 
+/**
+ * The fields a page file may fill, in the order assembly copies them onto
+ * the slide. Everything else a slide carries is the spec's.
+ */
+export const PAGE_FILL_FIELDS = ["components", "background", "image_side", "footnote", "notes"] as const satisfies readonly (keyof PageContent)[]
+
 export interface AssembleResult {
   ir: PptxIR
 }
@@ -33,14 +39,14 @@ function buildSlide(page: PageSpec, content: PageContent | undefined): Record<st
       ...(page.summary !== undefined ? { subheading: page.summary } : {}),
     }
   }
+  const filled: Record<string, unknown> = {}
+  for (const field of PAGE_FILL_FIELDS) {
+    if (content[field] !== undefined) filled[field] = content[field]
+  }
   return {
     ...locked,
     ...(page.type !== "content" && page.summary !== undefined ? { subheading: page.summary } : {}),
-    ...(content.components !== undefined ? { components: content.components } : {}),
-    ...(content.background !== undefined ? { background: content.background } : {}),
-    ...(content.image_side !== undefined ? { image_side: content.image_side } : {}),
-    ...(content.footnote !== undefined ? { footnote: content.footnote } : {}),
-    ...(content.notes !== undefined ? { notes: content.notes } : {}),
+    ...filled,
   }
 }
 

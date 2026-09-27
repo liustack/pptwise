@@ -382,6 +382,9 @@ function checkContentPageSlots(ir: PptxIR, theme: ThemeDefinition): ValidationIs
   return errors
 }
 
+/** Page fields no cover, chapter or ending face draws: filling one is an error. */
+export const BOUNDARY_UNRENDERED_FIELDS = ["footnote"] as const
+
 /**
  * Boundary-page render-surface hard gate (bench-driven fixes wave, defect
  * D, retargeted in wave 8 batch 1). `footnote` still never renders on
@@ -405,7 +408,7 @@ function checkBoundaryPageContent(ir: PptxIR, theme: ThemeDefinition): Validatio
     const layout = componentFace(ir, slide, theme)
     const stray = slide.components.filter((component) => !layout || !layoutAcceptsComponent(layout, component.type))
     if (stray.length > 0) ignored.push("components")
-    if (slide.footnote) ignored.push("footnote")
+    for (const field of BOUNDARY_UNRENDERED_FIELDS) if (slide[field]) ignored.push(field)
     if (ignored.length === 0) return
     errors.push({
       path: `slides.${i}`,
