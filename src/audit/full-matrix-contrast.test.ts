@@ -2980,6 +2980,61 @@ describe("chart-depth subtypes contrast + wedge attribution (16-theme sweep, 裁
   }
 })
 
+// Stacked and percent-stacked columns (chart-stacked-combo wave). Every label
+// these two draw sits on the page background: the column totals above the
+// piles, the ticks and titles outside the plot, the legend in the header row.
+// Nothing is printed on a segment, which is what keeps `chart` classified
+// `"page-bg"` above. A clean sweep across every theme is the proof that the
+// totals really do land on the page and not on a palette fill, and that the
+// 1px separator strokes in the page background never read as anything the
+// audit has to judge. Mixed-sign piles ride the same net, so a total above a
+// pile with a loss hanging under it is covered too.
+describe("stacked chart contrast (every theme)", () => {
+  const STACKED_SLIDE: Slide = {
+    type: "content",
+    kind: "points",
+    heading: HEADING,
+    components: [
+      {
+        type: "chart",
+        chart_type: "stacked",
+        axes: { x_title: "Quarter", y_title: "Revenue", y_unit: "M" },
+        series: [
+          { name: "Consulting", data: [{ x: "Q1", y: 42 }, { x: "Q2", y: 48 }, { x: "Q3", y: 51 }, { x: "Q4", y: 60 }] },
+          { name: "Software", data: [{ x: "Q1", y: 30 }, { x: "Q2", y: -6 }, { x: "Q3", y: 38 }, { x: "Q4", y: 44 }] },
+          { name: "Education", data: [{ x: "Q1", y: 18 }, { x: "Q2", y: 21 }, { x: "Q3", y: -9 }, { x: "Q4", y: 26 }] },
+        ],
+      },
+    ],
+  } as Slide
+  const PERCENT_SLIDE: Slide = {
+    type: "content",
+    kind: "points",
+    heading: HEADING,
+    components: [
+      {
+        type: "chart",
+        chart_type: "percent_stacked",
+        axes: { x_title: "Year", y_title: "Channel share" },
+        series: [
+          { name: "Online", data: [{ x: "2022", y: 38 }, { x: "2023", y: 44 }, { x: "2024", y: 52 }] },
+          { name: "Retail", data: [{ x: "2022", y: 41 }, { x: "2023", y: 36 }, { x: "2024", y: 30 }] },
+          { name: "Partners", data: [{ x: "2022", y: 21 }, { x: "2023", y: 20 }, { x: "2024", y: 18 }] },
+        ],
+      },
+    ],
+  } as Slide
+
+  for (const themeId of CANONICAL_THEME_IDS) {
+    it(`${themeId}: stacked columns with totals render with zero auditDeck findings`, () => {
+      expect(auditFindings(deckFor(themeId, STACKED_SLIDE))).toEqual([])
+    })
+    it(`${themeId}: percent_stacked columns render with zero auditDeck findings`, () => {
+      expect(auditFindings(deckFor(themeId, PERCENT_SLIDE))).toEqual([])
+    })
+  }
+})
+
 // Decor-collision sweep (fix/decor-contrast-attribution). The sweep at the
 // top of this file renders no `meta.organization`/`meta.date` — a deliberate
 // scope choice, argued in this file's own header — and a theme motif's corner

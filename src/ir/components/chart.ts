@@ -57,7 +57,20 @@ const WHOLE_SHARE_TYPES = ["pie", "donut", "funnel"] as const
  * `chart_duplicate_category` warning, which is what a repeated label means
  * there: possibly a typo, never a dropped value.
  */
-export const CATEGORY_FOLDING_TYPES = ["bar", "line", "area"] as const
+export const CATEGORY_FOLDING_TYPES = ["bar", "line", "area", "stacked", "percent_stacked"] as const
+
+/**
+ * Chart types that pile each category's series into one column: `stacked`
+ * keeps the amounts, `percent_stacked` scales every column to 100%.
+ *
+ * Both need two series at least. One series piled on nothing is a plain bar
+ * with a different name, and for `percent_stacked` it is a column that reads
+ * 100% everywhere, which says nothing at all.
+ */
+export const STACKED_TYPES = ["stacked", "percent_stacked"] as const
+
+/** Chart types whose columns stand upright only. `direction` belongs to bar. */
+const UPRIGHT_ONLY_TYPES = ["stacked", "percent_stacked"] as const
 
 export const schema = z
   .object({
@@ -70,9 +83,23 @@ export const schema = z
      * area：line 的基线闭合填充变体。donut：pie 的环形子型（可选中心总值）。
      * gauge：单值对目标的完成度半环。 */
     chart_type: z
-      .enum(["bar", "line", "pie", "funnel", "dumbbell", "scatter", "area", "donut", "gauge"])
+      .enum([
+        "bar",
+        "line",
+        "pie",
+        "funnel",
+        "dumbbell",
+        "scatter",
+        "area",
+        "donut",
+        "gauge",
+        "stacked",
+        "percent_stacked",
+      ])
       .describe(
         "How to plot the series. bar/line: a category axis of trends or comparisons. " +
+          "stacked: each category's series piled into one column, so the total and its parts show together (two or more series; negative values pile down from zero; the column total is printed above it). " +
+          "percent_stacked: the same piles scaled so every column reaches 100%, to compare make-up rather than size (two or more series, no negative values, every category must add up above zero). " +
           "scatter: a numeric x-y point cloud — use when BOTH axes are quantities (add an optional per-point `size` to make it a bubble chart); if x is a category label, use line/bar instead. " +
           "area: a line with the region under it filled to the baseline, for volume/cumulative emphasis. " +
           "pie: part-to-whole share. donut: the ring form of pie (set `center_total: true` to print the summed total big in the middle). " +
@@ -100,7 +127,9 @@ export const schema = z
       .strict()
       .optional(),
     /** Renders only for `chart_type: "bar"` (either direction), `"line"`,
-     * `"scatter"`, and `"area"` — a cartesian plot box with a real
+     * `"scatter"`, `"area"`, `"stacked"` and `"percent_stacked"` (whose
+     * `y_unit` may only be `%`, since its axis always reads 0% to 100%) —
+     * a cartesian plot box with a real
      * category/value axis pair to title and grid against. Ignored
      * (schema-legal, silently dropped at render, warn-severity
      * `chart_axes_ignored` validate finding) on `pie`/`donut`/`funnel`/
@@ -290,6 +319,84 @@ export const schema = z
           message:
             `a dumbbell pairs the two series row by row, so both need the same number of points and the same labels, ` +
             `got ${c.series[0]!.data.length} in series[0] ("${c.series[0]!.name}") and ${c.series[1]!.data.length} in series[1] ("${c.series[1]!.name}").`,
+        })
+      }
+    }
+    // A pile needs something to pile. One series in a `stacked` chart is a
+    // bar chart by another name, and one in a `percent_stacked` chart is a
+    // column that reads 100% in every category. Neither is what the author
+    // meant, so name the chart that does what one series can.
+    if (STACKED_TYPES.includes(c.chart_type as (typeof STACKED_TYPES)[number]) && c.series.length < 2) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["series"],
+        message:
+          c.chart_type === "stacked"
+            ? `a stacked chart piles several series into one column per category, so it needs at least two series, got ${c.series.length}. ` +
+              `For one series use chart_type "bar".`
+            : `a percent_stacked chart splits each category's column into the shares of its series, so it needs at least two series, got ${c.series.length}. ` +
+              `One series fills every column to 100% and says nothing. For one whole split into parts use chart_type "pie".`,
+      })
+    }
+    if (UPRIGHT_ONLY_TYPES.includes(c.chart_type as (typeof UPRIGHT_ONLY_TYPES)[number]) && c.direction === "horizontal") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["direction"],
+        message:
+          `a ${c.chart_type} chart draws upright columns only, and direction "horizontal" would be ignored. ` +
+          `Remove direction, or use chart_type "bar" with direction "horizontal" for side-by-side horizontal bars.`,
+      })
+    }
+    if (c.chart_type === "percent_stacked") {
+      // A share of a total is never negative. A loss inside a column is what
+      // `stacked` is for: it piles negative values down from zero.
+      let negative = false
+      c.series.forEach((s, si) =>
+        s.data.forEach((d, di) => {
+          if (d.y >= 0) return
+          negative = true
+          ctx.addIssue({
+            code: "custom",
+            path: ["series", si, "data", di, "y"],
+            message:
+              `a percent_stacked chart draws each value as a share of its category's total, and series[${si}] ("${s.name}") has ${d.y} for "${d.x}". ` +
+              `A share cannot be negative. Use chart_type "stacked" to show gains and losses, which piles negative values below the zero line.`,
+          })
+        }),
+      )
+      // A category whose values add up to zero has no shares to draw. The
+      // column would be empty with nothing on the page to say why, and an
+      // empty column reads as missing data rather than as a real zero. It is
+      // refused here, the same boundary a pie with a zero total stops at.
+      if (!negative) {
+        const totals = new Map<string, { x: string | number; total: number }>()
+        for (const s of c.series) {
+          for (const d of s.data) {
+            const key = typeof d.x === "number" ? `n:${d.x}` : `s:${d.x}`
+            const entry = totals.get(key) ?? { x: d.x, total: 0 }
+            entry.total += d.y
+            totals.set(key, entry)
+          }
+        }
+        for (const { x, total } of totals.values()) {
+          if (total > 0) continue
+          ctx.addIssue({
+            code: "custom",
+            path: ["series"],
+            message:
+              `a percent_stacked chart scales each category to 100%, and category "${x}" adds up to 0 across every series, so it has no shares to draw. ` +
+              `Remove the category, give it values, or use chart_type "stacked" to show absolute amounts.`,
+          })
+        }
+      }
+      const unit = c.axes?.y_unit
+      if (unit !== undefined && unit !== "%" && unit !== "％") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["axes", "y_unit"],
+          message:
+            `a percent_stacked value axis always reads 0% to 100%, so y_unit "${unit}" cannot apply. ` +
+            `Remove y_unit, and say what the shares are of in axes.y_title.`,
         })
       }
     }

@@ -83,7 +83,14 @@ function charLen(s: string): number {
  * to anchor a title against; scatter/area are cartesian and DO render axes,
  * added in the chart-depth wave).
  */
-const AXES_APPLICABLE_CHART_TYPES: ReadonlySet<string> = new Set(["bar", "line", "scatter", "area"])
+const AXES_APPLICABLE_CHART_TYPES: ReadonlySet<string> = new Set([
+  "bar",
+  "line",
+  "scatter",
+  "area",
+  "stacked",
+  "percent_stacked",
+])
 
 /** True when `axes` carries at least one real setting — `axes: {}` (every
  * sub-field omitted, schema-legal since all three are optional) has nothing
@@ -418,7 +425,7 @@ function checkSlide(
       slide: index,
       severity: "warn",
       code: "chart_axes_ignored",
-      message: `图表类型 "${component.chart_type}" 不支持坐标轴标题/网格线，axes 字段将被忽略（仅 bar、line、scatter、area 支持）`,
+      message: `图表类型 "${component.chart_type}" 不支持坐标轴标题/网格线，axes 字段将被忽略（仅 bar、line、scatter、area、stacked、percent_stacked 支持）`,
       chartAxesIgnored: { chartType: component.chart_type },
     })
   }

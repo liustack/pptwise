@@ -25,6 +25,7 @@ import {
   renderPie,
   renderFunnel,
   renderScatter,
+  renderStacked,
   type ChartRenderFn,
 } from "./chart-svg"
 
@@ -47,6 +48,10 @@ const renderers: Record<ChartComponent["chart_type"], ChartRenderFn> = {
   // decide whether to print the center total, so one function serves both.
   donut: renderDonut,
   gauge: renderGauge,
+  // One renderer for both piles: `renderStacked` reads `component.chart_type`
+  // to decide whether each column keeps its amounts or is scaled to 100%.
+  stacked: renderStacked,
+  percent_stacked: renderStacked,
 }
 
 /** 变体分发：bar+direction=horizontal 走横条，pie+style=donut 走环形（沿用旧
@@ -74,6 +79,8 @@ function resolveRenderer(component: ChartComponent): ChartRenderFn {
  *  - scatter: APPLICABLE. A numeric x-y plot box — the most literally
  *    cartesian of them all.
  *  - area: APPLICABLE. Line's own plot box with the region under it filled.
+ *  - stacked / percent_stacked: APPLICABLE. Bar's plot box with the series
+ *    piled into one column per category.
  *  - pie / donut / gauge: NOT applicable. Purely radial — no axes, no plot
  *    box to title (donut is the same "no axes" case whether reached via the
  *    dedicated chart_type or the legacy `pie`+`style: "donut"` form).
@@ -108,6 +115,8 @@ const AXES_APPLICABLE_TYPES: ReadonlySet<ChartComponent["chart_type"]> = new Set
   "line",
   "scatter",
   "area",
+  "stacked",
+  "percent_stacked",
 ])
 
 function axesApplicable(component: ChartComponent): boolean {
