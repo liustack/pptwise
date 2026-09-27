@@ -55,7 +55,7 @@ pptwise validate deck.json
 | `version` | `"5"` | 唯一接受的 IR 版本。省略时按 v5 处理。 |
 | `filename` | string | 输出文件名，默认 `presentation`。 |
 | `narrative` | 预设字符串或部分三轴 | 论证、节奏与受众决定。 |
-| `theme` | object | 只绑定主题 id：`{ "id": "acme" }`。必填，绑定工作区主题或出厂预设。改颜色用 `pptwise theme fork`。品牌配置写在主题文件上。 |
+| `theme` | object | 只绑定主题 id：`{ "id": "acme" }`。必填，绑定工作区主题、已装内容包的主题或出厂预设。改颜色用 `pptwise theme fork`。品牌配置写在主题文件上。 |
 | `meta` | object | 机构、作者、日期、版本、保密级别、联系信息、版权与动画。 |
 | `assets` | object | `assets.images` 下的命名图片来源。 |
 | `brand` | object | Deck logo 的资产 id 与角落位置。 |

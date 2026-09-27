@@ -25,6 +25,8 @@ import {
 import { runConfigSet, runConfigShow } from "./cli/config-cmd"
 import { runDoctor } from "./cli/doctor"
 import { runImagesFetch, runImagesGenerate, runImagesList, runImagesSearch } from "./cli/images"
+import { runLicenseClear, runLicenseSet, runLicenseStatus } from "./cli/packs/license"
+import { runPacksList, runPacksSync } from "./cli/packs/sync"
 import { DEFAULT_PORT, runServe } from "./cli/serve"
 import { checkForUpdate, createSelfUpdater } from "./cli/update"
 import { VERSION } from "./version"
@@ -133,7 +135,7 @@ program
   .option("--spec", "print the deck spec schema instead")
   .option("--component <type>", "print one component's schema with the $defs it needs")
   .option("--kind <kind>", "print the components a page of this kind may hold, with their schemas")
-  .option("--theme <name>", "with --kind: answer for one theme instead of every installed theme (deck theme.json, then workspace themes/, then presets)")
+  .option("--theme <name>", "with --kind: answer for one theme instead of every built-in theme (deck theme.json, then workspace themes/, then installed packs, then presets)")
   .option("--deck <dir>", "with --theme: the deck project directory to read a deck-local theme from (default: the cwd when it holds deck.spec.json or a deck-local theme file for the name)")
   .option("--pretty", "indent the JSON (default output is one line)")
   .addHelpText(
@@ -224,9 +226,15 @@ program
 
 program
   .command("themes")
-  .description("List built-in themes")
-  .option("--json", "machine-readable output")
-  .action((opts: { json?: boolean }) => console.log(runThemes(Boolean(opts.json))))
+  .description("List the built-in presets and the themes of installed content packs")
+  .option("--json", "machine-readable output (each theme's source is builtin or pack)")
+  .action(async (opts: { json?: boolean }) => {
+    try {
+      console.log(await runThemes(Boolean(opts.json)))
+    } catch (e) {
+      fail(e)
+    }
+  })
 
 const theme = program.command("theme").description("Copy, fork, and compare themes")
 theme
@@ -357,6 +365,68 @@ config
   .action(async () => {
     try {
       console.log(await runConfigShow())
+    } catch (e) {
+      fail(e)
+    }
+  })
+
+const license = program.command("license").description("The license key that unlocks content packs")
+license
+  .command("set <key>")
+  .description("Save a license key to $PPTWISE_HOME/license.json (readable by you only)")
+  .action(async (key: string) => {
+    try {
+      console.log(await runLicenseSet(key))
+    } catch (e) {
+      fail(e)
+    }
+  })
+license
+  .command("status")
+  .description("Show whether a license key is configured (first 8 characters only)")
+  .action(async () => {
+    try {
+      console.log(await runLicenseStatus())
+    } catch (e) {
+      fail(e)
+    }
+  })
+license
+  .command("clear")
+  .description("Remove the saved license key. Installed packs stay in place")
+  .action(async () => {
+    try {
+      console.log(await runLicenseClear())
+    } catch (e) {
+      fail(e)
+    }
+  })
+
+const packs = program.command("packs").description("Content packs: extra themes installed under $PPTWISE_HOME/packs")
+packs
+  .command("sync")
+  .description(
+    "Install or update every pack your license covers. Without a license it prints a one-line note and exits 0. A failed sync leaves installed packs as they were",
+  )
+  .option("--json", "machine-readable output")
+  .action(async (opts: { json?: boolean }) => {
+    try {
+      const { output, failed } = await runPacksSync({ json: opts.json })
+      console.log(output)
+      // exitCode rather than exit(): a long --json report piped to another
+      // process is flushed in full before the process ends.
+      if (failed) process.exitCode = 1
+    } catch (e) {
+      fail(e)
+    }
+  })
+packs
+  .command("list")
+  .description("List installed packs and the themes each one ships")
+  .option("--json", "machine-readable output")
+  .action(async (opts: { json?: boolean }) => {
+    try {
+      console.log(await runPacksList({ json: opts.json }))
     } catch (e) {
       fail(e)
     }

@@ -40,10 +40,11 @@ Never write IR or a spec from memory. Run these at the start of each deck task:
 ```bash
 pptwise schema --spec
 pptwise narratives --json
+pptwise packs sync
 pptwise themes --json
 ```
 
-The IR component contract is read per page while filling, never whole. See step 5.
+`packs sync` installs or updates the user's content packs when a license is configured, so `themes --json` lists their themes with `"source": "pack"`. Without a license it prints one line and exits 0. If it fails, relay its message and continue with what is installed. The IR component contract is read per page while filling, never whole. See step 5.
 
 Scan the workspace before asking questions. An existing `deck.spec.json` already records the narrative, bound theme, page order, headings, and content kinds. A deck-local `theme.json`, a workspace `themes/` file, a named theme, or a supplied `.thmx`, `.potx`, or branded `.pptx` is a theme signal.
 
@@ -67,7 +68,8 @@ Resolve theme names in this order:
 
 1. The deck directory.
 2. A workspace `themes/` directory while walking upward.
-3. The 24 factory presets.
+3. Installed content packs (`pptwise packs list`).
+4. The 24 factory presets.
 
 Use request and workspace signals to shortlist themes by `occasions` and `identity`. Compare two to four candidates with the fixed fitting-room sample:
 

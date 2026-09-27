@@ -42,10 +42,11 @@ powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\run.ps1 <args>  # W
 ```bash
 pptwise schema --spec
 pptwise narratives --json
+pptwise packs sync
 pptwise themes --json
 ```
 
-IR 组件契约在填页时按页读取，不整份读。见第 5 步。
+配置了 license 时，`packs sync` 会安装或更新用户的内容包，`themes --json` 随后会列出包内主题，并标 `"source": "pack"`。没有 license 时它只打印一行并以 0 退出。失败时转告它的信息，用已装的内容继续。IR 组件契约在填页时按页读取，不整份读。见第 5 步。
 
 提问前先扫描工作区。已有 `deck.spec.json` 会记录叙事、绑定主题、页面顺序、标题与每张内容页的 `kind`。deck 内 `theme.json`、工作区 `themes/` 文件、用户点名的主题，或递来的 `.thmx`、`.potx`、带品牌 `.pptx` 都是主题信号。
 
@@ -65,11 +66,12 @@ IR 组件契约在填页时按页读取，不整份读。见第 5 步。
 
 主题是一个完整、自包含的文件，包含样式、页面菜单、可选品牌规则与场合元数据。内容菜单只服务全局 11 个 `kind` 中的一个子集。缺少某个词是设计选择。
 
-主题名按三级查找：
+主题名按四级查找：
 
 1. deck 目录。
 2. 从当前目录向上查找工作区 `themes/`。
-3. 24 个出厂预设。
+3. 已装的内容包（`pptwise packs list`）。
+4. 24 个出厂预设。
 
 按请求与工作区信号，用 `occasions` 和 `identity` 筛出候选。用固定样张比较 2 到 4 个候选：
 

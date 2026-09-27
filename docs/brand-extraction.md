@@ -78,7 +78,7 @@ Place the file under a workspace `themes/` directory and bind its id in the spec
 }
 ```
 
-Project commands load the bound file through normal three-level theme lookup and pass the compiled definition down the render chain by value. There is no registration flag and no render-time theme override. `serve` watches a deck-local `theme.json`, rereads it on every rebuild, and refreshes the review.
+Project commands load the bound file through normal four-level theme lookup and pass the compiled definition down the render chain by value. There is no registration flag and no render-time theme override. `serve` watches a deck-local `theme.json`, rereads it on every rebuild, and refreshes the review.
 
 ## Known limits
 

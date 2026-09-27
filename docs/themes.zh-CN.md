@@ -1,5 +1,5 @@
 ---
-summary: '自包含 v2 主题、出厂预设拷贝、菜单绑定、三级查名、配色分叉与固定样张视觉对比'
+summary: '自包含 v2 主题、出厂预设拷贝、菜单绑定、含已装内容包的四级查名、配色分叉与固定样张视觉对比'
 read_when:
   - 选择、创建、绑定或冻结主题
   - 编写或装载版本 2 主题文件
@@ -120,13 +120,14 @@ Deck spec 按名称绑定主题：
 
 裸 IR 文件中的绑定写作 `"theme": { "id": "acme-report" }`。
 
-名称按三级顺序解析：
+名称按四级顺序解析：
 
 1. Deck 目录。依次检查 `theme.json`、`<name>.theme.json` 和能够完整解析且 id 匹配的 `<name>.json`。
 2. 从起始目录向上查找各级工作区 `themes/`。
-3. 24 个出厂预设。
+3. `$PPTWISE_HOME/packs/` 下已装的内容包。见 [Content packs](./packs.md)。
+4. 24 个出厂预设。
 
-Deck 与工作区文件可以保名遮蔽出厂预设。冻结就是下沉拷贝并保留绑定名，例如 `pptwise theme new --from brief -o deck-dir/theme.json --id brief`。未知名称会明确报错，并列出查过的位置。
+Deck 与工作区文件可以保名遮蔽出厂预设或包内主题。包内主题不会占用预设的 id，`pptwise packs sync` 会拒装这样的包。冻结就是下沉拷贝并保留绑定名，例如 `pptwise theme new --from brief -o deck-dir/theme.json --id brief`。未知名称会明确报错，并列出查过的位置。
 
 要把工作区主题冻结给一份 deck，保留 id 并拷入 deck 目录的 `theme.json`：
 

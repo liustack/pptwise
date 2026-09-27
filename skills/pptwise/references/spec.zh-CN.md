@@ -70,11 +70,14 @@ pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief
 pptwise theme fork acme --primary '#0B5FFF' --id acme-blue
 ```
 
-主题名按三级解析：
+主题名按四级解析：
 
 1. deck 目录，包括 `theme.json` 与具名主题 JSON。
 2. 从 deck 向上查找的工作区 `themes/`。
-3. 出厂预设。
+3. 已装的内容包，位于 `$PPTWISE_HOME/packs/`，由 `pptwise packs sync` 保持最新。
+4. 出厂预设。
+
+工作区里的同名文件会遮住包内主题。包内主题的 id 不会与出厂预设重名。
 
 在 `deck.spec.json` 的 `theme` 中写入唯一名称完成绑定。要把工作区主题冻结给单个 deck，保持 id 不变，把完整文件复制到 deck 目录并命名为 `theme.json`。之后 deck 命令会自动装载。
 

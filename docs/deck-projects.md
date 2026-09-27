@@ -150,7 +150,7 @@ Treat `deck.json` as an inspection or interchange artifact. Edit the spec or pag
 
 ## Theme binding and rebinding
 
-`spec.theme` resolves by name from the deck directory, upward workspace `themes/` directories, then factory presets. Render has no theme override.
+`spec.theme` resolves by name from the deck directory, upward workspace `themes/` directories, installed content packs, then factory presets. Render has no theme override.
 
 Freeze a workspace theme by copying it to `my-deck/theme.json` with the same id. Project commands load it automatically, and `serve` watches it.
 

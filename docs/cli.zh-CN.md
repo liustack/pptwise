@@ -1,11 +1,12 @@
 ---
-summary: '当前 CLI 命令面：IR v5、主题 v2、deck 项目、逐页检查、固定样张主题对比、验证、审计、图片、预览与安装体检'
+summary: '当前 CLI 命令面：IR v5、主题 v2、deck 项目、逐页检查、固定样张主题对比、验证、审计、图片、预览、内容包与安装体检'
 read_when:
   - 查询受支持的命令或参数
   - 给 agent 接上 spec、填充、validate、audit 与 render 回路
   - 读取一页的填写契约，或在 render 前检查一页放不放得下
   - 创建、分叉、对比、抽取或解析主题
   - 排查 audit 输出、图片获取或安装状态
+  - 设置 license 或同步内容包
 ---
 
 # CLI
@@ -40,7 +41,7 @@ pptwise preview deck-dir/ --html
 | `spec validate <file>` | 验证主题形状的 deck spec。 |
 | `assemble <dir|name>` | 把 deck 项目合并成派生 IR v5。 |
 | `disassemble <ir.json>` | 把 IR v5 拆成 spec、页面文件与资产。 |
-| `themes` | 列出 24 个出厂预设及元数据。 |
+| `themes` | 列出 24 个出厂预设与已装内容包的主题，附元数据。 |
 | `theme new` | 把命名主题拷贝为自包含 v2 文件。 |
 | `theme fork` | 拷贝主题，并围绕新锚色重推导配色。 |
 | `theme try` | 用两到四个主题渲染固定试衣样稿。 |
@@ -54,6 +55,11 @@ pptwise preview deck-dir/ --html
 | `images generate` | 通过已启用的本地 CLI 生成并固定图片。 |
 | `config set` | 设置可选用户配置。 |
 | `config show` | 显示已生效配置，秘密会遮盖。 |
+| `license set <key>` | 保存解锁内容包的 license。 |
+| `license status` | 显示是否已配置 license。 |
+| `license clear` | 删除已保存的 license。 |
+| `packs sync` | 安装或更新 license 覆盖的内容包。 |
+| `packs list` | 列出已装内容包及其主题。 |
 | `init` | 在当前目录创建 `pptwise.config.json`。 |
 | `preview <target>` | 写出 SVG 页面与可选的自包含评审文件。 |
 | `serve <target>` | 启动自动刷新的评审服务。 |
@@ -111,7 +117,7 @@ pptwise spec validate deck-dir/deck.spec.json
 
 IR schema 把每个共享片段只放进 `$defs` 一次：每个组件用自己的类型名，组件联合叫 `Component`，图标名枚举叫 `IconName`。默认输出一行，加 `--pretty` 才缩进。
 
-`--component` 打印一个组件的 schema，只带它用到的 `$defs`。`--kind` 打印该 kind 页面可以放的组件、每个已安装主题为它绑定的脸、这些组件的 `oneOf` 以及它们的 `$defs`。加 `--theme` 只回答绑定主题的情况。主题名按 `validate` 解析 spec 主题的同一顺序查找：先 deck 目录（`theme.json`、`<name>.theme.json`），再工作区 `themes/`，最后内置预设。deck 目录取 `--deck <dir>`，没给时当前目录含 `deck.spec.json`，或含该主题名的 deck 本地文件（`theme.json`、`<name>.theme.json`、`<name>.json`）就算 deck，`validate deck.json` 也是从裸 IR 所在目录读主题的。脸不画任何组件时，列表为空，`oneOf` 的位置换成 `not: {}`。列表来自 validate 用的同一条主题菜单路线，列表之外的组件会被 `validate` 拒绝。未知的类型、kind 或主题会失败并列出合法名字。
+`--component` 打印一个组件的 schema，只带它用到的 `$defs`。`--kind` 打印该 kind 页面可以放的组件、每个内置主题为它绑定的脸、这些组件的 `oneOf` 以及它们的 `$defs`。加 `--theme` 只回答绑定主题的情况。主题名按 `validate` 解析 spec 主题的同一顺序查找：先 deck 目录（`theme.json`、`<name>.theme.json`），再工作区 `themes/`，再已装内容包，最后内置预设。deck 目录取 `--deck <dir>`，没给时当前目录含 `deck.spec.json`，或含该主题名的 deck 本地文件（`theme.json`、`<name>.theme.json`、`<name>.json`）就算 deck，`validate deck.json` 也是从裸 IR 所在目录读主题的。脸不画任何组件时，列表为空，`oneOf` 的位置换成 `not: {}`。列表来自 validate 用的同一条主题菜单路线，列表之外的组件会被 `validate` 拒绝。未知的类型、kind 或主题会失败并列出合法名字。
 
 图标字段打印为一个指向 `pptwise icons` 的字符串。校验始终按完整枚举检查。
 
@@ -167,7 +173,9 @@ pptwise theme try <id,id,...> [-o <dir>]
 
 `theme try` 要求两个到四个互不重复的名称。默认把对比图写到 `.pptwise/theme-try/`。它永远不会修改 deck 绑定。
 
-主题名称先从 deck 目录解析，再从向上查找的工作区 `themes/` 目录解析，最后查出厂预设。未知名称报错。Deck 与工作区文件可以保名遮蔽出厂预设。主题 id 必须匹配 `^[a-z0-9-]+$`。覆盖已有主题文件需要 `--force`。
+`themes --json` 为每一行标出 `source`：出厂预设是 `builtin`，已装内容包提供的主题是 `pack`，并带上 `pack` id。读不出来的包列为一条带 `error` 字段的条目，不影响其余条目。
+
+主题名称先从 deck 目录解析，再从向上查找的工作区 `themes/` 目录解析，再查已装内容包，最后查出厂预设。未知名称报错，并列出查过的每个位置，包括每个已装包的目录。Deck 与工作区文件可以保名遮蔽出厂预设或包内主题。主题 id 必须匹配 `^[a-z0-9-]+$`。覆盖已有主题文件需要 `--force`。
 
 ## 品牌抽取
 
@@ -216,6 +224,20 @@ Preview 为每页写一个 SVG。`--html` 还会写一个内联评审界面，�
 Serve 监听 IR 或项目源文件，包括 deck 本地的 `theme.json`，并刷新浏览器。Agent 应传 `--no-open`，报告准确 URL，结束时只停止自己启动的进程。
 
 `GET /status` 返回 JSON 对象，包含 `latestRevision`、`servedRevision`、`latestOk` 和可选的 `error` 消息。`GET /` 带三个响应头：`X-Pptwise-Build-Status`（`ok` 或 `failed`）、`X-Pptwise-Served-Revision`、`X-Pptwise-Latest-Revision`。重建失败时浏览器显示错误横幅，继续提供上一次成功的 HTML，不会把旧结果冒充最新。
+
+## 内容包
+
+```bash
+pptwise license set <key>
+pptwise license status
+pptwise license clear
+pptwise packs sync [--json]
+pptwise packs list [--json]
+```
+
+内容包是一组带版本的额外主题，由 license 解锁。`license set` 校验 key 的形状后存进 `$PPTWISE_HOME/license.json`，只有本人可读。`license status` 最多显示 key 的前 8 个字符。`license clear` 删除 key，已装的包保持原样。
+
+`packs sync` 找出 license 覆盖、但本地缺失或版本不同的包，逐个下载安装。装前校验 sha256、`pack.json`、engine 范围与每个主题文件。需要更新版 pptwise 的包会跳过并提示更新。没有 license 时只打印一行并以 0 退出。同步失败时已装的包保持原样，并以 1 退出。`PPTWISE_PACKS_URL` 可以改指另一台服务器，地址必须是 https（只有 `localhost`、`127.0.0.1`、`::1` 上允许明文 http）。协议、包格式与 `--json` 报告见 [Content packs](./packs.md)。
 
 ## 配置与体检
 
