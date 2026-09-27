@@ -4,7 +4,7 @@
 
 <p align="center"><b>真正的 PPT，不是图片</b></p>
 
-<p align="center">🥇 <b>全网第一个 DeepSeek Harness PPT 生成插件</b> 🥇</p>
+<p align="center">🥇 <b>全网最强的 DeepSeek Harness PPT 生成插件</b> 🥇</p>
 
 <p align="center">
   <a href="https://pptwise.com/zh">pptwise.com</a> ·
