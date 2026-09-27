@@ -536,13 +536,82 @@ describe("theme default backgrounds", () => {
 describe("remote asset fetch limits", () => {
   const PNG_BYTES = Uint8Array.from(atob(RED_PNG.split(",")[1]!), (c) => c.charCodeAt(0))
 
-  it("refuses a source with a scheme other than http or https, and never fetches it", async () => {
+  it("refuses a source with a scheme other than http, https, or blob, and never fetches it", async () => {
     const fetchSpy = vi.fn()
     installPlatform({ fetch: fetchSpy, decodeImage: acceptAnyImage })
-    for (const src of ["file:///etc/passwd", "ftp://example.com/a.png", "javascript:alert(1)"]) {
-      await expect(inlinePptxAssets(ir({ hero: { src } }), BULLETIN)).rejects.toThrow(/only http and https/)
+    for (const src of [
+      "file:///etc/passwd",
+      "ftp://example.com/a.png",
+      "javascript:alert(1)",
+      // URL parsing drops leading whitespace and control characters and
+      // any tab or newline, so these are file: and data: to fetch.
+      "\tfile:///etc/passwd",
+      "fi\nle:///etc/passwd",
+      " data:image/png;base64,AA==",
+    ]) {
+      await expect(inlinePptxAssets(ir({ hero: { src } }), BULLETIN)).rejects.toThrow(/only http, https, and blob/)
     }
     expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  it("reads a browser object URL, which never leaves the machine", async () => {
+    const platformFetch = vi.fn(async () => new Response(PNG_BYTES, { headers: { "content-type": "image/png" } }))
+    installPlatform({ fetch: platformFetch as unknown as typeof fetch, decodeImage: acceptAnyImage })
+    await inlinePptxAssets(ir({ hero: { src: "blob:https://pptwise.com/5d1e" } }), BULLETIN)
+    expect(platformFetch).toHaveBeenCalledTimes(1)
+  })
+
+  it("gives up on a body that stalls after the headers arrive", async () => {
+    vi.useFakeTimers()
+    try {
+      const stalling = vi.fn(async (_url: string, init?: RequestInit) => {
+        const body = new ReadableStream<Uint8Array>({
+          start(controller) {
+            init?.signal?.addEventListener("abort", () => controller.error(new DOMException("aborted", "AbortError")))
+          },
+        })
+        return new Response(body, { headers: { "content-type": "image/png" } })
+      })
+      installPlatform({ fetch: stalling as unknown as typeof fetch, decodeImage: acceptAnyImage })
+      const run = inlinePptxAssets(ir({ hero: { src: "https://stall.example.com/a.png" } }), BULLETIN)
+      const settled = expect(run).rejects.toThrow(new RegExp(`timed out after ${FETCH_TIMEOUT_MS / 1000} s`))
+      await vi.advanceTimersByTimeAsync(FETCH_TIMEOUT_MS + 1)
+      await settled
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("counts what arrives, whatever the declared length says", async () => {
+    const chunk = new Uint8Array(1024 * 1024)
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.enqueue(chunk)
+      },
+    })
+    installPlatform({
+      fetch: vi.fn(
+        async () => new Response(body, { headers: { "content-type": "image/png", "content-length": "10" } }),
+      ) as unknown as typeof fetch,
+      decodeImage: acceptAnyImage,
+    })
+    await expect(inlinePptxAssets(ir({ hero: { src: "https://liar.example.com/a.png" } }), BULLETIN)).rejects.toThrow(
+      /above the 25\.0 MB limit/,
+    )
+  })
+
+  it("leaves no timer behind after a download finishes", async () => {
+    vi.useFakeTimers()
+    try {
+      installPlatform({
+        fetch: vi.fn(async () => new Response(PNG_BYTES, { headers: { "content-type": "image/png" } })) as unknown as typeof fetch,
+        decodeImage: acceptAnyImage,
+      })
+      await inlinePptxAssets(ir({ hero: { src: "https://ok.example.com/a.png" } }), BULLETIN)
+      expect(vi.getTimerCount()).toBe(0)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it("gives up on a response that does not arrive in time", async () => {
