@@ -18,7 +18,7 @@ The project spec binds one theme by name. Boundary pages contribute their `type`
 bound theme + page type or content kind -> one menu entry -> one face
 ```
 
-The theme is resolved by the three-level name lookup described in [Themes](./themes.md). Once loaded, its menu is the only source for ordinary page-face resolution.
+The theme is resolved by the four-level name lookup described in [Themes](./themes.md). Once loaded, its menu is the only source for ordinary page-face resolution.
 
 ## Boundary pages
 

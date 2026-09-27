@@ -1,11 +1,12 @@
 ---
-summary: 'Current CLI surface for IR v5, theme v2, deck projects, per-page inspection, fixed-sample theme comparison, validation, audit, images, preview, and installation health'
+summary: 'Current CLI surface for IR v5, theme v2, deck projects, per-page inspection, fixed-sample theme comparison, validation, audit, images, preview, content packs, and installation health'
 read_when:
   - looking up a supported command or flag
   - wiring an agent around the spec, fill, validate, audit, and render loop
   - reading one page's fill contract or checking whether a page fits before render
   - creating, forking, comparing, extracting, or resolving themes
   - diagnosing audit output, image sourcing, or an installation
+  - setting a license key or syncing content packs
 ---
 
 # CLI
@@ -40,7 +41,7 @@ Fill no more than four pages between validation passes, and read each page's con
 | `spec validate <file>` | Validate a theme-shaped deck spec. |
 | `assemble <dir|name>` | Merge a deck project into derived IR v5. |
 | `disassemble <ir.json>` | Split IR v5 into a spec, page files, and assets. |
-| `themes` | List the 24 factory presets and metadata. |
+| `themes` | List the 24 factory presets and installed pack themes, with metadata. |
 | `theme new` | Copy a named theme into a self-contained v2 file. |
 | `theme fork` | Copy a theme and rederive its palette around new anchors. |
 | `theme try` | Render the fixed fitting-room sample across two to four themes. |
@@ -54,6 +55,11 @@ Fill no more than four pages between validation passes, and read each page's con
 | `images generate` | Generate and pin an image through an enabled local CLI. |
 | `config set` | Set optional user configuration. |
 | `config show` | Show effective user configuration with secrets masked. |
+| `license set <key>` | Save the license key that unlocks content packs. |
+| `license status` | Show whether a license key is configured. |
+| `license clear` | Remove the saved license key. |
+| `packs sync` | Install or update the content packs a license covers. |
+| `packs list` | List installed packs and their themes. |
 | `init` | Create `pptwise.config.json` in the current directory. |
 | `preview <target>` | Write SVG pages and an optional self-contained review file. |
 | `serve <target>` | Start a live-reloading review server. |
@@ -111,7 +117,7 @@ pptwise spec validate deck-dir/deck.spec.json
 
 The IR schema keeps every shared piece in `$defs` once: each component under its own type name, the component union as `Component`, and the icon-name enum as `IconName`. Output is one line unless `--pretty` is passed.
 
-`--component` prints one component's schema with only the `$defs` it needs. `--kind` prints the components a page of that kind may hold, the face each installed theme binds to it, a `oneOf` over those components, and their `$defs`. Add `--theme` to answer for the bound theme alone. The name resolves the way `validate` resolves a spec's theme: the deck directory first (`theme.json`, `<name>.theme.json`), then workspace `themes/`, then the presets. The deck directory is `--deck <dir>`, or the cwd when it holds `deck.spec.json` or a deck-local file for that name (`theme.json`, `<name>.theme.json`, `<name>.json`), which is where `validate deck.json` reads a bare IR's theme from. A face that draws no component prints an empty list and `not: {}` in place of the `oneOf`. The list comes from the same theme-menu route validate uses, so a component outside it fails `validate`. An unknown type, kind, or theme fails and lists the valid names.
+`--component` prints one component's schema with only the `$defs` it needs. `--kind` prints the components a page of that kind may hold, the face each built-in theme binds to it, a `oneOf` over those components, and their `$defs`. Add `--theme` to answer for the bound theme alone. The name resolves the way `validate` resolves a spec's theme: the deck directory first (`theme.json`, `<name>.theme.json`), then workspace `themes/`, then installed packs, then the presets. The deck directory is `--deck <dir>`, or the cwd when it holds `deck.spec.json` or a deck-local file for that name (`theme.json`, `<name>.theme.json`, `<name>.json`), which is where `validate deck.json` reads a bare IR's theme from. A face that draws no component prints an empty list and `not: {}` in place of the `oneOf`. The list comes from the same theme-menu route validate uses, so a component outside it fails `validate`. An unknown type, kind, or theme fails and lists the valid names.
 
 Icon fields print as a string that points at `pptwise icons`. Validation always checks the closed enum.
 
@@ -167,7 +173,9 @@ pptwise theme try <id,id,...> [-o <dir>]
 
 `theme try` requires two to four distinct names. It writes a contact sheet under `.pptwise/theme-try/` by default. It never changes a deck binding.
 
-Theme names resolve from the deck directory, then workspace `themes/` directories while walking upward, then factory presets. Unknown names fail. Deck and workspace files may keep a factory id and shadow the preset. A theme id is `^[a-z0-9-]+$`. Pass `--force` to overwrite an existing theme file.
+`themes --json` marks each row's `source`: `builtin` for a factory preset, `pack` for a theme an installed content pack ships (with its `pack` id).
+
+Theme names resolve from the deck directory, then workspace `themes/` directories while walking upward, then installed content packs, then factory presets. Unknown names fail and list every place searched, each installed pack directory included. Deck and workspace files may keep a factory or pack id and shadow that theme. A theme id is `^[a-z0-9-]+$`. Pass `--force` to overwrite an existing theme file.
 
 ## Brand extraction
 
@@ -216,6 +224,20 @@ Preview writes one SVG per page. `--html` also writes an inlined review interfac
 Serve watches the IR or project sources, including deck-local `theme.json`, and refreshes the browser. Agents should pass `--no-open`, report the exact URL, and stop only the process they started.
 
 `GET /status` returns a JSON object with `latestRevision`, `servedRevision`, `latestOk`, and an optional `error` message. `GET /` carries three response headers: `X-Pptwise-Build-Status` (`ok` or `failed`), `X-Pptwise-Served-Revision`, and `X-Pptwise-Latest-Revision`. When a rebuild fails, the browser shows an error banner and keeps serving the last good HTML without passing it off as current.
+
+## Content packs
+
+```bash
+pptwise license set <key>
+pptwise license status
+pptwise license clear
+pptwise packs sync [--json]
+pptwise packs list [--json]
+```
+
+A content pack is a versioned set of extra themes unlocked by a license key. `license set` checks the key's shape and saves it to `$PPTWISE_HOME/license.json`, readable by the owner only. `license status` shows at most the key's first eight characters. `license clear` removes the key and leaves installed packs in place.
+
+`packs sync` installs every pack the license covers that is missing or at another version, after checking its sha256, its `pack.json`, its engine range, and each theme file. A pack for a newer pptwise is skipped with a note to update. Without a license it prints one line and exits 0. A failed sync leaves installed packs as they were, and exits 1. `PPTWISE_PACKS_URL` points it at another server. See [Content packs](./packs.md) for the protocol, the archive format, and the `--json` report.
 
 ## Configuration and health
 
