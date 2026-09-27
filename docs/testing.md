@@ -176,6 +176,17 @@ osascript scripts/ppt-repair-check.applescript "$PWD/.e2e-out/webp.pptx"
 
 The required result is `OK`. A repair dialog, repaired-title window, or timeout is a release blocker. Record which representative files were probed when handing off an export change.
 
+PowerPoint for Mac is sandboxed. A file outside its container opens a "Grant File Access" prompt the probe cannot answer, and the probe then reports an AppleEvent timeout or error -9074 that says nothing about the file. Copy the files into the container first and probe them there:
+
+```bash
+D=~/Library/Containers/com.microsoft.Powerpoint/Data/Documents/pptwise-probe
+mkdir -p "$D" && cp .e2e-out/basic.pptx .e2e-out/webp.pptx "$D"/
+osascript scripts/ppt-repair-check.applescript "$D/basic.pptx"
+osascript scripts/ppt-repair-check.applescript "$D/webp.pptx"
+```
+
+If an earlier run left PowerPoint stuck on that prompt, quit it before probing again.
+
 ## Acceptance by change type
 
 | change | minimum evidence |
