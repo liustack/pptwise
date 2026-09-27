@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { THEME_DEFINITIONS } from "../../themes/definitions"
 import { VERSION } from "../../version"
-import { runRender, runSpecValidate, runThemeNew, runThemes } from "../commands"
+import { runRender, runSchema, runSpecValidate, runThemeNew, runThemes } from "../commands"
 import { resolveThemeByName } from "../theme-resolve"
 import { buildPackZip, packTheme, themeEntryPath } from "./__fixtures__/pack-zip"
 import { installPack } from "./install"
@@ -228,5 +228,25 @@ describe("pptwise themes with installed packs", () => {
     expect(text).toHaveLength(27)
     expect(text[24]).toMatch(/^\(pack broken\) installed pack .*broken cannot be read: /)
     expect(text[26]).toMatch(/^sample-brief\s/)
+  })
+})
+
+describe("schema --kind without a theme", () => {
+  const kindThemes = async (): Promise<Record<string, unknown>> =>
+    (JSON.parse(await runSchema({ kind: "points", cwd })) as { themes: Record<string, unknown> }).themes
+
+  it("answers for installed pack themes as well as the presets", async () => {
+    await installSample()
+    const themes = await kindThemes()
+    expect(Object.keys(themes)).toContain("sample-brief")
+    expect(Object.keys(themes)).toContain("brief")
+  })
+
+  it("still answers for the presets and readable packs when one pack is damaged", async () => {
+    await installSample()
+    await mkdirp(join(packsRoot(), "broken"))
+    const themes = await kindThemes()
+    expect(Object.keys(themes)).toContain("sample-brief")
+    expect(Object.keys(themes)).toContain("brief")
   })
 })

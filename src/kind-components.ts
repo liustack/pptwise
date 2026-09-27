@@ -39,6 +39,12 @@ export interface KindComponentsOptions {
    * theme.
    */
   theme?: string | ThemeDefinition
+  /**
+   * Themes beyond the built-in shelf and the SDK registry that the caller has
+   * already resolved, such as the CLI's installed content pack themes. Only
+   * consulted when no single `theme` is named: they join the union.
+   */
+  extraThemes?: readonly ThemeDefinition[]
 }
 
 function assertKind(kind: string): asserts kind is PageKind {
@@ -75,6 +81,10 @@ export function componentsForKind(kind: string, options: KindComponentsOptions =
       const offer = offerFor(getThemeDefinition(id), kind)
       if (offer !== undefined) themes[id] = offer
     }
+    for (const theme of options.extraThemes ?? []) {
+      const offer = offerFor(theme, kind)
+      if (offer !== undefined) themes[theme.id] = offer
+    }
   }
   const union = new Set<string>()
   for (const offer of Object.values(themes)) for (const type of offer.components) union.add(type)
@@ -92,7 +102,7 @@ export function componentsForKind(kind: string, options: KindComponentsOptions =
  * with a description saying why.
  */
 export function kindJsonSchema(kind: string, options: KindComponentsOptions = {}): JsonSchemaDocument {
-  const offer = componentsForKind(kind, { theme: options.theme })
+  const offer = componentsForKind(kind, { theme: options.theme, extraThemes: options.extraThemes })
   const full = irJsonSchema()
   const head = { $schema: full.$schema, kind: offer.kind, components: offer.components, themes: offer.themes }
   if (offer.components.length === 0) {
