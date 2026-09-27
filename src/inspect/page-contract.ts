@@ -154,8 +154,7 @@ function isBoundary(slide: Slide): boolean {
 }
 
 /** The IR schema's slide variant for one page type. */
-function slideSchema(type: Slide["type"]): { properties: Record<string, unknown> } {
-  const full = irJsonSchema()
+function slideSchema(full: JsonSchemaDocument, type: Slide["type"]): { properties: Record<string, unknown> } {
   const slides = (full.properties as Record<string, { items: { oneOf: { properties: Record<string, unknown> }[] } }>).slides!
   const variant = slides.items.oneOf.find((option) => (option.properties.type as { const?: string }).const === type)
   if (variant === undefined) throw new Error(`IR schema has no slide variant for "${type}"`)
@@ -168,8 +167,8 @@ function slideSchema(type: Slide["type"]): { properties: Record<string, unknown>
  * repeating the whole union. A boundary page leaves out the fields no
  * boundary face draws.
  */
-function pageFields(slide: Slide): Record<string, unknown> {
-  const variant = slideSchema(slide.type)
+function pageFields(full: JsonSchemaDocument, slide: Slide): Record<string, unknown> {
+  const variant = slideSchema(full, slide.type)
   const skipped: readonly string[] = isBoundary(slide) ? BOUNDARY_UNRENDERED_FIELDS : []
   const fields: Record<string, unknown> = {}
   for (const field of PAGE_FILL_FIELDS) {
@@ -183,7 +182,7 @@ function pageFields(slide: Slide): Record<string, unknown> {
           }
         : variant.properties[field]
   }
-  const defs = reachableDefs(irJsonSchema().$defs ?? {}, Object.values(fields))
+  const defs = reachableDefs(full.$defs ?? {}, Object.values(fields))
   return Object.keys(defs).length > 0 ? { ...fields, $defs: defs } : fields
 }
 
@@ -216,7 +215,7 @@ function pageComponents(ir: PptxIR, slide: Slide, theme: ThemeDefinition, pageSp
   }
   return {
     legal,
-    fullBody: legal.filter((type) => FULL_BODY_TYPES.has(type as never)),
+    fullBody: legal.filter((type) => (FULL_BODY_TYPES as ReadonlySet<string>).has(type)),
     required,
     onPage,
     recommended,
@@ -228,7 +227,14 @@ function pageComponents(ir: PptxIR, slide: Slide, theme: ThemeDefinition, pageSp
  * Every count validate applies to this page, from the sources validate reads.
  * Component-specific ceilings are listed only for components the page may hold.
  */
-function pageLimits(ir: PptxIR, slide: Slide, theme: ThemeDefinition, pacing: Pacing, legal: readonly string[]): PageLimit[] {
+function pageLimits(
+  full: JsonSchemaDocument,
+  ir: PptxIR,
+  slide: Slide,
+  theme: ThemeDefinition,
+  pacing: Pacing,
+  legal: readonly string[],
+): PageLimit[] {
   // A page that takes no component is refused any component outright, so
   // no count about components can ever come into play.
   if (legal.length === 0) return []
@@ -265,7 +271,7 @@ function pageLimits(ir: PptxIR, slide: Slide, theme: ThemeDefinition, pacing: Pa
           source: `the face's ${slot.name} slot`,
         })
       }
-      const listed = slot.accepts.filter(holdsItems)
+      const listed = slot.accepts.filter((type) => holdsItems(full, type))
       if (slot.itemCapacity !== undefined && listed.length > 0) {
         limits.push({
           level: "error",
@@ -313,8 +319,8 @@ function pageLimits(ir: PptxIR, slide: Slide, theme: ThemeDefinition, pacing: Pa
 }
 
 /** Whether a component type carries an `items` list, the list a face's item capacity counts. */
-function holdsItems(type: string): boolean {
-  const def = (irJsonSchema().$defs ?? {})[type] as { properties?: { items?: { type?: string } } } | undefined
+function holdsItems(full: JsonSchemaDocument, type: string): boolean {
+  const def = (full.$defs ?? {})[type] as { properties?: { items?: { type?: string } } } | undefined
   return def?.properties?.items?.type === "array"
 }
 
@@ -360,13 +366,14 @@ export function pageContract(ir: PptxIR, pageId: string, opts: PageContractOptio
   const validation = opts.validation ?? validateIr(ir, { theme })
   const pacing = resolveNarrative(ir.narrative as Parameters<typeof resolveNarrative>[0]).pacing
   const components = pageComponents(ir, slide, theme, pageSpec)
+  const schema = irJsonSchema()
   return {
     page: inspectedPage(ir, index, pageSpec),
     theme: theme.id,
     face: resolveEffectiveFace(ir, slide, theme).layoutId,
-    fields: pageFields(slide),
+    fields: pageFields(schema, slide),
     components,
-    limits: pageLimits(ir, slide, theme, pacing, components.legal),
+    limits: pageLimits(schema, ir, slide, theme, pacing, components.legal),
     errors: pageIssues(validation.errors, index),
     warnings: pageIssues(validation.warnings ?? [], index),
   }
