@@ -4,7 +4,7 @@
 
 <p align="center"><b>A real PowerPoint, not a picture.</b></p>
 
-<p align="center">🥇 <b>The FIRST deck-generation plugin for DeepSeek Harness (dsh)</b> 🥇</p>
+<p align="center">🥇 <b>The most powerful deck-generation plugin for DeepSeek Harness (dsh)</b> 🥇</p>
 
 <p align="center">
   <a href="https://pptwise.com">pptwise.com</a> ·
