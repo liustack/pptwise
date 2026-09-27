@@ -148,6 +148,22 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
     }
   })
 
+  it("syncs content packs before the theme list is read, and resolves names in four levels", () => {
+    for (const rel of [EN_REL, ZH_REL]) {
+      const text = read(rel)
+      // `packs sync` exits 0 without a license, so the playbook runs it
+      // unconditionally, and before `themes --json` so pack themes are listed.
+      expect(text).toMatch(/^pptwise packs sync$/m)
+      expect(text.indexOf("pptwise packs sync")).toBeLessThan(text.indexOf("pptwise themes --json"))
+      expect(text.indexOf("pptwise packs sync")).toBeLessThan(text.indexOf("### 3."))
+    }
+    expect(read(EN_REL)).toMatch(/2\. A workspace `themes\/` directory.*\n3\. Installed content packs.*\n4\. The 24 factory presets\./)
+    expect(read(ZH_REL)).toMatch(/2\. 从当前目录向上查找工作区 `themes\/`。\n3\. 已装的内容包.*\n4\. 24 个出厂预设。/)
+    for (const rel of [REF("spec.md"), REF("spec.zh-CN.md")]) {
+      expect(read(rel)).toMatch(/\n3\. (Installed content packs|已装的内容包).*\n4\. /)
+    }
+  })
+
   it("keeps launcher and pinned fallback commands synchronized", () => {
     const launcherLines = (text: string) =>
       [...text.matchAll(/^(?:bash|powershell) [^\n]*run\.(?:sh|ps1)[^\n]*$/gm)].map((match) => match[0])

@@ -226,7 +226,7 @@ describe("checkPptwiseArgs covers every command SKILL.md asks for", () => {
   const workspace = resolve(sep, "fake", "workspace")
   /** Kept off the whitelist on purpose — see run-agentic.mts's
    *  ALLOWED_SUBCOMMANDS doc comment for each one's reason. */
-  const EXCLUDED = new Set(["serve", "check-update", "self-update", "init", "images", "config"])
+  const EXCLUDED = new Set(["serve", "check-update", "self-update", "init", "images", "config", "packs"])
 
   /** `pptwise <sub> [<subsub>]` from inline code spans and fenced code
    *  lines only — prose mentions ("pptwise turns semantic JSON...") are not

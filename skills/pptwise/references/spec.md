@@ -65,11 +65,14 @@ With an existing theme and a requested color change, fork it. The fork keeps the
 pptwise theme fork acme --primary '#0B5FFF' --id acme-blue
 ```
 
-Theme names resolve in three levels:
+Theme names resolve in four levels:
 
 1. The deck directory, including `theme.json` and named theme JSON files.
 2. A workspace `themes/` directory while walking upward from the deck.
-3. Factory presets.
+3. Installed content packs under `$PPTWISE_HOME/packs/`, kept current by `pptwise packs sync`.
+4. Factory presets.
+
+A workspace file of the same name shadows a pack theme. A pack theme never shares an id with a factory preset.
 
 Bind exactly one name by writing it to `deck.spec.json` as `theme`. To freeze a workspace theme for one deck, copy the complete file into the deck directory as `theme.json` without changing its id. Deck commands then load it automatically.
 
