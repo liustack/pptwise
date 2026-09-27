@@ -500,6 +500,36 @@ const GENERIC_FAMILIES = new Set(["sans-serif", "serif", "monospace", "cursive",
 /** A family name no machine has installed, so it always lands on the default. */
 const SENTINEL_FAMILY = "PptwiseNoSuchFaceExists"
 
+/**
+ * How this machine draws a face: a digest of one probe set at the sizes and
+ * weights the fixtures use. Two machines can resolve the same family name to
+ * different builds of it (another OS release ships a revised PingFang), and
+ * those draw the same page in slightly different glyphs. The name cannot tell
+ * them apart, and byte identity needs the same glyphs, not the same name.
+ */
+export async function faceFingerprint(family: string): Promise<string> {
+  const rasterize = getPlatform().rasterizeSvg
+  if (!rasterize) throw new Error("rasterizeSvg unavailable — installNodePlatform() did not run")
+  const line = (y: number, size: number, weight: number, text: string) =>
+    `<text x="4" y="${y}" font-size="${size}" font-weight="${weight}" font-family="${family}">${text}</text>`
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="160">` +
+    line(30, 20, 400, "云雀 18.4 活跃用户") +
+    line(70, 22, 700, "云雀 18.4 活跃用户") +
+    line(130, 38, 700, "云雀 18.4") +
+    `</svg>`
+  const img = await rasterize(svg, 360, 160)
+  const bytes = Buffer.from(img.data.buffer, img.data.byteOffset, img.data.byteLength)
+  return createHash("sha256").update(bytes).digest("hex")
+}
+
+/** The face a fixture's stack resolves to here, and how this machine draws it. */
+export async function fixtureFaceIdentity(spec: FixtureSpec): Promise<{ face: string; fingerprint: string }> {
+  const face = await resolvedFixtureFace(spec)
+  const fingerprint = await faceFingerprint(face === "generic" ? SENTINEL_FAMILY : face)
+  return { face, fingerprint }
+}
+
 async function faceDrawsDistinctly(family: string): Promise<boolean> {
   const rasterize = getPlatform().rasterizeSvg
   if (!rasterize) throw new Error("rasterizeSvg unavailable — installNodePlatform() did not run")
@@ -529,13 +559,17 @@ async function writeFixture(root: string, spec: FixtureSpec): Promise<void> {
         source_sha256: fixtureSourceDigest(spec),
         recipe_sha256: fixtureRecipeDigest(spec),
         recipe: RECIPE,
-        // The one environment fact in here, and it is recorded rather than
-        // asserted: the page names a stack of CJK faces and the machine that
-        // wrote these bytes drew them with this one. A machine that resolves
-        // the stack to a different face draws the same page in different
-        // glyphs, so the fixture test compares its own probe against this and
-        // skips the pixel comparison instead of failing over a font.
-        rendered_with_face: await resolvedFixtureFace(spec),
+        // The environment facts in here, recorded rather than asserted: the
+        // page names a stack of CJK faces, and the machine that wrote these
+        // bytes drew them with this face, in glyphs with this fingerprint. A
+        // machine that resolves another face, or another build of the same
+        // one, draws the same page in different glyphs, so the fixture test
+        // compares its own probe against both and skips the pixel comparison
+        // instead of failing over a font.
+        ...(await (async () => {
+          const identity = await fixtureFaceIdentity(spec)
+          return { rendered_with_face: identity.face, rendered_with_face_fingerprint: identity.fingerprint }
+        })()),
         width: spec.width,
         height: spec.height,
       },
