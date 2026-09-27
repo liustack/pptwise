@@ -399,6 +399,20 @@ function sleep(ms: number): Promise<void> {
  *  finish, for a test asserting that no such rebuild happened. */
 const DEBOUNCE_GRACE_MS = 800
 
+/**
+ * Whether a path that runs through a plain file fails with ENOTDIR here.
+ *
+ * The tests gated on this all break the theme lookup or the watcher tree the
+ * same way: a plain file named `themes` where a directory is expected. POSIX
+ * answers a path through it with ENOTDIR, and that failure is what they
+ * drive. Windows answers it with ERROR_PATH_NOT_FOUND, which libuv reports as
+ * ENOENT, and `fs.watch` on the plain file itself succeeds. There a plain
+ * file named `themes` is simply no theme directory, to the lookup and to the
+ * watcher tree alike: no build fails and no watcher update throws, so the
+ * failure these tests start from cannot be produced at all.
+ */
+const PATH_THROUGH_A_FILE_IS_ENOTDIR = process.platform !== "win32"
+
 /** The revision once startup noise has passed. FSEvents on macOS can hand
  *  a fresh watcher an event for a write made just before it was attached
  *  (the fixture files this test wrote), and that stray event is a rebuild
@@ -1309,7 +1323,7 @@ describe("createServeServer — the theme source is compared by content", () => 
     expect(handle.status().latestRevision).toBe(settled + 2)
   })
 
-  it("on a built-in, a plain file named themes/ above the project root fails the build within one check, and its removal recovers", async () => {
+  it.skipIf(!PATH_THROUGH_A_FILE_IS_ENOTDIR)("on a built-in, a plain file named themes/ above the project root fails the build within one check, and its removal recovers", async () => {
     const { parent, cwd, irPath } = await makeAboveCeilingDeck("pptwise-serve-strict-check-")
     const handle = await startServe(irPath, { cwd })
     expect((await get(handle.port, "/")).body.toUpperCase()).toContain(BUILTIN_BRIEF_PRIMARY)
@@ -1330,7 +1344,7 @@ describe("createServeServer — the theme source is compared by content", () => 
     expect(recovered).toMatchObject({ latestRevision: settled + 2, servedRevision: settled + 2 })
   })
 
-  it("rejects when a watcher cannot be attached, leaving no watcher or timer behind", async () => {
+  it.skipIf(!PATH_THROUGH_A_FILE_IS_ENOTDIR)("rejects when a watcher cannot be attached, leaving no watcher or timer behind", async () => {
     // The deck's own theme.json answers the lookup, so the build succeeds.
     // The watch set still names `<deck>/themes/brief.theme.json`, and
     // `fs.watch` on `<deck>/themes` — a plain file — throws ENOTDIR after
@@ -1757,7 +1771,7 @@ describe("createServeServer — recovery sequences count their revisions", () =>
   })
 })
 
-describe("createServeServer — a watcher set that cannot be attached at runtime", () => {
+describe.skipIf(!PATH_THROUGH_A_FILE_IS_ENOTDIR)("createServeServer — a watcher set that cannot be attached at runtime", () => {
   // After every build the tree is handed the paths the bound theme could
   // resolve to now. A plain file named `themes` created inside the deck
   // while the server runs makes `fs.watch` on `<deck>/themes` throw
@@ -1817,7 +1831,7 @@ describe("createServeServer — a watcher set that cannot be attached at runtime
   })
 })
 
-describe("createServeServer — a deck served from above its own directory", () => {
+describe.skipIf(!PATH_THROUGH_A_FILE_IS_ENOTDIR)("createServeServer — a deck served from above its own directory", () => {
   // `pptwise serve decks/demo` from the project root: the deck directory
   // is not the directory the theme lookup starts from, so the project
   // root's own `themes/` is watched while the root itself was not. A
@@ -1930,7 +1944,7 @@ describe("createServeServer — a deck served from above its own directory", () 
   })
 })
 
-describe("pptwise serve — the CLI process", () => {
+describe.skipIf(!PATH_THROUGH_A_FILE_IS_ENOTDIR)("pptwise serve — the CLI process", () => {
   // The factory tests above run with vitest's own unhandled-rejection
   // handling in place. Only a real `pptwise serve` process shows whether
   // a rejection escapes the build loop: Node exits with code 1 on one.
@@ -2099,7 +2113,7 @@ describe("pptwise serve — the CLI process", () => {
   })
 })
 
-describe("createServeServer — a watcher event whose handling throws", () => {
+describe.skipIf(!PATH_THROUGH_A_FILE_IS_ENOTDIR)("createServeServer — a watcher event whose handling throws", () => {
   // `fs.watch` hands an event to the tree, and the tree stats the entry
   // the event names to decide whether a child watcher must be replaced.
   // That stat can throw: the directory swapped for a plain file between
@@ -2223,7 +2237,7 @@ describe("createServeServer — a watcher event whose handling throws", () => {
   })
 })
 
-describe("watchTree — a watcher opened, then failed before it was registered", () => {
+describe.skipIf(!PATH_THROUGH_A_FILE_IS_ENOTDIR)("watchTree — a watcher opened, then failed before it was registered", () => {
   it("closes the watcher when the stat after fs.watch throws, so nothing outlives the rejected tree", async () => {
     // `attach` opens the watcher, then stats the directory for its inode,
     // then registers it. A directory swapped for a plain file between the
