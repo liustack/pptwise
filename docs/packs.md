@@ -56,7 +56,7 @@ The exit code is 0 when every pack is installed, current, or skipped for its eng
 
 ## Server
 
-The base URL defaults to `https://pptwise.com`. `PPTWISE_PACKS_URL` overrides it, for a mirror or a test server. It must be an `http` or `https` URL and may carry a path prefix. Every request carries the license:
+The base URL defaults to `https://pptwise.com`. `PPTWISE_PACKS_URL` overrides it, for a mirror or a test server, and may carry a path prefix. Every request carries the license key, so the address must be `https`. Plain `http` is accepted only on this machine's loopback (`localhost`, `127.0.0.1`, `::1`). Any other `http` address is refused before a request is sent. The key goes in the `Authorization` header:
 
 ```text
 Authorization: Bearer ptw_...

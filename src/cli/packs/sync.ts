@@ -80,7 +80,17 @@ export interface PackSyncOptions {
 const SET_HINT = "pptwise license set <key>"
 const UNCHANGED = "Installed packs are unchanged."
 
-/** The pack server's base URL without a trailing slash. */
+/** The host names plain http may reach: this machine's loopback, where a
+ *  test server or a local mirror runs and the key never crosses a network. */
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"])
+
+/**
+ * The pack server's base URL without a trailing slash. Every request
+ * carries the license key, so the address must be https. The one
+ * exception is plain http on this machine's loopback (`localhost`,
+ * `127.0.0.1`, `::1`). Any other http address is refused here, before a
+ * request is made.
+ */
 export function packsServerUrl(env: NodeJS.ProcessEnv = process.env): string {
   const raw = resolveProductEnv("PACKS_URL", env) ?? DEFAULT_PACKS_URL
   let url: URL
@@ -89,8 +99,13 @@ export function packsServerUrl(env: NodeJS.ProcessEnv = process.env): string {
   } catch {
     throw new PptwiseError(`PPTWISE_PACKS_URL is not a URL: "${raw}"`)
   }
+  if (url.protocol === "http:" && !LOOPBACK_HOSTS.has(url.hostname)) {
+    throw new PptwiseError(
+      `PPTWISE_PACKS_URL "${raw}" uses plain http to ${url.host}, and the license key would travel unencrypted. Use an https address. Plain http is allowed only on localhost, 127.0.0.1, or ::1.`,
+    )
+  }
   if (url.protocol !== "https:" && url.protocol !== "http:") {
-    throw new PptwiseError(`PPTWISE_PACKS_URL must be an http or https URL, got "${raw}"`)
+    throw new PptwiseError(`PPTWISE_PACKS_URL must be an https URL, got "${raw}"`)
   }
   return raw.replace(/\/+$/, "")
 }

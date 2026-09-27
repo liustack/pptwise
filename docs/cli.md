@@ -237,7 +237,7 @@ pptwise packs list [--json]
 
 A content pack is a versioned set of extra themes unlocked by a license key. `license set` checks the key's shape and saves it to `$PPTWISE_HOME/license.json`, readable by the owner only. `license status` shows at most the key's first eight characters. `license clear` removes the key and leaves installed packs in place.
 
-`packs sync` installs every pack the license covers that is missing or at another version, after checking its sha256, its `pack.json`, its engine range, and each theme file. A pack for a newer pptwise is skipped with a note to update. Without a license it prints one line and exits 0. A failed sync leaves installed packs as they were, and exits 1. `PPTWISE_PACKS_URL` points it at another server. See [Content packs](./packs.md) for the protocol, the archive format, and the `--json` report.
+`packs sync` installs every pack the license covers that is missing or at another version, after checking its sha256, its `pack.json`, its engine range, and each theme file. A pack for a newer pptwise is skipped with a note to update. Without a license it prints one line and exits 0. A failed sync leaves installed packs as they were, and exits 1. `PPTWISE_PACKS_URL` points it at another server, which must be https (plain http only on `localhost`, `127.0.0.1`, or `::1`). See [Content packs](./packs.md) for the protocol, the archive format, and the `--json` report.
 
 ## Configuration and health
 

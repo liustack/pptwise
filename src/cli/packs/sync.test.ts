@@ -4,12 +4,12 @@ import type { AddressInfo } from "node:net"
 import { mkdtemp, readFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { buildPackZip, sha256Hex, type PackFixture } from "./__fixtures__/pack-zip"
 import { runLicenseSet } from "./license"
 import { listInstalledPacks } from "./store"
-import { runPacksList, runPacksSync, syncPacks, type PackSyncReport } from "./sync"
+import { packsServerUrl, runPacksList, runPacksSync, syncPacks, type PackSyncReport } from "./sync"
 
 installNodePlatform()
 
@@ -321,6 +321,43 @@ describe("packs sync with a license", () => {
 
   it("refuses a pack server address that is not http or https", async () => {
     await expect(syncPacks({ env: { PPTWISE_PACKS_URL: "file:///etc" }, engineVersion: ENGINE })).rejects.toThrow(/PPTWISE_PACKS_URL/)
+  })
+
+  it("refuses plain http to another machine before sending anything, since the key would travel unencrypted", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch")
+    try {
+      for (const url of ["http://example.com", "http://example.com:8080/mirror", "http://localhost.example.com", "http://10.0.0.1", "http://127.0.0.2"]) {
+        await expect(syncPacks({ env: { PPTWISE_PACKS_URL: url }, engineVersion: ENGINE }), url).rejects.toThrow(/https.*unencrypted|unencrypted.*https/)
+        await expect(runPacksSync({ json: true, env: { PPTWISE_PACKS_URL: url } }), url).rejects.toThrow(/PPTWISE_PACKS_URL/)
+      }
+      expect(fetchSpy).not.toHaveBeenCalled()
+      expect(server.requests).toEqual([])
+    } finally {
+      fetchSpy.mockRestore()
+    }
+  })
+})
+
+describe("pack server address", () => {
+  it("defaults to https://pptwise.com", () => {
+    expect(packsServerUrl({})).toBe("https://pptwise.com")
+  })
+
+  it("takes any https address, path prefix included", () => {
+    expect(packsServerUrl({ PPTWISE_PACKS_URL: "https://mirror.example.com/pptwise/" })).toBe("https://mirror.example.com/pptwise")
+    expect(packsServerUrl({ PPTWISE_PACKS_URL: "https://203.0.113.7:8443" })).toBe("https://203.0.113.7:8443")
+  })
+
+  it("takes plain http only on this machine's loopback names", () => {
+    for (const url of ["http://127.0.0.1:8787", "http://localhost", "http://localhost:3000", "http://[::1]:8787"]) {
+      expect(packsServerUrl({ PPTWISE_PACKS_URL: url }), url).toBe(url)
+    }
+  })
+
+  it("refuses plain http anywhere else", () => {
+    for (const url of ["http://example.com", "http://pptwise.com", "http://192.168.1.10:8787"]) {
+      expect(() => packsServerUrl({ PPTWISE_PACKS_URL: url }), url).toThrow(/https.*unencrypted|unencrypted.*https/)
+    }
   })
 })
 
