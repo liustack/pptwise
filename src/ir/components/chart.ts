@@ -495,7 +495,7 @@ export const traits = {
 
 export const story: DesignStory = {
   name: "Plot",
-  story: "Numbers drawn as a shape: bars, a line, an area, slices, a funnel, a from-and-to pair, a point cloud, or one arc against a target.",
+  story: "Numbers drawn as a shape: bars, stacked or 100% columns, bars under a line, a line, an area, slices, a funnel, a from-and-to pair, a point cloud, or one arc against a target.",
   positioning: "Choose it when the audience should grasp the shape of the numbers at a glance. Use data_table when exact values must be read row by row, and comparison when the attributes are words rather than figures.",
   audience: "A room that reads a trend faster than a column of digits.",
   notFor: "Several independent headline figures, which belong in kpi_cards.",
