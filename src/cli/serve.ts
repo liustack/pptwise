@@ -817,19 +817,23 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
    * and the build it triggers attaches the rest.
    */
   async function buildOnce(): Promise<void> {
-    const revision = ++latestRevision
+    // The attempt's number, outcome, and page are published together when
+    // it settles. Until then `status()` describes the last finished attempt:
+    // publishing the number up front paired it with the previous attempt's
+    // error for as long as the build ran, a failure that had not happened.
+    const revision = latestRevision + 1
+    let html: string | undefined
+    let error: string | undefined
     building = true
     try {
       try {
         const result = await buildDeckPreview(options.target, { cwd })
-        cachedHtml = injectServeClient(result.html)
-        servedRevision = revision
-        latestError = undefined
+        html = injectServeClient(result.html)
         recordThemeInputs(result.themeInputs)
       } catch (e) {
         // Every failure `buildDeckPreview` raises carries its record.
         if (!(e instanceof DeckBuildError)) throw e
-        latestError = e.message
+        error = e.message
         recordThemeInputs(e.themeInputs)
       }
       // `watchers` is assigned below, before the server listens. No build
@@ -840,13 +844,19 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
       // The build's own failure, when there was one, names the cause the
       // author can act on; a watcher failure on top of it says the same
       // thing about the same path.
-      latestError ??= messageOf(e)
+      error ??= messageOf(e)
     } finally {
+      latestRevision = revision
+      latestError = error
+      if (html !== undefined) {
+        cachedHtml = html
+        servedRevision = revision
+      }
       buildGeneration++
       building = false
     }
-    if (latestError === undefined) broadcast("reload", { revision })
-    else broadcast("error", { revision, message: latestError })
+    if (error === undefined) broadcast("reload", { revision })
+    else broadcast("error", { revision, message: error })
   }
 
   // Builds run strictly one after another. Two overlapping builds could

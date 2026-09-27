@@ -767,6 +767,39 @@ describe("createServeServer — build status", () => {
     })
     sse.close()
   })
+
+  it("keeps reporting the last finished attempt while the next one is still building", async () => {
+    const dir = await makeDir()
+    const irPath = join(dir, "deck.json")
+    await writeFile(irPath, JSON.stringify(VALID_IR))
+    const handle = await startServe(irPath, { cwd: dir })
+    const settled = await settledRevision(handle)
+
+    await writeFile(irPath, "{not valid json")
+    await handle.rebuild()
+    const failed = handle.status()
+    expect(failed).toMatchObject({ latestRevision: settled + 1, servedRevision: settled, latestOk: false })
+
+    // The fix lands, and the rebuild that picks it up is held before it
+    // reads the source. Until it settles, status must still describe the
+    // failed attempt: a poll here used to see the new attempt's number
+    // beside the old attempt's error, a failure that never happened.
+    await writeFile(irPath, JSON.stringify(VALID_IR))
+    const gate = holdReads({ phase: "before", scope: "build", kind: "source", once: true })
+    const building = handle.rebuild()
+    await gate.entered
+    expect(handle.status()).toEqual(failed)
+    const midBuild = await get(handle.port, "/")
+    expect(midBuild.headers["x-pptwise-latest-revision"]).toBe(String(settled + 1))
+    gate.release()
+    await building
+
+    expect(handle.status()).toEqual({
+      latestRevision: settled + 2,
+      servedRevision: settled + 2,
+      latestOk: true,
+    })
+  })
 })
 
 describe("createServeServer — rebuild()", () => {
