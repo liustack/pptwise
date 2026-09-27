@@ -2292,6 +2292,10 @@ describe.skipIf(!PATH_THROUGH_A_FILE_IS_ENOTDIR)("createServeServer — a watche
       (e) => errors.push(e),
     )
     try {
+      // FSEvents on macOS starts a fresh watcher's stream a moment after
+      // `fs.watch` returns, and a directory made inside that moment is
+      // never reported (about 1 in 20 runs), so the test waits it out.
+      await sleep(DEBOUNCE_GRACE_MS)
       const rotated = swapThemesOnBriefEvent(themes)
       await mkdir(join(themes, "brief"))
       await pollUntil(async () => (errors.length > 0 ? true : undefined))
