@@ -123,6 +123,8 @@ pptwise schema --component <type>
 - 带宽承载数量并发生分支与汇合时用 `sankey`：宽度即论据，缺口显示未核算的流量。分支表达决策而非数量时用 `flowchart`。
 - 需要逐行读取精确值时用 `data_table`，需要一眼看懂数值形态时用 `chart`，定性属性对照用 `comparison`。
 - 一个值对一个目标用 `chart` 内的 `gauge`，多个完成度百分比用 `progress_donuts`，一个或多个独立头条数字用 `kpi_cards`。
+- 每个类别的总量和它由哪几块组成都要看时用 `chart` 内的 `stacked`。只比构成、各类别总量相差太大没法比分块时用 `percent_stacked`，系列要并排比而不是相加时用 `bar`。
+- 两个指标共用一条类别轴时用 `chart` 内的 `combo`，比如按季度看收入和毛利率。单位不同的那个指标放到 `axis: "right"`。两个指标的类别对不上时拆成两张图。
 
 - `logo_wall` 用在一串组织名字本身就是论据、每个名字权重相同时。照片用 `image_grid`，每个名字都要配一句说明用 `row_cards`。
 
@@ -137,6 +139,27 @@ pptwise schema --component <type>
 - 要把比例还原成数得过来的人时用 `pictogram`。比例本身是主角时用 `progress_donuts`。
 
 - 重点是「哪些词反复出现」时用 `word_cloud`。次数要被读出来时用 `chart`，一排等重短标签用 `tag_row`。
+
+## 图表类型
+
+`chart_type` 决定画法。其中三种对系列有别的类型没有的要求：
+
+- `stacked` 与 `percent_stacked` 需要两个或以上系列，落在同一组类别上。`percent_stacked` 不接受负值，每个类别的合计必须大于零。
+- `combo` 里写了 `plot: "line"` 的系列画成线，其余画成柱，线和柱至少各一个。写了 `axis: "right"` 的系列读右侧那条自有刻度的轴，轴标题与单位写在 `axes.y2_title` 和 `axes.y2_unit`。
+
+```json
+{
+  "type": "chart",
+  "chart_type": "combo",
+  "axes": { "y_title": "收入", "y_unit": "万元", "y2_title": "毛利率", "y2_unit": "%" },
+  "series": [
+    { "name": "收入", "data": [{ "x": "第一季度", "y": 720 }, { "x": "第二季度", "y": 820 }] },
+    { "name": "毛利率", "plot": "line", "axis": "right", "data": [{ "x": "第一季度", "y": 31.5 }, { "x": "第二季度", "y": 29.8 }] }
+  ]
+}
+```
+
+`stacked` 在每根柱上印合计，`percent_stacked` 在图上不印数字，`combo` 完全不印数字。观众必须读准的数字写进标题或放进 `data_table`。
 
 `architecture.layers` 默认从上向下绘制。作者按基座优先的顺序写作时，设置 `direction: "bottom_up"`，不要手工倒置数组。
 

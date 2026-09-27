@@ -118,6 +118,8 @@ The table gives each component's normal kind home. A component may serve more th
 - Use `sankey` when band width carries an amount through branches and merges, and a gap should show where a flow is not accounted for. Use `flowchart` when branches carry decisions rather than quantities.
 - Use `data_table` when exact values must be read row by row. Use `chart` when the audience should grasp a numeric shape at a glance. Use `comparison` for qualitative attributes.
 - Use `gauge` inside `chart` for one value against one target. Use `progress_donuts` for several completion rates and `kpi_cards` for one or more independent headline values.
+- Use `stacked` inside `chart` when each category's total and the parts that make it up both matter. Use `percent_stacked` when only the make-up matters and the totals differ too much to compare the parts, and `bar` when the series should stand side by side rather than add up.
+- Use `combo` inside `chart` when two measures share one category axis, such as revenue and margin by quarter. Put the measure with a different unit on `axis: "right"`. Use two charts when the measures do not share their categories.
 
 - Use `logo_wall` when a set of organization names is itself the claim and every name carries the same weight. Use `image_grid` for photographs and `row_cards` when each name needs a line of its own.
 
@@ -132,6 +134,27 @@ The table gives each component's normal kind home. A component may serve more th
 - Use `pictogram` to land a rate as a countable number of people. Use `progress_donuts` when the rate itself is the subject.
 
 - Use `word_cloud` when the point is which words keep coming back. Use `chart` when the counts must be read and `tag_row` for a line of labels that carry no weight against each other.
+
+## Chart types
+
+`chart_type` picks the drawing. Three of them hold their series to rules the others do not:
+
+- `stacked` and `percent_stacked` need two or more series over the same categories. `percent_stacked` takes no negative values, and every category must add up above zero.
+- `combo` draws a series as a line when it sets `plot: "line"` and as bars otherwise, and needs at least one of each. A series with `axis: "right"` gets its own scale on a right-hand axis, named by `axes.y2_title` and `axes.y2_unit`.
+
+```json
+{
+  "type": "chart",
+  "chart_type": "combo",
+  "axes": { "y_title": "Revenue", "y_unit": "M", "y2_title": "Gross margin", "y2_unit": "%" },
+  "series": [
+    { "name": "Revenue", "data": [{ "x": "Q1", "y": 72 }, { "x": "Q2", "y": 82 }] },
+    { "name": "Gross margin", "plot": "line", "axis": "right", "data": [{ "x": "Q1", "y": 31.5 }, { "x": "Q2", "y": 29.8 }] }
+  ]
+}
+```
+
+`stacked` prints each column's total, `percent_stacked` prints no numbers on the plot, and `combo` prints none at all. When the audience must read a figure exactly, put it in the heading or a `data_table`.
 
 `architecture.layers` paints top to bottom by default. Set `direction: "bottom_up"` when the authored order should begin at the foundation. Keep the array in narrative order.
 
