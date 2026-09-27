@@ -14,7 +14,7 @@ import { CANVAS_H_PX, CANVAS_W_PX } from "../constants"
 import { PptwiseError } from "../errors"
 import { VERSION } from "../version"
 import type { PptxIR } from "../ir"
-import type { ThemeDefinition } from "../themes/definitions"
+import { compileThemeDefinition, type ThemeDefinition } from "../themes/definitions"
 import { componentJsonSchema } from "../ir/json-schema"
 import { PPTX_ICON_NAMES } from "../icons/catalog"
 import { kindJsonSchema } from "../kind-components"
@@ -976,7 +976,10 @@ export async function runSchema(opts: SchemaCommandOptions = {}): Promise<string
       deckDir = await schemaDeckDir(cwd, opts.deck, opts.theme)
     }
     const resolved = await resolveThemeSelection(opts.theme, { startDir: cwd, deckDir })
-    schema = kindJsonSchema(opts.kind, { theme: resolved?.definition })
+    schema = kindJsonSchema(opts.kind, {
+      theme: resolved?.definition,
+      extraThemes: resolved === undefined ? await readablePackDefinitions() : undefined,
+    })
   } else {
     schema = irJsonSchema()
   }
@@ -1005,6 +1008,36 @@ interface PackErrorRow {
   source: "pack"
   pack: string
   error: string
+}
+
+/**
+ * Every theme of every installed pack that can be read, compiled, for
+ * `schema --kind` without a theme. A pack that cannot be read is left out
+ * with a note on stderr, the way `themes` lists it as an error rather than
+ * failing: the answer for the presets and the readable packs still stands,
+ * and `pptwise themes` or `packs list` names what is wrong with it.
+ */
+async function readablePackDefinitions(): Promise<ThemeDefinition[]> {
+  const definitions: ThemeDefinition[] = []
+  for (const id of await installedPackIds()) {
+    const dir = join(packsRoot(), id)
+    try {
+      const pack = await readInstalledPack(dir, id)
+      const compiled: ThemeDefinition[] = []
+      for (const theme of pack.themes) {
+        try {
+          compiled.push(compileThemeDefinition(await readThemeFile(theme.path)))
+        } catch (e) {
+          throw damagedPackError(dir, e instanceof Error ? e.message : String(e))
+        }
+      }
+      definitions.push(...compiled)
+    } catch (e) {
+      if (!(e instanceof PptwiseError)) throw e
+      process.stderr.write(`schema --kind: left out ${e.message}\n`)
+    }
+  }
+  return definitions
 }
 
 /** One pack's rows: its themes, or a single error entry when the pack or
