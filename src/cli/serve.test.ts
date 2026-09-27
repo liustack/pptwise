@@ -817,6 +817,36 @@ describe("createServeServer — build status", () => {
       latestOk: true,
     })
   })
+
+  it("keeps a failed attempt's error on that attempt's own number while the next one builds", async () => {
+    // The symptom as it was seen: after a failure, a poll during the next
+    // build read the new number beside the old error. The source is broken
+    // once, the watcher's build for that write is waited out, and nothing is
+    // written after that, so the only build in flight is the held one.
+    const dir = await makeDir()
+    const irPath = join(dir, "deck.json")
+    await writeFile(irPath, JSON.stringify(VALID_IR))
+    const handle = await startServe(irPath, { cwd: dir })
+    await settledRevision(handle)
+    await writeFile(irPath, "{not valid json")
+    await pollUntil(async () => (handle.status().latestOk ? undefined : true))
+    await sleep(DEBOUNCE_GRACE_MS)
+    await handle.rebuild()
+    const failed = handle.status()
+    expect(failed).toMatchObject({ latestOk: false, error: expect.stringMatching(/not valid JSON/) })
+    expect(failed.servedRevision).toBeLessThan(failed.latestRevision)
+
+    const gate = holdReads({ phase: "before", scope: "build", kind: "source", once: true })
+    const building = handle.rebuild()
+    try {
+      await gate.entered
+      expect(handle.status()).toEqual(failed)
+    } finally {
+      gate.release()
+      await building
+    }
+    expect(handle.status()).toMatchObject({ latestRevision: failed.latestRevision + 1, latestOk: false })
+  })
 })
 
 describe("createServeServer — rebuild()", () => {
