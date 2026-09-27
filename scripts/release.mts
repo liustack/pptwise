@@ -93,10 +93,14 @@ async function waitForReleaseRun(tag: string): Promise<string> {
   stop(`no release.yml run appeared for ${tag}. Check the Actions tab.`)
 }
 
+/** npm serves package metadata through a CDN with `cache-control: max-age=300`,
+ *  so a version published a moment ago can stay invisible for up to five
+ *  minutes. Seven minutes of polling covers that, and `--prefer-online` keeps
+ *  the local npm cache from adding its own staleness on top. */
 async function waitForNpm(version: string): Promise<boolean> {
-  for (let i = 0; i < 24; i++) {
+  for (let i = 0; i < 84; i++) {
     try {
-      if (run("npm", ["view", `${PKG_NAME}@${version}`, "version"]) === version) return true
+      if (run("npm", ["view", `${PKG_NAME}@${version}`, "version", "--prefer-online"]) === version) return true
     } catch {
       // Not visible yet: the registry takes a moment after the upload.
     }
