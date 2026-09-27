@@ -432,8 +432,8 @@ writeFileSync(
       {
         type: "kpi_cards",
         items: [
-          { value: "13", label: "built-in themes" },
-          { value: "33", label: "semantic component types" },
+          { value: "24", label: "built-in themes" },
+          { value: "62", label: "semantic component types" },
         ],
       },
     ],
@@ -457,7 +457,7 @@ const finalPptxPath = join(OUT, "deck-dir-final.pptx")
 console.log(sh("node", ["dist/cli.js", "render", deckDir, "-o", finalPptxPath]))
 const finalZip = await JSZip.loadAsync(readFileSync(finalPptxPath))
 const finalSlide3 = await finalZip.file("ppt/slides/slide3.xml")!.async("string")
-if (!finalSlide3.includes("13") || !finalSlide3.includes("built-in themes")) {
+if (!finalSlide3.includes("24") || !finalSlide3.includes("built-in themes")) {
   throw new Error("e2e: deck-dir leg — filled page content not found in slide3.xml after the normal render")
 }
 console.log("deck-dir leg OK (assemble + draft gate + fill + normal render)")
