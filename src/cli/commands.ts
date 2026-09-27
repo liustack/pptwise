@@ -21,6 +21,7 @@ import { kindJsonSchema } from "../kind-components"
 import { disassembleDeck, type PageContent } from "../spec/assemble"
 import { formatInvalidSpecError, specJsonSchema, resolveSpecThemeId, validateSpec, type DeckSpec } from "../spec"
 import { pageComponentContract, pageContract } from "../inspect/page-contract"
+import { pageFit } from "../inspect/page-fit"
 import { AUDIENCE_VALUES, PACING_BUDGETS, STRATEGY_DEFINITIONS, NARRATIVE_PRESETS, resolveNarrative, type NarrativeProfile } from "../narrative"
 import { auditDeck, type AuditChecks, type AuditFinding, type AuditReport } from "../audit/deck-audit"
 import { buildAssetBrief, type AssetBrief, type AssetBriefItem } from "../render/asset-brief"
@@ -41,7 +42,13 @@ import {
   SPEC_FILENAME,
   THEME_FILENAME,
 } from "./deck-dir"
-import { formatPageComponentContract, formatPageContract } from "./inspect-format"
+import {
+  formatPageComponentContract,
+  formatPageContract,
+  formatPageFitReport,
+  type InspectFit,
+  type PageFitReport,
+} from "./inspect-format"
 import { writeThemeFile } from "./theme-write"
 import { loadIrFile, resolveLocalAssets } from "./load-ir"
 import { buildContactSheetHtml, buildPreviewHtml } from "./preview-html"
@@ -690,6 +697,8 @@ export interface InspectOptions {
   page?: string
   /** Expand this one component for the page instead of the whole contract. */
   component?: string
+  /** Draw the page and report whether its content fits, instead of the whole contract. */
+  fit?: boolean
   /** Print the contract object as one line of JSON. */
   json?: boolean
   cwd?: string
@@ -702,9 +711,10 @@ export interface InspectCliResult {
 }
 
 /**
- * `pptwise inspect <deck> --page <id> [--component <type>] [--json]`: one
- * page's fill contract (`../inspect/page-contract.ts`), or one component of
- * it expanded with its schema.
+ * `pptwise inspect <deck> --page <id> [--component <type> | --fit] [--json]`:
+ * one page's fill contract (`../inspect/page-contract.ts`), one component of
+ * it expanded with its schema, or the page drawn and checked for what it
+ * loses (`../inspect/page-fit.ts`).
  *
  * The deck resolves the way `validate` resolves it: the same target lookup,
  * the same theme inputs, the same workspace stock images. Only the page's
@@ -718,6 +728,7 @@ export async function runInspect(target: string, opts: InspectOptions): Promise<
   if (opts.page === undefined || opts.page.length === 0) {
     throw new PptwiseError("pass --page <id>: the id of one page in deck.spec.json")
   }
+  if (opts.component !== undefined && opts.fit) throw new PptwiseError("pass --component or --fit, not both")
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await readConfigs(cwd)
   const location = await locateDeckTarget(target, cwd, projectHit, userHit)
@@ -739,11 +750,34 @@ export async function runInspect(target: string, opts: InspectOptions): Promise<
   }
   const contract = pageContract(ir, opts.page, contractOpts)
   const file = `${PAGES_DIRNAME}/${opts.page}.json`
+  if (opts.fit) {
+    let fit: InspectFit
+    if (!contract.page.filled) {
+      fit = { checked: false, reason: "the page is not written yet" }
+    } else if (!validation.ok) {
+      fit = { checked: false, reason: "the page has validate errors; fix them first" }
+    } else {
+      // The input the export draws: the validated deck, local assets read in.
+      await resolveLocalAssets(validation.ir!, loaded.baseDir, loaded.workspaceAssetsDir)
+      fit = { checked: true, ...pageFit(validation.ir!, opts.page, { theme }) }
+    }
+    const report: PageFitReport = {
+      page: { ...contract.page, file },
+      errors: contract.errors,
+      warnings: contract.warnings,
+      fit,
+    }
+    return {
+      output: opts.json ? JSON.stringify(report) : formatPageFitReport(report, contract.theme),
+      failed: contract.errors.length > 0 || (fit.checked && !fit.fits),
+    }
+  }
   const output = opts.json
     ? JSON.stringify({ ...contract, page: { ...contract.page, file } })
     : formatPageContract(contract, file)
   return { output, failed: contract.errors.length > 0 }
 }
+
 
 // ── asset-brief ──────────────────────────────────────────────────────────
 

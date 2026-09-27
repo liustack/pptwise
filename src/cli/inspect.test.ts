@@ -7,7 +7,7 @@ import { installNodePlatform } from "@/platform/node"
 import { componentJsonSchema } from "../ir/json-schema"
 import { pageContract } from "../inspect/page-contract"
 import { getThemeDefinition } from "../themes/definitions"
-import { runInspect, runValidate } from "./commands"
+import { runInspect, runRender, runValidate } from "./commands"
 import { readDeckDir } from "./deck-dir"
 
 const originalPptwiseHome = process.env.PPTWISE_HOME
@@ -175,5 +175,85 @@ describe("runInspect --component", () => {
     const dir = await deck({})
     await expect(runInspect(dir, { page: "number", component: "chart" })).rejects.toThrow(/page "number" does not draw chart\. It draws: /)
     await expect(runInspect(dir, { page: "number", component: "quote" })).rejects.toThrow(/unknown component type "quote"/)
+  })
+})
+
+describe("runInspect --fit", () => {
+  const LONG = "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及跨可用区容灾演练的完整落地路径说明"
+  const FIT_SPEC = {
+    version: "1",
+    narrative: { pacing: "spacious" },
+    theme: "brief",
+    filename: "fit-test",
+    pages: [
+      { id: "open", type: "cover", heading: "Quarterly review" },
+      { id: "fits", type: "content", kind: "data", heading: "Revenue mix" },
+      { id: "blocks", type: "content", kind: "points", heading: "Too much" },
+      { id: "items", type: "content", kind: "points", heading: "Long list" },
+      { id: "close", type: "ending", heading: "Decisions" },
+    ],
+  }
+  const FIT_PAGES: Record<string, unknown> = {
+    open: {},
+    fits: { components: [CHART] },
+    blocks: { components: Array.from({ length: 8 }, () => ({ type: "paragraph", text: LONG.repeat(3) })) },
+    items: { components: [{ type: "bullets", items: Array.from({ length: 40 }, (_, i) => `要点 ${i}`) }] },
+    close: {},
+  }
+
+  async function fitDeck(pages: Record<string, unknown>): Promise<string> {
+    const dir = await mkdtemp(join(tmpdir(), "pptwise-inspect-fit-"))
+    await writeFile(join(dir, "deck.spec.json"), JSON.stringify(FIT_SPEC))
+    await mkdir(join(dir, "pages"))
+    for (const [id, content] of Object.entries(pages)) await writeFile(join(dir, "pages", `${id}.json`), JSON.stringify(content))
+    return dir
+  }
+
+  it("gives each page the verdict render's content-drop gate gives it (T8)", async () => {
+    const dir = await fitDeck(FIT_PAGES)
+    const refs: string[] = []
+    for (const [number, page] of FIT_SPEC.pages.entries()) {
+      const { output, failed } = await runInspect(dir, { page: page.id, fit: true, json: true })
+      const report = JSON.parse(output)
+      expect(report.fit.checked, page.id).toBe(true)
+      expect(failed, page.id).toBe(!report.fit.fits)
+      if (!report.fit.fits) {
+        refs.push(`${page.id} (page ${number + 1}): ${report.fit.dropped.map((d: { what: string }) => d.what).join(", ")}`)
+      }
+    }
+    expect(refs.map((ref) => ref.split(" ")[0])).toEqual(["blocks", "items"])
+    await expect(runRender(dir, { output: join(dir, "out.pptx") })).rejects.toThrow(
+      `deck drops content that does not fit the content area, on 2 pages — ${refs.join("; ")}. `,
+    )
+    // Validate keeps its structural boundary: the same deck passes it.
+    await expect(runValidate(dir)).resolves.toMatch(/^OK/)
+  })
+
+  it("prints the verdict and what to do without --json", async () => {
+    const dir = await fitDeck(FIT_PAGES)
+    const blocks = await runInspect(dir, { page: "blocks", fit: true })
+    expect(blocks.failed).toBe(true)
+    expect(blocks.output).toMatch(/fit: does not fit — \d+ content blocks dropped/)
+    expect(blocks.output).toContain("render refuses a deck that drops content")
+    const fits = await runInspect(dir, { page: "fits", fit: true })
+    expect(fits.failed).toBe(false)
+    expect(fits.output).toContain("fit: fits, nothing dropped")
+  })
+
+  it("does not draw a page validate refuses, or a page not written yet", async () => {
+    const dir = await fitDeck({ fits: { components: [{ type: "bullets", items: ["测".repeat(40)] }] } })
+    const refused = await runInspect(dir, { page: "fits", fit: true, json: true })
+    expect(refused.failed).toBe(true)
+    const report = JSON.parse(refused.output)
+    expect(report.errors.length).toBeGreaterThan(0)
+    expect(report.fit).toEqual({ checked: false, reason: "the page has validate errors; fix them first" })
+    const unwritten = await runInspect(dir, { page: "blocks", fit: true, json: true })
+    expect(unwritten.failed).toBe(false)
+    expect(JSON.parse(unwritten.output).fit).toEqual({ checked: false, reason: "the page is not written yet" })
+  })
+
+  it("takes --fit or --component, not both", async () => {
+    const dir = await fitDeck(FIT_PAGES)
+    await expect(runInspect(dir, { page: "fits", fit: true, component: "chart" })).rejects.toThrow(/--component or --fit, not both/)
   })
 })

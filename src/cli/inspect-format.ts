@@ -4,6 +4,18 @@
  * facts as lines a person can scan.
  */
 import type { InspectedPage, PageComponentContract, PageContract, PageIssue, PageLimit } from "../inspect/page-contract"
+import type { PageFit } from "../inspect/page-fit"
+
+/** `pptwise inspect --fit`'s verdict: the drawn result, or why the page was not drawn. */
+export type InspectFit = ({ checked: true } & PageFit) | { checked: false; reason: string }
+
+/** What `pptwise inspect --fit` reports for one page. */
+export interface PageFitReport {
+  page: InspectedPage & { file: string }
+  errors: PageIssue[]
+  warnings: PageIssue[]
+  fit: InspectFit
+}
 
 /** `page growth (2 of 5): content, kind "data", theme "brief"` plus the locked heading and hints. */
 function pageHeader(page: InspectedPage, theme: string | undefined, file: string): string[] {
@@ -96,5 +108,27 @@ export function formatPageComponentContract(expanded: PageComponentContract): st
     )
   }
   lines.push("schema:", JSON.stringify(expanded.schema, null, 2))
+  return lines.join("\n")
+}
+
+/** The report `pptwise inspect <deck> --page <id> --fit` prints without `--json`. */
+export function formatPageFitReport(report: PageFitReport, theme: string): string {
+  const lines = pageHeader(report.page, theme, report.page.file)
+  const { fit } = report
+  if (!fit.checked) {
+    lines.push(`fit: not checked, ${fit.reason}`)
+  } else if (fit.fits) {
+    lines.push("fit: fits, nothing dropped")
+  } else {
+    lines.push(
+      `fit: does not fit — ${fit.dropped.map((drop) => drop.what).join(", ")} dropped. ` +
+        "render refuses a deck that drops content: shorten the page or split it in two",
+    )
+  }
+  if (fit.checked) {
+    for (const text of fit.truncated) lines.push(`  text cut to fit: "${text}" (render allows it, audit reports it)`)
+    if (fit.steppedAside) lines.push("  stepped aside: the theme's face declined this page, and a plainer layout drew all of it")
+  }
+  lines.push(...issueBlock("errors", report.errors), ...issueBlock("warnings", report.warnings))
   return lines.join("\n")
 }

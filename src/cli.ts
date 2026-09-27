@@ -156,11 +156,20 @@ program
   .argument("<deck>", "deck project directory, or bare name under ~/.pptwise/decks")
   .requiredOption("--page <id>", "the page id in deck.spec.json")
   .option("--component <type>", "expand one component the page may hold: its story, its limits on this page, and its schema")
-  .option("--json", "print the contract as one line of JSON")
-  .addHelpText("after", "\nExamples:\n  $ pptwise inspect my-deck/ --page growth\n  $ pptwise inspect my-deck/ --page growth --component chart")
-  .action(async (target: string, opts: { page: string; component?: string; json?: boolean }) => {
+  .option("--fit", "draw the page and report whether its content fits, as render's content-drop gate would judge it — exits 1 when it does not")
+  .option("--json", "print the report as one line of JSON")
+  .addHelpText(
+    "after",
+    "\nExamples:\n  $ pptwise inspect my-deck/ --page growth\n  $ pptwise inspect my-deck/ --page growth --component chart\n  $ pptwise inspect my-deck/ --page growth --fit",
+  )
+  .action(async (target: string, opts: { page: string; component?: string; fit?: boolean; json?: boolean }) => {
     try {
-      const { output, failed } = await runInspect(target, { page: opts.page, component: opts.component, json: opts.json })
+      const { output, failed } = await runInspect(target, {
+        page: opts.page,
+        component: opts.component,
+        fit: opts.fit,
+        json: opts.json,
+      })
       console.log(output)
       if (failed) process.exit(1)
     } catch (e) {
