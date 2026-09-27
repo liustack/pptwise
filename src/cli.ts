@@ -25,6 +25,7 @@ import {
 import { runConfigSet, runConfigShow } from "./cli/config-cmd"
 import { runDoctor } from "./cli/doctor"
 import { runImagesFetch, runImagesGenerate, runImagesList, runImagesSearch } from "./cli/images"
+import { runLicenseClear, runLicenseSet, runLicenseStatus } from "./cli/packs/license"
 import { DEFAULT_PORT, runServe } from "./cli/serve"
 import { checkForUpdate, createSelfUpdater } from "./cli/update"
 import { VERSION } from "./version"
@@ -357,6 +358,38 @@ config
   .action(async () => {
     try {
       console.log(await runConfigShow())
+    } catch (e) {
+      fail(e)
+    }
+  })
+
+const license = program.command("license").description("The license key that unlocks content packs")
+license
+  .command("set <key>")
+  .description("Save a license key to $PPTWISE_HOME/license.json (readable by you only)")
+  .action(async (key: string) => {
+    try {
+      console.log(await runLicenseSet(key))
+    } catch (e) {
+      fail(e)
+    }
+  })
+license
+  .command("status")
+  .description("Show whether a license key is configured (first 8 characters only)")
+  .action(async () => {
+    try {
+      console.log(await runLicenseStatus())
+    } catch (e) {
+      fail(e)
+    }
+  })
+license
+  .command("clear")
+  .description("Remove the saved license key. Installed packs stay in place")
+  .action(async () => {
+    try {
+      console.log(await runLicenseClear())
     } catch (e) {
       fail(e)
     }
