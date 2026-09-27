@@ -26,6 +26,15 @@
   <img src="https://img.shields.io/badge/no%20API%20key-to%20render-4c1?style=flat-square" alt="No API key to render">
 </p>
 
+## What it makes
+
+<table>
+  <tr><td><img src="assets/gallery/data-charts-02.png" alt="Grouped bar chart of revenue against target by quarter"></td><td><img src="assets/gallery/quarterly-review-zh-05.png" alt="Profit bridge from Q1 to Q2 drawn as a waterfall chart, in Chinese"></td><td><img src="assets/gallery/strategy-analysis-02.png" alt="SWOT grid for a market entry analysis"></td></tr>
+  <tr><td><img src="assets/gallery/team-onboarding-04.png" alt="Four-step chevron process for how a change ships"></td><td><img src="assets/gallery/data-charts-04.png" alt="Donut chart of revenue by segment"></td><td><img src="assets/gallery/team-onboarding-02.png" alt="Team cards with names, roles, and groups"></td></tr>
+</table>
+
+Pages from the decks in [`examples/`](./examples), rendered by the engine. In the exported file every bar, label, and card is a native PowerPoint shape with editable text. Three of the decks come ready to open: [product pitch](https://pptwise.com/samples/product-pitch.pptx) · [charts](https://pptwise.com/samples/data-charts.pptx) · [quarterly review, in Chinese](https://pptwise.com/samples/quarterly-review-zh.pptx).
+
 ## Talk to us
 
 Issues are welcome any time. [Open one](https://github.com/liustack/pptwise/issues/new/choose), or follow **[@liustack](https://x.com/liustack)** on X. Share what you made with pptwise, which harness you use, and what the next release should solve. New releases land there first.
