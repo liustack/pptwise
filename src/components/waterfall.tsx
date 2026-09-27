@@ -3,6 +3,7 @@ import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
+import { mostlyChinese } from "../lib/text-script"
 
 type WaterfallComponent = Extract<Component, { type: "waterfall" }>
 type WaterfallItem = WaterfallComponent["items"][number]
@@ -87,6 +88,8 @@ const CONNECTOR_DASH = "4 3"
 const NATURAL_H = 420
 
 const AUTO_TOTAL_LABEL = "Total"
+/** The automatic total when the bars are labelled in Chinese (`mostlyChinese`). */
+const AUTO_TOTAL_LABEL_ZH = "合计"
 
 type BarKind = "rise" | "fall" | "total"
 
@@ -115,7 +118,8 @@ function computeBars(items: readonly WaterfallItem[]): Bar[] {
   })
   const last = items[items.length - 1]
   if (!last || last.kind !== "total") {
-    bars.push({ label: AUTO_TOTAL_LABEL, start: 0, end: running, kind: "total", displayValue: running })
+    const label = mostlyChinese(items.map((item) => item.label)) ? AUTO_TOTAL_LABEL_ZH : AUTO_TOTAL_LABEL
+    bars.push({ label, start: 0, end: running, kind: "total", displayValue: running })
   }
   return bars
 }

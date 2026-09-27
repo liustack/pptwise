@@ -43,26 +43,6 @@ describe("bmc component", () => {
     expect(container.querySelectorAll("rect")).toHaveLength(9)
   })
 
-  it("renders all nine block titles", () => {
-    const { container } = svg(bmc.render(basic, { x: 0, y: 0, w: 1088 }, ctx))
-    const blob = Array.from(container.querySelectorAll("text"))
-      .map((t) => t.textContent ?? "")
-      .join(" ")
-    for (const label of [
-      "Key Partners",
-      "Key Activities",
-      "Key Resources",
-      "Value Propositions",
-      "Customer Relationships",
-      "Channels",
-      "Customer Segments",
-      "Cost Structure",
-      "Revenue Streams",
-    ]) {
-      expect(blob).toContain(label)
-    }
-  })
-
   it("renders every item across all nine blocks", () => {
     const { container } = svg(bmc.render(basic, { x: 0, y: 0, w: 1088 }, ctx))
     const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
@@ -136,5 +116,51 @@ describe("bmc component", () => {
       <svg xmlns="http://www.w3.org/2000/svg">{bmc.render(basic, { x: 0, y: 0, w: 1088 }, ctx)}</svg>,
     )
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
+  })
+})
+
+describe("bmc block titles follow the language of the content", () => {
+  // Joined with spaces: a long title such as Customer Relationships wraps
+  // onto two text lines in its block.
+  const titles = (c: Parameters<typeof bmc.render>[0]) =>
+    Array.from(svg(bmc.render(c, { x: 0, y: 0, w: 1088 }, ctx)).container.querySelectorAll("text")).map(
+      (t) => t.textContent ?? "",
+    )
+
+  it("titles Chinese content in Chinese", () => {
+    const text = titles(basic).join(" ")
+    for (const title of ["重要合作", "关键业务", "核心资源", "价值主张", "客户关系", "渠道通路", "客户细分", "成本结构", "收入来源"]) {
+      expect(text).toContain(title)
+    }
+    expect(text).not.toContain("Key Partners")
+  })
+
+  it("titles English content in English", () => {
+    const text = titles({
+      type: "bmc",
+      key_partners: ["Suppliers"],
+      key_activities: ["R&D"],
+      key_resources: ["Engineers"],
+      value_propositions: ["One stop shop"],
+      customer_relationships: ["Account managers"],
+      channels: ["Direct sales"],
+      customer_segments: ["Mid-size firms"],
+      cost_structure: ["Cloud"],
+      revenue_streams: ["Subscriptions"],
+    }).join(" ")
+    for (const title of [
+      "Key Partners",
+      "Key Activities",
+      "Key Resources",
+      "Value Propositions",
+      "Customer Relationships",
+      "Channels",
+      "Customer Segments",
+      "Cost Structure",
+      "Revenue Streams",
+    ]) {
+      expect(text).toContain(title)
+    }
+    expect(text).not.toContain("重要合作")
   })
 })
