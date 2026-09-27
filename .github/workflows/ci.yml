@@ -22,6 +22,11 @@ jobs:
     # POSIX permission-bit tests (chmod 0600, X_OK, group/other-readable) use
     # skipIf(win32). Those skips are not product bugs: Windows has no POSIX
     # permission bits, so chmod 0600 assertions would mis-fire on windows-latest.
+    # A test that only needs a path this process cannot read or write gets the
+    # Windows form of that instead (src/test-permissions.ts: a handle that
+    # shares nothing, or an icacls deny). The serve tests that drive ENOTDIR
+    # from a plain file named themes/ are POSIX-only as well: Windows reports
+    # a path through a plain file as ENOENT, so their failure cannot happen.
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
