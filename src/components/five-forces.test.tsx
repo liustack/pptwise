@@ -297,12 +297,21 @@ describe("five_forces panel titles follow the language of the content", () => {
       buyer_power: { items: ["Concentrated buyers"] },
       substitutes: { items: ["Free open source"] },
     })
-    expect(text).toContain("Supplier Power")
+    for (const title of [
+      "Competitive Rivalry",
+      "Threat of New Entrants",
+      "Supplier Power",
+      "Buyer Power",
+      "Threat of Substitutes",
+    ]) {
+      expect(text).toContain(title)
+    }
   })
 
   it("keeps a title the author wrote", () => {
     const text = titles({ ...basic, supplier_power: { ...basic.supplier_power, label: "上游" } })
     expect(text).toContain("上游")
+    expect(text).not.toContain("供应商议价能力")
     expect(text).toContain("买方议价能力")
   })
 })

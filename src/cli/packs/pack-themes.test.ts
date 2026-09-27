@@ -2,7 +2,7 @@
 import { mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { THEME_DEFINITIONS } from "../../themes/definitions"
 import { VERSION } from "../../version"
@@ -231,22 +231,96 @@ describe("pptwise themes with installed packs", () => {
   })
 })
 
-describe("schema --kind without a theme", () => {
-  const kindThemes = async (): Promise<Record<string, unknown>> =>
-    (JSON.parse(await runSchema({ kind: "points", cwd })) as { themes: Record<string, unknown> }).themes
+/** A pack written by hand straight into the store, the way a user could
+ *  edit or copy one: `packs sync` would have refused any of the conflicts
+ *  these tests set up. */
+async function handPack(id: string, themes: { id: string; primary?: string }[]): Promise<string> {
+  const dir = join(packsRoot(), id)
+  for (const theme of themes) await writeTheme(join(dir, themeEntryPath(theme.id)), theme.id, theme.primary ?? "#0B5FFF")
+  await writeFile(
+    join(dir, "pack.json"),
+    JSON.stringify({ pack: 1, id, version: "1", title: id, engine: "*", themes: themes.map((t) => themeEntryPath(t.id)) }),
+  )
+  return dir
+}
+
+type ListRow = { id?: string; source: string; pack?: string; error?: string }
+
+describe("installed packs, as themes and schema --kind read them", () => {
+  let stderr: string
+  beforeEach(() => {
+    stderr = ""
+    vi.spyOn(process.stderr, "write").mockImplementation((chunk: string | Uint8Array) => {
+      stderr += String(chunk)
+      return true
+    })
+  })
+  afterEach(() => vi.restoreAllMocks())
+
+  const list = async (): Promise<ListRow[]> => JSON.parse(await runThemes(true)) as ListRow[]
+  const kindThemes = async (theme?: string): Promise<Record<string, { face: string }>> =>
+    (JSON.parse(await runSchema({ kind: "points", cwd, ...(theme ? { theme } : {}) })) as {
+      themes: Record<string, { face: string }>
+    }).themes
 
   it("answers for installed pack themes as well as the presets", async () => {
     await installSample()
     const themes = await kindThemes()
     expect(Object.keys(themes)).toContain("sample-brief")
     expect(Object.keys(themes)).toContain("brief")
+    expect(stderr).toBe("")
   })
 
-  it("still answers for the presets and readable packs when one pack is damaged", async () => {
-    await installSample()
-    await mkdirp(join(packsRoot(), "broken"))
+  it("leaves a whole pack out when one of its themes fails the checks, and says where it is", async () => {
+    await installSample(["sample-brief", "sample-second"])
+    const second = join(packsRoot(), "sample", themeEntryPath("sample-second"))
+    const file = JSON.parse(await readFile(second, "utf8")) as { menu: { content: Record<string, { face: string }> } }
+    file.menu.content.points = { face: "no-such-face" }
+    await writeFile(second, JSON.stringify(file))
+
     const themes = await kindThemes()
-    expect(Object.keys(themes)).toContain("sample-brief")
+    expect(Object.keys(themes)).not.toContain("sample-brief")
+    expect(Object.keys(themes)).not.toContain("sample-second")
     expect(Object.keys(themes)).toContain("brief")
+    expect(stderr).toContain(join(packsRoot(), "sample"))
+    expect(stderr).toContain("pptwise packs sync")
+
+    // themes --json judges the same pack the same way: one error row, no themes.
+    const rows = (await list()).filter((row) => row.pack === "sample")
+    expect(rows).toHaveLength(1)
+    expect(rows[0]!.error).toContain(join(packsRoot(), "sample"))
+  })
+
+  it("never lets a pack theme stand in for a preset of the same name", async () => {
+    await handPack("handmade", [{ id: "brief" }])
+    const themes = await kindThemes()
+    const preset = (JSON.parse(await runSchema({ kind: "points", cwd, theme: "brief" })) as {
+      themes: Record<string, { face: string }>
+    }).themes.brief
+    expect(themes.brief).toEqual(preset)
+    expect(stderr).toMatch(/handmade[\s\S]*"brief"/)
+    const rows = (await list()).filter((row) => row.pack === "handmade")
+    expect(rows).toHaveLength(1)
+    expect(rows[0]!.error).toMatch(/factory preset/)
+  })
+
+  it("names both packs, and answers for neither, when two ship the same theme id", async () => {
+    await handPack("one", [{ id: "shared" }])
+    await handPack("two", [{ id: "shared" }])
+    const themes = await kindThemes()
+    expect(Object.keys(themes)).not.toContain("shared")
+    expect(stderr).toContain(join(packsRoot(), "one"))
+    expect(stderr).toContain(join(packsRoot(), "two"))
+    const rows = await list()
+    for (const pack of ["one", "two"]) {
+      const own = rows.filter((row) => row.pack === pack)
+      expect(own).toHaveLength(1)
+      expect(own[0]!.error).toMatch(/more than one installed pack/)
+    }
+  })
+
+  it("answers for the named theme alone when --theme is given", async () => {
+    await installSample()
+    expect(Object.keys(await kindThemes("brief"))).toEqual(["brief"])
   })
 })

@@ -55,23 +55,6 @@ describe("pest component", () => {
     }
   })
 
-  it("default quadrant titles are the fixed English full words", () => {
-    const { container } = svg(pest.render(basic, { x: 0, y: 0, w: 1000 }, ctx))
-    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
-    for (const label of ["Political", "Economic", "Social", "Technological"]) {
-      expect(texts).toContain(label)
-    }
-  })
-
-  it("a quadrant's own inline title overrides only that quadrant's default", () => {
-    const withTitle = { ...basic, political: { ...basic.political, title: "政治" } }
-    const { container } = svg(pest.render(withTitle, { x: 0, y: 0, w: 1000 }, ctx))
-    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
-    expect(texts).toContain("政治")
-    expect(texts).not.toContain("Political")
-    expect(texts).toContain("Economic") // untouched quadrant keeps the default
-  })
-
   it("renders every item across all four quadrants", () => {
     const { container } = svg(pest.render(basic, { x: 0, y: 0, w: 1000 }, ctx))
     const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
@@ -135,5 +118,33 @@ describe("pest component", () => {
     }
     const { container } = svg(pest.render(longItem, { x: 0, y: 0, w: 1000 }, ctx))
     expect(container.querySelector('text[data-truncated="1"]')).not.toBeNull()
+  })
+})
+
+describe("pest quadrant titles follow the language of the content", () => {
+  const titles = (c: Parameters<typeof pest.render>[0]) =>
+    Array.from(svg(pest.render(c, { x: 0, y: 0, w: 1000 }, ctx)).container.querySelectorAll("text")).map(
+      (t) => t.textContent ?? "",
+    )
+
+  it("titles Chinese content in Chinese and English content in English", () => {
+    const zh = titles(basic)
+    for (const title of ["政治", "经济", "社会", "技术"]) expect(zh).toContain(title)
+    expect(zh).not.toContain("Political")
+    const en = titles({
+      type: "pest",
+      political: { items: ["Stricter rules"] },
+      economic: { items: ["Falling rates"] },
+      social: { items: ["Generational shift"] },
+      technological: { items: ["AI adoption"] },
+    })
+    for (const title of ["Political", "Economic", "Social", "Technological"]) expect(en).toContain(title)
+  })
+
+  it("keeps a title the author wrote", () => {
+    const text = titles({ ...basic, political: { ...basic.political, title: "政策" } })
+    expect(text).toContain("政策")
+    expect(text).not.toContain("政治")
+    expect(text).toContain("经济")
   })
 })

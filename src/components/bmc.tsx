@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { mostlyChinese } from "../lib/text-script"
 import { accessibleInk } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -120,6 +121,24 @@ const BLOCK_LABELS: Record<BlockKey, string> = {
   cost_structure: "Cost Structure",
   revenue_streams: "Revenue Streams",
 }
+/** The titles when the blocks are written in Chinese (`mostlyChinese`). */
+const BLOCK_LABELS_ZH: Record<BlockKey, string> = {
+  key_partners: "重要合作",
+  key_activities: "关键业务",
+  key_resources: "核心资源",
+  value_propositions: "价值主张",
+  customer_relationships: "客户关系",
+  channels: "渠道通路",
+  customer_segments: "客户细分",
+  cost_structure: "成本结构",
+  revenue_streams: "收入来源",
+}
+
+/** The block titles for this canvas: Chinese when its items mostly are. */
+function blockLabels(component: BmcComponent): Record<BlockKey, string> {
+  const keys = Object.keys(BLOCK_LABELS) as BlockKey[]
+  return mostlyChinese(keys.flatMap((key) => component[key])) ? BLOCK_LABELS_ZH : BLOCK_LABELS
+}
 
 const GAP = 14
 const PAD_X = 14
@@ -185,7 +204,7 @@ interface BlockLayout {
  */
 // `fontFamily` (bold-metrics fix, round 2, 2026-07-24): `renderBlock`'s own
 // title `<text>` declares `fontWeight="700"` in `ctx.fonts.heading` -- the
-// cell title (`BLOCK_LABELS[key]`, a fixed constant, not user-controllable
+// cell title (from `blockLabels`, a fixed per-language constant, not user-controllable
 // via the IR) needs the same bold-aware fitting as every other bold
 // heading-faced text this task's audit-baseline sweep already found and
 // fixed (kpi.tsx/steps.tsx/etc, round 1). Optional and defaults to
@@ -198,7 +217,7 @@ interface BlockLayout {
 // regardless of which callers pass `fontFamily`.
 function blockLayout(
   items: string[],
-  key: BlockKey,
+  label: string,
   w: number,
   rhythmScale: number = 1,
   fontFamily?: string,
@@ -219,7 +238,7 @@ function blockLayout(
   const itemGap = ITEM_GAP * rhythmScale
   const bulletR = BULLET_R
 
-  const titleLaid = layoutSvgText(BLOCK_LABELS[key], {
+  const titleLaid = layoutSvgText(label, {
     maxWidth: contentW,
     fontSize: Math.max(titleSize, TITLE_SIZE_MIN),
     maxLines: 2,
@@ -276,13 +295,14 @@ function naturalBandHeights(
 ): { topBandH: number; bottomBandH: number } {
   const colW = (w - GAP * 4) / 5
   const bottomColW = (w - GAP) / 2
+  const labels = blockLabels(component)
   const halfRowH = Math.max(
-    ...[...TOP_ROW_KEYS, ...BOTTOM_ROW_KEYS].map((k) => blockLayout(component[k], k, colW, rhythmScale).contentH),
+    ...[...TOP_ROW_KEYS, ...BOTTOM_ROW_KEYS].map((k) => blockLayout(component[k], labels[k], colW, rhythmScale).contentH),
   )
-  const spanH = Math.max(...SPAN_KEYS.map((k) => blockLayout(component[k], k, colW, rhythmScale).contentH))
+  const spanH = Math.max(...SPAN_KEYS.map((k) => blockLayout(component[k], labels[k], colW, rhythmScale).contentH))
   const topBandH = Math.max(halfRowH * 2 + GAP, spanH)
   const bottomBandH = Math.max(
-    ...BOTTOM_BAND_KEYS.map((k) => blockLayout(component[k], k, bottomColW, rhythmScale).contentH),
+    ...BOTTOM_BAND_KEYS.map((k) => blockLayout(component[k], labels[k], bottomColW, rhythmScale).contentH),
   )
   return { topBandH, bottomBandH }
 }
@@ -444,11 +464,12 @@ export const bmc: SvgComponent<BmcComponent> = {
     const finalTotalH = totalH
 
     const { cells } = gridGeom(box.w, finalTotalH, scaledTop, scaledBottom)
+    const labels = blockLabels(component)
     const r = ctx.shape?.radius ?? CARD_RADIUS
     return (
       <g>
         {cells.map((cell) => {
-          const layout = blockLayout(component[cell.key], cell.key, cell.w, rhythmScale, ctx.fonts.heading)
+          const layout = blockLayout(component[cell.key], labels[cell.key], cell.w, rhythmScale, ctx.fonts.heading)
           return renderBlock(cell, layout, ctx, box.x, box.y, r)
         })}
       </g>

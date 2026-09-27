@@ -308,7 +308,6 @@ export const DeckBrandingSchema = z.enum(DECK_BRANDING_VALUES).describe(
 )
 
 // ── Components（62 种）──
-// ── Components（58 种）──
 
 export const ComponentSchema = z.discriminatedUnion("type", [
   bulletsSchema,

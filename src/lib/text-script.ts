@@ -89,13 +89,32 @@ export function isCjk(text: string): boolean {
   return HAS_SQUARE_GLYPH_RE.test(text)
 }
 
+const HAN_RE = /\p{Script=Han}/gu
+const KANA_HANGUL_RE = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u
+const LATIN_WORD_RE = /[A-Za-z]+/g
+
 /**
- * True when more than half of the non-empty `texts` carry a square-script
- * glyph. A component's built-in titles (SWOT quadrants, the five forces)
- * follow the language its own items are written in, so one English brand
- * name inside Chinese content, or the reverse, does not flip them.
+ * True when `text` reads as Chinese: it has Han characters, no Japanese kana
+ * or Korean hangul, and at least as many Han characters as Latin words. So
+ * "Apple 生态" is Chinese and "Sales grew in 中国" is not. Deciding which
+ * language a component's built-in titles speak is a different question from
+ * how to lay out square glyphs, which is what {@link isCjk} answers.
  */
-export function mostlyCjk(texts: readonly string[]): boolean {
+export function isChineseText(text: string): boolean {
+  if (KANA_HANGUL_RE.test(text)) return false
+  const han = text.match(HAN_RE)?.length ?? 0
+  if (han === 0) return false
+  return han >= (text.match(LATIN_WORD_RE)?.length ?? 0)
+}
+
+/**
+ * True when more than half of the non-empty `texts` read as Chinese
+ * ({@link isChineseText}). Components with built-in titles (SWOT, PEST, the
+ * five forces, the business model canvas, a waterfall's automatic total)
+ * pick their Chinese set from this, so one Chinese name inside English
+ * content, or one English brand inside Chinese content, does not flip them.
+ */
+export function mostlyChinese(texts: readonly string[]): boolean {
   const written = texts.filter((text) => text.trim() !== "")
-  return written.filter(isCjk).length * 2 > written.length
+  return written.filter(isChineseText).length * 2 > written.length
 }
