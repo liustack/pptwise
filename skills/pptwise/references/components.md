@@ -154,7 +154,7 @@ The table gives each component's normal kind home. A component may serve more th
 }
 ```
 
-`stacked` prints each column's total, `percent_stacked` prints no numbers on the plot, and `combo` prints none at all. When the audience must read a figure exactly, put it in the heading or a `data_table`.
+`stacked` prints each column's total when every total fits above its column, and otherwise none, which stops the export until the numbers are shorter or the categories fewer. `percent_stacked` prints no numbers on the plot, and `combo` prints none at all. When the audience must read a figure exactly, put it in the heading or a `data_table`.
 
 `architecture.layers` paints top to bottom by default. Set `direction: "bottom_up"` when the authored order should begin at the foundation. Keep the array in narrative order.
 
