@@ -8,11 +8,13 @@ read_when:
 
 # Releasing
 
-Versioning uses [changesets](https://github.com/changesets/changesets) in local
-mode — no CI is involved today (the CI rebuild is a recorded future item, and
-publishing uses an interactive npm passkey that automation cannot hold). The
-version's single source of truth is `package.json`. `src/version.ts` mirrors
-it, pinned by `src/version-sync.test.ts`, so a missed sync fails `pnpm check`.
+Versioning uses [changesets](https://github.com/changesets/changesets) in
+local mode: version bumps are cut on a machine, not by a CI bot. Publishing
+runs in CI from a pushed tag (the Publish workflow, trusted publishing), with
+a maintainer's `npm publish` as the fallback while that is not registered on
+npm. See "Publishing" below. The version's single source of truth is
+`package.json`. `src/version.ts` mirrors it, pinned by
+`src/version-sync.test.ts`, so a missed sync fails `pnpm check`.
 
 ## During development
 
@@ -70,7 +72,7 @@ git push origin main
 If the publish fails, `main` has not moved and nothing users install from
 has changed. Fix the cause and re-run the workflow for the same tag.
 
-## Publishing (maintainer, manual)
+## Publishing
 
 1. `pnpm e2e` — full chain on the built CLI.
 2. PowerPoint repair-dialog probe (`docs/testing.md`) — mandatory whenever the
