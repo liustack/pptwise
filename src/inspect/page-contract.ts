@@ -278,13 +278,13 @@ function pageLimits(ir: PptxIR, slide: Slide, theme: ThemeDefinition, pacing: Pa
       }
     }
   }
-  const width = "in width units, where one CJK character is 1 and Latin letters count less"
+  const width = "a CJK character is 1 width unit, a Latin letter less"
   if (legal.includes("bullets")) {
     limits.push(
       { level: "warning", measure: "items", per: "component", of: ["bullets"], max: budget.bullets.maxItems, source: `${pacing} pacing` },
-      { level: "warning", measure: "item width", per: "item", of: ["bullets"], max: budget.bullets.maxUnitsPerItem, source: `${pacing} pacing, ${width}` },
+      { level: "warning", measure: "item width", per: "item", of: ["bullets"], max: budget.bullets.maxUnitsPerItem, source: `${pacing} pacing; ${width}` },
       { level: "error", measure: "items", per: "component", of: ["bullets"], max: CAPACITY.bullets.countOverflowItems, source: "engine ceiling" },
-      { level: "error", measure: "item width", per: "item", of: ["bullets"], max: CAPACITY.bullets.itemOverflowUnits, source: `render-safety limit, ${width}` },
+      { level: "error", measure: "item width", per: "item", of: ["bullets"], max: CAPACITY.bullets.itemOverflowUnits, source: `render-safety limit; ${width}` },
     )
   }
   if (legal.includes("comparison")) {

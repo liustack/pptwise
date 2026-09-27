@@ -21,6 +21,8 @@ export const PAGE_FILL_FIELDS = ["components", "background", "image_side", "foot
 
 export interface AssembleResult {
   ir: PptxIR
+  /** The spec as validation parsed it, the source of every locked field. */
+  spec: DeckSpec
 }
 
 const LOCKED_KEYS = ["type", "kind", "heading"] as const
@@ -101,7 +103,7 @@ export function assembleDeck(
     const detail = parsed.error.issues.map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`).join("\n")
     throw new PptwiseError(`assembled deck did not produce valid IR:\n${detail}`)
   }
-  return { ir: parsed.data }
+  return { ir: parsed.data, spec: deckSpec }
 }
 
 const UNTITLED_HEADING = "Untitled"

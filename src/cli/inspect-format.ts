@@ -1,0 +1,74 @@
+/**
+ * Human-readable `pptwise inspect` reports. `--json` prints the contract
+ * objects themselves (`../inspect/page-contract.ts`); these render the same
+ * facts as lines a person can scan.
+ */
+import type { InspectedPage, PageContract, PageIssue, PageLimit } from "../inspect/page-contract"
+
+/** `page growth (2 of 5): content, kind "data", theme "brief"` plus the locked heading and hints. */
+function pageHeader(page: InspectedPage, theme: string | undefined, file: string): string[] {
+  const kind = page.kind !== undefined ? `, kind "${page.kind}"` : ""
+  const bound = theme !== undefined ? `, theme "${theme}"` : ""
+  const lines = [`page ${page.id} (${page.number} of ${page.of}): ${page.type}${kind}${bound}`, `heading: ${page.heading}`]
+  if (page.summary !== undefined) lines.push(`summary: ${page.summary}`)
+  if (page.focus !== undefined) lines.push(`focus: ${page.focus}`)
+  lines.push(`file: ${file} (${page.filled ? "filled" : "not written yet"})`)
+  return lines
+}
+
+/** `at most 3 items in each bullets — the face's body slot`. The caller groups lines by level. */
+export function formatLimit(limit: PageLimit): string {
+  const of = limit.of?.join(" or ")
+  let what: string
+  if (limit.per === "page") {
+    what = `at most ${limit.max} ${limit.measure}${of !== undefined ? ` (${of})` : ""} on the page`
+  } else if (limit.per === "component") {
+    what = `at most ${limit.max} ${limit.measure} in each ${of ?? "component"}`
+  } else {
+    what = `at most ${limit.max} width units in each ${of ?? "component"} item`
+  }
+  return `${what} — ${limit.source}`
+}
+
+/** `page components — message`, `deck narrative — message`. */
+export function formatIssue(issue: PageIssue): string {
+  const where = issue.path === "" ? issue.scope : `${issue.scope} ${issue.path}`
+  return `${where} — ${issue.message}`
+}
+
+function issueBlock(label: string, issues: readonly PageIssue[]): string[] {
+  if (issues.length === 0) return [`${label}: none`]
+  return [`${label}:`, ...issues.map((issue) => `  ${formatIssue(issue)}`)]
+}
+
+/** The whole-page report `pptwise inspect <deck> --page <id>` prints without `--json`. */
+export function formatPageContract(contract: PageContract, file: string): string {
+  const { components } = contract
+  const lines = [...pageHeader(contract.page, contract.theme, file), ""]
+  lines.push(`fields: ${Object.keys(contract.fields).filter((key) => key !== "$defs").join(", ")}`)
+  lines.push(`components (${components.legal.length}): ${components.legal.length > 0 ? components.legal.join(", ") : "none"}`)
+  if (components.fullBody.length > 0) {
+    lines.push(`  full-body, each must be the page's only component: ${components.fullBody.join(", ")}`)
+  }
+  for (const slot of components.required) {
+    lines.push(`  required: one of ${slot.accepts.join(", ")} for the ${slot.slot} slot`)
+  }
+  if (components.recommended.length > 0) {
+    lines.push(`  recommended: ${components.recommended.map((r) => `${r.type} (${r.because})`).join(", ")}`)
+  }
+  for (const note of components.notes) lines.push(`  note: ${note}`)
+  if (components.legal.length > 0) lines.push("  expand one with --component <type>")
+  lines.push("")
+  const errors = contract.limits.filter((limit) => limit.level === "error")
+  const warnings = contract.limits.filter((limit) => limit.level === "warning")
+  if (errors.length > 0) {
+    lines.push("limits (validate refuses the page past these):", ...errors.map((limit) => `  ${formatLimit(limit)}`))
+  }
+  if (warnings.length > 0) {
+    lines.push("advice (validate warns past these):", ...warnings.map((limit) => `  ${formatLimit(limit)}`))
+  }
+  if (contract.limits.length > 0) lines.push("")
+  lines.push(...issueBlock("errors", contract.errors), ...issueBlock("warnings", contract.warnings))
+  lines.push("fit: counts are not a drawing; --fit draws this page and reports what it loses")
+  return lines.join("\n")
+}

@@ -377,25 +377,44 @@ function specThemeFromRaw(spec: unknown): string | undefined {
 }
 
 /**
+ * Reads one `pages/<id>.json` for a single-page read ({@link readDeckDir}'s
+ * `page` option): that record alone, or none when the page is not filled
+ * yet. The id is checked as a file name before it becomes part of a path.
+ */
+async function readOnePage(dir: string, id: string): Promise<Record<string, unknown>> {
+  assertSafeFileSegment(id, "page id")
+  const path = join(dir, PAGES_DIRNAME, `${id}.json`)
+  if (!(await pathExists(path))) return {}
+  return { [id]: await loadIrFile(path, `page "${id}"`) }
+}
+
+/**
  * `opts.spec` is the spec as the caller already read it (the theme-input
  * record, `./theme-inputs.ts`): assembly takes that object and the file is
  * not read again, so a caller that read the binding off it assembles the
  * binding it read. Without it, the spec is read here.
+ *
+ * `opts.page` reads one page's file and no other (`pptwise inspect`): every
+ * other page assembles as a placeholder, so a broken or half-written page
+ * elsewhere in the deck cannot hide what this one page holds. The deck keeps
+ * its full page order, so the page's number and every per-page route are
+ * the ones the whole deck gives it.
  */
 export async function readDeckDir(
   dir: string,
-  opts?: { theme?: ThemeDefinition; spec?: { parsed: unknown } },
+  opts?: { theme?: ThemeDefinition; spec?: { parsed: unknown }; page?: string },
 ): Promise<DeckDirResult> {
   const deckDir = resolve(dir)
   const specPath = join(deckDir, SPEC_FILENAME)
   const spec = opts?.spec !== undefined ? opts.spec.parsed : await readSpecFile(deckDir)
   const specTheme = specThemeFromRaw(spec)
-  const pages = await readPages(deckDir)
-  const { ir } = assembleDeck(spec, pages as Record<string, PageContent>, opts)
+  const pages = opts?.page !== undefined ? await readOnePage(deckDir, opts.page) : await readPages(deckDir)
+  const assembled = assembleDeck(spec, pages as Record<string, PageContent>, opts)
   const images = await scanAssets(deckDir)
-  const merged = { ...ir, assets: { images: { ...ir.assets.images, ...images } } }
+  const merged = { ...assembled.ir, assets: { images: { ...assembled.ir.assets.images, ...images } } }
   return {
     ir: merged,
+    spec: assembled.spec,
     deckDir,
     specPath,
     ...(specTheme !== undefined ? { specTheme } : {}),
