@@ -6,7 +6,7 @@
   "sideEffects": false,
   "license": "MIT",
   "bin": {
-    "pptwise": "./dist/cli.js"
+    "pptwise": "dist/cli.js"
   },
   "main": "./dsh/index.js",
   "exports": {

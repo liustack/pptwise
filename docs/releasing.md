@@ -49,12 +49,26 @@ pinned version to the new one:
 The drift test (`scripts/stamp.test.mts`, part of `pnpm check`) reads each one
 back, so a forgotten stamp fails the release before it ships stale numbers.
 
-Review `CHANGELOG.md`, commit, merge to `main`, then tag the merge:
+Review `CHANGELOG.md`, commit, merge to `main`, then tag the merge with an
+annotated tag (`--follow-tags` never pushes a lightweight one).
+
+**Push the tag first, and `main` only once npm has the version.** `main` is
+what users install from: pptwise.com hands agents `INSTALL.md` on `main`,
+which clones the skill whose launcher pins this version. A `main` that pins a
+version npm does not have yet breaks every new install until it lands. On
+2026-09-27 that is exactly what happened: `main` went out with 0.37.0 pinned
+and the publish failed on npm.
 
 ```bash
-git tag v$(node -p "require('./package.json').version")
-git push origin main --follow-tags
+v=$(node -p "require('./package.json').version")
+git tag -a "v$v" -m "v$v"
+git push origin "v$v"                     # the Publish workflow runs from the tag
+npm view @liustack/pptwise@"$v" version   # wait until this answers $v
+git push origin main
 ```
+
+If the publish fails, `main` has not moved and nothing users install from
+has changed. Fix the cause and re-run the workflow for the same tag.
 
 ## Publishing (maintainer, manual)
 
@@ -68,6 +82,12 @@ git push origin main --follow-tags
    skipping the gate, and isolate-rerun any failing file first to confirm
    it is contention, not a regression.
 
-When CI is rebuilt, migrate publishing to npm trusted publishing (OIDC) and
-let the changesets action open version PRs — that is the current ecosystem
-best practice this local flow deliberately scales down from.
+The Publish workflow (`.github/workflows/publish.yml`) publishes from a
+pushed `v*` tag through npm trusted publishing (OIDC), with provenance. It
+only works once the package's npm settings register a trusted publisher:
+GitHub Actions, owner `liustack`, repository `pptwise`, workflow
+`publish.yml`, no environment. Without that registration the job gets as far
+as the upload and fails with `E404` on the `PUT`, which is npm refusing the
+write, not a missing package. Until it is registered, publish by hand as
+above, then re-run nothing: the tag and `main` order in "Cutting a release"
+still applies.
