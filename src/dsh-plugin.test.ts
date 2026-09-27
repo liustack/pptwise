@@ -7,6 +7,7 @@
 import { mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
+import { DENIED_READ_CODES, denyFileRead } from "./test-permissions"
 
 // The plugin is plain dependency-free JS by design (no build step, no dsh
 // type imports) — see dsh/index.js's own header comment.
@@ -1987,7 +1988,6 @@ describe("preview route (the handler DSH actually calls)", () => {
     // sitting right there is retired for the life of the page. Take the errno
     // check out of `readRecord`, `recallAnywhere` or the two file branches and
     // the matching row below goes red.
-    const { chmod } = await import("node:fs/promises")
     const { join } = await import("node:path")
     const { __testing } = await loadPreviewTool()
 
@@ -2002,7 +2002,7 @@ describe("preview route (the handler DSH actually calls)", () => {
     for (const [what, file, suffix] of unreadable) {
       const { handler, route, value } = await servedPreview(`unreadable-${file}`)
       const path = join(value.outDir, file)
-      await chmod(path, 0o000)
+      const restore = await denyFileRead(path)
       try {
         // Prove the environment can actually express this before trusting the
         // result — running as root would read it anyway and the assertion below
@@ -2010,19 +2010,22 @@ describe("preview route (the handler DSH actually calls)", () => {
         const { readFile } = await import("node:fs/promises")
         let denied = false
         await readFile(path).catch((error: NodeJS.ErrnoException) => {
-          denied = error.code === "EACCES" || error.code === "EPERM"
+          denied = DENIED_READ_CODES.includes(error.code ?? "")
         })
-        expect(denied, `${what}: chmod 000 did not deny this process a read`).toBe(true)
+        expect(denied, `${what}: the file was not denied to this process`).toBe(true)
 
         const res = await request(handler, `${route}/${value.previewId}${suffix}`)
         expect(res.status, what).toBe(503)
         const body = res.body.toString("utf8")
-        expect(body, what).toMatch(/could not be read right now/)
-        expect(body, what).toContain(path)
+        // Read out of the JSON rather than off its text: a JSON string doubles
+        // every backslash, so a Windows path is never found in the raw body.
+        const message: string = suffix === "/html" ? body : JSON.parse(body).error
+        expect(message, what).toMatch(/could not be read right now/)
+        expect(message, what).toContain(path)
         // The words that would be a lie about a file that is present.
-        expect(body, what).not.toMatch(/is missing|unknown preview id/)
+        expect(message, what).not.toMatch(/is missing|unknown preview id/)
       } finally {
-        await chmod(path, 0o600).catch(() => {})
+        await restore().catch(() => {})
       }
     }
   })
@@ -2031,13 +2034,12 @@ describe("preview route (the handler DSH actually calls)", () => {
     // The 503 reaches the iframe as a document, so it has to be a different
     // document. Handing a permission blip the "no longer on disk" page sends a
     // user off to rebuild a deck that never went anywhere.
-    const { chmod } = await import("node:fs/promises")
     const { join } = await import("node:path")
     const { __testing } = await loadPreviewTool()
     const { handler, route, value } = await servedPreview("unreadable-html-page")
     const path = join(value.outDir, __testing.PREVIEW_HTML_FILE)
 
-    await chmod(path, 0o000)
+    const restore = await denyFileRead(path)
     try {
       const res = await request(handler, `${route}/${value.previewId}/html`)
       expect(res.status).toBe(503)
@@ -2048,7 +2050,7 @@ describe("preview route (the handler DSH actually calls)", () => {
       expect(page).not.toContain("no longer on disk")
       expect(page).not.toContain("until you delete them")
     } finally {
-      await chmod(path, 0o600).catch(() => {})
+      await restore().catch(() => {})
     }
   })
 
@@ -2063,13 +2065,14 @@ describe("preview route (the handler DSH actually calls)", () => {
     // Exhaustive and mutually exclusive: every row below produces exactly one
     // status and one code, and no two rows produce the same pair for different
     // reasons.
-    const { chmod, rm, writeFile } = await import("node:fs/promises")
+    const { rm, writeFile } = await import("node:fs/promises")
     const { join } = await import("node:path")
     const { __testing, PREVIEW_ROUTE, FAILURE_CODES } = await loadPreviewTool()
     const svc = await makeService("classification")
     const handler = routeHandlerOf(svc)
 
-    const cases: [string, (dir: string) => Promise<void>, number, string][] = [
+    // A row that takes something away returns what gives it back.
+    const cases: [string, (dir: string) => Promise<void | (() => Promise<void>)>, number, string][] = [
       ["intact", async () => {}, 200, ""],
       [
         "the whole directory is gone",
@@ -2099,13 +2102,13 @@ describe("preview route (the handler DSH actually calls)", () => {
       ],
       [
         "the record cannot be read",
-        async (dir) => chmod(join(dir, __testing.RECORD_FILE), 0o000),
+        async (dir) => denyFileRead(join(dir, __testing.RECORD_FILE)),
         503,
         FAILURE_CODES.unreadable,
       ],
       [
         "a page cannot be read",
-        async (dir) => chmod(join(dir, "001.svg"), 0o000),
+        async (dir) => denyFileRead(join(dir, "001.svg")),
         503,
         FAILURE_CODES.unreadable,
       ],
@@ -2116,7 +2119,7 @@ describe("preview route (the handler DSH actually calls)", () => {
       const id = previewId(`7${index}a`)
       const dir = join(svc.root, id)
       await seedPreview(svc.root, id)
-      await breakIt(dir)
+      const restore = await breakIt(dir)
       try {
         const res = await request(handler, `${PREVIEW_ROUTE}/${id}`)
         expect(res.status, what).toBe(status)
@@ -2125,9 +2128,7 @@ describe("preview route (the handler DSH actually calls)", () => {
           seen.set(what, `${res.status} ${code}`)
         }
       } finally {
-        await chmod(dir, 0o700).catch(() => {})
-        await chmod(join(dir, __testing.RECORD_FILE), 0o600).catch(() => {})
-        await chmod(join(dir, "001.svg"), 0o600).catch(() => {})
+        if (restore) await restore().catch(() => {})
       }
     }
 
@@ -3500,7 +3501,6 @@ describe("what the card does with a bad answer", () => {
     // The other half of the errno work, checked across the seam: the server
     // answers a file it could not read with 503, and the card has to read that
     // as "try again" rather than as a deck that is gone.
-    const { chmod } = await import("node:fs/promises")
     const { join } = await import("node:path")
     const { PREVIEW_ROUTE, __testing } = await loadPreviewTool()
     const client = await loadClientBundle(() => ({}))
@@ -3510,14 +3510,14 @@ describe("what the card does with a bad answer", () => {
     const value = await svc.tool.execute({ target: deck })
     const path = join(value.outDir, __testing.RECORD_FILE)
 
-    await chmod(path, 0o000)
+    const restore = await denyFileRead(path)
     try {
       const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${value.previewId}`)
       expect(res.status).toBe(503)
       expect(await client.__testing.verdictOf(asResponse(res))).toBe("unreachable")
       expect(client.__testing.isRetryable(await client.__testing.verdictOf(asResponse(res)))).toBe(true)
     } finally {
-      await chmod(path, 0o600).catch(() => {})
+      await restore().catch(() => {})
     }
   })
 

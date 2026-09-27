@@ -1,8 +1,9 @@
 // @vitest-environment node
-import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
+import { DENIED_READ_CODES, denyFileRead } from "../../src/test-permissions"
 import { describeError, runOneAgentic } from "./run-agentic.mts"
 
 // ── "No meta.json" and "cannot read meta.json" are two different answers
@@ -14,11 +15,11 @@ import { describeError, runOneAgentic } from "./run-agentic.mts"
 
 describe("runOneAgentic resume tells a missing meta.json from an unreadable one", () => {
   let base: string
-  let metaPath: string | undefined
+  let restoreRead: (() => Promise<void>) | undefined
 
-  afterEach(() => {
-    if (metaPath && existsSync(metaPath)) chmodSync(metaPath, 0o600)
-    metaPath = undefined
+  afterEach(async () => {
+    await restoreRead?.()
+    restoreRead = undefined
     if (base) rmSync(base, { recursive: true, force: true })
   })
 
@@ -52,18 +53,28 @@ describe("runOneAgentic resume tells a missing meta.json from an unreadable one"
   // root reads a mode-000 file regardless, so the permission case cannot be staged there.
   it.skipIf(process.getuid?.() === 0)("a meta.json that exists but cannot be read stops resume with the path and errno, no model call", async () => {
     const { resultDir, dirs } = setUp()
-    metaPath = join(resultDir, "meta.json")
+    const metaPath = join(resultDir, "meta.json")
     const before = JSON.stringify({ rounds: 1, tool_calls: 0 }) + "\n"
     writeFileSync(metaPath, before)
-    chmodSync(metaPath, 0)
+    restoreRead = await denyFileRead(metaPath)
+    // The errno this platform denies a read with: EACCES from mode 000 on
+    // POSIX, EBUSY from a handle that shares nothing on Windows.
+    let denied = ""
+    try {
+      readFileSync(metaPath)
+    } catch (e) {
+      denied = (e as NodeJS.ErrnoException).code ?? ""
+    }
+    expect(DENIED_READ_CODES).toContain(denied)
 
     const { thrown, modelCalls } = await resume(dirs)
     expect(modelCalls).toBe(0)
     expect(thrown).toBeInstanceOf(Error)
     const described = describeError(thrown, 2000)
-    expect(described).toContain("EACCES")
+    expect(described).toContain(denied)
     expect(described).toContain(metaPath)
-    chmodSync(metaPath, 0o600)
+    await restoreRead()
+    restoreRead = undefined
     expect(readFileSync(metaPath, "utf8")).toBe(before)
   })
 
