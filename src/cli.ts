@@ -26,6 +26,7 @@ import { runConfigSet, runConfigShow } from "./cli/config-cmd"
 import { runDoctor } from "./cli/doctor"
 import { runImagesFetch, runImagesGenerate, runImagesList, runImagesSearch } from "./cli/images"
 import { runLicenseClear, runLicenseSet, runLicenseStatus } from "./cli/packs/license"
+import { runPacksList, runPacksSync } from "./cli/packs/sync"
 import { DEFAULT_PORT, runServe } from "./cli/serve"
 import { checkForUpdate, createSelfUpdater } from "./cli/update"
 import { VERSION } from "./version"
@@ -390,6 +391,36 @@ license
   .action(async () => {
     try {
       console.log(await runLicenseClear())
+    } catch (e) {
+      fail(e)
+    }
+  })
+
+const packs = program.command("packs").description("Content packs: extra themes installed under $PPTWISE_HOME/packs")
+packs
+  .command("sync")
+  .description(
+    "Install or update every pack your license covers. Without a license it prints a one-line note and exits 0. A failed sync leaves installed packs as they were",
+  )
+  .option("--json", "machine-readable output")
+  .action(async (opts: { json?: boolean }) => {
+    try {
+      const { output, failed } = await runPacksSync({ json: opts.json })
+      console.log(output)
+      // exitCode rather than exit(): a long --json report piped to another
+      // process is flushed in full before the process ends.
+      if (failed) process.exitCode = 1
+    } catch (e) {
+      fail(e)
+    }
+  })
+packs
+  .command("list")
+  .description("List installed packs and the themes each one ships")
+  .option("--json", "machine-readable output")
+  .action(async (opts: { json?: boolean }) => {
+    try {
+      console.log(await runPacksList({ json: opts.json }))
     } catch (e) {
       fail(e)
     }
