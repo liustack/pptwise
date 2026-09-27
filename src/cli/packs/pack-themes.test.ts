@@ -319,6 +319,21 @@ describe("installed packs, as themes and schema --kind read them", () => {
     }
   })
 
+  it("reports a pack that ships a retired theme id", async () => {
+    // Every theme builder refuses a retired id, so the file is edited by
+    // hand after the fact, the way such a pack could only come about.
+    const dir = await handPack("oldnames", [{ id: "oldnames-theme" }])
+    const path = join(dir, themeEntryPath("oldnames-theme"))
+    const file = JSON.parse(await readFile(path, "utf8")) as { id: string; style: { id: string } }
+    file.id = "consulting"
+    file.style.id = "consulting"
+    await writeFile(path, JSON.stringify(file))
+    const rows = (await list()).filter((row) => row.pack === "oldnames")
+    expect(rows).toHaveLength(1)
+    expect(rows[0]!.error).toContain("consulting")
+    expect(Object.keys(await kindThemes())).not.toContain("consulting")
+  })
+
   it("answers for the named theme alone when --theme is given", async () => {
     await installSample()
     expect(Object.keys(await kindThemes("brief"))).toEqual(["brief"])
