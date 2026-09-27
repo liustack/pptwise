@@ -5,6 +5,7 @@ read_when:
   - 某个字段、页面 kind、组件或版本被拒绝
   - 在裸 IR 与 deck 项目之间选择
   - 确认哪些语义字段会进入渲染
+  - 选择 chart_type，或编写堆叠柱、百分比堆叠柱、柱线组合图
 ---
 
 # IR v5
@@ -146,6 +147,58 @@ pptwise schema --kind data --theme brief
 `swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap` 与 `sankey` 会占满正文区，必须独占页面。
 
 组件的 kind 归属与相近选择见 [SKILL 组件指南](../skills/pptwise/references/components.zh-CN.md)。
+
+### 图表
+
+`chart` 把一组数字画成一个形状。`chart_type` 决定形状，每种类型对系列数各有要求：
+
+| chart_type | 画法 | 系列 |
+| --- | --- | --- |
+| `bar` | 每个类别一根柱，`direction: "horizontal"` 时每个类别一行。多个系列并排。 | 1 个或以上 |
+| `stacked` | 每个类别的各系列叠成一根柱，柱顶印出这一柱的合计。 | 2 个或以上 |
+| `percent_stacked` | 同样的堆叠，每根柱缩放到 100%，读 0% 到 100% 的轴。 | 2 个或以上 |
+| `combo` | 同一个类别轴上既有柱也有线，右侧可加第二条数值轴。 | 至少一个柱系列和一个线系列 |
+| `line` | 每个系列一条线，名字写在线尾。 | 1 个或以上 |
+| `area` | 线下方的区域填色。 | 1 个或以上 |
+| `scatter` | 数值 x-y 点。点带 `size` 就成气泡。 | 1 个或以上 |
+| `pie`、`donut` | 一个整体分成若干有名字的扇区。 | 恰好 1 个 |
+| `funnel` | 一个数值沿有序阶段逐级收窄。 | 恰好 1 个 |
+| `dumbbell` | 每行一个起点值和一个终点值。 | 恰好 2 个 |
+| `gauge` | 一个值对一个目标。 | 恰好 1 个，且只有一个点 |
+
+`axes` 的标题和单位作用于 `bar`、`stacked`、`percent_stacked`、`combo`、`line`、`area` 与 `scatter`。同一系列里一个类别只能出现一次。
+
+`stacked` 保留绝对值。正值按系列顺序从零向上叠，负值从零向下叠，有负值垂到零下时画一条零线标出分界。每根柱上方的数字是这个类别的净合计。分段不印数字，读分段看数值轴。
+
+```json
+{
+  "type": "chart",
+  "chart_type": "stacked",
+  "axes": { "x_title": "季度", "y_title": "收入", "y_unit": "万元" },
+  "series": [
+    { "name": "咨询", "data": [{ "x": "第一季度", "y": 420 }, { "x": "第二季度", "y": 480 }] },
+    { "name": "软件", "data": [{ "x": "第一季度", "y": 300 }, { "x": "第二季度", "y": 340 }] }
+  ]
+}
+```
+
+`percent_stacked` 把每个值除以它所在类别的合计，每根柱都到 100%，只比构成。它不印合计，默认在每个 25% 处画网格线。数值不能为负，每个类别的合计必须大于零，`y_unit` 只能写 `%`。合计为零的类别直接报错，而不是画成一根空柱，因为空柱读起来像缺数据。
+
+`combo` 在同一组类别上同时画柱和线。要画成线的系列写 `plot: "line"`，其余画成柱。写了 `axis: "right"` 的系列读右侧那条自有刻度的数值轴，轴标题与单位写在 `axes.y2_title` 和 `axes.y2_unit`。右轴的刻度与左轴落在同一排上，一组网格线两边都能读。
+
+```json
+{
+  "type": "chart",
+  "chart_type": "combo",
+  "axes": { "x_title": "季度", "y_title": "收入", "y_unit": "万元", "y2_title": "毛利率", "y2_unit": "%" },
+  "series": [
+    { "name": "收入", "data": [{ "x": "第一季度", "y": 720 }, { "x": "第二季度", "y": 820 }] },
+    { "name": "毛利率", "plot": "line", "axis": "right", "data": [{ "x": "第一季度", "y": 31.5 }, { "x": "第二季度", "y": 29.8 }] }
+  ]
+}
+```
+
+组合图至少要有一个柱系列和一个线系列，且至少一个系列留在左轴。`plot`、`axis`、`y2_title` 与 `y2_unit` 只在 `combo` 上有效，写了 `y2_title` 或 `y2_unit` 却没有系列放在右轴会报错。三种新类型都不接受 `direction: "horizontal"`。
 
 ## 资产与背景
 
