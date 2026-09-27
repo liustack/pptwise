@@ -12,7 +12,7 @@ Every content page has two independent limits. Narrative pacing sets an editoria
 | `balanced` | 24px | 4 | 5 | 25 |
 | `spacious` | 32px | 3 | 4 | 22 |
 
-`validate` reports the effective limit for the actual theme and kind. Editorial excess is normally a warning. Render-safety limits and content loss remain hard errors. Shorten or split a page instead of hiding overflow.
+`validate` reports the effective limit for the actual theme and kind, and `pptwise inspect deck-dir/ --page <id>` lists it before the page is written. Neither count says the content fits the drawn page. `--fit` on the same command draws it and reports anything render would drop. Editorial excess is normally a warning. Render-safety limits and content loss remain hard errors. Shorten or split a page instead of hiding overflow.
 
 `spacious` means fewer elements at a larger body size. It does not mean the same content compressed into a cleaner-looking page. Keep headings assertive and keep bullet items near two lines.
 

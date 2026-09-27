@@ -108,11 +108,12 @@ spec 锁定主题、叙事、品牌姿态、页面顺序、页型、标题，以
 
 选择服务本页 `kind` 的组件。`quote` 是页面讲法，引用组件名是 `blockquote`。组件归属与相似项对照见 `references/components.md`。节奏与容量见 `references/density.md`。图片流程见 `references/images.md`。
 
-写页面前先读精确契约，一次读一个 kind 或一个组件。kind 查询列出绑定主题的脸能画的组件，列表之外的组件会被 `validate` 拒绝。在 deck 目录里运行，或传 `--deck deck-dir/`，deck 本地的 `theme.json` 才会和 `validate` 给出同一份答案。图标字段的名字来自 `pptwise icons`。
+写一页之前先读这一页的契约。`inspect` 打印 spec 锁定的内容、页面文件可以填的字段、绑定主题的脸在这一页能画的组件、`validate` 对这一页的计数要求，以及 `validate` 此刻对它的结论。组件列表之外的组件过不了 `validate`。写某个组件前先展开它。计数不能证明内容放得下：页面内容偏长时，`--fit` 会真的画这一页，告诉你渲染会不会丢内容。图标字段的名字来自 `pptwise icons`。
 
 ```bash
-pptwise schema --kind <kind> --theme <theme> --deck deck-dir/
-pptwise schema --component <type>
+pptwise inspect deck-dir/ --page <id>
+pptwise inspect deck-dir/ --page <id> --component <type>
+pptwise inspect deck-dir/ --page <id> --fit
 pptwise icons
 ```
 

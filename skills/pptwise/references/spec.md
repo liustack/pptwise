@@ -18,7 +18,7 @@ pptwise narratives --json
 pptwise themes --json
 ```
 
-The IR component contract is read per page during fill with `pptwise schema --kind` or `pptwise schema --component`. See `components.md`.
+The IR component contract is read per page during fill with `pptwise inspect deck-dir/ --page <id>`. See `components.md`.
 
 The command output and workspace files outrank this guide. Scan for an existing `deck.spec.json`, deck-local `theme.json`, workspace `themes/`, and supplied Office brand files before asking questions.
 
