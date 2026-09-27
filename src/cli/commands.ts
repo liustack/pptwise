@@ -778,7 +778,6 @@ export async function runInspect(target: string, opts: InspectOptions): Promise<
   return { output, failed: contract.errors.length > 0 }
 }
 
-
 // ── asset-brief ──────────────────────────────────────────────────────────
 
 /**
