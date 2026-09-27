@@ -57,7 +57,8 @@
     "gen:skill-refs": "tsx scripts/gen-skill-refs.mts",
     "evals:gallery": "tsx evals/gallery/run.mts",
     "fixtures:unassigned-bytes": "tsx scripts/write-unassigned-bytes.mts",
-    "prepublishOnly": "pnpm check && pnpm e2e",
+    "prepublishOnly": "pnpm build",
+    "release": "tsx scripts/release.mts",
     "release:version": "changeset version && tsx scripts/sync-version.mts && tsx scripts/stamp.mts",
     "bench:run": "tsx tests/bench/run.mts",
     "bench:agentic": "tsx tests/bench/run-agentic.mts"

@@ -1,7 +1,8 @@
 ---
-summary: 'Release flow: changesets local mode, three-way version sync, pre-publish gates, manual passkey publish'
+summary: 'Release flow: changesets decide the version, `pnpm release` runs the guards and pushes the tag, CI publishes with provenance and cuts the GitHub Release, main follows npm'
 read_when:
   - preparing an npm release
+  - a release run failed, or npm and main disagree about the version
   - a version-mismatch guard test fails
   - wondering why there is a .changeset directory
 ---
@@ -9,10 +10,9 @@ read_when:
 # Releasing
 
 Versioning uses [changesets](https://github.com/changesets/changesets) in
-local mode: version bumps are cut on a machine, not by a CI bot. Publishing
-runs in CI from a pushed tag (the Release workflow, trusted publishing), with
-a maintainer's `npm publish` as the fallback while that is not registered on
-npm. See "Publishing" below. The version's single source of truth is
+local mode: the version is decided by the pending changesets and bumped on a
+machine, not by a CI bot. Publishing happens in one place only, the Release
+workflow, from a pushed tag. The version's single source of truth is
 `package.json`. `src/version.ts` mirrors it, pinned by
 `src/version-sync.test.ts`, so a missed sync fails `pnpm check`.
 
@@ -25,17 +25,36 @@ npx changeset        # pick the bump level, write a human-readable summary
 ```
 
 This creates a markdown file under `.changeset/` that travels with the branch.
-Multiple changesets accumulate — `changeset version` later collapses them into
+Multiple changesets accumulate. `changeset version` later collapses them into
 one correct bump (two minors do not become two bumps).
 
 ## Cutting a release
 
-On a release branch off `main`:
+On an up-to-date `main` with the changesets merged:
 
 ```bash
-pnpm release:version   # changeset version + sync src/version.ts + stamp the docs
-pnpm check             # guard tests confirm every copy of the version agrees
+pnpm release --dry-run   # every check, nothing changed
+pnpm release
 ```
+
+`scripts/release.mts` does the whole release in this order, and stops with the
+reason at the first thing that is not right:
+
+1. **Refuses before anything happens:** a dirty tree, a branch other than
+   `main`, a `main` behind or diverged from `origin/main`, no pending
+   changeset for the package, or a tag for the planned version that already
+   exists locally or on origin.
+2. **Bumps and gates:** runs `pnpm release:version`, dates the new `CHANGELOG`
+   heading (`## 0.37.2 - 2026-09-28`), checks the section says something, and
+   runs typecheck, lint, and the version tests. A failure here restores the
+   tree.
+3. **Commits and tags on `main`,** then pushes the annotated tag alone. The tag
+   starts the Release workflow.
+4. **Waits for that run,** then for npm to answer with the new version, and
+   only then pushes `main`.
+
+The release commit is the one commit made on `main` directly. Everything else
+still goes through a topic branch.
 
 `release:version` also runs `scripts/stamp.mts`, which rewrites two kinds of
 pinned version to the new one:
@@ -51,46 +70,60 @@ pinned version to the new one:
 The drift test (`scripts/stamp.test.mts`, part of `pnpm check`) reads each one
 back, so a forgotten stamp fails the release before it ships stale numbers.
 
-Review `CHANGELOG.md`, commit, merge to `main`, then tag the merge with an
-annotated tag (`--follow-tags` never pushes a lightweight one).
+### Why main waits for npm
 
-**Push the tag first, and `main` only once npm has the version.** `main` is
-what users install from: pptwise.com hands agents `INSTALL.md` on `main`,
-which clones the skill whose launcher pins this version. A `main` that pins a
-version npm does not have yet breaks every new install until it lands. On
-2026-09-27 that is exactly what happened: `main` went out with 0.37.0 pinned
-and the publish failed on npm.
+`main` is what users install from: pptwise.com hands agents `INSTALL.md` on
+`main`, which clones the skill whose launcher pins this version. A `main` that
+pins a version npm does not have yet breaks every new install until it lands.
+On 2026-09-27 that is exactly what happened: `main` went out with 0.37.0
+pinned and the publish failed. So the tag goes first, and a failed release
+leaves `main`, and every install, untouched. Step 1 checks `main` can
+fast-forward before the tag goes out, so the later push lands the tree the tag
+released.
+
+### When the release run fails
+
+`main` has not moved. Fix the cause, then either re-run the workflow for the
+same tag, or retract the tag and start over (the script prints the exact
+commands). The export XML changing since the last release still needs the
+PowerPoint repair-dialog probe before `pnpm release` (`docs/testing.md`).
+
+## The Release workflow
+
+`.github/workflows/release.yml` runs on every pushed `v*` tag:
+
+1. Refuses a tag that is not the version in `package.json`.
+2. Runs typecheck, lint, the full test suite, and `pnpm e2e` with LibreOffice
+   installed, so the visual gate is not silently skipped.
+3. Extracts this version's `CHANGELOG` section, and fails if there is none.
+   All of this happens before the one irreversible step.
+4. Publishes with provenance through npm trusted publishing (OIDC), skipped
+   when the version is already on npm, so a hand publish never turns the run
+   red.
+5. Creates the GitHub Release from the tag with that section as its notes,
+   skipped when it already exists.
+
+npm matches the workflow by file name. The package's trusted publisher is
+registered as GitHub Actions, owner `liustack`, repository `pptwise`, workflow
+`release.yml`, no environment. If the two ever disagree (a renamed file, an
+environment added on one side), the OIDC exchange answers "package not
+found", npm quietly falls back to setup-node's placeholder token, and the job
+fails with `E404` on the `PUT`. That E404 is npm refusing the write, not a
+missing package.
+
+## Publishing by hand
+
+Only when CI publishing is down. Run the gates yourself first, since
+`prepublishOnly` only builds:
 
 ```bash
-v=$(node -p "require('./package.json').version")
-git tag -a "v$v" -m "v$v"
-git push origin "v$v"                     # the Release workflow runs from the tag
-npm view @liustack/pptwise@"$v" version   # wait until this answers $v
-git push origin main
+pnpm check && pnpm e2e
+npm publish --access public
 ```
 
-If the publish fails, `main` has not moved and nothing users install from
-has changed. Fix the cause and re-run the workflow for the same tag.
-
-## Publishing
-
-1. `pnpm e2e` — full chain on the built CLI.
-2. PowerPoint repair-dialog probe (`docs/testing.md`) — mandatory whenever the
-   export XML changed since the last release.
-3. `npm publish` — `prepublishOnly` reruns `pnpm check && pnpm e2e` as the
-   final gate. On a machine running concurrent heavy sessions the vitest leg
-   can hit spurious 30s timeouts — bound the workers for the publish run
-   (`VITEST_MAX_THREADS=2 VITEST_MAX_FORKS=2 npm publish`) rather than
-   skipping the gate, and isolate-rerun any failing file first to confirm
-   it is contention, not a regression.
-
-The Release workflow (`.github/workflows/release.yml`) publishes from a
-pushed `v*` tag through npm trusted publishing (OIDC), with provenance. npm
-matches the workflow by file name: the package's trusted publisher is
-registered as GitHub Actions, owner `liustack`, repository `pptwise`,
-workflow `release.yml`, no environment. If the two ever disagree (a renamed
-file, an environment added on one side), the OIDC exchange answers "package
-not found", npm quietly falls back to setup-node's placeholder token, and the
-job fails with `E404` on the `PUT`. That E404 is npm refusing the write, not
-a missing package. Until CI publishing works again, publish by hand as
-above; the tag and `main` order in "Cutting a release" still applies.
+On a machine running concurrent heavy sessions the vitest leg can hit
+spurious timeouts. Bound the workers (`VITEST_MAX_THREADS=2
+VITEST_MAX_FORKS=2 pnpm check`) rather than skipping the gate, and
+isolate-rerun any failing file to confirm it is contention, not a regression.
+Then push the tag as usual: the workflow sees the version on npm, skips the
+publish, and still cuts the GitHub Release. Push `main` last.
