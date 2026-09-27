@@ -69,6 +69,24 @@ export const CATEGORY_FOLDING_TYPES = ["bar", "line", "area", "stacked", "percen
  */
 export const STACKED_TYPES = ["stacked", "percent_stacked"] as const
 
+/**
+ * The largest magnitude a stacked column total, or any value in a combo, may
+ * reach.
+ *
+ * A value axis pads its range and rounds it out to nice ticks, so its top tick
+ * lands at up to a few times the largest value it holds, and the builders stop
+ * producing finite ticks well before a double runs out: a plain bar of 1.7e308
+ * already throws while laying out its axis. A stacked total is a sum, so it
+ * can leave the doubles on its own (`1e308 + 1e308` is `Infinity`), and the
+ * column, the axis and the printed total then all come out as `Infinity` or
+ * `NaN`. The ceiling leaves eight orders of magnitude for the axis to grow
+ * into, and no figure a slide reports comes near it.
+ *
+ * It applies to the three chart types that were written against it. The
+ * older types keep accepting what they always accepted.
+ */
+export const CHART_AXIS_LIMIT = 1e300
+
 /** Chart types whose columns stand upright only. `direction` belongs to bar. */
 const UPRIGHT_ONLY_TYPES = ["stacked", "percent_stacked", "combo"] as const
 
@@ -367,6 +385,36 @@ export const schema = z
           `a ${c.chart_type} chart draws upright columns only, and direction "horizontal" would be ignored. ` +
           `Remove direction, or use chart_type "bar" with direction "horizontal" for side-by-side horizontal bars.`,
       })
+    }
+    // A stacked column's height is a sum. Each side of the zero line has to
+    // stay under the ceiling on its own, since the axis runs from the
+    // deepest negative pile to the tallest positive one.
+    if (c.chart_type === "stacked") {
+      const piles = new Map<string, { x: string | number; up: number; down: number }>()
+      for (const s of c.series) {
+        for (const d of s.data) {
+          const key = typeof d.x === "number" ? `n:${d.x}` : `s:${d.x}`
+          const pile = piles.get(key) ?? { x: d.x, up: 0, down: 0 }
+          if (d.y > 0) pile.up += d.y
+          else pile.down += d.y
+          piles.set(key, pile)
+        }
+      }
+      for (const { x, up, down } of piles.values()) {
+        for (const [side, sum] of [
+          ["positive", up],
+          ["negative", -down],
+        ] as const) {
+          if (sum <= CHART_AXIS_LIMIT) continue
+          ctx.addIssue({
+            code: "custom",
+            path: ["series"],
+            message:
+              `the ${side} values in category "${x}" add up to ${side === "positive" ? "more than" : "less than -"}${CHART_AXIS_LIMIT}, beyond what a chart axis can draw. ` +
+              `Divide every value by a power of ten and name the unit in axes.y_unit, for example 3.2 with y_unit "M" for 3200000.`,
+          })
+        }
+      }
     }
     if (c.chart_type === "percent_stacked") {
       // A share of a total is never negative. A loss inside a column is what

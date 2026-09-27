@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import type { Component } from "@/ir"
-import { schema as chartSchema } from "@/ir/components/chart"
+import { CHART_AXIS_LIMIT, schema as chartSchema } from "@/ir/components/chart"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { chart } from "./chart"
@@ -166,6 +166,59 @@ describe("stacked chart: crowded totals", () => {
     const container = draw(crowded(4))
     expect(valueLabels(container)).toEqual(["2000000", "2000000", "2000000", "2000000"])
     expect(container.querySelector("[data-dropped]")).toBeNull()
+  })
+})
+
+describe("stacked chart: totals past what an axis can draw", () => {
+  const pile = (a: number, b: number): ChartComponent => ({
+    type: "chart",
+    chart_type: "stacked",
+    series: [
+      { name: "A", data: [{ x: "Q", y: a }] },
+      { name: "B", data: [{ x: "Q", y: b }] },
+    ],
+  })
+
+  it("refuses positive values that add up past the ceiling, and says how to scale them", () => {
+    // 1e308 + 1e308 is Infinity: the axis, the column and the printed total
+    // all came out as Infinity or NaN.
+    const issues = issuesOf(pile(1e308, 1e308))
+    expect(issues.map((i) => i.path.join("."))).toEqual(["series"])
+    expect(issues[0]!.message).toMatch(/"Q"/)
+    expect(issues[0]!.message).toContain(String(CHART_AXIS_LIMIT))
+    expect(issues[0]!.message).toMatch(/y_unit/)
+  })
+
+  it("refuses negative values that add up past the ceiling", () => {
+    const issues = issuesOf(pile(-6e299, -6e299))
+    expect(issues.map((i) => i.path.join("."))).toEqual(["series"])
+    expect(issues[0]!.message).toMatch(/negative/)
+  })
+
+  it("draws a pile under the ceiling with finite geometry and its total", () => {
+    const component = pile(4e299, 4e299)
+    expect(issuesOf(component)).toEqual([])
+    const container = draw(component)
+    const markup = container.innerHTML
+    expect(markup).not.toMatch(/="-?(Infinity|NaN)"/)
+    expect(valueLabels(container)).toEqual(["8e+299"])
+    for (const seg of segments(container)) expect(seg.h).toBeGreaterThan(0)
+  })
+
+  it("declines, and says so, when handed a pile past the ceiling around validate", () => {
+    const series = pile(1e308, 1e308).series
+    const out = render(
+      <svg>
+        {renderStacked(series, PALETTE, 0, 0, W, 240, "#5D6B65", "#1A2421", "#00A878", undefined, {
+          type: "chart",
+          chart_type: "stacked",
+          series,
+        })}
+      </svg>,
+    ).container
+    expect(out.querySelectorAll("rect")).toHaveLength(0)
+    expect(out.innerHTML).not.toMatch(/Infinity|NaN/)
+    expect(out.querySelector("[data-dropped]")!.getAttribute("data-dropped-kind")).toBe("component")
   })
 })
 

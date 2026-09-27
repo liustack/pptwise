@@ -1,5 +1,6 @@
 import type { ReactElement } from "react"
 import type { ChartSeries, Component } from "@/ir"
+import { CHART_AXIS_LIMIT } from "@/ir/components/chart"
 import { accessibleInk } from "../render/ink"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { axisTitlePairHeight, renderCartesianAxisTitles } from "./axis-titles"
@@ -47,6 +48,9 @@ import {
  * fragment, took the series name, every point name and every value off the
  * page with no error and no mark. This one paints nothing either, and says
  * that the component went with it.
+ *
+ * `renderStacked` gives the same answer to the stacked case of the same
+ * trouble: a pile past `CHART_AXIS_LIMIT` that no axis can be built for.
  */
 function WholeShareDeclined(): ReactElement {
   // One component, because one component is what went: the chart draws
@@ -2922,6 +2926,13 @@ export function renderStacked(
   // schema there is nothing honest to paint, so the whole chart declines and
   // says so, the same answer a pie with a zero total gets.
   if (percent && piles.some((p) => p.up <= 0 || p.down < 0)) return <WholeShareDeclined />
+  // validate refuses a pile past `CHART_AXIS_LIMIT`, since no axis can be
+  // built for it. Past the schema, the old answer was a column, an axis and a
+  // total of `Infinity` and `NaN`. Nothing honest can be drawn, so the chart
+  // declines and says so, the same way.
+  if (!percent && piles.some((p) => p.up > CHART_AXIS_LIMIT || -p.down > CHART_AXIS_LIMIT)) {
+    return <WholeShareDeclined />
+  }
 
   // Each column's positive values over its `shareScale`, added in the same
   // order `up` was, so the scaled total is `up` over the same factor exactly.
