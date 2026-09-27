@@ -57,7 +57,7 @@ const WHOLE_SHARE_TYPES = ["pie", "donut", "funnel"] as const
  * `chart_duplicate_category` warning, which is what a repeated label means
  * there: possibly a typo, never a dropped value.
  */
-export const CATEGORY_FOLDING_TYPES = ["bar", "line", "area", "stacked", "percent_stacked"] as const
+export const CATEGORY_FOLDING_TYPES = ["bar", "line", "area", "stacked", "percent_stacked", "combo"] as const
 
 /**
  * Chart types that pile each category's series into one column: `stacked`
@@ -70,7 +70,7 @@ export const CATEGORY_FOLDING_TYPES = ["bar", "line", "area", "stacked", "percen
 export const STACKED_TYPES = ["stacked", "percent_stacked"] as const
 
 /** Chart types whose columns stand upright only. `direction` belongs to bar. */
-const UPRIGHT_ONLY_TYPES = ["stacked", "percent_stacked"] as const
+const UPRIGHT_ONLY_TYPES = ["stacked", "percent_stacked", "combo"] as const
 
 export const schema = z
   .object({
@@ -95,11 +95,13 @@ export const schema = z
         "gauge",
         "stacked",
         "percent_stacked",
+        "combo",
       ])
       .describe(
         "How to plot the series. bar/line: a category axis of trends or comparisons. " +
           "stacked: each category's series piled into one column, so the total and its parts show together (two or more series; negative values pile down from zero; the column total is printed above it). " +
           "percent_stacked: the same piles scaled so every column reaches 100%, to compare make-up rather than size (two or more series, no negative values, every category must add up above zero). " +
+          "combo: bars and lines on one category axis, for two measures that share a period, such as revenue as columns and margin as a line. Mark each line series with `plot: \"line\"` (the rest are bars); needs at least one of each. Put a series on `axis: \"right\"` to give it its own scale on a right-hand axis, titled by axes.y2_title / axes.y2_unit. " +
           "scatter: a numeric x-y point cloud — use when BOTH axes are quantities (add an optional per-point `size` to make it a bubble chart); if x is a category label, use line/bar instead. " +
           "area: a line with the region under it filled to the baseline, for volume/cumulative emphasis. " +
           "pie: part-to-whole share. donut: the ring form of pie (set `center_total: true` to print the summed total big in the middle). " +
@@ -142,6 +144,12 @@ export const schema = z
         x_unit: z.string().optional(),
         /** Unit suffix on y-axis tick labels (`%`, `千`). */
         y_unit: z.string().optional(),
+        /** `chart_type: "combo"` only: title of the right-hand value axis,
+         * which exists when a series sets `axis: "right"`. */
+        y2_title: z.string().optional(),
+        /** `chart_type: "combo"` only: unit suffix on the right-hand axis's
+         * tick labels. */
+        y2_unit: z.string().optional(),
         show_grid: z.boolean().optional(),
       })
       .strict()
@@ -151,6 +159,19 @@ export const schema = z
         .object({
           name: z.string(),
           data: z.array(ChartPointSchema),
+          /** `chart_type: "combo"` only: draw this series as bars (the
+           * default) or as a line. */
+          plot: z
+            .enum(["bar", "line"])
+            .optional()
+            .describe('combo only: "line" draws this series as a line over the bars; omitted or "bar" draws it as bars.'),
+          /** `chart_type: "combo"` only: which value axis this series is
+           * read against. `"right"` gives it its own scale on a right-hand
+           * axis; omitted or `"left"` shares the left one. */
+          axis: z
+            .enum(["left", "right"])
+            .optional()
+            .describe('combo only: "right" reads this series against its own right-hand axis (for a second unit, such as a rate beside amounts); omitted or "left" shares the left axis.'),
         })
         .strict(),
     ),
@@ -397,6 +418,65 @@ export const schema = z
           message:
             `a percent_stacked value axis always reads 0% to 100%, so y_unit "${unit}" cannot apply. ` +
             `Remove y_unit, and say what the shares are of in axes.y_title.`,
+        })
+      }
+    }
+    // `plot` and `axis` choose a mark and a scale inside a combo. On any other
+    // chart type nothing reads them, and a line the author asked for would
+    // silently come out as whatever that chart draws.
+    if (c.chart_type !== "combo") {
+      c.series.forEach((s, si) => {
+        for (const key of ["plot", "axis"] as const) {
+          if (s[key] === undefined) continue
+          ctx.addIssue({
+            code: "custom",
+            path: ["series", si, key],
+            message:
+              `series[${si}].${key} only applies to chart_type "combo", which mixes bars and lines, and a ${c.chart_type} chart ignores it. ` +
+              `Remove ${key}, or use chart_type "combo" to draw some series as bars and some as lines.`,
+          })
+        }
+      })
+    }
+    const rightSeries = c.chart_type === "combo" ? c.series.filter((s) => s.axis === "right").length : 0
+    for (const key of ["y2_title", "y2_unit"] as const) {
+      if (c.axes?.[key] === undefined || rightSeries > 0) continue
+      ctx.addIssue({
+        code: "custom",
+        path: ["axes", key],
+        message:
+          c.chart_type === "combo"
+            ? `axes.${key} labels the right-hand axis, and no series here is on it. Set axis: "right" on the series that needs its own scale, or remove ${key}.`
+            : `axes.${key} labels the right-hand axis of a combo chart, and a ${c.chart_type} chart has none. Remove ${key}, or use chart_type "combo" with a series on axis: "right".`,
+      })
+    }
+    if (c.chart_type === "combo") {
+      const lines = c.series.filter((s) => s.plot === "line").length
+      const bars = c.series.length - lines
+      if (lines === 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["series"],
+          message:
+            `a combo draws some series as bars and at least one as a line, and none of these ${c.series.length} series has plot: "line". ` +
+            `Set plot: "line" on the series to draw as a line, or use chart_type "bar" if every series is a bar.`,
+        })
+      } else if (bars === 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["series"],
+          message:
+            `a combo draws some series as bars and at least one as a line, and every series here has plot: "line", so nothing is drawn as bars. ` +
+            `Remove plot (or set plot: "bar") on the series to draw as bars, or use chart_type "line" if every series is a line.`,
+        })
+      }
+      if (c.series.length > 0 && rightSeries === c.series.length) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["series"],
+          message:
+            `every series in this combo is on axis: "right", so the left axis would have nothing to measure. ` +
+            `Keep at least one series on the left: remove axis or set axis: "left" on it.`,
         })
       }
     }

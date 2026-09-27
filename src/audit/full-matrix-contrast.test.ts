@@ -3035,6 +3035,62 @@ describe("stacked chart contrast (every theme)", () => {
   }
 })
 
+// Combo charts (chart-stacked-combo wave). The one new surface is the
+// right-hand axis: its ticks and its title sit outside the plot on the page
+// background, the same place the left axis puts its own. The line halo is a
+// stroke in the page background and carries no text. The sweep covers a combo
+// on one axis and one with a second scale, in both cases with a line crossing
+// the bars.
+describe("combo chart contrast (every theme)", () => {
+  const ONE_AXIS_SLIDE: Slide = {
+    type: "content",
+    kind: "points",
+    heading: HEADING,
+    components: [
+      {
+        type: "chart",
+        chart_type: "combo",
+        axes: { x_title: "Quarter", y_title: "Paid seats", y_unit: "k" },
+        series: [
+          { name: "Paid seats", data: [{ x: "Q1", y: 62 }, { x: "Q2", y: 71 }, { x: "Q3", y: 80 }, { x: "Q4", y: 94 }] },
+          { name: "Seat target", plot: "line", data: [{ x: "Q1", y: 60 }, { x: "Q2", y: 75 }, { x: "Q3", y: 78 }, { x: "Q4", y: 96 }] },
+        ],
+      },
+    ],
+  } as Slide
+  const TWO_AXIS_SLIDE: Slide = {
+    type: "content",
+    kind: "points",
+    heading: HEADING,
+    components: [
+      {
+        type: "chart",
+        chart_type: "combo",
+        axes: { x_title: "Quarter", y_title: "Revenue", y_unit: "M", y2_title: "Gross margin", y2_unit: "%" },
+        series: [
+          { name: "Consulting", data: [{ x: "Q1", y: 42 }, { x: "Q2", y: 48 }, { x: "Q3", y: 51 }, { x: "Q4", y: 60 }] },
+          { name: "Software", data: [{ x: "Q1", y: 30 }, { x: "Q2", y: 34 }, { x: "Q3", y: 38 }, { x: "Q4", y: 44 }] },
+          {
+            name: "Gross margin",
+            plot: "line",
+            axis: "right",
+            data: [{ x: "Q1", y: 31.5 }, { x: "Q2", y: 29.8 }, { x: "Q3", y: 33.2 }, { x: "Q4", y: 36.4 }],
+          },
+        ],
+      },
+    ],
+  } as Slide
+
+  for (const themeId of CANONICAL_THEME_IDS) {
+    it(`${themeId}: a one-axis combo renders with zero auditDeck findings`, () => {
+      expect(auditFindings(deckFor(themeId, ONE_AXIS_SLIDE))).toEqual([])
+    })
+    it(`${themeId}: a two-axis combo renders with zero auditDeck findings`, () => {
+      expect(auditFindings(deckFor(themeId, TWO_AXIS_SLIDE))).toEqual([])
+    })
+  }
+})
+
 // Decor-collision sweep (fix/decor-contrast-attribution). The sweep at the
 // top of this file renders no `meta.organization`/`meta.date` — a deliberate
 // scope choice, argued in this file's own header — and a theme motif's corner

@@ -24,8 +24,8 @@ export const AXIS_TITLE_GAP = 36
 export const X_AXIS_ARROW = "  →"
 export const Y_AXIS_ARROW = "  ↑"
 
-export function axisTitlePairHeight(xTitle?: string, yTitle?: string): number {
-  return xTitle || yTitle ? AXIS_TITLE_BAND_H : 0
+export function axisTitlePairHeight(xTitle?: string, yTitle?: string, y2Title?: string): number {
+  return xTitle || yTitle || y2Title ? AXIS_TITLE_BAND_H : 0
 }
 
 export function fitAxisTitle(
@@ -75,17 +75,34 @@ function fitTitlePair(
   return { yFit, xFit, yWidth }
 }
 
+/**
+ * Share of the title line a right-hand axis title may take before it is cut.
+ * The left pair keeps the rest: it names two axes, this names one.
+ */
+export const Y2_TITLE_MAX_SHARE = 0.4
+
 export function renderAxisTitlePair(opts: {
   x: number
   y: number
   width: number
   xTitle?: string
   yTitle?: string
+  /**
+   * Title of a right-hand value axis. It sits on the same line, right-aligned
+   * to the end of `width` — under the axis it names — and the left pair is
+   * fitted into what it leaves. Omitted, the pair is laid out exactly as it
+   * always was.
+   */
+  y2Title?: string
   fill: string
   fontFamily: string
 }): ReactElement | null {
-  const { yFit, xFit, yWidth } = fitTitlePair(opts.xTitle, opts.yTitle, opts.width, opts.fontFamily)
-  if (!yFit && !xFit) return null
+  const y2Fit = opts.y2Title
+    ? fitAxisTitle(opts.y2Title, Y_AXIS_ARROW, Math.max(1, opts.width * Y2_TITLE_MAX_SHARE), opts.fontFamily)
+    : null
+  const pairWidth = y2Fit ? Math.max(1, opts.width - fittedWidth(y2Fit, opts.fontFamily) - AXIS_TITLE_GAP) : opts.width
+  const { yFit, xFit, yWidth } = fitTitlePair(opts.xTitle, opts.yTitle, pairWidth, opts.fontFamily)
+  if (!yFit && !xFit && !y2Fit) return null
   const baseline = opts.y + AXIS_TITLE_BASELINE
   const xTitleX = yFit ? opts.x + yWidth + AXIS_TITLE_GAP : opts.x
   return (
@@ -118,6 +135,21 @@ export function renderAxisTitlePair(opts: {
           {xFit.text}
         </text>
       ) : null}
+      {y2Fit ? (
+        <text
+          data-axis-title="y2"
+          data-truncated={y2Fit.truncated ? "1" : undefined}
+          x={opts.x + opts.width}
+          y={baseline}
+          textAnchor="end"
+          fontSize={y2Fit.fontSize}
+          fill={opts.fill}
+          fontFamily={opts.fontFamily}
+          dominantBaseline="alphabetic"
+        >
+          {y2Fit.text}
+        </text>
+      ) : null}
     </g>
   )
 }
@@ -129,6 +161,7 @@ export function renderCartesianAxisTitles(opts: {
   plotW: number
   xTitle?: string
   yTitle?: string
+  y2Title?: string
   fill: string
   fontFamily: string
 }): ReactElement | null {
@@ -138,6 +171,7 @@ export function renderCartesianAxisTitles(opts: {
     width: opts.plotW,
     xTitle: opts.xTitle,
     yTitle: opts.yTitle,
+    y2Title: opts.y2Title,
     fill: opts.fill,
     fontFamily: opts.fontFamily,
   })

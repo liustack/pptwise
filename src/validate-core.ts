@@ -233,8 +233,8 @@ function describeQualityIssue(issue: QualityIssue): string {
       // structured-field convention as `density`/`bulletsBudget` above.
       const chartType = issue.chartAxesIgnored?.chartType
       return chartType
-        ? `axes settings (x_title/y_title/show_grid) are not supported for "${chartType}" charts and are ignored — only bar, line, scatter, area, stacked and percent_stacked charts render them`
-        : "chart axes settings (x_title/y_title/show_grid) are not supported for this chart type and are ignored — only bar, line, scatter, area, stacked and percent_stacked charts render them"
+        ? `axes settings (x_title/y_title/show_grid) are not supported for "${chartType}" charts and are ignored — only bar, line, scatter, area, stacked, percent_stacked and combo charts render them`
+        : "chart axes settings (x_title/y_title/show_grid) are not supported for this chart type and are ignored — only bar, line, scatter, area, stacked, percent_stacked and combo charts render them"
     }
     case "chart_duplicate_category": {
       // What a repeated category costs depends on the chart type, so the

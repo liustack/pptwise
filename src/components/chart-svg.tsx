@@ -4,6 +4,7 @@ import { accessibleInk } from "../render/ink"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { axisTitlePairHeight, renderCartesianAxisTitles } from "./axis-titles"
 import {
+  buildAlignedNumericAxis,
   buildNumericAxis,
   formatAxisTick,
   layoutCartesianPlot,
@@ -868,7 +869,11 @@ function cartesianMeta(component?: ChartInput) {
     yTitle: component?.axes?.y_title,
     xUnit: component?.axes?.x_unit,
     yUnit: component?.axes?.y_unit,
-    titleH: axisTitlePairHeight(component?.axes?.x_title, component?.axes?.y_title),
+    // Right-hand axis, combo only. validate refuses both anywhere else, so
+    // every other chart type reads them as undefined and lays out as before.
+    y2Title: component?.axes?.y2_title,
+    y2Unit: component?.axes?.y2_unit,
+    titleH: axisTitlePairHeight(component?.axes?.x_title, component?.axes?.y_title, component?.axes?.y2_title),
   }
 }
 
@@ -2992,6 +2997,225 @@ export function renderStacked(
         plotW: geom.plotW,
         xTitle: meta.xTitle,
         yTitle: meta.yTitle,
+        fill: mutedColor,
+        fontFamily: fontFamily ?? "",
+      })}
+    </>
+  )
+}
+
+/**
+ * combo: bars and lines on one category axis.
+ *
+ * Series marked `plot: "line"` are drawn as lines through the centers of the
+ * category bands; the rest are bars, grouped side by side in the middle
+ * `COMBO_CLUSTER_RATIO` of each band, so a line point always sits over the
+ * middle of its own category's bars. Colors follow series order through the
+ * palette whatever the mark, so the legend reads in the order the author
+ * wrote.
+ *
+ * **Two value axes, one set of rows.** Series on `axis: "right"` are read
+ * against a right-hand axis with its own range, unit and title. Its ticks
+ * are built by `buildAlignedNumericAxis` on the left axis's rows, so the one
+ * set of gridlines serves both sides and zero shares a row when it can. An
+ * axis that carries a bar keeps zero in range, because a bar is measured from
+ * zero; an axis of lines alone picks its range the way `renderLine` does.
+ *
+ * **No value labels.** A line crossing the bars leaves no place above a bar
+ * that the line cannot also pass through, which is exactly the trap that took
+ * `renderLine`'s own labels off the plot. The axes carry the numbers, and
+ * gridlines default to on for the same reason `renderLine` keeps them: they
+ * are the only way to read an interior value.
+ *
+ * Each line runs over a halo in the page background, so where it crosses a
+ * bar of a similar color it still reads as a line. A point with no neighbour
+ * on either side (a gap in the series) is still shown by its dot.
+ */
+const COMBO_CLUSTER_RATIO = 0.6
+const COMBO_LINE_W = 2.5
+const COMBO_LINE_HALO_W = 6
+const COMBO_DOT_R = 4
+
+export function renderCombo(
+  series: ChartSeries[],
+  palette: string[],
+  x0: number,
+  y0: number,
+  w: number,
+  h: number,
+  mutedColor: string,
+  _textColor: string,
+  _accentColor: string,
+  showGrid = true,
+  component?: ChartInput,
+  bgHex?: string,
+  axisColor?: string,
+  fontFamily?: string,
+): ReactElement {
+  const model = buildChartModel(series)
+  const { categories } = model
+  const meta = cartesianMeta(component)
+  const isLine = (seriesIndex: number) => series[seriesIndex]?.plot === "line"
+  const onRight = (seriesIndex: number) => series[seriesIndex]?.axis === "right"
+
+  const axisSeries = (right: boolean) => model.series.filter((s) => onRight(s.seriesIndex) === right)
+  const axisMode = (right: boolean): DomainPadMode => {
+    const members = axisSeries(right)
+    if (members.some((s) => !isLine(s.seriesIndex))) return "zero-max"
+    return valueAxisMode(keptValues(members))
+  }
+  const hasRight = axisSeries(true).length > 0
+  const yAxis = buildNumericAxis(keptValues(axisSeries(false)), axisMode(false), meta.yUnit)
+  const y2Axis = hasRight
+    ? buildAlignedNumericAxis(keptValues(axisSeries(true)), axisMode(true), yAxis.ticks, meta.y2Unit)
+    : null
+  const geom = layoutCartesianPlot({
+    x0,
+    y0,
+    w,
+    h,
+    yTickLabels: yAxis.labels,
+    y2TickLabels: y2Axis?.labels,
+    titleH: meta.titleH,
+    fontFamily,
+  })
+  const domainOf = (seriesIndex: number) => (onRight(seriesIndex) && y2Axis ? y2Axis.domain : yAxis.domain)
+  const yOf = (v: number, seriesIndex: number) => mapToPlotY(v, domainOf(seriesIndex), geom.plotY, geom.plotH)
+  const groupW = geom.plotW / Math.max(categories.length, 1)
+  const centerOf = (i: number) => geom.plotX + i * groupW + groupW / 2
+
+  const yTicks = yAxis.ticks.map((t) => ({
+    label: formatAxisTick(t, meta.yUnit),
+    pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
+  }))
+  // The right-hand ticks sit on the left axis's rows by construction, so they
+  // take those rows' positions rather than recomputing them from a second
+  // domain and landing a rounding error away.
+  const y2Ticks = y2Axis?.ticks.map((t, i) => ({ label: formatAxisTick(t, meta.y2Unit), pos: yTicks[i]!.pos }))
+  const xTicks = categories.map((cat, i) => {
+    const category = fitSvgLine(String(cat.x), {
+      maxWidth: Math.max(8, groupW - BAR_GROUP_EDGE_GAP * 2),
+      fontSize: CATEGORY_FONT_SIZE,
+      minFontSize: CATEGORY_MIN_FONT_SIZE,
+      fontFamily,
+    })
+    return { label: category.text, pos: centerOf(i), truncated: category.truncated, fontSize: category.fontSize }
+  })
+
+  const barSeries = model.series.filter((s) => !isLine(s.seriesIndex))
+  const lineSeries = model.series.filter((s) => isLine(s.seriesIndex))
+  const clusterW = groupW * COMBO_CLUSTER_RATIO
+  const nb = barSeries.length
+  const perBarW = nb <= 1 ? clusterW : Math.max(1, (clusterW - (nb - 1) * BAR_GROUP_EDGE_GAP) / nb)
+
+  const bars = categories.map((cat, i) => {
+    const clusterX = centerOf(i) - clusterW / 2
+    const rects: ReactElement[] = []
+    barSeries.forEach((s, k) => {
+      const v = s.values[i]
+      if (v == null || v === 0) return
+      const top = yOf(Math.max(v, 0), s.seriesIndex)
+      const bottom = yOf(Math.min(v, 0), s.seriesIndex)
+      rects.push(
+        <rect
+          key={s.seriesIndex}
+          data-plot-mark="1"
+          x={clusterX + k * (perBarW + BAR_GROUP_EDGE_GAP)}
+          y={top}
+          width={perBarW}
+          height={bottom - top}
+          fill={palette[s.seriesIndex % palette.length]}
+        />,
+      )
+    })
+    return <g key={cat.key}>{rects}</g>
+  })
+
+  const lines = lineSeries.map((s) => {
+    const color = palette[s.seriesIndex % palette.length]
+    type Pt = { x: number; y: number }
+    const runs: Pt[][] = []
+    let run: Pt[] = []
+    const points: Pt[] = []
+    categories.forEach((_cat, i) => {
+      const v = s.values[i]
+      if (v == null) {
+        if (run.length > 0) runs.push(run)
+        run = []
+        return
+      }
+      const p = { x: centerOf(i), y: yOf(v, s.seriesIndex) }
+      run.push(p)
+      points.push(p)
+    })
+    if (run.length > 0) runs.push(run)
+    const drawn = runs.filter((r) => r.length >= 2)
+    const pts = (r: Pt[]) => r.map((p) => `${p.x},${p.y}`).join(" ")
+    return (
+      <g key={s.seriesIndex}>
+        {bgHex
+          ? drawn.map((r, ri) => (
+              <polyline
+                key={`halo-${ri}`}
+                data-plot-mark="1"
+                points={pts(r)}
+                fill="none"
+                stroke={bgHex}
+                strokeWidth={COMBO_LINE_HALO_W}
+              />
+            ))
+          : null}
+        {drawn.map((r, ri) => (
+          <polyline
+            key={`ln-${ri}`}
+            data-plot-mark="1"
+            points={pts(r)}
+            fill="none"
+            stroke={color}
+            strokeWidth={COMBO_LINE_W}
+          />
+        ))}
+        {points.map((p, pi) => (
+          <circle
+            key={`dot-${pi}`}
+            data-plot-mark="1"
+            cx={p.x}
+            cy={p.y}
+            r={COMBO_DOT_R}
+            fill={color}
+            {...(bgHex ? { stroke: bgHex, strokeWidth: 1.5 } : {})}
+          />
+        ))}
+      </g>
+    )
+  })
+
+  return (
+    <>
+      {renderCartesianFrame({
+        plotX: geom.plotX,
+        plotY: geom.plotY,
+        plotW: geom.plotW,
+        plotH: geom.plotH,
+        xTicks,
+        yTicks,
+        showHGrid: showGrid,
+        yTickMaxW: Math.max(0, geom.leftGutter - TICK_TO_AXIS_GAP),
+        y2Ticks,
+        y2TickMaxW: y2Axis ? Math.max(0, geom.rightGutter - TICK_TO_AXIS_GAP) : undefined,
+        axisColor: axisColor ?? mutedColor,
+        mutedColor,
+        fontFamily,
+      })}
+      {bars}
+      {lines}
+      {renderCartesianAxisTitles({
+        plotX: geom.plotX,
+        plotBottom: geom.titleY,
+        plotW: geom.plotW,
+        xTitle: meta.xTitle,
+        yTitle: meta.yTitle,
+        y2Title: y2Axis ? meta.y2Title : undefined,
         fill: mutedColor,
         fontFamily: fontFamily ?? "",
       })}

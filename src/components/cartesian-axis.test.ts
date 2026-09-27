@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { META_FONT_FLOOR_PX } from "@/constants"
 import {
+  buildAlignedNumericAxis,
   formatAxisTick,
   MAX_TICK_COUNT,
   MIN_TICK_COUNT,
@@ -94,5 +95,60 @@ describe("yTickGutter", () => {
     expect(yTickGutter(labels, "Arial", 400)).toBe(want)
     // And the comfort floor still applies below the cap when there is room.
     expect(yTickGutter(["0"], "Arial", 400)).toBe(Y_TICK_MIN_GUTTER)
+  })
+})
+
+describe("buildAlignedNumericAxis", () => {
+  // A second value axis whose ticks land on the first axis's rows, so one set
+  // of gridlines reads against both.
+  it("returns exactly as many ticks as the primary axis, covering its own values", () => {
+    const axis = buildAlignedNumericAxis([29.8, 33.2, 31.5], "fit", [0, 200, 400, 600], "%")
+    expect(axis.ticks).toHaveLength(4)
+    expect(axis.domain.min).toBeLessThanOrEqual(29.8)
+    expect(axis.domain.max).toBeGreaterThanOrEqual(33.2)
+    expect(axis.labels.every((l) => l.endsWith("%"))).toBe(true)
+    // Evenly spaced, like the rows it shares.
+    const steps = axis.ticks.slice(1).map((t, i) => Number((t - axis.ticks[i]!).toPrecision(12)))
+    expect(new Set(steps).size).toBe(1)
+  })
+
+  it("puts zero on the primary axis's zero row when both ranges hold zero", () => {
+    const axis = buildAlignedNumericAxis([-5, 30], "zero-max", [-100, 0, 100, 200])
+    expect(axis.ticks[1]).toBe(0)
+    expect(axis.domain.min).toBeLessThanOrEqual(-5)
+    expect(axis.domain.max).toBeGreaterThanOrEqual(30)
+  })
+
+  it("starts at zero beside a primary axis that starts at zero, for bars on the right", () => {
+    const axis = buildAlignedNumericAxis([12, 48], "zero-max", [0, 20, 40, 60, 80])
+    expect(axis.ticks[0]).toBe(0)
+    expect(axis.domain.max).toBeGreaterThanOrEqual(48)
+  })
+
+  it("leaves a high line band off zero in fit mode", () => {
+    const axis = buildAlignedNumericAxis([61, 88], "fit", [0, 100, 200, 300, 400])
+    expect(axis.ticks).toHaveLength(5)
+    expect(axis.domain.min).toBeGreaterThan(0)
+    expect(axis.domain.min).toBeLessThanOrEqual(61)
+    expect(axis.domain.max).toBeGreaterThanOrEqual(88)
+  })
+
+  it("falls back to its own start when zero cannot share the primary's zero row", () => {
+    // The primary's zero is its bottom row, and this range dips below zero.
+    const axis = buildAlignedNumericAxis([-5, 30], "zero-max", [0, 100, 200])
+    expect(axis.ticks).toHaveLength(3)
+    expect(axis.domain.min).toBeLessThanOrEqual(-5)
+    expect(axis.domain.max).toBeGreaterThanOrEqual(30)
+  })
+
+  it("still draws a scale for a right axis with nothing on it", () => {
+    const axis = buildAlignedNumericAxis([], "fit", [0, 50, 100])
+    expect(axis.ticks).toHaveLength(3)
+    expect(axis.domain.max).toBeGreaterThan(axis.domain.min)
+  })
+
+  it("keeps decimal steps clean", () => {
+    const axis = buildAlignedNumericAxis([0.012, 0.047], "zero-max", [0, 25, 50, 75, 100])
+    for (const t of axis.ticks) expect(String(t).length).toBeLessThan(8)
   })
 })

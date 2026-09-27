@@ -90,6 +90,7 @@ const AXES_APPLICABLE_CHART_TYPES: ReadonlySet<string> = new Set([
   "area",
   "stacked",
   "percent_stacked",
+  "combo",
 ])
 
 /** True when `axes` carries at least one real setting — `axes: {}` (every
@@ -425,7 +426,7 @@ function checkSlide(
       slide: index,
       severity: "warn",
       code: "chart_axes_ignored",
-      message: `图表类型 "${component.chart_type}" 不支持坐标轴标题/网格线，axes 字段将被忽略（仅 bar、line、scatter、area、stacked、percent_stacked 支持）`,
+      message: `图表类型 "${component.chart_type}" 不支持坐标轴标题/网格线，axes 字段将被忽略（仅 bar、line、scatter、area、stacked、percent_stacked、combo 支持）`,
       chartAxesIgnored: { chartType: component.chart_type },
     })
   }
