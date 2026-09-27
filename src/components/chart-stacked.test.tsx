@@ -76,7 +76,7 @@ const TWO_REGIONS: ChartComponent = {
   ],
 }
 
-describe("stacked chart — schema", () => {
+describe("stacked chart: schema", () => {
   it("accepts two or more series on a shared category axis", () => {
     expect(issuesOf(TWO_REGIONS)).toEqual([])
   })
@@ -107,7 +107,7 @@ describe("stacked chart — schema", () => {
   })
 })
 
-describe("stacked chart — drawing", () => {
+describe("stacked chart: drawing", () => {
   it("piles each category's series into one column, first series at the bottom", () => {
     const container = draw(TWO_REGIONS)
     const segs = segments(container)
@@ -275,7 +275,7 @@ const SHARES: ChartComponent = {
   ],
 }
 
-describe("percent_stacked chart — schema", () => {
+describe("percent_stacked chart: schema", () => {
   it("accepts two or more series", () => {
     expect(issuesOf(SHARES)).toEqual([])
   })
@@ -318,7 +318,7 @@ describe("percent_stacked chart — schema", () => {
   })
 })
 
-describe("percent_stacked chart — drawing", () => {
+describe("percent_stacked chart: drawing", () => {
   it("fills every column to the top of the axis, each share in proportion", () => {
     const container = draw(SHARES)
     const segs = segments(container)

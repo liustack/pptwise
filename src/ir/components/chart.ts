@@ -99,9 +99,9 @@ export const schema = z
       ])
       .describe(
         "How to plot the series. bar/line: a category axis of trends or comparisons. " +
-          "stacked: each category's series piled into one column, so the total and its parts show together (two or more series; negative values pile down from zero; the column total is printed above it). " +
+          "stacked: each category's series piled into one column, so the total and its parts show together (two or more series, negative values pile down from zero, and the column total is printed above it). " +
           "percent_stacked: the same piles scaled so every column reaches 100%, to compare make-up rather than size (two or more series, no negative values, every category must add up above zero). " +
-          "combo: bars and lines on one category axis, for two measures that share a period, such as revenue as columns and margin as a line. Mark each line series with `plot: \"line\"` (the rest are bars); needs at least one of each. Put a series on `axis: \"right\"` to give it its own scale on a right-hand axis, titled by axes.y2_title / axes.y2_unit. " +
+          "combo: bars and lines on one category axis, for two measures that share a period, such as revenue as columns and margin as a line. Mark each line series with `plot: \"line\"` (the rest are bars). It needs at least one of each. Put a series on `axis: \"right\"` to give it its own scale on a right-hand axis, titled by axes.y2_title / axes.y2_unit. " +
           "scatter: a numeric x-y point cloud — use when BOTH axes are quantities (add an optional per-point `size` to make it a bubble chart); if x is a category label, use line/bar instead. " +
           "area: a line with the region under it filled to the baseline, for volume/cumulative emphasis. " +
           "pie: part-to-whole share. donut: the ring form of pie (set `center_total: true` to print the summed total big in the middle). " +
@@ -164,14 +164,14 @@ export const schema = z
           plot: z
             .enum(["bar", "line"])
             .optional()
-            .describe('combo only: "line" draws this series as a line over the bars; omitted or "bar" draws it as bars.'),
+            .describe('combo only: "line" draws this series as a line over the bars, and omitted or "bar" draws it as bars.'),
           /** `chart_type: "combo"` only: which value axis this series is
            * read against. `"right"` gives it its own scale on a right-hand
-           * axis; omitted or `"left"` shares the left one. */
+           * axis, and omitted or `"left"` shares the left one. */
           axis: z
             .enum(["left", "right"])
             .optional()
-            .describe('combo only: "right" reads this series against its own right-hand axis (for a second unit, such as a rate beside amounts); omitted or "left" shares the left axis.'),
+            .describe('combo only: "right" reads this series against its own right-hand axis (for a second unit, such as a rate beside amounts), and omitted or "left" shares the left axis.'),
         })
         .strict(),
     ),

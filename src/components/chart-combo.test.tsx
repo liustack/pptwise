@@ -84,7 +84,7 @@ function linePoints(container: HTMLElement): { x: number; y: number }[] {
     })
 }
 
-describe("combo chart — schema", () => {
+describe("combo chart: schema", () => {
   it("accepts bars with a line on a right-hand axis, and bars with a line on one axis", () => {
     expect(issuesOf(REVENUE_MARGIN)).toEqual([])
     expect(issuesOf(SAME_AXIS)).toEqual([])
@@ -163,7 +163,7 @@ describe("combo chart — schema", () => {
   })
 })
 
-describe("combo chart — drawing", () => {
+describe("combo chart: drawing", () => {
   it("draws bar series as columns and line series as a line through the category centers", () => {
     const container = draw(SAME_AXIS)
     const bars = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]'))

@@ -2793,7 +2793,7 @@ export function renderGauge(
  * their marks). So `stacked` prints one total per column, above the positive
  * pile or, for a pile with no positive part, above the zero line, which is
  * exactly where `renderBar` puts a negative bar's value. Segment values are
- * not printed; the axis reads them. `percent_stacked` prints no total at all,
+ * not printed. The axis reads them. `percent_stacked` prints no total at all,
  * since every column would say 100%.
  *
  * Gridlines follow what the chart already prints. `stacked` has a number
@@ -3008,7 +3008,7 @@ export function renderStacked(
  * combo: bars and lines on one category axis.
  *
  * Series marked `plot: "line"` are drawn as lines through the centers of the
- * category bands; the rest are bars, grouped side by side in the middle
+ * category bands. The rest are bars, grouped side by side in the middle
  * `COMBO_CLUSTER_RATIO` of each band, so a line point always sits over the
  * middle of its own category's bars. Colors follow series order through the
  * palette whatever the mark, so the legend reads in the order the author
@@ -3019,7 +3019,7 @@ export function renderStacked(
  * are built by `buildAlignedNumericAxis` on the left axis's rows, so the one
  * set of gridlines serves both sides and zero shares a row when it can. An
  * axis that carries a bar keeps zero in range, because a bar is measured from
- * zero; an axis of lines alone picks its range the way `renderLine` does.
+ * zero. An axis of lines alone picks its range the way `renderLine` does.
  *
  * **No value labels.** A line crossing the bars leaves no place above a bar
  * that the line cannot also pass through, which is exactly the trap that took

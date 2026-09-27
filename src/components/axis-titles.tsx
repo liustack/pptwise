@@ -89,7 +89,7 @@ export function renderAxisTitlePair(opts: {
   yTitle?: string
   /**
    * Title of a right-hand value axis. It sits on the same line, right-aligned
-   * to the end of `width` — under the axis it names — and the left pair is
+   * to the end of `width` (under the axis it names), and the left pair is
    * fitted into what it leaves. Omitted, the pair is laid out exactly as it
    * always was.
    */

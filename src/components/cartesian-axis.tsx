@@ -135,9 +135,9 @@ export function buildNumericAxis(
  * cover the padded values, so one set of gridlines reads against both sides.
  *
  * When both ranges hold zero, zero goes on the same row as the primary's
- * zero, so the two zero lines are one line. That is not always possible — a
+ * zero, so the two zero lines are one line. That is not always possible: a
  * primary whose zero is its bottom row cannot share it with a range that dips
- * below zero — and then the axis starts on its own nice multiple instead.
+ * below zero. Then the axis starts on its own nice multiple instead.
  */
 export function buildAlignedNumericAxis(
   values: readonly number[],
@@ -326,7 +326,7 @@ export function layoutCartesianPlot(opts: {
   plotW: number
   plotH: number
   leftGutter: number
-  /** Width of the right-hand axis gutter; 0 without a right-hand axis. */
+  /** Width of the right-hand axis gutter, 0 without a right-hand axis. */
   rightGutter: number
   xTickBaseline: number
   titleY: number

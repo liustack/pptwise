@@ -182,6 +182,18 @@ function legendApplicable(component: ChartComponent): boolean {
 }
 
 /**
+ * A combo names a line series with a line, not a square: the legend is the
+ * only place that says which of its colors are bars and which are lines, and
+ * a square beside a line's name describes a bar the chart never drew.
+ */
+function legendSwatchIsLine(component: ChartComponent, seriesIndex: number): boolean {
+  return component.chart_type === "combo" && component.series[seriesIndex]?.plot === "line"
+}
+
+/** Thickness (px) of a line series' legend swatch (a short stroke, not a chip). */
+const LEGEND_LINE_SWATCH_H = 3
+
+/**
  * The color a legend swatch has to be: whatever the renderer actually painted
  * that series with.
  *
@@ -192,18 +204,6 @@ function legendApplicable(component: ChartComponent): boolean {
  * A palette swatch beside those names would be a legend describing a chart
  * that is not on the page.
  */
-/**
- * A combo names a line series with a line, not a square: the legend is the
- * only place that says which of its colors are bars and which are lines, and
- * a square beside a line's name describes a bar the chart never drew.
- */
-function legendSwatchIsLine(component: ChartComponent, seriesIndex: number): boolean {
-  return component.chart_type === "combo" && component.series[seriesIndex]?.plot === "line"
-}
-
-/** Thickness (px) of a line series' legend swatch — a short stroke, not a chip. */
-const LEGEND_LINE_SWATCH_H = 3
-
 function legendSwatchFill(
   component: ChartComponent,
   seriesIndex: number,
@@ -343,7 +343,7 @@ function axisTitlesOf(component: ChartComponent): { xTitle?: string; yTitle?: st
 /**
  * Narrowest box this chart can draw a plot in. A combo with a series on the
  * right axis pays for a second tick gutter, so it needs more than one axis
- * does (`MIN_DUAL_AXIS_BOX_W`); everything else keeps `MIN_CARTESIAN_BOX_W`.
+ * does (`MIN_DUAL_AXIS_BOX_W`). Everything else keeps `MIN_CARTESIAN_BOX_W`.
  */
 function minCartesianBoxW(component: ChartComponent): number {
   const dual = component.chart_type === "combo" && component.series.some((s) => s.axis === "right")
