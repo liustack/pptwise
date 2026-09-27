@@ -138,7 +138,9 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     // notes-column reproducibility across machines: the embedded path is
     // repo-root-relative, not the machine-specific absolute path.
     expect(score.reason).not.toContain(REPO_ROOT)
-    expect(score.reason).toContain("tests/bench/fixtures/results/degraded-model/fx01/broken.json")
+    // In the platform's own separator: the scorer strips the root prefix and
+    // leaves the rest of the path as the filesystem spelled it.
+    expect(score.reason).toContain(join("tests", "bench", "fixtures", "results", "degraded-model", "fx01", "broken.json"))
   })
 
   it("fx02 (degraded): unknown theme id fails validateIr — validatePass false, errors > 0, render also fails", async () => {
@@ -226,7 +228,7 @@ describe("scoreQuestion — ambiguous artifact", () => {
     expect(score.coverageHits).toEqual([])
     // relativized, not the machine-specific absolute path
     expect(score.reason).not.toContain(REPO_ROOT)
-    expect(score.reason).toContain("tests/bench/fixtures/results/degraded-model/fx97")
+    expect(score.reason).toContain(join("tests", "bench", "fixtures", "results", "degraded-model", "fx97"))
   })
 })
 

@@ -1000,9 +1000,10 @@ describe("preview recall across restarts", () => {
     }
     // Every path the module builds from an accepted id stays under the root,
     // staging directory included — that one is where the single `rm` points.
+    const { sep } = await import("node:path")
     const id = previewId("d0")
-    expect(__testing.previewDir(root, id)!.startsWith(`${root}/`)).toBe(true)
-    expect(__testing.partialDir(root, id).startsWith(`${root}/`)).toBe(true)
+    expect(__testing.previewDir(root, id)!.startsWith(`${root}${sep}`)).toBe(true)
+    expect(__testing.partialDir(root, id).startsWith(`${root}${sep}`)).toBe(true)
     expect(() => __testing.partialDir(root, "../../victim")).toThrow(/unsafe id/)
   })
 

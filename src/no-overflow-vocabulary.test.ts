@@ -24,7 +24,7 @@
 //     still cleared a floor of 200. Each scope proves its own size.
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
-import { join, relative, resolve } from "node:path"
+import { join, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
 
@@ -89,7 +89,8 @@ function filesUnder(scope: string): string[] {
     }
   }
   walk(join(ROOT, scope))
-  return out.filter((path) => !EXCLUDED_FILES.includes(relative(ROOT, path)))
+  // Compared in the exclusion list's own spelling, with `/` on every platform.
+  return out.filter((path) => !EXCLUDED_FILES.includes(relative(ROOT, path).split(sep).join("/")))
 }
 
 /**
