@@ -163,6 +163,50 @@ describe("combo chart: schema", () => {
   })
 })
 
+/** Every plot mark's geometry is a finite number inside the frame the axes draw. */
+function expectMarksInsidePlot(container: HTMLElement) {
+  expect(container.innerHTML).not.toMatch(/="-?(Infinity|NaN)"/)
+  const yAxis = container.querySelector('[data-axis="y"]')!
+  const xAxis = container.querySelector('[data-axis="x"]')!
+  const top = Number(yAxis.getAttribute("y1"))
+  const bottom = Number(xAxis.getAttribute("y1"))
+  const left = Number(xAxis.getAttribute("x1"))
+  const right = Number(xAxis.getAttribute("x2"))
+  const eps = 1e-6
+  for (const rect of Array.from(container.querySelectorAll('rect[data-plot-mark="1"]'))) {
+    const y = Number(rect.getAttribute("y"))
+    const h = Number(rect.getAttribute("height"))
+    expect(y).toBeGreaterThanOrEqual(top - eps)
+    expect(y + h).toBeLessThanOrEqual(bottom + eps)
+    expect(h).toBeGreaterThan(0)
+  }
+  for (const dot of Array.from(container.querySelectorAll('circle[data-plot-mark="1"]'))) {
+    const cx = Number(dot.getAttribute("cx"))
+    const cy = Number(dot.getAttribute("cy"))
+    expect(cy).toBeGreaterThanOrEqual(top - eps)
+    expect(cy).toBeLessThanOrEqual(bottom + eps)
+    expect(cx).toBeGreaterThanOrEqual(left)
+    expect(cx).toBeLessThanOrEqual(right)
+  }
+}
+
+describe("combo chart: one category", () => {
+  it("stands a lone bar on zero, inside the plot", () => {
+    // Every left value the same: the shared axis builder centred its range
+    // on that value and dropped zero, so the bar hung below the x-axis.
+    const container = draw({
+      type: "chart",
+      chart_type: "combo",
+      series: [
+        { name: "A", data: [{ x: "Q", y: 100 }] },
+        { name: "B", plot: "line", data: [{ x: "Q", y: 100 }] },
+      ],
+    })
+    expect(tickLabels(container, "y")[0]).toBe("0")
+    expectMarksInsidePlot(container)
+  })
+})
+
 describe("combo chart: drawing", () => {
   it("draws bar series as columns and line series as a line through the category centers", () => {
     const container = draw(SAME_AXIS)
