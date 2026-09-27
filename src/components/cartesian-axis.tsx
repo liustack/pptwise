@@ -138,6 +138,13 @@ export function buildNumericAxis(
  * zero, so the two zero lines are one line. That is not always possible: a
  * primary whose zero is its bottom row cannot share it with a range that dips
  * below zero. Then the axis starts on its own nice multiple instead.
+ *
+ * The result is checked before it is returned: finite ticks, each above the
+ * last, covering every value. A range no such axis can cover (padding
+ * 1.7e308 overflows to `Infinity`) throws rather than handing back an axis
+ * that misses the data, and so does a value that is not a finite number.
+ * validate keeps both off every combo (`CHART_AXIS_LIMIT`), so a throw here
+ * is a caller that went around it.
  */
 export function buildAlignedNumericAxis(
   values: readonly number[],
@@ -146,21 +153,29 @@ export function buildAlignedNumericAxis(
   unit?: string,
 ): { domain: NumericDomain; ticks: number[]; labels: string[] } {
   const intervals = Math.max(1, primaryTicks.length - 1)
-  const nums = values.filter((v) => Number.isFinite(v))
-  let lo = nums.length ? Math.min(...nums) : 0
-  let hi = nums.length ? Math.max(...nums) : 1
+  const invalid = values.find((v) => !Number.isFinite(v))
+  if (invalid !== undefined) {
+    throw new Error(`buildAlignedNumericAxis: every value must be a finite number, got ${invalid}`)
+  }
+  let lo = values.length ? Math.min(...values) : 0
+  let hi = values.length ? Math.max(...values) : 1
   if (mode === "zero-max") {
     lo = Math.min(0, lo)
     hi = Math.max(0, hi)
   }
+  // What the ticks have to reach, before any headroom is added.
+  const needLo = lo
+  const needHi = hi
   if (hi === lo) {
     const pad = Math.abs(lo) * DOMAIN_PAD_FRAC || 1
     lo -= mode === "zero-max" && lo === 0 ? 0 : pad
     hi += pad
   }
   // The same headroom `paddedDomain` gives: the top always, the bottom too
-  // when the axis is not pinned to zero.
-  const span = hi - lo
+  // when the axis is not pinned to zero. In "zero-max" mode the span is
+  // floored at 1, as `paddedDomain` floors it, so a range of 1e-323 gets the
+  // axis the left side would give it instead of a step too small to form.
+  const span = mode === "zero-max" ? Math.max(hi - lo, 1) : hi - lo
   hi += span * DOMAIN_PAD_FRAC
   if (mode === "fit") lo -= span * DOMAIN_PAD_FRAC
 
@@ -170,6 +185,7 @@ export function buildAlignedNumericAxis(
 
   let step = niceStep(hi - lo, intervals)
   let start = 0
+  let covered = false
   for (let guard = 0; guard < 40; guard++) {
     if (alignZero) {
       start = -zeroRow * step
@@ -177,10 +193,19 @@ export function buildAlignedNumericAxis(
       start = Math.floor(lo / step) * step
       if (Math.abs(start) < step * 1e-12) start = 0
     }
-    if (start <= lo + step * 1e-9 && start + intervals * step >= hi - step * 1e-9) break
+    if (start <= lo + step * 1e-9 && start + intervals * step >= hi - step * 1e-9) {
+      covered = true
+      break
+    }
     step = nextNiceStep(step)
   }
   const ticks = Array.from({ length: intervals + 1 }, (_, i) => Number((start + i * step).toPrecision(12)))
+  const increasing = ticks.every((t, i) => Number.isFinite(t) && (i === 0 || t > ticks[i - 1]!))
+  if (!covered || !increasing || ticks[0]! > needLo || ticks[ticks.length - 1]! < needHi) {
+    throw new Error(
+      `buildAlignedNumericAxis: cannot cover ${needLo} to ${needHi} with ${intervals + 1} finite, increasing ticks`,
+    )
+  }
   return {
     domain: { min: ticks[0]!, max: ticks[ticks.length - 1]! },
     ticks,

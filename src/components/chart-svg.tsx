@@ -49,8 +49,9 @@ import {
  * page with no error and no mark. This one paints nothing either, and says
  * that the component went with it.
  *
- * `renderStacked` gives the same answer to the stacked case of the same
- * trouble: a pile past `CHART_AXIS_LIMIT` that no axis can be built for.
+ * `renderStacked` and `renderCombo` give the same answer to their case of the
+ * same trouble: a pile or a value past `CHART_AXIS_LIMIT` that no axis can be
+ * built for.
  */
 function WholeShareDeclined(): ReactElement {
   // One component, because one component is what went: the chart draws
@@ -3149,6 +3150,11 @@ export function renderCombo(
   const model = buildChartModel(series)
   const { categories } = model
   const meta = cartesianMeta(component)
+  // validate refuses a combo value past `CHART_AXIS_LIMIT`, since neither axis
+  // can be built for it (`buildAlignedNumericAxis` throws rather than return
+  // a range that misses it). Handed one around validate, the chart declines
+  // and says so, as a stacked pile past the same ceiling does.
+  if (keptValues(model.series).some((v) => Math.abs(v) > CHART_AXIS_LIMIT)) return <WholeShareDeclined />
   const isLine = (seriesIndex: number) => series[seriesIndex]?.plot === "line"
   const onRight = (seriesIndex: number) => series[seriesIndex]?.axis === "right"
 

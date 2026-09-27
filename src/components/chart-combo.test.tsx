@@ -2,7 +2,7 @@
 import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import type { Component } from "@/ir"
-import { schema as chartSchema } from "@/ir/components/chart"
+import { CHART_AXIS_LIMIT, schema as chartSchema } from "@/ir/components/chart"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { AXIS_TITLE_BAND_H } from "./axis-titles"
@@ -204,6 +204,54 @@ describe("combo chart: one category", () => {
     })
     expect(tickLabels(container, "y")[0]).toBe("0")
     expectMarksInsidePlot(container)
+  })
+})
+
+describe("combo chart: values at the numeric extremes", () => {
+  const lone = (left: number, right: number): ChartComponent => ({
+    type: "chart",
+    chart_type: "combo",
+    series: [
+      { name: "A", data: [{ x: "Q", y: left }] },
+      { name: "B", plot: "line", axis: "right", data: [{ x: "Q", y: right }] },
+    ],
+  })
+
+  it("refuses a value past what an axis can draw, naming the unit field of its own axis", () => {
+    // A right line of 1.7e308 used to pass and draw a point at cy="NaN".
+    const right = issuesOf(lone(100, 1.7e308))
+    expect(right.map((i) => i.path.join("."))).toEqual(["series.1.data.0.y"])
+    expect(right[0]!.message).toContain(String(CHART_AXIS_LIMIT))
+    expect(right[0]!.message).toMatch(/y2_unit/)
+    const left = issuesOf(lone(-1.7e308, 1))
+    expect(left.map((i) => i.path.join("."))).toEqual(["series.0.data.0.y"])
+    expect(left[0]!.message).toMatch(/axes\.y_unit/)
+  })
+
+  it("draws a right line at 1e300 inside the plot, on finite right ticks", () => {
+    const component = lone(100, 1e300)
+    expect(issuesOf(component)).toEqual([])
+    const container = draw(component)
+    expectMarksInsidePlot(container)
+    const right = tickLabels(container, "y2").map(Number)
+    expect(right.every(Number.isFinite)).toBe(true)
+    expect(Math.max(...right)).toBeGreaterThanOrEqual(1e300)
+    expect(new Set(right).size).toBe(right.length)
+  })
+
+  it("draws a right line at 1e-323 inside the plot, on distinct right ticks", () => {
+    const component = lone(100, 1e-323)
+    expect(issuesOf(component)).toEqual([])
+    const container = draw(component)
+    expectMarksInsidePlot(container)
+    expect(tickLabels(container, "y2")).toEqual(["0", "0.05", "0.1", "0.15"])
+  })
+
+  it("declines, and says so, when handed a value past the ceiling around validate", () => {
+    const container = draw(lone(100, 1.7e308))
+    expect(container.innerHTML).not.toMatch(/Infinity|NaN/)
+    expect(container.querySelectorAll('[data-plot-mark="1"]')).toHaveLength(0)
+    expect(container.querySelector('[data-dropped-kind="component"]')).not.toBeNull()
   })
 })
 

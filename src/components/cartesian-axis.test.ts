@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { META_FONT_FLOOR_PX } from "@/constants"
 import {
   buildAlignedNumericAxis,
+  buildNumericAxis,
   formatAxisTick,
   MAX_TICK_COUNT,
   MIN_TICK_COUNT,
@@ -145,6 +146,44 @@ describe("buildAlignedNumericAxis", () => {
     const axis = buildAlignedNumericAxis([], "fit", [0, 50, 100])
     expect(axis.ticks).toHaveLength(3)
     expect(axis.domain.max).toBeGreaterThan(axis.domain.min)
+  })
+
+  it("floors a tiny zero-max span at 1, the way the left axis does, instead of collapsing to zero", () => {
+    // 1e-323 is below every step the nice-number search can form, so the
+    // step underflowed to 0 and every tick came out 0.
+    const axis = buildAlignedNumericAxis([1e-323], "zero-max", [0, 50, 100, 150])
+    expect(axis.ticks).toEqual([0, 0.05, 0.1, 0.15])
+    expect(buildNumericAxis([0, 1e-323], "zero-max").ticks).toEqual([0, 0.05, 0.1, 0.15])
+  })
+
+  it("refuses a range it cannot cover with finite ticks, rather than returning one that misses the data", () => {
+    // Padding 1.7e308 overflowed to Infinity, the step search fell back to 1,
+    // and the axis came back as 0 to 3e10.
+    expect(() => buildAlignedNumericAxis([1.7e308], "zero-max", [0, 50, 100, 150])).toThrow(/cannot/)
+    expect(() => buildAlignedNumericAxis([-1.7e308, 1.7e308], "fit", [0, 50, 100])).toThrow(/cannot/)
+  })
+
+  it("refuses a value that is not a finite number", () => {
+    expect(() => buildAlignedNumericAxis([1, Number.NaN], "fit", [0, 50, 100])).toThrow(/finite/)
+    expect(() => buildAlignedNumericAxis([Number.POSITIVE_INFINITY], "zero-max", [0, 50, 100])).toThrow(/finite/)
+  })
+
+  it("covers its values with distinct, finite, evenly spaced ticks across every magnitude up to the ceiling", () => {
+    for (const exp of [-300, -200, -20, -3, 0, 3, 20, 200, 300]) {
+      for (const values of [[10 ** exp], [0.3 * 10 ** exp, 10 ** exp], [-(10 ** exp), 0.5 * 10 ** exp]]) {
+        for (const mode of ["zero-max", "fit"] as const) {
+          for (const primary of [[0, 50, 100], [-100, 0, 100, 200], [0, 25, 50, 75, 100, 125]]) {
+            const axis = buildAlignedNumericAxis(values, mode, primary)
+            const label = `${mode} ${JSON.stringify(values)} on ${primary.length} rows`
+            expect(axis.ticks, label).toHaveLength(primary.length)
+            expect(axis.ticks.every(Number.isFinite), label).toBe(true)
+            for (let i = 1; i < axis.ticks.length; i++) expect(axis.ticks[i]!, label).toBeGreaterThan(axis.ticks[i - 1]!)
+            expect(axis.domain.min, label).toBeLessThanOrEqual(Math.min(...values))
+            expect(axis.domain.max, label).toBeGreaterThanOrEqual(Math.max(...values))
+          }
+        }
+      }
+    }
   })
 
   it("keeps decimal steps clean", () => {

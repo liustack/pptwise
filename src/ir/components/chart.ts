@@ -82,8 +82,9 @@ export const STACKED_TYPES = ["stacked", "percent_stacked"] as const
  * `NaN`. The ceiling leaves eight orders of magnitude for the axis to grow
  * into, and no figure a slide reports comes near it.
  *
- * It applies to the three chart types that were written against it. The
- * older types keep accepting what they always accepted.
+ * It applies to `stacked` and `combo`. `percent_stacked` needs none, since
+ * it scales each column before summing it and its axis is always 0% to 100%.
+ * The older types keep accepting what they always accepted.
  */
 export const CHART_AXIS_LIMIT = 1e300
 
@@ -497,6 +498,24 @@ export const schema = z
             ? `axes.${key} labels the right-hand axis, and no series here is on it. Set axis: "right" on the series that needs its own scale, or remove ${key}.`
             : `axes.${key} labels the right-hand axis of a combo chart, and a ${c.chart_type} chart has none. Remove ${key}, or use chart_type "combo" with a series on axis: "right".`,
       })
+    }
+    // A combo's values sit on one of two axes, and the right one is built to
+    // share the left one's rows, which stretches its range further still.
+    // Past the ceiling neither can be built: a right line of 1.7e308 drew a
+    // point at cy="NaN".
+    if (c.chart_type === "combo") {
+      c.series.forEach((s, si) =>
+        s.data.forEach((d, di) => {
+          if (Math.abs(d.y) <= CHART_AXIS_LIMIT) return
+          ctx.addIssue({
+            code: "custom",
+            path: ["series", si, "data", di, "y"],
+            message:
+              `series[${si}] ("${s.name}") has ${d.y} for "${d.x}", beyond plus or minus ${CHART_AXIS_LIMIT}, the largest value a chart axis can draw. ` +
+              `Divide the series by a power of ten and name the unit in axes.${s.axis === "right" ? "y2_unit" : "y_unit"}, for example 3.2 with "M" for 3200000.`,
+          })
+        }),
+      )
     }
     if (c.chart_type === "combo") {
       const lines = c.series.filter((s) => s.plot === "line").length
