@@ -169,6 +169,39 @@ describe("stacked chart: crowded totals", () => {
   })
 })
 
+describe("percent_stacked chart: large values", () => {
+  // Two finite values whose sum is not finite. Dividing each by that sum
+  // gave 0, so a 50/50 column was painted as two empty segments.
+  it("splits a column of two 1e308 values into two halves", () => {
+    const component: ChartComponent = {
+      type: "chart",
+      chart_type: "percent_stacked",
+      series: [
+        { name: "A", data: [{ x: "Q", y: 1e308 }] },
+        { name: "B", data: [{ x: "Q", y: 1e308 }] },
+      ],
+    }
+    expect(issuesOf(component)).toEqual([])
+    const [a, b] = segments(draw(component))
+    expect(a!.h).toBeGreaterThan(0)
+    expect(a!.h).toBeCloseTo(b!.h, 9)
+    expect(b!.y + b!.h).toBeCloseTo(a!.y, 9)
+  })
+
+  it("keeps a 1e308 share in proportion beside a small one", () => {
+    const component: ChartComponent = {
+      type: "chart",
+      chart_type: "percent_stacked",
+      series: [
+        { name: "A", data: [{ x: "Q", y: 1.5e308 }] },
+        { name: "B", data: [{ x: "Q", y: 0.5e308 }] },
+      ],
+    }
+    const [a, b] = segments(draw(component))
+    expect(a!.h / b!.h).toBeCloseTo(3, 9)
+  })
+})
+
 describe("stacked chart: drawing", () => {
   it("piles each category's series into one column, first series at the bottom", () => {
     const container = draw(TWO_REGIONS)
