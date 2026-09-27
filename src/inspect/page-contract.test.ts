@@ -7,7 +7,14 @@ import { CANONICAL_THEME_IDS } from "@/themes"
 import { getThemeDefinition } from "@/themes/definitions"
 import { COMPONENT_BUILDERS } from "../../evals/gallery/corpus/components"
 import { LEXICONS } from "../../evals/gallery/corpus/lexicon"
-import { pageComponentContract, pageContract, type PageLimit } from "./page-contract"
+import { CAPACITY } from "@/audit/capacity"
+import { architecture } from "@/components/architecture"
+import { bullets } from "@/components/bullets"
+import { comparison } from "@/components/comparison"
+import type { ComponentCtx } from "@/components/types"
+import { CANVAS_H_PX, CANVAS_W_PX } from "@/constants"
+import { DEFAULT_NARRATIVE, PACING_BUDGETS, PACING_VALUES } from "@/narrative"
+import { CANVAS_BOUND, pageComponentContract, pageContract, type PageLimit } from "./page-contract"
 
 // 1x1 红色 PNG
 const PNG_1PX =
@@ -319,5 +326,53 @@ describe("pageComponentContract", () => {
       /page "probe" does not draw chart\. It draws: paragraph, kpi_cards|page "probe" does not draw chart\. It draws: kpi_cards, paragraph/,
     )
     expect(() => pageComponentContract(ir, "probe", "quote", { theme })).toThrow(/unknown component type "quote"/)
+  })
+})
+
+describe("pageContract: only limits a drawn page can reach", () => {
+  it("leaves out the pathological-input ceilings and keeps the real ones", () => {
+    const limits = contractOf("brief", { type: "content", kind: "data" }).limits
+    const maxes = (type: string, measure: PageLimit["measure"], level: PageLimit["level"]) =>
+      limits.filter((l) => l.of?.includes(type) && l.measure === measure && l.level === level).map((l) => l.max)
+    // Far past anything a canvas shows: never listed.
+    expect(maxes("bullets", "items", "error")).toEqual([])
+    expect(maxes("comparison", "rows", "error")).toEqual([])
+    expect(limits.some((l) => l.max === CAPACITY.bullets.countOverflowItems || l.max === CAPACITY.comparison.errorRows)).toBe(false)
+    // Reachable: still listed.
+    expect(maxes("architecture", "layers", "error")).toEqual([CAPACITY.architecture.errorLayers])
+    expect(maxes("bullets", "item width", "error")).toEqual([CAPACITY.bullets.itemOverflowUnits])
+    expect(maxes("bullets", "items", "warning")).toEqual([PACING_BUDGETS[DEFAULT_NARRATIVE.pacing].bullets.maxItems])
+    expect(maxes("comparison", "rows", "warning")).toEqual([CAPACITY.comparison.warnRows])
+    // Nothing listed sits past the whole-canvas figure for its unit.
+    for (const limit of limits) {
+      const bound = limit.of?.length === 1 ? CANVAS_BOUND[`${limit.of[0]} ${limit.measure}`] : undefined
+      if (bound !== undefined) expect(limit.max, JSON.stringify(limit)).toBeLessThanOrEqual(bound)
+    }
+  })
+
+  it("measures each whole-canvas figure with the component's own measure, at its smallest body size", () => {
+    const ctx = (bodyFontPx: number) => ({ bodyFontPx }) as ComponentCtx
+    const smallest = Math.min(...PACING_VALUES.map((pacing) => PACING_BUDGETS[pacing].bodyBaselinePx))
+    /** The largest count whose natural height still fits the canvas. */
+    const mostThatFits = (height: (n: number) => number): number => {
+      let n = 0
+      while (height(n + 1) <= CANVAS_H_PX) n++
+      return n
+    }
+    expect(CANVAS_BOUND["bullets items"]).toBe(
+      mostThatFits((n) =>
+        bullets.measure({ type: "bullets", style: "plain", items: Array.from({ length: n }, () => "x") }, CANVAS_W_PX, ctx(smallest)),
+      ),
+    )
+    expect(CANVAS_BOUND["comparison rows"]).toBe(
+      mostThatFits((n) =>
+        comparison.measure({ type: "comparison", columns: ["A", "B"], rows: Array.from({ length: n }, () => ({ label: "x", cells: ["y"] })) }, CANVAS_W_PX, ctx(smallest)),
+      ),
+    )
+    expect(CANVAS_BOUND["architecture layers"]).toBe(
+      mostThatFits((n) =>
+        architecture.measure({ type: "architecture", layers: Array.from({ length: n }, () => ({ title: "x", items: ["y"] })) }, CANVAS_W_PX, ctx(smallest)),
+      ),
+    )
   })
 })
