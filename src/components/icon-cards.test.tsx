@@ -207,4 +207,30 @@ describe("icon_cards component", () => {
     const ctx = themeCtx("swiss")
     expect(markupOf(iconCards.render(four, BOX, ctx))).toBe(markupOf(iconCards.render(four, BOX, ctx)))
   })
+
+  it("shrinks the icon node before it cuts a sentence the box could hold", () => {
+    const english = {
+      type: "icon_cards" as const,
+      items: [
+        card("In-house workspace compute", "Moving workloads off public cloud dropped per-seat monthly cost by thirty-one percent.", "target"),
+        card("Vertical playbook replication", "East China penetration is half of South China, and sales coverage density is the main reason.", "gauge"),
+        card("Staffing-path automation", "Client managers are running near their load ceiling, so expansion is gated on hiring.", "shield"),
+        card("Channel partner enablement", "Two competitors are bidding below cost in the mid-market, which we cannot meet head-on.", "rocket"),
+      ],
+    }
+    const ctx = themeCtx("brief")
+    const { container } = svg(iconCards.render(english, { x: 96, y: 330, w: 1088, h: 252 }, ctx))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const words = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .join(" ")
+    for (const item of english.items) expect(words).toContain(item.text)
+    const radii = Array.from(container.querySelectorAll("[data-audit-box] > circle")).map((c) => Number(c.getAttribute("r")))
+    expect(radii.length).toBe(english.items.length)
+    for (const r of radii) {
+      expect(r).toBeLessThan(44)
+      expect(r).toBeGreaterThanOrEqual(28)
+    }
+    for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y"))).toBeLessThanOrEqual(252)
+  })
 })

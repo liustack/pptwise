@@ -53,8 +53,10 @@ function layoutItemText(
   return { title, text }
 }
 
+const NODE_R_MIN = 28
+
 function nodeRadius(colW: number): number {
-  return Math.round(Math.min(44, Math.max(28, colW * 0.16)))
+  return Math.round(Math.min(44, Math.max(NODE_R_MIN, colW * 0.16)))
 }
 
 function stackHeight(layout: ReturnType<typeof layoutItemText>, nodeSize: number): number {
@@ -97,7 +99,30 @@ function geometry(
   const cols = formIconColumnCols(n, w, COL_INSET)
   const rows = Math.ceil(n / cols)
   const colW = w / cols
-  const nodeR = nodeRadius(colW)
+  const settled = columnsAt(component, w, ctx, cols, rows, colW, nodeRadius(colW), boxH)
+  // The icon is the one thing in a column that is not content. When the box
+  // is too short for every title and text at the node's natural size, the
+  // node gives up height first, as far as its own floor, before a word goes.
+  const cut = (layouts: typeof settled.layouts) => layouts.some((l) => l.title.truncated || l.text.truncated)
+  if (boxH !== undefined && cut(settled.layouts)) {
+    for (let r = settled.nodeR - 1; r >= NODE_R_MIN; r--) {
+      const smaller = columnsAt(component, w, ctx, cols, rows, colW, r, boxH)
+      if (!cut(smaller.layouts)) return smaller
+    }
+  }
+  return settled
+}
+
+function columnsAt(
+  component: IconCardsComponent,
+  w: number,
+  ctx: ComponentCtx,
+  cols: number,
+  rows: number,
+  colW: number,
+  nodeR: number,
+  boxH?: number,
+) {
   const nodeSize = nodeR * 2
   const contentW = Math.max(24, colW - COL_INSET)
   const slotH = boxH != null ? Math.max(1, (boxH - GAP * (rows - 1)) / rows) : undefined
