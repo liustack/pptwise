@@ -4,13 +4,13 @@ import { accessibleInk } from "../render/ink"
 import {
   FORM_BODY_FLOOR,
   FORM_TITLE_FLOOR,
-  fitFormLine,
   formHighlightFill,
+  layoutFormBody,
   layoutFormTitle,
   formLineHeight,
   formTextClipMarker,
 } from "./legibility"
-import type { RenderDef, SvgComponent } from "./types"
+import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type ChevronProcessComponent = Extract<Component, { type: "chevron_process" }>
 
@@ -28,6 +28,12 @@ const NOTCH = 26
 const SEAM = 3
 const BAND_H = 118
 const NOTE_GAP = 18
+/**
+ * A note is a short line, but a common English phrase at the body floor is
+ * wider than a quarter of the page: it wraps to a second line under its own
+ * chevron rather than losing its tail.
+ */
+const NOTE_MAX_LINES = 2
 
 interface Chevron {
   i: number
@@ -44,10 +50,11 @@ interface Geometry {
   indexSize: number
   titleSize: number
   noteSize: number
+  notes: (ReturnType<typeof layoutFormBody> | null)[]
   h: number
 }
 
-function resolve(component: ChevronProcessComponent, w: number): Geometry {
+function resolve(component: ChevronProcessComponent, w: number, ctx: ComponentCtx): Geometry {
   const n = component.items.length
   const notch = Math.min(NOTCH, Math.max(12, w / (n * 8)))
   const advance = (w - notch) / n
@@ -65,7 +72,23 @@ function resolve(component: ChevronProcessComponent, w: number): Geometry {
   })
   const inner = Math.max(24, advance - notch - 28)
   const titleSize = Math.max(FORM_TITLE_FLOOR, Math.min(24, Math.round(inner * 0.2)))
-  const hasNote = component.items.some((item) => (item.text ?? "").trim() !== "")
+  // A note prints on the page under the band, so it may run under the next
+  // chevron's notch — it stops where the next note starts, not where this
+  // chevron's own point begins.
+  const noteWidth = (i: number): number =>
+    (i === chevrons.length - 1 ? w : chevrons[i + 1]!.textLeft - 12) - chevrons[i]!.textLeft
+  const notes = component.items.map((item, i) => {
+    const note = (item.text ?? "").trim()
+    return note
+      ? layoutFormBody(note, {
+          maxWidth: Math.max(24, noteWidth(i)),
+          fontSize: FORM_BODY_FLOOR,
+          maxLines: NOTE_MAX_LINES,
+          fontFamily: ctx.fonts.body,
+        })
+      : null
+  })
+  const noteLines = Math.max(0, ...notes.map((n) => n?.lines.length ?? 0))
   const band = BAND_H
   return {
     band,
@@ -73,7 +96,8 @@ function resolve(component: ChevronProcessComponent, w: number): Geometry {
     indexSize: FORM_BODY_FLOOR,
     titleSize,
     noteSize: FORM_BODY_FLOOR,
-    h: band + (hasNote ? NOTE_GAP + formLineHeight(FORM_BODY_FLOOR) : 0),
+    notes,
+    h: band + (noteLines > 0 ? NOTE_GAP + noteLines * formLineHeight(FORM_BODY_FLOOR) : 0),
   }
 }
 
@@ -93,17 +117,12 @@ function chevronPoints(c: Chevron, band: number): string {
 }
 
 export const chevronProcess: SvgComponent<ChevronProcessComponent> = {
-  measure(component, w) {
-    return resolve(component, w).h
+  measure(component, w, ctx) {
+    return resolve(component, w, ctx).h
   },
 
   render(component, box, ctx): ReactElement {
-    const g = resolve(component, box.w)
-    // A note prints on the page under the band, so it may run under the next
-    // chevron's notch — it stops where the next note starts, not where this
-    // chevron's own point begins.
-    const noteWidth = (i: number): number =>
-      (i === g.chevrons.length - 1 ? box.w : g.chevrons[i + 1]!.textLeft - 12) - g.chevrons[i]!.textLeft
+    const g = resolve(component, box.w, ctx)
     const border = ctx.colors.border ?? ctx.colors.muted
     const last = component.items.length - 1
     const highlight = formHighlightFill(ctx.colors)
@@ -126,14 +145,7 @@ export const chevronProcess: SvgComponent<ChevronProcessComponent> = {
           const titleInk = accessibleInk(filled ? ctx.colors.surface : ctx.colors.primary, fill, titleLayout.fontSize)
           const blockH = formLineHeight(g.indexSize) + titleLayout.lines.length * titleLayout.lineHeight
           const top = g.band / 2 - blockH / 2
-          const note = (item.text ?? "").trim()
-          const noteFit = note
-            ? fitFormLine(note, {
-                maxWidth: Math.max(24, noteWidth(c.i)),
-                fontSize: g.noteSize,
-                fontFamily: ctx.fonts.body,
-              })
-            : null
+          const noteFit = g.notes[c.i]
           return (
             <g key={`chevron-${c.i}`}>
               <polygon
@@ -166,18 +178,19 @@ export const chevronProcess: SvgComponent<ChevronProcessComponent> = {
                   {line}
                 </text>
               ))}
-              {noteFit ? (
+              {noteFit?.lines.map((line, li) => (
                 <text
-                  data-truncated={noteFit.truncated ? "1" : undefined}
+                  key={`note-${li}`}
+                  data-truncated={formTextClipMarker(noteFit, li)}
                   x={c.textLeft}
-                  y={g.band + NOTE_GAP + noteFit.fontSize * 0.9}
+                  y={g.band + NOTE_GAP + li * noteFit.lineHeight + noteFit.fontSize * 0.9}
                   fontFamily={ctx.fonts.body}
                   fontSize={noteFit.fontSize}
                   fill={accessibleInk(ctx.colors.muted, ctx.defaultBg ?? ctx.colors.bg, noteFit.fontSize)}
                 >
-                  {noteFit.text}
+                  {line}
                 </text>
-              ) : null}
+              ))}
             </g>
           )
         })}

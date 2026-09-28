@@ -103,6 +103,32 @@ describe("chevron_process component", () => {
     expect(container.querySelectorAll("[data-dropped]").length).toBe(0)
   })
 
+  it("wraps a note wider than its column onto a second line instead of cutting it", () => {
+    const english = {
+      type: "chevron_process" as const,
+      items: [
+        { title: "Scoping", text: "Seat expansion in existing accounts" },
+        { title: "Solutioning", text: "Standardized onboarding templates" },
+        { title: "Seat setup", text: "In-house workspace compute" },
+        { title: "Access setup", text: "Vertical playbook replication" },
+      ],
+    }
+    const ctx = themed("brief")
+    const box = { x: 96, y: 290, w: 1088 }
+    const h = chevronProcess.measure(english, box.w, ctx)
+    const { container } = svg(chevronProcess.render(english, box, ctx))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const words = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .join(" ")
+      .replace(/\s+/g, " ")
+    for (const item of english.items) expect(words).toContain(item.text)
+    // The second line is paid for in the measured height.
+    const lastBaseline = Math.max(...Array.from(container.querySelectorAll("text")).map((t) => Number(t.getAttribute("y"))))
+    expect(lastBaseline).toBeLessThanOrEqual(h)
+    expect(h).toBeGreaterThan(chevronProcess.measure(withN(4), box.w, ctx))
+  })
+
   it("keeps stage names inside their own chevron at the widest legal count", () => {
     const { container } = svg(chevronProcess.render(withN(6), { x: 88, y: 96, w: 1104 }, themed("swiss")))
     const band = polys(container)
