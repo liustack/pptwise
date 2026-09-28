@@ -42,6 +42,54 @@ export function parseNums(attr: string | null): number[] {
   return (attr ?? "").split(",").map(Number)
 }
 
+function runUnits(text: string, fontFamily: string, fontWeight: string | null): number {
+  return isMonoFontFamily(fontFamily)
+    ? measureMonoTextUnits(text)
+    : measureTextUnits(text, { bold: isBold(fontWeight), fontFamily })
+}
+
+/**
+ * Rendered width of one `<text>` line, in page px.
+ *
+ * A `<tspan>` that sets its own `font-size` or `dx` is measured as its own
+ * run: a hero figure's unit (brief's stat-hero sets "10.2" at 310px and
+ * "万席" at 81px in one `<text>`, which the exporter keeps as two runs of one
+ * text box) is charged at the size it is drawn at, plus its lead-in gap.
+ * Read at the outer size, those two CJK glyphs alone were charged 620px and
+ * the line was reported spanning x=[96,1381] on a page it never leaves.
+ *
+ * A line with no such run is measured as one string, exactly as before.
+ */
+function textLineWidth(el: Element, content: string, fontSize: number, scale: number): number {
+  const fontFamily = el.getAttribute("font-family") ?? ""
+  const fontWeight = el.getAttribute("font-weight")
+  const sizedRun = (node: Element) =>
+    node.tagName.toLowerCase() === "tspan" && (node.hasAttribute("font-size") || node.hasAttribute("dx"))
+  if (!Array.from(el.children).some(sizedRun)) return runUnits(content, fontFamily, fontWeight) * fontSize
+
+  const runs: { text: string; fontSize: number; dx: number; fontWeight: string | null }[] = []
+  el.childNodes.forEach((node) => {
+    if (node.nodeType === 3) {
+      runs.push({ text: node.textContent ?? "", fontSize, dx: 0, fontWeight })
+      return
+    }
+    if (node.nodeType !== 1) return
+    const child = node as Element
+    const ownSize = Number(child.getAttribute("font-size"))
+    const ownDx = Number(child.getAttribute("dx"))
+    runs.push({
+      text: child.textContent ?? "",
+      fontSize: Number.isFinite(ownSize) && ownSize > 0 ? ownSize * scale : fontSize,
+      dx: Number.isFinite(ownDx) ? ownDx * scale : 0,
+      fontWeight: child.getAttribute("font-weight") ?? fontWeight,
+    })
+  })
+  // `content` is the trimmed line, so the runs lose the same outer blanks.
+  runs[0]!.text = runs[0]!.text.trimStart()
+  runs[runs.length - 1]!.text = runs[runs.length - 1]!.text.trimEnd()
+  return runs.reduce((sum, run) => sum + run.dx + runUnits(run.text, fontFamily, run.fontWeight) * run.fontSize, 0)
+}
+
 export function auditSvgMarkup(markup: string): OverflowIssue[] {
   const Parser = getPlatform().domParser ?? globalThis.DOMParser
   if (!Parser) {
@@ -110,11 +158,7 @@ export function auditSvgMarkup(markup: string): OverflowIssue[] {
         // "estimator/audit shared-blindness" gap root-cause.md S4.2 named
         // as the mechanism that let the reported cover-overflow defect
         // audit clean (0 findings) while visibly overflowing in PowerPoint.
-        const fontFamily = el.getAttribute("font-family") ?? ""
-        const units = isMonoFontFamily(fontFamily)
-          ? measureMonoTextUnits(content)
-          : measureTextUnits(content, { bold: isBold(el.getAttribute("font-weight")), fontFamily })
-        const width = units * fontSize
+        const width = textLineWidth(el, content, fontSize, as)
         const anchor = el.getAttribute("text-anchor") ?? "start"
         const left = anchor === "end" ? tx - width : anchor === "middle" ? tx - width / 2 : tx
         const right = left + width
