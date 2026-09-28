@@ -319,7 +319,7 @@ describe("heatmap component", () => {
       expect(labels.every((t) => t.getAttribute("data-truncated") === null)).toBe(true)
     })
 
-    it("keeps the 96px column, byte for byte, when every row name already fits it", () => {
+    it("keeps the 96px column when every row name already fits it", () => {
       const firstCellX = Number(
         svg(heatmap.render(basic, { x: 40, y: 0, w: 900, h: 300 }, ctx)).container.querySelector("rect")!.getAttribute("x"),
       )
