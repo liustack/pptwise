@@ -228,6 +228,29 @@ describe("combo chart: values at the numeric extremes", () => {
     expect(left[0]!.message).toMatch(/axes\.y_unit/)
   })
 
+  it("asks for one factor across every series on the axis, not for the one series that is too large", () => {
+    // Dividing only A by ten, as the old message said, turned a 2:1 ratio
+    // between A and B into 0.2:1 under one shared unit.
+    const component: ChartComponent = {
+      type: "chart",
+      chart_type: "combo",
+      series: [
+        { name: "A", data: [{ x: "Q", y: 2e300 }] },
+        { name: "B", plot: "line", data: [{ x: "Q", y: 1e300 }] },
+        { name: "C", plot: "line", axis: "right", data: [{ x: "Q", y: 5 }] },
+      ],
+    }
+    const issues = issuesOf(component)
+    expect(issues.map((i) => i.path.join("."))).toEqual(["series.0.data.0.y"])
+    const message = issues[0]!.message
+    expect(message).toMatch(/every series on the left axis/)
+    expect(message).toMatch(/same power of ten/)
+    expect(message).toContain('"A"')
+    expect(message).toContain('"B"')
+    expect(message).not.toContain('"C"')
+    expect(message).toMatch(/axes\.y_unit/)
+  })
+
   it("draws a right line at 1e300 inside the plot, on finite right ticks", () => {
     const component = lone(100, 1e300)
     expect(issuesOf(component)).toEqual([])

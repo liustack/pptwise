@@ -401,6 +401,10 @@ export const schema = z
           piles.set(key, pile)
         }
       }
+      // Every series in a stacked chart sits on the one axis, so the fix is
+      // one factor for all of them. Dividing only the series that looks large
+      // would change what each column is made of.
+      const everySeries = c.series.map((s) => `"${s.name}"`).join(", ")
       for (const { x, up, down } of piles.values()) {
         for (const [side, sum] of [
           ["positive", up],
@@ -411,8 +415,9 @@ export const schema = z
             code: "custom",
             path: ["series"],
             message:
-              `the ${side} values in category "${x}" add up to ${side === "positive" ? "more than" : "less than -"}${CHART_AXIS_LIMIT}, beyond what a chart axis can draw. ` +
-              `Divide every value by a power of ten and name the unit in axes.y_unit, for example 3.2 with y_unit "M" for 3200000.`,
+              `the ${side} values in category "${x}" add up to ${side === "positive" ? "more than " : "less than -"}${CHART_AXIS_LIMIT}, beyond what a chart axis can draw. ` +
+              `Divide every value in every series (${everySeries}) by the same power of ten, so the columns keep their proportions, ` +
+              `and name the unit in axes.y_unit, for example 3.2 with y_unit "M" for 3200000.`,
           })
         }
       }
@@ -503,16 +508,26 @@ export const schema = z
     // share the left one's rows, which stretches its range further still.
     // Past the ceiling neither can be built: a right line of 1.7e308 drew a
     // point at cy="NaN".
+    // The fix is one factor for everything on that value's axis: series on
+    // one axis are read against one scale and one unit, so dividing only the
+    // series that is too large changes how it compares with the others.
     if (c.chart_type === "combo") {
+      const peers = (right: boolean) =>
+        c.series
+          .filter((s) => (s.axis === "right") === right)
+          .map((s) => `"${s.name}"`)
+          .join(", ")
       c.series.forEach((s, si) =>
         s.data.forEach((d, di) => {
           if (Math.abs(d.y) <= CHART_AXIS_LIMIT) return
+          const right = s.axis === "right"
           ctx.addIssue({
             code: "custom",
             path: ["series", si, "data", di, "y"],
             message:
               `series[${si}] ("${s.name}") has ${d.y} for "${d.x}", beyond plus or minus ${CHART_AXIS_LIMIT}, the largest value a chart axis can draw. ` +
-              `Divide the series by a power of ten and name the unit in axes.${s.axis === "right" ? "y2_unit" : "y_unit"}, for example 3.2 with "M" for 3200000.`,
+              `Divide every series on the ${right ? "right" : "left"} axis (${peers(right)}) by the same power of ten, so they keep their proportions, ` +
+              `and name the unit in axes.${right ? "y2_unit" : "y_unit"}, for example 3.2 with "M" for 3200000.`,
           })
         }),
       )

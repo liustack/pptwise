@@ -185,14 +185,20 @@ describe("stacked chart: totals past what an axis can draw", () => {
     const issues = issuesOf(pile(1e308, 1e308))
     expect(issues.map((i) => i.path.join("."))).toEqual(["series"])
     expect(issues[0]!.message).toMatch(/"Q"/)
-    expect(issues[0]!.message).toContain(String(CHART_AXIS_LIMIT))
+    expect(issues[0]!.message).toContain(`more than ${CHART_AXIS_LIMIT}`)
     expect(issues[0]!.message).toMatch(/y_unit/)
+    // Every series shares the one axis, so the fix is one factor for all of
+    // them, or the columns stop meaning what they meant.
+    expect(issues[0]!.message).toMatch(/same power of ten/)
+    expect(issues[0]!.message).toContain('"A"')
+    expect(issues[0]!.message).toContain('"B"')
   })
 
   it("refuses negative values that add up past the ceiling", () => {
     const issues = issuesOf(pile(-6e299, -6e299))
     expect(issues.map((i) => i.path.join("."))).toEqual(["series"])
     expect(issues[0]!.message).toMatch(/negative/)
+    expect(issues[0]!.message).toContain(`less than -${CHART_AXIS_LIMIT}`)
   })
 
   it("draws a pile under the ceiling with finite geometry and its total", () => {
