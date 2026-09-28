@@ -161,6 +161,87 @@ describe("auditL1 planted defects", () => {
     expect(codes(svg)).not.toContain("strikethrough")
   })
 
+  // homeroom's bmc page before its rules moved: a midground rule at y548 ran
+  // behind the opaque bottom cards, and the card text sat on it. The page
+  // showed no line through the words, only a stub in the gap between cards.
+  // Text 1 has the rule through its x-height, text 2 has it on its baseline.
+  const ruleUnderCard = (card: string) =>
+    wrap(
+      `<g data-depth="bg"><rect x="0" y="0" width="1280" height="720" fill="#ECF0F2"/></g>` +
+        `<g data-depth="mid"><g data-decor="true">` +
+        `<line x1="96" y1="548" x2="1184" y2="548" stroke="#D3DBE0" stroke-width="1" opacity="0.55"/>` +
+        `</g></g>` +
+        `<g data-depth="fg">${card}` +
+        `<text x="110" y="553" font-size="16">辅助线变式见得太少</text>` +
+        `<text x="661" y="548" font-size="16">暑假是补计算的黄金窗口</text></g>`,
+    )
+  const OPAQUE_CARDS =
+    `<rect x="96" y="491" width="537" height="140" rx="12" fill="#F9FBFC"/>` +
+    `<rect x="647" y="491" width="537" height="140" rx="12" fill="#F9FBFC"/>`
+
+  it("does not flag a rule the text's opaque card paints over", () => {
+    const found = codes(ruleUnderCard(OPAQUE_CARDS))
+    expect(found).not.toContain("strikethrough")
+    expect(found).not.toContain("edge-stick")
+  })
+
+  it("still flags the rule when nothing covers it", () => {
+    const found = codes(ruleUnderCard(""))
+    expect(found).toContain("strikethrough")
+    expect(found).toContain("edge-stick")
+  })
+
+  it("still flags the rule when the card is painted under it", () => {
+    const svg = wrap(
+      `${OPAQUE_CARDS}<line x1="96" y1="548" x2="1184" y2="548" stroke="#D3DBE0"/>` +
+        `<text x="110" y="553" font-size="16">辅助线变式见得太少</text>` +
+        `<text x="661" y="548" font-size="16">暑假是补计算的黄金窗口</text>`,
+    )
+    expect(codes(svg)).toContain("strikethrough")
+    expect(codes(svg)).toContain("edge-stick")
+  })
+
+  it("still flags the rule through a card that lets it show", () => {
+    const card = (attrs: string) =>
+      `<rect x="96" y="491" width="537" height="140" ${attrs}/>` +
+      `<rect x="647" y="491" width="537" height="140" ${attrs}/>`
+    for (const cards of [
+      card(`fill="#F9FBFC" fill-opacity="0.6"`),
+      card(`fill="#F9FBFC" opacity="0.9"`),
+      `<g opacity="0.8">${card(`fill="#F9FBFC"`)}</g>`,
+      card(`fill="none" stroke="#D3DBE0"`),
+      card(`fill="#F9FBFC80"`),
+      card(`fill="url(#paper)"`),
+      card(`fill="#F9FBFC" clip-path="url(#c)"`),
+      card(`fill="#F9FBFC" transform="rotate(8)"`),
+    ]) {
+      const found = codes(ruleUnderCard(cards))
+      expect(found, cards).toContain("strikethrough")
+      expect(found, cards).toContain("edge-stick")
+    }
+  })
+
+  it("still flags the part of the rule a card leaves uncovered", () => {
+    // Each card stops 40px into its text, so most of the words keep the line.
+    const svg = ruleUnderCard(
+      `<rect x="96" y="491" width="54" height="140" fill="#F9FBFC"/>` +
+        `<rect x="647" y="491" width="54" height="140" fill="#F9FBFC"/>`,
+    )
+    expect(codes(svg)).toContain("strikethrough")
+    expect(codes(svg)).toContain("edge-stick")
+  })
+
+  it("still flags a rule that runs through a rounded card's corner", () => {
+    // y=493 is 2px under the top edge of an rx=12 card. The corner curve
+    // leaves the line bare there, and the text sits across the corner.
+    const svg = wrap(
+      `<line x1="40" y1="493" x2="700" y2="493" stroke="#D3DBE0" stroke-width="1"/>` +
+        `<rect x="96" y="491" width="537" height="140" rx="12" fill="#F9FBFC"/>` +
+        `<text x="76" y="498" font-size="16">角落</text>`,
+    )
+    expect(codes(svg)).toContain("strikethrough")
+  })
+
   it("does not flag a short gold underline as edge-stick", () => {
     const svg = wrap(
       `<text x="640" y="404" font-size="84" text-anchor="middle">客户与收入结构</text>` +
