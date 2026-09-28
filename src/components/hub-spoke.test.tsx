@@ -170,4 +170,34 @@ describe("hub_spoke component", () => {
     const b = renderToStaticMarkup(<svg>{hubSpoke.render(four, box, ctx)}</svg>)
     expect(a).toBe(b)
   })
+
+  it("gives a description too long for one line the second line its capsule has room for", () => {
+    const english = {
+      type: "hub_spoke" as const,
+      center: "Product",
+      items: [
+        { label: "Consulting", description: "Seat expansion in existing accounts" },
+        { label: "Platforms", description: "Standardized onboarding templates" },
+        { label: "K-12", description: "In-house workspace compute" },
+        { label: "Credit", description: "Vertical playbook replication" },
+      ],
+    }
+    const { container } = svg(hubSpoke.render(english, { x: 96, y: 240, w: 1088 }, themed("brief")))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const capsules = Array.from(container.querySelectorAll("g")).filter((g) => g.querySelector(":scope > rect"))
+    expect(capsules).toHaveLength(english.items.length)
+    capsules.forEach((capsule, i) => {
+      const rect = capsule.querySelector(":scope > rect")!
+      const top = Number(rect.getAttribute("y"))
+      const bottom = top + Number(rect.getAttribute("height"))
+      const texts = Array.from(capsule.querySelectorAll("text"))
+      const words = texts.map((t) => t.textContent ?? "").join(" ")
+      expect(words, `capsule ${i}`).toContain(english.items[i]!.description)
+      for (const t of texts) {
+        const y = Number(t.getAttribute("y"))
+        expect(y, `capsule ${i}`).toBeGreaterThan(top)
+        expect(y, `capsule ${i}`).toBeLessThan(bottom)
+      }
+    })
+  })
 })
