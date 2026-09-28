@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": patch
+---
+
+A single-number page now sizes the number together with its unit, so a long figure such as "1142.6万元" stays inside the page margin instead of running its unit toward the edge. Figures whose unit already fit render exactly as before. `pptwise audit` and the preview overlay measure a unit set in a smaller size at that size, so these pages are no longer reported as falling off the page. The photo page with the picture on top gives its title more room above and below when a theme sets the title larger, so the title no longer sits on its rule or against the picture. The covers and ending that print the organization in the top-left corner, and the cover with a colored top band, no longer draw the theme's corner mark over or under it. The single-evidence page no longer marks a complete source line as cut. On the page that tiles four to six tall images, a caption longer than its frame wraps onto a second line instead of being cut after about eleven characters.
