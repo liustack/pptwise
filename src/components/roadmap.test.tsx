@@ -4,6 +4,7 @@ import { render } from "@testing-library/react"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { roadmap } from "./roadmap"
+import { measureTextUnits } from "../lib/svg-text-layout"
 import type { ComponentCtx } from "./types"
 
 const ctx: ComponentCtx = {
@@ -121,6 +122,62 @@ describe("roadmap component", () => {
       expect(v!.getAttribute("y"), value).toBe(labels[i]!.getAttribute("y"))
       expect(Number(v!.getAttribute("font-size")), value).toBeGreaterThanOrEqual(16)
     }
+  })
+
+  it("widens the label column into the room short values leave, rather than cut the label", () => {
+    // The gallery's English roadmap printed "Workspace headcount" as
+    // "Workspace": the label column stopped at 42% of the card although the
+    // values beside it were "102k seats" and "91%".
+    const component = {
+      type: "roadmap" as const,
+      items: ["Quarter at a Glance", "Customers and Revenue Mix", "Product and Delivery"].map((title, i) => ({
+        title,
+        period: `Q${i + 1}`,
+        rows: [
+          { label: "Workspace headcount", value: "102k seats" },
+          { label: "Renewal rate", value: "91%" },
+        ],
+      })),
+    }
+    const { container } = svg(roadmap.render(component, { x: 0, y: 0, w: 1088 }, ctx))
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+    const texts = Array.from(container.querySelectorAll("text"))
+    const labels = texts.filter((t) => t.textContent === "Workspace headcount")
+    const values = texts.filter((t) => t.textContent === "102k seats")
+    expect(labels).toHaveLength(3)
+    expect(values).toHaveLength(3)
+    for (const [i, label] of labels.entries()) {
+      const end = Number(label.getAttribute("x")) + measureTextUnits("Workspace headcount") * 16
+      expect(Number(values[i]!.getAttribute("x")) - end).toBeGreaterThanOrEqual(12 - 1e-6)
+    }
+  })
+
+  it("wraps a label the values leave no room for onto a second line, whole", () => {
+    const component = {
+      type: "roadmap" as const,
+      items: [0, 1, 2].map((i) => ({
+        title: `Phase ${i + 1}`,
+        rows: [
+          { label: "Workspace headcount", value: "十万两千席，三个大区" },
+          { label: "Renewal rate", value: "91%" },
+        ],
+      })),
+    }
+    const flat = {
+      ...component,
+      items: component.items.map((it) => ({ ...it, rows: it.rows.map((r) => ({ ...r, label: "Seats" })) })),
+    }
+    const { container } = svg(roadmap.render(component, { x: 0, y: 0, w: 1088 }, ctx))
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+    const texts = Array.from(container.querySelectorAll("text"))
+    const at = (s: string) => texts.filter((t) => t.textContent === s).map((t) => Number(t.getAttribute("y")))
+    expect(at("Workspace")).toHaveLength(3)
+    expect(at("headcount")).toHaveLength(3)
+    expect(at("十万两千席，三个大区"), "the value keeps its one line").toHaveLength(3)
+    // The row under a two-line label starts below that label's second line,
+    // and the card grows by what the second line costs.
+    expect(at("Renewal rate")[0]! - at("headcount")[0]!).toBeGreaterThanOrEqual(16 * 1.4)
+    expect(roadmap.measure(component, 1088, ctx)).toBeGreaterThan(roadmap.measure(flat, 1088, ctx))
   })
 
   it("renders only svg2pptx-subset primitives", () => {

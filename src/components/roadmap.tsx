@@ -37,6 +37,8 @@ const GAP_BADGE_TITLE = 14
 const GAP_TITLE_ROWS = 16
 
 const LABEL_SIZE = 16
+/** The label column's share of the card when the values need the rest. */
+const LABEL_COL_SHARE = 0.42
 /**
  * Same floor story as the period: a value that started at 14.5 painted at
  * the 16px floor anyway, but its baseline and row pitch were still worked
@@ -48,7 +50,7 @@ const ROW_GAP = 12
 const LABEL_VALUE_GAP = 12
 
 interface RowLayout {
-  label: { text: string; fontSize: number; truncated: boolean }
+  label: { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean }
   value: { lines: string[]; fontSize: number; lineHeight: number }
   height: number
 }
@@ -123,15 +125,34 @@ function cardLayout(
     fontFamily: headingFontFamily,
   })
   const rowItems = item.rows ?? []
-  // Label column width = widest fitted label, clamped so the value column keeps
-  // a usable width.
+  // Label column width = widest label plus the gap, clamped so the value
+  // column keeps a usable width. The clamp used to be a flat 42% of the card
+  // whatever the values needed, and a label past it was cut at the floor:
+  // "Workspace headcount" printed as "Workspace" beside a "91%" that had room
+  // to spare. The column may now take whatever the widest value leaves, and a
+  // label still wider than that wraps onto a second line instead of losing
+  // its tail.
   const labelWidths = rowItems.map((r) => measureTextUnits(r.label) * LABEL_SIZE)
+  const valueWidths = rowItems.map(
+    (r) => measureTextUnits(r.value, { bold: true, fontFamily: bodyFontFamily }) * VALUE_SIZE,
+  )
+  const labelCap = Math.max(Math.round(contentW * LABEL_COL_SHARE), Math.floor(contentW - Math.max(...valueWidths)))
   const labelColW = rowItems.length
-    ? Math.min(Math.max(48, Math.max(...labelWidths) + LABEL_VALUE_GAP), Math.round(contentW * 0.42))
+    ? Math.min(Math.max(48, Math.max(...labelWidths) + LABEL_VALUE_GAP), labelCap)
     : 0
+  const labelMax = labelColW - LABEL_VALUE_GAP
   const valueW = Math.max(40, contentW - labelColW)
-  const rows: RowLayout[] = rowItems.map((r) => {
-    const label = fitSvgLine(r.label, { maxWidth: labelColW, fontSize: LABEL_SIZE, minFontSize: 16 })
+  const rows: RowLayout[] = rowItems.map((r, i) => {
+    const label = layoutSvgText(r.label, {
+      // A label that fits beside its gap keeps the one-line fit it always
+      // had. The half pixel absorbs the rounding in `labelColW - gap`, which
+      // would otherwise wrap the very label the column was sized to.
+      maxWidth: labelWidths[i]! <= labelMax + 0.5 ? labelColW : labelMax,
+      fontSize: LABEL_SIZE,
+      minPt: LABEL_SIZE,
+      maxLines: 2,
+      lineHeightRatio: 1.4,
+    })
     const value = layoutSvgText(r.value, {
       maxWidth: valueW,
       fontSize: VALUE_SIZE,
@@ -140,7 +161,11 @@ function cardLayout(
       bold: true,
       fontFamily: bodyFontFamily,
     })
-    return { label, value, height: Math.max(VALUE_LH, value.lines.length * value.lineHeight) }
+    return {
+      label,
+      value,
+      height: Math.max(VALUE_LH, value.lines.length * value.lineHeight, label.lines.length * label.lineHeight),
+    }
   })
   const rowsH = rows.reduce((s, r) => s + r.height, 0) + Math.max(0, rows.length - 1) * ROW_GAP
   const contentH =
@@ -245,17 +270,20 @@ function renderCard(
         rowY += row.height + ROW_GAP
         return (
           <g key={ri}>
-            <text
-              data-truncated={row.label.truncated ? "1" : undefined}
-              x={x + PAD_X}
-              y={rowTop + LABEL_SIZE}
-              fontSize={row.label.fontSize}
-              fill={ctx.colors.muted}
-              fontFamily={ctx.fonts.body}
-              dominantBaseline="alphabetic"
-            >
-              {row.label.text}
-            </text>
+            {row.label.lines.map((line, li) => (
+              <text
+                key={`l${li}`}
+                data-truncated={row.label.truncated && li === row.label.lines.length - 1 ? "1" : undefined}
+                x={x + PAD_X}
+                y={rowTop + LABEL_SIZE + li * row.label.lineHeight}
+                fontSize={row.label.fontSize}
+                fill={ctx.colors.muted}
+                fontFamily={ctx.fonts.body}
+                dominantBaseline="alphabetic"
+              >
+                {line}
+              </text>
+            ))}
             {row.value.lines.map((line, li) => (
               <text
                 key={li}
