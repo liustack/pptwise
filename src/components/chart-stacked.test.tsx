@@ -6,7 +6,7 @@ import { CHART_AXIS_LIMIT, schema as chartSchema } from "@/ir/components/chart"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { chart } from "./chart"
-import { renderStacked } from "./chart-svg"
+import { percentShares, renderStacked } from "./chart-svg"
 import { valueLabelBox } from "./label-collision"
 import type { ComponentCtx } from "./types"
 
@@ -241,6 +241,30 @@ describe("percent_stacked chart: large values", () => {
     expect(b!.y + b!.h).toBeCloseTo(a!.y, 9)
   })
 
+  it("draws a column holding the largest finite double", () => {
+    // log2(Number.MAX_VALUE) rounds to 1024, and 2 ** 1024 is Infinity: the
+    // scale factor overflowed and every share came out 0 / 0.
+    for (const [a, b] of [
+      [Number.MAX_VALUE, 1],
+      [Number.MAX_VALUE, Number.MAX_VALUE],
+    ] as const) {
+      const component: ChartComponent = {
+        type: "chart",
+        chart_type: "percent_stacked",
+        series: [
+          { name: "A", data: [{ x: "Q", y: a }] },
+          { name: "B", data: [{ x: "Q", y: b }] },
+        ],
+      }
+      expect(issuesOf(component)).toEqual([])
+      const container = draw(component)
+      expect(container.innerHTML).not.toMatch(/NaN|Infinity/)
+      const [first, second] = segments(container)
+      expect(first!.h).toBeGreaterThan(0)
+      if (a === b) expect(first!.h).toBeCloseTo(second!.h, 9)
+    }
+  })
+
   it("keeps a 1e308 share in proportion beside a small one", () => {
     const component: ChartComponent = {
       type: "chart",
@@ -252,6 +276,61 @@ describe("percent_stacked chart: large values", () => {
     }
     const [a, b] = segments(draw(component))
     expect(a!.h / b!.h).toBeCloseTo(3, 9)
+  })
+})
+
+describe("percentShares", () => {
+  // The scaled division is there so a column can hold values whose sum
+  // overflows. Wherever the plain `v / total` was finite, it has to give the
+  // very same bits, or every percent_stacked page that ever drew would move.
+  function rng(seed: number) {
+    let a = seed >>> 0
+    return () => {
+      a = (a + 0x6d2b79f5) >>> 0
+      let t = a
+      t = Math.imul(t ^ (t >>> 15), t | 1)
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+    }
+  }
+
+  it("matches v / total bit for bit on every column whose total is finite and whose values are within 2^1022 of each other", () => {
+    const r = rng(0x9e3779b9)
+    for (let k = 0; k < 5000; k++) {
+      const n = 1 + Math.floor(r() * 6)
+      const exp = Math.floor(r() * 600) - 300
+      const values = Array.from({ length: n }, () =>
+        r() < 0.1 ? null : r() < 0.1 ? 0 : (1 + r() * 9) * 10 ** (exp + Math.floor(r() * 20)),
+      )
+      let total = 0
+      for (const v of values) if (v != null && v > 0) total += v
+      if (!(total > 0) || !Number.isFinite(total)) continue
+      const expected = values.map((v) => (v == null ? null : (v / total) * 100))
+      expect(percentShares(values), JSON.stringify(values)).toEqual(expected)
+    }
+  })
+
+  it("stays finite, and adds up to 100, at the edges of the doubles", () => {
+    const MAX = Number.MAX_VALUE
+    for (const values of [
+      [MAX, 1],
+      [MAX, MAX],
+      [MAX, MAX, MAX, MAX],
+      [MAX * (1 - 2 ** -52), 5e-324],
+      [5e-324, 5e-324],
+      [1e-323, 5e-324],
+      [2 ** 1023, 2 ** 1023],
+      [MAX * 0.75, 1e308],
+    ]) {
+      const shares = percentShares(values) as number[]
+      expect(shares.every(Number.isFinite), JSON.stringify(values)).toBe(true)
+      expect(shares.reduce((a, b) => a + b, 0)).toBeCloseTo(100, 9)
+    }
+  })
+
+  it("returns null for a column with nothing above zero, which the caller declines", () => {
+    expect(percentShares([0, 0])).toBeNull()
+    expect(percentShares([null])).toBeNull()
   })
 })
 

@@ -2826,18 +2826,46 @@ const PERCENT_TICKS = [0, 25, 50, 75, 100] as const
 
 /**
  * The factor a percent_stacked column is divided by before its values are
- * added up: the largest power of two not above its largest value.
+ * added up: a power of two near its largest value.
  *
  * Finite values can add up to more than a double holds (`1e308 + 1e308` is
- * `Infinity`), and every share of an infinite total is 0, so a 50/50 column
- * came out as two empty segments. Divided by this first, a column's values add
- * up to less than twice its series count. A power of two because dividing by
- * one is exact: the scaled sum is the true sum over the same factor, bit for
- * bit, so each share comes out exactly as `v / total` does wherever that total
- * is finite, and every column that already drew keeps its bytes.
+ * `Infinity`), and every share of an infinite total is 0. Divided by this
+ * first, a column's values add up to less than twice its series count.
+ *
+ * The exponent is held to the doubles' own range. `Math.log2` rounds, and at
+ * the top it rounds up: `log2(Number.MAX_VALUE)` is exactly 1024, `2 ** 1024`
+ * is `Infinity`, and the factor that was there to stop an overflow caused
+ * one. 1023 is the largest exponent a finite power of two can have and -1074
+ * the smallest a positive one can.
  */
 function shareScale(peak: number): number {
-  return 2 ** Math.floor(Math.log2(peak))
+  return 2 ** Math.min(1023, Math.max(-1074, Math.floor(Math.log2(peak))))
+}
+
+/**
+ * Each value's share of its column, in percent, for a column of values that
+ * are zero or more. `null` stays `null` (a series with no point there). The
+ * whole result is `null` when nothing in the column is above zero, which is
+ * a column with no shares to draw.
+ *
+ * The values are divided by `shareScale` before they are summed, so no column
+ * of finite values can overflow. Dividing by a power of two is exact, so the
+ * scaled sum is the true sum over the same factor, bit for bit, and each share
+ * comes out exactly as `(v / total) * 100` does, as long as that total is
+ * finite and no value is so much smaller than the largest (by 2^1022 or more)
+ * that scaling pushes it into the subnormal range, where a division loses bits.
+ * `chart-stacked.test.tsx` holds both halves of that claim.
+ */
+export function percentShares(values: readonly (number | null)[]): (number | null)[] | null {
+  let peak = 0
+  for (const v of values) if (v != null && v > peak) peak = v
+  if (!(peak > 0)) return null
+  const scale = shareScale(peak)
+  // Summed in the order the values come, over the same positive values a
+  // plain total would add, so it is that total over `scale` exactly.
+  let sum = 0
+  for (const v of values) if (v != null && v > 0) sum += v / scale
+  return values.map((v) => (v == null ? null : (v / scale / sum) * 100))
 }
 
 /** A column total as a person writes it: `0.1 + 0.2` prints `0.3`. */
@@ -2910,23 +2938,21 @@ export function renderStacked(
     let total = 0
     let up = 0
     let down = 0
-    let peak = 0
     for (const s of model.series) {
       const v = s.values[i]
       if (v == null) continue
       total += v
-      if (v > 0) {
-        up += v
-        peak = Math.max(peak, v)
-      } else down += v
+      if (v > 0) up += v
+      else down += v
     }
-    return { total, up, down, peak }
+    return { total, up, down }
   })
   // validate refuses both (`ir/components/chart.ts`): a share of a negative
   // amount means nothing, and a zero total has no shares to draw. Past the
   // schema there is nothing honest to paint, so the whole chart declines and
   // says so, the same answer a pie with a zero total gets.
-  if (percent && piles.some((p) => p.up <= 0 || p.down < 0)) return <WholeShareDeclined />
+  const shares = percent ? categories.map((_cat, i) => percentShares(model.series.map((s) => s.values[i]!))) : []
+  if (percent && piles.some((p, i) => shares[i] === null || p.down < 0)) return <WholeShareDeclined />
   // validate refuses a pile past `CHART_AXIS_LIMIT`, since no axis can be
   // built for it. Past the schema, the old answer was a column, an axis and a
   // total of `Infinity` and `NaN`. Nothing honest can be drawn, so the chart
@@ -2935,18 +2961,7 @@ export function renderStacked(
     return <WholeShareDeclined />
   }
 
-  // Each column's positive values over its `shareScale`, added in the same
-  // order `up` was, so the scaled total is `up` over the same factor exactly.
-  const scales = piles.map((p) => (percent ? shareScale(p.peak) : 1))
-  const scaledUps = categories.map((_cat, i) => {
-    let sum = 0
-    for (const s of model.series) {
-      const v = s.values[i]
-      if (v != null && v > 0) sum += v / scales[i]!
-    }
-    return sum
-  })
-  const scaled = (i: number, v: number) => (percent ? (v / scales[i]! / scaledUps[i]!) * 100 : v)
+  const scaled = (i: number, seriesIndex: number, v: number) => (percent ? shares[i]![seriesIndex]! : v)
   const yUnit = percent ? "%" : meta.yUnit
   const yAxis = percent
     ? {
@@ -2992,7 +3007,7 @@ export function renderStacked(
     for (const s of model.series) {
       const raw = s.values[i]
       if (raw == null || raw === 0) continue
-      const v = scaled(i, raw)
+      const v = scaled(i, s.seriesIndex, raw)
       const from = v > 0 ? up : down
       const to = from + v
       if (v > 0) up = to
