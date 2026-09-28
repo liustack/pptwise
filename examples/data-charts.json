@@ -91,6 +91,85 @@
     {
       "type": "content",
       "kind": "data",
+      "heading": "Enterprise carries the growth",
+      "components": [
+        {
+          "type": "chart",
+          "chart_type": "stacked",
+          "axes": { "y_title": "ARR ($M)", "show_grid": true },
+          "series": [
+            {
+              "name": "Enterprise",
+              "data": [
+                { "x": "Q3 25", "y": 5.9 },
+                { "x": "Q4 25", "y": 6.9 },
+                { "x": "Q1 26", "y": 8.1 },
+                { "x": "Q2 26", "y": 9.6 }
+              ]
+            },
+            {
+              "name": "Mid-market",
+              "data": [
+                { "x": "Q3 25", "y": 3.8 },
+                { "x": "Q4 25", "y": 4.2 },
+                { "x": "Q1 26", "y": 4.8 },
+                { "x": "Q2 26", "y": 5.4 }
+              ]
+            },
+            {
+              "name": "Self-serve",
+              "data": [
+                { "x": "Q3 25", "y": 2.4 },
+                { "x": "Q4 25", "y": 2.7 },
+                { "x": "Q1 26", "y": 3.0 },
+                { "x": "Q2 26", "y": 3.4 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "content",
+      "kind": "data",
+      "heading": "Margin rises as revenue scales",
+      "components": [
+        {
+          "type": "chart",
+          "chart_type": "combo",
+          "axes": {
+            "y_title": "ARR ($M)",
+            "y2_title": "Gross margin",
+            "y2_unit": "%"
+          },
+          "series": [
+            {
+              "name": "ARR",
+              "data": [
+                { "x": "Q3 25", "y": 12.1 },
+                { "x": "Q4 25", "y": 13.8 },
+                { "x": "Q1 26", "y": 15.9 },
+                { "x": "Q2 26", "y": 18.4 }
+              ]
+            },
+            {
+              "name": "Gross margin",
+              "plot": "line",
+              "axis": "right",
+              "data": [
+                { "x": "Q3 25", "y": 71 },
+                { "x": "Q4 25", "y": 73 },
+                { "x": "Q1 26", "y": 76 },
+                { "x": "Q2 26", "y": 78 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "content",
+      "kind": "data",
       "heading": "Feature adoption by cohort",
       "components": [
         {

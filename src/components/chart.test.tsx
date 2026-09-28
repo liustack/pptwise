@@ -787,6 +787,35 @@ describe("chart component — legend (n>=2 series)", () => {
     }
   })
 
+  // A name wider than the minimum pitch used to set the pitch by itself, so
+  // the next swatch started where the name's estimated width ended. A face
+  // that sets the name a few px wider than the estimate (PingFang standing
+  // in for Microsoft YaHei on a Mac) then ran the name into that swatch.
+  it("leaves a clear gap between every legend name and the next swatch, however long the name", () => {
+    const longNames = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      series: ["Enterprise", "Mid-market", "Self-serve", "North America"].map((name, i) => ({
+        name,
+        data: [{ x: "Q1", y: 10 + i }],
+      })),
+    }
+    const { container } = svg(chart.render(longNames, box, ctx))
+    const texts = legendTexts(container)
+    const swatches = Array.from(container.querySelectorAll("rect")).filter(
+      (r) => Number(r.getAttribute("width")) === 10 && Number(r.getAttribute("height")) === 10,
+    )
+    expect(texts.map((t) => t.textContent)).toEqual(["Enterprise", "Mid-market", "Self-serve", "North America"])
+    for (let i = 1; i < texts.length; i++) {
+      const prev = texts[i - 1]!
+      const nameEnd =
+        Number(prev.getAttribute("x")) +
+        measureTextUnits(prev.textContent!, { fontFamily: prev.getAttribute("font-family")! }) *
+          Number(prev.getAttribute("font-size"))
+      expect(Number(swatches[i]!.getAttribute("x")) - nameEnd).toBeGreaterThanOrEqual(16)
+    }
+  })
+
   it("legend swatch colors follow the rotated palette in series order (colorIndex === seriesIndex)", () => {
     const { container } = svg(chart.render(twoSeriesBar, box, ctx))
     const swatches = Array.from(container.querySelectorAll("rect")).filter(
