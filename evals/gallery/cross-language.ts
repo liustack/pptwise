@@ -32,6 +32,18 @@ export const KNOWN_OVERFLOWS: readonly string[] = [
   // step-aside AGENTS.md names.
   "playbill · from_to · en: 1×component",
   "stage · from_to · en: 1×component",
+  // Rings route to `asymmetric-triptych`, which hands the component its
+  // 424px side panel. Three one-sentence English descriptions need about
+  // 366px of rows there even with the rings down to 45% of the width, and
+  // the panel under these two themes' two-line headings is shorter, so the
+  // rings decline rather than cut. The step-aside sheet would hold them at
+  // full width, but under the same large heading it has no room for the
+  // lead-in and the rings' 340px together. The pages used to draw with every
+  // label and description cut to a few characters ("Acces", "Onbo",
+  // "bookin"). Both themes read Chinese on their own gallery pages, where the
+  // panel holds everything.
+  "playbill · rings · en: 3×item",
+  "stage · rings · en: 3×item",
 ]
 
 /** Entries in `KNOWN_OVERFLOWS` whose theme id (the part before ` · `) is in `themeIds`. */
