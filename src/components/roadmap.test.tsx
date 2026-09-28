@@ -108,6 +108,21 @@ describe("roadmap component", () => {
     expect(other.querySelector("[data-truncated]")).toBeNull()
   })
 
+  it("sets each value on its label's baseline", () => {
+    // The value started at 14.5px under the 16px floor: it painted at 16 but
+    // was placed as if it were 14.5, a pixel and a half above its label.
+    const { container } = svg(roadmap.render(threePhase, { x: 0, y: 0, w: 1088 }, ctx))
+    const texts = Array.from(container.querySelectorAll("text"))
+    const labels = texts.filter((t) => t.textContent === "规模")
+    expect(labels).toHaveLength(3)
+    for (const [i, value] of ["3-5 个标杆站", "进入 3-5 个城市", "策略目标 500+ 站点"].entries()) {
+      const v = texts.find((t) => t.textContent === value)
+      expect(v, value).toBeDefined()
+      expect(v!.getAttribute("y"), value).toBe(labels[i]!.getAttribute("y"))
+      expect(Number(v!.getAttribute("font-size")), value).toBeGreaterThanOrEqual(16)
+    }
+  })
+
   it("renders only svg2pptx-subset primitives", () => {
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">

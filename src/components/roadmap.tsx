@@ -37,7 +37,12 @@ const GAP_BADGE_TITLE = 14
 const GAP_TITLE_ROWS = 16
 
 const LABEL_SIZE = 16
-const VALUE_SIZE = 14.5
+/**
+ * Same floor story as the period: a value that started at 14.5 painted at
+ * the 16px floor anyway, but its baseline and row pitch were still worked
+ * out from 14.5, so it sat a pixel and a half above its own label.
+ */
+const VALUE_SIZE = 16
 const VALUE_LH = Math.round(VALUE_SIZE * 1.4)
 const ROW_GAP = 12
 const LABEL_VALUE_GAP = 12
