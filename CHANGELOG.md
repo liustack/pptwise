@@ -1,5 +1,22 @@
 # @liustack/pptwise
 
+## 0.39.0 - 2026-09-28
+
+### Minor Changes
+
+- ff11528: Three new `chart_type` values for the charts business decks use most. `stacked` piles each category's series into one column and prints the column total above it, stacking negative values down from a zero line. `percent_stacked` scales every column to 100% on a fixed 0% to 100% axis. `combo` draws series marked `plot: "line"` as lines over the bars of the rest, and a series on `axis: "right"` gets its own scale on a right-hand axis, titled by the new `axes.y2_title` and `axes.y2_unit`. Colors come from the theme's `chartPalette`, and the charts export as native editable shapes like every other chart.
+
+  validate explains what to change when a chart asks for something these types cannot draw: one series on a stacked chart, a negative value or a category adding up to zero on `percent_stacked`, a combo without both a bar and a line series or with every series on the right axis, `plot`, `axis`, `y2_title` or `y2_unit` anywhere they do nothing, and a stacked total or combo value past 1e300, which no axis can draw. Stacked totals are printed together or not at all: when they do not fit above their columns, none is printed and the export stops on that page until the numbers are shorter. Existing IR is unchanged and renders byte for byte as before. See the Charts section of `docs/ir.md`.
+
+### Patch Changes
+
+- 45a2321: SWOT quadrants and the five forces now title themselves in the language their items are written in. Chinese content gets 优势 / 劣势 / 机会 / 威胁 and 同业竞争 / 新进入者威胁 / 供应商议价能力 / 买方议价能力 / 替代品威胁 instead of the English defaults. Content that is mostly Latin keeps the English titles, and a title the author writes (`labels` on swot, `label` on a five forces panel) still wins.
+- b59d826: A chart legend now keeps at least 20px between a series name and the next swatch, where a name wider than the standard spacing used to end exactly where the next swatch began and could overlap it when the final font set the name a little wider. Legends whose names already left that gap render exactly as before. Longer names move apart, and on a very narrow chart that can leave one more name out of the legend, flagged like any other dropped legend name. A heatmap's row label column now grows to fit its row names, up to a quarter of the chart's width, instead of cutting ordinary names like "Enterprise" at a fixed 96px. Heatmaps whose row names fit the 96px column render exactly as before.
+- f69f7d8: `pptwise themes` and `pptwise schema --kind` now judge installed packs the same way: every pack theme is fully compiled, and a pack is reported instead of listed when any theme fails, when it ships a factory preset's or a retired id, or when another installed pack ships the same theme id. A pack theme can no longer stand in for a preset in the `schema --kind` answer.
+- bf13f8b: Remote image assets are now fetched with limits. Only `http`, `https`, and browser `blob:` sources are fetched, judged by how the URL parses rather than by its raw text (a `file:` or other scheme is refused with a reason), a download that takes longer than 30 seconds is abandoned, and a response larger than the 25 MB per-image limit is refused as soon as it says so or crosses the line, instead of after the whole body was read. Relative sources still go to the platform fetch unchanged. Behind a proxy (`HTTPS_PROXY` and friends) the CLI buffers the response before handing it over, so there only the time limit applies during the download and the size is checked after it.
+- 3916cf7: `pptwise schema --kind` without `--theme` now answers for installed content pack themes too, not only the presets. A pack that cannot be read is left out with a note on stderr instead of failing the query.
+- 042c7e7: Built-in titles now follow a Chinese-specific count. An item counts as Chinese when it has Han characters, no Japanese kana or Korean hangul, and at least as many Han characters as ASCII letter runs, and a component switches to its Chinese titles when more than half of its items do. Japanese or Korean content with kana or hangul keeps the English titles, and so does English like "Strong brand in 中国". It is a count, not language detection: a short phrase around a long Chinese name ("Visit 上海") counts as Chinese, and an author who needs other titles writes them. PEST quadrants (政治 / 经济 / 社会 / 技术), the business model canvas blocks, and a waterfall's automatic total (合计) now follow the same rule as SWOT and the five forces.
+
 ## 0.38.0 - 2026-09-27
 
 ### Minor Changes
