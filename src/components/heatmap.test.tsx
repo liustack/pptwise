@@ -296,6 +296,49 @@ describe("heatmap component", () => {
     expect(truncated.length).toBeGreaterThan(0)
   })
 
+  describe("row label column", () => {
+    const cohorts = {
+      type: "heatmap" as const,
+      x_labels: ["Dashboards", "Alerts", "API", "Exports"],
+      y_labels: ["Enterprise", "Mid-market", "Self-serve"],
+      values: [
+        [92, 81, 74, 66],
+        [85, 62, 41, 58],
+        [71, 35, 12, 44],
+      ],
+    }
+    const rowLabels = (container: Element, labels: readonly string[]) =>
+      Array.from(container.querySelectorAll("text")).filter((t) =>
+        labels.some((l) => t.textContent?.startsWith(l.slice(0, 3))),
+      )
+
+    it("widens to fit ordinary row names instead of cutting them", () => {
+      const { container } = svg(heatmap.render(cohorts, { x: 96, y: 0, w: 1088, h: 400 }, ctx))
+      const labels = rowLabels(container, cohorts.y_labels)
+      expect(labels.map((t) => t.textContent)).toEqual(cohorts.y_labels)
+      expect(labels.every((t) => t.getAttribute("data-truncated") === null)).toBe(true)
+    })
+
+    it("keeps the 96px column, byte for byte, when every row name already fits it", () => {
+      const firstCellX = Number(
+        svg(heatmap.render(basic, { x: 40, y: 0, w: 900, h: 300 }, ctx)).container.querySelector("rect")!.getAttribute("x"),
+      )
+      expect(firstCellX).toBe(40 + 96)
+    })
+
+    it("stops widening at a quarter of the width and marks what it still cuts", () => {
+      const long = { ...cohorts, y_labels: ["Enterprise accounts with a named success manager", "Mid-market", "Self-serve"] }
+      const w = 1088
+      const { container } = svg(heatmap.render(long, { x: 0, y: 0, w, h: 400 }, ctx))
+      const firstCellX = Number(container.querySelector("rect")!.getAttribute("x"))
+      expect(firstCellX).toBeLessThanOrEqual(w / 4)
+      expect(firstCellX).toBeGreaterThan(96)
+      const cut = Array.from(container.querySelectorAll("text[data-truncated='1']")).map((t) => t.textContent)
+      expect(cut).toHaveLength(1)
+      expect(cut[0]!.startsWith("Enterprise accounts")).toBe(true)
+    })
+  })
+
   it("box.h stretches row height to fill the given height (no cap, full-body idiom)", () => {
     const natural = heatmap.measure(basic, 900, ctx)
     const shortRender = svg(heatmap.render(basic, { x: 0, y: 0, w: 900, h: natural }, ctx))

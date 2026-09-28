@@ -1,5 +1,5 @@
 import type { Component } from "@/ir"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { mixHex } from "./color-mix"
 import { axisTitlePairHeight, renderAxisTitlePair } from "./axis-titles"
 import { accessibleInk, contrastRatio, readableOn } from "../render/ink"
@@ -58,7 +58,10 @@ type HeatmapComponent = Extract<Component, { type: "heatmap" }>
 const CELL_GAP = 3
 const CELL_RADIUS = 3
 const NATURAL_CELL_H = 36
+/** Row label column (px) when every row name fits in it. */
 const ROW_LABEL_W = 96
+/** Widest the row label column grows to, as a share of the component width. */
+const ROW_LABEL_MAX_SHARE = 0.25
 const ROW_LABEL_PAD = 8
 const COL_LABEL_H = 26
 const COL_LABEL_PAD = 4
@@ -220,11 +223,20 @@ function cellFill(t: number, ctx: ComponentCtx, forInk = false): string {
   return mixHex(ctx.colors.surface, ctx.colors.primary, forInk ? safeEased(eased, ctx) : eased)
 }
 
+/** The row label column: `ROW_LABEL_W` when every name fits it, otherwise as
+ *  wide as the widest name, up to `ROW_LABEL_MAX_SHARE` of `w`. A name past
+ *  that is cut by `fitSvgLine` and marked. */
+function rowLabelColumnW(labels: readonly string[], w: number): number {
+  const widest = Math.max(0, ...labels.map((label) => measureTextUnits(label) * ROW_LABEL_FONT))
+  const wanted = Math.ceil(widest) + ROW_LABEL_PAD * 2
+  return Math.max(ROW_LABEL_W, Math.min(wanted, Math.floor(w * ROW_LABEL_MAX_SHARE)))
+}
+
 function gridGeom(component: HeatmapComponent, w: number) {
   const cols = component.x_labels.length
   const rows = component.y_labels.length
   const titleH = axisTitlePairHeight(component.x_title, component.y_title)
-  const gridX0 = ROW_LABEL_W
+  const gridX0 = rowLabelColumnW(component.y_labels, w)
   const gridW = Math.max(1, w - gridX0)
   const cellW = (gridW - CELL_GAP * (cols - 1)) / cols
   const gridH = rows * NATURAL_CELL_H + (rows - 1) * CELL_GAP
@@ -258,7 +270,7 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
     )
     const rowLabelFits = component.y_labels.map((label) =>
       fitSvgLine(label, {
-        maxWidth: ROW_LABEL_W - ROW_LABEL_PAD * 2,
+        maxWidth: gridX0 - ROW_LABEL_PAD * 2,
         fontSize: ROW_LABEL_FONT,
         minFontSize: ROW_LABEL_MIN_FONT,
       }),
