@@ -400,3 +400,51 @@ describe("matrix component", () => {
     })
   })
 })
+
+describe("matrix in a half-page column", () => {
+  const english = {
+    type: "matrix" as const,
+    x_title: "Quarter",
+    y_title: "Vertical",
+    cols: 3 as const,
+    items: [
+      { title: "Seat expansion in existing accounts", tag: "Q1", tone: "accent" as const },
+      { title: "Standardized onboarding templates", tag: "Q2", tone: "neutral" as const },
+      { title: "In-house workspace compute", tag: "Q3", tone: "info" as const },
+      { title: "Vertical playbook replication", tag: "Q4", tone: "accent" as const },
+      { title: "Staffing-path automation", tag: "Q1", tone: "neutral" as const },
+      { title: "Channel partner enablement", tag: "Q2", tone: "info" as const },
+    ],
+  }
+  const georgia: ComponentCtx = { ...ctx, fonts: { heading: "Georgia, Songti SC, STSong, serif", body: "Georgia", mono: "Consolas" } }
+
+  it("wraps a cell title across lines and keeps its tag below the last one", () => {
+    const box = { x: 656, y: 284, w: 528 }
+    const h = matrix.measure(english, box.w, georgia)
+    const { container } = svg(matrix.render(english, box, georgia))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const cells = Array.from(container.querySelectorAll("[data-audit-box]"))
+    expect(cells).toHaveLength(english.items.length)
+    cells.forEach((cell, i) => {
+      const texts = Array.from(cell.querySelectorAll("text"))
+      const tag = texts.at(-1)!
+      const title = texts.slice(0, -1)
+      expect(title.map((t) => t.textContent).join(" "), `cell ${i}`).toBe(english.items[i]!.title)
+      expect(tag.textContent).toBe(english.items[i]!.tag)
+      for (const line of title) expect(Number(tag.getAttribute("y"))).toBeGreaterThan(Number(line.getAttribute("y")))
+      const rect = cell.querySelector("rect")!
+      expect(Number(tag.getAttribute("y"))).toBeLessThan(Number(rect.getAttribute("y")) + Number(rect.getAttribute("height")))
+    })
+    expect(h).toBeGreaterThan(0)
+  })
+
+  it("gives back title lines in a box too short for the wrapped grid, and marks the cut", () => {
+    const box = { x: 656, y: 284, w: 528, h: 200 }
+    const { container } = svg(matrix.render(english, box, georgia))
+    for (const rect of container.querySelectorAll("[data-audit-box] > rect")) {
+      expect(Number(rect.getAttribute("y")) + Number(rect.getAttribute("height"))).toBeLessThanOrEqual(box.y + box.h + 0.5)
+    }
+    expect(container.querySelectorAll("[data-truncated]").length).toBeGreaterThan(0)
+  })
+})
+
