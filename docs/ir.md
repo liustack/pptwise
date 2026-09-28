@@ -168,7 +168,7 @@ See the [SKILL component guide](../skills/pptwise/references/components.md) for 
 
 `axes` titles and units apply to `bar`, `stacked`, `percent_stacked`, `combo`, `line`, `area`, and `scatter`. Within one series, a category may appear once.
 
-`stacked` keeps the amounts. Positive values pile up from zero and negative values pile down from it, in series order, and a zero line marks the seam when a pile hangs below it. The number above each column is the category's net total. Segments carry no numbers, so read them against the axis. The totals are printed together or not at all: when they do not all fit above their columns, none is printed and export stops on that page until the numbers are shorter (divide them and name the unit in `y_unit`) or the chart has fewer categories. Each category's positive values, and its negative values, must add up to no more than 1e300 in size.
+`stacked` keeps the amounts. Positive values pile up from zero and negative values pile down from it, in series order, and a zero line marks the seam when a pile hangs below it. The number above each column is the category's net total. Segments carry no numbers, so read them against the axis. The totals are printed together or not at all: when they do not all fit above their columns, none is printed and export stops on that page until the numbers are shorter (divide them and name the unit in `y_unit`) or the chart has fewer categories. Each category's positive values, and its negative values, must add up to no more than 1e300 in size. To get under it, divide every series by the same power of ten and name the unit in `y_unit`, so the columns keep their proportions.
 
 ```json
 {
@@ -198,7 +198,7 @@ See the [SKILL component guide](../skills/pptwise/references/components.md) for 
 }
 ```
 
-A combo needs at least one bar series and one line series, and at least one series on the left axis. `plot`, `axis`, `y2_title`, and `y2_unit` exist only on `combo`, and `y2_title` or `y2_unit` without a series on the right axis is refused. Every combo value must stay within 1e300 in size. None of the three new types takes `direction: "horizontal"`.
+A combo needs at least one bar series and one line series, and at least one series on the left axis. `plot`, `axis`, `y2_title`, and `y2_unit` exist only on `combo`, and `y2_title` or `y2_unit` without a series on the right axis is refused. Every combo value must stay within 1e300 in size. To get under it, divide every series on that value's axis by the same power of ten and name the unit in that axis's `y_unit` or `y2_unit`. None of the three new types takes `direction: "horizontal"`.
 
 ## Assets and backgrounds
 
