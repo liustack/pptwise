@@ -484,6 +484,18 @@ const TOP_BODY_MIN_H = 100
 const TOP_TITLE_GAP = 42
 const TOP_RULE_GAP = 12
 const TOP_BODY_GAP = 32
+/** 标题定稿字号，主题的 typeScale 在它上面放大。 */
+const TOP_TITLE_SIZE = 30
+/**
+ * 夹住标题的两段距离（图底到首行基线、基线到贯穿细线）跟着标题字号走。
+ * 上面这些数字是 30px 标题定稿时的节奏，放大字号的主题（playbill 1.3×、
+ * stage 1.5×）把标题排到 39、45px：固定的 12px 让逗号落到了细线上，固定的
+ * 42px 让字顶贴住了图底。按同一比例放大，不低于定稿值，所以缩了字号的标题
+ * 仍按原来的节奏。
+ */
+function titleBandGap(gap: number, titleFontSize: number): number {
+  return Math.max(gap, Math.round((titleFontSize * gap) / TOP_TITLE_SIZE))
+}
 /** 页底安全边距。 */
 const TOP_SAFE_BOTTOM = 84
 const BAND_PAD_X = 96
@@ -522,7 +534,7 @@ export function ImageTopPage({
   const titleMaxW = W - BAND_PAD_X * 2 - 120
   const title = fitEmphasisHeading(slide.heading, {
     maxWidth: titleMaxW,
-    fontSize: scaleTypePx(30, ctx.shape?.typeScale),
+    fontSize: scaleTypePx(TOP_TITLE_SIZE, ctx.shape?.typeScale),
     maxLines: 2,
     minPt: 18,
     lineHeightRatio: 1.2,
@@ -537,20 +549,23 @@ export function ImageTopPage({
   const naturalH = rest.slice(0, 3).reduce((max, block) => Math.max(max, measureComponent(block, colW, ctx)), 0)
   const neededH = Math.max(naturalH, TOP_BODY_MIN_H)
   const titleExtra = Math.max(0, title.lines.length - 1) * title.lineHeight
-  const headBandH = TOP_TITLE_GAP + titleExtra + TOP_RULE_GAP + TOP_BODY_GAP
+  const titleGap = titleBandGap(TOP_TITLE_GAP, title.fontSize)
+  const captionTitleGap = titleBandGap(TOP_CAPTION_TITLE_GAP, title.fontSize)
+  const ruleGap = titleBandGap(TOP_RULE_GAP, title.fontSize)
+  const headBandH = titleGap + titleExtra + ruleGap + TOP_BODY_GAP
   // 图吃掉正文带和标题带之外的所有空间，上下界见常量注释。分栏里一个块都没有
   // 的时候不预留分栏带，图直接长到标题带上沿（见 TOP_IMG_H_MAX_CAPTION_ONLY）。
   const captionOnly = rest.length === 0
-  const captionBandH = TOP_CAPTION_TITLE_GAP + titleExtra + TOP_RULE_GAP + TOP_CAPTION_RULE_GAP_BOTTOM
+  const captionBandH = captionTitleGap + titleExtra + ruleGap + TOP_CAPTION_RULE_GAP_BOTTOM
   const imgH = captionOnly
     ? Math.min(TOP_IMG_H_MAX_CAPTION_ONLY, Math.max(TOP_IMG_H_MIN, H - TOP_SAFE_BOTTOM - captionBandH))
     : Math.min(TOP_IMG_H_MAX, Math.max(TOP_IMG_H_MIN, H - TOP_SAFE_BOTTOM - neededH - headBandH))
 
   // 单行标题时几何跟着图底缘走（原固定图高下为 398 / 发丝 410 / 正文 442）。
   // 换行时发丝和分栏整体下移。
-  const firstTitleY = imgH + (captionOnly ? TOP_CAPTION_TITLE_GAP : TOP_TITLE_GAP)
+  const firstTitleY = imgH + (captionOnly ? captionTitleGap : titleGap)
   const lastTitleY = firstTitleY + Math.max(0, title.lines.length - 1) * title.lineHeight
-  const ruleY = lastTitleY + TOP_RULE_GAP
+  const ruleY = lastTitleY + ruleGap
   const componentsTop = ruleY + TOP_BODY_GAP
   const componentsH = H - TOP_SAFE_BOTTOM - componentsTop
   const fits = rest.slice(0, 3).map((b, i) => {
