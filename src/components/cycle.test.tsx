@@ -66,6 +66,28 @@ function parseTranslate(el: Element): { dx: number; dy: number } {
   return { dx: m ? Number(m[1]) : 0, dy: m ? Number(m[2]) : 0 }
 }
 
+/**
+ * Every stage node, circle or capsule, as a centre plus half-extents. A
+ * node is the one shape inside its `data-audit-box` group.
+ */
+function nodeShapes(container: HTMLElement) {
+  return Array.from(container.querySelectorAll("[data-audit-box] > circle, [data-audit-box] > rect")).map((el) => {
+    if (el.tagName.toLowerCase() === "circle") {
+      const r = Number(el.getAttribute("r"))
+      return { shape: "circle", cx: Number(el.getAttribute("cx")), cy: Number(el.getAttribute("cy")), halfW: r, halfH: r }
+    }
+    const w = Number(el.getAttribute("width"))
+    const h = Number(el.getAttribute("height"))
+    return {
+      shape: "capsule",
+      cx: Number(el.getAttribute("x")) + w / 2,
+      cy: Number(el.getAttribute("y")) + h / 2,
+      halfW: w / 2,
+      halfH: h / 2,
+    }
+  })
+}
+
 function allowedPaints(c: ComponentCtx["colors"]): Set<string> {
   const hexes = [
     c.bg,
@@ -94,9 +116,9 @@ function allowedPaints(c: ComponentCtx["colors"]): Set<string> {
 // enlarged and accent-ringed as the reading start, descriptions laid out
 // radially. No per-theme dispatch — the skin is the theme's own tokens.
 describe("cycle component", () => {
-  it("renders one node circle per stage on a single dashed ring path", () => {
+  it("renders one node per stage on a single dashed ring path", () => {
     const { container } = svg(cycle.render(component3, { x: 80, y: 100, w: 900 }, ctx))
-    expect(container.querySelectorAll("circle").length).toBe(3)
+    expect(nodeShapes(container)).toHaveLength(3)
     const paths = Array.from(container.querySelectorAll("path"))
     expect(paths).toHaveLength(1)
     expect(paths[0]!.getAttribute("fill")).toBe("none")
@@ -190,17 +212,15 @@ describe("cycle component", () => {
 
   it("closed-loop geometry: every node sits the same distance from the ring center", () => {
     const { container } = svg(cycle.render(component8, { x: 0, y: 0, w: 900 }, ctx))
-    const circles = Array.from(container.querySelectorAll("circle"))
-    expect(circles.length).toBe(8)
+    const nodes = nodeShapes(container)
+    expect(nodes.length).toBe(8)
     const ring = container.querySelector("path")!
     const d = ring.getAttribute("d") ?? ""
     const [, cxs, cys] = /M ([\d.]+) ([\d.]+)/.exec(d) ?? []
     const cx = Number(cxs)
     const cy = Number(cys) // ring top — the center is one radius below it
     const r = Number(/A ([\d.]+)/.exec(d)?.[1])
-    const radii = circles.map((c) =>
-      Math.hypot(Number(c.getAttribute("cx")) - cx, Number(c.getAttribute("cy")) - (cy + r)),
-    )
+    const radii = nodes.map((node) => Math.hypot(node.cx - cx, node.cy - (cy + r)))
     for (const dist of radii) expect(dist).toBeCloseTo(r, 0)
   })
 
@@ -209,10 +229,64 @@ describe("cycle component", () => {
     const titleEl = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "Product loop")
     expect(titleEl).toBeTruthy()
     const titleBottom = Number(titleEl!.getAttribute("y")) + Number(titleEl!.getAttribute("font-size")) * 0.25
-    const circles = Array.from(container.querySelectorAll("circle"))
-    expect(circles.length).toBe(8)
-    const ringTop = Math.min(...circles.map((c) => Number(c.getAttribute("cy")) - Number(c.getAttribute("r"))))
+    const nodes = nodeShapes(container)
+    expect(nodes.length).toBe(8)
+    const ringTop = Math.min(...nodes.map((node) => node.cy - node.halfH))
     expect(titleBottom).toBeLessThan(ringTop)
+  })
+
+  it("keeps an English word whole by stretching its node into a capsule", () => {
+    const ir = {
+      type: "cycle" as const,
+      title: "Product",
+      items: [
+        { label: "Scoping", description: "Seat expansion in existing accounts" },
+        { label: "Solutioning", description: "Standardized onboarding templates" },
+        { label: "Seat setup", description: "In-house workspace compute" },
+        { label: "Access setup", description: "Vertical playbook replication" },
+        { label: "Pilot run", description: "Staffing-path automation" },
+      ],
+    }
+    const { container } = svg(cycle.render(ir, { x: 96, y: 186, w: 1088, h: 458 }, themed("brief")))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const groups = Array.from(container.querySelectorAll("[data-audit-box]"))
+    expect(groups).toHaveLength(ir.items.length)
+    groups.forEach((group, i) => {
+      const lines = Array.from(group.querySelectorAll("text")).map((t) => t.textContent ?? "")
+      expect(lines.join(" "), `node ${i}`).toBe(ir.items[i]!.label)
+    })
+    const nodes = nodeShapes(container)
+    expect(nodes.find((node) => node.shape === "capsule")).toBeTruthy()
+    // A capsule keeps its circle's height, so the reading start stays the tallest node.
+    for (const node of nodes.slice(1)) expect(nodes[0]!.halfH).toBeGreaterThan(node.halfH)
+    // Neighbours stay apart even after a node widens.
+    for (let i = 0; i < nodes.length; i++) {
+      const a = nodes[i]!
+      const b = nodes[(i + 1) % nodes.length]!
+      const apartX = Math.abs(a.cx - b.cx) - a.halfW - b.halfW
+      const apartY = Math.abs(a.cy - b.cy) - a.halfH - b.halfH
+      expect(Math.max(apartX, apartY), `nodes ${i} and ${(i + 1) % nodes.length}`).toBeGreaterThan(0)
+    }
+  })
+
+  it("gives a five-character CJK label the room for all five characters", () => {
+    const ir = {
+      type: "cycle" as const,
+      title: "支出",
+      items: [
+        { label: "需求核报", description: "逐笔可查" },
+        { label: "联合采购", description: "失误成章" },
+        { label: "物流配送", description: "管理费率" },
+        { label: "图书角建设", description: "月捐共同体" },
+        { label: "借阅运营", description: "联合采购" },
+      ],
+    }
+    const { container } = svg(cycle.render(ir, { x: 96, y: 186, w: 1088 }, themed("swiss")))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const joined = Array.from(container.querySelectorAll("[data-audit-box] text"))
+      .map((t) => t.textContent ?? "")
+      .join("")
+    expect(joined).toContain("图书角建设")
   })
 
   it("3–4 char CJK node labels wrap instead of ellipsizing 试运行", () => {
