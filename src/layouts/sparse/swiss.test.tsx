@@ -7,6 +7,7 @@ import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
 import { OneEvidenceContent } from "../content-one-evidence"
 import type { PptxIR, Slide } from "@/ir"
+import { measureTextUnits } from "../../lib/svg-text-layout"
 
 const VERSE = "设备不会突然坏，只是没人**听它说话**。"
 const VERSE_PLAIN = "设备不会突然坏，只是没人听它说话。"
@@ -100,6 +101,27 @@ describe("swiss sparse faces", () => {
     expect(page.textContent).toBe("01 / 03")
     expect(page.getAttribute("x")).toBe("1188")
     expect(page.getAttribute("text-anchor")).toBe("end")
+  })
+
+  it("stat-hero keeps the figure and its unit inside the right margin", () => {
+    const slide: Slide = {
+      type: "content",
+      kind: "fact",
+      layout: "stat-hero",
+      heading: "年度总收入",
+      components: [{ type: "kpi_cards", items: [{ value: "1142.6", unit: "万元", label: "年度总收入" }] }],
+    } as Slide
+    const { root } = render(<StatHeroContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />)
+    const hero = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").startsWith("1142.6"))!
+    const unit = hero.querySelector("tspan")!
+    expect(unit.textContent).toBe("万元")
+    const weight = { bold: true, fontFamily: hero.getAttribute("font-family")! }
+    const right =
+      Number(hero.getAttribute("x")) +
+      measureTextUnits("1142.6", weight) * Number(hero.getAttribute("font-size")) +
+      Number(unit.getAttribute("dx")) +
+      measureTextUnits("万元", weight) * Number(unit.getAttribute("font-size"))
+    expect(right).toBeLessThanOrEqual(88 + 1100)
   })
 
   it("one-evidence sits the claim on a surface card with a red index", () => {

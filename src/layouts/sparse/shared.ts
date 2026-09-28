@@ -33,11 +33,42 @@ export function isNumericHero(value: string): boolean {
   return /^-?\d+(?:[.,]\d+)?%?$/.test(value.trim())
 }
 
+/**
+ * The hero figure's type size, with whatever the skin sets after it on the
+ * same line.
+ *
+ * Every skin draws the figure and its trailing runs as one `<text>`: the
+ * author's unit as a `heroUnitMark` `<tspan>`, and on thesis and stage a
+ * percent sign shrunk to `percentScale` of the figure. Fitting the figure on
+ * its own gave it the whole measure and then hung the unit past it: swiss'
+ * "1142.6" filled its 1100px and "万元" ran 180px further, to x=1255 on a
+ * page whose margin is 1192. The trailing runs scale with the figure, so the
+ * size is the largest one at which all of it fits, and the runs' width at
+ * the floor size is what a figure too long even there is cut to make room
+ * for. A figure with nothing after it fits exactly as a plain line does.
+ */
 export function fitHeroLine(
   value: string,
-  opts: { maxWidth: number; fontSize: number; fontFamily: string; bold: boolean },
+  opts: {
+    maxWidth: number
+    fontSize: number
+    fontFamily: string
+    bold: boolean
+    /** The unit `<tspan>` the skin sets after the figure (see `heroUnitMark`). */
+    unit?: string
+    /** A trailing `%` set at this share of the figure's size. */
+    percentScale?: number
+  },
 ): { text: string; fontSize: number } {
   const minFontSize = Math.max(48, Math.round(opts.fontSize * (64 / 180)))
+  const weight = { bold: opts.bold, fontFamily: opts.fontFamily }
+  const unitUnits = opts.unit ? measureTextUnits(opts.unit, weight) : 0
+  const percentUnits = opts.percentScale ? measureTextUnits("%", weight) : 0
+  const trailWidth = (size: number) => {
+    const unit = opts.unit ? heroUnitMark(size).dx + unitUnits * heroUnitMark(size).fontSize : 0
+    const percent = opts.percentScale ? percentUnits * Math.round(size * opts.percentScale) : 0
+    return unit + percent
+  }
   const fitted = fitSvgLine(value, {
     maxWidth: opts.maxWidth,
     fontSize: opts.fontSize,
@@ -45,7 +76,20 @@ export function fitHeroLine(
     fontFamily: opts.fontFamily,
     bold: opts.bold,
   })
-  return { text: fitted.text, fontSize: fitted.fontSize }
+  if (!opts.unit && !opts.percentScale) return { text: fitted.text, fontSize: fitted.fontSize }
+
+  const valueUnits = measureTextUnits(value, weight)
+  for (let size = fitted.fontSize; size >= minFontSize; size--) {
+    if (valueUnits * size + trailWidth(size) <= opts.maxWidth) return { text: value, fontSize: size }
+  }
+  const cut = fitSvgLine(value, {
+    maxWidth: Math.max(0, opts.maxWidth - trailWidth(minFontSize)),
+    fontSize: minFontSize,
+    minFontSize,
+    fontFamily: opts.fontFamily,
+    bold: opts.bold,
+  })
+  return { text: cut.text, fontSize: cut.fontSize }
 }
 
 /**

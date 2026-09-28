@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { rotateRectPolygon, yearQuarter } from "./shared"
+import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
+import { fitHeroLine, heroUnitMark, rotateRectPolygon, yearQuarter } from "./shared"
 
 const round1 = (v: number) => Math.round(v * 10) / 10
 
@@ -75,5 +76,41 @@ describe("yearQuarter", () => {
     expect(yearQuarter("")).toBeUndefined()
     expect(yearQuarter("2026-00-01")).toBeUndefined()
     expect(yearQuarter("2026-13-01")).toBeUndefined()
+  })
+})
+
+describe("fitHeroLine", () => {
+  const family = "Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif"
+  const opts = { maxWidth: 1100, fontSize: 360, fontFamily: family, bold: true }
+  const units = (text: string) => measureTextUnits(text, { bold: true, fontFamily: family })
+  /** The line as the skins draw it: figure, then the unit `<tspan>` at its own size. */
+  const drawnWidth = (fitted: { text: string; fontSize: number }, unit: string) => {
+    const mark = heroUnitMark(fitted.fontSize)
+    return units(fitted.text) * fitted.fontSize + mark.dx + units(unit) * mark.fontSize
+  }
+
+  // swiss' stat-hero drew "1142.6" at the size that filled 1100px on its own
+  // and then set "万元" after it, 180px past the measure it was fitted to.
+  it("fits the figure and its trailing unit inside one measure", () => {
+    const fitted = fitHeroLine("1142.6", { ...opts, unit: "万元" })
+    expect(fitted.text).toBe("1142.6")
+    expect(drawnWidth(fitted, "万元")).toBeLessThanOrEqual(1100)
+    expect(drawnWidth({ text: fitted.text, fontSize: fitted.fontSize + 1 }, "万元")).toBeGreaterThan(1100)
+  })
+
+  it("counts a shrunk percent sign that trails the figure", () => {
+    const fitted = fitHeroLine("1142.6", { ...opts, percentScale: 0.5 })
+    const percent = units("%") * Math.round(fitted.fontSize * 0.5)
+    expect(units(fitted.text) * fitted.fontSize + percent).toBeLessThanOrEqual(1100)
+  })
+
+  it("keeps the full size when figure and unit already fit", () => {
+    expect(fitHeroLine("10.2", { ...opts, unit: "万席" }).fontSize).toBe(360)
+  })
+
+  it("fits a figure with no unit exactly as a plain line fit does", () => {
+    const plain = fitSvgLine("1142.6", { maxWidth: 1100, fontSize: 360, minFontSize: 128, fontFamily: family, bold: true })
+    const fitted = fitHeroLine("1142.6", opts)
+    expect({ text: fitted.text, fontSize: fitted.fontSize }).toEqual({ text: plain.text, fontSize: plain.fontSize })
   })
 })

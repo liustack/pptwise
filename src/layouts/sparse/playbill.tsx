@@ -76,13 +76,14 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   const numeric = isNumericHero(raw)
   const unsigned = raw.trim().replace(/^-/, "")
   const { body } = splitTrailingPercent(unsigned)
+  const unit = heroUnit(slide)
   const fitted = fitHeroLine(numeric ? body : raw, {
     maxWidth: 1000,
     fontSize: 380,
     fontFamily: fonts.heading,
     bold: true,
+    unit,
   })
-  const unit = heroUnit(slide)
   const unitMark = heroUnitMark(fitted.fontSize)
   const chip = numeric ? (raw.includes("%") ? raw : `${raw}%`) : null
   const caption = heroCaption(slide)
