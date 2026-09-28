@@ -247,6 +247,28 @@ describe("combo chart: values at the numeric extremes", () => {
     expect(tickLabels(container, "y2")).toEqual(["0", "0.05", "0.1", "0.15"])
   })
 
+  it("draws a right line whose values are a hair apart, inside the plot", () => {
+    // Both pass validate. The right-hand axis rounded its ticks together and
+    // then threw on its own result, so renderSlideSvg threw.
+    for (const [a, b] of [
+      [100000000000, 100000000000.01],
+      [1, 1.00000000000001],
+    ]) {
+      const component: ChartComponent = {
+        type: "chart",
+        chart_type: "combo",
+        series: [
+          { name: "A", data: [{ x: "Q1", y: 100 }, { x: "Q2", y: 100 }] },
+          { name: "B", plot: "line", axis: "right", data: [{ x: "Q1", y: a }, { x: "Q2", y: b }] },
+        ],
+      }
+      expect(issuesOf(component)).toEqual([])
+      const container = draw(component)
+      expectMarksInsidePlot(container)
+      expect(container.querySelectorAll("polyline")).not.toHaveLength(0)
+    }
+  })
+
   it("declines, and says so, when handed a value past the ceiling around validate", () => {
     const container = draw(lone(100, 1.7e308))
     expect(container.innerHTML).not.toMatch(/Infinity|NaN/)

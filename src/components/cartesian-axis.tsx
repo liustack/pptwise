@@ -140,11 +140,13 @@ export function buildNumericAxis(
  * below zero. Then the axis starts on its own nice multiple instead.
  *
  * The result is checked before it is returned: finite ticks, each above the
- * last, covering every value. A range no such axis can cover (padding
- * 1.7e308 overflows to `Infinity`) throws rather than handing back an axis
- * that misses the data, and so does a value that is not a finite number.
- * validate keeps both off every combo (`CHART_AXIS_LIMIT`), so a throw here
- * is a caller that went around it.
+ * last, covering every value. A range too narrow for that is widened the way
+ * `niceTicks` widens one, and searched again. What still cannot be covered
+ * (padding 1.7e308 overflows to `Infinity`) throws rather than handing back
+ * an axis that misses the data, and so does a value that is not a finite
+ * number. validate keeps both off every combo (`CHART_AXIS_LIMIT`), so a
+ * throw here is a caller that went around it, and every finite value set
+ * within that ceiling gets an axis (`chart-numeric-range.test.tsx`).
  */
 export function buildAlignedNumericAxis(
   values: readonly number[],
@@ -180,28 +182,48 @@ export function buildAlignedNumericAxis(
   if (mode === "fit") lo -= span * DOMAIN_PAD_FRAC
 
   const zeroRow = primaryTicks.findIndex((t) => t === 0)
-  const alignZero =
-    zeroRow >= 0 && lo <= 0 && hi >= 0 && (lo === 0 || zeroRow > 0) && (hi === 0 || zeroRow < intervals)
 
-  let step = niceStep(hi - lo, intervals)
-  let start = 0
-  let covered = false
-  for (let guard = 0; guard < 40; guard++) {
-    if (alignZero) {
-      start = -zeroRow * step
-    } else {
-      start = Math.floor(lo / step) * step
-      if (Math.abs(start) < step * 1e-12) start = 0
+  /**
+   * The nice-number search over [from, to], checked: finite ticks, each above
+   * the last, covering what the values need. `null` when the search cannot
+   * give that.
+   */
+  const solve = (from: number, to: number): number[] | null => {
+    const alignZero =
+      zeroRow >= 0 && from <= 0 && to >= 0 && (from === 0 || zeroRow > 0) && (to === 0 || zeroRow < intervals)
+    let step = niceStep(to - from, intervals)
+    let start = 0
+    let covered = false
+    for (let guard = 0; guard < 40; guard++) {
+      if (alignZero) {
+        start = -zeroRow * step
+      } else {
+        start = Math.floor(from / step) * step
+        if (Math.abs(start) < step * 1e-12) start = 0
+      }
+      if (start <= from + step * 1e-9 && start + intervals * step >= to - step * 1e-9) {
+        covered = true
+        break
+      }
+      step = nextNiceStep(step)
     }
-    if (start <= lo + step * 1e-9 && start + intervals * step >= hi - step * 1e-9) {
-      covered = true
-      break
-    }
-    step = nextNiceStep(step)
+    const ticks = Array.from({ length: intervals + 1 }, (_, i) => Number((start + i * step).toPrecision(12)))
+    const increasing = ticks.every((t, i) => Number.isFinite(t) && (i === 0 || t > ticks[i - 1]!))
+    return covered && increasing && ticks[0]! <= needLo && ticks[ticks.length - 1]! >= needHi ? ticks : null
   }
-  const ticks = Array.from({ length: intervals + 1 }, (_, i) => Number((start + i * step).toPrecision(12)))
-  const increasing = ticks.every((t, i) => Number.isFinite(t) && (i === 0 || t > ticks[i - 1]!))
-  if (!covered || !increasing || ticks[0]! > needLo || ticks[ticks.length - 1]! < needHi) {
+
+  // Ticks are rounded to 12 significant digits, so values a hair apart
+  // (1e11 and 1e11 + 0.01, or 1 and 1 + 1e-14) round their ticks together
+  // and the search above comes back empty. `niceTicks` meets the same
+  // trouble on the left axis by widening the range around its middle, out to
+  // the larger of its own size, its span and 1, and so does this: the right
+  // axis then reads on the same kind of scale the left one would have drawn.
+  // Halves are added rather than the sum halved, so the middle of two large
+  // values cannot overflow.
+  const mid = needLo / 2 + needHi / 2
+  const pad = Math.max(Math.abs(mid), needHi - needLo, 1)
+  const ticks = solve(lo, hi) ?? solve(mid - pad, mid + pad)
+  if (ticks === null) {
     throw new Error(
       `buildAlignedNumericAxis: cannot cover ${needLo} to ${needHi} with ${intervals + 1} finite, increasing ticks`,
     )

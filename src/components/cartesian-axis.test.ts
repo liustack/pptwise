@@ -163,6 +163,27 @@ describe("buildAlignedNumericAxis", () => {
     expect(() => buildAlignedNumericAxis([-1.7e308, 1.7e308], "fit", [0, 50, 100])).toThrow(/cannot/)
   })
 
+  it("widens a range too narrow for distinct ticks, the way the left axis does, instead of throwing", () => {
+    // Ticks are rounded to 12 significant digits, so values a hair apart
+    // gave four equal ticks, and the guard that checks the result threw on
+    // input the schema had accepted.
+    for (const values of [
+      [100000000000, 100000000000.01],
+      [1, 1.00000000000001],
+      [9.99999999999999e299, 1e300],
+      [-6.6947653749957686e299, -6.69476537499577e299],
+    ]) {
+      const axis = buildAlignedNumericAxis(values, "fit", [0, 50, 100, 150])
+      expect(axis.ticks).toHaveLength(4)
+      for (let i = 1; i < axis.ticks.length; i++) expect(axis.ticks[i]!).toBeGreaterThan(axis.ticks[i - 1]!)
+      expect(axis.domain.min).toBeLessThanOrEqual(Math.min(...values))
+      expect(axis.domain.max).toBeGreaterThanOrEqual(Math.max(...values))
+    }
+    const tiny = buildAlignedNumericAxis([-1e-323, 0], "fit", [0, 50, 100, 150])
+    expect(tiny.ticks.every(Number.isFinite)).toBe(true)
+    expect(new Set(tiny.ticks).size).toBe(4)
+  })
+
   it("refuses a value that is not a finite number", () => {
     expect(() => buildAlignedNumericAxis([1, Number.NaN], "fit", [0, 50, 100])).toThrow(/finite/)
     expect(() => buildAlignedNumericAxis([Number.POSITIVE_INFINITY], "zero-max", [0, 50, 100])).toThrow(/finite/)
