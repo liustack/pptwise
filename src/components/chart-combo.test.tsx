@@ -269,6 +269,26 @@ describe("combo chart: values at the numeric extremes", () => {
     }
   })
 
+  it("gives a lines-only left axis distinct rows when its values are a hair apart", () => {
+    // Every bar on the right leaves the left axis to lines, read in "fit"
+    // mode. The shared builder rounded 100 and 100.0000000001 into five ticks
+    // on two rows, and the right axis's ticks were laid on those same rows.
+    const container = draw({
+      type: "chart",
+      chart_type: "combo",
+      series: [
+        { name: "A", axis: "right", data: [{ x: "Q1", y: 5 }, { x: "Q2", y: 7 }] },
+        { name: "B", plot: "line", data: [{ x: "Q1", y: 100 }, { x: "Q2", y: 100.0000000001 }] },
+      ],
+    })
+    for (const axis of ["y", "y2"] as const) {
+      const rows = tickYs(container, axis)
+      expect(rows.length).toBeGreaterThan(2)
+      expect(new Set(rows).size, axis).toBe(rows.length)
+    }
+    expectMarksInsidePlot(container)
+  })
+
   it("declines, and says so, when handed a value past the ceiling around validate", () => {
     const container = draw(lone(100, 1.7e308))
     expect(container.innerHTML).not.toMatch(/Infinity|NaN/)

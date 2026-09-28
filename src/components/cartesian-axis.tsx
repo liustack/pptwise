@@ -124,6 +124,49 @@ export function buildNumericAxis(
 }
 
 /**
+ * `buildNumericAxis`, held to the contract the stacked and combo charts are
+ * built on: finite ticks, each above the last, covering every value.
+ *
+ * The shared builder does not always meet it. Ticks are rounded to 12
+ * significant digits, so values a hair apart can come back as
+ * `[99.9999999999, 99.9999999999, 100, 100, 100]`: five ticks on two
+ * values, not reaching 100.0000000001, and a combo laying its right axis on
+ * those rows put its own ticks on top of each other. Where the shared result
+ * falls short, the range is widened around its middle to the larger of its
+ * own size, its span and 1, which is what `niceTicks` already does with a
+ * range too narrow to yield enough ticks, and built again.
+ *
+ * Wherever the shared result already covers the values, it is returned as it
+ * is. The older chart types keep calling `buildNumericAxis` directly, and
+ * their pages are pinned to its output.
+ */
+export function buildCoveringNumericAxis(
+  values: readonly number[],
+  mode: DomainPadMode,
+  unit?: string,
+): { domain: NumericDomain; ticks: number[]; labels: string[] } {
+  const invalid = values.find((v) => !Number.isFinite(v))
+  if (invalid !== undefined) {
+    throw new Error(`buildCoveringNumericAxis: every value must be a finite number, got ${invalid}`)
+  }
+  const lo = values.length ? Math.min(...values) : 0
+  const hi = values.length ? Math.max(...values) : 0
+  const covers = (axis: { domain: NumericDomain; ticks: number[] }) =>
+    axis.ticks.every((t, i) => Number.isFinite(t) && (i === 0 || t > axis.ticks[i - 1]!)) &&
+    axis.domain.min <= lo &&
+    axis.domain.max >= hi
+  const axis = buildNumericAxis(values, mode, unit)
+  if (covers(axis)) return axis
+  // Halves are added rather than the sum halved, so the middle of two large
+  // values cannot overflow.
+  const mid = lo / 2 + hi / 2
+  const pad = Math.max(Math.abs(mid), hi - lo, 1)
+  const widened = buildNumericAxis([mid - pad, mid + pad], mode, unit)
+  if (covers(widened)) return widened
+  throw new Error(`buildCoveringNumericAxis: cannot cover ${lo} to ${hi} with finite, increasing ticks`)
+}
+
+/**
  * A second value axis whose ticks land on the rows the first axis already
  * drew, for a combo chart's right-hand axis.
  *
