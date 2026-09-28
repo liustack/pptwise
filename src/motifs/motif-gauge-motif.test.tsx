@@ -7,6 +7,9 @@ import { parseSvgRoot, renderSvgMarkup } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import type { PageRenderContext } from "../render/page-context"
 import { GaugeMotif } from "./motif-gauge-motif"
+import { BoundSlideSvg } from "../render/__fixtures__/bound-slide"
+import { registerTestTheme } from "../themes/test-fixtures"
+import { __resetRegisteredThemes } from "../themes/definitions"
 
 const SLIDES = ["cover", "chapter", "content", "ending"].map(
   (type) => ({ type, heading: type, components: [] }) as Slide,
@@ -85,6 +88,34 @@ describe("GaugeMotif", () => {
     const page = pageReserving([{ x: 48, y: 96, w: 4, h: 544 }])
     const { root } = renderMotif(SLIDES[2]!, page)
     expect(root.querySelector('[data-decor-piece="locator-corner"]')).toBeNull()
+  })
+
+  // header-band fills the top 152px with its band and both tone-adaptive
+  // faces set the organization at (64,74): on brief, the corner's top arm
+  // ran through "战略与运营部" on the two tone-adaptive pages and was painted
+  // under the band on header-band.
+  it.each([
+    ["header-band", { cover: "header-band" }, "cover"],
+    ["tone-adaptive-header", { cover: "tone-adaptive-header" }, "cover"],
+    ["tone-adaptive-ending", { ending: "tone-adaptive-ending" }, "ending"],
+  ] as const)("stands down on %s, which paints the top-left corner itself", (face, faces, type) => {
+    const themeId = registerTestTheme(`gauge-keep-out-${face}`, "brief", faces)
+    const slide = { type, heading: "云觅科技二季度业务评审", components: [] } as unknown as Slide
+    const ir = {
+      version: "5",
+      filename: "keep-out.pptx",
+      theme: { id: themeId },
+      meta: { organization: "战略与运营部" },
+      assets: { images: {} },
+      slides: [slide],
+    } as PptxIR
+    try {
+      const root = parseSvgRoot(renderSvgMarkup(<BoundSlideSvg ir={ir} slide={slide} index={0} />))
+      expect(Array.from(root.querySelectorAll("text")).some((t) => t.textContent === "战略与运营部")).toBe(true)
+      expect(root.querySelector('[data-decor-piece="locator-corner"]')).toBeNull()
+    } finally {
+      __resetRegisteredThemes()
+    }
   })
 
   it("still paints beside furniture that is nowhere near the corner", () => {
