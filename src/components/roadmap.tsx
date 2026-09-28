@@ -24,7 +24,13 @@ const BADGE_FONT = 16
 const BASELINE_FUDGE = 0.32
 const BADGE_TOP = BAR_H + 16 // 徽章顶到卡顶
 
-const PERIOD_SIZE = 14
+/**
+ * The period starts at the 16px type floor. It started at 14 when the floor
+ * was 14, and the floor rising past it left every fit starting below its own
+ * minimum: `fitSvgLine` then takes its truncate branch on every call, so a
+ * whole "Q1" printed at 16 still came back flagged as cut.
+ */
+const PERIOD_SIZE = 16
 const TITLE_SIZE = 19
 const TITLE_LH = Math.round(TITLE_SIZE * 1.4)
 const GAP_BADGE_TITLE = 14

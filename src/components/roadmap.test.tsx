@@ -87,6 +87,27 @@ describe("roadmap component", () => {
     expect(roadmap.measure(long, 600, ctx)).toBeGreaterThan(roadmap.measure(short, 600, ctx))
   })
 
+  it("prints a short period whole, at the floor, and never flags it as cut", () => {
+    // The period's starting size sat under its own 16px floor, so every fit
+    // took the truncate branch and flagged the line even when the whole of
+    // "Q1" was painted. The gallery reported every roadmap on every theme.
+    const periods = ["Q1", "第一季度", "三月", "Q3 第 1 月", "0-6 个月"]
+    const component = {
+      type: "roadmap" as const,
+      items: periods.slice(0, 3).map((period, i) => ({ title: `阶段${i + 1}`, period })),
+    }
+    const { container } = svg(roadmap.render(component, { x: 0, y: 0, w: 1088 }, ctx))
+    for (const period of periods.slice(0, 3)) {
+      const text = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === period)
+      expect(text, period).toBeDefined()
+      expect(text!.getAttribute("data-truncated"), period).toBeNull()
+      expect(Number(text!.getAttribute("font-size")), period).toBeGreaterThanOrEqual(16)
+    }
+    const rest = { ...component, items: periods.slice(3).map((period, i) => ({ title: `阶段${i + 1}`, period })) }
+    const other = svg(roadmap.render(rest, { x: 0, y: 0, w: 1088 }, ctx)).container
+    expect(other.querySelector("[data-truncated]")).toBeNull()
+  })
+
   it("renders only svg2pptx-subset primitives", () => {
     const markup = renderSvgMarkup(
       <svg xmlns="http://www.w3.org/2000/svg">
