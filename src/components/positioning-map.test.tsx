@@ -186,6 +186,93 @@ describe("positioning_map component", () => {
     }
   })
 
+  // Subjects clustered round the crossing, as a clinic's patient groups are:
+  // several sit a few points off one rule or the other, which is where the
+  // labels used to land straight across an axis.
+  const crossing = {
+    ...eight,
+    points: [
+      { label: "签约随访组", x: 78, y: 74, emphasis: true as const },
+      { label: "普通门诊组", x: 46, y: 52 },
+      { label: "独居老人组", x: 20, y: 30 },
+      { label: "在职中年组", x: 34, y: 44 },
+      { label: "药房取药组", x: 56, y: 40 },
+      { label: "讲堂常来组", x: 70, y: 62 },
+      { label: "楼组长带教组", x: 62, y: 58 },
+      { label: "新确诊组", x: 26, y: 48 },
+    ],
+  }
+
+  /** Each point's name, its dot, and the two rules, read off the markup. */
+  function readMap(component: typeof crossing, w: number, ctx: ComponentCtx) {
+    const { container } = svg(positioningMap.render(component, { x: 0, y: 0, w }, ctx))
+    const [horizontal, vertical] = Array.from(container.querySelectorAll("line"))
+    const axisY = Number(horizontal!.getAttribute("y1"))
+    const axisX = Number(vertical!.getAttribute("x1"))
+    const circles = Array.from(container.querySelectorAll("circle"))
+    const texts = Array.from(container.querySelectorAll("text"))
+    const names = component.points.map((point, i) => {
+      const t = texts.find((el) => el.textContent === point.label)
+      if (!t) return { point, dot: circles[i]!, ink: undefined }
+      const size = Number(t.getAttribute("font-size"))
+      const width =
+        measureTextUnits(point.label, { bold: t.getAttribute("font-weight") === "700", fontFamily: ctx.fonts.body }) *
+        size
+      const x = Number(t.getAttribute("x"))
+      const y = Number(t.getAttribute("y"))
+      const left = t.getAttribute("text-anchor") === "end" ? x - width : x
+      // The same ink band the gallery's geometry check reads: a full em
+      // above the baseline and a quarter below it.
+      return { point, dot: circles[i]!, ink: { left, right: left + width, top: y - size, bottom: y + size * 0.25 } }
+    })
+    return { container, axisX, axisY, names }
+  }
+
+  it("keeps every name off both axis rules", () => {
+    for (const w of [1088, 880]) {
+      const { axisX, axisY, names } = readMap(crossing, w, themed("clinic"))
+      for (const { point, ink } of names) {
+        expect(ink, `${w}: ${point.label} placed`).toBeDefined()
+        const clearOfRow = ink!.bottom <= axisY - 4 || ink!.top >= axisY + 4
+        const clearOfColumn = ink!.right <= axisX - 4 || ink!.left >= axisX + 4
+        expect(clearOfRow, `${w}: ${point.label} on the horizontal rule`).toBe(true)
+        expect(clearOfColumn, `${w}: ${point.label} on the vertical rule`).toBe(true)
+      }
+    }
+  })
+
+  it("names each subject inside its own quadrant", () => {
+    const { axisX, axisY, names } = readMap(crossing, 1088, themed("clinic"))
+    for (const { point, dot, ink } of names) {
+      const cx = Number(dot.getAttribute("cx"))
+      const cy = Number(dot.getAttribute("cy"))
+      expect(cx < axisX ? ink!.right < axisX : ink!.left > axisX, `${point.label} across the vertical rule`).toBe(true)
+      expect(cy < axisY ? ink!.bottom < axisY : ink!.top > axisY, `${point.label} across the horizontal rule`).toBe(true)
+    }
+  })
+
+  it("moves an earlier name aside rather than drop a later one", () => {
+    // Eight classes packed into one quadrant near the crossing. Placed in
+    // author order with no second thoughts, the seventh finds every spot
+    // beside its dot taken; another arrangement names them all.
+    const packed = {
+      ...eight,
+      points: [
+        { label: "本班平均", x: 72, y: 68, emphasis: true as const },
+        { label: "基础组", x: 66, y: 42 },
+        { label: "提高组", x: 88, y: 86 },
+        { label: "初二（1）班", x: 78, y: 74 },
+        { label: "初二（5）班", x: 62, y: 60 },
+        { label: "年级平均", x: 70, y: 64 },
+        { label: "上学期本班", x: 58, y: 56 },
+        { label: "订正未跟组", x: 40, y: 34 },
+      ],
+    }
+    const { container, names } = readMap(packed, 1088, themed("homeroom"))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    for (const { point, ink } of names) expect(ink, point.label).toBeDefined()
+  })
+
   it("declares instead of drawing past a height it was given", () => {
     const { container } = svg(positioningMap.render(eight, { x: 0, y: 0, w: 1088, h: 200 }, themed("brief")))
     const marker = container.querySelector("[data-dropped]")!
