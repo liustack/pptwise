@@ -1,19 +1,24 @@
-import type { Component } from "@/ir"
-import { SINGLE_SERIES_TYPES } from "@/ir/components/chart"
-import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
-import { rotateChartPalette } from "../render/chart-palette"
-import { accessibleInk } from "../render/ink"
-import { axisTitlePairHeight } from "./axis-titles"
-import { MIN_CARTESIAN_BOX_W, MIN_DUAL_AXIS_BOX_W, PLOT_TOP_PAD, X_TICK_BAND } from "./cartesian-axis"
-import { labelLinePitch } from "./label-collision"
+import type { Component } from "@/ir";
+import { SINGLE_SERIES_TYPES } from "@/ir/components/chart";
+import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout";
+import { rotateChartPalette } from "../render/chart-palette";
+import { accessibleInk } from "../render/ink";
+import { axisTitlePairHeight } from "./axis-titles";
+import {
+  MIN_CARTESIAN_BOX_W,
+  MIN_DUAL_AXIS_BOX_W,
+  PLOT_TOP_PAD,
+  X_TICK_BAND,
+} from "./cartesian-axis";
+import { labelLinePitch } from "./label-collision";
 import {
   CHART_BODY_H,
   DIRECT_LABEL_FONT_SIZE,
   RADIAL_MIN_BODY_H,
   seriesGutterLabelsFit,
-} from "./chart-svg"
-import { buildChartModel } from "./chart-model"
-import type { RenderDef, SvgComponent } from "./types"
+} from "./chart-svg";
+import { buildChartModel } from "./chart-model";
+import type { RenderDef, SvgComponent } from "./types";
 import {
   renderArea,
   renderBar,
@@ -28,13 +33,13 @@ import {
   renderScatter,
   renderStacked,
   type ChartRenderFn,
-} from "./chart-svg"
+} from "./chart-svg";
 
-type ChartComponent = Extract<Component, { type: "chart" }>
+type ChartComponent = Extract<Component, { type: "chart" }>;
 
 /** Re-exported name for the flat body height, which now lives beside the
  * radial geometry that has to reason about it (`chart-svg.tsx`). */
-const CHART_H = CHART_BODY_H
+const CHART_H = CHART_BODY_H;
 
 const renderers: Record<ChartComponent["chart_type"], ChartRenderFn> = {
   bar: renderBar,
@@ -54,19 +59,19 @@ const renderers: Record<ChartComponent["chart_type"], ChartRenderFn> = {
   stacked: renderStacked,
   percent_stacked: renderStacked,
   combo: renderCombo,
-}
+};
 
 /** 变体分发：bar+direction=horizontal 走横条，pie+style=donut 走环形（沿用旧
  * 形态，中心总值恒显）；其余按 chart_type 直查 renderers（含新 donut/gauge/
  * scatter/area）。 */
 function resolveRenderer(component: ChartComponent): ChartRenderFn {
   if (component.chart_type === "bar" && component.direction === "horizontal") {
-    return renderBarHorizontal
+    return renderBarHorizontal;
   }
   if (component.chart_type === "pie" && component.style === "donut") {
-    return renderDonut
+    return renderDonut;
   }
-  return renderers[component.chart_type]
+  return renderers[component.chart_type];
 }
 
 /**
@@ -115,18 +120,19 @@ function resolveRenderer(component: ChartComponent): ChartRenderFn {
  * `chart_axes_ignored` warning still keys off this same applicability set:
  * a pie with `axes.x_title` still warns, a bar with `axes.x_title` does not.
  */
-const AXES_APPLICABLE_TYPES: ReadonlySet<ChartComponent["chart_type"]> = new Set([
-  "bar",
-  "line",
-  "scatter",
-  "area",
-  "stacked",
-  "percent_stacked",
-  "combo",
-])
+const AXES_APPLICABLE_TYPES: ReadonlySet<ChartComponent["chart_type"]> =
+  new Set([
+    "bar",
+    "line",
+    "scatter",
+    "area",
+    "stacked",
+    "percent_stacked",
+    "combo",
+  ]);
 
 function axesApplicable(component: ChartComponent): boolean {
-  return AXES_APPLICABLE_TYPES.has(component.chart_type)
+  return AXES_APPLICABLE_TYPES.has(component.chart_type);
 }
 
 /**
@@ -141,7 +147,9 @@ function axesApplicable(component: ChartComponent): boolean {
  * there is what keeps "the renderer draws one series" and "the author may
  * only write one" from drifting apart.
  */
-const SINGLE_SERIES: ReadonlySet<ChartComponent["chart_type"]> = new Set(SINGLE_SERIES_TYPES)
+const SINGLE_SERIES: ReadonlySet<ChartComponent["chart_type"]> = new Set(
+  SINGLE_SERIES_TYPES
+);
 
 /**
  * Chart types that name their own series on the plot, so a legend would
@@ -156,7 +164,10 @@ const SINGLE_SERIES: ReadonlySet<ChartComponent["chart_type"]> = new Set(SINGLE_
  * on top of that would be the same names twice, and it cost every line and
  * area chart 52px of plot height for the privilege.
  */
-const DIRECT_LABELLED: ReadonlySet<ChartComponent["chart_type"]> = new Set(["line", "area"])
+const DIRECT_LABELLED: ReadonlySet<ChartComponent["chart_type"]> = new Set([
+  "line",
+  "area",
+]);
 
 /**
  * Legend applicability. A legend maps a color to a series name, so it applies
@@ -176,9 +187,9 @@ const DIRECT_LABELLED: ReadonlySet<ChartComponent["chart_type"]> = new Set(["lin
  * that boundary.
  */
 function legendApplicable(component: ChartComponent): boolean {
-  if (SINGLE_SERIES.has(component.chart_type)) return false
-  if (DIRECT_LABELLED.has(component.chart_type)) return false
-  return component.series.length >= 2
+  if (SINGLE_SERIES.has(component.chart_type)) return false;
+  if (DIRECT_LABELLED.has(component.chart_type)) return false;
+  return component.series.length >= 2;
 }
 
 /**
@@ -186,12 +197,18 @@ function legendApplicable(component: ChartComponent): boolean {
  * only place that says which of its colors are bars and which are lines, and
  * a square beside a line's name describes a bar the chart never drew.
  */
-function legendSwatchIsLine(component: ChartComponent, seriesIndex: number): boolean {
-  return component.chart_type === "combo" && component.series[seriesIndex]?.plot === "line"
+function legendSwatchIsLine(
+  component: ChartComponent,
+  seriesIndex: number
+): boolean {
+  return (
+    component.chart_type === "combo" &&
+    component.series[seriesIndex]?.plot === "line"
+  );
 }
 
 /** Thickness (px) of a line series' legend swatch (a short stroke, not a chip). */
-const LEGEND_LINE_SWATCH_H = 3
+const LEGEND_LINE_SWATCH_H = 3;
 
 /**
  * The color a legend swatch has to be: whatever the renderer actually painted
@@ -209,10 +226,11 @@ function legendSwatchFill(
   seriesIndex: number,
   palette: string[],
   mutedColor: string,
-  accentColor: string,
+  accentColor: string
 ): string {
-  if (component.chart_type === "dumbbell") return seriesIndex === 0 ? mutedColor : accentColor
-  return palette[seriesIndex % palette.length]!
+  if (component.chart_type === "dumbbell")
+    return seriesIndex === 0 ? mutedColor : accentColor;
+  return palette[seriesIndex % palette.length]!;
 }
 
 /**
@@ -223,45 +241,52 @@ function legendSwatchFill(
  * a header baseline at 16, which is what keeps the tallest bar's value
  * label ≥ 24px clear of the legend ink.
  */
-const HEADER_ROW_H = 52
-const HEADER_BASELINE_Y = 16
+const HEADER_ROW_H = 52;
+const HEADER_BASELINE_Y = 16;
 
 /** Legend swatch (px, square) — LabelTuning.dc.html keeps the 10px chip. */
-const LEGEND_SWATCH_SIZE = 10
+const LEGEND_SWATCH_SIZE = 10;
 /** Legend name font size (px) — 11 → 12 to match the header unit caption. */
-const LEGEND_FONT_SIZE = 16
-const LEGEND_MIN_FONT_SIZE = 16
+const LEGEND_FONT_SIZE = 16;
+const LEGEND_MIN_FONT_SIZE = 16;
 /** Per-entry name budget (px) before `fitSvgLine` shrinks/truncates it. */
-const LEGEND_NAME_MAX_W = 160
+const LEGEND_NAME_MAX_W = 160;
 /** Gap (px) between a swatch and its own name. */
-const LEGEND_SWATCH_GAP = 6
+const LEGEND_SWATCH_GAP = 6;
 /**
  * Minimum swatch-to-swatch pitch (px). LabelTuning.dc.html starts two
  * 2-character CJK names 72px apart and grows the slot when the fitted name
  * is wider than that.
  */
-const LEGEND_ENTRY_PITCH = 100
+const LEGEND_ENTRY_PITCH = 100;
+/**
+ * Clear space (px) between a name and the next swatch once the name is too
+ * wide for `LEGEND_ENTRY_PITCH`. Names are placed by estimated width, and the
+ * face that finally sets them can run a few px wider (PingFang standing in
+ * for Microsoft YaHei on a Mac), so the gap has to absorb that.
+ */
+const LEGEND_ENTRY_GAP = 20;
 
 type LegendSlot = {
-  seriesIndex: number
-  colorIndex: number
-  slotX: number
-  fitted: ReturnType<typeof fitSvgLine>
-  width: number
-}
+  seriesIndex: number;
+  colorIndex: number;
+  slotX: number;
+  fitted: ReturnType<typeof fitSvgLine>;
+  width: number;
+};
 
 function legendNameWidth(
   fitted: ReturnType<typeof fitSvgLine>,
-  fontFamily: string,
+  fontFamily: string
 ): number {
-  return measureTextUnits(fitted.text, { fontFamily }) * fitted.fontSize
+  return measureTextUnits(fitted.text, { fontFamily }) * fitted.fontSize;
 }
 
 /**
  * Lays out a chart's legend entries (chart-model.ts's `ChartModel.legend`,
  * already in input series order) against `availW` px. Slots pack left to
- * right with a ≥72px swatch-to-swatch pitch (or the fitted name width when
- * that is larger). The caller right-aligns the group by offsetting `slotX`
+ * right with a `LEGEND_ENTRY_PITCH` swatch-to-swatch pitch, or the fitted
+ * entry plus `LEGEND_ENTRY_GAP` when that is larger. The caller right-aligns the group by offsetting `slotX`
  * with `availW - groupW`.
  *
  * **What fits is named, and the rest is declared.** A slide never carries a
@@ -276,12 +301,12 @@ function legendNameWidth(
 function layoutChartLegend(
   legend: ReturnType<typeof buildChartModel>["legend"],
   availW: number,
-  fontFamily: string,
+  fontFamily: string
 ): {
-  slots: LegendSlot[]
-  droppedCount: number
+  slots: LegendSlot[];
+  droppedCount: number;
   /** Total width of the right-aligned group. */
-  groupW: number
+  groupW: number;
 } {
   const prepared = legend.map((entry) => {
     const fitted = fitSvgLine(entry.name, {
@@ -289,55 +314,72 @@ function layoutChartLegend(
       fontSize: LEGEND_FONT_SIZE,
       minFontSize: LEGEND_MIN_FONT_SIZE,
       fontFamily,
-    })
+    });
     return {
       seriesIndex: entry.seriesIndex,
       colorIndex: entry.colorIndex,
       fitted,
-      width: LEGEND_SWATCH_SIZE + LEGEND_SWATCH_GAP + legendNameWidth(fitted, fontFamily),
-    }
-  })
+      width:
+        LEGEND_SWATCH_SIZE +
+        LEGEND_SWATCH_GAP +
+        legendNameWidth(fitted, fontFamily),
+    };
+  });
 
-  const pitchAfter = (width: number) => Math.max(LEGEND_ENTRY_PITCH, width)
+  const pitchAfter = (width: number) =>
+    Math.max(LEGEND_ENTRY_PITCH, width + LEGEND_ENTRY_GAP);
 
   function pack(count: number) {
-    const slots: LegendSlot[] = []
+    const slots: LegendSlot[] = [];
     for (let i = 0; i < count; i++) {
-      const e = prepared[i]!
-      const slotX = i === 0 ? 0 : slots[i - 1]!.slotX + pitchAfter(prepared[i - 1]!.width)
+      const e = prepared[i]!;
+      const slotX =
+        i === 0 ? 0 : slots[i - 1]!.slotX + pitchAfter(prepared[i - 1]!.width);
       slots.push({
         seriesIndex: e.seriesIndex,
         colorIndex: e.colorIndex,
         slotX,
         fitted: e.fitted,
         width: e.width,
-      })
+      });
     }
     if (count === 0) {
-      return { slots, groupW: 0 }
+      return { slots, groupW: 0 };
     }
-    const last = slots[count - 1]!
-    return { slots, groupW: last.slotX + last.width }
+    const last = slots[count - 1]!;
+    return { slots, groupW: last.slotX + last.width };
   }
 
-  let visible = prepared.length
+  let visible = prepared.length;
   while (visible > 0) {
-    const packed = pack(visible)
+    const packed = pack(visible);
     if (packed.groupW <= availW) {
-      return { slots: packed.slots, droppedCount: prepared.length - visible, groupW: packed.groupW }
+      return {
+        slots: packed.slots,
+        droppedCount: prepared.length - visible,
+        groupW: packed.groupW,
+      };
     }
-    visible -= 1
+    visible -= 1;
   }
-  return { slots: [], droppedCount: prepared.length, groupW: 0 }
+  return { slots: [], droppedCount: prepared.length, groupW: 0 };
 }
 
 function hasHeaderRow(component: ChartComponent): boolean {
-  return legendApplicable(component)
+  return legendApplicable(component);
 }
 
-function axisTitlesOf(component: ChartComponent): { xTitle?: string; yTitle?: string; y2Title?: string } {
-  if (!axesApplicable(component)) return {}
-  return { xTitle: component.axes?.x_title, yTitle: component.axes?.y_title, y2Title: component.axes?.y2_title }
+function axisTitlesOf(component: ChartComponent): {
+  xTitle?: string;
+  yTitle?: string;
+  y2Title?: string;
+} {
+  if (!axesApplicable(component)) return {};
+  return {
+    xTitle: component.axes?.x_title,
+    yTitle: component.axes?.y_title,
+    y2Title: component.axes?.y2_title,
+  };
 }
 
 /**
@@ -346,8 +388,10 @@ function axisTitlesOf(component: ChartComponent): { xTitle?: string; yTitle?: st
  * does (`MIN_DUAL_AXIS_BOX_W`). Everything else keeps `MIN_CARTESIAN_BOX_W`.
  */
 function minCartesianBoxW(component: ChartComponent): number {
-  const dual = component.chart_type === "combo" && component.series.some((s) => s.axis === "right")
-  return dual ? MIN_DUAL_AXIS_BOX_W : MIN_CARTESIAN_BOX_W
+  const dual =
+    component.chart_type === "combo" &&
+    component.series.some((s) => s.axis === "right");
+  return dual ? MIN_DUAL_AXIS_BOX_W : MIN_CARTESIAN_BOX_W;
 }
 
 /**
@@ -367,9 +411,11 @@ function minCartesianBoxW(component: ChartComponent): number {
  * labelled keeps the flat floor.
  */
 function directLabelBodyH(component: ChartComponent): number {
-  if (!DIRECT_LABELLED.has(component.chart_type)) return 0
-  const columns = Math.ceil(component.series.length * labelLinePitch(DIRECT_LABEL_FONT_SIZE))
-  return columns + PLOT_TOP_PAD + X_TICK_BAND
+  if (!DIRECT_LABELLED.has(component.chart_type)) return 0;
+  const columns = Math.ceil(
+    component.series.length * labelLinePitch(DIRECT_LABEL_FONT_SIZE)
+  );
+  return columns + PLOT_TOP_PAD + X_TICK_BAND;
 }
 
 /**
@@ -383,8 +429,9 @@ function directLabelBodyH(component: ChartComponent): number {
  * circle it always got and the leaders land inside it.
  */
 function radialBodyH(component: ChartComponent): number {
-  if (component.chart_type !== "pie" && component.chart_type !== "donut") return 0
-  return RADIAL_MIN_BODY_H
+  if (component.chart_type !== "pie" && component.chart_type !== "donut")
+    return 0;
+  return RADIAL_MIN_BODY_H;
 }
 
 /**
@@ -403,29 +450,34 @@ function radialBodyH(component: ChartComponent): number {
  * every stage named.
  */
 function funnelBodyH(component: ChartComponent): number {
-  if (component.chart_type !== "funnel") return 0
-  const stages = component.series[0]?.data.length ?? 0
-  if (stages === 0) return 0
-  return Math.ceil(stages * labelLinePitch(DIRECT_LABEL_FONT_SIZE))
+  if (component.chart_type !== "funnel") return 0;
+  const stages = component.series[0]?.data.length ?? 0;
+  if (stages === 0) return 0;
+  return Math.ceil(stages * labelLinePitch(DIRECT_LABEL_FONT_SIZE));
 }
 
 export const chart: SvgComponent<ChartComponent> = {
   measure(component) {
-    const { xTitle, yTitle, y2Title } = axisTitlesOf(component)
+    const { xTitle, yTitle, y2Title } = axisTitlesOf(component);
     return (
       (hasHeaderRow(component) ? HEADER_ROW_H : 0) +
       axisTitlePairHeight(xTitle, yTitle, y2Title) +
-      Math.max(CHART_H, directLabelBodyH(component), funnelBodyH(component), radialBodyH(component))
-    )
+      Math.max(
+        CHART_H,
+        directLabelBodyH(component),
+        funnelBodyH(component),
+        radialBodyH(component)
+      )
+    );
   },
   render(component, box, ctx) {
-    const renderer = resolveRenderer(component)
+    const renderer = resolveRenderer(component);
     // axes only applies on an applicable chart_type — on any other type
     // (pie/funnel/dumbbell) `axes` is read as if it were entirely absent, so
     // the field is honestly ignored rather than partially/silently honored.
-    const axes = axesApplicable(component) ? component.axes : undefined
-    const headerH = hasHeaderRow(component) ? HEADER_ROW_H : 0
-    const minimum = chart.measure(component, box.w, ctx)
+    const axes = axesApplicable(component) ? component.axes : undefined;
+    const headerH = hasHeaderRow(component) ? HEADER_ROW_H : 0;
+    const minimum = chart.measure(component, box.w, ctx);
     // A component draws inside the box it accepted, or it declines. This used
     // to read `Math.max(CHART_H + titleH, allocated)`: handed a box shorter
     // than its own measured minimum, the chart quietly drew that minimum
@@ -440,9 +492,9 @@ export const chart: SvgComponent<ChartComponent> = {
     // stage names inside a box that had room for them. `traits.stretchable`
     // says a layout may grow this component; honouring that only on four of
     // the nine chart types made the trait half true.
-    const bodyH = (box.h ?? minimum) - headerH
-    const plotX = 0
-    const plotW = box.w
+    const bodyH = (box.h ?? minimum) - headerH;
+    const plotX = 0;
+    const plotW = box.w;
 
     // A box this component cannot draw in — too short for its own measured
     // minimum, or too narrow for a plot to exist at all — is a layout defect,
@@ -465,7 +517,7 @@ export const chart: SvgComponent<ChartComponent> = {
     // lets the page still render for preview and review, and moves the
     // refusal to the one place that ships a file.
     if ((box.h ?? minimum) + 0.5 < minimum) {
-      return <g data-dropped={1} data-dropped-kind="component" />
+      return <g data-dropped={1} data-dropped-kind="component" />;
     }
     // Same contract on the other axis. Below `MIN_CARTESIAN_BOX_W` the y-tick
     // gutter and the right pad leave no plot to speak of, and the frame would
@@ -473,7 +525,7 @@ export const chart: SvgComponent<ChartComponent> = {
     // anything and, before the gutter cap was made to bind, ink outside the
     // box.
     if (axesApplicable(component) && box.w < minCartesianBoxW(component)) {
-      return <g data-dropped={1} data-dropped-kind="component" />
+      return <g data-dropped={1} data-dropped-kind="component" />;
     }
     // A directly-labelled chart has a second contract on this axis, and it
     // is not a width: line and area carry no legend, so the only place a
@@ -486,7 +538,7 @@ export const chart: SvgComponent<ChartComponent> = {
       DIRECT_LABELLED.has(component.chart_type) &&
       !seriesGutterLabelsFit(component.series, box.w, component, ctx.fonts.body)
     ) {
-      return <g data-dropped={1} data-dropped-kind="component" />
+      return <g data-dropped={1} data-dropped-kind="component" />;
     }
 
     // P1 variety wave, task 2 (review fix round, Major finding): rotation
@@ -496,18 +548,25 @@ export const chart: SvgComponent<ChartComponent> = {
     // own doc comment for the leak this seam fixes). `ctx.chartPaletteOffset`
     // undefined/0 rotates to a same-values copy (`rotateChartPalette`'s own
     // doc comment) — a byte-identical multiset either way.
-    const palette = rotateChartPalette(ctx.colors.chartPalette, ctx.chartPaletteOffset ?? 0)
-    const legendBg = ctx.defaultBg ?? ctx.colors.bg
-    const bodyFace = ctx.fonts.body
+    const palette = rotateChartPalette(
+      ctx.colors.chartPalette,
+      ctx.chartPaletteOffset ?? 0
+    );
+    const legendBg = ctx.defaultBg ?? ctx.colors.bg;
+    const bodyFace = ctx.fonts.body;
 
-    const hasLegend = legendApplicable(component)
-    const headerW = box.w
+    const hasLegend = legendApplicable(component);
+    const headerW = box.w;
     const legendLayout = hasLegend
-      ? layoutChartLegend(buildChartModel(component.series).legend, headerW, bodyFace)
-      : null
-    const legendLeft = legendLayout ? headerW - legendLayout.groupW : headerW
+      ? layoutChartLegend(
+          buildChartModel(component.series).legend,
+          headerW,
+          bodyFace
+        )
+      : null;
+    const legendLeft = legendLayout ? headerW - legendLayout.groupW : headerW;
 
-    const swatchY = HEADER_BASELINE_Y - LEGEND_SWATCH_SIZE
+    const swatchY = HEADER_BASELINE_Y - LEGEND_SWATCH_SIZE;
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
@@ -530,32 +589,39 @@ export const chart: SvgComponent<ChartComponent> = {
           // `ChartRenderFn`'s own `bgHex` doc comment.
           legendBg,
           ctx.colors.border ?? ctx.colors.muted,
-          bodyFace,
+          bodyFace
         )}
         {legendLayout ? (
           <g>
             {legendLayout.slots.map((slot) => {
-              const swatchX = legendLeft + slot.slotX
-              const nameFill = accessibleInk(ctx.colors.muted, legendBg, slot.fitted.fontSize)
+              const swatchX = legendLeft + slot.slotX;
+              const nameFill = accessibleInk(
+                ctx.colors.muted,
+                legendBg,
+                slot.fitted.fontSize
+              );
               return (
                 <g key={slot.seriesIndex}>
                   <rect
                     x={swatchX}
                     y={
                       legendSwatchIsLine(component, slot.seriesIndex)
-                        ? swatchY + (LEGEND_SWATCH_SIZE - LEGEND_LINE_SWATCH_H) / 2
+                        ? swatchY +
+                          (LEGEND_SWATCH_SIZE - LEGEND_LINE_SWATCH_H) / 2
                         : swatchY
                     }
                     width={LEGEND_SWATCH_SIZE}
                     height={
-                      legendSwatchIsLine(component, slot.seriesIndex) ? LEGEND_LINE_SWATCH_H : LEGEND_SWATCH_SIZE
+                      legendSwatchIsLine(component, slot.seriesIndex)
+                        ? LEGEND_LINE_SWATCH_H
+                        : LEGEND_SWATCH_SIZE
                     }
                     fill={legendSwatchFill(
                       component,
                       slot.colorIndex,
                       palette,
                       ctx.colors.muted,
-                      ctx.colors.accent,
+                      ctx.colors.accent
                     )}
                   />
                   <text
@@ -570,16 +636,25 @@ export const chart: SvgComponent<ChartComponent> = {
                     {slot.fitted.text}
                   </text>
                 </g>
-              )
+              );
             })}
             {/* Series the row could not name are declared, never counted
                 on the page: the export refuses instead. */}
-            {legendLayout.droppedCount > 0 && <g data-dropped={legendLayout.droppedCount} data-dropped-kind="series-name" />}
+            {legendLayout.droppedCount > 0 && (
+              <g
+                data-dropped={legendLayout.droppedCount}
+                data-dropped-kind="series-name"
+              />
+            )}
           </g>
         ) : null}
       </g>
-    )
+    );
   },
-}
+};
 
-export const renderDef: RenderDef<ChartComponent> = { type: "chart", measure: chart.measure, render: chart.render }
+export const renderDef: RenderDef<ChartComponent> = {
+  type: "chart",
+  measure: chart.measure,
+  render: chart.render,
+};
