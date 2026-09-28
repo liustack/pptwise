@@ -336,7 +336,7 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
   },
   "component:chart": {
     name: "图表",
-    story: "数字画成形状：柱形、折线、面积、扇区、漏斗、来去配对、散点，或一段弧线对着目标。",
+    story: "数字画成形状：柱形、堆叠柱或百分比堆叠柱、柱上叠线、折线、面积、扇区、漏斗、来去配对、散点，或一段弧线对着目标。",
     positioning: "听众应该一眼看出数字的轮廓。data_table 适合需要逐行读精确值的情形，comparison 适合属性是文字而非数字的情形。",
     audience: "读一条趋势比读一列数字快的满场听众。",
     notFor: "几个独立的大数字，那属于 kpi_cards。",

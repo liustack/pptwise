@@ -709,7 +709,7 @@ export function layoutPage(
  * almost never alone on a real slide and its spacing against neighbouring
  * text is part of what is being judged.
  */
-const CARTESIAN_CHART_TYPES = new Set(["bar", "line", "scatter", "area"])
+const CARTESIAN_CHART_TYPES = new Set(["bar", "line", "scatter", "area", "stacked", "percent_stacked", "combo"])
 
 function isCartesianChart(component: Component): component is Extract<Component, { type: "chart" }> {
   return component.type === "chart" && CARTESIAN_CHART_TYPES.has(component.chart_type)

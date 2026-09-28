@@ -874,11 +874,18 @@ describe("checkIrQuality", () => {
       bodyFontPx: 24,
     }
     const box = { x: 0, y: 0, w: 1120 }
-    const ALL_CHART_TYPES = ["bar", "line", "pie", "funnel", "dumbbell"] as const
+    const ALL_CHART_TYPES = ["bar", "line", "pie", "funnel", "dumbbell", "stacked", "percent_stacked", "combo"] as const
 
     it.each(ALL_CHART_TYPES)("chart_type=%s: chart.tsx renders y_title iff ir-quality.ts does NOT warn chart_axes_ignored", (chart_type) => {
+      // A dumbbell and both piles take two series by contract, and a combo a
+      // bar series and a line series.
       const series =
-        chart_type === "dumbbell"
+        chart_type === "combo"
+          ? [
+              { name: "Bars", data: [{ x: "A", y: 10 }] },
+              { name: "Line", plot: "line" as const, data: [{ x: "A", y: 20 }] },
+            ]
+          : chart_type === "dumbbell" || chart_type === "stacked" || chart_type === "percent_stacked"
           ? [
               { name: "From", data: [{ x: "A", y: 10 }] },
               { name: "To", data: [{ x: "A", y: 20 }] },

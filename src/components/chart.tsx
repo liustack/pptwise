@@ -4,7 +4,7 @@ import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { rotateChartPalette } from "../render/chart-palette"
 import { accessibleInk } from "../render/ink"
 import { axisTitlePairHeight } from "./axis-titles"
-import { MIN_CARTESIAN_BOX_W, PLOT_TOP_PAD, X_TICK_BAND } from "./cartesian-axis"
+import { MIN_CARTESIAN_BOX_W, MIN_DUAL_AXIS_BOX_W, PLOT_TOP_PAD, X_TICK_BAND } from "./cartesian-axis"
 import { labelLinePitch } from "./label-collision"
 import {
   CHART_BODY_H,
@@ -18,6 +18,7 @@ import {
   renderArea,
   renderBar,
   renderBarHorizontal,
+  renderCombo,
   renderDonut,
   renderDumbbell,
   renderGauge,
@@ -25,6 +26,7 @@ import {
   renderPie,
   renderFunnel,
   renderScatter,
+  renderStacked,
   type ChartRenderFn,
 } from "./chart-svg"
 
@@ -47,6 +49,11 @@ const renderers: Record<ChartComponent["chart_type"], ChartRenderFn> = {
   // decide whether to print the center total, so one function serves both.
   donut: renderDonut,
   gauge: renderGauge,
+  // One renderer for both piles: `renderStacked` reads `component.chart_type`
+  // to decide whether each column keeps its amounts or is scaled to 100%.
+  stacked: renderStacked,
+  percent_stacked: renderStacked,
+  combo: renderCombo,
 }
 
 /** 变体分发：bar+direction=horizontal 走横条，pie+style=donut 走环形（沿用旧
@@ -74,6 +81,11 @@ function resolveRenderer(component: ChartComponent): ChartRenderFn {
  *  - scatter: APPLICABLE. A numeric x-y plot box — the most literally
  *    cartesian of them all.
  *  - area: APPLICABLE. Line's own plot box with the region under it filled.
+ *  - stacked / percent_stacked: APPLICABLE. Bar's plot box with the series
+ *    piled into one column per category.
+ *  - combo: APPLICABLE. Bar's plot box with lines drawn over the bars, and
+ *    the only type that may add a right-hand value axis (`y2_title` /
+ *    `y2_unit`, refused by validate everywhere else).
  *  - pie / donut / gauge: NOT applicable. Purely radial — no axes, no plot
  *    box to title (donut is the same "no axes" case whether reached via the
  *    dedicated chart_type or the legacy `pie`+`style: "donut"` form).
@@ -108,6 +120,9 @@ const AXES_APPLICABLE_TYPES: ReadonlySet<ChartComponent["chart_type"]> = new Set
   "line",
   "scatter",
   "area",
+  "stacked",
+  "percent_stacked",
+  "combo",
 ])
 
 function axesApplicable(component: ChartComponent): boolean {
@@ -165,6 +180,18 @@ function legendApplicable(component: ChartComponent): boolean {
   if (DIRECT_LABELLED.has(component.chart_type)) return false
   return component.series.length >= 2
 }
+
+/**
+ * A combo names a line series with a line, not a square: the legend is the
+ * only place that says which of its colors are bars and which are lines, and
+ * a square beside a line's name describes a bar the chart never drew.
+ */
+function legendSwatchIsLine(component: ChartComponent, seriesIndex: number): boolean {
+  return component.chart_type === "combo" && component.series[seriesIndex]?.plot === "line"
+}
+
+/** Thickness (px) of a line series' legend swatch (a short stroke, not a chip). */
+const LEGEND_LINE_SWATCH_H = 3
 
 /**
  * The color a legend swatch has to be: whatever the renderer actually painted
@@ -308,9 +335,19 @@ function hasHeaderRow(component: ChartComponent): boolean {
   return legendApplicable(component)
 }
 
-function axisTitlesOf(component: ChartComponent): { xTitle?: string; yTitle?: string } {
+function axisTitlesOf(component: ChartComponent): { xTitle?: string; yTitle?: string; y2Title?: string } {
   if (!axesApplicable(component)) return {}
-  return { xTitle: component.axes?.x_title, yTitle: component.axes?.y_title }
+  return { xTitle: component.axes?.x_title, yTitle: component.axes?.y_title, y2Title: component.axes?.y2_title }
+}
+
+/**
+ * Narrowest box this chart can draw a plot in. A combo with a series on the
+ * right axis pays for a second tick gutter, so it needs more than one axis
+ * does (`MIN_DUAL_AXIS_BOX_W`). Everything else keeps `MIN_CARTESIAN_BOX_W`.
+ */
+function minCartesianBoxW(component: ChartComponent): number {
+  const dual = component.chart_type === "combo" && component.series.some((s) => s.axis === "right")
+  return dual ? MIN_DUAL_AXIS_BOX_W : MIN_CARTESIAN_BOX_W
 }
 
 /**
@@ -374,10 +411,10 @@ function funnelBodyH(component: ChartComponent): number {
 
 export const chart: SvgComponent<ChartComponent> = {
   measure(component) {
-    const { xTitle, yTitle } = axisTitlesOf(component)
+    const { xTitle, yTitle, y2Title } = axisTitlesOf(component)
     return (
       (hasHeaderRow(component) ? HEADER_ROW_H : 0) +
-      axisTitlePairHeight(xTitle, yTitle) +
+      axisTitlePairHeight(xTitle, yTitle, y2Title) +
       Math.max(CHART_H, directLabelBodyH(component), funnelBodyH(component), radialBodyH(component))
     )
   },
@@ -435,7 +472,7 @@ export const chart: SvgComponent<ChartComponent> = {
     // be drawn against `plotW`'s 1px floor — geometry that no longer means
     // anything and, before the gutter cap was made to bind, ink outside the
     // box.
-    if (axesApplicable(component) && box.w < MIN_CARTESIAN_BOX_W) {
+    if (axesApplicable(component) && box.w < minCartesianBoxW(component)) {
       return <g data-dropped={1} data-dropped-kind="component" />
     }
     // A directly-labelled chart has a second contract on this axis, and it
@@ -504,9 +541,15 @@ export const chart: SvgComponent<ChartComponent> = {
                 <g key={slot.seriesIndex}>
                   <rect
                     x={swatchX}
-                    y={swatchY}
+                    y={
+                      legendSwatchIsLine(component, slot.seriesIndex)
+                        ? swatchY + (LEGEND_SWATCH_SIZE - LEGEND_LINE_SWATCH_H) / 2
+                        : swatchY
+                    }
                     width={LEGEND_SWATCH_SIZE}
-                    height={LEGEND_SWATCH_SIZE}
+                    height={
+                      legendSwatchIsLine(component, slot.seriesIndex) ? LEGEND_LINE_SWATCH_H : LEGEND_SWATCH_SIZE
+                    }
                     fill={legendSwatchFill(
                       component,
                       slot.colorIndex,

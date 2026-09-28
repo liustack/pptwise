@@ -201,7 +201,7 @@ export function unservedLayoutIds(themeIds: readonly string[]): string[] {
 
 /**
  * The component band's page list: every component type, with `chart` replaced
- * by its nine drawings and `device_mockup` by its two devices. Every theme's band carries the same list — a
+ * by its twelve drawings and `device_mockup` by its two devices. Every theme's band carries the same list — a
  * component draws one way everywhere, so what a reviewer compares across two
  * sections is the skin, not the drawing.
  */
@@ -241,7 +241,7 @@ export const ADJACENCY_PAGES: readonly { readonly component: string; readonly th
 
 function componentEntries(): ComponentEntry[] {
   const base: ComponentEntry[] = [
-    // `chart` renders nine unrelated drawings behind one type name, so the
+    // `chart` renders twelve unrelated drawings behind one type name, so the
     // variants replace the bare `chart` entry rather than sitting next to it.
     ...Object.entries(COMPONENT_BUILDERS)
       .filter(([id]) => id !== "chart" && id !== "device_mockup")

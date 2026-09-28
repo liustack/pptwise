@@ -1,9 +1,12 @@
 import type { ReactElement } from "react"
 import type { ChartSeries, Component } from "@/ir"
+import { CHART_AXIS_LIMIT } from "@/ir/components/chart"
 import { accessibleInk } from "../render/ink"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { axisTitlePairHeight, renderCartesianAxisTitles } from "./axis-titles"
 import {
+  buildAlignedNumericAxis,
+  buildCoveringNumericAxis,
   buildNumericAxis,
   formatAxisTick,
   layoutCartesianPlot,
@@ -17,11 +20,14 @@ import {
   type DomainPadMode,
 } from "./cartesian-axis"
 import { buildChartModel, zeroAxisRatio, type ChartDomain } from "./chart-model"
+import { boxesIntersect, type DepthBox } from "../render/depth-contract/geometry"
 import {
   labelLinePitch,
   resolveValueLabelCollisions,
   stackLabelColumn,
+  valueLabelBox,
   type ColumnLabelSpec,
+  type PlacedValueLabel,
   type ValueLabelSpec,
 } from "./label-collision"
 
@@ -43,6 +49,10 @@ import {
  * fragment, took the series name, every point name and every value off the
  * page with no error and no mark. This one paints nothing either, and says
  * that the component went with it.
+ *
+ * `renderStacked` and `renderCombo` give the same answer to their case of the
+ * same trouble: a pile or a value past `CHART_AXIS_LIMIT` that no axis can be
+ * built for.
  */
 function WholeShareDeclined(): ReactElement {
   // One component, because one component is what went: the chart draws
@@ -868,7 +878,11 @@ function cartesianMeta(component?: ChartInput) {
     yTitle: component?.axes?.y_title,
     xUnit: component?.axes?.x_unit,
     yUnit: component?.axes?.y_unit,
-    titleH: axisTitlePairHeight(component?.axes?.x_title, component?.axes?.y_title),
+    // Right-hand axis, combo only. validate refuses both anywhere else, so
+    // every other chart type reads them as undefined and lays out as before.
+    y2Title: component?.axes?.y2_title,
+    y2Unit: component?.axes?.y2_unit,
+    titleH: axisTitlePairHeight(component?.axes?.x_title, component?.axes?.y_title, component?.axes?.y2_title),
   }
 }
 
@@ -2767,6 +2781,569 @@ export function renderGauge(
           {fitSvgLine(captionText, { maxWidth: w * 0.9, fontSize: LABEL_FONT_SIZE, minFontSize: 16 }).text}
         </text>
       )}
+    </>
+  )
+}
+
+/**
+ * stacked / percent_stacked: each category's series piled into one column.
+ *
+ * `stacked` keeps the amounts, so a column's height is the category total and
+ * its segments are the parts. Positive values pile up from the zero line and
+ * negative values pile down from it, each in series order, so a loss inside a
+ * category hangs below the axis instead of eating into the gains above it.
+ * `percent_stacked` divides every value by its category's total first, so
+ * every column reaches 100% and only the make-up is compared.
+ *
+ * **Labels follow the house rule: beside the mark, never on it.** A segment
+ * is a `chartPalette` fill, and body text on a palette fill has no contrast
+ * floor that holds across forked or brand-extracted palettes (see
+ * `DIRECT_LABEL_FONT_SIZE`'s own note on why pie and funnel label outside
+ * their marks). So `stacked` prints one total per column, above the positive
+ * pile or, for a pile with no positive part, above the zero line, which is
+ * exactly where `renderBar` puts a negative bar's value. Segment values are
+ * not printed. The axis reads them. `percent_stacked` prints no total at all,
+ * since every column would say 100%.
+ *
+ * Gridlines follow what the chart already prints. `stacked` has a number
+ * over every column, so it defaults to no lines, the same call `renderBar`
+ * makes. `percent_stacked` prints nothing on the plot and its shares are read
+ * off the axis, so it defaults to lines at every quarter, the same call
+ * `renderLine` makes. Columns take `STACK_COLUMN_RATIO` of their band so the
+ * lines show between them.
+ *
+ * Adjacent segments are parted by a 1px stroke in the page background, so
+ * two neighbouring palette colors that sit close in lightness still read as
+ * two parts.
+ *
+ * When a pile hangs below zero, the x-axis sits at the bottom of the negative
+ * range and nothing marks where "up" meets "down". A zero line in the axis
+ * color is drawn over the columns there, on the seam between the two piles.
+ * All-positive piles stand on the x-axis itself and get none.
+ */
+const STACK_COLUMN_RATIO = 0.6
+const STACK_SEPARATOR_W = 1
+const PERCENT_TICKS = [0, 25, 50, 75, 100] as const
+
+/**
+ * The factor a percent_stacked column is divided by before its values are
+ * added up: a power of two near its largest value.
+ *
+ * Finite values can add up to more than a double holds (`1e308 + 1e308` is
+ * `Infinity`), and every share of an infinite total is 0. Divided by this
+ * first, a column's values add up to less than twice its series count.
+ *
+ * The exponent is held to the doubles' own range. `Math.log2` rounds, and at
+ * the top it rounds up: `log2(Number.MAX_VALUE)` is exactly 1024, `2 ** 1024`
+ * is `Infinity`, and the factor that was there to stop an overflow caused
+ * one. 1023 is the largest exponent a finite power of two can have and -1074
+ * the smallest a positive one can.
+ */
+function shareScale(peak: number): number {
+  return 2 ** Math.min(1023, Math.max(-1074, Math.floor(Math.log2(peak))))
+}
+
+/**
+ * Each value's share of its column, in percent, for a column of values that
+ * are zero or more. `null` stays `null` (a series with no point there). The
+ * whole result is `null` when nothing in the column is above zero, which is
+ * a column with no shares to draw.
+ *
+ * The values are divided by `shareScale` before they are summed, so no column
+ * of finite values can overflow. Dividing by a power of two is exact, so the
+ * scaled sum is the true sum over the same factor, bit for bit, and each share
+ * comes out exactly as `(v / total) * 100` does, as long as that total is
+ * finite and no value is so much smaller than the largest (by 2^1022 or more)
+ * that scaling pushes it into the subnormal range, where a division loses bits.
+ * `chart-stacked.test.tsx` holds both halves of that claim.
+ */
+export function percentShares(values: readonly (number | null)[]): (number | null)[] | null {
+  let peak = 0
+  for (const v of values) if (v != null && v > peak) peak = v
+  if (!(peak > 0)) return null
+  const scale = shareScale(peak)
+  // Summed in the order the values come, over the same positive values a
+  // plain total would add, so it is that total over `scale` exactly.
+  let sum = 0
+  for (const v of values) if (v != null && v > 0) sum += v / scale
+  return values.map((v) => (v == null ? null : (v / scale / sum) * 100))
+}
+
+/** A column total as a person writes it: `0.1 + 0.2` prints `0.3`. */
+function formatStackTotal(value: number): string {
+  return String(Number(value.toPrecision(12)))
+}
+
+/**
+ * Place a stacked chart's column totals together, or not at all.
+ *
+ * A total belongs on the page background above its own column. Below that
+ * spot is its own column, so the pairwise resolver may only move a total up
+ * (`yMax` is where it started) and never into the legend row above the plot
+ * (`yMin`). What the resolver cannot settle inside that band it hides, and
+ * what it settles by stepping a label sideways can still land on a
+ * neighbouring column. So the result is checked against the real geometry:
+ * every total shown, none on a segment, none on another total, all inside
+ * `bounds`. One failure and no total is painted. A row of numbers with gaps in
+ * it reads as columns that have no total, and a reader cannot tell which gap
+ * is which, so the whole row goes and the caller declares every one of them.
+ *
+ * The same crowding pushes `renderBar`'s value labels down onto its bars.
+ * That renderer is left as it is here, since changing its placement would
+ * move the pages of every existing bar chart that crowds.
+ */
+function placeStackTotals(
+  specs: readonly ValueLabelSpec[],
+  segments: readonly DepthBox[],
+  bounds: { readonly left: number; readonly right: number; readonly top: number; readonly bottom: number },
+): PlacedValueLabel[] | null {
+  const placed = resolveValueLabelCollisions(
+    specs.map((spec) => ({ ...spec, yMin: bounds.top + spec.fontSize * 0.75, yMax: spec.y })),
+  )
+  if (placed.some((label) => label.hidden)) return null
+  const boxes = placed.map(valueLabelBox)
+  for (let i = 0; i < boxes.length; i++) {
+    const box = boxes[i]!
+    if (box.x < bounds.left || box.x + box.w > bounds.right) return null
+    if (box.y < bounds.top || box.y + box.h > bounds.bottom) return null
+    if (segments.some((seg) => boxesIntersect(box, seg))) return null
+    for (let j = i + 1; j < boxes.length; j++) {
+      if (boxesIntersect(box, boxes[j]!)) return null
+    }
+  }
+  return placed
+}
+
+export function renderStacked(
+  series: ChartSeries[],
+  palette: string[],
+  x0: number,
+  y0: number,
+  w: number,
+  h: number,
+  mutedColor: string,
+  textColor: string,
+  _accentColor: string,
+  showGrid?: boolean,
+  component?: ChartInput,
+  bgHex?: string,
+  axisColor?: string,
+  fontFamily?: string,
+): ReactElement {
+  const percent = component?.chart_type === "percent_stacked"
+  const model = buildChartModel(series)
+  const { categories } = model
+  const meta = cartesianMeta(component)
+
+  const piles = categories.map((_cat, i) => {
+    let total = 0
+    let up = 0
+    let down = 0
+    for (const s of model.series) {
+      const v = s.values[i]
+      if (v == null) continue
+      total += v
+      if (v > 0) up += v
+      else down += v
+    }
+    return { total, up, down }
+  })
+  // validate refuses both (`ir/components/chart.ts`): a share of a negative
+  // amount means nothing, and a zero total has no shares to draw. Past the
+  // schema there is nothing honest to paint, so the whole chart declines and
+  // says so, the same answer a pie with a zero total gets.
+  const shares = percent ? categories.map((_cat, i) => percentShares(model.series.map((s) => s.values[i]!))) : []
+  if (percent && piles.some((p, i) => shares[i] === null || p.down < 0)) return <WholeShareDeclined />
+  // validate refuses a pile past `CHART_AXIS_LIMIT`, since no axis can be
+  // built for it. Past the schema, the old answer was a column, an axis and a
+  // total of `Infinity` and `NaN`. Nothing honest can be drawn, so the chart
+  // declines and says so, the same way.
+  if (!percent && piles.some((p) => p.up > CHART_AXIS_LIMIT || -p.down > CHART_AXIS_LIMIT)) {
+    return <WholeShareDeclined />
+  }
+
+  const scaled = (i: number, seriesIndex: number, v: number) => (percent ? shares[i]![seriesIndex]! : v)
+  const yUnit = percent ? "%" : meta.yUnit
+  const yAxis = percent
+    ? {
+        domain: { min: 0, max: 100 },
+        ticks: [...PERCENT_TICKS],
+        labels: PERCENT_TICKS.map((t) => formatAxisTick(t, "%")),
+      }
+    : buildCoveringNumericAxis([...piles.map((p) => p.up), ...piles.map((p) => p.down)], "zero-max", yUnit)
+  const geom = layoutCartesianPlot({
+    x0,
+    y0,
+    w,
+    h,
+    yTickLabels: yAxis.labels,
+    titleH: meta.titleH,
+    fontFamily,
+  })
+  const yOf = (v: number) => mapToPlotY(v, yAxis.domain, geom.plotY, geom.plotH)
+  const groupW = geom.plotW / Math.max(categories.length, 1)
+  const colW = groupW * STACK_COLUMN_RATIO
+  const yTicks = yAxis.ticks.map((t) => ({ label: formatAxisTick(t, yUnit), pos: yOf(t) }))
+  const xTicks = categories.map((cat, i) => {
+    const category = fitSvgLine(String(cat.x), {
+      maxWidth: Math.max(8, groupW - BAR_GROUP_EDGE_GAP * 2),
+      fontSize: CATEGORY_FONT_SIZE,
+      minFontSize: CATEGORY_MIN_FONT_SIZE,
+      fontFamily,
+    })
+    return {
+      label: category.text,
+      pos: geom.plotX + i * groupW + groupW / 2,
+      truncated: category.truncated,
+      fontSize: category.fontSize,
+    }
+  })
+
+  const segmentBoxes: DepthBox[] = []
+  const columns = categories.map((cat, i) => {
+    const colX = geom.plotX + i * groupW + (groupW - colW) / 2
+    let up = 0
+    let down = 0
+    const rects: ReactElement[] = []
+    for (const s of model.series) {
+      const raw = s.values[i]
+      if (raw == null || raw === 0) continue
+      const v = scaled(i, s.seriesIndex, raw)
+      const from = v > 0 ? up : down
+      const to = from + v
+      if (v > 0) up = to
+      else down = to
+      const top = yOf(Math.max(from, to))
+      const bottom = yOf(Math.min(from, to))
+      segmentBoxes.push({ x: colX, y: top, w: colW, h: bottom - top })
+      rects.push(
+        <rect
+          key={s.seriesIndex}
+          data-plot-mark="1"
+          x={colX}
+          y={top}
+          width={colW}
+          height={bottom - top}
+          fill={palette[s.seriesIndex % palette.length]}
+          {...(bgHex ? { stroke: bgHex, strokeWidth: STACK_SEPARATOR_W } : {})}
+        />,
+      )
+    }
+    return { key: cat.key, colX, rects, labelBaseY: up > 0 ? yOf(up) : yOf(0) }
+  })
+
+  const totals: ValueLabelSpec[] = percent
+    ? []
+    : columns.map((col, i) => ({
+        id: `stack-${i}`,
+        text: formatStackTotal(piles[i]!.total),
+        x: col.colX + colW / 2,
+        y: col.labelBaseY - VALUE_LABEL_GAP,
+        anchor: "middle" as const,
+        fontSize: VALUE_FONT_SIZE,
+        fontFamily,
+        priority: 100,
+      }))
+  // The totals may use the chart body between the legend row and the x-axis,
+  // across the plot's own width. The y-tick labels sit left of it.
+  const placedTotals = placeStackTotals(totals, segmentBoxes, {
+    left: geom.plotX,
+    right: geom.plotX + geom.plotW,
+    top: y0,
+    bottom: geom.plotY + geom.plotH,
+  })
+  const totalInk = directLabelInk(textColor, bgHex)
+
+  return (
+    <>
+      {renderCartesianFrame({
+        plotX: geom.plotX,
+        plotY: geom.plotY,
+        plotW: geom.plotW,
+        plotH: geom.plotH,
+        xTicks,
+        yTicks,
+        showHGrid: showGrid ?? percent,
+        yTickMaxW: Math.max(0, geom.leftGutter - TICK_TO_AXIS_GAP),
+        axisColor: axisColor ?? mutedColor,
+        mutedColor,
+        fontFamily,
+      })}
+      {columns.map((col) => (
+        <g key={col.key}>{col.rects}</g>
+      ))}
+      {yAxis.domain.min < 0 ? (
+        <line
+          data-zero-line="1"
+          x1={geom.plotX}
+          y1={yOf(0)}
+          x2={geom.plotX + geom.plotW}
+          y2={yOf(0)}
+          stroke={axisColor ?? mutedColor}
+          strokeWidth={1}
+        />
+      ) : null}
+      {placedTotals === null ? (
+        <g data-dropped={totals.length} data-dropped-kind="value-label" />
+      ) : null}
+      {(placedTotals ?? []).map((label) => (
+        <text
+          key={label.id}
+          data-value-label="1"
+          x={label.x}
+          y={label.y}
+          textAnchor="middle"
+          fontSize={VALUE_FONT_SIZE}
+          fontWeight={VALUE_FONT_WEIGHT}
+          fill={totalInk}
+          fontFamily={fontFamily}
+          dominantBaseline="alphabetic"
+        >
+          {label.text}
+        </text>
+      ))}
+      {renderCartesianAxisTitles({
+        plotX: geom.plotX,
+        plotBottom: geom.titleY,
+        plotW: geom.plotW,
+        xTitle: meta.xTitle,
+        yTitle: meta.yTitle,
+        fill: mutedColor,
+        fontFamily: fontFamily ?? "",
+      })}
+    </>
+  )
+}
+
+/**
+ * combo: bars and lines on one category axis.
+ *
+ * Series marked `plot: "line"` are drawn as lines through the centers of the
+ * category bands. The rest are bars, grouped side by side in the middle
+ * `COMBO_CLUSTER_RATIO` of each band, so a line point always sits over the
+ * middle of its own category's bars. Colors follow series order through the
+ * palette whatever the mark, so the legend reads in the order the author
+ * wrote.
+ *
+ * **Two value axes, one set of rows.** Series on `axis: "right"` are read
+ * against a right-hand axis with its own range, unit and title. Its ticks
+ * are built by `buildAlignedNumericAxis` on the left axis's rows, so the one
+ * set of gridlines serves both sides and zero shares a row when it can. An
+ * axis that carries a bar keeps zero in range, because a bar is measured from
+ * zero. An axis of lines alone picks its range the way `renderLine` does.
+ *
+ * **No value labels.** A line crossing the bars leaves no place above a bar
+ * that the line cannot also pass through, which is exactly the trap that took
+ * `renderLine`'s own labels off the plot. The axes carry the numbers, and
+ * gridlines default to on for the same reason `renderLine` keeps them: they
+ * are the only way to read an interior value.
+ *
+ * Each line runs over a halo in the page background, so where it crosses a
+ * bar of a similar color it still reads as a line. A point with no neighbour
+ * on either side (a gap in the series) is still shown by its dot.
+ */
+const COMBO_CLUSTER_RATIO = 0.6
+const COMBO_LINE_W = 2.5
+const COMBO_LINE_HALO_W = 6
+const COMBO_DOT_R = 4
+
+export function renderCombo(
+  series: ChartSeries[],
+  palette: string[],
+  x0: number,
+  y0: number,
+  w: number,
+  h: number,
+  mutedColor: string,
+  _textColor: string,
+  _accentColor: string,
+  showGrid = true,
+  component?: ChartInput,
+  bgHex?: string,
+  axisColor?: string,
+  fontFamily?: string,
+): ReactElement {
+  const model = buildChartModel(series)
+  const { categories } = model
+  const meta = cartesianMeta(component)
+  // validate refuses a combo value past `CHART_AXIS_LIMIT`, since neither axis
+  // can be built for it (`buildAlignedNumericAxis` throws rather than return
+  // a range that misses it). Handed one around validate, the chart declines
+  // and says so, as a stacked pile past the same ceiling does.
+  if (keptValues(model.series).some((v) => Math.abs(v) > CHART_AXIS_LIMIT)) return <WholeShareDeclined />
+  const isLine = (seriesIndex: number) => series[seriesIndex]?.plot === "line"
+  const onRight = (seriesIndex: number) => series[seriesIndex]?.axis === "right"
+
+  const axisSeries = (right: boolean) => model.series.filter((s) => onRight(s.seriesIndex) === right)
+  const axisMode = (right: boolean): DomainPadMode => {
+    const members = axisSeries(right)
+    if (members.some((s) => !isLine(s.seriesIndex))) return "zero-max"
+    return valueAxisMode(keptValues(members))
+  }
+  const hasRight = axisSeries(true).length > 0
+  // A bar is measured from zero, so the left axis has to hold zero whenever a
+  // bar sits on it. `buildNumericAxis` keeps zero in "zero-max" mode except
+  // when every value is the same: that case centres the range on the value
+  // and leaves zero out, so a one-category combo hung its bar below the
+  // x-axis. Zero goes in as a value here instead. Wherever the values differ
+  // this changes nothing, since "zero-max" already starts at zero. (Bar has
+  // the same gap in that builder and is left alone, to keep its pages.)
+  const leftMode = axisMode(false)
+  const leftValues = keptValues(axisSeries(false))
+  const yAxis = buildCoveringNumericAxis(leftMode === "zero-max" ? [0, ...leftValues] : leftValues, leftMode, meta.yUnit)
+  const y2Axis = hasRight
+    ? buildAlignedNumericAxis(keptValues(axisSeries(true)), axisMode(true), yAxis.ticks, meta.y2Unit)
+    : null
+  const geom = layoutCartesianPlot({
+    x0,
+    y0,
+    w,
+    h,
+    yTickLabels: yAxis.labels,
+    y2TickLabels: y2Axis?.labels,
+    titleH: meta.titleH,
+    fontFamily,
+  })
+  const domainOf = (seriesIndex: number) => (onRight(seriesIndex) && y2Axis ? y2Axis.domain : yAxis.domain)
+  const yOf = (v: number, seriesIndex: number) => mapToPlotY(v, domainOf(seriesIndex), geom.plotY, geom.plotH)
+  const groupW = geom.plotW / Math.max(categories.length, 1)
+  const centerOf = (i: number) => geom.plotX + i * groupW + groupW / 2
+
+  const yTicks = yAxis.ticks.map((t) => ({
+    label: formatAxisTick(t, meta.yUnit),
+    pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
+  }))
+  // The right-hand ticks sit on the left axis's rows by construction, so they
+  // take those rows' positions rather than recomputing them from a second
+  // domain and landing a rounding error away.
+  const y2Ticks = y2Axis?.ticks.map((t, i) => ({ label: formatAxisTick(t, meta.y2Unit), pos: yTicks[i]!.pos }))
+  const xTicks = categories.map((cat, i) => {
+    const category = fitSvgLine(String(cat.x), {
+      maxWidth: Math.max(8, groupW - BAR_GROUP_EDGE_GAP * 2),
+      fontSize: CATEGORY_FONT_SIZE,
+      minFontSize: CATEGORY_MIN_FONT_SIZE,
+      fontFamily,
+    })
+    return { label: category.text, pos: centerOf(i), truncated: category.truncated, fontSize: category.fontSize }
+  })
+
+  const barSeries = model.series.filter((s) => !isLine(s.seriesIndex))
+  const lineSeries = model.series.filter((s) => isLine(s.seriesIndex))
+  const clusterW = groupW * COMBO_CLUSTER_RATIO
+  const nb = barSeries.length
+  const perBarW = nb <= 1 ? clusterW : Math.max(1, (clusterW - (nb - 1) * BAR_GROUP_EDGE_GAP) / nb)
+
+  const bars = categories.map((cat, i) => {
+    const clusterX = centerOf(i) - clusterW / 2
+    const rects: ReactElement[] = []
+    barSeries.forEach((s, k) => {
+      const v = s.values[i]
+      if (v == null || v === 0) return
+      const top = yOf(Math.max(v, 0), s.seriesIndex)
+      const bottom = yOf(Math.min(v, 0), s.seriesIndex)
+      rects.push(
+        <rect
+          key={s.seriesIndex}
+          data-plot-mark="1"
+          x={clusterX + k * (perBarW + BAR_GROUP_EDGE_GAP)}
+          y={top}
+          width={perBarW}
+          height={bottom - top}
+          fill={palette[s.seriesIndex % palette.length]}
+        />,
+      )
+    })
+    return <g key={cat.key}>{rects}</g>
+  })
+
+  const lines = lineSeries.map((s) => {
+    const color = palette[s.seriesIndex % palette.length]
+    type Pt = { x: number; y: number }
+    const runs: Pt[][] = []
+    let run: Pt[] = []
+    const points: Pt[] = []
+    categories.forEach((_cat, i) => {
+      const v = s.values[i]
+      if (v == null) {
+        if (run.length > 0) runs.push(run)
+        run = []
+        return
+      }
+      const p = { x: centerOf(i), y: yOf(v, s.seriesIndex) }
+      run.push(p)
+      points.push(p)
+    })
+    if (run.length > 0) runs.push(run)
+    const drawn = runs.filter((r) => r.length >= 2)
+    const pts = (r: Pt[]) => r.map((p) => `${p.x},${p.y}`).join(" ")
+    return (
+      <g key={s.seriesIndex}>
+        {bgHex
+          ? drawn.map((r, ri) => (
+              <polyline
+                key={`halo-${ri}`}
+                data-plot-mark="1"
+                points={pts(r)}
+                fill="none"
+                stroke={bgHex}
+                strokeWidth={COMBO_LINE_HALO_W}
+              />
+            ))
+          : null}
+        {drawn.map((r, ri) => (
+          <polyline
+            key={`ln-${ri}`}
+            data-plot-mark="1"
+            points={pts(r)}
+            fill="none"
+            stroke={color}
+            strokeWidth={COMBO_LINE_W}
+          />
+        ))}
+        {points.map((p, pi) => (
+          <circle
+            key={`dot-${pi}`}
+            data-plot-mark="1"
+            cx={p.x}
+            cy={p.y}
+            r={COMBO_DOT_R}
+            fill={color}
+            {...(bgHex ? { stroke: bgHex, strokeWidth: 1.5 } : {})}
+          />
+        ))}
+      </g>
+    )
+  })
+
+  return (
+    <>
+      {renderCartesianFrame({
+        plotX: geom.plotX,
+        plotY: geom.plotY,
+        plotW: geom.plotW,
+        plotH: geom.plotH,
+        xTicks,
+        yTicks,
+        showHGrid: showGrid,
+        yTickMaxW: Math.max(0, geom.leftGutter - TICK_TO_AXIS_GAP),
+        y2Ticks,
+        y2TickMaxW: y2Axis ? Math.max(0, geom.rightGutter - TICK_TO_AXIS_GAP) : undefined,
+        axisColor: axisColor ?? mutedColor,
+        mutedColor,
+        fontFamily,
+      })}
+      {bars}
+      {lines}
+      {renderCartesianAxisTitles({
+        plotX: geom.plotX,
+        plotBottom: geom.titleY,
+        plotW: geom.plotW,
+        xTitle: meta.xTitle,
+        yTitle: meta.yTitle,
+        y2Title: y2Axis ? meta.y2Title : undefined,
+        fill: mutedColor,
+        fontFamily: fontFamily ?? "",
+      })}
     </>
   )
 }

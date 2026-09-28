@@ -57,7 +57,39 @@ const WHOLE_SHARE_TYPES = ["pie", "donut", "funnel"] as const
  * `chart_duplicate_category` warning, which is what a repeated label means
  * there: possibly a typo, never a dropped value.
  */
-export const CATEGORY_FOLDING_TYPES = ["bar", "line", "area"] as const
+export const CATEGORY_FOLDING_TYPES = ["bar", "line", "area", "stacked", "percent_stacked", "combo"] as const
+
+/**
+ * Chart types that pile each category's series into one column: `stacked`
+ * keeps the amounts, `percent_stacked` scales every column to 100%.
+ *
+ * Both need two series at least. One series piled on nothing is a plain bar
+ * with a different name, and for `percent_stacked` it is a column that reads
+ * 100% everywhere, which says nothing at all.
+ */
+export const STACKED_TYPES = ["stacked", "percent_stacked"] as const
+
+/**
+ * The largest magnitude a stacked column total, or any value in a combo, may
+ * reach.
+ *
+ * A value axis pads its range and rounds it out to nice ticks, so its top tick
+ * lands at up to a few times the largest value it holds, and the builders stop
+ * producing finite ticks well before a double runs out: a plain bar of 1.7e308
+ * already throws while laying out its axis. A stacked total is a sum, so it
+ * can leave the doubles on its own (`1e308 + 1e308` is `Infinity`), and the
+ * column, the axis and the printed total then all come out as `Infinity` or
+ * `NaN`. The ceiling leaves eight orders of magnitude for the axis to grow
+ * into, and no figure a slide reports comes near it.
+ *
+ * It applies to `stacked` and `combo`. `percent_stacked` needs none, since
+ * it scales each column before summing it and its axis is always 0% to 100%.
+ * The older types keep accepting what they always accepted.
+ */
+export const CHART_AXIS_LIMIT = 1e300
+
+/** Chart types whose columns stand upright only. `direction` belongs to bar. */
+const UPRIGHT_ONLY_TYPES = ["stacked", "percent_stacked", "combo"] as const
 
 export const schema = z
   .object({
@@ -70,9 +102,25 @@ export const schema = z
      * area：line 的基线闭合填充变体。donut：pie 的环形子型（可选中心总值）。
      * gauge：单值对目标的完成度半环。 */
     chart_type: z
-      .enum(["bar", "line", "pie", "funnel", "dumbbell", "scatter", "area", "donut", "gauge"])
+      .enum([
+        "bar",
+        "line",
+        "pie",
+        "funnel",
+        "dumbbell",
+        "scatter",
+        "area",
+        "donut",
+        "gauge",
+        "stacked",
+        "percent_stacked",
+        "combo",
+      ])
       .describe(
         "How to plot the series. bar/line: a category axis of trends or comparisons. " +
+          "stacked: each category's series piled into one column, so the total and its parts show together (two or more series, negative values pile down from zero, and the column total is printed above it). " +
+          "percent_stacked: the same piles scaled so every column reaches 100%, to compare make-up rather than size (two or more series, no negative values, every category must add up above zero). " +
+          "combo: bars and lines on one category axis, for two measures that share a period, such as revenue as columns and margin as a line. Mark each line series with `plot: \"line\"` (the rest are bars). It needs at least one of each. Put a series on `axis: \"right\"` to give it its own scale on a right-hand axis, titled by axes.y2_title / axes.y2_unit. " +
           "scatter: a numeric x-y point cloud — use when BOTH axes are quantities (add an optional per-point `size` to make it a bubble chart); if x is a category label, use line/bar instead. " +
           "area: a line with the region under it filled to the baseline, for volume/cumulative emphasis. " +
           "pie: part-to-whole share. donut: the ring form of pie (set `center_total: true` to print the summed total big in the middle). " +
@@ -100,7 +148,9 @@ export const schema = z
       .strict()
       .optional(),
     /** Renders only for `chart_type: "bar"` (either direction), `"line"`,
-     * `"scatter"`, and `"area"` — a cartesian plot box with a real
+     * `"scatter"`, `"area"`, `"stacked"` and `"percent_stacked"` (whose
+     * `y_unit` may only be `%`, since its axis always reads 0% to 100%) —
+     * a cartesian plot box with a real
      * category/value axis pair to title and grid against. Ignored
      * (schema-legal, silently dropped at render, warn-severity
      * `chart_axes_ignored` validate finding) on `pie`/`donut`/`funnel`/
@@ -113,6 +163,12 @@ export const schema = z
         x_unit: z.string().optional(),
         /** Unit suffix on y-axis tick labels (`%`, `千`). */
         y_unit: z.string().optional(),
+        /** `chart_type: "combo"` only: title of the right-hand value axis,
+         * which exists when a series sets `axis: "right"`. */
+        y2_title: z.string().optional(),
+        /** `chart_type: "combo"` only: unit suffix on the right-hand axis's
+         * tick labels. */
+        y2_unit: z.string().optional(),
         show_grid: z.boolean().optional(),
       })
       .strict()
@@ -122,6 +178,19 @@ export const schema = z
         .object({
           name: z.string(),
           data: z.array(ChartPointSchema),
+          /** `chart_type: "combo"` only: draw this series as bars (the
+           * default) or as a line. */
+          plot: z
+            .enum(["bar", "line"])
+            .optional()
+            .describe('combo only: "line" draws this series as a line over the bars, and omitted or "bar" draws it as bars.'),
+          /** `chart_type: "combo"` only: which value axis this series is
+           * read against. `"right"` gives it its own scale on a right-hand
+           * axis, and omitted or `"left"` shares the left one. */
+          axis: z
+            .enum(["left", "right"])
+            .optional()
+            .describe('combo only: "right" reads this series against its own right-hand axis (for a second unit, such as a rate beside amounts), and omitted or "left" shares the left axis.'),
         })
         .strict(),
     ),
@@ -293,6 +362,206 @@ export const schema = z
         })
       }
     }
+    // A pile needs something to pile. One series in a `stacked` chart is a
+    // bar chart by another name, and one in a `percent_stacked` chart is a
+    // column that reads 100% in every category. Neither is what the author
+    // meant, so name the chart that does what one series can.
+    if (STACKED_TYPES.includes(c.chart_type as (typeof STACKED_TYPES)[number]) && c.series.length < 2) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["series"],
+        message:
+          c.chart_type === "stacked"
+            ? `a stacked chart piles several series into one column per category, so it needs at least two series, got ${c.series.length}. ` +
+              `For one series use chart_type "bar".`
+            : `a percent_stacked chart splits each category's column into the shares of its series, so it needs at least two series, got ${c.series.length}. ` +
+              `One series fills every column to 100% and says nothing. For one whole split into parts use chart_type "pie".`,
+      })
+    }
+    if (UPRIGHT_ONLY_TYPES.includes(c.chart_type as (typeof UPRIGHT_ONLY_TYPES)[number]) && c.direction === "horizontal") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["direction"],
+        message:
+          `a ${c.chart_type} chart draws upright columns only, and direction "horizontal" would be ignored. ` +
+          `Remove direction, or use chart_type "bar" with direction "horizontal" for side-by-side horizontal bars.`,
+      })
+    }
+    // A stacked column's height is a sum. Each side of the zero line has to
+    // stay under the ceiling on its own, since the axis runs from the
+    // deepest negative pile to the tallest positive one.
+    if (c.chart_type === "stacked") {
+      const piles = new Map<string, { x: string | number; up: number; down: number }>()
+      for (const s of c.series) {
+        for (const d of s.data) {
+          const key = typeof d.x === "number" ? `n:${d.x}` : `s:${d.x}`
+          const pile = piles.get(key) ?? { x: d.x, up: 0, down: 0 }
+          if (d.y > 0) pile.up += d.y
+          else pile.down += d.y
+          piles.set(key, pile)
+        }
+      }
+      // Every series in a stacked chart sits on the one axis, so the fix is
+      // one factor for all of them. Dividing only the series that looks large
+      // would change what each column is made of.
+      const everySeries = c.series.map((s) => `"${s.name}"`).join(", ")
+      for (const { x, up, down } of piles.values()) {
+        for (const [side, sum] of [
+          ["positive", up],
+          ["negative", -down],
+        ] as const) {
+          if (sum <= CHART_AXIS_LIMIT) continue
+          ctx.addIssue({
+            code: "custom",
+            path: ["series"],
+            message:
+              `the ${side} values in category "${x}" add up to ${side === "positive" ? "more than " : "less than -"}${CHART_AXIS_LIMIT}, beyond what a chart axis can draw. ` +
+              `Divide every value in every series (${everySeries}) by the same power of ten, so the columns keep their proportions, ` +
+              `and name the unit in axes.y_unit, for example 3.2 with y_unit "M" for 3200000.`,
+          })
+        }
+      }
+    }
+    if (c.chart_type === "percent_stacked") {
+      // A share of a total is never negative. A loss inside a column is what
+      // `stacked` is for: it piles negative values down from zero.
+      let negative = false
+      c.series.forEach((s, si) =>
+        s.data.forEach((d, di) => {
+          if (d.y >= 0) return
+          negative = true
+          ctx.addIssue({
+            code: "custom",
+            path: ["series", si, "data", di, "y"],
+            message:
+              `a percent_stacked chart draws each value as a share of its category's total, and series[${si}] ("${s.name}") has ${d.y} for "${d.x}". ` +
+              `A share cannot be negative. Use chart_type "stacked" to show gains and losses, which piles negative values below the zero line.`,
+          })
+        }),
+      )
+      // A category whose values add up to zero has no shares to draw. The
+      // column would be empty with nothing on the page to say why, and an
+      // empty column reads as missing data rather than as a real zero. It is
+      // refused here, the same boundary a pie with a zero total stops at.
+      if (!negative) {
+        const totals = new Map<string, { x: string | number; total: number }>()
+        for (const s of c.series) {
+          for (const d of s.data) {
+            const key = typeof d.x === "number" ? `n:${d.x}` : `s:${d.x}`
+            const entry = totals.get(key) ?? { x: d.x, total: 0 }
+            entry.total += d.y
+            totals.set(key, entry)
+          }
+        }
+        for (const { x, total } of totals.values()) {
+          if (total > 0) continue
+          ctx.addIssue({
+            code: "custom",
+            path: ["series"],
+            message:
+              `a percent_stacked chart scales each category to 100%, and category "${x}" adds up to 0 across every series, so it has no shares to draw. ` +
+              `Remove the category, give it values, or use chart_type "stacked" to show absolute amounts.`,
+          })
+        }
+      }
+      const unit = c.axes?.y_unit
+      if (unit !== undefined && unit !== "%" && unit !== "％") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["axes", "y_unit"],
+          message:
+            `a percent_stacked value axis always reads 0% to 100%, so y_unit "${unit}" cannot apply. ` +
+            `Remove y_unit, and say what the shares are of in axes.y_title.`,
+        })
+      }
+    }
+    // `plot` and `axis` choose a mark and a scale inside a combo. On any other
+    // chart type nothing reads them, and a line the author asked for would
+    // silently come out as whatever that chart draws.
+    if (c.chart_type !== "combo") {
+      c.series.forEach((s, si) => {
+        for (const key of ["plot", "axis"] as const) {
+          if (s[key] === undefined) continue
+          ctx.addIssue({
+            code: "custom",
+            path: ["series", si, key],
+            message:
+              `series[${si}].${key} only applies to chart_type "combo", which mixes bars and lines, and a ${c.chart_type} chart ignores it. ` +
+              `Remove ${key}, or use chart_type "combo" to draw some series as bars and some as lines.`,
+          })
+        }
+      })
+    }
+    const rightSeries = c.chart_type === "combo" ? c.series.filter((s) => s.axis === "right").length : 0
+    for (const key of ["y2_title", "y2_unit"] as const) {
+      if (c.axes?.[key] === undefined || rightSeries > 0) continue
+      ctx.addIssue({
+        code: "custom",
+        path: ["axes", key],
+        message:
+          c.chart_type === "combo"
+            ? `axes.${key} labels the right-hand axis, and no series here is on it. Set axis: "right" on the series that needs its own scale, or remove ${key}.`
+            : `axes.${key} labels the right-hand axis of a combo chart, and a ${c.chart_type} chart has none. Remove ${key}, or use chart_type "combo" with a series on axis: "right".`,
+      })
+    }
+    // A combo's values sit on one of two axes, and the right one is built to
+    // share the left one's rows, which stretches its range further still.
+    // Past the ceiling neither can be built: a right line of 1.7e308 drew a
+    // point at cy="NaN".
+    // The fix is one factor for everything on that value's axis: series on
+    // one axis are read against one scale and one unit, so dividing only the
+    // series that is too large changes how it compares with the others.
+    if (c.chart_type === "combo") {
+      const peers = (right: boolean) =>
+        c.series
+          .filter((s) => (s.axis === "right") === right)
+          .map((s) => `"${s.name}"`)
+          .join(", ")
+      c.series.forEach((s, si) =>
+        s.data.forEach((d, di) => {
+          if (Math.abs(d.y) <= CHART_AXIS_LIMIT) return
+          const right = s.axis === "right"
+          ctx.addIssue({
+            code: "custom",
+            path: ["series", si, "data", di, "y"],
+            message:
+              `series[${si}] ("${s.name}") has ${d.y} for "${d.x}", beyond plus or minus ${CHART_AXIS_LIMIT}, the largest value a chart axis can draw. ` +
+              `Divide every series on the ${right ? "right" : "left"} axis (${peers(right)}) by the same power of ten, so they keep their proportions, ` +
+              `and name the unit in axes.${right ? "y2_unit" : "y_unit"}, for example 3.2 with "M" for 3200000.`,
+          })
+        }),
+      )
+    }
+    if (c.chart_type === "combo") {
+      const lines = c.series.filter((s) => s.plot === "line").length
+      const bars = c.series.length - lines
+      if (lines === 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["series"],
+          message:
+            `a combo draws some series as bars and at least one as a line, and none of these ${c.series.length} series has plot: "line". ` +
+            `Set plot: "line" on the series to draw as a line, or use chart_type "bar" if every series is a bar.`,
+        })
+      } else if (bars === 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["series"],
+          message:
+            `a combo draws some series as bars and at least one as a line, and every series here has plot: "line", so nothing is drawn as bars. ` +
+            `Remove plot (or set plot: "bar") on the series to draw as bars, or use chart_type "line" if every series is a line.`,
+        })
+      }
+      if (c.series.length > 0 && rightSeries === c.series.length) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["series"],
+          message:
+            `every series in this combo is on axis: "right", so the left axis would have nothing to measure. ` +
+            `Keep at least one series on the left: remove axis or set axis: "left" on it.`,
+        })
+      }
+    }
   })
 
 export const aliases = {} satisfies ComponentAliasSpec
@@ -308,7 +577,7 @@ export const traits = {
 
 export const story: DesignStory = {
   name: "Plot",
-  story: "Numbers drawn as a shape: bars, a line, an area, slices, a funnel, a from-and-to pair, a point cloud, or one arc against a target.",
+  story: "Numbers drawn as a shape: bars, stacked or 100% columns, bars under a line, a line, an area, slices, a funnel, a from-and-to pair, a point cloud, or one arc against a target.",
   positioning: "Choose it when the audience should grasp the shape of the numbers at a glance. Use data_table when exact values must be read row by row, and comparison when the attributes are words rather than figures.",
   audience: "A room that reads a trend faster than a column of digits.",
   notFor: "Several independent headline figures, which belong in kpi_cards.",

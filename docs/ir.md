@@ -5,6 +5,7 @@ read_when:
   - a field name, page kind, component, or version was rejected
   - deciding between a bare IR and a deck project
   - checking which semantic fields survive into render
+  - choosing a chart_type, or writing a stacked, percent_stacked, or combo chart
 ---
 
 # IR v5
@@ -146,6 +147,58 @@ The attributed prose component is `blockquote`. There is no component type named
 `swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, and `sankey` occupy the full body and must be the page's only component.
 
 See the [SKILL component guide](../skills/pptwise/references/components.md) for semantic kind ownership and close component choices.
+
+### Charts
+
+`chart` draws a numeric set as one shape. `chart_type` picks the shape, and each type holds its series to a count:
+
+| chart_type | draws | series |
+| --- | --- | --- |
+| `bar` | One column per category, or one row with `direction: "horizontal"`. Several series stand side by side. | 1 or more |
+| `stacked` | Each category's series piled into one column, with the column total printed above it. | 2 or more |
+| `percent_stacked` | The same piles scaled so every column reaches 100%, read on a 0% to 100% axis. | 2 or more |
+| `combo` | Bars and lines on one category axis, with an optional second value axis on the right. | at least one bar and one line |
+| `line` | One line per series, each named where it ends. | 1 or more |
+| `area` | A line with the region under it filled. | 1 or more |
+| `scatter` | Numeric x-y points. A per-point `size` makes a bubble. | 1 or more |
+| `pie`, `donut` | One whole split into named slices. | exactly 1 |
+| `funnel` | One value narrowing across ordered stages. | exactly 1 |
+| `dumbbell` | A from value and a to value per row. | exactly 2 |
+| `gauge` | One value against a target. | exactly 1, with one point |
+
+`axes` titles and units apply to `bar`, `stacked`, `percent_stacked`, `combo`, `line`, `area`, and `scatter`. Within one series, a category may appear once.
+
+`stacked` keeps the amounts. Positive values pile up from zero and negative values pile down from it, in series order, and a zero line marks the seam when a pile hangs below it. The number above each column is the category's net total. Segments carry no numbers, so read them against the axis. The totals are printed together or not at all: when they do not all fit above their columns, none is printed and export stops on that page until the numbers are shorter (divide them and name the unit in `y_unit`) or the chart has fewer categories. Each category's positive values, and its negative values, must add up to no more than 1e300 in size. To get under it, divide every series by the same power of ten and name the unit in `y_unit`, so the columns keep their proportions.
+
+```json
+{
+  "type": "chart",
+  "chart_type": "stacked",
+  "axes": { "x_title": "Quarter", "y_title": "Revenue", "y_unit": "M" },
+  "series": [
+    { "name": "Consulting", "data": [{ "x": "Q1", "y": 42 }, { "x": "Q2", "y": 48 }] },
+    { "name": "Software", "data": [{ "x": "Q1", "y": 30 }, { "x": "Q2", "y": 34 }] }
+  ]
+}
+```
+
+`percent_stacked` divides each value by its category's total, so every column reaches 100% and only the make-up is compared. It prints no totals and draws gridlines at every quarter by default. Values must not be negative, every category must add up above zero, and `y_unit` may only be `%`. A category that adds up to zero is refused rather than drawn as an empty column, because an empty column reads as missing data.
+
+`combo` draws bars and lines against the same categories. Set `plot: "line"` on each series to draw as a line. The rest are bars. A series with `axis: "right"` is read against a right-hand axis with its own scale, titled by `axes.y2_title` and `axes.y2_unit`. The right axis ticks sit on the same rows as the left axis ticks, so one set of gridlines serves both.
+
+```json
+{
+  "type": "chart",
+  "chart_type": "combo",
+  "axes": { "x_title": "Quarter", "y_title": "Revenue", "y_unit": "M", "y2_title": "Gross margin", "y2_unit": "%" },
+  "series": [
+    { "name": "Revenue", "data": [{ "x": "Q1", "y": 72 }, { "x": "Q2", "y": 82 }] },
+    { "name": "Gross margin", "plot": "line", "axis": "right", "data": [{ "x": "Q1", "y": 31.5 }, { "x": "Q2", "y": 29.8 }] }
+  ]
+}
+```
+
+A combo needs at least one bar series and one line series, and at least one series on the left axis. `plot`, `axis`, `y2_title`, and `y2_unit` exist only on `combo`, and `y2_title` or `y2_unit` without a series on the right axis is refused. Every combo value must stay within 1e300 in size. To get under it, divide every series on that value's axis by the same power of ten and name the unit in that axis's `y_unit` or `y2_unit`. None of the three new types takes `direction: "horizontal"`.
 
 ## Assets and backgrounds
 

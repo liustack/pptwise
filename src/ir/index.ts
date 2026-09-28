@@ -558,6 +558,11 @@ export type ChartSeries = {
    * scatter dot into a bubble (chart-depth wave). Every other chart_type
    * ignores it. Mirrors `components/chart.ts`'s `ChartPointSchema`. */
   data: { x: string | number; y: number; size?: number }[]
+  /** `chart_type: "combo"` only: draw this series as bars (default) or a line. */
+  plot?: "bar" | "line"
+  /** `chart_type: "combo"` only: read this series against the left (default)
+   * or a right-hand value axis. */
+  axis?: "left" | "right"
 }
 export type FlowNode = {
   id: string
