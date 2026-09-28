@@ -164,6 +164,55 @@ describe("decision_tree component", () => {
     expect(container.querySelectorAll("[data-dropped]").length).toBe(0)
   })
 
+  it("sets English names, details and conditions whole at the widths a content page grants", () => {
+    const english = {
+      type: "decision_tree" as const,
+      question: "Where does the second half's money go first",
+      branches: [
+        {
+          edge: "Channel depth · 61%",
+          title: "Sign twenty regional partners",
+          detail: "Repeats a proven segment",
+          outcomes: [
+            { edge: "38%", title: "Training only", detail: "Partners find their own deals", value: "4.2", unit: "k seats" },
+            { edge: "62%", title: "Training and joint delivery", detail: "Costs two implementers", value: "6.8", unit: "k seats", recommended: true },
+          ],
+        },
+        {
+          edge: "Opening automation · 39%",
+          title: "Cut setup to three weeks",
+          detail: "No new sales headcount",
+          outcomes: [
+            { edge: "55%", title: "Templates only", detail: "Complex accounts stay manual", value: "3.1", unit: "k seats" },
+            { edge: "45%", title: "Templates and self-serve", detail: "One quarter of build", value: "5.4", unit: "k seats" },
+          ],
+        },
+      ],
+    }
+    const ctx = themed("brief")
+    const box = { x: 96, y: 276, w: 1088, h: 330 }
+    const h = decisionTree.measure(english, box.w, ctx)
+    const { container } = svg(decisionTree.render(english, box, ctx))
+    expect(container.querySelectorAll("[data-truncated], [data-dropped]")).toHaveLength(0)
+    const words = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .join(" ")
+    for (const branch of english.branches) {
+      expect(words).toContain(branch.edge)
+      expect(words).toContain(branch.title)
+      expect(words).toContain(branch.detail)
+      for (const outcome of branch.outcomes) expect(words).toContain(outcome.title)
+    }
+    // A grown branch card still sits inside the drawing's own height.
+    for (const r of rects(container)) expect(r.y + r.h).toBeLessThanOrEqual(h + 1)
+    // Outcome names share one size, however far the longest took it down.
+    const outcomeTitles = Array.from(container.querySelectorAll("text")).filter((t) =>
+      english.branches.some((b) => b.outcomes.some((o) => o.title === t.textContent)),
+    )
+    expect(new Set(outcomeTitles.map((t) => t.getAttribute("font-size"))).size).toBe(1)
+    expect(Number(outcomeTitles[0]!.getAttribute("font-size"))).toBeGreaterThanOrEqual(FORM_BODY_FLOOR)
+  })
+
   it("declares the second lines dropped once nine outcomes leave one row of height each", () => {
     const { container } = svg(decisionTree.render(tree(3, 3), { x: 88, y: 96, w: 1104 }, themed("brief")))
     const text = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "").join("|")
