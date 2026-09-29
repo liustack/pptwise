@@ -4,6 +4,8 @@ import { SvgContent } from "../render/svg-content"
 import { stripEmphasis } from "../render/emphasis"
 import { fitHeadingLines } from "../render/heading-fit"
 import { stepAside } from "../render/step-aside"
+import { footnoteBaselineFor } from "../render/branding-geometry"
+import { fitSvgLine } from "../lib/svg-text-layout"
 
 /**
  * The page stat-hero hands over when its hero construction cannot hold what
@@ -22,6 +24,12 @@ const COLUMN_X = 160
 const COLUMN_W = 1280 - COLUMN_X * 2
 const FALLBACK_HEADING_Y = 150
 const FALLBACK_RECT = { x: COLUMN_X, y: 230, w: COLUMN_W, h: 400 } as const
+const SUBHEADING_SIZE = 22
+/** Below the heading's last baseline, clear of the body band at y=230. */
+const SUBHEADING_GAP = 40
+const FOOTNOTE_SIZE = 16
+/** Air between the body band and the footnote's cap height. */
+const FOOTNOTE_AIR = 16
 
 /** The whole page, drawn plainly, when the hero construction cannot hold it. */
 export function StatHeroFallbackContent({ slide, ctx }: Pick<SvgTemplateProps, "slide" | "ctx">) {
@@ -36,9 +44,26 @@ export function StatHeroFallbackContent({ slide, ctx }: Pick<SvgTemplateProps, "
     fontFamily: fonts.heading,
   })
   const headingStart = FALLBACK_HEADING_Y - Math.max(0, heading.lines.length - 1) * heading.lineHeight
-  // A fixed 400px band inside a 960px column. The hero page gives its body
-  // less room than an ordinary page would, so ask before drawing it.
-  const aside = stepAside({ face: "stat-hero", slide, ctx, bodyRect: FALLBACK_RECT })
+  // The hero face sets these as its caption and source, so the page it hands
+  // over keeps them: a plain page that dropped them would lose them unmarked.
+  const subheadingText = stripEmphasis(slide.subheading ?? "").trim()
+  const subheading = subheadingText
+    ? fitSvgLine(subheadingText, { maxWidth: COLUMN_W, fontSize: SUBHEADING_SIZE, minFontSize: 16, fontFamily: fonts.body })
+    : null
+  const footnoteText = stripEmphasis(slide.footnote ?? "").trim()
+  const footnote = footnoteText
+    ? fitSvgLine(footnoteText, { maxWidth: COLUMN_W, fontSize: FOOTNOTE_SIZE, minFontSize: 16, fontFamily: fonts.body })
+    : null
+  const footnoteY = footnote ? footnoteBaselineFor(footnote.fontSize) : 0
+  const bodyRect = footnote
+    ? {
+        ...FALLBACK_RECT,
+        h: Math.min(FALLBACK_RECT.h, footnoteY - footnote.fontSize - FOOTNOTE_AIR - FALLBACK_RECT.y),
+      }
+    : FALLBACK_RECT
+  // A fixed band of at most 400px inside a 960px column. The hero page gives
+  // its body less room than an ordinary page would, so ask before drawing it.
+  const aside = stepAside({ face: "stat-hero", slide, ctx, bodyRect })
   if (aside) return aside
   return (
     <g data-hero-mode="fallback">
@@ -57,7 +82,33 @@ export function StatHeroFallbackContent({ slide, ctx }: Pick<SvgTemplateProps, "
           {line}
         </text>
       ))}
-      <SvgContent components={slide.components} rect={FALLBACK_RECT} ctx={ctx} />
+      {subheading && (
+        <text
+          data-truncated={subheading.truncated ? "1" : undefined}
+          x={COLUMN_X}
+          y={FALLBACK_HEADING_Y + SUBHEADING_GAP}
+          fontFamily={fonts.body}
+          fontSize={subheading.fontSize}
+          fill={accessibleInk(colors.muted, defaultBg, subheading.fontSize)}
+          dominantBaseline="alphabetic"
+        >
+          {subheading.text}
+        </text>
+      )}
+      <SvgContent components={slide.components} rect={bodyRect} ctx={ctx} />
+      {footnote && (
+        <text
+          data-truncated={footnote.truncated ? "1" : undefined}
+          x={COLUMN_X}
+          y={footnoteY}
+          fontFamily={fonts.body}
+          fontSize={footnote.fontSize}
+          fill={accessibleInk(colors.muted, defaultBg, footnote.fontSize)}
+          dominantBaseline="alphabetic"
+        >
+          {footnote.text}
+        </text>
+      )}
     </g>
   )
 }

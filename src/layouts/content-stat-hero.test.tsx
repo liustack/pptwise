@@ -205,13 +205,18 @@ describe("a hero figure is never cut", () => {
     .filter(([, faces]) => faces?.["stat-hero"] !== undefined)
     .map(([theme]) => theme)
 
-  function drawHero(theme: string, item: { value: string; unit?: string; label: string }) {
+  function drawHero(
+    theme: string,
+    item: { value: string; unit?: string; label: string },
+    extra: { subheading?: string; footnote?: string } = {},
+  ) {
     const ctx = boundThemeCtx(theme, {})
     const slide = {
       type: "content",
       kind: "fact",
       layout: "stat-hero",
       heading: item.label,
+      ...extra,
       components: [{ type: "kpi_cards", items: [item] }],
     } as unknown as Slide
     return render(<StatHeroContent ir={ir(theme, [slide])} slide={slide} index={0} ctx={ctx} />)
@@ -249,6 +254,21 @@ describe("a hero figure is never cut", () => {
     const runs = figureRuns(root, "1234567890")
     expect(runs.length).toBeGreaterThan(0)
     for (const run of runs) expect(run.text, theme).toContain("1234567890")
+  })
+
+  // The hero face sets the slide's subheading and footnote as its caption
+  // and source. The page it hands over drew only the heading and the card,
+  // so both went missing with no mark.
+  it.each(SKINNED)("%s keeps the subheading and footnote on the page it hands over", (theme) => {
+    const { root } = drawHero(
+      theme,
+      { value: "1234567890".repeat(4), unit: "万元", label: "累计" },
+      { subheading: "三年滚动口径", footnote: "Source: audited FY2026 accounts" },
+    )
+    expect(root.querySelector('[data-hero-mode="fallback"], [data-face-mode="fallback"]'), theme).not.toBeNull()
+    const texts = Array.from(root.querySelectorAll("text")).map((t) => (t.textContent ?? "").replace(/\s+/g, " ").trim())
+    expect(texts, theme).toContain("三年滚动口径")
+    expect(texts, theme).toContain("Source: audited FY2026 accounts")
   })
 
   // Forty digits: too wide for every skin even at its floor. Twenty used to
