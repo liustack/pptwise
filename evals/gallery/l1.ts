@@ -79,24 +79,38 @@ const INK_DESCENT = 0.12
 /**
  * How far a run's ink reaches above and below its baseline, as shares of its
  * own font size, for the edge and divider checks. Ideographs fill nearly the
- * whole em box, Latin tops out at its ascenders, and only a few Latin glyphs
+ * whole em box, plain Latin tops out at its ascenders, and only a few Latin glyphs
  * hang below the baseline. The em box read at the outer size overstates a
  * display figure badly: memo's 280px "22" with a 73px "个月" was given a
  * descender 70px deep, on a rule its ink stops 60px short of.
  */
 const CJK_INK_TOP = 0.88
-const LATIN_INK_TOP = 0.76
+const LATIN_INK_TOP = 0.8
+/** Accented capitals, combining marks and other scripts: the whole em box. */
+const UNCALIBRATED_INK_TOP = 1
+/** Plain ASCII plus spaces, dashes, quotes and bullets: no glyph taller than the Latin estimate. */
+const CALIBRATED_LATIN_CHAR = /[\x20-\x7e\u00a0\u00b7\u2010-\u2027]/
 const CJK_INK_DEPTH = 0.12
 const DESCENDER_DEPTH = 0.25
 const BASELINE_DEPTH = 0.05
 const CJK_CHAR = /[\u2e80-\u9fff\uac00-\ud7af\uf900-\ufaff\uff00-\uffef]/
 const DESCENDER_CHAR = /[gjpqyQ,;()[\]{}|/\\_@$§µ]/
 
+/** The tallest ink share any character of `text` reaches. */
+function inkTopShare(text: string): number {
+  let top = 0
+  for (const ch of text) {
+    const share = CJK_CHAR.test(ch) ? CJK_INK_TOP : CALIBRATED_LATIN_CHAR.test(ch) ? LATIN_INK_TOP : UNCALIBRATED_INK_TOP
+    if (share > top) top = share
+  }
+  return top
+}
+
 function runInkExtent(text: string): { top: number; depth: number } {
   const cjk = CJK_CHAR.test(text)
   const descends = DESCENDER_CHAR.test(text)
   return {
-    top: cjk ? CJK_INK_TOP : LATIN_INK_TOP,
+    top: inkTopShare(text),
     depth: descends ? DESCENDER_DEPTH : cjk ? CJK_INK_DEPTH : BASELINE_DEPTH,
   }
 }

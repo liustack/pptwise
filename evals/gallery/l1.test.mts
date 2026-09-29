@@ -303,6 +303,16 @@ describe("auditL1 planted defects", () => {
     expect(codes(svg)).not.toContain("edge-stick")
   })
 
+  // An accented capital stands about 0.9em tall, well above the Latin
+  // ascender height the calibrated estimate uses.
+  it("still flags accented capitals that rise off the top of the page", () => {
+    expect(codes(wrap(`<text x="100" y="90" font-family="Arial" font-size="100">ÉTÉ</text>`))).toContain("edge-stick")
+  })
+
+  it("reads an accented capital at full height inside a Chinese line too", () => {
+    expect(codes(wrap(`<text x="100" y="96" font-family="Arial" font-size="100">夏ÉTÉ</text>`))).toContain("edge-stick")
+  })
+
   it("still flags a rule just under a Latin line's descenders", () => {
     const svg = wrap(
       `<text x="100" y="300" font-size="16">graphing yearly</text>` +
