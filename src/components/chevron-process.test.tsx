@@ -10,6 +10,8 @@ import { chevronProcess } from "./chevron-process"
 import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR } from "./legibility"
 import { listThemes } from "../api"
 import { contrastRatio } from "../render/ink"
+import { measureTextUnits } from "../lib/svg-text-layout"
+import { SIBLING_AIR_PX } from "../render/spacing"
 import type { ComponentCtx } from "./types"
 
 function themed(id: string): ComponentCtx {
@@ -101,6 +103,44 @@ describe("chevron_process component", () => {
     }
     expect(text).toEqual(expect.arrayContaining(["01", "02", "03", "04", "05"]))
     expect(container.querySelectorAll("[data-dropped]").length).toBe(0)
+  })
+
+  it("keeps a sibling's air between two notes that share a baseline", () => {
+    // Seventeen characters fit the 275px the note used to be allowed, which
+    // left its last glyph 15px from the next note's first. At 12px apart two
+    // notes read as one line, so the note now stops SIBLING_AIR_PX short.
+    const crowded = {
+      type: "chevron_process" as const,
+      items: [
+        { title: "需求核报", text: "一笔三百万捐赠因附带指定条款被婉拒" },
+        { title: "联合采购", text: "失误成章" },
+        { title: "物流配送", text: "管理费率" },
+        { title: "借阅运营", text: "月捐共同体" },
+      ],
+    }
+    const ctx = themed("swiss")
+    const { container } = svg(chevronProcess.render(crowded, { x: 96, y: 290, w: 1088 }, ctx))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const notes = Array.from(container.querySelectorAll("text")).filter(
+      (t) => Number(t.getAttribute("font-size")) === FORM_BODY_FLOOR && Number(t.getAttribute("y")) > 118,
+    )
+    const firstLine = new Map<number, Element>()
+    for (const t of notes) {
+      const y = Number(t.getAttribute("y"))
+      const x = Number(t.getAttribute("x"))
+      if (!firstLine.has(x) || Number(firstLine.get(x)!.getAttribute("y")) > y) firstLine.set(x, t)
+    }
+    const starts = [...firstLine.keys()].sort((a, b) => a - b)
+    expect(starts).toHaveLength(4)
+    for (const t of notes) {
+      const x = Number(t.getAttribute("x"))
+      const next = starts.find((s) => s > x)
+      if (next === undefined) continue
+      const end = x + measureTextUnits(t.textContent ?? "", { fontFamily: ctx.fonts.body }) * FORM_BODY_FLOOR
+      expect(next - end, t.textContent ?? "").toBeGreaterThanOrEqual(SIBLING_AIR_PX)
+    }
+    const words = notes.map((t) => t.textContent ?? "").join("")
+    expect(words).toContain(crowded.items[0]!.text)
   })
 
   it("wraps a note wider than its column onto a second line instead of cutting it", () => {
