@@ -1,4 +1,5 @@
 import { META_FONT_FLOOR_PX } from "../constants"
+import { SYMBOL_ADVANCE_BOUNDS } from "./symbol-advances"
 
 /**
  * Weight/face hint threaded through the estimator (bold-metrics fix,
@@ -21,10 +22,10 @@ export interface TextWeightHint {
    * `classifyFace` below. */
   fontFamily?: string
   /**
-   * Use the face's Regular exact hmtx table. Default Regular stays on the
-   * class-average path so existing call sites stay byte-identical. Opt in
-   * when a mark has to sit under a specific glyph (memo-head last-run
-   * underline).
+   * Asks for the face's Regular exact hmtx table. Every face with one
+   * (Georgia, Microsoft YaHei, SimSun/KaiTi) now measures Regular from it by
+   * default, so this changes nothing today. It stays so the call sites that
+   * said it (a mark that must sit under a specific glyph) keep saying so.
    */
   exact?: boolean
 }
@@ -153,6 +154,12 @@ const WIDE_CHAR_RE = /[\u2014\u2018-\u201f\u2e80-\u9fff\uff00-\uffef]/
 // no-action -- this table needs no per-role safety factor for Georgia or
 // Microsoft YaHei. Full corpus and methodology: task-3-report.md
 // (borrow-wave scratchpad, not shipped in this repo).
+//
+// Later correction: "safe" held for overflow but not for wrapping. Over a
+// whole sentence those per-class gaps add up to 20-25% too wide for
+// Georgia and 9-16% for YaHei and SimSun/KaiTi, enough to wrap text that
+// fits on one line, so Regular text in all three now measures from each
+// face's exact table (see `measureTextUnits`).
 //
 // Separately (not a width-calibration finding, recorded here since it
 // surfaced during this same measurement): neither Georgia nor Consolas
@@ -404,6 +411,17 @@ const GEORGIA_BOLD_EXACT: Readonly<Record<number, number>> = {32:0.2539,33:0.376
 const YAHEI_REGULAR_EXACT: Readonly<Record<number, number>> = {32:0.2959,33:0.3125,34:0.4355,35:0.6382,36:0.5864,37:0.8896,38:0.8701,39:0.2563,40:0.334,41:0.334,42:0.4551,43:0.7417,44:0.2407,45:0.4326,46:0.2407,47:0.4272,48:0.5864,49:0.5864,50:0.5864,51:0.5864,52:0.5864,53:0.5864,54:0.5864,55:0.5864,56:0.5864,57:0.5864,58:0.2407,59:0.2407,60:0.7417,61:0.7417,62:0.7417,63:0.4829,64:1.0312,65:0.7036,66:0.6274,67:0.6689,68:0.7617,69:0.5498,70:0.5312,71:0.7437,72:0.7734,73:0.2939,74:0.396,75:0.6348,76:0.5132,77:0.9771,78:0.813,79:0.8149,80:0.6118,81:0.8149,82:0.6528,83:0.5771,84:0.5732,85:0.7466,86:0.6763,87:1.0176,88:0.645,89:0.6035,90:0.6201,91:0.334,92:0.416,93:0.334,94:0.7417,95:0.4482,96:0.2949,97:0.5527,98:0.6387,99:0.5015,100:0.6396,101:0.5674,102:0.3467,103:0.6396,104:0.6157,105:0.2661,106:0.2671,107:0.5444,108:0.2661,109:0.937,110:0.6162,111:0.6357,112:0.6387,113:0.6396,114:0.3818,115:0.4629,116:0.3726,117:0.6162,118:0.5249,119:0.7896,120:0.5068,121:0.5293,122:0.4917,123:0.334,124:0.269,125:0.334,126:0.7417}
 const YAHEI_BOLD_EXACT: Readonly<Record<number, number>> = {32:0.2979,33:0.3486,34:0.521,35:0.6401,36:0.6167,37:0.9312,38:0.9111,39:0.3081,40:0.3896,41:0.3896,42:0.4873,43:0.7612,44:0.2856,45:0.4365,46:0.2856,47:0.4727,48:0.6167,49:0.6167,50:0.6167,51:0.6167,52:0.6167,53:0.6167,54:0.6167,55:0.6167,56:0.6167,57:0.6167,58:0.2856,59:0.2856,60:0.7612,61:0.7612,62:0.7612,63:0.4741,64:1.0298,65:0.752,66:0.6836,67:0.6733,68:0.7915,69:0.5718,70:0.5581,71:0.7651,72:0.8213,73:0.3354,74:0.4702,75:0.6929,76:0.5469,77:1.0283,78:0.8481,79:0.8184,80:0.6572,81:0.8184,82:0.6982,83:0.6016,84:0.6255,85:0.7764,86:0.7148,87:1.0762,88:0.7002,89:0.6484,90:0.6504,91:0.3896,92:0.4644,93:0.3896,94:0.7612,95:0.4482,96:0.3335,97:0.5776,98:0.666,99:0.5166,100:0.6646,101:0.582,102:0.4053,103:0.6646,104:0.6455,105:0.2959,106:0.3018,107:0.5962,108:0.2959,109:0.9819,110:0.6479,111:0.6572,112:0.666,113:0.6646,114:0.4238,115:0.4937,116:0.4141,117:0.6479,118:0.5771,119:0.8516,120:0.585,121:0.5742,122:0.5137,123:0.3896,124:0.3413,125:0.3896,126:0.7612}
 
+// SimSun and KaiTi Regular: every printable ASCII codepoint advances 128
+// units at unitsPerEm=256, exactly 0.5em, read with a standalone cmap+hmtx
+// parser from the genuine binaries Office ships (`Simsun.ttc[0]`, name
+// "SimSun" Regular, Version 5.21, and `Kaiti.ttf`, "KaiTi" Regular,
+// Version 5.01i, in PowerPoint's and Word's `DFonts`, byte-identical in
+// both). Both faces are a fixed half-em grid for Latin, so the table is
+// that one number 95 times. Neither face kerns.
+const SIMSUN_KAITI_REGULAR_EXACT: Readonly<Record<number, number>> = Object.fromEntries(
+  Array.from({ length: 95 }, (_, i) => [32 + i, 0.5]),
+)
+
 interface ExactFaceTable {
   regular: Readonly<Record<number, number>>
   bold: Readonly<Record<number, number>>
@@ -418,13 +436,20 @@ const CLASS_TABLE_FOR: Readonly<Record<FaceKey, FaceFactorTable>> = {
   unknown: ENVELOPE,
 }
 
-// Only the two exact-model faces have an entry -- `simsun-kaiti`/`unknown`
-// fall through `measureTextUnits`' own `exactTable` lookup (undefined) to
-// the class-average path unconditionally, no per-character data existing
-// for either.
+// Faces with a genuine binary at both weights. `simsun-kaiti` has no Bold
+// binary anywhere (its Bold stays the class-average proxy, see
+// `SIMSUN_KAITI`) and `unknown` has no data, so neither has an entry here,
+// and `hasExactWidthTable` reads this map for exactly that reason.
 const EXACT_TABLE_FOR: Readonly<Partial<Record<FaceKey, ExactFaceTable>>> = {
   georgia: { regular: GEORGIA_REGULAR_EXACT, bold: GEORGIA_BOLD_EXACT },
   yahei: { regular: YAHEI_REGULAR_EXACT, bold: YAHEI_BOLD_EXACT },
+}
+
+/** Every face whose Regular weight has a genuine binary to read. */
+const REGULAR_EXACT_TABLE_FOR: Readonly<Partial<Record<FaceKey, Readonly<Record<number, number>>>>> = {
+  georgia: GEORGIA_REGULAR_EXACT,
+  yahei: YAHEI_REGULAR_EXACT,
+  "simsun-kaiti": SIMSUN_KAITI_REGULAR_EXACT,
 }
 
 /**
@@ -480,25 +505,29 @@ export function measureTextUnits(text: string, weight?: TextWeightHint): number 
   const mode: WeightMode = weight?.bold ? "bold" : "regular"
   const faceKey = classifyFaceKey(weight?.fontFamily)
   const classTable = CLASS_TABLE_FOR[faceKey]
-  // Exact model applies to Bold only, even though a genuine Regular exact
-  // table exists right above (`GEORGIA_REGULAR_EXACT`/`YAHEI_REGULAR_EXACT`)
-  // -- Regular-weight text must stay byte-identical to this file's pre-fix
-  // arithmetic for every call site this whole task didn't touch (the "non-
-  // bold byte-inertness" hard requirement), and Georgia/YaHei's own
-  // class-average tables already encode that as a literal `regular: 1`
-  // (`NO_CORRECTION`) on every class -- falling through to
-  // `classAverageUnits` at Regular weight reproduces the original
-  // unweighted sum exactly, unchanged by this file's whole existence. The
-  // Regular exact tables are real, correct data (kept for documentation and
-  // any future caller that legitimately wants exact Regular widths -- they
-  // even surface a genuine, pre-existing, bold-unrelated finding: "Components
-  // Demo" sits ~1.25% past its own declared budget at Regular weight too,
-  // root-cause.md's own number) -- but *exposing* that pre-existing gap
-  // through this function's default Regular path would be an undisclosed
-  // behavior change on text this fix promised to leave alone, not something
-  // this task's mandate covers.
-  const exactTable =
-    mode === "bold" || weight?.exact ? EXACT_TABLE_FOR[faceKey]?.[mode] : undefined
+  // Every printable ASCII character measures from its face's own advance
+  // table when the face has one for this weight: Bold for Georgia and
+  // YaHei, Regular for those two and SimSun/KaiTi.
+  //
+  // Regular used to stay on the class-average path for every face so that
+  // non-bold text kept its pre-bold-fix geometry, and that path runs wide.
+  // Over the brief gallery's English sentences the class sum is 20-25% over
+  // Georgia's real advances, 9-16% over YaHei's, and 5-15% over
+  // SimSun/KaiTi's half-em grid. The cause is the 0.56/0.35/0.46 class
+  // weights against these faces' narrower lowercase, spaces and marks:
+  // "Vertical playbook replication" is 15.92em by class, 12.72em in Georgia,
+  // 13.68em in YaHei and 14.5em in SimSun. Text that fits one line wrapped
+  // to two. The one class that runs the other way is YaHei's digits
+  // (0.5864em against the class's 0.56), which the class path under-priced.
+  //
+  // Checked against real layout engines, not just this file's own tables:
+  // rsvg's Georgia ink lands within 0.3% of the exact sum, and FreeType
+  // (through Pillow) reproduces the YaHei and SimSun/KaiTi sums to the
+  // fourth decimal. HarfBuzz shaping, which applies YaHei's kerning, comes
+  // out up to 1% narrower on ordinary sentences, and SimSun/KaiTi do not
+  // kern. So the exact sum errs a hair wide, never narrow.
+  const exactTable = mode === "bold" ? EXACT_TABLE_FOR[faceKey]?.bold : REGULAR_EXACT_TABLE_FOR[faceKey]
+  const symbolBounds = faceKey === "unknown" ? undefined : SYMBOL_ADVANCE_BOUNDS[faceKey][mode]
   return Array.from(text).reduce((sum, char) => {
     // WIDE_CHAR_RE (CJK/ideographic-punctuation/fullwidth) always takes the
     // class path, even under an exact-model face: the exact tables only
@@ -510,7 +539,18 @@ export function measureTextUnits(text: string, weight?: TextWeightHint): number 
       const exact = exactTable[char.charCodeAt(0)]
       if (exact !== undefined) return sum + exact
     }
-    return sum + classAverageUnits(char, classTable, mode)
+    // Outside printable ASCII the class average is a guess, and for some
+    // glyphs a low one: SimSun and KaiTi set "·" on the full em against the
+    // class's 0.563, YaHei's "—" runs 1.08em against 1, Georgia's "‰"
+    // 1.31em against 0.46, an ideographic space 1em against a space's 0.35.
+    // `SYMBOL_ADVANCE_BOUNDS` holds the widest real advance each measured
+    // face (and the face that may stand in for it) gives the character,
+    // and the estimate rises to it. It never falls below the class average,
+    // so no layout gets tighter for a glyph the tables say is narrower than
+    // the guess.
+    const estimate = classAverageUnits(char, classTable, mode)
+    const floor = symbolBounds?.[char.charCodeAt(0)]
+    return sum + (floor !== undefined && floor > estimate ? floor : estimate)
   }, 0)
 }
 
@@ -746,23 +786,86 @@ function splitLongToken(token: string, maxUnits: number, weight?: TextWeightHint
 const LATIN_RUN_OR_CHAR_RE = /[A-Za-z0-9](?:[A-Za-z0-9.\-%]*[A-Za-z0-9%])?|./gu
 
 /**
- * Splits `text` into wrap tokens. Space-delimited text (contains at least
- * one space anywhere) splits on spaces, same as always -- `wrapWithUnits`
- * re-joins those with a single space within a line (`spaceDelimited: true`
- * is exactly the re-join signal it reads). Text with no space at all (the
- * common case for a CJK clause, with or without a fused Latin/digit prefix)
- * splits per `LATIN_RUN_OR_CHAR_RE` above: one token per CJK/punctuation
- * character, but a maximal atomic token per contiguous ASCII Latin/digit
- * run -- see that constant's own comment for the full boundary discussion.
+ * One wrap token. `space` marks a token that re-joins its predecessor with a
+ * space: the first segment of each space-delimited word.
  */
-function tokenize(text: string): { tokens: string[]; spaceDelimited: boolean } {
+interface WrapToken {
+  text: string
+  space: boolean
+}
+
+/**
+ * Splits one space-delimited word at every boundary that touches a CJK
+ * character, keeping each run of anything else whole.
+ *
+ * A space-delimited mixed sentence ("镜像构建从 Jenkins 迁到 GitHub Actions，
+ * 平均构建时长从 11 分钟降到 4 分钟。") used to wrap each space-delimited
+ * word as one unbreakable unit, so a Chinese clause between two spaces could
+ * only move to the next line whole. It left "BP" alone on a line in front of
+ * a clause too long to join it, and a line ending at "GitHub" with a third
+ * of its width empty. Chinese breaks between any two ideographs whether or
+ * not a space sits somewhere else in the sentence, so the clause splits per
+ * character here, exactly as the no-space branch splits it.
+ *
+ * Only a boundary with a `WIDE_CHAR_RE` character on at least one side is
+ * cut, so a Latin word, a number, and whatever ASCII punctuation hangs on
+ * them ("GitHub,", "90%", "v2.3") stay one token, as before. Kinsoku still
+ * rules every boundary this creates.
+ */
+function splitWideBoundaries(word: string): string[] {
+  const out: string[] = []
+  let run = ""
+  for (const ch of word) {
+    if (WIDE_CHAR_RE.test(ch)) {
+      if (run) out.push(run)
+      out.push(ch)
+      run = ""
+    } else {
+      run += ch
+    }
+  }
+  if (run) out.push(run)
+  return out
+}
+
+/**
+ * Splits `text` into wrap tokens. Space-delimited text (contains at least
+ * one space anywhere) splits on spaces, and then each word at its CJK
+ * boundaries (`splitWideBoundaries`), so only a word's first segment
+ * re-joins with a space. A word with no CJK character in it is one token,
+ * same as always. Text with no space at all (the common case for a CJK
+ * clause, with or without a fused Latin/digit prefix) splits per
+ * `LATIN_RUN_OR_CHAR_RE` above: one token per CJK/punctuation character,
+ * but a maximal atomic token per contiguous ASCII Latin/digit run -- see
+ * that constant's own comment for the full boundary discussion.
+ */
+function tokenize(text: string): { tokens: WrapToken[]; spaceDelimited: boolean } {
   const normalized = text.trim().replace(/\s+/g, " ")
   if (!normalized) return { tokens: [], spaceDelimited: false }
   const spaceDelimited = normalized.includes(" ")
+  if (!spaceDelimited) {
+    return {
+      tokens: (normalized.match(LATIN_RUN_OR_CHAR_RE) ?? []).map((t) => ({ text: t, space: false })),
+      spaceDelimited,
+    }
+  }
   return {
-    tokens: spaceDelimited ? normalized.split(" ") : (normalized.match(LATIN_RUN_OR_CHAR_RE) ?? []),
+    tokens: normalized
+      .split(" ")
+      .flatMap((word) => splitWideBoundaries(word).map((t, i) => ({ text: t, space: i === 0 }))),
     spaceDelimited,
   }
+}
+
+/**
+ * The units the wrap keeps whole, in order: each Latin word, number or other
+ * non-CJK run as one, and each CJK character as its own. A unit wider than
+ * a line is the only thing the wrap has to cut mid-way (`splitLongToken`).
+ * For a caller that must know beforehand whether its text can wrap without
+ * breaking a word.
+ */
+export function wrapTokens(text: string): string[] {
+  return tokenize(text).tokens.map((token) => token.text)
 }
 
 // Retry-ladder word-integrity plumbing (task R2 scope extension, 2026-07-24
@@ -799,6 +902,11 @@ interface WrapResult {
    * this value back in as `maxUnits` is, by construction, the exact
    * narrowest budget under which every such run stays whole. */
   minSplitFreeUnits: number
+  /** `true` iff some paragraph ended on a lone CJK character and
+   * `avoidCjkOrphan` moved a character down to keep it company. The greedy
+   * lines had a widow even though the returned ones may no longer measure
+   * as one, so `balanceWrappedLines` reads this to still rebalance. */
+  orphanFixed: boolean
 }
 
 /**
@@ -844,38 +952,89 @@ function retreatPieceCut(pieces: WrapPiece[], lineStart: number, breakAt: number
 }
 
 /**
- * Last-resort push-out *inside* a piece, for when no boundary between
- * pieces on the line is legal at all.
- *
- * The case that needs it: a space-delimited CJK title whose separator is
- * its own token — 「夜校手机摄影课 · 第三讲」 packs as three pieces, and the
- * only boundary the line offers puts the separator at a line head. There is
- * nothing to retreat *to*, because the rest of the line is one token.
- *
- * CJK breaks between any two ideographs, so the piece itself supplies the
- * boundary. Returns the *latest* such offset (retreat as little as the rule
- * allows), or 0 when the piece offers none.
- *
- * Both sides must be `WIDE_CHAR_RE` characters. That is what makes this
- * structurally incapable of splitting a Latin word: no ASCII letter, digit,
- * or space is ever wide, so a space-delimited English token can never
- * produce a non-zero offset here, whatever its content.
+ * A CJK orphan (孤字): a line that holds exactly one ideograph once the
+ * punctuation kinsoku pins to it is set aside: 「本」, 「审」, 「娘」」. A
+ * line with any Latin letter or digit on it is never one: a lone English
+ * word ending a paragraph is ordinary, not a broken read.
  */
-function wideBreakOffset(text: string): number {
-  const chars = Array.from(text)
-  for (let k = chars.length - 1; k >= 1; k -= 1) {
-    const before = chars[k - 1]
-    const after = chars[k]
-    if (!WIDE_CHAR_RE.test(before) || !WIDE_CHAR_RE.test(after)) continue
-    if (allowsLineBreakBetween(before, after)) return chars.slice(0, k).join("").length
+function isCjkOrphanLine(line: string): boolean {
+  let core = 0
+  for (const ch of line) {
+    if (/\s/.test(ch) || LINE_START_FORBIDDEN.test(ch) || LINE_END_FORBIDDEN.test(ch)) continue
+    if (!WIDE_CHAR_RE.test(ch)) return false
+    core += 1
+    if (core > 1) return false
   }
-  return 0
+  return core === 1
+}
+
+/**
+ * True when wrapped `lines` end on a CJK orphan. The shared wrap already
+ * settles every orphan it can at a fixed width, so this is for a caller that
+ * owns its width and can widen past what a fixed width allows (a cycle
+ * node's capsule, whose 「季后」+「赛」 has no character to spare).
+ */
+export function endsInCjkOrphan(lines: readonly string[]): boolean {
+  return lines.length > 1 && isCjkOrphanLine(lines[lines.length - 1])
+}
+
+/**
+ * Keeps a paragraph from ending on a single CJK character.
+ *
+ * The greedy pack fills every line to the budget, so a paragraph one glyph
+ * longer than a whole number of lines ends on that glyph alone: 「植物染批次
+ * 色差需沟通成」+「本」, 「方案评」+「审」. Chinese typesetting never lets one
+ * character stand as a paragraph's last line, so this moves the fewest
+ * characters it can from the end of the line before down with it, which
+ * rebalances the last two lines without touching any line above them.
+ *
+ * The move never adds a line, never widens a line past `maxUnits`, and
+ * never leaves the line above an orphan itself, so a caller's line cap and
+ * no-truncation guarantee hold exactly as before. It moves whole pieces,
+ * latest boundary first. Every CJK character is a piece of its own
+ * (`tokenize`), so a Latin word travels whole and is never split here, and
+ * every candidate boundary still has to pass kinsoku. When nothing qualifies
+ * (「季后」+「赛」 has no character to spare) the greedy lines stand.
+ *
+ * `lineStarts` holds the piece index each of `paragraphLines` starts at.
+ */
+function avoidCjkOrphan(
+  pieces: WrapPiece[],
+  lineStarts: number[],
+  paragraphLines: string[],
+  maxUnits: number,
+  weight?: TextWeightHint,
+): string[] {
+  const n = paragraphLines.length
+  if (n < 2 || !isCjkOrphanLine(paragraphLines[n - 1])) return paragraphLines
+  const prevStart = lineStarts[n - 2]
+  const lastStart = lineStarts[n - 1]
+
+  const settle = (cut: number): string[] | null => {
+    const before = pieces[cut - 1].text
+    const after = pieces[cut].text
+    if (!allowsLineBreakBetween(before[before.length - 1], after[0])) return null
+    const prev = joinPieces(pieces, prevStart, cut)
+    const last = joinPieces(pieces, cut, pieces.length)
+    if (isCjkOrphanLine(prev) || isCjkOrphanLine(last)) return null
+    if (measureTextUnits(last, weight) > maxUnits) return null
+    return [...paragraphLines.slice(0, n - 2), prev, last]
+  }
+
+  for (let cut = lastStart - 1; cut > prevStart; cut -= 1) {
+    if (measureTextUnits(joinPieces(pieces, cut, pieces.length), weight) > maxUnits) break
+    const fixed = settle(cut)
+    if (fixed) return fixed
+  }
+
+  return paragraphLines
 }
 
 function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint): WrapResult {
   const lines: string[] = []
   let hadSplit = false
   let minSplitFreeUnits = 0
+  let orphanFixed = false
 
   for (const paragraph of text.split(/\n+/)) {
     const { tokens, spaceDelimited } = tokenize(paragraph)
@@ -884,18 +1043,20 @@ function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint):
     // and walk it backwards. The greedy arithmetic itself is unchanged.
     const pieces: WrapPiece[] = []
     for (const token of tokens) {
-      const tokenUnits = measureTextUnits(token, weight)
-      const isRunToken = !spaceDelimited && Array.from(token).length > 1
+      const tokenUnits = measureTextUnits(token.text, weight)
+      const isRunToken = !spaceDelimited && Array.from(token.text).length > 1
       if (isRunToken) minSplitFreeUnits = Math.max(minSplitFreeUnits, tokenUnits)
 
-      const tokenChunks = tokenUnits > maxUnits ? splitLongToken(token, maxUnits, weight) : [token]
+      const tokenChunks = tokenUnits > maxUnits ? splitLongToken(token.text, maxUnits, weight) : [token.text]
       if (isRunToken && tokenChunks.length > 1) hadSplit = true
 
       for (const [chunkIndex, chunk] of tokenChunks.entries()) {
-        pieces.push({ text: chunk, space: spaceDelimited && chunkIndex === 0 })
+        pieces.push({ text: chunk, space: token.space && chunkIndex === 0 })
       }
     }
 
+    const paragraphLines: string[] = []
+    const lineStarts: number[] = [0]
     let lineStart = 0
     let current = ""
     for (let i = 0; i < pieces.length; i += 1) {
@@ -906,46 +1067,35 @@ function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint):
         // an unretreated cut pushes the identical string the pre-kinsoku loop
         // pushed and allocates nothing extra. Only a real prohibition pays
         // for the two re-joins.
+        // No legal boundary between pieces anywhere on this line: FLOOR,
+        // content beats purity, and the prohibited cut stands rather than
+        // emptying the line or dropping text. Every CJK character is its own
+        // piece (`tokenize`), so a line holding two ideographs always offers
+        // the boundary between them, and a CJK line only lands here when
+        // kinsoku forbids every one (「》》》」).
         let cut = retreatPieceCut(pieces, lineStart, i)
-        if (cut === -1) {
-          // No legal boundary between pieces anywhere on this line. Split the
-          // piece before the break at its own latest legal CJK boundary and
-          // retreat there. The array grows by one entry behind the cursor, so
-          // `i` advances with it and the index arithmetic below is unchanged.
-          const offset = wideBreakOffset(pieces[i - 1].text)
-          if (offset > 0) {
-            const whole = pieces[i - 1]
-            pieces.splice(
-              i - 1,
-              1,
-              { text: whole.text.slice(0, offset), space: whole.space },
-              { text: whole.text.slice(offset), space: false },
-            )
-            i += 1
-            cut = i - 1
-          } else {
-            // FLOOR: content beats purity — the prohibited cut stands rather
-            // than emptying the line or dropping text.
-            cut = i
-          }
-        }
+        if (cut === -1) cut = i
         if (cut === i) {
-          lines.push(current)
+          paragraphLines.push(current)
           current = pieces[i].text
         } else {
-          lines.push(joinPieces(pieces, lineStart, cut))
+          paragraphLines.push(joinPieces(pieces, lineStart, cut))
           current = joinPieces(pieces, cut, i + 1)
         }
         lineStart = cut
+        lineStarts.push(cut)
       } else {
         current = candidate
       }
     }
 
-    if (current) lines.push(current)
+    if (current) paragraphLines.push(current)
+    const settled = avoidCjkOrphan(pieces, lineStarts, paragraphLines, maxUnits, weight)
+    if (settled !== paragraphLines) orphanFixed = true
+    lines.push(...settled)
   }
 
-  return { lines, hadSplit, minSplitFreeUnits }
+  return { lines, hadSplit, minSplitFreeUnits, orphanFixed }
 }
 
 /**
@@ -959,29 +1109,218 @@ function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint):
  * steps up ×1.06 until the re-wrap stops exceeding the original line count;
  * if 8 steps can't get there, the greedy result stands. Explicit newlines are
  * the author's own breaks — those layouts are returned untouched.
+ *
+ * `orphanFixed` is the wrap's own report that the greedy lines ended on a
+ * lone CJK character before `avoidCjkOrphan` moved one down (「年度战略回」+
+ * 「顾」 arrives here as 「年度战略」+「回顾」). That was a widow too, so it
+ * rebalances even though the lines it is handed no longer measure as one.
  */
-function balanceWrappedLines(content: string, lines: string[], weight?: TextWeightHint): string[] {
+function balanceWrappedLines(
+  content: string,
+  lines: string[],
+  weight?: TextWeightHint,
+  orphanFixed = false,
+): string[] {
   if (lines.length < 2 || content.includes("\n")) return lines
   const units = lines.map((l) => measureTextUnits(l, weight))
   const widest = Math.max(...units)
-  if (units[units.length - 1] >= widest * 0.5) return lines
+  if (!orphanFixed && units[units.length - 1] >= widest * 0.5) return lines
   const total = units.reduce((sum, u) => sum + u, 0)
   // Token floor must mirror `tokenize`: space-delimited text wraps by words,
   // so flooring at the longest word keeps `splitLongToken` from ever firing;
   // unspaced (CJK) text wraps per character, so no floor is needed — flooring
   // at the whole string there would collapse the wrap to one oversized line.
   const { tokens } = tokenize(content)
-  const longestToken = Math.max(...tokens.map((t) => measureTextUnits(t, weight)), 0)
+  const longestToken = Math.max(...tokens.map((t) => measureTextUnits(t.text, weight)), 0)
   let target = Math.max(total / lines.length, longestToken)
   for (let i = 0; i < 8; i += 1) {
     const candidate = wrapWithUnits(content, target, weight)
     // Same line count, evenly split — that's the goal. Fewer lines means the
     // token floor out-widened the greedy budget (giant word): keep greedy.
-    if (candidate.lines.length === lines.length) return candidate.lines
+    if (candidate.lines.length === lines.length) {
+      return preferScriptBoundaries(content, candidate.lines, widest, weight)
+    }
     if (candidate.lines.length < lines.length) return lines
     target *= 1.06
   }
   return lines
+}
+
+/** A printable ASCII character: the Latin side of a mixed-script line. */
+const ASCII_GLYPH_RE = /[\x21-\x7e]/
+
+/**
+ * How a line break reads, by the characters on either side of it: +1 where
+ * Latin meets CJK (the seam a mixed line already has), -1 between two Latin
+ * words (it splits a name like "Linjiang Group"), 0 anywhere else.
+ */
+function breakScore(before: string, after: string): number {
+  const a = before.trimEnd().slice(-1)
+  const b = after.trimStart().charAt(0)
+  const asciiA = ASCII_GLYPH_RE.test(a)
+  const asciiB = ASCII_GLYPH_RE.test(b)
+  if ((asciiA && WIDE_CHAR_RE.test(b)) || (WIDE_CHAR_RE.test(a) && asciiB)) return 1
+  if (asciiA && asciiB) return -1
+  return 0
+}
+
+function linesScore(lines: readonly string[]): number {
+  let score = 0
+  for (let i = 1; i < lines.length; i += 1) score += breakScore(lines[i - 1], lines[i])
+  return score
+}
+
+/** How much wider than the balanced lines' widest a preferred split may run. */
+const SCRIPT_BREAK_TOLERANCE = 0.1
+
+/**
+ * The search's bounds. Past either one the balanced lines stand: a
+ * preference between nearly equal splits is not worth a slow page. The step
+ * budget covers hundreds of pieces over dozens of lines, far more than any
+ * heading or card item carries.
+ */
+const SCRIPT_BREAK_MAX_PIECES = 2000
+const SCRIPT_BREAK_BUDGET = 2_000_000
+
+/**
+ * Among the splits of `content` into as many lines as `balanced` whose line
+ * lengths are close to the balanced ones, prefer the one that breaks where
+ * Latin meets CJK, then between CJK characters, and last between two Latin
+ * words.
+ *
+ * Balancing by width alone treats every boundary as equal, so a mixed line
+ * whose widths tie broke inside an English name: 「Linjiang Group 临江咨询」
+ * became 「Linjiang」+「Group 临江咨询」 where 「Linjiang Group」+「临江咨询」 is
+ * barely less even and reads as two things. A split replaces the balanced
+ * one only when its breaks score strictly better (`breakScore`), and only
+ * inside every constraint the balanced lines already meet: the same line
+ * count, every break legal under kinsoku, no line wider than `limit` (the
+ * widest line the caller's budget produced, so the fitted font size cannot
+ * drop), the widest line no more than `SCRIPT_BREAK_TOLERANCE` over the
+ * balanced widest, a last line at least half the widest (not the widow
+ * balancing exists to remove), and no single-character CJK last line.
+ *
+ * Text that is all Latin or all CJK scores every split the same, so it
+ * returns `balanced` without searching. The search is a dynamic programme,
+ * polynomial in the pieces and lines (it used to enumerate every split and
+ * took seconds on a Latin word before 81 CJK characters in a narrow cell),
+ * and it gives up for `balanced` past `SCRIPT_BREAK_BUDGET` steps.
+ */
+function preferScriptBoundaries(
+  content: string,
+  balanced: string[],
+  limit: number,
+  weight?: TextWeightHint,
+): string[] {
+  if (balanced.length < 2 || !ASCII_GLYPH_RE.test(content) || !WIDE_CHAR_RE.test(content)) return balanced
+  const pieces: WrapPiece[] = tokenize(content).tokens
+  const count = pieces.length
+  const n = balanced.length
+  if (count > SCRIPT_BREAK_MAX_PIECES || n > count) return balanced
+
+  // Widths by prefix sums. `measureTextUnits` is a per-character sum, so a
+  // line's width is the pieces' own widths plus the spaces between them.
+  const spaceUnits = measureTextUnits(" ", weight)
+  const prefix = new Float64Array(count + 1)
+  for (let i = 0; i < count; i += 1) {
+    prefix[i + 1] = prefix[i] + measureTextUnits(pieces[i].text, weight) + (pieces[i].space ? spaceUnits : 0)
+  }
+  const width = (from: number, to: number): number =>
+    prefix[to] - prefix[from] - (pieces[from].space ? spaceUnits : 0)
+
+  // What a break before piece `i` scores, or null where kinsoku forbids one.
+  const breakAt: (number | null)[] = [null]
+  for (let i = 1; i < count; i += 1) {
+    const before = pieces[i - 1].text
+    const after = pieces[i].text
+    breakAt.push(allowsLineBreakBetween(before[before.length - 1], after[0]) ? breakScore(before, after) : null)
+  }
+
+  const balancedWidest = Math.max(...balanced.map((l) => measureTextUnits(l, weight)))
+  const cap = Math.min(limit, balancedWidest * (1 + SCRIPT_BREAK_TOLERANCE)) + 1e-9
+  const baselineScore = linesScore(balanced)
+  let budget = SCRIPT_BREAK_BUDGET
+
+  // A split is better with a higher score, then a narrower widest line, then
+  // earlier breaks (the order the balanced wrap itself prefers).
+  const outranks = (score: number, widest: number, starts: number[], than: typeof best): boolean => {
+    if (!than) return true
+    if (score !== than.score) return score > than.score
+    if (Math.abs(widest - than.widest) > 1e-9) return widest < than.widest
+    for (let i = 0; i < starts.length; i += 1) if (starts[i] !== than.starts[i]) return starts[i] < than.starts[i]
+    return false
+  }
+  let best: { score: number; widest: number; starts: number[] } | null = null
+
+  // The last line is fixed first: it starts at `last`, and every other line
+  // may be at most twice its width, which keeps it from being the widow
+  // balancing removed. Pieces 0..last-1 then go into n - 1 lines by dynamic
+  // programming over (lines left k, start piece i), keeping per cell the
+  // best score, its widest line and the next line's start. Each cell tries
+  // only the ends a line can reach within `lineCap`, and a cell whose pieces
+  // cannot fill its lines at that width is skipped, so one last line costs
+  // at most n * count * (pieces per line) steps, and `budget` bounds the
+  // whole search.
+  const stride = count + 1
+  const score = new Float64Array(n * stride)
+  const widest = new Float64Array(n * stride)
+  const nextStart = new Int32Array(n * stride)
+  for (let last = count - 1; last >= 1; last -= 1) {
+    const lastWidth = width(last, count)
+    if (lastWidth > cap) break
+    const lastBreak = breakAt[last]
+    if (lastBreak === null || isCjkOrphanLine(joinPieces(pieces, last, count))) continue
+    const lineCap = Math.min(cap, lastWidth * 2 + 1e-9)
+    nextStart.fill(-1)
+    // Level 0: nothing left to set before `last`.
+    nextStart[last] = last
+    score[last] = 0
+    widest[last] = 0
+    for (let k = 1; k < n; k += 1) {
+      const row = k * stride
+      const below = (k - 1) * stride
+      for (let i = 0; i < last; i += 1) {
+        if (i > 0 && breakAt[i] === null) continue
+        if (width(i, last) > k * lineCap) continue
+        let found = -1
+        let bestScore = 0
+        let bestWidest = 0
+        for (let j = i + 1; j <= last; j += 1) {
+          if ((budget -= 1) < 0) return balanced
+          const w = width(i, j)
+          if (w > lineCap) break
+          if (nextStart[below + j] < 0) continue
+          const s = score[below + j] + (j < last ? (breakAt[j] ?? 0) : 0)
+          const wide = Math.max(w, widest[below + j])
+          // Ascending j with strict improvement keeps the earliest break on a tie.
+          if (found < 0 || s > bestScore || (s === bestScore && wide < bestWidest - 1e-9)) {
+            found = j
+            bestScore = s
+            bestWidest = wide
+          }
+        }
+        if (found >= 0) {
+          nextStart[row + i] = found
+          score[row + i] = bestScore
+          widest[row + i] = bestWidest
+        }
+      }
+    }
+    const head = (n - 1) * stride
+    if (nextStart[head] < 0) continue
+    const starts = [0]
+    for (let k = n - 1, i = 0; k >= 1; k -= 1) {
+      i = nextStart[k * stride + i]
+      starts.push(i)
+    }
+    const total = score[head] + lastBreak
+    const wide = Math.max(widest[head], lastWidth)
+    if (outranks(total, wide, starts, best)) best = { score: total, widest: wide, starts }
+  }
+
+  if (!best || best.score <= baselineScore) return balanced
+  const starts = best.starts
+  return starts.map((from, i) => joinPieces(pieces, from, i + 1 < starts.length ? starts[i + 1] : count))
 }
 
 /**
@@ -1107,6 +1446,7 @@ export function fitSvgLine(
   } & TextWeightHint,
 ): { text: string; fontSize: number; truncated: boolean } {
   const minFontSize = opts.minFontSize ?? META_FONT_FLOOR_PX
+  const startSize = Math.max(opts.fontSize, minFontSize)
   // `letterSpacing` is an SVG attribute in absolute px, independent of
   // font-size — unlike `measureTextUnits`' per-character weights, it doesn't
   // scale down when the line shrinks to fit. A caller that renders this
@@ -1119,11 +1459,11 @@ export function fitSvgLine(
   const letterSpacing = opts.letterSpacing ?? 0
   const weight: TextWeightHint = { bold: opts.bold, fontFamily: opts.fontFamily }
   const units = measureTextUnits(text, weight)
-  if (units <= 0) return { text, fontSize: opts.fontSize, truncated: false }
+  if (units <= 0) return { text, fontSize: startSize, truncated: false }
   const charCount = Array.from(text).length
   const spacingBudget = Math.max(0, charCount - 1) * letterSpacing
   const availableWidth = Math.max(0, opts.maxWidth - spacingBudget)
-  const fitted = Math.min(opts.fontSize, Math.floor(availableWidth / units))
+  const fitted = Math.min(startSize, Math.floor(availableWidth / units))
   if (fitted >= minFontSize) return { text, fontSize: fitted, truncated: false }
   // `truncated` (bench-driven fix round, defect E): `true` exactly when the
   // shrink-to-`minFontSize` step still wasn't enough and `truncateToUnits`
@@ -1195,11 +1535,15 @@ export function layoutSvgText(
   }
   const legacyHadSplit = attempt.hadSplit
 
+  // Which wrap the chosen lines came from settled an orphan. A merged
+  // fallback is no wrap's output, so it carries no such report.
+  let orphanFixed = attempt.orphanFixed
   if (legacyLines.length > maxLines) {
     legacyLines = [
       ...legacyLines.slice(0, maxLines - 1),
       legacyLines.slice(maxLines - 1).join(""),
     ]
+    orphanFixed = false
   }
 
   let lines = legacyLines
@@ -1300,14 +1644,17 @@ export function layoutSvgText(
           admissible = fontSizeFor(splitFreeAttempt.lines) >= minPt
         }
       }
-      if (admissible) lines = splitFreeAttempt.lines
+      if (admissible) {
+        lines = splitFreeAttempt.lines
+        orphanFixed = splitFreeAttempt.orphanFixed
+      }
     }
   }
 
   // After the merge fallback a too-long text's last line is long, not a
   // widow, so balancing naturally skips it — only genuine widows re-wrap.
   if (options.balanceLines) {
-    lines = balanceWrappedLines(content, lines, weight)
+    lines = balanceWrappedLines(content, lines, weight, orphanFixed)
   }
 
   let fontSize = fontSizeFor(lines)
@@ -1344,6 +1691,33 @@ export function layoutSvgText(
     lineHeight: Math.round(fontSize * lineHeightRatio),
     truncated,
   }
+}
+
+/**
+ * The CJK code points every measured face draws on the full em square:
+ * ideographic punctuation, the unified ideographs, and the fullwidth ASCII
+ * variants. Read from msyh.ttc, Simsun.ttc and Kaiti.ttf: all 20902 unified
+ * ideographs and all 94 fullwidth forms advance exactly 1em in each, and so
+ * does every ideographic punctuation mark each face carries (a mark SimSun
+ * or KaiTi lacks falls back to YaHei, which has all of them at 1em).
+ */
+const EM_SQUARE_RE = /[\u3000-\u303f\u4e00-\u9fa5\uff01-\uff5e]/
+
+/**
+ * True when `measureTextUnits` knows `text`'s width rather than estimating
+ * it: every character is either on the CJK em square (`EM_SQUARE_RE`) or in
+ * the face's own advance table for this weight. A caller that pads an
+ * estimate against the class average's worst case can skip the padding
+ * then, since there is no class average left in the number.
+ */
+export function measuresExactly(text: string, weight?: TextWeightHint): boolean {
+  const faceKey = classifyFaceKey(weight?.fontFamily)
+  const table = weight?.bold ? EXACT_TABLE_FOR[faceKey]?.bold : REGULAR_EXACT_TABLE_FOR[faceKey]
+  for (const ch of text) {
+    if (EM_SQUARE_RE.test(ch)) continue
+    if (table?.[ch.charCodeAt(0)] === undefined) return false
+  }
+  return true
 }
 
 /**

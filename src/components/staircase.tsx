@@ -3,6 +3,7 @@ import type { Component } from "@/ir"
 import { accessibleInk } from "../render/ink"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { measureTextUnits } from "../lib/svg-text-layout"
+import { TEXT_INK_DESCENT } from "../render/depth-contract/geometry"
 import {
   FORM_BODY_FLOOR,
   FORM_TITLE_FLOOR,
@@ -55,14 +56,38 @@ function typeScale(stepW: number): { titleSize: number; valueSize: number; noteS
   return { titleSize, valueSize, noteSize: FORM_BODY_FLOOR, pad }
 }
 
+/**
+ * Where a tread's lines sit below its top edge: the title's, the number's
+ * and the note's baselines, and the bottom of the last line's ink. The
+ * drawing places its text by these and the flight sizes its lowest tread by
+ * them, so the two cannot disagree.
+ */
+function textBaselines(
+  scale: { titleSize: number; valueSize: number; noteSize: number; pad: number },
+  hasNote: boolean,
+  fitted: { titleSize: number; valueSize: number } = scale,
+): { title: number; value: number; note: number; inkBottom: number } {
+  const title = scale.pad + fitted.titleSize * 0.9
+  const value = title + formLineHeight(scale.titleSize) * 0.86 + fitted.valueSize * 0.78
+  const note = value + formLineHeight(scale.noteSize) * 0.95
+  const inkBottom = hasNote
+    ? note + scale.noteSize * TEXT_INK_DESCENT
+    : value + fitted.valueSize * TEXT_INK_DESCENT
+  return { title, value, note, inkBottom }
+}
+
 function resolve(component: StaircaseComponent, w: number, boxH?: number): Geometry {
   const n = component.items.length
   const stepW = Math.max(48, (w - GAP * (n - 1)) / n)
   const { titleSize, valueSize, noteSize, pad } = typeScale(stepW)
   const hasNote = component.items.some((item) => (item.note ?? "").trim() !== "")
-  const textH =
-    formLineHeight(titleSize) + valueSize + (hasNote ? formLineHeight(noteSize) : 0) + (hasNote ? 6 : 0)
-  const baseH = Math.round(textH + pad * 2)
+  // The lowest tread holds its words with the same pad under the last line's
+  // ink as beside it. It used to be sized by a line-box sum the placement
+  // below does not follow: the title's baseline drop and the number's cap
+  // offset spend about 7px more than that sum allows, and that came out of
+  // the bottom pad, so the lowest number sat 12px off its tread's bottom
+  // edge under a title 24px from the top.
+  const baseH = Math.round(textBaselines({ titleSize, valueSize, noteSize, pad }, hasNote).inkBottom + pad)
   // A face may hand over less than the natural height; the flight climbs
   // less steeply into whatever arrives rather than drawing past its edge.
   const target = boxH !== undefined && boxH > 0 ? Math.min(TARGET_H, boxH) : TARGET_H
@@ -121,11 +146,24 @@ export const staircase: SvgComponent<StaircaseComponent> = {
           // `fitFormUnit`). A long one used to be written out at whatever width
           // it wanted and walk off the tread, while the number it belongs to
           // was squeezed to a 24px stub.
+          //
+          // Its share starts at 45% of the tread. A short number leaves far
+          // more than that beside it, though ("412" takes a third of a
+          // quarter-page tread), so a unit that share would cut gets the room
+          // the number actually leaves instead: "accounts" used to print as
+          // "account" next to half a tread of nothing.
           const unit = (item.unit ?? "").trim()
           const unitSize = Math.max(FORM_BODY_FLOOR, Math.round(step.valueSize * 0.46))
-          const unitFit = unit
+          const shareFit = unit
             ? fitFormUnit(unit, { room: inner * 0.45, fontSize: unitSize, fontFamily: ctx.fonts.body })
             : null
+          const valueNatural =
+            measureTextUnits(item.value, { bold: true, fontFamily: ctx.fonts.heading }) * step.valueSize
+          const leftRoom = inner - valueNatural - 6
+          const unitFit =
+            unit && (!shareFit || shareFit.truncated) && leftRoom > inner * 0.45
+              ? fitFormUnit(unit, { room: leftRoom, fontSize: unitSize, fontFamily: ctx.fonts.body })
+              : shareFit
           const unitW = unitFit ? unitFit.width + 6 : 0
           const value = fitFormLine(item.value, {
             maxWidth: Math.max(24, inner - unitW),
@@ -142,9 +180,10 @@ export const staircase: SvgComponent<StaircaseComponent> = {
           const valueInk = accessibleInk(filled ? ctx.colors.surface : ctx.colors.primary, fill, value.fontSize)
           const unitInk = accessibleInk(filled ? ctx.colors.surface : ctx.colors.muted, fill, unitFit?.fontSize ?? unitSize)
           const noteInk = accessibleInk(filled ? ctx.colors.surface : ctx.colors.muted, fill, step.noteSize)
-          const titleY = step.y + step.pad + title.fontSize * 0.9
-          const valueY = titleY + formLineHeight(step.titleSize) * 0.86 + value.fontSize * 0.78
-          const noteY = valueY + formLineHeight(step.noteSize) * 0.95
+          const lines = textBaselines(step, note !== "", { titleSize: title.fontSize, valueSize: value.fontSize })
+          const titleY = step.y + lines.title
+          const valueY = step.y + lines.value
+          const noteY = step.y + lines.note
 
           return (
             <g key={`step-${i}`}>

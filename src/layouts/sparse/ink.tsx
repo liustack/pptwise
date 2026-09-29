@@ -9,7 +9,8 @@ import {
   pullQuoteContext,
   pullQuoteText,
 } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, heroUnitMark, quoteBlockBaseline } from "./shared"
+import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline } from "./shared"
+import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** ink 稀排脸：竖排格言、验印巨数、竖排引文。引文页 motif 画左下半山、不画右缘落款列。 */
 
@@ -178,9 +179,11 @@ export function statement({ ir, slide, ctx }: SvgTemplateProps) {
 
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1080, fontSize: 300, fontFamily: fonts.heading, bold: false })
   const unit = heroUnit(slide)
-  const unitMark = heroUnitMark(fitted.fontSize)
+  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1080, fontSize: 300, fontFamily: fonts.heading, bold: false, unit })
+  // A figure this line cannot set whole goes to the plain page, never cut.
+  if (!fitted) return StatHeroFallbackContent({ slide, ctx })
+  const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   return (

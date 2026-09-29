@@ -208,6 +208,27 @@ describe("runway show layouts", () => {
     ])
   })
 
+  // A 172px frame holds about eleven tracked 12px glyphs, and the one line it
+  // gave a caption cut "文档模板库在咨询项目中的复用位置" after
+  // "文档模板库在咨询项目中的". The room under the caption takes a second line.
+  it("wraps a long show-gallery caption onto a second line instead of cutting it", () => {
+    const long = "文档模板库在咨询项目中的复用位置"
+    const base = slides[2]!
+    const grid = base.components[0] as Extract<Slide["components"][number], { type: "image_grid" }>
+    const slide = {
+      ...base,
+      components: [{ ...grid, items: grid.items.map((item, i) => (i === 1 ? { ...item, caption: long } : item)) }],
+    } as Slide
+    const root = draw(2, slide)
+    const lines = Array.from(root.querySelectorAll("text")).filter(
+      (t) => t.getAttribute("x") === "260" && t.getAttribute("font-size") === "12",
+    )
+    expect(lines.map((t) => t.textContent).join("")).toBe(long)
+    expect(lines.map((t) => t.getAttribute("y"))).toEqual(["614", "632"])
+    expect(lines.some((t) => t.hasAttribute("data-truncated"))).toBe(false)
+    expect(attrs(textBy(root, "场景 1"), ["y", "font-size", "letter-spacing"])).toEqual(["614", "12", "2"])
+  })
+
   it("places show-spotlight on the approved image and parameter columns", () => {
     const root = draw(3)
     expect(attrs(root.querySelector('[data-show-image-frame="true"]')!, ["x", "y", "width", "height"])).toEqual([
@@ -272,6 +293,38 @@ describe("runway show layouts", () => {
     expect(attrs(textBy(root, "增长可复制"), ["x", "y", "font-size"])).toEqual(["720", "540", "22"])
   })
 
+  it("show-spotlight wraps a heading its column cannot hold, keeping the last line on the rule's baseline", () => {
+    const heading = "第九个 look 是整个系列的转折"
+    const root = draw(3, { ...slides[3]!, heading } as Slide)
+    expect(root.querySelector('[data-show-mode="spotlight"]')).not.toBeNull()
+    const lines = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") === "700" && t.getAttribute("x") === "720")
+    // The Chinese clause breaks between any two ideographs, so the join is
+    // compared without the spaces a line break may have absorbed.
+    expect(lines.map((t) => t.textContent).join("").replace(/\s/g, "")).toBe(heading.replace(/\s/g, ""))
+    expect(lines.length).toBe(2)
+    expect(lines.at(-1)!.getAttribute("y")).toBe("248")
+    for (const line of lines) expect(line.hasAttribute("data-truncated")).toBe(false)
+    // The kicker climbs with the first line and stays clear of it and of the FOCUS tag.
+    const kicker = textBy(root, "FOCUS 01")
+    const firstTop = Number(lines[0]!.getAttribute("y")) - Number(lines[0]!.getAttribute("font-size")) * 0.8
+    expect(Number(kicker.getAttribute("y"))).toBeLessThan(firstTop)
+    expect(Number(kicker.getAttribute("y")) - 14).toBeGreaterThan(92)
+  })
+
+  it("show-spotlight fits a fallback heading to the full line it is set on", () => {
+    const heading = "第九个 look 是整个系列的转折"
+    const slide = {
+      ...slides[3]!,
+      heading,
+      components: [{ type: "paragraph", text: "没有图片，落到通用排布。" }],
+    } as unknown as Slide
+    const root = draw(3, slide)
+    expect(root.querySelector('[data-show-mode="fallback"]')).not.toBeNull()
+    const title = textBy(root, heading)
+    expect(title.hasAttribute("data-truncated")).toBe(false)
+    expect(attrs(title, ["x", "y"])).toEqual(["240", "86"])
+  })
+
   it("places show-statement on the approved assertion and three-column grid", () => {
     const root = draw(4)
     const tokens = resolveStyle("runway")
@@ -322,9 +375,13 @@ describe("runway show layouts", () => {
   it("places show-figures on the approved three-stat grid and accents the first delta item", () => {
     const root = draw(5)
     const tokens = resolveStyle("runway")
+    // "2.4×" sets smaller than its neighbours. Runway's figures are SimSun,
+    // which draws "×" on the full em: at 140px the figure is 350px wide in a
+    // 336px column. The estimate used to price "×" at 0.563em and let it
+    // overflow, and now fits it at the size the column holds.
     expect(["38%", "2.4×", "91%"].map((value) => attrs(textBy(root, value), ["x", "y", "font-size", "fill"]))).toEqual([
       ["64", "392", "140", tokens.colors.primary],
-      ["512", "392", "140", tokens.colors.accent],
+      ["512", "392", "122", tokens.colors.accent],
       ["960", "392", "140", tokens.colors.primary],
     ])
     expect(Array.from(root.querySelectorAll('[data-show-divider="figures"]')).map((line) => attrs(line, ["x1", "y1", "x2", "y2"]))).toEqual([

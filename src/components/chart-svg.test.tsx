@@ -573,6 +573,40 @@ describe("renderDonut — center total label", () => {
     expect(container.textContent).not.toContain("总计")
   })
 
+  it("wraps a caption too long for one line onto two inside the hole, rather than cutting it", () => {
+    // At the default 240px body the hole is 71.92px across the radius. The
+    // one-line width gave "Workspace headcount" room for "Workspace" alone.
+    const named: ChartSeries[] = [{ name: "Workspace headcount", data: [{ x: "A", y: 40 }, { x: "B", y: 60 }] }]
+    const { container } = svg(renderDonut(named, PALETTE, 0, 0, W, H, MUTED, TEXT))
+    const cx = W / 2
+    const cy = H / 2
+    const ri = Number(
+      /A ([\d.]+) [\d.]+ 0 [01] 0/.exec(container.querySelector("path")!.getAttribute("d")!)![1],
+    )
+    const texts = Array.from(container.querySelectorAll("text")).filter((t) => !t.hasAttribute("data-value-label"))
+    expect(texts.map((t) => t.textContent)).toEqual(["100", "Workspace", "headcount"])
+    for (const t of texts) {
+      expect(t.hasAttribute("data-truncated")).toBe(false)
+      // Every line stays inside the hole: its ink box's corners are within
+      // the inner radius of the centre.
+      const box = textInkBox({
+        content: t.textContent!,
+        x: Number(t.getAttribute("x")),
+        y: Number(t.getAttribute("y")),
+        fontSize: Number(t.getAttribute("font-size")),
+        fontFamily: "",
+        fontWeight: t.getAttribute("font-weight"),
+        textAnchor: "middle",
+      })
+      for (const [x, y] of [
+        [box.x, box.y],
+        [box.x + box.w, box.y + box.h],
+      ]) {
+        expect(Math.hypot(x! - cx, y! - cy), t.textContent!).toBeLessThan(ri)
+      }
+    }
+  })
+
   it("leaves the caption off entirely when the series has no name", () => {
     const unnamed: ChartSeries[] = [{ name: "", data: [{ x: "A", y: 40 }, { x: "B", y: 60 }] }]
     const { container } = svg(renderDonut(unnamed, PALETTE, 0, 0, W, H, MUTED, TEXT))
@@ -1068,7 +1102,7 @@ describe("renderBar — grouped (n>=2) negative/mixed-sign regression (T2 review
     })
   })
 
-  it("two-series all-negative: bars still anchor correctly even though domain.max unconditionally floors to 1 (not 0) with no positive data in sight (the T1-review-flagged floor-at-1 quirk)", () => {
+  it("two-series all-negative: bars hang from one shared zero row, with room above it for their value labels", () => {
     const twoSeries: ChartSeries[] = [
       { name: "A", data: [{ x: "Q1", y: -12 }, { x: "Q2", y: -3 }] },
       { name: "B", data: [{ x: "Q1", y: -8 }, { x: "Q2", y: -20 }] },
@@ -1095,9 +1129,12 @@ describe("renderBar — grouped (n>=2) negative/mixed-sign regression (T2 review
       expect(height).toBeCloseTo((end - start) * plot.plotH)
       expect(y).toBeCloseTo(baselineY) // every bar hangs down from the same shared baseline
     })
-    // The baseline is NOT at the plot's very top (y===PLOT_TOP) -- proof the
-    // max-floors-to-1 quirk is genuinely in effect (domain.max=1, not 0).
-    expect(baselineY).toBeLessThanOrEqual(plot.plotY + 1)
+    // Zero is not the plot's top edge. A negative bar prints its value just
+    // above the zero row, so the axis keeps headroom above zero the way it
+    // keeps headroom above the tallest positive bar. With zero on the top
+    // edge those labels were printed above the plot, out of the chart.
+    expect(domain.max).toBeGreaterThan(0)
+    expect(baselineY).toBeGreaterThan(plot.plotY + 16)
   })
 
   it("shared domain is NOT computed per-series: a modest-value series' bar scales against the OTHER series' extreme value", () => {

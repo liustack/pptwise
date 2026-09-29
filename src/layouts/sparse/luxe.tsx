@@ -9,7 +9,8 @@ import {
   pullQuoteText,
   trackingPx,
 } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, heroUnitMark, quoteBlockBaseline, rotateRectPolygon } from "./shared"
+import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, rotateRectPolygon } from "./shared"
+import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** luxe 稀排脸：金菱引文、发丝巨数、一行金字。不画金框。 */
 
@@ -84,9 +85,11 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
 
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 270, fontFamily: fonts.heading, bold: false })
   const unit = heroUnit(slide)
-  const unitMark = heroUnitMark(fitted.fontSize)
+  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 270, fontFamily: fonts.heading, bold: false, unit })
+  // A figure this line cannot set whole goes to the plain page, never cut.
+  if (!fitted) return StatHeroFallbackContent({ slide, ctx })
+  const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   return (

@@ -108,31 +108,33 @@ describe("measureTextUnits — bold golden widths (data-anchored, bold-metrics f
     })
   })
 
-  describe("non-bold byte-inertness (round 2's own hard requirement — exact tables must NOT leak into Regular weight)", () => {
-    // The exact model applies to Bold only (svg-text-layout.ts's
-    // `measureTextUnits`, the `mode === "bold"` gate right above
-    // `exactTable`'s own declaration) -- Regular-weight Georgia/YaHei text
-    // must stay byte-identical to this file's pre-bold-metrics-fix
-    // arithmetic. A genuine Regular exact table exists (`GEORGIA_REGULAR_
-    // EXACT`/`YAHEI_REGULAR_EXACT`) and would, if wired into the default
-    // path, surface a real but out-of-scope finding (Regular "Components
-    // Demo" already sits ~1.25% past its own 1168px budget too, root-
-    // cause.md's own number) -- this test locks that it does NOT leak in.
-    it("Georgia Regular reproduces the exact pre-fix unweighted estimate, not the exact table", () => {
+  describe("Regular weight measures from each face's own advance table", () => {
+    // Round 2 kept every Regular face on the class path so non-bold text
+    // kept its old geometry. Regular has since moved to the exact tables:
+    // the class average ran 20-25% wide over Georgia sentences and 9-16%
+    // over YaHei and SimSun/KaiTi ones, and wrapped notes that fit on one
+    // line (svg-text-layout.ts, the comment above `exactTable`). "Components
+    // Demo" in Georgia is the one string that ran the other way: the class
+    // sum is 8.39em, the font's own advances 8.51em, which is the ~1.25%
+    // Regular overflow root-cause.md already recorded.
+    it("Georgia Regular measures from the exact table, not the class average", () => {
       const withFontFamily = measureTextUnits("Components Demo", { fontFamily: CONSULTING_HEADING })
-      const noFontFamily = measureTextUnits("Components Demo")
-      // upper=2*0.66 + lowerDigit=12*0.56 + space=1*0.35, all NO_CORRECTION
-      // at Georgia Regular -- see GEORGIA's own table, every `regular` entry
-      // is a literal `1`.
-      expect(withFontFamily).toBeCloseTo(2 * 0.66 + 12 * 0.56 + 1 * 0.35, 4)
-      expect(withFontFamily).toBe(noFontFamily)
+      // C D (0.6421 + 0.749) + omponents emo + one space, per GEORGIA_REGULAR_EXACT,
+      // which matches the macOS Georgia.ttf hmtx to 0.0001em.
+      expect(withFontFamily).toBeCloseTo(8.5084, 3)
+      expect(withFontFamily).not.toBe(measureTextUnits("Components Demo"))
     })
 
-    it("Microsoft YaHei Regular reproduces the exact pre-fix unweighted estimate, not the exact table", () => {
+    it("Microsoft YaHei Regular measures from the exact table, not the class average", () => {
+      // msyh.ttc[0] advances, which FreeType reproduces to the fourth
+      // decimal: 9.349em, 11% over the class's 8.39.
       const withFontFamily = measureTextUnits("Components Demo", { fontFamily: CAMPAIGN_HEADING })
-      const noFontFamily = measureTextUnits("Components Demo")
-      expect(withFontFamily).toBeCloseTo(2 * 0.66 + 12 * 0.56 + 1 * 0.35, 4)
-      expect(withFontFamily).toBe(noFontFamily)
+      expect(withFontFamily).toBeCloseTo(9.349, 3)
+      expect(withFontFamily).not.toBe(measureTextUnits("Components Demo"))
+    })
+
+    it("an unmeasured face keeps the class path at Regular", () => {
+      expect(measureTextUnits("Components Demo", { fontFamily: "Cambria" })).toBe(measureTextUnits("Components Demo"))
     })
   })
 
@@ -172,13 +174,15 @@ describe("measureTextUnits — bold golden widths (data-anchored, bold-metrics f
     // that they're supposed to be EQUAL to each other (not that either
     // equals the unweighted baseline). Direct regression lock, independent
     // of the `bold-golden` framing above.
-    it("item 2 regression: the SimSun/KaiTi space/other correction applies at Regular weight too, not just Bold", () => {
+    it("item 2 regression: a SimSun/KaiTi space measures its real half em at both weights, not the blind 0.35", () => {
+      // Regular reads the exact table (0.5em, the face's half-em grid). Bold
+      // keeps the class correction, which lands on the same half em.
       const spaceRegular = measureTextUnits(" ", { fontFamily: SIMSUN_HEADING })
       const spaceBold = measureTextUnits(" ", { bold: true, fontFamily: SIMSUN_HEADING })
       const spaceUncorrected = measureTextUnits(" ") // no fontFamily -> envelope, regular column = 1.0
-      expect(spaceRegular).toBe(spaceBold) // 0% bold-vs-regular delta (bold-data-pack.md S2)
-      expect(spaceRegular).toBeGreaterThan(spaceUncorrected) // but both exceed the old blind 0.35 assumption
-      expect(spaceRegular).toBeCloseTo(0.35 * 1.4286, 4)
+      expect(spaceRegular).toBe(0.5)
+      expect(spaceBold).toBeCloseTo(0.35 * 1.4286, 4)
+      expect(spaceRegular).toBeGreaterThan(spaceUncorrected)
     })
 
     // Round 2 (2026-07-24): the margin this test originally documented
@@ -202,8 +206,11 @@ describe("measureTextUnits — bold golden widths (data-anchored, bold-metrics f
       const upperRegular = measureTextUnits("A", { fontFamily: SIMSUN_HEADING })
       expect(lowerBold).toBeCloseTo(0.56 * 1.048, 4)
       expect(upperBold).toBeCloseTo(0.66 * 0.852, 4)
-      expect(lowerRegular).toBeCloseTo(0.56, 4) // NO_CORRECTION at Regular
-      expect(upperRegular).toBeCloseTo(0.66, 4)
+      // Regular has a genuine binary to read: Simsun.ttc and Kaiti.ttf set
+      // every printable ASCII glyph on a 0.5em grid.
+      expect(lowerRegular).toBe(0.5)
+      expect(upperRegular).toBe(0.5)
+      expect(measureTextUnits("Components Demo", { fontFamily: KAITI_HEADING })).toBe(7.5)
     })
   })
 

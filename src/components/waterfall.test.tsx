@@ -5,6 +5,7 @@ import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { waterfall } from "./waterfall"
 import type { ComponentCtx } from "./types"
+import { schema as waterfallSchema } from "@/ir/components/waterfall"
 
 const ctx: ComponentCtx = {
   colors: {
@@ -250,5 +251,104 @@ describe("waterfall automatic total follows the language of the labels", () => {
     })
     expect(text).toContain("Total")
     expect(text).not.toContain("合计")
+  })
+})
+
+describe("waterfall category names", () => {
+  // Six columns across the gallery's 1080px band leave each name about 176px.
+  // "Seat expansion in existing accounts" came out as "Seat expansion in".
+  const long = {
+    type: "waterfall" as const,
+    unit: " seats",
+    items: [
+      { label: "Q1", value: 4172, kind: "total" as const },
+      { label: "Seat expansion in existing accounts", value: 810 },
+      { label: "In-house workspace compute", value: 265 },
+      { label: "Data quality governance", value: -318 },
+      { label: "Pooled delivery capacity", value: -160 },
+      { label: "Q2", value: 4769, kind: "total" as const },
+    ],
+  }
+  const box = { x: 0, y: 0, w: 1080, h: 330 }
+
+  it("wraps a name too long for its column onto a second line instead of cutting it", () => {
+    const root = parseSvgRoot(renderSvgMarkup(<svg>{waterfall.render(long, box, ctx)}</svg>))
+    expect(root.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const all = texts(root).join(" ")
+    for (const item of long.items) expect(all.replace(/\s+/g, " ")).toContain(item.label)
+  })
+
+  it("hangs every name from one line, clear of the bars above it", () => {
+    const root = parseSvgRoot(renderSvgMarkup(<svg>{waterfall.render(long, box, ctx)}</svg>))
+    const rects = Array.from(root.querySelectorAll("rect"))
+    const plotBottom = Math.max(...rects.map((r) => Number(r.getAttribute("y")) + Number(r.getAttribute("height"))))
+    const names = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") !== "700")
+    const firstLine = Math.min(...names.map((t) => Number(t.getAttribute("y"))))
+    // Every column's first line shares one baseline, a full line of text
+    // below the bottom of the bars.
+    const q1 = names.find((t) => t.textContent === "Q1")!
+    expect(Number(q1.getAttribute("y"))).toBe(firstLine)
+    expect(firstLine - 16).toBeGreaterThanOrEqual(plotBottom + 4)
+    expect(Math.max(...names.map((t) => Number(t.getAttribute("y"))))).toBeLessThanOrEqual(box.h)
+  })
+
+  it("keeps a single line where the names fit", () => {
+    const { container } = svg(waterfall.render(basic, { x: 0, y: 0, w: 1000, h: 400 }, ctx))
+    const names = Array.from(container.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") !== "700")
+    expect(names.map((t) => t.getAttribute("y"))).toEqual(["390", "390", "390", "390"])
+  })
+})
+
+describe("a waterfall value past what the bar axis can draw is refused", () => {
+  // Bars of 1.7e308 passed validate. Two of them overflow the running total
+  // to Infinity, and a bar that runs from -1.7e308 to 1.7e308 spans more
+  // than a double holds: either way the scale divides Infinity by Infinity
+  // and every bar, connector and label is drawn at NaN.
+  const issuesOf = (component: unknown) => {
+    const parsed = waterfallSchema.safeParse(component)
+    return parsed.success ? [] : parsed.error.issues
+  }
+  const items = (a: number, b: number, c: number) => [
+    { label: "Opening ARR", value: a },
+    { label: "New seats", value: b },
+    { label: "Churn", value: c },
+  ]
+
+  it("names every bar on the axis, one factor for all of them, and the unit field", () => {
+    const issues = issuesOf({ type: "waterfall", items: items(1.7e308, 5, -3) })
+    expect(issues.map((issue) => issue.path.join("."))).toEqual(["items.0.value"])
+    const message = issues[0]!.message
+    expect(message).toMatch(/the largest value a chart axis can draw/)
+    expect(message).toMatch(/same power of ten/)
+    for (const label of ['"Opening ARR"', '"New seats"', '"Churn"']) expect(message).toContain(label)
+    expect(message).toMatch(/\bunit\b/)
+  })
+
+  it("holds the running total a bar ends at to the same ceiling", () => {
+    const issues = issuesOf({ type: "waterfall", items: items(1e300, 1e300, -1) })
+    expect(issues.map((issue) => issue.path.join("."))).toEqual(["items.1.value"])
+    expect(issues[0]!.message).toMatch(/running total/)
+    expect(issues[0]!.message).toContain('"Opening ARR"')
+  })
+
+  it("still accepts values and totals right at the ceiling", () => {
+    expect(issuesOf({ type: "waterfall", items: items(1e300, -1e300, 1e300) })).toEqual([])
+    expect(
+      issuesOf({
+        type: "waterfall",
+        items: [...items(1e300, -1e300, -1e300), { label: "Closing ARR", value: -1e300, kind: "total" }],
+      }),
+    ).toEqual([])
+  })
+
+  it("declines, rather than draws at NaN, when a caller hands the renderer one anyway", () => {
+    for (const component of [
+      { type: "waterfall" as const, items: items(1.7e308, 1.7e308, -1) },
+      { type: "waterfall" as const, items: [...items(1.7e308, 5, -3), { label: "Close", value: -1.7e308, kind: "total" as const }] },
+    ]) {
+      const markup = renderSvgMarkup(<svg>{waterfall.render(component, { x: 0, y: 0, w: 1088, h: 400 }, ctx)}</svg>)
+      expect(markup).toContain('data-dropped-kind="component"')
+      expect(markup).not.toMatch(/NaN|Infinity/)
+    }
   })
 })

@@ -143,11 +143,12 @@ describe("word_cloud packing", () => {
   it("sizes its collision boxes by what the glyphs will actually paint", () => {
     // The shared estimator prices most text from a class average, so a box
     // sized to the estimate can be crossed by the letters drawn inside it.
+    // Georgia's advance table says what each letter paints.
     const { placed } = packWords(LATIN.words, 1064, 372, { fontFamily: "Georgia" })
     for (const item of placed) {
       const bold = item.word.weight >= 3
-      const estimate = measureTextUnits(item.word.text, { bold, fontFamily: "Georgia" }) * item.fontSize
-      expect(item.w, item.word.text).toBeGreaterThanOrEqual(estimate)
+      const painted = measureTextUnits(item.word.text, { bold, fontFamily: "Georgia", exact: true }) * item.fontSize
+      expect(item.w, item.word.text).toBeGreaterThanOrEqual(painted)
     }
     // And a gutter on top, so two boxes never share an edge.
     for (let i = 0; i < placed.length; i++) {
@@ -159,6 +160,49 @@ describe("word_cloud packing", () => {
         expect(Math.max(gapX, gapY), `${a.word.text} / ${b.word.text}`).toBeGreaterThan(0)
       }
     }
+  })
+
+  it("does not pad a word whose width is on record, so a small panel still holds the list", () => {
+    // Every regular-weight word used to be boxed at half again its estimate.
+    // Georgia and Microsoft YaHei have an advance for every ASCII letter, so
+    // the half again only made the cloud look full: at 420×260 this list lost
+    // two words in Georgia and one in YaHei with room left between the rest.
+    // A word is now boxed at its advance, or at the estimate the page audit
+    // reads where that is wider.
+    const english = [
+      ["Renewal", 4], ["Setup time", 4], ["Seat growth", 4], ["Self-serve", 3], ["Integrations", 3],
+      ["Response time", 3], ["Pricing", 3], ["Partners", 2], ["Migration", 2], ["Permissions", 2],
+      ["Tickets", 2], ["Training", 1], ["Onboarding kit", 1], ["Site visits", 1],
+    ].map(([text, weight]) => ({ text: text as string, weight: weight as 1 | 2 | 3 | 4 }))
+    for (const fontFamily of ["Georgia", "Microsoft YaHei"]) {
+      const { placed, dropped } = packWords(english, 420, 260, { fontFamily })
+      expect(dropped, fontFamily).toBe(0)
+      for (const item of placed) {
+        const bold = item.word.weight >= 3
+        const painted = measureTextUnits(item.word.text, { bold, fontFamily, exact: true }) * item.fontSize
+        const estimate = measureTextUnits(item.word.text, { bold, fontFamily }) * item.fontSize
+        expect(item.w, `${fontFamily} ${item.word.text}`).toBeCloseTo(Math.max(painted, estimate), 6)
+      }
+    }
+  })
+
+  it("boxes a Chinese word at one em a character, and pads Latin only where the face has no table", () => {
+    const { placed } = packWords(
+      [
+        { text: "续约率", weight: 4 },
+        { text: "开通周期", weight: 2 },
+        { text: "Renewal", weight: 1 },
+      ],
+      800,
+      300,
+      { fontFamily: "KaiTi" },
+    )
+    const byText = new Map(placed.map((item) => [item.word.text, item]))
+    expect(byText.get("续约率")!.w).toBeCloseTo(3 * byText.get("续约率")!.fontSize, 6)
+    expect(byText.get("开通周期")!.w).toBeCloseTo(4 * byText.get("开通周期")!.fontSize, 6)
+    // KaiTi has no advance table, so its Latin still gets the headroom.
+    const renewal = byText.get("Renewal")!
+    expect(renewal.w).toBeCloseTo(measureTextUnits("Renewal", { fontFamily: "KaiTi" }) * renewal.fontSize * 1.5, 6)
   })
 
   it("keeps the four sizes apart or declares the panel too small", () => {

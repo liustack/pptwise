@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import { Icon } from "../render/icons"
+import { DroppedContentMarker } from "../render/drop-marker"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import {
   boardTypeScale,
@@ -53,8 +54,10 @@ function layoutItemText(
   return { title, text }
 }
 
+const NODE_R_MIN = 28
+
 function nodeRadius(colW: number): number {
-  return Math.round(Math.min(44, Math.max(28, colW * 0.16)))
+  return Math.round(Math.min(44, Math.max(NODE_R_MIN, colW * 0.16)))
 }
 
 function stackHeight(layout: ReturnType<typeof layoutItemText>, nodeSize: number): number {
@@ -97,7 +100,39 @@ function geometry(
   const cols = formIconColumnCols(n, w, COL_INSET)
   const rows = Math.ceil(n / cols)
   const colW = w / cols
-  const nodeR = nodeRadius(colW)
+  const settled = columnsAt(component, w, ctx, cols, rows, colW, nodeRadius(colW), boxH)
+  // The icon is the one thing in a column that is not content. When the box
+  // is too short for every title and text at the node's natural size, the
+  // node gives up height first, as far as its own floor, before a word goes.
+  const cut = (layouts: typeof settled.layouts) => layouts.some((l) => l.title.truncated || l.text.truncated)
+  // A column always keeps its icon and a line of title, so a short enough
+  // row can be overrun by the stack even with no word cut.
+  const tooTall = (res: typeof settled) => res.layouts.some((l) => stackHeight(l, res.nodeSize) > res.rowH + 1)
+  if (boxH !== undefined && (cut(settled.layouts) || tooTall(settled))) {
+    let shortest: typeof settled | undefined
+    for (let r = settled.nodeR - 1; r >= NODE_R_MIN; r--) {
+      const smaller = columnsAt(component, w, ctx, cols, rows, colW, r, boxH)
+      if (!cut(smaller.layouts) && !tooTall(smaller)) return { ...smaller, declined: false }
+      if (!shortest && !tooTall(smaller)) shortest = smaller
+    }
+    if (!tooTall(settled)) return { ...settled, declined: false }
+    // Even the smallest icon leaves a column taller than its row: the cards
+    // decline the box rather than drawing above and below it.
+    return shortest ? { ...shortest, declined: false } : { ...settled, declined: true }
+  }
+  return { ...settled, declined: false }
+}
+
+function columnsAt(
+  component: IconCardsComponent,
+  w: number,
+  ctx: ComponentCtx,
+  cols: number,
+  rows: number,
+  colW: number,
+  nodeR: number,
+  boxH?: number,
+) {
   const nodeSize = nodeR * 2
   const contentW = Math.max(24, colW - COL_INSET)
   const slotH = boxH != null ? Math.max(1, (boxH - GAP * (rows - 1)) / rows) : undefined
@@ -132,7 +167,9 @@ function geometry(
     bodySize: filled.bodySize,
     gap: GAP_TITLE_TEXT,
     extraAbove,
-    titleMax: 2,
+    // As many title lines as the titles take at the size just chosen, the
+    // count that size was chosen against, so the body keeps the rest.
+    titleMax: filled.titleMaxLines,
     bodyMax: Math.max(2, filled.bodyMaxLines),
   })
   const layouts = component.items.map((item) =>
@@ -159,10 +196,24 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
 
   render(component, box, ctx): React.ReactElement {
   const g = geometry(component, box.w, ctx, box.h)
+  if (g.declined) {
+    return (
+      <g transform={`translate(${box.x},${box.y})`}>
+        <DroppedContentMarker count={1} kind="component" />
+      </g>
+    )
+  }
   const fill = ctx.colors.surface
   const ink = ctx.colors.accent
   const iconSize = Math.round(g.nodeR * 0.85)
   const strokeProps = { stroke: ctx.colors.border ?? ctx.colors.muted, strokeWidth: 1 }
+  // One top per row: the row's tallest stack is centred in the row, and
+  // every column in it starts where that one does. Centring each column on
+  // its own height put a short body's icon below its longer neighbour's,
+  // so icons and titles stepped across the row.
+  const rowStackH = Array.from({ length: g.rows }, (_, row) =>
+    Math.max(...g.layouts.slice(row * g.cols, (row + 1) * g.cols).map((l) => stackHeight(l, g.nodeSize))),
+  )
 
   return (
     <g transform={`translate(${box.x},${box.y})`}>
@@ -172,8 +223,7 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
         const cx = col * g.colW + g.colW / 2
         const rowY = row * (g.rowH + GAP)
         const layout = g.layouts[i]!
-        const stackH = stackHeight(layout, g.nodeSize)
-        const stackTop = rowY + (g.rowH - stackH) / 2
+        const stackTop = rowY + (g.rowH - rowStackH[row]!) / 2
         const cy = stackTop + g.nodeR
         const titleTop = stackTop + g.nodeSize + GAP_NODE_TITLE
         const textTop =

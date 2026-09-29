@@ -3,9 +3,11 @@ import {
   hasExactWidthTable,
   layoutSvgText,
   measureTextUnits,
+  measuresExactly,
   truncateToUnits,
   type TextWeightHint,
 } from "../lib/svg-text-layout"
+import { isCjk } from "../lib/text-script"
 import { accessibleInk, contrastRatio } from "../render/ink"
 
 /** User-visible type floors for component-form item titles and body (1280×720 px). */
@@ -56,12 +58,16 @@ export function formHighlightFill(colors: { primary: string; surface: string; te
  * `measureTextUnits` prices regular-weight uppercase Latin at 0.66em a
  * character; Georgia paints "W" at about 0.94. A line fitted exactly to the
  * room left for it can therefore still be drawn past the edge of that room —
- * measured at 140.75px for a run the estimator priced at 95.04px. Every unit
- * is fitted to the room divided by this factor and positioned by the padded
- * width, so the gap between a number and its unit narrows rather than the
- * unit leaving the card.
+ * measured at 140.75px for a run the estimator priced at 95.04px. A unit the
+ * face cannot measure exactly (see `measuresExactly`) is fitted to the room
+ * divided by this factor and positioned by the padded width, so the gap
+ * between a number and its unit narrows rather than the unit leaving the
+ * card. Chinese and ASCII in a face with an advance table need no headroom.
  */
 const WIDTH_ESTIMATE_HEADROOM = 1.5
+
+/** The characters a face's advance table covers (`measureTextUnits`' exact model). */
+const PRINTABLE_ASCII = /[\x20-\x7e]/
 
 /**
  * An upper bound on the width `text` will actually paint at `fontSize` — the
@@ -69,11 +75,24 @@ const WIDTH_ESTIMATE_HEADROOM = 1.5
  *
  * Same estimator gap {@link WIDTH_ESTIMATE_HEADROOM} exists for, read the
  * other way round: `fitFormUnit` divides the room it fits into, and a caller
- * that has already fitted a line multiplies the width back out. The estimate
- * is trusted as-is only where the exact per-glyph model applies (bold weight
- * in a face that has a table) — everywhere else a 66px "LDAP" measures
- * 148.45px and paints 170.41px, which is how two words in a cloud came to
- * overlap while every estimated rectangle said they did not.
+ * that has already fitted a line multiplies the width back out. The class
+ * estimate reads short on Latin: a 66px "LDAP" measures 148.45px and paints
+ * 170.41px, which is how two words in a cloud came to overlap while every
+ * estimated rectangle said they did not.
+ *
+ * The headroom is only for widths that are estimated, though, and two kinds
+ * are known exactly. A Han, kana or hangul glyph is drawn on the em square in
+ * every face. A printable ASCII glyph in a face with an advance table
+ * (Georgia and Microsoft YaHei, every built-in body face and most heading
+ * faces) has its advance on record at either weight. Padding those by half
+ * again made a cloud or a map look full while there was room left in it, so
+ * they go without it and the rest keeps it. ASCII is counted at the wider of
+ * its advance and `measureTextUnits`' default reading, which the page audit
+ * and the gallery's L1 check measure by: Microsoft YaHei Regular is still
+ * read by class averages there, which run wide on lowercase, and two words
+ * boxed at their advances alone were reported overlapping with 8px of page
+ * between them. Bold text in a face with a table keeps the whole-string
+ * estimate it always had.
  *
  * For collision boxes and hard budgets, never for fitting: `fitSvgLine`
  * already shrinks and truncates against the estimate, and padding there would
@@ -84,9 +103,23 @@ export function paintedWidthCeiling(
   fontSize: number,
   weight?: { bold?: boolean; fontFamily?: string },
 ): number {
-  const estimate = measureTextUnits(text, weight) * fontSize
-  const exact = weight?.bold === true && hasExactWidthTable(weight.fontFamily ?? "")
-  return exact ? estimate : estimate * WIDTH_ESTIMATE_HEADROOM
+  const tabled = hasExactWidthTable(weight?.fontFamily ?? "")
+  if (weight?.bold === true && tabled) return measureTextUnits(text, weight) * fontSize
+  let square = 0
+  let exact = ""
+  let estimated = ""
+  for (const ch of text) {
+    if (isCjk(ch)) square += 1
+    else if (tabled && PRINTABLE_ASCII.test(ch)) exact += ch
+    else estimated += ch
+  }
+  return (
+    square * fontSize +
+    (exact
+      ? Math.max(measureTextUnits(exact, { ...weight, exact: true }), measureTextUnits(exact, weight)) * fontSize
+      : 0) +
+    (estimated ? measureTextUnits(estimated, weight) * fontSize * WIDTH_ESTIMATE_HEADROOM : 0)
+  )
 }
 
 /**
@@ -96,6 +129,13 @@ export function paintedWidthCeiling(
  * `null` is a real answer, not an edge case to swallow: a unit is what a
  * number is counted in, and half of one beside the number says less than
  * nothing. The caller declares the loss.
+ *
+ * The headroom is for widths the estimator can only guess. A unit set in a
+ * face whose advance table covers it, or in CJK, is measured exactly
+ * (`measuresExactly`), and padding it by half again only narrowed the room a
+ * number and its unit had: "accounts" in Georgia was fitted into two thirds
+ * of its space and then charged half again for a width the font's own table
+ * already gives.
  */
 export function fitFormUnit(
   unit: string,
@@ -104,13 +144,14 @@ export function fitFormUnit(
   const text = unit.trim()
   if (!text) return null
   const room = Math.max(0, opts.room)
+  const weight = { fontFamily: opts.fontFamily }
+  const headroom = measuresExactly(text, weight) ? 1 : WIDTH_ESTIMATE_HEADROOM
   const fitted = fitFormLine(text, {
-    maxWidth: room / WIDTH_ESTIMATE_HEADROOM,
+    maxWidth: room / headroom,
     fontSize: opts.fontSize,
     fontFamily: opts.fontFamily,
   })
-  const width =
-    measureTextUnits(fitted.text, { fontFamily: opts.fontFamily }) * fitted.fontSize * WIDTH_ESTIMATE_HEADROOM
+  const width = measureTextUnits(fitted.text, weight) * fitted.fontSize * headroom
   if (!fitted.text || width > room) return null
   return { text: fitted.text, fontSize: fitted.fontSize, width, truncated: fitted.truncated }
 }
@@ -368,17 +409,31 @@ export function fillCardType(opts: {
   fonts?: { heading?: string; body?: string }
   titleLhRatio?: number
   bodyLhRatio?: number
-}): { titleSize: number; bodySize: number; bodyMaxLines: number } {
+}): { titleSize: number; bodySize: number; bodyMaxLines: number; titleMaxLines: number } {
   const titleLh = opts.titleLhRatio ?? TITLE_LH
   const bodyLh = opts.bodyLhRatio ?? BODY_LH
   const extra = opts.extraAbove ?? 0
   let titleSize = Math.max(FORM_TITLE_FLOOR, opts.titleSize)
   let bodySize = capFormBody(titleSize, Math.max(FORM_BODY_FLOOR, opts.bodySize))
   const longest = opts.longestBody ?? ""
-  const cap = maxTitleSize(opts.contentW, opts.titles ?? [], opts.fonts?.heading)
+  const titles = opts.titles ?? []
+  const cap = maxTitleSize(opts.contentW, titles, opts.fonts?.heading)
 
+  // The lines the longest-wrapping title really takes at size `t`, at most
+  // two. Sizing the type and handing out lines have to count the same
+  // title lines: sizing against one line while the page then reserved two
+  // left the body a line short, and its last line was cut.
+  const titleLinesAt = (t: number) =>
+    Math.max(
+      1,
+      ...titles.map(
+        (title) =>
+          layoutFormTitle(title, { maxWidth: opts.contentW, fontSize: t, maxLines: 2, fontFamily: opts.fonts?.heading })
+            .lines.length,
+      ),
+    )
   const stackH = (t: number, b: number, lines: number) =>
-    extra + formLineHeight(t, titleLh) + opts.gap + lines * formLineHeight(b, bodyLh)
+    extra + titleLinesAt(t) * formLineHeight(t, titleLh) + opts.gap + lines * formLineHeight(b, bodyLh)
 
   const linesFor = (b: number, maxLines: number) =>
     Math.max(longest.trim() ? 1 : 0, bodyLineCount(longest, opts.contentW, b, maxLines, opts.fonts?.body))
@@ -416,5 +471,5 @@ export function fillCardType(opts: {
   bodySize = capFormBody(titleSize, titleSize / TITLE_BODY_RATIO)
   if (!longest.trim()) bodyMaxLines = 0
   else bodyMaxLines = Math.max(2, bodyMaxLines)
-  return { titleSize, bodySize, bodyMaxLines }
+  return { titleSize, bodySize, bodyMaxLines, titleMaxLines: titleLinesAt(titleSize) }
 }

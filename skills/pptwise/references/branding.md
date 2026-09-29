@@ -20,7 +20,7 @@ Omitting `branding` is exactly the same as `cover-only`. Choose `full` only when
 
 The deck posture is only the broad permission. A face may carry the structural fact `branding: "none"`. A theme menu entry may also declare `brand: "none"`. Either one removes the whole shared brand fragment from that page, even when the deck says `full`.
 
-This is intentional for faces whose composition has no safe brand frame. It is not a missing logo bug and it must not be repaired with page content. Theme motifs are separate from branding and remain governed by the face and menu decoration rules.
+This is intentional for faces whose composition has no safe brand frame. It is not a missing logo bug and it must not be repaired with page content. Theme motifs are separate from branding and remain governed by the face and menu decoration rules. The one meeting point is the footer strip below the content-page footer rule: a motif that draws there, such as homeroom's two notebook lines, leaves it to the brand footer under `full` and `minimal`.
 
 ## Extract a complete v2 theme
 

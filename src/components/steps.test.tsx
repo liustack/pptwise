@@ -178,4 +178,89 @@ describe("steps on every theme", () => {
       expect(shapesOf(id), id).toBe(baseline)
     }
   })
+
+  it("keeps a step's whole sentence under its chevron when side by side, and measures for it", () => {
+    const english = {
+      type: "steps" as const,
+      items: [
+        step("Scoping", "Renewal rate recovered to ninety-one percent, the highest in six quarters."),
+        step("Solutioning", "New bookings grew twenty-three percent, but three accounts contributed sixty percent of that."),
+        step("Seat setup", "Activation coverage reached eighty-eight percent, cutting unplanned meetings by forty percent."),
+        step("Access setup", "Delivery time fell from nine weeks to five, largely through standardized onboarding templates."),
+      ],
+    }
+    const ctx = boundThemeCtx("brief", {})
+    const w = 1088
+    const h = steps.measure(english, w, ctx)
+    const { container } = svg(steps.render(english, { x: 96, y: 290, w }, ctx))
+    expect(container.querySelectorAll("[data-truncated], [data-dropped]")).toHaveLength(0)
+    const words = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .join(" ")
+    for (const item of english.items) expect(words).toContain(item.text)
+    const lowest = Math.max(...Array.from(container.querySelectorAll("text")).map((t) => Number(t.getAttribute("y"))))
+    expect(lowest).toBeLessThanOrEqual(h)
+  })
+
+  it("gives sentence lines back side by side in a box too short for them, and marks the cut", () => {
+    const english = {
+      type: "steps" as const,
+      items: [
+        step("Scoping", "Renewal rate recovered to ninety-one percent, the highest in six quarters."),
+        step("Solutioning", "New bookings grew twenty-three percent, but three accounts contributed sixty percent of that."),
+        step("Seat setup", "Activation coverage reached eighty-eight percent, cutting unplanned meetings by forty percent."),
+        step("Access setup", "Delivery time fell from nine weeks to five, largely through standardized onboarding templates."),
+      ],
+    }
+    const ctx = boundThemeCtx("brief", {})
+    expect(steps.measure(english, 1088, ctx)).toBeGreaterThan(180)
+    const box = { x: 0, y: 0, w: 1088, h: 180 }
+    const { container } = svg(steps.render(english, box, ctx))
+    for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y")), t.textContent ?? "").toBeLessThanOrEqual(box.h)
+    expect(container.querySelector('[data-truncated="1"]')).not.toBeNull()
+  })
+
+  it("declines a box too short for the chevrons and one line of sentence", () => {
+    const three = { type: "steps" as const, items: [step("A", "one"), step("B", "two"), step("C", "three")] }
+    const { container } = svg(steps.render(three, { x: 0, y: 0, w: 1088, h: 110 }, boundThemeCtx("brief", {})))
+    expect(container.querySelectorAll("path, text")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+  })
+
+  it("declines a stacked box too short for its first step instead of drawing it below", () => {
+    const many = { type: "steps" as const, items: Array.from({ length: 5 }, (_, i) => step(`S${i}`, "note")) }
+    const { container } = svg(steps.render(many, { x: 0, y: 0, w: 400, h: 40 }, boundThemeCtx("brief", {})))
+    expect(container.querySelectorAll("path, text")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+  })
+
+  it("counts the last line's descenders in the height it asks for", () => {
+    const english = {
+      type: "steps" as const,
+      items: [
+        step("Scoping", "Renewal rate recovered to ninety-one percent, the highest in six quarters."),
+        step("Solutioning", "New bookings grew twenty-three percent, but three accounts contributed sixty percent of that."),
+        step("Seat setup", "Activation coverage reached eighty-eight percent, cutting unplanned meetings by forty percent."),
+        step("Access setup", "Delivery time fell from nine weeks to five, largely through standardized onboarding templates."),
+      ],
+    }
+    const ctx = boundThemeCtx("brief", {})
+    const short = { type: "steps" as const, items: [step("A", "拼音 gyp"), step("B", "了的"), step("C", "yg")] }
+    const cases: [number, typeof english][] = [
+      [1088, english],
+      [528, english],
+      [1088, short],
+    ]
+    for (const [w, ir] of cases) {
+      const h = steps.measure(ir, w, ctx)
+      const { container } = svg(steps.render(ir, { x: 0, y: 0, w, h }, ctx))
+      expect(container.querySelector("[data-dropped]"), `w=${w}`).toBeNull()
+      for (const t of container.querySelectorAll("text")) {
+        // Ink runs a quarter em below the baseline.
+        const bottom = Number(t.getAttribute("y")) + Number(t.getAttribute("font-size")) * 0.25
+        expect(bottom, `w=${w} "${t.textContent}"`).toBeLessThanOrEqual(h)
+      }
+    }
+  })
 })
+

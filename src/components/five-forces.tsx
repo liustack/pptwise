@@ -1,8 +1,9 @@
 import type React from "react"
 import type { Component } from "@/ir"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitSvgLine, layoutSvgText, truncateToUnits } from "../lib/svg-text-layout"
 import { mostlyChinese } from "../lib/text-script"
 import { accessibleInk } from "../render/ink"
+import { DroppedContentMarker } from "../render/drop-marker"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -194,6 +195,12 @@ const ITEM_SIZE = 16
 const ITEM_SIZE_MIN = 16
 const ITEM_LH_RATIO = 1.3
 const ITEM_GAP = 4
+/**
+ * A force's item is a phrase, and a side panel is a quarter of the page: an
+ * ordinary English phrase at the 16px floor runs past one line there. It
+ * wraps under its own bullet instead of losing its tail.
+ */
+const ITEM_MAX_LINES = 3
 const BULLET_R = 2
 const BULLET_INDENT = 11
 
@@ -245,7 +252,7 @@ function panelFill(key: ForceKey, ctx: ComponentCtx): string {
 
 interface PanelLayout {
   label: { text: string; fontSize: number; truncated: boolean }
-  items: { text: string; fontSize: number; truncated: boolean }[]
+  items: { lines: string[]; fontSize: number; truncated: boolean }[]
   intensity?: Intensity
   contentH: number
   // rhythmScale-applied nominal rhythm — renderPanel positions against these,
@@ -319,14 +326,21 @@ function panelLayout(
     bold: true,
     fontFamily,
   })
-  const items = panel.items.map((it) =>
-    fitSvgLine(it, {
-      maxWidth: contentW - BULLET_INDENT,
+  const items = panel.items.map((it) => {
+    const maxWidth = contentW - BULLET_INDENT
+    const one = fitSvgLine(it, { maxWidth, fontSize: itemSize, minFontSize: ITEM_SIZE_MIN })
+    if (!one.truncated) return { lines: [one.text], fontSize: one.fontSize, truncated: false }
+    const laid = layoutSvgText(it, { maxWidth, fontSize: itemSize, maxLines: 64, minPt: itemSize })
+    const kept = laid.lines.slice(0, ITEM_MAX_LINES)
+    const lines = kept.map((line) => truncateToUnits(line, maxWidth / itemSize))
+    return {
+      lines,
       fontSize: itemSize,
-      minFontSize: ITEM_SIZE_MIN,
-    }),
-  )
-  const itemsH = items.length * itemLH + Math.max(0, items.length - 1) * itemGap
+      truncated: laid.lines.length > kept.length || lines.some((line, i) => line !== kept[i]),
+    }
+  })
+  const lineCount = items.reduce((n, item) => n + item.lines.length, 0)
+  const itemsH = lineCount * itemLH + Math.max(0, items.length - 1) * itemGap
   const markerH = panel.intensity ? gapLabelMarker + markerDotR * 2 : 0
   const contentH = padTop + labelSize + markerH + gapHeaderItems + itemsH + padBottom
   return {
@@ -472,9 +486,12 @@ function renderPanel(
   if (layout.intensity != null) cursorY += layout.gapLabelMarker + layout.markerDotR * 2
   let itemY = cursorY + layout.gapHeaderItems
   const itemLimit = y + h - layout.padBottom
-  const visibleItems = layout.items.filter((_, ii) => {
-    const rowY = itemY + ii * (layout.itemLH + layout.itemGap)
-    return rowY + layout.itemSize <= itemLimit
+  // An item shows only if its last line clears the panel's bottom padding.
+  let probeY = itemY
+  const visibleItems = layout.items.filter((item) => {
+    const lastLineY = probeY + (item.lines.length - 1) * layout.itemLH
+    probeY += item.lines.length * layout.itemLH + layout.itemGap
+    return lastLineY + layout.itemSize <= itemLimit
   })
   const dropped = layout.items.length - visibleItems.length
   return (
@@ -495,22 +512,25 @@ function renderPanel(
       {markerRow}
       {visibleItems.map((item, ii) => {
         const rowY = itemY
-        itemY += layout.itemLH + layout.itemGap
+        itemY += item.lines.length * layout.itemLH + layout.itemGap
         const dotCy = rowY + layout.itemSize * 0.65
         return (
           <g key={ii}>
             <circle cx={x + PAD_X + layout.bulletR} cy={dotCy} r={layout.bulletR} fill={itemInk} />
-            <text
-              data-truncated={item.truncated ? "1" : undefined}
-              x={x + PAD_X + BULLET_INDENT}
-              y={rowY + layout.itemSize}
-              fontSize={item.fontSize}
-              fill={itemInk}
-              fontFamily={ctx.fonts.body}
-              dominantBaseline="alphabetic"
-            >
-              {item.text}
-            </text>
+            {item.lines.map((line, li) => (
+              <text
+                key={li}
+                data-truncated={item.truncated && li === item.lines.length - 1 ? "1" : undefined}
+                x={x + PAD_X + BULLET_INDENT}
+                y={rowY + li * layout.itemLH + layout.itemSize}
+                fontSize={item.fontSize}
+                fill={itemInk}
+                fontFamily={ctx.fonts.body}
+                dominantBaseline="alphabetic"
+              >
+                {line}
+              </text>
+            ))}
           </g>
         )
       })}
@@ -574,6 +594,24 @@ export const fiveForces: SvgComponent<FiveForcesComponent> = {
     const scaledTopH = scaledNatTop * growScale
     const scaledMidH = scaledNatMid * growScale
     const scaledBottomH = finalTotalH - GAP * 2 - scaledTopH - scaledMidH
+
+    // Items a band cannot hold are dropped and declared by `renderPanel`,
+    // but every panel keeps its title and intensity dots. A band too short
+    // for even those cannot hold the panel, so the cross declines the box
+    // rather than printing a header over the band below or past the box.
+    const headerH = (l: PanelLayout) =>
+      l.padTop + l.labelSize + (l.intensity ? l.gapLabelMarker + l.markerDotR * 2 : l.labelSize * 0.25)
+    const holdsHeaders =
+      headerH(layouts.new_entrants) <= scaledTopH &&
+      Math.max(headerH(layouts.supplier_power), headerH(layouts.rivalry), headerH(layouts.buyer_power)) <= scaledMidH &&
+      headerH(layouts.substitutes) <= scaledBottomH
+    if (!holdsHeaders) {
+      return (
+        <g>
+          <DroppedContentMarker count={1} kind="component" />
+        </g>
+      )
+    }
 
     const leftX = box.x
     const centerX = box.x + leftW + GAP

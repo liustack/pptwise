@@ -10,7 +10,7 @@ import { cycle } from "./cycle"
 import type { ComponentCtx } from "./types"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { contrastRatio, requiredContrastRatio } from "../render/ink"
-import { fitFormUnit, boardTypeScale, capFormBody, fillCardType, formLegibleInk, formIconColumnCols, layoutAtSize, layoutFormBody, BOARD_CARD_W, FORM_BODY_FLOOR, FORM_BODY_TITLE_CAP, FORM_TITLE_FLOOR } from "./legibility"
+import { paintedWidthCeiling, fitFormUnit, boardTypeScale, capFormBody, fillCardType, formLegibleInk, formIconColumnCols, layoutAtSize, layoutFormBody, BOARD_CARD_W, FORM_BODY_FLOOR, FORM_BODY_TITLE_CAP, FORM_TITLE_FLOOR } from "./legibility"
 
 describe("form text contrast", () => {
   it("replaces unreadable white on brief yellow with a passing ink", () => {
@@ -355,5 +355,66 @@ describe("layoutAtSize", () => {
     expect(r.lines).toHaveLength(1)
     expect(r.lines[0]).not.toContain("…")
     expect(source.startsWith(r.lines[0]!)).toBe(true)
+  })
+})
+
+describe("paintedWidthCeiling", () => {
+  // The half-again headroom is for widths the measurer can only estimate.
+  it("counts a square-script glyph at one em in every face", () => {
+    for (const fontFamily of ["Georgia", "Microsoft YaHei", "KaiTi", "SimSun", "Fraunces"]) {
+      expect(paintedWidthCeiling("续约率回升", 20, { fontFamily }), fontFamily).toBe(100)
+      expect(paintedWidthCeiling("续约率回升", 20, { bold: true, fontFamily }), fontFamily).toBe(100)
+    }
+  })
+
+  it("counts ASCII in a face with an advance table without the headroom, at either weight", () => {
+    // At its advance, or at the class estimate where that reads wider: the
+    // page audit measures regular text by the estimate, so a box narrower
+    // than it would be reported as overlapping its neighbour.
+    for (const fontFamily of ["Georgia", "Microsoft YaHei"]) {
+      for (const bold of [false, true]) {
+        const painted = measureTextUnits("Renewal rate", { bold, fontFamily, exact: true }) * 20
+        const estimate = measureTextUnits("Renewal rate", { bold, fontFamily }) * 20
+        const width = paintedWidthCeiling("Renewal rate", 20, { bold, fontFamily })
+        expect(width, `${fontFamily} ${bold}`).toBeCloseTo(Math.max(painted, estimate), 9)
+        expect(width, `${fontFamily} ${bold}`).toBeLessThan(estimate * 1.5)
+      }
+    }
+  })
+
+  it("keeps the headroom on Latin it can only estimate", () => {
+    const estimate = measureTextUnits("Renewal", { fontFamily: "KaiTi" }) * 20
+    expect(paintedWidthCeiling("Renewal", 20, { fontFamily: "KaiTi" })).toBeCloseTo(estimate * 1.5, 9)
+    // A mixed name: the Chinese at one em, the Latin by its advances.
+    const mixed = paintedWidthCeiling("Quill 平台组", 20, { fontFamily: "Georgia" })
+    const quill = Math.max(
+      measureTextUnits("Quill ", { fontFamily: "Georgia", exact: true }),
+      measureTextUnits("Quill ", { fontFamily: "Georgia" }),
+    )
+    expect(mixed).toBeCloseTo(60 + quill * 20, 9)
+  })
+})
+
+describe("fitFormUnit headroom", () => {
+  it("takes a unit its face measures exactly at its own width, with no headroom", () => {
+    // "accounts" in Georgia Regular reads from the font's advance table:
+    // 4.1718em. Pre-fix it was fitted into room / 1.5 and charged 1.5 times
+    // that width, so a 70px room left it cut.
+    const georgia = "Georgia, Songti SC, STSong, serif"
+    const exact = measureTextUnits("accounts", { fontFamily: georgia }) * 16
+    const fit = fitFormUnit("accounts", { room: exact + 1, fontSize: 16, fontFamily: georgia })
+    expect(fit).not.toBeNull()
+    expect(fit!.text).toBe("accounts")
+    expect(fit!.truncated).toBe(false)
+    expect(fit!.width).toBeCloseTo(exact, 6)
+    // CJK sits on the em square in every face.
+    const cjk = fitFormUnit("万元", { room: 33, fontSize: 16, fontFamily: "Microsoft YaHei" })
+    expect(cjk).toEqual({ text: "万元", fontSize: 16, width: 32, truncated: false })
+  })
+
+  it("keeps the headroom for a unit the estimator can only guess", () => {
+    // "‰" has no advance table entry, so the class estimate is padded.
+    const fit = fitFormUnit("‰", { room: 100, fontSize: 16, fontFamily: "Georgia" })
+    expect(fit!.width).toBeCloseTo(measureTextUnits("‰", { fontFamily: "Georgia" }) * 16 * 1.5, 6)
   })
 })

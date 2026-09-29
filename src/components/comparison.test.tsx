@@ -2,6 +2,7 @@
 import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import { comparison } from "./comparison"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import type { ComponentCtx } from "./types"
 
 const ctx: ComponentCtx = {
@@ -311,13 +312,29 @@ describe("comparison 首列重复归一化（2026-07-10 无图矩阵真机病型
       expect(hiddenCount + dataRowLabelTexts.length).toBe(manyRowsComponent.rows.length)
     })
 
-    it("still renders at least one row even when box.h is far smaller than a single row's height", () => {
+    // This used to pin the opposite: at least one row drawn, however short
+    // the box. A row kept that way is drawn below the box with no mark
+    // anywhere, which breaks the repo's rule that a component either draws
+    // all it was given or declares the loss. The whole table now declines.
+    it("declines a box too short for the header and one row, instead of drawing that row outside it", () => {
       const box = { x: 0, y: 0, w: 1088, h: 5 }
       const { container } = render(<svg>{comparison.render(manyRowsComponent, box, ctx)}</svg>)
-      const dataRowLabelTexts = Array.from(container.querySelectorAll("text")).filter((t) =>
-        (t.textContent ?? "").startsWith("row "),
-      )
-      expect(dataRowLabelTexts.length).toBeGreaterThanOrEqual(1)
+      expect(container.querySelectorAll("text")).toHaveLength(0)
+      const marker = container.querySelector("[data-dropped]")
+      expect(marker?.getAttribute("data-dropped-kind")).toBe("component")
+    })
+
+    it("declines a one-row table whose row cannot fit under the header", () => {
+      const single = {
+        type: "comparison" as const,
+        columns: ["Option"],
+        rows: [{ label: "Plan", cells: ["Customer support and training included"] }],
+      }
+      const { container } = render(<svg>{comparison.render(single, { x: 0, y: 0, w: 300, h: 80 }, ctx)}</svg>)
+      for (const t of container.querySelectorAll("text, line")) {
+        expect(Number(t.getAttribute("y") ?? t.getAttribute("y1"))).toBeLessThanOrEqual(80)
+      }
+      expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
     })
 
     it("is a byte-identical no-op when box.h is omitted (the ordinary/common render path)", () => {
@@ -407,6 +424,56 @@ describe("comparison 空首列表头归一化（2026-08-19 gallery 重渲：20 �
     const x = xByText(container)
     expect(x.get("维度")).toBe(x.get("价格"))
     expect(x.get("我们")).toBe(x.get("低 15%"))
+  })
+
+  describe("a half-page box", () => {
+    const georgia: ComponentCtx = { ...ctx, fonts: { heading: "Georgia", body: "Georgia, Songti SC, STSong, serif", mono: "Consolas" } }
+    const english = {
+      type: "comparison" as const,
+      columns: ["Consulting", "Platforms", "K-12"],
+      rows: [
+        { label: "Seat expansion in existing accounts", cells: ["Q1", "East", "Q2"] },
+        { label: "Standardized onboarding templates", cells: ["Q2", "South", "Q3"] },
+        { label: "In-house workspace compute", cells: ["Q3", "North", "Q4"] },
+        { label: "Vertical playbook replication", cells: ["Q4", "Southwest", "Q1"] },
+      ],
+    }
+
+    it("gives short columns the width their words need and wraps the long label column", () => {
+      const box = { x: 656, y: 294, w: 528 }
+      const h = comparison.measure(english, box.w, georgia)
+      const { container } = render(<svg>{comparison.render(english, box, georgia)}</svg>)
+      expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+      const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "")
+      for (const header of english.columns) expect(texts).toContain(header)
+      expect(texts).toContain("Southwest")
+      const words = texts.join(" ")
+      for (const row of english.rows) expect(words).toContain(row.label)
+      // The height the face reserves is the height drawn: the closing rule
+      // sits on it and every baseline sits above it.
+      const rules = Array.from(container.querySelectorAll("line")).map((l) => Number(l.getAttribute("y1")))
+      expect(Math.max(...rules)).toBe(h)
+      for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y"))).toBeLessThan(h)
+      expect(h).toBeGreaterThan((english.rows.length + 1) * 44)
+    })
+  })
+})
+
+describe("comparison in a box shorter than its wrapped rows", () => {
+  it("gives back cell lines and marks the cut rather than drawing past the box", () => {
+    const table = {
+      type: "comparison" as const,
+      columns: ["Option"],
+      rows: [{ label: "Plan", cells: ["Customer support and training included"] }],
+    }
+    const swiss = boundThemeCtx("swiss", {})
+    // Unbounded, the cell wraps and the table measures taller than one row.
+    expect(comparison.measure(table, 300, swiss)).toBeGreaterThan(88)
+    const box = { x: 0, y: 0, w: 300, h: 88 }
+    const { container } = render(<svg>{comparison.render(table, box, swiss)}</svg>)
+    for (const line of container.querySelectorAll("line")) expect(Number(line.getAttribute("y1"))).toBeLessThanOrEqual(box.h)
+    for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y"))).toBeLessThanOrEqual(box.h)
+    expect(container.querySelector('[data-truncated="1"]')).not.toBeNull()
   })
 })
 

@@ -9,7 +9,9 @@ import {
   fitFormLine,
   fitFormTitleLine,
   formHighlightFill,
+  formLineHeight,
   layoutFormBody,
+  layoutFormTitle,
 } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
 
@@ -163,35 +165,50 @@ export const swimlane: SvgComponent<SwimlaneComponent> = {
         ))}
         {component.lanes.map((lane, i) => {
           const band = g.lanes[i]!
-          const label = fitFormTitleLine(lane.label, {
-            maxWidth: g.labelW,
-            fontSize: 20,
-            fontFamily: ctx.fonts.body,
-          })
           const role = lane.role?.trim()
           const roleFit = role
             ? fitFormLine(role, { maxWidth: g.labelW, fontSize: FORM_BODY_FLOOR, fontFamily: ctx.fonts.body })
             : null
-          const blockH = label.fontSize + (roleFit ? roleFit.fontSize + 8 : 0)
+          // A lane's name is a person's title ("Chief Technology Officer",
+          // 「集团总裁 · 切换总指挥」), and the label column is a sixth of
+          // the page. One the column cannot hold on a line wraps, onto as many
+          // lines (up to three) as the band is tall enough to keep beside it.
+          const oneLine = fitFormTitleLine(lane.label, {
+            maxWidth: g.labelW,
+            fontSize: 20,
+            fontFamily: ctx.fonts.body,
+          })
+          const lineH = formLineHeight(20)
+          const roleH = roleFit ? roleFit.fontSize + 8 : 0
+          const labelLines = Math.min(3, 1 + Math.floor((band.h - roleH - 20) / lineH))
+          const label =
+            oneLine.truncated && labelLines > 1
+              ? layoutFormTitle(lane.label, { maxWidth: g.labelW, fontSize: 20, maxLines: labelLines, fontFamily: ctx.fonts.body })
+              : { lines: [oneLine.text], fontSize: oneLine.fontSize, lineHeight: lineH, truncated: oneLine.truncated }
+          const extra = (label.lines.length - 1) * label.lineHeight
+          const blockH = label.fontSize + extra + roleH
           const top = band.y + band.h / 2 - blockH / 2
           return (
             <g key={`lane-${i}`}>
-              <text
-                data-truncated={label.truncated ? "1" : undefined}
-                x={0}
-                y={top + label.fontSize * 0.9}
-                fontFamily={ctx.fonts.body}
-                fontSize={label.fontSize}
-                fontWeight="700"
-                fill={accessibleInk(ctx.colors.primary, pageBg, label.fontSize)}
-              >
-                {label.text}
-              </text>
+              {label.lines.map((line, li) => (
+                <text
+                  key={li}
+                  data-truncated={label.truncated && li === label.lines.length - 1 ? "1" : undefined}
+                  x={0}
+                  y={top + li * label.lineHeight + label.fontSize * 0.9}
+                  fontFamily={ctx.fonts.body}
+                  fontSize={label.fontSize}
+                  fontWeight="700"
+                  fill={accessibleInk(ctx.colors.primary, pageBg, label.fontSize)}
+                >
+                  {line}
+                </text>
+              ))}
               {roleFit ? (
                 <text
                   data-truncated={roleFit.truncated ? "1" : undefined}
                   x={0}
-                  y={top + label.fontSize + 8 + roleFit.fontSize * 0.9}
+                  y={top + label.fontSize + extra + 8 + roleFit.fontSize * 0.9}
                   fontFamily={ctx.fonts.body}
                   fontSize={roleFit.fontSize}
                   fill={accessibleInk(ctx.colors.muted, pageBg, roleFit.fontSize)}

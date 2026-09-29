@@ -1,6 +1,7 @@
 import type { ReactElement } from "react"
 import type { Component } from "@/ir"
 import { accessibleInk } from "../render/ink"
+import { DroppedContentMarker } from "../render/drop-marker"
 import {
   FORM_BODY_FLOOR,
   FORM_TITLE_FLOOR,
@@ -101,7 +102,7 @@ interface HubGeom {
   h: number
 }
 
-function resolveHub(component: HubSpokeComponent, w: number): HubGeom {
+function resolveHub(component: HubSpokeComponent, w: number, boxH?: number): HubGeom {
   const n = component.items.length
   const { capW, capH, hubR, spoke } = sizes(n)
   const caps = placeCapsules(n, capW, capH, hubR, spoke)
@@ -121,7 +122,11 @@ function resolveHub(component: HubSpokeComponent, w: number): HubGeom {
   maxY += PAD
   const bboxW = maxX - minX
   const bboxH = maxY - minY
-  const scale = Math.min(w / bboxW, MAX_H / bboxH, MAX_UPSCALE)
+  // A face may hand over less height than the drawing's own ceiling; the
+  // drawing then scales into it rather than running past its bottom edge,
+  // and a capsule too small for its words cuts them and says so.
+  const heightBudget = boxH !== undefined && boxH > 0 ? Math.min(MAX_H, boxH) : MAX_H
+  const scale = Math.min(w / bboxW, heightBudget / bboxH, MAX_UPSCALE)
   const drawnW = bboxW * scale
   const ox = (w - drawnW) / 2 + (0 - minX) * scale
   const oy = (0 - minY) * scale
@@ -164,9 +169,32 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
   },
 
   render(component, box, ctx): ReactElement {
-    const g = resolveHub(component, box.w)
+    const g = resolveHub(component, box.w, box.h)
     const { ox, oy, caps, scale } = g
     const hubR = g.hubR * scale
+    const hubLayout = layoutFormTitle(component.center, {
+      maxWidth: hubR * 1.55,
+      fontSize: Math.max(FORM_TITLE_FLOOR, Math.round(22 * scale)),
+      maxLines: 2,
+      fontFamily: ctx.fonts.heading,
+    })
+    // The drawing scales into a short box but its type stops at the 20px
+    // floor, so below some size the words no longer fit their shapes: a
+    // label's ink reaches 0.65em either side of its capsule's middle, and the
+    // centre's lines need the hub's full height. The smallest drawing that
+    // still holds them is the smallest one this component draws; a box that
+    // cannot give it that much height gets the whole component declined.
+    const labelSize = Math.max(FORM_TITLE_FLOOR, Math.round(16 * scale))
+    const holdsWords =
+      caps.every((cap) => cap.h >= 1.3 * labelSize + 2) &&
+      2 * hubR >= hubLayout.lines.length * hubLayout.lineHeight
+    if (!holdsWords) {
+      return (
+        <g transform={`translate(${box.x},${box.y})`}>
+          <DroppedContentMarker count={1} kind="component" />
+        </g>
+      )
+    }
     const border = ctx.colors.border ?? ctx.colors.muted
     const hubFill = ctx.colors.surface
 
@@ -193,12 +221,7 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
         })}
         <circle cx={ox} cy={oy} r={hubR} fill={hubFill} stroke={ctx.colors.accent} strokeWidth={1.5} />
         {(() => {
-          const layout = layoutFormTitle(component.center, {
-            maxWidth: hubR * 1.55,
-            fontSize: Math.max(FORM_TITLE_FLOOR, Math.round(22 * scale)),
-            maxLines: 2,
-            fontFamily: ctx.fonts.heading,
-          })
+          const layout = hubLayout
           const lines = layout.lines
           const totalH = lines.length * layout.lineHeight
           const top = oy - totalH / 2
@@ -242,20 +265,24 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
           })
           const desc = item.description?.trim()
           const descBudget = cap.h - labelFit.lineHeight - 8
+          const descSize = capFormBody(labelFit.fontSize, Math.round(13 * scale))
+          // The capsule is tall enough for a second line under the label; a
+          // description that runs past one line takes it rather than being cut.
+          const descMaxLines = descBudget >= 2 * Math.round(descSize * 1.25) ? 2 : 1
           const descLayout =
             desc && descBudget >= FORM_BODY_FLOOR
               ? layoutFormBody(desc, {
                   maxWidth: textW,
-                  fontSize: capFormBody(labelFit.fontSize, Math.round(13 * scale)),
+                  fontSize: descSize,
                   titleSize: labelFit.fontSize,
-                  maxLines: 1,
+                  maxLines: descMaxLines,
                   lineHeightRatio: 1.25,
                   fontFamily: ctx.fonts.body,
                 })
               : null
-          const descLine = descLayout?.lines[0] ?? ""
+          const descLines = descLayout?.lines ?? []
           const descInk = accessibleInk(ctx.colors.muted, ctx.colors.surface, descLayout?.fontSize ?? 12)
-          const blockH = labelFit.fontSize + (descLine ? descLayout!.lineHeight : 0)
+          const blockH = labelFit.fontSize + (descLines.length > 0 ? descLines.length * descLayout!.lineHeight : 0)
           const labelY = cap.y + cap.h / 2 - blockH / 2 + labelFit.fontSize * 0.9
           const descY = labelY + (descLayout ? descLayout.lineHeight : 0)
           return (
@@ -298,19 +325,22 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
               >
                 {labelFit.lines[0] ?? ""}
               </text>
-              {descLine ? (
-                <text
-                  data-truncated={formTextClipMarker(descLayout!, 0)}
-                  x={tx}
-                  y={descY}
-                  textAnchor={anchor}
-                  fontFamily={ctx.fonts.body}
-                  fontSize={descLayout!.fontSize}
-                  fill={descInk}
-                >
-                  {descLine}
-                </text>
-              ) : null}
+              {descLines.map((line, li) =>
+                line ? (
+                  <text
+                    key={`desc-${li}`}
+                    data-truncated={formTextClipMarker(descLayout!, li)}
+                    x={tx}
+                    y={descY + li * descLayout!.lineHeight}
+                    textAnchor={anchor}
+                    fontFamily={ctx.fonts.body}
+                    fontSize={descLayout!.fontSize}
+                    fill={descInk}
+                  >
+                    {line}
+                  </text>
+                ) : null,
+              )}
             </g>
           )
         })}

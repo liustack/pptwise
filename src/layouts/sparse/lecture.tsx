@@ -5,7 +5,8 @@ import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { heroCaption, heroUnit, heroSource, heroValue, statementAttribution } from "../minimal-shared"
 import { renderFittedEvidence } from "../fitted-evidence"
-import { evidenceSource, firstEmphasisRun, fitHeroLine, heroUnitMark, fitSparseHeading } from "./shared"
+import { evidenceSource, firstEmphasisRun, fitHeroLine, fitSparseHeading } from "./shared"
+import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** lecture 稀排脸：左轴板书、粉笔巨数、虚线证据框。不画整页粉笔槽细框。 */
 
@@ -85,9 +86,11 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   const kicker = section
     ? fitSvgLine(section, { maxWidth: 1040, fontSize: 22, minFontSize: 16, fontFamily: fonts.body })
     : null
-  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1040, fontSize: 260, fontFamily: fonts.heading, bold: false })
   const unit = heroUnit(slide)
-  const unitMark = heroUnitMark(fitted.fontSize)
+  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1040, fontSize: 260, fontFamily: fonts.heading, bold: false, unit })
+  // A figure this line cannot set whole goes to the plain page, never cut.
+  if (!fitted) return StatHeroFallbackContent({ slide, ctx })
+  const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   return (

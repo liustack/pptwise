@@ -1,8 +1,9 @@
 import type React from "react"
 import type { Component } from "@/ir"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { accessibleInk, contrastRatio, requiredContrastRatio } from "../render/ink"
+import { DroppedContentMarker } from "../render/drop-marker"
 
 type TimelineComponent = Extract<Component, { type: "timeline" }>
 
@@ -77,31 +78,65 @@ function labelPlacement(
  * title 2 行 / desc 3 行换行排布（2026-07-09 用户反馈：版面宽却单行截断
  * 加省略号——所有主题共用本块，一处修复全主题生效）。
  */
-function milestoneLayout(component: TimelineComponent, w: number) {
+/** How many lines a milestone's title and description may take. */
+interface LineCaps {
+  title: number
+  desc: number
+}
+const FULL_CAPS: LineCaps = { title: 2, desc: 3 }
+
+function milestoneLayout(component: TimelineComponent, w: number, fontFamily: string, caps: LineCaps = FULL_CAPS) {
   const n = component.milestones.length
   const span = w - 2 * PAD
   const step = n > 1 ? span / (n - 1) : 0
-  return component.milestones.map((m, i) => {
-    const x = n === 1 ? w / 2 : PAD + i * step
-    const { maxWidth, anchor, tx } = labelPlacement(i, x, n, w, step)
+  const lay = (m: TimelineComponent["milestones"][number], i: number, x: number, maxWidth: number, anchor: Anchor, tx: number) => {
     const title = layoutSvgText(m.title, {
       maxWidth,
       fontSize: TITLE_SIZE,
-      maxLines: 2,
+      maxLines: caps.title,
       lineHeightRatio: 1.25,
     })
     const desc = m.desc
       ? layoutSvgText(m.desc, {
           maxWidth,
           fontSize: DESC_SIZE,
-          maxLines: 3,
+          maxLines: caps.desc,
           lineHeightRatio: 1.3,
         })
       : null
     const titleH = title.lines.length * title.lineHeight
     const descH = desc ? desc.lines.length * desc.lineHeight + 6 : 0
-    return { m, x, maxWidth, anchor, tx, title, desc, belowH: 28 + titleH + descH }
+    // The ink the label actually spans, not the room it was offered.
+    const inkW = Math.max(
+      0,
+      ...title.lines.map((line) => measureTextUnits(line, { bold: true, fontFamily }) * title.fontSize),
+      ...(desc?.lines ?? []).map((line) => measureTextUnits(line, { fontFamily }) * desc!.fontSize),
+    )
+    const left = anchor === "start" ? tx : anchor === "end" ? tx - inkW : tx - inkW / 2
+    return { m, i, x, maxWidth, anchor, tx, title, desc, belowH: 28 + titleH + descH, left, right: left + inkW }
+  }
+  const rows = component.milestones.map((m, i) => {
+    const x = n === 1 ? w / 2 : PAD + i * step
+    const { maxWidth, anchor, tx } = labelPlacement(i, x, n, w, step)
+    return lay(m, i, x, maxWidth, anchor, tx)
   })
+  // An end label is offered a whole step, and its centred neighbour half a
+  // step on either side, so the two offers overlap by half a step. Where the
+  // words actually meet there, the end label wraps short of its neighbour's
+  // first glyph instead of running under it.
+  if (n > 1) {
+    const first = rows[0]!
+    const next = rows[1]!
+    if (first.right > next.left - LABEL_GAP) {
+      rows[0] = lay(first.m, 0, first.x, Math.max(1, next.left - LABEL_GAP - first.tx), first.anchor, first.tx)
+    }
+    const last = rows[n - 1]!
+    const prev = rows[n - 2]!
+    if (last.left < prev.right + LABEL_GAP) {
+      rows[n - 1] = lay(last.m, n - 1, last.x, Math.max(1, last.tx - prev.right - LABEL_GAP), last.anchor, last.tx)
+    }
+  }
+  return rows
 }
 
 // ── 竖排版式（2026-07-11 用户借鉴编辑部竖排时间线）：左 date 右对齐、
@@ -159,7 +194,16 @@ function visibleVerticalRowCount(
     if (rowTops[i] + rows[i].rowH > truncBudget) break
     visible = i + 1
   }
-  return Math.max(1, visible)
+  return visible
+}
+
+/** A timeline given a box it cannot draw even its first milestone in. */
+function declined(box: ComponentBox): React.ReactElement {
+  return (
+    <g transform={`translate(${box.x},${box.y})`}>
+      <DroppedContentMarker count={1} kind="component" />
+    </g>
+  )
 }
 
 function renderVertical(
@@ -183,6 +227,9 @@ function renderVertical(
   // precedent for the convention below).
   const truncBudget = box.h ?? Number.POSITIVE_INFINITY
   const visibleCount = visibleVerticalRowCount(allRowTops, allRows, truncBudget)
+  // Not even the first milestone fits: the timeline declines the box rather
+  // than drawing that one below it.
+  if (visibleCount === 0 && allRows.length > 0) return declined(box)
   const hiddenCount = allRows.length - visibleCount
   const rows = allRows.slice(0, visibleCount)
   const rowTops = allRowTops.slice(0, visibleCount)
@@ -267,24 +314,42 @@ function renderVertical(
   )
 }
 
-function measureDefault(component: TimelineComponent, w: number): number {
+function measureDefault(component: TimelineComponent, w: number, fontFamily: string): number {
   if (component.layout === "vertical") {
     const rows = verticalLayout(component, w)
     const total = rows.reduce((sum, r) => sum + r.rowH + V_ROW_GAP, V_TOP_PAD)
     return total - V_ROW_GAP + BOTTOM_PAD
   }
-  const rows = milestoneLayout(component, w)
+  const rows = milestoneLayout(component, w, fontFamily)
   const maxBelow = rows.reduce((mx, r) => Math.max(mx, r.belowH), 48)
   return AXIS_Y + maxBelow + BOTTOM_PAD
 }
 
 export const timeline: SvgComponent<TimelineComponent> = {
-  measure(component, w) {
-    return measureDefault(component, w)
+  measure(component, w, ctx) {
+    return measureDefault(component, w, ctx.fonts.body)
   },
   render(component, box, ctx) {
     if (component.layout === "vertical") return renderVertical(component, box, ctx)
-    const rows = milestoneLayout(component, box.w)
+    // Side by side, every milestone hangs its words under one axis, so a box
+    // shorter than the tallest of them gives lines back from the bottom:
+    // description lines first, then a title's second line, each cut marked.
+    // With one line of each still too tall, the timeline declines the box.
+    const depth = (r: ReturnType<typeof milestoneLayout>) =>
+      AXIS_Y + r.reduce((mx, row) => Math.max(mx, row.belowH), 48)
+    let rows = milestoneLayout(component, box.w, ctx.fonts.body)
+    if (box.h !== undefined && box.h > 0 && depth(rows) + BOTTOM_PAD > box.h) {
+      const ladder: LineCaps[] = [
+        { title: 2, desc: 2 },
+        { title: 2, desc: 1 },
+        { title: 1, desc: 1 },
+      ]
+      for (const caps of ladder) {
+        if (depth(rows) <= box.h) break
+        rows = milestoneLayout(component, box.w, ctx.fonts.body, caps)
+      }
+      if (depth(rows) > box.h) return declined(box)
+    }
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         <line
@@ -325,6 +390,7 @@ export const timeline: SvgComponent<TimelineComponent> = {
               {title.lines.map((line, li) => (
                 <text
                   key={li}
+                  data-truncated={title.truncated && li === title.lines.length - 1 ? "1" : undefined}
                   x={tx}
                   y={TITLE_TOP + li * title.lineHeight}
                   textAnchor={anchor}
@@ -341,6 +407,7 @@ export const timeline: SvgComponent<TimelineComponent> = {
                 ? desc.lines.map((line, li) => (
                     <text
                       key={li}
+                      data-truncated={desc.truncated && li === desc.lines.length - 1 ? "1" : undefined}
                       x={tx}
                       y={descTop + li * desc.lineHeight}
                       textAnchor={anchor}

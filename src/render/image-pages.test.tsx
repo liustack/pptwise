@@ -151,6 +151,37 @@ describe("image-split / image-top gallery English heading overflow", () => {
   })
 })
 
+describe("image-top title band", () => {
+  // The band around the title kept the flat 42px / 12px of the 30px title it
+  // was drawn for. stage sets that title at 45px and playbill at 39px: the
+  // comma of "续航十四小时，从早会撑到夜航" came to rest on the rule, and the
+  // glyph tops ran to within 3px of the picture's bottom edge.
+  const HEADING = "续航十四小时，从早会撑到夜航"
+  const DESCENT = 0.25
+  const CJK_ASCENT = 0.88
+
+  it.each(["journal", "playbill", "stage"] as const)("%s keeps the title clear of the picture and the rule", (theme) => {
+    for (const slide of [
+      makeSlide(HEADING),
+      { ...makeSlide(HEADING), components: [makeSlide(HEADING).components[0]!] } as Slide,
+    ]) {
+      const root = renderRoot(theme, "image-top", slide)
+      const titles = titleNodes(root, HEADING)
+      const first = titles[0]!
+      const last = titles.at(-1)!
+      const size = Number(first.getAttribute("font-size"))
+      const top = Number(first.getAttribute("y")) - size * CJK_ASCENT
+      const floor = Number(last.getAttribute("y")) + size * DESCENT
+      const imageBottom = Number(root.querySelector("image")!.getAttribute("height"))
+      const hairline = Array.from(root.querySelectorAll("rect")).find(
+        (r) => r.getAttribute("height") === "1" && Number(r.getAttribute("width")) > 1000,
+      )!
+      expect(top - imageBottom, theme).toBeGreaterThanOrEqual(12)
+      expect(Number(hairline.getAttribute("y")) - floor, theme).toBeGreaterThanOrEqual(4)
+    }
+  })
+})
+
 describe("image-top with nothing under the image", () => {
   /** photo 页只带一张图（image_grid / image_compare 被 takeover 收成单张主视觉
    * 也是这一档）：没有分栏可分的时候不预留分栏带，图长到标题带上沿，页底不留

@@ -164,3 +164,182 @@ describe("bmc block titles follow the language of the content", () => {
     expect(text).not.toContain("重要合作")
   })
 })
+
+// A canvas on a narrower content rect: a column of about 150px holds nine
+// characters a line at the type floor. Items used to be fitted to one line
+// and cut there ("协作活跃率领先同行两") while the cell had room underneath.
+describe("bmc wraps an item instead of cutting it", () => {
+  const long = {
+    ...basic,
+    value_propositions: ["协作活跃率领先同行两个身位", "开通模板已覆盖四个客群"],
+    key_activities: ["Seat expansion in existing accounts"],
+  }
+  const W = 880
+
+  it("sets every word of a long item, under its one bullet", () => {
+    const { container } = svg(bmc.render(long, { x: 0, y: 0, w: W }, ctx))
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    // One group per item: its bullet and its lines, no panel.
+    const groups = Array.from(container.querySelectorAll("g")).filter((g) => !g.querySelector("rect, g"))
+    for (const item of [...long.value_propositions, ...long.key_activities]) {
+      const group = groups.find((g) =>
+        (g.textContent ?? "").replace(/ /g, "").includes(item.replace(/ /g, "")),
+      )
+      expect(group, item).toBeDefined()
+      const lines = Array.from(group!.querySelectorAll("text"))
+      expect(lines.length, item).toBeGreaterThan(1)
+      expect(group!.querySelectorAll("circle"), item).toHaveLength(1)
+      // The continuation hangs under the first line, not under the bullet.
+      expect(new Set(lines.map((t) => t.getAttribute("x"))).size, item).toBe(1)
+    }
+  })
+
+  it("measures the lines an item wraps onto", () => {
+    expect(bmc.measure(long, W, ctx)).toBeGreaterThan(bmc.measure(basic, W, ctx))
+  })
+
+  it("keeps an item that fits on its one line", () => {
+    const { container } = svg(bmc.render(long, { x: 0, y: 0, w: W }, ctx))
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+    expect(texts).toContain("核心供应商")
+    expect(texts).toContain("合作伙伴分销")
+  })
+})
+
+// A block title is drawn in the heading face, and the canvas used to size
+// its cells by a generic width estimate instead. The two disagree on where
+// an English title wraps, so a cell was measured for one title line and
+// drawn with two, or measured for two and drawn with one.
+describe("bmc measures a block title in the face it draws it in", () => {
+  const english = {
+    type: "bmc" as const,
+    key_partners: ["Linjiang Group", "Northshore Software"],
+    key_activities: ["Seat expansion in existing accounts", "Standardized onboarding templates"],
+    key_resources: ["Vertical playbooks", "Staffing automation"],
+    value_propositions: ["Activity leads the category", "Existing customers expand"],
+    customer_relationships: ["Faster build iteration"],
+    channels: ["East", "South"],
+    customer_segments: ["Consulting", "Platforms", "K-12"],
+    cost_structure: ["New bookings concentrated in three accounts"],
+    revenue_streams: ["Consulting firms want joint offerings"],
+  }
+
+  /** Space left under the last line of each cell in the top band, whose cells start at y=0. */
+  function topBandSlack(component: Parameters<typeof bmc.render>[0], w: number): number[] {
+    const { container } = svg(bmc.render(component, { x: 0, y: 0, w }, ctx))
+    return Array.from(container.querySelectorAll("rect"))
+      .filter((rect) => Number(rect.getAttribute("y")) === 0)
+      .map((rect) => {
+        const bottom = Number(rect.getAttribute("height"))
+        const baselines = Array.from(rect.parentElement!.querySelectorAll("text")).map((t) => Number(t.getAttribute("y")))
+        return bottom - Math.max(...baselines)
+      })
+  }
+
+  it("is only as tall as the lines it draws on a narrow rect", () => {
+    // At 840px "Key Activities" fits one line in Georgia and two in the
+    // estimate, so every cell in the top band carried a spare title line.
+    // The fullest cell should end one bottom padding (14) plus an item
+    // line's leading under its baseline (22 - 16) below its last line.
+    expect(Math.min(...topBandSlack(english, 840))).toBeCloseTo(20, 0)
+  })
+
+  it("keeps every item at its own measured height when a title wraps only in the heading face", () => {
+    // At 1016px "Customer Segments" fits one line in the estimate and needs
+    // two in Georgia. Measured for one, the column's last segment had no
+    // room left and was dropped.
+    const segments = {
+      ...english,
+      key_activities: ["Onboarding"],
+      key_resources: ["Playbooks"],
+      value_propositions: ["Faster rollout"],
+      customer_segments: [
+        "Mid-market consulting firms",
+        "Regional platform vendors",
+        "K-12 school districts",
+        "Hospital groups in the east",
+      ],
+    }
+    const { container } = svg(bmc.render(segments, { x: 0, y: 0, w: 1016, h: bmc.measure(segments, 1016, ctx) }, ctx))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    const text = container.textContent ?? ""
+    for (const item of segments.customer_segments) expect(text.replace(/\s/g, "")).toContain(item.replace(/\s/g, ""))
+  })
+})
+
+// A canvas narrower than the gallery ever draws it. At 880px an item has a
+// 126px measure and a three-line cap cut "Existing customers reliably
+// expand" after "reliably"; under about 764px "Relationships" is wider than
+// its column in bold Georgia and the block title was cut to "Relationship".
+describe("bmc on a narrow rect keeps every word whole or declines", () => {
+  const english = {
+    type: "bmc" as const,
+    key_partners: ["Linjiang Group", "Northshore Software", "Yunshan School"],
+    key_activities: ["Seat expansion in existing accounts", "Standardized onboarding templates"],
+    key_resources: ["Vertical playbook replication", "Staffing-path automation"],
+    value_propositions: [
+      "Activity leads the category by a clear margin",
+      "Existing customers reliably expand",
+      "Onboarding templates cover four industries",
+    ],
+    customer_relationships: ["Faster build iteration", "Data quality governance"],
+    channels: ["East", "South"],
+    customer_segments: ["Consulting", "Platforms", "K-12"],
+    cost_structure: ["New bookings concentrated in three accounts", "Success bench capacity near saturation"],
+    revenue_streams: ["No mature vendor serves campus buyers yet", "Consulting firms want joint offerings"],
+  }
+  const squash = (s: string) => s.replace(/\s+/g, "")
+
+  it("gives an item the lines it needs instead of cutting it at three", () => {
+    for (const w of [880, 800]) {
+      const { container } = svg(bmc.render(english, { x: 0, y: 0, w }, ctx))
+      expect(container.querySelector("[data-truncated]"), `${w}`).toBeNull()
+      expect(container.querySelector("[data-dropped]"), `${w}`).toBeNull()
+      const text = squash(container.textContent ?? "")
+      for (const key of Object.keys(english).filter((k) => k !== "type") as (keyof typeof english)[]) {
+        for (const item of english[key] as string[]) expect(text, `${w}: ${item}`).toContain(squash(item))
+      }
+      for (const title of ["Customer Relationships", "Value Propositions"]) expect(text, `${w}: ${title}`).toContain(squash(title))
+    }
+  })
+
+  it("declines, rather than break or cut a block title, where a title word is wider than its column", () => {
+    for (const w of [760, 720, 640]) {
+      const markup = renderSvgMarkup(<svg>{bmc.render(english, { x: 0, y: 0, w }, ctx)}</svg>)
+      expect(markup, `${w}`).toContain('data-dropped-kind="component"')
+      expect(markup, `${w}`).not.toContain("data-truncated")
+      expect(markup, `${w}`).not.toContain("Relationship<")
+    }
+  })
+
+  it("keeps drawing a Chinese canvas, whose titles are short, at the same widths", () => {
+    for (const w of [720, 640]) {
+      const { container } = svg(bmc.render(basic, { x: 0, y: 0, w }, ctx))
+      expect(container.querySelector("[data-dropped]"), `${w}`).toBeNull()
+      expect(container.querySelector("[data-truncated]"), `${w}`).toBeNull()
+      expect(container.textContent).toContain("客户关系")
+    }
+  })
+
+  it("wraps a Chinese title between its characters where it is wider than its column", () => {
+    // At 480px a column has 57px for its title and 「重要合作」 is 64px. Read
+    // as one unbreakable word, it sent the whole canvas away, but Chinese
+    // breaks between any two characters, and the title sets as 「重要」
+    // over 「合作」.
+    const w = 480
+    const { container } = svg(bmc.render(basic, { x: 0, y: 0, w }, ctx))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+    const titles = Array.from(container.querySelectorAll('text[font-weight="700"]')).map((t) => t.textContent ?? "")
+    for (const title of ["重要合作", "关键业务", "核心资源", "价值主张", "客户关系", "渠道通路", "客户细分"]) {
+      expect(titles.join(""), title).toContain(title)
+      expect(titles, title).not.toContain(title)
+    }
+    // Where even a two-line title no longer fits, the canvas still declines
+    // rather than cut it.
+    expect(renderSvgMarkup(<svg>{bmc.render(basic, { x: 0, y: 0, w: 320 }, ctx)}</svg>)).toContain(
+      'data-dropped-kind="component"',
+    )
+  })
+})

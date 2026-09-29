@@ -1,6 +1,7 @@
 import { z } from "zod"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
+import { CHART_AXIS_LIMIT } from "./chart"
 
 // 数值轴家族（structure-components wave task 2）：另一支满幅组件——不是
 // named-slot（swot/bmc 的具名槽治的是「弱模型排错序」），而是「运行合计/
@@ -28,6 +29,43 @@ export const schema = z
     unit: z.string().optional(),
   })
   .strict()
+  .superRefine((c, ctx) => {
+    // Every bar is read against one value axis that runs from the lowest
+    // running total to the highest. Past `CHART_AXIS_LIMIT` that axis cannot
+    // be drawn: two bars of 1.7e308 overflow the running total to Infinity,
+    // and one bar from -1.7e308 to 1.7e308 spans more than a double holds,
+    // so every bar and label came out at NaN. The fix is one factor for
+    // every bar, since they are read against one scale and one unit.
+    const everyItem = c.items.map((item) => `"${item.label}"`).join(", ")
+    const advice =
+      `Divide every item (${everyItem}) by the same power of ten, so the bars keep their proportions, ` +
+      `and name the unit in the unit field, for example 3.2 with unit "M" for 3200000.`
+    let valuePast = false
+    c.items.forEach((item, i) => {
+      if (Math.abs(item.value) <= CHART_AXIS_LIMIT) return
+      valuePast = true
+      ctx.addIssue({
+        code: "custom",
+        path: ["items", i, "value"],
+        message: `items[${i}] ("${item.label}") has ${item.value}, beyond plus or minus ${CHART_AXIS_LIMIT}, the largest value a chart axis can draw. ${advice}`,
+      })
+    })
+    if (valuePast) return
+    // Each value can sit under the ceiling while the running total climbs
+    // past it. The closing total the renderer adds is that same running
+    // total, so this covers it too. Named once, where it first crosses.
+    let running = 0
+    for (const [i, item] of c.items.entries()) {
+      running = item.kind === "total" ? item.value : running + item.value
+      if (Math.abs(running) <= CHART_AXIS_LIMIT) continue
+      ctx.addIssue({
+        code: "custom",
+        path: ["items", i, "value"],
+        message: `the running total reaches ${running} at items[${i}] ("${item.label}"), beyond plus or minus ${CHART_AXIS_LIMIT}, the largest value a chart axis can draw. ${advice}`,
+      })
+      return
+    }
+  })
 
 export const aliases = {
   items: [{ itemsKey: "items", aliases: { amount: "value" } }],

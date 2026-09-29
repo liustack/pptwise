@@ -5,6 +5,7 @@ import { render } from "@testing-library/react"
 import { timeline } from "./timeline"
 import type { ComponentCtx } from "./types"
 import { contrastRatio } from "../render/ink"
+import { measureTextUnits } from "../lib/svg-text-layout"
 
 const ctx: ComponentCtx = {
   colors: {
@@ -273,10 +274,15 @@ describe("timeline component", () => {
         expect(markerY + markerFontSize * 0.25).toBeLessThanOrEqual(box.h)
       })
 
-      it("still renders at least one row even when box.h is far smaller than a single row", () => {
+      // This used to pin the opposite: one milestone drawn however short the
+      // box. That milestone lands below the box with no mark anywhere, which
+      // breaks the rule that a component draws all it was given or declares
+      // the loss. The timeline now declines the box.
+      it("declines a box too short for its first milestone instead of drawing it below the box", () => {
         const box = { x: 0, y: 0, w: 800, h: 5 }
         const { container } = svg(timeline.render(manyComponent, box, ctx))
-        expect(container.querySelectorAll("circle").length).toBeGreaterThanOrEqual(1)
+        expect(container.querySelectorAll("circle, text")).toHaveLength(0)
+        expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
       })
 
       it("is a byte-identical no-op when box.h is omitted", () => {
@@ -298,6 +304,78 @@ describe("timeline component", () => {
         expect(container.querySelector("[data-dropped]")).toBeNull()
       })
     })
+  })
+})
+
+describe("timeline end labels beside a centred neighbour", () => {
+  it("wrap short of the neighbour's first glyph instead of running under it", () => {
+    const english = {
+      type: "timeline" as const,
+      milestones: [
+        { date: "Q1", title: "Scoping", desc: "Seat expansion in existing accounts" },
+        { date: "Q2", title: "Solutioning", desc: "Standardized onboarding templates" },
+        { date: "Q3", title: "Seat setup", desc: "In-house workspace compute", highlight: true },
+        { date: "Q4", title: "Access setup", desc: "Vertical playbook replication" },
+      ],
+    }
+    const brief = boundThemeCtx("brief", {})
+    const { container } = svg(timeline.render(english, { x: 96, y: 290, w: 1088 }, brief))
+    // Ink boxes the way the gallery's overlap check draws them.
+    const boxes = Array.from(container.querySelectorAll("g > g")).flatMap((group, milestone) =>
+      Array.from(group.querySelectorAll("text")).map((t) => {
+        const size = Number(t.getAttribute("font-size"))
+        const width =
+          measureTextUnits(t.textContent ?? "", {
+            bold: t.getAttribute("font-weight") === "bold",
+            fontFamily: t.getAttribute("font-family") ?? "",
+          }) * size
+        const x = Number(t.getAttribute("x"))
+        const anchor = t.getAttribute("text-anchor")
+        const left = anchor === "end" ? x - width : anchor === "middle" ? x - width / 2 : x
+        const y = Number(t.getAttribute("y"))
+        return { milestone, text: t.textContent, left, right: left + width, top: y - 0.72 * size, bottom: y + 0.12 * size }
+      }),
+    )
+    const words = boxes.map((b) => b.text).join(" ")
+    for (const m of english.milestones) expect(words).toContain(m.desc)
+    for (const a of boxes) {
+      for (const b of boxes) {
+        if (a.milestone >= b.milestone) continue
+        const apart = a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top
+        expect(apart, `"${a.text}" and "${b.text}"`).toBe(true)
+      }
+    }
+  })
+})
+
+describe("timeline side by side in a short box", () => {
+  const english = {
+    type: "timeline" as const,
+    milestones: [
+      { date: "Q1", title: "Scoping", desc: "Seat expansion in existing accounts across the region" },
+      { date: "Q2", title: "Solutioning", desc: "Standardized onboarding templates for every vertical we sell into" },
+      { date: "Q3", title: "Seat setup", desc: "In-house workspace compute" },
+      { date: "Q4", title: "Access setup", desc: "Vertical playbook replication" },
+    ],
+  }
+  const bottoms = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll("text")).map((t) => Number(t.getAttribute("y")) + Number(t.getAttribute("font-size")) * 0.25)
+
+  it("gives description lines back and marks the cut rather than drawing below the box", () => {
+    const brief = boundThemeCtx("brief", {})
+    const natural = timeline.measure(english, 528, brief)
+    const h = Math.round(natural * 0.75)
+    const { container } = svg(timeline.render(english, { x: 0, y: 0, w: 528, h }, brief))
+    for (const bottom of bottoms(container)) expect(bottom).toBeLessThanOrEqual(h)
+    expect(container.querySelector('[data-truncated="1"]')).not.toBeNull()
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+  })
+
+  it("declines a box too short for one line of each", () => {
+    const brief = boundThemeCtx("brief", {})
+    const { container } = svg(timeline.render(english, { x: 0, y: 0, w: 528, h: 120 }, brief))
+    expect(container.querySelectorAll("text")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
   })
 })
 

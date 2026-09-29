@@ -50,8 +50,22 @@ const LEAD_PX = 19
 const SIDE_PX = FORM_BODY_FLOOR
 const INSET = 28
 const LINE_RATIO = 1.25
-/** How far down the tip's own band the lowest line's descender may reach. */
-const TIP_FLOOR = 0.98
+/**
+ * Room left between the lowest tip line's descender and the waterline, in px.
+ *
+ * The descender used to reach 98% of the way down the tip band, a share
+ * rather than a distance: about two pixels above a 1.5px rule at the natural
+ * height, less in a shorter box, so the line read as text resting on the
+ * rule rather than printed in the ice. A fixed distance holds at every box
+ * height. The clearance is measured from `DESCENDER`, and a glyph box
+ * reaching a quarter of the size below the baseline goes a little further,
+ * so five pixels leaves an 18px line's box about 4.5px off the rule, clear
+ * of the 4px the gallery check asks for. It is kept small on purpose:
+ * every pixel lifts the line into a narrower part of the tip. Across the
+ * gallery's own texts in eleven box sizes, eight pixels turned fifteen
+ * pairings into declines and five turned one.
+ */
+const WATERLINE_CLEAR = 5
 
 function points(shape: readonly (readonly [number, number])[], w: number, y0: number, bandH: number): string {
   return shape.map(([fx, fy]) => `${round(fx * w)},${round(y0 + fy * bandH)}`).join(" ")
@@ -228,8 +242,9 @@ export const iceberg: SvgComponent<IcebergComponent> = {
     // reaches up from the baseline — anchoring the baseline put the top of the
     // line in the part of the tip that is still narrowing, and cost a line
     // more room than the drawing had to give. Anchoring the descender just
-    // inside the base puts every line as low, and so as wide, as it can go.
-    const tipFloorY = above * TIP_FLOOR - ITEM_PX * DESCENDER
+    // above the waterline puts every line as low, and so as wide, as it can
+    // go without touching the rule.
+    const tipFloorY = above - WATERLINE_CLEAR - ITEM_PX * DESCENDER
     const aboveRows = component.above.map((text, i) => {
       const y = tipFloorY - (component.above.length - 1 - i) * ITEM_PX * LINE_RATIO
       return { ...row(text, TIP, y, 0, above, ITEM_PX, false), lead: false }

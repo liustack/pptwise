@@ -207,4 +207,101 @@ describe("icon_cards component", () => {
     const ctx = themeCtx("swiss")
     expect(markupOf(iconCards.render(four, BOX, ctx))).toBe(markupOf(iconCards.render(four, BOX, ctx)))
   })
+
+  it("tops every column in a row at one line, so icons and titles align across it", () => {
+    // Pre-fix each column centred its own stack in the row, so a column with
+    // a longer body sat higher than its neighbours and the icons stepped
+    // across the row (brief and thesis gallery pages).
+    const uneven = {
+      type: "icon_cards" as const,
+      items: [
+        card("In-house workspace compute", "Moving workloads off public cloud dropped per-seat monthly cost by thirty-one percent.", "target"),
+        card("Vertical playbook replication", "East China penetration is half of South China.", "gauge"),
+        card("Staffing-path automation", "Client managers are running near their load ceiling, so expansion is gated on hiring.", "shield"),
+        card("Channel partner", "Two competitors bid below cost.", "rocket"),
+      ],
+    }
+    const { container } = svg(iconCards.render(uneven, { x: 96, y: 330, w: 1088, h: 252 }, themeCtx("brief")))
+    const groups = Array.from(container.querySelectorAll("[data-audit-box]"))
+    expect(groups).toHaveLength(4)
+    const nodeCy = groups.map((g) => Number(g.querySelector(":scope > circle")!.getAttribute("cy")))
+    expect(new Set(nodeCy).size).toBe(1)
+    const titleY = groups.map((g) => Number(g.querySelector("text")!.getAttribute("y")))
+    expect(new Set(titleY).size).toBe(1)
+    // The bodies still differ in length, so the stacks differ in height.
+    const lastY = groups.map((g) => Math.max(...Array.from(g.querySelectorAll("text")).map((t) => Number(t.getAttribute("y")))))
+    expect(new Set(lastY).size).toBeGreaterThan(1)
+  })
+
+  it("shrinks the icon node before it cuts a sentence the box could hold", () => {
+    const english = {
+      type: "icon_cards" as const,
+      items: [
+        card("In-house workspace compute", "Moving workloads off public cloud dropped per-seat monthly cost by thirty-one percent.", "target"),
+        card("Vertical playbook replication", "East China penetration is half of South China, and sales coverage density is the main reason.", "gauge"),
+        card("Staffing-path automation", "Client managers are running near their load ceiling, so expansion is gated on hiring.", "shield"),
+        card("Channel partner enablement", "Two competitors are bidding below cost in the mid-market, which we cannot meet head-on.", "rocket"),
+      ],
+    }
+    const ctx = themeCtx("brief")
+    // 224px: short enough that these four need a smaller node than the
+    // natural 44. At 252px they used to, while Georgia was priced 20% wide.
+    const h = 224
+    const { container } = svg(iconCards.render(english, { x: 96, y: 330, w: 1088, h }, ctx))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const words = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .join(" ")
+    for (const item of english.items) expect(words).toContain(item.text)
+    const radii = Array.from(container.querySelectorAll("[data-audit-box] > circle")).map((c) => Number(c.getAttribute("r")))
+    expect(radii.length).toBe(english.items.length)
+    for (const r of radii) {
+      expect(r).toBeLessThan(44)
+      expect(r).toBeGreaterThanOrEqual(28)
+    }
+    for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y"))).toBeLessThanOrEqual(h)
+  })
+
+  it("sizes the type against the title lines it then reserves, so a tall box does not cut the body", () => {
+    // The split-band face hands a four-card row 307px. Type used to be scaled
+    // up against one title line and the lines handed out against two, which
+    // left each body a line short of its third.
+    const farm = {
+      type: "icon_cards" as const,
+      items: [
+        card("轮作不累地", "七月一场大涝淹田三天，稻子倒伏不足一成。", "target"),
+        card("稻鸭共作", "稻鸭共作放鸭三百二十只，除草人工省了六成。", "gauge"),
+        card("蛙声报告", "田埂鸟类记录新增七种，白鹭单次最多十一只。", "shield"),
+        card("冬绿肥", "会员菜箱四百二十户，续订率八成七。", "rocket"),
+      ],
+    }
+    // And when a title really does wrap at the scaled size, the scale has to
+    // have paid for its second line.
+    const field = {
+      type: "icon_cards" as const,
+      items: [
+        card("音系先验注入", "对照组实验排除了说话人重叠带来的数据泄漏解释。", "target"),
+        card("低资源评测协议", "评测集按村落分层抽样，避免了年龄偏置。", "gauge"),
+        card("半自动标注流水线", "方法迁移到藏缅语支后，仅声母系统的收益得到复现。", "shield"),
+        card("村落分层抽样", "半自动标注流水线把每小时标注成本从四百元降到九十元。", "rocket"),
+      ],
+    }
+    for (const [theme, ir] of [["almanac", farm], ["thesis", field]] as const) {
+      const h = 307.2
+      const { container } = svg(iconCards.render(ir, { x: 96, y: 200, w: 1088, h }, themeCtx(theme)))
+      expect(container.querySelectorAll("[data-truncated]"), theme).toHaveLength(0)
+      const words = Array.from(container.querySelectorAll("text"))
+        .map((t) => t.textContent ?? "")
+        .join("")
+      for (const item of ir.items) expect(words, theme).toContain(item.text)
+      for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y")), theme).toBeLessThanOrEqual(h)
+    }
+  })
+
+  it("declines a box too short for even the smallest icon and a line of title", () => {
+    const { container } = svg(iconCards.render(four, { x: 0, y: 0, w: 1088, h: 90 }, themeCtx("brief")))
+    expect(container.querySelectorAll("circle, text")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+  })
 })
+

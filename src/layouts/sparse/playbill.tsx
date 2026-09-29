@@ -7,7 +7,8 @@ import { accessibleOpacity, readableOn } from "../../render/ink"
 import { bleedSlotCanHost, findImageSelection, singlePictureExact } from "../find-image"
 import { DroppedContentMarker } from "../../render/drop-marker"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, isNumericHero, rotateRectPolygon, splitTrailingPercent } from "./shared"
+import { fitHeroLine, fitSparseHeading, fitStatementSource, isNumericHero, rotateRectPolygon, splitTrailingPercent } from "./shared"
+import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** playbill 稀排脸：特粗三行、出血巨数+斜贴片、满版图。不画日期贴片。 */
 
@@ -76,14 +77,17 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   const numeric = isNumericHero(raw)
   const unsigned = raw.trim().replace(/^-/, "")
   const { body } = splitTrailingPercent(unsigned)
+  const unit = heroUnit(slide)
   const fitted = fitHeroLine(numeric ? body : raw, {
     maxWidth: 1000,
     fontSize: 380,
     fontFamily: fonts.heading,
     bold: true,
+    unit,
   })
-  const unit = heroUnit(slide)
-  const unitMark = heroUnitMark(fitted.fontSize)
+  // A figure this line cannot set whole goes to the plain page, never cut.
+  if (!fitted) return StatHeroFallbackContent({ slide, ctx })
+  const unitMark = fitted.unitMark
   const chip = numeric ? (raw.includes("%") ? raw : `${raw}%`) : null
   const caption = heroCaption(slide)
   const source = heroSource(slide)

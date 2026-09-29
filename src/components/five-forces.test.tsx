@@ -239,10 +239,23 @@ describe("five_forces component", () => {
         expect(g.labelSize).toBe(16)
       })
 
+      // A box short enough that no panel header fits is declined whole now
+      // (see "five_forces in a box too short for its panel headers"), so the
+      // floor is checked at every height the cross still agrees to draw in.
       it("never shrinks type below the 16px (12pt) readable floor, air spent or not", () => {
-        const g = atHeight(Math.max(80, natural * 0.2))
-        expect(g.itemSize).toBe(16)
-        expect(g.labelSize).toBe(16)
+        let drawn = 0
+        for (const h of [natural * 0.6, natural * 0.45, natural * 0.35, natural * 0.25, 80]) {
+          const { container } = svg(fiveForces.render(basic, { x: 0, y: 0, w: 1000, h }, ctx))
+          if (!container.querySelector('rect[data-force="rivalry"]')) {
+            expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+            continue
+          }
+          drawn += 1
+          const g = atHeight(h)
+          expect(g.itemSize, `h=${h}`).toBe(16)
+          expect(g.labelSize, `h=${h}`).toBe(16)
+        }
+        expect(drawn).toBeGreaterThan(0)
       })
     })
 
@@ -271,6 +284,35 @@ describe("five_forces component", () => {
     }
     const { container } = svg(fiveForces.render(longItem, { x: 0, y: 0, w: 1000 }, ctx))
     expect(container.querySelector('text[data-truncated="1"]')).not.toBeNull()
+  })
+
+  it("wraps a phrase too long for a side panel under its own bullet, and makes the row tall enough", () => {
+    const english = {
+      type: "five_forces" as const,
+      rivalry: { items: ["Below-cost bids in the mid-market", "Large accounts building in-house teams"], intensity: "high" as const },
+      new_entrants: { items: ["No mature vendor serves campus buyers yet", "Consulting firms want joint offerings"], intensity: "medium" as const },
+      supplier_power: { items: ["New bookings concentrated in three accounts", "Success bench capacity near saturation"], intensity: "medium" as const },
+      buyer_power: { items: ["Activity leads the category by a clear margin", "Existing customers reliably expand"], intensity: "high" as const },
+      substitutes: { items: ["Tightening workplace data regulations", "Longer lead times on key add-ons"], intensity: "low" as const },
+    }
+    const georgia: ComponentCtx = { ...ctx, fonts: { heading: "Georgia", body: "Georgia", mono: "Consolas" } }
+    const w = 1088
+    const h = fiveForces.measure(english, w, georgia)
+    const { container } = svg(fiveForces.render(english, { x: 0, y: 0, w }, georgia))
+    expect(container.querySelectorAll("[data-truncated], [data-dropped]")).toHaveLength(0)
+    const words = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .join(" ")
+    for (const panel of [english.supplier_power, english.buyer_power]) {
+      for (const item of panel.items) expect(words).toContain(item)
+    }
+    // The side panel carrying the wrapped lines still holds its last line.
+    const supplier = container.querySelector('rect[data-force="supplier_power"]')!
+    const bottom = Number(supplier.getAttribute("y")) + Number(supplier.getAttribute("height"))
+    const lastLine = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "saturation")
+    expect(lastLine).toBeTruthy()
+    expect(Number(lastLine!.getAttribute("y"))).toBeLessThan(bottom)
+    expect(h).toBeGreaterThan(fiveForces.measure(basic, w, georgia))
   })
 })
 
@@ -315,3 +357,14 @@ describe("five_forces panel titles follow the language of the content", () => {
     expect(text).toContain("买方议价能力")
   })
 })
+
+describe("five_forces in a box too short for its panel headers", () => {
+  it("declines the box rather than printing headers past it", () => {
+    for (const h of [120, 20]) {
+      const { container } = svg(fiveForces.render(basic, { x: 0, y: 0, w: 1088, h }, ctx))
+      expect(container.querySelectorAll("rect, text, circle"), `h=${h}`).toHaveLength(0)
+      expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind"), `h=${h}`).toBe("component")
+    }
+  })
+})
+

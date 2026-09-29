@@ -170,4 +170,99 @@ describe("hub_spoke component", () => {
     const b = renderToStaticMarkup(<svg>{hubSpoke.render(four, box, ctx)}</svg>)
     expect(a).toBe(b)
   })
+
+  it("gives a description too long for one line the second line its capsule has room for", () => {
+    const english = {
+      type: "hub_spoke" as const,
+      center: "Product",
+      items: [
+        { label: "Consulting", description: "Seat expansion in existing accounts" },
+        { label: "Platforms", description: "Standardized onboarding templates" },
+        { label: "K-12", description: "In-house workspace compute" },
+        { label: "Credit", description: "Vertical playbook replication" },
+      ],
+    }
+    const { container } = svg(hubSpoke.render(english, { x: 96, y: 240, w: 1088 }, themed("brief")))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const capsules = Array.from(container.querySelectorAll("g")).filter((g) => g.querySelector(":scope > rect"))
+    expect(capsules).toHaveLength(english.items.length)
+    capsules.forEach((capsule, i) => {
+      const rect = capsule.querySelector(":scope > rect")!
+      const top = Number(rect.getAttribute("y"))
+      const bottom = top + Number(rect.getAttribute("height"))
+      const texts = Array.from(capsule.querySelectorAll("text"))
+      const words = texts.map((t) => t.textContent ?? "").join(" ")
+      expect(words, `capsule ${i}`).toContain(english.items[i]!.description)
+      for (const t of texts) {
+        const y = Number(t.getAttribute("y"))
+        expect(y, `capsule ${i}`).toBeGreaterThan(top)
+        expect(y, `capsule ${i}`).toBeLessThan(bottom)
+      }
+    })
+  })
+
+  it("scales into a box shorter than its own height instead of drawing past it", () => {
+    const english = {
+      type: "hub_spoke" as const,
+      center: "Product",
+      items: [
+        { label: "Consulting", description: "Seat expansion in existing accounts" },
+        { label: "Platforms", description: "Standardized onboarding templates" },
+        { label: "K-12", description: "In-house workspace compute" },
+        { label: "Credit", description: "Vertical playbook replication" },
+      ],
+    }
+    const ctx = themed("brief")
+    const h = Math.round(hubSpoke.measure(english, 1088, ctx) * 0.75)
+    const box = { x: 0, y: 0, w: 1088, h }
+    const { container } = svg(hubSpoke.render(english, box, ctx))
+    for (const r of container.querySelectorAll("rect")) {
+      expect(Number(r.getAttribute("y")) + Number(r.getAttribute("height"))).toBeLessThanOrEqual(h + 0.5)
+    }
+    for (const c of container.querySelectorAll("circle")) {
+      expect(Number(c.getAttribute("cy")) + Number(c.getAttribute("r"))).toBeLessThanOrEqual(h + 0.5)
+    }
+  })
+
+  it("declines a box too short for its words at their floor size, rather than setting them below it", () => {
+    const tiny = {
+      type: "hub_spoke" as const,
+      center: ".",
+      items: [{ label: "g" }, { label: "g" }, { label: "g" }, { label: "g" }],
+    }
+    const ctx = themed("swiss")
+    const { container } = svg(hubSpoke.render(tiny, { x: 0, y: 0, w: 1088, h: 20 }, ctx))
+    expect(container.querySelectorAll("text")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+  })
+
+  it("keeps every word's ink inside the box at every height it agrees to draw in", () => {
+    const english = {
+      type: "hub_spoke" as const,
+      center: "Product",
+      items: [
+        { label: "Consulting", description: "Seat expansion in existing accounts" },
+        { label: "Platforms", description: "Standardized onboarding templates" },
+        { label: "K-12", description: "In-house workspace compute" },
+        { label: "Credit", description: "Vertical playbook replication" },
+      ],
+    }
+    const ctx = themed("swiss")
+    for (const h of [236, 177, 118, 80, 60, 40, 20]) {
+      const { container } = svg(hubSpoke.render(english, { x: 0, y: 0, w: 1088, h }, ctx))
+      const texts = Array.from(container.querySelectorAll("text"))
+      if (texts.length === 0) {
+        expect(container.querySelector("[data-dropped]"), `h=${h}`).not.toBeNull()
+        continue
+      }
+      for (const t of texts) {
+        const y = Number(t.getAttribute("y"))
+        const size = Number(t.getAttribute("font-size"))
+        // A glyph's ink runs about 0.8em above its baseline and 0.25em below.
+        expect(y + size * 0.25, `h=${h} "${t.textContent}"`).toBeLessThanOrEqual(h)
+        expect(y - size * 0.8, `h=${h} "${t.textContent}"`).toBeGreaterThanOrEqual(0)
+      }
+    }
+  })
 })
+

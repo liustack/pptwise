@@ -2,7 +2,8 @@ import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue, pullQuoteAttribution, pullQuoteContext, pullQuoteText } from "../minimal-shared"
-import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, fitStatementSource, pad2, quoteBlockBaseline } from "./shared"
+import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, pad2, quoteBlockBaseline } from "./shared"
+import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** journal 稀排脸：巨引号、期号巨数、报头格言。不画 motif 报头双线。 */
 
@@ -75,9 +76,11 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const section = sectionNameFor(ir.slides, index)
   const kicker = [`№ ${pad2(index + 1)}`, section].filter((v): v is string => Boolean(v && v.trim())).join(" · ")
-  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: false })
   const unit = heroUnit(slide)
-  const unitMark = heroUnitMark(fitted.fontSize)
+  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: false, unit })
+  // A figure this line cannot set whole goes to the plain page, never cut.
+  if (!fitted) return StatHeroFallbackContent({ slide, ctx })
+  const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   return (

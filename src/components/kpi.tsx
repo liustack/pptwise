@@ -7,6 +7,8 @@ import {
 } from "../lib/svg-text-layout"
 import { accessibleInk, accessibleOpacity, graphicInk, resolveSemanticColor, type SemanticColorTokens } from "../render/ink"
 import { Icon } from "../render/icons"
+import { DroppedContentMarker } from "../render/drop-marker"
+import { layoutAtSize } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
 
 type KpiComponent = Extract<Component, { type: "kpi_cards" }>
@@ -209,9 +211,30 @@ export function dedupeKpiUnit(
   return u && value.trim().endsWith(u) ? undefined : unit
 }
 
-/** 任一 item 带 source 来源行时卡加高（label 下再排一行 11px 小字）。 */
-function baseCardH(component: KpiComponent): number {
-  return component.items.some((it) => it.source) ? CARD_H + 18 : CARD_H
+/** Pitch of a source line under the label, and under the source line before it. */
+const SOURCE_LINE = 18
+/**
+ * A source is a citation ("CloudSeek Workspaces Q2 2026 operating data"),
+ * and a quarter-width card holds about twenty characters of one at 16px. It
+ * takes a second line before it loses its tail.
+ */
+const SOURCE_MAX_LINES = 2
+
+function fitSource(source: string, cardW: number, maxLines = SOURCE_MAX_LINES): { lines: string[]; truncated: boolean } {
+  const one = fitSvgLine(source, { maxWidth: cardW - 40, fontSize: 16, minFontSize: 16 })
+  if (!one.truncated || maxLines <= 1) return { lines: [one.text], truncated: one.truncated }
+  const laid = layoutAtSize(source, { maxWidth: cardW - 40, fontSize: 16, maxLines })
+  return { lines: laid.lines, truncated: laid.truncated }
+}
+
+/** 任一 item 带 source 来源行时卡加高（label 下再排一行 11px 小字），来源折成几行就加几行。 */
+function baseCardH(component: KpiComponent, cardW: number, maxLines = SOURCE_MAX_LINES): number {
+  const lines = Math.max(0, ...component.items.map((it) => (it.source ? fitSource(it.source, cardW, maxLines).lines.length : 0)))
+  return lines > 0 ? CARD_H + SOURCE_LINE * lines : CARD_H
+}
+
+function cardWidth(boxW: number, cols: number): number {
+  return (boxW - GAP * (cols - 1)) / cols
 }
 
 /**
@@ -277,7 +300,7 @@ function wrappedHeight(component: KpiComponent, w: number): number {
   const n = component.items.length
   const cols = visibleCardCount(n, w)
   const rows = Math.ceil(n / cols)
-  const rowH = baseCardH(component)
+  const rowH = baseCardH(component, cardWidth(w, cols))
   return rows * rowH + (rows - 1) * GAP
 }
 
@@ -288,17 +311,34 @@ export const kpi: SvgComponent<KpiComponent> = {
   render(rawComponent, box, ctx) {
     const fullCount = rawComponent.items.length
     const cols = visibleCardCount(fullCount, box.w)
-    const rowH = baseCardH(rawComponent)
+    // Grid pitch is the column count, not the last row's leftover, so a
+    // 3+1 wrap does not stretch the fourth card across the whole rail.
+    const cardW = cardWidth(box.w, cols)
     const naturalRows = Math.ceil(fullCount / cols)
-    const maxRows =
-      box.h == null ? naturalRows : Math.max(1, Math.floor((box.h + GAP) / (rowH + GAP)))
+    // A box too short for the cards at their wrapped-source height gives the
+    // source's second line back before it drops a row or runs a card past
+    // its bottom edge. At one line a card is the height it always was.
+    let sourceCap = SOURCE_MAX_LINES
+    let rowH = baseCardH(rawComponent, cardW, sourceCap)
+    while (box.h != null && sourceCap > 1 && naturalRows * rowH + (naturalRows - 1) * GAP > box.h) {
+      sourceCap -= 1
+      rowH = baseCardH(rawComponent, cardW, sourceCap)
+    }
+    const maxRows = box.h == null ? naturalRows : Math.floor((box.h + GAP) / (rowH + GAP))
+    // A box shorter than one row of cards cannot hold a card. It used to keep
+    // one row anyway and run it past the box's bottom edge with nothing to
+    // say so; the cards decline the box instead.
+    if (maxRows < 1) {
+      return (
+        <g transform={`translate(${box.x},${box.y})`}>
+          <DroppedContentMarker count={1} kind="component" />
+        </g>
+      )
+    }
     const rows = Math.min(naturalRows, maxRows)
     const visible = Math.min(fullCount, cols * rows)
     const hidden = fullCount - visible
     const component = hidden > 0 ? { ...rawComponent, items: rawComponent.items.slice(0, visible) } : rawComponent
-    // Grid pitch is the column count, not the last row's leftover, so a
-    // 3+1 wrap does not stretch the fourth card across the whole rail.
-    const cardW = (box.w - GAP * (cols - 1)) / cols
     const natural = rows * rowH + (rows - 1) * GAP
     const cardH = box.h != null && box.h > natural ? (box.h - (rows - 1) * GAP) / rows : rowH
     const contentShift = (cardH - rowH) / 2
@@ -382,9 +422,7 @@ export const kpi: SvgComponent<KpiComponent> = {
             fontSize: 16,
             minFontSize: 16,
           })
-          const fittedSource = item.source
-            ? fitSvgLine(item.source, { maxWidth: cardW - 40, fontSize: 16, minFontSize: 16 })
-            : null
+          const fittedSource = item.source ? fitSource(item.source, cardW, sourceCap) : null
           return (
             <g key={i}>
               <rect
@@ -447,11 +485,12 @@ export const kpi: SvgComponent<KpiComponent> = {
               >
                 {fittedLabel.text}
               </text>
-              {fittedSource && (
+              {fittedSource?.lines.map((line, li) => (
                 <text
-                  data-truncated={fittedSource.truncated ? "1" : undefined}
+                  key={`source-${li}`}
+                  data-truncated={fittedSource.truncated && li === fittedSource.lines.length - 1 ? "1" : undefined}
                   x={cardX + 20}
-                  y={cardY + 114 + contentShift}
+                  y={cardY + 114 + li * SOURCE_LINE + contentShift}
                   fontSize={16}
                   fill={ctx.colors.muted}
                   // Post-v0.3 W8 fix round (backlog item "D", task-2 review
@@ -474,9 +513,9 @@ export const kpi: SvgComponent<KpiComponent> = {
                   fontFamily={ctx.fonts.body}
                   dominantBaseline="alphabetic"
                 >
-                  {fittedSource.text}
+                  {line}
                 </text>
-              )}
+              ))}
             </g>
           )
         })}

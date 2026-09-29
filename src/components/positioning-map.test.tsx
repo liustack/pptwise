@@ -186,6 +186,117 @@ describe("positioning_map component", () => {
     }
   })
 
+  // Subjects clustered round the crossing, as a clinic's patient groups are:
+  // several sit a few points off one rule or the other, which is where the
+  // labels used to land straight across an axis.
+  const crossing = {
+    ...eight,
+    points: [
+      { label: "签约随访组", x: 78, y: 74, emphasis: true as const },
+      { label: "普通门诊组", x: 46, y: 52 },
+      { label: "独居老人组", x: 20, y: 30 },
+      { label: "在职中年组", x: 34, y: 44 },
+      { label: "药房取药组", x: 56, y: 40 },
+      { label: "讲堂常来组", x: 70, y: 62 },
+      { label: "楼组长带教组", x: 62, y: 58 },
+      { label: "新确诊组", x: 26, y: 48 },
+    ],
+  }
+
+  /** Each point's name, its dot, and the two rules, read off the markup. */
+  function readMap(component: typeof crossing, w: number, ctx: ComponentCtx) {
+    const { container } = svg(positioningMap.render(component, { x: 0, y: 0, w }, ctx))
+    const [horizontal, vertical] = Array.from(container.querySelectorAll("line"))
+    const axisY = Number(horizontal!.getAttribute("y1"))
+    const axisX = Number(vertical!.getAttribute("x1"))
+    const circles = Array.from(container.querySelectorAll("circle"))
+    const texts = Array.from(container.querySelectorAll("text"))
+    const names = component.points.map((point, i) => {
+      const t = texts.find((el) => el.textContent === point.label)
+      if (!t) return { point, dot: circles[i]!, ink: undefined }
+      const size = Number(t.getAttribute("font-size"))
+      const width =
+        measureTextUnits(point.label, { bold: t.getAttribute("font-weight") === "700", fontFamily: ctx.fonts.body }) *
+        size
+      const x = Number(t.getAttribute("x"))
+      const y = Number(t.getAttribute("y"))
+      const left = t.getAttribute("text-anchor") === "end" ? x - width : x
+      // The same ink band the gallery's geometry check reads: a full em
+      // above the baseline and a quarter below it.
+      return { point, dot: circles[i]!, ink: { left, right: left + width, top: y - size, bottom: y + size * 0.25 } }
+    })
+    return { container, axisX, axisY, names }
+  }
+
+  it("keeps every name off both axis rules", () => {
+    for (const w of [1088, 880]) {
+      const { axisX, axisY, names } = readMap(crossing, w, themed("clinic"))
+      for (const { point, ink } of names) {
+        expect(ink, `${w}: ${point.label} placed`).toBeDefined()
+        const clearOfRow = ink!.bottom <= axisY - 4 || ink!.top >= axisY + 4
+        const clearOfColumn = ink!.right <= axisX - 4 || ink!.left >= axisX + 4
+        expect(clearOfRow, `${w}: ${point.label} on the horizontal rule`).toBe(true)
+        expect(clearOfColumn, `${w}: ${point.label} on the vertical rule`).toBe(true)
+      }
+    }
+  })
+
+  it("names each subject inside its own quadrant", () => {
+    const { axisX, axisY, names } = readMap(crossing, 1088, themed("clinic"))
+    for (const { point, dot, ink } of names) {
+      const cx = Number(dot.getAttribute("cx"))
+      const cy = Number(dot.getAttribute("cy"))
+      expect(cx < axisX ? ink!.right < axisX : ink!.left > axisX, `${point.label} across the vertical rule`).toBe(true)
+      expect(cy < axisY ? ink!.bottom < axisY : ink!.top > axisY, `${point.label} across the horizontal rule`).toBe(true)
+    }
+  })
+
+  it("moves an earlier name aside rather than drop a later one", () => {
+    // Eight classes packed into one quadrant near the crossing. Placed in
+    // author order with no second thoughts, the seventh finds every spot
+    // beside its dot taken; another arrangement names them all.
+    const packed = {
+      ...eight,
+      points: [
+        { label: "本班平均", x: 72, y: 68, emphasis: true as const },
+        { label: "基础组", x: 66, y: 42 },
+        { label: "提高组", x: 88, y: 86 },
+        { label: "初二（1）班", x: 78, y: 74 },
+        { label: "初二（5）班", x: 62, y: 60 },
+        { label: "年级平均", x: 70, y: 64 },
+        { label: "上学期本班", x: 58, y: 56 },
+        { label: "订正未跟组", x: 40, y: 34 },
+      ],
+    }
+    const { container, names } = readMap(packed, 1088, themed("homeroom"))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    for (const { point, ink } of names) expect(ink, point.label).toBeDefined()
+  })
+
+  it("moves an axis end name off a subject's dot to the other side of its rule", () => {
+    // A subject near the far end of the horizontal scale and a little under
+    // the middle lands its dot where the high end's name is printed.
+    const nearEnd = {
+      ...eight,
+      x_axis: { title: "托管化程度", low: "自建", high: "全托管" },
+      points: [...eight.points.slice(0, 7), { label: "东启金融", x: 92, y: 40 }],
+    }
+    const { container } = svg(positioningMap.render(nearEnd, { x: 0, y: 0, w: 1088 }, themed("brief")))
+    const horizontal = container.querySelector("line")!
+    const axisY = Number(horizontal.getAttribute("y1"))
+    const name = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "托管化程度 全托管")!
+    const baseline = Number(name.getAttribute("y"))
+    const size = Number(name.getAttribute("font-size"))
+    const dot = Array.from(container.querySelectorAll("circle"))[7]!
+    const cy = Number(dot.getAttribute("cy"))
+    const r = Number(dot.getAttribute("r"))
+    // The name's ink band and the dot no longer share any height.
+    const top = baseline - size
+    const bottom = baseline + size * 0.25
+    expect(bottom <= cy - r || top >= cy + r).toBe(true)
+    expect(bottom).toBeLessThanOrEqual(axisY - 4)
+  })
+
   it("declares instead of drawing past a height it was given", () => {
     const { container } = svg(positioningMap.render(eight, { x: 0, y: 0, w: 1088, h: 200 }, themed("brief")))
     const marker = container.querySelector("[data-dropped]")!
@@ -234,5 +345,160 @@ describe("positioning_map component", () => {
     const a = renderToStaticMarkup(<svg>{positioningMap.render(eight, box, ctx)}</svg>)
     const b = renderToStaticMarkup(<svg>{positioningMap.render(eight, box, ctx)}</svg>)
     expect(a).toBe(b)
+  })
+
+  it("boxes an English name at the width its face paints, not half again", () => {
+    // Eight English subjects on a 700px map. Every Latin name used to be
+    // boxed at half again its width, so one of them found no free spot
+    // beside its dot and was declared dropped, while the names at their
+    // real advances all fit.
+    const english = {
+      type: "positioning_map" as const,
+      x_axis: { title: "Delivery depth", low: "Light", high: "Deep" },
+      y_axis: { title: "Annual contract value", low: "Low", high: "High" },
+      quadrants: {
+        top_left: "Generic tools, price war",
+        top_right: "Deep delivery, annual terms",
+        bottom_left: "Self-serve, volume play",
+        bottom_right: "Service-heavy, low ticket",
+      },
+      points: [
+        { label: "CloudSeek", x: 74, y: 80, emphasis: true as const },
+        { label: "Linjiang Group", x: 90, y: 62 },
+        { label: "Northshore", x: 88, y: 30 },
+        { label: "Yunshan School", x: 30, y: 74 },
+        { label: "Dongqi Fund", x: 46, y: 56 },
+        { label: "Yonggu Market", x: 16, y: 38 },
+        { label: "Ocean Education", x: 58, y: 18 },
+        { label: "Jinsui Study", x: 26, y: 8 },
+      ],
+    }
+    for (const themeId of ["brief", "swiss"]) {
+      const ctx = themed(themeId)
+      const { container } = svg(positioningMap.render(english, { x: 0, y: 0, w: 700 }, ctx))
+      expect(container.querySelector("[data-dropped]"), themeId).toBeNull()
+      // Each name at its real advance width: none runs into another name or a dot.
+      const names = english.points.map((point) => {
+        const t = Array.from(container.querySelectorAll("text")).find((el) => el.textContent === point.label)
+        expect(t, `${themeId}: ${point.label}`).toBeDefined()
+        const size = Number(t!.getAttribute("font-size"))
+        const width =
+          measureTextUnits(point.label, { bold: point.emphasis === true, fontFamily: ctx.fonts.body, exact: true }) * size
+        const x = Number(t!.getAttribute("x"))
+        const left = t!.getAttribute("text-anchor") === "end" ? x - width : x
+        return { label: point.label, x: left, y: Number(t!.getAttribute("y")) - size * 0.8, w: width, h: size * 1.1 }
+      })
+      const dots = Array.from(container.querySelectorAll("circle")).map((c) => {
+        const r = Number(c.getAttribute("r"))
+        return { x: Number(c.getAttribute("cx")) - r, y: Number(c.getAttribute("cy")) - r, w: r * 2, h: r * 2 }
+      })
+      const hits = (a: { x: number; y: number; w: number; h: number }, b: typeof a) =>
+        a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
+      for (const [i, name] of names.entries()) {
+        for (const dot of dots) expect(hits(name, dot), `${themeId}: ${name.label} over a dot`).toBe(false)
+        for (const other of names.slice(i + 1)) {
+          expect(hits(name, other), `${themeId}: ${name.label} over ${other.label}`).toBe(false)
+        }
+      }
+    }
+  })
+
+  describe("keeps two names stacked one over the other far enough apart to read as two", () => {
+    // Air between two words above and below each other, ink to ink. A wrapped
+    // line sits at most 0.3em (5px here) under the one above it.
+    const STACK_AIR = 8
+    // Ink as the gallery's L1 check reads it: ideographs reach 0.88em above
+    // the baseline, Latin less, and a descender 0.25em below.
+    const inkOf = (t: Element, ctx: ComponentCtx) => {
+      const size = Number(t.getAttribute("font-size"))
+      const text = t.textContent ?? ""
+      const width =
+        measureTextUnits(text, { bold: t.getAttribute("font-weight") === "700", fontFamily: ctx.fonts.body, exact: true }) *
+        size
+      const x = Number(t.getAttribute("x"))
+      const y = Number(t.getAttribute("y"))
+      const left = t.getAttribute("text-anchor") === "end" ? x - width : x
+      return { text, left, right: left + width, top: y - size * 0.88, bottom: y + size * 0.25 }
+    }
+    /** Every pair of words on the map that overlap across, with the air between them above and below. */
+    function stackedGaps(component: typeof english, w: number, ctx: ComponentCtx) {
+      const { container } = svg(positioningMap.render(component, { x: 0, y: 0, w }, ctx))
+      expect(container.querySelector("[data-dropped]")).toBeNull()
+      const inks = Array.from(container.querySelectorAll("text")).map((t) => inkOf(t, ctx))
+      const names = new Set(component.points.map((p) => p.label))
+      for (const label of names) expect(inks.some((ink) => ink.text === label), label).toBe(true)
+      const gaps: { pair: string; gap: number }[] = []
+      for (const [i, a] of inks.entries()) {
+        for (const b of inks.slice(i + 1)) {
+          // Two axis or quadrant names are placed by the frame, not by the
+          // name search; a pair needs a subject's name in it.
+          if (!names.has(a.text) && !names.has(b.text)) continue
+          if (a.right <= b.left || b.right <= a.left) continue
+          gaps.push({ pair: `${a.text} / ${b.text}`, gap: Math.max(b.top - a.bottom, a.top - b.bottom) })
+        }
+      }
+      return gaps
+    }
+    const english = {
+      type: "positioning_map" as const,
+      x_axis: { title: "Delivery depth", low: "Light", high: "Deep" },
+      y_axis: { title: "Annual contract value", low: "Low", high: "High" },
+      points: [
+        { label: "Yunshan School", x: 30, y: 70 },
+        { label: "Dongqi Fund", x: 30, y: 62 },
+      ] as { label: string; x: number; y: number; emphasis?: true }[],
+    }
+
+    it("for two subjects one right above the other", () => {
+      // Named in author order, the second name used to land one row under
+      // the first with 1.4px of ink between them: one name on two lines.
+      for (const gap of stackedGaps(english, 1088, themed("brief"))) {
+        expect(gap.gap, gap.pair).toBeGreaterThanOrEqual(STACK_AIR)
+      }
+    })
+
+    it("on a full map, against every other name and every axis and quadrant name", () => {
+      const full = {
+        ...english,
+        quadrants: {
+          top_left: "Generic tools, price war",
+          top_right: "Deep delivery, annual terms",
+          bottom_left: "Self-serve, volume play",
+          bottom_right: "Service-heavy, low ticket",
+        },
+        points: [
+          { label: "CloudSeek", x: 74, y: 80, emphasis: true as const },
+          { label: "Linjiang Group", x: 90, y: 62 },
+          { label: "Northshore", x: 88, y: 30 },
+          { label: "Yunshan School", x: 30, y: 74 },
+          { label: "Dongqi Fund", x: 46, y: 56 },
+          { label: "Yonggu Market", x: 16, y: 38 },
+          { label: "Ocean Education", x: 58, y: 18 },
+          { label: "Jinsui Study", x: 26, y: 8 },
+        ],
+      }
+      for (const w of [1088, 880]) {
+        for (const gap of stackedGaps(full, w, themed("brief"))) {
+          expect(gap.gap, `${w}: ${gap.pair}`).toBeGreaterThanOrEqual(STACK_AIR)
+        }
+      }
+      // Eight classes packed round the crossing, as homeroom's map has them.
+      const packed = {
+        ...eight,
+        points: [
+          { label: "本班平均", x: 72, y: 68, emphasis: true as const },
+          { label: "基础组", x: 66, y: 42 },
+          { label: "提高组", x: 88, y: 86 },
+          { label: "初二（1）班", x: 78, y: 74 },
+          { label: "初二（5）班", x: 62, y: 60 },
+          { label: "年级平均", x: 70, y: 64 },
+          { label: "上学期本班", x: 58, y: 56 },
+          { label: "订正未跟组", x: 40, y: 34 },
+        ],
+      }
+      for (const gap of stackedGaps(packed as typeof english, 1088, themed("homeroom"))) {
+        expect(gap.gap, gap.pair).toBeGreaterThanOrEqual(STACK_AIR)
+      }
+    })
   })
 })

@@ -2,6 +2,7 @@ import type React from "react"
 import type { Component } from "@/ir"
 import { wrapClip } from "./clip-text"
 import { readableOn } from "../render/ink"
+import { DroppedContentMarker } from "../render/drop-marker"
 import {
   FORM_BODY_FLOOR,
   FORM_TITLE_FLOOR,
@@ -29,6 +30,22 @@ const BADGE_INSET = 16
 const TITLE_SIZE = FORM_TITLE_FLOOR
 const FOOT_SIZE = FORM_BODY_FLOOR
 const FOOT_GAP = 14
+/**
+ * How far a sentence's last line reaches below its baseline. A line's
+ * baseline sits at the bottom of its line box, so descenders (g, p, y, the
+ * tails of 的 and 了) hang under it; a quarter em covers them. The height a
+ * step asks for includes this, so the last line's ink stays inside the box
+ * it is given.
+ */
+const FOOT_DESCENT = Math.ceil(FOOT_SIZE * 0.25)
+/**
+ * Lines a step's sentence may take under its chevron. Side by side, a slot
+ * is a quarter of the page, and an ordinary English sentence runs to four
+ * or five lines there at the body floor; it keeps them rather than stopping
+ * at three. Stacked, a step spans the full width and two lines hold it.
+ */
+const FOOT_LINES = 5
+const FOOT_LINES_VERTICAL = 2
 
 function needsVertical(n: number, w: number): boolean {
   return n * MIN_ARROW_W + (n - 1) * THRESHOLD_GAP > w
@@ -66,11 +83,11 @@ function measureSteps(component: StepsComponent, w: number, ctx: ComponentCtx): 
   const n = component.items.length
   const vertical = needsVertical(n, w)
   const slotW = vertical ? w : (w - GAP * (n - 1)) / n
-  const footLines = vertical ? 2 : 3
+  const footLines = vertical ? FOOT_LINES_VERTICAL : FOOT_LINES
   const foot = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
   const arrowH = vertical ? ARROW_H_VERTICAL : ARROW_H
-  if (vertical) return n * (arrowH + FOOT_GAP + foot + GAP) - GAP
-  return arrowH + FOOT_GAP + foot
+  if (vertical) return n * (arrowH + FOOT_GAP + foot + GAP) - GAP + FOOT_DESCENT
+  return arrowH + FOOT_GAP + foot + FOOT_DESCENT
 }
 
 function renderBadge(
@@ -110,9 +127,17 @@ export const steps: SvgComponent<StepsComponent> = {
   const slotW = vertical ? box.w : (box.w - GAP * (n - 1)) / n
   const fill = ctx.colors.primary
   const ink = readableOn(fill)
-  const footLines = vertical ? 2 : 3
-  const footH = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
   const arrowH = vertical ? ARROW_H_VERTICAL : ARROW_H
+  // Side by side, a box shorter than the chevrons and their sentences gives
+  // lines back from the bottom of every sentence, cut and marked, rather than
+  // printing the last of them under the box. Stacked steps drop whole steps
+  // instead, below.
+  let footLines = vertical ? FOOT_LINES_VERTICAL : FOOT_LINES
+  let footH = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
+  while (!vertical && box.h !== undefined && footLines > 1 && arrowH + FOOT_GAP + footH + FOOT_DESCENT > box.h) {
+    footLines -= 1
+    footH = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
+  }
   const stride = arrowH + FOOT_GAP + footH + (vertical ? GAP : 0)
   const titleMaxW = Math.max(1, slotW - BADGE_R * 2 - BADGE_INSET - 28)
   const budget = box.h ?? Number.POSITIVE_INFINITY
@@ -120,11 +145,21 @@ export const steps: SvgComponent<StepsComponent> = {
   if (vertical && Number.isFinite(budget)) {
     visible = 0
     for (let i = 0; i < n; i++) {
-      const bottom = i * stride + arrowH + FOOT_GAP + footH
-      if (bottom > budget && visible >= 1) break
+      const bottom = i * stride + arrowH + FOOT_GAP + footH + FOOT_DESCENT
+      if (bottom > budget) break
       visible = i + 1
     }
-    visible = Math.max(1, visible)
+  }
+  // Side by side with one line of sentence, or stacked with not even the
+  // first step, the box cannot hold the steps: they decline it rather than
+  // drawing under it.
+  const tooShort = vertical ? visible === 0 && n > 0 : box.h !== undefined && arrowH + FOOT_GAP + footH + FOOT_DESCENT > box.h + 1
+  if (tooShort) {
+    return (
+      <g transform={`translate(${box.x},${box.y})`}>
+        <DroppedContentMarker count={1} kind="component" />
+      </g>
+    )
   }
   const hidden = n - visible
   const shown = component.items.slice(0, visible)

@@ -168,8 +168,16 @@ describe("bullets component emphasis", () => {
     const texts = Array.from(container.querySelectorAll("text"))
     const suffix = texts.find((t) => (t.textContent ?? "").includes("结尾还有一些文字"))
     expect(suffix).toBeTruthy()
+    // The emphasis may run onto the suffix's line ("例延续" wraps there now
+    // that the clause breaks per character), but none of the suffix's own
+    // characters may be accented.
     const suffixTspans = Array.from(suffix!.querySelectorAll("tspan"))
-    expect(suffixTspans.some((t) => t.getAttribute("fill") === "#00A878")).toBe(false)
+    const accented = suffixTspans
+      .filter((t) => t.getAttribute("fill") === "#00A878")
+      .map((t) => t.textContent ?? "")
+      .join("")
+    expect(accented).not.toMatch(/[结尾还有一些文字]/)
+    expect(accented).toBe("例延续")
   })
 })
 

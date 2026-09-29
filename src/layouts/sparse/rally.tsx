@@ -5,7 +5,8 @@ import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
+import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** rally 稀排脸：洋红收尾杠、侧幕卡。不画纸屑场。 */
 
@@ -65,9 +66,11 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
 export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const section = sectionNameFor(ir.slides, index)
-  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 320, fontFamily: fonts.heading, bold: true })
   const unit = heroUnit(slide)
-  const unitMark = heroUnitMark(fitted.fontSize)
+  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 320, fontFamily: fonts.heading, bold: true, unit })
+  // A figure this line cannot set whole goes to the plain page, never cut.
+  if (!fitted) return StatHeroFallbackContent({ slide, ctx })
+  const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   return (

@@ -4,15 +4,18 @@ import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { heroCaption, heroSource, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
+import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** swiss 稀排脸：左对齐超黑。不画顶边红条（motif 已画）。 */
 
 export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 360, fontFamily: fonts.heading, bold: true })
   const unit = heroUnit(slide)
-  const unitMark = heroUnitMark(fitted.fontSize)
+  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 360, fontFamily: fonts.heading, bold: true, unit })
+  // A figure this line cannot set whole goes to the plain page, never cut.
+  if (!fitted) return StatHeroFallbackContent({ slide, ctx })
+  const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   const page = `${pad2(index + 1)} / ${pad2(ir.slides.length)}`

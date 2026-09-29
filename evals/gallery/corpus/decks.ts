@@ -419,6 +419,9 @@ function shortNote(lex: Lexicon): Component {
   return { type: "paragraph", text: lex.sentences[10]! }
 }
 
+/** The frames `show-gallery` lays across its page (`FRAME_X` in `content-show-gallery.tsx`). */
+const SHOW_GALLERY_FRAMES = 6
+
 /**
  * Body components for a content page under a given layout, filled up to the
  * layout's declared capacity and no further. Overfilling would make the
@@ -466,11 +469,18 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
     return [cards]
   }
   if (def.id === "show-gallery") {
+    // Six frames over four photos, and a caption of its own under each. The
+    // captions used to cycle the four-line pool, so frames five and six
+    // printed the captions of frames one and two.
+    const captions = lex.captions.slice(0, SHOW_GALLERY_FRAMES)
+    if (captions.length < SHOW_GALLERY_FRAMES) {
+      throw new Error(`show-gallery draws ${SHOW_GALLERY_FRAMES} frames, and lexicon "${lex.id}" has ${lex.captions.length} captions`)
+    }
     return [{
       type: "image_grid",
-      items: Array.from({ length: 6 }, (_, index) => ({
+      items: captions.map((caption, index) => ({
         asset_id: PHOTO_ASSETS[index % PHOTO_ASSETS.length]!,
-        caption: lex.captions[index % lex.captions.length]!,
+        caption,
       })),
     }]
   }

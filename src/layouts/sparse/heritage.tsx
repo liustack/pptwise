@@ -1,7 +1,8 @@
 import type { SvgTemplateProps } from "../types"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue, pullQuoteAttribution, pullQuoteContext, pullQuoteText } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, heroUnitMark, quoteBlockBaseline } from "./shared"
+import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline } from "./shared"
+import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** heritage 稀排脸：文武线引文、取景框格言、夹心巨数。不画 motif 顶缘双线和顶角金菱。 */
 
@@ -185,9 +186,11 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
 
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
-  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 800, fontSize: 280, fontFamily: fonts.heading, bold: false })
   const unit = heroUnit(slide)
-  const unitMark = heroUnitMark(fitted.fontSize)
+  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 800, fontSize: 280, fontFamily: fonts.heading, bold: false, unit })
+  // A figure this line cannot set whole goes to the plain page, never cut.
+  if (!fitted) return StatHeroFallbackContent({ slide, ctx })
+  const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   return (

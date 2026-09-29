@@ -70,23 +70,35 @@ export const CATEGORY_FOLDING_TYPES = ["bar", "line", "area", "stacked", "percen
 export const STACKED_TYPES = ["stacked", "percent_stacked"] as const
 
 /**
- * The largest magnitude a stacked column total, or any value in a combo, may
- * reach.
+ * The largest magnitude a value on a chart's value axis, or a stacked column
+ * total, may reach.
  *
  * A value axis pads its range and rounds it out to nice ticks, so its top tick
- * lands at up to a few times the largest value it holds, and the builders stop
- * producing finite ticks well before a double runs out: a plain bar of 1.7e308
- * already throws while laying out its axis. A stacked total is a sum, so it
- * can leave the doubles on its own (`1e308 + 1e308` is `Infinity`), and the
- * column, the axis and the printed total then all come out as `Infinity` or
- * `NaN`. The ceiling leaves eight orders of magnitude for the axis to grow
+ * lands at up to a few times the largest value it holds, and past a point no
+ * finite tick can reach it: a plain bar of 1.7e308 walked its ticks toward an
+ * end that had overflowed to `Infinity` and threw a `RangeError`, and a
+ * scatter or a dumbbell drew its points at `NaN`. A stacked total is a sum, so
+ * it can leave the doubles on its own (`1e308 + 1e308` is `Infinity`), and
+ * the column, the axis and the printed total then all come out as `Infinity`
+ * or `NaN`. The ceiling leaves eight orders of magnitude for the axis to grow
  * into, and no figure a slide reports comes near it.
  *
- * It applies to `stacked` and `combo`. `percent_stacked` needs none, since
- * it scales each column before summing it and its axis is always 0% to 100%.
- * The older types keep accepting what they always accepted.
+ * It applies to every value on a value axis: every `y` of `bar` (either
+ * direction), `line`, `area`, `scatter`, `dumbbell` and `combo`, a scatter's
+ * `x`, and a stacked column's total. `percent_stacked` needs none, since it
+ * scales each column before summing it and its axis is always 0% to 100%.
+ * A `waterfall` reads its bars against a value axis of its own, so every
+ * item's value and every running total a bar ends at is held to it too
+ * (`waterfall.ts`).
  */
 export const CHART_AXIS_LIMIT = 1e300
+
+/**
+ * Chart types that read every value against one value axis the renderer
+ * builds from the values themselves. `combo` has two axes and its own message
+ * below, and `stacked` is held to the ceiling by its column totals.
+ */
+const ONE_AXIS_TYPES = ["bar", "line", "area", "scatter", "dumbbell"] as const
 
 /** Chart types whose columns stand upright only. `direction` belongs to bar. */
 const UPRIGHT_ONLY_TYPES = ["stacked", "percent_stacked", "combo"] as const
@@ -503,6 +515,46 @@ export const schema = z
             ? `axes.${key} labels the right-hand axis, and no series here is on it. Set axis: "right" on the series that needs its own scale, or remove ${key}.`
             : `axes.${key} labels the right-hand axis of a combo chart, and a ${c.chart_type} chart has none. Remove ${key}, or use chart_type "combo" with a series on axis: "right".`,
       })
+    }
+    // Every value on a value axis stays under the ceiling, or no finite tick
+    // can reach it. The fix is one factor for every series on the axis, since
+    // they are read against one scale and one unit, and dividing only the
+    // series that is too large changes how it compares with the others.
+    if (ONE_AXIS_TYPES.includes(c.chart_type as (typeof ONE_AXIS_TYPES)[number])) {
+      const everySeries = c.series.map((s) => `"${s.name}"`).join(", ")
+      // Where the unit goes: the field that labels the value axis. A
+      // horizontal bar's value axis runs along x. A dumbbell prints no axis,
+      // and its two series' names are what its legend shows.
+      const unitAt = (axis: "x" | "y") =>
+        c.chart_type === "dumbbell"
+          ? `and name the unit in both series' names, for example 3.2 with "(M)" in the name for 3200000.`
+          : `and name the unit in axes.${axis}_unit, for example 3.2 with "M" for 3200000.`
+      const valueAxis = c.chart_type === "bar" && c.direction === "horizontal" ? "x" : "y"
+      c.series.forEach((s, si) =>
+        s.data.forEach((d, di) => {
+          if (Math.abs(d.y) > CHART_AXIS_LIMIT) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["series", si, "data", di, "y"],
+              message:
+                `series[${si}] ("${s.name}") has ${d.y} for "${d.x}", beyond plus or minus ${CHART_AXIS_LIMIT}, the largest value a chart axis can draw. ` +
+                `Divide every series (${everySeries}) by the same power of ten, so they keep their proportions, ` +
+                unitAt(valueAxis),
+            })
+          }
+          // A scatter's x is a quantity on an axis of its own.
+          if (c.chart_type === "scatter" && typeof d.x === "number" && Math.abs(d.x) > CHART_AXIS_LIMIT) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["series", si, "data", di, "x"],
+              message:
+                `series[${si}] ("${s.name}") has x ${d.x}, beyond plus or minus ${CHART_AXIS_LIMIT}, the largest value a chart axis can draw. ` +
+                `Divide the x of every point in every series (${everySeries}) by the same power of ten, so they keep their proportions, ` +
+                unitAt("x"),
+            })
+          }
+        }),
+      )
     }
     // A combo's values sit on one of two axes, and the right one is built to
     // share the left one's rows, which stretches its range further still.

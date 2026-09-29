@@ -84,7 +84,7 @@ Fonts express family, weight, and rhythm. Never require a commercial face to exi
 
 ### Decoration
 
-Decoration must stay subordinate to content and within audit-safe regions. Keep solid marks out of heading, body, footer metadata, logo, and footnote zones. Hairlines up to 1.5px and background-level marks may cross a reserved zone only when the composited result remains readable.
+Decoration must stay subordinate to content and within audit-safe regions. Keep solid marks out of heading, body, footer metadata, logo, and footnote zones. Hairlines up to 1.5px and background-level marks may cross a reserved zone, but never a line of text. A rule through a line, or within 4px of it, reads as a strikethrough at any contrast, and the gallery's L1 check reports it. Components fill the content area down to about y=648, so content-page rules belong in the margins or below the footer rule, as homeroom's do.
 
 A page paints at most three named decoration pieces. Repeated marks that read as one field count as one piece. Wrap pieces in `<g data-decor-piece>` so the budget can audit them.
 

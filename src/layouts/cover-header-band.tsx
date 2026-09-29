@@ -243,6 +243,10 @@ export const layoutDef: LayoutDefinition = {
     notFor: "Openings where the title goes inside the band rather than below it, which is what Title Band does.",
   },
   slideTypes: ["cover"],
+  // The band is solid primary from the top edge down to y=152. A motif mark
+  // in that corner is painted and then covered: invisible on the slide, and
+  // a stray shape under the band in the exported file.
+  decorKeepOut: [{ x: 0, y: 0, w: 1280, h: BAND_H }],
   slots: [
     { name: "meta", accepts: [] },
     { name: "heading", accepts: [] },

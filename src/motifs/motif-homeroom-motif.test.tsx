@@ -8,8 +8,20 @@ import { resolveStyle } from "../themes"
 import { blendOver, contrastRatio } from "../render/ink"
 import { HomeroomMotif } from "./motif-homeroom-motif"
 import { CONTENT_DECOR_CONTRAST_CEILING, DECOR_PIECE_ATTR, countDecorPieces, leafOpacity, leafPaint, paintedLeaves } from "./decor-budget"
-import { textInkBox } from "../render/depth-contract/geometry"
-import type { PptxIR, Slide } from "@/ir"
+import {
+  IDENTITY_MATRIX,
+  multiplyMatrices,
+  parseSvgTransform,
+  textInkBox,
+  transformBox,
+} from "../render/depth-contract/geometry"
+import { FOOTER_DIVIDER_Y } from "../render/branding-geometry"
+import { renderSlideSvg } from "../api"
+import { installNodePlatform } from "../platform/node"
+import { buildMatrix } from "../../evals/gallery/matrix"
+import { corpusAssets, themeDeck, type CorpusAssets } from "../../evals/gallery/corpus/decks"
+import { LEXICONS, type LanguageId } from "../../evals/gallery/corpus/lexicon"
+import type { DeckBranding, PptxIR, Slide } from "@/ir"
 
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } as Slide
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] } as Slide
@@ -20,7 +32,7 @@ const DRAWN_SLIDES = [coverSlide, chapterSlide, contentSlide]
 const CLASSROOM_HEX = ["#ECF0F2", "#F9FBFC", "#4A6B8A", "#B96A5E", "#23282E", "#5A6470", "#D3DBE0"]
 const BAND = { x: 96, y: 252, w: 1088, h: 176 }
 
-const ir = (theme: string): PptxIR =>
+const ir = (theme: string, branding?: DeckBranding): PptxIR =>
   ({
     version: "3",
     filename: "x.pptx",
@@ -28,6 +40,7 @@ const ir = (theme: string): PptxIR =>
     meta: {},
     assets: { images: {} },
     slides: [coverSlide],
+    ...(branding ? { branding } : {}),
   }) as unknown as PptxIR
 
 function render(body: React.ReactElement | null): { markup: string; root: Element } {
@@ -39,11 +52,88 @@ function render(body: React.ReactElement | null): { markup: string; root: Elemen
   return { markup, root: parseSvgRoot(markup) }
 }
 
-function draw(theme: string, slide: Slide) {
+function draw(theme: string, slide: Slide, opts: { branding?: DeckBranding } = {}) {
   const tokens = resolveStyle(theme)
   const defaultBg = resolveBackgroundHex(tokens.defaultBackgrounds[slide.type], tokens.colors.surface)
   const ctx = buildCtx(tokens, {}, undefined, defaultBg)
-  return { ...render(<HomeroomMotif ir={ir(theme)} slide={slide} ctx={ctx} />), ctx, tokens, defaultBg }
+  return {
+    ...render(<HomeroomMotif ir={ir(theme, opts.branding)} slide={slide} ctx={ctx} />),
+    ctx,
+    tokens,
+    defaultBg,
+  }
+}
+
+/** Blank page between a rule and the nearest line of text, in px. */
+const RULE_TEXT_CLEARANCE = 12
+
+function inherited(el: Element, name: string): string | null {
+  for (let n: Element | null = el; n && n.tagName.toLowerCase() !== "svg"; n = n.parentElement) {
+    const v = n.getAttribute(name)
+    if (v !== null && v !== "") return v
+  }
+  return null
+}
+
+/**
+ * Every homeroom page the gallery draws (sample deck, each menu face, every
+ * component skin), rendered through the public entry point. Returns one
+ * line per text that a motif rule crosses or comes within
+ * `RULE_TEXT_CLEARANCE` of. The text box runs a full em above the baseline
+ * and a quarter em below it, the reach of CJK glyphs and italic
+ * descenders.
+ */
+async function ruleTextOffenders(theme: string): Promise<string[]> {
+  installNodePlatform()
+  const assets = { zh: await corpusAssets(LEXICONS.zh) } as Record<LanguageId, CorpusAssets>
+  const offenders: string[] = []
+  for (const job of buildMatrix([theme], assets, { section: theme })) {
+    const svg = renderSlideSvg(job.ir, job.slideIndex)
+    const root = parseSvgRoot(svg)
+    const rules: { y: number; x1: number; x2: number }[] = []
+    const texts: { label: string; box: { x: number; y: number; w: number; h: number } }[] = []
+    const visit = (el: Element, parent: typeof IDENTITY_MATRIX, inRules: boolean) => {
+      const matrix = multiplyMatrices(parent, parseSvgTransform(el.getAttribute("transform")))
+      const rulesHere = inRules || el.getAttribute(DECOR_PIECE_ATTR) === "rules"
+      const tag = el.tagName.toLowerCase()
+      if (tag === "line" && rulesHere) {
+        const box = transformBox(
+          { x: num(el, "x1"), y: num(el, "y1"), w: num(el, "x2") - num(el, "x1"), h: 0 },
+          matrix,
+        )
+        rules.push({ y: box.y, x1: box.x, x2: box.x + box.w })
+      }
+      if (tag === "text" && !el.closest("[data-decor]")) {
+        const content = (el.textContent ?? "").trim()
+        if (content) {
+          const fontSize = Number(inherited(el, "font-size") ?? 16)
+          const ink = textInkBox({
+            content,
+            x: num(el, "x"),
+            y: num(el, "y"),
+            fontSize,
+            fontFamily: inherited(el, "font-family") ?? "",
+            fontWeight: inherited(el, "font-weight"),
+            textAnchor: inherited(el, "text-anchor") ?? "start",
+          })
+          const box = { x: ink.x, y: num(el, "y") - fontSize, w: ink.w, h: fontSize * 1.25 }
+          texts.push({ label: content.slice(0, 16), box: transformBox(box, matrix) })
+        }
+      }
+      for (const child of Array.from(el.children)) visit(child, matrix, rulesHere)
+    }
+    visit(root, IDENTITY_MATRIX, false)
+    for (const rule of rules) {
+      for (const t of texts) {
+        if (t.box.x >= rule.x2 || t.box.x + t.box.w <= rule.x1) continue
+        const gap = Math.max(t.box.y - rule.y, rule.y - (t.box.y + t.box.h))
+        if (gap < RULE_TEXT_CLEARANCE) {
+          offenders.push(`${job.id}: rule y${rule.y} is ${gap.toFixed(1)}px from "${t.label}"`)
+        }
+      }
+    }
+  }
+  return offenders
 }
 
 const num = (el: Element, a: string) => Number(el.getAttribute(a))
@@ -129,6 +219,59 @@ describe("HomeroomMotif（横线簿格线）", () => {
       const ratio = contrastRatio(blendOver(paint!.color, defaultBg, leafOpacity(el)), defaultBg)
       expect(ratio).toBeLessThan(CONTENT_DECOR_CONTRAST_CEILING)
     }
+  })
+
+  it("content 格线沉到页脚分隔线以下，版心里一条不画", () => {
+    // 版式把内容（含脚注墨）都排在 FOOTER_DIVIDER_Y 之上，线落在它下面才
+    // 碰不到任何组件。y500/548 落在版心中段，横穿图表坐标、卡片字和表格行。
+    const { root } = draw("homeroom", contentSlide)
+    const lines = Array.from(root.querySelectorAll("line"))
+    expect(lines.map((l) => [num(l, "x1"), num(l, "y1"), num(l, "x2"), num(l, "y2")])).toEqual([
+      [96, 672, 1184, 672],
+      [96, 696, 1184, 696],
+    ])
+    for (const box of inkBoxes(root)) {
+      expect(box.y0, "rule inside the content frame").toBeGreaterThan(FOOTER_DIVIDER_Y)
+      expect(720 - box.y1, "rule too close to the page edge").toBeGreaterThanOrEqual(20)
+    }
+  })
+
+  it("deck 给内容页画页脚时 content 格线让位，不与分隔线、meta 行、logo 叠", () => {
+    for (const branding of ["full", "minimal"] as const) {
+      const { root } = draw("homeroom", contentSlide, { branding })
+      expect(root.querySelectorAll("line"), branding).toHaveLength(0)
+      expect(countDecorPieces(root), branding).toBe(0)
+    }
+    for (const branding of ["cover-only", undefined] as const) {
+      const { root } = draw("homeroom", contentSlide, { branding })
+      expect(root.querySelectorAll("line"), String(branding)).toHaveLength(2)
+    }
+    // 封面与章节的格线位置由版式定死，与页脚无关，照画。
+    for (const slide of [coverSlide, chapterSlide]) {
+      expect(draw("homeroom", slide, { branding: "full" }).root.querySelectorAll("line")).toHaveLength(2)
+    }
+  })
+
+  it("整页走真实渲染：格线与每一行字至少隔 12px（样张 + 菜单版式 + 全部组件皮肤）", async () => {
+    const offenders = await ruleTextOffenders("homeroom")
+    expect(offenders, offenders.join("\n")).toEqual([])
+  })
+
+  it("整页走真实渲染：branding full 的内容页只有页脚分隔线，没有格线", async () => {
+    installNodePlatform()
+    const deck = themeDeck("homeroom", LEXICONS.zh, await corpusAssets(LEXICONS.zh))
+    const branded = { ...deck, branding: "full", meta: { ...deck.meta, organization: "明澜中学", date: "2026-07-01" } } as PptxIR
+    let contentPages = 0
+    branded.slides.forEach((slide, index) => {
+      const root = parseSvgRoot(renderSlideSvg(branded, index))
+      const rules = root.querySelectorAll(`[${DECOR_PIECE_ATTR}="rules"]`)
+      if (slide.type !== "content") return
+      contentPages++
+      expect(rules, `p${index + 1}`).toHaveLength(0)
+      const footer = Array.from(root.querySelectorAll("line")).filter((l) => num(l, "y1") === FOOTER_DIVIDER_Y)
+      expect(footer, `p${index + 1} footer divider`).toHaveLength(1)
+    })
+    expect(contentPages).toBeGreaterThan(0)
   })
 
   it("ending 完全退让，避免与作业底线叠一条", () => {

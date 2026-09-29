@@ -66,6 +66,24 @@ describe("auditSvgMarkup", () => {
     expect(issues.some((i) => i.kind === "page-overflow")).toBe(true)
   })
 
+  // A hero figure sets its unit as a smaller trailing `<tspan>` inside the
+  // same `<text>` (brief's stat-hero: "10.2" at 310px, "万席" at 81px). Read
+  // at the outer 310px, the two CJK glyphs alone were charged 620px and the
+  // line was reported spanning x=[96,1381], off a page it never leaves.
+  it("measures a trailing tspan at its own font size", () => {
+    const issues = auditSvgMarkup(
+      wrap(`<text x="96" y="450" font-size="310" font-weight="700">10.2<tspan dx="12" font-size="81">万席</tspan></text>`),
+    )
+    expect(issues).toEqual([])
+  })
+
+  it("still flags a line whose tspan runs carry it off the page", () => {
+    const issues = auditSvgMarkup(
+      wrap(`<text x="900" y="450" font-size="200">42<tspan dx="12" font-size="100">万元整</tspan></text>`),
+    )
+    expect(issues.map((i) => i.kind)).toEqual(["page-overflow"])
+  })
+
   // text-anchor="middle" straddles its x coordinate, so the auditor must
   // subtract width/2 (not width) from tx to find the left edge. "12345678"
   // is 8 digits, each weighed 0.56 by measureTextUnits (digits fall in the
@@ -263,22 +281,28 @@ describe("auditSvgMarkup — bold-weight alignment with the real exporter (bold-
     expect(issues.filter((i) => i.kind === "h-overflow")).toHaveLength(1)
   })
 
-  it("scope fence: the identical line/box at Regular weight (no font-weight attribute) stays clean — bold-awareness doesn't leak into non-bold text", () => {
+  // Georgia Regular now measures from its exact table, which puts this line
+  // at 1182.7px: the ~1.3% Regular overflow root-cause.md S3 recorded is
+  // real, and the audit now sees it. The fences below ask a different
+  // question (does Bold metrics leak into non-bold text?), so they use a box
+  // that holds the Regular line and not the Bold one (1366.8px).
+  const REGULAR_FITS_BOX_W = 1190
+
+  it("scope fence: the identical line at Regular weight (no font-weight attribute) fits a box its Bold twin overflows, so bold-awareness doesn't leak into non-bold text", () => {
     const markup = wrap(
-      `<g data-audit-box="0,0,${REPORTED_BOX_W}">` +
+      `<g data-audit-box="0,0,${REGULAR_FITS_BOX_W}">` +
         `<text x="0" y="20" font-size="${REPORTED_FONT_SIZE}" font-family="${georgiaCtx.fonts.heading}">${REPORTED_LINE}</text>` +
         `</g>`,
     )
     const issues = auditSvgMarkup(markup)
-    // Regular Georgia is within tolerance for this string (root-cause.md
-    // S3: +1.41%, inside the 3% no-action band) — genuinely does not
-    // overflow, not merely "not flagged."
     expect(issues.filter((i) => i.kind === "h-overflow")).toEqual([])
+    const bold = auditSvgMarkup(markup.replace("<text ", '<text font-weight="700" '))
+    expect(bold.filter((i) => i.kind === "h-overflow")).toHaveLength(1)
   })
 
   it("scope fence: font-weight=\"500\" (below this codebase's bold threshold) is not treated as bold", () => {
     const markup = wrap(
-      `<g data-audit-box="0,0,${REPORTED_BOX_W}">` +
+      `<g data-audit-box="0,0,${REGULAR_FITS_BOX_W}">` +
         `<text x="0" y="20" font-size="${REPORTED_FONT_SIZE}" font-weight="500" font-family="${georgiaCtx.fonts.heading}">${REPORTED_LINE}</text>` +
         `</g>`,
     )

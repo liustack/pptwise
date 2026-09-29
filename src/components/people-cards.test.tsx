@@ -314,3 +314,86 @@ describe("people-cards title belongs to the group below it", () => {
     expect(stretched.aboveInsideBox).toBe(natural.aboveInsideBox)
   })
 })
+
+// A roster in a side panel: five people in three columns of about 130px,
+// with the type already at its floor. Every field used to be fitted to one
+// line (the role to two) and cut when it did not fit, so the panel printed
+// "Yanqing" for Yanqing Chen and "TechnologyO" for the second half of a
+// title.
+describe("people_cards says every name whole in a narrow card", () => {
+  const panel = {
+    type: "people_cards" as const,
+    people: [
+      { name: "Yanqing Chen", role: "Chief Technology Officer", org: "Linjiang Group" },
+      { name: "月捐人代表阿蓝", role: "捐赠人监督员", org: "萤火乡村阅读基金会" },
+      { name: "Weiwan Su", role: "Director of Workspaces", org: "CloudSeek" },
+      { name: "谷雨", role: "项目总监", org: "月捐共同体" },
+      { name: "Yuan He", role: "Head of Digital", org: "Northshore Software" },
+    ],
+  }
+  const W = 424
+
+  const textsOf = (component: typeof panel, h?: number) => {
+    const box = { x: 0, y: 0, w: W, ...(h != null ? { h } : {}) }
+    const { container } = svg(peopleCards.render(component, box, ctx))
+    return { container, texts: Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "") }
+  }
+
+  it("wraps a name, a title and an affiliation instead of cutting them", () => {
+    const { container, texts } = textsOf(panel)
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+    // Lines joined back up, spaces dropped: a wrapped name loses the space
+    // it broke at.
+    const joined = texts.join("").replace(/ /g, "")
+    for (const person of panel.people) {
+      expect(joined, person.name).toContain(person.name.replace(/ /g, ""))
+      expect(joined, person.role).toContain(person.role.replace(/ /g, ""))
+      expect(joined, person.org).toContain(person.org.replace(/ /g, ""))
+    }
+    expect(texts).toContain("Yanqing")
+    expect(texts).toContain("Chen")
+    expect(texts).toContain("Officer")
+  })
+
+  it("keeps a name that fits on its one line at the full size", () => {
+    const { container } = textsOf(panel)
+    const name = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "谷雨")!
+    expect(Number(name.getAttribute("font-size"))).toBe(16)
+    expect(Array.from(container.querySelectorAll("text")).filter((t) => t.textContent === "谷雨")).toHaveLength(1)
+  })
+
+  it("measures the lines it wraps onto", () => {
+    const short = {
+      ...panel,
+      people: panel.people.map((p) => ({ name: p.name.split(" ")[0]!.slice(0, 2), role: "CTO", org: "Acme" })),
+    }
+    expect(peopleCards.measure(panel, W, ctx)).toBeGreaterThan(peopleCards.measure(short, W, ctx))
+  })
+
+  it("declines a word too long for the card even on its own line", () => {
+    // "Collaboration" is wider than a 130px card at the type floor, so the
+    // affiliation cannot be set whole here. A roster that prints part of it
+    // names a different organisation; the page needs a wider rendering.
+    const long = {
+      ...panel,
+      people: [{ ...panel.people[0]!, org: "CloudSeek Collaboration" }, ...panel.people.slice(1)],
+    }
+    const { container, texts } = textsOf(long)
+    expect(container.querySelector("[data-dropped]")).not.toBeNull()
+    expect(texts).toHaveLength(0)
+    // The same roster at full width has room for it.
+    const wide = svg(peopleCards.render(long, { x: 0, y: 0, w: 1104 }, ctx)).container
+    expect(wide.querySelector("[data-dropped]")).toBeNull()
+    expect(wide.querySelector("[data-truncated]")).toBeNull()
+  })
+
+  it("declines a height budget shorter than its cards instead of cutting their lines", () => {
+    const measured = peopleCards.measure(panel, W, ctx)
+    const { container, texts } = textsOf(panel, measured - 60)
+    const marker = container.querySelector("[data-dropped]")
+    expect(marker).not.toBeNull()
+    expect(Number(marker!.getAttribute("data-dropped"))).toBe(panel.people.length)
+    expect(marker!.getAttribute("data-dropped-kind")).toBe("card")
+    expect(texts).toHaveLength(0)
+  })
+})

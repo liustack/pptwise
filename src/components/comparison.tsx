@@ -1,7 +1,9 @@
 import { Fragment } from "react"
 import type { Component } from "@/ir"
 import { measureTextUnits, truncateToUnits, type TextWeightHint } from "../lib/svg-text-layout"
-import type { RenderDef, SvgComponent } from "./types"
+import { DroppedContentMarker } from "../render/drop-marker"
+import { formLineHeight, layoutAtSize } from "./legibility"
+import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type ComparisonComponent = Extract<Component, { type: "comparison" }>
 
@@ -184,20 +186,200 @@ function truncate(text: string, colW: number, fontSize: number, weight?: TextWei
   return truncateToUnits(text, (colW - PAD_X * 2) / fontSize, weight)
 }
 
-function measureDefault(component: ComparisonComponent): number {
-  return (component.rows.length + 1) * ROW
+/** Line pitch for a cell that wraps: tighter than body copy, it is a table. */
+const CELL_LINE_RATIO = 1.25
+/** A cell past three lines is a paragraph, not a table entry. */
+const MAX_CELL_LINES = 3
+
+/**
+ * What a column needs to hold its header and every cell on one line at the
+ * sizes the table prefers, padding included.
+ */
+function naturalWidths(component: ComparisonComponent, labelHeader: string, fontFamily: string): number[] {
+  return headerTitles(component, labelHeader).map((header, c) => {
+    const headerW = header ? measureTextUnits(header, { bold: true, fontFamily }) * HEADER_FONT_SIZE : 0
+    const cellW = Math.max(
+      0,
+      ...columnTexts(component, c).map((t) => measureTextUnits(t, { bold: c === 0, fontFamily }) * CELL_FONT_SIZE),
+    )
+    return Math.max(MIN_COL_W, Math.max(headerW, cellW) + PAD_X * 2)
+  })
 }
 
-function renderDefault(rawComponent: ComparisonComponent, box: Parameters<SvgComponent<ComparisonComponent>["render"]>[1], ctx: Parameters<SvgComponent<ComparisonComponent>["render"]>[2]) {
-    // 先丢多余的空首表头，再判首列重复：两种笔误叠在一起时，只有空表头
-    // 已经丢掉，dedupeLabelColumn 的「cells 与 columns 等长」判据才成立。
-    const { labelHeader, component: dedupedComponent } = dedupeLabelColumn(
-      dropBlankLeadingHeader(rawComponent),
+/**
+ * Columns sized from what each one needs. When everything fits, the spare
+ * width is shared out in proportion. When it does not, every column that
+ * needs less than an even share of what is left keeps its natural width,
+ * and the widest columns split the rest and wrap.
+ */
+function fillColumns(natural: number[], totalW: number): number[] {
+  const sum = natural.reduce((s, w) => s + w, 0)
+  if (sum <= totalW) return natural.map((w) => w + ((totalW - sum) * w) / sum)
+  let remaining = totalW
+  let left = natural.length
+  let cap = totalW / natural.length
+  for (const w of [...natural].sort((a, b) => a - b)) {
+    if (w * left <= remaining) {
+      remaining -= w
+      left -= 1
+    } else {
+      cap = remaining / left
+      break
+    }
+  }
+  cap = Math.max(cap, MIN_COL_W)
+  return natural.map((w) => Math.min(w, cap))
+}
+
+function offsetsOf(widths: number[]): number[] {
+  const offsets: number[] = []
+  let x = 0
+  for (const w of widths) {
+    offsets.push(x)
+    x += w
+  }
+  return offsets
+}
+
+interface CellLayout {
+  lines: string[]
+  truncated: boolean
+}
+
+interface TableLayout {
+  labelHeader: string
+  component: ComparisonComponent
+  widths: number[]
+  offsets: number[]
+  headerFontSize: number
+  cellFontSize: number
+  lineH: number
+  headers: CellLayout[]
+  rows: { cells: CellLayout[]; h: number }[]
+}
+
+/**
+ * The whole table's geometry, shared by `measure` and `render` so the height
+ * a face reserves is the height that gets drawn.
+ *
+ * The proportional split below is the table's own look, and it holds while
+ * every header and cell fits its column on one line. It prices text by
+ * character weight alone, though, so a short column pays the same padding
+ * as a long one out of a much smaller share: in a half-page box a three-word
+ * column header came out "Consul". When the split cuts anything, the table
+ * is sized from what each column needs instead, and the one column too long
+ * to fit wraps its cells.
+ */
+function layoutTable(
+  raw: ComparisonComponent,
+  w: number,
+  fontFamily: string,
+  maxCellLines = MAX_CELL_LINES,
+): TableLayout {
+  // 先丢多余的空首表头，再判首列重复：两种笔误叠在一起时，只有空表头
+  // 已经丢掉，dedupeLabelColumn 的「cells 与 columns 等长」判据才成立。
+  const { labelHeader, component } = dedupeLabelColumn(dropBlankLeadingHeader(raw))
+  const headers = headerTitles(component, labelHeader)
+  const colCount = headers.length
+  const rowCells = component.rows.map((row) => [row.label, ...row.cells].slice(0, colCount))
+
+  const sized = (widths: number[]) => {
+    const headerFontSize = fittedFontSize(
+      // Every header renders bold below (`fontWeight="bold"`).
+      headers.flatMap((title, c) => (title ? [{ text: title, colW: widths[c]!, bold: true }] : [])),
+      HEADER_FONT_SIZE,
+      fontFamily,
     )
+    const cellFontSize = fittedFontSize(
+      // Column 0 (row label) renders bold below (`fontWeight={c === 0 ?
+      // "bold" : "normal"}`); every other column stays Regular.
+      rowCells.flatMap((cells) => cells.map((cell, c) => ({ text: cell, colW: widths[c]!, bold: c === 0 }))),
+      CELL_FONT_SIZE,
+      fontFamily,
+    )
+    const headerLayouts = headers.map((title, c): CellLayout => {
+      if (!title) return { lines: [], truncated: false }
+      const fitted = truncate(title, widths[c]!, headerFontSize, { bold: true, fontFamily })
+      return { lines: [fitted], truncated: fitted !== title }
+    })
+    return { headerFontSize, cellFontSize, headerLayouts }
+  }
+
+  const legacyWidths = computeColumns(component, w, labelHeader).widths
+  const legacy = sized(legacyWidths)
+  const legacyCells = rowCells.map((cells) =>
+    cells.map((cell, c): CellLayout => {
+      const fitted = truncate(cell, legacyWidths[c]!, legacy.cellFontSize, { bold: c === 0, fontFamily })
+      return { lines: [fitted], truncated: fitted !== cell }
+    }),
+  )
+  const legacyCuts =
+    legacy.headerLayouts.some((h) => h.truncated) || legacyCells.some((cells) => cells.some((cell) => cell.truncated))
+  if (!legacyCuts) {
+    return {
+      labelHeader,
+      component,
+      widths: legacyWidths,
+      offsets: offsetsOf(legacyWidths),
+      headerFontSize: legacy.headerFontSize,
+      cellFontSize: legacy.cellFontSize,
+      lineH: 0,
+      headers: legacy.headerLayouts,
+      rows: legacyCells.map((cells) => ({ cells, h: ROW })),
+    }
+  }
+
+  const widths = fillColumns(naturalWidths(component, labelHeader, fontFamily), w)
+  const fitted = sized(widths)
+  const lineH = formLineHeight(fitted.cellFontSize, CELL_LINE_RATIO)
+  const rows = rowCells.map((cells) => {
+    const laid = cells.map((cell, c): CellLayout => {
+      if (!cell.trim()) return { lines: [cell], truncated: false }
+      const wrapped = layoutAtSize(cell, {
+        maxWidth: widths[c]! - PAD_X * 2,
+        fontSize: fitted.cellFontSize,
+        maxLines: maxCellLines,
+        lineHeightRatio: CELL_LINE_RATIO,
+        bold: c === 0,
+        fontFamily,
+      })
+      return { lines: wrapped.lines, truncated: wrapped.truncated }
+    })
+    const lines = Math.max(1, ...laid.map((cell) => cell.lines.length))
+    return { cells: laid, h: ROW + (lines - 1) * lineH }
+  })
+  return {
+    labelHeader,
+    component,
+    widths,
+    offsets: offsetsOf(widths),
+    headerFontSize: fitted.headerFontSize,
+    cellFontSize: fitted.cellFontSize,
+    lineH,
+    headers: fitted.headerLayouts,
+    rows,
+  }
+}
+
+function measureDefault(component: ComparisonComponent, w: number, ctx: ComponentCtx): number {
+  const table = layoutTable(component, w, ctx.fonts.body)
+  return ROW + table.rows.reduce((s, row) => s + row.h, 0)
+}
+
+function renderDefault(rawComponent: ComparisonComponent, box: ComponentBox, ctx: ComponentCtx) {
+    // A box shorter than the wrapped table gives back cell lines first, down
+    // to one: every row keeps its first line, cut and marked, before any row
+    // is dropped. At one line a row is `ROW` tall again, the height the
+    // row-dropping below has always been measured against.
+    let table = layoutTable(rawComponent, box.w, ctx.fonts.body)
+    for (let lines = MAX_CELL_LINES - 1; lines >= 1 && box.h !== undefined; lines--) {
+      if (ROW + table.rows.reduce((s, row) => s + row.h, 0) <= box.h) break
+      table = layoutTable(rawComponent, box.w, ctx.fonts.body, lines)
+    }
 
     // Vertical graceful landing (P0 hardening, robustness deep-review D1,
     // family-sweep sibling of bullets.tsx): `rows` has no schema ceiling
-    // and each row costs a fixed `ROW` px regardless of content, so an
+    // and each row costs at least `ROW` px regardless of content, so an
     // extreme row count (the D1 repro used 300) pushes every row further
     // off-canvas with no cap of its own — the same "unbounded per-item
     // vertical stack, no box.h awareness" shape bullets.tsx had. `box.h` is
@@ -206,44 +388,39 @@ function renderDefault(rawComponent: ComparisonComponent, box: Parameters<SvgCom
     // presence always means "cap to this budget," never "stretch"
     // (row-cards.tsx's own precedent for this convention).
     const truncBudget = box.h ?? Number.POSITIVE_INFINITY
-    const fullRowCount = dedupedComponent.rows.length
-    const naturalHeight = (fullRowCount + 1) * ROW // header + every data row, ignoring box.h
-    let visibleRowCount = fullRowCount
-    if (naturalHeight > truncBudget) {
-      // Reserve 1 ROW for the header. Truncation is silent (`data-dropped`
-      // only). Floored at 1 visible row (row-cards.tsx's "never render zero
-      // visible units" precedent).
-      visibleRowCount = Math.max(1, Math.min(fullRowCount, Math.floor(truncBudget / ROW) - 1))
+    const fullRowCount = table.rows.length
+    // Reserve 1 ROW for the header. Truncation is silent (`data-dropped`
+    // only).
+    let visibleRowCount = 0
+    let used = ROW
+    for (const row of table.rows) {
+      if (used + row.h > truncBudget) break
+      used += row.h
+      visibleRowCount += 1
+    }
+    // A box that cannot hold the header and one one-line row cannot hold the
+    // table. It used to keep that row anyway and draw it below the box with
+    // nothing to say so; the table declines the box instead, so the layout
+    // can find it a taller one or the export stops.
+    if (visibleRowCount === 0 && fullRowCount > 0) {
+      return (
+        <g transform={`translate(${box.x},${box.y})`}>
+          <DroppedContentMarker count={1} kind="component" />
+        </g>
+      )
     }
     const hiddenRowCount = fullRowCount - visibleRowCount
-    const component =
-      hiddenRowCount > 0
-        ? { ...dedupedComponent, rows: dedupedComponent.rows.slice(0, visibleRowCount) }
-        : dedupedComponent
+    const rows = table.rows.slice(0, visibleRowCount)
+    const rowTops: number[] = []
+    let top = ROW
+    for (const row of rows) {
+      rowTops.push(top)
+      top += row.h
+    }
+    const tableBottom = top
 
-    const headers = headerTitles(component, labelHeader)
-    const colCount = headers.length
-    const { widths, offsets } = computeColumns(component, box.w, labelHeader)
+    const { offsets, headerFontSize, cellFontSize } = table
     const borderColor = ctx.colors.border ?? ctx.colors.muted
-    const totalRows = component.rows.length + 1 // header + data rows
-
-    const headerFontSize = fittedFontSize(
-      // Every header renders bold below (`fontWeight="bold"`).
-      headers.flatMap((title, c) => (title ? [{ text: title, colW: widths[c], bold: true }] : [])),
-      HEADER_FONT_SIZE,
-      ctx.fonts.body,
-    )
-    const cellFontSize = fittedFontSize(
-      component.rows.flatMap((row) =>
-        // Column 0 (row label) renders bold below (`fontWeight={c === 0 ?
-        // "bold" : "normal"}`); every other column stays Regular.
-        [row.label, ...row.cells]
-          .slice(0, colCount)
-          .map((cell, c) => ({ text: cell, colW: widths[c], bold: c === 0 })),
-      ),
-      CELL_FONT_SIZE,
-      ctx.fonts.body,
-    )
     // 基线补偿随字号走（0.35×字号），18/16 时与旧常量 +6 完全一致。
     const headerBaseline = Math.round(headerFontSize * 0.35)
     const cellBaseline = Math.round(cellFontSize * 0.35)
@@ -255,13 +432,12 @@ function renderDefault(rawComponent: ComparisonComponent, box: Parameters<SvgCom
             加粗表头文字 + 下方一条正文色重规则线表达，天然融入任意主题底色。 */}
 
         {/* Header texts */}
-        {headers.map((title, c) => {
-          if (!title) return null
-          const fitted = truncate(title, widths[c], headerFontSize, { bold: true, fontFamily: ctx.fonts.body })
+        {table.headers.map((header, c) => {
+          if (header.lines.length === 0) return null
           return (
             <text
               key={`h-${c}`}
-              data-truncated={fitted !== title ? "1" : undefined}
+              data-truncated={header.truncated ? "1" : undefined}
               x={offsets[c] + PAD_X}
               y={ROW / 2 + headerBaseline}
               fill={ctx.colors.text}
@@ -270,7 +446,7 @@ function renderDefault(rawComponent: ComparisonComponent, box: Parameters<SvgCom
               fontWeight="bold"
               dominantBaseline="alphabetic"
             >
-              {fitted}
+              {header.lines[0]}
             </text>
           )
         })}
@@ -286,54 +462,51 @@ function renderDefault(rawComponent: ComparisonComponent, box: Parameters<SvgCom
           stroke={ctx.colors.text}
           strokeWidth={2}
         />
-        {Array.from({ length: component.rows.length - 1 }, (_, k) => (
+        {rowTops.slice(1).map((y, k) => (
           <line
             key={`sep-${k}`}
             x1={0}
-            y1={(k + 2) * ROW}
+            y1={y}
             x2={box.w}
-            y2={(k + 2) * ROW}
+            y2={y}
             stroke={borderColor}
             strokeWidth={1}
           />
         ))}
         <line
           x1={0}
-          y1={totalRows * ROW}
+          y1={tableBottom}
           x2={box.w}
-          y2={totalRows * ROW}
+          y2={tableBottom}
           stroke={borderColor}
           strokeWidth={1}
         />
 
 
         {/* Data rows */}
-        {component.rows.map((row, r) => {
-          const rowY = (r + 1) * ROW
-          const cells = [row.label, ...row.cells]
+        {rows.map((row, r) => {
+          const rowY = rowTops[r]!
           return (
             <Fragment key={`r-${r}`}>
-              {cells.map((cell, c) => {
-                if (c >= colCount) return null
-                const fitted = truncate(cell, widths[c], cellFontSize, {
-                  bold: c === 0,
-                  fontFamily: ctx.fonts.body,
-                })
-                return (
+              {row.cells.map((cell, c) => {
+                // A wrapped cell's lines centre on the row as a block; a
+                // one-line cell sits where it always has.
+                const first = rowY + row.h / 2 - ((cell.lines.length - 1) * table.lineH) / 2 + cellBaseline
+                return cell.lines.map((line, li) => (
                   <text
-                    key={`c-${r}-${c}`}
-                    data-truncated={fitted !== cell ? "1" : undefined}
+                    key={`c-${r}-${c}-${li}`}
+                    data-truncated={cell.truncated && li === cell.lines.length - 1 ? "1" : undefined}
                     x={offsets[c] + PAD_X}
-                    y={rowY + ROW / 2 + cellBaseline}
+                    y={first + li * table.lineH}
                     fill={c === 0 ? ctx.colors.muted : ctx.colors.text}
                     fontFamily={ctx.fonts.body}
                     fontSize={cellFontSize}
                     fontWeight={c === 0 ? "bold" : "normal"}
                     dominantBaseline="alphabetic"
                   >
-                    {fitted}
+                    {line}
                   </text>
-                )
+                ))
               })}
             </Fragment>
           )
@@ -344,8 +517,8 @@ function renderDefault(rawComponent: ComparisonComponent, box: Parameters<SvgCom
 }
 
 export const comparison: SvgComponent<ComparisonComponent> = {
-  measure(component) {
-    return measureDefault(component)
+  measure(component, w, ctx) {
+    return measureDefault(component, w, ctx)
   },
   render(component, box, ctx) {
     return renderDefault(component, box, ctx)

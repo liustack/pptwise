@@ -17,7 +17,9 @@ export const schema = z
             text: z
               .string()
               .optional()
-              .describe("Optional single line printed under the chevron, not inside it."),
+              .describe(
+                "Optional short note printed under the chevron, not inside it. It wraps to a second line when it needs one, and two lines is all it gets."
+              ),
           })
           .strict()
       )

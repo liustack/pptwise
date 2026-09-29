@@ -161,6 +161,186 @@ describe("auditL1 planted defects", () => {
     expect(codes(svg)).not.toContain("strikethrough")
   })
 
+  // homeroom's bmc page before its rules moved: a midground rule at y548 ran
+  // behind the opaque bottom cards, and the card text sat on it. The page
+  // showed no line through the words, only a stub in the gap between cards.
+  // Text 1 has the rule through its x-height, text 2 has it on its baseline.
+  const ruleUnderCard = (card: string) =>
+    wrap(
+      `<g data-depth="bg"><rect x="0" y="0" width="1280" height="720" fill="#ECF0F2"/></g>` +
+        `<g data-depth="mid"><g data-decor="true">` +
+        `<line x1="96" y1="548" x2="1184" y2="548" stroke="#D3DBE0" stroke-width="1" opacity="0.55"/>` +
+        `</g></g>` +
+        `<g data-depth="fg">${card}` +
+        `<text x="110" y="553" font-size="16">辅助线变式见得太少</text>` +
+        `<text x="661" y="548" font-size="16">暑假是补计算的黄金窗口</text></g>`,
+    )
+  const OPAQUE_CARDS =
+    `<rect x="96" y="491" width="537" height="140" rx="12" fill="#F9FBFC"/>` +
+    `<rect x="647" y="491" width="537" height="140" rx="12" fill="#F9FBFC"/>`
+
+  it("does not flag a rule the text's opaque card paints over", () => {
+    const found = codes(ruleUnderCard(OPAQUE_CARDS))
+    expect(found).not.toContain("strikethrough")
+    expect(found).not.toContain("edge-stick")
+  })
+
+  it("still flags the rule when nothing covers it", () => {
+    const found = codes(ruleUnderCard(""))
+    expect(found).toContain("strikethrough")
+    expect(found).toContain("edge-stick")
+  })
+
+  it("still flags the rule when the card is painted under it", () => {
+    const svg = wrap(
+      `${OPAQUE_CARDS}<line x1="96" y1="548" x2="1184" y2="548" stroke="#D3DBE0"/>` +
+        `<text x="110" y="553" font-size="16">辅助线变式见得太少</text>` +
+        `<text x="661" y="548" font-size="16">暑假是补计算的黄金窗口</text>`,
+    )
+    expect(codes(svg)).toContain("strikethrough")
+    expect(codes(svg)).toContain("edge-stick")
+  })
+
+  it("still flags the rule through a card that lets it show", () => {
+    const card = (attrs: string) =>
+      `<rect x="96" y="491" width="537" height="140" ${attrs}/>` +
+      `<rect x="647" y="491" width="537" height="140" ${attrs}/>`
+    for (const cards of [
+      card(`fill="#F9FBFC" fill-opacity="0.6"`),
+      card(`fill="#F9FBFC" opacity="0.9"`),
+      `<g opacity="0.8">${card(`fill="#F9FBFC"`)}</g>`,
+      card(`fill="none" stroke="#D3DBE0"`),
+      card(`fill="#F9FBFC80"`),
+      card(`fill="url(#paper)"`),
+      card(`fill="#F9FBFC" clip-path="url(#c)"`),
+      card(`fill="#F9FBFC" transform="rotate(8)"`),
+    ]) {
+      const found = codes(ruleUnderCard(cards))
+      expect(found, cards).toContain("strikethrough")
+      expect(found, cards).toContain("edge-stick")
+    }
+  })
+
+  it("still flags the part of the rule a card leaves uncovered", () => {
+    // Each card stops 40px into its text, so most of the words keep the line.
+    const svg = ruleUnderCard(
+      `<rect x="96" y="491" width="54" height="140" fill="#F9FBFC"/>` +
+        `<rect x="647" y="491" width="54" height="140" fill="#F9FBFC"/>`,
+    )
+    expect(codes(svg)).toContain("strikethrough")
+    expect(codes(svg)).toContain("edge-stick")
+  })
+
+  // A rect only hides a rule when nothing can take it off the page or move
+  // it: one in <defs> is never painted, an inline style can make it clear,
+  // and a transform the checker cannot read puts it somewhere else.
+  it.each([
+    ["kept in defs", `<defs><rect x="80" y="150" width="540" height="100" fill="#ffffff"/></defs>`],
+    ["made clear by an inline style", `<rect x="80" y="150" width="540" height="100" fill="#ffffff" style="fill-opacity:0"/>`],
+    [
+      "squashed by an uneven scale",
+      `<g transform="scale(1,0.1)"><rect x="80" y="150" width="540" height="100" fill="#ffffff"/></g>`,
+    ],
+    [
+      "shrunk by a scale written in exponent form",
+      `<g transform="scale(1e-1)"><rect x="80" y="150" width="540" height="100" fill="#ffffff"/></g>`,
+    ],
+    [
+      "moved by a scale applied before its translate",
+      `<g transform="scale(2) translate(20,100)"><rect x="20" y="20" width="300" height="40" fill="#ffffff"/></g>`,
+    ],
+  ])("still flags a rule over a rect %s", (_label, cover) => {
+    const svg = wrap(
+      `<line x1="90" y1="190" x2="600" y2="190" stroke="#000000"/>${cover}` +
+        `<text x="100" y="200" font-size="24">Visible rule crossing this text</text>`,
+    )
+    expect(codes(svg)).toContain("strikethrough")
+  })
+
+  it("still flags a rule that runs through a rounded card's corner", () => {
+    // y=493 is 2px under the top edge of an rx=12 card. The corner curve
+    // leaves the line bare there, and the text sits across the corner.
+    const svg = wrap(
+      `<line x1="40" y1="493" x2="700" y2="493" stroke="#D3DBE0" stroke-width="1"/>` +
+        `<rect x="96" y="491" width="537" height="140" rx="12" fill="#F9FBFC"/>` +
+        `<text x="76" y="498" font-size="16">角落</text>`,
+    )
+    expect(codes(svg)).toContain("strikethrough")
+  })
+
+  // brief's stat-hero: "10.2" at 310px with the unit as an 81px run. Read at
+  // the outer size, the unit alone was charged 620px and the line ended at
+  // x=1381, a page edge it stops 350px short of.
+  it("measures a hero figure's smaller unit at its own size", () => {
+    const svg = wrap(`<text x="96" y="450" font-size="310">10.2<tspan font-size="81">万席</tspan></text>`)
+    expect(codes(svg)).not.toContain("edge-stick")
+    expect(codes(svg)).not.toContain("out-of-bounds")
+  })
+
+  it("still flags a run that really carries the line off the page", () => {
+    const svg = wrap(`<text x="900" y="450" font-size="100">10<tspan font-size="100">万席万席</tspan></text>`)
+    expect(codes(svg)).toContain("out-of-bounds")
+  })
+
+  // luxe's stat-hero: a rule at y=200 sat exactly one font size above a
+  // 270px figure's baseline, which is where the em box ends, while the
+  // digits' ink starts some 75px lower.
+  it("does not flag a rule that clears a display figure's ink but not its em box", () => {
+    const svg = wrap(
+      `<line x1="96" y1="200" x2="1184" y2="200" stroke="#222" stroke-width="1"/>` +
+        `<text x="96" y="470" font-size="270">307</text>`,
+    )
+    expect(codes(svg)).not.toContain("edge-stick")
+  })
+
+  // memo's stat-hero: "22" at 280px with "个月" as a 73px run, over a double
+  // rule at y=530 and 534. Reading the whole line at 280px put a descender
+  // 70px below the baseline, on the rule, where the digits have none and
+  // the unit's ink stops about 10px down.
+  it("reads a line's ink depth from its runs, not from the outer size", () => {
+    const svg = wrap(
+      `<line x1="96" y1="170" x2="1184" y2="170" stroke="#222" stroke-width="2"/>` +
+        `<text x="640" y="460" text-anchor="middle" font-size="280">22<tspan dx="11" font-size="73">个月</tspan></text>` +
+        `<line x1="96" y1="530" x2="1184" y2="530" stroke="#222" stroke-width="1"/>` +
+        `<line x1="96" y1="534" x2="1184" y2="534" stroke="#222" stroke-width="2"/>`,
+    )
+    expect(codes(svg)).not.toContain("edge-stick")
+  })
+
+  // An accented capital stands about 0.9em tall, well above the Latin
+  // ascender height the calibrated estimate uses.
+  it("still flags accented capitals that rise off the top of the page", () => {
+    expect(codes(wrap(`<text x="100" y="90" font-family="Arial" font-size="100">ÉTÉ</text>`))).toContain("edge-stick")
+  })
+
+  it("reads an accented capital at full height inside a Chinese line too", () => {
+    expect(codes(wrap(`<text x="100" y="96" font-family="Arial" font-size="100">夏ÉTÉ</text>`))).toContain("edge-stick")
+  })
+
+  it("still flags a rule just under a Latin line's descenders", () => {
+    const svg = wrap(
+      `<text x="100" y="300" font-size="16">graphing yearly</text>` +
+        `<line x1="96" y1="306" x2="700" y2="306" stroke="#222" stroke-width="1"/>`,
+    )
+    expect(codes(svg)).toContain("edge-stick")
+  })
+
+  it("still flags a rule just under a line of Chinese text", () => {
+    const svg = wrap(
+      `<text x="100" y="300" font-size="16">上节课平均分在这里</text>` +
+        `<line x1="96" y1="303" x2="700" y2="303" stroke="#222" stroke-width="1"/>`,
+    )
+    expect(codes(svg)).toContain("edge-stick")
+  })
+
+  it("still flags a rule just above the ink of a line of Chinese text", () => {
+    const svg = wrap(
+      `<line x1="96" y1="284" x2="700" y2="284" stroke="#222" stroke-width="1"/>` +
+        `<text x="100" y="300" font-size="16">上节课平均分在这里</text>`,
+    )
+    expect(codes(svg)).toContain("edge-stick")
+  })
+
   it("does not flag a short gold underline as edge-stick", () => {
     const svg = wrap(
       `<text x="640" y="404" font-size="84" text-anchor="middle">客户与收入结构</text>` +

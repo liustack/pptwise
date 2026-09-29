@@ -10,6 +10,9 @@ import { chevronProcess } from "./chevron-process"
 import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR } from "./legibility"
 import { listThemes } from "../api"
 import { contrastRatio } from "../render/ink"
+import { measureTextUnits } from "../lib/svg-text-layout"
+import { SIBLING_AIR_PX } from "../render/spacing"
+import { irJsonSchema } from "../ir/json-schema"
 import type { ComponentCtx } from "./types"
 
 function themed(id: string): ComponentCtx {
@@ -101,6 +104,120 @@ describe("chevron_process component", () => {
     }
     expect(text).toEqual(expect.arrayContaining(["01", "02", "03", "04", "05"]))
     expect(container.querySelectorAll("[data-dropped]").length).toBe(0)
+  })
+
+  it("describes the note in the public schema the way it is drawn: up to two lines", () => {
+    // The schema used to promise a single line while the renderer wrapped a
+    // long note to a second one, so a model writing to the schema kept notes
+    // shorter than the drawing needs.
+    const defs = irJsonSchema().$defs as Record<string, { properties: Record<string, unknown> }>
+    const items = defs.chevron_process!.properties.items as { items: { properties: { text: { description: string } } } }
+    const note = items.items.properties.text.description
+    expect(note).not.toMatch(/single line/i)
+    expect(note).toMatch(/two lines/i)
+    const long = {
+      type: "chevron_process" as const,
+      items: [
+        { title: "Scoping", text: "Seat expansion across every existing enterprise account in the region" },
+        { title: "Solutioning", text: "Templates" },
+        { title: "Rollout", text: "Pilot" },
+      ],
+    }
+    const { container } = svg(chevronProcess.render(long, { x: 96, y: 290, w: 1088 }, themed("brief")))
+    const noteLines = Array.from(container.querySelectorAll("text")).filter(
+      (t) => Number(t.getAttribute("y")) > 118 && Number(t.getAttribute("x")) < 200,
+    )
+    expect(noteLines.length).toBe(2)
+  })
+
+  it("keeps a sibling's air between two notes that share a baseline", () => {
+    // Seventeen characters fit the 275px the note used to be allowed, which
+    // left its last glyph 15px from the next note's first. At 12px apart two
+    // notes read as one line, so the note now stops SIBLING_AIR_PX short.
+    const crowded = {
+      type: "chevron_process" as const,
+      items: [
+        { title: "需求核报", text: "一笔三百万捐赠因附带指定条款被婉拒" },
+        { title: "联合采购", text: "失误成章" },
+        { title: "物流配送", text: "管理费率" },
+        { title: "借阅运营", text: "月捐共同体" },
+      ],
+    }
+    const ctx = themed("swiss")
+    const { container } = svg(chevronProcess.render(crowded, { x: 96, y: 290, w: 1088 }, ctx))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const notes = Array.from(container.querySelectorAll("text")).filter(
+      (t) => Number(t.getAttribute("font-size")) === FORM_BODY_FLOOR && Number(t.getAttribute("y")) > 118,
+    )
+    const firstLine = new Map<number, Element>()
+    for (const t of notes) {
+      const y = Number(t.getAttribute("y"))
+      const x = Number(t.getAttribute("x"))
+      if (!firstLine.has(x) || Number(firstLine.get(x)!.getAttribute("y")) > y) firstLine.set(x, t)
+    }
+    const starts = [...firstLine.keys()].sort((a, b) => a - b)
+    expect(starts).toHaveLength(4)
+    for (const t of notes) {
+      const x = Number(t.getAttribute("x"))
+      const next = starts.find((s) => s > x)
+      if (next === undefined) continue
+      const end = x + measureTextUnits(t.textContent ?? "", { fontFamily: ctx.fonts.body }) * FORM_BODY_FLOOR
+      expect(next - end, t.textContent ?? "").toBeGreaterThanOrEqual(SIBLING_AIR_PX)
+    }
+    const words = notes.map((t) => t.textContent ?? "").join("")
+    expect(words).toContain(crowded.items[0]!.text)
+  })
+
+  it("wraps a note wider than its column onto a second line instead of cutting it", () => {
+    const english = {
+      type: "chevron_process" as const,
+      items: [
+        { title: "Scoping", text: "Seat expansion in existing accounts" },
+        { title: "Solutioning", text: "Standardized onboarding templates" },
+        { title: "Seat setup", text: "In-house workspace compute" },
+        { title: "Access setup", text: "Vertical playbook replication" },
+      ],
+    }
+    const ctx = themed("brief")
+    const box = { x: 96, y: 290, w: 1088 }
+    const h = chevronProcess.measure(english, box.w, ctx)
+    const { container } = svg(chevronProcess.render(english, box, ctx))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const words = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .join(" ")
+      .replace(/\s+/g, " ")
+    for (const item of english.items) expect(words).toContain(item.text)
+    // The second line is paid for in the measured height.
+    const lastBaseline = Math.max(...Array.from(container.querySelectorAll("text")).map((t) => Number(t.getAttribute("y"))))
+    expect(lastBaseline).toBeLessThanOrEqual(h)
+    expect(h).toBeGreaterThan(chevronProcess.measure(withN(4), box.w, ctx))
+  })
+
+  it("gives the notes' second line back in a box too short for it, and marks the cut", () => {
+    const english = {
+      type: "chevron_process" as const,
+      items: [
+        { title: "Scoping", text: "Seat expansion in existing accounts" },
+        { title: "Solutioning", text: "Standardized onboarding templates" },
+        { title: "Seat setup", text: "In-house workspace compute" },
+        { title: "Access setup", text: "Vertical playbook replication" },
+      ],
+    }
+    const ctx = themed("brief")
+    const oneLineH = chevronProcess.measure(withN(4), 1088, ctx)
+    expect(chevronProcess.measure(english, 1088, ctx)).toBeGreaterThan(oneLineH)
+    const box = { x: 0, y: 0, w: 1088, h: oneLineH }
+    const { container } = svg(chevronProcess.render(english, box, ctx))
+    for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y")), t.textContent ?? "").toBeLessThanOrEqual(box.h)
+    expect(container.querySelector('[data-truncated="1"]')).not.toBeNull()
+  })
+
+  it("declines a box too short for the band and one line of note", () => {
+    const box = { x: 0, y: 0, w: 1104, h: 120 }
+    const { container } = svg(chevronProcess.render(five, box, themed("brief")))
+    expect(container.querySelectorAll("polygon, text")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
   })
 
   it("keeps stage names inside their own chevron at the widest legal count", () => {

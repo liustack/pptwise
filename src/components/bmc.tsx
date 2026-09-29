@@ -1,7 +1,9 @@
 import type React from "react"
 import type { Component } from "@/ir"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { layoutSvgText, measureTextUnits, wrapTokens } from "../lib/svg-text-layout"
 import { mostlyChinese } from "../lib/text-script"
+import { DroppedContentMarker } from "../render/drop-marker"
+import { anyCut } from "./declared-fit"
 import { accessibleInk } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -48,7 +50,8 @@ type BlockKey =
  *
  * Row-height ratios are *not* a hardcoded constant: `naturalBandHeights`
  * derives the top-band/bottom-band split from each block's own real fitted
- * content (title + item count) at the natural, unstretched width — pure
+ * content (its title's lines, fitted in the heading face they are drawn in,
+ * and its items' lines) at the natural, unstretched width — pure
  * function of the input, deterministic. `render`'s box.h-aware stretch
  * (matrix.tsx's own idiom — see `swot.tsx`'s identical comment) then grows
  * both bands by the *same proportion* their natural heights already had, so
@@ -155,6 +158,21 @@ const ITEM_SIZE = 16
 const ITEM_SIZE_MIN = 16
 const ITEM_LH_RATIO = 1.35
 const ITEM_GAP = 5
+/**
+ * Lines one item may wrap onto: as many as it needs. Each item used to be
+ * fitted to a single line, and with the type already at the floor a narrow
+ * column cut it off mid-phrase ("Seat expansion in", "协作活跃率领先同行两")
+ * while the cell had room to spare underneath. An item now wraps under its
+ * own bullet, its lines balanced so a phrase does not leave one character
+ * alone on the last, and the cell measures the lines it draws.
+ *
+ * It used to stop at three lines and cut the rest, and an 880px English
+ * canvas has a 126px item measure, where "Existing customers reliably
+ * expand" takes four. The cell already keeps its items whole by height,
+ * dropping and declaring one that would cross its floor, so a line cap
+ * only ever cut words the cell had room for.
+ */
+const ITEM_MAX_LINES = Number.POSITIVE_INFINITY
 const BULLET_R = 2
 const BULLET_INDENT = 11
 
@@ -174,7 +192,7 @@ const MIN_RHYTHM_SCALE = 0.55
 
 interface BlockLayout {
   title: { lines: string[]; fontSize: number; truncated: boolean }
-  items: { text: string; fontSize: number; truncated: boolean }[]
+  items: { lines: string[]; fontSize: number; truncated: boolean }[]
   contentH: number
   /** `rhythmScale`-applied nominal sizes/rhythm `renderBlock` positions
    * against — nominal, not each fitted item/title's own (possibly further
@@ -207,20 +225,21 @@ interface BlockLayout {
 // cell title (from `blockLabels`, a fixed per-language constant, not user-controllable
 // via the IR) needs the same bold-aware fitting as every other bold
 // heading-faced text this task's audit-baseline sweep already found and
-// fixed (kpi.tsx/steps.tsx/etc, round 1). Optional and defaults to
-// `undefined` (envelope fallback, `bold: true` regardless -- title is
-// unconditionally bold in this component) so the measure-time callers
-// below (which only ever read `.contentH`, itself derived from the fixed
-// declared `titleSize`, never the fitted result) don't need it -- see this
-// function's own return value: `contentH` doesn't depend on whether
-// `title` actually had to shrink, so measure/render can't disagree over it
-// regardless of which callers pass `fontFamily`.
+// fixed (kpi.tsx/steps.tsx/etc, round 1).
+//
+// Required, and passed by the measuring callers too. `contentH` counts the
+// title's lines, and where an English title wraps depends on the face: at
+// 840px "Key Activities" is one line in Georgia and two in the envelope
+// estimate, and at 1016px "Customer Segments" is the other way round. A
+// canvas measured with the estimate and drawn in the face got a spare title
+// line in every cell of its band, or a cell one line short that dropped its
+// last item.
 function blockLayout(
   items: string[],
   label: string,
   w: number,
-  rhythmScale: number = 1,
-  fontFamily?: string,
+  rhythmScale: number,
+  fontFamily: string,
 ): BlockLayout {
   const contentW = Math.max(1, w - PAD_X * 2)
   // Type never scales: `TITLE_SIZE`/`ITEM_SIZE` are the legibility floor
@@ -252,14 +271,19 @@ function blockLayout(
     fontSize: titleLaid.fontSize,
     truncated: titleLaid.truncated,
   }
-  const fittedItems = items.map((it) =>
-    fitSvgLine(it, {
+  const fittedItems = items.map((it) => {
+    const laid = layoutSvgText(it, {
       maxWidth: contentW - BULLET_INDENT,
       fontSize: itemSize,
-      minFontSize: ITEM_SIZE_MIN,
-    }),
-  )
-  const itemsH = fittedItems.length * itemLH + Math.max(0, fittedItems.length - 1) * itemGap
+      maxLines: ITEM_MAX_LINES,
+      lineHeightRatio: itemLHRatio,
+      minPt: ITEM_SIZE_MIN,
+      balanceLines: true,
+    })
+    return { lines: laid.lines, fontSize: laid.fontSize, truncated: laid.truncated }
+  })
+  const itemLines = fittedItems.reduce((sum, item) => sum + item.lines.length, 0)
+  const itemsH = itemLines * itemLH + Math.max(0, fittedItems.length - 1) * itemGap
   const titleBlockH = Math.max(titleLH, title.lines.length * titleLaid.lineHeight)
   const contentH = padTop + titleBlockH + gapTitleItems + itemsH + padBottom
   return {
@@ -284,25 +308,26 @@ const SPAN_KEYS: readonly BlockKey[] = ["key_partners", "value_propositions", "c
 const BOTTOM_BAND_KEYS: readonly BlockKey[] = ["cost_structure", "revenue_streams"]
 
 /** Natural (unstretched, `rhythmScale`-adjusted) top-band/bottom-band
- * heights, pure function of `component`'s real content at width `w` and
- * `rhythmScale` — see file header. `rhythmScale` defaults to 1 (nominal);
- * `render`'s undersized-box shrink path is the only caller that ever
- * passes a smaller value. */
+ * heights, pure function of `component`'s real content at width `w`, the
+ * heading face its titles are drawn in, and `rhythmScale` — see file header.
+ * `rhythmScale` defaults to 1 (nominal); `render`'s undersized-box shrink
+ * path is the only caller that ever passes a smaller value. */
 function naturalBandHeights(
   component: BmcComponent,
   w: number,
+  headingFont: string,
   rhythmScale: number = 1,
 ): { topBandH: number; bottomBandH: number } {
   const colW = (w - GAP * 4) / 5
   const bottomColW = (w - GAP) / 2
   const labels = blockLabels(component)
   const halfRowH = Math.max(
-    ...[...TOP_ROW_KEYS, ...BOTTOM_ROW_KEYS].map((k) => blockLayout(component[k], labels[k], colW, rhythmScale).contentH),
+    ...[...TOP_ROW_KEYS, ...BOTTOM_ROW_KEYS].map((k) => blockLayout(component[k], labels[k], colW, rhythmScale, headingFont).contentH),
   )
-  const spanH = Math.max(...SPAN_KEYS.map((k) => blockLayout(component[k], labels[k], colW, rhythmScale).contentH))
+  const spanH = Math.max(...SPAN_KEYS.map((k) => blockLayout(component[k], labels[k], colW, rhythmScale, headingFont).contentH))
   const topBandH = Math.max(halfRowH * 2 + GAP, spanH)
   const bottomBandH = Math.max(
-    ...BOTTOM_BAND_KEYS.map((k) => blockLayout(component[k], labels[k], bottomColW, rhythmScale).contentH),
+    ...BOTTOM_BAND_KEYS.map((k) => blockLayout(component[k], labels[k], bottomColW, rhythmScale, headingFont).contentH),
   )
   return { topBandH, bottomBandH }
 }
@@ -377,10 +402,15 @@ function renderBlock(
   const titleLineH = layout.titleLH
   let itemY = y + layout.padTop + layout.title.lines.length * titleLineH + layout.gapTitleItems
   const itemLimit = y + cell.h - layout.padBottom
-  const visibleItems = layout.items.filter((_, ii) => {
-    const rowY = itemY + ii * (layout.itemLH + layout.itemGap)
-    return rowY + layout.itemSize <= itemLimit
-  })
+  // Items stay whole: one whose last line would cross the cell's floor is
+  // dropped and declared, never drawn with its tail missing.
+  const visibleItems: BlockLayout["items"] = []
+  for (let cursor = itemY; visibleItems.length < layout.items.length; ) {
+    const item = layout.items[visibleItems.length]!
+    if (cursor + (item.lines.length - 1) * layout.itemLH + layout.itemSize > itemLimit) break
+    visibleItems.push(item)
+    cursor += item.lines.length * layout.itemLH + layout.itemGap
+  }
   const dropped = layout.items.length - visibleItems.length
   return (
     <g key={cell.key}>
@@ -412,22 +442,25 @@ function renderBlock(
       ))}
       {visibleItems.map((item, ii) => {
         const rowY = itemY
-        itemY += layout.itemLH + layout.itemGap
+        itemY += item.lines.length * layout.itemLH + layout.itemGap
         const dotCy = rowY + layout.itemSize * 0.6
         return (
           <g key={ii}>
             <circle cx={x + PAD_X + layout.bulletR} cy={dotCy} r={layout.bulletR} fill={itemInk} />
-            <text
-              data-truncated={item.truncated ? "1" : undefined}
-              x={x + PAD_X + BULLET_INDENT}
-              y={rowY + layout.itemSize}
-              fontSize={item.fontSize}
-              fill={itemInk}
-              fontFamily={ctx.fonts.body}
-              dominantBaseline="alphabetic"
-            >
-              {item.text}
-            </text>
+            {item.lines.map((line, li) => (
+              <text
+                key={li}
+                data-truncated={item.truncated && li === item.lines.length - 1 ? "1" : undefined}
+                x={x + PAD_X + BULLET_INDENT}
+                y={rowY + li * layout.itemLH + layout.itemSize}
+                fontSize={item.fontSize}
+                fill={itemInk}
+                fontFamily={ctx.fonts.body}
+                dominantBaseline="alphabetic"
+              >
+                {line}
+              </text>
+            ))}
           </g>
         )
       })}
@@ -436,13 +469,43 @@ function renderBlock(
   )
 }
 
+/**
+ * Whether every block title keeps each of its words on one line.
+ *
+ * A title is the canvas's own fixed name for a block, at the type floor
+ * already, so it has nowhere to shrink. Below a width where its longest word
+ * fits the column, the wrap can only break the word ("Relationship" over
+ * "s") or cut it, and neither is the block's name any more. The repo's rule
+ * for a drawing that cannot keep its words whole is to decline and say so
+ * (`declared-fit.ts`, and `from-to.tsx`'s `MIN_W`): the page then moves to a
+ * rendering wide enough for it. In the heading face that is about 764px for
+ * "Relationships" in Georgia.
+ *
+ * A word here is what the shared wrap keeps whole (`wrapTokens`). Chinese
+ * breaks between any two characters, so 「重要合作」 is four units, not one:
+ * read as a single word, it sent a 480px canvas away although the title
+ * sets as 「重要」 over 「合作」.
+ */
+function titleWordsFit(component: BmcComponent, w: number, headingFont: string): boolean {
+  const colW = (w - GAP * 4) / 5
+  const bottomColW = (w - GAP) / 2
+  const labels = blockLabels(component)
+  return (Object.keys(labels) as BlockKey[]).every((key) => {
+    const room = (BOTTOM_BAND_KEYS.includes(key) ? bottomColW : colW) - PAD_X * 2
+    return wrapTokens(labels[key]).every(
+      (unit) => measureTextUnits(unit, { bold: true, fontFamily: headingFont }) * TITLE_SIZE <= room,
+    )
+  })
+}
+
 export const bmc: SvgComponent<BmcComponent> = {
-  measure(component, w) {
-    const { topBandH, bottomBandH } = naturalBandHeights(component, w)
+  measure(component, w, ctx) {
+    const { topBandH, bottomBandH } = naturalBandHeights(component, w, ctx.fonts.heading)
     return topBandH + GAP + bottomBandH
   },
   render(component, box, ctx) {
-    const { topBandH: natTop, bottomBandH: natBottom } = naturalBandHeights(component, box.w)
+    if (!titleWordsFit(component, box.w, ctx.fonts.heading)) return <DroppedContentMarker count={1} kind="component" />
+    const { topBandH: natTop, bottomBandH: natBottom } = naturalBandHeights(component, box.w, ctx.fonts.heading)
     const naturalTotal = natTop + GAP + natBottom
     const totalH = box.h ?? naturalTotal
 
@@ -460,20 +523,20 @@ export const bmc: SvgComponent<BmcComponent> = {
     const { topBandH: scaledTop, bottomBandH: scaledBottom } =
       rhythmScale === 1
         ? { topBandH: natTop, bottomBandH: natBottom }
-        : naturalBandHeights(component, box.w, rhythmScale)
+        : naturalBandHeights(component, box.w, ctx.fonts.heading, rhythmScale)
     const finalTotalH = totalH
 
     const { cells } = gridGeom(box.w, finalTotalH, scaledTop, scaledBottom)
     const labels = blockLabels(component)
     const r = ctx.shape?.radius ?? CARD_RADIUS
-    return (
-      <g>
-        {cells.map((cell) => {
-          const layout = blockLayout(component[cell.key], labels[cell.key], cell.w, rhythmScale, ctx.fonts.heading)
-          return renderBlock(cell, layout, ctx, box.x, box.y, r)
-        })}
-      </g>
+    const layouts = cells.map((cell) =>
+      blockLayout(component[cell.key], labels[cell.key], cell.w, rhythmScale, ctx.fonts.heading),
     )
+    // Every unit of a title can fit its column and the title still need more
+    // lines than it has: a Chinese title on a very narrow canvas, a character
+    // or two a line. It is not cut either.
+    if (anyCut(layouts.map((layout) => layout.title))) return <DroppedContentMarker count={1} kind="component" />
+    return <g>{cells.map((cell, i) => renderBlock(cell, layouts[i]!, ctx, box.x, box.y, r))}</g>
   },
 }
 

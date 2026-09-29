@@ -6,9 +6,11 @@ import {
   layoutSvgText,
   measureMonoTextUnits,
   measureTextUnits,
+  measuresExactly,
   truncateToMonoUnits,
   truncateToUnits,
 } from "./svg-text-layout"
+import { SYMBOL_ADVANCE_BOUNDS } from "./symbol-advances"
 
 describe("svg text layout", () => {
   it("wraps long mixed CJK title into bounded lines", () => {
@@ -153,6 +155,17 @@ describe("fitSvgLine", () => {
       truncated: false,
     })
   })
+  // roadmap asked for its period labels at 14px under a 16px floor, and
+  // every one of them, "Q1" included, came back painted whole at 16px yet
+  // marked cut. The floor is where a line starts, not a reason to cut it.
+  it("starts a request below the floor at the floor, and cuts nothing that fits there", () => {
+    expect(fitSvgLine("Q1", { maxWidth: 200, fontSize: 14, minFontSize: 16 })).toEqual({
+      text: "Q1",
+      fontSize: 16,
+      truncated: false,
+    })
+  })
+
   it("solves the tracking budget with the surviving text, not the input", () => {
     // 500 tracked glyphs ask for 499px of gaps alone. Deducting the *input*
     // string's budget from a 485px box left nothing to fit any text into, so
@@ -324,9 +337,12 @@ describe("layoutSvgText balanceLines (widow avoidance)", () => {
     expect(r.fontSize).toBe(64)
   })
 
-  it("keeps the greedy wrap by default (existing callers unaffected)", () => {
+  it("keeps the greedy wrap by default, only lifting a lone last character", () => {
+    // Greedy is 「年度战略回」+「顾」. Without balanceLines the lines stay
+    // greedy, and the one move made is the orphan fix: one character joins
+    // 「顾」 so the last line is not a single glyph.
     const r = layoutSvgText("年度战略回顾", { maxWidth: 360, fontSize: 64, maxLines: 3 })
-    expect(r.lines).toEqual(["年度战略回", "顾"])
+    expect(r.lines).toEqual(["年度战略", "回顾"])
   })
 
   it("balances space-delimited text without splitting words", () => {
@@ -697,6 +713,40 @@ describe("hasExactWidthTable", () => {
   })
 })
 
+describe("Regular widths from the fonts' own advance tables", () => {
+  // Advance sum read from /System/Library/Fonts/Supplemental/Georgia.ttf
+  // with a standalone cmap+hmtx parser: 26053 / 2048 em. rsvg paints the
+  // same string at 100px with its ink ending at 1269px, 0.2% short of it.
+  const REAL_EM = 26053 / 2048
+
+  it("measures from the exact advance table, not the class averages", () => {
+    // Pre-fix the class path priced this at 15.92em, 25% over the font.
+    const units = measureTextUnits("Vertical playbook replication", { fontFamily: "Georgia" })
+    expect(Math.abs(units - REAL_EM)).toBeLessThan(0.005)
+  })
+
+  it("lets a note that fits one line stay on one line (brief timeline repro)", () => {
+    // 12.72em at 16px paints 203.5px. The class estimate (254.7px) wrapped it.
+    const r = layoutSvgText("Vertical playbook replication", {
+      maxWidth: 210,
+      fontSize: 16,
+      maxLines: 2,
+      minPt: 16,
+      fontFamily: "Georgia, Songti SC, STSong, serif",
+    })
+    expect(r.lines).toEqual(["Vertical playbook replication"])
+  })
+
+  it("measures Microsoft YaHei and SimSun Regular from their own advance tables too", () => {
+    // msyh.ttc[0] and Simsun.ttc[0] advances, as FreeType reads them: 13.68em
+    // and 14.5em, where the class average says 15.92em.
+    const text = "Vertical playbook replication"
+    expect(measureTextUnits(text, { fontFamily: "Microsoft YaHei" })).toBeCloseTo(13.6825, 3)
+    expect(measureTextUnits(text, { fontFamily: "SimSun, 宋体, serif" })).toBe(14.5)
+    expect(measureTextUnits(text)).toBeCloseTo(15.92, 3)
+  })
+})
+
 // CJK line-break prohibition (禁则处理 / kinsoku shori) — see the set
 // selection comment above `LINE_START_FORBIDDEN` in svg-text-layout.ts.
 //
@@ -768,7 +818,8 @@ describe("CJK line-break prohibition (kinsoku)", () => {
       minPt: 24,
     })
     expectNoProhibitedBoundary(r.lines)
-    expect(r.lines).toEqual(["七月一场大涝淹田三", "天，稻子倒伏不足一", "成。"])
+    // 「成。」 alone would be an orphan, so 「一」 comes down with it.
+    expect(r.lines).toEqual(["七月一场大涝淹田三", "天，稻子倒伏不足", "一成。"])
   })
 
   it("pulls a doubled ellipsis onto the line before it", () => {
@@ -784,10 +835,22 @@ describe("CJK line-break prohibition (kinsoku)", () => {
   })
 
   it("obeys the prohibition inside splitLongToken's emergency cut of an over-long token", () => {
-    // A space-delimited paragraph whose second token is wider than a whole
-    // line, so `splitLongToken` — not the token packer — chooses the break
-    // points. Pre-fix it cut after the opening bracket:
-    // ["报告", "深度学习（", "DL）在生", "产环境的落", "地路径与成", "本。"].
+    // A bracketed run wider than a whole line, so `splitLongToken`, not the
+    // token packer, chooses the break points. Without the rule its cut lands
+    // just before the closing bracket: ["lmnopq", ") now"].
+    const r = layoutSvgText("see (abcdefghijklmnopq) now", {
+      maxWidth: 60,
+      fontSize: 16,
+      maxLines: 8,
+      minPt: 16,
+    })
+    expect(r.lines).toEqual(["see", "(abcde", "fghijk", "lmnop", "q) now"])
+  })
+
+  it("keeps kinsoku when a space-delimited CJK clause wraps per character", () => {
+    // The clause after the space breaks between any two ideographs, and the
+    // brackets still keep their places: 「（」 never ends a line and 「）」
+    // never starts one.
     const r = layoutSvgText("报告 深度学习（DL）在生产环境的落地路径与成本。", {
       maxWidth: 120,
       fontSize: 24,
@@ -795,7 +858,7 @@ describe("CJK line-break prohibition (kinsoku)", () => {
       minPt: 12,
     })
     expectNoProhibitedBoundary(r.lines)
-    expect(r.lines).toEqual(["报告", "深度学习", "（DL）在", "生产环境的", "落地路径与", "成本。"])
+    expect(r.lines).toEqual(["报告 深度", "学习", "（DL）在", "生产环境的", "落地路径与", "成本。"])
   })
 
   it("keeps the original cut rather than emptying a line when no legal break exists", () => {
@@ -940,3 +1003,195 @@ describe("allowsLineBreakBetween", () => {
     expect(allowsLineBreakBetween("", "》")).toBe(true)
   })
 })
+
+describe("CJK orphan avoidance (no single-character last line)", () => {
+  // Body type at a frozen size, the way form cards call it (`layoutAtSize`).
+  const at = (text: string, maxWidth: number) =>
+    layoutSvgText(text, { maxWidth, fontSize: 16, maxLines: 64, minPt: 16 })
+
+  it("moves one character down to a lone last character (runway five-forces repro)", () => {
+    // Pre-fix: ["植物染批次色差需沟通成", "本"].
+    const r = at("植物染批次色差需沟通成本", 180)
+    expect(r.lines).toEqual(["植物染批次色差需沟通", "成本"])
+    expect(r.fontSize).toBe(16)
+    expect(r.truncated).toBe(false)
+  })
+
+  it("splits a four-character label two and two (cycle node repro)", () => {
+    // Pre-fix: ["方案评", "审"].
+    expect(at("方案评审", 52).lines).toEqual(["方案", "评审"])
+  })
+
+  it("counts closing punctuation with the character it trails", () => {
+    // Pre-fix: ["女主角「旅馆老板", "娘」"]. 「娘」」 is still one ideograph.
+    expect(at("女主角「旅馆老板娘」", 132).lines).toEqual(["女主角「旅馆老", "板娘」"])
+    // Pre-fix: ["九十分以上十八人，比期中多了五", "人。"].
+    expect(at("九十分以上十八人，比期中多了五人。", 244).lines).toEqual([
+      "九十分以上十八人，比期中多了",
+      "五人。",
+    ])
+  })
+
+  it("moves a space-delimited word whole rather than splitting it", () => {
+    // Pre-fix: ["业务 SLO 要求 90", "秒。"].
+    expect(at("业务 SLO 要求 90 秒。", 144).lines).toEqual(["业务 SLO 要求", "90 秒。"])
+  })
+
+  it("leaves the greedy lines alone when no character can be spared", () => {
+    // 「季」+「后赛」 would only move the orphan to the first line.
+    expect(at("季后赛", 36).lines).toEqual(["季后", "赛"])
+  })
+
+  it("never widens the last line past the budget", () => {
+    // One ideograph per line: moving one down would overflow, so it stays.
+    expect(at("成本", 20).lines).toEqual(["成", "本"])
+  })
+
+  it("leaves a lone Latin word on the last line alone", () => {
+    expect(at("Vertical playbook replication", 200).lines).toEqual(["Vertical playbook", "replication"])
+  })
+})
+
+describe("space-delimited mixed text wraps Chinese per character", () => {
+  const at = (text: string, maxWidth: number, fontSize = 16, fontFamily?: string) =>
+    layoutSvgText(text, { maxWidth, fontSize, maxLines: 64, minPt: fontSize, fontFamily })
+
+  it("fills the line after a lone Latin word (arena split-band repro)", () => {
+    // Pre-fix the clause after "BP" moved to the next line whole:
+    // ["BP", "前三手的英雄池扩展到二十", "一个。"].
+    expect(at("BP 前三手的英雄池扩展到二十一个。", 240).lines).toEqual(["BP 前三手的英雄池扩展到二十", "一个。"])
+  })
+
+  it("breaks a Chinese clause mid-sentence instead of ending the line at a Latin word (brief rings repro)", () => {
+    // Pre-fix: ["镜像构建从 Jenkins 迁到 GitHub", "Actions，平均构建时长从 11 分钟降到 4 分钟。"].
+    const r = at("镜像构建从 Jenkins 迁到 GitHub Actions，平均构建时长从 11 分钟降到 4 分钟。", 430, 20, "Georgia")
+    expect(r.lines).toEqual(["镜像构建从 Jenkins 迁到 GitHub Actions，平均", "构建时长从 11 分钟降到 4 分钟。"])
+  })
+
+  it("still keeps every Latin word, number and its punctuation whole", () => {
+    const text = "迁到 GitHub Actions, 90% 的构建 v2.3.1-rc 版本"
+    const r = at(text, 90)
+    const words = ["GitHub", "Actions,", "90%", "v2.3.1-rc"]
+    for (const word of words) expect(r.lines.some((line) => line.split(" ").includes(word)), word).toBe(true)
+    expect(r.lines.join("").replace(/\s/g, "")).toBe(text.replace(/\s/g, ""))
+  })
+
+  it("wraps pure English exactly as before", () => {
+    expect(at("Seat expansion in existing accounts and more", 200).lines).toEqual([
+      "Seat expansion in",
+      "existing accounts and",
+      "more",
+    ])
+  })
+})
+
+describe("measuresExactly", () => {
+  it("is true for printable ASCII in a face with a table for that weight, and for CJK", () => {
+    expect(measuresExactly("accounts", { fontFamily: "Georgia" })).toBe(true)
+    expect(measuresExactly("k seats 90%", { fontFamily: "Microsoft YaHei" })).toBe(true)
+    expect(measuresExactly("Q2 季度", { fontFamily: "SimSun" })).toBe(true)
+    expect(measuresExactly("万元，", { fontFamily: "Cambria" })).toBe(true)
+  })
+
+  it("is false where a character falls back to a class average", () => {
+    // SimSun has no Bold binary, Cambria no table, and "‰"/"·" no entry.
+    expect(measuresExactly("Q2", { fontFamily: "SimSun", bold: true })).toBe(false)
+    expect(measuresExactly("accounts", { fontFamily: "Cambria" })).toBe(false)
+    expect(measuresExactly("3‰", { fontFamily: "Georgia" })).toBe(false)
+    expect(measuresExactly("甲 · 乙", { fontFamily: "Microsoft YaHei" })).toBe(false)
+  })
+})
+
+describe("non-ASCII marks never measure narrower than the face draws them", () => {
+  // Read with scripts/gen-symbol-advances.mts from Georgia.ttf, msyh.ttc,
+  // Simsun.ttc and Kaiti.ttf. Pre-fix every one of these fell to a class
+  // average below the real advance.
+  it("prices the marks the fonts draw wide at their real width", () => {
+    expect(measureTextUnits("·", { fontFamily: "SimSun" })).toBe(1) // was 0.563
+    expect(measureTextUnits("·", { fontFamily: "KaiTi, 楷体, serif" })).toBe(1)
+    expect(measureTextUnits("—", { fontFamily: "Microsoft YaHei" })).toBeCloseTo(1.0801, 4) // was 1
+    expect(measureTextUnits("‰", { fontFamily: "Georgia" })).toBeCloseTo(1.3125, 4) // was 0.46
+    expect(measureTextUnits("…", { fontFamily: "Georgia", bold: true })).toBeCloseTo(0.9629, 4) // was 0.421
+    expect(measureTextUnits("\u3000", { fontFamily: "Microsoft YaHei" })).toBe(1) // was 0.35
+    expect(measureTextUnits("é", { fontFamily: "Microsoft YaHei" })).toBeCloseTo(0.5674, 4) // was 0.46
+  })
+
+  it("covers the marks and symbols a Chinese or English deck carries", () => {
+    for (const ch of "·—–…“”‘’《》、。，×°‰¥€") {
+      for (const face of ["georgia", "yahei", "simsun-kaiti"] as const) {
+        expect(SYMBOL_ADVANCE_BOUNDS[face].regular[ch.charCodeAt(0)], `${face} ${ch}`).toBeDefined()
+        expect(SYMBOL_ADVANCE_BOUNDS[face].bold[ch.charCodeAt(0)], `${face} bold ${ch}`).toBeDefined()
+      }
+    }
+  })
+
+  it("never measures a covered character below its bound or below the class average", () => {
+    const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "simsun-kaiti": "SimSun" } as const
+    for (const [face, weights] of Object.entries(SYMBOL_ADVANCE_BOUNDS) as [keyof typeof families, (typeof SYMBOL_ADVANCE_BOUNDS)["georgia"]][]) {
+      for (const [weight, table] of Object.entries(weights) as ["regular" | "bold", Record<number, number>][]) {
+        for (const [cp, w] of Object.entries(table)) {
+          const ch = String.fromCharCode(Number(cp))
+          const measured = measureTextUnits(ch, { fontFamily: families[face], bold: weight === "bold" })
+          expect(measured, `${face} ${weight} U+${Number(cp).toString(16)}`).toBeGreaterThanOrEqual(w)
+          if (weight === "regular") expect(measured).toBeGreaterThanOrEqual(measureTextUnits(ch))
+        }
+      }
+    }
+  })
+
+  it("leaves a call that names no face on the class average", () => {
+    expect(measureTextUnits("·")).toBeCloseTo(0.46, 6)
+  })
+})
+
+describe("balanced lines prefer to break where Latin meets CJK", () => {
+  // The brief bmc cell's own call: body size, no line cap, balanced.
+  const cell = (text: string, maxWidth: number) =>
+    layoutSvgText(text, { maxWidth, fontSize: 16, maxLines: Number.POSITIVE_INFINITY, minPt: 16, balanceLines: true })
+
+  it("keeps an English name on one line when the split at the script seam is nearly as even (bmc repro)", () => {
+    // Pre-fix: ["Linjiang", "Group 临江咨询"], a break inside the name.
+    const r = cell("Linjiang Group 临江咨询", 160)
+    expect(r.lines).toEqual(["Linjiang Group", "临江咨询"])
+    expect(r.fontSize).toBe(16)
+    expect(r.truncated).toBe(false)
+  })
+
+  it("moves a break from between two CJK characters to the script seam at three lines", () => {
+    // Pre-fix: ["Linjiang", "Group 临", "江咨询"].
+    expect(cell("Linjiang Group 临江咨询", 100).lines).toEqual(["Linjiang", "Group", "临江咨询"])
+  })
+
+  it("does not take the seam when it would leave the lines far from even", () => {
+    // 「Linjiang Group」+「临江咨询服务中心有限公司」 is the only seam split, and
+    // its second line runs far past the balanced widest, so the balanced
+    // split between two CJK characters stands.
+    expect(cell("Linjiang Group 临江咨询服务中心有限公司", 200).lines).toEqual([
+      "Linjiang Group 临江咨询",
+      "服务中心有限公司",
+    ])
+  })
+
+  it("leaves all-Latin and all-CJK balancing as it was", () => {
+    const opts = { maxWidth: 360, fontSize: 64, maxLines: 3, balanceLines: true }
+    expect(layoutSvgText("年度战略回顾", opts).lines).toEqual(["年度战", "略回顾"])
+    expect(
+      layoutSvgText("Alpha Beta Gamma Delta X", { ...opts, maxWidth: 806.4, maxLines: 2 }).lines,
+    ).toEqual(["Alpha Beta", "Gamma Delta X"])
+  })
+
+  it("never widens past the greedy lines or brings back a one-character last line", () => {
+    for (let w = 90; w <= 200; w += 2) {
+      const text = "Linjiang Group 临江咨询"
+      const greedy = layoutSvgText(text, { maxWidth: w, fontSize: 16, maxLines: 8, minPt: 16 })
+      const r = cell(text, w)
+      expect(r.lines.length, `${w}`).toBe(greedy.lines.length)
+      expect(r.fontSize).toBe(16)
+      const widest = Math.max(...greedy.lines.map((l) => measureTextUnits(l)))
+      for (const line of r.lines) expect(measureTextUnits(line)).toBeLessThanOrEqual(widest + 1e-9)
+      expect(Array.from(r.lines.at(-1)!).length).toBeGreaterThan(1)
+      expect(r.lines.join("").replace(/\s/g, "")).toBe(text.replace(/\s/g, ""))
+    }
+  })
+})
+
