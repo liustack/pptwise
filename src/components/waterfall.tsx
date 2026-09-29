@@ -1,5 +1,5 @@
 import type { Component } from "@/ir"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -79,6 +79,8 @@ const VALUE_MIN_FONT = 16
 const CATEGORY_FONT = 16
 const CATEGORY_MIN_FONT = 16
 const CATEGORY_BOTTOM_MARGIN = 10
+/** Baseline to baseline between a category name's two lines (`layoutSvgText`'s own line height at 16px). */
+const CATEGORY_LINE_H = Math.round(CATEGORY_FONT * 1.08)
 const CONNECTOR_DASH = "4 3"
 /** Natural (unstretched) height — full-body geometry is always driven by the
  * given `box.h` at render time (`checkFullBodyExclusivity` guarantees this is
@@ -151,6 +153,27 @@ function formatValue(v: number, unit: string | undefined, signed: boolean): stri
   return `${sign}${num}${unit ?? ""}`
 }
 
+interface CategoryLabel {
+  lines: string[]
+  truncated: boolean
+}
+
+/**
+ * A bar's category name, on one line or two.
+ *
+ * One line first, fitted to its column. A name too long for that used to be
+ * cut ("Seat expansion in existing accounts" came out as "Seat expansion in")
+ * with the page's whole bottom band to spare. It now wraps onto a second line
+ * under the first, and only a name too long for two lines is cut and marked
+ * `data-truncated`.
+ */
+function categoryLabel(label: string, maxWidth: number): CategoryLabel {
+  const one = fitSvgLine(label, { maxWidth, fontSize: CATEGORY_FONT, minFontSize: CATEGORY_MIN_FONT })
+  if (!one.truncated) return { lines: [one.text], truncated: false }
+  const two = layoutSvgText(label, { maxWidth, fontSize: CATEGORY_FONT, minPt: CATEGORY_MIN_FONT, maxLines: 2 })
+  return { lines: two.lines, truncated: two.truncated }
+}
+
 interface Geom {
   bars: Bar[]
   colW: number
@@ -158,17 +181,25 @@ interface Geom {
   plotTop: number
   plotH: number
   valueToY: (v: number) => number
+  categories: CategoryLabel[]
+  /** Lines the tallest category name takes, and so the band every name hangs in. */
+  categoryLines: number
 }
 
 function geom(component: WaterfallComponent, w: number, h: number): Geom {
   const bars = computeBars(component.items)
   const { min, max } = yDomain(bars)
-  const plotTop = LABEL_TOP_PAD
-  const plotH = Math.max(1, h - LABEL_TOP_PAD - LABEL_BOTTOM_PAD)
   const colW = w / bars.length
+  const categories = bars.map((bar) => categoryLabel(bar.label, colW - 4))
+  const categoryLines = Math.max(1, ...categories.map((c) => c.lines.length))
+  // A second line of names takes its height from the plot, so the bars and
+  // the value labels under a falling bar keep the clearance they had above a
+  // single line.
+  const plotTop = LABEL_TOP_PAD
+  const plotH = Math.max(1, h - LABEL_TOP_PAD - LABEL_BOTTOM_PAD - (categoryLines - 1) * CATEGORY_LINE_H)
   const barInset = Math.min(BAR_INSET_MAX, colW * BAR_INSET_RATIO)
   const valueToY = (v: number) => plotTop + plotH - ((v - min) / (max - min)) * plotH
-  return { bars, colW, barInset, plotTop, plotH, valueToY }
+  return { bars, colW, barInset, plotTop, plotH, valueToY, categories, categoryLines }
 }
 
 export const waterfall: SvgComponent<WaterfallComponent> = {
@@ -234,13 +265,12 @@ export const waterfall: SvgComponent<WaterfallComponent> = {
           const valueY = above
             ? yTop - VALUE_GAP
             : yBot + VALUE_GAP + valueText.fontSize * 0.85
-          const categoryText = fitSvgLine(bar.label, {
-            maxWidth: g.colW - 4,
-            fontSize: CATEGORY_FONT,
-            minFontSize: CATEGORY_MIN_FONT,
-          })
+          const category = g.categories[i]!
+          // Names hang from one line across every column: the first line of
+          // each sits where the first line of the tallest one does.
+          const categoryY = box.y + h - CATEGORY_BOTTOM_MARGIN - (g.categoryLines - 1) * CATEGORY_LINE_H
           const valueInk = accessibleInk(ctx.colors.text, bg, valueText.fontSize)
-          const categoryInk = accessibleInk(ctx.colors.text, bg, categoryText.fontSize)
+          const categoryInk = accessibleInk(ctx.colors.text, bg, CATEGORY_FONT)
           return (
             <g key={i}>
               <rect x={barX} y={yTop} width={barW} height={barH} fill={fillFor(bar.kind, ctx)} />
@@ -257,18 +287,21 @@ export const waterfall: SvgComponent<WaterfallComponent> = {
               >
                 {valueText.text}
               </text>
-              <text
-                data-truncated={categoryText.truncated ? "1" : undefined}
-                x={barX + barW / 2}
-                y={box.y + h - CATEGORY_BOTTOM_MARGIN}
-                textAnchor="middle"
-                fontSize={categoryText.fontSize}
-                fill={categoryInk}
-                fontFamily={ctx.fonts.body}
-                dominantBaseline="alphabetic"
-              >
-                {categoryText.text}
-              </text>
+              {category.lines.map((line, k) => (
+                <text
+                  key={`category-${k}`}
+                  data-truncated={category.truncated && k === category.lines.length - 1 ? "1" : undefined}
+                  x={barX + barW / 2}
+                  y={categoryY + k * CATEGORY_LINE_H}
+                  textAnchor="middle"
+                  fontSize={CATEGORY_FONT}
+                  fill={categoryInk}
+                  fontFamily={ctx.fonts.body}
+                  dominantBaseline="alphabetic"
+                >
+                  {line}
+                </text>
+              ))}
             </g>
           )
         })}

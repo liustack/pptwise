@@ -2,11 +2,10 @@ import type { ReactElement } from "react"
 import type { ChartSeries, Component } from "@/ir"
 import { CHART_AXIS_LIMIT } from "@/ir/components/chart"
 import { accessibleInk } from "../render/ink"
-import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
+import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import { axisTitlePairHeight, renderCartesianAxisTitles } from "./axis-titles"
 import {
   buildAlignedNumericAxis,
-  buildCoveringNumericAxis,
   buildNumericAxis,
   formatAxisTick,
   layoutCartesianPlot,
@@ -17,10 +16,11 @@ import {
   TICK_MIN_FONT_SIZE,
   TICK_TO_AXIS_GAP,
   X_TICK_BAND,
+  Y_TICK_MAX_W_RATIO,
   type DomainPadMode,
 } from "./cartesian-axis"
 import { buildChartModel, zeroAxisRatio, type ChartDomain } from "./chart-model"
-import { boxesIntersect, type DepthBox } from "../render/depth-contract/geometry"
+import { boxesIntersect, TEXT_INK_DESCENT, type DepthBox } from "../render/depth-contract/geometry"
 import {
   labelLinePitch,
   resolveValueLabelCollisions,
@@ -50,9 +50,9 @@ import {
  * page with no error and no mark. This one paints nothing either, and says
  * that the component went with it.
  *
- * `renderStacked` and `renderCombo` give the same answer to their case of the
- * same trouble: a pile or a value past `CHART_AXIS_LIMIT` that no axis can be
- * built for.
+ * Every cartesian renderer gives the same answer to its case of the same
+ * trouble: a value, or a stacked pile, past `CHART_AXIS_LIMIT` that no axis
+ * can be built for (`pastAxisLimit`).
  */
 function WholeShareDeclined(): ReactElement {
   // One component, because one component is what went: the chart draws
@@ -64,6 +64,17 @@ function WholeShareDeclined(): ReactElement {
   // `slideToRender` sums and `checkContentDropGate` reads as no loss at all.
   // A constant of one is both the floor and the truth.
   return <g data-dropped={1} data-dropped-kind="component" />
+}
+
+/**
+ * True when a value lies past `CHART_AXIS_LIMIT`, where no axis can be built.
+ *
+ * validate refuses such a value on every cartesian chart, so one reaching a
+ * renderer has come round the gate. The axis builder would throw on it, so the
+ * renderer declines first and says so, with `WholeShareDeclined`.
+ */
+function pastAxisLimit(values: readonly number[]): boolean {
+  return values.some((v) => Math.abs(v) > CHART_AXIS_LIMIT)
 }
 
 /** The `chart` IR component, for the renderers whose geometry needs
@@ -551,6 +562,9 @@ export function seriesGutterLabelsFit(
   const model = buildChartModel(series)
   const meta = cartesianMeta(component)
   const values = keptValues(model.series)
+  // No axis can be laid out for a value past the ceiling. The renderer
+  // declines the whole chart for that, so the labels are not the question.
+  if (pastAxisLimit(values)) return true
   const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit)
   // Only `plotW` matters here, and it does not depend on the height or the
   // axis-title band — see `layoutCartesianPlot`.
@@ -948,6 +962,7 @@ export function renderBar(
   const { categories } = model
   const n = model.series.length
   const meta = cartesianMeta(component)
+  if (pastAxisLimit(keptValues(model.series))) return <WholeShareDeclined />
   const yAxis = buildNumericAxis(keptValues(model.series), "zero-max", meta.yUnit)
   const domain: ChartDomain = { min: yAxis.domain.min, max: yAxis.domain.max, degenerate: yAxis.domain.max <= yAxis.domain.min }
   const geom = layoutCartesianPlot({
@@ -981,7 +996,11 @@ export function renderBar(
   const gradientId = chartGradientId("chart-bar-grad", w, h, series)
   const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
   const dataMax = Math.max(...keptValues(model.series), Number.NEGATIVE_INFINITY)
+  // Every bar prints its value above itself, all of them or none: see
+  // `placeValueLabelsTogether`. The labels may use the chart body between the
+  // legend row and the x-axis, across the plot's own width.
   const barLabelSpecs: ValueLabelSpec[] = []
+  const barBoxes: DepthBox[] = []
   for (let i = 0; i < categories.length; i++) {
     const groupX0 = geom.plotX + i * groupW + BAR_GROUP_EDGE_GAP
     const usableW = groupW - BAR_GROUP_EDGE_GAP * 2
@@ -990,20 +1009,32 @@ export function renderBar(
       const value = s.values[i]
       if (value == null) continue
       const barX = groupX0 + s.seriesIndex * (perBarW + BAR_GROUP_EDGE_GAP)
-      const { barY } = verticalBarExtent(value, domain, geom.plotY, geom.plotH)
-      barLabelSpecs.push({
-        id: `bar-${i}-${s.seriesIndex}`,
-        text: String(value),
-        x: barX + perBarW / 2,
-        y: barY - VALUE_LABEL_GAP,
-        anchor: "middle",
-        fontSize: VALUE_FONT_SIZE,
-        fontFamily,
-        priority: 100 - s.seriesIndex,
-      })
+      const { barY, barH } = verticalBarExtent(value, domain, geom.plotY, geom.plotH)
+      barBoxes.push({ x: barX, y: barY, w: perBarW, h: barH })
+      barLabelSpecs.push(
+        risingBand(
+          {
+            id: `bar-${i}-${s.seriesIndex}`,
+            text: String(value),
+            x: barX + perBarW / 2,
+            y: barY - VALUE_LABEL_GAP,
+            anchor: "middle",
+            fontSize: VALUE_FONT_SIZE,
+            fontFamily,
+            priority: 100 - s.seriesIndex,
+          },
+          y0,
+        ),
+      )
     }
   }
-  const placedBars = new Map(resolveValueLabelCollisions(barLabelSpecs).map((label) => [label.id, label]))
+  const placedLabels = placeValueLabelsTogether(barLabelSpecs, barBoxes, {
+    left: geom.plotX,
+    right: geom.plotX + geom.plotW,
+    top: y0,
+    bottom: geom.plotY + geom.plotH,
+  })
+  const placedBars = new Map((placedLabels ?? []).map((label) => [label.id, label]))
   return (
     <>
       {n <= 1 && (
@@ -1057,7 +1088,7 @@ export function renderBar(
               opacity={isSingle ? (isMax ? 1 : 0.75) : 1}
             />,
           )
-          if (placed && !placed.hidden) {
+          if (placed) {
             barElements.push(
               <text
                 key={`v-${s.seriesIndex}`}
@@ -1077,6 +1108,7 @@ export function renderBar(
         }
         return <g key={cat.key}>{barElements}</g>
       })}
+      {placedLabels === null ? <g data-dropped={barLabelSpecs.length} data-dropped-kind="value-label" /> : null}
       {renderCartesianAxisTitles({
         plotX: geom.plotX,
         plotBottom: geom.titleY,
@@ -1116,6 +1148,7 @@ export function renderLine(
   const n = model.series.length
   const meta = cartesianMeta(component)
   const values = keptValues(model.series)
+  if (pastAxisLimit(values)) return <WholeShareDeclined />
   const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit)
   const geom = layoutCartesianPlot({
     x0,
@@ -1976,6 +2009,7 @@ export function renderDumbbell(
   const rows = Math.min(fromData.length, toData.length)
   if (rows === 0) return <></>
   const all = [...fromData, ...toData].map((d) => d.y)
+  if (pastAxisLimit(all)) return <WholeShareDeclined />
   // Value domain must cover the data's real minimum, not just its positive
   // side — a negative value otherwise has no left bound and `vx()` can push
   // it arbitrarily far off-canvas (2026-07-21 fix: a mixed-sign series, e.g.
@@ -2075,8 +2109,26 @@ export function renderDumbbell(
  * bar 横向模式（2026-07-12 借鉴）：行式横条排名——类目标签左侧右对齐、
  * 条自左起、端值标签在条右。长标签（公司名/条目名）比竖柱友好。
  * 最大条实色 accent，其余同竖版走渐变（横向）。
+ *
+ * The category band is at least this wide, and grows with the widest
+ * category name up to `Y_TICK_MAX_W_RATIO` of the chart, the share any
+ * value-axis gutter may take. It used to stay at 110px whatever the names, so
+ * every name past about seven CJK glyphs or a dozen Latin letters was cut, on
+ * charts that had hundreds of pixels of plot to give. See `barHorizontalBands`.
  */
 const BAR_H_LABEL_W = 110
+/**
+ * Room past the plot for the value label of a bar that runs its full length:
+ * at least this, and more when the widest value label needs it, up to
+ * `BAR_H_VALUE_MAX_W_RATIO` of the chart. A fixed 64px let a long figure run
+ * off the right edge of the chart.
+ */
+const BAR_H_VALUE_W = 64
+const BAR_H_VALUE_MAX_W_RATIO = 0.25
+/** Gap between a bar's end and its value label. */
+const BAR_H_VALUE_GAP = 8
+/** Gap between the category band and the plot. */
+const BAR_H_BAND_GAP = 12
 /**
  * Fit budget headroom for the horizontal bar's category labels.
  *
@@ -2104,6 +2156,52 @@ const BAR_H_ROW_EDGE_GAP = 5
  * - 10)`) — reused unchanged as the floor for each sub-row in a grouped
  * category too, rather than inventing a second minimum. */
 const BAR_H_MIN_THICKNESS = 4
+/** Space `renderBarHorizontal` keeps above its first row. */
+const BAR_H_PLOT_TOP_PAD = 4
+
+/**
+ * Body height a horizontal bar chart needs so every category keeps a row of
+ * its own.
+ *
+ * Rows share the plot's height. Each has to hold its category name, one line
+ * of tick text, and its bars, each at least `BAR_H_MIN_THICKNESS` thick with
+ * the usual gaps. Below that the bars were drawn at their floor anyway and ran
+ * into the next row and out through the bottom of the plot, and the names sat
+ * on top of each other. The plot is the body less the top pad and the x-tick
+ * band (`renderBarHorizontal`), so this is what `chart.measure` asks for.
+ */
+export function barHorizontalMinBodyH(categories: number, seriesCount: number): number {
+  const n = Math.max(1, seriesCount)
+  const barsH = 2 * BAR_H_ROW_EDGE_GAP + n * BAR_H_MIN_THICKNESS + (n - 1) * BAR_H_ROW_EDGE_GAP
+  const rowH = Math.max(labelLinePitch(TICK_FONT_SIZE), barsH)
+  return Math.ceil(categories * rowH) + BAR_H_PLOT_TOP_PAD + X_TICK_BAND
+}
+
+/**
+ * Widths of a horizontal bar chart's two bands: the category names on the
+ * left, and the room past the plot on the right for the longest bar's value.
+ *
+ * Each band is its floor, or what its widest text needs, whichever is more,
+ * capped at its share of the chart. Text wider than its capped band is fitted
+ * the usual way: the category name is cut and marked `data-truncated`, and a
+ * value label that no longer fits is dropped with its row and declared
+ * (`placeValueLabelsTogether`).
+ */
+function barHorizontalBands(
+  categoryTexts: readonly string[],
+  valueTexts: readonly string[],
+  w: number,
+  fontFamily?: string,
+): { labelW: number; valueW: number } {
+  const widest = (texts: readonly string[], bold: boolean) =>
+    Math.max(0, ...texts.map((t) => measureTextUnits(t, { fontFamily, bold }) * TICK_FONT_SIZE))
+  const labelWant = Math.ceil(widest(categoryTexts, false) + BAR_H_LABEL_FIT_MARGIN)
+  const valueWant = Math.ceil(widest(valueTexts, true) + BAR_H_VALUE_GAP)
+  return {
+    labelW: Math.max(BAR_H_LABEL_W, Math.min(labelWant, Math.floor(w * Y_TICK_MAX_W_RATIO))),
+    valueW: Math.max(BAR_H_VALUE_W, Math.min(valueWant, Math.floor(w * BAR_H_VALUE_MAX_W_RATIO))),
+  }
+}
 
 export function renderBarHorizontal(
   series: ChartSeries[],
@@ -2135,13 +2233,20 @@ export function renderBarHorizontal(
   const n = model.series.length
   const meta = cartesianMeta(component)
   const values = keptValues(model.series)
+  if (pastAxisLimit(values)) return <WholeShareDeclined />
   const xAxis = buildNumericAxis(values, "zero-max", meta.xUnit ?? meta.yUnit)
   const domain: ChartDomain = { min: xAxis.domain.min, max: xAxis.domain.max, degenerate: false }
   const dataMax = Math.max(...values, Number.NEGATIVE_INFINITY)
-  const plotX = x0 + BAR_H_LABEL_W + 12
-  const plotW = Math.max(1, w - BAR_H_LABEL_W - 12 - 64)
-  const plotY = y0 + 4
-  const plotH = Math.max(1, h - meta.titleH - X_TICK_BAND - 4)
+  const { labelW, valueW } = barHorizontalBands(
+    categories.map((cat) => String(cat.x)),
+    values.map((v) => String(v)),
+    w,
+    fontFamily,
+  )
+  const plotX = x0 + labelW + BAR_H_BAND_GAP
+  const plotW = Math.max(1, w - labelW - BAR_H_BAND_GAP - valueW)
+  const plotY = y0 + BAR_H_PLOT_TOP_PAD
+  const plotH = Math.max(1, h - meta.titleH - X_TICK_BAND - BAR_H_PLOT_TOP_PAD)
   const rowH = plotH / categories.length
   const gradientId = chartGradientId("chart-barh-grad", w, h, series)
   const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
@@ -2150,7 +2255,11 @@ export function renderBarHorizontal(
     pos: mapToPlotX(t, xAxis.domain, plotX, plotW),
     anchor: edgeAnchor(i, xAxis.ticks.length),
   }))
+  // Every bar prints its value past its end, all of them or none: see
+  // `placeValueLabelsTogether`. A label keeps to its own row, so it may not
+  // step up or down, and it stays inside the chart.
   const hBarSpecs: ValueLabelSpec[] = []
+  const hBarBoxes: DepthBox[] = []
   for (let i = 0; i < categories.length; i++) {
     const rowY0 = plotY + i * rowH + BAR_H_ROW_EDGE_GAP
     const usableH = rowH - BAR_H_ROW_EDGE_GAP * 2
@@ -2163,22 +2272,32 @@ export function renderBarHorizontal(
       if (value == null) continue
       const barY = rowY0 + s.seriesIndex * (perBarH + BAR_H_ROW_EDGE_GAP)
       const { barX, barW } = horizontalBarExtent(value, domain, plotX, plotW)
+      hBarBoxes.push({ x: barX, y: barY, w: barW, h: perBarH })
+      const labelY = barY + perBarH / 2 + 4
       hBarSpecs.push({
         id: `hbar-${i}-${s.seriesIndex}`,
         text: String(value),
-        x: barX + barW + 8,
-        y: barY + perBarH / 2 + 4,
+        x: barX + barW + BAR_H_VALUE_GAP,
+        y: labelY,
         anchor: "start",
         fontSize: VALUE_FONT_SIZE,
         fontFamily,
         priority: 100 - s.seriesIndex,
+        yMin: labelY,
+        yMax: labelY,
       })
     }
   }
-  const placedHBars = new Map(resolveValueLabelCollisions(hBarSpecs).map((label) => [label.id, label]))
+  const placedHLabels = placeValueLabelsTogether(hBarSpecs, hBarBoxes, {
+    left: plotX,
+    right: x0 + w,
+    top: y0,
+    bottom: plotY + plotH,
+  })
+  const placedHBars = new Map((placedHLabels ?? []).map((label) => [label.id, label]))
   const yTicks = categories.map((cat, i) => {
     const label = fitSvgLine(String(cat.x), {
-      maxWidth: BAR_H_LABEL_W - BAR_H_LABEL_FIT_MARGIN,
+      maxWidth: labelW - BAR_H_LABEL_FIT_MARGIN,
       fontSize: TICK_FONT_SIZE,
       minFontSize: TICK_MIN_FONT_SIZE,
       fontFamily,
@@ -2208,7 +2327,7 @@ export function renderBarHorizontal(
         xTicks,
         yTicks,
         showHGrid: showGrid,
-        yTickMaxW: Math.max(0, BAR_H_LABEL_W + 12 - TICK_TO_AXIS_GAP),
+        yTickMaxW: Math.max(0, labelW + BAR_H_BAND_GAP - TICK_TO_AXIS_GAP),
         showVGrid: false,
         axisColor: axisColor ?? mutedColor,
         mutedColor,
@@ -2252,7 +2371,7 @@ export function renderBarHorizontal(
             />,
           )
           const placed = placedHBars.get(`hbar-${i}-${s.seriesIndex}`)
-          if (placed && !placed.hidden) {
+          if (placed) {
             barElements.push(
               <text
                 key={`v-${s.seriesIndex}`}
@@ -2271,6 +2390,7 @@ export function renderBarHorizontal(
         }
         return <g key={cat.key}>{barElements}</g>
       })}
+      {placedHLabels === null ? <g data-dropped={hBarSpecs.length} data-dropped-kind="value-label" /> : null}
       {renderCartesianAxisTitles({
         plotX,
         plotBottom: plotY + plotH + X_TICK_BAND,
@@ -2289,6 +2409,55 @@ export function renderBarHorizontal(
  * （外弧+内弧，不依赖背景色圆覆盖）+ 中心总值大字 +「总计」小字。
  */
 const DONUT_HOLE_RATIO = 0.62
+/** Size of the caption under a donut's centre total. */
+const DONUT_CAPTION_FONT_SIZE = 16
+/** Baseline of the caption's first line, below the total's baseline. */
+const DONUT_CAPTION_GAP = 18
+/** Baseline to baseline between the caption's two lines. */
+const DONUT_CAPTION_LINE_H = 19
+
+/**
+ * The series name under a donut's centre total, on one line or two.
+ *
+ * One line first, fitted to the width it has always had. A name too long for
+ * that line used to be cut ("Workspace headcount" came out as "Workspace")
+ * inside a hole with room below for a second line. It now wraps onto two, no
+ * wider than that one line and no wider than the hole at the second line's
+ * foot, the narrowest point the caption reaches, and the total moves up by
+ * half a line so the block stays centred. A name too long for two lines is
+ * cut and marked `data-truncated`.
+ */
+function donutCaption(
+  name: string,
+  ri: number,
+  totalFontSize: number,
+): { lines: string[]; truncated: boolean; shift: number } {
+  const lineW = ri * 1.7
+  const one = fitSvgLine(name, {
+    maxWidth: lineW,
+    fontSize: DONUT_CAPTION_FONT_SIZE,
+    minFontSize: DONUT_CAPTION_FONT_SIZE,
+  })
+  if (!one.truncated) return { lines: [one.text], truncated: false, shift: 0 }
+  const shift = DONUT_CAPTION_LINE_H / 2
+  // The second line's ink foot, measured down from the centre.
+  const foot =
+    totalFontSize * 0.15 -
+    shift +
+    DONUT_CAPTION_GAP +
+    DONUT_CAPTION_LINE_H +
+    DONUT_CAPTION_FONT_SIZE * TEXT_INK_DESCENT
+  if (foot >= ri) return { lines: [one.text], truncated: true, shift: 0 }
+  // Never wider than the one line that did not fit, so the name always
+  // takes both lines.
+  const two = layoutSvgText(name, {
+    maxWidth: Math.min(lineW, 2 * Math.sqrt(ri * ri - foot * foot)),
+    fontSize: DONUT_CAPTION_FONT_SIZE,
+    minPt: DONUT_CAPTION_FONT_SIZE,
+    maxLines: 2,
+  })
+  return { lines: two.lines, truncated: two.truncated, shift }
+}
 
 /**
  * One annulus (ring) sector as `renderDonut`'s own wedge idiom — the exact
@@ -2360,9 +2529,8 @@ export function renderDonut(
   // which nothing else on a donut ever paints (`legendApplicable` needs two
   // series, and a donut has one). No name, no caption: a bare number reads
   // fine, an English label on a Chinese deck does not.
-  const centerCaption = series[0]?.name?.trim()
-    ? fitSvgLine(series[0].name.trim(), { maxWidth: ri * 1.7, fontSize: 16, minFontSize: 16 })
-    : null
+  const centerCaption = series[0]?.name?.trim() ? donutCaption(series[0].name.trim(), ri, fitted.fontSize) : null
+  const totalY = cy + fitted.fontSize * 0.15 - (centerCaption?.shift ?? 0)
   return (
     <>
       {slices.map((slice) => (
@@ -2379,7 +2547,7 @@ export function renderDonut(
           <text
             data-truncated={fitted.truncated ? "1" : undefined}
             x={cx}
-            y={cy + fitted.fontSize * 0.15}
+            y={totalY}
             textAnchor="middle"
             fontSize={fitted.fontSize}
             fontWeight="bold"
@@ -2388,19 +2556,20 @@ export function renderDonut(
           >
             {fitted.text}
           </text>
-          {centerCaption && (
+          {centerCaption?.lines.map((line, i) => (
             <text
-              data-truncated={centerCaption.truncated ? "1" : undefined}
+              key={`caption-${i}`}
+              data-truncated={centerCaption.truncated && i === centerCaption.lines.length - 1 ? "1" : undefined}
               x={cx}
-              y={cy + fitted.fontSize * 0.15 + 18}
+              y={totalY + DONUT_CAPTION_GAP + i * DONUT_CAPTION_LINE_H}
               textAnchor="middle"
-              fontSize={centerCaption.fontSize}
+              fontSize={DONUT_CAPTION_FONT_SIZE}
               fill={mutedColor}
               dominantBaseline="alphabetic"
             >
-              {centerCaption.text}
+              {line}
             </text>
-          )}
+          ))}
         </>
       )}
     </>
@@ -2439,6 +2608,7 @@ export function renderScatter(
   const numX = (x: string | number): number => (typeof x === "number" ? x : Number(x))
   const xsAll = series.flatMap((s) => s.data.map((d) => numX(d.x)))
   const ysAll = series.flatMap((s) => s.data.map((d) => d.y))
+  if (pastAxisLimit(xsAll) || pastAxisLimit(ysAll)) return <WholeShareDeclined />
   const xAxis = buildNumericAxis(xsAll, "fit", meta.xUnit)
   const yAxis = buildNumericAxis(ysAll, "fit", meta.yUnit)
   const geom = layoutCartesianPlot({
@@ -2544,6 +2714,7 @@ export function renderArea(
   const { categories } = model
   const meta = cartesianMeta(component)
   const values = keptValues(model.series)
+  if (pastAxisLimit(values)) return <WholeShareDeclined />
   const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit)
   const geom = layoutCartesianPlot({
     x0,
@@ -2875,43 +3046,51 @@ function formatStackTotal(value: number): string {
 }
 
 /**
- * Place a stacked chart's column totals together, or not at all.
+ * Place a row of value labels together, or not at all.
  *
- * A total belongs on the page background above its own column. Below that
- * spot is its own column, so the pairwise resolver may only move a total up
- * (`yMax` is where it started) and never into the legend row above the plot
- * (`yMin`). What the resolver cannot settle inside that band it hides, and
- * what it settles by stepping a label sideways can still land on a
- * neighbouring column. So the result is checked against the real geometry:
- * every total shown, none on a segment, none on another total, all inside
- * `bounds`. One failure and no total is painted. A row of numbers with gaps in
- * it reads as columns that have no total, and a reader cannot tell which gap
- * is which, so the whole row goes and the caller declares every one of them.
+ * A value label belongs on the page background beside its own mark: above a
+ * bar or a stacked column, past the end of a horizontal bar. The pairwise
+ * resolver may move a label only inside the band its spec allows
+ * (`yMin`/`yMax`, and sideways by an indent), and what it cannot settle it
+ * hides. What it settles by stepping a label sideways can still land on a
+ * neighbouring mark. So the result is checked against the real geometry:
+ * every label shown, none on a mark, none on another label, all inside
+ * `bounds`. One failure and no label is painted. A row of numbers with gaps in
+ * it reads as marks that have no value, and a reader cannot tell which gap is
+ * which, so the whole row goes and the caller declares every one of them.
  *
- * The same crowding pushes `renderBar`'s value labels down onto its bars.
- * That renderer is left as it is here, since changing its placement would
- * move the pages of every existing bar chart that crowds.
+ * Stacked charts place their column totals this way, and bar charts their
+ * values. The pairwise resolver alone used to push a crowded bar chart's
+ * labels down onto its bars and past the chart's edges, with nothing to say
+ * anything was lost.
  */
-function placeStackTotals(
+function placeValueLabelsTogether(
   specs: readonly ValueLabelSpec[],
-  segments: readonly DepthBox[],
+  marks: readonly DepthBox[],
   bounds: { readonly left: number; readonly right: number; readonly top: number; readonly bottom: number },
 ): PlacedValueLabel[] | null {
-  const placed = resolveValueLabelCollisions(
-    specs.map((spec) => ({ ...spec, yMin: bounds.top + spec.fontSize * 0.75, yMax: spec.y })),
-  )
+  const placed = resolveValueLabelCollisions(specs)
   if (placed.some((label) => label.hidden)) return null
   const boxes = placed.map(valueLabelBox)
   for (let i = 0; i < boxes.length; i++) {
     const box = boxes[i]!
     if (box.x < bounds.left || box.x + box.w > bounds.right) return null
     if (box.y < bounds.top || box.y + box.h > bounds.bottom) return null
-    if (segments.some((seg) => boxesIntersect(box, seg))) return null
+    if (marks.some((mark) => boxesIntersect(box, mark))) return null
     for (let j = i + 1; j < boxes.length; j++) {
       if (boxesIntersect(box, boxes[j]!)) return null
     }
   }
   return placed
+}
+
+/**
+ * The band a label above its mark may move in: up from where it starts, never
+ * down onto the mark under it, and never above `top` (the legend row, or the
+ * top of the chart).
+ */
+function risingBand(spec: ValueLabelSpec, top: number): ValueLabelSpec {
+  return { ...spec, yMin: top + spec.fontSize * 0.75, yMax: spec.y }
 }
 
 export function renderStacked(
@@ -2970,7 +3149,7 @@ export function renderStacked(
         ticks: [...PERCENT_TICKS],
         labels: PERCENT_TICKS.map((t) => formatAxisTick(t, "%")),
       }
-    : buildCoveringNumericAxis([...piles.map((p) => p.up), ...piles.map((p) => p.down)], "zero-max", yUnit)
+    : buildNumericAxis([...piles.map((p) => p.up), ...piles.map((p) => p.down)], "zero-max", yUnit)
   const geom = layoutCartesianPlot({
     x0,
     y0,
@@ -3046,12 +3225,11 @@ export function renderStacked(
       }))
   // The totals may use the chart body between the legend row and the x-axis,
   // across the plot's own width. The y-tick labels sit left of it.
-  const placedTotals = placeStackTotals(totals, segmentBoxes, {
-    left: geom.plotX,
-    right: geom.plotX + geom.plotW,
-    top: y0,
-    bottom: geom.plotY + geom.plotH,
-  })
+  const placedTotals = placeValueLabelsTogether(
+    totals.map((spec) => risingBand(spec, y0)),
+    segmentBoxes,
+    { left: geom.plotX, right: geom.plotX + geom.plotW, top: y0, bottom: geom.plotY + geom.plotH },
+  )
   const totalInk = directLabelInk(textColor, bgHex)
 
   return (
@@ -3170,7 +3348,7 @@ export function renderCombo(
   // can be built for it (`buildAlignedNumericAxis` throws rather than return
   // a range that misses it). Handed one around validate, the chart declines
   // and says so, as a stacked pile past the same ceiling does.
-  if (keptValues(model.series).some((v) => Math.abs(v) > CHART_AXIS_LIMIT)) return <WholeShareDeclined />
+  if (pastAxisLimit(keptValues(model.series))) return <WholeShareDeclined />
   const isLine = (seriesIndex: number) => series[seriesIndex]?.plot === "line"
   const onRight = (seriesIndex: number) => series[seriesIndex]?.axis === "right"
 
@@ -3181,16 +3359,9 @@ export function renderCombo(
     return valueAxisMode(keptValues(members))
   }
   const hasRight = axisSeries(true).length > 0
-  // A bar is measured from zero, so the left axis has to hold zero whenever a
-  // bar sits on it. `buildNumericAxis` keeps zero in "zero-max" mode except
-  // when every value is the same: that case centres the range on the value
-  // and leaves zero out, so a one-category combo hung its bar below the
-  // x-axis. Zero goes in as a value here instead. Wherever the values differ
-  // this changes nothing, since "zero-max" already starts at zero. (Bar has
-  // the same gap in that builder and is left alone, to keep its pages.)
-  const leftMode = axisMode(false)
-  const leftValues = keptValues(axisSeries(false))
-  const yAxis = buildCoveringNumericAxis(leftMode === "zero-max" ? [0, ...leftValues] : leftValues, leftMode, meta.yUnit)
+  // A bar is measured from zero, and "zero-max" keeps zero in range whatever
+  // the values, so a left axis that carries a bar holds zero.
+  const yAxis = buildNumericAxis(keptValues(axisSeries(false)), axisMode(false), meta.yUnit)
   const y2Axis = hasRight
     ? buildAlignedNumericAxis(keptValues(axisSeries(true)), axisMode(true), yAxis.ticks, meta.y2Unit)
     : null

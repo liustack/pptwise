@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import { META_FONT_FLOOR_PX } from "@/constants"
 import {
   buildAlignedNumericAxis,
-  buildCoveringNumericAxis,
   buildNumericAxis,
   formatAxisTick,
   MAX_TICK_COUNT,
@@ -54,6 +53,74 @@ describe("paddedDomain", () => {
     expect(domain.min).toBe(0)
     expect(domain.max).toBeGreaterThan(75)
   })
+
+  it("zero-max mode keeps 0 when every value is the same", () => {
+    // A lone bar of 42 used to get a 35 to 50 axis, and hung below the x-axis.
+    const up = paddedDomain(42, 42, "zero-max")
+    expect(up.min).toBe(0)
+    expect(up.max).toBeGreaterThan(42)
+    const down = paddedDomain(-42, -42, "zero-max")
+    expect(down.min).toBeLessThanOrEqual(-42)
+    expect(down.max).toBeGreaterThanOrEqual(0)
+  })
+
+  it("zero-max mode keeps 0 when every value is below it", () => {
+    for (const [lo, hi] of [
+      [-20, -3],
+      [-1e11 - 0.01, -1e11],
+    ]) {
+      const domain = paddedDomain(lo!, hi!, "zero-max")
+      expect(domain.min, `${lo}..${hi}`).toBeLessThanOrEqual(lo!)
+      expect(domain.max, `${lo}..${hi}`).toBeGreaterThanOrEqual(0)
+    }
+  })
+})
+
+describe("buildNumericAxis", () => {
+  const strictlyIncreasing = (ticks: readonly number[]) => ticks.every((t, i) => i === 0 || t > ticks[i - 1]!)
+
+  it("starts a lone bar's axis at zero", () => {
+    const axis = buildNumericAxis([42], "zero-max")
+    expect(axis.ticks[0]).toBe(0)
+    expect(axis.domain.max).toBeGreaterThanOrEqual(42)
+  })
+
+  it("covers values a hair apart with distinct ticks", () => {
+    // It used to give [99.9999999999, 99.9999999999, 100, 100, 100]: five
+    // ticks on two values, not reaching 100.0000000001.
+    for (const values of [
+      [100, 100.0000000001],
+      [1e11, 1e11 + 0.01],
+      [9.99999999999999e299, 1e300],
+    ]) {
+      for (const mode of ["fit", "zero-max"] as const) {
+        const axis = buildNumericAxis(values, mode)
+        expect(strictlyIncreasing(axis.ticks), `${mode} ${values} -> ${axis.ticks}`).toBe(true)
+        expect(axis.domain.min).toBeLessThanOrEqual(Math.min(...values))
+        expect(axis.domain.max).toBeGreaterThanOrEqual(Math.max(...values))
+      }
+    }
+  })
+
+  it("keeps zero and the lowest value in range when every value is negative", () => {
+    const values = [-1e11, -1e11 - 0.01]
+    const axis = buildNumericAxis(values, "zero-max")
+    expect(strictlyIncreasing(axis.ticks)).toBe(true)
+    expect(axis.domain.min).toBeLessThanOrEqual(Math.min(...values))
+    expect(axis.domain.max).toBeGreaterThanOrEqual(0)
+  })
+
+  it("refuses a value that is not a finite number", () => {
+    // It used to filter such values out and build an axis for the rest.
+    expect(() => buildNumericAxis([1, Number.NaN], "fit")).toThrow(/finite/)
+    expect(() => buildNumericAxis([Number.POSITIVE_INFINITY], "zero-max")).toThrow(/finite/)
+  })
+
+  it("refuses a range past what finite ticks can reach, at once and by name", () => {
+    // 1.7e308 padded past the largest double and the tick walk ran until
+    // the array could grow no further: a RangeError about array length.
+    expect(() => buildNumericAxis([1.7e308, 1], "zero-max")).toThrow(/cannot cover/)
+  })
 })
 
 describe("formatAxisTick", () => {
@@ -62,6 +129,30 @@ describe("formatAxisTick", () => {
     expect(formatAxisTick(2, "周")).toBe("2 周")
     expect(formatAxisTick(4, "weeks")).toBe("4 weeks")
     expect(formatAxisTick(80)).toBe("80")
+  })
+
+  it("prints every digit a tick has, so neighbouring ticks never share a label", () => {
+    // One or two decimals printed 0.999999, 1, 1.000001 and 1.000002 all as
+    // "1", and 10.25 as "10.3", a number the axis does not mark.
+    expect(buildNumericAxis([1, 1.000001], "fit").labels).toEqual(["0.999999", "1", "1.000001", "1.000002"])
+    expect(formatAxisTick(10.25)).toBe("10.25")
+    expect(formatAxisTick(0.025, "%")).toBe("0.025%")
+    expect(formatAxisTick(1e-10)).toBe("1e-10")
+  })
+
+  it("prints the ticks it always printed the way it always printed them", () => {
+    const cases: [number, string][] = [
+      [0, "0"],
+      [-0, "0"],
+      [50, "50"],
+      [0.5, "0.5"],
+      [2.5, "2.5"],
+      [12.5, "12.5"],
+      [-0.25, "-0.25"],
+      [1500000, "1500000"],
+      [1e300, "1e+300"],
+    ]
+    for (const [tick, label] of cases) expect(formatAxisTick(tick), String(tick)).toBe(label)
   })
 })
 
@@ -97,30 +188,6 @@ describe("yTickGutter", () => {
     expect(yTickGutter(labels, "Arial", 400)).toBe(want)
     // And the comfort floor still applies below the cap when there is room.
     expect(yTickGutter(["0"], "Arial", 400)).toBe(Y_TICK_MIN_GUTTER)
-  })
-})
-
-describe("buildCoveringNumericAxis", () => {
-  it("is buildNumericAxis wherever that one already covers the values", () => {
-    for (const values of [[0, 42], [30, 58, 71], [-12, 40], [0.1, 0.2], [1e300]]) {
-      for (const mode of ["zero-max", "fit"] as const) {
-        expect(buildCoveringNumericAxis(values, mode, "%")).toEqual(buildNumericAxis(values, mode, "%"))
-      }
-    }
-  })
-
-  it("widens a range whose ticks the shared builder rounds together", () => {
-    // buildNumericAxis gives [99.9999999999, 99.9999999999, 100, 100, 100]:
-    // five ticks on two values, not covering 100.0000000001.
-    const values = [100, 100.0000000001]
-    const axis = buildCoveringNumericAxis(values, "fit")
-    for (let i = 1; i < axis.ticks.length; i++) expect(axis.ticks[i]!).toBeGreaterThan(axis.ticks[i - 1]!)
-    expect(axis.domain.min).toBeLessThanOrEqual(100)
-    expect(axis.domain.max).toBeGreaterThanOrEqual(100.0000000001)
-  })
-
-  it("refuses a value that is not a finite number", () => {
-    expect(() => buildCoveringNumericAxis([1, Number.POSITIVE_INFINITY], "fit")).toThrow(/finite/)
   })
 })
 

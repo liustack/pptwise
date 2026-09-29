@@ -1663,3 +1663,206 @@ describe("a radial slice that cannot print its value declares the drop", () => {
     })
   }
 })
+
+describe("a value past what an axis can draw is refused on every cartesian chart", () => {
+  // A single value of 1.7e308 passed validate on a bar or a line, and the
+  // axis builder then walked ticks toward an end that had overflowed to
+  // Infinity until the array could grow no further. The page threw a
+  // RangeError. Stacked and combo already refused past CHART_AXIS_LIMIT.
+  const issuesOf = (component: unknown) => {
+    const parsed = chartSchema.safeParse(component)
+    return parsed.success ? [] : parsed.error.issues
+  }
+  const two = (a: number, b: number) => [
+    { name: "North", data: [{ x: "Q1", y: a }, { x: "Q2", y: 5 }] },
+    { name: "South", data: [{ x: "Q1", y: b }, { x: "Q2", y: 6 }] },
+  ]
+
+  it("names every series on the axis, one factor for all of them, and the unit field the axis reads", () => {
+    const cases = [
+      { component: { type: "chart", chart_type: "bar", series: two(1.7e308, 1) }, unit: /axes\.y_unit/ },
+      { component: { type: "chart", chart_type: "line", series: two(1, -1.7e308) }, unit: /axes\.y_unit/ },
+      { component: { type: "chart", chart_type: "area", series: two(1.7e308, 1) }, unit: /axes\.y_unit/ },
+      {
+        component: { type: "chart", chart_type: "bar", direction: "horizontal", series: two(1.7e308, 1) },
+        unit: /axes\.x_unit/,
+      },
+      { component: { type: "chart", chart_type: "dumbbell", series: two(1.7e308, 1) }, unit: /series' names/ },
+    ]
+    for (const { component, unit } of cases) {
+      const issues = issuesOf(component)
+      const label = `${component.chart_type}${"direction" in component ? " horizontal" : ""}`
+      expect(issues, label).toHaveLength(1)
+      const message = issues[0]!.message
+      expect(message, label).toMatch(/the largest value a chart axis can draw/)
+      expect(message, label).toMatch(/same power of ten/)
+      expect(message, label).toContain('"North"')
+      expect(message, label).toContain('"South"')
+      expect(message, label).toMatch(unit)
+    }
+  })
+
+  it("holds a scatter's x to the same ceiling as its y", () => {
+    const issues = issuesOf({
+      type: "chart",
+      chart_type: "scatter",
+      series: [
+        { name: "North", data: [{ x: 1.7e308, y: 1 }] },
+        { name: "South", data: [{ x: 2, y: 3 }] },
+      ],
+    })
+    expect(issues.map((i) => i.path.join("."))).toEqual(["series.0.data.0.x"])
+    expect(issues[0]!.message).toMatch(/axes\.x_unit/)
+    expect(issues[0]!.message).toContain('"South"')
+  })
+
+  it("still accepts a value right at the ceiling", () => {
+    expect(issuesOf({ type: "chart", chart_type: "bar", series: two(1e300, -1e300) })).toEqual([])
+  })
+
+  it("declines, rather than throws, when a caller hands the renderer one anyway", () => {
+    for (const chart_type of ["bar", "line", "area", "dumbbell"] as const) {
+      const component = { type: "chart" as const, chart_type, series: two(1.7e308, 1) }
+      const markup = renderSvgMarkup(
+        <svg>{chart.render(component, { x: 0, y: 0, w: 1120, h: chart.measure(component, 1120, ctx) }, ctx)}</svg>,
+      )
+      expect(markup, chart_type).toContain('data-dropped-kind="component"')
+      expect(markup, chart_type).not.toMatch(/NaN|Infinity/)
+    }
+  })
+})
+
+describe("bar value labels are printed together or not at all", () => {
+  // Twenty categories of two series used to push 39 of 40 labels down onto
+  // the bars and 28 out of the chart, with no mark that anything was lost.
+  const categories = Array.from({ length: 20 }, (_, i) => `C${i + 1}`)
+  const crowded = {
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    series: [
+      { name: "Plan", data: categories.map((x, i) => ({ x, y: 120 + i * 7 })) },
+      { name: "Actual", data: categories.map((x, i) => ({ x, y: 118 + i * 7 })) },
+    ],
+  }
+
+  function paint(component: Parameters<typeof chart.render>[0], w = 1120) {
+    const h = chart.measure(component, w, ctx)
+    const root = parseSvgRoot(renderSvgMarkup(<svg>{chart.render(component, { x: 0, y: 0, w, h }, ctx)}</svg>))
+    const bars = Array.from(root.querySelectorAll('rect[data-plot-mark="1"]'))
+    const labels = Array.from(root.querySelectorAll('[data-value-label="1"]'))
+    const dropped = root.querySelector('[data-dropped-kind="value-label"]')
+    return { bars, labels, dropped, w, h }
+  }
+
+  it("prints none of a crowded row and declares every one of them", () => {
+    const { bars, labels, dropped } = paint(crowded)
+    expect(bars).toHaveLength(40)
+    expect(labels).toHaveLength(0)
+    expect(dropped?.getAttribute("data-dropped")).toBe("40")
+  })
+
+  it("still prints every label when they all fit, and declares nothing", () => {
+    const roomy = { ...crowded, series: crowded.series.map((s) => ({ ...s, data: s.data.slice(0, 5) })) }
+    const { bars, labels, dropped } = paint(roomy)
+    expect(bars).toHaveLength(10)
+    expect(labels).toHaveLength(10)
+    expect(dropped).toBeNull()
+  })
+
+  it("does the same across a horizontal bar, whose labels sit past each bar's end", () => {
+    // Rows thinner than a line of text cannot hold a label each.
+    const rows = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      direction: "horizontal" as const,
+      series: ["A", "B", "C"].map((name, si) => ({
+        name,
+        data: categories.map((x, i) => ({ x, y: 40 + i + si })),
+      })),
+    }
+    const crowdedRows = paint(rows)
+    expect(crowdedRows.labels).toHaveLength(0)
+    expect(crowdedRows.dropped?.getAttribute("data-dropped")).toBe("60")
+  })
+})
+
+describe("a horizontal bar chart names every category and gives each a row", () => {
+  const names = [
+    "Seat expansion in existing accounts",
+    "Standardized onboarding templates",
+    "In-house workspace compute",
+    "Vertical playbook replication",
+    "Staffing-path automation",
+  ]
+
+  it("shows a long category name whole when the chart has room for it", () => {
+    // The category band used to stay 110px whatever the names, so each of
+    // these came out cut ("Seat", "Standardize") beside 900px of plot.
+    const component = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      direction: "horizontal" as const,
+      series: [{ name: "Seats", data: names.map((x, i) => ({ x, y: 92 - i * 13 })) }],
+    }
+    const w = 970
+    const h = chart.measure(component, w, ctx)
+    const root = parseSvgRoot(renderSvgMarkup(<svg>{chart.render(component, { x: 0, y: 0, w, h }, ctx)}</svg>))
+    const ticks = Array.from(root.querySelectorAll('[data-axis-tick="y"]'))
+    expect(ticks.map((t) => t.textContent)).toEqual(names)
+    for (const t of ticks) {
+      expect(t.hasAttribute("data-truncated")).toBe(false)
+      // Right-anchored names still start inside the chart's own box.
+      const width = measureTextUnits(t.textContent!, { fontFamily: ctx.fonts.body }) * Number(t.getAttribute("font-size"))
+      expect(Number(t.getAttribute("x")) - width).toBeGreaterThanOrEqual(0)
+    }
+  })
+
+  it("leaves room past the longest bar for its value", () => {
+    // The band past the bars was a fixed 64px, so a long figure ran off the
+    // right edge of the chart. It grows to the widest value now.
+    const component = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      direction: "horizontal" as const,
+      series: [{ name: "Revenue", data: [{ x: "A", y: 123456789.25 }, { x: "B", y: 98765432.5 }] }],
+    }
+    const w = 420
+    const h = chart.measure(component, w, ctx)
+    const root = parseSvgRoot(renderSvgMarkup(<svg>{chart.render(component, { x: 0, y: 0, w, h }, ctx)}</svg>))
+    const labels = Array.from(root.querySelectorAll('[data-value-label="1"]'))
+    expect(labels).toHaveLength(2)
+    for (const label of labels) {
+      const width = measureTextUnits(label.textContent ?? "", { bold: true, fontFamily: ctx.fonts.body }) * 16
+      expect(Number(label.getAttribute("x")) + width).toBeLessThanOrEqual(w)
+    }
+  })
+
+  it("measures a row per category, so every bar stays inside the plot", () => {
+    // Twenty categories of three series got the flat 240px body: each row
+    // was thinner than its three 4px bars, which ran on into the next row
+    // and out through the x-axis.
+    const cats = Array.from({ length: 20 }, (_, i) => `C${i + 1}`)
+    const component = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      direction: "horizontal" as const,
+      series: ["A", "B", "C"].map((name, si) => ({ name, data: cats.map((x, i) => ({ x, y: 40 + i + si })) })),
+    }
+    const w = 1120
+    const h = chart.measure(component, w, ctx)
+    expect(h).toBeGreaterThan(240)
+    const root = parseSvgRoot(renderSvgMarkup(<svg>{chart.render(component, { x: 0, y: 0, w, h }, ctx)}</svg>))
+    const top = Number(root.querySelector('[data-axis="y"]')!.getAttribute("y1"))
+    const bottom = Number(root.querySelector('[data-axis="x"]')!.getAttribute("y1"))
+    const bars = Array.from(root.querySelectorAll('rect[data-plot-mark="1"]'))
+    expect(bars).toHaveLength(60)
+    for (const bar of bars) {
+      const y = Number(bar.getAttribute("y"))
+      expect(y).toBeGreaterThanOrEqual(top)
+      expect(y + Number(bar.getAttribute("height"))).toBeLessThanOrEqual(bottom)
+    }
+    // A short list keeps the flat body it always had.
+    const short = { ...component, series: component.series.map((s) => ({ ...s, data: s.data.slice(0, 5) })) }
+    expect(chart.measure(short, w, ctx)).toBe(chart.measure({ ...short, direction: undefined }, w, ctx))
+  })
+})
