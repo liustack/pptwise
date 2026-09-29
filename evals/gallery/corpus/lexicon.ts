@@ -1106,9 +1106,9 @@ const en: Lexicon = {
   ],
 
   people: [
-    { name: "Yanqing Chen", role: "Chief Technology Officer", org: "CloudSeek Collaboration" },
-    { name: "Zhiyuan Lin", role: "Head of Delivery", org: "CloudSeek Collaboration" },
-    { name: "Weiwan Su", role: "Director of Workspaces", org: "CloudSeek Collaboration" },
+    { name: "Yanqing Chen", role: "Chief Technology Officer", org: "CloudSeek Engineering" },
+    { name: "Zhiyuan Lin", role: "Head of Delivery", org: "CloudSeek Delivery Office" },
+    { name: "Weiwan Su", role: "Director of Workspaces", org: "CloudSeek Workspace Group" },
     { name: "Changfeng Zhao", role: "Chief Collaboration Lead", org: "Linjiang Group" },
     { name: "Yuan He", role: "Head of Digital", org: "Northshore Software" },
     { name: "Nanqiao Gu", role: "Collaboration Lead", org: "Yunshan School" },
