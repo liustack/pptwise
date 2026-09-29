@@ -408,5 +408,36 @@ describe("comparison 空首列表头归一化（2026-08-19 gallery 重渲：20 �
     expect(x.get("维度")).toBe(x.get("价格"))
     expect(x.get("我们")).toBe(x.get("低 15%"))
   })
-})
 
+  describe("a half-page box", () => {
+    const georgia: ComponentCtx = { ...ctx, fonts: { heading: "Georgia", body: "Georgia, Songti SC, STSong, serif", mono: "Consolas" } }
+    const english = {
+      type: "comparison" as const,
+      columns: ["Consulting", "Platforms", "K-12"],
+      rows: [
+        { label: "Seat expansion in existing accounts", cells: ["Q1", "East", "Q2"] },
+        { label: "Standardized onboarding templates", cells: ["Q2", "South", "Q3"] },
+        { label: "In-house workspace compute", cells: ["Q3", "North", "Q4"] },
+        { label: "Vertical playbook replication", cells: ["Q4", "Southwest", "Q1"] },
+      ],
+    }
+
+    it("gives short columns the width their words need and wraps the long label column", () => {
+      const box = { x: 656, y: 294, w: 528 }
+      const h = comparison.measure(english, box.w, georgia)
+      const { container } = render(<svg>{comparison.render(english, box, georgia)}</svg>)
+      expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+      const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "")
+      for (const header of english.columns) expect(texts).toContain(header)
+      expect(texts).toContain("Southwest")
+      const words = texts.join(" ")
+      for (const row of english.rows) expect(words).toContain(row.label)
+      // The height the face reserves is the height drawn: the closing rule
+      // sits on it and every baseline sits above it.
+      const rules = Array.from(container.querySelectorAll("line")).map((l) => Number(l.getAttribute("y1")))
+      expect(Math.max(...rules)).toBe(h)
+      for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y"))).toBeLessThan(h)
+      expect(h).toBeGreaterThan((english.rows.length + 1) * 44)
+    })
+  })
+})

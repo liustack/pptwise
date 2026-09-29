@@ -121,11 +121,24 @@ export const staircase: SvgComponent<StaircaseComponent> = {
           // `fitFormUnit`). A long one used to be written out at whatever width
           // it wanted and walk off the tread, while the number it belongs to
           // was squeezed to a 24px stub.
+          //
+          // Its share starts at 45% of the tread. A short number leaves far
+          // more than that beside it, though ("412" takes a third of a
+          // quarter-page tread), so a unit that share would cut gets the room
+          // the number actually leaves instead: "accounts" used to print as
+          // "account" next to half a tread of nothing.
           const unit = (item.unit ?? "").trim()
           const unitSize = Math.max(FORM_BODY_FLOOR, Math.round(step.valueSize * 0.46))
-          const unitFit = unit
+          const shareFit = unit
             ? fitFormUnit(unit, { room: inner * 0.45, fontSize: unitSize, fontFamily: ctx.fonts.body })
             : null
+          const valueNatural =
+            measureTextUnits(item.value, { bold: true, fontFamily: ctx.fonts.heading }) * step.valueSize
+          const leftRoom = inner - valueNatural - 6
+          const unitFit =
+            unit && (!shareFit || shareFit.truncated) && leftRoom > inner * 0.45
+              ? fitFormUnit(unit, { room: leftRoom, fontSize: unitSize, fontFamily: ctx.fonts.body })
+              : shareFit
           const unitW = unitFit ? unitFit.width + 6 : 0
           const value = fitFormLine(item.value, {
             maxWidth: Math.max(24, inner - unitW),

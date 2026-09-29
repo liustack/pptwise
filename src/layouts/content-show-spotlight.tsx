@@ -1,5 +1,5 @@
 import type { Component } from "@/ir"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { stripEmphasis } from "../render/emphasis"
 import { accessibleInk, groupValueInks } from "../render/ink"
 import { SvgContent } from "../render/svg-content"
@@ -36,6 +36,18 @@ const FALLBACK_CONCLUSION_Y = 664
 /** The band this face gives a page its own construction cannot hold. */
 const SPOTLIGHT_FALLBACK_RECT = { x: 64, y: 124, w: 1152, h: 500 } as const
 
+/** The heading's line on the fallback path: from after the FOCUS tag to the right margin. */
+const FALLBACK_TITLE_X = 240
+const FALLBACK_TITLE_W = 1216 - FALLBACK_TITLE_X
+/** The spotlight column's heading baseline, which the rule under it is set against. */
+const TITLE_BASELINE = 248
+/**
+ * A heading too long for one line of the spotlight column takes two, set no
+ * larger than this so the pair still sits between the FOCUS tag and the rule.
+ */
+const WRAPPED_TITLE_MAX = 44
+const WRAPPED_TITLE_LH = 1.2
+
 export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -51,6 +63,41 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
         bold: true,
       })
     : null
+  // A heading the spotlight column cannot hold on one line wraps onto a
+  // second one above it, the last line keeping the baseline the rule is set
+  // against. The fallback path sets its heading on a full-width line of its
+  // own, so there it is fitted to that line rather than to a column the
+  // fallback never draws.
+  const wrappedTitle =
+    title?.truncated === true
+      ? layoutSvgText(titleSource, {
+          maxWidth: 496,
+          fontSize: WRAPPED_TITLE_MAX,
+          minPt: 36,
+          maxLines: 2,
+          lineHeightRatio: WRAPPED_TITLE_LH,
+          fontFamily: fonts.heading,
+          bold: true,
+        })
+      : null
+  const titleLines = wrappedTitle
+    ? wrappedTitle.lines
+    : title
+      ? [title.text]
+      : []
+  const titleSize = wrappedTitle ? wrappedTitle.fontSize : (title?.fontSize ?? 0)
+  const titleTruncated = wrappedTitle ? wrappedTitle.truncated : title?.truncated === true
+  const titleLift = wrappedTitle ? (wrappedTitle.lines.length - 1) * wrappedTitle.lineHeight : 0
+  const fallbackTitle =
+    title?.truncated === true
+      ? fitSvgLine(titleSource, {
+          maxWidth: FALLBACK_TITLE_W,
+          fontSize: 40,
+          minFontSize: 36,
+          fontFamily: fonts.heading,
+          bold: true,
+        })
+      : title
   // The kicker is the panel's own title. The picture's caption used to share
   // this one slot with it (`panel.title || image.caption`), so a page that
   // wrote both printed the title and lost the caption — the approved
@@ -207,7 +254,7 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
               data-font-floor-exempt="show-spec"
               data-truncated={kicker.truncated ? "1" : undefined}
               x={720}
-              y={172}
+              y={172 - titleLift}
               fontFamily={fonts.body}
               fontSize={kicker.fontSize}
               fill={accessibleInk(colors.muted, bg, kicker.fontSize)}
@@ -216,20 +263,21 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
               {withoutOverflowMark(kicker.text)}
             </text>
           )}
-          {title && (
+          {titleLines.map((line, li) => (
             <text
-              data-truncated={title.truncated ? "1" : undefined}
+              key={`title-${li}`}
+              data-truncated={titleTruncated && li === titleLines.length - 1 ? "1" : undefined}
               x={720}
-              y={248}
+              y={TITLE_BASELINE - titleLift + li * (wrappedTitle?.lineHeight ?? 0)}
               fontFamily={fonts.heading}
-              fontSize={title.fontSize}
+              fontSize={titleSize}
               fontWeight="700"
-              fill={accessibleInk(colors.text, bg, title.fontSize)}
+              fill={accessibleInk(colors.text, bg, titleSize)}
               dominantBaseline="alphabetic"
             >
-              {withoutOverflowMark(title.text)}
+              {withoutOverflowMark(line)}
             </text>
-          )}
+          ))}
           <line x1={720} y1={296} x2={1216} y2={296} stroke={colors.border ?? colors.muted} strokeWidth={1} />
           {rows.map((row, rowIndex) => {
             const label = fitSvgLine(row.label, {
@@ -314,18 +362,18 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
         </>
       ) : (
         <>
-          {title && (
+          {fallbackTitle && (
             <text
-              data-truncated={title.truncated ? "1" : undefined}
-              x={240}
+              data-truncated={fallbackTitle.truncated ? "1" : undefined}
+              x={FALLBACK_TITLE_X}
               y={86}
               fontFamily={fonts.heading}
-              fontSize={Math.min(title.fontSize, 40)}
+              fontSize={Math.min(fallbackTitle.fontSize, 40)}
               fontWeight="700"
-              fill={accessibleInk(colors.text, bg, Math.min(title.fontSize, 40))}
+              fill={accessibleInk(colors.text, bg, Math.min(fallbackTitle.fontSize, 40))}
               dominantBaseline="alphabetic"
             >
-              {withoutOverflowMark(title.text)}
+              {withoutOverflowMark(fallbackTitle.text)}
             </text>
           )}
           <SvgContent

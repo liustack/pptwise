@@ -3,7 +3,7 @@ import { parseProgressRatio } from "@/ir/components/progress-donuts"
 import { PptwiseError } from "../errors"
 import { Icon } from "../render/icons"
 import { accessibleInk, groupValueInks } from "../render/ink"
-import { FORM_BODY_FLOOR, fitFormLine } from "./legibility"
+import { FORM_BODY_FLOOR, fitFormLine, layoutAtSize } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
 
 type ProgressDonutsComponent = Extract<Component, { type: "progress_donuts" }>
@@ -18,6 +18,14 @@ const PAD = 8
 const MIN_CELL = 168
 const LABEL_BAND = 36
 const SOURCE_BAND = 20
+/** Pitch between a source's lines, the same as between the label and the source. */
+const SOURCE_LINE = 18
+/**
+ * A source names a document, and a third of the page at 16px holds about
+ * forty characters of one. A longer name takes a second line under the
+ * first rather than losing its tail.
+ */
+const SOURCE_MAX_LINES = 2
 const BASELINE_FUDGE = 0.35
 const FULL_T = 0.9999
 
@@ -66,11 +74,28 @@ function splitValue(value: string, unit: string | undefined): { head: string; ta
   return { head: value, tail: deduped ?? null }
 }
 
-function grid(n: number, w: number, h?: number) {
-  const cols = Math.max(1, Math.min(n, Math.max(1, Math.floor((w + 8) / MIN_CELL))))
+function fitSource(source: string, cellW: number, fontFamily: string): { lines: string[]; fontSize: number; truncated: boolean } {
+  const one = fitFormLine(source, { maxWidth: cellW - 16, fontSize: 16, floor: 16, fontFamily })
+  if (!one.truncated) return { lines: [one.text], fontSize: one.fontSize, truncated: false }
+  const laid = layoutAtSize(source, { maxWidth: cellW - 16, fontSize: 16, maxLines: SOURCE_MAX_LINES, fontFamily })
+  return { lines: laid.lines, fontSize: laid.fontSize, truncated: laid.truncated }
+}
+
+function columns(n: number, w: number): number {
+  return Math.max(1, Math.min(n, Math.max(1, Math.floor((w + 8) / MIN_CELL))))
+}
+
+/** The most lines any one source takes at this width; a band always holds one. */
+function sourceLines(component: ProgressDonutsComponent, w: number, fontFamily: string): number {
+  const cellW = w / columns(component.items.length, w)
+  return Math.max(1, ...component.items.map((item) => (item.source ? fitSource(item.source, cellW, fontFamily).lines.length : 1)))
+}
+
+function grid(n: number, w: number, h?: number, sourceLineCount = 1) {
+  const cols = columns(n, w)
   const rows = Math.max(1, Math.ceil(n / cols))
   const cellW = w / cols
-  const source = SOURCE_BAND
+  const source = SOURCE_BAND + (sourceLineCount - 1) * SOURCE_LINE
   const naturalCellH = Math.min(cellW * 1.15, 280)
   const cellH = h != null ? h / rows : naturalCellH
   const r = Math.max(
@@ -83,15 +108,16 @@ function grid(n: number, w: number, h?: number) {
 }
 
 export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
-  measure(component, w) {
-    return grid(component.items.length, w).naturalH
+  measure(component, w, ctx) {
+    return grid(component.items.length, w, undefined, sourceLines(component, w, ctx.fonts.body)).naturalH
   },
 
   render(component, box, ctx) {
   const n = component.items.length
-  const natural = grid(n, box.w).naturalH
+  const lines = sourceLines(component, box.w, ctx.fonts.body)
+  const natural = grid(n, box.w, undefined, lines).naturalH
   const h = box.h ?? natural
-  const G = grid(n, box.w, h)
+  const G = grid(n, box.w, h, lines)
   const arc = ctx.colors.accent
   const track = ctx.colors.muted
   const pageBg = ctx.defaultBg ?? ctx.colors.bg
@@ -158,9 +184,7 @@ export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
           bold: true,
           fontFamily: ctx.fonts.body,
         })
-        const source = item.source
-          ? fitFormLine(item.source, { maxWidth: G.cellW - 16, fontSize: 16, floor: 16, fontFamily: ctx.fonts.body })
-          : null
+        const source = item.source ? fitSource(item.source, G.cellW, ctx.fonts.body) : null
         const labelY = cy + G.r + G.strokeW / 2 + 22
         const iconSize = 14
         const showIcon = Boolean(item.icon) && G.r >= 48
@@ -243,20 +267,21 @@ export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
             >
               {label.text}
             </text>
-            {source ? (
+            {source?.lines.map((line, li) => (
               <text
-                data-truncated={source.truncated ? "1" : undefined}
+                key={`source-${li}`}
+                data-truncated={source.truncated && li === source.lines.length - 1 ? "1" : undefined}
                 x={cx}
-                y={labelY + 18}
+                y={labelY + 18 + li * SOURCE_LINE}
                 textAnchor="middle"
                 fontSize={source.fontSize}
                 fill={accessibleInk(ctx.colors.muted, pageBg, source.fontSize)}
                 fontFamily={ctx.fonts.body}
                 dominantBaseline="alphabetic"
               >
-                {source.text}
+                {line}
               </text>
-            ) : null}
+            ))}
           </g>
         )
       })}

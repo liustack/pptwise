@@ -178,4 +178,28 @@ describe("steps on every theme", () => {
       expect(shapesOf(id), id).toBe(baseline)
     }
   })
+
+  it("keeps a step's whole sentence under its chevron when side by side, and measures for it", () => {
+    const english = {
+      type: "steps" as const,
+      items: [
+        step("Scoping", "Renewal rate recovered to ninety-one percent, the highest in six quarters."),
+        step("Solutioning", "New bookings grew twenty-three percent, but three accounts contributed sixty percent of that."),
+        step("Seat setup", "Activation coverage reached eighty-eight percent, cutting unplanned meetings by forty percent."),
+        step("Access setup", "Delivery time fell from nine weeks to five, largely through standardized onboarding templates."),
+      ],
+    }
+    const ctx = boundThemeCtx("brief", {})
+    const w = 1088
+    const h = steps.measure(english, w, ctx)
+    const { container } = svg(steps.render(english, { x: 96, y: 290, w }, ctx))
+    expect(container.querySelectorAll("[data-truncated], [data-dropped]")).toHaveLength(0)
+    const words = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .join(" ")
+    for (const item of english.items) expect(words).toContain(item.text)
+    const lowest = Math.max(...Array.from(container.querySelectorAll("text")).map((t) => Number(t.getAttribute("y"))))
+    expect(lowest).toBeLessThanOrEqual(h)
+  })
 })
+

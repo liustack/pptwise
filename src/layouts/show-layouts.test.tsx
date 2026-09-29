@@ -293,6 +293,36 @@ describe("runway show layouts", () => {
     expect(attrs(textBy(root, "增长可复制"), ["x", "y", "font-size"])).toEqual(["720", "540", "22"])
   })
 
+  it("show-spotlight wraps a heading its column cannot hold, keeping the last line on the rule's baseline", () => {
+    const heading = "第九个 look 是整个系列的转折"
+    const root = draw(3, { ...slides[3]!, heading } as Slide)
+    expect(root.querySelector('[data-show-mode="spotlight"]')).not.toBeNull()
+    const lines = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") === "700" && t.getAttribute("x") === "720")
+    expect(lines.map((t) => t.textContent).join(" ")).toBe(heading)
+    expect(lines.length).toBe(2)
+    expect(lines.at(-1)!.getAttribute("y")).toBe("248")
+    for (const line of lines) expect(line.hasAttribute("data-truncated")).toBe(false)
+    // The kicker climbs with the first line and stays clear of it and of the FOCUS tag.
+    const kicker = textBy(root, "FOCUS 01")
+    const firstTop = Number(lines[0]!.getAttribute("y")) - Number(lines[0]!.getAttribute("font-size")) * 0.8
+    expect(Number(kicker.getAttribute("y"))).toBeLessThan(firstTop)
+    expect(Number(kicker.getAttribute("y")) - 14).toBeGreaterThan(92)
+  })
+
+  it("show-spotlight fits a fallback heading to the full line it is set on", () => {
+    const heading = "第九个 look 是整个系列的转折"
+    const slide = {
+      ...slides[3]!,
+      heading,
+      components: [{ type: "paragraph", text: "没有图片，落到通用排布。" }],
+    } as unknown as Slide
+    const root = draw(3, slide)
+    expect(root.querySelector('[data-show-mode="fallback"]')).not.toBeNull()
+    const title = textBy(root, heading)
+    expect(title.hasAttribute("data-truncated")).toBe(false)
+    expect(attrs(title, ["x", "y"])).toEqual(["240", "86"])
+  })
+
   it("places show-statement on the approved assertion and three-column grid", () => {
     const root = draw(4)
     const tokens = resolveStyle("runway")

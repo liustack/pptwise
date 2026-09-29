@@ -14,6 +14,12 @@ type NumberedCardsComponent = Extract<Component, { type: "numbered_cards" }>
 
 const COL_GAP = 24
 const PILL_GAP = 14
+/**
+ * How far the air between pills may close up when a box too short for the
+ * pills' words would otherwise cut a body to its first line. Air carries no
+ * meaning; the second line of a sentence does.
+ */
+const PILL_GAP_TIGHT = 6
 const PAD = 6
 const STACK_CAP = 440
 const BASELINE_FUDGE = 0.35
@@ -50,8 +56,8 @@ function pillRx(pillH: number, ctx: ComponentCtx): number {
   return ctx.shape?.radius ?? pillH / 2
 }
 
-function layoutPills(n: number, w: number, hHint?: number) {
-  const gaps = Math.max(n - 1, 0) * PILL_GAP
+function layoutPills(n: number, w: number, hHint?: number, pillGap = PILL_GAP) {
+  const gaps = Math.max(n - 1, 0) * pillGap
   let pillH = Math.min(
     88,
     Math.max(BODY_PILL_MIN, (STACK_CAP - gaps) / Math.max(n, 1)),
@@ -77,11 +83,69 @@ function layoutPills(n: number, w: number, hHint?: number) {
     n,
     pillH,
     pillW,
+    pillGap,
     stackH,
     leftSize,
     h: hHint != null && hHint > 0 ? hHint : h,
     naturalH: h,
   }
+}
+
+type PillLayout = ReturnType<typeof layoutPills>
+type Item = NumberedCardsComponent["items"][number]
+
+/** Everything a pill sets inside itself, at the geometry `L` hands it. */
+function pillText(item: Item, L: PillLayout, ctx: ComponentCtx, bodyCap = BODY_MAX_LINES) {
+  const showText = L.pillH >= BODY_PILL_MIN - 4
+  const visualDiam = L.pillH * BADGE_DIAMETER_RATIO
+  const badgeR = Math.max(0, visualDiam / 2)
+  const badgeInset = Math.max(0, (L.pillH - visualDiam) / 2)
+  const badgeRight = badgeInset + 2 * badgeR
+  const textX = badgeRight + BADGE_TEXT_GAP
+  const textRight = L.pillW - TEXT_PAD
+  const subCap = Math.min(SUB_MAX_W, Math.max(0, (textRight - textX) * SUB_MAX_SHARE))
+  const sub =
+    showText && item.sub?.trim() && subCap > 0
+      ? fitSvgLine(item.sub.trim(), {
+          maxWidth: subCap,
+          fontSize: FORM_BODY_FLOOR,
+          minFontSize: FORM_BODY_FLOOR,
+          fontFamily: ctx.fonts.body,
+        })
+      : null
+  const subW = sub ? measureTextUnits(sub.text, { fontFamily: ctx.fonts.body }) * sub.fontSize + SUB_GAP : 0
+  const textW = Math.max(24, textRight - textX - subW)
+  const innerH = Math.max(0, L.pillH - 4)
+  const titleLH = formLineHeight(FORM_TITLE_FLOOR)
+  const titleKeep = Math.max(1, Math.min(TITLE_MAX_LINES, Math.floor(innerH / titleLH) || 1))
+  const title = wrapPillText(item.title, {
+    maxWidth: textW,
+    fontSize: FORM_TITLE_FLOOR,
+    maxKeep: titleKeep,
+    fontFamily: ctx.fonts.heading,
+    bold: true,
+  })
+  const titleBlockH = title.lines.length * title.lineHeight
+  const leftover = innerH - titleBlockH - (showText && item.text ? TITLE_BODY_GAP : 0)
+  const bodyLH = formLineHeight(FORM_BODY_FLOOR)
+  const bodyMaxLines =
+    showText && item.text && leftover >= bodyLH ? Math.min(bodyCap, Math.floor(leftover / bodyLH)) : 0
+  const body =
+    bodyMaxLines > 0 && item.text
+      ? wrapPillText(item.text, {
+          maxWidth: textW,
+          fontSize: FORM_BODY_FLOOR,
+          maxKeep: bodyMaxLines,
+          fontFamily: ctx.fonts.body,
+        })
+      : null
+  // What this pill would need to set its title and all of its body (up to
+  // the body's own line cap), measured at this pill's text width.
+  const fullBody = item.text
+    ? wrapPillText(item.text, { maxWidth: textW, fontSize: FORM_BODY_FLOOR, maxKeep: bodyCap, fontFamily: ctx.fonts.body })
+    : null
+  const neededH = 4 + titleBlockH + (fullBody && fullBody.lines.length > 0 ? TITLE_BODY_GAP + fullBody.lines.length * bodyLH : 0)
+  return { showText, sub, title, titleBlockH, body, neededH }
 }
 
 /** Wrap at a frozen floor, then keep the lines that fit. Never ellipsizes. */
@@ -125,7 +189,16 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
 
   render(component, box, ctx) {
   const n = component.items.length
-  const L = layoutPills(n, box.w, box.h)
+  let L = layoutPills(n, box.w, box.h)
+  // A box too short for a pill's body closes up the air between pills first,
+  // down to `PILL_GAP_TIGHT`, before any sentence loses its second line.
+  if (box.h != null && box.h > 0 && n > 1) {
+    const needed = Math.max(...component.items.map((item) => pillText(item, L, ctx).neededH))
+    if (needed > L.pillH) {
+      const gap = Math.max(PILL_GAP_TIGHT, (box.h - PAD * 2 - n * needed) / (n - 1))
+      if (gap < PILL_GAP) L = layoutPills(n, box.w, box.h, gap)
+    }
+  }
 
   const leftFill = ctx.colors.primary
   const leftX = PAD
@@ -139,7 +212,6 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
   const surface = ctx.colors.surface
   const border = ctx.colors.border ?? ctx.colors.muted
   const rx = pillRx(L.pillH, ctx)
-  const showText = L.pillH >= BODY_PILL_MIN - 4
   const strokeW = 0
   const visualDiam = L.pillH * BADGE_DIAMETER_RATIO
   const badgeR = Math.max(0, (visualDiam - strokeW) / 2)
@@ -163,7 +235,7 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
       </text>
       {component.items.map((item, i) => {
         const pillX = pillsLeft
-        const pillY = pillsTop + i * (L.pillH + PILL_GAP)
+        const pillY = pillsTop + i * (L.pillH + L.pillGap)
         const badgeCx = pillX + badgeInset + visualR
         const badgeCy = pillY + L.pillH / 2
         const badgeFill = ctx.colors.accent
@@ -173,44 +245,7 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
         const badgeRight = badgeCx + badgeR
         const textX = badgeRight + BADGE_TEXT_GAP
         const textRight = pillX + L.pillW - TEXT_PAD
-        const subCap = Math.min(SUB_MAX_W, Math.max(0, (textRight - textX) * SUB_MAX_SHARE))
-        const sub =
-          showText && item.sub?.trim() && subCap > 0
-            ? fitSvgLine(item.sub.trim(), {
-                maxWidth: subCap,
-                fontSize: FORM_BODY_FLOOR,
-                minFontSize: FORM_BODY_FLOOR,
-                fontFamily: ctx.fonts.body,
-              })
-            : null
-        const subW = sub ? measureTextUnits(sub.text, { fontFamily: ctx.fonts.body }) * sub.fontSize + SUB_GAP : 0
-        const textW = Math.max(24, textRight - textX - subW)
-        const innerH = Math.max(0, L.pillH - 4)
-        const titleLH = formLineHeight(FORM_TITLE_FLOOR)
-        const titleKeep = Math.max(1, Math.min(TITLE_MAX_LINES, Math.floor(innerH / titleLH) || 1))
-        const title = wrapPillText(item.title, {
-          maxWidth: textW,
-          fontSize: FORM_TITLE_FLOOR,
-          maxKeep: titleKeep,
-          fontFamily: ctx.fonts.heading,
-          bold: true,
-        })
-        const titleBlockH = title.lines.length * title.lineHeight
-        const leftover = innerH - titleBlockH - (showText && item.text ? TITLE_BODY_GAP : 0)
-        const bodyLH = formLineHeight(FORM_BODY_FLOOR)
-        const bodyMaxLines =
-          showText && item.text && leftover >= bodyLH
-            ? Math.min(BODY_MAX_LINES, Math.floor(leftover / bodyLH))
-            : 0
-        const body =
-          bodyMaxLines > 0 && item.text
-            ? wrapPillText(item.text, {
-                maxWidth: textW,
-                fontSize: FORM_BODY_FLOOR,
-                maxKeep: bodyMaxLines,
-                fontFamily: ctx.fonts.body,
-              })
-            : null
+        const { sub, title, titleBlockH, body } = pillText(item, L, ctx)
         const bodyBlockH = body ? body.lines.length * body.lineHeight : 0
         const stackTextH = titleBlockH + (body ? TITLE_BODY_GAP + bodyBlockH : 0)
         const textTop = pillY + (L.pillH - stackTextH) / 2

@@ -242,20 +242,24 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
           })
           const desc = item.description?.trim()
           const descBudget = cap.h - labelFit.lineHeight - 8
+          const descSize = capFormBody(labelFit.fontSize, Math.round(13 * scale))
+          // The capsule is tall enough for a second line under the label; a
+          // description that runs past one line takes it rather than being cut.
+          const descMaxLines = descBudget >= 2 * Math.round(descSize * 1.25) ? 2 : 1
           const descLayout =
             desc && descBudget >= FORM_BODY_FLOOR
               ? layoutFormBody(desc, {
                   maxWidth: textW,
-                  fontSize: capFormBody(labelFit.fontSize, Math.round(13 * scale)),
+                  fontSize: descSize,
                   titleSize: labelFit.fontSize,
-                  maxLines: 1,
+                  maxLines: descMaxLines,
                   lineHeightRatio: 1.25,
                   fontFamily: ctx.fonts.body,
                 })
               : null
-          const descLine = descLayout?.lines[0] ?? ""
+          const descLines = descLayout?.lines ?? []
           const descInk = accessibleInk(ctx.colors.muted, ctx.colors.surface, descLayout?.fontSize ?? 12)
-          const blockH = labelFit.fontSize + (descLine ? descLayout!.lineHeight : 0)
+          const blockH = labelFit.fontSize + (descLines.length > 0 ? descLines.length * descLayout!.lineHeight : 0)
           const labelY = cap.y + cap.h / 2 - blockH / 2 + labelFit.fontSize * 0.9
           const descY = labelY + (descLayout ? descLayout.lineHeight : 0)
           return (
@@ -298,19 +302,22 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
               >
                 {labelFit.lines[0] ?? ""}
               </text>
-              {descLine ? (
-                <text
-                  data-truncated={formTextClipMarker(descLayout!, 0)}
-                  x={tx}
-                  y={descY}
-                  textAnchor={anchor}
-                  fontFamily={ctx.fonts.body}
-                  fontSize={descLayout!.fontSize}
-                  fill={descInk}
-                >
-                  {descLine}
-                </text>
-              ) : null}
+              {descLines.map((line, li) =>
+                line ? (
+                  <text
+                    key={`desc-${li}`}
+                    data-truncated={formTextClipMarker(descLayout!, li)}
+                    x={tx}
+                    y={descY + li * descLayout!.lineHeight}
+                    textAnchor={anchor}
+                    fontFamily={ctx.fonts.body}
+                    fontSize={descLayout!.fontSize}
+                    fill={descInk}
+                  >
+                    {line}
+                  </text>
+                ) : null,
+              )}
             </g>
           )
         })}

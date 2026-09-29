@@ -235,4 +235,31 @@ describe("staircase component", () => {
     const b = renderToStaticMarkup(<svg>{staircase.render(five, box, ctx)}</svg>)
     expect(a).toBe(b)
   })
+
+  it("gives a unit the room its short number leaves rather than a fixed share of the tread", () => {
+    for (const unit of ["accounts", "个 service"]) {
+      const flight = {
+        type: "staircase" as const,
+        items: [
+          { title: "Trial seat", value: "412", unit },
+          { title: "Team rollout", value: "386", unit },
+          { title: "Data connected", value: "248", unit },
+          { title: "Platform partner", value: "96", unit },
+        ],
+      }
+      const box = { x: 96, y: 270, w: 1088, h: 342 }
+      const { container } = svg(staircase.render(flight, box, themed("brief")))
+      expect(container.querySelectorAll("[data-truncated], [data-dropped]"), unit).toHaveLength(0)
+      const units = Array.from(container.querySelectorAll("text")).filter((t) => t.textContent === unit)
+      expect(units, unit).toHaveLength(flight.items.length)
+      // Still inside its own tread.
+      const treads = Array.from(container.querySelectorAll("rect"))
+      units.forEach((t, i) => {
+        const right = Number(treads[i]!.getAttribute("x")) + Number(treads[i]!.getAttribute("width"))
+        const width = measureTextUnits(unit) * Number(t.getAttribute("font-size"))
+        expect(Number(t.getAttribute("x")) + width, unit).toBeLessThanOrEqual(right)
+      })
+    }
+  })
 })
+

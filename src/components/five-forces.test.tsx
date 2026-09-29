@@ -272,6 +272,35 @@ describe("five_forces component", () => {
     const { container } = svg(fiveForces.render(longItem, { x: 0, y: 0, w: 1000 }, ctx))
     expect(container.querySelector('text[data-truncated="1"]')).not.toBeNull()
   })
+
+  it("wraps a phrase too long for a side panel under its own bullet, and makes the row tall enough", () => {
+    const english = {
+      type: "five_forces" as const,
+      rivalry: { items: ["Below-cost bids in the mid-market", "Large accounts building in-house teams"], intensity: "high" as const },
+      new_entrants: { items: ["No mature vendor serves campus buyers yet", "Consulting firms want joint offerings"], intensity: "medium" as const },
+      supplier_power: { items: ["New bookings concentrated in three accounts", "Success bench capacity near saturation"], intensity: "medium" as const },
+      buyer_power: { items: ["Activity leads the category by a clear margin", "Existing customers reliably expand"], intensity: "high" as const },
+      substitutes: { items: ["Tightening workplace data regulations", "Longer lead times on key add-ons"], intensity: "low" as const },
+    }
+    const georgia: ComponentCtx = { ...ctx, fonts: { heading: "Georgia", body: "Georgia", mono: "Consolas" } }
+    const w = 1088
+    const h = fiveForces.measure(english, w, georgia)
+    const { container } = svg(fiveForces.render(english, { x: 0, y: 0, w }, georgia))
+    expect(container.querySelectorAll("[data-truncated], [data-dropped]")).toHaveLength(0)
+    const words = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .join(" ")
+    for (const panel of [english.supplier_power, english.buyer_power]) {
+      for (const item of panel.items) expect(words).toContain(item)
+    }
+    // The side panel carrying the wrapped lines still holds its last line.
+    const supplier = container.querySelector('rect[data-force="supplier_power"]')!
+    const bottom = Number(supplier.getAttribute("y")) + Number(supplier.getAttribute("height"))
+    const lastLine = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "saturation")
+    expect(lastLine).toBeTruthy()
+    expect(Number(lastLine!.getAttribute("y"))).toBeLessThan(bottom)
+    expect(h).toBeGreaterThan(fiveForces.measure(basic, w, georgia))
+  })
 })
 
 describe("five_forces panel titles follow the language of the content", () => {

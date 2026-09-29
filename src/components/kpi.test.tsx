@@ -37,6 +37,30 @@ const component = {
 }
 
 describe("kpi component", () => {
+  it("wraps a source too long for its card onto a second line and grows the card for it", () => {
+    const withSource = {
+      type: "kpi_cards" as const,
+      items: [
+        { value: "102k", unit: "seats", label: "Workspace headcount", icon: "trending-up" as const, source: "CloudSeek Workspaces Q2 2026 operating data" },
+        { value: "91%", label: "Renewal rate", icon: "trending-up" as const },
+        { value: "88%", label: "Activation coverage", icon: "trending-up" as const },
+        { value: "5", unit: "weeks", label: "Average delivery time", icon: "trending-up" as const },
+      ],
+    }
+    const brief = boundThemeCtx("brief", {})
+    const w = 970
+    const h = kpi.measure(withSource, w, brief)
+    const oneLine = kpi.measure({ ...withSource, items: withSource.items.map((it, i) => (i === 0 ? { ...it, source: "Q2 data" } : it)) }, w, brief)
+    expect(h).toBe(oneLine + 18)
+    const { container } = svg(kpi.render(withSource, { x: 160, y: 390, w }, brief))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const words = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .join(" ")
+    expect(words).toContain(withSource.items[0]!.source)
+    for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y"))).toBeLessThan(h)
+  })
+
   it("renders 3 card rects with fill=ctx.colors.surface", () => {
     const { container } = svg(
       kpi.render(component, { x: 80, y: 200, w: 1120 }, ctx),

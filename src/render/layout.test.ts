@@ -257,9 +257,10 @@ describe("layoutContentFit", () => {
 
   it("keeps gallery-length English bullets in two columns and wraps KPI instead of restacking", () => {
     // Short "a".."e" bullets restack (test above). The live gallery credits
-    // the first KPI, so a sourced card is 138px and the single stack is
-    // 228+16+138=382 against a 362px rect. Restack declines, wrapping has
-    // to keep the fourth card in the 528px column.
+    // the first KPI, and a card grows 18px for each line its source takes:
+    // this source takes two at either width, so a sourced card is 156px and
+    // the single stack is 228+16+156=400 against a 362px rect. Restack
+    // declines, wrapping has to keep the fourth card in the 528px column.
     const kpi: Component = {
       type: "kpi_cards",
       items: [
@@ -289,8 +290,8 @@ describe("layoutContentFit", () => {
       kpi,
     ]
     const pageRect: ContentRect = { x: 96, y: 278, w: 1088, h: 362 }
-    expect(measureComponent(kpi, 528, ctx)).toBe(2 * 138 + 16)
-    expect(measureComponent(kpi, 1088, ctx)).toBe(138)
+    expect(measureComponent(kpi, 528, ctx)).toBe(2 * 156 + 16)
+    expect(measureComponent(kpi, 1088, ctx)).toBe(156)
     const { placed, dropped } = layoutContentFit("two_column", components, pageRect, ctx)
     expect(dropped).toBe(0)
     expect(placed).toHaveLength(2)

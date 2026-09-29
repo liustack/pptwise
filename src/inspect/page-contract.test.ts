@@ -351,7 +351,9 @@ describe("pageContract: only limits a drawn page can reach", () => {
   })
 
   it("measures each whole-canvas figure with the component's own measure, at its smallest body size", () => {
-    const ctx = (bodyFontPx: number) => ({ bodyFontPx }) as ComponentCtx
+    // A measure may read the body face to know where its words break.
+    const ctx = (bodyFontPx: number) =>
+      ({ bodyFontPx, fonts: { heading: "Georgia", body: "Georgia", mono: "Consolas" } }) as ComponentCtx
     const smallest = Math.min(...PACING_VALUES.map((pacing) => PACING_BUDGETS[pacing].bodyBaselinePx))
     /** The largest count whose natural height still fits the canvas. */
     const mostThatFits = (height: (n: number) => number): number => {

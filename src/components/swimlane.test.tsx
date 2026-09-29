@@ -259,4 +259,34 @@ describe("swimlane component", () => {
     const b = renderToStaticMarkup(<svg>{swimlane.render(renewal, box, ctx)}</svg>)
     expect(a).toBe(b)
   })
+
+  it("wraps a lane name the label column cannot hold on one line, inside its own band", () => {
+    const lanes = [{ label: "Chief Technology Officer" }, { label: "Head of Delivery" }, { label: "Director of Workspaces" }]
+    const flow = {
+      type: "swimlane" as const,
+      lanes,
+      steps: [
+        { lane: "Director of Workspaces", title: "Scoping", detail: "Q1" },
+        { lane: "Chief Technology Officer", title: "Solutioning", detail: "Q2" },
+        { lane: "Head of Delivery", title: "Seat setup", detail: "Q3" },
+        { lane: "Head of Delivery", title: "Access setup", detail: "Q4" },
+        { lane: "Head of Delivery", title: "Pilot run", detail: "H1 next year" },
+      ],
+    }
+    const box = { x: 96, y: 276, w: 1088, h: 330 }
+    const { container } = svg(swimlane.render(flow, box, boundThemeCtx("brief", {})))
+    expect(container.querySelectorAll("[data-truncated], [data-dropped]")).toHaveLength(0)
+    const bands = Array.from(container.querySelectorAll("rect")).slice(0, lanes.length)
+    const labelTexts = Array.from(container.querySelectorAll("text")).filter((t) => t.getAttribute("x") === "0")
+    lanes.forEach((lane, i) => {
+      const top = Number(bands[i]!.getAttribute("y"))
+      const bottom = top + Number(bands[i]!.getAttribute("height"))
+      const own = labelTexts.filter((t) => {
+        const y = Number(t.getAttribute("y"))
+        return y > top && y < bottom
+      })
+      expect(own.map((t) => t.textContent).join(" "), lane.label).toBe(lane.label)
+    })
+  })
 })
+

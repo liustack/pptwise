@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { axisTitlePairHeight, renderAxisTitlePair } from "./axis-titles"
+import { formTextClipMarker, layoutAtSize } from "./legibility"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -23,6 +24,13 @@ const TAG_SIZE = 16
 const TAG_LH = Math.round(TAG_SIZE * 1.35)
 const GAP_TITLE_TAG = 6
 const PAD_BOTTOM = 16
+/**
+ * A cell names the thing placed in it, and three cells can share a
+ * half-page column: "Seat expansion in existing accounts" takes four lines
+ * of a 165px cell at the title size. It wraps rather than losing words, and
+ * every cell in the grid grows with the tallest one so the rows stay even.
+ */
+const TITLE_MAX_LINES = 4
 
 function toneFill(tone: MatrixItem["tone"], ctx: ComponentCtx): string {
   switch (tone) {
@@ -36,7 +44,7 @@ function toneFill(tone: MatrixItem["tone"], ctx: ComponentCtx): string {
 }
 
 interface CellLayout {
-  title: { text: string; fontSize: number; truncated: boolean }
+  title: { lines: string[]; fontSize: number; truncated: boolean }
   tag: { text: string; fontSize: number; truncated: boolean } | null
   contentH: number
 }
@@ -49,45 +57,69 @@ interface CellLayout {
 // of which face this fit resolves against. Same fallback-in-measure,
 // real-face-in-render split 5d4c4a8 established for the other 9 structure
 // components.
-function cellLayout(item: MatrixItem, cardW: number, fontFamily?: string): CellLayout {
+function cellLayout(item: MatrixItem, cardW: number, fontFamily?: string, maxLines = TITLE_MAX_LINES): CellLayout {
   const contentW = cardW - PAD_X * 2
   // `bold: true`: this title always renders `fontWeight="700"` below --
   // unconditional, unlike a component where boldness depends on content.
-  const title = fitSvgLine(item.title, {
+  const one = fitSvgLine(item.title, {
     maxWidth: contentW,
     fontSize: TITLE_SIZE,
     minFontSize: 16,
     bold: true,
     fontFamily,
   })
+  const title = one.truncated
+    ? layoutAtSize(item.title, {
+        maxWidth: contentW,
+        fontSize: TITLE_SIZE,
+        maxLines,
+        lineHeightRatio: TITLE_LH / TITLE_SIZE,
+        bold: true,
+        fontFamily,
+      })
+    : { lines: [one.text], fontSize: one.fontSize, truncated: false }
   const tag = item.tag
     ? fitSvgLine(item.tag, { maxWidth: contentW, fontSize: TAG_SIZE, minFontSize: 16 })
     : null
-  const contentH = TITLE_LH + (tag ? GAP_TITLE_TAG + TAG_LH : 0)
+  const contentH = title.lines.length * TITLE_LH + (tag ? GAP_TITLE_TAG + TAG_LH : 0)
   return { title, tag, contentH }
 }
 
-function gridGeom(component: MatrixComponent, w: number) {
+function gridGeom(component: MatrixComponent, w: number, fontFamily?: string, maxLines = TITLE_MAX_LINES) {
   const cols = component.cols
   const rows = Math.ceil(component.items.length / cols)
   const titleH = axisTitlePairHeight(component.x_title, component.y_title)
   const cardW = (w - CARD_GAP * (cols - 1)) / cols
   const contentH = Math.max(
-    ...component.items.map((it) => cellLayout(it, cardW).contentH),
+    ...component.items.map((it) => cellLayout(it, cardW, fontFamily, maxLines).contentH),
     TITLE_LH,
   )
   const cardH = PAD_TOP + contentH + PAD_BOTTOM
   const gridH = rows * cardH + (rows - 1) * CARD_GAP
-  return { cols, rows, cardW, cardH, gridH, titleH }
+  return { cols, rows, cardW, cardH, gridH, titleH, maxLines }
+}
+
+/**
+ * The grid at the most title lines the box can hold. A box shorter than the
+ * wrapped grid gives back title lines, down to one, and a title cut there
+ * is marked like any other cut.
+ */
+function gridInBox(component: MatrixComponent, w: number, fontFamily: string, boxH?: number) {
+  let geom = gridGeom(component, w, fontFamily)
+  if (boxH === undefined) return geom
+  while (geom.maxLines > 1 && geom.titleH + geom.gridH > boxH) {
+    geom = gridGeom(component, w, fontFamily, geom.maxLines - 1)
+  }
+  return geom
 }
 
 export const matrix: SvgComponent<MatrixComponent> = {
-  measure(component, w) {
-    const { gridH, titleH } = gridGeom(component, w)
+  measure(component, w, ctx) {
+    const { gridH, titleH } = gridGeom(component, w, ctx.fonts.heading)
     return titleH + gridH
   },
   render(component, box, ctx) {
-    const { cols, rows, cardW, cardH, gridH, titleH } = gridGeom(component, box.w)
+    const { cols, rows, cardW, cardH, gridH, titleH, maxLines } = gridInBox(component, box.w, ctx.fonts.heading, box.h)
     const gridTop = box.y
     // 按 box.h 把每行卡等分拉伸（内容顶对齐），铺满可用高。The title pair
     // now sits *below* the grid. Two height semantics meet here, and the
@@ -111,7 +143,7 @@ export const matrix: SvgComponent<MatrixComponent> = {
           const row = Math.floor(i / cols)
           const x = box.x + col * (cardW + CARD_GAP)
           const y = gridTop + row * (rowH + CARD_GAP)
-          const cell = cellLayout(item, cardW, ctx.fonts.heading)
+          const cell = cellLayout(item, cardW, ctx.fonts.heading, maxLines)
           const titleBaseline = y + PAD_TOP + TITLE_SIZE
           return (
             <g key={i} data-audit-box={`${x},${y},${cardW}`}>
@@ -127,23 +159,26 @@ export const matrix: SvgComponent<MatrixComponent> = {
                   ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 }
                   : {})}
               />
-              <text
-                data-truncated={cell.title.truncated ? "1" : undefined}
-                x={x + PAD_X}
-                y={titleBaseline}
-                fontSize={cell.title.fontSize}
-                fontWeight="700"
-                fill={ctx.colors.text}
-                fontFamily={ctx.fonts.heading}
-                dominantBaseline="alphabetic"
-              >
-                {cell.title.text}
-              </text>
+              {cell.title.lines.map((line, li) => (
+                <text
+                  key={`title-${li}`}
+                  data-truncated={formTextClipMarker(cell.title, li)}
+                  x={x + PAD_X}
+                  y={titleBaseline + li * TITLE_LH}
+                  fontSize={cell.title.fontSize}
+                  fontWeight="700"
+                  fill={ctx.colors.text}
+                  fontFamily={ctx.fonts.heading}
+                  dominantBaseline="alphabetic"
+                >
+                  {line}
+                </text>
+              ))}
               {cell.tag ? (
                 <text
                   data-truncated={cell.tag.truncated ? "1" : undefined}
                   x={x + PAD_X}
-                  y={titleBaseline + GAP_TITLE_TAG + TAG_SIZE}
+                  y={titleBaseline + (cell.title.lines.length - 1) * TITLE_LH + GAP_TITLE_TAG + TAG_SIZE}
                   fontSize={cell.tag.fontSize}
                   fill={ctx.colors.muted}
                   fontFamily={ctx.fonts.body}

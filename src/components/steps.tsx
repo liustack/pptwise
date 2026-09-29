@@ -29,6 +29,14 @@ const BADGE_INSET = 16
 const TITLE_SIZE = FORM_TITLE_FLOOR
 const FOOT_SIZE = FORM_BODY_FLOOR
 const FOOT_GAP = 14
+/**
+ * Lines a step's sentence may take under its chevron. Side by side, a slot
+ * is a quarter of the page, and an ordinary English sentence runs to four
+ * or five lines there at the body floor; it keeps them rather than stopping
+ * at three. Stacked, a step spans the full width and two lines hold it.
+ */
+const FOOT_LINES = 5
+const FOOT_LINES_VERTICAL = 2
 
 function needsVertical(n: number, w: number): boolean {
   return n * MIN_ARROW_W + (n - 1) * THRESHOLD_GAP > w
@@ -66,7 +74,7 @@ function measureSteps(component: StepsComponent, w: number, ctx: ComponentCtx): 
   const n = component.items.length
   const vertical = needsVertical(n, w)
   const slotW = vertical ? w : (w - GAP * (n - 1)) / n
-  const footLines = vertical ? 2 : 3
+  const footLines = vertical ? FOOT_LINES_VERTICAL : FOOT_LINES
   const foot = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
   const arrowH = vertical ? ARROW_H_VERTICAL : ARROW_H
   if (vertical) return n * (arrowH + FOOT_GAP + foot + GAP) - GAP
@@ -110,7 +118,7 @@ export const steps: SvgComponent<StepsComponent> = {
   const slotW = vertical ? box.w : (box.w - GAP * (n - 1)) / n
   const fill = ctx.colors.primary
   const ink = readableOn(fill)
-  const footLines = vertical ? 2 : 3
+  const footLines = vertical ? FOOT_LINES_VERTICAL : FOOT_LINES
   const footH = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
   const arrowH = vertical ? ARROW_H_VERTICAL : ARROW_H
   const stride = arrowH + FOOT_GAP + footH + (vertical ? GAP : 0)
