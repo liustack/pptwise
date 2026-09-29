@@ -70,6 +70,21 @@ function lineChart(n: number) {
   }
 }
 
+/** Two KPI items and a chart: more than stat-hero's hero line can hold. */
+function statHeroBody(n: number) {
+  return [
+    {
+      type: "kpi_cards",
+      items: [
+        { value: "91", unit: "%", label: "Renewal" },
+        { value: "88", unit: "%", label: "Activation" },
+      ],
+    },
+    lineChart(n),
+  ]
+}
+
+
 /**
  * Faces whose body slot is only reached past their own construction guard
  * need company on the page, or they draw their exact composition instead and
@@ -152,22 +167,26 @@ const CASES: FaceCase[] = [
     regions: ["face", "aside", "declined"],
   },
   // A lone hero figure is this face's page. Two KPI items are not, so the
-  // page falls to the body slot the chart shares with them.
+  // page falls to the body slot the chart shares with them. That page keeps
+  // the slide's footnote, and a footnote takes the same 36px off its fixed
+  // band that it takes off the sheet's, so only a page without one has room
+  // for the face to hold before it steps aside.
   {
     face: "stat-hero",
     Face: StatHeroContent,
     themeId: "brief",
-    components: (n) => [
-      {
-        type: "kpi_cards",
-        items: [
-          { value: "91", unit: "%", label: "Renewal" },
-          { value: "88", unit: "%", label: "Activation" },
-        ],
-      },
-      lineChart(n),
-    ],
+    omitFootnote: true,
+    components: (n) => statHeroBody(n),
     regions: ["face", "aside", "declined"],
+  },
+  // With a footnote the handed-over band is never larger than the sheet's,
+  // so two KPIs and a chart go straight to the sheet.
+  {
+    face: "stat-hero",
+    Face: StatHeroContent,
+    themeId: "brief",
+    components: (n) => statHeroBody(n),
+    regions: ["aside", "declined"],
   },
   // A chart is scalable, so the bento grid shrinks one into whatever cell it
   // gets and the degrade path is never reached. A bullets list is not: it
@@ -242,7 +261,7 @@ function sweep(c: FaceCase): { verdicts: Verdict[]; from: number } {
 
 describe("a wired face steps aside exactly where its body slot starts costing content", () => {
   for (const c of CASES) {
-    it(`${c.face}`, { timeout: 60_000 }, () => {
+    it(`${c.face}${c.omitFootnote ? " (no footnote)" : ""}`, { timeout: 60_000 }, () => {
       const { verdicts } = sweep(c)
       // The page walks exactly the regions this case declares, in order. One
       // equality carries every property the regions are supposed to have:
