@@ -298,7 +298,9 @@ describe("runway show layouts", () => {
     const root = draw(3, { ...slides[3]!, heading } as Slide)
     expect(root.querySelector('[data-show-mode="spotlight"]')).not.toBeNull()
     const lines = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") === "700" && t.getAttribute("x") === "720")
-    expect(lines.map((t) => t.textContent).join(" ")).toBe(heading)
+    // The Chinese clause breaks between any two ideographs, so the join is
+    // compared without the spaces a line break may have absorbed.
+    expect(lines.map((t) => t.textContent).join("").replace(/\s/g, "")).toBe(heading.replace(/\s/g, ""))
     expect(lines.length).toBe(2)
     expect(lines.at(-1)!.getAttribute("y")).toBe("248")
     for (const line of lines) expect(line.hasAttribute("data-truncated")).toBe(false)

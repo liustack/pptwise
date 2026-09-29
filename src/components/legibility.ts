@@ -3,6 +3,7 @@ import {
   hasExactWidthTable,
   layoutSvgText,
   measureTextUnits,
+  measuresExactly,
   truncateToUnits,
   type TextWeightHint,
 } from "../lib/svg-text-layout"
@@ -127,6 +128,13 @@ export function paintedWidthCeiling(
  * `null` is a real answer, not an edge case to swallow: a unit is what a
  * number is counted in, and half of one beside the number says less than
  * nothing. The caller declares the loss.
+ *
+ * The headroom is for widths the estimator can only guess. A unit set in a
+ * face whose advance table covers it, or in CJK, is measured exactly
+ * (`measuresExactly`), and padding it by half again only narrowed the room a
+ * number and its unit had: "accounts" in Georgia was fitted into two thirds
+ * of its space and then charged half again for a width the font's own table
+ * already gives.
  */
 export function fitFormUnit(
   unit: string,
@@ -135,13 +143,14 @@ export function fitFormUnit(
   const text = unit.trim()
   if (!text) return null
   const room = Math.max(0, opts.room)
+  const weight = { fontFamily: opts.fontFamily }
+  const headroom = measuresExactly(text, weight) ? 1 : WIDTH_ESTIMATE_HEADROOM
   const fitted = fitFormLine(text, {
-    maxWidth: room / WIDTH_ESTIMATE_HEADROOM,
+    maxWidth: room / headroom,
     fontSize: opts.fontSize,
     fontFamily: opts.fontFamily,
   })
-  const width =
-    measureTextUnits(fitted.text, { fontFamily: opts.fontFamily }) * fitted.fontSize * WIDTH_ESTIMATE_HEADROOM
+  const width = measureTextUnits(fitted.text, weight) * fitted.fontSize * headroom
   if (!fitted.text || width > room) return null
   return { text: fitted.text, fontSize: fitted.fontSize, width, truncated: fitted.truncated }
 }
