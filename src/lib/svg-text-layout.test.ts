@@ -829,10 +829,22 @@ describe("CJK line-break prohibition (kinsoku)", () => {
   })
 
   it("obeys the prohibition inside splitLongToken's emergency cut of an over-long token", () => {
-    // A space-delimited paragraph whose second token is wider than a whole
-    // line, so `splitLongToken` — not the token packer — chooses the break
-    // points. Pre-fix it cut after the opening bracket:
-    // ["报告", "深度学习（", "DL）在生", "产环境的落", "地路径与成", "本。"].
+    // A bracketed run wider than a whole line, so `splitLongToken`, not the
+    // token packer, chooses the break points. Without the rule its cut lands
+    // just before the closing bracket: ["lmnopq", ") now"].
+    const r = layoutSvgText("see (abcdefghijklmnopq) now", {
+      maxWidth: 60,
+      fontSize: 16,
+      maxLines: 8,
+      minPt: 16,
+    })
+    expect(r.lines).toEqual(["see", "(abcde", "fghijk", "lmnop", "q) now"])
+  })
+
+  it("keeps kinsoku when a space-delimited CJK clause wraps per character", () => {
+    // The clause after the space breaks between any two ideographs, and the
+    // brackets still keep their places: 「（」 never ends a line and 「）」
+    // never starts one.
     const r = layoutSvgText("报告 深度学习（DL）在生产环境的落地路径与成本。", {
       maxWidth: 120,
       fontSize: 24,
@@ -840,7 +852,7 @@ describe("CJK line-break prohibition (kinsoku)", () => {
       minPt: 12,
     })
     expectNoProhibitedBoundary(r.lines)
-    expect(r.lines).toEqual(["报告", "深度学习", "（DL）在", "生产环境的", "落地路径与", "成本。"])
+    expect(r.lines).toEqual(["报告 深度", "学习", "（DL）在", "生产环境的", "落地路径与", "成本。"])
   })
 
   it("keeps the original cut rather than emptying a line when no legal break exists", () => {
@@ -1019,15 +1031,6 @@ describe("CJK orphan avoidance (no single-character last line)", () => {
     expect(at("业务 SLO 要求 90 秒。", 144).lines).toEqual(["业务 SLO 要求", "90 秒。"])
   })
 
-  it("cuts inside a long CJK run between two ideographs when no word boundary works", () => {
-    // splitLongToken chunks the run 「是整个系列的转折点」 and leaves 「点」 alone.
-    expect(at("第九个 look 是整个系列的转折点", 128).lines).toEqual([
-      "第九个 look",
-      "是整个系列的转",
-      "折点",
-    ])
-  })
-
   it("leaves the greedy lines alone when no character can be spared", () => {
     // 「季」+「后赛」 would only move the orphan to the first line.
     expect(at("季后赛", 36).lines).toEqual(["季后", "赛"])
@@ -1042,3 +1045,37 @@ describe("CJK orphan avoidance (no single-character last line)", () => {
     expect(at("Vertical playbook replication", 200).lines).toEqual(["Vertical playbook", "replication"])
   })
 })
+
+describe("space-delimited mixed text wraps Chinese per character", () => {
+  const at = (text: string, maxWidth: number, fontSize = 16, fontFamily?: string) =>
+    layoutSvgText(text, { maxWidth, fontSize, maxLines: 64, minPt: fontSize, fontFamily })
+
+  it("fills the line after a lone Latin word (arena split-band repro)", () => {
+    // Pre-fix the clause after "BP" moved to the next line whole:
+    // ["BP", "前三手的英雄池扩展到二十", "一个。"].
+    expect(at("BP 前三手的英雄池扩展到二十一个。", 240).lines).toEqual(["BP 前三手的英雄池扩展到二十", "一个。"])
+  })
+
+  it("breaks a Chinese clause mid-sentence instead of ending the line at a Latin word (brief rings repro)", () => {
+    // Pre-fix: ["镜像构建从 Jenkins 迁到 GitHub", "Actions，平均构建时长从 11 分钟降到 4 分钟。"].
+    const r = at("镜像构建从 Jenkins 迁到 GitHub Actions，平均构建时长从 11 分钟降到 4 分钟。", 430, 20, "Georgia")
+    expect(r.lines).toEqual(["镜像构建从 Jenkins 迁到 GitHub Actions，平均", "构建时长从 11 分钟降到 4 分钟。"])
+  })
+
+  it("still keeps every Latin word, number and its punctuation whole", () => {
+    const text = "迁到 GitHub Actions, 90% 的构建 v2.3.1-rc 版本"
+    const r = at(text, 90)
+    const words = ["GitHub", "Actions,", "90%", "v2.3.1-rc"]
+    for (const word of words) expect(r.lines.some((line) => line.split(" ").includes(word)), word).toBe(true)
+    expect(r.lines.join("").replace(/\s/g, "")).toBe(text.replace(/\s/g, ""))
+  })
+
+  it("wraps pure English exactly as before", () => {
+    expect(at("Seat expansion in existing accounts and more", 200).lines).toEqual([
+      "Seat expansion in",
+      "existing accounts and",
+      "more",
+    ])
+  })
+})
+

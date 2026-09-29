@@ -760,21 +760,73 @@ function splitLongToken(token: string, maxUnits: number, weight?: TextWeightHint
 const LATIN_RUN_OR_CHAR_RE = /[A-Za-z0-9](?:[A-Za-z0-9.\-%]*[A-Za-z0-9%])?|./gu
 
 /**
- * Splits `text` into wrap tokens. Space-delimited text (contains at least
- * one space anywhere) splits on spaces, same as always -- `wrapWithUnits`
- * re-joins those with a single space within a line (`spaceDelimited: true`
- * is exactly the re-join signal it reads). Text with no space at all (the
- * common case for a CJK clause, with or without a fused Latin/digit prefix)
- * splits per `LATIN_RUN_OR_CHAR_RE` above: one token per CJK/punctuation
- * character, but a maximal atomic token per contiguous ASCII Latin/digit
- * run -- see that constant's own comment for the full boundary discussion.
+ * One wrap token. `space` marks a token that re-joins its predecessor with a
+ * space: the first segment of each space-delimited word.
  */
-function tokenize(text: string): { tokens: string[]; spaceDelimited: boolean } {
+interface WrapToken {
+  text: string
+  space: boolean
+}
+
+/**
+ * Splits one space-delimited word at every boundary that touches a CJK
+ * character, keeping each run of anything else whole.
+ *
+ * A space-delimited mixed sentence ("镜像构建从 Jenkins 迁到 GitHub Actions，
+ * 平均构建时长从 11 分钟降到 4 分钟。") used to wrap each space-delimited
+ * word as one unbreakable unit, so a Chinese clause between two spaces could
+ * only move to the next line whole. It left "BP" alone on a line in front of
+ * a clause too long to join it, and a line ending at "GitHub" with a third
+ * of its width empty. Chinese breaks between any two ideographs whether or
+ * not a space sits somewhere else in the sentence, so the clause splits per
+ * character here, exactly as the no-space branch splits it.
+ *
+ * Only a boundary with a `WIDE_CHAR_RE` character on at least one side is
+ * cut, so a Latin word, a number, and whatever ASCII punctuation hangs on
+ * them ("GitHub,", "90%", "v2.3") stay one token, as before. Kinsoku still
+ * rules every boundary this creates.
+ */
+function splitWideBoundaries(word: string): string[] {
+  const out: string[] = []
+  let run = ""
+  for (const ch of word) {
+    if (WIDE_CHAR_RE.test(ch)) {
+      if (run) out.push(run)
+      out.push(ch)
+      run = ""
+    } else {
+      run += ch
+    }
+  }
+  if (run) out.push(run)
+  return out
+}
+
+/**
+ * Splits `text` into wrap tokens. Space-delimited text (contains at least
+ * one space anywhere) splits on spaces, and then each word at its CJK
+ * boundaries (`splitWideBoundaries`), so only a word's first segment
+ * re-joins with a space. A word with no CJK character in it is one token,
+ * same as always. Text with no space at all (the common case for a CJK
+ * clause, with or without a fused Latin/digit prefix) splits per
+ * `LATIN_RUN_OR_CHAR_RE` above: one token per CJK/punctuation character,
+ * but a maximal atomic token per contiguous ASCII Latin/digit run -- see
+ * that constant's own comment for the full boundary discussion.
+ */
+function tokenize(text: string): { tokens: WrapToken[]; spaceDelimited: boolean } {
   const normalized = text.trim().replace(/\s+/g, " ")
   if (!normalized) return { tokens: [], spaceDelimited: false }
   const spaceDelimited = normalized.includes(" ")
+  if (!spaceDelimited) {
+    return {
+      tokens: (normalized.match(LATIN_RUN_OR_CHAR_RE) ?? []).map((t) => ({ text: t, space: false })),
+      spaceDelimited,
+    }
+  }
   return {
-    tokens: spaceDelimited ? normalized.split(" ") : (normalized.match(LATIN_RUN_OR_CHAR_RE) ?? []),
+    tokens: normalized
+      .split(" ")
+      .flatMap((word) => splitWideBoundaries(word).map((t, i) => ({ text: t, space: i === 0 }))),
     spaceDelimited,
   }
 }
@@ -863,35 +915,6 @@ function retreatPieceCut(pieces: WrapPiece[], lineStart: number, breakAt: number
 }
 
 /**
- * Last-resort push-out *inside* a piece, for when no boundary between
- * pieces on the line is legal at all.
- *
- * The case that needs it: a space-delimited CJK title whose separator is
- * its own token — 「夜校手机摄影课 · 第三讲」 packs as three pieces, and the
- * only boundary the line offers puts the separator at a line head. There is
- * nothing to retreat *to*, because the rest of the line is one token.
- *
- * CJK breaks between any two ideographs, so the piece itself supplies the
- * boundary. Returns the *latest* such offset (retreat as little as the rule
- * allows), or 0 when the piece offers none.
- *
- * Both sides must be `WIDE_CHAR_RE` characters. That is what makes this
- * structurally incapable of splitting a Latin word: no ASCII letter, digit,
- * or space is ever wide, so a space-delimited English token can never
- * produce a non-zero offset here, whatever its content.
- */
-function wideBreakOffset(text: string): number {
-  const chars = Array.from(text)
-  for (let k = chars.length - 1; k >= 1; k -= 1) {
-    const before = chars[k - 1]
-    const after = chars[k]
-    if (!WIDE_CHAR_RE.test(before) || !WIDE_CHAR_RE.test(after)) continue
-    if (allowsLineBreakBetween(before, after)) return chars.slice(0, k).join("").length
-  }
-  return 0
-}
-
-/**
  * A CJK orphan (孤字): a line that holds exactly one ideograph once the
  * punctuation kinsoku pins to it is set aside: 「本」, 「审」, 「娘」」. A
  * line with any Latin letter or digit on it is never one: a lone English
@@ -930,16 +953,13 @@ export function endsInCjkOrphan(lines: readonly string[]): boolean {
  *
  * The move never adds a line, never widens a line past `maxUnits`, and
  * never leaves the line above an orphan itself, so a caller's line cap and
- * no-truncation guarantee hold exactly as before. It tries boundaries
- * between pieces first, latest first, so a space-delimited word travels
- * whole. Only when none works does it cut inside a piece, and then only
- * between two CJK characters, which is the same rule `wideBreakOffset` cuts
- * by: a Latin word is never split here. Every candidate boundary still has
- * to pass kinsoku. When nothing qualifies (「季后」+「赛」 has no character to
- * spare) the greedy lines stand.
+ * no-truncation guarantee hold exactly as before. It moves whole pieces,
+ * latest boundary first. Every CJK character is a piece of its own
+ * (`tokenize`), so a Latin word travels whole and is never split here, and
+ * every candidate boundary still has to pass kinsoku. When nothing qualifies
+ * (「季后」+「赛」 has no character to spare) the greedy lines stand.
  *
  * `lineStarts` holds the piece index each of `paragraphLines` starts at.
- * Returns the fixed lines, and may split one piece of `pieces` in place.
  */
 function avoidCjkOrphan(
   pieces: WrapPiece[],
@@ -970,26 +990,6 @@ function avoidCjkOrphan(
     if (fixed) return fixed
   }
 
-  for (let j = lastStart - 1; j >= prevStart; j -= 1) {
-    const whole = pieces[j]
-    const chars = Array.from(whole.text)
-    for (let k = chars.length - 1; k >= 1; k -= 1) {
-      if (!WIDE_CHAR_RE.test(chars[k - 1]) || !WIDE_CHAR_RE.test(chars[k])) continue
-      pieces.splice(
-        j,
-        1,
-        { text: chars.slice(0, k).join(""), space: whole.space },
-        { text: chars.slice(k).join(""), space: false },
-      )
-      // Moving more only widens the new last line, so the first cut that
-      // overflows ends the search.
-      const tooWide = measureTextUnits(joinPieces(pieces, j + 1, pieces.length), weight) > maxUnits
-      const fixed = tooWide ? null : settle(j + 1)
-      if (fixed) return fixed
-      pieces.splice(j, 2, whole)
-      if (tooWide) return paragraphLines
-    }
-  }
   return paragraphLines
 }
 
@@ -1006,15 +1006,15 @@ function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint):
     // and walk it backwards. The greedy arithmetic itself is unchanged.
     const pieces: WrapPiece[] = []
     for (const token of tokens) {
-      const tokenUnits = measureTextUnits(token, weight)
-      const isRunToken = !spaceDelimited && Array.from(token).length > 1
+      const tokenUnits = measureTextUnits(token.text, weight)
+      const isRunToken = !spaceDelimited && Array.from(token.text).length > 1
       if (isRunToken) minSplitFreeUnits = Math.max(minSplitFreeUnits, tokenUnits)
 
-      const tokenChunks = tokenUnits > maxUnits ? splitLongToken(token, maxUnits, weight) : [token]
+      const tokenChunks = tokenUnits > maxUnits ? splitLongToken(token.text, maxUnits, weight) : [token.text]
       if (isRunToken && tokenChunks.length > 1) hadSplit = true
 
       for (const [chunkIndex, chunk] of tokenChunks.entries()) {
-        pieces.push({ text: chunk, space: spaceDelimited && chunkIndex === 0 })
+        pieces.push({ text: chunk, space: token.space && chunkIndex === 0 })
       }
     }
 
@@ -1030,29 +1030,14 @@ function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint):
         // an unretreated cut pushes the identical string the pre-kinsoku loop
         // pushed and allocates nothing extra. Only a real prohibition pays
         // for the two re-joins.
+        // No legal boundary between pieces anywhere on this line: FLOOR,
+        // content beats purity, and the prohibited cut stands rather than
+        // emptying the line or dropping text. Every CJK character is its own
+        // piece (`tokenize`), so a line holding two ideographs always offers
+        // the boundary between them, and a CJK line only lands here when
+        // kinsoku forbids every one (「》》》」).
         let cut = retreatPieceCut(pieces, lineStart, i)
-        if (cut === -1) {
-          // No legal boundary between pieces anywhere on this line. Split the
-          // piece before the break at its own latest legal CJK boundary and
-          // retreat there. The array grows by one entry behind the cursor, so
-          // `i` advances with it and the index arithmetic below is unchanged.
-          const offset = wideBreakOffset(pieces[i - 1].text)
-          if (offset > 0) {
-            const whole = pieces[i - 1]
-            pieces.splice(
-              i - 1,
-              1,
-              { text: whole.text.slice(0, offset), space: whole.space },
-              { text: whole.text.slice(offset), space: false },
-            )
-            i += 1
-            cut = i - 1
-          } else {
-            // FLOOR: content beats purity — the prohibited cut stands rather
-            // than emptying the line or dropping text.
-            cut = i
-          }
-        }
+        if (cut === -1) cut = i
         if (cut === i) {
           paragraphLines.push(current)
           current = pieces[i].text
@@ -1109,7 +1094,7 @@ function balanceWrappedLines(
   // unspaced (CJK) text wraps per character, so no floor is needed — flooring
   // at the whole string there would collapse the wrap to one oversized line.
   const { tokens } = tokenize(content)
-  const longestToken = Math.max(...tokens.map((t) => measureTextUnits(t, weight)), 0)
+  const longestToken = Math.max(...tokens.map((t) => measureTextUnits(t.text, weight)), 0)
   let target = Math.max(total / lines.length, longestToken)
   for (let i = 0; i < 8; i += 1) {
     const candidate = wrapWithUnits(content, target, weight)
