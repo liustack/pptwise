@@ -267,6 +267,36 @@ describe("auditL1 planted defects", () => {
     expect(codes(svg)).not.toContain("edge-stick")
   })
 
+  // memo's stat-hero: "22" at 280px with "个月" as a 73px run, over a double
+  // rule at y=530 and 534. Reading the whole line at 280px put a descender
+  // 70px below the baseline, on the rule, where the digits have none and
+  // the unit's ink stops about 10px down.
+  it("reads a line's ink depth from its runs, not from the outer size", () => {
+    const svg = wrap(
+      `<line x1="96" y1="170" x2="1184" y2="170" stroke="#222" stroke-width="2"/>` +
+        `<text x="640" y="460" text-anchor="middle" font-size="280">22<tspan dx="11" font-size="73">个月</tspan></text>` +
+        `<line x1="96" y1="530" x2="1184" y2="530" stroke="#222" stroke-width="1"/>` +
+        `<line x1="96" y1="534" x2="1184" y2="534" stroke="#222" stroke-width="2"/>`,
+    )
+    expect(codes(svg)).not.toContain("edge-stick")
+  })
+
+  it("still flags a rule just under a Latin line's descenders", () => {
+    const svg = wrap(
+      `<text x="100" y="300" font-size="16">graphing yearly</text>` +
+        `<line x1="96" y1="306" x2="700" y2="306" stroke="#222" stroke-width="1"/>`,
+    )
+    expect(codes(svg)).toContain("edge-stick")
+  })
+
+  it("still flags a rule just under a line of Chinese text", () => {
+    const svg = wrap(
+      `<text x="100" y="300" font-size="16">上节课平均分在这里</text>` +
+        `<line x1="96" y1="303" x2="700" y2="303" stroke="#222" stroke-width="1"/>`,
+    )
+    expect(codes(svg)).toContain("edge-stick")
+  })
+
   it("still flags a rule just above the ink of a line of Chinese text", () => {
     const svg = wrap(
       `<line x1="96" y1="284" x2="700" y2="284" stroke="#222" stroke-width="1"/>` +

@@ -18,7 +18,7 @@ import { META_FONT_FLOOR_PT, META_FONT_FLOOR_PX, pxToPt } from "@/constants"
 import { findOverflowVocabulary } from "@/ir/overflow-vocabulary"
 import { getPlatform } from "@/platform/registry"
 import { __pathBoundingBox, findOverlapIssues } from "@/audit/deck-audit"
-import { auditSvgMarkup, parseTransform, textLineWidth } from "@/audit/svg-audit"
+import { auditSvgMarkup, parseTransform, textLineWidth, textRuns, type TextRun } from "@/audit/svg-audit"
 import {
   IDENTITY_MATRIX,
   boxesIntersect,
@@ -77,15 +77,42 @@ const BOXLESS_TOL = 6
 const INK_ASCENT = 0.72
 const INK_DESCENT = 0.12
 /**
- * How high a line's ink reaches above its baseline, for the edge and divider
- * checks. Ideographs fill nearly the whole em box, Latin tops out at its
- * ascenders. The em box itself overstates a display figure's top by a quarter
- * of its size: a 270px hero number was reported touching a rule 76px above
- * its digits.
+ * How far a run's ink reaches above and below its baseline, as shares of its
+ * own font size, for the edge and divider checks. Ideographs fill nearly the
+ * whole em box, Latin tops out at its ascenders, and only a few Latin glyphs
+ * hang below the baseline. The em box read at the outer size overstates a
+ * display figure badly: memo's 280px "22" with a 73px "个月" was given a
+ * descender 70px deep, on a rule its ink stops 60px short of.
  */
 const CJK_INK_TOP = 0.88
 const LATIN_INK_TOP = 0.76
+const CJK_INK_DEPTH = 0.12
+const DESCENDER_DEPTH = 0.25
+const BASELINE_DEPTH = 0.05
 const CJK_CHAR = /[\u2e80-\u9fff\uac00-\ud7af\uf900-\ufaff\uff00-\uffef]/
+const DESCENDER_CHAR = /[gjpqyQ,;()[\]{}|/\\_@$§µ]/
+
+function runInkExtent(text: string): { top: number; depth: number } {
+  const cjk = CJK_CHAR.test(text)
+  const descends = DESCENDER_CHAR.test(text)
+  return {
+    top: cjk ? CJK_INK_TOP : LATIN_INK_TOP,
+    depth: descends ? DESCENDER_DEPTH : cjk ? CJK_INK_DEPTH : BASELINE_DEPTH,
+  }
+}
+
+/** The tallest ink above and deepest ink below the baseline, over every run. */
+function lineInkExtent(runs: readonly TextRun[]): { above: number; below: number } {
+  let above = 0
+  let below = 0
+  for (const run of runs) {
+    if (!run.text.trim()) continue
+    const { top, depth } = runInkExtent(run.text)
+    above = Math.max(above, top * run.fontSize)
+    below = Math.max(below, depth * run.fontSize)
+  }
+  return { above, below }
+}
 const STRIKE_BAND_TOP = 0.85
 const STRIKE_BAND_BOTTOM = 0.02
 const UNDERLINE_BELOW = 0.08
@@ -968,8 +995,9 @@ function walkText(
         const anchor = el.getAttribute("text-anchor") ?? "start"
         const left = anchor === "end" ? tx - width : anchor === "middle" ? tx - width / 2 : tx
         const right = left + width
-        const top = ty - (CJK_CHAR.test(content) ? CJK_INK_TOP : LATIN_INK_TOP) * fontSize
-        const bottom = ty + fontSize * 0.25
+        const ink = lineInkExtent(textRuns(el, content, fontSize, as))
+        const top = ty - ink.above
+        const bottom = ty + ink.below
         const decor = hasDecor(el)
 
         if (findOverflowVocabulary(content)) {
