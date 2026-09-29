@@ -146,6 +146,8 @@ pptwise schema --kind data --theme brief
 
 `swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap` 与 `sankey` 会占满正文区，必须独占页面。
 
+`waterfall` 的每根柱都读同一根数值轴，所以每条 `value`，以及每根柱落到的累计值，绝对值都不能超过 1e300。超了就把所有条目除以同一个十的幂，把单位写进 `unit`，这样各柱的比例不变。
+
 组件的 kind 归属与相近选择见 [SKILL 组件指南](../skills/pptwise/references/components.zh-CN.md)。
 
 ### 图表

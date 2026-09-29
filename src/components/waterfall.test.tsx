@@ -5,6 +5,7 @@ import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { waterfall } from "./waterfall"
 import type { ComponentCtx } from "./types"
+import { schema as waterfallSchema } from "@/ir/components/waterfall"
 
 const ctx: ComponentCtx = {
   colors: {
@@ -295,5 +296,59 @@ describe("waterfall category names", () => {
     const { container } = svg(waterfall.render(basic, { x: 0, y: 0, w: 1000, h: 400 }, ctx))
     const names = Array.from(container.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") !== "700")
     expect(names.map((t) => t.getAttribute("y"))).toEqual(["390", "390", "390", "390"])
+  })
+})
+
+describe("a waterfall value past what the bar axis can draw is refused", () => {
+  // Bars of 1.7e308 passed validate. Two of them overflow the running total
+  // to Infinity, and a bar that runs from -1.7e308 to 1.7e308 spans more
+  // than a double holds: either way the scale divides Infinity by Infinity
+  // and every bar, connector and label is drawn at NaN.
+  const issuesOf = (component: unknown) => {
+    const parsed = waterfallSchema.safeParse(component)
+    return parsed.success ? [] : parsed.error.issues
+  }
+  const items = (a: number, b: number, c: number) => [
+    { label: "Opening ARR", value: a },
+    { label: "New seats", value: b },
+    { label: "Churn", value: c },
+  ]
+
+  it("names every bar on the axis, one factor for all of them, and the unit field", () => {
+    const issues = issuesOf({ type: "waterfall", items: items(1.7e308, 5, -3) })
+    expect(issues.map((issue) => issue.path.join("."))).toEqual(["items.0.value"])
+    const message = issues[0]!.message
+    expect(message).toMatch(/the largest value a chart axis can draw/)
+    expect(message).toMatch(/same power of ten/)
+    for (const label of ['"Opening ARR"', '"New seats"', '"Churn"']) expect(message).toContain(label)
+    expect(message).toMatch(/\bunit\b/)
+  })
+
+  it("holds the running total a bar ends at to the same ceiling", () => {
+    const issues = issuesOf({ type: "waterfall", items: items(1e300, 1e300, -1) })
+    expect(issues.map((issue) => issue.path.join("."))).toEqual(["items.1.value"])
+    expect(issues[0]!.message).toMatch(/running total/)
+    expect(issues[0]!.message).toContain('"Opening ARR"')
+  })
+
+  it("still accepts values and totals right at the ceiling", () => {
+    expect(issuesOf({ type: "waterfall", items: items(1e300, -1e300, 1e300) })).toEqual([])
+    expect(
+      issuesOf({
+        type: "waterfall",
+        items: [...items(1e300, -1e300, -1e300), { label: "Closing ARR", value: -1e300, kind: "total" }],
+      }),
+    ).toEqual([])
+  })
+
+  it("declines, rather than draws at NaN, when a caller hands the renderer one anyway", () => {
+    for (const component of [
+      { type: "waterfall" as const, items: items(1.7e308, 1.7e308, -1) },
+      { type: "waterfall" as const, items: [...items(1.7e308, 5, -3), { label: "Close", value: -1.7e308, kind: "total" as const }] },
+    ]) {
+      const markup = renderSvgMarkup(<svg>{waterfall.render(component, { x: 0, y: 0, w: 1088, h: 400 }, ctx)}</svg>)
+      expect(markup).toContain('data-dropped-kind="component"')
+      expect(markup).not.toMatch(/NaN|Infinity/)
+    }
   })
 })

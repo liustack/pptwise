@@ -87,6 +87,9 @@ export const STACKED_TYPES = ["stacked", "percent_stacked"] as const
  * direction), `line`, `area`, `scatter`, `dumbbell` and `combo`, a scatter's
  * `x`, and a stacked column's total. `percent_stacked` needs none, since it
  * scales each column before summing it and its axis is always 0% to 100%.
+ * A `waterfall` reads its bars against a value axis of its own, so every
+ * item's value and every running total a bar ends at is held to it too
+ * (`waterfall.ts`).
  */
 export const CHART_AXIS_LIMIT = 1e300
 
