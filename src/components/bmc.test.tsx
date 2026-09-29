@@ -321,4 +321,25 @@ describe("bmc on a narrow rect keeps every word whole or declines", () => {
       expect(container.textContent).toContain("客户关系")
     }
   })
+
+  it("wraps a Chinese title between its characters where it is wider than its column", () => {
+    // At 480px a column has 57px for its title and 「重要合作」 is 64px. Read
+    // as one unbreakable word, it sent the whole canvas away, but Chinese
+    // breaks between any two characters, and the title sets as 「重要」
+    // over 「合作」.
+    const w = 480
+    const { container } = svg(bmc.render(basic, { x: 0, y: 0, w }, ctx))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+    const titles = Array.from(container.querySelectorAll('text[font-weight="700"]')).map((t) => t.textContent ?? "")
+    for (const title of ["重要合作", "关键业务", "核心资源", "价值主张", "客户关系", "渠道通路", "客户细分"]) {
+      expect(titles.join(""), title).toContain(title)
+      expect(titles, title).not.toContain(title)
+    }
+    // Where even a two-line title no longer fits, the canvas still declines
+    // rather than cut it.
+    expect(renderSvgMarkup(<svg>{bmc.render(basic, { x: 0, y: 0, w: 320 }, ctx)}</svg>)).toContain(
+      'data-dropped-kind="component"',
+    )
+  })
 })
