@@ -439,12 +439,20 @@ describe("matrix in a half-page column", () => {
   })
 
   it("gives back title lines in a box too short for the wrapped grid, and marks the cut", () => {
-    const box = { x: 656, y: 284, w: 528, h: 200 }
+    const box = { x: 656, y: 284, w: 528, h: 230 }
     const { container } = svg(matrix.render(english, box, georgia))
     for (const rect of container.querySelectorAll("[data-audit-box] > rect")) {
       expect(Number(rect.getAttribute("y")) + Number(rect.getAttribute("height"))).toBeLessThanOrEqual(box.y + box.h + 0.5)
     }
     expect(container.querySelectorAll("[data-truncated]").length).toBeGreaterThan(0)
+  })
+
+  it("declines a box too short for the one-line grid instead of drawing below it", () => {
+    const oneLine = matrix.measure(sixCells, 1088, ctx)
+    const box = { x: 0, y: 0, w: 1088, h: Math.round(oneLine * 0.75) }
+    const { container } = svg(matrix.render(sixCells, box, ctx))
+    expect(container.querySelectorAll("text")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
   })
 })
 
