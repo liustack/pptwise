@@ -375,9 +375,13 @@ describe("runway show layouts", () => {
   it("places show-figures on the approved three-stat grid and accents the first delta item", () => {
     const root = draw(5)
     const tokens = resolveStyle("runway")
+    // "2.4×" sets smaller than its neighbours. Runway's figures are SimSun,
+    // which draws "×" on the full em: at 140px the figure is 350px wide in a
+    // 336px column. The estimate used to price "×" at 0.563em and let it
+    // overflow, and now fits it at the size the column holds.
     expect(["38%", "2.4×", "91%"].map((value) => attrs(textBy(root, value), ["x", "y", "font-size", "fill"]))).toEqual([
       ["64", "392", "140", tokens.colors.primary],
-      ["512", "392", "140", tokens.colors.accent],
+      ["512", "392", "122", tokens.colors.accent],
       ["960", "392", "140", tokens.colors.primary],
     ])
     expect(Array.from(root.querySelectorAll('[data-show-divider="figures"]')).map((line) => attrs(line, ["x1", "y1", "x2", "y2"]))).toEqual([

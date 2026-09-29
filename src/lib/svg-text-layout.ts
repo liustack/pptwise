@@ -1,4 +1,5 @@
 import { META_FONT_FLOOR_PX } from "../constants"
+import { SYMBOL_ADVANCE_BOUNDS } from "./symbol-advances"
 
 /**
  * Weight/face hint threaded through the estimator (bold-metrics fix,
@@ -526,6 +527,7 @@ export function measureTextUnits(text: string, weight?: TextWeightHint): number 
   // out up to 1% narrower on ordinary sentences, and SimSun/KaiTi do not
   // kern. So the exact sum errs a hair wide, never narrow.
   const exactTable = mode === "bold" ? EXACT_TABLE_FOR[faceKey]?.bold : REGULAR_EXACT_TABLE_FOR[faceKey]
+  const symbolBounds = faceKey === "unknown" ? undefined : SYMBOL_ADVANCE_BOUNDS[faceKey][mode]
   return Array.from(text).reduce((sum, char) => {
     // WIDE_CHAR_RE (CJK/ideographic-punctuation/fullwidth) always takes the
     // class path, even under an exact-model face: the exact tables only
@@ -537,7 +539,18 @@ export function measureTextUnits(text: string, weight?: TextWeightHint): number 
       const exact = exactTable[char.charCodeAt(0)]
       if (exact !== undefined) return sum + exact
     }
-    return sum + classAverageUnits(char, classTable, mode)
+    // Outside printable ASCII the class average is a guess, and for some
+    // glyphs a low one: SimSun and KaiTi set "·" on the full em against the
+    // class's 0.563, YaHei's "—" runs 1.08em against 1, Georgia's "‰"
+    // 1.31em against 0.46, an ideographic space 1em against a space's 0.35.
+    // `SYMBOL_ADVANCE_BOUNDS` holds the widest real advance each measured
+    // face (and the face that may stand in for it) gives the character,
+    // and the estimate rises to it. It never falls below the class average,
+    // so no layout gets tighter for a glyph the tables say is narrower than
+    // the guess.
+    const estimate = classAverageUnits(char, classTable, mode)
+    const floor = symbolBounds?.[char.charCodeAt(0)]
+    return sum + (floor !== undefined && floor > estimate ? floor : estimate)
   }, 0)
 }
 
@@ -1113,11 +1126,115 @@ function balanceWrappedLines(
     const candidate = wrapWithUnits(content, target, weight)
     // Same line count, evenly split — that's the goal. Fewer lines means the
     // token floor out-widened the greedy budget (giant word): keep greedy.
-    if (candidate.lines.length === lines.length) return candidate.lines
+    if (candidate.lines.length === lines.length) {
+      return preferScriptBoundaries(content, candidate.lines, widest, weight)
+    }
     if (candidate.lines.length < lines.length) return lines
     target *= 1.06
   }
   return lines
+}
+
+/** A printable ASCII character: the Latin side of a mixed-script line. */
+const ASCII_GLYPH_RE = /[\x21-\x7e]/
+
+/**
+ * How a line break reads, by the characters on either side of it: +1 where
+ * Latin meets CJK (the seam a mixed line already has), -1 between two Latin
+ * words (it splits a name like "Linjiang Group"), 0 anywhere else.
+ */
+function breakScore(before: string, after: string): number {
+  const a = before.trimEnd().slice(-1)
+  const b = after.trimStart().charAt(0)
+  const asciiA = ASCII_GLYPH_RE.test(a)
+  const asciiB = ASCII_GLYPH_RE.test(b)
+  if ((asciiA && WIDE_CHAR_RE.test(b)) || (WIDE_CHAR_RE.test(a) && asciiB)) return 1
+  if (asciiA && asciiB) return -1
+  return 0
+}
+
+function linesScore(lines: readonly string[]): number {
+  let score = 0
+  for (let i = 1; i < lines.length; i += 1) score += breakScore(lines[i - 1], lines[i])
+  return score
+}
+
+/** How much wider than the balanced lines' widest a preferred split may run. */
+const SCRIPT_BREAK_TOLERANCE = 0.1
+
+/**
+ * Among the splits of `content` into as many lines as `balanced` whose line
+ * lengths are close to the balanced ones, prefer the one that breaks where
+ * Latin meets CJK, then between CJK characters, and last between two Latin
+ * words.
+ *
+ * Balancing by width alone treats every boundary as equal, so a mixed line
+ * whose widths tie broke inside an English name: 「Linjiang Group 临江咨询」
+ * became 「Linjiang」+「Group 临江咨询」 where 「Linjiang Group」+「临江咨询」 is
+ * barely less even and reads as two things. A split replaces the balanced
+ * one only when its breaks score strictly better (`breakScore`), and only
+ * inside every constraint the balanced lines already meet: the same line
+ * count, every break legal under kinsoku, no line wider than `limit` (the
+ * widest line the caller's budget produced, so the fitted font size cannot
+ * drop), the widest line no more than `SCRIPT_BREAK_TOLERANCE` over the
+ * balanced widest, a last line at least half the widest (not the widow
+ * balancing exists to remove), and no single-character CJK last line.
+ *
+ * Text that is all Latin or all CJK scores every split the same, so it
+ * returns `balanced` without searching.
+ */
+function preferScriptBoundaries(
+  content: string,
+  balanced: string[],
+  limit: number,
+  weight?: TextWeightHint,
+): string[] {
+  if (balanced.length < 2 || !ASCII_GLYPH_RE.test(content) || !WIDE_CHAR_RE.test(content)) return balanced
+  const pieces: WrapPiece[] = tokenize(content).tokens
+  const n = balanced.length
+  const widthCache = new Map<number, number>()
+  const width = (from: number, to: number): number => {
+    const key = from * 4096 + to
+    let w = widthCache.get(key)
+    if (w === undefined) {
+      w = measureTextUnits(joinPieces(pieces, from, to), weight)
+      widthCache.set(key, w)
+    }
+    return w
+  }
+  const balancedWidest = Math.max(...balanced.map((l) => measureTextUnits(l, weight)))
+  const cap = Math.min(limit, balancedWidest * (1 + SCRIPT_BREAK_TOLERANCE)) + 1e-9
+  let best = balanced
+  let bestScore = linesScore(balanced)
+  let bestWidest = balancedWidest
+
+  const starts: number[] = [0]
+  const search = (from: number): void => {
+    if (starts.length === n) {
+      const last = width(from, pieces.length)
+      if (last > cap) return
+      const lines = starts.map((s, i) => joinPieces(pieces, s, i + 1 < n ? starts[i + 1] : pieces.length))
+      const widest = Math.max(...starts.map((s, i) => width(s, i + 1 < n ? starts[i + 1] : pieces.length)))
+      if (last < widest * 0.5 || isCjkOrphanLine(lines[n - 1])) return
+      const score = linesScore(lines)
+      if (score > bestScore || (score === bestScore && best !== balanced && widest < bestWidest)) {
+        best = lines
+        bestScore = score
+        bestWidest = widest
+      }
+      return
+    }
+    for (let cut = from + 1; cut < pieces.length; cut += 1) {
+      if (width(from, cut) > cap) break
+      const before = pieces[cut - 1].text
+      if (!allowsLineBreakBetween(before[before.length - 1], pieces[cut].text[0])) continue
+      starts.push(cut)
+      search(cut)
+      starts.pop()
+    }
+  }
+  search(0)
+  return best
 }
 
 /**
