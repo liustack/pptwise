@@ -37,6 +37,13 @@ const component = {
 }
 
 describe("kpi component", () => {
+  it("declines a box shorter than one row of cards instead of running a card past it", () => {
+    const box = { x: 0, y: 0, w: 1000, h: 100 }
+    const { container } = svg(kpi.render(component, box, ctx))
+    expect(container.querySelectorAll("rect, text")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+  })
+
   it("gives a wrapped source's second line back in a box too short for it, and marks the cut", () => {
     const sourced = {
       type: "kpi_cards" as const,

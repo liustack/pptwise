@@ -219,5 +219,19 @@ describe("steps on every theme", () => {
     for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y")), t.textContent ?? "").toBeLessThanOrEqual(box.h)
     expect(container.querySelector('[data-truncated="1"]')).not.toBeNull()
   })
+
+  it("declines a box too short for the chevrons and one line of sentence", () => {
+    const three = { type: "steps" as const, items: [step("A", "one"), step("B", "two"), step("C", "three")] }
+    const { container } = svg(steps.render(three, { x: 0, y: 0, w: 1088, h: 110 }, boundThemeCtx("brief", {})))
+    expect(container.querySelectorAll("path, text")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+  })
+
+  it("declines a stacked box too short for its first step instead of drawing it below", () => {
+    const many = { type: "steps" as const, items: Array.from({ length: 5 }, (_, i) => step(`S${i}`, "note")) }
+    const { container } = svg(steps.render(many, { x: 0, y: 0, w: 400, h: 40 }, boundThemeCtx("brief", {})))
+    expect(container.querySelectorAll("path, text")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+  })
 })
 

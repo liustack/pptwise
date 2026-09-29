@@ -1,6 +1,7 @@
 import type { ReactElement } from "react"
 import type { Component } from "@/ir"
 import { accessibleInk } from "../render/ink"
+import { DroppedContentMarker } from "../render/drop-marker"
 import {
   FORM_BODY_FLOOR,
   FORM_TITLE_FLOOR,
@@ -224,6 +225,62 @@ export const cycle: SvgComponent<CycleComponent> = {
 
   const ringD = `M ${ox} ${oy - r} A ${r} ${r} 0 0 1 ${ox} ${oy + r} A ${r} ${r} 0 0 1 ${ox} ${oy - r}`
 
+  const descAt = (maxLines: number) =>
+    component.items.map((item, i) => {
+      if (!item.description?.trim()) return null
+      const a = nodeAngle(i, n)
+      const outward = { x: Math.cos(a), y: Math.sin(a) }
+      const nr = radii[i]!
+      // A capsule reaches further out along its own flat side.
+      const anchorR = (ringR + nr + halfLens[i]! * Math.abs(outward.x) + GAP_NODE_DESC) * scale
+      const ax = ox + outward.x * anchorR
+      const ay = oy + outward.y * anchorR
+      const maxWidth = DESC_W * scale
+      const nodeFont = Math.max(
+        FORM_BODY_FLOOR,
+        Math.min(FORM_TITLE_FLOOR, Math.round(nr * scale * NODE_TEXT_RATIO)),
+      )
+      const wrapped = layoutFormBody(item.description, {
+        maxWidth,
+        fontSize: capFormBody(nodeFont, Math.round(DESC_FONT * scale)),
+        titleSize: nodeFont,
+        maxLines,
+        lineHeightRatio: DESC_LINE_RATIO,
+        fontFamily: ctx.fonts.body,
+      })
+      const textAnchor: "start" | "end" | "middle" = outward.x > 0.3 ? "start" : outward.x < -0.3 ? "end" : "middle"
+      const stackUp = outward.y < 0
+      const totalH = wrapped.lines.length * wrapped.lineHeight
+      const topY = stackUp ? ay - totalH : ay
+      return { i, ax, topY, textAnchor, wrapped }
+    })
+  // The ring shrinks into a short box but description type stops at its
+  // floor, so a small enough drawing has more description than room around
+  // it. Descriptions then give lines back, cut and marked; if one line each
+  // still reaches past the box, the loop declines it.
+  const budget = box.h ?? g.h
+  const spills = (ds: ReturnType<typeof descAt>) =>
+    ds.some(
+      (d) =>
+        d !== null &&
+        d.wrapped.lines.length > 0 &&
+        (d.topY + d.wrapped.fontSize * 0.2 < -1 ||
+          d.topY + (d.wrapped.lines.length - 1) * d.wrapped.lineHeight + d.wrapped.fontSize * 1.25 > budget + 1),
+    )
+  let descLines = DESC_MAX_LINES
+  let descs = descAt(descLines)
+  while (descLines > 1 && spills(descs)) {
+    descLines -= 1
+    descs = descAt(descLines)
+  }
+  if (spills(descs)) {
+    return (
+      <g transform={`translate(${box.x},${box.y})`}>
+        <DroppedContentMarker count={1} kind="component" />
+      </g>
+    )
+  }
+
   return (
     <g transform={`translate(${box.x},${box.y})`}>
       <path
@@ -288,52 +345,26 @@ export const cycle: SvgComponent<CycleComponent> = {
           </g>
         )
       })}
-      {component.items.map((item, i) => {
-        if (!item.description?.trim()) return null
-        const a = nodeAngle(i, n)
-        const outward = { x: Math.cos(a), y: Math.sin(a) }
-        const nr = radii[i]!
-        // A capsule reaches further out along its own flat side.
-        const anchorR = (ringR + nr + halfLens[i]! * Math.abs(outward.x) + GAP_NODE_DESC) * scale
-        const ax = ox + outward.x * anchorR
-        const ay = oy + outward.y * anchorR
-        const maxWidth = DESC_W * scale
-        const nodeFont = Math.max(
-          FORM_BODY_FLOOR,
-          Math.min(FORM_TITLE_FLOOR, Math.round(nr * scale * NODE_TEXT_RATIO)),
-        )
-        const wrapped = layoutFormBody(item.description, {
-          maxWidth,
-          fontSize: capFormBody(nodeFont, Math.round(DESC_FONT * scale)),
-          titleSize: nodeFont,
-          maxLines: DESC_MAX_LINES,
-          lineHeightRatio: DESC_LINE_RATIO,
-          fontFamily: ctx.fonts.body,
-        })
-        const lines = wrapped.lines
-        const textAnchor = outward.x > 0.3 ? "start" : outward.x < -0.3 ? "end" : "middle"
-        const stackUp = outward.y < 0
-        const totalH = lines.length * wrapped.lineHeight
-        const topY = stackUp ? ay - totalH : ay
-        return (
-          <g key={`desc-${i}`}>
-            {lines.map((line, li) => (
+      {descs.map((d) =>
+        d ? (
+          <g key={`desc-${d.i}`}>
+            {d.wrapped.lines.map((line, li) => (
               <text
                 key={li}
-                data-truncated={formTextClipMarker(wrapped, li)}
-                x={ax}
-                y={topY + li * wrapped.lineHeight + wrapped.fontSize}
-                textAnchor={textAnchor}
+                data-truncated={formTextClipMarker(d.wrapped, li)}
+                x={d.ax}
+                y={d.topY + li * d.wrapped.lineHeight + d.wrapped.fontSize}
+                textAnchor={d.textAnchor}
                 fontFamily={ctx.fonts.body}
-                fontSize={wrapped.fontSize}
-                fill={accessibleInk(ctx.colors.muted, ctx.defaultBg ?? ctx.colors.bg, wrapped.fontSize)}
+                fontSize={d.wrapped.fontSize}
+                fill={accessibleInk(ctx.colors.muted, ctx.defaultBg ?? ctx.colors.bg, d.wrapped.fontSize)}
               >
                 {line}
               </text>
             ))}
           </g>
-        )
-      })}
+        ) : null,
+      )}
       {hasTitle &&
         (() => {
           const title = fitFormTitleLine(component.title!, {

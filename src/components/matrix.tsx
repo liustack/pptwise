@@ -1,7 +1,8 @@
 import type { Component } from "@/ir"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { axisTitlePairHeight, renderAxisTitlePair } from "./axis-titles"
-import { formTextClipMarker, layoutAtSize } from "./legibility"
+import { DroppedContentMarker } from "../render/drop-marker"
+import { boxTooShort, formTextClipMarker, layoutAtSize } from "./legibility"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -120,6 +121,16 @@ export const matrix: SvgComponent<MatrixComponent> = {
   },
   render(component, box, ctx) {
     const { cols, rows, cardW, cardH, gridH, titleH, maxLines } = gridInBox(component, box.w, ctx.fonts.heading, box.h)
+    // One-line titles are as short as the grid gets. A box shorter still
+    // cannot hold it, so the matrix declines the box rather than drawing its
+    // last row and axis titles below it.
+    if (boxTooShort(titleH + gridH, box.h)) {
+      return (
+        <g transform={`translate(${box.x},${box.y})`}>
+          <DroppedContentMarker count={1} kind="component" />
+        </g>
+      )
+    }
     const gridTop = box.y
     // 按 box.h 把每行卡等分拉伸（内容顶对齐），铺满可用高。The title pair
     // now sits *below* the grid. Two height semantics meet here, and the

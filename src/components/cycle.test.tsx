@@ -269,6 +269,32 @@ describe("cycle component", () => {
     }
   })
 
+  it("keeps descriptions inside a short box, giving lines back or declining it", () => {
+    const ir = {
+      type: "cycle" as const,
+      title: "Product",
+      items: [
+        { label: "Scoping", description: "Seat expansion in existing accounts" },
+        { label: "Solutioning", description: "Standardized onboarding templates" },
+        { label: "Seat setup", description: "In-house workspace compute" },
+        { label: "Access setup", description: "Vertical playbook replication" },
+        { label: "Pilot run", description: "Staffing-path automation" },
+      ],
+    }
+    for (const h of [240, 190, 120]) {
+      const { container } = svg(cycle.render(ir, { x: 0, y: 0, w: 1088, h }, themed("brief")))
+      for (const t of container.querySelectorAll("text")) {
+        const y = Number(t.getAttribute("y"))
+        const size = Number(t.getAttribute("font-size"))
+        expect(y + size * 0.25, `h=${h} "${t.textContent}"`).toBeLessThanOrEqual(h + 1)
+        expect(y - size * 0.8, `h=${h} "${t.textContent}"`).toBeGreaterThanOrEqual(-1)
+      }
+      if (container.querySelectorAll("text").length === 0) {
+        expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+      }
+    }
+  })
+
   it("gives a five-character CJK label the room for all five characters", () => {
     const ir = {
       type: "cycle" as const,

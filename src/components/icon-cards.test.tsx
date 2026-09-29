@@ -297,5 +297,11 @@ describe("icon_cards component", () => {
       for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y")), theme).toBeLessThanOrEqual(h)
     }
   })
+
+  it("declines a box too short for even the smallest icon and a line of title", () => {
+    const { container } = svg(iconCards.render(four, { x: 0, y: 0, w: 1088, h: 90 }, themeCtx("brief")))
+    expect(container.querySelectorAll("circle, text")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+  })
 })
 

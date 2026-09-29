@@ -7,6 +7,7 @@ import {
 } from "../lib/svg-text-layout"
 import { accessibleInk, accessibleOpacity, graphicInk, resolveSemanticColor, type SemanticColorTokens } from "../render/ink"
 import { Icon } from "../render/icons"
+import { DroppedContentMarker } from "../render/drop-marker"
 import { layoutAtSize } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
 
@@ -323,8 +324,17 @@ export const kpi: SvgComponent<KpiComponent> = {
       sourceCap -= 1
       rowH = baseCardH(rawComponent, cardW, sourceCap)
     }
-    const maxRows =
-      box.h == null ? naturalRows : Math.max(1, Math.floor((box.h + GAP) / (rowH + GAP)))
+    const maxRows = box.h == null ? naturalRows : Math.floor((box.h + GAP) / (rowH + GAP))
+    // A box shorter than one row of cards cannot hold a card. It used to keep
+    // one row anyway and run it past the box's bottom edge with nothing to
+    // say so; the cards decline the box instead.
+    if (maxRows < 1) {
+      return (
+        <g transform={`translate(${box.x},${box.y})`}>
+          <DroppedContentMarker count={1} kind="component" />
+        </g>
+      )
+    }
     const rows = Math.min(naturalRows, maxRows)
     const visible = Math.min(fullCount, cols * rows)
     const hidden = fullCount - visible

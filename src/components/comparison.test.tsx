@@ -312,13 +312,29 @@ describe("comparison 首列重复归一化（2026-07-10 无图矩阵真机病型
       expect(hiddenCount + dataRowLabelTexts.length).toBe(manyRowsComponent.rows.length)
     })
 
-    it("still renders at least one row even when box.h is far smaller than a single row's height", () => {
+    // This used to pin the opposite: at least one row drawn, however short
+    // the box. A row kept that way is drawn below the box with no mark
+    // anywhere, which breaks the repo's rule that a component either draws
+    // all it was given or declares the loss. The whole table now declines.
+    it("declines a box too short for the header and one row, instead of drawing that row outside it", () => {
       const box = { x: 0, y: 0, w: 1088, h: 5 }
       const { container } = render(<svg>{comparison.render(manyRowsComponent, box, ctx)}</svg>)
-      const dataRowLabelTexts = Array.from(container.querySelectorAll("text")).filter((t) =>
-        (t.textContent ?? "").startsWith("row "),
-      )
-      expect(dataRowLabelTexts.length).toBeGreaterThanOrEqual(1)
+      expect(container.querySelectorAll("text")).toHaveLength(0)
+      const marker = container.querySelector("[data-dropped]")
+      expect(marker?.getAttribute("data-dropped-kind")).toBe("component")
+    })
+
+    it("declines a one-row table whose row cannot fit under the header", () => {
+      const single = {
+        type: "comparison" as const,
+        columns: ["Option"],
+        rows: [{ label: "Plan", cells: ["Customer support and training included"] }],
+      }
+      const { container } = render(<svg>{comparison.render(single, { x: 0, y: 0, w: 300, h: 80 }, ctx)}</svg>)
+      for (const t of container.querySelectorAll("text, line")) {
+        expect(Number(t.getAttribute("y") ?? t.getAttribute("y1"))).toBeLessThanOrEqual(80)
+      }
+      expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
     })
 
     it("is a byte-identical no-op when box.h is omitted (the ordinary/common render path)", () => {

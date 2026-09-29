@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { parseProgressRatio } from "@/ir/components/progress-donuts"
 import { PptwiseError } from "../errors"
 import { Icon } from "../render/icons"
+import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk, groupValueInks } from "../render/ink"
 import { FORM_BODY_FLOOR, fitFormLine, layoutAtSize } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
@@ -106,6 +107,11 @@ function sourcesFit(g: ReturnType<typeof grid>, lines: number): boolean {
   return labelY + SOURCE_LINE * lines + 16 * 0.25 <= g.cellH
 }
 
+/** Whether the ring and its label, with no source under it, end inside a cell. */
+function labelFits(g: ReturnType<typeof grid>): boolean {
+  return PAD + 2 * g.r + g.strokeW + 22 + 16 * 0.25 <= g.cellH
+}
+
 function grid(n: number, w: number, h?: number, sourceLineCount = 1) {
   const cols = columns(n, w)
   const rows = Math.max(1, Math.ceil(n / cols))
@@ -140,6 +146,17 @@ export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
   while (lines > 1 && !sourcesFit(G, lines)) {
     lines -= 1
     G = grid(n, box.w, h, lines)
+  }
+  // The ring does not shrink past its 36px floor. A cell shorter than that
+  // ring, its label and one line of source cannot hold a donut, so the row
+  // declines the box rather than printing the label or source below it.
+  const sourced = component.items.some((item) => item.source)
+  if (box.h !== undefined && !(sourced ? sourcesFit(G, lines) : labelFits(G))) {
+    return (
+      <g transform={`translate(${box.x},${box.y})`}>
+        <DroppedContentMarker count={1} kind="component" />
+      </g>
+    )
   }
   const arc = ctx.colors.accent
   const track = ctx.colors.muted

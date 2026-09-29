@@ -2,6 +2,7 @@ import type React from "react"
 import type { Component } from "@/ir"
 import { wrapClip } from "./clip-text"
 import { readableOn } from "../render/ink"
+import { DroppedContentMarker } from "../render/drop-marker"
 import {
   FORM_BODY_FLOOR,
   FORM_TITLE_FLOOR,
@@ -137,10 +138,20 @@ export const steps: SvgComponent<StepsComponent> = {
     visible = 0
     for (let i = 0; i < n; i++) {
       const bottom = i * stride + arrowH + FOOT_GAP + footH
-      if (bottom > budget && visible >= 1) break
+      if (bottom > budget) break
       visible = i + 1
     }
-    visible = Math.max(1, visible)
+  }
+  // Side by side with one line of sentence, or stacked with not even the
+  // first step, the box cannot hold the steps: they decline it rather than
+  // drawing under it.
+  const tooShort = vertical ? visible === 0 && n > 0 : box.h !== undefined && arrowH + FOOT_GAP + footH > box.h + 1
+  if (tooShort) {
+    return (
+      <g transform={`translate(${box.x},${box.y})`}>
+        <DroppedContentMarker count={1} kind="component" />
+      </g>
+    )
   }
   const hidden = n - visible
   const shown = component.items.slice(0, visible)
