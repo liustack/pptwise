@@ -1,4 +1,5 @@
 import { META_FONT_FLOOR_PX } from "../constants"
+import { SYMBOL_ADVANCE_BOUNDS } from "./symbol-advances"
 
 /**
  * Weight/face hint threaded through the estimator (bold-metrics fix,
@@ -526,6 +527,7 @@ export function measureTextUnits(text: string, weight?: TextWeightHint): number 
   // out up to 1% narrower on ordinary sentences, and SimSun/KaiTi do not
   // kern. So the exact sum errs a hair wide, never narrow.
   const exactTable = mode === "bold" ? EXACT_TABLE_FOR[faceKey]?.bold : REGULAR_EXACT_TABLE_FOR[faceKey]
+  const symbolBounds = faceKey === "unknown" ? undefined : SYMBOL_ADVANCE_BOUNDS[faceKey][mode]
   return Array.from(text).reduce((sum, char) => {
     // WIDE_CHAR_RE (CJK/ideographic-punctuation/fullwidth) always takes the
     // class path, even under an exact-model face: the exact tables only
@@ -537,7 +539,18 @@ export function measureTextUnits(text: string, weight?: TextWeightHint): number 
       const exact = exactTable[char.charCodeAt(0)]
       if (exact !== undefined) return sum + exact
     }
-    return sum + classAverageUnits(char, classTable, mode)
+    // Outside printable ASCII the class average is a guess, and for some
+    // glyphs a low one: SimSun and KaiTi set "·" on the full em against the
+    // class's 0.563, YaHei's "—" runs 1.08em against 1, Georgia's "‰"
+    // 1.31em against 0.46, an ideographic space 1em against a space's 0.35.
+    // `SYMBOL_ADVANCE_BOUNDS` holds the widest real advance each measured
+    // face (and the face that may stand in for it) gives the character,
+    // and the estimate rises to it. It never falls below the class average,
+    // so no layout gets tighter for a glyph the tables say is narrower than
+    // the guess.
+    const estimate = classAverageUnits(char, classTable, mode)
+    const floor = symbolBounds?.[char.charCodeAt(0)]
+    return sum + (floor !== undefined && floor > estimate ? floor : estimate)
   }, 0)
 }
 

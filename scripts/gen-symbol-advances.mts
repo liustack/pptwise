@@ -1,0 +1,206 @@
+/**
+ * Reads the real advance widths of the punctuation, symbols and accented
+ * Latin letters Chinese and English decks carry, from the four faces the
+ * width estimator names, and writes them as upper bounds to
+ *   src/lib/symbol-advances.ts
+ *
+ * The estimator prices a character outside printable ASCII by class average
+ * (0.46em for a mark, 1em for a CJK one). Several real glyphs are wider than
+ * that: SimSun and KaiTi set "·" on the full em, YaHei's "—" runs 1.08em,
+ * "‰" is 1.31em in Georgia. An underestimate is the unsafe direction, since
+ * a line fitted to it paints past its box. The table this writes is a floor
+ * the estimator raises its guess to, never a ceiling it lowers it by.
+ *
+ * Which glyph paints is not always the declared face's. The export writes
+ * YaHei as the East Asian font behind Georgia (`eaFontFaceFor`), and
+ * PowerPoint may set a shared mark like "—" or "·" from either one, so a
+ * Georgia bound is the wider of the two. A character a face does not carry
+ * at all is drawn from a substitute, and its bound is the widest of the
+ * measured faces that do carry it. SimSun and KaiTi have no Bold binary, and
+ * PowerPoint emboldens them synthetically without changing an advance, so
+ * their Bold bound is their Regular one. The two share one estimator key, so
+ * their bound is the wider of the two.
+ *
+ * Needs the genuine binaries: macOS Georgia and the Office for Mac copies of
+ * Microsoft YaHei, SimSun and KaiTi. Each file's `name` table is checked
+ * before it is read.
+ *
+ * Run: pnpm exec tsx scripts/gen-symbol-advances.mts
+ */
+import { readFileSync, writeFileSync } from "node:fs"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
+const OUT = path.join(ROOT, "src/lib/symbol-advances.ts")
+
+const OFFICE = "/Applications/Microsoft PowerPoint.app/Contents/Resources/DFonts/"
+const SYSTEM = "/System/Library/Fonts/Supplemental/"
+
+interface FaceFile {
+  file: string
+  family: string
+  subfamily: string
+}
+
+const FACES = {
+  georgia: { file: `${SYSTEM}Georgia.ttf`, family: "Georgia", subfamily: "Regular" },
+  georgiaBold: { file: `${SYSTEM}Georgia Bold.ttf`, family: "Georgia", subfamily: "Bold" },
+  yahei: { file: `${OFFICE}msyh.ttc`, family: "Microsoft YaHei", subfamily: "Regular" },
+  yaheiBold: { file: `${OFFICE}msyhbd.ttc`, family: "Microsoft YaHei", subfamily: "Bold" },
+  simsun: { file: `${OFFICE}Simsun.ttc`, family: "SimSun", subfamily: "Regular" },
+  kaiti: { file: `${OFFICE}Kaiti.ttf`, family: "KaiTi", subfamily: "Regular" },
+} as const satisfies Record<string, FaceFile>
+
+type FaceName = keyof typeof FACES
+
+/** The code points covered: Latin-1, the punctuation and symbols decks use, and CJK punctuation. */
+const RANGES: readonly (readonly [number, number])[] = [
+  [0x00a0, 0x00ff],
+  [0x2010, 0x2027],
+  [0x2030, 0x203b],
+  [0x20ac, 0x20ac],
+  [0x2103, 0x2103],
+  [0x2116, 0x2116],
+  [0x2122, 0x2122],
+  [0x2190, 0x2193],
+  [0x2212, 0x2212],
+  [0x221e, 0x221e],
+  [0x2248, 0x2248],
+  [0x2260, 0x2260],
+  [0x2264, 0x2265],
+  [0x25a0, 0x25a1],
+  [0x25b2, 0x25b2],
+  [0x25bc, 0x25bc],
+  [0x25cb, 0x25cb],
+  [0x25cf, 0x25cf],
+  [0x2605, 0x2606],
+  [0x3000, 0x3011],
+  [0x3014, 0x301f],
+  [0xff01, 0xff5e],
+  [0xffe0, 0xffe6],
+]
+
+/** Advance widths in em for the BMP code points a face maps, read from `cmap` (3,1) format 4 and `hmtx`. */
+function readFace(face: FaceFile): (cp: number) => number | undefined {
+  const b = readFileSync(face.file)
+  const base = b.toString("latin1", 0, 4) === "ttcf" ? b.readUInt32BE(12) : 0
+  const tables = new Map<string, number>()
+  for (let i = 0; i < b.readUInt16BE(base + 4); i++) {
+    const o = base + 12 + 16 * i
+    tables.set(b.toString("latin1", o, o + 4), b.readUInt32BE(o + 8))
+  }
+  const at = (tag: string): number => {
+    const off = tables.get(tag)
+    if (off === undefined) throw new Error(`${face.file}: no ${tag} table`)
+    return off
+  }
+
+  const names = new Map<number, string>()
+  const name = at("name")
+  const strings = name + b.readUInt16BE(name + 4)
+  for (let i = 0; i < b.readUInt16BE(name + 2); i++) {
+    const r = name + 6 + 12 * i
+    if (b.readUInt16BE(r) !== 3 || b.readUInt16BE(r + 4) !== 0x409) continue
+    const raw = b.subarray(strings + b.readUInt16BE(r + 10), strings + b.readUInt16BE(r + 10) + b.readUInt16BE(r + 8))
+    let s = ""
+    for (let k = 0; k + 1 < raw.length; k += 2) s += String.fromCharCode(raw.readUInt16BE(k))
+    names.set(b.readUInt16BE(r + 6), s)
+  }
+  if (names.get(1) !== face.family || names.get(2) !== face.subfamily) {
+    throw new Error(`${face.file}: expected ${face.family} ${face.subfamily}, found ${names.get(1)} ${names.get(2)}`)
+  }
+
+  const upem = b.readUInt16BE(at("head") + 18)
+  const metrics = b.readUInt16BE(at("hhea") + 34)
+  const hmtx = at("hmtx")
+  const cmap = at("cmap")
+  let sub = -1
+  for (let i = 0; i < b.readUInt16BE(cmap + 2); i++) {
+    const r = cmap + 4 + 8 * i
+    if (b.readUInt16BE(r) === 3 && b.readUInt16BE(r + 2) === 1) sub = cmap + b.readUInt32BE(r + 4)
+  }
+  if (sub < 0 || b.readUInt16BE(sub) !== 4) throw new Error(`${face.file}: no (3,1) format 4 cmap`)
+  const segX2 = b.readUInt16BE(sub + 6)
+  const ends = sub + 14
+  const starts = ends + segX2 + 2
+  const deltas = starts + segX2
+  const offsets = deltas + segX2
+  const glyph = (cp: number): number => {
+    for (let i = 0; i < segX2 / 2; i++) {
+      if (cp > b.readUInt16BE(ends + 2 * i)) continue
+      const start = b.readUInt16BE(starts + 2 * i)
+      if (cp < start) return 0
+      const delta = b.readInt16BE(deltas + 2 * i)
+      const ro = b.readUInt16BE(offsets + 2 * i)
+      if (ro === 0) return (cp + delta) & 0xffff
+      const g = b.readUInt16BE(offsets + 2 * i + ro + 2 * (cp - start))
+      return g === 0 ? 0 : (g + delta) & 0xffff
+    }
+    return 0
+  }
+  return (cp) => {
+    const g = glyph(cp)
+    return g === 0 ? undefined : b.readUInt16BE(hmtx + 4 * Math.min(g, metrics - 1)) / upem
+  }
+}
+
+const advance = Object.fromEntries(
+  Object.entries(FACES).map(([key, face]) => [key, readFace(face)]),
+) as Record<FaceName, (cp: number) => number | undefined>
+
+/** Rounded up, so a stored bound is never below the width it came from. */
+const ceil4 = (n: number): number => Math.ceil(n * 10000 - 1e-6) / 10000
+
+/**
+ * The widest of `primary` that carry the code point, or when none does, the
+ * widest of `substitutes` that do.
+ */
+function bound(cp: number, primary: readonly FaceName[], substitutes: readonly FaceName[]): number | undefined {
+  const widest = (faces: readonly FaceName[]) => {
+    const found = faces.map((f) => advance[f](cp)).filter((w): w is number => w !== undefined)
+    return found.length ? Math.max(...found) : undefined
+  }
+  const w = widest(primary) ?? widest(substitutes)
+  return w === undefined ? undefined : ceil4(w)
+}
+
+const ALL: readonly FaceName[] = ["georgia", "georgiaBold", "yahei", "yaheiBold", "simsun", "kaiti"]
+const TABLES = {
+  georgia: { regular: ["georgia", "yahei"], bold: ["georgiaBold", "yaheiBold"] },
+  yahei: { regular: ["yahei"], bold: ["yaheiBold"] },
+  "simsun-kaiti": { regular: ["simsun", "kaiti"], bold: ["simsun", "kaiti"] },
+} as const satisfies Record<string, Record<"regular" | "bold", readonly FaceName[]>>
+
+const codePoints: number[] = []
+for (const [from, to] of RANGES) for (let cp = from; cp <= to; cp++) codePoints.push(cp)
+
+const literal = (primary: readonly FaceName[]): string => {
+  const entries: string[] = []
+  for (const cp of codePoints) {
+    const w = bound(cp, primary, ALL)
+    if (w !== undefined) entries.push(`${cp}:${w}`)
+  }
+  return `{${entries.join(",")}}`
+}
+
+const body = Object.entries(TABLES)
+  .map(([key, weights]) => `  ${JSON.stringify(key)}: {\n    regular: ${literal(weights.regular)},\n    bold: ${literal(weights.bold)},\n  },`)
+  .join("\n")
+
+writeFileSync(
+  OUT,
+  `// Generated by scripts/gen-symbol-advances.mts. Do not edit by hand.
+//
+// Upper bounds, in em, on the advance of each covered non-ASCII code point in
+// the faces the width estimator names, keyed by \`charCodeAt(0)\`. See the
+// generator for which faces each bound is the widest of, and why.
+
+export const SYMBOL_ADVANCE_BOUNDS: Readonly<
+  Record<"georgia" | "yahei" | "simsun-kaiti", Readonly<Record<"regular" | "bold", Readonly<Record<number, number>>>>>
+> = {
+${body}
+}
+`,
+)
+console.log(`wrote ${codePoints.length} code points x ${Object.keys(TABLES).length} faces to ${path.relative(ROOT, OUT)}`)

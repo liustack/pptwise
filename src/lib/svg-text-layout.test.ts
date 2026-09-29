@@ -10,6 +10,7 @@ import {
   truncateToMonoUnits,
   truncateToUnits,
 } from "./svg-text-layout"
+import { SYMBOL_ADVANCE_BOUNDS } from "./symbol-advances"
 
 describe("svg text layout", () => {
   it("wraps long mixed CJK title into bounded lines", () => {
@@ -1098,6 +1099,48 @@ describe("measuresExactly", () => {
     expect(measuresExactly("accounts", { fontFamily: "Cambria" })).toBe(false)
     expect(measuresExactly("3‰", { fontFamily: "Georgia" })).toBe(false)
     expect(measuresExactly("甲 · 乙", { fontFamily: "Microsoft YaHei" })).toBe(false)
+  })
+})
+
+describe("non-ASCII marks never measure narrower than the face draws them", () => {
+  // Read with scripts/gen-symbol-advances.mts from Georgia.ttf, msyh.ttc,
+  // Simsun.ttc and Kaiti.ttf. Pre-fix every one of these fell to a class
+  // average below the real advance.
+  it("prices the marks the fonts draw wide at their real width", () => {
+    expect(measureTextUnits("·", { fontFamily: "SimSun" })).toBe(1) // was 0.563
+    expect(measureTextUnits("·", { fontFamily: "KaiTi, 楷体, serif" })).toBe(1)
+    expect(measureTextUnits("—", { fontFamily: "Microsoft YaHei" })).toBeCloseTo(1.0801, 4) // was 1
+    expect(measureTextUnits("‰", { fontFamily: "Georgia" })).toBeCloseTo(1.3125, 4) // was 0.46
+    expect(measureTextUnits("…", { fontFamily: "Georgia", bold: true })).toBeCloseTo(0.9629, 4) // was 0.421
+    expect(measureTextUnits("\u3000", { fontFamily: "Microsoft YaHei" })).toBe(1) // was 0.35
+    expect(measureTextUnits("é", { fontFamily: "Microsoft YaHei" })).toBeCloseTo(0.5674, 4) // was 0.46
+  })
+
+  it("covers the marks and symbols a Chinese or English deck carries", () => {
+    for (const ch of "·—–…“”‘’《》、。，×°‰¥€") {
+      for (const face of ["georgia", "yahei", "simsun-kaiti"] as const) {
+        expect(SYMBOL_ADVANCE_BOUNDS[face].regular[ch.charCodeAt(0)], `${face} ${ch}`).toBeDefined()
+        expect(SYMBOL_ADVANCE_BOUNDS[face].bold[ch.charCodeAt(0)], `${face} bold ${ch}`).toBeDefined()
+      }
+    }
+  })
+
+  it("never measures a covered character below its bound or below the class average", () => {
+    const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "simsun-kaiti": "SimSun" } as const
+    for (const [face, weights] of Object.entries(SYMBOL_ADVANCE_BOUNDS) as [keyof typeof families, (typeof SYMBOL_ADVANCE_BOUNDS)["georgia"]][]) {
+      for (const [weight, table] of Object.entries(weights) as ["regular" | "bold", Record<number, number>][]) {
+        for (const [cp, w] of Object.entries(table)) {
+          const ch = String.fromCharCode(Number(cp))
+          const measured = measureTextUnits(ch, { fontFamily: families[face], bold: weight === "bold" })
+          expect(measured, `${face} ${weight} U+${Number(cp).toString(16)}`).toBeGreaterThanOrEqual(w)
+          if (weight === "regular") expect(measured).toBeGreaterThanOrEqual(measureTextUnits(ch))
+        }
+      }
+    }
+  })
+
+  it("leaves a call that names no face on the class average", () => {
+    expect(measureTextUnits("·")).toBeCloseTo(0.46, 6)
   })
 })
 
