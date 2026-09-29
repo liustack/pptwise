@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { changelogSection, datedHeading, plannedVersion } from "./release.mts"
+import { changelogSection, datedHeading, plannedVersion, releaseRunListArgs } from "./release.mts"
 
 const CHANGELOG = `# @liustack/pptwise
 
@@ -68,5 +68,14 @@ describe("plannedVersion", () => {
 
   it("has no plan when no pending changeset releases the package", () => {
     expect(plannedVersion({ releases: [] }, "@liustack/pptwise")).toBeUndefined()
+  })
+})
+
+describe("releaseRunListArgs", () => {
+  it("asks for the run of the tagged commit, not any run the tag name ever had", () => {
+    const args = releaseRunListArgs("v0.40.0", "1f13ec9c")
+    expect(args).toContain("--commit")
+    expect(args[args.indexOf("--commit") + 1]).toBe("1f13ec9c")
+    expect(args[args.indexOf("--branch") + 1]).toBe("v0.40.0")
   })
 })

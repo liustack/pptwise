@@ -84,9 +84,18 @@ function changesetPlan(): string | undefined {
   }
 }
 
-async function waitForReleaseRun(tag: string): Promise<string> {
+/**
+ * The `gh run list` arguments for the release run of one commit. Matching by
+ * the tag's name alone finds a retracted tag's older, failed run when the
+ * same tag is pushed again, and the release then stops on that stale result.
+ */
+export function releaseRunListArgs(tag: string, sha: string): string[] {
+  return ["run", "list", "--workflow", "release.yml", "--branch", tag, "--commit", sha, "--limit", "1", "--json", "databaseId", "--jq", ".[0].databaseId // empty"]
+}
+
+async function waitForReleaseRun(tag: string, sha: string): Promise<string> {
   for (let i = 0; i < 30; i++) {
-    const id = run("gh", ["run", "list", "--workflow", "release.yml", "--branch", tag, "--limit", "1", "--json", "databaseId", "--jq", ".[0].databaseId // empty"])
+    const id = run("gh", releaseRunListArgs(tag, sha))
     if (id) return id
     await sleep(5000)
   }
@@ -159,7 +168,7 @@ async function main(): Promise<void> {
   run("git", ["push", "origin", `refs/tags/${tag}`])
   console.log(`\nTag ${tag} pushed. Waiting for the release workflow (full gates, npm, GitHub Release).`)
 
-  const runId = await waitForReleaseRun(tag)
+  const runId = await waitForReleaseRun(tag, run("git", ["rev-parse", "HEAD"]))
   try {
     runLoud("gh", ["run", "watch", runId, "--exit-status"])
   } catch {
