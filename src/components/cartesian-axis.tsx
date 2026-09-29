@@ -70,9 +70,33 @@ function ticksFrom(start: number, end: number, step: number): number[] {
 }
 
 /**
+ * What every tick list has to be: finite, each tick above the last, and
+ * reaching both ends of the range it was asked to cover.
+ */
+function ticksCover(ticks: readonly number[], lo: number, hi: number): boolean {
+  return (
+    ticks.length >= MIN_TICK_COUNT &&
+    ticks.every((t, i) => Number.isFinite(t) && (i === 0 || t > ticks[i - 1]!)) &&
+    ticks[0]! <= lo &&
+    ticks[ticks.length - 1]! >= hi
+  )
+}
+
+/**
  * About four readable ticks covering `[min, max]`. Widens the range to
  * nice numbers. If the first pass is denser than {@link MAX_TICK_COUNT},
  * the step grows until the count fits.
+ *
+ * A range the nice-number walk cannot cover is widened around its middle, to
+ * the larger of its own size, its span and 1, and walked again. That was
+ * always the answer for a range too narrow to give {@link MIN_TICK_COUNT}
+ * ticks. It is now also the answer for a range whose step is finer than the 12
+ * significant digits ticks are rounded to: 100 to 100.0000000001 came back as
+ * `[99.9999999999, 99.9999999999, 100, 100, 100]`, two values five times
+ * over, short of the top of the range.
+ *
+ * The widened range holds zero and spans at least twice its own middle, so its
+ * step is a third of its size and its ticks cannot round together.
  */
 export function niceTicks(min: number, max: number, target = TARGET_TICK_COUNT): number[] {
   if (!Number.isFinite(min) || !Number.isFinite(max)) return [0, 1]
@@ -98,72 +122,54 @@ export function niceTicks(min: number, max: number, target = TARGET_TICK_COUNT):
     ticks = ticksFrom(start, end, step)
     guard += 1
   }
-  if (ticks.length < MIN_TICK_COUNT) {
-    const mid = (lo + hi) / 2
+  if (!ticksCover(ticks, lo, hi)) {
+    // Halves are added rather than the sum halved, so the middle of two large
+    // values cannot overflow.
+    const mid = lo / 2 + hi / 2
     const pad = Math.max(Math.abs(mid), hi - lo, 1)
     return niceTicks(mid - pad, mid + pad, target)
   }
   return ticks
 }
 
-export function buildNumericAxis(
-  values: readonly number[],
-  mode: DomainPadMode,
-  unit?: string,
-): { domain: NumericDomain; ticks: number[]; labels: string[] } {
-  const nums = values.filter((v) => Number.isFinite(v))
-  const min = nums.length ? Math.min(...nums) : 0
-  const max = nums.length ? Math.max(...nums) : 1
-  const domain = paddedDomain(min, max, mode)
-  const ticks = niceTicks(domain.min, domain.max)
-  return {
-    domain: { min: ticks[0]!, max: ticks[ticks.length - 1]! },
-    ticks,
-    labels: ticks.map((t) => formatAxisTick(t, unit)),
-  }
-}
-
 /**
- * `buildNumericAxis`, held to the contract the stacked and combo charts are
- * built on: finite ticks, each above the last, covering every value.
+ * A value axis for `values`: its ticks, the domain they span, and a label per
+ * tick.
  *
- * The shared builder does not always meet it. Ticks are rounded to 12
- * significant digits, so values a hair apart can come back as
- * `[99.9999999999, 99.9999999999, 100, 100, 100]`: five ticks on two
- * values, not reaching 100.0000000001, and a combo laying its right axis on
- * those rows put its own ticks on top of each other. Where the shared result
- * falls short, the range is widened around its middle to the larger of its
- * own size, its span and 1, which is what `niceTicks` already does with a
- * range too narrow to yield enough ticks, and built again.
+ * The contract every chart is built on: finite ticks, each above the last,
+ * covering every value, and zero as well in "zero-max" mode, since a bar is
+ * measured from zero. `paddedDomain` and `niceTicks` keep it. A range they
+ * cannot cover throws rather than hand back an axis that misses the data, and
+ * so does a value that is not a finite number.
  *
- * Wherever the shared result already covers the values, it is returned as it
- * is. The older chart types keep calling `buildNumericAxis` directly, and
- * their pages are pinned to its output.
+ * Stacked and combo charts used to go through a second builder that checked
+ * this one's result and widened it where it fell short. The shortfall is fixed
+ * where it arose, in `niceTicks` and `paddedDomain`, so every chart type now
+ * gets the same axis from the one builder.
  */
-export function buildCoveringNumericAxis(
+export function buildNumericAxis(
   values: readonly number[],
   mode: DomainPadMode,
   unit?: string,
 ): { domain: NumericDomain; ticks: number[]; labels: string[] } {
   const invalid = values.find((v) => !Number.isFinite(v))
   if (invalid !== undefined) {
-    throw new Error(`buildCoveringNumericAxis: every value must be a finite number, got ${invalid}`)
+    throw new Error(`buildNumericAxis: every value must be a finite number, got ${invalid}`)
   }
-  const lo = values.length ? Math.min(...values) : 0
-  const hi = values.length ? Math.max(...values) : 0
-  const covers = (axis: { domain: NumericDomain; ticks: number[] }) =>
-    axis.ticks.every((t, i) => Number.isFinite(t) && (i === 0 || t > axis.ticks[i - 1]!)) &&
-    axis.domain.min <= lo &&
-    axis.domain.max >= hi
-  const axis = buildNumericAxis(values, mode, unit)
-  if (covers(axis)) return axis
-  // Halves are added rather than the sum halved, so the middle of two large
-  // values cannot overflow.
-  const mid = lo / 2 + hi / 2
-  const pad = Math.max(Math.abs(mid), hi - lo, 1)
-  const widened = buildNumericAxis([mid - pad, mid + pad], mode, unit)
-  if (covers(widened)) return widened
-  throw new Error(`buildCoveringNumericAxis: cannot cover ${lo} to ${hi} with finite, increasing ticks`)
+  const min = values.length ? Math.min(...values) : 0
+  const max = values.length ? Math.max(...values) : 1
+  const domain = paddedDomain(min, max, mode)
+  const ticks = niceTicks(domain.min, domain.max)
+  const needLo = mode === "zero-max" ? Math.min(0, min) : min
+  const needHi = mode === "zero-max" ? Math.max(0, max) : max
+  if (!ticksCover(ticks, needLo, needHi)) {
+    throw new Error(`buildNumericAxis: cannot cover ${min} to ${max} with finite, increasing ticks`)
+  }
+  return {
+    domain: { min: ticks[0]!, max: ticks[ticks.length - 1]! },
+    ticks,
+    labels: ticks.map((t) => formatAxisTick(t, unit)),
+  }
 }
 
 /**

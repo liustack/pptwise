@@ -6,7 +6,6 @@ import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { axisTitlePairHeight, renderCartesianAxisTitles } from "./axis-titles"
 import {
   buildAlignedNumericAxis,
-  buildCoveringNumericAxis,
   buildNumericAxis,
   formatAxisTick,
   layoutCartesianPlot,
@@ -2970,7 +2969,7 @@ export function renderStacked(
         ticks: [...PERCENT_TICKS],
         labels: PERCENT_TICKS.map((t) => formatAxisTick(t, "%")),
       }
-    : buildCoveringNumericAxis([...piles.map((p) => p.up), ...piles.map((p) => p.down)], "zero-max", yUnit)
+    : buildNumericAxis([...piles.map((p) => p.up), ...piles.map((p) => p.down)], "zero-max", yUnit)
   const geom = layoutCartesianPlot({
     x0,
     y0,
@@ -3183,7 +3182,7 @@ export function renderCombo(
   const hasRight = axisSeries(true).length > 0
   // A bar is measured from zero, and "zero-max" keeps zero in range whatever
   // the values, so a left axis that carries a bar holds zero.
-  const yAxis = buildCoveringNumericAxis(keptValues(axisSeries(false)), axisMode(false), meta.yUnit)
+  const yAxis = buildNumericAxis(keptValues(axisSeries(false)), axisMode(false), meta.yUnit)
   const y2Axis = hasRight
     ? buildAlignedNumericAxis(keptValues(axisSeries(true)), axisMode(true), yAxis.ticks, meta.y2Unit)
     : null
