@@ -239,10 +239,23 @@ describe("five_forces component", () => {
         expect(g.labelSize).toBe(16)
       })
 
+      // A box short enough that no panel header fits is declined whole now
+      // (see "five_forces in a box too short for its panel headers"), so the
+      // floor is checked at every height the cross still agrees to draw in.
       it("never shrinks type below the 16px (12pt) readable floor, air spent or not", () => {
-        const g = atHeight(Math.max(80, natural * 0.2))
-        expect(g.itemSize).toBe(16)
-        expect(g.labelSize).toBe(16)
+        let drawn = 0
+        for (const h of [natural * 0.6, natural * 0.45, natural * 0.35, natural * 0.25, 80]) {
+          const { container } = svg(fiveForces.render(basic, { x: 0, y: 0, w: 1000, h }, ctx))
+          if (!container.querySelector('rect[data-force="rivalry"]')) {
+            expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+            continue
+          }
+          drawn += 1
+          const g = atHeight(h)
+          expect(g.itemSize, `h=${h}`).toBe(16)
+          expect(g.labelSize, `h=${h}`).toBe(16)
+        }
+        expect(drawn).toBeGreaterThan(0)
       })
     })
 
@@ -344,3 +357,14 @@ describe("five_forces panel titles follow the language of the content", () => {
     expect(text).toContain("买方议价能力")
   })
 })
+
+describe("five_forces in a box too short for its panel headers", () => {
+  it("declines the box rather than printing headers past it", () => {
+    for (const h of [120, 20]) {
+      const { container } = svg(fiveForces.render(basic, { x: 0, y: 0, w: 1088, h }, ctx))
+      expect(container.querySelectorAll("rect, text, circle"), `h=${h}`).toHaveLength(0)
+      expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind"), `h=${h}`).toBe("component")
+    }
+  })
+})
+
