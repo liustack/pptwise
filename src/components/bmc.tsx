@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Component } from "@/ir"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { layoutSvgText } from "../lib/svg-text-layout"
 import { mostlyChinese } from "../lib/text-script"
 import { accessibleInk } from "../render/ink"
 import { mixHex } from "./color-mix"
@@ -155,6 +155,15 @@ const ITEM_SIZE = 16
 const ITEM_SIZE_MIN = 16
 const ITEM_LH_RATIO = 1.35
 const ITEM_GAP = 5
+/**
+ * Lines one item may wrap onto before its last line is cut. Each item used
+ * to be fitted to a single line, and with the type already at the floor a
+ * narrow column cut it off mid-phrase ("Seat expansion in", "协作活跃率领先
+ * 同行两") while the cell had room to spare underneath. An item now wraps
+ * under its own bullet, its lines balanced so a phrase does not leave one
+ * character alone on the last, and the cell measures the lines it draws.
+ */
+const ITEM_MAX_LINES = 3
 const BULLET_R = 2
 const BULLET_INDENT = 11
 
@@ -174,7 +183,7 @@ const MIN_RHYTHM_SCALE = 0.55
 
 interface BlockLayout {
   title: { lines: string[]; fontSize: number; truncated: boolean }
-  items: { text: string; fontSize: number; truncated: boolean }[]
+  items: { lines: string[]; fontSize: number; truncated: boolean }[]
   contentH: number
   /** `rhythmScale`-applied nominal sizes/rhythm `renderBlock` positions
    * against — nominal, not each fitted item/title's own (possibly further
@@ -252,14 +261,19 @@ function blockLayout(
     fontSize: titleLaid.fontSize,
     truncated: titleLaid.truncated,
   }
-  const fittedItems = items.map((it) =>
-    fitSvgLine(it, {
+  const fittedItems = items.map((it) => {
+    const laid = layoutSvgText(it, {
       maxWidth: contentW - BULLET_INDENT,
       fontSize: itemSize,
-      minFontSize: ITEM_SIZE_MIN,
-    }),
-  )
-  const itemsH = fittedItems.length * itemLH + Math.max(0, fittedItems.length - 1) * itemGap
+      maxLines: ITEM_MAX_LINES,
+      lineHeightRatio: itemLHRatio,
+      minPt: ITEM_SIZE_MIN,
+      balanceLines: true,
+    })
+    return { lines: laid.lines, fontSize: laid.fontSize, truncated: laid.truncated }
+  })
+  const itemLines = fittedItems.reduce((sum, item) => sum + item.lines.length, 0)
+  const itemsH = itemLines * itemLH + Math.max(0, fittedItems.length - 1) * itemGap
   const titleBlockH = Math.max(titleLH, title.lines.length * titleLaid.lineHeight)
   const contentH = padTop + titleBlockH + gapTitleItems + itemsH + padBottom
   return {
@@ -377,10 +391,15 @@ function renderBlock(
   const titleLineH = layout.titleLH
   let itemY = y + layout.padTop + layout.title.lines.length * titleLineH + layout.gapTitleItems
   const itemLimit = y + cell.h - layout.padBottom
-  const visibleItems = layout.items.filter((_, ii) => {
-    const rowY = itemY + ii * (layout.itemLH + layout.itemGap)
-    return rowY + layout.itemSize <= itemLimit
-  })
+  // Items stay whole: one whose last line would cross the cell's floor is
+  // dropped and declared, never drawn with its tail missing.
+  const visibleItems: BlockLayout["items"] = []
+  for (let cursor = itemY; visibleItems.length < layout.items.length; ) {
+    const item = layout.items[visibleItems.length]!
+    if (cursor + (item.lines.length - 1) * layout.itemLH + layout.itemSize > itemLimit) break
+    visibleItems.push(item)
+    cursor += item.lines.length * layout.itemLH + layout.itemGap
+  }
   const dropped = layout.items.length - visibleItems.length
   return (
     <g key={cell.key}>
@@ -412,22 +431,25 @@ function renderBlock(
       ))}
       {visibleItems.map((item, ii) => {
         const rowY = itemY
-        itemY += layout.itemLH + layout.itemGap
+        itemY += item.lines.length * layout.itemLH + layout.itemGap
         const dotCy = rowY + layout.itemSize * 0.6
         return (
           <g key={ii}>
             <circle cx={x + PAD_X + layout.bulletR} cy={dotCy} r={layout.bulletR} fill={itemInk} />
-            <text
-              data-truncated={item.truncated ? "1" : undefined}
-              x={x + PAD_X + BULLET_INDENT}
-              y={rowY + layout.itemSize}
-              fontSize={item.fontSize}
-              fill={itemInk}
-              fontFamily={ctx.fonts.body}
-              dominantBaseline="alphabetic"
-            >
-              {item.text}
-            </text>
+            {item.lines.map((line, li) => (
+              <text
+                key={li}
+                data-truncated={item.truncated && li === item.lines.length - 1 ? "1" : undefined}
+                x={x + PAD_X + BULLET_INDENT}
+                y={rowY + li * layout.itemLH + layout.itemSize}
+                fontSize={item.fontSize}
+                fill={itemInk}
+                fontFamily={ctx.fonts.body}
+                dominantBaseline="alphabetic"
+              >
+                {line}
+              </text>
+            ))}
           </g>
         )
       })}

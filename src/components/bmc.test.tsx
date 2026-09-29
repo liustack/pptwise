@@ -164,3 +164,45 @@ describe("bmc block titles follow the language of the content", () => {
     expect(text).not.toContain("重要合作")
   })
 })
+
+// A canvas on a narrower content rect: a column of about 150px holds nine
+// characters a line at the type floor. Items used to be fitted to one line
+// and cut there ("协作活跃率领先同行两") while the cell had room underneath.
+describe("bmc wraps an item instead of cutting it", () => {
+  const long = {
+    ...basic,
+    value_propositions: ["协作活跃率领先同行两个身位", "开通模板已覆盖四个客群"],
+    key_activities: ["Seat expansion in existing accounts"],
+  }
+  const W = 880
+
+  it("sets every word of a long item, under its one bullet", () => {
+    const { container } = svg(bmc.render(long, { x: 0, y: 0, w: W }, ctx))
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    // One group per item: its bullet and its lines, no panel.
+    const groups = Array.from(container.querySelectorAll("g")).filter((g) => !g.querySelector("rect, g"))
+    for (const item of [...long.value_propositions, ...long.key_activities]) {
+      const group = groups.find((g) =>
+        (g.textContent ?? "").replace(/ /g, "").includes(item.replace(/ /g, "")),
+      )
+      expect(group, item).toBeDefined()
+      const lines = Array.from(group!.querySelectorAll("text"))
+      expect(lines.length, item).toBeGreaterThan(1)
+      expect(group!.querySelectorAll("circle"), item).toHaveLength(1)
+      // The continuation hangs under the first line, not under the bullet.
+      expect(new Set(lines.map((t) => t.getAttribute("x"))).size, item).toBe(1)
+    }
+  })
+
+  it("measures the lines an item wraps onto", () => {
+    expect(bmc.measure(long, W, ctx)).toBeGreaterThan(bmc.measure(basic, W, ctx))
+  })
+
+  it("keeps an item that fits on its one line", () => {
+    const { container } = svg(bmc.render(long, { x: 0, y: 0, w: W }, ctx))
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+    expect(texts).toContain("核心供应商")
+    expect(texts).toContain("合作伙伴分销")
+  })
+})

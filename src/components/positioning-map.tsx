@@ -1,5 +1,6 @@
 import type { ReactElement } from "react"
 import type { Component } from "@/ir"
+import { isCjk } from "../lib/text-script"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk } from "../render/ink"
 import { anyCut } from "./declared-fit"
@@ -14,10 +15,13 @@ type PositioningMapComponent = Extract<Component, { type: "positioning_map" }>
  * 标签的碰撞处理是这个组件唯一的算法，而它先要知道障碍是什么：四个象限名、
  * 四个轴端名、以及**全部**的点——不只是已经排过的那几个。早先的版本把点的
  * 占位放在它自己的标签之后才加入，于是先写的标签能盖住后写的点；象限名更是
- * 排完才生成，从头到尾不在障碍集合里。现在先把所有固定墨迹量出来，再按作者
- * 顺序逐个安置标签，十二个位置都被占了才把这一条标签让出去，并用 `data-dropped`
- * （kind=label）声明。点还在，位置还在，少的是名字，页面上不留「还有几个」的
- * 记号——导出会因为这条声明拒绝出片。
+ * 排完才生成，从头到尾不在障碍集合里。两条轴线也曾不在障碍里，落在中线附近
+ * 的点，名字就压在轴线上，像被划掉一样。现在名字必须待在自己那个点所在的
+ * 象限里，离两条轴线都留出空隙。先把所有固定墨迹量出来，再按作者顺序逐个
+ * 安置标签。某条标签无处可放时，回头改前面标签的位置再试，确实没有一种摆法
+ * 能放下全部名字，才把放不下的标签让出去，并用 `data-dropped`（kind=label）
+ * 声明。点还在，位置还在，少的是名字，页面上不留「还有几个」的记号——导出会
+ * 因为这条声明拒绝出片。
  *
  * 名字本身一个字都不许少：任何一条标签、象限名或轴端名需要裁字才能放下时，
  * 整幅图声明退让（`./declared-fit.ts`）。
@@ -30,6 +34,25 @@ const CORNER_ROW = 26
 const DOT_R = 5
 const EMPHASIS_DOT_R = 7.5
 const LABEL_GAP = 9
+/**
+ * Air a point's name keeps from either axis rule. The rules are ink like
+ * everything else on the map, and a name laid across one reads as struck
+ * through; one just grazing it reads as underlined.
+ */
+const AXIS_CLEAR = 8
+/**
+ * Air a point's name keeps beside any other ink on the map. Sized by its
+ * real width, a name can otherwise end exactly where the next one starts,
+ * and two names set on one line read as one.
+ */
+const LABEL_AIR = 6
+/**
+ * Spots the label search may try before it settles for dropping a name. A
+ * map whose first pass fits costs one try per label, and the densest gallery
+ * maps settle within a few hundred. The cap only stops a map that has no
+ * arrangement from trying every combination.
+ */
+const PLACEMENT_BUDGET = 20000
 const MIN_H = 230
 const MAX_H = 350
 /** How tall the map wants to be relative to the width it is given. */
@@ -44,6 +67,11 @@ interface Box {
 
 function overlaps(a: Box, b: Box): boolean {
   return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
+}
+
+/** A label's box widened by the air it keeps on either side. */
+function airy(b: Box): Box {
+  return { x: b.x - LABEL_AIR, y: b.y, w: b.w + LABEL_AIR * 2, h: b.h }
 }
 
 function mapHeight(w: number): number {
@@ -81,8 +109,17 @@ export const positioningMap: SvgComponent<PositioningMapComponent> = {
     // estimate reads short on a face with no exact width table, and a label
     // that measured clear then painted over its neighbour is exactly the
     // failure this placement exists to prevent.
-    const widthOf = (text: string, bold: boolean, size: number) =>
-      paintedWidthCeiling(text, size, { bold, fontFamily: ctx.fonts.body })
+    //
+    // The headroom is for Latin, though. A Han, kana or hangul glyph is drawn
+    // on the em square in every face, so its width is known exactly, and
+    // padding a Chinese name by half again made a crowded map look full
+    // while there was still room beside a dot for the name to sit.
+    const widthOf = (text: string, bold: boolean, size: number) => {
+      const chars = Array.from(text)
+      const square = chars.filter((ch) => isCjk(ch)).length
+      const rest = chars.filter((ch) => !isCjk(ch)).join("")
+      return square * size + (rest ? paintedWidthCeiling(rest, size, { bold, fontFamily: ctx.fonts.body }) : 0)
+    }
 
     const xLow = fitMeta(`${component.x_axis.title} ${component.x_axis.low}`, box.w * 0.4)
     const xHigh = fitMeta(`${component.x_axis.title} ${component.x_axis.high}`, box.w * 0.4)
@@ -115,7 +152,8 @@ export const positioningMap: SvgComponent<PositioningMapComponent> = {
 
     // Every piece of fixed ink first: the four axis end names, the four
     // quadrant names, and every dot — including the dots whose own label has
-    // not been placed yet.
+    // not been placed yet. The two axis rules are kept clear by the side
+    // rule below.
     const dots = component.points.map((point) => {
       const r = point.emphasis ? EMPHASIS_DOT_R : DOT_R
       return {
@@ -135,27 +173,44 @@ export const positioningMap: SvgComponent<PositioningMapComponent> = {
         h: metaSize + 6,
       }
     })
-    const taken: Box[] = [
-      { x: axisX + 8, y: plotTop - 4, w: widthOf(yHigh.text, false, metaSize) + 8, h: metaSize + 8 },
-      { x: axisX + 8, y: plotBottom - metaSize - 4, w: widthOf(yLow.text, false, metaSize) + 8, h: metaSize + 8 },
-      { x: 0, y: axisY + 4, w: widthOf(xLow.text, false, metaSize) + 8, h: metaSize + 8 },
-      {
-        x: box.w - widthOf(xHigh.text, false, metaSize) - 8,
-        y: axisY + 4,
-        w: widthOf(xHigh.text, false, metaSize) + 8,
-        h: metaSize + 8,
-      },
-      ...cornerBoxes,
-      ...dots.map((d) => ({ x: d.cx - d.r, y: d.cy - d.r, w: d.r * 2, h: d.r * 2 })),
-    ]
-
-    interface Placed {
-      label?: { x: number; y: number; anchor: "start" | "end"; text: string; fontSize: number }
+    const dotBoxes: Box[] = dots.map((d) => ({ x: d.cx - d.r, y: d.cy - d.r, w: d.r * 2, h: d.r * 2 }))
+    // An axis end name sits under its rule (the x axis) or to the right of
+    // it (the y axis). A subject near that end of the scale can land its dot
+    // right on the name, and the dot is data where the name is not: the name
+    // crosses to the other side of the rule when that side is clear.
+    const onDot = (b: Box) => dotBoxes.some((d) => overlaps(d, b))
+    const xEnd = (text: string, atRight: boolean) => {
+      const w = widthOf(text, false, metaSize) + 8
+      const x = atRight ? box.w - widthOf(text, false, metaSize) - 8 : 0
+      const under: Box = { x, y: axisY + 4, w, h: metaSize + 8 }
+      const over: Box = { x, y: axisY - 12 - metaSize, w, h: metaSize + 8 }
+      const up = onDot(under) && !onDot(over)
+      return { box: up ? over : under, y: up ? axisY - 10 : axisY + metaSize + 8 }
     }
-    const placed: Placed[] = []
-    let droppedLabels = 0
+    const yEnd = (text: string, atTop: boolean) => {
+      const w = widthOf(text, false, metaSize) + 8
+      const y = atTop ? plotTop - 4 : plotBottom - metaSize - 4
+      const right: Box = { x: axisX + 8, y, w, h: metaSize + 8 }
+      const left: Box = { x: axisX - 8 - w, y, w, h: metaSize + 8 }
+      const flip = onDot(right) && !onDot(left)
+      return { box: flip ? left : right, x: flip ? axisX - 10 : axisX + 10, anchor: flip ? ("end" as const) : undefined }
+    }
+    const xLowEnd = xEnd(xLow.text, false)
+    const xHighEnd = xEnd(xHigh.text, true)
+    const yHighEnd = yEnd(yHigh.text, true)
+    const yLowEnd = yEnd(yLow.text, false)
+    const fixed: Box[] = [yHighEnd.box, yLowEnd.box, xLowEnd.box, xHighEnd.box, ...cornerBoxes, ...dotBoxes]
 
-    component.points.forEach((point, i) => {
+    interface Spot {
+      box: Box
+      x: number
+      y: number
+      anchor: "start" | "end"
+    }
+    // Every spot each label could take on its own (inside the map, on its
+    // own dot's side of both axis rules, and clear of the fixed ink), in the
+    // order a person labelling by hand would try them.
+    const spots: Spot[][] = component.points.map((point, i) => {
       const dot = dots[i]!
       const fitted = labels[i]!
       const textW = widthOf(fitted.text, point.emphasis === true, fitted.fontSize)
@@ -172,27 +227,44 @@ export const positioningMap: SvgComponent<PositioningMapComponent> = {
         y: dot.cy + dy + fitted.fontSize * 0.35,
         anchor: "end" as const,
       })
-      const above = {
-        box: { x: dot.cx - textW / 2, y: dot.cy - dot.r - LABEL_GAP - textH, w: textW, h: textH },
-        x: dot.cx - textW / 2,
-        y: dot.cy - dot.r - LABEL_GAP - textH * 0.2,
-        anchor: "start" as const,
-      }
-      const below = {
-        box: { x: dot.cx - textW / 2, y: dot.cy + dot.r + LABEL_GAP, w: textW, h: textH },
-        x: dot.cx - textW / 2,
-        y: dot.cy + dot.r + LABEL_GAP + fitted.fontSize * 0.9,
-        anchor: "start" as const,
-      }
       const rise = textH + 4
+      // A label stacked over or under the dot: its box centred on the dot,
+      // or hung off the dot's right or left edge. `rows` steps it one more
+      // line away.
+      const aboveAt = (x: number, anchor: "start" | "end", rows = 0) => ({
+        box: {
+          x: anchor === "start" ? x : x - textW,
+          y: dot.cy - dot.r - LABEL_GAP - textH - rows * rise,
+          w: textW,
+          h: textH,
+        },
+        x,
+        y: dot.cy - dot.r - LABEL_GAP - textH * 0.2 - rows * rise,
+        anchor,
+      })
+      const belowAt = (x: number, anchor: "start" | "end", rows = 0) => {
+        const top = dot.cy + dot.r + LABEL_GAP + rows * rise
+        return {
+          box: { x: anchor === "start" ? x : x - textW, y: top, w: textW, h: textH },
+          x,
+          y: top + fitted.fontSize * 0.9,
+          anchor,
+        }
+      }
+      const centred = dot.cx - textW / 2
       // Right of the dot first, then left, then above and below, then the
       // same four again one and two rows off — the order a person labelling
       // by hand would try, and fixed, so the same map lands the same way.
+      // Only once all of those are taken does a label try the finer steps: a
+      // half row off to either side, hung off a corner of the dot, or a row
+      // further up or down. A subject sitting near the crossing has both
+      // axis rules to stay off as well as its neighbours, and the whole-row
+      // steps alone leave it nowhere to go.
       const candidates = [
         rightOf(0),
         leftOf(0),
-        above,
-        below,
+        aboveAt(centred, "start"),
+        belowAt(centred, "start"),
         rightOf(-rise),
         rightOf(rise),
         leftOf(-rise),
@@ -201,25 +273,72 @@ export const positioningMap: SvgComponent<PositioningMapComponent> = {
         rightOf(2 * rise),
         leftOf(-2 * rise),
         leftOf(2 * rise),
+        rightOf(-rise / 2),
+        rightOf(rise / 2),
+        leftOf(-rise / 2),
+        leftOf(rise / 2),
+        aboveAt(dot.cx, "start"),
+        aboveAt(dot.cx, "end"),
+        belowAt(dot.cx, "start"),
+        belowAt(dot.cx, "end"),
+        aboveAt(centred, "start", 1),
+        belowAt(centred, "start", 1),
       ]
-      const spot = candidates.find(
+      // A name belongs in its subject's quadrant: across an axis rule it
+      // reads as a claim about the other quadrant, and on the rule it reads
+      // as struck through.
+      // A subject sitting exactly on a rule may be named from either side.
+      const leftOfRule = (b: Box) => b.x + b.w <= axisX - AXIS_CLEAR
+      const rightOfRule = (b: Box) => b.x >= axisX + AXIS_CLEAR
+      const aboveRule = (b: Box) => b.y + b.h <= axisY - AXIS_CLEAR
+      const belowRule = (b: Box) => b.y >= axisY + AXIS_CLEAR
+      const ownSide = (b: Box) =>
+        (dot.cx < axisX ? leftOfRule(b) : dot.cx > axisX ? rightOfRule(b) : leftOfRule(b) || rightOfRule(b)) &&
+        (dot.cy < axisY ? aboveRule(b) : dot.cy > axisY ? belowRule(b) : aboveRule(b) || belowRule(b))
+      return candidates.filter(
         (candidate) =>
+          ownSide(candidate.box) &&
           candidate.box.x >= 0 &&
           candidate.box.x + candidate.box.w <= box.w &&
           candidate.box.y >= 0 &&
           candidate.box.y + candidate.box.h <= h &&
-          !taken.some((t) => overlaps(t, candidate.box)),
+          !fixed.some((t) => overlaps(t, airy(candidate.box))),
       )
-      if (spot) {
-        taken.push(spot.box)
-        placed.push({
-          label: { x: spot.x, y: spot.y, anchor: spot.anchor, text: fitted.text, fontSize: fitted.fontSize },
-        })
-      } else {
-        droppedLabels += 1
-        placed.push({})
-      }
     })
+
+    // Author order, each label in the first spot still free. When that
+    // leaves a label nowhere to go, an earlier label may have taken the one
+    // spot it had while other spots were open to it, so the search steps
+    // back and tries the earlier labels' later spots before giving any name
+    // up. A map whose first pass fits is never searched further, and the
+    // budget keeps a hopeless map from searching forever.
+    const chosen: (Spot | undefined)[] = new Array(spots.length).fill(undefined)
+    let budget = PLACEMENT_BUDGET
+    const fits = (i: number): boolean => {
+      if (i === spots.length) return true
+      for (const spot of spots[i]!) {
+        if (budget-- <= 0) return false
+        if (chosen.some((c, j) => j < i && c !== undefined && overlaps(airy(c.box), spot.box))) continue
+        chosen[i] = spot
+        if (fits(i + 1)) return true
+      }
+      chosen[i] = undefined
+      return false
+    }
+    if (!fits(0)) {
+      // No arrangement names every subject: the first free spot in author
+      // order, and a declared drop for each label left without one.
+      chosen.fill(undefined)
+      spots.forEach((options, i) => {
+        chosen[i] = options.find((spot) => !chosen.some((c) => c !== undefined && overlaps(airy(c.box), spot.box)))
+      })
+    }
+    const droppedLabels = chosen.filter((c) => c === undefined).length
+    const placed = chosen.map((spot, i) =>
+      spot
+        ? { label: { x: spot.x, y: spot.y, anchor: spot.anchor, text: labels[i]!.text, fontSize: labels[i]!.fontSize } }
+        : {},
+    )
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
@@ -238,12 +357,12 @@ export const positioningMap: SvgComponent<PositioningMapComponent> = {
             {fit.text}
           </text>
         ))}
-        <text x={0} y={axisY + metaSize + 8} fontFamily={ctx.fonts.body} fontSize={xLow.fontSize} fill={metaInk}>
+        <text x={0} y={xLowEnd.y} fontFamily={ctx.fonts.body} fontSize={xLow.fontSize} fill={metaInk}>
           {xLow.text}
         </text>
         <text
           x={box.w}
-          y={axisY + metaSize + 8}
+          y={xHighEnd.y}
           textAnchor="end"
           fontFamily={ctx.fonts.body}
           fontSize={xHigh.fontSize}
@@ -251,10 +370,24 @@ export const positioningMap: SvgComponent<PositioningMapComponent> = {
         >
           {xHigh.text}
         </text>
-        <text x={axisX + 10} y={plotTop + metaSize} fontFamily={ctx.fonts.body} fontSize={yHigh.fontSize} fill={metaInk}>
+        <text
+          x={yHighEnd.x}
+          y={plotTop + metaSize}
+          textAnchor={yHighEnd.anchor}
+          fontFamily={ctx.fonts.body}
+          fontSize={yHigh.fontSize}
+          fill={metaInk}
+        >
           {yHigh.text}
         </text>
-        <text x={axisX + 10} y={plotBottom - 4} fontFamily={ctx.fonts.body} fontSize={yLow.fontSize} fill={metaInk}>
+        <text
+          x={yLowEnd.x}
+          y={plotBottom - 4}
+          textAnchor={yLowEnd.anchor}
+          fontFamily={ctx.fonts.body}
+          fontSize={yLow.fontSize}
+          fill={metaInk}
+        >
           {yLow.text}
         </text>
         {dots.map((dot, i) => (
