@@ -5,8 +5,10 @@ import type { DesignStory } from "../../design-story"
 export const schema = z
   .object({
     type: z.literal("numbered_cards"),
-    /** 编号网格列表（编辑部大数字目录）：自动编号 01..N，无卡壳左竖线
-     * 分栏，适合并列名录/作品集/要点集。≤4 项单行，5-8 项两行网格。 */
+    /** 编号卡片列表（编辑部大数字目录）：3-8 项自上而下排成一列，每项一张
+     * 卡片，卡内左端是自动编号徽章 01..N，右边是标题和可选正文，`sub` 限定语
+     * 右对齐贴在卡片右端。列表左侧一枚大圆标出条目总数。适合并列名录、作品集、
+     * 要点集。 */
     items: z
       .array(
         z
@@ -37,7 +39,7 @@ export const traits = {
 
 export const story: DesignStory = {
   name: "Numbered Index",
-  story: "Items numbered from 01 upward, divided by hairline rules into a grid. The contents page of a magazine, where the numbers are how you refer to things.",
+  story: "Items numbered from 01 upward, each on its own card in one column, beside a disc that counts them. The contents page of a magazine, where the numbers are how you refer to things.",
   positioning: "Choose it when each item carries its own title and a stable number it will be referred to by. Use bullets when short lines with no titles are enough, and steps when the order is a procedure to follow.",
   audience: "Readers who will point at item three later.",
   notFor: "A procedure to be carried out in order, which belongs in steps.",
