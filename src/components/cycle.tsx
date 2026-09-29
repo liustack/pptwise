@@ -10,7 +10,7 @@ import {
   layoutFormBody,
   layoutFormTitle,
 } from "./legibility"
-import { measureTextUnits } from "../lib/svg-text-layout"
+import { endsInCjkOrphan, measureTextUnits } from "../lib/svg-text-layout"
 import type { RenderDef, SvgComponent } from "./types"
 
 type CycleComponent = Extract<Component, { type: "cycle" }>
@@ -117,15 +117,17 @@ function splitsAWord(text: string, lines: string[]): boolean {
 
 /**
  * A node's label at the node's drawn radius `nr`. Inside the circle first;
- * when that cuts the label or breaks a word, the text area widens until it
- * holds the label whole, and the node becomes a capsule that wide.
+ * when that cuts the label, breaks a word, or leaves one CJK character alone
+ * on the second line (「试运」+「行」), the text area widens until it holds
+ * the label whole, and the node becomes a capsule that wide.
  */
 function nodeLabel(label: string, nr: number, fontFamily: string, textMax = CAPSULE_TEXT_MAX): NodeLabel {
   const fontSize = Math.max(FORM_BODY_FLOOR, Math.min(FORM_TITLE_FLOOR, Math.round(nr * NODE_TEXT_RATIO)))
   const inCircle = 2 * nr * 0.72
   const at = (maxWidth: number) =>
     layoutFormTitle(label, { maxWidth, fontSize, floor: FORM_BODY_FLOOR, maxLines: 2, fontFamily })
-  const clean = (fit: ReturnType<typeof at>) => !fit.truncated && !splitsAWord(label, fit.lines)
+  const clean = (fit: ReturnType<typeof at>) =>
+    !fit.truncated && !splitsAWord(label, fit.lines) && !endsInCjkOrphan(fit.lines)
   const first = at(inCircle)
   if (clean(first)) return { ...first, halfLen: 0 }
   const widestAllowed = Math.max(inCircle, textMax)

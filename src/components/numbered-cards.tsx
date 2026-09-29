@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "@/lib/svg-text-layout"
 import { readableOn } from "../render/ink"
+import { TEXT_INK_ASCENT, TEXT_INK_DESCENT } from "../render/depth-contract/geometry"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import {
   FORM_BODY_FLOOR,
@@ -34,6 +35,17 @@ const SOFT_LEFT = 88
 const WRAP_PROBE_LINES = 64
 const TITLE_MAX_LINES = 2
 const BODY_MAX_LINES = 4
+/**
+ * Air between a pill's edge and the ink of the words inside it, top and
+ * bottom. The rubric's floor for a title against a card's top edge is 8px
+ * (`evals/gallery/rubric/breathing.md`), and a pill's own title is no less a
+ * title against a card edge. The words used to be centred by their line
+ * boxes with 2px to spare, which left a title's caps 5-6px under the pill's
+ * top once the pills had closed up to fit a short box.
+ */
+const TEXT_INK_AIR = 8
+/** Where a line's baseline sits below the top of its line box. */
+const BASELINE_DROP = 0.85
 
 /**
  * `items[].sub` — the qualifier an author hangs on a card: a quarter, a
@@ -56,20 +68,25 @@ function pillRx(pillH: number, ctx: ComponentCtx): number {
   return ctx.shape?.radius ?? pillH / 2
 }
 
-function layoutPills(n: number, w: number, hHint?: number, pillGap = PILL_GAP) {
+/**
+ * `padY` is the air above and below the whole stack, inside the box. It has
+ * nothing to separate from (the box edge is not drawn), so a box too short
+ * for the pills' words closes it after the gaps between pills.
+ */
+function layoutPills(n: number, w: number, hHint?: number, pillGap = PILL_GAP, padY = PAD) {
   const gaps = Math.max(n - 1, 0) * pillGap
   let pillH = Math.min(
     88,
     Math.max(BODY_PILL_MIN, (STACK_CAP - gaps) / Math.max(n, 1)),
   )
   if (hHint != null && n > 0) {
-    const fitted = (hHint - PAD * 2 - gaps) / n
+    const fitted = (hHint - padY * 2 - gaps) / n
     if (Number.isFinite(fitted)) pillH = Math.min(pillH, Math.max(0, fitted))
   }
   const stackH = n <= 0 ? 0 : n * pillH + gaps
   const innerW = Math.max(0, w - COL_GAP - PAD * 2)
-  const boxH = hHint != null && hHint > 0 ? hHint : stackH + PAD * 2
-  const availH = Math.max(0, boxH - PAD * 2)
+  const boxH = hHint != null && hHint > 0 ? hHint : stackH + padY * 2
+  const availH = Math.max(0, boxH - padY * 2)
   const maxByW = Math.max(0, innerW - MIN_PILL_W)
   const maxFit = Math.min(LEFT_CAP, availH, maxByW)
   const preferred = Math.min(stackH * 0.42, innerW * 0.16, LEFT_CAP)
@@ -78,12 +95,13 @@ function layoutPills(n: number, w: number, hHint?: number, pillGap = PILL_GAP) {
   if (leftSize < SOFT_LEFT) leftSize = Math.min(SOFT_LEFT, maxFit)
   leftSize = Math.max(0, leftSize)
   const pillW = Math.max(MIN_PILL_W, innerW - leftSize)
-  const h = Math.max(stackH, leftSize) + PAD * 2
+  const h = Math.max(stackH, leftSize) + padY * 2
   return {
     n,
     pillH,
     pillW,
     pillGap,
+    padY,
     stackH,
     leftSize,
     h: hHint != null && hHint > 0 ? hHint : h,
@@ -93,6 +111,27 @@ function layoutPills(n: number, w: number, hHint?: number, pillGap = PILL_GAP) {
 
 type PillLayout = ReturnType<typeof layoutPills>
 type Item = NumberedCardsComponent["items"][number]
+
+/**
+ * Where the ink of a pill's words starts below the top of their first line
+ * box, and how tall it stands: the title's caps down to the last line's
+ * descenders, by the shared ink model (`TEXT_INK_ASCENT`/`_DESCENT`).
+ */
+function inkExtent(titleLines: number, bodyLines: number): { top: number; h: number } {
+  const titleLH = formLineHeight(FORM_TITLE_FLOOR)
+  const bodyLH = formLineHeight(FORM_BODY_FLOOR)
+  const top = (BASELINE_DROP - TEXT_INK_ASCENT) * FORM_TITLE_FLOOR
+  const bottom =
+    bodyLines > 0
+      ? titleLines * titleLH + TITLE_BODY_GAP + (bodyLines - 1) * bodyLH + (BASELINE_DROP + TEXT_INK_DESCENT) * FORM_BODY_FLOOR
+      : (titleLines - 1) * titleLH + (BASELINE_DROP + TEXT_INK_DESCENT) * FORM_TITLE_FLOOR
+  return { top, h: bottom - top }
+}
+
+/** The pill height `titleLines` and `bodyLines` need with their air. */
+function pillHeightFor(titleLines: number, bodyLines: number): number {
+  return inkExtent(titleLines, bodyLines).h + TEXT_INK_AIR * 2
+}
 
 /** Everything a pill sets inside itself, at the geometry `L` hands it. */
 function pillText(item: Item, L: PillLayout, ctx: ComponentCtx, bodyCap = BODY_MAX_LINES) {
@@ -115,9 +154,8 @@ function pillText(item: Item, L: PillLayout, ctx: ComponentCtx, bodyCap = BODY_M
       : null
   const subW = sub ? measureTextUnits(sub.text, { fontFamily: ctx.fonts.body }) * sub.fontSize + SUB_GAP : 0
   const textW = Math.max(24, textRight - textX - subW)
-  const innerH = Math.max(0, L.pillH - 4)
-  const titleLH = formLineHeight(FORM_TITLE_FLOOR)
-  const titleKeep = Math.max(1, Math.min(TITLE_MAX_LINES, Math.floor(innerH / titleLH) || 1))
+  let titleKeep = TITLE_MAX_LINES
+  while (titleKeep > 1 && pillHeightFor(titleKeep, 0) > L.pillH) titleKeep -= 1
   const title = wrapPillText(item.title, {
     maxWidth: textW,
     fontSize: FORM_TITLE_FLOOR,
@@ -126,10 +164,10 @@ function pillText(item: Item, L: PillLayout, ctx: ComponentCtx, bodyCap = BODY_M
     bold: true,
   })
   const titleBlockH = title.lines.length * title.lineHeight
-  const leftover = innerH - titleBlockH - (showText && item.text ? TITLE_BODY_GAP : 0)
-  const bodyLH = formLineHeight(FORM_BODY_FLOOR)
-  const bodyMaxLines =
-    showText && item.text && leftover >= bodyLH ? Math.min(bodyCap, Math.floor(leftover / bodyLH)) : 0
+  let bodyMaxLines = 0
+  if (showText && item.text) {
+    while (bodyMaxLines < bodyCap && pillHeightFor(title.lines.length, bodyMaxLines + 1) <= L.pillH) bodyMaxLines += 1
+  }
   const body =
     bodyMaxLines > 0 && item.text
       ? wrapPillText(item.text, {
@@ -144,7 +182,7 @@ function pillText(item: Item, L: PillLayout, ctx: ComponentCtx, bodyCap = BODY_M
   const fullBody = item.text
     ? wrapPillText(item.text, { maxWidth: textW, fontSize: FORM_BODY_FLOOR, maxKeep: bodyCap, fontFamily: ctx.fonts.body })
     : null
-  const neededH = 4 + titleBlockH + (fullBody && fullBody.lines.length > 0 ? TITLE_BODY_GAP + fullBody.lines.length * bodyLH : 0)
+  const neededH = pillHeightFor(title.lines.length, fullBody?.lines.length ?? 0)
   return { showText, sub, title, titleBlockH, body, neededH }
 }
 
@@ -192,11 +230,17 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
   let L = layoutPills(n, box.w, box.h)
   // A box too short for a pill's body closes up the air between pills first,
   // down to `PILL_GAP_TIGHT`, before any sentence loses its second line.
+  // The air above and below the whole stack closes next, since the box edge
+  // it keeps the pills from is not drawn.
   if (box.h != null && box.h > 0 && n > 1) {
     const needed = Math.max(...component.items.map((item) => pillText(item, L, ctx).neededH))
     if (needed > L.pillH) {
       const gap = Math.max(PILL_GAP_TIGHT, (box.h - PAD * 2 - n * needed) / (n - 1))
       if (gap < PILL_GAP) L = layoutPills(n, box.w, box.h, gap)
+    }
+    if (needed > L.pillH) {
+      const padY = Math.max(0, (box.h - n * needed - (n - 1) * L.pillGap) / 2)
+      if (padY < PAD) L = layoutPills(n, box.w, box.h, L.pillGap, padY)
     }
   }
 
@@ -246,9 +290,11 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
         const textX = badgeRight + BADGE_TEXT_GAP
         const textRight = pillX + L.pillW - TEXT_PAD
         const { sub, title, titleBlockH, body } = pillText(item, L, ctx)
-        const bodyBlockH = body ? body.lines.length * body.lineHeight : 0
-        const stackTextH = titleBlockH + (body ? TITLE_BODY_GAP + bodyBlockH : 0)
-        const textTop = pillY + (L.pillH - stackTextH) / 2
+        // Centred by ink, not by line boxes: a line's leading sits mostly
+        // under its baseline, so centring the boxes left the caps closer to
+        // the top edge than the last line's descenders were to the bottom.
+        const ink = inkExtent(title.lines.length, body?.lines.length ?? 0)
+        const textTop = pillY + (L.pillH - ink.h) / 2 - ink.top
         // A short pill (8 items in a constrained slot) turns `showText` off,
         // and the body and the sub then go unbuilt. Both are authored words,
         // so both leave the same mark on the pill they could not fit in —
@@ -286,7 +332,7 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
                 key={`t-${li}`}
                 data-truncated={formTextClipMarker(title, li)}
                 x={textX}
-                y={textTop + li * title.lineHeight + title.fontSize * 0.85}
+                y={textTop + li * title.lineHeight + title.fontSize * BASELINE_DROP}
                 fontSize={title.fontSize}
                 fontWeight="bold"
                 fill={ctx.colors.text}
@@ -307,7 +353,7 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
                       titleBlockH +
                       TITLE_BODY_GAP +
                       li * body.lineHeight +
-                      body.fontSize * 0.85
+                      body.fontSize * BASELINE_DROP
                     }
                     fontSize={body.fontSize}
                     fill={ctx.colors.muted}

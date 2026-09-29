@@ -315,6 +315,32 @@ describe("cycle component", () => {
     }
   })
 
+  it("never leaves one CJK character alone on a node's second line", () => {
+    // Pre-fix the brief gallery page drew 「方案评」+「审」-style labels and
+    // 「试运」+「行」. Four characters now split two and two in the circle.
+    // Three have no character to spare, so the node widens into a capsule
+    // and holds the label on one line.
+    const ir = {
+      type: "cycle" as const,
+      title: "产品进展",
+      items: [
+        { label: "需求确认", description: "存量客户席位扩容" },
+        { label: "方案评审", description: "标准化开通模板" },
+        { label: "席位开通", description: "自建基建替换" },
+        { label: "权限配置", description: "客群场景复制" },
+        { label: "试运行", description: "开通流程自动化" },
+      ],
+    }
+    const { container } = svg(cycle.render(ir, { x: 96, y: 186, w: 1088, h: 458 }, themed("brief")))
+    const labels = Array.from(container.querySelectorAll("[data-audit-box]")).map((group) =>
+      Array.from(group.querySelectorAll("text")).map((t) => t.textContent ?? ""),
+    )
+    expect(labels[1]).toEqual(["方案", "评审"])
+    expect(labels[4]).toEqual(["试运行"])
+    for (const lines of labels) expect(Array.from(lines[lines.length - 1]!).length).toBeGreaterThan(1)
+    expect(nodeShapes(container)[4]!.shape).toBe("capsule")
+  })
+
   it("scales into a 640×392 slot, stays centered, and caps in-circle type", () => {
     const ir = {
       type: "cycle" as const,
@@ -331,16 +357,14 @@ describe("cycle component", () => {
     const { container } = svg(cycle.render(ir, box, themed("museum")))
     const root = container.querySelector("svg") ?? container
     const { dx, dy } = parseTranslate(root.querySelector("g")!)
-    const nodes = Array.from(container.querySelectorAll("circle")).map((c) => ({
-      cx: dx + Number(c.getAttribute("cx")),
-      cy: dy + Number(c.getAttribute("cy")),
-      r: Number(c.getAttribute("r")),
-    }))
+    // 「试运行」 has no character to spare for a two-line circle, so its node
+    // is a capsule. Count circles and capsules alike.
+    const nodes = nodeShapes(container).map((n) => ({ ...n, cx: dx + n.cx, cy: dy + n.cy }))
     expect(nodes).toHaveLength(5)
-    const minX = Math.min(...nodes.map((n) => n.cx - n.r))
-    const maxX = Math.max(...nodes.map((n) => n.cx + n.r))
-    const minY = Math.min(...nodes.map((n) => n.cy - n.r))
-    const maxY = Math.max(...nodes.map((n) => n.cy + n.r))
+    const minX = Math.min(...nodes.map((n) => n.cx - n.halfW))
+    const maxX = Math.max(...nodes.map((n) => n.cx + n.halfW))
+    const minY = Math.min(...nodes.map((n) => n.cy - n.halfH))
+    const maxY = Math.max(...nodes.map((n) => n.cy + n.halfH))
     expect(minX).toBeGreaterThanOrEqual(box.x - 2)
     expect(maxX).toBeLessThanOrEqual(box.x + box.w + 2)
     expect(minY).toBeGreaterThanOrEqual(box.y - 2)

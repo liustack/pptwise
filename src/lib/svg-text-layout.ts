@@ -154,6 +154,11 @@ const WIDE_CHAR_RE = /[\u2014\u2018-\u201f\u2e80-\u9fff\uff00-\uffef]/
 // Microsoft YaHei. Full corpus and methodology: task-3-report.md
 // (borrow-wave scratchpad, not shipped in this repo).
 //
+// Later correction: "safe" held for overflow but not for wrapping. Over a
+// whole Georgia sentence those per-class gaps add up to 20-25% too wide,
+// enough to wrap text that fits on one line, so Georgia Regular now
+// measures from its exact table (see `measureTextUnits`).
+//
 // Separately (not a width-calibration finding, recorded here since it
 // surfaced during this same measurement): neither Georgia nor Consolas
 // (src/components/code.tsx) has any CJK glyph in its `cmap` at all --
@@ -427,6 +432,9 @@ const EXACT_TABLE_FOR: Readonly<Partial<Record<FaceKey, ExactFaceTable>>> = {
   yahei: { regular: YAHEI_REGULAR_EXACT, bold: YAHEI_BOLD_EXACT },
 }
 
+/** Faces whose Regular weight measures from its exact table by default. */
+const REGULAR_EXACT_FACES: ReadonlySet<FaceKey> = new Set<FaceKey>(["georgia"])
+
 /**
  * Classifies a resolved CSS font-family list (`ComponentCtx.fonts.*`, i.e.
  * `resolveFontStack`'s output) down to the face this pack measured, by its
@@ -480,25 +488,31 @@ export function measureTextUnits(text: string, weight?: TextWeightHint): number 
   const mode: WeightMode = weight?.bold ? "bold" : "regular"
   const faceKey = classifyFaceKey(weight?.fontFamily)
   const classTable = CLASS_TABLE_FOR[faceKey]
-  // Exact model applies to Bold only, even though a genuine Regular exact
-  // table exists right above (`GEORGIA_REGULAR_EXACT`/`YAHEI_REGULAR_EXACT`)
-  // -- Regular-weight text must stay byte-identical to this file's pre-fix
-  // arithmetic for every call site this whole task didn't touch (the "non-
-  // bold byte-inertness" hard requirement), and Georgia/YaHei's own
-  // class-average tables already encode that as a literal `regular: 1`
-  // (`NO_CORRECTION`) on every class -- falling through to
-  // `classAverageUnits` at Regular weight reproduces the original
-  // unweighted sum exactly, unchanged by this file's whole existence. The
-  // Regular exact tables are real, correct data (kept for documentation and
-  // any future caller that legitimately wants exact Regular widths -- they
-  // even surface a genuine, pre-existing, bold-unrelated finding: "Components
-  // Demo" sits ~1.25% past its own declared budget at Regular weight too,
-  // root-cause.md's own number) -- but *exposing* that pre-existing gap
-  // through this function's default Regular path would be an undisclosed
-  // behavior change on text this fix promised to leave alone, not something
-  // this task's mandate covers.
+  // Bold always takes the exact table. Regular takes it for Georgia, and
+  // for any face when the caller asks (`exact`).
+  //
+  // Regular used to stay on the class-average path for every face so that
+  // non-bold text kept its pre-bold-fix geometry. For Georgia that path runs
+  // wide. Summing `GEORGIA_REGULAR_EXACT` (which matches the macOS
+  // Georgia.ttf `hmtx` to 0.0001 em on all 95 codepoints) over the brief
+  // gallery's sentences puts the class average 20-25% over the real advance,
+  // and rsvg's rendered ink agrees with the exact sum to within 0.3%. The
+  // cause is Georgia's narrow lowercase, space, and punctuation against the
+  // 0.56/0.35/0.46 class weights: "Vertical playbook replication" is 15.92
+  // em by class and 12.72 em real, so a note that fits one line wrapped to
+  // two (the brief timeline's last item, the chevron's last note). Exact
+  // advances carry no class-average error and Georgia's kerning only
+  // tightens pairs, so the exact sum still errs a hair wide, never narrow.
+  //
+  // Microsoft YaHei, SimSun, and KaiTi Regular run 9-16% wide on English
+  // for the same reason (class weights, not their own glyphs). They stay
+  // on the class path until each gets its own measured change, since
+  // switching them moves every English and mixed page of the themes that
+  // body-set in them.
   const exactTable =
-    mode === "bold" || weight?.exact ? EXACT_TABLE_FOR[faceKey]?.[mode] : undefined
+    mode === "bold" || weight?.exact || REGULAR_EXACT_FACES.has(faceKey)
+      ? EXACT_TABLE_FOR[faceKey]?.[mode]
+      : undefined
   return Array.from(text).reduce((sum, char) => {
     // WIDE_CHAR_RE (CJK/ideographic-punctuation/fullwidth) always takes the
     // class path, even under an exact-model face: the exact tables only
@@ -799,6 +813,11 @@ interface WrapResult {
    * this value back in as `maxUnits` is, by construction, the exact
    * narrowest budget under which every such run stays whole. */
   minSplitFreeUnits: number
+  /** `true` iff some paragraph ended on a lone CJK character and
+   * `avoidCjkOrphan` moved a character down to keep it company. The greedy
+   * lines had a widow even though the returned ones may no longer measure
+   * as one, so `balanceWrappedLines` reads this to still rebalance. */
+  orphanFixed: boolean
 }
 
 /**
@@ -872,10 +891,113 @@ function wideBreakOffset(text: string): number {
   return 0
 }
 
+/**
+ * A CJK orphan (孤字): a line that holds exactly one ideograph once the
+ * punctuation kinsoku pins to it is set aside: 「本」, 「审」, 「娘」」. A
+ * line with any Latin letter or digit on it is never one: a lone English
+ * word ending a paragraph is ordinary, not a broken read.
+ */
+function isCjkOrphanLine(line: string): boolean {
+  let core = 0
+  for (const ch of line) {
+    if (/\s/.test(ch) || LINE_START_FORBIDDEN.test(ch) || LINE_END_FORBIDDEN.test(ch)) continue
+    if (!WIDE_CHAR_RE.test(ch)) return false
+    core += 1
+    if (core > 1) return false
+  }
+  return core === 1
+}
+
+/**
+ * True when wrapped `lines` end on a CJK orphan. The shared wrap already
+ * settles every orphan it can at a fixed width, so this is for a caller that
+ * owns its width and can widen past what a fixed width allows (a cycle
+ * node's capsule, whose 「季后」+「赛」 has no character to spare).
+ */
+export function endsInCjkOrphan(lines: readonly string[]): boolean {
+  return lines.length > 1 && isCjkOrphanLine(lines[lines.length - 1])
+}
+
+/**
+ * Keeps a paragraph from ending on a single CJK character.
+ *
+ * The greedy pack fills every line to the budget, so a paragraph one glyph
+ * longer than a whole number of lines ends on that glyph alone: 「植物染批次
+ * 色差需沟通成」+「本」, 「方案评」+「审」. Chinese typesetting never lets one
+ * character stand as a paragraph's last line, so this moves the fewest
+ * characters it can from the end of the line before down with it, which
+ * rebalances the last two lines without touching any line above them.
+ *
+ * The move never adds a line, never widens a line past `maxUnits`, and
+ * never leaves the line above an orphan itself, so a caller's line cap and
+ * no-truncation guarantee hold exactly as before. It tries boundaries
+ * between pieces first, latest first, so a space-delimited word travels
+ * whole. Only when none works does it cut inside a piece, and then only
+ * between two CJK characters, which is the same rule `wideBreakOffset` cuts
+ * by: a Latin word is never split here. Every candidate boundary still has
+ * to pass kinsoku. When nothing qualifies (「季后」+「赛」 has no character to
+ * spare) the greedy lines stand.
+ *
+ * `lineStarts` holds the piece index each of `paragraphLines` starts at.
+ * Returns the fixed lines, and may split one piece of `pieces` in place.
+ */
+function avoidCjkOrphan(
+  pieces: WrapPiece[],
+  lineStarts: number[],
+  paragraphLines: string[],
+  maxUnits: number,
+  weight?: TextWeightHint,
+): string[] {
+  const n = paragraphLines.length
+  if (n < 2 || !isCjkOrphanLine(paragraphLines[n - 1])) return paragraphLines
+  const prevStart = lineStarts[n - 2]
+  const lastStart = lineStarts[n - 1]
+
+  const settle = (cut: number): string[] | null => {
+    const before = pieces[cut - 1].text
+    const after = pieces[cut].text
+    if (!allowsLineBreakBetween(before[before.length - 1], after[0])) return null
+    const prev = joinPieces(pieces, prevStart, cut)
+    const last = joinPieces(pieces, cut, pieces.length)
+    if (isCjkOrphanLine(prev) || isCjkOrphanLine(last)) return null
+    if (measureTextUnits(last, weight) > maxUnits) return null
+    return [...paragraphLines.slice(0, n - 2), prev, last]
+  }
+
+  for (let cut = lastStart - 1; cut > prevStart; cut -= 1) {
+    if (measureTextUnits(joinPieces(pieces, cut, pieces.length), weight) > maxUnits) break
+    const fixed = settle(cut)
+    if (fixed) return fixed
+  }
+
+  for (let j = lastStart - 1; j >= prevStart; j -= 1) {
+    const whole = pieces[j]
+    const chars = Array.from(whole.text)
+    for (let k = chars.length - 1; k >= 1; k -= 1) {
+      if (!WIDE_CHAR_RE.test(chars[k - 1]) || !WIDE_CHAR_RE.test(chars[k])) continue
+      pieces.splice(
+        j,
+        1,
+        { text: chars.slice(0, k).join(""), space: whole.space },
+        { text: chars.slice(k).join(""), space: false },
+      )
+      // Moving more only widens the new last line, so the first cut that
+      // overflows ends the search.
+      const tooWide = measureTextUnits(joinPieces(pieces, j + 1, pieces.length), weight) > maxUnits
+      const fixed = tooWide ? null : settle(j + 1)
+      if (fixed) return fixed
+      pieces.splice(j, 2, whole)
+      if (tooWide) return paragraphLines
+    }
+  }
+  return paragraphLines
+}
+
 function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint): WrapResult {
   const lines: string[] = []
   let hadSplit = false
   let minSplitFreeUnits = 0
+  let orphanFixed = false
 
   for (const paragraph of text.split(/\n+/)) {
     const { tokens, spaceDelimited } = tokenize(paragraph)
@@ -896,6 +1018,8 @@ function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint):
       }
     }
 
+    const paragraphLines: string[] = []
+    const lineStarts: number[] = [0]
     let lineStart = 0
     let current = ""
     for (let i = 0; i < pieces.length; i += 1) {
@@ -930,22 +1054,26 @@ function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint):
           }
         }
         if (cut === i) {
-          lines.push(current)
+          paragraphLines.push(current)
           current = pieces[i].text
         } else {
-          lines.push(joinPieces(pieces, lineStart, cut))
+          paragraphLines.push(joinPieces(pieces, lineStart, cut))
           current = joinPieces(pieces, cut, i + 1)
         }
         lineStart = cut
+        lineStarts.push(cut)
       } else {
         current = candidate
       }
     }
 
-    if (current) lines.push(current)
+    if (current) paragraphLines.push(current)
+    const settled = avoidCjkOrphan(pieces, lineStarts, paragraphLines, maxUnits, weight)
+    if (settled !== paragraphLines) orphanFixed = true
+    lines.push(...settled)
   }
 
-  return { lines, hadSplit, minSplitFreeUnits }
+  return { lines, hadSplit, minSplitFreeUnits, orphanFixed }
 }
 
 /**
@@ -959,12 +1087,22 @@ function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint):
  * steps up ×1.06 until the re-wrap stops exceeding the original line count;
  * if 8 steps can't get there, the greedy result stands. Explicit newlines are
  * the author's own breaks — those layouts are returned untouched.
+ *
+ * `orphanFixed` is the wrap's own report that the greedy lines ended on a
+ * lone CJK character before `avoidCjkOrphan` moved one down (「年度战略回」+
+ * 「顾」 arrives here as 「年度战略」+「回顾」). That was a widow too, so it
+ * rebalances even though the lines it is handed no longer measure as one.
  */
-function balanceWrappedLines(content: string, lines: string[], weight?: TextWeightHint): string[] {
+function balanceWrappedLines(
+  content: string,
+  lines: string[],
+  weight?: TextWeightHint,
+  orphanFixed = false,
+): string[] {
   if (lines.length < 2 || content.includes("\n")) return lines
   const units = lines.map((l) => measureTextUnits(l, weight))
   const widest = Math.max(...units)
-  if (units[units.length - 1] >= widest * 0.5) return lines
+  if (!orphanFixed && units[units.length - 1] >= widest * 0.5) return lines
   const total = units.reduce((sum, u) => sum + u, 0)
   // Token floor must mirror `tokenize`: space-delimited text wraps by words,
   // so flooring at the longest word keeps `splitLongToken` from ever firing;
@@ -1196,11 +1334,15 @@ export function layoutSvgText(
   }
   const legacyHadSplit = attempt.hadSplit
 
+  // Which wrap the chosen lines came from settled an orphan. A merged
+  // fallback is no wrap's output, so it carries no such report.
+  let orphanFixed = attempt.orphanFixed
   if (legacyLines.length > maxLines) {
     legacyLines = [
       ...legacyLines.slice(0, maxLines - 1),
       legacyLines.slice(maxLines - 1).join(""),
     ]
+    orphanFixed = false
   }
 
   let lines = legacyLines
@@ -1301,14 +1443,17 @@ export function layoutSvgText(
           admissible = fontSizeFor(splitFreeAttempt.lines) >= minPt
         }
       }
-      if (admissible) lines = splitFreeAttempt.lines
+      if (admissible) {
+        lines = splitFreeAttempt.lines
+        orphanFixed = splitFreeAttempt.orphanFixed
+      }
     }
   }
 
   // After the merge fallback a too-long text's last line is long, not a
   // widow, so balancing naturally skips it — only genuine widows re-wrap.
   if (options.balanceLines) {
-    lines = balanceWrappedLines(content, lines, weight)
+    lines = balanceWrappedLines(content, lines, weight, orphanFixed)
   }
 
   let fontSize = fontSizeFor(lines)

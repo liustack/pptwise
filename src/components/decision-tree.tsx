@@ -138,18 +138,68 @@ function resolve(component: DecisionTreeComponent, w: number, boxH?: number): Ge
   }
 }
 
-/** Out of `from`'s right edge, across a shared spine, into `to`'s left edge. */
-function elbow(from: Node, to: Node, arrow: number): { d: string; tipY: number; spine: number } {
+/**
+ * Out of `from`'s right edge, across a shared spine, into `to`'s left edge.
+ * The spine stands midway across the gutter unless the caller moved it.
+ */
+function elbow(
+  from: Node,
+  to: Node,
+  arrow: number,
+  spineAt?: number,
+): { d: string; tipY: number; spine: number } {
   const ay = from.y + from.h / 2
   const by = to.y + to.h / 2
   const ax = from.x + from.w
   const bx = to.x - arrow
-  const spine = Math.round((ax + bx) / 2)
+  const spine = spineAt ?? Math.round((ax + bx) / 2)
   if (Math.abs(ay - by) < 0.5) return { d: `M ${ax} ${ay} L ${bx} ${ay}`, tipY: ay, spine }
   return { d: `M ${ax} ${ay} L ${spine} ${ay} L ${spine} ${by} L ${bx} ${by}`, tipY: by, spine }
 }
 
 const ARROW = 7
+/** A condition's air to the spine on its left and to the arrow on its right. */
+const LABEL_SPINE_AIR = 5
+const LABEL_ARROW_AIR = 6
+/** The shortest run out of a card before its spine turns. */
+const SPINE_MIN_STUB = 16
+
+/** Whether a condition set above the line at `tipY` stands level with `from`. */
+function levelWithSource(from: Node, tipY: number, edgeSize: number): boolean {
+  const top = tipY - 7 - edgeSize
+  const bottom = tipY - 7
+  return !(bottom < from.y || top > from.y + from.h)
+}
+
+/**
+ * The spine one source's edges share. Midway across the gutter by default.
+ * A condition level with its source card stands between the spine and the
+ * arrow, so when the widest such condition needs more than half the gutter
+ * ("62%" in Georgia is 31px against a 31px half), the spine steps back
+ * toward the source card rather than the condition losing its "%". It never
+ * steps back past `SPINE_MIN_STUB`, and every edge out of one card keeps the
+ * one spine.
+ */
+function sharedSpine(
+  from: Node,
+  targets: readonly Node[],
+  edges: readonly (string | undefined)[],
+  edgeSize: number,
+  fontFamily: string,
+): number | undefined {
+  const target = targets[0]
+  if (!target) return undefined
+  const ax = from.x + from.w
+  const midway = Math.round((ax + target.x - ARROW) / 2)
+  let spine = midway
+  targets.forEach((to, i) => {
+    const edge = edges[i]?.trim()
+    if (!edge || !levelWithSource(from, to.y + to.h / 2, edgeSize)) return
+    const need = measureTextUnits(edge, { fontFamily }) * edgeSize
+    spine = Math.min(spine, Math.floor(to.x - ARROW - LABEL_ARROW_AIR - LABEL_SPINE_AIR - need))
+  })
+  return Math.max(Math.min(spine, midway), Math.ceil(ax + SPINE_MIN_STUB))
+}
 
 function arrowHead(x: number, y: number, color: string): ReactElement {
   return <polygon points={`${x},${y - ARROW * 0.6} ${x + ARROW},${y} ${x},${y + ARROW * 0.6}`} fill={color} />
@@ -223,14 +273,12 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
       if (!value) return null
       // The line the label occupies, so "does it clear the card" is asked of
       // the text's own band and not of a point on it.
-      const top = tipY - 7 - edgeSize
-      const bottom = tipY - 7
-      const clear = bottom < from.y || top > from.y + from.h
-      const right = clear ? spine - 6 : to.x - ARROW - 6
+      const clear = !levelWithSource(from, tipY, edgeSize)
+      const right = clear ? spine - 6 : to.x - ARROW - LABEL_ARROW_AIR
       // Clear of its card, a label may run back across that card's whole
       // column: a condition like "Opening automation · 39%" is a phrase, and
       // stopping it halfway across left it at "Opening automation".
-      const left = clear ? from.x : spine + 5
+      const left = clear ? from.x : spine + LABEL_SPINE_AIR
       const fit = fitFormLine(value, {
         maxWidth: Math.max(24, right - left),
         fontSize: edgeSize,
@@ -471,10 +519,27 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
       )
     }
 
+    const rootSpine = sharedSpine(
+      g.root,
+      branchCards.map(({ node }) => node),
+      component.branches.map((branch) => branch.edge),
+      edgeSize,
+      ctx.fonts.body,
+    )
+    const outcomeSpines = g.outcomes.map((group, b) =>
+      sharedSpine(
+        branchCards[b]!.node,
+        group,
+        component.branches[b]!.outcomes.map((outcome) => outcome.edge),
+        edgeSize,
+        ctx.fonts.body,
+      ),
+    )
+
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         {branchCards.map(({ node: branch }, b) => {
-          const { d, tipY, spine } = elbow(g.root, branch, ARROW)
+          const { d, tipY, spine } = elbow(g.root, branch, ARROW, rootSpine)
           return (
             <g key={`root-edge-${b}`}>
               <path d={d} fill="none" stroke={line} strokeWidth={1.25} />
@@ -486,7 +551,7 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
         {g.outcomes.flatMap((group, b) =>
           group.map((outcome, o) => {
             const from = branchCards[b]!.node
-            const { d, tipY, spine } = elbow(from, outcome, ARROW)
+            const { d, tipY, spine } = elbow(from, outcome, ARROW, outcomeSpines[b])
             return (
               <g key={`edge-${b}-${o}`}>
                 <path d={d} fill="none" stroke={line} strokeWidth={1.25} />

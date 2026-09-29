@@ -208,6 +208,31 @@ describe("icon_cards component", () => {
     expect(markupOf(iconCards.render(four, BOX, ctx))).toBe(markupOf(iconCards.render(four, BOX, ctx)))
   })
 
+  it("tops every column in a row at one line, so icons and titles align across it", () => {
+    // Pre-fix each column centred its own stack in the row, so a column with
+    // a longer body sat higher than its neighbours and the icons stepped
+    // across the row (brief and thesis gallery pages).
+    const uneven = {
+      type: "icon_cards" as const,
+      items: [
+        card("In-house workspace compute", "Moving workloads off public cloud dropped per-seat monthly cost by thirty-one percent.", "target"),
+        card("Vertical playbook replication", "East China penetration is half of South China.", "gauge"),
+        card("Staffing-path automation", "Client managers are running near their load ceiling, so expansion is gated on hiring.", "shield"),
+        card("Channel partner", "Two competitors bid below cost.", "rocket"),
+      ],
+    }
+    const { container } = svg(iconCards.render(uneven, { x: 96, y: 330, w: 1088, h: 252 }, themeCtx("brief")))
+    const groups = Array.from(container.querySelectorAll("[data-audit-box]"))
+    expect(groups).toHaveLength(4)
+    const nodeCy = groups.map((g) => Number(g.querySelector(":scope > circle")!.getAttribute("cy")))
+    expect(new Set(nodeCy).size).toBe(1)
+    const titleY = groups.map((g) => Number(g.querySelector("text")!.getAttribute("y")))
+    expect(new Set(titleY).size).toBe(1)
+    // The bodies still differ in length, so the stacks differ in height.
+    const lastY = groups.map((g) => Math.max(...Array.from(g.querySelectorAll("text")).map((t) => Number(t.getAttribute("y")))))
+    expect(new Set(lastY).size).toBeGreaterThan(1)
+  })
+
   it("shrinks the icon node before it cuts a sentence the box could hold", () => {
     const english = {
       type: "icon_cards" as const,
@@ -219,7 +244,10 @@ describe("icon_cards component", () => {
       ],
     }
     const ctx = themeCtx("brief")
-    const { container } = svg(iconCards.render(english, { x: 96, y: 330, w: 1088, h: 252 }, ctx))
+    // 224px: short enough that these four need a smaller node than the
+    // natural 44. At 252px they used to, while Georgia was priced 20% wide.
+    const h = 224
+    const { container } = svg(iconCards.render(english, { x: 96, y: 330, w: 1088, h }, ctx))
     expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
     const words = Array.from(container.querySelectorAll("text"))
       .map((t) => t.textContent ?? "")
@@ -231,7 +259,7 @@ describe("icon_cards component", () => {
       expect(r).toBeLessThan(44)
       expect(r).toBeGreaterThanOrEqual(28)
     }
-    for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y"))).toBeLessThanOrEqual(252)
+    for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y"))).toBeLessThanOrEqual(h)
   })
 
   it("sizes the type against the title lines it then reserves, so a tall box does not cut the body", () => {
