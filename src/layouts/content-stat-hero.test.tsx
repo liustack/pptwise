@@ -251,8 +251,11 @@ describe("a hero figure is never cut", () => {
     for (const run of runs) expect(run.text, theme).toContain("1234567890")
   })
 
+  // Forty digits: too wide for every skin even at its floor. Twenty used to
+  // be, until SimSun's digits were measured at their real half em, and four
+  // skins now set twenty whole on the hero, inside the margin.
   it.each(SKINNED)("%s hands the page over rather than cut a figure too long for it", (theme) => {
-    const value = "12345678901234567890"
+    const value = "1234567890".repeat(4)
     const { root } = drawHero(theme, { value, unit: "万元", label: "累计" })
     expect(root.querySelector('[data-hero-mode="fallback"], [data-face-mode="fallback"]'), theme).not.toBeNull()
     const runs = figureRuns(root, value)
