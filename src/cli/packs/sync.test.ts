@@ -9,6 +9,7 @@ import { installNodePlatform } from "@/platform/node"
 import { buildPackZip, sha256Hex, type PackFixture } from "./__fixtures__/pack-zip"
 import { runLicenseSet } from "./license"
 import { listInstalledPacks } from "./store"
+import { VERSION } from "../../version"
 import { packsServerUrl, runPacksList, runPacksSync, syncPacks, type PackSyncReport } from "./sync"
 
 installNodePlatform()
@@ -16,6 +17,13 @@ installNodePlatform()
 const KEY = "ptw_abcdefghijklmnopqrstuvwxyz234567"
 const REVOKED = "ptw_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
 const ENGINE = "0.37.1"
+/**
+ * A range neither `ENGINE` nor the real version meets. The CLI path reads
+ * the real version, which every release bumps, so a fixed range stops being
+ * in the future the day the version reaches it.
+ */
+const [MAJOR, MINOR] = VERSION.split(".").map(Number) as [number, number]
+const FUTURE_ENGINE = `>=${MAJOR}.${MINOR + 1}.0 <${MAJOR + 1}.0.0`
 
 /**
  * The two endpoints of the pack distribution contract, served from memory.
@@ -209,11 +217,12 @@ describe("packs sync with a license", () => {
   })
 
   it("skips a pack whose engine range this pptwise does not meet, without downloading it", async () => {
-    await publish(server, { id: "future", version: "2027.1.0", themes: ["future-brief"], engine: ">=0.40.0 <1.0.0" })
+    await publish(server, { id: "future", version: "2027.1.0", themes: ["future-brief"], engine: FUTURE_ENGINE })
     await publish(server, { id: "sample", version: "2026.1.0", themes: ["sample-brief"] })
     const report = await sync()
     expect(report.ok).toBe(true)
-    expect(report.packs[0]).toMatchObject({ id: "future", status: "incompatible", reason: expect.stringMatching(/>=0\.40\.0 <1\.0\.0.*0\.37\.1/) })
+    expect(report.packs[0]).toMatchObject({ id: "future", status: "incompatible", reason: expect.stringContaining(FUTURE_ENGINE) })
+    expect(report.packs[0]!.reason).toContain(ENGINE)
     expect(zipRequests()).toEqual(["/api/packs/sample/2026.1.0.zip"])
     const text = await runPacksSync({ env: { PPTWISE_PACKS_URL: server.url } })
     expect(text.failed).toBe(false)
