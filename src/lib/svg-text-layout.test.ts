@@ -711,7 +711,7 @@ describe("hasExactWidthTable", () => {
   })
 })
 
-describe("Georgia Regular widths", () => {
+describe("Regular widths from the fonts' own advance tables", () => {
   // Advance sum read from /System/Library/Fonts/Supplemental/Georgia.ttf
   // with a standalone cmap+hmtx parser: 26053 / 2048 em. rsvg paints the
   // same string at 100px with its ink ending at 1269px, 0.2% short of it.
@@ -735,9 +735,13 @@ describe("Georgia Regular widths", () => {
     expect(r.lines).toEqual(["Vertical playbook replication"])
   })
 
-  it("keeps Microsoft YaHei Regular on the class path", () => {
+  it("measures Microsoft YaHei and SimSun Regular from their own advance tables too", () => {
+    // msyh.ttc[0] and Simsun.ttc[0] advances, as FreeType reads them: 13.68em
+    // and 14.5em, where the class average says 15.92em.
     const text = "Vertical playbook replication"
-    expect(measureTextUnits(text, { fontFamily: "Microsoft YaHei" })).toBe(measureTextUnits(text))
+    expect(measureTextUnits(text, { fontFamily: "Microsoft YaHei" })).toBeCloseTo(13.6825, 3)
+    expect(measureTextUnits(text, { fontFamily: "SimSun, 宋体, serif" })).toBe(14.5)
+    expect(measureTextUnits(text)).toBeCloseTo(15.92, 3)
   })
 })
 
@@ -1078,4 +1082,3 @@ describe("space-delimited mixed text wraps Chinese per character", () => {
     ])
   })
 })
-

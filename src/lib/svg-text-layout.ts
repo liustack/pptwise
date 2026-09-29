@@ -21,10 +21,10 @@ export interface TextWeightHint {
    * `classifyFace` below. */
   fontFamily?: string
   /**
-   * Use the face's Regular exact hmtx table. Default Regular stays on the
-   * class-average path so existing call sites stay byte-identical. Opt in
-   * when a mark has to sit under a specific glyph (memo-head last-run
-   * underline).
+   * Asks for the face's Regular exact hmtx table. Every face with one
+   * (Georgia, Microsoft YaHei, SimSun/KaiTi) now measures Regular from it by
+   * default, so this changes nothing today. It stays so the call sites that
+   * said it (a mark that must sit under a specific glyph) keep saying so.
    */
   exact?: boolean
 }
@@ -155,9 +155,10 @@ const WIDE_CHAR_RE = /[\u2014\u2018-\u201f\u2e80-\u9fff\uff00-\uffef]/
 // (borrow-wave scratchpad, not shipped in this repo).
 //
 // Later correction: "safe" held for overflow but not for wrapping. Over a
-// whole Georgia sentence those per-class gaps add up to 20-25% too wide,
-// enough to wrap text that fits on one line, so Georgia Regular now
-// measures from its exact table (see `measureTextUnits`).
+// whole sentence those per-class gaps add up to 20-25% too wide for
+// Georgia and 9-16% for YaHei and SimSun/KaiTi, enough to wrap text that
+// fits on one line, so Regular text in all three now measures from each
+// face's exact table (see `measureTextUnits`).
 //
 // Separately (not a width-calibration finding, recorded here since it
 // surfaced during this same measurement): neither Georgia nor Consolas
@@ -409,6 +410,17 @@ const GEORGIA_BOLD_EXACT: Readonly<Record<number, number>> = {32:0.2539,33:0.376
 const YAHEI_REGULAR_EXACT: Readonly<Record<number, number>> = {32:0.2959,33:0.3125,34:0.4355,35:0.6382,36:0.5864,37:0.8896,38:0.8701,39:0.2563,40:0.334,41:0.334,42:0.4551,43:0.7417,44:0.2407,45:0.4326,46:0.2407,47:0.4272,48:0.5864,49:0.5864,50:0.5864,51:0.5864,52:0.5864,53:0.5864,54:0.5864,55:0.5864,56:0.5864,57:0.5864,58:0.2407,59:0.2407,60:0.7417,61:0.7417,62:0.7417,63:0.4829,64:1.0312,65:0.7036,66:0.6274,67:0.6689,68:0.7617,69:0.5498,70:0.5312,71:0.7437,72:0.7734,73:0.2939,74:0.396,75:0.6348,76:0.5132,77:0.9771,78:0.813,79:0.8149,80:0.6118,81:0.8149,82:0.6528,83:0.5771,84:0.5732,85:0.7466,86:0.6763,87:1.0176,88:0.645,89:0.6035,90:0.6201,91:0.334,92:0.416,93:0.334,94:0.7417,95:0.4482,96:0.2949,97:0.5527,98:0.6387,99:0.5015,100:0.6396,101:0.5674,102:0.3467,103:0.6396,104:0.6157,105:0.2661,106:0.2671,107:0.5444,108:0.2661,109:0.937,110:0.6162,111:0.6357,112:0.6387,113:0.6396,114:0.3818,115:0.4629,116:0.3726,117:0.6162,118:0.5249,119:0.7896,120:0.5068,121:0.5293,122:0.4917,123:0.334,124:0.269,125:0.334,126:0.7417}
 const YAHEI_BOLD_EXACT: Readonly<Record<number, number>> = {32:0.2979,33:0.3486,34:0.521,35:0.6401,36:0.6167,37:0.9312,38:0.9111,39:0.3081,40:0.3896,41:0.3896,42:0.4873,43:0.7612,44:0.2856,45:0.4365,46:0.2856,47:0.4727,48:0.6167,49:0.6167,50:0.6167,51:0.6167,52:0.6167,53:0.6167,54:0.6167,55:0.6167,56:0.6167,57:0.6167,58:0.2856,59:0.2856,60:0.7612,61:0.7612,62:0.7612,63:0.4741,64:1.0298,65:0.752,66:0.6836,67:0.6733,68:0.7915,69:0.5718,70:0.5581,71:0.7651,72:0.8213,73:0.3354,74:0.4702,75:0.6929,76:0.5469,77:1.0283,78:0.8481,79:0.8184,80:0.6572,81:0.8184,82:0.6982,83:0.6016,84:0.6255,85:0.7764,86:0.7148,87:1.0762,88:0.7002,89:0.6484,90:0.6504,91:0.3896,92:0.4644,93:0.3896,94:0.7612,95:0.4482,96:0.3335,97:0.5776,98:0.666,99:0.5166,100:0.6646,101:0.582,102:0.4053,103:0.6646,104:0.6455,105:0.2959,106:0.3018,107:0.5962,108:0.2959,109:0.9819,110:0.6479,111:0.6572,112:0.666,113:0.6646,114:0.4238,115:0.4937,116:0.4141,117:0.6479,118:0.5771,119:0.8516,120:0.585,121:0.5742,122:0.5137,123:0.3896,124:0.3413,125:0.3896,126:0.7612}
 
+// SimSun and KaiTi Regular: every printable ASCII codepoint advances 128
+// units at unitsPerEm=256, exactly 0.5em, read with a standalone cmap+hmtx
+// parser from the genuine binaries Office ships (`Simsun.ttc[0]`, name
+// "SimSun" Regular, Version 5.21, and `Kaiti.ttf`, "KaiTi" Regular,
+// Version 5.01i, in PowerPoint's and Word's `DFonts`, byte-identical in
+// both). Both faces are a fixed half-em grid for Latin, so the table is
+// that one number 95 times. Neither face kerns.
+const SIMSUN_KAITI_REGULAR_EXACT: Readonly<Record<number, number>> = Object.fromEntries(
+  Array.from({ length: 95 }, (_, i) => [32 + i, 0.5]),
+)
+
 interface ExactFaceTable {
   regular: Readonly<Record<number, number>>
   bold: Readonly<Record<number, number>>
@@ -423,17 +435,21 @@ const CLASS_TABLE_FOR: Readonly<Record<FaceKey, FaceFactorTable>> = {
   unknown: ENVELOPE,
 }
 
-// Only the two exact-model faces have an entry -- `simsun-kaiti`/`unknown`
-// fall through `measureTextUnits`' own `exactTable` lookup (undefined) to
-// the class-average path unconditionally, no per-character data existing
-// for either.
+// Faces with a genuine binary at both weights. `simsun-kaiti` has no Bold
+// binary anywhere (its Bold stays the class-average proxy, see
+// `SIMSUN_KAITI`) and `unknown` has no data, so neither has an entry here,
+// and `hasExactWidthTable` reads this map for exactly that reason.
 const EXACT_TABLE_FOR: Readonly<Partial<Record<FaceKey, ExactFaceTable>>> = {
   georgia: { regular: GEORGIA_REGULAR_EXACT, bold: GEORGIA_BOLD_EXACT },
   yahei: { regular: YAHEI_REGULAR_EXACT, bold: YAHEI_BOLD_EXACT },
 }
 
-/** Faces whose Regular weight measures from its exact table by default. */
-const REGULAR_EXACT_FACES: ReadonlySet<FaceKey> = new Set<FaceKey>(["georgia"])
+/** Every face whose Regular weight has a genuine binary to read. */
+const REGULAR_EXACT_TABLE_FOR: Readonly<Partial<Record<FaceKey, Readonly<Record<number, number>>>>> = {
+  georgia: GEORGIA_REGULAR_EXACT,
+  yahei: YAHEI_REGULAR_EXACT,
+  "simsun-kaiti": SIMSUN_KAITI_REGULAR_EXACT,
+}
 
 /**
  * Classifies a resolved CSS font-family list (`ComponentCtx.fonts.*`, i.e.
@@ -488,31 +504,28 @@ export function measureTextUnits(text: string, weight?: TextWeightHint): number 
   const mode: WeightMode = weight?.bold ? "bold" : "regular"
   const faceKey = classifyFaceKey(weight?.fontFamily)
   const classTable = CLASS_TABLE_FOR[faceKey]
-  // Bold always takes the exact table. Regular takes it for Georgia, and
-  // for any face when the caller asks (`exact`).
+  // Every printable ASCII character measures from its face's own advance
+  // table when the face has one for this weight: Bold for Georgia and
+  // YaHei, Regular for those two and SimSun/KaiTi.
   //
   // Regular used to stay on the class-average path for every face so that
-  // non-bold text kept its pre-bold-fix geometry. For Georgia that path runs
-  // wide. Summing `GEORGIA_REGULAR_EXACT` (which matches the macOS
-  // Georgia.ttf `hmtx` to 0.0001 em on all 95 codepoints) over the brief
-  // gallery's sentences puts the class average 20-25% over the real advance,
-  // and rsvg's rendered ink agrees with the exact sum to within 0.3%. The
-  // cause is Georgia's narrow lowercase, space, and punctuation against the
-  // 0.56/0.35/0.46 class weights: "Vertical playbook replication" is 15.92
-  // em by class and 12.72 em real, so a note that fits one line wrapped to
-  // two (the brief timeline's last item, the chevron's last note). Exact
-  // advances carry no class-average error and Georgia's kerning only
-  // tightens pairs, so the exact sum still errs a hair wide, never narrow.
+  // non-bold text kept its pre-bold-fix geometry, and that path runs wide.
+  // Over the brief gallery's English sentences the class sum is 20-25% over
+  // Georgia's real advances, 9-16% over YaHei's, and 5-15% over
+  // SimSun/KaiTi's half-em grid. The cause is the 0.56/0.35/0.46 class
+  // weights against these faces' narrower lowercase, spaces and marks:
+  // "Vertical playbook replication" is 15.92em by class, 12.72em in Georgia,
+  // 13.68em in YaHei and 14.5em in SimSun. Text that fits one line wrapped
+  // to two. The one class that runs the other way is YaHei's digits
+  // (0.5864em against the class's 0.56), which the class path under-priced.
   //
-  // Microsoft YaHei, SimSun, and KaiTi Regular run 9-16% wide on English
-  // for the same reason (class weights, not their own glyphs). They stay
-  // on the class path until each gets its own measured change, since
-  // switching them moves every English and mixed page of the themes that
-  // body-set in them.
-  const exactTable =
-    mode === "bold" || weight?.exact || REGULAR_EXACT_FACES.has(faceKey)
-      ? EXACT_TABLE_FOR[faceKey]?.[mode]
-      : undefined
+  // Checked against real layout engines, not just this file's own tables:
+  // rsvg's Georgia ink lands within 0.3% of the exact sum, and FreeType
+  // (through Pillow) reproduces the YaHei and SimSun/KaiTi sums to the
+  // fourth decimal. HarfBuzz shaping, which applies YaHei's kerning, comes
+  // out up to 1% narrower on ordinary sentences, and SimSun/KaiTi do not
+  // kern. So the exact sum errs a hair wide, never narrow.
+  const exactTable = mode === "bold" ? EXACT_TABLE_FOR[faceKey]?.bold : REGULAR_EXACT_TABLE_FOR[faceKey]
   return Array.from(text).reduce((sum, char) => {
     // WIDE_CHAR_RE (CJK/ideographic-punctuation/fullwidth) always takes the
     // class path, even under an exact-model face: the exact tables only

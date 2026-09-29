@@ -710,16 +710,28 @@ export const sankey: SvgComponent<SankeyComponent> = {
         ))}
         {layout.nodes.map((n) => {
           const labelMaxW = Math.min(MAX_LABEL_W, Math.max(24, (box.w - layout.layerCount * NODE_W) / Math.max(1, layout.layerCount - 1) - LABEL_GAP * 2))
+          // Measured in the face the label is painted in. Without it the
+          // estimate was the class average, which prices a YaHei "m" at
+          // 0.56em where the face draws 0.937, so "Homes" ran 7px past the
+          // box its own node declared.
+          const labelFace = ctx.fonts.body
           const oneLine = fitSvgLine(n.label, {
             maxWidth: labelMaxW,
             fontSize: LABEL_FONT,
             minFontSize: LABEL_MIN_FONT,
+            fontFamily: labelFace,
           })
           const lineH = Math.round(LABEL_MIN_FONT * LABEL_LINE_RATIO)
           const stackLines = Math.max(1, Math.min(LABEL_MAX_LINES, Math.floor(n.h / lineH)))
           const labelFit =
             oneLine.truncated && stackLines > 1
-              ? layoutAtSize(n.label, { maxWidth: labelMaxW, fontSize: LABEL_MIN_FONT, maxLines: stackLines, lineHeightRatio: LABEL_LINE_RATIO })
+              ? layoutAtSize(n.label, {
+                  maxWidth: labelMaxW,
+                  fontSize: LABEL_MIN_FONT,
+                  maxLines: stackLines,
+                  lineHeightRatio: LABEL_LINE_RATIO,
+                  fontFamily: labelFace,
+                })
               : { lines: [oneLine.text], fontSize: oneLine.fontSize, lineHeight: lineH, truncated: oneLine.truncated }
           const extra = (labelFit.lines.length - 1) * labelFit.lineHeight
           const labelX = n.isLastLayer ? n.x - LABEL_GAP : n.x + NODE_W + LABEL_GAP
@@ -730,7 +742,8 @@ export const sankey: SvgComponent<SankeyComponent> = {
           const maxLabelY = box.y + h - labelFit.fontSize * LABEL_DESCENT_RATIO - extra
           const labelY = Math.min(maxLabelY, Math.max(minLabelY, rawLabelY))
           const labelFitsVertically = minLabelY <= maxLabelY
-          const labelW = Math.max(...labelFit.lines.map((line) => measureTextUnits(line))) * labelFit.fontSize
+          const labelW =
+            Math.max(...labelFit.lines.map((line) => measureTextUnits(line, { fontFamily: labelFace }))) * labelFit.fontSize
           const labelBBox: BBox = {
             xMin: n.isLastLayer ? labelX - labelW : labelX,
             xMax: n.isLastLayer ? labelX : labelX + labelW,
@@ -798,7 +811,7 @@ export const sankey: SvgComponent<SankeyComponent> = {
                       textAnchor={labelAnchor}
                       fontSize={labelFit.fontSize}
                       fill={ink}
-                      fontFamily={ctx.fonts.body}
+                      fontFamily={labelFace}
                       dominantBaseline="alphabetic"
                     >
                       {line}
