@@ -157,7 +157,9 @@ function columnsAt(
     bodySize: filled.bodySize,
     gap: GAP_TITLE_TEXT,
     extraAbove,
-    titleMax: 2,
+    // As many title lines as the titles take at the size just chosen, the
+    // count that size was chosen against, so the body keeps the rest.
+    titleMax: filled.titleMaxLines,
     bodyMax: Math.max(2, filled.bodyMaxLines),
   })
   const layouts = component.items.map((item) =>

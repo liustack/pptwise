@@ -368,17 +368,31 @@ export function fillCardType(opts: {
   fonts?: { heading?: string; body?: string }
   titleLhRatio?: number
   bodyLhRatio?: number
-}): { titleSize: number; bodySize: number; bodyMaxLines: number } {
+}): { titleSize: number; bodySize: number; bodyMaxLines: number; titleMaxLines: number } {
   const titleLh = opts.titleLhRatio ?? TITLE_LH
   const bodyLh = opts.bodyLhRatio ?? BODY_LH
   const extra = opts.extraAbove ?? 0
   let titleSize = Math.max(FORM_TITLE_FLOOR, opts.titleSize)
   let bodySize = capFormBody(titleSize, Math.max(FORM_BODY_FLOOR, opts.bodySize))
   const longest = opts.longestBody ?? ""
-  const cap = maxTitleSize(opts.contentW, opts.titles ?? [], opts.fonts?.heading)
+  const titles = opts.titles ?? []
+  const cap = maxTitleSize(opts.contentW, titles, opts.fonts?.heading)
 
+  // The lines the longest-wrapping title really takes at size `t`, at most
+  // two. Sizing the type and handing out lines have to count the same
+  // title lines: sizing against one line while the page then reserved two
+  // left the body a line short, and its last line was cut.
+  const titleLinesAt = (t: number) =>
+    Math.max(
+      1,
+      ...titles.map(
+        (title) =>
+          layoutFormTitle(title, { maxWidth: opts.contentW, fontSize: t, maxLines: 2, fontFamily: opts.fonts?.heading })
+            .lines.length,
+      ),
+    )
   const stackH = (t: number, b: number, lines: number) =>
-    extra + formLineHeight(t, titleLh) + opts.gap + lines * formLineHeight(b, bodyLh)
+    extra + titleLinesAt(t) * formLineHeight(t, titleLh) + opts.gap + lines * formLineHeight(b, bodyLh)
 
   const linesFor = (b: number, maxLines: number) =>
     Math.max(longest.trim() ? 1 : 0, bodyLineCount(longest, opts.contentW, b, maxLines, opts.fonts?.body))
@@ -416,5 +430,5 @@ export function fillCardType(opts: {
   bodySize = capFormBody(titleSize, titleSize / TITLE_BODY_RATIO)
   if (!longest.trim()) bodyMaxLines = 0
   else bodyMaxLines = Math.max(2, bodyMaxLines)
-  return { titleSize, bodySize, bodyMaxLines }
+  return { titleSize, bodySize, bodyMaxLines, titleMaxLines: titleLinesAt(titleSize) }
 }
