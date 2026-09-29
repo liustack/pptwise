@@ -857,6 +857,17 @@ function tokenize(text: string): { tokens: WrapToken[]; spaceDelimited: boolean 
   }
 }
 
+/**
+ * The units the wrap keeps whole, in order: each Latin word, number or other
+ * non-CJK run as one, and each CJK character as its own. A unit wider than
+ * a line is the only thing the wrap has to cut mid-way (`splitLongToken`).
+ * For a caller that must know beforehand whether its text can wrap without
+ * breaking a word.
+ */
+export function wrapTokens(text: string): string[] {
+  return tokenize(text).tokens.map((token) => token.text)
+}
+
 // Retry-ladder word-integrity plumbing (task R2 scope extension, 2026-07-24
 // — see `layoutSvgText`'s own comment for how these two fields drive the
 // search). Deliberately scoped to the no-space branch's atomic Latin/digit

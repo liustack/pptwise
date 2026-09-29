@@ -1,8 +1,9 @@
 import type React from "react"
 import type { Component } from "@/ir"
-import { layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
+import { layoutSvgText, measureTextUnits, wrapTokens } from "../lib/svg-text-layout"
 import { mostlyChinese } from "../lib/text-script"
 import { DroppedContentMarker } from "../render/drop-marker"
+import { anyCut } from "./declared-fit"
 import { accessibleInk } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -478,7 +479,12 @@ function renderBlock(
  * for a drawing that cannot keep its words whole is to decline and say so
  * (`declared-fit.ts`, and `from-to.tsx`'s `MIN_W`): the page then moves to a
  * rendering wide enough for it. In the heading face that is about 764px for
- * "Relationships" in Georgia, and far narrower for the Chinese titles.
+ * "Relationships" in Georgia.
+ *
+ * A word here is what the shared wrap keeps whole (`wrapTokens`). Chinese
+ * breaks between any two characters, so 「重要合作」 is four units, not one:
+ * read as a single word, it sent a 480px canvas away although the title
+ * sets as 「重要」 over 「合作」.
  */
 function titleWordsFit(component: BmcComponent, w: number, headingFont: string): boolean {
   const colW = (w - GAP * 4) / 5
@@ -486,9 +492,9 @@ function titleWordsFit(component: BmcComponent, w: number, headingFont: string):
   const labels = blockLabels(component)
   return (Object.keys(labels) as BlockKey[]).every((key) => {
     const room = (BOTTOM_BAND_KEYS.includes(key) ? bottomColW : colW) - PAD_X * 2
-    return labels[key]
-      .split(/\s+/)
-      .every((word) => measureTextUnits(word, { bold: true, fontFamily: headingFont }) * TITLE_SIZE <= room)
+    return wrapTokens(labels[key]).every(
+      (unit) => measureTextUnits(unit, { bold: true, fontFamily: headingFont }) * TITLE_SIZE <= room,
+    )
   })
 }
 
@@ -523,14 +529,14 @@ export const bmc: SvgComponent<BmcComponent> = {
     const { cells } = gridGeom(box.w, finalTotalH, scaledTop, scaledBottom)
     const labels = blockLabels(component)
     const r = ctx.shape?.radius ?? CARD_RADIUS
-    return (
-      <g>
-        {cells.map((cell) => {
-          const layout = blockLayout(component[cell.key], labels[cell.key], cell.w, rhythmScale, ctx.fonts.heading)
-          return renderBlock(cell, layout, ctx, box.x, box.y, r)
-        })}
-      </g>
+    const layouts = cells.map((cell) =>
+      blockLayout(component[cell.key], labels[cell.key], cell.w, rhythmScale, ctx.fonts.heading),
     )
+    // Every unit of a title can fit its column and the title still need more
+    // lines than it has: a Chinese title on a very narrow canvas, a character
+    // or two a line. It is not cut either.
+    if (anyCut(layouts.map((layout) => layout.title))) return <DroppedContentMarker count={1} kind="component" />
+    return <g>{cells.map((cell, i) => renderBlock(cell, layouts[i]!, ctx, box.x, box.y, r))}</g>
   },
 }
 
