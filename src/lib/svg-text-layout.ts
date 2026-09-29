@@ -1107,6 +1107,7 @@ export function fitSvgLine(
   } & TextWeightHint,
 ): { text: string; fontSize: number; truncated: boolean } {
   const minFontSize = opts.minFontSize ?? META_FONT_FLOOR_PX
+  const startSize = Math.max(opts.fontSize, minFontSize)
   // `letterSpacing` is an SVG attribute in absolute px, independent of
   // font-size — unlike `measureTextUnits`' per-character weights, it doesn't
   // scale down when the line shrinks to fit. A caller that renders this
@@ -1119,11 +1120,11 @@ export function fitSvgLine(
   const letterSpacing = opts.letterSpacing ?? 0
   const weight: TextWeightHint = { bold: opts.bold, fontFamily: opts.fontFamily }
   const units = measureTextUnits(text, weight)
-  if (units <= 0) return { text, fontSize: opts.fontSize, truncated: false }
+  if (units <= 0) return { text, fontSize: startSize, truncated: false }
   const charCount = Array.from(text).length
   const spacingBudget = Math.max(0, charCount - 1) * letterSpacing
   const availableWidth = Math.max(0, opts.maxWidth - spacingBudget)
-  const fitted = Math.min(opts.fontSize, Math.floor(availableWidth / units))
+  const fitted = Math.min(startSize, Math.floor(availableWidth / units))
   if (fitted >= minFontSize) return { text, fontSize: fitted, truncated: false }
   // `truncated` (bench-driven fix round, defect E): `true` exactly when the
   // shrink-to-`minFontSize` step still wasn't enough and `truncateToUnits`

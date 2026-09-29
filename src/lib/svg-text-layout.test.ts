@@ -153,6 +153,17 @@ describe("fitSvgLine", () => {
       truncated: false,
     })
   })
+  // roadmap asked for its period labels at 14px under a 16px floor, and
+  // every one of them, "Q1" included, came back painted whole at 16px yet
+  // marked cut. The floor is where a line starts, not a reason to cut it.
+  it("starts a request below the floor at the floor, and cuts nothing that fits there", () => {
+    expect(fitSvgLine("Q1", { maxWidth: 200, fontSize: 14, minFontSize: 16 })).toEqual({
+      text: "Q1",
+      fontSize: 16,
+      truncated: false,
+    })
+  })
+
   it("solves the tracking budget with the surviving text, not the input", () => {
     // 500 tracked glyphs ask for 499px of gaps alone. Deducting the *input*
     // string's budget from a 485px box left nothing to fit any text into, so
