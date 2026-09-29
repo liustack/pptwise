@@ -1174,6 +1174,15 @@ function linesScore(lines: readonly string[]): number {
 const SCRIPT_BREAK_TOLERANCE = 0.1
 
 /**
+ * The search's bounds. Past either one the balanced lines stand: a
+ * preference between nearly equal splits is not worth a slow page. The step
+ * budget covers hundreds of pieces over dozens of lines, far more than any
+ * heading or card item carries.
+ */
+const SCRIPT_BREAK_MAX_PIECES = 2000
+const SCRIPT_BREAK_BUDGET = 2_000_000
+
+/**
  * Among the splits of `content` into as many lines as `balanced` whose line
  * lengths are close to the balanced ones, prefer the one that breaks where
  * Latin meets CJK, then between CJK characters, and last between two Latin
@@ -1192,7 +1201,10 @@ const SCRIPT_BREAK_TOLERANCE = 0.1
  * balancing exists to remove), and no single-character CJK last line.
  *
  * Text that is all Latin or all CJK scores every split the same, so it
- * returns `balanced` without searching.
+ * returns `balanced` without searching. The search is a dynamic programme,
+ * polynomial in the pieces and lines (it used to enumerate every split and
+ * took seconds on a Latin word before 81 CJK characters in a narrow cell),
+ * and it gives up for `balanced` past `SCRIPT_BREAK_BUDGET` steps.
  */
 function preferScriptBoundaries(
   content: string,
@@ -1202,50 +1214,113 @@ function preferScriptBoundaries(
 ): string[] {
   if (balanced.length < 2 || !ASCII_GLYPH_RE.test(content) || !WIDE_CHAR_RE.test(content)) return balanced
   const pieces: WrapPiece[] = tokenize(content).tokens
+  const count = pieces.length
   const n = balanced.length
-  const widthCache = new Map<number, number>()
-  const width = (from: number, to: number): number => {
-    const key = from * 4096 + to
-    let w = widthCache.get(key)
-    if (w === undefined) {
-      w = measureTextUnits(joinPieces(pieces, from, to), weight)
-      widthCache.set(key, w)
-    }
-    return w
+  if (count > SCRIPT_BREAK_MAX_PIECES || n > count) return balanced
+
+  // Widths by prefix sums. `measureTextUnits` is a per-character sum, so a
+  // line's width is the pieces' own widths plus the spaces between them.
+  const spaceUnits = measureTextUnits(" ", weight)
+  const prefix = new Float64Array(count + 1)
+  for (let i = 0; i < count; i += 1) {
+    prefix[i + 1] = prefix[i] + measureTextUnits(pieces[i].text, weight) + (pieces[i].space ? spaceUnits : 0)
   }
+  const width = (from: number, to: number): number =>
+    prefix[to] - prefix[from] - (pieces[from].space ? spaceUnits : 0)
+
+  // What a break before piece `i` scores, or null where kinsoku forbids one.
+  const breakAt: (number | null)[] = [null]
+  for (let i = 1; i < count; i += 1) {
+    const before = pieces[i - 1].text
+    const after = pieces[i].text
+    breakAt.push(allowsLineBreakBetween(before[before.length - 1], after[0]) ? breakScore(before, after) : null)
+  }
+
   const balancedWidest = Math.max(...balanced.map((l) => measureTextUnits(l, weight)))
   const cap = Math.min(limit, balancedWidest * (1 + SCRIPT_BREAK_TOLERANCE)) + 1e-9
-  let best = balanced
-  let bestScore = linesScore(balanced)
-  let bestWidest = balancedWidest
+  const baselineScore = linesScore(balanced)
+  let budget = SCRIPT_BREAK_BUDGET
 
-  const starts: number[] = [0]
-  const search = (from: number): void => {
-    if (starts.length === n) {
-      const last = width(from, pieces.length)
-      if (last > cap) return
-      const lines = starts.map((s, i) => joinPieces(pieces, s, i + 1 < n ? starts[i + 1] : pieces.length))
-      const widest = Math.max(...starts.map((s, i) => width(s, i + 1 < n ? starts[i + 1] : pieces.length)))
-      if (last < widest * 0.5 || isCjkOrphanLine(lines[n - 1])) return
-      const score = linesScore(lines)
-      if (score > bestScore || (score === bestScore && best !== balanced && widest < bestWidest)) {
-        best = lines
-        bestScore = score
-        bestWidest = widest
-      }
-      return
-    }
-    for (let cut = from + 1; cut < pieces.length; cut += 1) {
-      if (width(from, cut) > cap) break
-      const before = pieces[cut - 1].text
-      if (!allowsLineBreakBetween(before[before.length - 1], pieces[cut].text[0])) continue
-      starts.push(cut)
-      search(cut)
-      starts.pop()
-    }
+  // A split is better with a higher score, then a narrower widest line, then
+  // earlier breaks (the order the balanced wrap itself prefers).
+  const outranks = (score: number, widest: number, starts: number[], than: typeof best): boolean => {
+    if (!than) return true
+    if (score !== than.score) return score > than.score
+    if (Math.abs(widest - than.widest) > 1e-9) return widest < than.widest
+    for (let i = 0; i < starts.length; i += 1) if (starts[i] !== than.starts[i]) return starts[i] < than.starts[i]
+    return false
   }
-  search(0)
-  return best
+  let best: { score: number; widest: number; starts: number[] } | null = null
+
+  // The last line is fixed first: it starts at `last`, and every other line
+  // may be at most twice its width, which keeps it from being the widow
+  // balancing removed. Pieces 0..last-1 then go into n - 1 lines by dynamic
+  // programming over (lines left k, start piece i), keeping per cell the
+  // best score, its widest line and the next line's start. Each cell tries
+  // only the ends a line can reach within `lineCap`, and a cell whose pieces
+  // cannot fill its lines at that width is skipped, so one last line costs
+  // at most n * count * (pieces per line) steps, and `budget` bounds the
+  // whole search.
+  const stride = count + 1
+  const score = new Float64Array(n * stride)
+  const widest = new Float64Array(n * stride)
+  const nextStart = new Int32Array(n * stride)
+  for (let last = count - 1; last >= 1; last -= 1) {
+    const lastWidth = width(last, count)
+    if (lastWidth > cap) break
+    const lastBreak = breakAt[last]
+    if (lastBreak === null || isCjkOrphanLine(joinPieces(pieces, last, count))) continue
+    const lineCap = Math.min(cap, lastWidth * 2 + 1e-9)
+    nextStart.fill(-1)
+    // Level 0: nothing left to set before `last`.
+    nextStart[last] = last
+    score[last] = 0
+    widest[last] = 0
+    for (let k = 1; k < n; k += 1) {
+      const row = k * stride
+      const below = (k - 1) * stride
+      for (let i = 0; i < last; i += 1) {
+        if (i > 0 && breakAt[i] === null) continue
+        if (width(i, last) > k * lineCap) continue
+        let found = -1
+        let bestScore = 0
+        let bestWidest = 0
+        for (let j = i + 1; j <= last; j += 1) {
+          if ((budget -= 1) < 0) return balanced
+          const w = width(i, j)
+          if (w > lineCap) break
+          if (nextStart[below + j] < 0) continue
+          const s = score[below + j] + (j < last ? (breakAt[j] ?? 0) : 0)
+          const wide = Math.max(w, widest[below + j])
+          // Ascending j with strict improvement keeps the earliest break on a tie.
+          if (found < 0 || s > bestScore || (s === bestScore && wide < bestWidest - 1e-9)) {
+            found = j
+            bestScore = s
+            bestWidest = wide
+          }
+        }
+        if (found >= 0) {
+          nextStart[row + i] = found
+          score[row + i] = bestScore
+          widest[row + i] = bestWidest
+        }
+      }
+    }
+    const head = (n - 1) * stride
+    if (nextStart[head] < 0) continue
+    const starts = [0]
+    for (let k = n - 1, i = 0; k >= 1; k -= 1) {
+      i = nextStart[k * stride + i]
+      starts.push(i)
+    }
+    const total = score[head] + lastBreak
+    const wide = Math.max(widest[head], lastWidth)
+    if (outranks(total, wide, starts, best)) best = { score: total, widest: wide, starts }
+  }
+
+  if (!best || best.score <= baselineScore) return balanced
+  const starts = best.starts
+  return starts.map((from, i) => joinPieces(pieces, from, i + 1 < starts.length ? starts[i + 1] : count))
 }
 
 /**
