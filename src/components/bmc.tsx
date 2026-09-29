@@ -48,7 +48,8 @@ type BlockKey =
  *
  * Row-height ratios are *not* a hardcoded constant: `naturalBandHeights`
  * derives the top-band/bottom-band split from each block's own real fitted
- * content (title + item count) at the natural, unstretched width — pure
+ * content (its title's lines, fitted in the heading face they are drawn in,
+ * and its items' lines) at the natural, unstretched width — pure
  * function of the input, deterministic. `render`'s box.h-aware stretch
  * (matrix.tsx's own idiom — see `swot.tsx`'s identical comment) then grows
  * both bands by the *same proportion* their natural heights already had, so
@@ -216,20 +217,21 @@ interface BlockLayout {
 // cell title (from `blockLabels`, a fixed per-language constant, not user-controllable
 // via the IR) needs the same bold-aware fitting as every other bold
 // heading-faced text this task's audit-baseline sweep already found and
-// fixed (kpi.tsx/steps.tsx/etc, round 1). Optional and defaults to
-// `undefined` (envelope fallback, `bold: true` regardless -- title is
-// unconditionally bold in this component) so the measure-time callers
-// below (which only ever read `.contentH`, itself derived from the fixed
-// declared `titleSize`, never the fitted result) don't need it -- see this
-// function's own return value: `contentH` doesn't depend on whether
-// `title` actually had to shrink, so measure/render can't disagree over it
-// regardless of which callers pass `fontFamily`.
+// fixed (kpi.tsx/steps.tsx/etc, round 1).
+//
+// Required, and passed by the measuring callers too. `contentH` counts the
+// title's lines, and where an English title wraps depends on the face: at
+// 840px "Key Activities" is one line in Georgia and two in the envelope
+// estimate, and at 1016px "Customer Segments" is the other way round. A
+// canvas measured with the estimate and drawn in the face got a spare title
+// line in every cell of its band, or a cell one line short that dropped its
+// last item.
 function blockLayout(
   items: string[],
   label: string,
   w: number,
-  rhythmScale: number = 1,
-  fontFamily?: string,
+  rhythmScale: number,
+  fontFamily: string,
 ): BlockLayout {
   const contentW = Math.max(1, w - PAD_X * 2)
   // Type never scales: `TITLE_SIZE`/`ITEM_SIZE` are the legibility floor
@@ -298,25 +300,26 @@ const SPAN_KEYS: readonly BlockKey[] = ["key_partners", "value_propositions", "c
 const BOTTOM_BAND_KEYS: readonly BlockKey[] = ["cost_structure", "revenue_streams"]
 
 /** Natural (unstretched, `rhythmScale`-adjusted) top-band/bottom-band
- * heights, pure function of `component`'s real content at width `w` and
- * `rhythmScale` — see file header. `rhythmScale` defaults to 1 (nominal);
- * `render`'s undersized-box shrink path is the only caller that ever
- * passes a smaller value. */
+ * heights, pure function of `component`'s real content at width `w`, the
+ * heading face its titles are drawn in, and `rhythmScale` — see file header.
+ * `rhythmScale` defaults to 1 (nominal); `render`'s undersized-box shrink
+ * path is the only caller that ever passes a smaller value. */
 function naturalBandHeights(
   component: BmcComponent,
   w: number,
+  headingFont: string,
   rhythmScale: number = 1,
 ): { topBandH: number; bottomBandH: number } {
   const colW = (w - GAP * 4) / 5
   const bottomColW = (w - GAP) / 2
   const labels = blockLabels(component)
   const halfRowH = Math.max(
-    ...[...TOP_ROW_KEYS, ...BOTTOM_ROW_KEYS].map((k) => blockLayout(component[k], labels[k], colW, rhythmScale).contentH),
+    ...[...TOP_ROW_KEYS, ...BOTTOM_ROW_KEYS].map((k) => blockLayout(component[k], labels[k], colW, rhythmScale, headingFont).contentH),
   )
-  const spanH = Math.max(...SPAN_KEYS.map((k) => blockLayout(component[k], labels[k], colW, rhythmScale).contentH))
+  const spanH = Math.max(...SPAN_KEYS.map((k) => blockLayout(component[k], labels[k], colW, rhythmScale, headingFont).contentH))
   const topBandH = Math.max(halfRowH * 2 + GAP, spanH)
   const bottomBandH = Math.max(
-    ...BOTTOM_BAND_KEYS.map((k) => blockLayout(component[k], labels[k], bottomColW, rhythmScale).contentH),
+    ...BOTTOM_BAND_KEYS.map((k) => blockLayout(component[k], labels[k], bottomColW, rhythmScale, headingFont).contentH),
   )
   return { topBandH, bottomBandH }
 }
@@ -459,12 +462,12 @@ function renderBlock(
 }
 
 export const bmc: SvgComponent<BmcComponent> = {
-  measure(component, w) {
-    const { topBandH, bottomBandH } = naturalBandHeights(component, w)
+  measure(component, w, ctx) {
+    const { topBandH, bottomBandH } = naturalBandHeights(component, w, ctx.fonts.heading)
     return topBandH + GAP + bottomBandH
   },
   render(component, box, ctx) {
-    const { topBandH: natTop, bottomBandH: natBottom } = naturalBandHeights(component, box.w)
+    const { topBandH: natTop, bottomBandH: natBottom } = naturalBandHeights(component, box.w, ctx.fonts.heading)
     const naturalTotal = natTop + GAP + natBottom
     const totalH = box.h ?? naturalTotal
 
@@ -482,7 +485,7 @@ export const bmc: SvgComponent<BmcComponent> = {
     const { topBandH: scaledTop, bottomBandH: scaledBottom } =
       rhythmScale === 1
         ? { topBandH: natTop, bottomBandH: natBottom }
-        : naturalBandHeights(component, box.w, rhythmScale)
+        : naturalBandHeights(component, box.w, ctx.fonts.heading, rhythmScale)
     const finalTotalH = totalH
 
     const { cells } = gridGeom(box.w, finalTotalH, scaledTop, scaledBottom)
