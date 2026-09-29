@@ -16,10 +16,9 @@
 
 import { META_FONT_FLOOR_PT, META_FONT_FLOOR_PX, pxToPt } from "@/constants"
 import { findOverflowVocabulary } from "@/ir/overflow-vocabulary"
-import { measureMonoTextUnits, measureTextUnits } from "@/lib/svg-text-layout"
 import { getPlatform } from "@/platform/registry"
 import { __pathBoundingBox, findOverlapIssues } from "@/audit/deck-audit"
-import { auditSvgMarkup, parseTransform } from "@/audit/svg-audit"
+import { auditSvgMarkup, parseTransform, textLineWidth } from "@/audit/svg-audit"
 import {
   IDENTITY_MATRIX,
   boxesIntersect,
@@ -30,7 +29,6 @@ import {
   type DepthBox,
   type SvgMatrix,
 } from "@/render/depth-contract/geometry"
-import { isBold, isMonoFontFamily } from "@/render/fonts"
 import { blendOver, contrastRatio } from "@/render/ink"
 import {
   CONTENT_DECOR_CONTRAST_CEILING,
@@ -515,14 +513,6 @@ function writingModeOf(el: Element): string {
   return ""
 }
 
-function textWidth(el: Element, content: string, fontSize: number): number {
-  const fontFamily = el.getAttribute("font-family") ?? ""
-  const units = isMonoFontFamily(fontFamily)
-    ? measureMonoTextUnits(content)
-    : measureTextUnits(content, { bold: isBold(el.getAttribute("font-weight")), fontFamily })
-  return units * fontSize
-}
-
 /**
  * A horizontal rule as the page paints it: where it runs, how thick it is,
  * and when it is painted. `order` is the element's position in document
@@ -816,7 +806,7 @@ function collectGeometry(root: Element, paintOrder: ReadonlyMap<Element, number>
         const fontSize = Number(el.getAttribute("font-size") ?? 16) * as
         const tx = ax + Number(el.getAttribute("x") ?? 0) * as
         const ty = ay + Number(el.getAttribute("y") ?? 0) * as
-        const width = textWidth(el, content, fontSize)
+        const width = textLineWidth(el, content, fontSize, as)
         const anchor = el.getAttribute("text-anchor") ?? "start"
         const left = anchor === "end" ? tx - width : anchor === "middle" ? tx - width / 2 : tx
         texts.push({
@@ -964,7 +954,7 @@ function walkText(
         const fontSize = Number(fontSizeAttr ?? 16) * as
         const tx = ax + Number(el.getAttribute("x") ?? 0) * as
         const ty = ay + Number(el.getAttribute("y") ?? 0) * as
-        const width = textWidth(el, content, fontSize)
+        const width = textLineWidth(el, content, fontSize, as)
         const anchor = el.getAttribute("text-anchor") ?? "start"
         const left = anchor === "end" ? tx - width : anchor === "middle" ? tx - width / 2 : tx
         const right = left + width

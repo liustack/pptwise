@@ -60,7 +60,7 @@ function runUnits(text: string, fontFamily: string, fontWeight: string | null): 
  *
  * A line with no such run is measured as one string, exactly as before.
  */
-function textLineWidth(el: Element, content: string, fontSize: number, scale: number): number {
+export function textLineWidth(el: Element, content: string, fontSize: number, scale: number): number {
   const fontFamily = el.getAttribute("font-family") ?? ""
   const fontWeight = el.getAttribute("font-weight")
   const sizedRun = (node: Element) =>

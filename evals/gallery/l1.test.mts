@@ -242,6 +242,20 @@ describe("auditL1 planted defects", () => {
     expect(codes(svg)).toContain("strikethrough")
   })
 
+  // brief's stat-hero: "10.2" at 310px with the unit as an 81px run. Read at
+  // the outer size, the unit alone was charged 620px and the line ended at
+  // x=1381, a page edge it stops 350px short of.
+  it("measures a hero figure's smaller unit at its own size", () => {
+    const svg = wrap(`<text x="96" y="450" font-size="310">10.2<tspan font-size="81">万席</tspan></text>`)
+    expect(codes(svg)).not.toContain("edge-stick")
+    expect(codes(svg)).not.toContain("out-of-bounds")
+  })
+
+  it("still flags a run that really carries the line off the page", () => {
+    const svg = wrap(`<text x="900" y="450" font-size="100">10<tspan font-size="100">万席万席</tspan></text>`)
+    expect(codes(svg)).toContain("out-of-bounds")
+  })
+
   it("does not flag a short gold underline as edge-stick", () => {
     const svg = wrap(
       `<text x="640" y="404" font-size="84" text-anchor="middle">客户与收入结构</text>` +
