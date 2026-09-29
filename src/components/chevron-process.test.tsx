@@ -12,6 +12,7 @@ import { listThemes } from "../api"
 import { contrastRatio } from "../render/ink"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { SIBLING_AIR_PX } from "../render/spacing"
+import { irJsonSchema } from "../ir/json-schema"
 import type { ComponentCtx } from "./types"
 
 function themed(id: string): ComponentCtx {
@@ -103,6 +104,30 @@ describe("chevron_process component", () => {
     }
     expect(text).toEqual(expect.arrayContaining(["01", "02", "03", "04", "05"]))
     expect(container.querySelectorAll("[data-dropped]").length).toBe(0)
+  })
+
+  it("describes the note in the public schema the way it is drawn: up to two lines", () => {
+    // The schema used to promise a single line while the renderer wrapped a
+    // long note to a second one, so a model writing to the schema kept notes
+    // shorter than the drawing needs.
+    const defs = irJsonSchema().$defs as Record<string, { properties: Record<string, unknown> }>
+    const items = defs.chevron_process!.properties.items as { items: { properties: { text: { description: string } } } }
+    const note = items.items.properties.text.description
+    expect(note).not.toMatch(/single line/i)
+    expect(note).toMatch(/two lines/i)
+    const long = {
+      type: "chevron_process" as const,
+      items: [
+        { title: "Scoping", text: "Seat expansion across every existing enterprise account in the region" },
+        { title: "Solutioning", text: "Templates" },
+        { title: "Rollout", text: "Pilot" },
+      ],
+    }
+    const { container } = svg(chevronProcess.render(long, { x: 96, y: 290, w: 1088 }, themed("brief")))
+    const noteLines = Array.from(container.querySelectorAll("text")).filter(
+      (t) => Number(t.getAttribute("y")) > 118 && Number(t.getAttribute("x")) < 200,
+    )
+    expect(noteLines.length).toBe(2)
   })
 
   it("keeps a sibling's air between two notes that share a baseline", () => {
