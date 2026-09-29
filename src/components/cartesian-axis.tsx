@@ -321,13 +321,21 @@ export function paddedDomain(min: number, max: number, mode: DomainPadMode, padF
   return { min: ticks[0]!, max: ticks[ticks.length - 1]! }
 }
 
+/**
+ * A tick's value as the axis prints it: every digit the tick has, to the 12
+ * significant digits ticks are rounded to, and no trailing zeros.
+ *
+ * It used to keep one or two decimals, whatever the step between ticks. Ticks
+ * a millionth apart all printed as "1", and 10.25 printed as "10.3", a value
+ * the axis does not mark. Ticks are nice multiples of their step, so the
+ * digits they have are the digits their step needs: whole numbers stay whole,
+ * 0.5 stays 0.5, and two different ticks never share a label.
+ */
 export function formatNiceNumber(value: number): string {
   if (!Number.isFinite(value)) return "0"
-  const rounded = Math.round(value)
-  if (Math.abs(value - rounded) < 1e-9) return String(rounded)
-  const abs = Math.abs(value)
-  const digits = abs >= 10 ? 1 : 2
-  return value.toFixed(digits).replace(/\.?0+$/, "")
+  // `String` gives the shortest form that reads back as the same number, and
+  // turns -0 into "0".
+  return String(Number(value.toPrecision(12)))
 }
 
 /** `%` glues to the number. Other units sit after a space (`2 周`, `4 weeks`). */

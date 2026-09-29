@@ -124,6 +124,30 @@ describe("formatAxisTick", () => {
     expect(formatAxisTick(4, "weeks")).toBe("4 weeks")
     expect(formatAxisTick(80)).toBe("80")
   })
+
+  it("prints every digit a tick has, so neighbouring ticks never share a label", () => {
+    // One or two decimals printed 0.999999, 1, 1.000001 and 1.000002 all as
+    // "1", and 10.25 as "10.3", a number the axis does not mark.
+    expect(buildNumericAxis([1, 1.000001], "fit").labels).toEqual(["0.999999", "1", "1.000001", "1.000002"])
+    expect(formatAxisTick(10.25)).toBe("10.25")
+    expect(formatAxisTick(0.025, "%")).toBe("0.025%")
+    expect(formatAxisTick(1e-10)).toBe("1e-10")
+  })
+
+  it("prints the ticks it always printed the way it always printed them", () => {
+    const cases: [number, string][] = [
+      [0, "0"],
+      [-0, "0"],
+      [50, "50"],
+      [0.5, "0.5"],
+      [2.5, "2.5"],
+      [12.5, "12.5"],
+      [-0.25, "-0.25"],
+      [1500000, "1500000"],
+      [1e300, "1e+300"],
+    ]
+    for (const [tick, label] of cases) expect(formatAxisTick(tick), String(tick)).toBe(label)
+  })
 })
 
 describe("tick type floor", () => {
