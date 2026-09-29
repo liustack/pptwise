@@ -252,3 +252,48 @@ describe("waterfall automatic total follows the language of the labels", () => {
     expect(text).not.toContain("合计")
   })
 })
+
+describe("waterfall category names", () => {
+  // Six columns across the gallery's 1080px band leave each name about 176px.
+  // "Seat expansion in existing accounts" came out as "Seat expansion in".
+  const long = {
+    type: "waterfall" as const,
+    unit: " seats",
+    items: [
+      { label: "Q1", value: 4172, kind: "total" as const },
+      { label: "Seat expansion in existing accounts", value: 810 },
+      { label: "In-house workspace compute", value: 265 },
+      { label: "Data quality governance", value: -318 },
+      { label: "Pooled delivery capacity", value: -160 },
+      { label: "Q2", value: 4769, kind: "total" as const },
+    ],
+  }
+  const box = { x: 0, y: 0, w: 1080, h: 330 }
+
+  it("wraps a name too long for its column onto a second line instead of cutting it", () => {
+    const root = parseSvgRoot(renderSvgMarkup(<svg>{waterfall.render(long, box, ctx)}</svg>))
+    expect(root.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const all = texts(root).join(" ")
+    for (const item of long.items) expect(all.replace(/\s+/g, " ")).toContain(item.label)
+  })
+
+  it("hangs every name from one line, clear of the bars above it", () => {
+    const root = parseSvgRoot(renderSvgMarkup(<svg>{waterfall.render(long, box, ctx)}</svg>))
+    const rects = Array.from(root.querySelectorAll("rect"))
+    const plotBottom = Math.max(...rects.map((r) => Number(r.getAttribute("y")) + Number(r.getAttribute("height"))))
+    const names = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") !== "700")
+    const firstLine = Math.min(...names.map((t) => Number(t.getAttribute("y"))))
+    // Every column's first line shares one baseline, a full line of text
+    // below the bottom of the bars.
+    const q1 = names.find((t) => t.textContent === "Q1")!
+    expect(Number(q1.getAttribute("y"))).toBe(firstLine)
+    expect(firstLine - 16).toBeGreaterThanOrEqual(plotBottom + 4)
+    expect(Math.max(...names.map((t) => Number(t.getAttribute("y"))))).toBeLessThanOrEqual(box.h)
+  })
+
+  it("keeps a single line where the names fit", () => {
+    const { container } = svg(waterfall.render(basic, { x: 0, y: 0, w: 1000, h: 400 }, ctx))
+    const names = Array.from(container.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") !== "700")
+    expect(names.map((t) => t.getAttribute("y"))).toEqual(["390", "390", "390", "390"])
+  })
+})
