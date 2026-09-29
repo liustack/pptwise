@@ -2,6 +2,7 @@ import type { ReactElement } from "react"
 import type { Component } from "@/ir"
 import { accessibleInk } from "../render/ink"
 import {
+  boxTooShort,
   FORM_BODY_FLOOR,
   FORM_TITLE_FLOOR,
   formHighlightFill,
@@ -11,6 +12,7 @@ import {
   formTextClipMarker,
 } from "./legibility"
 import { SIBLING_AIR_PX } from "../render/spacing"
+import { DroppedContentMarker } from "../render/drop-marker"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type ChevronProcessComponent = Extract<Component, { type: "chevron_process" }>
@@ -129,6 +131,15 @@ export const chevronProcess: SvgComponent<ChevronProcessComponent> = {
     // it always did, rather than running past the bottom of the box.
     const wrapped = resolve(component, box.w, ctx)
     const g = box.h !== undefined && box.h > 0 && wrapped.h > box.h ? resolve(component, box.w, ctx, 1) : wrapped
+    // With one line of note the band is as short as it gets. A box shorter
+    // still cannot hold it, so the band declines the box.
+    if (boxTooShort(g.h, box.h)) {
+      return (
+        <g transform={`translate(${box.x},${box.y})`}>
+          <DroppedContentMarker count={1} kind="component" />
+        </g>
+      )
+    }
     const border = ctx.colors.border ?? ctx.colors.muted
     const last = component.items.length - 1
     const highlight = formHighlightFill(ctx.colors)

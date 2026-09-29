@@ -213,6 +213,13 @@ describe("chevron_process component", () => {
     expect(container.querySelector('[data-truncated="1"]')).not.toBeNull()
   })
 
+  it("declines a box too short for the band and one line of note", () => {
+    const box = { x: 0, y: 0, w: 1104, h: 120 }
+    const { container } = svg(chevronProcess.render(five, box, themed("brief")))
+    expect(container.querySelectorAll("polygon, text")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+  })
+
   it("keeps stage names inside their own chevron at the widest legal count", () => {
     const { container } = svg(chevronProcess.render(withN(6), { x: 88, y: 96, w: 1104 }, themed("swiss")))
     const band = polys(container)
