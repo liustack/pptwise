@@ -167,6 +167,8 @@ describe("word_cloud packing", () => {
     // Georgia and Microsoft YaHei have an advance for every ASCII letter, so
     // the half again only made the cloud look full: at 420×260 this list lost
     // two words in Georgia and one in YaHei with room left between the rest.
+    // A word is now boxed at its advance, or at the estimate the page audit
+    // reads where that is wider.
     const english = [
       ["Renewal", 4], ["Setup time", 4], ["Seat growth", 4], ["Self-serve", 3], ["Integrations", 3],
       ["Response time", 3], ["Pricing", 3], ["Partners", 2], ["Migration", 2], ["Permissions", 2],
@@ -178,7 +180,8 @@ describe("word_cloud packing", () => {
       for (const item of placed) {
         const bold = item.word.weight >= 3
         const painted = measureTextUnits(item.word.text, { bold, fontFamily, exact: true }) * item.fontSize
-        expect(item.w, `${fontFamily} ${item.word.text}`).toBeCloseTo(painted, 6)
+        const estimate = measureTextUnits(item.word.text, { bold, fontFamily }) * item.fontSize
+        expect(item.w, `${fontFamily} ${item.word.text}`).toBeCloseTo(Math.max(painted, estimate), 6)
       }
     }
   })

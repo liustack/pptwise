@@ -84,8 +84,13 @@ const PRINTABLE_ASCII = /[\x20-\x7e]/
  * (Georgia and Microsoft YaHei, every built-in body face and most heading
  * faces) has its advance on record at either weight. Padding those by half
  * again made a cloud or a map look full while there was room left in it, so
- * they are counted at their width and the rest keeps the headroom. Bold text
- * in a face with a table keeps the whole-string estimate it always had.
+ * they go without it and the rest keeps it. ASCII is counted at the wider of
+ * its advance and `measureTextUnits`' default reading, which the page audit
+ * and the gallery's L1 check measure by: Microsoft YaHei Regular is still
+ * read by class averages there, which run wide on lowercase, and two words
+ * boxed at their advances alone were reported overlapping with 8px of page
+ * between them. Bold text in a face with a table keeps the whole-string
+ * estimate it always had.
  *
  * For collision boxes and hard budgets, never for fitting: `fitSvgLine`
  * already shrinks and truncates against the estimate, and padding there would
@@ -108,7 +113,9 @@ export function paintedWidthCeiling(
   }
   return (
     square * fontSize +
-    (exact ? measureTextUnits(exact, { ...weight, exact: true }) * fontSize : 0) +
+    (exact
+      ? Math.max(measureTextUnits(exact, { ...weight, exact: true }), measureTextUnits(exact, weight)) * fontSize
+      : 0) +
     (estimated ? measureTextUnits(estimated, weight) * fontSize * WIDTH_ESTIMATE_HEADROOM : 0)
   )
 }

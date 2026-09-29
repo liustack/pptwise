@@ -367,11 +367,17 @@ describe("paintedWidthCeiling", () => {
     }
   })
 
-  it("counts ASCII in a face with an advance table at its advance, at either weight", () => {
+  it("counts ASCII in a face with an advance table without the headroom, at either weight", () => {
+    // At its advance, or at the class estimate where that reads wider: the
+    // page audit measures regular text by the estimate, so a box narrower
+    // than it would be reported as overlapping its neighbour.
     for (const fontFamily of ["Georgia", "Microsoft YaHei"]) {
       for (const bold of [false, true]) {
         const painted = measureTextUnits("Renewal rate", { bold, fontFamily, exact: true }) * 20
-        expect(paintedWidthCeiling("Renewal rate", 20, { bold, fontFamily }), `${fontFamily} ${bold}`).toBeCloseTo(painted, 9)
+        const estimate = measureTextUnits("Renewal rate", { bold, fontFamily }) * 20
+        const width = paintedWidthCeiling("Renewal rate", 20, { bold, fontFamily })
+        expect(width, `${fontFamily} ${bold}`).toBeCloseTo(Math.max(painted, estimate), 9)
+        expect(width, `${fontFamily} ${bold}`).toBeLessThan(estimate * 1.5)
       }
     }
   })
@@ -381,6 +387,10 @@ describe("paintedWidthCeiling", () => {
     expect(paintedWidthCeiling("Renewal", 20, { fontFamily: "KaiTi" })).toBeCloseTo(estimate * 1.5, 9)
     // A mixed name: the Chinese at one em, the Latin by its advances.
     const mixed = paintedWidthCeiling("Quill 平台组", 20, { fontFamily: "Georgia" })
-    expect(mixed).toBeCloseTo(60 + measureTextUnits("Quill ", { fontFamily: "Georgia", exact: true }) * 20, 9)
+    const quill = Math.max(
+      measureTextUnits("Quill ", { fontFamily: "Georgia", exact: true }),
+      measureTextUnits("Quill ", { fontFamily: "Georgia" }),
+    )
+    expect(mixed).toBeCloseTo(60 + quill * 20, 9)
   })
 })
