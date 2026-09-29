@@ -3,6 +3,7 @@ import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { accessibleInk, contrastRatio, requiredContrastRatio } from "../render/ink"
+import { DroppedContentMarker } from "../render/drop-marker"
 
 type TimelineComponent = Extract<Component, { type: "timeline" }>
 
@@ -77,7 +78,14 @@ function labelPlacement(
  * title 2 行 / desc 3 行换行排布（2026-07-09 用户反馈：版面宽却单行截断
  * 加省略号——所有主题共用本块，一处修复全主题生效）。
  */
-function milestoneLayout(component: TimelineComponent, w: number, fontFamily: string) {
+/** How many lines a milestone's title and description may take. */
+interface LineCaps {
+  title: number
+  desc: number
+}
+const FULL_CAPS: LineCaps = { title: 2, desc: 3 }
+
+function milestoneLayout(component: TimelineComponent, w: number, fontFamily: string, caps: LineCaps = FULL_CAPS) {
   const n = component.milestones.length
   const span = w - 2 * PAD
   const step = n > 1 ? span / (n - 1) : 0
@@ -85,14 +93,14 @@ function milestoneLayout(component: TimelineComponent, w: number, fontFamily: st
     const title = layoutSvgText(m.title, {
       maxWidth,
       fontSize: TITLE_SIZE,
-      maxLines: 2,
+      maxLines: caps.title,
       lineHeightRatio: 1.25,
     })
     const desc = m.desc
       ? layoutSvgText(m.desc, {
           maxWidth,
           fontSize: DESC_SIZE,
-          maxLines: 3,
+          maxLines: caps.desc,
           lineHeightRatio: 1.3,
         })
       : null
@@ -186,7 +194,16 @@ function visibleVerticalRowCount(
     if (rowTops[i] + rows[i].rowH > truncBudget) break
     visible = i + 1
   }
-  return Math.max(1, visible)
+  return visible
+}
+
+/** A timeline given a box it cannot draw even its first milestone in. */
+function declined(box: ComponentBox): React.ReactElement {
+  return (
+    <g transform={`translate(${box.x},${box.y})`}>
+      <DroppedContentMarker count={1} kind="component" />
+    </g>
+  )
 }
 
 function renderVertical(
@@ -210,6 +227,9 @@ function renderVertical(
   // precedent for the convention below).
   const truncBudget = box.h ?? Number.POSITIVE_INFINITY
   const visibleCount = visibleVerticalRowCount(allRowTops, allRows, truncBudget)
+  // Not even the first milestone fits: the timeline declines the box rather
+  // than drawing that one below it.
+  if (visibleCount === 0 && allRows.length > 0) return declined(box)
   const hiddenCount = allRows.length - visibleCount
   const rows = allRows.slice(0, visibleCount)
   const rowTops = allRowTops.slice(0, visibleCount)
@@ -311,7 +331,25 @@ export const timeline: SvgComponent<TimelineComponent> = {
   },
   render(component, box, ctx) {
     if (component.layout === "vertical") return renderVertical(component, box, ctx)
-    const rows = milestoneLayout(component, box.w, ctx.fonts.body)
+    // Side by side, every milestone hangs its words under one axis, so a box
+    // shorter than the tallest of them gives lines back from the bottom:
+    // description lines first, then a title's second line, each cut marked.
+    // With one line of each still too tall, the timeline declines the box.
+    const depth = (r: ReturnType<typeof milestoneLayout>) =>
+      AXIS_Y + r.reduce((mx, row) => Math.max(mx, row.belowH), 48)
+    let rows = milestoneLayout(component, box.w, ctx.fonts.body)
+    if (box.h !== undefined && box.h > 0 && depth(rows) + BOTTOM_PAD > box.h) {
+      const ladder: LineCaps[] = [
+        { title: 2, desc: 2 },
+        { title: 2, desc: 1 },
+        { title: 1, desc: 1 },
+      ]
+      for (const caps of ladder) {
+        if (depth(rows) <= box.h) break
+        rows = milestoneLayout(component, box.w, ctx.fonts.body, caps)
+      }
+      if (depth(rows) > box.h) return declined(box)
+    }
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         <line
@@ -352,6 +390,7 @@ export const timeline: SvgComponent<TimelineComponent> = {
               {title.lines.map((line, li) => (
                 <text
                   key={li}
+                  data-truncated={title.truncated && li === title.lines.length - 1 ? "1" : undefined}
                   x={tx}
                   y={TITLE_TOP + li * title.lineHeight}
                   textAnchor={anchor}
@@ -368,6 +407,7 @@ export const timeline: SvgComponent<TimelineComponent> = {
                 ? desc.lines.map((line, li) => (
                     <text
                       key={li}
+                      data-truncated={desc.truncated && li === desc.lines.length - 1 ? "1" : undefined}
                       x={tx}
                       y={descTop + li * desc.lineHeight}
                       textAnchor={anchor}
