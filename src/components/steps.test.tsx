@@ -233,5 +233,34 @@ describe("steps on every theme", () => {
     expect(container.querySelectorAll("path, text")).toHaveLength(0)
     expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
   })
+
+  it("counts the last line's descenders in the height it asks for", () => {
+    const english = {
+      type: "steps" as const,
+      items: [
+        step("Scoping", "Renewal rate recovered to ninety-one percent, the highest in six quarters."),
+        step("Solutioning", "New bookings grew twenty-three percent, but three accounts contributed sixty percent of that."),
+        step("Seat setup", "Activation coverage reached eighty-eight percent, cutting unplanned meetings by forty percent."),
+        step("Access setup", "Delivery time fell from nine weeks to five, largely through standardized onboarding templates."),
+      ],
+    }
+    const ctx = boundThemeCtx("brief", {})
+    const short = { type: "steps" as const, items: [step("A", "拼音 gyp"), step("B", "了的"), step("C", "yg")] }
+    const cases: [number, typeof english][] = [
+      [1088, english],
+      [528, english],
+      [1088, short],
+    ]
+    for (const [w, ir] of cases) {
+      const h = steps.measure(ir, w, ctx)
+      const { container } = svg(steps.render(ir, { x: 0, y: 0, w, h }, ctx))
+      expect(container.querySelector("[data-dropped]"), `w=${w}`).toBeNull()
+      for (const t of container.querySelectorAll("text")) {
+        // Ink runs a quarter em below the baseline.
+        const bottom = Number(t.getAttribute("y")) + Number(t.getAttribute("font-size")) * 0.25
+        expect(bottom, `w=${w} "${t.textContent}"`).toBeLessThanOrEqual(h)
+      }
+    }
+  })
 })
 

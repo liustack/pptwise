@@ -31,6 +31,14 @@ const TITLE_SIZE = FORM_TITLE_FLOOR
 const FOOT_SIZE = FORM_BODY_FLOOR
 const FOOT_GAP = 14
 /**
+ * How far a sentence's last line reaches below its baseline. A line's
+ * baseline sits at the bottom of its line box, so descenders (g, p, y, the
+ * tails of 的 and 了) hang under it; a quarter em covers them. The height a
+ * step asks for includes this, so the last line's ink stays inside the box
+ * it is given.
+ */
+const FOOT_DESCENT = Math.ceil(FOOT_SIZE * 0.25)
+/**
  * Lines a step's sentence may take under its chevron. Side by side, a slot
  * is a quarter of the page, and an ordinary English sentence runs to four
  * or five lines there at the body floor; it keeps them rather than stopping
@@ -78,8 +86,8 @@ function measureSteps(component: StepsComponent, w: number, ctx: ComponentCtx): 
   const footLines = vertical ? FOOT_LINES_VERTICAL : FOOT_LINES
   const foot = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
   const arrowH = vertical ? ARROW_H_VERTICAL : ARROW_H
-  if (vertical) return n * (arrowH + FOOT_GAP + foot + GAP) - GAP
-  return arrowH + FOOT_GAP + foot
+  if (vertical) return n * (arrowH + FOOT_GAP + foot + GAP) - GAP + FOOT_DESCENT
+  return arrowH + FOOT_GAP + foot + FOOT_DESCENT
 }
 
 function renderBadge(
@@ -126,7 +134,7 @@ export const steps: SvgComponent<StepsComponent> = {
   // instead, below.
   let footLines = vertical ? FOOT_LINES_VERTICAL : FOOT_LINES
   let footH = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
-  while (!vertical && box.h !== undefined && footLines > 1 && arrowH + FOOT_GAP + footH > box.h) {
+  while (!vertical && box.h !== undefined && footLines > 1 && arrowH + FOOT_GAP + footH + FOOT_DESCENT > box.h) {
     footLines -= 1
     footH = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
   }
@@ -137,7 +145,7 @@ export const steps: SvgComponent<StepsComponent> = {
   if (vertical && Number.isFinite(budget)) {
     visible = 0
     for (let i = 0; i < n; i++) {
-      const bottom = i * stride + arrowH + FOOT_GAP + footH
+      const bottom = i * stride + arrowH + FOOT_GAP + footH + FOOT_DESCENT
       if (bottom > budget) break
       visible = i + 1
     }
@@ -145,7 +153,7 @@ export const steps: SvgComponent<StepsComponent> = {
   // Side by side with one line of sentence, or stacked with not even the
   // first step, the box cannot hold the steps: they decline it rather than
   // drawing under it.
-  const tooShort = vertical ? visible === 0 && n > 0 : box.h !== undefined && arrowH + FOOT_GAP + footH > box.h + 1
+  const tooShort = vertical ? visible === 0 && n > 0 : box.h !== undefined && arrowH + FOOT_GAP + footH + FOOT_DESCENT > box.h + 1
   if (tooShort) {
     return (
       <g transform={`translate(${box.x},${box.y})`}>
