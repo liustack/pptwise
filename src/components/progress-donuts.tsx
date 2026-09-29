@@ -74,10 +74,15 @@ function splitValue(value: string, unit: string | undefined): { head: string; ta
   return { head: value, tail: deduped ?? null }
 }
 
-function fitSource(source: string, cellW: number, fontFamily: string): { lines: string[]; fontSize: number; truncated: boolean } {
+function fitSource(
+  source: string,
+  cellW: number,
+  fontFamily: string,
+  maxLines = SOURCE_MAX_LINES,
+): { lines: string[]; fontSize: number; truncated: boolean } {
   const one = fitFormLine(source, { maxWidth: cellW - 16, fontSize: 16, floor: 16, fontFamily })
-  if (!one.truncated) return { lines: [one.text], fontSize: one.fontSize, truncated: false }
-  const laid = layoutAtSize(source, { maxWidth: cellW - 16, fontSize: 16, maxLines: SOURCE_MAX_LINES, fontFamily })
+  if (!one.truncated || maxLines <= 1) return { lines: [one.text], fontSize: one.fontSize, truncated: one.truncated }
+  const laid = layoutAtSize(source, { maxWidth: cellW - 16, fontSize: 16, maxLines, fontFamily })
   return { lines: laid.lines, fontSize: laid.fontSize, truncated: laid.truncated }
 }
 
@@ -89,6 +94,16 @@ function columns(n: number, w: number): number {
 function sourceLines(component: ProgressDonutsComponent, w: number, fontFamily: string): number {
   const cellW = w / columns(component.items.length, w)
   return Math.max(1, ...component.items.map((item) => (item.source ? fitSource(item.source, cellW, fontFamily).lines.length : 1)))
+}
+
+/**
+ * Whether `lines` source lines still end inside a cell of grid `g`: the
+ * ring, the label under it, then each source line, the last one's descent
+ * included.
+ */
+function sourcesFit(g: ReturnType<typeof grid>, lines: number): boolean {
+  const labelY = PAD + 2 * g.r + g.strokeW + 22
+  return labelY + SOURCE_LINE * lines + 16 * 0.25 <= g.cellH
 }
 
 function grid(n: number, w: number, h?: number, sourceLineCount = 1) {
@@ -114,10 +129,18 @@ export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
 
   render(component, box, ctx) {
   const n = component.items.length
-  const lines = sourceLines(component, box.w, ctx.fonts.body)
-  const natural = grid(n, box.w, undefined, lines).naturalH
+  const wanted = sourceLines(component, box.w, ctx.fonts.body)
+  const natural = grid(n, box.w, undefined, wanted).naturalH
   const h = box.h ?? natural
-  const G = grid(n, box.w, h, lines)
+  // The ring stops shrinking at its 36px floor, so a short cell cannot
+  // always pay for a second source line. It gives the line back instead,
+  // and a source cut to one line is marked, the way it always was.
+  let lines = wanted
+  let G = grid(n, box.w, h, lines)
+  while (lines > 1 && !sourcesFit(G, lines)) {
+    lines -= 1
+    G = grid(n, box.w, h, lines)
+  }
   const arc = ctx.colors.accent
   const track = ctx.colors.muted
   const pageBg = ctx.defaultBg ?? ctx.colors.bg
@@ -184,7 +207,7 @@ export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
           bold: true,
           fontFamily: ctx.fonts.body,
         })
-        const source = item.source ? fitSource(item.source, G.cellW, ctx.fonts.body) : null
+        const source = item.source ? fitSource(item.source, G.cellW, ctx.fonts.body, lines) : null
         const labelY = cy + G.r + G.strokeW / 2 + 22
         const iconSize = 14
         const showIcon = Boolean(item.icon) && G.r >= 48
