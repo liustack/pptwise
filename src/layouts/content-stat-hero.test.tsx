@@ -4,6 +4,8 @@ import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { StatHeroContent, layoutDef } from "./content-stat-hero"
+import { FACES } from "./sparse/registry"
+import { measureTextUnits } from "../lib/svg-text-layout"
 import type { PptxIR, Slide } from "@/ir"
 
 const CJK_LONG =
@@ -190,5 +192,71 @@ describe("StatHeroContent", () => {
       <StatHeroContent ir={ir("crayon", [slide])} slide={slide} index={0} ctx={ctx} />,
     )
     expect(root.querySelector("g[data-hero-mode]")).toBeNull()
+  })
+})
+
+// A sparse skin fitted the figure and its unit together and, when the pair
+// could not fit even at the hero's floor size, cut the figure to make room:
+// swiss printed "123456789" for "1234567890" with no mark of any kind. A
+// number is never cut. The unit gives first, and a figure that still cannot
+// be set whole hands the page to the plain rendering.
+describe("a hero figure is never cut", () => {
+  const SKINNED = Object.entries(FACES)
+    .filter(([, faces]) => faces?.["stat-hero"] !== undefined)
+    .map(([theme]) => theme)
+
+  function drawHero(theme: string, item: { value: string; unit?: string; label: string }) {
+    const ctx = boundThemeCtx(theme, {})
+    const slide = {
+      type: "content",
+      kind: "fact",
+      layout: "stat-hero",
+      heading: item.label,
+      components: [{ type: "kpi_cards", items: [item] }],
+    } as unknown as Slide
+    return render(<StatHeroContent ir={ir(theme, [slide])} slide={slide} index={0} ctx={ctx} />)
+  }
+
+  /** Every `<text>` that paints part of `value`, with how much of it. */
+  function figureRuns(root: Element, value: string): { text: string; marked: boolean }[] {
+    const head = value.slice(0, 6)
+    return Array.from(root.querySelectorAll("text"))
+      .map((t) => ({ text: (t.textContent ?? "").replace(/\s+/g, ""), marked: t.closest("[data-truncated]") !== null }))
+      .filter((run) => run.text.includes(head))
+  }
+
+  it("covers all eighteen theme skins", () => {
+    expect(SKINNED).toHaveLength(18)
+  })
+
+  it("keeps swiss' figure whole beside a long unit (the reported page)", () => {
+    const { root } = drawHero("swiss", { value: "1234567890", unit: "registered accounts", label: "Accounts" })
+    const hero = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").startsWith("12345"))!
+    expect(hero.firstChild?.textContent).toBe("1234567890")
+    const unit = hero.querySelector("tspan")!
+    expect(unit.textContent).toBe("registered accounts")
+    const weight = { bold: true, fontFamily: hero.getAttribute("font-family")! }
+    const right =
+      Number(hero.getAttribute("x")) +
+      measureTextUnits("1234567890", weight) * Number(hero.getAttribute("font-size")) +
+      Number(unit.getAttribute("dx")) +
+      measureTextUnits("registered accounts", weight) * Number(unit.getAttribute("font-size"))
+    expect(right).toBeLessThanOrEqual(88 + 1100)
+  })
+
+  it.each(SKINNED)("%s paints the figure whole when figure and unit are long", (theme) => {
+    const { root } = drawHero(theme, { value: "1234567890", unit: "registered accounts", label: "Accounts" })
+    const runs = figureRuns(root, "1234567890")
+    expect(runs.length).toBeGreaterThan(0)
+    for (const run of runs) expect(run.text, theme).toContain("1234567890")
+  })
+
+  it.each(SKINNED)("%s hands the page over rather than cut a figure too long for it", (theme) => {
+    const value = "12345678901234567890"
+    const { root } = drawHero(theme, { value, unit: "万元", label: "累计" })
+    expect(root.querySelector('[data-hero-mode="fallback"], [data-face-mode="fallback"]'), theme).not.toBeNull()
+    const runs = figureRuns(root, value)
+    expect(runs.length, theme).toBeGreaterThan(0)
+    for (const run of runs) expect(run.text.includes(value) || run.marked, `${theme}: "${run.text}"`).toBe(true)
   })
 })

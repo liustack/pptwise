@@ -35,17 +35,26 @@ export function isNumericHero(value: string): boolean {
 
 /**
  * The hero figure's type size, with whatever the skin sets after it on the
- * same line.
+ * same line, or `null` when the figure cannot be set whole.
  *
  * Every skin draws the figure and its trailing runs as one `<text>`: the
- * author's unit as a `heroUnitMark` `<tspan>`, and on thesis and stage a
- * percent sign shrunk to `percentScale` of the figure. Fitting the figure on
- * its own gave it the whole measure and then hung the unit past it: swiss'
+ * author's unit as a `<tspan>` (see `heroUnitMark`), and on thesis and stage
+ * a percent sign shrunk to `percentScale` of the figure. Fitting the figure
+ * on its own gave it the whole measure and then hung the unit past it: swiss'
  * "1142.6" filled its 1100px and "万元" ran 180px further, to x=1255 on a
- * page whose margin is 1192. The trailing runs scale with the figure, so the
- * size is the largest one at which all of it fits, and the runs' width at
- * the floor size is what a figure too long even there is cut to make room
- * for. A figure with nothing after it fits exactly as a plain line does.
+ * page whose margin is 1192. So the size is the largest one at which all of
+ * it fits, with the trailing runs scaling alongside the figure.
+ *
+ * A figure is never cut. A shortened number is not a smaller version of the
+ * author's number, it is a different one, and nothing on the slide would say
+ * so. When the whole line does not fit even at the floor size, the unit gives
+ * first: it shrinks toward `HERO_UNIT_MIN_PX` while the figure holds its
+ * floor. When that is still not enough, or the figure alone is wider than the
+ * measure at its floor, this returns `null`, and the skin hands its page to
+ * `StatHeroFallbackContent`, which draws the component whole.
+ *
+ * `text` is always `value`, untouched. A figure with nothing after it fits
+ * exactly as a plain line fit would size it.
  */
 export function fitHeroLine(
   value: string,
@@ -54,42 +63,35 @@ export function fitHeroLine(
     fontSize: number
     fontFamily: string
     bold: boolean
-    /** The unit `<tspan>` the skin sets after the figure (see `heroUnitMark`). */
+    /** The unit `<tspan>` the skin sets after the figure. */
     unit?: string
     /** A trailing `%` set at this share of the figure's size. */
     percentScale?: number
   },
-): { text: string; fontSize: number } {
+): HeroLine | null {
   const minFontSize = Math.max(48, Math.round(opts.fontSize * (64 / 180)))
   const weight = { bold: opts.bold, fontFamily: opts.fontFamily }
+  const valueUnits = measureTextUnits(value, weight)
   const unitUnits = opts.unit ? measureTextUnits(opts.unit, weight) : 0
   const percentUnits = opts.percentScale ? measureTextUnits("%", weight) : 0
-  const trailWidth = (size: number) => {
-    const unit = opts.unit ? heroUnitMark(size).dx + unitUnits * heroUnitMark(size).fontSize : 0
-    const percent = opts.percentScale ? percentUnits * Math.round(size * opts.percentScale) : 0
-    return unit + percent
-  }
-  const fitted = fitSvgLine(value, {
-    maxWidth: opts.maxWidth,
-    fontSize: opts.fontSize,
-    minFontSize,
-    fontFamily: opts.fontFamily,
-    bold: opts.bold,
-  })
-  if (!opts.unit && !opts.percentScale) return { text: fitted.text, fontSize: fitted.fontSize }
+  const lineWidth = (size: number, unitMark: HeroUnitMark) =>
+    valueUnits * size +
+    (opts.unit ? unitMark.dx + unitUnits * unitMark.fontSize : 0) +
+    (opts.percentScale ? percentUnits * Math.round(size * opts.percentScale) : 0)
 
-  const valueUnits = measureTextUnits(value, weight)
-  for (let size = fitted.fontSize; size >= minFontSize; size--) {
-    if (valueUnits * size + trailWidth(size) <= opts.maxWidth) return { text: value, fontSize: size }
+  const largest = valueUnits > 0 ? Math.min(opts.fontSize, Math.floor(opts.maxWidth / valueUnits)) : opts.fontSize
+  for (let size = largest; size >= minFontSize; size--) {
+    const unitMark = heroUnitMark(size)
+    if (lineWidth(size, unitMark) <= opts.maxWidth) return { text: value, fontSize: size, unitMark }
   }
-  const cut = fitSvgLine(value, {
-    maxWidth: Math.max(0, opts.maxWidth - trailWidth(minFontSize)),
-    fontSize: minFontSize,
-    minFontSize,
-    fontFamily: opts.fontFamily,
-    bold: opts.bold,
-  })
-  return { text: cut.text, fontSize: cut.fontSize }
+  if (opts.unit && largest >= minFontSize) {
+    const { dx, fontSize: unitStart } = heroUnitMark(minFontSize)
+    for (let unitSize = unitStart - 1; unitSize >= HERO_UNIT_MIN_PX; unitSize--) {
+      const unitMark = { fontSize: unitSize, dx }
+      if (lineWidth(minFontSize, unitMark) <= opts.maxWidth) return { text: value, fontSize: minFontSize, unitMark }
+    }
+  }
+  return null
 }
 
 /**
@@ -328,9 +330,24 @@ export function quoteBlockBaseline(
  * A unit is set small and tight against its figure, which is what these two
  * numbers are — a quarter of the numeral's size, a hair of air before it.
  */
-export function heroUnitMark(heroFontSize: number): { fontSize: number; dx: number } {
+export function heroUnitMark(heroFontSize: number): HeroUnitMark {
   return {
-    fontSize: Math.max(20, Math.round(heroFontSize * 0.26)),
+    fontSize: Math.max(HERO_UNIT_MIN_PX, Math.round(heroFontSize * 0.26)),
     dx: Math.max(2, Math.round(heroFontSize * 0.04)),
   }
+}
+
+/** The smallest a hero's unit mark is ever set, and where it stops giving way to the figure. */
+export const HERO_UNIT_MIN_PX = 20
+
+export interface HeroUnitMark {
+  fontSize: number
+  dx: number
+}
+
+/** A hero line that fits: the figure whole, at `fontSize`, and its unit mark. */
+export interface HeroLine {
+  text: string
+  fontSize: number
+  unitMark: HeroUnitMark
 }

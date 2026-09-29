@@ -8,7 +8,8 @@ import {
   pullQuoteContext,
   pullQuoteText,
 } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, heroUnitMark, quoteBlockBaseline, yearQuarter } from "./shared"
+import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, yearQuarter } from "./shared"
+import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** ledger 稀排脸：行情格言、幽灵季度、折线引文。不画顶缘刻度尺和底缘面积线。 */
 
@@ -93,7 +94,9 @@ export function statHero({ ir, slide, ctx }: SvgTemplateProps) {
   const quarter = yearQuarter(ir.meta.date)
   const unit = heroUnit(slide)
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 290, fontFamily: fonts.heading, bold: false, unit })
-  const unitMark = heroUnitMark(fitted.fontSize)
+  // A figure this line cannot set whole goes to the plain page, never cut.
+  if (!fitted) return StatHeroFallbackContent({ slide, ctx })
+  const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   return (

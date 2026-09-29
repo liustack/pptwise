@@ -4,7 +4,8 @@ import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { heroCaption, heroSource, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, heroUnitMark, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
+import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** terminal 稀排脸：青光巨数、轨道格言、节点证据卡。不画右缘星座链。 */
 
@@ -29,7 +30,9 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const unit = heroUnit(slide)
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: true, unit })
-  const unitMark = heroUnitMark(fitted.fontSize)
+  // A figure this line cannot set whole goes to the plain page, never cut.
+  if (!fitted) return StatHeroFallbackContent({ slide, ctx })
+  const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   const heroWidth = measureTextUnits(fitted.text, { bold: true, fontFamily: fonts.heading }) * fitted.fontSize

@@ -12,12 +12,13 @@ import {
   statementAttribution,
 } from "../minimal-shared"
 import {
-  fitHeroLine, heroUnitMark,
+  fitHeroLine,
   fitSparseHeading,
   fitSparseQuote,
   quoteBlockBaseline,
   splitTrailingPercent,
 } from "./shared"
+import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** stage 稀排脸：居中细字、巨数、双发丝引文。 */
 
@@ -87,7 +88,9 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { body, percent } = splitTrailingPercent(heroValue(slide))
   const unit = heroUnit(slide)
   const fitted = fitHeroLine(body, { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: false, unit, percentScale: percent ? 0.5 : undefined })
-  const unitMark = heroUnitMark(fitted.fontSize)
+  // A figure this line cannot set whole goes to the plain page, never cut.
+  if (!fitted) return StatHeroFallbackContent({ slide, ctx })
+  const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   return (
