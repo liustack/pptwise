@@ -629,13 +629,27 @@ interface Occluder {
   order: number
 }
 
-const UNSTRAIGHT_TRANSFORM = /rotate|skew|matrix/i
+/** Containers whose children are never painted where they stand. */
+const UNPAINTED_CONTAINERS = new Set(["defs", "symbol", "mask", "clippath", "pattern", "marker"])
+const NUM = String.raw`-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?`
+/**
+ * The only transforms `parseTransform` reads right: an optional two-value
+ * translate, then an optional one-value scale, in that order. Anything else
+ * (a rotation, an uneven scale, a scale before its translate) would put the
+ * rect somewhere the checker does not think it is.
+ */
+const READABLE_TRANSFORM = new RegExp(
+  String.raw`^\s*(?:translate\(\s*${NUM}[\s,]+${NUM}\s*\))?\s*(?:scale\(\s*${NUM}\s*\))?\s*$`,
+  "i",
+)
 
 function hidesWhatIsUnder(el: Element): boolean {
   for (let n: Element | null = el; n && n.tagName.toLowerCase() !== "svg"; n = n.parentElement) {
+    if (UNPAINTED_CONTAINERS.has(n.tagName.toLowerCase())) return false
+    if (n.getAttribute("style")) return false
     if (n.getAttribute("clip-path") || n.getAttribute("mask") || n.getAttribute("filter")) return false
     if (n.getAttribute("visibility") === "hidden" || n.getAttribute("display") === "none") return false
-    if (UNSTRAIGHT_TRANSFORM.test(n.getAttribute("transform") ?? "")) return false
+    if (!READABLE_TRANSFORM.test(n.getAttribute("transform") ?? "")) return false
   }
   const paint = parseHexPaint(inheritedAttr(el, "fill") ?? "#000000")
   if (!paint || paint.alpha < 1) return false

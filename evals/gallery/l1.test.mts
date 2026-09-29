@@ -231,6 +231,28 @@ describe("auditL1 planted defects", () => {
     expect(codes(svg)).toContain("edge-stick")
   })
 
+  // A rect only hides a rule when nothing can take it off the page or move
+  // it: one in <defs> is never painted, an inline style can make it clear,
+  // and a transform the checker cannot read puts it somewhere else.
+  it.each([
+    ["kept in defs", `<defs><rect x="80" y="150" width="540" height="100" fill="#ffffff"/></defs>`],
+    ["made clear by an inline style", `<rect x="80" y="150" width="540" height="100" fill="#ffffff" style="fill-opacity:0"/>`],
+    [
+      "squashed by an uneven scale",
+      `<g transform="scale(1,0.1)"><rect x="80" y="150" width="540" height="100" fill="#ffffff"/></g>`,
+    ],
+    [
+      "moved by a scale applied before its translate",
+      `<g transform="scale(2) translate(20,100)"><rect x="20" y="20" width="300" height="40" fill="#ffffff"/></g>`,
+    ],
+  ])("still flags a rule over a rect %s", (_label, cover) => {
+    const svg = wrap(
+      `<line x1="90" y1="190" x2="600" y2="190" stroke="#000000"/>${cover}` +
+        `<text x="100" y="200" font-size="24">Visible rule crossing this text</text>`,
+    )
+    expect(codes(svg)).toContain("strikethrough")
+  })
+
   it("still flags a rule that runs through a rounded card's corner", () => {
     // y=493 is 2px under the top edge of an rx=12 card. The corner curve
     // leaves the line bare there, and the text sits across the corner.
