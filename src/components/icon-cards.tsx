@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import { Icon } from "../render/icons"
+import { DroppedContentMarker } from "../render/drop-marker"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import {
   boardTypeScale,
@@ -104,13 +105,22 @@ function geometry(
   // is too short for every title and text at the node's natural size, the
   // node gives up height first, as far as its own floor, before a word goes.
   const cut = (layouts: typeof settled.layouts) => layouts.some((l) => l.title.truncated || l.text.truncated)
-  if (boxH !== undefined && cut(settled.layouts)) {
+  // A column always keeps its icon and a line of title, so a short enough
+  // row can be overrun by the stack even with no word cut.
+  const tooTall = (res: typeof settled) => res.layouts.some((l) => stackHeight(l, res.nodeSize) > res.rowH + 1)
+  if (boxH !== undefined && (cut(settled.layouts) || tooTall(settled))) {
+    let shortest: typeof settled | undefined
     for (let r = settled.nodeR - 1; r >= NODE_R_MIN; r--) {
       const smaller = columnsAt(component, w, ctx, cols, rows, colW, r, boxH)
-      if (!cut(smaller.layouts)) return smaller
+      if (!cut(smaller.layouts) && !tooTall(smaller)) return { ...smaller, declined: false }
+      if (!shortest && !tooTall(smaller)) shortest = smaller
     }
+    if (!tooTall(settled)) return { ...settled, declined: false }
+    // Even the smallest icon leaves a column taller than its row: the cards
+    // decline the box rather than drawing above and below it.
+    return shortest ? { ...shortest, declined: false } : { ...settled, declined: true }
   }
-  return settled
+  return { ...settled, declined: false }
 }
 
 function columnsAt(
@@ -186,6 +196,13 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
 
   render(component, box, ctx): React.ReactElement {
   const g = geometry(component, box.w, ctx, box.h)
+  if (g.declined) {
+    return (
+      <g transform={`translate(${box.x},${box.y})`}>
+        <DroppedContentMarker count={1} kind="component" />
+      </g>
+    )
+  }
   const fill = ctx.colors.surface
   const ink = ctx.colors.accent
   const iconSize = Math.round(g.nodeR * 0.85)
