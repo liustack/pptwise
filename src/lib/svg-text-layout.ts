@@ -1491,6 +1491,33 @@ export function layoutSvgText(
 }
 
 /**
+ * The CJK code points every measured face draws on the full em square:
+ * ideographic punctuation, the unified ideographs, and the fullwidth ASCII
+ * variants. Read from msyh.ttc, Simsun.ttc and Kaiti.ttf: all 20902 unified
+ * ideographs and all 94 fullwidth forms advance exactly 1em in each, and so
+ * does every ideographic punctuation mark each face carries (a mark SimSun
+ * or KaiTi lacks falls back to YaHei, which has all of them at 1em).
+ */
+const EM_SQUARE_RE = /[\u3000-\u303f\u4e00-\u9fa5\uff01-\uff5e]/
+
+/**
+ * True when `measureTextUnits` knows `text`'s width rather than estimating
+ * it: every character is either on the CJK em square (`EM_SQUARE_RE`) or in
+ * the face's own advance table for this weight. A caller that pads an
+ * estimate against the class average's worst case can skip the padding
+ * then, since there is no class average left in the number.
+ */
+export function measuresExactly(text: string, weight?: TextWeightHint): boolean {
+  const faceKey = classifyFaceKey(weight?.fontFamily)
+  const table = weight?.bold ? EXACT_TABLE_FOR[faceKey]?.bold : REGULAR_EXACT_TABLE_FOR[faceKey]
+  for (const ch of text) {
+    if (EM_SQUARE_RE.test(ch)) continue
+    if (table?.[ch.charCodeAt(0)] === undefined) return false
+  }
+  return true
+}
+
+/**
  * True when `fontFamily` resolves (via `classifyFaceKey`'s own first-member
  * convention above) to a face this pack has a real per-character exact
  * advance-width table for (`EXACT_TABLE_FOR` above) -- currently Georgia and

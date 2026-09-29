@@ -357,3 +357,27 @@ describe("layoutAtSize", () => {
     expect(source.startsWith(r.lines[0]!)).toBe(true)
   })
 })
+
+describe("fitFormUnit headroom", () => {
+  it("takes a unit its face measures exactly at its own width, with no headroom", () => {
+    // "accounts" in Georgia Regular reads from the font's advance table:
+    // 4.1718em. Pre-fix it was fitted into room / 1.5 and charged 1.5 times
+    // that width, so a 70px room left it cut.
+    const georgia = "Georgia, Songti SC, STSong, serif"
+    const exact = measureTextUnits("accounts", { fontFamily: georgia }) * 16
+    const fit = fitFormUnit("accounts", { room: exact + 1, fontSize: 16, fontFamily: georgia })
+    expect(fit).not.toBeNull()
+    expect(fit!.text).toBe("accounts")
+    expect(fit!.truncated).toBe(false)
+    expect(fit!.width).toBeCloseTo(exact, 6)
+    // CJK sits on the em square in every face.
+    const cjk = fitFormUnit("万元", { room: 33, fontSize: 16, fontFamily: "Microsoft YaHei" })
+    expect(cjk).toEqual({ text: "万元", fontSize: 16, width: 32, truncated: false })
+  })
+
+  it("keeps the headroom for a unit the estimator can only guess", () => {
+    // "‰" has no advance table entry, so the class estimate is padded.
+    const fit = fitFormUnit("‰", { room: 100, fontSize: 16, fontFamily: "Georgia" })
+    expect(fit!.width).toBeCloseTo(measureTextUnits("‰", { fontFamily: "Georgia" }) * 16 * 1.5, 6)
+  })
+})

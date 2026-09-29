@@ -6,6 +6,7 @@ import {
   layoutSvgText,
   measureMonoTextUnits,
   measureTextUnits,
+  measuresExactly,
   truncateToMonoUnits,
   truncateToUnits,
 } from "./svg-text-layout"
@@ -1082,3 +1083,21 @@ describe("space-delimited mixed text wraps Chinese per character", () => {
     ])
   })
 })
+
+describe("measuresExactly", () => {
+  it("is true for printable ASCII in a face with a table for that weight, and for CJK", () => {
+    expect(measuresExactly("accounts", { fontFamily: "Georgia" })).toBe(true)
+    expect(measuresExactly("k seats 90%", { fontFamily: "Microsoft YaHei" })).toBe(true)
+    expect(measuresExactly("Q2 季度", { fontFamily: "SimSun" })).toBe(true)
+    expect(measuresExactly("万元，", { fontFamily: "Cambria" })).toBe(true)
+  })
+
+  it("is false where a character falls back to a class average", () => {
+    // SimSun has no Bold binary, Cambria no table, and "‰"/"·" no entry.
+    expect(measuresExactly("Q2", { fontFamily: "SimSun", bold: true })).toBe(false)
+    expect(measuresExactly("accounts", { fontFamily: "Cambria" })).toBe(false)
+    expect(measuresExactly("3‰", { fontFamily: "Georgia" })).toBe(false)
+    expect(measuresExactly("甲 · 乙", { fontFamily: "Microsoft YaHei" })).toBe(false)
+  })
+})
+
