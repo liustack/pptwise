@@ -1,5 +1,6 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
+import { layoutAtSize } from "./legibility"
 import { rotateChartPalette } from "../render/chart-palette"
 import { accessibleInk, contrastRatio, readableOn, requiredContrastRatio } from "../render/ink"
 import { mixHex } from "./color-mix"
@@ -184,6 +185,13 @@ const LABEL_GAP = 8
 const MAX_LABEL_W = 150
 const LABEL_FONT = 16
 const LABEL_MIN_FONT = 16
+/**
+ * A node label longer than `MAX_LABEL_W` wraps into a short stack centred on
+ * its node rather than losing its tail, as many lines as the node is tall
+ * enough to keep beside it, and never more than this.
+ */
+const LABEL_MAX_LINES = 3
+const LABEL_LINE_RATIO = 1.25
 /** Natural (unstretched) fallback height — full-body geometry is always
  * driven by the given `box.h` at render time (`checkFullBodyExclusivity`
  * guarantees this is always the slide's sole component), so this only
@@ -701,24 +709,33 @@ export const sankey: SvgComponent<SankeyComponent> = {
           />
         ))}
         {layout.nodes.map((n) => {
-          const labelFit = fitSvgLine(n.label, {
-            maxWidth: Math.min(MAX_LABEL_W, Math.max(24, (box.w - layout.layerCount * NODE_W) / Math.max(1, layout.layerCount - 1) - LABEL_GAP * 2)),
+          const labelMaxW = Math.min(MAX_LABEL_W, Math.max(24, (box.w - layout.layerCount * NODE_W) / Math.max(1, layout.layerCount - 1) - LABEL_GAP * 2))
+          const oneLine = fitSvgLine(n.label, {
+            maxWidth: labelMaxW,
             fontSize: LABEL_FONT,
             minFontSize: LABEL_MIN_FONT,
           })
+          const lineH = Math.round(LABEL_MIN_FONT * LABEL_LINE_RATIO)
+          const stackLines = Math.max(1, Math.min(LABEL_MAX_LINES, Math.floor(n.h / lineH)))
+          const labelFit =
+            oneLine.truncated && stackLines > 1
+              ? layoutAtSize(n.label, { maxWidth: labelMaxW, fontSize: LABEL_MIN_FONT, maxLines: stackLines, lineHeightRatio: LABEL_LINE_RATIO })
+              : { lines: [oneLine.text], fontSize: oneLine.fontSize, lineHeight: lineH, truncated: oneLine.truncated }
+          const extra = (labelFit.lines.length - 1) * labelFit.lineHeight
           const labelX = n.isLastLayer ? n.x - LABEL_GAP : n.x + NODE_W + LABEL_GAP
           const labelAnchor = n.isLastLayer ? "end" : "start"
-          const rawLabelY = n.y + n.h / 2 + labelFit.fontSize * 0.35
+          // The first baseline of the stack; a one-line label sits exactly where it always has.
+          const rawLabelY = n.y + n.h / 2 - extra / 2 + labelFit.fontSize * 0.35
           const minLabelY = box.y + labelFit.fontSize * LABEL_ASCENT_RATIO
-          const maxLabelY = box.y + h - labelFit.fontSize * LABEL_DESCENT_RATIO
+          const maxLabelY = box.y + h - labelFit.fontSize * LABEL_DESCENT_RATIO - extra
           const labelY = Math.min(maxLabelY, Math.max(minLabelY, rawLabelY))
           const labelFitsVertically = minLabelY <= maxLabelY
-          const labelW = measureTextUnits(labelFit.text) * labelFit.fontSize
+          const labelW = Math.max(...labelFit.lines.map((line) => measureTextUnits(line))) * labelFit.fontSize
           const labelBBox: BBox = {
             xMin: n.isLastLayer ? labelX - labelW : labelX,
             xMax: n.isLastLayer ? labelX : labelX + labelW,
             yMin: labelY - labelFit.fontSize * LABEL_ASCENT_RATIO,
-            yMax: labelY + labelFit.fontSize * LABEL_DESCENT_RATIO,
+            yMax: labelY + extra + labelFit.fontSize * LABEL_DESCENT_RATIO,
           }
           const labelFitsHorizontally =
             labelBBox.xMin >= box.x - 6 && labelBBox.xMax <= box.x + box.w + 6
@@ -768,21 +785,26 @@ export const sankey: SvgComponent<SankeyComponent> = {
                   fill={bg}
                 />
               ) : null}
-              {showLabel ? (
-              <text
-                data-truncated={labelFit.truncated ? "1" : undefined}
-                data-label-bbox={formatBBox(labelBBox)}
-                x={labelX}
-                y={labelY}
-                textAnchor={labelAnchor}
-                fontSize={labelFit.fontSize}
-                fill={ink}
-                fontFamily={ctx.fonts.body}
-                dominantBaseline="alphabetic"
-              >
-                {labelFit.text}
-              </text>
-              ) : null}
+              {showLabel
+                ? labelFit.lines.map((line, li) => (
+                    <text
+                      key={li}
+                      data-truncated={labelFit.truncated && li === labelFit.lines.length - 1 ? "1" : undefined}
+                      // The whole stack's box rides on its first line, so the
+                      // contrast sweep checks every band any line crosses.
+                      data-label-bbox={li === 0 ? formatBBox(labelBBox) : undefined}
+                      x={labelX}
+                      y={labelY + li * labelFit.lineHeight}
+                      textAnchor={labelAnchor}
+                      fontSize={labelFit.fontSize}
+                      fill={ink}
+                      fontFamily={ctx.fonts.body}
+                      dominantBaseline="alphabetic"
+                    >
+                      {line}
+                    </text>
+                  ))
+                : null}
             </g>
           )
         })}

@@ -425,3 +425,51 @@ describe("sankey label ink is safe against real band composites (task 3 fix roun
     }
   })
 })
+
+describe("sankey node labels longer than the label column", () => {
+  const english = {
+    type: "sankey" as const,
+    nodes: [
+      { id: "n1", label: "Consulting" },
+      { id: "n2", label: "Platforms" },
+      { id: "n3", label: "K-12" },
+      { id: "n4", label: "Seat expansion in existing accounts" },
+      { id: "n5", label: "In-house workspace compute" },
+      { id: "n6", label: "Staffing-path automation" },
+    ],
+    links: [
+      { from: "n1", to: "n4", value: 34 },
+      { from: "n1", to: "n5", value: 18 },
+      { from: "n2", to: "n4", value: 21 },
+      { from: "n2", to: "n6", value: 15 },
+      { from: "n3", to: "n5", value: 12 },
+      { from: "n4", to: "n6", value: 40 },
+      { from: "n5", to: "n6", value: 22 },
+    ],
+  }
+
+  it("stack onto lines beside their node instead of losing their tail", () => {
+    const box = { x: 96, y: 182, w: 1088, h: 458 }
+    const { container } = svg(sankey.render(english, box, ctx))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const groups = Array.from(container.querySelectorAll("g[data-audit-box]"))
+    for (const node of english.nodes) {
+      const group = groups.find((g) =>
+        Array.from(g.querySelectorAll("text"))
+          .map((t) => t.textContent ?? "")
+          .join(" ")
+          .includes(node.label),
+      )
+      expect(group, node.label).toBeTruthy()
+      const lines = Array.from(group!.querySelectorAll("text"))
+      // One contrast box per label, carried by its first line.
+      expect(lines.filter((t) => t.hasAttribute("data-label-bbox"))).toHaveLength(1)
+      for (const t of lines) {
+        const y = Number(t.getAttribute("y"))
+        expect(y).toBeGreaterThan(box.y)
+        expect(y).toBeLessThanOrEqual(box.y + box.h)
+      }
+    }
+  })
+})
+
