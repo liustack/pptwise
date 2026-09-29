@@ -335,9 +335,12 @@ describe("layoutSvgText balanceLines (widow avoidance)", () => {
     expect(r.fontSize).toBe(64)
   })
 
-  it("keeps the greedy wrap by default (existing callers unaffected)", () => {
+  it("keeps the greedy wrap by default, only lifting a lone last character", () => {
+    // Greedy is 「年度战略回」+「顾」. Without balanceLines the lines stay
+    // greedy, and the one move made is the orphan fix: one character joins
+    // 「顾」 so the last line is not a single glyph.
     const r = layoutSvgText("年度战略回顾", { maxWidth: 360, fontSize: 64, maxLines: 3 })
-    expect(r.lines).toEqual(["年度战略回", "顾"])
+    expect(r.lines).toEqual(["年度战略", "回顾"])
   })
 
   it("balances space-delimited text without splitting words", () => {
@@ -779,7 +782,8 @@ describe("CJK line-break prohibition (kinsoku)", () => {
       minPt: 24,
     })
     expectNoProhibitedBoundary(r.lines)
-    expect(r.lines).toEqual(["七月一场大涝淹田三", "天，稻子倒伏不足一", "成。"])
+    // 「成。」 alone would be an orphan, so 「一」 comes down with it.
+    expect(r.lines).toEqual(["七月一场大涝淹田三", "天，稻子倒伏不足", "一成。"])
   })
 
   it("pulls a doubled ellipsis onto the line before it", () => {
@@ -949,5 +953,62 @@ describe("allowsLineBreakBetween", () => {
     expect(allowsLineBreakBetween(undefined, "》")).toBe(true)
     expect(allowsLineBreakBetween("《", undefined)).toBe(true)
     expect(allowsLineBreakBetween("", "》")).toBe(true)
+  })
+})
+
+describe("CJK orphan avoidance (no single-character last line)", () => {
+  // Body type at a frozen size, the way form cards call it (`layoutAtSize`).
+  const at = (text: string, maxWidth: number) =>
+    layoutSvgText(text, { maxWidth, fontSize: 16, maxLines: 64, minPt: 16 })
+
+  it("moves one character down to a lone last character (runway five-forces repro)", () => {
+    // Pre-fix: ["植物染批次色差需沟通成", "本"].
+    const r = at("植物染批次色差需沟通成本", 180)
+    expect(r.lines).toEqual(["植物染批次色差需沟通", "成本"])
+    expect(r.fontSize).toBe(16)
+    expect(r.truncated).toBe(false)
+  })
+
+  it("splits a four-character label two and two (cycle node repro)", () => {
+    // Pre-fix: ["方案评", "审"].
+    expect(at("方案评审", 52).lines).toEqual(["方案", "评审"])
+  })
+
+  it("counts closing punctuation with the character it trails", () => {
+    // Pre-fix: ["女主角「旅馆老板", "娘」"]. 「娘」」 is still one ideograph.
+    expect(at("女主角「旅馆老板娘」", 132).lines).toEqual(["女主角「旅馆老", "板娘」"])
+    // Pre-fix: ["九十分以上十八人，比期中多了五", "人。"].
+    expect(at("九十分以上十八人，比期中多了五人。", 244).lines).toEqual([
+      "九十分以上十八人，比期中多了",
+      "五人。",
+    ])
+  })
+
+  it("moves a space-delimited word whole rather than splitting it", () => {
+    // Pre-fix: ["业务 SLO 要求 90", "秒。"].
+    expect(at("业务 SLO 要求 90 秒。", 144).lines).toEqual(["业务 SLO 要求", "90 秒。"])
+  })
+
+  it("cuts inside a long CJK run between two ideographs when no word boundary works", () => {
+    // splitLongToken chunks the run 「是整个系列的转折点」 and leaves 「点」 alone.
+    expect(at("第九个 look 是整个系列的转折点", 128).lines).toEqual([
+      "第九个 look",
+      "是整个系列的转",
+      "折点",
+    ])
+  })
+
+  it("leaves the greedy lines alone when no character can be spared", () => {
+    // 「季」+「后赛」 would only move the orphan to the first line.
+    expect(at("季后赛", 36).lines).toEqual(["季后", "赛"])
+  })
+
+  it("never widens the last line past the budget", () => {
+    // One ideograph per line: moving one down would overflow, so it stays.
+    expect(at("成本", 20).lines).toEqual(["成", "本"])
+  })
+
+  it("leaves a lone Latin word on the last line alone", () => {
+    expect(at("Vertical playbook replication", 200).lines).toEqual(["Vertical playbook", "replication"])
   })
 })
