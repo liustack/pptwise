@@ -30,7 +30,9 @@ const SHOW_SPEC_UNDER_FLOOR = [
   "layouts/content-show-figures.tsx: minFontSize: 15",
   "layouts/content-show-gallery.tsx: minFontSize: 15",
   "layouts/content-show-gallery.tsx: minFontSize: 14",
-  "layouts/content-show-gallery.tsx: minFontSize: 12",
+  // The frame caption, now wrapped onto two lines (`layoutSvgText` names its
+  // floor `minPt`) at the same 12px it was fitted at on one.
+  "layouts/content-show-gallery.tsx: minPt: 12",
   "layouts/content-show-spotlight.tsx: minFontSize: 14",
   // The picture's own caption, on the show scale's caption size — it used to
   // share the kicker line with `insight_panel.title` and lose to it.

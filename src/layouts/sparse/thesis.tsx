@@ -84,8 +84,8 @@ const CAPTION_SOURCE_GAP = 40
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const { body, percent } = splitTrailingPercent(heroValue(slide))
-  const fitted = fitHeroLine(body, { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: false })
   const unit = heroUnit(slide)
+  const fitted = fitHeroLine(body, { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: false, unit, percentScale: percent ? 190 / 300 : undefined })
   const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
   const source = heroSource(slide)

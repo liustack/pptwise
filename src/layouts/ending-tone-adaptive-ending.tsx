@@ -227,6 +227,10 @@ export const layoutDef: LayoutDefinition = {
     notFor: "Endings that carry a subtitle or a list, which belong in Tinted Word or Conclusions List.",
   },
   slideTypes: ["ending"],
+  // The organization label sits at (64,74). brief's locator corner runs its
+  // top arm along y=56 out to x=128, straight through the label's first
+  // glyphs.
+  decorKeepOut: [{ x: 64, y: 50, w: 1152, h: 32 }],
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },

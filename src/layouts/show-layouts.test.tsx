@@ -208,6 +208,27 @@ describe("runway show layouts", () => {
     ])
   })
 
+  // A 172px frame holds about eleven tracked 12px glyphs, and the one line it
+  // gave a caption cut "文档模板库在咨询项目中的复用位置" after
+  // "文档模板库在咨询项目中的". The room under the caption takes a second line.
+  it("wraps a long show-gallery caption onto a second line instead of cutting it", () => {
+    const long = "文档模板库在咨询项目中的复用位置"
+    const base = slides[2]!
+    const grid = base.components[0] as Extract<Slide["components"][number], { type: "image_grid" }>
+    const slide = {
+      ...base,
+      components: [{ ...grid, items: grid.items.map((item, i) => (i === 1 ? { ...item, caption: long } : item)) }],
+    } as Slide
+    const root = draw(2, slide)
+    const lines = Array.from(root.querySelectorAll("text")).filter(
+      (t) => t.getAttribute("x") === "260" && t.getAttribute("font-size") === "12",
+    )
+    expect(lines.map((t) => t.textContent).join("")).toBe(long)
+    expect(lines.map((t) => t.getAttribute("y"))).toEqual(["614", "632"])
+    expect(lines.some((t) => t.hasAttribute("data-truncated"))).toBe(false)
+    expect(attrs(textBy(root, "场景 1"), ["y", "font-size", "letter-spacing"])).toEqual(["614", "12", "2"])
+  })
+
   it("places show-spotlight on the approved image and parameter columns", () => {
     const root = draw(3)
     expect(attrs(root.querySelector('[data-show-image-frame="true"]')!, ["x", "y", "width", "height"])).toEqual([

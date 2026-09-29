@@ -30,7 +30,13 @@ const EVIDENCE_TOP = 180
 const EVIDENCE_W = 960
 const EVIDENCE_BOTTOM = 640
 const FOOTNOTE_Y = 656
-const FOOTNOTE_SIZE = 12
+/**
+ * The source line sits at the 16px floor it has always been painted at. It
+ * used to ask for 12px, which `fitSvgLine` cannot give under a 16px floor:
+ * a request below the floor takes the cut branch whatever the length, so
+ * every source line came back marked as cut.
+ */
+const FOOTNOTE_SIZE = 16
 
 /**
  * Whether this page is the one thing this face can draw: a single piece of

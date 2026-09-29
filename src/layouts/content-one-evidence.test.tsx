@@ -270,6 +270,28 @@ describe("one-evidence evidence vs assertion partition", () => {
     expect(ev.y).toBeGreaterThanOrEqual(Number(heading.getAttribute("y")))
   })
 
+  // The source line asked `fitSvgLine` for 12px under a 16px floor. A request
+  // under the floor always takes the cut branch, so "吴语田野采集档案" was
+  // painted whole at 16px and still marked as cut.
+  it.each([
+    ["evidence frame", [BAR_CHART]],
+    ["step-aside page", [{ type: "code", language: "ts", code: "const x = 1" }]],
+  ] as const)("sets a short source line whole and unmarked on the %s", (_, components) => {
+    const ctx = boundThemeCtx("thesis", {})
+    const slide = {
+      type: "content",
+      kind: "evidence",
+      layout: "one-evidence",
+      heading: CJK_CLAIM,
+      footnote: "吴语田野采集档案",
+      components,
+    } as unknown as Slide
+    const { root } = render(<OneEvidenceContent ir={ir("thesis", [slide])} slide={slide} index={0} ctx={ctx} />)
+    const source = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "吴语田野采集档案")!
+    expect(source.getAttribute("font-size")).toBe("16")
+    expect(source.hasAttribute("data-truncated")).toBe(false)
+  })
+
   it("museum with evidence gives the chart a band at least 140px below the claim", () => {
     const ctx = boundThemeCtx("museum", {})
     const slide: Slide = {

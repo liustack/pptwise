@@ -1,6 +1,6 @@
 import type { Component } from "@/ir"
 import { sectionNameFor } from "../lib/derive"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { stripEmphasis } from "../render/emphasis"
 import { accessibleInk, groupValueInks } from "../render/ink"
 import { SvgContent } from "../render/svg-content"
@@ -17,6 +17,21 @@ import type { SvgTemplateProps } from "./types"
 type ImageGrid = Extract<Component, { type: "image_grid" }>
 
 const FRAME_X = [64, 260, 456, 652, 848, 1044] as const
+
+/**
+ * A caption under a frame: 12px, tracked 2px, in the frame's 172px.
+ *
+ * That measure holds about eleven CJK glyphs, and an ordinary caption runs
+ * past it ("文档模板库在咨询项目中的复用位置" is sixteen). One line cut it
+ * mid-phrase. The band under the caption is empty down to the summary at
+ * y=672, so a second line at the same size takes the rest, split evenly so
+ * no line ends on a two-glyph widow.
+ */
+const CAPTION_Y = 614
+const CAPTION_SIZE = 12
+const CAPTION_TRACKING = 2
+const CAPTION_LINE_HEIGHT = 18
+const CAPTION_MAX_LINES = 2
 
 function exactImageGrid(slide: SvgTemplateProps["slide"]): ImageGrid | null {
   if (slide.components.length !== 1) return null
@@ -119,12 +134,17 @@ export function ShowGalleryContent({ ir, slide, index, ctx }: SvgTemplateProps) 
             const item = block.items[itemIndex]
             const asset = item ? ctx.images?.[item.asset_id] : undefined
             const caption = item?.caption
-              ? fitSvgLine(item.caption, {
+              ? layoutSvgText(item.caption, {
                   maxWidth: 172,
-                  fontSize: 12,
-                  minFontSize: 12,
-                  letterSpacing: 2,
+                  fontSize: CAPTION_SIZE,
+                  // Written out, not named: the show scale's under-floor sizes
+                  // are an exact list the floor scan reads (font-floors.test).
+                  minPt: 12,
+                  maxLines: CAPTION_MAX_LINES,
+                  lineHeightRatio: CAPTION_LINE_HEIGHT / CAPTION_SIZE,
+                  letterSpacing: CAPTION_TRACKING,
                   fontFamily: fonts.body,
+                  balanceLines: true,
                 })
               : null
             return (
@@ -171,21 +191,22 @@ export function ShowGalleryContent({ ir, slide, index, ctx }: SvgTemplateProps) 
                 >
                   {String(itemIndex + 1).padStart(2, "0")}
                 </text>
-                {caption && (
+                {caption?.lines.map((line, lineIndex) => (
                   <text
+                    key={lineIndex}
                     data-font-floor-exempt="show-spec"
-                    data-truncated={caption.truncated ? "1" : undefined}
+                    data-truncated={caption.truncated && lineIndex === caption.lines.length - 1 ? "1" : undefined}
                     x={x}
-                    y={614}
+                    y={CAPTION_Y + lineIndex * CAPTION_LINE_HEIGHT}
                     fontFamily={fonts.body}
                     fontSize={caption.fontSize}
                     fill={captionInks[itemIndex]}
-                    letterSpacing={2}
+                    letterSpacing={CAPTION_TRACKING}
                     dominantBaseline="alphabetic"
                   >
-                    {withoutOverflowMark(caption.text)}
+                    {withoutOverflowMark(line)}
                   </text>
-                )}
+                ))}
               </g>
             )
           })}

@@ -154,8 +154,10 @@ function repeatedRuns(svg: string): string[] {
 const KNOWN_LABEL_REPEATS: readonly string[] = [
   "playbill--comp--icon-cards--zh\t首演两场七百张票三天售罄",
   "terminal--deck--p04\t三次重写RFC与否决记录",
-  "unserved--face--show-gallery\t临江咨询三号团队的协作工",
-  "unserved--face--show-gallery\t文档模板库在咨询项目中的",
+  // unserved--face--show-gallery left this list when its frame captions began
+  // wrapping onto two lines, not because its six tiles stopped reusing four
+  // captions. Each wrapped line is now shorter than MIN_RUN, so this scan no
+  // longer sees that repeat.
 ]
 
 // The two constitutional nails that need the whole corpus rendered: no page

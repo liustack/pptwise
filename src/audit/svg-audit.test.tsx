@@ -66,6 +66,24 @@ describe("auditSvgMarkup", () => {
     expect(issues.some((i) => i.kind === "page-overflow")).toBe(true)
   })
 
+  // A hero figure sets its unit as a smaller trailing `<tspan>` inside the
+  // same `<text>` (brief's stat-hero: "10.2" at 310px, "万席" at 81px). Read
+  // at the outer 310px, the two CJK glyphs alone were charged 620px and the
+  // line was reported spanning x=[96,1381], off a page it never leaves.
+  it("measures a trailing tspan at its own font size", () => {
+    const issues = auditSvgMarkup(
+      wrap(`<text x="96" y="450" font-size="310" font-weight="700">10.2<tspan dx="12" font-size="81">万席</tspan></text>`),
+    )
+    expect(issues).toEqual([])
+  })
+
+  it("still flags a line whose tspan runs carry it off the page", () => {
+    const issues = auditSvgMarkup(
+      wrap(`<text x="900" y="450" font-size="200">42<tspan dx="12" font-size="100">万元整</tspan></text>`),
+    )
+    expect(issues.map((i) => i.kind)).toEqual(["page-overflow"])
+  })
+
   // text-anchor="middle" straddles its x coordinate, so the auditor must
   // subtract width/2 (not width) from tx to find the left edge. "12345678"
   // is 8 digits, each weighed 0.56 by measureTextUnits (digits fall in the

@@ -85,8 +85,8 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   const kicker = section
     ? fitSvgLine(section, { maxWidth: 1040, fontSize: 22, minFontSize: 16, fontFamily: fonts.body })
     : null
-  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1040, fontSize: 260, fontFamily: fonts.heading, bold: false })
   const unit = heroUnit(slide)
+  const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1040, fontSize: 260, fontFamily: fonts.heading, bold: false, unit })
   const unitMark = heroUnitMark(fitted.fontSize)
   const caption = heroCaption(slide)
   const source = heroSource(slide)

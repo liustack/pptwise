@@ -290,6 +290,13 @@ export const layoutDef: LayoutDefinition = {
     notFor: "Openings that always show a photograph, which suit Split Stage.",
   },
   slideTypes: ["cover"],
+  // The organization label sits at (64,74) and the confidentiality badge at
+  // the top right. brief's locator corner runs its top arm along y=56 out to
+  // x=128, straight through the label's first glyphs.
+  decorKeepOut: [
+    { x: 64, y: 50, w: 1000, h: 32 },
+    { x: 1086, y: 50, w: 130, h: 44 },
+  ],
   params: {
     titleSize: { type: "number", min: 48, max: 120 },
     hideRightMeta: { type: "boolean" },
