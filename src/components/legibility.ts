@@ -58,10 +58,11 @@ export function formHighlightFill(colors: { primary: string; surface: string; te
  * `measureTextUnits` prices regular-weight uppercase Latin at 0.66em a
  * character; Georgia paints "W" at about 0.94. A line fitted exactly to the
  * room left for it can therefore still be drawn past the edge of that room —
- * measured at 140.75px for a run the estimator priced at 95.04px. Every unit
- * is fitted to the room divided by this factor and positioned by the padded
- * width, so the gap between a number and its unit narrows rather than the
- * unit leaving the card.
+ * measured at 140.75px for a run the estimator priced at 95.04px. A unit the
+ * face cannot measure exactly (see `measuresExactly`) is fitted to the room
+ * divided by this factor and positioned by the padded width, so the gap
+ * between a number and its unit narrows rather than the unit leaving the
+ * card. Chinese and ASCII in a face with an advance table need no headroom.
  */
 const WIDTH_ESTIMATE_HEADROOM = 1.5
 
