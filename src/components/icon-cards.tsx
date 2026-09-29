@@ -190,6 +190,13 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
   const ink = ctx.colors.accent
   const iconSize = Math.round(g.nodeR * 0.85)
   const strokeProps = { stroke: ctx.colors.border ?? ctx.colors.muted, strokeWidth: 1 }
+  // One top per row: the row's tallest stack is centred in the row, and
+  // every column in it starts where that one does. Centring each column on
+  // its own height put a short body's icon below its longer neighbour's,
+  // so icons and titles stepped across the row.
+  const rowStackH = Array.from({ length: g.rows }, (_, row) =>
+    Math.max(...g.layouts.slice(row * g.cols, (row + 1) * g.cols).map((l) => stackHeight(l, g.nodeSize))),
+  )
 
   return (
     <g transform={`translate(${box.x},${box.y})`}>
@@ -199,8 +206,7 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
         const cx = col * g.colW + g.colW / 2
         const rowY = row * (g.rowH + GAP)
         const layout = g.layouts[i]!
-        const stackH = stackHeight(layout, g.nodeSize)
-        const stackTop = rowY + (g.rowH - stackH) / 2
+        const stackTop = rowY + (g.rowH - rowStackH[row]!) / 2
         const cy = stackTop + g.nodeR
         const titleTop = stackTop + g.nodeSize + GAP_NODE_TITLE
         const textTop =
