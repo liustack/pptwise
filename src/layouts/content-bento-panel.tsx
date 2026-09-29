@@ -34,6 +34,7 @@ import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphas
 import { accessibleInk, graphicInk, groupValueInks } from "../render/ink"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
 import { FRAMED_CONTENT_BOTTOM } from "./framed-content-bottom"
+import { footnoteBaselineFor } from "../render/branding-geometry"
 import { CARD_INSET_PX } from "../render/spacing"
 
 /**
@@ -1020,7 +1021,7 @@ export function BentoPanelContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         {slide.footnote && (
           <text
             x="96"
-            y="652"
+            y={footnoteBaselineFor(20)}
             fontFamily={fonts.body}
             fontSize="20"
             fill={colors.muted}
@@ -1096,7 +1097,7 @@ export function BentoPanelContent({ ir, slide, index, ctx }: SvgTemplateProps) {
       {slide.footnote && (
         <text
           x="96"
-          y="652"
+          y={footnoteBaselineFor(20)}
           fontFamily={fonts.body}
           fontSize="20"
           fill={colors.muted}
