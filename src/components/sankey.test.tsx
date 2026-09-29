@@ -473,3 +473,23 @@ describe("sankey node labels longer than the label column", () => {
   })
 })
 
+describe("sankey in a box too short for its node stacks", () => {
+  it("declines the box rather than stacking nodes below it", () => {
+    const { container } = svg(sankey.render(multiLayer, { x: 0, y: 0, w: 900, h: 20 }, ctx))
+    expect(container.querySelectorAll("rect, path, text")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+  })
+
+  it("declares a node label it leaves off for want of room beside the node", () => {
+    const { container } = svg(sankey.render(multiLayer, { x: 0, y: 0, w: 60, h: 400 }, ctx))
+    const labels = container.querySelectorAll("text[data-label-bbox]").length
+    const left = multiLayer.nodes.length - labels
+    expect(left).toBeGreaterThan(0)
+    const declared = Array.from(container.querySelectorAll('[data-dropped-kind="label"]')).reduce(
+      (sum, g) => sum + Number(g.getAttribute("data-dropped")),
+      0,
+    )
+    expect(declared).toBe(left)
+  })
+})
+

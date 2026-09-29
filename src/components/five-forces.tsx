@@ -3,6 +3,7 @@ import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, truncateToUnits } from "../lib/svg-text-layout"
 import { mostlyChinese } from "../lib/text-script"
 import { accessibleInk } from "../render/ink"
+import { DroppedContentMarker } from "../render/drop-marker"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -593,6 +594,24 @@ export const fiveForces: SvgComponent<FiveForcesComponent> = {
     const scaledTopH = scaledNatTop * growScale
     const scaledMidH = scaledNatMid * growScale
     const scaledBottomH = finalTotalH - GAP * 2 - scaledTopH - scaledMidH
+
+    // Items a band cannot hold are dropped and declared by `renderPanel`,
+    // but every panel keeps its title and intensity dots. A band too short
+    // for even those cannot hold the panel, so the cross declines the box
+    // rather than printing a header over the band below or past the box.
+    const headerH = (l: PanelLayout) =>
+      l.padTop + l.labelSize + (l.intensity ? l.gapLabelMarker + l.markerDotR * 2 : l.labelSize * 0.25)
+    const holdsHeaders =
+      headerH(layouts.new_entrants) <= scaledTopH &&
+      Math.max(headerH(layouts.supplier_power), headerH(layouts.rivalry), headerH(layouts.buyer_power)) <= scaledMidH &&
+      headerH(layouts.substitutes) <= scaledBottomH
+    if (!holdsHeaders) {
+      return (
+        <g>
+          <DroppedContentMarker count={1} kind="component" />
+        </g>
+      )
+    }
 
     const leftX = box.x
     const centerX = box.x + leftW + GAP
