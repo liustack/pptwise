@@ -1,7 +1,9 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, truncateToUnits } from "../lib/svg-text-layout"
+import { DroppedContentMarker } from "../render/drop-marker"
 import { readableOn } from "../render/ink"
+import { anyCut } from "./declared-fit"
 import { deriveInitials } from "./people-initials"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -54,17 +56,34 @@ const BASELINE_FUDGE_RATIO = 0.32
 const GAP_BADGE_NAME = 6
 const NAME_FONT_SIZE = 16
 const NAME_MIN_FONT_SIZE = 16
-const NAME_LINE_HEIGHT = Math.round(NAME_FONT_SIZE * 1.25)
+const NAME_LINE_HEIGHT_RATIO = 1.25
+const NAME_LINE_HEIGHT = Math.round(NAME_FONT_SIZE * NAME_LINE_HEIGHT_RATIO)
 
 const GAP_NAME_ROLE = 2
 const ROLE_FONT_SIZE = 16
-const ROLE_MAX_LINES = 2
 const ROLE_LINE_HEIGHT_RATIO = 1.3
 
 const GAP_ROLE_ORG = 2
 const ORG_FONT_SIZE = 16
 const ORG_MIN_FONT_SIZE = 16
-const ORG_LINE_HEIGHT = Math.round(ORG_FONT_SIZE * 1.25)
+const ORG_LINE_HEIGHT_RATIO = 1.25
+const ORG_LINE_HEIGHT = Math.round(ORG_FONT_SIZE * ORG_LINE_HEIGHT_RATIO)
+
+/**
+ * Lines each field may wrap onto before its last line is cut. The type is
+ * already at the floor, so a card too narrow for a name used to cut the
+ * name short ("Yanqing" for Yanqing Chen, "萤火乡村阅读" for a foundation
+ * whose name runs two characters longer). A name or an affiliation now
+ * wraps like the role always did, and a three-word title such as Chief
+ * Technology Officer gets the third line it needs. The card measures the
+ * lines it really draws. A grid that grows too tall for its slot, or holds a
+ * word too long even for these lines, declines, and the page steps aside
+ * for one that can hold it rather than keep a card that says less than the
+ * author wrote.
+ */
+const NAME_MAX_LINES = 2
+const ROLE_MAX_LINES = 3
+const ORG_MAX_LINES = 2
 
 // Optional overall `title` (裁定 1: "可选整体 title 按惯例") — same posture
 // as cycle.tsx's own optional title: a fixed band reserved above the card
@@ -107,10 +126,17 @@ const TITLE_BAND_MAX_GROW = 16
  */
 const TITLE_TOP_PAD = 4
 
+interface WrappedField {
+  lines: string[]
+  fontSize: number
+  lineHeight: number
+  truncated: boolean
+}
+
 interface PersonCardLayout {
-  name: { text: string; fontSize: number; truncated: boolean }
-  role: { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean } | null
-  org: { text: string; fontSize: number; truncated: boolean } | null
+  name: WrappedField
+  role: WrappedField | null
+  org: WrappedField | null
 }
 
 /** Fit a person's name/role/org within `contentW` — same technique as
@@ -121,11 +147,18 @@ interface PersonCardLayout {
  * before the merged tail line actually fits), org shrink-then-truncate
  * (a second single line, smaller and lower-priority than name). */
 function layoutPersonCard(person: PersonItem, contentW: number): PersonCardLayout {
-  const name = fitSvgLine(person.name, {
+  // A short name or affiliation keeps its one line at the full size, the
+  // same line `fitSvgLine` used to give it. Only one too wide for the card
+  // wraps, balanced so a seven-character name does not leave one character
+  // alone on its second line.
+  const name = layoutSvgText(person.name, {
     maxWidth: contentW,
     fontSize: NAME_FONT_SIZE,
-    minFontSize: NAME_MIN_FONT_SIZE,
+    maxLines: NAME_MAX_LINES,
+    lineHeightRatio: NAME_LINE_HEIGHT_RATIO,
+    minPt: NAME_MIN_FONT_SIZE,
     bold: true,
+    balanceLines: true,
   })
   const role = person.role
     ? (() => {
@@ -136,11 +169,19 @@ function layoutPersonCard(person: PersonItem, contentW: number): PersonCardLayou
           lineHeightRatio: ROLE_LINE_HEIGHT_RATIO,
         })
         const maxUnits = contentW / wrapped.fontSize
-        return { ...wrapped, lines: wrapped.lines.map((line) => truncateToUnits(line, maxUnits)) }
+        const lines = wrapped.lines.map((line) => truncateToUnits(line, maxUnits))
+        return { ...wrapped, lines, truncated: wrapped.truncated || lines.some((line, li) => line !== wrapped.lines[li]) }
       })()
     : null
   const org = person.org
-    ? fitSvgLine(person.org, { maxWidth: contentW, fontSize: ORG_FONT_SIZE, minFontSize: ORG_MIN_FONT_SIZE })
+    ? layoutSvgText(person.org, {
+        maxWidth: contentW,
+        fontSize: ORG_FONT_SIZE,
+        maxLines: ORG_MAX_LINES,
+        lineHeightRatio: ORG_LINE_HEIGHT_RATIO,
+        minPt: ORG_MIN_FONT_SIZE,
+        balanceLines: true,
+      })
     : null
   return { name, role, org }
 }
@@ -149,13 +190,13 @@ function layoutPersonCard(person: PersonItem, contentW: number): PersonCardLayou
  * org's line) — excludes PAD_TOP/PAD_BOTTOM, mirroring icon-cards.tsx's
  * `iconCardContentHeight`/steps.tsx's `stepContentHeight` split. */
 function personCardContentHeight(person: PersonItem, contentW: number): number {
-  const { role, org } = layoutPersonCard(person, contentW)
+  const { name, role, org } = layoutPersonCard(person, contentW)
   return (
     BADGE_D +
     GAP_BADGE_NAME +
-    NAME_LINE_HEIGHT +
+    name.lines.length * NAME_LINE_HEIGHT +
     (role ? GAP_NAME_ROLE + role.lines.length * role.lineHeight : 0) +
-    (org ? GAP_ROLE_ORG + ORG_LINE_HEIGHT : 0)
+    (org ? GAP_ROLE_ORG + org.lines.length * ORG_LINE_HEIGHT : 0)
   )
 }
 
@@ -247,6 +288,18 @@ export const peopleCards: SvgComponent<PeopleCardsComponent> = {
     // TITLE_BAND_GROW_SHARE 切一小块给 title band（有 title 时），其余才进
     // 卡壳池：band 曾是纯固定预留，卡片越长它越显得贴。
     const measuredH = titleBand + rows * cardH + (rows - 1) * GAP
+    // A person's name or affiliation with characters cut off is somebody
+    // else's, and a budget shorter than the grid measures would cut lines
+    // off the bottom of the cards. Either way the grid declines rather than
+    // print less than the author wrote, and the face steps aside for a page
+    // with the room to draw every card whole (`./declared-fit.ts`).
+    const layouts = component.people.map((person) => layoutPersonCard(person, contentW))
+    if (
+      anyCut(layouts.flatMap(({ name, role, org }) => [name, role, org])) ||
+      (box.h != null && box.h + 1 < measuredH)
+    ) {
+      return <DroppedContentMarker count={component.people.length} kind="card" />
+    }
     const grow = Math.max(0, (box.h ?? measuredH) - measuredH)
     const bandGrow = hasTitle
       ? Math.min(grow * TITLE_BAND_GROW_SHARE, TITLE_BAND_MAX_GROW)
@@ -292,12 +345,12 @@ export const peopleCards: SvgComponent<PeopleCardsComponent> = {
         {component.people.map((person, i) => {
           const cardX = (i % cols) * (cardW + GAP)
           const cardY = grownTitleBand + Math.floor(i / cols) * (shellH + GAP)
-          const { name, role, org } = layoutPersonCard(person, contentW)
+          const { name, role, org } = layouts[i]!
           const badgeCx = cardX + cardW / 2
           const badgeCy = cardY + PAD_TOP + contentShift + BADGE_R
           const nameTopY = badgeCy + BADGE_R + GAP_BADGE_NAME
           const nameBaselineY = nameTopY + NAME_FONT_SIZE
-          let cursorY = nameTopY + NAME_LINE_HEIGHT
+          let cursorY = nameTopY + name.lines.length * NAME_LINE_HEIGHT
           const roleTopY = cursorY + (role ? GAP_NAME_ROLE : 0)
           const shellBottom = cardY + shellH - 2
           const roleLines = role
@@ -305,7 +358,9 @@ export const peopleCards: SvgComponent<PeopleCardsComponent> = {
             : []
           if (role) cursorY = roleTopY + roleLines.length * role.lineHeight
           const orgBaselineY = cursorY + (org ? GAP_ROLE_ORG : 0) + (org ? org.fontSize : 0)
-          const showOrg = Boolean(org) && orgBaselineY <= shellBottom
+          const orgLines = org
+            ? org.lines.filter((_, li) => orgBaselineY + li * ORG_LINE_HEIGHT <= shellBottom)
+            : []
           const fill = palette.length > 0 ? palette[i % palette.length] : ctx.colors.primary
           return (
             <g key={i} data-audit-box={`${cardX},${cardY},${cardW}`}>
@@ -321,19 +376,22 @@ export const peopleCards: SvgComponent<PeopleCardsComponent> = {
                   : {})}
               />
               {renderBadge(badgeCx, badgeCy, deriveInitials(person.name), fill, ctx)}
-              <text
-                data-truncated={name.truncated ? "1" : undefined}
-                x={badgeCx}
-                y={nameBaselineY}
-                textAnchor="middle"
-                fontSize={name.fontSize}
-                fontWeight="700"
-                fill={ctx.colors.text}
-                fontFamily={ctx.fonts.heading}
-                dominantBaseline="alphabetic"
-              >
-                {name.text}
-              </text>
+              {name.lines.map((line, li) => (
+                <text
+                  key={`name-${li}`}
+                  data-truncated={name.truncated ? "1" : undefined}
+                  x={badgeCx}
+                  y={nameBaselineY + li * NAME_LINE_HEIGHT}
+                  textAnchor="middle"
+                  fontSize={name.fontSize}
+                  fontWeight="700"
+                  fill={ctx.colors.text}
+                  fontFamily={ctx.fonts.heading}
+                  dominantBaseline="alphabetic"
+                >
+                  {line}
+                </text>
+              ))}
               {role
                 ? roleLines.map((line, li) => (
                     <text
@@ -351,20 +409,23 @@ export const peopleCards: SvgComponent<PeopleCardsComponent> = {
                     </text>
                   ))
                 : null}
-              {showOrg && org ? (
-                <text
-                  data-truncated={org.truncated ? "1" : undefined}
-                  x={badgeCx}
-                  y={orgBaselineY}
-                  textAnchor="middle"
-                  fontSize={org.fontSize}
-                  fill={ctx.colors.muted}
-                  fontFamily={ctx.fonts.body}
-                  dominantBaseline="alphabetic"
-                >
-                  {org.text}
-                </text>
-              ) : null}
+              {org
+                ? orgLines.map((line, li) => (
+                    <text
+                      key={`org-${li}`}
+                      data-truncated={org.truncated || orgLines.length < org.lines.length ? "1" : undefined}
+                      x={badgeCx}
+                      y={orgBaselineY + li * ORG_LINE_HEIGHT}
+                      textAnchor="middle"
+                      fontSize={org.fontSize}
+                      fill={ctx.colors.muted}
+                      fontFamily={ctx.fonts.body}
+                      dominantBaseline="alphabetic"
+                    >
+                      {line}
+                    </text>
+                  ))
+                : null}
             </g>
           )
         })}
