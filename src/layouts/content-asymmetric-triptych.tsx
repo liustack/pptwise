@@ -1,3 +1,4 @@
+import type { Component } from "@/ir"
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import type { ContentRect } from "../render/layout"
@@ -33,11 +34,13 @@ import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
  * when it actually holds a component. Empty slots never draw a frame,
  * a divider-to-empty, or a surface shell.
  *
- * Component placement: `components[0]` (if any) goes to LEAD alone — a
- * single hero item at the widest column, the same "one dominant subject"
- * instinct `stacked-poster`'s capacity-1 `hero` slot already encodes, just
- * without that layout's scale-to-fill behavior. The remainder splits
- * across TOP (first half) then BOTTOM (second half). Each region is an
+ * Component placement: one component goes to LEAD alone, a single hero
+ * item at the widest column, the same "one dominant subject" instinct
+ * `stacked-poster`'s capacity-1 `hero` slot already encodes, just without
+ * that layout's scale-to-fill behavior. It is the first component that is
+ * not running text, or the first component when all of them are
+ * (`leadIndex`). The remainder keeps its authored order and splits across
+ * TOP (first half) then BOTTOM (second half). Each region is an
  * independent `SvgContent` call with `arrangement` hardcoded to the
  * default single-stack (never `slide.arrangement` — this layout's
  * three-region split *is* its own arrangement, the same hardcode
@@ -95,6 +98,30 @@ const PANEL_PAD_Y = 16
  * padding it now carries would go negative on the narrowest split. */
 const PANEL_MIN_CONTENT_H = 60
 
+/**
+ * Text set as written: it wraps to whatever measure it is handed, so a
+ * narrower column costs it lines and nothing else.
+ */
+const RUNNING_TEXT_TYPES: ReadonlySet<Component["type"]> = new Set(["paragraph", "bullets", "callout", "blockquote"])
+
+/**
+ * Which component takes the lead column: the first one that is not running
+ * text, or the first one when every component is.
+ *
+ * The lead used to be `components[0]`, and an author writes a one-sentence
+ * lead-in first because it is read first, not because it is the subject.
+ * The sentence then sat alone in the 592px column with the column empty
+ * under it, and the drawing it introduced was squeezed into the 424px panel
+ * beside it. A drawing is laid out for the width it gets: English rings
+ * there had no room for their three descriptions under playbill's and
+ * stage's two-line headings and declined. Running text only rewraps, so it
+ * gives the width up to the component that needs it.
+ */
+function leadIndex(components: readonly Component[]): number {
+  const drawn = components.findIndex((component) => !RUNNING_TEXT_TYPES.has(component.type))
+  return drawn === -1 ? 0 : drawn
+}
+
 export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const treated = tryContentHeadingTreatment({ ir, slide, index, ctx })
   const { colors, fonts } = ctx
@@ -130,7 +157,9 @@ export function AsymmetricTriptychContent({ ir, slide, index, ctx }: SvgTemplate
   const bodyBottom = slide.footnote ? 616 : 632
   const bodyH = Math.max(120, bodyBottom - bodyTop)
 
-  const [leadComponent, ...rest] = slide.components
+  const lead = leadIndex(slide.components)
+  const leadComponent = slide.components[lead]
+  const rest = slide.components.filter((_, i) => i !== lead)
   const topHalfCount = Math.ceil(rest.length / 2)
   const topComponents = rest.slice(0, topHalfCount)
   const bottomComponents = rest.slice(topHalfCount)

@@ -184,13 +184,14 @@ const CASES: FaceCase[] = [
     regions: ["face", "aside", "declined"],
   },
   // The lead column is the tall one. The two framed panels on the right are
-  // where a region runs short, so the chart goes second.
+  // where a region runs short, so the chart goes second, behind a lead that
+  // is not running text: a paragraph gives the lead column up to the chart.
   {
     face: "asymmetric-triptych",
     Face: AsymmetricTriptychContent,
     themeId: "brief",
     components: (n) => [
-      { type: "paragraph", text: "Renewal recovered." },
+      { type: "verdict_banner", tone: "positive", text: "Renewal recovered." },
       lineChart(n),
       { type: "paragraph", text: "Activation coverage reached eighty-eight percent." },
     ],
