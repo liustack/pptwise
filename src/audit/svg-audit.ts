@@ -48,26 +48,29 @@ function runUnits(text: string, fontFamily: string, fontWeight: string | null): 
     : measureTextUnits(text, { bold: isBold(fontWeight), fontFamily })
 }
 
+export interface TextRun {
+  text: string
+  fontSize: number
+  dx: number
+  fontWeight: string | null
+}
+
 /**
- * Rendered width of one `<text>` line, in page px.
+ * One `<text>` line as the runs it is painted in, sizes in page px.
  *
- * A `<tspan>` that sets its own `font-size` or `dx` is measured as its own
- * run: a hero figure's unit (brief's stat-hero sets "10.2" at 310px and
- * "万席" at 81px in one `<text>`, which the exporter keeps as two runs of one
- * text box) is charged at the size it is drawn at, plus its lead-in gap.
- * Read at the outer size, those two CJK glyphs alone were charged 620px and
- * the line was reported spanning x=[96,1381] on a page it never leaves.
- *
- * A line with no such run is measured as one string, exactly as before.
+ * A `<tspan>` that sets its own `font-size` or `dx` is its own run: a hero
+ * figure's unit (brief's stat-hero sets "10.2" at 310px and "万席" at 81px in
+ * one `<text>`, which the exporter keeps as two runs of one text box) is
+ * drawn at its own size, after its own lead-in gap. A line with no such run
+ * is one run of `content` at `fontSize`.
  */
-export function textLineWidth(el: Element, content: string, fontSize: number, scale: number): number {
-  const fontFamily = el.getAttribute("font-family") ?? ""
+export function textRuns(el: Element, content: string, fontSize: number, scale: number): TextRun[] {
   const fontWeight = el.getAttribute("font-weight")
   const sizedRun = (node: Element) =>
     node.tagName.toLowerCase() === "tspan" && (node.hasAttribute("font-size") || node.hasAttribute("dx"))
-  if (!Array.from(el.children).some(sizedRun)) return runUnits(content, fontFamily, fontWeight) * fontSize
+  if (!Array.from(el.children).some(sizedRun)) return [{ text: content, fontSize, dx: 0, fontWeight }]
 
-  const runs: { text: string; fontSize: number; dx: number; fontWeight: string | null }[] = []
+  const runs: TextRun[] = []
   el.childNodes.forEach((node) => {
     if (node.nodeType === 3) {
       runs.push({ text: node.textContent ?? "", fontSize, dx: 0, fontWeight })
@@ -87,7 +90,21 @@ export function textLineWidth(el: Element, content: string, fontSize: number, sc
   // `content` is the trimmed line, so the runs lose the same outer blanks.
   runs[0]!.text = runs[0]!.text.trimStart()
   runs[runs.length - 1]!.text = runs[runs.length - 1]!.text.trimEnd()
-  return runs.reduce((sum, run) => sum + run.dx + runUnits(run.text, fontFamily, run.fontWeight) * run.fontSize, 0)
+  return runs
+}
+
+/**
+ * Rendered width of one `<text>` line, in page px: each run at the size it
+ * is drawn at, plus its lead-in gap. Read at the outer size, stat-hero's
+ * two CJK unit glyphs alone were charged 620px and the line was reported
+ * spanning x=[96,1381] on a page it never leaves.
+ */
+export function textLineWidth(el: Element, content: string, fontSize: number, scale: number): number {
+  const fontFamily = el.getAttribute("font-family") ?? ""
+  return textRuns(el, content, fontSize, scale).reduce(
+    (sum, run) => sum + run.dx + runUnits(run.text, fontFamily, run.fontWeight) * run.fontSize,
+    0,
+  )
 }
 
 export function auditSvgMarkup(markup: string): OverflowIssue[] {
