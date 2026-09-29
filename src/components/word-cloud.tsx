@@ -17,9 +17,11 @@ type Word = WordCloudComponent["words"][number]
  *
  * **宽度按真实字形的上界算**（`paintedWidthCeiling`），中西文同一把尺子。
  * 共享度量器对大多数文字只有分类平均值——66px 的 "LDAP" 估宽 148px、实际画到
- * 170px——所以碰撞盒按估算值加一档余量，再留 `GAP` 的安全间隙。用估算矩形
- * 互不相交去证明真实文字互不相交是不成立的：两个词的估算盒挨着，画出来就压在
- * 一起，ink、runway、journal、luxe、heritage、museum、lecture、memo 都复现过。
+ * 170px——所以只能估算的字按估算值加一档余量，再留 `GAP` 的安全间隙。用估算
+ * 矩形互不相交去证明真实文字互不相交是不成立的：两个词的估算盒挨着，画出来就
+ * 压在一起，ink、runway、journal、luxe、heritage、museum、lecture、memo 都复现
+ * 过。宽度确知的字不加余量：汉字每字一个字宽，有字宽表的字体（Georgia、微软
+ * 雅黑）里的西文按表算。多算的那五成只会让面板看起来满了，小面板因此白白丢词。
  *
  * **装不下先缩档再声明。** 一轮排不完就把四档一起按 `SHRINK_STEPS` 收一档
  * 重排，收到最后一档仍排不完的词不画、也不在页面上留任何提示，只打

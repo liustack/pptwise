@@ -1,7 +1,5 @@
 import type { ReactElement } from "react"
 import type { Component } from "@/ir"
-import { hasExactWidthTable, measureTextUnits } from "../lib/svg-text-layout"
-import { isCjk } from "../lib/text-script"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk } from "../render/ink"
 import { anyCut } from "./declared-fit"
@@ -68,8 +66,6 @@ const NAME_STACK_AIR = 8
  * arrangement from trying every combination.
  */
 const PLACEMENT_BUDGET = 20000
-/** The characters a face's advance table covers (`measureTextUnits`' exact model). */
-const PRINTABLE_ASCII = /[\x20-\x7e]/
 const MIN_H = 230
 const MAX_H = 350
 /** How tall the map wants to be relative to the width it is given. */
@@ -130,34 +126,12 @@ export const positioningMap: SvgComponent<PositioningMapComponent> = {
     // Collision boxes are sized by what a line will really paint: the
     // estimate reads short on a face with no exact width table, and a label
     // that measured clear then painted over its neighbour is exactly the
-    // failure this placement exists to prevent.
-    //
-    // The headroom is for widths the map can only estimate, though. A Han,
-    // kana or hangul glyph is drawn on the em square in every face, and a
-    // printable ASCII glyph in a face with an advance table (Georgia and
-    // Microsoft YaHei, every built-in body face) has its advance on record,
-    // so both are known exactly. `paintedWidthCeiling`'s half again exists
-    // because the class-average estimate prices a Georgia "W" at 0.66em
-    // where it paints 0.94. The table has no such gap, and padding an
-    // English name by half again made a crowded map look full while there
-    // was still room beside a dot for the name to sit.
-    const tabled = hasExactWidthTable(ctx.fonts.body)
-    const widthOf = (text: string, bold: boolean, size: number) => {
-      let square = 0
-      let exact = ""
-      let estimated = ""
-      for (const ch of text) {
-        if (isCjk(ch)) square += 1
-        else if (tabled && PRINTABLE_ASCII.test(ch)) exact += ch
-        else estimated += ch
-      }
-      const weight = { bold, fontFamily: ctx.fonts.body }
-      return (
-        square * size +
-        (exact ? measureTextUnits(exact, { ...weight, exact: true }) * size : 0) +
-        (estimated ? paintedWidthCeiling(estimated, size, weight) : 0)
-      )
-    }
+    // failure this placement exists to prevent. A Chinese name, and an
+    // English one in a face with an advance table, is boxed at its real width
+    // (`paintedWidthCeiling`): padding it by half again made a crowded map
+    // look full while there was still room beside a dot for the name to sit.
+    const widthOf = (text: string, bold: boolean, size: number) =>
+      paintedWidthCeiling(text, size, { bold, fontFamily: ctx.fonts.body })
 
     const xLow = fitMeta(`${component.x_axis.title} ${component.x_axis.low}`, box.w * 0.4)
     const xHigh = fitMeta(`${component.x_axis.title} ${component.x_axis.high}`, box.w * 0.4)

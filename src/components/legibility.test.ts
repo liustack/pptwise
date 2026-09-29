@@ -10,7 +10,7 @@ import { cycle } from "./cycle"
 import type { ComponentCtx } from "./types"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { contrastRatio, requiredContrastRatio } from "../render/ink"
-import { fitFormUnit, boardTypeScale, capFormBody, fillCardType, formLegibleInk, formIconColumnCols, layoutAtSize, layoutFormBody, BOARD_CARD_W, FORM_BODY_FLOOR, FORM_BODY_TITLE_CAP, FORM_TITLE_FLOOR } from "./legibility"
+import { paintedWidthCeiling, fitFormUnit, boardTypeScale, capFormBody, fillCardType, formLegibleInk, formIconColumnCols, layoutAtSize, layoutFormBody, BOARD_CARD_W, FORM_BODY_FLOOR, FORM_BODY_TITLE_CAP, FORM_TITLE_FLOOR } from "./legibility"
 
 describe("form text contrast", () => {
   it("replaces unreadable white on brief yellow with a passing ink", () => {
@@ -355,5 +355,32 @@ describe("layoutAtSize", () => {
     expect(r.lines).toHaveLength(1)
     expect(r.lines[0]).not.toContain("…")
     expect(source.startsWith(r.lines[0]!)).toBe(true)
+  })
+})
+
+describe("paintedWidthCeiling", () => {
+  // The half-again headroom is for widths the measurer can only estimate.
+  it("counts a square-script glyph at one em in every face", () => {
+    for (const fontFamily of ["Georgia", "Microsoft YaHei", "KaiTi", "SimSun", "Fraunces"]) {
+      expect(paintedWidthCeiling("续约率回升", 20, { fontFamily }), fontFamily).toBe(100)
+      expect(paintedWidthCeiling("续约率回升", 20, { bold: true, fontFamily }), fontFamily).toBe(100)
+    }
+  })
+
+  it("counts ASCII in a face with an advance table at its advance, at either weight", () => {
+    for (const fontFamily of ["Georgia", "Microsoft YaHei"]) {
+      for (const bold of [false, true]) {
+        const painted = measureTextUnits("Renewal rate", { bold, fontFamily, exact: true }) * 20
+        expect(paintedWidthCeiling("Renewal rate", 20, { bold, fontFamily }), `${fontFamily} ${bold}`).toBeCloseTo(painted, 9)
+      }
+    }
+  })
+
+  it("keeps the headroom on Latin it can only estimate", () => {
+    const estimate = measureTextUnits("Renewal", { fontFamily: "KaiTi" }) * 20
+    expect(paintedWidthCeiling("Renewal", 20, { fontFamily: "KaiTi" })).toBeCloseTo(estimate * 1.5, 9)
+    // A mixed name: the Chinese at one em, the Latin by its advances.
+    const mixed = paintedWidthCeiling("Quill 平台组", 20, { fontFamily: "Georgia" })
+    expect(mixed).toBeCloseTo(60 + measureTextUnits("Quill ", { fontFamily: "Georgia", exact: true }) * 20, 9)
   })
 })

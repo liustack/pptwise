@@ -6,6 +6,7 @@ import {
   truncateToUnits,
   type TextWeightHint,
 } from "../lib/svg-text-layout"
+import { isCjk } from "../lib/text-script"
 import { accessibleInk, contrastRatio } from "../render/ink"
 
 /** User-visible type floors for component-form item titles and body (1280×720 px). */
@@ -63,17 +64,28 @@ export function formHighlightFill(colors: { primary: string; surface: string; te
  */
 const WIDTH_ESTIMATE_HEADROOM = 1.5
 
+/** The characters a face's advance table covers (`measureTextUnits`' exact model). */
+const PRINTABLE_ASCII = /[\x20-\x7e]/
+
 /**
  * An upper bound on the width `text` will actually paint at `fontSize` — the
  * number to size a box by when nothing may cross its edge.
  *
  * Same estimator gap {@link WIDTH_ESTIMATE_HEADROOM} exists for, read the
  * other way round: `fitFormUnit` divides the room it fits into, and a caller
- * that has already fitted a line multiplies the width back out. The estimate
- * is trusted as-is only where the exact per-glyph model applies (bold weight
- * in a face that has a table) — everywhere else a 66px "LDAP" measures
- * 148.45px and paints 170.41px, which is how two words in a cloud came to
- * overlap while every estimated rectangle said they did not.
+ * that has already fitted a line multiplies the width back out. The class
+ * estimate reads short on Latin: a 66px "LDAP" measures 148.45px and paints
+ * 170.41px, which is how two words in a cloud came to overlap while every
+ * estimated rectangle said they did not.
+ *
+ * The headroom is only for widths that are estimated, though, and two kinds
+ * are known exactly. A Han, kana or hangul glyph is drawn on the em square in
+ * every face. A printable ASCII glyph in a face with an advance table
+ * (Georgia and Microsoft YaHei, every built-in body face and most heading
+ * faces) has its advance on record at either weight. Padding those by half
+ * again made a cloud or a map look full while there was room left in it, so
+ * they are counted at their width and the rest keeps the headroom. Bold text
+ * in a face with a table keeps the whole-string estimate it always had.
  *
  * For collision boxes and hard budgets, never for fitting: `fitSvgLine`
  * already shrinks and truncates against the estimate, and padding there would
@@ -84,9 +96,21 @@ export function paintedWidthCeiling(
   fontSize: number,
   weight?: { bold?: boolean; fontFamily?: string },
 ): number {
-  const estimate = measureTextUnits(text, weight) * fontSize
-  const exact = weight?.bold === true && hasExactWidthTable(weight.fontFamily ?? "")
-  return exact ? estimate : estimate * WIDTH_ESTIMATE_HEADROOM
+  const tabled = hasExactWidthTable(weight?.fontFamily ?? "")
+  if (weight?.bold === true && tabled) return measureTextUnits(text, weight) * fontSize
+  let square = 0
+  let exact = ""
+  let estimated = ""
+  for (const ch of text) {
+    if (isCjk(ch)) square += 1
+    else if (tabled && PRINTABLE_ASCII.test(ch)) exact += ch
+    else estimated += ch
+  }
+  return (
+    square * fontSize +
+    (exact ? measureTextUnits(exact, { ...weight, exact: true }) * fontSize : 0) +
+    (estimated ? measureTextUnits(estimated, weight) * fontSize * WIDTH_ESTIMATE_HEADROOM : 0)
+  )
 }
 
 /**
