@@ -512,5 +512,36 @@ describe("numbered_cards n=3 and n=8 stay in box", () => {
     }
     assertInsideBox(container, w, h)
   })
-})
 
+  it("keeps a pill's words 8px of ink clear of its top and bottom edges in a short box", () => {
+    // The box that closes the pills up to 6px apart. Pre-fix the words were
+    // centred by their line boxes with 2px to spare, which put each title's
+    // caps about 5px under its pill's top edge.
+    const english = {
+      type: "numbered_cards" as const,
+      items: [
+        { title: "Seat expansion in existing accounts", text: "Activation coverage reached eighty-eight percent, cutting unplanned meetings by forty percent.", sub: "Q1" },
+        { title: "Standardized onboarding templates", text: "Delivery time fell from nine weeks to five, largely through standardized onboarding templates.", sub: "Q2" },
+        { title: "In-house workspace compute", text: "Moving workloads off public cloud dropped per-seat monthly cost by thirty-one percent.", sub: "Q3" },
+        { title: "Vertical playbook replication", text: "East China penetration is half of South China, and sales coverage density is the main reason.", sub: "Q4" },
+      ],
+    }
+    const w = 880
+    const h = 354
+    const { container } = svg(numberedCards.render(english, { x: 0, y: 0, w, h }, boundThemeCtx("brief", {})))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const groups = Array.from(container.querySelectorAll("g")).filter((g) => g.querySelector(":scope > rect"))
+    expect(groups).toHaveLength(english.items.length)
+    for (const g of groups) {
+      const rect = g.querySelector(":scope > rect")!
+      const top = Number(rect.getAttribute("y"))
+      const bottom = top + Number(rect.getAttribute("height"))
+      const words = Array.from(g.querySelectorAll(":scope > text")).filter((t) => t.getAttribute("text-anchor") === null)
+      const inkTop = Math.min(...words.map((t) => Number(t.getAttribute("y")) - 0.72 * Number(t.getAttribute("font-size"))))
+      const inkBottom = Math.max(...words.map((t) => Number(t.getAttribute("y")) + 0.12 * Number(t.getAttribute("font-size"))))
+      expect(inkTop - top).toBeGreaterThanOrEqual(8 - 0.01)
+      expect(bottom - inkBottom).toBeGreaterThanOrEqual(8 - 0.01)
+    }
+    assertInsideBox(container, w, h)
+  })
+})
