@@ -1,7 +1,8 @@
 import type React from "react"
 import type { Component } from "@/ir"
-import { layoutSvgText } from "../lib/svg-text-layout"
+import { layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import { mostlyChinese } from "../lib/text-script"
+import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -157,14 +158,20 @@ const ITEM_SIZE_MIN = 16
 const ITEM_LH_RATIO = 1.35
 const ITEM_GAP = 5
 /**
- * Lines one item may wrap onto before its last line is cut. Each item used
- * to be fitted to a single line, and with the type already at the floor a
- * narrow column cut it off mid-phrase ("Seat expansion in", "协作活跃率领先
- * 同行两") while the cell had room to spare underneath. An item now wraps
- * under its own bullet, its lines balanced so a phrase does not leave one
- * character alone on the last, and the cell measures the lines it draws.
+ * Lines one item may wrap onto: as many as it needs. Each item used to be
+ * fitted to a single line, and with the type already at the floor a narrow
+ * column cut it off mid-phrase ("Seat expansion in", "协作活跃率领先同行两")
+ * while the cell had room to spare underneath. An item now wraps under its
+ * own bullet, its lines balanced so a phrase does not leave one character
+ * alone on the last, and the cell measures the lines it draws.
+ *
+ * It used to stop at three lines and cut the rest, and an 880px English
+ * canvas has a 126px item measure, where "Existing customers reliably
+ * expand" takes four. The cell already keeps its items whole by height,
+ * dropping and declaring one that would cross its floor, so a line cap
+ * only ever cut words the cell had room for.
  */
-const ITEM_MAX_LINES = 3
+const ITEM_MAX_LINES = Number.POSITIVE_INFINITY
 const BULLET_R = 2
 const BULLET_INDENT = 11
 
@@ -461,12 +468,37 @@ function renderBlock(
   )
 }
 
+/**
+ * Whether every block title keeps each of its words on one line.
+ *
+ * A title is the canvas's own fixed name for a block, at the type floor
+ * already, so it has nowhere to shrink. Below a width where its longest word
+ * fits the column, the wrap can only break the word ("Relationship" over
+ * "s") or cut it, and neither is the block's name any more. The repo's rule
+ * for a drawing that cannot keep its words whole is to decline and say so
+ * (`declared-fit.ts`, and `from-to.tsx`'s `MIN_W`): the page then moves to a
+ * rendering wide enough for it. In the heading face that is about 764px for
+ * "Relationships" in Georgia, and far narrower for the Chinese titles.
+ */
+function titleWordsFit(component: BmcComponent, w: number, headingFont: string): boolean {
+  const colW = (w - GAP * 4) / 5
+  const bottomColW = (w - GAP) / 2
+  const labels = blockLabels(component)
+  return (Object.keys(labels) as BlockKey[]).every((key) => {
+    const room = (BOTTOM_BAND_KEYS.includes(key) ? bottomColW : colW) - PAD_X * 2
+    return labels[key]
+      .split(/\s+/)
+      .every((word) => measureTextUnits(word, { bold: true, fontFamily: headingFont }) * TITLE_SIZE <= room)
+  })
+}
+
 export const bmc: SvgComponent<BmcComponent> = {
   measure(component, w, ctx) {
     const { topBandH, bottomBandH } = naturalBandHeights(component, w, ctx.fonts.heading)
     return topBandH + GAP + bottomBandH
   },
   render(component, box, ctx) {
+    if (!titleWordsFit(component, box.w, ctx.fonts.heading)) return <DroppedContentMarker count={1} kind="component" />
     const { topBandH: natTop, bottomBandH: natBottom } = naturalBandHeights(component, box.w, ctx.fonts.heading)
     const naturalTotal = natTop + GAP + natBottom
     const totalH = box.h ?? naturalTotal
