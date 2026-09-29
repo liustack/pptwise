@@ -12,6 +12,7 @@ import {
 } from "./cartesian-axis";
 import { labelLinePitch } from "./label-collision";
 import {
+  barHorizontalMinBodyH,
   CHART_BODY_H,
   DIRECT_LABEL_FONT_SIZE,
   RADIAL_MIN_BODY_H,
@@ -456,6 +457,19 @@ function funnelBodyH(component: ChartComponent): number {
   return Math.ceil(stages * labelLinePitch(DIRECT_LABEL_FONT_SIZE));
 }
 
+/**
+ * Body height a horizontal bar chart needs so every category keeps a row:
+ * the same claim `funnelBodyH` makes for a funnel's stages, sized by
+ * `barHorizontalMinBodyH` beside the renderer whose rows it measures.
+ */
+function horizontalBarBodyH(component: ChartComponent): number {
+  if (component.chart_type !== "bar" || component.direction !== "horizontal")
+    return 0;
+  const rows = buildChartModel(component.series).categories.length;
+  if (rows === 0) return 0;
+  return barHorizontalMinBodyH(rows, component.series.length);
+}
+
 export const chart: SvgComponent<ChartComponent> = {
   measure(component) {
     const { xTitle, yTitle, y2Title } = axisTitlesOf(component);
@@ -466,7 +480,8 @@ export const chart: SvgComponent<ChartComponent> = {
         CHART_H,
         directLabelBodyH(component),
         funnelBodyH(component),
-        radialBodyH(component)
+        radialBodyH(component),
+        horizontalBarBodyH(component)
       )
     );
   },

@@ -16,6 +16,7 @@ import {
   TICK_MIN_FONT_SIZE,
   TICK_TO_AXIS_GAP,
   X_TICK_BAND,
+  Y_TICK_MAX_W_RATIO,
   type DomainPadMode,
 } from "./cartesian-axis"
 import { buildChartModel, zeroAxisRatio, type ChartDomain } from "./chart-model"
@@ -2091,8 +2092,26 @@ export function renderDumbbell(
  * bar 横向模式（2026-07-12 借鉴）：行式横条排名——类目标签左侧右对齐、
  * 条自左起、端值标签在条右。长标签（公司名/条目名）比竖柱友好。
  * 最大条实色 accent，其余同竖版走渐变（横向）。
+ *
+ * The category band is at least this wide, and grows with the widest
+ * category name up to `Y_TICK_MAX_W_RATIO` of the chart, the share any
+ * value-axis gutter may take. It used to stay at 110px whatever the names, so
+ * every name past about seven CJK glyphs or a dozen Latin letters was cut, on
+ * charts that had hundreds of pixels of plot to give. See `barHorizontalBands`.
  */
 const BAR_H_LABEL_W = 110
+/**
+ * Room past the plot for the value label of a bar that runs its full length:
+ * at least this, and more when the widest value label needs it, up to
+ * `BAR_H_VALUE_MAX_W_RATIO` of the chart. A fixed 64px let a long figure run
+ * off the right edge of the chart.
+ */
+const BAR_H_VALUE_W = 64
+const BAR_H_VALUE_MAX_W_RATIO = 0.25
+/** Gap between a bar's end and its value label. */
+const BAR_H_VALUE_GAP = 8
+/** Gap between the category band and the plot. */
+const BAR_H_BAND_GAP = 12
 /**
  * Fit budget headroom for the horizontal bar's category labels.
  *
@@ -2120,6 +2139,52 @@ const BAR_H_ROW_EDGE_GAP = 5
  * - 10)`) — reused unchanged as the floor for each sub-row in a grouped
  * category too, rather than inventing a second minimum. */
 const BAR_H_MIN_THICKNESS = 4
+/** Space `renderBarHorizontal` keeps above its first row. */
+const BAR_H_PLOT_TOP_PAD = 4
+
+/**
+ * Body height a horizontal bar chart needs so every category keeps a row of
+ * its own.
+ *
+ * Rows share the plot's height. Each has to hold its category name, one line
+ * of tick text, and its bars, each at least `BAR_H_MIN_THICKNESS` thick with
+ * the usual gaps. Below that the bars were drawn at their floor anyway and ran
+ * into the next row and out through the bottom of the plot, and the names sat
+ * on top of each other. The plot is the body less the top pad and the x-tick
+ * band (`renderBarHorizontal`), so this is what `chart.measure` asks for.
+ */
+export function barHorizontalMinBodyH(categories: number, seriesCount: number): number {
+  const n = Math.max(1, seriesCount)
+  const barsH = 2 * BAR_H_ROW_EDGE_GAP + n * BAR_H_MIN_THICKNESS + (n - 1) * BAR_H_ROW_EDGE_GAP
+  const rowH = Math.max(labelLinePitch(TICK_FONT_SIZE), barsH)
+  return Math.ceil(categories * rowH) + BAR_H_PLOT_TOP_PAD + X_TICK_BAND
+}
+
+/**
+ * Widths of a horizontal bar chart's two bands: the category names on the
+ * left, and the room past the plot on the right for the longest bar's value.
+ *
+ * Each band is its floor, or what its widest text needs, whichever is more,
+ * capped at its share of the chart. Text wider than its capped band is fitted
+ * the usual way: the category name is cut and marked `data-truncated`, and a
+ * value label that no longer fits is dropped with its row and declared
+ * (`placeValueLabelsTogether`).
+ */
+function barHorizontalBands(
+  categoryTexts: readonly string[],
+  valueTexts: readonly string[],
+  w: number,
+  fontFamily?: string,
+): { labelW: number; valueW: number } {
+  const widest = (texts: readonly string[], bold: boolean) =>
+    Math.max(0, ...texts.map((t) => measureTextUnits(t, { fontFamily, bold }) * TICK_FONT_SIZE))
+  const labelWant = Math.ceil(widest(categoryTexts, false) + BAR_H_LABEL_FIT_MARGIN)
+  const valueWant = Math.ceil(widest(valueTexts, true) + BAR_H_VALUE_GAP)
+  return {
+    labelW: Math.max(BAR_H_LABEL_W, Math.min(labelWant, Math.floor(w * Y_TICK_MAX_W_RATIO))),
+    valueW: Math.max(BAR_H_VALUE_W, Math.min(valueWant, Math.floor(w * BAR_H_VALUE_MAX_W_RATIO))),
+  }
+}
 
 export function renderBarHorizontal(
   series: ChartSeries[],
@@ -2155,10 +2220,16 @@ export function renderBarHorizontal(
   const xAxis = buildNumericAxis(values, "zero-max", meta.xUnit ?? meta.yUnit)
   const domain: ChartDomain = { min: xAxis.domain.min, max: xAxis.domain.max, degenerate: false }
   const dataMax = Math.max(...values, Number.NEGATIVE_INFINITY)
-  const plotX = x0 + BAR_H_LABEL_W + 12
-  const plotW = Math.max(1, w - BAR_H_LABEL_W - 12 - 64)
-  const plotY = y0 + 4
-  const plotH = Math.max(1, h - meta.titleH - X_TICK_BAND - 4)
+  const { labelW, valueW } = barHorizontalBands(
+    categories.map((cat) => String(cat.x)),
+    values.map((v) => String(v)),
+    w,
+    fontFamily,
+  )
+  const plotX = x0 + labelW + BAR_H_BAND_GAP
+  const plotW = Math.max(1, w - labelW - BAR_H_BAND_GAP - valueW)
+  const plotY = y0 + BAR_H_PLOT_TOP_PAD
+  const plotH = Math.max(1, h - meta.titleH - X_TICK_BAND - BAR_H_PLOT_TOP_PAD)
   const rowH = plotH / categories.length
   const gradientId = chartGradientId("chart-barh-grad", w, h, series)
   const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
@@ -2183,7 +2254,7 @@ export function renderBarHorizontal(
       hBarSpecs.push({
         id: `hbar-${i}-${s.seriesIndex}`,
         text: String(value),
-        x: barX + barW + 8,
+        x: barX + barW + BAR_H_VALUE_GAP,
         y: barY + perBarH / 2 + 4,
         anchor: "start",
         fontSize: VALUE_FONT_SIZE,
@@ -2195,7 +2266,7 @@ export function renderBarHorizontal(
   const placedHBars = new Map(resolveValueLabelCollisions(hBarSpecs).map((label) => [label.id, label]))
   const yTicks = categories.map((cat, i) => {
     const label = fitSvgLine(String(cat.x), {
-      maxWidth: BAR_H_LABEL_W - BAR_H_LABEL_FIT_MARGIN,
+      maxWidth: labelW - BAR_H_LABEL_FIT_MARGIN,
       fontSize: TICK_FONT_SIZE,
       minFontSize: TICK_MIN_FONT_SIZE,
       fontFamily,
@@ -2225,7 +2296,7 @@ export function renderBarHorizontal(
         xTicks,
         yTicks,
         showHGrid: showGrid,
-        yTickMaxW: Math.max(0, BAR_H_LABEL_W + 12 - TICK_TO_AXIS_GAP),
+        yTickMaxW: Math.max(0, labelW + BAR_H_BAND_GAP - TICK_TO_AXIS_GAP),
         showVGrid: false,
         axisColor: axisColor ?? mutedColor,
         mutedColor,

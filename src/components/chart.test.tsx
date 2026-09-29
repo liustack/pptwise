@@ -1731,3 +1731,84 @@ describe("a value past what an axis can draw is refused on every cartesian chart
     }
   })
 })
+
+describe("a horizontal bar chart names every category and gives each a row", () => {
+  const names = [
+    "Seat expansion in existing accounts",
+    "Standardized onboarding templates",
+    "In-house workspace compute",
+    "Vertical playbook replication",
+    "Staffing-path automation",
+  ]
+
+  it("shows a long category name whole when the chart has room for it", () => {
+    // The category band used to stay 110px whatever the names, so each of
+    // these came out cut ("Seat", "Standardize") beside 900px of plot.
+    const component = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      direction: "horizontal" as const,
+      series: [{ name: "Seats", data: names.map((x, i) => ({ x, y: 92 - i * 13 })) }],
+    }
+    const w = 970
+    const h = chart.measure(component, w, ctx)
+    const root = parseSvgRoot(renderSvgMarkup(<svg>{chart.render(component, { x: 0, y: 0, w, h }, ctx)}</svg>))
+    const ticks = Array.from(root.querySelectorAll('[data-axis-tick="y"]'))
+    expect(ticks.map((t) => t.textContent)).toEqual(names)
+    for (const t of ticks) {
+      expect(t.hasAttribute("data-truncated")).toBe(false)
+      // Right-anchored names still start inside the chart's own box.
+      const width = measureTextUnits(t.textContent!, { fontFamily: ctx.fonts.body }) * Number(t.getAttribute("font-size"))
+      expect(Number(t.getAttribute("x")) - width).toBeGreaterThanOrEqual(0)
+    }
+  })
+
+  it("leaves room past the longest bar for its value", () => {
+    // The band past the bars was a fixed 64px, so a long figure ran off the
+    // right edge of the chart. It grows to the widest value now.
+    const component = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      direction: "horizontal" as const,
+      series: [{ name: "Revenue", data: [{ x: "A", y: 123456789.25 }, { x: "B", y: 98765432.5 }] }],
+    }
+    const w = 420
+    const h = chart.measure(component, w, ctx)
+    const root = parseSvgRoot(renderSvgMarkup(<svg>{chart.render(component, { x: 0, y: 0, w, h }, ctx)}</svg>))
+    const labels = Array.from(root.querySelectorAll('[data-value-label="1"]'))
+    expect(labels).toHaveLength(2)
+    for (const label of labels) {
+      const width = measureTextUnits(label.textContent ?? "", { bold: true, fontFamily: ctx.fonts.body }) * 16
+      expect(Number(label.getAttribute("x")) + width).toBeLessThanOrEqual(w)
+    }
+  })
+
+  it("measures a row per category, so every bar stays inside the plot", () => {
+    // Twenty categories of three series got the flat 240px body: each row
+    // was thinner than its three 4px bars, which ran on into the next row
+    // and out through the x-axis.
+    const cats = Array.from({ length: 20 }, (_, i) => `C${i + 1}`)
+    const component = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      direction: "horizontal" as const,
+      series: ["A", "B", "C"].map((name, si) => ({ name, data: cats.map((x, i) => ({ x, y: 40 + i + si })) })),
+    }
+    const w = 1120
+    const h = chart.measure(component, w, ctx)
+    expect(h).toBeGreaterThan(240)
+    const root = parseSvgRoot(renderSvgMarkup(<svg>{chart.render(component, { x: 0, y: 0, w, h }, ctx)}</svg>))
+    const top = Number(root.querySelector('[data-axis="y"]')!.getAttribute("y1"))
+    const bottom = Number(root.querySelector('[data-axis="x"]')!.getAttribute("y1"))
+    const bars = Array.from(root.querySelectorAll('rect[data-plot-mark="1"]'))
+    expect(bars).toHaveLength(60)
+    for (const bar of bars) {
+      const y = Number(bar.getAttribute("y"))
+      expect(y).toBeGreaterThanOrEqual(top)
+      expect(y + Number(bar.getAttribute("height"))).toBeLessThanOrEqual(bottom)
+    }
+    // A short list keeps the flat body it always had.
+    const short = { ...component, series: component.series.map((s) => ({ ...s, data: s.data.slice(0, 5) })) }
+    expect(chart.measure(short, w, ctx)).toBe(chart.measure({ ...short, direction: undefined }, w, ctx))
+  })
+})
