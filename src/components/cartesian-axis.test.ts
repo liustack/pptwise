@@ -115,6 +115,12 @@ describe("buildNumericAxis", () => {
     expect(() => buildNumericAxis([1, Number.NaN], "fit")).toThrow(/finite/)
     expect(() => buildNumericAxis([Number.POSITIVE_INFINITY], "zero-max")).toThrow(/finite/)
   })
+
+  it("refuses a range past what finite ticks can reach, at once and by name", () => {
+    // 1.7e308 padded past the largest double and the tick walk ran until
+    // the array could grow no further: a RangeError about array length.
+    expect(() => buildNumericAxis([1.7e308, 1], "zero-max")).toThrow(/cannot cover/)
+  })
 })
 
 describe("formatAxisTick", () => {

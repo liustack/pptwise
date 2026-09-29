@@ -49,9 +49,9 @@ import {
  * page with no error and no mark. This one paints nothing either, and says
  * that the component went with it.
  *
- * `renderStacked` and `renderCombo` give the same answer to their case of the
- * same trouble: a pile or a value past `CHART_AXIS_LIMIT` that no axis can be
- * built for.
+ * Every cartesian renderer gives the same answer to its case of the same
+ * trouble: a value, or a stacked pile, past `CHART_AXIS_LIMIT` that no axis
+ * can be built for (`pastAxisLimit`).
  */
 function WholeShareDeclined(): ReactElement {
   // One component, because one component is what went: the chart draws
@@ -63,6 +63,17 @@ function WholeShareDeclined(): ReactElement {
   // `slideToRender` sums and `checkContentDropGate` reads as no loss at all.
   // A constant of one is both the floor and the truth.
   return <g data-dropped={1} data-dropped-kind="component" />
+}
+
+/**
+ * True when a value lies past `CHART_AXIS_LIMIT`, where no axis can be built.
+ *
+ * validate refuses such a value on every cartesian chart, so one reaching a
+ * renderer has come round the gate. The axis builder would throw on it, so the
+ * renderer declines first and says so, with `WholeShareDeclined`.
+ */
+function pastAxisLimit(values: readonly number[]): boolean {
+  return values.some((v) => Math.abs(v) > CHART_AXIS_LIMIT)
 }
 
 /** The `chart` IR component, for the renderers whose geometry needs
@@ -550,6 +561,9 @@ export function seriesGutterLabelsFit(
   const model = buildChartModel(series)
   const meta = cartesianMeta(component)
   const values = keptValues(model.series)
+  // No axis can be laid out for a value past the ceiling. The renderer
+  // declines the whole chart for that, so the labels are not the question.
+  if (pastAxisLimit(values)) return true
   const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit)
   // Only `plotW` matters here, and it does not depend on the height or the
   // axis-title band — see `layoutCartesianPlot`.
@@ -947,6 +961,7 @@ export function renderBar(
   const { categories } = model
   const n = model.series.length
   const meta = cartesianMeta(component)
+  if (pastAxisLimit(keptValues(model.series))) return <WholeShareDeclined />
   const yAxis = buildNumericAxis(keptValues(model.series), "zero-max", meta.yUnit)
   const domain: ChartDomain = { min: yAxis.domain.min, max: yAxis.domain.max, degenerate: yAxis.domain.max <= yAxis.domain.min }
   const geom = layoutCartesianPlot({
@@ -1115,6 +1130,7 @@ export function renderLine(
   const n = model.series.length
   const meta = cartesianMeta(component)
   const values = keptValues(model.series)
+  if (pastAxisLimit(values)) return <WholeShareDeclined />
   const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit)
   const geom = layoutCartesianPlot({
     x0,
@@ -1975,6 +1991,7 @@ export function renderDumbbell(
   const rows = Math.min(fromData.length, toData.length)
   if (rows === 0) return <></>
   const all = [...fromData, ...toData].map((d) => d.y)
+  if (pastAxisLimit(all)) return <WholeShareDeclined />
   // Value domain must cover the data's real minimum, not just its positive
   // side — a negative value otherwise has no left bound and `vx()` can push
   // it arbitrarily far off-canvas (2026-07-21 fix: a mixed-sign series, e.g.
@@ -2134,6 +2151,7 @@ export function renderBarHorizontal(
   const n = model.series.length
   const meta = cartesianMeta(component)
   const values = keptValues(model.series)
+  if (pastAxisLimit(values)) return <WholeShareDeclined />
   const xAxis = buildNumericAxis(values, "zero-max", meta.xUnit ?? meta.yUnit)
   const domain: ChartDomain = { min: xAxis.domain.min, max: xAxis.domain.max, degenerate: false }
   const dataMax = Math.max(...values, Number.NEGATIVE_INFINITY)
@@ -2438,6 +2456,7 @@ export function renderScatter(
   const numX = (x: string | number): number => (typeof x === "number" ? x : Number(x))
   const xsAll = series.flatMap((s) => s.data.map((d) => numX(d.x)))
   const ysAll = series.flatMap((s) => s.data.map((d) => d.y))
+  if (pastAxisLimit(xsAll) || pastAxisLimit(ysAll)) return <WholeShareDeclined />
   const xAxis = buildNumericAxis(xsAll, "fit", meta.xUnit)
   const yAxis = buildNumericAxis(ysAll, "fit", meta.yUnit)
   const geom = layoutCartesianPlot({
@@ -2543,6 +2562,7 @@ export function renderArea(
   const { categories } = model
   const meta = cartesianMeta(component)
   const values = keptValues(model.series)
+  if (pastAxisLimit(values)) return <WholeShareDeclined />
   const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit)
   const geom = layoutCartesianPlot({
     x0,
@@ -3169,7 +3189,7 @@ export function renderCombo(
   // can be built for it (`buildAlignedNumericAxis` throws rather than return
   // a range that misses it). Handed one around validate, the chart declines
   // and says so, as a stacked pile past the same ceiling does.
-  if (keptValues(model.series).some((v) => Math.abs(v) > CHART_AXIS_LIMIT)) return <WholeShareDeclined />
+  if (pastAxisLimit(keptValues(model.series))) return <WholeShareDeclined />
   const isLine = (seriesIndex: number) => series[seriesIndex]?.plot === "line"
   const onRight = (seriesIndex: number) => series[seriesIndex]?.axis === "right"
 

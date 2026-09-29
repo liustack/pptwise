@@ -1663,3 +1663,71 @@ describe("a radial slice that cannot print its value declares the drop", () => {
     })
   }
 })
+
+describe("a value past what an axis can draw is refused on every cartesian chart", () => {
+  // A single value of 1.7e308 passed validate on a bar or a line, and the
+  // axis builder then walked ticks toward an end that had overflowed to
+  // Infinity until the array could grow no further. The page threw a
+  // RangeError. Stacked and combo already refused past CHART_AXIS_LIMIT.
+  const issuesOf = (component: unknown) => {
+    const parsed = chartSchema.safeParse(component)
+    return parsed.success ? [] : parsed.error.issues
+  }
+  const two = (a: number, b: number) => [
+    { name: "North", data: [{ x: "Q1", y: a }, { x: "Q2", y: 5 }] },
+    { name: "South", data: [{ x: "Q1", y: b }, { x: "Q2", y: 6 }] },
+  ]
+
+  it("names every series on the axis, one factor for all of them, and the unit field the axis reads", () => {
+    const cases = [
+      { component: { type: "chart", chart_type: "bar", series: two(1.7e308, 1) }, unit: /axes\.y_unit/ },
+      { component: { type: "chart", chart_type: "line", series: two(1, -1.7e308) }, unit: /axes\.y_unit/ },
+      { component: { type: "chart", chart_type: "area", series: two(1.7e308, 1) }, unit: /axes\.y_unit/ },
+      {
+        component: { type: "chart", chart_type: "bar", direction: "horizontal", series: two(1.7e308, 1) },
+        unit: /axes\.x_unit/,
+      },
+      { component: { type: "chart", chart_type: "dumbbell", series: two(1.7e308, 1) }, unit: /series' names/ },
+    ]
+    for (const { component, unit } of cases) {
+      const issues = issuesOf(component)
+      const label = `${component.chart_type}${"direction" in component ? " horizontal" : ""}`
+      expect(issues, label).toHaveLength(1)
+      const message = issues[0]!.message
+      expect(message, label).toMatch(/the largest value a chart axis can draw/)
+      expect(message, label).toMatch(/same power of ten/)
+      expect(message, label).toContain('"North"')
+      expect(message, label).toContain('"South"')
+      expect(message, label).toMatch(unit)
+    }
+  })
+
+  it("holds a scatter's x to the same ceiling as its y", () => {
+    const issues = issuesOf({
+      type: "chart",
+      chart_type: "scatter",
+      series: [
+        { name: "North", data: [{ x: 1.7e308, y: 1 }] },
+        { name: "South", data: [{ x: 2, y: 3 }] },
+      ],
+    })
+    expect(issues.map((i) => i.path.join("."))).toEqual(["series.0.data.0.x"])
+    expect(issues[0]!.message).toMatch(/axes\.x_unit/)
+    expect(issues[0]!.message).toContain('"South"')
+  })
+
+  it("still accepts a value right at the ceiling", () => {
+    expect(issuesOf({ type: "chart", chart_type: "bar", series: two(1e300, -1e300) })).toEqual([])
+  })
+
+  it("declines, rather than throws, when a caller hands the renderer one anyway", () => {
+    for (const chart_type of ["bar", "line", "area", "dumbbell"] as const) {
+      const component = { type: "chart" as const, chart_type, series: two(1.7e308, 1) }
+      const markup = renderSvgMarkup(
+        <svg>{chart.render(component, { x: 0, y: 0, w: 1120, h: chart.measure(component, 1120, ctx) }, ctx)}</svg>,
+      )
+      expect(markup, chart_type).toContain('data-dropped-kind="component"')
+      expect(markup, chart_type).not.toMatch(/NaN|Infinity/)
+    }
+  })
+})

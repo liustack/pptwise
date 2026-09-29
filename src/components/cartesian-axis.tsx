@@ -57,8 +57,18 @@ function nextNiceStep(step: number): number {
   return 10 * pow
 }
 
+/**
+ * Most intervals a tick walk may take. A nice step is at least a third of the
+ * range, so a real walk takes a handful. A count past this comes from a range
+ * whose end overflowed to `Infinity`, and walking it pushed ticks until the
+ * array could grow no further: a `RangeError` about array length, some thirty
+ * seconds later.
+ */
+const MAX_TICK_WALK = 1000
+
 function ticksFrom(start: number, end: number, step: number): number[] {
   const n = Math.max(1, Math.round((end - start) / step))
+  if (!(n <= MAX_TICK_WALK)) return []
   const ticks: number[] = []
   for (let i = 0; i <= n; i++) {
     ticks.push(Number((start + i * step).toPrecision(12)))
@@ -90,13 +100,18 @@ function ticksCover(ticks: readonly number[], lo: number, hi: number): boolean {
  * A range the nice-number walk cannot cover is widened around its middle, to
  * the larger of its own size, its span and 1, and walked again. That was
  * always the answer for a range too narrow to give {@link MIN_TICK_COUNT}
- * ticks. It is now also the answer for a range whose step is finer than the 12
- * significant digits ticks are rounded to: 100 to 100.0000000001 came back as
- * `[99.9999999999, 99.9999999999, 100, 100, 100]`, two values five times
- * over, short of the top of the range.
+ * ticks. It is now the answer for every way the walk can fall short:
+ *
+ *  - Ticks are rounded to 12 significant digits, so a range whose step is
+ *    finer than that (100 to 100.0000000001) came back as
+ *    `[99.9999999999, 99.9999999999, 100, 100, 100]`: two values five times
+ *    over, short of the top of the range.
+ *  - An end that overflowed to `Infinity` gave the walk no end at all.
  *
  * The widened range holds zero and spans at least twice its own middle, so its
- * step is a third of its size and its ticks cannot round together.
+ * step is a third of its size and its ticks cannot round together. Only a
+ * range whose widening overflows is left short, and that comes back as the
+ * `[0, 1]` a non-finite range has always got. `buildNumericAxis` refuses it.
  */
 export function niceTicks(min: number, max: number, target = TARGET_TICK_COUNT): number[] {
   if (!Number.isFinite(min) || !Number.isFinite(max)) return [0, 1]
@@ -138,9 +153,11 @@ export function niceTicks(min: number, max: number, target = TARGET_TICK_COUNT):
  *
  * The contract every chart is built on: finite ticks, each above the last,
  * covering every value, and zero as well in "zero-max" mode, since a bar is
- * measured from zero. `paddedDomain` and `niceTicks` keep it. A range they
- * cannot cover throws rather than hand back an axis that misses the data, and
- * so does a value that is not a finite number.
+ * measured from zero. `paddedDomain` and `niceTicks` keep it for every value
+ * within `CHART_AXIS_LIMIT`, which validate holds every cartesian chart to.
+ * Past that the padded range overflows the doubles and no finite ticks can
+ * reach it, so this throws rather than hand back an axis that misses the data,
+ * and so does a value that is not a finite number.
  *
  * Stacked and combo charts used to go through a second builder that checked
  * this one's result and widened it where it fell short. The shortfall is fixed
