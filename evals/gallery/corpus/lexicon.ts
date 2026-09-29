@@ -434,7 +434,12 @@ export interface Lexicon {
   }
   /** Source lines a component names under its own content. */
   readonly sources: readonly { label: string; ref?: string; url?: string }[]
-  /** Caption text for image slots. */
+  /**
+   * Caption text for image slots, one per photo fixture in `PHOTO_ASSETS`
+   * order. A pool that feeds the six frames of `show-gallery` carries two
+   * more, for the first two photos shown a second time, so no frame prints
+   * another frame's caption.
+   */
   readonly captions: Pool
   /** Browser address-bar text for the device mockup. */
   readonly url: string
@@ -854,6 +859,8 @@ const zh: Lexicon = {
     "文档模板库在咨询项目中的复用位置",
     "客户成功的实时健康看板",
     "实施工程师使用管理端完成席位开通",
+    "季度复盘会上的新客户上线进度",
+    "值班工位上的服务可用性监控",
   ],
 
   url: "portal.cloudseek.example.com/workspaces",
@@ -1267,6 +1274,8 @@ const en: Lexicon = {
     "Template gallery placement on the home sidebar",
     "Live usage wall in the workspaces center",
     "A client manager closing a seat grant from mobile",
+    "Quarterly review of new-account rollout progress",
+    "Uptime monitor on the on-call engineer's desk",
   ],
 
   url: "portal.cloudseek.example.com/workspaces",
@@ -1682,6 +1691,8 @@ spec:
     "Canary 灰度期间的 P95 延迟分布",
     "Grafana 上的 etcd 写放大面板",
     "GitHub Actions 构建流水线视图",
+    "Sprint 复盘会上的 SLO 达成大屏",
+    "On-call 工位上的 Prometheus 告警面板",
   ],
 
   url: "argocd.cloudseek.example.com/v/applications",
