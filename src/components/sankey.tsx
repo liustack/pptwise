@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { layoutAtSize } from "./legibility"
+import { DroppedContentMarker } from "../render/drop-marker"
 import { rotateChartPalette } from "../render/chart-palette"
 import { accessibleInk, contrastRatio, readableOn, requiredContrastRatio } from "../render/ink"
 import { mixHex } from "./color-mix"
@@ -684,6 +685,16 @@ export const sankey: SvgComponent<SankeyComponent> = {
   render(component, box, ctx) {
     const h = box.h ?? NATURAL_H
     const layout = computeLayout(component, box.x, box.y, box.w, h)
+    // Every node keeps a minimum height and every column its gaps, so a box
+    // short enough stacks nodes past its bottom edge. The diagram declines
+    // that box rather than drawing below it.
+    if (layout.nodes.some((n) => n.y + n.h > box.y + h + 1)) {
+      return (
+        <g>
+          <DroppedContentMarker count={1} kind="component" />
+        </g>
+      )
+    }
     const palette = rotateChartPalette(ctx.colors.chartPalette, ctx.chartPaletteOffset ?? 0)
     const bg = ctx.defaultBg ?? ctx.colors.bg
     // Real fill + bbox per band, computed once and reused both for the
@@ -818,6 +829,8 @@ export const sankey: SvgComponent<SankeyComponent> = {
                     </text>
                   ))
                 : null}
+              {/* A label with no room beside its node is left off; the loss is declared, not silent. */}
+              <DroppedContentMarker count={showLabel ? 0 : 1} kind="label" />
             </g>
           )
         })}
