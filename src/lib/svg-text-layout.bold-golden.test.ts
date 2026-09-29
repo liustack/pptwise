@@ -108,24 +108,20 @@ describe("measureTextUnits — bold golden widths (data-anchored, bold-metrics f
     })
   })
 
-  describe("non-bold byte-inertness (round 2's own hard requirement — exact tables must NOT leak into Regular weight)", () => {
-    // The exact model applies to Bold only (svg-text-layout.ts's
-    // `measureTextUnits`, the `mode === "bold"` gate right above
-    // `exactTable`'s own declaration) -- Regular-weight Georgia/YaHei text
-    // must stay byte-identical to this file's pre-bold-metrics-fix
-    // arithmetic. A genuine Regular exact table exists (`GEORGIA_REGULAR_
-    // EXACT`/`YAHEI_REGULAR_EXACT`) and would, if wired into the default
-    // path, surface a real but out-of-scope finding (Regular "Components
-    // Demo" already sits ~1.25% past its own 1168px budget too, root-
-    // cause.md's own number) -- this test locks that it does NOT leak in.
-    it("Georgia Regular reproduces the exact pre-fix unweighted estimate, not the exact table", () => {
+  describe("Regular weight: Georgia measures exact, YaHei stays on the class path", () => {
+    // Round 2 kept every Regular face on the class path so non-bold text
+    // kept its old geometry. Georgia Regular has since moved to its exact
+    // table: its class average ran 20-25% wide over whole sentences and
+    // wrapped notes that fit on one line (svg-text-layout.ts, the comment
+    // above `exactTable`). This string is the one exception that ran the
+    // other way: the class sum is 8.39em, the font's own advances 8.51em,
+    // which is the ~1.25% Regular overflow root-cause.md already recorded.
+    it("Georgia Regular measures from the exact table, not the class average", () => {
       const withFontFamily = measureTextUnits("Components Demo", { fontFamily: CONSULTING_HEADING })
-      const noFontFamily = measureTextUnits("Components Demo")
-      // upper=2*0.66 + lowerDigit=12*0.56 + space=1*0.35, all NO_CORRECTION
-      // at Georgia Regular -- see GEORGIA's own table, every `regular` entry
-      // is a literal `1`.
-      expect(withFontFamily).toBeCloseTo(2 * 0.66 + 12 * 0.56 + 1 * 0.35, 4)
-      expect(withFontFamily).toBe(noFontFamily)
+      // C D (0.6421 + 0.749) + omponents emo + one space, per GEORGIA_REGULAR_EXACT,
+      // which matches the macOS Georgia.ttf hmtx to 0.0001em.
+      expect(withFontFamily).toBeCloseTo(8.5084, 3)
+      expect(withFontFamily).not.toBe(measureTextUnits("Components Demo"))
     })
 
     it("Microsoft YaHei Regular reproduces the exact pre-fix unweighted estimate, not the exact table", () => {

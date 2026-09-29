@@ -281,22 +281,28 @@ describe("auditSvgMarkup — bold-weight alignment with the real exporter (bold-
     expect(issues.filter((i) => i.kind === "h-overflow")).toHaveLength(1)
   })
 
-  it("scope fence: the identical line/box at Regular weight (no font-weight attribute) stays clean — bold-awareness doesn't leak into non-bold text", () => {
+  // Georgia Regular now measures from its exact table, which puts this line
+  // at 1182.7px: the ~1.3% Regular overflow root-cause.md S3 recorded is
+  // real, and the audit now sees it. The fences below ask a different
+  // question (does Bold metrics leak into non-bold text?), so they use a box
+  // that holds the Regular line and not the Bold one (1366.8px).
+  const REGULAR_FITS_BOX_W = 1190
+
+  it("scope fence: the identical line at Regular weight (no font-weight attribute) fits a box its Bold twin overflows, so bold-awareness doesn't leak into non-bold text", () => {
     const markup = wrap(
-      `<g data-audit-box="0,0,${REPORTED_BOX_W}">` +
+      `<g data-audit-box="0,0,${REGULAR_FITS_BOX_W}">` +
         `<text x="0" y="20" font-size="${REPORTED_FONT_SIZE}" font-family="${georgiaCtx.fonts.heading}">${REPORTED_LINE}</text>` +
         `</g>`,
     )
     const issues = auditSvgMarkup(markup)
-    // Regular Georgia is within tolerance for this string (root-cause.md
-    // S3: +1.41%, inside the 3% no-action band) — genuinely does not
-    // overflow, not merely "not flagged."
     expect(issues.filter((i) => i.kind === "h-overflow")).toEqual([])
+    const bold = auditSvgMarkup(markup.replace("<text ", '<text font-weight="700" '))
+    expect(bold.filter((i) => i.kind === "h-overflow")).toHaveLength(1)
   })
 
   it("scope fence: font-weight=\"500\" (below this codebase's bold threshold) is not treated as bold", () => {
     const markup = wrap(
-      `<g data-audit-box="0,0,${REPORTED_BOX_W}">` +
+      `<g data-audit-box="0,0,${REGULAR_FITS_BOX_W}">` +
         `<text x="0" y="20" font-size="${REPORTED_FONT_SIZE}" font-weight="500" font-family="${georgiaCtx.fonts.heading}">${REPORTED_LINE}</text>` +
         `</g>`,
     )

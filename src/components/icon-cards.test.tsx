@@ -219,7 +219,10 @@ describe("icon_cards component", () => {
       ],
     }
     const ctx = themeCtx("brief")
-    const { container } = svg(iconCards.render(english, { x: 96, y: 330, w: 1088, h: 252 }, ctx))
+    // 224px: short enough that these four need a smaller node than the
+    // natural 44. At 252px they used to, while Georgia was priced 20% wide.
+    const h = 224
+    const { container } = svg(iconCards.render(english, { x: 96, y: 330, w: 1088, h }, ctx))
     expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
     const words = Array.from(container.querySelectorAll("text"))
       .map((t) => t.textContent ?? "")
@@ -231,7 +234,7 @@ describe("icon_cards component", () => {
       expect(r).toBeLessThan(44)
       expect(r).toBeGreaterThanOrEqual(28)
     }
-    for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y"))).toBeLessThanOrEqual(252)
+    for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y"))).toBeLessThanOrEqual(h)
   })
 
   it("sizes the type against the title lines it then reserves, so a tall box does not cut the body", () => {

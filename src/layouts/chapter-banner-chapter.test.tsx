@@ -94,11 +94,12 @@ describe("BannerChapter", () => {
       )
 
     // With a subheading, the rule underlines the subheading: 「面向 2027 的三个
-    // 决定」 at 36px measures 358px wide, centered on the page's own 640 axis.
+    // 决定」 at 36px measures 350px wide (Georgia's own advances for "2027"
+    // and the two spaces), centered on the page's own 640 axis.
     const withSub = root(chapter2, 2)
     const subRule = withSub.querySelector("line")!
     expect(Number(subRule.getAttribute("x1")) + Number(subRule.getAttribute("x2"))).toBe(1280)
-    expect(Number(subRule.getAttribute("x2")) - Number(subRule.getAttribute("x1"))).toBe(358)
+    expect(Number(subRule.getAttribute("x2")) - Number(subRule.getAttribute("x1"))).toBe(350)
 
     // Without one, it underlines the last heading line instead — a wider
     // line, 84px type, so a proportionally lower offset.

@@ -711,6 +711,36 @@ describe("hasExactWidthTable", () => {
   })
 })
 
+describe("Georgia Regular widths", () => {
+  // Advance sum read from /System/Library/Fonts/Supplemental/Georgia.ttf
+  // with a standalone cmap+hmtx parser: 26053 / 2048 em. rsvg paints the
+  // same string at 100px with its ink ending at 1269px, 0.2% short of it.
+  const REAL_EM = 26053 / 2048
+
+  it("measures from the exact advance table, not the class averages", () => {
+    // Pre-fix the class path priced this at 15.92em, 25% over the font.
+    const units = measureTextUnits("Vertical playbook replication", { fontFamily: "Georgia" })
+    expect(Math.abs(units - REAL_EM)).toBeLessThan(0.005)
+  })
+
+  it("lets a note that fits one line stay on one line (brief timeline repro)", () => {
+    // 12.72em at 16px paints 203.5px. The class estimate (254.7px) wrapped it.
+    const r = layoutSvgText("Vertical playbook replication", {
+      maxWidth: 210,
+      fontSize: 16,
+      maxLines: 2,
+      minPt: 16,
+      fontFamily: "Georgia, Songti SC, STSong, serif",
+    })
+    expect(r.lines).toEqual(["Vertical playbook replication"])
+  })
+
+  it("keeps Microsoft YaHei Regular on the class path", () => {
+    const text = "Vertical playbook replication"
+    expect(measureTextUnits(text, { fontFamily: "Microsoft YaHei" })).toBe(measureTextUnits(text))
+  })
+})
+
 // CJK line-break prohibition (禁则处理 / kinsoku shori) — see the set
 // selection comment above `LINE_START_FORBIDDEN` in svg-text-layout.ts.
 //

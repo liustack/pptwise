@@ -154,6 +154,11 @@ const WIDE_CHAR_RE = /[\u2014\u2018-\u201f\u2e80-\u9fff\uff00-\uffef]/
 // Microsoft YaHei. Full corpus and methodology: task-3-report.md
 // (borrow-wave scratchpad, not shipped in this repo).
 //
+// Later correction: "safe" held for overflow but not for wrapping. Over a
+// whole Georgia sentence those per-class gaps add up to 20-25% too wide,
+// enough to wrap text that fits on one line, so Georgia Regular now
+// measures from its exact table (see `measureTextUnits`).
+//
 // Separately (not a width-calibration finding, recorded here since it
 // surfaced during this same measurement): neither Georgia nor Consolas
 // (src/components/code.tsx) has any CJK glyph in its `cmap` at all --
@@ -427,6 +432,9 @@ const EXACT_TABLE_FOR: Readonly<Partial<Record<FaceKey, ExactFaceTable>>> = {
   yahei: { regular: YAHEI_REGULAR_EXACT, bold: YAHEI_BOLD_EXACT },
 }
 
+/** Faces whose Regular weight measures from its exact table by default. */
+const REGULAR_EXACT_FACES: ReadonlySet<FaceKey> = new Set<FaceKey>(["georgia"])
+
 /**
  * Classifies a resolved CSS font-family list (`ComponentCtx.fonts.*`, i.e.
  * `resolveFontStack`'s output) down to the face this pack measured, by its
@@ -480,25 +488,31 @@ export function measureTextUnits(text: string, weight?: TextWeightHint): number 
   const mode: WeightMode = weight?.bold ? "bold" : "regular"
   const faceKey = classifyFaceKey(weight?.fontFamily)
   const classTable = CLASS_TABLE_FOR[faceKey]
-  // Exact model applies to Bold only, even though a genuine Regular exact
-  // table exists right above (`GEORGIA_REGULAR_EXACT`/`YAHEI_REGULAR_EXACT`)
-  // -- Regular-weight text must stay byte-identical to this file's pre-fix
-  // arithmetic for every call site this whole task didn't touch (the "non-
-  // bold byte-inertness" hard requirement), and Georgia/YaHei's own
-  // class-average tables already encode that as a literal `regular: 1`
-  // (`NO_CORRECTION`) on every class -- falling through to
-  // `classAverageUnits` at Regular weight reproduces the original
-  // unweighted sum exactly, unchanged by this file's whole existence. The
-  // Regular exact tables are real, correct data (kept for documentation and
-  // any future caller that legitimately wants exact Regular widths -- they
-  // even surface a genuine, pre-existing, bold-unrelated finding: "Components
-  // Demo" sits ~1.25% past its own declared budget at Regular weight too,
-  // root-cause.md's own number) -- but *exposing* that pre-existing gap
-  // through this function's default Regular path would be an undisclosed
-  // behavior change on text this fix promised to leave alone, not something
-  // this task's mandate covers.
+  // Bold always takes the exact table. Regular takes it for Georgia, and
+  // for any face when the caller asks (`exact`).
+  //
+  // Regular used to stay on the class-average path for every face so that
+  // non-bold text kept its pre-bold-fix geometry. For Georgia that path runs
+  // wide. Summing `GEORGIA_REGULAR_EXACT` (which matches the macOS
+  // Georgia.ttf `hmtx` to 0.0001 em on all 95 codepoints) over the brief
+  // gallery's sentences puts the class average 20-25% over the real advance,
+  // and rsvg's rendered ink agrees with the exact sum to within 0.3%. The
+  // cause is Georgia's narrow lowercase, space, and punctuation against the
+  // 0.56/0.35/0.46 class weights: "Vertical playbook replication" is 15.92
+  // em by class and 12.72 em real, so a note that fits one line wrapped to
+  // two (the brief timeline's last item, the chevron's last note). Exact
+  // advances carry no class-average error and Georgia's kerning only
+  // tightens pairs, so the exact sum still errs a hair wide, never narrow.
+  //
+  // Microsoft YaHei, SimSun, and KaiTi Regular run 9-16% wide on English
+  // for the same reason (class weights, not their own glyphs). They stay
+  // on the class path until each gets its own measured change, since
+  // switching them moves every English and mixed page of the themes that
+  // body-set in them.
   const exactTable =
-    mode === "bold" || weight?.exact ? EXACT_TABLE_FOR[faceKey]?.[mode] : undefined
+    mode === "bold" || weight?.exact || REGULAR_EXACT_FACES.has(faceKey)
+      ? EXACT_TABLE_FOR[faceKey]?.[mode]
+      : undefined
   return Array.from(text).reduce((sum, char) => {
     // WIDE_CHAR_RE (CJK/ideographic-punctuation/fullwidth) always takes the
     // class path, even under an exact-model face: the exact tables only
