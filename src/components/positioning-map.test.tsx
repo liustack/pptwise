@@ -402,4 +402,103 @@ describe("positioning_map component", () => {
       }
     }
   })
+
+  describe("keeps two names stacked one over the other far enough apart to read as two", () => {
+    // Air between two words above and below each other, ink to ink. A wrapped
+    // line sits at most 0.3em (5px here) under the one above it.
+    const STACK_AIR = 8
+    // Ink as the gallery's L1 check reads it: ideographs reach 0.88em above
+    // the baseline, Latin less, and a descender 0.25em below.
+    const inkOf = (t: Element, ctx: ComponentCtx) => {
+      const size = Number(t.getAttribute("font-size"))
+      const text = t.textContent ?? ""
+      const width =
+        measureTextUnits(text, { bold: t.getAttribute("font-weight") === "700", fontFamily: ctx.fonts.body, exact: true }) *
+        size
+      const x = Number(t.getAttribute("x"))
+      const y = Number(t.getAttribute("y"))
+      const left = t.getAttribute("text-anchor") === "end" ? x - width : x
+      return { text, left, right: left + width, top: y - size * 0.88, bottom: y + size * 0.25 }
+    }
+    /** Every pair of words on the map that overlap across, with the air between them above and below. */
+    function stackedGaps(component: typeof english, w: number, ctx: ComponentCtx) {
+      const { container } = svg(positioningMap.render(component, { x: 0, y: 0, w }, ctx))
+      expect(container.querySelector("[data-dropped]")).toBeNull()
+      const inks = Array.from(container.querySelectorAll("text")).map((t) => inkOf(t, ctx))
+      const names = new Set(component.points.map((p) => p.label))
+      for (const label of names) expect(inks.some((ink) => ink.text === label), label).toBe(true)
+      const gaps: { pair: string; gap: number }[] = []
+      for (const [i, a] of inks.entries()) {
+        for (const b of inks.slice(i + 1)) {
+          // Two axis or quadrant names are placed by the frame, not by the
+          // name search; a pair needs a subject's name in it.
+          if (!names.has(a.text) && !names.has(b.text)) continue
+          if (a.right <= b.left || b.right <= a.left) continue
+          gaps.push({ pair: `${a.text} / ${b.text}`, gap: Math.max(b.top - a.bottom, a.top - b.bottom) })
+        }
+      }
+      return gaps
+    }
+    const english = {
+      type: "positioning_map" as const,
+      x_axis: { title: "Delivery depth", low: "Light", high: "Deep" },
+      y_axis: { title: "Annual contract value", low: "Low", high: "High" },
+      points: [
+        { label: "Yunshan School", x: 30, y: 70 },
+        { label: "Dongqi Fund", x: 30, y: 62 },
+      ] as { label: string; x: number; y: number; emphasis?: true }[],
+    }
+
+    it("for two subjects one right above the other", () => {
+      // Named in author order, the second name used to land one row under
+      // the first with 1.4px of ink between them: one name on two lines.
+      for (const gap of stackedGaps(english, 1088, themed("brief"))) {
+        expect(gap.gap, gap.pair).toBeGreaterThanOrEqual(STACK_AIR)
+      }
+    })
+
+    it("on a full map, against every other name and every axis and quadrant name", () => {
+      const full = {
+        ...english,
+        quadrants: {
+          top_left: "Generic tools, price war",
+          top_right: "Deep delivery, annual terms",
+          bottom_left: "Self-serve, volume play",
+          bottom_right: "Service-heavy, low ticket",
+        },
+        points: [
+          { label: "CloudSeek", x: 74, y: 80, emphasis: true as const },
+          { label: "Linjiang Group", x: 90, y: 62 },
+          { label: "Northshore", x: 88, y: 30 },
+          { label: "Yunshan School", x: 30, y: 74 },
+          { label: "Dongqi Fund", x: 46, y: 56 },
+          { label: "Yonggu Market", x: 16, y: 38 },
+          { label: "Ocean Education", x: 58, y: 18 },
+          { label: "Jinsui Study", x: 26, y: 8 },
+        ],
+      }
+      for (const w of [1088, 880]) {
+        for (const gap of stackedGaps(full, w, themed("brief"))) {
+          expect(gap.gap, `${w}: ${gap.pair}`).toBeGreaterThanOrEqual(STACK_AIR)
+        }
+      }
+      // Eight classes packed round the crossing, as homeroom's map has them.
+      const packed = {
+        ...eight,
+        points: [
+          { label: "本班平均", x: 72, y: 68, emphasis: true as const },
+          { label: "基础组", x: 66, y: 42 },
+          { label: "提高组", x: 88, y: 86 },
+          { label: "初二（1）班", x: 78, y: 74 },
+          { label: "初二（5）班", x: 62, y: 60 },
+          { label: "年级平均", x: 70, y: 64 },
+          { label: "上学期本班", x: 58, y: 56 },
+          { label: "订正未跟组", x: 40, y: 34 },
+        ],
+      }
+      for (const gap of stackedGaps(packed as typeof english, 1088, themed("homeroom"))) {
+        expect(gap.gap, gap.pair).toBeGreaterThanOrEqual(STACK_AIR)
+      }
+    })
+  })
 })

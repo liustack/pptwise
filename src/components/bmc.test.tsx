@@ -267,3 +267,58 @@ describe("bmc measures a block title in the face it draws it in", () => {
     for (const item of segments.customer_segments) expect(text.replace(/\s/g, "")).toContain(item.replace(/\s/g, ""))
   })
 })
+
+// A canvas narrower than the gallery ever draws it. At 880px an item has a
+// 126px measure and a three-line cap cut "Existing customers reliably
+// expand" after "reliably"; under about 764px "Relationships" is wider than
+// its column in bold Georgia and the block title was cut to "Relationship".
+describe("bmc on a narrow rect keeps every word whole or declines", () => {
+  const english = {
+    type: "bmc" as const,
+    key_partners: ["Linjiang Group", "Northshore Software", "Yunshan School"],
+    key_activities: ["Seat expansion in existing accounts", "Standardized onboarding templates"],
+    key_resources: ["Vertical playbook replication", "Staffing-path automation"],
+    value_propositions: [
+      "Activity leads the category by a clear margin",
+      "Existing customers reliably expand",
+      "Onboarding templates cover four industries",
+    ],
+    customer_relationships: ["Faster build iteration", "Data quality governance"],
+    channels: ["East", "South"],
+    customer_segments: ["Consulting", "Platforms", "K-12"],
+    cost_structure: ["New bookings concentrated in three accounts", "Success bench capacity near saturation"],
+    revenue_streams: ["No mature vendor serves campus buyers yet", "Consulting firms want joint offerings"],
+  }
+  const squash = (s: string) => s.replace(/\s+/g, "")
+
+  it("gives an item the lines it needs instead of cutting it at three", () => {
+    for (const w of [880, 800]) {
+      const { container } = svg(bmc.render(english, { x: 0, y: 0, w }, ctx))
+      expect(container.querySelector("[data-truncated]"), `${w}`).toBeNull()
+      expect(container.querySelector("[data-dropped]"), `${w}`).toBeNull()
+      const text = squash(container.textContent ?? "")
+      for (const key of Object.keys(english).filter((k) => k !== "type") as (keyof typeof english)[]) {
+        for (const item of english[key] as string[]) expect(text, `${w}: ${item}`).toContain(squash(item))
+      }
+      for (const title of ["Customer Relationships", "Value Propositions"]) expect(text, `${w}: ${title}`).toContain(squash(title))
+    }
+  })
+
+  it("declines, rather than break or cut a block title, where a title word is wider than its column", () => {
+    for (const w of [760, 720, 640]) {
+      const markup = renderSvgMarkup(<svg>{bmc.render(english, { x: 0, y: 0, w }, ctx)}</svg>)
+      expect(markup, `${w}`).toContain('data-dropped-kind="component"')
+      expect(markup, `${w}`).not.toContain("data-truncated")
+      expect(markup, `${w}`).not.toContain("Relationship<")
+    }
+  })
+
+  it("keeps drawing a Chinese canvas, whose titles are short, at the same widths", () => {
+    for (const w of [720, 640]) {
+      const { container } = svg(bmc.render(basic, { x: 0, y: 0, w }, ctx))
+      expect(container.querySelector("[data-dropped]"), `${w}`).toBeNull()
+      expect(container.querySelector("[data-truncated]"), `${w}`).toBeNull()
+      expect(container.textContent).toContain("客户关系")
+    }
+  })
+})
