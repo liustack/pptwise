@@ -48,6 +48,20 @@ const AXIS_CLEAR = 8
  */
 const LABEL_AIR = 6
 /**
+ * Air a name keeps above and below any other words on the map, ink to ink.
+ *
+ * Beside is not enough. Two names stacked a line apart and overlapping
+ * across read as one name wrapped onto two lines: brief's English map set
+ * "Yunshan School" 2px over "Dongqi Fund", and homeroom's "本班平均" sat on
+ * "年级平均" the same way. A wrapped line in this repo sits at most half an
+ * em of leading below the one above it (0.3em of air at the 17px names
+ * here), and a stacked list keeps 8px more between two entries than between
+ * the lines of one: `rings.tsx`'s `ROW_CLEAR`, set for the same 16–17px rows.
+ * So a name keeps 8px from any word above or below it, clearly more than
+ * the lines of one name would have.
+ */
+const NAME_STACK_AIR = 8
+/**
  * Spots the label search may try before it settles for dropping a name. A
  * map whose first pass fits costs one try per label, and the densest gallery
  * maps settle within a few hundred. The cap only stops a map that has no
@@ -75,6 +89,11 @@ function overlaps(a: Box, b: Box): boolean {
 /** A label's box widened by the air it keeps on either side. */
 function airy(b: Box): Box {
   return { x: b.x - LABEL_AIR, y: b.y, w: b.w + LABEL_AIR * 2, h: b.h }
+}
+
+/** A name's box widened by the air it keeps from another name, above and below as well as beside. */
+function apart(b: Box): Box {
+  return { x: b.x - LABEL_AIR, y: b.y - NAME_STACK_AIR, w: b.w + LABEL_AIR * 2, h: b.h + NAME_STACK_AIR * 2 }
 }
 
 function mapHeight(w: number): number {
@@ -219,6 +238,10 @@ export const positioningMap: SvgComponent<PositioningMapComponent> = {
     const yHighEnd = yEnd(yHigh.text, true)
     const yLowEnd = yEnd(yLow.text, false)
     const fixed: Box[] = [yHighEnd.box, yLowEnd.box, xLowEnd.box, xHighEnd.box, ...cornerBoxes, ...dotBoxes]
+    // The words among them, which a name keeps `NAME_STACK_AIR` from above
+    // and below as well. A dot is not a word, and a name sits right above or
+    // below its own.
+    const fixedText: Box[] = [yHighEnd.box, yLowEnd.box, xLowEnd.box, xHighEnd.box, ...cornerBoxes]
 
     interface Spot {
       box: Box
@@ -302,6 +325,19 @@ export const positioningMap: SvgComponent<PositioningMapComponent> = {
         belowAt(dot.cx, "end"),
         aboveAt(centred, "start", 1),
         belowAt(centred, "start", 1),
+        // With air kept above and below every name, a cluster of subjects
+        // needs spots the whole-row steps skip: a row and a half off, a
+        // hung spot one row further, a centred spot two rows further.
+        rightOf(-1.5 * rise),
+        rightOf(1.5 * rise),
+        leftOf(-1.5 * rise),
+        leftOf(1.5 * rise),
+        aboveAt(dot.cx, "start", 1),
+        aboveAt(dot.cx, "end", 1),
+        belowAt(dot.cx, "start", 1),
+        belowAt(dot.cx, "end", 1),
+        aboveAt(centred, "start", 2),
+        belowAt(centred, "start", 2),
       ]
       // A name belongs in its subject's quadrant: across an axis rule it
       // reads as a claim about the other quadrant, and on the rule it reads
@@ -321,7 +357,8 @@ export const positioningMap: SvgComponent<PositioningMapComponent> = {
           candidate.box.x + candidate.box.w <= box.w &&
           candidate.box.y >= 0 &&
           candidate.box.y + candidate.box.h <= h &&
-          !fixed.some((t) => overlaps(t, airy(candidate.box))),
+          !fixed.some((t) => overlaps(t, airy(candidate.box))) &&
+          !fixedText.some((t) => overlaps(t, apart(candidate.box))),
       )
     })
 
@@ -331,25 +368,36 @@ export const positioningMap: SvgComponent<PositioningMapComponent> = {
     // back and tries the earlier labels' later spots before giving any name
     // up. A map whose first pass fits is never searched further, and the
     // budget keeps a hopeless map from searching forever.
+    //
+    // Each spot taken also strikes the spots it crowds from every later
+    // label's list, and a spot that leaves some later label with none is
+    // passed over at once. That finds the same arrangement stepping back
+    // would, without walking every dead end first: once names kept air above
+    // and below and had more spots to try, clinic's map spent the whole
+    // budget on dead ends and dropped a name that had a spot.
     const chosen: (Spot | undefined)[] = new Array(spots.length).fill(undefined)
     let budget = PLACEMENT_BUDGET
-    const fits = (i: number): boolean => {
+    const clear = (a: Spot, b: Spot) => !overlaps(apart(a.box), b.box)
+    const fits = (i: number, open: Spot[][]): boolean => {
       if (i === spots.length) return true
-      for (const spot of spots[i]!) {
+      for (const spot of open[i]!) {
         if (budget-- <= 0) return false
-        if (chosen.some((c, j) => j < i && c !== undefined && overlaps(airy(c.box), spot.box))) continue
+        // Taking a spot is only worth trying if every later label still has
+        // somewhere to go beside it.
+        const rest = open.map((options, j) => (j > i ? options.filter((other) => clear(spot, other)) : options))
+        if (rest.some((options, j) => j > i && options.length === 0)) continue
         chosen[i] = spot
-        if (fits(i + 1)) return true
+        if (fits(i + 1, rest)) return true
       }
       chosen[i] = undefined
       return false
     }
-    if (!fits(0)) {
+    if (!fits(0, spots)) {
       // No arrangement names every subject: the first free spot in author
       // order, and a declared drop for each label left without one.
       chosen.fill(undefined)
       spots.forEach((options, i) => {
-        chosen[i] = options.find((spot) => !chosen.some((c) => c !== undefined && overlaps(airy(c.box), spot.box)))
+        chosen[i] = options.find((spot) => !chosen.some((c) => c !== undefined && overlaps(apart(c.box), spot.box)))
       })
     }
     const droppedLabels = chosen.filter((c) => c === undefined).length
