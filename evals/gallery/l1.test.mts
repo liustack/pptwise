@@ -256,6 +256,25 @@ describe("auditL1 planted defects", () => {
     expect(codes(svg)).toContain("out-of-bounds")
   })
 
+  // luxe's stat-hero: a rule at y=200 sat exactly one font size above a
+  // 270px figure's baseline, which is where the em box ends, while the
+  // digits' ink starts some 75px lower.
+  it("does not flag a rule that clears a display figure's ink but not its em box", () => {
+    const svg = wrap(
+      `<line x1="96" y1="200" x2="1184" y2="200" stroke="#222" stroke-width="1"/>` +
+        `<text x="96" y="470" font-size="270">307</text>`,
+    )
+    expect(codes(svg)).not.toContain("edge-stick")
+  })
+
+  it("still flags a rule just above the ink of a line of Chinese text", () => {
+    const svg = wrap(
+      `<line x1="96" y1="284" x2="700" y2="284" stroke="#222" stroke-width="1"/>` +
+        `<text x="100" y="300" font-size="16">上节课平均分在这里</text>`,
+    )
+    expect(codes(svg)).toContain("edge-stick")
+  })
+
   it("does not flag a short gold underline as edge-stick", () => {
     const svg = wrap(
       `<text x="640" y="404" font-size="84" text-anchor="middle">客户与收入结构</text>` +

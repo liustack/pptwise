@@ -76,6 +76,16 @@ const CARD_MIN = 40
 const BOXLESS_TOL = 6
 const INK_ASCENT = 0.72
 const INK_DESCENT = 0.12
+/**
+ * How high a line's ink reaches above its baseline, for the edge and divider
+ * checks. Ideographs fill nearly the whole em box, Latin tops out at its
+ * ascenders. The em box itself overstates a display figure's top by a quarter
+ * of its size: a 270px hero number was reported touching a rule 76px above
+ * its digits.
+ */
+const CJK_INK_TOP = 0.88
+const LATIN_INK_TOP = 0.76
+const CJK_CHAR = /[\u2e80-\u9fff\uac00-\ud7af\uf900-\ufaff\uff00-\uffef]/
 const STRIKE_BAND_TOP = 0.85
 const STRIKE_BAND_BOTTOM = 0.02
 const UNDERLINE_BELOW = 0.08
@@ -958,7 +968,7 @@ function walkText(
         const anchor = el.getAttribute("text-anchor") ?? "start"
         const left = anchor === "end" ? tx - width : anchor === "middle" ? tx - width / 2 : tx
         const right = left + width
-        const top = ty - fontSize
+        const top = ty - (CJK_CHAR.test(content) ? CJK_INK_TOP : LATIN_INK_TOP) * fontSize
         const bottom = ty + fontSize * 0.25
         const decor = hasDecor(el)
 
