@@ -544,4 +544,11 @@ describe("numbered_cards n=3 and n=8 stay in box", () => {
     }
     assertInsideBox(container, w, h)
   })
+
+  it("declines a box too short for a line of title in every pill", () => {
+    const { container } = svg(numberedCards.render(four, { x: 0, y: 0, w: 880, h: 20 }, boundThemeCtx("brief", {})))
+    expect(container.querySelectorAll("text, rect, circle")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+  })
 })
+

@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "@/lib/svg-text-layout"
 import { readableOn } from "../render/ink"
+import { DroppedContentMarker } from "../render/drop-marker"
 import { TEXT_INK_ASCENT, TEXT_INK_DESCENT } from "../render/depth-contract/geometry"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import {
@@ -242,6 +243,16 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
       const padY = Math.max(0, (box.h - n * needed - (n - 1) * L.pillGap) / 2)
       if (padY < PAD) L = layoutPills(n, box.w, box.h, L.pillGap, padY)
     }
+  }
+  // A pill always keeps one line of title. Shorter than that line, it
+  // cannot hold even that, so the cards decline the box rather than setting
+  // titles over their neighbours and past the box's edges.
+  if (n > 0 && L.pillH < formLineHeight(FORM_TITLE_FLOOR) + 4) {
+    return (
+      <g transform={`translate(${box.x},${box.y})`}>
+        <DroppedContentMarker count={1} kind="component" />
+      </g>
+    )
   }
 
   const leftFill = ctx.colors.primary
