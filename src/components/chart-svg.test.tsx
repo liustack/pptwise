@@ -1068,7 +1068,7 @@ describe("renderBar — grouped (n>=2) negative/mixed-sign regression (T2 review
     })
   })
 
-  it("two-series all-negative: bars still anchor correctly even though domain.max unconditionally floors to 1 (not 0) with no positive data in sight (the T1-review-flagged floor-at-1 quirk)", () => {
+  it("two-series all-negative: bars hang from one shared zero row, with room above it for their value labels", () => {
     const twoSeries: ChartSeries[] = [
       { name: "A", data: [{ x: "Q1", y: -12 }, { x: "Q2", y: -3 }] },
       { name: "B", data: [{ x: "Q1", y: -8 }, { x: "Q2", y: -20 }] },
@@ -1095,9 +1095,12 @@ describe("renderBar — grouped (n>=2) negative/mixed-sign regression (T2 review
       expect(height).toBeCloseTo((end - start) * plot.plotH)
       expect(y).toBeCloseTo(baselineY) // every bar hangs down from the same shared baseline
     })
-    // The baseline is NOT at the plot's very top (y===PLOT_TOP) -- proof the
-    // max-floors-to-1 quirk is genuinely in effect (domain.max=1, not 0).
-    expect(baselineY).toBeLessThanOrEqual(plot.plotY + 1)
+    // Zero is not the plot's top edge. A negative bar prints its value just
+    // above the zero row, so the axis keeps headroom above zero the way it
+    // keeps headroom above the tallest positive bar. With zero on the top
+    // edge those labels were printed above the plot, out of the chart.
+    expect(domain.max).toBeGreaterThan(0)
+    expect(baselineY).toBeGreaterThan(plot.plotY + 16)
   })
 
   it("shared domain is NOT computed per-series: a modest-value series' bar scales against the OTHER series' extreme value", () => {

@@ -3181,16 +3181,9 @@ export function renderCombo(
     return valueAxisMode(keptValues(members))
   }
   const hasRight = axisSeries(true).length > 0
-  // A bar is measured from zero, so the left axis has to hold zero whenever a
-  // bar sits on it. `buildNumericAxis` keeps zero in "zero-max" mode except
-  // when every value is the same: that case centres the range on the value
-  // and leaves zero out, so a one-category combo hung its bar below the
-  // x-axis. Zero goes in as a value here instead. Wherever the values differ
-  // this changes nothing, since "zero-max" already starts at zero. (Bar has
-  // the same gap in that builder and is left alone, to keep its pages.)
-  const leftMode = axisMode(false)
-  const leftValues = keptValues(axisSeries(false))
-  const yAxis = buildCoveringNumericAxis(leftMode === "zero-max" ? [0, ...leftValues] : leftValues, leftMode, meta.yUnit)
+  // A bar is measured from zero, and "zero-max" keeps zero in range whatever
+  // the values, so a left axis that carries a bar holds zero.
+  const yAxis = buildCoveringNumericAxis(keptValues(axisSeries(false)), axisMode(false), meta.yUnit)
   const y2Axis = hasRight
     ? buildAlignedNumericAxis(keptValues(axisSeries(true)), axisMode(true), yAxis.ticks, meta.y2Unit)
     : null

@@ -54,6 +54,45 @@ describe("paddedDomain", () => {
     expect(domain.min).toBe(0)
     expect(domain.max).toBeGreaterThan(75)
   })
+
+  it("zero-max mode keeps 0 when every value is the same", () => {
+    // A lone bar of 42 used to get a 35 to 50 axis, and hung below the x-axis.
+    const up = paddedDomain(42, 42, "zero-max")
+    expect(up.min).toBe(0)
+    expect(up.max).toBeGreaterThan(42)
+    const down = paddedDomain(-42, -42, "zero-max")
+    expect(down.min).toBeLessThanOrEqual(-42)
+    expect(down.max).toBeGreaterThanOrEqual(0)
+  })
+
+  it("zero-max mode keeps 0 when every value is below it", () => {
+    for (const [lo, hi] of [
+      [-20, -3],
+      [-1e11 - 0.01, -1e11],
+    ]) {
+      const domain = paddedDomain(lo!, hi!, "zero-max")
+      expect(domain.min, `${lo}..${hi}`).toBeLessThanOrEqual(lo!)
+      expect(domain.max, `${lo}..${hi}`).toBeGreaterThanOrEqual(0)
+    }
+  })
+})
+
+describe("buildNumericAxis", () => {
+  const strictlyIncreasing = (ticks: readonly number[]) => ticks.every((t, i) => i === 0 || t > ticks[i - 1]!)
+
+  it("starts a lone bar's axis at zero", () => {
+    const axis = buildNumericAxis([42], "zero-max")
+    expect(axis.ticks[0]).toBe(0)
+    expect(axis.domain.max).toBeGreaterThanOrEqual(42)
+  })
+
+  it("keeps zero and the lowest value in range when every value is negative", () => {
+    const values = [-1e11, -1e11 - 0.01]
+    const axis = buildNumericAxis(values, "zero-max")
+    expect(strictlyIncreasing(axis.ticks)).toBe(true)
+    expect(axis.domain.min).toBeLessThanOrEqual(Math.min(...values))
+    expect(axis.domain.max).toBeGreaterThanOrEqual(0)
+  })
 })
 
 describe("formatAxisTick", () => {

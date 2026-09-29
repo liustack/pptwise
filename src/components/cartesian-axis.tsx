@@ -278,23 +278,36 @@ export function buildAlignedNumericAxis(
   }
 }
 
+/**
+ * The range an axis spans before it is rounded out to nice ticks.
+ *
+ * "zero-max" always holds zero, whatever the values: it runs from the lower
+ * of zero and the lowest value to the higher of zero and the highest value,
+ * plus headroom above. It used to hold zero only by luck. Values that were all
+ * the same took the "fit" branch (a lone bar of 42 got a 35 to 50 axis and hung
+ * below the x-axis), and values all below zero padded their own top and
+ * stopped short of it (-1e11 and -1e11 - 0.01 got an axis with no zero on it).
+ * The headroom sits above zero when every value is below it, which is where a
+ * negative bar prints its value.
+ */
 export function paddedDomain(min: number, max: number, mode: DomainPadMode, padFrac = DOMAIN_PAD_FRAC): NumericDomain {
   if (!Number.isFinite(min) || !Number.isFinite(max)) return { min: 0, max: 1 }
   const lo = Math.min(min, max)
   const hi = Math.max(min, max)
+  if (mode === "zero-max") {
+    const start = Math.min(0, lo)
+    const top = Math.max(0, hi)
+    const span = Math.max(top - start, 1)
+    const end = top + span * padFrac
+    const ticks = niceTicks(start, end)
+    const tickMin = ticks[0]!
+    const tickMax = ticks[ticks.length - 1]!
+    return { min: Math.min(0, tickMin), max: Math.max(tickMax, top) }
+  }
   if (lo === hi) {
     const pad = Math.abs(lo) * padFrac || 1
     const ticks = niceTicks(lo - pad, hi + pad)
     return { min: ticks[0]!, max: ticks[ticks.length - 1]! }
-  }
-  if (mode === "zero-max") {
-    const start = Math.min(0, lo)
-    const span = Math.max(hi - start, 1)
-    const end = hi + span * padFrac
-    const ticks = niceTicks(start, end)
-    const tickMin = ticks[0]!
-    const tickMax = ticks[ticks.length - 1]!
-    return { min: Math.min(0, tickMin), max: Math.max(tickMax, hi) }
   }
   const span = hi - lo
   const pad = span * padFrac
