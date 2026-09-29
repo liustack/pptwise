@@ -399,15 +399,18 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     })),
   }),
 
+  // Each phase gets its own two measures, the six headline numbers taken in
+  // order. Every card used to carry metrics 0 and 1, so one page printed the
+  // same two rows three times over.
   roadmap: (lex) => ({
     type: "roadmap",
     items: slice(lex.chapters, 3).map((title, i) => ({
       title,
       period: lex.periods[i],
-      rows: [
-        { label: lex.metrics[0]!.label, value: `${lex.metrics[0]!.value}${lex.metrics[0]!.unit ?? ""}` },
-        { label: lex.metrics[1]!.label, value: `${lex.metrics[1]!.value}${lex.metrics[1]!.unit ?? ""}` },
-      ],
+      rows: [0, 1].map((k) => {
+        const m = lex.metrics[(i * 2 + k) % lex.metrics.length]!
+        return { label: m.label, value: `${m.value}${m.unit ?? ""}` }
+      }),
     })),
   }),
 
