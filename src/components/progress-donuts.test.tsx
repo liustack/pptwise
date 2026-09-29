@@ -323,3 +323,29 @@ describe("progress_donuts rendering", () => {
     )
   })
 })
+
+describe("progress_donuts source line", () => {
+  it("wraps a source too long for its cell onto a second line and budgets the height for it", () => {
+    const english = {
+      type: "progress_donuts" as const,
+      items: [
+        { value: "86%", label: "Workspace headcount", icon: "trending-up" as const, source: "CloudSeek Workspaces Q2 2026 operating data" },
+        { value: "72%", label: "Renewal rate" },
+        { value: "48%", label: "Activation coverage" },
+      ],
+    }
+    const ctx = themeCtx("brief")
+    const w = 1104
+    const h = progressDonuts.measure(english, w, ctx)
+    const short = progressDonuts.measure({ ...english, items: english.items.map((it, i) => (i === 0 ? { ...it, source: "Q2 data" } : it)) }, w, ctx)
+    expect(h).toBeGreaterThan(short)
+    const { container } = svg(progressDonuts.render(english, { x: 88, y: 245, w }, ctx))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const words = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .join(" ")
+    expect(words).toContain(english.items[0]!.source)
+    for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y"))).toBeLessThanOrEqual(h)
+  })
+})
+
