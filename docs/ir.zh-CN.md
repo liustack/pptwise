@@ -168,7 +168,7 @@ pptwise schema --kind data --theme brief
 
 `axes` 的标题和单位作用于 `bar`、`stacked`、`percent_stacked`、`combo`、`line`、`area` 与 `scatter`。同一系列里一个类别只能出现一次。
 
-横条图（`direction: "horizontal"`）会随类别数长高，保证每个类别各占一行。
+`bar` 在每根柱旁边印出它的数值，竖柱印在柱顶上方，横条印在条的末端。只有全部数值都能印在不压柱、不出图的位置时才印，否则一个都不印，这一页的导出会停下，直到数字改短（除以十的幂，把单位写进 `y_unit`，横条写进 `x_unit`）或减少类别、系列。横条图会随类别数长高，保证每个类别各占一行。
 
 读数值轴的每个值，绝对值都不能超过 1e300：`bar`、`line`、`area`、`scatter`、`dumbbell`、`combo` 的每个 `y`，以及 `scatter` 的每个 `x`。超了就把这条轴上的所有系列除以同一个十的幂，把单位写进这条轴的单位字段，这样各系列的比例不变。`dumbbell` 没有轴标题，单位写进两个系列的名字里。
 

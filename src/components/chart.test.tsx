@@ -1732,6 +1732,60 @@ describe("a value past what an axis can draw is refused on every cartesian chart
   })
 })
 
+describe("bar value labels are printed together or not at all", () => {
+  // Twenty categories of two series used to push 39 of 40 labels down onto
+  // the bars and 28 out of the chart, with no mark that anything was lost.
+  const categories = Array.from({ length: 20 }, (_, i) => `C${i + 1}`)
+  const crowded = {
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    series: [
+      { name: "Plan", data: categories.map((x, i) => ({ x, y: 120 + i * 7 })) },
+      { name: "Actual", data: categories.map((x, i) => ({ x, y: 118 + i * 7 })) },
+    ],
+  }
+
+  function paint(component: Parameters<typeof chart.render>[0], w = 1120) {
+    const h = chart.measure(component, w, ctx)
+    const root = parseSvgRoot(renderSvgMarkup(<svg>{chart.render(component, { x: 0, y: 0, w, h }, ctx)}</svg>))
+    const bars = Array.from(root.querySelectorAll('rect[data-plot-mark="1"]'))
+    const labels = Array.from(root.querySelectorAll('[data-value-label="1"]'))
+    const dropped = root.querySelector('[data-dropped-kind="value-label"]')
+    return { bars, labels, dropped, w, h }
+  }
+
+  it("prints none of a crowded row and declares every one of them", () => {
+    const { bars, labels, dropped } = paint(crowded)
+    expect(bars).toHaveLength(40)
+    expect(labels).toHaveLength(0)
+    expect(dropped?.getAttribute("data-dropped")).toBe("40")
+  })
+
+  it("still prints every label when they all fit, and declares nothing", () => {
+    const roomy = { ...crowded, series: crowded.series.map((s) => ({ ...s, data: s.data.slice(0, 5) })) }
+    const { bars, labels, dropped } = paint(roomy)
+    expect(bars).toHaveLength(10)
+    expect(labels).toHaveLength(10)
+    expect(dropped).toBeNull()
+  })
+
+  it("does the same across a horizontal bar, whose labels sit past each bar's end", () => {
+    // Rows thinner than a line of text cannot hold a label each.
+    const rows = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      direction: "horizontal" as const,
+      series: ["A", "B", "C"].map((name, si) => ({
+        name,
+        data: categories.map((x, i) => ({ x, y: 40 + i + si })),
+      })),
+    }
+    const crowdedRows = paint(rows)
+    expect(crowdedRows.labels).toHaveLength(0)
+    expect(crowdedRows.dropped?.getAttribute("data-dropped")).toBe("60")
+  })
+})
+
 describe("a horizontal bar chart names every category and gives each a row", () => {
   const names = [
     "Seat expansion in existing accounts",

@@ -996,7 +996,11 @@ export function renderBar(
   const gradientId = chartGradientId("chart-bar-grad", w, h, series)
   const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
   const dataMax = Math.max(...keptValues(model.series), Number.NEGATIVE_INFINITY)
+  // Every bar prints its value above itself, all of them or none: see
+  // `placeValueLabelsTogether`. The labels may use the chart body between the
+  // legend row and the x-axis, across the plot's own width.
   const barLabelSpecs: ValueLabelSpec[] = []
+  const barBoxes: DepthBox[] = []
   for (let i = 0; i < categories.length; i++) {
     const groupX0 = geom.plotX + i * groupW + BAR_GROUP_EDGE_GAP
     const usableW = groupW - BAR_GROUP_EDGE_GAP * 2
@@ -1005,20 +1009,32 @@ export function renderBar(
       const value = s.values[i]
       if (value == null) continue
       const barX = groupX0 + s.seriesIndex * (perBarW + BAR_GROUP_EDGE_GAP)
-      const { barY } = verticalBarExtent(value, domain, geom.plotY, geom.plotH)
-      barLabelSpecs.push({
-        id: `bar-${i}-${s.seriesIndex}`,
-        text: String(value),
-        x: barX + perBarW / 2,
-        y: barY - VALUE_LABEL_GAP,
-        anchor: "middle",
-        fontSize: VALUE_FONT_SIZE,
-        fontFamily,
-        priority: 100 - s.seriesIndex,
-      })
+      const { barY, barH } = verticalBarExtent(value, domain, geom.plotY, geom.plotH)
+      barBoxes.push({ x: barX, y: barY, w: perBarW, h: barH })
+      barLabelSpecs.push(
+        risingBand(
+          {
+            id: `bar-${i}-${s.seriesIndex}`,
+            text: String(value),
+            x: barX + perBarW / 2,
+            y: barY - VALUE_LABEL_GAP,
+            anchor: "middle",
+            fontSize: VALUE_FONT_SIZE,
+            fontFamily,
+            priority: 100 - s.seriesIndex,
+          },
+          y0,
+        ),
+      )
     }
   }
-  const placedBars = new Map(resolveValueLabelCollisions(barLabelSpecs).map((label) => [label.id, label]))
+  const placedLabels = placeValueLabelsTogether(barLabelSpecs, barBoxes, {
+    left: geom.plotX,
+    right: geom.plotX + geom.plotW,
+    top: y0,
+    bottom: geom.plotY + geom.plotH,
+  })
+  const placedBars = new Map((placedLabels ?? []).map((label) => [label.id, label]))
   return (
     <>
       {n <= 1 && (
@@ -1072,7 +1088,7 @@ export function renderBar(
               opacity={isSingle ? (isMax ? 1 : 0.75) : 1}
             />,
           )
-          if (placed && !placed.hidden) {
+          if (placed) {
             barElements.push(
               <text
                 key={`v-${s.seriesIndex}`}
@@ -1092,6 +1108,7 @@ export function renderBar(
         }
         return <g key={cat.key}>{barElements}</g>
       })}
+      {placedLabels === null ? <g data-dropped={barLabelSpecs.length} data-dropped-kind="value-label" /> : null}
       {renderCartesianAxisTitles({
         plotX: geom.plotX,
         plotBottom: geom.titleY,
@@ -2238,7 +2255,11 @@ export function renderBarHorizontal(
     pos: mapToPlotX(t, xAxis.domain, plotX, plotW),
     anchor: edgeAnchor(i, xAxis.ticks.length),
   }))
+  // Every bar prints its value past its end, all of them or none: see
+  // `placeValueLabelsTogether`. A label keeps to its own row, so it may not
+  // step up or down, and it stays inside the chart.
   const hBarSpecs: ValueLabelSpec[] = []
+  const hBarBoxes: DepthBox[] = []
   for (let i = 0; i < categories.length; i++) {
     const rowY0 = plotY + i * rowH + BAR_H_ROW_EDGE_GAP
     const usableH = rowH - BAR_H_ROW_EDGE_GAP * 2
@@ -2251,19 +2272,29 @@ export function renderBarHorizontal(
       if (value == null) continue
       const barY = rowY0 + s.seriesIndex * (perBarH + BAR_H_ROW_EDGE_GAP)
       const { barX, barW } = horizontalBarExtent(value, domain, plotX, plotW)
+      hBarBoxes.push({ x: barX, y: barY, w: barW, h: perBarH })
+      const labelY = barY + perBarH / 2 + 4
       hBarSpecs.push({
         id: `hbar-${i}-${s.seriesIndex}`,
         text: String(value),
         x: barX + barW + BAR_H_VALUE_GAP,
-        y: barY + perBarH / 2 + 4,
+        y: labelY,
         anchor: "start",
         fontSize: VALUE_FONT_SIZE,
         fontFamily,
         priority: 100 - s.seriesIndex,
+        yMin: labelY,
+        yMax: labelY,
       })
     }
   }
-  const placedHBars = new Map(resolveValueLabelCollisions(hBarSpecs).map((label) => [label.id, label]))
+  const placedHLabels = placeValueLabelsTogether(hBarSpecs, hBarBoxes, {
+    left: plotX,
+    right: x0 + w,
+    top: y0,
+    bottom: plotY + plotH,
+  })
+  const placedHBars = new Map((placedHLabels ?? []).map((label) => [label.id, label]))
   const yTicks = categories.map((cat, i) => {
     const label = fitSvgLine(String(cat.x), {
       maxWidth: labelW - BAR_H_LABEL_FIT_MARGIN,
@@ -2340,7 +2371,7 @@ export function renderBarHorizontal(
             />,
           )
           const placed = placedHBars.get(`hbar-${i}-${s.seriesIndex}`)
-          if (placed && !placed.hidden) {
+          if (placed) {
             barElements.push(
               <text
                 key={`v-${s.seriesIndex}`}
@@ -2359,6 +2390,7 @@ export function renderBarHorizontal(
         }
         return <g key={cat.key}>{barElements}</g>
       })}
+      {placedHLabels === null ? <g data-dropped={hBarSpecs.length} data-dropped-kind="value-label" /> : null}
       {renderCartesianAxisTitles({
         plotX,
         plotBottom: plotY + plotH + X_TICK_BAND,
@@ -2965,43 +2997,51 @@ function formatStackTotal(value: number): string {
 }
 
 /**
- * Place a stacked chart's column totals together, or not at all.
+ * Place a row of value labels together, or not at all.
  *
- * A total belongs on the page background above its own column. Below that
- * spot is its own column, so the pairwise resolver may only move a total up
- * (`yMax` is where it started) and never into the legend row above the plot
- * (`yMin`). What the resolver cannot settle inside that band it hides, and
- * what it settles by stepping a label sideways can still land on a
- * neighbouring column. So the result is checked against the real geometry:
- * every total shown, none on a segment, none on another total, all inside
- * `bounds`. One failure and no total is painted. A row of numbers with gaps in
- * it reads as columns that have no total, and a reader cannot tell which gap
- * is which, so the whole row goes and the caller declares every one of them.
+ * A value label belongs on the page background beside its own mark: above a
+ * bar or a stacked column, past the end of a horizontal bar. The pairwise
+ * resolver may move a label only inside the band its spec allows
+ * (`yMin`/`yMax`, and sideways by an indent), and what it cannot settle it
+ * hides. What it settles by stepping a label sideways can still land on a
+ * neighbouring mark. So the result is checked against the real geometry:
+ * every label shown, none on a mark, none on another label, all inside
+ * `bounds`. One failure and no label is painted. A row of numbers with gaps in
+ * it reads as marks that have no value, and a reader cannot tell which gap is
+ * which, so the whole row goes and the caller declares every one of them.
  *
- * The same crowding pushes `renderBar`'s value labels down onto its bars.
- * That renderer is left as it is here, since changing its placement would
- * move the pages of every existing bar chart that crowds.
+ * Stacked charts place their column totals this way, and bar charts their
+ * values. The pairwise resolver alone used to push a crowded bar chart's
+ * labels down onto its bars and past the chart's edges, with nothing to say
+ * anything was lost.
  */
-function placeStackTotals(
+function placeValueLabelsTogether(
   specs: readonly ValueLabelSpec[],
-  segments: readonly DepthBox[],
+  marks: readonly DepthBox[],
   bounds: { readonly left: number; readonly right: number; readonly top: number; readonly bottom: number },
 ): PlacedValueLabel[] | null {
-  const placed = resolveValueLabelCollisions(
-    specs.map((spec) => ({ ...spec, yMin: bounds.top + spec.fontSize * 0.75, yMax: spec.y })),
-  )
+  const placed = resolveValueLabelCollisions(specs)
   if (placed.some((label) => label.hidden)) return null
   const boxes = placed.map(valueLabelBox)
   for (let i = 0; i < boxes.length; i++) {
     const box = boxes[i]!
     if (box.x < bounds.left || box.x + box.w > bounds.right) return null
     if (box.y < bounds.top || box.y + box.h > bounds.bottom) return null
-    if (segments.some((seg) => boxesIntersect(box, seg))) return null
+    if (marks.some((mark) => boxesIntersect(box, mark))) return null
     for (let j = i + 1; j < boxes.length; j++) {
       if (boxesIntersect(box, boxes[j]!)) return null
     }
   }
   return placed
+}
+
+/**
+ * The band a label above its mark may move in: up from where it starts, never
+ * down onto the mark under it, and never above `top` (the legend row, or the
+ * top of the chart).
+ */
+function risingBand(spec: ValueLabelSpec, top: number): ValueLabelSpec {
+  return { ...spec, yMin: top + spec.fontSize * 0.75, yMax: spec.y }
 }
 
 export function renderStacked(
@@ -3136,12 +3176,11 @@ export function renderStacked(
       }))
   // The totals may use the chart body between the legend row and the x-axis,
   // across the plot's own width. The y-tick labels sit left of it.
-  const placedTotals = placeStackTotals(totals, segmentBoxes, {
-    left: geom.plotX,
-    right: geom.plotX + geom.plotW,
-    top: y0,
-    bottom: geom.plotY + geom.plotH,
-  })
+  const placedTotals = placeValueLabelsTogether(
+    totals.map((spec) => risingBand(spec, y0)),
+    segmentBoxes,
+    { left: geom.plotX, right: geom.plotX + geom.plotW, top: y0, bottom: geom.plotY + geom.plotH },
+  )
   const totalInk = directLabelInk(textColor, bgHex)
 
   return (
