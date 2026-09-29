@@ -1144,3 +1144,54 @@ describe("non-ASCII marks never measure narrower than the face draws them", () =
   })
 })
 
+describe("balanced lines prefer to break where Latin meets CJK", () => {
+  // The brief bmc cell's own call: body size, no line cap, balanced.
+  const cell = (text: string, maxWidth: number) =>
+    layoutSvgText(text, { maxWidth, fontSize: 16, maxLines: Number.POSITIVE_INFINITY, minPt: 16, balanceLines: true })
+
+  it("keeps an English name on one line when the split at the script seam is nearly as even (bmc repro)", () => {
+    // Pre-fix: ["Linjiang", "Group 临江咨询"], a break inside the name.
+    const r = cell("Linjiang Group 临江咨询", 160)
+    expect(r.lines).toEqual(["Linjiang Group", "临江咨询"])
+    expect(r.fontSize).toBe(16)
+    expect(r.truncated).toBe(false)
+  })
+
+  it("moves a break from between two CJK characters to the script seam at three lines", () => {
+    // Pre-fix: ["Linjiang", "Group 临", "江咨询"].
+    expect(cell("Linjiang Group 临江咨询", 100).lines).toEqual(["Linjiang", "Group", "临江咨询"])
+  })
+
+  it("does not take the seam when it would leave the lines far from even", () => {
+    // 「Linjiang Group」+「临江咨询服务中心有限公司」 is the only seam split, and
+    // its second line runs far past the balanced widest, so the balanced
+    // split between two CJK characters stands.
+    expect(cell("Linjiang Group 临江咨询服务中心有限公司", 200).lines).toEqual([
+      "Linjiang Group 临江咨询",
+      "服务中心有限公司",
+    ])
+  })
+
+  it("leaves all-Latin and all-CJK balancing as it was", () => {
+    const opts = { maxWidth: 360, fontSize: 64, maxLines: 3, balanceLines: true }
+    expect(layoutSvgText("年度战略回顾", opts).lines).toEqual(["年度战", "略回顾"])
+    expect(
+      layoutSvgText("Alpha Beta Gamma Delta X", { ...opts, maxWidth: 806.4, maxLines: 2 }).lines,
+    ).toEqual(["Alpha Beta", "Gamma Delta X"])
+  })
+
+  it("never widens past the greedy lines or brings back a one-character last line", () => {
+    for (let w = 90; w <= 200; w += 2) {
+      const text = "Linjiang Group 临江咨询"
+      const greedy = layoutSvgText(text, { maxWidth: w, fontSize: 16, maxLines: 8, minPt: 16 })
+      const r = cell(text, w)
+      expect(r.lines.length, `${w}`).toBe(greedy.lines.length)
+      expect(r.fontSize).toBe(16)
+      const widest = Math.max(...greedy.lines.map((l) => measureTextUnits(l)))
+      for (const line of r.lines) expect(measureTextUnits(line)).toBeLessThanOrEqual(widest + 1e-9)
+      expect(Array.from(r.lines.at(-1)!).length).toBeGreaterThan(1)
+      expect(r.lines.join("").replace(/\s/g, "")).toBe(text.replace(/\s/g, ""))
+    }
+  })
+})
+

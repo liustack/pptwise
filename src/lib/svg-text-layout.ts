@@ -1126,11 +1126,115 @@ function balanceWrappedLines(
     const candidate = wrapWithUnits(content, target, weight)
     // Same line count, evenly split — that's the goal. Fewer lines means the
     // token floor out-widened the greedy budget (giant word): keep greedy.
-    if (candidate.lines.length === lines.length) return candidate.lines
+    if (candidate.lines.length === lines.length) {
+      return preferScriptBoundaries(content, candidate.lines, widest, weight)
+    }
     if (candidate.lines.length < lines.length) return lines
     target *= 1.06
   }
   return lines
+}
+
+/** A printable ASCII character: the Latin side of a mixed-script line. */
+const ASCII_GLYPH_RE = /[\x21-\x7e]/
+
+/**
+ * How a line break reads, by the characters on either side of it: +1 where
+ * Latin meets CJK (the seam a mixed line already has), -1 between two Latin
+ * words (it splits a name like "Linjiang Group"), 0 anywhere else.
+ */
+function breakScore(before: string, after: string): number {
+  const a = before.trimEnd().slice(-1)
+  const b = after.trimStart().charAt(0)
+  const asciiA = ASCII_GLYPH_RE.test(a)
+  const asciiB = ASCII_GLYPH_RE.test(b)
+  if ((asciiA && WIDE_CHAR_RE.test(b)) || (WIDE_CHAR_RE.test(a) && asciiB)) return 1
+  if (asciiA && asciiB) return -1
+  return 0
+}
+
+function linesScore(lines: readonly string[]): number {
+  let score = 0
+  for (let i = 1; i < lines.length; i += 1) score += breakScore(lines[i - 1], lines[i])
+  return score
+}
+
+/** How much wider than the balanced lines' widest a preferred split may run. */
+const SCRIPT_BREAK_TOLERANCE = 0.1
+
+/**
+ * Among the splits of `content` into as many lines as `balanced` whose line
+ * lengths are close to the balanced ones, prefer the one that breaks where
+ * Latin meets CJK, then between CJK characters, and last between two Latin
+ * words.
+ *
+ * Balancing by width alone treats every boundary as equal, so a mixed line
+ * whose widths tie broke inside an English name: 「Linjiang Group 临江咨询」
+ * became 「Linjiang」+「Group 临江咨询」 where 「Linjiang Group」+「临江咨询」 is
+ * barely less even and reads as two things. A split replaces the balanced
+ * one only when its breaks score strictly better (`breakScore`), and only
+ * inside every constraint the balanced lines already meet: the same line
+ * count, every break legal under kinsoku, no line wider than `limit` (the
+ * widest line the caller's budget produced, so the fitted font size cannot
+ * drop), the widest line no more than `SCRIPT_BREAK_TOLERANCE` over the
+ * balanced widest, a last line at least half the widest (not the widow
+ * balancing exists to remove), and no single-character CJK last line.
+ *
+ * Text that is all Latin or all CJK scores every split the same, so it
+ * returns `balanced` without searching.
+ */
+function preferScriptBoundaries(
+  content: string,
+  balanced: string[],
+  limit: number,
+  weight?: TextWeightHint,
+): string[] {
+  if (balanced.length < 2 || !ASCII_GLYPH_RE.test(content) || !WIDE_CHAR_RE.test(content)) return balanced
+  const pieces: WrapPiece[] = tokenize(content).tokens
+  const n = balanced.length
+  const widthCache = new Map<number, number>()
+  const width = (from: number, to: number): number => {
+    const key = from * 4096 + to
+    let w = widthCache.get(key)
+    if (w === undefined) {
+      w = measureTextUnits(joinPieces(pieces, from, to), weight)
+      widthCache.set(key, w)
+    }
+    return w
+  }
+  const balancedWidest = Math.max(...balanced.map((l) => measureTextUnits(l, weight)))
+  const cap = Math.min(limit, balancedWidest * (1 + SCRIPT_BREAK_TOLERANCE)) + 1e-9
+  let best = balanced
+  let bestScore = linesScore(balanced)
+  let bestWidest = balancedWidest
+
+  const starts: number[] = [0]
+  const search = (from: number): void => {
+    if (starts.length === n) {
+      const last = width(from, pieces.length)
+      if (last > cap) return
+      const lines = starts.map((s, i) => joinPieces(pieces, s, i + 1 < n ? starts[i + 1] : pieces.length))
+      const widest = Math.max(...starts.map((s, i) => width(s, i + 1 < n ? starts[i + 1] : pieces.length)))
+      if (last < widest * 0.5 || isCjkOrphanLine(lines[n - 1])) return
+      const score = linesScore(lines)
+      if (score > bestScore || (score === bestScore && best !== balanced && widest < bestWidest)) {
+        best = lines
+        bestScore = score
+        bestWidest = widest
+      }
+      return
+    }
+    for (let cut = from + 1; cut < pieces.length; cut += 1) {
+      if (width(from, cut) > cap) break
+      const before = pieces[cut - 1].text
+      if (!allowsLineBreakBetween(before[before.length - 1], pieces[cut].text[0])) continue
+      starts.push(cut)
+      search(cut)
+      starts.pop()
+    }
+  }
+  search(0)
+  return best
 }
 
 /**
