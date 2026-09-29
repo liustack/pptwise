@@ -269,7 +269,12 @@ interface TableLayout {
  * is sized from what each column needs instead, and the one column too long
  * to fit wraps its cells.
  */
-function layoutTable(raw: ComparisonComponent, w: number, fontFamily: string): TableLayout {
+function layoutTable(
+  raw: ComparisonComponent,
+  w: number,
+  fontFamily: string,
+  maxCellLines = MAX_CELL_LINES,
+): TableLayout {
   // 先丢多余的空首表头，再判首列重复：两种笔误叠在一起时，只有空表头
   // 已经丢掉，dedupeLabelColumn 的「cells 与 columns 等长」判据才成立。
   const { labelHeader, component } = dedupeLabelColumn(dropBlankLeadingHeader(raw))
@@ -332,7 +337,7 @@ function layoutTable(raw: ComparisonComponent, w: number, fontFamily: string): T
       const wrapped = layoutAtSize(cell, {
         maxWidth: widths[c]! - PAD_X * 2,
         fontSize: fitted.cellFontSize,
-        maxLines: MAX_CELL_LINES,
+        maxLines: maxCellLines,
         lineHeightRatio: CELL_LINE_RATIO,
         bold: c === 0,
         fontFamily,
@@ -361,7 +366,15 @@ function measureDefault(component: ComparisonComponent, w: number, ctx: Componen
 }
 
 function renderDefault(rawComponent: ComparisonComponent, box: ComponentBox, ctx: ComponentCtx) {
-    const table = layoutTable(rawComponent, box.w, ctx.fonts.body)
+    // A box shorter than the wrapped table gives back cell lines first, down
+    // to one: every row keeps its first line, cut and marked, before any row
+    // is dropped. At one line a row is `ROW` tall again, the height the
+    // row-dropping below has always been measured against.
+    let table = layoutTable(rawComponent, box.w, ctx.fonts.body)
+    for (let lines = MAX_CELL_LINES - 1; lines >= 1 && box.h !== undefined; lines--) {
+      if (ROW + table.rows.reduce((s, row) => s + row.h, 0) <= box.h) break
+      table = layoutTable(rawComponent, box.w, ctx.fonts.body, lines)
+    }
 
     // Vertical graceful landing (P0 hardening, robustness deep-review D1,
     // family-sweep sibling of bullets.tsx): `rows` has no schema ceiling

@@ -219,16 +219,16 @@ const SOURCE_LINE = 18
  */
 const SOURCE_MAX_LINES = 2
 
-function fitSource(source: string, cardW: number): { lines: string[]; truncated: boolean } {
+function fitSource(source: string, cardW: number, maxLines = SOURCE_MAX_LINES): { lines: string[]; truncated: boolean } {
   const one = fitSvgLine(source, { maxWidth: cardW - 40, fontSize: 16, minFontSize: 16 })
-  if (!one.truncated) return { lines: [one.text], truncated: false }
-  const laid = layoutAtSize(source, { maxWidth: cardW - 40, fontSize: 16, maxLines: SOURCE_MAX_LINES })
+  if (!one.truncated || maxLines <= 1) return { lines: [one.text], truncated: one.truncated }
+  const laid = layoutAtSize(source, { maxWidth: cardW - 40, fontSize: 16, maxLines })
   return { lines: laid.lines, truncated: laid.truncated }
 }
 
 /** 任一 item 带 source 来源行时卡加高（label 下再排一行 11px 小字），来源折成几行就加几行。 */
-function baseCardH(component: KpiComponent, cardW: number): number {
-  const lines = Math.max(0, ...component.items.map((it) => (it.source ? fitSource(it.source, cardW).lines.length : 0)))
+function baseCardH(component: KpiComponent, cardW: number, maxLines = SOURCE_MAX_LINES): number {
+  const lines = Math.max(0, ...component.items.map((it) => (it.source ? fitSource(it.source, cardW, maxLines).lines.length : 0)))
   return lines > 0 ? CARD_H + SOURCE_LINE * lines : CARD_H
 }
 
@@ -313,8 +313,16 @@ export const kpi: SvgComponent<KpiComponent> = {
     // Grid pitch is the column count, not the last row's leftover, so a
     // 3+1 wrap does not stretch the fourth card across the whole rail.
     const cardW = cardWidth(box.w, cols)
-    const rowH = baseCardH(rawComponent, cardW)
     const naturalRows = Math.ceil(fullCount / cols)
+    // A box too short for the cards at their wrapped-source height gives the
+    // source's second line back before it drops a row or runs a card past
+    // its bottom edge. At one line a card is the height it always was.
+    let sourceCap = SOURCE_MAX_LINES
+    let rowH = baseCardH(rawComponent, cardW, sourceCap)
+    while (box.h != null && sourceCap > 1 && naturalRows * rowH + (naturalRows - 1) * GAP > box.h) {
+      sourceCap -= 1
+      rowH = baseCardH(rawComponent, cardW, sourceCap)
+    }
     const maxRows =
       box.h == null ? naturalRows : Math.max(1, Math.floor((box.h + GAP) / (rowH + GAP)))
     const rows = Math.min(naturalRows, maxRows)
@@ -404,7 +412,7 @@ export const kpi: SvgComponent<KpiComponent> = {
             fontSize: 16,
             minFontSize: 16,
           })
-          const fittedSource = item.source ? fitSource(item.source, cardW) : null
+          const fittedSource = item.source ? fitSource(item.source, cardW, sourceCap) : null
           return (
             <g key={i}>
               <rect

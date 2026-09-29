@@ -201,5 +201,23 @@ describe("steps on every theme", () => {
     const lowest = Math.max(...Array.from(container.querySelectorAll("text")).map((t) => Number(t.getAttribute("y"))))
     expect(lowest).toBeLessThanOrEqual(h)
   })
+
+  it("gives sentence lines back side by side in a box too short for them, and marks the cut", () => {
+    const english = {
+      type: "steps" as const,
+      items: [
+        step("Scoping", "Renewal rate recovered to ninety-one percent, the highest in six quarters."),
+        step("Solutioning", "New bookings grew twenty-three percent, but three accounts contributed sixty percent of that."),
+        step("Seat setup", "Activation coverage reached eighty-eight percent, cutting unplanned meetings by forty percent."),
+        step("Access setup", "Delivery time fell from nine weeks to five, largely through standardized onboarding templates."),
+      ],
+    }
+    const ctx = boundThemeCtx("brief", {})
+    expect(steps.measure(english, 1088, ctx)).toBeGreaterThan(180)
+    const box = { x: 0, y: 0, w: 1088, h: 180 }
+    const { container } = svg(steps.render(english, box, ctx))
+    for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y")), t.textContent ?? "").toBeLessThanOrEqual(box.h)
+    expect(container.querySelector('[data-truncated="1"]')).not.toBeNull()
+  })
 })
 

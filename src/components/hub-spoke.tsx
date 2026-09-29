@@ -101,7 +101,7 @@ interface HubGeom {
   h: number
 }
 
-function resolveHub(component: HubSpokeComponent, w: number): HubGeom {
+function resolveHub(component: HubSpokeComponent, w: number, boxH?: number): HubGeom {
   const n = component.items.length
   const { capW, capH, hubR, spoke } = sizes(n)
   const caps = placeCapsules(n, capW, capH, hubR, spoke)
@@ -121,7 +121,11 @@ function resolveHub(component: HubSpokeComponent, w: number): HubGeom {
   maxY += PAD
   const bboxW = maxX - minX
   const bboxH = maxY - minY
-  const scale = Math.min(w / bboxW, MAX_H / bboxH, MAX_UPSCALE)
+  // A face may hand over less height than the drawing's own ceiling; the
+  // drawing then scales into it rather than running past its bottom edge,
+  // and a capsule too small for its words cuts them and says so.
+  const heightBudget = boxH !== undefined && boxH > 0 ? Math.min(MAX_H, boxH) : MAX_H
+  const scale = Math.min(w / bboxW, heightBudget / bboxH, MAX_UPSCALE)
   const drawnW = bboxW * scale
   const ox = (w - drawnW) / 2 + (0 - minX) * scale
   const oy = (0 - minY) * scale
@@ -164,7 +168,7 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
   },
 
   render(component, box, ctx): ReactElement {
-    const g = resolveHub(component, box.w)
+    const g = resolveHub(component, box.w, box.h)
     const { ox, oy, caps, scale } = g
     const hubR = g.hubR * scale
     const border = ctx.colors.border ?? ctx.colors.muted

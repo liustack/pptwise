@@ -349,3 +349,21 @@ describe("progress_donuts source line", () => {
   })
 })
 
+describe("progress_donuts source line in a short cell", () => {
+  it("gives the second line back and marks the cut rather than drawing past the cell", () => {
+    const donuts = {
+      type: "progress_donuts" as const,
+      items: [
+        { value: "50%", label: "A", source: "Annual customer retention survey" },
+        { value: "75%", label: "B" },
+      ],
+    }
+    const box = { x: 0, y: 0, w: 400, h: 140 }
+    const { container } = svg(progressDonuts.render(donuts, box, themeCtx("swiss")))
+    for (const t of container.querySelectorAll("text")) {
+      expect(Number(t.getAttribute("y")) + Number(t.getAttribute("font-size")) * 0.25, t.textContent ?? "").toBeLessThanOrEqual(box.h)
+    }
+    expect(container.querySelector('[data-truncated="1"]')).not.toBeNull()
+  })
+})
+

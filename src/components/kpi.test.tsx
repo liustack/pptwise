@@ -37,6 +37,30 @@ const component = {
 }
 
 describe("kpi component", () => {
+  it("gives a wrapped source's second line back in a box too short for it, and marks the cut", () => {
+    const sourced = {
+      type: "kpi_cards" as const,
+      items: [
+        { value: "102k", unit: "seats", label: "Workspace headcount", source: "CloudSeek Workspaces Q2 2026 operating data" },
+        { value: "91%", label: "Renewal rate" },
+        { value: "88%", label: "Activation coverage" },
+        { value: "5", unit: "weeks", label: "Average delivery time" },
+      ],
+    }
+    const brief = boundThemeCtx("brief", {})
+    const w = 970
+    // Unbounded, the card grows a line for the source's second line.
+    expect(kpi.measure(sourced, w, brief)).toBe(120 + 18 * 2)
+    const box = { x: 0, y: 0, w, h: 140 }
+    const { container } = svg(kpi.render(sourced, box, brief))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y")), t.textContent ?? "").toBeLessThanOrEqual(box.h)
+    for (const r of container.querySelectorAll("rect")) {
+      expect(Number(r.getAttribute("y")) + Number(r.getAttribute("height"))).toBeLessThanOrEqual(box.h)
+    }
+    expect(container.querySelector('[data-truncated="1"]')).not.toBeNull()
+  })
+
   it("wraps a source too long for its card onto a second line and grows the card for it", () => {
     const withSource = {
       type: "kpi_cards" as const,

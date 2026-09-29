@@ -118,9 +118,17 @@ export const steps: SvgComponent<StepsComponent> = {
   const slotW = vertical ? box.w : (box.w - GAP * (n - 1)) / n
   const fill = ctx.colors.primary
   const ink = readableOn(fill)
-  const footLines = vertical ? FOOT_LINES_VERTICAL : FOOT_LINES
-  const footH = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
   const arrowH = vertical ? ARROW_H_VERTICAL : ARROW_H
+  // Side by side, a box shorter than the chevrons and their sentences gives
+  // lines back from the bottom of every sentence, cut and marked, rather than
+  // printing the last of them under the box. Stacked steps drop whole steps
+  // instead, below.
+  let footLines = vertical ? FOOT_LINES_VERTICAL : FOOT_LINES
+  let footH = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
+  while (!vertical && box.h !== undefined && footLines > 1 && arrowH + FOOT_GAP + footH > box.h) {
+    footLines -= 1
+    footH = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
+  }
   const stride = arrowH + FOOT_GAP + footH + (vertical ? GAP : 0)
   const titleMaxW = Math.max(1, slotW - BADGE_R * 2 - BADGE_INSET - 28)
   const budget = box.h ?? Number.POSITIVE_INFINITY
