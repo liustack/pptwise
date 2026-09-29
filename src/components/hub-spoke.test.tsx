@@ -200,4 +200,28 @@ describe("hub_spoke component", () => {
       }
     })
   })
+
+  it("scales into a box shorter than its own height instead of drawing past it", () => {
+    const english = {
+      type: "hub_spoke" as const,
+      center: "Product",
+      items: [
+        { label: "Consulting", description: "Seat expansion in existing accounts" },
+        { label: "Platforms", description: "Standardized onboarding templates" },
+        { label: "K-12", description: "In-house workspace compute" },
+        { label: "Credit", description: "Vertical playbook replication" },
+      ],
+    }
+    const ctx = themed("brief")
+    const h = Math.round(hubSpoke.measure(english, 1088, ctx) * 0.75)
+    const box = { x: 0, y: 0, w: 1088, h }
+    const { container } = svg(hubSpoke.render(english, box, ctx))
+    for (const r of container.querySelectorAll("rect")) {
+      expect(Number(r.getAttribute("y")) + Number(r.getAttribute("height"))).toBeLessThanOrEqual(h + 0.5)
+    }
+    for (const c of container.querySelectorAll("circle")) {
+      expect(Number(c.getAttribute("cy")) + Number(c.getAttribute("r"))).toBeLessThanOrEqual(h + 0.5)
+    }
+  })
 })
+
