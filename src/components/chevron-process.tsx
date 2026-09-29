@@ -55,7 +55,7 @@ interface Geometry {
   h: number
 }
 
-function resolve(component: ChevronProcessComponent, w: number, ctx: ComponentCtx): Geometry {
+function resolve(component: ChevronProcessComponent, w: number, ctx: ComponentCtx, noteCap = NOTE_MAX_LINES): Geometry {
   const n = component.items.length
   const notch = Math.min(NOTCH, Math.max(12, w / (n * 8)))
   const advance = (w - notch) / n
@@ -85,7 +85,7 @@ function resolve(component: ChevronProcessComponent, w: number, ctx: ComponentCt
       ? layoutFormBody(note, {
           maxWidth: Math.max(24, noteWidth(i)),
           fontSize: FORM_BODY_FLOOR,
-          maxLines: NOTE_MAX_LINES,
+          maxLines: noteCap,
           fontFamily: ctx.fonts.body,
         })
       : null
@@ -124,7 +124,11 @@ export const chevronProcess: SvgComponent<ChevronProcessComponent> = {
   },
 
   render(component, box, ctx): ReactElement {
-    const g = resolve(component, box.w, ctx)
+    // A box shorter than the band and its wrapped notes gives the notes'
+    // second line back: each note keeps its first line, cut and marked, as
+    // it always did, rather than running past the bottom of the box.
+    const wrapped = resolve(component, box.w, ctx)
+    const g = box.h !== undefined && box.h > 0 && wrapped.h > box.h ? resolve(component, box.w, ctx, 1) : wrapped
     const border = ctx.colors.border ?? ctx.colors.muted
     const last = component.items.length - 1
     const highlight = formHighlightFill(ctx.colors)

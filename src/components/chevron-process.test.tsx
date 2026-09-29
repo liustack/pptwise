@@ -194,6 +194,25 @@ describe("chevron_process component", () => {
     expect(h).toBeGreaterThan(chevronProcess.measure(withN(4), box.w, ctx))
   })
 
+  it("gives the notes' second line back in a box too short for it, and marks the cut", () => {
+    const english = {
+      type: "chevron_process" as const,
+      items: [
+        { title: "Scoping", text: "Seat expansion in existing accounts" },
+        { title: "Solutioning", text: "Standardized onboarding templates" },
+        { title: "Seat setup", text: "In-house workspace compute" },
+        { title: "Access setup", text: "Vertical playbook replication" },
+      ],
+    }
+    const ctx = themed("brief")
+    const oneLineH = chevronProcess.measure(withN(4), 1088, ctx)
+    expect(chevronProcess.measure(english, 1088, ctx)).toBeGreaterThan(oneLineH)
+    const box = { x: 0, y: 0, w: 1088, h: oneLineH }
+    const { container } = svg(chevronProcess.render(english, box, ctx))
+    for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y")), t.textContent ?? "").toBeLessThanOrEqual(box.h)
+    expect(container.querySelector('[data-truncated="1"]')).not.toBeNull()
+  })
+
   it("keeps stage names inside their own chevron at the widest legal count", () => {
     const { container } = svg(chevronProcess.render(withN(6), { x: 88, y: 96, w: 1104 }, themed("swiss")))
     const band = polys(container)
