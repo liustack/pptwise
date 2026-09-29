@@ -1,6 +1,7 @@
 import { Fragment } from "react"
 import type { Component } from "@/ir"
 import { measureTextUnits, truncateToUnits, type TextWeightHint } from "../lib/svg-text-layout"
+import { DroppedContentMarker } from "../render/drop-marker"
 import { formLineHeight, layoutAtSize } from "./legibility"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -389,8 +390,7 @@ function renderDefault(rawComponent: ComparisonComponent, box: ComponentBox, ctx
     const truncBudget = box.h ?? Number.POSITIVE_INFINITY
     const fullRowCount = table.rows.length
     // Reserve 1 ROW for the header. Truncation is silent (`data-dropped`
-    // only). Floored at 1 visible row (row-cards.tsx's "never render zero
-    // visible units" precedent).
+    // only).
     let visibleRowCount = 0
     let used = ROW
     for (const row of table.rows) {
@@ -398,7 +398,17 @@ function renderDefault(rawComponent: ComparisonComponent, box: ComponentBox, ctx
       used += row.h
       visibleRowCount += 1
     }
-    visibleRowCount = Math.max(1, visibleRowCount)
+    // A box that cannot hold the header and one one-line row cannot hold the
+    // table. It used to keep that row anyway and draw it below the box with
+    // nothing to say so; the table declines the box instead, so the layout
+    // can find it a taller one or the export stops.
+    if (visibleRowCount === 0 && fullRowCount > 0) {
+      return (
+        <g transform={`translate(${box.x},${box.y})`}>
+          <DroppedContentMarker count={1} kind="component" />
+        </g>
+      )
+    }
     const hiddenRowCount = fullRowCount - visibleRowCount
     const rows = table.rows.slice(0, visibleRowCount)
     const rowTops: number[] = []
