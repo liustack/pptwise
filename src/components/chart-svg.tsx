@@ -2,7 +2,7 @@ import type { ReactElement } from "react"
 import type { ChartSeries, Component } from "@/ir"
 import { CHART_AXIS_LIMIT } from "@/ir/components/chart"
 import { accessibleInk } from "../render/ink"
-import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
+import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import { axisTitlePairHeight, renderCartesianAxisTitles } from "./axis-titles"
 import {
   buildAlignedNumericAxis,
@@ -20,7 +20,7 @@ import {
   type DomainPadMode,
 } from "./cartesian-axis"
 import { buildChartModel, zeroAxisRatio, type ChartDomain } from "./chart-model"
-import { boxesIntersect, type DepthBox } from "../render/depth-contract/geometry"
+import { boxesIntersect, TEXT_INK_DESCENT, type DepthBox } from "../render/depth-contract/geometry"
 import {
   labelLinePitch,
   resolveValueLabelCollisions,
@@ -2409,6 +2409,55 @@ export function renderBarHorizontal(
  * （外弧+内弧，不依赖背景色圆覆盖）+ 中心总值大字 +「总计」小字。
  */
 const DONUT_HOLE_RATIO = 0.62
+/** Size of the caption under a donut's centre total. */
+const DONUT_CAPTION_FONT_SIZE = 16
+/** Baseline of the caption's first line, below the total's baseline. */
+const DONUT_CAPTION_GAP = 18
+/** Baseline to baseline between the caption's two lines. */
+const DONUT_CAPTION_LINE_H = 19
+
+/**
+ * The series name under a donut's centre total, on one line or two.
+ *
+ * One line first, fitted to the width it has always had. A name too long for
+ * that line used to be cut ("Workspace headcount" came out as "Workspace")
+ * inside a hole with room below for a second line. It now wraps onto two, no
+ * wider than that one line and no wider than the hole at the second line's
+ * foot, the narrowest point the caption reaches, and the total moves up by
+ * half a line so the block stays centred. A name too long for two lines is
+ * cut and marked `data-truncated`.
+ */
+function donutCaption(
+  name: string,
+  ri: number,
+  totalFontSize: number,
+): { lines: string[]; truncated: boolean; shift: number } {
+  const lineW = ri * 1.7
+  const one = fitSvgLine(name, {
+    maxWidth: lineW,
+    fontSize: DONUT_CAPTION_FONT_SIZE,
+    minFontSize: DONUT_CAPTION_FONT_SIZE,
+  })
+  if (!one.truncated) return { lines: [one.text], truncated: false, shift: 0 }
+  const shift = DONUT_CAPTION_LINE_H / 2
+  // The second line's ink foot, measured down from the centre.
+  const foot =
+    totalFontSize * 0.15 -
+    shift +
+    DONUT_CAPTION_GAP +
+    DONUT_CAPTION_LINE_H +
+    DONUT_CAPTION_FONT_SIZE * TEXT_INK_DESCENT
+  if (foot >= ri) return { lines: [one.text], truncated: true, shift: 0 }
+  // Never wider than the one line that did not fit, so the name always
+  // takes both lines.
+  const two = layoutSvgText(name, {
+    maxWidth: Math.min(lineW, 2 * Math.sqrt(ri * ri - foot * foot)),
+    fontSize: DONUT_CAPTION_FONT_SIZE,
+    minPt: DONUT_CAPTION_FONT_SIZE,
+    maxLines: 2,
+  })
+  return { lines: two.lines, truncated: two.truncated, shift }
+}
 
 /**
  * One annulus (ring) sector as `renderDonut`'s own wedge idiom — the exact
@@ -2480,9 +2529,8 @@ export function renderDonut(
   // which nothing else on a donut ever paints (`legendApplicable` needs two
   // series, and a donut has one). No name, no caption: a bare number reads
   // fine, an English label on a Chinese deck does not.
-  const centerCaption = series[0]?.name?.trim()
-    ? fitSvgLine(series[0].name.trim(), { maxWidth: ri * 1.7, fontSize: 16, minFontSize: 16 })
-    : null
+  const centerCaption = series[0]?.name?.trim() ? donutCaption(series[0].name.trim(), ri, fitted.fontSize) : null
+  const totalY = cy + fitted.fontSize * 0.15 - (centerCaption?.shift ?? 0)
   return (
     <>
       {slices.map((slice) => (
@@ -2499,7 +2547,7 @@ export function renderDonut(
           <text
             data-truncated={fitted.truncated ? "1" : undefined}
             x={cx}
-            y={cy + fitted.fontSize * 0.15}
+            y={totalY}
             textAnchor="middle"
             fontSize={fitted.fontSize}
             fontWeight="bold"
@@ -2508,19 +2556,20 @@ export function renderDonut(
           >
             {fitted.text}
           </text>
-          {centerCaption && (
+          {centerCaption?.lines.map((line, i) => (
             <text
-              data-truncated={centerCaption.truncated ? "1" : undefined}
+              key={`caption-${i}`}
+              data-truncated={centerCaption.truncated && i === centerCaption.lines.length - 1 ? "1" : undefined}
               x={cx}
-              y={cy + fitted.fontSize * 0.15 + 18}
+              y={totalY + DONUT_CAPTION_GAP + i * DONUT_CAPTION_LINE_H}
               textAnchor="middle"
-              fontSize={centerCaption.fontSize}
+              fontSize={DONUT_CAPTION_FONT_SIZE}
               fill={mutedColor}
               dominantBaseline="alphabetic"
             >
-              {centerCaption.text}
+              {line}
             </text>
-          )}
+          ))}
         </>
       )}
     </>

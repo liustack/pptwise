@@ -573,6 +573,40 @@ describe("renderDonut — center total label", () => {
     expect(container.textContent).not.toContain("总计")
   })
 
+  it("wraps a caption too long for one line onto two inside the hole, rather than cutting it", () => {
+    // At the default 240px body the hole is 71.92px across the radius. The
+    // one-line width gave "Workspace headcount" room for "Workspace" alone.
+    const named: ChartSeries[] = [{ name: "Workspace headcount", data: [{ x: "A", y: 40 }, { x: "B", y: 60 }] }]
+    const { container } = svg(renderDonut(named, PALETTE, 0, 0, W, H, MUTED, TEXT))
+    const cx = W / 2
+    const cy = H / 2
+    const ri = Number(
+      /A ([\d.]+) [\d.]+ 0 [01] 0/.exec(container.querySelector("path")!.getAttribute("d")!)![1],
+    )
+    const texts = Array.from(container.querySelectorAll("text")).filter((t) => !t.hasAttribute("data-value-label"))
+    expect(texts.map((t) => t.textContent)).toEqual(["100", "Workspace", "headcount"])
+    for (const t of texts) {
+      expect(t.hasAttribute("data-truncated")).toBe(false)
+      // Every line stays inside the hole: its ink box's corners are within
+      // the inner radius of the centre.
+      const box = textInkBox({
+        content: t.textContent!,
+        x: Number(t.getAttribute("x")),
+        y: Number(t.getAttribute("y")),
+        fontSize: Number(t.getAttribute("font-size")),
+        fontFamily: "",
+        fontWeight: t.getAttribute("font-weight"),
+        textAnchor: "middle",
+      })
+      for (const [x, y] of [
+        [box.x, box.y],
+        [box.x + box.w, box.y + box.h],
+      ]) {
+        expect(Math.hypot(x! - cx, y! - cy), t.textContent!).toBeLessThan(ri)
+      }
+    }
+  })
+
   it("leaves the caption off entirely when the series has no name", () => {
     const unnamed: ChartSeries[] = [{ name: "", data: [{ x: "A", y: 40 }, { x: "B", y: 60 }] }]
     const { container } = svg(renderDonut(unnamed, PALETTE, 0, 0, W, H, MUTED, TEXT))
