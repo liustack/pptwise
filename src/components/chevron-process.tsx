@@ -10,6 +10,7 @@ import {
   formLineHeight,
   formTextClipMarker,
 } from "./legibility"
+import { SIBLING_AIR_PX } from "../render/spacing"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type ChevronProcessComponent = Extract<Component, { type: "chevron_process" }>
@@ -73,10 +74,11 @@ function resolve(component: ChevronProcessComponent, w: number, ctx: ComponentCt
   const inner = Math.max(24, advance - notch - 28)
   const titleSize = Math.max(FORM_TITLE_FLOOR, Math.min(24, Math.round(inner * 0.2)))
   // A note prints on the page under the band, so it may run under the next
-  // chevron's notch — it stops where the next note starts, not where this
-  // chevron's own point begins.
+  // chevron's notch — it stops a sibling's air short of where the next note
+  // starts, not where this chevron's own point begins. Two notes share a
+  // baseline, and 12px between them read as one run-on line.
   const noteWidth = (i: number): number =>
-    (i === chevrons.length - 1 ? w : chevrons[i + 1]!.textLeft - 12) - chevrons[i]!.textLeft
+    (i === chevrons.length - 1 ? w : chevrons[i + 1]!.textLeft - SIBLING_AIR_PX) - chevrons[i]!.textLeft
   const notes = component.items.map((item, i) => {
     const note = (item.text ?? "").trim()
     return note

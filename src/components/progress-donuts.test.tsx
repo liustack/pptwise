@@ -329,7 +329,7 @@ describe("progress_donuts source line", () => {
     const english = {
       type: "progress_donuts" as const,
       items: [
-        { value: "86%", label: "Workspace headcount", icon: "trending-up" as const, source: "CloudSeek Workspaces Q2 2026 operating data" },
+        { value: "86%", label: "Workspace headcount", icon: "trending-up" as const, source: "CloudSeek Workspaces Q2 2026 operating data, audited by the finance team" },
         { value: "72%", label: "Renewal rate" },
         { value: "48%", label: "Activation coverage" },
       ],
