@@ -146,6 +146,8 @@ The attributed prose component is `blockquote`. There is no component type named
 
 `swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, and `sankey` occupy the full body and must be the page's only component.
 
+A `waterfall` reads every bar against one value axis, so every item's `value`, and every running total a bar ends at, must stay within 1e300 in size. To get under it, divide every item by the same power of ten and name the unit in `unit`, so the bars keep their proportions.
+
 See the [SKILL component guide](../skills/pptwise/references/components.md) for semantic kind ownership and close component choices.
 
 ### Charts

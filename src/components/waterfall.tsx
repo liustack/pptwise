@@ -1,5 +1,7 @@
 import type { Component } from "@/ir"
+import { CHART_AXIS_LIMIT } from "@/ir/components/chart"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -186,8 +188,18 @@ interface Geom {
   categoryLines: number
 }
 
-function geom(component: WaterfallComponent, w: number, h: number): Geom {
-  const bars = computeBars(component.items)
+/**
+ * True when a bar starts or ends past `CHART_AXIS_LIMIT`, or at a running
+ * total that is no longer a finite number. validate refuses both, so one
+ * reaching the renderer has come round the gate. The scale would divide
+ * Infinity by Infinity and draw every bar at NaN, so the renderer declines
+ * first and says so.
+ */
+function pastAxisLimit(bars: readonly Bar[]): boolean {
+  return bars.some((bar) => !(Math.abs(bar.start) <= CHART_AXIS_LIMIT && Math.abs(bar.end) <= CHART_AXIS_LIMIT))
+}
+
+function geom(bars: Bar[], w: number, h: number): Geom {
   const { min, max } = yDomain(bars)
   const colW = w / bars.length
   const categories = bars.map((bar) => categoryLabel(bar.label, colW - 4))
@@ -208,7 +220,9 @@ export const waterfall: SvgComponent<WaterfallComponent> = {
   },
   render(component, box, ctx) {
     const h = box.h ?? NATURAL_H
-    const g = geom(component, box.w, h)
+    const bars = computeBars(component.items)
+    if (pastAxisLimit(bars)) return <DroppedContentMarker count={1} kind="component" />
+    const g = geom(bars, box.w, h)
     const bg = ctx.defaultBg ?? ctx.colors.bg
     const baselineY = box.y + g.valueToY(0)
 

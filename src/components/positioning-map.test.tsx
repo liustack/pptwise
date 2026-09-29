@@ -346,4 +346,60 @@ describe("positioning_map component", () => {
     const b = renderToStaticMarkup(<svg>{positioningMap.render(eight, box, ctx)}</svg>)
     expect(a).toBe(b)
   })
+
+  it("boxes an English name at the width its face paints, not half again", () => {
+    // Eight English subjects on a 700px map. Every Latin name used to be
+    // boxed at half again its width, so one of them found no free spot
+    // beside its dot and was declared dropped, while the names at their
+    // real advances all fit.
+    const english = {
+      type: "positioning_map" as const,
+      x_axis: { title: "Delivery depth", low: "Light", high: "Deep" },
+      y_axis: { title: "Annual contract value", low: "Low", high: "High" },
+      quadrants: {
+        top_left: "Generic tools, price war",
+        top_right: "Deep delivery, annual terms",
+        bottom_left: "Self-serve, volume play",
+        bottom_right: "Service-heavy, low ticket",
+      },
+      points: [
+        { label: "CloudSeek", x: 74, y: 80, emphasis: true as const },
+        { label: "Linjiang Group", x: 90, y: 62 },
+        { label: "Northshore", x: 88, y: 30 },
+        { label: "Yunshan School", x: 30, y: 74 },
+        { label: "Dongqi Fund", x: 46, y: 56 },
+        { label: "Yonggu Market", x: 16, y: 38 },
+        { label: "Ocean Education", x: 58, y: 18 },
+        { label: "Jinsui Study", x: 26, y: 8 },
+      ],
+    }
+    for (const themeId of ["brief", "swiss"]) {
+      const ctx = themed(themeId)
+      const { container } = svg(positioningMap.render(english, { x: 0, y: 0, w: 700 }, ctx))
+      expect(container.querySelector("[data-dropped]"), themeId).toBeNull()
+      // Each name at its real advance width: none runs into another name or a dot.
+      const names = english.points.map((point) => {
+        const t = Array.from(container.querySelectorAll("text")).find((el) => el.textContent === point.label)
+        expect(t, `${themeId}: ${point.label}`).toBeDefined()
+        const size = Number(t!.getAttribute("font-size"))
+        const width =
+          measureTextUnits(point.label, { bold: point.emphasis === true, fontFamily: ctx.fonts.body, exact: true }) * size
+        const x = Number(t!.getAttribute("x"))
+        const left = t!.getAttribute("text-anchor") === "end" ? x - width : x
+        return { label: point.label, x: left, y: Number(t!.getAttribute("y")) - size * 0.8, w: width, h: size * 1.1 }
+      })
+      const dots = Array.from(container.querySelectorAll("circle")).map((c) => {
+        const r = Number(c.getAttribute("r"))
+        return { x: Number(c.getAttribute("cx")) - r, y: Number(c.getAttribute("cy")) - r, w: r * 2, h: r * 2 }
+      })
+      const hits = (a: { x: number; y: number; w: number; h: number }, b: typeof a) =>
+        a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h
+      for (const [i, name] of names.entries()) {
+        for (const dot of dots) expect(hits(name, dot), `${themeId}: ${name.label} over a dot`).toBe(false)
+        for (const other of names.slice(i + 1)) {
+          expect(hits(name, other), `${themeId}: ${name.label} over ${other.label}`).toBe(false)
+        }
+      }
+    }
+  })
 })

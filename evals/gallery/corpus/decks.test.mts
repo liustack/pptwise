@@ -56,7 +56,12 @@ describe("runway show layout corpus", () => {
     const gallery = layoutPage("show-gallery", zh, emptyAssets).slides[0]!
     expect(gallery.components).toHaveLength(1)
     expect(gallery.components[0]?.type).toBe("image_grid")
-    if (gallery.components[0]?.type === "image_grid") expect(gallery.components[0].items).toHaveLength(6)
+    if (gallery.components[0]?.type === "image_grid") {
+      expect(gallery.components[0].items).toHaveLength(6)
+      // One caption per frame. Six frames over a four-caption pool printed
+      // frames one and two's captions again under frames five and six.
+      expect(new Set(gallery.components[0].items.map((item) => item.caption)).size).toBe(6)
+    }
 
     const spotlight = layoutPage("show-spotlight", zh, emptyAssets).slides[0]!
     expect(spotlight.components.map((component) => component.type)).toEqual(["image", "insight_panel"])

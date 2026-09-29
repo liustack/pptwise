@@ -40,6 +40,7 @@ import {
 import { auditL1, classifyL1, type L1Result } from "./l1"
 import { buildMatrix, type Job } from "./matrix"
 import { renderMatrix, type Manifest } from "./render"
+import { repeatedRuns } from "./repeats"
 
 await installNodePlatform()
 
@@ -118,46 +119,29 @@ function drops(svg: string): string[] {
  * pages said it twice. A corpus page is product content, and product content
  * does not repeat itself in two places on one slide.
  *
- * The scan reads the page the way a reader does: text is compared with all
- * whitespace removed, because a wrapped line is split across elements at a
- * break the reader never sees. Only that spelling catches a sentence that is
- * wrapped in one place and whole in another, which is exactly how the 24
- * pages hid from an element-by-element comparison.
+ * The scan reads the page the way a reader does (`repeats.ts`): whitespace
+ * removed, so a sentence wrapped in one place and whole in another is still
+ * one sentence, which is exactly how the 24 pages hid from an
+ * element-by-element comparison, and the lines of one paragraph joined back
+ * together, so a caption wrapped in both places is still one caption.
  */
-
-/** The shortest run worth calling a repetition. A word is not a repetition. */
-const MIN_RUN = 12
 
 /** A run that closes on a full stop is a sentence, not a label. */
 const SENTENCE_END = /[。．.！!？?]$/
 
-/** Every painted run of {@link MIN_RUN} characters or more the page draws twice, whitespace removed. */
-function repeatedRuns(svg: string): string[] {
-  const Parser = getPlatform().domParser ?? globalThis.DOMParser
-  if (!Parser) throw new Error("DOMParser unavailable")
-  const root = new Parser().parseFromString(svg, "image/svg+xml").documentElement
-  const runs = Array.from(root.querySelectorAll("text")).map((el) => (el.textContent ?? "").replace(/\s+/g, ""))
-  const page = runs.join("")
-  return [...new Set(runs.filter((run) => run.length >= MIN_RUN && page.split(run).length - 1 > 1))]
-}
-
 /**
  * The labels the corpus repeats today, page by page.
  *
- * A cycling pool, not a lead-in drawn from the wrong end: `show-gallery` lays
- * six tiles over four captions, playbill's `icon_cards` title opens one of
- * its own sentences, and one page reuses one phrase in two rows. Those are
- * corpus writing rather than wiring, so they are pinned here and the set can
- * only shrink — an entry leaves when someone writes the missing caption.
- * Nothing may join it, and a repeated *sentence* may never be listed at all.
+ * Corpus writing, not a lead-in drawn from the wrong end: playbill's
+ * `icon_cards` title opens one of its own sentences, and one page reuses one
+ * phrase in two rows. Those are pinned here and the set can only shrink: an
+ * entry leaves when someone writes the missing line, as `show-gallery`'s did
+ * when its six frames got six captions. Nothing may join it, and a repeated
+ * *sentence* may never be listed at all.
  */
 const KNOWN_LABEL_REPEATS: readonly string[] = [
   "playbill--comp--icon-cards--zh\t首演两场七百张票三天售罄",
   "terminal--deck--p04\t三次重写RFC与否决记录",
-  // unserved--face--show-gallery left this list when its frame captions began
-  // wrapping onto two lines, not because its six tiles stopped reusing four
-  // captions. Each wrapped line is now shorter than MIN_RUN, so this scan no
-  // longer sees that repeat.
 ]
 
 // The two constitutional nails that need the whole corpus rendered: no page

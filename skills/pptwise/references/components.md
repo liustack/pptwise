@@ -156,7 +156,7 @@ The table gives each component's normal kind home. A component may serve more th
 
 `bar` prints each bar's value when every value fits beside its bar, and otherwise none, which stops the export until the numbers are shorter or the categories or series fewer. `stacked` prints each column's total on the same terms. `percent_stacked` prints no numbers on the plot, and `combo` prints none at all. When the audience must read a figure exactly, put it in the heading or a `data_table`.
 
-No value on a chart's value axis may pass 1e300 in size. To get under it, divide every series on that axis by the same power of ten and name the unit in the axis's unit field.
+No value on a chart's value axis may pass 1e300 in size. To get under it, divide every series on that axis by the same power of ten and name the unit in the axis's unit field. The same holds for a `waterfall`'s values and the running totals its bars reach: divide every item by one power of ten and name the unit in `unit`.
 
 `architecture.layers` paints top to bottom by default. Set `direction: "bottom_up"` when the authored order should begin at the foundation. Keep the array in narrative order.
 

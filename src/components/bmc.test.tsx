@@ -206,3 +206,64 @@ describe("bmc wraps an item instead of cutting it", () => {
     expect(texts).toContain("合作伙伴分销")
   })
 })
+
+// A block title is drawn in the heading face, and the canvas used to size
+// its cells by a generic width estimate instead. The two disagree on where
+// an English title wraps, so a cell was measured for one title line and
+// drawn with two, or measured for two and drawn with one.
+describe("bmc measures a block title in the face it draws it in", () => {
+  const english = {
+    type: "bmc" as const,
+    key_partners: ["Linjiang Group", "Northshore Software"],
+    key_activities: ["Seat expansion in existing accounts", "Standardized onboarding templates"],
+    key_resources: ["Vertical playbooks", "Staffing automation"],
+    value_propositions: ["Activity leads the category", "Existing customers expand"],
+    customer_relationships: ["Faster build iteration"],
+    channels: ["East", "South"],
+    customer_segments: ["Consulting", "Platforms", "K-12"],
+    cost_structure: ["New bookings concentrated in three accounts"],
+    revenue_streams: ["Consulting firms want joint offerings"],
+  }
+
+  /** Space left under the last line of each cell in the top band, whose cells start at y=0. */
+  function topBandSlack(component: Parameters<typeof bmc.render>[0], w: number): number[] {
+    const { container } = svg(bmc.render(component, { x: 0, y: 0, w }, ctx))
+    return Array.from(container.querySelectorAll("rect"))
+      .filter((rect) => Number(rect.getAttribute("y")) === 0)
+      .map((rect) => {
+        const bottom = Number(rect.getAttribute("height"))
+        const baselines = Array.from(rect.parentElement!.querySelectorAll("text")).map((t) => Number(t.getAttribute("y")))
+        return bottom - Math.max(...baselines)
+      })
+  }
+
+  it("is only as tall as the lines it draws on a narrow rect", () => {
+    // At 840px "Key Activities" fits one line in Georgia and two in the
+    // estimate, so every cell in the top band carried a spare title line.
+    // The fullest cell should end one bottom padding (14) plus an item
+    // line's leading under its baseline (22 - 16) below its last line.
+    expect(Math.min(...topBandSlack(english, 840))).toBeCloseTo(20, 0)
+  })
+
+  it("keeps every item at its own measured height when a title wraps only in the heading face", () => {
+    // At 1016px "Customer Segments" fits one line in the estimate and needs
+    // two in Georgia. Measured for one, the column's last segment had no
+    // room left and was dropped.
+    const segments = {
+      ...english,
+      key_activities: ["Onboarding"],
+      key_resources: ["Playbooks"],
+      value_propositions: ["Faster rollout"],
+      customer_segments: [
+        "Mid-market consulting firms",
+        "Regional platform vendors",
+        "K-12 school districts",
+        "Hospital groups in the east",
+      ],
+    }
+    const { container } = svg(bmc.render(segments, { x: 0, y: 0, w: 1016, h: bmc.measure(segments, 1016, ctx) }, ctx))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    const text = container.textContent ?? ""
+    for (const item of segments.customer_segments) expect(text.replace(/\s/g, "")).toContain(item.replace(/\s/g, ""))
+  })
+})
