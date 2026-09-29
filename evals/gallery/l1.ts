@@ -6,6 +6,12 @@
  * overflow, page-edge stick, font-size floor, overflow markers, declared
  * content drops, Latin vertical type, axis-title vs data-mark intersection, isolated midground
  * ticks and filled dots. Five-dot progress is left to L2.
+ *
+ * Strikethrough and divider edge-stick judge a rule only where the page
+ * shows it. An opaque rect painted after the rule hides the stretch it
+ * covers, so a midground rule running behind a card does not count against
+ * the card's text (`visibleRuns`). Anything that cannot be proven opaque
+ * leaves the rule counted.
  */
 
 import { META_FONT_FLOOR_PT, META_FONT_FLOOR_PX, pxToPt } from "@/constants"
@@ -517,21 +523,35 @@ function textWidth(el: Element, content: string, fontSize: number): number {
   return units * fontSize
 }
 
-function collectDividers(root: Element): { y: number; x1: number; x2: number }[] {
-  const out: { y: number; x1: number; x2: number }[] = []
+/**
+ * A horizontal rule as the page paints it: where it runs, how thick it is,
+ * and when it is painted. `order` is the element's position in document
+ * order, which is SVG paint order.
+ */
+interface Strike {
+  y: number
+  x1: number
+  x2: number
+  half: number
+  order: number
+}
+
+function collectDividers(root: Element, paintOrder: ReadonlyMap<Element, number>): Strike[] {
+  const out: Strike[] = []
   const visit = (el: Element, ox: number, oy: number, os: number) => {
     const { dx, dy, scale } = parseTransform(el)
     const ax = ox + os * dx
     const ay = oy + os * dy
     const as = os * scale
     const tag = el.tagName.toLowerCase()
+    const order = paintOrder.get(el) ?? 0
     if (tag === "line") {
       const x1 = ax + Number(el.getAttribute("x1") ?? 0) * as
       const x2 = ax + Number(el.getAttribute("x2") ?? 0) * as
       const y1 = ay + Number(el.getAttribute("y1") ?? 0) * as
       const y2 = ay + Number(el.getAttribute("y2") ?? 0) * as
       if (Math.abs(y1 - y2) <= 2 && Math.abs(x2 - x1) > DIVIDER_MIN_W) {
-        out.push({ y: (y1 + y2) / 2, x1: Math.min(x1, x2), x2: Math.max(x1, x2) })
+        out.push({ y: (y1 + y2) / 2, x1: Math.min(x1, x2), x2: Math.max(x1, x2), half: strokeHalf(el, as), order })
       }
     }
     if (tag === "rect") {
@@ -540,7 +560,7 @@ function collectDividers(root: Element): { y: number; x1: number; x2: number }[]
       const w = Number(el.getAttribute("width") ?? 0) * as
       const h = Number(el.getAttribute("height") ?? 0) * as
       if (h > 0 && h <= 4 && w > DIVIDER_MIN_W) {
-        out.push({ y: y + h / 2, x1: x, x2: x + w })
+        out.push({ y: y + h / 2, x1: x, x2: x + w, half: h / 2, order })
       }
     }
     for (const child of Array.from(el.children)) visit(child, ax, ay, as)
@@ -549,10 +569,128 @@ function collectDividers(root: Element): { y: number; x1: number; x2: number }[]
   return out
 }
 
-interface Strike {
+function strokeHalf(el: Element, scale: number): number {
+  const width = Number(inheritedAttr(el, "stroke-width") ?? 1)
+  return ((Number.isFinite(width) && width > 0 ? width : 1) * scale) / 2
+}
+
+/** Document order of every element: the order SVG paints them in. */
+function paintOrderOf(root: Element): Map<Element, number> {
+  const order = new Map<Element, number>()
+  const visit = (el: Element) => {
+    order.set(el, order.size)
+    for (const child of Array.from(el.children)) visit(child)
+  }
+  visit(root)
+  return order
+}
+
+/**
+ * A rect that hides whatever was painted under it: a solid hex fill at full
+ * strength, with no clip, mask, rotation or skew anywhere up its chain.
+ * Anything this cannot prove opaque (a gradient, a translucent fill, a
+ * group fade, a clipped card) is not an occluder, so a rule under it still
+ * counts as seen.
+ */
+interface Occluder {
+  x: number
   y: number
-  x1: number
-  x2: number
+  w: number
+  h: number
+  rx: number
+  ry: number
+  order: number
+}
+
+const UNSTRAIGHT_TRANSFORM = /rotate|skew|matrix/i
+
+function hidesWhatIsUnder(el: Element): boolean {
+  for (let n: Element | null = el; n && n.tagName.toLowerCase() !== "svg"; n = n.parentElement) {
+    if (n.getAttribute("clip-path") || n.getAttribute("mask") || n.getAttribute("filter")) return false
+    if (n.getAttribute("visibility") === "hidden" || n.getAttribute("display") === "none") return false
+    if (UNSTRAIGHT_TRANSFORM.test(n.getAttribute("transform") ?? "")) return false
+  }
+  const paint = parseHexPaint(inheritedAttr(el, "fill") ?? "#000000")
+  if (!paint || paint.alpha < 1) return false
+  return effectivePaintOpacity(el, "fill") >= 1
+}
+
+function collectOccluders(root: Element, paintOrder: ReadonlyMap<Element, number>): Occluder[] {
+  const out: Occluder[] = []
+  const visit = (el: Element, ox: number, oy: number, os: number) => {
+    const { dx, dy, scale } = parseTransform(el)
+    const ax = ox + os * dx
+    const ay = oy + os * dy
+    const as = os * scale
+    if (el.tagName.toLowerCase() === "rect" && hidesWhatIsUnder(el)) {
+      const w = numericAttr(el, "width") * as
+      const h = numericAttr(el, "height") * as
+      if (w > 0 && h > 0) {
+        const rxRaw = el.getAttribute("rx")
+        const ryRaw = el.getAttribute("ry")
+        const rx = Number(rxRaw ?? ryRaw ?? 0) * as
+        const ry = Number(ryRaw ?? rxRaw ?? 0) * as
+        out.push({
+          x: ax + numericAttr(el, "x") * as,
+          y: ay + numericAttr(el, "y") * as,
+          w,
+          h,
+          rx: Math.min(Math.max(0, rx || 0), w / 2),
+          ry: Math.min(Math.max(0, ry || 0), h / 2),
+          order: paintOrder.get(el) ?? 0,
+        })
+      }
+    }
+    for (const child of Array.from(el.children)) visit(child, ax, ay, as)
+  }
+  visit(root, 0, 0, 1)
+  return out
+}
+
+/** How far a rounded corner pulls the rect's edge in at height `y`. */
+function cornerInset(o: Occluder, y: number): number {
+  if (o.rx <= 0 || o.ry <= 0) return 0
+  const into = y < o.y + o.ry ? o.y + o.ry - y : y > o.y + o.h - o.ry ? y - (o.y + o.h - o.ry) : 0
+  if (into <= 0) return 0
+  const t = Math.min(1, into / o.ry)
+  return o.rx * (1 - Math.sqrt(1 - t * t))
+}
+
+/**
+ * The stretches of a rule still on show once every opaque rect painted
+ * after it has covered what it covers. A rect hides a stretch only when it
+ * spans the rule's full stroke there, corner curves included.
+ */
+function visibleRuns(s: Strike, occluders: readonly Occluder[]): [number, number][] {
+  let runs: [number, number][] = [[s.x1, s.x2]]
+  const top = s.y - s.half
+  const bottom = s.y + s.half
+  for (const o of occluders) {
+    if (o.order <= s.order) continue
+    if (top < o.y || bottom > o.y + o.h) continue
+    const inset = Math.max(cornerInset(o, top), cornerInset(o, bottom))
+    const left = o.x + inset
+    const right = o.x + o.w - inset
+    if (right <= left) continue
+    const next: [number, number][] = []
+    for (const [a, b] of runs) {
+      if (right <= a || left >= b) {
+        next.push([a, b])
+        continue
+      }
+      if (left > a) next.push([a, left])
+      if (right < b) next.push([right, b])
+    }
+    runs = next
+    if (runs.length === 0) break
+  }
+  return runs
+}
+
+function visibleOverlap(runs: readonly [number, number][], left: number, right: number): number {
+  let total = 0
+  for (const [a, b] of runs) total += Math.max(0, Math.min(right, b) - Math.max(left, a))
+  return total
 }
 
 interface CardRect {
@@ -583,6 +721,7 @@ interface Geometry {
   texts: CollectedText[]
   strikes: Strike[]
   cards: CardRect[]
+  occluders: Occluder[]
 }
 
 function isPageSized(w: number, h: number): boolean {
@@ -621,7 +760,7 @@ function isWatermarkText(el: Element, fontSize: number): boolean {
   return fontSize >= WATERMARK_SIZE && opacity <= WATERMARK_OPACITY
 }
 
-function collectGeometry(root: Element): Geometry {
+function collectGeometry(root: Element, paintOrder: ReadonlyMap<Element, number>): Geometry {
   const texts: CollectedText[] = []
   const strikes: Strike[] = []
   const cards: CardRect[] = []
@@ -641,6 +780,7 @@ function collectGeometry(root: Element): Geometry {
     if (el.hasAttribute("data-audit-box")) hasAuditBox = true
 
     const tag = el.tagName.toLowerCase()
+    const order = paintOrder.get(el) ?? 0
     if (tag === "line") {
       const x1 = ax + Number(el.getAttribute("x1") ?? 0) * as
       const x2 = ax + Number(el.getAttribute("x2") ?? 0) * as
@@ -648,7 +788,7 @@ function collectGeometry(root: Element): Geometry {
       const y2 = ay + Number(el.getAttribute("y2") ?? 0) * as
       const w = Math.abs(x2 - x1)
       if (Math.abs(y1 - y2) <= 2 && w >= STRIKE_MIN_W) {
-        strikes.push({ y: (y1 + y2) / 2, x1: Math.min(x1, x2), x2: Math.max(x1, x2) })
+        strikes.push({ y: (y1 + y2) / 2, x1: Math.min(x1, x2), x2: Math.max(x1, x2), half: strokeHalf(el, as), order })
       }
     }
     if (tag === "rect") {
@@ -657,7 +797,7 @@ function collectGeometry(root: Element): Geometry {
       const w = Number(el.getAttribute("width") ?? 0) * as
       const h = Number(el.getAttribute("height") ?? 0) * as
       if (h > 0 && h <= 4 && w >= STRIKE_MIN_W) {
-        strikes.push({ y: y + h / 2, x1: x, x2: x + w })
+        strikes.push({ y: y + h / 2, x1: x, x2: x + w, half: h / 2, order })
       }
       const card = asCardRect(el, ox, oy, os)
       if (card) cards.push(card)
@@ -700,7 +840,7 @@ function collectGeometry(root: Element): Geometry {
   }
 
   visit(root, 0, 0, 1, [], false)
-  return { texts, strikes, cards }
+  return { texts, strikes, cards, occluders: collectOccluders(root, paintOrder) }
 }
 
 function inkBox(t: CollectedText): { left: number; right: number; top: number; bottom: number } {
@@ -723,7 +863,7 @@ function findStrikethrough(geo: Geometry, findings: L1Finding[]): void {
     for (const s of geo.strikes) {
       if (s.y >= underlineY) continue
       if (s.y < bandTop || s.y >= bandBottom) continue
-      const overlap = Math.min(t.right, s.x2) - Math.max(t.left, s.x1)
+      const overlap = visibleOverlap(visibleRuns(s, geo.occluders), t.left, t.right)
       if (overlap > STRIKE_X_FRAC * width) {
         findings.push({
           code: "strikethrough",
@@ -808,7 +948,8 @@ function walkText(
   root: Element,
   layout: string,
   findings: L1Finding[],
-  dividers: { y: number; x1: number; x2: number }[],
+  dividers: readonly Strike[],
+  occluders: readonly Occluder[],
 ): void {
   const visit = (el: Element, ox: number, oy: number, os: number) => {
     const { dx, dy, scale } = parseTransform(el)
@@ -872,9 +1013,9 @@ function walkText(
             })
           } else if (!exempt) {
             for (const d of dividers) {
-              const overlap = Math.min(right, d.x2) - Math.max(left, d.x1)
               const gap = Math.min(Math.abs(bottom - d.y), Math.abs(top - d.y), Math.abs(ty - d.y))
-              if (overlap > 0 && gap < EDGE_PX) {
+              if (gap >= EDGE_PX) continue
+              if (visibleOverlap(visibleRuns(d, occluders), left, right) > 0) {
                 findings.push({
                   code: "edge-stick",
                   message: `text "${label}" sits within ${EDGE_PX}px of a divider`,
@@ -943,9 +1084,10 @@ export function auditL1(svg: string): L1Result {
   findAxisTitleOverlap(root, findings)
   findValueLabelCollision(root, findings)
   const layout = layoutOf(svg)
-  walkText(root, layout, findings, collectDividers(root))
+  const paintOrder = paintOrderOf(root)
+  const geo = collectGeometry(root, paintOrder)
+  walkText(root, layout, findings, collectDividers(root, paintOrder), geo.occluders)
   findDeclaredDrops(root, findings)
-  const geo = collectGeometry(root)
   findStrikethrough(geo, findings)
   findInkOverlap(geo, findings)
   findBoxlessOverflow(geo, layout, findings)
