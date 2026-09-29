@@ -146,13 +146,12 @@ function repeatedRuns(svg: string): string[] {
  *
  * A cycling pool, not a lead-in drawn from the wrong end: `show-gallery` lays
  * six tiles over four captions, playbill's `icon_cards` title opens one of
- * its own sentences, and two pages reuse one phrase in two rows. Those are
+ * its own sentences, and one page reuses one phrase in two rows. Those are
  * corpus writing rather than wiring, so they are pinned here and the set can
  * only shrink — an entry leaves when someone writes the missing caption.
  * Nothing may join it, and a repeated *sentence* may never be listed at all.
  */
 const KNOWN_LABEL_REPEATS: readonly string[] = [
-  "brief--comp--roadmap--mixed\tobservability",
   "playbill--comp--icon-cards--zh\t首演两场七百张票三天售罄",
   "terminal--deck--p04\t三次重写RFC与否决记录",
   "unserved--face--show-gallery\t临江咨询三号团队的协作工",

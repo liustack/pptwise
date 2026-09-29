@@ -186,6 +186,39 @@ describe("iceberg component", () => {
     }
   })
 
+  it("keeps every tip line clear of the waterline instead of resting on it", () => {
+    // The gallery's L1 pass found the tip line within 4px of the waterline on
+    // every theme: the lowest line was anchored with its descender at 98% of
+    // the tip band, which left about two pixels between the glyphs and a
+    // 1.5px rule. A glyph box reaches a quarter of the font size below the
+    // baseline, and that box has to stay at least 4px off the line.
+    const english = {
+      type: "iceberg" as const,
+      above: ["Setup runs nine weeks"],
+      below: ["Customer data sits in six systems", "Three teams count seats three ways", "Health scores never write back"],
+    }
+    const cases = [
+      { component: berg, box: BOX },
+      { component: berg, box: { x: 96, y: 202, w: 1088, h: 400 } },
+      { component: { ...berg, above: ["开通九周", "客户每周追进度"] }, box: BOX },
+      { component: english, box: { x: 0, y: 0, w: 1088, h: 300 } },
+      { component: english, box: { x: 0, y: 0, w: 900, h: 360 } },
+    ]
+    for (const { component, box } of cases) {
+      const { container } = svg(iceberg.render(component, box, themed("brief")))
+      expect(container.querySelector("[data-dropped]"), component.above.join("|")).toBeNull()
+      const waterline = Number(container.querySelector("line")!.getAttribute("y1"))
+      const tipLines = Array.from(container.querySelectorAll("text")).filter(
+        (t) => t.getAttribute("text-anchor") === "middle" && component.above.includes(t.textContent ?? ""),
+      )
+      expect(tipLines).toHaveLength(component.above.length)
+      for (const t of tipLines) {
+        const bottom = Number(t.getAttribute("y")) + Number(t.getAttribute("font-size")) * 0.25
+        expect(waterline - bottom, `"${t.textContent}" in a ${box.w}x${box.h} box`).toBeGreaterThanOrEqual(4)
+      }
+    }
+  })
+
   it("draws the same geometry on a second render", () => {
     const first = svg(iceberg.render(berg, BOX, themed("brief"))).container.innerHTML
     expect(svg(iceberg.render(berg, BOX, themed("brief"))).container.innerHTML).toBe(first)
