@@ -4,7 +4,8 @@ import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, heroUnitMark, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
+import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** arena 稀排脸：内缩 HUD、量能条、对角亮括弧。不画页角 12px 括弧和底带能量条。 */
 
@@ -19,7 +20,9 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const unit = heroUnit(slide)
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1100, fontSize: 330, fontFamily: fonts.heading, bold: true, unit })
-  const unitMark = heroUnitMark(fitted.fontSize)
+  // A figure this line cannot set whole goes to the plain page, never cut.
+  if (!fitted) return StatHeroFallbackContent({ slide, ctx })
+  const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   return (

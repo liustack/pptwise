@@ -10,11 +10,8 @@ import {
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { heroCaption, heroSource, heroUnit, heroValue, latinUpper, trackingPx } from "./minimal-shared"
-import { SvgContent } from "../render/svg-content"
-import { stripEmphasis } from "../render/emphasis"
-import { fitHeadingLines } from "../render/heading-fit"
 import { sparseFace } from "./sparse/registry"
-import { stepAside } from "../render/step-aside"
+import { StatHeroFallbackContent } from "./content-stat-hero-fallback"
 
 /**
  * 未注册的 (themeId, layoutId) 与自定义主题仍走此脸。
@@ -70,48 +67,6 @@ export function StatHeroContent(props: SvgTemplateProps) {
   const Face = sparseFace("stat-hero", props.ir.theme.id)
   if (Face) return Face(props)
   return GenericStatHeroContent(props)
-}
-
-const FALLBACK_HEADING_Y = 150
-const FALLBACK_RECT = { x: PAD_X, y: 230, w: 1280 - PAD_X * 2, h: 400 } as const
-
-/** The whole page, drawn plainly, when the hero construction cannot hold it. */
-function StatHeroFallbackContent({ slide, ctx }: SvgTemplateProps) {
-  const { colors, fonts } = ctx
-  const defaultBg = ctx.defaultBg ?? colors.bg
-  const heading = fitHeadingLines(stripEmphasis(slide.heading ?? ""), {
-    maxWidth: CONTENT_MAX_W,
-    fontSize: 44,
-    maxLines: 2,
-    minPt: 28,
-    lineHeightRatio: 1.28,
-    fontFamily: fonts.heading,
-  })
-  const headingStart = FALLBACK_HEADING_Y - Math.max(0, heading.lines.length - 1) * heading.lineHeight
-  // A fixed 400px band inside a 960px column. The hero page gives its body
-  // less room than an ordinary page would, so ask before drawing it.
-  const aside = stepAside({ face: "stat-hero", slide, ctx, bodyRect: FALLBACK_RECT })
-  if (aside) return aside
-  return (
-    <g data-hero-mode="fallback">
-      {heading.lines.map((line, i) => (
-        <text
-          key={`heading-${i}`}
-          data-truncated={heading.truncated && i === heading.lines.length - 1 ? "1" : undefined}
-          x={PAD_X}
-          y={headingStart + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="700"
-          fill={accessibleInk(colors.text, defaultBg, heading.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
-      <SvgContent components={slide.components} rect={FALLBACK_RECT} ctx={ctx} />
-    </g>
-  )
 }
 
 function GenericStatHeroContent({ ir, slide, index, ctx }: SvgTemplateProps) {

@@ -9,7 +9,8 @@ import {
   pullQuoteContext,
   pullQuoteText,
 } from "../minimal-shared"
-import { fitHeroLine, heroUnitMark, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, splitTrailingPercent } from "./shared"
+import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, splitTrailingPercent } from "./shared"
+import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 import { underlineDescentRatio } from "../underline"
 
 /** thesis 稀排脸：脚注引文、百分号巨数、命题格言。不画点轨和角标。 */
@@ -86,7 +87,9 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { body, percent } = splitTrailingPercent(heroValue(slide))
   const unit = heroUnit(slide)
   const fitted = fitHeroLine(body, { maxWidth: 1100, fontSize: 300, fontFamily: fonts.heading, bold: false, unit, percentScale: percent ? 190 / 300 : undefined })
-  const unitMark = heroUnitMark(fitted.fontSize)
+  // A figure this line cannot set whole goes to the plain page, never cut.
+  if (!fitted) return StatHeroFallbackContent({ slide, ctx })
+  const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   // The rule hangs from the numeral's ink floor rather than a fixed y.

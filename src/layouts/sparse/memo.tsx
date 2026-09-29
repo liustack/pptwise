@@ -9,7 +9,8 @@ import {
   pullQuoteText,
   trackingPx,
 } from "../minimal-shared"
-import { firstEmphasisRun, fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, heroUnitMark, quoteBlockBaseline } from "./shared"
+import { firstEmphasisRun, fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline } from "./shared"
+import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** memo 稀排脸：打字机引文、文武夹巨数、宋体格言+印章。不画 MEMORANDUM / 顶缘红双线。 */
 
@@ -121,7 +122,9 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const unit = heroUnit(slide)
   const fitted = fitHeroLine(heroValue(slide), { maxWidth: 1088, fontSize: 280, fontFamily: fonts.heading, bold: false, unit })
-  const unitMark = heroUnitMark(fitted.fontSize)
+  // A figure this line cannot set whole goes to the plain page, never cut.
+  if (!fitted) return StatHeroFallbackContent({ slide, ctx })
+  const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
   const source = heroSource(slide)
   return (
