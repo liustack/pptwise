@@ -273,6 +273,30 @@ describe("positioning_map component", () => {
     for (const { point, ink } of names) expect(ink, point.label).toBeDefined()
   })
 
+  it("moves an axis end name off a subject's dot to the other side of its rule", () => {
+    // A subject near the far end of the horizontal scale and a little under
+    // the middle lands its dot where the high end's name is printed.
+    const nearEnd = {
+      ...eight,
+      x_axis: { title: "托管化程度", low: "自建", high: "全托管" },
+      points: [...eight.points.slice(0, 7), { label: "东启金融", x: 92, y: 40 }],
+    }
+    const { container } = svg(positioningMap.render(nearEnd, { x: 0, y: 0, w: 1088 }, themed("brief")))
+    const horizontal = container.querySelector("line")!
+    const axisY = Number(horizontal.getAttribute("y1"))
+    const name = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "托管化程度 全托管")!
+    const baseline = Number(name.getAttribute("y"))
+    const size = Number(name.getAttribute("font-size"))
+    const dot = Array.from(container.querySelectorAll("circle"))[7]!
+    const cy = Number(dot.getAttribute("cy"))
+    const r = Number(dot.getAttribute("r"))
+    // The name's ink band and the dot no longer share any height.
+    const top = baseline - size
+    const bottom = baseline + size * 0.25
+    expect(bottom <= cy - r || top >= cy + r).toBe(true)
+    expect(bottom).toBeLessThanOrEqual(axisY - 4)
+  })
+
   it("declares instead of drawing past a height it was given", () => {
     const { container } = svg(positioningMap.render(eight, { x: 0, y: 0, w: 1088, h: 200 }, themed("brief")))
     const marker = container.querySelector("[data-dropped]")!

@@ -173,19 +173,33 @@ export const positioningMap: SvgComponent<PositioningMapComponent> = {
         h: metaSize + 6,
       }
     })
-    const fixed: Box[] = [
-      { x: axisX + 8, y: plotTop - 4, w: widthOf(yHigh.text, false, metaSize) + 8, h: metaSize + 8 },
-      { x: axisX + 8, y: plotBottom - metaSize - 4, w: widthOf(yLow.text, false, metaSize) + 8, h: metaSize + 8 },
-      { x: 0, y: axisY + 4, w: widthOf(xLow.text, false, metaSize) + 8, h: metaSize + 8 },
-      {
-        x: box.w - widthOf(xHigh.text, false, metaSize) - 8,
-        y: axisY + 4,
-        w: widthOf(xHigh.text, false, metaSize) + 8,
-        h: metaSize + 8,
-      },
-      ...cornerBoxes,
-      ...dots.map((d) => ({ x: d.cx - d.r, y: d.cy - d.r, w: d.r * 2, h: d.r * 2 })),
-    ]
+    const dotBoxes: Box[] = dots.map((d) => ({ x: d.cx - d.r, y: d.cy - d.r, w: d.r * 2, h: d.r * 2 }))
+    // An axis end name sits under its rule (the x axis) or to the right of
+    // it (the y axis). A subject near that end of the scale can land its dot
+    // right on the name, and the dot is data where the name is not: the name
+    // crosses to the other side of the rule when that side is clear.
+    const onDot = (b: Box) => dotBoxes.some((d) => overlaps(d, b))
+    const xEnd = (text: string, atRight: boolean) => {
+      const w = widthOf(text, false, metaSize) + 8
+      const x = atRight ? box.w - widthOf(text, false, metaSize) - 8 : 0
+      const under: Box = { x, y: axisY + 4, w, h: metaSize + 8 }
+      const over: Box = { x, y: axisY - 12 - metaSize, w, h: metaSize + 8 }
+      const up = onDot(under) && !onDot(over)
+      return { box: up ? over : under, y: up ? axisY - 10 : axisY + metaSize + 8 }
+    }
+    const yEnd = (text: string, atTop: boolean) => {
+      const w = widthOf(text, false, metaSize) + 8
+      const y = atTop ? plotTop - 4 : plotBottom - metaSize - 4
+      const right: Box = { x: axisX + 8, y, w, h: metaSize + 8 }
+      const left: Box = { x: axisX - 8 - w, y, w, h: metaSize + 8 }
+      const flip = onDot(right) && !onDot(left)
+      return { box: flip ? left : right, x: flip ? axisX - 10 : axisX + 10, anchor: flip ? ("end" as const) : undefined }
+    }
+    const xLowEnd = xEnd(xLow.text, false)
+    const xHighEnd = xEnd(xHigh.text, true)
+    const yHighEnd = yEnd(yHigh.text, true)
+    const yLowEnd = yEnd(yLow.text, false)
+    const fixed: Box[] = [yHighEnd.box, yLowEnd.box, xLowEnd.box, xHighEnd.box, ...cornerBoxes, ...dotBoxes]
 
     interface Spot {
       box: Box
@@ -343,12 +357,12 @@ export const positioningMap: SvgComponent<PositioningMapComponent> = {
             {fit.text}
           </text>
         ))}
-        <text x={0} y={axisY + metaSize + 8} fontFamily={ctx.fonts.body} fontSize={xLow.fontSize} fill={metaInk}>
+        <text x={0} y={xLowEnd.y} fontFamily={ctx.fonts.body} fontSize={xLow.fontSize} fill={metaInk}>
           {xLow.text}
         </text>
         <text
           x={box.w}
-          y={axisY + metaSize + 8}
+          y={xHighEnd.y}
           textAnchor="end"
           fontFamily={ctx.fonts.body}
           fontSize={xHigh.fontSize}
@@ -356,10 +370,24 @@ export const positioningMap: SvgComponent<PositioningMapComponent> = {
         >
           {xHigh.text}
         </text>
-        <text x={axisX + 10} y={plotTop + metaSize} fontFamily={ctx.fonts.body} fontSize={yHigh.fontSize} fill={metaInk}>
+        <text
+          x={yHighEnd.x}
+          y={plotTop + metaSize}
+          textAnchor={yHighEnd.anchor}
+          fontFamily={ctx.fonts.body}
+          fontSize={yHigh.fontSize}
+          fill={metaInk}
+        >
           {yHigh.text}
         </text>
-        <text x={axisX + 10} y={plotBottom - 4} fontFamily={ctx.fonts.body} fontSize={yLow.fontSize} fill={metaInk}>
+        <text
+          x={yLowEnd.x}
+          y={plotBottom - 4}
+          textAnchor={yLowEnd.anchor}
+          fontFamily={ctx.fonts.body}
+          fontSize={yLow.fontSize}
+          fill={metaInk}
+        >
           {yLow.text}
         </text>
         {dots.map((dot, i) => (
