@@ -1,6 +1,7 @@
 import type { ReactElement } from "react"
 import type { Component } from "@/ir"
 import { accessibleInk } from "../render/ink"
+import { DroppedContentMarker } from "../render/drop-marker"
 import {
   FORM_BODY_FLOOR,
   FORM_TITLE_FLOOR,
@@ -171,6 +172,29 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
     const g = resolveHub(component, box.w, box.h)
     const { ox, oy, caps, scale } = g
     const hubR = g.hubR * scale
+    const hubLayout = layoutFormTitle(component.center, {
+      maxWidth: hubR * 1.55,
+      fontSize: Math.max(FORM_TITLE_FLOOR, Math.round(22 * scale)),
+      maxLines: 2,
+      fontFamily: ctx.fonts.heading,
+    })
+    // The drawing scales into a short box but its type stops at the 20px
+    // floor, so below some size the words no longer fit their shapes: a
+    // label's ink reaches 0.65em either side of its capsule's middle, and the
+    // centre's lines need the hub's full height. The smallest drawing that
+    // still holds them is the smallest one this component draws; a box that
+    // cannot give it that much height gets the whole component declined.
+    const labelSize = Math.max(FORM_TITLE_FLOOR, Math.round(16 * scale))
+    const holdsWords =
+      caps.every((cap) => cap.h >= 1.3 * labelSize + 2) &&
+      2 * hubR >= hubLayout.lines.length * hubLayout.lineHeight
+    if (!holdsWords) {
+      return (
+        <g transform={`translate(${box.x},${box.y})`}>
+          <DroppedContentMarker count={1} kind="component" />
+        </g>
+      )
+    }
     const border = ctx.colors.border ?? ctx.colors.muted
     const hubFill = ctx.colors.surface
 
@@ -197,12 +221,7 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
         })}
         <circle cx={ox} cy={oy} r={hubR} fill={hubFill} stroke={ctx.colors.accent} strokeWidth={1.5} />
         {(() => {
-          const layout = layoutFormTitle(component.center, {
-            maxWidth: hubR * 1.55,
-            fontSize: Math.max(FORM_TITLE_FLOOR, Math.round(22 * scale)),
-            maxLines: 2,
-            fontFamily: ctx.fonts.heading,
-          })
+          const layout = hubLayout
           const lines = layout.lines
           const totalH = lines.length * layout.lineHeight
           const top = oy - totalH / 2
