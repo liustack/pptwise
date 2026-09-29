@@ -367,3 +367,18 @@ describe("progress_donuts source line in a short cell", () => {
   })
 })
 
+describe("progress_donuts in a box shorter than its smallest ring", () => {
+  it("declines the box rather than printing a label or source below it", () => {
+    const donuts = {
+      type: "progress_donuts" as const,
+      items: [
+        { value: "50%", label: "A", source: "Annual customer retention survey" },
+        { value: "75%", label: "B" },
+      ],
+    }
+    const { container } = svg(progressDonuts.render(donuts, { x: 0, y: 0, w: 400, h: 110 }, themeCtx("swiss")))
+    expect(container.querySelectorAll("text, circle")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+  })
+})
+
