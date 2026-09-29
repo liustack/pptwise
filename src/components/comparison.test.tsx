@@ -2,6 +2,7 @@
 import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import { comparison } from "./comparison"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import type { ComponentCtx } from "./types"
 
 const ctx: ComponentCtx = {
@@ -441,3 +442,22 @@ describe("comparison 空首列表头归一化（2026-08-19 gallery 重渲：20 �
     })
   })
 })
+
+describe("comparison in a box shorter than its wrapped rows", () => {
+  it("gives back cell lines and marks the cut rather than drawing past the box", () => {
+    const table = {
+      type: "comparison" as const,
+      columns: ["Option"],
+      rows: [{ label: "Plan", cells: ["Customer support and training included"] }],
+    }
+    const swiss = boundThemeCtx("swiss", {})
+    // Unbounded, the cell wraps and the table measures taller than one row.
+    expect(comparison.measure(table, 300, swiss)).toBeGreaterThan(88)
+    const box = { x: 0, y: 0, w: 300, h: 88 }
+    const { container } = render(<svg>{comparison.render(table, box, swiss)}</svg>)
+    for (const line of container.querySelectorAll("line")) expect(Number(line.getAttribute("y1"))).toBeLessThanOrEqual(box.h)
+    for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y"))).toBeLessThanOrEqual(box.h)
+    expect(container.querySelector('[data-truncated="1"]')).not.toBeNull()
+  })
+})
+
