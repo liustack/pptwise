@@ -242,6 +242,10 @@ describe("auditL1 planted defects", () => {
       `<g transform="scale(1,0.1)"><rect x="80" y="150" width="540" height="100" fill="#ffffff"/></g>`,
     ],
     [
+      "shrunk by a scale written in exponent form",
+      `<g transform="scale(1e-1)"><rect x="80" y="150" width="540" height="100" fill="#ffffff"/></g>`,
+    ],
+    [
       "moved by a scale applied before its translate",
       `<g transform="scale(2) translate(20,100)"><rect x="20" y="20" width="300" height="40" fill="#ffffff"/></g>`,
     ],

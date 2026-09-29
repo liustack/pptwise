@@ -645,7 +645,8 @@ interface Occluder {
 
 /** Containers whose children are never painted where they stand. */
 const UNPAINTED_CONTAINERS = new Set(["defs", "symbol", "mask", "clippath", "pattern", "marker"])
-const NUM = String.raw`-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?`
+/** A plain decimal: the only number form `parseTransform` reads (no exponent). */
+const NUM = String.raw`-?(?:\d+\.?\d*|\.\d+)`
 /**
  * The only transforms `parseTransform` reads right: an optional two-value
  * translate, then an optional one-value scale, in that order. Anything else
