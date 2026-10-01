@@ -40,3 +40,4 @@ export type MotifId =
   | "playbill-motif" // 空 motif。封面日期贴片由 bill-head 当前景画
   | "gauge-motif" // 2026-08-25：brief 量规定位角标，左上两条直线构成 ⌐
   | "crayonbox-motif" // 2026-08-25：一盒蜡笔右上角阳光黄太阳与星贴纸组
+  | "folio-motif" // 2026-10-02：brief 定稿页脚，y664 细线 + 左机构名右保密级别，不印页码

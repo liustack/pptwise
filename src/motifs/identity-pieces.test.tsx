@@ -38,6 +38,7 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
   "luxe-motif": { cover: ["invitation"], ending: ["invitation"] },
   "vermilion-motif": { content: ["gold-rules"], ending: ["gold-rules"] },
   "corner-ornament-motif": { content: ["masthead"], ending: ["masthead"] },
+  "folio-motif": { chapter: ["folio"], content: ["folio"], ending: ["folio"] },
 }
 
 /** Adjudicated identity pieces. Midground, original color, no intensity cap. */
