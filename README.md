@@ -153,6 +153,7 @@ Full reference: [`docs/cli.md`](./docs/cli.md).
 | [Menu lookup](./docs/menu-lookup.md) | Tracing how a page kind reaches one theme face across validation and render |
 | [Contrast system](./docs/contrast-system.md) | Debugging text color, painted backgrounds, or contrast findings |
 | [Designing themes](./docs/designing-themes.md) | Drawing a theme redesign that can actually compile to PPTX |
+| [Design brief](./docs/design-brief.md) | The rules a design tool gets before it draws a face or component |
 | [Testing](./docs/testing.md) | Running the right gate, inspecting snapshots, or changing exported XML |
 | [Internal API](./docs/internal-api.md) | Understanding why the JavaScript internals carry no semver promise |
 | [Release guide](./docs/releasing.md) | Preparing and publishing an npm release |
