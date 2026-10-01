@@ -552,6 +552,14 @@ describe("gridlines", () => {
 })
 
 describe("renderDonut — center total label", () => {
+  // 1.05 + 2.10 printed "3.1": the centre kept one decimal whatever the
+  // slices were written with.
+  it("prints the sum the slices add up to, not a rounding of it", () => {
+    const { container } = svg(renderDonut(seriesOf(1.05, 2.1), PALETTE, 0, 0, W, H, MUTED, TEXT))
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+    expect(texts).toContain("3.15")
+  })
+
   // Regression lock for defect C (bench-driven fixes wave, task 4): the
   // center caption under the summed total used to be hardcoded Chinese
   // ("总计") regardless of deck language — public rendered-output surfaces
