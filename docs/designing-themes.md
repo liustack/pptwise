@@ -36,6 +36,8 @@ Offering a kind is a promise that the theme has a convincing face for that seman
 
 Each key maps to exactly one face. There is no rotation or conditional branch. Adaptation to actual content belongs inside the face.
 
+Give each kind its own face. Two kinds on one fixed arrangement read as the same page twice. The one exception is a face that declares `dispatch: "content"`: it picks its composition from what the page carries (a ruled list, an options table, a row of phases), so several kinds can share it without the deck going monotonous. Brief's `gauge-sheet` is such a face.
+
 ## Face contract
 
 A face declares:
@@ -47,6 +49,7 @@ A face declares:
 - whether it paints its own background
 - whether motif suppression is structural
 - whether shared branding is structurally absent
+- whether it dispatches by content, which lets several kinds share it
 
 A menu entry may supply only declared parameter values. Registration rejects unknown names, wrong types, and values outside bounds.
 

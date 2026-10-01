@@ -67,8 +67,15 @@ export function fitHeroLine(
     unit?: string
     /** A trailing `%` set at this share of the figure's size. */
     percentScale?: number
+    /**
+     * The unit mark the skin sets at a given figure size. Defaults to
+     * `heroUnitMark`. A skin whose board sets the unit at its own proportion
+     * passes that here, so the line is measured as it is drawn.
+     */
+    unitMark?: (heroFontSize: number) => HeroUnitMark
   },
 ): HeroLine | null {
+  const markFor = opts.unitMark ?? heroUnitMark
   const minFontSize = Math.max(48, Math.round(opts.fontSize * (64 / 180)))
   const weight = { bold: opts.bold, fontFamily: opts.fontFamily }
   const valueUnits = measureTextUnits(value, weight)
@@ -81,11 +88,11 @@ export function fitHeroLine(
 
   const largest = valueUnits > 0 ? Math.min(opts.fontSize, Math.floor(opts.maxWidth / valueUnits)) : opts.fontSize
   for (let size = largest; size >= minFontSize; size--) {
-    const unitMark = heroUnitMark(size)
+    const unitMark = markFor(size)
     if (lineWidth(size, unitMark) <= opts.maxWidth) return { text: value, fontSize: size, unitMark }
   }
   if (opts.unit && largest >= minFontSize) {
-    const { dx, fontSize: unitStart } = heroUnitMark(minFontSize)
+    const { dx, fontSize: unitStart } = markFor(minFontSize)
     for (let unitSize = unitStart - 1; unitSize >= HERO_UNIT_MIN_PX; unitSize--) {
       const unitMark = { fontSize: unitSize, dx }
       if (lineWidth(minFontSize, unitMark) <= opts.maxWidth) return { text: value, fontSize: minFontSize, unitMark }

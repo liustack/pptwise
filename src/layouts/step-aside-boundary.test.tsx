@@ -30,7 +30,10 @@ import { renderSvgMarkup } from "../render/serialize"
 import { AsymmetricTriptychContent } from "./content-asymmetric-triptych"
 import { BentoPanelContent } from "./content-bento-panel"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
+import { GaugeExhibitContent } from "./content-gauge-exhibit"
+import { GaugeFigureContent } from "./content-gauge-figure"
 import { GaugePointContent } from "./content-gauge-point"
+import { GaugeSheetContent } from "./content-gauge-sheet"
 import { GaugeStatsContent } from "./content-gauge-stats"
 import { OneEvidenceContent } from "./content-one-evidence"
 import { QuoteStageContent } from "./content-quote-stage"
@@ -127,6 +130,30 @@ const CASES: FaceCase[] = [
   { face: "quote-stage", Face: QuoteStageContent, themeId: "brief", regions: ["aside", "declined"] },
   { face: "tone-adaptive-content", Face: ToneAdaptiveContent, themeId: "terminal", regions: ["face", "aside", "declined"] },
   { face: "gauge-stats", Face: GaugeStatsContent, themeId: "brief", regions: ["face", "aside", "declined"] },
+  // A line chart of up to three series first takes the board's change
+  // column beside a narrowed plot, then the full band once it no longer fits
+  // there, so both of the face's own compositions sit in the first region.
+  { face: "gauge-sheet", Face: GaugeSheetContent, themeId: "brief", regions: ["face", "aside", "declined"] },
+  { face: "gauge-exhibit", Face: GaugeExhibitContent, themeId: "brief", regions: ["face", "aside", "declined"] },
+  // Two figures are not this face's hero page, so the page goes to its sheet,
+  // whose band the chart shares with them. On the full page the standfirst
+  // and the source line leave the band less room than the step-aside sheet
+  // has, so only the short page holds before it steps aside.
+  {
+    face: "gauge-figure",
+    Face: GaugeFigureContent,
+    themeId: "brief",
+    components: (n) => statHeroBody(n),
+    shortPage: true,
+    regions: ["face", "aside", "declined"],
+  },
+  {
+    face: "gauge-figure",
+    Face: GaugeFigureContent,
+    themeId: "brief",
+    components: (n) => statHeroBody(n),
+    regions: ["aside", "declined"],
+  },
   { face: "crayonbox-cards", Face: CrayonboxCardsContent, themeId: "crayon", regions: ["face", "aside", "declined"] },
   // A fixed body band is only ever worth trading for the sheet on a page
   // that has not already spent the sheet's room on a second heading line, a
@@ -276,7 +303,7 @@ function sweep(c: FaceCase): { verdicts: Verdict[]; from: number } {
 
 describe("a wired face steps aside exactly where its body slot starts costing content", () => {
   for (const c of CASES) {
-    it(`${c.face}${c.omitFootnote ? " (no footnote)" : ""}`, { timeout: 60_000 }, () => {
+    it(`${c.face}${c.omitFootnote ? " (no footnote)" : ""}${c.shortPage ? " (short page)" : ""}`, { timeout: 60_000 }, () => {
       const { verdicts } = sweep(c)
       // The page walks exactly the regions this case declares, in order. One
       // equality carries every property the regions are supposed to have:

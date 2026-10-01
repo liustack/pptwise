@@ -16,6 +16,18 @@ function entries(menu: Menu): { path: string; slideType: "cover" | "chapter" | "
   ]
 }
 
+/** Faces a menu names for more than one kind without declaring that they dispatch by content. */
+function repeatedFixedFaces(content: Menu["content"]): string[] {
+  const counts = new Map<string, number>()
+  for (const entry of Object.values(content)) {
+    if (entry === undefined) continue
+    counts.set(entry.face, (counts.get(entry.face) ?? 0) + 1)
+  }
+  return [...counts]
+    .filter(([face, n]) => n > 1 && getLayout(face)?.dispatch !== "content")
+    .map(([face]) => face)
+}
+
 describe("built-in menus", () => {
   it.each(CANONICAL_THEME_IDS)("%s names a registered face valid for each page type", (id) => {
     for (const { path, slideType, entry } of entries(BUILTIN_THEME_FILES[id].menu)) {
@@ -31,9 +43,18 @@ describe("built-in menus", () => {
     for (const kind of kinds) expect(KIND_VALUES as readonly string[]).toContain(kind)
   })
 
-  it.each(CANONICAL_THEME_IDS)("%s gives each served kind its own face", (id) => {
-    const faces = Object.values(BUILTIN_THEME_FILES[id].menu.content).map((entry) => entry!.face)
-    expect(new Set(faces).size, `${id} points two kinds at one face`).toBe(faces.length)
+  // A face drawing one fixed arrangement, named by two kinds, makes two kinds
+  // of page look the same. Only a face that picks its composition from the
+  // page's content (`LayoutDefinition.dispatch`) may serve several kinds.
+  it.each(CANONICAL_THEME_IDS)("%s gives each served kind its own face, unless the face dispatches by content", (id) => {
+    expect(repeatedFixedFaces(BUILTIN_THEME_FILES[id].menu.content), `${id} points two kinds at one face`).toEqual([])
+  })
+
+  it("refuses a fixed face named by two kinds, and lets a dispatching face serve several", () => {
+    expect(repeatedFixedFaces({ points: { face: "narrow-column" }, list: { face: "narrow-column" } })).toEqual(["narrow-column"])
+    expect(
+      repeatedFixedFaces({ points: { face: "gauge-sheet" }, list: { face: "gauge-sheet" }, data: { face: "gauge-sheet" } }),
+    ).toEqual([])
   })
 
   it.each(CANONICAL_THEME_IDS)("%s silences decoration only where the face draws its own", (id) => {

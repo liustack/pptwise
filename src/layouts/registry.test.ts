@@ -39,7 +39,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     }
   }
 
-  it("has exactly 130 layout-kind entries, all traceable to one of the four real registries", () => {
+  it("has exactly 133 layout-kind entries, all traceable to one of the four real registries", () => {
     const knownIds = new Set([
       ...Object.keys(COVER_LAYOUTS),
       ...Object.keys(CHAPTER_LAYOUTS),
@@ -53,7 +53,9 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // theme-locked, so none of them joins the shared automatic pools.
     // One-box-of-crayons adds five theme-locked pin-only faces: 118 -> 123.
     // Runway show adds seven pin-only faces: 123 -> 130.
-    expect(layoutEntries).toHaveLength(130)
+    // The brief sample redesign adds gauge-sheet, gauge-exhibit and
+    // gauge-figure, three theme-locked content faces: 130 -> 133.
+    expect(layoutEntries).toHaveLength(133)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -163,6 +165,8 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
         id === "one-evidence" ||
         id === "mono-bleed" ||
         id === "gauge-point" ||
+        id === "gauge-exhibit" ||
+        id === "gauge-figure" ||
         id === "crayonbox-point" ||
         id === "show-gallery" ||
         id === "show-spotlight" ||
@@ -187,6 +191,13 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
 
   it("gauge-point carries one attribution component", () => {
     expect(LAYOUT_REGISTRY["gauge-point"].slots.find((s) => s.name === "body")?.capacity).toBe(1)
+  })
+
+  it("gauge-sheet takes up to four blocks, and gauge-exhibit and gauge-figure one", () => {
+    const body = (id: string) => LAYOUT_REGISTRY[id].slots.find((s) => s.name === "body")
+    expect(body("gauge-sheet")).toMatchObject({ accepts: "any", capacity: 4 })
+    expect(body("gauge-exhibit")).toMatchObject({ accepts: "any", capacity: 1 })
+    expect(body("gauge-figure")).toMatchObject({ accepts: ["kpi_cards", "paragraph"], capacity: 1 })
   })
 
   it("crayonbox-point carries one attribution component", () => {
@@ -241,10 +252,10 @@ describe("layoutsForSlideType", () => {
     expect(layoutsForSlideType("ending")).toHaveLength(34)
   })
 
-  it("content includes both the 23 layouts and the 4 takeovers", () => {
+  it("content includes both the 26 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(23)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(26)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(27)
+    expect(contents).toHaveLength(30)
   })
 })
