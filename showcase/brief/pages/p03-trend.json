@@ -1,0 +1,61 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "combo",
+      "axes": {
+        "y_title": "Parcels (millions)",
+        "y2_title": "Last-mile cost per parcel",
+        "y2_unit": "$"
+      },
+      "series": [
+        {
+          "name": "Parcels",
+          "data": [
+            {
+              "x": "FY2023",
+              "y": 131
+            },
+            {
+              "x": "FY2024",
+              "y": 139
+            },
+            {
+              "x": "FY2025",
+              "y": 150
+            },
+            {
+              "x": "FY2026",
+              "y": 160
+            }
+          ]
+        },
+        {
+          "name": "Cost per parcel",
+          "plot": "line",
+          "axis": "right",
+          "data": [
+            {
+              "x": "FY2023",
+              "y": 4.1
+            },
+            {
+              "x": "FY2024",
+              "y": 4.45
+            },
+            {
+              "x": "FY2025",
+              "y": 4.9
+            },
+            {
+              "x": "FY2026",
+              "y": 5.35
+            }
+          ],
+          "emphasis": true
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Northwind finance and network data, FY2023 to FY2026"
+}
