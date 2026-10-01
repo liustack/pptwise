@@ -189,6 +189,35 @@ describe("waterfall component", () => {
     expect(t).toContain("-150万")
   })
 
+  // A bridge of cost per parcel: 4.10 to 5.35 by steps of 0.48, 0.37, 0.26,
+  // 0.09 and 0.05. Every label used to keep one decimal, so 0.09 and 0.05
+  // both read "+0.1" and the closing 5.35 read "5.3", and the dollar sign
+  // came after the number.
+  it("prints every bar with the decimals its values were written with, currency sign first", () => {
+    const bridge = {
+      type: "waterfall" as const,
+      unit: "$",
+      items: [
+        { label: "FY2023", value: 4.1, kind: "total" as const },
+        { label: "Failed first attempts", value: 0.48 },
+        { label: "Falling route density", value: 0.37 },
+        { label: "Driver overtime", value: 0.26 },
+        { label: "Fuel", value: 0.09 },
+        { label: "Other", value: 0.05 },
+        { label: "FY2026", value: 5.35, kind: "total" as const },
+      ],
+    }
+    const t = texts(svg(waterfall.render(bridge, { x: 0, y: 0, w: 1100, h: 420 }, ctx)).container)
+    for (const label of ["$4.10", "+$0.48", "+$0.37", "+$0.26", "+$0.09", "+$0.05", "$5.35"]) {
+      expect(t, label).toContain(label)
+    }
+  })
+
+  it("keeps whole-number bridges whole", () => {
+    const t = texts(svg(waterfall.render(basic, { x: 0, y: 0, w: 1000, h: 400 }, ctx)).container)
+    expect(t.some((s) => s?.includes("."))).toBe(false)
+  })
+
   it("box.h stretches the plot to fill the given height (no 1.7x cap)", () => {
     const shortRender = svg(waterfall.render(basic, { x: 0, y: 0, w: 1000, h: 420 }, ctx))
     const tallRender = svg(waterfall.render(basic, { x: 0, y: 0, w: 1000, h: 420 * 3 }, ctx))
