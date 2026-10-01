@@ -22,14 +22,14 @@ import type { DecorProps } from "./types"
  *     分：浅底线走 `border`、字走 `metaInk(muted)`；深底（brief 的 chapter
  *     是整版 primary）线和字都取「底色混可读墨」，即藏青底上的混白。
  *
+ * 守 branding 契约：这件页脚就是 deck 的页脚，所以和 Branding 的页脚一样
+ * 只在 `showsDocumentMeta` 为真（deck 声明 `branding: "full"`，且菜单没有
+ * `brand: "none"`）时出场，线和字一起出、一起不出。`cover-only`、`minimal`
+ * 与省略姿态下整件不画：那几种姿态承诺内容页没有页脚，motif 不另开口子。
+ *
  * 文字来源：
- *   - 机构名取 `meta.organization`。与 ink-motif 的落款列同一先例，不看
- *     deck branding 姿态（菜单 `brand: "none"` 时 FullSlideSvg 已经把 meta
- *     清空，这里自然不画）。
- *   - 保密标签取 `meta.confidentiality` 经 `CONF_LABEL` 映射，和所有封面、
- *     tone-adaptive-content 一样只在 `showsDocumentMeta` 为真（deck 声明
- *     `branding: "full"`）时出场。IR 契约写明其余姿态下 confidentiality 不上
- *     画布，motif 不另开口子。
+ *   - 机构名取 `meta.organization`。
+ *   - 保密标签取 `meta.confidentiality` 经 `CONF_LABEL` 映射。
  *
  * 线、字同属一件 `structure`：页脚是页面骨架，不是可退底的背景纹样。分区
  * 把它抬进前景，原色满画，不受内容页 3:1 装饰天花板约束（浅底 border 本来
@@ -87,13 +87,14 @@ export function folioInks(ctx: DecorProps["ctx"]): { rule: string; text: string 
 
 export function FolioMotif({ ir, slide, ctx, page }: DecorProps) {
   if (slide.type === "cover") return null
+  if (!showsDocumentMeta(page, ir, slide)) return null
   if (!clearsFaceFurniture(page, FOLIO_BOX)) return null
 
   const { rule, text } = folioInks(ctx)
   const font = ctx.fonts.body
 
   const orgSource = ir.meta.organization?.trim() ?? ""
-  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
+  const conf = ir.meta.confidentiality
   const confSource = conf ? CONF_LABEL[conf] : ""
 
   const org = orgSource

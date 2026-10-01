@@ -102,15 +102,27 @@ describe("FolioMotif", () => {
     expect(texts(root).map((t) => t.textContent)).toEqual(["Halden Partners", "Restricted"])
   })
 
-  it("keeps confidentiality off the canvas unless the deck declares full branding", () => {
-    // Same rule every cover face follows: other postures leave the field off.
-    const offPage = draw("content", { page: pageWith({ branding: "cover-only", documentMetaOn: false }) })
-    expect(texts(offPage.root).map((t) => t.textContent)).toEqual(["Halden Partners"])
-    // Rendered in isolation, the deck posture decides.
-    const omitted = draw("content")
-    expect(texts(omitted.root).map((t) => t.textContent)).toEqual(["Halden Partners"])
+  it.each(["cover-only", "minimal"] as const)(
+    "draws no footer at all, rule or words, when the deck's posture is %s",
+    (branding) => {
+      for (const type of ["chapter", "content", "ending"] as const) {
+        const { root } = draw(type, { page: pageWith({ branding, documentMetaOn: false }) })
+        expect(root.children, `${type} @ ${branding}`).toHaveLength(0)
+      }
+    },
+  )
+
+  it("follows the deck posture when rendered on its own: omitted is cover-only, full draws", () => {
+    expect(draw("content").root.children).toHaveLength(0)
+    expect(draw("content", { ir: { branding: "cover-only" } }).root.children).toHaveLength(0)
     const declared = draw("content", { ir: { branding: "full" } })
     expect(texts(declared.root).map((t) => t.textContent)).toEqual(["Halden Partners", "Confidential"])
+    expect(declared.root.querySelectorAll("line")).toHaveLength(1)
+  })
+
+  it("draws nothing on a page whose menu entry silences the brand", () => {
+    const { root } = draw("content", { ir: { branding: "full" }, page: pageWith({ brandOn: false, branding: "none", metadataOn: false, documentMetaOn: false }) })
+    expect(root.children).toHaveLength(0)
   })
 
   it("never prints a page number", () => {
