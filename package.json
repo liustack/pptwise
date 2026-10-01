@@ -2,6 +2,7 @@
   "name": "@liustack/pptwise",
   "version": "0.40.0",
   "description": "A real PowerPoint, not HTML. Editable .pptx decks for AI agents, rendered on your own machine.",
+  "homepage": "https://pptwise.com",
   "type": "module",
   "sideEffects": false,
   "license": "MIT",
@@ -76,7 +77,10 @@
     "dsh",
     "dsh-plugin"
   ],
-  "author": "Leon Liu",
+  "author": {
+    "name": "Leon Liu",
+    "url": "https://liustack.dev"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/liustack/pptwise.git"

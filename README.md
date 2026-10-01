@@ -160,6 +160,8 @@ Full reference: [`docs/cli.md`](./docs/cli.md).
 
 ## Credits
 
+pptwise is an open-source project by [liustack](https://liustack.dev).
+
 Icon primitives are extracted from [lucide](https://lucide.dev) (ISC License). pptwise itself was extracted from a production AI-deck-generation system and CJK-typography-tuned (full-width punctuation width, Chinese line breaking, a Chinese-first font stack, explicit east-asian font-slot declarations) from day one.
 
 ## License

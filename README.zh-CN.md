@@ -169,6 +169,8 @@ Deck 项目在 `deck.spec.json` 中绑定唯一主题，再把页面内容放进
 
 ## 致谢
 
+pptwise 是 [liustack](https://liustack.dev) 的开源项目。
+
 图标原语抽取自 [lucide](https://lucide.dev)（ISC License）。pptwise 本身从一套生产环境的 AI 出 PPT 系统中抽取而来，从第一天起就针对 CJK 排版做了优化（全角标点宽度、中文换行、雅黑优先字体栈、显式东亚字体槽声明）。
 
 ## License
