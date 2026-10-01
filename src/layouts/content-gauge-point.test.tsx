@@ -47,6 +47,38 @@ const textBy = (root: Element, value: string) =>
   Array.from(root.querySelectorAll("text")).find((text) => text.textContent === value)
 
 describe("content-gauge-point", () => {
+  // The face's story sets "a body quote or paragraph" below the claim, but a
+  // paragraph was set as the one-line source caption: three sentences of
+  // support were cut to their first line on a page with half its height free.
+  it("sets a paragraph as the body block under the claim, not as a one-line caption", () => {
+    const text =
+      "Northwind delivered 160 million parcels this year. The last mile cost $5.35 each, 41% of all delivery cost. Volume grew 22% in three years, and last-mile cost per parcel grew 30%."
+    const paragraphSlide = {
+      type: "content",
+      kind: "statement",
+      layout: "gauge-point",
+      heading: "Last mile is the cost line that keeps growing",
+      components: [{ type: "paragraph", text }],
+    } as Slide
+    const tokens = resolveStyle("brief")
+    const bg = resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.surface)
+    const ctx = buildCtx(tokens, {}, undefined, bg)
+    const root = parseSvgRoot(
+      renderSvgMarkup(
+        <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+          <GaugePointContent ir={{ ...ir, slides: [chapter, paragraphSlide] } as PptxIR} slide={paragraphSlide} index={1} ctx={ctx} />
+        </svg>,
+      ),
+    )
+    const body = Array.from(root.querySelectorAll("text")).filter(
+      (t) => Number(t.getAttribute("font-size")) <= 24 && /Northwind|cost|grew/.test(t.textContent ?? ""),
+    )
+    expect(body.length).toBeGreaterThan(1)
+    expect(body.map((t) => t.textContent).join(" ").replace(/\s+/g, " ")).toBe(text)
+    expect(root.querySelector("[data-truncated]")).toBeNull()
+    for (const line of body) expect(Number(line.getAttribute("y"))).toBeLessThan(664)
+  })
+
   it("places the kicker, one gold lead rule, and two statement lines at the approved coordinates", () => {
     const { root, tokens } = renderPoint()
     const kicker = textBy(root, "增长判断")!

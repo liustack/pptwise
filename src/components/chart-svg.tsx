@@ -2520,7 +2520,7 @@ export function renderDonut(
   const { r, slices } = layoutRadialSlices(data, total, cx, cy, x0, w, fullR, fontFamily)
   const ri = r * DONUT_HOLE_RATIO
   const labelFill = directLabelInk(textColor, bgHex)
-  const totalLabel = Number.isInteger(total) ? String(total) : total.toFixed(1)
+  const totalLabel = formatStackTotal(total)
   const fitted = fitSvgLine(totalLabel, { maxWidth: ri * 1.5, fontSize: 30, minFontSize: 16 })
   // The caption under the centre number used to be the literal word "Total",
   // printed on every deck in every language — a maintainer's word arriving on

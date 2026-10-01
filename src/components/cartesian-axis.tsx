@@ -1,5 +1,6 @@
 import type { ReactElement } from "react"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
+import { joinUnit } from "../lib/quantity-format"
 
 /**
  * Shared cartesian plot frame (scatter / bubble / line / area / bar).
@@ -355,12 +356,10 @@ export function formatNiceNumber(value: number): string {
   return String(Number(value.toPrecision(12)))
 }
 
-/** `%` glues to the number. Other units sit after a space (`2 周`, `4 weeks`). */
+/** `%` glues to the number, a currency sign leads it (`$6`), and other
+ *  units sit after a space (`2 周`, `4 weeks`). */
 export function formatAxisTick(value: number, unit?: string): string {
-  const n = formatNiceNumber(value)
-  if (!unit) return n
-  if (unit === "%" || unit === "％") return `${n}%`
-  return `${n} ${unit}`
+  return joinUnit(formatNiceNumber(value), unit, " ")
 }
 
 /**

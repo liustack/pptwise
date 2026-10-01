@@ -131,6 +131,12 @@ describe("formatAxisTick", () => {
     expect(formatAxisTick(80)).toBe("80")
   })
 
+  it("prints a currency sign before the tick, not after it", () => {
+    expect(formatAxisTick(6, "$")).toBe("$6")
+    expect(formatAxisTick(-2, "$")).toBe("-$2")
+    expect(formatAxisTick(40, "$M")).toBe("$40M")
+  })
+
   it("prints every digit a tick has, so neighbouring ticks never share a label", () => {
     // One or two decimals printed 0.999999, 1, 1.000001 and 1.000002 all as
     // "1", and 10.25 as "10.3", a number the axis does not mark.

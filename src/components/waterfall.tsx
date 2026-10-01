@@ -6,6 +6,7 @@ import { accessibleInk } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { mostlyChinese } from "../lib/text-script"
+import { joinUnit } from "../lib/quantity-format"
 
 type WaterfallComponent = Extract<Component, { type: "waterfall" }>
 type WaterfallItem = WaterfallComponent["items"][number]
@@ -149,10 +150,24 @@ function fillFor(kind: BarKind, ctx: ComponentCtx): string {
   }
 }
 
-function formatValue(v: number, unit: string | undefined, signed: boolean): string {
-  const sign = signed && v > 0 ? "+" : ""
-  const num = Number.isInteger(v) ? String(v) : v.toFixed(1)
-  return `${sign}${num}${unit ?? ""}`
+/** The most decimals any label prints, past which a bridge is not read. */
+const MAX_DECIMALS = 4
+
+/** Decimal places `v` was written with, read from its shortest form. */
+function decimalsOf(v: number): number {
+  const text = String(Number(v.toPrecision(12)))
+  const dot = text.indexOf(".")
+  return dot < 0 || /e/i.test(text) ? 0 : text.length - dot - 1
+}
+
+/**
+ * Every bar prints the same number of decimals, the most any authored value
+ * was written with: a bridge from 4.10 by 0.48 and 0.05 reads 4.10, +0.48,
+ * +0.05, never 4.1 and +0.1. A unit glues on, and a currency sign leads.
+ */
+function formatValue(v: number, unit: string | undefined, signed: boolean, decimals: number): string {
+  const sign = v < 0 ? "-" : signed && v > 0 ? "+" : ""
+  return joinUnit(`${sign}${Math.abs(v).toFixed(decimals)}`, unit, "")
 }
 
 interface CategoryLabel {
@@ -221,6 +236,7 @@ export const waterfall: SvgComponent<WaterfallComponent> = {
   render(component, box, ctx) {
     const h = box.h ?? NATURAL_H
     const bars = computeBars(component.items)
+    const decimals = Math.min(MAX_DECIMALS, Math.max(0, ...component.items.map((item) => decimalsOf(item.value))))
     if (pastAxisLimit(bars)) return <DroppedContentMarker count={1} kind="component" />
     const g = geom(bars, box.w, h)
     const bg = ctx.defaultBg ?? ctx.colors.bg
@@ -271,7 +287,7 @@ export const waterfall: SvgComponent<WaterfallComponent> = {
           }
           const barH = yBot - yTop
           const above = bar.displayValue >= 0
-          const valueText = fitSvgLine(formatValue(bar.displayValue, component.unit, bar.kind !== "total"), {
+          const valueText = fitSvgLine(formatValue(bar.displayValue, component.unit, bar.kind !== "total", decimals), {
             maxWidth: g.colW - 4,
             fontSize: VALUE_FONT,
             minFontSize: VALUE_MIN_FONT,

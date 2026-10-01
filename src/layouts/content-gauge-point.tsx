@@ -65,8 +65,14 @@ export function GaugePointContent({ ir, slide, index, ctx }: SvgTemplateProps) {
     typeScale: ctx.shape?.typeScale,
   })
   const lines = statementLines(slide)
-  const quote = lines.quote
-    ? fitEmphasisText(lines.quote, {
+  // The story sets "a body quote or paragraph" under the claim. A paragraph
+  // is support for the claim, not its source: it takes the quote's body
+  // block, at text weight, and the source line stays for an attribution.
+  const paragraph = slide.components[0]?.type === "paragraph"
+  const bodyText = paragraph ? lines.source : lines.quote
+  const sourceText = paragraph ? undefined : lines.source
+  const quote = bodyText
+    ? fitEmphasisText(bodyText, {
         maxWidth: SOURCE_MAX_W,
         fontSize: QUOTE_SIZE,
         maxLines: QUOTE_MAX_LINES,
@@ -75,8 +81,8 @@ export function GaugePointContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         fontFamily: fonts.body,
       })
     : null
-  const source = lines.source
-    ? fitSvgLine(lines.source, {
+  const source = sourceText
+    ? fitSvgLine(sourceText, {
         maxWidth: SOURCE_MAX_W,
         fontSize: SOURCE_SIZE,
         minFontSize: SOURCE_SIZE,
@@ -132,7 +138,7 @@ export function GaugePointContent({ ir, slide, index, ctx }: SvgTemplateProps) {
           headingEmphasisPaint(ctx, quote, {
             baseFill: accessibleInk(colors.text, bg, quote.fontSize),
             fontFamily: fonts.body,
-            fontWeight: "600",
+            fontWeight: paragraph ? "400" : "600",
             bold: false,
           }),
           (_line, lineIndex) => (
