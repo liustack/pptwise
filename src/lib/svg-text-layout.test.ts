@@ -986,6 +986,32 @@ describe("allowsLineBreakBetween", () => {
     expect(allowsLineBreakBetween(")", "n")).toBe(true)
   })
 
+  it("keeps a number with the unit that counts it, and a magnitude with what it scales", () => {
+    expect(allowsLineBreakBetween("2", "个")).toBe(false)
+    expect(allowsLineBreakBetween("8", "家")).toBe(false)
+    expect(allowsLineBreakBetween("0", "万")).toBe(false)
+    expect(allowsLineBreakBetween("3", "亿")).toBe(false)
+    expect(allowsLineBreakBetween("亿", "元")).toBe(false)
+    expect(allowsLineBreakBetween("万", "人")).toBe(false)
+    // Neither rule reaches past the unit, or into Latin text.
+    expect(allowsLineBreakBetween("元", "降")).toBe(true)
+    expect(allowsLineBreakBetween("亿", "降")).toBe(true)
+    expect(allowsLineBreakBetween("2", "a")).toBe(true)
+  })
+
+  it("wraps a Chinese sentence without splitting a figure from its unit", () => {
+    const text =
+      "四年里我们净增了 144 家门店，门店层利润却从 3.08 亿元降到了 1.93 亿元。412 家门店中，38 家已经连续 12 个月亏损，去年合计亏掉 2,860 万元。"
+    for (const maxWidth of [600, 700, 760, 820, 880]) {
+      const { lines } = layoutSvgText(text, { maxWidth, fontSize: 27, maxLines: 6 })
+      for (let i = 1; i < lines.length; i += 1) {
+        const before = lines[i - 1]!.trimEnd()
+        const after = lines[i]!.trimStart()
+        expect(`${before}|${after}`).not.toMatch(/[0-9]\|[万亿元家个月]|亿\|元|万\|元/)
+      }
+    }
+  })
+
   it("treats ASCII sentence punctuation and straight quotes as freely breakable, keeping English wrapping untouched", () => {
     // Direction-ambiguous or Latin-context marks, deliberately excluded from
     // both sets — see the set-selection comment in svg-text-layout.ts.

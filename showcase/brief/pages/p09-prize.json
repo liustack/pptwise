@@ -1,5 +1,0 @@
-{
-  "components": [
-    { "type": "kpi_cards", "items": [ { "value": "$154M", "unit": "a year", "label": "Saving at run rate, from month 12", "source": "$0.96 off each of 160 million parcels" } ] }
-  ]
-}
