@@ -1,8 +1,8 @@
-<p align="center"><img src="assets/banner.png" alt="pptwise: A real PowerPoint, not a picture." width="100%"></p>
+<p align="center"><img src="assets/banner.png" alt="pptwise: A real PowerPoint, not HTML." width="100%"></p>
 
 <h1 align="center">pptwise</h1>
 
-<p align="center"><b>A real PowerPoint, not a picture.</b></p>
+<p align="center"><b>A real PowerPoint, not HTML.</b></p>
 
 <p align="center">🥇 <b>The most powerful deck-generation plugin for DeepSeek Harness (dsh)</b> 🥇</p>
 
@@ -159,6 +159,8 @@ Full reference: [`docs/cli.md`](./docs/cli.md).
 | [CHANGELOG](./CHANGELOG.md) | Finding what changed in a version |
 
 ## Credits
+
+pptwise is an open-source project by [liustack](https://liustack.dev).
 
 Icon primitives are extracted from [lucide](https://lucide.dev) (ISC License). pptwise itself was extracted from a production AI-deck-generation system and CJK-typography-tuned (full-width punctuation width, Chinese line breaking, a Chinese-first font stack, explicit east-asian font-slot declarations) from day one.
 

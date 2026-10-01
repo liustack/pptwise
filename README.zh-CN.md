@@ -1,8 +1,8 @@
-<p align="center"><img src="assets/banner.png" alt="pptwise：真正的 PPT，不是图片" width="100%"></p>
+<p align="center"><img src="assets/banner.png" alt="pptwise：真正的 PPT，不是 HTML" width="100%"></p>
 
 <h1 align="center">pptwise</h1>
 
-<p align="center"><b>真正的 PPT，不是图片</b></p>
+<p align="center"><b>真正的 PPT，不是 HTML</b></p>
 
 <p align="center">🥇 <b>全网最强的 DeepSeek Harness PPT 生成插件</b> 🥇</p>
 
@@ -168,6 +168,8 @@ Deck 项目在 `deck.spec.json` 中绑定唯一主题，再把页面内容放进
 ⭐ 如果 pptwise 对你有用，请给[项目](https://github.com/liustack/pptwise)一个 star，并在 X 关注 **[@liustack](https://x.com/liustack)**。这是让更多开发者找到它最直接的方式。
 
 ## 致谢
+
+pptwise 是 [liustack](https://liustack.dev) 的开源项目。
 
 图标原语抽取自 [lucide](https://lucide.dev)（ISC License）。pptwise 本身从一套生产环境的 AI 出 PPT 系统中抽取而来，从第一天起就针对 CJK 排版做了优化（全角标点宽度、中文换行、雅黑优先字体栈、显式东亚字体槽声明）。
 
