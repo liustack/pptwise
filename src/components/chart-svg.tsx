@@ -3,6 +3,7 @@ import type { ChartSeries, Component } from "@/ir"
 import { CHART_AXIS_LIMIT } from "@/ir/components/chart"
 import { accessibleInk } from "../render/ink"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
+import { joinUnit } from "../lib/quantity-format"
 import { axisTitlePairHeight, renderCartesianAxisTitles } from "./axis-titles"
 import {
   buildAlignedNumericAxis,
@@ -3067,21 +3068,32 @@ function formatStackTotal(value: number): string {
 function placeValueLabelsTogether(
   specs: readonly ValueLabelSpec[],
   marks: readonly DepthBox[],
-  bounds: { readonly left: number; readonly right: number; readonly top: number; readonly bottom: number },
+  bounds: LabelBounds,
 ): PlacedValueLabel[] | null {
   const placed = resolveValueLabelCollisions(specs)
   if (placed.some((label) => label.hidden)) return null
-  const boxes = placed.map(valueLabelBox)
+  return labelsClear(placed.map(valueLabelBox), marks, bounds) ? placed : null
+}
+
+type LabelBounds = { readonly left: number; readonly right: number; readonly top: number; readonly bottom: number }
+
+/**
+ * True when every label box, exactly where it stands, sits inside `bounds`,
+ * off every mark and off every other label box. The check
+ * `placeValueLabelsTogether` applies after its resolver has moved what it
+ * could.
+ */
+function labelsClear(boxes: readonly DepthBox[], marks: readonly DepthBox[], bounds: LabelBounds): boolean {
   for (let i = 0; i < boxes.length; i++) {
     const box = boxes[i]!
-    if (box.x < bounds.left || box.x + box.w > bounds.right) return null
-    if (box.y < bounds.top || box.y + box.h > bounds.bottom) return null
-    if (marks.some((mark) => boxesIntersect(box, mark))) return null
+    if (box.x < bounds.left || box.x + box.w > bounds.right) return false
+    if (box.y < bounds.top || box.y + box.h > bounds.bottom) return false
+    if (marks.some((mark) => boxesIntersect(box, mark))) return false
     for (let j = i + 1; j < boxes.length; j++) {
-      if (boxesIntersect(box, boxes[j]!)) return null
+      if (boxesIntersect(box, boxes[j]!)) return false
     }
   }
-  return placed
+  return true
 }
 
 /**
@@ -3310,11 +3322,17 @@ export function renderStacked(
  * axis that carries a bar keeps zero in range, because a bar is measured from
  * zero. An axis of lines alone picks its range the way `renderLine` does.
  *
- * **No value labels.** A line crossing the bars leaves no place above a bar
- * that the line cannot also pass through, which is exactly the trap that took
- * `renderLine`'s own labels off the plot. The axes carry the numbers, and
- * gridlines default to on for the same reason `renderLine` keeps them: they
- * are the only way to read an interior value.
+ * **No value labels, except on a marked line.** A line crossing the bars
+ * leaves no place above a bar that the line cannot also pass through, which is
+ * exactly the trap that took `renderLine`'s own labels off the plot. The axes
+ * carry the numbers, and gridlines default to on for the same reason
+ * `renderLine` keeps them: they are the only way to read an interior value.
+ * The one exception is a line series the author marked with `emphasis`: that
+ * line is what the page is about, so each of its points prints its value just
+ * above itself, with the unit of the axis it reads against. The labels are
+ * not moved to make room. If any one of them would touch a bar, a dot, a line
+ * or another label, or leave the plot, none of them is painted
+ * (`comboPointLabels`), and the axis still carries every value.
  *
  * Each line runs over a halo in the page background, so where it crosses a
  * bar of a similar color it still reads as a line. A point with no neighbour
@@ -3324,6 +3342,114 @@ const COMBO_CLUSTER_RATIO = 0.6
 const COMBO_LINE_W = 2.5
 const COMBO_LINE_HALO_W = 6
 const COMBO_DOT_R = 4
+/** A combo dot's own stroke, the halo ring drawn round it. */
+const COMBO_DOT_STROKE = 1.5
+/** The most decimals a marked line's point label prints. */
+const POINT_LABEL_MAX_DECIMALS = 4
+/** Side margin of the background plate under a point label. */
+const POINT_PLATE_PAD_X = 3
+
+/** The box a combo dot paints, its stroke included. */
+function dotBox(p: { x: number; y: number }): DepthBox {
+  const r = COMBO_DOT_R + COMBO_DOT_STROKE / 2
+  return { x: p.x - r, y: p.y - r, w: r * 2, h: r * 2 }
+}
+
+/** Decimal places `v` was written with, read from its shortest form. */
+function decimalsOf(v: number): number {
+  const text = String(Number(v.toPrecision(12)))
+  const dot = text.indexOf(".")
+  return dot < 0 || /e/i.test(text) ? 0 : text.length - dot - 1
+}
+
+/** True when the segment from `a` to `b` passes through `box` (Liang-Barsky). */
+function segmentCrossesBox(a: { x: number; y: number }, b: { x: number; y: number }, box: DepthBox): boolean {
+  const dx = b.x - a.x
+  const dy = b.y - a.y
+  let t0 = 0
+  let t1 = 1
+  const edges: [number, number][] = [
+    [-dx, a.x - box.x],
+    [dx, box.x + box.w - a.x],
+    [-dy, a.y - box.y],
+    [dy, box.y + box.h - a.y],
+  ]
+  for (const [p, q] of edges) {
+    if (p === 0) {
+      if (q < 0) return false
+      continue
+    }
+    const t = q / p
+    if (p < 0) t0 = Math.max(t0, t)
+    else t1 = Math.min(t1, t)
+    if (t0 > t1) return false
+  }
+  return true
+}
+
+/**
+ * The background plate under a point label: its ink box widened to every
+ * row a gridline could strike it through (from 0.9em above the baseline to
+ * 0.2em below), so a gridline running under the label stops at its edge
+ * instead of crossing its letters.
+ */
+function pointPlateBox(label: ValueLabelSpec): DepthBox {
+  const ink = valueLabelBox(label)
+  return {
+    x: ink.x - POINT_PLATE_PAD_X,
+    y: label.y - label.fontSize * 0.9,
+    w: ink.w + POINT_PLATE_PAD_X * 2,
+    h: label.fontSize * 1.1,
+  }
+}
+
+/**
+ * A marked combo line's point labels, every one of them or none.
+ *
+ * Each value sits centered just above its own dot, printed with the decimals
+ * the series was written with (4.10 beside 4.45, never 4.1) and the unit of
+ * the axis the line reads against, a currency sign leading (`joinUnit`). The
+ * labels are not nudged: a label moved off its dot reads as some other
+ * point's value. So the check is plain. If any label would leave the plot,
+ * touch a bar, a dot, a line segment or another label, none is painted. No
+ * drop is declared, because nothing the author wrote leaves the page: the
+ * axis still carries every value.
+ *
+ * Each label stands on a plate in the page background (`pointPlateBox`), so
+ * a gridline behind it breaks at the label rather than striking it through.
+ * The checks run on the plate, which is what the label covers.
+ */
+function comboPointLabels(opts: {
+  points: readonly { x: number; y: number; value: number }[]
+  unit?: string
+  fontFamily?: string
+  bars: readonly DepthBox[]
+  dots: readonly DepthBox[]
+  segments: readonly (readonly [{ x: number; y: number }, { x: number; y: number }])[]
+  bounds: LabelBounds
+}): { label: ValueLabelSpec; plate: DepthBox }[] {
+  const decimals = Math.min(POINT_LABEL_MAX_DECIMALS, Math.max(0, ...opts.points.map((p) => decimalsOf(p.value))))
+  const labels: ValueLabelSpec[] = opts.points.map((p, i) => ({
+    id: `point-${i}`,
+    text: joinUnit(p.value.toFixed(decimals), opts.unit, " "),
+    x: p.x,
+    y: p.y - COMBO_DOT_R - VALUE_LABEL_GAP,
+    anchor: "middle",
+    fontSize: VALUE_FONT_SIZE,
+    fontFamily: opts.fontFamily,
+    priority: 100,
+  }))
+  const plates = labels.map(pointPlateBox)
+  if (!labelsClear(plates, [...opts.bars, ...opts.dots], opts.bounds)) return []
+  // A line is drawn over a halo, so its ink runs half the halo's width
+  // either side of the segment.
+  const reach = COMBO_LINE_HALO_W / 2
+  const crossed = plates.some((plate) => {
+    const box = { x: plate.x - reach, y: plate.y - reach, w: plate.w + reach * 2, h: plate.h + reach * 2 }
+    return opts.segments.some(([a, b]) => segmentCrossesBox(a, b, box))
+  })
+  return crossed ? [] : labels.map((label, i) => ({ label, plate: plates[i]! }))
+}
 
 export function renderCombo(
   series: ChartSeries[],
@@ -3333,7 +3459,7 @@ export function renderCombo(
   w: number,
   h: number,
   mutedColor: string,
-  _textColor: string,
+  textColor: string,
   _accentColor: string,
   showGrid = true,
   component?: ChartInput,
@@ -3404,6 +3530,7 @@ export function renderCombo(
   const nb = barSeries.length
   const perBarW = nb <= 1 ? clusterW : Math.max(1, (clusterW - (nb - 1) * BAR_GROUP_EDGE_GAP) / nb)
 
+  const barBoxes: DepthBox[] = []
   const bars = categories.map((cat, i) => {
     const clusterX = centerOf(i) - clusterW / 2
     const rects: ReactElement[] = []
@@ -3412,6 +3539,7 @@ export function renderCombo(
       if (v == null || v === 0) return
       const top = yOf(Math.max(v, 0), s.seriesIndex)
       const bottom = yOf(Math.min(v, 0), s.seriesIndex)
+      barBoxes.push({ x: clusterX + k * (perBarW + BAR_GROUP_EDGE_GAP), y: top, w: perBarW, h: bottom - top })
       rects.push(
         <rect
           key={s.seriesIndex}
@@ -3427,12 +3555,11 @@ export function renderCombo(
     return <g key={cat.key}>{rects}</g>
   })
 
-  const lines = lineSeries.map((s) => {
-    const color = palette[s.seriesIndex % palette.length]
-    type Pt = { x: number; y: number }
+  type Pt = { x: number; y: number }
+  const lineGeoms = lineSeries.map((s) => {
     const runs: Pt[][] = []
     let run: Pt[] = []
-    const points: Pt[] = []
+    const points: (Pt & { value: number })[] = []
     categories.forEach((_cat, i) => {
       const v = s.values[i]
       if (v == null) {
@@ -3442,10 +3569,27 @@ export function renderCombo(
       }
       const p = { x: centerOf(i), y: yOf(v, s.seriesIndex) }
       run.push(p)
-      points.push(p)
+      points.push({ ...p, value: v })
     })
     if (run.length > 0) runs.push(run)
-    const drawn = runs.filter((r) => r.length >= 2)
+    return { s, points, drawn: runs.filter((r) => r.length >= 2) }
+  })
+  const marked = lineGeoms.find((g) => series[g.s.seriesIndex]?.emphasis === true)
+  const pointLabels = marked
+    ? comboPointLabels({
+        points: marked.points,
+        unit: onRight(marked.s.seriesIndex) ? meta.y2Unit : meta.yUnit,
+        fontFamily,
+        bars: barBoxes,
+        dots: lineGeoms.flatMap((g) => g.points.map((p) => dotBox(p))),
+        segments: lineGeoms.flatMap((g) => g.drawn.flatMap((r) => r.slice(1).map((p, k) => [r[k]!, p] as const))),
+        bounds: { left: geom.plotX, right: geom.plotX + geom.plotW, top: y0, bottom: geom.plotY + geom.plotH },
+      })
+    : []
+  const pointLabelInk = directLabelInk(textColor, bgHex)
+
+  const lines = lineGeoms.map(({ s, points, drawn }) => {
+    const color = palette[s.seriesIndex % palette.length]
     const pts = (r: Pt[]) => r.map((p) => `${p.x},${p.y}`).join(" ")
     return (
       <g key={s.seriesIndex}>
@@ -3479,7 +3623,7 @@ export function renderCombo(
             cy={p.y}
             r={COMBO_DOT_R}
             fill={color}
-            {...(bgHex ? { stroke: bgHex, strokeWidth: 1.5 } : {})}
+            {...(bgHex ? { stroke: bgHex, strokeWidth: COMBO_DOT_STROKE } : {})}
           />
         ))}
       </g>
@@ -3505,6 +3649,24 @@ export function renderCombo(
       })}
       {bars}
       {lines}
+      {pointLabels.map(({ label, plate }) => (
+        <g key={label.id}>
+          {bgHex ? <rect x={plate.x} y={plate.y} width={plate.w} height={plate.h} fill={bgHex} /> : null}
+          <text
+            data-value-label="1"
+            x={label.x}
+            y={label.y}
+            textAnchor="middle"
+            fontSize={VALUE_FONT_SIZE}
+            fontWeight={VALUE_FONT_WEIGHT}
+            fill={pointLabelInk}
+            fontFamily={fontFamily}
+            dominantBaseline="alphabetic"
+          >
+            {label.text}
+          </text>
+        </g>
+      ))}
       {renderCartesianAxisTitles({
         plotX: geom.plotX,
         plotBottom: geom.titleY,

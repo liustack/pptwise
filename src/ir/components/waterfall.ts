@@ -20,6 +20,14 @@ export const schema = z
             label: z.string(),
             value: z.number(),
             kind: z.enum(["delta", "total"]).optional(),
+            /** Marks the bars the page is about. Marked bars run in one
+             * unbroken stretch and are never a total. */
+            emphasis: z
+              .boolean()
+              .optional()
+              .describe(
+                "Marks a bar the page is about. Marked bars must sit next to each other and cannot be a total. The rest of the bridge recedes to grey.",
+              ),
           })
           .strict()
       )
@@ -27,9 +35,44 @@ export const schema = z
       .max(8),
     /** 数值单位后缀（如「万」「%」），附加在每条数值标签之后，纯展示。 */
     unit: z.string().optional(),
+    /** One line printed over the marked bars, naming what they add up to. */
+    emphasis_label: z
+      .string()
+      .refine((value) => value.trim().length > 0, {
+        error: "waterfall emphasis_label is blank. Write the line that names the marked bars, or remove the field.",
+      })
+      .optional()
+      .describe("One line printed above the marked bars, saying what they add up to. Needs at least one item with emphasis: true."),
   })
   .strict()
   .superRefine((c, ctx) => {
+    // The marked bars are read as one group under one bracket, so they have
+    // to stand side by side, and a total is where the bridge lands rather
+    // than a step in it. The label names that group, so it needs one.
+    const marked = c.items.flatMap((item, i) => (item.emphasis === true ? [i] : []))
+    for (const i of marked) {
+      if (c.items[i]!.kind !== "total") continue
+      ctx.addIssue({
+        code: "custom",
+        path: ["items", i, "emphasis"],
+        message: `items[${i}] ("${c.items[i]!.label}") is a total, and a total is where the bridge lands, not a step that moved it. Mark the steps that explain the change instead.`,
+      })
+    }
+    const gap = marked.findIndex((i, k) => k > 0 && i !== marked[k - 1]! + 1)
+    if (gap > 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["items", marked[gap]!, "emphasis"],
+        message: `the marked bars are read as one group under one bracket, so they must sit next to each other, and items[${marked[gap - 1]}] and items[${marked[gap]}] have unmarked bars between them. Reorder the items so the marked ones are adjacent, or mark only one run of them.`,
+      })
+    }
+    if (c.emphasis_label !== undefined && marked.length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["emphasis_label"],
+        message: `emphasis_label names the marked bars, and no item has emphasis: true. Set emphasis: true on the bars the label adds up, or remove emphasis_label.`,
+      })
+    }
     // Every bar is read against one value axis that runs from the lowest
     // running total to the highest. Past `CHART_AXIS_LIMIT` that axis cannot
     // be drawn: two bars of 1.7e308 overflow the running total to Infinity,

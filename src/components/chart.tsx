@@ -1,7 +1,14 @@
 import type { Component } from "@/ir";
-import { SINGLE_SERIES_TYPES } from "@/ir/components/chart";
+import {
+  SERIES_EMPHASIS_TYPES,
+  SINGLE_SERIES_TYPES,
+} from "@/ir/components/chart";
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout";
-import { rotateChartPalette } from "../render/chart-palette";
+import {
+  emphasisSeriesPalette,
+  recededMarkFill,
+  rotateChartPalette,
+} from "../render/chart-palette";
 import { accessibleInk } from "../render/ink";
 import { axisTitlePairHeight } from "./axis-titles";
 import {
@@ -366,6 +373,20 @@ function layoutChartLegend(
   return { slots: [], droppedCount: prepared.length, groupW: 0 };
 }
 
+const SERIES_EMPHASIS: ReadonlySet<ChartComponent["chart_type"]> = new Set(
+  SERIES_EMPHASIS_TYPES
+);
+
+/**
+ * The series `series[].emphasis` singles out, or -1. validate holds the mark
+ * to one series, on a chart type that colors its series one by one, among
+ * at least two (`ir/components/chart.ts`), so the first mark is the mark.
+ */
+function markedSeriesIndex(component: ChartComponent): number {
+  if (!SERIES_EMPHASIS.has(component.chart_type)) return -1;
+  return component.series.findIndex((s) => s.emphasis === true);
+}
+
 function hasHeaderRow(component: ChartComponent): boolean {
   return legendApplicable(component);
 }
@@ -563,11 +584,26 @@ export const chart: SvgComponent<ChartComponent> = {
     // own doc comment for the leak this seam fixes). `ctx.chartPaletteOffset`
     // undefined/0 rotates to a same-values copy (`rotateChartPalette`'s own
     // doc comment) — a byte-identical multiset either way.
-    const palette = rotateChartPalette(
+    const rotated = rotateChartPalette(
       ctx.colors.chartPalette,
       ctx.chartPaletteOffset ?? 0
     );
     const legendBg = ctx.defaultBg ?? ctx.colors.bg;
+    // A marked series keeps the lead color and every other series recedes
+    // to one grey, so the page reads as one series against its context.
+    // Remapped after rotation, on the one array every renderer and the
+    // legend both read, so swatch and mark cannot disagree. Unmarked charts
+    // take the rotated palette untouched.
+    const marked = markedSeriesIndex(component);
+    const palette =
+      marked < 0
+        ? rotated
+        : emphasisSeriesPalette(
+            rotated,
+            component.series.length,
+            marked,
+            recededMarkFill(ctx.colors.muted, legendBg)
+          );
     const bodyFace = ctx.fonts.body;
 
     const hasLegend = legendApplicable(component);

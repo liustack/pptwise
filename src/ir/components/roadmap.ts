@@ -18,6 +18,12 @@ export const schema = z
               .array(z.object({ label: z.string(), value: z.string() }).strict())
               .max(4)
               .optional(),
+            /** Marks the one phase the page is about: its card alone keeps
+             * the accent bar, and the others take the primary color. */
+            emphasis: z
+              .boolean()
+              .optional()
+              .describe("Marks the one phase the page is about. Its card keeps the accent bar and the others turn primary. At most one item."),
           })
           .strict()
       )
@@ -25,6 +31,18 @@ export const schema = z
       .max(4),
   })
   .strict()
+  .superRefine((c, ctx) => {
+    // The accent bar singles one phase out, so two marked phases single out
+    // nothing.
+    const marked = c.items.flatMap((item, i) => (item.emphasis === true ? [i] : []))
+    if (marked.length > 1) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["items", marked[1]!, "emphasis"],
+        message: `roadmap marks ${marked.length} phases with emphasis, and the accent bar singles out one. Keep emphasis on the phase the page is about.`,
+      })
+    }
+  })
 
 export const aliases = {} satisfies ComponentAliasSpec
 

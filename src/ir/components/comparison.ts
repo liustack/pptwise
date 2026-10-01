@@ -40,9 +40,26 @@ export const schema = z
         .object({ label: z.string(), cells: z.array(z.string()) })
         .strict()
     ),
+    /** Index into `columns` of the option the page recommends. Its header
+     * and cells are set in the primary color, bold. */
+    recommended: z
+      .number()
+      .int()
+      .nonnegative()
+      .optional()
+      .describe(
+        "Index into columns (0 is the first) of the one option the page recommends. Its header and cells are set bold in the primary color.",
+      ),
   })
   .strict()
   .superRefine((c, ctx) => {
+    if (c.recommended !== undefined && c.recommended >= c.columns.length) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["recommended"],
+        message: `comparison recommended is ${c.recommended}, and columns has ${c.columns.length} entr${c.columns.length === 1 ? "y" : "ies"}, so there is no column ${c.recommended} to mark. Columns count from 0: use 0 to ${Math.max(0, c.columns.length - 1)}.`,
+      })
+    }
     c.rows.forEach((row, i) => {
       if (row.cells.length > c.columns.length) {
         ctx.addIssue({

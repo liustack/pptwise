@@ -12,6 +12,10 @@ type RoadmapItem = RoadmapComponent["items"][number]
  * 阶段横排圆角卡，自动编号 01..N。每卡＝顶部 accent 条（上圆角，随卡片
  * 圆角，修手绘直角戳圆角的旧缺陷）+ 圆形深色编号徽章 + 可选时段 + 粗标题
  * + 若干 `label:value` 指标行。文本全实测决定卡高。
+ *
+ * An author who marks one phase (`items[].emphasis`) singles it out by its
+ * bar: that card alone keeps the accent bar, and every other card's bar
+ * turns primary. With nothing marked every bar is accent, as before.
  */
 const GAP = 24
 const PAD_X = 22
@@ -192,6 +196,7 @@ function renderCard(
   cardW: number,
   cardH: number,
   ctx: ComponentCtx,
+  barFill: string,
 ): React.ReactElement {
   const r = ctx.shape?.radius ?? CARD_RADIUS
   const cx = x + PAD_X + BADGE_R
@@ -210,7 +215,7 @@ function renderCard(
         fill={ctx.colors.surface}
         {...(ctx.colors.cardStroke ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 } : {})}
       />
-      <path d={roundedTopBarPath(x, y, cardW, BAR_H, r)} fill={ctx.colors.accent} />
+      <path d={roundedTopBarPath(x, y, cardW, BAR_H, r)} fill={barFill} />
       <circle cx={cx} cy={cy} r={BADGE_R} fill={ctx.colors.primary} />
       {/* Bench-driven fix round, defect A reclassification (Task 3
           handoff): same unguarded `fill="#FFFFFF"`-on-`colors.primary`
@@ -320,10 +325,13 @@ export const roadmap: SvgComponent<RoadmapComponent> = {
     const measuredH = Math.max(...layouts.map((l) => l.cardH))
     // 均分密度拉伸：box.h 由布局分配时，卡高吃满（内容顶对齐，底部留白）。
     const cardH = Math.max(measuredH, box.h ?? measuredH)
+    const marked = component.items.some((item) => item.emphasis === true)
+    const barFill = (item: RoadmapItem) =>
+      !marked || item.emphasis === true ? ctx.colors.accent : ctx.colors.primary
     return (
       <g>
         {layouts.map((layout, i) =>
-          renderCard(layout, i, box.x + i * (cardW + GAP), box.y, cardW, cardH, ctx),
+          renderCard(layout, i, box.x + i * (cardW + GAP), box.y, cardW, cardH, ctx, barFill(component.items[i]!)),
         )}
       </g>
     )
