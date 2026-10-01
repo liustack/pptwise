@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import { it, expect } from "vitest"
-import { textToOp } from "./text"
+import { textToOps, type TextOp } from "./text"
+
+/** The one box a single-baseline `<text>` exports to. */
+function textToOp(el: Element): TextOp {
+  const ops = textToOps(el)
+  if (ops.length !== 1) throw new Error(`expected one text op, got ${ops.length}`)
+  return ops[0]!
+}
 
 function parseText(svg: string): Element {
   const doc = new DOMParser().parseFromString(svg, "image/svg+xml")

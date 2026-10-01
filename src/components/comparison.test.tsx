@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import { comparison } from "./comparison"
 import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
+import { contrastRatio } from "../render/ink"
 import type { ComponentCtx } from "./types"
 
 const ctx: ComponentCtx = {
@@ -477,3 +478,81 @@ describe("comparison in a box shorter than its wrapped rows", () => {
   })
 })
 
+
+describe("comparison marks and a recommended column", () => {
+  const options = {
+    type: "comparison" as const,
+    columns: ["Add 600 vans", "Fix density first"],
+    rows: [
+      { label: "Cost to Northwind", cells: ["$210M capital", "$38M over 12 months"] },
+      { label: "Cost per parcel", cells: ["4% lower", "**18% lower**"] },
+    ],
+  }
+  const brief = boundThemeCtx("brief", {})
+  const lecture = boundThemeCtx("lecture", {})
+  const box = { x: 0, y: 0, w: 1000 }
+  const texts = (container: Element) => Array.from(container.querySelectorAll("text"))
+  const textOf = (container: Element, content: string) => texts(container).find((t) => t.textContent === content)!
+
+  it("paints a `**` run with the theme's own stroke and never prints the asterisks", () => {
+    for (const ctx of [brief, lecture]) {
+      const { container } = svg(comparison.render(options, box, ctx))
+      expect(container.textContent).not.toContain("*")
+      expect(textOf(container, "18% lower")).toBeDefined()
+    }
+    // brief strikes a marked run with a marker pad, lecture with a chalk underline.
+    expect(svg(comparison.render(options, box, brief)).container.querySelector("[data-emphasis-pad]")).not.toBeNull()
+    expect(svg(comparison.render(options, box, lecture)).container.querySelector("[data-emphasis-underline]")).not.toBeNull()
+  })
+
+  it("measures a marked cell without its asterisks", () => {
+    const plain = { ...options, rows: options.rows.map((row) => ({ ...row, cells: row.cells.map((cell) => cell.replaceAll("**", "")) })) }
+    expect(comparison.measure(options, 520, brief)).toBe(comparison.measure(plain, 520, brief))
+    const { container } = svg(comparison.render(options, { x: 0, y: 0, w: 520 }, brief))
+    expect(container.querySelector('[data-truncated="1"]')).toBeNull()
+  })
+
+  it("sets the recommended column's header and cells in primary, bold", () => {
+    const { container } = svg(comparison.render({ ...options, recommended: 1 }, box, brief))
+    const primary = brief.colors.primary
+    const header = textOf(container, "Fix density first")
+    expect(header.getAttribute("fill")).toBe(primary)
+    expect(header.getAttribute("font-weight")).toBe("bold")
+    const cell = textOf(container, "$38M over 12 months")
+    expect(cell.getAttribute("fill")).toBe(primary)
+    expect(cell.getAttribute("font-weight")).toBe("bold")
+    // The other option keeps the table's own inks.
+    expect(textOf(container, "Add 600 vans").getAttribute("fill")).toBe(brief.colors.text)
+    const other = textOf(container, "$210M capital")
+    expect(other.getAttribute("fill")).toBe(brief.colors.text)
+    expect(other.getAttribute("font-weight")).toBe("normal")
+  })
+
+  it("keeps a recommended column readable on a theme whose primary is a block fill", () => {
+    // rally's primary is a banner color that does not separate from its page.
+    const rally = boundThemeCtx("rally", {})
+    const { container } = svg(comparison.render({ ...options, recommended: 1 }, box, rally))
+    const cell = textOf(container, "$38M over 12 months")
+    expect(contrastRatio(cell.getAttribute("fill")!, rally.colors.bg)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it("follows the recommended column when a repeated label column is folded away", () => {
+    // Every row repeats its label in cells[0], so columns[0] becomes the
+    // label column's header and recommended 2 still names "Fix density first".
+    const repeated = {
+      type: "comparison" as const,
+      columns: ["Measure", "Add 600 vans", "Fix density first"],
+      recommended: 2,
+      rows: options.rows.map((row) => ({ ...row, cells: [row.label, ...row.cells] })),
+    }
+    const { container } = svg(comparison.render(repeated, box, brief))
+    expect(textOf(container, "Fix density first").getAttribute("fill")).toBe(brief.colors.primary)
+    expect(textOf(container, "Add 600 vans").getAttribute("fill")).toBe(brief.colors.text)
+  })
+
+  it("paints an unmarked table with no tspans and the table's own inks", () => {
+    const { container } = svg(comparison.render(component, box, brief))
+    expect(container.querySelector("tspan")).toBeNull()
+    for (const t of texts(container)) expect([brief.colors.text, brief.colors.muted]).toContain(t.getAttribute("fill"))
+  })
+})

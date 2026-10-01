@@ -106,7 +106,9 @@ describe("THEME_DEFINITIONS", () => {
     expect(THEME_DEFINITIONS.ink.brand.suppressFooterRule).toBe(true)
     // ink v3：落款列吞并页脚 meta 文字（`BRANDS.ink` 自己的注释交代了代价）
     expect(THEME_DEFINITIONS.ink.brand.suppressFooterMeta).toBe(true)
-    expect(THEME_DEFINITIONS.brief.brand).toEqual({})
+    // brief（2026-10-02 样例重做）：folio-motif 自己画页脚线与机构行，
+    // Branding 的页脚线和 meta 行让开，同 ink 先例。
+    expect(THEME_DEFINITIONS.brief.brand).toEqual({ suppressFooterRule: true, suppressFooterMeta: true })
   })
 
   it("24 主题四页型菜单均非空。motif 可选", () => {
@@ -149,9 +151,13 @@ describe("THEME_DEFINITIONS", () => {
   })
 
   it("每套主题各自的专属脸只出现在自己的菜单里，不外溢", () => {
+    // gauge-stats 在 2026-10-02 样例重做后不再挂在 brief 菜单上，内置主题里
+    // 没有主人，只剩 gallery 借用，故不在此表。
     const exclusive: Record<string, string> = {
-      "gauge-stats": "brief",
       "gauge-point": "brief",
+      "gauge-sheet": "brief",
+      "gauge-exhibit": "brief",
+      "gauge-figure": "brief",
       "crayonbox-cards": "crayon",
       "crayonbox-point": "crayon",
       "show-statement": "runway",

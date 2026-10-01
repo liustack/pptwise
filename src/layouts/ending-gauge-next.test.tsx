@@ -7,125 +7,119 @@ import { parseSvgRoot, renderSvgMarkup } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { GaugeNextEnding, layoutDef } from "./ending-gauge-next"
 
-const ITEMS = ["确定首批试点团队", "冻结核心指标口径", "四周后复盘扩容"]
-const slide: Slide = {
-  type: "ending",
-  heading: "下一步",
-  subheading: "云觅咨询 · 增长战略组",
-  components: [{ type: "bullets", items: ITEMS }],
-} as Slide
+const ITEMS = ["Pilot depots: Leeds, Bristol, Glasgow", "Halden team on site in week one", "First readout on 15 February"]
+const SIGNOFF = "Maya Ellison, Engagement lead, Halden Partners"
 
-const ir: PptxIR = {
-  version: "5",
-  filename: "gauge-next.pptx",
-  theme: { id: "brief" },
-  meta: { organization: "云觅咨询", version: "v2", date: "2026-08" },
-  assets: { images: {} },
-  slides: [slide],
-} as PptxIR
+const endingSlide = (overrides: Partial<Slide> = {}): Slide =>
+  ({
+    type: "ending",
+    heading: "Approve the three-depot pilot by **15 November**",
+    subheading: SIGNOFF,
+    components: [{ type: "bullets", items: ITEMS }],
+    ...overrides,
+  }) as Slide
 
-function renderEnding() {
+function renderEnding(slide: Slide = endingSlide()) {
   const tokens = resolveStyle("brief")
   const bg = resolveBackgroundHex(tokens.defaultBackgrounds.ending, tokens.colors.surface)
-  const ctx = buildCtx(tokens, {}, undefined, bg)
+  const ctx = buildCtx(tokens, {}, undefined, bg, undefined, undefined, "pad")
+  const ir = {
+    version: "5",
+    filename: "gauge-next.pptx",
+    theme: { id: "brief" },
+    meta: { organization: "Halden Partners", version: "v2", date: "2026-10-14" },
+    assets: { images: {} },
+    slides: [slide],
+  } as PptxIR
   const markup = renderSvgMarkup(
     <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
       <GaugeNextEnding ir={ir} slide={slide} index={0} ctx={ctx} />
     </svg>,
   )
-  return { root: parseSvgRoot(markup), tokens }
+  return { root: parseSvgRoot(markup), tokens, ctx }
 }
 
 const textBy = (root: Element, value: string) =>
   Array.from(root.querySelectorAll("text")).find((text) => text.textContent === value)
+const bySize = (root: Element, size: string) =>
+  Array.from(root.querySelectorAll("text")).filter((text) => text.getAttribute("font-size") === size)
+const attrs = (el: Element, names: string[]) => names.map((name) => el.getAttribute(name))
 
 describe("ending-gauge-next", () => {
-  it("places NEXT and three numbered actions on the approved grid", () => {
-    const { root, tokens } = renderEnding()
-    const kicker = textBy(root, "NEXT")!
-    expect([
-      kicker.getAttribute("x"),
-      kicker.getAttribute("y"),
-      kicker.getAttribute("font-size"),
-      kicker.getAttribute("letter-spacing"),
-      kicker.getAttribute("fill"),
-    ]).toEqual(["160", "200", "16", "6", tokens.colors.muted])
+  it("draws the heading as the closing ask: primary bar, then 54/66 regular primary", () => {
+    const { root, tokens, ctx } = renderEnding()
+    const bar = root.querySelector(`rect[fill="${tokens.colors.primary}"]`)!
+    expect(attrs(bar, ["x", "y", "width", "height"])).toEqual(["96", "120", "64", "6"])
 
-    const ys = [292, 384, 476]
-    for (const index of ITEMS.keys()) {
+    const title = bySize(root, "54")
+    expect(title.map((line) => attrs(line, ["x", "y", "font-weight", "fill"]))).toEqual([
+      ["96", "202", "400", tokens.colors.primary],
+      ["96", "268", "400", tokens.colors.primary],
+    ])
+    expect(title.map((line) => line.textContent).join(" ")).toBe("Approve the three-depot pilot by 15 November")
+    expect(title[0]!.getAttribute("font-family")).toBe(ctx.fonts.heading)
+  })
+
+  it("opens three numbered steps under a primary rule at y368", () => {
+    const { root, tokens } = renderEnding()
+    const rules = Array.from(root.querySelectorAll("line"))
+    expect(rules.map((line) => attrs(line, ["x1", "y1", "x2", "y2", "stroke", "stroke-width"]))).toEqual([
+      ["96", "368", "1184", "368", tokens.colors.primary, "1"],
+    ])
+    for (const [index, x] of [96, 464, 832].entries()) {
       const number = textBy(root, String(index + 1).padStart(2, "0"))!
-      const item = textBy(root, ITEMS[index]!)!
-      expect([
-        number.getAttribute("x"),
-        number.getAttribute("y"),
-        number.getAttribute("font-size"),
-        number.getAttribute("font-weight"),
-        number.getAttribute("fill"),
-      ]).toEqual(["160", String(ys[index]), "20", "700", tokens.colors.primary])
-      expect([
-        item.getAttribute("x"),
-        item.getAttribute("y"),
-        item.getAttribute("font-size"),
-        item.getAttribute("font-weight"),
-        item.getAttribute("fill"),
-      ]).toEqual([
-        "212",
-        String(ys[index]),
-        "36",
-        "700",
-        index === 0 ? tokens.colors.primary : tokens.colors.text,
-      ])
+      expect(attrs(number, ["x", "y", "font-size", "fill"])).toEqual([String(x), "410", "16", tokens.colors.muted])
+      const body = bySize(root, "24").filter((text) => text.getAttribute("x") === String(x))
+      expect(body.map((line) => line.textContent).join(" ")).toBe(ITEMS[index])
+      expect(body.map((line) => line.getAttribute("y"))).toEqual(body.map((_, line) => String(445 + line * 34)))
+      expect(body[0]!.getAttribute("fill")).toBe(tokens.colors.text)
     }
+    expect(root.querySelector("[data-truncated]")).toBeNull()
   })
 
-  it("underlines only the first action and places the closing rule and signoff", () => {
+  it("signs off with the subheading at 18px muted on y604", () => {
     const { root, tokens } = renderEnding()
-    const underline = root.querySelector(`rect[fill="${tokens.colors.accent}"]`)!
-    expect([
-      underline.getAttribute("x"),
-      underline.getAttribute("y"),
-      underline.getAttribute("width"),
-      underline.getAttribute("height"),
-    ]).toEqual(["212", "306", "252", "6"])
-    expect(root.querySelectorAll(`rect[fill="${tokens.colors.accent}"]`)).toHaveLength(1)
-    expect(root.querySelectorAll(`text[fill="${tokens.colors.accent}"]`)).toHaveLength(0)
-
-    const rule = root.querySelector('line[y1="600"][y2="600"]')!
-    expect([rule.getAttribute("x1"), rule.getAttribute("x2"), rule.getAttribute("stroke-width")]).toEqual([
-      "160",
-      "1130",
-      "1",
+    const signoff = textBy(root, SIGNOFF)!
+    expect(attrs(signoff, ["x", "y", "font-size", "fill", "data-contrast-tier"])).toEqual([
+      "96",
+      "604",
+      "18",
+      tokens.colors.muted,
+      "meta",
     ])
-    const signoff = textBy(root, "云觅咨询 · 增长战略组")!
-    expect([
-      signoff.getAttribute("x"),
-      signoff.getAttribute("y"),
-      signoff.getAttribute("font-size"),
-      signoff.getAttribute("fill"),
-    ]).toEqual(["160", "636", "16", tokens.colors.muted])
   })
 
-  it("keeps top-right meta and declares a theme-locked ending", () => {
-    const { root } = renderEnding()
-    expect([textBy(root, "云觅咨询")?.getAttribute("x"), textBy(root, "云觅咨询")?.getAttribute("y")]).toEqual([
-      "1184",
-      "100",
-    ])
-    expect([textBy(root, "v2 · 2026-08")?.getAttribute("x"), textBy(root, "v2 · 2026-08")?.getAttribute("y")]).toEqual([
-      "1184",
-      "122",
-    ])
-    expect(layoutDef).toMatchObject({
-      id: "gauge-next",
-      kind: "standard",
-      slideTypes: ["ending"],
-    })
+  it("paints yellow only as the pad under the marked run", () => {
+    const { root, tokens } = renderEnding()
+    const accent = Array.from(root.querySelectorAll(`[fill="${tokens.colors.accent}"]`))
+    expect(accent.length).toBeGreaterThan(0)
+    expect(accent.every((el) => el.hasAttribute("data-emphasis-pad"))).toBe(true)
+    expect(() => assertSubset(root)).not.toThrow()
+
+    const plain = renderEnding(endingSlide({ heading: "Approve the three-depot pilot by 15 November" }))
+    expect(plain.root.innerHTML).not.toContain(tokens.colors.accent)
+    // No corner meta and no footer row: the motif owns the footer.
+    expect(textBy(plain.root, "Halden Partners")).toBeUndefined()
+    expect(plain.root.querySelectorAll('text[font-size="14"]')).toHaveLength(0)
+  })
+
+  it("draws the heading and never splits it into steps when there are no bullets", () => {
+    const { root } = renderEnding(
+      endingSlide({ heading: "1. Approve the pilot 2. Staff the depots", components: [], subheading: undefined }),
+    )
+    expect(bySize(root, "54").map((line) => line.textContent).join(" ")).toBe("1. Approve the pilot 2. Staff the depots")
+    expect(textBy(root, "01")).toBeUndefined()
+    expect(root.querySelectorAll("line")).toHaveLength(0)
+  })
+
+  it("declares a theme-locked ending with one bullets slot", () => {
+    expect(layoutDef).toMatchObject({ id: "gauge-next", kind: "standard", slideTypes: ["ending"], branding: "none" })
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({
       name: "body",
       accepts: ["bullets"],
       capacity: 1,
       itemCapacity: 3,
     })
-    expect(() => assertSubset(root)).not.toThrow()
+    expect(layoutDef.headingFit).toMatchObject({ fontSize: 54, maxLines: 2, bold: false })
   })
 })

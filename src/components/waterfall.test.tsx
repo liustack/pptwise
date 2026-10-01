@@ -4,6 +4,7 @@ import { render } from "@testing-library/react"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { waterfall } from "./waterfall"
+import { contrastRatio } from "../render/ink"
 import type { ComponentCtx } from "./types"
 import { schema as waterfallSchema } from "@/ir/components/waterfall"
 
@@ -379,5 +380,159 @@ describe("a waterfall value past what the bar axis can draw is refused", () => {
       expect(markup).toContain('data-dropped-kind="component"')
       expect(markup).not.toMatch(/NaN|Infinity/)
     }
+  })
+})
+
+// The brief sample's bridge: cost per parcel from $4.10 to $5.35.
+const parcelBridge = {
+  type: "waterfall" as const,
+  unit: "$",
+  items: [
+    { label: "FY2023", value: 4.1, kind: "total" as const },
+    { label: "Failed first attempts", value: 0.48 },
+    { label: "Falling route density", value: 0.37 },
+    { label: "Driver overtime", value: 0.26 },
+    { label: "Fuel", value: 0.09 },
+    { label: "Other", value: 0.05 },
+    { label: "FY2026", value: 5.35, kind: "total" as const },
+  ],
+}
+const bridgeBox = { x: 0, y: 0, w: 1088, h: 400 }
+const rootOf = (c: Parameters<typeof waterfall.render>[0], b = bridgeBox) =>
+  parseSvgRoot(renderSvgMarkup(<svg>{waterfall.render(c, b, ctx)}</svg>))
+const num = (el: Element, attr: string) => Number(el.getAttribute(attr))
+
+describe("waterfall truncated axis", () => {
+  it("starts the axis at 3.00 for a bridge from 4.10 to 5.35, the totals standing on it", () => {
+    const root = rootOf(parcelBridge)
+    const rects = Array.from(root.querySelectorAll("rect"))
+    const first = rects[0]!
+    const last = rects[6]!
+    // Both totals stand on the floor: their feet share the plot bottom.
+    const floorY = num(first, "y") + num(first, "height")
+    expect(num(last, "y") + num(last, "height")).toBeCloseTo(floorY, 5)
+    // Heights read from 3.00, not from zero: (4.10 - 3) / (5.35 - 3).
+    expect(num(first, "height") / num(last, "height")).toBeCloseTo(1.1 / 2.35, 5)
+    // The baseline rule runs along the floor.
+    const baseline = Array.from(root.querySelectorAll("line")).find((l) => l.getAttribute("stroke-opacity") === "0.3")!
+    expect(num(baseline, "y1")).toBeCloseTo(floorY, 5)
+  })
+
+  it("cuts every total bar's foot with two background strokes that stay inside the bar and off every text", () => {
+    const root = rootOf(parcelBridge)
+    const marks = Array.from(root.querySelectorAll('[data-axis-break="1"]'))
+    expect(marks).toHaveLength(4)
+    const rects = Array.from(root.querySelectorAll("rect"))
+    const totals = [rects[0]!, rects[6]!]
+    for (const mark of marks) {
+      expect(mark.getAttribute("stroke")).toBe(ctx.colors.bg)
+      const top = Math.min(num(mark, "y1"), num(mark, "y2")) - 1.5
+      const bottom = Math.max(num(mark, "y1"), num(mark, "y2")) + 1.5
+      const bar = totals.find((r) => num(mark, "x1") < num(r, "x") && num(mark, "x2") > num(r, "x") + num(r, "width"))!
+      expect(bar).toBeDefined()
+      expect(top).toBeGreaterThan(num(bar, "y"))
+      expect(bottom).toBeLessThan(num(bar, "y") + num(bar, "height"))
+      // No text ink (0.75em above to 0.25em below its baseline) reaches the strokes' rows.
+      for (const text of Array.from(root.querySelectorAll("text"))) {
+        const size = num(text, "font-size")
+        const inkTop = num(text, "y") - size * 0.75
+        const inkBottom = num(text, "y") + size * 0.25
+        expect(inkBottom < top || inkTop > bottom, text.textContent ?? "").toBe(true)
+      }
+    }
+  })
+
+  it("keeps the axis at zero when the lowest level is under half the highest", () => {
+    // 220, 70 and 150: 70 is under half of 220.
+    const root = rootOf(basic)
+    expect(root.querySelectorAll('[data-axis-break="1"]')).toHaveLength(0)
+  })
+
+  it("keeps the axis at zero when a level is not above zero", () => {
+    const fromZero = { type: "waterfall" as const, items: [{ label: "A", value: 100 }, { label: "B", value: 10 }, { label: "C", value: 5 }] }
+    expect(rootOf(fromZero).querySelectorAll('[data-axis-break="1"]')).toHaveLength(0)
+  })
+
+  it("draws from zero when the box is too short to cut the totals clear of their tops", () => {
+    const root = rootOf(parcelBridge, { x: 0, y: 0, w: 1088, h: 150 })
+    expect(root.querySelectorAll('[data-axis-break="1"]')).toHaveLength(0)
+  })
+})
+
+describe("waterfall emphasis", () => {
+  const marked = {
+    ...parcelBridge,
+    emphasis_label: "Planning drivers: +$1.11 of the +$1.25 rise",
+    items: parcelBridge.items.map((item, i) => (i >= 1 && i <= 3 ? { ...item, emphasis: true } : item)),
+  }
+  const bars = (root: Element) => Array.from(root.querySelectorAll("rect"))
+
+  it("fills totals primary, the marked bars accent and every other bar one grey that still clears 3:1", () => {
+    const fills = bars(rootOf(marked)).map((r) => r.getAttribute("fill"))
+    expect(fills[0]).toBe(ctx.colors.primary)
+    expect(fills[6]).toBe(ctx.colors.primary)
+    expect(fills.slice(1, 4)).toEqual([ctx.colors.accent, ctx.colors.accent, ctx.colors.accent])
+    expect(fills[4]).toBe(fills[5])
+    expect([ctx.colors.primary, ctx.colors.accent]).not.toContain(fills[4])
+    expect(contrastRatio(fills[4]!, ctx.colors.bg)).toBeGreaterThanOrEqual(3)
+  })
+
+  it("prints the receded bars' values in muted and every other value as before", () => {
+    const values = Array.from(rootOf(marked).querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") === "700")
+    const fillOf = (label: string) => values.find((t) => t.textContent === label)!.getAttribute("fill")
+    expect(fillOf("+$0.09")).toBe(ctx.colors.muted)
+    expect(fillOf("+$0.05")).toBe(ctx.colors.muted)
+    for (const label of ["$4.10", "+$0.48", "+$0.37", "+$0.26", "$5.35"]) expect(fillOf(label), label).toBe(ctx.colors.text)
+  })
+
+  it("brackets the marked bars from their outer edges, the label centered over it, clear of every value", () => {
+    const root = rootOf(marked)
+    const rects = bars(root)
+    const bracket = root.querySelector('[data-emphasis-bracket="1"]')!
+    const d = bracket.querySelector("path")!.getAttribute("d")!
+    const [, x0, hookY, barY, x1] = /^M (\S+) (\S+) V (\S+) H (\S+) V (\S+)$/.exec(d)!.map(Number)
+    expect(x0).toBeCloseTo(num(rects[1]!, "x"), 5)
+    expect(x1).toBeCloseTo(num(rects[3]!, "x") + num(rects[3]!, "width"), 5)
+    expect(hookY! - barY!).toBe(10)
+    expect(bracket.querySelector("path")!.getAttribute("stroke")).toBe(ctx.colors.primary)
+    const label = bracket.querySelector("text")!
+    expect(label.textContent).toBe(marked.emphasis_label)
+    expect(num(label, "x")).toBeCloseTo((x0! + x1!) / 2, 5)
+    expect(num(label, "y")).toBeLessThan(barY!)
+    expect(label.getAttribute("fill")).toBe(ctx.colors.primary)
+    // Every value label's ink starts below the hooks.
+    const values = Array.from(root.querySelectorAll("text")).filter(
+      (t) => t.getAttribute("font-weight") === "700" && t !== label,
+    )
+    for (const value of values) expect(num(value, "y") - 16 * 0.75).toBeGreaterThan(hookY!)
+  })
+
+  it("colors the marked bars but draws no bracket when there is no label", () => {
+    const { emphasis_label: _label, ...unlabelled } = marked
+    const root = rootOf(unlabelled)
+    expect(root.querySelector('[data-emphasis-bracket="1"]')).toBeNull()
+    expect(bars(root)[1]!.getAttribute("fill")).toBe(ctx.colors.accent)
+  })
+
+  it("is byte-identical to an unmarked bridge when nothing is marked", () => {
+    const markup = (c: Parameters<typeof waterfall.render>[0]) => renderSvgMarkup(<svg>{waterfall.render(c, bridgeBox, ctx)}</svg>)
+    const withFalse = { ...basic, items: basic.items.map((item) => ({ ...item, emphasis: false })) }
+    expect(markup(withFalse)).toBe(markup(basic))
+    expect(markup({ ...parcelBridge, items: parcelBridge.items.map((item) => ({ ...item, emphasis: false })) })).toBe(
+      markup(parcelBridge),
+    )
+  })
+
+  it("passes validate when the marked bars stand together, and refuses a gap between them", () => {
+    expect(waterfallSchema.safeParse(marked).success).toBe(true)
+    const gapped = { ...marked, items: marked.items.map((item, i) => (i === 2 ? { ...item, emphasis: false } : item)) }
+    const parsed = waterfallSchema.safeParse(gapped)
+    expect(parsed.success).toBe(false)
+    expect(parsed.error!.issues.map((issue) => issue.path.join("."))).toEqual(["items.3.emphasis"])
+  })
+
+  it("renders only svg2pptx-subset primitives", () => {
+    const markup = renderSvgMarkup(<svg xmlns="http://www.w3.org/2000/svg">{waterfall.render(marked, bridgeBox, ctx)}</svg>)
+    expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
   })
 })

@@ -2,15 +2,15 @@
 import { afterEach, describe, it, expect, vi } from "vitest"
 import { BoundSlideSvg } from "./__fixtures__/bound-slide"
 import { render } from "@testing-library/react"
-import { resolveBackgroundHex, resolveOverrideBackgroundHex } from "./full-slide-svg"
+import { FullSlideSvg, resolveBackgroundHex, resolveOverrideBackgroundHex } from "./full-slide-svg"
 import { renderSvgMarkup, parseSvgRoot } from "./serialize"
 import { assertSubset } from "./subset-validate"
 import { svgToOps } from "../pptx/svg2pptx/dispatch"
 import { MOTIFS } from "../motifs"
-import { __resetRegisteredThemes, getThemeDefinition, THEME_DEFINITIONS } from "../themes/definitions"
+import { __resetRegisteredThemes, compileBuiltinTheme, getThemeDefinition, THEME_DEFINITIONS } from "../themes/definitions"
 import { registerTestTheme, type TestThemeFaces } from "../themes/test-fixtures"
 import { accessibleInk, blendOver, contrastRatio, readableOn } from "./ink"
-import { resolveStyle } from "../themes"
+import { BUILTIN_THEME_FILES, resolveStyle } from "../themes"
 import {
   CONTENT_DECOR_CONTRAST_CEILING,
   effectivePaintOpacity,
@@ -230,8 +230,17 @@ describe("FullSlideSvg", () => {
       heading: "市场洞察",
       components: [{ type: "paragraph", text: "正文" }],
     }
+    // brief's ghost-bleed index rides the shared heading system, which its
+    // own gauge faces do not use since the 2026-10-02 redesign. A workspace
+    // copy of brief that keeps the id and names narrow-column for points
+    // still reaches it, so the page is drawn with that copy, by value.
+    const file = BUILTIN_THEME_FILES.brief
+    const theme = compileBuiltinTheme({
+      ...file,
+      menu: { ...file.menu, content: { ...file.menu.content, points: { face: "narrow-column" } } },
+    })
     const doc: PptxIR = { ...ir([chapter, content]), theme: { id: "brief" } }
-    const { container } = render(<BoundSlideSvg ir={doc} slide={content} index={1} />)
+    const { container } = render(<FullSlideSvg ir={doc} slide={content} index={1} theme={theme} />)
     const ghost = Array.from(container.querySelectorAll('[data-depth="mid"] text')).find(
       (text) => text.textContent === "01" && Number(text.getAttribute("font-size")) >= 200,
     )!
@@ -723,11 +732,11 @@ describe("主题菜单四页型分发", () => {
     expect(id).toBe(THEME_DEFINITIONS.journal.menu.ending.face)
   })
 
-  it("motif 命中：Decor 优先取 THEME_DEFINITIONS 对应主题的 motif 对应的 MOTIFS 组件（brief → gauge-motif）", () => {
+  it("motif 命中：Decor 优先取 THEME_DEFINITIONS 对应主题的 motif 对应的 MOTIFS 组件（brief → folio-motif）", () => {
     // MOTIFS 是模块单例对象，spy 其上的属性能直接证明 FullSlideSvg
     // 内部确实调用了这张注册表（而不是巧合产出等价 markup——strangler 抽取
     // 本就要求新旧输出逐字节等价，纯 DOM diff 无法区分调用来源）。
-    const spy = vi.spyOn(MOTIFS, "gauge-motif")
+    const spy = vi.spyOn(MOTIFS, "folio-motif")
     const slide: Slide = { type: "cover", heading: "标题", components: [] } as Slide
     const doc = irWithFace(slide, "brief", {})
     render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)

@@ -28,13 +28,14 @@ beforeAll(() => {
  * label column for. `chart.measure` grows with the series count now that
  * line and area name every series in a gutter.
  *
- * Three regions, measured on `brief`'s `data` face:
+ * Three regions, measured on `brief`'s `data` face (`gauge-sheet`):
  *
- *  - up to 12 series the face's own band holds the chart.
- *  - 13 to 16 the band is short and the face steps aside
+ *  - up to 14 series the face's own band holds the chart.
+ *  - 15 and 16 the band is short and the face steps aside
  *    (`render/step-aside.tsx`), which hands the chart the whole sheet — 412px
- *    instead of 328 — and it draws in full. Nothing is dropped, so nothing
- *    refuses, which is the point of the step-aside.
+ *    instead of the 376 left under the standfirst — and it draws in full.
+ *    Nothing is dropped, so nothing refuses, which is the point of the
+ *    step-aside.
  *  - past 16 the whole sheet is short too. There is no rendering left that
  *    can draw the page, the step-aside declines to make things worse, and
  *    the chart's own decline stands. That is the deck this file is about.
@@ -89,10 +90,10 @@ describe("a declined chart blocks the export", () => {
   })
 
   it("exports cleanly at a count only the step-aside can hold", async () => {
-    // 13 is past the face's own band and inside the full sheet. Before the
+    // 15 is past the face's own band and inside the full sheet. Before the
     // step-aside this deck refused; the chart is drawn now, in full.
-    expect(renderSlideSvg(validateIr(declinedChartDeck(13)).ir!, 0)).toContain('data-face-mode="fallback"')
-    const out = await generatePptx(declinedChartDeck(13))
+    expect(renderSlideSvg(validateIr(declinedChartDeck(15)).ir!, 0)).toContain('data-face-mode="fallback"')
+    const out = await generatePptx(declinedChartDeck(15))
     expect(out.byteLength).toBeGreaterThan(0)
   })
 })

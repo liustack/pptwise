@@ -107,11 +107,11 @@ describe("runInspect --page", () => {
 
   it("locates validate's own finding inside the page and exits non-zero", async () => {
     const dir = await deck({ number: { components: [CHART] } })
-    await expect(runValidate(dir)).rejects.toThrow(/page 3 \(number\) — slides\.2\.components: layout "stat-hero" does not render chart components/)
+    await expect(runValidate(dir)).rejects.toThrow(/page 3 \(number\) — slides\.2\.components: layout "gauge-figure" does not render chart components/)
     const { output, failed } = await runInspect(dir, { page: "number", json: true })
     expect(failed).toBe(true)
     expect(JSON.parse(output).errors).toEqual([
-      { scope: "page", path: "components", message: 'layout "stat-hero" does not render chart components' },
+      { scope: "page", path: "components", message: 'layout "gauge-figure" does not render chart components' },
     ])
   })
 

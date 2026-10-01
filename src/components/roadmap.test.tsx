@@ -190,3 +190,23 @@ describe("roadmap component", () => {
     expect(() => assertSubset(root)).not.toThrow()
   })
 })
+
+describe("roadmap emphasis", () => {
+  const barFills = (c: Parameters<typeof roadmap.render>[0]) =>
+    Array.from(svg(roadmap.render(c, { x: 80, y: 100, w: 1088 }, ctx)).container.querySelectorAll("path")).map((p) =>
+      p.getAttribute("fill"),
+    )
+
+  it("keeps the accent bar on the marked phase only, the others in primary", () => {
+    const marked = { ...threePhase, items: threePhase.items.map((item, i) => (i === 1 ? { ...item, emphasis: true } : item)) }
+    expect(barFills(marked)).toEqual([ctx.colors.primary, ctx.colors.accent, ctx.colors.primary])
+  })
+
+  it("keeps every bar accent, byte for byte, when no phase is marked", () => {
+    expect(barFills(threePhase)).toEqual([ctx.colors.accent, ctx.colors.accent, ctx.colors.accent])
+    const markup = (c: Parameters<typeof roadmap.render>[0]) =>
+      renderSvgMarkup(<svg>{roadmap.render(c, { x: 80, y: 100, w: 1088 }, ctx)}</svg>)
+    const withFalse = { ...threePhase, items: threePhase.items.map((item) => ({ ...item, emphasis: false })) }
+    expect(markup(withFalse)).toBe(markup(threePhase))
+  })
+})

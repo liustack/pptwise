@@ -509,6 +509,21 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   if (def.id === "gauge-point") return [b.blockquote!(lex)]
   if (def.id === "crayonbox-point") return [b.blockquote!(lex)]
   if (def.id === "one-evidence") return [b.chart!(lex)]
+  if (def.id === "gauge-exhibit") return [b.chart!(lex)]
+  // The board's ruled rows with a closing block: a short list and one
+  // remark the page lands on, which is the shape the face composes by hand.
+  if (def.id === "gauge-sheet") {
+    return [sliceBullets(b.bullets!(lex), 3), { type: "callout", variant: "info", text: lex.verdicts.positive }]
+  }
+  if (def.id === "gauge-figure") {
+    // One figure with nothing the hero line has no place for: a delta arrow
+    // or an icon sends the page to the plain fallback.
+    const kpi = b.kpi_cards!(lex)
+    if (kpi.type === "kpi_cards") {
+      kpi.items = kpi.items.slice(0, 1).map((item) => ({ value: item.value, unit: item.unit, label: item.label, source: item.source }))
+    }
+    return [kpi]
+  }
   if (def.id === "bento-panel") {
     const kpi = b.kpi_cards!(lex)
     const icons = b.icon_cards!(lex)
@@ -579,6 +594,9 @@ const CONTENT_FACE_KINDS: Record<string, PageKind> = {
   "crayonbox-cards": "list",
   "crayonbox-point": "statement",
   "gauge-point": "statement",
+  "gauge-exhibit": "evidence",
+  "gauge-figure": "fact",
+  "gauge-sheet": "points",
   "gauge-stats": "data",
   "image-annotate": "photo",
   "image-bottom": "photo",

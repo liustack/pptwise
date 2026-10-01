@@ -60,7 +60,9 @@ const DECK = {
       kind: "data",
       heading: "续约结构的四个季度",
       subheading: "续约率回升到百分之九十一。",
-      components: [lineChart(13)],
+      // Fifteen series: past what brief's data band holds under the
+      // standfirst, inside what the step-aside sheet holds.
+      components: [lineChart(15)],
       footnote: "来源：运营周报",
     },
     {

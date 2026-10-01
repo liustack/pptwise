@@ -8,6 +8,7 @@ import { auditSvgMarkup } from "../audit/svg-audit"
 import { auditDeck } from "../audit/deck-audit"
 import { AXIS_TITLE_BAND_H } from "./axis-titles"
 import { chart } from "./chart"
+import { contrastRatio } from "../render/ink"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { schema as chartSchema } from "@/ir/components/chart"
 import type { ComponentCtx } from "./types"
@@ -1864,5 +1865,65 @@ describe("a horizontal bar chart names every category and gives each a row", () 
     // A short list keeps the flat body it always had.
     const short = { ...component, series: component.series.map((s) => ({ ...s, data: s.data.slice(0, 5) })) }
     expect(chart.measure(short, w, ctx)).toBe(chart.measure({ ...short, direction: undefined }, w, ctx))
+  })
+})
+
+describe("chart series emphasis", () => {
+  const PALETTE = ctx.colors.chartPalette
+  const three = (chart_type: "bar" | "line" | "stacked" | "area") => ({
+    type: "chart" as const,
+    chart_type,
+    series: [
+      { name: "North", data: [{ x: "Q1", y: 12 }, { x: "Q2", y: 18 }, { x: "Q3", y: 15 }] },
+      { name: "South", emphasis: true, data: [{ x: "Q1", y: 8 }, { x: "Q2", y: 11 }, { x: "Q3", y: 14 }] },
+      { name: "West", data: [{ x: "Q1", y: 5 }, { x: "Q2", y: 6 }, { x: "Q3", y: 9 }] },
+    ],
+  })
+  const draw = (component: Parameters<typeof chart.render>[0]) =>
+    svg(chart.render(component, { ...box, h: chart.measure(component, box.w, ctx) }, ctx)).container
+  const markup = (component: Parameters<typeof chart.render>[0]) =>
+    renderSvgMarkup(<svg>{chart.render(component, { ...box, h: chart.measure(component, box.w, ctx) }, ctx)}</svg>)
+  const unmark = <T extends { series: { emphasis?: boolean }[] }>(c: T): T => ({
+    ...c,
+    series: c.series.map(({ emphasis: _emphasis, ...s }) => s),
+  })
+
+  it("gives the marked series the lead color and every other series one grey that still clears 3:1", () => {
+    for (const type of ["bar", "stacked"] as const) {
+      const fills = Array.from(draw(three(type)).querySelectorAll('rect[data-plot-mark="1"]')).map((r) =>
+        r.getAttribute("fill"),
+      )
+      const distinct = [...new Set(fills)]
+      expect(distinct, type).toHaveLength(2)
+      expect(distinct, type).toContain(PALETTE[0])
+      const grey = distinct.find((f) => f !== PALETTE[0])!
+      expect(contrastRatio(grey, ctx.colors.bg)).toBeGreaterThanOrEqual(3)
+      // A third of the marks are the marked series'.
+      expect(fills.filter((f) => f === PALETTE[0])).toHaveLength(fills.length / 3)
+    }
+  })
+
+  it("paints the legend swatches with the same colors as the marks", () => {
+    const container = draw(three("bar"))
+    const swatches = Array.from(container.querySelectorAll("rect")).filter((r) => !r.hasAttribute("data-plot-mark"))
+    const grey = swatches[0]!.getAttribute("fill")
+    expect(swatches.map((r) => r.getAttribute("fill"))).toEqual([grey, PALETTE[0], grey])
+  })
+
+  it("strokes the marked line in the lead color and greys the others", () => {
+    const strokes = Array.from(draw(three("line")).querySelectorAll("polyline"))
+      .map((p) => p.getAttribute("stroke"))
+      .filter((s) => s !== ctx.colors.bg)
+    expect(strokes[1]).toBe(PALETTE[0])
+    expect(strokes[0]).toBe(strokes[2])
+    expect(strokes[0]).not.toBe(PALETTE[0])
+  })
+
+  it("is byte-identical to an unmarked chart when no series is marked", () => {
+    for (const type of ["bar", "line", "stacked", "area"] as const) {
+      const c = unmark(three(type))
+      expect(markup({ ...c, series: c.series.map((s) => ({ ...s, emphasis: false })) }), type).toBe(markup(c))
+      expect(markup(three(type)), type).not.toBe(markup(c))
+    }
   })
 })

@@ -6,6 +6,7 @@ import { CHART_AXIS_LIMIT, schema as chartSchema } from "@/ir/components/chart"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { AXIS_TITLE_BAND_H } from "./axis-titles"
+import { contrastRatio } from "../render/ink"
 import { chart } from "./chart"
 import type { ComponentCtx } from "./types"
 
@@ -470,5 +471,141 @@ describe("combo chart: drawing", () => {
       </svg>,
     )
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
+  })
+})
+
+describe("combo chart: a marked line", () => {
+  // The brief sample's trend page: parcels as bars, cost per parcel as the
+  // line the page is about, on its own dollar axis.
+  const PARCELS_COST: ChartComponent = {
+    type: "chart",
+    chart_type: "combo",
+    axes: { y_title: "Parcels (millions)", y2_title: "Cost per parcel", y2_unit: "$" },
+    series: [
+      {
+        name: "Parcels",
+        data: [{ x: "FY2023", y: 131 }, { x: "FY2024", y: 139 }, { x: "FY2025", y: 150 }, { x: "FY2026", y: 160 }],
+      },
+      {
+        name: "Cost per parcel",
+        plot: "line",
+        axis: "right",
+        emphasis: true,
+        data: [{ x: "FY2023", y: 4.1 }, { x: "FY2024", y: 4.45 }, { x: "FY2025", y: 4.9 }, { x: "FY2026", y: 5.35 }],
+      },
+    ],
+  }
+  const unmarked: ChartComponent = {
+    ...PARCELS_COST,
+    series: PARCELS_COST.series.map(({ emphasis: _emphasis, ...s }) => s),
+  }
+  const valueLabels = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll('[data-value-label="1"]')).map((t) => t.textContent)
+  // A line that runs well clear of the bars under it, on one dollar axis.
+  const PRICE_OVER_COST: ChartComponent = {
+    type: "chart",
+    chart_type: "combo",
+    axes: { y_unit: "$" },
+    series: [
+      { name: "Unit cost", data: [{ x: "FY2023", y: 40 }, { x: "FY2024", y: 42 }, { x: "FY2025", y: 45 }, { x: "FY2026", y: 47 }] },
+      {
+        name: "Price",
+        plot: "line",
+        emphasis: true,
+        data: [{ x: "FY2023", y: 80.1 }, { x: "FY2024", y: 84.45 }, { x: "FY2025", y: 88.9 }, { x: "FY2026", y: 90.35 }],
+      },
+    ],
+  }
+
+  it("prints every point's value above it, with the axis unit and the decimals the series was written with", () => {
+    const container = draw(PRICE_OVER_COST, 760)
+    expect(valueLabels(container)).toEqual(["$80.10", "$84.45", "$88.90", "$90.35"])
+    const points = linePoints(container)
+    const labels = Array.from(container.querySelectorAll('[data-value-label="1"]'))
+    labels.forEach((label, i) => {
+      expect(Number(label.getAttribute("x"))).toBeCloseTo(points[i]!.x, 5)
+      expect(Number(label.getAttribute("y"))).toBeLessThan(points[i]!.y)
+      // Each label stands on a plate in the page background, painted after
+      // the gridlines, so a gridline under it breaks instead of striking it.
+      const plate = label.previousElementSibling!
+      expect(plate.tagName.toLowerCase()).toBe("rect")
+      expect(plate.getAttribute("fill")).toBe(ctx.colors.bg)
+      const y = Number(label.getAttribute("y"))
+      expect(Number(plate.getAttribute("y"))).toBeLessThanOrEqual(y - 16 * 0.85)
+      expect(Number(plate.getAttribute("y")) + Number(plate.getAttribute("height"))).toBeGreaterThanOrEqual(y)
+    })
+    // No drop is declared: the axis still carries every value.
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+  })
+
+  it("prints nothing on an unmarked combo, and a marked bar series prints nothing either", () => {
+    expect(valueLabels(draw(unmarked, 760))).toEqual([])
+    const barMarked: ChartComponent = {
+      ...unmarked,
+      series: [{ ...unmarked.series[0]!, emphasis: true }, unmarked.series[1]!],
+    }
+    expect(valueLabels(draw(barMarked, 760))).toEqual([])
+  })
+
+  it("prints none of them when any one would touch a bar", () => {
+    // The right axis is built on the left axis's rows, so the cost line runs
+    // through the parcel bars and the labels above its points land on them.
+    const container = draw(PARCELS_COST, 760)
+    expect(valueLabels(container)).toEqual([])
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+  })
+
+  it("prints none of them when one label would sit on another", () => {
+    // Twelve months on 600px leave each label about 45px, and "$1000.25" is
+    // wider than that. The bars stand far below the line, so only the
+    // labels themselves are in each other's way.
+    const months = (y: (i: number) => number) => Array.from({ length: 12 }, (_, i) => ({ x: `M${i + 1}`, y: y(i) }))
+    const tight: ChartComponent = {
+      type: "chart",
+      chart_type: "combo",
+      axes: { y_unit: "$" },
+      series: [
+        { name: "Volume", data: months(() => 10) },
+        { name: "Price", plot: "line", emphasis: true, data: months((i) => 1000.25 + i) },
+      ],
+    }
+    expect(valueLabels(draw(tight, 600))).toEqual([])
+    // The same line over six months has room for every label.
+    const roomy: ChartComponent = {
+      ...tight,
+      series: tight.series.map((s) => ({ ...s, data: s.data.slice(0, 6) })),
+    }
+    expect(valueLabels(draw(roomy, 1120))).toHaveLength(6)
+  })
+
+  it("keeps the marked line in the lead color and greys the bars, the legend agreeing", () => {
+    const container = draw(PARCELS_COST, 760)
+    const line = Array.from(container.querySelectorAll('polyline[data-plot-mark="1"]')).find(
+      (p) => p.getAttribute("stroke") !== ctx.colors.bg,
+    )!
+    expect(line.getAttribute("stroke")).toBe(PALETTE[0])
+    const bars = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]'))
+    const grey = bars[0]!.getAttribute("fill")!
+    expect(grey).not.toBe(PALETTE[0])
+    expect(bars.every((b) => b.getAttribute("fill") === grey)).toBe(true)
+    expect(contrastRatio(grey, ctx.colors.bg)).toBeGreaterThanOrEqual(3)
+    const swatches = Array.from(container.querySelectorAll("rect")).filter((r) => !r.hasAttribute("data-plot-mark"))
+    expect(swatches.map((r) => r.getAttribute("fill"))).toEqual([grey, PALETTE[0]])
+  })
+
+  it("is byte-identical to before when no series is marked", () => {
+    const markup = (c: ChartComponent) =>
+      renderSvgMarkup(<svg>{chart.render(c, { x: 0, y: 0, w: W, h: chart.measure(c, W, ctx) }, ctx)}</svg>)
+    const withFalse: ChartComponent = {
+      ...REVENUE_MARGIN,
+      series: REVENUE_MARGIN.series.map((s) => ({ ...s, emphasis: false })),
+    }
+    expect(markup(withFalse)).toBe(markup(REVENUE_MARGIN))
+  })
+
+  it("passes validate with one marked line, and refuses a second mark", () => {
+    expect(issuesOf(PARCELS_COST)).toEqual([])
+    const twice = issuesOf({ ...PARCELS_COST, series: PARCELS_COST.series.map((s) => ({ ...s, emphasis: true })) })
+    expect(twice.map((i) => i.path.join("."))).toEqual(["series.1.emphasis"])
   })
 })

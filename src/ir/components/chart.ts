@@ -103,6 +103,17 @@ const ONE_AXIS_TYPES = ["bar", "line", "area", "scatter", "dumbbell"] as const
 /** Chart types whose columns stand upright only. `direction` belongs to bar. */
 const UPRIGHT_ONLY_TYPES = ["stacked", "percent_stacked", "combo"] as const
 
+/**
+ * Chart types whose series each take their own palette color on one plot box,
+ * so one of them can be singled out by keeping its color and turning the
+ * rest grey.
+ *
+ * A pie, a donut, a funnel and a gauge draw one series. A dumbbell's two
+ * series are a from and a to painted in fixed colors, so there is no third
+ * color to spend on one of them.
+ */
+export const SERIES_EMPHASIS_TYPES = ["bar", "line", "area", "scatter", "stacked", "percent_stacked", "combo"] as const
+
 export const schema = z
   .object({
     type: z.literal("chart"),
@@ -203,6 +214,15 @@ export const schema = z
             .enum(["left", "right"])
             .optional()
             .describe('combo only: "right" reads this series against its own right-hand axis (for a second unit, such as a rate beside amounts), and omitted or "left" shares the left axis.'),
+          /** Singles this series out: it keeps the first palette color and
+           * every other series turns grey. In a combo, a marked line also
+           * prints its value at each point when they all fit. */
+          emphasis: z
+            .boolean()
+            .optional()
+            .describe(
+              "Marks the one series the page is about. It keeps the lead color and the others turn grey. At most one series, on bar, line, area, scatter, stacked, percent_stacked or combo charts with two or more series. A marked combo line also prints its values.",
+            ),
         })
         .strict(),
     ),
@@ -503,6 +523,31 @@ export const schema = z
           })
         }
       })
+    }
+    // Emphasis takes one series out of the palette and greys the rest, which
+    // only says something where several series share one plot box in their
+    // own colors. Two marked series are two answers, and the grey is gone.
+    const marked = c.series.flatMap((s, si) => (s.emphasis === true ? [si] : []))
+    if (marked.length > 0) {
+      const applies = SERIES_EMPHASIS_TYPES.includes(c.chart_type as (typeof SERIES_EMPHASIS_TYPES)[number])
+      if (!applies || c.series.length < 2) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["series", marked[0]!, "emphasis"],
+          message: !applies
+            ? `series emphasis keeps one series in color and turns the others grey, and a ${c.chart_type} chart does not color its series one by one. ` +
+              `Remove emphasis, or use chart_type ${SERIES_EMPHASIS_TYPES.map((t) => `"${t}"`).join(", ")}.`
+            : `series emphasis singles one series out from the others, and this chart has only one series. Remove emphasis, or add the series it stands out from.`,
+        })
+      } else if (marked.length > 1) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["series", marked[1]!, "emphasis"],
+          message:
+            `${marked.length} series are marked with emphasis, and a chart singles out one: two marked series read as two answers, and the grey that sets them apart is gone. ` +
+            `Keep emphasis on the one series the page is about.`,
+        })
+      }
     }
     const rightSeries = c.chart_type === "combo" ? c.series.filter((s) => s.axis === "right").length : 0
     for (const key of ["y2_title", "y2_unit"] as const) {

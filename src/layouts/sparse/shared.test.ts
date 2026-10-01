@@ -132,6 +132,15 @@ describe("fitHeroLine", () => {
     expect(fitHeroLine("12345678901234567890", { ...opts, unit: "万元" })).toBeNull()
   })
 
+  it("measures the line with the unit mark the skin draws, when it names its own", () => {
+    const markFor = (size: number) => ({ fontSize: Math.round(size / 4), dx: Math.round((size * 20) / 176) })
+    const fitted = fitHeroLine("1142.6", { ...opts, unit: "万元", unitMark: markFor })!
+    expect(fitted.unitMark).toEqual(markFor(fitted.fontSize))
+    expect(drawnWidth(fitted, "万元")).toBeLessThanOrEqual(1100)
+    const larger = fitted.fontSize + 1
+    expect(drawnWidth({ text: fitted.text, fontSize: larger, unitMark: markFor(larger) }, "万元")).toBeGreaterThan(1100)
+  })
+
   it("declines when the unit at its smallest still does not leave the figure room", () => {
     // Fits alone at the floor, with nothing to spare for a long unit.
     const fitted = fitHeroLine("123456789012", { ...opts, unit: "registered user accounts in total" })

@@ -1,0 +1,42 @@
+{
+  "components": [
+    {
+      "type": "comparison",
+      "columns": [
+        "Add 600 vans",
+        "Fix density first"
+      ],
+      "rows": [
+        {
+          "label": "Cost to Northwind",
+          "cells": [
+            "$210M capital",
+            "$38M over 12 months"
+          ]
+        },
+        {
+          "label": "Time to first saving",
+          "cells": [
+            "18 months",
+            "3 months"
+          ]
+        },
+        {
+          "label": "Cost per parcel",
+          "cells": [
+            "4% lower",
+            "**18% lower**"
+          ]
+        },
+        {
+          "label": "Main risk",
+          "cells": [
+            "Vans sit idle off peak",
+            "Depot teams absorb change"
+          ]
+        }
+      ],
+      "recommended": 1
+    }
+  ]
+}

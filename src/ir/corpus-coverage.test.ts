@@ -162,6 +162,105 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
       { label: "Q1", value: 20 },
     ],
   }),
+  // waterfall emphasis: the marked bars stand together under one bracket, a
+  // total is never marked, and the bracket's label needs marked bars to name.
+  "coverage/waterfall-emphasis-valid": minimalDeck({
+    type: "waterfall",
+    unit: "$",
+    emphasis_label: "Planning drivers: +$1.11 of the +$1.25 rise",
+    items: [
+      { label: "FY2023", value: 4.1, kind: "total" },
+      { label: "Failed first attempts", value: 0.48, emphasis: true },
+      { label: "Falling route density", value: 0.37, emphasis: true },
+      { label: "Driver overtime", value: 0.26, emphasis: true },
+      { label: "Fuel", value: 0.09 },
+      { label: "Other", value: 0.05 },
+      { label: "FY2026", value: 5.35, kind: "total" },
+    ],
+  }),
+  "coverage/waterfall-emphasis-gap-tripwire": minimalDeck({
+    type: "waterfall",
+    items: [
+      { label: "Start", value: 100, kind: "total" },
+      { label: "Q1", value: 20, emphasis: true },
+      { label: "Q2", value: -15 },
+      { label: "Q3", value: 10, emphasis: true },
+    ],
+  }),
+  "coverage/waterfall-emphasis-total-tripwire": minimalDeck({
+    type: "waterfall",
+    items: [
+      { label: "Start", value: 100, kind: "total", emphasis: true },
+      { label: "Q1", value: 20 },
+      { label: "Q2", value: -15 },
+    ],
+  }),
+  "coverage/waterfall-emphasis-label-tripwire": minimalDeck({
+    type: "waterfall",
+    emphasis_label: "Most of the rise",
+    items: [
+      { label: "Start", value: 100 },
+      { label: "Q1", value: 20 },
+      { label: "Q2", value: -15 },
+    ],
+  }),
+  // chart series emphasis: one series, on a plot that colors series one by
+  // one, among at least two.
+  "coverage/chart-emphasis-valid": minimalDeck({
+    type: "chart",
+    chart_type: "combo",
+    axes: { y2_unit: "$" },
+    series: [
+      { name: "Parcels", data: [{ x: "FY2023", y: 131 }, { x: "FY2024", y: 139 }] },
+      { name: "Cost per parcel", plot: "line", axis: "right", emphasis: true, data: [{ x: "FY2023", y: 4.1 }, { x: "FY2024", y: 4.45 }] },
+    ],
+  }),
+  "coverage/chart-emphasis-two-tripwire": minimalDeck({
+    type: "chart",
+    chart_type: "bar",
+    series: [
+      { name: "North", emphasis: true, data: [{ x: "Q1", y: 4 }, { x: "Q2", y: 5 }] },
+      { name: "South", emphasis: true, data: [{ x: "Q1", y: 3 }, { x: "Q2", y: 6 }] },
+    ],
+  }),
+  "coverage/chart-emphasis-single-series-tripwire": minimalDeck({
+    type: "chart",
+    chart_type: "line",
+    series: [{ name: "North", emphasis: true, data: [{ x: "Q1", y: 4 }, { x: "Q2", y: 5 }] }],
+  }),
+  "coverage/chart-emphasis-pie-tripwire": minimalDeck({
+    type: "chart",
+    chart_type: "pie",
+    series: [{ name: "Share", emphasis: true, data: [{ x: "A", y: 4 }, { x: "B", y: 5 }] }],
+  }),
+  // comparison recommended: an index into columns, so it stops at the last one.
+  "coverage/comparison-recommended-valid": minimalDeck({
+    type: "comparison",
+    columns: ["Add 600 vans", "Fix density first"],
+    recommended: 1,
+    rows: [{ label: "Cost per parcel", cells: ["4% lower", "**18% lower**"] }],
+  }),
+  "coverage/comparison-recommended-tripwire": minimalDeck({
+    type: "comparison",
+    columns: ["Add 600 vans", "Fix density first"],
+    recommended: 2,
+    rows: [{ label: "Cost per parcel", cells: ["4% lower", "18% lower"] }],
+  }),
+  // roadmap emphasis: the accent bar singles out one phase.
+  "coverage/roadmap-emphasis-valid": minimalDeck({
+    type: "roadmap",
+    items: [
+      { title: "Pilot", period: "Months 1 to 3", emphasis: true },
+      { title: "Route re-cut", period: "Months 7 to 9" },
+    ],
+  }),
+  "coverage/roadmap-emphasis-tripwire": minimalDeck({
+    type: "roadmap",
+    items: [
+      { title: "Pilot", period: "Months 1 to 3", emphasis: true },
+      { title: "Route re-cut", period: "Months 7 to 9", emphasis: true },
+    ],
+  }),
   "coverage/data_table-valid": minimalDeck({
     type: "data_table",
     columns: [

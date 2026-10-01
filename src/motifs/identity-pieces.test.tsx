@@ -38,6 +38,7 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
   "luxe-motif": { cover: ["invitation"], ending: ["invitation"] },
   "vermilion-motif": { content: ["gold-rules"], ending: ["gold-rules"] },
   "corner-ornament-motif": { content: ["masthead"], ending: ["masthead"] },
+  "folio-motif": { chapter: ["folio"], content: ["folio"], ending: ["folio"] },
 }
 
 /** Adjudicated identity pieces. Midground, original color, no intensity cap. */
@@ -51,10 +52,18 @@ function slideOf(type: Slide["type"]): Slide {
   return { type, heading: "Heading", components: [] } as Slide
 }
 
-function irOf(theme: string, slide: Slide): PptxIR {
+/**
+ * A motif that is the deck's own footer (`folio-motif`) only paints under
+ * `branding: "full"`, the one posture that promises a content footer, so the
+ * roster renders it there. Every other motif keeps the omitted posture.
+ */
+const FULL_BRANDING_MOTIFS: ReadonlySet<MotifId> = new Set(["folio-motif"])
+
+function irOf(theme: string, slide: Slide, motif?: MotifId): PptxIR {
   return {
     version: "5",
     filename: "x.pptx",
+    ...(motif && FULL_BRANDING_MOTIFS.has(motif) ? { branding: "full" } : {}),
     theme: { id: theme },
     meta: { date: "2026-07-15", organization: "CloudSeek" },
     assets: { images: {} },
@@ -88,7 +97,7 @@ function draw(id: MotifId, type: Slide["type"]) {
   const Motif = MOTIFS[id]
   const markup = renderSvgMarkup(
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
-      <Motif ir={irOf(theme, slide)} slide={slide} ctx={ctx} />
+      <Motif ir={irOf(theme, slide, id)} slide={slide} ctx={ctx} />
     </svg>,
   )
   return parseSvgRoot(markup)

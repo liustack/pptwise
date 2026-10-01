@@ -563,6 +563,8 @@ export type ChartSeries = {
   /** `chart_type: "combo"` only: read this series against the left (default)
    * or a right-hand value axis. */
   axis?: "left" | "right"
+  /** Singles this series out: lead color, every other series grey. */
+  emphasis?: boolean
 }
 export type FlowNode = {
   id: string

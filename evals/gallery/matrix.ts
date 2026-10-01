@@ -261,12 +261,12 @@ function componentEntries(): ComponentEntry[] {
  * point of the corpus and also why none of them shows what happens when a
  * face cannot cope. These three do. One per family that suppresses something
  * of the theme's own on its ordinary page, because that suppression is what a
- * stepped-aside page must not inherit: `gauge-stats` declares
- * `branding: "none"` and draws the deck's metadata itself, `crayonbox-cards`
+ * stepped-aside page must not inherit: `gauge-sheet` declares
+ * `branding: "none"` because brief's footer is its motif, `crayonbox-cards`
  * and `show-figures` declare `suppressMotif`.
  *
  * Each is one ordinary corpus component under a lead-in sentence: a
- * four-quarter two-series bar chart, a three-ring onion, a five-person
+ * from-to shift, a three-ring onion, a five-person
  * roster. Nothing here is inflated to force the outcome — every one of them
  * fits its face on its own, and it is the sentence above it that takes the
  * page past what the face can hold, which is exactly the shape a real deck
@@ -278,7 +278,7 @@ export const STEP_ASIDE_PAGES: readonly {
   readonly face: string
   readonly component: string
 }[] = [
-  { theme: "brief", kind: "data", face: "gauge-stats", component: "chart · bar" },
+  { theme: "brief", kind: "data", face: "gauge-sheet", component: "from_to" },
   { theme: "runway", kind: "data", face: "show-figures", component: "rings" },
   { theme: "crayon", kind: "list", face: "crayonbox-cards", component: "people_cards" },
 ]
@@ -339,7 +339,14 @@ export function buildMatrix(
 
     // ── face band: this theme's menu, laid out one face per slot ─────────
     if (wantsBand("face")) {
+      // One specimen per face. A face that dispatches by content
+      // (`LayoutDefinition.dispatch`, brief's gauge-sheet) is named by
+      // several kinds, and its specimen is filed under the first of them; the
+      // deck band shows the compositions the other kinds get.
+      const specimens = new Set<string>()
       for (const [slot, layoutId] of Object.entries(menuFaces(themeId))) {
+        if (specimens.has(layoutId)) continue
+        specimens.add(layoutId)
         const kind = BOUNDARY_SLOTS.includes(slot) ? undefined : (slot as PageKind)
         const ir = layoutPage(layoutId, nativeLexiconFor(themeId), assets[themeLanguage], themeId, kind)
         push({

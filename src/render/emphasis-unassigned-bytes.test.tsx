@@ -189,10 +189,12 @@ describe("lecture underline reaches every shared emphasis path", () => {
 describe("brief gauge cover and shared emphasis paths", () => {
   const ir = consultingPadDeck()
 
-  it("gauge cover replaces the keyword pad with its one fixed gold underline", () => {
+  // The 2026-10-02 board keeps one fixed gold bar on the cover and gives
+  // every other yellow to the author: a marked title run takes the pad.
+  it("gauge cover keeps its one fixed gold bar and pads the marked title run", () => {
     const svg = renderSlideSvg(ir, 0)
-    expect(svg).toContain('<rect x="160" y="432" width="504" height="8" fill="#F5C518"></rect>')
-    expect(svg).not.toContain('data-emphasis-pad=""')
+    expect(svg).toContain('<rect x="96" y="196" width="64" height="6" fill="#F5C518"></rect>')
+    expect(svg).toContain('data-emphasis-pad=""')
     expect(svg).not.toContain("**")
   })
 

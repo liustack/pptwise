@@ -1,0 +1,9 @@
+{
+  "components": [
+    {
+      "type": "paragraph",
+      "text": "Northwind delivered 160 million parcels this year. The last mile cost $5.35 each, **41% of all delivery cost**. Volume grew 22% in three years, and last-mile cost per parcel grew 30%."
+    }
+  ],
+  "footnote": "Source: Northwind finance, FY2023 to FY2026"
+}

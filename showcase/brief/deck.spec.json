@@ -1,0 +1,89 @@
+{
+  "version": "1",
+  "narrative": "boardroom-report",
+  "theme": "brief",
+  "filename": "northwind-last-mile-proposal",
+  "meta": {
+    "organization": "Halden Partners",
+    "authors": [
+      {
+        "name": "Maya Ellison",
+        "role": "Engagement lead",
+        "org": "Halden Partners"
+      }
+    ],
+    "date": "14 October 2026",
+    "confidentiality": "confidential"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "Cut last-mile cost 18% in twelve months",
+      "summary": "Proposal to Northwind Logistics"
+    },
+    {
+      "id": "p02-verdict",
+      "type": "content",
+      "kind": "statement",
+      "heading": "Last mile is the cost line that keeps growing"
+    },
+    {
+      "id": "p03-trend",
+      "type": "content",
+      "kind": "data",
+      "heading": "Cost per parcel rose 30% while volume grew 22%",
+      "focus": "chart"
+    },
+    {
+      "id": "p04-drivers",
+      "type": "content",
+      "kind": "evidence",
+      "heading": "Three drivers explain almost 90% of the increase",
+      "focus": "waterfall"
+    },
+    {
+      "id": "p05-why",
+      "type": "content",
+      "kind": "points",
+      "heading": "Each driver is a planning problem"
+    },
+    {
+      "id": "p06-chapter",
+      "type": "chapter",
+      "heading": "What we propose"
+    },
+    {
+      "id": "p07-options",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Fix density before buying fleet"
+    },
+    {
+      "id": "p08-plan",
+      "type": "content",
+      "kind": "process",
+      "heading": "Four waves, each paying for the next",
+      "focus": "roadmap"
+    },
+    {
+      "id": "p09-prize",
+      "type": "content",
+      "kind": "fact",
+      "heading": "What the program is worth"
+    },
+    {
+      "id": "p10-team",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "One owner per lever, one steering group"
+    },
+    {
+      "id": "p11-ending",
+      "type": "ending",
+      "heading": "Approve the three-depot pilot by **15 November**",
+      "summary": "Maya Ellison, Engagement lead, Halden Partners"
+    }
+  ],
+  "branding": "full"
+}

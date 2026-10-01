@@ -17,6 +17,7 @@ import { buildCtx, resolveBackgroundHex } from "./full-slide-svg"
 import { parseSvgRoot, renderSvgMarkup } from "./serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { GaugeStatsContent } from "../layouts/content-gauge-stats"
+import { registerTestTheme } from "../themes/test-fixtures"
 
 const CANVAS_W = 1280
 
@@ -25,12 +26,24 @@ function ctxFor(themeId: string) {
   return buildCtx(tokens, {}, undefined, resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.surface))
 }
 
+/**
+ * A deck whose data page goes to `gauge-stats`. Brief no longer offers that
+ * face (its data page is gauge-sheet since the 2026-10-02 redesign, and its
+ * own footer is folio-motif), so the deck binds a copy of a theme that keeps
+ * the shared Branding footer, with gauge-stats on its data page.
+ */
+let gaugeThemeId: string | undefined
+function gaugeTheme(): string {
+  gaugeThemeId ??= registerTestTheme("identity-gauge-stats", "thesis", { content: { data: "gauge-stats" } })
+  return gaugeThemeId
+}
+
 /** A page rich enough that `gauge-stats` hands it to the step-aside. */
 function gaugeDeck(seriesCount: number, branding: "full" | "cover-only"): PptxIR {
   return {
     version: "5",
     filename: "identity.pptx",
-    theme: { id: "brief" },
+    theme: { id: gaugeTheme() },
     branding,
     meta: { organization: "云觅咨询", version: "v2", date: "2026-08" },
     assets: { images: {} },

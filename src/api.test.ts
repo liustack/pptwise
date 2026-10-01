@@ -915,7 +915,7 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
     })
     expect(v.ok).toBe(true)
     expect(densityMessage(v)).toBe(
-      "too many components on this slide (max 4 — two-column layout's capacity is tighter than dense pacing's 5) — split into multiple slides",
+      "too many components on this slide (max 4 — gauge-sheet layout's capacity is tighter than dense pacing's 5) — split into multiple slides",
     )
   })
 
@@ -1993,7 +1993,11 @@ describe("generatePptx", () => {
   })
 
   it("omitted branding leaves confidentiality and date off the cover, branding full paints them", () => {
-    const themeId = registerTestTheme("api-branding-face", "brief", {
+    // The shared Branding footer is what this test holds to the posture, so
+    // the copy starts from a theme that keeps it. Brief draws its own content
+    // footer through folio-motif, which sets the organization and the
+    // confidentiality label but not the date (motif-folio-motif.test.tsx).
+    const themeId = registerTestTheme("api-branding-face", "thesis", {
       cover: "tone-adaptive-header",
       content: { points: "quiet-frame" },
     })

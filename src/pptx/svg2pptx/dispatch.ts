@@ -1,8 +1,9 @@
-import { pxToIn } from "../../constants"
+import { PX_PER_IN, ptToPx, pxToIn } from "../../constants"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { rectToOp, type ShapeOp } from "./rect"
 import { circleToOp, ellipseToOp, type EllipseOp } from "./ellipse"
-import { anchorTextBox, textToOp, type TextOp } from "./text"
+import { anchorTextBox, lineSizePx, textToOps, type TextOp } from "./text"
+import { firstBaselineEm, lineHeightPx } from "./baseline"
 import { lineToOp, type LineOp } from "./line"
 import { polygonToOp, polylineToOp, pathToOp, type PathOp, type PathPoint } from "./path"
 import { imageToOp, type ImageOp } from "./image"
@@ -214,8 +215,18 @@ function withInheritedPaint(el: Element, paint: Paint): Element {
   return view
 }
 
-/** Convert a single leaf element to an op, or null if it isn't drawable. */
-function leafToOp(el: Element, gradients: ReadonlyMap<string, GradientDef>): Op | null {
+/**
+ * Convert a single leaf element to its ops: none if it isn't drawable, one
+ * for every shape, and for a `<text>` one per stretch sharing a baseline
+ * (`textToOps`; a `<tspan dy>` starts a new one).
+ */
+function leafToOps(el: Element, gradients: ReadonlyMap<string, GradientDef>): Op[] {
+  if (el.tagName.toLowerCase() === "text") return textToOps(el)
+  const op = shapeLeafToOp(el, gradients)
+  return op ? [op] : []
+}
+
+function shapeLeafToOp(el: Element, gradients: ReadonlyMap<string, GradientDef>): Op | null {
   switch (el.tagName.toLowerCase()) {
     case "rect":
       return rectToOp(el, gradients)
@@ -223,8 +234,6 @@ function leafToOp(el: Element, gradients: ReadonlyMap<string, GradientDef>): Op 
       return circleToOp(el, gradients)
     case "ellipse":
       return ellipseToOp(el, gradients)
-    case "text":
-      return textToOp(el)
     case "line":
       return lineToOp(el)
     case "polygon":
@@ -273,25 +282,26 @@ function walk(
     return
   }
 
-  const op = leafToOp(withInheritedPaint(el, paint), gradients)
-  if (!op) return
+  for (const op of leafToOps(withInheritedPaint(el, paint), gradients)) {
+    const positioned = positionLeafOp(op, el, ctm)
+    out.push(ownBlockIndex != null ? { ...positioned, blockIndex: ownBlockIndex } : positioned)
+  }
+}
+
+/** Fold a leaf op's inherited transform into its geometry. */
+function positionLeafOp(op: Op, el: Element, ctm: Matrix): Op {
   // 本渲染器只发 translate/scale。Rotated text still takes the dedicated
   // path below (kept after cartesian y-titles stopped emitting rotate(-90)).
   // 非文本叶子上的旋转/斜切仍不在受控子集内（出现时按未缩放处理）。
-  let positioned: Op
-  if (op.kind === "text" && Math.abs(rotationDeg(ctm)) > 0.5) {
-    positioned = positionRotatedText(op, el, ctm)
-  } else {
-    const origin = applyPoint(ctm, 0, 0)
-    positioned = translateOp(scaleOp(op, ctm[0], ctm[3]), pxToIn(origin.x), pxToIn(origin.y))
-    // A text box's width is measured against the canvas, so it is only right
-    // once the op is *in* canvas coordinates — which is here, and nowhere
-    // earlier (`textToOp` sees this element's local x and nothing else). Every
-    // other op kind carries real local geometry that the scale+translate above
-    // already maps correctly. See `anchorTextBox`'s own doc comment.
-    if (positioned.kind === "text") positioned = anchorTextBox(positioned)
-  }
-  out.push(ownBlockIndex != null ? { ...positioned, blockIndex: ownBlockIndex } : positioned)
+  if (op.kind === "text" && Math.abs(rotationDeg(ctm)) > 0.5) return positionRotatedText(op, el, ctm)
+  const origin = applyPoint(ctm, 0, 0)
+  const positioned = translateOp(scaleOp(op, ctm[0], ctm[3]), pxToIn(origin.x), pxToIn(origin.y))
+  // A text box's width is measured against the canvas, so it is only right
+  // once the op is *in* canvas coordinates — which is here, and nowhere
+  // earlier (`textToOps` sees this element's local x and nothing else). Every
+  // other op kind carries real local geometry that the scale+translate above
+  // already maps correctly. See `anchorTextBox`'s own doc comment.
+  return positioned.kind === "text" ? anchorTextBox(positioned) : positioned
 }
 
 /**
@@ -312,9 +322,11 @@ function walk(
  * 4° date sitting flat on a tilted chip.
  */
 function positionRotatedText(op: TextOp, el: Element, ctm: Matrix): TextOp {
-  const localX = Number(el.getAttribute("x") ?? 0) || 0
-  const localY = Number(el.getAttribute("y") ?? 0) || 0
-  const fontSizePx = Number(el.getAttribute("font-size") ?? 16) || 16
+  // `textToOps` already folded the stretch's own shift into the box, so the
+  // anchor is read back off the op rather than off the element's own x/y.
+  const lineSize = lineSizePx(op)
+  const localX = op.align === "left" ? op.x * PX_PER_IN : Number(el.getAttribute("x") ?? 0) || 0
+  const localY = op.y * PX_PER_IN + firstBaselineEm(op.fontFace) * lineSize
   const anchor = applyPoint(ctm, localX, localY)
   const scale = matrixScale(ctm) || 1
   const svgDeg = rotationDeg(ctm)
@@ -331,13 +343,14 @@ function positionRotatedText(op: TextOp, el: Element, ctm: Matrix): TextOp {
     fontFamily: op.fontFace,
     bold: op.runs.some((r) => r.bold),
   })
-  const wPx = Math.max(1, units * fontSizePx * scale)
-  const hPx = Math.max(1, fontSizePx * 1.2 * scale)
-  // Matches `text.ts`'s ASCENT_RATIO: alphabetic baseline sits ~0.8em below
-  // the box top. pptxgenjs clockwise rotation around the box center maps
+  const spacingPx = op.runs.reduce((sum, r) => sum + ptToPx(r.charSpacing ?? 0) * Array.from(r.text).length, 0)
+  const wPx = Math.max(1, (units * ptToPx(op.fontSize) + spacingPx) * scale)
+  const hPx = Math.max(1, lineHeightPx(lineSize) * scale)
+  // The box top sits one first-baseline drop (`baseline.ts`) above the
+  // baseline. pptxgenjs clockwise rotation around the box center maps
   // (dx, dy) → (dx cos θ − dy sin θ, dx sin θ + dy cos θ). Invert so the
   // unrotated baseline-anchor offset lands on `anchor` after that rotate.
-  const ascent = 0.8 * fontSizePx * scale
+  const ascent = firstBaselineEm(op.fontFace) * lineSize * scale
   const dx = op.align === "center" ? 0 : op.align === "right" ? wPx / 2 : -wPx / 2
   const dy = -hPx / 2 + ascent
   const rad = (rotate * Math.PI) / 180

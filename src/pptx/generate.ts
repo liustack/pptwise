@@ -24,6 +24,7 @@ import type { ImageOp } from "./svg2pptx/image"
 import { dedupeMediaInZip } from "./pptx-dedupe-media"
 import { applySlideTransitions, applyElementAnimations } from "./pptx-animations"
 import { applyEaFontFaces } from "./pptx-ea-fonts"
+import { applyParagraphMarkFonts } from "./pptx-paragraph-mark"
 import { dropPhrase, type DropKind } from "../render/drop-marker"
 import { auditPptxPackage } from "./package-audit"
 import { finalizePptxZip, normalizePptxTimestamps, PptxSealViolationError } from "./pptx-fixed-timestamps"
@@ -174,7 +175,10 @@ export async function generatePptxBlob(
   // fills, non-overlapping regions of the same XML), so grouping them keeps
   // slide-XML-correcting patches adjacent, ahead of the deck-level
   // transition/animation patches below which only ever *add* new structure.
-  const eaFontBlob = await applyEaFontFaces(gradientBlob)
+  // The paragraph-end mark then copies each paragraph's corrected font
+  // slots, so PowerPoint sets every line on its own face's metrics, which is
+  // what `svg2pptx/baseline.ts` places text boxes by (`pptx-paragraph-mark.ts`).
+  const eaFontBlob = await applyParagraphMarkFonts(await applyEaFontFaces(gradientBlob))
   // Deck-level page-transition switch (wave-C S1/S2): default fade unless
   // meta.animation.transition overrides it ("none" skips injection). Runs
   // right after the a:ea patch — still the same `ppt/slides/*.xml` parts.

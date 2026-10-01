@@ -192,6 +192,11 @@ export type ContentLayoutId =
   | "mono-bleed"
   | "gauge-stats"
   | "gauge-point"
+  // brief sample redesign: the board's ordinary content page, its evidence
+  // page, and its single-figure page. Theme-locked, never auto-picked.
+  | "gauge-sheet"
+  | "gauge-exhibit"
+  | "gauge-figure"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

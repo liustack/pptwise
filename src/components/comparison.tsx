@@ -2,6 +2,14 @@ import { Fragment } from "react"
 import type { Component } from "@/ir"
 import { measureTextUnits, truncateToUnits, type TextWeightHint } from "../lib/svg-text-layout"
 import { DroppedContentMarker } from "../render/drop-marker"
+import {
+  emphasisRunInk,
+  parseEmphasis,
+  renderEmphasisText,
+  sliceEmphasisForLines,
+  stripEmphasis,
+} from "../render/emphasis"
+import { accessibleInk } from "../render/ink"
 import { formLineHeight, layoutAtSize } from "./legibility"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -195,12 +203,18 @@ const MAX_CELL_LINES = 3
  * What a column needs to hold its header and every cell on one line at the
  * sizes the table prefers, padding included.
  */
-function naturalWidths(component: ComparisonComponent, labelHeader: string, fontFamily: string): number[] {
+function naturalWidths(
+  component: ComparisonComponent,
+  labelHeader: string,
+  fontFamily: string,
+  recommendedCol: number,
+): number[] {
   return headerTitles(component, labelHeader).map((header, c) => {
     const headerW = header ? measureTextUnits(header, { bold: true, fontFamily }) * HEADER_FONT_SIZE : 0
+    const bold = c === 0 || c === recommendedCol
     const cellW = Math.max(
       0,
-      ...columnTexts(component, c).map((t) => measureTextUnits(t, { bold: c === 0, fontFamily }) * CELL_FONT_SIZE),
+      ...columnTexts(component, c).map((t) => measureTextUnits(t, { bold, fontFamily }) * CELL_FONT_SIZE),
     )
     return Math.max(MIN_COL_W, Math.max(headerW, cellW) + PAD_X * 2)
   })
@@ -249,6 +263,10 @@ interface CellLayout {
 interface TableLayout {
   labelHeader: string
   component: ComparisonComponent
+  /** Logical column (0 is the row labels) of the recommended option, or -1. */
+  recommendedCol: number
+  /** Each visible row's cells as authored, `**` marks kept, for painting. */
+  markedCells: string[][]
   widths: number[]
   offsets: number[]
   headerFontSize: number
@@ -278,10 +296,26 @@ function layoutTable(
 ): TableLayout {
   // 先丢多余的空首表头，再判首列重复：两种笔误叠在一起时，只有空表头
   // 已经丢掉，dedupeLabelColumn 的「cells 与 columns 等长」判据才成立。
-  const { labelHeader, component } = dedupeLabelColumn(dropBlankLeadingHeader(raw))
+  const normalized = dedupeLabelColumn(dropBlankLeadingHeader(raw))
+  const { labelHeader } = normalized
+  // A cell may mark a run with `**`. Everything that measures, wraps or cuts
+  // reads the text without the marks, and the marks come back at paint time.
+  const component: ComparisonComponent = {
+    ...normalized.component,
+    rows: normalized.component.rows.map((row) => ({ label: stripEmphasis(row.label), cells: row.cells.map(stripEmphasis) })),
+  }
   const headers = headerTitles(component, labelHeader)
   const colCount = headers.length
   const rowCells = component.rows.map((row) => [row.label, ...row.cells].slice(0, colCount))
+  const markedCells = normalized.component.rows.map((row) => [row.label, ...row.cells].slice(0, colCount))
+  // `recommended` counts the columns as authored. Both normalizations above
+  // only ever drop leading columns, so the count they dropped is the shift,
+  // and a recommendation that pointed at a dropped column has nothing left
+  // to mark.
+  const shift = raw.columns.length - component.columns.length
+  const recommendedCol =
+    raw.recommended !== undefined && raw.recommended - shift >= 0 ? raw.recommended - shift + 1 : -1
+  const boldCol = (c: number) => c === 0 || c === recommendedCol
 
   const sized = (widths: number[]) => {
     const headerFontSize = fittedFontSize(
@@ -292,8 +326,9 @@ function layoutTable(
     )
     const cellFontSize = fittedFontSize(
       // Column 0 (row label) renders bold below (`fontWeight={c === 0 ?
-      // "bold" : "normal"}`); every other column stays Regular.
-      rowCells.flatMap((cells) => cells.map((cell, c) => ({ text: cell, colW: widths[c]!, bold: c === 0 }))),
+      // "bold" : "normal"}`), and so does a recommended column; every other
+      // column stays Regular.
+      rowCells.flatMap((cells) => cells.map((cell, c) => ({ text: cell, colW: widths[c]!, bold: boldCol(c) }))),
       CELL_FONT_SIZE,
       fontFamily,
     )
@@ -309,7 +344,7 @@ function layoutTable(
   const legacy = sized(legacyWidths)
   const legacyCells = rowCells.map((cells) =>
     cells.map((cell, c): CellLayout => {
-      const fitted = truncate(cell, legacyWidths[c]!, legacy.cellFontSize, { bold: c === 0, fontFamily })
+      const fitted = truncate(cell, legacyWidths[c]!, legacy.cellFontSize, { bold: boldCol(c), fontFamily })
       return { lines: [fitted], truncated: fitted !== cell }
     }),
   )
@@ -319,6 +354,8 @@ function layoutTable(
     return {
       labelHeader,
       component,
+      recommendedCol,
+      markedCells,
       widths: legacyWidths,
       offsets: offsetsOf(legacyWidths),
       headerFontSize: legacy.headerFontSize,
@@ -329,7 +366,7 @@ function layoutTable(
     }
   }
 
-  const widths = fillColumns(naturalWidths(component, labelHeader, fontFamily), w)
+  const widths = fillColumns(naturalWidths(component, labelHeader, fontFamily, recommendedCol), w)
   const fitted = sized(widths)
   const lineH = formLineHeight(fitted.cellFontSize, CELL_LINE_RATIO)
   const rows = rowCells.map((cells) => {
@@ -340,7 +377,7 @@ function layoutTable(
         fontSize: fitted.cellFontSize,
         maxLines: maxCellLines,
         lineHeightRatio: CELL_LINE_RATIO,
-        bold: c === 0,
+        bold: boldCol(c),
         fontFamily,
       })
       return { lines: wrapped.lines, truncated: wrapped.truncated }
@@ -351,6 +388,8 @@ function layoutTable(
   return {
     labelHeader,
     component,
+    recommendedCol,
+    markedCells,
     widths,
     offsets: offsetsOf(widths),
     headerFontSize: fitted.headerFontSize,
@@ -419,8 +458,15 @@ function renderDefault(rawComponent: ComparisonComponent, box: ComponentBox, ctx
     }
     const tableBottom = top
 
-    const { offsets, headerFontSize, cellFontSize } = table
+    const { offsets, headerFontSize, cellFontSize, recommendedCol } = table
     const borderColor = ctx.colors.border ?? ctx.colors.muted
+    // The recommended column is set in the primary color, bold: the least a
+    // table can do to say which option it argues for. It stands on the page
+    // background, so its ink is held to that background.
+    const pageBg = ctx.defaultBg ?? ctx.colors.bg
+    const recommendedHeaderInk =
+      recommendedCol < 0 ? undefined : accessibleInk(ctx.colors.primary, pageBg, headerFontSize)
+    const recommendedCellInk = recommendedCol < 0 ? undefined : accessibleInk(ctx.colors.primary, pageBg, cellFontSize)
     // 基线补偿随字号走（0.35×字号），18/16 时与旧常量 +6 完全一致。
     const headerBaseline = Math.round(headerFontSize * 0.35)
     const cellBaseline = Math.round(cellFontSize * 0.35)
@@ -440,7 +486,7 @@ function renderDefault(rawComponent: ComparisonComponent, box: ComponentBox, ctx
               data-truncated={header.truncated ? "1" : undefined}
               x={offsets[c] + PAD_X}
               y={ROW / 2 + headerBaseline}
-              fill={ctx.colors.text}
+              fill={c === recommendedCol ? recommendedHeaderInk : ctx.colors.text}
               fontFamily={ctx.fonts.body}
               fontSize={headerFontSize}
               fontWeight="bold"
@@ -492,21 +538,41 @@ function renderDefault(rawComponent: ComparisonComponent, box: ComponentBox, ctx
                 // A wrapped cell's lines centre on the row as a block; a
                 // one-line cell sits where it always has.
                 const first = rowY + row.h / 2 - ((cell.lines.length - 1) * table.lineH) / 2 + cellBaseline
-                return cell.lines.map((line, li) => (
+                const recommended = c === recommendedCol
+                const fill = recommended ? recommendedCellInk! : c === 0 ? ctx.colors.muted : ctx.colors.text
+                const bold = c === 0 || recommended
+                const text = (line: string, li: number) => (
                   <text
                     key={`c-${r}-${c}-${li}`}
                     data-truncated={cell.truncated && li === cell.lines.length - 1 ? "1" : undefined}
                     x={offsets[c] + PAD_X}
                     y={first + li * table.lineH}
-                    fill={c === 0 ? ctx.colors.muted : ctx.colors.text}
+                    fill={fill}
                     fontFamily={ctx.fonts.body}
                     fontSize={cellFontSize}
-                    fontWeight={c === 0 ? "bold" : "normal"}
+                    fontWeight={bold ? "bold" : "normal"}
                     dominantBaseline="alphabetic"
                   >
                     {line}
                   </text>
-                ))
+                )
+                // A cell with no `**` paints exactly as it always has.
+                const segments = parseEmphasis(table.markedCells[r]![c] ?? "")
+                if (!segments.some((segment) => segment.emphasized)) return cell.lines.map(text)
+                const lineSegments = sliceEmphasisForLines(segments, cell.lines)
+                return cell.lines.map((line, li) =>
+                  renderEmphasisText(
+                    lineSegments[li]!,
+                    {
+                      accent: emphasisRunInk(ctx.colors),
+                      baseFill: fill,
+                      emphasis: ctx.emphasis,
+                      fontWeight: bold ? "700" : undefined,
+                      measureWeight: { bold, fontFamily: ctx.fonts.body },
+                    },
+                    text(line, li),
+                  ),
+                )
               })}
             </Fragment>
           )

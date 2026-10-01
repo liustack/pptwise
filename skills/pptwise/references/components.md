@@ -154,9 +154,37 @@ The table gives each component's normal kind home. A component may serve more th
 }
 ```
 
-`bar` prints each bar's value when every value fits beside its bar, and otherwise none, which stops the export until the numbers are shorter or the categories or series fewer. `stacked` prints each column's total on the same terms. `percent_stacked` prints no numbers on the plot, and `combo` prints none at all. When the audience must read a figure exactly, put it in the heading or a `data_table`.
+`bar` prints each bar's value when every value fits beside its bar, and otherwise none, which stops the export until the numbers are shorter or the categories or series fewer. `stacked` prints each column's total on the same terms. `percent_stacked` prints no numbers on the plot, and `combo` prints none except on a marked line (see "Marking what the page is about" below). When the audience must read a figure exactly, put it in the heading or a `data_table`.
 
 No value on a chart's value axis may pass 1e300 in size. To get under it, divide every series on that axis by the same power of ten and name the unit in the axis's unit field. The same holds for a `waterfall`'s values and the running totals its bars reach: divide every item by one power of ten and name the unit in `unit`.
+
+A `waterfall` whose running totals and totals all stay above zero, with the lowest at least half the highest, starts its axis above zero so the movements get the height. Every total bar then carries a cut mark at its foot.
+
+## Marking what the page is about
+
+Four components let the author single out the part the page argues for. Every mark is optional, and a component with none renders exactly as before.
+
+- `chart`: `emphasis: true` on one series keeps it in the lead color and turns every other series grey. It applies to `bar`, `line`, `area`, `scatter`, `stacked`, `percent_stacked`, and `combo` charts with two or more series, and only one series may carry it. A marked `combo` line also prints its value at each point, with its axis unit, when every label clears the bars, dots, lines, and the other labels. When one does not, none is printed, and the axis still carries the values.
+- `waterfall`: `emphasis: true` on the items the page is about fills them in the accent, the totals in the primary color, and the rest grey. Marked items must sit next to each other and cannot be a total. `emphasis_label` prints one line over a bracket that spans the marked bars, and needs at least one marked item.
+- `comparison`: `recommended` is the index into `columns`, counted from 0, of the option the page recommends. Its header and cells are set bold in the primary color. Any cell can also mark a run with `**…**`, painted the way the theme marks emphasis everywhere else.
+- `roadmap`: `emphasis: true` on one item keeps the accent bar on that card and turns the other cards' bars primary. Only one item may carry it.
+
+```json
+{
+  "type": "waterfall",
+  "unit": "$",
+  "emphasis_label": "Planning drivers: +$1.11 of the +$1.25 rise",
+  "items": [
+    { "label": "FY2023", "value": 4.1, "kind": "total" },
+    { "label": "Failed first attempts", "value": 0.48, "emphasis": true },
+    { "label": "Falling route density", "value": 0.37, "emphasis": true },
+    { "label": "Driver overtime", "value": 0.26, "emphasis": true },
+    { "label": "Fuel", "value": 0.09 },
+    { "label": "Other", "value": 0.05 },
+    { "label": "FY2026", "value": 5.35, "kind": "total" }
+  ]
+}
+```
 
 `architecture.layers` paints top to bottom by default. Set `direction: "bottom_up"` when the authored order should begin at the foundation. Keep the array in narrative order.
 
