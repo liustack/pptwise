@@ -4,7 +4,7 @@ One sample deck per theme, written to look its best. Each sample is a deck proje
 
 | theme | sample |
 | --- | --- |
-| [`brief`](brief/) | Halden Partners asks Northwind Logistics to approve a plan that cuts last-mile cost 18% in twelve months. 11 pages: cover, statement, combo chart, waterfall, points, chapter, comparison, roadmap, key figure, org tree, ending. |
+| [`brief`](brief/) | A tea-shop chain's strategy team asks its board to approve the 2027 store network plan: close 38 stores, refit 52, open 20. 12 pages, in Chinese. |
 
 Render a sample from the repository root:
 

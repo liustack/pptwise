@@ -4,58 +4,58 @@
       "type": "chart",
       "chart_type": "combo",
       "axes": {
-        "y_title": "Parcels (millions)",
-        "y2_title": "Last-mile cost per parcel",
-        "y2_unit": "$"
+        "y_title": "门店数（家）",
+        "y2_title": "单店月营收（万元）",
+        "y2_unit": "万元"
       },
       "series": [
         {
-          "name": "Parcels",
+          "name": "门店数",
           "data": [
             {
-              "x": "FY2023",
-              "y": 131
+              "x": "2023",
+              "y": 268
             },
             {
-              "x": "FY2024",
-              "y": 139
+              "x": "2024",
+              "y": 321
             },
             {
-              "x": "FY2025",
-              "y": 150
+              "x": "2025",
+              "y": 376
             },
             {
-              "x": "FY2026",
-              "y": 160
+              "x": "2026",
+              "y": 412
             }
           ]
         },
         {
-          "name": "Cost per parcel",
+          "name": "单店月营收",
           "plot": "line",
           "axis": "right",
+          "emphasis": true,
           "data": [
             {
-              "x": "FY2023",
-              "y": 4.1
+              "x": "2023",
+              "y": 52.0
             },
             {
-              "x": "FY2024",
-              "y": 4.45
+              "x": "2024",
+              "y": 48.6
             },
             {
-              "x": "FY2025",
-              "y": 4.9
+              "x": "2025",
+              "y": 44.1
             },
             {
-              "x": "FY2026",
-              "y": 5.35
+              "x": "2026",
+              "y": 40.3
             }
-          ],
-          "emphasis": true
+          ]
         }
       ]
     }
   ],
-  "footnote": "Source: Northwind finance and network data, FY2023 to FY2026"
+  "footnote": "来源：公司财务部，单店月营收为全年平均"
 }

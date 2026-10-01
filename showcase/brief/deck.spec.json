@@ -2,88 +2,94 @@
   "version": "1",
   "narrative": "boardroom-report",
   "theme": "brief",
-  "filename": "northwind-last-mile-proposal",
+  "filename": "qinglan-2027-store-network",
+  "branding": "full",
   "meta": {
-    "organization": "Halden Partners",
+    "organization": "青岚茶饮",
     "authors": [
       {
-        "name": "Maya Ellison",
-        "role": "Engagement lead",
-        "org": "Halden Partners"
+        "name": "周宁",
+        "role": "战略发展部总监",
+        "org": "青岚茶饮"
       }
     ],
-    "date": "14 October 2026",
+    "date": "2026 年 12 月 8 日",
     "confidentiality": "confidential"
   },
   "pages": [
     {
       "id": "p01-cover",
       "type": "cover",
-      "heading": "Cut last-mile cost 18% in twelve months",
-      "summary": "Proposal to Northwind Logistics"
+      "heading": "2027 门店网络调整建议",
+      "summary": "战略发展部向董事会汇报"
     },
     {
       "id": "p02-verdict",
       "type": "content",
       "kind": "statement",
-      "heading": "Last mile is the cost line that keeps growing"
+      "heading": "门店越开越多，单店越赚越少"
     },
     {
       "id": "p03-trend",
       "type": "content",
       "kind": "data",
-      "heading": "Cost per parcel rose 30% while volume grew 22%",
+      "heading": "门店数四年增长 54%，单店月营收下降 23%",
       "focus": "chart"
     },
     {
-      "id": "p04-drivers",
+      "id": "p04-bridge",
       "type": "content",
       "kind": "evidence",
-      "heading": "Three drivers explain almost 90% of the increase",
+      "heading": "净增 144 家店，门店层利润反而少了 1.15 亿元",
       "focus": "waterfall"
     },
     {
       "id": "p05-why",
       "type": "content",
       "kind": "points",
-      "heading": "Each driver is a planning problem"
+      "heading": "问题出在三个决定上"
     },
     {
       "id": "p06-chapter",
       "type": "chapter",
-      "heading": "What we propose"
+      "heading": "调整方案"
     },
     {
       "id": "p07-options",
       "type": "content",
       "kind": "comparison",
-      "heading": "Fix density before buying fleet"
+      "heading": "少开店、开对店，利润多 1.1 亿元"
     },
     {
-      "id": "p08-plan",
+      "id": "p08-rules",
+      "type": "content",
+      "kind": "points",
+      "heading": "关、改、开，各按一条标准"
+    },
+    {
+      "id": "p09-plan",
       "type": "content",
       "kind": "process",
-      "heading": "Four waves, each paying for the next",
+      "heading": "分三批做完，每批先算账再动手",
       "focus": "roadmap"
     },
     {
-      "id": "p09-prize",
+      "id": "p10-prize",
       "type": "content",
       "kind": "fact",
-      "heading": "What the program is worth"
+      "heading": "调整完成后的门店层利润"
     },
     {
-      "id": "p10-team",
+      "id": "p11-team",
       "type": "content",
       "kind": "hierarchy",
-      "heading": "One owner per lever, one steering group"
+      "heading": "一个领导小组，四条线各有负责人"
     },
     {
-      "id": "p11-ending",
+      "id": "p12-ending",
       "type": "ending",
-      "heading": "Approve the three-depot pilot by **15 November**",
-      "summary": "Maya Ellison, Engagement lead, Halden Partners"
+      "heading": "请批准第一批 18 家关店和 52 家改造预算",
+      "summary": "周宁，战略发展部"
     }
-  ],
-  "branding": "full"
+  ]
 }

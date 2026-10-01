@@ -1,0 +1,44 @@
+{
+  "components": [
+    {
+      "type": "waterfall",
+      "unit": "亿元",
+      "emphasis_label": "同店下滑与外卖佣金：−1.13 亿元",
+      "items": [
+        {
+          "label": "2023 年",
+          "value": 3.08,
+          "kind": "total"
+        },
+        {
+          "label": "新店贡献",
+          "value": 0.62
+        },
+        {
+          "label": "租金上涨",
+          "value": -0.38
+        },
+        {
+          "label": "人工上涨",
+          "value": -0.26
+        },
+        {
+          "label": "同店下滑",
+          "value": -0.71,
+          "emphasis": true
+        },
+        {
+          "label": "外卖佣金",
+          "value": -0.42,
+          "emphasis": true
+        },
+        {
+          "label": "2026 年",
+          "value": 1.93,
+          "kind": "total"
+        }
+      ]
+    }
+  ],
+  "footnote": "来源：战略发展部测算，门店层利润 = 门店收入减去门店直接成本"
+}

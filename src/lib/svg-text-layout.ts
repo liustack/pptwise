@@ -674,11 +674,37 @@ const LINE_START_FORBIDDEN =
 const LINE_END_FORBIDDEN =
   /[([{（［｛｟〈《「『【〔〖〘〚｢‘“〝]/
 
+// A number and the unit that counts it read as one word in Chinese: 「12 个」,
+// 「38 家」, 「2,860 万元」, 「1.93 亿元」. A break between them leaves 「亿」 at
+// the end of one line and 「元」 opening the next, or a bare figure with its
+// unit on the following line, both of which a reader trips over. Two rules
+// keep them together, each a single-character test on either side of the
+// boundary like the kinsoku classes above:
+//   - a digit may not end a line when a counting unit or magnitude opens the
+//     next (「12|个」, 「2,860|万」);
+//   - a magnitude may not end a line when the unit it scales opens the next
+//     (「亿|元」, 「万|人」).
+// The sets are the measure words and units that follow numbers in business
+// prose. They hold only CJK characters, so English wrapping never meets them.
+
+const DIGIT = /[0-9０-９]/
+
+/** What may follow a figure without a break: magnitudes, currency, and the
+ *  measure words a count takes. */
+const UNIT_AFTER_NUMBER =
+  /[万亿千百元角分秒家个人位名次项件条页款台辆套张份户座所批轮倍岁度年月日天周时米吨斤克平股]/
+
+const MAGNITUDE = /[万亿千百]/
+
+/** What may follow a magnitude without a break: the thing it counts. */
+const UNIT_AFTER_MAGNITUDE = /[元人家个位名次项件条台辆套张份户座所吨平米股美港欧日英]/
+
 /**
  * The single kinsoku judgment: may a line break fall between `before` (the
  * would-be last character of a line) and `after` (the would-be first
  * character of the next)? Either side missing — a paragraph edge — is
- * always breakable.
+ * always breakable. A number and its unit count as one word here too (see
+ * the note above `DIGIT`).
  *
  * Pure-Latin text never reaches a `false` here in practice: neither class
  * contains an ASCII letter, digit, space, or sentence mark (see the set
@@ -691,6 +717,8 @@ export function allowsLineBreakBetween(
   after: string | undefined,
 ): boolean {
   if (!before || !after) return true
+  if (DIGIT.test(before) && UNIT_AFTER_NUMBER.test(after)) return false
+  if (MAGNITUDE.test(before) && UNIT_AFTER_MAGNITUDE.test(after)) return false
   return !LINE_START_FORBIDDEN.test(after) && !LINE_END_FORBIDDEN.test(before)
 }
 

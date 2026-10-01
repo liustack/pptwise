@@ -2,41 +2,41 @@
   "components": [
     {
       "type": "comparison",
+      "recommended": 1,
       "columns": [
-        "Add 600 vans",
-        "Fix density first"
+        "照旧每年开 50 家",
+        "调整网络"
       ],
       "rows": [
         {
-          "label": "Cost to Northwind",
+          "label": "2027 年底门店数",
           "cells": [
-            "$210M capital",
-            "$38M over 12 months"
+            "462 家",
+            "394 家"
           ]
         },
         {
-          "label": "Time to first saving",
+          "label": "门店层利润",
           "cells": [
-            "18 months",
-            "3 months"
+            "1.6 亿元",
+            "**2.7 亿元**"
           ]
         },
         {
-          "label": "Cost per parcel",
+          "label": "资本开支",
           "cells": [
-            "4% lower",
-            "**18% lower**"
+            "1.2 亿元",
+            "0.9 亿元"
           ]
         },
         {
-          "label": "Main risk",
+          "label": "主要风险",
           "cells": [
-            "Vans sit idle off peak",
-            "Depot teams absorb change"
+            "单店继续摊薄",
+            "关店期间区域份额下滑"
           ]
         }
-      ],
-      "recommended": 1
+      ]
     }
   ]
 }
