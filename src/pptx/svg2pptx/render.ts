@@ -106,6 +106,7 @@ function runToProp(run: TextRunData): { text: string; options: Record<string, un
   if (run.underline) options.underline = true
   if (run.color) options.color = run.color
   if (run.fontSize != null) options.fontSize = run.fontSize
+  if (run.charSpacing != null) options.charSpacing = run.charSpacing
   return { text: run.text, options }
 }
 

@@ -13,6 +13,7 @@ import { applyPoint, parseTransform } from "../pptx/svg2pptx/transform"
 import { PX_PER_IN } from "../constants"
 import { BillHeadCover, layoutDef } from "./cover-bill-head"
 import type { PptxIR, Slide } from "@/ir"
+import { firstBaselineEm } from "../pptx/svg2pptx/baseline"
 
 const HEADING = "开演前十分钟"
 const VENUE = "RIVERSIDE WAREHOUSE"
@@ -224,7 +225,8 @@ describe("cover-bill-head — shared pool", () => {
     const cx = (textOp!.x + textOp!.w / 2) * PX_PER_IN
     const cy = (textOp!.y + textOp!.h / 2) * PX_PER_IN
     const hPx = textOp!.h * PX_PER_IN
-    const ascent = 0.8 * fontSizePx
+    // PowerPoint sets the first baseline this face's drop below the box top.
+    const ascent = firstBaselineEm(textOp!.fontFace) * fontSizePx
     const dy = -hPx / 2 + ascent
     const rad = ((textOp!.rotate ?? 0) * Math.PI) / 180
     const baselineX = cx - dy * Math.sin(rad)

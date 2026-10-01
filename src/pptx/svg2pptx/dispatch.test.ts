@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest"
 import { svgToOps, type Op } from "./dispatch"
 import { applyPoint, parseTransform } from "./transform"
 import { pxToIn, pxToPt, PX_PER_IN, SLIDE_W_IN } from "../../constants"
+import { firstBaselineEm } from "./baseline"
 
 function parseSvg(inner: string): Element {
   const doc = new DOMParser().parseFromString(
@@ -465,8 +466,9 @@ describe("rotated text leaves (cartesian y-title)", () => {
     const cy = (text.y + text.h / 2) * PX_PER_IN
     const wPx = text.w * PX_PER_IN
     const hPx = text.h * PX_PER_IN
-    // Matches text.ts ASCENT_RATIO: alphabetic baseline is ~0.8em below the box top.
-    const ascent = 0.8 * 14
+    // PowerPoint's first baseline sits `firstBaselineEm` below the box top; the
+    // text names no face, so PowerPoint draws it in the theme font.
+    const ascent = firstBaselineEm(undefined) * 14
     // pptxgenjs/OOXML rotate 270° clockwise around the box center: (dx, dy) → (dy, -dx).
     const left = -wPx / 2
     const baseline = -hPx / 2 + ascent
@@ -485,7 +487,7 @@ describe("rotated text leaves (arbitrary small angles)", () => {
     const cy = (text.y + text.h / 2) * PX_PER_IN
     const wPx = text.w * PX_PER_IN
     const hPx = text.h * PX_PER_IN
-    const ascent = 0.8 * fontSizePx
+    const ascent = firstBaselineEm(undefined) * fontSizePx
     const dx = anchor === "middle" ? 0 : anchor === "end" ? wPx / 2 : -wPx / 2
     const dy = -hPx / 2 + ascent
     const rad = ((text.rotate ?? 0) * Math.PI) / 180

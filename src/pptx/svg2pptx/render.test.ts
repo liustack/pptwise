@@ -138,6 +138,25 @@ describe("renderOp", () => {
     })
   })
 
+  it("passes a run's charSpacing through as pptxgenjs charSpacing (points)", () => {
+    const slide = recorder()
+    renderOp(slide, {
+      kind: "text",
+      runs: [{ text: "$154" }, { text: "M", charSpacing: 15 }, { text: "a year", fontSize: 33 }],
+      x: 1,
+      y: 1,
+      w: 4,
+      h: 2,
+      fontSize: 132,
+      align: "left",
+    } as Op)
+    expect(slide.calls[0].args[0]).toEqual([
+      { text: "$154", options: {} },
+      { text: "M", options: { charSpacing: 15 } },
+      { text: "a year", options: { fontSize: 33 } },
+    ])
+  })
+
   it("passes a text op's rotate through to addText", () => {
     const slide = recorder()
     renderOp(slide, {

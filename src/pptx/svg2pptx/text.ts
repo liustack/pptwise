@@ -1,6 +1,8 @@
-import { pxToIn, pxToPt, SLIDE_W_IN } from "../../constants"
+import { ptToPx, pxToIn, pxToPt, SLIDE_W_IN } from "../../constants"
 import { collapseWhitespaceRuns, preservesWhitespace } from "@/lib/svg-whitespace"
 import { isBold } from "../../render/fonts"
+import { measureTextUnits } from "../../lib/svg-text-layout"
+import { firstBaselineEm, lineHeightPx } from "./baseline"
 import { svgColorToHex } from "./color"
 import { elementOpacity } from "./style"
 
@@ -12,6 +14,13 @@ export interface TextRunData {
   underline?: boolean
   color?: string
   fontSize?: number
+  /**
+   * Points added after every character of this run (pptxgenjs
+   * `charSpacing`, DrawingML `spc`). Only ever set on a one-character run:
+   * the last character before a `<tspan dx>`, split off so the gap lands
+   * after it and nowhere else. See `layOutSegments`.
+   */
+  charSpacing?: number
 }
 
 /**
@@ -42,11 +51,6 @@ export interface TextOp {
   /** Set by `svg2pptx/dispatch.ts` when this leaf lives under a `data-blk`-tagged `<g>` (wave-C S3, `elements === "auto"` only). */
   blockIndex?: number
 }
-
-// SVG `dominant-baseline:alphabetic` puts y at the text baseline; the box top
-// sits roughly one ascent (≈0.8em) above it. Approximate — calibrate against a
-// real PPT render during stage 4 (whole-slide assembly).
-const ASCENT_RATIO = 0.8
 
 /**
  * Floor on a text box's width. Only ever reached by an anchor sitting on (or
@@ -129,7 +133,38 @@ function anchorToAlign(anchor: string | null): "left" | "center" | "right" {
   return "left"
 }
 
-function buildRuns(el: Element, baseBold: boolean, baseItalic: boolean): TextRunData[] {
+/**
+ * A `<tspan>`'s `x`, `y`, `dx` or `dy`, in px, or `undefined` when absent. A
+ * list (`dx="4 2 6"`, one value per character) is refused rather than half
+ * read: no producer writes one, and honoring only its first entry would
+ * export a different line than the page paints.
+ */
+function tspanLength(el: Element, name: "x" | "y" | "dx" | "dy"): number | undefined {
+  const raw = el.getAttribute(name)
+  if (raw == null || raw.trim() === "") return undefined
+  const parts = raw.trim().split(/[\s,]+/)
+  const v = Number(parts[0])
+  if (parts.length !== 1 || !Number.isFinite(v)) {
+    throw new Error(`svg2pptx: <tspan ${name}="${raw}"> is not a single length; only one value per tspan is exported`)
+  }
+  return v
+}
+
+/** One run as the walk read it, before whitespace collapse and positioning. */
+interface RawRun {
+  run: TextRunData
+  preserve: boolean
+  dx: number
+  dy: number
+  /** An absolute `x`: this run starts a new text chunk there. */
+  x?: number
+  /** The chunk's own `text-anchor`, when the tspan sets one. */
+  anchor?: Align
+}
+
+type Align = TextOp["align"]
+
+function buildRawRuns(el: Element, baseBold: boolean, baseItalic: boolean): RawRun[] {
   // `xml:space` is inherited and a child may override it. The `<text>` reads
   // whatever an ancestor folded onto it (`dispatch.ts`), and each direct
   // child reads its own declaration over that. `code.tsx` is the producer
@@ -140,7 +175,7 @@ function buildRuns(el: Element, baseBold: boolean, baseItalic: boolean): TextRun
   // instead, which removed the two ends and left every interior run of blanks
   // untouched: 423 nodes across 217 corpus pages exported "A    ·    B" where
   // the page paints "A · B". Both consumers now read one character stream.
-  const runs: { run: TextRunData; preserve: boolean }[] = []
+  const runs: RawRun[] = []
   el.childNodes.forEach((node) => {
     if (node.nodeType === 3) {
       const text = node.textContent ?? ""
@@ -148,12 +183,17 @@ function buildRuns(el: Element, baseBold: boolean, baseItalic: boolean): TextRun
       const run: TextRunData = { text }
       if (baseBold) run.bold = true
       if (baseItalic) run.italic = true
-      runs.push({ run, preserve })
+      runs.push({ run, preserve, dx: 0, dy: 0 })
       return
     }
     if (node.nodeType !== 1) return
     const child = node as Element
     if (child.tagName.toLowerCase() !== "tspan") return
+    // An absolute y moves a chunk to another line entirely. No producer
+    // writes one, and a `dy` says the same thing relatively.
+    if (tspanLength(child, "y") !== undefined) {
+      throw new Error("svg2pptx: <tspan y> is not exported; use dy or a separate <text>")
+    }
     const run: TextRunData = { text: child.textContent ?? "" }
     if (isBold(child.getAttribute("font-weight")) || baseBold) run.bold = true
     if (isItalic(child.getAttribute("font-style")) || baseItalic) run.italic = true
@@ -161,12 +201,179 @@ function buildRuns(el: Element, baseBold: boolean, baseItalic: boolean): TextRun
     if (fill && fill !== "none") run.color = svgColorToHex(fill)
     const fs = child.getAttribute("font-size")
     if (fs) run.fontSize = pxToPt(parseFloat(fs))
-    runs.push({ run, preserve: preservesWhitespace(child, preserve) })
+    const raw: RawRun = {
+      run,
+      preserve: preservesWhitespace(child, preserve),
+      dx: tspanLength(child, "dx") ?? 0,
+      dy: tspanLength(child, "dy") ?? 0,
+    }
+    const x = tspanLength(child, "x")
+    if (x !== undefined) raw.x = x
+    const anchor = child.getAttribute("text-anchor")
+    if (anchor) raw.anchor = anchorToAlign(anchor)
+    runs.push(raw)
   })
-  const texts = collapseWhitespaceRuns(runs.map((entry) => ({ text: entry.run.text, preserve: entry.preserve })))
   return runs
-    .map((entry, i) => ({ ...entry.run, text: texts[i]! }))
-    .filter((run) => run.text.length > 0)
+}
+
+/** How far along a line of `width` an alignment's anchor sits. */
+function alignShare(align: Align): number {
+  return align === "center" ? 0.5 : align === "right" ? 1 : 0
+}
+
+/**
+ * One stretch of a `<text>` that shares a baseline: the whole line, unless a
+ * `<tspan dy>` moved the pen up or down partway.
+ */
+interface Segment {
+  runs: TextRunData[]
+  /** Where the pen starts, absolute px; `undefined` while the line's own anchor decides it. */
+  penX?: number
+  /** Baseline, absolute px. */
+  y: number
+}
+
+/**
+ * Turn each tspan's position into something PowerPoint draws where the page
+ * does, keeping a line one editable paragraph wherever it can.
+ *
+ * `dx` moves the pen before the tspan's first character, which is the same
+ * as widening the character before it. That character is split into its own
+ * run carrying `charSpacing` (DrawingML `spc`, added after each character of
+ * a run). PowerPoint then lays the line out with its own metrics and the gap
+ * is exactly `dx` wherever the preceding text happens to end, with no width
+ * estimate on this side, and a figure and its unit stay one editable line.
+ * The alternative, a second box at a measured offset, would hang the unit's
+ * position on `measureTextUnits` and leave it behind when someone retypes
+ * the figure. Measured in PowerPoint against Chrome's render of the same
+ * SVG: the unit after a 176 px "$154M" lands within 0.3 px.
+ *
+ * An absolute `x` starts a new chunk at that point. The emphasis pad
+ * (`render/emphasis.ts`) sets one on every run of a marked line, each at the
+ * pen position its own width model predicts. Inside a line, such an `x` is
+ * read as the gap it leaves after the previous run's measured advance, and
+ * that gap goes the way of a `dx` (zero for the pad's runs, give or take a
+ * weight the pad measured differently). An `x` on the line's first glyph
+ * fixes where the line starts.
+ *
+ * `dy` moves the pen for the tspan and everything after it. DrawingML's
+ * in-line answer, a run `baseline` shift, is not faithful: PowerPoint draws a
+ * shifted run as a superscript, at about two thirds of its size (measured: a
+ * 24 px "[1]" raised 18 px came out 16 px wide instead of 24, and 5 px low).
+ * So a `dy` starts a new stretch on its own baseline, which becomes its own
+ * text box, placed after the preceding stretch's measured advance.
+ */
+function layOutSegments(
+  raw: RawRun[],
+  line: { x: number; y: number; align: Align; sizePx: number; fontFamily: string | undefined },
+): Segment[] {
+  const texts = collapseWhitespaceRuns(raw.map((entry) => ({ text: entry.run.text, preserve: entry.preserve })))
+  const advance = (runs: readonly TextRunData[]) => advancePx(runs, line.sizePx, line.fontFamily)
+  const segments: Segment[] = []
+  raw.forEach((entry, i) => {
+    const text = texts[i]!
+    if (text.length === 0) return
+    const run: TextRunData = { ...entry.run, text }
+    const current = segments[segments.length - 1]
+    if (!current) {
+      const first: Segment = { runs: [run], y: line.y + entry.dy }
+      if (entry.x !== undefined) {
+        // A chunk anchored at its own x: where it starts depends on its width.
+        const share = alignShare(entry.anchor ?? line.align)
+        first.penX = entry.x + entry.dx - share * advanceOfChunk(raw, texts, i, advance)
+      } else if (line.align === "left") {
+        first.penX = line.x + entry.dx
+      } else if (entry.dx !== 0) {
+        // Where a leading shift lands under a middle or end anchor depends on
+        // how the chunk's extent is counted. No producer writes one.
+        throw new Error("svg2pptx: a tspan dx before the first glyph is only exported for start-anchored text")
+      }
+      segments.push(first)
+      return
+    }
+    if (entry.x !== undefined && (entry.anchor ?? line.align) !== "left") {
+      throw new Error("svg2pptx: a <tspan x> after the first glyph is only exported as a start-anchored chunk")
+    }
+    const pen = () => {
+      if (current.penX === undefined) {
+        throw new Error("svg2pptx: a <tspan x> or dy after text placed by a middle or end anchor is not exported")
+      }
+      return current.penX + advance(current.runs)
+    }
+    if (entry.dy !== 0) {
+      const penX = entry.x !== undefined ? entry.x + entry.dx : pen() + entry.dx
+      segments.push({ runs: [run], penX, y: current.y + entry.dy })
+      return
+    }
+    const gap = entry.x !== undefined ? entry.x + entry.dx - pen() : entry.dx
+    // DrawingML spacing is whole hundredths of a point. A gap that rounds to
+    // none, like the float dust between the pad's own pen positions and
+    // this side's re-measurement, leaves the run whole.
+    const gapPt = Math.round(pxToPt(gap) * 100) / 100
+    if (gapPt !== 0) widenLastCharacter(current.runs, gapPt)
+    current.runs.push(run)
+  })
+  // A shift on a tspan with no glyph moves nothing, as in SVG. A text with no
+  // glyph at all still yields one (empty) box, as before:
+  // `cover-tone-adaptive-header.tsx` relies on an empty cell staying a box.
+  if (segments.length === 0) segments.push({ runs: [], y: line.y })
+  return segments
+}
+
+/**
+ * The advance of the chunk that starts at raw run `start`: it and every run
+ * after it up to the next absolute `x` or `dy`, the extent a chunk anchor
+ * aligns. `dx` gaps inside it count.
+ */
+function advanceOfChunk(
+  raw: readonly RawRun[],
+  texts: readonly string[],
+  start: number,
+  advance: (runs: readonly TextRunData[]) => number,
+): number {
+  let width = 0
+  for (let i = start; i < raw.length; i++) {
+    if (i > start && (raw[i]!.x !== undefined || raw[i]!.dy !== 0)) break
+    if (i > start) width += raw[i]!.dx
+    width += advance([{ ...raw[i]!.run, text: texts[i]! }])
+  }
+  return width
+}
+
+/** A stretch's advance width in px, by the shared width model. */
+function advancePx(runs: readonly TextRunData[], baseSizePx: number, fontFamily: string | undefined): number {
+  return runs.reduce((sum, run) => {
+    const sizePx = run.fontSize != null ? ptToPx(run.fontSize) : baseSizePx
+    const glyphs = measureTextUnits(run.text, { fontFamily, bold: run.bold === true }) * sizePx
+    const spacing = ptToPx(run.charSpacing ?? 0) * Array.from(run.text).length
+    return sum + glyphs + spacing
+  }, 0)
+}
+
+/** Add `pt` of spacing after the last character laid so far. */
+function widenLastCharacter(runs: TextRunData[], pt: number): void {
+  const prev = runs[runs.length - 1]!
+  const chars = Array.from(prev.text)
+  if (chars.length > 1 && prev.charSpacing == null) {
+    const last = chars.pop()!
+    runs[runs.length - 1] = { ...prev, text: chars.join("") }
+    runs.push({ ...prev, text: last, charSpacing: pt })
+    return
+  }
+  // Already a lone character, or one carrying spacing from an earlier shift.
+  runs[runs.length - 1] = { ...prev, charSpacing: (prev.charSpacing ?? 0) + pt }
+}
+
+/**
+ * The size that sets a text op's line height, in px: the largest size any of
+ * its runs is drawn at (a run without its own size draws at the op's). The
+ * paragraph-end mark's size does not count: measured in PowerPoint, a box
+ * whose only run is 24 px under a 48 px mark set a 24 px line. An op with no
+ * runs is the mark alone.
+ */
+export function lineSizePx(op: Pick<TextOp, "fontSize" | "runs">): number {
+  if (op.runs.length === 0) return ptToPx(op.fontSize)
+  return ptToPx(Math.max(...op.runs.map((r) => r.fontSize ?? op.fontSize)))
 }
 
 /**
@@ -206,42 +413,68 @@ function buildRuns(el: Element, baseBold: boolean, baseItalic: boolean): TextRun
  * not a judgment: this layer is the only one that knows, since it is the one
  * folding the transforms in.
  */
-export function textToOp(el: Element): TextOp {
+/**
+ * The x a segment's box is anchored at under `align`. A line whose start the
+ * SVG left to its own anchor keeps that anchor. A line whose pen start the
+ * SVG fixed (an absolute `x`, a leading `dx`, a stretch after a `dy`) is
+ * anchored so that, at the width model's advance, it starts there: the
+ * start itself for a left box, the start plus half or all of the advance
+ * for a centered or right one, which keeps the box's alignment for editing.
+ */
+function boxAnchorX(segment: Segment, elementX: number, align: Align, sizePx: number, fontFamily: string | undefined): number {
+  if (segment.penX === undefined) return elementX
+  const share = alignShare(align)
+  return share === 0 ? segment.penX : segment.penX + share * advancePx(segment.runs, sizePx, fontFamily)
+}
+
+export function textToOps(el: Element): TextOp[] {
   const fontSizePx = num(el, "font-size", 16)
   const align = anchorToAlign(el.getAttribute("text-anchor"))
-  const xPx = num(el, "x")
-  const yPx = num(el, "y")
-
-  // Box placement: trust the SVG's pre-laid-out text — give a wide-enough box
-  // and let `align` anchor it, instead of measuring text width here. `xPx` is
-  // this element's own (possibly local) x, so the box below is only final for
-  // an untransformed element; `dispatch.ts` re-runs `anchorTextBox` once the
-  // op is in canvas coordinates.
-  const op: TextOp = anchorTextBox({
-    kind: "text",
-    runs: buildRuns(
-      el,
-      isBold(el.getAttribute("font-weight")),
-      isItalic(el.getAttribute("font-style")),
-    ),
-    x: pxToIn(xPx),
-    y: pxToIn(yPx - ASCENT_RATIO * fontSizePx),
-    w: 0,
-    h: pxToIn(fontSizePx * 1.2),
-    fontSize: pxToPt(fontSizePx),
-    align,
-  })
   const fontFace = firstFontFamily(el.getAttribute("font-family"))
-  if (fontFace) op.fontFace = fontFace
+  const segments = layOutSegments(
+    buildRawRuns(el, isBold(el.getAttribute("font-weight")), isItalic(el.getAttribute("font-style"))),
+    { x: num(el, "x"), y: num(el, "y"), align, sizePx: fontSizePx, fontFamily: fontFace },
+  )
+  if (segments.length > 1 && align !== "left") {
+    // Each stretch after a `dy` is its own box placed at its pen start, and
+    // a middle or end anchor would place the first one by its width alone.
+    // No producer writes one.
+    throw new Error("svg2pptx: a tspan dy is only exported for start-anchored text")
+  }
+  const fontSize = pxToPt(fontSizePx)
   const fill = el.getAttribute("fill")
-  if (fill && fill !== "none") op.color = svgColorToHex(fill)
+  const color = fill && fill !== "none" ? svgColorToHex(fill) : undefined
   const opacity = elementOpacity(el)
-  if (opacity < 1) op.transparency = Math.round((1 - opacity) * 100)
   // letter-spacing 故意不映射（2026-07-10 全主题导出审计定案）：曾映射为
   // charSpacing（spc），但 LibreOffice 对 spc+CJK 的宽度计算与渲染不一致，
   // **裁掉每段文字的尾字符**（runway 6 处丢字实锤，A/B 剥离 spc 后全部
   // 复原）。丢字是内容事故、字距只是排印细节——导出端不发 spc，预览保留
   // letter-spacing。若未来确认真实 Office/WPS 无此 bug 可再评估。
-
-  return op
+  // 上面说的是整段字距。`<tspan dx>` 的 spc 只落在 dx 前的那一个字符上
+  // （`widenLastCharacter`），不是 letter-spacing 的映射。
+  return segments.map((segment) => {
+    const linePx = lineSizePx({ fontSize, runs: segment.runs })
+    // Box placement: trust the SVG's pre-laid-out text — give a wide-enough
+    // box and let `align` anchor it, instead of measuring text width here.
+    // `x` is this element's own (possibly local) x, so the box below is only
+    // final for an untransformed element; `dispatch.ts` re-runs
+    // `anchorTextBox` once the op is in canvas coordinates. The top sits
+    // where PowerPoint puts this face's first baseline on the SVG's `y`
+    // (`baseline.ts`).
+    const segmentAlign = segments.length > 1 ? "left" : align
+    const op: TextOp = anchorTextBox({
+      kind: "text",
+      runs: segment.runs,
+      x: pxToIn(boxAnchorX(segment, num(el, "x"), segmentAlign, fontSizePx, fontFace)),
+      y: pxToIn(segment.y - firstBaselineEm(fontFace) * linePx),
+      w: 0,
+      h: pxToIn(lineHeightPx(linePx)),
+      fontSize,
+      align: segmentAlign,
+    })
+    if (fontFace) op.fontFace = fontFace
+    if (color) op.color = color
+    if (opacity < 1) op.transparency = Math.round((1 - opacity) * 100)
+    return op
+  })
 }
