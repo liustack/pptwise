@@ -1,7 +1,7 @@
 {
   "name": "@liustack/pptwise",
   "version": "0.40.0",
-  "description": "Stable, editable PPTX generation for AI agents — semantic IR in, native DrawingML out",
+  "description": "A real PowerPoint, not HTML. Editable .pptx decks for AI agents, rendered on your own machine.",
   "type": "module",
   "sideEffects": false,
   "license": "MIT",
