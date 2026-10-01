@@ -5,155 +5,145 @@ import { resolveStyle } from "../themes"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { parseSvgRoot, renderSvgMarkup } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
+import { footnoteBaselineFor } from "../render/branding-geometry"
 import { GaugePointContent, layoutDef } from "./content-gauge-point"
 
-const chapter: Slide = { type: "chapter", heading: "增长判断", components: [] } as Slide
-const slide: Slide = {
-  type: "content",
-  kind: "points",
-  layout: "gauge-point",
-  heading: "留存不是结果\n而是增长的前提",
-  components: [
-    {
-      type: "blockquote",
-      text: "留存不是结果，而是增长的前提。",
-      attribution: "云觅咨询研究",
-    },
-  ],
-} as Slide
+const PARAGRAPH =
+  "Northwind delivered 160 million parcels this year. The last mile cost $5.35 each, **41% of all delivery cost**. Volume grew 22% in three years, and last-mile cost per parcel grew 30%."
+const PLAIN = PARAGRAPH.replace(/\*\*/g, "")
 
-const ir: PptxIR = {
-  version: "5",
-  filename: "gauge-point.pptx",
-  theme: { id: "brief" },
-  meta: { organization: "云觅咨询", version: "v2", date: "2026-08" },
-  assets: { images: {} },
-  slides: [chapter, slide],
-} as PptxIR
+const pointSlide = (overrides: Partial<Slide> = {}): Slide =>
+  ({
+    type: "content",
+    kind: "statement",
+    heading: "Last mile is the cost line that keeps growing",
+    components: [{ type: "paragraph", text: PARAGRAPH }],
+    footnote: "Source: Northwind finance, FY2023 to FY2026",
+    ...overrides,
+  }) as Slide
 
-function renderPoint() {
+function renderPoint(slide: Slide = pointSlide()) {
   const tokens = resolveStyle("brief")
   const bg = resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.surface)
-  const ctx = buildCtx(tokens, {}, undefined, bg)
-  const markup = renderSvgMarkup(
-    <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-      <GaugePointContent ir={ir} slide={slide} index={1} ctx={ctx} />
-    </svg>,
+  const ctx = buildCtx(tokens, {}, undefined, bg, undefined, undefined, "pad")
+  const ir = {
+    version: "5",
+    filename: "gauge-point.pptx",
+    theme: { id: "brief" },
+    meta: { organization: "Halden Partners", date: "2026-10-14" },
+    assets: { images: {} },
+    slides: [slide],
+  } as PptxIR
+  const root = parseSvgRoot(
+    renderSvgMarkup(
+      <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+        <GaugePointContent ir={ir} slide={slide} index={0} ctx={ctx} />
+      </svg>,
+    ),
   )
-  return { root: parseSvgRoot(markup), tokens }
+  return { root, tokens, ctx }
 }
 
-const textBy = (root: Element, value: string) =>
-  Array.from(root.querySelectorAll("text")).find((text) => text.textContent === value)
+const bySize = (root: Element, size: string) =>
+  Array.from(root.querySelectorAll("text")).filter((text) => text.getAttribute("font-size") === size)
+const attrs = (el: Element, names: string[]) => names.map((name) => el.getAttribute(name))
 
 describe("content-gauge-point", () => {
-  // The face's story sets "a body quote or paragraph" below the claim, but a
-  // paragraph was set as the one-line source caption: three sentences of
-  // support were cut to their first line on a page with half its height free.
-  it("sets a paragraph as the body block under the claim, not as a one-line caption", () => {
-    const text =
-      "Northwind delivered 160 million parcels this year. The last mile cost $5.35 each, 41% of all delivery cost. Volume grew 22% in three years, and last-mile cost per parcel grew 30%."
-    const paragraphSlide = {
-      type: "content",
-      kind: "statement",
-      layout: "gauge-point",
-      heading: "Last mile is the cost line that keeps growing",
-      components: [{ type: "paragraph", text }],
-    } as Slide
-    const tokens = resolveStyle("brief")
-    const bg = resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.surface)
-    const ctx = buildCtx(tokens, {}, undefined, bg)
-    const root = parseSvgRoot(
-      renderSvgMarkup(
-        <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-          <GaugePointContent ir={{ ...ir, slides: [chapter, paragraphSlide] } as PptxIR} slide={paragraphSlide} index={1} ctx={ctx} />
-        </svg>,
-      ),
-    )
-    const body = Array.from(root.querySelectorAll("text")).filter(
-      (t) => Number(t.getAttribute("font-size")) <= 24 && /Northwind|cost|grew/.test(t.textContent ?? ""),
-    )
+  it("leads with a short primary bar and a two-line regular-weight claim", () => {
+    const { root, tokens, ctx } = renderPoint()
+    const bar = root.querySelector("rect")!
+    expect(attrs(bar, ["x", "y", "width", "height", "fill"])).toEqual(["96", "176", "64", "6", tokens.colors.primary])
+
+    const title = bySize(root, "54")
+    expect(title.map((line) => attrs(line, ["x", "y", "font-weight", "fill"]))).toEqual([
+      ["96", "258", "400", tokens.colors.primary],
+      ["96", "324", "400", tokens.colors.primary],
+    ])
+    expect(title.map((line) => line.textContent).join(" ")).toBe("Last mile is the cost line that keeps growing")
+    expect(title[0]!.getAttribute("font-family")).toBe(ctx.fonts.heading)
+  })
+
+  it("sets the whole paragraph at 27/44 on an 880px measure, with the marked run on a pad", () => {
+    const { root, tokens } = renderPoint()
+    const body = bySize(root, "27")
     expect(body.length).toBeGreaterThan(1)
-    expect(body.map((t) => t.textContent).join(" ").replace(/\s+/g, " ")).toBe(text)
+    expect(body.length).toBeLessThanOrEqual(4)
+    expect(body.map((line) => line.getAttribute("y"))).toEqual(body.map((_, index) => String(415 + index * 44)))
+    expect(body.map((line) => line.textContent).join(" ").replace(/\s+/g, " ")).toBe(PLAIN)
+    for (const line of body) expect(line.getAttribute("x")).toBe("96")
+    expect(body[0]!.getAttribute("fill")).toBe(tokens.colors.text)
+
+    const pads = Array.from(root.querySelectorAll("[data-emphasis-pad]"))
+    expect(pads.length).toBeGreaterThan(0)
+    for (const pad of pads) expect(pad.getAttribute("fill")).toBe(tokens.colors.accent)
     expect(root.querySelector("[data-truncated]")).toBeNull()
-    for (const line of body) expect(Number(line.getAttribute("y"))).toBeLessThan(664)
   })
 
-  it("places the kicker, one gold lead rule, and two statement lines at the approved coordinates", () => {
+  it("draws the footnote as the source line on the shared footnote baseline", () => {
     const { root, tokens } = renderPoint()
-    const kicker = textBy(root, "增长判断")!
-    expect([
-      kicker.getAttribute("x"),
-      kicker.getAttribute("y"),
-      kicker.getAttribute("font-size"),
-      kicker.getAttribute("letter-spacing"),
-      kicker.getAttribute("fill"),
-    ]).toEqual(["160", "200", "16", "4", tokens.colors.muted])
-
-    const lead = root.querySelector(`rect[fill="${tokens.colors.accent}"]`)!
-    expect([
-      lead.getAttribute("x"),
-      lead.getAttribute("y"),
-      lead.getAttribute("width"),
-      lead.getAttribute("height"),
-    ]).toEqual(["140", "300", "8", "170"])
-
-    for (const [line, y] of [
-      ["留存不是结果", "360"],
-      ["而是增长的前提", "440"],
-    ] as const) {
-      const title = textBy(root, line)!
-      expect([
-        title.getAttribute("x"),
-        title.getAttribute("y"),
-        title.getAttribute("font-size"),
-        title.getAttribute("font-weight"),
-        title.getAttribute("fill"),
-      ]).toEqual(["184", y, "60", "700", tokens.colors.primary])
-    }
+    const source = Array.from(root.querySelectorAll("text")).find((text) =>
+      text.textContent?.startsWith("Source: Northwind finance"),
+    )!
+    expect(attrs(source, ["x", "y", "font-size", "fill"])).toEqual([
+      "96",
+      String(footnoteBaselineFor(16)),
+      "16",
+      tokens.colors.muted,
+    ])
   })
 
-  it("paints the quote itself, then its speaker, then the top-right meta, keeping gold shape-only", () => {
-    const { root, tokens } = renderPoint()
-    // The words the author quoted, not just the name on them: this face used
-    // to set "云觅咨询研究" and drop the sentence it was attributing.
-    const quote = textBy(root, "留存不是结果，而是增长的前提。")!
-    expect([
-      quote.getAttribute("x"),
-      quote.getAttribute("y"),
-      quote.getAttribute("font-size"),
-      quote.getAttribute("fill"),
-    ]).toEqual(["184", "492", "22", tokens.colors.text])
-    const source = textBy(root, "云觅咨询研究")!
-    expect([
-      source.getAttribute("x"),
-      source.getAttribute("y"),
-      source.getAttribute("font-size"),
-      source.getAttribute("fill"),
-    ]).toEqual(["184", "538", "18", tokens.colors.muted])
-    expect([textBy(root, "云觅咨询")?.getAttribute("x"), textBy(root, "云觅咨询")?.getAttribute("y")]).toEqual([
-      "1184",
-      "100",
-    ])
-    expect([textBy(root, "v2 · 2026-08")?.getAttribute("x"), textBy(root, "v2 · 2026-08")?.getAttribute("y")]).toEqual([
-      "1184",
-      "122",
-    ])
-    expect(root.querySelectorAll(`rect[fill="${tokens.colors.accent}"]`)).toHaveLength(1)
-    expect(root.querySelectorAll(`text[fill="${tokens.colors.accent}"]`)).toHaveLength(0)
-    expect(() => assertSubset(root)).not.toThrow()
+  it("keeps yellow to the author's marks: none at all on an unmarked page", () => {
+    const marked = renderPoint()
+    const accentFills = Array.from(marked.root.querySelectorAll(`[fill="${marked.tokens.colors.accent}"]`))
+    expect(accentFills.every((el) => el.hasAttribute("data-emphasis-pad"))).toBe(true)
+    expect(() => assertSubset(marked.root)).not.toThrow()
+
+    const plain = renderPoint(pointSlide({ components: [{ type: "paragraph", text: PLAIN }] }))
+    expect(plain.root.innerHTML).not.toContain(plain.tokens.colors.accent)
+    // No top-right meta and no footer row: the motif owns the footer.
+    expect(plain.root.querySelectorAll('text[font-size="14"]')).toHaveLength(0)
+    expect(plain.root.querySelectorAll("line")).toHaveLength(0)
   })
 
-  it("declares a sparse pin-only content layout", () => {
-    expect(layoutDef).toMatchObject({
-      id: "gauge-point",
-      kind: "standard",
-      slideTypes: ["content"],
-    })
+  it("pulls the body up under a one-line claim", () => {
+    const { root } = renderPoint(pointSlide({ heading: "Last mile keeps growing" }))
+    expect(bySize(root, "54").map((line) => line.getAttribute("y"))).toEqual(["258"])
+    expect(bySize(root, "27")[0]!.getAttribute("y")).toBe(String(258 + 91))
+  })
+
+  it("sets a quote's words in the body block and its speaker under them", () => {
+    const { root, tokens } = renderPoint(
+      pointSlide({
+        kind: "quote",
+        components: [{ type: "blockquote", text: "Density is the lever nobody pulled.", attribution: "Northwind COO" }],
+        footnote: undefined,
+      } as Partial<Slide>),
+    )
+    const quote = bySize(root, "27")
+    expect(quote.map((line) => line.textContent).join(" ")).toBe("Density is the lever nobody pulled.")
+    const speaker = Array.from(root.querySelectorAll("text")).find((text) => text.textContent === "Northwind COO")!
+    expect(attrs(speaker, ["x", "y", "font-size", "fill"])).toEqual([
+      "96",
+      String(Number(quote[quote.length - 1]!.getAttribute("y")) + 40),
+      "20",
+      tokens.colors.muted,
+    ])
+  })
+
+  it("steps aside rather than cutting a paragraph too long for four lines", () => {
+    const long = Array.from({ length: 3 }, () => PLAIN).join(" ")
+    const { root } = renderPoint(pointSlide({ components: [{ type: "paragraph", text: long }] }))
+    expect(root.querySelector('[data-face-stepped-aside="gauge-point"]')).not.toBeNull()
+    expect(root.querySelector("[data-truncated]")).toBeNull()
+  })
+
+  it("declares a pin-only content face with one body component", () => {
+    expect(layoutDef).toMatchObject({ id: "gauge-point", kind: "standard", slideTypes: ["content"] })
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({
       name: "body",
       accepts: ["blockquote", "paragraph"],
       capacity: 1,
     })
+    expect(layoutDef.headingFit).toMatchObject({ fontSize: 54, maxLines: 2, bold: false })
   })
 })

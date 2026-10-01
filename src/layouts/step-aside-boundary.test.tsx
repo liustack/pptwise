@@ -30,6 +30,7 @@ import { renderSvgMarkup } from "../render/serialize"
 import { AsymmetricTriptychContent } from "./content-asymmetric-triptych"
 import { BentoPanelContent } from "./content-bento-panel"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
+import { GaugePointContent } from "./content-gauge-point"
 import { GaugeStatsContent } from "./content-gauge-stats"
 import { OneEvidenceContent } from "./content-one-evidence"
 import { QuoteStageContent } from "./content-quote-stage"
@@ -165,6 +166,20 @@ const CASES: FaceCase[] = [
     themeId: "brief",
     components: (n) => [bulletRows(n)],
     regions: ["face", "aside", "declined"],
+  },
+  // The body here is the face's own paragraph block, four lines at 27px on
+  // an 880px measure, not a component box, so the dial is the paragraph's
+  // length. Past four lines at the floor the face would cut it and hands the
+  // page to the sheet instead. A paragraph marks a cut rather than declaring
+  // a drop, so the sheet never stands down and there is no third region.
+  {
+    face: "gauge-point",
+    Face: GaugePointContent,
+    themeId: "brief",
+    components: (n) => [
+      { type: "paragraph", text: Array.from({ length: n }, (_, i) => `Volume grew in region ${i + 1}.`).join(" ") },
+    ],
+    regions: ["face", "aside"],
   },
   // A lone hero figure is this face's page. Two KPI items are not, so the
   // page falls to the body slot the chart shares with them. That page keeps

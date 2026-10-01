@@ -1,155 +1,173 @@
 import type { SvgTemplateProps } from "./types"
 import { boundaryBulletItems } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
-import { fitSvgLine } from "../lib/svg-text-layout"
-import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
-import { accessibleInk } from "../render/ink"
-import { GaugeMeta, withoutOverflowMark } from "./gauge-shared"
+import {
+  fitEmphasisHeading,
+  fitEmphasisLine,
+  fitEmphasisText,
+  headingEmphasisPaint,
+  renderEmphasisHeading,
+  renderEmphasisText,
+} from "../render/emphasis"
+import { accessibleInk, metaInk } from "../render/ink"
+import { GAUGE_LEFT, GAUGE_RIGHT } from "./gauge-shared"
 
-const KICKER_X = 160
-const KICKER_Y = 200
-const KICKER_SIZE = 16
-const KICKER_TRACKING = 6
-const KICKER = "NEXT"
+/*
+ * Geometry is the approved brief board (2026-10-02). Baselines are the
+ * board's CSS line boxes resolved for Georgia (ascent 0.917, descent 0.219).
+ * The footer row is the theme motif's, not this face's.
+ */
 
-const NUMBER_X = 160
-const BODY_X = 212
-const ITEM_YS = [292, 384, 476] as const
-const NUMBER_SIZE = 20
-const BODY_SIZE = 36
-const BODY_MIN_PT = 22
-const BODY_MAX_W = 918
+/** The short primary bar over the ask. Primary, not yellow: yellow on this
+ *  page belongs to whatever the author marked in the heading. */
+const BAR_Y = 120
+const BAR_W = 64
+const BAR_H = 6
 
-const UNDERLINE_X = 212
-const UNDERLINE_Y = 306
-const UNDERLINE_W = 252
-const UNDERLINE_H = 6
+const TITLE_Y = 202
+const TITLE_SIZE = 54
+const TITLE_LINE_HEIGHT = 66
+const TITLE_MAX_W = 1000
+const TITLE_FIT = {
+  maxWidth: TITLE_MAX_W,
+  fontSize: TITLE_SIZE,
+  maxLines: 2,
+  minPt: 40,
+  bold: false,
+  lineHeightRatio: TITLE_LINE_HEIGHT / TITLE_SIZE,
+}
 
-const RULE_X1 = 160
-const RULE_X2 = 1130
-const RULE_Y = 600
+/** The primary rule that opens the next steps. */
+const RULE_Y = 368
 
-const SIGNOFF_X = 160
-const SIGNOFF_Y = 636
-const SIGNOFF_SIZE = 16
-const SIGNOFF_MAX_W = 970
+const COL_X = [96, 464, 832] as const
+const NUM_Y = 410
+const NUM_SIZE = 16
+const BODY_Y = 445
+const BODY_SIZE = 24
+const BODY_LINE_HEIGHT = 34
+const BODY_MAX_LINES = 2
+const BODY_MAX_W = 344
+
+/** The sign-off: the author's subheading, under the steps. */
+const SIGNOFF_Y = 604
+const SIGNOFF_SIZE = 18
+const SIGNOFF_MAX_W = 900
 
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 3
 
-function splitHeading(text: string): string[] {
-  const trimmed = stripEmphasis(text).trim()
-  if (!trimmed) return []
-  const byNewline = trimmed.split(/\n+/).map((line) => line.trim()).filter(Boolean)
-  if (byNewline.length > 1) return byNewline.slice(0, 3)
-  const byCn = trimmed.split(/(?=[一二三四五六七八九十]+、)/).map((line) => line.trim()).filter(Boolean)
-  if (byCn.length > 1) return byCn.slice(0, 3)
-  const byDot = trimmed.split(/(?=(?:^|\s)\d+[.、]\s*)/).map((line) => line.trim()).filter(Boolean)
-  if (byDot.length > 1) return byDot.slice(0, 3)
-  return [trimmed]
-}
-
-function actionItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = boundaryBulletItems(slide, ITEM_MAX)
-  return bullets.length > 0 ? bullets : splitHeading(slide.heading ?? "")
-}
-
-/** gauge-next：编号行动清单，以第一项下划线作为全页唯一金色记号。 */
-export function GaugeNextEnding({ ir, slide, ctx }: SvgTemplateProps) {
+/** gauge-next：主色短条领收尾要求，主色线下三列下一步，末行署名。 */
+export function GaugeNextEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const ruleStroke = colors.border ?? colors.muted
-  const items = actionItems(slide).map((item, itemIndex) => ({
-    index: String(itemIndex + 1).padStart(2, "0"),
-    y: ITEM_YS[itemIndex]!,
-    body: fitSvgLine(stripEmphasis(item), {
+  // The heading is the ask the deck closes on, and it is always drawn. The
+  // steps come only from the author's bullets: a heading is never split
+  // into steps it was not written as.
+  const title = fitEmphasisHeading(slide.heading, {
+    ...TITLE_FIT,
+    fontFamily: fonts.heading,
+    typeScale: ctx.shape?.typeScale,
+  })
+  const steps = boundaryBulletItems(slide, ITEM_MAX).map((item, index) => ({
+    x: COL_X[index]!,
+    number: String(index + 1).padStart(2, "0"),
+    body: fitEmphasisText(item, {
       maxWidth: BODY_MAX_W,
       fontSize: BODY_SIZE,
-      minFontSize: BODY_MIN_PT,
-      fontFamily: fonts.heading,
-      bold: true,
+      maxLines: BODY_MAX_LINES,
+      minPt: 18,
+      lineHeightRatio: BODY_LINE_HEIGHT / BODY_SIZE,
+      fontFamily: fonts.body,
+      bold: false,
     }),
   }))
-  const signoffSource = slide.subheading?.trim() ?? ""
-  const signoff = signoffSource
-    ? fitEmphasisLine(signoffSource, {
-        maxWidth: SIGNOFF_MAX_W,
-        fontSize: SIGNOFF_SIZE,
-        minFontSize: SIGNOFF_SIZE,
-        fontFamily: fonts.body,
-      })
-    : null
+  const signoff = fitEmphasisLine(slide.subheading, {
+    maxWidth: SIGNOFF_MAX_W,
+    fontSize: SIGNOFF_SIZE,
+    minFontSize: 16,
+    fontFamily: fonts.body,
+    bold: false,
+  })
+
+  const titleInk = accessibleInk(colors.primary, bg, title.fontSize)
+  const numberInk = accessibleInk(colors.muted, bg, NUM_SIZE)
+  const signoffInk = metaInk(colors.muted, bg)
 
   return (
     <>
-      <GaugeMeta ir={ir} ctx={ctx} tone="light" />
-      <text
-        data-contrast-tier="meta"
-        x={KICKER_X}
-        y={KICKER_Y}
-        fontFamily={fonts.body}
-        fontSize={KICKER_SIZE}
-        fill={accessibleInk(colors.muted, bg, KICKER_SIZE)}
-        letterSpacing={KICKER_TRACKING}
-        dominantBaseline="alphabetic"
-      >
-        {KICKER}
-      </text>
+      <rect x={GAUGE_LEFT} y={BAR_Y} width={BAR_W} height={BAR_H} fill={colors.primary} />
 
-      {items.map((item, itemIndex) => (
-        <g key={item.index}>
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: titleInk, fontWeight: "400", fontFamily: fonts.heading, bold: false }),
+        (_line, index) => (
           <text
-            x={NUMBER_X}
-            y={item.y}
+            key={index}
+            data-truncated={title.truncated && index === title.lines.length - 1 ? "1" : undefined}
+            x={GAUGE_LEFT}
+            y={TITLE_Y + index * title.lineHeight}
             fontFamily={fonts.heading}
-            fontSize={NUMBER_SIZE}
-            fontWeight="700"
-            fill={accessibleInk(colors.primary, bg, NUMBER_SIZE)}
+            fontSize={title.fontSize}
+            fontWeight="400"
+            fill={titleInk}
             dominantBaseline="alphabetic"
-          >
-            {item.index}
-          </text>
-          <text
-            data-truncated={item.body.truncated ? "1" : undefined}
-            x={BODY_X}
-            y={item.y}
-            fontFamily={fonts.heading}
-            fontSize={item.body.fontSize}
-            fontWeight="700"
-            fill={accessibleInk(itemIndex === 0 ? colors.primary : colors.text, bg, item.body.fontSize)}
-            dominantBaseline="alphabetic"
-          >
-            {withoutOverflowMark(item.body.text)}
-          </text>
-        </g>
-      ))}
-
-      {items.length > 0 && (
-        <rect
-          x={UNDERLINE_X}
-          y={UNDERLINE_Y}
-          width={UNDERLINE_W}
-          height={UNDERLINE_H}
-          fill={colors.accent}
-        />
+          />
+        ),
       )}
 
-      <line x1={RULE_X1} y1={RULE_Y} x2={RULE_X2} y2={RULE_Y} stroke={ruleStroke} strokeWidth={1} />
-
-      {signoff && renderEmphasisText(
-        signoff.segments,
-        headingEmphasisPaint(ctx, signoff, { baseFill: accessibleInk(colors.muted, bg, signoff.fontSize), fontWeight: "600", fontFamily: fonts.body, bold: false }),
+      {steps.length > 0 && (
+        <line x1={GAUGE_LEFT} y1={RULE_Y} x2={GAUGE_RIGHT} y2={RULE_Y} stroke={colors.primary} strokeWidth={1} />
+      )}
+      {steps.map((step) => {
+        const bodyInk = accessibleInk(colors.text, bg, step.body.fontSize)
+        return (
+          <g key={step.number}>
             <text
-              data-contrast-tier="meta"
-              data-truncated={signoff.truncated ? "1" : undefined}
-              x={SIGNOFF_X}
-              y={SIGNOFF_Y}
+              x={step.x}
+              y={NUM_Y}
               fontFamily={fonts.body}
-              fontSize={signoff.fontSize}
-              fill={accessibleInk(colors.muted, bg, signoff.fontSize)}
+              fontSize={NUM_SIZE}
+              fill={numberInk}
               dominantBaseline="alphabetic"
-              />
-      )}
+            >
+              {step.number}
+            </text>
+            {renderEmphasisHeading(
+              step.body,
+              headingEmphasisPaint(ctx, step.body, { baseFill: bodyInk, fontWeight: "400", fontFamily: fonts.body, bold: false }),
+              (_line, index) => (
+                <text
+                  key={index}
+                  data-truncated={step.body.truncated && index === step.body.lines.length - 1 ? "1" : undefined}
+                  x={step.x}
+                  y={BODY_Y + index * step.body.lineHeight}
+                  fontFamily={fonts.body}
+                  fontSize={step.body.fontSize}
+                  fill={bodyInk}
+                  dominantBaseline="alphabetic"
+                />
+              ),
+            )}
+          </g>
+        )
+      })}
+
+      {signoff &&
+        renderEmphasisText(
+          signoff.segments,
+          headingEmphasisPaint(ctx, signoff, { baseFill: signoffInk, fontWeight: "400", fontFamily: fonts.body, bold: false }),
+          <text
+            data-contrast-tier="meta"
+            data-truncated={signoff.truncated ? "1" : undefined}
+            x={GAUGE_LEFT}
+            y={SIGNOFF_Y}
+            fontFamily={fonts.body}
+            fontSize={signoff.fontSize}
+            fill={signoffInk}
+            dominantBaseline="alphabetic"
+          />,
+        )}
     </>
   )
 }
@@ -160,20 +178,19 @@ export const layoutDef: LayoutDefinition = {
   kind: "standard",
   story: {
     name: "Gauge Wrap",
-    story: "A kicker at the top, up to three action items stacked below, a border rule, an optional sign-off, and a meta line at the bottom. Dense but orderly.",
-    positioning: "The closing page for up to three next steps with full meta attribution. The most information-dense closing page available.",
+    story: "A short navy bar over the closing ask set large, a navy rule, up to three numbered next steps side by side, and a quiet sign-off line. A marked phrase in the ask takes the theme's highlight.",
+    positioning: "The closing page for one decision and up to three next steps. The most information-dense closing page available.",
     audience: "Close-range screens and printed briefs where the reader needs every detail on one page.",
     notFor: "Closings that need a minimal farewell, which belong in Serif Curtain or Closing Dot.",
   },
   slideTypes: ["ending"],
   slots: [
-    { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
     { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "rule", accepts: [] },
-    { name: "meta", accepts: [] },
   ],
+  headingFit: TITLE_FIT,
   // `pinOnly`: brief locks this face by *listing* it in its own
   // `layouts`, which `resolveLayoutId` honours. Without it the face joins
   // `fullLayoutSet`, the pool the other 23 builtins auto-pick from.

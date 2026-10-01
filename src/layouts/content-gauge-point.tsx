@@ -1,173 +1,161 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { sectionNameFor } from "../lib/derive"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { fitHeadingLines } from "../render/heading-fit"
-import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading, stripEmphasis } from "../render/emphasis"
+import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
+import { stepAside } from "../render/step-aside"
 import { statementLines } from "./minimal-shared"
-import { GaugeMeta, withoutOverflowMark } from "./gauge-shared"
+import { GAUGE_LEFT, GaugeSource, withoutOverflowMark } from "./gauge-shared"
 
-const KICKER_X = 160
-const KICKER_Y = 200
-const KICKER_SIZE = 16
-const KICKER_TRACKING = 4
-const KICKER_MAX_W = 970
+/*
+ * Geometry is the approved brief board (2026-10-02). Baselines are the
+ * board's CSS line boxes resolved for Georgia (ascent 0.917, descent 0.219).
+ */
 
-const LEAD_X = 140
-const LEAD_Y = 300
-const LEAD_W = 8
-const LEAD_H = 170
+/** The short primary bar over the claim. Primary, not yellow: yellow on this
+ *  page belongs to whatever the author marked. */
+const BAR_Y = 176
+const BAR_W = 64
+const BAR_H = 6
 
-const TITLE_X = 184
-const TITLE_Y = 360
-const TITLE_LINE_HEIGHT = 80
-const TITLE_MAX_W = 946
-
-const SOURCE_X = 184
-const SOURCE_Y = 512
-const SOURCE_SIZE = 18
-const SOURCE_MAX_W = 946
+const TITLE_Y = 258
+const TITLE_SIZE = 54
+const TITLE_LINE_HEIGHT = 66
+const TITLE_MAX_W = 960
+const TITLE_FIT = {
+  maxWidth: TITLE_MAX_W,
+  fontSize: TITLE_SIZE,
+  maxLines: 2,
+  minPt: 40,
+  bold: false,
+  lineHeightRatio: TITLE_LINE_HEIGHT / TITLE_SIZE,
+}
 
 /**
- * The quote block, when the page's body component is a `blockquote`.
- *
- * This face reads as heading-as-claim plus a small source line, and for a
- * long time that is all it painted: handed a quote it set the speaker's name
- * and dropped what the speaker said. A page can hold both — the claim stays
- * the hero, the quote sits under it in the body register, and the speaker
- * closes underneath, which is how an attributed quote is set anywhere else in
- * this repository.
+ * The body block: the paragraph, the quoted words, or the subheading when the
+ * page has neither. 27/44, up to four lines on an 880px measure. Its first
+ * baseline hangs a fixed distance under the claim's last one (91px, the
+ * board's 324 to 415), so a one-line claim pulls the body up with it.
  */
-const QUOTE_SIZE = 22
-const QUOTE_MAX_LINES = 3
-const QUOTE_LINE_RATIO = 1.55
-const QUOTE_GAP = 52
-const QUOTE_SOURCE_GAP = 46
+const BODY_GAP = 91
+const BODY_SIZE = 27
+const BODY_LINE_HEIGHT = 44
+const BODY_MAX_LINES = 4
+const BODY_MIN_PT = 24
+const BODY_MAX_W = 880
 
-/** gauge-point：以单枚金色引条校准两行结论的疏内容页。 */
-export function GaugePointContent({ ir, slide, index, ctx }: SvgTemplateProps) {
+/** The speaker under a quote, one body line below its last line. */
+const ATTRIBUTION_GAP = 40
+const ATTRIBUTION_SIZE = 20
+
+/** gauge-point：主色短条领一句大标题，标题下一段正文，底部来源行。 */
+export function GaugePointContent({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const sectionSource = sectionNameFor(ir.slides, index)
-  const section = sectionSource
-    ? fitSvgLine(sectionSource, {
-        maxWidth: KICKER_MAX_W,
-        fontSize: KICKER_SIZE,
-        minFontSize: KICKER_SIZE,
-        letterSpacing: KICKER_TRACKING,
-        fontFamily: fonts.body,
-      })
-    : null
-  const heading = fitHeadingLines(stripEmphasis(slide.heading ?? ""), {
-    ...layoutDef.headingFit,
+  const title = fitEmphasisHeading(slide.heading, {
+    ...TITLE_FIT,
     fontFamily: fonts.heading,
     typeScale: ctx.shape?.typeScale,
   })
   const lines = statementLines(slide)
-  // The story sets "a body quote or paragraph" under the claim. A paragraph
-  // is support for the claim, not its source: it takes the quote's body
-  // block, at text weight, and the source line stays for an attribution.
-  const paragraph = slide.components[0]?.type === "paragraph"
-  const bodyText = paragraph ? lines.source : lines.quote
-  const sourceText = paragraph ? undefined : lines.source
-  const quote = bodyText
+  // A paragraph (or, with no component, the subheading) is support for the
+  // claim and takes the body block. A blockquote puts its words there and
+  // its speaker on the line under them.
+  const quoted = slide.components[0]?.type === "blockquote"
+  const bodyText = quoted ? lines.quote : lines.source
+  const attributionText = quoted ? lines.source : undefined
+  const body = bodyText
     ? fitEmphasisText(bodyText, {
-        maxWidth: SOURCE_MAX_W,
-        fontSize: QUOTE_SIZE,
-        maxLines: QUOTE_MAX_LINES,
-        minPt: 18,
-        lineHeightRatio: QUOTE_LINE_RATIO,
+        maxWidth: BODY_MAX_W,
+        fontSize: BODY_SIZE,
+        maxLines: BODY_MAX_LINES,
+        minPt: BODY_MIN_PT,
+        lineHeightRatio: BODY_LINE_HEIGHT / BODY_SIZE,
+        fontFamily: fonts.body,
+        bold: false,
+      })
+    : null
+  const attribution = attributionText
+    ? fitSvgLine(attributionText, {
+        maxWidth: BODY_MAX_W,
+        fontSize: ATTRIBUTION_SIZE,
+        minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null
-  const source = sourceText
-    ? fitSvgLine(sourceText, {
-        maxWidth: SOURCE_MAX_W,
-        fontSize: SOURCE_SIZE,
-        minFontSize: SOURCE_SIZE,
-        fontFamily: fonts.body,
-      })
-    : null
-  const headingLastY = TITLE_Y + Math.max(0, heading.lines.length - 1) * TITLE_LINE_HEIGHT
-  const quoteFirstY = headingLastY + QUOTE_GAP
-  const quoteLastY = quote ? quoteFirstY + Math.max(0, quote.lines.length - 1) * quote.lineHeight : quoteFirstY
-  // A page with no quote keeps the baseline this face has always used, so
-  // adding the quote block moves nothing on the pages that never had one.
-  const sourceY = quote ? quoteLastY + QUOTE_SOURCE_GAP : SOURCE_Y
+
+  // Four lines at the floor is all the room under the claim. A body that
+  // still does not fit there is not cut on this page: the page steps aside
+  // to the plain sheet, which has the height to set all of it. Only when
+  // that sheet would lose content too does the face keep its page, with the
+  // cut declared by `data-truncated`.
+  if (body?.truncated || attribution?.truncated) {
+    const aside = stepAside({ face: "gauge-point", slide, ctx, cramped: true })
+    if (aside) return aside
+  }
+
+  const titleInk = accessibleInk(colors.primary, bg, title.fontSize)
+  const titleLastY = TITLE_Y + Math.max(0, title.lines.length - 1) * title.lineHeight
+  const bodyY = titleLastY + BODY_GAP
+  const bodyInk = body ? accessibleInk(colors.text, bg, body.fontSize) : colors.text
+  const bodyLastY = body ? bodyY + Math.max(0, body.lines.length - 1) * body.lineHeight : titleLastY
+  const attributionY = body ? bodyLastY + ATTRIBUTION_GAP : bodyY
 
   return (
     <>
-      <GaugeMeta ir={ir} ctx={ctx} tone="light" />
-      {section && (
-        <text
-          data-truncated={section.truncated ? "1" : undefined}
-          x={KICKER_X}
-          y={KICKER_Y}
-          fontFamily={fonts.body}
-          fontSize={section.fontSize}
-          fill={accessibleInk(colors.muted, bg, section.fontSize)}
-          letterSpacing={KICKER_TRACKING}
-          dominantBaseline="alphabetic"
-        >
-          {withoutOverflowMark(section.text)}
-        </text>
+      <rect x={GAUGE_LEFT} y={BAR_Y} width={BAR_W} height={BAR_H} fill={colors.primary} />
+
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: titleInk, fontWeight: "400", fontFamily: fonts.heading, bold: false }),
+        (_line, index) => (
+          <text
+            key={index}
+            data-truncated={title.truncated && index === title.lines.length - 1 ? "1" : undefined}
+            x={GAUGE_LEFT}
+            y={TITLE_Y + index * title.lineHeight}
+            fontFamily={fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="400"
+            fill={titleInk}
+            dominantBaseline="alphabetic"
+          />
+        ),
       )}
 
-      <rect x={LEAD_X} y={LEAD_Y} width={LEAD_W} height={LEAD_H} fill={colors.accent} />
-
-      {heading.lines.map((line, lineIndex) => (
-        <text
-          key={lineIndex}
-          data-truncated={heading.truncated && lineIndex === heading.lines.length - 1 ? "1" : undefined}
-          x={TITLE_X}
-          y={TITLE_Y + lineIndex * TITLE_LINE_HEIGHT}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="700"
-          fill={accessibleInk(colors.primary, bg, heading.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {withoutOverflowMark(line)}
-        </text>
-      ))}
-
-      {quote &&
+      {body &&
         renderEmphasisHeading(
-          quote,
-          headingEmphasisPaint(ctx, quote, {
-            baseFill: accessibleInk(colors.text, bg, quote.fontSize),
-            fontFamily: fonts.body,
-            fontWeight: paragraph ? "400" : "600",
-            bold: false,
-          }),
-          (_line, lineIndex) => (
+          body,
+          headingEmphasisPaint(ctx, body, { baseFill: bodyInk, fontWeight: "400", fontFamily: fonts.body, bold: false }),
+          (_line, index) => (
             <text
-              key={lineIndex}
-              data-truncated={quote.truncated && lineIndex === quote.lines.length - 1 ? "1" : undefined}
-              x={SOURCE_X}
-              y={quoteFirstY + lineIndex * quote.lineHeight}
+              key={index}
+              data-truncated={body.truncated && index === body.lines.length - 1 ? "1" : undefined}
+              x={GAUGE_LEFT}
+              y={bodyY + index * body.lineHeight}
               fontFamily={fonts.body}
-              fontSize={quote.fontSize}
-              fill={accessibleInk(colors.text, bg, quote.fontSize)}
+              fontSize={body.fontSize}
+              fill={bodyInk}
               dominantBaseline="alphabetic"
             />
           ),
         )}
 
-      {source && (
+      {attribution && (
         <text
-          data-truncated={source.truncated ? "1" : undefined}
-          x={SOURCE_X}
-          y={sourceY}
+          data-truncated={attribution.truncated ? "1" : undefined}
+          x={GAUGE_LEFT}
+          y={attributionY}
           fontFamily={fonts.body}
-          fontSize={source.fontSize}
-          fill={accessibleInk(colors.muted, bg, source.fontSize)}
+          fontSize={attribution.fontSize}
+          fill={accessibleInk(colors.muted, bg, attribution.fontSize)}
           dominantBaseline="alphabetic"
         >
-          {withoutOverflowMark(source.text)}
+          {withoutOverflowMark(attribution.text)}
         </text>
       )}
+
+      <GaugeSource text={slide.footnote} ctx={ctx} />
     </>
   )
 }
@@ -178,24 +166,15 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Gauge Verdict",
-    story: "An oversized bold heading with a tall coloured lead bar down its left edge. A body quote or paragraph sits below, and the section label floats above in tracked capitals.",
+    story: "A short navy bar over a large regular-weight claim, one paragraph of support beneath it, and the source on a quiet line at the foot. A marked phrase in the claim or the paragraph takes the theme's highlight.",
     positioning: "Serves statement and quote at one body block, and the statement page of the Brief preset uses it. Choose it for a single conclusion or recommendation anchoring a report section.",
     audience: "Structured-report readers who need one takeaway to land clearly.",
     notFor: "Multiple data blocks or charts, which belong in Gauge Columns.",
   },
   slideTypes: ["content"],
   slots: [
-    { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "body", accepts: ["blockquote", "paragraph"], capacity: 1 },
-    { name: "meta", accepts: [] },
   ],
-  headingFit: {
-    maxWidth: TITLE_MAX_W,
-    fontSize: 60,
-    maxLines: 2,
-    minPt: 36,
-    bold: true,
-    lineHeightRatio: TITLE_LINE_HEIGHT / 60,
-  },
+  headingFit: TITLE_FIT,
 } satisfies LayoutDefinition
