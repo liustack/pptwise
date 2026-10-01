@@ -55,10 +55,10 @@ There is no partial format, base reference, or load-time inheritance. Creating a
     "cover": { "face": "gauge-verdict" },
     "chapter": { "face": "gauge-section" },
     "content": {
-      "points": { "face": "narrow-column" },
-      "comparison": { "face": "two-column" },
-      "process": { "face": "rail-numbered" },
-      "data": { "face": "gauge-stats" },
+      "points": { "face": "gauge-sheet" },
+      "comparison": { "face": "gauge-sheet" },
+      "process": { "face": "gauge-sheet" },
+      "data": { "face": "gauge-sheet" },
       "statement": { "face": "gauge-point", "brand": "none" },
       "photo": {
         "face": "image-split",
@@ -76,7 +76,7 @@ The style object is complete. Its required core contains background, surface, pr
 
 `emphasis` is how the theme strikes a `**marked**` run inside body text: `tint` recolors it in the accent, `pad` swipes a marker-pen block behind it, `underline` strikes a chalk line under it. Omitted equals `tint`. It is a property of the theme, not of any component, so every page of a deck strikes its marked runs the same way.
 
-The menu must contain one entry for every boundary page and at least one content kind. It does not need all eleven kinds. Each offered kind maps to one face. `params` must match the adjustable values declared by that face. `decor` can select a motif or silence it. `brand: "none"` suppresses the shared brand fragment on that page.
+The menu must contain one entry for every boundary page and at least one content kind. It does not need all eleven kinds. Each offered kind maps to one face, and two kinds share a face only when that face picks its composition from the page content, as brief's `gauge-sheet` does. `params` must match the adjustable values declared by that face. `decor` can select a motif or silence it. `brand: "none"` suppresses the shared brand fragment on that page.
 
 ## Start from a factory preset
 

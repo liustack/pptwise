@@ -56,7 +56,7 @@ describe("Branding footer suppression (W1: theme brand.suppressFooterOnCardConte
     expect(container.textContent).not.toContain("v1")
   })
 
-  it.each(["brief", "ledger", "thesis", "terminal", "journal"] as const)(
+  it.each(["swiss", "ledger", "thesis", "terminal", "journal"] as const)(
     "%s 主题：同样的 content 页 + 卡片背景图 → 页脚正常显示（未设 brand.suppressFooterOnCardContent，不受影响）",
     (themeId) => {
       const doc = ir(themeId, [cardBgContentSlide], "full")
@@ -97,7 +97,7 @@ describe("Branding footer meta suppression (brand.suppressFooterMeta, ink v3)", 
     expect(container.querySelector("line")).toBeNull()
   })
 
-  it.each(["brief", "ledger", "thesis", "terminal", "journal", "bulletin"] as const)(
+  it.each(["swiss", "ledger", "thesis", "terminal", "journal", "bulletin"] as const)(
     "%s 主题：同一页页脚 meta 照排（未设 suppressFooterMeta，逐字节不受影响）",
     (themeId) => {
       const doc = ir(themeId, [plainContentSlide], "full")
@@ -108,8 +108,16 @@ describe("Branding footer meta suppression (brand.suppressFooterMeta, ink v3)", 
     },
   )
 
-  it("密级/机构组在左，版本/日期组在右", () => {
+  it("brief 主题：页脚线与 meta 行都交给 folio-motif，Branding 不再排（同 ink）", () => {
     const doc = ir("brief", [plainContentSlide], "full")
+    const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={plainContentSlide} ctx={ctx} />)
+    expect(container.textContent).not.toContain("ACME")
+    expect(container.textContent).not.toContain("v1")
+    expect(container.querySelector("line")).toBeNull()
+  })
+
+  it("密级/机构组在左，版本/日期组在右", () => {
+    const doc = ir("thesis", [plainContentSlide], "full")
     const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={plainContentSlide} ctx={ctx} />)
     const texts = Array.from(container.querySelectorAll("text"))
     const left = texts.find((el) => el.getAttribute("x") === "56")
@@ -125,8 +133,9 @@ const LOGO_SRC =
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] }
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] }
 const endingSlide: Slide = { type: "ending", heading: "收束", components: [] }
+/** A theme that keeps the shared footer, so the posture gate is what decides. */
 function branded(slides: Slide[], branding?: PptxIR["branding"]): PptxIR {
-  const base = ir("brief", slides)
+  const base = ir("thesis", slides)
   return {
     ...base,
     brand: { logo_asset_id: "logo", position: "br" },

@@ -61,6 +61,17 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * brief 的锁，色板不动。
  *
  * **菜单分派（S1-B）**：量规家族承主场（data 走 gauge-stats，statement 走同族的 gauge-point），先结论的报告腔靠 points 的窄栏与 evidence 的单证据页说话，不借别人的嘴，故无 quote。
+ *
+ * **样例重做（2026-10-02，`.issues/2026-10-02-brief-sample-redesign/`）**：
+ * 按定稿样例去掉左上取景框角标（gauge-motif 保留注册，brief 不再挂），
+ * 每张内容页改为同一副骨架：36px 常规字重标题压在 y172 藏青线上，来源行
+ * 收底，页脚交给新 motif `folio-motif`（机构名 + 保密级别，不印页码），
+ * Branding 自己的页脚线与 meta 行因此关掉。内容页换成三张新脸：
+ * `gauge-sheet` 按内容分派到定稿手排的构图（编号分隔行、方案表、阶段列、
+ * 组织树、带变化栏的趋势图），所以一张脸服务 points / list / comparison /
+ * process / data / hierarchy 六个 kind 不会单调；`gauge-exhibit` 承证据页，
+ * `gauge-figure` 承事实页的单个大数字。黄色只来自作者的标记。photo 页的
+ * 图片自带画面，motif 静音。
  */
 export const CONSULTING_TOKENS: StyleTokens = {
   id: "brief",
@@ -126,18 +137,21 @@ export const CONSULTING_THEME = {
     cover: { face: "gauge-verdict" },
     chapter: { face: "gauge-section" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "gauge-stats" },
-      photo: { face: "image-split" },
+      points: { face: "gauge-sheet" },
+      list: { face: "gauge-sheet" },
+      comparison: { face: "gauge-sheet" },
+      process: { face: "gauge-sheet" },
+      data: { face: "gauge-sheet" },
+      photo: { face: "image-split", decor: { kind: "silent" } },
       statement: { face: "gauge-point" },
-      fact: { face: "stat-hero" },
-      evidence: { face: "one-evidence" },
-      hierarchy: { face: "asymmetric-triptych" },
+      fact: { face: "gauge-figure" },
+      evidence: { face: "gauge-exhibit" },
+      hierarchy: { face: "gauge-sheet" },
     },
     ending: { face: "gauge-next" },
   },
-  motif: { id: "gauge-motif" },
+  motif: { id: "folio-motif" },
+  // folio-motif draws the content footer itself, rule and organization row,
+  // so the shared Branding footer keeps out of its way.
+  brand: { suppressFooterRule: true, suppressFooterMeta: true },
 } satisfies BuiltinThemeDeclaration;

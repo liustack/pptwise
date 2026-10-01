@@ -37,6 +37,12 @@ installNodePlatform()
 // Recaptured (ink duty sweep, 2026-08-25). The no-treatment narrow-column
 // kicker now resolves its 16px ink against the page background. Only the
 // nine chapter-context keys for homeroom, crayon, and clinic move.
+//
+// Recaptured (brief sample redesign, 2026-10-02). brief swaps its motif from
+// gauge-motif's corner locator to folio-motif, the footer that only paints
+// under `branding: "full"`, so the locator leaves these omitted-branding
+// pages. The heading treatment table is unchanged. Only the fifteen brief
+// keys move. Every other key and the emphasis fixture stay byte-identical.
 const fixture = JSON.parse(
   readFileSync(HEADING_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }

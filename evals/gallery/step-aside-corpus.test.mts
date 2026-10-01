@@ -35,13 +35,18 @@ await installNodePlatform()
  *
  * `gainsMotif` says the motif arrives *because* the face stepped aside.
  * `crayonbox-cards` and `show-figures` declare `suppressMotif`, so their
- * ordinary page has none. `gauge-stats` does not, so its motif is on both
- * pages and what its handover restores is the branding instead.
+ * ordinary page has none. `gauge-sheet` does not, so its motif is on both
+ * pages: brief's motif is its footer (`folio-motif`), which carries the
+ * organization and the confidentiality label on every content page.
+ *
+ * `datesFooter` says whether the theme's content footer sets the date. Brief's
+ * does not: its board prints the date on the cover only, so the date is not
+ * something its content pages have to keep.
  */
-const EXPECTED: Record<string, { motifPieces: readonly string[]; gainsMotif: boolean }> = {
-  brief: { motifPieces: ["locator-corner"], gainsMotif: false },
-  crayon: { motifPieces: ["crayonbox-sun", "crayonbox-stars"], gainsMotif: true },
-  runway: { motifPieces: [], gainsMotif: false },
+const EXPECTED: Record<string, { motifPieces: readonly string[]; gainsMotif: boolean; datesFooter: boolean }> = {
+  brief: { motifPieces: ["folio"], gainsMotif: false, datesFooter: false },
+  crayon: { motifPieces: ["crayonbox-sun", "crayonbox-stars"], gainsMotif: true, datesFooter: true },
+  runway: { motifPieces: [], gainsMotif: false, datesFooter: true },
 }
 
 describe("the corpus pages that exercise the step-aside", () => {
@@ -74,8 +79,10 @@ describe("the corpus pages that exercise the step-aside", () => {
       // `branding: "none"` and draws `GaugeMeta`). Organization and date both
       // vanished when the shared Branding stayed switched off, so both are
       // named here rather than one standing in for the other.
+      const expected = EXPECTED[spec.theme]!
       expect(svg, "organization").toContain(lex.author)
-      expect(svg, "date").toContain(lex.date)
+      if (expected.datesFooter) expect(svg, "date").toContain(lex.date)
+      else expect(svg, "confidentiality").toContain("Internal")
 
       // Accent: the theme's own hex, not a face's neutralised stand-in.
       const accent = resolveStyle(spec.theme).colors.accent
@@ -84,7 +91,6 @@ describe("the corpus pages that exercise the step-aside", () => {
       // Motif: the exact pieces this theme's motif paints, inside the shared
       // decor container `FullSlideSvg` wraps a motif in — not any element
       // that happens to start with `data-decor`.
-      const expected = EXPECTED[spec.theme]!
       const pieces = [...svg.matchAll(/data-decor-piece="([^"]+)"/g)].map((m) => m[1]!)
       if (expected.motifPieces.length === 0) {
         expect(svg, "runway paints no decor by design").not.toContain("data-decor")

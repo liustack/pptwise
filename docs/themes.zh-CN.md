@@ -54,10 +54,10 @@ read_when:
     "cover": { "face": "gauge-verdict" },
     "chapter": { "face": "gauge-section" },
     "content": {
-      "points": { "face": "narrow-column" },
-      "comparison": { "face": "two-column" },
-      "process": { "face": "rail-numbered" },
-      "data": { "face": "gauge-stats" },
+      "points": { "face": "gauge-sheet" },
+      "comparison": { "face": "gauge-sheet" },
+      "process": { "face": "gauge-sheet" },
+      "data": { "face": "gauge-sheet" },
       "statement": { "face": "gauge-point", "brand": "none" },
       "photo": {
         "face": "image-split",
@@ -73,7 +73,7 @@ read_when:
 
 `style` 对象是完整的。必需核心包括背景、表面、主色、强调色、正文色、弱化色、图表色板、标题字体、正文字体和四类默认背景。额外颜色、等宽字体、形状控制与 `allowCustomBackground` 可选。
 
-菜单必须为每种边界页提供一个条目，并提供至少一个内容 kind。它不需要覆盖全部十一词。每个已提供 kind 映射到一张脸。`params` 必须符合该脸声明的可调值。`decor` 可以选择 motif 或让它静默。`brand: "none"` 会关闭该页的共享品牌片段。
+菜单必须为每种边界页提供一个条目，并提供至少一个内容 kind。它不需要覆盖全部十一词。每个已提供 kind 映射到一张脸。只有按页面内容挑选构图的脸（如 brief 的 `gauge-sheet`）才能被多个 kind 共用。`params` 必须符合该脸声明的可调值。`decor` 可以选择 motif 或让它静默。`brand: "none"` 会关闭该页的共享品牌片段。
 
 ## 从出厂预设起步
 

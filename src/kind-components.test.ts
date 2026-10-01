@@ -65,7 +65,7 @@ describe("componentsForKind", () => {
     const fact = componentsForKind("fact", { theme: "brief" })
     expect(fact.kind).toBe("fact")
     expect([...fact.components].sort()).toEqual(["kpi_cards", "paragraph"])
-    expect(fact.themes).toEqual({ brief: { face: "stat-hero", components: fact.components } })
+    expect(fact.themes).toEqual({ brief: { face: "gauge-figure", components: fact.components } })
     for (const type of fact.components) {
       expect(validateIr(probeDeck("brief", "fact", type)).ok, type).toBe(true)
     }

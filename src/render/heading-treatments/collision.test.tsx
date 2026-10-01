@@ -12,6 +12,8 @@ import { corpusAssets, themeDeck } from "../../../evals/gallery/corpus/decks"
 import { LEXICONS } from "../../../evals/gallery/corpus/lexicon"
 import { nativeLexiconFor } from "../../../evals/gallery/corpus/native"
 import { assignedThemeIds } from "./assignments"
+import { BUILTIN_THEME_FILES, type CanonicalThemeId } from "../../themes"
+import { compileBuiltinTheme } from "../../themes/definitions"
 import { tryContentHeadingTreatment } from "./render"
 
 installNodePlatform()
@@ -238,10 +240,37 @@ describe("rail-numbered badge vs heading treatment", () => {
   })
 })
 
-describe("assigned themes on menu-selected rail-numbered", () => {
+/**
+ * The theme's own process page when its menu puts rail-numbered there, else
+ * the same theme, under its own id, with rail-numbered put there by value.
+ * The treatment table is keyed by theme id, so a renamed copy would carry no
+ * treatment at all. brief's process page is gauge-sheet since the 2026-10-02
+ * redesign, and its ghost index still reaches a workspace copy of brief that
+ * keeps the id and names rail-numbered, so the pairing stays checked.
+ */
+function renderAssignedRailPage(themeId: string): { svg: string; root: Element } {
+  const file = BUILTIN_THEME_FILES[themeId as CanonicalThemeId]
+  if (file.menu.content.process?.face === "rail-numbered") return renderRailPage(themeId)
+  const theme = compileBuiltinTheme({
+    ...file,
+    menu: { ...file.menu, content: { ...file.menu.content, process: { face: "rail-numbered" } } },
+  })
+  const svg = renderSlideSvg(deck(themeId, [chapterSlide(), contentSlide(GALLERY_HEADING)]), 1, { theme })
+  return { svg, root: parseSvgRoot(svg) }
+}
+
+describe("assigned themes on rail-numbered", () => {
   it.each(assignedThemeIds())("%s: badge vs title and kicker zero intersect", (themeId) => {
-    const { root } = renderRailPage(themeId)
+    const { root } = renderAssignedRailPage(themeId)
     expectBadgeClear(themeId, root, GALLERY_HEADING)
+  })
+
+  it("still paints brief's ghost index on the page it checks", () => {
+    const { root } = renderAssignedRailPage("brief")
+    const ghost = Array.from(root.querySelectorAll("text")).find(
+      (text) => text.textContent === "01" && Number(text.getAttribute("font-size")) >= 200,
+    )
+    expect(ghost).toBeDefined()
   })
 })
 
