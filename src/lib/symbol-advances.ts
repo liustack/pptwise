@@ -21,23 +21,24 @@ export const SYMBOL_ADVANCE_BOUNDS: Readonly<
   },
 }
 
-// The advance, in em, of each curly quotation mark in the face itself, keyed
-// by `charCodeAt(0)`. PowerPoint paints a quote from the run's Latin face,
-// so this is its width, not a bound. A mark the face lacks is left out.
+// The advance, in em, of the middle dot, the em dash and each curly
+// quotation mark in the face itself, keyed by `charCodeAt(0)`. PowerPoint
+// paints these from the run's Latin face, so this is their width, not a
+// bound. A mark the face lacks is left out.
 
-export const QUOTE_ADVANCES: Readonly<
+export const LATIN_FACE_MARK_ADVANCES: Readonly<
   Record<"georgia" | "yahei" | "simsun-kaiti", Readonly<Record<"regular" | "bold", Readonly<Record<number, number>>>>>
 > = {
   "georgia": {
-    regular: {8216:0.2266,8217:0.2266,8218:0.2266,8219:0.1953,8220:0.4102,8221:0.4102,8222:0.4102},
-    bold: {8216:0.2686,8217:0.2686,8218:0.2686,8219:0.2686,8220:0.519,8221:0.519,8222:0.519},
+    regular: {183:0.2793,8212:0.8569,8216:0.2266,8217:0.2266,8218:0.2266,8219:0.1953,8220:0.4102,8221:0.4102,8222:0.4102},
+    bold: {183:0.3379,8212:0.9277,8216:0.2686,8217:0.2686,8218:0.2686,8219:0.2686,8220:0.519,8221:0.519,8222:0.519},
   },
   "yahei": {
-    regular: {8216:1,8217:1,8218:0.5,8219:0.2549,8220:1,8221:1,8222:0.5},
-    bold: {8216:1,8217:1,8218:0.5,8219:0.3057,8220:1,8221:1,8222:0.5},
+    regular: {183:0.2407,8212:1.0801,8216:1,8217:1,8218:0.5,8219:0.2549,8220:1,8221:1,8222:0.5},
+    bold: {183:0.4395,8212:1.0801,8216:1,8217:1,8218:0.5,8219:0.3057,8220:1,8221:1,8222:0.5},
   },
   "simsun-kaiti": {
-    regular: {8216:1,8217:1,8220:1,8221:1},
-    bold: {8216:1,8217:1,8220:1,8221:1},
+    regular: {183:1,8212:1,8216:1,8217:1,8220:1,8221:1},
+    bold: {183:1,8212:1,8216:1,8217:1,8220:1,8221:1},
   },
 }

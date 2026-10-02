@@ -289,6 +289,28 @@ describe("renderEmphasisLine pad", () => {
       new DOMParser().parseFromString(`<svg>${html}</svg>`, "image/svg+xml").querySelector("[data-emphasis-pad]")?.getAttribute("d")
     expect(dOf(a)).not.toBe(dOf(other))
   })
+
+  it("starts a marked run after 「——」 where PowerPoint sets it in Georgia", () => {
+    // PowerPoint paints "—" from the run's Latin face, Georgia's at 0.857em.
+    // Pre-fix each dash measured YaHei's 1.08em, so the run and its pad sat
+    // 0.45em right of the text PowerPoint drew.
+    const fontSize = 28
+    const measureWeight = { fontFamily: "Georgia, Songti SC, STSong, serif" }
+    const rendered = renderEmphasisLine(parseEmphasis("门店多了 20.7%——**收入只多 2.3%**"), {
+      accent: "#F2C230",
+      baseFill: "#1F2A44",
+      fontSize,
+      x: 0,
+      baselineY: 100,
+      emphasis: "pad",
+      measureWeight,
+    })
+    const html = renderToStaticMarkup(createElement("text", null, rendered.tspans))
+    const doc = new DOMParser().parseFromString(`<svg>${html}</svg>`, "image/svg+xml")
+    const marked = [...doc.querySelectorAll("tspan")].find((t) => t.textContent === "收入只多 2.3%")!
+    const expected = (measureTextUnits("门店多了 20.7%", measureWeight) + 2 * 0.8569) * fontSize
+    expect(Number(marked.getAttribute("x"))).toBeCloseTo(expected, 1) // was 12.5px further right
+  })
 })
 
 describe("fitEmphasisLine", () => {

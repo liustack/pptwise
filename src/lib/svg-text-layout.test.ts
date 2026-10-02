@@ -10,7 +10,7 @@ import {
   truncateToMonoUnits,
   truncateToUnits,
 } from "./svg-text-layout"
-import { QUOTE_ADVANCES, SYMBOL_ADVANCE_BOUNDS } from "./symbol-advances"
+import { LATIN_FACE_MARK_ADVANCES, SYMBOL_ADVANCE_BOUNDS } from "./symbol-advances"
 
 describe("svg text layout", () => {
   it("wraps long mixed CJK title into bounded lines", () => {
@@ -1165,11 +1165,11 @@ describe("measuresExactly", () => {
   })
 
   it("is false where a character falls back to a class average", () => {
-    // SimSun has no Bold binary, Cambria no table, and "‰"/"·" no entry.
+    // SimSun has no Bold binary, Cambria no table, and "‰"/"×" no entry.
     expect(measuresExactly("Q2", { fontFamily: "SimSun", bold: true })).toBe(false)
     expect(measuresExactly("accounts", { fontFamily: "Cambria" })).toBe(false)
     expect(measuresExactly("3‰", { fontFamily: "Georgia" })).toBe(false)
-    expect(measuresExactly("甲 · 乙", { fontFamily: "Microsoft YaHei" })).toBe(false)
+    expect(measuresExactly("甲 × 乙", { fontFamily: "Microsoft YaHei" })).toBe(false)
   })
 })
 
@@ -1201,8 +1201,9 @@ describe("non-ASCII marks never measure narrower than the face draws them", () =
     for (const [face, weights] of Object.entries(SYMBOL_ADVANCE_BOUNDS) as [keyof typeof families, (typeof SYMBOL_ADVANCE_BOUNDS)["georgia"]][]) {
       for (const [weight, table] of Object.entries(weights) as ["regular" | "bold", Record<number, number>][]) {
         for (const [cp, w] of Object.entries(table)) {
-          // A curly quote the face carries is measured, not bounded (next block).
-          if (QUOTE_ADVANCES[face][weight][Number(cp)] !== undefined) continue
+          // A mark the face paints itself (a curly quote, the em dash, the
+          // middle dot) is measured, not bounded (next two blocks).
+          if (LATIN_FACE_MARK_ADVANCES[face][weight][Number(cp)] !== undefined) continue
           const ch = String.fromCharCode(Number(cp))
           const measured = measureTextUnits(ch, { fontFamily: families[face], bold: weight === "bold" })
           expect(measured, `${face} ${weight} U+${Number(cp).toString(16)}`).toBeGreaterThanOrEqual(w)
@@ -1253,9 +1254,9 @@ describe("curly quotes measure in the face that paints them", () => {
     expect(measureMonoTextUnits("“a”")).toBeCloseTo(3 * (1126 / 2048), 6) // was 2.55
   })
 
-  it("measures every quote a face carries at that face's own advance", () => {
+  it("measures every quote, dash and dot a face carries at that face's own advance", () => {
     const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "simsun-kaiti": "SimSun" } as const
-    for (const [face, weights] of Object.entries(QUOTE_ADVANCES) as [keyof typeof families, (typeof QUOTE_ADVANCES)["georgia"]][]) {
+    for (const [face, weights] of Object.entries(LATIN_FACE_MARK_ADVANCES) as [keyof typeof families, (typeof LATIN_FACE_MARK_ADVANCES)["georgia"]][]) {
       for (const [weight, table] of Object.entries(weights) as ["regular" | "bold", Record<number, number>][]) {
         for (const [cp, w] of Object.entries(table)) {
           const ch = String.fromCharCode(Number(cp))
@@ -1268,6 +1269,72 @@ describe("curly quotes measure in the face that paints them", () => {
   it("counts a quoted sentence in a tabled face as measured exactly", () => {
     expect(measuresExactly("“Sales fell.”", { fontFamily: "Georgia" })).toBe(true)
     expect(measuresExactly("“销量下滑。”", { fontFamily: "Microsoft YaHei" })).toBe(true)
+  })
+})
+
+describe("the em dash and middle dot measure in the face that paints them", () => {
+  // PowerPoint paints "—" and "·" from the run's <a:latin> face, the way it
+  // paints a curly quote, beside Chinese text as much as English
+  // (PowerPoint for Mac, PDF export, 2026-10-03, every run lang="en-US"):
+  // Georgia set "—" at 0.857em and "·" at 0.279em, Georgia Bold at 0.928em
+  // and 0.338em, YaHei at 1.081em and 0.244em, YaHei Bold at 1.081em and
+  // 0.437em, SimSun and KaiTi on the full em, Consolas on its grid. Pre-fix
+  // Georgia measured "—" at YaHei's 1.08em and "·" at a mark's 0.46em, so
+  // the run after 「——」, and the highlight under it, landed 0.45em right of
+  // where PowerPoint drew them.
+  it("prices Georgia's em dash and middle dot at Georgia's own advance", () => {
+    expect(measureTextUnits("—", { fontFamily: "Georgia, Songti SC, STSong, serif" })).toBeCloseTo(0.8569, 4) // was 1.0801
+    expect(measureTextUnits("—", { fontFamily: "Georgia", bold: true })).toBeCloseTo(0.9277, 4) // was 1.0801
+    expect(measureTextUnits("·", { fontFamily: "Georgia" })).toBeCloseTo(0.2793, 4) // was 0.46
+    expect(measureTextUnits("·", { fontFamily: "Georgia", bold: true })).toBeCloseTo(0.3379, 4) // was 0.4395
+  })
+
+  it("measures a doubled dash between Chinese characters in the same Latin face", () => {
+    expect(measureTextUnits("门店——收入", { fontFamily: "Georgia" })).toBeCloseTo(4 + 2 * 0.8569, 4) // was 6.16
+  })
+
+  it("prices YaHei's middle dot at YaHei's own advance and keeps its em dash", () => {
+    expect(measureTextUnits("·", { fontFamily: "Microsoft YaHei" })).toBeCloseTo(0.2407, 4) // was 0.46
+    expect(measureTextUnits("·", { fontFamily: "Microsoft YaHei", bold: true })).toBeCloseTo(0.4395, 4) // was 0.4413
+    expect(measureTextUnits("—", { fontFamily: "Microsoft YaHei" })).toBeCloseTo(1.0801, 4)
+    expect(measureTextUnits("—", { fontFamily: "Microsoft YaHei", bold: true })).toBeCloseTo(1.0801, 4)
+  })
+
+  it("keeps SimSun's and KaiTi's on the full em", () => {
+    expect(measureTextUnits("—", { fontFamily: "SimSun" })).toBe(1)
+    expect(measureTextUnits("·", { fontFamily: "SimSun", bold: true })).toBe(1)
+    expect(measureTextUnits("—", { fontFamily: "KaiTi" })).toBe(1)
+    expect(measureTextUnits("·", { fontFamily: "KaiTi" })).toBe(1)
+  })
+
+  it("leaves a face with no table for them where it was", () => {
+    expect(measureTextUnits("—", { fontFamily: "Cambria" })).toBe(1)
+    expect(measureTextUnits("—")).toBe(1)
+    expect(measureTextUnits("·", { fontFamily: "Cambria" })).toBeCloseTo(0.46, 6)
+  })
+
+  it("sets Consolas's em dash on its grid like any other glyph", () => {
+    expect(measureMonoTextUnits("a——b")).toBeCloseTo(4 * (1126 / 2048), 6) // was 3.1
+  })
+
+  it("still breaks a line at an em dash inside a space-delimited word", () => {
+    // Leaving the CJK width class must not glue "self-serve—automated—
+    // pipelines" into one token, which a 9em column then cut inside
+    // "automated": ["self-serve—automat", "ed—pipelines win", "the quarter"].
+    const r = layoutSvgText("self-serve—automated—pipelines win the quarter", {
+      maxWidth: 9 * 40,
+      fontSize: 40,
+      maxLines: 4,
+      minPt: 20,
+      fontFamily: "Georgia",
+    })
+    expect(r.lines).toEqual(["self-serve—", "automated—", "pipelines win the", "quarter"])
+  })
+
+  it("counts a dash or a dot in a tabled face as measured exactly", () => {
+    expect(measuresExactly("门店——收入", { fontFamily: "Georgia" })).toBe(true)
+    expect(measuresExactly("Mixue · Guming", { fontFamily: "Georgia", bold: true })).toBe(true)
+    expect(measuresExactly("蜜雪·古茗", { fontFamily: "Microsoft YaHei" })).toBe(true)
   })
 })
 
