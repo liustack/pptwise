@@ -669,6 +669,7 @@ body {
 h1 { font-size: 18px; font-weight: 600; margin: 0 0 16px; }
 table.cs { width: 100%; border-collapse: collapse; table-layout: fixed; }
 table.cs th, table.cs td { vertical-align: top; padding: 8px; }
+table.cs td.cs-missing { color: #8a8a85; vertical-align: middle; text-align: center; }
 table.cs thead th { text-align: left; font-size: 13px; font-weight: 600; }
 table.cs tbody th { text-align: left; font-weight: 500; color: #555; width: 88px; }
 .cs-cell svg { display: block; width: 100%; height: auto; background: #fff; }
@@ -690,7 +691,7 @@ export function buildContactSheetHtml(input: ContactSheetInput): string {
       const cells = themes
         .map((t, colIdx) => {
           const slide = t.slides.find((s) => (s.label ?? s.type) === label)
-          if (!slide) return "<td></td>"
+          if (!slide) return `<td class="cs-missing">not in ${escapeHtml(t.id)}'s menu</td>`
           const svg = namespaceSvgIds(slide.svg, `t${colIdx}-${label}-`)
           return `<td class="cs-cell">${svg}</td>`
         })

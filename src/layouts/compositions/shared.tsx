@@ -35,7 +35,40 @@ import { blendOver, readableOn } from "../../render/ink"
  * `design/compositions/<id>/`.
  */
 
-export type CompositionId = "rows" | "table" | "waves" | "tree" | "rail" | "figures" | "track" | "pairs"
+export type CompositionId =
+  | "rows"
+  | "table"
+  | "waves"
+  | "tree"
+  | "rail"
+  | "figures"
+  | "track"
+  | "pairs"
+  | "columns"
+  | "bars"
+  | "bridge"
+  | "records"
+  | "stack"
+  | "window"
+  | "lanes"
+
+/**
+ * The type a composition sets its page in.
+ *
+ * - `board`: brief's boards, where every composition was first drawn. Labels
+ *   and figures in the primary colour at regular weight, closing lines
+ *   reversed out of a primary block.
+ * - `notice`: bulletin's 2026-10 board. Black bold labels and figures, the
+ *   primary colour kept for the one thing an author marks (a `**…**` run, an
+ *   item or series with `emphasis`, a highlighted row), and closing lines on
+ *   a light panel. A composition offered this setting also takes the shapes
+ *   that board drew and the first one did not, such as `numbered_cards` as
+ *   rows with the marked item reversed out of a primary block.
+ *
+ * A setting is the face's choice, not the theme's: the face that offers the
+ * compositions names the setting its own frame was drawn with.
+ */
+export type CompositionSetting = "board" | "notice"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */
@@ -46,6 +79,8 @@ export interface CompositionProps {
   rect: ContentRect
   /** Starting inks a face supplies where its board names a colour the theme tokens do not carry. */
   inks?: CompositionInks
+  /** The type the page is set in. Omitted, `board`. */
+  setting?: CompositionSetting
 }
 
 export interface CompositionInks {

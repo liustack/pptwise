@@ -146,7 +146,7 @@ pptwise schema --kind data --theme brief
 
 带归属的引文组件叫 `blockquote`。不存在名为 `quote` 的组件类型。
 
-`swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap` 与 `sankey` 会占满正文区，必须独占页面。
+`swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap` 与 `sankey` 会占满正文区，必须独占页面。版式可以声明它在这些组件旁边能放哪些组件：bulletin 的内容页在 `waterfall` 或 `gantt` 旁边放一个 `kpi_cards`，所以在 bulletin 上这一对能通过校验，再加别的不行。
 
 `waterfall` 的每根柱都读同一根数值轴，所以每条 `value`，以及每根柱落到的累计值，绝对值都不能超过 1e300。超了就把所有条目除以同一个十的幂，把单位写进 `unit`，这样各柱的比例不变。
 
@@ -207,6 +207,42 @@ pptwise schema --kind data --theme brief
 ```
 
 组合图至少要有一个柱系列和一个线系列，且至少一个系列留在左轴。`plot`、`axis`、`y2_title` 与 `y2_unit` 只在 `combo` 上有效，写了 `y2_title` 或 `y2_unit` 却没有系列放在右轴会报错。组合图的每个值，绝对值都不能超过 1e300。超了就把这个值所在轴上的所有系列除以同一个十的幂，单位写进该轴的 `y_unit` 或 `y2_unit`。三种新类型都不接受 `direction: "horizontal"`。
+
+### 标出这一页说的那件事
+
+一页通常只论证一件事。下面这些字段让作者说清是哪一件，也说清一个数不是实报数时它是什么。每个主题都读这些字段，被标出的那件事用主题的强调色，其余的退后。
+
+| 字段 | 标出什么 | 限制 |
+| --- | --- | --- |
+| `chart.series[].data[].status` | `"forecast"` 把柱子画成斜线填充，`"target"` 画成浅色底上的虚线框。一个系列里实报和预测混着时，图例多一项「预测」或「目标」，预测柱的数值标签也写明「（预测）」。 | 只用于 `bar` 和 `stacked` |
+| `chart.changes` | `[{ "from": "2025 年三季度", "to": "2026 年三季度" }]` 在两根柱上方画一个括号，写两者的变化（相对变化，`%` 轴上写百分点）。写了 `"at": "比亚迪"` 时，`from` 和 `to` 是两个系列名，在这个类别上比较。横条图把变化写在后一根条的数值后面。 | `bar` 和 `stacked`，最多 3 个。横条图必须写 `at`，堆叠图不能写 |
+| `numbered_cards.items[].emphasis` | 这一页落到的那张卡，卡片填满主色 | 最多一张 |
+| `gantt.items[].text` 与 `emphasis` | 阶段名下面的一行说明，以及这一页说的那一段 | 最多标一段 |
+| `timeline.milestones[].lane` 与 `timeline.lanes` | 同一条时间顺序上的两条泳道。`lanes` 给出两条泳道的名字，轴上方的那条在前。放不下两侧的版式把泳道名写在日期前面 | 要么每个节点都写 lane，要么都不写，最多两条，竖向时间线不能用 |
+| `kpi_cards.items[].value` 写成 `**…**` | 用主题强调色印的那一个数 | |
+
+```json
+{
+  "type": "chart",
+  "chart_type": "bar",
+  "axes": { "y_unit": "万辆" },
+  "series": [
+    { "name": "2025 年", "data": [{ "x": "7 月", "y": 182.6 }, { "x": "8 月", "y": 199.5 }, { "x": "9 月", "y": 224.1 }] },
+    { "name": "2026 年", "emphasis": true, "data": [{ "x": "7 月", "y": 146.1 }, { "x": "8 月", "y": 154.1 }, { "x": "9 月", "y": 169, "status": "forecast" }] }
+  ]
+}
+```
+
+```json
+{
+  "type": "timeline",
+  "lanes": ["国内", "海外"],
+  "milestones": [
+    { "date": "7 月", "title": "巴西关税 35%", "lane": "海外" },
+    { "date": "7 月 7 日", "title": "推进《价格法》修改", "lane": "国内", "highlight": true }
+  ]
+}
+```
 
 ## 页脚标记
 

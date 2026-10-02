@@ -25,6 +25,7 @@ import { Icon } from "../render/icons"
 import {
   dedupeKpiUnit,
   deltaProps,
+  kpiValueText,
   fitKpiUnit,
   splitKpiValueWidths,
   type KpiValueScale,
@@ -34,7 +35,7 @@ import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphas
 import { accessibleInk, graphicInk, groupValueInks } from "../render/ink"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
 import { FRAMED_CONTENT_BOTTOM } from "./framed-content-bottom"
-import { footnoteBaselineFor } from "../render/branding-geometry"
+import { FaceFootnote } from "../render/face-footnote"
 import { CARD_INSET_PX } from "../render/spacing"
 
 /**
@@ -292,7 +293,7 @@ function fitBentoKpiValue(
   const valueSize = hero ? BENTO_KPI_HERO_VALUE_SIZE : BENTO_KPI_VALUE_SIZE
   // Same value/unit width split as kpi.tsx. The value keeps its budget when
   // the number and unit cannot both fit.
-  const valueStr = String(item.value)
+  const valueStr = kpiValueText(item.value).text
   // 冗余单位去重（同 components/kpi.tsx：value 已含 unit 结尾时丢弃，防 "35%%"）。
   const unit = dedupeKpiUnit(valueStr, item.unit)
   const valueScale: KpiValueScale = {
@@ -1049,19 +1050,7 @@ export function BentoPanelContent({ ir, slide, index, ctx }: SvgTemplateProps) {
       <>
         {treated.chrome}
         {body}
-        {slide.footnote && (
-          <text
-            x="96"
-            y={footnoteBaselineFor(20)}
-            fontFamily={fonts.body}
-            fontSize="20"
-            fill={colors.muted}
-            fontStyle="italic"
-            dominantBaseline="alphabetic"
-          >
-            {slide.footnote}
-          </text>
-        )}
+        <FaceFootnote text={slide.footnote} ctx={ctx} x={96} maxWidth={1088} fill={colors.muted} />
       </>
     )
   }
@@ -1125,19 +1114,7 @@ export function BentoPanelContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 
       {body}
 
-      {slide.footnote && (
-        <text
-          x="96"
-          y={footnoteBaselineFor(20)}
-          fontFamily={fonts.body}
-          fontSize="20"
-          fill={colors.muted}
-          fontStyle="italic"
-          dominantBaseline="alphabetic"
-        >
-          {slide.footnote}
-        </text>
-      )}
+      <FaceFootnote text={slide.footnote} ctx={ctx} x={96} maxWidth={1088} fill={colors.muted} />
     </>
   )
 }

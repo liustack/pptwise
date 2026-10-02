@@ -552,3 +552,33 @@ describe("numbered_cards n=3 and n=8 stay in box", () => {
   })
 })
 
+
+describe("numbered_cards marks", () => {
+  const marked = {
+    type: "numbered_cards" as const,
+    items: [
+      { title: "国内**在缩**", text: "同比约降**两成**" },
+      { title: "四季度怎么打", text: "重定目标", emphasis: true },
+      { title: "海外", text: "出口" },
+    ],
+  }
+
+  // 2026-10 bulletin deck p02: a marked run inside a card printed its asterisks.
+  it("paints a marked run in a title or a body instead of printing its asterisks", () => {
+    const { container } = svg(numberedCards.render(marked, { x: 0, y: 0, w: 880, h: 360 }, boundThemeCtx("brief", {})))
+    const words = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "").join(" ")
+    expect(words).not.toContain("**")
+    const runs = Array.from(container.querySelectorAll("tspan")).filter((t) => t.getAttribute("font-weight") === "700").map((t) => t.textContent)
+    expect(runs).toEqual(["在缩", "两成"])
+  })
+
+  it("fills the card the author marks in primary and keeps the others plain", () => {
+    const ctx = boundThemeCtx("brief", {})
+    const { container } = svg(numberedCards.render(marked, { x: 0, y: 0, w: 880, h: 360 }, ctx))
+    const cards = Array.from(container.querySelectorAll("[data-card-marked]"))
+    expect(cards).toHaveLength(1)
+    expect(cards[0]!.querySelector("rect")!.getAttribute("fill")).toBe(ctx.colors.primary)
+    expect(Array.from(cards[0]!.querySelectorAll("text")).find((t) => t.textContent === "四季度怎么打")!.getAttribute("fill")).toBe("#FFFFFF")
+    expect(() => assertSubset(parseSvgRoot(renderSvgMarkup(<svg>{numberedCards.render(marked, { x: 0, y: 0, w: 880, h: 360 }, ctx)}</svg>)))).not.toThrow()
+  })
+})

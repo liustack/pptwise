@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+Bulletin has a new look. The cover and ending are a full IKB page with a large white title and white steps. Every content page now opens with one quiet header, a black bold claim over a grey hairline with a short IKB bar, in place of the IKB title band and the ruler, and IKB is kept for the one thing each page marks. Points, list, comparison, process, data and hierarchy pages use the new `notice-sheet` face, which sets the page from its content: numbered rows with the answer reversed out, a chart or bridge beside its figures, a horizontal bar chart, an open records table with a warning, figures beside a titled list, a calendar window over facts, a two-lane timeline, or an options table. Photo pages use the `notice` column of `image-split`. On bulletin, a waterfall or a gantt may share its page with a `kpi_cards`. If you copied bulletin into your own theme file, its menu still names the old faces and they keep working, while `bulletin-motif` now draws only the steps.

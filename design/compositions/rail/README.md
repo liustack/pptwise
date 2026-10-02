@@ -39,3 +39,16 @@ Code: [`src/layouts/compositions/rail.tsx`](../../../src/layouts/compositions/ra
 - The two columns are drawn by the same composition with two geometries: the first round's for computed changes, this round's for written figures. A chart alone keeps the first.
 - A figure with a delta arrow, an icon or a source line has no place in the column, and three figures, or two and a remark, do not fit its height. The page then goes back to the face.
 - The first figure's highlight is a fixed mark of the column, because a `kpi_cards` value carries no `**…**` marks.
+
+## bulletin, NEV sample, 2026-10
+
+The notice setting. The plot is no longer the chart component: `rail` hands the left of the band to [`columns`](../columns/), [`bars`](../bars/) or [`bridge`](../bridge/) and sets the author's `kpi_cards` in the column right of a hairline ([rail-figures.tsx](../../../src/layouts/compositions/rail-figures.tsx), `railFiguresNotice`). See the boards in those three folders. The round's decisions are in [rounds/2026-10-03-bulletin](../../rounds/2026-10-03-bulletin/README.md).
+
+**What it looks like.** The column starts 420px from the right edge behind a hairline. Up to three figures, 170px apart with a hairline between them: a 16px muted label, the value at 50px bold, and a 16px note in body ink under it within two lines. A figure whose value is wrapped in `**…**` is primary.
+
+**Why.** The board put the figures that state the page's claim next to the chart that shows it, and the chart then needs no axis to be read.
+
+**What it gave up.**
+
+- A `kpi_cards` with a note no longer sends the page to a plainer face: the note is part of the figure.
+- A full-body `waterfall` may share the page with `kpi_cards` on a face that says so (`fullBodyCompanions`). validate still refuses any other sibling.

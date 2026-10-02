@@ -46,6 +46,10 @@ const IDENTITY_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], r
   "crayonbox-motif": { content: ["crayonbox-stars", "crayonbox-sun"] },
   "ink-motif": { content: ["seal"] },
   "clinic-motif": { cover: ["heartbeat"] },
+  // bulletin's square steps are its mark, in the same blue as the bar under
+  // every heading, so they keep their full colour on every page (2026-10
+  // sample redesign).
+  "bulletin-motif": { cover: ["ikb-steps"], chapter: ["ikb-steps"], content: ["ikb-steps"], ending: ["ikb-steps"] },
 }
 
 function slideOf(type: Slide["type"]): Slide {

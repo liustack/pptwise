@@ -19,6 +19,7 @@ import { META_FONT_FLOOR_PT, META_FONT_FLOOR_PX, pxToPt } from "@/constants"
 import { findOverflowVocabulary } from "@/ir/overflow-vocabulary"
 import { getPlatform } from "@/platform/registry"
 import { __pathBoundingBox, findOverlapIssues } from "@/audit/deck-audit"
+import { printsMark } from "@/audit/printed-marks"
 import { auditSvgMarkup, findRunMisfits, parseTransform, textLineWidth, textRuns, type TextRun } from "@/audit/svg-audit"
 import {
   IDENTITY_MATRIX,
@@ -1037,7 +1038,17 @@ function walkText(
           })
         }
 
-        const fontFloorExempt = ["gauge-spec", "show-spec"].includes(
+        // A `**…**` mark set as text: some renderer missed the author's
+        // emphasis and printed the asterisks instead.
+        if (printsMark(content)) {
+          findings.push({
+            code: "content-dropped",
+            message: `text "${label}" prints an emphasis mark as asterisks`,
+          })
+        }
+
+        // bulletin's 14px source line is an approved board size, like brief's meta.
+        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec"].includes(
           el.getAttribute("data-font-floor-exempt") ?? "",
         )
         if (!decor && !fontFloorExempt && fontSizeAttr !== null && Number(fontSizeAttr) < FONT_FLOOR) {

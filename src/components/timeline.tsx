@@ -361,7 +361,9 @@ export const timeline: SvgComponent<TimelineComponent> = {
           strokeWidth={2}
         />
         {rows.map(({ m, x, maxWidth, anchor, tx, title, desc }, i) => {
-          const date = fitSvgLine(m.date, {
+          // A milestone on a lane names it with its date: one row has no
+          // second side of the axis for the lane to run on.
+          const date = fitSvgLine(m.lane?.trim() ? `${m.lane.trim()} · ${m.date}` : m.date, {
             maxWidth,
             fontSize: 16,
             minFontSize: MIN_FONT_SIZE,

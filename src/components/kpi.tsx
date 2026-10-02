@@ -6,6 +6,7 @@ import {
   type TextWeightHint,
 } from "../lib/svg-text-layout"
 import { accessibleInk, accessibleOpacity, graphicInk, resolveSemanticColor, type SemanticColorTokens } from "../render/ink"
+import { emphasisRunInk, parseEmphasis, stripEmphasis } from "../render/emphasis"
 import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { layoutAtSize } from "./legibility"
@@ -181,7 +182,7 @@ export function rowValueFontSize(
 ): number {
   let smallest = scale.fontSize
   for (const item of items) {
-    const value = String(item.value)
+    const value = kpiValueText(item.value).text
     const unit = dedupeKpiUnit(value, item.unit)
     const { valueMaxWidth } = splitKpiValueWidths(value, unit, availableWidth, scale)
     const { fontSize } = fitSvgLine(value, {
@@ -202,6 +203,17 @@ export function rowValueFontSize(
  * 拼接即重复。value 已以 unit 结尾时丢弃 unit。导出供 bento KPI 卡
  * （content-bento-panel）同源复用，两条 KPI 渲染路径不漂移。
  */
+/**
+ * A figure as the reader sees it. An author marks the figure a page is about
+ * by writing its value between `**` (`"**4.5 万元**"`), and no renderer prints
+ * the asterisks: every one reads the value through here. `marked` says the
+ * author singled it out, for the renderers that set it apart.
+ */
+export function kpiValueText(value: string | number): { text: string; marked: boolean } {
+  const written = String(value)
+  return { text: stripEmphasis(written), marked: parseEmphasis(written).some((segment) => segment.emphasized) }
+}
+
 export function dedupeKpiUnit(
   value: string,
   unit: string | undefined,
@@ -400,7 +412,7 @@ export const kpi: SvgComponent<KpiComponent> = {
           // rendered text is separately truncated to fit the width share it
           // was allotted at its own (smaller) font size — together the two
           // bounds keep the card from overflowing at any value/unit length.
-          const valueStr = String(item.value)
+          const { text: valueStr, marked } = kpiValueText(item.value)
           const unit = dedupeKpiUnit(valueStr, item.unit)
           const { valueMaxWidth, unitMaxWidth } = splitKpiValueWidths(
             valueStr,
@@ -470,7 +482,7 @@ export const kpi: SvgComponent<KpiComponent> = {
                 y={cardY + (item.icon ? 64 : 58) + contentShift}
                 fontSize={fittedValue.fontSize}
                 fontWeight="bold"
-                fill={ctx.colors.text}
+                fill={marked ? accessibleInk(emphasisRunInk(ctx.colors), ctx.colors.surface, fittedValue.fontSize) : ctx.colors.text}
                 fontFamily={ctx.fonts.heading}
                 dominantBaseline="alphabetic"
               >

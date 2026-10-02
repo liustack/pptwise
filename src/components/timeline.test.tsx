@@ -379,3 +379,19 @@ describe("timeline side by side in a short box", () => {
   })
 })
 
+
+describe("timeline lanes, drawn by the shared renderer", () => {
+  it("names a milestone's lane before its date", () => {
+    const laned = {
+      type: "timeline" as const,
+      milestones: [
+        { date: "7 月", title: "巴西关税", lane: "海外" },
+        { date: "8 月", title: "一致性", lane: "国内" },
+      ],
+    }
+    const { container } = svg(timeline.render(laned, { x: 0, y: 0, w: 1000, h: 300 }, ctx))
+    const dates = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+    expect(dates).toContain("海外 · 7 月")
+    expect(dates).toContain("国内 · 8 月")
+  })
+})

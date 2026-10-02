@@ -321,6 +321,16 @@ describe("checkIrQuality", () => {
       expect(codes(issues)).toContain("bullet_item_long")
     })
 
+    // bulletin 2026-10 p05: an item at the ceiling with one marked figure
+    // was refused for the four asterisks no reader ever sees.
+    it("measures the words a reader sees, without the marks around a marked run", () => {
+      const atCeiling = `**${"长".repeat(4)}**${"长".repeat(CAPACITY.bullets.itemOverflowUnits - 4)}`
+      const ir = makeIR([
+        { type: "content", kind: "points", heading: "列表页", components: [{ type: "bullets", items: [atCeiling] }] },
+      ])
+      expect(codes(quality(ir))).not.toContain("bullet_item_overflow")
+    })
+
     it("fires the same regardless of pacing (flat geometric ceiling, not PACING_BUDGETS-scoped)", () => {
       const over = "长".repeat(CAPACITY.bullets.itemOverflowUnits + 1)
       const ir = makeIR([

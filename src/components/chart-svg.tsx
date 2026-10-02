@@ -4,6 +4,9 @@ import { CHART_AXIS_LIMIT } from "@/ir/components/chart"
 import { accessibleInk } from "../render/ink"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import { joinUnit } from "../lib/quantity-format"
+import { changeText } from "../lib/change-figure"
+import { mostlyChinese } from "../lib/text-script"
+import { StatusMark, statusGround, type PointStatus } from "../render/mark-status"
 import { axisTitlePairHeight, renderCartesianAxisTitles } from "./axis-titles"
 import {
   buildAlignedNumericAxis,
@@ -85,6 +88,157 @@ function pastAxisLimit(values: readonly number[]): boolean {
  * assignable to {@link ChartRenderFn} (a function with fewer parameters is
  * assignable to one that declares more). */
 type ChartInput = Extract<Component, { type: "chart" }>
+
+/** How much of a status bar's colour tints the ground under its hatching or outline. */
+const STATUS_GROUND_SHARE = 0.25
+
+/** The status the author gave the point a bar draws, if any (`chart` point `status`). */
+function pointStatusAt(series: readonly ChartSeries[], seriesIndex: number, x: string | number): PointStatus | undefined {
+  return series[seriesIndex]?.data.find((d) => d.x === x)?.status
+}
+
+/** Whether any point of the chart carries a status. */
+function hasPointStatus(series: readonly ChartSeries[]): boolean {
+  return series.some((s) => s.data.some((d) => d.status !== undefined))
+}
+
+/**
+ * A bar as its point's status says: a plain rectangle, a hatched forecast, or
+ * a dashed target (`render/mark-status.tsx`), tagged as a plot mark either way.
+ */
+function barMark(opts: {
+  key: string | number
+  x: number
+  y: number
+  w: number
+  h: number
+  fill: string
+  status: PointStatus | undefined
+  bg: string
+  opacity?: number
+  stroke?: { color: string; width: number }
+}): ReactElement {
+  if (opts.status) {
+    return (
+      <StatusMark
+        key={opts.key}
+        status={opts.status}
+        color={opts.fill}
+        ground={statusGround(opts.fill, opts.bg, STATUS_GROUND_SHARE)}
+        x={opts.x}
+        y={opts.y}
+        w={opts.w}
+        h={opts.h}
+        extra={{ "data-plot-mark": "1" }}
+      />
+    )
+  }
+  return (
+    <rect
+      key={opts.key}
+      data-plot-mark="1"
+      x={opts.x}
+      y={opts.y}
+      width={opts.w}
+      height={opts.h}
+      fill={opts.fill}
+      {...(opts.opacity !== undefined ? { opacity: opts.opacity } : {})}
+      {...(opts.stroke ? { stroke: opts.stroke.color, strokeWidth: opts.stroke.width } : {})}
+    />
+  )
+}
+
+/** One bracket's reach over the bars, before the bars are placed: category indices and its stacking level. */
+interface ChangeRun {
+  change: NonNullable<ChartInput["changes"]>[number]
+  lo: number
+  hi: number
+  level: number
+}
+
+/** The space one level of change brackets takes over the plot, and the air under the lowest. */
+const BRACKET_LEVEL_H = 34
+const BRACKET_PAD = 6
+const BRACKET_FONT_SIZE = 16
+
+/**
+ * The changes an upright bar or stacked chart draws as brackets, each with
+ * the categories it spans and a level, so two brackets that would cross
+ * stand one over the other. A change validate would refuse is left out.
+ */
+function changeRuns(component: ChartInput | undefined, categoryIndex: (x: string) => number): ChangeRun[] {
+  const runs: ChangeRun[] = []
+  for (const change of component?.changes ?? []) {
+    const a = categoryIndex(change.at ?? change.from)
+    const b = categoryIndex(change.at ?? change.to)
+    if (a < 0 || b < 0) continue
+    const lo = Math.min(a, b)
+    const hi = Math.max(a, b)
+    let level = 0
+    while (runs.some((r) => r.level === level && r.lo <= hi && lo <= r.hi)) level += 1
+    runs.push({ change, lo, hi, level })
+  }
+  return runs
+}
+
+/** The band brackets take over the plot: one level per stacked bracket. */
+function bracketBand(runs: readonly ChangeRun[]): number {
+  if (runs.length === 0) return 0
+  return (Math.max(...runs.map((r) => r.level)) + 1) * BRACKET_LEVEL_H + BRACKET_PAD
+}
+
+/** Whether a chart's own words are Chinese: its series names and categories. */
+function chartChinese(series: readonly ChartSeries[]): boolean {
+  const texts = series.map((s) => s.name)
+  for (const s of series) for (const d of s.data) if (typeof d.x === "string") texts.push(d.x)
+  return mostlyChinese(texts)
+}
+
+/** One end of a bracket: where its leg stands, how high it reaches, and the value it reads. */
+interface BracketEnd {
+  x: number
+  /** The leg stops here, over the bar's own value. */
+  legTop: number
+  value: number
+  seriesIndex: number
+}
+
+/** Paints a change bracket whose crossbar stands on `crossY`, in the marked series' colour when it ends on it. */
+function changeBracket(opts: {
+  key: string
+  ends: [BracketEnd, BracketEnd]
+  crossY: number
+  text: string
+  strongColor: string | null
+  mutedColor: string
+  bg: string
+  fontFamily?: string
+}): ReactElement {
+  const [a, b] = opts.ends
+  const color = opts.strongColor ?? opts.mutedColor
+  return (
+    <g key={opts.key} data-chart-change="">
+      <path
+        d={`M ${a.x} ${Math.max(a.legTop, opts.crossY)} V ${opts.crossY} H ${b.x} V ${Math.max(b.legTop, opts.crossY)}`}
+        fill="none"
+        stroke={color}
+        strokeWidth={opts.strongColor ? 2 : 1}
+      />
+      <text
+        x={(a.x + b.x) / 2}
+        y={opts.crossY - 6}
+        textAnchor="middle"
+        fontSize={BRACKET_FONT_SIZE}
+        fontWeight={opts.strongColor ? 700 : undefined}
+        fontFamily={opts.fontFamily}
+        fill={accessibleInk(color, opts.bg, BRACKET_FONT_SIZE)}
+        dominantBaseline="alphabetic"
+      >
+        {opts.text}
+      </text>
+    </g>
+  )
+}
 
 /**
  * The one uniform shape `chart.tsx`'s dispatch calls every chart renderer
@@ -985,6 +1139,34 @@ function baselineYFor(domain: { min: number; max: number }, plotY: number, plotH
   return plotY + plotH
 }
 
+/**
+ * Where a change's bracket stands on an upright bar chart: over the one bar
+ * each of its categories carries, or over two series' bars in the one
+ * category `at` names. Each leg stops over its bar's printed value.
+ */
+function barBracketEnds(
+  run: ChangeRun,
+  modelSeries: ReturnType<typeof buildChartModel>["series"],
+  categories: ReturnType<typeof buildChartModel>["categories"],
+  barEnds: ReadonlyMap<string, BracketEnd>,
+  placed: ReadonlyMap<string, { y: number }>,
+): [BracketEnd, BracketEnd] | null {
+  const end = (category: string, seriesName: string | undefined): BracketEnd | null => {
+    const i = categories.findIndex((cat) => cat.x === category)
+    if (i < 0) return null
+    const s = seriesName === undefined ? modelSeries.find((m) => m.values[i] != null) : modelSeries.find((m) => m.name === seriesName)
+    if (!s) return null
+    const bar = barEnds.get(`${i}-${s.seriesIndex}`)
+    if (!bar) return null
+    const label = placed.get(`bar-${i}-${s.seriesIndex}`)
+    return { ...bar, legTop: (label ? label.y - VALUE_FONT_SIZE : bar.legTop) - 4 }
+  }
+  const { change } = run
+  const a = change.at === undefined ? end(change.from, undefined) : end(change.at, change.from)
+  const b = change.at === undefined ? end(change.to, undefined) : end(change.at, change.to)
+  return a && b ? [a, b] : null
+}
+
 export function renderBar(
   series: ChartSeries[],
   palette: string[],
@@ -1028,11 +1210,16 @@ export function renderBar(
   if (pastAxisLimit(keptValues(model.series))) return <WholeShareDeclined />
   const yAxis = buildNumericAxis(keptValues(model.series), "zero-max", meta.yUnit)
   const domain: ChartDomain = { min: yAxis.domain.min, max: yAxis.domain.max, degenerate: yAxis.domain.max <= yAxis.domain.min }
+  // Brackets for the author's `changes` take a band over the plot, so the
+  // plot and its value labels start under them.
+  const runs = changeRuns(component, (x) => categories.findIndex((cat) => cat.x === x))
+  const band = bracketBand(runs)
+  const top = y0 + band
   const geom = layoutCartesianPlot({
     x0,
-    y0,
+    y0: top,
     w,
-    h,
+    h: h - band,
     yTickLabels: yAxis.labels,
     titleH: meta.titleH,
     fontFamily,
@@ -1057,7 +1244,8 @@ export function renderBar(
     }
   })
   const gradientId = chartGradientId("chart-bar-grad", w, h, series)
-  const highlight = n <= 1 && highlightsTallestBar(palette, accentColor)
+  // A forecast or a target is drawn in its series' colour, never in the tallest-bar highlight.
+  const highlight = n <= 1 && highlightsTallestBar(palette, accentColor) && !hasPointStatus(series)
   const group = fullestGroup(model.series, categories.length)
   const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
   const dataMax = Math.max(...keptValues(model.series), Number.NEGATIVE_INFINITY)
@@ -1066,6 +1254,7 @@ export function renderBar(
   // legend row and the x-axis, across the plot's own width.
   const barLabelSpecs: ValueLabelSpec[] = []
   const barBoxes: DepthBox[] = []
+  const barEnds = new Map<string, BracketEnd>()
   for (let i = 0; i < categories.length; i++) {
     const groupX0 = geom.plotX + i * groupW + BAR_GROUP_EDGE_GAP
     const usableW = groupW - BAR_GROUP_EDGE_GAP * 2
@@ -1089,15 +1278,16 @@ export function renderBar(
             fontFamily,
             priority: 100 - s.seriesIndex,
           },
-          y0,
+          top,
         ),
       )
+      barEnds.set(`${i}-${s.seriesIndex}`, { x: barX + perBarW / 2, legTop: barY, value, seriesIndex: s.seriesIndex })
     }
   }
   const placedLabels = placeValueLabelsTogether(barLabelSpecs, barBoxes, {
     left: geom.plotX,
     right: geom.plotX + geom.plotW,
-    top: y0,
+    top,
     bottom: geom.plotY + geom.plotH,
   })
   const placedBars = new Map((placedLabels ?? []).map((label) => [label.id, label]))
@@ -1143,16 +1333,17 @@ export function renderBar(
             : palette[s.seriesIndex % palette.length]
           const placed = placedBars.get(`bar-${i}-${s.seriesIndex}`)
           barElements.push(
-            <rect
-              key={`r-${s.seriesIndex}`}
-              data-plot-mark="1"
-              x={barX}
-              y={barY}
-              width={perBarW}
-              height={barH}
-              fill={fill}
-              opacity={highlight ? (isMax ? 1 : 0.75) : 1}
-            />,
+            barMark({
+              key: `r-${s.seriesIndex}`,
+              x: barX,
+              y: barY,
+              w: perBarW,
+              h: barH,
+              fill,
+              status: pointStatusAt(series, s.seriesIndex, cat.x),
+              bg: _bgHex ?? "#FFFFFF",
+              opacity: highlight ? (isMax ? 1 : 0.75) : 1,
+            }),
           )
           if (placed) {
             barElements.push(
@@ -1164,6 +1355,7 @@ export function renderBar(
                 textAnchor="middle"
                 fontSize={VALUE_FONT_SIZE}
                 fontWeight={VALUE_FONT_WEIGHT}
+                fontFamily={fontFamily}
                 fill={textColor}
                 dominantBaseline="alphabetic"
               >
@@ -1175,6 +1367,21 @@ export function renderBar(
         return <g key={cat.key}>{barElements}</g>
       })}
       {placedLabels === null ? <g data-dropped={barLabelSpecs.length} data-dropped-kind="value-label" /> : null}
+      {runs.map((run, k) => {
+        const ends = runs.length > 0 ? barBracketEnds(run, model.series, categories, barEnds, placedBars) : null
+        if (!ends) return null
+        const markedIndex = (component?.series ?? []).findIndex((s) => s.emphasis === true)
+        return changeBracket({
+          key: `change-${k}`,
+          ends,
+          crossY: top - BRACKET_PAD - run.level * BRACKET_LEVEL_H,
+          text: changeText(ends[0].value, ends[1].value, meta.yUnit, chartChinese(series)),
+          strongColor: markedIndex >= 0 && ends[1].seriesIndex === markedIndex ? palette[markedIndex % palette.length]! : null,
+          mutedColor,
+          bg: _bgHex ?? "#FFFFFF",
+          fontFamily,
+        })
+      })}
       {renderCartesianAxisTitles({
         plotX: geom.plotX,
         plotBottom: geom.titleY,
@@ -1689,6 +1896,7 @@ function radialSliceLabels(
   h: number,
   mutedColor: string | undefined,
   labelFill: string | undefined,
+  fontFamily?: string,
 ): ReactElement {
   const pitch = labelLinePitch(DIRECT_LABEL_FONT_SIZE)
   const bounds = { top: y0, bottom: y0 + h }
@@ -1755,6 +1963,7 @@ function radialSliceLabels(
               textAnchor={slice.right ? "start" : "end"}
               fontSize={slice.fitted.fontSize}
               fontWeight={DIRECT_LABEL_FONT_WEIGHT}
+              fontFamily={fontFamily}
               fill={labelFill}
               dominantBaseline="alphabetic"
             >
@@ -1818,7 +2027,7 @@ export function renderPie(
           />
         )
       })}
-      {radialSliceLabels(slices, y0, h, mutedColor, labelFill)}
+      {radialSliceLabels(slices, y0, h, mutedColor, labelFill, fontFamily)}
     </>
   )
 }
@@ -1923,6 +2132,7 @@ export function renderFunnel(
                 y={bandCy + DIRECT_LABEL_FONT_SIZE * DIRECT_LABEL_CENTER_TO_BASELINE}
                 fontSize={fitted.fontSize}
                 fontWeight={DIRECT_LABEL_FONT_WEIGHT}
+                fontFamily={fontFamily}
                 fill={labelFill}
                 dominantBaseline="alphabetic"
               >
@@ -2074,6 +2284,8 @@ export function renderDumbbell(
   _showGrid?: boolean,
   _component?: ChartInput,
   bgHex?: string,
+  _axisColor?: string,
+  fontFamily?: string,
 ): ReactElement {
   // Value labels sit on the page, not on a mark, so the accent has to clear
   // a contrast floor here even though the endpoint dots painted in the same
@@ -2134,6 +2346,14 @@ export function renderDumbbell(
         })
         const x1 = vx(from.y)
         const x2 = vx(to.y)
+        // The end value sits after the end dot. A row that fell has its end
+        // dot left of the start dot, so a label after it would run over the
+        // start dot and its value: it sits before the end dot when the plot
+        // has room there, and after the start dot when it does not.
+        const toW = measureTextUnits(toValueLabel.text, { bold: true, fontFamily }) * toValueLabel.fontSize
+        const fell = x2 < x1
+        const before = fell && x2 - DUMBBELL_TO_LABEL_INSET - toW >= plotX
+        const toX = !fell ? x2 + DUMBBELL_TO_LABEL_INSET : before ? x2 - DUMBBELL_TO_LABEL_INSET : x1 + DUMBBELL_TO_LABEL_INSET
         return (
           <g key={i}>
             <text
@@ -2144,6 +2364,7 @@ export function renderDumbbell(
               fontSize={label.fontSize}
               fontWeight="600"
               fill={textColor}
+              fontFamily={fontFamily}
               dominantBaseline="alphabetic"
             >
               {label.text}
@@ -2158,17 +2379,20 @@ export function renderDumbbell(
               textAnchor="middle"
               fontSize={fromValueLabel.fontSize}
               fill={mutedColor}
+              fontFamily={fontFamily}
               dominantBaseline="alphabetic"
             >
               {fromValueLabel.text}
             </text>
             <text
               data-truncated={toValueLabel.clipped ? "1" : undefined}
-              x={x2 + DUMBBELL_TO_LABEL_INSET}
+              x={toX}
               y={cy + 4}
+              textAnchor={before ? "end" : undefined}
               fontSize={toValueLabel.fontSize}
               fontWeight="bold"
               fill={accentInk}
+              fontFamily={fontFamily}
               dominantBaseline="alphabetic"
             >
               {toValueLabel.text}
@@ -2312,9 +2536,33 @@ export function renderBarHorizontal(
   const xAxis = buildNumericAxis(values, "zero-max", meta.xUnit ?? meta.yUnit)
   const domain: ChartDomain = { min: xAxis.domain.min, max: xAxis.domain.max, degenerate: false }
   const dataMax = Math.max(...values, Number.NEGATIVE_INFINITY)
+  // A change the author asked for at a category is printed after the later
+  // bar's own value, so its text widens that bar's label.
+  const chinese = chartChinese(series)
+  const changeAfter = new Map<string, string>()
+  for (const change of component?.changes ?? []) {
+    if (change.at === undefined) continue
+    const i = categories.findIndex((cat) => cat.x === change.at)
+    const from = model.series.find((m) => m.name === change.from)
+    const to = model.series.find((m) => m.name === change.to)
+    const a = from?.values[i]
+    const b = to?.values[i]
+    if (i < 0 || !to || a == null || b == null) continue
+    changeAfter.set(`${i}-${to.seriesIndex}`, changeText(a, b, meta.xUnit ?? meta.yUnit, chinese))
+  }
+  const labelText = (i: number, seriesIndex: number, value: number) => {
+    const change = changeAfter.get(`${i}-${seriesIndex}`)
+    return change ? `${value}  ${change}` : String(value)
+  }
+  const labelTexts =
+    changeAfter.size === 0
+      ? values.map((v) => String(v))
+      : categories.flatMap((_cat, i) =>
+          model.series.flatMap((m) => (m.values[i] == null ? [] : [labelText(i, m.seriesIndex, m.values[i]!)])),
+        )
   const { labelW, valueW } = barHorizontalBands(
     categories.map((cat) => String(cat.x)),
-    values.map((v) => String(v)),
+    labelTexts,
     w,
     fontFamily,
   )
@@ -2324,7 +2572,7 @@ export function renderBarHorizontal(
   const plotH = Math.max(1, h - meta.titleH - X_TICK_BAND - BAR_H_PLOT_TOP_PAD)
   const rowH = plotH / categories.length
   const gradientId = chartGradientId("chart-barh-grad", w, h, series)
-  const highlight = n <= 1 && highlightsTallestBar(palette, accentColor)
+  const highlight = n <= 1 && highlightsTallestBar(palette, accentColor) && !hasPointStatus(series)
   const group = fullestGroup(model.series, categories.length)
   const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
   const xTicks = xAxis.ticks.map((t, i) => ({
@@ -2354,7 +2602,7 @@ export function renderBarHorizontal(
       const labelY = barY + perBarH / 2 + 4
       hBarSpecs.push({
         id: `hbar-${i}-${s.seriesIndex}`,
-        text: String(value),
+        text: labelText(i, s.seriesIndex, value),
         x: barX + barW + BAR_H_VALUE_GAP,
         y: labelY,
         anchor: "start",
@@ -2437,16 +2685,17 @@ export function renderBarHorizontal(
               : `url(#${gradientId})`
             : palette[s.seriesIndex % palette.length]
           barElements.push(
-            <rect
-              key={`r-${s.seriesIndex}`}
-              data-plot-mark="1"
-              x={barX}
-              y={barY}
-              width={barW}
-              height={perBarH}
-              fill={fill}
-              opacity={highlight ? (isMax ? 1 : 0.75) : 1}
-            />,
+            barMark({
+              key: `r-${s.seriesIndex}`,
+              x: barX,
+              y: barY,
+              w: barW,
+              h: perBarH,
+              fill,
+              status: pointStatusAt(series, s.seriesIndex, cat.x),
+              bg: _bgHex ?? "#FFFFFF",
+              opacity: highlight ? (isMax ? 1 : 0.75) : 1,
+            }),
           )
           const placed = placedHBars.get(`hbar-${i}-${s.seriesIndex}`)
           if (placed) {
@@ -2458,6 +2707,7 @@ export function renderBarHorizontal(
                 y={placed.y}
                 fontSize={VALUE_FONT_SIZE}
                 fontWeight={VALUE_FONT_WEIGHT}
+                fontFamily={fontFamily}
                 fill={textColor}
                 dominantBaseline="alphabetic"
               >
@@ -2619,7 +2869,7 @@ export function renderDonut(
           fill={palette[slice.key % palette.length]}
         />
       ))}
-      {radialSliceLabels(slices, y0, h, mutedColor, labelFill)}
+      {radialSliceLabels(slices, y0, h, mutedColor, labelFill, fontFamily)}
       {showCenter && (
         <>
           <text
@@ -3239,11 +3489,15 @@ export function renderStacked(
         labels: PERCENT_TICKS.map((t) => formatAxisTick(t, "%")),
       }
     : buildNumericAxis([...piles.map((p) => p.up), ...piles.map((p) => p.down)], "zero-max", yUnit)
+  // Brackets for the author's `changes` take a band over the plot.
+  const runs = percent ? [] : changeRuns(component, (x) => categories.findIndex((cat) => cat.x === x))
+  const band = bracketBand(runs)
+  const top = y0 + band
   const geom = layoutCartesianPlot({
     x0,
-    y0,
+    y0: top,
     w,
-    h,
+    h: h - band,
     yTickLabels: yAxis.labels,
     titleH: meta.titleH,
     fontFamily,
@@ -3281,23 +3535,24 @@ export function renderStacked(
       const to = from + v
       if (v > 0) up = to
       else down = to
-      const top = yOf(Math.max(from, to))
+      const segTop = yOf(Math.max(from, to))
       const bottom = yOf(Math.min(from, to))
-      segmentBoxes.push({ x: colX, y: top, w: colW, h: bottom - top })
+      segmentBoxes.push({ x: colX, y: segTop, w: colW, h: bottom - segTop })
       rects.push(
-        <rect
-          key={s.seriesIndex}
-          data-plot-mark="1"
-          x={colX}
-          y={top}
-          width={colW}
-          height={bottom - top}
-          fill={palette[s.seriesIndex % palette.length]}
-          {...(bgHex ? { stroke: bgHex, strokeWidth: STACK_SEPARATOR_W } : {})}
-        />,
+        barMark({
+          key: s.seriesIndex,
+          x: colX,
+          y: segTop,
+          w: colW,
+          h: bottom - segTop,
+          fill: palette[s.seriesIndex % palette.length]!,
+          status: pointStatusAt(series, s.seriesIndex, cat.x),
+          bg: bgHex ?? "#FFFFFF",
+          ...(bgHex ? { stroke: { color: bgHex, width: STACK_SEPARATOR_W } } : {}),
+        }),
       )
     }
-    return { key: cat.key, colX, rects, labelBaseY: up > 0 ? yOf(up) : yOf(0) }
+    return { key: cat.key, x: cat.x, colX, rects, labelBaseY: up > 0 ? yOf(up) : yOf(0) }
   })
 
   const totals: ValueLabelSpec[] = percent
@@ -3315,10 +3570,25 @@ export function renderStacked(
   // The totals may use the chart body between the legend row and the x-axis,
   // across the plot's own width. The y-tick labels sit left of it.
   const placedTotals = placeValueLabelsTogether(
-    totals.map((spec) => risingBand(spec, y0)),
+    totals.map((spec) => risingBand(spec, top)),
     segmentBoxes,
-    { left: geom.plotX, right: geom.plotX + geom.plotW, top: y0, bottom: geom.plotY + geom.plotH },
+    { left: geom.plotX, right: geom.plotX + geom.plotW, top, bottom: geom.plotY + geom.plotH },
   )
+  const placedById = new Map((placedTotals ?? []).map((label) => [label.id, label]))
+  const markedIndex = (component?.series ?? []).findIndex((s) => s.emphasis === true)
+  /** A column's end of a bracket: its middle, over its printed total, reading its total. */
+  const columnEnd = (category: string): BracketEnd | null => {
+    const i = columns.findIndex((col) => col.x === category)
+    if (i < 0) return null
+    const label = placedById.get(`stack-${i}`)
+    const lead = [...model.series].reverse().find((m) => m.values[i] != null)
+    return {
+      x: columns[i]!.colX + colW / 2,
+      legTop: (label ? label.y - VALUE_FONT_SIZE : columns[i]!.labelBaseY) - 4,
+      value: piles[i]!.total,
+      seriesIndex: lead?.seriesIndex ?? -1,
+    }
+  }
   const totalInk = directLabelInk(textColor, bgHex)
 
   return (
@@ -3353,6 +3623,21 @@ export function renderStacked(
       {placedTotals === null ? (
         <g data-dropped={totals.length} data-dropped-kind="value-label" />
       ) : null}
+      {runs.map((run, k) => {
+        const a = columnEnd(run.change.from)
+        const b = columnEnd(run.change.to)
+        if (!a || !b) return null
+        return changeBracket({
+          key: `change-${k}`,
+          ends: [a, b],
+          crossY: top - BRACKET_PAD - run.level * BRACKET_LEVEL_H,
+          text: changeText(a.value, b.value, meta.yUnit, chartChinese(series)),
+          strongColor: markedIndex >= 0 && b.seriesIndex === markedIndex ? palette[markedIndex % palette.length]! : null,
+          mutedColor,
+          bg: bgHex ?? "#FFFFFF",
+          fontFamily,
+        })
+      })}
       {(placedTotals ?? []).map((label) => (
         <text
           key={label.id}

@@ -1,0 +1,69 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "axes": {
+        "y_title": "Million units"
+      },
+      "series": [
+        {
+          "name": "2025",
+          "data": [
+            {
+              "x": "July",
+              "y": 1.826
+            },
+            {
+              "x": "August",
+              "y": 1.995
+            },
+            {
+              "x": "September",
+              "y": 2.241
+            }
+          ]
+        },
+        {
+          "name": "2026",
+          "data": [
+            {
+              "x": "July",
+              "y": 1.461
+            },
+            {
+              "x": "August",
+              "y": 1.541
+            },
+            {
+              "x": "September",
+              "y": 1.69,
+              "status": "forecast"
+            }
+          ],
+          "emphasis": true
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "−20.9%",
+          "label": "July retail, year on year"
+        },
+        {
+          "value": "−23.6%",
+          "label": "August retail, year on year"
+        },
+        {
+          "value": "−29%",
+          "label": "Sep 1–27 retail, year on year",
+          "note": "Full-month forecast about 1.69m, −24.6%"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: China Passenger Car Association (CPCA) reports (Jul–Sep 2025, Jul–Aug 2026), Sep 30 weekly data, Sep 17 forecast",
+  "notes": "July retail was 1.461m units, down 20.9%. August was 1.541m, down 23.6%. The final September figure is not out yet. The 1.69m bar is CPCA's full-month forecast from September 17, about 24.6% below last year. The actual run rate to the 27th was worse, down 29%, and daily sales in the fourth week were down 42%, so the final number may come in below the forecast. Last September was the rush before the old subsidy stopped, which makes the base unusually high."
+}

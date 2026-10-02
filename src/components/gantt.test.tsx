@@ -123,3 +123,34 @@ describe("gantt component", () => {
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
   })
 })
+
+describe("gantt text and emphasis", () => {
+  const plan = {
+    type: "gantt" as const,
+    axis_labels: ["10 月", "11 月", "12 月"],
+    items: [
+      { label: "窗口期", text: "地方补贴先到先得", start: 0, end: 2, emphasis: true },
+      { label: "12 月 31 日", text: "中央资金到期", start: 2, end: 3 },
+    ],
+  }
+
+  it("sets a stretch's text in muted type under its label", () => {
+    const { container } = svg(gantt.render(plan, { x: 0, y: 0, w: 1000, h: 300 }, ctx))
+    const texts = Array.from(container.querySelectorAll("text"))
+    const label = texts.find((t) => t.textContent === "窗口期")!
+    const text = texts.find((t) => t.textContent === "地方补贴先到先得")!
+    expect(text.getAttribute("x")).toBe(label.getAttribute("x"))
+    expect(Number(text.getAttribute("y"))).toBeGreaterThan(Number(label.getAttribute("y")))
+    expect(text.getAttribute("fill")).toBe(ctx.colors.muted)
+  })
+
+  it("draws the marked stretch in the emphasis colour and lets the others recede", () => {
+    const { container } = svg(gantt.render(plan, { x: 0, y: 0, w: 1000, h: 300 }, ctx))
+    const marked = container.querySelector('[data-gantt-marked="1"] rect')!
+    const other = Array.from(container.querySelectorAll("rect")).find((r) => r !== marked)!
+    expect(marked.getAttribute("fill")).toBe(ctx.colors.accent)
+    expect(other.getAttribute("fill")).not.toBe(ctx.colors.accent)
+    expect(other.getAttribute("fill")).not.toBe(ctx.colors.primary)
+    expect(() => assertSubset(parseSvgRoot(renderSvgMarkup(<svg>{gantt.render(plan, { x: 0, y: 0, w: 1000, h: 300 }, ctx)}</svg>)))).not.toThrow()
+  })
+})

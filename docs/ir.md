@@ -146,7 +146,7 @@ pptwise schema --kind data --theme brief
 
 The attributed prose component is `blockquote`. There is no component type named `quote`.
 
-`swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, and `sankey` occupy the full body and must be the page's only component.
+`swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, and `sankey` occupy the full body and must be the page's only component. A face may name the companions it sets beside one of them: bulletin's content page sets a `waterfall` or a `gantt` beside a `kpi_cards`, so on bulletin that pair validates and nothing else joins it.
 
 A `waterfall` reads every bar against one value axis, so every item's `value`, and every running total a bar ends at, must stay within 1e300 in size. To get under it, divide every item by the same power of ten and name the unit in `unit`, so the bars keep their proportions.
 
@@ -207,6 +207,42 @@ Every value read against a value axis must stay within 1e300 in size: every `y` 
 ```
 
 A combo needs at least one bar series and one line series, and at least one series on the left axis. `plot`, `axis`, `y2_title`, and `y2_unit` exist only on `combo`, and `y2_title` or `y2_unit` without a series on the right axis is refused. Every combo value must stay within 1e300 in size. To get under it, divide every series on that value's axis by the same power of ten and name the unit in that axis's `y_unit` or `y2_unit`. None of the three new types takes `direction: "horizontal"`.
+
+### Marking what a page is about
+
+A page usually argues about one thing. These fields let the author say which, and say what a value is when it is not a reported figure. Every theme reads them. The marked thing takes the theme's emphasis and the rest steps back.
+
+| field | marks | limits |
+| --- | --- | --- |
+| `chart.series[].data[].status` | `"forecast"` hatches the bar, `"target"` draws it as a dashed outline over a pale tint. A series that mixes statuses gets a Forecast or Target legend entry, and a forecast's value label says so. | `bar` and `stacked` only |
+| `chart.changes` | `[{ "from": "2025 Q3", "to": "2026 Q3" }]` draws a bracket over two columns with the change between them (relative, or in points on a `%` axis). With `"at": "BYD"`, `from` and `to` name two series compared at that category. A horizontal chart writes the change after the later bar. | `bar` and `stacked`, at most 3. A horizontal chart needs `at`, a stacked one must not have it |
+| `numbered_cards.items[].emphasis` | the one card the page lands on: its pill is filled | at most one |
+| `gantt.items[].text` and `emphasis` | a line under the stretch's label, and the one stretch the page is about | at most one marked |
+| `timeline.milestones[].lane` and `timeline.lanes` | two tracks on one time order. `lanes` names them, the one above the axis first. A face with no room for two sides prints the lane before the date | every milestone names a lane or none does, at most two, not on a vertical timeline |
+| `kpi_cards.items[].value` written `**…**` | the one figure set in the theme's emphasis | |
+
+```json
+{
+  "type": "chart",
+  "chart_type": "bar",
+  "axes": { "y_title": "Million units" },
+  "series": [
+    { "name": "2025", "data": [{ "x": "July", "y": 1.826 }, { "x": "August", "y": 1.995 }, { "x": "September", "y": 2.241 }] },
+    { "name": "2026", "emphasis": true, "data": [{ "x": "July", "y": 1.461 }, { "x": "August", "y": 1.541 }, { "x": "September", "y": 1.69, "status": "forecast" }] }
+  ]
+}
+```
+
+```json
+{
+  "type": "timeline",
+  "lanes": ["Home", "Abroad"],
+  "milestones": [
+    { "date": "July", "title": "Brazil: 35% tariff", "lane": "Abroad" },
+    { "date": "July 7", "title": "Price Law revision", "lane": "Home", "highlight": true }
+  ]
+}
+```
 
 ## Footer marks
 

@@ -3,9 +3,10 @@ import type { Component } from "@/ir"
 import type { ComponentCtx } from "../../components/types"
 import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { parseEmphasis } from "../../render/emphasis"
-import { readableOn } from "../../render/ink"
+import { accessibleInk, readableOn } from "../../render/ink"
+import { panelFill } from "./notice"
 import { blockTag } from "./shared"
-import { fitFixed } from "./type"
+import { centredBaseline, fitFixed, paintLines } from "./type"
 
 type Callout = Extract<Component, { type: "callout" }>
 
@@ -102,6 +103,85 @@ export function paintClosing(
           ))}
         </text>
       ))}
+    </g>
+  )
+}
+
+/*
+ * The notice setting's closing note: the page's "so what" on a light panel
+ * rather than a primary block, since bulletin keeps its primary for the one
+ * thing a page marks. A warning carries a stroked circle with an exclamation
+ * mark before its words, and a note or a tip carries none. Text at 20px on 28px
+ * lines, up to two lines, with the theme's emphasis on a marked run.
+ * bulletin's 2026-10 table and timeline pages (p07, p11).
+ *
+ * Takes any `callout` without an icon of its own.
+ */
+
+const NOTICE_CLOSING = { size: 20, lineHeight: 28, padY: 18, padX: 24, iconPadX: 60, maxLines: 2 }
+const NOTICE_ICON = { r: 11, stroke: 2, cx: 33 }
+
+export interface NoticeClosingLayout {
+  callout: Callout
+  text: EmphasisHeadingLayout
+  warn: boolean
+  height: number
+}
+
+/** The callout a notice closing note can set, or `null`. */
+export function noticeClosingCallout(component: Component | undefined): Callout | null {
+  if (component?.type !== "callout" || component.icon !== undefined) return null
+  return component
+}
+
+/** `callout` set whole as a notice closing note `width` wide, or `null` when it does not fit. */
+export function fitNoticeClosing(callout: Callout, width: number, ctx: ComponentCtx): NoticeClosingLayout | null {
+  const warn = callout.variant === "warn"
+  const padLeft = warn ? NOTICE_CLOSING.iconPadX : NOTICE_CLOSING.padX
+  const marked = parseEmphasis(callout.text.trim()).some((segment) => segment.emphasized)
+  const text = fitFixed(callout.text, {
+    width: width - padLeft - NOTICE_CLOSING.padX,
+    size: NOTICE_CLOSING.size,
+    lineHeight: NOTICE_CLOSING.lineHeight,
+    maxLines: NOTICE_CLOSING.maxLines,
+    fontFamily: ctx.fonts.body,
+    bold: marked,
+  })
+  if (text === null || text.lines.length === 0) return null
+  return { callout, text, warn, height: text.lines.length * NOTICE_CLOSING.lineHeight + NOTICE_CLOSING.padY * 2 }
+}
+
+/** Paints a fitted notice closing note with its top-left corner at `x`, `y`. */
+export function paintNoticeClosing(
+  layout: NoticeClosingLayout,
+  place: { x: number; y: number; w: number },
+  ctx: ComponentCtx,
+): React.ReactElement {
+  const fill = panelFill(ctx)
+  const ink = accessibleInk(ctx.colors.text, fill, NOTICE_CLOSING.size)
+  const padLeft = layout.warn ? NOTICE_CLOSING.iconPadX : NOTICE_CLOSING.padX
+  const firstBaseline = centredBaseline(place.y + NOTICE_CLOSING.padY, NOTICE_CLOSING.lineHeight, NOTICE_CLOSING.size)
+  const cy = place.y + layout.height / 2
+  const cx = place.x + NOTICE_ICON.cx
+  return (
+    <g {...blockTag(ctx, layout.callout)} data-closing="notice">
+      <rect x={place.x} y={place.y} width={place.w} height={layout.height} fill={fill} />
+      {layout.warn && (
+        <g data-closing-icon="warn">
+          <circle cx={cx} cy={cy} r={NOTICE_ICON.r} fill="none" stroke={ink} strokeWidth={NOTICE_ICON.stroke} />
+          <rect x={cx - 1.2} y={cy - 7} width={2.4} height={9} fill={ink} />
+          <rect x={cx - 1.2} y={cy + 5} width={2.4} height={2.6} fill={ink} />
+        </g>
+      )}
+      {paintLines(layout.text, {
+        ctx,
+        x: place.x + padLeft,
+        y: firstBaseline,
+        fill: ink,
+        fontFamily: ctx.fonts.body,
+        fontWeight: "400",
+        bg: fill,
+      })}
     </g>
   )
 }

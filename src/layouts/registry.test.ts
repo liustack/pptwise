@@ -54,8 +54,9 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // One-box-of-crayons adds five theme-locked pin-only faces: 118 -> 123.
     // Runway show adds seven pin-only faces: 123 -> 130.
     // The brief sample redesign adds gauge-sheet, gauge-exhibit and
-    // gauge-figure, three theme-locked content faces: 130 -> 133.
-    expect(layoutEntries).toHaveLength(133)
+    // gauge-figure, three theme-locked content faces: 130 -> 133. The
+    // bulletin sample redesign adds notice-sheet: 133 -> 134.
+    expect(layoutEntries).toHaveLength(134)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -252,10 +253,10 @@ describe("layoutsForSlideType", () => {
     expect(layoutsForSlideType("ending")).toHaveLength(34)
   })
 
-  it("content includes both the 26 layouts and the 4 takeovers", () => {
+  it("content includes both the 27 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(26)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(27)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(30)
+    expect(contents).toHaveLength(31)
   })
 })

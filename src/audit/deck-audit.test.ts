@@ -2906,3 +2906,29 @@ describe("auditDeck — a run graded in the font it is painted in", () => {
     expect(auditDeck(ir).findings.filter((f) => f.code === "low-contrast")).toEqual([])
   })
 })
+
+describe("auditDeck: printed emphasis marks", () => {
+  // 2026-10 bulletin deck p02: a numbered card printed its author's marks as
+  // asterisks, and nothing on the page or in the audit said so.
+  it("reports no printed mark when a numbered card paints its marked runs", () => {
+    const ir = deck("brief", [
+      {
+        type: "content",
+        kind: "points",
+        heading: "四个判断",
+        components: [
+          {
+            type: "numbered_cards",
+            items: [
+              { title: "国内**在缩**", text: "三季度国内零售同比约降**两成**" },
+              { title: "增量在海外", text: "出口是去年同期的 2.5 倍" },
+              { title: "四季度怎么打", text: "目标按实际走势重定", emphasis: true },
+            ],
+          },
+        ],
+      } as Slide,
+    ])
+    const report = auditDeck(ir)
+    expect(report.findings.filter((f) => f.detail?.kind === "emphasis")).toEqual([])
+  })
+})

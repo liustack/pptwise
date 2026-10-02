@@ -114,6 +114,9 @@ export const ENTERPRISE_TOKENS: StyleTokens = {
     warning: "#A85F00", // 深琥珀。只作线与图标，压 surface 4.88:1，不答文字门槛
     success: "#0F7355", // 工业青绿。kpi 箭头当字，压 surface 5.83:1，答 4.5
     cardStroke: "#E4E6E1", // 发丝线，永不承字，不答文字门槛。取值来历见文件头
+    // 2026-10 样例改版：`**…**` 标出的那一处一律落 IKB 粗体，强调只用 IKB。
+    // 工业蓝 accent 留给图表第二色与方块，不再承担强调。
+    emphasisInk: "#0032A0",
     // 四格只作图系列与色块。徽章底的字走 readableOn 并答 4.5。
     // IKB、工业蓝、工业青取白墨，机灰取深墨。
     chartPalette: ["#0032A0", "#2F6FBF", "#0E7C86", "#7A7F87"], // IKB/工业蓝/工业青/机灰
@@ -154,13 +157,13 @@ export const ENTERPRISE_THEME = {
     cover: { face: "ikb-field-cover" },
     chapter: { face: "block-numeral-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "split-band" },
-      photo: { face: "image-split" },
-      hierarchy: { face: "asymmetric-triptych" },
+      points: { face: "notice-sheet" },
+      list: { face: "notice-sheet" },
+      comparison: { face: "notice-sheet" },
+      process: { face: "notice-sheet" },
+      data: { face: "notice-sheet" },
+      photo: { face: "image-split", params: { column: "notice" } },
+      hierarchy: { face: "notice-sheet" },
     },
     ending: { face: "signoff-ending" },
   },

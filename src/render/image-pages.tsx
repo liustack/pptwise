@@ -22,6 +22,8 @@ import { compose } from "../layouts/compositions"
 import { faceParam, type FaceParams } from "../layouts/face-params"
 import { SvgContent } from "./svg-content"
 import type { PageRenderContext } from "./page-context"
+import { NOTICE_BODY_BOTTOM, NOTICE_BODY_TOP, NoticeHead, NoticeSource, fitNoticeSource } from "../layouts/notice-shared"
+import { NoticeSheetContent } from "../layouts/content-notice-sheet"
 
 /**
  * 压图页与出血 split 页（图片排版 polish，2026-07-09 用户反馈驱动）。
@@ -435,8 +437,10 @@ const SPLIT_COLUMNS: Record<"standard" | "report", SplitColumn> = {
  * 无 image 块时回落 null（调用方走模板正常路径）。
  */
 export function ImageSplitPage({
+  ir,
   slide,
   ctx,
+  page,
   params,
 }: {
   ir: PptxIR
@@ -445,12 +449,19 @@ export function ImageSplitPage({
   page: PageRenderContext
   params?: FaceParams
 }) {
-  if (!singlePictureExact(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
+  const columnId = faceParam<"standard" | "report" | "notice">(params, "column", "standard")
+  // A notice page that is not one photograph and its facts is drawn as the
+  // notice sheet draws any other page, under the same frame, so the deck
+  // keeps one heading throughout.
+  const plain = () =>
+    columnId === "notice" ? <NoticeSheetContent ir={ir} slide={slide} index={0} ctx={ctx} page={page} /> : <TakeoverFallbackPage slide={slide} ctx={ctx} />
+  if (!singlePictureExact(slide)) return plain()
   const imageSelection = findImageSelection(slide)
   if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
-  if (!bleedSlotCanHost(imageSelection.source)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
+  if (!bleedSlotCanHost(imageSelection.source)) return plain()
   const { image: imageComponent, source: imageSource } = imageSelection
-  const column = SPLIT_COLUMNS[faceParam<"standard" | "report">(params, "column", "standard")]
+  if (columnId === "notice") return <NoticeSplitPage slide={slide} ctx={ctx} imageSelection={imageSelection} />
+  const column = SPLIT_COLUMNS[columnId]
   const imageW = column.imageW
   const textW = W - column.textX - 96
   // 图文范式族（ppt-master P04 右图出血）：image_side=right 时整页镜像——
@@ -605,6 +616,92 @@ export function ImageSplitPage({
       {source?.node}
       {/* Recorded, never painted — and the export refuses to ship it.
           See `DroppedContentMarker`'s own doc comment. */}
+      <DroppedContentMarker count={dropped} />
+    </g>
+  )
+}
+
+/** The notice column: the photograph's width and where the text column starts beside it. */
+const NOTICE_SPLIT = { imageW: 560, textX: 624, headW: 520, right: 80, sourceFirstBaseline: 656 }
+
+/**
+ * The notice column: bulletin's 2026-10 photo page (p05). The photograph
+ * takes the left 560px, edge to edge, top to bottom. Beside it the column
+ * wears the notice frame every bulletin content page wears (`NoticeHead`:
+ * the claim black and bold in a box that ends at y144, the hairline and its
+ * short primary bar), so a photo page reads as the same notice as the pages
+ * around it. Under the frame, a list of "Label: value" facts is set as the
+ * notice pairs, any other content by the component renderer, and the source
+ * sits at the foot of the column in the frame's 14px.
+ */
+function NoticeSplitPage({
+  slide,
+  ctx,
+  imageSelection,
+}: {
+  slide: Slide
+  ctx: ComponentCtx
+  imageSelection: NonNullable<ReturnType<typeof findImageSelection>>
+}) {
+  const { image: imageComponent, source: imageSource } = imageSelection
+  const rightSide = slide.image_side === "right"
+  const imgX = rightSide ? W - NOTICE_SPLIT.imageW : 0
+  const textX = rightSide ? NOTICE_SPLIT.right : NOTICE_SPLIT.textX
+  const textRight = rightSide ? W - NOTICE_SPLIT.imageW - (NOTICE_SPLIT.textX - NOTICE_SPLIT.imageW) : W - NOTICE_SPLIT.right
+  const textW = textRight - textX
+  const src = ctx.images?.[imageComponent.asset_id]?.src
+  const alt = ctx.images?.[imageComponent.asset_id]?.alt
+  const rest = slide.components.filter((component) => component !== imageSource)
+  const probe = fitNoticeSource(slide.footnote, ctx, textW)
+  const source = probe
+    ? fitNoticeSource(slide.footnote, ctx, textW, NOTICE_SPLIT.sourceFirstBaseline + (probe.layout.lines.length - 1) * 20)
+    : null
+  const bottom = source ? source.top - 12 : NOTICE_BODY_BOTTOM
+  const rect = { x: textX, y: NOTICE_BODY_TOP, w: textW, h: bottom - NOTICE_BODY_TOP }
+  const pairs = compose({ components: rest, ctx, rect, setting: "notice" }, ["pairs"])
+  const { placed, dropped } = pairs ? { placed: [], dropped: 0 } : layoutContentFit("single", rest, rect, ctx)
+  return (
+    <g data-split-column="notice">
+      {src ? (
+        <image
+          href={src}
+          x={imgX}
+          y={0}
+          width={NOTICE_SPLIT.imageW}
+          height={H}
+          preserveAspectRatio="xMidYMid slice"
+          aria-label={alt || undefined}
+        />
+      ) : (
+        <rect x={imgX} y={0} width={NOTICE_SPLIT.imageW} height={H} fill={ctx.colors.surface} />
+      )}
+      {imageComponent.caption &&
+        (() => {
+          const fitted = fitSvgLine(imageComponent.caption, { maxWidth: NOTICE_SPLIT.imageW - 48, fontSize: 16, minFontSize: 16 })
+          return (
+            <>
+              <rect x={imgX} y={H - 44} width={NOTICE_SPLIT.imageW} height={44} fill="#0A0E14" fillOpacity={0.62} />
+              <text
+                data-truncated={fitted.truncated ? "1" : undefined}
+                x={imgX + 24}
+                y={H - 17}
+                fontSize={fitted.fontSize}
+                fontFamily={ctx.fonts.body}
+                fill="#FFFFFF"
+                fillOpacity={0.92}
+                dominantBaseline="alphabetic"
+              >
+                {fitted.text}
+              </text>
+            </>
+          )
+        })()}
+      <NoticeHead heading={slide.heading} ctx={ctx} place={{ x: textX, w: Math.min(NOTICE_SPLIT.headW, textW), right: textRight }} />
+      {pairs}
+      {placed.map((p, i) => (
+        <Fragment key={i}>{renderComponent(p.component, p.box, ctx)}</Fragment>
+      ))}
+      <NoticeSource source={source} ctx={ctx} x={textX} />
       <DroppedContentMarker count={dropped} />
     </g>
   )
@@ -1457,7 +1554,7 @@ export function hasTakeoverRenderer(id: string): boolean {
 
 // T1d (src domain reorg wave 1): the 4 takeover LayoutDefinitions inlined
 // verbatim from registry.ts's former `TAKEOVER_LAYOUT_DEFS` entries — one file,
-// 4 named exports (not `layoutDef`, unlike the 133 layout files: all four
+// 4 named exports (not `layoutDef`, unlike the 134 layout files: all four
 // takeovers are implemented in this single file, so they need distinct
 // export names to coexist). `LayoutDefinition` is a type-only import from
 // registry.ts — registry.ts value-imports these 4 exports back, and a
@@ -1488,7 +1585,7 @@ export const imageSplitLayoutDef: LayoutDefinition = {
   // a wider photograph beside a regular-weight title and a list of facts set
   // as ruled pairs.
   params: {
-    column: { type: "string", values: ["standard", "report"] },
+    column: { type: "string", values: ["standard", "report", "notice"] },
   },
   slots: [
     { name: "image", accepts: ["image", "image_grid", "image_compare", "device_mockup"], required: true, selection: "first" },

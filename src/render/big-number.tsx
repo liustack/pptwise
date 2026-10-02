@@ -1,4 +1,5 @@
 import { Fragment } from "react"
+import { kpiValueText } from "../components/kpi"
 import type { Component } from "@/ir"
 import type { ComponentCtx } from "../components/types"
 import { renderComponent } from "../components"
@@ -68,7 +69,7 @@ export function BigNumber({
   let unitFontSize = 0
   let fittedUnit: string | null = null
   if (hero) {
-    const valueStr = String(hero.value)
+    const valueStr = kpiValueText(hero.value).text
     const valueUnits = measureTextUnits(valueStr)
     const unitUnits = hero.unit ? measureTextUnits(hero.unit) : 0
     const valueMaxWidth =

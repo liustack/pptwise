@@ -1,0 +1,85 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "co",
+          "label": "Company"
+        },
+        {
+          "key": "q3",
+          "label": "Q3 sales",
+          "align": "right"
+        },
+        {
+          "key": "yoy",
+          "label": "YoY",
+          "align": "right"
+        },
+        {
+          "key": "note",
+          "label": "What stands out"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "co": "Zeekr",
+            "q3": "110,034",
+            "yoy": "about +108%",
+            "note": "9X: 7,225 delivered in September"
+          }
+        },
+        {
+          "cells": {
+            "co": "Leapmotor",
+            "q3": "310,052",
+            "yoy": "+78.3%",
+            "note": "Over 100k a month for three months"
+          },
+          "emphasis": "highlight"
+        },
+        {
+          "cells": {
+            "co": "NIO Inc.",
+            "q3": "109,178",
+            "yoy": "+25.4%",
+            "note": "ES8: 10,542 delivered in September"
+          }
+        },
+        {
+          "cells": {
+            "co": "BYD",
+            "q3": "1,323,065",
+            "yoy": "+18.8%",
+            "note": "Exports were 41.6% of sales"
+          }
+        },
+        {
+          "cells": {
+            "co": "Li Auto",
+            "q3": "99,964",
+            "yoy": "+7.2%",
+            "note": "September down 15.6% on August"
+          }
+        },
+        {
+          "cells": {
+            "co": "XPeng",
+            "q3": "118,390",
+            "yoy": "+2.1%",
+            "note": "MONA L03 over 10k in September"
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "text": "HIMA delivered 37,490 in September, down 29.2%, its fourth monthly decline in a row."
+    }
+  ],
+  "footnote": "Source: company delivery releases via HKEX, SEC 6-K and CnEVPost (Aug 1 to Oct 1, 2026). Exports included",
+  "notes": "Each company counts differently. BYD reports NEV sales including commercial vehicles and exports. NIO Inc. is the total of its three brands. The rest are deliveries. So the table is for each company's own direction, not for ranking them against each other. Zeekr's growth is worked back from its monthly year-on-year rates and is approximate. Leapmotor exported over 27,000 cars in September, so it is growing at home and abroad. HIMA is Huawei's car alliance. From September, Seres took over AITO's product planning, sales network and service, and the two signed a new five-year deal on September 30, which makes the channel switch HIMA's big Q4 question."
+}

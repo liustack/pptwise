@@ -1197,7 +1197,19 @@ function balanceWrappedLines(
   const units = lines.map((l) => measureTextUnits(l, weight))
   const widest = Math.max(...units)
   const latin = !WIDE_CHAR_RE.test(content)
-  if (!latin && !orphanFixed && units[units.length - 1] >= widest * 0.5) return lines
+  // Chinese and mixed lines with no short last line keep their widths, and
+  // only move a break to a better seam (after a comma, at a space before a
+  // figure) when one sits within the widest line: 「…新能源出口 7–8 月」+
+  // 「是去年同期的 2.5 倍」 reads 「…新能源出口」+「7–8 月是去年同期的 2.5 倍」.
+  if (!latin && !orphanFixed && units[units.length - 1] >= widest * 0.5) {
+    const seamed = preferScriptBoundaries(content, lines, widest, weight)
+    // The better seam has to leave the lines at least as even as they were.
+    const evenness = (ls: readonly string[]) => {
+      const w = ls.map((l) => measureTextUnits(l, weight))
+      return Math.min(...w) / Math.max(...w)
+    }
+    return seamed !== lines && evenness(seamed) + 1e-9 >= evenness(lines) ? seamed : lines
+  }
   const total = units.reduce((sum, u) => sum + u, 0)
   // Token floor must mirror `tokenize`: space-delimited text wraps by words,
   // so flooring at the longest word keeps `splitLongToken` from ever firing;
@@ -1227,13 +1239,22 @@ function balanceWrappedLines(
 const ASCII_GLYPH_RE = /[\x21-\x7e]/
 
 /**
- * How a line break reads, by the characters on either side of it: +1 where
+ * Chinese clause punctuation a line may end on: a break right after it falls
+ * between two phrases, where a reader pauses anyway.
+ */
+const CJK_CLAUSE_END_RE = /[，、：；。！？）」』]/u
+
+/**
+ * How a line break reads, by the characters on either side of it: +2 after
+ * Chinese clause punctuation (「内需缩了两成，」+「四季度怎么打」), +1 where
  * Latin meets CJK (the seam a mixed line already has), -1 between two Latin
- * words (it splits a name like "Linjiang Group"), 0 anywhere else.
+ * words (it splits a name like "Linjiang Group"), 0 anywhere else, which for
+ * Chinese is between any two characters of a phrase (「四」+「季度」).
  */
 function breakScore(before: string, after: string): number {
   const a = before.trimEnd().slice(-1)
   const b = after.trimStart().charAt(0)
+  if (CJK_CLAUSE_END_RE.test(a)) return 2
   const asciiA = ASCII_GLYPH_RE.test(a)
   const asciiB = ASCII_GLYPH_RE.test(b)
   if ((asciiA && WIDE_CHAR_RE.test(b)) || (WIDE_CHAR_RE.test(a) && asciiB)) return 1
@@ -1249,6 +1270,8 @@ function linesScore(lines: readonly string[]): number {
 
 /** How much wider than the balanced lines' widest a preferred split may run. */
 const SCRIPT_BREAK_TOLERANCE = 0.1
+/** The same, for Chinese text with clause punctuation to break after. */
+const CLAUSE_BREAK_TOLERANCE = 0.25
 
 /**
  * The search's bounds. Past either one the balanced lines stand: a
@@ -1289,7 +1312,10 @@ function preferScriptBoundaries(
   limit: number,
   weight?: TextWeightHint,
 ): string[] {
-  if (balanced.length < 2 || !ASCII_GLYPH_RE.test(content) || !WIDE_CHAR_RE.test(content)) return balanced
+  // All-Latin text scores every break between words the same, and Chinese
+  // with no clause punctuation and no Latin in it scores every break 0.
+  if (balanced.length < 2 || !WIDE_CHAR_RE.test(content)) return balanced
+  if (!ASCII_GLYPH_RE.test(content) && !CJK_CLAUSE_END_RE.test(content)) return balanced
   const pieces: WrapPiece[] = tokenize(content).tokens
   const count = pieces.length
   const n = balanced.length
@@ -1314,7 +1340,10 @@ function preferScriptBoundaries(
   }
 
   const balancedWidest = Math.max(...balanced.map((l) => measureTextUnits(l, weight)))
-  const cap = Math.min(limit, balancedWidest * (1 + SCRIPT_BREAK_TOLERANCE)) + 1e-9
+  // A break after a comma is worth a less even split than a seam is: 「四季度国内目标，」
+  // +「按三季度实际走势重定」 over 「四季度国内目标，按」+「三季度实际走势重定」.
+  const tolerance = CJK_CLAUSE_END_RE.test(content) ? CLAUSE_BREAK_TOLERANCE : SCRIPT_BREAK_TOLERANCE
+  const cap = Math.min(limit, balancedWidest * (1 + tolerance)) + 1e-9
   const baselineScore = linesScore(balanced)
   let budget = SCRIPT_BREAK_BUDGET
 

@@ -1,0 +1,57 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "milestones": [
+        {
+          "date": "July",
+          "title": "Brazil: 35%",
+          "desc": "BEV import tariff",
+          "lane": "Abroad"
+        },
+        {
+          "date": "July 7",
+          "title": "Price Law revision",
+          "desc": "Clearer test for below-cost dumping",
+          "highlight": true,
+          "lane": "Home"
+        },
+        {
+          "date": "July 28",
+          "title": "Turkey tariff ruled unlawful",
+          "desc": "WTO panel ruled, but the tariff stays",
+          "lane": "Abroad"
+        },
+        {
+          "date": "August 27",
+          "title": "One-year conformity drive",
+          "desc": "Self-checks due by end-December",
+          "lane": "Home"
+        },
+        {
+          "date": "September 1",
+          "title": "Overseas conduct rules",
+          "desc": "Price on cost, no frequent big cuts",
+          "lane": "Home"
+        },
+        {
+          "date": "September 17",
+          "title": "EU eyes PHEVs",
+          "desc": "Sales caps floated",
+          "lane": "Abroad"
+        }
+      ],
+      "lanes": [
+        "Home",
+        "Abroad"
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "For us: cost every Q4 deal and keep the paperwork, and no frequent big cuts to export prices."
+    }
+  ],
+  "footnote": "Source: SAMR, MIIT, MOFCOM and WTO notices, Vrum and Financial Times reports (Mar–Sep 2026)",
+  "notes": "For home promotions, the one that matters most is the Price Law revision and its rules on below-cost dumping: time-limited cash and finance offers have to be costed too, so they cannot become evidence of dumping. The production conformity campaign also covers how driver-assistance systems are tested, and carmakers must report their own checks by the end of December. On exports, the guideline from the commerce ministry and two other agencies asks for cost-based prices and no frequent big price swings, which carries the home pricing discipline overseas. Brazil's tariff on imported battery-electric cars rose to 35% in July, Mexico has charged 10% to 50% on cars from countries without a trade deal since January, and the EU's countervailing duties on Chinese battery-electric cars are still in place, with plug-in hybrids now under discussion."
+}

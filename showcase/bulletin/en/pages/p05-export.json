@@ -1,0 +1,21 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "port",
+      "fit": "cover"
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "Jul–Aug NEV exports: **1.058m**, from 0.417m",
+        "Wholesale incl. exports: −1.6%",
+        "Home retail: −21.4%",
+        "NEV share of Aug exports: 58.4%",
+        "Top market, Jan–Aug: Brazil, 337k"
+      ]
+    }
+  ],
+  "footnote": "Source: CPCA reports (Jul–Aug 2025, 2026), Cui Dongshu export analysis (Sep 24, 2026). Photo is illustrative",
+  "notes": "Home retail is falling, yet carmakers' wholesale volume barely moved, and exports made up the gap. Passenger car exports in July and August were 1.806m, up 85%, of which NEVs were 1.058m, about 2.5 times a year earlier. Wholesale and retail measure different things, so they sit side by side here only to show how much exports made up, not to work out shares. The top five NEV export markets for January to August were Brazil, Belgium, the UK, Australia and the Philippines, from customs data compiled by CPCA secretary general Cui Dongshu. Brazil is first, but its import tariff on battery-electric cars rose to 35% in July, so Q4 needs a separate look."
+}

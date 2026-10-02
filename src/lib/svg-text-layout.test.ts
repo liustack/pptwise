@@ -428,6 +428,44 @@ describe("layoutSvgText balanceLines (widow avoidance)", () => {
     })
     expect(r.lines).toEqual(["每个班组配一名种子用户，", "问题十分钟内响应"])
   })
+
+  // bulletin 2026-10 cover: 「内需缩了两成，四」+「季度怎么打」 split a word
+  // in two, with the author's comma one character back.
+  it("moves a Chinese widow's break back to the comma before it", () => {
+    const opts = { maxWidth: 700, fontSize: 80, maxLines: 3, minPt: 80, bold: true, fontFamily: "Microsoft YaHei" }
+    expect(layoutSvgText("内需缩了两成，四季度怎么打", opts).lines).toEqual(["内需缩了两成，四", "季度怎么打"])
+    expect(layoutSvgText("内需缩了两成，四季度怎么打", { ...opts, balanceLines: true }).lines).toEqual(["内需缩了两成，", "四季度怎么打"])
+  })
+
+  // bulletin 2026-10 ending: the even split 「四季度国内目标，按」 left the
+  // comma one character short of the line end.
+  it("takes a comma a little past the even split over a break one character after it", () => {
+    const r = layoutSvgText("四季度国内目标，按三季度实际走势重定", {
+      maxWidth: 700,
+      fontSize: 56,
+      maxLines: 3,
+      minPt: 56,
+      bold: true,
+      fontFamily: "Microsoft YaHei",
+      balanceLines: true,
+    })
+    expect(r.lines).toEqual(["四季度国内目标，", "按三季度实际走势重定"])
+  })
+
+  // bulletin 2026-10 p05 heading: the greedy wrap left 「去」 on the first
+  // line and 「年同期」 on the second.
+  it("evens a two-line Chinese heading instead of splitting 「去年」 across the lines", () => {
+    const r = layoutSvgText("出口在涨：7–8 月新能源出口是去年同期的 2.5 倍", {
+      maxWidth: 520,
+      fontSize: 34,
+      maxLines: 3,
+      minPt: 34,
+      bold: true,
+      fontFamily: "Microsoft YaHei",
+      balanceLines: true,
+    })
+    expect(r.lines).toEqual(["出口在涨：7–8 月新能源", "出口是去年同期的 2.5 倍"])
+  })
 })
 
 describe("tokenize atomic Latin/digit runs (task R2: fused-prefix wrap fix)", () => {

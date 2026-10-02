@@ -1,0 +1,17 @@
+# timeline
+
+`milestones[].lane` and `timeline.lanes`: two tracks on one time order.
+
+Code: [`src/components/timeline.tsx`](../../../src/components/timeline.tsx), schema in [`src/ir/components/timeline.ts`](../../../src/ir/components/timeline.ts).
+
+## bulletin, NEV sample, 2026-10
+
+Settled on the regulation page. See the board and engine render in [compositions/lanes](../../compositions/lanes/), which sets the first lane above the axis and the second below. The round's decisions are in [rounds/2026-10-03-bulletin](../../rounds/2026-10-03-bulletin/README.md).
+
+**What it looks like.** The ordinary component keeps one track and prefixes each date with its lane, 「海外 · 7 月」. `lanes` names the two lanes and which runs above the axis. Without it, the lane a milestone names first runs above.
+
+**Why.** Home and abroad rules move on one calendar. Two timelines would hide the order, one unlabelled timeline would hide the side.
+
+**What it gave up.**
+
+- Every milestone names a lane, or none does. At most two lanes, and none on a vertical timeline. validate refuses the rest.

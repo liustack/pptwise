@@ -197,6 +197,9 @@ export type ContentLayoutId =
   | "gauge-sheet"
   | "gauge-exhibit"
   | "gauge-figure"
+  // bulletin sample redesign: the board's ordinary content page.
+  // Theme-locked, never auto-picked.
+  | "notice-sheet"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

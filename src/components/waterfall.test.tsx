@@ -182,12 +182,23 @@ describe("waterfall component", () => {
     expect(t).not.toContain("+-60")
   })
 
-  it("appends a unit suffix to every value label when `unit` is set", () => {
-    const withUnit = { ...basic, unit: "万" }
+  // nev-deck p04 (2026-10-03): 「382.1万辆」 came out with the unit glued to
+  // the figure, where every other chart on the page writes 「300 万辆」.
+  it("sets a unit after a space on every value label when `unit` is set", () => {
+    const withUnit = { ...basic, unit: "万辆" }
     const { container } = svg(waterfall.render(withUnit, { x: 0, y: 0, w: 1000, h: 400 }, ctx))
     const t = texts(container)
-    expect(t).toContain("+220万")
-    expect(t).toContain("-150万")
+    expect(t).toContain("+220 万辆")
+    expect(t).toContain("-150 万辆")
+  })
+
+  // An English bridge in millions read "3.82 m", which is three metres.
+  it("glues a Latin magnitude to its figure", () => {
+    const withUnit = { ...basic, unit: "m" }
+    const { container } = svg(waterfall.render(withUnit, { x: 0, y: 0, w: 1000, h: 400 }, ctx))
+    const t = texts(container)
+    expect(t).toContain("+220m")
+    expect(t).toContain("-150m")
   })
 
   // A bridge of cost per parcel: 4.10 to 5.35 by steps of 0.48, 0.37, 0.26,

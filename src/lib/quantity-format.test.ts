@@ -23,4 +23,12 @@ describe("joinUnit", () => {
     expect(joinUnit("3.2", "M", "")).toBe("3.2M")
     expect(joinUnit("80")).toBe("80")
   })
+
+  // nev-deck en p03 (2026-10-03): an axis in millions read "2 m", two metres.
+  it("glues a Latin magnitude to its figure whatever gap the caller asks for", () => {
+    expect(joinUnit("2", "m", " ")).toBe("2m")
+    expect(joinUnit("3.4", "bn", " ")).toBe("3.4bn")
+    expect(joinUnit("12", "K")).toBe("12K")
+    expect(joinUnit("2", "km", " ")).toBe("2 km")
+  })
 })

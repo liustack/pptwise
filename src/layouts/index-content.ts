@@ -19,6 +19,7 @@ import { GaugePointContent } from "./content-gauge-point"
 import { GaugeSheetContent } from "./content-gauge-sheet"
 import { GaugeExhibitContent } from "./content-gauge-exhibit"
 import { GaugeFigureContent } from "./content-gauge-figure"
+import { NoticeSheetContent } from "./content-notice-sheet"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { CrayonboxPointContent } from "./content-crayonbox-point"
 import { ShowGalleryContent } from "./content-show-gallery"
@@ -41,6 +42,7 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // brief, crayon, and runway families bring the pin-only count to 14,
 // for 23 registered content layouts in total. The brief sample redesign
 // adds gauge-sheet, gauge-exhibit and gauge-figure: 17 pin-only, 26 in all.
+// The bulletin sample redesign adds notice-sheet: 18 pin-only, 27 in all.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
   "two-column": TwoColumnContent,
@@ -68,4 +70,5 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "gauge-sheet": GaugeSheetContent,
   "gauge-exhibit": GaugeExhibitContent,
   "gauge-figure": GaugeFigureContent,
+  "notice-sheet": NoticeSheetContent,
 }

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { isPercentUnit } from "../../lib/quantity-format"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -12,8 +13,32 @@ const ChartPointSchema = z
     x: z.union([z.string(), z.number()]),
     y: z.number(),
     size: z.number().nonnegative().optional(),
+    /** A value nobody has reported yet. See `POINT_STATUS_TYPES`. */
+    status: z
+      .enum(["forecast", "target"])
+      .optional()
+      .describe(
+        'A value that is not a reported figure. "forecast" is an estimate of what will happen: its bar is hatched, and a lone bar\'s label says it is a forecast. ' +
+          '"target" is a level a plan calls for: its bar is drawn as a dashed outline. Bar and stacked charts only.',
+      ),
   })
   .strict()
+
+/**
+ * Chart types whose points may carry a `status`: the ones that draw each
+ * point as a bar of its own, where a hatched or outlined bar can say the
+ * value is not a reported one. A line, an area or a slice has no such mark.
+ */
+export const POINT_STATUS_TYPES = ["bar", "stacked"] as const
+
+/**
+ * Chart types that can draw `changes`: a bracket between two upright bars
+ * or columns, or a figure at the end of a horizontal bar.
+ */
+export const CHANGE_TYPES = ["bar", "stacked"] as const
+
+/** The most `changes` one chart draws. Past three, the brackets crowd the bars they read. */
+export const MAX_CHART_CHANGES = 3
 
 /**
  * Chart types that draw exactly one series and name its parts on the marks
@@ -114,6 +139,122 @@ const UPRIGHT_ONLY_TYPES = ["stacked", "percent_stacked", "combo"] as const
  */
 export const SERIES_EMPHASIS_TYPES = ["bar", "line", "area", "scatter", "stacked", "percent_stacked", "combo"] as const
 
+type ChartInput = {
+  chart_type: string
+  direction?: "horizontal" | "vertical"
+  axes?: { y_unit?: string }
+  changes?: { from: string; to: string; at?: string }[]
+  series: { name: string; data: { x: string | number; y: number }[] }[]
+}
+
+/**
+ * The rules a chart's `changes` keep: each names two bars the chart draws,
+ * and a figure can be computed between them.
+ *
+ * Without `at`, from and to are categories, and the change runs between
+ * their columns: a stacked column's total, or the one bar a category carries
+ * on a bar chart. A category with two bars has no one value to read. With
+ * `at`, from and to are series compared at one category, which a stacked
+ * column cannot show apart and a horizontal bar chart needs, since its rows
+ * have no room for a bracket between them.
+ */
+function checkChanges(c: ChartInput, ctx: z.RefinementCtx): void {
+  if (!CHANGE_TYPES.includes(c.chart_type as (typeof CHANGE_TYPES)[number])) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["changes"],
+      message:
+        `changes are drawn between two bars, and a ${c.chart_type} chart has none. ` +
+        `Use chart_type ${CHANGE_TYPES.map((t) => `"${t}"`).join(" or ")}, or state the change in the page's text.`,
+    })
+    return
+  }
+  const percent = isPercentUnit(c.axes?.y_unit)
+  const horizontal = c.chart_type === "bar" && c.direction === "horizontal"
+  const valueAt = (series: ChartInput["series"][number], x: string) =>
+    series.data.find((d) => d.x === x)?.y
+  c.changes!.forEach((change, k) => {
+    const path = ["changes", k]
+    if (change.from === change.to) {
+      ctx.addIssue({ code: "custom", path, message: `changes[${k}] runs from "${change.from}" to itself. Name two different bars.` })
+      return
+    }
+    let first: number | undefined
+    if (change.at === undefined) {
+      if (horizontal) {
+        ctx.addIssue({
+          code: "custom",
+          path,
+          message:
+            `changes[${k}] compares two categories, and a horizontal bar chart has no room for a bracket between its rows. ` +
+            `Write at with the category, and from and to with the two series whose bars it compares there.`,
+        })
+        return
+      }
+      for (const x of [change.from, change.to]) {
+        const bars = c.series.filter((s) => valueAt(s, x) !== undefined).length
+        if (bars === 0) {
+          ctx.addIssue({
+            code: "custom",
+            path,
+            message: `changes[${k}] names the category "${x}", and no series has a value there. Without at, from and to are categories (x values) of the chart.`,
+          })
+          return
+        }
+        if (bars > 1 && c.chart_type !== "stacked") {
+          ctx.addIssue({
+            code: "custom",
+            path,
+            message:
+              `changes[${k}] runs to the category "${x}", which carries ${bars} bars, so there is no one value to compare. ` +
+              `Write at with the category and name two series in from and to, or use chart_type "stacked" to compare column totals.`,
+          })
+          return
+        }
+      }
+      first = c.series.reduce((sum, s) => sum + (valueAt(s, change.from) ?? 0), 0)
+    } else {
+      if (c.chart_type === "stacked") {
+        ctx.addIssue({
+          code: "custom",
+          path: [...path, "at"],
+          message: `changes[${k}] compares two series inside one stacked column, which piles them into one bar. Remove at and compare two categories' columns instead.`,
+        })
+        return
+      }
+      for (const name of [change.from, change.to]) {
+        const series = c.series.find((s) => s.name === name)
+        if (series === undefined) {
+          ctx.addIssue({
+            code: "custom",
+            path,
+            message: `changes[${k}] names the series "${name}", and the chart has none by that name. With at, from and to are series names: ${c.series.map((s) => `"${s.name}"`).join(", ")}.`,
+          })
+          return
+        }
+        if (valueAt(series, change.at) === undefined) {
+          ctx.addIssue({
+            code: "custom",
+            path: [...path, "at"],
+            message: `changes[${k}] compares the series at "${change.at}", and series "${name}" has no value there.`,
+          })
+          return
+        }
+      }
+      first = valueAt(c.series.find((s) => s.name === change.from)!, change.at)
+    }
+    if (!percent && !(first! > 0)) {
+      ctx.addIssue({
+        code: "custom",
+        path,
+        message:
+          `changes[${k}] is stated as a relative change from ${first}, and a change relative to zero or less has no figure. ` +
+          `Compare against a bar above zero, or put the values in percent (axes.y_unit "%") to state the change in points.`,
+      })
+    }
+  })
+}
+
 export const schema = z
   .object({
     type: z.literal("chart"),
@@ -196,6 +337,26 @@ export const schema = z
       })
       .strict()
       .optional(),
+    /** Changes the chart states between two of its bars. See the describe below. */
+    changes: z
+      .array(
+        z
+          .object({
+            from: z.string(),
+            to: z.string(),
+            at: z.string().optional(),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(MAX_CHART_CHANGES)
+      .optional()
+      .describe(
+        "Up to three changes the chart states between two of its bars, each printed as a figure: a relative change (\"+11%\"), or a change in points when the value axis is in percent. " +
+          "Without `at`, from and to name two categories (x values), and the change runs between their columns, set as a bracket over them: each category must carry one bar, or the chart must be stacked. " +
+          "With `at`, from and to name two series and `at` the category where their bars are compared. The change is set beside the later bar. " +
+          "A change that ends on the marked series is set in the lead colour. Bar and stacked charts only.",
+      ),
     series: z.array(
       z
         .object({
@@ -549,6 +710,25 @@ export const schema = z
         })
       }
     }
+    // A status says how a bar is drawn: hatched for a forecast, a dashed
+    // outline for a target. A chart that draws no bar of its own for a
+    // point has nowhere to say it, and the reader would take the estimate
+    // for a reported figure.
+    if (!POINT_STATUS_TYPES.includes(c.chart_type as (typeof POINT_STATUS_TYPES)[number])) {
+      c.series.forEach((s, si) =>
+        s.data.forEach((d, di) => {
+          if (d.status === undefined) return
+          ctx.addIssue({
+            code: "custom",
+            path: ["series", si, "data", di, "status"],
+            message:
+              `status marks a bar as a ${d.status} rather than a reported figure, and a ${c.chart_type} chart draws no bar of its own for "${d.x}". ` +
+              `Use chart_type ${POINT_STATUS_TYPES.map((t) => `"${t}"`).join(" or ")}, or say which values are ${d.status}s in the series name.`,
+          })
+        }),
+      )
+    }
+    if (c.changes !== undefined) checkChanges(c, ctx)
     const rightSeries = c.chart_type === "combo" ? c.series.filter((s) => s.axis === "right").length : 0
     for (const key of ["y2_title", "y2_unit"] as const) {
       if (c.axes?.[key] === undefined || rightSeries > 0) continue

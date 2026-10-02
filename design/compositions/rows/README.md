@@ -25,3 +25,20 @@ Code: [`src/layouts/compositions/rows.tsx`](../../../src/layouts/compositions/ro
 ## Since the tea sample, 2026-10
 
 The closing block moved to [`src/layouts/compositions/closing.tsx`](../../../src/layouts/compositions/closing.tsx), shared with `table`, `track` and `figures`, each at the size its board gives it. Rows draws it byte for byte as before.
+
+## bulletin, NEV sample, 2026-10
+
+The notice setting (`setting: "notice"`), which bulletin's `notice-sheet` passes. The round's decisions are in [rounds/2026-10-03-bulletin](../../rounds/2026-10-03-bulletin/README.md).
+
+| board (p02) | engine |
+| :-: | :-: |
+| ![board](bulletin.board.png) | ![engine](bulletin.engine.png) |
+
+**What it looks like.** Each row is a 104px band with a hairline between rows: the number bold in primary at 26px, the label black and bold at 22px in a 280px column from 104px in, and the gloss at 19/30 from 400px in. It takes `numbered_cards` as well as bullets. The card the author marks (`items[].emphasis`) is reversed out of a primary block 8px clear of the row above, and is the page's answer. A closing callout becomes the light grey panel, not a primary block.
+
+**Why.** IKB is spent once a page, so the answer row takes it and nothing else does. The number in primary carries the brand on the other rows without competing with the answer.
+
+**What it gave up.**
+
+- A card with a `sub` line is declined.
+- Three to five cards, or two to five bullets. Rows shrink to 84px before the composition declines.

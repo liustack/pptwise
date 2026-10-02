@@ -299,7 +299,7 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
   }
   const emphasis = THEME_EMPHASIS_PHRASES[themeId]?.[lex.id]
   const content: Slide[] = slots.map((spec, i) => {
-    const built = fitThemeLead(themeId, i, buildThemeSlot(spec, lex))
+    const built = buildThemeSlot(spec, lex)
     const component = emphasis ? emphasizedLead(themeId, built, i, lex) : built
     const extra = thickenThemeContent(themeId, i, lex, component)
     const kind = componentKind(component)
@@ -369,13 +369,6 @@ function thickenThemeContent(themeId: string, slotIndex: number, lex: Lexicon, l
   if (themeId === "runway" && slotIndex === 5) return [shortParagraph]
   if (themeId === "heritage" && slotIndex === 3) return [shortParagraph]
   return []
-}
-
-function fitThemeLead(themeId: string, slotIndex: number, component: Component): Component {
-  if (themeId === "bulletin" && slotIndex === 2 && component.type === "icon_cards") {
-    return { ...component, items: component.items.slice(0, 3) }
-  }
-  return component
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -516,6 +509,16 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   if (def.id === "gauge-sheet") {
     return [sliceBullets(b.bullets!(lex), 3), { type: "callout", variant: "info", text: lex.verdicts.positive }]
   }
+  // The notice board's overview: numbered rows, the last the answer the
+  // others lead to, which the face reverses out of a primary block.
+  if (def.id === "notice-sheet") {
+    return [
+      {
+        type: "numbered_cards",
+        items: lex.phrases.slice(0, 4).map((title, i) => ({ title, text: lex.sentences[i + 2]!, ...(i === 3 ? { emphasis: true } : {}) })),
+      },
+    ]
+  }
   if (def.id === "gauge-figure") {
     // One figure with nothing the hero line has no place for: a delta arrow
     // or an icon sends the page to the plain fallback.
@@ -598,6 +601,7 @@ const CONTENT_FACE_KINDS: Record<string, PageKind> = {
   "gauge-exhibit": "evidence",
   "gauge-figure": "fact",
   "gauge-sheet": "points",
+  "notice-sheet": "points",
   "gauge-stats": "data",
   "image-annotate": "photo",
   "image-bottom": "photo",
@@ -1013,6 +1017,137 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
     ],
     footnote: lex.sources[0]!.label,
   }),
+  // Upright bars, the second series marked, its last value a forecast, and
+  // the change between the two series in the last period bracketed.
+  columns: (lex) => {
+    const periods = lex.periods.slice(0, 3)
+    const second = lex.labels[9]!
+    return {
+      heading: lex.headings[0]!,
+      components: [
+        {
+          type: "chart",
+          chart_type: "bar",
+          axes: { y_unit: lex.metrics[0]!.unit },
+          changes: [{ from: lex.labels[8]!, to: second, at: periods[2]! }],
+          series: [
+            { name: lex.labels[8]!, data: periods.map((x, i) => ({ x, y: 42 + i * 11 })) },
+            {
+              name: second,
+              emphasis: true,
+              data: periods.map((x, i) => ({ x, y: 30 + i * 6, ...(i === 2 ? { status: "forecast" as const } : {}) })),
+            },
+          ],
+        },
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
+  // Bars across, two series per row, the change at the first row stated.
+  bars: (lex) => {
+    const rows = lex.labels.slice(8, 12)
+    return {
+      heading: lex.headings[2]!,
+      components: [
+        {
+          type: "chart",
+          chart_type: "bar",
+          direction: "horizontal",
+          axes: { y_title: lex.metrics[1]!.label, y_unit: "%" },
+          changes: [{ from: lex.periods[0]!, to: lex.periods[1]!, at: rows[0]! }],
+          series: [
+            { name: lex.periods[0]!, data: rows.map((x, i) => ({ x, y: 27.8 - i * 6.1 })) },
+            { name: lex.periods[1]!, emphasis: true, data: rows.map((x, i) => ({ x, y: 23.3 - i * 5.2 })) },
+          ],
+        },
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
+  // A bridge whose levels sit far above zero, so its axis starts at a floor,
+  // one of its steps marked.
+  bridge: (lex) => ({
+    heading: lex.headings[1]!,
+    components: [
+      {
+        type: "waterfall",
+        unit: lex.metrics[0]!.unit,
+        items: [
+          { label: lex.periods[0]!, value: 4172, kind: "total" },
+          { label: lex.phrases[0]!, value: -132 },
+          { label: lex.phrases[2]!, value: -687, emphasis: true },
+          { label: lex.periods[1]!, value: 3353, kind: "total" },
+        ],
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // A data table with one highlighted row over a warning.
+  records: (lex) => {
+    const table = COMPONENT_BUILDERS.data_table!(lex)
+    return {
+      heading: lex.headings[9]!,
+      components: [
+        table.type === "data_table" ? { ...table, source: undefined, rows: table.rows.filter((row) => row.emphasis !== "total") } : table,
+        { type: "callout", variant: "warn", text: lex.verdicts.warning },
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
+  // Two figures, the second marked, beside a titled list.
+  stack: (lex) => ({
+    heading: lex.headings[3]!,
+    components: [
+      {
+        type: "kpi_cards",
+        items: figureItems(lex, 2).map((item, i) => (i === 1 ? { ...item, value: `**${item.value}**` } : item)),
+      },
+      {
+        type: "insight_panel",
+        title: lex.chapters[0]!,
+        rows: lex.phrases.slice(0, 4).map((label, i) => ({ label, text: lex.sentences[i]! })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // Three periods, the first two one marked window, over three facts.
+  window: (lex) => ({
+    heading: lex.headings[11]!,
+    components: [
+      {
+        type: "gantt",
+        axis_labels: lex.periods.slice(0, 3),
+        items: [
+          { label: lex.stages[0]!, text: lex.phrases[0]!, start: 0, end: 2, emphasis: true },
+          { label: lex.stages[1]!, text: lex.phrases[1]!, start: 2, end: 3 },
+        ],
+      },
+      {
+        type: "kpi_cards",
+        items: lex.metrics.slice(0, 3).map((metric, i) => ({ label: metric.label, value: `${metric.value}${metric.unit ?? ""}`, note: lex.periods[i]! })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // Six milestones on two lanes, one highlighted, over a closing note.
+  lanes: (lex) => ({
+    heading: lex.headings[11]!,
+    components: [
+      {
+        type: "timeline",
+        lanes: [lex.labels[8]!, lex.labels[9]!],
+        milestones: lex.stages.slice(0, 6).map((title, i) => ({
+          date: lex.periods[i % lex.periods.length]!,
+          title,
+          desc: lex.phrases[i]!,
+          lane: i % 2 === 0 ? lex.labels[9]! : lex.labels[8]!,
+          highlight: i === 1,
+        })),
+      },
+      { type: "callout", variant: "info", text: lex.verdicts.positive },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
   // The combo chart with its rate line marked, the series the column then
   // sets over the emphasis stroke.
   rail: (lex) => {
@@ -1045,13 +1180,23 @@ function figureItems(lex: Lexicon, count: number) {
  * instead of the changes it computes, and `table` at its dense size, four
  * options over a closing line.
  */
-export type CompositionVariant = "figures" | "dense"
+export type CompositionVariant = "figures" | "dense" | "answer"
 
 const COMPOSITION_VARIANT_BODIES: Record<`${CompositionId}-${CompositionVariant}`, ((lex: Lexicon) => CompositionBody) | undefined> = {
   "rail-figures": (lex) => ({
     heading: lex.headings[0]!,
     components: [CHART_VARIANTS["chart · bar"]!(lex), { type: "kpi_cards", items: figureItems(lex, 2) }],
     footnote: lex.sources[0]!.label,
+  }),
+  // Numbered cards, the last one the answer the others lead to.
+  "rows-answer": (lex) => ({
+    heading: lex.headings[1]!,
+    components: [
+      {
+        type: "numbered_cards",
+        items: lex.phrases.slice(0, 4).map((title, i) => ({ title, text: lex.sentences[i + 2]!, ...(i === 3 ? { emphasis: true } : {}) })),
+      },
+    ],
   }),
   "table-dense": (lex) => ({
     heading: lex.headings[9]!,

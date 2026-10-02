@@ -48,26 +48,54 @@ function renderEnding(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] 
 }
 
 describe("ending-signoff-ending — board geometry", () => {
-  it("paints a full-bleed primary field and left-aligned action heading", () => {
+  const ITEMS_PLAIN = ["华东首批十家焕新排期确认", "自有品牌预算追加审批", "季度目标责任书签发"]
+  const withList = (heading = HEADING, extras: Partial<Slide> = {}) =>
+    slide(heading, { components: [{ type: "bullets", items: ITEMS_PLAIN }], ...extras })
+
+  it("paints a full-bleed primary field and a left-aligned decision heading at the board coordinates", () => {
     const { root, tokens } = renderEnding("bulletin")
     const field = root.querySelector("rect[width='1280']")
     expect(field?.getAttribute("fill")).toBe(tokens.colors.primary)
-    const heading = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("三件事"),
-    )!
-    expect(heading.getAttribute("x")).toBe("96")
-    expect(heading.getAttribute("y")).toBe("300")
+    const heading = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("三件事"))!
+    // 56px on 74px lines from y196: the first baseline at y255.
+    expect(heading.getAttribute("x")).toBe("80")
+    expect(heading.getAttribute("y")).toBe("255")
+    expect(heading.getAttribute("font-size")).toBe("56")
     expect(heading.getAttribute("font-weight")).toBe("700")
     expect(heading.getAttribute("fill")).toBe(readableOn(tokens.colors.primary))
   })
 
-  it("with 3 bullet items draws the sign-off list at the board rows", () => {
-    const withList = slide(HEADING, { components: [{ type: "bullets", items: ITEMS }] })
-    const { root } = renderEnding("bulletin", withList)
+  it("sets the subheading as the small line above the heading", () => {
+    const { root } = renderEnding("bulletin", slide(HEADING, { subheading: "需要管理层拍板" }))
+    const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "需要管理层拍板")!
+    expect(kicker.getAttribute("x")).toBe("80")
+    expect(kicker.getAttribute("y")).toBe("116")
+  })
+
+  it("sets three items as numbered columns 376px apart under a fine rule at y404", () => {
+    const { root } = renderEnding("bulletin", withList())
     const texts = Array.from(root.querySelectorAll("text"))
-    expect(texts.some((t) => t.textContent === ITEMS[0] && t.getAttribute("y") === "392")).toBe(true)
-    expect(texts.some((t) => t.textContent === ITEMS[1] && t.getAttribute("y") === "436")).toBe(true)
-    expect(texts.some((t) => t.textContent === ITEMS[2] && t.getAttribute("y") === "480")).toBe(true)
+    for (const [i, item] of ITEMS_PLAIN.entries()) {
+      const number = texts.find((t) => t.textContent === `0${i + 1}`)!
+      expect(number.getAttribute("x")).toBe(String(80 + i * 376))
+      expect(texts.some((t) => t.textContent === item && t.getAttribute("x") === String(80 + i * 376))).toBe(true)
+    }
+    const rule = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("height") === "1")!
+    expect(rule.getAttribute("y")).toBe("404")
+  })
+
+  it("keeps a two-line English heading clear of the items under it", () => {
+    const heading = "Reset the fourth-quarter home targets to the third quarter's real trend"
+    const { root } = renderEnding("bulletin", withList(heading))
+    const lines = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-size") === "56" || Number(t.getAttribute("font-size")) > 40)
+    const lastBaseline = Math.max(...lines.map((t) => Number(t.getAttribute("y"))))
+    expect(lastBaseline).toBeLessThan(404 - 40)
+  })
+
+  it("paints a marked run of the heading as an underline instead of dropping the mark", () => {
+    const { root } = renderEnding("bulletin", slide("按三季度**实际走势**重定"))
+    expect(root.querySelector("[data-field-mark]")).not.toBeNull()
+    expect(Array.from(root.querySelectorAll("text")).map((t) => t.textContent).join("")).not.toContain("**")
   })
 
   it("with components: [] draws no invented list and no thank-you", () => {
@@ -79,27 +107,9 @@ describe("ending-signoff-ending — board geometry", () => {
   })
 
   it("empty heading does not fall back to a thank-you", () => {
-    const { markup, root } = renderEnding("bulletin", slide("", { heading: "", components: [] }))
+    const { markup } = renderEnding("bulletin", slide("", { heading: "", components: [] }))
     expect(markup).not.toContain("Thank you")
     expect(markup).not.toContain("谢谢")
-    const bars = Array.from(root.querySelectorAll("rect")).filter(
-      (r) => r.getAttribute("width") === "120" && r.getAttribute("height") === "8",
-    )
-    expect(bars).toHaveLength(1)
-  })
-
-  it("draws the closing bar and the colophon", () => {
-    const { root } = renderEnding("bulletin")
-    const bar = Array.from(root.querySelectorAll("rect")).find(
-      (r) => r.getAttribute("width") === "120" && r.getAttribute("height") === "8",
-    )
-    expect(bar?.getAttribute("x")).toBe("96")
-    expect(bar?.getAttribute("y")).toBe("580")
-    const foot = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("集团经营部"),
-    )
-    expect(foot?.getAttribute("data-contrast-tier")).toBe("meta")
-    expect(Number(foot?.getAttribute("y"))).toBe(650)
   })
 })
 

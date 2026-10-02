@@ -16,6 +16,13 @@ export const schema = z
             title: z.string(),
             text: z.string().optional(),
             sub: z.string().optional(),
+            /** The one item the page lands on. See the describe below. */
+            emphasis: z
+              .boolean()
+              .optional()
+              .describe(
+                "Marks the one item the page lands on, such as the answer the other items lead to. Its card is filled in the primary colour. At most one item.",
+              ),
           })
           .strict()
       )
@@ -23,6 +30,18 @@ export const schema = z
       .max(8),
   })
   .strict()
+  .superRefine((c, ctx) => {
+    // A filled card singles one item out, so two filled cards single out
+    // nothing.
+    const marked = c.items.flatMap((item, i) => (item.emphasis === true ? [i] : []))
+    if (marked.length > 1) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["items", marked[1]!, "emphasis"],
+        message: `numbered_cards marks ${marked.length} items with emphasis, and a filled card singles out one. Keep emphasis on the item the page lands on.`,
+      })
+    }
+  })
 
 export const aliases = {
   items: [{ itemsKey: "items", aliases: { description: "text", desc: "text" } }],

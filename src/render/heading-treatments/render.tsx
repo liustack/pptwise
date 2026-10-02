@@ -17,7 +17,7 @@ import {
   type EmphasisHeadingPaint,
   type EmphasisSegment,
 } from "../emphasis"
-import { accessibleInk, readableOn } from "../ink"
+import { accessibleInk } from "../ink"
 import { layoutSvgText, measureTextUnits, type SvgTextLayout } from "../../lib/svg-text-layout"
 import {
   resolveHeadingTreatment,
@@ -648,13 +648,12 @@ function renderTagBox(args: RenderArgs): { chrome: ReactNode; contentRect: Conte
   const box = args.knobs.box ?? "solid-invert"
   const hud = box === "hud-brackets"
   const boxH = hud ? 30 : 38
-  const boxFill = box === "solid-invert" ? colors.text : box === "solid-primary" ? colors.primary : colors.surface
-  const labelFill =
-    box === "solid-invert" ? colors.bg : box === "solid-primary" ? readableOn(colors.primary) : colors.accent
+  const boxFill = box === "solid-invert" ? colors.text : colors.surface
+  const labelFill = box === "solid-invert" ? colors.bg : colors.accent
   const labelKind = args.knobs.chapterLabel ?? "act"
   const label = formatChapterLabel(labelKind, args.chapterNumber, hasCjk(args.sectionName ?? ""))
   const labelY = hud ? 77 : 82
-  const labelSize = hud ? 16 : box === "solid-primary" ? 17 : 18
+  const labelSize = hud ? 16 : 18
   const chipW = 150
   const chipY = 56
   const chipX = nudgeXForReserve({ x: PAGE_LEFT, y: chipY, w: chipW, h: boxH }, args.reserve)

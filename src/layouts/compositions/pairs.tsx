@@ -1,9 +1,10 @@
+import type React from "react"
 import type { Component } from "@/ir"
 import { accessibleInk } from "../../render/ink"
 import { drawableItems } from "../boundary-content"
 import { splitRow } from "./rows"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
-import { fitFixed, paintLines } from "./type"
+import { centredBaseline, fitFixed, paintLines } from "./type"
 
 type Bullets = Extract<Component, { type: "bullets" }>
 
@@ -53,7 +54,9 @@ function pairsShape(components: readonly Component[]): Bullets | null {
   return only.type === "bullets" ? only : null
 }
 
-export const pairsComposition: Composition = ({ components, ctx, rect }) => {
+export const pairsComposition: Composition = (props) => {
+  if (props.setting === "notice") return noticePairs(props)
+  const { components, ctx, rect } = props
   const bullets = pairsShape(components)
   if (!bullets || rect.w < MIN_W) return null
   const items = drawableItems(bullets.items)
@@ -109,6 +112,134 @@ export const pairsComposition: Composition = ({ components, ctx, rect }) => {
         </g>
       ))}
       <line x1={rect.x} y1={foot} x2={right} y2={foot} stroke={rule} strokeWidth={1} />
+    </g>
+  )
+}
+
+/*
+ * The notice setting of pairs: bulletin's 2026-10 photo page (p05). Each
+ * pair is a 72px row with a hairline between rows: the label small and muted
+ * on the left, the value black and bold at 26px from 226px in. The pair the
+ * author marks takes a taller row: its value is written with the figure
+ * marked (`**105.8 万辆**，去年同期 41.7 万辆`), and the marked figure is set
+ * at 40px in primary with the rest of the value under it as a small muted
+ * note.
+ *
+ * Takes: one `bullets` of two to six items, every one written "Label: value".
+ *
+ * Declines: as the board setting does, plus a value past one line of its
+ * column at 26px (40px for the marked figure) and a note past one line at
+ * 16px.
+ */
+
+const NP = {
+  valueInset: 226,
+  labelW: 210,
+  row: 72,
+  markedRow: 104,
+  label: { size: 17, box: 26, top: 24 },
+  value: { size: 26, box: 32, top: 20 },
+  figure: { size: 40, box: 44, top: 16 },
+  note: { size: 16, box: 24, top: 64 },
+}
+
+/** A marked value split into its figure and the note after it, or `null` for a value with no leading marked run. */
+export function markedValue(value: string): { figure: string; note: string } | null {
+  const match = /^\s*\*\*(.+?)\*\*\s*[,，;；、]?\s*(.*)$/u.exec(value)
+  if (!match) return null
+  return { figure: match[1]!.trim(), note: match[2]!.trim() }
+}
+
+export function noticePairs({ components, ctx, rect }: Parameters<Composition>[0]): React.ReactElement | null {
+  const bullets = pairsShape(components)
+  if (!bullets || rect.w < MIN_W) return null
+  const items = drawableItems(bullets.items)
+  if (items.length < MIN_ITEMS || items.length > MAX_ITEMS) return null
+  const body = ctx.fonts.body
+  const valueW = rect.w - NP.valueInset
+  const rows = []
+  for (const item of items) {
+    const { label, gloss } = splitRow(item)
+    if (!label) return null
+    const labelLayout = fitFixed(label, { width: NP.labelW, size: NP.label.size, lineHeight: NP.label.box, maxLines: 2, fontFamily: body, bold: false })
+    if (labelLayout === null) return null
+    const marked = markedValue(gloss)
+    if (marked) {
+      const figure = fitFixed(marked.figure, { width: valueW, size: NP.figure.size, lineHeight: NP.figure.box, maxLines: 1, fontFamily: body, bold: true })
+      const note = marked.note
+        ? fitFixed(marked.note, { width: valueW, size: NP.note.size, lineHeight: NP.note.box, maxLines: 1, fontFamily: body, bold: false })
+        : undefined
+      if (figure === null || note === null) return null
+      rows.push({ label: labelLayout, marked: true as const, figure, note, height: NP.markedRow })
+    } else {
+      const value = fitFixed(gloss, { width: valueW, size: NP.value.size, lineHeight: NP.value.box, maxLines: 1, fontFamily: body, bold: true })
+      if (value === null) return null
+      rows.push({ label: labelLayout, marked: false as const, value, height: NP.row })
+    }
+  }
+  const total = rows.reduce((sum, row) => sum + row.height, 0)
+  if (total > rect.h) return null
+
+  const { colors } = ctx
+  const bg = ctx.defaultBg ?? colors.bg
+  const rule = ruleInk(ctx)
+  const labelInk = accessibleInk(colors.muted, bg, NP.label.size)
+  const valueInk = accessibleInk(colors.text, bg, NP.value.size)
+  const figureInk = accessibleInk(colors.primary, bg, NP.figure.size)
+  const noteInk = accessibleInk(colors.muted, bg, NP.note.size)
+  const right = rect.x + rect.w
+  const valueX = rect.x + NP.valueInset
+  let cursor = rect.y
+  return (
+    <g {...compositionTag("pairs")} {...blockTag(ctx, bullets)}>
+      {rows.map((row, index) => {
+        const top = cursor
+        cursor += row.height
+        const labelTop = top + NP.label.top - ((row.label.lines.length - 1) * NP.label.box) / 2
+        return (
+          <g key={index} data-pair-marked={row.marked ? "1" : undefined}>
+            {index > 0 && <line x1={rect.x} y1={top} x2={right} y2={top} stroke={rule} strokeWidth={1} />}
+            {paintLines(row.label, {
+              ctx,
+              x: rect.x,
+              y: centredBaseline(labelTop, NP.label.box, NP.label.size),
+              fill: labelInk,
+              fontFamily: body,
+              fontWeight: "400",
+            })}
+            {row.marked ? (
+              <>
+                {paintLines(row.figure, {
+                  ctx,
+                  x: valueX,
+                  y: centredBaseline(top + NP.figure.top, NP.figure.box, NP.figure.size),
+                  fill: figureInk,
+                  fontFamily: body,
+                  fontWeight: "700",
+                })}
+                {row.note &&
+                  paintLines(row.note, {
+                    ctx,
+                    x: valueX,
+                    y: centredBaseline(top + NP.note.top, NP.note.box, NP.note.size),
+                    fill: noteInk,
+                    fontFamily: body,
+                    fontWeight: "400",
+                  })}
+              </>
+            ) : (
+              paintLines(row.value, {
+                ctx,
+                x: valueX,
+                y: centredBaseline(top + NP.value.top, NP.value.box, NP.value.size),
+                fill: valueInk,
+                fontFamily: body,
+                fontWeight: "700",
+              })
+            )}
+          </g>
+        )
+      })}
     </g>
   )
 }

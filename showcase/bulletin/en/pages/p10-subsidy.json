@@ -1,0 +1,49 @@
+{
+  "components": [
+    {
+      "type": "gantt",
+      "axis_labels": [
+        "October",
+        "November",
+        "December"
+      ],
+      "items": [
+        {
+          "label": "Window: subsidies still open",
+          "text": "Local money is first come, first served: help buyers claim it",
+          "start": 0,
+          "end": 2,
+          "emphasis": true
+        },
+        {
+          "label": "December 31",
+          "text": "Unspent central funds go back",
+          "start": 2,
+          "end": 3
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "label": "Purchase tax",
+          "value": "Halved, up to RMB 15k",
+          "note": "Halved in 2026 and 2027, no cliff at year end"
+        },
+        {
+          "label": "Trade-in",
+          "value": "12%, up to RMB 20k",
+          "note": "Scrappage subsidy, maxed out near a RMB 167k price"
+        },
+        {
+          "label": "Local subsidies",
+          "value": "First come, first served",
+          "note": "Such as 14,000 slots in Shanghai's Pudong"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: MOF/STA No. 10 of 2023, NDRC/MOF No. 1745 of 2025, Shanghai government, MOFCOM (Sep 2026)",
+  "notes": "There is no purchase-tax cliff at year end, but there is a subsidy deadline: central trade-in money not spent by December 31 goes back to the central budget, and most local subsidies run on first come, first served. That may pull some sales into October and November, but no data puts a number on it, so we do not build it into the volume plan. We treat it as the window for promotions and store actions. Replacing an old car without scrapping it pays 8%, up to RMB 15,000. The third tranche of RMB 62.5bn in central funds went out before the end of June, and we have found no Q4 tranche as of October 3."
+}

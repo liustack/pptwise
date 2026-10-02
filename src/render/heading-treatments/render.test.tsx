@@ -4,7 +4,7 @@ import { dirname, extname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
 import { renderSvgMarkup, parseSvgRoot } from "../serialize"
-import { contrastRatio, readableOn, requiredContrastRatio } from "../ink"
+import { contrastRatio, requiredContrastRatio } from "../ink"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { tryContentHeadingTreatment } from "./render"
 import type { PptxIR, Slide } from "@/ir"
@@ -351,17 +351,6 @@ describe("tag_box playbill", () => {
     expect(treated!.contentRect.y).toBe(64)
     const root = rootOf(treated!.chrome)
     expect(texts(root).some((t) => (t.textContent ?? "").includes("第一幕"))).toBe(false)
-  })
-})
-
-describe("tag_box bulletin", () => {
-  it("solid-primary box + 第N部分", () => {
-    const { treated, colors } = withChapter("bulletin")
-    const root = rootOf(treated!.chrome)
-    const box = rectAt(root, 96, 56, 150, 38)
-    expect(box.getAttribute("fill")).toBe(colors.primary)
-    const label = textContaining(root, "第一部分")
-    expect(label.getAttribute("fill")).toBe(readableOn(colors.primary))
   })
 })
 

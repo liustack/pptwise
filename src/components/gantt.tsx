@@ -1,5 +1,7 @@
 import type { Component } from "@/ir"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { recededMarkFill } from "../render/chart-palette"
+import { accessibleInk } from "../render/ink"
 import type { RenderDef, SvgComponent } from "./types"
 
 type GanttComponent = Extract<Component, { type: "gantt" }>
@@ -78,11 +80,33 @@ function axisBounds(component: GanttComponent): { min: number; max: number } {
   return { min, max }
 }
 
+/** A bar's line of text (`items[].text`): under its label in the label column, up to three lines. */
+const ROW_TEXT_FONT = 16
+const ROW_TEXT_LINE_H = 20
+const ROW_TEXT_MAX_LINES = 3
+/** The label's line box when a text line follows it, and the air around the pair. */
+const ROW_LABEL_LINE_H = 22
+const ROW_PAD_Y = 8
+
+function rowText(item: GanttComponent["items"][number]): ReturnType<typeof layoutSvgText> | null {
+  const text = item.text?.trim()
+  if (!text) return null
+  return layoutSvgText(text, { maxWidth: LABEL_W, fontSize: ROW_TEXT_FONT, minPt: ROW_TEXT_FONT, maxLines: ROW_TEXT_MAX_LINES, lineHeightRatio: ROW_TEXT_LINE_H / ROW_TEXT_FONT })
+}
+
+/** The height a row needs: the natural row, or its label and text stacked with air. */
+function rowNeed(item: GanttComponent["items"][number]): number {
+  const text = rowText(item)
+  if (!text) return ROW_H_NATURAL
+  return Math.max(ROW_H_NATURAL, ROW_PAD_Y * 2 + ROW_LABEL_LINE_H + text.lines.length * ROW_TEXT_LINE_H)
+}
+
 function naturalHeight(component: GanttComponent): number {
   const n = component.items.length
   const hasAxisLabels = (component.axis_labels?.length ?? 0) > 0
   const reservedBottom = hasAxisLabels ? AXIS_BAND_H : 0
-  return n * ROW_H_NATURAL + (n - 1) * ROW_GAP + reservedBottom
+  const rows = Math.max(...component.items.map(rowNeed))
+  return n * rows + (n - 1) * ROW_GAP + reservedBottom
 }
 
 export const gantt: SvgComponent<GanttComponent> = {
@@ -98,7 +122,11 @@ export const gantt: SvgComponent<GanttComponent> = {
     // STRETCH_CAP_RATIO ceiling, this component fills whatever it's handed.
     const totalH = Math.max(naturalH, box.h ?? naturalH)
     const rowsH = totalH - reservedBottom
-    const rowH = Math.max(ROW_H_NATURAL, (rowsH - (n - 1) * ROW_GAP) / n)
+    const rowH = Math.max(ROW_H_NATURAL, ...component.items.map(rowNeed), (rowsH - (n - 1) * ROW_GAP) / n)
+    // A bar the author marks keeps the accent and the others recede, the
+    // way a marked waterfall bar does.
+    const marked = component.items.some((item) => item.emphasis === true)
+    const receded = marked ? recededMarkFill(ctx.colors.muted, ctx.defaultBg ?? ctx.colors.bg) : ""
 
     const { min: axisMin, max: axisMax } = axisBounds(component)
     const plotX = box.x + LABEL_W + LABEL_GAP
@@ -123,12 +151,16 @@ export const gantt: SvgComponent<GanttComponent> = {
           const barY = rowY + BAR_INSET_Y
           const barH = Math.max(1, rowH - BAR_INSET_Y * 2)
           const r = Math.min(4, barH / 2)
+          const text = rowText(item)
+          // With a line of text, the label and its text stack centred on the row.
+          const stackTop = text ? cy - (ROW_LABEL_LINE_H + text.lines.length * ROW_TEXT_LINE_H) / 2 : 0
+          const labelY = text ? stackTop + ROW_LABEL_LINE_H - 6 : cy + Math.round(label.fontSize * 0.35)
           return (
-            <g key={i}>
+            <g key={i} data-gantt-marked={item.emphasis ? "1" : undefined}>
               <text
                 data-truncated={label.truncated ? "1" : undefined}
                 x={box.x}
-                y={cy + Math.round(label.fontSize * 0.35)}
+                y={labelY}
                 textAnchor="start"
                 fontSize={label.fontSize}
                 fontWeight="600"
@@ -138,7 +170,28 @@ export const gantt: SvgComponent<GanttComponent> = {
               >
                 {label.text}
               </text>
-              <rect x={barX} y={barY} width={barW} height={barH} rx={r} fill={ctx.colors.accent} />
+              {text?.lines.map((line, k) => (
+                <text
+                  key={`t-${k}`}
+                  data-truncated={text.truncated && k === text.lines.length - 1 ? "1" : undefined}
+                  x={box.x}
+                  y={stackTop + ROW_LABEL_LINE_H + (k + 1) * ROW_TEXT_LINE_H - 5}
+                  fontSize={text.fontSize}
+                  fill={accessibleInk(ctx.colors.muted, ctx.defaultBg ?? ctx.colors.bg, text.fontSize)}
+                  fontFamily={ctx.fonts.body}
+                  dominantBaseline="alphabetic"
+                >
+                  {line}
+                </text>
+              ))}
+              <rect
+                x={barX}
+                y={barY}
+                width={barW}
+                height={barH}
+                rx={r}
+                fill={marked && !item.emphasis ? receded : ctx.colors.accent}
+              />
             </g>
           )
         })}
