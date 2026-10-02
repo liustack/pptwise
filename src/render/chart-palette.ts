@@ -12,7 +12,8 @@ import { blendOver, contrastRatio, graphicInk } from "./ink"
  * `<text>` fill from `palette[i]` — every label reads a fixed theme token
  * (`ctx.colors.text`/`muted`/`accent`, never the palette array itself; the
  * one exception, `renderBar`'s tallest-bar highlight, reads `accentColor`
- * directly, also not the palette).
+ * directly, also not the palette, and only while the palette it was handed
+ * carries the accent, see `highlightsTallestBar`).
  */
 
 /**

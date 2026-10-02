@@ -1,7 +1,8 @@
 /**
  * L1 gallery audit: geometry and taboo markers, zero model.
  *
- * Reuses `auditSvgMarkup` (overflow / page-overflow) and `findOverlapIssues`.
+ * Reuses `auditSvgMarkup` (overflow / page-overflow), `findOverlapIssues` and
+ * `findRunMisfits` (the runs of one line colliding, reported as overlap).
  * Extra checks: strikethrough vs underline, ink-box overlap, boxless card
  * overflow, page-edge stick, font-size floor, overflow markers, declared
  * content drops, Latin vertical type, axis-title vs data-mark intersection, isolated midground
@@ -18,7 +19,7 @@ import { META_FONT_FLOOR_PT, META_FONT_FLOOR_PX, pxToPt } from "@/constants"
 import { findOverflowVocabulary } from "@/ir/overflow-vocabulary"
 import { getPlatform } from "@/platform/registry"
 import { __pathBoundingBox, findOverlapIssues } from "@/audit/deck-audit"
-import { auditSvgMarkup, parseTransform, textLineWidth, textRuns, type TextRun } from "@/audit/svg-audit"
+import { auditSvgMarkup, findRunMisfits, parseTransform, textLineWidth, textRuns, type TextRun } from "@/audit/svg-audit"
 import {
   IDENTITY_MATRIX,
   boxesIntersect,
@@ -1132,6 +1133,15 @@ export function auditL1(svg: string): L1Result {
     findings.push({
       code: "overlap",
       message: `two regions overlap by ${pct}% of the smaller region's area — near "${issue.a.label}" and "${issue.b.label}"`,
+    })
+  }
+  for (const issue of findRunMisfits(svg)) {
+    findings.push({
+      code: "overlap",
+      message:
+        issue.kind === "short-pad"
+          ? `the highlight under "${issue.text}" stops short of its words (${issue.detail})`
+          : `the words after "${issue.text}" are drawn on top of it (${issue.detail})`,
     })
   }
   const root = parseRoot(svg)

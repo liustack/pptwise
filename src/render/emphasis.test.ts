@@ -438,13 +438,20 @@ describe("run geometry follows the parent text's tracking", () => {
     }
   }
 
-  /** Where each run starts if the cursor budgets tracking the way the fit does. */
+  /**
+   * Where each run starts if the cursor budgets tracking the way the fit
+   * does. "Beta" is the marked run, painted at 600, so it advances at bold.
+   */
   function expectedStarts(letterSpacing: number): number[] {
-    const segs = ["Alpha ", "Beta", " Gamma"]
+    const segs = [
+      { text: "Alpha ", bold: false },
+      { text: "Beta", bold: true },
+      { text: " Gamma", bold: false },
+    ]
     let cursor = 100
     return segs.map((seg) => {
       const start = cursor
-      cursor += measureTextUnits(seg, { bold: false }) * FONT_SIZE + Array.from(seg).length * letterSpacing
+      cursor += measureTextUnits(seg.text, { bold: seg.bold }) * FONT_SIZE + Array.from(seg.text).length * letterSpacing
       return start
     })
   }
@@ -458,7 +465,7 @@ describe("run geometry follows the parent text's tracking", () => {
   it("widens the pad by the tracking inside the run it covers", () => {
     const spacing = 4
     const chars = Array.from("Beta").length
-    const ink = measureTextUnits("Beta", { bold: false }) * FONT_SIZE + (chars - 1) * spacing
+    const ink = measureTextUnits("Beta", { bold: true }) * FONT_SIZE + (chars - 1) * spacing
     // The pad adds its own fontSize*0.1 padding on each side.
     expect(runs(spacing).padWidth).toBeGreaterThan(ink)
     expect(runs(spacing).padWidth).toBeLessThan(ink + FONT_SIZE * 0.4)
@@ -467,5 +474,75 @@ describe("run geometry follows the parent text's tracking", () => {
   it("leaves an untracked line exactly where it was", () => {
     const { xs } = runs(0)
     xs.forEach((x, i) => expect(x).toBeCloseTo(expectedStarts(0)[i]!, 6))
+  })
+})
+
+// tea-deck p03/p05/p07 (2026-10-02): a callout measured its runs in Georgia
+// Regular and painted the marked one at 600. The pad stopped short of the
+// bold glyphs and the next run started on top of them ("29,43345 times").
+describe("a marked run is measured at the weight it is painted in", () => {
+  const FONT = "Georgia, Songti SC, STSong, serif"
+  const SIZE = 24
+
+  function geometry(text: string, fontWeight?: string) {
+    const rendered = renderEmphasisLine(parseEmphasis(text), {
+      accent: "#F5C518",
+      baseFill: "#111111",
+      fontSize: SIZE,
+      x: 0,
+      baselineY: 40,
+      emphasis: "pad",
+      measureWeight: { fontFamily: FONT },
+      ...(fontWeight ? { fontWeight } : {}),
+    })
+    const markup = renderToStaticMarkup(
+      createElement("g", null, rendered.pads, createElement("text", { x: 0, y: 40 }, rendered.tspans)),
+    )
+    const xs = Array.from(markup.matchAll(/<tspan[^>]*\sx="([-\d.]+)"/g)).map((m) => Number(m[1]))
+    const pad = padPathPoints(/<path[^>]*\sd="([^"]+)"/.exec(markup)?.[1] ?? "")
+    return { xs, padRight: Math.max(...pad.map((p) => p.x)) }
+  }
+
+  it("starts the run after a bold run where the bold glyphs end", () => {
+    const { xs } = geometry("closed, **a net loss of 29,434**, 2.5 times")
+    const plain = measureTextUnits("closed, ", { fontFamily: FONT }) * SIZE
+    const bold = measureTextUnits("a net loss of 29,434", { fontFamily: FONT, bold: true }) * SIZE
+    expect(xs).toHaveLength(3)
+    expect(xs[1]).toBeCloseTo(plain, 6)
+    expect(xs[2]).toBeCloseTo(plain + bold, 6)
+  })
+
+  it("runs the pad past the end of the bold glyphs", () => {
+    const { padRight } = geometry("closed, **a net loss of 29,434**, 2.5 times")
+    const plain = measureTextUnits("closed, ", { fontFamily: FONT }) * SIZE
+    const bold = measureTextUnits("a net loss of 29,434", { fontFamily: FONT, bold: true }) * SIZE
+    expect(padRight).toBeGreaterThanOrEqual(plain + bold)
+  })
+
+  it("measures a run painted at a regular weight as regular", () => {
+    const { xs } = geometry("closed, **a net loss of 29,434**, 2.5 times", "400")
+    const plain = measureTextUnits("closed, ", { fontFamily: FONT }) * SIZE
+    const regular = measureTextUnits("a net loss of 29,434", { fontFamily: FONT }) * SIZE
+    expect(xs[2]).toBeCloseTo(plain + regular, 6)
+  })
+})
+
+// The run after a marked one starts its own chunk at its own `x`. rsvg
+// strips a chunk's leading blank under the default whitespace rule, so
+// "**double digits** at the group" previewed as "digitsat the group".
+describe("a run placed at its own x keeps the blank it starts with", () => {
+  it("marks a run that opens with a blank as preserving it", () => {
+    const rendered = renderEmphasisLine(parseEmphasis("said **double digits** at the group."), {
+      accent: "#F5C518",
+      baseFill: "#111111",
+      fontSize: 24,
+      x: 0,
+      baselineY: 40,
+      emphasis: "pad",
+    })
+    const markup = renderToStaticMarkup(createElement("text", null, rendered.tspans))
+    const tspans = Array.from(markup.matchAll(/<tspan([^>]*)>([^<]*)<\/tspan>/g))
+    expect(tspans.map((m) => m[2])).toEqual(["said ", "double digits", " at the group."])
+    expect(tspans.map((m) => m[1]!.includes('xml:space="preserve"'))).toEqual([false, false, true])
   })
 })

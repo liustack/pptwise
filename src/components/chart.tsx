@@ -21,6 +21,7 @@ import { labelLinePitch } from "./label-collision";
 import {
   barHorizontalMinBodyH,
   CHART_BODY_H,
+  CHART_MIN_BODY_H,
   DIRECT_LABEL_FONT_SIZE,
   RADIAL_MIN_BODY_H,
   seriesGutterLabelsFit,
@@ -491,20 +492,51 @@ function horizontalBarBodyH(component: ChartComponent): number {
   return barHorizontalMinBodyH(rows, component.series.length);
 }
 
+/** The header row and the axis-title band a chart stacks on its body. */
+function chartFrameH(component: ChartComponent): number {
+  const { xTitle, yTitle, y2Title } = axisTitlesOf(component);
+  return (hasHeaderRow(component) ? HEADER_ROW_H : 0) + axisTitlePairHeight(xTitle, yTitle, y2Title);
+}
+
+function measureChartH(component: ChartComponent): number {
+  return (
+    chartFrameH(component) +
+    Math.max(
+      CHART_H,
+      directLabelBodyH(component),
+      funnelBodyH(component),
+      radialBodyH(component),
+      horizontalBarBodyH(component)
+    )
+  );
+}
+
+/**
+ * The least height a chart draws whole in.
+ *
+ * A chart on a cartesian plot can draw a shorter plot than the flat body it
+ * measures at, down to `CHART_MIN_BODY_H`, so long as every other claim its
+ * measure makes still holds: the column of names a line or area chart sets at
+ * the end of its lines, and the rows a horizontal bar chart gives its
+ * categories. A pie, donut, funnel, gauge or dumbbell sizes its marks from the
+ * band it measured, and keeps it.
+ *
+ * Without this a chart was a fixed 320px block wherever it stood, and under
+ * brief's heading rule that left room for exactly one line of callout below
+ * it: a callout a few words longer sent the page to the step-aside layout, or
+ * at spacious pacing lost the callout, while 92px of the band stood empty.
+ */
+function chartMinHeight(component: ChartComponent): number {
+  if (!axesApplicable(component)) return measureChartH(component);
+  return (
+    chartFrameH(component) +
+    Math.max(CHART_MIN_BODY_H, directLabelBodyH(component), horizontalBarBodyH(component))
+  );
+}
+
 export const chart: SvgComponent<ChartComponent> = {
   measure(component) {
-    const { xTitle, yTitle, y2Title } = axisTitlesOf(component);
-    return (
-      (hasHeaderRow(component) ? HEADER_ROW_H : 0) +
-      axisTitlePairHeight(xTitle, yTitle, y2Title) +
-      Math.max(
-        CHART_H,
-        directLabelBodyH(component),
-        funnelBodyH(component),
-        radialBodyH(component),
-        horizontalBarBodyH(component)
-      )
-    );
+    return measureChartH(component);
   },
   render(component, box, ctx) {
     const renderer = resolveRenderer(component);
@@ -513,14 +545,15 @@ export const chart: SvgComponent<ChartComponent> = {
     // the field is honestly ignored rather than partially/silently honored.
     const axes = axesApplicable(component) ? component.axes : undefined;
     const headerH = hasHeaderRow(component) ? HEADER_ROW_H : 0;
-    const minimum = chart.measure(component, box.w, ctx);
+    const minimum = chartMinHeight(component);
     // A component draws inside the box it accepted, or it declines. This used
     // to read `Math.max(CHART_H + titleH, allocated)`: handed a box shorter
     // than its own measured minimum, the chart quietly drew that minimum
     // anyway and spilled over whatever the face had placed below it — a
-    // sentence, a footnote, 16 pages of the review corpus. `measure()` is the
-    // minimum a caller owes this component, and `render` now trusts `box.h`
-    // to be it.
+    // sentence, a footnote, 16 pages of the review corpus. `measure()` is
+    // what a caller hands this component while the page has room, and
+    // `chartMinHeight` the least it accepts when the page has none; `render`
+    // trusts `box.h` to be at least that.
     // Every chart type, not only the cartesian ones. `CHART_H` used to be
     // pinned here for funnel, pie, donut, gauge and dumbbell, so a face that
     // handed one of them a 328px band got a 240px chart and kept the
@@ -528,7 +561,7 @@ export const chart: SvgComponent<ChartComponent> = {
     // stage names inside a box that had room for them. `traits.stretchable`
     // says a layout may grow this component; honouring that only on four of
     // the nine chart types made the trait half true.
-    const bodyH = (box.h ?? minimum) - headerH;
+    const bodyH = (box.h ?? chart.measure(component, box.w, ctx)) - headerH;
     const plotX = 0;
     const plotW = box.w;
 
@@ -552,7 +585,7 @@ export const chart: SvgComponent<ChartComponent> = {
     // under-allocated box stays reachable by construction; a named marker
     // lets the page still render for preview and review, and moves the
     // refusal to the one place that ships a file.
-    if ((box.h ?? minimum) + 0.5 < minimum) {
+    if ((box.h ?? Number.POSITIVE_INFINITY) + 0.5 < minimum) {
       return <g data-dropped={1} data-dropped-kind="component" />;
     }
     // Same contract on the other axis. Below `MIN_CARTESIAN_BOX_W` the y-tick
@@ -708,4 +741,5 @@ export const renderDef: RenderDef<ChartComponent> = {
   type: "chart",
   measure: chart.measure,
   render: chart.render,
+  minHeight: chartMinHeight,
 };

@@ -188,4 +188,14 @@ export interface RenderDef<T extends Component = Component> {
   readonly type: T["type"]
   readonly measure: SvgComponent<T>["measure"]
   readonly render: SvgComponent<T>["render"]
+  /**
+   * The least height this component still draws whole in, when it can draw
+   * shorter than it {@link measure}s. `measure` is the height it asks for and
+   * what every layout hands it while the page has room. A layout that would
+   * otherwise lose a block, or send the page to a plainer layout, may hand a
+   * component that declares this anything down to it (`layoutContentFit`),
+   * and the component draws everything it was given in that box. Omitted, a
+   * component's floor is its measure.
+   */
+  readonly minHeight?: SvgComponent<T>["measure"]
 }

@@ -100,6 +100,7 @@ Audit renders deterministic SVG and checks:
 - `overlap`
 - `content-truncated`
 - `content-dropped`
+- `stepped-aside`
 - `monotony`
 
 Any finding exits with code 1. `--pixels` adds image-backed text contrast sampling and requires `sharp`.

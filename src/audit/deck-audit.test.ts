@@ -137,6 +137,7 @@ describe("auditDeck — clean deck baseline", () => {
             "overlap",
             "content-truncated",
             "content-dropped",
+            "stepped-aside",
             "monotony",
           ]).toContain(f.code)
           expect(f.message.length).toBeGreaterThan(0)
@@ -2809,5 +2810,38 @@ describe("auditDeck — arc-bbox reclassification ink fixes (fix/arc-bbox)", () 
     ])
     const contrast = auditDeck(ir).findings.filter((f) => f.code === "low-contrast")
     expect(contrast.some((f) => f.detail?.text === "Q1")).toBe(false)
+  })
+})
+
+// tea-deck (2026-10-02): a page that steps aside draws everything, in a
+// plainer layout whose heading sits higher and heavier than the rest of the
+// deck's. `inspect --fit` said so for one page at a time and the audit said
+// nothing, so a deck carried the odd page out unnoticed.
+describe("auditDeck: a page its theme's face stepped aside from", () => {
+  const prose: Component = { type: "paragraph", text: "Every driver traces back to how the work is planned." }
+  const page = (items: number): Slide =>
+    ({
+      id: `rows-${items}`,
+      type: "content",
+      kind: "points",
+      heading: "Each driver is a planning problem",
+      components: [
+        { type: "bullets", items: Array.from({ length: items }, (_, i) => `Quarterly review point number ${i + 1}`) },
+        prose,
+      ],
+      footnote: "Halden analysis",
+    }) as Slide
+
+  it("names the page and the face that stood down", () => {
+    // The gauge-sheet sweep in content-gauge-sheet.test.tsx puts the
+    // step-aside between these two lengths.
+    const stepped = Array.from({ length: 30 }, (_, n) => n + 4).find((items) =>
+      renderSlideSvg(deck("brief", [page(items)]), 0).includes('data-face-stepped-aside="gauge-sheet"'),
+    )!
+    const report = auditDeck(deck("brief", [page(4), page(stepped)]))
+    const aside = report.findings.filter((f) => f.code === "stepped-aside")
+    expect(aside).toHaveLength(1)
+    expect(aside[0]).toMatchObject({ page: 2, slideId: `rows-${stepped}`, code: "stepped-aside" })
+    expect(aside[0]!.message).toContain("gauge-sheet")
   })
 })

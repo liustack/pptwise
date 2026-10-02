@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { code } from "../components/code"
 import { resolveFontStack } from "../render/fonts"
 import type { ComponentCtx } from "../components/types"
-import { auditSvgMarkup } from "./svg-audit"
+import { auditSvgMarkup, findRunMisfits } from "./svg-audit"
 import { renderSvgMarkup } from "../render/serialize"
 import { FashionMastheadCover } from "../layouts/cover-fashion-masthead"
 import type { PptxIR, Slide } from "@/ir"
@@ -340,5 +340,47 @@ describe("auditSvgMarkup — bold-weight alignment with the real exporter (bold-
     const markup = wrap(`<g data-audit-box="56,0,1168">${out}</g>`)
     const issues = auditSvgMarkup(markup)
     expect(issues.filter((i) => i.kind === "h-overflow")).toEqual([])
+  })
+})
+
+// tea-deck p03/p05/p07 (2026-10-02): a highlighted run painted at 600 but
+// measured regular. Every check here read the line as one run flowing from
+// its `x`, so the run that started on top of the bold glyphs and the pad
+// that stopped short of them were both invisible to it.
+describe("findRunMisfits", () => {
+  const GEORGIA = "Georgia, Songti SC, STSong, serif"
+  const line = (secondX: number, padRight: number) =>
+    wrap(
+      `<path data-emphasis-pad="" d="M 98 20 L ${padRight} 20 L ${padRight} 46 L 98 46 Z" fill="#F5C518"></path>` +
+        `<text x="0" y="40" font-family="${GEORGIA}" font-size="24">` +
+        `<tspan x="0" text-anchor="start">closed, </tspan>` +
+        `<tspan x="88" font-weight="600" text-anchor="start" data-emphasis-pad-fill="#F5C518">a net loss of 29,434</tspan>` +
+        `<tspan x="${secondX}" text-anchor="start">, 2.5 times</tspan>` +
+        `</text>`,
+    )
+  // "a net loss of 29,434" at 24px: about 236px in Georgia Bold, 204px in Regular.
+  const BOLD_END = 88 + 236
+  const REGULAR_END = 88 + 204
+
+  it("flags a run that starts on top of the bold run before it", () => {
+    const issues = findRunMisfits(line(REGULAR_END, BOLD_END + 4))
+    expect(issues.map((issue) => issue.kind)).toEqual(["run-collision"])
+    expect(issues[0]!.text).toBe("a net loss of 29,434")
+  })
+
+  it("flags a highlight that stops short of the run it marks", () => {
+    const issues = findRunMisfits(line(BOLD_END + 1, REGULAR_END))
+    expect(issues.map((issue) => issue.kind)).toEqual(["short-pad"])
+  })
+
+  it("passes runs placed where the painted glyphs end, under a pad that covers them", () => {
+    expect(findRunMisfits(line(BOLD_END + 1, BOLD_END + 4))).toEqual([])
+  })
+
+  it("leaves runs without their own x to the renderer's flow", () => {
+    const flowing = wrap(
+      `<text x="0" y="40" font-family="${GEORGIA}" font-size="24">closed, <tspan font-weight="600">a net loss</tspan> after</text>`,
+    )
+    expect(findRunMisfits(flowing)).toEqual([])
   })
 })

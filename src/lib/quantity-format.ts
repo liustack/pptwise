@@ -6,6 +6,11 @@ const CURRENCY_LEAD = /^(US\$|HK\$|NT\$|A\$|C\$|S\$|R\$|[$€£¥￥₩₹₽₺
 
 const PERCENT = new Set(["%", "％"])
 
+/** Whether `unit` is a percent sign, half-width or full-width. */
+export function isPercentUnit(unit: string | undefined): boolean {
+  return unit !== undefined && PERCENT.has(unit.trim())
+}
+
 /**
  * `number` with `unit` attached as a reader expects it: a currency sign
  * before the digits and after any `+` or `-` (`+$0.48`, `-$2`), a percent sign

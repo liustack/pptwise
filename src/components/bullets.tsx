@@ -266,6 +266,9 @@ export const bullets: SvgComponent<BulletsComponent> = {
                   accent: emphasisRunInk(ctx.colors),
                   baseFill: ctx.colors.text,
                   emphasis: ctx.emphasis,
+                  // Runs are placed in the face they are painted in, so a
+                  // pad hugs its glyphs.
+                  measureWeight: { fontFamily: ctx.fonts.body },
                 },
                 <text
                   key={li}

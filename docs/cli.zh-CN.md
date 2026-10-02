@@ -100,6 +100,7 @@ Audit 渲染确定性 SVG，并检查：
 - `overlap`
 - `content-truncated`
 - `content-dropped`
+- `stepped-aside`
 - `monotony`
 
 任意发现都会让退出码变为 1。`--pixels` 增加压图文字的像素对比度采样，需要 `sharp`。

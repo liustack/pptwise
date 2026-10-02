@@ -609,3 +609,23 @@ describe("combo chart: a marked line", () => {
     expect(twice.map((i) => i.path.join("."))).toEqual(["series.1.emphasis"])
   })
 })
+
+describe("combo bars on a category only some bar series reach", () => {
+  it("centres that category's bars under its name", () => {
+    const container = draw({
+      type: "chart",
+      chart_type: "combo",
+      series: [
+        { name: "Full year", data: [{ x: "2024", y: 384 }, { x: "2025", y: 456 }] },
+        { name: "First half", data: [{ x: "H1 2026", y: 440 }] },
+        { name: "Share", plot: "line", data: [{ x: "2024", y: 30 }, { x: "2025", y: 34 }, { x: "H1 2026", y: 36 }] },
+      ],
+    } as ChartComponent)
+    const bars = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]')).map(
+      (rect) => Number(rect.getAttribute("x")) + Number(rect.getAttribute("width")) / 2,
+    )
+    const ticks = Array.from(container.querySelectorAll('[data-axis-tick="x"]')).map((t) => Number(t.getAttribute("x")))
+    expect(bars).toHaveLength(3)
+    bars.forEach((center, i) => expect(center).toBeCloseTo(ticks[i]!, 6))
+  })
+})

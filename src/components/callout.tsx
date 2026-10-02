@@ -1,11 +1,8 @@
 import type { Component } from "@/ir"
-import { layoutSvgText } from "../lib/svg-text-layout"
 import { Icon } from "../render/icons"
 import {
-  parseEmphasis,
+  layoutEmphasisText,
   renderEmphasisText,
-  sliceEmphasisForLines,
-  stripEmphasis,
   type EmphasisSegment,
   emphasisRunInk,
 } from "../render/emphasis"
@@ -51,8 +48,12 @@ interface CalloutLaid {
   contentH: number
 }
 
+/**
+ * Wraps the body so each line fits as painted: a marked run is set at 600,
+ * wider than the regular text it was fitted with (`layoutEmphasisText`).
+ */
 function layCalloutBody(text: string, maxWidth: number, fontSize: number, fontFamily?: string): CalloutLaid {
-  const l = layoutSvgText(stripEmphasis(text), {
+  const l = layoutEmphasisText(text, {
     maxWidth,
     fontSize,
     maxLines: 99,
@@ -62,7 +63,7 @@ function layCalloutBody(text: string, maxWidth: number, fontSize: number, fontFa
   return {
     fontSize: l.fontSize,
     lineHeight: l.lineHeight,
-    lineSegments: sliceEmphasisForLines(parseEmphasis(text), l.lines),
+    lineSegments: l.segments,
     contentH: l.lines.length * l.lineHeight,
   }
 }
