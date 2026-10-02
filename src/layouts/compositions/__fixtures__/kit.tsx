@@ -6,7 +6,7 @@ import { buildCtx, resolveBackgroundHex } from "../../../render/full-slide-svg"
 import { parseSvgRoot, renderSvgMarkup } from "../../../render/serialize"
 import { resolveThemeEmphasis } from "../../../themes/definitions"
 import { resolveStyle } from "../../../themes"
-import type { Composition, CompositionInks } from "../shared"
+import type { Composition, CompositionInks, CompositionSetting } from "../shared"
 
 /**
  * The band brief's content pages hand their body: the type area under the
@@ -16,6 +16,11 @@ import type { Composition, CompositionInks } from "../shared"
 export const BAND: ContentRect = { x: 96, y: 200, w: 1088, h: 448 }
 /** The same band on a page with a source line under it. */
 export const BAND_ABOVE_SOURCE: ContentRect = { ...BAND, h: 412 }
+
+/** The band bulletin's notice sheet hands its body: x80 to x1200, y196 down to the source line. */
+export const NOTICE_BAND: ContentRect = { x: 80, y: 196, w: 1120, h: 444 }
+/** The plot's share of it beside a column of figures (x80 to x760). */
+export const NOTICE_PLOT: ContentRect = { x: 80, y: 196, w: 680, h: 444 }
 
 /** A content-page context for `themeId`, built the way the page renderer builds one. */
 export function testCtx(themeId = "brief"): { ctx: ComponentCtx; tokens: ReturnType<typeof resolveStyle> } {
@@ -37,6 +42,8 @@ export interface RenderOptions {
   theme?: string
   rect?: ContentRect
   inks?: CompositionInks
+  /** The page type the face hands down; the brief board's own when left out. */
+  setting?: CompositionSetting
   /** Applied to the theme's context before the composition sees it. */
   ctx?: (ctx: ComponentCtx) => ComponentCtx
 }
@@ -50,6 +57,7 @@ export function renderComposition(composition: Composition, components: unknown[
     ctx,
     rect: options.rect ?? BAND,
     inks: options.inks,
+    setting: options.setting,
   })
   return { element, tokens, ctx, ...(element ? renderNode(element) : { root: null, markup: "" }) }
 }

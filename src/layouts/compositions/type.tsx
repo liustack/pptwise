@@ -15,6 +15,17 @@ import {
  * without a single `data-truncated` of their own.
  */
 
+/**
+ * The baseline of a `size` line centred in a `lineHeight` box whose top is
+ * `top`, the way a browser sets a sans with Microsoft YaHei's metrics.
+ * bulletin's 2026-10 board was drawn that way, and its baselines read off
+ * the board at 14, 34 and 50px sit at the box's middle plus 0.385 of the
+ * size. brief's boards were set in Georgia and keep their own constants.
+ */
+export function centredBaseline(top: number, lineHeight: number, size: number): number {
+  return Math.round(top + lineHeight / 2 + size * 0.385)
+}
+
 export interface FixedTextSpec {
   /** The measure, in px. */
   width: number

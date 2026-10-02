@@ -1,7 +1,8 @@
+import type React from "react"
 import type { Component } from "@/ir"
 import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { accessibleInk, readableOn } from "../../render/ink"
-import { closingCallout, fitClosing, paintClosing, type ClosingLayout, type ClosingSpec } from "./closing"
+import { closingCallout, fitClosing, fitNoticeClosing, paintClosing, paintNoticeClosing, type ClosingLayout, type ClosingSpec } from "./closing"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 
@@ -52,7 +53,7 @@ const MAX_ROWS = 5
 const MIN_TEXT_W = 160
 
 interface TableScale {
-  id: "board" | "compact" | "dense"
+  id: "board" | "compact" | "dense" | "notice"
   maxColumns: number
   /** The row labels' measure. */
   labelW: number
@@ -81,6 +82,13 @@ interface TableScale {
   lastRowPad: number
   /** Every row is as tall as this many lines at least, and as tall as the tallest row. */
   evenRows: number | null
+  /**
+   * Whose type the table is set in. `board`: plain cells in body ink and the
+   * pick in primary. `notice`: plain cells muted, the pick black and bold on
+   * its white column, its header bold, a black rule under the headers and a
+   * hairline under the last row.
+   */
+  inks?: "board" | "notice"
 }
 
 const SCALES: readonly TableScale[] = [
@@ -150,6 +158,36 @@ const SCALES: readonly TableScale[] = [
     rowPadBottom: 2,
     lastRowPad: 2,
     evenRows: 2,
+  },
+]
+/**
+ * The notice setting's one size: bulletin's 2026-10 plan page (p12). 20px
+ * cells and headers on 60px headers and 70px rows, 17px labels in a 170px
+ * column, the pick's column 32px wider than a plain one.
+ */
+const NOTICE_SCALES: readonly TableScale[] = [
+  {
+    id: "notice",
+    maxColumns: 3,
+    labelW: 170,
+    optionsInset: 180,
+    columnGap: 28,
+    plainPad: [0, 24],
+    pickPad: [28, 28],
+    pickExtra: 32,
+    headH: 60,
+    headSize: 20,
+    headBaseline: 38,
+    cellSize: 20,
+    labelSize: 17,
+    lineHeight: 30,
+    cellBaseline: 23,
+    labelBaseline: 22,
+    rowPadTop: 20,
+    rowPadBottom: 20,
+    lastRowPad: 20,
+    evenRows: 1,
+    inks: "notice",
   },
 ]
 const MAX_COLUMNS = Math.max(...SCALES.map((scale) => scale.maxColumns))
@@ -296,9 +334,10 @@ function layoutAt(
   return { scale, columns, headers, rows, bottom, ...(closing ? { closing } : {}) }
 }
 
-export const tableComposition: Composition = ({ components, ctx, rect }) => {
+export const tableComposition: Composition = ({ components, ctx, rect, setting }) => {
   const shape = tableShape(components)
   if (!shape) return null
+  if (setting === "notice") return noticeTable(shape, ctx, rect)
   let layout: TableLayout | null = null
   for (const scale of SCALES) {
     layout = layoutAt(scale, shape.comparison, shape.callout, ctx, rect)
@@ -382,6 +421,93 @@ export const tableComposition: Composition = ({ components, ctx, rect }) => {
     <g {...compositionTag("table")}>
       <g {...blockTag(ctx, shape.comparison)}>{table}</g>
       {paintClosing(layout.closing, { x: left, y: layout.bottom + CLOSING_GAP, w: rect.w }, CLOSING, ctx)}
+    </g>
+  )
+}
+
+/**
+ * The table in the notice setting: the one notice size, its inks, and a
+ * closing note on a light panel instead of a primary block.
+ */
+function noticeTable(
+  shape: { comparison: Comparison; callout?: Callout },
+  ctx: Parameters<Composition>[0]["ctx"],
+  rect: Parameters<Composition>[0]["rect"],
+): React.ReactElement | null {
+  const closing = shape.callout ? fitNoticeClosing(shape.callout, rect.w, ctx) : undefined
+  if (closing === null) return null
+  const room = closing ? { ...rect, h: rect.h - CLOSING_GAP - closing.height } : rect
+  let layout: TableLayout | null = null
+  for (const scale of NOTICE_SCALES) {
+    layout = layoutAt(scale, shape.comparison, undefined, ctx, room)
+    if (layout) break
+  }
+  if (!layout) return null
+  const { scale, columns, headers, rows } = layout
+  const { colors, fonts } = ctx
+  const body = fonts.body
+  const bg = ctx.defaultBg ?? colors.bg
+  const surface = colors.surface
+  const left = rect.x
+  const right = rect.x + rect.w
+  const pick = columns.find((column) => column.picked)
+  const headInk = accessibleInk(colors.muted, bg, scale.headSize)
+  const pickHeadInk = readableOn(colors.primary)
+  const labelInk = accessibleInk(colors.muted, bg, scale.labelSize)
+  const cellInk = accessibleInk(colors.muted, bg, scale.cellSize)
+  const pickInk = accessibleInk(colors.text, surface, scale.cellSize)
+  const rule = ruleInk(ctx)
+  const headRule = accessibleInk(colors.text, bg, scale.cellSize)
+  const table = (
+    <>
+      {pick && <rect x={pick.x} y={rect.y} width={pick.w} height={layout.bottom - rect.y} fill={surface} />}
+      {pick && <rect x={pick.x} y={rect.y} width={pick.w} height={scale.headH} fill={colors.primary} />}
+      {columns.map((column, i) => (
+        <g key={i}>
+          {paintLines(headers[i]!, {
+            ctx,
+            x: column.textX,
+            y: rect.y + scale.headBaseline,
+            fill: column.picked ? pickHeadInk : headInk,
+            fontFamily: body,
+            fontWeight: column.picked ? "700" : "400",
+            bg: column.picked ? colors.primary : undefined,
+          })}
+        </g>
+      ))}
+      <line x1={left} y1={rect.y + scale.headH} x2={right} y2={rect.y + scale.headH} stroke={headRule} strokeWidth={1} />
+      {rows.map((row, index) => (
+        <g key={index}>
+          {paintLines(row.label, {
+            ctx,
+            x: left,
+            y: row.top + scale.rowPadTop + scale.labelBaseline,
+            fill: labelInk,
+            fontFamily: body,
+            fontWeight: "400",
+          })}
+          {columns.map((column, i) => (
+            <g key={i}>
+              {paintLines(row.cells[i]!, {
+                ctx,
+                x: column.textX,
+                y: row.top + scale.rowPadTop + scale.cellBaseline,
+                fill: column.picked ? pickInk : cellInk,
+                fontFamily: body,
+                fontWeight: column.picked ? "700" : "400",
+                bg: column.picked ? surface : undefined,
+              })}
+            </g>
+          ))}
+          <line x1={left} y1={row.bottom} x2={right} y2={row.bottom} stroke={rule} strokeWidth={1} />
+        </g>
+      ))}
+    </>
+  )
+  return (
+    <g {...compositionTag("table")}>
+      <g {...blockTag(ctx, shape.comparison)}>{table}</g>
+      {closing && paintNoticeClosing(closing, { x: left, y: layout.bottom + CLOSING_GAP, w: rect.w }, ctx)}
     </g>
   )
 }

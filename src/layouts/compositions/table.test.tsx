@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest"
 import { assertSubset } from "../../render/subset-validate"
 import { tableComposition } from "./table"
-import { attrs, BAND, BAND_ABOVE_SOURCE, byText, renderComposition, texts, textOf } from "./__fixtures__/kit"
+import { attrs, BAND, BAND_ABOVE_SOURCE, byText, NOTICE_BAND, renderComposition, texts, textOf } from "./__fixtures__/kit"
 
 const ROWS = [
   { label: "Cost to Northwind", cells: ["$210M capital", "$38M over 12 months"] },
@@ -187,5 +187,45 @@ describe("table composition on the tea board", () => {
     expect(attrs(byText(root!, "古茗")!, ["x", "y", "font-size", "font-weight"])).toEqual(["290", "286", "17", "700"])
     expect(attrs(byText(root!, "蜜雪集团")!, ["x", "y", "font-size"])).toEqual(["508", "286", "17"])
     expect(Array.from(root!.querySelectorAll("line")).map((line) => line.getAttribute("y1"))).toEqual(["318", "384", "450"])
+  })
+})
+
+/** bulletin's 2026-10 decision page (p12): two plans, the recommended one on the right. */
+const PLANS = {
+  type: "comparison",
+  recommended: 1,
+  columns: ["按年中判断冲量", "按实际走势调整"],
+  rows: [
+    { label: "国内目标", cells: ["四季度比三季度多卖 65%", "按三季度同比约降两成重定"] },
+    { label: "促销方式", cells: ["跟进直降", "限时金融和保险权益，逐档过合规"] },
+    { label: "代价", cells: ["欠目标，库存和降价压力压到年底", "全年目标要下调"] },
+  ],
+}
+
+describe("table composition, notice setting", () => {
+  const notice = (components: unknown[]) => renderComposition(tableComposition, components, { rect: NOTICE_BAND, theme: "bulletin", setting: "notice" })
+
+  it("keeps the other plan muted and the recommended one black and bold, its header reversed out of primary", () => {
+    const { root, tokens } = notice([PLANS])
+    expect(attrs(byText(root!, "按年中判断冲量")!, ["font-size", "fill", "font-weight"])).toEqual(["20", tokens.colors.muted, null])
+    expect(attrs(byText(root!, "按实际走势调整")!, ["fill", "font-weight"])).toEqual(["#FFFFFF", "700"])
+    const head = Array.from(root!.querySelectorAll("rect")).find((rect) => rect.getAttribute("fill") === tokens.colors.primary)!
+    expect(attrs(head, ["x", "y", "height"])).toEqual(["728", "196", "60"])
+    expect(byText(root!, "跟进直降")!.getAttribute("fill")).toBe(tokens.colors.muted)
+    expect(attrs(byText(root!, "全年目标要下调")!, ["fill", "font-weight"])).toEqual([tokens.colors.text, "700"])
+    expect(() => assertSubset(root!)).not.toThrow()
+  })
+
+  it("rules the header in ink and every row under it, the last one included", () => {
+    const { root, tokens } = notice([PLANS])
+    const rules = Array.from(root!.querySelectorAll("line")).map((line) => attrs(line, ["y1", "stroke"]))
+    expect(rules[0]).toEqual(["256", tokens.colors.text])
+    expect(rules.slice(1).map(([y]) => y)).toEqual(["326", "396", "466"])
+  })
+
+  it("sets the row labels small and muted in their own column", () => {
+    const { root, tokens } = notice([PLANS])
+    expect(attrs(byText(root!, "国内目标")!, ["x", "font-size", "fill"])).toEqual(["80", "17", tokens.colors.muted])
+    expect(texts(root!).map(textOf).join(" ")).not.toContain("**")
   })
 })

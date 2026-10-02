@@ -9,7 +9,7 @@ import { trackComposition } from "./track"
 import { treeComposition } from "./tree"
 import { wavesComposition } from "./waves"
 
-export type { Composition, CompositionId, CompositionInks, CompositionProps } from "./shared"
+export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
 export { fitFixed, paintLines, type FixedTextSpec, type PaintSpec } from "./type"
 

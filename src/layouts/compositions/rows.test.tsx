@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest"
 import { assertSubset } from "../../render/subset-validate"
 import { rowsComposition, splitRow } from "./rows"
-import { attrs, BAND, BAND_ABOVE_SOURCE, byText, renderComposition, renderNode, testCtx, texts, textOf } from "./__fixtures__/kit"
+import { attrs, BAND, BAND_ABOVE_SOURCE, byText, NOTICE_BAND, renderComposition, renderNode, testCtx, texts, textOf } from "./__fixtures__/kit"
 
 const ITEMS = ["Missed deliveries: No time windows", "Density: Routes cut for 2022 volume", "Overtime: Shifts planned same day"]
 const CLOSE = "None of the three needs a single new van. All three need a better plan."
@@ -141,5 +141,61 @@ describe("rows composition", () => {
 
   it("adds no tag when animation is off", () => {
     expect(renderComposition(rowsComposition, boardPage()).root!.querySelector("[data-blk]")).toBeNull()
+  })
+})
+
+/** bulletin's 2026-10 overview (p02): four findings, the last one the page's answer. */
+const findings = (marked: number | null = 3, overrides: Record<string, unknown> = {}) => ({
+  type: "numbered_cards",
+  items: [
+    { title: "国内在缩", text: "三季度国内零售同比约降两成，9 月没有旺季。" },
+    { title: "增量在海外", text: "7–8 月新能源乘用车出口 105.8 万辆，是去年同期的 2.5 倍。" },
+    { title: "份额在挪，价格转暗", text: "比亚迪国内份额约少 4.5 个点，新势力多了 5.5 个点。" },
+    { title: "四季度怎么打", text: "目标按实际走势重定，预算押在补贴窗口。" },
+  ].map((item, i) => (i === marked ? { ...item, emphasis: true } : item)),
+  ...overrides,
+})
+const notice = (components: unknown[], rect = NOTICE_BAND) =>
+  renderComposition(rowsComposition, components, { rect, theme: "bulletin", setting: "notice" })
+
+describe("rows composition, notice setting", () => {
+  it("sets each finding in a 104px band: the number bold in primary, the label black and bold, the gloss beside it", () => {
+    const { root, tokens } = notice([findings()])
+    expect(attrs(byText(root!, "01")!, ["x", "y", "font-size", "font-weight", "fill"])).toEqual(["80", "261", "26", "700", tokens.colors.primary])
+    expect(attrs(byText(root!, "国内在缩")!, ["x", "y", "font-size", "font-weight", "fill"])).toEqual(["184", "259", "22", "700", tokens.colors.text])
+    expect(attrs(byText(root!, "三季度国内零售同比约降两成，9 月没有旺季。")!, ["x", "font-size"])).toEqual(["480", "19"])
+    const rules = Array.from(root!.querySelectorAll("line")).map((line) => line.getAttribute("y1"))
+    expect(rules).toEqual(["300", "404"])
+    expect(() => assertSubset(root!)).not.toThrow()
+  })
+
+  it("reverses the marked finding out of a primary block 8px clear of the row above, with no rule over it", () => {
+    const { root, tokens } = notice([findings()])
+    const block = root!.querySelector('[data-row-marked="1"] rect')!
+    expect(attrs(block, ["x", "y", "width", "height", "fill"])).toEqual(["80", "524", "1120", "96", tokens.colors.primary])
+    expect(attrs(byText(root!, "04")!, ["x", "fill"])).toEqual(["108", "#FFFFFF"])
+    expect(byText(root!, "四季度怎么打")!.getAttribute("fill")).toBe("#FFFFFF")
+  })
+
+  it("paints a marked run inside a finding instead of printing its asterisks", () => {
+    const cards = findings(null)
+    cards.items[1] = { title: "增量在海外", text: "出口 **105.8 万辆**，是去年同期的 2.5 倍。" }
+    const { root } = notice([cards])
+    expect(texts(root!).map(textOf).join(" ")).not.toContain("**")
+    expect(Array.from(root!.querySelectorAll("tspan")).some((tspan) => tspan.textContent === "105.8 万辆")).toBe(true)
+  })
+
+  it("takes bullets split at their colons, and a closing panel under the rows", () => {
+    const { root } = notice([{ type: "bullets", items: ["国内：在缩", "海外：在涨", "价格：转暗"] }, { type: "callout", variant: "info", text: "四季度按实际走势重定目标" }])
+    expect(byText(root!, "在涨")!.getAttribute("x")).toBe("480")
+    expect(root!.querySelector('[data-closing="notice"]')).not.toBeNull()
+  })
+
+  it("declines a card with a sub line, more than five rows, and rows the band cannot hold at 84px", () => {
+    const withSub = findings(null)
+    expect(notice([{ ...withSub, items: [{ ...withSub.items[0]!, sub: "国内" }, ...withSub.items.slice(1)] }]).element).toBeNull()
+    const six = { type: "numbered_cards", items: Array.from({ length: 6 }, (_, i) => ({ title: `第 ${i + 1} 条`, text: "说明" })) }
+    expect(notice([six]).element).toBeNull()
+    expect(notice([findings()], { ...NOTICE_BAND, h: 320 }).element).toBeNull()
   })
 })
