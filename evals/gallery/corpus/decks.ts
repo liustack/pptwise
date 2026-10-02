@@ -516,6 +516,16 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   if (def.id === "gauge-sheet") {
     return [sliceBullets(b.bullets!(lex), 3), { type: "callout", variant: "info", text: lex.verdicts.positive }]
   }
+  // The notice board's overview: numbered rows, the last the answer the
+  // others lead to, which the face reverses out of a primary block.
+  if (def.id === "notice-sheet") {
+    return [
+      {
+        type: "numbered_cards",
+        items: lex.phrases.slice(0, 4).map((title, i) => ({ title, text: lex.sentences[i + 2]!, ...(i === 3 ? { emphasis: true } : {}) })),
+      },
+    ]
+  }
   if (def.id === "gauge-figure") {
     // One figure with nothing the hero line has no place for: a delta arrow
     // or an icon sends the page to the plain fallback.
@@ -598,6 +608,7 @@ const CONTENT_FACE_KINDS: Record<string, PageKind> = {
   "gauge-exhibit": "evidence",
   "gauge-figure": "fact",
   "gauge-sheet": "points",
+  "notice-sheet": "points",
   "gauge-stats": "data",
   "image-annotate": "photo",
   "image-bottom": "photo",

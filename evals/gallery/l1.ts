@@ -1047,7 +1047,8 @@ function walkText(
           })
         }
 
-        const fontFloorExempt = ["gauge-spec", "show-spec"].includes(
+        // bulletin's 14px source line is an approved board size, like brief's meta.
+        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec"].includes(
           el.getAttribute("data-font-floor-exempt") ?? "",
         )
         if (!decor && !fontFloorExempt && fontSizeAttr !== null && Number(fontSizeAttr) < FONT_FLOOR) {
