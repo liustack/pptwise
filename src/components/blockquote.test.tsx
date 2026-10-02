@@ -30,6 +30,15 @@ describe("blockquote component", () => {
     attribution: "Francis Bacon",
   }
 
+  it("paints a marked run as emphasis instead of printing its asterisks", () => {
+    const marked = { type: "blockquote" as const, text: "店均营业额都出现**双位数下滑**。", attribution: "张渊" }
+    const { container } = svg(blockquote.render(marked, { x: 0, y: 0, w: 1120 }, ctx))
+    const body = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "").join("")
+    expect(body).toContain("店均营业额都出现双位数下滑。")
+    expect(body).not.toContain("**")
+    expect(container.querySelector("[data-emphasis-pad], tspan[fill]")).not.toBeNull()
+  })
+
   it("measure with attribution is greater than without", () => {
     const hNoAttr = blockquote.measure(componentNoAttr, 1120, ctx)
     const hWithAttr = blockquote.measure(componentWithAttr, 1120, ctx)
