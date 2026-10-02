@@ -406,3 +406,26 @@ describe("RailNumberedContent", () => {
     expect(out).toContain(`font-family="${ctx.fonts.heading}"`)
   })
 })
+
+describe("rail-numbered badge in a deck with no chapters", () => {
+  // A deck with no chapter pages printed "1.10" on its tenth content page:
+  // a section number for a section that does not exist.
+  it("numbers a page by its place among the content pages", () => {
+    const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
+    const cover = { type: "cover", heading: "封面" } as Slide
+    const pages = Array.from({ length: 10 }, (_, i) => ({ ...content1b, heading: `第 ${i + 1} 页` }) as Slide)
+    const deck = { ...ir("homeroom"), slides: [cover, ...pages] } as PptxIR
+    const badge = (index: number) => {
+      const root = parseSvgRoot(
+        renderSvgMarkup(
+          <svg>
+            <RailNumberedContent ir={deck} slide={deck.slides[index]!} index={index} ctx={ctx} />
+          </svg>,
+        ),
+      )
+      return Array.from(root.querySelectorAll("text")).find((t) => t.getAttribute("text-anchor") === "middle")!.textContent
+    }
+    expect(badge(1)).toBe("01")
+    expect(badge(10)).toBe("10")
+  })
+})

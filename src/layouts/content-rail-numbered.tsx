@@ -114,11 +114,14 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
   )
   const { colors, fonts } = ctx
 
-  // A content slide with no chapter before it (malformed/edge-case deck) is
-  // clamped to chapter 1 rather than showing "0.n".
-  const chNum = Math.max(1, chapterNumberFor(ir.slides, index))
+  // "{chapter}.{page}" only means something in a deck with chapters. A page
+  // with no chapter before it used to be clamped to chapter 1, and a deck
+  // with no chapters at all printed "1.10" on its tenth page, a section
+  // number for a section that does not exist. It now prints the page's own
+  // place among the content pages, "10".
+  const chNum = chapterNumberFor(ir.slides, index)
   const contentNum = contentIndexInChapter(ir.slides, index)
-  const badgeLabel = fitSvgLine(`${chNum}.${contentNum}`, {
+  const badgeLabel = fitSvgLine(chNum > 0 ? `${chNum}.${contentNum}` : String(contentNum).padStart(2, "0"), {
     maxWidth: BADGE_TEXT_MAX_W,
     fontSize: BADGE_FONT_SIZE,
     minFontSize: 16,
