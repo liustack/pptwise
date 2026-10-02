@@ -31,14 +31,16 @@ describe("figures composition", () => {
 
   it("sets the quote large under the rule, its marked run on the emphasis stroke, the speaker under it", () => {
     const { root, tokens } = renderComposition(figuresComposition, [kpis(), QUOTE], { rect: BAND_ABOVE_SOURCE })
-    // The opening mark sits on its own, right-aligned before the words, so
-    // the marked run is placed from the words alone.
-    const mark = byText(root!, "“")!
-    expect(attrs(mark, ["x", "y", "text-anchor", "font-size"])).toEqual(["109", "485", "end", "30"])
-    const quote = texts(root!).find((el) => textOf(el).startsWith("集团"))!
-    expect(attrs(quote, ["x", "y", "font-size", "fill"])).toEqual(["109", "485", "30", tokens.colors.primary])
-    expect(textOf(quote)).toBe("集团和蜜雪冰城主品牌的店均营业额都出现双位数下滑。”")
+    // The quotation marks are set in the line, the opening one at the measure's edge.
+    expect(byText(root!, "“")).toBeUndefined()
+    const quote = texts(root!).find((el) => textOf(el).startsWith("“集团"))!
+    expect(attrs(quote, ["x", "y", "font-size", "fill"])).toEqual(["96", "485", "30", tokens.colors.primary])
+    expect(textOf(quote)).toBe("“集团和蜜雪冰城主品牌的店均营业额都出现双位数下滑。”")
     expect(root!.querySelectorAll("[data-emphasis-pad]").length).toBe(1)
+    // The marked run starts after Georgia's opening mark (0.41em, as
+    // PowerPoint paints it) and nineteen characters on the em.
+    const run = Array.from(quote.querySelectorAll("tspan")).find((t) => t.textContent === "双位数下滑")!
+    expect(Number(run.getAttribute("x"))).toBeCloseTo(96 + (0.4102 + 19) * 30, 1)
     expect(attrs(byText(root!, QUOTE.attribution)!, ["x", "y", "font-size", "fill"])).toEqual(["96", "571", "17", tokens.colors.muted])
   })
 

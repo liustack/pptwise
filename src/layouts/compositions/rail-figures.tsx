@@ -7,7 +7,7 @@ import type { ContentRect } from "../../render/layout"
 import { SvgContent } from "../../render/svg-content"
 import { bodySlotDropsContent } from "../../render/step-aside"
 import { closingCallout } from "./closing"
-import { fitFigure, fitQuote, paintFigure, paintQuote, plainFigure, type FittedFigure, type FittedQuote, type KpiItem } from "./figure"
+import { fitFigure, fitQuote, paintFigure, plainFigure, type FittedFigure, type KpiItem } from "./figure"
 import { blockTag, compositionTag, ruleInk } from "./shared"
 import { fitFixed, paintLines } from "./type"
 
@@ -90,8 +90,8 @@ interface RemarkBlock {
   kind: "remark"
   component: Callout | Blockquote
   label: EmphasisHeadingLayout | null
-  /** A callout's words, or a quote's with its opening mark set apart. */
-  text: FittedQuote
+  /** A callout's words, or a quote's between its quotation marks. */
+  text: EmphasisHeadingLayout
 }
 
 type Block = FigureBlock | RemarkBlock
@@ -114,7 +114,7 @@ function blockBottom(block: Block): number {
     return NOTE_BASELINE + (block.note.lines.length - 1) * NOTE_LINE_HEIGHT + Math.ceil(NOTE_SIZE * DESCENT_RATIO)
   }
   const top = block.label ? REMARK_UNDER_LABEL : 0
-  return top + REMARK_BASELINE + (block.text.body.lines.length - 1) * REMARK_LINE_HEIGHT + Math.ceil(REMARK_SIZE * DESCENT_RATIO)
+  return top + REMARK_BASELINE + (block.text.lines.length - 1) * REMARK_LINE_HEIGHT + Math.ceil(REMARK_SIZE * DESCENT_RATIO)
 }
 
 /** The page drawn as a chart with the author's figures beside it, or `null` when it is not that page. */
@@ -156,7 +156,7 @@ export function railFigures({
     if (attribution && label === null) return null
     const spec = { width: columnW, size: REMARK_SIZE, lineHeight: REMARK_LINE_HEIGHT, maxLines: REMARK_MAX_LINES, fontFamily: body }
     const callout = remark.type === "callout" ? fitFixed(remark.text, { ...spec, bold: false }) : null
-    const text = remark.type === "blockquote" ? fitQuote(remark, spec) : callout && callout.lines.length > 0 ? { body: callout, open: null, room: 0 } : null
+    const text = remark.type === "blockquote" ? fitQuote(remark, spec) : callout && callout.lines.length > 0 ? callout : null
     if (text === null) return null
     blocks.push({ kind: "remark", component: remark, label, text })
   }
@@ -198,7 +198,7 @@ export function railFigures({
           <g key={i} {...blockTag(ctx, block.component)}>
             <line x1={columnX} y1={top - RULE_ABOVE} x2={right} y2={top - RULE_ABOVE} stroke={rule} strokeWidth={1} />
             {block.label && paintLines(block.label, { ...muted, y: top + LABEL_BASELINE })}
-            {paintQuote(block.text, { ctx, x: columnX, y: textTop + REMARK_BASELINE, fill: remarkInk, fontFamily: body, fontWeight: "400" })}
+            {paintLines(block.text, { ctx, x: columnX, y: textTop + REMARK_BASELINE, fill: remarkInk, fontFamily: body, fontWeight: "400" })}
           </g>
         )
       })}

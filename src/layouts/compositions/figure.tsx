@@ -5,7 +5,7 @@ import { isCurrencyUnit, isPercentUnit, joinUnit } from "../../lib/quantity-form
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { headingEmphasisPaint, renderEmphasisText, stripEmphasis, type EmphasisHeadingLayout } from "../../render/emphasis"
 import { accessibleInk } from "../../render/ink"
-import { fitFixed, paintLines, type PaintSpec } from "./type"
+import { fitFixed } from "./type"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 export type KpiItem = KpiCards["items"][number]
@@ -132,71 +132,27 @@ const LATIN_CLOSE = /["”’']$/u
 const CJK_OPEN = /^[「『]/u
 
 /**
- * The room the opening mark takes before the words, as a share of the size.
- * Georgia's curly mark is about 0.41em, and the mark is set right-aligned in
- * this room, so a wider mark from a CJK face hangs a little further left.
+ * The author's words between curly quotation marks, the marks set in the
+ * line like any other character. Marks the author wrote are kept once, and
+ * words that open with a corner bracket carry their own.
  */
-const OPEN_MARK_ROOM = 0.42
+function quoted(text: string): string {
+  const trimmed = text.trim()
+  if (CJK_OPEN.test(trimmed)) return trimmed
+  if (!LATIN_OPEN.test(trimmed)) return `“${trimmed}”`
+  const inner = trimmed.slice(1)
+  return `“${LATIN_CLOSE.test(inner) ? inner.slice(0, -1) : inner}”`
+}
 
 /**
- * A quote set by hand: the words, with the closing mark after them, and the
- * opening mark set on its own, right-aligned in a fixed room before the first
- * line.
- *
- * The opening mark is kept out of the measured line because the measurement
- * counts a curly mark a full em wide, the width some CJK faces give it,
- * while the faces that actually set it (Georgia here, in a browser and in
- * PowerPoint) set it at about two fifths of that. Inside the line, every run
- * after it, a marked run's highlight included, landed half an em too far
- * right.
+ * A blockquote's words set whole at a fixed size, marks kept for the paint,
+ * or `null`. A quote set large is display type, so its lines even out the
+ * way a heading's do.
  */
-export interface FittedQuote {
-  body: EmphasisHeadingLayout
-  /** The opening mark, or `null` when the words open with a corner bracket of their own. */
-  open: string | null
-  /** The room before the words that the opening mark sits in. */
-  room: number
-}
-
-function splitQuote(text: string): { open: string | null; body: string } {
-  const trimmed = text.trim()
-  if (CJK_OPEN.test(trimmed)) return { open: null, body: trimmed }
-  if (LATIN_OPEN.test(trimmed)) {
-    const inner = trimmed.slice(1)
-    return { open: "“", body: LATIN_CLOSE.test(inner) ? `${inner.slice(0, -1)}”` : `${inner}”` }
-  }
-  return { open: "“", body: `${trimmed}”` }
-}
-
-/** A blockquote's words set whole at a fixed size, marks kept for the paint, or `null`. */
 export function fitQuote(
   quote: Blockquote,
   spec: { width: number; size: number; lineHeight: number; maxLines: number; fontFamily: string },
-): FittedQuote | null {
-  const { open, body } = splitQuote(quote.text)
-  const room = open ? Math.round(spec.size * OPEN_MARK_ROOM) : 0
-  const layout = fitFixed(body, { ...spec, width: spec.width - room, bold: false })
-  return layout && layout.lines.length > 0 ? { body: layout, open, room } : null
-}
-
-/** Paints a fitted quote with its first baseline at `y`, the opening mark hung in its room before `x + room`. */
-export function paintQuote(quote: FittedQuote, place: PaintSpec): React.ReactElement {
-  return (
-    <g>
-      {quote.open && (
-        <text
-          x={place.x + quote.room}
-          y={place.y}
-          textAnchor="end"
-          fontFamily={place.fontFamily}
-          fontSize={quote.body.fontSize}
-          fill={place.fill}
-          dominantBaseline="alphabetic"
-        >
-          {quote.open}
-        </text>
-      )}
-      {paintLines(quote.body, { ...place, x: place.x + quote.room })}
-    </g>
-  )
+): EmphasisHeadingLayout | null {
+  const layout = fitFixed(quoted(quote.text), { ...spec, bold: false, balance: true })
+  return layout && layout.lines.length > 0 ? layout : null
 }
