@@ -42,7 +42,7 @@ export interface RenderOptions {
   theme?: string
   rect?: ContentRect
   inks?: CompositionInks
-  /** The page type the face hands down; the brief board's own when left out. */
+  /** The page type the face hands down, the brief board's own when left out. */
   setting?: CompositionSetting
   /** Applied to the theme's context before the composition sees it. */
   ctx?: (ctx: ComponentCtx) => ComponentCtx

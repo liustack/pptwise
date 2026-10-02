@@ -2597,8 +2597,8 @@ function printedMarkFindings(markup: string, page: number, slideId: string | und
       ...(slideId !== undefined ? { slideId } : {}),
       code: "content-dropped",
       message:
-        `${printed.length} text line(s) print an emphasis mark as asterisks ("${sample}"), so the phrase the author marked is not set apart — ` +
-        `the renderer that drew it does not read **…** marks`,
+        `${printed.length} text line(s) print an emphasis mark as asterisks ("${sample}"), so the phrase the author marked is not set apart. ` +
+        `The renderer that drew it does not read **…** marks`,
       detail: { count: printed.length, kind: "emphasis" },
     },
   ]

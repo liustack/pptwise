@@ -2907,7 +2907,7 @@ describe("auditDeck — a run graded in the font it is painted in", () => {
   })
 })
 
-describe("auditDeck — printed emphasis marks", () => {
+describe("auditDeck: printed emphasis marks", () => {
   // 2026-10 bulletin deck p02: a numbered card printed its author's marks as
   // asterisks, and nothing on the page or in the audit said so.
   it("reports no printed mark when a numbered card paints its marked runs", () => {

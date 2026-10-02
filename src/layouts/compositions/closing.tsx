@@ -111,7 +111,7 @@ export function paintClosing(
  * The notice setting's closing note: the page's "so what" on a light panel
  * rather than a primary block, since bulletin keeps its primary for the one
  * thing a page marks. A warning carries a stroked circle with an exclamation
- * mark before its words; a note or a tip carries none. Text at 20px on 28px
+ * mark before its words, and a note or a tip carries none. Text at 20px on 28px
  * lines, up to two lines, with the theme's emphasis on a marked run.
  * bulletin's 2026-10 table and timeline pages (p07, p11).
  *

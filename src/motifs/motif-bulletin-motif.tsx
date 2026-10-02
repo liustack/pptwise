@@ -3,7 +3,7 @@ import { DecorPiece } from "./decor-piece"
 import { readableOn } from "../render/ink"
 
 /**
- * bulletin-motif v4 —— 「方块阶」（2026-10 样例改版，见
+ * bulletin-motif v4：「方块阶」（2026-10 样例改版，见
  * `design/rounds/2026-10-03-bulletin/`）。
  *
  * 相对 v3（第八波制度板）：

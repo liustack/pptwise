@@ -38,7 +38,7 @@ type Waterfall = Extract<Component, { type: "waterfall" }>
  * waterfall component draws that bracket), a category name past one line of
  * its column at 17px, and values that cannot be set clear of each other.
  *
- * Band: the board's plot is 680px by 444px; the bars take 290px.
+ * Band: the board's plot is 680px by 444px, and the bars take 290px.
  *
  * Reads: `primary` (marked steps), `text` (totals' values, category names),
  * `muted` (other values, the note), `bg` or `defaultBg` (the cut marks),

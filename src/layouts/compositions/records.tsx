@@ -15,7 +15,7 @@ type Callout = Extract<Component, { type: "callout" }>
  * headers over a black rule, one 50px row per record with a hairline between
  * rows and under the last, every cell on one line at 19px. A highlighted row
  * (`emphasis: "highlight"`) sits on a pale tint of the primary colour with its
- * text bold in primary; a total row is set bold under a black rule. A closing
+ * text bold in primary, and a total row is set bold under a black rule. A closing
  * note may follow on a light panel. bulletin's 2026-10 company table (p07).
  *
  * Takes: `[data_table]` or `[data_table, callout]`, where the table has two to

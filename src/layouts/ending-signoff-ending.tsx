@@ -40,7 +40,7 @@ const KICKER = { top: 96, size: 18, box: 26, share: 0.78, maxW: 900 }
 const TITLE = { top: 196, size: 56, box: 74, minPt: 36, maxLines: 2, maxW: 1000 }
 const RULE = { y: 404, share: 0.4 }
 const ITEM_MAX = 4
-/** Columns stand on the pitch the cover's facts would, 376px for three; each item's text stops 46px short of the next. */
+/** Columns stand on the pitch the cover's facts would, 376px for three. Each item's text stops 46px short of the next. */
 const ITEM_PITCH_GAP = 8
 const ITEM_GUTTER = 46
 const NUMBER = { top: 432, size: 20, box: 30, share: 0.7 }

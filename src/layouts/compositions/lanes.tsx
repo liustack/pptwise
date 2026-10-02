@@ -56,7 +56,7 @@ const CARD_TRAIL = 24
 /** An upper card starts 18px into the band, a lower card 28px under the axis. */
 const UPPER_TOP = 18
 const LOWER_DROP = 28
-/** The line from an upper card starts 4px under its top; a lower card's runs 18px past the deepest lower card. */
+/** The line from an upper card starts 4px under its top. A lower card's runs 18px past the deepest lower card. */
 const UPPER_LINE_LEAD = 4
 const STEM_PAST_CARD = 18
 /** The least air between the deepest upper card and the axis, and between the stems and the closing note. */
@@ -100,7 +100,7 @@ export const lanesComposition: Composition = ({ components, ctx, rect }) => {
     names.push(fitted)
   }
 
-  // Each card measured from its own top; where its top sits waits for the axis.
+  // Each card measured from its own top. Where its top sits waits for the axis.
   const measured = []
   for (const [i, m] of milestones.entries()) {
     const below = hasLanes && m.lane?.trim() === laneNames[1]

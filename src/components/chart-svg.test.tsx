@@ -2270,7 +2270,7 @@ describe("renderBarHorizontal: a category only some series reach", () => {
   })
 })
 
-describe("renderDumbbell — the end value of a row that fell", () => {
+describe("renderDumbbell: the end value of a row that fell", () => {
   // bulletin deck review (2026-10): on a row whose end sat just left of its
   // start, the end value set after the end dot ran over the start dot.
   const series: ChartSeries[] = [

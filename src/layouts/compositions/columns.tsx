@@ -78,7 +78,7 @@ const CATEGORY_DROP = 30
 const BOARD_H = 300
 const BOARD_H_BRACKETS = 290
 const MIN_H = 150
-/** A lone bar's width and share of its column; grouped bars' width, share and gap. */
+/** A lone bar's width and share of its column, then grouped bars' width, share and gap. */
 const LONE_BAR_W = 104
 const LONE_BAR_SHARE = 0.62
 const GROUP_BAR_W = 76
@@ -402,7 +402,7 @@ interface BracketEnd {
 /**
  * Where a change's bracket stands: over the two columns it runs between, or
  * over the two bars of one column it compares. `null` when the chart does
- * not draw what the change names; validate refuses those first.
+ * not draw what the change names. validate refuses those first.
  */
 function bracketEnds(
   change: NonNullable<Chart["changes"]>[number],

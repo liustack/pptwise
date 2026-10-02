@@ -7,7 +7,7 @@ import { blendOver } from "./ink"
  * shares:
  *
  * - a forecast is hatched: 3px stripes of the bar's own colour, 8px apart
- *   across, rising left to right, over a pale tint of that colour;
+ *   across, rising left to right, over a pale tint of that colour.
  * - a target is a dashed outline in the bar's colour over the same tint.
  *
  * No pattern fill and no clip path: the stripes are one path clipped to the

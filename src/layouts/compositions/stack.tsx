@@ -12,7 +12,7 @@ type InsightPanel = Extract<Component, { type: "insight_panel" }>
  * beside them, right of a hairline, a titled list of points: the panel's
  * title small and muted, then each row as a bold line and a muted line under
  * it, with a hairline over every row. The figures are black and bold at 76px
- * with a small label over them and a note under; the one the author marks
+ * with a small label over them and a note under, and the one the author marks
  * (`**…**` around its value) is set in primary. bulletin's 2026-10 pricing
  * page (p08).
  *
@@ -25,7 +25,7 @@ type InsightPanel = Extract<Component, { type: "insight_panel" }>
  * its text past two at 17px, and a page taller than the band.
  *
  * Band: the figure column is 460px and the list starts 560px in, so the band
- * needs 960px. Two figures stand 214px apart; four panel rows need 416px.
+ * needs 960px. Two figures stand 214px apart, and four panel rows need 416px.
  *
  * Reads: `primary` (a marked figure), `text` (figures, notes, row labels),
  * `muted` (labels, the panel title, row text), `border` or `muted` (rules),
