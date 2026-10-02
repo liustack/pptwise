@@ -578,7 +578,13 @@ export type ChartSeries = {
   /** `size` is scatter-only: an optional per-point magnitude that turns a
    * scatter dot into a bubble (chart-depth wave). Every other chart_type
    * ignores it. Mirrors `components/chart.ts`'s `ChartPointSchema`. */
-  data: { x: string | number; y: number; size?: number }[]
+  data: {
+    x: string | number
+    y: number
+    size?: number
+    /** Bar and stacked only: a forecast (hatched) or a target (dashed outline), not a reported figure. */
+    status?: "forecast" | "target"
+  }[]
   /** `chart_type: "combo"` only: draw this series as bars (default) or a line. */
   plot?: "bar" | "line"
   /** `chart_type: "combo"` only: read this series against the left (default)

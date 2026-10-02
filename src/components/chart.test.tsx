@@ -1937,3 +1937,71 @@ describe("chart series emphasis", () => {
     }
   })
 })
+
+describe("chart point status and change brackets", () => {
+  const draw = (component: Parameters<typeof chart.render>[0]) =>
+    svg(chart.render(component, { ...box, h: chart.measure(component, box.w, ctx) }, ctx)).container
+  const months = {
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    series: [
+      {
+        name: "2026 年",
+        data: [
+          { x: "7 月", y: 146 },
+          { x: "8 月", y: 154 },
+          { x: "9 月", y: 169, status: "forecast" as const },
+          { x: "目标", y: 300, status: "target" as const },
+        ],
+      },
+    ],
+  }
+
+  it("hatches a forecast bar and outlines a target bar with a dashed stroke, both over a pale tint", () => {
+    const container = draw(months)
+    const forecast = container.querySelector('g[data-mark-status="forecast"][data-plot-mark="1"]')!
+    expect(forecast.querySelector("path")!.getAttribute("stroke")).toBe(ctx.colors.chartPalette[0])
+    expect(forecast.querySelector("rect")!.getAttribute("fill")).not.toBe(ctx.colors.chartPalette[0])
+    const target = container.querySelector('rect[data-mark-status="target"][data-plot-mark="1"]')!
+    expect(target.getAttribute("stroke-dasharray")).toBe("6 4")
+    expect(container.querySelector("pattern")).toBeNull()
+    expect(() => assertSubset(parseSvgRoot(renderSvgMarkup(<svg>{chart.render(months, { ...box, h: 320 }, ctx)}</svg>)))).not.toThrow()
+  })
+
+  it("names the forecast and the target in the legend, in the chart's own language", () => {
+    const names = Array.from(draw(months).querySelectorAll("text")).map((t) => t.textContent)
+    expect(names).toContain("预测")
+    expect(names).toContain("目标")
+  })
+
+  it("draws a bracket over two columns with the change between them", () => {
+    const quarters = {
+      type: "chart" as const,
+      chart_type: "stacked" as const,
+      series: [
+        { name: "实际", data: [{ x: "三季度", y: 473 }, { x: "四季度", y: 300 }] },
+        { name: "倒推所需", emphasis: true, data: [{ x: "三季度", y: 0 }, { x: "四季度", y: 480, status: "target" as const }] },
+      ],
+      changes: [{ from: "三季度", to: "四季度" }],
+    }
+    const bracket = draw(quarters).querySelector("[data-chart-change]")!
+    expect(bracket.querySelector("path")!.getAttribute("d")).toMatch(/^M [\d.]+ [\d.]+ V [\d.]+ H [\d.]+ V [\d.]+$/)
+    expect(bracket.querySelector("text")!.textContent).toBe("+65%")
+  })
+
+  it("writes a horizontal chart's change after the value of the bar it lands on", () => {
+    const share = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      direction: "horizontal" as const,
+      axes: { y_unit: "%" },
+      series: [
+        { name: "2025", data: [{ x: "比亚迪", y: 27.8 }, { x: "吉利", y: 12 }] },
+        { name: "2026", data: [{ x: "比亚迪", y: 23.3 }, { x: "吉利", y: 13.1 }] },
+      ],
+      changes: [{ at: "比亚迪", from: "2025", to: "2026" }],
+    }
+    const labels = Array.from(draw(share).querySelectorAll("[data-value-label]")).map((t) => t.textContent)
+    expect(labels).toContain("23.3  −4.5 个百分点")
+  })
+})

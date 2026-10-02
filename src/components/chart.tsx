@@ -10,6 +10,8 @@ import {
   rotateChartPalette,
 } from "../render/chart-palette";
 import { accessibleInk } from "../render/ink";
+import { StatusMark, statusGround, statusWords } from "../render/mark-status";
+import { mostlyChinese } from "../lib/text-script";
 import { axisTitlePairHeight } from "./axis-titles";
 import {
   MIN_CARTESIAN_BOX_W,
@@ -198,7 +200,43 @@ const DIRECT_LABELLED: ReadonlySet<ChartComponent["chart_type"]> = new Set([
 function legendApplicable(component: ChartComponent): boolean {
   if (SINGLE_SERIES.has(component.chart_type)) return false;
   if (DIRECT_LABELLED.has(component.chart_type)) return false;
-  return component.series.length >= 2;
+  // A hatched forecast or a dashed target needs a key saying so, even on a
+  // chart of one series.
+  return component.series.length >= 2 || component.series.some((s) => s.data.some((d) => d.status !== undefined));
+}
+
+/** Legend entries a chart's point statuses add: a forecast swatch, a target swatch. */
+const FORECAST_ENTRY = -1;
+const TARGET_ENTRY = -2;
+
+/** The status every point of a series shares, when they all share one: its legend swatch is drawn that way. */
+function seriesStatus(component: ChartComponent, seriesIndex: number): "forecast" | "target" | undefined {
+  const data = component.series[seriesIndex]?.data ?? [];
+  const first = data[0]?.status;
+  return first !== undefined && data.every((d) => d.status === first) ? first : undefined;
+}
+
+/**
+ * The extra legend entries for points that are not reported figures, where a
+ * series mixes them with reported ones: one "Forecast" entry hatched in the
+ * colour of the first such series, and one "Target" entry outlined the same
+ * way. A series whose every point is a forecast or a target needs none: its
+ * own swatch is hatched or outlined.
+ */
+function statusEntries(component: ChartComponent): { name: string; seriesIndex: number; colorIndex: number }[] {
+  const chinese = mostlyChinese([
+    ...component.series.map((s) => s.name),
+    ...component.series.flatMap((s) => s.data.flatMap((d) => (typeof d.x === "string" ? [d.x] : []))),
+  ]);
+  const words = statusWords(chinese);
+  const entries: { name: string; seriesIndex: number; colorIndex: number }[] = [];
+  const partial = (status: "forecast" | "target") =>
+    component.series.findIndex((s, i) => seriesStatus(component, i) === undefined && s.data.some((d) => d.status === status));
+  const forecast = partial("forecast");
+  const target = partial("target");
+  if (forecast >= 0) entries.push({ name: words.forecast, seriesIndex: FORECAST_ENTRY, colorIndex: forecast });
+  if (target >= 0) entries.push({ name: words.target, seriesIndex: TARGET_ENTRY, colorIndex: target });
+  return entries;
 }
 
 /**
@@ -643,7 +681,7 @@ export const chart: SvgComponent<ChartComponent> = {
     const headerW = box.w;
     const legendLayout = hasLegend
       ? layoutChartLegend(
-          buildChartModel(component.series).legend,
+          [...buildChartModel(component.series).legend, ...statusEntries(component)],
           headerW,
           bodyFace
         )
@@ -686,6 +724,17 @@ export const chart: SvgComponent<ChartComponent> = {
               );
               return (
                 <g key={slot.seriesIndex}>
+                  {slot.seriesIndex < 0 || seriesStatus(component, slot.seriesIndex) ? (
+                    <StatusMark
+                      status={slot.seriesIndex === FORECAST_ENTRY ? "forecast" : slot.seriesIndex === TARGET_ENTRY ? "target" : seriesStatus(component, slot.seriesIndex)!}
+                      color={palette[slot.colorIndex % palette.length]!}
+                      ground={statusGround(palette[slot.colorIndex % palette.length]!, legendBg, 0.25)}
+                      x={swatchX}
+                      y={swatchY}
+                      w={LEGEND_SWATCH_SIZE}
+                      h={LEGEND_SWATCH_SIZE}
+                    />
+                  ) : (
                   <rect
                     x={swatchX}
                     y={
@@ -708,6 +757,7 @@ export const chart: SvgComponent<ChartComponent> = {
                       ctx.colors.accent
                     )}
                   />
+                  )}
                   <text
                     data-truncated={slot.fitted.truncated ? "1" : undefined}
                     x={swatchX + LEGEND_SWATCH_SIZE + LEGEND_SWATCH_GAP}
