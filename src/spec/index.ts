@@ -33,6 +33,7 @@ import {
   type Pacing,
 } from "../narrative"
 import { CAPACITY } from "../audit/capacity"
+import { stripEmphasis } from "../render/emphasis"
 import { type SlideType } from "../layouts/registry"
 import { offeredContentKinds, resolveLayoutId } from "../render/layout-selection"
 import type { ThemeDefinition } from "../themes/definitions"
@@ -341,7 +342,9 @@ const HEADING_MAX_CHARS = CAPACITY.headingMaxChars
  * `charLen` if that one ever changes.
  */
 function specHeadingLength(heading: string): number {
-  return heading.length
+  // `**…**` marks are never painted, so they are not part of the length a
+  // reader sees.
+  return stripEmphasis(heading).length
 }
 
 function checkHeadings(spec: DeckSpec): SpecValidationIssue[] {
