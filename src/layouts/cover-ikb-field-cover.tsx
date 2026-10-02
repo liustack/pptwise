@@ -1,91 +1,84 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { accessibleInk, metaInk, readableOn } from "../render/ink"
-import { hasCjk } from "./minimal-shared"
-import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading, stripEmphasis } from "../render/emphasis"
+import { accessibleInk, readableOn } from "../render/ink"
+import { showsDocumentMeta } from "../render/document-meta"
+import {
+  fitEmphasisHeading,
+  fitEmphasisText,
+  headingEmphasisPaint,
+  renderEmphasisHeading,
+  stripEmphasis,
+} from "../render/emphasis"
+import { centredBaseline } from "./compositions/type"
+import { FieldHeadingLine, fieldInk } from "./field-type"
 
 /**
- * ikb-field-cover（第八波企业制度封面）：满版 primary 场，左齐反白标题，
- * 题下一条短杠收题。构图抄 `.issues/design-boards/wave8/b1/Enterprise.dc.html`
- * 封面：kicker y132、标题两行约 y348/440、白杠 y496、底句 y662。
+ * ikb-field-cover：满版 primary 场，左齐反白标题。2026-10 bulletin 样例改版
+ * （`design/rounds/2026-10-03-bulletin/`）重画：
  *
- * 进共享池，不是 bulletin 专用。零 theme id、零 baked hex。方块阶归
- * motif，本版式不重画。满版色场由本文件自己铺（`paintsOwnBackground`），
- * 主题 `defaultBackgrounds.cover` 保持浅底，避免 `assertContrastFloor`
- * 拿深字压深底判红。
+ *   - 上方一行小字（`meta.organization`）18px，场上白色 78%，y96 起。
+ *   - 标题 80/98 粗体，场的可读墨，y232 起最多两行，宽 960：中文标题在逗号
+ *     处断成两行，不在词中间断。板上的字距（小字 +1、标题 -1）不画：导出
+ *     不映射 letter-spacing（`svg2pptx/text.ts`），预览与 PowerPoint 要一致。
+ *   - 标题末行之下 60px 一条 64×6 的白色短条收题。
+ *   - 副标题（`subheading`）22/32，白色 86%，短条下 30px。旧版是 muted 灰字
+ *     压蓝，对比度约 3:1，这一版取场墨往场色退 14%，对比度 6:1 以上。
+ *   - 日期（`meta.date`，deck 要印文档信息时）16px，白色 70%，y616 起。
+ *   - 右上大号白色方块阶归 motif（`bulletin-motif`），本版式不重画。
  *
- * 板上做不到、最近落地：
- *   1. CJK 标题与 kicker 不加 letter-spacing。
- *   2. 字色走 `readableOn` / `metaInk` 相对本场 primary，不烤白字。
- *   3. 空 heading 不编造封面句，也不画那条收题杠。
+ * 进共享池，不是 bulletin 专用。零 theme id、零 baked hex。满版色场由本文件
+ * 自己铺（`paintsOwnBackground`），主题 `defaultBackgrounds.cover` 保持浅底。
+ * 标题里的 `**…**` 在场上换不出强调色，改为同色直线下划（`field-type.tsx`）。
+ * 空 heading 不编造封面句，也不画收题短条。
  */
 
-const TITLE_X = 96
-const TITLE_Y = 348
-const TITLE_SIZE = 64
-const TITLE_MIN_PT = 36
-const TITLE_MAX_LINES = 2
-const TITLE_MAX_W = 960
-const TITLE_LINE_HEIGHT = 92
+const LEFT = 80
+const KICKER = { top: 96, size: 18, box: 26, share: 0.78, maxW: 900 }
+const TITLE = { top: 232, size: 80, box: 98, minPt: 48, maxLines: 2, maxW: 960 }
+/** The closing bar: this far under the title's last baseline. */
+const BAR = { drop: 60, w: 64, h: 6 }
+const SUBTITLE = { gap: 30, size: 22, box: 32, share: 0.86, maxW: 900, maxLines: 2 }
+const DATE = { top: 616, size: 16, box: 24, share: 0.7, maxW: 600 }
 
-const KICKER_X = 96
-const KICKER_Y = 132
-const KICKER_SIZE = 17
-const KICKER_TRACKING = 6
-const KICKER_MAX_W = 960
-
-const SUBTITLE_X = 96
-const SUBTITLE_Y = 662
-const SUBTITLE_SIZE = 17
-const SUBTITLE_MAX_W = 960
-
-const BAR_X = 96
-const BAR_W = 120
-const BAR_H = 8
-const BAR_GAP = 56
-
-export function IkbFieldCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function IkbFieldCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const field = colors.primary
   const ink = readableOn(field)
-  const org = ir.meta.organization
-  const headingSource = slide.heading ?? ""
-  const plainHeading = stripEmphasis(headingSource)
+  const org = ir.meta.organization?.trim()
 
-  const title = fitHeadingLines(plainHeading, {
-    maxWidth: TITLE_MAX_W,
-    fontSize: TITLE_SIZE,
-    maxLines: TITLE_MAX_LINES,
-    minPt: TITLE_MIN_PT,
-    lineHeightRatio: TITLE_LINE_HEIGHT / TITLE_SIZE,
+  const title = fitEmphasisHeading(slide.heading ?? "", {
+    maxWidth: TITLE.maxW,
+    fontSize: TITLE.size,
+    maxLines: TITLE.maxLines,
+    minPt: TITLE.minPt,
+    lineHeightRatio: TITLE.box / TITLE.size,
     fontFamily: fonts.heading,
     typeScale: ctx.shape?.typeScale,
   })
+  const showTitle = stripEmphasis(slide.heading ?? "").trim().length > 0
   const titleInk = accessibleInk(ink, field, title.fontSize)
-  const titleLastY = TITLE_Y + Math.max(0, title.lines.length - 1) * title.lineHeight
-  const barY = titleLastY + BAR_GAP
-  const showTitle = plainHeading.trim().length > 0
+  const firstBaseline = centredBaseline(TITLE.top, title.lineHeight, title.fontSize)
+  const lastBaseline = firstBaseline + Math.max(0, title.lines.length - 1) * title.lineHeight
+  const barY = lastBaseline + BAR.drop
 
-  const kickerTracking = org && !hasCjk(org) ? KICKER_TRACKING : undefined
   const kicker = org
-    ? fitSvgLine(org, {
-        maxWidth: KICKER_MAX_W,
-        fontSize: KICKER_SIZE,
-        minFontSize: 16,
-        letterSpacing: kickerTracking,
-        fontFamily: fonts.body,
-      })
+    ? fitSvgLine(org, { maxWidth: KICKER.maxW, fontSize: KICKER.size, minFontSize: 16, fontFamily: fonts.body })
     : null
-
   const subtitle = fitEmphasisText(slide.subheading, {
-    maxWidth: SUBTITLE_MAX_W,
-    fontSize: SUBTITLE_SIZE,
-    maxLines: 2,
-    lineHeightRatio: 1.25,
+    maxWidth: SUBTITLE.maxW,
+    fontSize: SUBTITLE.size,
+    maxLines: SUBTITLE.maxLines,
+    lineHeightRatio: SUBTITLE.box / SUBTITLE.size,
     fontFamily: fonts.body,
   })
+  const subtitleTop = (showTitle ? barY + BAR.h : TITLE.top) + SUBTITLE.gap
+  const dateText = showsDocumentMeta(page, ir) ? ir.meta.date?.trim() : undefined
+  const date = dateText ? fitSvgLine(dateText, { maxWidth: DATE.maxW, fontSize: DATE.size, minFontSize: 16, fontFamily: fonts.body }) : null
+
+  const kickerInk = fieldInk(ctx, KICKER.share, KICKER.size)
+  const subtitleInk = fieldInk(ctx, SUBTITLE.share, SUBTITLE.size)
+  const dateInk = fieldInk(ctx, DATE.share, DATE.size)
 
   return (
     <>
@@ -95,12 +88,11 @@ export function IkbFieldCover({ ir, slide, ctx }: SvgTemplateProps) {
         <text
           data-contrast-tier="meta"
           data-truncated={kicker.truncated ? "1" : undefined}
-          x={KICKER_X}
-          y={KICKER_Y}
+          x={LEFT}
+          y={centredBaseline(KICKER.top, KICKER.box, kicker.fontSize)}
           fontFamily={fonts.body}
           fontSize={kicker.fontSize}
-          fill={metaInk(colors.muted, field)}
-          letterSpacing={kickerTracking}
+          fill={kickerInk}
           dominantBaseline="alphabetic"
         >
           {kicker.text}
@@ -108,30 +100,26 @@ export function IkbFieldCover({ ir, slide, ctx }: SvgTemplateProps) {
       )}
 
       {showTitle &&
-        title.lines.map((line, i) => (
-          <text
+        title.lines.map((_line, i) => (
+          <FieldHeadingLine
             key={i}
-            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-            x={TITLE_X}
-            y={TITLE_Y + i * title.lineHeight}
-            fontFamily={fonts.heading}
-            fontSize={title.fontSize}
-            fontWeight="700"
-            fill={titleInk}
-            dominantBaseline="alphabetic"
-          >
-            {line}
-          </text>
+            layout={title}
+            index={i}
+            x={LEFT}
+            baseline={firstBaseline + i * title.lineHeight}
+            ink={titleInk}
+            ctx={ctx}
+            truncated={title.truncated && i === title.lines.length - 1}
+          />
         ))}
 
-      {showTitle && (
-        <rect x={BAR_X} y={barY} width={BAR_W} height={BAR_H} fill={ink} />
-      )}
+      {showTitle && <rect x={LEFT} y={barY} width={BAR.w} height={BAR.h} fill={ink} />}
 
       {renderEmphasisHeading(
         subtitle,
         headingEmphasisPaint(ctx, subtitle, {
-          baseFill: metaInk(colors.muted, field),
+          baseFill: subtitleInk,
+          accent: ink,
           fontFamily: fonts.body,
           bold: false,
           // The field this face paints, not the page behind it.
@@ -140,16 +128,30 @@ export function IkbFieldCover({ ir, slide, ctx }: SvgTemplateProps) {
         (_line, i) => (
           <text
             key={`sub-${i}`}
-            data-contrast-tier="meta"
             data-truncated={subtitle.truncated && i === subtitle.lines.length - 1 ? "1" : undefined}
-            x={SUBTITLE_X}
-            y={SUBTITLE_Y + i * subtitle.lineHeight}
+            x={LEFT}
+            y={centredBaseline(subtitleTop, SUBTITLE.box, subtitle.fontSize) + i * subtitle.lineHeight}
             fontFamily={fonts.body}
             fontSize={subtitle.fontSize}
-            fill={metaInk(colors.muted, field)}
+            fill={subtitleInk}
             dominantBaseline="alphabetic"
           />
         ),
+      )}
+
+      {date && (
+        <text
+          data-contrast-tier="meta"
+          data-truncated={date.truncated ? "1" : undefined}
+          x={LEFT}
+          y={centredBaseline(DATE.top, DATE.box, date.fontSize)}
+          fontFamily={fonts.body}
+          fontSize={date.fontSize}
+          fill={dateInk}
+          dominantBaseline="alphabetic"
+        >
+          {date.text}
+        </text>
       )}
     </>
   )
@@ -158,18 +160,19 @@ export function IkbFieldCover({ ir, slide, ctx }: SvgTemplateProps) {
 export const layoutDef = {
   branding: "none",
   // The shared top-left mark sits on the primary field this face paints.
-  coverMark: { x: 96, y: 56, ground: "primary" },
-  // cover-ikb-field-cover.tsx: full-bleed primary field, left-aligned
-  // inverted title, short rule under the last title line. Motif owns the
-  // square steps. Empty heading draws no title and no rule.
+  coverMark: { x: 80, y: 56, ground: "primary" },
+  // cover-ikb-field-cover.tsx: full-bleed primary field, a small line over a
+  // left-aligned inverted title, a short bar under its last line, the
+  // subtitle and the date. Motif owns the square steps. Empty heading draws
+  // no title and no bar.
   id: "ikb-field-cover",
   kind: "standard",
   story: {
     name: "Signal Field",
-    story: "A single saturated field covers the page edge to edge. The title sits left in reversed ink, large and bold, with a short bar underneath that closes the thought.",
-    positioning: "Opens a deck whose title alone must carry the page. A short subtitle can sit near the foot, and there is no room for a date chip or a byline beside the heading.",
+    story: "A single saturated field covers the page edge to edge. The title sits left in reversed ink, large and bold, under one small line of who is speaking, with a short bar underneath that closes the thought and the subtitle and date below it.",
+    positioning: "Opens a deck whose title alone must carry the page, with a subtitle and a date in quieter reversed ink. There is no room for a byline beside the heading.",
     audience: "A projected wall or shared screen where one color and one sentence set the tone from across the room.",
-    notFor: "Covers that need visible authorship or a date line on the title page, which belong on Report Card.",
+    notFor: "Covers that need visible authorship beside the title, which belong on Report Card.",
   },
   paintsOwnBackground: true,
   slideTypes: ["cover"],
@@ -180,10 +183,10 @@ export const layoutDef = {
     { name: "rule", accepts: [] },
   ],
   headingFit: {
-    maxWidth: TITLE_MAX_W,
-    fontSize: TITLE_SIZE,
-    maxLines: TITLE_MAX_LINES,
-    minPt: TITLE_MIN_PT,
-    lineHeightRatio: TITLE_LINE_HEIGHT / TITLE_SIZE,
+    maxWidth: TITLE.maxW,
+    fontSize: TITLE.size,
+    maxLines: TITLE.maxLines,
+    minPt: TITLE.minPt,
+    lineHeightRatio: TITLE.box / TITLE.size,
   },
 } satisfies LayoutDefinition

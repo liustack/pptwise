@@ -5,7 +5,7 @@ import { assertSubset } from "../render/subset-validate"
 import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
-import { contrastRatio, metaInk, readableOn, requiredContrastRatio } from "../render/ink"
+import { contrastRatio, readableOn, requiredContrastRatio } from "../render/ink"
 import { IkbFieldCover, layoutDef } from "./cover-ikb-field-cover"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -48,55 +48,62 @@ function renderCover(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] =
 }
 
 describe("cover-ikb-field-cover — board geometry", () => {
-  it("paints a full-bleed primary field and left-aligned inverted title at the board coordinates", () => {
+  const titleLines = (root: Element) =>
+    Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") === "700" && t.getAttribute("x") === "80")
+
+  it("paints a full-bleed primary field and a left-aligned inverted title at the board coordinates", () => {
     const { root, tokens } = renderCover("bulletin")
     const field = root.querySelector("rect[width='1280']")
     expect(field?.getAttribute("fill")).toBe(tokens.colors.primary)
     expect(field?.getAttribute("height")).toBe("720")
-    const headings = Array.from(root.querySelectorAll("text")).filter(
-      (t) => t.getAttribute("font-weight") === "700" && t.getAttribute("x") === "96",
-    )
-    expect(headings[0]?.getAttribute("y")).toBe("348")
-    expect(Number(headings[0]?.getAttribute("font-size"))).toBeGreaterThanOrEqual(50)
+    const headings = titleLines(root)
+    // The 2026-10 board: 80px on 98px lines from y232, the first baseline at y312.
+    expect(headings[0]?.getAttribute("y")).toBe("312")
+    expect(headings[0]?.getAttribute("font-size")).toBe("80")
     expect(headings[0]?.getAttribute("text-anchor")).not.toBe("middle")
     expect(headings.map((t) => t.textContent).join("")).toContain("二〇二六年")
     expect(headings[0]?.getAttribute("fill")).toBe(readableOn(tokens.colors.primary))
   })
 
-  it("draws the title-closing bar under the last heading line in inverted ink", () => {
+  it("breaks a Chinese title after its comma, not inside a word", () => {
+    const { root } = renderCover("bulletin", slide("内需缩了两成，四季度怎么打"))
+    expect(titleLines(root).map((t) => t.textContent)).toEqual(["内需缩了两成，", "四季度怎么打"])
+  })
+
+  it("closes the title with a 64 by 6 bar 60px under its last baseline, in inverted ink", () => {
     const { root, tokens } = renderCover("bulletin")
-    const headings = Array.from(root.querySelectorAll("text")).filter(
-      (t) => t.getAttribute("font-weight") === "700" && t.getAttribute("x") === "96",
-    )
+    const headings = titleLines(root)
     const lastY = Number(headings[headings.length - 1]?.getAttribute("y"))
-    const bar = Array.from(root.querySelectorAll("rect")).find(
-      (r) => r.getAttribute("width") === "120" && r.getAttribute("height") === "8",
-    )
-    expect(bar).toBeTruthy()
-    expect(bar?.getAttribute("x")).toBe("96")
-    expect(Number(bar?.getAttribute("y"))).toBe(lastY + 56)
+    const bar = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("width") === "64" && r.getAttribute("height") === "6")
+    expect(bar?.getAttribute("x")).toBe("80")
+    expect(Number(bar?.getAttribute("y"))).toBe(lastY + 60)
     expect(bar?.getAttribute("fill")).toBe(readableOn(tokens.colors.primary))
   })
 
-  it("places the organization kicker at the board coordinate without CJK tracking", () => {
-    const { root } = renderCover("bulletin")
-    const kicker = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("星桥零售集团"),
-    )
-    expect(kicker?.getAttribute("x")).toBe("96")
-    expect(kicker?.getAttribute("y")).toBe("132")
-    expect(kicker?.getAttribute("letter-spacing")).toBeNull()
-    expect(kicker?.getAttribute("data-contrast-tier")).toBe("meta")
+  it("sets the organization above the title and the subtitle under the bar, both in a light ink that reads on the field", () => {
+    const { root, tokens } = renderCover("bulletin")
+    const texts = Array.from(root.querySelectorAll("text"))
+    const kicker = texts.find((t) => (t.textContent ?? "").includes("星桥零售集团"))!
+    expect(kicker.getAttribute("x")).toBe("80")
+    expect(kicker.getAttribute("y")).toBe("116")
+    expect(kicker.getAttribute("data-contrast-tier")).toBe("meta")
+    const subtitle = texts.find((t) => (t.textContent ?? "").includes("连锁零售业务"))!
+    // White at 86% of its strength, not the muted grey that read 3:1 on the field.
+    expect(contrastRatio(subtitle.getAttribute("fill")!, tokens.colors.primary)).toBeGreaterThan(6)
   })
 
-  it("does not invent cover copy when heading is empty, and skips the rule", () => {
+  it("does not invent cover copy when heading is empty, and skips the bar", () => {
     const { root, markup } = renderCover("bulletin", slide("", { heading: "", subheading: "" }))
     expect(markup).not.toContain("Thank you")
     expect(markup).not.toContain("谢谢")
-    const bars = Array.from(root.querySelectorAll("rect")).filter(
-      (r) => r.getAttribute("width") === "120" && r.getAttribute("height") === "8",
-    )
+    const bars = Array.from(root.querySelectorAll("rect")).filter((r) => r.getAttribute("width") === "64" && r.getAttribute("height") === "6")
     expect(bars).toHaveLength(0)
+  })
+
+  it("underlines a marked run of the title instead of dropping the mark", () => {
+    const { root } = renderCover("bulletin", slide("内需缩了**两成**"))
+    expect(root.querySelector("[data-field-mark]")).not.toBeNull()
+    expect(Array.from(root.querySelectorAll("text")).map((t) => t.textContent).join("")).not.toContain("**")
   })
 })
 
@@ -135,11 +142,10 @@ describe("cover-ikb-field-cover — shared pool", () => {
     }
   })
 
-  it("kicker meta ink follows metaInk against the field", () => {
+  it("sets the organization in the field's own light ink, never the theme's muted grey", () => {
     const { root, tokens } = renderCover("bulletin")
-    const kicker = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("星桥"),
-    )!
-    expect(kicker.getAttribute("fill")).toBe(metaInk(tokens.colors.muted, tokens.colors.primary))
+    const kicker = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("星桥"))!
+    expect(kicker.getAttribute("fill")).not.toBe(tokens.colors.muted)
+    expect(contrastRatio(kicker.getAttribute("fill")!, tokens.colors.primary)).toBeGreaterThanOrEqual(4.5)
   })
 })

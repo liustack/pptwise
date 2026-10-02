@@ -673,3 +673,41 @@ describe("image-split report column", () => {
     expect(Array.from(root.querySelectorAll("text")).some((t) => t.getAttribute("font-weight") === "600")).toBe(true)
   })
 })
+
+describe("image-split notice column", () => {
+  // bulletin's 2026-10 export page (p05): a 560px photograph, the notice head
+  // and its pairs in the column beside it.
+  const slide = {
+    type: "content",
+    kind: "photo",
+    heading: "出口在涨：7–8 月新能源出口是去年同期的 2.5 倍",
+    components: [
+      { type: "image", asset_id: "hero", fit: "cover" },
+      { type: "bullets", items: ["7–8 月新能源出口：**105.8 万辆**，去年同期 41.7 万辆", "厂家批发（含出口）：−1.6%", "国内零售：−21.4%"] },
+    ],
+    footnote: "来源：乘联分会",
+  } as Slide
+  const root = () => parseSvgRoot(boundSlideToSvgMarkup(makeIr("bulletin", slide), slide, 0))
+  const attr = (el: Element | null | undefined, names: string[]) => names.map((name) => el?.getAttribute(name) ?? null)
+  const byText = (root: Element, text: string) => Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").trim() === text)
+
+  it("sets a 560px photograph and the notice head in the column beside it", () => {
+    const page = root()
+    expect(page.querySelector('[data-split-column="notice"]')).not.toBeNull()
+    expect(attr(page.querySelector("image"), ["x", "width", "height"])).toEqual(["0", "560", "720"])
+    const lines = Array.from(page.querySelector("[data-notice-head]")!.querySelectorAll("text"))
+    expect(lines.map((line) => attr(line, ["x", "y", "font-size"]))).toEqual([
+      ["624", "88", "34"],
+      ["624", "134", "34"],
+    ])
+    const bar = Array.from(page.querySelectorAll("[data-notice-head] rect")).find((rect) => rect.getAttribute("height") === "3")!
+    expect(attr(bar, ["x", "y", "width"])).toEqual(["624", "162", "96"])
+  })
+
+  it("sets the facts as notice pairs, the marked one large, and the source at the column's foot", () => {
+    const page = root()
+    expect(page.querySelector('[data-gauge-module="pairs"]')).not.toBeNull()
+    expect(attr(byText(page, "105.8 万辆"), ["x", "font-size"])).toEqual(["850", "40"])
+    expect(attr(byText(page, "来源：乘联分会"), ["x", "y", "font-size"])).toEqual(["624", "656", "14"])
+  })
+})

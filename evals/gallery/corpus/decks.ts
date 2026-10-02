@@ -299,7 +299,7 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
   }
   const emphasis = THEME_EMPHASIS_PHRASES[themeId]?.[lex.id]
   const content: Slide[] = slots.map((spec, i) => {
-    const built = fitThemeLead(themeId, i, buildThemeSlot(spec, lex))
+    const built = buildThemeSlot(spec, lex)
     const component = emphasis ? emphasizedLead(themeId, built, i, lex) : built
     const extra = thickenThemeContent(themeId, i, lex, component)
     const kind = componentKind(component)
@@ -369,13 +369,6 @@ function thickenThemeContent(themeId: string, slotIndex: number, lex: Lexicon, l
   if (themeId === "runway" && slotIndex === 5) return [shortParagraph]
   if (themeId === "heritage" && slotIndex === 3) return [shortParagraph]
   return []
-}
-
-function fitThemeLead(themeId: string, slotIndex: number, component: Component): Component {
-  if (themeId === "bulletin" && slotIndex === 2 && component.type === "icon_cards") {
-    return { ...component, items: component.items.slice(0, 3) }
-  }
-  return component
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -1056,13 +1049,23 @@ function figureItems(lex: Lexicon, count: number) {
  * instead of the changes it computes, and `table` at its dense size, four
  * options over a closing line.
  */
-export type CompositionVariant = "figures" | "dense"
+export type CompositionVariant = "figures" | "dense" | "answer"
 
 const COMPOSITION_VARIANT_BODIES: Record<`${CompositionId}-${CompositionVariant}`, ((lex: Lexicon) => CompositionBody) | undefined> = {
   "rail-figures": (lex) => ({
     heading: lex.headings[0]!,
     components: [CHART_VARIANTS["chart · bar"]!(lex), { type: "kpi_cards", items: figureItems(lex, 2) }],
     footnote: lex.sources[0]!.label,
+  }),
+  // Numbered cards, the last one the answer the others lead to.
+  "rows-answer": (lex) => ({
+    heading: lex.headings[1]!,
+    components: [
+      {
+        type: "numbered_cards",
+        items: lex.phrases.slice(0, 4).map((title, i) => ({ title, text: lex.sentences[i + 2]!, ...(i === 3 ? { emphasis: true } : {}) })),
+      },
+    ],
   }),
   "table-dense": (lex) => ({
     heading: lex.headings[9]!,

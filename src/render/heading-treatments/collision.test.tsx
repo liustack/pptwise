@@ -275,7 +275,7 @@ describe("assigned themes on rail-numbered", () => {
 })
 
 describe("tag_box chapter chip vs rail-numbered badge", () => {
-  it.each(["bulletin", "playbill", "arena"] as const)(
+  it.each(["playbill", "arena"] as const)(
     "%s: chapter chip stays a full reserve-gap clear of the {chapter}.{n} badge",
     (themeId) => {
       const { root } = renderRailPage(themeId)

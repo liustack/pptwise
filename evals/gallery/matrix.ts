@@ -300,9 +300,9 @@ export const STEP_ASIDE_PAGES: readonly {
  * and a two-level team were never drawn by any of them. One page each closes
  * that, and `coverage.ts` holds the list to every registered composition.
  *
- * Today brief's `gauge-sheet` is the only face that composes. A theme whose
- * face starts handing pages to these adds its own row per composition, so
- * the band compares one composition across the skins that use it.
+ * brief's `gauge-sheet` and bulletin's `notice-sheet` compose today. A theme
+ * whose face starts handing pages to these adds its own row per composition,
+ * so the band compares one composition across the skins that use it.
  */
 export const COMPOSITION_PAGES: readonly {
   readonly theme: string
@@ -324,6 +324,11 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "brief", kind: "data", composition: "figures" },
   { theme: "brief", kind: "process", composition: "track" },
   { theme: "brief", kind: "photo", composition: "pairs" },
+  // bulletin's notice sheet sets the same shapes in the notice setting, and
+  // draws the shapes its own board added.
+  { theme: "bulletin", kind: "points", composition: "rows", variant: "answer" },
+  { theme: "bulletin", kind: "comparison", composition: "table" },
+  { theme: "bulletin", kind: "photo", composition: "pairs" },
 ]
 
 export function buildMatrix(

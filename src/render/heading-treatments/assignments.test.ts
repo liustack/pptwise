@@ -44,11 +44,6 @@ const ASSIGNMENTS: AssignmentRow[] = [
     knobs: { box: "solid-invert", chapterLabel: "act" },
   },
   {
-    themeId: "bulletin",
-    treatment: "tag_box",
-    knobs: { box: "solid-primary", chapterLabel: "part" },
-  },
-  {
     themeId: "arena",
     treatment: "tag_box",
     knobs: { box: "hud-brackets", chapterLabel: "round" },
@@ -141,7 +136,7 @@ describe("resolveHeadingTreatment", () => {
     it("maps each themeId to exactly one treatment", () => {
       const themeIds = assignedThemeIds()
       expect(new Set(themeIds).size).toBe(themeIds.length)
-      expect(themeIds).toHaveLength(16)
+      expect(themeIds).toHaveLength(15)
       for (const themeId of themeIds) {
         const assignment = resolveHeadingTreatment(themeId)
         expect(assignment).toBeDefined()
@@ -155,8 +150,8 @@ describe("resolveHeadingTreatment", () => {
     expect(assignedThemeIds()).not.toContain("homeroom")
   })
 
-  it("assignment count is 16", () => {
-    expect(assignedThemeIds()).toHaveLength(16)
-    expect(ASSIGNMENTS).toHaveLength(16)
+  it("assignment count is 15", () => {
+    expect(assignedThemeIds()).toHaveLength(15)
+    expect(ASSIGNMENTS).toHaveLength(15)
   })
 })

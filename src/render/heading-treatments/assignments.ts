@@ -1,7 +1,8 @@
 /**
  * Render-side content-page heading treatment assignment table. Treatments
  * are not IR: one theme maps to at most one treatment, looked up here.
- * 16 rows. homeroom is not listed.
+ * 15 rows. homeroom and bulletin are not listed: bulletin's content pages
+ * draw their own heading (`notice-sheet`).
  *
  * ghost_index and tag_box need a chapter page. Runtime falls back to the
  * native heading when `chapterNumberFor === 0`. The table still lists those
@@ -32,7 +33,7 @@ export interface HeadingKnobs {
   rule?: "hairline" | "wenwu" | "double-tone"
   rightSlot?: "none" | "numero-name"
   /** tag_box */
-  box?: "solid-invert" | "solid-primary" | "hud-brackets"
+  box?: "solid-invert" | "hud-brackets"
   chapterLabel?: "act" | "part" | "round" | "chapter" | "lecture"
   /** lead_accent */
   accentStyle?: "color" | "typeface-shift"
@@ -83,12 +84,6 @@ const ASSIGNMENTS: Record<string, HeadingAssignment> = {
   playbill: {
     treatment: "tag_box",
     knobs: { box: "solid-invert", chapterLabel: "act" },
-  },
-  // Needs a chapter page. Runtime falls back to the native heading when
-  // chapterNumberFor === 0.
-  bulletin: {
-    treatment: "tag_box",
-    knobs: { box: "solid-primary", chapterLabel: "part" },
   },
   // Needs a chapter page. Runtime falls back to the native heading when
   // chapterNumberFor === 0.

@@ -1,122 +1,55 @@
 import type { DecorProps } from "./types"
 import { DecorPiece } from "./decor-piece"
-import { leafRecessOpacity } from "./decor-budget"
 import { readableOn } from "../render/ink"
 
 /**
- * bulletin-motif v3 —— 「方块秩序」（第八波制度板对账，沿用 v2 方块阶）。
+ * bulletin-motif v4 —— 「方块阶」（2026-10 样例改版，见
+ * `design/rounds/2026-10-03-bulletin/`）。
  *
- * 相对 v2（2026-08-20 冷调组皮肤）：
- *   - **封面只留右上阶**，opacity 0.28，几何抄第八波板右上三枚 26×26。
- *     满版 primary 场上走 `readableOn(primary)`，不烤白。第三枚再淡一档
- *     （板上组 0.28 × 叶 0.5）。顶缘刻度尺不在封面画，避免与左齐标题抢。
- *   - **删除左下孤立 accent 方块**（孤立小件禁令）。
- *   - **chapter 浅底可画刻度**：顶缘尺身 + 六枚齿，位置仍是 v2 的 y36 尺。
- *   - **content** 保留尺 + 右上递减阶（v2 几何，压在标题带之上）。
- *   - **ending** 空：满版 primary 收口页板上不留阶。
+ * 相对 v3（第八波制度板）：
+ *   - **删去顶缘刻度尺**。内容页的头部改由 `notice-sheet` 的一种页头承担
+ *     （黑色粗体结论、灰细线、左端 96×3 的 IKB 粗线），刻度尺与它抢第一眼。
+ *   - **内容页右上一组小号 IKB 阶**：14、10、7 三枚方块，间距 5，底边
+ *     齐在 y72，起点 x1158。实色 IKB，不随内容页退让：它是本主题的身份
+ *     记号（`role="identity"`），跟页头那段粗线是同一种蓝。章节页同。
+ *   - **封面与结尾右上一组大号白色阶**：44、30、20 三枚，间距 10，底边齐在
+ *     y140，起点 x1080，满版 IKB 场上取 `readableOn(primary)`，不再打淡。
  *
- * 叶子走 `leafRecessOpacity`。每一组包进 `data-decor-piece`。
- *
- * 纪律：零 theme id、零 hex，颜色只来自 ctx / `readableOn`。
+ * 每一组包进 `data-decor-piece`。纪律：零 theme id、零 hex，颜色只来自
+ * ctx / `readableOn`。
  */
 
-// ── 顶缘刻度尺（chapter / content）──────────────────────────────────────
-const RULE_Y = 36
-const RULE_X1 = 48
-/** 止于右上 logo 带（branding.tsx 的 `logoBox`）的左沿。 */
-const RULE_X2 = 1120
-/** 六枚齿：两端长齿（y30-42），中间四枚短齿（y32-40），等距 214。 */
-const TICKS: readonly { x: number; y1: number; y2: number }[] = [
-  { x: 48, y1: 30, y2: 42 },
-  { x: 262, y1: 32, y2: 40 },
-  { x: 476, y1: 32, y2: 40 },
-  { x: 690, y1: 32, y2: 40 },
-  { x: 904, y1: 32, y2: 40 },
-  { x: 1118, y1: 30, y2: 42 },
-]
-const TICK_STROKE = 1.5
+/** One run of steps: its sizes, the gap between them, and where the first one starts and all of them end. */
+interface Steps {
+  x: number
+  /** The steps' feet line up on this y. */
+  foot: number
+  sizes: readonly number[]
+  gap: number
+}
 
-// ── content 右上递减方块阶（v2 几何，底边同在 y40）──────────────────────
-const STEPS: readonly { x: number; y: number; size: number }[] = [
-  { x: 1150, y: 12, size: 28 },
-  { x: 1188, y: 20, size: 20 },
-  { x: 1218, y: 26, size: 14 },
-]
+/** The small steps top right of every chapter and content page. */
+const PAGE_STEPS: Steps = { x: 1158, foot: 72, sizes: [14, 10, 7], gap: 5 }
+/** The large steps top right of the cover and the ending, on the primary field. */
+const FIELD_STEPS: Steps = { x: 1080, foot: 140, sizes: [44, 30, 20], gap: 10 }
 
-// ── 封面右上阶（第八波板，三枚等大正方形）──────────────────────────────
-const COVER_STEP_OPACITY = 0.28
-const COVER_STEPS: readonly { x: number; y: number; size: number; opacity: number }[] = [
-  { x: 1120, y: 64, size: 26, opacity: COVER_STEP_OPACITY },
-  { x: 1154, y: 98, size: 26, opacity: COVER_STEP_OPACITY },
-  { x: 1086, y: 98, size: 26, opacity: COVER_STEP_OPACITY * 0.5 },
-]
-
-function Ruler({
-  rule,
-  muted,
-  fade,
-}: {
-  rule: string
-  muted: string
-  fade: (ink: string, preferred?: number) => number | undefined
-}) {
-  return (
-    <DecorPiece id="ruler">
-      <line x1={RULE_X1} y1={RULE_Y} x2={RULE_X2} y2={RULE_Y} stroke={rule} strokeWidth={1} opacity={fade(rule)} />
-      {TICKS.map((t) => (
-        <line
-          key={t.x}
-          x1={t.x}
-          y1={t.y1}
-          x2={t.x}
-          y2={t.y2}
-          stroke={muted}
-          strokeWidth={TICK_STROKE}
-          opacity={fade(muted)}
-        />
-      ))}
-    </DecorPiece>
-  )
+function stepRects(steps: Steps): { x: number; y: number; size: number }[] {
+  let x = steps.x
+  return steps.sizes.map((size) => {
+    const rect = { x, y: steps.foot - size, size }
+    x += size + steps.gap
+    return rect
+  })
 }
 
 export function BulletinMotif({ slide, ctx }: DecorProps) {
-  if (slide.type === "ending") return null
-
-  const ikb = ctx.colors.primary
-  const rule = ctx.colors.border ?? ctx.colors.muted
-  const muted = ctx.colors.muted
-  const bg = ctx.defaultBg ?? ctx.colors.bg
-  const fade = (ink: string, preferred?: number) => leafRecessOpacity(slide.type, ink, bg, preferred)
-
-  if (slide.type === "cover") {
-    const ink = readableOn(ikb)
-    return (
-      <DecorPiece id="ikb-steps">
-        {COVER_STEPS.map((s) => (
-          <rect
-            key={`${s.x}-${s.y}`}
-            x={s.x}
-            y={s.y}
-            width={s.size}
-            height={s.size}
-            fill={ink}
-            opacity={fade(ink, s.opacity)}
-          />
-        ))}
-      </DecorPiece>
-    )
-  }
-
+  const field = slide.type === "cover" || slide.type === "ending"
+  const ink = field ? readableOn(ctx.colors.primary) : ctx.colors.primary
   return (
-    <>
-      <Ruler rule={rule} muted={muted} fade={fade} />
-      {slide.type === "content" && (
-        <DecorPiece id="ikb-steps">
-          {STEPS.map((s) => (
-            <rect key={s.x} x={s.x} y={s.y} width={s.size} height={s.size} fill={ikb} opacity={fade(ikb)} />
-          ))}
-        </DecorPiece>
-      )}
-    </>
+    <DecorPiece id="ikb-steps" role="identity">
+      {stepRects(field ? FIELD_STEPS : PAGE_STEPS).map((s) => (
+        <rect key={s.x} x={s.x} y={s.y} width={s.size} height={s.size} fill={ink} />
+      ))}
+    </DecorPiece>
   )
 }

@@ -42,78 +42,55 @@ function draw(theme: string, slide: Slide) {
 const num = (el: Element, a: string) => Number(el.getAttribute(a))
 
 /**
- * bulletin-motif v3「方块秩序」（第八波制度板对账）。
+ * bulletin-motif v4「方块阶」（2026-10 样例改版）。
  */
-describe("BulletinMotif（方块秩序 v3）", () => {
-  it("cover 只画右上三枚方块阶，不画刻度尺，不画左下 accent 方块", () => {
-    const { root } = draw("bulletin", coverSlide)
-    expect(Array.from(root.querySelectorAll("line"))).toHaveLength(0)
-    expect(Array.from(root.querySelectorAll("rect"))).toHaveLength(3)
-    expect(root.querySelector(`[${DECOR_PIECE_ATTR}="ikb-steps"]`)).toBeTruthy()
-    expect(root.querySelector(`[${DECOR_PIECE_ATTR}="spark"]`)).toBeNull()
-    expect(root.querySelector(`[${DECOR_PIECE_ATTR}="ruler"]`)).toBeNull()
+describe("BulletinMotif（方块阶 v4）", () => {
+  const steps = (root: Element) =>
+    Array.from(root.querySelectorAll("rect")).map((r) => [num(r, "x"), num(r, "y"), num(r, "width"), num(r, "height")])
+
+  it("任何页型都不画刻度尺", () => {
+    for (const slide of [coverSlide, chapterSlide, contentSlide, endingSlide]) {
+      const { root } = draw("bulletin", slide)
+      expect(Array.from(root.querySelectorAll("line"))).toHaveLength(0)
+      expect(root.querySelector(`[${DECOR_PIECE_ATTR}="ruler"]`)).toBeNull()
+    }
   })
 
-  it("cover 方块阶几何与板上一致，opacity 0.28（第三枚再半档）", () => {
-    const { root, ctx } = draw("bulletin", coverSlide)
-    const ink = readableOn(ctx.colors.primary)
-    const rects = Array.from(root.querySelectorAll("rect"))
-    expect(rects.map((r) => [num(r, "x"), num(r, "y"), num(r, "width"), num(r, "height")])).toEqual([
-      [1120, 64, 26, 26],
-      [1154, 98, 26, 26],
-      [1086, 98, 26, 26],
-    ])
-    for (const r of rects) expect(r.getAttribute("fill")).toBe(ink)
-    expect(Number(rects[0]?.getAttribute("opacity"))).toBe(0.28)
-    expect(Number(rects[1]?.getAttribute("opacity"))).toBe(0.28)
-    expect(Number(rects[2]?.getAttribute("opacity"))).toBeCloseTo(0.14)
+  it("封面与结尾：右上三枚大号阶 44/30/20，间距 10，底边齐在 y140，场的可读墨、实色", () => {
+    for (const slide of [coverSlide, endingSlide]) {
+      const { root, ctx } = draw("bulletin", slide)
+      expect(steps(root)).toEqual([
+        [1080, 96, 44, 44],
+        [1134, 110, 30, 30],
+        [1174, 120, 20, 20],
+      ])
+      for (const r of Array.from(root.querySelectorAll("rect"))) {
+        expect(r.getAttribute("fill")).toBe(readableOn(ctx.colors.primary))
+        expect(r.getAttribute("opacity")).toBeNull()
+      }
+    }
   })
 
-  it("chapter 浅底画顶缘刻度尺，不画方块阶、不画孤立 accent", () => {
-    const { root } = draw("bulletin", chapterSlide)
-    expect(Array.from(root.querySelectorAll("line"))).toHaveLength(7)
-    expect(Array.from(root.querySelectorAll("rect"))).toHaveLength(0)
-    expect(root.querySelector(`[${DECOR_PIECE_ATTR}="ruler"]`)).toBeTruthy()
-  })
-
-  it("ending 完全退让", () => {
-    const { root } = draw("bulletin", endingSlide)
-    expect(Array.from(root.querySelectorAll("rect"))).toHaveLength(0)
-    expect(Array.from(root.querySelectorAll("line"))).toHaveLength(0)
-  })
-
-  it("content 画尺 + 三枚递减方块阶，不画左下 accent", () => {
-    const { root } = draw("bulletin", contentSlide)
-    expect(Array.from(root.querySelectorAll("line"))).toHaveLength(7)
-    expect(Array.from(root.querySelectorAll("rect"))).toHaveLength(3)
-    expect(root.querySelector(`[${DECOR_PIECE_ATTR}="spark"]`)).toBeNull()
-  })
-
-  it("content 方块阶仍是 v2 几何：三枚递减方块底边同在 y40", () => {
-    const { root } = draw("bulletin", contentSlide)
-    const rects = Array.from(root.querySelectorAll("rect")).map((r) => [
-      num(r, "x"),
-      num(r, "y"),
-      num(r, "width"),
-      num(r, "height"),
-    ])
-    expect(rects).toEqual([
-      [1150, 12, 28, 28],
-      [1188, 20, 20, 20],
-      [1218, 26, 14, 14],
-    ])
-    for (const [, y, , h] of rects) expect(y + h).toBe(40)
-  })
-
-  it("颜色一律读 token：尺身 border、齿 muted、content 方块阶 primary", () => {
+  it("章节与内容页：右上三枚小号阶 14/10/7，间距 5，底边齐在 y72，实色 primary", () => {
     const t = resolveStyle("bulletin")
+    for (const slide of [chapterSlide, contentSlide]) {
+      const { root } = draw("bulletin", slide)
+      expect(steps(root)).toEqual([
+        [1158, 58, 14, 14],
+        [1177, 62, 10, 10],
+        [1192, 65, 7, 7],
+      ])
+      for (const r of Array.from(root.querySelectorAll("rect"))) {
+        expect(r.getAttribute("fill")).toBe(t.colors.primary)
+        expect(r.getAttribute("opacity")).toBeNull()
+      }
+    }
+  })
+
+  it("方块阶是身份记号：不随内容页退让", () => {
     const { root } = draw("bulletin", contentSlide)
-    const rule = Array.from(root.querySelectorAll("line")).find((l) => num(l, "x1") !== num(l, "x2"))!
-    expect(rule.getAttribute("stroke")).toBe(t.colors.border)
-    const ticks = Array.from(root.querySelectorAll("line")).filter((l) => l.getAttribute("stroke") === t.colors.muted)
-    expect(ticks, "ticks must read colors.muted").toHaveLength(6)
-    const steps = Array.from(root.querySelectorAll("rect")).filter((r) => r.getAttribute("fill") === t.colors.primary)
-    expect(steps, "square steps must read colors.primary").toHaveLength(3)
+    const piece = root.querySelector(`[${DECOR_PIECE_ATTR}="ikb-steps"]`)!
+    expect(piece.getAttribute("data-decor-role")).toBe("identity")
   })
 
   it("motif 不读 chartPalette——图表调色板轮转改不动它一个字节", () => {
@@ -130,25 +107,6 @@ describe("BulletinMotif（方块秩序 v3）", () => {
       ),
     )
     expect(markups.size).toBe(1)
-  })
-
-  it("chapter 刻度尺几何：y36 一条 x48→1120 的尺身，六枚齿两长四短、等距 214", () => {
-    const { root } = draw("bulletin", chapterSlide)
-    const lines = Array.from(root.querySelectorAll("line")).map((l) => [
-      num(l, "x1"),
-      num(l, "y1"),
-      num(l, "x2"),
-      num(l, "y2"),
-    ])
-    expect(lines).toEqual([
-      [48, 36, 1120, 36],
-      [48, 30, 48, 42],
-      [262, 32, 262, 40],
-      [476, 32, 476, 40],
-      [690, 32, 690, 40],
-      [904, 32, 904, 40],
-      [1118, 30, 1118, 42],
-    ])
   })
 
   it("没有左下 16×16 孤立方块，也没有左竖条", () => {
