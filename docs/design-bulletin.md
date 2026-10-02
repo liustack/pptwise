@@ -26,7 +26,7 @@ Take the colours from `pptwise themes --json`, not from this page. For reading t
 | unmarked data | muted blended a third of the way toward the page | about `#C4C5C5` |
 | closing panel | `panel` | `#F0F0EC` |
 
-No warm colour marks anything, ever. The maintainer ruled orange against IKB out in 2026-08 and the theme file records why. `accent` is an industrial blue (`#2F6FBF`) kept for decoration the theme does not currently draw.
+No warm colour marks anything, ever. The maintainer ruled orange beside IKB out in an earlier review, and the theme file records why. `accent` is an industrial blue (`#2F6FBF`), the chart palette's second colour, which the ordinary components may use for a second series or a small mark but never for emphasis: `emphasisInk` is IKB.
 
 ## The two field pages
 
