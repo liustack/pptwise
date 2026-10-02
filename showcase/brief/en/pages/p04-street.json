@@ -1,0 +1,20 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "tea-street",
+      "fit": "cover"
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "Guangzhou: 14,355 → 12,029",
+        "Shenzhen: 9,113 → 7,814",
+        "20 cities: All shrank",
+        "Closures: Often 1.5 to 2 times openings"
+      ]
+    }
+  ],
+  "footnote": "Source: Zhaimen Canyan data compiled by Kamen (Aug 2026). City figures compare July 2025 with July 2026. The photo is illustrative.",
+  "notes": "The change is easier to see on the street than in national totals. On Zhaimen Canyan's rolling count, China had about 373,000 milk tea shops in mid-July 2026, a net loss of about 54,500 in a year."
+}

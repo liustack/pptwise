@@ -1,0 +1,81 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "stacked",
+      "axes": {
+        "y_unit": "cups"
+      },
+      "series": [
+        {
+          "name": "Full year",
+          "data": [
+            {
+              "x": "2023",
+              "y": 417
+            },
+            {
+              "x": "2024",
+              "y": 384
+            },
+            {
+              "x": "2025",
+              "y": 456
+            },
+            {
+              "x": "H1 2025",
+              "y": 0
+            },
+            {
+              "x": "H1 2026",
+              "y": 0
+            }
+          ]
+        },
+        {
+          "name": "First half",
+          "data": [
+            {
+              "x": "2023",
+              "y": 0
+            },
+            {
+              "x": "2024",
+              "y": 0
+            },
+            {
+              "x": "2025",
+              "y": 0
+            },
+            {
+              "x": "H1 2025",
+              "y": 439
+            },
+            {
+              "x": "H1 2026",
+              "y": 440
+            }
+          ],
+          "emphasis": true
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "label": "H1 2026",
+          "value": "440 cups",
+          "note": "439 a year earlier"
+        }
+      ]
+    },
+    {
+      "type": "blockquote",
+      "text": "Lower subsidies from third-party delivery platforms were a drag.",
+      "attribution": "Guming, 2026 interim results"
+    }
+  ],
+  "footnote": "Source: Guming annual and interim results (Mar 2025 to Aug 2026)",
+  "notes": "Guming sold 384 cups per store per day in 2024. During the 2025 delivery subsidy war this rose to 456, up 18.8%, and the company named platform subsidies as one reason. In the first half of 2026 it was 440, level with 439 a year earlier. Mixue's management also said last year's delivery war pushed store sales to an abnormally high base."
+}

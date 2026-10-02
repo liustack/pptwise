@@ -1,0 +1,47 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "axes": {
+        "y_unit": "k"
+      },
+      "series": [
+        {
+          "name": "Monthly GMV per store",
+          "data": [
+            {
+              "x": "Q2 2024",
+              "y": 538
+            },
+            {
+              "x": "Q2 2025",
+              "y": 404
+            },
+            {
+              "x": "Q2 2026",
+              "y": 338
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "label": "Change in two years",
+          "value": "−37%",
+          "note": "RMB 538k → RMB 338k"
+        },
+        {
+          "label": "Greater China same-store GMV",
+          "value": "−16.1%",
+          "note": "Q2 2026, year on year"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: CHAGEE Q2 2025 and Q2 2026 results (Aug 2025, Aug 2026)",
+  "notes": "Quarter for quarter, CHAGEE's average monthly GMV per store in Greater China keeps falling. Q2 2026 was RMB 338,259, 37% below RMB 537,954 two years earlier. Greater China same-store GMV has fallen by double digits for five straight quarters, minus 16.1% in Q2 2026. Guidance for 2026 is revenue and profit roughly flat on 2025, with same-store recovery as the top KPI."
+}

@@ -1,0 +1,23 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "20%+",
+          "label": "Coffee's share of Guming's revenue, H1 2026"
+        },
+        {
+          "value": "About 94%",
+          "label": "Guming stores with coffee machines (June 2026)"
+        },
+        {
+          "value": "120 cups",
+          "label": "Guming's daily coffee target per store for 2026 (about 80 at end-2025)"
+        }
+      ]
+    }
+  ],
+  "notes": "By June 2026 about 13,500 Guming stores had coffee machines, about 94% of the network. Mixue is following: its fresh-ground coffee machines reached more than 3,000 stores by end-June and more than 6,000 by 27 August, with about 14,000 planned by year end.",
+  "footnote": "Source: Guming interim results and earnings call (Aug 2026)"
+}

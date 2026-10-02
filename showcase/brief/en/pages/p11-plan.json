@@ -1,0 +1,56 @@
+{
+  "components": [
+    {
+      "type": "comparison",
+      "recommended": 1,
+      "columns": [
+        "Store count first",
+        "Same-store growth first"
+      ],
+      "rows": [
+        {
+          "label": "Lead target",
+          "cells": [
+            "Net new stores",
+            "Same-store growth, cups a day"
+          ]
+        },
+        {
+          "label": "Volume baseline",
+          "cells": [
+            "2025 volume, with subsidies",
+            "2026 volume, after subsidies"
+          ]
+        },
+        {
+          "label": "Where to invest",
+          "cells": [
+            "New store openings",
+            "Coffee, breakfast, sourcing"
+          ]
+        },
+        {
+          "label": "Overseas pace",
+          "cells": [
+            "Set by opening targets",
+            "Scale up once the model works"
+          ]
+        },
+        {
+          "label": "Cost",
+          "cells": [
+            "Existing stores get diluted",
+            "Slower store growth near term"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "In August, Mixue's management said store count is no longer its primary target."
+    }
+  ],
+  "footnote": "Source: Mixue Group interim earnings call (Aug 2026)",
+  "notes": "Planning by store count assumes a new store brings in roughly what an old one does. That no longer holds. Planning by same-store growth still allows openings, but each one must first show it will not eat into nearby stores. Guming's management has made the same point: a wave of weak stores dilutes the business of existing franchisees."
+}

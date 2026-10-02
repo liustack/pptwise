@@ -1,0 +1,95 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "brief",
+  "filename": "new-tea-after-the-store-boom",
+  "meta": {
+    "date": "2026 年 10 月"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "开店潮之后，增长靠什么",
+      "summary": "新茶饮上市公司 2026 年中报复盘与 2027 年计划建议"
+    },
+    {
+      "id": "p02-verdict",
+      "type": "content",
+      "kind": "statement",
+      "heading": "增长要靠单店，不再靠开店"
+    },
+    {
+      "id": "p03-industry",
+      "type": "content",
+      "kind": "data",
+      "heading": "连锁新茶饮已连续两年关店多于开店",
+      "focus": "chart"
+    },
+    {
+      "id": "p04-street",
+      "type": "content",
+      "kind": "photo",
+      "heading": "广州一年少了 2,326 家茶饮店",
+      "focus": "image"
+    },
+    {
+      "id": "p05-stores-vs-revenue",
+      "type": "content",
+      "kind": "data",
+      "heading": "蜜雪门店一年多了 20.7%，上半年收入只多 2.3%",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p06-chagee",
+      "type": "content",
+      "kind": "data",
+      "heading": "霸王茶姬单店月均 GMV 两年少了 37%",
+      "focus": "chart"
+    },
+    {
+      "id": "p07-subsidy",
+      "type": "content",
+      "kind": "data",
+      "heading": "古茗单店杯量去年涨了 18.8%，今年上半年没再涨",
+      "focus": "chart"
+    },
+    {
+      "id": "p08-regulation",
+      "type": "content",
+      "kind": "process",
+      "heading": "监管从约谈走到立规矩，补贴拉单量的路在收窄",
+      "focus": "timeline"
+    },
+    {
+      "id": "p09-paths",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "四条新路里，只有新品类和新时段守住了单店",
+      "focus": "comparison"
+    },
+    {
+      "id": "p10-coffee",
+      "type": "content",
+      "kind": "fact",
+      "heading": "咖啡正在成为茶饮店的第二条腿",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p11-plan",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "2027 年计划按单店定，而不是按门店数定",
+      "focus": "comparison"
+    },
+    {
+      "id": "p12-ending",
+      "type": "ending",
+      "heading": "2027 年第一考核指标，改为**同店增长**"
+    }
+  ]
+}
