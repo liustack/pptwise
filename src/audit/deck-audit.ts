@@ -8,6 +8,7 @@ import { getPlatform } from "../platform/registry"
 import { isBold, isMonoFontFamily } from "../render/fonts"
 import { dropPhrase, parseDropKind, type DropKind } from "../render/drop-marker"
 import { sourceLineMissing } from "./source-line"
+import { printedMarks } from "./printed-marks"
 import { auditSvgMarkup, findRunMisfits, parseNums, parseTransform, type OverflowIssue, type RunMisfit } from "./svg-audit"
 
 /**
@@ -2584,6 +2585,25 @@ function sourceLineFindings(markup: string, slide: Slide, page: number, slideId:
   ]
 }
 
+// Printed marks (`printed-marks.ts`): a `**…**` run painted as asterisks.
+
+function printedMarkFindings(markup: string, page: number, slideId: string | undefined): AuditFinding[] {
+  const printed = printedMarks(parseSvg(markup))
+  if (printed.length === 0) return []
+  const sample = (printed[0]!.textContent ?? "").trim().slice(0, 40)
+  return [
+    {
+      page,
+      ...(slideId !== undefined ? { slideId } : {}),
+      code: "content-dropped",
+      message:
+        `${printed.length} text line(s) print an emphasis mark as asterisks ("${sample}"), so the phrase the author marked is not set apart — ` +
+        `the renderer that drew it does not read **…** marks`,
+      detail: { count: printed.length, kind: "emphasis" },
+    },
+  ]
+}
+
 function monotonyMessage(componentType: string, fromPage: number, toPage: number, length: number): string {
   return (
     `pages ${fromPage}-${toPage} repeat component type "${componentType}" (${length} consecutive pages) — ` +
@@ -2688,6 +2708,7 @@ function runDeterministicAudit(
     findings.push(...droppedFindings(markup, page, slideId))
     findings.push(...steppedAsideFindings(markup, page, slideId))
     findings.push(...sourceLineFindings(markup, slide, page, slideId))
+    findings.push(...printedMarkFindings(markup, page, slideId))
   })
 
   findings.push(...monotonyFindings(ir))

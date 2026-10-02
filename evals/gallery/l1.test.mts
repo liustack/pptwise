@@ -51,6 +51,13 @@ describe("auditL1 planted defects", () => {
     expect(codes(wrap(`<text x="40" y="40" font-size="16">all of it fits</text>`))).not.toContain("content-dropped")
   })
 
+  // bulletin deck review (2026-10): a numbered card printed 「约降**两成**」
+  // with its asterisks, and nothing reported it.
+  it("flags an emphasis mark printed as asterisks as content-dropped", () => {
+    expect(codes(wrap(`<text x="40" y="40" font-size="16">同比约降**两成**</text>`))).toContain("content-dropped")
+    expect(codes(wrap(`<text x="40" y="40" font-size="16">a ** b, painted as written</text>`))).not.toContain("content-dropped")
+  })
+
   it("flags a bare ellipsis or standalone ... inside text as overflow-marker", () => {
     expect(codes(wrap(`<text x="40" y="40" font-size="14">云觅科技 2026…</text>`))).toContain("overflow-marker")
     expect(codes(wrap(`<text x="40" y="40" font-size="14">cut short...</text>`))).toContain("overflow-marker")
