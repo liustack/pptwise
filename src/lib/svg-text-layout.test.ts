@@ -10,7 +10,7 @@ import {
   truncateToMonoUnits,
   truncateToUnits,
 } from "./svg-text-layout"
-import { SYMBOL_ADVANCE_BOUNDS } from "./symbol-advances"
+import { QUOTE_ADVANCES, SYMBOL_ADVANCE_BOUNDS } from "./symbol-advances"
 
 describe("svg text layout", () => {
   it("wraps long mixed CJK title into bounded lines", () => {
@@ -382,6 +382,51 @@ describe("layoutSvgText balanceLines (widow avoidance)", () => {
       balanceLines: true,
     })
     expect(r.lines).toEqual(["年度战略回", "顾报告"])
+  })
+
+  it("evens Latin lines even when the last one is not a widow (brief en p04 heading)", () => {
+    // Greedy: "Guangzhou lost 2,326 tea" + "shops in a year", 448 and 262px.
+    // The last line is over half the first, so the widow test left it, with
+    // "tea shops" split. Every break in Latin text falls between words, so
+    // evening the lines costs no word, the way CSS text-wrap: balance sets a
+    // heading.
+    const r = layoutSvgText("Guangzhou lost 2,326 tea shops in a year", {
+      maxWidth: 512,
+      fontSize: 40,
+      maxLines: 3,
+      minPt: 22,
+      lineHeightRatio: 1.3,
+      balanceLines: true,
+      fontFamily: "Georgia",
+      bold: false,
+    })
+    expect(r.lines).toEqual(["Guangzhou lost 2,326", "tea shops in a year"])
+    expect(r.fontSize).toBe(40)
+  })
+
+  it("never evens lines into a wider line than the greedy wrap's", () => {
+    // Greedy holds three lines at 40px, the widest 305px. The first budget
+    // that also makes three lines, "tea brand revenue" + "in leader margin" +
+    // "fell sales", runs 319px wide and would have set the text at 38px.
+    const opts = { maxWidth: 311, fontSize: 40, maxLines: 3, minPt: 22, fontFamily: "Georgia", bold: false }
+    const text = "tea brand revenue in leader margin fell sales"
+    const balanced = layoutSvgText(text, { ...opts, balanceLines: true })
+    expect(balanced.fontSize).toBe(40)
+    expect(balanced.lines).toEqual(layoutSvgText(text, opts).lines)
+  })
+
+  it("keeps a Chinese split that is no widow where the greedy wrap put it", () => {
+    // The greedy break falls on the author's comma. An even split would fall
+    // between any two characters, here 「种子用」+「户，」, so Chinese and
+    // mixed text still rebalance only a widow.
+    const r = layoutSvgText("每个班组配一名种子用户，问题十分钟内响应", {
+      maxWidth: 12 * 40,
+      fontSize: 40,
+      maxLines: 3,
+      balanceLines: true,
+      fontFamily: "Microsoft YaHei",
+    })
+    expect(r.lines).toEqual(["每个班组配一名种子用户，", "问题十分钟内响应"])
   })
 })
 
@@ -1156,6 +1201,8 @@ describe("non-ASCII marks never measure narrower than the face draws them", () =
     for (const [face, weights] of Object.entries(SYMBOL_ADVANCE_BOUNDS) as [keyof typeof families, (typeof SYMBOL_ADVANCE_BOUNDS)["georgia"]][]) {
       for (const [weight, table] of Object.entries(weights) as ["regular" | "bold", Record<number, number>][]) {
         for (const [cp, w] of Object.entries(table)) {
+          // A curly quote the face carries is measured, not bounded (next block).
+          if (QUOTE_ADVANCES[face][weight][Number(cp)] !== undefined) continue
           const ch = String.fromCharCode(Number(cp))
           const measured = measureTextUnits(ch, { fontFamily: families[face], bold: weight === "bold" })
           expect(measured, `${face} ${weight} U+${Number(cp).toString(16)}`).toBeGreaterThanOrEqual(w)
@@ -1167,6 +1214,60 @@ describe("non-ASCII marks never measure narrower than the face draws them", () =
 
   it("leaves a call that names no face on the class average", () => {
     expect(measureTextUnits("·")).toBeCloseTo(0.46, 6)
+  })
+})
+
+describe("curly quotes measure in the face that paints them", () => {
+  // The export writes every run as lang="en-US", and PowerPoint then paints a
+  // curly quote from the run's <a:latin> face, beside Chinese text as much as
+  // English (PowerPoint for Mac, PDF export, 2026-10-03): Georgia set “ ” at
+  // 0.41em and ‘ ’ at 0.23em, YaHei and SimSun on the full em, Consolas on
+  // its grid. Pre-fix every face measured them a full em, so a run after an
+  // opening quote in Georgia, and the highlight under it, landed 0.59em right.
+  it("prices Georgia's quotes at Georgia's own advance", () => {
+    expect(measureTextUnits("“", { fontFamily: "Georgia, Songti SC, serif" })).toBeCloseTo(0.4102, 4) // was 1
+    expect(measureTextUnits("”", { fontFamily: "Georgia" })).toBeCloseTo(0.4102, 4)
+    expect(measureTextUnits("‘", { fontFamily: "Georgia" })).toBeCloseTo(0.2266, 4)
+    expect(measureTextUnits("’", { fontFamily: "Georgia" })).toBeCloseTo(0.2266, 4)
+    expect(measureTextUnits("“", { fontFamily: "Georgia", bold: true })).toBeCloseTo(0.519, 4)
+  })
+
+  it("measures a quote beside Chinese in the same Latin face", () => {
+    const g = { fontFamily: "Georgia" }
+    expect(measureTextUnits("“第三方”", g)).toBeCloseTo(3 + 2 * 0.4102, 4)
+  })
+
+  it("keeps the Chinese faces' quotes on the full em", () => {
+    expect(measureTextUnits("“", { fontFamily: "Microsoft YaHei" })).toBe(1)
+    expect(measureTextUnits("’", { fontFamily: "Microsoft YaHei", bold: true })).toBe(1)
+    expect(measureTextUnits("”", { fontFamily: "SimSun" })).toBe(1)
+    expect(measureTextUnits("”", { fontFamily: "KaiTi", bold: true })).toBe(1)
+  })
+
+  it("prices a quote in a face it has no table for as wide as a Chinese face sets it", () => {
+    expect(measureTextUnits("“", { fontFamily: "Cambria" })).toBe(1)
+    expect(measureTextUnits("“")).toBe(1)
+  })
+
+  it("sets Consolas's quotes on its grid like any other glyph", () => {
+    expect(measureMonoTextUnits("“a”")).toBeCloseTo(3 * (1126 / 2048), 6) // was 2.55
+  })
+
+  it("measures every quote a face carries at that face's own advance", () => {
+    const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "simsun-kaiti": "SimSun" } as const
+    for (const [face, weights] of Object.entries(QUOTE_ADVANCES) as [keyof typeof families, (typeof QUOTE_ADVANCES)["georgia"]][]) {
+      for (const [weight, table] of Object.entries(weights) as ["regular" | "bold", Record<number, number>][]) {
+        for (const [cp, w] of Object.entries(table)) {
+          const ch = String.fromCharCode(Number(cp))
+          expect(measureTextUnits(ch, { fontFamily: families[face], bold: weight === "bold" }), `${face} ${weight} U+${Number(cp).toString(16)}`).toBe(w)
+        }
+      }
+    }
+  })
+
+  it("counts a quoted sentence in a tabled face as measured exactly", () => {
+    expect(measuresExactly("“Sales fell.”", { fontFamily: "Georgia" })).toBe(true)
+    expect(measuresExactly("“销量下滑。”", { fontFamily: "Microsoft YaHei" })).toBe(true)
   })
 })
 
