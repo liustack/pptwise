@@ -44,8 +44,9 @@ interface ReadHold {
   phase: "before" | "after"
   /** Every read, or only those a `buildDeckPreview` call makes. */
   scope: "any" | "build"
-  /** The target's own spec or IR file, a theme file, or any file. */
-  kind: "source" | "theme" | "any"
+  /** The target's own spec or IR file, a theme file, a page of a deck
+   *  project, or any file. */
+  kind: "source" | "theme" | "page" | "any"
   /** Hold only the next read, or every read until released. */
   once: boolean
   entered: () => void
@@ -127,6 +128,7 @@ vi.mock("./load-ir", async (importOriginal) => {
   function kindMatches(hold: ReadHold["kind"], kind: string): boolean {
     if (hold === "any") return true
     if (hold === "theme") return kind === "theme"
+    if (hold === "page") return kind.startsWith("page ")
     return kind === "IR" || kind === "spec"
   }
   async function waitAt(phase: "before" | "after", kind: string): Promise<void> {
@@ -571,6 +573,41 @@ describe("createServeServer — startup failures", () => {
     const handle1 = await startServe(irPath)
     await expect(createServeServer({ target: irPath, port: handle1.port })).rejects.toThrow(/already in use/)
   })
+
+  it("closes the watchers it opened for a first build that fails, and builds nothing for a change seen meanwhile", async () => {
+    // The watchers open before the first build, so a first build that
+    // fails leaves them to close, together with the rebuild a change seen
+    // while it ran has scheduled.
+    const dir = await makeDir()
+    const irPath = join(dir, "deck.json")
+    await writeFile(irPath, JSON.stringify(INVALID_IR_SHAPE))
+    const count = (kind: string) => process.getActiveResourcesInfo().filter((name) => name === kind).length
+    const watchersBefore = count("FSEventWrap")
+    const timeoutsBefore = count("Timeout")
+
+    const gate = holdReads({ phase: "before", scope: "build", kind: "source", once: true })
+    const starting = createServeServer({ target: irPath, port: 0, cwd: dir })
+    try {
+      await gate.entered
+      await untilWatchersLive()
+      const seen = new Promise<void>((resolvePromise) => {
+        fsGate.beforeEvent = (path, _event, filename) => {
+          if (path === dir && filename !== null && basename(filename.toString()) === "deck.json") resolvePromise()
+        }
+      })
+      await writeFile(irPath, `${JSON.stringify(INVALID_IR_SHAPE)}\n`)
+      await seen
+    } finally {
+      gate.release()
+    }
+    await expect(starting).rejects.toThrow(/invalid IR/)
+
+    const readsAfterStartup = resolveGate.buildReads.length
+    await sleep(DEBOUNCE_GRACE_MS)
+    expect(resolveGate.buildReads.length).toBe(readsAfterStartup)
+    await pollUntil(async () => (count("FSEventWrap") <= watchersBefore ? true : undefined))
+    expect(count("Timeout")).toBeLessThanOrEqual(timeoutsBefore)
+  })
 })
 
 describe("createServeServer — watch + rebuild (bare IR file)", () => {
@@ -778,10 +815,21 @@ describe("createServeServer — directories that appear after startup", () => {
     expect((await get(handle.port, "/")).body).not.toContain("data:image/png;base64")
 
     // assets/ is born empty first, so the only thing that can bring the
-    // bytes in is an event from inside the new directory itself.
-    await mkdir(join(deckDir, "assets"))
-    await sleep(400)
-    await writeFile(join(deckDir, "assets", "logo.png"), PNG_1PX)
+    // bytes in is an event from inside the new directory itself. The image
+    // lands once the server has opened a watcher on the new directory, the
+    // rebuild its appearance scheduled has read it empty, and that watcher
+    // reports (`untilWatchersLive`).
+    const assetsDir = join(deckDir, "assets")
+    const watched = new Promise<void>((resolvePromise) => {
+      fsGate.afterWatch = (path) => {
+        if (path === assetsDir) resolvePromise()
+      }
+    })
+    await mkdir(assetsDir)
+    await watched
+    await sse.waitForNext("reload")
+    await untilWatchersLive()
+    await writeFile(join(assetsDir, "logo.png"), PNG_1PX)
     const withImage = await pollUntil(async () => {
       const res = await get(handle.port, "/")
       return res.body.includes("data:image/png;base64") ? res : undefined
@@ -850,6 +898,44 @@ describe("startServe — the server comes back with its watchers reporting", () 
       await busyExited
       await rm(busyDir, { recursive: true, force: true })
     }
+  })
+})
+
+describe("createServeServer — a page saved while the first build runs", () => {
+  it("is picked up once the server is up, instead of staying behind the first build", async () => {
+    // The first build has read the page and is still running when the page
+    // is saved again. A large deck's first build takes seconds, so an agent
+    // that starts the server and keeps editing does exactly this.
+    const deckDir = await makeDir()
+    const page = join(deckDir, "pages", "p-a.json")
+    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
+    await mkdir(join(deckDir, "pages"))
+    await writeFile(page, JSON.stringify({ components: [{ type: "paragraph", text: "first draft" }] }))
+
+    const gate = holdReads({ phase: "after", scope: "build", kind: "page", once: true })
+    const serving = startServe(deckDir, { cwd: deckDir })
+    try {
+      await gate.entered
+      await untilWatchersLive()
+      await writeFile(page, JSON.stringify({ components: [{ type: "paragraph", text: "saved during the first build" }] }))
+      // The build runs on after the save. Half a second also keeps the save
+      // out of reach of the stray event FSEvents can hand a watcher for a
+      // write made just before it opened (see `settledRevision`), which
+      // would otherwise cover for a server that only starts watching once
+      // the first build is done.
+      await sleep(500)
+    } finally {
+      gate.release()
+    }
+    const handle = await serving
+
+    const saved = await pollUntil(async () => {
+      const res = await get(handle.port, "/")
+      return res.body.includes("saved during the first build") ? res : undefined
+    }, THEME_POLL_MS + 3000)
+    expect(saved.body).not.toContain("first draft")
+    expect(saved.headers["x-pptwise-build-status"]).toBe("ok")
+    expect(Number(saved.headers["x-pptwise-served-revision"])).toBeGreaterThan(1)
   })
 })
 
