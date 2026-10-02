@@ -1,69 +1,164 @@
 import type { Component } from "@/ir"
 import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { accessibleInk, readableOn } from "../../render/ink"
+import { closingCallout, fitClosing, paintClosing, type ClosingLayout, type ClosingSpec } from "./closing"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 
 type Comparison = Extract<Component, { type: "comparison" }>
+type Callout = Extract<Component, { type: "callout" }>
 
 /*
  * table: a comparison set as an open ruled table. The row labels sit small
  * and muted in their own column, the options run across, and the recommended
  * option, when the author names one (`recommended`), is lifted onto a
- * `surface` column under a `primary` header and set bold in primary. Brief's
- * options page (p07).
+ * `surface` column under a `primary` header and set bold in primary. A
+ * closing line may follow the table in a full-width `primary` block, the
+ * way `rows` closes. Brief's options page (p07 of the first board), and the
+ * tea board's four-path and plan pages (p09, p11).
  *
- * Takes: one `comparison`, alone on the page, of two or three columns and one
- * to five rows.
+ * The table is set at one of three sizes, the largest that holds it:
  *
- * Declines: one column or more than three, more than five rows, anything
- * beside the comparison, a header past one line or a cell past two lines of
- * its column at 24px, a row label past two lines of 280px at 18px, and a
- * table taller than the band.
+ * - board: 24px cells and headers, 18px labels in a 280px column, rows that
+ *   grow with their text. Two or three options. The first board's size.
+ * - compact: 20px cells, 22px headers, 17px labels in a 260px column, every
+ *   row as tall as the tallest. Two or three options. The tea board's plan
+ *   page, five rows over a closing block.
+ * - dense: 17px cells, 19px headers, 16px labels in a 170px column, every row
+ *   room for two lines. Two to four options. The tea board's four paths.
  *
- * Band: the label column takes 304px and the options share the rest, each
- * option's text at least 160px wide. That is 736px for two options with a
- * pick, 952px for three. Height is 64px of header plus about 84px a one-line
- * row: four rows of the board need 416px.
+ * Takes: one `comparison` of two to four columns and one to five rows,
+ * optionally followed by an `info` or `tip` `callout` with no icon.
  *
- * Reads: `primary` (the pick's header fill and its values), `surface` (the
- * pick's column), `text` (plain cells), `muted` (labels and plain headers),
- * `border` or `muted` (rules between rows), `bg` or `defaultBg`, `fonts.body`,
- * and the theme's emphasis stroke for a marked run in a cell, measured
- * against the column it sits on.
+ * Declines: one column or more than four, more than five rows, a warning
+ * callout or one with an icon, anything else beside the comparison, and a
+ * table that at none of its sizes keeps every header to one line, every
+ * cell and label to two, and itself and its closing block inside the band.
+ *
+ * Band: at the board size the label column takes 304px and each option's
+ * text at least 160px, so two options with a pick need 736px and three
+ * 952px. The dense size puts four options in the board's 1088px.
+ *
+ * Reads: `primary` (the pick's header fill and its values, the closing
+ * block), `surface` (the pick's column), `text` (plain cells), `muted`
+ * (labels and plain headers), `border` or `muted` (rules between rows), `bg`
+ * or `defaultBg`, `fonts.body`, and the theme's emphasis stroke for a marked
+ * run in a cell, measured against the column it sits on.
  */
 
 const MIN_COLUMNS = 2
-const MAX_COLUMNS = 3
 const MAX_ROWS = 5
-
-const LABEL_W = 280
-/** The options start this far right of the band's left edge (x400 on the board) and run to its right edge. */
-const OPTIONS_INSET = 304
-const COLUMN_GAP = 32
 /** The narrowest an option's text may be set. */
 const MIN_TEXT_W = 160
-/** Air right of a plain column's text. */
-const PLAIN_PAD = 24
-/** Air either side of the recommended column's text, inside its white column. */
-const PICK_PAD = 28
 
-const HEAD_H = 64
-const HEAD_SIZE = 24
-/** Baseline of the 24px header, centred in its 64px band. */
-const HEAD_BASELINE = 40
+interface TableScale {
+  id: "board" | "compact" | "dense"
+  maxColumns: number
+  /** The row labels' measure. */
+  labelW: number
+  /** The options start this far right of the band's left edge. */
+  optionsInset: number
+  columnGap: number
+  /** Air left and right of a plain column's text. */
+  plainPad: readonly [number, number]
+  /** Air left and right of the recommended column's text. */
+  pickPad: readonly [number, number]
+  /** How much wider the recommended column's box is than a plain one. */
+  pickExtra: number
+  headH: number
+  headSize: number
+  /** Baseline of a header in its band. */
+  headBaseline: number
+  cellSize: number
+  labelSize: number
+  lineHeight: number
+  /** Baseline of a cell's and a label's first line below the row's text top. */
+  cellBaseline: number
+  labelBaseline: number
+  /** Air above a row's text, below it where a rule follows, and below the last row. */
+  rowPadTop: number
+  rowPadBottom: number
+  lastRowPad: number
+  /** Every row is as tall as this many lines at least, and as tall as the tallest row. */
+  evenRows: number | null
+}
 
-const CELL_SIZE = 24
-const LABEL_SIZE = 18
-const ROW_LINE_HEIGHT = 32
+const SCALES: readonly TableScale[] = [
+  {
+    id: "board",
+    maxColumns: 3,
+    labelW: 280,
+    optionsInset: 304,
+    columnGap: 32,
+    plainPad: [0, 24],
+    pickPad: [28, 28],
+    // Every column's text gets the same measure.
+    pickExtra: 32,
+    headH: 64,
+    headSize: 24,
+    headBaseline: 40,
+    cellSize: 24,
+    labelSize: 18,
+    lineHeight: 32,
+    cellBaseline: 24,
+    labelBaseline: 22,
+    rowPadTop: 26,
+    rowPadBottom: 26,
+    lastRowPad: 10,
+    evenRows: null,
+  },
+  {
+    id: "compact",
+    maxColumns: 3,
+    labelW: 260,
+    optionsInset: 284,
+    columnGap: 36,
+    plainPad: [0, 16],
+    pickPad: [24, 24],
+    pickExtra: 48,
+    headH: 52,
+    headSize: 22,
+    headBaseline: 34,
+    cellSize: 20,
+    labelSize: 17,
+    lineHeight: 28,
+    cellBaseline: 21,
+    labelBaseline: 21,
+    rowPadTop: 12,
+    rowPadBottom: 12,
+    lastRowPad: 16,
+    evenRows: 1,
+  },
+  {
+    id: "dense",
+    maxColumns: 4,
+    labelW: 170,
+    optionsInset: 176,
+    columnGap: 16,
+    plainPad: [4, 26],
+    pickPad: [18, 12],
+    pickExtra: 0,
+    headH: 52,
+    headSize: 19,
+    headBaseline: 33,
+    cellSize: 17,
+    labelSize: 16,
+    lineHeight: 24,
+    cellBaseline: 18,
+    labelBaseline: 18,
+    rowPadTop: 16,
+    rowPadBottom: 2,
+    lastRowPad: 2,
+    evenRows: 2,
+  },
+]
+const MAX_COLUMNS = Math.max(...SCALES.map((scale) => scale.maxColumns))
 const CELL_MAX_LINES = 2
-/** Air above a row's text, and below it where a rule follows. */
-const ROW_PAD = 26
-/** Air below the last row's text, where the white column ends. */
-const LAST_ROW_PAD = 10
-/** Baselines of the 24px cell and the 18px label in a 32px line box. */
-const CELL_BASELINE = 24
-const LABEL_BASELINE = 22
+
+/** The closing block under a table: one 22px line makes the tea board's 64px block. */
+const CLOSING: ClosingSpec = { size: 22, lineHeight: 34, padX: 40, padY: 15, maxLines: 2 }
+/** From the table's foot to the closing block. */
+const CLOSING_GAP = 24
 
 interface Column {
   /** Left edge of the column's box. */
@@ -76,54 +171,78 @@ interface Column {
 }
 
 /**
- * The option columns across `optionsX` to `optionsX + optionsW` (x400 to
- * x1184 on the board). Each plain column is its text plus 24px of air on the
- * right, the recommended one its text plus 28px each side, with 32px between
- * boxes, and every column's text gets the same measure. On the board's two
- * columns that is 336px each.
+ * The option columns across `optionsX` to `optionsX + optionsW`. Every plain
+ * column is the same box, the recommended one `pickExtra` wider, with
+ * `columnGap` between boxes. At the board size that gives every column's
+ * text one measure (336px each on its two columns). On the tea board's plan
+ * page the pick's box is 408px beside a plain 360px.
  */
-function columnsFor(count: number, picked: number | undefined, optionsX: number, optionsW: number): Column[] {
-  const padding = Array.from({ length: count }, (_, i) => (i === picked ? PICK_PAD * 2 : PLAIN_PAD))
-  const textW = Math.floor((optionsW - COLUMN_GAP * (count - 1) - padding.reduce((a, b) => a + b, 0)) / count)
+function columnsFor(scale: TableScale, count: number, picked: number | undefined, optionsX: number, optionsW: number): Column[] {
+  const hasPick = picked !== undefined && picked >= 0 && picked < count
+  const plainPads = scale.plainPad[0] + scale.plainPad[1]
+  const pickPads = scale.pickPad[0] + scale.pickPad[1]
+  const plainTextW = Math.floor(
+    (optionsW - scale.columnGap * (count - 1) - (hasPick ? scale.pickExtra : 0) - count * plainPads) / count,
+  )
   const columns: Column[] = []
   let x = optionsX
   for (let i = 0; i < count; i++) {
-    const isPicked = i === picked
-    const w = textW + padding[i]!
-    columns.push({ x, w, textX: isPicked ? x + PICK_PAD : x, textW, picked: isPicked })
-    x += w + COLUMN_GAP
+    const isPicked = hasPick && i === picked
+    const w = plainTextW + plainPads + (isPicked ? scale.pickExtra : 0)
+    const textW = isPicked ? w - pickPads : plainTextW
+    columns.push({ x, w, textX: x + (isPicked ? scale.pickPad[0] : scale.plainPad[0]), textW, picked: isPicked })
+    x += w + scale.columnGap
   }
   return columns
 }
 
-function tableShape(components: readonly Component[]): Comparison | null {
-  if (components.length !== 1) return null
-  const only = components[0]!
-  if (only.type !== "comparison") return null
+function tableShape(components: readonly Component[]): { comparison: Comparison; callout?: Callout } | null {
+  const [only, second, ...rest] = components
+  if (only?.type !== "comparison" || rest.length > 0) return null
   if (only.columns.length < MIN_COLUMNS || only.columns.length > MAX_COLUMNS) return null
   if (only.rows.length === 0 || only.rows.length > MAX_ROWS) return null
-  return only
+  if (second === undefined) return { comparison: only }
+  const callout = closingCallout(second)
+  return callout ? { comparison: only, callout } : null
 }
 
-export const tableComposition: Composition = ({ components, ctx, rect }) => {
-  const comparison = tableShape(components)
-  if (!comparison) return null
-  const { colors, fonts } = ctx
-  const body = fonts.body
-  const bg = ctx.defaultBg ?? colors.bg
-  const surface = colors.surface
-  const left = rect.x
-  const right = rect.x + rect.w
-  const optionsX = left + OPTIONS_INSET
-  const columns = columnsFor(comparison.columns.length, comparison.recommended, optionsX, right - optionsX)
-  if (columns[0]!.textW < MIN_TEXT_W) return null
+interface PlacedRow {
+  label: EmphasisHeadingLayout
+  cells: EmphasisHeadingLayout[]
+  top: number
+  bottom: number
+  last: boolean
+}
+
+interface TableLayout {
+  scale: TableScale
+  columns: Column[]
+  headers: EmphasisHeadingLayout[]
+  rows: PlacedRow[]
+  bottom: number
+  closing?: ClosingLayout
+}
+
+/** The table set at `scale` in `rect`, or `null` when it does not hold whole there. */
+function layoutAt(
+  scale: TableScale,
+  comparison: Comparison,
+  callout: Callout | undefined,
+  ctx: Parameters<Composition>[0]["ctx"],
+  rect: Parameters<Composition>[0]["rect"],
+): TableLayout | null {
+  if (comparison.columns.length > scale.maxColumns) return null
+  const body = ctx.fonts.body
+  const optionsX = rect.x + scale.optionsInset
+  const columns = columnsFor(scale, comparison.columns.length, comparison.recommended, optionsX, rect.x + rect.w - optionsX)
+  if (columns.some((column) => column.textW < MIN_TEXT_W)) return null
 
   const headers: EmphasisHeadingLayout[] = []
   for (const [i, column] of columns.entries()) {
     const fitted = fitFixed(comparison.columns[i], {
       width: column.textW,
-      size: HEAD_SIZE,
-      lineHeight: ROW_LINE_HEIGHT,
+      size: scale.headSize,
+      lineHeight: scale.lineHeight,
       maxLines: 1,
       fontFamily: body,
       bold: false,
@@ -132,12 +251,12 @@ export const tableComposition: Composition = ({ components, ctx, rect }) => {
     headers.push(fitted)
   }
 
-  const rows = []
+  const fitted = []
   for (const row of comparison.rows) {
     const label = fitFixed(row.label, {
-      width: LABEL_W,
-      size: LABEL_SIZE,
-      lineHeight: ROW_LINE_HEIGHT,
+      width: scale.labelW,
+      size: scale.labelSize,
+      lineHeight: scale.lineHeight,
       maxLines: CELL_MAX_LINES,
       fontFamily: body,
       bold: false,
@@ -147,8 +266,8 @@ export const tableComposition: Composition = ({ components, ctx, rect }) => {
     for (const [i, column] of columns.entries()) {
       const cell = fitFixed(row.cells[i] ?? "", {
         width: column.textW,
-        size: CELL_SIZE,
-        lineHeight: ROW_LINE_HEIGHT,
+        size: scale.cellSize,
+        lineHeight: scale.lineHeight,
         maxLines: CELL_MAX_LINES,
         fontFamily: body,
         bold: column.picked,
@@ -156,39 +275,62 @@ export const tableComposition: Composition = ({ components, ctx, rect }) => {
       if (cell === null) return null
       cells.push(cell)
     }
-    rows.push({ label, cells })
+    fitted.push({ label, cells, lines: Math.max(1, label.lines.length, ...cells.map((cell) => cell.lines.length)) })
   }
+  const even = scale.evenRows === null ? null : Math.max(scale.evenRows, ...fitted.map((row) => row.lines))
 
-  let cursor = rect.y + HEAD_H
-  const placed = rows.map((row, index) => {
+  let cursor = rect.y + scale.headH
+  const rows: PlacedRow[] = fitted.map((row, index) => {
     const top = cursor
-    const lines = Math.max(1, row.label.lines.length, ...row.cells.map((cell) => cell.lines.length))
-    const last = index === rows.length - 1
-    const bottom = top + ROW_PAD + lines * ROW_LINE_HEIGHT + (last ? LAST_ROW_PAD : ROW_PAD)
+    const last = index === fitted.length - 1
+    const lines = even ?? row.lines
+    const bottom = top + scale.rowPadTop + lines * scale.lineHeight + (last ? scale.lastRowPad : scale.rowPadBottom)
     cursor = bottom
-    return { ...row, top, bottom, last }
+    return { label: row.label, cells: row.cells, top, bottom, last }
   })
-  const tableBottom = cursor
-  if (tableBottom > rect.y + rect.h) return null
+  const bottom = cursor
+  const closing = callout ? fitClosing(callout, rect.w, CLOSING, ctx) : undefined
+  if (closing === null) return null
+  const foot = closing ? bottom + CLOSING_GAP + closing.height : bottom
+  if (foot > rect.y + rect.h) return null
+  return { scale, columns, headers, rows, bottom, ...(closing ? { closing } : {}) }
+}
+
+export const tableComposition: Composition = ({ components, ctx, rect }) => {
+  const shape = tableShape(components)
+  if (!shape) return null
+  let layout: TableLayout | null = null
+  for (const scale of SCALES) {
+    layout = layoutAt(scale, shape.comparison, shape.callout, ctx, rect)
+    if (layout) break
+  }
+  if (!layout) return null
+  const { scale, columns, headers, rows } = layout
+  const { colors, fonts } = ctx
+  const body = fonts.body
+  const bg = ctx.defaultBg ?? colors.bg
+  const surface = colors.surface
+  const left = rect.x
+  const right = rect.x + rect.w
 
   const pick = columns.find((column) => column.picked)
-  const headInk = accessibleInk(colors.muted, bg, HEAD_SIZE)
+  const headInk = accessibleInk(colors.muted, bg, scale.headSize)
   const pickHeadInk = readableOn(colors.primary)
-  const labelInk = accessibleInk(colors.muted, bg, LABEL_SIZE)
-  const cellInk = accessibleInk(colors.text, bg, CELL_SIZE)
-  const pickInk = accessibleInk(colors.primary, surface, CELL_SIZE)
+  const labelInk = accessibleInk(colors.muted, bg, scale.labelSize)
+  const cellInk = accessibleInk(colors.text, bg, scale.cellSize)
+  const pickInk = accessibleInk(colors.primary, surface, scale.cellSize)
   const rule = ruleInk(ctx)
 
-  return (
-    <g {...compositionTag("table")} {...blockTag(ctx, comparison)}>
-      {pick && <rect x={pick.x} y={rect.y} width={pick.w} height={tableBottom - rect.y} fill={surface} />}
-      {pick && <rect x={pick.x} y={rect.y} width={pick.w} height={HEAD_H} fill={colors.primary} />}
+  const table = (
+    <>
+      {pick && <rect x={pick.x} y={rect.y} width={pick.w} height={layout.bottom - rect.y} fill={surface} />}
+      {pick && <rect x={pick.x} y={rect.y} width={pick.w} height={scale.headH} fill={colors.primary} />}
       {columns.map((column, i) => (
         <g key={i}>
           {paintLines(headers[i]!, {
           ctx,
           x: column.textX,
-          y: rect.y + HEAD_BASELINE,
+          y: rect.y + scale.headBaseline,
           fill: column.picked ? pickHeadInk : headInk,
           fontFamily: body,
           fontWeight: "400",
@@ -196,12 +338,12 @@ export const tableComposition: Composition = ({ components, ctx, rect }) => {
           })}
         </g>
       ))}
-      {placed.map((row, index) => (
+      {rows.map((row, index) => (
         <g key={index}>
           {paintLines(row.label, {
             ctx,
             x: left,
-            y: row.top + ROW_PAD + LABEL_BASELINE,
+            y: row.top + scale.rowPadTop + scale.labelBaseline,
             fill: labelInk,
             fontFamily: body,
             fontWeight: "400",
@@ -211,7 +353,7 @@ export const tableComposition: Composition = ({ components, ctx, rect }) => {
               {paintLines(row.cells[i]!, {
               ctx,
               x: column.textX,
-              y: row.top + ROW_PAD + CELL_BASELINE,
+              y: row.top + scale.rowPadTop + scale.cellBaseline,
               fill: column.picked ? pickInk : cellInk,
               fontFamily: body,
               fontWeight: column.picked ? "700" : "400",
@@ -224,6 +366,22 @@ export const tableComposition: Composition = ({ components, ctx, rect }) => {
           )}
         </g>
       ))}
+    </>
+  )
+  // A table with no closing line is one block, tagged on the composition's
+  // own group as it always was. A closing line is a second component, so
+  // each gets a group of its own.
+  if (!layout.closing) {
+    return (
+      <g {...compositionTag("table")} {...blockTag(ctx, shape.comparison)}>
+        {table}
+      </g>
+    )
+  }
+  return (
+    <g {...compositionTag("table")}>
+      <g {...blockTag(ctx, shape.comparison)}>{table}</g>
+      {paintClosing(layout.closing, { x: left, y: layout.bottom + CLOSING_GAP, w: rect.w }, CLOSING, ctx)}
     </g>
   )
 }

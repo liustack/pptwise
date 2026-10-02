@@ -12,9 +12,10 @@ import { blendOver, readableOn } from "../../render/ink"
  * one its own way. A composition draws a whole page body by hand instead: a
  * short list as ruled numbered rows, a comparison as an open table with the
  * pick lifted out, a roadmap as phase columns under colour bars, a two-level
- * team as an owner block over cards, a trend chart with a change column
- * beside it. They were drawn for brief's 2026-10 board, and nothing in them is
- * brief's: each one reads only the band its face hands it and the theme's
+ * team as an owner block over cards, a trend chart with a column of figures
+ * beside it, a row of headline figures over a quote, a timeline on one rule,
+ * a list of label and value pairs. They were drawn for brief's 2026-10
+ * boards, and nothing in them is brief's: each one reads only the band its face hands it and the theme's
  * tokens, so the face keeps its own heading, source line and footer.
  *
  * The contract every composition keeps:
@@ -34,7 +35,7 @@ import { blendOver, readableOn } from "../../render/ink"
  * `design/compositions/<id>/`.
  */
 
-export type CompositionId = "rows" | "table" | "waves" | "tree" | "rail"
+export type CompositionId = "rows" | "table" | "waves" | "tree" | "rail" | "figures" | "track" | "pairs"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */

@@ -7,6 +7,7 @@ import { headingEmphasisPaint, renderEmphasisText } from "../../render/emphasis"
 import { accessibleInk } from "../../render/ink"
 import { SvgContent } from "../../render/svg-content"
 import { bodySlotDropsContent } from "../../render/step-aside"
+import { railFigures } from "./rail-figures"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 
@@ -14,7 +15,13 @@ type Chart = Extract<Component, { type: "chart" }>
 type Series = Chart["series"][number]
 
 /*
- * rail: a trend chart with a column of figures beside it. The chart keeps the
+ * rail: a trend chart with a column of figures beside it. The figures are
+ * the author's when the page writes them: a chart followed by one or two
+ * `kpi_cards` items, and optionally a closing callout or quote, is set by
+ * `railFigures` (`./rail-figures.tsx`, the tea board's p03, p06 and p07),
+ * which has its own contract. A chart alone gets the column computed here.
+ *
+ * The computed column: the chart keeps the
  * left of the band, and a column right of a hairline states what each series
  * did from its first category to its last: the series' swatch and name, the
  * change, and the two values it ran between. The change is a whole-number
@@ -230,6 +237,8 @@ function swatchIsLine(chart: Chart, series: Series): boolean {
 }
 
 export const railComposition: Composition = ({ components, ctx, rect }) => {
+  const authored = railFigures({ components, ctx, rect })
+  if (authored) return authored
   const shape = railShape(components)
   if (!shape) return null
   const { chart, entries } = shape

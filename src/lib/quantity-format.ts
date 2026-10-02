@@ -11,6 +11,11 @@ export function isPercentUnit(unit: string | undefined): boolean {
   return unit !== undefined && PERCENT.has(unit.trim())
 }
 
+/** Whether `unit` is a currency sign, alone or leading a magnitude like "$M", which a reader writes before the number. */
+export function isCurrencyUnit(unit: string | undefined): boolean {
+  return unit !== undefined && CURRENCY_LEAD.test(unit.trim())
+}
+
 /**
  * `number` with `unit` attached as a reader expects it: a currency sign
  * before the digits and after any `+` or `-` (`+$0.48`, `-$2`), a percent sign

@@ -3,7 +3,7 @@ import type { Slide } from "@/ir"
 import type { ComponentCtx } from "../../components/types"
 import type { ContentRect } from "../../render/layout"
 import { SvgContent } from "../../render/svg-content"
-import { compose, type CompositionInks } from "../compositions"
+import { compose, type CompositionId, type CompositionInks } from "../compositions"
 import { GAUGE_DARK_META, GaugeHead, GaugeSource } from "../gauge-shared"
 import { sheetCtx, sheetFrame } from "./frame"
 
@@ -12,6 +12,14 @@ import { sheetCtx, sheetFrame } from "./frame"
  * page, the same grey the dark chapter sets its meta in.
  */
 const SHEET_INKS: CompositionInks = { quietOnPrimary: GAUGE_DARK_META }
+
+/**
+ * The compositions a brief sheet offers its body: every one drawn for the
+ * full type width. `pairs` is left out. It sets a list for a narrow column
+ * beside a photograph, and across the whole page it would take a list that
+ * `rows` turned down.
+ */
+const SHEET_COMPOSITIONS: readonly CompositionId[] = ["rows", "table", "waves", "tree", "rail", "figures", "track"]
 
 export interface SheetBody {
   /** The subheading, painted, or `null`. */
@@ -31,7 +39,7 @@ export interface SheetBody {
 export function composeSheet(slide: Slide, ctx: ComponentCtx): SheetBody {
   const paint = sheetCtx(ctx)
   const { standfirst, rect } = sheetFrame(slide, paint)
-  const composed = compose({ components: slide.components, ctx: paint, rect, inks: SHEET_INKS })
+  const composed = compose({ components: slide.components, ctx: paint, rect, inks: SHEET_INKS }, SHEET_COMPOSITIONS)
   return { standfirst, rect, composed, paint }
 }
 

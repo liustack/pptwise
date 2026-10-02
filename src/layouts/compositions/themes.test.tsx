@@ -78,6 +78,33 @@ const PAGES: Record<CompositionId, unknown[]> = {
       ],
     },
   ],
+  figures: [
+    {
+      type: "kpi_cards",
+      items: [
+        { value: "+20.7%", label: "Stores, year on year", note: "63,987 at end-June" },
+        { value: "+2.3%", label: "H1 revenue, year on year", note: "RMB 15.2bn" },
+        { value: "−14.7%", label: "H1 profit, year on year", note: "First fall since listing" },
+      ],
+    },
+    { type: "blockquote", text: "Sales per store fell by **double digits** at the group and the brand.", attribution: "Zhang Yuan, CEO" },
+  ],
+  track: [
+    {
+      type: "timeline",
+      milestones: [
+        { date: "13 May 2025", title: "Platforms summoned", desc: "JD, Meituan and Ele.me" },
+        { date: "18 Jul 2025", title: "Second summons", desc: "Calls for rational competition" },
+        { date: "Early Dec 2025", title: "National standard", desc: "Platforms bear promotion costs", highlight: true },
+        { date: "9 Jan 2026", title: "Antitrust review", desc: "Delivery competition assessed" },
+        { date: "17 Jun 2026", title: "Draft subsidy rules", desc: "Merchants need not fund subsidies" },
+      ],
+    },
+    { type: "callout", variant: "info", text: "Platforms are pulling back too: **loss per order halved** from October." },
+  ],
+  pairs: [
+    { type: "bullets", items: ["Guangzhou: 14,355 → 12,029", "Shenzhen: 9,113 → 7,814", "Closures: 1.5 to 2 times openings"] },
+  ],
 }
 
 /** Every string an author wrote on the page, less the emphasis marks, that the composition must print. */
@@ -87,6 +114,9 @@ const AUTHORED: Record<CompositionId, string[]> = {
   waves: ["Pilot", "Months 1 to 3", "$0.40 off per parcel", "Handover", "Run rate reached"],
   tree: ["Steering group", "COO, CFO, Halden partner", "Finance", "CFO office"],
   rail: ["Parcels", "+22%", "Cost per parcel", "+30%", "$4.10 → $5.35"],
+  figures: ["+20.7%", "Stores, year on year", "63,987 at end-June", "−14.7%", "double digits", "Zhang Yuan, CEO"],
+  track: ["13 May 2025", "Platforms summoned", "JD, Meituan and Ele.me", "Early Dec 2025", "Draft subsidy rules", "loss per order halved"],
+  pairs: ["Guangzhou", "14,355 → 12,029", "Closures", "1.5 to 2 times openings"],
 }
 
 /**
