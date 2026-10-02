@@ -47,6 +47,10 @@ export type CompositionId =
   | "columns"
   | "bars"
   | "bridge"
+  | "records"
+  | "stack"
+  | "window"
+  | "lanes"
 
 /**
  * The type a composition sets its page in.

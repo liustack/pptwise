@@ -37,7 +37,18 @@ import {
  */
 
 /** The compositions a notice sheet offers its body, in the notice setting. */
-const NOTICE_COMPOSITIONS: readonly CompositionId[] = ["rows", "table", "rail", "columns", "bars", "bridge"]
+const NOTICE_COMPOSITIONS: readonly CompositionId[] = [
+  "rows",
+  "table",
+  "records",
+  "rail",
+  "columns",
+  "bars",
+  "bridge",
+  "stack",
+  "window",
+  "lanes",
+]
 
 /** The subheading, when a page carries one: muted lines under the rule, the body below them. */
 const STANDFIRST = { size: 18, box: 26, maxLines: 2, gap: 16 }

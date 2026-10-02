@@ -1082,6 +1082,72 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
     ],
     footnote: lex.sources[0]!.label,
   }),
+  // A data table with one highlighted row over a warning.
+  records: (lex) => {
+    const table = COMPONENT_BUILDERS.data_table!(lex)
+    return {
+      heading: lex.headings[9]!,
+      components: [
+        table.type === "data_table" ? { ...table, source: undefined, rows: table.rows.filter((row) => row.emphasis !== "total") } : table,
+        { type: "callout", variant: "warn", text: lex.verdicts.warning },
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
+  // Two figures, the second marked, beside a titled list.
+  stack: (lex) => ({
+    heading: lex.headings[3]!,
+    components: [
+      {
+        type: "kpi_cards",
+        items: figureItems(lex, 2).map((item, i) => (i === 1 ? { ...item, value: `**${item.value}**` } : item)),
+      },
+      {
+        type: "insight_panel",
+        title: lex.chapters[0]!,
+        rows: lex.phrases.slice(0, 4).map((label, i) => ({ label, text: lex.sentences[i]! })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // Three periods, the first two one marked window, over three facts.
+  window: (lex) => ({
+    heading: lex.headings[11]!,
+    components: [
+      {
+        type: "gantt",
+        axis_labels: lex.periods.slice(0, 3),
+        items: [
+          { label: lex.stages[0]!, text: lex.phrases[0]!, start: 0, end: 2, emphasis: true },
+          { label: lex.stages[1]!, text: lex.phrases[1]!, start: 2, end: 3 },
+        ],
+      },
+      {
+        type: "kpi_cards",
+        items: lex.metrics.slice(0, 3).map((metric, i) => ({ label: metric.label, value: `${metric.value}${metric.unit ?? ""}`, note: lex.periods[i]! })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // Six milestones on two lanes, one highlighted, over a closing note.
+  lanes: (lex) => ({
+    heading: lex.headings[11]!,
+    components: [
+      {
+        type: "timeline",
+        lanes: [lex.labels[8]!, lex.labels[9]!],
+        milestones: lex.stages.slice(0, 6).map((title, i) => ({
+          date: lex.periods[i % lex.periods.length]!,
+          title,
+          desc: lex.phrases[i]!,
+          lane: i % 2 === 0 ? lex.labels[9]! : lex.labels[8]!,
+          highlight: i === 1,
+        })),
+      },
+      { type: "callout", variant: "info", text: lex.verdicts.positive },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
   // The combo chart with its rate line marked, the series the column then
   // sets over the emphasis stroke.
   rail: (lex) => {

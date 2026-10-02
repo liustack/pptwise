@@ -2282,9 +2282,9 @@
       "color": "spj9ai"
     },
     "bulletin--deck--p07": {
-      "hash": "18n0ixe",
-      "geometry": "wlvjct",
-      "color": "1psfzsi"
+      "hash": "13gbgca",
+      "geometry": "1c57d74",
+      "color": "166ew93"
     },
     "bulletin--deck--p08": {
       "hash": "1oa2kq7",
@@ -2360,6 +2360,26 @@
       "hash": "q5zer",
       "geometry": "mqpz6r",
       "color": "gvrbcl"
+    },
+    "bulletin--compose--records": {
+      "hash": "g2b4z6",
+      "geometry": "opjrmz",
+      "color": "1qzd0qr"
+    },
+    "bulletin--compose--stack": {
+      "hash": "1tprqtp",
+      "geometry": "1a9l90",
+      "color": "16ssmyu"
+    },
+    "bulletin--compose--window": {
+      "hash": "1jb7gd3",
+      "geometry": "1beyhzn",
+      "color": "1yx8ati"
+    },
+    "bulletin--compose--lanes": {
+      "hash": "10sh9aq",
+      "geometry": "w1389o",
+      "color": "1htwas6"
     },
     "bulletin--comp--architecture--zh": {
       "hash": "aws01w",

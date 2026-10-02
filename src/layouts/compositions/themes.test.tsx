@@ -149,6 +149,71 @@ const PAGES: Record<CompositionId, unknown[]> = {
       ],
     },
   ],
+  records: [
+    {
+      type: "data_table",
+      columns: [
+        { key: "co", label: "Company" },
+        { key: "q3", label: "Q3 sales", align: "right" },
+        { key: "yoy", label: "YoY", align: "right" },
+        { key: "note", label: "What stands out" },
+      ],
+      rows: [
+        { cells: { co: "Zeekr", q3: "110,034", yoy: "~+108%", note: "9X: 7,225 in September" } },
+        { cells: { co: "Leapmotor", q3: "310,052", yoy: "+78.3%", note: "Over 100k a month" }, emphasis: "highlight" },
+        { cells: { co: "BYD", q3: "1,323,065", yoy: "+18.8%", note: "Exports 41.6% of sales" } },
+      ],
+    },
+    { type: "callout", variant: "warn", text: "HIMA delivered 37,490 in September, **down 29.2%**." },
+  ],
+  stack: [
+    {
+      type: "kpi_cards",
+      items: [
+        { value: "10", label: "Models cut in price in August", note: "23 a year earlier" },
+        { value: "**RMB 45k**", label: "Average cut per discounted NEV", note: "17.8% off, vs RMB 30k in H1" },
+      ],
+    },
+    {
+      type: "insight_panel",
+      title: "September's play",
+      rows: [
+        { label: "Tesla: cash off", text: "Up to RMB 10k off stock cars" },
+        { label: "Xiaomi: 0% or insurance", text: "3-year 0% finance or a RMB 6k insurance subsidy" },
+      ],
+    },
+  ],
+  window: [
+    {
+      type: "gantt",
+      axis_labels: ["October", "November", "December"],
+      items: [
+        { label: "Window open", text: "Help buyers claim local money", start: 0, end: 2, emphasis: true },
+        { label: "December 31", text: "Unspent funds go back", start: 2, end: 3 },
+      ],
+    },
+    {
+      type: "kpi_cards",
+      items: [
+        { label: "Purchase tax", value: "Halved", note: "In 2026 and 2027" },
+        { label: "Trade-in", value: "12%, up to RMB 20k", note: "Scrappage subsidy" },
+        { label: "Local", value: "First come", note: "Pudong: 14,000 slots" },
+      ],
+    },
+  ],
+  lanes: [
+    {
+      type: "timeline",
+      lanes: ["Home", "Abroad"],
+      milestones: [
+        { date: "July", title: "Brazil: 35%", desc: "BEV import tariff", lane: "Abroad" },
+        { date: "July 7", title: "Price Law", desc: "Below-cost test", lane: "Home", highlight: true },
+        { date: "July 28", title: "Turkey ruling", desc: "Tariff stays", lane: "Abroad" },
+        { date: "Sept 1", title: "Conduct rules", desc: "Price on cost", lane: "Home" },
+      ],
+    },
+    { type: "callout", variant: "info", text: "For us: **cost every deal**." },
+  ],
 }
 
 /** Every string an author wrote on the page, less the emphasis marks, that the composition must print. */
@@ -164,6 +229,10 @@ const AUTHORED: Record<CompositionId, string[]> = {
   columns: ["2025", "2026", "Forecast", "Million units", "1.826", "1.69", "September"],
   bars: ["Aug 2025", "Aug 2026", "BYD", "27.8", "23.3", "−4.5 pts", "Share of home NEV retail, %"],
   bridge: ["million units, axis from 2", "3.82", "−0.13", "−0.69", "Jul–Aug 2026"],
+  records: ["Company", "What stands out", "Leapmotor", "+78.3%", "1,323,065", "down 29.2%"],
+  stack: ["Models cut in price in August", "RMB 45k", "17.8% off, vs RMB 30k in H1", "September's play", "Xiaomi: 0% or insurance"],
+  window: ["October", "December", "Window open", "Help buyers claim local money", "Purchase tax", "12%, up to RMB 20k", "Pudong: 14,000 slots"],
+  lanes: ["Home", "Abroad", "Brazil: 35%", "July 7", "Price Law", "Price on cost", "cost every deal"],
 }
 
 /**

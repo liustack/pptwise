@@ -3,14 +3,18 @@ import { barsComposition } from "./bars"
 import { bridgeComposition } from "./bridge"
 import { columnsComposition } from "./columns"
 import { figuresComposition } from "./figures"
+import { lanesComposition } from "./lanes"
 import { pairsComposition } from "./pairs"
 import { railComposition } from "./rail"
+import { recordsComposition } from "./records"
 import { rowsComposition } from "./rows"
 import type { Composition, CompositionId, CompositionProps } from "./shared"
+import { stackComposition } from "./stack"
 import { tableComposition } from "./table"
 import { trackComposition } from "./track"
 import { treeComposition } from "./tree"
 import { wavesComposition } from "./waves"
+import { windowComposition } from "./window"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -35,6 +39,10 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   columns: columnsComposition,
   bars: barsComposition,
   bridge: bridgeComposition,
+  records: recordsComposition,
+  stack: stackComposition,
+  window: windowComposition,
+  lanes: lanesComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]

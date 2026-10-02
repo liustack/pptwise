@@ -333,6 +333,10 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "bulletin", kind: "data", composition: "columns" },
   { theme: "bulletin", kind: "data", composition: "bars" },
   { theme: "bulletin", kind: "data", composition: "bridge" },
+  { theme: "bulletin", kind: "data", composition: "records" },
+  { theme: "bulletin", kind: "list", composition: "stack" },
+  { theme: "bulletin", kind: "list", composition: "window" },
+  { theme: "bulletin", kind: "process", composition: "lanes" },
 ]
 
 export function buildMatrix(
