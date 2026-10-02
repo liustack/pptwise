@@ -72,9 +72,9 @@
       "color": "p0ehcg"
     },
     "almanac--face--comparison--two-column": {
-      "hash": "tg7yw0",
-      "geometry": "80dj5n",
-      "color": "12u6uhn"
+      "hash": "ivfza5",
+      "geometry": "17ejrr",
+      "color": "1n9v2rj"
     },
     "almanac--face--process--rail-numbered": {
       "hash": "3zlkfl",
@@ -87,18 +87,18 @@
       "color": "wi32pa"
     },
     "almanac--face--photo--image-top": {
-      "hash": "1tta2li",
-      "geometry": "90ajl1",
-      "color": "1v0rdra"
+      "hash": "33smm5",
+      "geometry": "1vxk1lx",
+      "color": "etc2n8"
     },
     "almanac--face--statement--statement": {
-      "hash": "1sff1pw",
-      "geometry": "sawcou",
+      "hash": "1bsva9a",
+      "geometry": "p775lo",
       "color": "1uaden3"
     },
     "almanac--face--fact--stat-hero": {
-      "hash": "1fpvt4l",
-      "geometry": "1pbs2gz",
+      "hash": "jdlnff",
+      "geometry": "1u91utp",
       "color": "1uiafyr"
     },
     "almanac--face--evidence--one-evidence": {
@@ -217,9 +217,9 @@
       "color": "m17b51"
     },
     "almanac--comp--comparison--zh": {
-      "hash": "1nyn0dg",
-      "geometry": "1c4g17r",
-      "color": "1ayxmnf"
+      "hash": "1fe1aly",
+      "geometry": "zadspg",
+      "color": "15oh54f"
     },
     "almanac--comp--concept-equation--zh": {
       "hash": "qa8oot",
@@ -342,9 +342,9 @@
       "color": "1it9mu1"
     },
     "almanac--comp--matrix--zh": {
-      "hash": "tg81kv",
-      "geometry": "1gxj9ra",
-      "color": "mhppvi"
+      "hash": "adaiox",
+      "geometry": "p72em7",
+      "color": "yfunjw"
     },
     "almanac--comp--numbered-cards--zh": {
       "hash": "1ilz470",
@@ -562,9 +562,9 @@
       "color": "v0pcf8"
     },
     "arena--face--comparison--two-column": {
-      "hash": "1n7s6x2",
-      "geometry": "1jymjt2",
-      "color": "1dbxbqq"
+      "hash": "thmbp2",
+      "geometry": "1ac5knd",
+      "color": "149bmbu"
     },
     "arena--face--process--rail-numbered": {
       "hash": "1pus8d2",
@@ -577,18 +577,18 @@
       "color": "i3k2fy"
     },
     "arena--face--photo--image-top": {
-      "hash": "69niac",
-      "geometry": "1dxa96f",
-      "color": "158qkmh"
+      "hash": "qvxn11",
+      "geometry": "1rnlys7",
+      "color": "vulvrj"
     },
     "arena--face--statement--statement": {
-      "hash": "1s9a5d0",
-      "geometry": "18ccbbd",
+      "hash": "ga1ss2",
+      "geometry": "oc5k99",
       "color": "eika51"
     },
     "arena--face--fact--stat-hero": {
-      "hash": "1w7v4w0",
-      "geometry": "vezo79",
+      "hash": "3y8wou",
+      "geometry": "14f2nqx",
       "color": "hn4eta"
     },
     "arena--face--evidence--one-evidence": {
@@ -707,9 +707,9 @@
       "color": "3skicu"
     },
     "arena--comp--comparison--zh": {
-      "hash": "muyin0",
-      "geometry": "1sgo03q",
-      "color": "pnxs5f"
+      "hash": "1tf4inp",
+      "geometry": "9i5lho",
+      "color": "au1l6d"
     },
     "arena--comp--concept-equation--zh": {
       "hash": "1qii2fk",
@@ -832,9 +832,9 @@
       "color": "1tvc8gm"
     },
     "arena--comp--matrix--zh": {
-      "hash": "1ap38tm",
-      "geometry": "1j09f2e",
-      "color": "zn78i2"
+      "hash": "12mdbs1",
+      "geometry": "xbhn92",
+      "color": "1uxm5zm"
     },
     "arena--comp--numbered-cards--zh": {
       "hash": "ob3zg3",
@@ -1047,9 +1047,9 @@
       "color": "1vgi0q9"
     },
     "brief--face--photo--image-split": {
-      "hash": "slep3c",
-      "geometry": "16hl14q",
-      "color": "1kdk88y"
+      "hash": "118jmcz",
+      "geometry": "zkyu6s",
+      "color": "lahu16"
     },
     "brief--face--statement--gauge-point": {
       "hash": "1sillbz",
@@ -1081,6 +1081,11 @@
       "geometry": "tai4jb",
       "color": "16q7if6"
     },
+    "brief--compose--table-dense": {
+      "hash": "1mrv3mf",
+      "geometry": "dap914",
+      "color": "1bzzst2"
+    },
     "brief--compose--waves": {
       "hash": "ogwijw",
       "geometry": "bi98g5",
@@ -1095,6 +1100,26 @@
       "hash": "11ewlf3",
       "geometry": "17iy7lq",
       "color": "w7uu9c"
+    },
+    "brief--compose--rail-figures": {
+      "hash": "h3geqx",
+      "geometry": "11bef23",
+      "color": "1b3f7it"
+    },
+    "brief--compose--figures": {
+      "hash": "10ov9ib",
+      "geometry": "18g812x",
+      "color": "li168j"
+    },
+    "brief--compose--track": {
+      "hash": "1fc1wd",
+      "geometry": "1t0403o",
+      "color": "o87lgg"
+    },
+    "brief--compose--pairs": {
+      "hash": "d46qw3",
+      "geometry": "vk095x",
+      "color": "1t83atb"
     },
     "brief--aside--gauge-sheet": {
       "hash": "udo5tt",
@@ -1657,18 +1682,18 @@
       "color": "1tehk3"
     },
     "brief--comp--image--zh": {
-      "hash": "1nxzok6",
-      "geometry": "1trvej3",
+      "hash": "2qza12",
+      "geometry": "1mtfip",
       "color": "1wv49fr"
     },
     "brief--comp--image--en": {
-      "hash": "lozieb",
-      "geometry": "6u7e43",
+      "hash": "1liifyb",
+      "geometry": "fepzjx",
       "color": "12x3jh9"
     },
     "brief--comp--image--mixed": {
-      "hash": "zvgenz",
-      "geometry": "s40gdg",
+      "hash": "17lnehr",
+      "geometry": "1t06ej6",
       "color": "1wv49fr"
     },
     "brief--comp--image-compare--zh": {
@@ -2297,9 +2322,9 @@
       "color": "12u6ptb"
     },
     "bulletin--face--comparison--two-column": {
-      "hash": "13v4cqn",
-      "geometry": "1eb0mb8",
-      "color": "7d0rvc"
+      "hash": "68wb6n",
+      "geometry": "pnjesl",
+      "color": "1qtkgwm"
     },
     "bulletin--face--process--rail-numbered": {
       "hash": "1eltokr",
@@ -2312,9 +2337,9 @@
       "color": "1gop8j0"
     },
     "bulletin--face--photo--image-split": {
-      "hash": "16yzmhz",
-      "geometry": "7vchkx",
-      "color": "1ocqiyw"
+      "hash": "16ciaei",
+      "geometry": "ff2whr",
+      "color": "p1nlae"
     },
     "bulletin--face--hierarchy--asymmetric-triptych": {
       "hash": "4husq",
@@ -2427,9 +2452,9 @@
       "color": "507290"
     },
     "bulletin--comp--comparison--zh": {
-      "hash": "vlb1fg",
-      "geometry": "1m0kkii",
-      "color": "1t4afh3"
+      "hash": "1pqw1ho",
+      "geometry": "pnq1ed",
+      "color": "17vrzv7"
     },
     "bulletin--comp--concept-equation--zh": {
       "hash": "vjwih4",
@@ -2552,9 +2577,9 @@
       "color": "11oy0sm"
     },
     "bulletin--comp--matrix--zh": {
-      "hash": "127k9oc",
-      "geometry": "4rknes",
-      "color": "190ha1i"
+      "hash": "1fb6uam",
+      "geometry": "1603fp",
+      "color": "1bowg4s"
     },
     "bulletin--comp--numbered-cards--zh": {
       "hash": "19j4wy",
@@ -2772,9 +2797,9 @@
       "color": "1i99oq8"
     },
     "clinic--face--comparison--two-column": {
-      "hash": "i833wu",
-      "geometry": "4gau1m",
-      "color": "1mjb7ph"
+      "hash": "1coev33",
+      "geometry": "kfjpk5",
+      "color": "3lk9yi"
     },
     "clinic--face--process--rail-numbered": {
       "hash": "w20b13",
@@ -2787,9 +2812,9 @@
       "color": "1cins0i"
     },
     "clinic--face--photo--image-annotate": {
-      "hash": "bhvhhq",
-      "geometry": "zovf2z",
-      "color": "o7yk7t"
+      "hash": "lg9fnb",
+      "geometry": "17cvsjm",
+      "color": "573edi"
     },
     "clinic--face--hierarchy--asymmetric-triptych": {
       "hash": "rkp22n",
@@ -2902,9 +2927,9 @@
       "color": "h8kiqu"
     },
     "clinic--comp--comparison--zh": {
-      "hash": "1yttbz8",
-      "geometry": "o5zq4v",
-      "color": "ty2jno"
+      "hash": "11w6gx6",
+      "geometry": "8hfomf",
+      "color": "1w7iwll"
     },
     "clinic--comp--concept-equation--zh": {
       "hash": "zp7tfh",
@@ -3027,9 +3052,9 @@
       "color": "1ntydn3"
     },
     "clinic--comp--matrix--zh": {
-      "hash": "1mmkh78",
-      "geometry": "vco3jb",
-      "color": "1ptyl5r"
+      "hash": "l2yl2a",
+      "geometry": "17bw7r7",
+      "color": "1c46258"
     },
     "clinic--comp--numbered-cards--zh": {
       "hash": "1ndrpr7",
@@ -3247,9 +3272,9 @@
       "color": "1f41tub"
     },
     "crayon--face--comparison--two-column": {
-      "hash": "aslz8m",
-      "geometry": "sej1dw",
-      "color": "10mdpa3"
+      "hash": "r2dvac",
+      "geometry": "1q4dtrv",
+      "color": "9ytcwf"
     },
     "crayon--face--process--rail-numbered": {
       "hash": "6kqnxs",
@@ -3257,13 +3282,13 @@
       "color": "1g0gp1e"
     },
     "crayon--face--photo--image-top": {
-      "hash": "2eykx",
-      "geometry": "yvs57r",
-      "color": "1yiaoo3"
+      "hash": "1abpq88",
+      "geometry": "1akfn8v",
+      "color": "1cb5i5z"
     },
     "crayon--face--statement--crayonbox-point": {
-      "hash": "8sahw6",
-      "geometry": "10xwxly",
+      "hash": "1i4jeag",
+      "geometry": "8yvsug",
       "color": "b9q3ad"
     },
     "crayon--face--ending--crayonbox-todo": {
@@ -3377,9 +3402,9 @@
       "color": "ogysvf"
     },
     "crayon--comp--comparison--zh": {
-      "hash": "12bzrhv",
-      "geometry": "ilu7yb",
-      "color": "1l9apli"
+      "hash": "crhyh0",
+      "geometry": "6ofuct",
+      "color": "1wlm7fg"
     },
     "crayon--comp--concept-equation--zh": {
       "hash": "40uk11",
@@ -3502,9 +3527,9 @@
       "color": "1iz588j"
     },
     "crayon--comp--matrix--zh": {
-      "hash": "8k0nqa",
-      "geometry": "8zhay0",
-      "color": "1t867b3"
+      "hash": "hyd43t",
+      "geometry": "1xubjnk",
+      "color": "13ve99f"
     },
     "crayon--comp--numbered-cards--zh": {
       "hash": "kqzi2n",
@@ -3727,9 +3752,9 @@
       "color": "1qo9zcu"
     },
     "ember--face--comparison--two-column": {
-      "hash": "bxksec",
-      "geometry": "1219phx",
-      "color": "1fkpyfk"
+      "hash": "1a3bhy4",
+      "geometry": "1kri9on",
+      "color": "1693fll"
     },
     "ember--face--process--rail-numbered": {
       "hash": "oisoej",
@@ -3742,9 +3767,9 @@
       "color": "1ais47h"
     },
     "ember--face--photo--image-split": {
-      "hash": "1y2rbew",
-      "geometry": "1dntzkm",
-      "color": "1dw0npy"
+      "hash": "g3mpb5",
+      "geometry": "1a0f897",
+      "color": "1j7ltav"
     },
     "ember--face--hierarchy--asymmetric-triptych": {
       "hash": "13o23e2",
@@ -3857,9 +3882,9 @@
       "color": "1ye1kq4"
     },
     "ember--comp--comparison--zh": {
-      "hash": "cjffzr",
-      "geometry": "2gby84",
-      "color": "1wros9j"
+      "hash": "jic12l",
+      "geometry": "1ey2f8m",
+      "color": "n9deho"
     },
     "ember--comp--concept-equation--zh": {
       "hash": "125o0cq",
@@ -3982,9 +4007,9 @@
       "color": "xwxszf"
     },
     "ember--comp--matrix--zh": {
-      "hash": "45jyc2",
-      "geometry": "1r2gibz",
-      "color": "13r3viq"
+      "hash": "xfmt60",
+      "geometry": "1869mzn",
+      "color": "mp5tbn"
     },
     "ember--comp--numbered-cards--zh": {
       "hash": "acarjr",
@@ -4202,9 +4227,9 @@
       "color": "10ovit7"
     },
     "heritage--face--comparison--two-column": {
-      "hash": "1w76h14",
-      "geometry": "1j4gkh2",
-      "color": "w9bn9w"
+      "hash": "9b57qp",
+      "geometry": "1gvdd0n",
+      "color": "ukxjax"
     },
     "heritage--face--process--rail-numbered": {
       "hash": "ylbbvo",
@@ -4217,23 +4242,23 @@
       "color": "wxjncq"
     },
     "heritage--face--photo--image-split": {
-      "hash": "j6ujv9",
-      "geometry": "hdd6kw",
-      "color": "11gaxkt"
+      "hash": "u7139e",
+      "geometry": "10ckyzn",
+      "color": "1vod2ui"
     },
     "heritage--face--statement--statement": {
-      "hash": "xv995t",
-      "geometry": "1k6mtwy",
+      "hash": "ewu2fy",
+      "geometry": "1qdpve1",
       "color": "x6fzv8"
     },
     "heritage--face--quote--pull-quote": {
-      "hash": "1rfiwms",
-      "geometry": "ypm4tu",
+      "hash": "13ru2gb",
+      "geometry": "1qe7sx5",
       "color": "1orzamm"
     },
     "heritage--face--fact--stat-hero": {
-      "hash": "s9srg8",
-      "geometry": "i4mthb",
+      "hash": "1o9sj9j",
+      "geometry": "19290hg",
       "color": "1pil3k5"
     },
     "heritage--face--hierarchy--asymmetric-triptych": {
@@ -4347,9 +4372,9 @@
       "color": "1x5xvjh"
     },
     "heritage--comp--comparison--zh": {
-      "hash": "zlvo1s",
-      "geometry": "td1i4p",
-      "color": "pzrxa1"
+      "hash": "o4z968",
+      "geometry": "1oezi97",
+      "color": "rmix2u"
     },
     "heritage--comp--concept-equation--zh": {
       "hash": "qbg11x",
@@ -4472,9 +4497,9 @@
       "color": "qtsy4r"
     },
     "heritage--comp--matrix--zh": {
-      "hash": "4y5ja8",
-      "geometry": "4hps1d",
-      "color": "1md6zmi"
+      "hash": "18fr81g",
+      "geometry": "1ul8cjb",
+      "color": "17lz2ez"
     },
     "heritage--comp--numbered-cards--zh": {
       "hash": "pn29jc",
@@ -4692,9 +4717,9 @@
       "color": "7tev2d"
     },
     "homeroom--face--comparison--two-column": {
-      "hash": "11uhb8h",
-      "geometry": "u9pru0",
-      "color": "1b74wtk"
+      "hash": "1bm5oys",
+      "geometry": "1tp7pdd",
+      "color": "1ojjf7b"
     },
     "homeroom--face--process--rail-numbered": {
       "hash": "nh5iv",
@@ -4707,9 +4732,9 @@
       "color": "1pji6z3"
     },
     "homeroom--face--photo--image-top": {
-      "hash": "1o4dulb",
-      "geometry": "1rqushn",
-      "color": "s0s3gh"
+      "hash": "1byfbmz",
+      "geometry": "14n0pwz",
+      "color": "141d8w4"
     },
     "homeroom--face--hierarchy--asymmetric-triptych": {
       "hash": "11pluji",
@@ -4822,9 +4847,9 @@
       "color": "1vg792q"
     },
     "homeroom--comp--comparison--zh": {
-      "hash": "9lrg8z",
-      "geometry": "z0fone",
-      "color": "3o7fuq"
+      "hash": "11gjre0",
+      "geometry": "dl1jav",
+      "color": "13qlpqp"
     },
     "homeroom--comp--concept-equation--zh": {
       "hash": "ges0fm",
@@ -4947,9 +4972,9 @@
       "color": "1oxkpn7"
     },
     "homeroom--comp--matrix--zh": {
-      "hash": "fhtfj1",
-      "geometry": "1idlft8",
-      "color": "cxlxth"
+      "hash": "1xd6wjc",
+      "geometry": "oixjyz",
+      "color": "b73ij4"
     },
     "homeroom--comp--numbered-cards--zh": {
       "hash": "1k8sgsw",
@@ -5167,9 +5192,9 @@
       "color": "gvw263"
     },
     "ink--face--comparison--two-column": {
-      "hash": "h4ccmw",
-      "geometry": "1kugmep",
-      "color": "gpf8ok"
+      "hash": "bx8k74",
+      "geometry": "fgnsoz",
+      "color": "2ia4tb"
     },
     "ink--face--process--rail-numbered": {
       "hash": "xmmep3",
@@ -5182,23 +5207,23 @@
       "color": "1yp32dm"
     },
     "ink--face--photo--image-split": {
-      "hash": "1pamiga",
-      "geometry": "1bxy0fb",
-      "color": "gvzhc9"
+      "hash": "j1lwuc",
+      "geometry": "10j6pjd",
+      "color": "zzbsh0"
     },
     "ink--face--statement--statement": {
-      "hash": "daq81e",
-      "geometry": "aylwu2",
+      "hash": "18sglm2",
+      "geometry": "14b67c2",
       "color": "1h1h5f2"
     },
     "ink--face--quote--pull-quote": {
-      "hash": "7ih7dv",
-      "geometry": "lp12ca",
-      "color": "1xuue7o"
+      "hash": "1pecpg0",
+      "geometry": "1lrf7nh",
+      "color": "lf36z0"
     },
     "ink--face--fact--stat-hero": {
-      "hash": "1g3obzf",
-      "geometry": "1biu837",
+      "hash": "1sui6mn",
+      "geometry": "17yafxj",
       "color": "1ok40pf"
     },
     "ink--face--hierarchy--asymmetric-triptych": {
@@ -5312,9 +5337,9 @@
       "color": "w8guix"
     },
     "ink--comp--comparison--zh": {
-      "hash": "1y3lsnk",
-      "geometry": "rd70ob",
-      "color": "83hmga"
+      "hash": "ai7ev4",
+      "geometry": "epvppl",
+      "color": "l0w63d"
     },
     "ink--comp--concept-equation--zh": {
       "hash": "17kow37",
@@ -5437,9 +5462,9 @@
       "color": "yeme7v"
     },
     "ink--comp--matrix--zh": {
-      "hash": "lbfmwk",
-      "geometry": "s1prxp",
-      "color": "1bxjnsx"
+      "hash": "1ahtcp4",
+      "geometry": "g55q4f",
+      "color": "11hold8"
     },
     "ink--comp--numbered-cards--zh": {
       "hash": "ijflx7",
@@ -5657,9 +5682,9 @@
       "color": "jk7y6f"
     },
     "journal--face--comparison--two-column": {
-      "hash": "160jb0",
-      "geometry": "1xsghyf",
-      "color": "139j38q"
+      "hash": "klk0w",
+      "geometry": "vnlr9h",
+      "color": "gcyfgt"
     },
     "journal--face--process--rail-numbered": {
       "hash": "19bmxkh",
@@ -5672,23 +5697,23 @@
       "color": "avk34v"
     },
     "journal--face--photo--image-split": {
-      "hash": "13dbe6s",
-      "geometry": "1or1ge6",
-      "color": "1jmp47i"
+      "hash": "1i5ukai",
+      "geometry": "1l4y2dy",
+      "color": "1x6uug1"
     },
     "journal--face--statement--statement": {
-      "hash": "161dvcc",
-      "geometry": "13fzzyu",
+      "hash": "9phrog",
+      "geometry": "jg5fy",
       "color": "1pgukrf"
     },
     "journal--face--quote--pull-quote": {
-      "hash": "gd53qo",
-      "geometry": "17vddnl",
+      "hash": "o91h38",
+      "geometry": "9v23r5",
       "color": "a44juw"
     },
     "journal--face--fact--stat-hero": {
-      "hash": "1i3dr81",
-      "geometry": "191bwr",
+      "hash": "56ftkh",
+      "geometry": "1fkxk1r",
       "color": "1vfgqg0"
     },
     "journal--face--hierarchy--asymmetric-triptych": {
@@ -5802,9 +5827,9 @@
       "color": "17ayvx5"
     },
     "journal--comp--comparison--zh": {
-      "hash": "uhmvau",
-      "geometry": "f66ura",
-      "color": "2xu41d"
+      "hash": "1391bww",
+      "geometry": "15gnv7m",
+      "color": "1xa6g60"
     },
     "journal--comp--concept-equation--zh": {
       "hash": "1dllbgg",
@@ -5927,9 +5952,9 @@
       "color": "174yzgs"
     },
     "journal--comp--matrix--zh": {
-      "hash": "qawuqd",
-      "geometry": "wjz2pd",
-      "color": "2wwoaq"
+      "hash": "91m62d",
+      "geometry": "nseq95",
+      "color": "3rglpx"
     },
     "journal--comp--numbered-cards--zh": {
       "hash": "15dgc4j",
@@ -6147,9 +6172,9 @@
       "color": "xy1m"
     },
     "lecture--face--comparison--two-column": {
-      "hash": "fmc5by",
-      "geometry": "17ixng2",
-      "color": "1msxhma"
+      "hash": "1jp7k3s",
+      "geometry": "8ob6yh",
+      "color": "cdbolw"
     },
     "lecture--face--process--rail-numbered": {
       "hash": "1x35f3",
@@ -6162,18 +6187,18 @@
       "color": "1fs0iw"
     },
     "lecture--face--photo--image-annotate": {
-      "hash": "16j8ss7",
-      "geometry": "1d0fp43",
-      "color": "g2644h"
+      "hash": "14hvyuo",
+      "geometry": "nnug15",
+      "color": "lju1e5"
     },
     "lecture--face--statement--statement": {
-      "hash": "169byfu",
-      "geometry": "1xir3s9",
+      "hash": "205mer",
+      "geometry": "eky1s8",
       "color": "utnzpk"
     },
     "lecture--face--fact--stat-hero": {
-      "hash": "16evqst",
-      "geometry": "7rgfg2",
+      "hash": "18ujsqs",
+      "geometry": "1od240r",
       "color": "1s2v2lp"
     },
     "lecture--face--evidence--one-evidence": {
@@ -6292,9 +6317,9 @@
       "color": "1ohghg4"
     },
     "lecture--comp--comparison--zh": {
-      "hash": "1rpu417",
-      "geometry": "14lzn84",
-      "color": "npitlr"
+      "hash": "1jqvkd6",
+      "geometry": "1byhn3u",
+      "color": "1mepa7r"
     },
     "lecture--comp--concept-equation--zh": {
       "hash": "1vb2vqn",
@@ -6417,9 +6442,9 @@
       "color": "11xo200"
     },
     "lecture--comp--matrix--zh": {
-      "hash": "anak7m",
-      "geometry": "1jigqy9",
-      "color": "14u3xl2"
+      "hash": "1g31esn",
+      "geometry": "1ac8tv1",
+      "color": "1w721hk"
     },
     "lecture--comp--numbered-cards--zh": {
       "hash": "o1m3n4",
@@ -6637,9 +6662,9 @@
       "color": "18t2ljs"
     },
     "ledger--face--comparison--two-column": {
-      "hash": "myza3e",
-      "geometry": "lggcaq",
-      "color": "bxhts1"
+      "hash": "1f240th",
+      "geometry": "mwlgza",
+      "color": "6on16f"
     },
     "ledger--face--process--rail-numbered": {
       "hash": "1tdorru",
@@ -6652,18 +6677,18 @@
       "color": "xuq8tj"
     },
     "ledger--face--statement--statement": {
-      "hash": "1uydrv3",
-      "geometry": "19gvjq8",
+      "hash": "1fgquml",
+      "geometry": "1bc7cie",
       "color": "w0pb58"
     },
     "ledger--face--quote--pull-quote": {
-      "hash": "8h7715",
-      "geometry": "1g17ykz",
+      "hash": "3dd773",
+      "geometry": "eu5u21",
       "color": "55i3sj"
     },
     "ledger--face--fact--stat-hero": {
-      "hash": "1flbpha",
-      "geometry": "15ipl1f",
+      "hash": "18n0e6c",
+      "geometry": "1ga8a61",
       "color": "tt15fc"
     },
     "ledger--face--hierarchy--asymmetric-triptych": {
@@ -6777,9 +6802,9 @@
       "color": "k9sjut"
     },
     "ledger--comp--comparison--zh": {
-      "hash": "vizzx0",
-      "geometry": "mqgf3x",
-      "color": "1w4qyb2"
+      "hash": "1ko7chj",
+      "geometry": "qnwvqp",
+      "color": "jofkpq"
     },
     "ledger--comp--concept-equation--zh": {
       "hash": "10onh6f",
@@ -6902,9 +6927,9 @@
       "color": "o7a3v9"
     },
     "ledger--comp--matrix--zh": {
-      "hash": "14x71o5",
-      "geometry": "1pfjv0s",
-      "color": "uzn8pl"
+      "hash": "t4yjoq",
+      "geometry": "1jfi99e",
+      "color": "rry22n"
     },
     "ledger--comp--numbered-cards--zh": {
       "hash": "ofhj75",
@@ -7122,9 +7147,9 @@
       "color": "h0irjh"
     },
     "luxe--face--comparison--two-column": {
-      "hash": "lpj8jf",
-      "geometry": "1y3ngc1",
-      "color": "15g5mv9"
+      "hash": "tcf0gd",
+      "geometry": "u2ph1h",
+      "color": "18duqii"
     },
     "luxe--face--process--rail-numbered": {
       "hash": "6kt9yq",
@@ -7137,23 +7162,23 @@
       "color": "1wteois"
     },
     "luxe--face--photo--image-split": {
-      "hash": "1ub0tk2",
-      "geometry": "o6sieu",
-      "color": "u275mk"
+      "hash": "1e7bdkk",
+      "geometry": "14kuy8c",
+      "color": "10ptlad"
     },
     "luxe--face--statement--statement": {
-      "hash": "1uhhwl3",
-      "geometry": "34c3lw",
+      "hash": "1ce6oql",
+      "geometry": "zxd3nu",
       "color": "1hltj84"
     },
     "luxe--face--quote--pull-quote": {
-      "hash": "17mxe9m",
-      "geometry": "b92f71",
+      "hash": "y2wxmc",
+      "geometry": "1hpo6f",
       "color": "wd97a5"
     },
     "luxe--face--fact--stat-hero": {
-      "hash": "1yhvihx",
-      "geometry": "1g7ya6c",
+      "hash": "12x7ni7",
+      "geometry": "si1bt6",
       "color": "oxcyfd"
     },
     "luxe--face--hierarchy--asymmetric-triptych": {
@@ -7267,9 +7292,9 @@
       "color": "trzy5x"
     },
     "luxe--comp--comparison--zh": {
-      "hash": "tyv7tk",
-      "geometry": "112tq07",
-      "color": "1lr1ul0"
+      "hash": "3j3obx",
+      "geometry": "kvyj6m",
+      "color": "ka82q5"
     },
     "luxe--comp--concept-equation--zh": {
       "hash": "792dqn",
@@ -7392,9 +7417,9 @@
       "color": "1vjc5a8"
     },
     "luxe--comp--matrix--zh": {
-      "hash": "i4b48f",
-      "geometry": "pfobdg",
-      "color": "14pv55r"
+      "hash": "4ixahs",
+      "geometry": "k0rhyp",
+      "color": "qv6s9k"
     },
     "luxe--comp--numbered-cards--zh": {
       "hash": "v04fut",
@@ -7612,9 +7637,9 @@
       "color": "1bk2pp4"
     },
     "memo--face--comparison--two-column": {
-      "hash": "1ju6hwk",
-      "geometry": "16dp032",
-      "color": "vk52tl"
+      "hash": "15et4x",
+      "geometry": "1zbzhz",
+      "color": "1brhqx4"
     },
     "memo--face--process--rail-numbered": {
       "hash": "115tqns",
@@ -7627,18 +7652,18 @@
       "color": "jiwdx4"
     },
     "memo--face--statement--statement": {
-      "hash": "1y2vo9d",
-      "geometry": "1hq631c",
+      "hash": "yfszob",
+      "geometry": "1crd9oy",
       "color": "1l78r13"
     },
     "memo--face--quote--pull-quote": {
-      "hash": "1owbfax",
-      "geometry": "77m3p6",
+      "hash": "1mr66hz",
+      "geometry": "1c6na80",
       "color": "1pitpvc"
     },
     "memo--face--fact--stat-hero": {
-      "hash": "dm72l9",
-      "geometry": "5s6kyg",
+      "hash": "17ik6nf",
+      "geometry": "18myz2q",
       "color": "fuxlip"
     },
     "memo--face--hierarchy--asymmetric-triptych": {
@@ -7752,9 +7777,9 @@
       "color": "e4clg7"
     },
     "memo--comp--comparison--zh": {
-      "hash": "18vfvjw",
-      "geometry": "11k7ixd",
-      "color": "fe7fl8"
+      "hash": "30xxeq",
+      "geometry": "yxm3ib",
+      "color": "15gkl2r"
     },
     "memo--comp--concept-equation--zh": {
       "hash": "1yfwmfd",
@@ -7877,9 +7902,9 @@
       "color": "9ri2ae"
     },
     "memo--comp--matrix--zh": {
-      "hash": "roxlzv",
-      "geometry": "1rmairu",
-      "color": "14h8687"
+      "hash": "1uitavz",
+      "geometry": "mnwqos",
+      "color": "1l1x9um"
     },
     "memo--comp--numbered-cards--zh": {
       "hash": "1hhfoky",
@@ -8097,9 +8122,9 @@
       "color": "1efdik9"
     },
     "museum--face--comparison--two-column": {
-      "hash": "tdpgk5",
-      "geometry": "1toxomt",
-      "color": "1fe766m"
+      "hash": "1mkqxt7",
+      "geometry": "1ysmjdv",
+      "color": "1elkl8p"
     },
     "museum--face--process--rail-numbered": {
       "hash": "s73rwe",
@@ -8112,18 +8137,18 @@
       "color": "ss3puj"
     },
     "museum--face--photo--image-split": {
-      "hash": "15zr4mi",
-      "geometry": "zusl6n",
-      "color": "prk2h5"
+      "hash": "qkqpe2",
+      "geometry": "191vzf5",
+      "color": "1mn8xew"
     },
     "museum--face--statement--statement": {
-      "hash": "3dj9ga",
-      "geometry": "1fdlp10",
+      "hash": "q4y728",
+      "geometry": "l7er4q",
       "color": "1d1uwt1"
     },
     "museum--face--fact--stat-hero": {
-      "hash": "1iqridd",
-      "geometry": "jlm61g",
+      "hash": "6y5u39",
+      "geometry": "8cluuy",
       "color": "gv2uu1"
     },
     "museum--face--evidence--one-evidence": {
@@ -8242,9 +8267,9 @@
       "color": "73b411"
     },
     "museum--comp--comparison--zh": {
-      "hash": "4rwhyk",
-      "geometry": "1t6w5b9",
-      "color": "afho8p"
+      "hash": "15bbuoo",
+      "geometry": "9v1vlb",
+      "color": "1e4neg"
     },
     "museum--comp--concept-equation--zh": {
       "hash": "kwg129",
@@ -8367,9 +8392,9 @@
       "color": "1s4w37z"
     },
     "museum--comp--matrix--zh": {
-      "hash": "1sugie7",
-      "geometry": "1u8zxfi",
-      "color": "nam4k2"
+      "hash": "3msy85",
+      "geometry": "avi6w",
+      "color": "gs9419"
     },
     "museum--comp--numbered-cards--zh": {
       "hash": "1s3c1go",
@@ -8587,9 +8612,9 @@
       "color": "h68uw5"
     },
     "playbill--face--comparison--two-column": {
-      "hash": "1xc1q9w",
-      "geometry": "jm6t0k",
-      "color": "j7j02d"
+      "hash": "5izsz2",
+      "geometry": "2xdb5k",
+      "color": "zvf5iu"
     },
     "playbill--face--process--rail-numbered": {
       "hash": "b7x2sp",
@@ -8602,18 +8627,18 @@
       "color": "j4ufbk"
     },
     "playbill--face--photo--image-top": {
-      "hash": "1eicon1",
-      "geometry": "14wrbjk",
-      "color": "1bc4euu"
+      "hash": "p90ghk",
+      "geometry": "yketb",
+      "color": "pwtrkb"
     },
     "playbill--face--statement--mono-bleed": {
-      "hash": "6yt253",
-      "geometry": "19ikm67",
-      "color": "10n0ec0"
+      "hash": "15dwwi4",
+      "geometry": "1viiedk",
+      "color": "158nrpg"
     },
     "playbill--face--fact--stat-hero": {
-      "hash": "141jlg1",
-      "geometry": "pbg4i2",
+      "hash": "1vgpeji",
+      "geometry": "1vr80o1",
       "color": "gpa4dn"
     },
     "playbill--face--hierarchy--asymmetric-triptych": {
@@ -8727,9 +8752,9 @@
       "color": "ci2kd8"
     },
     "playbill--comp--comparison--zh": {
-      "hash": "18s7e8w",
-      "geometry": "ysbn54",
-      "color": "y9g8u9"
+      "hash": "1ufs174",
+      "geometry": "1j3h2o",
+      "color": "5e058a"
     },
     "playbill--comp--concept-equation--zh": {
       "hash": "6i0b36",
@@ -8852,9 +8877,9 @@
       "color": "9nb9ug"
     },
     "playbill--comp--matrix--zh": {
-      "hash": "19rummu",
-      "geometry": "b917c8",
-      "color": "nnp9i6"
+      "hash": "5zwdu4",
+      "geometry": "vqmru2",
+      "color": "ngmn3n"
     },
     "playbill--comp--numbered-cards--zh": {
       "hash": "ghlxf1",
@@ -9072,9 +9097,9 @@
       "color": "55b5gs"
     },
     "rally--face--comparison--two-column": {
-      "hash": "1javodz",
-      "geometry": "1kasam0",
-      "color": "1blyr5o"
+      "hash": "i7046y",
+      "geometry": "b6128u",
+      "color": "1vzrh1m"
     },
     "rally--face--process--rail-numbered": {
       "hash": "l5w7hs",
@@ -9087,18 +9112,18 @@
       "color": "12qm0h6"
     },
     "rally--face--photo--image-top": {
-      "hash": "p8naw7",
-      "geometry": "1q4x4vc",
-      "color": "1rl8xh1"
+      "hash": "kf78ic",
+      "geometry": "tu4ila",
+      "color": "1lxhkbh"
     },
     "rally--face--statement--statement": {
-      "hash": "153k2xh",
-      "geometry": "98mvt7",
+      "hash": "1ldlnlr",
+      "geometry": "ejmjh1",
       "color": "14j3itj"
     },
     "rally--face--fact--stat-hero": {
-      "hash": "6skol9",
-      "geometry": "35u87c",
+      "hash": "r13j5j",
+      "geometry": "hxrzys",
       "color": "1gwahxk"
     },
     "rally--face--evidence--one-evidence": {
@@ -9217,9 +9242,9 @@
       "color": "1kfuylh"
     },
     "rally--comp--comparison--zh": {
-      "hash": "1wja6bc",
-      "geometry": "1jyder6",
-      "color": "nkwlgr"
+      "hash": "xhomqj",
+      "geometry": "18968fw",
+      "color": "vm0053"
     },
     "rally--comp--concept-equation--zh": {
       "hash": "o4evok",
@@ -9342,9 +9367,9 @@
       "color": "xk1km9"
     },
     "rally--comp--matrix--zh": {
-      "hash": "1ihn9mb",
-      "geometry": "125hdob",
-      "color": "6a21za"
+      "hash": "1iwpe5q",
+      "geometry": "c04dnh",
+      "color": "gv4geo"
     },
     "rally--comp--numbered-cards--zh": {
       "hash": "11hk8v2",
@@ -9562,9 +9587,9 @@
       "color": "rw7f4p"
     },
     "runway--face--comparison--two-column": {
-      "hash": "1o4owb4",
-      "geometry": "k4yqmw",
-      "color": "1h4yfdf"
+      "hash": "1pzxjr6",
+      "geometry": "rn07t5",
+      "color": "1ljwak3"
     },
     "runway--face--process--rail-numbered": {
       "hash": "t5i3ob",
@@ -9577,14 +9602,14 @@
       "color": "zsirux"
     },
     "runway--face--photo--show-spotlight": {
-      "hash": "4nmley",
-      "geometry": "5g6jlo",
+      "hash": "2or29g",
+      "geometry": "lwqcga",
       "color": "1eay3xj"
     },
     "runway--face--statement--show-statement": {
-      "hash": "1o59uwp",
-      "geometry": "1feen9",
-      "color": "zajequ"
+      "hash": "1t6pbw3",
+      "geometry": "ssg5aa",
+      "color": "1rgp8pc"
     },
     "runway--face--ending--show-finale": {
       "hash": "fanshk",
@@ -9697,9 +9722,9 @@
       "color": "8ow1vo"
     },
     "runway--comp--comparison--zh": {
-      "hash": "39wzyc",
-      "geometry": "15m1qu8",
-      "color": "9i6huh"
+      "hash": "f9yuv3",
+      "geometry": "1yj8it8",
+      "color": "1h48ist"
     },
     "runway--comp--concept-equation--zh": {
       "hash": "858qpc",
@@ -9822,9 +9847,9 @@
       "color": "tu4061"
     },
     "runway--comp--matrix--zh": {
-      "hash": "rqgr3s",
-      "geometry": "tnndvw",
-      "color": "13mxy1o"
+      "hash": "qsw4n",
+      "geometry": "1tvrqn0",
+      "color": "vv81p6"
     },
     "runway--comp--numbered-cards--zh": {
       "hash": "1i0fi4n",
@@ -10042,9 +10067,9 @@
       "color": "1pprjf9"
     },
     "stage--face--comparison--two-column": {
-      "hash": "101l29f",
-      "geometry": "15r08xn",
-      "color": "huaajd"
+      "hash": "1eu6hg2",
+      "geometry": "1ikktt1",
+      "color": "1gf0613"
     },
     "stage--face--process--rail-numbered": {
       "hash": "t1wbt3",
@@ -10057,23 +10082,23 @@
       "color": "1wkc30v"
     },
     "stage--face--photo--image-top": {
-      "hash": "pgkuf",
-      "geometry": "14yx81a",
-      "color": "uhkmy8"
+      "hash": "96sk4l",
+      "geometry": "5t42ud",
+      "color": "1g38uq0"
     },
     "stage--face--statement--statement": {
-      "hash": "12jt4dj",
-      "geometry": "p4im3h",
+      "hash": "12hghny",
+      "geometry": "1qeq5g4",
       "color": "297dvg"
     },
     "stage--face--quote--pull-quote": {
-      "hash": "tgjpnc",
-      "geometry": "j4mhet",
+      "hash": "1yf1hd5",
+      "geometry": "13hacrg",
       "color": "frxzc5"
     },
     "stage--face--fact--stat-hero": {
-      "hash": "vevjde",
-      "geometry": "lak3o7",
+      "hash": "1b9bc9n",
+      "geometry": "p4b2qm",
       "color": "1m22m9h"
     },
     "stage--face--hierarchy--asymmetric-triptych": {
@@ -10187,9 +10212,9 @@
       "color": "16s1raj"
     },
     "stage--comp--comparison--zh": {
-      "hash": "8u5ndu",
-      "geometry": "xxs4tx",
-      "color": "aag15e"
+      "hash": "1aw53oj",
+      "geometry": "bejx4j",
+      "color": "1obi51e"
     },
     "stage--comp--concept-equation--zh": {
       "hash": "ypir0j",
@@ -10312,9 +10337,9 @@
       "color": "1g1r3g3"
     },
     "stage--comp--matrix--zh": {
-      "hash": "uqbnp0",
-      "geometry": "902klx",
-      "color": "1yx4qrp"
+      "hash": "2479l7",
+      "geometry": "19mbscd",
+      "color": "1fgfzyj"
     },
     "stage--comp--numbered-cards--zh": {
       "hash": "112cck0",
@@ -10532,9 +10557,9 @@
       "color": "wkz5f0"
     },
     "swiss--face--comparison--two-column": {
-      "hash": "hi42pe",
-      "geometry": "1ccj7jt",
-      "color": "1o8nf4t"
+      "hash": "1x6jqwp",
+      "geometry": "3pmoq7",
+      "color": "158tcsz"
     },
     "swiss--face--process--rail-numbered": {
       "hash": "tuk6cj",
@@ -10547,18 +10572,18 @@
       "color": "6u0q9q"
     },
     "swiss--face--photo--image-top": {
-      "hash": "w5bxae",
-      "geometry": "vhrhq2",
-      "color": "9drv4w"
+      "hash": "16imcf0",
+      "geometry": "2c3t37",
+      "color": "1c0dvxc"
     },
     "swiss--face--statement--statement": {
-      "hash": "1uwm7vl",
-      "geometry": "1skojn0",
+      "hash": "1jd0758",
+      "geometry": "10odkqd",
       "color": "5cnmsl"
     },
     "swiss--face--fact--stat-hero": {
-      "hash": "1btjlpi",
-      "geometry": "zb4kvi",
+      "hash": "16uvpl5",
+      "geometry": "4bct4z",
       "color": "1ijmjwi"
     },
     "swiss--face--evidence--one-evidence": {
@@ -10677,9 +10702,9 @@
       "color": "18r8r6l"
     },
     "swiss--comp--comparison--zh": {
-      "hash": "1h5djmw",
-      "geometry": "11oem8s",
-      "color": "1mkza5n"
+      "hash": "nm2naz",
+      "geometry": "rwpx7o",
+      "color": "hzkhqt"
     },
     "swiss--comp--concept-equation--zh": {
       "hash": "xgyk2",
@@ -10802,9 +10827,9 @@
       "color": "mudk37"
     },
     "swiss--comp--matrix--zh": {
-      "hash": "1ctons0",
-      "geometry": "riy8zi",
-      "color": "1gmr8yc"
+      "hash": "vn1as1",
+      "geometry": "cnpybs",
+      "color": "1tlu538"
     },
     "swiss--comp--numbered-cards--zh": {
       "hash": "9jnlee",
@@ -11022,9 +11047,9 @@
       "color": "1kimfj5"
     },
     "terminal--face--comparison--two-column": {
-      "hash": "1wc292a",
-      "geometry": "h900lc",
-      "color": "it026y"
+      "hash": "1e47r75",
+      "geometry": "11qtgj9",
+      "color": "1fqek77"
     },
     "terminal--face--process--rail-numbered": {
       "hash": "13j895",
@@ -11037,18 +11062,18 @@
       "color": "j6l7ww"
     },
     "terminal--face--photo--image-annotate": {
-      "hash": "rie0a2",
-      "geometry": "1dki2sb",
-      "color": "1j85i1u"
+      "hash": "1fkb0un",
+      "geometry": "11iunqy",
+      "color": "12n09x7"
     },
     "terminal--face--statement--statement": {
-      "hash": "1drjr3e",
-      "geometry": "rkmx6e",
+      "hash": "1t5tqqo",
+      "geometry": "1pgezt8",
       "color": "1in7cf2"
     },
     "terminal--face--fact--stat-hero": {
-      "hash": "13ido6q",
-      "geometry": "yke7i6",
+      "hash": "1gzcqig",
+      "geometry": "4dty6c",
       "color": "1t2bq9n"
     },
     "terminal--face--evidence--one-evidence": {
@@ -11167,9 +11192,9 @@
       "color": "1sgdanq"
     },
     "terminal--comp--comparison--zh": {
-      "hash": "twghgx",
-      "geometry": "tqc1cg",
-      "color": "1ioutop"
+      "hash": "r09uum",
+      "geometry": "1yt76j9",
+      "color": "10ajqe"
     },
     "terminal--comp--concept-equation--zh": {
       "hash": "1f8k7rv",
@@ -11292,9 +11317,9 @@
       "color": "guh7dx"
     },
     "terminal--comp--matrix--zh": {
-      "hash": "8hdrc4",
-      "geometry": "1oqv3md",
-      "color": "45fshu"
+      "hash": "xbji8h",
+      "geometry": "n3h5sw",
+      "color": "o3pgnv"
     },
     "terminal--comp--numbered-cards--zh": {
       "hash": "kb7dxr",
@@ -11512,9 +11537,9 @@
       "color": "1lvstsx"
     },
     "thesis--face--comparison--two-column": {
-      "hash": "symzv7",
-      "geometry": "spqdso",
-      "color": "198u3yv"
+      "hash": "19uc088",
+      "geometry": "12lbenw",
+      "color": "rw7baz"
     },
     "thesis--face--process--rail-numbered": {
       "hash": "iiccuj",
@@ -11527,23 +11552,23 @@
       "color": "1lnoho5"
     },
     "thesis--face--photo--image-annotate": {
-      "hash": "1fa3fpm",
-      "geometry": "2etm27",
-      "color": "1h5hgsn"
+      "hash": "hb7uhy",
+      "geometry": "c47oa",
+      "color": "1ghur1n"
     },
     "thesis--face--statement--statement": {
-      "hash": "1wl8kw9",
-      "geometry": "r8rf2z",
+      "hash": "12ljqth",
+      "geometry": "1un3npr",
       "color": "mgijd3"
     },
     "thesis--face--quote--pull-quote": {
-      "hash": "1c376x9",
-      "geometry": "jdk99a",
+      "hash": "17wmtlt",
+      "geometry": "cf9424",
       "color": "14arqw6"
     },
     "thesis--face--fact--stat-hero": {
-      "hash": "b1359j",
-      "geometry": "rw5zuv",
+      "hash": "1ik3n5v",
+      "geometry": "v95bvn",
       "color": "1t52jak"
     },
     "thesis--face--evidence--one-evidence": {
@@ -11662,9 +11687,9 @@
       "color": "1gq3086"
     },
     "thesis--comp--comparison--zh": {
-      "hash": "u8j2v0",
-      "geometry": "gsnsgn",
-      "color": "1i7vvc1"
+      "hash": "vgclo7",
+      "geometry": "1yl3x55",
+      "color": "164p3bh"
     },
     "thesis--comp--concept-equation--zh": {
       "hash": "c7mllh",
@@ -11787,9 +11812,9 @@
       "color": "a44i7t"
     },
     "thesis--comp--matrix--zh": {
-      "hash": "1fmnewx",
-      "geometry": "2d6oi0",
-      "color": "1bmb1vu"
+      "hash": "1teq80i",
+      "geometry": "qm6nd0",
+      "color": "15x705k"
     },
     "thesis--comp--numbered-cards--zh": {
       "hash": "1witucd",
@@ -12027,9 +12052,9 @@
       "color": "11coucb"
     },
     "vermilion--face--comparison--two-column": {
-      "hash": "1f181q1",
-      "geometry": "dytt0x",
-      "color": "1igqf5i"
+      "hash": "1slwhwg",
+      "geometry": "g2dedp",
+      "color": "lt1cxa"
     },
     "vermilion--face--process--rail-numbered": {
       "hash": "vusvfw",
@@ -12042,13 +12067,13 @@
       "color": "jbp2x0"
     },
     "vermilion--face--statement--statement": {
-      "hash": "10d3y3h",
-      "geometry": "ridzzv",
+      "hash": "zczmsb",
+      "geometry": "opll9t",
       "color": "1y5u8aj"
     },
     "vermilion--face--fact--stat-hero": {
-      "hash": "1tm5mtf",
-      "geometry": "a2ndiu",
+      "hash": "ux52lp",
+      "geometry": "1s01yzs",
       "color": "155qe12"
     },
     "vermilion--face--evidence--one-evidence": {
@@ -12167,9 +12192,9 @@
       "color": "m9y37b"
     },
     "vermilion--comp--comparison--zh": {
-      "hash": "zprj9n",
-      "geometry": "e1yiy6",
-      "color": "1btfavm"
+      "hash": "1dhgw2x",
+      "geometry": "1mohoh9",
+      "color": "uhbi7m"
     },
     "vermilion--comp--concept-equation--zh": {
       "hash": "1jezft6",
@@ -12292,9 +12317,9 @@
       "color": "5l8j2b"
     },
     "vermilion--comp--matrix--zh": {
-      "hash": "domysy",
-      "geometry": "j8ywnl",
-      "color": "9aeezt"
+      "hash": "6tpcxi",
+      "geometry": "w2omde",
+      "color": "xbmrgf"
     },
     "vermilion--comp--numbered-cards--zh": {
       "hash": "1p7bl8r",
@@ -12532,9 +12557,9 @@
       "color": "zqwntn"
     },
     "unserved--face--image-bottom": {
-      "hash": "1vl3me6",
-      "geometry": "16zhc2r",
-      "color": "702iie"
+      "hash": "5l06am",
+      "geometry": "1p2t97w",
+      "color": "1dclhym"
     },
     "unserved--face--left-anchor": {
       "hash": "14ycqvv",

@@ -80,7 +80,7 @@ pnpm gallery --bbox
 
 The gallery renders the review matrix through the production validation and SVG path. It has no alternate renderer. Output goes to `.gallery/` by default and includes SVG pages, `manifest.json`, and a self-contained `index.html`.
 
-The matrix covers themes, internal faces, the shared compositions (one page each in the 构图 band, `COMPOSITION_PAGES`), components, full-load cases, and heading constructions across language tracks. `scripts/gallery.test.mts` exercises the matrix during `pnpm check`, including inventory coverage. A new component or theme must not disappear from review merely because its builder was forgotten.
+The matrix covers themes, internal faces, the shared compositions (at least one page each in the 构图 band, `COMPOSITION_PAGES`), components, full-load cases, and heading constructions across language tracks. `scripts/gallery.test.mts` exercises the matrix during `pnpm check`, including inventory coverage. A new component or theme must not disappear from review merely because its builder was forgotten.
 
 `--bbox` mounts SVG in a real browser and compares `getBBox()` against declared boxes. It is optional because it needs Playwright and depends on installed fonts. Findings go to `.gallery/bbox.json` and make the command fail.
 
