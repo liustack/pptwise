@@ -710,10 +710,14 @@ describe("chart component — legend (n>=2 series)", () => {
   // y_title/legend) — chart-svg.tsx's own bar/line/etc. text elements never
   // do (see chart-svg.tsx's text nodes) — so for an axes-free component,
   // every `text[font-family]` is unambiguously legend content.
+  // The legend's names sit on the header row's baseline. Value labels name
+  // their family too now (rsvg set a family-less label in a serif), so the
+  // family alone no longer tells a legend name from a plot label.
   function legendTexts(container: HTMLElement): Element[] {
     return Array.from(container.querySelectorAll("text")).filter(
       (t) =>
         t.getAttribute("font-family") === ctx.fonts.body &&
+        t.getAttribute("y") === "16" &&
         !t.hasAttribute("data-axis-tick") &&
         !t.hasAttribute("data-axis-title"),
     )

@@ -2269,3 +2269,30 @@ describe("renderBarHorizontal: a category only some series reach", () => {
     offsets.forEach((offset) => expect(offset).toBeCloseTo(offsets[0]!, 6))
   })
 })
+
+describe("renderDumbbell — the end value of a row that fell", () => {
+  // bulletin deck review (2026-10): on a row whose end sat just left of its
+  // start, the end value set after the end dot ran over the start dot.
+  const series: ChartSeries[] = [
+    { name: "2025", data: [{ x: "比亚迪", y: 27.8 }, { x: "零跑", y: 5.2 }] },
+    { name: "2026", data: [{ x: "比亚迪", y: 26.9 }, { x: "零跑", y: 9.6 }] },
+  ]
+  const draw = () => svg(renderDumbbell(series, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT)).container
+  const endDots = (container: HTMLElement) => Array.from(container.querySelectorAll("circle")).filter((_, i) => i % 2 === 1)
+
+  it("sets the value before the end dot, clear of the start dot", () => {
+    const container = draw()
+    const [fell] = endDots(container)
+    const label = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "26.9")!
+    expect(label.getAttribute("text-anchor")).toBe("end")
+    expect(Number(label.getAttribute("x"))).toBeLessThan(Number(fell!.getAttribute("cx")))
+  })
+
+  it("keeps the value after the end dot on a row that rose", () => {
+    const container = draw()
+    const [, rose] = endDots(container)
+    const label = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "9.6")!
+    expect(label.getAttribute("text-anchor")).toBeNull()
+    expect(Number(label.getAttribute("x"))).toBeGreaterThan(Number(rose!.getAttribute("cx")))
+  })
+})

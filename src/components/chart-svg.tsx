@@ -1164,6 +1164,7 @@ export function renderBar(
                 textAnchor="middle"
                 fontSize={VALUE_FONT_SIZE}
                 fontWeight={VALUE_FONT_WEIGHT}
+                fontFamily={fontFamily}
                 fill={textColor}
                 dominantBaseline="alphabetic"
               >
@@ -1689,6 +1690,7 @@ function radialSliceLabels(
   h: number,
   mutedColor: string | undefined,
   labelFill: string | undefined,
+  fontFamily?: string,
 ): ReactElement {
   const pitch = labelLinePitch(DIRECT_LABEL_FONT_SIZE)
   const bounds = { top: y0, bottom: y0 + h }
@@ -1755,6 +1757,7 @@ function radialSliceLabels(
               textAnchor={slice.right ? "start" : "end"}
               fontSize={slice.fitted.fontSize}
               fontWeight={DIRECT_LABEL_FONT_WEIGHT}
+              fontFamily={fontFamily}
               fill={labelFill}
               dominantBaseline="alphabetic"
             >
@@ -1818,7 +1821,7 @@ export function renderPie(
           />
         )
       })}
-      {radialSliceLabels(slices, y0, h, mutedColor, labelFill)}
+      {radialSliceLabels(slices, y0, h, mutedColor, labelFill, fontFamily)}
     </>
   )
 }
@@ -1923,6 +1926,7 @@ export function renderFunnel(
                 y={bandCy + DIRECT_LABEL_FONT_SIZE * DIRECT_LABEL_CENTER_TO_BASELINE}
                 fontSize={fitted.fontSize}
                 fontWeight={DIRECT_LABEL_FONT_WEIGHT}
+                fontFamily={fontFamily}
                 fill={labelFill}
                 dominantBaseline="alphabetic"
               >
@@ -2074,6 +2078,8 @@ export function renderDumbbell(
   _showGrid?: boolean,
   _component?: ChartInput,
   bgHex?: string,
+  _axisColor?: string,
+  fontFamily?: string,
 ): ReactElement {
   // Value labels sit on the page, not on a mark, so the accent has to clear
   // a contrast floor here even though the endpoint dots painted in the same
@@ -2134,6 +2140,14 @@ export function renderDumbbell(
         })
         const x1 = vx(from.y)
         const x2 = vx(to.y)
+        // The end value sits after the end dot. A row that fell has its end
+        // dot left of the start dot, so a label after it would run over the
+        // start dot and its value: it sits before the end dot when the plot
+        // has room there, and after the start dot when it does not.
+        const toW = measureTextUnits(toValueLabel.text, { bold: true, fontFamily }) * toValueLabel.fontSize
+        const fell = x2 < x1
+        const before = fell && x2 - DUMBBELL_TO_LABEL_INSET - toW >= plotX
+        const toX = !fell ? x2 + DUMBBELL_TO_LABEL_INSET : before ? x2 - DUMBBELL_TO_LABEL_INSET : x1 + DUMBBELL_TO_LABEL_INSET
         return (
           <g key={i}>
             <text
@@ -2144,6 +2158,7 @@ export function renderDumbbell(
               fontSize={label.fontSize}
               fontWeight="600"
               fill={textColor}
+              fontFamily={fontFamily}
               dominantBaseline="alphabetic"
             >
               {label.text}
@@ -2158,17 +2173,20 @@ export function renderDumbbell(
               textAnchor="middle"
               fontSize={fromValueLabel.fontSize}
               fill={mutedColor}
+              fontFamily={fontFamily}
               dominantBaseline="alphabetic"
             >
               {fromValueLabel.text}
             </text>
             <text
               data-truncated={toValueLabel.clipped ? "1" : undefined}
-              x={x2 + DUMBBELL_TO_LABEL_INSET}
+              x={toX}
               y={cy + 4}
+              textAnchor={before ? "end" : undefined}
               fontSize={toValueLabel.fontSize}
               fontWeight="bold"
               fill={accentInk}
+              fontFamily={fontFamily}
               dominantBaseline="alphabetic"
             >
               {toValueLabel.text}
@@ -2458,6 +2476,7 @@ export function renderBarHorizontal(
                 y={placed.y}
                 fontSize={VALUE_FONT_SIZE}
                 fontWeight={VALUE_FONT_WEIGHT}
+                fontFamily={fontFamily}
                 fill={textColor}
                 dominantBaseline="alphabetic"
               >
@@ -2619,7 +2638,7 @@ export function renderDonut(
           fill={palette[slice.key % palette.length]}
         />
       ))}
-      {radialSliceLabels(slices, y0, h, mutedColor, labelFill)}
+      {radialSliceLabels(slices, y0, h, mutedColor, labelFill, fontFamily)}
       {showCenter && (
         <>
           <text
