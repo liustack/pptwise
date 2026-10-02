@@ -7,7 +7,10 @@ import { headingEmphasisPaint, renderEmphasisText } from "../../render/emphasis"
 import { accessibleInk } from "../../render/ink"
 import { SvgContent } from "../../render/svg-content"
 import { bodySlotDropsContent } from "../../render/step-aside"
-import { railFigures } from "./rail-figures"
+import { barsComposition } from "./bars"
+import { bridgeComposition } from "./bridge"
+import { columnsComposition } from "./columns"
+import { railFigures, railFiguresNotice } from "./rail-figures"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 
@@ -236,7 +239,23 @@ function swatchIsLine(chart: Chart, series: Series): boolean {
   return chart.chart_type === "combo" && series.plot === "line"
 }
 
-export const railComposition: Composition = ({ components, ctx, rect }) => {
+export const railComposition: Composition = ({ components, ctx, rect, setting }) => {
+  // The notice setting sets only the author's figures, beside a hand-set
+  // plot when one takes the chart. A chart alone goes to the plots.
+  if (setting === "notice") {
+    return railFiguresNotice({
+      components,
+      ctx,
+      rect,
+      plot: (component, band) => {
+        for (const draw of [columnsComposition, barsComposition, bridgeComposition]) {
+          const drawn = draw({ components: [component], ctx, rect: band, setting })
+          if (drawn) return drawn
+        }
+        return null
+      },
+    })
+  }
   const authored = railFigures({ components, ctx, rect })
   if (authored) return authored
   const shape = railShape(components)

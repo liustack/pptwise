@@ -319,11 +319,22 @@ function checkThemeMenuFaces(ir: PptxIR, theme: ThemeDefinition): ValidationIssu
  * full-body type(s) so the message is actionable without needing to open
  * the slide's own JSON.
  */
-function checkFullBodyExclusivity(ir: PptxIR): ValidationIssue[] {
+function checkFullBodyExclusivity(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
   const errors: ValidationIssue[] = []
   ir.slides.forEach((slide, i) => {
     const fullBodyTypes = slide.components.filter((c) => FULL_BODY_TYPES.has(c.type))
     if (fullBodyTypes.length === 0 || slide.components.length === 1) return
+    // A face that sets a full-body component beside companions of declared
+    // types takes exactly that page: one full-body component, the rest
+    // companions.
+    const companions = slide.type === "content" ? componentFace(ir, slide, theme)?.fullBodyCompanions : undefined
+    if (
+      companions !== undefined &&
+      fullBodyTypes.length === 1 &&
+      slide.components.every((c) => FULL_BODY_TYPES.has(c.type) || companions.includes(c.type))
+    ) {
+      return
+    }
     const names = [...new Set(fullBodyTypes.map((c) => c.type))].join(", ")
     errors.push({
       path: `slides.${i}.components`,
@@ -838,7 +849,7 @@ export function validateIr(input: unknown, opts?: { theme?: ThemeDefinition }): 
   if (menuFaceErrors.length > 0) return withNormalized({ ok: false, errors: menuFaceErrors })
   const contentSlotErrors = checkContentPageSlots(r.data, theme)
   if (contentSlotErrors.length > 0) return withNormalized({ ok: false, errors: contentSlotErrors })
-  const fullBodyErrors = checkFullBodyExclusivity(r.data)
+  const fullBodyErrors = checkFullBodyExclusivity(r.data, theme)
   if (fullBodyErrors.length > 0) return withNormalized({ ok: false, errors: fullBodyErrors })
   const boundaryPageErrors = checkBoundaryPageContent(r.data, theme)
   if (boundaryPageErrors.length > 0) return withNormalized({ ok: false, errors: boundaryPageErrors })

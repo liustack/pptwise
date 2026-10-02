@@ -1,4 +1,7 @@
 import type React from "react"
+import { barsComposition } from "./bars"
+import { bridgeComposition } from "./bridge"
+import { columnsComposition } from "./columns"
 import { figuresComposition } from "./figures"
 import { pairsComposition } from "./pairs"
 import { railComposition } from "./rail"
@@ -29,6 +32,9 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   figures: figuresComposition,
   track: trackComposition,
   pairs: pairsComposition,
+  columns: columnsComposition,
+  bars: barsComposition,
+  bridge: bridgeComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]

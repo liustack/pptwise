@@ -1017,6 +1017,71 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
     ],
     footnote: lex.sources[0]!.label,
   }),
+  // Upright bars, the second series marked, its last value a forecast, and
+  // the change between the two series in the last period bracketed.
+  columns: (lex) => {
+    const periods = lex.periods.slice(0, 3)
+    const second = lex.labels[9]!
+    return {
+      heading: lex.headings[0]!,
+      components: [
+        {
+          type: "chart",
+          chart_type: "bar",
+          axes: { y_unit: lex.metrics[0]!.unit },
+          changes: [{ from: lex.labels[8]!, to: second, at: periods[2]! }],
+          series: [
+            { name: lex.labels[8]!, data: periods.map((x, i) => ({ x, y: 42 + i * 11 })) },
+            {
+              name: second,
+              emphasis: true,
+              data: periods.map((x, i) => ({ x, y: 30 + i * 6, ...(i === 2 ? { status: "forecast" as const } : {}) })),
+            },
+          ],
+        },
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
+  // Bars across, two series per row, the change at the first row stated.
+  bars: (lex) => {
+    const rows = lex.labels.slice(8, 12)
+    return {
+      heading: lex.headings[2]!,
+      components: [
+        {
+          type: "chart",
+          chart_type: "bar",
+          direction: "horizontal",
+          axes: { y_title: lex.metrics[1]!.label, y_unit: "%" },
+          changes: [{ from: lex.periods[0]!, to: lex.periods[1]!, at: rows[0]! }],
+          series: [
+            { name: lex.periods[0]!, data: rows.map((x, i) => ({ x, y: 27.8 - i * 6.1 })) },
+            { name: lex.periods[1]!, emphasis: true, data: rows.map((x, i) => ({ x, y: 23.3 - i * 5.2 })) },
+          ],
+        },
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
+  // A bridge whose levels sit far above zero, so its axis starts at a floor,
+  // one of its steps marked.
+  bridge: (lex) => ({
+    heading: lex.headings[1]!,
+    components: [
+      {
+        type: "waterfall",
+        unit: lex.metrics[0]!.unit,
+        items: [
+          { label: lex.periods[0]!, value: 4172, kind: "total" },
+          { label: lex.phrases[0]!, value: -132 },
+          { label: lex.phrases[2]!, value: -687, emphasis: true },
+          { label: lex.periods[1]!, value: 3353, kind: "total" },
+        ],
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
   // The combo chart with its rate line marked, the series the column then
   // sets over the emphasis stroke.
   rail: (lex) => {

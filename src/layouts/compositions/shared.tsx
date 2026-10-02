@@ -35,7 +35,18 @@ import { blendOver, readableOn } from "../../render/ink"
  * `design/compositions/<id>/`.
  */
 
-export type CompositionId = "rows" | "table" | "waves" | "tree" | "rail" | "figures" | "track" | "pairs"
+export type CompositionId =
+  | "rows"
+  | "table"
+  | "waves"
+  | "tree"
+  | "rail"
+  | "figures"
+  | "track"
+  | "pairs"
+  | "columns"
+  | "bars"
+  | "bridge"
 
 /**
  * The type a composition sets its page in.

@@ -328,7 +328,11 @@ export const COMPOSITION_PAGES: readonly {
   // draws the shapes its own board added.
   { theme: "bulletin", kind: "points", composition: "rows", variant: "answer" },
   { theme: "bulletin", kind: "comparison", composition: "table" },
+  { theme: "bulletin", kind: "data", composition: "rail", variant: "figures" },
   { theme: "bulletin", kind: "photo", composition: "pairs" },
+  { theme: "bulletin", kind: "data", composition: "columns" },
+  { theme: "bulletin", kind: "data", composition: "bars" },
+  { theme: "bulletin", kind: "data", composition: "bridge" },
 ]
 
 export function buildMatrix(

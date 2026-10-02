@@ -7,11 +7,12 @@ import type { ContentRect } from "../../render/layout"
 import { SvgContent } from "../../render/svg-content"
 import { bodySlotDropsContent } from "../../render/step-aside"
 import { closingCallout } from "./closing"
-import { fitFigure, fitQuote, paintFigure, plainFigure, type FittedFigure, type KpiItem } from "./figure"
+import { fitFigure, fitQuote, markedFigure, paintBoldFigure, paintFigure, plainFigure, type FittedFigure, type KpiItem } from "./figure"
 import { blockTag, compositionTag, ruleInk } from "./shared"
-import { fitFixed, paintLines } from "./type"
+import { centredBaseline, fitFixed, paintLines } from "./type"
 
 type Chart = Extract<Component, { type: "chart" }>
+type Waterfall = Extract<Component, { type: "waterfall" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 type Callout = Extract<Component, { type: "callout" }>
 type Blockquote = Extract<Component, { type: "blockquote" }>
@@ -202,6 +203,142 @@ export function railFigures({
           </g>
         )
       })}
+    </g>
+  )
+}
+
+/*
+ * The notice setting of the same page: bulletin's 2026-10 chart pages (p03,
+ * p04, p06, p09). The plot keeps the left 680px of the board's 1120px, set by
+ * one of the hand-set plots (`columns`, `bars`, `bridge`) when one takes it
+ * and by the chart or waterfall component otherwise. Right of a hairline, one
+ * to three figures in a column: a small muted label, the figure black and
+ * bold at 50px, and its note under it, with a hairline between figures. A
+ * figure the author marks (`**…**` around the value) is set in primary. No
+ * figure is marked by the composition itself.
+ *
+ * Takes: `[chart | waterfall, kpi_cards]`, where the kpi_cards holds one to
+ * three items with a value and no delta, icon or source line.
+ *
+ * Declines: anything else, a label past one line of the 380px column at
+ * 16px, a figure past one line at 50px, a note past two lines at 16px, a
+ * column taller than the band, and a plot that would drop content.
+ */
+
+/** The divider stands this far left of the band's right edge (x780 on the board). */
+const NOTICE_DIVIDER_INSET = 420
+/** The plot stops this far short of the divider. */
+const NOTICE_PLOT_GAP = 20
+const NOTICE_COLUMN_GAP = 40
+const NOTICE_MAX_FIGURES = 3
+/** The first block starts 18px into the band (y214 on the board). */
+const NOTICE_FIRST = 18
+/** Two figures stand 170px apart, three 136px. */
+const NOTICE_PITCH = [170, 170, 136] as const
+/** The divider stops this far short of the last block's pitch. */
+const NOTICE_DIVIDER_SHORT = 24
+const NOTICE_RULE_ABOVE = 16
+const NOTICE_LABEL = { size: 16, top: 0, box: 22 }
+const NOTICE_FIGURE = { size: 50, top: 28, box: 60 }
+const NOTICE_NOTE = { size: 16, top: 92, box: 22, maxLines: 2 }
+
+function noticeShape(components: readonly Component[]): { plot: Chart | Waterfall; kpis: KpiCards } | null {
+  const [plot, kpis, ...rest] = components
+  if (rest.length > 0 || kpis?.type !== "kpi_cards") return null
+  if (plot?.type !== "chart" && plot?.type !== "waterfall") return null
+  if (kpis.items.length < 1 || kpis.items.length > NOTICE_MAX_FIGURES || !kpis.items.every(plainFigure)) return null
+  return { plot, kpis }
+}
+
+/** The page drawn as a plot with the author's figures in a column beside it, in the notice setting, or `null`. */
+export function railFiguresNotice({
+  components,
+  ctx,
+  rect,
+  plot: plotFor,
+}: {
+  components: readonly Component[]
+  ctx: ComponentCtx
+  rect: ContentRect
+  /** Draws the plot by hand in its band, or returns `null`. Passed in so this file does not import the plots it sits beside. */
+  plot: (component: Chart | Waterfall, band: ContentRect) => React.ReactElement | null
+}): React.ReactElement | null {
+  const shape = noticeShape(components)
+  if (!shape) return null
+  const right = rect.x + rect.w
+  const dividerX = right - NOTICE_DIVIDER_INSET
+  const columnX = dividerX + NOTICE_COLUMN_GAP
+  const columnW = right - columnX
+  const plotRect = { x: rect.x, y: rect.y, w: dividerX - NOTICE_PLOT_GAP - rect.x, h: rect.h }
+  if (plotRect.w < MIN_CHART_W) return null
+
+  const { colors, fonts } = ctx
+  const body = fonts.body
+  const count = shape.kpis.items.length
+  const pitch = NOTICE_PITCH[count - 1]!
+  const blocks = []
+  for (const item of shape.kpis.items) {
+    const label = fitFixed(item.label, { width: columnW, size: NOTICE_LABEL.size, lineHeight: NOTICE_LABEL.box, maxLines: 1, fontFamily: body, bold: false })
+    const figure = fitFigure(item, NOTICE_FIGURE.size, columnW, fonts.heading, false, true)
+    const note = item.note?.trim()
+      ? fitFixed(item.note, { width: columnW, size: NOTICE_NOTE.size, lineHeight: NOTICE_NOTE.box, maxLines: NOTICE_NOTE.maxLines, fontFamily: body, bold: false })
+      : null
+    if (label === null || figure === null || (item.note?.trim() && note === null)) return null
+    const marked = markedFigure(item)
+    blocks.push({ item, label, figure, note, marked })
+  }
+  const lastTop = rect.y + NOTICE_FIRST + (count - 1) * pitch
+  const last = blocks[count - 1]!
+  const lastFoot = last.note
+    ? lastTop + NOTICE_NOTE.top + last.note.lines.length * NOTICE_NOTE.box
+    : lastTop + NOTICE_FIGURE.top + NOTICE_FIGURE.box
+  if (lastFoot > rect.y + rect.h) return null
+
+  const drawn = plotFor(shape.plot, plotRect)
+  if (!drawn && bodySlotDropsContent([shape.plot], plotRect, ctx)) return null
+
+  const bg = ctx.defaultBg ?? colors.bg
+  const rule = ruleInk(ctx)
+  const labelInk = accessibleInk(colors.muted, bg, NOTICE_LABEL.size)
+  const noteInk = accessibleInk(colors.text, bg, NOTICE_NOTE.size)
+  const top0 = rect.y + NOTICE_FIRST
+  return (
+    <g {...compositionTag("rail")} data-rail-source="author">
+      {drawn ?? <SvgContent components={[shape.plot]} rect={plotRect} ctx={ctx} />}
+      <line x1={dividerX} y1={top0} x2={dividerX} y2={top0 + count * pitch - NOTICE_DIVIDER_SHORT} stroke={rule} strokeWidth={1} />
+      <g {...blockTag(ctx, shape.kpis)}>
+        {blocks.map((block, i) => {
+          const top = top0 + i * pitch
+          const figureInk = accessibleInk(block.marked ? colors.primary : colors.text, bg, NOTICE_FIGURE.size)
+          return (
+            <g key={i}>
+              {i > 0 && <line x1={columnX} y1={top - NOTICE_RULE_ABOVE} x2={right} y2={top - NOTICE_RULE_ABOVE} stroke={rule} strokeWidth={1} />}
+              {paintLines(block.label, {
+                ctx,
+                x: columnX,
+                y: centredBaseline(top + NOTICE_LABEL.top, NOTICE_LABEL.box, NOTICE_LABEL.size),
+                fill: labelInk,
+                fontFamily: body,
+                fontWeight: "400",
+              })}
+              {paintBoldFigure(block.figure, {
+                x: columnX,
+                y: centredBaseline(top + NOTICE_FIGURE.top, NOTICE_FIGURE.box, NOTICE_FIGURE.size),
+                ink: figureInk,
+              }, ctx)}
+              {block.note &&
+                paintLines(block.note, {
+                  ctx,
+                  x: columnX,
+                  y: centredBaseline(top + NOTICE_NOTE.top, NOTICE_NOTE.box, NOTICE_NOTE.size),
+                  fill: noteInk,
+                  fontFamily: body,
+                  fontWeight: "400",
+                })}
+            </g>
+          )
+        })}
+      </g>
     </g>
   )
 }

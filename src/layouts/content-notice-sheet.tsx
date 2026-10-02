@@ -37,7 +37,7 @@ import {
  */
 
 /** The compositions a notice sheet offers its body, in the notice setting. */
-const NOTICE_COMPOSITIONS: readonly CompositionId[] = ["rows", "table"]
+const NOTICE_COMPOSITIONS: readonly CompositionId[] = ["rows", "table", "rail", "columns", "bars", "bridge"]
 
 /** The subheading, when a page carries one: muted lines under the rule, the body below them. */
 const STANDFIRST = { size: 18, box: 26, maxLines: 2, gap: 16 }
@@ -140,4 +140,6 @@ export const layoutDef = {
     { name: "body", accepts: "any", capacity: 4 },
   ],
   headingFit: NOTICE_HEAD_FIT,
+  // A waterfall or a gantt sets its figures beside it on this face.
+  fullBodyCompanions: ["kpi_cards"],
 } satisfies LayoutDefinition

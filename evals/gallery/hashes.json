@@ -2262,9 +2262,9 @@
       "color": "16fzlgd"
     },
     "bulletin--deck--p03": {
-      "hash": "gsz86p",
-      "geometry": "z9e5i0",
-      "color": "jvbvj0"
+      "hash": "88tezb",
+      "geometry": "1f3qfiy",
+      "color": "1dnbdrz"
     },
     "bulletin--deck--p04": {
       "hash": "vegjui",
@@ -2336,10 +2336,30 @@
       "geometry": "1hbdgvq",
       "color": "1qo3hg3"
     },
+    "bulletin--compose--rail-figures": {
+      "hash": "13tf3jc",
+      "geometry": "1y1ozry",
+      "color": "1vyayg1"
+    },
     "bulletin--compose--pairs": {
       "hash": "16vm5ht",
       "geometry": "102t08j",
       "color": "1v1s0d1"
+    },
+    "bulletin--compose--columns": {
+      "hash": "jry936",
+      "geometry": "1xa5ib1",
+      "color": "1fs688v"
+    },
+    "bulletin--compose--bars": {
+      "hash": "1t1gege",
+      "geometry": "b8nrpc",
+      "color": "4oq8om"
+    },
+    "bulletin--compose--bridge": {
+      "hash": "q5zer",
+      "geometry": "mqpz6r",
+      "color": "gvrbcl"
     },
     "bulletin--comp--architecture--zh": {
       "hash": "aws01w",
@@ -2707,9 +2727,9 @@
       "color": "xsj4sm"
     },
     "bulletin--comp--waterfall--zh": {
-      "hash": "1kqlndk",
-      "geometry": "krori3",
-      "color": "jvbvj0"
+      "hash": "1rdf3qs",
+      "geometry": "kgsz9j",
+      "color": "1dnbdrz"
     },
     "bulletin--comp--word-cloud--zh": {
       "hash": "t7paz3",

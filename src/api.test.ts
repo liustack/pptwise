@@ -505,6 +505,26 @@ describe("full-body component exclusivity gate (structure-components wave 1 task
     expect(v.errors[0]!.message).toMatch(/found 2 components/)
   })
 
+  // bulletin 2026-10 p04/p10: the notice sheet sets a waterfall or a gantt
+  // beside a column of figures, the one page shape its face declares.
+  it("accepts a full-body component beside the companions its face declares, and nothing else", () => {
+    const themeId = registerTestTheme("api-full-body-companions", "bulletin", { content: { data: "notice-sheet" } })
+    try {
+      const facts = { type: "kpi_cards", items: [{ value: "65.2%", label: "渗透率" }, { value: "84%", label: "燃油车占比" }] }
+      const page = (components: unknown[], theme = themeId) => ({
+        ...raw,
+        theme: { id: theme },
+        slides: [{ type: "content", kind: "data", heading: "减量里八成是燃油车", components }],
+      })
+      expect(validateIr(page([waterfallOnly, facts])).ok).toBe(true)
+      expect(validateIr(page([waterfallOnly, { type: "bullets", items: ["额外的兄弟块"] }])).ok).toBe(false)
+      expect(validateIr(page([waterfallOnly, ganttOnly, facts])).ok).toBe(false)
+      expect(validateIr(page([waterfallOnly, facts], "brief")).ok).toBe(false)
+    } finally {
+      __resetRegisteredThemes()
+    }
+  })
+
   it("hard-rejects two full-body components sharing one slide", () => {
     const v = validateIr({
       ...raw,

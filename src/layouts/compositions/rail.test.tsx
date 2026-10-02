@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest"
 import { assertSubset } from "../../render/subset-validate"
 import { changeFigure, changeLabel, railComposition, spanLabel } from "./rail"
-import { attrs, BAND_ABOVE_SOURCE, byText, renderComposition, texts, textOf } from "./__fixtures__/kit"
+import { attrs, BAND_ABOVE_SOURCE, byText, NOTICE_BAND, renderComposition, texts, textOf } from "./__fixtures__/kit"
 
 const YEARS = ["FY2023", "FY2024", "FY2025", "FY2026"]
 const series = (name: string, ys: number[], extra: Record<string, unknown> = {}) => ({
@@ -168,5 +168,57 @@ describe("rail composition", () => {
   it("declines a band that would leave the plot under 400px", () => {
     expect(draw(combo(), { rect: { ...BAND_ABOVE_SOURCE, w: 719 } }).element).toBeNull()
     expect(draw(combo(), { rect: { ...BAND_ABOVE_SOURCE, w: 720 } }).element).not.toBeNull()
+  })
+})
+
+/** bulletin's 2026-10 retail page (p03): two years of monthly retail, September a forecast, three figures beside them. */
+const retail = {
+  type: "chart",
+  chart_type: "bar",
+  axes: { y_unit: "万辆" },
+  series: [
+    { name: "2025 年", data: [{ x: "7 月", y: 182.6 }, { x: "8 月", y: 199.5 }, { x: "9 月", y: 224.1 }] },
+    { name: "2026 年", emphasis: true, data: [{ x: "7 月", y: 146.1 }, { x: "8 月", y: 154.1 }, { x: "9 月", y: 169, status: "forecast" }] },
+  ],
+}
+const monthly = {
+  type: "kpi_cards",
+  items: [
+    { value: "−20.9%", label: "7 月零售同比" },
+    { value: "−23.6%", label: "8 月零售同比" },
+    { value: "−29%", label: "9 月 1–27 日零售同比", note: "全月预测约 169 万辆，同比 −24.6%" },
+  ],
+}
+
+describe("rail composition, notice setting", () => {
+  const notice = (components: unknown[]) => renderComposition(railComposition, components, { rect: NOTICE_BAND, theme: "bulletin", setting: "notice" })
+
+  it("sets the hand-drawn plot on the left and the figures in a column right of a hairline", () => {
+    const { root, tokens } = notice([retail, monthly])
+    expect(root!.querySelector('[data-gauge-module="columns"]')).not.toBeNull()
+    const divider = Array.from(root!.querySelectorAll("line")).find((line) => line.getAttribute("x1") === "780" && line.getAttribute("x2") === "780")!
+    expect(divider.getAttribute("y1")).toBe("214")
+    expect(attrs(byText(root!, "−20.9%")!, ["x", "y", "font-size", "font-weight", "fill"])).toEqual(["820", "291", "50", "700", tokens.colors.text])
+    expect(attrs(byText(root!, "7 月零售同比")!, ["x", "font-size"])).toEqual(["820", "16"])
+    expect(() => assertSubset(root!)).not.toThrow()
+  })
+
+  it("keeps a figure's note under it instead of dropping the figure to fit", () => {
+    const { root } = notice([retail, monthly])
+    expect(byText(root!, "全月预测约 169 万辆，同比 −24.6%")).toBeDefined()
+    expect(root!.querySelectorAll("[data-dropped]").length).toBe(0)
+  })
+
+  it("hatches the forecast bar and says so in its label and the legend", () => {
+    const { root } = notice([retail, monthly])
+    expect(root!.querySelectorAll('[data-mark-status="forecast"]').length).toBeGreaterThanOrEqual(1)
+    expect(byText(root!, "169（预测）")).toBeDefined()
+    expect(byText(root!, "预测")).toBeDefined()
+  })
+
+  it("sets a marked figure in primary", () => {
+    const marked = { ...monthly, items: monthly.items.map((item, i) => (i === 2 ? { ...item, value: "**−29%**" } : item)) }
+    const { root, tokens } = notice([retail, marked])
+    expect(byText(root!, "−29%")!.getAttribute("fill")).toBe(tokens.colors.primary)
   })
 })

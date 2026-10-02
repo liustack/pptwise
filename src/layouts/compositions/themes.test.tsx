@@ -105,6 +105,50 @@ const PAGES: Record<CompositionId, unknown[]> = {
   pairs: [
     { type: "bullets", items: ["Guangzhou: 14,355 → 12,029", "Shenzhen: 9,113 → 7,814", "Closures: 1.5 to 2 times openings"] },
   ],
+  columns: [
+    {
+      type: "chart",
+      chart_type: "bar",
+      axes: { y_title: "Million units" },
+      series: [
+        { name: "2025", data: [["July", 1.826], ["August", 1.995], ["September", 2.241]].map(([x, y]) => ({ x: x as string, y: y as number })) },
+        {
+          name: "2026",
+          emphasis: true,
+          data: [
+            { x: "July", y: 1.461 },
+            { x: "August", y: 1.541 },
+            { x: "September", y: 1.69, status: "forecast" },
+          ],
+        },
+      ],
+    },
+  ],
+  bars: [
+    {
+      type: "chart",
+      chart_type: "bar",
+      direction: "horizontal",
+      axes: { y_title: "Share of home NEV retail", y_unit: "%" },
+      changes: [{ from: "Aug 2025", to: "Aug 2026", at: "BYD" }],
+      series: [
+        { name: "Aug 2025", data: [{ x: "BYD", y: 27.8 }, { x: "Geely", y: 12.1 }, { x: "Changan", y: 6.5 }] },
+        { name: "Aug 2026", emphasis: true, data: [{ x: "BYD", y: 23.3 }, { x: "Geely", y: 11.0 }, { x: "Changan", y: 5.8 }] },
+      ],
+    },
+  ],
+  bridge: [
+    {
+      type: "waterfall",
+      unit: "million units",
+      items: [
+        { label: "Jul–Aug 2025", value: 3.82, kind: "total" },
+        { label: "NEVs", value: -0.13 },
+        { label: "ICE cars", value: -0.69, emphasis: true },
+        { label: "Jul–Aug 2026", value: 3.0, kind: "total" },
+      ],
+    },
+  ],
 }
 
 /** Every string an author wrote on the page, less the emphasis marks, that the composition must print. */
@@ -117,6 +161,9 @@ const AUTHORED: Record<CompositionId, string[]> = {
   figures: ["+20.7%", "Stores, year on year", "63,987 at end-June", "−14.7%", "double digits", "Zhang Yuan, CEO"],
   track: ["13 May 2025", "Platforms summoned", "JD, Meituan and Ele.me", "Early Dec 2025", "Draft subsidy rules", "loss per order halved"],
   pairs: ["Guangzhou", "14,355 → 12,029", "Closures", "1.5 to 2 times openings"],
+  columns: ["2025", "2026", "Forecast", "Million units", "1.826", "1.69", "September"],
+  bars: ["Aug 2025", "Aug 2026", "BYD", "27.8", "23.3", "−4.5 pts", "Share of home NEV retail, %"],
+  bridge: ["million units, axis from 2", "3.82", "−0.13", "−0.69", "Jul–Aug 2026"],
 }
 
 /**

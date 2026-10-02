@@ -54,6 +54,7 @@ export function fitFigure(
   width: number,
   fontFamily: string,
   lead = false,
+  bold = false,
 ): FittedFigure | null {
   const written = stripEmphasis(String(item.value)).trim()
   if (!written) return null
@@ -62,12 +63,58 @@ export function fitFigure(
   const inline = ownUnit !== undefined && (isPercentUnit(ownUnit) || isCurrencyUnit(ownUnit))
   const value = inline ? joinUnit(written, ownUnit) : written
   const unit = inline ? undefined : ownUnit
-  const valueW = measureTextUnits(value, { fontFamily }) * size
+  const valueW = measureTextUnits(value, { fontFamily, bold }) * size
   if (!unit) return valueW <= width ? { value, size, width: valueW } : null
   const unitSize = Math.max(UNIT_MIN, Math.round(size * UNIT_RATIO))
   const dx = Math.round(size * (lead ? LEAD_UNIT_GAP_RATIO : UNIT_GAP_RATIO))
   const total = valueW + dx + measureTextUnits(unit, { fontFamily }) * unitSize
   return total <= width ? { value, unit: { text: unit, dx, size: unitSize }, size, width: total } : null
+}
+
+/**
+ * Paints a figure fitted with `bold`, set bold in `ink` with its unit smaller
+ * and muted after it. The notice setting's figures: no emphasis stroke under
+ * them, the colour alone says which one the author marked.
+ */
+export function paintBoldFigure(
+  figure: FittedFigure,
+  place: { x: number; y: number; ink: string; bg?: string },
+  ctx: ComponentCtx,
+): React.ReactElement {
+  const { colors, fonts } = ctx
+  const bg = place.bg ?? ctx.defaultBg ?? colors.bg
+  return (
+    <g>
+      <text
+        x={place.x}
+        y={place.y}
+        fontFamily={fonts.heading}
+        fontSize={figure.size}
+        fontWeight="700"
+        fill={place.ink}
+        dominantBaseline="alphabetic"
+      >
+        {figure.value}
+      </text>
+      {figure.unit && (
+        <text
+          x={place.x + figure.width - measureTextUnits(figure.unit.text, { fontFamily: fonts.heading }) * figure.unit.size}
+          y={place.y}
+          fontFamily={fonts.heading}
+          fontSize={figure.unit.size}
+          fill={accessibleInk(colors.muted, bg, figure.unit.size)}
+          dominantBaseline="alphabetic"
+        >
+          {figure.unit.text}
+        </text>
+      )}
+    </g>
+  )
+}
+
+/** Whether the author marked a figure as the page's one emphasis: `**…**` around its value. */
+export function markedFigure(item: Pick<KpiItem, "value">): boolean {
+  return /\*\*.+?\*\*/u.test(String(item.value))
 }
 
 /**

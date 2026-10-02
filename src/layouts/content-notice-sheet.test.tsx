@@ -62,8 +62,9 @@ describe("content-notice-sheet", () => {
     expect(texts(root).map(textOf).join(" ")).toContain("一段说明文字。")
   })
 
-  it("declares the heading fit it draws", () => {
+  it("declares the heading fit it draws and the companions a full-body component may keep", () => {
     expect(layoutDef.headingFit).toEqual(NOTICE_HEAD_FIT)
+    expect(layoutDef.fullBodyCompanions).toEqual(["kpi_cards"])
     expect(layoutDef.slots.find((slot) => slot.name === "body")).toEqual({ name: "body", accepts: "any", capacity: 4 })
   })
 })

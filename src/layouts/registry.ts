@@ -453,6 +453,19 @@ export interface LayoutDefinition {
    */
   dispatch?: "content"
   /**
+   * Structural fact of a content face: one of its compositions sets a
+   * full-body component (a waterfall, a gantt) beside a companion of these
+   * types, such as the figures a bridge or a calendar is read with.
+   *
+   * A full-body component owns the whole body band everywhere else, so
+   * validate refuses it beside anything (`checkFullBodyExclusivity`). A face
+   * that declares companions is the exception for exactly those types: the
+   * page may hold one full-body component and companions of the declared
+   * types, nothing else. Undefined means the face takes a full-body
+   * component alone.
+   */
+  fullBodyCompanions?: readonly string[]
+  /**
    * This face's own heading fit, declared rather than inlined.
    *
    * A face whose heading is the whole page — `stat-hero`'s numeral,

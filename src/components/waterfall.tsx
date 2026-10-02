@@ -144,9 +144,9 @@ const AUTO_TOTAL_LABEL = "Total"
 /** The automatic total when the bars are labelled in Chinese (`mostlyChinese`). */
 const AUTO_TOTAL_LABEL_ZH = "合计"
 
-type BarKind = "rise" | "fall" | "total"
+export type BarKind = "rise" | "fall" | "total"
 
-interface Bar {
+export interface Bar {
   label: string
   start: number
   end: number
@@ -160,7 +160,7 @@ interface Bar {
 
 /** Deterministic running-total derivation — see file header. Pure function of
  * `items`, no `Date`/`random` anywhere in this file. */
-function computeBars(items: readonly WaterfallItem[]): Bar[] {
+export function computeBars(items: readonly WaterfallItem[]): Bar[] {
   let running = 0
   const bars: Bar[] = items.map((item) => {
     const emphasis = item.emphasis === true
@@ -204,7 +204,7 @@ function niceFloor(v: number): number {
  * total keeps a visible stretch of its own: 4.10 to 5.35 starts at 3.00.
  * Levels that never move leave nothing to stretch and draw from zero.
  */
-function truncatedFloor(bars: readonly Bar[]): number | null {
+export function truncatedFloor(bars: readonly Bar[]): number | null {
   const levels = bars.flatMap((b) => (b.kind === "total" ? [b.end] : [b.start, b.end]))
   if (!levels.every((v) => v > 0)) return null
   const low = Math.min(...levels)
