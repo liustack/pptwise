@@ -11,6 +11,7 @@ import {
 import { formLegibleInk } from "../components/legibility"
 import { fitHeadingLines } from "./heading-fit"
 import { accessibleInk } from "./ink"
+import { isBold } from "./fonts"
 import type { ComponentCtx } from "../components/types"
 import type { EmphasisTreatment } from "../themes/schema"
 import type { StyleColors } from "../themes/tokens"
@@ -164,6 +165,37 @@ function markerPadD(opts: {
 }
 
 /**
+ * The weight one run is measured at: the caller's hint for a plain run, and
+ * for a marked run the weight this module paints it in (`fontWeight`, 600 by
+ * default), in the caller's face.
+ *
+ * A caller's hint describes its own text, and the marked run is not that
+ * text: a callout set in Georgia Regular paints its marked run at 600, and
+ * measured it at the hint's Regular. Bold Georgia runs about a sixth wider,
+ * so the pad stopped short of the glyphs and the next run, placed where the
+ * regular glyphs would have ended, was drawn over them.
+ */
+function runWeight(
+  segment: EmphasisSegment,
+  opts: { fontWeight?: string; measureWeight?: TextWeightHint },
+): TextWeightHint | undefined {
+  if (!segment.emphasized) return opts.measureWeight
+  return { ...opts.measureWeight, bold: isBold(opts.fontWeight ?? "600") }
+}
+
+/**
+ * Width of one line as it will be painted, in px: plain runs at the
+ * caller's weight, marked runs at the weight they are painted in. Tracking
+ * is not counted, since none of the wrapping callers set any.
+ */
+export function paintedLineWidth(
+  segments: EmphasisSegment[],
+  opts: { fontSize: number; fontWeight?: string; measureWeight?: TextWeightHint },
+): number {
+  return segments.reduce((sum, segment) => sum + measureTextUnits(segment.text, runWeight(segment, opts)) * opts.fontSize, 0)
+}
+
+/**
  * Renders one already-fitted emphasis line. The default tint branch delegates
  * to `renderEmphasisTspans` unchanged. A theme-assigned pad branch derives run
  * offsets and widths with the same `measureTextUnits` weight hint its caller
@@ -217,7 +249,7 @@ export function renderEmphasisLine(
   /** A run's own ink: its glyphs plus the gaps between them. */
   const widths = segments.map(
     (segment, index) =>
-      measureTextUnits(segment.text, opts.measureWeight) * opts.fontSize +
+      measureTextUnits(segment.text, runWeight(segment, opts)) * opts.fontSize +
       Math.max(0, chars[index]! - 1) * tracking,
   )
   /** What the cursor moves by: the run's ink plus the gap to the next run. */
@@ -287,6 +319,12 @@ export function renderEmphasisLine(
     return path
   })
   const padInk = formLegibleInk(opts.baseFill, padFill, opts.fontSize)
+  // Every run here starts its own chunk at its own `x`, and a renderer may
+  // strip a chunk's leading blank under the default whitespace rule (rsvg
+  // does: "**double digits** at the group" previewed as "digitsat the
+  // group"). The cursor already counted that blank, so a run that opens
+  // with one says to keep it. PowerPoint reads the same single space.
+  const keepsBlank = (index: number, text: string) => (index > 0 && /^\s/.test(text) ? { xmlSpace: "preserve" } : {})
   const tspans = segments.map((segment, index) => {
     const x = textXs[index] ?? startX
     return segment.emphasized
@@ -299,12 +337,13 @@ export function renderEmphasisLine(
             fontWeight: opts.fontWeight ?? "600",
             textAnchor: "start",
             "data-emphasis-pad-fill": padFill,
+            ...keepsBlank(index, segment.text),
           },
           segment.text,
         )
       : React.createElement(
           "tspan",
-          { key: index, x, fill: opts.baseFill, textAnchor: "start" },
+          { key: index, x, fill: opts.baseFill, textAnchor: "start", ...keepsBlank(index, segment.text) },
           segment.text,
         )
   })
@@ -421,6 +460,44 @@ export function fitEmphasisHeading(
   opts: Parameters<typeof fitHeadingLines>[1],
 ): EmphasisHeadingLayout {
   return attachEmphasis(text, fitHeadingLines(stripEmphasis(text ?? ""), opts))
+}
+
+/**
+ * Wraps marked text so every line fits `maxWidth` as it is painted.
+ *
+ * The fit chain measures the stripped text at one weight, and a marked run is
+ * painted heavier than the text around it (`fontWeight`, 600 by default). A
+ * line the fit filled at regular weight comes out wider by however much its
+ * marked run gains in bold: about a sixth of the run in Georgia, enough to
+ * carry a callout's last word past its panel. So each line is measured as
+ * painted ({@link paintedLineWidth}), and while the widest overshoots, the
+ * wrap runs again on a budget narrower by that overshoot. Text with no
+ * marked run measures the same either way and comes back from the first
+ * wrap, unchanged.
+ */
+export function layoutEmphasisText(
+  text: string,
+  opts: Parameters<typeof layoutSvgText>[1] & { fontWeight?: string },
+): EmphasisHeadingLayout {
+  const segments = parseEmphasis(text)
+  const plain = stripEmphasis(text)
+  const measureWeight: TextWeightHint = { bold: opts.bold, fontFamily: opts.fontFamily }
+  let budget = opts.maxWidth
+  let laid = attachEmphasis(text, layoutSvgText(plain, opts))
+  if (!segments.some((segment) => segment.emphasized)) return laid
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const widest = Math.max(
+      0,
+      ...laid.segments.map((line) =>
+        paintedLineWidth(line, { fontSize: laid.fontSize, fontWeight: opts.fontWeight, measureWeight }),
+      ),
+    )
+    const over = widest - opts.maxWidth
+    if (over <= 0) return laid
+    budget -= Math.max(1, over)
+    laid = attachEmphasis(text, layoutSvgText(plain, { ...opts, maxWidth: budget }))
+  }
+  return laid
 }
 
 /** `attachEmphasis` over `layoutSvgText` — wrap and shrink, no truncate fallback. */

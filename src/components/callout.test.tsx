@@ -8,6 +8,8 @@ import type { ComponentCtx } from "./types"
 import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
 import { buildCtx } from "../render/full-slide-svg"
 import { PACING_BUDGETS } from "@/narrative"
+import { findRunMisfits } from "../audit/svg-audit"
+import { measureTextUnits } from "../lib/svg-text-layout"
 
 const ctx: ComponentCtx = {
   colors: {
@@ -267,5 +269,50 @@ describe("callout component pacing tiers", () => {
     const spaciousCtx: ComponentCtx = { ...ctx, bodyFontPx: PACING_BUDGETS.spacious.bodyBaselinePx }
     const { container } = svg(callout.render(component, { x: 0, y: 0, w: 1120 }, spaciousCtx))
     expect(container.querySelector("text")?.getAttribute("font-size")).toBe("32")
+  })
+})
+
+// tea-deck p03/p05/p07 (2026-10-02): brief's highlighter under a marked run.
+// The run was measured in Georgia Regular and painted at 600, so the pad
+// stopped short of the bold glyphs and the next run started on top of them.
+describe("callout: a marked run under brief's highlighter", () => {
+  const brief = boundThemeCtx("brief")
+  const W = 1088
+  // Text starts after the icon (20 + 22 + 14) and stops 20px short of the panel's edge.
+  const TEXT_LEFT = 56
+  const TEXT_RIGHT = W - 20
+
+  function draw(text: string) {
+    const markup = renderToStaticMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg">{callout.render({ type: "callout", variant: "info", text }, { x: 0, y: 0, w: W }, brief)}</svg>,
+    )
+    return markup
+  }
+
+  it.each([
+    "2025: 103,135 opened, 132,569 closed, **a net loss of 29,434**, 2.5 times the 2024 loss.",
+    "CEO Zhang Yuan said **sales per store fell by double digits** at the group.",
+    "2025 年新开 103,135 家，关闭 132,569 家，**净减 29,434 家**，是 2024 年净减数的 2.5 倍。",
+  ])("keeps every run clear of the next and under its highlight: %s", (text) => {
+    expect(findRunMisfits(draw(text))).toEqual([])
+  })
+
+  it("keeps a line ending in a long marked run inside the panel", () => {
+    // Fills the line at regular weight, so the bold run would push past the
+    // panel's right edge if the wrap measured it regular.
+    const text =
+      "Openings fell from 173,000 to 103,000 in three years while **closures stayed between 130,000 and 160,000 every year** across the chain."
+    const markup = draw(text)
+    expect(findRunMisfits(markup)).toEqual([])
+    const doc = new DOMParser().parseFromString(markup, "image/svg+xml")
+    for (const line of Array.from(doc.querySelectorAll("text"))) {
+      const runs = Array.from(line.querySelectorAll("tspan"))
+      const last = runs[runs.length - 1]
+      const start = last ? Number(last.getAttribute("x") ?? TEXT_LEFT) : TEXT_LEFT
+      const content = last ? (last.textContent ?? "") : (line.textContent ?? "")
+      const bold = last?.getAttribute("font-weight") === "600"
+      const end = start + measureTextUnits(content.trimEnd(), { fontFamily: brief.fonts.body, bold }) * brief.bodyFontPx
+      expect(end).toBeLessThanOrEqual(TEXT_RIGHT + 0.5)
+    }
   })
 })

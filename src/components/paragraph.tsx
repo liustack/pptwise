@@ -53,6 +53,8 @@ export const paragraph: SvgComponent<ParagraphComponent> = {
       <g transform={`translate(${box.x},${box.y})`} data-truncated={truncated ? "1" : undefined}>
         {visible.map((segments, i) => {
           const baselineY = i * l.lineHeight + l.fontSize
+          // Runs are placed in the face they are painted in, so a pad
+          // hugs its glyphs. The wrap above keeps the wider class estimate.
           const emphasis = renderEmphasisLine(segments, {
             accent: emphasisRunInk(ctx.colors),
             baseFill: ctx.colors.text,
@@ -60,6 +62,7 @@ export const paragraph: SvgComponent<ParagraphComponent> = {
             x: 0,
             baselineY,
             emphasis: ctx.emphasis,
+            measureWeight: { fontFamily: ctx.fonts.body },
           })
           return (
             <Fragment key={i}>

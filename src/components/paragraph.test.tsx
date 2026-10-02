@@ -78,8 +78,9 @@ describe("paragraph component emphasis", () => {
     )
     expect(pad.getAttribute("fill")).toBe(CONSULTING_TOKENS.colors.accent)
 
+    // Placed in the face the line is painted in, not the class estimate.
     const runStart =
-      measureTextUnits("普通 ") * consultingCtx.bodyFontPx
+      measureTextUnits("普通 ", { fontFamily: consultingCtx.fonts.body }) * consultingCtx.bodyFontPx
     expect(Number(spans[0]?.getAttribute("x"))).toBe(0)
     expect(Number(emphasized.getAttribute("x"))).toBeCloseTo(runStart, 6)
     expect(emphasized.getAttribute("text-anchor")).toBe("start")
