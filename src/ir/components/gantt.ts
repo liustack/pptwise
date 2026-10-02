@@ -18,6 +18,16 @@ const GanttItemSchema = z
     label: z.string(),
     start: z.number(),
     end: z.number(),
+    /** One short line under the label. See the describe below. */
+    text: z
+      .string()
+      .optional()
+      .describe("One short line under the bar's label: what happens in that stretch, or why it matters."),
+    /** The one bar the page is about. See the describe below. */
+    emphasis: z
+      .boolean()
+      .optional()
+      .describe("Marks the one bar the page is about. It keeps the lead colour and the other bars recede. At most one item."),
   })
   .strict()
   .refine((item) => item.end > item.start, {
@@ -38,6 +48,18 @@ export const schema = z
     axis_labels: z.array(z.string()).optional(),
   })
   .strict()
+  .superRefine((c, ctx) => {
+    // A bar keeps the lead colour so it stands out from the rest, so two
+    // marked bars stand out from nothing.
+    const marked = c.items.flatMap((item, i) => (item.emphasis === true ? [i] : []))
+    if (marked.length > 1) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["items", marked[1]!, "emphasis"],
+        message: `gantt marks ${marked.length} bars with emphasis, and a marked bar stands out from the rest. Keep emphasis on the one bar the page is about.`,
+      })
+    }
+  })
 
 export const aliases = {
   items: [{ itemsKey: "items", aliases: { from: "start", to: "end" } }],

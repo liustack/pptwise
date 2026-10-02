@@ -92,3 +92,23 @@ describe("numbered_cards emphasis", () => {
     expect(messages([cards([1, 2])]).join(" ")).toContain("singles out one")
   })
 })
+
+describe("gantt text and emphasis", () => {
+  const gantt = (items: unknown[]) => ({ type: "gantt", axis_labels: ["10 月", "11 月", "12 月"], items })
+
+  it("takes a line of text under a stretch's label and marks one stretch", () => {
+    const items = [
+      { label: "窗口期", text: "地方补贴先到先得", start: 0, end: 2, emphasis: true },
+      { label: "12 月 31 日", text: "中央资金到期", start: 2, end: 3 },
+    ]
+    expect(parse([gantt(items)]).success).toBe(true)
+  })
+
+  it("rejects a second marked stretch", () => {
+    const items = [
+      { label: "a", start: 0, end: 1, emphasis: true },
+      { label: "b", start: 1, end: 2, emphasis: true },
+    ]
+    expect(parse([gantt(items)]).success).toBe(false)
+  })
+})
