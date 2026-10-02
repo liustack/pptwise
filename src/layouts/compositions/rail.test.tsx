@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
 import { assertSubset } from "../../render/subset-validate"
-import { changeLabel, railComposition, spanLabel } from "./rail"
+import { changeFigure, changeLabel, railComposition, spanLabel } from "./rail"
 import { attrs, BAND_ABOVE_SOURCE, byText, renderComposition, texts, textOf } from "./__fixtures__/kit"
 
 const YEARS = ["FY2023", "FY2024", "FY2025", "FY2026"]
@@ -32,6 +32,15 @@ describe("changeLabel and spanLabel", () => {
     expect(changeLabel(4.1, 5.35)).toBe("+30%")
     expect(changeLabel(200, 184)).toBe("-8%")
     expect(changeLabel(100, 100.2)).toBe("0%")
+  })
+
+  it("states a series measured in percent as a change in points, to one decimal", () => {
+    expect(changeFigure(80.1, 91.0, "%", false)).toEqual({ figure: "+10.9", unit: "pts" })
+    expect(changeFigure(80.1, 91.0, "％", true)).toEqual({ figure: "+10.9", unit: "个百分点" })
+    expect(changeFigure(42, 38.5, "%", false)).toEqual({ figure: "-3.5", unit: "pts" })
+    expect(changeFigure(12, 12.04, "%", false)).toEqual({ figure: "0.0", unit: "pts" })
+    expect(changeFigure(131, 160, "k", false)).toEqual({ figure: "+22%" })
+    expect(changeFigure(131, 160, undefined, true)).toEqual({ figure: "+22%" })
   })
 
   it("prints both ends at the decimals the series was written with, in the axis's unit", () => {
@@ -105,6 +114,38 @@ describe("rail composition", () => {
     const sizes = new Set(["+50%", "+25%", "+80%"].map((text) => byText(root!, text)!.getAttribute("font-size")))
     expect(sizes.size).toBe(1)
     expect(Number([...sizes][0])).toBeLessThan(56)
+  })
+
+  it("states a percent series' change in points beside the figure, in the deck's language", () => {
+    const rate = (name: string, ys: number[], unit: string, years = YEARS) => ({
+      type: "chart",
+      chart_type: "line",
+      axes: { y_unit: unit },
+      series: [{ name, data: ys.map((y, i) => ({ x: years[i]!, y })) }],
+    })
+    const en = draw(rate("Share of cups sold", [80.1, 84.2, 88.6, 91.0], "%"))
+    const figure = byText(en.root!, "+10.9")!
+    expect(figure).toBeDefined()
+    expect(byText(en.root!, "+14%")).toBeUndefined()
+    const unit = byText(en.root!, "pts")!
+    expect(unit.getAttribute("y")).toBe(figure.getAttribute("y"))
+    expect(Number(unit.getAttribute("x"))).toBeGreaterThan(Number(figure.getAttribute("x")))
+    expect(Number(unit.getAttribute("font-size"))).toBeLessThan(Number(figure.getAttribute("font-size")))
+    expect(byText(en.root!, "80.1% → 91.0%")).toBeDefined()
+
+    const zh = draw(rate("咖啡杯量占比", [80.1, 84.2, 88.6, 91.0], "％", ["2023 年", "2024 年", "2025 年", "2026 年"]))
+    expect(byText(zh.root!, "+10.9")).toBeDefined()
+    expect(byText(zh.root!, "个百分点")).toBeDefined()
+    // The unit sits beside the figure inside the column, never past the band.
+    const zhUnit = byText(zh.root!, "个百分点")!
+    expect(Number(zhUnit.getAttribute("x"))).toBeLessThan(BAND_ABOVE_SOURCE.x + BAND_ABOVE_SOURCE.w)
+  })
+
+  it("takes a percent series that starts at zero, since a change in points needs no base", () => {
+    const chart = { type: "chart", chart_type: "line", axes: { y_unit: "%" }, series: [series("Opt-in rate", [0, 2.5, 4, 6.2])] }
+    const { root } = draw(chart)
+    expect(root).not.toBeNull()
+    expect(byText(root!, "+6.2")).toBeDefined()
   })
 
   it.each([
