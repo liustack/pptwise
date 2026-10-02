@@ -1,6 +1,13 @@
 import type { Component } from "@/ir"
-import { fitSvgLine, layoutSvgText, measureTextUnits } from "@/lib/svg-text-layout"
-import { readableOn } from "../render/ink"
+import { fitSvgLine, measureTextUnits } from "@/lib/svg-text-layout"
+import { accessibleInk, blendOver, readableOn } from "../render/ink"
+import {
+  headingEmphasisPaint,
+  layoutEmphasisText,
+  renderEmphasisText,
+  stripEmphasis,
+  type EmphasisSegment,
+} from "../render/emphasis"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { TEXT_INK_ASCENT, TEXT_INK_DESCENT } from "../render/depth-contract/geometry"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -197,14 +204,16 @@ function wrapPillText(
     fontFamily?: string
     bold?: boolean
   },
-): { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean } {
+): { lines: string[]; segments: EmphasisSegment[][]; fontSize: number; lineHeight: number; truncated: boolean } {
   const fontSize = opts.fontSize
   const lineHeight = formLineHeight(fontSize)
   const content = text?.trim() ?? ""
-  if (!content || opts.maxKeep <= 0) {
-    return { lines: [], fontSize, lineHeight, truncated: false }
+  if (!stripEmphasis(content) || opts.maxKeep <= 0) {
+    return { lines: [], segments: [], fontSize, lineHeight, truncated: false }
   }
-  const laid = layoutSvgText(content, {
+  // Measured as the reader sees it: a `**marked**` run is painted in the
+  // theme's emphasis, never as four asterisks.
+  const laid = layoutEmphasisText(content, {
     maxWidth: opts.maxWidth,
     fontSize,
     minPt: fontSize,
@@ -215,6 +224,7 @@ function wrapPillText(
   const lines = laid.lines.slice(0, opts.maxKeep)
   return {
     lines,
+    segments: laid.segments.slice(0, opts.maxKeep),
     fontSize,
     lineHeight,
     truncated: laid.lines.length > lines.length,
@@ -313,67 +323,87 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
         const omitted =
           formTextOmissionMarker(item.text ?? "", body ?? { lines: [] }) ??
           formTextOmissionMarker(item.sub ?? "", { lines: sub ? [sub.text] : [] })
+        // The item the page lands on (`emphasis`) fills its pill in primary
+        // and reverses its words out of it.
+        const marked = item.emphasis === true
+        const pillFill = marked ? ctx.colors.primary : surface
+        const onPill = readableOn(ctx.colors.primary)
+        const titleInk = marked ? onPill : ctx.colors.text
+        const bodyInk = marked ? accessibleInk(blendOver(onPill, ctx.colors.primary, 0.82), ctx.colors.primary, FORM_BODY_FLOOR) : ctx.colors.muted
+        const paint = (fontSize: number, base: string, bold: boolean) =>
+          headingEmphasisPaint(ctx, { fontSize }, {
+            baseFill: base,
+            fontWeight: "700",
+            fontFamily: bold ? ctx.fonts.heading : ctx.fonts.body,
+            bold,
+            bg: pillFill,
+            ...(marked ? { accent: onPill } : {}),
+          })
         return (
-          <g key={i} data-truncated={omitted}>
+          <g key={i} data-truncated={omitted} data-card-marked={marked ? "1" : undefined}>
             <rect
               x={pillX}
               y={pillY}
               width={L.pillW}
               height={L.pillH}
               rx={rx}
-              fill={surface}
-              stroke={border}
+              fill={pillFill}
+              stroke={marked ? pillFill : border}
               strokeWidth={1}
             />
-            <circle cx={badgeCx} cy={badgeCy} r={badgeR} fill={badgeFill} />
+            <circle cx={badgeCx} cy={badgeCy} r={badgeR} fill={marked ? onPill : badgeFill} />
             <text
               x={badgeCx}
               y={badgeCy + badgeFont * BASELINE_FUDGE}
               textAnchor="middle"
               fontSize={badgeFont}
               fontWeight="bold"
-              fill={badgeInk}
+              fill={marked ? readableOn(onPill) : badgeInk}
               fontFamily={ctx.fonts.heading}
               dominantBaseline="alphabetic"
             >
               {num}
             </text>
-            {title.lines.map((line, li) => (
-              <text
-                key={`t-${li}`}
-                data-truncated={formTextClipMarker(title, li)}
-                x={textX}
-                y={textTop + li * title.lineHeight + title.fontSize * BASELINE_DROP}
-                fontSize={title.fontSize}
-                fontWeight="bold"
-                fill={ctx.colors.text}
-                fontFamily={ctx.fonts.heading}
-                dominantBaseline="alphabetic"
-              >
-                {line}
-              </text>
-            ))}
+            {title.lines.map((line, li) =>
+              renderEmphasisText(
+                title.segments[li] ?? [{ text: line, emphasized: false }],
+                paint(title.fontSize, titleInk, true),
+                <text
+                  key={`t-${li}`}
+                  data-truncated={formTextClipMarker(title, li)}
+                  x={textX}
+                  y={textTop + li * title.lineHeight + title.fontSize * BASELINE_DROP}
+                  fontSize={title.fontSize}
+                  fontWeight="bold"
+                  fill={titleInk}
+                  fontFamily={ctx.fonts.heading}
+                  dominantBaseline="alphabetic"
+                />,
+              ),
+            )}
             {body
-              ? body.lines.map((line, li) => (
-                  <text
-                    key={`b-${li}`}
-                    data-truncated={formTextClipMarker(body, li)}
-                    x={textX}
-                    y={
-                      textTop +
-                      titleBlockH +
-                      TITLE_BODY_GAP +
-                      li * body.lineHeight +
-                      body.fontSize * BASELINE_DROP
-                    }
-                    fontSize={body.fontSize}
-                    fill={ctx.colors.muted}
-                    fontFamily={ctx.fonts.body}
-                    dominantBaseline="alphabetic"
-                  >
-                    {line}
-                  </text>
-                ))
+              ? body.lines.map((line, li) =>
+                  renderEmphasisText(
+                    body.segments[li] ?? [{ text: line, emphasized: false }],
+                    paint(body.fontSize, bodyInk, false),
+                    <text
+                      key={`b-${li}`}
+                      data-truncated={formTextClipMarker(body, li)}
+                      x={textX}
+                      y={
+                        textTop +
+                        titleBlockH +
+                        TITLE_BODY_GAP +
+                        li * body.lineHeight +
+                        body.fontSize * BASELINE_DROP
+                      }
+                      fontSize={body.fontSize}
+                      fill={bodyInk}
+                      fontFamily={ctx.fonts.body}
+                      dominantBaseline="alphabetic"
+                    />,
+                  ),
+                )
               : null}
             {sub && (
               <text
@@ -382,7 +412,7 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
                 y={pillY + L.pillH / 2 + sub.fontSize * BASELINE_FUDGE}
                 textAnchor="end"
                 fontSize={sub.fontSize}
-                fill={ctx.colors.muted}
+                fill={bodyInk}
                 fontFamily={ctx.fonts.body}
                 dominantBaseline="alphabetic"
               >

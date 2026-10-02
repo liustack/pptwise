@@ -77,3 +77,18 @@ describe("chart changes", () => {
     expect(messages([horizontal]).join(" ")).toContain("no room for a bracket")
   })
 })
+
+describe("numbered_cards emphasis", () => {
+  const cards = (marked: number[]) => ({
+    type: "numbered_cards",
+    items: ["国内在缩", "增量在海外", "四季度怎么打"].map((title, i) => ({ title, text: "说明", ...(marked.includes(i) ? { emphasis: true } : {}) })),
+  })
+
+  it("marks the one item the page lands on", () => {
+    expect(parse([cards([2])]).success).toBe(true)
+  })
+
+  it("rejects a second marked item", () => {
+    expect(messages([cards([1, 2])]).join(" ")).toContain("singles out one")
+  })
+})
