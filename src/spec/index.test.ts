@@ -177,6 +177,21 @@ describe("deck spec hard gates", () => {
     expect(formatSpecIssues(long.errors)).toContain("48-character limit")
   })
 
+  it("counts a heading's length as it is painted, without its emphasis marks", () => {
+    const marked = validateSpec({
+      narrative: { pacing: "spacious" },
+      theme: TEST_THEME_ID,
+      pages: [cover(), content("a", { heading: `${"x".repeat(40)}**${"y".repeat(8)}**` }), content("b"), ending()],
+    })
+    expect(formatSpecIssues(marked.errors)).not.toContain("character limit")
+    const long = validateSpec({
+      narrative: { pacing: "spacious" },
+      theme: TEST_THEME_ID,
+      pages: [cover(), content("a", { heading: `${"x".repeat(41)}**${"y".repeat(8)}**` }), content("b"), ending()],
+    })
+    expect(formatSpecIssues(long.errors)).toContain("heading is 49 characters")
+  })
+
   it("checks installed themes", () => {
     expect(expectOk(valid()).theme).toBe(TEST_THEME_ID)
     const result = validateSpec(valid({ theme: "not-installed" }))

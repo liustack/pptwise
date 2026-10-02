@@ -1,4 +1,4 @@
-import type { PptxIR } from "@/ir"
+import type { PptxIR, Slide } from "@/ir"
 import { renderSlideSvg } from "../api"
 import type { ThemeDefinition } from "../themes/definitions"
 import { resolveIrTheme } from "../themes/resolve-ir-theme"
@@ -7,6 +7,7 @@ import { measureMonoTextUnits, measureTextUnits } from "../lib/svg-text-layout"
 import { getPlatform } from "../platform/registry"
 import { isBold, isMonoFontFamily } from "../render/fonts"
 import { dropPhrase, parseDropKind, type DropKind } from "../render/drop-marker"
+import { sourceLineMissing } from "./source-line"
 import { auditSvgMarkup, findRunMisfits, parseNums, parseTransform, type OverflowIssue, type RunMisfit } from "./svg-audit"
 
 /**
@@ -1659,6 +1660,28 @@ function registersExactOutline(tag: string): boolean {
   return tag === "rect" || tag === "circle" || tag === "ellipse" || tag === "polygon"
 }
 
+/** The nearest value of a presentation attribute on `el` or an ancestor, as SVG inherits it. */
+function inheritedAttribute(el: Element, name: string): string | null {
+  for (let node: Element | null = el; node; node = node.parentElement) {
+    const value = node.getAttribute(name)
+    if (value !== null) return value
+  }
+  return null
+}
+
+/**
+ * A run's width in ems, measured in the face and weight it is painted in, the
+ * estimate the renderer fits its text with and the overflow walker checks it
+ * with. Measured without its font, a Latin run came out a tenth wider than
+ * the renderer set it, so a line that fills a primary block edge to edge
+ * was graded over the page beyond the block's end.
+ */
+function runUnits(el: Element, content: string): number {
+  const fontFamily = inheritedAttribute(el, "font-family") ?? ""
+  if (isMonoFontFamily(fontFamily)) return measureMonoTextUnits(content)
+  return measureTextUnits(content, { bold: isBold(inheritedAttribute(el, "font-weight")), fontFamily })
+}
+
 function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: BgRegion[]; imageBackedRuns: ImageBackedTextRun[] } {
   const root = parseSvg(markup)
   const issues: ContrastIssue[] = []
@@ -2064,7 +2087,7 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
             // returned before this change — the single-background case is
             // every page's overwhelmingly common one, so this is a widening
             // of what the walk can see, not a rewrite of what it decides.
-            const width = measureTextUnits(content) * renderedFontSize
+            const width = runUnits(el, content) * renderedFontSize
             const left =
               currentAnchor === "end" ? tx - width : currentAnchor === "middle" ? tx - width / 2 : tx
             const candidates =
@@ -2112,7 +2135,7 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
           // near-invisible watermark shouldn't demand a pixel sample any
           // more than it demands an SVG-color check.
           const renderedFontSize = currentFontSize * as
-          const width = measureTextUnits(content) * renderedFontSize
+          const width = runUnits(el, content) * renderedFontSize
           const left = currentAnchor === "end" ? tx - width : currentAnchor === "middle" ? tx - width / 2 : tx
           const required = requiredRatioFor(currentTier, renderedFontSize)
           imageBackedRuns.push({
@@ -2539,6 +2562,28 @@ function steppedAsideFindings(markup: string, page: number, slideId: string | un
   ]
 }
 
+// ────────────────────────────────────────────────────────────────────────
+// Source line: a content page's `footnote` that the rendered page never
+// paints. No face marks this loss on its own, because a face that has no
+// place for the field never looks at it (see `./source-line.ts`), so the
+// check reads the page against the slide.
+// ────────────────────────────────────────────────────────────────────────
+
+function sourceLineFindings(markup: string, slide: Slide, page: number, slideId: string | undefined): AuditFinding[] {
+  if (!slide.footnote?.trim() || !sourceLineMissing(parseSvg(markup), slide)) return []
+  return [
+    {
+      page,
+      ...(slideId !== undefined ? { slideId } : {}),
+      code: "content-dropped",
+      message:
+        `the page's source line is missing from the rendered slide, with nothing on it to say so — ` +
+        `the layout this page uses does not draw a footnote`,
+      detail: { count: 1, kind: "footnote" },
+    },
+  ]
+}
+
 function monotonyMessage(componentType: string, fromPage: number, toPage: number, length: number): string {
   return (
     `pages ${fromPage}-${toPage} repeat component type "${componentType}" (${length} consecutive pages) — ` +
@@ -2642,6 +2687,7 @@ function runDeterministicAudit(
     findings.push(...truncatedFindings(markup, page, slideId))
     findings.push(...droppedFindings(markup, page, slideId))
     findings.push(...steppedAsideFindings(markup, page, slideId))
+    findings.push(...sourceLineFindings(markup, slide, page, slideId))
   })
 
   findings.push(...monotonyFindings(ir))

@@ -4,7 +4,7 @@ import { sectionNameFor } from "../lib/derive"
 import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
-import { latinUpper, statementLines, trackingPx } from "./minimal-shared"
+import { joinSources, latinUpper, statementLines, trackingPx } from "./minimal-shared"
 import { sparseFace } from "./sparse/registry"
 
 /**
@@ -84,7 +84,8 @@ function GenericStatementContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const quoteLastY = quote
     ? quoteFirstY + Math.max(0, quote.lines.length - 1) * quote.lineHeight
     : quoteFirstY
-  const attrSource = lines.source
+  // The page's own footnote shares the caption (see `joinSources`).
+  const attrSource = joinSources(lines.source, slide.footnote)
   const attrTracking = trackingPx(ATTR_SIZE, ATTR_TRACKING_EM)
   const attribution = attrSource
     ? fitSvgLine(latinUpper(attrSource), {

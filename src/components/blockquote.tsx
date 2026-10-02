@@ -1,5 +1,6 @@
 import type { Component } from "@/ir"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 import type { RenderDef, SvgComponent } from "./types"
 
@@ -70,8 +71,13 @@ const ATTR_MIN_FONT_SIZE = 16
 const ATTR_GAP = 8
 const BOTTOM_PAD = 12
 
+/**
+ * The body lines, fitted on the words a reader sees. A marked run (`**…**`)
+ * keeps its marks for the paint, so it takes the theme's emphasis instead of
+ * printing its asterisks.
+ */
 function layBody(text: string, w: number) {
-  return layoutSvgText(text, {
+  return fitEmphasisText(text, {
     maxWidth: w - BODY_INDENT * 2,
     fontSize: BODY_FONT_SIZE,
     maxLines: 99,
@@ -120,21 +126,23 @@ export const blockquote: SvgComponent<BlockquoteComponent> = {
         </text>
 
         {/* body lines (italic) */}
-        {visibleLines.map((line, i) => (
-          <text
-            key={i}
-            data-truncated={bodyTruncated && i === visibleLines.length - 1 ? "1" : undefined}
-            x={BODY_INDENT}
-            y={QUOTE_ZONE + i * l.lineHeight + l.fontSize}
-            fontFamily={ctx.fonts.body}
-            fontSize={l.fontSize}
-            fontStyle="italic"
-            fill={ctx.colors.text}
-            dominantBaseline="alphabetic"
-          >
-            {line}
-          </text>
-        ))}
+        {renderEmphasisHeading(
+          { ...l, lines: visibleLines, segments: l.segments.slice(0, visibleLines.length) },
+          headingEmphasisPaint(ctx, l, { baseFill: ctx.colors.text, fontFamily: ctx.fonts.body, bold: false }),
+          (_line, i) => (
+            <text
+              key={i}
+              data-truncated={bodyTruncated && i === visibleLines.length - 1 ? "1" : undefined}
+              x={BODY_INDENT}
+              y={QUOTE_ZONE + i * l.lineHeight + l.fontSize}
+              fontFamily={ctx.fonts.body}
+              fontSize={l.fontSize}
+              fontStyle="italic"
+              fill={ctx.colors.text}
+              dominantBaseline="alphabetic"
+            />
+          ),
+        )}
 
         {/* attribution: single line, shrunk/truncated to the box width — a
             narrow theme column (e.g. magazine's 880 content column)

@@ -6,7 +6,8 @@ import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { accessibleOpacity, readableOn } from "../../render/ink"
 import { bleedSlotCanHost, findImageSelection, singlePictureExact } from "../find-image"
 import { DroppedContentMarker } from "../../render/drop-marker"
-import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
+import { heroCaption, heroUnit, heroSource, heroValue, joinSources } from "../minimal-shared"
+import { MonoBleedFootnote } from "../generic-mono-bleed"
 import { fitHeroLine, fitSparseHeading, fitStatementSource, isNumericHero, rotateRectPolygon, splitTrailingPercent } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
@@ -204,6 +205,7 @@ function playbillTypeOnField({ slide, ctx }: SvgTemplateProps) {
           {subheading.text}
         </text>
       )}
+      <MonoBleedFootnote text={slide.footnote} ctx={ctx} />
     </>
   )
 }
@@ -265,7 +267,7 @@ export function monoBleed(props: SvgTemplateProps) {
   // The picture's own caption, not the page heading. It used to have no place
   // on this face at all: a photo authored with a caption reached the slide as
   // pixels only, and the line the author wrote was never painted.
-  const caption = image?.caption?.trim()
+  const caption = joinSources(image?.caption?.trim(), slide.footnote)
   const captionOpacity = accessibleOpacity(colors.bg, colors.primary, BAND_CAPTION_SIZE, BAND_CAPTION_OPACITY)
   return (
     <>

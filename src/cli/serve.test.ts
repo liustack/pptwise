@@ -44,8 +44,9 @@ interface ReadHold {
   phase: "before" | "after"
   /** Every read, or only those a `buildDeckPreview` call makes. */
   scope: "any" | "build"
-  /** The target's own spec or IR file, a theme file, or any file. */
-  kind: "source" | "theme" | "any"
+  /** The target's own spec or IR file, a theme file, a page of a deck
+   *  project, or any file. */
+  kind: "source" | "theme" | "page" | "any"
   /** Hold only the next read, or every read until released. */
   once: boolean
   entered: () => void
@@ -127,6 +128,7 @@ vi.mock("./load-ir", async (importOriginal) => {
   function kindMatches(hold: ReadHold["kind"], kind: string): boolean {
     if (hold === "any") return true
     if (hold === "theme") return kind === "theme"
+    if (hold === "page") return kind.startsWith("page ")
     return kind === "IR" || kind === "spec"
   }
   async function waitAt(phase: "before" | "after", kind: string): Promise<void> {
@@ -437,7 +439,66 @@ async function pollUntil<T>(probe: () => Promise<T | undefined>, timeoutMs = 300
   }
 }
 
+/** How long a marker gets to be reported before {@link untilWatchersLive}
+ *  writes a fresh one. Longer than the 50ms over which libuv asks FSEvents
+ *  to batch changes: fresh markers 50ms apart were seen to go unreported
+ *  for seconds on end, while at 100ms no start out of 300 needed more than
+ *  one fresh marker. */
+const MARKER_RETRY_MS = 100
+
+/**
+ * Resolves once the platform is reporting changes to every directory this
+ * process watches.
+ *
+ * On macOS, libuv runs all of a process's `fs.watch` directory watchers on
+ * a single FSEvents stream, and every new watcher makes it build that
+ * stream again on a background thread after `fs.watch` has returned. A
+ * write into a watched directory before the new stream runs can be dropped
+ * with no event at all when that directory also changed just before the
+ * watcher opened, which is the shape of every test here: the fixture is
+ * written, the server starts, the test writes again. Measured with plain
+ * `fs.watch` and no serve code, a page rewritten 1ms after its watcher
+ * opened, 8ms after the fixture wrote it, went unreported in 12 runs out
+ * of 150. Rewritten after a marker had been reported this way, it was
+ * reported in all 150.
+ *
+ * The watcher this opens comes after every other one, so it rides the
+ * same stream, and the first marker it reports proves the stream carrying
+ * the earlier watchers is running. A marker written before that can be
+ * dropped too, so a fresh one follows every {@link MARKER_RETRY_MS}.
+ * inotify and ReadDirectoryChangesW watch from the moment the call
+ * returns, and there the first marker is reported at once. Uses the real
+ * `fs.watch`, so neither the marker watcher nor its events reach the
+ * `fsGate` hooks.
+ */
+async function untilWatchersLive(): Promise<void> {
+  const fs = await vi.importActual<typeof FsModule>("node:fs")
+  const dir = await makeDir("pptwise-serve-live-")
+  let watcher: FsModule.FSWatcher | undefined
+  let retry: NodeJS.Timeout | undefined
+  let deadline: NodeJS.Timeout | undefined
+  try {
+    await new Promise<void>((resolvePromise, reject) => {
+      let marker = 0
+      const mark = () => void writeFile(join(dir, `marker-${marker++}`), "").catch(reject)
+      watcher = fs.watch(dir, () => resolvePromise())
+      watcher.on("error", reject)
+      mark()
+      retry = setInterval(mark, MARKER_RETRY_MS)
+      deadline = setTimeout(() => reject(new Error("fs.watch reported no marker within 10s")), 10_000)
+    })
+  } finally {
+    clearInterval(retry)
+    clearTimeout(deadline)
+    watcher?.close()
+    await rm(dir, { recursive: true, force: true })
+  }
+}
+
 const openHandles: ServeHandle[] = []
+/** A server on an ephemeral port, handed over only once its watchers are
+ *  reporting ({@link untilWatchersLive}): the tests below write right after
+ *  this returns and wait for that write to be seen. */
 async function startServe(
   target: string,
   opts: { port?: number; cwd?: string } = {},
@@ -448,6 +509,7 @@ async function startServe(
     cwd: opts.cwd,
   })
   openHandles.push(handle)
+  await untilWatchersLive()
   return handle
 }
 
@@ -510,6 +572,41 @@ describe("createServeServer — startup failures", () => {
     await writeFile(irPath, JSON.stringify(VALID_IR))
     const handle1 = await startServe(irPath)
     await expect(createServeServer({ target: irPath, port: handle1.port })).rejects.toThrow(/already in use/)
+  })
+
+  it("closes the watchers it opened for a first build that fails, and builds nothing for a change seen meanwhile", async () => {
+    // The watchers open before the first build, so a first build that
+    // fails leaves them to close, together with the rebuild a change seen
+    // while it ran has scheduled.
+    const dir = await makeDir()
+    const irPath = join(dir, "deck.json")
+    await writeFile(irPath, JSON.stringify(INVALID_IR_SHAPE))
+    const count = (kind: string) => process.getActiveResourcesInfo().filter((name) => name === kind).length
+    const watchersBefore = count("FSEventWrap")
+    const timeoutsBefore = count("Timeout")
+
+    const gate = holdReads({ phase: "before", scope: "build", kind: "source", once: true })
+    const starting = createServeServer({ target: irPath, port: 0, cwd: dir })
+    try {
+      await gate.entered
+      await untilWatchersLive()
+      const seen = new Promise<void>((resolvePromise) => {
+        fsGate.beforeEvent = (path, _event, filename) => {
+          if (path === dir && filename !== null && basename(filename.toString()) === "deck.json") resolvePromise()
+        }
+      })
+      await writeFile(irPath, `${JSON.stringify(INVALID_IR_SHAPE)}\n`)
+      await seen
+    } finally {
+      gate.release()
+    }
+    await expect(starting).rejects.toThrow(/invalid IR/)
+
+    const readsAfterStartup = resolveGate.buildReads.length
+    await sleep(DEBOUNCE_GRACE_MS)
+    expect(resolveGate.buildReads.length).toBe(readsAfterStartup)
+    await pollUntil(async () => (count("FSEventWrap") <= watchersBefore ? true : undefined))
+    expect(count("Timeout")).toBeLessThanOrEqual(timeoutsBefore)
   })
 })
 
@@ -718,16 +815,127 @@ describe("createServeServer — directories that appear after startup", () => {
     expect((await get(handle.port, "/")).body).not.toContain("data:image/png;base64")
 
     // assets/ is born empty first, so the only thing that can bring the
-    // bytes in is an event from inside the new directory itself.
-    await mkdir(join(deckDir, "assets"))
-    await sleep(400)
-    await writeFile(join(deckDir, "assets", "logo.png"), PNG_1PX)
+    // bytes in is an event from inside the new directory itself. The image
+    // lands once the server has opened a watcher on the new directory, the
+    // rebuild its appearance scheduled has read it empty, and that watcher
+    // reports (`untilWatchersLive`).
+    const assetsDir = join(deckDir, "assets")
+    const watched = new Promise<void>((resolvePromise) => {
+      fsGate.afterWatch = (path) => {
+        if (path === assetsDir) resolvePromise()
+      }
+    })
+    await mkdir(assetsDir)
+    await watched
+    await sse.waitForNext("reload")
+    await untilWatchersLive()
+    await writeFile(join(assetsDir, "logo.png"), PNG_1PX)
     const withImage = await pollUntil(async () => {
       const res = await get(handle.port, "/")
       return res.body.includes("data:image/png;base64") ? res : undefined
     })
     expect(withImage.body).not.toContain("no image yet")
     sse.close()
+  })
+})
+
+/** The body of a child process that keeps the disk busy: it rewrites 200
+ *  small files in the directory named by its argument as fast as it can,
+ *  for at most 30s whatever happens to the test that started it. */
+const BUSY_WRITER = `
+const { writeFileSync } = require("node:fs")
+const { join } = require("node:path")
+const dir = process.argv[1]
+const end = Date.now() + 30_000
+for (let n = 0; Date.now() < end; n++) writeFileSync(join(dir, "f" + (n % 200)), String(n))
+`
+
+describe("startServe — the server comes back with its watchers reporting", () => {
+  // Every watcher test below writes right after `startServe` and waits for
+  // that write to be seen. On macOS that write used to go unreported now
+  // and then, and "marks the served HTML stale after a failed rebuild"
+  // timed out waiting for its error frame. FSEvents serves the whole
+  // machine, and the drop is rare on a quiet one but common once something
+  // else keeps the disk busy, which is what a full parallel run does. So a
+  // child process rewrites files next door the whole time, and each start
+  // does what that test does: load the page, subscribe, rewrite a page.
+  // With `startServe` handing the server over before its watchers report,
+  // this failed within its first three starts in six runs out of six.
+  it("reports a page rewritten right after start, in twenty starts out of twenty, with the disk kept busy", async () => {
+    const busyDir = await makeDir("pptwise-serve-busy-")
+    const busy = spawn(process.execPath, ["-e", BUSY_WRITER, busyDir], { stdio: "ignore" })
+    const busyExited = new Promise((resolvePromise) => busy.once("exit", resolvePromise))
+    try {
+      for (let start = 1; start <= 20; start++) {
+        const deckDir = await makeDir()
+        const pages = join(deckDir, "pages")
+        const page = join(pages, "p-a.json")
+        await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
+        await mkdir(pages)
+        await writeFile(page, JSON.stringify({ components: [{ type: "paragraph", text: "first draft" }] }))
+        const handle = await startServe(deckDir, { cwd: deckDir })
+        await get(handle.port, "/")
+        const sse = await connectSSE(handle.port)
+        const reported = new Promise<void>((resolvePromise, reject) => {
+          const timer = setTimeout(
+            () => reject(new Error(`start ${start} of 20: the rewrite of pages/p-a.json was never reported`)),
+            3000,
+          )
+          fsGate.beforeEvent = (path, _event, filename) => {
+            if (path !== pages || filename === null || basename(filename.toString()) !== "p-a.json") return
+            clearTimeout(timer)
+            resolvePromise()
+          }
+        })
+        await writeFile(page, JSON.stringify({ components: [{ type: "paragraph", text: "revised draft" }] }))
+        await reported
+        fsGate.beforeEvent = undefined
+        sse.close()
+        await handle.close()
+      }
+    } finally {
+      busy.kill()
+      await busyExited
+      await rm(busyDir, { recursive: true, force: true })
+    }
+  })
+})
+
+describe("createServeServer — a page saved while the first build runs", () => {
+  it("is picked up once the server is up, instead of staying behind the first build", async () => {
+    // The first build has read the page and is still running when the page
+    // is saved again. A large deck's first build takes seconds, so an agent
+    // that starts the server and keeps editing does exactly this.
+    const deckDir = await makeDir()
+    const page = join(deckDir, "pages", "p-a.json")
+    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
+    await mkdir(join(deckDir, "pages"))
+    await writeFile(page, JSON.stringify({ components: [{ type: "paragraph", text: "first draft" }] }))
+
+    const gate = holdReads({ phase: "after", scope: "build", kind: "page", once: true })
+    const serving = startServe(deckDir, { cwd: deckDir })
+    try {
+      await gate.entered
+      await untilWatchersLive()
+      await writeFile(page, JSON.stringify({ components: [{ type: "paragraph", text: "saved during the first build" }] }))
+      // The build runs on after the save. Half a second also keeps the save
+      // out of reach of the stray event FSEvents can hand a watcher for a
+      // write made just before it opened (see `settledRevision`), which
+      // would otherwise cover for a server that only starts watching once
+      // the first build is done.
+      await sleep(500)
+    } finally {
+      gate.release()
+    }
+    const handle = await serving
+
+    const saved = await pollUntil(async () => {
+      const res = await get(handle.port, "/")
+      return res.body.includes("saved during the first build") ? res : undefined
+    }, THEME_POLL_MS + 3000)
+    expect(saved.body).not.toContain("first draft")
+    expect(saved.headers["x-pptwise-build-status"]).toBe("ok")
+    expect(Number(saved.headers["x-pptwise-served-revision"])).toBeGreaterThan(1)
   })
 })
 
@@ -1991,7 +2199,7 @@ describe.skipIf(!PATH_THROUGH_A_FILE_IS_ENOTDIR)("createServeServer — a deck s
     const errors: unknown[] = []
     const tree = watchTree(roots, () => changes++, (e) => errors.push(e), { ceilingDir: root })
     try {
-      await sleep(DEBOUNCE_GRACE_MS)
+      await untilWatchersLive()
       renameSync(themes, `${themes}-moved`)
       writeFileSync(themes, "not a directory\n")
       await pollUntil(async () => (changes > 0 ? true : undefined))
@@ -2292,10 +2500,7 @@ describe.skipIf(!PATH_THROUGH_A_FILE_IS_ENOTDIR)("createServeServer — a watche
       (e) => errors.push(e),
     )
     try {
-      // FSEvents on macOS starts a fresh watcher's stream a moment after
-      // `fs.watch` returns, and a directory made inside that moment is
-      // never reported (about 1 in 20 runs), so the test waits it out.
-      await sleep(DEBOUNCE_GRACE_MS)
+      await untilWatchersLive()
       const rotated = swapThemesOnBriefEvent(themes)
       await mkdir(join(themes, "brief"))
       await pollUntil(async () => (errors.length > 0 ? true : undefined))

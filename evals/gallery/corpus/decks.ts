@@ -988,6 +988,31 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
       },
     ],
   }),
+  // Three headline numbers over the quote the page is about.
+  figures: (lex) => ({
+    heading: lex.headings[2]!,
+    components: [
+      { type: "kpi_cards", items: figureItems(lex, 3) },
+      { type: "blockquote", text: lex.quote.text, attribution: lex.quote.attribution },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // The timeline across the page, its third milestone marked, over a
+  // closing line.
+  track: (lex) => ({
+    heading: lex.headings[11]!,
+    components: [COMPONENT_BUILDERS.timeline!(lex), { type: "callout", variant: "info", text: lex.verdicts.positive }],
+    footnote: lex.sources[0]!.label,
+  }),
+  // A photograph beside a list of facts written "label：value".
+  pairs: (lex) => ({
+    heading: lex.headings[7]!,
+    components: [
+      COMPONENT_BUILDERS.image!(lex),
+      { type: "bullets", items: lex.metrics.slice(0, 4).map((m) => `${m.label}${lex.id === "en" ? ": " : "："}${m.value}${m.unit ?? ""}`) },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
   // The combo chart with its rate line marked, the series the column then
   // sets over the emphasis stroke.
   rail: (lex) => {
@@ -1004,6 +1029,48 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
   },
 }
 
+/** The figures the column beside a chart or a row of figures sets: label, value and a note. */
+function figureItems(lex: Lexicon, count: number) {
+  return lex.metrics.slice(0, count).map((metric, i) => ({
+    value: metric.value,
+    ...(metric.unit ? { unit: metric.unit } : {}),
+    label: metric.label,
+    note: lex.periods[i]!,
+  }))
+}
+
+/**
+ * Second pages for the compositions that take two shapes or set themselves
+ * at a second size: `rail` with the author's figures beside the chart
+ * instead of the changes it computes, and `table` at its dense size, four
+ * options over a closing line.
+ */
+export type CompositionVariant = "figures" | "dense"
+
+const COMPOSITION_VARIANT_BODIES: Record<`${CompositionId}-${CompositionVariant}`, ((lex: Lexicon) => CompositionBody) | undefined> = {
+  "rail-figures": (lex) => ({
+    heading: lex.headings[0]!,
+    components: [CHART_VARIANTS["chart · bar"]!(lex), { type: "kpi_cards", items: figureItems(lex, 2) }],
+    footnote: lex.sources[0]!.label,
+  }),
+  "table-dense": (lex) => ({
+    heading: lex.headings[9]!,
+    components: [
+      {
+        type: "comparison",
+        recommended: 0,
+        columns: [lex.labels[8]!, lex.labels[9]!, lex.labels[10]!, lex.labels[11]!],
+        rows: lex.phrases.slice(0, 4).map((label, i) => ({
+          label,
+          cells: [lex.periods[i % 4]!, lex.labels[(i + 12) % lex.labels.length]!, lex.periods[(i + 1) % 4]!, lex.labels[(i + 13) % lex.labels.length]!],
+        })),
+      },
+      { type: "callout", variant: "info", text: lex.verdicts.positive },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+} as Record<`${CompositionId}-${CompositionVariant}`, ((lex: Lexicon) => CompositionBody) | undefined>
+
 /** One page drawn by one shared composition, on `themeId`, under the face its menu gives `kind`. */
 export function compositionPage(
   lex: Lexicon,
@@ -1011,8 +1078,11 @@ export function compositionPage(
   themeId: string,
   kind: PageKind,
   composition: CompositionId,
+  variant?: CompositionVariant,
 ): PptxIR {
-  const body = COMPOSITION_BODIES[composition](lex)
+  const build = variant ? COMPOSITION_VARIANT_BODIES[`${composition}-${variant}`] : COMPOSITION_BODIES[composition]
+  if (!build) throw new Error(`no gallery page for composition ${composition} in variant ${variant}`)
+  const body = build(lex)
   const slide = {
     type: "content",
     kind,
@@ -1020,5 +1090,5 @@ export function compositionPage(
     components: body.components,
     ...(body.footnote ? { footnote: body.footnote } : {}),
   } as Slide
-  return deckShell(lex, assets, themeId, `composition-${composition}-${themeId}-${lex.id}`, [slide])
+  return deckShell(lex, assets, themeId, `composition-${composition}${variant ? `-${variant}` : ""}-${themeId}-${lex.id}`, [slide])
 }

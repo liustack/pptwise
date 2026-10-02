@@ -42,7 +42,10 @@
  * Watch roots (design ruling 3) come straight from {@link buildDeckPreview}'s
  * own `resolvedTarget`/`isDir` — the exact path `loadDeckTarget`
  * (`./commands.ts`) already resolved `target` to — rather than this module
- * re-deriving the bare-name/`decksDir` resolution a second time: a deck
+ * re-deriving the bare-name/`decksDir` resolution a second time. The one
+ * exception is the set opened before the first build, which comes from
+ * `locateDeck` (`./commands.ts`), the locator that build itself calls, and
+ * which that build's own answer replaces as soon as it finishes: a deck
  * project directory cares about `deck.spec.json` + `pages/` + `assets/` +
  * `theme.json`; a bare IR target cares about that one file. Both also care
  * about where the bound theme's name resolves to, and that is covered two
@@ -111,7 +114,7 @@ import { basename, dirname, join, resolve, sep } from "node:path"
 import { THEME_ID_PATTERN } from "@/ir"
 import { PptwiseError } from "../errors"
 import { spawnHidden } from "./child"
-import { buildDeckPreview, collectDeckThemeInputs, DeckBuildError } from "./commands"
+import { buildDeckPreview, collectDeckThemeInputs, DeckBuildError, type DeckLocation, locateDeck } from "./commands"
 import { findConfig } from "./config"
 import { ASSETS_DIRNAME, PAGES_DIRNAME, SPEC_FILENAME, THEME_FILENAME } from "./deck-dir"
 import { boundThemeName, type ThemeInputs } from "./theme-inputs"
@@ -697,16 +700,23 @@ export function injectServeClient(html: string): string {
 
 
 /**
- * The testable factory (serve wave, task S1). Builds once up front — a
- * failure here rejects the whole call, see this module's own doc comment —
- * then starts listening and watching. Every fs/network resource this
- * function opens (the watchers, the heartbeat and theme-poll timers, the
- * HTTP server) is opened as the last step, after every `await` that could
- * reject, inside one `try` whose `catch` tears down whatever had been
- * opened before rethrowing. A caller that gets a handle tears the rest down
- * through {@link ServeHandle.close}, and a caller that gets an error has
- * nothing left to clean up, which is what makes this safe to call directly
- * from a test without going through the CLI at all.
+ * The testable factory (serve wave, task S1). Locates the target, starts
+ * watching it, builds once, then starts listening. A failed first build
+ * rejects the whole call, see this module's own doc comment. The watchers
+ * open before that build rather than after it: the build reads every page
+ * at its start and a large deck renders for seconds after, and a page
+ * saved in between used to land before anything was watching, leaving the
+ * served page on the draft the build had read while the status called it
+ * current. Now that save is an event like any other, and the rebuild it
+ * schedules waits for the first build and runs once the server is up.
+ *
+ * Every fs/network resource this function opens (the watchers, the
+ * heartbeat and theme-poll timers, the HTTP server) is opened inside one
+ * `try` whose `catch` tears down whatever had been opened before
+ * rethrowing, the first build included. A caller that gets a handle tears
+ * the rest down through {@link ServeHandle.close}, and a caller that gets
+ * an error has nothing left to clean up, which is what makes this safe to
+ * call directly from a test without going through the CLI at all.
  */
 export async function createServeServer(options: ServeOptions): Promise<ServeHandle> {
   const cwd = options.cwd ?? process.cwd()
@@ -715,14 +725,19 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     throw new PptwiseError(`invalid port ${requestedPort} — expected an integer between 0 and 65535`)
   }
 
-  // First build happens before the server ever starts listening — deliberate:
-  // there is no previous-good HTML to fall back to yet, so an invalid target
-  // must fail this call outright (CLI exit 1, same as every other command)
-  // rather than start a server with nothing to show at `GET /`.
-  const initial = await buildDeckPreview(options.target, { cwd })
-  let cachedHtml = injectServeClient(initial.html)
-  let latestRevision = 1
-  let servedRevision = 1
+  // Where the target is, located the way the first build will locate it,
+  // and the project it sits in: everything the watch set needs before
+  // that build has read anything. A target that cannot be located fails
+  // here, before anything is opened, with the error the build would raise.
+  const located = await locateDeck(options.target, { cwd })
+  const projectHit = await findConfig(cwd)
+  const watchCeiling = projectHit !== null ? dirname(projectHit.path) : cwd
+
+  // Set by the first build, below. The server only listens once it has
+  // succeeded, so nothing reads these before then.
+  let cachedHtml = ""
+  let latestRevision = 0
+  let servedRevision = 0
   let latestError: string | undefined
   const sseClients = new Set<ServerResponse>()
 
@@ -749,30 +764,37 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     writeToAll(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
   }
 
-  const deckDir = initial.isDir ? initial.resolvedTarget : dirname(initial.resolvedTarget)
   const messageOf = (e: unknown): string => (e instanceof Error ? e.message : String(e))
+
+  /** The target the watch set is drawn for: as located above until the
+   *  first build has resolved it, then as that build resolved it, which
+   *  is what every later build resolves too. */
+  let watchedTarget: DeckLocation = located
 
   /** The theme name the last build found bound, for the watcher set: a
    *  spec rebound to a name whose file does not exist yet fails to build,
    *  and the file that will fix it has to be watched before it exists. A
-   *  build whose source could not be read keeps the last name. */
-  let watchedThemeName: string | undefined = boundThemeName(initial.themeInputs)
-
-  const projectHit = await findConfig(cwd)
-  const watchCeiling = projectHit !== null ? dirname(projectHit.path) : cwd
-  const workspaceAssets = join(
-    resolveWorkspaceLocation({
-      cwd,
-      projectConfigPath: projectHit?.path,
-      outDir: projectHit?.config.outDir,
-      target: initial.resolvedTarget,
-      isDir: initial.isDir,
-    }).dir,
-    ASSETS_DIRNAME,
-  )
+   *  build whose source could not be read keeps the last name. Unknown
+   *  until the first build has read the source, so the set opened before
+   *  it holds no theme files: a theme changed while that build runs is
+   *  left to the timed check, which compares against what the build
+   *  read. */
+  let watchedThemeName: string | undefined
 
   function currentWatchRoots(): WatchRoot[] {
-    return watchRoots(initial.resolvedTarget, initial.isDir, [
+    const { resolvedTarget, isDir } = watchedTarget
+    const deckDir = isDir ? resolvedTarget : dirname(resolvedTarget)
+    const workspaceAssets = join(
+      resolveWorkspaceLocation({
+        cwd,
+        projectConfigPath: projectHit?.path,
+        outDir: projectHit?.config.outDir,
+        target: resolvedTarget,
+        isDir,
+      }).dir,
+      ASSETS_DIRNAME,
+    )
+    return watchRoots(resolvedTarget, isDir, [
       { path: workspaceAssets, kind: "dir" },
       ...themeWatchRoots(watchedThemeName, { startDir: cwd, deckDir, ceilingDir: watchCeiling }),
     ])
@@ -786,7 +808,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
    *  before a build finished compares against a record that build has
    *  since replaced, so it checks the count on return and drops its result
    *  when the count moved. */
-  let lastThemeInputsKey = initial.themeInputs.key
+  let lastThemeInputsKey = ""
   let buildGeneration = 0
   let building = false
   let closed = false
@@ -866,7 +888,12 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   // has no handler for it either, so the process would go down on an
   // unhandled rejection. `buildOnce` settles every failure itself; the
   // `catch` here is the guarantee for anything that still gets past it.
-  let buildQueue: Promise<void> = Promise.resolve()
+  // The chain starts shut and opens once the server is up: the watchers
+  // are already open while the first build runs, and a rebuild a change
+  // schedules meanwhile waits here instead of racing that build. When
+  // startup fails the chain never opens, and nothing queued on it runs.
+  let openBuildQueue!: () => void
+  let buildQueue: Promise<void> = new Promise<void>((resolveOpen) => (openBuildQueue = resolveOpen))
   function rebuild(): Promise<void> {
     const run = buildQueue.then(buildOnce).catch((e: unknown) => {
       latestError = messageOf(e)
@@ -947,11 +974,11 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     res.end("not found")
   })
 
-  // Everything that holds a resource starts here, after the last `await`
-  // that could reject, and inside one `try`: whichever step fails, what
-  // the earlier steps opened is torn down before the error leaves. A
-  // watcher set that cannot be attached (`watchTree` throws, having closed
-  // its own partial set) is the first way out, a port in use the last.
+  // Everything that holds a resource starts here, inside one `try`:
+  // whichever step fails, what the earlier steps opened is torn down
+  // before the error leaves. A watcher set that cannot be attached
+  // (`watchTree` throws, having closed its own partial set) is the first
+  // way out, a failed first build the next, a port in use the last.
   let watchers: WatchTreeHandle | undefined
   let heartbeat: NodeJS.Timeout | undefined
   let themePoll: NodeJS.Timeout | undefined
@@ -979,6 +1006,18 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
 
   try {
     watchers = watchTree(currentWatchRoots(), scheduleRebuild, onWatchError, { ceilingDir: watchCeiling })
+    // The first build happens before the server ever starts listening,
+    // deliberately: there is no previous-good HTML to fall back to yet, so
+    // an invalid target must fail this call outright (CLI exit 1, same as
+    // every other command) rather than start a server with nothing to show
+    // at `GET /`.
+    const initial = await buildDeckPreview(options.target, { cwd })
+    cachedHtml = injectServeClient(initial.html)
+    latestRevision = 1
+    servedRevision = 1
+    recordThemeInputs(initial.themeInputs)
+    watchedTarget = { resolvedTarget: initial.resolvedTarget, isDir: initial.isDir }
+    watchers.update(currentWatchRoots())
     heartbeat = setInterval(() => writeToAll(": heartbeat\n\n"), HEARTBEAT_MS)
     themePoll = setInterval(() => void checkThemeSource(), THEME_POLL_MS)
     await new Promise<void>((resolveListen, rejectListen) => {
@@ -1001,6 +1040,8 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     }
     throw e
   }
+
+  openBuildQueue()
 
   const address = server.address()
   const actualPort = typeof address === "object" && address !== null ? address.port : requestedPort

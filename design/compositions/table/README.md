@@ -20,3 +20,28 @@ Code: [`src/layouts/compositions/table.tsx`](../../../src/layouts/compositions/t
 - Two or three options, at most five rows, headers in one line and cells in two at 24px. A bigger comparison goes back to the ordinary comparison component.
 - The pick's column is only visible where `surface` differs from the page. On a theme whose card and page are the same colour, the pick is carried by its header and its bold type alone.
 - A marked cell (`**…**`) takes the theme's highlight, measured against the column it sits on.
+
+## brief, tea sample, 2026-10
+
+| board (p09) | engine |
+| :-: | :-: |
+| ![board](brief-tea.board.png) | ![engine](brief-tea.engine.png) |
+
+| board (p11) | engine |
+| :-: | :-: |
+| ![board](brief-tea-p11.board.png) | ![engine](brief-tea-p11.engine.png) |
+
+**What changed.** The table takes four options and a closing line, and steps down through two smaller sizes when the first board's does not hold it.
+
+- compact (p11): 20px cells, 22px headers, 17px labels in a 260px column, a 52px header band, every row as tall as the tallest. The pick's column is 48px wider than a plain one (408px beside 360px on two options).
+- dense (p09): 17px cells, 19px headers, 16px labels in a 170px column, every column 216px with 16px between them on four options, and every row room for two lines.
+
+A closing `callout` sits 24px under the table in a full-width primary block at 22px, the block `rows` uses at its own size.
+
+**Why.** Five rows over a closing line, or four options side by side, do not fit the first board's 24px table. The tea board drew both at smaller sizes rather than drop the closing line, and the sizes are a ladder the composition climbs down, the way `waves` steps its first measure from 36px to 24px.
+
+**What it gave up.**
+
+- The first board's size is still tried first, so a table that fit before is drawn exactly as before.
+- Four options only at the dense size. Five rows at most at every size.
+- The English copy of the sample was tightened to keep every cell within its line budget, since the sizes are fixed.

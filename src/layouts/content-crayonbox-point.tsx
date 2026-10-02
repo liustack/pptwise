@@ -5,7 +5,7 @@ import { fitSvgLine } from "../lib/svg-text-layout"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading, stripEmphasis } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
-import { statementLines } from "./minimal-shared"
+import { joinSources, statementLines } from "./minimal-shared"
 import {
   CREATIVE_PURPLE,
   CrayonboxDecorPiece,
@@ -77,8 +77,10 @@ export function CrayonboxPointContent({ ir, slide, index, ctx }: SvgTemplateProp
         fontFamily: fonts.body,
       })
     : null
-  const source = lines.source
-    ? fitSvgLine(lines.source, {
+  // The page's own footnote shares the source line (see `joinSources`).
+  const sourceText = joinSources(lines.source, slide.footnote)
+  const source = sourceText
+    ? fitSvgLine(sourceText, {
         maxWidth: 700,
         fontSize: 22,
         minFontSize: 18,

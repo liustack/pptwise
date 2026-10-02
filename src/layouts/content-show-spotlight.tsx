@@ -12,6 +12,7 @@ import {
   withoutOverflowMark,
 } from "./show-shared"
 import type { SvgTemplateProps } from "./types"
+import { joinSources } from "./minimal-shared"
 
 type ImageComponent = Extract<Component, { type: "image" }>
 type InsightPanel = Extract<Component, { type: "insight_panel" }>
@@ -32,6 +33,8 @@ function exactSpotlight(slide: SvgTemplateProps["slide"]): {
 /** show-spotlight。一个主图加至多三组参数时启用定稿疏构图。 */
 /** Closing-line baseline on the fallback path, under its content block. */
 const FALLBACK_CONCLUSION_Y = 664
+/** The fallback's source line, under its closing line. */
+const FALLBACK_FOOTNOTE_Y = 694
 
 /** The band this face gives a page its own construction cannot hold. */
 const SPOTLIGHT_FALLBACK_RECT = { x: 64, y: 124, w: 1152, h: 500 } as const
@@ -135,7 +138,9 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
         fontFamily: fonts.body,
       })
     : null
-  const footnoteSource = stripEmphasis(exact?.panel?.footnote ?? "").trim()
+  // The page's own footnote shares the panel's note line (see `joinSources`).
+  // It used to reach nobody on this face.
+  const footnoteSource = joinSources(stripEmphasis(exact?.panel?.footnote ?? "").trim(), stripEmphasis(slide.footnote ?? "")) ?? ""
   const footnote = footnoteSource
     ? fitSvgLine(footnoteSource, {
         maxWidth: 496,
@@ -166,6 +171,12 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
    * rather than as the panel's own note.
    */
   const FOOTNOTE_Y = 672
+  // A page this face falls back on keeps its source line under the closing line.
+  const fallbackFootnoteSource = stripEmphasis(slide.footnote ?? "").trim()
+  const fallbackFootnote =
+    !exact && fallbackFootnoteSource
+      ? fitSvgLine(fallbackFootnoteSource, { maxWidth: 1152, fontSize: 16, minFontSize: 16, fontFamily: fonts.body })
+      : null
 
   // Not wired to the step-aside (`render/step-aside.tsx`). This fallback
   // band is a constant 1152x500 that no heading moves, and the sheet is
@@ -398,6 +409,19 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
               dominantBaseline="alphabetic"
             >
               {withoutOverflowMark(conclusion.text)}
+            </text>
+          )}
+          {fallbackFootnote && (
+            <text
+              data-truncated={fallbackFootnote.truncated ? "1" : undefined}
+              x={64}
+              y={conclusion ? FALLBACK_FOOTNOTE_Y : FALLBACK_CONCLUSION_Y}
+              fontFamily={fonts.body}
+              fontSize={fallbackFootnote.fontSize}
+              fill={accessibleInk(colors.muted, bg, fallbackFootnote.fontSize)}
+              dominantBaseline="alphabetic"
+            >
+              {withoutOverflowMark(fallbackFootnote.text)}
             </text>
           )}
         </>

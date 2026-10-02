@@ -39,6 +39,13 @@ function statementItems(block: NumberedCards | Bullets): StatementItem[] {
 /** show-statement。三点以内的观点内容进入陈述句加三列定稿构图。 */
 /** The band this face gives a page its own construction cannot hold. */
 const STATEMENT_FALLBACK_RECT = { x: 64, y: 230, w: 1152, h: 390 } as const
+/**
+ * The page's source line, on the line the runway faces close a column with
+ * (`show-spotlight` sets its panel's note there). This face used to draw no
+ * footnote at all.
+ */
+const FOOTNOTE_Y = 672
+const FOOTNOTE_SIZE = 16
 
 export function ShowStatementContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
@@ -89,6 +96,10 @@ export function ShowStatementContent({ ir, slide, index, ctx }: SvgTemplateProps
     ? null
     : stepAside({ face: "show-statement", slide, ctx, bodyRect: STATEMENT_FALLBACK_RECT })
   if (aside) return aside
+  const footnoteSource = stripEmphasis(slide.footnote ?? "").trim()
+  const footnote = footnoteSource
+    ? fitSvgLine(footnoteSource, { maxWidth: 1152, fontSize: FOOTNOTE_SIZE, minFontSize: FOOTNOTE_SIZE, fontFamily: fonts.body })
+    : null
 
   return (
     <g data-show-mode={block ? "statement" : "fallback"}>
@@ -215,6 +226,19 @@ export function ShowStatementContent({ ir, slide, index, ctx }: SvgTemplateProps
             ctx={showNeutralFallbackCtx(ctx)}
           />
         </>
+      )}
+      {footnote && (
+        <text
+          data-truncated={footnote.truncated ? "1" : undefined}
+          x={64}
+          y={FOOTNOTE_Y}
+          fontFamily={fonts.body}
+          fontSize={footnote.fontSize}
+          fill={accessibleInk(colors.muted, bg, footnote.fontSize)}
+          dominantBaseline="alphabetic"
+        >
+          {withoutOverflowMark(footnote.text)}
+        </text>
       )}
     </g>
   )

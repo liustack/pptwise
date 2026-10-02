@@ -227,9 +227,26 @@ function fitSource(source: string, cardW: number, maxLines = SOURCE_MAX_LINES): 
   return { lines: laid.lines, truncated: laid.truncated }
 }
 
-/** 任一 item 带 source 来源行时卡加高（label 下再排一行 11px 小字），来源折成几行就加几行。 */
+/**
+ * A note (`items[].note`) is the line that puts the figure in context, "6 月末
+ * 共 63,987 家" under "门店数同比". It sits right under the label, in the
+ * card's body ink, and takes up to two lines the way a source does. A source
+ * follows it.
+ */
+const NOTE_MAX_LINES = 2
+
+function noteLines(item: KpiComponent["items"][number], cardW: number): { lines: string[]; truncated: boolean } | null {
+  return item.note?.trim() ? fitSource(item.note.trim(), cardW, NOTE_MAX_LINES) : null
+}
+
+/** 任一 item 带 source 来源行时卡加高（label 下再排一行 11px 小字），来源折成几行就加几行。note 行同理，排在来源之前。 */
 function baseCardH(component: KpiComponent, cardW: number, maxLines = SOURCE_MAX_LINES): number {
-  const lines = Math.max(0, ...component.items.map((it) => (it.source ? fitSource(it.source, cardW, maxLines).lines.length : 0)))
+  const lines = Math.max(
+    0,
+    ...component.items.map(
+      (it) => (noteLines(it, cardW)?.lines.length ?? 0) + (it.source ? fitSource(it.source, cardW, maxLines).lines.length : 0),
+    ),
+  )
   return lines > 0 ? CARD_H + SOURCE_LINE * lines : CARD_H
 }
 
@@ -423,6 +440,8 @@ export const kpi: SvgComponent<KpiComponent> = {
             minFontSize: 16,
           })
           const fittedSource = item.source ? fitSource(item.source, cardW, sourceCap) : null
+          const fittedNote = noteLines(item, cardW)
+          const noteShift = (fittedNote?.lines.length ?? 0) * SOURCE_LINE
           return (
             <g key={i}>
               <rect
@@ -485,12 +504,26 @@ export const kpi: SvgComponent<KpiComponent> = {
               >
                 {fittedLabel.text}
               </text>
+              {fittedNote?.lines.map((line, li) => (
+                <text
+                  key={`note-${li}`}
+                  data-truncated={fittedNote.truncated && li === fittedNote.lines.length - 1 ? "1" : undefined}
+                  x={cardX + 20}
+                  y={cardY + 114 + li * SOURCE_LINE + contentShift}
+                  fontSize={16}
+                  fill={accessibleInk(ctx.colors.text, ctx.colors.surface, 16)}
+                  fontFamily={ctx.fonts.body}
+                  dominantBaseline="alphabetic"
+                >
+                  {line}
+                </text>
+              ))}
               {fittedSource?.lines.map((line, li) => (
                 <text
                   key={`source-${li}`}
                   data-truncated={fittedSource.truncated && li === fittedSource.lines.length - 1 ? "1" : undefined}
                   x={cardX + 20}
-                  y={cardY + 114 + li * SOURCE_LINE + contentShift}
+                  y={cardY + 114 + noteShift + li * SOURCE_LINE + contentShift}
                   fontSize={16}
                   fill={ctx.colors.muted}
                   // Post-v0.3 W8 fix round (backlog item "D", task-2 review

@@ -12,6 +12,7 @@ import { findImageSelection } from "../layouts/find-image"
 import { resolveEffectiveFace } from "./layout-selection"
 import type { ThemeDefinition } from "../themes/definitions"
 import { measureTextUnits } from "../lib/svg-text-layout"
+import { stripEmphasis } from "./emphasis"
 import { buildChartModel } from "../components/chart-model"
 import { CATEGORY_FOLDING_TYPES } from "@/ir/components/chart"
 
@@ -68,7 +69,9 @@ export type QualityIssue = {
 
 /** Count characters. CJK characters count as 1 each (same as .length). */
 function charLen(s: string): number {
-  return s.length
+  // `**…**` marks are never painted, so they are not part of the length a
+  // reader sees.
+  return stripEmphasis(s).length
 }
 
 /**

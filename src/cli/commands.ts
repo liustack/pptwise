@@ -254,7 +254,7 @@ async function loadWorkspaceStock(
 
 /** Where `arg` resolved to: the deck project directory or the bare IR
  *  file, with the directory the theme lookup and rebind guard anchor at. */
-interface DeckLocation {
+export interface DeckLocation {
   resolvedTarget: string
   isDir: boolean
 }
@@ -271,6 +271,19 @@ async function locateDeckTarget(
 }
 
 /**
+ * Where a build of `arg` would find it right now, located the way a build
+ * locates it: both config layers read, then the target resolved. Throws
+ * whatever that raises. `pptwise serve` (`./serve.ts`) starts watching
+ * here before its first build, so a page saved while that build runs is
+ * an event like any other.
+ */
+export async function locateDeck(arg: string, opts: { cwd?: string } = {}): Promise<DeckLocation> {
+  const cwd = opts.cwd ?? process.cwd()
+  const [projectHit, userHit] = await readConfigs(cwd)
+  return locateDeckTarget(arg, cwd, projectHit, userHit)
+}
+
+/**
  * The theme inputs a build of `arg` reads right now, collected the way a
  * build collects them and never thrown: a target that cannot be located
  * is recorded in the name's place ({@link unreadThemeInputs}). `pptwise
@@ -281,8 +294,7 @@ export async function collectDeckThemeInputs(arg: string, opts: { cwd?: string }
   const cwd = opts.cwd ?? process.cwd()
   let location: DeckLocation
   try {
-    const [projectHit, userHit] = await readConfigs(cwd)
-    location = await locateDeckTarget(arg, cwd, projectHit, userHit)
+    location = await locateDeck(arg, { cwd })
   } catch (e) {
     return unreadThemeInputs(e)
   }

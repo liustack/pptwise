@@ -28,6 +28,7 @@ import {
   BASELINE_THEME,
   componentPage,
   compositionPage,
+  type CompositionVariant,
   layoutFaceSlot,
   layoutPage,
   themeDeck,
@@ -307,12 +308,22 @@ export const COMPOSITION_PAGES: readonly {
   readonly theme: string
   readonly kind: PageKind
   readonly composition: CompositionId
+  /**
+   * A second page for a composition that takes two shapes or sets itself at
+   * a second size, keyed into `COMPOSITION_VARIANT_BODIES`.
+   */
+  readonly variant?: CompositionVariant
 }[] = [
   { theme: "brief", kind: "points", composition: "rows" },
   { theme: "brief", kind: "comparison", composition: "table" },
+  { theme: "brief", kind: "comparison", composition: "table", variant: "dense" },
   { theme: "brief", kind: "process", composition: "waves" },
   { theme: "brief", kind: "hierarchy", composition: "tree" },
   { theme: "brief", kind: "data", composition: "rail" },
+  { theme: "brief", kind: "data", composition: "rail", variant: "figures" },
+  { theme: "brief", kind: "data", composition: "figures" },
+  { theme: "brief", kind: "process", composition: "track" },
+  { theme: "brief", kind: "photo", composition: "pairs" },
 ]
 
 export function buildMatrix(
@@ -405,9 +416,9 @@ export function buildMatrix(
     // ── compose: each shared composition this theme's faces hand pages to ─
     if (wantsBand("compose")) {
       for (const spec of COMPOSITION_PAGES.filter((p) => p.theme === themeId)) {
-        const ir = compositionPage(nativeLexiconFor(themeId), assets[themeLanguage], themeId, spec.kind, spec.composition)
+        const ir = compositionPage(nativeLexiconFor(themeId), assets[themeLanguage], themeId, spec.kind, spec.composition, spec.variant)
         push({
-          id: `${safe(themeId)}--compose--${safe(spec.composition)}`,
+          id: `${safe(themeId)}--compose--${safe(spec.variant ? `${spec.composition}-${spec.variant}` : spec.composition)}`,
           section: themeId,
           sectionLabel,
           band: "compose",

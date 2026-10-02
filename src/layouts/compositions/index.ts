@@ -1,8 +1,11 @@
 import type React from "react"
+import { figuresComposition } from "./figures"
+import { pairsComposition } from "./pairs"
 import { railComposition } from "./rail"
 import { rowsComposition } from "./rows"
 import type { Composition, CompositionId, CompositionProps } from "./shared"
 import { tableComposition } from "./table"
+import { trackComposition } from "./track"
 import { treeComposition } from "./tree"
 import { wavesComposition } from "./waves"
 
@@ -23,6 +26,9 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   waves: wavesComposition,
   tree: treeComposition,
   rail: railComposition,
+  figures: figuresComposition,
+  track: trackComposition,
+  pairs: pairsComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]

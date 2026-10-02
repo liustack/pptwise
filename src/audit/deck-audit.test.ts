@@ -2845,3 +2845,64 @@ describe("auditDeck: a page its theme's face stepped aside from", () => {
     expect(aside[0]!.message).toContain("gauge-sheet")
   })
 })
+
+describe("auditDeck — source line", () => {
+  const PIXEL =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+  const SOURCE = "Source: store counts, July 2025 against July 2026"
+  const photo = (theme: string): PptxIR =>
+    deck(
+      theme,
+      [
+        {
+          type: "content",
+          kind: "photo",
+          id: "street",
+          heading: "One city lost two thousand shops",
+          components: [
+            { type: "image", asset_id: "street", fit: "cover" },
+            { type: "bullets", items: ["Guangzhou: 14,355 down to 12,029", "Shenzhen: 9,113 down to 7,814"] },
+          ],
+          footnote: SOURCE,
+        } as Slide,
+      ],
+      { assets: { images: { street: { src: PIXEL } } } },
+    )
+
+  it.each(["brief", "almanac", "clinic"])("finds the source line on a %s photo page", (theme) => {
+    const report = auditDeck(photo(theme))
+    expect(report.findings.filter((f) => f.detail?.kind === "footnote")).toEqual([])
+  })
+})
+
+describe("auditDeck — a run graded in the font it is painted in", () => {
+  it("does not grade a line that fills a primary block against the page past the block's end", () => {
+    const ir = deck("brief", [
+      {
+        type: "content",
+        kind: "process",
+        heading: "Regulation is closing the subsidy route",
+        components: [
+          {
+            type: "timeline",
+            milestones: [
+              { date: "13 May 2025", title: "Platforms summoned", desc: "JD, Meituan and Ele.me" },
+              { date: "18 Jul 2025", title: "Second summons", desc: "Calls for rational competition" },
+              { date: "Early Dec 2025", title: "National standard", desc: "Platforms bear promotion costs", highlight: true },
+              { date: "9 Jan 2026", title: "Antitrust review", desc: "Delivery competition assessed" },
+              { date: "17 Jun 2026", title: "Draft subsidy rules", desc: "Merchants need not fund subsidies" },
+            ],
+          },
+          {
+            type: "callout",
+            variant: "info",
+            text: "Platforms are pulling back too. Alibaba said Q3 2025 was the peak of its instant-commerce spending, and its loss per order from October was half the July and August level.",
+          },
+        ],
+        footnote: "Source: SAMR, Xinhua and other reports (May 2025 to Jun 2026)",
+      } as Slide,
+    ])
+    expect(renderSlideSvg(ir, 0)).toContain('data-gauge-module="track"')
+    expect(auditDeck(ir).findings.filter((f) => f.code === "low-contrast")).toEqual([])
+  })
+})

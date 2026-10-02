@@ -722,6 +722,18 @@ describe("checkIrQuality", () => {
     )
   })
 
+  it("counts a heading's emphasis marks out of its length", () => {
+    const ir = makeIR([
+      {
+        type: "content",
+        kind: "points",
+        heading: `${"a".repeat(CAPACITY.headingMaxChars - 4)}**bbbb**`,
+        components: [],
+      },
+    ])
+    expect(codes(quality(ir))).not.toContain("long_heading")
+  })
+
   it(`does NOT warn for heading at exactly ${CAPACITY.headingMaxChars} characters`, () => {
     const ir = makeIR([
       {

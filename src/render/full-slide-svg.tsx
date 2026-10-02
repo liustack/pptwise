@@ -385,7 +385,7 @@ export function FullSlideSvg({
         `layout registry invariant failed: takeover "${effectiveFace.layoutId}" has no renderer dispatcher`,
       )
     }
-    pageBody = renderTakeover({ ir: renderIr, slide, index, ctx, page })
+    pageBody = renderTakeover({ ir: renderIr, slide, index, ctx, page, params: effectiveFace.entry?.params })
   } else if (pageLayout) {
     pageBody = pageLayout.Component({
       ir: renderIr,

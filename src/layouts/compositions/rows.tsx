@@ -1,7 +1,7 @@
 import type { Component } from "@/ir"
-import { parseEmphasis } from "../../render/emphasis"
-import { accessibleInk, readableOn } from "../../render/ink"
+import { accessibleInk } from "../../render/ink"
 import { drawableItems } from "../boundary-content"
+import { closingCallout, fitClosing, paintClosing, type ClosingSpec } from "./closing"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 
@@ -59,14 +59,8 @@ const ROW_AIR = 28
 
 /** From the last rule to the closing block. */
 const CALLOUT_GAP = 44
-const CALLOUT_PAD_X = 48
-const CALLOUT_SIZE = 28
-const CALLOUT_LINE_HEIGHT = 40
-const CALLOUT_MAX_LINES = 3
-/** Vertical padding inside the block: one line makes the board's 112px. */
-const CALLOUT_PAD_Y = 36
-/** Baseline of a 28px line in its 40px box. */
-const CALLOUT_BASELINE = 30
+/** The closing block at 28/40, one line making the board's 112px. */
+const CLOSING: ClosingSpec = { size: 28, lineHeight: 40, padX: 48, padY: 36, maxLines: 3 }
 
 /**
  * Splits "Label: gloss" at its first colon. A full-width colon splits as
@@ -83,8 +77,8 @@ function rowsShape(components: readonly Component[]): { bullets: Bullets; callou
   const [first, second, ...rest] = components
   if (first?.type !== "bullets" || rest.length > 0) return null
   if (second === undefined) return { bullets: first }
-  if (second.type !== "callout" || second.variant === "warn" || second.icon !== undefined) return null
-  return { bullets: first, callout: second }
+  const callout = closingCallout(second)
+  return callout ? { bullets: first, callout } : null
 }
 
 export const rowsComposition: Composition = ({ components, ctx, rect }) => {
@@ -120,19 +114,8 @@ export const rowsComposition: Composition = ({ components, ctx, rect }) => {
     rows.push({ label: labelLayout, gloss: glossLayout, whole: !label })
   }
 
-  const calloutSegments = shape.callout ? parseEmphasis(shape.callout.text.trim()) : []
-  const callout = shape.callout
-    ? fitFixed(shape.callout.text, {
-        width: rect.w - CALLOUT_PAD_X * 2,
-        size: CALLOUT_SIZE,
-        lineHeight: CALLOUT_LINE_HEIGHT,
-        maxLines: CALLOUT_MAX_LINES,
-        fontFamily: body,
-        // A marked run in the block turns bold, so a marked block is measured wide.
-        bold: calloutSegments.some((segment) => segment.emphasized),
-      })
-    : undefined
-  if (callout === null || (callout && callout.lines.length === 0)) return null
+  const callout = shape.callout ? fitClosing(shape.callout, rect.w, CLOSING, ctx) : undefined
+  if (callout === null) return null
 
   let cursor = rect.y + FIRST_ROW_INSET
   const placed = rows.map((row) => {
@@ -144,15 +127,13 @@ export const rowsComposition: Composition = ({ components, ctx, rect }) => {
   })
   const lastRule = placed[placed.length - 1]!.rule
   const calloutTop = lastRule + CALLOUT_GAP
-  const calloutH = callout ? callout.lines.length * CALLOUT_LINE_HEIGHT + CALLOUT_PAD_Y * 2 : 0
-  const bottom = callout ? calloutTop + calloutH : lastRule
+  const bottom = callout ? calloutTop + callout.height : lastRule
   if (bottom > rect.y + rect.h) return null
 
   const numberInk = accessibleInk(colors.muted, bg, NUMBER_SIZE)
   const labelInk = accessibleInk(colors.primary, bg, ROW_SIZE)
   const glossInk = accessibleInk(colors.text, bg, ROW_SIZE)
   const rule = ruleInk(ctx)
-  const calloutInk = readableOn(colors.primary)
 
   return (
     <g {...compositionTag("rows")}>
@@ -183,28 +164,7 @@ export const rowsComposition: Composition = ({ components, ctx, rect }) => {
         </g>
       ))}
       </g>
-      {callout && shape.callout && (
-        <g {...blockTag(ctx, shape.callout)}>
-          <rect x={left} y={calloutTop} width={rect.w} height={calloutH} fill={colors.primary} />
-          {callout.lines.map((_line, index) => (
-            <text
-              key={index}
-              x={left + CALLOUT_PAD_X}
-              y={calloutTop + CALLOUT_PAD_Y + CALLOUT_BASELINE + index * CALLOUT_LINE_HEIGHT}
-              fontFamily={body}
-              fontSize={CALLOUT_SIZE}
-              fill={calloutInk}
-              dominantBaseline="alphabetic"
-            >
-              {(callout.segments[index] ?? []).map((segment, at) => (
-                <tspan key={at} fontWeight={segment.emphasized ? "700" : undefined}>
-                  {segment.text}
-                </tspan>
-              ))}
-            </text>
-          ))}
-        </g>
-      )}
+      {callout && paintClosing(callout, { x: left, y: calloutTop, w: rect.w }, CLOSING, ctx)}
     </g>
   )
 }

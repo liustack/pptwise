@@ -19,9 +19,10 @@ await installNodePlatform()
 
 describe("the corpus pages that show the shared compositions", () => {
   for (const spec of COMPOSITION_PAGES) {
-    it(`${spec.theme} · ${spec.composition} is drawn by its composition, whole`, { timeout: 60_000 }, async () => {
+    const name = spec.variant ? `${spec.composition} (${spec.variant})` : spec.composition
+    it(`${spec.theme} · ${name} is drawn by its composition, whole`, { timeout: 60_000 }, async () => {
       const lex = nativeLexiconFor(spec.theme)
-      const ir = compositionPage(lex, await corpusAssets(lex), spec.theme, spec.kind, spec.composition)
+      const ir = compositionPage(lex, await corpusAssets(lex), spec.theme, spec.kind, spec.composition, spec.variant)
       const svg = renderSlideSvg(ir, 0)
       const drawnBy = [...svg.matchAll(/data-gauge-module="([a-z]+)"/g)].map((m) => m[1])
       expect(drawnBy).toEqual([spec.composition])

@@ -7,6 +7,37 @@ import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
 import { stepAside } from "../render/step-aside"
+import { footnoteBaselineFor } from "../render/branding-geometry"
+import type { ComponentCtx } from "../components/types"
+
+/** The body stops here, and above a source line 20px higher, as `banner-heading` and `narrow-column` do. */
+const BODY_BOTTOM = 640
+const BODY_BOTTOM_WITH_FOOTNOTE = 620
+const FOOTNOTE_SIZE = 16
+
+/**
+ * The page's source line (`slide.footnote`) on the shared footnote baseline
+ * across the type area. This face used to draw none, so a comparison page's
+ * source reached nobody, and nothing said so.
+ */
+function TwoColumnFootnote({ text, ctx }: { text: string | undefined; ctx: ComponentCtx }) {
+  const footnote = fitEmphasisLine(text?.trim(), { maxWidth: 1088, fontSize: FOOTNOTE_SIZE, minFontSize: FOOTNOTE_SIZE, fontFamily: ctx.fonts.body })
+  if (!footnote) return null
+  const ink = accessibleInk(ctx.colors.muted, ctx.defaultBg ?? ctx.colors.bg, footnote.fontSize)
+  return renderEmphasisText(
+    footnote.segments,
+    headingEmphasisPaint(ctx, footnote, { baseFill: ink, fontFamily: ctx.fonts.body, bold: false }),
+    <text
+      data-truncated={footnote.truncated ? "1" : undefined}
+      x={96}
+      y={footnoteBaselineFor(footnote.fontSize)}
+      fontFamily={ctx.fonts.body}
+      fontSize={footnote.fontSize}
+      fill={ink}
+      dominantBaseline="alphabetic"
+    />,
+  )
+}
 
 /**
  * two-column content layout（P3 Item ②，spec §3.2/§3.4）：跨主题通用的
@@ -29,12 +60,13 @@ import { stepAside } from "../render/step-aside"
  */
 export function TwoColumnContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const treated = tryContentHeadingTreatment({ ir, slide, index, ctx })
+  const bodyBottom = slide.footnote?.trim() ? BODY_BOTTOM_WITH_FOOTNOTE : BODY_BOTTOM
   if (treated) {
     const treatedRect = {
       x: treated.contentRect.x,
       y: treated.contentRect.y,
       w: treated.contentRect.w,
-      h: Math.max(120, treated.contentRect.h),
+      h: Math.max(120, Math.min(treated.contentRect.h, bodyBottom - treated.contentRect.y)),
     }
     const aside = stepAside({ face: "two-column", slide, ctx, bodyRect: treatedRect, arrangement: "two_column" })
     if (aside) return aside
@@ -47,6 +79,7 @@ export function TwoColumnContent({ ir, slide, index, ctx }: SvgTemplateProps) {
           rect={treatedRect}
           ctx={ctx}
         />
+        <TwoColumnFootnote text={slide.footnote} ctx={ctx} />
       </>
     )
   }
@@ -80,7 +113,7 @@ export function TwoColumnContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const accentY = (subheading ? subheadingY : headingLastY) + 22
   const ruleY = accentY + 22
   const contentY = ruleY + 34
-  const contentH = 640 - contentY
+  const contentH = bodyBottom - contentY
 
   // This face halves the page down the middle whatever the slide carries, so
   // a block measured for 1088 gets 528 — and the band's own top follows the
@@ -156,6 +189,7 @@ export function TwoColumnContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         rect={bodyRect}
         ctx={ctx}
       />
+      <TwoColumnFootnote text={slide.footnote} ctx={ctx} />
     </>
   )
 }
@@ -172,8 +206,8 @@ export function TwoColumnContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 export const layoutDef: LayoutDefinition = {
   // content-two-column.tsx: kicker, heading, subheading, accent bar +
   // hairline rule, SvgContent body — hardcodes arrangement="two_column"
-  // (content-two-column.tsx:102) regardless of slide.arrangement. No
-  // footnote/meta render at all.
+  // (content-two-column.tsx:102) regardless of slide.arrangement. The
+  // footnote sits on the shared footnote baseline. No meta render.
   id: "two-column",
   kind: "standard",
   story: {
