@@ -12,11 +12,14 @@ const VERSE = "设备不会突然坏，只是没人听它说话。"
 const LUXE_GOLD = "#C6A15B"
 const BOARD_CLAIM = "#3A2E24"
 
-function ir(slides: Slide[], meta: Record<string, string> = {}): PptxIR {
+function ir(slides: Slide[], meta: Record<string, string> = {}, branding: PptxIR["branding"] | null = "full"): PptxIR {
   return {
     version: "5",
     filename: "x.pptx",
     theme: { id: "vermilion" },
+    // The organization and date on a sparse page are footer information: they
+    // print only when the deck asks, and `branding: "full"` asks for both.
+    ...(branding ? { branding } : {}),
     meta,
     assets: { images: {} },
     slides,
@@ -82,6 +85,14 @@ describe("vermilion sparse faces", () => {
     expect(
       Array.from(heading.querySelectorAll("tspan")).every((t) => t.getAttribute("fill") !== ctx.colors.accent),
     ).toBe(true)
+  })
+
+  it("statement prints no organization or date when the deck asks for no footer marks", () => {
+    const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
+    const deck = ir([slide], { organization: "云觅科技", date: "2026-08" }, null)
+    const { markup } = render(<StatementContent ir={deck} slide={slide} index={0} ctx={ctx} />)
+    expect(markup).not.toContain("云觅科技")
+    expect(markup).not.toContain("2026-08")
   })
 
   it("statement omits the meta line when organization and date are both missing", () => {

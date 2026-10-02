@@ -2,8 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { CONF_LABEL } from "../lib/conf-labels"
-import { showsDocumentMeta } from "../render/document-meta"
+import { coverConfidentiality, showsDocumentMeta } from "../render/document-meta"
 import { accessibleInk, metaInk } from "../render/ink"
 
 /**
@@ -84,8 +83,7 @@ export function ColophonCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const bg = ctx.defaultBg ?? colors.bg
 
   const org = ir.meta.organization
-  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
-  const confLabel = conf ? CONF_LABEL[conf] : null
+  const confLabel = coverConfidentiality(page, ir)
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
 
@@ -233,6 +231,7 @@ export function ColophonCover({ ir, slide, ctx, page }: SvgTemplateProps) {
 }
 
 export const layoutDef: LayoutDefinition = {
+  coverMark: "face",
   // cover-colophon.tsx: accent leader block flagging the first heading line,
   // left-axis heading, wide-tracked org kicker, subheading, and a
   // bottom-left byline row. Content stays left of x1180 — the right edge is

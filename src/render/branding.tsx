@@ -1,46 +1,45 @@
 import type { PptxIR, Slide } from "@/ir"
 import type { ComponentCtx } from "../components/types"
-import { CONF_LABEL } from "../lib/conf-labels"
 import type { ThemeDefinition } from "../themes/definitions"
-import { FOOTER_DIVIDER_Y } from "./branding-geometry"
-import { resolveDeckBranding, type PageRenderContext } from "./page-context"
+import { FooterRow } from "./footer"
+import type { PageRenderContext } from "./page-context"
 
 /**
- * Shared footer/logo branding as an SVG fragment. Ported from MasterFrame so the
- * footer divider, confidentiality/org, version/date and brand logo are part of
- * the single-source svg (and thus exported). 页码已整体移除（2026-07-09 用户
- * 裁决「页码区块完全多此一举」）：预览静态页码与导出的原生动态页码一并删。
+ * Shared brand fragment as SVG: the brand logo and the content-page footer
+ * row, both part of the single-source page and so of the export.
+ *
+ * The logo follows the deck's `branding` posture. The footer row prints
+ * only the marks the deck asked for (`footer`, or the older reading of
+ * `branding: "full"`), and only on content pages: see `./footer-marks.ts`
+ * for the marks and `./page-context.ts` for which pages carry the row and
+ * whether this fragment or the theme's motif draws it.
  */
 export function Branding({
   ir,
   slide,
+  index,
   ctx,
   page,
   theme,
 }: {
   ir: PptxIR
   slide: Slide
+  /** This page's 0-based position in the deck, for the page number. */
+  index: number
   ctx: ComponentCtx
-  page?: PageRenderContext
+  page: PageRenderContext
   /** The bound theme, carried by `FullSlideSvg`. */
   theme: ThemeDefinition
 }) {
-  const { meta, brand, assets } = ir
-  // Deck-level branding posture. Omitted = "cover-only": cover and chapter keep
-  // the brand logo, content and ending skip the whole fragment (rule, meta,
-  // logo). "full" is the explicit declaration that draws the content-page
-  // footer. Menu-level silence is applied by FullSlideSvg before this fragment.
-  const posture = page?.branding ?? resolveDeckBranding(ir)
+  const { brand, assets } = ir
+  // Deck-level logo posture. Omitted = "cover-only": cover and chapter keep
+  // the brand logo, content and ending carry none. Menu-level silence is
+  // applied by FullSlideSvg before this fragment.
+  const posture = page.branding
   if (posture === "none") return null
-  if (posture === "cover-only" && (slide.type === "content" || slide.type === "ending")) {
-    return null
-  }
-  const conf = meta.confidentiality
-  const org = meta.organization
-  const version = meta.version
-  const date = meta.date
+  const logoOn = !(posture === "cover-only" && (slide.type === "content" || slide.type === "ending"))
 
-  const logo = brand?.logo_asset_id ? assets.images[brand.logo_asset_id] : null
+  const logo = logoOn && brand?.logo_asset_id ? assets.images[brand.logo_asset_id] : null
   const pos = brand?.position ?? "br"
   const logoBox =
     pos === "tl"
@@ -50,43 +49,6 @@ export function Branding({
         : pos === "bl"
           ? { x: 64, y: 630 }
           : { x: 1120, y: 630 }
-
-  const muted = ctx.colors.muted
-  const border = ctx.colors.border ?? ctx.colors.muted
-  const font = ctx.fonts.body
-
-  // 背景图 + 卡片态 content 页整页抑制页脚——是否生效由 theme 的 brand 配置
-  // 驱动（W1 从旧 theme-manifest 的页脚开关拆出，见 themes/definitions.ts 的 brand 字段；
-  // bulletin 持有 suppressFooterOnCardContent，其余主题不设 = 默认 false）。
-  const bgAsset =
-    slide.background?.kind === "asset" ? assets.images[slide.background.asset_id] : null
-  const brandConfig = theme.brand
-  const cardBgSuppressesFooter =
-    Boolean(brandConfig.suppressFooterOnCardContent) &&
-    slide.type === "content" &&
-    !!(bgAsset?.src && !bgAsset.error)
-
-  // image-split 通栏页（2026-07-09 用户裁决图列垂直铺满）：图占整列到页底，
-  // 页脚分隔线与文字会压图——同 cardBgSuppressesFooter 先例整页抑制页脚
-  // （org 已在该版式的 kicker 里，无信息损失）。
-  const imageSplitBleed = false
-
-  // image-bottom 通栏页（2026-07-09 用户裁决）：底图铺满页缘，meta 信息
-  // 改用遮罩浮层 footer（暗条白字压图），无 meta 则什么都不画。
-  const imageBottomBleed = false
-
-  const hideFooterByPosture = posture === "minimal"
-  const showFooter =
-    slide.type === "content" &&
-    !cardBgSuppressesFooter &&
-    !imageSplitBleed &&
-    !imageBottomBleed &&
-    !hideFooterByPosture
-  const showOverlayFooter =
-    slide.type === "content" &&
-    imageBottomBleed &&
-    Boolean(conf || org || version || date) &&
-    !hideFooterByPosture
 
   return (
     <>
@@ -101,81 +63,18 @@ export function Branding({
         />
       ) : null}
 
-      {showFooter && (
-        <>
-          {/* 分隔线可被 theme 的 brand.suppressFooterRule 抑制（主题自带
-              版框线时避免双线，ink 先例，2026-07-10 用户裁决） */}
-          {!brandConfig.suppressFooterRule && (
-            <line x1="56" y1={FOOTER_DIVIDER_Y} x2="1224" y2={FOOTER_DIVIDER_Y} stroke={border} strokeWidth="1.2" />
-          )}
-          {/* meta 两端排布（2026-07-10 用户裁决：时间居中而右侧空很奇怪）：
-              密级/机构组固定在左，版本/日期组固定在右。
-
-              整行可被 theme 的 brand.suppressFooterMeta 抑制（2026-08-18
-              ink v3：主题的 motif 自己已经把机构名/日期排在别处时，这一行会
-              把同一份信息在一页上印两遍——ink 的右缘落款列先例）。与
-              suppressFooterRule 正交：那个只关分隔线，这个只关文字，两个开关
-              互不预设对方。别的主题不设 = 默认 false，输出逐字节不变。 */}
-          {!brandConfig.suppressFooterMeta && (() => {
-            const orgGroup = [conf ? CONF_LABEL[conf] : null, org].filter(Boolean).join(" · ")
-            const dateGroup = [version, date].filter(Boolean).join(" · ")
-            return (
-              <>
-                {orgGroup && (
-                  <text x="56" y="700" fontSize="20" fill={muted} fontFamily={font} dominantBaseline="alphabetic">
-                    {orgGroup}
-                  </text>
-                )}
-                {dateGroup && (
-                  <text
-                    x="1224"
-                    y="700"
-                    fontSize="20"
-                    textAnchor="end"
-                    fill={muted}
-                    fontFamily={font}
-                    dominantBaseline="alphabetic"
-                  >
-                    {dateGroup}
-                  </text>
-                )}
-              </>
-            )
-          })()}
-        </>
-      )}
-
-      {showOverlayFooter && (
-        <>
-          <rect x={0} y={680} width={1280} height={40} fill="#0A0E14" fillOpacity={0.55} />
-          {(conf || org) && (
-            <text
-              x="56"
-              y="705"
-              fontSize="18"
-              fill="#FFFFFF"
-              fillOpacity={0.92}
-              fontFamily={font}
-              dominantBaseline="alphabetic"
-            >
-              {[conf ? CONF_LABEL[conf] : null, org].filter(Boolean).join(" · ")}
-            </text>
-          )}
-          {(version || date) && (
-            <text
-              x="1224"
-              y="705"
-              fontSize="18"
-              textAnchor="end"
-              fill="#FFFFFF"
-              fillOpacity={0.92}
-              fontFamily={font}
-              dominantBaseline="alphabetic"
-            >
-              {[version, date].filter(Boolean).join(" · ")}
-            </text>
-          )}
-        </>
+      {/* The rule can be left to the theme (`brand.suppressFooterRule`): a
+          theme that draws its own frame would otherwise show two lines
+          (ink precedent, 2026-07-10). */}
+      {page.footerRow === "branding" && (
+        <FooterRow
+          footer={page.footer}
+          index={index}
+          pageCount={ir.slides.length}
+          ctx={ctx}
+          omitOrganization={page.footerOmitsOrganization}
+          rule={!theme.brand.suppressFooterRule}
+        />
       )}
     </>
   )

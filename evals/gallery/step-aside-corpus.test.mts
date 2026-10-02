@@ -11,6 +11,7 @@
 import { describe, expect, it } from "vitest"
 import { renderSlideSvg } from "@/api"
 import { installNodePlatform } from "@/platform/node"
+import { confidentialityLabel, deckWritesChinese } from "@/lib/conf-labels"
 import { resolveStyle } from "@/themes"
 import { getThemeDefinition } from "@/themes/definitions"
 import { corpusAssets, stepAsidePage } from "./corpus/decks"
@@ -39,14 +40,14 @@ await installNodePlatform()
  * pages: brief's motif is its footer (`folio-motif`), which carries the
  * organization and the confidentiality label on every content page.
  *
- * `datesFooter` says whether the theme's content footer sets the date. Brief's
- * does not: its board prints the date on the cover only, so the date is not
- * something its content pages have to keep.
+ * The content footer `branding: "full"` stands for is the organization and
+ * the confidentiality mark, in the deck's language (`render/footer-marks.ts`).
+ * The date stays on the cover, for every theme.
  */
-const EXPECTED: Record<string, { motifPieces: readonly string[]; gainsMotif: boolean; datesFooter: boolean }> = {
-  brief: { motifPieces: ["folio"], gainsMotif: false, datesFooter: false },
-  crayon: { motifPieces: ["crayonbox-sun", "crayonbox-stars"], gainsMotif: true, datesFooter: true },
-  runway: { motifPieces: [], gainsMotif: false, datesFooter: true },
+const EXPECTED: Record<string, { motifPieces: readonly string[]; gainsMotif: boolean }> = {
+  brief: { motifPieces: ["folio"], gainsMotif: false },
+  crayon: { motifPieces: ["crayonbox-sun", "crayonbox-stars"], gainsMotif: true },
+  runway: { motifPieces: [], gainsMotif: false },
 }
 
 describe("the corpus pages that exercise the step-aside", () => {
@@ -74,15 +75,15 @@ describe("the corpus pages that exercise the step-aside", () => {
 
       // Theme identity survives the handover, asserted piece by piece.
       //
-      // Branding: both fields the deck asked for, on a page whose face used
-      // to paint that metadata itself (`gauge-stats` declares
-      // `branding: "none"` and draws `GaugeMeta`). Organization and date both
-      // vanished when the shared Branding stayed switched off, so both are
-      // named here rather than one standing in for the other.
+      // Branding: both marks the deck's footer asks for, on a page whose face
+      // used to paint that metadata itself (`gauge-stats` declares
+      // `branding: "none"` and draws `GaugeMeta`). Both vanished when the
+      // shared Branding stayed switched off, so both are named here rather
+      // than one standing in for the other.
       const expected = EXPECTED[spec.theme]!
       expect(svg, "organization").toContain(lex.author)
-      if (expected.datesFooter) expect(svg, "date").toContain(lex.date)
-      else expect(svg, "confidentiality").toContain("Internal")
+      const mark = confidentialityLabel("internal", deckWritesChinese(ir))!
+      expect(svg, "confidentiality").toContain(mark)
 
       // Accent: the theme's own hex, not a face's neutralised stand-in.
       const accent = resolveStyle(spec.theme).colors.accent

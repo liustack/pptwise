@@ -269,8 +269,10 @@ describe("FullSlideSvg", () => {
     expect(container.textContent).toContain("三大支柱")
     // bullets markers + kpi card present
     expect(container.querySelectorAll("circle").length).toBeGreaterThanOrEqual(3)
-    // 页码已删（2026-07-09 用户裁决）：页脚不再出现 x / y
+    // 默认不印页码（2026-07-09 裁决删静态页码，2026-10-02 页脚裁决：页码
+    // 只在 deck 写了 footer.page_number 时出现，且导出为原生字段）。
     expect(container.textContent).not.toContain("1 / 1")
+    expect(container.querySelector("[data-field]")).toBeNull()
     expect(container.querySelector('line[y1="664"]')).toBeNull()
   })
 
@@ -285,10 +287,22 @@ describe("FullSlideSvg", () => {
     expect(new Set(ops.map((o) => o.kind)).has("text")).toBe(true)
   })
 
-  it("omits the page number for export (native slide number takes over)", () => {
+  it("omits the page number unless the deck asks for one", () => {
     const doc = ir([contentSlide])
     const markup = renderSvgMarkup(<BoundSlideSvg ir={doc} slide={contentSlide} index={0} />)
     expect(markup).not.toContain("1 / 1")
+    expect(markup).not.toContain("data-field")
+  })
+
+  it("draws an asked-for page number as the page's own number, marked for the native field", () => {
+    const doc: PptxIR = { ...ir([contentSlide]), footer: { page_number: true } }
+    const root = parseSvgRoot(renderSvgMarkup(<BoundSlideSvg ir={doc} slide={contentSlide} index={0} />))
+    const numbers = root.querySelectorAll('[data-field="slidenum"]')
+    expect(numbers).toHaveLength(1)
+    // The preview shows the number PowerPoint shows: the page's position.
+    expect(numbers[0]!.textContent).toBe("1")
+    // No "x / y" total: PowerPoint's field is the page's own number.
+    expect(root.textContent).not.toContain("1 / 1")
   })
 
   // Wave-C S3: `data-blk` is the anchor svg2pptx's `dispatch.ts` walks to tag

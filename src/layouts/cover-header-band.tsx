@@ -3,8 +3,7 @@ import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk, blendOver, metaInk, readableOn } from "../render/ink"
-import { CONF_LABEL } from "../lib/conf-labels"
-import { showsDocumentMeta } from "../render/document-meta"
+import { coverConfidentiality, showsDocumentMeta } from "../render/document-meta"
 import { fitEmphasisText, headingEmphasisPaint, parseEmphasis, renderEmphasisHeading, renderEmphasisText, resolveEmphasisForm, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 
 /**
@@ -56,8 +55,7 @@ export function HeaderBandCover({ ir, slide, ctx, page }: SvgTemplateProps) {
 
   const org = ir.meta.organization
   const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
-  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
-  const confLabel = conf ? CONF_LABEL[conf] : null
+  const confLabel = coverConfidentiality(page, ir)
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
 
@@ -230,6 +228,7 @@ export function HeaderBandCover({ ir, slide, ctx, page }: SvgTemplateProps) {
 }
 
 export const layoutDef: LayoutDefinition = {
+  coverMark: "face",
   // cover-header-band.tsx: top tone band carries meta only. Title sits on
   // paper below the band. Emphasized run uses accent, optional q-curve
   // under that run.

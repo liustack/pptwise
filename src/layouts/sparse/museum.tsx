@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "../types"
+import { footerOrganization, showsDocumentMeta } from "../../render/document-meta"
 import { sectionNameFor } from "../../lib/derive"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
@@ -11,7 +12,7 @@ import { SIBLING_AIR_PX } from "../../render/spacing"
 
 /** museum 稀排脸：展签格言、衬板单证据、铜金巨数。 */
 
-export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
+export function statement({ ir, slide, index, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const section = sectionNameFor(ir.slides, index)
   const heading = fitSparseHeading(slide.heading, {
@@ -23,7 +24,11 @@ export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: false,
   })
-  const footer = [ir.meta.organization, ir.meta.date].filter((v): v is string => Boolean(v && v.trim())).join(" · ")
+  // Organization and date are footer information on a content page: each
+  // prints only when the deck asks for it.
+  const footer = [footerOrganization(page, ir), showsDocumentMeta(page, ir) ? ir.meta.date : undefined]
+    .filter((v): v is string => Boolean(v && v.trim()))
+    .join(" · ")
   const source = fitStatementSource(slide, { maxWidth: 1000, fontSize: 17, fontFamily: fonts.body })
   return (
     <>

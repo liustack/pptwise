@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "../types"
+import { footerOrganization } from "../../render/document-meta"
 import type { EmphasisSegment } from "../../render/emphasis"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import {
@@ -65,7 +66,7 @@ function VerticalRun({
   )
 }
 
-export function statement({ ir, slide, ctx }: SvgTemplateProps) {
+export function statement({ ir, slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const verse = slide.heading ?? ""
   const latin = !hasCjk(verse)
@@ -131,7 +132,9 @@ export function statement({ ir, slide, ctx }: SvgTemplateProps) {
   })
   const columns = heading.lines.slice(0, 2)
   const xs = [1000, 880]
-  const org = ir.meta.organization?.trim()
+  // The organization is a footer mark on a content page: it prints only
+  // when the deck asks for it.
+  const org = footerOrganization(page, ir)
   return (
     <>
       <rect x={1042} y={110} width={18} height={66} fill={colors.accent} />

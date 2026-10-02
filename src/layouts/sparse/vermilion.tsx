@@ -1,4 +1,5 @@
 import type { SvgTemplateProps } from "../types"
+import { footerOrganization, showsDocumentMeta } from "../../render/document-meta"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
@@ -30,7 +31,7 @@ function InkDouble({
   )
 }
 
-export function statement({ ir, slide, ctx }: SvgTemplateProps) {
+export function statement({ ir, slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const heading = fitSparseHeading(slide.heading, {
     maxWidth: 1000,
@@ -41,7 +42,10 @@ export function statement({ ir, slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: true,
   })
-  const meta = [ir.meta.organization, ir.meta.date]
+  // Organization and date are footer information on a content page: each
+  // prints only when the deck asks for it (`footerOrganization`,
+  // `showsDocumentMeta`).
+  const meta = [footerOrganization(page, ir), showsDocumentMeta(page, ir) ? ir.meta.date : undefined]
     .filter((v): v is string => Boolean(v && v.trim()))
     .join(" · ")
   const source = fitStatementSource(slide, { maxWidth: 800, fontSize: 18, fontFamily: fonts.body })

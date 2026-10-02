@@ -4,7 +4,8 @@
  * Every slide is rendered by `FullSlideSvg` (the same component the preview
  * mounts) into one flat 1280×720 SVG, then converted to native pptxgenjs objects
  * by svg2pptx. Preview and export therefore share one visual source and cannot
- * drift. The only native object kept is the dynamic slide number (on the master).
+ * drift. The footer's page number is the one native field: the text box is
+ * drawn like any other, then its run becomes a slide-number field.
  */
 import JSZip from "jszip"
 import type pptxgen from "pptxgenjs"
@@ -25,6 +26,7 @@ import { dedupeMediaInZip } from "./pptx-dedupe-media"
 import { applySlideTransitions, applyElementAnimations } from "./pptx-animations"
 import { applyEaFontFaces } from "./pptx-ea-fonts"
 import { applyParagraphMarkFonts } from "./pptx-paragraph-mark"
+import { applySlideNumberFields } from "./pptx-slide-number"
 import { dropPhrase, type DropKind } from "../render/drop-marker"
 import { auditPptxPackage } from "./package-audit"
 import { finalizePptxZip, normalizePptxTimestamps, PptxSealViolationError } from "./pptx-fixed-timestamps"
@@ -179,13 +181,18 @@ export async function generatePptxBlob(
   // slots, so PowerPoint sets every line on its own face's metrics, which is
   // what `svg2pptx/baseline.ts` places text boxes by (`pptx-paragraph-mark.ts`).
   const eaFontBlob = await applyParagraphMarkFonts(await applyEaFontFaces(gradientBlob))
+  // The footer's page number becomes PowerPoint's own slide-number field,
+  // after the font patches so the field keeps the run's corrected fonts
+  // (`pptx-slide-number.ts`). A deck without page numbers has no marked box
+  // and this pass returns the package untouched.
+  const slideNumberBlob = await applySlideNumberFields(eaFontBlob)
   // Deck-level page-transition switch (wave-C S1/S2): default fade unless
   // meta.animation.transition overrides it ("none" skips injection). Runs
   // right after the a:ea patch — still the same `ppt/slides/*.xml` parts.
   // Ordering relative to the media dedupe pass below is otherwise inert,
   // since dedupe only ever touches `ppt/media/*` and `*.rels` parts.
   const transitionBlob = await applySlideTransitions(
-    eaFontBlob,
+    slideNumberBlob,
     ir.meta.animation?.transition ?? "fade"
   )
   // Per-component entrance animations (wave-C S3): opt-in only, default off.

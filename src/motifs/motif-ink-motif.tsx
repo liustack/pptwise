@@ -2,6 +2,7 @@ import type { DecorProps } from "./types"
 import { DecorPiece } from "./decor-piece"
 import { leafRecessOpacity } from "./decor-budget"
 import { asciiDigitsToHan, CJK_DIGITS } from "../render/heading-treatments/labels"
+import { footerOrganization, showsDocumentMeta } from "../render/document-meta"
 
 /**
  * ink-motif（第八波批 2，沿用半山 + 落款列）。
@@ -12,6 +13,14 @@ import { asciiDigitsToHan, CJK_DIGITS } from "../render/heading-treatments/label
  *   - **章节**：整页退让。卷号、淡墨曲线归 `volume-slip-chapter`。
  *   - **内容**：右缘落款列留下（x≥1220），机构名 / 年月 / 列底小印。内容页
  *     没有版式印，这一列仍是 org 的唯一出场位置。
+ *
+ * 落款列里的字是页脚信息，不是装饰（2026-10-02 页脚裁决：默认不印页脚，
+ * motif 不能借装饰之名印）。所以列线与小印照画，字只在 deck 要时出现：
+ *   - 机构名：deck 的页脚要印机构名时（`footer.organization`，或旧式
+ *     `branding: "full"`）。此时共享页脚那一行不再印机构名，这一列就是它
+ *     的位置（`footer-roles.ts` 记为 `"organization"`）。
+ *   - 年月：和封面、结尾页的日期同一个开关（`showsDocumentMeta`，即
+ *     `branding: "full"`）。
  *   - **ending**：半山改右下（板上 path 从右缘进来）。中轴印归
  *     `seal-close-ending`，motif 不画落款列，避免和右下墨形叠在一起。
  *
@@ -118,7 +127,7 @@ function Seal({ ctx }: { ctx: DecorProps["ctx"] }) {
   )
 }
 
-export function InkMotif({ slide, ir, ctx }: DecorProps) {
+export function InkMotif({ slide, ir, ctx, page }: DecorProps) {
   if (slide.type === "chapter") return null
 
   if (slide.type === "cover") {
@@ -130,8 +139,9 @@ export function InkMotif({ slide, ir, ctx }: DecorProps) {
   }
 
   const { colors } = ctx
-  const dateGlyphs = colophonDateGlyphs(ir.meta.date)
-  const org = fitOrgGlyphs(ir.meta.organization ?? "", orgCapacity(dateGlyphs.length))
+  const dateGlyphs = showsDocumentMeta(page, ir, slide) ? colophonDateGlyphs(ir.meta.date) : []
+  const orgSource = footerOrganization(page, ir) ?? ""
+  const org = fitOrgGlyphs(orgSource, orgCapacity(dateGlyphs.length))
   const orgLastY = ORG_FIRST_Y + Math.max(0, org.glyphs.length - 1) * ORG_STEP
   const dateFirstY = org.glyphs.length > 0 ? orgLastY + BLOCK_GAP : ORG_FIRST_Y
   const bg = ctx.defaultBg ?? colors.bg

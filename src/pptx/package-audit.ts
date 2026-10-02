@@ -6,6 +6,7 @@ import type { ThemeDefinition } from "../themes/definitions"
 import { resolveIrTheme } from "../themes/resolve-ir-theme"
 import { createPptxPackageReader, type PptxPackageReader, type PackageRelationship } from "./package-reader"
 import type { ImageOp } from "./svg2pptx/image"
+import { SLIDE_NUMBER_OBJECT_PREFIX } from "./pptx-slide-number"
 
 /**
  * PPTX package audit — Audit v2 spec §4.4's fourth layer. Runs on the
@@ -33,6 +34,7 @@ export type PackageAuditRuleId =
   | "invalid-shape-transform"
   | "dangling-animation-target"
   | "image-alt-dropped"
+  | "slide-number-not-field"
 
 export interface PackageAuditViolation {
   rule: PackageAuditRuleId
@@ -560,6 +562,34 @@ function slideNumberFromPart(slidePart: string): number | null {
   return m ? Number(m[1]) : null
 }
 
+/** Rule: slide-number-not-field. The footer's page number is drawn as an
+ * ordinary text box named `pptwise-slidenum-*` and then rewritten into
+ * PowerPoint's slide-number field (`pptx-slide-number.ts`). A box that
+ * still holds a plain run ships a frozen number, which is wrong the moment
+ * a slide moves: the defect the static page numbers were removed for
+ * (2026-07-09). Every marked box must hold exactly one `<a:fld
+ * type="slidenum">` and no plain run. */
+function checkSlideNumberFields(doc: Document, slidePart: string): PackageAuditViolation[] {
+  const violations: PackageAuditViolation[] = []
+  const shapes = doc.getElementsByTagName("p:sp")
+  for (let i = 0; i < shapes.length; i++) {
+    const sp = shapes[i]!
+    const name = sp.getElementsByTagName("p:cNvPr")[0]?.getAttribute("name") ?? ""
+    if (!name.startsWith(SLIDE_NUMBER_OBJECT_PREFIX)) continue
+    const fields = Array.from(sp.getElementsByTagName("a:fld")).filter((f) => f.getAttribute("type") === "slidenum")
+    const runs = sp.getElementsByTagName("a:r").length
+    if (fields.length !== 1 || runs !== 0) {
+      violations.push(
+        violation(
+          "slide-number-not-field",
+          `${slidePart}: page-number box "${name}" holds ${fields.length} slide-number field(s) and ${runs} plain run(s), expected one field and no run`,
+        ),
+      )
+    }
+  }
+  return violations
+}
+
 async function checkSlideParts(
   reader: PptxPackageReader,
   source?: AuditIrSource,
@@ -604,6 +634,7 @@ async function checkSlideParts(
     violations.push(...checkDuplicateShapeIds(doc, slidePart))
     violations.push(...checkShapeTransforms(doc, slidePart))
     violations.push(...checkAnimationTargets(doc, slidePart))
+    violations.push(...checkSlideNumberFields(doc, slidePart))
     if (ir) {
       const num = slideNumberFromPart(slidePart)
       const slide = num != null ? ir.slides[num - 1] : undefined

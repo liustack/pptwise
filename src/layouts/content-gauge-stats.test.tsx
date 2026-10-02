@@ -38,7 +38,7 @@ const slide: Slide = {
 
 const META = { organization: "云觅咨询", version: "v2", date: "2026-08" }
 
-function renderContent(contentSlide: Slide = slide) {
+function renderContent(contentSlide: Slide = slide, branding: PptxIR["branding"] | null = "full") {
   const tokens = resolveStyle("brief")
   const bg = resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.surface)
   const ctx = buildCtx(tokens, {}, undefined, bg)
@@ -47,6 +47,7 @@ function renderContent(contentSlide: Slide = slide) {
     filename: "gauge-stats.pptx",
     theme: { id: "brief" },
     meta: META,
+    ...(branding ? { branding } : {}),
     assets: { images: {} },
     slides: [chapter, contentSlide],
   } as PptxIR
@@ -162,6 +163,12 @@ describe("content-gauge-stats", () => {
       "122",
     ])
     expect(() => assertSubset(root)).not.toThrow()
+  })
+
+  it("prints no header meta when the deck asks for no footer marks", () => {
+    const { root } = renderContent(slide, null)
+    expect(textBy(root, "云觅咨询")).toBeUndefined()
+    expect(textBy(root, "v2 · 2026-08")).toBeUndefined()
   })
 
   it("preserves arbitrary content through the shared SvgContent fallback", () => {

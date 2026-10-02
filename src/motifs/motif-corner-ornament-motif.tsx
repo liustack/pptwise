@@ -1,5 +1,6 @@
 import type { DecorProps } from "./types"
 import { accessibleInk } from "../render/ink"
+import { showsDocumentMeta } from "../render/document-meta"
 import { DecorPiece } from "./decor-piece"
 import { leafRecessOpacity } from "./decor-budget"
 import { textInkBox } from "../render/depth-contract/geometry"
@@ -147,7 +148,7 @@ function placeIssue(label: string, fontFamily: string): { x: number; y: number }
   return { x, y }
 }
 
-export function CornerOrnamentMotif({ ir, slide, ctx }: DecorProps) {
+export function CornerOrnamentMotif({ ir, slide, ctx, page }: DecorProps) {
   // chapter 退让的两条实测依据见文件头。
   if (slide.type === "chapter") return null
 
@@ -155,7 +156,12 @@ export function CornerOrnamentMotif({ ir, slide, ctx }: DecorProps) {
   const bg = ctx.defaultBg ?? ctx.colors.bg
   const fade = (ink: string) => leafRecessOpacity(slide.type, ink, bg)
   const cover = slide.type === "cover"
-  const label = issueLabel(ir.meta.date)
+  // The month is the deck's date, and a date is document meta: it reaches a
+  // page only under `branding: "full"`, the same switch as the date on the
+  // cover and ending (2026-10-02 footer ruling: a motif prints no footer
+  // information the deck did not ask for). Otherwise the bare 「№」, a
+  // typographic mark that states no fact.
+  const label = issueLabel(showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined)
   const issuePos = placeIssue(label, ctx.fonts.heading)
 
   return (

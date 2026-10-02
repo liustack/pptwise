@@ -53,7 +53,7 @@ const ir = (theme: string, slides: Slide[] = [chapter, content]): PptxIR =>
 // 20px) — the paragraph/bullets components grow taller (28px -> 34px line
 // height) and push the quote block down; quote's own fixed 26px text and
 // 20px attribution line, and every layout-bespoke element (kicker,
-// heading, subheading, page number, footnote), are untouched, confirming
+// heading, subheading, footnote), are untouched, confirming
 // the diff is confined to the paragraph/bullets trio.
 // Footnote-clearance re-pin (2026-08-20): the column floor drops 20px when a
 // footnote is present (rect h 342 -> 322), so the two inner blocks close up
@@ -81,10 +81,10 @@ const ir = (theme: string, slides: Slide[] = [chapter, content]): PptxIR =>
 // `MAGAZINE_EXPECTED_BARE` 262 -> 246 (rect.y 230 + the 16px cap).
 // `MAGAZINE_EXPECTED` still untouched.
 const MAGAZINE_EXPECTED =
-  "<line x1=\"96\" y1=\"88\" x2=\"1184\" y2=\"88\" stroke=\"#D3DBE0\" stroke-width=\"1.2\"></line><text x=\"96\" y=\"124\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"16\" fill=\"#23282E\" font-style=\"italic\" dominant-baseline=\"alphabetic\">\u7b2c\u4e00\u90e8\u5206\uff1a\u5e02\u573a\u6d1e\u5bdf</text><text x=\"96\" y=\"190\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"60\" font-weight=\"600\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u7a84\u680f\u53d9\u4e8b\uff1a\u4ece\u6570\u636e\u5230\u6d1e\u5bdf</text><text x=\"96\" y=\"254\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"22\" fill=\"#0A0E14\" font-style=\"italic\" dominant-baseline=\"alphabetic\"><tspan fill=\"#23282E\" font-weight=\"700\">\u6838\u5fc3\u7ed3\u8bba</tspan><tspan fill=\"#0A0E14\">\uff1a\u7559\u5b58\u7387\u663e\u8457\u63d0\u5347</tspan></text><g data-audit-rect=\"96,298,880,322\"><g data-audit-box=\"96,298,880,34\"><g transform=\"translate(96,298)\"><text x=\"0\" y=\"24\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u672c\u5b63\u5ea6\u7528\u6237\u7559\u5b58\u5448\u73b0\u6301\u7eed\u4e0a\u884c\u8d8b\u52bf\u3002</text></g></g><g data-audit-box=\"96,342,880,144\"><g transform=\"translate(96,342)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#4A6B8A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u7559\u5b58\u7387 +12%</text><circle cx=\"5\" cy=\"60.8\" r=\"3\" fill=\"#4A6B8A\"></circle><text x=\"26\" y=\"68\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u6d3b\u8dc3\u65f6\u957f +8%</text><circle cx=\"5\" cy=\"102.8\" r=\"3\" fill=\"#4A6B8A\"></circle><text x=\"26\" y=\"110\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u6d41\u5931\u7387 -5%</text></g></g><g data-audit-box=\"96,496,880,124\"><g transform=\"translate(96,496)\"><text x=\"0\" y=\"64\" font-size=\"64\" fill=\"#B96A5E\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" dominant-baseline=\"alphabetic\">\u201c</text><text x=\"20\" y=\"60\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"26\" font-style=\"italic\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u589e\u957f\u7684\u672c\u8d28\u662f\u7559\u4f4f\u5df2\u7ecf\u4fe1\u4efb\u4f60\u7684\u4eba\u3002</text><text x=\"20\" y=\"97\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"20\" fill=\"#5A6470\" dominant-baseline=\"alphabetic\">\u2014 \u5185\u90e8\u8bbf\u8c08</text></g></g></g><text x=\"1184\" y=\"628\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"64\" fill=\"#5A6470\" opacity=\"0.3\" text-anchor=\"end\" dominant-baseline=\"alphabetic\">02</text><text x=\"96\" y=\"644\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"20\" fill=\"#5A6470\" font-style=\"italic\" dominant-baseline=\"alphabetic\">\u6570\u636e\u6765\u6e90\uff1a\u5185\u90e8\u57cb\u70b9\uff0c2026Q2</text>"
+  "<line x1=\"96\" y1=\"88\" x2=\"1184\" y2=\"88\" stroke=\"#D3DBE0\" stroke-width=\"1.2\"></line><text x=\"96\" y=\"124\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"16\" fill=\"#23282E\" font-style=\"italic\" dominant-baseline=\"alphabetic\">\u7b2c\u4e00\u90e8\u5206\uff1a\u5e02\u573a\u6d1e\u5bdf</text><text x=\"96\" y=\"190\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"60\" font-weight=\"600\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u7a84\u680f\u53d9\u4e8b\uff1a\u4ece\u6570\u636e\u5230\u6d1e\u5bdf</text><text x=\"96\" y=\"254\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"22\" fill=\"#0A0E14\" font-style=\"italic\" dominant-baseline=\"alphabetic\"><tspan fill=\"#23282E\" font-weight=\"700\">\u6838\u5fc3\u7ed3\u8bba</tspan><tspan fill=\"#0A0E14\">\uff1a\u7559\u5b58\u7387\u663e\u8457\u63d0\u5347</tspan></text><g data-audit-rect=\"96,298,880,322\"><g data-audit-box=\"96,298,880,34\"><g transform=\"translate(96,298)\"><text x=\"0\" y=\"24\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u672c\u5b63\u5ea6\u7528\u6237\u7559\u5b58\u5448\u73b0\u6301\u7eed\u4e0a\u884c\u8d8b\u52bf\u3002</text></g></g><g data-audit-box=\"96,342,880,144\"><g transform=\"translate(96,342)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#4A6B8A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u7559\u5b58\u7387 +12%</text><circle cx=\"5\" cy=\"60.8\" r=\"3\" fill=\"#4A6B8A\"></circle><text x=\"26\" y=\"68\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u6d3b\u8dc3\u65f6\u957f +8%</text><circle cx=\"5\" cy=\"102.8\" r=\"3\" fill=\"#4A6B8A\"></circle><text x=\"26\" y=\"110\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u6d41\u5931\u7387 -5%</text></g></g><g data-audit-box=\"96,496,880,124\"><g transform=\"translate(96,496)\"><text x=\"0\" y=\"64\" font-size=\"64\" fill=\"#B96A5E\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" dominant-baseline=\"alphabetic\">\u201c</text><text x=\"20\" y=\"60\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"26\" font-style=\"italic\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u589e\u957f\u7684\u672c\u8d28\u662f\u7559\u4f4f\u5df2\u7ecf\u4fe1\u4efb\u4f60\u7684\u4eba\u3002</text><text x=\"20\" y=\"97\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"20\" fill=\"#5A6470\" dominant-baseline=\"alphabetic\">\u2014 \u5185\u90e8\u8bbf\u8c08</text></g></g></g><text x=\"96\" y=\"644\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"20\" fill=\"#5A6470\" font-style=\"italic\" dominant-baseline=\"alphabetic\">\u6570\u636e\u6765\u6e90\uff1a\u5185\u90e8\u57cb\u70b9\uff0c2026Q2</text>"
 
 const MAGAZINE_EXPECTED_BARE =
-  "<line x1=\"96\" y1=\"88\" x2=\"1184\" y2=\"88\" stroke=\"#D3DBE0\" stroke-width=\"1.2\"></line><text x=\"96\" y=\"190\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"60\" font-weight=\"600\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u7b80\u62a5</text><g data-audit-rect=\"96,230,880,410\"><g data-audit-box=\"96,246,880,34\"><g transform=\"translate(96,246)\"><text x=\"0\" y=\"24\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u4e00</text></g></g></g><text x=\"1184\" y=\"628\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"64\" fill=\"#5A6470\" opacity=\"0.3\" text-anchor=\"end\" dominant-baseline=\"alphabetic\">01</text>"
+  "<line x1=\"96\" y1=\"88\" x2=\"1184\" y2=\"88\" stroke=\"#D3DBE0\" stroke-width=\"1.2\"></line><text x=\"96\" y=\"190\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"60\" font-weight=\"600\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u7b80\u62a5</text><g data-audit-rect=\"96,230,880,410\"><g data-audit-box=\"96,246,880,34\"><g transform=\"translate(96,246)\"><text x=\"0\" y=\"24\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#23282E\" dominant-baseline=\"alphabetic\">\u4e00</text></g></g></g>"
 
 describe("NarrowColumnContent", () => {
   it("magazine tokens 下输出与固化的基准 markup 逐字节一致（档位一，含多种 component/kicker/subheading/footnote，档案来自旧 EditorialSerifContent）", () => {
@@ -99,7 +99,8 @@ describe("NarrowColumnContent", () => {
     expect(next).toContain("留存率 +12%")
     expect(next).toContain("增长的本质是留住已经信任你的人。")
     expect(next).toContain("数据来源：内部埋点，2026Q2")
-    expect(next).toContain(">02<") // zero-padded page number, index 1 -> "02"
+    // No page number of its own: page numbers are a footer mark.
+    expect(next).not.toContain(">02<")
   })
 
   it("单块 slide（无 subheading/footnote）同样与固化基准逐字节一致", () => {
@@ -175,34 +176,22 @@ describe("NarrowColumnContent", () => {
     expect(w).toBe(880)
   })
 
-  it("renders a large, 30%-opacity, zero-padded page number anchored to the right gutter", () => {
+  it("draws no page number of its own, on any page (page numbers are a footer mark)", () => {
     const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
     const slide: Slide = { type: "content", kind: "points", heading: "标题", components: [para("一")] } as Slide
-    // 9th slide (index 8) => page label "09"
     const slides = Array.from({ length: 9 }, () => ({ ...slide }))
     const deck = ir("homeroom", slides)
-    const markup = renderSvgMarkup(
-      <svg xmlns="http://www.w3.org/2000/svg">
-        <NarrowColumnContent ir={deck} slide={slide} index={8} ctx={ctx} />
-      </svg>,
-    )
-    const root = parseSvgRoot(markup)
-    const pageNum = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "09")
-    expect(pageNum).toBeDefined()
-    expect(pageNum!.getAttribute("opacity")).toBe("0.3")
-    expect(pageNum!.getAttribute("text-anchor")).toBe("end")
-    expect(pageNum!.getAttribute("x")).toBe("1184")
-    expect(pageNum!.getAttribute("font-size")).toBe("64")
-
-    // Single-digit pages are still zero-padded.
-    const markupFirst = renderSvgMarkup(
-      <svg xmlns="http://www.w3.org/2000/svg">
-        <NarrowColumnContent ir={ir("homeroom", [slide])} slide={slide} index={0} ctx={ctx} />
-      </svg>,
-    )
-    const rootFirst = parseSvgRoot(markupFirst)
-    const firstPage = Array.from(rootFirst.querySelectorAll("text")).find((t) => t.textContent === "01")
-    expect(firstPage).toBeDefined()
+    for (const index of [0, 8]) {
+      const root = parseSvgRoot(
+        renderSvgMarkup(
+          <svg xmlns="http://www.w3.org/2000/svg">
+            <NarrowColumnContent ir={deck} slide={slide} index={index} ctx={ctx} />
+          </svg>,
+        ),
+      )
+      const numbers = Array.from(root.querySelectorAll("text")).filter((t) => /^\d+$/.test(t.textContent ?? ""))
+      expect(numbers, `index ${index}`).toHaveLength(0)
+    }
   })
 
   it("converges a pathologically long (48-char) heading to <32pt or 2 lines within the 880 column", () => {
@@ -261,7 +250,7 @@ describe("NarrowColumnContent", () => {
     expect(fontSize < 16 || truncated).toBe(true)
   })
 
-  it("footnote stays within the 980-wide budget instead of colliding with the page number", () => {
+  it("footnote stays within the 980-wide budget", () => {
     const ctx = buildCtx({ ...resolveStyle("homeroom"), shape: undefined }, {})
     const longFootnote = "数据来源：" + "内部报告与季度审计草案汇总说明".repeat(6)
     const slide: Slide = {

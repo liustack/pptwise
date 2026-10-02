@@ -1,11 +1,12 @@
 ---
-summary: 'IR v5: deck fields, required content kinds, slide fields, components, assets, narrative pacing, branding, and strict removal of selection fields'
+summary: 'IR v5: deck fields, required content kinds, slide fields, components, assets, narrative pacing, branding, footer marks, and strict removal of selection fields'
 read_when:
   - writing or validating a bare IR file
   - a field name, page kind, component, or version was rejected
   - deciding between a bare IR and a deck project
   - checking which semantic fields survive into render
   - choosing a chart_type, or writing a stacked, percent_stacked, or combo chart
+  - adding page numbers, a confidentiality mark, or other footer marks
 ---
 
 # IR v5
@@ -57,10 +58,11 @@ pptwise validate deck.json
 | `filename` | string | Output filename. Defaults to `presentation`. |
 | `narrative` | preset string or partial axes | Argument, pacing, and audience decision. |
 | `theme` | object | Bound theme id only: `{ "id": "acme" }`. Required — bind a workspace theme, an installed pack theme, or a factory preset. Recolor with `pptwise theme fork`. Brand config lives on the theme file. |
-| `meta` | object | Organization, authors, date, version, confidentiality, contact, copyright, and animation. |
+| `meta` | object | Organization, authors, date, version, confidentiality, legal classification, contact, copyright, and animation. |
 | `assets` | object | Named image sources under `assets.images`. |
 | `brand` | object | Deck logo asset id and corner position. |
-| `branding` | enum | `full`, `cover-only`, or `minimal`. Omission equals `cover-only`. |
+| `branding` | enum | Where the logo appears: `full`, `cover-only`, or `minimal`. Omission equals `cover-only`. |
+| `footer` | object | Page number and other small marks in the page corners. Omission prints none. See [Footer marks](#footer-marks). |
 | `slides` | array | Ordered pages. |
 
 The root object is strict. Unknown fields fail validation.
@@ -205,6 +207,49 @@ Every value read against a value axis must stay within 1e300 in size: every `y` 
 ```
 
 A combo needs at least one bar series and one line series, and at least one series on the left axis. `plot`, `axis`, `y2_title`, and `y2_unit` exist only on `combo`, and `y2_title` or `y2_unit` without a series on the right axis is refused. Every combo value must stay within 1e300 in size. To get under it, divide every series on that value's axis by the same power of ten and name the unit in that axis's `y_unit` or `y2_unit`. None of the three new types takes `direction: "horizontal"`.
+
+## Footer marks
+
+A deck prints no footer unless `footer` asks for it: no page number, no organization, no date, no confidentiality line. Each mark is opt-in, and every text is the author's own or the deck's own `meta`.
+
+| field | prints | where |
+| --- | --- | --- |
+| `page_number` | The page number. Exported as PowerPoint's slide-number field, so it renumbers when slides move. | Content pages, bottom right. Never on cover, chapter, or ending pages. |
+| `organization` | `meta.organization`. | Content pages, bottom left. |
+| `label` | The author's occasion-and-date line, as written. | After the organization. |
+| `notice` | The author's copyright line or disclaimer pointer, as written. | After the label. |
+| `draft` | The author's draft or version mark, as written. | Bottom right, before the page number. |
+| `confidentiality` | The `meta.confidentiality` mark, in the deck's language. `"cover"` prints it once on the cover. `"footer"` prints it on the cover and on every content page. | Cover: the face's own spot, or top left. Content pages: bottom right. |
+
+```json
+{
+  "meta": { "organization": "华东区域运营中心", "confidentiality": "confidential" },
+  "footer": { "page_number": true, "organization": true, "label": "2026 年中期业绩 | 2026.08", "confidentiality": "footer" }
+}
+```
+
+```json
+{
+  "meta": { "organization": "Acme Holdings", "confidentiality": "confidential" },
+  "footer": { "page_number": true, "label": "Investor Presentation | February 2026", "confidentiality": "cover" }
+}
+```
+
+The confidentiality words follow the deck's language, read from its headings. A Chinese deck prints 「仅供内部讨论」 for `internal`, 「内部资料，请勿外传」 for `confidential`, and 「限定范围阅读，请勿转发」 for `restricted`, never 「机密」, which is a legal classification level in Chinese. An English deck prints Internal, Confidential, or Restricted. `public` prints nothing.
+
+A legal classification with its term goes in `meta.classification`, written exactly as given ("秘密★1年"). It prints once, on the cover, top left, and nowhere else.
+
+The footer is one line of 16px meta-tier text (12pt, PowerPoint's own footer size) along the bottom of the type area, with a hairline above it when it carries words. Faces that leave no room for the brand frame (`branding: "none"`, such as a full-page statement or a big number), faces whose artwork runs to the bottom edge (`footerRow: "none"`, such as a full-height photo column), and menu entries with `brand: "none"` carry no footer row, page number included.
+
+`branding` and `footer` answer different questions. `branding` decides where the logo appears. `footer` decides which marks print. A deck with `branding: "full"` and no `footer` keeps its older footer, read as `{ "organization": true, "confidentiality": "footer" }` for whichever of the two `meta` carries. The date and version it used to repeat on every page stay on the cover and ending, where `full` still prints them. Writing `footer` replaces that reading, and `footer: {}` turns it off.
+
+`validate` refuses:
+
+- `organization` without `meta.organization`
+- `confidentiality` without `meta.confidentiality`, or with `public`
+- `confidentiality` together with `meta.classification`
+- a legal classification written into `label`, `notice`, or `draft`
+- a footer line too long for one line at the bottom of the page (a footer never trims the author's words)
 
 ## Assets and backgrounds
 

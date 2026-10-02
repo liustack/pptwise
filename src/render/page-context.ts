@@ -1,7 +1,9 @@
 import type { DeckBranding, PptxIR, Slide } from "@/ir"
 import type { DecorKeepOutRect } from "../layouts/registry"
+import { MOTIF_FOOTER_ROLES } from "../motifs/footer-roles"
 import type { MotifId } from "../motifs/types"
 import type { ThemeDefinition } from "../themes/definitions"
+import { footerRowItems, footerRowWanted, NO_FOOTER_MARKS, resolveDeckFooter, type DeckFooter } from "./footer-marks"
 import type { EffectiveFace } from "./layout-selection"
 
 export type EffectiveBranding = DeckBranding | "none"
@@ -15,6 +17,20 @@ export interface PageRenderContext {
   branding: EffectiveBranding
   metadataOn: boolean
   documentMetaOn: boolean
+  /** The deck's footer marks, resolved from `footer` (or `branding: "full"`). None when the menu silences this page's metadata. */
+  footer: DeckFooter
+  /**
+   * Who draws the content-page footer row on this page: the shared footer
+   * (`./branding.tsx`), the theme's motif (`motifs/footer-roles.ts`), or
+   * nobody. Nobody on every page that is not a content page, on a page
+   * whose metadata the menu silenced, when the deck asked for no row, on a
+   * face whose artwork runs to the bottom edge (`footerRow: "none"`), and
+   * when the face leaves no room for the brand frame and no motif paints
+   * the row in its place.
+   */
+  footerRow: "branding" | "motif" | null
+  /** The motif on this page prints the organization itself, so the row leaves it out. */
+  footerOmitsOrganization: boolean
   /**
    * Page-coordinate rectangles the chosen face paints its own furniture
    * into. A motif checks its mark against these before painting — see
@@ -31,9 +47,15 @@ const FRAME_BOTTOM_BRANDED = 624
 const CANVAS_BOTTOM = 720
 const FOOTER_HEIGHT = 40
 
-function hasFooterMeta(ir: PptxIR): boolean {
-  const { confidentiality, organization, version, date } = ir.meta
-  return Boolean(confidentiality || organization || version || date)
+/**
+ * A theme may keep the footer off a content page that wears a photo
+ * background behind a card (`brand.suppressFooterOnCardContent`, bulletin):
+ * the row would cross the photo.
+ */
+function cardBackgroundSuppressesFooter(ir: PptxIR, slide: Slide, theme: ThemeDefinition): boolean {
+  if (!theme.brand.suppressFooterOnCardContent || slide.type !== "content") return false
+  const bgAsset = slide.background?.kind === "asset" ? ir.assets.images[slide.background.asset_id] : null
+  return Boolean(bgAsset?.src && !bgAsset.error)
 }
 
 export function resolveDeckBranding(ir: Pick<PptxIR, "branding">): DeckBranding {
@@ -93,6 +115,23 @@ export function resolvePageRenderContext(
   const branding: EffectiveBranding = brandOn ? deckBranding : "none"
   const documentMetaOn = metadataOn && deckBranding === "full"
 
+  // A menu that silences a page's metadata silences its footer marks too.
+  const footer = metadataOn ? resolveDeckFooter(ir) : NO_FOOTER_MARKS
+  const motifFooterRole = motifOn && motifId !== undefined ? MOTIF_FOOTER_ROLES[motifId] : undefined
+  const footerOmitsOrganization = motifFooterRole === "organization"
+  const rowWanted =
+    slide.type === "content" &&
+    metadataOn &&
+    (steppedAside || effectiveFace.layout?.footerRow !== "none") &&
+    footerRowWanted(footerRowItems(footer, { omitOrganization: footerOmitsOrganization }))
+  const footerRow: PageRenderContext["footerRow"] = !rowWanted
+    ? null
+    : motifFooterRole === "row"
+      ? "motif"
+      : brandOn && !cardBackgroundSuppressesFooter(ir, slide, theme)
+        ? "branding"
+        : null
+
   return {
     motifOn,
     ...(motifId !== undefined ? { motifId } : {}),
@@ -101,13 +140,15 @@ export function resolvePageRenderContext(
     branding,
     metadataOn,
     documentMetaOn,
+    footer,
+    footerRow,
+    footerOmitsOrganization,
     ...(effectiveFace.layout?.decorKeepOut && !steppedAside
       ? { decorKeepOut: effectiveFace.layout.decorKeepOut }
       : {}),
     geometry: {
-      ...(branding === "full" ? { brandedFrameBottomY: FRAME_BOTTOM_BRANDED } : {}),
-      imageBottomCaptionBottomY:
-        branding === "full" && hasFooterMeta(ir) ? CANVAS_BOTTOM - FOOTER_HEIGHT : CANVAS_BOTTOM,
+      ...(branding === "full" || footerRow !== null ? { brandedFrameBottomY: FRAME_BOTTOM_BRANDED } : {}),
+      imageBottomCaptionBottomY: footerRow !== null ? CANVAS_BOTTOM - FOOTER_HEIGHT : CANVAS_BOTTOM,
     },
   }
 }

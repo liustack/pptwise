@@ -310,3 +310,25 @@ describe("absolute tspan x (the emphasis pad's runs)", () => {
     expect(textToOp(el).runs).toEqual([{ text: "a" }, { text: "b", charSpacing: 6 }, { text: "cd" }])
   })
 })
+
+describe("textToOp: the footer's page-number field", () => {
+  it("carries the slide-number field on the one run it exports to", () => {
+    const op = textToOp(
+      textEl('<text data-field="slidenum" x="1184" y="694" font-size="16" text-anchor="end" fill="#5B6069">12</text>'),
+    )
+    expect(op.field).toBe("slidenum")
+    expect(op.runs).toEqual([{ text: "12" }])
+    expect(op.align).toBe("right")
+  })
+
+  it("leaves every other text without a field", () => {
+    expect(textToOp(textEl('<text x="96" y="120" font-size="16">12</text>')).field).toBeUndefined()
+  })
+
+  it("refuses an unknown field, and a field that is not one line of one run", () => {
+    expect(() => textToOps(textEl('<text data-field="date" x="0" y="20">x</text>'))).toThrow(/unknown text field/)
+    expect(() =>
+      textToOps(textEl('<text data-field="slidenum" x="0" y="20">1<tspan font-weight="700">2</tspan></text>')),
+    ).toThrow(/one line of one run/)
+  })
+})

@@ -1,11 +1,12 @@
 ---
-summary: 'IR v5：deck 字段、内容页必填 kind、页面字段、组件、资产、叙事 pacing、品牌，以及选型字段的严格删除'
+summary: 'IR v5：deck 字段、内容页必填 kind、页面字段、组件、资产、叙事 pacing、品牌、页脚标记，以及选型字段的严格删除'
 read_when:
   - 编写或验证裸 IR 文件
   - 某个字段、页面 kind、组件或版本被拒绝
   - 在裸 IR 与 deck 项目之间选择
   - 确认哪些语义字段会进入渲染
   - 选择 chart_type，或编写堆叠柱、百分比堆叠柱、柱线组合图
+  - 加页码、保密标识或其他页脚标记
 ---
 
 # IR v5
@@ -57,10 +58,11 @@ pptwise validate deck.json
 | `filename` | string | 输出文件名，默认 `presentation`。 |
 | `narrative` | 预设字符串或部分三轴 | 论证、节奏与受众决定。 |
 | `theme` | object | 只绑定主题 id：`{ "id": "acme" }`。必填，绑定工作区主题、已装内容包的主题或出厂预设。改颜色用 `pptwise theme fork`。品牌配置写在主题文件上。 |
-| `meta` | object | 机构、作者、日期、版本、保密级别、联系信息、版权与动画。 |
+| `meta` | object | 机构、作者、日期、版本、保密级别、法定密级、联系信息、版权与动画。 |
 | `assets` | object | `assets.images` 下的命名图片来源。 |
 | `brand` | object | Deck logo 的资产 id 与角落位置。 |
-| `branding` | enum | `full`、`cover-only` 或 `minimal`。省略等于 `cover-only`。 |
+| `branding` | enum | logo 出现在哪里：`full`、`cover-only` 或 `minimal`。省略等于 `cover-only`。 |
+| `footer` | object | 页码以及页面角落的其他小标记。省略就什么都不印。见[页脚标记](#页脚标记)。 |
 | `slides` | array | 有序页面。 |
 
 根对象是严格结构，未知字段会让验证失败。
@@ -205,6 +207,49 @@ pptwise schema --kind data --theme brief
 ```
 
 组合图至少要有一个柱系列和一个线系列，且至少一个系列留在左轴。`plot`、`axis`、`y2_title` 与 `y2_unit` 只在 `combo` 上有效，写了 `y2_title` 或 `y2_unit` 却没有系列放在右轴会报错。组合图的每个值，绝对值都不能超过 1e300。超了就把这个值所在轴上的所有系列除以同一个十的幂，单位写进该轴的 `y_unit` 或 `y2_unit`。三种新类型都不接受 `direction: "horizontal"`。
+
+## 页脚标记
+
+deck 不写 `footer` 就不印页脚：没有页码，没有机构名，没有日期，没有保密字样。每样标记都要作者明确要，印的字要么是作者原样写的，要么来自 deck 自己的 `meta`。
+
+| 字段 | 印什么 | 位置 |
+| --- | --- | --- |
+| `page_number` | 页码。导出为 PowerPoint 原生页码字段，调整页序后自动更新。 | 内容页右下角。封面、章节页、结尾页不印。 |
+| `organization` | `meta.organization`。 | 内容页左下角。 |
+| `label` | 作者原样提供的「场合加日期」一行字。 | 机构名之后。 |
+| `notice` | 作者原样提供的版权行或免责声明提示。 | label 之后。 |
+| `draft` | 作者原样提供的草稿或版本标识。 | 右下角，页码之前。 |
+| `confidentiality` | `meta.confidentiality` 的标识，按 deck 语言选字。`"cover"` 只在封面印一次，`"footer"` 封面加每张内容页都印。 | 封面：脸自己的位置，或左上角。内容页：右下角。 |
+
+```json
+{
+  "meta": { "organization": "华东区域运营中心", "confidentiality": "confidential" },
+  "footer": { "page_number": true, "organization": true, "label": "2026 年中期业绩 | 2026.08", "confidentiality": "footer" }
+}
+```
+
+```json
+{
+  "meta": { "organization": "Acme Holdings", "confidentiality": "confidential" },
+  "footer": { "page_number": true, "label": "Investor Presentation | February 2026", "confidentiality": "cover" }
+}
+```
+
+保密标识的措辞跟 deck 的语言走，语言从页面标题判断。中文 deck 的 `internal` 印「仅供内部讨论」，`confidential` 印「内部资料，请勿外传」，`restricted` 印「限定范围阅读，请勿转发」，不印「机密」，因为它在中文里是法定密级。英文 deck 印 Internal、Confidential 或 Restricted。`public` 什么都不印。
+
+法定密级和保密期限写进 `meta.classification`，照原样写（如「秘密★1年」）。它只在封面左上角印一次，别处都不印。
+
+页脚是沿版心底部的一行 16px 次级文字（12pt，与 PowerPoint 自带页脚同号），有字时上方带一条细线。声明 `branding: "none"` 的脸（构图里没有品牌框的位置，如整页金句、大数字）、声明 `footerRow: "none"` 的脸（画面压到页底，如整列出血的照片）和写了 `brand: "none"` 的菜单条目不画页脚这一行，页码也不画。
+
+`branding` 与 `footer` 管两件事。`branding` 决定 logo 出现在哪里，`footer` 决定印哪些标记。写了 `branding: "full"` 而没写 `footer` 的 deck 保留它原来的页脚，读作 `{ "organization": true, "confidentiality": "footer" }`（`meta` 有哪样就印哪样）。它以前每页重复的日期和版本留在封面和结尾页，`full` 仍然在那里印。写了 `footer` 就以它为准，写空的 `footer: {}` 可以关掉旧页脚。
+
+`validate` 拒绝：
+
+- 写了 `organization` 但没有 `meta.organization`
+- 写了 `confidentiality` 但没有 `meta.confidentiality`，或取值为 `public`
+- `confidentiality` 与 `meta.classification` 同时出现
+- 把法定密级写进 `label`、`notice` 或 `draft`
+- 页脚一行太长，底部放不下（页脚不会截断作者的字）
 
 ## 资产与背景
 

@@ -93,7 +93,9 @@ pptwise theme fork acme --primary '#0B5FFF' --id acme-blue
 
 ### 4. 用 `kind` 写 spec
 
-spec 锁定主题、叙事、品牌姿态、页面顺序、页型、标题，以及每张内容页的 `kind`。它不保存任何渲染选择状态。
+spec 锁定主题、叙事、品牌姿态、页脚标记、页面顺序、页型、标题，以及每张内容页的 `kind`。它不保存任何渲染选择状态。
+
+spec 的 `footer` 不要，deck 就不印页码、机构名、日期和保密字样。只要场合需要的那几样，见 `references/branding.md`。
 
 - `cover`、`chapter`、`ending` 是页型，不写 `kind`。
 - 每张 `content` 页必须显式写且只写一个 `kind`。
@@ -173,6 +175,6 @@ pptwise render deck-dir/
 - `references/layouts.md`：在 11 个 `kind` 中选择。
 - `references/components.md`：组件归属、字段与相似项选择。
 - `references/density.md`：节奏、容量、独占页面组件与局部装饰。
-- `references/branding.md`：deck 品牌姿态、无框页面、logo 与品牌抽取。
+- `references/branding.md`：页脚标记（页码、机构名、保密标识）、deck 品牌姿态、无框页面、logo 与品牌抽取。
 - `references/images.md`：图片资产、图库、生图，以及 `photo` 和 `evidence` 的边界。
 - `references/validate.md`：assemble、validate、audit、preview、serve、render 与修订循环。

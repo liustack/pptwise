@@ -2,8 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { CONF_LABEL } from "../lib/conf-labels"
-import { showsDocumentMeta } from "../render/document-meta"
+import { coverConfidentiality, showsDocumentMeta } from "../render/document-meta"
 import { blendOver, metaInk, readableOn } from "../render/ink"
 
 /**
@@ -53,8 +52,7 @@ const TITLE_MAX_W = 1280 - TITLE_X - 96
 export function SplitDiagonalCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const org = page?.metadataOn === false ? undefined : ir.meta.organization
   const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
-  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
-  const confLabel = conf ? CONF_LABEL[conf] : null
+  const confLabel = coverConfidentiality(page, ir)
   const author = page?.metadataOn === false ? undefined : ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
   const version = page?.metadataOn === false ? undefined : ir.meta.version
@@ -191,6 +189,7 @@ export function SplitDiagonalCover({ ir, slide, ctx, page }: SvgTemplateProps) {
 // cycle with the registry aggregator (which value-imports this export) — see
 // registry.ts's slot-`accepts` convention doc for what `[]` means.
 export const layoutDef: LayoutDefinition = {
+  coverMark: "face",
   // cover-split-diagonal.tsx: diagonal-cut primary block carries an org
   // kicker + decorative accent dot (decor); heading/rule/subheading/meta
   // sit in the right clear zone.

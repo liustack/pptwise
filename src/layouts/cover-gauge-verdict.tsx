@@ -1,10 +1,9 @@
 import type { SvgTemplateProps } from "./types"
 import { boundaryBulletItems } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
-import { CONF_LABEL } from "../lib/conf-labels"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
-import { showsDocumentMeta } from "../render/document-meta"
+import { coverConfidentiality, showsDocumentMeta } from "../render/document-meta"
 import {
   fitEmphasisHeading,
   fitEmphasisLine,
@@ -85,16 +84,6 @@ function authorLine({ ir }: Pick<SvgTemplateProps, "ir">): string {
   return parts.join(parts.some(hasCjk) ? "，" : ", ")
 }
 
-/**
- * Confidentiality and date are document meta: like the folio on the content
- * pages, they reach the canvas only when the deck declares `branding: "full"`
- * (`showsDocumentMeta`). The organization and the author are drawn either way.
- */
-function confidentialityLabel({ ir }: Pick<SvgTemplateProps, "ir">, documentMeta: boolean): string {
-  const value = documentMeta ? ir.meta.confidentiality : undefined
-  return value ? (CONF_LABEL[value] ?? value) : ""
-}
-
 /** gauge-verdict：结论封面。左上机构、右上密级，一枚黄条领副题与大标题，主色线下三列论据，页脚作者与日期。 */
 export function GaugeVerdictCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
@@ -112,7 +101,11 @@ export function GaugeVerdictCover({ ir, slide, ctx, page }: SvgTemplateProps) {
         bold: true,
       })
     : null
-  const confSource = confidentialityLabel({ ir }, documentMeta)
+  // The confidentiality mark is due when the deck's footer puts it on the
+  // cover (`coverConfidentiality`). The date is document meta: it reaches
+  // the canvas only under `branding: "full"` (`showsDocumentMeta`). The
+  // organization and the author are drawn either way.
+  const confSource = coverConfidentiality(page, ir) ?? ""
   const conf = confSource
     ? fitSvgLine(confSource, { maxWidth: CONF_MAX_W, fontSize: CONF_SIZE, minFontSize: CONF_SIZE, fontFamily: fonts.body })
     : null
@@ -299,6 +292,7 @@ export function GaugeVerdictCover({ ir, slide, ctx, page }: SvgTemplateProps) {
 
 export const layoutDef: LayoutDefinition = {
   branding: "none",
+  coverMark: "face",
   id: "gauge-verdict",
   kind: "standard",
   story: {

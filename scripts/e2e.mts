@@ -217,6 +217,45 @@ if (!brandThemedSlideXml.includes(brandThemeFile.style.colors.muted.replace("#",
   throw new Error("e2e: brand leg — the derived muted color did not reach the DrawingML")
 }
 
+// 2c) Footer marks leg: a real Chinese deck with every footer mark on,
+//     rendered through the built CLI. Content pages carry PowerPoint's own
+//     slide-number field, the other pages carry none, and the file is the
+//     third input of the PowerPoint repair probe (docs/testing.md).
+const footerDeck = JSON.parse(readFileSync("examples/quarterly-review-zh.json", "utf8")) as {
+  slides: { type?: string }[]
+} & Record<string, unknown>
+footerDeck.footer = {
+  page_number: true,
+  organization: true,
+  label: "2026 年第二季度经营回顾 | 2026.08",
+  draft: "讨论稿",
+  confidentiality: "footer",
+}
+const footerDeckPath = join(OUT, "page-numbers-deck.json")
+writeFileSync(footerDeckPath, JSON.stringify(footerDeck))
+const footerPptxPath = join(OUT, "page-numbers.pptx")
+console.log(sh("node", ["dist/cli.js", "render", footerDeckPath, "-o", footerPptxPath]))
+const footerZip = await JSZip.loadAsync(readFileSync(footerPptxPath))
+let numberedPages = 0
+for (const [i, slide] of footerDeck.slides.entries()) {
+  const xml = await footerZip.file(`ppt/slides/slide${i + 1}.xml`)!.async("string")
+  const fields = xml.match(/<a:fld [^>]*type="slidenum"[^>]*>[\s\S]*?<\/a:fld>/g) ?? []
+  const type = slide.type ?? "content"
+  // A content face that leaves no room for the brand frame (a full-page
+  // statement, a big number) carries no footer row, page number included.
+  if (fields.length > (type === "content" ? 1 : 0)) {
+    throw new Error(`e2e: footer leg: slide ${i + 1} (${type}) carries ${fields.length} slide-number fields`)
+  }
+  if (fields.length === 1) {
+    numberedPages++
+    if (!fields[0]!.includes(`<a:t>${i + 1}</a:t>`)) {
+      throw new Error(`e2e: footer leg: slide ${i + 1}'s field does not show its own number: ${fields[0]}`)
+    }
+  }
+}
+if (numberedPages < 4) throw new Error(`e2e: footer leg: only ${numberedPages} content pages carry a page number`)
+console.log(`footer leg OK (${numberedPages} content pages carry the slide-number field, no other page does)`)
+
 const invalidBrandFixturePath = join(OUT, "brand-fixture-invalid.pptx")
 writeFileSync(
   invalidBrandFixturePath,

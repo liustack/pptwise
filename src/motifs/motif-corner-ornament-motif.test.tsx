@@ -64,12 +64,18 @@ const FOOTER_MIDDLE_WINDOW = { x: 560, y: 686, w: 160, h: 28 } as const
 const contains = (b: Box, z: { x: number; y: number; w: number; h: number }) =>
   b.x0 >= z.x && b.x1 <= z.x + z.w && b.y0 >= z.y && b.y1 <= z.y + z.h
 
-const ir = (theme: string, date?: string): PptxIR =>
+/**
+ * The month reads the deck's date, which reaches a page only under
+ * `branding: "full"` (the same switch as the cover's date), so the fixture
+ * declares it unless a test asks for the omitted posture.
+ */
+const ir = (theme: string, date?: string, branding: PptxIR["branding"] | null = "full"): PptxIR =>
   ({
     version: "3",
     filename: "x.pptx",
     theme: { id: theme },
     meta: date === undefined ? {} : { date },
+    ...(branding ? { branding } : {}),
     assets: { images: {} },
     slides: [coverSlide],
   }) as unknown as PptxIR
@@ -83,9 +89,9 @@ function render(body: React.ReactElement | null): { markup: string; root: Elemen
   return { markup, root: parseSvgRoot(markup) }
 }
 
-function draw(theme: string, slide: Slide, date?: string) {
+function draw(theme: string, slide: Slide, date?: string, branding: PptxIR["branding"] | null = "full") {
   const ctx = boundThemeCtx(theme, {})
-  return { ...render(<CornerOrnamentMotif ir={ir(theme, date)} slide={slide} ctx={ctx} />), ctx }
+  return { ...render(<CornerOrnamentMotif ir={ir(theme, date, branding)} slide={slide} ctx={ctx} />), ctx }
 }
 
 const num = (el: Element, a: string) => Number(el.getAttribute(a))
@@ -251,6 +257,15 @@ describe("CornerOrnamentMotif（报头双线）", () => {
       expect(root.querySelector("text")!.textContent, `date=${String(date)}`).toBe("№")
     }
     expect(draw("journal", coverSlide, "2026-01-15").root.querySelector("text")!.textContent).toBe("№ 01")
+  })
+
+  it("期号：月份是 deck 的日期，默认不印（2026-10-02 页脚裁决），只留不声称任何事实的「№」", () => {
+    for (const branding of [null, "cover-only", "minimal"] as const) {
+      for (const slide of [coverSlide, contentSlide]) {
+        const { root } = draw("journal", slide, "2026 年 7 月", branding)
+        expect(root.querySelector("text")!.textContent, `${String(branding)} ${slide.type}`).toBe("№")
+      }
+    }
   })
 
   it("期号是装饰里唯一的文字，所以走 accessibleInk——journal 自己逐字节 no-op，借用方过不了线才抬", () => {

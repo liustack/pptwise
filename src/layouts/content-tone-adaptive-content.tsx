@@ -4,8 +4,6 @@ import type { LayoutDefinition } from "./registry"
 import { SvgContent } from "../render/svg-content"
 import { chapterNumberFor, sectionNameFor } from "../lib/derive"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { CONF_LABEL } from "../lib/conf-labels"
-import { showsDocumentMeta } from "../render/document-meta"
 import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 import { footnoteBaselineFor } from "../render/branding-geometry"
@@ -167,7 +165,7 @@ const KICKER_FONT_SIZE = 22
  */
 const KICKER_BASELINE = TITLE_ZONE_TOP + KICKER_FONT_SIZE
 
-export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplateProps) {
+export function ToneAdaptiveContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const withBg = hasBgImage(ir, slide)
   const section = sectionNameFor(ir.slides, index)
@@ -198,7 +196,6 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
       h: Math.max(120, treated.contentRect.h),
     }
     if (withBg) {
-      const footerFill = accessibleInk(colors.muted, "#FFFFFF", 20)
       // The white plate stays: it is what makes any ink legible over the
       // background image, and it costs the body nothing.
       const cardPlate = (
@@ -225,24 +222,6 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
           />
           {treated.chrome}
           <SvgContent components={slide.components} rect={treatedRect} ctx={cardCtx} />
-          <text
-            x="92"
-            y="636"
-            fontFamily={fonts.body}
-            fontSize="20"
-            fill={footerFill}
-            dominantBaseline="alphabetic"
-          >
-            {[
-              showsDocumentMeta(page, ir, slide) && ir.meta.confidentiality
-                ? CONF_LABEL[ir.meta.confidentiality]
-                : null,
-              ir.meta.organization,
-              ir.meta.version,
-            ]
-              .filter(Boolean)
-              .join("  ·  ")}
-          </text>
         </>
       )
     }
@@ -350,7 +329,6 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
         muted: accessibleInk(colors.muted, "#FFFFFF", ctx.bodyFontPx),
       },
     }
-    const footerFill = accessibleInk(colors.muted, "#FFFFFF", 20)
 
     const cardBodyRect = { x: 92, y: contentRectY, w: 1096, h: contentRectH }
     const cardAsideUntreated = stepAside({
@@ -465,26 +443,6 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx, page }: SvgTemplate
           rect={cardBodyRect}
           ctx={cardCtx}
         />
-
-        {/* Footer meta inside card */}
-        <text
-          x="92"
-          y="636"
-          fontFamily={fonts.body}
-          fontSize="20"
-          fill={footerFill}
-          dominantBaseline="alphabetic"
-        >
-          {[
-            showsDocumentMeta(page, ir, slide) && ir.meta.confidentiality
-              ? CONF_LABEL[ir.meta.confidentiality]
-              : null,
-            ir.meta.organization,
-            ir.meta.version,
-          ]
-            .filter(Boolean)
-            .join("  ·  ")}
-        </text>
       </>
     )
   }

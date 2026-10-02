@@ -12,11 +12,18 @@ const VERSE = "设备不会突然坏，只是没人听它说话。"
 const LUXE_GOLD = "#C6A15B"
 const BOARD_TEXT = "#E8DFC9"
 
-function ir(slides: Slide[], meta: { organization?: string; date?: string } = {}): PptxIR {
+function ir(
+  slides: Slide[],
+  meta: { organization?: string; date?: string } = {},
+  branding: PptxIR["branding"] | null = "full",
+): PptxIR {
   return {
     version: "5",
     filename: "x.pptx",
     theme: { id: "museum" },
+    // The organization and date on a sparse page are footer information: they
+    // print only when the deck asks, and `branding: "full"` asks for both.
+    ...(branding ? { branding } : {}),
     meta,
     assets: { images: {} },
     slides,

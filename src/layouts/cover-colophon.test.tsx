@@ -85,7 +85,8 @@ describe("cover-colophon — the 1a design's own geometry", () => {
     expect(at(478)?.textContent, "subheading y478").toBe(SUBHEADING)
     expect(at(478)?.getAttribute("font-size")).toBe("27")
     expect(at(648)?.getAttribute("x"), "byline sits on the page margin").toBe("96")
-    expect(at(648)?.textContent).toContain("Internal")
+    // A Chinese deck prints the Chinese confidentiality phrase.
+    expect(at(648)?.textContent).toContain("仅供内部讨论")
     expect(at(648)?.textContent).toContain("2026-08-15")
     expect(at(648)?.textContent).toContain("v1.2")
   })

@@ -45,7 +45,11 @@ export function ShowStatementContent({ ir, slide, index, ctx }: SvgTemplateProps
   const bg = ctx.defaultBg ?? colors.bg
   const block = exactStatement(slide)
   const items = block ? statementItems(block) : []
-  const sectionSource = sectionNameFor(ir.slides, index) ?? ir.meta.organization?.trim() ?? ""
+  // The kicker names the section. It no longer falls back to the
+  // organization: on a content page the organization is a footer mark with
+  // one place, the footer row, and only when the deck asks for it
+  // (2026-10-02 footer ruling).
+  const sectionSource = sectionNameFor(ir.slides, index) ?? ""
   const section = sectionSource
     ? fitSvgLine(sectionSource, {
         maxWidth: 1128,

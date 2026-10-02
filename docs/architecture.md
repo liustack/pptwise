@@ -102,7 +102,9 @@ The SVG page is the single drawing source for preview and export. Shared text me
 
 The face fact wins over the menu. A copied public preset has ordinary motif choices written into its menu entries, so it needs no hidden inheritance.
 
-Branding is independent. A face with `branding: "none"` or a menu entry with `brand: "none"` suppresses the shared fragment. Otherwise `src/render/branding.tsx` applies the deck's `full`, `cover-only`, or `minimal` posture. Omission equals `cover-only`.
+Branding is independent. A face with `branding: "none"` or a menu entry with `brand: "none"` suppresses the shared fragment. Otherwise `src/render/branding.tsx` applies the deck's `full`, `cover-only`, or `minimal` logo posture. Omission equals `cover-only`.
+
+Footer marks (page number, organization, occasion label, notice, draft mark, confidentiality) are resolved once per page in `src/render/page-context.ts` from the deck's `footer`, or from the older reading of `branding: "full"`. Omitted, a deck prints none, and no motif or face prints footer information on its own. The content-page row is one shared component (`src/render/footer.tsx`), drawn by the brand fragment or, when the page's motif declares it carries the row (`src/motifs/footer-roles.ts`), by that motif. A cover's confidentiality mark sits where the face's own composition puts it (`coverMark: "face"`), otherwise in the shared top-left mark, which also carries a legal classification. The page number is exported as PowerPoint's slide-number field (`src/pptx/pptx-slide-number.ts`).
 
 ## Strict boundaries
 

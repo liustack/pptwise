@@ -2,8 +2,8 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { CONF_LABEL } from "../lib/conf-labels"
-import { showsDocumentMeta } from "../render/document-meta"
+import { coverConfidentiality, showsDocumentMeta } from "../render/document-meta"
+import { coverBadgeBox } from "./cover-badge"
 import { accessibleInk, readableOn } from "../render/ink"
 import { hasCjk, latinUpper, trackingPx } from "./minimal-shared"
 import { faceParam } from "./face-params"
@@ -122,8 +122,10 @@ export function LeftAnchorCover({ ir, slide, ctx, page, params }: SvgTemplatePro
   })
 
   const org = ir.meta.organization
-  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
-  const confLabel = conf ? CONF_LABEL[conf] : null
+  const confLabel = coverConfidentiality(page, ir)
+  const confBadge = confLabel
+    ? coverBadgeBox(confLabel, { right: 1184, minWidth: 120, fontSize: 26, fontFamily: fonts.body, padX: 16 })
+    : null
   const author = ir.meta.authors?.[0]
   const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const version = ir.meta.version
@@ -250,12 +252,12 @@ export function LeftAnchorCover({ ir, slide, ctx, page, params }: SvgTemplatePro
       {/* Confidentiality badge (top right, over the white panel). y=104 keeps
           it clear of Branding's tr logo band (x 1120-1216, y 48-88) —
           same safety margin as brief's y=100 equivalent badge. */}
-      {confLabel && (
+      {confLabel && confBadge && (
         <g>
           <rect
-            x="1064"
+            x={confBadge.x}
             y="104"
-            width="120"
+            width={confBadge.width}
             height="48"
             rx="6"
             fill="none"
@@ -263,7 +265,7 @@ export function LeftAnchorCover({ ir, slide, ctx, page, params }: SvgTemplatePro
             strokeWidth="2"
           />
           <text
-            x="1124"
+            x={confBadge.centerX}
             y="135"
             fontFamily={fonts.body}
             fontSize="26"
@@ -344,6 +346,7 @@ export function LeftAnchorCover({ ir, slide, ctx, page, params }: SvgTemplatePro
 // cycle with the registry aggregator (which value-imports this export) — see
 // registry.ts's slot-`accepts` convention doc for what `[]` means.
 export const layoutDef: LayoutDefinition = {
+  coverMark: "face",
   // cover-left-anchor.tsx: 40%-width primary color block carries the
   // heading (white, product-logic exempt); right panel has org kicker,
   // conf badge, subheading, meta divider + author/date/version. The

@@ -1,5 +1,5 @@
 /**
- * The v5 IR schema root: theme/meta/assets/brand/branding/background/slide/narrative
+ * The v5 IR schema root: theme/meta/assets/brand/branding/footer/background/slide/narrative
  * and the top-level `PptxIRSchema` a deck document parses against
  * (`parsePptxIR`). Versions 1 through 4 are rejected at this boundary.
  *
@@ -33,6 +33,7 @@ import { z } from "zod"
 import { HexTokenSchema } from "../themes/hex"
 import { KIND_VALUES } from "./narrative-values"
 import { componentTypeError } from "./schema-error-hints"
+import { FooterSchema, nonBlankString } from "./footer"
 import { schema as bulletsSchema } from "./components/bullets"
 import { schema as paragraphSchema } from "./components/paragraph"
 import { schema as blockquoteSchema } from "./components/blockquote"
@@ -161,34 +162,25 @@ const BackgroundSpecSchema = z.discriminatedUnion("kind", [
 /**
  * Brand (logical slide-master) config: branding behavior owned by a theme.
  * W1 scope was exactly the two flags migrated from the old theme-manifest footer flags;
- * the ink v3 redesign (2026-08-18) added a third, orthogonal one.
- * Single source of truth — the TS type is inferred, never hand-written.
+ * the ink v3 redesign (2026-08-18) added a third, since retired.
+ * Single source of truth: the TS type is inferred, never hand-written.
  *
- * All three are independent switches, not a ladder: a theme may set any
- * combination, and each names exactly one piece of brand footer. They are
- * deliberately not collapsed into one "footer style" enum — a theme that
- * draws its own divider is a different situation from one whose motif
- * already carries the org/date, and merging them would force one to imply
- * the other.
+ * The live switches are independent, not a ladder: a theme may set any
+ * combination, and each names exactly one piece of brand footer.
  */
 export const BrandConfigSchema = z
   .object({
     /** Suppress the footer entirely on content slides with a card background (bulletin legacy semantics). */
     suppressFooterOnCardContent: z.boolean().optional(),
-    /** Skip the footer divider line — for themes that draw their own frame (ink). */
+    /** Skip the footer divider line, for themes that draw their own frame (ink). */
     suppressFooterRule: z.boolean().optional(),
     /**
-     * Skip the footer's org/confidentiality/version/date text row on content
-     * slides — for themes whose motif already carries that information
-     * somewhere else on the page, where leaving the footer row on would print
-     * the same organization and date twice (ink v3's right-edge colophon
-     * rail, `src/motifs/motif-ink-motif.tsx`).
-     *
-     * Scoped to the ordinary footer row only. The image-bottom overlay footer
-     * (a light-on-dark scrim over a full-bleed photo) is untouched: a motif
-     * is painted *under* the layout, so a full-bleed image covers the rail
-     * completely and the overlay row is the only place that information
-     * survives on such a page.
+     * Retired (2026-10-02). Accepted so theme files written before then still
+     * load, and ignored. It used to skip the whole footer text row for a
+     * theme whose motif printed the organization and date elsewhere. Which
+     * footer marks a motif prints is now the motif's own declaration
+     * (`src/motifs/footer-roles.ts`), read page by page, so a page whose
+     * motif is silenced still gets its page number and marks.
      */
     suppressFooterMeta: z.boolean().optional(),
   })
@@ -236,7 +228,21 @@ export const MetaSchema = z
     version: z.string().optional(),
     confidentiality: z
       .enum(["public", "internal", "confidential", "restricted"])
-      .optional(),
+      .optional()
+      .describe(
+        'How far the deck may travel. Prints nothing by itself: footer.confidentiality decides whether the mark goes on the cover or also on every content page. "public" never prints a mark.',
+      ),
+    /**
+     * A legal classification and its term, written exactly as the law gives
+     * it ("秘密★1年"). Unlike `confidentiality` it is not a company label
+     * and it is not a footer mark: when present it prints once, on the
+     * cover, top left, and nowhere else. See `./footer.ts`.
+     */
+    classification: nonBlankString("meta.classification")
+      .optional()
+      .describe(
+        'A legal classification and its term, written exactly as given (e.g. "秘密★1年"). Prints on the cover only, top left. Cannot be combined with footer.confidentiality.',
+      ),
     contact: z
       .object({
         name: z.string().optional(),
@@ -286,16 +292,17 @@ export const BrandSchema = z
   .strict()
 
 /**
- * Deck-level branding posture. Omitted equals `"cover-only"` (cover and
- * chapter keep the brand logo, content and ending drop the footer rule,
- * meta, and logo). The schema never bakes a default: writing `"cover-only"`
- * back into a parsed IR would rewrite every existing deck.
+ * Deck-level branding posture: where the brand logo appears. Omitted equals
+ * `"cover-only"` (cover and chapter keep the logo, content and ending pages
+ * carry none). The schema never bakes a default: writing `"cover-only"` back
+ * into a parsed IR would rewrite every existing deck.
  *
- * `"full"` is the explicit declaration that draws the content-page footer
- * rule, meta, and logo, and that paints confidentiality and date on cover
- * and ending meta rows. Other postures leave those two fields off the
- * canvas even when meta carries them. `"minimal"` drops the content-page
- * footer rule and meta but keeps the logo. Layout-declared `branding: "none"`
+ * `"full"` and `"minimal"` keep the logo on every page. `"full"` also paints
+ * the date on cover and ending meta rows, and, when the deck writes no
+ * `footer`, stands for the footer it always drew: the organization and the
+ * confidentiality mark, read as `{ organization: true, confidentiality:
+ * "footer" }` for whichever of the two `meta` carries. Writing `footer`
+ * replaces that reading (`./footer.ts`). Layout-declared `branding: "none"`
  * still wins. Theme motifs are not this field.
  *
  * Shared with `DeckSpecSchema` (`src/spec/index.ts`) so the spec and IR
@@ -304,8 +311,17 @@ export const BrandSchema = z
 export const DECK_BRANDING_VALUES = ["full", "cover-only", "minimal"] as const
 export type DeckBranding = (typeof DECK_BRANDING_VALUES)[number]
 export const DeckBrandingSchema = z.enum(DECK_BRANDING_VALUES).describe(
-  'Where the brand footer and logo appear. Omitted equals "cover-only": cover and chapter pages keep the brand logo, content and ending pages drop the footer rule, meta, and logo. "full" is the explicit declaration that draws the content-page footer and logo, and that paints confidentiality and date on cover and ending meta rows. Other postures leave those two fields off the canvas even when meta carries them. "minimal" drops the content-page footer rule and meta but keeps the logo. Layout branding:"none" still wins. Theme motifs are unaffected. Write "full" only when every content page needs the brand footer.',
+  'Where the brand logo appears. Omitted equals "cover-only": cover and chapter pages keep the logo, content and ending pages carry none. "full" and "minimal" keep the logo on every page. "full" also paints the date on cover and ending meta rows, and without a footer object it stands for footer {organization, confidentiality: "footer"}. Page marks such as page numbers live in footer. Layout branding:"none" still wins. Theme motifs are unaffected.',
 )
+
+export {
+  FooterSchema,
+  FOOTER_CONFIDENTIALITY_PLACEMENTS,
+  footerSettingIssues,
+  type Footer,
+  type FooterConfidentialityPlacement,
+  type FooterSettingIssue,
+} from "./footer"
 
 // ── Components（62 种）──
 
@@ -524,14 +540,19 @@ export const PptxIRSchema = z
     assets: AssetsSchema.default({ images: {} }),
     brand: BrandSchema.optional(),
     /**
-     * Where the brand footer and logo appear. Optional, no default: omitted
-     * stays `undefined` and the renderer treats that as `"cover-only"`, so a
-     * deck that never mentions the field gets a clean content page. Write
-     * `"full"` to draw the footer rule, meta, and logo on content pages,
-     * and to paint confidentiality and date on cover and ending meta rows.
-     * See {@link DeckBrandingSchema}.
+     * Where the brand logo appears. Optional, no default: omitted stays
+     * `undefined` and the renderer treats that as `"cover-only"`, so a deck
+     * that never mentions the field gets a clean content page. See
+     * {@link DeckBrandingSchema} for what `"full"` adds.
      */
     branding: DeckBrandingSchema.optional(),
+    /**
+     * Small marks printed in the page corners: page number, organization,
+     * occasion label, notice, draft mark, confidentiality placement.
+     * Optional, no default: omitted, the deck prints none of them (or, under
+     * `branding: "full"`, the older footer it always had). See `./footer.ts`.
+     */
+    footer: FooterSchema.optional(),
     slides: z.array(SlideSchema),
   })
   .strict()

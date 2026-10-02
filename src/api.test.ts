@@ -2047,9 +2047,21 @@ describe("generatePptx", () => {
     expect(fullCover).toContain("2026-08-15")
     expect(fullCover).toContain("ACME")
     expect(fullCover).toContain("Ada")
+    // The content page keeps the older footer: organization and mark. The
+    // date stays on the cover, not repeated on every page.
     const fullContent = renderSlideSvg(full.ir!, 1)
-    expect(fullContent).toContain("2026-08-15")
+    expect(fullContent).not.toContain("2026-08-15")
     expect(fullContent).toContain("Internal")
+    expect(fullContent).toContain("ACME")
+
+    // A footer that asks for the mark on the cover prints it there without
+    // "full", and leaves the date where the posture puts it.
+    const asked = validateIr({ ...base, footer: { confidentiality: "cover" } })
+    expect(asked.ok).toBe(true)
+    const askedCover = renderSlideSvg(asked.ir!, 0)
+    expect(askedCover).toContain("Internal")
+    expect(askedCover).not.toContain("2026-08-15")
+    expect(renderSlideSvg(asked.ir!, 1)).not.toContain("Internal")
   })
 
   it("validates and renders a cover-only deck to pptx", async () => {
@@ -2561,6 +2573,14 @@ describe("irJsonSchema", () => {
     expect(json).toContain("cover-only")
     expect(json).toContain("minimal")
     expect(json).toContain('Omitted equals \\"cover-only\\"')
-    expect(json).toContain("confidentiality and date")
+    expect(json).toContain("Where the brand logo appears")
+  })
+
+  it("surfaces the footer marks and the cover-only legal classification", () => {
+    const schema = irJsonSchema() as { properties?: Record<string, { properties?: Record<string, unknown> }> }
+    expect(Object.keys(schema.properties?.footer?.properties ?? {}).sort()).toEqual(
+      ["confidentiality", "draft", "label", "notice", "organization", "page_number"],
+    )
+    expect(JSON.stringify(schema.properties?.meta)).toContain("classification")
   })
 })

@@ -91,7 +91,9 @@ A same-menu color fork may replace the bound theme during the workflow. A differ
 
 ### 4. Write the spec with `kind`
 
-The spec locks theme, narrative, branding posture, page order, page type, heading, and the `kind` of every content page. It contains no render selection state.
+The spec locks theme, narrative, branding posture, footer marks, page order, page type, heading, and the `kind` of every content page. It contains no render selection state.
+
+A deck prints no page number, organization, date, or confidentiality line unless the spec's `footer` asks for it. Ask only for what the occasion needs, see `references/branding.md`.
 
 - `cover`, `chapter`, and `ending` are page types and do not use `kind`.
 - Every `content` page requires exactly one explicit `kind`.
@@ -171,6 +173,6 @@ Use `--draft` or `--allow-dropped-content` only when the user explicitly request
 - `references/layouts.md`: choosing among the 11 `kind` words.
 - `references/components.md`: component ownership, fields, and lookalike choices.
 - `references/density.md`: pacing, capacity, full-page components, and local decoration.
-- `references/branding.md`: deck branding posture, frameless pages, logos, and brand extraction.
+- `references/branding.md`: footer marks (page numbers, organization, confidentiality), deck branding posture, frameless pages, logos, and brand extraction.
 - `references/images.md`: image assets, stock search, generation, and `photo` versus `evidence`.
 - `references/validate.md`: assemble, validate, audit, preview, serve, render, and revision loops.

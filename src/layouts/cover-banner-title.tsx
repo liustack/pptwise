@@ -4,8 +4,8 @@ import type { LayoutDefinition } from "./registry"
 import { scaleTypePx } from "../render/heading-fit"
 import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
-import { CONF_LABEL } from "../lib/conf-labels"
-import { showsDocumentMeta } from "../render/document-meta"
+import { coverConfidentiality, showsDocumentMeta } from "../render/document-meta"
+import { coverBadgeBox } from "./cover-badge"
 
 /**
  * banner-title cover layout（spec §3.2）：结论横幅式封面——org 圆点标、
@@ -74,8 +74,10 @@ export function BannerTitleCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const subtitleY = titleLastY + 96
 
   const org = ir.meta.organization
-  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
-  const confLabel = conf ? CONF_LABEL[conf] : null
+  const confLabel = coverConfidentiality(page, ir)
+  const confBadge = confLabel
+    ? coverBadgeBox(confLabel, { right: 1184, minWidth: 126, fontSize: 26, fontFamily: ctx.fonts.body, padX: 16 })
+    : null
   const author = ir.meta.authors?.[0]
   const authorText = author
     ? [author.name, author.role].filter(Boolean).join(" · ")
@@ -111,21 +113,21 @@ export function BannerTitleCover({ ir, slide, ctx, page }: SvgTemplateProps) {
       </g>
 
       {/* Confidentiality badge (top right) */}
-      {confLabel && (
+      {confLabel && confBadge && (
         <g>
           <rect
-            x="1058"
+            x={confBadge.x}
             y="100"
-            width="126"
+            width={confBadge.width}
             height="48"
             rx="4"
             fill="none"
             stroke={ctx.colors.primary}
             strokeWidth="2"
           />
-          <rect x="1058" y="100" width="8" height="48" fill={ctx.colors.accent} />
+          <rect x={confBadge.x} y="100" width="8" height="48" fill={ctx.colors.accent} />
           <text
-            x="1128"
+            x={confBadge.centerX + 4}
             y="131"
             fontFamily={ctx.fonts.body}
             fontSize="26"
@@ -222,6 +224,7 @@ export function BannerTitleCover({ ir, slide, ctx, page }: SvgTemplateProps) {
 // cycle with the registry aggregator (which value-imports this export) — see
 // registry.ts's slot-`accepts` convention doc for what `[]` means.
 export const layoutDef: LayoutDefinition = {
+  coverMark: "face",
   // cover-banner-title.tsx: org dot-kicker, conf badge, heading, accent
   // bar, italic subheading, meta divider + author/date/version row.
   id: "banner-title",

@@ -2,8 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { CONF_LABEL } from "../lib/conf-labels"
-import { showsDocumentMeta } from "../render/document-meta"
+import { coverConfidentiality, showsDocumentMeta } from "../render/document-meta"
 import { accessibleInk } from "../render/ink"
 import { hasCjk, latinUpper, trackingPx } from "./minimal-shared"
 import { SIBLING_AIR_PX } from "../render/spacing"
@@ -54,8 +53,7 @@ const META_BOTTOM_RIGHT = { x: 1208, y: 684 }
 export function PosterCenterCover({ ir, slide, ctx, page, params }: SvgTemplateProps) {
   const org = ir.meta.organization
   const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
-  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
-  const confLabel = conf ? CONF_LABEL[conf] : null
+  const confLabel = coverConfidentiality(page, ir)
   const author = ir.meta.authors?.[0]
   const authorText = author
     ? [author.name, author.role].filter(Boolean).join(" · ")
@@ -239,6 +237,7 @@ export function PosterCenterCover({ ir, slide, ctx, page, params }: SvgTemplateP
 // cycle with the registry aggregator (which value-imports this export) — see
 // registry.ts's slot-`accepts` convention doc for what `[]` means.
 export const layoutDef: LayoutDefinition = {
+  coverMark: "face",
   // cover-poster-center.tsx: fully centered "poster". Optional kicker,
   // metaPlacement, and textAnchor knobs. Default: no kicker, org folded
   // into the bottom meta line, middle anchor (start left-aligns the

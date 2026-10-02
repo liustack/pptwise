@@ -324,7 +324,7 @@ describe("LeftAnchorCover", () => {
     })
   })
 
-  it("confidentiality 徽标 (1064,104,120,48) 避让 Branding 四个 logo 带（迁移自 thesis.test.tsx）", () => {
+  it("confidentiality 徽标右缘钉在 1184、随标签变宽，仍避让 Branding 四个 logo 带（迁移自 thesis.test.tsx）", () => {
     const ctx = buildCtx(tokensWithoutCover("thesis"), {})
     const deck: PptxIR = {
       version: "3",
@@ -336,16 +336,18 @@ describe("LeftAnchorCover", () => {
       slides: [slide],
     } as unknown as PptxIR
     const out = renderSvgMarkup(<LeftAnchorCover ir={deck} slide={slide} index={0} ctx={ctx} />)
-    expect(out).toContain("Internal")
+    // A Chinese deck: the mark is the Chinese phrase, wider than the
+    // badge's designed 120px, so the badge grows leftward from x1184.
+    expect(out).toContain("仅供内部讨论")
 
     const root = parseSvgRoot(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
     )
     const confRect = Array.from(root.querySelectorAll("rect")).find(
       (r) =>
-        r.getAttribute("x") === "1064" &&
+        Number(r.getAttribute("x")) + Number(r.getAttribute("width")) === 1184 &&
         r.getAttribute("y") === "104" &&
-        r.getAttribute("width") === "120" &&
+        Number(r.getAttribute("width")) > 120 &&
         r.getAttribute("height") === "48",
     )
     expect(confRect).toBeTruthy()

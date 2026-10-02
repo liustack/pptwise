@@ -84,14 +84,18 @@ describe("a stepped-aside page keeps the theme it belongs to", () => {
     // drawing, so the shared Branding has to stand in — and before it did,
     // all three lines simply vanished between a 12-series page and a
     // 13-series one in the same deck.
+    //
+    // On the face's own page the header carries the organization, version
+    // and date. On the stepped-aside page the shared footer stands in with
+    // the marks the deck's footer asks for, which under `"full"` is the
+    // organization (the date stays on the cover).
     const held = page(gaugeDeck(12, "full"))
     const aside = page(gaugeDeck(13, "full"))
     expect(held).not.toContain("data-face-mode")
     expect(aside).toContain('data-face-stepped-aside="gauge-stats"')
-    for (const fact of ["云觅咨询", "v2", "2026-08"]) {
-      expect(held).toContain(fact)
-      expect(aside).toContain(fact)
-    }
+    for (const fact of ["云觅咨询", "v2", "2026-08"]) expect(held).toContain(fact)
+    expect(aside).toContain("云觅咨询")
+    expect(aside).toContain('data-footer="row"')
   })
 
   it("paints the motif a suppressing face had turned off", () => {

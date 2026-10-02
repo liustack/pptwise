@@ -13,7 +13,7 @@ import { stepAside } from "../render/step-aside"
  * narrow-column content layout（spec §3.2，Wave 3 Task 17）：trades the
  * usual full-width component stack for a magazine-style narrow column (w=880 of
  * the page's 1088 content width), leaving a deliberate 208px whitespace
- * gutter on the right that carries only a large muted serif page number.
+ * gutter on the right that stays empty.
  * Kicker (section name) sits italic above the heading and prefers accent
  * only when it clears the 16px text floor. Its fallback is the theme text
  * token. An optional accent-italic subheading slots in below it. Extracted from
@@ -54,7 +54,6 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
     const columnH = Math.max(0, COLUMN_BOTTOM - y)
     const aside = stepAside({ face: "narrow-column", slide, ctx, bodyRect: { x, y, w, h: columnH } })
     if (aside) return aside
-    const pageLabel = String(index + 1).padStart(2, "0")
     const footnote = slide.footnote
       ? fitSvgLine(slide.footnote, { maxWidth: 980, fontSize: 20, minFontSize: 16 })
       : null
@@ -66,18 +65,6 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
           rect={{ x, y, w, h: columnH }}
           ctx={ctx}
         />
-        <text
-          x="1184"
-          y="628"
-          fontFamily={fonts.heading}
-          fontSize="64"
-          fill={colors.muted}
-          opacity="0.3"
-          textAnchor="end"
-          dominantBaseline="alphabetic"
-        >
-          {pageLabel}
-        </text>
         {footnote && (
           <text
             data-truncated={footnote.truncated ? "1" : undefined}
@@ -103,8 +90,7 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
   const KICKER_Y = 124
   const HEADING_BASELINE = 190
   // Deliberately narrow: 880 of the page's usual 1088 content width, leaving
-  // a 208px right-hand whitespace gutter (x 1000-1184) that carries nothing
-  // but the big page number below.
+  // a 208px right-hand whitespace gutter (x 1000-1184) that stays empty.
   const COLUMN_X = 96
   const COLUMN_W = 880
   // 620 with a footnote, the same 20px shrink `banner-heading` (a flat 620),
@@ -183,7 +169,6 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
   })
   if (aside) return aside
 
-  const pageLabel = String(index + 1).padStart(2, "0")
 
   const kicker = section
     ? fitSvgLine(section, { maxWidth: COLUMN_W, fontSize: 16, minFontSize: 16 })
@@ -195,10 +180,9 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
       : accessibleInk(colors.text, ctx.defaultBg ?? colors.bg, kicker.fontSize)
     : colors.accent
 
-  // 980 = conservative left edge of the page-number digits (1112) minus the
-  // footnote's own start x (96) minus a 36px safety gap, so a
-  // maximally-fitted footnote never runs into the large muted page number in
-  // the right gutter.
+  // 980 = the footnote's width when the gutter still held a large page
+  // number from x1112. The width is kept so a footnote fits the same way it
+  // always has.
   const footnote = slide.footnote
     ? fitSvgLine(slide.footnote, { maxWidth: 980, fontSize: 20, minFontSize: 16 })
     : null
@@ -276,20 +260,12 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
         ctx={ctx}
       />
 
-      {/* Right-hand whitespace gutter: nothing but the large muted page
-          number lives here, anchored to the page's right content margin. */}
-      <text
-        x="1184"
-        y="628"
-        fontFamily={fonts.heading}
-        fontSize="64"
-        fill={colors.muted}
-        opacity="0.3"
-        textAnchor="end"
-        dominantBaseline="alphabetic"
-      >
-        {pageLabel}
-      </text>
+      {/* The right-hand gutter stays empty. It used to carry a large muted
+          page number, a static one that went stale as soon as a slide moved
+          in PowerPoint, and a page number on every page the author never
+          asked for. Page numbers are a footer mark now (footer.page_number,
+          render/footer-marks.ts), drawn small in the corner and exported as
+          PowerPoint's own field. */}
 
       {footnote && (
         <text
@@ -321,14 +297,13 @@ export function NarrowColumnContent({ ir, slide, index, ctx }: SvgTemplateProps)
 export const layoutDef: LayoutDefinition = {
   // content-narrow-column.tsx: top hairline, italic kicker, heading,
   // subheading, narrow SvgContent body (arrangement passed through
-  // unchanged), large muted page-number watermark in the right gutter,
-  // italic footnote
+  // unchanged), an empty right gutter, italic footnote
   // (meta).
   id: "narrow-column",
   kind: "standard",
   story: {
     name: "Margin Column",
-    story: "A narrow 880px column runs down the left while a broad right-hand gutter holds nothing but a large soft grey page number. The eye follows the column, the whitespace gives the page its calm.",
+    story: "A narrow 880px column runs down the left while a broad right-hand gutter stays empty. The eye follows the column, the whitespace gives the page its calm.",
     positioning: "Serves points, list, data and process at up to four blocks in a single stack. The open gutter lets a dense page breathe without splitting into columns.",
     audience: "Readers scanning a printed handout or a shared screen at a meeting table.",
     notFor: "Content that needs two columns side by side, which belongs in Twin Columns.",

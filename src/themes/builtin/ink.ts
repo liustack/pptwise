@@ -79,7 +79,7 @@ export const INK_THEME = {
     lineage: "Chinese ink painting and the hanging scroll.",
   },
   style: INK_TOKENS,
-  brand: { suppressFooterRule: true, suppressFooterMeta: true },
+  brand: { suppressFooterRule: true },
   menu: {
     cover: { face: "vertical-title-cover" },
     chapter: { face: "volume-slip-chapter" },

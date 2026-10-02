@@ -13,11 +13,14 @@ const QUOTE = "最贵的停机，是没人预料到的那一次。"
 const LUXE_GOLD = "#C6A15B"
 const BAKED_COLOPHON = "丙午夏云觅"
 
-function ir(slides: Slide[], organization?: string): PptxIR {
+function ir(slides: Slide[], organization?: string, branding: PptxIR["branding"] | null = "full"): PptxIR {
   return {
     version: "5",
     filename: "x.pptx",
     theme: { id: "ink" },
+    // The organization on a sparse page is a footer mark: it prints only when
+    // the deck asks, and `branding: "full"` asks for it.
+    ...(branding ? { branding } : {}),
     meta: organization ? { organization } : {},
     assets: { images: {} },
     slides,

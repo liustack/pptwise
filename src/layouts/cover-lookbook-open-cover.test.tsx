@@ -58,7 +58,7 @@ function renderCover(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] =
 }
 
 describe("cover-lookbook-open-cover — board geometry", () => {
-  it("places the brand, season, full-width rule, left title, subtitle, and crimson folio", () => {
+  it("places the brand, season, full-width rule, left title, and subtitle", () => {
     const { root, tokens, ctx } = renderCover("runway")
     const bg = ctx.defaultBg ?? tokens.colors.bg
 
@@ -96,21 +96,15 @@ describe("cover-lookbook-open-cover — board geometry", () => {
     expect(sub?.getAttribute("x")).toBe("96")
     expect(sub?.getAttribute("y")).toBe("480")
     expect(sub?.getAttribute("data-contrast-tier")).toBe("meta")
-
-    const folio = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").startsWith("No."))
-    expect(folio?.textContent).toBe("No.01")
-    expect(folio?.getAttribute("x")).toBe("1184")
-    expect(folio?.getAttribute("y")).toBe("662")
-    expect(folio?.getAttribute("text-anchor")).toBe("end")
-    expect(folio?.getAttribute("fill")).toBe(accessibleInk(tokens.colors.accent, bg, Number(folio?.getAttribute("font-size"))))
   })
 
-  it("gives crimson only to the folio, not the title or brand", () => {
-    const { root, tokens, ctx } = renderCover("runway")
-    const bg = ctx.defaultBg ?? tokens.colors.bg
-    const accent = accessibleInk(tokens.colors.accent, bg, 16)
-    const folio = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").startsWith("No."))
-    expect(folio?.getAttribute("fill")).toBe(accent)
+  it("prints no page number: a cover carries none (2026-10-02 footer ruling)", () => {
+    const { root } = renderCover("runway")
+    expect(Array.from(root.querySelectorAll("text")).some((t) => /^No\.\d+$/.test(t.textContent ?? ""))).toBe(false)
+  })
+
+  it("keeps the accent off the title and the brand", () => {
+    const { root, tokens } = renderCover("runway")
     const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("回声"))
     expect(title?.getAttribute("fill")).not.toBe(tokens.colors.accent)
     const brand = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "ECHO")
@@ -126,7 +120,6 @@ describe("cover-lookbook-open-cover — board geometry", () => {
     expect(markup).not.toContain("回声，穿在身上")
     expect(markup).not.toContain("买手订货会")
     expect(Array.from(root.querySelectorAll("text")).some((t) => t.textContent === "ECHO")).toBe(true)
-    expect(Array.from(root.querySelectorAll("text")).some((t) => t.textContent === "No.01")).toBe(true)
   })
 
   it("does not set a CJK brand with letter-spacing, and does not stack a year vertically", () => {

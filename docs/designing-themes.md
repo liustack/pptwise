@@ -36,7 +36,7 @@ Offering a kind is a promise that the theme has a convincing face for that seman
 
 Each key maps to exactly one face. There is no rotation or conditional branch. Adaptation to actual content belongs inside the face.
 
-Give each kind its own face. Two kinds on one fixed arrangement read as the same page twice. The one exception is a face that declares `dispatch: "content"`: it picks its composition from what the page carries (a ruled list, an options table, a row of phases), so several kinds can share it without the deck going monotonous. Brief's `gauge-sheet` is such a face.
+Give each kind its own face. Two kinds on one fixed arrangement read as the same page twice. The one exception is a face that declares `dispatch: "content"`: it picks its composition from what the page carries (a ruled list, an options table, a row of phases), so several kinds can share it without the deck going monotonous. Brief's `gauge-sheet` is such a face. It hands its body band to the shared compositions in `src/layouts/compositions/`, which any face can call the same way. See [Reusable parts](./reusable-parts.md) before drawing a new one.
 
 ## Face contract
 
@@ -102,7 +102,7 @@ Motif colors derive from theme tokens. A palette fork must recolor motifs withou
 
 ### Branding safe zones
 
-Design against all three deck postures. `full` can add a content footer, metadata, and logo. `cover-only` keeps the logo on cover and chapter. `minimal` keeps logos but removes the content footer and metadata.
+Design against all three deck postures and against the footer row. `full` and `minimal` keep the logo on every page, `cover-only` keeps it on cover and chapter. The footer row (page number, organization, label, notice, draft, confidentiality) can appear on any content page whose deck asks for it, along the bottom of the type area with a hairline at the footer divider. A cover face either sets the confidentiality mark in its own composition (`coverMark: "face"`) or leaves the top-left corner to the shared mark, moving it with a `coverMark` anchor when the corner holds the face's own furniture. A motif never prints footer information on its own.
 
 When a composition has no safe place for the shared fragment, declare that fact on the face or set `brand: "none"` in the menu entry. Do not squeeze the brand frame into content or rely on authors to omit metadata.
 
@@ -177,6 +177,8 @@ A finished theme hands back:
 - Workspace name lookup: `src/cli/theme-resolve.ts`
 - Palette forking: `src/cli/theme-fork.ts`
 - Faces and parameter declarations: `src/layouts/`
+- Shared compositions a face can hand its body to: `src/layouts/compositions/`
+- Settled design boards: `design/`, listed in [Reusable parts](./reusable-parts.md)
 - Motifs and decoration budgets: `src/motifs/`
 - Composition and brand semantics: `src/render/full-slide-svg.tsx`
 - Contrast system: [Contrast system](./contrast-system.md)

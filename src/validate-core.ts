@@ -17,7 +17,7 @@
  * `./api` itself, the one file allowed to reach the render/export chain.
  */
 import { PptwiseError } from "./errors"
-import { OLD_IR_VERSION_ERROR, PptxIRSchema, themeIssueMessage, type PptxIR } from "./ir"
+import { footerSettingIssues, OLD_IR_VERSION_ERROR, PptxIRSchema, themeIssueMessage, type PptxIR } from "./ir"
 import { listAssetReferences } from "./ir/asset-references"
 import { decodeDataUriBytes, dataUriMime, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "./ir/asset-sniff"
 import { normalizeComponentAliases, normalizeDeckRootAliases } from "./ir/field-aliases"
@@ -32,6 +32,8 @@ import { CAPACITY } from "./audit/capacity"
 import { CATEGORY_FOLDING_TYPES } from "./ir/components/chart"
 import { FULL_BODY_TYPES } from "./render/component-traits"
 import { checkIrQuality, type QualityIssue } from "./render/ir-quality"
+import { footerFitIssues } from "./render/footer-marks"
+import { resolveFontStack } from "./render/fonts"
 import { componentFace, resolveEffectiveFace } from "./render/layout-selection"
 import { boundarySlotBlocks, drawableItems } from "./layouts/boundary-content"
 import { findImageSelection } from "./layouts/find-image"
@@ -573,6 +575,7 @@ function checkOverflowVocabulary(ir: PptxIR): ValidationIssue[] {
     })
   }
   consider(ir.meta, "meta")
+  consider(ir.footer, "footer")
   ir.slides.forEach((slide, i) => {
     consider(slide, `slides.${i}`, i + 1, slide.id)
   })
@@ -847,6 +850,12 @@ export function validateIr(input: unknown, opts?: { theme?: ThemeDefinition }): 
   if (duplicateIdErrors.length > 0) return withNormalized({ ok: false, errors: duplicateIdErrors })
   const overflowVocabularyErrors = checkOverflowVocabulary(r.data)
   if (overflowVocabularyErrors.length > 0) return withNormalized({ ok: false, errors: overflowVocabularyErrors })
+  // Footer marks: cross-field rules first (a mark with nothing to print, a
+  // legal classification in the wrong place), then whether the row the
+  // deck asked for fits on one line. A footer never trims an author's text
+  // to make room, so a row that does not fit is refused here.
+  const footerErrors = [...footerSettingIssues(r.data), ...footerFitIssues(r.data, resolveFontStack(theme.style.fonts.body, "body"))]
+  if (footerErrors.length > 0) return withNormalized({ ok: false, errors: footerErrors })
   // Asset byte validation (borrow wave, Task 2 — D3): a broken image is
   // content loss, so this is a hard gate at the same short-circuiting
   // position as the other structural checks above, not folded into

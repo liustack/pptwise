@@ -3,6 +3,7 @@ import { fitSvgLine } from "../lib/svg-text-layout"
 import { stripEmphasis } from "../render/emphasis"
 import { fitHeadingLines } from "../render/heading-fit"
 import { accessibleInk } from "../render/ink"
+import { coverConfidentiality } from "../render/document-meta"
 import type { LayoutDefinition } from "./registry"
 import { latinUpper } from "./minimal-shared"
 import {
@@ -25,7 +26,7 @@ function yearFrom(value: string | undefined): string | undefined {
 }
 
 /** show-headline。黑场、绯红半幅与极端字级共同承担身份。 */
-export function ShowHeadlineCover({ ir, slide, ctx }: SvgTemplateProps) {
+export function ShowHeadlineCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const imageComponent = firstImage(slide.components)
   const image = imageComponent ? ctx.images?.[imageComponent.asset_id] : undefined
@@ -72,7 +73,7 @@ export function ShowHeadlineCover({ ir, slide, ctx }: SvgTemplateProps) {
         fontFamily: fonts.body,
       })
     : null
-  const topLabelSource = ir.meta.confidentiality?.trim() ?? ""
+  const topLabelSource = coverConfidentiality(page, ir) ?? ""
   const topLabel = topLabelSource
     ? fitSvgLine(latinUpper(topLabelSource), {
         maxWidth: 480,
@@ -267,6 +268,7 @@ export function ShowHeadlineCover({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
+  coverMark: "face",
   suppressMotif: true,
   id: "show-headline",
   kind: "standard",

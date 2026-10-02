@@ -141,6 +141,22 @@ describe("auditPptxPackage — red-first breakage fixtures", () => {
     await expect(auditPptxPackage(zip)).rejects.toThrow(/duplicate-shape-id/)
   })
 
+  it("rejects a page number left as a plain run instead of the slide-number field", async () => {
+    const zip = await renderCleanZip(makeIr({ footer: { page_number: true } }))
+    let patched = false
+    for (const part of Object.keys(zip.files).filter((p) => /^ppt\/slides\/slide\d+\.xml$/.test(p))) {
+      const xml = await readPart(zip, part)
+      if (!xml.includes('type="slidenum"')) continue
+      // Undo the field: the exact package a skipped or broken
+      // `applySlideNumberFields` would ship.
+      zip.file(part, xml.replace(/<a:fld [^>]*type="slidenum"[^>]*>([\s\S]*?)<\/a:fld>/, "<a:r>$1</a:r>"))
+      patched = true
+      break
+    }
+    expect(patched).toBe(true)
+    await expect(auditPptxPackage(zip)).rejects.toThrow(/slide-number-not-field/)
+  })
+
   it("rejects a dangling animation shape reference", async () => {
     const zip = await renderCleanZip(
       makeIr({

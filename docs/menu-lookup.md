@@ -55,7 +55,7 @@ This parity is a testable invariant. A new route must not be reimplemented separ
 
 A face with structural `suppressMotif: true` cannot receive a motif. On any other face, a menu entry may choose `silent` or another motif. If the entry has no decoration opinion, the theme's ordinary motif is used.
 
-Branding resolves independently. A face with structural `branding: "none"` or an entry with `brand: "none"` suppresses the shared brand fragment. Otherwise the deck-level `full`, `cover-only`, or `minimal` posture applies.
+Branding resolves independently. A face with structural `branding: "none"` or an entry with `brand: "none"` suppresses the shared brand fragment, footer row included. Otherwise the deck-level `full`, `cover-only`, or `minimal` posture places the logo, and the deck's `footer` decides which footer marks print.
 
 ## Theme changes
 

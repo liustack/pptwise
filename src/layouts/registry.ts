@@ -319,6 +319,13 @@ export interface DecorKeepOutRect {
   readonly h: number
 }
 
+/** Where a cover face puts the shared top-left mark, see `LayoutDefinition.coverMark`. */
+export interface CoverMarkAnchor {
+  x: number
+  y: number
+  ground?: "primary" | "accent" | "surface"
+}
+
 export interface LayoutDefinition {
   id: string
   /**
@@ -357,6 +364,32 @@ export interface LayoutDefinition {
    * brand on a face that does have room; it can never paint one here.
    */
   branding?: "none"
+  /**
+   * Structural fact of a cover face about the cover's top-left mark
+   * (`render/footer.tsx`'s `CoverMark`).
+   *
+   * - `"face"`: the face sets the confidentiality mark in a place of its own
+   *   composition (a corner label, a meta row), reading the words from
+   *   `coverConfidentiality` (`render/document-meta.ts`). The shared mark
+   *   then stays off unless it carries a legal classification, which only
+   *   ever goes top left.
+   * - `{ x, y, ground? }`: the shared mark's baseline start on this face,
+   *   when the default top-left spot would sit on the face's own furniture
+   *   (a frame line, a band). `ground` names the theme color the face paints
+   *   under that spot when it is not the page's own background (a full-bleed
+   *   primary field), so the mark's ink is measured against what is really
+   *   there.
+   *
+   * Omitted, the shared mark takes the default top-left spot.
+   */
+  coverMark?: "face" | CoverMarkAnchor
+  /**
+   * Structural fact of a content face: its artwork runs to the bottom edge
+   * where the footer row would sit (a full-height bleed photo, its caption
+   * bar), so the page carries no footer row, page number included. Narrower
+   * than `branding: "none"`: the logo keeps its place.
+   */
+  footerRow?: "none"
   /**
    * Structural fact of the face: it paints its own full identity and the
    * theme motif must stay off. A menu entry's `decor` can silence a motif
@@ -415,7 +448,7 @@ export interface LayoutDefinition {
    * be named by several kinds of one menu (`themes/builtin/menus.test.ts`).
    *
    * `gauge-sheet` is the case: it hands each content shape the brief board
-   * composes by hand to its own composition (`layouts/gauge-sheet/`).
+   * composes by hand to one of the shared compositions (`layouts/compositions/`).
    */
   dispatch?: "content"
   /**

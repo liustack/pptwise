@@ -38,7 +38,7 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
   "luxe-motif": { cover: ["invitation"], ending: ["invitation"] },
   "vermilion-motif": { content: ["gold-rules"], ending: ["gold-rules"] },
   "corner-ornament-motif": { content: ["masthead"], ending: ["masthead"] },
-  "folio-motif": { chapter: ["folio"], content: ["folio"], ending: ["folio"] },
+  "folio-motif": { content: ["folio"] },
 }
 
 /** Adjudicated identity pieces. Midground, original color, no intensity cap. */
@@ -53,9 +53,10 @@ function slideOf(type: Slide["type"]): Slide {
 }
 
 /**
- * A motif that is the deck's own footer (`folio-motif`) only paints under
- * `branding: "full"`, the one posture that promises a content footer, so the
- * roster renders it there. Every other motif keeps the omitted posture.
+ * A motif that is the deck's own footer (`folio-motif`) only paints on a
+ * content page of a deck that asks for footer marks, so the roster renders
+ * it under `branding: "full"`, which still stands for the organization and
+ * the confidentiality mark. Every other motif keeps the omitted posture.
  */
 const FULL_BRANDING_MOTIFS: ReadonlySet<MotifId> = new Set(["folio-motif"])
 
