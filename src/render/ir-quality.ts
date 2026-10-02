@@ -359,7 +359,8 @@ function checkSlide(
       })
     }
     for (const item of component.items) {
-      const units = measureTextUnits(item)
+      // The words a reader sees: `**` marks are not painted, so they take no width.
+      const units = measureTextUnits(stripEmphasis(item))
       if (units > budget.bullets.maxUnitsPerItem) {
         issues.push({
           slide: index,
