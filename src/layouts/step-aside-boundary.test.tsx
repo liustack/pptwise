@@ -19,7 +19,8 @@
 //    stands. The export refuses, which is the honest answer.
 //
 // A face with no first region on this fixture (its band is short for a
-// two-series chart already) is still checked for the other two.
+// two-series chart already, even with the chart drawn down to its floor) is
+// still checked for the other two.
 import { describe, expect, it } from "vitest"
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
@@ -122,7 +123,7 @@ interface FaceCase {
 }
 
 const CASES: FaceCase[] = [
-  { face: "narrow-column", Face: NarrowColumnContent, themeId: "brief", regions: ["aside", "declined"] },
+  { face: "narrow-column", Face: NarrowColumnContent, themeId: "brief", regions: ["face", "aside", "declined"] },
   { face: "two-column", Face: TwoColumnContent, themeId: "brief", regions: ["face", "aside", "declined"] },
   { face: "rail-numbered", Face: RailNumberedContent, themeId: "brief", regions: ["face", "aside", "declined"] },
   { face: "quiet-frame", Face: QuietFrameContent, themeId: "brief", regions: ["face", "aside", "declined"] },
@@ -138,7 +139,8 @@ const CASES: FaceCase[] = [
   // Two figures are not this face's hero page, so the page goes to its sheet,
   // whose band the chart shares with them. On the full page the standfirst
   // and the source line leave the band less room than the step-aside sheet
-  // has, so only the short page holds before it steps aside.
+  // has, so the face holds only the few series a chart drawn down to its
+  // floor (`chartMinHeight`) still fits before it steps aside.
   {
     face: "gauge-figure",
     Face: GaugeFigureContent,
@@ -152,7 +154,7 @@ const CASES: FaceCase[] = [
     Face: GaugeFigureContent,
     themeId: "brief",
     components: (n) => statHeroBody(n),
-    regions: ["aside", "declined"],
+    regions: ["face", "aside", "declined"],
   },
   { face: "crayonbox-cards", Face: CrayonboxCardsContent, themeId: "crayon", regions: ["face", "aside", "declined"] },
   // A fixed body band is only ever worth trading for the sheet on a page
@@ -222,13 +224,14 @@ const CASES: FaceCase[] = [
     regions: ["face", "aside", "declined"],
   },
   // With a footnote the handed-over band is never larger than the sheet's,
-  // so two KPIs and a chart go straight to the sheet.
+  // so two KPIs and a chart hold there only while the chart, drawn down to
+  // its floor (`chartMinHeight`), still fits beside them.
   {
     face: "stat-hero",
     Face: StatHeroContent,
     themeId: "brief",
     components: (n) => statHeroBody(n),
-    regions: ["aside", "declined"],
+    regions: ["face", "aside", "declined"],
   },
   // A chart is scalable, so the bento grid shrinks one into whatever cell it
   // gets and the degrade path is never reached. A bullets list is not: it

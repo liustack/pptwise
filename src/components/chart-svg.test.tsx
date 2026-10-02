@@ -147,6 +147,34 @@ describe("renderBar — gradient bars", () => {
   })
 })
 
+describe("renderBar: a palette without the accent", () => {
+  // A face that keeps the accent for what the author marks takes it out of
+  // the chart palette (brief's sheet). The tallest-bar highlight is drawn in
+  // the accent, so on that palette there is none: the one series is drawn
+  // flat in the lead colour, like any series of a grouped chart.
+  const withoutAccent = PALETTE.filter((color) => color !== ACCENT)
+
+  it("draws a single series flat in the lead colour, with no gradient", () => {
+    const { container } = svg(renderBar(seriesOf(100, 200, 150), withoutAccent, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    expect(container.querySelector("linearGradient")).toBeNull()
+    const rects = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]'))
+    expect(rects.map((rect) => [rect.getAttribute("fill"), rect.getAttribute("opacity")])).toEqual([
+      [withoutAccent[0], "1"],
+      [withoutAccent[0], "1"],
+      [withoutAccent[0], "1"],
+    ])
+  })
+
+  it("does the same for a single horizontal series", () => {
+    const { container } = svg(renderBarHorizontal(seriesOf(100, 200, 150), withoutAccent, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    expect(container.querySelector("linearGradient")).toBeNull()
+    const rects = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]'))
+    expect(new Set(rects.map((rect) => `${rect.getAttribute("fill")} ${rect.getAttribute("opacity")}`))).toEqual(
+      new Set([`${withoutAccent[0]} 1`]),
+    )
+  })
+})
+
 describe("gradient id uniqueness across chart instances on one page", () => {
   it("gives two different-data chart instances distinct gradient ids", () => {
     const { container: a } = svg(renderBar(seriesOf(1, 2), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
@@ -2150,5 +2178,94 @@ describe("a value that does not fit is dropped, never shortened", () => {
     const series: ChartSeries[] = [{ name: "S", data: [{ x: "A", y: 123456789 }, { x: "B", y: 987654321 }] }]
     const { container } = svg(renderLine(series, PALETTE, 0, 0, 260, H, MUTED, TEXT, ACCENT))
     expect(container.querySelector("[data-dropped]")).not.toBeNull()
+  })
+})
+
+// tea-deck p07 (2026-10-02): the full-year figures and the half-year figures
+// were two series over different categories, so every category held one of
+// the two. Each bar kept the slot its series would have had in a full group,
+// and stood left or right of the category name printed under its centre.
+describe("renderBar: a category only some series reach", () => {
+  const years: ChartSeries[] = [
+    { name: "Full year", data: [{ x: "2023", y: 417 }, { x: "2024", y: 384 }, { x: "2025", y: 456 }] },
+    { name: "First half", data: [{ x: "H1 2025", y: 439 }, { x: "H1 2026", y: 440 }] },
+  ]
+
+  function barsAndTicks(container: HTMLElement) {
+    const bars = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]')).map((rect) => ({
+      center: Number(rect.getAttribute("x")) + Number(rect.getAttribute("width")) / 2,
+      width: Number(rect.getAttribute("width")),
+      fill: rect.getAttribute("fill"),
+    }))
+    const ticks = Array.from(container.querySelectorAll('[data-axis-tick="x"]')).map((t) => Number(t.getAttribute("x")))
+    return { bars, ticks }
+  }
+
+  it("centres each category's bars under its name, as wide as one series' bars", () => {
+    const { container } = svg(renderBar(years, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const { bars, ticks } = barsAndTicks(container)
+    expect(bars).toHaveLength(5)
+    bars.forEach((bar, i) => expect(bar.center).toBeCloseTo(ticks[i]!, 6))
+    expect(new Set(bars.map((bar) => bar.width.toFixed(6))).size).toBe(1)
+    // No category holds both series, so no bar is cut down to half a pair.
+    const { container: single } = svg(renderBar(seriesOf(1, 2, 3, 4, 5), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    expect(bars[0]!.width).toBeCloseTo(barsAndTicks(single).bars[0]!.width, 6)
+    expect(bars.map((bar) => bar.fill)).toEqual([PALETTE[0], PALETTE[0], PALETTE[0], PALETTE[1], PALETTE[1]])
+  })
+
+  it("cuts every bar from the fullest category when some hold more than one", () => {
+    const mixed: ChartSeries[] = [
+      { name: "A", data: [{ x: "Q1", y: 3 }, { x: "Q2", y: 4 }] },
+      { name: "B", data: [{ x: "Q2", y: 6 }] },
+    ]
+    const { container } = svg(renderBar(mixed, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const { bars, ticks } = barsAndTicks(container)
+    expect(bars).toHaveLength(3)
+    expect(new Set(bars.map((bar) => bar.width.toFixed(6))).size).toBe(1)
+    expect(bars[0]!.center).toBeCloseTo(ticks[0]!, 6)
+    expect((bars[1]!.center + bars[2]!.center) / 2).toBeCloseTo(ticks[1]!, 6)
+  })
+
+  it("puts each value label over its own bar", () => {
+    const { container } = svg(renderBar(years, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const { bars } = barsAndTicks(container)
+    const labels = Array.from(container.querySelectorAll('[data-value-label="1"]')).map((t) => Number(t.getAttribute("x")))
+    expect(labels).toHaveLength(5)
+    labels.forEach((x, i) => expect(x).toBeCloseTo(bars[i]!.center, 6))
+  })
+
+  it("keeps a full group's bars where they always were", () => {
+    const full: ChartSeries[] = [
+      { name: "A", data: [{ x: "Q1", y: 3 }, { x: "Q2", y: 4 }] },
+      { name: "B", data: [{ x: "Q1", y: 5 }, { x: "Q2", y: 6 }] },
+    ]
+    const { container } = svg(renderBar(full, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const { bars, ticks } = barsAndTicks(container)
+    // Two bars per category, one each side of the category's centre.
+    expect(bars[0]!.center).toBeLessThan(ticks[0]!)
+    expect(bars[1]!.center).toBeGreaterThan(ticks[0]!)
+    expect((bars[0]!.center + bars[1]!.center) / 2).toBeCloseTo(ticks[0]!, 6)
+  })
+})
+
+describe("renderBarHorizontal: a category only some series reach", () => {
+  it("centres each row's bars on its category name", () => {
+    const rows: ChartSeries[] = [
+      { name: "Full year", data: [{ x: "2024", y: 384 }, { x: "2025", y: 456 }] },
+      { name: "First half", data: [{ x: "H1 2026", y: 440 }] },
+    ]
+    const { container } = svg(renderBarHorizontal(rows, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const bars = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]')).map(
+      (rect) => Number(rect.getAttribute("y")) + Number(rect.getAttribute("height")) / 2,
+    )
+    const ticks = Array.from(container.querySelectorAll('[data-axis-tick="y"]')).map(
+      (t) => Number(t.getAttribute("y")),
+    )
+    expect(bars).toHaveLength(3)
+    expect(ticks).toHaveLength(3)
+    // A tick label's baseline sits a fixed distance below its row's centre,
+    // so the bars are centred when every bar keeps the same offset from it.
+    const offsets = bars.map((center, i) => ticks[i]! - center)
+    offsets.forEach((offset) => expect(offset).toBeCloseTo(offsets[0]!, 6))
   })
 })

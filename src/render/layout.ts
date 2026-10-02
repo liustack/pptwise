@@ -1,7 +1,7 @@
 import type { Component } from "@/ir"
 import type { ComponentBox, ComponentCtx } from "../components/types"
 import { COLUMN_SPANNING_TYPES, STRETCHABLE_TYPES } from "./component-traits"
-import { measureComponent } from "../components"
+import { measureComponent, minComponentHeight } from "../components"
 
 /** Internal body-flow word. Faces pass one to SvgContent; nothing external
  * authors it any more (the IR field died with the theme-model round). */
@@ -457,8 +457,47 @@ export function settleToGolden(
 }
 
 /**
+ * One column that does not fit at its measured heights, made to fit by
+ * drawing its shrinkable blocks shorter, or `null` when even their floors
+ * leave it too tall.
+ *
+ * A block that declares a floor below its measure (`RenderDef.minHeight`, a
+ * chart's plot today) gives up height in proportion to how much it has to
+ * give, until the column reaches the rect's foot exactly. Every other block
+ * keeps its measured height. The blocks stay in order at `gap`, and each one
+ * that shrank carries its new height as `box.h`, which it draws whole in.
+ *
+ * This is what stood between a chart and the callout under it on brief's
+ * sheet: the chart measured a flat 320px, one line of callout fit below it
+ * and two did not, so the page stepped aside (or at spacious pacing lost the
+ * callout) with the band's last 92px empty.
+ */
+function shrinkStack(
+  components: Component[],
+  rect: ContentRect,
+  ctx: ComponentCtx,
+  gap: number,
+): PlacedComponent[] | null {
+  if (components.length === 0) return null
+  const heights = components.map((component) => measureComponent(component, rect.w, ctx))
+  const floors = components.map((component) => minComponentHeight(component, rect.w, ctx))
+  const over = heights.reduce((sum, h) => sum + h, 0) + gap * (components.length - 1) - rect.h
+  const spare = heights.reduce((sum, h, i) => sum + (h - floors[i]!), 0)
+  if (over <= 0 || spare < over) return null
+  let cursor = rect.y
+  return components.map((component, i) => {
+    const give = heights[i]! - floors[i]!
+    const h = give > 0 ? heights[i]! - give * (over / spare) : undefined
+    const placed: PlacedComponent = { component, box: { x: rect.x, y: cursor, w: rect.w, ...(h !== undefined ? { h } : {}) } }
+    cursor += (h ?? heights[i]!) + gap
+    return placed
+  })
+}
+
+/**
  * Vertical overflow guard: retries `layoutContent` with progressively tighter
- * gaps, then — if the tightest gap still overflows — keeps only the components
+ * gaps, then, for a single column, draws its shrinkable blocks shorter
+ * (`shrinkStack`), then — if that still overflows — keeps only the components
  * whose bottom edge fits the rect and reports how many were dropped so the
  * caller can declare the loss. Quality gates upstream (ir-quality
  * warn, backend lint) are meant to keep real decks from ever reaching the
@@ -526,6 +565,16 @@ export function layoutContentFit(
         placed: spaced.length >= 2 ? settleToGolden(spaced, rect, ctx) : spaced,
         dropped: 0,
       })
+    }
+  }
+  // Before giving up on a single column: draw its shrinkable blocks shorter
+  // (`shrinkStack`), at the widest gap that then fits. Reached only by a page
+  // no gap tier holds at measured heights, so every page that fit before
+  // keeps its placement exactly.
+  if (arrangement === undefined || arrangement === "single" || arrangement === "code") {
+    for (const gap of scaledTiers) {
+      const shrunk = shrinkStack(components, rect, ctx, gap)
+      if (shrunk) return { placed: shrunk, dropped: 0 }
     }
   }
   // Before giving up and dropping content: a column-splitting arrangement

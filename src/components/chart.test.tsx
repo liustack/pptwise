@@ -7,7 +7,7 @@ import { assertSubset } from "../render/subset-validate"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { auditDeck } from "../audit/deck-audit"
 import { AXIS_TITLE_BAND_H } from "./axis-titles"
-import { chart } from "./chart"
+import { chart, renderDef } from "./chart"
 import { contrastRatio } from "../render/ink"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { schema as chartSchema } from "@/ir/components/chart"
@@ -60,15 +60,21 @@ describe("chart component", () => {
     expect(axisY).toBeGreaterThan(Number(tight.querySelector('[data-axis="x"]')!.getAttribute("y1")))
   })
 
-  it("declines a box below its measured minimum instead of painting past it", () => {
+  it("declines a box below its floor instead of painting past it", () => {
     const component = {
       type: "chart" as const,
       chart_type: "line" as const,
       axes: { x_title: "月份", y_title: "数量" },
       series: [{ name: "Trend", data: [{ x: "Jan", y: 10 }, { x: "Feb", y: 30 }] }],
     }
-    const minimum = chart.measure(component, 970, ctx)
-    const { container } = svg(chart.render(component, { x: 0, y: 0, w: 970, h: minimum - 40 }, ctx))
+    // The floor sits under the measure: a layout short of room may hand the
+    // plot down to it, and the chart draws whole there.
+    const floor = renderDef.minHeight!(component, 970, ctx)
+    expect(floor).toBeLessThan(chart.measure(component, 970, ctx))
+    const { container: atFloor } = svg(chart.render(component, { x: 0, y: 0, w: 970, h: floor }, ctx))
+    expect(atFloor.querySelector("[data-dropped]")).toBeNull()
+    expect(atFloor.querySelectorAll("polyline").length).toBeGreaterThan(0)
+    const { container } = svg(chart.render(component, { x: 0, y: 0, w: 970, h: floor - 1 }, ctx))
     // Nothing painted, and the loss declared where the gate reads it:
     // `slideToRender` counts `data-dropped`, so a decline that wrote no
     // attribute at all would be a page with no chart, no error, and a

@@ -10,7 +10,7 @@ import {
   GOLDEN_TOP_CAP_GAPS,
   type ContentRect,
 } from "./layout"
-import { measureComponent, renderComponent } from "../components"
+import { measureComponent, minComponentHeight, renderComponent } from "../components"
 import { renderSvgMarkup } from "./serialize"
 import type { ComponentCtx } from "../components/types"
 import type { Component } from "@/ir"
@@ -678,5 +678,54 @@ describe("settleToGolden top-air cap (上不空优先)", () => {
     const next = settleToGolden(placed, fitRect, ctx)
     expect(next[1].box.y - next[0].box.y).toBe(136)
     expect(next[0].box.y).toBe(BLOCK_GAP)
+  })
+})
+
+// tea-deck p03/p07 (2026-10-02): a chart and a two-line callout under brief's
+// heading rule. The band is 412px, the chart claims 320 of it and the callout
+// 99, so the page stepped aside at balanced pacing and lost the callout at
+// spacious pacing, with the band's last 92px empty under the chart either way.
+describe("layoutContentFit: a chart gives up height before the page loses a block", () => {
+  const band: ContentRect = { x: 96, y: 200, w: 1088, h: 412 }
+  const chart: Component = {
+    type: "chart",
+    chart_type: "bar",
+    axes: { y_title: "Stores", y_unit: "k" },
+    series: [
+      { name: "Opened", data: [{ x: "2023", y: 173 }, { x: "2024", y: 146 }, { x: "2025", y: 103 }] },
+      { name: "Closed", data: [{ x: "2023", y: 153 }, { x: "2024", y: 157 }, { x: "2025", y: 133 }] },
+    ],
+  }
+  const note: Component = {
+    type: "callout",
+    variant: "info",
+    text: "2025: 103,135 opened and 132,569 closed, a net loss of 29,434 chain stores, which is 2.5 times the loss in 2024.",
+  }
+
+  it.each([24, 32])("keeps both blocks at a %ipx body, the chart shorter but still at its floor or above", (bodyFontPx) => {
+    const paced = { ...ctx, bodyFontPx }
+    expect(measureComponent(chart, band.w, paced) + BLOCK_GAP + measureComponent(note, band.w, paced)).toBeGreaterThan(band.h)
+    const { placed, dropped } = layoutContentFit(undefined, [chart, note], band, paced)
+    expect(dropped).toBe(0)
+    expect(placed.map((p) => p.component)).toEqual([chart, note])
+    const [drawn, closing] = placed
+    expect(drawn!.box.h).toBeLessThan(measureComponent(chart, band.w, paced))
+    expect(drawn!.box.h).toBeGreaterThanOrEqual(minComponentHeight(chart, band.w, paced))
+    expect(closing!.box.y).toBeGreaterThanOrEqual(drawn!.box.y + drawn!.box.h!)
+    expect(closing!.box.y + measureComponent(note, band.w, paced)).toBeLessThanOrEqual(band.y + band.h + 1)
+    const markup = renderSvgMarkup(renderComponent(drawn!.component, drawn!.box, paced))
+    expect(markup).not.toMatch(/data-dropped="[1-9]/)
+  })
+
+  it("leaves a page that fits as it was", () => {
+    const short: Component = { type: "callout", variant: "info", text: "A net loss of 29,434 stores in 2025." }
+    const { placed } = layoutContentFit(undefined, [chart, short], band, ctx)
+    expect(placed[0]!.box.h).toBeUndefined()
+  })
+
+  it("still drops what even the chart's floor cannot make room for", () => {
+    const long: Component = { type: "callout", variant: "info", text: Array(6).fill(note.text).join(" ") }
+    const { dropped } = layoutContentFit(undefined, [chart, long], band, ctx)
+    expect(dropped).toBe(1)
   })
 })

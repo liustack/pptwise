@@ -120,6 +120,7 @@ The table gives each component's normal kind home. A component may serve more th
 - Use `gauge` inside `chart` for one value against one target. Use `progress_donuts` for several completion rates and `kpi_cards` for one or more independent headline values.
 - Use `stacked` inside `chart` when each category's total and the parts that make it up both matter. Use `percent_stacked` when only the make-up matters and the totals differ too much to compare the parts, and `bar` when the series should stand side by side rather than add up.
 - Use `combo` inside `chart` when two measures share one category axis, such as revenue and margin by quarter. Put the measure with a different unit on `axis: "right"`. Use two charts when the measures do not share their categories.
+- To set one group of categories apart from another in a `bar` chart, such as full years beside half-years, give each group its own series and leave out the categories it does not cover. Each bar stays centered on its category and takes its series' color. Do not pad a series with zeros or turn the chart into a `stacked` one for this: a zero is a data point, and the chart reads it as one.
 
 - Use `logo_wall` when a set of organization names is itself the claim and every name carries the same weight. Use `image_grid` for photographs and `row_cards` when each name needs a line of its own.
 

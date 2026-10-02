@@ -315,6 +315,24 @@ function scaleHexBrightness(hex: string, factor: number): string {
 }
 
 /**
+ * Whether a single bar series highlights its tallest bar: that bar solid in
+ * the accent, the rest in a gradient of it.
+ *
+ * The highlight is the accent, so it is drawn only where the accent is one of
+ * the colours this chart was handed. Every built-in theme's chart palette
+ * carries its accent, and there nothing changes. A face that keeps the accent
+ * for what the author marks takes it out of the palette it hands its charts
+ * (brief's sheet, `paletteWithoutAccent`), and its unmarked single series is
+ * drawn flat in the lead colour, the way every series of a grouped chart is.
+ * Reading `accentColor` here regardless was how one unmarked series of three
+ * bars came out in brief's highlight yellow.
+ */
+function highlightsTallestBar(palette: readonly string[], accentColor: string): boolean {
+  const accent = accentColor.toUpperCase()
+  return palette.some((color) => color.toUpperCase() === accent)
+}
+
+/**
  * Direct labels for the two charts that carry no axis and no legend — pie
  * and funnel (`chart.tsx`'s `legendApplicable` excludes both, and always
  * did). Until this wave they printed nothing at all: a full-page pie was
@@ -882,6 +900,50 @@ function horizontalBarExtent(
   return { barX: barLeftX, barW: clampChartExtent(barRightX - barLeftX) }
 }
 
+/**
+ * Where each series' bar sits along one category's band: the offset from the
+ * band's start, keyed by series index, for the series that have a value here.
+ *
+ * Bars keep one thickness across the chart, the share of the band a full
+ * group of `n` gives each one, so every category reads at the same weight.
+ * A category only some series reach lays out just those bars, side by side,
+ * centred in the band. Each bar used to keep the slot its series held in a
+ * full group, so two series over different categories (a year's figures
+ * beside two half-years') stood every bar off to one side of the category
+ * name printed under the band's centre. A full group has nothing to centre
+ * and keeps its offsets exactly, so its geometry is unchanged.
+ */
+/**
+ * How many bars the fullest category holds: the group size every bar's
+ * thickness is cut from. A chart whose series each cover their own
+ * categories (a year's figures beside two half-years') holds one bar per
+ * category and draws each one as wide as a single series would, instead of
+ * as thin as a pair it never shows. Every series in every category is `n`,
+ * exactly what the thickness was cut from before.
+ */
+function fullestGroup(series: readonly { values: readonly (number | null)[] }[], categories: number): number {
+  let fullest = 0
+  for (let i = 0; i < categories; i++) {
+    fullest = Math.max(fullest, series.filter((s) => s.values[i] != null).length)
+  }
+  return fullest
+}
+
+function barSlots(
+  series: readonly { seriesIndex: number; values: readonly (number | null)[] }[],
+  category: number,
+  usable: number,
+  thickness: number,
+  gap: number,
+): Map<number, number> {
+  const present = series.filter((s) => s.values[category] != null)
+  const lead =
+    present.length === series.length
+      ? 0
+      : (usable - (present.length * thickness + Math.max(0, present.length - 1) * gap)) / 2
+  return new Map(present.map((s, slot) => [s.seriesIndex, lead + slot * (thickness + gap)]))
+}
+
 /** Vertical bar's group edge margin (px, was the inline literals `4`/`groupW
  * - 8`) — reused unchanged as the intra-group gap between sibling bars in a
  * grouped (n>=2) category, see `renderBar`'s own group-geometry comment. */
@@ -995,6 +1057,8 @@ export function renderBar(
     }
   })
   const gradientId = chartGradientId("chart-bar-grad", w, h, series)
+  const highlight = n <= 1 && highlightsTallestBar(palette, accentColor)
+  const group = fullestGroup(model.series, categories.length)
   const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
   const dataMax = Math.max(...keptValues(model.series), Number.NEGATIVE_INFINITY)
   // Every bar prints its value above itself, all of them or none: see
@@ -1005,11 +1069,12 @@ export function renderBar(
   for (let i = 0; i < categories.length; i++) {
     const groupX0 = geom.plotX + i * groupW + BAR_GROUP_EDGE_GAP
     const usableW = groupW - BAR_GROUP_EDGE_GAP * 2
-    const perBarW = n <= 1 ? usableW : Math.max(1, (usableW - (n - 1) * BAR_GROUP_EDGE_GAP) / n)
+    const perBarW = group <= 1 ? usableW : Math.max(1, (usableW - (group - 1) * BAR_GROUP_EDGE_GAP) / group)
+    const slots = barSlots(model.series, i, usableW, perBarW, BAR_GROUP_EDGE_GAP)
     for (const s of model.series) {
       const value = s.values[i]
       if (value == null) continue
-      const barX = groupX0 + s.seriesIndex * (perBarW + BAR_GROUP_EDGE_GAP)
+      const barX = groupX0 + slots.get(s.seriesIndex)!
       const { barY, barH } = verticalBarExtent(value, domain, geom.plotY, geom.plotH)
       barBoxes.push({ x: barX, y: barY, w: perBarW, h: barH })
       barLabelSpecs.push(
@@ -1038,7 +1103,7 @@ export function renderBar(
   const placedBars = new Map((placedLabels ?? []).map((label) => [label.id, label]))
   return (
     <>
-      {n <= 1 && (
+      {highlight && (
         <defs>
           <linearGradient id={gradientId} x1={0} y1={0} x2={0} y2={1}>
             <stop offset="0%" stopColor={accentColor} />
@@ -1062,16 +1127,16 @@ export function renderBar(
       {categories.map((cat, i) => {
         const groupX0 = geom.plotX + i * groupW + BAR_GROUP_EDGE_GAP
         const usableW = groupW - BAR_GROUP_EDGE_GAP * 2
-        const perBarW = n <= 1 ? usableW : Math.max(1, (usableW - (n - 1) * BAR_GROUP_EDGE_GAP) / n)
+        const perBarW = group <= 1 ? usableW : Math.max(1, (usableW - (group - 1) * BAR_GROUP_EDGE_GAP) / group)
+        const slots = barSlots(model.series, i, usableW, perBarW, BAR_GROUP_EDGE_GAP)
         const barElements: ReactElement[] = []
         for (const s of model.series) {
           const value = s.values[i]
           if (value == null) continue
-          const barX = groupX0 + s.seriesIndex * (perBarW + BAR_GROUP_EDGE_GAP)
-          const isSingle = n <= 1
-          const isMax = isSingle && value === dataMax
+          const barX = groupX0 + slots.get(s.seriesIndex)!
+          const isMax = highlight && value === dataMax
           const { barY, barH } = verticalBarExtent(value, domain, geom.plotY, geom.plotH)
-          const fill = isSingle
+          const fill = highlight
             ? isMax
               ? accentColor
               : `url(#${gradientId})`
@@ -1086,7 +1151,7 @@ export function renderBar(
               width={perBarW}
               height={barH}
               fill={fill}
-              opacity={isSingle ? (isMax ? 1 : 0.75) : 1}
+              opacity={highlight ? (isMax ? 1 : 0.75) : 1}
             />,
           )
           if (placed) {
@@ -1458,6 +1523,15 @@ const PIE_MIN_RADIUS_RATIO = 0.55
  * only the one it was handed.
  */
 export const CHART_BODY_H = 240
+
+/**
+ * The shortest body a chart on a cartesian plot draws in, when a page cannot
+ * give it {@link CHART_BODY_H}: a 160px plot under the same top pad and tick
+ * band, still five ticks a comfortable line apart. `chart.tsx`'s `minHeight`
+ * offers the 40px between the two to a layout that would otherwise drop a
+ * block or step aside (`layoutContentFit`).
+ */
+export const CHART_MIN_BODY_H = 200
 
 /**
  * The band a pie or donut measures for itself: the flat body plus the two
@@ -2250,6 +2324,8 @@ export function renderBarHorizontal(
   const plotH = Math.max(1, h - meta.titleH - X_TICK_BAND - BAR_H_PLOT_TOP_PAD)
   const rowH = plotH / categories.length
   const gradientId = chartGradientId("chart-barh-grad", w, h, series)
+  const highlight = n <= 1 && highlightsTallestBar(palette, accentColor)
+  const group = fullestGroup(model.series, categories.length)
   const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
   const xTicks = xAxis.ticks.map((t, i) => ({
     label: formatAxisTick(t, meta.xUnit ?? meta.yUnit),
@@ -2265,13 +2341,14 @@ export function renderBarHorizontal(
     const rowY0 = plotY + i * rowH + BAR_H_ROW_EDGE_GAP
     const usableH = rowH - BAR_H_ROW_EDGE_GAP * 2
     const perBarH =
-      n <= 1
+      group <= 1
         ? Math.max(BAR_H_MIN_THICKNESS, usableH)
-        : Math.max(BAR_H_MIN_THICKNESS, (usableH - (n - 1) * BAR_H_ROW_EDGE_GAP) / n)
+        : Math.max(BAR_H_MIN_THICKNESS, (usableH - (group - 1) * BAR_H_ROW_EDGE_GAP) / group)
+    const slots = barSlots(model.series, i, usableH, perBarH, BAR_H_ROW_EDGE_GAP)
     for (const s of model.series) {
       const value = s.values[i]
       if (value == null) continue
-      const barY = rowY0 + s.seriesIndex * (perBarH + BAR_H_ROW_EDGE_GAP)
+      const barY = rowY0 + slots.get(s.seriesIndex)!
       const { barX, barW } = horizontalBarExtent(value, domain, plotX, plotW)
       hBarBoxes.push({ x: barX, y: barY, w: barW, h: perBarH })
       const labelY = barY + perBarH / 2 + 4
@@ -2312,7 +2389,7 @@ export function renderBarHorizontal(
   })
   return (
     <>
-      {n <= 1 && (
+      {highlight && (
         <defs>
           <linearGradient id={gradientId} x1={0} y1={0} x2={1} y2={0}>
             <stop offset="0%" stopColor={gradientShade} />
@@ -2343,18 +2420,18 @@ export function renderBarHorizontal(
         const rowY0 = plotY + i * rowH + BAR_H_ROW_EDGE_GAP
         const usableH = rowH - BAR_H_ROW_EDGE_GAP * 2
         const perBarH =
-          n <= 1
+          group <= 1
             ? Math.max(BAR_H_MIN_THICKNESS, usableH)
-            : Math.max(BAR_H_MIN_THICKNESS, (usableH - (n - 1) * BAR_H_ROW_EDGE_GAP) / n)
+            : Math.max(BAR_H_MIN_THICKNESS, (usableH - (group - 1) * BAR_H_ROW_EDGE_GAP) / group)
+        const slots = barSlots(model.series, i, usableH, perBarH, BAR_H_ROW_EDGE_GAP)
         const barElements: ReactElement[] = []
         for (const s of model.series) {
           const value = s.values[i]
           if (value == null) continue
-          const barY = rowY0 + s.seriesIndex * (perBarH + BAR_H_ROW_EDGE_GAP)
-          const isSingle = n <= 1
-          const isMax = isSingle && value === dataMax
+          const barY = rowY0 + slots.get(s.seriesIndex)!
+          const isMax = highlight && value === dataMax
           const { barX, barW } = horizontalBarExtent(value, domain, plotX, plotW)
-          const fill = isSingle
+          const fill = highlight
             ? isMax
               ? accentColor
               : `url(#${gradientId})`
@@ -2368,7 +2445,7 @@ export function renderBarHorizontal(
               width={barW}
               height={perBarH}
               fill={fill}
-              opacity={isSingle ? (isMax ? 1 : 0.75) : 1}
+              opacity={highlight ? (isMax ? 1 : 0.75) : 1}
             />,
           )
           const placed = placedHBars.get(`hbar-${i}-${s.seriesIndex}`)
@@ -3527,24 +3604,26 @@ export function renderCombo(
   const barSeries = model.series.filter((s) => !isLine(s.seriesIndex))
   const lineSeries = model.series.filter((s) => isLine(s.seriesIndex))
   const clusterW = groupW * COMBO_CLUSTER_RATIO
-  const nb = barSeries.length
+  const nb = fullestGroup(barSeries, categories.length)
   const perBarW = nb <= 1 ? clusterW : Math.max(1, (clusterW - (nb - 1) * BAR_GROUP_EDGE_GAP) / nb)
 
   const barBoxes: DepthBox[] = []
   const bars = categories.map((cat, i) => {
     const clusterX = centerOf(i) - clusterW / 2
+    const slots = barSlots(barSeries, i, clusterW, perBarW, BAR_GROUP_EDGE_GAP)
     const rects: ReactElement[] = []
-    barSeries.forEach((s, k) => {
+    barSeries.forEach((s) => {
       const v = s.values[i]
       if (v == null || v === 0) return
       const top = yOf(Math.max(v, 0), s.seriesIndex)
       const bottom = yOf(Math.min(v, 0), s.seriesIndex)
-      barBoxes.push({ x: clusterX + k * (perBarW + BAR_GROUP_EDGE_GAP), y: top, w: perBarW, h: bottom - top })
+      const barX = clusterX + slots.get(s.seriesIndex)!
+      barBoxes.push({ x: barX, y: top, w: perBarW, h: bottom - top })
       rects.push(
         <rect
           key={s.seriesIndex}
           data-plot-mark="1"
-          x={clusterX + k * (perBarW + BAR_GROUP_EDGE_GAP)}
+          x={barX}
           y={top}
           width={perBarW}
           height={bottom - top}

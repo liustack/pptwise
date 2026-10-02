@@ -61,6 +61,52 @@ describe("content-gauge-sheet", () => {
     expect(markup).not.toContain(`fill="${tokens.colors.accent}"`)
   })
 
+  // tea-deck p06 (2026-10-02): one series of three bars came out in the
+  // highlight yellow, the tallest solid and the rest in a fading gradient,
+  // though nothing on the page was marked.
+  it("draws an unmarked single-series bar chart flat in the lead colour, with no highlight", () => {
+    const chart = {
+      type: "chart",
+      chart_type: "bar",
+      series: [{ name: "GMV per store", data: [{ x: "Q2 2024", y: 53.8 }, { x: "Q2 2025", y: 40.4 }, { x: "Q2 2026", y: 33.8 }] }],
+    }
+    for (const components of [[chart], [chart, PROSE]]) {
+      const { root, markup, tokens } = renderFace(GaugeSheetContent, sheetSlide(components))
+      expect(markup).not.toContain(tokens.colors.accent)
+      expect(root.querySelector("linearGradient")).toBeNull()
+      const bars = Array.from(root.querySelectorAll('rect[data-plot-mark="1"]'))
+      expect(bars).toHaveLength(3)
+      for (const bar of bars) expect(attrs(bar, ["fill", "opacity"])).toEqual([tokens.colors.primary, "1"])
+    }
+  })
+
+  // tea-deck p03/p07 (2026-10-02): an English callout a little over one
+  // line under a chart sent the page to the plainer step-aside layout at
+  // balanced pacing, and at spacious pacing (boardroom-report) lost the
+  // callout outright, while the band's last 92px sat empty under the chart.
+  it.each([24, 32])("keeps a chart and a two-line callout on its own page at a %ipx body", (bodyFontPx) => {
+    const chart = {
+      type: "chart",
+      chart_type: "bar",
+      axes: { y_title: "Stores", y_unit: "k" },
+      series: [
+        { name: "Opened", data: [{ x: "2023", y: 173 }, { x: "2024", y: 146 }, { x: "2025", y: 103 }] },
+        { name: "Closed", data: [{ x: "2023", y: 153 }, { x: "2024", y: 157 }, { x: "2025", y: 133 }] },
+      ],
+    }
+    const callout = {
+      type: "callout",
+      variant: "info",
+      text: "2025: 103,135 opened and 132,569 closed, a net loss of 29,434 chain stores, which is 2.5 times the loss in 2024.",
+    }
+    const slide = sheetSlide([chart, callout], { footnote: "Source: China Insights Consultancy (Mar 2026)" })
+    const { markup, root } = renderFace((props) => GaugeSheetContent({ ...props, ctx: { ...props.ctx, bodyFontPx } }), slide)
+    expect(markup).not.toContain("data-face-stepped-aside")
+    expect(markup).not.toMatch(/data-dropped="[1-9]/)
+    expect(texts(root).map(textOf).join(" ")).toContain("a net loss of 29,434")
+    expect(byText(root, "Each driver is a planning problem")!.getAttribute("y")).toBe("150")
+  })
+
   it("steps aside when the band cannot hold the page and the full sheet can", () => {
     // The list grows one row at a time, so the sweep walks from a page the
     // band holds to one only the full sheet holds.

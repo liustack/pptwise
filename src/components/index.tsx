@@ -180,6 +180,17 @@ export function measureComponent(component: Component, w: number, ctx: Component
   return getRenderDef(component.type).measure(component, w, ctx)
 }
 
+/**
+ * The least height `component` draws whole in at width `w`: its declared
+ * floor (`RenderDef.minHeight`), never above its measure, or its measure
+ * when it declares none.
+ */
+export function minComponentHeight(component: Component, w: number, ctx: ComponentCtx): number {
+  const def = getRenderDef(component.type)
+  const measured = def.measure(component, w, ctx)
+  return def.minHeight ? Math.min(measured, def.minHeight(component, w, ctx)) : measured
+}
+
 /** Render a component's own content — the `renderComponent` dispatch, unwrapped. */
 function renderComponentContent(component: Component, box: ComponentBox, ctx: ComponentCtx): React.ReactElement {
   return getRenderDef(component.type).render(component, box, ctx)
