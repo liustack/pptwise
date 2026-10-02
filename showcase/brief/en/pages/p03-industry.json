@@ -1,0 +1,65 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "axes": {
+        "y_unit": "k"
+      },
+      "series": [
+        {
+          "name": "Opened",
+          "data": [
+            {
+              "x": "2023",
+              "y": 173
+            },
+            {
+              "x": "2024",
+              "y": 146
+            },
+            {
+              "x": "2025",
+              "y": 103
+            }
+          ]
+        },
+        {
+          "name": "Closed",
+          "data": [
+            {
+              "x": "2023",
+              "y": 153
+            },
+            {
+              "x": "2024",
+              "y": 157
+            },
+            {
+              "x": "2025",
+              "y": 133
+            }
+          ],
+          "emphasis": true
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "label": "Net store loss, 2025",
+          "value": "29,434",
+          "note": "103,135 opened, 132,569 closed"
+        },
+        {
+          "label": "Against 2024",
+          "value": "2.5×",
+          "note": "2024 net loss: 11,613"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: China Insights Consultancy (Mar 2026), from Zhaimen Canyan data. Chain shops in prefecture-level cities and above",
+  "notes": "Openings fell from 173,000 to 103,000 in three years, while closures stayed between 130,000 and 160,000. The chain segment still grew by 19,934 stores in 2023, then shrank by 11,613 in 2024 and 29,434 in 2025. Hongcan, which also counts independent shops, reports the opposite direction: 449,000 tea shops nationwide in December 2025, up 3.5%. The two sources measure different things."
+}

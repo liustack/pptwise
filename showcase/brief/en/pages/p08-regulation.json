@@ -1,0 +1,42 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "milestones": [
+        {
+          "date": "13 May 2025",
+          "title": "Platforms summoned",
+          "desc": "JD, Meituan and Ele.me"
+        },
+        {
+          "date": "18 Jul 2025",
+          "title": "Second summons",
+          "desc": "Calls for rational competition"
+        },
+        {
+          "date": "Early Dec 2025",
+          "title": "National standard",
+          "desc": "Platforms bear promotion costs",
+          "highlight": true
+        },
+        {
+          "date": "9 Jan 2026",
+          "title": "Antitrust review",
+          "desc": "Delivery competition assessed"
+        },
+        {
+          "date": "17 Jun 2026",
+          "title": "Draft subsidy rules",
+          "desc": "Merchants need not fund subsidies"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Platforms are pulling back too. Alibaba said Q3 2025 was the peak of its instant-commerce spending, and its loss per order from October was half the July and August level."
+    }
+  ],
+  "footnote": "Source: SAMR, Xinhua and other reports (May 2025 to Jun 2026), Alibaba earnings call reported by Jiemian (Jan 2026)",
+  "notes": "The May 2025 summons came from SAMR together with four other agencies. The January 2026 review was launched by the Office of the State Council Anti-Monopoly and Anti-Unfair Competition Commission, citing subsidy wars, price wars and traffic control. The June document is SAMR's draft ten rules on delivery platform subsidies. The 2027 volume plan should assume no platform subsidies."
+}

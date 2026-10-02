@@ -1,0 +1,59 @@
+{
+  "components": [
+    {
+      "type": "comparison",
+      "recommended": 0,
+      "columns": [
+        "New categories",
+        "Supply chain",
+        "Operating model",
+        "Overseas"
+      ],
+      "rows": [
+        {
+          "label": "Who",
+          "cells": [
+            "Guming",
+            "Mixue Group",
+            "CHAGEE",
+            "CHAGEE"
+          ]
+        },
+        {
+          "label": "Progress",
+          "cells": [
+            "Coffee machines in about 94% of stores",
+            "About RMB 1.6bn this year",
+            "Direct-run stores up to 883",
+            "Overseas stores up to 399"
+          ]
+        },
+        {
+          "label": "Per-store trend",
+          "cells": [
+            "Cups flat as subsidies faded",
+            "Sales per store down double digits",
+            "Same-store GMV in Greater China −16.1%",
+            "Overseas same-store GMV −15.1%"
+          ]
+        },
+        {
+          "label": "Watch next",
+          "cells": [
+            "Can coffee reach 120 cups a day?",
+            "Will the spend lift store sales?",
+            "Can same-store sales stop falling?",
+            "Can the store model work abroad?"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "As subsidies faded, Guming kept cups per store steady, crediting coffee and breakfast."
+    }
+  ],
+  "footnote": "Source: Guming, Mixue Group and CHAGEE interim and quarterly results and earnings calls (Aug 2026)",
+  "notes": "All four paths are being tried by market leaders. Only new categories and dayparts show up in per-store numbers: in the half-year when subsidies faded, Guming's cups per store did not fall, and the company credits coffee and breakfast. Guming sold about 80 cups of coffee per store per day at the end of 2025 and targets about 120 in 2026. Mixue's supply chain spend and CHAGEE's model change have only just started, and store sales are still falling. Overseas store counts are rising, CHAGEE's overseas GMV grew 114.3% in Q2, but same-store sales abroad are still negative, and Mixue's overseas store count fell by 428 in 2025, its first annual decline."
+}

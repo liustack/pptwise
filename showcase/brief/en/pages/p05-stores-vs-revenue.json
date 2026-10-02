@@ -1,0 +1,31 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "+20.7%",
+          "label": "Store count, year on year",
+          "note": "63,987 stores at end-June"
+        },
+        {
+          "value": "+2.3%",
+          "label": "H1 revenue, year on year",
+          "note": "RMB 15.2bn"
+        },
+        {
+          "value": "−14.7%",
+          "label": "H1 profit, year on year",
+          "note": "First fall since the IPO"
+        }
+      ]
+    },
+    {
+      "type": "blockquote",
+      "text": "In the first half, sales per store fell by **double digits** at both the group and the Mixue Bingcheng brand.",
+      "attribution": "Zhang Yuan, CEO, Mixue Group, interim results call, Aug 2026"
+    }
+  ],
+  "footnote": "Source: Mixue Group interim results and earnings call (Aug 2026). Revenue is mostly supplies and equipment sold to franchisees",
+  "notes": "Store count is at group level, including Lucky Cup and Fulujia. Most revenue is what headquarters sells to franchisees, not what stores sell to customers, so revenue should track store count. The gap is now 18 percentage points. Mixue's shares fell 14.88% over the two trading days after the results."
+}
