@@ -2,7 +2,7 @@ import type { Component } from "@/ir"
 import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { accessibleInk } from "../../render/ink"
 import { closingCallout, fitClosing, paintClosing, type ClosingLayout, type ClosingSpec } from "./closing"
-import { fitFigure, fitQuote, paintFigure, paintQuote, plainFigure, type FittedFigure, type FittedQuote } from "./figure"
+import { fitFigure, fitQuote, paintFigure, plainFigure, type FittedFigure } from "./figure"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 
@@ -124,7 +124,7 @@ export const figuresComposition: Composition = ({ components, ctx, rect }) => {
     rect.y + (noteLines > 0 ? NOTE_BASELINE + (noteLines - 1) * NOTE_LINE_HEIGHT : FIGURE_BASELINE) + RULE_BELOW_NOTE
   const acrossY = ruleFoot + ROW_TO_RULE
 
-  let quote: { text: FittedQuote; speaker: EmphasisHeadingLayout | null } | undefined
+  let quote: { text: EmphasisHeadingLayout; speaker: EmphasisHeadingLayout | null } | undefined
   let closing: ClosingLayout | undefined
   let bottom = ruleFoot
   if (shape.quote) {
@@ -141,7 +141,7 @@ export const figuresComposition: Composition = ({ components, ctx, rect }) => {
       : null
     if (text === null || (attribution && speaker === null)) return null
     quote = { text, speaker }
-    bottom = acrossY + QUOTE_TOP + (speaker ? SPEAKER_TOP + SPEAKER_BASELINE + 5 : QUOTE_BASELINE + (text.body.lines.length - 1) * QUOTE_LINE_HEIGHT + 8)
+    bottom = acrossY + QUOTE_TOP + (speaker ? SPEAKER_TOP + SPEAKER_BASELINE + 5 : QUOTE_BASELINE + (text.lines.length - 1) * QUOTE_LINE_HEIGHT + 8)
   } else if (shape.callout) {
     const fitted = fitClosing(shape.callout, rect.w, CLOSING, ctx)
     if (fitted === null) return null
@@ -187,7 +187,7 @@ export const figuresComposition: Composition = ({ components, ctx, rect }) => {
       {quote && shape.quote && (
         <g {...blockTag(ctx, shape.quote)}>
           <line x1={rect.x} y1={acrossY} x2={rect.x + rect.w} y2={acrossY} stroke={rule} strokeWidth={1} />
-          {paintQuote(quote.text, { ctx, x: rect.x, y: quoteTop + QUOTE_BASELINE, fill: quoteInk, fontFamily: body, fontWeight: "400" })}
+          {paintLines(quote.text, { ctx, x: rect.x, y: quoteTop + QUOTE_BASELINE, fill: quoteInk, fontFamily: body, fontWeight: "400" })}
           {quote.speaker &&
             paintLines(quote.speaker, {
               ctx,

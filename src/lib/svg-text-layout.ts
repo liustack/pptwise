@@ -1,5 +1,5 @@
 import { META_FONT_FLOOR_PX } from "../constants"
-import { SYMBOL_ADVANCE_BOUNDS } from "./symbol-advances"
+import { QUOTE_ADVANCES, SYMBOL_ADVANCE_BOUNDS } from "./symbol-advances"
 
 /**
  * Weight/face hint threaded through the estimator (bold-metrics fix,
@@ -124,7 +124,24 @@ export interface SvgTextLayout {
 // Half-width ASCII punctuation (period, comma, colon, parens, the ASCII
 // hyphen, etc.) intentionally stays in the "other" 0.46 bucket below: it
 // really does render narrower than a CJK glyph.
-const WIDE_CHAR_RE = /[\u2014\u2018-\u201f\u2e80-\u9fff\uff00-\uffef]/
+//
+// The quotation marks have since left this class. A quote is not a CJK
+// character: PowerPoint paints it from the run's Latin face (see
+// `QUOTE_MARK_RE`), which sets it on the full em in YaHei, SimSun and KaiTi
+// and at two fifths of one in Georgia. Counted wide here, every face
+// measured it a full em, and a run after an opening quote in Georgia, with
+// the highlight under it, landed 0.59em right of where PowerPoint drew it.
+const WIDE_CHAR_RE = /[\u2014\u2e80-\u9fff\uff00-\uffef]/
+
+/**
+ * The curly quotation marks, U+2018 to U+201F. The export writes every run as
+ * lang="en-US", and PowerPoint then paints a quote from the run's
+ * `<a:latin>` face, beside Chinese text as much as English. So a quote
+ * measures at the advance of the face the caller names (`QUOTE_ADVANCES`,
+ * read from the face itself). A face without a table for it measures it a
+ * full em, as wide as any measured face sets it.
+ */
+const QUOTE_MARK_RE = /[\u2018-\u201f]/
 
 // Export-font calibration (borrow-wave Task 3, 2026-07-21): this weight
 // table is font-agnostic by design, but heading/body text ultimately
@@ -495,7 +512,7 @@ function classifyFaceKey(fontFamily: string | undefined): FaceKey {
  */
 function classAverageUnits(char: string, table: FaceFactorTable, mode: WeightMode): number {
   if (/\s/.test(char)) return 0.35 * table.space[mode]
-  if (WIDE_CHAR_RE.test(char)) return 1 * table.wide[mode]
+  if (WIDE_CHAR_RE.test(char) || QUOTE_MARK_RE.test(char)) return 1 * table.wide[mode]
   if (/[A-Z]/.test(char)) return 0.66 * table.upper[mode]
   if (/[a-z0-9]/.test(char)) return 0.56 * table.lowerDigit[mode]
   return 0.46 * table.other[mode]
@@ -528,7 +545,12 @@ export function measureTextUnits(text: string, weight?: TextWeightHint): number 
   // kern. So the exact sum errs a hair wide, never narrow.
   const exactTable = mode === "bold" ? EXACT_TABLE_FOR[faceKey]?.bold : REGULAR_EXACT_TABLE_FOR[faceKey]
   const symbolBounds = faceKey === "unknown" ? undefined : SYMBOL_ADVANCE_BOUNDS[faceKey][mode]
+  const quotes = faceKey === "unknown" ? undefined : QUOTE_ADVANCES[faceKey][mode]
   return Array.from(text).reduce((sum, char) => {
+    // A curly quote is painted from the face itself (`QUOTE_MARK_RE`), so
+    // its advance there is its width.
+    const quote = quotes?.[char.charCodeAt(0)]
+    if (quote !== undefined) return sum + quote
     // WIDE_CHAR_RE (CJK/ideographic-punctuation/fullwidth) always takes the
     // class path, even under an exact-model face: the exact tables only
     // cover printable ASCII, and CJK's own class factor (measured
@@ -1127,15 +1149,26 @@ function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint):
 }
 
 /**
- * Re-wrap `content` so its lines split evenly instead of greedy-filling, when
- * the greedy result ends in a widow (last line < half the widest line).
+ * Re-wrap `content` so its lines split evenly instead of greedy-filling.
+ * Latin text always evens out. Text with any CJK in it does only when the
+ * greedy result ends in a widow (last line < half the widest line).
+ *
+ * The two differ in where an even split can fall. Every break in Latin text
+ * is between words, so evening the lines costs no word, which is how CSS
+ * `text-wrap: balance` sets a heading: "Guangzhou lost 2,326 tea" + "shops
+ * in a year" becomes "Guangzhou lost 2,326" + "tea shops in a year". Chinese
+ * breaks between any two characters, so an even split lands wherever the
+ * arithmetic says, often inside a word, while an author's greedy line often
+ * ends on their own comma: 「每个班组配一名种子用户，」 would become
+ * 「每个班组配一名种子用」+「户，…」. There only a widow is worth the move.
  *
  * The balanced budget starts at `max(total/N, longest token)` — flooring at
  * the longest whitespace-delimited token guarantees `splitLongToken` never
  * fires, so balancing can shorten lines but never split a word mid-way (for
  * CJK the "tokens" are single chars, so the floor is a no-op). The budget
  * steps up ×1.06 until the re-wrap stops exceeding the original line count;
- * if 8 steps can't get there, the greedy result stands. Explicit newlines are
+ * if 8 steps can't get there, or the first that does sets a line wider than
+ * the greedy widest, the greedy result stands. Explicit newlines are
  * the author's own breaks — those layouts are returned untouched.
  *
  * `orphanFixed` is the wrap's own report that the greedy lines ended on a
@@ -1152,7 +1185,8 @@ function balanceWrappedLines(
   if (lines.length < 2 || content.includes("\n")) return lines
   const units = lines.map((l) => measureTextUnits(l, weight))
   const widest = Math.max(...units)
-  if (!orphanFixed && units[units.length - 1] >= widest * 0.5) return lines
+  const latin = !WIDE_CHAR_RE.test(content)
+  if (!latin && !orphanFixed && units[units.length - 1] >= widest * 0.5) return lines
   const total = units.reduce((sum, u) => sum + u, 0)
   // Token floor must mirror `tokenize`: space-delimited text wraps by words,
   // so flooring at the longest word keeps `splitLongToken` from ever firing;
@@ -1166,6 +1200,10 @@ function balanceWrappedLines(
     // Same line count, evenly split — that's the goal. Fewer lines means the
     // token floor out-widened the greedy budget (giant word): keep greedy.
     if (candidate.lines.length === lines.length) {
+      // A budget step can pass the greedy widest line, and a candidate wider
+      // than it is no more even and sets the text smaller. Every later step
+      // is wider still, so the greedy lines stand.
+      if (Math.max(...candidate.lines.map((l) => measureTextUnits(l, weight))) > widest + 1e-9) return lines
       return preferScriptBoundaries(content, candidate.lines, widest, weight)
     }
     if (candidate.lines.length < lines.length) return lines
@@ -1733,16 +1771,19 @@ const EM_SQUARE_RE = /[\u3000-\u303f\u4e00-\u9fa5\uff01-\uff5e]/
 
 /**
  * True when `measureTextUnits` knows `text`'s width rather than estimating
- * it: every character is either on the CJK em square (`EM_SQUARE_RE`) or in
- * the face's own advance table for this weight. A caller that pads an
+ * it: every character is either on the CJK em square (`EM_SQUARE_RE`), a
+ * curly quote the face carries (`QUOTE_ADVANCES`), or in the face's own
+ * advance table for this weight. A caller that pads an
  * estimate against the class average's worst case can skip the padding
  * then, since there is no class average left in the number.
  */
 export function measuresExactly(text: string, weight?: TextWeightHint): boolean {
   const faceKey = classifyFaceKey(weight?.fontFamily)
   const table = weight?.bold ? EXACT_TABLE_FOR[faceKey]?.bold : REGULAR_EXACT_TABLE_FOR[faceKey]
+  const quotes = faceKey === "unknown" ? undefined : QUOTE_ADVANCES[faceKey][weight?.bold ? "bold" : "regular"]
   for (const ch of text) {
     if (EM_SQUARE_RE.test(ch)) continue
+    if (quotes?.[ch.charCodeAt(0)] !== undefined) continue
     if (table?.[ch.charCodeAt(0)] === undefined) return false
   }
   return true

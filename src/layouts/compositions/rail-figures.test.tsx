@@ -51,9 +51,13 @@ describe("rail with the author's figures", () => {
     const quote = { type: "blockquote", text: "第三方外卖平台补贴减少则构成拖累。", attribution: "古茗 2026 年中期业绩" }
     const { root, tokens } = renderComposition(railComposition, [chart, kpis(ITEMS.slice(0, 1)), quote], { rect: BAND_ABOVE_SOURCE })
     expect(attrs(byText(root!, quote.attribution)!, ["x", "y", "font-size", "fill"])).toEqual(["912", "430", "16", tokens.colors.muted])
-    expect(attrs(byText(root!, "“")!, ["x", "y", "text-anchor"])).toEqual(["920", "463", "end"])
-    const first = texts(root!).find((el) => textOf(el).startsWith("第三方"))!
-    expect(attrs(first, ["x", "y", "font-size", "fill"])).toEqual(["920", "463", "20", tokens.colors.primary])
+    expect(byText(root!, "“")).toBeUndefined()
+    const first = texts(root!).find((el) => textOf(el).startsWith("“第三方"))!
+    expect(attrs(first, ["x", "y", "font-size", "fill"])).toEqual(["912", "463", "20", tokens.colors.primary])
+    // A quote is display type, and its lines even out like a heading's: the
+    // greedy fill left 「…则构」+「成拖累。”」, a last line a third as long.
+    expect(textOf(first)).toBe("“第三方外卖平台补贴")
+    expect(attrs(byText(root!, "减少则构成拖累。”")!, ["x", "y"])).toEqual(["912", "495"])
   })
 
   it("sets a callout as the column's closing remark, with no label line", () => {

@@ -26,6 +26,12 @@ export interface FixedTextSpec {
   fontFamily: string
   /** Whether the text is drawn at weight 600 or above, so it is measured wide. */
   bold: boolean
+  /**
+   * Even out the lines the way a heading's are (`balanceLines`), for display
+   * text such as a quote set large. Off by default, so labels, notes and
+   * closing lines keep the greedy fill.
+   */
+  balance?: boolean
 }
 
 /**
@@ -42,6 +48,7 @@ export function fitFixed(text: string | undefined, spec: FixedTextSpec): Emphasi
     lineHeightRatio: spec.lineHeight / spec.size,
     fontFamily: spec.fontFamily,
     bold: spec.bold,
+    balanceLines: spec.balance,
   })
   if (layout.truncated || layout.fontSize !== spec.size || layout.lines.length > spec.maxLines) return null
   return { ...layout, lineHeight: spec.lineHeight }
