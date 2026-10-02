@@ -35,6 +35,7 @@ import {
   FACE_SLOTS,
   menuFaces,
   unservedLayoutIds,
+  COMPOSITION_PAGES,
   STEP_ASIDE_PAGES,
   UNSERVED_SECTION,
 } from "../evals/gallery/matrix"
@@ -111,18 +112,22 @@ describe("gallery coverage", () => {
 
   it("emits one section per theme plus the appendix, each theme section carrying the three universal bands", async () => {
     const jobs = buildMatrix(themeIds, await assets())
-    expect([...new Set(jobs.map((j) => j.band))].sort()).toEqual(["aside", "component", "deck", "face"])
+    expect([...new Set(jobs.map((j) => j.band))].sort()).toEqual(["aside", "component", "compose", "deck", "face"])
     const sections = [...new Set(jobs.map((j) => j.section))]
     expect(sections).toEqual([...themeIds, UNSERVED_SECTION])
     for (const themeId of themeIds) {
       const bands = new Set(jobs.filter((j) => j.section === themeId).map((j) => j.band))
       // `aside` is not owed by every section: the step-aside sheet is the
       // same sheet on all 24 skins, so three pages cover it (see
-      // `STEP_ASIDE_PAGES`). The other three are per-theme promises.
-      expect([...bands].sort().filter((b) => b !== "aside"), themeId).toEqual(["component", "deck", "face"])
+      // `STEP_ASIDE_PAGES`). Nor is `compose`: only a theme whose faces hand
+      // pages to the shared compositions has any to show (see
+      // `COMPOSITION_PAGES`). The other three are per-theme promises.
+      expect([...bands].sort().filter((b) => b !== "aside" && b !== "compose"), themeId).toEqual(["component", "deck", "face"])
     }
     const asideSections = new Set(jobs.filter((j) => j.band === "aside").map((j) => j.section))
     expect([...asideSections].sort()).toEqual([...new Set(STEP_ASIDE_PAGES.map((p) => p.theme))].sort())
+    const composeSections = new Set(jobs.filter((j) => j.band === "compose").map((j) => j.section))
+    expect([...composeSections].sort()).toEqual([...new Set(COMPOSITION_PAGES.map((p) => p.theme))].sort())
     // The appendix is faces only — it exists to close the layout gap, not to
     // be a 25th theme.
     expect([...new Set(jobs.filter((j) => j.section === UNSERVED_SECTION).map((j) => j.band))]).toEqual(["face"])

@@ -13,6 +13,7 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import type { Component, PageKind, PptxIR, Slide } from "@/ir"
 import { FULL_BODY_TYPES } from "@/render/component-traits"
+import type { CompositionId } from "@/layouts/compositions"
 import { LAYOUT_REGISTRY, type LayoutDefinition } from "@/layouts/registry"
 import { fitSvgLine } from "@/lib/svg-text-layout"
 import { resolveFontStack } from "@/render/fonts"
@@ -920,4 +921,104 @@ export function stepAsidePage(
     ...deckShell(lex, assets, themeId, `step-aside-${themeId}-${lex.id}`, [slide]),
     branding: "full",
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Composition table: one page per shared composition
+// ─────────────────────────────────────────────────────────────────────────
+
+interface CompositionBody {
+  readonly heading: string
+  readonly components: Component[]
+  readonly footnote?: string
+}
+
+/**
+ * The page each shared composition (`src/layouts/compositions/`) takes, built
+ * from the corpus' own pools in the exact shape that composition recognises.
+ *
+ * A theme section's other bands reach a composition only by accident: the
+ * component band puts a lead-in sentence above most components, which is a
+ * second component, and every composition but `rows` takes its component
+ * alone. So without these pages an options table, a phase plan and a team
+ * tree were never drawn by the review at all.
+ *
+ * Each page also carries the author mark its composition has a look for: the
+ * recommended option, the marked phase, the marked series. `rows` writes its
+ * items as "label：value" from `metrics`, where label and value are one
+ * authored fact, so the page shows the two-column split no other page does.
+ * `composition-corpus.test.mts` holds every page to being drawn by the
+ * composition it names, whole.
+ */
+const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBody> = {
+  rows: (lex) => ({
+    heading: lex.headings[1]!,
+    components: [
+      { type: "bullets", items: lex.metrics.slice(1, 4).map((m) => `${m.label}${lex.id === "en" ? ": " : "："}${m.value}${m.unit ?? ""}`) },
+      { type: "callout", variant: "info", text: lex.verdicts.positive },
+    ],
+  }),
+  table: (lex) => {
+    const comparison = COMPONENT_BUILDERS.comparison!(lex)
+    return {
+      heading: lex.headings[9]!,
+      components: [comparison.type === "comparison" ? { ...comparison, recommended: 1 } : comparison],
+    }
+  },
+  waves: (lex) => {
+    const roadmap = COMPONENT_BUILDERS.roadmap!(lex)
+    return {
+      heading: lex.headings[11]!,
+      components: [
+        roadmap.type === "roadmap"
+          ? { ...roadmap, items: roadmap.items.map((item, i) => (i === 0 ? { ...item, emphasis: true as const } : item)) }
+          : roadmap,
+      ],
+    }
+  },
+  // The root and the managers under it, without their reports: the
+  // composition is a two-level team, and a deeper tree is the org chart's.
+  tree: (lex) => ({
+    heading: lex.headings[6]!,
+    components: [
+      {
+        type: "org_tree",
+        root: { name: lex.orgChart.root.name, role: lex.orgChart.root.role },
+        children: lex.orgChart.managers.map((manager) => ({ name: manager.name, role: manager.role })),
+      },
+    ],
+  }),
+  // The combo chart with its rate line marked, the series the column then
+  // sets over the emphasis stroke.
+  rail: (lex) => {
+    const chart = CHART_VARIANTS["chart · combo"]!(lex)
+    return {
+      heading: lex.headings[0]!,
+      components: [
+        chart.type === "chart"
+          ? { ...chart, series: chart.series.map((series) => (series.plot === "line" ? { ...series, emphasis: true as const } : series)) }
+          : chart,
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
+}
+
+/** One page drawn by one shared composition, on `themeId`, under the face its menu gives `kind`. */
+export function compositionPage(
+  lex: Lexicon,
+  assets: CorpusAssets,
+  themeId: string,
+  kind: PageKind,
+  composition: CompositionId,
+): PptxIR {
+  const body = COMPOSITION_BODIES[composition](lex)
+  const slide = {
+    type: "content",
+    kind,
+    heading: body.heading,
+    components: body.components,
+    ...(body.footnote ? { footnote: body.footnote } : {}),
+  } as Slide
+  return deckShell(lex, assets, themeId, `composition-${composition}-${themeId}-${lex.id}`, [slide])
 }

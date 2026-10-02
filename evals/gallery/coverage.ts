@@ -8,6 +8,8 @@
  *   theme      CANONICAL_THEME_IDS
  *   layout     Object.keys(LAYOUT_REGISTRY), including pinOnly
  *   component  COMPONENT_TYPES (chart and device_mockup via their variant pages)
+ *   composition  COMPOSITION_IDS, the shared hand-set compositions a face may
+ *              hand its body to (`src/layouts/compositions/`)
  *
  * The review is cut theme first, so the promise is per section as well as
  * global: every theme section carries all three bands, and its component
@@ -22,12 +24,13 @@
  */
 
 import { COMPONENT_TYPES } from "@/ir"
+import { COMPOSITION_IDS } from "@/layouts/compositions"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { CANONICAL_THEME_IDS } from "@/themes"
 import { CHART_VARIANTS, DEVICE_VARIANTS } from "./corpus/components"
 import { UNIVERSAL_BAND_IDS, UNSERVED_SECTION, servedLayoutIds, type BandId, type Job } from "./matrix"
 
-export type InventoryKind = "theme" | "layout" | "component"
+export type InventoryKind = "theme" | "layout" | "component" | "composition"
 
 export interface MappedSubject {
   readonly inventory: InventoryKind
@@ -42,6 +45,7 @@ export interface GallerySubject {
 
 const COMPONENT_TYPE_SET = new Set<string>(COMPONENT_TYPES)
 const THEME_SET = new Set<string>(CANONICAL_THEME_IDS)
+const COMPOSITION_SET = new Set<string>(COMPOSITION_IDS)
 
 function mapTheme(job: GallerySubject): MappedSubject | undefined {
   return THEME_SET.has(job.subject) ? { inventory: "theme", id: job.subject } : undefined
@@ -58,6 +62,10 @@ function mapComponent(job: GallerySubject): MappedSubject | undefined {
   return undefined
 }
 
+function mapComposition(job: GallerySubject): MappedSubject | undefined {
+  return COMPOSITION_SET.has(job.subject) ? { inventory: "composition", id: job.subject } : undefined
+}
+
 /**
  * Band → subject mapper. A new band is one more key. Jobs whose band is
  * missing here, or whose subject matches nothing, are unmapped.
@@ -70,6 +78,7 @@ const BAND_SUBJECT_MAPPERS: Record<string, (job: GallerySubject) => MappedSubjec
   // carry no `face`), but the layout they name is a real registry entry and
   // a typo in it should fail here like any other.
   aside: mapLayout,
+  compose: mapComposition,
   component: mapComponent,
 }
 
@@ -81,6 +90,8 @@ export interface CoverageGaps {
   readonly missingThemes: readonly string[]
   readonly missingLayouts: readonly string[]
   readonly missingComponents: readonly string[]
+  /** Shared compositions no page shows drawing. */
+  readonly missingCompositions: readonly string[]
   /** `<theme> band` pairs a theme section is missing. */
   readonly missingBands: readonly string[]
   /** `<theme>: <component>` pairs a theme section's component band never drew. */
@@ -96,6 +107,7 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
   const themes = new Set<string>()
   const layouts = new Set<string>()
   const components = new Set<string>()
+  const compositions = new Set<string>()
   const unmapped: string[] = []
   /** section → component types its component band drew. */
   const perSection = new Map<string, Set<string>>()
@@ -114,6 +126,7 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
       continue
     }
     if (mapped.inventory === "theme") themes.add(mapped.id)
+    if (mapped.inventory === "composition") compositions.add(mapped.id)
     if (mapped.inventory === "layout") {
       layouts.add(mapped.id)
       if (job.section === UNSERVED_SECTION) appendix.add(mapped.id)
@@ -158,11 +171,13 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
     .sort()
     .filter((id) => !layouts.has(id))
   const missingComponents = COMPONENT_TYPES.filter((id) => !components.has(id))
+  const missingCompositions = COMPOSITION_IDS.filter((id) => !compositions.has(id))
 
   return {
     missingThemes,
     missingLayouts,
     missingComponents,
+    missingCompositions,
     missingBands,
     missingSectionComponents,
     misfiledUnserved,
@@ -209,6 +224,12 @@ export function assertInventoryCoverage(jobs: readonly Job[]): void {
     problems.push(
       `no gallery page for component type(s): ${sample(gaps.missingComponents)} — ` +
         `chart and device_mockup may be covered by their variant pages rather than a bare type id`,
+    )
+  }
+  if (gaps.missingCompositions.length > 0) {
+    problems.push(
+      `no gallery page for composition(s): ${sample(gaps.missingCompositions)}. ` +
+        `Add a row to COMPOSITION_PAGES in evals/gallery/matrix.ts on a theme whose face hands pages to it`,
     )
   }
   if (gaps.missingSectionComponents.length > 0) {

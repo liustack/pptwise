@@ -19,6 +19,7 @@
  */
 
 import { COMPONENT_TYPES, type PageKind, type PptxIR } from "@/ir"
+import type { CompositionId } from "@/layouts/compositions"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { resolveEffectiveFace } from "@/render/layout-selection"
 import { getThemeDefinition } from "@/themes/definitions"
@@ -26,6 +27,7 @@ import { CHART_VARIANTS, COMPONENT_BUILDERS, DEVICE_VARIANTS } from "./corpus/co
 import {
   BASELINE_THEME,
   componentPage,
+  compositionPage,
   layoutFaceSlot,
   layoutPage,
   themeDeck,
@@ -35,12 +37,15 @@ import {
 import { LANGUAGE_IDS, LEXICONS, type LanguageId } from "./corpus/lexicon"
 import { nativeLexiconFor } from "./corpus/native"
 
-export const BAND_IDS = ["deck", "face", "aside", "component"] as const
+export const BAND_IDS = ["deck", "face", "compose", "aside", "component"] as const
 /**
- * The bands every theme section owes. `aside` is not one of them: it exists
- * to show the shared step-aside (`src/render/step-aside.tsx`) to a reviewer,
- * and three pages cover that rendering for all 24 skins because the sheet is
- * the same sheet on every one of them. See `STEP_ASIDE_PAGES`.
+ * The bands every theme section owes. `compose` and `aside` are not among
+ * them. `compose` shows the shared compositions (`src/layouts/compositions/`)
+ * on the themes whose faces hand pages to them, see `COMPOSITION_PAGES`.
+ * `aside` exists to show the shared step-aside (`src/render/step-aside.tsx`)
+ * to a reviewer, and three pages cover that rendering for all 24 skins
+ * because the sheet is the same sheet on every one of them. See
+ * `STEP_ASIDE_PAGES`.
  */
 export const UNIVERSAL_BAND_IDS = ["deck", "face", "component"] as const
 export type BandId = (typeof BAND_IDS)[number]
@@ -283,6 +288,33 @@ export const STEP_ASIDE_PAGES: readonly {
   { theme: "crayon", kind: "list", face: "crayonbox-cards", component: "people_cards" },
 ]
 
+/**
+ * The pages that show each shared composition (`src/layouts/compositions/`)
+ * drawing, on a theme whose face hands it pages.
+ *
+ * A composition takes one content shape whole, and most of those shapes are a
+ * single component alone on the page. The theme deck carries seven fixed
+ * leads, the face band one specimen per face, and the component band a
+ * lead-in sentence above most components, so an options table, a phase plan
+ * and a two-level team were never drawn by any of them. One page each closes
+ * that, and `coverage.ts` holds the list to every registered composition.
+ *
+ * Today brief's `gauge-sheet` is the only face that composes. A theme whose
+ * face starts handing pages to these adds its own row per composition, so
+ * the band compares one composition across the skins that use it.
+ */
+export const COMPOSITION_PAGES: readonly {
+  readonly theme: string
+  readonly kind: PageKind
+  readonly composition: CompositionId
+}[] = [
+  { theme: "brief", kind: "points", composition: "rows" },
+  { theme: "brief", kind: "comparison", composition: "table" },
+  { theme: "brief", kind: "process", composition: "waves" },
+  { theme: "brief", kind: "hierarchy", composition: "tree" },
+  { theme: "brief", kind: "data", composition: "rail" },
+]
+
 export function buildMatrix(
   themeIds: readonly string[],
   assets: Readonly<Record<LanguageId, CorpusAssets>>,
@@ -363,6 +395,32 @@ export function buildMatrix(
           page: 1,
           pageCount: 1,
           slideType: ir.slides[0]!.type ?? "content",
+          heading: ir.slides[0]!.heading ?? "",
+          ir,
+          slideIndex: 0,
+        })
+      }
+    }
+
+    // ── compose: each shared composition this theme's faces hand pages to ─
+    if (wantsBand("compose")) {
+      for (const spec of COMPOSITION_PAGES.filter((p) => p.theme === themeId)) {
+        const ir = compositionPage(nativeLexiconFor(themeId), assets[themeLanguage], themeId, spec.kind, spec.composition)
+        push({
+          id: `${safe(themeId)}--compose--${safe(spec.composition)}`,
+          section: themeId,
+          sectionLabel,
+          band: "compose",
+          subject: spec.composition,
+          slot: spec.kind,
+          // No `face`, for the reason the aside band gives below: 按版式
+          // holds one specimen per section-and-face pair, and these pages
+          // are specimens of a composition, not of the face that framed it.
+          language: themeLanguage,
+          theme: themeId,
+          page: 1,
+          pageCount: 1,
+          slideType: "content",
           heading: ir.slides[0]!.heading ?? "",
           ir,
           slideIndex: 0,
