@@ -33,12 +33,22 @@ const REMNANT_RIGHT = "M 1320 720 Q 1140 640 950 690 Q 850 708 780 720 Z"
 const RAIL_X = 1220
 const BR_LOGO = { x: 1120, y: 630, w: 96, h: 40 }
 
-function ir(meta: PptxIR["meta"] = { organization: "云帆科技", date: "2026-08-15" }): PptxIR {
+/**
+ * The rail's words are footer marks: the organization when the deck's footer
+ * prints it, the year and month when the deck shows its date. `branding:
+ * "full"` asks for both, so the fixture declares it unless a test passes its
+ * own deck-level fields.
+ */
+function ir(
+  meta: PptxIR["meta"] = { organization: "云帆科技", date: "2026-08-15" },
+  deck: Partial<Pick<PptxIR, "branding" | "footer">> = { branding: "full" },
+): PptxIR {
   return {
     version: "5",
     filename: "ink-motif.pptx",
     theme: { id: "ink" },
     meta,
+    ...deck,
     assets: { images: {} },
     slides: [slideOf("cover")],
   } as unknown as PptxIR
@@ -46,16 +56,32 @@ function ir(meta: PptxIR["meta"] = { organization: "云帆科技", date: "2026-0
 
 const tokens = resolveStyle("ink")
 
-function render(type: Slide["type"], meta?: PptxIR["meta"]) {
+function render(type: Slide["type"], meta?: PptxIR["meta"], deck?: Partial<Pick<PptxIR, "branding" | "footer">>) {
   const defaultBg = resolveBackgroundHex(tokens.defaultBackgrounds[type], tokens.colors.surface)
   const pageCtx = buildCtx(tokens, {}, undefined, defaultBg)
   const markup = renderSvgMarkup(
     <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-      <InkMotif ir={ir(meta)} slide={slideOf(type)} ctx={pageCtx} />
+      <InkMotif ir={ir(meta, deck)} slide={slideOf(type)} ctx={pageCtx} />
     </svg>,
   )
   return { markup, root: parseSvgRoot(markup), defaultBg }
 }
+
+describe("ink-motif colophon words are footer marks (2026-10-02 footer ruling)", () => {
+  it("a deck that asks for no footer gets the rail and the seal, and no words", () => {
+    for (const deck of [{}, { branding: "cover-only" as const }, { branding: "minimal" as const }]) {
+      const { root } = render("content", undefined, deck)
+      expect(root.querySelectorAll("text"), JSON.stringify(deck)).toHaveLength(0)
+      expect(root.querySelector('[data-decor-piece="colophon"] line')).not.toBeNull()
+      expect(root.querySelector('[data-decor-piece="seal"]')).not.toBeNull()
+    }
+  })
+
+  it("footer.organization prints the organization down the rail; the date waits for the date switch", () => {
+    const { root } = render("content", undefined, { footer: { organization: true } })
+    expect(Array.from(root.querySelectorAll("text")).map((t) => t.textContent).join("")).toBe("云帆科技")
+  })
+})
 
 describe("ink-motif wave 8 — remnant mountain and colophon rail by page type", () => {
   it("cover paints only the left remnant, no rail and no second seal", () => {

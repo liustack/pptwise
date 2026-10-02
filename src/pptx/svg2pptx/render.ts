@@ -3,6 +3,7 @@ import type { Op } from "./dispatch"
 import type { TextRunData } from "./text"
 import { gradientFillXml } from "./gradient"
 import { blockMarker, pad4 } from "../pptx-animations"
+import { slideNumberObjectName } from "../pptx-slide-number"
 
 /**
  * The subset of a pptxgenjs `Slide` that the render layer uses. Keeping it
@@ -209,6 +210,9 @@ export function renderOp(
       // 的框裁掉（2026-07-10 全主题导出审计：runway 6 处截断的根因）。
       // 关闭换行让超宽文字横向溢出显示，与 SVG 语义一致。
       opts.wrap = false
+      // The footer's page number: named so `applySlideNumberFields` can find
+      // the box and turn its run into PowerPoint's slide-number field.
+      if (op.field === "slidenum") opts.objectName = slideNumberObjectName(slideIndex)
       withBlockMarker(opts, op, slideIndex, opIndex)
       slide.addText(op.runs.map(runToProp), opts)
       break

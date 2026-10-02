@@ -4,15 +4,20 @@ import type { ComponentCtx } from "../components/types"
 import type { PageRenderContext } from "../render/page-context"
 
 /**
- * Props for a motif（原 templates/types.ts 的 DecorProps）。与
- * SvgTemplateProps（layouts/types.ts）相比无 index：装饰几何是
- * (theme, slide.type) 的纯函数。
+ * Props for a motif（原 templates/types.ts 的 DecorProps）。装饰几何是
+ * (theme, slide.type) 的纯函数，不读页序。
  */
 export interface DecorProps {
   ir: PptxIR
   slide: Slide
   ctx: ComponentCtx
   page?: PageRenderContext
+  /**
+   * This page's 0-based position in the deck. Only a motif that paints the
+   * footer row reads it (`footer-roles.ts`), for the page number: the one
+   * mark that depends on where the page sits. Decoration never does.
+   */
+  index?: number
 }
 
 /** Motif（原 per-theme Decor）：签名对齐 templates/types.ts 的 DecorProps，可为 null。 */

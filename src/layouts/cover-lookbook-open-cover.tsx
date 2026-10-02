@@ -8,12 +8,14 @@ import { stripEmphasis } from "../render/emphasis"
 
 /**
  * lookbook-open-cover（第八波 pinOnly）：型录头版。左品牌行、右季/场次、
- * 通栏黑杠、左齐巨号标题、题下副题、右下绯红页码。构图抄
+ * 通栏黑杠、左齐巨号标题、题下副题。构图抄
  * `.issues/design-boards/wave8/b3/Runway.dc.html` 封面：品牌 y140 / 26px，
- * 杠 y168 x96–1184 宽 2，标题 y400 / 96px，副题 y480 / 22px，页码 y662。
+ * 杠 y168 x96–1184 宽 2，标题 y400 / 96px，副题 y480 / 22px。板上右下角
+ * 的绯红页码不画：封面不印页码（2026-10-02 页脚裁决），那个数字也不会随
+ * 页序更新。
  *
- * 进共享池，不是 runway 专用。零 theme id、零 baked hex。无 motif。绯红
- * 只落页码。标题钉死板上 96，不吃 typeScale，禁止放大到 132 铺满。空
+ * 进共享池，不是 runway 专用。零 theme id、零 baked hex。无 motif。
+ * 标题钉死板上 96，不吃 typeScale，禁止放大到 132 铺满。空
  * heading 不编造封面句。不要竖排年份。CJK 不加 letter-spacing。渲染不画
  * 省略号。主题菜单应声明 `decor: silent`。底色走主题 `defaultBackgrounds.cover`，本
  * 文件不自绘满版。
@@ -48,21 +50,12 @@ const SUB_Y = 480
 const SUB_SIZE = 22
 const SUB_MAX_W = 1088
 
-const FOLIO_X = 1184
-const FOLIO_Y = 662
-const FOLIO_SIZE = 16
-const FOLIO_MAX_W = 240
-
 /** Fit 链可能给末字补上省略号。渲染侧砍掉，不画 … 或 ...。 */
 function dropOverflowMark(text: string): string {
   return text.replace(/(?:\u2026|\.{3})$/g, "")
 }
 
-function folioLabel(index: number): string {
-  return `No.${String(index + 1).padStart(2, "0")}`
-}
-
-export function LookbookOpenCover({ ir, slide, index, ctx }: SvgTemplateProps) {
+export function LookbookOpenCover({ ir, slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
   const org = ir.meta.organization?.trim() || ""
@@ -113,15 +106,6 @@ export function LookbookOpenCover({ ir, slide, index, ctx }: SvgTemplateProps) {
       })
     : null
   const subPaint = subtitle ? dropOverflowMark(subtitle.text) : ""
-
-  const folio = fitSvgLine(folioLabel(index), {
-    maxWidth: FOLIO_MAX_W,
-    fontSize: FOLIO_SIZE,
-    minFontSize: 16,
-    fontFamily: fonts.heading,
-  })
-  const folioPaint = dropOverflowMark(folio.text)
-  const folioInk = accessibleInk(colors.accent, bg, folio.fontSize)
 
   return (
     <>
@@ -201,21 +185,6 @@ export function LookbookOpenCover({ ir, slide, index, ctx }: SvgTemplateProps) {
           {subPaint}
         </text>
       )}
-
-      {folioPaint && (
-        <text
-          data-truncated={folio.truncated ? "1" : undefined}
-          x={FOLIO_X}
-          y={FOLIO_Y}
-          textAnchor="end"
-          fontFamily={fonts.heading}
-          fontSize={folio.fontSize}
-          fill={folioInk}
-          dominantBaseline="alphabetic"
-        >
-          {folioPaint}
-        </text>
-      )}
     </>
   )
 }
@@ -223,7 +192,7 @@ export function LookbookOpenCover({ ir, slide, index, ctx }: SvgTemplateProps) {
 export const layoutDef = {
   branding: "none",
   // cover-lookbook-open-cover.tsx: lookbook masthead, full-width primary
-  // rule, left display title at 96px, season/date, crimson folio. pinOnly.
+  // rule, left display title at 96px, season/date. pinOnly.
   // Empty heading draws no title. No motif, no vertical year.
   id: "lookbook-open-cover",
   kind: "standard",

@@ -50,6 +50,13 @@ export interface TextOp {
   rotate?: number
   /** Set by `svg2pptx/dispatch.ts` when this leaf lives under a `data-blk`-tagged `<g>` (wave-C S3, `elements === "auto"` only). */
   blockIndex?: number
+  /**
+   * A PowerPoint field the text stands for. Only `"slidenum"`, from the
+   * footer's page number (`data-field="slidenum"`, `render/footer.tsx`):
+   * the box is written like any other text, then its one run becomes a
+   * slide-number field (`pptx-slide-number.ts`). Absent on every other op.
+   */
+  field?: "slidenum"
 }
 
 /**
@@ -428,6 +435,10 @@ function boxAnchorX(segment: Segment, elementX: number, align: Align, sizePx: nu
 }
 
 export function textToOps(el: Element): TextOp[] {
+  const fieldAttr = el.getAttribute("data-field")
+  if (fieldAttr !== null && fieldAttr !== "slidenum") {
+    throw new Error(`svg2pptx: unknown text field "${fieldAttr}"`)
+  }
   const fontSizePx = num(el, "font-size", 16)
   const align = anchorToAlign(el.getAttribute("text-anchor"))
   const fontFace = firstFontFamily(el.getAttribute("font-family"))
@@ -475,6 +486,12 @@ export function textToOps(el: Element): TextOp[] {
     if (fontFace) op.fontFace = fontFace
     if (color) op.color = color
     if (opacity < 1) op.transparency = Math.round((1 - opacity) * 100)
+    if (fieldAttr === "slidenum") {
+      if (segments.length !== 1 || segment.runs.length !== 1) {
+        throw new Error("svg2pptx: a slide-number field must be one line of one run")
+      }
+      op.field = "slidenum"
+    }
     return op
   })
 }

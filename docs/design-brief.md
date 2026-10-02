@@ -4,6 +4,7 @@ read_when:
   - drawing design boards for a face, component, or theme change
   - a showcase deck shows a page that needs redesign rather than a bug fix
   - judging whether a proposed design can be built in the engine
+  - archiving an approved board under design/ after a design round
 ---
 
 # Design brief
@@ -59,6 +60,24 @@ pptwise schema --component <type> # the component's fields and limits, when a co
 
 For a face, add the face's story from `pptwise inspect <deck-dir> --page <id>` on a page that uses it, and the current render from `pptwise preview <deck-dir>`.
 
+When the part in question already has a settled board, attach it too: look for its folder under [`design/`](../design/README.md) and its entry in [Reusable parts](./reusable-parts.md). A new direction for a settled part has to say what it changes about the settled design and why.
+
 ## After the pick
 
-The chosen board is archived beside the face or component it changes, so the next theme that meets the same component starts from the settled design. The engine change follows the board, is checked against it at the same size, and is done when the difference is no longer visible. A component change reaches every theme that uses it: re-run the gallery, the L1 audit, and look at a few themes, not just the one being designed.
+The engine change follows the board, is checked against it at the same size, and is done when the difference is no longer visible. A component change reaches every theme that uses it: re-run the gallery, the L1 audit, and look at a few themes, not just the one being designed.
+
+Then archive the chosen board in [`design/`](../design/README.md), in the folder of the part it settles, so the next theme that meets the same composition, component, motif or face starts from the settled design:
+
+```text
+design/
+  compositions/<id>/            shared compositions (src/layouts/compositions/)
+  components/<type>/            components (src/components/)
+  motifs/<id>/                  motifs (src/motifs/)
+  faces/<id>/                   faces (src/layouts/)
+    README.md                   what it looks like, why, and what it gave up, one section per theme round
+    <theme>.board.png           the approved board, 1280 by 720
+    <theme>.engine.png          the engine's render of the same page, taken when the board is archived
+  rounds/<YYYY-MM-DD>-<theme>/  the board source and the round's decisions, including every place the engine departs from the board on purpose
+```
+
+A part settled on another part's page links to that page instead of keeping a copy. Finally, add every part the round produced to [Reusable parts](./reusable-parts.md). Nothing under `design/` ships in the npm package.

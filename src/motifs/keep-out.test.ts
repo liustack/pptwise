@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { PageRenderContext } from "../render/page-context"
+import { NO_FOOTER_MARKS } from "../render/footer-marks"
 import { clearsFaceFurniture, STRUCTURE_MARK_CLEARANCE } from "./keep-out"
 
 const MARK = { x: 56, y: 56, w: 72, h: 72 }
@@ -9,6 +10,9 @@ const page = (decorKeepOut: PageRenderContext["decorKeepOut"]): PageRenderContex
   branding: "none",
   metadataOn: false,
   documentMetaOn: false,
+  footer: NO_FOOTER_MARKS,
+  footerRow: null,
+  footerOmitsOrganization: false,
   decorKeepOut,
   geometry: { imageBottomCaptionBottomY: 0 },
 })

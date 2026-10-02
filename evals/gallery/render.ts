@@ -164,6 +164,10 @@ const BAND_META: Record<BandId, { label: string; question: string }> = {
     label: "骨架全脸",
     question: "这套主题菜单上的每一张脸，用它自己的皮渲一页——这套主题的骨相成不成立？",
   },
+  compose: {
+    label: "构图",
+    question: "脸把正文交给共享构图手排的页面，每种构图一页（编号分隔行、方案表、阶段列、组织树、带变化栏的趋势图）。构图在这套皮下站不站得住？",
+  },
   aside: {
     label: "让位页",
     question: "把这张脸装不下的内容交给共享页画一遍——退位之后，主题的底、纹样、品牌与强调色还在不在？",

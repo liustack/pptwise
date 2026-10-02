@@ -46,6 +46,11 @@ describe("mapJobSubject", () => {
       id: "hub_spoke",
     })
     expect(mapJobSubject({ band: "component", subject: "flowchart · typed nodes" })).toBeUndefined()
+    expect(mapJobSubject({ band: "compose", subject: "table" })).toEqual({
+      inventory: "composition",
+      id: "table",
+    })
+    expect(mapJobSubject({ band: "compose", subject: "gauge-sheet" })).toBeUndefined()
   })
 
   it("leaves retired subjects unmapped, including bloom / logo-wall / side-highlight", () => {
@@ -74,6 +79,13 @@ describe("gallery inventory coverage", () => {
     expect(gaps.missingThemes, `missing themes: ${gaps.missingThemes.join(", ")}`).toEqual([])
     expect(gaps.missingLayouts, `missing layouts: ${gaps.missingLayouts.join(", ")}`).toEqual([])
     expect(gaps.missingComponents, `missing components: ${gaps.missingComponents.join(", ")}`).toEqual([])
+    expect(gaps.missingCompositions, `missing compositions: ${gaps.missingCompositions.join(", ")}`).toEqual([])
+  })
+
+  it("reports a shared composition no page shows drawing", () => {
+    const withoutTree = jobs().filter((job) => !(job.band === "compose" && job.subject === "tree"))
+    expect(galleryCoverageGaps(withoutTree).missingCompositions).toEqual(["tree"])
+    expect(() => assertInventoryCoverage(withoutTree)).toThrow(/composition\(s\): tree/)
   })
 
   it("gives every theme section the same component page list — one drawing per component", () => {

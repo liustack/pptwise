@@ -27,9 +27,10 @@ import { resolveDeckBranding } from "../render/page-context"
  * 16px（`footnoteBaselineFor`），组件在版心之内。所以格线挪进这条带，间距
  * 24，与页底也留 24，像作业纸最后两行空着的格子。
  *
- * deck 给内容页画品牌（branding full 画分隔线与 meta 行，minimal 留 logo）
- * 时这条带归品牌，content 格线整组让位：full 的 y664 分隔线本身就是一条
- * 格线，再画会叠成双线并压过 y700 的 meta 字。
+ * deck 给内容页画品牌（branding full / minimal 留 logo）或页脚行
+ * （`page.footerRow`，页码、机构名等）时这条带归品牌，content 格线整组
+ * 让位：页脚的 y664 分隔线本身就是一条格线，再画会叠成双线并压过 y694
+ * 的页脚字。
  *
  * 叶子走 `leafRecessOpacity` / `contentRecessOpacity`。画笔写在叶子上。
  *
@@ -51,7 +52,8 @@ function ruleYs(props: DecorProps): readonly number[] | null {
   if (slide.type === "cover") return COVER_YS
   if (slide.type === "content") {
     const branding = page ? page.branding : resolveDeckBranding(ir)
-    return branding === "full" || branding === "minimal" ? null : CONTENT_YS
+    if (branding === "full" || branding === "minimal") return null
+    return page?.footerRow ? null : CONTENT_YS
   }
   return null
 }

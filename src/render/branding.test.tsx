@@ -5,6 +5,8 @@ import { Branding } from "./branding"
 import { getThemeDefinition } from "../themes/definitions"
 import type { PptxIR, Slide } from "@/ir"
 import type { ComponentCtx } from "../components/types"
+import { resolveEffectiveFace } from "./layout-selection"
+import { resolvePageRenderContext } from "./page-context"
 
 const ctx: ComponentCtx = {
   colors: {
@@ -35,6 +37,17 @@ function ir(themeId: PptxIR["theme"]["id"], slides: Slide[], branding?: PptxIR["
   }
 }
 
+/** The fragment as FullSlideSvg mounts it: the page decision comes from the same resolver. */
+function drawBranding(doc: PptxIR, slide: Slide, index = doc.slides.indexOf(slide)) {
+  const theme = getThemeDefinition(doc.theme.id)
+  const page = resolvePageRenderContext(doc, slide, resolveEffectiveFace(doc, slide, theme), theme)
+  return render(
+    <svg>
+      <Branding ir={doc} slide={slide} index={Math.max(0, index)} ctx={ctx} page={page} theme={theme} />
+    </svg>,
+  )
+}
+
 const cardBgContentSlide: Slide = {
   type: "content",
   kind: "points",
@@ -43,87 +56,61 @@ const cardBgContentSlide: Slide = {
   background: { kind: "asset", asset_id: "bg", fit: "cover" },
 }
 
-function svg(node: React.ReactElement) {
-  return render(<svg>{node}</svg>)
+const plainContentSlide: Slide = {
+  type: "content",
+  kind: "points",
+  heading: "Plain content",
+  components: [{ type: "paragraph", text: "Body." }],
 }
 
 describe("Branding footer suppression (W1: theme brand.suppressFooterOnCardContent)", () => {
-  it("bulletin 主题：content 页 + 卡片背景图 → 页脚整体消失（theme brand 驱动）", () => {
+  it("bulletin: a content page over a card background drops the footer whole", () => {
     const doc = ir("bulletin", [cardBgContentSlide], "full")
-    const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={cardBgContentSlide} ctx={ctx} />)
+    const { container } = drawBranding(doc, cardBgContentSlide)
     expect(container.querySelector("line")).toBeNull()
     expect(container.textContent).not.toContain("ACME")
-    expect(container.textContent).not.toContain("v1")
   })
 
   it.each(["swiss", "ledger", "thesis", "terminal", "journal"] as const)(
-    "%s 主题：同样的 content 页 + 卡片背景图 → 页脚正常显示（未设 brand.suppressFooterOnCardContent，不受影响）",
+    "%s: the same page keeps its footer (the theme does not set the flag)",
     (themeId) => {
       const doc = ir(themeId, [cardBgContentSlide], "full")
-      const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={cardBgContentSlide} ctx={ctx} />)
+      const { container } = drawBranding(doc, cardBgContentSlide)
       expect(container.querySelector("line")).not.toBeNull()
       expect(container.textContent).toContain("ACME")
-      expect(container.textContent).toContain("v1")
     },
   )
 })
 
-// ── theme-redesign wave (2026-08-18): the third, orthogonal footer switch ──
-//
-// `suppressFooterMeta` exists because ink v3's motif draws a right-edge
-// colophon rail carrying the org and the year/month
-// (`motifs/motif-ink-motif.tsx`) — leaving the footer row on prints both
-// on the same page. Mutation guard 4 of the wave's four: dropping the
-// `!brandConfig.suppressFooterMeta` gate in `branding.tsx` re-lands the
-// duplicate and fails the first case below.
-
-const plainContentSlide: Slide = {
-  type: "content",
-  kind: "points",
-  heading: "普通内容页",
-  components: [{ type: "paragraph", text: "正文。" }],
-}
-
-describe("Branding footer meta suppression (brand.suppressFooterMeta, ink v3)", () => {
-  it("ink 主题：content 页页脚不排 meta 文字（org/密级/版本/日期全部交给落款列）", () => {
-    const doc = ir("ink", [plainContentSlide], "full")
-    const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={plainContentSlide} ctx={ctx} />)
-    expect(container.textContent).not.toContain("ACME")
+describe('the older footer of branding: "full"', () => {
+  it("reads as the organization left and the confidentiality mark right, on the shared row", () => {
+    const doc = ir("thesis", [plainContentSlide], "full")
+    const { container } = drawBranding(doc, plainContentSlide)
+    const texts = Array.from(container.querySelectorAll("text"))
+    const left = texts.find((el) => el.getAttribute("x") === "96")
+    const right = texts.find((el) => el.getAttribute("x") === "1184")
+    expect(left?.textContent).toBe("ACME")
+    expect(right?.textContent).toBe("Internal")
+    // Version and date stay on the cover and ending meta rows, not on every page.
     expect(container.textContent).not.toContain("v1")
     expect(container.textContent).not.toContain("2026")
-    expect(container.textContent).not.toContain("Internal")
-    // 与 suppressFooterRule 正交，不是同一个开关的两种说法：分隔线也没画，
-    // 但那是 ink 早就设的另一个 flag 的功劳。
-    expect(container.querySelector("line")).toBeNull()
+    expect(container.querySelector("line")).not.toBeNull()
   })
 
-  it.each(["swiss", "ledger", "thesis", "terminal", "journal", "bulletin"] as const)(
-    "%s 主题：同一页页脚 meta 照排（未设 suppressFooterMeta，逐字节不受影响）",
-    (themeId) => {
-      const doc = ir(themeId, [plainContentSlide], "full")
-      const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={plainContentSlide} ctx={ctx} />)
-      expect(container.textContent).toContain("ACME")
-      expect(container.textContent).toContain("v1")
-      expect(container.querySelector("line")).not.toBeNull()
-    },
-  )
-
-  it("brief 主题：页脚线与 meta 行都交给 folio-motif，Branding 不再排（同 ink）", () => {
-    const doc = ir("brief", [plainContentSlide], "full")
-    const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={plainContentSlide} ctx={ctx} />)
+  it("ink: the colophon rail carries the organization, so the row leaves it out", () => {
+    const doc = ir("ink", [plainContentSlide], "full")
+    const { container } = drawBranding(doc, plainContentSlide)
     expect(container.textContent).not.toContain("ACME")
-    expect(container.textContent).not.toContain("v1")
+    expect(container.textContent).toContain("Internal")
+    // ink draws its own frame and keeps the shared rule off.
     expect(container.querySelector("line")).toBeNull()
   })
 
-  it("密级/机构组在左，版本/日期组在右", () => {
-    const doc = ir("thesis", [plainContentSlide], "full")
-    const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={plainContentSlide} ctx={ctx} />)
-    const texts = Array.from(container.querySelectorAll("text"))
-    const left = texts.find((el) => el.getAttribute("x") === "56")
-    const right = texts.find((el) => el.getAttribute("x") === "1224")
-    expect(left?.textContent).toBe("Internal · ACME")
-    expect(right?.textContent).toBe("v1 · 2026")
+  it("brief: folio-motif draws the whole row, so the shared fragment draws none", () => {
+    const doc = ir("brief", [plainContentSlide], "full")
+    const { container } = drawBranding(doc, plainContentSlide)
+    expect(container.textContent).toBe("")
+    expect(container.querySelector("line")).toBeNull()
   })
 })
 
@@ -133,9 +120,9 @@ const LOGO_SRC =
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] }
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] }
 const endingSlide: Slide = { type: "ending", heading: "收束", components: [] }
-/** A theme that keeps the shared footer, so the posture gate is what decides. */
+/** A theme whose cover, chapter and content faces all leave room for the brand frame, so the posture gate is what decides. */
 function branded(slides: Slide[], branding?: PptxIR["branding"]): PptxIR {
-  const base = ir("thesis", slides)
+  const base = ir("terminal", slides)
   return {
     ...base,
     brand: { logo_asset_id: "logo", position: "br" },
@@ -152,75 +139,73 @@ function branded(slides: Slide[], branding?: PptxIR["branding"]): PptxIR {
 describe("deck branding posture (Branding gate)", () => {
   it("omitted branding drops footer rule, meta, and logo on a content page", () => {
     const doc = branded([plainContentSlide])
-    const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={plainContentSlide} ctx={ctx} />)
+    const { container } = drawBranding(doc, plainContentSlide)
     expect(container.querySelector("line")).toBeNull()
     expect(container.textContent).not.toContain("ACME")
     expect(container.querySelector("image")).toBeNull()
   })
 
   it("explicit branding cover-only matches the omitted path on a content page", () => {
-    const omitted = branded([plainContentSlide])
-    const coverOnly = branded([plainContentSlide], "cover-only")
-    const a = svg(<Branding ir={omitted} theme={getThemeDefinition(omitted.theme.id)} slide={plainContentSlide} ctx={ctx} />).container.innerHTML
-    const b = svg(<Branding ir={coverOnly} theme={getThemeDefinition(coverOnly.theme.id)} slide={plainContentSlide} ctx={ctx} />).container.innerHTML
+    const a = drawBranding(branded([plainContentSlide]), plainContentSlide).container.innerHTML
+    const b = drawBranding(branded([plainContentSlide], "cover-only"), plainContentSlide).container.innerHTML
     expect(a).toBe(b)
   })
 
-  it("explicit branding full still draws the content footer rule, meta, and logo", () => {
+  it("explicit branding full draws the content footer rule, meta, and logo", () => {
     const doc = branded([plainContentSlide], "full")
-    const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={plainContentSlide} ctx={ctx} />)
+    const { container } = drawBranding(doc, plainContentSlide)
     expect(container.querySelector("line")).not.toBeNull()
     expect(container.textContent).toContain("ACME")
     expect(container.querySelector("image")).not.toBeNull()
   })
 
-  it("omitted branding keeps the logo on cover and chapter pages", () => {
-    const doc = branded([coverSlide, chapterSlide])
+  it.each([undefined, "cover-only"] as const)("%s keeps the logo on cover and chapter pages", (branding) => {
+    const doc = branded([coverSlide, chapterSlide], branding)
     for (const slide of [coverSlide, chapterSlide]) {
-      const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={slide} ctx={ctx} />)
+      const { container } = drawBranding(doc, slide)
       expect(container.querySelector("image"), slide.type).not.toBeNull()
       expect(container.querySelector("line"), slide.type).toBeNull()
     }
   })
 
-  it("omitted branding drops the logo on an ending page", () => {
-    const doc = branded([endingSlide])
-    const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={endingSlide} ctx={ctx} />)
+  it.each([undefined, "cover-only"] as const)("%s drops the logo on an ending page", (branding) => {
+    const doc = branded([endingSlide], branding)
+    const { container } = drawBranding(doc, endingSlide)
     expect(container.querySelector("image")).toBeNull()
     expect(container.querySelector("line")).toBeNull()
     expect(container.textContent).not.toContain("ACME")
   })
 
-  it("cover-only drops footer rule, meta, and logo on a content page", () => {
-    const doc = branded([plainContentSlide], "cover-only")
-    const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={plainContentSlide} ctx={ctx} />)
-    expect(container.querySelector("line")).toBeNull()
-    expect(container.textContent).not.toContain("ACME")
-    expect(container.querySelector("image")).toBeNull()
-  })
-
-  it("cover-only keeps the logo on cover and chapter pages", () => {
-    const doc = branded([coverSlide, chapterSlide], "cover-only")
-    for (const slide of [coverSlide, chapterSlide]) {
-      const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={slide} ctx={ctx} />)
-      expect(container.querySelector("image"), slide.type).not.toBeNull()
-      expect(container.querySelector("line"), slide.type).toBeNull()
-    }
-  })
-
-  it("cover-only drops the logo on an ending page", () => {
-    const doc = branded([endingSlide], "cover-only")
-    const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={endingSlide} ctx={ctx} />)
-    expect(container.querySelector("image")).toBeNull()
-    expect(container.querySelector("line")).toBeNull()
-    expect(container.textContent).not.toContain("ACME")
-  })
-
-  it("minimal drops the content footer rule and meta but keeps the logo", () => {
+  it("minimal keeps the logo and draws no footer of its own", () => {
     const doc = branded([plainContentSlide], "minimal")
-    const { container } = svg(<Branding ir={doc} theme={getThemeDefinition(doc.theme.id)} slide={plainContentSlide} ctx={ctx} />)
+    const { container } = drawBranding(doc, plainContentSlide)
     expect(container.querySelector("line")).toBeNull()
     expect(container.textContent).not.toContain("ACME")
+    expect(container.querySelector("image")).not.toBeNull()
+  })
+
+  it("minimal with a footer: the logo and the footer row together", () => {
+    const doc: PptxIR = { ...branded([plainContentSlide], "minimal"), footer: { page_number: true, organization: true } }
+    const { container } = drawBranding(doc, plainContentSlide)
+    expect(container.querySelector("image")).not.toBeNull()
+    expect(container.textContent).toContain("ACME")
+    expect(container.querySelector('[data-field="slidenum"]')?.textContent).toBe("1")
+  })
+
+  it('a footer object replaces the older reading of "full"', () => {
+    const doc: PptxIR = { ...branded([plainContentSlide], "full"), footer: { page_number: true } }
+    const { container } = drawBranding(doc, plainContentSlide)
+    expect(container.textContent).toBe("1")
+    expect(container.querySelector("image")).not.toBeNull()
+    // A lone page number has no rule over it.
+    expect(container.querySelector("line")).toBeNull()
+  })
+
+  it('"full" with an empty footer object prints no footer row, only the logo', () => {
+    const doc: PptxIR = { ...branded([plainContentSlide], "full"), footer: {} }
+    const { container } = drawBranding(doc, plainContentSlide)
+    expect(container.querySelector("text")).toBeNull()
+    expect(container.querySelector("line")).toBeNull()
     expect(container.querySelector("image")).not.toBeNull()
   })
 })

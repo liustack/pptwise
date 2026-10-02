@@ -218,6 +218,8 @@ export function InvitationPlateCover({ ir, slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
+  // The shared top-left mark goes inside the motif's gilt frame, not across it.
+  coverMark: { x: 96, y: 100 },
   // cover-invitation-plate-cover.tsx: centered invitation plate.
   // Gold title on the theme paper. Motif owns the double gilt frame.
   // Empty heading invents no invitation line and skips the short rule.

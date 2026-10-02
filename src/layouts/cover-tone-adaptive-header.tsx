@@ -2,8 +2,8 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { scaleTypePx } from "../render/heading-fit"
 import { fitEmphasisLine, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
-import { CONF_LABEL } from "../lib/conf-labels"
-import { showsDocumentMeta } from "../render/document-meta"
+import { coverConfidentiality, showsDocumentMeta } from "../render/document-meta"
+import { coverBadgeBox } from "./cover-badge"
 import { faceParam } from "./face-params"
 
 /**
@@ -80,8 +80,10 @@ export function ToneAdaptiveHeaderCover({ ir, slide, ctx, page, params }: SvgTem
   const borderOpacity = withBg ? 0.18 : 1
 
   const org = ir.meta.organization
-  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
-  const confLabel = conf ? CONF_LABEL[conf] : null
+  const confLabel = coverConfidentiality(page, ir)
+  const confBadge = confLabel
+    ? coverBadgeBox(confLabel, { right: 1216, minWidth: 130, fontSize: 24, fontFamily: fonts.heading, padX: 16 })
+    : null
   const author = ir.meta.authors?.[0]
   const authorText = author
     ? [author.name, author.role].filter(Boolean).join(" · ")
@@ -147,12 +149,12 @@ export function ToneAdaptiveHeaderCover({ ir, slide, ctx, page, params }: SvgTem
       )}
 
       {/* Top right: confidentiality badge */}
-      {confLabel && (
+      {confLabel && confBadge && (
         <g>
           <rect
-            x="1086"
+            x={confBadge.x}
             y="50"
-            width="130"
+            width={confBadge.width}
             height="44"
             rx="6"
             fill="none"
@@ -161,7 +163,7 @@ export function ToneAdaptiveHeaderCover({ ir, slide, ctx, page, params }: SvgTem
             strokeOpacity={withBg ? 0.6 : 1}
           />
           <text
-            x="1151"
+            x={confBadge.centerX}
             y="79"
             fontFamily={fonts.heading}
             fontSize="24"
@@ -277,6 +279,7 @@ export function ToneAdaptiveHeaderCover({ ir, slide, ctx, page, params }: SvgTem
 // export) — see registry.ts's slot-`accepts` convention doc for what `[]`
 // means.
 export const layoutDef: LayoutDefinition = {
+  coverMark: "face",
   // cover-tone-adaptive-header.tsx: org kicker, conf badge, heading,
   // subheading; no-bg mode adds a divider + author/date/version meta row,
   // bg mode collapses meta to one white overlay line (same slot names).

@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Component, Slide } from "@/ir"
+import type { Slide } from "@/ir"
 import type { ComponentCtx } from "../../components/types"
 import type { ContentRect } from "../../render/layout"
 import { paletteWithoutAccent } from "../../render/chart-palette"
@@ -24,21 +24,6 @@ const STANDFIRST_MAX_LINES = 2
 const STANDFIRST_Y = 206
 /** From the standfirst's last baseline to the top of the body band. */
 const STANDFIRST_TO_BODY = 30
-
-/** What a sheet module is handed: the page, the paint context, and its band. */
-export interface SheetModuleProps {
-  slide: Slide
-  ctx: ComponentCtx
-  rect: ContentRect
-}
-
-/**
- * A module draws one content shape the brief board composes by hand, or
- * returns `null` to say it does not take this page. A module never takes part
- * of a page: it draws every component on it whole, or it declines and the
- * sheet hands the page to the ordinary component renderer.
- */
-export type SheetModule = (props: SheetModuleProps) => React.ReactElement | null
 
 export interface SheetFrame {
   /** The subheading, painted, or `null` for a page without one. */
@@ -102,23 +87,4 @@ export function sheetCtx(ctx: ComponentCtx): ComponentCtx {
     ...ctx,
     colors: { ...ctx.colors, chartPalette: paletteWithoutAccent(ctx.colors.chartPalette, ctx.colors.accent) },
   }
-}
-
-/** The ink a hairline between rows takes. */
-export function ruleInk(ctx: ComponentCtx): string {
-  return ctx.colors.border ?? ctx.colors.muted
-}
-
-/**
- * The `data-blk` tag a component drawn by hand needs.
- *
- * A component drawn through `renderComponent` is tagged there, and the
- * per-component entrance animation (`meta.animation.elements: "auto"`) finds
- * its shapes by that tag. The modules here draw their components themselves,
- * so each one tags the group it draws a component into, the way the bento
- * grid tags its exploded cards. Empty when animation is off.
- */
-export function blockTag(ctx: ComponentCtx, component: Component): { "data-blk"?: number } {
-  const index = ctx.blockIndex?.get(component)
-  return index != null ? { "data-blk": index } : {}
 }

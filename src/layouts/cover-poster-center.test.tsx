@@ -104,9 +104,9 @@ describe("PosterCenterCover", () => {
     expect(subtitle.getAttribute("text-anchor")).toBe("middle")
 
     // Combined meta line carries org/confidentiality/date as a single
-    // centered row (CONF_LABEL.internal -> "Internal").
+    // centered row. The deck is Chinese, so "internal" prints 仅供内部讨论.
     expect(markup).toContain("DarkCo")
-    expect(markup).toContain("Internal")
+    expect(markup).toContain("仅供内部讨论")
   })
 
   it("Cover 元素避开四角 Branding logo 条带", () => {

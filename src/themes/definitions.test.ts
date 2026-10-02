@@ -104,11 +104,14 @@ describe("THEME_DEFINITIONS", () => {
   it("carries the two legacy branding flags to their owners", () => {
     expect(THEME_DEFINITIONS.bulletin.brand.suppressFooterOnCardContent).toBe(true)
     expect(THEME_DEFINITIONS.ink.brand.suppressFooterRule).toBe(true)
-    // ink v3：落款列吞并页脚 meta 文字（`BRANDS.ink` 自己的注释交代了代价）
-    expect(THEME_DEFINITIONS.ink.brand.suppressFooterMeta).toBe(true)
-    // brief（2026-10-02 样例重做）：folio-motif 自己画页脚线与机构行，
-    // Branding 的页脚线和 meta 行让开，同 ink 先例。
-    expect(THEME_DEFINITIONS.brief.brand).toEqual({ suppressFooterRule: true, suppressFooterMeta: true })
+    // brief（2026-10-02 样例重做）：folio-motif 自己画页脚线与页脚行，
+    // Branding 的页脚线让开，同 ink 先例。哪些页脚字由 motif 印，归 motif
+    // 自己声明（`motifs/footer-roles.ts`），不再是主题开关：
+    // suppressFooterMeta 已退役，内置主题都不设。
+    expect(THEME_DEFINITIONS.brief.brand).toEqual({ suppressFooterRule: true })
+    for (const id of CANONICAL_THEME_IDS) {
+      expect(THEME_DEFINITIONS[id].brand.suppressFooterMeta, id).toBeUndefined()
+    }
   })
 
   it("24 主题四页型菜单均非空。motif 可选", () => {

@@ -275,8 +275,8 @@ export function ImageCoverPage({
 const SPLIT_IMG_W = 540
 const SPLIT_TEXT_X = 620
 const SPLIT_TEXT_W = W - SPLIT_TEXT_X - 96
-/** 图列垂直通栏（2026-07-09 用户裁决）：Branding 对 image_split 页
- * 已整页抑制页脚，无压图问题。 */
+/** 图列垂直通栏（2026-07-09 用户裁决）：图压到页底，本版式声明
+ * `footerRow: "none"`，页脚这一行整页不画，无压图问题。 */
 const SPLIT_IMG_H = H
 
 /**
@@ -285,10 +285,8 @@ const SPLIT_IMG_H = H
  * 无 image 块时回落 null（调用方走模板正常路径）。
  */
 export function ImageSplitPage({
-  ir,
   slide,
   ctx,
-  page,
 }: {
   ir: PptxIR
   slide: Slide
@@ -312,7 +310,6 @@ export function ImageSplitPage({
   // only-when-present rule as that file's own `<image>`.
   const alt = ctx.images?.[imageComponent.asset_id]?.alt
   const rest = slide.components.filter((component) => component !== imageSource)
-  const org = page.metadataOn ? ir.meta.organization : undefined
 
   // fontWeight 600 而非 700：magazine/creative 的衬线 heading（SimSun/Lora）
   // 被 700 合成加粗抹掉衬线特征——降字重提字号保气势。拟合必须带 bold +
@@ -333,8 +330,11 @@ export function ImageSplitPage({
     maxLines: 2,
     lineHeightRatio: 1.3,
   })
+  // The band above the title used to carry an organization kicker. On a
+  // content page the organization is a footer mark with one place, the
+  // footer row, and only when the deck asks for it (2026-10-02 footer
+  // ruling), so the band stays empty and the title keeps its place.
   let cursor = 128
-  const kickerY = cursor
   cursor += 46
   const titleY = cursor + title.lineHeight - 12
   cursor += title.lines.length * title.lineHeight + 18
@@ -391,20 +391,6 @@ export function ImageSplitPage({
             </>
           )
         })()}
-      {org && <rect x={textX} y={kickerY - 13} width={13} height={13} fill={ctx.colors.accent} />}
-      {org && (
-        <text
-          x={textX + 24}
-          y={kickerY}
-          fontSize={17}
-          fontFamily={ctx.fonts.body}
-          fill={ctx.colors.muted}
-          letterSpacing={2}
-          dominantBaseline="alphabetic"
-        >
-          {org}
-        </text>
-      )}
       {renderEmphasisHeading(
         title,
         headingEmphasisPaint(ctx, title, { baseFill: accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, title.fontSize), fontWeight: "600", fontFamily: ctx.fonts.heading }),
@@ -1270,6 +1256,10 @@ export const imageSplitLayoutDef: LayoutDefinition = {
   // the text column, followed by the components left after consuming that
   // source as body. The body uses hardcoded arrangement "single".
   // Takeovers do not expose standard layout arrangements.
+  // The image column runs to the bottom edge, caption bar included, so the
+  // page carries no footer row (2026-07-09 ruling: the footer would print
+  // over the photo).
+  footerRow: "none",
   id: "image-split",
   kind: "takeover",
   story: {

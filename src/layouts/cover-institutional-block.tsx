@@ -196,6 +196,8 @@ export function InstitutionalBlockCover({ ir, slide, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef: LayoutDefinition = {
+  // The shared top-left mark lines up with the org kicker's left edge.
+  coverMark: { x: KICKER_X, y: 56 },
   // cover-institutional-block.tsx: left-axis giant heading, wide-tracked
   // org kicker, accent signature block bottom-left, two-line byline
   // bottom-right. Institutional-report cover grammar.

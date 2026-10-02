@@ -6,6 +6,7 @@ import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { parseSvgRoot, renderSvgMarkup } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import type { PageRenderContext } from "../render/page-context"
+import { NO_FOOTER_MARKS } from "../render/footer-marks"
 import { GaugeMotif } from "./motif-gauge-motif"
 import { BoundSlideSvg } from "../render/__fixtures__/bound-slide"
 import { registerTestTheme } from "../themes/test-fixtures"
@@ -42,6 +43,9 @@ const pageReserving = (decorKeepOut: PageRenderContext["decorKeepOut"]): PageRen
   branding: "none",
   metadataOn: false,
   documentMetaOn: false,
+  footer: NO_FOOTER_MARKS,
+  footerRow: null,
+  footerOmitsOrganization: false,
   decorKeepOut,
   geometry: { imageBottomCaptionBottomY: 0 },
 })

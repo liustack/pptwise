@@ -10,6 +10,8 @@ import {
   BrandSchema,
   COMPONENT_TYPES,
   DeckBrandingSchema,
+  FooterSchema,
+  footerSettingIssues,
   KIND_VALUES,
   MetaSchema,
   NarrativeProfileInputSchema,
@@ -114,6 +116,13 @@ export const DeckSpecSchema = z
      * branding for its own page.
      */
     branding: DeckBrandingSchema.optional(),
+    /**
+     * Small marks printed in the page corners, reused verbatim from the
+     * IR's own `footer` field (`FooterSchema`, `../ir/footer`) so the spec
+     * and IR cannot drift. Optional, no default: omitted, the deck prints
+     * none of them, and assemble writes nothing into the IR.
+     */
+    footer: FooterSchema.optional(),
     pages: z.array(PageSpecSchema),
   })
   .strict()
@@ -369,6 +378,7 @@ function checkOverflowVocabulary(spec: DeckSpec): SpecValidationIssue[] {
     })
   }
   consider(spec.meta, "meta")
+  consider(spec.footer, "footer")
   consider(spec.pages, "pages")
   return errors
 }
@@ -629,6 +639,9 @@ export function validateSpec(input: unknown, opts?: { theme?: ThemeDefinition })
 
   const overflowVocabularyErrors = checkOverflowVocabulary(spec)
   if (overflowVocabularyErrors.length > 0) return withNormalized({ ok: false, errors: overflowVocabularyErrors })
+
+  const footerErrors = footerSettingIssues({ meta: spec.meta, footer: spec.footer })
+  if (footerErrors.length > 0) return withNormalized({ ok: false, errors: footerErrors })
 
   const boundTheme = resolveSpecTheme(spec, opts?.theme)
   if (!boundTheme.ok) return withNormalized({ ok: false, errors: boundTheme.errors })

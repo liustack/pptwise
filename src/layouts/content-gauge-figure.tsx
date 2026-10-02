@@ -8,7 +8,7 @@ import { stepAside } from "../render/step-aside"
 import { GAUGE_HEAD_FIT, GAUGE_LEFT, GaugeHead, GaugeSource, gaugeBodyRect } from "./gauge-shared"
 import { sheetFrame } from "./gauge-sheet/frame"
 import { GaugeSheetPage, composeSheet } from "./gauge-sheet/sheet"
-import { fitFixed, paintLines } from "./gauge-sheet/type"
+import { fitFixed, paintLines } from "./compositions"
 import { heroCaption, heroUnit, heroValue } from "./minimal-shared"
 import { fitHeroLine, type HeroUnitMark } from "./sparse/shared"
 

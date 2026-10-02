@@ -143,7 +143,7 @@ Narrative pacing owns the editorial budget and body-text baseline. The face sele
 3. Pacing controls editorial capacity and the body baseline, never face choice.
 4. A kind outside the bound menu is a hard validation error.
 5. Boundary-page component support comes from the bound face and is validated there.
-6. Deck branding keeps `full`, `cover-only`, and `minimal`. Page silence belongs to the face or menu entry.
+6. Deck branding keeps `full`, `cover-only`, and `minimal` for the logo. Footer marks are opt-in through `footer`. Page silence belongs to the face or menu entry.
 7. Page arrangement belongs to face self-adaptation, not IR.
 8. Visual comparison uses `theme try` with a fixed sample. Render has no theme override.
 9. `heading` and `summary` remain semantic spec fields.

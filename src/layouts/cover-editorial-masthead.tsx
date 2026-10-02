@@ -2,8 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { CONF_LABEL } from "../lib/conf-labels"
-import { showsDocumentMeta } from "../render/document-meta"
+import { coverConfidentiality, showsDocumentMeta } from "../render/document-meta"
 import { accessibleInk } from "../render/ink"
 import { hasCjk, latinUpper, trackingPx } from "./minimal-shared"
 import { faceParam } from "./face-params"
@@ -38,8 +37,7 @@ export function EditorialMastheadCover({ ir, slide, ctx, page, params }: SvgTemp
   const showKicker = faceParam(params, "showKicker", false)
   const pageBg = ctx.defaultBg ?? colors.bg
   const org = ir.meta.organization
-  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
-  const confLabel = conf ? CONF_LABEL[conf] : null
+  const confLabel = coverConfidentiality(page, ir)
   const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const metaParts = [showKicker ? undefined : org, date, confLabel].filter((v): v is string => Boolean(v))
 
@@ -168,6 +166,7 @@ export function EditorialMastheadCover({ ir, slide, ctx, page, params }: SvgTemp
 // cycle with the registry aggregator (which value-imports this export) — see
 // registry.ts's slot-`accepts` convention doc for what `[]` means.
 export const layoutDef: LayoutDefinition = {
+  coverMark: "face",
   // cover-editorial-masthead.tsx: masthead heading + short underline +
   // italic subheading + merged org/date/conf meta. Optional kicker and
   // textAnchor knobs. Default: middle, no kicker.

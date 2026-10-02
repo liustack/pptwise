@@ -120,7 +120,7 @@ function noteSource(item: KpiCards["items"][number]): string {
  * 构图。作为自动池成员遇到其他合法内容时，沿同一 x160 内容轴交给
  * `SvgContent`，避免无声丢失模型已经写入的组件。
  */
-export function GaugeStatsContent({ ir, slide, index, ctx }: SvgTemplateProps) {
+export function GaugeStatsContent({ ir, slide, index, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
   const border = colors.border ?? colors.muted
@@ -216,7 +216,7 @@ export function GaugeStatsContent({ ir, slide, index, ctx }: SvgTemplateProps) {
 
   return (
     <>
-      <GaugeMeta ir={ir} ctx={ctx} tone="light" />
+      <GaugeMeta ir={ir} ctx={ctx} tone="light" page={page} />
       <rect x={MARK_X} y={MARK_Y} width={MARK_SIZE} height={MARK_SIZE} fill={colors.accent} />
       {section && (
         <text

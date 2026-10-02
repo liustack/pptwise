@@ -151,7 +151,9 @@ export const CONSULTING_THEME = {
     ending: { face: "gauge-next" },
   },
   motif: { id: "folio-motif" },
-  // folio-motif draws the content footer itself, rule and organization row,
-  // so the shared Branding footer keeps out of its way.
-  brand: { suppressFooterRule: true, suppressFooterMeta: true },
+  // folio-motif draws the content footer row itself, rule included
+  // (`motifs/footer-roles.ts`), so the shared Branding footer keeps out of
+  // its way. On a page whose motif is silenced the shared footer prints the
+  // same marks, and this keeps its rule off there too.
+  brand: { suppressFooterRule: true },
 } satisfies BuiltinThemeDeclaration;

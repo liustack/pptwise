@@ -157,6 +157,8 @@ export function IkbFieldCover({ ir, slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
+  // The shared top-left mark sits on the primary field this face paints.
+  coverMark: { x: 96, y: 56, ground: "primary" },
   // cover-ikb-field-cover.tsx: full-bleed primary field, left-aligned
   // inverted title, short rule under the last title line. Motif owns the
   // square steps. Empty heading draws no title and no rule.

@@ -1,8 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
-import { CONF_LABEL } from "../lib/conf-labels"
-import { showsDocumentMeta } from "../render/document-meta"
+import { coverConfidentiality, showsDocumentMeta } from "../render/document-meta"
 import { faceParam } from "./face-params"
 
 /**
@@ -67,8 +66,7 @@ export function ConstellationCover({ ir, slide, ctx, page, params }: SvgTemplate
   const titleBottomAnchor = faceParam(params, "titleBottomAnchor", true)
   const ruleStyle = faceParam<"bar" | "star-chain">(params, "ruleStyle", "bar")
   const org = ir.meta.organization
-  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
-  const confLabel = conf ? CONF_LABEL[conf] : null
+  const confLabel = coverConfidentiality(page, ir)
   const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
   const metaParts = [confLabel, date].filter((v): v is string => Boolean(v))
 
@@ -255,6 +253,7 @@ export function ConstellationCover({ ir, slide, ctx, page, params }: SvgTemplate
 // cycle with the registry aggregator (which value-imports this export) — see
 // registry.ts's slot-`accepts` convention doc for what `[]` means.
 export const layoutDef: LayoutDefinition = {
+  coverMark: "face",
   // cover-constellation.tsx: top-left org kicker, bottom-anchored hero
   // heading, accent rule + subheading, conf/date meta row, and the
   // signature 9-point constellation motif (inline in this file, not the

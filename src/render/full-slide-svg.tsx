@@ -8,6 +8,7 @@ import type { ComponentCtx } from "../components/types"
 import type { SvgTemplateProps } from "../layouts/types"
 import { Background } from "./background"
 import { Branding } from "./branding"
+import { CoverMark } from "./footer"
 import { SlideDecor } from "./slide-decor"
 import { getTakeoverRenderer, ImageCoverPage } from "./image-pages"
 import { gradientBands } from "./gradient-bands"
@@ -401,7 +402,8 @@ export function FullSlideSvg({
   // without them, so the motif still paints and the deck's branding still
   // reaches a page whose face used to draw that metadata itself. The body
   // is already built and consults neither, so nothing needs re-rendering.
-  if (pageBody !== null && treeStepsAside(pageBody)) {
+  const steppedAside = pageBody !== null && treeStepsAside(pageBody)
+  if (steppedAside) {
     page = resolvePageRenderContext(ir, slide, effectiveFace, themeDef, true)
     renderIr = page.metadataOn
       ? ir
@@ -412,7 +414,7 @@ export function FullSlideSvg({
   const motif =
     Decor && !imageCoverTakeover ? (
       <g data-decor>
-        <Decor ir={renderIr} slide={slide} ctx={ctx} page={page} />
+        <Decor ir={renderIr} slide={slide} ctx={ctx} page={page} index={index} />
       </g>
     ) : null
   const motifDepth: SvgDepthLayers = motif
@@ -439,13 +441,31 @@ export function FullSlideSvg({
     keyedBody("fg")
   )
   const branding = page.brandOn ? (
-    <Branding ir={renderIr} slide={slide} ctx={ctx} page={page} theme={themeDef} />
+    <Branding ir={renderIr} slide={slide} index={index} ctx={ctx} page={page} theme={themeDef} />
   ) : null
+  // A cover's top-left mark: a legal classification, or the confidentiality
+  // mark when the face has no place of its own for it. Independent of the
+  // brand fragment, since many cover faces leave no room for that fragment
+  // and still owe the mark. A face that stepped aside, or a cover drawn over
+  // a photo by the image-cover renderer, draws none of the face's own
+  // furniture, so the shared mark stands in for it.
+  const faceCoverMark = steppedAside || imageCoverTakeover ? undefined : effectiveFace.layout?.coverMark
+  const coverMark =
+    slide.type === "cover" && page.metadataOn ? (
+      <CoverMark
+        footer={page.footer}
+        faceDrawsConfidentiality={faceCoverMark === "face"}
+        {...(typeof faceCoverMark === "object" ? { anchor: faceCoverMark } : {})}
+        ctx={ctx}
+        onImage={imageCoverTakeover}
+      />
+    ) : null
   const foreground = (
     <>
       {keyedMotif("fg")}
       {foregroundBody}
       {branding}
+      {coverMark}
     </>
   )
   const midground = (

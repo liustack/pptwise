@@ -46,7 +46,7 @@ intent -> narrative -> theme -> spec -> fill -> render
     "date": "2026-08-30",
     "confidentiality": "internal"
   },
-  "branding": "full",
+  "footer": { "page_number": true, "organization": true, "confidentiality": "footer" },
   "pages": [
     {
       "id": "cover",
@@ -76,7 +76,7 @@ intent -> narrative -> theme -> spec -> fill -> render
 }
 ```
 
-The spec owns narrative, theme binding, output filename, metadata, deck brand, branding posture, page order, each page's id, type, heading, and every content page's kind. `summary` and `focus` are optional fill guidance. Prefer a component type for `focus`.
+The spec owns narrative, theme binding, output filename, metadata, deck brand, branding posture, footer marks, page order, each page's id, type, heading, and every content page's kind. `summary` and `focus` are optional fill guidance. Prefer a component type for `focus`.
 
 Validate it before filling pages:
 

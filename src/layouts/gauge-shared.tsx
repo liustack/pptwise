@@ -4,6 +4,8 @@ import type { ContentRect } from "../render/layout"
 import { accessibleInk, metaInk } from "../render/ink"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { footnoteBaselineFor } from "../render/branding-geometry"
+import { footerOrganization, showsDocumentMeta } from "../render/document-meta"
+import type { PageRenderContext } from "../render/page-context"
 import {
   fitEmphasisHeading,
   fitEmphasisLine,
@@ -29,18 +31,29 @@ export function withoutOverflowMark(text: string): string {
   return text.replace(/(?:\u2026|\.{3})$/u, "")
 }
 
-/** gauge 五页共用的右上两行 meta。第一行机构，第二行版本与日期。 */
+/**
+ * gauge 五页共用的右上两行 meta。第一行机构，第二行版本与日期。
+ *
+ * 这两行是 deck 的页眉信息，不是版式自带的字（2026-10-02 页脚裁决：默认不印
+ * 机构名、日期，版式不能自己开口子）：机构名只在 deck 的页脚要印机构名时出现
+ * （`footer.organization`，或旧式 `branding: "full"`），版本与日期和封面日期
+ * 同一个开关（`showsDocumentMeta`）。
+ */
 export function GaugeMeta({
   ir,
   ctx,
   tone,
+  page,
 }: {
   ir: PptxIR
   ctx: ComponentCtx
   tone: "light" | "dark"
+  page?: PageRenderContext
 }) {
-  const firstSource = ir.meta.organization?.trim() ?? ""
-  const secondSource = [ir.meta.version?.trim(), ir.meta.date?.trim()].filter(Boolean).join(" · ")
+  const firstSource = footerOrganization(page, ir) ?? ""
+  const secondSource = showsDocumentMeta(page, ir)
+    ? [ir.meta.version?.trim(), ir.meta.date?.trim()].filter(Boolean).join(" · ")
+    : ""
   const first = firstSource
     ? fitSvgLine(firstSource, {
         maxWidth: META_MAX_W,

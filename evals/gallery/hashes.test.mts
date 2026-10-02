@@ -115,7 +115,7 @@ describe("hashesFromManifest", () => {
 })
 
 describe("gold sample against a live render", () => {
-  it("matches hashes.json for the baseline theme's component/zh pages and every step-aside page", async () => {
+  it("matches hashes.json for the baseline theme's component/zh pages and every step-aside and composition page", async () => {
     const goldFile = loadGoldHashes()
     const themeIds = listThemes()
       .map((t) => t.id)
@@ -139,6 +139,10 @@ describe("gold sample against a live render", () => {
       // its motif would otherwise sit in a committed hash nothing renders,
       // and `pnpm check` would stay green through it.
       ...buildMatrix(themeIds, assets, { only: "aside", languages: ["zh"] }),
+      // The whole `compose` band, for the same reason: the only pages that
+      // draw an options table, a phase plan or a two-level team through the
+      // shared compositions.
+      ...buildMatrix(themeIds, assets, { only: "compose", languages: ["zh"] }),
     ]
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gold-sample-"))
     const current = hashesFromManifest(renderMatrix(jobs, outDir, "pin").manifest)

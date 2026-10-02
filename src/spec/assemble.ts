@@ -95,6 +95,7 @@ export function assembleDeck(
     ...(deckSpec.filename !== undefined ? { filename: deckSpec.filename } : {}),
     ...(deckSpec.brand !== undefined ? { brand: deckSpec.brand } : {}),
     ...(deckSpec.branding !== undefined ? { branding: deckSpec.branding } : {}),
+    ...(deckSpec.footer !== undefined ? { footer: deckSpec.footer } : {}),
     meta: deckSpec.meta,
     slides: deckSpec.pages.map((page) => buildSlide(page, pages[page.id])),
   }
@@ -138,6 +139,7 @@ export function disassembleDeck(ir: PptxIR): {
       filename: ir.filename,
       ...(ir.brand !== undefined ? { brand: ir.brand } : {}),
       ...(ir.branding !== undefined ? { branding: ir.branding } : {}),
+      ...(ir.footer !== undefined ? { footer: ir.footer } : {}),
       meta: ir.meta,
       pages: pageSpecs,
     },

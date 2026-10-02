@@ -58,6 +58,25 @@ function minimalDeck(component: Record<string, unknown>): unknown {
 }
 
 /**
+ * The same smallest deck with deck-level fields instead of a component: the
+ * footer marks and the cover's legal classification are cross-field rules
+ * (`ir/footer.ts`) that the schema alone does not show, so they get the same
+ * `-valid` / `-tripwire` treatment as a component's refine.
+ */
+function footerDeck(extra: Record<string, unknown>, meta: Record<string, unknown> = {}): unknown {
+  return {
+    version: "5",
+    theme: { id: "brief" },
+    meta: { organization: "华东区域运营中心", confidentiality: "confidential", ...meta },
+    slides: [
+      { type: "cover", heading: "2026 年门店网络调整方案" },
+      { type: "content", kind: "points", heading: "footer probe", components: [{ type: "paragraph", text: "正文" }] },
+    ],
+    ...extra,
+  }
+}
+
+/**
  * Hand-written fill-in for component types not otherwise guaranteed to
  * appear in `examples/*.json` or `STRESS_DECKS` — see this file's top doc
  * comment for why this exists. Each type gets exactly 2 entries: `-valid`
@@ -90,6 +109,28 @@ function minimalDeck(component: Record<string, unknown>): unknown {
  *    file's hard-rejection tripwire.
  */
 const COVERAGE_ENTRIES: Record<string, unknown> = {
+  // Footer marks: every mark at once is legal; each tripwire breaks one rule.
+  "coverage/footer-valid": footerDeck({
+    footer: {
+      page_number: true,
+      organization: true,
+      label: "2026 年中期业绩 | 2026.08",
+      notice: "© 2026 华东区域运营中心",
+      draft: "讨论稿",
+      confidentiality: "footer",
+    },
+  }),
+  "coverage/footer-cover-confidentiality-valid": footerDeck({ footer: { confidentiality: "cover" } }),
+  "coverage/footer-classification-valid": footerDeck({}, { confidentiality: undefined, classification: "秘密★1年" }),
+  "coverage/footer-organization-tripwire": footerDeck({ footer: { organization: true } }, { organization: undefined }),
+  "coverage/footer-public-confidentiality-tripwire": footerDeck({ footer: { confidentiality: "cover" } }, { confidentiality: "public" }),
+  "coverage/footer-classification-with-mark-tripwire": footerDeck(
+    { footer: { confidentiality: "footer" } },
+    { classification: "秘密★1年" },
+  ),
+  "coverage/footer-legal-label-tripwire": footerDeck({ footer: { label: "机密★5年" } }),
+  "coverage/footer-too-long-tripwire": footerDeck({ footer: { organization: true, label: "2026 年中期业绩说明会 | ".repeat(8) } }),
+  "coverage/footer-unknown-key-tripwire": footerDeck({ footer: { page_numbers: true } }),
   "coverage/gantt-valid": minimalDeck({
     type: "gantt",
     items: [

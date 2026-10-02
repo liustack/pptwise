@@ -212,6 +212,8 @@ export function DoubleFrameCover({ ir, slide, ctx, page }: SvgTemplateProps) {
 
 export const layoutDef = {
   branding: "none",
+  // The shared top-left mark goes inside the double frame, not across it.
+  coverMark: { x: 96, y: 100 },
   // cover-double-frame-cover.tsx: centered double frame. Outer
   // border hairline, inner accent hairline, grouped. Burgundy only on the
   // display title. Year and colophon centered. Empty heading invents no

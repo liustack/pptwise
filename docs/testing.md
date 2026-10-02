@@ -80,7 +80,7 @@ pnpm gallery --bbox
 
 The gallery renders the review matrix through the production validation and SVG path. It has no alternate renderer. Output goes to `.gallery/` by default and includes SVG pages, `manifest.json`, and a self-contained `index.html`.
 
-The matrix covers themes, internal faces, components, full-load cases, and heading constructions across language tracks. `scripts/gallery.test.mts` exercises the matrix during `pnpm check`, including inventory coverage. A new component or theme must not disappear from review merely because its builder was forgotten.
+The matrix covers themes, internal faces, the shared compositions (one page each in the 构图 band, `COMPOSITION_PAGES`), components, full-load cases, and heading constructions across language tracks. `scripts/gallery.test.mts` exercises the matrix during `pnpm check`, including inventory coverage. A new component or theme must not disappear from review merely because its builder was forgotten.
 
 `--bbox` mounts SVG in a real browser and compares `getBBox()` against declared boxes. It is optional because it needs Playwright and depends on installed fonts. Findings go to `.gallery/bbox.json` and make the command fail.
 
@@ -172,7 +172,10 @@ LibreOffice and package audit cannot reproduce every native PowerPoint parser de
 pnpm e2e
 osascript scripts/ppt-repair-check.applescript "$PWD/.e2e-out/basic.pptx"
 osascript scripts/ppt-repair-check.applescript "$PWD/.e2e-out/webp.pptx"
+osascript scripts/ppt-repair-check.applescript "$PWD/.e2e-out/page-numbers.pptx"
 ```
+
+`page-numbers.pptx` is the E2E footer leg: every footer mark on, so its content pages carry PowerPoint's slide-number field (`src/pptx/pptx-slide-number.ts`). Probe it whenever the footer row or the field patch changes.
 
 The required result is `OK`. A repair dialog, repaired-title window, or timeout is a release blocker. Record which representative files were probed when handing off an export change.
 
@@ -180,9 +183,10 @@ PowerPoint for Mac is sandboxed. A file outside its container opens a "Grant Fil
 
 ```bash
 D=~/Library/Containers/com.microsoft.Powerpoint/Data/Documents/pptwise-probe
-mkdir -p "$D" && cp .e2e-out/basic.pptx .e2e-out/webp.pptx "$D"/
+mkdir -p "$D" && cp .e2e-out/basic.pptx .e2e-out/webp.pptx .e2e-out/page-numbers.pptx "$D"/
 osascript scripts/ppt-repair-check.applescript "$D/basic.pptx"
 osascript scripts/ppt-repair-check.applescript "$D/webp.pptx"
+osascript scripts/ppt-repair-check.applescript "$D/page-numbers.pptx"
 ```
 
 If an earlier run left PowerPoint stuck on that prompt, quit it before probing again.

@@ -2,8 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { CONF_LABEL } from "../lib/conf-labels"
-import { showsDocumentMeta } from "../render/document-meta"
+import { coverConfidentiality, showsDocumentMeta } from "../render/document-meta"
 import { blendOver, metaInk, readableOn } from "../render/ink"
 
 /**
@@ -60,8 +59,7 @@ import { blendOver, metaInk, readableOn } from "../render/ink"
 export function FashionMastheadCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   const org = ir.meta.organization
   const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
-  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
-  const confLabel = conf ? CONF_LABEL[conf] : null
+  const confLabel = coverConfidentiality(page, ir)
   const version = ir.meta.version
   const fg = readableOn(ctx.colors.primary)
 
@@ -237,6 +235,7 @@ export function FashionMastheadCover({ ir, slide, ctx, page }: SvgTemplateProps)
 // cycle with the registry aggregator (which value-imports this export) — see
 // registry.ts's slot-`accepts` convention doc for what `[]` means.
 export const layoutDef: LayoutDefinition = {
+  coverMark: "face",
   suppressMotif: true,
   // cover-fashion-masthead.tsx: full-bleed primary block, org kicker, thin
   // rule above the masthead heading, accent color band, subheading, meta.

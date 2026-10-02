@@ -4,8 +4,7 @@ import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphas
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { latinUpper, trackingPx } from "./minimal-shared"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
-import { CONF_LABEL } from "../lib/conf-labels"
-import { showsDocumentMeta } from "../render/document-meta"
+import { coverConfidentiality, showsDocumentMeta } from "../render/document-meta"
 import { faceParam } from "./face-params"
 
 /**
@@ -76,8 +75,7 @@ export function BandTitleCover({ ir, slide, ctx, page, params }: SvgTemplateProp
 
   const org = ir.meta.organization
   const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
-  const conf = showsDocumentMeta(page, ir, slide) ? ir.meta.confidentiality : undefined
-  const confLabel = conf ? CONF_LABEL[conf] : null
+  const confLabel = coverConfidentiality(page, ir)
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
 
@@ -236,6 +234,7 @@ export function BandTitleCover({ ir, slide, ctx, page, params }: SvgTemplateProp
 }
 
 export const layoutDef: LayoutDefinition = {
+  coverMark: "face",
   // cover-band-title.tsx: full-width primary band carrying reversed title.
   // kicker sits on the band's top edge. meta in the top bar. Alignment /
   // Band geometry and optional marks come from this menu face's parameters.

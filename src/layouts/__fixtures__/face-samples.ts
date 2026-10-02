@@ -47,9 +47,10 @@ export interface FaceSampleInput {
    * The deck-level branding posture the original IR carried.
    *
    * It is a render switch, not decoration: `showsDocumentMeta` resolves an
-   * omitted value to `cover-only`, which leaves date and confidentiality off
-   * the canvas however full `meta` is. Four covers declared `"full"` and drew
-   * a date line because of it.
+   * omitted value to `cover-only`, which leaves the date off the canvas
+   * however full `meta` is, and without a `footer` an omitted posture asks
+   * for no confidentiality mark either. Four covers declared `"full"` and
+   * drew a date line because of it.
    */
   readonly branding?: PptxIR["branding"]
   readonly slides: readonly Slide[]
@@ -708,7 +709,8 @@ export const LEGACY_FACE_SAMPLES = [
     slideType: "cover",
     index: 0,
     branding: "full",
-    requiredText: ["Internal · 2026 年 7 月"],
+    // A Chinese deck: the confidentiality mark follows the deck's language.
+    requiredText: ["仅供内部讨论 · 2026 年 7 月"],
     meta: {
       organization: "云觅科技 · 战略与运营部",
       authors: [

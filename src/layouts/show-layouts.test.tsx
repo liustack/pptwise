@@ -104,6 +104,7 @@ const ir: PptxIR = {
     date: "2026-08-26",
     confidentiality: "confidential",
   },
+  footer: { confidentiality: "cover" },
   assets: { images: {} },
   slides,
 } as PptxIR
@@ -161,7 +162,8 @@ describe("runway show layouts", () => {
     expect(attrs(textBy(root, "2026"), ["x", "y", "font-size", "text-anchor"])).toEqual([
       "992", "404", "104", "middle",
     ])
-    expect(attrs(textBy(root, "CONFIDENTIAL"), ["x", "y", "font-size", "text-anchor"])).toEqual([
+    // The deck is Chinese, so the confidentiality mark is the Chinese phrase.
+    expect(attrs(textBy(root, "内部资料，请勿外传"), ["x", "y", "font-size", "text-anchor"])).toEqual([
       "992", "70", "12", "middle",
     ])
     expect(attrs(root.querySelector('[data-show-rule="headline"]')!, ["x1", "y1", "x2", "y2", "stroke-width"])).toEqual([
