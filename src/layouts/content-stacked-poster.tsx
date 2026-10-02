@@ -12,6 +12,7 @@ import { fitSvgLine } from "../lib/svg-text-layout"
 import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 import { footnoteBaselineFor } from "../render/branding-geometry"
+import { FaceFootnote } from "../render/face-footnote"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
 
 /**
@@ -262,20 +263,7 @@ function renderStackedContent(
       <>
         {treated.chrome}
         <SvgContent components={slide.components} rect={bodyRect} ctx={ctx} />
-        {slide.footnote && (
-          <text
-            x="56"
-            y={footnoteBaselineFor(20)}
-            fontFamily={ctx.fonts.body}
-            fontSize="20"
-            fill={ctx.colors.muted}
-            letterSpacing="4"
-            fontStyle="italic"
-            dominantBaseline="alphabetic"
-          >
-            {slide.footnote}
-          </text>
-        )}
+        <FaceFootnote text={slide.footnote} ctx={ctx} x={56} maxWidth={1168} fill={ctx.colors.muted} letterSpacing={4} />
       </>
     )
   }
@@ -367,20 +355,7 @@ function renderStackedContent(
        * same construction through its own copy. The room was already
        * reserved: `contentH = footnote ? 420 : 460` floors the content at
        * y=600, and nothing was using the 44px above the rule. */}
-      {slide.footnote && (
-        <text
-          x="56"
-          y={footnoteBaselineFor(20)}
-          fontFamily={ctx.fonts.body}
-          fontSize="20"
-          fill={ctx.colors.muted}
-          letterSpacing="4"
-          fontStyle="italic"
-          dominantBaseline="alphabetic"
-        >
-          {slide.footnote}
-        </text>
-      )}
+      <FaceFootnote text={slide.footnote} ctx={ctx} x={56} maxWidth={1168} fill={ctx.colors.muted} letterSpacing={4} />
     </>
   )
 }

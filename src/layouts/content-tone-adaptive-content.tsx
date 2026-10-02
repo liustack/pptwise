@@ -6,7 +6,7 @@ import { chapterNumberFor, sectionNameFor } from "../lib/derive"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
-import { footnoteBaselineFor } from "../render/branding-geometry"
+import { FaceFootnote } from "../render/face-footnote"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
 import { FRAMED_CONTENT_BOTTOM } from "./framed-content-bottom"
 
@@ -231,19 +231,7 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx }: SvgTemplateProps)
       <>
         {treated.chrome}
         <SvgContent components={slide.components} rect={treatedRect} ctx={ctx} />
-        {slide.footnote && (
-          <text
-            x="64"
-            y={footnoteBaselineFor(20)}
-            fontFamily={fonts.body}
-            fontSize="20"
-            fill={colors.muted}
-            fontStyle="italic"
-            dominantBaseline="alphabetic"
-          >
-            {slide.footnote}
-          </text>
-        )}
+        <FaceFootnote text={slide.footnote} ctx={ctx} x={64} maxWidth={1152} fill={colors.muted} />
       </>
     )
   }
@@ -604,19 +592,7 @@ export function ToneAdaptiveContent({ ir, slide, index, ctx }: SvgTemplateProps)
        * the two strings printed on top of each other. The room was already
        * reserved: `contentH = footnote ? 420 : 460` floors the content at
        * y=600, and nothing was using the 44px above the rule. */}
-      {slide.footnote && (
-        <text
-          x="64"
-          y={footnoteBaselineFor(20)}
-          fontFamily={fonts.body}
-          fontSize="20"
-          fill={colors.muted}
-          fontStyle="italic"
-          dominantBaseline="alphabetic"
-        >
-          {slide.footnote}
-        </text>
-      )}
+      <FaceFootnote text={slide.footnote} ctx={ctx} x={64} maxWidth={1152} fill={colors.muted} />
     </>
   )
 }
