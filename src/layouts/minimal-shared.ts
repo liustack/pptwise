@@ -65,6 +65,22 @@ export function chapterIndexKicker(n: number, heading: string | undefined): stri
   return `CHAPTER ${String(n).padStart(2, "0")}`
 }
 
+/**
+ * The source line of a page with one small line for "where this came from",
+ * and the page's own `footnote` with it.
+ *
+ * The statement, pull-quote and stat-hero families each set one such line
+ * under their claim: the quote's speaker, the figure's source, the sentence
+ * under a claim. The page's `footnote` is a source too, and none of them
+ * printed it once something else had the line, so a page that wrote both
+ * lost its footnote with nothing to say so. Both go on the line now, the
+ * component's first, joined the way a kicker joins two of the page's texts.
+ */
+export function joinSources(primary: string | undefined, footnote: string | undefined): string | undefined {
+  const parts = [primary?.trim(), footnote?.trim()].filter((part): part is string => Boolean(part))
+  return parts.length > 0 ? parts.join(" \u00b7 ") : undefined
+}
+
 /** The two texts a `statement`-family page can put under its claim. */
 export interface StatementLines {
   /**
@@ -121,7 +137,7 @@ export function statementLines(slide: Slide): StatementLines {
  */
 export function statementAttribution(slide: Slide): string | undefined {
   const { quote, source } = statementLines(slide)
-  return source ?? quote
+  return joinSources(source ?? quote, slide.footnote)
 }
 
 /**
@@ -173,11 +189,8 @@ export function pullQuoteContext(slide: Slide): string | undefined {
  */
 export function pullQuoteAttribution(slide: Slide): string | undefined {
   const component = slide.components[0]
-  if (component?.type === "blockquote") {
-    const fromQuote = component.attribution?.trim()
-    if (fromQuote) return fromQuote
-  }
-  return undefined
+  const fromQuote = component?.type === "blockquote" ? component.attribution?.trim() : undefined
+  return joinSources(fromQuote, slide.footnote)
 }
 
 /** Body prose for `pull-quote`: only a paragraph component, never the quote itself. */
@@ -233,15 +246,10 @@ export function heroCaption(slide: Slide): string | undefined {
 
 export function heroSource(slide: Slide): string | undefined {
   const kpi = kpiHero(slide)
-  const fromKpi = kpi?.source?.trim()
-  if (fromKpi) return fromKpi
   const component = slide.components[0]
-  if (!kpi && component?.type === "paragraph") {
-    const text = component.text.trim()
-    if (text) return text
-  }
-  const footnote = slide.footnote?.trim()
-  if (footnote) return footnote
+  const paragraph = !kpi && component?.type === "paragraph" ? component.text.trim() : undefined
+  const joined = joinSources(kpi?.source?.trim() || paragraph || undefined, slide.footnote)
+  if (joined) return joined
   if (kpi) {
     const sub = slide.subheading?.trim()
     if (sub) return sub

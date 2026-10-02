@@ -72,6 +72,10 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * process / data / hierarchy 六个 kind 不会单调；`gauge-exhibit` 承证据页，
  * `gauge-figure` 承事实页的单个大数字。黄色只来自作者的标记。photo 页的
  * 图片自带画面，motif 静音。
+ *
+ * **茶饮样例（2026-10-02，`design/rounds/2026-10-02-brief-tea/`）**：photo 页
+ * 改用 image-split 的 `column: "report"` 文字栏（600px 照片、40px 常规字重
+ * 标题、48×6 黄条、「标签：数值」清单排成分隔线对子），来源行收在文字栏底。
  */
 export const CONSULTING_TOKENS: StyleTokens = {
   id: "brief",
@@ -142,7 +146,7 @@ export const CONSULTING_THEME = {
       comparison: { face: "gauge-sheet" },
       process: { face: "gauge-sheet" },
       data: { face: "gauge-sheet" },
-      photo: { face: "image-split", decor: { kind: "silent" } },
+      photo: { face: "image-split", params: { column: "report" }, decor: { kind: "silent" } },
       statement: { face: "gauge-point" },
       fact: { face: "gauge-figure" },
       evidence: { face: "gauge-exhibit" },

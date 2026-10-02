@@ -574,3 +574,102 @@ describe("device_mockup keeps its frame", () => {
     expect(root.textContent?.match(/Live health board/g)).toHaveLength(1)
   })
 })
+
+describe("takeover source lines", () => {
+  const SOURCE = "Source: store counts compiled from operator filings, July 2025 against July 2026, all twenty tracked cities"
+  const FACES = ["image-split", "image-top", "image-bottom", "image-annotate"] as const
+
+  function sourcedSlide(components: Slide["components"]): Slide {
+    return { type: "content", kind: "photo", heading: "One city lost two thousand shops in a year", components, footnote: SOURCE } as Slide
+  }
+
+  function renderFace(theme: CanonicalThemeId, face: (typeof FACES)[number], slide: Slide): Element {
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, theme, { content: { photo: face } })
+    return parseSvgRoot(boundSlideToSvgMarkup(makeIr(themeId, slide), slide, 0))
+  }
+
+  const body = [
+    { type: "image", asset_id: "hero", fit: "cover", caption: "Onboarding cabinet" },
+    { type: "bullets", items: ["Guangzhou: 14,355 down to 12,029", "Shenzhen: 9,113 down to 7,814", "All twenty cities shrank"] },
+  ] as Slide["components"]
+
+  describe.each(FACES)("%s", (face) => {
+    it.each(["brief", "ember", "crayon"] as const)("sets the source in muted ink on %s, under everything else on the page", (theme) => {
+      const root = renderFace(theme, face, sourcedSlide(body))
+      const group = root.querySelector("[data-takeover-source]")
+      expect(group, face).not.toBeNull()
+      const lines = Array.from(group!.querySelectorAll("text"))
+      expect(lines.map((t) => t.textContent).join(" ").replace(/\s+/g, " ")).toBe(SOURCE)
+      for (const line of lines) expect(line.getAttribute("font-size")).toBe("16")
+      const top = Number(lines[0]!.getAttribute("y")) - 15
+      const others = Array.from(root.querySelectorAll("text")).filter((t) => !group!.contains(t) && !t.closest("[data-decor]"))
+      for (const other of others) {
+        const y = Number(other.getAttribute("y"))
+        if (!Number.isFinite(y)) continue
+        // The caption over the picture sits on the picture, which the source never shares a column with.
+        if ((other.textContent ?? "").includes("Onboarding cabinet")) continue
+        expect(y, `${face} on ${theme}: "${other.textContent}"`).toBeLessThan(top)
+      }
+    })
+  })
+
+  it("draws the source on the plain page a takeover hands an image grid to", () => {
+    const grid = [
+      { type: "image_grid", items: [{ asset_id: "hero", caption: "One" }, { asset_id: "hero", caption: "Two" }] },
+    ] as Slide["components"]
+    for (const face of FACES) {
+      const root = renderFace("brief", face, sourcedSlide(grid))
+      const group = root.querySelector("[data-takeover-source]")
+      expect(group, face).not.toBeNull()
+    }
+  })
+})
+
+describe("image-split report column", () => {
+  const slide = {
+    type: "content",
+    kind: "photo",
+    heading: "广州一年少了 2,326 家茶饮店",
+    components: [
+      { type: "image", asset_id: "hero", fit: "cover" },
+      { type: "bullets", items: ["广州：14,355 → 12,029 家", "深圳：9,113 → 7,814 家", "20 个城市：全部净减少", "关店数：普遍是新开数的 1.5 到 2 倍"] },
+    ],
+    footnote: "来源：窄门餐眼，咖门整理（2026 年 8 月）。城市数据为 2025 年 7 月与 2026 年 7 月对比。图为示意图。",
+  } as Slide
+
+  function renderColumn(column: "standard" | "report"): Element {
+    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
+      content: { photo: { face: "image-split", params: { column } } as never },
+    })
+    return parseSvgRoot(boundSlideToSvgMarkup(makeIr(themeId, slide), slide, 0))
+  }
+
+  const attr = (el: Element | null | undefined, names: string[]) => names.map((name) => el?.getAttribute(name) ?? null)
+  const byText = (root: Element, text: string) => Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").trim() === text)
+
+  it("sets the tea board's photo page: a 600px photograph, a 40px regular title, a 48 by 6 bar", () => {
+    const root = renderColumn("report")
+    expect(attr(root.querySelector("image"), ["x", "width", "height"])).toEqual(["0", "600", "720"])
+    const title = byText(root, "广州一年少了")!
+    expect(attr(title, ["x", "y", "font-size", "font-weight"])).toEqual(["672", "190", "40", "400"])
+    expect(attr(byText(root, "2,326 家茶饮店")!, ["y"])).toEqual(["242"])
+    const bar = Array.from(root.querySelectorAll("rect")).find((rect) => rect.getAttribute("height") === "6")!
+    expect(attr(bar, ["x", "y", "width"])).toEqual(["672", "286", "48"])
+  })
+
+  it("sets the facts as ruled pairs and the source at the column's foot", () => {
+    const root = renderColumn("report")
+    expect(root.querySelector('[data-gauge-module="pairs"]')).not.toBeNull()
+    expect(attr(byText(root, "广州")!, ["x", "y", "font-size"])).toEqual(["672", "363", "17"])
+    const source = Array.from(root.querySelector("[data-takeover-source]")!.querySelectorAll("text"))
+    expect(source.map((line) => line.getAttribute("y"))).toEqual(["618", "642"])
+    expect(source.every((line) => line.getAttribute("x") === "672")).toBe(true)
+  })
+
+  it("keeps the standard column as it was when the menu asks for nothing", () => {
+    const root = renderColumn("standard")
+    expect(attr(root.querySelector("image"), ["width"])).toEqual(["540"])
+    expect(root.querySelector('[data-gauge-module="pairs"]')).toBeNull()
+    expect(Array.from(root.querySelectorAll("text")).some((t) => t.getAttribute("font-weight") === "600")).toBe(true)
+  })
+})

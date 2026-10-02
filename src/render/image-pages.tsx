@@ -17,6 +17,9 @@ import {
 } from "./emphasis"
 import { accessibleInk } from "./ink"
 import { showsDocumentMeta } from "./document-meta"
+import { footnoteBaselineFor } from "./branding-geometry"
+import { compose } from "../layouts/compositions"
+import { faceParam, type FaceParams } from "../layouts/face-params"
 import { SvgContent } from "./svg-content"
 import type { PageRenderContext } from "./page-context"
 
@@ -48,6 +51,86 @@ const H = CANVAS_H_PX
 function MissingRequiredImageMarker({ slide }: { slide: Slide }) {
   return <DroppedContentMarker count={Math.max(1, slide.components.length)} />
 }
+
+/**
+ * The source line (`slide.footnote`) of a takeover page.
+ *
+ * The four takeovers used to draw none, on any theme: a photo credit or a
+ * data source written for a photo page reached nobody, with nothing on the
+ * page and nothing in validate or the audit to say so. Each takeover now
+ * sets it the way the rest of the engine sets a footnote, 16px in the
+ * theme's muted ink, up to two lines of its own column, its last line on
+ * `lastBaseline`, and keeps its body clear of `top`. A source longer than two
+ * lines is cut and marked `data-truncated`.
+ */
+const SOURCE_SIZE = 16
+const SOURCE_LINE_HEIGHT = 24
+const SOURCE_MAX_LINES = 2
+/** Georgia's ascent, the share of the size a line's ink rises above its baseline. */
+const SOURCE_ASCENT = 0.917
+
+/** Georgia's descent at the source size, rounded up: where the last line's ink ends. */
+const SOURCE_DESCENT = 4
+
+interface TakeoverSource {
+  node: ReactNode
+  /** Where the first line's ink starts. A body above it stops short of this. */
+  top: number
+  /** Where the last line's ink ends. */
+  bottom: number
+}
+
+/**
+ * Sets the source line with its last baseline on `lastBaseline`, or, for a
+ * face that stacks it under its body instead, with its first line's ink
+ * starting at `top`.
+ */
+function takeoverSource(
+  slide: Slide,
+  ctx: ComponentCtx,
+  place: { x: number; width: number; anchor?: "start" | "middle" } & ({ lastBaseline: number } | { top: number }),
+): TakeoverSource | null {
+  if (!slide.footnote?.trim()) return null
+  const layout = fitEmphasisText(slide.footnote, {
+    maxWidth: place.width,
+    fontSize: SOURCE_SIZE,
+    minPt: SOURCE_SIZE,
+    maxLines: SOURCE_MAX_LINES,
+    lineHeightRatio: SOURCE_LINE_HEIGHT / SOURCE_SIZE,
+    fontFamily: ctx.fonts.body,
+  })
+  if (layout.lines.length === 0) return null
+  const ink = accessibleInk(ctx.colors.muted, ctx.defaultBg ?? ctx.colors.bg, SOURCE_SIZE)
+  const ascent = Math.ceil(SOURCE_SIZE * SOURCE_ASCENT)
+  const firstBaseline =
+    "top" in place ? place.top + ascent : place.lastBaseline - (layout.lines.length - 1) * SOURCE_LINE_HEIGHT
+  const lastBaseline = firstBaseline + (layout.lines.length - 1) * SOURCE_LINE_HEIGHT
+  const node = (
+    <g data-takeover-source="">
+      {renderEmphasisHeading(
+        layout,
+        headingEmphasisPaint(ctx, layout, { baseFill: ink, fontWeight: "400", fontFamily: ctx.fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={layout.truncated && i === layout.lines.length - 1 ? "1" : undefined}
+            x={place.x}
+            y={firstBaseline + i * SOURCE_LINE_HEIGHT}
+            textAnchor={place.anchor === "middle" ? "middle" : undefined}
+            fontSize={SOURCE_SIZE}
+            fontFamily={ctx.fonts.body}
+            fill={ink}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
+    </g>
+  )
+  return { node, top: firstBaseline - ascent, bottom: lastBaseline + SOURCE_DESCENT }
+}
+
+/** Air between a takeover's body and the source line under it. */
+const SOURCE_GAP = 16
 
 /** 通用回落版式的版心：三个出血 takeover 共用一套几何。 */
 const FALLBACK_MARGIN_X = 88
@@ -86,6 +169,12 @@ function TakeoverFallbackPage({ slide, ctx }: { slide: Slide; ctx: ComponentCtx 
   const subY = cursor + sub.lineHeight - 8
   if (sub.lines.length) cursor += sub.lines.length * sub.lineHeight + 6
   const bodyTop = cursor + 22
+  const source = takeoverSource(slide, ctx, {
+    x: FALLBACK_MARGIN_X,
+    width: contentW,
+    lastBaseline: footnoteBaselineFor(SOURCE_SIZE),
+  })
+  const bodyBottom = source ? Math.min(FALLBACK_BOTTOM, source.top - SOURCE_GAP) : FALLBACK_BOTTOM
   return (
     <g data-takeover-mode="fallback">
       {renderEmphasisHeading(
@@ -127,9 +216,10 @@ function TakeoverFallbackPage({ slide, ctx }: { slide: Slide; ctx: ComponentCtx 
       )}
       <SvgContent
         components={slide.components}
-        rect={{ x: FALLBACK_MARGIN_X, y: bodyTop, w: contentW, h: Math.max(80, FALLBACK_BOTTOM - bodyTop) }}
+        rect={{ x: FALLBACK_MARGIN_X, y: bodyTop, w: contentW, h: Math.max(80, bodyBottom - bodyTop) }}
         ctx={ctx}
       />
+      {source?.node}
     </g>
   )
 }
@@ -274,10 +364,70 @@ export function ImageCoverPage({
 
 const SPLIT_IMG_W = 540
 const SPLIT_TEXT_X = 620
-const SPLIT_TEXT_W = W - SPLIT_TEXT_X - 96
 /** 图列垂直通栏（2026-07-09 用户裁决）：图压到页底，本版式声明
  * `footerRow: "none"`，页脚这一行整页不画，无压图问题。 */
 const SPLIT_IMG_H = H
+
+/**
+ * The text column beside the photograph, in the two settings a menu can ask
+ * for with the `column` parameter.
+ *
+ * - `standard`: a 540px photograph, the title at 44px semibold on 1.18 lines,
+ *   a 72 by 4 accent bar, and the components stacked under it.
+ * - `report`: the tea board's photo page (p04), the way a report sets a
+ *   photograph and its facts: a 600px photograph, the title at 40px regular
+ *   on 52px lines, a short 48 by 6 accent bar, and a list of "Label: value"
+ *   facts set as ruled pairs (the shared `pairs` composition), with the
+ *   source at the foot of the column.
+ */
+interface SplitColumn {
+  imageW: number
+  /** The text column's left edge when the photograph is on the left. */
+  textX: number
+  titleSize: number
+  titleLineRatio: number
+  titleWeight: "400" | "600"
+  /** Top of the title's first line box; its baseline sits 12px above that box's foot. */
+  titleTop: number
+  barW: number
+  barH: number
+  /** From the title's last line box to the bar. */
+  barGap: number
+  /** Whether a list of "Label: value" facts is offered to the `pairs` composition. */
+  pairs: boolean
+  /** The source line's last baseline. */
+  sourceBaseline: number
+}
+
+const SPLIT_COLUMNS: Record<"standard" | "report", SplitColumn> = {
+  standard: {
+    imageW: SPLIT_IMG_W,
+    textX: SPLIT_TEXT_X,
+    titleSize: 44,
+    titleLineRatio: 1.18,
+    titleWeight: "600",
+    titleTop: 174,
+    barW: 72,
+    barH: 4,
+    barGap: 18,
+    pairs: false,
+    sourceBaseline: footnoteBaselineFor(SOURCE_SIZE),
+  },
+  report: {
+    imageW: 600,
+    textX: 672,
+    titleSize: 40,
+    titleLineRatio: 52 / 40,
+    titleWeight: "400",
+    titleTop: 150,
+    barW: 48,
+    barH: 6,
+    barGap: 32,
+    pairs: true,
+    // The board's source box starts at y600 with two 24px lines.
+    sourceBaseline: 642,
+  },
+}
 
 /**
  * image_split 出血版式：左列全高出血大图（页顶到页底、贴左缘，无框线），
@@ -287,22 +437,27 @@ const SPLIT_IMG_H = H
 export function ImageSplitPage({
   slide,
   ctx,
+  params,
 }: {
   ir: PptxIR
   slide: Slide
   ctx: ComponentCtx
   page: PageRenderContext
+  params?: FaceParams
 }) {
   if (!singlePictureExact(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
   const imageSelection = findImageSelection(slide)
   if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
   if (!bleedSlotCanHost(imageSelection.source)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
   const { image: imageComponent, source: imageSource } = imageSelection
+  const column = SPLIT_COLUMNS[faceParam<"standard" | "report">(params, "column", "standard")]
+  const imageW = column.imageW
+  const textW = W - column.textX - 96
   // 图文范式族（ppt-master P04 右图出血）：image_side=right 时整页镜像——
   // 图列贴右缘、文字区在左。
   const rightSide = slide.image_side === "right"
-  const imgX = rightSide ? W - SPLIT_IMG_W : 0
-  const textX = rightSide ? 96 : SPLIT_TEXT_X
+  const imgX = rightSide ? W - imageW : 0
+  const textX = rightSide ? 96 : column.textX
   const src = ctx.images?.[imageComponent.asset_id]?.src
   // A11Y-01 alt 链路收尾（q15 根因）：this takeover bypasses
   // `components/image.tsx` entirely (`full-slide-svg.tsx`'s takeover
@@ -314,18 +469,19 @@ export function ImageSplitPage({
   // fontWeight 600 而非 700：magazine/creative 的衬线 heading（SimSun/Lora）
   // 被 700 合成加粗抹掉衬线特征——降字重提字号保气势。拟合必须带 bold +
   // heading 字体：Regular 估算会把「Competitors are pricing」收成一行，
-  // SimSun 600 实宽超出 SPLIT_TEXT_W。
+  // SimSun 600 实宽超出文字栏宽。
+  const titleBold = column.titleWeight !== "400"
   const title = fitEmphasisHeading(slide.heading, {
-    maxWidth: SPLIT_TEXT_W,
-    fontSize: scaleTypePx(44, ctx.shape?.typeScale),
+    maxWidth: textW,
+    fontSize: scaleTypePx(column.titleSize, ctx.shape?.typeScale),
     maxLines: 3,
     minPt: 22,
-    lineHeightRatio: 1.18,
+    lineHeightRatio: column.titleLineRatio,
     fontFamily: ctx.fonts.heading,
-    bold: true,
+    bold: titleBold,
   })
   const sub = fitEmphasisText(slide.subheading, {
-    maxWidth: SPLIT_TEXT_W,
+    maxWidth: textW,
     fontSize: 21,
     maxLines: 2,
     lineHeightRatio: 1.3,
@@ -334,22 +490,35 @@ export function ImageSplitPage({
   // content page the organization is a footer mark with one place, the
   // footer row, and only when the deck asks for it (2026-10-02 footer
   // ruling), so the band stays empty and the title keeps its place.
-  let cursor = 128
-  cursor += 46
+  let cursor = column.titleTop
   const titleY = cursor + title.lineHeight - 12
-  cursor += title.lines.length * title.lineHeight + 18
+  cursor += title.lines.length * title.lineHeight + column.barGap
   const ruleY = cursor
   cursor += 30
   const subY = cursor + 6
   if (sub.lines.length) cursor += sub.lines.length * sub.lineHeight + 24
   const componentsTop = cursor + 8
-  const componentsH = H - 96 - componentsTop
-  const { placed, dropped } = layoutContentFit(
-    "single",
-    rest,
-    { x: textX, y: componentsTop, w: SPLIT_TEXT_W, h: Math.max(120, componentsH) },
-    ctx,
-  )
+  const source = takeoverSource(slide, ctx, {
+    x: textX,
+    width: textW,
+    lastBaseline: column.sourceBaseline,
+  })
+  const componentsBottom = source ? Math.min(H - 96, source.top - SOURCE_GAP) : H - 96
+  const componentsH = componentsBottom - componentsTop
+  const pairs = column.pairs
+    ? compose(
+        { components: rest, ctx, rect: { x: textX, y: componentsTop, w: textW, h: componentsBottom - componentsTop } },
+        ["pairs"],
+      )
+    : null
+  const { placed, dropped } = pairs
+    ? { placed: [], dropped: 0 }
+    : layoutContentFit(
+        "single",
+        rest,
+        { x: textX, y: componentsTop, w: textW, h: Math.max(120, componentsH) },
+        ctx,
+      )
 
   return (
     <g>
@@ -358,24 +527,24 @@ export function ImageSplitPage({
           href={src}
           x={imgX}
           y={0}
-          width={SPLIT_IMG_W}
+          width={imageW}
           height={SPLIT_IMG_H}
           preserveAspectRatio="xMidYMid slice"
           aria-label={alt || undefined}
         />
       ) : (
-        <rect x={imgX} y={0} width={SPLIT_IMG_W} height={SPLIT_IMG_H} fill={ctx.colors.surface} />
+        <rect x={imgX} y={0} width={imageW} height={SPLIT_IMG_H} fill={ctx.colors.surface} />
       )}
       {imageComponent.caption &&
         (() => {
           const fitted = fitSvgLine(imageComponent.caption, {
-            maxWidth: SPLIT_IMG_W - 48,
+            maxWidth: imageW - 48,
             fontSize: 16,
             minFontSize: 16,
           })
           return (
             <>
-              <rect x={imgX} y={SPLIT_IMG_H - 44} width={SPLIT_IMG_W} height={44} fill="#0A0E14" fillOpacity={0.62} />
+              <rect x={imgX} y={SPLIT_IMG_H - 44} width={imageW} height={44} fill="#0A0E14" fillOpacity={0.62} />
               <text
                 data-truncated={fitted.truncated ? "1" : undefined}
                 x={imgX + 24}
@@ -393,7 +562,12 @@ export function ImageSplitPage({
         })()}
       {renderEmphasisHeading(
         title,
-        headingEmphasisPaint(ctx, title, { baseFill: accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, title.fontSize), fontWeight: "600", fontFamily: ctx.fonts.heading }),
+        headingEmphasisPaint(ctx, title, {
+          baseFill: accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, title.fontSize),
+          fontWeight: column.titleWeight,
+          fontFamily: ctx.fonts.heading,
+          bold: titleBold,
+        }),
         (_line, i) => (
           <text
             key={i}
@@ -401,14 +575,14 @@ export function ImageSplitPage({
             x={textX}
             y={titleY + i * title.lineHeight}
             fontSize={title.fontSize}
-            fontWeight={600}
+            fontWeight={titleBold ? 600 : 400}
             fontFamily={ctx.fonts.heading}
             fill={accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, title.fontSize)}
             dominantBaseline="alphabetic"
           />
         ),
       )}
-      <rect x={textX} y={ruleY} width={72} height={4} fill={ctx.colors.accent} />
+      <rect x={textX} y={ruleY} width={column.barW} height={column.barH} fill={ctx.colors.accent} />
       {renderEmphasisHeading(
         sub,
         headingEmphasisPaint(ctx, sub, { baseFill: ctx.colors.muted, fontFamily: ctx.fonts.body, bold: false }),
@@ -424,9 +598,11 @@ export function ImageSplitPage({
           />
         ),
       )}
+      {pairs}
       {placed.map((p, i) => (
         <Fragment key={i}>{renderComponent(p.component, p.box, ctx)}</Fragment>
       ))}
+      {source?.node}
       {/* Recorded, never painted — and the export refuses to ship it.
           See `DroppedContentMarker`'s own doc comment. */}
       <DroppedContentMarker count={dropped} />
@@ -513,6 +689,15 @@ export function ImageTopPage({
 
   // 2-3 个文字块横向分列（P05 三栏），单块全宽。列宽只跟块数有关，不依赖图高，
   // 所以可以先定列宽，再按列宽量文字，最后才算图高。
+  // The source line sits on the page's footnote baseline across the band, and
+  // the body and the picture's arithmetic both stop above it.
+  const source = takeoverSource(slide, ctx, {
+    x: BAND_PAD_X,
+    width: W - BAND_PAD_X * 2,
+    lastBaseline: footnoteBaselineFor(SOURCE_SIZE),
+  })
+  const bodyBottom = source ? Math.min(H - TOP_SAFE_BOTTOM, source.top - SOURCE_GAP) : H - TOP_SAFE_BOTTOM
+
   const n = Math.max(1, Math.min(rest.length, 3))
   const colGap = 40
   const colW = (W - BAND_PAD_X * 2 - colGap * (n - 1)) / n
@@ -544,8 +729,8 @@ export function ImageTopPage({
   const captionOnly = rest.length === 0
   const captionBandH = captionTitleGap + titleExtra + ruleGap + TOP_CAPTION_RULE_GAP_BOTTOM
   const imgH = captionOnly
-    ? Math.min(TOP_IMG_H_MAX_CAPTION_ONLY, Math.max(TOP_IMG_H_MIN, H - TOP_SAFE_BOTTOM - captionBandH))
-    : Math.min(TOP_IMG_H_MAX, Math.max(TOP_IMG_H_MIN, H - TOP_SAFE_BOTTOM - neededH - headBandH))
+    ? Math.min(TOP_IMG_H_MAX_CAPTION_ONLY, Math.max(TOP_IMG_H_MIN, bodyBottom - captionBandH))
+    : Math.min(TOP_IMG_H_MAX, Math.max(TOP_IMG_H_MIN, bodyBottom - neededH - headBandH))
 
   // 单行标题时几何跟着图底缘走（原固定图高下为 398 / 发丝 410 / 正文 442）。
   // 换行时发丝和分栏整体下移。
@@ -553,7 +738,7 @@ export function ImageTopPage({
   const lastTitleY = firstTitleY + Math.max(0, title.lines.length - 1) * title.lineHeight
   const ruleY = lastTitleY + ruleGap
   const componentsTop = ruleY + TOP_BODY_GAP
-  const componentsH = H - TOP_SAFE_BOTTOM - componentsTop
+  const componentsH = bodyBottom - componentsTop
   const fits = rest.slice(0, 3).map((b, i) => {
     const rect = {
       x: BAND_PAD_X + i * (colW + colGap),
@@ -636,6 +821,7 @@ export function ImageTopPage({
           ))}
         </Fragment>
       ))}
+      {source?.node}
       <DroppedContentMarker count={dropped} />
     </g>
   )
@@ -746,6 +932,14 @@ function ImageAnnotateFallbackPage({
   const subY = cursor + sub.lineHeight - 8
   if (sub.lines.length) cursor += sub.lines.length * sub.lineHeight + 6
   const bodyTop = cursor + 22
+  const source = takeoverSource(slide, ctx, {
+    x: ANN_MARGIN_X,
+    width: ANN_CONTENT_W,
+    lastBaseline: footnoteBaselineFor(SOURCE_SIZE),
+  })
+  const bodyBottom = source
+    ? Math.min(ANN_BODY_BOTTOM + ANN_CAPTION_SLOT, source.top - SOURCE_GAP)
+    : ANN_BODY_BOTTOM + ANN_CAPTION_SLOT
   return (
     <g data-annotate-mode="fallback">
       {renderEmphasisHeading(
@@ -787,9 +981,10 @@ function ImageAnnotateFallbackPage({
       )}
       <SvgContent
         components={slide.components}
-        rect={{ x: ANN_MARGIN_X, y: bodyTop, w: ANN_CONTENT_W, h: Math.max(80, ANN_BODY_BOTTOM + ANN_CAPTION_SLOT - bodyTop) }}
+        rect={{ x: ANN_MARGIN_X, y: bodyTop, w: ANN_CONTENT_W, h: Math.max(80, bodyBottom - bodyTop) }}
         ctx={ctx}
       />
+      {source?.node}
     </g>
   )
 }
@@ -861,10 +1056,17 @@ function ImageAnnotateSoloPage({
   if (sub.lines.length) cursor += sub.lines.length * sub.lineHeight + 6
   const bodyTop = cursor + 22
 
+  const source = takeoverSource(slide, ctx, {
+    x: ANN_MARGIN_X,
+    width: ANN_CONTENT_W,
+    lastBaseline: footnoteBaselineFor(SOURCE_SIZE),
+  })
+  const bodyBottom = source ? Math.min(ANN_BODY_BOTTOM, source.top - SOURCE_GAP) : ANN_BODY_BOTTOM
+
   const imgW = hasNotes ? ANN_IMG_W : ANN_SOLO_IMG_W
   const frameW = frameWFor(imgW)
   const frameX = hasNotes ? ANN_MARGIN_X : Math.round((W - frameW) / 2)
-  const availFrameH = ANN_BODY_BOTTOM - bodyTop - (caption ? ANN_CAPTION_SLOT : 0)
+  const availFrameH = bodyBottom - bodyTop - (caption ? ANN_CAPTION_SLOT : 0)
   // A device draws its own frame, so it gets the card's whole footprint with
   // no white mount around it — two frames around one screenshot reads as a
   // photo of a monitor, not as software running.
@@ -1052,6 +1254,7 @@ function ImageAnnotateSoloPage({
           ))}
         </g>
       ))}
+      {source?.node}
       <DroppedContentMarker count={droppedItems} kind="item" />
       <DroppedContentMarker count={droppedComponents} kind="component" />
     </g>
@@ -1118,7 +1321,13 @@ export function ImageBottomPage({
   // 内容溢进图片被裁）：正文先排在「到最小底图上缘」的大区，图片起点落
   // 正文实际底部下方，图高 MIN_BOTTOM_IMG..MAX_BOTTOM_IMG 自适应——短内容
   // 大图、长内容小图，正文与图永不碰撞。
-  const contentZoneBottom = H - MIN_BOTTOM_IMG - 20
+  //
+  // The source line closes the text, centred under the body and above the
+  // picture, so the zone the body may fill gives up the source's height.
+  const sourcePlace = { x: W / 2, width: W - 480, anchor: "middle" as const }
+  const sourceProbe = takeoverSource(slide, ctx, { ...sourcePlace, top: 0 })
+  const sourceRoom = sourceProbe ? sourceProbe.bottom + SOURCE_GAP : 0
+  const contentZoneBottom = H - MIN_BOTTOM_IMG - 20 - sourceRoom
   const { placed, dropped } = layoutContentFit(
     "single",
     rest,
@@ -1126,8 +1335,10 @@ export function ImageBottomPage({
     ctx,
   )
   const contentBottom = placed.length ? stackBottom(placed, ctx) : componentsTop
+  const source = sourceProbe ? takeoverSource(slide, ctx, { ...sourcePlace, top: contentBottom + SOURCE_GAP }) : null
+  const textBottom = source ? source.bottom : contentBottom
   const imgTop = Math.min(
-    Math.max(contentBottom + 24, H - MAX_BOTTOM_IMG),
+    Math.max(textBottom + 24, H - MAX_BOTTOM_IMG),
     H - MIN_BOTTOM_IMG,
   )
   const imgH = H - imgTop
@@ -1171,6 +1382,7 @@ export function ImageBottomPage({
       {placed.map((p, i) => (
         <Fragment key={i}>{renderComponent(p.component, p.box, ctx)}</Fragment>
       ))}
+      {source?.node}
       {src ? (
         <image
           href={src}
@@ -1221,6 +1433,8 @@ export interface TakeoverRendererProps {
   index: number
   ctx: ComponentCtx
   page: PageRenderContext
+  /** The menu entry's parameters, checked against the face's declaration when the theme was registered. */
+  params?: FaceParams
 }
 
 export type TakeoverRenderer = (props: TakeoverRendererProps) => ReactNode
@@ -1270,6 +1484,12 @@ export const imageSplitLayoutDef: LayoutDefinition = {
     notFor: "An image above or below the text, which belongs in Top Takeover or Base Takeover.",
   },
   slideTypes: ["content"],
+  // How the text column is set (`SPLIT_COLUMNS`): "standard", or "report",
+  // a wider photograph beside a regular-weight title and a list of facts set
+  // as ruled pairs.
+  params: {
+    column: { type: "string", values: ["standard", "report"] },
+  },
   slots: [
     { name: "image", accepts: ["image", "image_grid", "image_compare", "device_mockup"], required: true, selection: "first" },
     { name: "caption", accepts: [] },

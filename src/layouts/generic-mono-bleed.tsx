@@ -2,6 +2,8 @@ import type { SvgTemplateProps } from "./types"
 import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 
 import { accessibleOpacity, readableOn } from "../render/ink"
+import { footnoteBaselineFor } from "../render/branding-geometry"
+import type { ComponentCtx } from "../components/types"
 
 /**
  * Generic mono-bleed face: full-bleed primary field, type as the image.
@@ -21,6 +23,40 @@ export const MONO_BLEED_HEADING_FIT = {
   maxLines: 3,
   minPt: 40,
   lineHeightRatio: 1.15,
+}
+
+const FOOTNOTE_SIZE = 16
+
+/**
+ * The page's source line on the colour field, centred on the shared footnote
+ * baseline in the field's own readable ink, as quiet as the subheading. This
+ * face has no body, and its footnote used to reach nobody.
+ */
+export function MonoBleedFootnote({ text, ctx }: { text: string | undefined; ctx: ComponentCtx }) {
+  const field = ctx.colors.primary
+  const fg = readableOn(field)
+  const footnote = fitEmphasisLine(text?.trim(), {
+    maxWidth: HEADING_MAX_W,
+    fontSize: FOOTNOTE_SIZE,
+    minFontSize: FOOTNOTE_SIZE,
+    fontFamily: ctx.fonts.body,
+  })
+  if (!footnote) return null
+  return renderEmphasisText(
+    footnote.segments,
+    headingEmphasisPaint(ctx, footnote, { baseFill: fg, fontFamily: ctx.fonts.body, bold: false, bg: field }),
+    <text
+      data-truncated={footnote.truncated ? "1" : undefined}
+      x={CENTER_X}
+      y={footnoteBaselineFor(footnote.fontSize)}
+      textAnchor="middle"
+      fontFamily={ctx.fonts.body}
+      fontSize={footnote.fontSize}
+      fill={fg}
+      fillOpacity={accessibleOpacity(fg, field, footnote.fontSize, SUB_OPACITY)}
+      dominantBaseline="alphabetic"
+    />,
+  )
 }
 
 export function GenericMonoBleedContent({ slide, ctx }: SvgTemplateProps) {
@@ -98,6 +134,7 @@ export function GenericMonoBleedContent({ slide, ctx }: SvgTemplateProps) {
               dominantBaseline="alphabetic"
               />
       )}
+      <MonoBleedFootnote text={slide.footnote} ctx={ctx} />
     </>
   )
 }
