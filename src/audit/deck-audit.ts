@@ -7,7 +7,7 @@ import { measureMonoTextUnits, measureTextUnits } from "../lib/svg-text-layout"
 import { getPlatform } from "../platform/registry"
 import { isBold, isMonoFontFamily } from "../render/fonts"
 import { dropPhrase, parseDropKind, type DropKind } from "../render/drop-marker"
-import { auditSvgMarkup, parseNums, parseTransform, type OverflowIssue } from "./svg-audit"
+import { auditSvgMarkup, findRunMisfits, parseNums, parseTransform, type OverflowIssue, type RunMisfit } from "./svg-audit"
 
 /**
  * `pptwise audit` finding shape (v0.3 W6, spec §7 workflow ④). `page` is
@@ -26,6 +26,7 @@ export interface AuditFinding {
     | "overlap"
     | "content-truncated"
     | "content-dropped"
+    | "stepped-aside"
     | "monotony"
   message: string
   detail?: Record<string, unknown>
@@ -2402,14 +2403,31 @@ function overlapMessage(issue: OverlapIssue): string {
   )
 }
 
+function runMisfitMessage(issue: RunMisfit): string {
+  if (issue.kind === "short-pad") {
+    return `the highlight under "${issue.text}" stops short of its words (${issue.detail}). This is a rendering defect: report it`
+  }
+  return `the words after "${issue.text}" are drawn on top of it (${issue.detail}). This is a rendering defect: report it`
+}
+
 function overlapFindings(markup: string, page: number, slideId: string | undefined): AuditFinding[] {
-  return findOverlapIssues(markup).map((issue) => ({
+  const regions: AuditFinding[] = findOverlapIssues(markup).map((issue) => ({
     page,
     ...(slideId !== undefined ? { slideId } : {}),
     code: "overlap",
     message: overlapMessage(issue),
     detail: { a: issue.a, b: issue.b, ratio: issue.ratio },
   }))
+  // The parts of one line colliding with each other: a run over the run
+  // before it, or a highlight shorter than its words (`findRunMisfits`).
+  const runs: AuditFinding[] = findRunMisfits(markup).map((issue) => ({
+    page,
+    ...(slideId !== undefined ? { slideId } : {}),
+    code: "overlap",
+    message: runMisfitMessage(issue),
+    detail: { kind: issue.kind, text: issue.text, detail: issue.detail },
+  }))
+  return [...regions, ...runs]
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -2493,6 +2511,33 @@ function droppedFindings(markup: string, page: number, slideId: string | undefin
 // Pages with zero components still count as audited for geometry, but
 // break / never start a monotony streak (covers/chapters/endings).
 // ────────────────────────────────────────────────────────────────────────
+
+// ────────────────────────────────────────────────────────────────────────
+// Stepped-aside: a page the theme's face could not hold. The step-aside
+// (`render/step-aside.tsx`) draws every component, so nothing is lost, but
+// in a plainer layout: its heading sits at the top of the page, set heavier
+// than the face's, so the page reads as the odd one out of the deck. The
+// root it draws carries `data-face-stepped-aside="<face>"`, which is what
+// `inspect --fit` reports for one page and this reports for every page.
+// ────────────────────────────────────────────────────────────────────────
+
+const STEPPED_ASIDE = /data-face-stepped-aside="([^"]+)"/
+
+function steppedAsideFindings(markup: string, page: number, slideId: string | undefined): AuditFinding[] {
+  const face = STEPPED_ASIDE.exec(markup)?.[1]
+  if (face === undefined) return []
+  return [
+    {
+      page,
+      ...(slideId !== undefined ? { slideId } : {}),
+      code: "stepped-aside",
+      message:
+        `the theme's "${face}" layout could not hold this page, so a plainer layout drew all of it, ` +
+        `with a heading that does not match the deck's other pages. Shorten the content or split the page to keep the theme's layout`,
+      detail: { face },
+    },
+  ]
+}
 
 function monotonyMessage(componentType: string, fromPage: number, toPage: number, length: number): string {
   return (
@@ -2596,6 +2641,7 @@ function runDeterministicAudit(
     findings.push(...overlapFindings(markup, page, slideId))
     findings.push(...truncatedFindings(markup, page, slideId))
     findings.push(...droppedFindings(markup, page, slideId))
+    findings.push(...steppedAsideFindings(markup, page, slideId))
   })
 
   findings.push(...monotonyFindings(ir))

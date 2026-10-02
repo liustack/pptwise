@@ -107,14 +107,18 @@ export function textLineWidth(el: Element, content: string, fontSize: number, sc
   )
 }
 
-export function auditSvgMarkup(markup: string): OverflowIssue[] {
+function parseMarkup(markup: string): Document {
   const Parser = getPlatform().domParser ?? globalThis.DOMParser
   if (!Parser) {
     throw new Error(
       'DOMParser unavailable — in Node, call installNodePlatform() from "@liustack/pptwise/node" first (the pptwise CLI does this automatically)'
     )
   }
-  const doc = new Parser().parseFromString(markup, "image/svg+xml")
+  return new Parser().parseFromString(markup, "image/svg+xml")
+}
+
+export function auditSvgMarkup(markup: string): OverflowIssue[] {
+  const doc = parseMarkup(markup)
   const root = doc.documentElement
   const issues: OverflowIssue[] = []
 
@@ -214,5 +218,101 @@ export function auditSvgMarkup(markup: string): OverflowIssue[] {
   }
 
   visit(root, 0, 0, 1, null, null)
+  return issues
+}
+
+export interface RunMisfit {
+  kind: "run-collision" | "short-pad"
+  /** The run that collides or that the pad fails to cover. */
+  text: string
+  detail: string
+}
+
+/** How far a run may reach past the next run's start, or past its pad, before it counts. */
+const RUN_TOL = 2
+
+/** A pad is a marker quad, `M x y L x y L x y L x y Z`. Its rightmost corner, or null for any other path. */
+function padRight(d: string | null): number | null {
+  if (!d || !/^[\sMLZ\d.,-]+$/i.test(d)) return null
+  const nums = Array.from(d.matchAll(/-?\d+(?:\.\d+)?/g), (m) => Number(m[0]))
+  if (nums.length < 2 || nums.length % 2 !== 0) return null
+  let right = Number.NEGATIVE_INFINITY
+  for (let i = 0; i < nums.length; i += 2) right = Math.max(right, nums[i]!)
+  return right
+}
+
+/**
+ * A line whose runs are placed one by one, as each run's painted glyphs see
+ * them.
+ *
+ * Under a pad or underline stroke every run of a marked line carries its own
+ * `x`, worked out by the renderer from its own measurement of the runs
+ * before it. Every other check here reads a line as one run flowing from the
+ * line's `x`, so a renderer that measured a bold run at regular weight placed
+ * the next run on top of it, and drew the pad short of it, and nothing said
+ * so. This reads each run at the weight it is actually painted in (its own
+ * `font-weight`, else the line's) with the same width model as the overflow
+ * check above, and reports a run that reaches past the start of the next, or
+ * a marked run (`data-emphasis-pad-fill`) whose pad stops short of its end.
+ *
+ * A run with no `x` of its own flows after the run before it, wherever that
+ * ends, so it cannot collide and is left alone.
+ */
+export function findRunMisfits(markup: string): RunMisfit[] {
+  const doc = parseMarkup(markup)
+  const issues: RunMisfit[] = []
+  for (const text of Array.from(doc.getElementsByTagName("text"))) {
+    const placed = Array.from(text.children).filter(
+      (child) => child.tagName.toLowerCase() === "tspan" && child.hasAttribute("x"),
+    )
+    if (placed.length === 0) continue
+    const fontFamily = text.getAttribute("font-family") ?? ""
+    const lineSize = Number(text.getAttribute("font-size") ?? 16)
+    const lineWeight = text.getAttribute("font-weight")
+    const spacing = Number(text.getAttribute("letter-spacing"))
+    const tracking = Number.isFinite(spacing) ? spacing : 0
+    const runs = placed.map((tspan) => {
+      const content = tspan.textContent ?? ""
+      const ownSize = Number(tspan.getAttribute("font-size"))
+      const size = Number.isFinite(ownSize) && ownSize > 0 ? ownSize : lineSize
+      const chars = Array.from(content).length
+      const width =
+        runUnits(content, fontFamily, tspan.getAttribute("font-weight") ?? lineWeight) * size +
+        Math.max(0, chars - 1) * tracking
+      return { content, x: Number(tspan.getAttribute("x")), width, marked: tspan.hasAttribute("data-emphasis-pad-fill") }
+    })
+    for (let i = 0; i + 1 < runs.length; i++) {
+      const run = runs[i]!
+      const next = runs[i + 1]!
+      if (!run.content.trim()) continue
+      const end = run.x + run.width
+      if (end > next.x + RUN_TOL) {
+        issues.push({
+          kind: "run-collision",
+          text: run.content.trim().slice(0, 24),
+          detail: `run ends at x=${end.toFixed(1)}, ${(end - next.x).toFixed(1)}px past the start of "${next.content.trim().slice(0, 24)}" at x=${next.x.toFixed(1)}`,
+        })
+      }
+    }
+    // The renderer puts a line's pads just before its `<text>`, one per
+    // marked run, in run order.
+    const pads: Element[] = []
+    for (let sibling = text.previousElementSibling; sibling?.hasAttribute("data-emphasis-pad"); sibling = sibling.previousElementSibling) {
+      pads.unshift(sibling)
+    }
+    const marked = runs.filter((run) => run.marked)
+    if (pads.length !== marked.length) continue
+    marked.forEach((run, i) => {
+      const right = padRight(pads[i]!.getAttribute("d"))
+      const end = run.x + run.width
+      if (right !== null && right + RUN_TOL < end) {
+        issues.push({
+          kind: "short-pad",
+          text: run.content.trim().slice(0, 24),
+          detail: `highlight ends at x=${right.toFixed(1)}, ${(end - right).toFixed(1)}px short of the run's end at x=${end.toFixed(1)}`,
+        })
+      }
+    })
+  }
   return issues
 }
