@@ -154,6 +154,7 @@ Full reference: [`docs/cli.md`](./docs/cli.md).
 | [Contrast system](./docs/contrast-system.md) | Debugging text color, painted backgrounds, or contrast findings |
 | [Designing themes](./docs/designing-themes.md) | Drawing a theme redesign that can actually compile to PPTX |
 | [Design brief](./docs/design-brief.md) | The rules a design tool gets before it draws a face or component |
+| [Reusable parts](./docs/reusable-parts.md) | Starting a theme from the compositions, fields and fixes earlier theme samples settled |
 | [Testing](./docs/testing.md) | Running the right gate, inspecting snapshots, or changing exported XML |
 | [Internal API](./docs/internal-api.md) | Understanding why the JavaScript internals carry no semver promise |
 | [Release guide](./docs/releasing.md) | Preparing and publishing an npm release |
