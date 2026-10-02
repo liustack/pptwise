@@ -20,17 +20,22 @@
  * bound is their Regular one. The two share one estimator key, so their
  * bound is the wider of the two.
  *
- * The curly quotation marks are measured, not bounded. The export writes
- * every run as lang="en-US", and PowerPoint then paints a quote from the
- * run's `<a:latin>` face, beside Chinese text as much as English, and never
- * from its `<a:ea>` face. PowerPoint for Mac, PDF export, 2026-10-03, every
- * run Georgia over YaHei: “ ” at 0.411em and ‘ ’ at 0.228em in a Latin
- * sentence, inside a Chinese one and opening one, the Georgia advances
- * below. A YaHei, SimSun or Consolas run painted them from its own face.
- * So a quote's width is the advance of the face the run names, and
- * `QUOTE_ADVANCES` holds it for each face that carries the mark. The same
- * probe found "—", "·" and "…" painted from Georgia too, at or under the
- * bounds here, which err wide for them.
+ * The middle dot, the em dash and the curly quotation marks are measured,
+ * not bounded. The export writes every run as lang="en-US", and PowerPoint
+ * then paints these from the run's `<a:latin>` face, beside Chinese text as
+ * much as English, and never from its `<a:ea>` face. PowerPoint for Mac, PDF
+ * export, 2026-10-03, every run Georgia over YaHei: “ ” at 0.411em and ‘ ’
+ * at 0.228em in a Latin sentence, inside a Chinese one and opening one, "—"
+ * at 0.857em and "·" at 0.279em (Bold 0.928em and 0.338em) in 「甲——乙·丙」
+ * and "A—B·C" alike, the Georgia advances below. A YaHei, YaHei Bold,
+ * SimSun, KaiTi or Consolas run painted them from its own face. So such a
+ * mark's width is the advance of the face the run names, and
+ * `LATIN_FACE_MARK_ADVANCES` holds it for each face that carries the mark.
+ * Bounding them wide instead put Georgia's "—" at YaHei's 1.08em.
+ *
+ * The same probe found "…", "•", "‰", "′" and "–" painted from Georgia too,
+ * at or under the bounds here, which err wide for them, and "×", "°", "±"
+ * and "÷" painted from YaHei, the `<a:ea>` face, which the bounds hold.
  *
  * Needs the genuine binaries: macOS Georgia and the Office for Mac copies of
  * Microsoft YaHei, SimSun and KaiTi. Each file's `name` table is checked
@@ -199,15 +204,18 @@ const body = Object.entries(TABLES)
   .map(([key, weights]) => `  ${JSON.stringify(key)}: {\n    regular: ${literal(weights.regular)},\n    bold: ${literal(weights.bold)},\n  },`)
   .join("\n")
 
-/** The curly quotation marks, U+2018 to U+201F. */
-const QUOTES: readonly number[] = Array.from({ length: 8 }, (_, i) => 0x2018 + i)
+/**
+ * The marks PowerPoint paints from the run's Latin face: the middle dot, the
+ * em dash, and the curly quotation marks U+2018 to U+201F.
+ */
+const LATIN_FACE_MARKS: readonly number[] = [0x00b7, 0x2014, ...Array.from({ length: 8 }, (_, i) => 0x2018 + i)]
 
 /**
- * The faces behind each estimator key, for the quotes: the key's own face at
- * that weight. SimSun and KaiTi share a key, so a quote counts only when both
- * carry it at the same advance, and their Bold is their Regular.
+ * The faces behind each estimator key, for those marks: the key's own face
+ * at that weight. SimSun and KaiTi share a key, so a mark counts only when
+ * both carry it at the same advance, and their Bold is their Regular.
  */
-const QUOTE_FACES = {
+const LATIN_FACE_MARK_FACES = {
   georgia: { regular: ["georgia"], bold: ["georgiaBold"] },
   yahei: { regular: ["yahei"], bold: ["yaheiBold"] },
   "simsun-kaiti": { regular: ["simsun", "kaiti"], bold: ["simsun", "kaiti"] },
@@ -221,17 +229,17 @@ function sharedAdvance(cp: number, faces: readonly FaceName[]): number | undefin
   return Math.round(first * 10000) / 10000
 }
 
-const quoteLiteral = (faces: readonly FaceName[]): string => {
+const markLiteral = (faces: readonly FaceName[]): string => {
   const entries: string[] = []
-  for (const cp of QUOTES) {
+  for (const cp of LATIN_FACE_MARKS) {
     const w = sharedAdvance(cp, faces)
     if (w !== undefined) entries.push(`${cp}:${w}`)
   }
   return `{${entries.join(",")}}`
 }
 
-const quoteBody = Object.entries(QUOTE_FACES)
-  .map(([key, weights]) => `  ${JSON.stringify(key)}: {\n    regular: ${quoteLiteral(weights.regular)},\n    bold: ${quoteLiteral(weights.bold)},\n  },`)
+const markBody = Object.entries(LATIN_FACE_MARK_FACES)
+  .map(([key, weights]) => `  ${JSON.stringify(key)}: {\n    regular: ${markLiteral(weights.regular)},\n    bold: ${markLiteral(weights.bold)},\n  },`)
   .join("\n")
 
 writeFileSync(
@@ -248,14 +256,15 @@ export const SYMBOL_ADVANCE_BOUNDS: Readonly<
 ${body}
 }
 
-// The advance, in em, of each curly quotation mark in the face itself, keyed
-// by \`charCodeAt(0)\`. PowerPoint paints a quote from the run's Latin face,
-// so this is its width, not a bound. A mark the face lacks is left out.
+// The advance, in em, of the middle dot, the em dash and each curly
+// quotation mark in the face itself, keyed by \`charCodeAt(0)\`. PowerPoint
+// paints these from the run's Latin face, so this is their width, not a
+// bound. A mark the face lacks is left out.
 
-export const QUOTE_ADVANCES: Readonly<
+export const LATIN_FACE_MARK_ADVANCES: Readonly<
   Record<"georgia" | "yahei" | "simsun-kaiti", Readonly<Record<"regular" | "bold", Readonly<Record<number, number>>>>>
 > = {
-${quoteBody}
+${markBody}
 }
 `,
 )

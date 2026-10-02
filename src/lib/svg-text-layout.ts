@@ -1,5 +1,5 @@
 import { META_FONT_FLOOR_PX } from "../constants"
-import { QUOTE_ADVANCES, SYMBOL_ADVANCE_BOUNDS } from "./symbol-advances"
+import { LATIN_FACE_MARK_ADVANCES, SYMBOL_ADVANCE_BOUNDS } from "./symbol-advances"
 
 /**
  * Weight/face hint threaded through the estimator (bold-metrics fix,
@@ -125,23 +125,28 @@ export interface SvgTextLayout {
 // hyphen, etc.) intentionally stays in the "other" 0.46 bucket below: it
 // really does render narrower than a CJK glyph.
 //
-// The quotation marks have since left this class. A quote is not a CJK
-// character: PowerPoint paints it from the run's Latin face (see
-// `QUOTE_MARK_RE`), which sets it on the full em in YaHei, SimSun and KaiTi
-// and at two fifths of one in Georgia. Counted wide here, every face
-// measured it a full em, and a run after an opening quote in Georgia, with
-// the highlight under it, landed 0.59em right of where PowerPoint drew it.
-const WIDE_CHAR_RE = /[\u2014\u2e80-\u9fff\uff00-\uffef]/
+// The quotation marks, and then the em dash, have since left this class.
+// Neither is a CJK character: PowerPoint paints both from the run's Latin
+// face (see `LATIN_FACE_MARK_ADVANCES`), which sets a quote on the full em
+// in YaHei, SimSun and KaiTi and at two fifths of one in Georgia, and the
+// em dash at 1.08em in YaHei and 0.86em in Georgia. Counted wide here, a
+// quote measured a full em in every face, and Georgia's em dash YaHei's
+// 1.08em once `SYMBOL_ADVANCE_BOUNDS` raised it, so a run after an opening
+// quote or a 「——」 in Georgia, with the highlight under it, landed right of
+// where PowerPoint drew it: 0.59em per quote, 0.22em per dash.
+const WIDE_CHAR_RE = /[\u2e80-\u9fff\uff00-\uffef]/
 
 /**
- * The curly quotation marks, U+2018 to U+201F. The export writes every run as
- * lang="en-US", and PowerPoint then paints a quote from the run's
- * `<a:latin>` face, beside Chinese text as much as English. So a quote
- * measures at the advance of the face the caller names (`QUOTE_ADVANCES`,
- * read from the face itself). A face without a table for it measures it a
- * full em, as wide as any measured face sets it.
+ * The marks PowerPoint paints from the run's `<a:latin>` face that a face
+ * without an advance table still measures a full em: the em dash and the
+ * curly quotation marks, U+2018 to U+201F. The export writes every run as
+ * lang="en-US", and PowerPoint then paints these, and the middle dot, from
+ * the Latin face, beside Chinese text as much as English. So they measure at
+ * the advance of the face the caller names (`LATIN_FACE_MARK_ADVANCES`, read
+ * from the face itself). A face without a table keeps the class each had
+ * before: these the full em, the middle dot a mark's 0.46.
  */
-const QUOTE_MARK_RE = /[\u2018-\u201f]/
+const FULL_EM_LATIN_MARK_RE = /[\u2014\u2018-\u201f]/
 
 // Export-font calibration (borrow-wave Task 3, 2026-07-21): this weight
 // table is font-agnostic by design, but heading/body text ultimately
@@ -512,7 +517,7 @@ function classifyFaceKey(fontFamily: string | undefined): FaceKey {
  */
 function classAverageUnits(char: string, table: FaceFactorTable, mode: WeightMode): number {
   if (/\s/.test(char)) return 0.35 * table.space[mode]
-  if (WIDE_CHAR_RE.test(char) || QUOTE_MARK_RE.test(char)) return 1 * table.wide[mode]
+  if (WIDE_CHAR_RE.test(char) || FULL_EM_LATIN_MARK_RE.test(char)) return 1 * table.wide[mode]
   if (/[A-Z]/.test(char)) return 0.66 * table.upper[mode]
   if (/[a-z0-9]/.test(char)) return 0.56 * table.lowerDigit[mode]
   return 0.46 * table.other[mode]
@@ -545,12 +550,13 @@ export function measureTextUnits(text: string, weight?: TextWeightHint): number 
   // kern. So the exact sum errs a hair wide, never narrow.
   const exactTable = mode === "bold" ? EXACT_TABLE_FOR[faceKey]?.bold : REGULAR_EXACT_TABLE_FOR[faceKey]
   const symbolBounds = faceKey === "unknown" ? undefined : SYMBOL_ADVANCE_BOUNDS[faceKey][mode]
-  const quotes = faceKey === "unknown" ? undefined : QUOTE_ADVANCES[faceKey][mode]
+  const latinMarks = faceKey === "unknown" ? undefined : LATIN_FACE_MARK_ADVANCES[faceKey][mode]
   return Array.from(text).reduce((sum, char) => {
-    // A curly quote is painted from the face itself (`QUOTE_MARK_RE`), so
-    // its advance there is its width.
-    const quote = quotes?.[char.charCodeAt(0)]
-    if (quote !== undefined) return sum + quote
+    // The middle dot, the em dash and a curly quote are painted from the
+    // face itself, so its advance there (`LATIN_FACE_MARK_ADVANCES`) is the
+    // width.
+    const latinMark = latinMarks?.[char.charCodeAt(0)]
+    if (latinMark !== undefined) return sum + latinMark
     // WIDE_CHAR_RE (CJK/ideographic-punctuation/fullwidth) always takes the
     // class path, even under an exact-model face: the exact tables only
     // cover printable ASCII, and CJK's own class factor (measured
@@ -562,9 +568,9 @@ export function measureTextUnits(text: string, weight?: TextWeightHint): number 
       if (exact !== undefined) return sum + exact
     }
     // Outside printable ASCII the class average is a guess, and for some
-    // glyphs a low one: SimSun and KaiTi set "·" on the full em against the
-    // class's 0.563, YaHei's "—" runs 1.08em against 1, Georgia's "‰"
-    // 1.31em against 0.46, an ideographic space 1em against a space's 0.35.
+    // glyphs a low one: SimSun and KaiTi set "×" and "°" on the full em
+    // against the class's 0.46, Georgia's "‰" runs 1.21em, YaHei's "×"
+    // 0.74em, an ideographic space 1em against a space's 0.35.
     // `SYMBOL_ADVANCE_BOUNDS` holds the widest real advance each measured
     // face (and the face that may stand in for it) gives the character,
     // and the estimate rises to it. It never falls below the class average,
@@ -857,16 +863,21 @@ interface WrapToken {
  * not a space sits somewhere else in the sentence, so the clause splits per
  * character here, exactly as the no-space branch splits it.
  *
- * Only a boundary with a `WIDE_CHAR_RE` character on at least one side is
- * cut, so a Latin word, a number, and whatever ASCII punctuation hangs on
- * them ("GitHub,", "90%", "v2.3") stay one token, as before. Kinsoku still
- * rules every boundary this creates.
+ * Only a boundary with a `WIDE_CHAR_RE` character or an em dash on at least
+ * one side is cut, so a Latin word, a number, and whatever ASCII punctuation
+ * hangs on them ("GitHub,", "90%", "v2.3") stay one token, as before.
+ * Kinsoku still rules every boundary this creates.
+ *
+ * The em dash left `WIDE_CHAR_RE` for its width alone (it is painted from
+ * the Latin face), and a line may still break on either side of it, as
+ * UAX #14 class B2 allows. Glued into one token, "self-serve—automated—
+ * pipelines" in a 9em column was cut inside "automated".
  */
 function splitWideBoundaries(word: string): string[] {
   const out: string[] = []
   let run = ""
   for (const ch of word) {
-    if (WIDE_CHAR_RE.test(ch)) {
+    if (WIDE_CHAR_RE.test(ch) || ch === "\u2014") {
       if (run) out.push(run)
       out.push(ch)
       run = ""
@@ -1772,7 +1783,7 @@ const EM_SQUARE_RE = /[\u3000-\u303f\u4e00-\u9fa5\uff01-\uff5e]/
 /**
  * True when `measureTextUnits` knows `text`'s width rather than estimating
  * it: every character is either on the CJK em square (`EM_SQUARE_RE`), a
- * curly quote the face carries (`QUOTE_ADVANCES`), or in the face's own
+ * mark the face paints itself (`LATIN_FACE_MARK_ADVANCES`), or in the face's own
  * advance table for this weight. A caller that pads an
  * estimate against the class average's worst case can skip the padding
  * then, since there is no class average left in the number.
@@ -1780,10 +1791,10 @@ const EM_SQUARE_RE = /[\u3000-\u303f\u4e00-\u9fa5\uff01-\uff5e]/
 export function measuresExactly(text: string, weight?: TextWeightHint): boolean {
   const faceKey = classifyFaceKey(weight?.fontFamily)
   const table = weight?.bold ? EXACT_TABLE_FOR[faceKey]?.bold : REGULAR_EXACT_TABLE_FOR[faceKey]
-  const quotes = faceKey === "unknown" ? undefined : QUOTE_ADVANCES[faceKey][weight?.bold ? "bold" : "regular"]
+  const latinMarks = faceKey === "unknown" ? undefined : LATIN_FACE_MARK_ADVANCES[faceKey][weight?.bold ? "bold" : "regular"]
   for (const ch of text) {
     if (EM_SQUARE_RE.test(ch)) continue
-    if (quotes?.[ch.charCodeAt(0)] !== undefined) continue
+    if (latinMarks?.[ch.charCodeAt(0)] !== undefined) continue
     if (table?.[ch.charCodeAt(0)] === undefined) return false
   }
   return true
