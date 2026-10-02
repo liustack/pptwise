@@ -1,4 +1,5 @@
 import type { Component } from "@/ir"
+import { kpiValueText } from "../components/kpi"
 import type { SvgTemplateProps } from "./types"
 import { stepAside } from "../render/step-aside"
 import type { LayoutDefinition } from "./registry"
@@ -180,7 +181,7 @@ export function GaugeStatsContent({ ir, slide, index, ctx, page }: SvgTemplatePr
   const droppedStats = kpis ? Math.max(0, kpis.items.length - 4) : 0
   const stats = (kpis?.items.slice(0, 4) ?? []).map((item, itemIndex) => ({
     x: STAT_X[itemIndex]!,
-    value: fitSvgLine(item.value, {
+    value: fitSvgLine(kpiValueText(item.value).text, {
       maxWidth: STAT_W[itemIndex]!,
       fontSize: VALUE_SIZE,
       minFontSize: 32,

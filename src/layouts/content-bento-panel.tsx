@@ -25,6 +25,7 @@ import { Icon } from "../render/icons"
 import {
   dedupeKpiUnit,
   deltaProps,
+  kpiValueText,
   fitKpiUnit,
   splitKpiValueWidths,
   type KpiValueScale,
@@ -292,7 +293,7 @@ function fitBentoKpiValue(
   const valueSize = hero ? BENTO_KPI_HERO_VALUE_SIZE : BENTO_KPI_VALUE_SIZE
   // Same value/unit width split as kpi.tsx. The value keeps its budget when
   // the number and unit cannot both fit.
-  const valueStr = String(item.value)
+  const valueStr = kpiValueText(item.value).text
   // 冗余单位去重（同 components/kpi.tsx：value 已含 unit 结尾时丢弃，防 "35%%"）。
   const unit = dedupeKpiUnit(valueStr, item.unit)
   const valueScale: KpiValueScale = {

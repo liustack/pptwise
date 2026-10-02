@@ -8,6 +8,7 @@ import { measureTextUnits } from "../lib/svg-text-layout"
 import type { ComponentCtx } from "./types"
 import { CANONICAL_THEME_IDS } from "../themes"
 import { accessibleInk } from "../render/ink"
+import { emphasisRunInk } from "../render/emphasis"
 
 const ctx: ComponentCtx = {
   colors: {
@@ -722,3 +723,23 @@ describe("kpi row-uniform value size", () => {
   })
 })
 
+
+describe("kpi marked value", () => {
+  it("sets a marked value in the emphasis ink without its asterisks, and the rest in text", () => {
+    const cards = {
+      type: "kpi_cards" as const,
+      items: [
+        { value: "10 款", label: "8 月降价车型" },
+        { value: "**4.5 万元**", label: "平均每辆降幅" },
+      ],
+    }
+    const themed = boundThemeCtx("bulletin", {})
+    const { container } = svg(kpi.render(cards, { x: 0, y: 0, w: 900, h: 220 }, themed))
+    const texts = Array.from(container.querySelectorAll("text"))
+    expect(texts.map((t) => t.textContent ?? "").join(" ")).not.toContain("**")
+    const marked = texts.find((t) => t.textContent === "4.5 万元")!
+    const plain = texts.find((t) => t.textContent === "10 款")!
+    expect(marked.getAttribute("fill")).toBe(accessibleInk(emphasisRunInk(themed.colors), themed.colors.surface, Number(marked.getAttribute("font-size"))))
+    expect(plain.getAttribute("fill")).toBe(themed.colors.text)
+  })
+})
