@@ -2,24 +2,41 @@ import type { Component } from "@/ir"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { stripEmphasis } from "../../render/emphasis"
 import { accessibleInk } from "../../render/ink"
-import { GAUGE_LEFT, GAUGE_RIGHT } from "../gauge-shared"
-import { blockTag, ruleInk, type SheetModule } from "./frame"
+import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 
 type Roadmap = Extract<Component, { type: "roadmap" }>
 
 /*
- * waves: the board's plan page (p08). A roadmap set as open columns, one per
- * phase, each under a 10px colour bar: the period small and muted, the phase
- * name, a hairline, then up to two measures, the first set large. The bar is
- * primary, and accent on the one phase the author marked with `emphasis`.
+ * waves: a roadmap set as open columns, one per phase, each under a 10px
+ * colour bar: the period small and muted, the phase name, a hairline, then up
+ * to two measures, the first set large. The bar is `primary`, and `accent` on
+ * the one phase the author marked with `emphasis`. Brief's plan page (p08).
  *
- * Takes one `roadmap` of two to four phases with at most two measures each.
+ * Takes: one `roadmap`, alone on the page, of two to four phases with at most
+ * two measures (`rows`) each.
+ *
+ * Declines: one phase or more than four, a phase with three measures or
+ * more, anything beside the roadmap, a phase name past two lines at 28px, a
+ * first measure that does not fit one line even at 24px, a second measure
+ * past two lines at 24px, a period or measure label past one line at 16px,
+ * columns narrower than 200px, and a band shorter than 382px.
+ *
+ * Band: the columns share the full width with 16px between them, so four
+ * phases need 848px and two need 416px. Every column runs to the same fixed
+ * depth, 382px below the band's top.
+ *
+ * Reads: `primary` (bars, phase names), `accent` (the marked phase's bar),
+ * `text` (measures), `muted` (periods and measure labels), `border` or
+ * `muted` (the hairline), `bg` or `defaultBg`, `fonts.body`, and the theme's
+ * emphasis stroke for a marked run.
  */
 
 const MIN_ITEMS = 2
 const MAX_ITEMS = 4
 const MAX_ROWS = 2
+/** The narrowest a phase column may be. */
+const MIN_COLUMN_W = 200
 
 const COLUMN_GAP = 16
 /** Text stops 16px short of the next column. */
@@ -50,7 +67,12 @@ const SECOND_BASELINE = 342
 /** Ink floor of the second measure's two lines, below the band top. */
 const SECOND_BOTTOM = 382
 
-/** Georgia's ascent and descent, which the board's line boxes were resolved with. */
+/**
+ * Georgia's ascent and descent, which the board's line boxes were resolved
+ * with. Every font gets the baselines they give, rather than ones measured
+ * from its own metrics, so the columns stand on the board's rhythm in any
+ * theme.
+ */
 const ASCENT = 0.917
 const DESCENT = 0.219
 
@@ -67,8 +89,8 @@ function wavesShape(components: readonly Component[]): Roadmap | null {
   return only
 }
 
-export const sheetWaves: SheetModule = ({ slide, ctx, rect }) => {
-  const roadmap = wavesShape(slide.components)
+export const wavesComposition: Composition = ({ components, ctx, rect }) => {
+  const roadmap = wavesShape(components)
   if (!roadmap) return null
   const { colors, fonts } = ctx
   const body = fonts.body
@@ -77,7 +99,8 @@ export const sheetWaves: SheetModule = ({ slide, ctx, rect }) => {
   if (top + SECOND_BOTTOM > rect.y + rect.h) return null
 
   const count = roadmap.items.length
-  const columnW = (GAUGE_RIGHT - GAUGE_LEFT - COLUMN_GAP * (count - 1)) / count
+  const columnW = (rect.w - COLUMN_GAP * (count - 1)) / count
+  if (columnW < MIN_COLUMN_W) return null
   const textW = columnW - TEXT_INSET
 
   // Every column's first measure shares one size: the largest at which all
@@ -106,7 +129,7 @@ export const sheetWaves: SheetModule = ({ slide, ctx, rect }) => {
     const parts = [period, title, firstLabel, firstValue, secondLabel, secondValue]
     if (parts.some((part) => part === null)) return null
     columns.push({
-      x: GAUGE_LEFT + i * (columnW + COLUMN_GAP),
+      x: rect.x + i * (columnW + COLUMN_GAP),
       marked: item.emphasis === true,
       period: period!,
       title: title!,
@@ -124,7 +147,7 @@ export const sheetWaves: SheetModule = ({ slide, ctx, rect }) => {
   const muted = { ctx, fill: mutedInk, fontFamily: body, fontWeight: "400" } as const
 
   return (
-    <g data-gauge-module="waves" {...blockTag(ctx, roadmap)}>
+    <g {...compositionTag("waves")} {...blockTag(ctx, roadmap)}>
       {columns.map((column, i) => (
         <g key={i}>
           <rect

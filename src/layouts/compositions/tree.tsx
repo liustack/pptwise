@@ -1,22 +1,40 @@
 import type { Component } from "@/ir"
 import { accessibleInk, readableOn } from "../../render/ink"
-import { GAUGE_DARK_META, GAUGE_LEFT, GAUGE_RIGHT } from "../gauge-shared"
-import { blockTag, ruleInk, type SheetModule } from "./frame"
+import { blockTag, compositionTag, quietInkOn, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 
 type OrgTree = Extract<Component, { type: "org_tree" }>
 
 /*
- * tree: the board's team page (p10). One owner block in primary at the top
- * centre, a square primary connector, and a row of white cards under it,
- * each topped with a 4px primary rule.
+ * tree: a two-level team. One owner block in `primary` at the top centre, a
+ * square primary connector, and a row of `surface` cards under it, each
+ * topped with a 4px primary rule. Brief's team page (p10).
  *
- * Takes one `org_tree` with two to four branches and no row under any of
- * them. A deeper tree is the ordinary org chart's job.
+ * Takes: one `org_tree`, alone on the page, with two to four branches and no
+ * row under any of them. A deeper tree is the ordinary org chart's job.
+ *
+ * Declines: one branch or more than four, a branch with people under it,
+ * anything beside the tree, an owner name or role past one line of the
+ * 376px block, a branch name or role past two lines of its card, cards
+ * narrower than 200px, and a row of cards that runs below the band.
+ *
+ * Band: the cards share the full width with 40px between them, so four
+ * branches need 920px and two need 440px. The owner block is 376px wide. The
+ * cards start 208px below the band's top and are at least 128px tall, so the
+ * band needs at least 336px.
+ *
+ * Reads: `primary` (owner block, connectors, card rules, branch names),
+ * `surface` (cards), `muted` (branch roles), `border` or `muted` (card
+ * outlines), `fonts.body`, and the theme's emphasis stroke for a marked run.
+ * The role under the owner's name is a quiet light ink on primary: the face
+ * may hand its own (`inks.quietOnPrimary`), otherwise `quietInkOn` derives
+ * one.
  */
 
 const MIN_CHILDREN = 2
 const MAX_CHILDREN = 4
+/** The narrowest a branch card may be. */
+const MIN_CARD_W = 200
 
 const ROOT_W = 376
 const ROOT_H = 96
@@ -52,9 +70,10 @@ function treeShape(components: readonly Component[]): OrgTree | null {
   return only
 }
 
-export const sheetTree: SheetModule = ({ slide, ctx, rect }) => {
-  const tree = treeShape(slide.components)
+export const treeComposition: Composition = ({ components, ctx, rect, inks }) => {
+  const tree = treeShape(components)
   if (!tree) return null
+  if (rect.w < ROOT_W) return null
   const { colors, fonts } = ctx
   const body = fonts.body
   const top = rect.y
@@ -80,7 +99,8 @@ export const sheetTree: SheetModule = ({ slide, ctx, rect }) => {
   if (rootName === null || rootRole === null) return null
 
   const count = tree.children.length
-  const cardW = (GAUGE_RIGHT - GAUGE_LEFT - CARD_GAP * (count - 1)) / count
+  const cardW = (rect.w - CARD_GAP * (count - 1)) / count
+  if (cardW < MIN_CARD_W) return null
   const cardText = cardW - 2 - CARD_PAD_X * 2
   const cards = []
   for (const [i, child] of tree.children.entries()) {
@@ -101,7 +121,7 @@ export const sheetTree: SheetModule = ({ slide, ctx, rect }) => {
       bold: false,
     })
     if (name === null || role === null) return null
-    cards.push({ x: GAUGE_LEFT + i * (cardW + CARD_GAP), name, role })
+    cards.push({ x: rect.x + i * (cardW + CARD_GAP), name, role })
   }
   // Every card in the row is as tall as the tallest one needs, and never
   // shorter than the board's 128px.
@@ -121,7 +141,7 @@ export const sheetTree: SheetModule = ({ slide, ctx, rect }) => {
   const rootX = centre - ROOT_W / 2
   const rootY = top + ROOT_TOP
   const rootInk = readableOn(colors.primary)
-  const rootRoleInk = accessibleInk(GAUGE_DARK_META, colors.primary, ROLE_SIZE)
+  const rootRoleInk = accessibleInk(quietInkOn(colors.primary, inks?.quietOnPrimary), colors.primary, ROLE_SIZE)
   // A root with no role sets its name on the block's centre line.
   const rootNameY =
     rootRole.lines.length > 0
@@ -133,7 +153,7 @@ export const sheetTree: SheetModule = ({ slide, ctx, rect }) => {
   const centres = cards.map((card) => card.x + cardW / 2)
 
   return (
-    <g data-gauge-module="tree" {...blockTag(ctx, tree)}>
+    <g {...compositionTag("tree")} {...blockTag(ctx, tree)}>
       <rect x={rootX} y={rootY} width={ROOT_W} height={ROOT_H} fill={colors.primary} />
       {paintLines(rootName, {
         ctx,

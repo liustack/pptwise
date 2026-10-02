@@ -5,35 +5,58 @@ import { headingEmphasisPaint, renderEmphasisText } from "../../render/emphasis"
 import { accessibleInk } from "../../render/ink"
 import { SvgContent } from "../../render/svg-content"
 import { bodySlotDropsContent } from "../../render/step-aside"
-import { GAUGE_RIGHT } from "../gauge-shared"
-import { blockTag, ruleInk, type SheetModule } from "./frame"
+import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Series = Chart["series"][number]
 
 /*
- * rail: the board's trend page (p03). The chart keeps the left of the band,
- * and a column right of a hairline at x904 states what each series did from
- * its first category to its last: the series' swatch and name, the change as
- * a whole-number percentage, and the two values it ran between. Every number
- * in the column is computed from the series, so nothing is written twice.
+ * rail: a trend chart with a column of figures beside it. The chart keeps the
+ * left of the band, and a column right of a hairline states what each series
+ * did from its first category to its last: the series' swatch and name, the
+ * change as a whole-number percentage, and the two values it ran between.
+ * Every number in the column is computed from the series, so nothing is
+ * written twice. A series marked `emphasis` sets its change in `primary` over
+ * the theme's emphasis stroke and the others recede to `muted`. Brief's trend
+ * page (p03).
  *
- * Takes one chart on a category axis (upright bars, lines, areas, stacks or
- * a combo) with one to three series, where every series has a value at the
- * first and the last category and its first value is above zero. The chart
- * must still draw whole in the narrower band. Otherwise the module declines
- * and the chart takes the full width.
+ * Takes: one `chart`, alone on the page, on a category axis (upright bars,
+ * lines, areas, stacks or a combo), with one to three series, where every
+ * series has a value at the first and the last category and its first value
+ * is above zero.
+ *
+ * Declines: any other chart type, a horizontal bar, a numeric x axis, more
+ * than three series, a series that starts at zero or below or misses either
+ * end, a change too large to state, anything beside the chart, a series name
+ * past one line of the column at 16px, a chart that would drop content in the
+ * narrower plot, and a column that does not fit the band's height even with
+ * its figures at 36px. The face then draws the chart across the full width.
+ *
+ * Band: the column and its divider take the right 280px, and the plot keeps
+ * at least 400px left of them, so the band needs 720px. The figures step down
+ * from 56px to 44px to 36px until the column fits the height. At 36px with
+ * one-line spans the column needs 267px for two series and 406px for three.
+ * The board's two series stand at 56px in 353px.
+ *
+ * Reads: the chart palette as the face hands it (rotated by
+ * `chartPaletteOffset`, with the marked series kept and the others receded,
+ * the same palette the plot draws with), `primary` (changes), `text` (spans),
+ * `muted` (names, unmarked changes and spans), `border` or `muted` (the
+ * divider), `bg` or `defaultBg`, `fonts.heading` (the changes), `fonts.body`.
  */
 
 const RAIL_TYPES: ReadonlySet<Chart["chart_type"]> = new Set(["bar", "line", "area", "stacked", "combo"])
 const MAX_SERIES = 3
 
-const DIVIDER_X = 904
+/** The divider stands this far left of the band's right edge (x904 on the board). */
+const DIVIDER_INSET = 280
 /** The chart stops this far short of the divider. */
 const CHART_GAP = 40
-const RAIL_X = 944
-const RAIL_W = GAUGE_RIGHT - RAIL_X
+/** The narrowest plot the column leaves. */
+const MIN_CHART_W = 400
+/** The column starts this far right of the divider (x944 on the board). */
+const RAIL_GAP = 40
 /** The divider stops this far above the band's foot. */
 const DIVIDER_FOOT = 28
 /** The first block's label line starts 18px into the band. */
@@ -41,8 +64,8 @@ const FIRST_BLOCK = 18
 const BLOCK_GAP = 29
 
 const SWATCH_W = 24
-const LABEL_X = 976
-const LABEL_W = GAUGE_RIGHT - LABEL_X
+/** The series name starts this far right of the column's left edge, past its swatch (x976 on the board). */
+const LABEL_INSET = 32
 const LABEL_SIZE = 16
 const LABEL_BASELINE = 18
 /** The value line's box starts here, below the block's top. */
@@ -59,7 +82,10 @@ const NOTE_DESCENT = 6
 /** The most decimals a value in the note prints. */
 const MAX_DECIMALS = 4
 
-/** Georgia's ascent and descent, which the board's line boxes were resolved with. */
+/**
+ * Georgia's ascent and descent, which the board's line boxes were resolved
+ * with. Every font gets the baselines they give, as in `waves`.
+ */
 const ASCENT = 0.917
 const DESCENT = 0.219
 
@@ -125,11 +151,17 @@ function swatchIsLine(chart: Chart, series: Series): boolean {
   return chart.chart_type === "combo" && series.plot === "line"
 }
 
-export const sheetRail: SheetModule = ({ slide, ctx, rect }) => {
-  const shape = railShape(slide.components)
+export const railComposition: Composition = ({ components, ctx, rect }) => {
+  const shape = railShape(components)
   if (!shape) return null
   const { chart, entries } = shape
-  const chartRect = { x: rect.x, y: rect.y, w: DIVIDER_X - CHART_GAP - rect.x, h: rect.h }
+  const right = rect.x + rect.w
+  const dividerX = right - DIVIDER_INSET
+  const railX = dividerX + RAIL_GAP
+  const railW = right - railX
+  const labelX = railX + LABEL_INSET
+  const chartRect = { x: rect.x, y: rect.y, w: dividerX - CHART_GAP - rect.x, h: rect.h }
+  if (chartRect.w < MIN_CHART_W) return null
   if (bodySlotDropsContent([chart], chartRect, ctx)) return null
 
   const { colors, fonts } = ctx
@@ -147,7 +179,7 @@ export const sheetRail: SheetModule = ({ slide, ctx, rect }) => {
   for (const entry of entries) {
     const unit = entry.series.axis === "right" ? chart.axes?.y2_unit : chart.axes?.y_unit
     const name = fitFixed(entry.series.name, {
-      width: LABEL_W,
+      width: right - labelX,
       size: LABEL_SIZE,
       lineHeight: LABEL_SIZE,
       maxLines: 1,
@@ -155,7 +187,7 @@ export const sheetRail: SheetModule = ({ slide, ctx, rect }) => {
       bold: false,
     })
     const note = fitFixed(spanLabel(entry.series, entry.first, entry.last, unit), {
-      width: RAIL_W,
+      width: railW,
       size: NOTE_SIZE,
       lineHeight: NOTE_LINE_HEIGHT,
       maxLines: NOTE_MAX_LINES,
@@ -171,7 +203,7 @@ export const sheetRail: SheetModule = ({ slide, ctx, rect }) => {
   // same rhythm whatever their notes run to.
   let layout: { size: number; pitches: number[] } | null = null
   for (const size of VALUE_SIZES) {
-    if (labels.some((label) => fitFixed(label.change, { width: RAIL_W, size, lineHeight: size, maxLines: 1, fontFamily: fonts.heading, bold: false }) === null)) continue
+    if (labels.some((label) => fitFixed(label.change, { width: railW, size, lineHeight: size, maxLines: 1, fontFamily: fonts.heading, bold: false }) === null)) continue
     const noteAt = valueBaseline(size) + VALUE_TO_NOTE
     for (const reserve of [NOTE_MAX_LINES, 0]) {
       const heights = labels.map((label) => noteAt + (Math.max(reserve, label.note.lines.length) - 1) * NOTE_LINE_HEIGHT + NOTE_DESCENT)
@@ -195,15 +227,15 @@ export const sheetRail: SheetModule = ({ slide, ctx, rect }) => {
   let cursor = rect.y + FIRST_BLOCK
 
   return (
-    <g data-gauge-module="rail">
+    <g {...compositionTag("rail")}>
       <SvgContent components={[chart]} rect={chartRect} ctx={ctx} />
       {/* The plot is tagged where it is drawn. The column is part of the
           same chart, so it enters with it. */}
       <g {...blockTag(ctx, chart)}>
       <line
-        x1={DIVIDER_X}
+        x1={dividerX}
         y1={rect.y}
-        x2={DIVIDER_X}
+        x2={dividerX}
         y2={rect.y + rect.h - DIVIDER_FOOT}
         stroke={ruleInk(ctx)}
         strokeWidth={1}
@@ -216,7 +248,7 @@ export const sheetRail: SheetModule = ({ slide, ctx, rect }) => {
         const quiet = marked >= 0 && !lead
         const valueText = (
           <text
-            x={RAIL_X}
+            x={railX}
             y={top + valueY}
             fontFamily={fonts.heading}
             fontSize={fit.size}
@@ -227,11 +259,11 @@ export const sheetRail: SheetModule = ({ slide, ctx, rect }) => {
         return (
           <g key={i}>
             {swatchIsLine(chart, entries[i]!.series) ? (
-              <rect x={RAIL_X} y={top + 10} width={SWATCH_W} height={3} fill={color} />
+              <rect x={railX} y={top + 10} width={SWATCH_W} height={3} fill={color} />
             ) : (
-              <rect x={RAIL_X} y={top + 6} width={SWATCH_W} height={12} fill={color} />
+              <rect x={railX} y={top + 6} width={SWATCH_W} height={12} fill={color} />
             )}
-            {paintLines(label.name, { ctx, x: LABEL_X, y: top + LABEL_BASELINE, fill: nameInk, fontFamily: body, fontWeight: "400" })}
+            {paintLines(label.name, { ctx, x: labelX, y: top + LABEL_BASELINE, fill: nameInk, fontFamily: body, fontWeight: "400" })}
             {renderEmphasisText(
               [{ text: label.change, emphasized: lead }],
               headingEmphasisPaint(ctx, { fontSize: fit.size }, {
@@ -244,7 +276,7 @@ export const sheetRail: SheetModule = ({ slide, ctx, rect }) => {
             )}
             {paintLines(label.note, {
               ctx,
-              x: RAIL_X,
+              x: railX,
               y: top + valueY + VALUE_TO_NOTE,
               fill: quiet ? quietNoteInk : noteInk,
               fontFamily: body,

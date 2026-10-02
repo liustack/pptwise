@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
 import { assertSubset } from "../../render/subset-validate"
-import { changeLabel, sheetRail, spanLabel } from "./rail"
-import { attrs, byText, renderModule, sheetSlide, texts, textOf } from "./__fixtures__/kit"
+import { changeLabel, railComposition, spanLabel } from "./rail"
+import { attrs, BAND_ABOVE_SOURCE, byText, renderComposition, texts, textOf } from "./__fixtures__/kit"
 
 const YEARS = ["FY2023", "FY2024", "FY2025", "FY2026"]
 const series = (name: string, ys: number[], extra: Record<string, unknown> = {}) => ({
@@ -22,8 +22,9 @@ const combo = (marked = true, overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 })
 
-const trend = (chart: unknown = combo()) =>
-  sheetSlide([chart], { kind: "data", footnote: "Northwind finance and network data, FY2023 to FY2026" })
+/** The board's trend page carries a source line, so its band stops above it. */
+const draw = (chart: unknown = combo(), options: Parameters<typeof renderComposition>[2] = {}) =>
+  renderComposition(railComposition, [chart], { rect: BAND_ABOVE_SOURCE, ...options })
 
 describe("changeLabel and spanLabel", () => {
   it("rounds the change to a whole percent and signs it", () => {
@@ -42,9 +43,9 @@ describe("changeLabel and spanLabel", () => {
   })
 })
 
-describe("rail module", () => {
+describe("rail composition", () => {
   it("keeps the chart left of a hairline at x904 and draws it whole", () => {
-    const { root, markup } = renderModule(sheetRail, trend())
+    const { root, markup } = draw()
     expect(root!.querySelector("[data-audit-rect]")!.getAttribute("data-audit-rect")).toBe("96,200,768,412")
     expect(markup).not.toMatch(/data-dropped="[1-9]/)
     const divider = Array.from(root!.querySelectorAll("line")).find((line) => line.getAttribute("x1") === "904")!
@@ -53,7 +54,7 @@ describe("rail module", () => {
   })
 
   it("states each series' change from its first category to its last", () => {
-    const { root, tokens } = renderModule(sheetRail, trend())
+    const { root, tokens } = draw()
     const rail = texts(root!).filter((el) => Number(el.getAttribute("x")) >= 944)
     expect(attrs(rail[0]!, ["x", "font-size", "fill"])).toEqual(["976", "16", tokens.colors.muted])
     expect(rail.map((el) => [textOf(el), el.getAttribute("y")])).toEqual([
@@ -67,7 +68,7 @@ describe("rail module", () => {
   })
 
   it("sets the marked series' change in primary over the highlighter and quiets the others", () => {
-    const { root, tokens } = renderModule(sheetRail, trend())
+    const { root, tokens } = draw()
     const quiet = byText(root!, "+22%")!
     expect(attrs(quiet, ["font-size", "fill"])).toEqual(["56", tokens.colors.muted])
     expect(root!.querySelectorAll("[data-emphasis-pad]").length).toBe(1)
@@ -76,7 +77,7 @@ describe("rail module", () => {
   })
 
   it("keys each swatch to its series: a bar block for bars, a short stroke for the line", () => {
-    const { root, tokens } = renderModule(sheetRail, trend())
+    const { root, tokens } = draw()
     const swatches = Array.from(root!.querySelectorAll("rect")).filter((rect) => rect.getAttribute("x") === "944")
     expect(swatches.map((rect) => attrs(rect, ["y", "width", "height"]))).toEqual([
       ["224", "24", "12"],
@@ -87,7 +88,7 @@ describe("rail module", () => {
   })
 
   it("sets every change in primary, with no highlighter, when no series is marked", () => {
-    const { root, tokens } = renderModule(sheetRail, trend(combo(false)))
+    const { root, tokens } = draw(combo(false))
     expect(root!.querySelector("[data-emphasis-pad]")).toBeNull()
     expect(byText(root!, "+22%")!.getAttribute("fill")).toBe(tokens.colors.primary)
     expect(byText(root!, "+30%")!.getAttribute("fill")).toBe(tokens.colors.primary)
@@ -99,7 +100,7 @@ describe("rail module", () => {
       axes: undefined,
       series: [series("North", [10, 12, 14, 15]), series("South", [8, 9, 9, 10]), series("West", [5, 6, 7, 9])],
     })
-    const { root } = renderModule(sheetRail, trend(three))
+    const { root } = draw(three)
     expect(root).not.toBeNull()
     const sizes = new Set(["+50%", "+25%", "+80%"].map((text) => byText(root!, text)!.getAttribute("font-size")))
     expect(sizes.size).toBe(1)
@@ -115,10 +116,15 @@ describe("rail module", () => {
     ["a change too large to state", combo(false, { chart_type: "stacked", series: [series("A", [5e-324, 2, 3, -1e163]), series("B", [1, 2, 3, 4])] })],
     ["a series with no value at the last category", combo(false, { chart_type: "line", series: [series("A", [1, 2, 3, 4]), series("B", [1, 2])] })],
   ])("declines %s", (_name, chart) => {
-    expect(renderModule(sheetRail, trend(chart)).element).toBeNull()
+    expect(draw(chart).element).toBeNull()
   })
 
   it("declines a page with anything beside the chart", () => {
-    expect(renderModule(sheetRail, sheetSlide([combo(), { type: "paragraph", text: "Note." }])).element).toBeNull()
+    expect(renderComposition(railComposition, [combo(), { type: "paragraph", text: "Note." }]).element).toBeNull()
+  })
+
+  it("declines a band that would leave the plot under 400px", () => {
+    expect(draw(combo(), { rect: { ...BAND_ABOVE_SOURCE, w: 719 } }).element).toBeNull()
+    expect(draw(combo(), { rect: { ...BAND_ABOVE_SOURCE, w: 720 } }).element).not.toBeNull()
   })
 })

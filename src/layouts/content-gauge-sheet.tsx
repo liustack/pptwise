@@ -8,9 +8,9 @@ import { GaugeSheetPage, composeSheet } from "./gauge-sheet/sheet"
  * gauge-sheet: the brief board's ordinary content page. The claim sits on the
  * y172 rule, the source closes the page above the footer, and between them
  * the body takes one of the board's hand-set compositions when the content
- * has that shape (`gauge-sheet/`): numbered rows with a closing block, an
- * options table, phase columns, a two-level team, or a chart with a change
- * column beside it. Any other content is drawn by the ordinary component
+ * has that shape (the shared `compositions/`): numbered rows with a closing
+ * block, an options table, phase columns, a two-level team, or a chart with a
+ * change column beside it. Any other content is drawn by the ordinary component
  * renderer in the same band, and a page that band cannot hold steps aside.
  */
 export function GaugeSheetContent({ slide, ctx }: SvgTemplateProps) {

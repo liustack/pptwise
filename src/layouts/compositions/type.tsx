@@ -8,11 +8,11 @@ import {
 } from "../../render/emphasis"
 
 /*
- * Type for the sheet modules. Every module sets its text at the size the
+ * Type for the compositions. Every composition sets its text at the size the
  * board gives it and never shrinks or cuts it: a text that does not fit its
- * measure in its line budget makes the module decline the page, so the
- * ordinary component renderer draws it instead. That keeps the hand-set
- * compositions honest without a single `data-truncated` of their own.
+ * measure in its line budget makes the composition decline the page, so the
+ * face draws it another way. That keeps the hand-set compositions honest
+ * without a single `data-truncated` of their own.
  */
 
 export interface FixedTextSpec {
