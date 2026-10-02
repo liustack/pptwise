@@ -587,6 +587,17 @@ describe("runRender", () => {
         runPreview(join(dir, "deck-dropped-content.json"), out, { htmlOut: true }),
       ).resolves.toBeTruthy()
     })
+
+    // tea-deck (2026-10-02): at spacious pacing a chart page lost its callout.
+    // The preview drew the page without it and said nothing, so the author
+    // only learned of it when render refused the deck.
+    it("names the pages that drop content in the preview's own output", async () => {
+      const msg = await runPreview(join(dir, "deck-dropped-content.json"), join(dir, "dropped-preview-note"))
+      expect(msg).toMatch(/note: 1 page drops content .*render will refuse/)
+      expect(msg).toMatch(/p-2 \(page 2\): \d+ content blocks/)
+      const clean = await runPreview(join(dir, "deck.json"), join(dir, "clean-preview-note"))
+      expect(clean).not.toContain("drops content")
+    })
   })
 
   describe("field-alias note (W5 whole-branch review finding 3: README claimed render printed this note; it never actually did)", () => {

@@ -25,6 +25,7 @@ import { pageFit } from "../inspect/page-fit"
 import { AUDIENCE_VALUES, PACING_BUDGETS, STRATEGY_DEFINITIONS, NARRATIVE_PRESETS, resolveNarrative, type NarrativeProfile } from "../narrative"
 import { auditDeck, type AuditChecks, type AuditFinding, type AuditReport } from "../audit/deck-audit"
 import { buildAssetBrief, type AssetBrief, type AssetBriefItem } from "../render/asset-brief"
+import { dropPhrase, parseDropKind, type DropKind } from "../render/drop-marker"
 import { extractBrandTheme, slugify } from "../themes/extract/brand-extract"
 import { ThemeFileSchema, type ThemeFile } from "../themes/schema"
 import { THEME_OCCASIONS } from "../themes/occasions"
@@ -1751,6 +1752,39 @@ async function resolvePreviewOutDir(
   return { resolvedOut: location.dir, extraNotes }
 }
 
+const DROP_MARK = /data-dropped="(\d+)"(?:\s+data-dropped-kind="([a-z-]+)")?/g
+
+/**
+ * The preview's own word on pages that lose content, or `null` when none do.
+ *
+ * Preview draws a page that drops content, which is what it is for, and the
+ * export refuses the same deck (`checkContentDropGate`). Saying nothing here
+ * left the author looking at a page without its callout and no reason to
+ * suspect one, until render refused. The counts are the export gate's own:
+ * every `data-dropped` mark, in its own unit.
+ */
+function droppedContentNote(ir: PptxIR, svgs: readonly string[]): string | null {
+  const refs: string[] = []
+  svgs.forEach((svg, i) => {
+    const byKind = new Map<DropKind, number>()
+    for (const m of svg.matchAll(DROP_MARK)) {
+      const count = Number(m[1])
+      if (count <= 0) continue
+      const kind = parseDropKind(m[2])
+      byKind.set(kind, (byKind.get(kind) ?? 0) + count)
+    }
+    if (byKind.size === 0) return
+    const id = ir.slides[i]?.id
+    const where = id ? `${id} (page ${i + 1})` : `page ${i + 1}`
+    refs.push(`${where}: ${Array.from(byKind, ([kind, count]) => dropPhrase(kind, count)).join(", ")}`)
+  })
+  if (refs.length === 0) return null
+  return (
+    `note: ${refs.length} page${refs.length === 1 ? " drops" : "s drop"} content that does not fit, and render will refuse the deck until ` +
+    `${refs.length === 1 ? "it fits" : "they fit"}. ${refs.join(". ")}. Shorten the content or split the page in two`
+  )
+}
+
 export async function runPreview(irPath: string, outDir?: string, opts: PreviewOptions = {}): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
   const { ir, theme, svgs, normalized, isDir, resolvedTarget } = await renderDeckSlides(irPath, {
@@ -1768,6 +1802,8 @@ export async function runPreview(irPath: string, outDir?: string, opts: PreviewO
   const notes: string[] = [...extraNotes]
   const aliasNote = normalizedNote(normalized)
   if (aliasNote) notes.push(aliasNote)
+  const dropNote = droppedContentNote(ir, svgs)
+  if (dropNote) notes.push(dropNote)
   if (opts.htmlOut) {
     const { html, findings, checks } = buildDeckAuditAndHtml(ir, svgs, theme)
     const htmlPath = join(resolvedOut, "preview.html")
