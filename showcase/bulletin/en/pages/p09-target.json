@@ -61,13 +61,13 @@
       "type": "kpi_cards",
       "items": [
         {
-          "value": "~+65%",
-          "label": "Q4 over Q3, needed",
+          "value": "+65%",
+          "label": "Q4 over Q3, needed (approx.)",
           "note": "Only 11% a year ago"
         },
         {
-          "value": "~+15%",
-          "label": "Q4 over last year, needed",
+          "value": "+15%",
+          "label": "Q4 over last year, needed (approx.)",
           "note": "Q3 was about −22.6%"
         }
       ]
