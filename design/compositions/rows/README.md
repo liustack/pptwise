@@ -21,3 +21,7 @@ Code: [`src/layouts/compositions/rows.tsx`](../../../src/layouts/compositions/ro
 - A warning callout or one with an icon is declined: the block has no place for an icon, and a warning is not a conclusion.
 - A marked run in the closing block turns bold instead of taking the theme's highlight, which would sit on primary with no contrast.
 - The label column was sized for English labels. Short Chinese labels leave it airy, as the engine render shows.
+
+## Since the tea sample, 2026-10
+
+The closing block moved to [`src/layouts/compositions/closing.tsx`](../../../src/layouts/compositions/closing.tsx), shared with `table`, `track` and `figures`, each at the size its board gives it. Rows draws it byte for byte as before.

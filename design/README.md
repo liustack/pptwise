@@ -25,6 +25,8 @@ A part folder holds:
 | `<theme>.board.png` | The approved board for that theme, 1280 by 720. |
 | `<theme>.engine.png` | The engine's render of that theme's showcase page for the same part, 1280 by 720, taken when the board was archived. |
 
+A later round on the same theme names its pair after the round, `<theme>-<round>.board.png` and `<theme>-<round>.engine.png` (brief's tea sample is `brief-tea`), with a page suffix when one part was settled on two pages.
+
 A part that was settled on another part's page, such as a component field shown on a composition's page, links to that page instead of keeping a copy.
 
 A round folder holds what the boards were drawn from (the generator script or tool export) and a `README.md` with the round's decisions, including every place the engine departs from the board on purpose.
