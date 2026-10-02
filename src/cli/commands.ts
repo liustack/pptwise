@@ -85,6 +85,7 @@ import {
 } from "./theme-inputs"
 import { forkTheme } from "./theme-fork"
 import { THEME_TRY_SAMPLE_IR } from "./fixtures/theme-try-sample"
+import { offeredContentKinds } from "../render/layout-selection"
 
 /** `findUserConfig()`'s own return shape, named here so it can be threaded as
  *  a parameter (`loadDeckTarget`/`applyDeckConfig` below) instead of each
@@ -1416,8 +1417,17 @@ export async function runThemeTry(idsRaw: string, opts: ThemeTryOptions = {}): P
   const columns: { id: string; slides: { type: string; label: string; svg: string }[] }[] = []
   for (const name of ids) {
     const resolved = await resolveThemeByName(name, { startDir: cwd })
-    const raw = structuredClone(THEME_TRY_SAMPLE_IR) as { theme: { id: string }; slides: unknown[]; filename: string }
+    const raw = structuredClone(THEME_TRY_SAMPLE_IR) as {
+      theme: { id: string }
+      slides: { type?: string; kind?: string }[]
+      filename: string
+    }
     raw.theme = { id: resolved.id }
+    // The sample shows every kind, and a theme offers the kinds its menu
+    // names. A page whose kind this theme does not offer is left out of its
+    // column, which the sheet marks, rather than failing the whole comparison.
+    const offered = new Set<string>(offeredContentKinds(resolved.definition.menu))
+    raw.slides = raw.slides.filter((slide) => slide.type !== "content" || offered.has(slide.kind ?? ""))
     const v = validateIr(raw, { theme: resolved.definition })
     if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
     const ir = v.ir!
