@@ -600,7 +600,7 @@ export type FlowNode = {
 }
 export type FlowEdge = { from: string; to: string; label?: string }
 export type ArchitectureLayer = { title: string; items: string[] }
-export type TimelineMilestone = { date: string; title: string; desc?: string }
+export type TimelineMilestone = { date: string; title: string; desc?: string; lane?: string }
 export type ComparisonRow = { label: string; cells: string[] }
 
 function isRetiredIrVersion(input: unknown): boolean {

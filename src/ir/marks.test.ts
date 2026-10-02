@@ -112,3 +112,27 @@ describe("gantt text and emphasis", () => {
     expect(parse([gantt(items)]).success).toBe(false)
   })
 })
+
+describe("timeline lanes", () => {
+  const milestones = (lanes: (string | undefined)[]) =>
+    lanes.map((lane, i) => ({ date: `${7 + i} 月`, title: `事件 ${i}`, ...(lane === undefined ? {} : { lane }) }))
+
+  it("places every milestone on one of two lanes, the timeline naming which runs above", () => {
+    expect(parse([{ type: "timeline", milestones: milestones(["国内", "海外", "国内"]) }]).success).toBe(true)
+    expect(parse([{ type: "timeline", lanes: ["海外", "国内"], milestones: milestones(["国内", "海外", "国内"]) }]).success).toBe(true)
+  })
+
+  it("rejects a milestone left off the lanes the others run on", () => {
+    expect(messages([{ type: "timeline", milestones: milestones(["国内", undefined, "海外"]) }]).join(" ")).toContain("names no lane")
+  })
+
+  it("rejects a third lane, a lane the timeline does not name, and lanes on a vertical timeline", () => {
+    expect(messages([{ type: "timeline", milestones: milestones(["国内", "海外", "欧洲"]) }]).join(" ")).toContain("3 lanes")
+    expect(messages([{ type: "timeline", lanes: ["国内", "海外"], milestones: milestones(["国内", "欧洲"]) }]).join(" ")).toContain("Use one of them")
+    expect(messages([{ type: "timeline", layout: "vertical", milestones: milestones(["国内", "海外"]) }]).join(" ")).toContain("no sides")
+  })
+
+  it("rejects lanes when no milestone sits on one", () => {
+    expect(messages([{ type: "timeline", lanes: ["国内", "海外"], milestones: milestones([undefined, undefined]) }]).join(" ")).toContain("no milestone sits on one")
+  })
+})
