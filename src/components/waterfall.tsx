@@ -255,11 +255,13 @@ function decimalsOf(v: number): number {
 /**
  * Every bar prints the same number of decimals, the most any authored value
  * was written with: a bridge from 4.10 by 0.48 and 0.05 reads 4.10, +0.48,
- * +0.05, never 4.1 and +0.1. A unit glues on, and a currency sign leads.
+ * +0.05, never 4.1 and +0.1. A unit follows after a space ("382.1 万辆"), a
+ * percent sign or a magnitude glues on ("12%", "3.8m"), and a currency sign
+ * leads.
  */
 function formatValue(v: number, unit: string | undefined, signed: boolean, decimals: number): string {
   const sign = v < 0 ? "-" : signed && v > 0 ? "+" : ""
-  return joinUnit(`${sign}${Math.abs(v).toFixed(decimals)}`, unit, "")
+  return joinUnit(`${sign}${Math.abs(v).toFixed(decimals)}`, unit, " ")
 }
 
 interface CategoryLabel {

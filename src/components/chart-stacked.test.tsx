@@ -486,7 +486,8 @@ describe("stacked chart: drawing", () => {
     const container = draw({ ...TWO_REGIONS, axes: { x_title: "Quarter", y_title: "Revenue", y_unit: "M" } })
     expect(container.querySelector('[data-axis-title="x"]')!.textContent).toMatch(/^Quarter/)
     expect(container.querySelector('[data-axis-title="y"]')!.textContent).toMatch(/^Revenue/)
-    expect(yTickLabels(container).every((t) => t.endsWith(" M"))).toBe(true)
+    // A Latin magnitude glues to its figure: "40M", never "40 M".
+    expect(yTickLabels(container).every((t) => /\dM$/.test(t))).toBe(true)
   })
 
   it("renders only svg2pptx-subset primitives", () => {

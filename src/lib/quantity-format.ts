@@ -17,13 +17,26 @@ export function isCurrencyUnit(unit: string | undefined): boolean {
 }
 
 /**
+ * A Latin magnitude written as a unit: thousands, millions, billions,
+ * trillions. Glued to the figure it scales ("2m", "3.4bn", "12K"), the way a
+ * business reader writes it: "2 m" reads as two metres.
+ */
+const MAGNITUDE = new Set(["k", "K", "m", "M", "mn", "bn", "B", "tn", "T"])
+
+/** Whether `unit` is a Latin magnitude abbreviation, glued to its figure. */
+export function isMagnitudeUnit(unit: string | undefined): boolean {
+  return unit !== undefined && MAGNITUDE.has(unit.trim())
+}
+
+/**
  * `number` with `unit` attached as a reader expects it: a currency sign
  * before the digits and after any `+` or `-` (`+$0.48`, `-$2`), a percent sign
- * glued after them, and any other unit after `gap`.
+ * or a Latin magnitude glued after them (`12%`, `2m`), and any other unit
+ * after `gap`.
  */
 export function joinUnit(number: string, unit?: string, gap: "" | " " = " "): string {
   if (!unit) return number
-  if (PERCENT.has(unit)) return `${number}${unit}`
+  if (PERCENT.has(unit) || MAGNITUDE.has(unit)) return `${number}${unit}`
   const currency = CURRENCY_LEAD.exec(unit)
   if (currency) {
     const sign = /^[+\-−]/.test(number) ? number[0] : ""

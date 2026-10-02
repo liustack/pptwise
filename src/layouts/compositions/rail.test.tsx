@@ -48,7 +48,8 @@ describe("changeLabel and spanLabel", () => {
     expect(spanLabel(cost, 4.1, 5.35, "$")).toBe("$4.10 → $5.35")
     expect(spanLabel(series("Parcels", [131, 160]), 131, 160, undefined)).toBe("131 → 160")
     expect(spanLabel(series("Share", [12, 18]), 12, 18, "%")).toBe("12% → 18%")
-    expect(spanLabel(series("Seats", [12, 18]), 12, 18, "k")).toBe("12 k → 18 k")
+    // A Latin magnitude glues to its figure (`joinUnit`).
+    expect(spanLabel(series("Seats", [12, 18]), 12, 18, "k")).toBe("12k → 18k")
   })
 })
 
