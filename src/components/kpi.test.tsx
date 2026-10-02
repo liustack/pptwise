@@ -92,6 +92,28 @@ describe("kpi component", () => {
     for (const t of container.querySelectorAll("text")) expect(Number(t.getAttribute("y"))).toBeLessThan(h)
   })
 
+  it("sets a note under the label in body ink, before the source, and grows the card for it", () => {
+    const noted = {
+      type: "kpi_cards" as const,
+      items: [
+        { value: "+20.7%", label: "门店数同比", note: "6 月末共 63,987 家", source: "蜜雪集团中期业绩" },
+        { value: "+2.3%", label: "上半年收入同比", note: "152.16 亿元" },
+      ],
+    }
+    const brief = boundThemeCtx("brief", {})
+    const w = 970
+    expect(kpi.measure(noted, w, brief)).toBe(120 + 18 * 2)
+    const { container } = svg(kpi.render(noted, { x: 0, y: 0, w }, brief))
+    const byText = (text: string) => Array.from(container.querySelectorAll("text")).find((t) => t.textContent === text)!
+    const label = byText("门店数同比")
+    const note = byText("6 月末共 63,987 家")
+    const source = byText("蜜雪集团中期业绩")
+    expect(Number(note.getAttribute("y"))).toBeGreaterThan(Number(label.getAttribute("y")))
+    expect(Number(source.getAttribute("y"))).toBe(Number(note.getAttribute("y")) + 18)
+    expect(note.getAttribute("fill")).toBe(accessibleInk(brief.colors.text, brief.colors.surface, 16))
+    expect(byText("152.16 亿元")).toBeTruthy()
+  })
+
   it("renders 3 card rects with fill=ctx.colors.surface", () => {
     const { container } = svg(
       kpi.render(component, { x: 80, y: 200, w: 1120 }, ctx),

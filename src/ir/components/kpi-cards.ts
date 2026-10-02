@@ -12,6 +12,12 @@ export const schema = z
           value: z.string(),
           unit: z.string().optional(),
           label: z.string(),
+          note: z
+            .string()
+            .optional()
+            .describe(
+              "One short line that puts the figure in context: the base it is measured from, the period, or the counts behind it. Where the figure came from belongs in source.",
+            ),
           delta: z.enum(["up", "down", "flat"]).optional(),
           icon: IconNameSchema.optional(),
           /** 数据来源小字（财经信任语言，2026-07-12 借鉴），如

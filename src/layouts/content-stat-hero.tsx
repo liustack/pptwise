@@ -59,7 +59,13 @@ const CAPTION_LINE_RATIO = 1.25
  * `show-spotlight`.
  */
 function heroExact(slide: SvgTemplateProps["slide"]): boolean {
-  return !slide.components.some((component) => component.type === "kpi_cards" && component.items.length > 1)
+  // A figure's note (`items[].note`) is a line the author wrote, and the
+  // hero line has its caption and its source line and nowhere for a third.
+  return !slide.components.some(
+    (component) =>
+      component.type === "kpi_cards" &&
+      (component.items.length > 1 || component.items.some((item) => item.note?.trim())),
+  )
 }
 
 export function StatHeroContent(props: SvgTemplateProps) {

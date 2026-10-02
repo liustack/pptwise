@@ -264,13 +264,19 @@ const SINGLE_KPI_CARD_H = 160
  * budget check and the actual paint can never disagree about which size a
  * given cell renders at.
  */
-function kpiContentHeight(hasIcon: boolean, hero: boolean, hasSource: boolean): number {
+function kpiContentHeight(hasIcon: boolean, hero: boolean, hasSource: boolean, hasNote = false): number {
   const iconComponentH = hasIcon ? BENTO_KPI_ICON_SIZE + BENTO_KPI_ICON_GAP : 0
   const valueSize = hero ? BENTO_KPI_HERO_VALUE_SIZE : BENTO_KPI_VALUE_SIZE
   const valueLabelGap = hero
     ? BENTO_KPI_HERO_VALUE_LABEL_GAP
     : BENTO_KPI_VALUE_LABEL_GAP
-  return iconComponentH + valueSize + valueLabelGap + (hasSource ? BENTO_KPI_SOURCE_GAP : 0)
+  return (
+    iconComponentH +
+    valueSize +
+    valueLabelGap +
+    (hasNote ? BENTO_KPI_SOURCE_GAP : 0) +
+    (hasSource ? BENTO_KPI_SOURCE_GAP : 0)
+  )
 }
 
 type KpiBentoUnit = Extract<BentoCell["unit"], { kind: "kpi-item" }>
@@ -392,6 +398,9 @@ function renderKpiCardBody(
   } = valuePaint.layout
   const hasIcon = Boolean(item.icon)
   const sourceText = item.source?.trim() ?? ""
+  // `items[].note`, the line that puts the figure in context. It takes the
+  // source's size and pitch, right under the label, and the source follows.
+  const noteText = item.note?.trim() ?? ""
   const iconComponentH = hasIcon ? BENTO_KPI_ICON_SIZE + BENTO_KPI_ICON_GAP : 0
 
   // Task 3 "视觉主角": a hero-sized cell (see BENTO_KPI_HERO_MIN_CELL_H's own
@@ -411,7 +420,7 @@ function renderKpiCardBody(
   // padding and the bottom breathing room in every case, including cells too
   // short to have any slack (offsetY floors at 0).
   const budgetH = box.h - BENTO_CARD_TOP_PAD - BENTO_CARD_BOTTOM_PAD
-  const offsetY = Math.max(0, (budgetH - kpiContentHeight(hasIcon, hero, sourceText.length > 0)) / 2)
+  const offsetY = Math.max(0, (budgetH - kpiContentHeight(hasIcon, hero, sourceText.length > 0, noteText.length > 0)) / 2)
   const innerY = box.y + BENTO_CARD_TOP_PAD + offsetY
 
   const dp = item.delta ? deltaProps(item.delta, ctx.colors) : null
@@ -431,6 +440,15 @@ function renderKpiCardBody(
     fontSize: BENTO_KPI_LABEL_SIZE,
     minFontSize: BENTO_KPI_LABEL_MIN_SIZE,
   })
+  const fittedNote = noteText
+    ? fitSvgLine(noteText, {
+        maxWidth: innerW,
+        fontSize: BENTO_KPI_SOURCE_SIZE,
+        minFontSize: BENTO_KPI_SOURCE_SIZE,
+        fontFamily: ctx.fonts.body,
+      })
+    : null
+  const sourceY = fittedNote ? BENTO_KPI_SOURCE_GAP * 2 : BENTO_KPI_SOURCE_GAP
   const fittedSource = sourceText
     ? fitSvgLine(sourceText, {
         maxWidth: innerW,
@@ -549,11 +567,24 @@ function renderKpiCardBody(
       >
         {fittedLabel.text}
       </text>
+      {fittedNote && (
+        <text
+          data-truncated={fittedNote.truncated ? "1" : undefined}
+          x={innerX}
+          y={labelBaselineY + BENTO_KPI_SOURCE_GAP}
+          fontSize={fittedNote.fontSize}
+          fill={accessibleInk(ctx.colors.text, ctx.colors.surface, fittedNote.fontSize)}
+          fontFamily={ctx.fonts.body}
+          dominantBaseline="alphabetic"
+        >
+          {fittedNote.text}
+        </text>
+      )}
       {fittedSource && (
         <text
           data-truncated={fittedSource.truncated ? "1" : undefined}
           x={innerX}
-          y={labelBaselineY + BENTO_KPI_SOURCE_GAP}
+          y={labelBaselineY + sourceY}
           fontSize={fittedSource.fontSize}
           fill={ctx.colors.muted}
           fontFamily={ctx.fonts.body}
@@ -680,7 +711,7 @@ function cellOverBudget(cell: BentoCell, ctx: ComponentCtx): boolean {
   if (unit.kind === "kpi-item") {
     const budgetH = box.h - BENTO_CARD_TOP_PAD - BENTO_CARD_BOTTOM_PAD
     const hero = box.h > BENTO_KPI_HERO_MIN_CELL_H
-    return kpiContentHeight(Boolean(unit.item.icon), hero, Boolean(unit.item.source?.trim())) > budgetH
+    return kpiContentHeight(Boolean(unit.item.icon), hero, Boolean(unit.item.source?.trim()), Boolean(unit.item.note?.trim())) > budgetH
   }
   if (unit.kind === "icon-card-item") {
     const budgetH = box.h - BENTO_CARD_TOP_PAD - BENTO_CARD_BOTTOM_PAD

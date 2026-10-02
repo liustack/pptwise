@@ -17,6 +17,9 @@ const HERO_SIZE = 200
 const HERO_MIN_FONT_SIZE = 48
 const LABEL_FONT_SIZE = 28
 const LABEL_MIN_FONT_SIZE = 16
+const NOTE_FONT_SIZE = 20
+/** From the label's baseline to the note's, inside the hero band above the support rect. */
+const LABEL_TO_NOTE = 28
 
 /**
  * `big_number` arrangement — a "giant metric stage": the first KPI's value fills the
@@ -95,6 +98,15 @@ export function BigNumber({
         minFontSize: LABEL_MIN_FONT_SIZE,
       })
     : null
+  // The hero's note, the line that puts the number in context, under its label.
+  const fittedNote = hero?.note?.trim()
+    ? fitSvgLine(hero.note.trim(), {
+        maxWidth: rect.w,
+        fontSize: NOTE_FONT_SIZE,
+        minFontSize: NOTE_FONT_SIZE,
+        fontFamily: ctx.fonts.body,
+      })
+    : null
   const heroInk = fittedValue
     ? accessibleInk(
         ctx.colors.text,
@@ -135,6 +147,19 @@ export function BigNumber({
           >
             {fittedLabel!.text}
           </text>
+          {fittedNote && (
+            <text
+              data-truncated={fittedNote.truncated ? "1" : undefined}
+              x={rect.x}
+              y={valueBaseline + 44 + LABEL_TO_NOTE}
+              fontFamily={ctx.fonts.body}
+              fontSize={fittedNote.fontSize}
+              fill={accessibleInk(ctx.colors.text, ctx.defaultBg ?? ctx.colors.bg, fittedNote.fontSize)}
+              dominantBaseline="alphabetic"
+            >
+              {fittedNote.text}
+            </text>
+          )}
         </g>
       )}
       {placed.map((p, i) => (
