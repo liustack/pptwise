@@ -122,7 +122,7 @@ brief's sheets offer every composition except `pairs` (`SHEET_COMPOSITIONS` in [
 | face | what changed | code | used by | board |
 | :-- | :-- | :-- | :-- | :-- |
 | `gauge-figure` | the kpi_cards' second and third items stand right of a hairline beside the lead figure | [content-gauge-figure.tsx](../src/layouts/content-gauge-figure.tsx) | brief | [design/faces/gauge-figure](../design/faces/gauge-figure/README.md) |
-| `image-split` | a `column` parameter: `report` sets a 600px photograph, a 40px regular title, a 48 by 6 bar and the facts as `pairs`. Every other theme keeps `standard` | [image-pages.tsx](../src/render/image-pages.tsx) (`SPLIT_COLUMNS`) | brief (`report`), bulletin, ember, heritage, ink, journal, luxe, museum | [design/faces/image-split](../design/faces/image-split/README.md) |
+| `image-split` | a `column` parameter: `report` sets a 600px photograph, a 40px regular title, a 48 by 6 bar and the facts as `pairs`. Every other theme keeps `standard` | [image-pages.tsx](../src/render/image-pages.tsx) (`SPLIT_COLUMNS`) | brief (`report`), bulletin (`notice`), ember, heritage, ink, journal, luxe, museum | [design/faces/image-split](../design/faces/image-split/README.md) |
 
 A takeover face now receives its menu entry's `params`, the way a standard face always has.
 
@@ -147,3 +147,74 @@ A takeover face now receives its menu entry's `params`, the way a standard face 
 | Latin headings break evenly | balanced text with no Chinese in it (headings, and the cells that ask for it) evens its lines whenever an even split is no wider than the greedy one, the way CSS `text-wrap: balance` sets a heading, so "Guangzhou lost 2,326 tea" + "shops in a year" reads "Guangzhou lost 2,326" + "tea shops in a year". Chinese and mixed text still rebalance only a short last line, since an even split there falls between any two characters | [svg-text-layout.ts](../src/lib/svg-text-layout.ts) (`balanceWrappedLines`) | none |
 | A quote set large balances its lines | `figures` and `rail` fit a quote the way a heading is fitted, so a last line a third as long as the first evens out: 「“第三方外卖平台补贴」+「减少则构成拖累。”」 | [figure.tsx](../src/layouts/compositions/figure.tsx) (`fitQuote`), [type.tsx](../src/layouts/compositions/type.tsx) (`balance`) | none |
 
+## bulletin NEV sample, 2026-10
+
+The round redrew bulletin to a thirteen-page Chinese and English review of the 2026 third-quarter NEV market. Its decisions, the design system every bulletin page follows, and every place the engine departs from the board are in [`design/rounds/2026-10-03-bulletin/`](../design/rounds/2026-10-03-bulletin/README.md). The rules are restated for the next design session in [Designing for bulletin](./design-bulletin.md).
+
+### Compositions
+
+The compositions now take a `setting` from the face that offers them (`CompositionSetting` in [shared.tsx](../src/layouts/compositions/shared.tsx)). `board` is brief's first board and the default. `notice` is this round's: the same shapes set the way bulletin's board sets them, and a closing note on a light grey panel with a stroked circle for a warning (`paintNoticeClosing` in [closing.tsx](../src/layouts/compositions/closing.tsx)), since bulletin keeps its primary for the one marked thing. A composition that has no notice form ignores the setting.
+
+New, all in the notice setting so far:
+
+| composition | what it draws | takes | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| `columns` | an upright bar chart with no value axis: legend and unit over the plot, every value printed, forecast bars hatched, target bars outlined, change brackets over two columns | one `chart` (`bar` upright or `stacked`), one to three series (two to four stacked), two to six categories, no negative values | [columns.tsx](../src/layouts/compositions/columns.tsx), [plot.tsx](../src/layouts/compositions/plot.tsx) | bulletin | [design/compositions/columns](../design/compositions/columns/README.md) |
+| `bars` | a horizontal grouped bar chart: one row per category, each value at its bar's end, a change written after the bar it lands on | one horizontal `bar` chart, one to three series, two to six categories, every change with `at` | [bars.tsx](../src/layouts/compositions/bars.tsx) | bulletin | [design/compositions/bars](../design/compositions/bars/README.md) |
+| `bridge` | a waterfall with no value axis: grey totals with cut marks on a truncated axis, the marked step in primary with its value inside | one `waterfall` of two to six bars, no level below zero, no `emphasis_label` | [bridge.tsx](../src/layouts/compositions/bridge.tsx) | bulletin | [design/compositions/bridge](../design/compositions/bridge/README.md) |
+| `records` | an open data table: small headers over a black rule, 50px rows, a highlighted row on a pale primary tint, an optional note panel | `data_table` of two to six columns and up to eight one-line rows, optionally followed by a `callout` | [records.tsx](../src/layouts/compositions/records.tsx) | bulletin | [design/compositions/records](../design/compositions/records/README.md) |
+| `stack` | two or three headline figures stacked on the left, a titled list of bold lines and muted lines on the right | `kpi_cards` of two or three plain figures, then an `insight_panel` with no footnote | [stack.tsx](../src/layouts/compositions/stack.tsx) | bulletin | [design/compositions/stack](../design/compositions/stack/README.md) |
+| `window` | a short calendar as one band of blocks, the marked stretch in primary, with facts in columns under it | `gantt` with whole-unit, non-overlapping bars and one `axis_labels` entry per unit (two to six), then `kpi_cards` of two to four facts | [window.tsx](../src/layouts/compositions/window.tsx) | bulletin | [design/compositions/window](../design/compositions/window/README.md) |
+| `lanes` | one axis across the page, milestones as equal columns, the first lane's cards above and the second's below, an optional note panel | a horizontal `timeline` of two to eight milestones, optionally with lanes, optionally followed by a `callout` | [lanes.tsx](../src/layouts/compositions/lanes.tsx) | bulletin | [design/compositions/lanes](../design/compositions/lanes/README.md) |
+
+Settled compositions that grew a notice form:
+
+- `rows` takes `numbered_cards` too, sets each item in a 104px band, and reverses the marked card out of a primary block as the page's answer. Board: [design/compositions/rows](../design/compositions/rows/README.md).
+- `rail` hands its plot to `columns`, `bars` or `bridge` and sets the author's figures in a column right of a hairline (`railFiguresNotice` in [rail-figures.tsx](../src/layouts/compositions/rail-figures.tsx)). A figure with a note no longer sends the page to a plainer face. Board: [design/compositions/rail](../design/compositions/rail/README.md).
+- `pairs` sets a value written `**figure**，note` as the marked row: the figure at 40px in primary with the note under it. Board: [design/faces/image-split](../design/faces/image-split/README.md).
+- `table` keeps the other options muted and the recommended one black and bold under a primary header. Board: [design/compositions/table](../design/compositions/table/README.md).
+
+The tests for each new composition run it on bulletin and on ember and crayon, two themes that share nothing with it. The gallery's 构图 band has a bulletin page for each.
+
+### Faces
+
+| face | what it is | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- |
+| `notice-sheet` | the ordinary content page: a black bold claim over a hairline with a 96 by 3 primary bar, the body handed to the compositions in the notice setting, the source at 14px. Takes a full-body `waterfall` or `gantt` beside a `kpi_cards` (`fullBodyCompanions`) | [content-notice-sheet.tsx](../src/layouts/content-notice-sheet.tsx), [notice-shared.tsx](../src/layouts/notice-shared.tsx) | bulletin (points, list, comparison, process, data, hierarchy) | [design/faces/notice-sheet](../design/faces/notice-sheet/README.md) |
+| `ikb-field-cover` | redrawn: a full primary field, a small line, the title at 80px, a short white bar, the subtitle and the date in white held to contrast | [cover-ikb-field-cover.tsx](../src/layouts/cover-ikb-field-cover.tsx), [field-type.tsx](../src/layouts/field-type.tsx) | bulletin | [design/faces/ikb-field-cover](../design/faces/ikb-field-cover/README.md) |
+| `signoff-ending` | redrawn: a full primary field, what needs deciding at 56px, a thin rule, the next steps as numbered columns | [ending-signoff-ending.tsx](../src/layouts/ending-signoff-ending.tsx), [field-type.tsx](../src/layouts/field-type.tsx) | bulletin | [design/faces/signoff-ending](../design/faces/signoff-ending/README.md) |
+| `image-split` | a `notice` column: a 560px photograph, the notice head and the facts as notice `pairs` | [image-pages.tsx](../src/render/image-pages.tsx) (`NoticeSplitPage`) | bulletin | [design/faces/image-split](../design/faces/image-split/README.md) |
+
+A face can now declare `fullBodyCompanions`, the component types it sets beside one full-body component. validate lets exactly that page through on that face and refuses it everywhere else.
+
+### Motif
+
+| motif | what it draws | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- |
+| `bulletin-motif` | three square steps top right on every page: small and in primary on content pages, large and white on the cover and ending. The ruler and the title band are gone | [motif-bulletin-motif.tsx](../src/motifs/motif-bulletin-motif.tsx) | bulletin | [design/motifs/bulletin-motif](../design/motifs/bulletin-motif/README.md) |
+
+### Component fields
+
+| field | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| `chart.series[].data[].status` | `"forecast"` hatches a bar, `"target"` outlines it dashed over a pale tint, in the ordinary bar and stacked charts and the hand-set plots, with a legend entry and a forecast label | [chart.ts](../src/ir/components/chart.ts), [mark-status.tsx](../src/render/mark-status.tsx), [chart.tsx](../src/components/chart.tsx), [chart-svg.tsx](../src/components/chart-svg.tsx) | [design/components/chart](../design/components/chart/README.md) |
+| `chart.changes` | a bracket with the change over two columns, or with `at` the change between two series at one category | [chart.ts](../src/ir/components/chart.ts), [change-figure.ts](../src/lib/change-figure.ts), [chart-svg.tsx](../src/components/chart-svg.tsx) | [design/components/chart](../design/components/chart/README.md) |
+| `numbered_cards.items[].emphasis` | the one card the page lands on, its pill filled in primary | [numbered-cards.ts](../src/ir/components/numbered-cards.ts), [numbered-cards.tsx](../src/components/numbered-cards.tsx) | [design/components/numbered_cards](../design/components/numbered_cards/README.md) |
+| `gantt.items[].text`, `gantt.items[].emphasis` | a line under a stretch's label, and the one stretch the page is about | [gantt.ts](../src/ir/components/gantt.ts), [gantt.tsx](../src/components/gantt.tsx) | [design/components/gantt](../design/components/gantt/README.md) |
+| `timeline.milestones[].lane`, `timeline.lanes` | two tracks on one time order. The ordinary timeline prints the lane before the date | [timeline.ts](../src/ir/components/timeline.ts), [timeline.tsx](../src/components/timeline.tsx) | [design/components/timeline](../design/components/timeline/README.md) |
+| `kpi_cards.items[].value` with `**…**` | the one figure set in the theme's emphasis, in the ordinary card and in the compositions that set figures. The bento cell and the big-number faces print it without its asterisks | [kpi.tsx](../src/components/kpi.tsx) (`kpiValueText`) | [design/compositions/stack](../design/compositions/stack/README.md) |
+
+### Engine behaviour
+
+| behaviour | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| A numbered card paints its marks | titles and texts of `numbered_cards` set a `**…**` run as emphasis instead of printing the asterisks | [numbered-cards.tsx](../src/components/numbered-cards.tsx) | none |
+| The audit finds printed marks | `pptwise audit` and the gallery's L1 report `content-dropped` (kind `emphasis`) for any painted text that still shows an opening `**` | [printed-marks.ts](../src/audit/printed-marks.ts), [deck-audit.ts](../src/audit/deck-audit.ts), [l1.ts](../evals/gallery/l1.ts) | none |
+| Chinese lines break after a comma | balanced Chinese text moves a break back to the clause punctuation before it, so 「内需缩了两成，四」+「季度怎么打」 reads 「内需缩了两成，」+「四季度怎么打」, and a two-line Chinese heading evens its lines when a better seam leaves them at least as even | [svg-text-layout.ts](../src/lib/svg-text-layout.ts) (`breakScore`, `preferScriptBoundaries`, `balanceWrappedLines`) | none |
+| A unit stands apart from its number, a magnitude does not | a waterfall prints 「382.1 万辆」 and "3.82 million units", not 「382.1万辆」. A percent sign or a Latin magnitude (k, m, bn) stays glued to its figure, "12%" and "2m", in a waterfall and on a chart axis alike, so "2 m" no longer reads as two metres | [quantity-format.ts](../src/lib/quantity-format.ts), [waterfall.tsx](../src/components/waterfall.tsx) | none |
+| Chart value labels name their font | bar, horizontal bar, pie, donut, funnel and dumbbell value labels carry the body font, so a preview renderer no longer falls back to a serif | [chart-svg.tsx](../src/components/chart-svg.tsx) | none |
+| A dumbbell row that fell keeps its labels apart | the end value sits before the end dot when the row fell, instead of running over the start dot | [chart-svg.tsx](../src/components/chart-svg.tsx) (`renderDumbbell`) | none |
+| Card faces fit their footnote | `bento-panel`, `tone-adaptive-content` and `stacked-poster` shrink a long footnote to 16px and then cut it with `data-truncated`, instead of running past the type area | [face-footnote.tsx](../src/render/face-footnote.tsx) | none |
+| A deck with no chapters numbers pages plainly | `rail-numbered` prints 「01」 to 「10」 in a deck with no chapter pages, instead of a section number like "1.10" for a section that does not exist | [content-rail-numbered.tsx](../src/layouts/content-rail-numbered.tsx) | none |
+| `theme try` compares themes with different menus | a sample page whose kind a theme does not offer is left out of that theme's column and marked in the cell, instead of failing the whole comparison | [commands.ts](../src/cli/commands.ts) (`runThemeTry`), [preview-html.ts](../src/cli/preview-html.ts) | none |
+| A bullet's length leaves out its marks | the bullet length checks in validate count the words a reader sees, not the `**` around a marked run | [ir-quality.ts](../src/render/ir-quality.ts) | none |

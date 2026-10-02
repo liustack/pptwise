@@ -20,3 +20,19 @@ Code: [`src/render/image-pages.tsx`](../../../src/render/image-pages.tsx) (`Imag
 - A list the pairs cannot set whole is stacked under the bar the ordinary way.
 
 **The source line, on every theme.** The four takeovers (`image-split`, `image-top`, `image-bottom`, `image-annotate`) drew no `footnote` at all before this round, so a photo credit or a data source on a photo page reached nobody, and nothing said so. Each now sets it at 16px in muted ink within two lines: at the foot of the text column here, on the footnote line across the page under `image-top` and `image-annotate`, and centred between the text and the picture under `image-bottom`. `pptwise audit` reports a source line a page never paints.
+
+## bulletin, NEV sample, 2026-10
+
+bulletin's menu asks for the `notice` column. The round's decisions are in [rounds/2026-10-03-bulletin](../../rounds/2026-10-03-bulletin/README.md).
+
+| board (p05) | engine |
+| :-: | :-: |
+| ![board](bulletin.board.png) | ![engine](bulletin.engine.png) |
+
+**What it looks like.** The photograph fills x0 to x560 full height. The column starts at x624: the notice head (the 34px black bold claim, bottom-aligned, over the hairline and its 96 by 3 IKB bar) in 520px, the facts as notice [`pairs`](../../compositions/pairs/) from y196, and the 14px source at the column's foot.
+
+**Why.** The photo page is one more notice: the same head as every content page, so the deck reads as one document, with the photograph standing in for the chart.
+
+**What it gave up.**
+
+- A list the pairs cannot set is stacked under the head the ordinary way.

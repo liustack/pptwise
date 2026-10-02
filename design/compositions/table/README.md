@@ -45,3 +45,19 @@ A closing `callout` sits 24px under the table in a full-width primary block at 2
 - The first board's size is still tried first, so a table that fit before is drawn exactly as before.
 - Four options only at the dense size. Five rows at most at every size.
 - The English copy of the sample was tightened to keep every cell within its line budget, since the sizes are fixed.
+
+## bulletin, NEV sample, 2026-10
+
+The notice setting. The round's decisions are in [rounds/2026-10-03-bulletin](../../rounds/2026-10-03-bulletin/README.md).
+
+| board (p12) | engine |
+| :-: | :-: |
+| ![board](bulletin.board.png) | ![engine](bulletin.engine.png) |
+
+**What it looks like.** Row labels at 17px muted in a 170px column. The other options' cells at 20px muted. The recommended option's column lifted onto the surface with its header reversed out of a primary block, bold and white, and its cells black and bold. A rule in body ink under the header and a hairline under every row, the last one included.
+
+**Why.** The recommended option is the page's answer, so it takes the page's one IKB, the header, and its cells read as the plan by weight alone. The other option is there to be rejected, so it is muted.
+
+**What it gave up.**
+
+- A closing callout becomes the light grey panel.
