@@ -1,0 +1,27 @@
+{
+  "components": [
+    {
+      "type": "numbered_cards",
+      "items": [
+        {
+          "title": "Home market is shrinking",
+          "text": "Q3 home retail is down about a fifth, and NEV retail is falling too."
+        },
+        {
+          "title": "Growth moved abroad",
+          "text": "NEV exports hit 1.058m in Jul–Aug, 2.5 times a year earlier."
+        },
+        {
+          "title": "Share is moving, discounts went quiet",
+          "text": "BYD lost about 4.5 points of share. Fewer price cuts, but deeper."
+        },
+        {
+          "title": "How we play Q4",
+          "text": "Reset targets, spend in the subsidy window, clear every deal first.",
+          "emphasis": true
+        }
+      ]
+    }
+  ],
+  "notes": "Four findings. The first three review Q3, the fourth is how we play Q4. The pages that follow take them in this order, and the last page is what management needs to confirm today."
+}

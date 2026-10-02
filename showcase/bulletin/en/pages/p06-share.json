@@ -1,0 +1,81 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "axes": {
+        "y_title": "Share of home NEV retail",
+        "y_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Aug 2025",
+          "data": [
+            {
+              "x": "BYD",
+              "y": 27.8
+            },
+            {
+              "x": "Geely",
+              "y": 12.1
+            },
+            {
+              "x": "Changan",
+              "y": 6.5
+            },
+            {
+              "x": "Tesla China",
+              "y": 5.1
+            }
+          ]
+        },
+        {
+          "name": "Aug 2026",
+          "data": [
+            {
+              "x": "BYD",
+              "y": 23.3
+            },
+            {
+              "x": "Geely",
+              "y": 11.0
+            },
+            {
+              "x": "Changan",
+              "y": 5.8
+            },
+            {
+              "x": "Tesla China",
+              "y": 5.0
+            }
+          ],
+          "emphasis": true
+        }
+      ],
+      "direction": "horizontal",
+      "changes": [
+        {
+          "from": "Aug 2025",
+          "to": "Aug 2026",
+          "at": "BYD"
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "26.0%",
+          "label": "Start-ups' share in August",
+          "note": "Up 5.5 points year on year"
+        },
+        {
+          "value": "No. 3",
+          "label": "Leapmotor in August NEV retail"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: CPCA (Aug 2026 report, Aug 2025 maker data via CnEVPost). Share of home NEV retail, approximate",
+  "notes": "Share is each maker's home retail from the CPCA ranking divided by that month's NEV retail. The denominator is rounded, so the shares are approximate. BYD sold 233,943 at home in August, about 24.6% fewer than a year earlier, and its share fell from about 27.8% to 23.3%. Geely, Changan and Tesla China also gave up a little. The share went to the EV start-ups: 26.8% in July and 26.0% in August, each over 5 points higher than a year earlier, led by Leapmotor and NIO. The September maker ranking is not out, so a full Q3 share picture waits for CPCA's September report."
+}

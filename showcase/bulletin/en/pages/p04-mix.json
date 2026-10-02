@@ -1,0 +1,46 @@
+{
+  "components": [
+    {
+      "type": "waterfall",
+      "unit": "million units",
+      "items": [
+        {
+          "label": "Jul–Aug 2025",
+          "value": 3.82,
+          "kind": "total"
+        },
+        {
+          "label": "NEVs",
+          "value": -0.13
+        },
+        {
+          "label": "ICE cars",
+          "value": -0.69,
+          "emphasis": true
+        },
+        {
+          "label": "Jul–Aug 2026",
+          "value": 3.0,
+          "kind": "total"
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "65.2%",
+          "label": "NEV share of retail, Jul–Aug",
+          "note": "54.6% a year earlier"
+        },
+        {
+          "value": "84%",
+          "label": "ICE share of the drop",
+          "note": "ICE cars −0.69m, NEVs −0.13m"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: CPCA monthly reports, Jul–Aug 2025 and 2026. Passenger car home retail, changes are the two years' published figures subtracted",
+  "notes": "Home retail in July and August fell by 819k units. NEVs accounted for 132k of that and conventional fuel cars, hybrids without a plug included, for 687k. In August alone conventional cars sold 540k, down 40%, with pure petrol cars down 45%. So NEV share passed 65% because fuel cars collapsed faster, not because NEVs sold more. NEV retail itself was down 10.1% in August and 20% in September 1–27."
+}

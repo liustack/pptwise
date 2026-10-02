@@ -1,0 +1,43 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "10",
+          "label": "Models cut in price in August",
+          "note": "23 a year earlier"
+        },
+        {
+          "value": "**RMB 45k**",
+          "label": "Average cut per discounted NEV",
+          "note": "17.8% off, vs RMB 30k in H1"
+        }
+      ]
+    },
+    {
+      "type": "insight_panel",
+      "title": "September's play: finance and insurance perks",
+      "rows": [
+        {
+          "label": "Tesla: cash off",
+          "text": "Up to RMB 10k off stock cars, then up to RMB 7k off from Sep 25"
+        },
+        {
+          "label": "Xiaomi: 0% or insurance",
+          "text": "SU7 and YU7: 3-year 0% finance or a RMB 6k insurance subsidy"
+        },
+        {
+          "label": "Zeekr 8X: both",
+          "text": "RMB 10k insurance subsidy plus 5-year 0% finance"
+        },
+        {
+          "label": "Leapmotor: perks",
+          "text": "Purchase perks worth up to RMB 19,680"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: CPCA price-cut tracking (Jul 6, Sep 8, 2026), Tesla China, China Daily, Yicai Global (Sep 2026)",
+  "notes": "CPCA's own phrase is fewer cuts, deeper cuts. Fewer models were marked down, but discounted NEVs came down by RMB 45,000 on average, or 17.8%, against RMB 30,000 and 12% in the first half. In September carmakers stopped cutting list prices and switched to time-limited cash, 0% finance and insurance subsidies. CPCA secretary general Cui Dongshu sees this as a short push for the peak season rather than a new all-out price war. Our own deals should move the same way, but only if each one clears the pricing rules, which the rules page explains."
+}

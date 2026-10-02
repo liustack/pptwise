@@ -1,0 +1,107 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "bulletin",
+  "filename": "nev-q3-2026-review-en",
+  "meta": {
+    "organization": "Q3 2026 business review",
+    "date": "October 2026"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "Home demand fell a fifth. How do we play Q4?",
+      "summary": "China new-energy passenger cars: Q3 2026 review and Q4 actions"
+    },
+    {
+      "id": "p02-summary",
+      "type": "content",
+      "kind": "points",
+      "heading": "Home sales fell a fifth. Reset the Q4 targets",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p03-market",
+      "type": "content",
+      "kind": "data",
+      "heading": "Home retail fell over 20% three months running",
+      "focus": "chart"
+    },
+    {
+      "id": "p04-mix",
+      "type": "content",
+      "kind": "data",
+      "heading": "NEV share hit 65%, mostly as ICE sales collapsed",
+      "focus": "waterfall"
+    },
+    {
+      "id": "p05-export",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Growth went abroad: NEV exports up 154%",
+      "focus": "image"
+    },
+    {
+      "id": "p06-share",
+      "type": "content",
+      "kind": "data",
+      "heading": "BYD lost ~4.5 share points, start-ups gained 5.5",
+      "focus": "chart"
+    },
+    {
+      "id": "p07-players",
+      "type": "content",
+      "kind": "data",
+      "heading": "Q3 split: Leapmotor +78%, HIMA −29% in September",
+      "focus": "data_table"
+    },
+    {
+      "id": "p08-pricing",
+      "type": "content",
+      "kind": "list",
+      "heading": "Fewer but deeper price cuts, then finance perks",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p09-target",
+      "type": "content",
+      "kind": "data",
+      "heading": "June's call needs Q4 retail about 65% above Q3",
+      "focus": "chart"
+    },
+    {
+      "id": "p10-subsidy",
+      "type": "content",
+      "kind": "list",
+      "heading": "Subsidy funds lapse at year end: act in Oct–Nov",
+      "focus": "gantt"
+    },
+    {
+      "id": "p11-rules",
+      "type": "content",
+      "kind": "process",
+      "heading": "Q4 deals and export prices must clear new rules",
+      "focus": "timeline"
+    },
+    {
+      "id": "p12-plan",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Plan Q4 on the real trend, spend in the window",
+      "focus": "comparison"
+    },
+    {
+      "id": "p13-ending",
+      "type": "ending",
+      "heading": "Reset Q4 targets to **Q3's real trend**",
+      "summary": "For management to decide"
+    }
+  ],
+  "branding": "full",
+  "footer": {}
+}

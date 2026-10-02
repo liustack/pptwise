@@ -1,0 +1,78 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "stacked",
+      "axes": {
+        "y_title": "Million units"
+      },
+      "changes": [
+        {
+          "from": "Q3 2025",
+          "to": "Q4 2025"
+        },
+        {
+          "from": "Q3 2026",
+          "to": "Q4 2026"
+        }
+      ],
+      "series": [
+        {
+          "name": "Actual",
+          "data": [
+            {
+              "x": "Q3 2025",
+              "y": 6.06
+            },
+            {
+              "x": "Q4 2025",
+              "y": 6.73
+            },
+            {
+              "x": "Q3 2026",
+              "y": 3.0
+            }
+          ]
+        },
+        {
+          "name": "September forecast",
+          "data": [
+            {
+              "x": "Q3 2026",
+              "y": 1.69,
+              "status": "forecast"
+            }
+          ]
+        },
+        {
+          "name": "Needed",
+          "data": [
+            {
+              "x": "Q4 2026",
+              "y": 7.72,
+              "status": "target"
+            }
+          ],
+          "emphasis": true
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "~+65%",
+          "label": "Q4 over Q3, needed",
+          "note": "Only 11% a year ago"
+        },
+        {
+          "value": "~+15%",
+          "label": "Q4 over last year, needed",
+          "note": "Q3 was about −22.6%"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: CPCA reports and Sep forecast, Cui Dongshu's full-year call (Jun 9, 2026). Q4 worked back from an 11% decline",
+  "notes": "In June, CPCA secretary general Cui Dongshu said full-year retail would fall only 11% and Q4 would return to growth. Worked backwards: 23.74m units for 2025 times 0.89, less 11.716m for January to August and the 1.69m September forecast, leaves about 7.72m for Q4, some 15% above Q4 2025's 6.728m. Every month of last year's Q4 sold over 2.22m, so the base is not low. Q3 2026's 4.69m uses the September forecast, so if the final number comes in lower, the gap gets bigger. The June call no longer holds, and our Q4 home target should not be worked back from it."
+}

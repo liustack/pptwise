@@ -1,0 +1,107 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "bulletin",
+  "filename": "nev-q3-2026-review",
+  "meta": {
+    "organization": "2026 年三季度经营复盘",
+    "date": "2026 年 10 月"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "内需缩了两成，四季度怎么打",
+      "summary": "2026 年三季度新能源乘用车市场复盘与四季度动作"
+    },
+    {
+      "id": "p02-summary",
+      "type": "content",
+      "kind": "points",
+      "heading": "内需缩了两成，增量来自海外，四季度目标按实际走势重定",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p03-market",
+      "type": "content",
+      "kind": "data",
+      "heading": "国内零售连续三个月同比降两成以上，9 月也没有旺季",
+      "focus": "chart"
+    },
+    {
+      "id": "p04-mix",
+      "type": "content",
+      "kind": "data",
+      "heading": "渗透率升到 65%，主要是燃油车掉得更快",
+      "focus": "waterfall"
+    },
+    {
+      "id": "p05-export",
+      "type": "content",
+      "kind": "photo",
+      "heading": "增量在海外：新能源出口 7–8 月是去年同期的 2.5 倍",
+      "focus": "image"
+    },
+    {
+      "id": "p06-share",
+      "type": "content",
+      "kind": "data",
+      "heading": "份额在挪：比亚迪约少 4.5 个点，新势力多 5.5 个点",
+      "focus": "chart"
+    },
+    {
+      "id": "p07-players",
+      "type": "content",
+      "kind": "data",
+      "heading": "三季度成绩分化：零跑涨 78%，鸿蒙智行 9 月降 29%",
+      "focus": "data_table"
+    },
+    {
+      "id": "p08-pricing",
+      "type": "content",
+      "kind": "list",
+      "heading": "降价车型少了，单车降得更深，9 月改打金融和保险权益",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p09-target",
+      "type": "content",
+      "kind": "data",
+      "heading": "按 6 月的全年判断，四季度要比三季度多卖六成多",
+      "focus": "chart"
+    },
+    {
+      "id": "p10-subsidy",
+      "type": "content",
+      "kind": "list",
+      "heading": "补贴额度年底清账，10–11 月是窗口期",
+      "focus": "gantt"
+    },
+    {
+      "id": "p11-rules",
+      "type": "content",
+      "kind": "process",
+      "heading": "四季度的促销和出口定价，都要先过新规这一关",
+      "focus": "timeline"
+    },
+    {
+      "id": "p12-plan",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "目标按实际走势定，预算押在补贴窗口",
+      "focus": "comparison"
+    },
+    {
+      "id": "p13-ending",
+      "type": "ending",
+      "heading": "四季度国内目标，按三季度**实际走势**重定",
+      "summary": "需要管理层拍板"
+    }
+  ],
+  "branding": "full",
+  "footer": {}
+}

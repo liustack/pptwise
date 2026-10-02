@@ -1,0 +1,17 @@
+{
+  "components": [
+    {
+      "type": "comparison",
+      "recommended": 1,
+      "columns": ["Chase June's call", "Follow the real trend"],
+      "rows": [
+        { "label": "Home target", "cells": ["Q4 65% above Q3", "Reset to Q3's ~20% decline"] },
+        { "label": "Promotions", "cells": ["Match cash cuts", "Finance and insurance perks, each cleared"] },
+        { "label": "Subsidy window", "cells": ["Buyers claim on their own", "Stores help buyers claim in Oct–Nov"] },
+        { "label": "Exports", "cells": ["Ship to the old plan", "Reprice Brazil and Mexico at new tariffs"] },
+        { "label": "Cost", "cells": ["Missed target, stock and discounts by Dec", "Full-year target comes down"] }
+      ]
+    }
+  ],
+  "notes": "On the left we keep chasing June's full-year call. On the right we follow what Q3 actually did. The right column costs us a lower full-year target, which needs a conversation with headquarters. The left costs more: Q4 would have to sell over 60% more than Q3, and whatever we miss turns into stock and year-end discounting, the very thing regulators are watching most closely this year."
+}
