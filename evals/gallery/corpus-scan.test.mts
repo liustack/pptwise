@@ -323,7 +323,7 @@ describe("gallery SVG text respects the readable font floor", () => {
         if (
           !content ||
           hasDecor(el) ||
-          ["gauge-spec", "show-spec", "notice-spec"].includes(el.getAttribute("data-font-floor-exempt") ?? "")
+          ["gauge-spec", "show-spec", "notice-spec", "grid-spec"].includes(el.getAttribute("data-font-floor-exempt") ?? "")
         ) continue
         const fontSize = Number(el.getAttribute("font-size") ?? 16)
         if (fontSize < META_FONT_FLOOR_PX) {

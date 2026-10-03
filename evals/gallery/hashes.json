@@ -12581,6 +12581,21 @@
       "geometry": "4ph8px",
       "color": "9zrxrl"
     },
+    "unserved--face--grid-figure": {
+      "hash": "n98uce",
+      "geometry": "kb4lf3",
+      "color": "9xq7ta"
+    },
+    "unserved--face--grid-sheet": {
+      "hash": "skddrv",
+      "geometry": "1pitse6",
+      "color": "1p44iru"
+    },
+    "unserved--face--grid-statement": {
+      "hash": "1u38up1",
+      "geometry": "1jfzkm4",
+      "color": "1ohzntv"
+    },
     "unserved--face--header-band": {
       "hash": "u8mep",
       "geometry": "1e9dx38",

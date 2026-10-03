@@ -55,8 +55,9 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // Runway show adds seven pin-only faces: 123 -> 130.
     // The brief sample redesign adds gauge-sheet, gauge-exhibit and
     // gauge-figure, three theme-locked content faces: 130 -> 133. The
-    // bulletin sample redesign adds notice-sheet: 133 -> 134.
-    expect(layoutEntries).toHaveLength(134)
+    // bulletin sample redesign adds notice-sheet: 133 -> 134. The swiss
+    // sample redesign adds grid-sheet, grid-statement and grid-figure: 137.
+    expect(layoutEntries).toHaveLength(137)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -253,10 +254,10 @@ describe("layoutsForSlideType", () => {
     expect(layoutsForSlideType("ending")).toHaveLength(34)
   })
 
-  it("content includes both the 27 layouts and the 4 takeovers", () => {
+  it("content includes both the 30 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(27)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(30)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(31)
+    expect(contents).toHaveLength(34)
   })
 })

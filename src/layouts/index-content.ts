@@ -20,6 +20,9 @@ import { GaugeSheetContent } from "./content-gauge-sheet"
 import { GaugeExhibitContent } from "./content-gauge-exhibit"
 import { GaugeFigureContent } from "./content-gauge-figure"
 import { NoticeSheetContent } from "./content-notice-sheet"
+import { GridSheetContent } from "./content-grid-sheet"
+import { GridStatementContent } from "./content-grid-statement"
+import { GridFigureContent } from "./content-grid-figure"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { CrayonboxPointContent } from "./content-crayonbox-point"
 import { ShowGalleryContent } from "./content-show-gallery"
@@ -43,6 +46,8 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // for 23 registered content layouts in total. The brief sample redesign
 // adds gauge-sheet, gauge-exhibit and gauge-figure: 17 pin-only, 26 in all.
 // The bulletin sample redesign adds notice-sheet: 18 pin-only, 27 in all.
+// The swiss sample redesign adds grid-sheet, grid-statement and grid-figure:
+// 21 pin-only, 30 in all.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
   "two-column": TwoColumnContent,
@@ -71,4 +76,7 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "gauge-exhibit": GaugeExhibitContent,
   "gauge-figure": GaugeFigureContent,
   "notice-sheet": NoticeSheetContent,
+  "grid-sheet": GridSheetContent,
+  "grid-statement": GridStatementContent,
+  "grid-figure": GridFigureContent,
 }

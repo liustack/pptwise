@@ -200,6 +200,11 @@ export type ContentLayoutId =
   // bulletin sample redesign: the board's ordinary content page.
   // Theme-locked, never auto-picked.
   | "notice-sheet"
+  // swiss sample redesign: the board's ordinary content page, its statement
+  // page and its single-figure page. Theme-locked, never auto-picked.
+  | "grid-sheet"
+  | "grid-statement"
+  | "grid-figure"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

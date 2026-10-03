@@ -177,7 +177,18 @@ export function fitNoticeSource(
  * with no "Source:" composed by the face. A source past two lines at 14px is
  * cut and carries `data-truncated`.
  */
-export function NoticeSource({ source, ctx, x = NOTICE_LEFT }: { source: NoticeSourceLayout | null; ctx: ComponentCtx; x?: number }) {
+export function NoticeSource({
+  source,
+  ctx,
+  x = NOTICE_LEFT,
+  exempt = "notice-spec",
+}: {
+  source: NoticeSourceLayout | null
+  ctx: ComponentCtx
+  x?: number
+  /** The font-floor exemption the L1 audit knows this frame's 14px by: `notice-spec`, or `grid-spec` on swiss's frame. */
+  exempt?: "notice-spec" | "grid-spec"
+}) {
   if (!source) return null
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -191,7 +202,7 @@ export function NoticeSource({ source, ctx, x = NOTICE_LEFT }: { source: NoticeS
         (_line, index) => (
           <text
             key={index}
-            data-font-floor-exempt="notice-spec"
+            data-font-floor-exempt={exempt}
             data-truncated={layout.truncated && index === layout.lines.length - 1 ? "1" : undefined}
             x={x}
             y={source.firstBaseline + index * SOURCE_LINE_HEIGHT}

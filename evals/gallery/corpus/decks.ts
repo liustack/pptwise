@@ -519,6 +519,20 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
       },
     ]
   }
+  // swiss's grid sheet: the board's table page, a highlighted row over a
+  // closing note, which the face sets by hand in its grid setting.
+  if (def.id === "grid-sheet") {
+    const table = b.data_table!(lex)
+    return [
+      table.type === "data_table" ? { ...table, source: undefined } : table,
+      { type: "callout", variant: "info", text: lex.verdicts.positive },
+    ]
+  }
+  // The statement's figures and the figure page's lead with two beside it:
+  // plain values, labels and notes, the second one marked.
+  if (def.id === "grid-statement" || def.id === "grid-figure") {
+    return [{ type: "kpi_cards", items: figureItems(lex, 3).map((item, i) => (i === 1 ? { ...item, value: `**${item.value}**` } : item)) }]
+  }
   if (def.id === "gauge-figure") {
     // One figure with nothing the hero line has no place for: a delta arrow
     // or an icon sends the page to the plain fallback.
@@ -602,6 +616,9 @@ const CONTENT_FACE_KINDS: Record<string, PageKind> = {
   "gauge-figure": "fact",
   "gauge-sheet": "points",
   "notice-sheet": "points",
+  "grid-sheet": "data",
+  "grid-statement": "statement",
+  "grid-figure": "fact",
   "gauge-stats": "data",
   "image-annotate": "photo",
   "image-bottom": "photo",
