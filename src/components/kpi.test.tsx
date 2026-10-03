@@ -133,7 +133,7 @@ describe("kpi component", () => {
     const texts = container.querySelectorAll("text")
     // value texts are at y=58 positions
     const valueTexts = Array.from(texts).filter(
-      (t) => t.getAttribute("y") === "58",
+      (t) => t.getAttribute("y") === "58" && !t.hasAttribute("data-kpi-delta"),
     )
     expect(valueTexts).toHaveLength(3)
     valueTexts.forEach((t) => {
@@ -155,15 +155,43 @@ describe("kpi component", () => {
     const { container } = svg(
       kpi.render(component, { x: 80, y: 200, w: 1120 }, ctx),
     )
-    const texts = container.querySelectorAll("text")
-    // delta texts are at y=36 positions
-    const deltaTexts = Array.from(texts).filter(
-      (t) => t.getAttribute("y") === "36",
-    )
+    const deltaTexts = Array.from(container.querySelectorAll("text[data-kpi-delta]"))
     // First item has delta="up"
     const upArrow = deltaTexts[0]
     expect(upArrow.textContent).toBe("↑")
     expect(upArrow.getAttribute("fill")).toBe("#0A0E14")
+  })
+
+  it("sets the delta arrow after the figure and its unit, clear of both, however long the figure", () => {
+    // The arrow used to stand in the card's top right corner, and a figure
+    // long enough to reach it ran under the arrow ("600 至 640 亿").
+    const long = {
+      type: "kpi_cards" as const,
+      items: [
+        { value: "600 至 640 亿", label: "台积电资本预算", delta: "up" as const },
+        { value: "167", unit: "亿美元", label: "博通", delta: "up" as const },
+        { value: "542 亿美元", label: "美光", delta: "down" as const },
+      ],
+    }
+    const { container } = svg(kpi.render(long, { x: 0, y: 0, w: 760 }, ctx))
+    const groups = Array.from(container.querySelectorAll("svg > g > g"))
+    expect(groups).toHaveLength(3)
+    for (const card of groups) {
+      const [value] = Array.from(card.querySelectorAll("text"))
+      const arrow = card.querySelector("text[data-kpi-delta]")!
+      const size = Number(value!.getAttribute("font-size"))
+      const unit = value!.querySelector("tspan")
+      const figure = (value!.childNodes[0]?.textContent ?? "")
+      const right =
+        Number(value!.getAttribute("x")) +
+        measureTextUnits(figure, { bold: true, fontFamily: ctx.fonts.heading }) * size +
+        (unit ? measureTextUnits(unit.textContent!, { bold: true, fontFamily: ctx.fonts.heading }) * Number(unit.getAttribute("font-size")) : 0)
+      expect(arrow.getAttribute("y")).toBe(value!.getAttribute("y"))
+      expect(Number(arrow.getAttribute("x"))).toBeGreaterThanOrEqual(right + 8 - 0.01)
+      const card0 = card.querySelector("rect")!
+      const cardRight = Number(card0.getAttribute("x")) + Number(card0.getAttribute("width"))
+      expect(Number(arrow.getAttribute("x")) + measureTextUnits("↑", { fontFamily: ctx.fonts.body }) * 20).toBeLessThanOrEqual(cardRight - 20 + 0.5)
+    }
   })
 
   it("measure returns 120", () => {
@@ -254,12 +282,10 @@ describe("kpi component", () => {
 })
 
 describe("kpi semantic color tokens", () => {
-  /** Delta arrows render at y=36, one per card, in item order: up, down, flat. */
+  /** Delta arrows, one per card, in item order: up, down, flat. */
   function deltaFills(themeCtx: ComponentCtx) {
     const { container } = svg(kpi.render(component, { x: 80, y: 200, w: 1120 }, themeCtx))
-    return Array.from(container.querySelectorAll("text"))
-      .filter((t) => t.getAttribute("y") === "36")
-      .map((t) => t.getAttribute("fill"))
+    return Array.from(container.querySelectorAll("text[data-kpi-delta]")).map((t) => t.getAttribute("fill"))
   }
 
   it("follows colors.success / colors.danger for the up and down arrows", () => {
