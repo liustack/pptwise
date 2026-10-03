@@ -142,7 +142,8 @@ function railShape(components: readonly Component[]): { chart: Chart; entries: R
   if (components.length !== 1) return null
   const chart = components[0]!
   if (chart.type !== "chart" || !RAIL_TYPES.has(chart.chart_type)) return null
-  if (chart.chart_type === "bar" && chart.direction === "horizontal") return null
+  // A horizontal bar has no trend to read, and a stacked chart on its side is a share bar.
+  if (chart.direction === "horizontal") return null
   if (chart.series.length < 1 || chart.series.length > MAX_SERIES) return null
   if (chart.series.some((s) => s.data.some((point) => typeof point.x !== "string"))) return null
   // The category axis runs in first-seen order across the series, the order

@@ -141,8 +141,21 @@ export const CHART_AXIS_LIMIT = 1e300
  */
 const ONE_AXIS_TYPES = ["bar", "line", "area", "scatter", "dumbbell"] as const
 
-/** Chart types whose columns stand upright only. `direction` belongs to bar. */
-const UPRIGHT_ONLY_TYPES = ["stacked", "percent_stacked", "combo"] as const
+/**
+ * Chart types whose columns stand upright only. `direction` belongs to bar,
+ * and to the one stacked chart that lies on its side: the share bar.
+ */
+const UPRIGHT_ONLY_TYPES = ["percent_stacked", "combo"] as const
+
+/**
+ * Whether a chart is a share bar: a stacked chart turned on its side, which
+ * draws one whole as a single bar across the page cut into its parts. Each
+ * series is one part with its one value at the chart's one category, and
+ * the category's name is the bar's caption (`components/share-bar.tsx`).
+ */
+export function isShareBar(c: { chart_type: string; direction?: "horizontal" | "vertical" }): boolean {
+  return c.chart_type === "stacked" && c.direction === "horizontal"
+}
 
 /**
  * Chart types whose series each take their own palette color on one plot box,
@@ -307,7 +320,13 @@ export const schema = z
           "funnel: one value narrowing across ordered stages. dumbbell: a from→to change per row. " +
           "gauge: ONE value's progress toward a target, drawn as a filled half-ring with the number centered — reach for it for a single completion metric (e.g. 62% of goal). For several independent headline metrics side by side use `kpi_cards`, never a row of gauges.",
       ),
-    direction: z.enum(["horizontal", "vertical"]).optional(),
+    direction: z
+      .enum(["horizontal", "vertical"])
+      .optional()
+      .describe(
+        'bar: "horizontal" lays the bars on their side. stacked: "horizontal" draws one whole as a single share bar across the page, ' +
+          "every series one part with its one value at the chart's one category, whose name captions the bar.",
+      ),
     style: z.enum(["donut"]).optional(),
     /** `chart_type: "donut"` only: print the summed total as a big number in
      * the ring's hollow center (default: empty center). The legacy
@@ -398,7 +417,8 @@ export const schema = z
             .boolean()
             .optional()
             .describe(
-              "Marks the one series the page is about. It keeps the lead color and the others turn grey. At most one series, on bar, line, area, scatter, stacked, percent_stacked or combo charts with two or more series. A marked combo line also prints its values.",
+              "Marks the one series the page is about. It keeps the lead color and the others turn grey. At most one series, on bar, line, area, scatter, stacked, percent_stacked or combo charts with two or more series. A marked combo line also prints its values. " +
+                "A share bar (a stacked chart with direction \"horizontal\") may mark a run of adjacent parts, and states the run's total and share under it.",
             ),
         })
         .strict(),
@@ -596,6 +616,42 @@ export const schema = z
           `Remove direction, or use chart_type "bar" with direction "horizontal" for side-by-side horizontal bars.`,
       })
     }
+    // A stacked chart on its side is one whole as a single bar, cut into its
+    // parts: one category, one value per series, every part a share of the
+    // whole, so nothing below zero and nothing hatched, which a share has no
+    // way to show.
+    if (isShareBar(c)) {
+      const categories = new Set(c.series.flatMap((s) => s.data.map((d) => (typeof d.x === "number" ? `n:${d.x}` : `s:${d.x}`))))
+      const lone = c.series.findIndex((s) => s.data.length !== 1)
+      if (categories.size !== 1 || lone >= 0) {
+        ctx.addIssue({
+          code: "custom",
+          path: lone >= 0 ? ["series", lone, "data"] : ["series"],
+          message:
+            `a stacked chart on its side draws one whole as a single bar, so every series is one part with one value at the same category, the bar's caption. ` +
+            `This one has ${categories.size} categories${lone >= 0 ? ` and series[${lone}] ("${c.series[lone]!.name}") has ${c.series[lone]!.data.length} values` : ""}. ` +
+            `Give every series one point at one category, or remove direction to stack several upright columns.`,
+        })
+      }
+      c.series.forEach((s, si) =>
+        s.data.forEach((d, di) => {
+          if (d.y < 0) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["series", si, "data", di, "y"],
+              message: `series[${si}] ("${s.name}") is ${d.y}, and a part of a whole cannot be below zero. Give every part its size, or use chart_type "bar" for figures that can be negative.`,
+            })
+          }
+          if (d.status !== undefined) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["series", si, "data", di, "status"],
+              message: `a share bar draws every part as a share of one whole, and has no way to show that "${s.name}" is a ${d.status}. Say so in the series name, or remove status.`,
+            })
+          }
+        }),
+      )
+    }
     // A stacked column's height is a sum. Each side of the zero line has to
     // stay under the ceiling on its own, since the axis runs from the
     // deepest negative pile to the tallest positive one.
@@ -716,13 +772,15 @@ export const schema = z
               `Remove emphasis, or use chart_type ${SERIES_EMPHASIS_TYPES.map((t) => `"${t}"`).join(", ")}.`
             : `series emphasis singles one series out from the others, and this chart has only one series. Remove emphasis, or add the series it stands out from.`,
         })
-      } else if (marked.length > 1) {
+      } else if (marked.length > 1 && !(isShareBar(c) && marked[marked.length - 1]! - marked[0]! === marked.length - 1)) {
         ctx.addIssue({
           code: "custom",
           path: ["series", marked[1]!, "emphasis"],
-          message:
-            `${marked.length} series are marked with emphasis, and a chart singles out one: two marked series read as two answers, and the grey that sets them apart is gone. ` +
-            `Keep emphasis on the one series the page is about.`,
+          message: isShareBar(c)
+            ? `a share bar marks one run of adjacent parts, and the marked series here are not next to each other. ` +
+              `Put the parts the page is about side by side in the series, or keep emphasis on one of them.`
+            : `${marked.length} series are marked with emphasis, and a chart singles out one: two marked series read as two answers, and the grey that sets them apart is gone. ` +
+              `Keep emphasis on the one series the page is about.`,
         })
       }
     }

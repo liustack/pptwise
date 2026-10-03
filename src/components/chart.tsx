@@ -1,8 +1,10 @@
 import type { Component } from "@/ir";
 import {
+  isShareBar,
   SERIES_EMPHASIS_TYPES,
   SINGLE_SERIES_TYPES,
 } from "@/ir/components/chart";
+import { drawShareBar, SHARE_BAR_H, shareFills, shareParts } from "./share-bar";
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout";
 import {
   emphasisSeriesPalette,
@@ -565,6 +567,7 @@ function measureChartH(component: ChartComponent): number {
  * at spacious pacing lost the callout, while 92px of the band stood empty.
  */
 function chartMinHeight(component: ChartComponent): number {
+  if (isShareBar(component)) return SHARE_BAR_H;
   if (!axesApplicable(component)) return measureChartH(component);
   return (
     chartFrameH(component) +
@@ -572,11 +575,35 @@ function chartMinHeight(component: ChartComponent): number {
   );
 }
 
+/**
+ * A share bar (`isShareBar`) in the ordinary chart: each part its palette
+ * colour, or, with a run marked, the run in the lead colour and every other
+ * part in the grey a marked series leaves the rest in. Declared dropped when
+ * a part's name and value have nowhere to go.
+ */
+function renderShare(component: ChartComponent, box: { x: number; y: number; w: number }, ctx: Parameters<SvgComponent<ChartComponent>["render"]>[2]) {
+  const parts = shareParts(component);
+  const palette = rotateChartPalette(ctx.colors.chartPalette, ctx.chartPaletteOffset ?? 0);
+  const bg = ctx.defaultBg ?? ctx.colors.bg;
+  const marked = parts?.some((part) => part.marked) ?? false;
+  const fills = parts
+    ? shareFills(parts, {
+        mark: palette[0]!,
+        others: marked ? [recededMarkFill(ctx.colors.muted, bg)] : palette,
+        surface: ctx.colors.surface,
+      })
+    : [];
+  const drawn = drawShareBar({ chart: component, ctx, x: box.x, y: box.y, w: box.w, fills, markInk: palette[0]! });
+  return drawn ? drawn.node : <g data-dropped={1} data-dropped-kind="component" />;
+}
+
 export const chart: SvgComponent<ChartComponent> = {
   measure(component) {
+    if (isShareBar(component)) return SHARE_BAR_H;
     return measureChartH(component);
   },
   render(component, box, ctx) {
+    if (isShareBar(component)) return renderShare(component, box, ctx);
     const renderer = resolveRenderer(component);
     // axes only applies on an applicable chart_type — on any other type
     // (pie/funnel/dumbbell) `axes` is read as if it were entirely absent, so

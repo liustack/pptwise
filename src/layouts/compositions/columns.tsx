@@ -133,6 +133,8 @@ function columnsShape(components: readonly Component[]): Chart | null {
     if (chart.direction === "horizontal") return null
     if (chart.series.length < 1 || chart.series.length > MAX_SERIES) return null
   } else if (chart.chart_type === "stacked") {
+    // A stacked chart on its side is a share bar, which `share` draws.
+    if (chart.direction === "horizontal") return null
     if (chart.series.length < 2 || chart.series.length > MAX_STACKED_SERIES) return null
   } else return null
   if (chart.axes?.x_title) return null

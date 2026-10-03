@@ -190,6 +190,24 @@ Every value read against a value axis must stay within 1e300 in size: every `y` 
 }
 ```
 
+A `stacked` chart with `direction: "horizontal"` is a share bar: one whole drawn as a single bar across the page, cut into its parts in series order. Each series is one part with one value at the chart's one category, and that category's name is printed over the bar as its caption. Each part carries its name and value, inside it when they fit and over the bar's end when it is too narrow. Marking a run of adjacent parts with `emphasis` adds a line under the bar with the run's total and share of the whole, beside the largest other part's. Values must not be negative and no part takes a `status`.
+
+```json
+{
+  "type": "chart",
+  "chart_type": "stacked",
+  "direction": "horizontal",
+  "axes": { "y_unit": "GW" },
+  "series": [
+    { "name": "Solar", "emphasis": true, "data": [{ "x": "China's capacity at the end of 2025, by source", "y": 1202 }] },
+    { "name": "Wind", "emphasis": true, "data": [{ "x": "China's capacity at the end of 2025, by source", "y": 640 }] },
+    { "name": "Thermal", "data": [{ "x": "China's capacity at the end of 2025, by source", "y": 1539 }] },
+    { "name": "Hydro", "data": [{ "x": "China's capacity at the end of 2025, by source", "y": 448 }] },
+    { "name": "Nuclear", "data": [{ "x": "China's capacity at the end of 2025, by source", "y": 62 }] }
+  ]
+}
+```
+
 `percent_stacked` divides each value by its category's total, so every column reaches 100% and only the make-up is compared. It prints no totals and draws gridlines at every quarter by default. Values must not be negative, every category must add up above zero, and `y_unit` may only be `%`. A category that adds up to zero is refused rather than drawn as an empty column, because an empty column reads as missing data.
 
 `combo` draws bars and lines against the same categories. Set `plot: "line"` on each series to draw as a line. The rest are bars. A series with `axis: "right"` is read against a right-hand axis with its own scale, titled by `axes.y2_title` and `axes.y2_unit`. The right axis ticks sit on the same rows as the left axis ticks, so one set of gridlines serves both.
@@ -206,7 +224,7 @@ Every value read against a value axis must stay within 1e300 in size: every `y` 
 }
 ```
 
-A combo needs at least one bar series and one line series, and at least one series on the left axis. `plot`, `axis`, `y2_title`, and `y2_unit` exist only on `combo`, and `y2_title` or `y2_unit` without a series on the right axis is refused. Every combo value must stay within 1e300 in size. To get under it, divide every series on that value's axis by the same power of ten and name the unit in that axis's `y_unit` or `y2_unit`. None of the three new types takes `direction: "horizontal"`.
+A combo needs at least one bar series and one line series, and at least one series on the left axis. `plot`, `axis`, `y2_title`, and `y2_unit` exist only on `combo`, and `y2_title` or `y2_unit` without a series on the right axis is refused. Every combo value must stay within 1e300 in size. To get under it, divide every series on that value's axis by the same power of ten and name the unit in that axis's `y_unit` or `y2_unit`. `percent_stacked` and `combo` do not take `direction: "horizontal"`, and `stacked` takes it only as a share bar.
 
 ### Marking what a page is about
 

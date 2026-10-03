@@ -79,6 +79,60 @@ describe("chart point emphasis", () => {
   })
 })
 
+// swiss power deck (2026-10-03): China's installed capacity as one bar cut
+// into its sources, wind and solar marked as the run the page compares.
+describe("chart share bar", () => {
+  const capacity = (overrides: Record<string, unknown> = {}, parts?: unknown[]) => ({
+    type: "chart",
+    chart_type: "stacked",
+    direction: "horizontal",
+    axes: { y_unit: "亿千瓦" },
+    series: parts ?? [
+      { name: "太阳能", emphasis: true, data: [{ x: "2025 年末全国发电装机", y: 12.02 }] },
+      { name: "风电", emphasis: true, data: [{ x: "2025 年末全国发电装机", y: 6.4 }] },
+      { name: "火电", data: [{ x: "2025 年末全国发电装机", y: 15.39 }] },
+      { name: "水电", data: [{ x: "2025 年末全国发电装机", y: 4.48 }] },
+      { name: "核电", data: [{ x: "2025 年末全国发电装机", y: 0.62 }] },
+    ],
+    ...overrides,
+  })
+
+  it("draws one whole as one bar and marks a run of adjacent parts", () => {
+    expect(parse([capacity()]).success).toBe(true)
+  })
+
+  it("rejects a second category, a part below zero and a hatched part", () => {
+    const two = [
+      { name: "A", data: [{ x: "2024", y: 1 }, { x: "2025", y: 2 }] },
+      { name: "B", data: [{ x: "2024", y: 1 }, { x: "2025", y: 2 }] },
+    ]
+    expect(messages([capacity({}, two)]).join(" ")).toContain("one value at the same category")
+    const below = [
+      { name: "A", data: [{ x: "x", y: -1 }] },
+      { name: "B", data: [{ x: "x", y: 2 }] },
+    ]
+    expect(messages([capacity({}, below)]).join(" ")).toContain("cannot be below zero")
+    const hatched = [
+      { name: "A", data: [{ x: "x", y: 1, status: "forecast" }] },
+      { name: "B", data: [{ x: "x", y: 2 }] },
+    ]
+    expect(messages([capacity({}, hatched)]).join(" ")).toContain("no way to show")
+  })
+
+  it("rejects marked parts that are not next to each other", () => {
+    const apart = [
+      { name: "A", emphasis: true, data: [{ x: "x", y: 1 }] },
+      { name: "B", data: [{ x: "x", y: 2 }] },
+      { name: "C", emphasis: true, data: [{ x: "x", y: 3 }] },
+    ]
+    expect(messages([capacity({}, apart)]).join(" ")).toContain("not next to each other")
+  })
+
+  it("still keeps percent_stacked and combo upright", () => {
+    expect(messages([capacity({ chart_type: "percent_stacked" })]).join(" ")).toContain("upright columns only")
+  })
+})
+
 describe("chart changes", () => {
   const quarters = {
     type: "chart",
