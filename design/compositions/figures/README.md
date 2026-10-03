@@ -26,3 +26,20 @@ Code: [`src/layouts/compositions/figures.tsx`](../../../src/layouts/compositions
 The grid setting, settled on the statement page and the photo page: see [faces/grid-statement](../../faces/grid-statement/swiss.board.png) and [faces/image-top](../../faces/image-top/swiss.board.png). The round's decisions are in [rounds/2026-10-03-swiss](../../rounds/2026-10-03-swiss/README.md).
 
 **What it looks like.** Two to four figures in columns 376px apart, the last stopping 28px short of the band's edge: a 17px muted label, the figure bold in black, the one written `**…**` in the accent, and a 19px note under it, with hairlines between columns. Every figure shares the largest of 104, 72, 56 and 46px at which all of them fit: 104px for the statement's 「8490」, 46px for the photo page's 「70 美元/千瓦时」, 72px for the same page in English. No quote and no closing block in this setting.
+
+## ledger, AI capex sample, 2026-10
+
+In the panel setting. The round's decisions are in [rounds/2026-10-04-ledger](../../rounds/2026-10-04-ledger/README.md).
+
+| board (p13) | engine |
+| :-: | :-: |
+| ![board](ledger.board.png) | ![engine](ledger.engine.png) |
+
+**What it looks like.** A row of two to four figure panels, each named by its item's label, the figure under the bar with an arrow for its `delta`, and the note under it. A figure written with its sign ("+15.5%") is itself a change and takes its direction's colour. Under the row, a wider panel for the page's lead: a second `kpi_cards` of one item and a `paragraph`. The item's label names the panel, its figure stands on the left at up to 110px over its note, and the paragraph runs on the right at 20px. A callout after the row is a note panel instead.
+
+**Why.** The market page compares four reactions and singles out one. The row gives each the same weight, and the lead panel gives the outlier its own reading.
+
+**What it gave up.**
+
+- A lead figure wider than its column at 72px, or a paragraph past five lines, declines.
+- Red here is a fall, not a verdict: the two cloud companies whose cash flow worsened are red because their shares fell.

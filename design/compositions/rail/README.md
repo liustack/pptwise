@@ -58,3 +58,24 @@ The notice setting. The plot is no longer the chart component: `rail` hands the 
 The figure column beside [`columns`](../columns/) on p05 and p13 and beside the short chart under [`share`](../share/) on p08, in the grid setting. See those pages' boards. The round's decisions are in [rounds/2026-10-03-swiss](../../rounds/2026-10-03-swiss/README.md).
 
 **What it looks like.** A 1px black rule at x800, the plot to x760, the column from x840: a 16px muted label, the figure bold at 52px, its note at 16px, 170px apart. The figure written `**…**` is in the accent. In a band too short for that (under a share bar) each figure steps down to 44px with its note beside it in up to two lines, 110px apart, on the board's shorter column: the rule at x780, the plot to x700, the column from x820.
+
+## ledger, AI capex sample, 2026-10
+
+In the panel setting, settled on three pages: the guidance page (its dot plot in [compositions/shifts](../shifts/)), the lease page and the supplier page. The round's decisions are in [rounds/2026-10-04-ledger](../../rounds/2026-10-04-ledger/README.md).
+
+| board (p09) | engine |
+| :-: | :-: |
+| ![board](ledger-p09.board.png) | ![engine](ledger-p09.engine.png) |
+
+| board (p11) | engine |
+| :-: | :-: |
+| ![board](ledger-p11.board.png) | ![engine](ledger-p11.engine.png) |
+
+**What it looks like.** A chart in its panel beside a column of figure panels, one per `kpi_cards` item. The column stands on the side the author wrote it: figures before the chart on the left (360px), after it on the right (376px). Each figure panel is named by the item's label and sets the figure at the largest of 56, 48, 40 and 34px its panel holds, an arrow after it for its `delta` in the direction's colour, and its unit and note under it at 15px. A marked figure takes amber for its panel's edge, its name and itself. The chart is any chart the panel setting draws: columns, a stack, a combo, horizontal bars or a dumbbell.
+
+**Why.** Each of these pages argues from one chart and two or three figures that qualify it. Panels of one size make the figures read as a column of quotes beside the chart.
+
+**What it gave up.**
+
+- One to three figures. A figure its panel cannot hold whole declines the page to the other compositions.
+- The bars on the lease page set each name on the left at 18px and the value after the bar, the marked bar in amber with its name and value bold.

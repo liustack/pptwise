@@ -282,3 +282,68 @@ The tests for the grid forms and the new compositions run them on swiss and on e
 | A split label declares its colon | a face that sets an item's label apart from its gloss names the colon it set as the break (`data-gloss-break`), and the content audit reads it back | [fidelity.ts](../evals/gallery/fidelity.ts), [grid-shared.tsx](../src/layouts/grid-shared.tsx) (`FittedLines`) | none |
 | An English paragraph does not end on one word | text with no Chinese in it that the greedy wrap ends on a lone word takes the last word of the line before down to it, the way CSS `text-wrap: pretty` sets body text: "IEA sees coal power up 1.4%" + "in 2026" where it read "…1.4% in" + "2026". It moves only when that adds no line, leaves the line above two words or more and makes no line wider than the widest, so nothing is set smaller. Chinese keeps its own rule for a lone last character | [svg-text-layout.ts](../src/lib/svg-text-layout.ts) (`avoidLatinOrphan`) | none |
 | An English heading breaks between its sentences | balanced text (headings, and the quotes and cells that ask for it) takes a break between two English sentences over an even split whenever no line comes out wider than the plain wrap's widest, as a Chinese heading takes its comma: "Clean power met all new demand." + "Not settled yet." where it read "Clean power met all new" + "demand. Not settled yet.". The lines the break leaves are evened, a one-word last sentence keeps company, and the full stop of an initialism ("U.S.") or a short title ("Dr.") is no sentence end | [svg-text-layout.ts](../src/lib/svg-text-layout.ts) (`preferScriptBoundaries`, `isLatinSentenceBreak`) | none |
+
+## ledger AI capex sample, 2026-10
+
+The round redrew ledger to a fifteen-page Chinese and English investment committee review of the AI capital spending of the four largest US cloud companies in 2026. Its decisions, the design system every ledger page follows, and every place the engine departs from the board are in [`design/rounds/2026-10-04-ledger/`](../design/rounds/2026-10-04-ledger/README.md). The rules are restated for the next design session in [Designing for ledger](./design-ledger.md).
+
+### Compositions
+
+The compositions take a fourth `setting`, `panel` (`CompositionSetting` in [shared.tsx](../src/layouts/compositions/shared.tsx), the panel, its title bar and its inks in [panel.tsx](../src/layouts/compositions/panel.tsx)): every shape in a dark panel with a 36px title bar naming it and its unit. The theme's emphasis ink is the one mark, its success and danger inks say only which way a value moved, and unmarked series take the chart palette after its lead, nearest the mark first. Each composition's panel form lives in its own file beside the composition (`records-panel.tsx`, `table-panel.tsx`, `lanes-panel.tsx`, `rail-panel.tsx`, `figures-panel.tsx`, `columns-panel.tsx`, `bars-panel.tsx`), and the composition hands the page to it when the face asks for the panel setting. A composition with no panel form ignores the setting.
+
+New:
+
+| composition | what it draws | takes | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| `tiles` | numbered cards as numbered panels, two by two or three in a row, the number in each title bar | one `numbered_cards` of three or four items. The panel setting only | [tiles.tsx](../src/layouts/compositions/tiles.tsx) | ledger | [design/compositions/tiles](../design/compositions/tiles/README.md) |
+| `shifts` | a dumbbell chart in a panel, the rises in the mark, a parenthesis in a category set as a note under its name | one `dumbbell` chart of two series. The panel setting only, and `rail` sets it beside figure panels | [shifts.tsx](../src/layouts/compositions/shifts.tsx) | ledger | [design/compositions/shifts](../design/compositions/shifts/README.md) |
+| ticker | a row of headline figures under a cover's title: label, figure, unit, and the move or a note | one `kpi_cards` of two to four items. A face calls it (`drawTicker`), `compose` never offers it | [ticker.tsx](../src/layouts/compositions/ticker.tsx) | ledger (`stat-cover`) | [design/compositions/ticker](../design/compositions/ticker/README.md) |
+
+Settled compositions that grew a panel form:
+
+- `columns` sets a single series, a stack or a bar-and-line combo in a panel with no value axis, a legend from the top of the stack down, a total on every column, a change bracketed in the mark (in the direction's colour when a bar is marked), and a marked combo line's two ends with their values. Board: [design/compositions/columns](../design/compositions/columns/README.md).
+- `bars` sets one horizontal series as rows with the value after the bar, and, for the fact page, two or three bars each under its name with the value inside the bar's end (`compareBarsPanel`). Board: [design/faces/panel-figure](../design/faces/panel-figure/README.md) and [design/compositions/rail](../design/compositions/rail/README.md).
+- `records` sets a data table in a panel named by its `title`, figures large in the heading face, a negative figure in the danger ink, a highlighted row on the mark's tint with a bar down its edge, at a large and a compact size. Board: [design/compositions/records](../design/compositions/records/README.md).
+- `table` sets the options in a panel, the recommended column on the mark's tint inside its edge with 「（建议）」 or " (recommended)" after its header. Board: [design/compositions/table](../design/compositions/table/README.md).
+- `lanes` sets a timeline in a panel, the highlighted milestone in the mark, and on two lanes the lanes' names in the title bar so a date is only ever a date. Board: [design/compositions/lanes](../design/compositions/lanes/README.md).
+- `rail` stands a column of figure panels beside any panel chart, on the side the author wrote it, each figure at the largest size its panel holds with its arrow after it. Board: [design/compositions/rail](../design/compositions/rail/README.md).
+- `figures` sets a row of figure panels, a figure written with its sign in its direction's colour, and under the row a lead panel of one figure and its paragraph, or a note. Board: [design/compositions/figures](../design/compositions/figures/README.md).
+
+The shared pieces of the panel forms are in [panel.tsx](../src/layouts/compositions/panel.tsx): `paintPanel` and `fitPanelBar` for the panel and its title bar, `panelInks` for the inks, `fitFigurePanel` and `paintFigurePanel` for a figure panel, and `fitNotePanel` and `paintNotePanel` for a note panel that names itself by the label before a colon.
+
+The tests draw every panel form on ledger and on bulletin, ember and crayon ([panel.test.tsx](../src/layouts/compositions/panel.test.tsx), [tiles.test.tsx](../src/layouts/compositions/tiles.test.tsx)). The gallery's 构图 band has ledger pages for `tiles` and `shifts`.
+
+### Faces
+
+| face | what it is | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- |
+| `panel-sheet` | the ordinary content page: the claim in a serif across the full measure, the body handed to the compositions in the panel setting, the source at 13px | [content-panel-sheet.tsx](../src/layouts/content-panel-sheet.tsx), [panel-shared.tsx](../src/layouts/panel-shared.tsx) | ledger (points, list, comparison, process, data, hierarchy) | [design/faces/panel-sheet](../design/faces/panel-sheet/README.md) |
+| `panel-figure` | one figure at 200px with its unit and note, and a panel beside it of two or three bars and the move between them, or of more figures | [content-panel-figure.tsx](../src/layouts/content-panel-figure.tsx) | ledger (fact) | [design/faces/panel-figure](../design/faces/panel-figure/README.md) |
+| `image-split` | a `column` parameter: `panel` lays the photograph down the left from under the status bar, the claim and a ledger of figures beside it, and the caption over the source | [image-panel-split.tsx](../src/layouts/image-panel-split.tsx), [image-pages.tsx](../src/render/image-pages.tsx) | ledger (`panel`) | [design/faces/image-split](../design/faces/image-split/README.md) |
+| `stat-cover` | redrawn: an amber `kicker`, the title in a serif on one line where it fits, the subtitle, and a ticker of the first `kpi_cards` under a hairline | [cover-stat-cover.tsx](../src/layouts/cover-stat-cover.tsx) | ledger | [design/faces/stat-cover](../design/faces/stat-cover/README.md) |
+| `close-word-ending` | redrawn: an amber `kicker`, the decision in a serif, a hairline, a lead-in, two to four panels of label and gloss from the first `bullets`, and the page's `footnote` | [ending-close-word-ending.tsx](../src/layouts/ending-close-word-ending.tsx) | ledger | [design/faces/close-word-ending](../design/faces/close-word-ending/README.md) |
+
+### Motif
+
+| motif | what it draws | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- |
+| `poster-motif` | redrawn: a 32px status bar across the top of every page, the organization after an amber dot on the left and the date on the right. The wavy line along the foot is gone | [motif-poster-motif.tsx](../src/motifs/motif-poster-motif.tsx) | ledger | [design/motifs/poster-motif](../design/motifs/poster-motif/README.md) |
+
+### Page and component fields
+
+| field | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| `slide.kicker` | a short label over the heading, such as the occasion on a cover or what an ending asks for. A spec writes it on the page. Only a face that declares a place for it (`LayoutDefinition.pageFields`) draws it, and validate refuses it on any other, naming the face | [ir/index.ts](../src/ir/index.ts), [validate-core.ts](../src/validate-core.ts) (`checkKickerDrawn`), [spec/assemble.ts](../src/spec/assemble.ts) | [design/faces/stat-cover](../design/faces/stat-cover/README.md) |
+| `LayoutDefinition.pageFields` | a face declares the page fields it draws beyond heading, subheading and components: `kicker`, and on a boundary face `footnote`, so an ending can carry a disclaimer | [registry.ts](../src/layouts/registry.ts), [validate-core.ts](../src/validate-core.ts) (`checkBoundaryPageContent`) | [design/faces/close-word-ending](../design/faces/close-word-ending/README.md) |
+| `title` on `data_table`, `comparison` and `timeline` | the name a report gives a table or a timeline. It prints over the block in bold, and in the panel setting in the panel's title bar | [block-title.tsx](../src/components/block-title.tsx), [data-table.ts](../src/ir/components/data-table.ts), [comparison.ts](../src/ir/components/comparison.ts), [timeline.ts](../src/ir/components/timeline.ts) | [design/compositions/records](../design/compositions/records/README.md) |
+
+### Engine behaviour
+
+| behaviour | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| One figure style per deck | every chart in a deck prints its figures one way. The language comes from the deck's headings, and a Chinese deck groups four-digit figures when its author writes one grouped anywhere in the deck (GB/T 15835-2011 §5.1.1 allows either). Five digits and more are always grouped | [figure-style.ts](../src/lib/figure-style.ts) (`deckFigureStyle`), [quantity-format.ts](../src/lib/quantity-format.ts) | [design/components/chart](../design/components/chart/README.md) |
+| A dumbbell names its axes | the rows' title and the values' title and unit print as one line under the rows, as a horizontal bar chart does | [chart-svg.tsx](../src/components/chart-svg.tsx) | [design/components/chart](../design/components/chart/README.md) |
+| A marked combo line prints its ends | when the values between would land on taller bars, the line still prints its first and last values | [chart-svg.tsx](../src/components/chart-svg.tsx) | [design/components/chart](../design/components/chart/README.md) |
+| A delta arrow follows its figure | a headline card's arrow follows its figure and unit on one line, and the figure is fitted to the room it leaves, where the arrow used to sit in the corner over a long figure | [kpi.tsx](../src/components/kpi.tsx) | [design/components/kpi_cards](../design/components/kpi_cards/README.md) |
+| A hub and spoke too narrow declines | a hub and spoke set in a box too narrow for its words declines instead of cutting its labels, so the page steps aside or declares the drop | [hub-spoke.tsx](../src/components/hub-spoke.tsx) | none |
+| A photo's caption has a place on a panel page | `image-split`'s panel column sets the caption over the source, so a captioned photograph keeps its column instead of falling back to a sheet that cannot hold the rest | [image-panel-split.tsx](../src/layouts/image-panel-split.tsx) | [design/faces/image-split](../design/faces/image-split/README.md) |

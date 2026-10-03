@@ -61,3 +61,20 @@ The notice setting. The round's decisions are in [rounds/2026-10-03-bulletin](..
 **What it gave up.**
 
 - A closing callout becomes the light grey panel.
+
+## ledger, AI capex sample, 2026-10
+
+In the panel setting. The round's decisions are in [rounds/2026-10-04-ledger](../../rounds/2026-10-04-ledger/README.md).
+
+| board (p14) | engine |
+| :-: | :-: |
+| ![board](ledger.board.png) | ![engine](ledger.engine.png) |
+
+**What it looks like.** The options in a panel named by the comparison's `title`, one column each, the dimensions down a 212px label column. The recommended option stands on the dark amber tint inside a 1px amber edge, its header bold in amber with 「（建议）」 or " (recommended)" after it and its cells bold in the full ink. The other headers are muted at 19px and their cells a step quieter at 17px.
+
+**Why.** The committee is asked to pick one of three. The pick is lifted out so the eye lands on it, and the other two stay readable as the alternatives.
+
+**What it gave up.**
+
+- Two to four options and one to five rows. A header past two lines, a cell past three or a label past two declines.
+- The title bar prints no qualifier. "研究判断，不是公司指引" moved into the source line.

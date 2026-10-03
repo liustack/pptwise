@@ -43,3 +43,20 @@ Two author fields, settled on the solar page and the capacity page: see [composi
 
 - A marked point only on a `bar` chart, one per chart, and not beside a marked series.
 - A share bar takes no second category, no value below zero and no `status`. Several marked series are allowed only there, and only as one run of adjacent parts.
+
+## ledger, AI capex sample, 2026-10
+
+Three fixes to the ordinary chart, found while the board's charts were drawn in panels. See [compositions/shifts](../../compositions/shifts/ledger.board.png) and [compositions/columns](../../compositions/columns/ledger-p06.board.png). The round's decisions are in [rounds/2026-10-04-ledger](../../rounds/2026-10-04-ledger/README.md).
+
+**What it looks like.**
+
+- A dumbbell names its axes on one line under its rows, the rows' title and the values' title and unit, the way a horizontal bar chart does. It used to ignore them, so a guidance chart in 亿美元 never said what its figures counted.
+- A marked line in a combo prints its first and last values when the values between would land on taller bars. It used to print none.
+- Every chart in a deck prints its figures one way. The language of a chart's figures comes from the deck's headings, and a Chinese deck groups four-digit figures (「3,291」) when its author writes one grouped anywhere in the deck, otherwise leaves them whole (「3291」). Five digits and more are grouped either way.
+
+**Why.** One Chinese deck printed 「1,650」 on a chart of quarters and 「3291」 on a chart of company names, because each chart judged its language by its own labels. GB/T 15835-2011 §5.1.1 allows a four-digit integer either way, so the deck's author decides, and every chart follows.
+
+**What it gave up.**
+
+- A dumbbell still draws no grid, so validate keeps warning about `show_grid` on it.
+- A Chinese deck that never writes a grouped four-digit figure keeps 「8490」 beside 「10,575」, as swiss's does.
