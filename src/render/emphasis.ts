@@ -83,10 +83,23 @@ export function renderEmphasisTspans(
   if (segments.length === 1 && !segments[0].emphasized) {
     return segments[0].text
   }
+  // These runs flow on from one another, and a renderer that strips each
+  // chunk's edge blanks under the default whitespace rule loses the space
+  // two runs meet at (rsvg does: "Added worldwide: **112 GW**, up 48%"
+  // previewed as "worldwide:112 GW, up"). A run with a blank on an edge
+  // another run meets says to keep it. Browsers and the PowerPoint export
+  // read the same single space either way.
+  const last = segments.length - 1
+  const keepsEdgeBlank = (index: number, text: string) =>
+    (index > 0 && /^\s/.test(text)) || (index < last && /\s$/.test(text)) ? { xmlSpace: "preserve" } : {}
   return segments.map((seg, i) =>
     seg.emphasized
-      ? React.createElement("tspan", { key: i, fill: opts.accent, fontWeight: opts.fontWeight ?? "600" }, seg.text)
-      : React.createElement("tspan", { key: i, fill: opts.baseFill }, seg.text),
+      ? React.createElement(
+          "tspan",
+          { key: i, fill: opts.accent, fontWeight: opts.fontWeight ?? "600", ...keepsEdgeBlank(i, seg.text) },
+          seg.text,
+        )
+      : React.createElement("tspan", { key: i, fill: opts.baseFill, ...keepsEdgeBlank(i, seg.text) }, seg.text),
   )
 }
 
