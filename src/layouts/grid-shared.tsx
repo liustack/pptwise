@@ -151,6 +151,7 @@ export function FittedLines({
   fill,
   bold = false,
   fontFamily,
+  glossBreak,
 }: {
   layout: EmphasisHeadingLayout
   ctx: ComponentCtx
@@ -160,6 +161,12 @@ export function FittedLines({
   fill: string
   bold?: boolean
   fontFamily?: string
+  /**
+   * The separator an author wrote after this label and the face set as the
+   * break before its gloss, declared on the last line (`data-gloss-break`)
+   * so the content audit reads it back.
+   */
+  glossBreak?: string
 }) {
   const family = fontFamily ?? (bold ? ctx.fonts.heading : ctx.fonts.body)
   return (
@@ -171,6 +178,7 @@ export function FittedLines({
           <text
             key={index}
             data-truncated={layout.truncated && index === layout.lines.length - 1 ? "1" : undefined}
+            data-gloss-break={glossBreak && index === layout.lines.length - 1 ? glossBreak : undefined}
             x={x}
             y={y + index * layout.lineHeight}
             fontFamily={family}

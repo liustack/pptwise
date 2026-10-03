@@ -651,9 +651,18 @@ function contractPages(lex: (typeof LEXICONS)[LanguageId], assets: CorpusAssets)
   const quoteSlide = pullQuote.slides[0] as Slide
   quoteSlide.components = [COMPONENT_BUILDERS.blockquote!(lex)]
 
+  // An ending that sets each item's label apart from its gloss, the colon
+  // between them the break: swiss's closing page.
+  const resolution = layoutPage("resolution-ending", lex, assets, "swiss")
+  const resolutionSlide = resolution.slides[0] as Slide
+  resolutionSlide.components = [
+    { type: "bullets", items: lex.metrics.slice(0, 3).map((m) => `${m.label}${lex.id === "en" ? ": " : "："}${m.value}${m.unit ?? ""}`) },
+  ]
+
   return [
     { id: "contract--stat-hero--four-metrics", ir: statHero, slideIndex: 0 },
     { id: "contract--pull-quote--authored-quote", ir: pullQuote, slideIndex: 0 },
+    { id: "contract--resolution-ending--label-gloss", ir: resolution, slideIndex: 0 },
   ]
 }
 

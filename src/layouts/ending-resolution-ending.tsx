@@ -19,8 +19,8 @@ import { FittedLines } from "./grid-shared"
  *   - 2px 黑线 y330。
  *   - 线下最多三列，列距 376：红色 72px 粗体编号「01」（主题强调墨），30px
  *     粗体标签，20/30 说明。条目取第一个 bullets：写成「标签：说明」时拆成
- *     标签和说明（`splitRow`，冒号是两者的分界，不再印），没有冒号时整条做
- *     标签。
+ *     标签和说明（`splitRow`）。冒号是两行之间的分界，不再印，标签末行用
+ *     `data-gloss-break` 声明它，内容审计照样读得到。没有冒号时整条做标签。
  *   - 顶边红条归 motif，本版式不画。不致谢，不画落款。
  *
  * 零 theme id、零 baked hex。标签放不下两行、说明放不下三行时缩到下限，再
@@ -69,6 +69,9 @@ export function ResolutionEnding({ slide, ctx }: SvgTemplateProps) {
 
   const columns = boundaryBulletItems(slide, ITEM_MAX).map((item, i) => {
     const { label, gloss } = splitRow(item)
+    // The colon between label and gloss becomes the break between the two
+    // lines, declared on the label so the content audit can read it back.
+    const glossBreak = label ? item.trim().slice(label.length, item.trim().length - gloss.length).trim() : undefined
     const head = fitEmphasisText(label ?? gloss, {
       maxWidth: COLUMN.w,
       fontSize: LABEL.size,
@@ -89,7 +92,7 @@ export function ResolutionEnding({ slide, ctx }: SvgTemplateProps) {
           bold: false,
         })
       : null
-    return { x: LEFT + i * COLUMN.pitch, number: String(i + 1).padStart(2, "0"), head, desc }
+    return { x: LEFT + i * COLUMN.pitch, number: String(i + 1).padStart(2, "0"), head, desc, glossBreak }
   })
 
   const ink = (size: number) => accessibleInk(colors.text, bg, size)
@@ -123,7 +126,7 @@ export function ResolutionEnding({ slide, ctx }: SvgTemplateProps) {
             >
               {column.number}
             </text>
-            <FittedLines layout={column.head} ctx={ctx} x={column.x} y={headBaseline} fill={ink(column.head.fontSize)} bold />
+            <FittedLines layout={column.head} ctx={ctx} x={column.x} y={headBaseline} fill={ink(column.head.fontSize)} bold glossBreak={column.glossBreak} />
             {column.desc && column.desc.lines.length > 0 && (
               <FittedLines
                 layout={column.desc}

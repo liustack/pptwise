@@ -75,6 +75,8 @@ describe("ending-resolution-ending — board geometry", () => {
       expect(["x", "y", "font-size", "font-weight"].map((a) => byText(root, label)!.getAttribute(a))).toEqual([x, "484", "30", "700"])
     }
     expect(byText(root, "IEA 预计 2026 年煤电回升 1.4%")!.getAttribute("font-size")).toBe("20")
+    // The colon is the break between the two lines, declared on the label.
+    expect(byText(root, "气价")!.getAttribute("data-gloss-break")).toBe("：")
     // The magnitudes of a power unit stay on one line.
     expect(byText(root, "1.58 亿千瓦")).toBeDefined()
   })
