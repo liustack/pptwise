@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { groupDigits, joinUnit } from "./quantity-format"
+import { CHINESE_FIGURES, ENGLISH_FIGURES, groupDigits, joinUnit } from "./quantity-format"
 
 describe("joinUnit", () => {
   it("puts a currency sign in front of the number, after any sign", () => {
@@ -47,6 +47,15 @@ describe("groupDigits", () => {
     expect(groupDigits("8490", true)).toBe("8490")
     expect(groupDigits("10575", true)).toBe("10,575")
     expect(groupDigits("−12345.5", true)).toBe("−12,345.5")
+  })
+
+  it("groups a Chinese four-digit figure when the deck's style says its author does", () => {
+    const grouping = { chinese: true, groupFour: true }
+    expect(groupDigits("1650", grouping)).toBe("1,650")
+    expect(groupDigits("3291", grouping)).toBe("3,291")
+    expect(groupDigits("890", grouping)).toBe("890")
+    expect(groupDigits("8490", CHINESE_FIGURES)).toBe("8490")
+    expect(groupDigits("2778", ENGLISH_FIGURES)).toBe("2,778")
   })
 
   it("keeps the sign, the decimals and the unit as written", () => {

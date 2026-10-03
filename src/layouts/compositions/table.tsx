@@ -5,6 +5,7 @@ import { accessibleInk, readableOn } from "../../render/ink"
 import { closingCallout, fitClosing, fitNoticeClosing, paintClosing, paintNoticeClosing, type ClosingLayout, type ClosingSpec } from "./closing"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
+import { tablePanel } from "./table-panel"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -237,6 +238,8 @@ function columnsFor(scale: TableScale, count: number, picked: number | undefined
 function tableShape(components: readonly Component[]): { comparison: Comparison; callout?: Callout } | null {
   const [only, second, ...rest] = components
   if (only?.type !== "comparison" || rest.length > 0) return null
+  // No place for a title over the open table: the ordinary comparison prints it.
+  if (only.title?.trim()) return null
   if (only.columns.length < MIN_COLUMNS || only.columns.length > MAX_COLUMNS) return null
   if (only.rows.length === 0 || only.rows.length > MAX_ROWS) return null
   if (second === undefined) return { comparison: only }
@@ -334,7 +337,9 @@ function layoutAt(
   return { scale, columns, headers, rows, bottom, ...(closing ? { closing } : {}) }
 }
 
-export const tableComposition: Composition = ({ components, ctx, rect, setting }) => {
+export const tableComposition: Composition = (props) => {
+  if (props.setting === "panel") return tablePanel(props)
+  const { components, ctx, rect, setting } = props
   const shape = tableShape(components)
   if (!shape) return null
   if (setting === "notice") return noticeTable(shape, ctx, rect)

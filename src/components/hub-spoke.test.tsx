@@ -264,5 +264,32 @@ describe("hub_spoke component", () => {
       }
     }
   })
-})
 
+  it("declines a box too narrow for its words rather than cutting them, beside a second component", () => {
+    // The sample deck's five labs, set in the half of a page a face leaves
+    // when a kpi_cards row stands beside the hub: the drawing scales to the
+    // width, and at that scale "商业 RPO 剔除 OpenAI 只增 25%" no longer fits
+    // its capsule. It used to print the first few characters, marked
+    // truncated. A word cut short is a different word, so the hub declines.
+    const labs = {
+      type: "hub_spoke" as const,
+      center: "AI 实验室",
+      items: [
+        { label: "微软", description: "商业 RPO 剔除 OpenAI 只增 25%" },
+        { label: "亚马逊", description: "投资两家，各获千亿级 AWS 承诺" },
+        { label: "英伟达", description: "为租给 OpenAI 的园区担保，上限 1,050 亿" },
+        { label: "四家积压订单", description: "合计约 2.35 万亿" },
+        { label: "Anthropic", description: "算力义务 5,180 亿，2025 年收入近 46 亿" },
+      ],
+    }
+    for (const id of ["ledger", "brief"]) {
+      const ctx = themed(id)
+      const narrow = svg(hubSpoke.render(labs, { x: 0, y: 0, w: 560, h: 400 }, ctx)).container
+      expect(narrow.querySelectorAll("[data-truncated]"), id).toHaveLength(0)
+      expect(narrow.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind"), id).toBe("component")
+      const wide = svg(hubSpoke.render(labs, { x: 0, y: 0, w: 1088, h: 400 }, ctx)).container
+      expect(wide.querySelector("[data-dropped]"), id).toBeNull()
+      expect(wide.querySelectorAll("[data-truncated]"), id).toHaveLength(0)
+    }
+  })
+})

@@ -555,6 +555,31 @@ describe("combo chart: a marked line", () => {
     expect(container.querySelector("[data-dropped]")).toBeNull()
   })
 
+  it("prints the line's two ends when the points between them run under taller bars", () => {
+    // The ledger capex deck's p06 (2026-10-04): capex as a share of
+    // operating cash flow climbs from 45% to 96% while the cash-flow bars
+    // stand taller than the line in the middle quarters. The labels over
+    // those points land on the bars, and the line used to print none at all.
+    const share: ChartComponent = {
+      type: "chart",
+      chart_type: "combo",
+      axes: { y_unit: "亿美元", y2_unit: "%" },
+      series: [
+        { name: "Cash after capex", data: ["Q1", "Q2", "Q3", "Q4", "Q5"].map((x, i) => ({ x, y: [10, 95, 98, 95, 10][i]! })) },
+        {
+          name: "Capex share",
+          plot: "line",
+          axis: "right",
+          emphasis: true,
+          data: ["Q1", "Q2", "Q3", "Q4", "Q5"].map((x, i) => ({ x, y: [45, 50, 60, 70, 96][i]! })),
+        },
+      ],
+    }
+    const container = draw(share, 900)
+    expect(valueLabels(container)).toEqual(["45%", "96%"])
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+  })
+
   it("prints none of them when one label would sit on another", () => {
     // Twelve months on 600px leave each label about 45px, and "$1000.25" is
     // wider than that. The bars stand far below the line, so only the

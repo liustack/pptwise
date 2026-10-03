@@ -488,6 +488,37 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
     if (cards.type === "numbered_cards") cards.items = cards.items.slice(0, 3)
     return [cards]
   }
+  // ledger's panel sheet: the board's data page, a chart in its panel with
+  // the author's figures in panels beside it.
+  if (def.id === "panel-sheet") {
+    const chart = b.chart!(lex)
+    if (chart.type !== "chart") throw new Error("the corpus chart builder returned no chart")
+    // One series over the periods, the way the board's panel draws columns:
+    // the axis is named by the panel's title bar, not an axis title.
+    const series = chart.series.slice(0, 1)
+    return [
+      { ...chart, axes: { y_title: chart.axes?.y_title, y_unit: chart.axes?.y_unit }, series },
+      { type: "kpi_cards", items: figureItems(lex, 3) },
+    ]
+  }
+  // panel-figure's lead is one figure, read against a few bars of the same
+  // measure: the figure and the two periods before it, the last bar the
+  // figure itself.
+  if (def.id === "panel-figure") {
+    const figure = lex.metrics[1]!
+    const value = Number.parseFloat(figure.value)
+    if (!Number.isFinite(value)) throw new Error(`panel-figure needs a numeric metric, and lexicon "${lex.id}" has "${figure.value}"`)
+    return [
+      { type: "kpi_cards", items: [{ value: figure.value, unit: figure.unit, label: figure.label }] },
+      {
+        type: "chart",
+        chart_type: "bar",
+        direction: "horizontal",
+        axes: { x_unit: figure.unit },
+        series: [{ name: figure.label, data: lex.periods.slice(0, 3).map((x, i) => ({ x, y: Math.round(value * [0.8, 0.9, 1][i]! * 10) / 10 })) }],
+      },
+    ]
+  }
   if (def.id === "show-figures") {
     const kpi = b.kpi_cards!(lex)
     if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 3)
@@ -1188,6 +1219,34 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
       footnote: lex.sources[0]!.label,
     }
   },
+  // Four numbered panels, the second the one the page lands on.
+  tiles: (lex) => ({
+    heading: lex.headings[1]!,
+    components: [
+      {
+        type: "numbered_cards",
+        items: lex.phrases.slice(0, 4).map((title, i) => ({ title, text: lex.sentences[i + 2]!, ...(i === 1 ? { emphasis: true } : {}) })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // A move per row from a first value to a later one, one row falling, the
+  // values titled and in their unit.
+  shifts: (lex) => ({
+    heading: lex.headings[3]!,
+    components: [
+      {
+        type: "chart",
+        chart_type: "dumbbell",
+        axes: { x_title: lex.chapters[0]!, x_unit: lex.metrics[0]!.unit },
+        series: [
+          { name: lex.periods[0]!, data: lex.labels.slice(8, 12).map((x, i) => ({ x, y: [1800, 2000, 1250, 1900][i]! })) },
+          { name: lex.periods[1]!, data: lex.labels.slice(8, 12).map((x, i) => ({ x, y: [2000, 2200, 1375, 1750][i]! })) },
+        ],
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
   // The combo chart with its rate line marked, the series the column then
   // sets over the emphasis stroke.
   rail: (lex) => {

@@ -1,0 +1,78 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "title": "Free cash flow ($bn)",
+      "columns": [
+        {
+          "key": "co",
+          "label": "Company"
+        },
+        {
+          "key": "period",
+          "label": "Latest period"
+        },
+        {
+          "key": "fcf",
+          "label": "Free cash flow",
+          "align": "right"
+        },
+        {
+          "key": "prior",
+          "label": "Compared with",
+          "align": "right"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "co": "Microsoft",
+            "period": "Q2 2026",
+            "fcf": "19.6",
+            "prior": "25.6 a year earlier"
+          }
+        },
+        {
+          "cells": {
+            "co": "Alphabet",
+            "period": "Q2 2026",
+            "fcf": "−5.9",
+            "prior": "5.3 a year earlier"
+          },
+          "emphasis": "highlight"
+        },
+        {
+          "cells": {
+            "co": "Amazon",
+            "period": "12 months to June",
+            "fcf": "−7.6",
+            "prior": "18.2 a year earlier"
+          }
+        },
+        {
+          "cells": {
+            "co": "Meta",
+            "period": "Q2 2026",
+            "fcf": "0.78",
+            "prior": "8.55 a year earlier"
+          }
+        },
+        {
+          "cells": {
+            "co": "Oracle",
+            "period": "Jun to Aug quarter",
+            "fcf": "−5.4",
+            "prior": "−23.7 in fiscal 2026"
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Microsoft is still clearly positive, but 23% lower than a year ago. It expects positive free cash flow in fiscal 2027."
+    }
+  ],
+  "footnote": "Source: Microsoft call, company releases (Jul 2026), Oracle filings (Jun, Sep 2026). Each firm's own definition",
+  "notes": "Free cash flow here follows each company's own definition and the periods differ, so read the direction, not a ranking. Alphabet was minus $5.9bn in Q2 against plus $5.3bn a year earlier, and in the same quarter it announced an $84.75bn equity package. Amazon reports a trailing twelve-month figure, minus $7.6bn, which some outlets misread as a single quarter. Meta had $0.78bn left in Q2. Oracle's fiscal year ends in May: minus $23.7bn for fiscal 2026 and minus $5.4bn in the June to August quarter, and that quarter's operating cash included $11.4bn of customer prepayments. Microsoft made $19.6bn in calendar Q2, 23% less than the $25.6bn a year earlier, and says free cash flow stays positive in fiscal 2027."
+}

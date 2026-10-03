@@ -16,6 +16,9 @@ type KpiComponent = Extract<Component, { type: "kpi_cards" }>
 
 const GAP = 16
 const CARD_H = 120
+/** The delta arrow's size, and the air between the figure's last glyph (or its unit's) and the arrow. */
+const DELTA_SIZE = 20
+const DELTA_GAP = 8
 
 // Exported for content-bento-panel.tsx's own per-item KPI cards
 // (`renderKpiCardBody`) — same delta arrow/color mapping, just laid out
@@ -40,9 +43,28 @@ const CARD_H = 120
 // to neutral ink; a theme that declares neither still resolves to the same
 // `#16A34A`/`#DC2626` this function used to return outright.
 export function deltaProps(delta: "up" | "down" | "flat", colors: SemanticColorTokens) {
-  if (delta === "up") return { arrow: "↑", color: resolveSemanticColor("success", colors) }
-  if (delta === "down") return { arrow: "↓", color: resolveSemanticColor("danger", colors) }
-  return { arrow: "→", color: "" } // color filled by caller with ctx.colors.muted
+  if (delta === "up") return { arrow: deltaArrow(delta), color: resolveSemanticColor("success", colors) }
+  if (delta === "down") return { arrow: deltaArrow(delta), color: resolveSemanticColor("danger", colors) }
+  return { arrow: deltaArrow(delta), color: "" } // color filled by caller with ctx.colors.muted
+}
+
+/**
+ * The width a card keeps on its value line for the delta arrow: the arrow
+ * follows the figure (and its unit) on the same line, so the figure is
+ * fitted to what is left. Zero for a card with no delta.
+ *
+ * The arrow used to stand in the card's top right corner on its own, and a
+ * figure long enough to reach the corner ran under it: "600 至 640 亿" with
+ * its arrow printed over the last digits. Nothing measured the two against
+ * each other, so the overlap reached the page with no finding.
+ */
+function deltaReserve(item: { delta?: "up" | "down" | "flat" }, fontFamily: string): number {
+  if (!item.delta) return 0
+  return DELTA_GAP + measureTextUnits(deltaArrow(item.delta), { fontFamily }) * DELTA_SIZE
+}
+
+function deltaArrow(delta: "up" | "down" | "flat"): string {
+  return delta === "up" ? "↑" : delta === "down" ? "↓" : "→"
 }
 
 /**
@@ -176,15 +198,16 @@ export function fitKpiUnit(
  * untouched: this only picks the size, never the widths.
  */
 export function rowValueFontSize(
-  items: readonly { value: string | number; unit?: string }[],
+  items: readonly { value: string | number; unit?: string; delta?: "up" | "down" | "flat" }[],
   availableWidth: number,
   scale: KpiValueScale = CARD_VALUE_SCALE,
+  reserve: (item: { delta?: "up" | "down" | "flat" }) => number = () => 0,
 ): number {
   let smallest = scale.fontSize
   for (const item of items) {
     const value = kpiValueText(item.value).text
     const unit = dedupeKpiUnit(value, item.unit)
-    const { valueMaxWidth } = splitKpiValueWidths(value, unit, availableWidth, scale)
+    const { valueMaxWidth } = splitKpiValueWidths(value, unit, availableWidth - reserve(item), scale)
     const { fontSize } = fitSvgLine(value, {
       maxWidth: valueMaxWidth,
       fontSize: scale.fontSize,
@@ -376,7 +399,8 @@ export const kpi: SvgComponent<KpiComponent> = {
     // property rather than each card's (see `rowValueFontSize`).
     const availableWidth = cardW - 40
     const valueScale: KpiValueScale = { ...CARD_VALUE_SCALE, fontFamily: ctx.fonts.heading }
-    const rowFontSize = rowValueFontSize(component.items, availableWidth, valueScale)
+    const reserve = (item: { delta?: "up" | "down" | "flat" }) => deltaReserve(item, ctx.fonts.body)
+    const rowFontSize = rowValueFontSize(component.items, availableWidth, valueScale, reserve)
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         {component.items.map((item, i) => {
@@ -398,7 +422,7 @@ export const kpi: SvgComponent<KpiComponent> = {
           // passed on, byte-identical), falls back to neutral ink only
           // where it doesn't.
           const deltaColor = dp
-            ? accessibleInk(dp.color || ctx.colors.muted, ctx.colors.surface, 20)
+            ? accessibleInk(dp.color || ctx.colors.muted, ctx.colors.surface, DELTA_SIZE)
             : ctx.colors.muted
           // The overflow auditor measures a `<text>`'s whole textContent
           // (value + unit tspan concatenated) at the outer element's
@@ -417,7 +441,7 @@ export const kpi: SvgComponent<KpiComponent> = {
           const { valueMaxWidth, unitMaxWidth } = splitKpiValueWidths(
             valueStr,
             unit,
-            availableWidth,
+            availableWidth - reserve(item),
             valueScale,
           )
           // bold-metrics fix (2026-07-24): this text renders `fontWeight=
@@ -451,6 +475,12 @@ export const kpi: SvgComponent<KpiComponent> = {
             fontSize: 16,
             minFontSize: 16,
           })
+          const valueY = cardY + (item.icon ? 64 : 58) + contentShift
+          // The arrow stands right after the figure and its unit, on their
+          // baseline, measured the way they are painted (bold, heading face).
+          const figureW =
+            measureTextUnits(fittedValue.text, { bold: true, fontFamily: ctx.fonts.heading }) * fittedValue.fontSize +
+            (fittedUnit != null ? measureTextUnits(fittedUnit, { bold: true, fontFamily: ctx.fonts.heading }) * unitFontSize : 0)
           const fittedSource = item.source ? fitSource(item.source, cardW, sourceCap) : null
           const fittedNote = noteLines(item, cardW)
           const noteShift = (fittedNote?.lines.length ?? 0) * SOURCE_LINE
@@ -479,7 +509,7 @@ export const kpi: SvgComponent<KpiComponent> = {
               <text
                 data-truncated={fittedValue.truncated ? "1" : undefined}
                 x={cardX + 20}
-                y={cardY + (item.icon ? 64 : 58) + contentShift}
+                y={valueY}
                 fontSize={fittedValue.fontSize}
                 fontWeight="bold"
                 fill={marked ? accessibleInk(emphasisRunInk(ctx.colors), ctx.colors.surface, fittedValue.fontSize) : ctx.colors.text}
@@ -495,11 +525,12 @@ export const kpi: SvgComponent<KpiComponent> = {
               </text>
               {dp && (
                 <text
-                  x={cardX + cardW - 20}
-                  y={cardY + 36 + contentShift}
-                  textAnchor="end"
-                  fontSize={20}
+                  data-kpi-delta=""
+                  x={cardX + 20 + figureW + DELTA_GAP}
+                  y={valueY}
+                  fontSize={DELTA_SIZE}
                   fill={deltaColor}
+                  fontFamily={ctx.fonts.body}
                   dominantBaseline="alphabetic"
                 >
                   {dp.arrow}

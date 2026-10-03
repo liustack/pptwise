@@ -86,7 +86,7 @@ This section is generated from the preset library and each preset menu. `identit
 | `brief` | Brief | business | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
 | `bulletin` | Bulletin | business, institutional | low | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
 | `thesis` | Thesis | education | medium | 11 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `evidence`, `hierarchy` |
-| `ledger` | Ledger | finance | medium | 9 | `points`, `list`, `comparison`, `process`, `data`, `statement`, `quote`, `fact`, `hierarchy` |
+| `ledger` | Ledger | finance | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
 | `rally` | Rally | marketing, event | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
 | `homeroom` | Homeroom | education | medium | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
 | `ink` | Ink | culture | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
@@ -136,7 +136,7 @@ Four boundaries settle most ambiguous cases:
 
 ## Write the spec
 
-A valid deck spec opens with `cover`, closes with `ending`, and uses `content` or `chapter` inside. Every page has `id`, `type`, and `heading`. Content pages additionally require `kind`. `focus` may name a preferred component type. `summary` is a short content anchor for the fill step.
+A valid deck spec opens with `cover`, closes with `ending`, and uses `content` or `chapter` inside. Every page has `id`, `type`, and `heading`. Content pages additionally require `kind`. `focus` may name a preferred component type. `summary` is a short content anchor for the fill step. `kicker` is a short label set over the heading, such as the occasion on a cover. Only a face with a place for it draws it, and validate names the face when it has none.
 
 ```json
 {

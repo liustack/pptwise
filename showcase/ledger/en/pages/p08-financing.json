@@ -1,0 +1,48 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "title": "External funding and long commitments in 2026",
+      "milestones": [
+        {
+          "date": "Mar to Jul",
+          "title": "Amazon bonds",
+          "desc": "About $91.9bn"
+        },
+        {
+          "date": "May",
+          "title": "Meta bonds, $25bn",
+          "desc": "Notes outstanding $84bn"
+        },
+        {
+          "date": "June 2",
+          "title": "Alphabet equity, $84.75bn",
+          "desc": "Including $10bn from Berkshire",
+          "highlight": true
+        },
+        {
+          "date": "Jun to Aug",
+          "title": "Oracle sells $19.9bn stock",
+          "desc": "Facility used in one quarter"
+        },
+        {
+          "date": "July",
+          "title": "Meta signs new leases",
+          "desc": "About $68bn, from 2027"
+        },
+        {
+          "date": "August",
+          "title": "Nvidia guarantee",
+          "desc": "Up to $105bn"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Off balance sheet: Meta's 1 GW El Paso venture is 80% owned by BlackRock, and $12.5bn of its roughly $14bn cost is debt."
+    }
+  ],
+  "footnote": "Source: Amazon, Alphabet, Meta and Oracle 10-Qs and SEC filings, Meta release, Nvidia CFO commentary (Jun to Sep 2026)",
+  "notes": "The gap on the previous pages is now filled with outside money, in two ways. The first is plain debt and equity. Amazon has issued about $91.9bn of new notes this year, and the face value of its long-term debt went from $68.8bn at the end of 2025 to $133.0bn at the end of June. Alphabet issued about $51.8bn of debt in the first half and in June announced an $84.75bn equity package: common stock, mandatory convertible preferred, a $10bn private placement with Berkshire and a $40bn at-the-market facility, with $49.6bn of net proceeds in the quarter. Oracle used up its $20bn at-the-market facility in a single quarter. The second way stays off the balance sheet: long leases, joint ventures and guarantees. Meta signed about $68bn of new leases in July and set up a 1 GW campus in El Paso with BlackRock, which owns 80%, with $12.5bn of the roughly $14bn cost funded by debt. Nvidia guaranteed obligations for SB Energy's Ohio campus, which is leased to OpenAI for 20 years, up to $105bn."
+}

@@ -1,0 +1,125 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "ledger",
+  "filename": "ai-capex-2026-ic-review-en",
+  "meta": {
+    "organization": "Equity research · Investment committee",
+    "date": "October 2026"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "Investment committee",
+      "heading": "How long can AI capex keep rising?",
+      "summary": "It still rises in 2027. Cash, customers and power decide how long"
+    },
+    {
+      "id": "p02-summary",
+      "type": "content",
+      "kind": "points",
+      "heading": "Capex still climbs. Cash gives out before demand",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p03-scale",
+      "type": "content",
+      "kind": "fact",
+      "heading": "2026 guidance: $732.5bn, about 80% above 2025",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p04-quarterly",
+      "type": "content",
+      "kind": "data",
+      "heading": "Capex rose 87% in a year, and Alphabet's doubled",
+      "focus": "chart"
+    },
+    {
+      "id": "p05-guidance",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Guidance kept rising. H2 tops Q2 by 23% to 31%",
+      "focus": "chart"
+    },
+    {
+      "id": "p06-cash",
+      "type": "content",
+      "kind": "data",
+      "heading": "Capex eats 96% of operating cash flow, from 45%",
+      "focus": "chart"
+    },
+    {
+      "id": "p07-fcf",
+      "type": "content",
+      "kind": "data",
+      "heading": "Three of five burn cash, the other two have less",
+      "focus": "data_table"
+    },
+    {
+      "id": "p08-financing",
+      "type": "content",
+      "kind": "process",
+      "heading": "Debt, equity and long leases now fill the gap",
+      "focus": "timeline"
+    },
+    {
+      "id": "p09-leases",
+      "type": "content",
+      "kind": "data",
+      "heading": "$1.12tn of data center leases have yet to start",
+      "focus": "chart"
+    },
+    {
+      "id": "p10-labs",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "Orders rest on a few AI labs that suppliers fund",
+      "focus": "hub_spoke"
+    },
+    {
+      "id": "p11-upstream",
+      "type": "content",
+      "kind": "data",
+      "heading": "Suppliers win: Nvidia data center sales up 117%",
+      "focus": "chart"
+    },
+    {
+      "id": "p12-power",
+      "type": "content",
+      "kind": "photo",
+      "heading": "The bottleneck shifts from chips to power",
+      "focus": "image"
+    },
+    {
+      "id": "p13-market",
+      "type": "content",
+      "kind": "data",
+      "heading": "Markets reward cloud growth and punish cash burn",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p14-decision",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Recommendation: tilt toward suppliers and power",
+      "focus": "comparison"
+    },
+    {
+      "id": "p15-ending",
+      "type": "ending",
+      "kicker": "For the committee to decide",
+      "heading": "Favor **suppliers, power** and fast-payback clouds",
+      "summary": "Three signals to watch next"
+    }
+  ],
+  "branding": "full",
+  "footer": {
+    "organization": true
+  }
+}

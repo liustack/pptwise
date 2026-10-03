@@ -37,3 +37,24 @@ In the grid setting. The round's decisions are in [rounds/2026-10-03-swiss](../.
 - The board's red on its tint misses 4.5:1 by a little, so the row's text takes the least step of the accent toward black that reaches it: still red.
 - The tint is the accent at 10% over the surface (`#FBEAEA` on swiss), where the board drew `#FBE7E8`.
 - The closing note is 20px in a 64px panel, the size it is everywhere, where the board set 19px.
+
+## ledger, AI capex sample, 2026-10
+
+In the panel setting, settled on two pages. The round's decisions are in [rounds/2026-10-04-ledger](../../rounds/2026-10-04-ledger/README.md).
+
+| board (p07) | engine |
+| :-: | :-: |
+| ![board](ledger-p07.board.png) | ![engine](ledger-p07.engine.png) |
+
+| board (p10) | engine |
+| :-: | :-: |
+| ![board](ledger-p10.board.png) | ![engine](ledger-p10.engine.png) |
+
+**What it looks like.** The table in a panel named by its `title`. Small muted headers over a hairline, then one row per record with a hairline under each. The first column names the record, the column of plain figures is set large in the heading face, right-aligned, a negative figure in red, and the other columns stay quiet at 17px. A highlighted row sits on a dark amber tint with a 3px amber bar down its left edge, its name bold in amber and its figure amber unless it is negative. The table takes the large size (80px rows, figures at 36px) when it fits with its note and the compact one (58px rows, figures at 28px) otherwise. A callout after it is a note panel under the table.
+
+**Why.** A cash-flow table is read for the sign of each figure. Large serif figures with red for a negative make the three companies that turned negative the first thing seen, and the highlighted row is the one the page is about.
+
+**What it gave up.**
+
+- Two to six columns, one to eight rows, no `source` of its own. A cell past one line at its size declines.
+- A table has no unit field, so its `title` carries the unit ("自由现金流（亿美元）").

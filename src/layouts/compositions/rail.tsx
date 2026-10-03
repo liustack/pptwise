@@ -1,5 +1,5 @@
 import type { Component } from "@/ir"
-import { groupDigits, isPercentUnit, joinUnit } from "../../lib/quantity-format"
+import { figureStyleOf, groupDigits, isPercentUnit, joinUnit, type FigureStyle } from "../../lib/quantity-format"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { mostlyChinese } from "../../lib/text-script"
 import { emphasisSeriesPalette, recededMarkFill, rotateChartPalette } from "../../render/chart-palette"
@@ -13,6 +13,7 @@ import { columnsComposition } from "./columns"
 import { railFigures, railFiguresNotice } from "./rail-figures"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
+import { railPanel } from "./rail-panel"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Series = Chart["series"][number]
@@ -215,9 +216,9 @@ function chartWritesChinese(chart: Chart): boolean {
  * series was written with, grouped the way the chart's language prints a
  * figure (`groupDigits`).
  */
-export function spanLabel(series: Series, first: number, last: number, unit: string | undefined, chinese: boolean): string {
+export function spanLabel(series: Series, first: number, last: number, unit: string | undefined, figures: FigureStyle | boolean): string {
   const decimals = Math.min(MAX_DECIMALS, Math.max(0, ...series.data.map((point) => decimalsOf(point.y))))
-  const format = (v: number) => joinUnit(groupDigits(v.toFixed(decimals), chinese), unit, " ")
+  const format = (v: number) => joinUnit(groupDigits(v.toFixed(decimals), figures), unit, " ")
   return `${format(first)} → ${format(last)}`
 }
 
@@ -244,7 +245,9 @@ function swatchIsLine(chart: Chart, series: Series): boolean {
   return chart.chart_type === "combo" && series.plot === "line"
 }
 
-export const railComposition: Composition = ({ components, ctx, rect, setting }) => {
+export const railComposition: Composition = (props) => {
+  if (props.setting === "panel") return railPanel(props)
+  const { components, ctx, rect, setting } = props
   // The notice and grid settings set only the author's figures, beside a
   // hand-set plot when one takes the chart. A chart alone goes to the plots.
   if (setting === "notice" || setting === "grid") {
@@ -287,7 +290,8 @@ export const railComposition: Composition = ({ components, ctx, rect, setting })
       ? rotated
       : emphasisSeriesPalette(rotated, chart.series.length, marked, recededMarkFill(colors.muted, bg))
 
-  const chinese = chartWritesChinese(chart)
+  const figures = ctx.figures ?? figureStyleOf(chartWritesChinese(chart))
+  const chinese = figures.chinese
   const labels = []
   for (const entry of entries) {
     const unit = entry.unit
@@ -299,7 +303,7 @@ export const railComposition: Composition = ({ components, ctx, rect, setting })
       fontFamily: body,
       bold: false,
     })
-    const note = fitFixed(spanLabel(entry.series, entry.first, entry.last, unit, chinese), {
+    const note = fitFixed(spanLabel(entry.series, entry.first, entry.last, unit, figures), {
       width: railW,
       size: NOTE_SIZE,
       lineHeight: NOTE_LINE_HEIGHT,

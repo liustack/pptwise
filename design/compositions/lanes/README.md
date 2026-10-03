@@ -37,3 +37,21 @@ In the grid setting. The round's decisions are in [rounds/2026-10-03-swiss](../.
 - Dates and descriptions at 16px, where the board set 15px.
 - A title longer than its card wraps to a second line: 「IEA：煤电将回升 1.4%」 is one character longer than the board's and does not fit 146px at 16px bold.
 - The closing note is 20px in a 64px panel, where the board drew 19px in 52px.
+
+## ledger, AI capex sample, 2026-10
+
+In the panel setting. The round's decisions are in [rounds/2026-10-04-ledger](../../rounds/2026-10-04-ledger/README.md).
+
+| board (p08) | engine |
+| :-: | :-: |
+| ![board](ledger.board.png) | ![engine](ledger.engine.png) |
+
+**What it looks like.** The timeline in a panel named by its `title`. On one track each column carries its date at 15px over the axis, its node on the axis, and its title at 18px bold and description at 15px under it. The highlighted milestone has a larger amber node and its date and title in amber, the others hollow rings. A note written 「表外安排：…」 after it is a note panel named by the words before the colon, and the colon is declared (`data-gloss-break`). On two lanes the first lane stands over the axis and the second under it, and the lanes' names stand on the right of the title bar (「上：… · 下：…」, "Above: … · Below: …"), so a date is only ever a date.
+
+**Why.** Five kinds of funding arrived in four months. One axis shows the order, and the note keeps the off-balance-sheet deal apart from the dated ones.
+
+**What it gave up.**
+
+- Two to eight milestones on a horizontal timeline. A date past one line, a title past two lines or a description past two declines.
+- A timeline has no unit field, so its `title` carries the unit.
+- The lanes' names leave the axis, where the other settings put them, for the title bar: a timeline with lanes used to print the lane name into the date.

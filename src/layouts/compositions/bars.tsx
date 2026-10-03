@@ -9,7 +9,6 @@ import {
   MetaLine,
   anyMeet,
   changeText,
-  chartTexts,
   forecastWords,
   insideRect,
   layoutLegend,
@@ -23,11 +22,12 @@ import {
   seriesInk,
   textBox,
   textWidth,
-  writesChinese,
+  chartFigures,
   type InkBox,
   type LegendEntry,
 } from "./plot"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
+import { barsChart, barsPanel } from "./bars-panel"
 
 type Chart = Extract<Component, { type: "chart" }>
 
@@ -94,7 +94,12 @@ function barsShape(components: readonly Component[]): Chart | null {
   return chart
 }
 
-export const barsComposition: Composition = ({ components, ctx, rect }) => {
+export const barsComposition: Composition = ({ components, ctx, rect, setting }) => {
+  if (setting === "panel") {
+    const only = components.length === 1 ? components[0]! : null
+    const drawn = only && barsChart(only) ? barsPanel(only, rect, ctx) : null
+    return drawn ? <g {...compositionTag("bars")}>{drawn}</g> : null
+  }
   const chart = barsShape(components)
   if (!chart) return null
   const names: string[] = []
@@ -103,7 +108,8 @@ export const barsComposition: Composition = ({ components, ctx, rect }) => {
   const { colors, fonts } = ctx
   const body = fonts.body
   const bg = ctx.defaultBg ?? colors.bg
-  const chinese = writesChinese(chartTexts(chart))
+  const figures = chartFigures(chart, ctx)
+  const chinese = figures.chinese
   const marked = chart.series.findIndex((s) => s.emphasis === true)
   const right = rect.x + rect.w
   const forecast = forecastWords(chinese)
@@ -142,7 +148,7 @@ export const barsComposition: Composition = ({ components, ctx, rect }) => {
     chart.series.map((s, si) => {
       const point = s.data.find((p) => p.x === name)
       if (!point) return null
-      const text = plotNumber(point.y, chinese, pointDecimals(point, decimals)) + (point.status === "forecast" ? forecast.suffix : "")
+      const text = plotNumber(point.y, figures, pointDecimals(point, decimals)) + (point.status === "forecast" ? forecast.suffix : "")
       const bold = si === marked || point.emphasis === true
       const change = changes.find((c) => c.at === name && c.to === s.name)
       const changeLabel = change ? changeLabelFor(chart, change, chinese) : null

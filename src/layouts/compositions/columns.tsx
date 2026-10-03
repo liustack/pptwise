@@ -11,7 +11,6 @@ import {
   anyMeet,
   boxesMeet,
   changeText,
-  chartTexts,
   forecastWords,
   insideRect,
   layoutLegend,
@@ -26,12 +25,13 @@ import {
   seriesInk,
   textBox,
   textWidth,
-  writesChinese,
+  chartFigures,
   type InkBox,
   type LegendEntry,
   type MarkPaint,
 } from "./plot"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import { columnsChart, columnsPanel } from "./columns-panel"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Point = Chart["series"][number]["data"][number]
@@ -265,6 +265,11 @@ interface Placed {
 }
 
 export const columnsComposition: Composition = ({ components, ctx, rect, setting }) => {
+  if (setting === "panel") {
+    const only = components.length === 1 ? components[0]! : null
+    const drawn = only && columnsChart(only) ? columnsPanel(only, rect, ctx) : null
+    return drawn ? <g {...compositionTag("columns")}>{drawn}</g> : null
+  }
   const chart = columnsShape(components)
   if (!chart) return null
   const columns = columnsOf(chart)
@@ -272,7 +277,8 @@ export const columnsComposition: Composition = ({ components, ctx, rect, setting
   const { colors, fonts } = ctx
   const body = fonts.body
   const bg = ctx.defaultBg ?? colors.bg
-  const chinese = writesChinese(chartTexts(chart))
+  const figures = chartFigures(chart, ctx)
+  const chinese = figures.chinese
   const marked = chart.series.findIndex((s) => s.emphasis === true)
   const stacked = chart.chart_type === "stacked"
   const lone = stacked || columns.every((c) => c.bars.length <= 1)
@@ -350,7 +356,7 @@ export const columnsComposition: Composition = ({ components, ctx, rect, setting
           key: `value-${ci}-${k}`,
           cx: x + barW / 2,
           y: top - VALUE_LIFT,
-          figure: plotNumber(bar.point.y, chinese, pointDecimals(bar.point, decimals)),
+          figure: plotNumber(bar.point.y, figures, pointDecimals(bar.point, decimals)),
           suffix: bar.point.status === "forecast" ? forecast.suffix : "",
           size,
           bold,
@@ -363,7 +369,7 @@ export const columnsComposition: Composition = ({ components, ctx, rect, setting
         const top = y(column.total)
         const isMarked = column.bars.some((bar) => bar.series === marked)
         const lonePoint = column.bars.length === 1 ? column.bars[0]!.point : null
-        const text = plotNumber(column.total, chinese, Math.max(...column.bars.map((b) => pointDecimals(b.point, decimals)))) +
+        const text = plotNumber(column.total, figures, Math.max(...column.bars.map((b) => pointDecimals(b.point, decimals)))) +
           (lonePoint?.status === "forecast" ? forecast.suffix : "")
         const ink = accessibleInk(isMarked ? mark : colors.text, bg, PLOT_TYPE.lead)
         const cx = rect.x + slot * (ci + 0.5)

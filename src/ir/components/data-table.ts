@@ -46,6 +46,10 @@ const DataTableRowSchema = z
 export const schema = z
   .object({
     type: z.literal("data_table"),
+    title: z
+      .string()
+      .optional()
+      .describe('A short name for the table, printed over it, such as "自由现金流" or "Free cash flow". A theme that sets it in a panel prints the title in the panel\'s title bar.'),
     columns: z.array(DataTableColumnSchema).min(2).max(8),
     rows: z.array(DataTableRowSchema).min(1).max(12),
     /** 表格脚注（数据来源等），渲染为表格下方一行小字——slide 级的

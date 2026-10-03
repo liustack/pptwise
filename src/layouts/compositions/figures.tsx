@@ -7,6 +7,7 @@ import { fitFigure, fitQuote, markedFigure, paintBoldFigure, paintFigure, plainF
 import { gridMark } from "./grid"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
+import { figuresPanel } from "./figures-panel"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -91,6 +92,7 @@ function figuresShape(components: readonly Component[]): { kpis: KpiCards; quote
 
 export const figuresComposition: Composition = (props) => {
   if (props.setting === "grid") return gridFigures(props)
+  if (props.setting === "panel") return figuresPanel(props)
   const { components, ctx, rect } = props
   const shape = figuresShape(components)
   if (!shape) return null

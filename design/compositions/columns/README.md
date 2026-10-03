@@ -46,3 +46,25 @@ Settled on two pages, both beside the figure column of [`rail`](../rail/), in th
 
 - With no value axis there is no tick to round to, so the scale follows the tallest column (the board rounded 6.64 up to 7.5 by hand, which the nine tenths lands within 4px of).
 - Under a share bar (p08) the bars come down to 100px tall, where the notice setting stops at 150.
+
+## ledger, AI capex sample, 2026-10
+
+In the panel setting, settled on two pages and used again beside figure panels on a third ([compositions/rail](../rail/ledger-p11.board.png)). The round's decisions are in [rounds/2026-10-04-ledger](../../rounds/2026-10-04-ledger/README.md).
+
+| board (p04) | engine |
+| :-: | :-: |
+| ![board](ledger-p04.board.png) | ![engine](ledger-p04.engine.png) |
+
+| board (p06) | engine |
+| :-: | :-: |
+| ![board](ledger-p06.board.png) | ![engine](ledger-p06.engine.png) |
+
+**What it looks like.** The chart in a panel: named by its one series, or by the value axis title when there are several, with the unit on the right of the title bar (the left axis's and, for a combo, the right axis's after it, "亿美元 · %"). A stack lists its series under the bar from the top of the stack down, the marked series in amber and the others in the slates nearest the top first. Every column carries its figure, a stack its total. A change the author asked for (`changes`) is a bracket over the two columns with its figure after an arrow, in amber when no single bar is marked, in the direction's colour when one is, and the column it ends on prints its total bold. A combo is one bar series and one line on the right axis: the marked line in amber with small dots, its two ends larger, and its first and last values over them on a plate of the panel's colour where they meet a bar.
+
+**Why.** The stack's change and the line's climb are what these pages say. Amber marks them once, and the slates keep every other series readable without competing.
+
+**What it gave up.**
+
+- No value axis. Bars scale to their own band, and a combo's line to its own.
+- A single bar series, a stack of two to four, or a combo of one bar series and one line. A grouped bar chart or an axis title on the categories goes to the ordinary chart.
+- The title bar prints the unit only. How the figures were counted goes in the source.

@@ -39,7 +39,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     }
   }
 
-  it("has exactly 133 layout-kind entries, all traceable to one of the four real registries", () => {
+  it("has exactly 139 layout-kind entries, all traceable to one of the four real registries", () => {
     const knownIds = new Set([
       ...Object.keys(COVER_LAYOUTS),
       ...Object.keys(CHAPTER_LAYOUTS),
@@ -57,7 +57,8 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // gauge-figure, three theme-locked content faces: 130 -> 133. The
     // bulletin sample redesign adds notice-sheet: 133 -> 134. The swiss
     // sample redesign adds grid-sheet, grid-statement and grid-figure: 137.
-    expect(layoutEntries).toHaveLength(137)
+    // The ledger sample redesign adds panel-sheet and panel-figure: 139.
+    expect(layoutEntries).toHaveLength(139)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -120,7 +121,8 @@ describe("content family: body slot", () => {
           id === "resolution-ending" ||
           id === "decision-close-ending" ||
           id === "gauge-next" ||
-          id === "crayonbox-todo"
+          id === "crayonbox-todo" ||
+          id === "close-word-ending"
         ) {
           expect(entry.slots.some((s) => s.name === "body")).toBe(true)
           continue
@@ -254,10 +256,10 @@ describe("layoutsForSlideType", () => {
     expect(layoutsForSlideType("ending")).toHaveLength(34)
   })
 
-  it("content includes both the 30 layouts and the 4 takeovers", () => {
+  it("content includes both the 32 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(30)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(32)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(34)
+    expect(contents).toHaveLength(36)
   })
 })

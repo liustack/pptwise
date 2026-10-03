@@ -1,0 +1,203 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "stacked",
+      "axes": {
+        "y_title": "Quarterly capex, four firms",
+        "y_unit": "$bn"
+      },
+      "changes": [
+        {
+          "from": "2Q25",
+          "to": "2Q26"
+        }
+      ],
+      "series": [
+        {
+          "name": "Meta",
+          "data": [
+            {
+              "x": "1Q24",
+              "y": 6.4
+            },
+            {
+              "x": "2Q24",
+              "y": 8.2
+            },
+            {
+              "x": "3Q24",
+              "y": 8.3
+            },
+            {
+              "x": "4Q24",
+              "y": 14.4
+            },
+            {
+              "x": "1Q25",
+              "y": 12.9
+            },
+            {
+              "x": "2Q25",
+              "y": 16.5
+            },
+            {
+              "x": "3Q25",
+              "y": 18.8
+            },
+            {
+              "x": "4Q25",
+              "y": 21.4
+            },
+            {
+              "x": "1Q26",
+              "y": 19.0
+            },
+            {
+              "x": "2Q26",
+              "y": 30.1
+            }
+          ]
+        },
+        {
+          "name": "Amazon",
+          "data": [
+            {
+              "x": "1Q24",
+              "y": 14.9
+            },
+            {
+              "x": "2Q24",
+              "y": 17.6
+            },
+            {
+              "x": "3Q24",
+              "y": 22.6
+            },
+            {
+              "x": "4Q24",
+              "y": 27.8
+            },
+            {
+              "x": "1Q25",
+              "y": 25.0
+            },
+            {
+              "x": "2Q25",
+              "y": 32.2
+            },
+            {
+              "x": "3Q25",
+              "y": 35.1
+            },
+            {
+              "x": "4Q25",
+              "y": 39.5
+            },
+            {
+              "x": "1Q26",
+              "y": 44.2
+            },
+            {
+              "x": "2Q26",
+              "y": 54.2
+            }
+          ]
+        },
+        {
+          "name": "Microsoft",
+          "data": [
+            {
+              "x": "1Q24",
+              "y": 11.0
+            },
+            {
+              "x": "2Q24",
+              "y": 13.9
+            },
+            {
+              "x": "3Q24",
+              "y": 14.9
+            },
+            {
+              "x": "4Q24",
+              "y": 15.8
+            },
+            {
+              "x": "1Q25",
+              "y": 16.8
+            },
+            {
+              "x": "2Q25",
+              "y": 17.1
+            },
+            {
+              "x": "3Q25",
+              "y": 19.4
+            },
+            {
+              "x": "4Q25",
+              "y": 29.9
+            },
+            {
+              "x": "1Q26",
+              "y": 30.9
+            },
+            {
+              "x": "2Q26",
+              "y": 35.8
+            }
+          ]
+        },
+        {
+          "name": "Alphabet",
+          "data": [
+            {
+              "x": "1Q24",
+              "y": 12.0
+            },
+            {
+              "x": "2Q24",
+              "y": 13.2
+            },
+            {
+              "x": "3Q24",
+              "y": 13.1
+            },
+            {
+              "x": "4Q24",
+              "y": 14.3
+            },
+            {
+              "x": "1Q25",
+              "y": 17.2
+            },
+            {
+              "x": "2Q25",
+              "y": 22.4
+            },
+            {
+              "x": "3Q25",
+              "y": 24.0
+            },
+            {
+              "x": "4Q25",
+              "y": 27.8
+            },
+            {
+              "x": "1Q26",
+              "y": 35.7
+            },
+            {
+              "x": "2Q26",
+              "y": 44.9
+            }
+          ],
+          "emphasis": true
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Microsoft, Alphabet, Amazon and Meta 10-Qs and 10-Ks (Apr 2024 to Jul 2026). Cash basis, Amazon gross, calendar quarters",
+  "notes": "This chart is on a cash basis, purchases of property and equipment from the cash flow statement, so the four are comparable and can be added up. The four spent about $165bn in Q2 2026, 87% more than the roughly $88bn of Q2 2025 and 3.7 times the $44bn of Q1 2024. Alphabet added the most: its quarterly spend went from about $22.4bn to about $44.9bn, double, and the next pages show it was also the first to post negative free cash flow and raise equity. Microsoft's fiscal year ends in June and has been mapped to calendar quarters. Oracle's quarters end a month before calendar quarters, so it is left out: its quarter to August 2026 had about $28.5bn of capex. Company-basis figures differ. Microsoft including finance leases was $41.0bn in Q2, and the guidance on the next page is on that basis."
+}

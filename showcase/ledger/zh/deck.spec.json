@@ -1,0 +1,125 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "ledger",
+  "filename": "ai-capex-2026-ic-review",
+  "meta": {
+    "organization": "行业研究 · 投委会专题",
+    "date": "2026 年 10 月"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "投委会专题",
+      "heading": "AI 资本开支还能涨多久",
+      "summary": "2027 年还会涨，能涨多久要看钱、客户和电"
+    },
+    {
+      "id": "p02-summary",
+      "type": "content",
+      "kind": "points",
+      "heading": "结论：开支还在加速，先松动的会是钱，不是需求",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p03-scale",
+      "type": "content",
+      "kind": "fact",
+      "heading": "四家 2026 年资本开支指引中值 7,325 亿美元，比去年高约八成",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p04-quarterly",
+      "type": "content",
+      "kind": "data",
+      "heading": "四家单季资本开支一年涨了 87%，Alphabet 一家翻了一倍",
+      "focus": "chart"
+    },
+    {
+      "id": "p05-guidance",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "指引一路上调：下半年每季开支要比二季度再高两到三成",
+      "focus": "chart"
+    },
+    {
+      "id": "p06-cash",
+      "type": "content",
+      "kind": "data",
+      "heading": "资本开支已吃掉 96% 的经营现金流，两年前是 45%",
+      "focus": "chart"
+    },
+    {
+      "id": "p07-fcf",
+      "type": "content",
+      "kind": "data",
+      "heading": "五家里三家自由现金流已转负，另两家也在缩水",
+      "focus": "data_table"
+    },
+    {
+      "id": "p08-financing",
+      "type": "content",
+      "kind": "process",
+      "heading": "缺口开始靠外部资金补：发债、发股、签长租轮番上阵",
+      "focus": "timeline"
+    },
+    {
+      "id": "p09-leases",
+      "type": "content",
+      "kind": "data",
+      "heading": "还没起租的数据中心租约已有 1.12 万亿美元",
+      "focus": "chart"
+    },
+    {
+      "id": "p10-labs",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "订单押在少数 AI 实验室身上，投资方和客户互为彼此",
+      "focus": "hub_spoke"
+    },
+    {
+      "id": "p11-upstream",
+      "type": "content",
+      "kind": "data",
+      "heading": "钱先流到上游：英伟达数据中心单季收入一年翻了一倍多",
+      "focus": "chart"
+    },
+    {
+      "id": "p12-power",
+      "type": "content",
+      "kind": "photo",
+      "heading": "瓶颈从芯片转向电力：电网容量价格顶格，德州暂停并网",
+      "focus": "image"
+    },
+    {
+      "id": "p13-market",
+      "type": "content",
+      "kind": "data",
+      "heading": "市场开始挑：云收入加速的大涨，现金流变差的下跌",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p14-decision",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "建议：配置向上游和电力倾斜，云厂商只留回款快的",
+      "focus": "comparison"
+    },
+    {
+      "id": "p15-ending",
+      "type": "ending",
+      "kicker": "请投委会定",
+      "heading": "向**上游和电力**倾斜，云厂商只留回款快的",
+      "summary": "接下来盯三个信号"
+    }
+  ],
+  "branding": "full",
+  "footer": {
+    "organization": true
+  }
+}

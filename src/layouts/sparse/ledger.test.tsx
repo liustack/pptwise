@@ -183,7 +183,7 @@ describe("ledger sparse faces", () => {
     }
   })
 
-  it("routes the built-in cover and points motif ticker paths to mid, not fg", () => {
+  it("the redrawn cover and points pages draw no ticker curve, and the status bar stays on top", () => {
     const cases: { label: string; slide: Slide }[] = [
       { label: "cover", slide: { type: "cover", heading: "43%", components: [] } as Slide },
       {
@@ -197,10 +197,10 @@ describe("ledger sparse faces", () => {
       const tickers = Array.from(root.querySelectorAll("path")).filter(
         (el) => el.getAttribute("fill") === "none" && (el.getAttribute("d") ?? "").includes("C "),
       )
-      expect(tickers.length, label).toBeGreaterThan(0)
-      for (const ticker of tickers) {
-        expect(ticker.closest("[data-depth]")?.getAttribute("data-depth"), label).toBe("mid")
-      }
+      expect(tickers, label).toEqual([])
+      const bar = root.querySelector('[data-decor-piece="status-bar"]')
+      expect(bar, label).not.toBeNull()
+      expect(bar!.closest("[data-depth]")?.getAttribute("data-depth"), label).toBe("fg")
     }
   })
 })

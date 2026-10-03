@@ -76,6 +76,7 @@ Common page fields are:
 - `id`, an optional stable page identifier
 - `placeholder: true`, normally produced by an unfinished deck project
 - `heading` and `subheading`
+- `kicker`, a short label over the heading (the occasion on a cover, what an ending asks for), drawn only by a face that declares a place for it. validate refuses it on any other and names the face
 - `components`
 - `background`
 - `decor`, one controlled local primitive
@@ -83,7 +84,7 @@ Common page fields are:
 - `footnote`
 - `notes`, exported as native speaker notes
 
-Only content pages carry `kind`. Boundary pages do not. Components on a boundary page render only when the face bound by the theme menu declares compatible slots. Validation checks the effective face before output.
+Only content pages carry `kind`. Boundary pages do not. Components on a boundary page render only when the face bound by the theme menu declares compatible slots, and a boundary page's `footnote` only when that face declares it sets one (an ending's disclaimer at its foot). Validation checks the effective face before output.
 
 ## Content kinds
 
@@ -174,7 +175,7 @@ See the [SKILL component guide](../skills/pptwise/references/components.md) for 
 
 `bar` prints each value beside its bar, above it or past its end, when every value fits there clear of the bars and inside the chart. Otherwise it prints none, and export stops on that page until the numbers are shorter (divide them and name the unit in `y_unit`, or `x_unit` for `direction: "horizontal"`) or the chart has fewer categories or series. A horizontal bar chart grows taller with its category count, so each category keeps a row of its own.
 
-Every value read against a value axis must stay within 1e300 in size: every `y` of `bar`, `line`, `area`, `scatter`, `dumbbell`, and `combo`, and every `x` of `scatter`. To get under it, divide every series on that axis by the same power of ten and name the unit in that axis's unit field, so the series keep their proportions. A dumbbell has no axis titles, so name its unit in both series' names.
+Every value read against a value axis must stay within 1e300 in size: every `y` of `bar`, `line`, `area`, `scatter`, `dumbbell`, and `combo`, and every `x` of `scatter`. To get under it, divide every series on that axis by the same power of ten and name the unit in that axis's unit field, so the series keep their proportions. A dumbbell names its values on one line under its rows, so name the unit in `axes.x_unit`.
 
 `stacked` keeps the amounts. Positive values pile up from zero and negative values pile down from it, in series order, and a zero line marks the seam when a pile hangs below it. The number above each column is the category's net total. Segments carry no numbers, so read them against the axis. The totals are printed together or not at all: when they do not all fit above their columns, none is printed and export stops on that page until the numbers are shorter (divide them and name the unit in `y_unit`) or the chart has fewer categories. Each category's positive values, and its negative values, must add up to no more than 1e300 in size. To get under it, divide every series by the same power of ten and name the unit in `y_unit`, so the columns keep their proportions.
 

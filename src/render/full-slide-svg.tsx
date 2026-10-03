@@ -20,6 +20,8 @@ import { MOTIFS } from "../motifs"
 import { treeStepsAside } from "./step-aside"
 import type { ThemeDefinition } from "../themes/definitions"
 import type { EmphasisTreatment } from "../themes/schema"
+import type { FigureStyle } from "../lib/quantity-format"
+import { deckFigureStyle } from "../lib/figure-style"
 import { resolveEffectiveFace } from "./layout-selection"
 import { partitionSvgDepth, type SvgDepthLayers } from "./depth-contract/partition"
 import { enforceMidgroundContract, resolveMidgroundBackground } from "./depth-contract/safety"
@@ -175,6 +177,7 @@ export function buildCtx(
   bodyFontPx?: number,
   chartPaletteOffset?: number,
   emphasis?: EmphasisTreatment,
+  figures?: FigureStyle,
 ): ComponentCtx {
   return {
     colors: tokens.colors,
@@ -191,6 +194,7 @@ export function buildCtx(
     chartPaletteOffset,
     themeId: tokens.id,
     emphasis,
+    ...(figures ? { figures } : {}),
   }
 }
 
@@ -311,6 +315,7 @@ export function FullSlideSvg({
     bodyFontPx,
     chartPaletteOffset,
     themeDef.emphasis,
+    deckFigureStyle(ir),
   )
   // This is the only face resolution performed by the renderer. Capacity
   // checks and validation consume the same route record from

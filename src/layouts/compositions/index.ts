@@ -9,8 +9,10 @@ import { railComposition } from "./rail"
 import { recordsComposition } from "./records"
 import { rowsComposition } from "./rows"
 import { shareComposition } from "./share"
+import { shiftsComposition } from "./shifts"
 import type { Composition, CompositionId, CompositionProps } from "./shared"
 import { stackComposition } from "./stack"
+import { tilesComposition } from "./tiles"
 import { tableComposition } from "./table"
 import { trackComposition } from "./track"
 import { treeComposition } from "./tree"
@@ -45,6 +47,8 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   window: windowComposition,
   lanes: lanesComposition,
   share: shareComposition,
+  tiles: tilesComposition,
+  shifts: shiftsComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]

@@ -57,6 +57,8 @@ const CommonPageSpecFields = {
   focus: z.string().optional(),
   /** Free-text content anchor read by the fill step. */
   summary: z.string().optional(),
+  /** A short label over the heading, drawn only by faces with a place for it. See the IR's `kicker`. */
+  kicker: z.string().optional(),
 }
 
 export const PageSpecSchema = z.discriminatedUnion("type", [

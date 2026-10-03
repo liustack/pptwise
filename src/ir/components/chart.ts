@@ -353,7 +353,10 @@ export const schema = z
      * category/value axis pair to title and grid against. Ignored
      * (schema-legal, silently dropped at render, warn-severity
      * `chart_axes_ignored` validate finding) on `pie`/`donut`/`funnel`/
-     * `dumbbell`/`gauge`, which have no such plot box. */
+     * `gauge`, which have no such plot box. A `dumbbell` has no plot box
+     * either, but its values run along a line, so it prints the title and
+     * unit as one line under its rows (x_* or y_*, x_* first) and ignores
+     * only `show_grid`. */
     axes: z
       .object({
         x_title: z.string().optional(),

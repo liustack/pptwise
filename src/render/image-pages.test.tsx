@@ -762,3 +762,89 @@ describe("image-top grid band", () => {
     expect(page.querySelector('[data-gauge-module="figures"]')).not.toBeNull()
   })
 })
+
+describe("image-split panel column", () => {
+  // ledger's 2026-10 power page (p12): the photograph on the left under the
+  // status bar, the claim and a ledger of figures beside it.
+  const slide = (components?: Slide["components"]) =>
+    ({
+      type: "content",
+      kind: "photo",
+      heading: "瓶颈从芯片转向电力：电网容量价格顶格，德州暂停并网",
+      components: components ?? [
+        { type: "image", asset_id: "hero", fit: "cover" },
+        {
+          type: "kpi_cards",
+          items: [
+            { label: "PJM 容量价格，每兆瓦每天", value: "**325 美元**", note: "2028/29 年拍卖，触及上限" },
+            { label: "比可靠性标准少", value: "6,831 MW", note: "连续两期全网不足" },
+            { label: "德州", value: "暂停并网", note: "8 月起暂停新数据中心接入，先做审计" },
+            { label: "2030 年数据中心占美国用电", value: "11.8%", note: "LBNL 基准情景预测" },
+          ],
+        },
+      ],
+      footnote: "来源：PJM（2026 年 7 月），LBNL（2026 年 6 月）。图为示意图",
+    }) as Slide
+  const root = (s: Slide) => {
+    const themeId = registerTestTheme(`image-split-panel-${themeSerial++}`, "ledger", { content: { photo: { face: "image-split", params: { column: "panel" } } } })
+    return parseSvgRoot(boundSlideToSvgMarkup(makeIr(themeId, s), s, 0))
+  }
+  const attr = (el: Element | null | undefined, names: string[]) => names.map((name) => el?.getAttribute(name) ?? null)
+  const byText = (page: Element, text: string) => Array.from(page.querySelectorAll("text")).find((t) => (t.textContent ?? "").trim() === text)
+
+  it("lays the photograph down the left 600px under the status bar, the claim beside it on its last line at y136", () => {
+    const page = root(slide())
+    expect(page.querySelector('[data-split-column="panel"]')).not.toBeNull()
+    expect(attr(page.querySelector("image"), ["x", "y", "width", "height"])).toEqual(["0", "32", "600", "688"])
+    const head = Array.from(page.querySelectorAll("[data-panel-head] text"))
+    expect(head.map((line) => attr(line, ["x", "font-size"]))).toEqual([["640", "30"], ["640", "30"]])
+    expect(head[1]!.getAttribute("y")).toBe("126")
+  })
+
+  it("sets the figures as a ledger, the marked one in the mark, and the source at the column's foot", () => {
+    const page = root(slide())
+    expect(page.querySelectorAll("[data-figure-row]")).toHaveLength(4)
+    const marked = byText(page, "325 美元")!
+    expect(attr(marked, ["x", "font-size"])).toEqual(["640", "40"])
+    expect(marked.getAttribute("fill")).toBe("#F0A63C")
+    expect(attr(byText(page, "2028/29 年拍卖，触及上限"), ["x", "font-size"])).toEqual(["940", "15"])
+    expect(attr(byText(page, "来源：PJM（2026 年 7 月），LBNL（2026 年 6 月）。图为示意图"), ["x", "y", "font-size"])).toEqual(["640", "678", "13"])
+  })
+
+  it("draws any other column with the component renderer, and a page that is not one photograph as a panel sheet", () => {
+    const prose = root(slide([{ type: "image", asset_id: "hero", fit: "cover" }, { type: "paragraph", text: "一段说明。" }]))
+    expect(prose.querySelector('[data-split-column="panel"]')).not.toBeNull()
+    expect(byText(prose, "一段说明。")).toBeDefined()
+    // More than the column can hold: the page is drawn as the panel sheet.
+    const sheet = root(slide([
+      { type: "image", asset_id: "hero", fit: "cover" },
+      {
+        type: "data_table",
+        columns: [
+          { key: "area", label: "地区", align: "left" },
+          { key: "price", label: "容量价格", align: "right" },
+          { key: "gap", label: "缺口", align: "right" },
+        ],
+        rows: Array.from({ length: 16 }, (_, i) => ({ cells: { area: `区域 ${i + 1}`, price: `${300 + i} 美元`, gap: `${1000 + i * 10} MW` } })),
+      },
+    ]))
+    expect(sheet.querySelector("[data-dropped]")).not.toBeNull()
+    expect(sheet.querySelector('[data-split-column="panel"]')).toBeNull()
+    expect(sheet.querySelector("[data-panel-head]")).not.toBeNull()
+  })
+
+  it("keeps the photograph clean and sets its caption right above the source, in the source's 13px", () => {
+    const page = root(slide([
+      { type: "image", asset_id: "hero", fit: "cover", caption: "夜间的园区" },
+      { type: "bullets", items: ["电价顶格", "并网暂停"] },
+    ]))
+    expect(page.querySelector('[data-split-column="panel"]')).not.toBeNull()
+    expect(page.querySelector("[data-dropped]")).toBeNull()
+    expect(byText(page, "电价顶格")).toBeDefined()
+    const caption = page.querySelector("[data-image-caption] text")!
+    expect(attr(caption, ["x", "y", "font-size"])).toEqual(["640", "652", "13"])
+    expect(caption.textContent).toBe("夜间的园区")
+    const source = byText(page, "来源：PJM（2026 年 7 月），LBNL（2026 年 6 月）。图为示意图")!
+    expect(attr(source, ["y"])).toEqual(["678"])
+  })
+})

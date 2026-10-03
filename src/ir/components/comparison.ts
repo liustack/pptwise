@@ -34,6 +34,10 @@ import type { DesignStory } from "../../design-story"
 export const schema = z
   .object({
     type: z.literal("comparison"),
+    title: z
+      .string()
+      .optional()
+      .describe('A short name for the comparison, printed over it, such as "三个方案" or "Three options". A theme that sets it in a panel prints the title in the panel\'s title bar.'),
     columns: z.array(z.string()),
     rows: z.array(
       z

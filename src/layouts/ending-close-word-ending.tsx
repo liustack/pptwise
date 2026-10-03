@@ -1,141 +1,227 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
-import { fitHeadingLines } from "../render/heading-fit"
-
-import { accessibleInk, metaInk } from "../render/ink"
-import { fitEmphasisLine, headingEmphasisPaint, parseEmphasis, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
+import { boundaryBulletItems } from "./boundary-content"
+import {
+  fitEmphasisHeading,
+  fitEmphasisText,
+  headingEmphasisPaint,
+  renderEmphasisHeading,
+  type EmphasisHeadingLayout,
+} from "../render/emphasis"
+import { accessibleInk } from "../render/ink"
+import { splitRow } from "./compositions/rows"
+import { PANEL, paintPanel, panelInks, serifBaseline } from "./compositions/panel"
+import { centredBaseline, fitFixed, paintLines } from "./compositions/type"
+import { PANEL_LEFT, PANEL_W, PanelSource, fitPanelSource } from "./panel-shared"
 
 /**
- * close-word-ending layout（2026-08-22 第八波批 1，新表达）：
- * **收盘两行，accent 只点 `**强调**` 词**。构图抄 ledger 设计板 ending。
- * 底缘暗线归 motif，本版式不画。不致谢，不兜底 Thank you。
+ * close-word-ending：行情屏收口页。2026-10 ledger 样例改版
+ * （`design/rounds/2026-10-04-ledger/`）重画：
  *
- * **它进共享池，不是 ledger 专用**。零 theme id、零 hex。强调走 tint
- * （ledger 未分派 pad），没有标记就不改色。
+ *   - 顶部状态栏是 motif（`poster-motif`）。
+ *   - 一行 15px 强调色小标签：页面的 `kicker`，如「请投委会定」，y120 起。
+ *   - 标题 52/70，标题字体常规字重，最多两行，以最后一行为基准落在 y302
+ *     的盒底：要拍板的那一件事。`**…**` 那段走强调色（琥珀）。
+ *   - y340 一根 border 细线，线下一行 14px 青灰的引语（`subheading`，如
+ *     「接下来盯三个信号」）。
+ *   - 第一个 bullets 的条目排成等宽面板，两到四个：强调色 14px 编号、30px
+ *     标题字体的标签、17/26 的说明。条目写成「标签：说明」时在冒号处拆开，
+ *     冒号不再印，标签末行用 `data-gloss-break` 声明它。没有冒号时整条做
+ *     标签。
+ *   - 页面的 `footnote` 印在页脚，13px 青灰，如免责句（`pageFields`）。
  *
- * 服务场景：财报收口、投资备忘结尾、周报收盘。一句读完，点一个词。
+ * 不致谢，不兜底 Thank you。heading 空就不画标题。零 theme id、零 hex。
  */
 
-const TITLE_X = 96
-const TITLE_Y = 320
-const TITLE_SIZE = 44
-const TITLE_MIN_PT = 28
-const TITLE_MAX_LINES = 2
-const TITLE_MAX_W = 480
-const TITLE_LINE_HEIGHT = 72
+const KICKER = { top: 120, box: 22, size: 15 } as const
+const TITLE = { foot: 302, size: 52, lineHeight: 70, minPt: 36, maxLines: 2 } as const
+const RULE_Y = 340
+const LEAD = { top: 362, box: 20, size: 14 } as const
+const PANELS = { top: 396, h: 176, maxItems: 4, pad: 22 } as const
+const NUMBER = { top: 22, box: 20, size: 14 } as const
+const LABEL = { top: 50, size: 30, lineHeight: 40, maxLines: 1 } as const
+const TEXT = { top: 100, size: 17, lineHeight: 26, maxLines: 2 } as const
 
-const FOOT_X = 96
-const FOOT_Y = 540
-const FOOT_SIZE = 17
-const FOOT_MAX_W = 1088
+interface Item {
+  number: string
+  label: EmphasisHeadingLayout
+  text: EmphasisHeadingLayout | null
+  glossBreak?: string
+}
 
-export function CloseWordEnding({ ir, slide, ctx }: SvgTemplateProps) {
+export function CloseWordEnding({ slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const headingSource = slide.heading ?? ""
-  const plainHeading = stripEmphasis(headingSource)
-  const segments = parseEmphasis(headingSource)
+  const inks = panelInks(ctx)
 
-  const title = fitHeadingLines(plainHeading, {
-    maxWidth: TITLE_MAX_W,
-    fontSize: TITLE_SIZE,
-    maxLines: TITLE_MAX_LINES,
-    minPt: TITLE_MIN_PT,
-    lineHeightRatio: TITLE_LINE_HEIGHT / TITLE_SIZE,
+  const kicker = slide.kicker?.trim()
+    ? fitEmphasisText(slide.kicker, { maxWidth: PANEL_W, fontSize: KICKER.size, minPt: KICKER.size, maxLines: 1, lineHeightRatio: KICKER.box / KICKER.size, fontFamily: fonts.body, bold: false })
+    : null
+  const title = fitEmphasisHeading(slide.heading ?? "", {
+    maxWidth: PANEL_W,
+    fontSize: TITLE.size,
+    maxLines: TITLE.maxLines,
+    minPt: TITLE.minPt,
+    lineHeightRatio: TITLE.lineHeight / TITLE.size,
     fontFamily: fonts.heading,
-    typeScale: ctx.shape?.typeScale,
     bold: false,
   })
-  const lineSegs = sliceEmphasisForLines(segments, title.lines)
   const titleInk = accessibleInk(colors.text, bg, title.fontSize)
-  const accentInk = accessibleInk(colors.accent, bg, title.fontSize)
-
-  const org = ir.meta.organization
-  const author = ir.meta.authors?.[0]
-  const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
-  const footSource = slide.subheading?.trim() || [org, authorText].filter(Boolean).join(" · ")
-  const foot = footSource
-    ? fitEmphasisLine(footSource, {
-        maxWidth: FOOT_MAX_W,
-        fontSize: FOOT_SIZE,
-        minFontSize: 16,
-        fontFamily: fonts.body,
-      })
+  const lastBaseline = serifBaseline(TITLE.foot - title.lineHeight, title.lineHeight, title.fontSize)
+  const firstBaseline = lastBaseline - Math.max(0, title.lines.length - 1) * title.lineHeight
+  const lead = slide.subheading?.trim()
+    ? fitEmphasisText(slide.subheading, { maxWidth: PANEL_W, fontSize: LEAD.size, minPt: LEAD.size, maxLines: 1, lineHeightRatio: LEAD.box / LEAD.size, fontFamily: fonts.body, bold: false })
     : null
+  const source = fitPanelSource(slide, ctx, page)
+
+  const raw = boundaryBulletItems(slide, PANELS.maxItems)
+  // Three panels on the board's 384px pitch, 16px apart: a short row keeps
+  // that pitch and ends short of the measure, the way the board's does.
+  const pitch = raw.length > 0 ? PANEL_W / Math.max(3, raw.length) : 0
+  const w = pitch - PANEL.gap
+  const inner = w - PANELS.pad * 2
+  const items: Item[] = []
+  let lost = 0
+  for (const [i, item] of raw.entries()) {
+    const { label, gloss } = splitRow(item)
+    const glossBreak = label ? item.trim().slice(label.length, item.trim().length - gloss.length).trim() : undefined
+    const head = fitFixed(label ?? gloss, { width: inner, size: LABEL.size, lineHeight: LABEL.lineHeight, maxLines: LABEL.maxLines, fontFamily: fonts.heading, bold: false })
+    const text = label ? fitFixed(gloss, { width: inner, size: TEXT.size, lineHeight: TEXT.lineHeight, maxLines: TEXT.maxLines, fontFamily: fonts.body, bold: false }) : null
+    if (!head || (label && !text)) {
+      lost += 1
+      continue
+    }
+    items.push({ number: String(i + 1).padStart(2, "0"), label: head, text, glossBreak })
+  }
 
   return (
     <>
-      {title.lines.map((line, i) =>
-        renderEmphasisText(
-          lineSegs[i] ?? [{ text: line, emphasized: false }],
-          {
-            accent: accentInk,
-            baseFill: titleInk,
-            fontWeight: "400",
-            emphasis: ctx.emphasis,
-            measureWeight: { bold: false, fontFamily: fonts.heading },
-          },
+      {kicker &&
+        renderEmphasisHeading(
+          kicker,
+          headingEmphasisPaint(ctx, kicker, { baseFill: accessibleInk(colors.accent, bg, KICKER.size), fontWeight: "700", fontFamily: fonts.body, bold: false }),
+          (_line, i) => (
+            <text
+              key={i}
+              data-font-floor-exempt="panel-spec"
+              data-truncated={kicker.truncated ? "1" : undefined}
+              x={PANEL_LEFT}
+              y={centredBaseline(KICKER.top, KICKER.box, KICKER.size)}
+              fontFamily={fonts.body}
+              fontSize={kicker.fontSize}
+              fill={accessibleInk(colors.accent, bg, KICKER.size)}
+              dominantBaseline="alphabetic"
+            />
+          ),
+        )}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: titleInk, fontWeight: "400", fontFamily: fonts.heading, bold: false }),
+        (_line, i) => (
           <text
             key={i}
             data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-            x={TITLE_X}
-            y={TITLE_Y + i * TITLE_LINE_HEIGHT}
+            x={PANEL_LEFT}
+            y={firstBaseline + i * title.lineHeight}
             fontFamily={fonts.heading}
             fontSize={title.fontSize}
             fill={titleInk}
             dominantBaseline="alphabetic"
-          />,
+          />
         ),
       )}
-
-      {foot && renderEmphasisText(
-        foot.segments,
-        headingEmphasisPaint(ctx, foot, {
-          baseFill: metaInk(colors.muted, bg),
-          fontWeight: "600",
-          fontFamily: fonts.body,
-          bold: false,
-        }),
+      <rect x={PANEL_LEFT} y={RULE_Y} width={PANEL_W} height={1} fill={colors.border ?? colors.muted} />
+      {lead &&
+        renderEmphasisHeading(
+          lead,
+          headingEmphasisPaint(ctx, lead, { baseFill: accessibleInk(colors.muted, bg, LEAD.size), fontWeight: "700", fontFamily: fonts.body, bold: false }),
+          (_line, i) => (
             <text
-              data-contrast-tier="meta"
-              data-truncated={foot.truncated ? "1" : undefined}
-              x={FOOT_X}
-              y={FOOT_Y}
+              key={i}
+              data-font-floor-exempt="panel-spec"
+              data-truncated={lead.truncated ? "1" : undefined}
+              x={PANEL_LEFT}
+              y={centredBaseline(LEAD.top, LEAD.box, LEAD.size)}
               fontFamily={fonts.body}
-              fontSize={foot.fontSize}
-              fill={metaInk(colors.muted, bg)}
+              fontSize={lead.fontSize}
+              fill={accessibleInk(colors.muted, bg, LEAD.size)}
               dominantBaseline="alphabetic"
-              />
-      )}
+            />
+          ),
+        )}
+      {items.map((item, i) => {
+        const x = PANEL_LEFT + i * pitch
+        const y = PANELS.top
+        return (
+          <g key={i} data-next-step={i + 1}>
+            {paintPanel({ x, y, w, h: PANELS.h }, ctx)}
+            <text
+              data-font-floor-exempt="panel-spec"
+              x={x + PANELS.pad}
+              y={centredBaseline(y + NUMBER.top, NUMBER.box, NUMBER.size)}
+              fontFamily={fonts.body}
+              fontSize={NUMBER.size}
+              fill={accessibleInk(inks.mark, inks.surface, NUMBER.size)}
+              dominantBaseline="alphabetic"
+            >
+              {item.number}
+            </text>
+            {paintLines(item.label, {
+              ctx,
+              x: x + PANELS.pad,
+              y: serifBaseline(y + LABEL.top, LABEL.lineHeight, LABEL.size),
+              fill: accessibleInk(colors.text, inks.surface, LABEL.size),
+              fontFamily: fonts.heading,
+              fontWeight: "400",
+              bg: inks.surface,
+              ...(item.glossBreak ? { lastAttrs: { "data-gloss-break": item.glossBreak } } : {}),
+            })}
+            {item.text &&
+              paintLines(item.text, {
+                ctx,
+                x: x + PANELS.pad,
+                y: centredBaseline(y + TEXT.top, TEXT.lineHeight, TEXT.size),
+                fill: accessibleInk(inks.body, inks.surface, TEXT.size),
+                fontFamily: fonts.body,
+                fontWeight: "400",
+                bg: inks.surface,
+              })}
+          </g>
+        )
+      })}
+      {lost > 0 && <g data-dropped={lost} data-dropped-kind="item" />}
+      <PanelSource source={source} ctx={ctx} />
     </>
   )
 }
 
 export const layoutDef = {
-  // ending-close-word-ending.tsx: two-line close from heading, accent tint
-  // only on **emphasis**, footer from subheading or org/author. No thank-you
-  // fallback. Bottom ticker belongs to the motif. pinOnly.
+  // ending-close-word-ending.tsx: ledger's market-screen close. A kicker in
+  // the accent, the decision, a hairline, a lead-in, up to four next steps
+  // in panels, and the page's footnote at the foot.
   id: "close-word-ending",
   kind: "standard",
   story: {
-    name: "Tinted Word",
-    story: "Two lines of centered text fill the page, with one emphasized word picked out in the highlight tint. A footer drawn from the subtitle or the organization sits near the bottom.",
-    positioning: "The closing page for a two-line wrap-up sentence where one word carries the highlight. No list, no CTA.",
-    audience: "Close reading at a desk or on a tablet, where the single tinted word lands quietly.",
-    notFor: "Closings that need a list of follow-ups, which belong in Tally Close or Bare Checklist.",
+    name: "Close Word",
+    story: "A small line in the signal colour says what the page asks for, the decision follows in a serif with its key words in that colour, and under a hairline the signals to watch stand in dark panels, each a word and a line.",
+    positioning: "Closes a deck that ends on a call and the conditions that would change it. Choose it when the last page must say what to decide and what to watch.",
+    audience: "A committee leaving the room with one decision and a short watch list.",
+    notFor: "A thank-you page or a contact sheet.",
   },
   slideTypes: ["ending"],
   slots: [
+    { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "meta", accepts: [] },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: PANELS.maxItems },
   ],
+  pageFields: ["kicker", "footnote"],
   headingFit: {
-    maxWidth: TITLE_MAX_W,
-    fontSize: TITLE_SIZE,
-    maxLines: TITLE_MAX_LINES,
-    minPt: TITLE_MIN_PT,
+    maxWidth: PANEL_W,
+    fontSize: TITLE.size,
+    maxLines: TITLE.maxLines,
+    minPt: TITLE.minPt,
     bold: false,
-    lineHeightRatio: TITLE_LINE_HEIGHT / TITLE_SIZE,
+    lineHeightRatio: TITLE.lineHeight / TITLE.size,
   },
 } satisfies LayoutDefinition

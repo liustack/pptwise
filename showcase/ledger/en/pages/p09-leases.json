@@ -1,0 +1,57 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "x_unit": "$bn"
+      },
+      "series": [
+        {
+          "name": "Signed data center leases not yet started",
+          "data": [
+            {
+              "x": "Microsoft",
+              "y": 329.1
+            },
+            {
+              "x": "Oracle",
+              "y": 288,
+              "emphasis": true
+            },
+            {
+              "x": "Meta",
+              "y": 279.0
+            },
+            {
+              "x": "Amazon",
+              "y": 137.2
+            },
+            {
+              "x": "Alphabet",
+              "y": 85.2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "$1.12tn",
+          "label": "Five-firm total",
+          "note": "Plus about $68bn Meta signed in July"
+        },
+        {
+          "value": "**About 9x**",
+          "label": "Oracle's leases vs a year of operating cash",
+          "note": "$288bn against fiscal 2026's $32bn"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: company 10-K and 10-Q filings (Jul, Sep 2026). Multi-year commitments, not annual capex",
+  "notes": "These are data center leases that are signed but have not started, so they are not on the balance sheet yet. Microsoft has $329.1bn, starting between fiscal 2027 and 2033. Oracle has $288bn, up from $260bn at the end of May. Meta has $279.0bn and signed about $68bn more in July, starting in 2027 and 2028. Amazon has $137.2bn. Alphabet has $85.2bn, starting between 2026 and 2031. The five add up to about $1.12tn, or about $1.19tn with Meta's July signings. These are commitments over many years, so they are not one year's spending and should not be added to annual capex. What they show is how much is already locked in behind today's plans. Oracle carries the most relative to its size: its unstarted leases are about nine times its fiscal 2026 operating cash flow of $32bn. Microsoft, Alphabet, Amazon and Meta are as of the end of June, Oracle as of the end of August."
+}

@@ -26,8 +26,17 @@ const THEMES = ["ember", "crayon"] as const
 
 const YEARS = ["FY2023", "FY2024", "FY2025", "FY2026"]
 
+/**
+ * The compositions only the panel setting draws: numbered panels and a
+ * dumbbell in a panel. They have no other form to put on brief's band, and
+ * `panel.test.tsx` puts them on these themes in their own setting.
+ */
+const PANEL_ONLY = ["tiles", "shifts"] as const
+type BoardId = Exclude<CompositionId, (typeof PANEL_ONLY)[number]>
+const BOARD_IDS = COMPOSITION_IDS.filter((id): id is BoardId => !(PANEL_ONLY as readonly string[]).includes(id))
+
 /** One page per composition, in the shape each one takes. */
-const PAGES: Record<CompositionId, unknown[]> = {
+const PAGES: Record<BoardId, unknown[]> = {
   rows: [
     { type: "bullets", items: ["Missed deliveries: No time windows", "Density: Routes cut for **2022 volume**", "Overtime: Shifts planned same day"] },
     { type: "callout", variant: "info", text: "None of the three needs a single new van. All three need **a better plan**." },
@@ -232,7 +241,7 @@ const PAGES: Record<CompositionId, unknown[]> = {
 }
 
 /** Every string an author wrote on the page, less the emphasis marks, that the composition must print. */
-const AUTHORED: Record<CompositionId, string[]> = {
+const AUTHORED: Record<BoardId, string[]> = {
   rows: ["Missed deliveries", "No time windows", "2022 volume", "Shifts planned same day", "a better plan"],
   table: ["Add 600 vans", "Fix density first", "Cost to Northwind", "$38M over 12 months", "18% lower"],
   waves: ["Pilot", "Months 1 to 3", "$0.40 off per parcel", "Handover", "Run rate reached"],
@@ -281,7 +290,7 @@ function ownTexts(id: CompositionId, root: Element, rect: ContentRect): Element[
 }
 
 describe.each(THEMES)("the compositions on %s", (theme) => {
-  it.each(COMPOSITION_IDS)("%s takes the page it takes on brief", (id) => {
+  it.each(BOARD_IDS)("%s takes the page it takes on brief", (id) => {
     const { ctx } = testCtx(theme)
     const drawn = compose({ components: PAGES[id] as never, ctx, rect: BAND })
     expect(drawn).not.toBeNull()
@@ -292,7 +301,7 @@ describe.each(THEMES)("the compositions on %s", (theme) => {
     for (const words of AUTHORED[id]) expect(printed, words).toContain(words)
   })
 
-  it.each(COMPOSITION_IDS)("%s sets its text in the theme's fonts, legible on what it sits on", (id) => {
+  it.each(BOARD_IDS)("%s sets its text in the theme's fonts, legible on what it sits on", (id) => {
     const { root, ctx } = renderComposition(COMPOSITIONS[id], PAGES[id], { theme })
     const page = ctx.defaultBg ?? ctx.colors.bg
     const fonts = new Set([ctx.fonts.body, ctx.fonts.heading])
@@ -356,7 +365,7 @@ describe("the compositions in another face's band", () => {
   // largest case.
   const band: ContentRect = { x: 128, y: 180, w: 1024, h: 460 }
 
-  it.each(COMPOSITION_IDS)("%s starts at the band's left edge and stays inside it", (id) => {
+  it.each(BOARD_IDS)("%s starts at the band's left edge and stays inside it", (id) => {
     const { root } = renderComposition(COMPOSITIONS[id], PAGES[id], { theme: "crayon", rect: band })
     expect(root).not.toBeNull()
     const xs: number[] = []

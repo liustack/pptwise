@@ -425,7 +425,9 @@ function checkSlide(
   for (const component of slide.components) {
     if (component.type !== "chart" || !component.axes) continue
     if (AXES_APPLICABLE_CHART_TYPES.has(component.chart_type)) continue
-    if (!hasAnyAxesSetting(component.axes)) continue
+    // A dumbbell names its values under the rows (`dumbbellCaption`), so only
+    // a grid it has no plot box for goes unused.
+    if (component.chart_type === "dumbbell" ? component.axes.show_grid === undefined : !hasAnyAxesSetting(component.axes)) continue
     issues.push({
       slide: index,
       severity: "warn",

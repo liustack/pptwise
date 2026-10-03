@@ -3,7 +3,7 @@ import type { Component } from "@/ir"
 import { isShareBar } from "@/ir/components/chart"
 
 export { isShareBar }
-import { groupDigits, joinUnit } from "../lib/quantity-format"
+import { figureStyleOf, groupDigits, joinUnit, type FigureStyle } from "../lib/quantity-format"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { mostlyChinese } from "../lib/text-script"
 import { accessibleInk, blendOver, readableOn } from "../render/ink"
@@ -99,8 +99,8 @@ function shareChinese(chart: Chart): boolean {
 }
 
 /** A part's value with the chart's unit, at the decimals the parts were written with. */
-function figure(value: number, decimals: number, unit: string | undefined, chinese: boolean): string {
-  return joinUnit(groupDigits(value.toFixed(decimals), chinese), unit, " ")
+function figure(value: number, decimals: number, unit: string | undefined, figures: FigureStyle): string {
+  return joinUnit(groupDigits(value.toFixed(decimals), figures), unit, " ")
 }
 
 /** "太阳能和风电" or "Solar and Wind": the names of a run, joined the way the chart's language lists them. */
@@ -153,7 +153,8 @@ export function drawShareBar(spec: ShareBarSpec): { node: React.ReactElement; he
   const { colors, fonts } = ctx
   const body = fonts.body
   const bg = ctx.defaultBg ?? colors.bg
-  const chinese = shareChinese(chart)
+  const figures = ctx.figures ?? figureStyleOf(shareChinese(chart))
+  const chinese = figures.chinese
   const unit = chart.axes?.y_unit?.trim() || undefined
   const decimals = Math.min(4, Math.max(0, ...parts.map((p) => decimalsOf(p.value))))
   const caption = shareCaption(chart)
@@ -173,7 +174,7 @@ export function drawShareBar(spec: ShareBarSpec): { node: React.ReactElement; he
   const outside: { index: number; text: string; box: Placed; tickX: number }[] = []
   const inside: { index: number; value: string }[] = []
   for (const [i, part] of parts.entries()) {
-    const value = figure(part.value, decimals, unit, chinese)
+    const value = figure(part.value, decimals, unit, figures)
     const room = spans[i]!.x1 - spans[i]!.x0 - PART_GAP - LABEL_INSET - LABEL_TRAIL
     const fitsInside = width(part.name, NAME.size, body, true) <= room && width(value, VALUE.size, body) <= room
     if (fitsInside) {
@@ -197,7 +198,7 @@ export function drawShareBar(spec: ShareBarSpec): { node: React.ReactElement; he
   const totals: { text: string; x: number; ink: string }[] = []
   if (marked.length > 0) {
     const sum = marked.reduce((s, i) => s + parts[i]!.value, 0)
-    const text = totalText(runName(marked.map((i) => parts[i]!.name), chinese), figure(sum, decimals, unit, chinese), (sum / total) * 100, chinese)
+    const text = totalText(runName(marked.map((i) => parts[i]!.name), chinese), figure(sum, decimals, unit, figures), (sum / total) * 100, chinese)
     const at = spans[marked[0]!]!.x0
     if (at + width(text, TOTALS.size, body, true) <= x + w) {
       totals.push({ text, x: at, ink: accessibleInk(spec.markInk, bg, TOTALS.size) })
@@ -205,7 +206,7 @@ export function drawShareBar(spec: ShareBarSpec): { node: React.ReactElement; he
       const rival = others.reduce<number | null>((best, i) => (best === null || parts[i]!.value > parts[best]!.value ? i : best), null)
       if (rival !== null) {
         const other = parts[rival]!
-        const otherText = totalText(other.name, figure(other.value, decimals, unit, chinese), (other.value / total) * 100, chinese)
+        const otherText = totalText(other.name, figure(other.value, decimals, unit, figures), (other.value / total) * 100, chinese)
         const otherW = width(otherText, TOTALS.size, body, true)
         const otherX = Math.min(spans[rival]!.x0, x + w - otherW)
         const first: Placed = { x0: at, x1: at + width(text, TOTALS.size, body, true) }

@@ -411,6 +411,16 @@ const CommonSlideFields = {
   placeholder: z.literal(true).optional(),
   heading: z.string().optional(),
   subheading: z.string().optional(),
+  /**
+   * A short label set over the heading, such as the occasion on a cover
+   * ("投委会专题") or what an ending asks for ("请投委会定"). Only a face that
+   * declares a place for it (`LayoutDefinition.pageFields`) draws it, and
+   * validate refuses it on any other.
+   */
+  kicker: z
+    .string()
+    .optional()
+    .describe('A short label set over the heading, such as the occasion on a cover ("Investment committee") or what an ending asks for ("For decision"). Drawn only by faces that have a place for it: validate says which.'),
   components: z.array(ComponentSchema).default([]),
   background: BackgroundSpecSchema.optional(),
   // 图片排版 P4：受控装饰原语——模型只有选择权，绘制由渲染层完成。

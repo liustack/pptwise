@@ -781,6 +781,28 @@ describe("checkIrQuality", () => {
     expect(codes(quality(ir))).toContain("chart_axes_ignored")
   })
 
+  it("does not warn when a dumbbell names its axes or unit, which it prints under its rows", () => {
+    const ir = makeIR([
+      {
+        type: "content",
+        kind: "points",
+        heading: "Guidance",
+        components: [
+          {
+            type: "chart",
+            chart_type: "dumbbell",
+            axes: { x_title: "2026 guidance", x_unit: "$bn", y_title: "Company", y_unit: "$bn" },
+            series: [
+              { name: "From", data: [{ x: "A", y: 10 }] },
+              { name: "To", data: [{ x: "A", y: 20 }] },
+            ],
+          },
+        ],
+      },
+    ])
+    expect(codes(quality(ir))).not.toContain("chart_axes_ignored")
+  })
+
   it("warns when a funnel or dumbbell chart sets axes", () => {
     for (const chart_type of ["funnel", "dumbbell"] as const) {
       const ir = makeIR([

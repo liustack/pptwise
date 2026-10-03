@@ -1,0 +1,36 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "datacenter",
+      "fit": "cover"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "label": "PJM capacity price per MW-day",
+          "value": "**$325**",
+          "note": "2028/29 auction, at the cap"
+        },
+        {
+          "label": "Short of the reliability target",
+          "value": "6,831 MW",
+          "note": "Second shortfall in a row"
+        },
+        {
+          "label": "Texas",
+          "value": "Paused",
+          "note": "New data center hookups halted from August pending an audit"
+        },
+        {
+          "label": "Data centers' share of US power, 2030",
+          "value": "11.8%",
+          "note": "LBNL base case"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: PJM (Jul 2026), LBNL (Jun 2026), K&L Gates and EIA (Aug, Sep 2026). Image is illustrative",
+  "notes": "The binding constraint is moving from chips to power. PJM, the largest grid operator in the eastern US, ran its capacity auction for 2028/29 in July. The clearing price hit the cap at $325 per megawatt-day, the total cost was $16.4bn, and the supply procured fell 6,831 megawatts short of the reliability requirement, the second auction in a row to come up short. PJM says its load forecast keeps adding large data centers. In early August the governor of Texas ordered a pause on new data center grid connections pending an audit, which the EIA's short-term outlook also notes. LBNL projects US data centers will use 649 TWh in 2030, 11.8% of the country's electricity. Prices are rising too. EIA data show residential power prices up 4.9% year on year in July. That is a national average and not all of it is AI, but it makes local approvals harder. The big buyers are now sourcing their own power: Microsoft is restarting a Three Mile Island unit, Meta has signed up to 6.6 GW of nuclear, Oracle up to 2.8 GW of fuel cells, and the Ohio campus Nvidia guaranteed is planned at 4.25 GW. The image is AI-generated and illustrative."
+}

@@ -1,0 +1,50 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "+15.5%",
+          "label": "Microsoft · earnings day",
+          "note": "Azure up 43%",
+          "delta": "up"
+        },
+        {
+          "value": "+15.3%",
+          "label": "Amazon · earnings day",
+          "note": "AWS up 37%",
+          "delta": "up"
+        },
+        {
+          "value": "−7.1%",
+          "label": "Alphabet · earnings day",
+          "note": "Free cash flow turned negative",
+          "delta": "down"
+        },
+        {
+          "value": "−8.0%",
+          "label": "Meta · earnings day",
+          "note": "Free cash flow down to $0.78bn",
+          "delta": "down"
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "−56%",
+          "label": "Oracle: spends most, pays back slowest",
+          "note": "Below its September 2025 high",
+          "delta": "down"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "It fell 53.5% from June 1 to July 24. Fiscal 2027 capex runs up to about $95bn, with about $40bn of outside funding planned, after −$23.7bn of free cash flow last fiscal year."
+    }
+  ],
+  "footnote": "Source: Yahoo Finance adjusted prices, research team analysis (to Oct 2, 2026), company releases (Jun, Jul 2026), Reuters (Jun 2026)",
+  "notes": "The market is neither buying nor selling the whole theme. It is choosing. On Q2 earnings day, Microsoft and Amazon, whose cloud revenue sped up, each rose about 15%, while Alphabet fell 7.1% and Meta 8.0% as their cash flow weakened. Google Cloud grew 82% in the quarter, the fastest of the three, and Alphabet still fell, which says investors now look at how much is spent and where the money comes from, not only at revenue. Oracle is the extreme case. After it guided fiscal 2027 capex to as much as about $95bn with about $40bn of financing in June, the stock fell 53.5% from June 1 to July 24, and it now sits 56% below its September 2025 high. On the supplier side, the Philadelphia Semiconductor Index fell 28.6% from its high between June 22 and July 29, and Nvidia's forward P/E of about 16.5 is its lowest since 2015, so the pressure has moved from high multiples to whether earnings last."
+}

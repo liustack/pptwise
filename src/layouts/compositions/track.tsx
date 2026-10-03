@@ -78,7 +78,8 @@ const CLOSING: ClosingSpec = { size: 24, lineHeight: 38, padX: 40, padY: 33, max
 function trackShape(components: readonly Component[]): { timeline: Timeline; callout?: Callout } | null {
   const [timeline, second, ...rest] = components
   if (timeline?.type !== "timeline" || rest.length > 0) return null
-  if (timeline.layout === "vertical") return null
+  // No place for a title on the rule: the ordinary timeline prints it.
+  if (timeline.layout === "vertical" || timeline.title?.trim()) return null
   if (timeline.milestones.length < MIN_ITEMS || timeline.milestones.length > MAX_ITEMS) return null
   if (second === undefined) return { timeline }
   const callout = closingCallout(second)

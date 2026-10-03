@@ -36,3 +36,20 @@ bulletin's menu asks for the `notice` column. The round's decisions are in [roun
 **What it gave up.**
 
 - A list the pairs cannot set is stacked under the head the ordinary way.
+
+## ledger, AI capex sample, 2026-10
+
+ledger's menu asks for the `panel` column (`params: { column: "panel" }`), and ledger offers photo pages for the first time. The round's decisions are in [rounds/2026-10-04-ledger](../../rounds/2026-10-04-ledger/README.md).
+
+| board (p12) | engine |
+| :-: | :-: |
+| ![board](ledger.board.png) | ![engine](ledger.engine.png) |
+
+**What it looks like.** The photograph takes the left 600px under the status bar, edge to edge from y32 to the foot. Beside it from x640, the claim in the heading face at 30/42, set on its last line at y136. Under it, when the column is one `kpi_cards`, a ledger of two to five rows 116px apart over hairlines: the label at 14px muted, the figure at 40px in the heading face (amber when marked) and the note at 15px, 300px into the row. Anything else in the column is drawn by the component renderer. The source sits at the column's foot at 13px, and a caption the author gave the photograph sits right above it in the same 13px.
+
+**Why.** The power page is the one place the deck shows the physical thing the money buys. A clean photograph beside a short ledger of the grid's numbers keeps the screen's grammar without putting a panel over the picture.
+
+**What it gave up.**
+
+- The photograph carries nothing: no caption strip, no scrim. A caption moves into the column.
+- A page that is not one photograph and what this column holds is drawn as a panel sheet under the same frame.

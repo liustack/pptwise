@@ -25,6 +25,8 @@ import type { PageRenderContext } from "./page-context"
 import { NOTICE_BODY_BOTTOM, NOTICE_BODY_TOP, NoticeHead, NoticeSource, fitNoticeSource } from "../layouts/notice-shared"
 import { NoticeSheetContent } from "../layouts/content-notice-sheet"
 import { GridSheetContent } from "../layouts/content-grid-sheet"
+import { PanelSheetContent } from "../layouts/content-panel-sheet"
+import { PanelSplitPage } from "../layouts/image-panel-split"
 import { FittedLines, GRID_LEFT, GRID_W, GridSource, fitGridSource, gridBodyRect } from "../layouts/grid-shared"
 import { centredBaseline } from "../layouts/compositions/type"
 import { bodySlotDropsContent } from "./step-aside"
@@ -453,18 +455,25 @@ export function ImageSplitPage({
   page: PageRenderContext
   params?: FaceParams
 }) {
-  const columnId = faceParam<"standard" | "report" | "notice">(params, "column", "standard")
-  // A notice page that is not one photograph and its facts is drawn as the
-  // notice sheet draws any other page, under the same frame, so the deck
-  // keeps one heading throughout.
+  const columnId = faceParam<"standard" | "report" | "notice" | "panel">(params, "column", "standard")
+  // A notice or panel page that is not one photograph and its facts is drawn
+  // as that theme's sheet draws any other page, under the same frame, so the
+  // deck keeps one heading throughout.
   const plain = () =>
-    columnId === "notice" ? <NoticeSheetContent ir={ir} slide={slide} index={0} ctx={ctx} page={page} /> : <TakeoverFallbackPage slide={slide} ctx={ctx} />
+    columnId === "notice" ? (
+      <NoticeSheetContent ir={ir} slide={slide} index={0} ctx={ctx} page={page} />
+    ) : columnId === "panel" ? (
+      <PanelSheetContent ir={ir} slide={slide} index={0} ctx={ctx} page={page} />
+    ) : (
+      <TakeoverFallbackPage slide={slide} ctx={ctx} />
+    )
   if (!singlePictureExact(slide)) return plain()
   const imageSelection = findImageSelection(slide)
   if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
   if (!bleedSlotCanHost(imageSelection.source)) return plain()
   const { image: imageComponent, source: imageSource } = imageSelection
   if (columnId === "notice") return <NoticeSplitPage slide={slide} ctx={ctx} imageSelection={imageSelection} />
+  if (columnId === "panel") return PanelSplitPage({ slide, ctx, page, imageSelection }) ?? plain()
   const column = SPLIT_COLUMNS[columnId]
   const imageW = column.imageW
   const textW = W - column.textX - 96
@@ -1689,7 +1698,7 @@ export const imageSplitLayoutDef: LayoutDefinition = {
   // a wider photograph beside a regular-weight title and a list of facts set
   // as ruled pairs.
   params: {
-    column: { type: "string", values: ["standard", "report", "notice"] },
+    column: { type: "string", values: ["standard", "report", "notice", "panel"] },
   },
   slots: [
     { name: "image", accepts: ["image", "image_grid", "image_compare", "device_mockup"], required: true, selection: "first" },
