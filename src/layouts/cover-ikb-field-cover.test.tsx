@@ -57,17 +57,31 @@ describe("cover-ikb-field-cover — board geometry", () => {
     expect(field?.getAttribute("fill")).toBe(tokens.colors.primary)
     expect(field?.getAttribute("height")).toBe("720")
     const headings = titleLines(root)
-    // The 2026-10 board: 80px on 98px lines from y232, the first baseline at y312.
-    expect(headings[0]?.getAttribute("y")).toBe("312")
+    // The 2026-10 board: 80px on 98px lines from y232. The title stands on its
+    // last line at y410, where a two-line title's second line sits, so a
+    // two-line title starts at y312 and a one-line title rises no higher.
+    expect(headings[headings.length - 1]?.getAttribute("y")).toBe("410")
+    expect(Number(headings[0]?.getAttribute("y"))).toBe(410 - (headings.length - 1) * 98)
     expect(headings[0]?.getAttribute("font-size")).toBe("80")
     expect(headings[0]?.getAttribute("text-anchor")).not.toBe("middle")
     expect(headings.map((t) => t.textContent).join("")).toContain("二〇二六年")
     expect(headings[0]?.getAttribute("fill")).toBe(readableOn(tokens.colors.primary))
   })
 
-  it("breaks a Chinese title after its comma, not inside a word", () => {
+  it("keeps a title that fits the page's measure on one line, on the last line's baseline", () => {
+    // 13 characters at 80px is 1040px: inside the 1120px measure, so it must
+    // not break early just because the page has room for a second line.
     const { root } = renderCover("bulletin", slide("内需缩了两成，四季度怎么打"))
-    expect(titleLines(root).map((t) => t.textContent)).toEqual(["内需缩了两成，", "四季度怎么打"])
+    const lines = titleLines(root)
+    expect(lines.map((t) => t.textContent)).toEqual(["内需缩了两成，四季度怎么打"])
+    expect(lines[0]?.getAttribute("y")).toBe("410")
+  })
+
+  it("breaks a Chinese title that overruns the measure after its comma, not inside a word", () => {
+    const { root } = renderCover("bulletin", slide("今年国内需求缩了两成，四季度到底该怎么打"))
+    const lines = titleLines(root)
+    expect(lines.map((t) => t.textContent)).toEqual(["今年国内需求缩了两成，", "四季度到底该怎么打"])
+    expect(lines.map((t) => t.getAttribute("y"))).toEqual(["312", "410"])
   })
 
   it("closes the title with a 64 by 6 bar 60px under its last baseline, in inverted ink", () => {

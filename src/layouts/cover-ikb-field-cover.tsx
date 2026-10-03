@@ -34,8 +34,11 @@ import { FieldHeadingLine, fieldInk } from "./field-type"
  */
 
 const LEFT = 80
+const RIGHT = 1200
 const KICKER = { top: 96, size: 18, box: 26, share: 0.78, maxW: 900 }
-const TITLE = { top: 232, size: 80, box: 98, minPt: 48, maxLines: 2, maxW: 960 }
+/** The title runs the page's full measure. The steps sit above it, so nothing
+ *  beside it asks for room, and a narrower box only broke a title that fits. */
+const TITLE = { top: 232, size: 80, box: 98, minPt: 48, maxLines: 2, maxW: RIGHT - LEFT }
 /** The closing bar: this far under the title's last baseline. */
 const BAR = { drop: 60, w: 64, h: 6 }
 const SUBTITLE = { gap: 30, size: 22, box: 32, share: 0.86, maxW: 900, maxLines: 2 }
@@ -58,8 +61,12 @@ export function IkbFieldCover({ ir, slide, ctx, page }: SvgTemplateProps) {
   })
   const showTitle = stripEmphasis(slide.heading ?? "").trim().length > 0
   const titleInk = accessibleInk(ink, field, title.fontSize)
-  const firstBaseline = centredBaseline(TITLE.top, title.lineHeight, title.fontSize)
-  const lastBaseline = firstBaseline + Math.max(0, title.lines.length - 1) * title.lineHeight
+  // The title stands on its last line, where a two-line title's second line
+  // sits, and a shorter one rises no higher. Hung from the top instead, a
+  // one-line title pulled the bar and subtitle up and left a hole above the
+  // date.
+  const lastBaseline = centredBaseline(TITLE.top + (TITLE.maxLines - 1) * TITLE.box, TITLE.box, TITLE.size)
+  const firstBaseline = lastBaseline - Math.max(0, title.lines.length - 1) * title.lineHeight
   const barY = lastBaseline + BAR.drop
 
   const kicker = org
