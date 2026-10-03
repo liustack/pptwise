@@ -52,7 +52,8 @@ describe("table composition", () => {
     const { root } = renderComposition(tableComposition, [comparison()])
     expect(Array.from(root!.querySelectorAll("line")).map((line) => line.getAttribute("y1"))).toEqual(["348", "432", "516"])
     const lines = texts(root!).filter((el) => el.getAttribute("x") === "820" && Number(el.getAttribute("y")) > 516)
-    expect(lines.map(textOf)).toEqual(["Depot teams absorb", "change"])
+    // "absorb" moves down so "change" does not end the cell alone.
+    expect(lines.map(textOf)).toEqual(["Depot teams", "absorb change"])
   })
 
   it("puts the highlighter under a marked cell, measured against the white column", () => {

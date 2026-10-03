@@ -1095,6 +1095,58 @@ function avoidCjkOrphan(
   return paragraphLines
 }
 
+/**
+ * Keeps an English paragraph from ending on a single word, the way CSS
+ * `text-wrap: pretty` sets body text.
+ *
+ * The greedy pack fills every line to the budget, so a sentence one word
+ * longer than a whole number of lines ends on that word alone: "IEA sees coal
+ * power up 1.4% in" + "2026". This moves the last word of the line before
+ * down to join it ("IEA sees coal power up 1.4%" + "in 2026") and touches no
+ * line above those two, so it holds for a paragraph of any length.
+ *
+ * Like `avoidCjkOrphan`, the move never adds a line and never leaves the line
+ * above a single word itself. It also never makes the last line wider than
+ * the paragraph's widest greedy line, so the fitted font size holds along
+ * with the caller's line cap. It moves one whole word and only across a
+ * break between words, never a piece of a word `splitLongToken` cut, and the
+ * new break still has to pass kinsoku. Text with any CJK in it is left to
+ * `avoidCjkOrphan`: a Latin word closing a Chinese paragraph is ordinary
+ * there.
+ *
+ * `lineStarts` holds the piece index each of `paragraphLines` starts at.
+ */
+function avoidLatinOrphan(
+  pieces: WrapPiece[],
+  lineStarts: number[],
+  paragraphLines: string[],
+  weight?: TextWeightHint,
+): string[] {
+  const n = paragraphLines.length
+  if (n < 2) return paragraphLines
+  const prevStart = lineStarts[n - 2]
+  const lastStart = lineStarts[n - 1]
+  // A single word: the last line opens a word and every piece after it
+  // continues that word.
+  if (!pieces[lastStart].space) return paragraphLines
+  for (let i = lastStart + 1; i < pieces.length; i += 1) if (pieces[i].space) return paragraphLines
+  if (pieces.some((piece) => WIDE_CHAR_RE.test(piece.text))) return paragraphLines
+
+  const cut = lastStart - 1
+  // The word that moves has to be whole, and the line above has to keep two.
+  if (cut <= prevStart || !pieces[cut].space) return paragraphLines
+  let wordsLeft = 1
+  for (let i = prevStart + 1; i < cut; i += 1) if (pieces[i].space) wordsLeft += 1
+  if (wordsLeft < 2) return paragraphLines
+  const before = pieces[cut - 1].text
+  if (!allowsLineBreakBetween(before[before.length - 1], pieces[cut].text[0])) return paragraphLines
+
+  const last = joinPieces(pieces, cut, pieces.length)
+  const widest = Math.max(...paragraphLines.map((line) => measureTextUnits(line, weight)))
+  if (measureTextUnits(last, weight) > widest + 1e-9) return paragraphLines
+  return [...paragraphLines.slice(0, n - 2), joinPieces(pieces, prevStart, cut), last]
+}
+
 function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint): WrapResult {
   const lines: string[] = []
   let hadSplit = false
@@ -1157,7 +1209,7 @@ function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint):
     if (current) paragraphLines.push(current)
     const settled = avoidCjkOrphan(pieces, lineStarts, paragraphLines, maxUnits, weight)
     if (settled !== paragraphLines) orphanFixed = true
-    lines.push(...settled)
+    lines.push(...(settled === paragraphLines ? avoidLatinOrphan(pieces, lineStarts, paragraphLines, weight) : settled))
   }
 
   return { lines, hadSplit, minSplitFreeUnits, orphanFixed }

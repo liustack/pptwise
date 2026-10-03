@@ -982,14 +982,15 @@ describe("CJK line-break prohibition (kinsoku)", () => {
     // The sub-token retreat requires wide (CJK) characters on both sides of
     // the boundary, so an English token can never supply one. Here the rule
     // does move the break — a middle dot is a middle dot in any script — but
-    // it moves a whole word, and "Basics" survives intact.
+    // it moves a whole word, and "Basics" survives intact. The greedy last
+    // line "Two" stood alone, so the orphan rule takes "Volume" down to it.
     const r = layoutSvgText("Photography Basics · Volume Two", {
       maxWidth: 284,
       fontSize: 28,
       maxLines: 4,
       minPt: 14,
     })
-    expect(r.lines).toEqual(["Photography", "Basics · Volume", "Two"])
+    expect(r.lines).toEqual(["Photography", "Basics ·", "Volume Two"])
     for (const word of "Photography Basics Volume Two".split(" ")) {
       expect(r.lines.some((line) => line.split(/[\s·]+/).includes(word))).toBe(true)
     }
@@ -1165,8 +1166,74 @@ describe("CJK orphan avoidance (no single-character last line)", () => {
     expect(at("成本", 20).lines).toEqual(["成", "本"])
   })
 
-  it("leaves a lone Latin word on the last line alone", () => {
+  it("leaves a lone Latin word to the Latin rule, which spares the line above", () => {
+    // Moving "playbook" down would leave "Vertical" alone on the first line.
     expect(at("Vertical playbook replication", 200).lines).toEqual(["Vertical playbook", "replication"])
+  })
+})
+
+describe("Latin orphan avoidance (no single-word last line)", () => {
+  // swiss's closing columns and figure notes: body text at a fixed size in
+  // Microsoft YaHei, the way `fitFixed` and the ending's gloss call it.
+  const yahei = "Microsoft YaHei"
+  const body = (text: string, maxWidth: number, maxLines = 3) =>
+    layoutSvgText(text, { maxWidth, fontSize: 20, maxLines, minPt: 20, fontFamily: yahei, bold: false })
+
+  it("moves one word down to a lone last word (swiss en ending repro)", () => {
+    // Pre-fix: ["IEA sees coal power up 1.4% in", "2026"] and
+    // ["BNEF expects 158 GW added in", "2026"].
+    const coal = body("IEA sees coal power up 1.4% in 2026", 320)
+    expect(coal.lines).toEqual(["IEA sees coal power up 1.4%", "in 2026"])
+    expect(coal.fontSize).toBe(20)
+    expect(coal.truncated).toBe(false)
+    expect(body("BNEF expects 158 GW added in 2026", 320).lines).toEqual(["BNEF expects 158 GW added", "in 2026"])
+  })
+
+  it("keeps a two-line note at two lines (swiss en figure note repro)", () => {
+    // Pre-fix: [..., "at about 13.9 Gt of", "CO2"].
+    const r = body("+1.7% in 2024. The IEA also finds them flat, at about 13.9 Gt of CO2", 640, 2)
+    expect(r.lines).toEqual(["+1.7% in 2024. The IEA also finds them flat, at about 13.9 Gt", "of CO2"])
+    expect(r.fontSize).toBe(20)
+  })
+
+  it("only touches the last two lines of a longer paragraph", () => {
+    const greedy = ["Seat expansion in", "existing accounts and", "more"]
+    const r = layoutSvgText("Seat expansion in existing accounts and more", { maxWidth: 200, fontSize: 16, maxLines: 64, minPt: 16 })
+    expect(r.lines).toEqual([greedy[0], "existing accounts", "and more"])
+  })
+
+  it("settles each paragraph on its own", () => {
+    const r = body("IEA sees coal power up 1.4% in 2026\nBNEF expects 158 GW added in 2026", 320, 4)
+    expect(r.lines).toEqual(["IEA sees coal power up 1.4%", "in 2026", "BNEF expects 158 GW added", "in 2026"])
+  })
+
+  it("never makes the last line wider than the greedy lines, so the size holds", () => {
+    // "all electrification" would fit the measure but outrun every greedy
+    // line, and a fit that shrinks to the widest line would set it smaller.
+    const r = body("Go to all electrification", 200)
+    expect(r.lines).toEqual(["Go to all", "electrification"])
+  })
+
+  it("leaves a text that fits one line, or ends on two words, as it was", () => {
+    expect(body("China's use rate near 91%", 320).lines).toEqual(["China's use rate near 91%"])
+    expect(body("IEA sees coal power up 1.4% in early 2026", 320).lines).toEqual([
+      "IEA sees coal power up 1.4% in",
+      "early 2026",
+    ])
+  })
+
+  it("never moves a piece of a word an over-long token was cut into", () => {
+    // The last line is the tail of a cut token, not a word of its own.
+    const text = "see https://example.com/a-very-long-path-segment"
+    const r = layoutSvgText(text, { maxWidth: 160, fontSize: 16, maxLines: 64, minPt: 16 })
+    expect(r.lines[0]).toBe("see")
+    expect(r.lines.join("")).toBe(text.replace(" ", ""))
+  })
+
+  it("leaves Chinese, and a Latin word closing a Chinese paragraph, to the CJK rule", () => {
+    // The paragraph has CJK in it, so a lone "GPU" last line is ordinary.
+    const zh = layoutSvgText("推理集群下季度全部换成新一代 GPU", { maxWidth: 280, fontSize: 20, maxLines: 3, minPt: 20, fontFamily: yahei })
+    expect(zh.lines).toEqual(["推理集群下季度全部换成新一代", "GPU"])
   })
 })
 
@@ -1194,11 +1261,13 @@ describe("space-delimited mixed text wraps Chinese per character", () => {
     expect(r.lines.join("").replace(/\s/g, "")).toBe(text.replace(/\s/g, ""))
   })
 
-  it("wraps pure English exactly as before", () => {
+  it("wraps pure English word by word, as before", () => {
+    // Greedy ends on "more" alone, and the Latin orphan rule takes "and" down
+    // to it. Nothing about the mixed-text rule above reaches English.
     expect(at("Seat expansion in existing accounts and more", 200).lines).toEqual([
       "Seat expansion in",
-      "existing accounts and",
-      "more",
+      "existing accounts",
+      "and more",
     ])
   })
 })
@@ -1368,6 +1437,7 @@ describe("the em dash and middle dot measure in the face that paints them", () =
     // Leaving the CJK width class must not glue "self-serve—automated—
     // pipelines" into one token, which a 9em column then cut inside
     // "automated": ["self-serve—automat", "ed—pipelines win", "the quarter"].
+    // "the" moves down so "quarter" does not end the text alone.
     const r = layoutSvgText("self-serve—automated—pipelines win the quarter", {
       maxWidth: 9 * 40,
       fontSize: 40,
@@ -1375,7 +1445,7 @@ describe("the em dash and middle dot measure in the face that paints them", () =
       minPt: 20,
       fontFamily: "Georgia",
     })
-    expect(r.lines).toEqual(["self-serve—", "automated—", "pipelines win the", "quarter"])
+    expect(r.lines).toEqual(["self-serve—", "automated—", "pipelines win", "the quarter"])
   })
 
   it("counts a dash or a dot in a tabled face as measured exactly", () => {
