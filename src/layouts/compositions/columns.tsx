@@ -205,9 +205,9 @@ export function unitCaption(chart: Chart, chinese: boolean): string {
 }
 
 /**
- * The grid setting's bar colour: a forecast or target in the emphasis ink;
- * with a bar marked, that bar in it and the rest black; with a series
- * marked, that series in it and the rest in the light grey; with nothing
+ * The grid setting's bar colour: a forecast or target in the emphasis ink.
+ * With a bar marked, that bar in it and the rest black. With a series
+ * marked, that series in it and the rest in the light grey. With nothing
  * marked, the series black, mid grey and light grey in turn.
  */
 function gridInk(ctx: Parameters<Composition>[0]["ctx"], chart: Chart, series: number, point: Point, marked: number): string {

@@ -15,8 +15,8 @@ import { FittedLines } from "./grid-shared"
  *   - 左边 240px 红色粗体章号「01」，两位数，行框 x80 y72 起。强调色取主题
  *     的强调墨（`emphasisRunInk`，瑞士红）。
  *   - 右栏 x560 起、宽 640：章名 48/58 粗体，以最后一行为基准，末行行框底
- *     在 y220，两行时第一行往上长；说明（subheading）20/30 muted，y228 起
- *     一行；2px 黑线 y300。
+ *     在 y220，两行时第一行往上长。说明（subheading）20/30 muted，y228 起
+ *     一行。2px 黑线 y300。
  *   - 线下列出本章各页：从这一页到下一个章节页之间的内容页，页码两位红色
  *     粗体 17px，标题 19/28 黑字，最多两行，每行一根细线
  *     （`compositions/contents.tsx`）。作者不用写。页数多到放不下、或某个
@@ -110,7 +110,7 @@ export function DecimalIndexChapter({ ir, slide, index, ctx }: SvgTemplateProps)
 export const layoutDef = {
   branding: "none",
   // chapter-decimal-index-chapter.tsx: an institutional report's chapter
-  // page. The chapter number very large in the accent on the left; the
+  // page. The chapter number very large in the accent on the left, the
   // chapter's name, its subheading and a black rule on the right, and under
   // the rule the pages the chapter holds, read off the deck.
   id: "decimal-index-chapter",

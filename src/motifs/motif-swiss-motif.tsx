@@ -3,10 +3,10 @@ import type { DecorProps } from "./types"
 import { DecorPiece } from "./decor-piece"
 
 /**
- * swiss-motif —— 「冷白制度」页缘。2026-10 swiss 样例改版
+ * swiss-motif：「冷白制度」页缘。2026-10 swiss 样例改版
  * （`design/rounds/2026-10-03-swiss/`）：
  *
- *   - **顶边 8px 红条**：y0–8 通栏，走 accent（瑞士红），每一页都画，照片页
+ *   - **顶边 8px 红条**：y0 到 8 通栏，走 accent（瑞士红），每一页都画，照片页
  *     压在照片上。这是「红成边」的那一条边，不是横幅，上面不承字。结构件：
  *     原色满画，不减淡、不受强度上限。改版前是 12px，板上收到 8px。
  *   - 右缘三格灰刻度不画了：板上封面也没有，那三根短划是孤立小件语汇。

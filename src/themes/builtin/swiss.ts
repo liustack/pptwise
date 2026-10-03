@@ -60,7 +60,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *
  * **2026-10 样例改版**（`design/rounds/2026-10-03-swiss/`，设计系统见
  * `docs/design-swiss.md`）：
- *   - 顶边红条收到 8px，每一页都画；右缘三格灰刻度去掉。
+ *   - 顶边红条收到 8px，每一页都画，右缘三格灰刻度去掉。
  *   - 内容页统一一种头部（`grid-sheet` 的 `GridHead`）：左上红色章号加灰色
  *     章名 15px，黑色粗体结论 34px 整行 1120 宽、以最后一行为基准，2px 黑线
  *     y180。数据页的整条黑色标题条和「3.1」编号徽章都去掉了。
@@ -72,7 +72,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *     设定下的构图。封面、章节、收尾三张脸按板重画（章节页自带本章目录）。
  *
  * **菜单分派**：制度年报按章推进，七类内容页共用一张栅格正文页，按内容挑
- * 构图；结论、大数字、照片各有自己的页；quote 不上。
+ * 构图。结论、大数字、照片各有自己的页。quote 不上。
  */
 export const SWISS_TOKENS: StyleTokens = {
   id: "swiss",
