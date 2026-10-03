@@ -3,6 +3,7 @@ import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { mixHex } from "./color-mix"
 import { accessibleInk } from "../render/ink"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
+import { withBlockTitle } from "./block-title"
 
 type DataTableComponent = Extract<Component, { type: "data_table" }>
 type DataTableRow = DataTableComponent["rows"][number]
@@ -317,8 +318,8 @@ export const dataTable: SvgComponent<DataTableComponent> = {
   },
 }
 
-export const renderDef: RenderDef<DataTableComponent> = {
+export const renderDef: RenderDef<DataTableComponent> = withBlockTitle({
   type: "data_table",
   measure: dataTable.measure,
   render: dataTable.render,
-}
+})

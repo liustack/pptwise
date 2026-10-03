@@ -80,6 +80,8 @@ function recordsShape(components: readonly Component[]): { table: DataTable; cal
   const [table, second, ...rest] = components
   if (table?.type !== "data_table" || rest.length > 0) return null
   if (table.source?.trim()) return null
+  // No place for a title over the open table: the ordinary table prints it.
+  if (table.title?.trim()) return null
   if (table.columns.length > MAX_COLUMNS || table.rows.length > MAX_ROWS) return null
   if (second === undefined) return { table }
   const callout = noticeClosingCallout(second)

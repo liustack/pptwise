@@ -5,6 +5,10 @@ import type { DesignStory } from "../../design-story"
 export const schema = z
   .object({
     type: z.literal("timeline"),
+    title: z
+      .string()
+      .optional()
+      .describe('A short name for the timeline, printed over it, such as "2026 年外部融资" or "Funding in 2026". A theme that sets it in a panel prints the title in the panel\'s title bar.'),
     /** 版式：缺省 horizontal（存量语义）。vertical=左 date/中轴圆点/右
      * 标题描述的编辑部竖排时间线，适合 4-8 个叙事型节点。 */
     layout: z.enum(["horizontal", "vertical"]).optional(),

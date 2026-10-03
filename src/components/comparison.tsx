@@ -12,6 +12,7 @@ import {
 import { accessibleInk } from "../render/ink"
 import { formLineHeight, layoutAtSize } from "./legibility"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
+import { withBlockTitle } from "./block-title"
 
 type ComparisonComponent = Extract<Component, { type: "comparison" }>
 
@@ -591,4 +592,4 @@ export const comparison: SvgComponent<ComparisonComponent> = {
   },
 }
 
-export const renderDef: RenderDef<ComparisonComponent> = { type: "comparison", measure: comparison.measure, render: comparison.render }
+export const renderDef: RenderDef<ComparisonComponent> = withBlockTitle({ type: "comparison", measure: comparison.measure, render: comparison.render })

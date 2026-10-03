@@ -78,7 +78,8 @@ const MIN_COLUMN = 120
 function lanesShape(components: readonly Component[]): { timeline: Timeline; callout?: Callout } | null {
   const [timeline, second, ...rest] = components
   if (timeline?.type !== "timeline" || rest.length > 0) return null
-  if (timeline.layout === "vertical") return null
+  // No place for a title over the axis: the ordinary timeline prints it.
+  if (timeline.layout === "vertical" || timeline.title?.trim()) return null
   if (timeline.milestones.length < MIN_ITEMS || timeline.milestones.length > MAX_ITEMS) return null
   if (second === undefined) return { timeline }
   const callout = noticeClosingCallout(second)

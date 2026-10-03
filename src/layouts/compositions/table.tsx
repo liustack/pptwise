@@ -237,6 +237,8 @@ function columnsFor(scale: TableScale, count: number, picked: number | undefined
 function tableShape(components: readonly Component[]): { comparison: Comparison; callout?: Callout } | null {
   const [only, second, ...rest] = components
   if (only?.type !== "comparison" || rest.length > 0) return null
+  // No place for a title over the open table: the ordinary comparison prints it.
+  if (only.title?.trim()) return null
   if (only.columns.length < MIN_COLUMNS || only.columns.length > MAX_COLUMNS) return null
   if (only.rows.length === 0 || only.rows.length > MAX_ROWS) return null
   if (second === undefined) return { comparison: only }

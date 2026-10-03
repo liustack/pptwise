@@ -4,6 +4,7 @@ import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-lay
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { accessibleInk, contrastRatio, requiredContrastRatio } from "../render/ink"
 import { DroppedContentMarker } from "../render/drop-marker"
+import { withBlockTitle } from "./block-title"
 
 type TimelineComponent = Extract<Component, { type: "timeline" }>
 
@@ -430,4 +431,4 @@ export const timeline: SvgComponent<TimelineComponent> = {
   },
 }
 
-export const renderDef: RenderDef<TimelineComponent> = { type: "timeline", measure: timeline.measure, render: timeline.render }
+export const renderDef: RenderDef<TimelineComponent> = withBlockTitle({ type: "timeline", measure: timeline.measure, render: timeline.render })
