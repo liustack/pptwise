@@ -31,6 +31,7 @@ import {
   type MarkPaint,
 } from "./plot"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import { columnsChart, columnsPanel } from "./columns-panel"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Point = Chart["series"][number]["data"][number]
@@ -264,6 +265,11 @@ interface Placed {
 }
 
 export const columnsComposition: Composition = ({ components, ctx, rect, setting }) => {
+  if (setting === "panel") {
+    const only = components.length === 1 ? components[0]! : null
+    const drawn = only && columnsChart(only) ? columnsPanel(only, rect, ctx) : null
+    return drawn ? <g {...compositionTag("columns")}>{drawn}</g> : null
+  }
   const chart = columnsShape(components)
   if (!chart) return null
   const columns = columnsOf(chart)

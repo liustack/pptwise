@@ -76,6 +76,10 @@ export interface PaintSpec {
   anchor?: "start" | "middle" | "end"
   /** The colour the text lands on, when it is not the page background. */
   bg?: string
+  /** Attributes every line's `<text>` carries, such as a font-floor exemption. */
+  attrs?: Record<string, string>
+  /** Attributes the last line's `<text>` carries as well, such as `data-gloss-break`. */
+  lastAttrs?: Record<string, string>
 }
 
 /**
@@ -97,6 +101,8 @@ export function paintLines(layout: EmphasisHeadingLayout, spec: PaintSpec): Reac
     (_line, index) => (
       <text
         key={index}
+        {...spec.attrs}
+        {...(index === layout.lines.length - 1 ? spec.lastAttrs : undefined)}
         x={spec.x}
         y={spec.y + index * layout.lineHeight}
         fontFamily={spec.fontFamily}

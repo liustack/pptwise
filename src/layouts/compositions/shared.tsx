@@ -73,10 +73,18 @@ export type CompositionId =
  *   the bracket that states the page's change. Blocks that carry text stay
  *   black, never red. See `./grid.ts`.
  *
+ * - `panel`: ledger's 2026-10 board. Every shape set inside dark panels
+ *   with a 36px title bar naming the panel and its unit, the theme's
+ *   emphasis ink kept for the one thing an author marks, its success and
+ *   danger inks only for a value's direction, and unmarked series in the
+ *   chart palette after its lead. A composition offered this setting also
+ *   takes the shapes that board drew and no other did: numbered panels, a
+ *   before-and-after dot plot, a row of figure panels. See `./panel.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */

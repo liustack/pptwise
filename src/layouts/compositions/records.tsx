@@ -7,6 +7,7 @@ import { rowTint } from "./notice"
 import { textWidth } from "./plot"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
+import { recordsPanel } from "./records-panel"
 
 type DataTable = Extract<Component, { type: "data_table" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -93,7 +94,9 @@ function cell(row: DataTable["rows"][number], key: string): string {
   return v === undefined ? "" : String(v)
 }
 
-export const recordsComposition: Composition = ({ components, ctx, rect, setting }) => {
+export const recordsComposition: Composition = (props) => {
+  if (props.setting === "panel") return recordsPanel(props)
+  const { components, ctx, rect, setting } = props
   const shape = recordsShape(components)
   if (!shape) return null
   const grid = setting === "grid"

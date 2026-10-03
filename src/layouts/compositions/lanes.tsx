@@ -6,6 +6,7 @@ import { gridMark } from "./grid"
 import { axisInk } from "./notice"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
+import { lanesPanel } from "./lanes-panel"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -86,7 +87,9 @@ function lanesShape(components: readonly Component[]): { timeline: Timeline; cal
   return callout ? { timeline, callout } : null
 }
 
-export const lanesComposition: Composition = ({ components, ctx, rect, setting }) => {
+export const lanesComposition: Composition = (props) => {
+  if (props.setting === "panel") return lanesPanel(props)
+  const { components, ctx, rect, setting } = props
   const shape = lanesShape(components)
   if (!shape) return null
   const { colors, fonts } = ctx

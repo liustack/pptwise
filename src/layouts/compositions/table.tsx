@@ -5,6 +5,7 @@ import { accessibleInk, readableOn } from "../../render/ink"
 import { closingCallout, fitClosing, fitNoticeClosing, paintClosing, paintNoticeClosing, type ClosingLayout, type ClosingSpec } from "./closing"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
+import { tablePanel } from "./table-panel"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -336,7 +337,9 @@ function layoutAt(
   return { scale, columns, headers, rows, bottom, ...(closing ? { closing } : {}) }
 }
 
-export const tableComposition: Composition = ({ components, ctx, rect, setting }) => {
+export const tableComposition: Composition = (props) => {
+  if (props.setting === "panel") return tablePanel(props)
+  const { components, ctx, rect, setting } = props
   const shape = tableShape(components)
   if (!shape) return null
   if (setting === "notice") return noticeTable(shape, ctx, rect)

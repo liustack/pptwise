@@ -1047,9 +1047,10 @@ function walkText(
           })
         }
 
-        // bulletin's and swiss's 14px source lines and swiss's 15px chapter line
-        // are approved board sizes, like brief's meta.
-        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec"].includes(
+        // bulletin's and swiss's 14px source lines, swiss's 15px chapter line
+        // and the small type of ledger's panels (13px title bars and source,
+        // 14 and 15px labels) are approved board sizes, like brief's meta.
+        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec"].includes(
           el.getAttribute("data-font-floor-exempt") ?? "",
         )
         if (!decor && !fontFloorExempt && fontSizeAttr !== null && Number(fontSizeAttr) < FONT_FLOOR) {

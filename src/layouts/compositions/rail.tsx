@@ -13,6 +13,7 @@ import { columnsComposition } from "./columns"
 import { railFigures, railFiguresNotice } from "./rail-figures"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
+import { railPanel } from "./rail-panel"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Series = Chart["series"][number]
@@ -244,7 +245,9 @@ function swatchIsLine(chart: Chart, series: Series): boolean {
   return chart.chart_type === "combo" && series.plot === "line"
 }
 
-export const railComposition: Composition = ({ components, ctx, rect, setting }) => {
+export const railComposition: Composition = (props) => {
+  if (props.setting === "panel") return railPanel(props)
+  const { components, ctx, rect, setting } = props
   // The notice and grid settings set only the author's figures, beside a
   // hand-set plot when one takes the chart. A chart alone goes to the plots.
   if (setting === "notice" || setting === "grid") {
