@@ -2,6 +2,7 @@ import type { ReactElement } from "react"
 import type { Component } from "@/ir"
 import { accessibleInk } from "../render/ink"
 import { DroppedContentMarker } from "../render/drop-marker"
+import { anyCut } from "./declared-fit"
 import {
   FORM_BODY_FLOOR,
   FORM_TITLE_FLOOR,
@@ -20,6 +21,13 @@ type HubSpokeComponent = Extract<Component, { type: "hub_spoke" }>
  * 每个要素是一枚胶囊，胶囊内左/右侧一个序号徽标，标签粗体、说明一行。
  * 辐条从中心圆缘连到胶囊最近的边缘。全部 circle/rect/line/text 原语，
  * 导出安全。
+ *
+ * A box narrow enough to scale the drawing past what its words need (a hub
+ * set beside a second component in half the page) used to cut the labels and
+ * descriptions down to a few characters and mark them truncated. Every fit
+ * is now made before anything is painted, and a drawing that would cut any
+ * of them declines whole (`declared-fit.ts`), so the page steps aside to a
+ * rendering with room or the loss is declared.
  */
 
 function nodeAngle(i: number, n: number): number {
@@ -195,6 +203,48 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
         </g>
       )
     }
+    const capFits = caps.map((cap) => {
+      const item = component.items[cap.i]!
+      const badgeR = cap.h * 0.36
+      const inset = cap.h * 0.14
+      const badgeCx = cap.badge === "left" ? cap.x + inset + badgeR : cap.x + cap.w - inset - badgeR
+      const textLeft = cap.badge === "left" ? badgeCx + badgeR + 8 : cap.x + 12
+      const textRight = cap.badge === "left" ? cap.x + cap.w - 12 : badgeCx - badgeR - 8
+      const textW = Math.max(24, textRight - textLeft)
+      const labelFit = layoutFormTitle(item.label, {
+        maxWidth: textW,
+        fontSize: Math.max(FORM_TITLE_FLOOR, Math.round(16 * scale)),
+        maxLines: 1,
+        fontFamily: ctx.fonts.body,
+      })
+      const desc = item.description?.trim()
+      const descBudget = cap.h - labelFit.lineHeight - 8
+      const descSize = capFormBody(labelFit.fontSize, Math.round(13 * scale))
+      // The capsule is tall enough for a second line under the label; a
+      // description that runs past one line takes it rather than being cut.
+      const descMaxLines = descBudget >= 2 * Math.round(descSize * 1.25) ? 2 : 1
+      const descLayout =
+        desc && descBudget >= FORM_BODY_FLOOR
+          ? layoutFormBody(desc, {
+              maxWidth: textW,
+              fontSize: descSize,
+              titleSize: labelFit.fontSize,
+              maxLines: descMaxLines,
+              lineHeightRatio: 1.25,
+              fontFamily: ctx.fonts.body,
+            })
+          : null
+      // A description with no line of room is cut as surely as one cut short.
+      const descLost = Boolean(desc) && (descLayout === null || descLayout.lines.length === 0)
+      return { cap, badgeR, badgeCx, textLeft, textRight, labelFit, desc, descLayout, descLost }
+    })
+    if (anyCut([hubLayout, ...capFits.flatMap((fit) => [fit.labelFit, fit.descLayout])]) || capFits.some((fit) => fit.descLost)) {
+      return (
+        <g transform={`translate(${box.x},${box.y})`}>
+          <DroppedContentMarker count={1} kind="component" />
+        </g>
+      )
+    }
     const border = ctx.colors.border ?? ctx.colors.muted
     const hubFill = ctx.colors.surface
 
@@ -242,44 +292,14 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
             </text>
           ))
         })()}
-        {caps.map((cap) => {
-          const item = component.items[cap.i]!
-          const badgeR = cap.h * 0.36
-          const inset = cap.h * 0.14
-          const badgeCx = cap.badge === "left" ? cap.x + inset + badgeR : cap.x + cap.w - inset - badgeR
+        {capFits.map(({ cap, badgeR, badgeCx, textLeft, textRight, labelFit, desc, descLayout }) => {
           const badgeCy = cap.y + cap.h / 2
           const badgeFill = ctx.colors.accent
           const glyph = String(cap.i + 1)
           const glyphSize = Math.max(FORM_BODY_FLOOR, Math.round(16 * scale))
           const glyphInk = accessibleInk(ctx.colors.surface, badgeFill, glyphSize)
-          const textLeft = cap.badge === "left" ? badgeCx + badgeR + 8 : cap.x + 12
-          const textRight = cap.badge === "left" ? cap.x + cap.w - 12 : badgeCx - badgeR - 8
-          const textW = Math.max(24, textRight - textLeft)
           const anchor = cap.badge === "left" ? "start" : "end"
           const tx = cap.badge === "left" ? textLeft : textRight
-          const labelFit = layoutFormTitle(item.label, {
-            maxWidth: textW,
-            fontSize: Math.max(FORM_TITLE_FLOOR, Math.round(16 * scale)),
-            maxLines: 1,
-            fontFamily: ctx.fonts.body,
-          })
-          const desc = item.description?.trim()
-          const descBudget = cap.h - labelFit.lineHeight - 8
-          const descSize = capFormBody(labelFit.fontSize, Math.round(13 * scale))
-          // The capsule is tall enough for a second line under the label; a
-          // description that runs past one line takes it rather than being cut.
-          const descMaxLines = descBudget >= 2 * Math.round(descSize * 1.25) ? 2 : 1
-          const descLayout =
-            desc && descBudget >= FORM_BODY_FLOOR
-              ? layoutFormBody(desc, {
-                  maxWidth: textW,
-                  fontSize: descSize,
-                  titleSize: labelFit.fontSize,
-                  maxLines: descMaxLines,
-                  lineHeightRatio: 1.25,
-                  fontFamily: ctx.fonts.body,
-                })
-              : null
           const descLines = descLayout?.lines ?? []
           const descInk = accessibleInk(ctx.colors.muted, ctx.colors.surface, descLayout?.fontSize ?? 12)
           const blockH = labelFit.fontSize + (descLines.length > 0 ? descLines.length * descLayout!.lineHeight : 0)
