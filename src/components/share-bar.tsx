@@ -301,7 +301,10 @@ export function shareFills(
   let inRun = 0
   let other = 0
   return parts.map((part) => {
-    if (part.marked) return blendOver(inks.mark, inks.surface, Math.max(0, 1 - RUN_STEP * inRun++))
+    if (part.marked) {
+      const step = inRun++
+      return step === 0 ? inks.mark : blendOver(inks.mark, inks.surface, Math.max(0, 1 - RUN_STEP * step))
+    }
     return inks.others[other++ % inks.others.length]!
   })
 }

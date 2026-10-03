@@ -1,10 +1,12 @@
+import type React from "react"
 import type { Component } from "@/ir"
 import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { accessibleInk } from "../../render/ink"
 import { closingCallout, fitClosing, paintClosing, type ClosingLayout, type ClosingSpec } from "./closing"
-import { fitFigure, fitQuote, paintFigure, plainFigure, type FittedFigure } from "./figure"
+import { fitFigure, fitQuote, markedFigure, paintBoldFigure, paintFigure, plainFigure, type FittedFigure } from "./figure"
+import { gridMark } from "./grid"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
-import { fitFixed, paintLines } from "./type"
+import { centredBaseline, fitFixed, paintLines } from "./type"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -87,7 +89,9 @@ function figuresShape(components: readonly Component[]): { kpis: KpiCards; quote
   return callout ? { kpis, callout } : null
 }
 
-export const figuresComposition: Composition = ({ components, ctx, rect }) => {
+export const figuresComposition: Composition = (props) => {
+  if (props.setting === "grid") return gridFigures(props)
+  const { components, ctx, rect } = props
   const shape = figuresShape(components)
   if (!shape) return null
   const { colors, fonts } = ctx
@@ -200,6 +204,103 @@ export const figuresComposition: Composition = ({ components, ctx, rect }) => {
         </g>
       )}
       {closing && paintClosing(closing, { x: rect.x, y: acrossY, w: rect.w }, CLOSING, ctx)}
+    </g>
+  )
+}
+
+/*
+ * The grid setting of figures: swiss's 2026-10 statement and photo pages
+ * (p02, p10). Two to four figures in columns 376px apart on the board's
+ * 1120px, the last stopping 28px short of the band's edge, each a small
+ * muted label, the figure black and bold, and its note in ink under it,
+ * with a hairline between columns. The figure the author
+ * marks (`**…**` around its value) is set in the emphasis ink. Every figure
+ * shares one size, the largest of 104, 72, 56 and 46 at which all of them
+ * fit their column on one line, so a row of short numbers stands as large as
+ * the statement page sets them and a row with units steps down to the photo
+ * page's 46px.
+ *
+ * Takes: `[kpi_cards]`, two to four items with a value and no delta, icon or
+ * source line.
+ *
+ * Declines: anything else, a label past one line at 17px, a figure that does
+ * not fit its column even at 46px, a note past two lines at 19px, and a row
+ * taller than the band.
+ */
+
+const GRID = {
+  sizes: [104, 72, 56, 46] as const,
+  /** The text in each column stops this far short of the next one (340px of 376 on the board). */
+  gutter: 36,
+  /** The last column's text stops this far short of the band's right edge (x1172 on the board). */
+  trailing: 28,
+  label: { size: 17, box: 24 },
+  /** The figure's baseline under the label's: 24px plus 0.85 of its size. */
+  figureDrop: 24,
+  figureRatio: 0.85,
+  note: { size: 19, lineHeight: 28, maxLines: 2 },
+  /** The note's first baseline under the figure's: 30px plus a fifth of the figure's size. */
+  noteDrop: 30,
+  noteRatio: 0.19,
+  /** The hairline between columns runs from the band's top to this far under the last note line. */
+  ruleBelow: 44,
+  /** How far a column rule stands left of the column it opens. */
+  ruleInset: 24,
+}
+
+function gridFigures({ components, ctx, rect }: Parameters<Composition>[0]): React.ReactElement | null {
+  const [kpis, ...rest] = components
+  if (kpis?.type !== "kpi_cards" || rest.length > 0) return null
+  if (kpis.items.length < MIN_ITEMS || kpis.items.length > MAX_ITEMS || !kpis.items.every(plainFigure)) return null
+  const { colors, fonts } = ctx
+  const body = fonts.body
+  const count = kpis.items.length
+  const pitch = (rect.w - GRID.trailing + GRID.gutter) / count
+  const textW = Math.floor(pitch - GRID.gutter)
+  if (textW < MIN_COLUMN_W) return null
+  let figures: FittedFigure[] | null = null
+  for (const size of GRID.sizes) {
+    const fitted = kpis.items.map((item) => fitFigure(item, size, textW, fonts.heading, false, true))
+    if (fitted.every((figure) => figure !== null)) {
+      figures = fitted as FittedFigure[]
+      break
+    }
+  }
+  if (!figures) return null
+  const size = figures[0]!.size
+  const columns = []
+  for (const [i, item] of kpis.items.entries()) {
+    const label = fitFixed(item.label, { width: textW, size: GRID.label.size, lineHeight: GRID.label.box, maxLines: 1, fontFamily: body, bold: false })
+    const note = item.note?.trim()
+      ? fitFixed(item.note, { width: textW, size: GRID.note.size, lineHeight: GRID.note.lineHeight, maxLines: GRID.note.maxLines, fontFamily: body, bold: false })
+      : undefined
+    if (label === null || note === null) return null
+    columns.push({ x: Math.round(rect.x + i * pitch), label, figure: figures[i]!, note, marked: markedFigure(item) })
+  }
+  const labelY = centredBaseline(rect.y, GRID.label.box, GRID.label.size)
+  const figureY = labelY + GRID.figureDrop + Math.round(size * GRID.figureRatio)
+  const noteY = figureY + GRID.noteDrop + Math.round(size * GRID.noteRatio)
+  const noteLines = Math.max(0, ...columns.map((c) => c.note?.lines.length ?? 0))
+  const lastBaseline = noteLines > 0 ? noteY + (noteLines - 1) * GRID.note.lineHeight : figureY
+  if (lastBaseline + Math.ceil(GRID.note.size * 0.22) > rect.y + rect.h) return null
+  const ruleFoot = Math.min(rect.y + rect.h, lastBaseline + GRID.ruleBelow)
+
+  const bg = ctx.defaultBg ?? colors.bg
+  const rule = ruleInk(ctx)
+  const labelInk = accessibleInk(colors.muted, bg, GRID.label.size)
+  const noteInk = accessibleInk(colors.text, bg, GRID.note.size)
+  return (
+    <g {...compositionTag("figures")} data-figures-size={size}>
+      <g {...blockTag(ctx, kpis)}>
+        {columns.map((column, i) => (
+          <g key={i}>
+            {i > 0 && <line x1={column.x - GRID.ruleInset} y1={rect.y} x2={column.x - GRID.ruleInset} y2={ruleFoot} stroke={rule} strokeWidth={1} />}
+            {paintLines(column.label, { ctx, x: column.x, y: labelY, fill: labelInk, fontFamily: body, fontWeight: "400" })}
+            {paintBoldFigure(column.figure, { x: column.x, y: figureY, ink: accessibleInk(column.marked ? gridMark(ctx) : colors.text, bg, size) }, ctx)}
+            {column.note && paintLines(column.note, { ctx, x: column.x, y: noteY, fill: noteInk, fontFamily: body, fontWeight: "400" })}
+          </g>
+        ))}
+      </g>
     </g>
   )
 }

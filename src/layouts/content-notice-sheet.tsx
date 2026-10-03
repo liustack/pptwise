@@ -41,6 +41,8 @@ const NOTICE_COMPOSITIONS: readonly CompositionId[] = [
   "rows",
   "table",
   "records",
+  // Before rail: a share bar over figures runs the page's width, not rail's plot.
+  "share",
   "rail",
   "columns",
   "bars",

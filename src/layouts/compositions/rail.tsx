@@ -245,13 +245,14 @@ function swatchIsLine(chart: Chart, series: Series): boolean {
 }
 
 export const railComposition: Composition = ({ components, ctx, rect, setting }) => {
-  // The notice setting sets only the author's figures, beside a hand-set
-  // plot when one takes the chart. A chart alone goes to the plots.
-  if (setting === "notice") {
+  // The notice and grid settings set only the author's figures, beside a
+  // hand-set plot when one takes the chart. A chart alone goes to the plots.
+  if (setting === "notice" || setting === "grid") {
     return railFiguresNotice({
       components,
       ctx,
       rect,
+      setting,
       plot: (component, band) => {
         for (const draw of [columnsComposition, barsComposition, bridgeComposition]) {
           const drawn = draw({ components: [component], ctx, rect: band, setting })

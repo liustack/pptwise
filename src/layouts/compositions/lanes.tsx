@@ -2,6 +2,7 @@ import type React from "react"
 import type { Component } from "@/ir"
 import { accessibleInk } from "../../render/ink"
 import { fitNoticeClosing, noticeClosingCallout, paintNoticeClosing } from "./closing"
+import { gridMark } from "./grid"
 import { axisInk } from "./notice"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
@@ -36,6 +37,10 @@ type Callout = Extract<Component, { type: "callout" }>
  * Reads: `primary` (lane names, highlighted milestones), `text` (the axis,
  * titles, nodes), `muted` (dates, descriptions), `panel` (the note), `bg` or
  * `defaultBg`, `fonts.body`.
+ *
+ * The grid setting (swiss's 2026-10 board, p12) draws the same lanes with
+ * the lane names and the highlighted milestone in the emphasis ink
+ * (`./grid.ts`) and a 2px axis 8px lower, where the board puts it.
  */
 
 const MIN_ITEMS = 2
@@ -43,6 +48,9 @@ const MAX_ITEMS = 8
 /** The axis runs 196px into the band (y392 on the board). */
 const AXIS_AT = 196
 const AXIS_STROKE = 1.5
+/** The grid setting's axis: 2px, 204px into the band (y400 on swiss's board). */
+const GRID_AXIS_AT = 204
+const GRID_AXIS_STROKE = 2
 /** Lane names take a 100px column on the left when the timeline has lanes. */
 const NAME_COLUMN = 100
 const NAME = { size: 17, box: 24 }
@@ -77,10 +85,12 @@ function lanesShape(components: readonly Component[]): { timeline: Timeline; cal
   return callout ? { timeline, callout } : null
 }
 
-export const lanesComposition: Composition = ({ components, ctx, rect }) => {
+export const lanesComposition: Composition = ({ components, ctx, rect, setting }) => {
   const shape = lanesShape(components)
   if (!shape) return null
   const { colors, fonts } = ctx
+  const grid = setting === "grid"
+  const mark = grid ? gridMark(ctx) : colors.primary
   const body = fonts.body
   const milestones = shape.timeline.milestones
   const named = [...new Set(milestones.flatMap((m) => (m.lane ? [m.lane.trim()] : [])))]
@@ -127,7 +137,7 @@ export const lanesComposition: Composition = ({ components, ctx, rect }) => {
   // run 18px past the deepest lower card, the way the board's run to y560
   // under cards that end at y542.
   const lowerNeed = (axis: number) => (lowerDepth > 0 ? axis + LOWER_DROP + lowerDepth + STEM_PAST_CARD : axis)
-  let axisY = rect.y + AXIS_AT
+  let axisY = rect.y + (grid ? GRID_AXIS_AT : AXIS_AT)
   if (lowerNeed(axisY) > floor) axisY -= lowerNeed(axisY) - floor
   if (axisY < upperFoot + AXIS_CLEAR) return null
   const stemFoot = lowerNeed(axisY)
@@ -143,7 +153,7 @@ export const lanesComposition: Composition = ({ components, ctx, rect }) => {
   const nodes: React.ReactNode[] = []
   for (const card of cards) {
     const cx = card.x + NODE_INSET
-    const lineColor = card.highlight ? colors.primary : quietLine
+    const lineColor = card.highlight ? mark : quietLine
     nodes.push(
       card.below ? (
         <line key={`stem-${card.i}`} x1={cx} y1={axisY} x2={cx} y2={stemFoot} stroke={lineColor} strokeWidth={1} />
@@ -152,7 +162,7 @@ export const lanesComposition: Composition = ({ components, ctx, rect }) => {
       ),
     )
   }
-  nodes.push(<line key="axis" x1={x0 - NODE_INSET} y1={axisY} x2={rect.x + rect.w} y2={axisY} stroke={axisColor} strokeWidth={AXIS_STROKE} />)
+  nodes.push(<line key="axis" x1={x0 - NODE_INSET} y1={axisY} x2={rect.x + rect.w} y2={axisY} stroke={axisColor} strokeWidth={grid ? GRID_AXIS_STROKE : AXIS_STROKE} />)
   for (const card of cards) {
     const cx = card.x + NODE_INSET
     const tx = card.x + CARD_INSET
@@ -163,15 +173,15 @@ export const lanesComposition: Composition = ({ components, ctx, rect }) => {
           cx={cx}
           cy={axisY}
           r={NODE_R}
-          fill={strong ? colors.primary : bg}
-          stroke={strong ? colors.primary : axisColor}
+          fill={strong ? mark : bg}
+          stroke={strong ? mark : axisColor}
           strokeWidth={NODE_STROKE}
         />
         {paintLines(card.date, {
           ctx,
           x: tx,
           y: centredBaseline(card.top, DATE.box, DATE.size),
-          fill: accessibleInk(strong ? colors.primary : colors.muted, bg, DATE.size),
+          fill: accessibleInk(strong ? mark : colors.muted, bg, DATE.size),
           fontFamily: body,
           fontWeight: strong ? "700" : "400",
         })}
@@ -179,7 +189,7 @@ export const lanesComposition: Composition = ({ components, ctx, rect }) => {
           ctx,
           x: tx,
           y: centredBaseline(card.top + TITLE.top, TITLE.box, TITLE.size),
-          fill: accessibleInk(strong ? colors.primary : colors.text, bg, TITLE.size),
+          fill: accessibleInk(strong ? mark : colors.text, bg, TITLE.size),
           fontFamily: body,
           fontWeight: "700",
         })}
@@ -195,7 +205,7 @@ export const lanesComposition: Composition = ({ components, ctx, rect }) => {
       </g>,
     )
   }
-  const nameInk = accessibleInk(colors.primary, bg, NAME.size)
+  const nameInk = accessibleInk(mark, bg, NAME.size)
   return (
     <g {...compositionTag("lanes")}>
       <g {...blockTag(ctx, shape.timeline)}>

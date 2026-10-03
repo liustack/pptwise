@@ -8,6 +8,7 @@ import { pairsComposition } from "./pairs"
 import { railComposition } from "./rail"
 import { recordsComposition } from "./records"
 import { rowsComposition } from "./rows"
+import { shareComposition } from "./share"
 import type { Composition, CompositionId, CompositionProps } from "./shared"
 import { stackComposition } from "./stack"
 import { tableComposition } from "./table"
@@ -43,6 +44,7 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   stack: stackComposition,
   window: windowComposition,
   lanes: lanesComposition,
+  share: shareComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -52,8 +54,10 @@ export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly Composition
  * and returns the first drawing, or `null` when none of them does.
  */
 export function compose(props: CompositionProps, ids: readonly CompositionId[] = COMPOSITION_IDS): React.ReactElement | null {
+  const handOn: CompositionProps["handOn"] = (components, rect) =>
+    compose({ ...props, components, rect }, ids)
   for (const id of ids) {
-    const drawn = COMPOSITIONS[id](props)
+    const drawn = COMPOSITIONS[id]({ ...props, handOn })
     if (drawn) return drawn
   }
   return null

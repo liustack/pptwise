@@ -51,6 +51,7 @@ export type CompositionId =
   | "stack"
   | "window"
   | "lanes"
+  | "share"
 
 /**
  * The type a composition sets its page in.
@@ -65,10 +66,17 @@ export type CompositionId =
  *   that board drew and the first one did not, such as `numbered_cards` as
  *   rows with the marked item reversed out of a primary block.
  *
+ * - `grid`: swiss's 2026-10 board. The notice shapes on the notice band,
+ *   recoloured for a page whose data is black: unmarked data in the text
+ *   ink, what steps back in two greys, and the theme's emphasis ink (its
+ *   red) kept for the one thing an author marks, a forecast's hatching and
+ *   the bracket that states the page's change. Blocks that carry text stay
+ *   black, never red. See `./grid.ts`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice"
+export type CompositionSetting = "board" | "notice" | "grid"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */
@@ -81,6 +89,13 @@ export interface CompositionProps {
   inks?: CompositionInks
   /** The type the page is set in. Omitted, `board`. */
   setting?: CompositionSetting
+  /**
+   * Draws other components in a band of their own, with the compositions the
+   * face offered and in the same setting, or returns `null` when none takes
+   * them. `compose` hands it to every composition, so one that draws part of
+   * a page (a share bar over a chart and its figures) can pass the rest on.
+   */
+  handOn?: (components: readonly Component[], rect: ContentRect) => React.ReactElement | null
 }
 
 export interface CompositionInks {

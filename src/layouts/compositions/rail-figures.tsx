@@ -8,7 +8,8 @@ import { SvgContent } from "../../render/svg-content"
 import { bodySlotDropsContent } from "../../render/step-aside"
 import { closingCallout } from "./closing"
 import { fitFigure, fitQuote, markedFigure, paintBoldFigure, paintFigure, plainFigure, type FittedFigure, type KpiItem } from "./figure"
-import { blockTag, compositionTag, ruleInk } from "./shared"
+import { gridMark } from "./grid"
+import { blockTag, compositionTag, ruleInk, type CompositionSetting } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
 
 type Chart = Extract<Component, { type: "chart" }>
@@ -223,6 +224,13 @@ export function railFigures({
  * Declines: anything else, a label past one line of the 380px column at
  * 16px, a figure past one line at 50px, a note past two lines at 16px, a
  * column taller than the band, and a plot that would drop content.
+ *
+ * The grid setting (swiss's 2026-10 board, p05, p08 and p13) stands the
+ * column on a black rule 40px right of the plot, sets the figures at 52px,
+ * and the marked one in the emphasis ink (`./grid.ts`). In a band too short
+ * for figures stacked over their notes (p08, under a share bar) each figure
+ * steps down to 44px with its note beside it in up to two lines, 110px
+ * apart.
  */
 
 /** The divider stands this far left of the band's right edge (x780 on the board). */
@@ -242,6 +250,30 @@ const NOTICE_LABEL = { size: 16, top: 0, box: 22 }
 const NOTICE_FIGURE = { size: 50, top: 28, box: 60 }
 const NOTICE_NOTE = { size: 16, top: 92, box: 22, maxLines: 2 }
 
+/** The column's measures in one setting. */
+interface ColumnSpec {
+  /** The divider stands this far left of the band's right edge. */
+  dividerInset: number
+  plotGap: number
+  /** The divider's ink: the hairline, or the text ink. */
+  strongDivider: boolean
+  figureSize: number
+}
+const NOTICE_COLUMN: ColumnSpec = { dividerInset: NOTICE_DIVIDER_INSET, plotGap: NOTICE_PLOT_GAP, strongDivider: false, figureSize: NOTICE_FIGURE.size }
+/** swiss's board: the black rule at x800, the plot to x760, the column from x840. */
+const GRID_COLUMN: ColumnSpec = { dividerInset: 400, plotGap: 40, strongDivider: true, figureSize: 52 }
+/** The grid's compact block: a 44px figure with its note beside it, 110px apart. */
+const GRID_INLINE = {
+  pitch: 110,
+  figure: { size: 44, top: 24, box: 52 },
+  note: { size: 16, top: 40, box: 24, maxLines: 2 },
+  noteGap: 32,
+  dividerShort: 10,
+  /** The board's short column: the rule at x780, the plot to x700, the column from x820. */
+  dividerInset: 420,
+  plotGap: 80,
+}
+
 function noticeShape(components: readonly Component[]): { plot: Chart | Waterfall; kpis: KpiCards } | null {
   const [plot, kpis, ...rest] = components
   if (rest.length > 0 || kpis?.type !== "kpi_cards") return null
@@ -255,44 +287,90 @@ export function railFiguresNotice({
   components,
   ctx,
   rect,
+  setting,
   plot: plotFor,
 }: {
   components: readonly Component[]
   ctx: ComponentCtx
   rect: ContentRect
+  /** `notice` or `grid`: the column's measures and the ink a marked figure takes. */
+  setting: CompositionSetting
   /** Draws the plot by hand in its band, or returns `null`. Passed in so this file does not import the plots it sits beside. */
   plot: (component: Chart | Waterfall, band: ContentRect) => React.ReactElement | null
 }): React.ReactElement | null {
   const shape = noticeShape(components)
   if (!shape) return null
+  const grid = setting === "grid"
+  const spec = grid ? GRID_COLUMN : NOTICE_COLUMN
   const right = rect.x + rect.w
-  const dividerX = right - NOTICE_DIVIDER_INSET
-  const columnX = dividerX + NOTICE_COLUMN_GAP
-  const columnW = right - columnX
-  const plotRect = { x: rect.x, y: rect.y, w: dividerX - NOTICE_PLOT_GAP - rect.x, h: rect.h }
-  if (plotRect.w < MIN_CHART_W) return null
+  /** Where the divider, the column and the plot stand for a divider `inset` from the right and a plot `gap` short of it. */
+  const place = (inset: number, gap: number) => {
+    const dividerX = right - inset
+    const columnX = dividerX + NOTICE_COLUMN_GAP
+    return { dividerX, columnX, columnW: right - columnX, plotRect: { x: rect.x, y: rect.y, w: dividerX - gap - rect.x, h: rect.h } }
+  }
 
   const { colors, fonts } = ctx
   const body = fonts.body
   const count = shape.kpis.items.length
-  const pitch = NOTICE_PITCH[count - 1]!
-  const blocks = []
-  for (const item of shape.kpis.items) {
-    const label = fitFixed(item.label, { width: columnW, size: NOTICE_LABEL.size, lineHeight: NOTICE_LABEL.box, maxLines: 1, fontFamily: body, bold: false })
-    const figure = fitFigure(item, NOTICE_FIGURE.size, columnW, fonts.heading, false, true)
-    const note = item.note?.trim()
-      ? fitFixed(item.note, { width: columnW, size: NOTICE_NOTE.size, lineHeight: NOTICE_NOTE.box, maxLines: NOTICE_NOTE.maxLines, fontFamily: body, bold: false })
-      : null
-    if (label === null || figure === null || (item.note?.trim() && note === null)) return null
-    const marked = markedFigure(item)
-    blocks.push({ item, label, figure, note, marked })
+  const fitBlocks = (figureSize: number, columnW: number) => {
+    const fitted = []
+    for (const item of shape.kpis.items) {
+      const label = fitFixed(item.label, { width: columnW, size: NOTICE_LABEL.size, lineHeight: NOTICE_LABEL.box, maxLines: 1, fontFamily: body, bold: false })
+      const figure = fitFigure(item, figureSize, columnW, fonts.heading, false, true)
+      if (label === null || figure === null) return null
+      fitted.push({ item, label, figure, marked: markedFigure(item) })
+    }
+    return fitted
   }
-  const lastTop = rect.y + NOTICE_FIRST + (count - 1) * pitch
-  const last = blocks[count - 1]!
-  const lastFoot = last.note
-    ? lastTop + NOTICE_NOTE.top + last.note.lines.length * NOTICE_NOTE.box
-    : lastTop + NOTICE_FIGURE.top + NOTICE_FIGURE.box
-  if (lastFoot > rect.y + rect.h) return null
+  // Figures over their notes, the board's column.
+  const pitch = NOTICE_PITCH[count - 1]!
+  let layout: {
+    inline: boolean
+    pitch: number
+    figureSize: number
+    noteX: number
+    at: ReturnType<typeof place>
+    blocks: { item: KpiItem; label: EmphasisHeadingLayout; figure: FittedFigure; marked: boolean; note: EmphasisHeadingLayout | null }[]
+  } | null = null
+  const stackedAt = place(spec.dividerInset, spec.plotGap)
+  const stackedNote = (text: string | undefined) =>
+    text?.trim()
+      ? fitFixed(text, { width: stackedAt.columnW, size: NOTICE_NOTE.size, lineHeight: NOTICE_NOTE.box, maxLines: NOTICE_NOTE.maxLines, fontFamily: body, bold: false })
+      : undefined
+  const stacked = fitBlocks(spec.figureSize, stackedAt.columnW)
+  if (stacked) {
+    const notes = stacked.map((b) => stackedNote(b.item.note))
+    if (notes.every((n) => n !== null)) {
+      const blocks = stacked.map((b, i) => ({ ...b, note: notes[i] ?? null }))
+      const last = blocks[count - 1]!
+      const lastTop = rect.y + NOTICE_FIRST + (count - 1) * pitch
+      const lastFoot = last.note
+        ? lastTop + NOTICE_NOTE.top + last.note.lines.length * NOTICE_NOTE.box
+        : lastTop + NOTICE_FIGURE.top + NOTICE_FIGURE.box
+      if (lastFoot <= rect.y + rect.h) layout = { inline: false, pitch, figureSize: spec.figureSize, noteX: stackedAt.columnX, at: stackedAt, blocks }
+    }
+  }
+  // The grid's compact column: each note one line beside its figure.
+  if (!layout && grid) {
+    const inlineAt = place(GRID_INLINE.dividerInset, GRID_INLINE.plotGap)
+    const compact = fitBlocks(GRID_INLINE.figure.size, inlineAt.columnW)
+    if (compact) {
+      const noteX = inlineAt.columnX + Math.max(...compact.map((b) => b.figure.width)) + GRID_INLINE.noteGap
+      const notes = compact.map((b) =>
+        b.item.note?.trim()
+          ? fitFixed(b.item.note, { width: right - noteX, size: GRID_INLINE.note.size, lineHeight: GRID_INLINE.note.box, maxLines: GRID_INLINE.note.maxLines, fontFamily: body, bold: false })
+          : undefined,
+      )
+      const foot = rect.y + NOTICE_FIRST + (count - 1) * GRID_INLINE.pitch + GRID_INLINE.figure.top + GRID_INLINE.figure.box
+      if (notes.every((n) => n !== null) && foot <= rect.y + rect.h) {
+        layout = { inline: true, pitch: GRID_INLINE.pitch, figureSize: GRID_INLINE.figure.size, noteX, at: inlineAt, blocks: compact.map((b, i) => ({ ...b, note: notes[i] ?? null })) }
+      }
+    }
+  }
+  if (!layout) return null
+  const { dividerX, columnX, plotRect } = layout.at
+  if (plotRect.w < MIN_CHART_W) return null
 
   const drawn = plotFor(shape.plot, plotRect)
   if (!drawn && bodySlotDropsContent([shape.plot], plotRect, ctx)) return null
@@ -301,15 +379,24 @@ export function railFiguresNotice({
   const rule = ruleInk(ctx)
   const labelInk = accessibleInk(colors.muted, bg, NOTICE_LABEL.size)
   const noteInk = accessibleInk(colors.text, bg, NOTICE_NOTE.size)
+  const mark = grid ? gridMark(ctx) : colors.primary
   const top0 = rect.y + NOTICE_FIRST
+  const dividerFoot = top0 + count * layout.pitch - (layout.inline ? GRID_INLINE.dividerShort : NOTICE_DIVIDER_SHORT)
+  const figureBox = layout.inline ? GRID_INLINE.figure : NOTICE_FIGURE
+  const noteSpec = layout.inline ? GRID_INLINE.note : NOTICE_NOTE
   return (
     <g {...compositionTag("rail")} data-rail-source="author">
       {drawn ?? <SvgContent components={[shape.plot]} rect={plotRect} ctx={ctx} />}
-      <line x1={dividerX} y1={top0} x2={dividerX} y2={top0 + count * pitch - NOTICE_DIVIDER_SHORT} stroke={rule} strokeWidth={1} />
+      {spec.strongDivider ? (
+        <rect x={dividerX} y={top0} width={1} height={dividerFoot - top0} fill={accessibleInk(colors.text, bg, NOTICE_LABEL.size)} />
+      ) : (
+        <line x1={dividerX} y1={top0} x2={dividerX} y2={dividerFoot} stroke={rule} strokeWidth={1} />
+      )}
       <g {...blockTag(ctx, shape.kpis)}>
-        {blocks.map((block, i) => {
+        {layout.blocks.map((block, i) => {
+          const pitch = layout.pitch
           const top = top0 + i * pitch
-          const figureInk = accessibleInk(block.marked ? colors.primary : colors.text, bg, NOTICE_FIGURE.size)
+          const figureInk = accessibleInk(block.marked ? mark : colors.text, bg, layout.figureSize)
           return (
             <g key={i}>
               {i > 0 && <line x1={columnX} y1={top - NOTICE_RULE_ABOVE} x2={right} y2={top - NOTICE_RULE_ABOVE} stroke={rule} strokeWidth={1} />}
@@ -323,14 +410,14 @@ export function railFiguresNotice({
               })}
               {paintBoldFigure(block.figure, {
                 x: columnX,
-                y: centredBaseline(top + NOTICE_FIGURE.top, NOTICE_FIGURE.box, NOTICE_FIGURE.size),
+                y: centredBaseline(top + figureBox.top, figureBox.box, figureBox.size),
                 ink: figureInk,
               }, ctx)}
               {block.note &&
                 paintLines(block.note, {
                   ctx,
-                  x: columnX,
-                  y: centredBaseline(top + NOTICE_NOTE.top, NOTICE_NOTE.box, NOTICE_NOTE.size),
+                  x: layout.noteX,
+                  y: centredBaseline(top + noteSpec.top, noteSpec.box, noteSpec.size),
                   fill: noteInk,
                   fontFamily: body,
                   fontWeight: "400",

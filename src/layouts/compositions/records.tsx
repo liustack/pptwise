@@ -2,6 +2,7 @@ import type React from "react"
 import type { Component } from "@/ir"
 import { accessibleInk } from "../../render/ink"
 import { fitNoticeClosing, noticeClosingCallout, paintNoticeClosing } from "./closing"
+import { gridMark, gridMarkOn, gridRowTint } from "./grid"
 import { rowTint } from "./notice"
 import { textWidth } from "./plot"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
@@ -34,6 +35,11 @@ type Callout = Extract<Component, { type: "callout" }>
  * (cells, the rule under the headers), `muted` (headers), `border` or `muted`
  * (hairlines), `surface` (the tint), `panel` (the note), `bg` or `defaultBg`,
  * `fonts.body`.
+ *
+ * The grid setting (swiss's 2026-10 board, p09) sets the same table a touch
+ * heavier: a 2px black rule under the headers and over a total row, 48px
+ * rows of 20px cells, and a highlighted row on a pale tint of the emphasis
+ * ink with its text bold in that ink (`./grid.ts`).
  */
 
 const MAX_COLUMNS = 6
@@ -53,6 +59,23 @@ const COLUMN_GAP = 20
 const WIDE_GAP = 60
 const CLOSING_GAP = 20
 
+/** The table's measures in one setting. */
+interface RecordsSpec {
+  headTop: number
+  headBox: number
+  /** Rows start this far into the band. */
+  headH: number
+  /** The strong rules' thickness: under the headers and over a total row. */
+  strong: number
+  rowH: number
+  cellSize: number
+  closingGap: number
+}
+
+const NOTICE_SPEC: RecordsSpec = { headTop: HEAD_TOP, headBox: HEAD_BOX, headH: HEAD_H, strong: 1, rowH: ROW_H, cellSize: CELL_SIZE, closingGap: CLOSING_GAP }
+/** swiss's board: headers in a 26px box from y202, the rule at y232, rows from y234. */
+const GRID_SPEC: RecordsSpec = { headTop: 6, headBox: 26, headH: 38, strong: 2, rowH: 48, cellSize: 20, closingGap: 26 }
+
 function recordsShape(components: readonly Component[]): { table: DataTable; callout?: Callout } | null {
   const [table, second, ...rest] = components
   if (table?.type !== "data_table" || rest.length > 0) return null
@@ -68,9 +91,11 @@ function cell(row: DataTable["rows"][number], key: string): string {
   return v === undefined ? "" : String(v)
 }
 
-export const recordsComposition: Composition = ({ components, ctx, rect }) => {
+export const recordsComposition: Composition = ({ components, ctx, rect, setting }) => {
   const shape = recordsShape(components)
   if (!shape) return null
+  const grid = setting === "grid"
+  const spec = grid ? GRID_SPEC : NOTICE_SPEC
   const { table } = shape
   const { colors, fonts } = ctx
   const body = fonts.body
@@ -82,7 +107,7 @@ export const recordsComposition: Composition = ({ components, ctx, rect }) => {
     const texts = table.rows.map((row) => ({ text: cell(row, column.key), bold: row.emphasis !== undefined }))
     const widest = Math.max(
       textWidth(column.label, HEAD_SIZE, body),
-      ...texts.map((t) => textWidth(t.text, CELL_SIZE, body, t.bold)),
+      ...texts.map((t) => textWidth(t.text, spec.cellSize, body, t.bold)),
     )
     return Math.ceil(widest) + (i === 0 ? FIRST_INSET : 0)
   })
@@ -105,23 +130,31 @@ export const recordsComposition: Composition = ({ components, ctx, rect }) => {
 
   const fit = (text: string, w: number, size: number, box: number, bold: boolean) =>
     fitFixed(text, { width: w, size, lineHeight: box, maxLines: 1, fontFamily: body, bold })
-  const headers = table.columns.map((column, i) => fit(column.label, widths[i]!, HEAD_SIZE, HEAD_BOX, false))
+  const headers = table.columns.map((column, i) => fit(column.label, widths[i]!, HEAD_SIZE, spec.headBox, false))
   if (headers.some((h) => h === null)) return null
   const rows = table.rows.map((row) =>
-    table.columns.map((column, i) => fit(cell(row, column.key), widths[i]! - (i === 0 ? FIRST_INSET : 0), CELL_SIZE, CELL_BOX, row.emphasis !== undefined)),
+    table.columns.map((column, i) => fit(cell(row, column.key), widths[i]! - (i === 0 ? FIRST_INSET : 0), spec.cellSize, CELL_BOX, row.emphasis !== undefined)),
   )
   if (rows.some((r) => r.some((c) => c === null))) return null
 
   const closing = shape.callout ? fitNoticeClosing(shape.callout, rect.w, ctx) : undefined
   if (closing === null) return null
-  const tableFoot = rect.y + HEAD_H + table.rows.length * ROW_H
-  const foot = closing ? tableFoot + CLOSING_GAP + closing.height : tableFoot
+  const tableFoot = rect.y + spec.headH + table.rows.length * spec.rowH
+  const foot = closing ? tableFoot + spec.closingGap + closing.height : tableFoot
   if (foot > rect.y + rect.h) return null
 
   const headInk = accessibleInk(colors.muted, bg, HEAD_SIZE)
-  const strongRule = accessibleInk(colors.text, bg, CELL_SIZE)
+  const strongRule = accessibleInk(colors.text, bg, spec.cellSize)
   const rule = ruleInk(ctx)
-  const tint = rowTint(ctx)
+  const tint = grid ? gridRowTint(ctx) : rowTint(ctx)
+  const mark = grid ? gridMark(ctx) : colors.primary
+  /** A strong rule whose top edge is `y`, drawn as a filled band when it is thicker than a hairline. */
+  const strongLine = (key: string, y: number) =>
+    spec.strong > 1 ? (
+      <rect key={key} x={rect.x} y={y} width={rect.w} height={spec.strong} fill={strongRule} />
+    ) : (
+      <line key={key} x1={rect.x} y1={y} x2={right} y2={y} stroke={strongRule} strokeWidth={1} />
+    )
   const right = rect.x + rect.w
   const textX = (i: number, w: number, align: string | undefined, inset = true) =>
     align === "right" ? lefts[i]! + w : align === "center" ? lefts[i]! + w / 2 : lefts[i]! + (i === 0 && inset ? FIRST_INSET : 0)
@@ -134,7 +167,7 @@ export const recordsComposition: Composition = ({ components, ctx, rect }) => {
         {paintLines(headers[i]!, {
           ctx,
           x: textX(i, widths[i]!, column.align, false),
-          y: centredBaseline(rect.y + HEAD_TOP, HEAD_BOX, HEAD_SIZE),
+          y: centredBaseline(rect.y + spec.headTop, spec.headBox, HEAD_SIZE),
           fill: headInk,
           fontFamily: body,
           fontWeight: "400",
@@ -143,24 +176,24 @@ export const recordsComposition: Composition = ({ components, ctx, rect }) => {
       </g>,
     )
   })
-  nodes.push(<line key="head-rule" x1={rect.x} y1={rect.y + HEAD_H - 1} x2={right} y2={rect.y + HEAD_H - 1} stroke={strongRule} strokeWidth={1} />)
+  nodes.push(strongLine("head-rule", rect.y + spec.headH - spec.strong))
   table.rows.forEach((row, r) => {
-    const top = rect.y + HEAD_H + r * ROW_H
+    const top = rect.y + spec.headH + r * spec.rowH
     const highlight = row.emphasis === "highlight"
     const totalRow = row.emphasis === "total"
     const prevHighlight = r > 0 && table.rows[r - 1]!.emphasis === "highlight"
-    if (highlight) nodes.push(<rect key={`tint-${r}`} x={rect.x} y={top} width={rect.w} height={ROW_H} fill={tint} />)
-    else if (totalRow) nodes.push(<line key={`rule-${r}`} x1={rect.x} y1={top} x2={right} y2={top} stroke={strongRule} strokeWidth={1} />)
+    if (highlight) nodes.push(<rect key={`tint-${r}`} x={rect.x} y={top} width={rect.w} height={spec.rowH} fill={tint} />)
+    else if (totalRow) nodes.push(strongLine(`rule-${r}`, top))
     else if (r > 0 && !prevHighlight) nodes.push(<line key={`rule-${r}`} x1={rect.x} y1={top} x2={right} y2={top} stroke={rule} strokeWidth={1} />)
     const ground = highlight ? tint : bg
-    const ink = accessibleInk(highlight ? colors.primary : colors.text, ground, CELL_SIZE)
+    const ink = highlight && grid ? gridMarkOn(ctx, ground, spec.cellSize) : accessibleInk(highlight ? mark : colors.text, ground, spec.cellSize)
     table.columns.forEach((column, i) => {
       nodes.push(
         <g key={`cell-${r}-${i}`}>
           {paintLines(rows[r]![i]!, {
             ctx,
             x: textX(i, widths[i]!, column.align),
-            y: centredBaseline(top + (ROW_H - CELL_BOX) / 2, CELL_BOX, CELL_SIZE),
+            y: centredBaseline(top + (spec.rowH - CELL_BOX) / 2, CELL_BOX, spec.cellSize),
             fill: ink,
             fontFamily: body,
             fontWeight: highlight || totalRow ? "700" : "400",
@@ -177,7 +210,7 @@ export const recordsComposition: Composition = ({ components, ctx, rect }) => {
   return (
     <g {...compositionTag("records")}>
       <g {...blockTag(ctx, table)}>{nodes}</g>
-      {closing && paintNoticeClosing(closing, { x: rect.x, y: tableFoot + CLOSING_GAP, w: rect.w }, ctx)}
+      {closing && paintNoticeClosing(closing, { x: rect.x, y: tableFoot + spec.closingGap, w: rect.w }, ctx)}
     </g>
   )
 }

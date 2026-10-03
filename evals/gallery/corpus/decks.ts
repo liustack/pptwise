@@ -1148,6 +1148,29 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
     ],
     footnote: lex.sources[0]!.label,
   }),
+  // One whole as a share bar, its first two parts marked, over two figures
+  // the face draws in the band under it.
+  share: (lex) => {
+    const whole = lex.chapters[1]!
+    return {
+      heading: lex.headings[3]!,
+      components: [
+        {
+          type: "chart",
+          chart_type: "stacked",
+          direction: "horizontal",
+          axes: { y_unit: lex.metrics[0]!.unit },
+          series: lex.labels.slice(8, 12).map((name, i) => ({
+            name,
+            ...(i < 2 ? { emphasis: true as const } : {}),
+            data: [{ x: whole, y: [1202, 640, 1539, 448][i]! }],
+          })),
+        },
+        { type: "kpi_cards", items: figureItems(lex, 2) },
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
   // The combo chart with its rate line marked, the series the column then
   // sets over the emphasis stroke.
   rail: (lex) => {
