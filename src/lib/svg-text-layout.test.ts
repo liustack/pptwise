@@ -1076,7 +1076,16 @@ describe("allowsLineBreakBetween", () => {
     expect(allowsLineBreakBetween("3", "亿")).toBe(false)
     expect(allowsLineBreakBetween("亿", "元")).toBe(false)
     expect(allowsLineBreakBetween("万", "人")).toBe(false)
+    // A power figure's unit is magnitudes over watts: 「亿千瓦」, 「万千瓦」.
+    // swiss power deck (2026-10-03): 「1.58 亿」 ended a line and 「千瓦」
+    // opened the next.
+    expect(allowsLineBreakBetween("亿", "千")).toBe(false)
+    expect(allowsLineBreakBetween("万", "千")).toBe(false)
+    expect(allowsLineBreakBetween("千", "瓦")).toBe(false)
+    expect(allowsLineBreakBetween("8", "瓦")).toBe(false)
+    expect(allowsLineBreakBetween("瓦", "时")).toBe(false)
     // Neither rule reaches past the unit, or into Latin text.
+    expect(allowsLineBreakBetween("时", "比")).toBe(true)
     expect(allowsLineBreakBetween("元", "降")).toBe(true)
     expect(allowsLineBreakBetween("亿", "降")).toBe(true)
     expect(allowsLineBreakBetween("2", "a")).toBe(true)

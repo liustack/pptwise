@@ -711,7 +711,10 @@ const LINE_END_FORBIDDEN =
 //   - a digit may not end a line when a counting unit or magnitude opens the
 //     next (「12|个」, 「2,860|万」);
 //   - a magnitude may not end a line when the unit it scales opens the next
-//     (「亿|元」, 「万|人」).
+//     (「亿|元」, 「万|人」), and that unit may be another magnitude, as in
+//     a power figure's 「亿|千瓦」 and 「万|千瓦」, or 「千|瓦」 itself;
+//   - an energy unit may not end a line when the hour it is counted over
+//     opens the next (「千瓦|时」).
 // The sets are the measure words and units that follow numbers in business
 // prose. They hold only CJK characters, so English wrapping never meets them.
 
@@ -720,12 +723,12 @@ const DIGIT = /[0-9０-９]/
 /** What may follow a figure without a break: magnitudes, currency, and the
  *  measure words a count takes. */
 const UNIT_AFTER_NUMBER =
-  /[万亿千百元角分秒家个人位名次项件条页款台辆套张份户座所批轮倍岁度年月日天周时米吨斤克平股]/
+  /[万亿千百元角分秒家个人位名次项件条页款台辆套张份户座所批轮倍岁度年月日天周时米吨斤克平股瓦]/
 
 const MAGNITUDE = /[万亿千百]/
 
 /** What may follow a magnitude without a break: the thing it counts. */
-const UNIT_AFTER_MAGNITUDE = /[元人家个位名次项件条台辆套张份户座所吨平米股美港欧日英]/
+const UNIT_AFTER_MAGNITUDE = /[万亿千百元人家个位名次项件条台辆套张份户座所吨平米股美港欧日英瓦]/
 
 /**
  * The single kinsoku judgment: may a line break fall between `before` (the
@@ -747,6 +750,7 @@ export function allowsLineBreakBetween(
   if (!before || !after) return true
   if (DIGIT.test(before) && UNIT_AFTER_NUMBER.test(after)) return false
   if (MAGNITUDE.test(before) && UNIT_AFTER_MAGNITUDE.test(after)) return false
+  if (before === "瓦" && after === "时") return false
   return !LINE_START_FORBIDDEN.test(after) && !LINE_END_FORBIDDEN.test(before)
 }
 
