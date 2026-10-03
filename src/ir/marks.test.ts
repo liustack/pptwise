@@ -47,6 +47,38 @@ describe("chart point status", () => {
   })
 })
 
+// swiss power deck (2026-10-03): one series of years whose last bar is the
+// page's point, which series emphasis cannot say with a single series.
+describe("chart point emphasis", () => {
+  const years = (marks: Record<number, Record<string, unknown>>, overrides: Record<string, unknown> = {}) => ({
+    type: "chart",
+    chart_type: "bar",
+    series: [
+      {
+        name: "全球太阳能发电量",
+        data: ["2015 年", "2022 年", "2024 年", "2025 年"].map((x, i) => ({ x, y: [0.26, 1.33, 2.14, 2.78][i], ...(marks[i] ?? {}) })),
+      },
+    ],
+    ...overrides,
+  })
+
+  it("marks the one bar the page is about", () => {
+    expect(parse([years({ 3: { emphasis: true } })]).success).toBe(true)
+    expect(parse([years({ 3: { emphasis: true } }, { direction: "horizontal" })]).success).toBe(true)
+  })
+
+  it("rejects a marked point on a chart that draws no bar of its own for it", () => {
+    expect(messages([years({ 3: { emphasis: true } }, { chart_type: "line" })]).join(" ")).toContain("draws no bar of its own")
+  })
+
+  it("rejects a second marked bar, and a marked bar beside a marked series", () => {
+    expect(messages([years({ 2: { emphasis: true }, 3: { emphasis: true } })]).join(" ")).toContain("singles out one bar")
+    const both = chart()
+    ;(both.series[1]!.data[2] as Record<string, unknown>).emphasis = true
+    expect(messages([both]).join(" ")).toContain("not both")
+  })
+})
+
 describe("chart changes", () => {
   const quarters = {
     type: "chart",

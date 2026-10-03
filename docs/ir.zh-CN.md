@@ -215,6 +215,7 @@ pptwise schema --kind data --theme brief
 | 字段 | 标出什么 | 限制 |
 | --- | --- | --- |
 | `chart.series[].data[].status` | `"forecast"` 把柱子画成斜线填充，`"target"` 画成浅色底上的虚线框。一个系列里实报和预测混着时，图例多一项「预测」或「目标」，预测柱的数值标签也写明「（预测）」。 | 只用于 `bar` 和 `stacked` |
+| `chart.series[].data[].emphasis` | 这一页说的那一根柱子，比如一串年份里的最后一年：它保留系列颜色，其余柱子退后 | 只用于 `bar`，一张图只标一个点，不能和系列的 emphasis 同时用 |
 | `chart.changes` | `[{ "from": "2025 年三季度", "to": "2026 年三季度" }]` 在两根柱上方画一个括号，写两者的变化（相对变化，`%` 轴上写百分点）。写了 `"at": "比亚迪"` 时，`from` 和 `to` 是两个系列名，在这个类别上比较。横条图把变化写在后一根条的数值后面。 | `bar` 和 `stacked`，最多 3 个。横条图必须写 `at`，堆叠图不能写 |
 | `numbered_cards.items[].emphasis` | 这一页落到的那张卡，卡片填满主色 | 最多一张 |
 | `gantt.items[].text` 与 `emphasis` | 阶段名下面的一行说明，以及这一页说的那一段 | 最多标一段 |

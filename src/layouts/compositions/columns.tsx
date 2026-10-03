@@ -21,6 +21,7 @@ import {
   plotNumber,
   pointDecimals,
   reportedDecimals,
+  barInk,
   seriesInk,
   textBox,
   textWidth,
@@ -252,7 +253,7 @@ export const columnsComposition: Composition = ({ components, ctx, rect }) => {
       column.bars.forEach((bar, k) => {
         const x = barX(ci, k, column.bars.length)
         const top = y(bar.to)
-        const color = seriesInk(ctx, bar.series, marked)
+        const color = barInk(ctx, chart, bar.series, bar.point, marked)
         const paint = markPaint(ctx, color, bar.point.status)
         nodes.push(
           <g key={`bar-${ci}-${k}`} data-plot-mark="1">
@@ -262,7 +263,7 @@ export const columnsComposition: Composition = ({ components, ctx, rect }) => {
         marks.push({ x0: x, y0: top, x1: x + barW, y1: base })
         if (stacked) return
         // A value over each bar of an unstacked chart.
-        const isMarked = bar.series === marked
+        const isMarked = bar.series === marked || bar.point.emphasis === true
         const size = lone ? PLOT_TYPE.lead : PLOT_TYPE.value
         const bold = lone || isMarked
         const ink = accessibleInk(isMarked ? colors.primary : lone ? colors.text : colors.muted, bg, size)

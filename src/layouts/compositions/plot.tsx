@@ -150,6 +150,21 @@ export function seriesInk(ctx: ComponentCtx, index: number, marked: number): str
   return index === marked ? ctx.colors.primary : quietMarkFill(ctx)
 }
 
+/** Whether the chart marks one bar (`data[].emphasis`) rather than a series. */
+export function marksOnePoint(chart: Chart): boolean {
+  return chart.series.some((s) => s.data.some((point) => point.emphasis === true))
+}
+
+/**
+ * The colour of one bar: with a bar marked, that bar in primary and every
+ * other bar in the receded grey, the way a marked series sets itself apart.
+ * Otherwise its series' colour (`seriesInk`).
+ */
+export function barInk(ctx: ComponentCtx, chart: Chart, index: number, point: Point, marked: number): string {
+  if (marksOnePoint(chart)) return point.emphasis === true ? ctx.colors.primary : quietMarkFill(ctx)
+  return seriesInk(ctx, index, marked)
+}
+
 /** The ground a hatched or outlined bar of `color` sits on: a pale tint of it. */
 export function tintOf(ctx: ComponentCtx, color: string): string {
   if (color.toUpperCase() === ctx.colors.primary.toUpperCase()) return markTint(ctx)

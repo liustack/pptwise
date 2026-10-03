@@ -19,6 +19,7 @@ import {
   plotNumber,
   pointDecimals,
   reportedDecimals,
+  barInk,
   seriesInk,
   textBox,
   textWidth,
@@ -142,7 +143,7 @@ export const barsComposition: Composition = ({ components, ctx, rect }) => {
       const point = s.data.find((p) => p.x === name)
       if (!point) return null
       const text = plotNumber(point.y, chinese, pointDecimals(point, decimals)) + (point.status === "forecast" ? forecast.suffix : "")
-      const bold = si === marked
+      const bold = si === marked || point.emphasis === true
       const change = changes.find((c) => c.at === name && c.to === s.name)
       const changeLabel = change ? changeLabelFor(chart, change, chinese) : null
       const tail =
@@ -170,13 +171,13 @@ export const barsComposition: Composition = ({ components, ctx, rect }) => {
       if (!cell) return
       const y = top + 6 + k * (BAR_H + BAR_GAP)
       const w = Math.max(1, cell.point.y * scale)
-      const color = seriesInk(ctx, cell.series, marked)
+      const color = barInk(ctx, chart, cell.series, cell.point, marked)
       nodes.push(
         <g key={`bar-${ri}-${k}`} data-plot-mark="1">
           {paintMark(markPaint(ctx, color, cell.point.status), { x: x0, y, w, h: BAR_H })}
         </g>,
       )
-      const isMarked = cell.series === marked
+      const isMarked = cell.series === marked || cell.point.emphasis === true
       const valueInk = accessibleInk(isMarked ? colors.primary : colors.muted, bg, VALUE_SIZE)
       const vx = x0 + w + VALUE_GAP
       const valueW = textWidth(cell.text, VALUE_SIZE, body, cell.bold)

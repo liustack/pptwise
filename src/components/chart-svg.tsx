@@ -2,6 +2,7 @@ import type { ReactElement } from "react"
 import type { ChartSeries, Component } from "@/ir"
 import { CHART_AXIS_LIMIT } from "@/ir/components/chart"
 import { accessibleInk } from "../render/ink"
+import { recededMarkFill } from "../render/chart-palette"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import { groupDigits, joinUnit } from "../lib/quantity-format"
 import { changeText } from "../lib/change-figure"
@@ -484,6 +485,32 @@ function scaleHexBrightness(hex: string, factor: number): string {
 function highlightsTallestBar(palette: readonly string[], accentColor: string): boolean {
   const accent = accentColor.toUpperCase()
   return palette.some((color) => color.toUpperCase() === accent)
+}
+
+/** The one bar an author marked (`data[].emphasis`): its series and its category, or null. */
+function markedPointOf(series: readonly ChartSeries[]): { seriesIndex: number; x: string | number } | null {
+  for (const [seriesIndex, s] of series.entries()) {
+    const point = s.data.find((d) => d.emphasis === true)
+    if (point) return { seriesIndex, x: point.x }
+  }
+  return null
+}
+
+/**
+ * The fill of a bar in a chart with a marked bar: that bar keeps its
+ * series' colour and every other bar recedes to the grey a marked series
+ * leaves the rest in (`recededMarkFill`), so the page reads as one bar
+ * against its context. Null when no bar is marked.
+ */
+function markedPointFill(
+  marked: { seriesIndex: number; x: string | number } | null,
+  seriesIndex: number,
+  x: string | number,
+  palette: readonly string[],
+  receded: string,
+): string | null {
+  if (!marked) return null
+  return marked.seriesIndex === seriesIndex && marked.x === x ? palette[seriesIndex % palette.length]! : receded
 }
 
 /**
@@ -1259,8 +1286,11 @@ export function renderBar(
     }
   })
   const gradientId = chartGradientId("chart-bar-grad", w, h, series)
-  // A forecast or a target is drawn in its series' colour, never in the tallest-bar highlight.
-  const highlight = n <= 1 && highlightsTallestBar(palette, accentColor) && !hasPointStatus(series)
+  // A forecast or a target is drawn in its series' colour, never in the
+  // tallest-bar highlight, and a bar the author marked replaces it.
+  const marked = markedPointOf(series)
+  const receded = recededMarkFill(mutedColor, _bgHex ?? "#FFFFFF")
+  const highlight = !marked && n <= 1 && highlightsTallestBar(palette, accentColor) && !hasPointStatus(series)
   const group = fullestGroup(model.series, categories.length)
   const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
   const dataMax = Math.max(...keptValues(model.series), Number.NEGATIVE_INFINITY)
@@ -1341,11 +1371,9 @@ export function renderBar(
           const barX = groupX0 + slots.get(s.seriesIndex)!
           const isMax = highlight && value === dataMax
           const { barY, barH } = verticalBarExtent(value, domain, geom.plotY, geom.plotH)
-          const fill = highlight
-            ? isMax
-              ? accentColor
-              : `url(#${gradientId})`
-            : palette[s.seriesIndex % palette.length]
+          const fill =
+            markedPointFill(marked, s.seriesIndex, cat.x, palette, receded) ??
+            (highlight ? (isMax ? accentColor : `url(#${gradientId})`) : palette[s.seriesIndex % palette.length])
           const placed = placedBars.get(`bar-${i}-${s.seriesIndex}`)
           barElements.push(
             barMark({
@@ -2589,7 +2617,9 @@ export function renderBarHorizontal(
   const plotH = Math.max(1, h - meta.titleH - X_TICK_BAND - BAR_H_PLOT_TOP_PAD)
   const rowH = plotH / categories.length
   const gradientId = chartGradientId("chart-barh-grad", w, h, series)
-  const highlight = n <= 1 && highlightsTallestBar(palette, accentColor) && !hasPointStatus(series)
+  const marked = markedPointOf(series)
+  const receded = recededMarkFill(mutedColor, _bgHex ?? "#FFFFFF")
+  const highlight = !marked && n <= 1 && highlightsTallestBar(palette, accentColor) && !hasPointStatus(series)
   const group = fullestGroup(model.series, categories.length)
   const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
   const xTicks = xAxis.ticks.map((t, i) => ({
@@ -2696,11 +2726,9 @@ export function renderBarHorizontal(
           const barY = rowY0 + slots.get(s.seriesIndex)!
           const isMax = highlight && value === dataMax
           const { barX, barW } = horizontalBarExtent(value, domain, plotX, plotW)
-          const fill = highlight
-            ? isMax
-              ? accentColor
-              : `url(#${gradientId})`
-            : palette[s.seriesIndex % palette.length]
+          const fill =
+            markedPointFill(marked, s.seriesIndex, cat.x, palette, receded) ??
+            (highlight ? (isMax ? accentColor : `url(#${gradientId})`) : palette[s.seriesIndex % palette.length])
           barElements.push(
             barMark({
               key: `r-${s.seriesIndex}`,

@@ -21,6 +21,14 @@ const ChartPointSchema = z
         'A value that is not a reported figure. "forecast" is an estimate of what will happen: its bar is hatched, and a lone bar\'s label says it is a forecast. ' +
           '"target" is a level a plan calls for: its bar is drawn as a dashed outline. Bar and stacked charts only.',
       ),
+    /** The one bar the page is about. See `POINT_EMPHASIS_TYPES`. */
+    emphasis: z
+      .boolean()
+      .optional()
+      .describe(
+        "Marks the one bar the page is about, such as the latest year in a run of years. It keeps its series' colour and the other bars step back. " +
+          "One point per chart, on a bar chart, and not together with a series' own emphasis.",
+      ),
   })
   .strict()
 
@@ -30,6 +38,14 @@ const ChartPointSchema = z
  * value is not a reported one. A line, an area or a slice has no such mark.
  */
 export const POINT_STATUS_TYPES = ["bar", "stacked"] as const
+
+/**
+ * Chart types whose points may carry `emphasis`: the ones that draw each
+ * point as a bar of its own, one colour per series, so one bar can keep its
+ * colour while the others step back. A stacked column is a whole made of its
+ * series and has no one bar to single out.
+ */
+export const POINT_EMPHASIS_TYPES = ["bar"] as const
 
 /**
  * Chart types that can draw `changes`: a bracket between two upright bars
@@ -707,6 +723,42 @@ export const schema = z
           message:
             `${marked.length} series are marked with emphasis, and a chart singles out one: two marked series read as two answers, and the grey that sets them apart is gone. ` +
             `Keep emphasis on the one series the page is about.`,
+        })
+      }
+    }
+    // A marked bar is the one the page is about, the way a marked series is.
+    // It needs a bar of its own to mark, and one answer per chart: a second
+    // marked bar, or a marked series beside it, is a second answer.
+    const markedPoints = c.series.flatMap((s, si) =>
+      s.data.flatMap((d, di) => (d.emphasis === true ? [{ si, di, x: d.x }] : [])),
+    )
+    if (markedPoints.length > 0) {
+      const first = markedPoints[0]!
+      const path = ["series", first.si, "data", first.di, "emphasis"]
+      if (!POINT_EMPHASIS_TYPES.includes(c.chart_type as (typeof POINT_EMPHASIS_TYPES)[number])) {
+        ctx.addIssue({
+          code: "custom",
+          path,
+          message:
+            `emphasis on a point marks the one bar the page is about, and a ${c.chart_type} chart draws no bar of its own for "${first.x}". ` +
+            `Use chart_type ${POINT_EMPHASIS_TYPES.map((t) => `"${t}"`).join(" or ")}, or say in the page's text which value it is about.`,
+        })
+      } else if (markedPoints.length > 1) {
+        const second = markedPoints[1]!
+        ctx.addIssue({
+          code: "custom",
+          path: ["series", second.si, "data", second.di, "emphasis"],
+          message:
+            `${markedPoints.length} points are marked with emphasis, and a chart singles out one bar: two marked bars read as two answers. ` +
+            `Keep emphasis on the one bar the page is about.`,
+        })
+      } else if (marked.length > 0) {
+        ctx.addIssue({
+          code: "custom",
+          path,
+          message:
+            `the chart marks both a series and the bar "${first.x}", and each says the page is about something else. ` +
+            `Keep emphasis on the series, or on the one bar, not both.`,
         })
       }
     }

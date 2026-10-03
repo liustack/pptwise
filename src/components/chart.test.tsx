@@ -1938,6 +1938,44 @@ describe("chart series emphasis", () => {
   })
 })
 
+describe("chart point emphasis", () => {
+  const PALETTE = ctx.colors.chartPalette
+  const draw = (component: Parameters<typeof chart.render>[0]) =>
+    svg(chart.render(component, { ...box, h: chart.measure(component, box.w, ctx) }, ctx)).container
+  const years = (direction?: "horizontal") => ({
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    ...(direction ? { direction } : {}),
+    series: [
+      {
+        name: "Solar",
+        data: [
+          { x: "2015", y: 256 },
+          { x: "2022", y: 1333 },
+          { x: "2024", y: 2143 },
+          { x: "2025", y: 2778, emphasis: true },
+        ],
+      },
+    ],
+  })
+
+  it("keeps the marked bar in its series' colour and steps the others back to one grey", () => {
+    for (const direction of [undefined, "horizontal"] as const) {
+      const fills = Array.from(draw(years(direction)).querySelectorAll('rect[data-plot-mark="1"]')).map((r) => r.getAttribute("fill"))
+      expect(fills, direction).toHaveLength(4)
+      expect(fills[3], direction).toBe(PALETTE[0])
+      const grey = fills[0]!
+      expect(new Set(fills.slice(0, 3)), direction).toEqual(new Set([grey]))
+      expect(grey).not.toBe(PALETTE[0])
+      expect(contrastRatio(grey, ctx.colors.bg)).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  it("draws no tallest-bar gradient beside a marked bar", () => {
+    expect(draw(years()).querySelector("linearGradient")).toBeNull()
+  })
+})
+
 describe("chart point status and change brackets", () => {
   const draw = (component: Parameters<typeof chart.render>[0]) =>
     svg(chart.render(component, { ...box, h: chart.measure(component, box.w, ctx) }, ctx)).container
