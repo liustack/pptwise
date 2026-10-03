@@ -1,8 +1,9 @@
 /**
  * Render-side content-page heading treatment assignment table. Treatments
  * are not IR: one theme maps to at most one treatment, looked up here.
- * 15 rows. homeroom and bulletin are not listed: bulletin's content pages
- * draw their own heading (`notice-sheet`).
+ * 15 rows. homeroom, bulletin and swiss are not listed: bulletin's and
+ * swiss's content pages draw their own heading (`notice-sheet`, the grid
+ * faces).
  *
  * ghost_index and tag_box need a chapter page. Runtime falls back to the
  * native heading when `chapterNumberFor === 0`. The table still lists those

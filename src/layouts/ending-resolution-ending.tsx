@@ -1,206 +1,158 @@
 import type { SvgTemplateProps } from "./types"
 import { boundaryBulletItems } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
-import { fitSvgLine } from "../lib/svg-text-layout"
-import { accessibleInk, metaInk } from "../render/ink"
-import { hasCjk } from "./minimal-shared"
-import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
+import { accessibleInk } from "../render/ink"
+import { emphasisRunInk, fitEmphasisHeading, fitEmphasisText, stripEmphasis } from "../render/emphasis"
+import { splitRow } from "./compositions/rows"
+import { centredBaseline } from "./compositions/type"
+import { FittedLines } from "./grid-shared"
 
 /**
- * resolution-ending（第八波 pinOnly）：决议编号制收口。kicker 取短 heading
- * 或公开 CJK「评审决议」/ Latin RESOLUTION。清单优先 bullets 前三项，否则
- * 按换行或「一、/1.」切 heading。条目文本原样，不要再叠 3.1。底 border 线
- * y520。落款取 subheading，不写死决议编号。无 Thank you。构图抄
- * `.issues/design-boards/wave8/b4/Swiss.dc.html` ending：kicker y140 /
- * 20px，三条 y260/350/440，线 x96–1184，落款 y590。
+ * resolution-ending：瑞士制度腔收口页。2026-10 swiss 样例改版
+ * （`design/rounds/2026-10-03-swiss/`）重画：
  *
- * 进共享池。零 theme id、零 baked hex。红条归 motif，本版式不画红条。
- * 红永不承字成横幅，accent 不当文字色。`body accepts: ["bullets"]`。
- * CJK kicker 不加 letter-spacing。渲染不画省略号。
+ *   - 顶部一行 16px muted（`subheading`，这一页要说明的事），下面一根 1px
+ *     黑细线，x80–1200，y104。英文也不加字距：小写字母拉开字距难看，导出也
+ *     不映射 letter-spacing。
+ *   - 标题 64/76 粗体黑字，整行宽 1120，最多两行，以最后一行为基准，末行
+ *     行框底在 y290。
+ *   - 2px 黑线 y330。
+ *   - 线下最多三列，列距 376：红色 72px 粗体编号「01」（主题强调墨），30px
+ *     粗体标签，20/30 说明。条目取第一个 bullets：写成「标签：说明」时拆成
+ *     标签和说明（`splitRow`，冒号是两者的分界，不再印），没有冒号时整条做
+ *     标签。
+ *   - 顶边红条归 motif，本版式不画。不致谢，不画落款。
+ *
+ * 零 theme id、零 baked hex。标签放不下两行、说明放不下三行时缩到下限，再
+ * 放不下就截断并标 `data-truncated`。
  */
 
-const KICKER_X = 96
-const KICKER_Y = 140
-const KICKER_SIZE = 20
-const KICKER_TRACKING = 8
-const KICKER_MAX_W = 1088
-
-const ITEM_X = 96
-const ITEM_YS = [260, 350, 440] as const
-const ITEM_SIZE = 34
-const ITEM_MIN_PT = 20
-const ITEM_MAX_W = 1088
-
-const RULE_X1 = 96
-const RULE_X2 = 1184
-const RULE_Y = 520
-const RULE_STROKE = 1
-
-const SIGNOFF_X = 96
-const SIGNOFF_Y = 590
-const SIGNOFF_SIZE = 18
-const SIGNOFF_MAX_W = 1088
-
-const RESOLUTION_CJK = "评审决议"
-const RESOLUTION_LATIN = "RESOLUTION"
-
-function withoutOverflowMark(text: string): string {
-  return text.replace(/(?:\.{3}|…)+$/u, "")
-}
+const LEFT = 80
+const RIGHT = 1200
+const KICKER = { top: 72, box: 24, size: 16 }
+const KICKER_RULE = { y: 104, h: 1 }
+const TITLE = { size: 64, lineHeight: 76, foot: 290, maxLines: 2, minPt: 44 }
+const RULE = { y: 330, h: 2 }
+const COLUMN = { pitch: 376, w: 340 }
+const NUMBER = { top: 360, size: 72, box: 80 }
+const LABEL = { top: 452, size: 30, lineHeight: 40, maxLines: 2, minPt: 24 }
+/** The description's first line box starts 8px under the label's last. */
+const DESC = { gap: 8, size: 20, lineHeight: 30, maxLines: 3, minPt: 18, w: 320 }
 
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 3
 
-function splitResolutionLines(text: string): string[] {
-  const trimmed = text.trim()
-  if (!trimmed) return []
-  const byNewline = trimmed.split(/\n+/).map((line) => line.trim()).filter(Boolean)
-  if (byNewline.length > 1) return byNewline.slice(0, 3)
-  const byCn = trimmed.split(/(?=[一二三四五六七八九十]+、)/).map((line) => line.trim()).filter(Boolean)
-  if (byCn.length > 1) return byCn.slice(0, 3)
-  const byDot = trimmed.split(/(?=(?:^|\s)\d+[.、]\s*)/).map((line) => line.trim()).filter(Boolean)
-  if (byDot.length > 1) return byDot.slice(0, 3)
-  return [trimmed]
-}
-
-function resolutionItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = boundaryBulletItems(slide, ITEM_MAX)
-  if (bullets.length > 0) return bullets
-  return splitResolutionLines(stripEmphasis(slide.heading ?? ""))
-}
-
-function isShortKicker(heading: string): boolean {
-  if (!heading) return false
-  if (heading.includes("\n")) return false
-  if (/^[一二三四五六七八九十]+、/.test(heading)) return false
-  if (/^\d+[.、]/.test(heading)) return false
-  return true
-}
-
-function kickerSource(slide: SvgTemplateProps["slide"]): string {
-  const heading = stripEmphasis(slide.heading ?? "").trim()
-  if (boundaryBulletItems(slide, ITEM_MAX).length > 0 && isShortKicker(heading)) return heading
-  const scriptSrc = heading || boundaryBulletItems(slide, ITEM_MAX)[0] || ""
-  return hasCjk(scriptSrc) ? RESOLUTION_CJK : RESOLUTION_LATIN
-}
+const TITLE_FIT = {
+  maxWidth: RIGHT - LEFT,
+  fontSize: TITLE.size,
+  maxLines: TITLE.maxLines,
+  minPt: TITLE.minPt,
+  lineHeightRatio: TITLE.lineHeight / TITLE.size,
+} as const
 
 export function ResolutionEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const items = resolutionItems(slide)
-  const kickerText = kickerSource(slide)
-  const kickerTracking = hasCjk(kickerText) ? undefined : KICKER_TRACKING
-  const signoffSource = (slide.subheading ?? "").trim()
-  const ruleStroke = colors.border ?? colors.muted
-
-  const kicker = fitSvgLine(kickerText, {
-    maxWidth: KICKER_MAX_W,
-    fontSize: KICKER_SIZE,
-    minFontSize: 16,
-    letterSpacing: kickerTracking,
-    fontFamily: fonts.heading,
+  const kicker = fitEmphasisText(slide.subheading, {
+    maxWidth: RIGHT - LEFT,
+    fontSize: KICKER.size,
+    minPt: KICKER.size,
+    maxLines: 1,
+    lineHeightRatio: KICKER.box / KICKER.size,
+    fontFamily: fonts.body,
+    bold: false,
   })
-  const kickerPainted = withoutOverflowMark(kicker.text)
+  const title = fitEmphasisHeading(slide.heading, { ...TITLE_FIT, fontFamily: fonts.heading, typeScale: ctx.shape?.typeScale })
+  const showTitle = stripEmphasis(slide.heading ?? "").trim().length > 0
+  const lastBaseline = centredBaseline(TITLE.foot - TITLE.lineHeight, TITLE.lineHeight, title.fontSize)
+  const firstBaseline = lastBaseline - Math.max(0, title.lines.length - 1) * title.lineHeight
 
-  const lines = items.map((item, i) => {
-    const body = fitSvgLine(stripEmphasis(item), {
-      maxWidth: ITEM_MAX_W,
-      fontSize: ITEM_SIZE,
-      minFontSize: ITEM_MIN_PT,
+  const columns = boundaryBulletItems(slide, ITEM_MAX).map((item, i) => {
+    const { label, gloss } = splitRow(item)
+    const head = fitEmphasisText(label ?? gloss, {
+      maxWidth: COLUMN.w,
+      fontSize: LABEL.size,
+      minPt: LABEL.minPt,
+      maxLines: LABEL.maxLines,
+      lineHeightRatio: LABEL.lineHeight / LABEL.size,
       fontFamily: fonts.heading,
       bold: true,
     })
-    return { y: ITEM_YS[i]!, body, painted: withoutOverflowMark(body.text) }
+    const desc = label
+      ? fitEmphasisText(gloss, {
+          maxWidth: DESC.w,
+          fontSize: DESC.size,
+          minPt: DESC.minPt,
+          maxLines: DESC.maxLines,
+          lineHeightRatio: DESC.lineHeight / DESC.size,
+          fontFamily: fonts.body,
+          bold: false,
+        })
+      : null
+    return { x: LEFT + i * COLUMN.pitch, number: String(i + 1).padStart(2, "0"), head, desc }
   })
 
-  const signoff = signoffSource
-    ? fitEmphasisLine(signoffSource, {
-        maxWidth: SIGNOFF_MAX_W,
-        fontSize: SIGNOFF_SIZE,
-        minFontSize: 16,
-        fontFamily: fonts.body,
-      })
-    : null
-
-  const itemInk = accessibleInk(colors.text, bg, ITEM_SIZE)
-
+  const ink = (size: number) => accessibleInk(colors.text, bg, size)
   return (
     <>
-      {kickerPainted && (
-        <text
-          data-contrast-tier="meta"
-          data-truncated={kicker.truncated ? "1" : undefined}
-          x={KICKER_X}
-          y={KICKER_Y}
-          fontFamily={fonts.heading}
-          fontSize={kicker.fontSize}
-          fill={metaInk(colors.muted, bg)}
-          letterSpacing={kickerTracking}
-          dominantBaseline="alphabetic"
-        >
-          {kickerPainted}
-        </text>
+      {kicker.lines.length > 0 && (
+        <FittedLines
+          layout={{ ...kicker, lineHeight: KICKER.box }}
+          ctx={ctx}
+          x={LEFT}
+          y={centredBaseline(KICKER.top, KICKER.box, kicker.fontSize)}
+          fill={accessibleInk(colors.muted, bg, kicker.fontSize)}
+        />
       )}
-
-      {lines.map((line, i) =>
-        line.painted ? (
-          <text
-            key={i}
-            data-truncated={line.body.truncated ? "1" : undefined}
-            x={ITEM_X}
-            y={line.y}
-            fontFamily={fonts.heading}
-            fontSize={line.body.fontSize}
-            fontWeight="700"
-            fill={itemInk}
-            dominantBaseline="alphabetic"
-          >
-            {line.painted}
-          </text>
-        ) : null,
-      )}
-
-      <line
-        data-depth="mid"
-        x1={RULE_X1}
-        y1={RULE_Y}
-        x2={RULE_X2}
-        y2={RULE_Y}
-        stroke={ruleStroke}
-        strokeWidth={RULE_STROKE}
-      />
-
-      {signoff && renderEmphasisText(
-        signoff.segments,
-        headingEmphasisPaint(ctx, signoff, { baseFill: metaInk(colors.muted, bg), fontWeight: "600", fontFamily: fonts.body, bold: false }),
+      <rect x={LEFT} y={KICKER_RULE.y} width={RIGHT - LEFT} height={KICKER_RULE.h} fill={ink(KICKER.size)} />
+      {showTitle && <FittedLines layout={title} ctx={ctx} x={LEFT} y={firstBaseline} fill={ink(title.fontSize)} bold />}
+      <rect x={LEFT} y={RULE.y} width={RIGHT - LEFT} height={RULE.h} fill={ink(TITLE.size)} />
+      {columns.map((column, i) => {
+        const headBaseline = centredBaseline(LABEL.top, LABEL.lineHeight, column.head.fontSize)
+        const headFoot = LABEL.top + column.head.lines.length * column.head.lineHeight
+        return (
+          <g key={i} data-resolution-item={i + 1}>
             <text
-              data-contrast-tier="meta"
-              data-truncated={signoff.truncated ? "1" : undefined}
-              x={SIGNOFF_X}
-              y={SIGNOFF_Y}
-              fontFamily={fonts.body}
-              fontSize={signoff.fontSize}
-              fill={metaInk(colors.muted, bg)}
+              x={column.x}
+              y={centredBaseline(NUMBER.top, NUMBER.box, NUMBER.size)}
+              fontFamily={fonts.heading}
+              fontSize={NUMBER.size}
+              fontWeight="700"
+              fill={accessibleInk(emphasisRunInk(colors), bg, NUMBER.size)}
               dominantBaseline="alphabetic"
+            >
+              {column.number}
+            </text>
+            <FittedLines layout={column.head} ctx={ctx} x={column.x} y={headBaseline} fill={ink(column.head.fontSize)} bold />
+            {column.desc && column.desc.lines.length > 0 && (
+              <FittedLines
+                layout={column.desc}
+                ctx={ctx}
+                x={column.x}
+                y={centredBaseline(headFoot + DESC.gap, DESC.lineHeight, column.desc.fontSize)}
+                fill={ink(column.desc.fontSize)}
               />
-      )}
+            )}
+          </g>
+        )
+      })}
     </>
   )
 }
 
 export const layoutDef: LayoutDefinition = {
   branding: "none",
-  // ending-resolution-ending.tsx: three-item resolution list,
-  // short heading or CJK 评审决议 / Latin RESOLUTION kicker, border
-  // closing rule, optional subheading sign-off. No thank-you and no
-  // invented resolution number. Optional bullets fill the list.
+  // ending-resolution-ending.tsx: an institutional report's closing page.
+  // What the page settles in a small line over a hairline, the closing title
+  // large and bold, a black rule, then up to three numbered columns, each a
+  // label and what it means. No thanks and no sign-off.
   id: "resolution-ending",
   kind: "standard",
   story: {
     name: "Numbered Resolution",
-    story: "A kicker labeled RESOLUTION sits at the top. Up to three resolution items stack below, a border rule runs across, and an optional sign-off anchors the bottom.",
-    positioning: "The closing page for up to three formally recorded resolution items and a sign-off. Not a task list.",
-    audience: "Board meetings and review panels where the resolution is projected on a wall screen.",
+    story: "A small line over a hairline says what the page settles. The closing title sits large and bold on a heavy black rule, and under it up to three numbered columns, each a short label and a line on what it means.",
+    positioning: "The closing page for up to three things the reader is asked to watch, decide or keep. Not a thank-you page.",
+    audience: "Board meetings and review panels where the closing items are projected on a wall screen.",
     notFor: "Closings that list informal next steps, which belong in Next Steps Pad as a casual to-do list.",
   },
   slideTypes: ["ending"],
@@ -211,4 +163,5 @@ export const layoutDef: LayoutDefinition = {
     { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "rule", accepts: [] },
   ],
+  headingFit: TITLE_FIT,
 }

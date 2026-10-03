@@ -17,8 +17,8 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *   left-anchor / split-diagonal 色块走 primary 硬黑，不走 accent。
  *
  * 四轴 L / bottom-right / light / tight。最近邻 terminal（L / BR / medium /
- * tight），岔在装饰轴：terminal 是右缘星座链的 medium，swiss 是顶边 12px 红条
- * + 右缘三格灰刻度的 light。bulletin 也是 L / tight，但 meta 在 top-band、
+ * tight），岔在装饰轴：terminal 是右缘星座链的 medium，swiss 是顶边 8px 红条
+ * 的 light。bulletin 也是 L / tight，但 meta 在 top-band、
  * 装饰是 IKB 方块的 medium，两轴都岔开。
  *
  * 逐条来历（设计定稿板 `theme-wave7/Swiss.dc.html` 给死五格，surface 与
@@ -52,15 +52,27 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * （字重导出只有粗/不粗两档，900 → 加粗）。圆角 0 + gapScale 1（tight，
  * 与 terminal 同档）。
  *
- * 装饰见 `../../motifs/motif-swiss-motif.tsx`（顶边 12px 红条四页都画。
- * 右缘三格灰刻度只留封面，章节 / 内容 / ending 不画刻度）。light 档。
- * 板上封面那根 x852 整高裸格线**不进 motif**：纵穿正文区
- * (96,200,1040×420)，违反五个保护区。
+ * 装饰见 `../../motifs/motif-swiss-motif.tsx`（顶边 8px 红条每页都画）。
+ * light 档。
  *
  * 第八波批 4：chapter 默认底从 primary 硬黑改为冷白纸（与 bg 同值）。
- * 板上章节是白纸 + 小数编号，不是整版黑。红条四页都在，是身份件。
+ * 板上章节是白纸，不是整版黑。红条每页都在，是身份件。
  *
- * **菜单分派（S1-B）**：制度年报按小数点编号推进，栅格里 data 走通栏 split-band，photo 用满幅顶图接住瑞士海报的图版传统，quote 不上。
+ * **2026-10 样例改版**（`design/rounds/2026-10-03-swiss/`，设计系统见
+ * `docs/design-swiss.md`）：
+ *   - 顶边红条收到 8px，每一页都画；右缘三格灰刻度去掉。
+ *   - 内容页统一一种头部（`grid-sheet` 的 `GridHead`）：左上红色章号加灰色
+ *     章名 15px，黑色粗体结论 34px 整行 1120 宽、以最后一行为基准，2px 黑线
+ *     y180。数据页的整条黑色标题条和「3.1」编号徽章都去掉了。
+ *   - 数据主色是黑（text），次要是两档灰，红（accent，即强调墨）每页只标
+ *     一处：作者标出的柱子、系列、表格行、数字，以及预测柱的斜线和这一页
+ *     要说的那个变化括号。红仍然不承字成横幅：能承字的色块走黑。
+ *   - 结论页 `grid-statement`、大数字页 `grid-figure`、照片页 `image-top`
+ *     的 `band: "grid"`，其余七类内容页都走 `grid-sheet`，按内容交给栅格
+ *     设定下的构图。封面、章节、收尾三张脸按板重画（章节页自带本章目录）。
+ *
+ * **菜单分派**：制度年报按章推进，七类内容页共用一张栅格正文页，按内容挑
+ * 构图；结论、大数字、照片各有自己的页；quote 不上。
  */
 export const SWISS_TOKENS: StyleTokens = {
   id: "swiss",
@@ -110,16 +122,16 @@ export const SWISS_THEME = {
     cover: { face: "institutional-block" },
     chapter: { face: "decimal-index-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "split-band" },
-      photo: { face: "image-top" },
-      statement: { face: "statement" },
-      fact: { face: "stat-hero" },
-      evidence: { face: "one-evidence" },
-      hierarchy: { face: "asymmetric-triptych" },
+      points: { face: "grid-sheet" },
+      list: { face: "grid-sheet" },
+      comparison: { face: "grid-sheet" },
+      process: { face: "grid-sheet" },
+      data: { face: "grid-sheet" },
+      photo: { face: "image-top", params: { band: "grid" } },
+      statement: { face: "grid-statement" },
+      fact: { face: "grid-figure" },
+      evidence: { face: "grid-sheet" },
+      hierarchy: { face: "grid-sheet" },
     },
     ending: { face: "resolution-ending" },
   },

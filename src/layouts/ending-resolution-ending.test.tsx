@@ -5,23 +5,20 @@ import { assertSubset } from "../render/subset-validate"
 import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
-import { contrastRatio, metaInk, requiredContrastRatio } from "../render/ink"
+import { contrastRatio, requiredContrastRatio } from "../render/ink"
+import { emphasisRunInk } from "../render/emphasis"
 import { ResolutionEnding, layoutDef } from "./ending-resolution-ending"
 import type { PptxIR, Slide } from "@/ir"
 
-const KICKER = "本轮三条"
-const ITEMS = [
-  "品牌规范 v3 通过，十月一日生效",
-  "旧版模板十二月底前全部下线",
-  "例外申请一律走规范委员会",
-]
-const SIGNOFF = "存档规范委员会"
+const HEADING = "2026 年要盯的三件事"
+const SUB = "清洁电力能否连续第二年接住增量，取决于这三件事"
+const ITEMS = ["气价：IEA 预计 2026 年煤电回升 1.4%", "消纳：中国风光利用率降到约 91%", "储能：BNEF 预计 2026 年新增 1.58 亿千瓦"]
 
 function slide(extras: Partial<Slide> = {}): Slide {
   return {
     type: "ending",
-    heading: KICKER,
-    subheading: SIGNOFF,
+    heading: HEADING,
+    subheading: SUB,
     components: [{ type: "bullets", items: ITEMS }],
     ...extras,
   } as Slide
@@ -55,92 +52,47 @@ function renderEnding(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] 
 }
 
 describe("ending-resolution-ending — board geometry", () => {
-  it("draws the short heading kicker, three resolutions, a border rule, and the subheading sign-off", () => {
-    const { root, tokens, ctx } = renderEnding("swiss")
-    const bg = ctx.defaultBg ?? tokens.colors.bg
-    const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === KICKER)
-    expect(kicker?.getAttribute("x")).toBe("96")
-    expect(kicker?.getAttribute("y")).toBe("140")
-    expect(kicker?.getAttribute("letter-spacing")).toBeNull()
-    expect(kicker?.getAttribute("data-contrast-tier")).toBe("meta")
-    expect(kicker?.getAttribute("fill")).toBe(metaInk(tokens.colors.muted, bg))
-    expect(kicker?.getAttribute("fill")).not.toBe(tokens.colors.accent)
+  // swiss's 2026-10 ending (p14): a small line over a hairline, the title,
+  // a 2px rule, three numbered columns of a label and what it means.
+  const byText = (root: Element, text: string) => Array.from(root.querySelectorAll("text")).find((t) => t.textContent === text)
 
-    const actions = Array.from(root.querySelectorAll("text")).filter(
-      (t) => t.getAttribute("font-weight") === "700" && t.getAttribute("x") === "96",
-    )
-    expect(actions.map((t) => t.getAttribute("y"))).toEqual(["260", "350", "440"])
-    expect(actions.map((t) => t.textContent)).toEqual(ITEMS)
-    expect(actions.every((t) => Number(t.getAttribute("font-size")) === 34)).toBe(true)
-
-    const rule = Array.from(root.querySelectorAll("line")).find((l) => l.getAttribute("y1") === "520")
-    expect(rule?.getAttribute("x1")).toBe("96")
-    expect(rule?.getAttribute("x2")).toBe("1184")
-    expect(rule?.getAttribute("stroke")).toBe(tokens.colors.border)
-    expect(rule?.getAttribute("stroke-width")).toBe("1")
-    expect(rule?.getAttribute("data-depth")).toBe("mid")
-
-    const foot = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === SIGNOFF)
-    expect(foot?.getAttribute("y")).toBe("590")
-    expect(root.querySelector("rect")).toBeNull()
+  it("sets the subheading small over a hairline at y104, the title at 64px on y277, a 2px rule at y330", () => {
+    const { root, tokens } = renderEnding("swiss")
+    expect(["x", "y", "font-size", "letter-spacing"].map((a) => byText(root, SUB)!.getAttribute(a))).toEqual(["80", "90", "16", null])
+    expect(["x", "y", "font-size", "font-weight"].map((a) => byText(root, HEADING)!.getAttribute(a))).toEqual(["80", "277", "64", "700"])
+    const rects = Array.from(root.querySelectorAll("rect")).map((r) => ["y", "width", "height", "fill"].map((a) => r.getAttribute(a)))
+    expect(rects).toEqual([
+      ["104", "1120", "1", tokens.colors.text],
+      ["330", "1120", "2", tokens.colors.text],
+    ])
   })
 
-  it("does not thank the reader or invent a resolution number", () => {
-    const { root, markup } = renderEnding("swiss", { type: "ending", components: [] } as Slide, {})
-    const joined = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "").join(" ")
-    expect(joined).not.toMatch(/Thank you/i)
-    expect(joined).not.toMatch(/谢谢/)
-    expect(markup).not.toContain("BR-2026-014")
-    expect(markup).not.toContain("品牌规范")
-    expect(joined).toContain("RESOLUTION")
+  it("splits each item written label and gloss into a bold label and its gloss, under a red number", () => {
+    const { root, ctx } = renderEnding("swiss")
+    for (const [i, label] of ["气价", "消纳", "储能"].entries()) {
+      const x = String(80 + i * 376)
+      expect(["x", "y", "font-size", "fill"].map((a) => byText(root, `0${i + 1}`)!.getAttribute(a))).toEqual([x, "428", "72", emphasisRunInk(ctx.colors)])
+      expect(["x", "y", "font-size", "font-weight"].map((a) => byText(root, label)!.getAttribute(a))).toEqual([x, "484", "30", "700"])
+    }
+    expect(byText(root, "IEA 预计 2026 年煤电回升 1.4%")!.getAttribute("font-size")).toBe("20")
+    // The magnitudes of a power unit stay on one line.
+    expect(byText(root, "1.58 亿千瓦")).toBeDefined()
   })
 
-  it("reads bullets as the list and keeps a short heading as the kicker", () => {
-    const { root } = renderEnding("swiss")
-    const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
-    expect(texts).toContain(KICKER)
-    expect(texts).toContain(ITEMS[0])
-    expect(texts).toContain(SIGNOFF)
-    expect(texts).not.toContain("RESOLUTION")
-    expect(texts).not.toContain("评审决议")
-    expect(texts.some((t) => t.startsWith("3.1"))).toBe(false)
+  it("sets an item with no label whole as its label", () => {
+    const { root } = renderEnding("swiss", slide({ components: [{ type: "bullets", items: ["盯住气价"] }] }))
+    expect(byText(root, "盯住气价")!.getAttribute("font-size")).toBe("30")
   })
 
-  it("falls back to 评审决议 when a CJK heading is consumed as the list", () => {
-    const listed = {
-      type: "ending",
-      heading: ITEMS.join("\n"),
-      subheading: SIGNOFF,
-      components: [],
-    } as Slide
-    const { root } = renderEnding("swiss", listed)
-    const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
-    expect(texts).toContain("评审决议")
-    expect(texts).toContain(ITEMS[0])
-    expect(texts).toContain(SIGNOFF)
-    expect(texts).not.toContain("RESOLUTION")
-  })
-
-  it("falls back to RESOLUTION when heading is empty", () => {
-    const { root } = renderEnding("swiss", { type: "ending", components: [] } as Slide)
-    const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
-    expect(texts).toContain("RESOLUTION")
-  })
-
-  it("paints item text as authored, without stacking 3.1", () => {
-    const { markup } = renderEnding("swiss")
-    expect(markup).not.toContain("3.1")
-    expect(markup).not.toContain("3.2")
-    expect(markup).not.toContain("3.3")
+  it("does not thank the reader or invent a sign-off", () => {
+    const { root } = renderEnding("swiss", slide({ subheading: undefined }))
+    const printed = Array.from(root.querySelectorAll("text")).map((t) => t.textContent).join(" ")
+    expect(printed).not.toMatch(/thank|谢谢|RESOLUTION|评审决议/i)
   })
 
   it("uses tokens, not baked swiss hex, when another theme draws it", () => {
-    const { root, tokens } = renderEnding("bulletin")
-    const rule = Array.from(root.querySelectorAll("line")).find((l) => l.getAttribute("y1") === "520")
-    expect(rule?.getAttribute("stroke")).toBe(tokens.colors.border)
-    expect(root.innerHTML).not.toMatch(/#D7282F/i)
-    expect(root.innerHTML).not.toMatch(/#F7F7F5/i)
-    expect(root.innerHTML).not.toMatch(/#E3E3E0/i)
+    const { root } = renderEnding("bulletin")
+    for (const hex of ["#D7282F", "#E3E3E0", "#F7F7F5"]) expect(root.innerHTML, hex).not.toMatch(new RegExp(hex, "i"))
   })
 })
 
@@ -167,11 +119,8 @@ describe("ending-resolution-ending — shared pool", () => {
     }
   })
 
-  it("swiss red accent is never used as type or as a text-bearing banner", () => {
+  it("never puts text on a block of the accent", () => {
     const { root, tokens } = renderEnding("swiss")
-    for (const el of Array.from(root.querySelectorAll("text"))) {
-      expect(el.getAttribute("fill"), el.textContent).not.toBe(tokens.colors.accent)
-    }
     expect(root.querySelector(`rect[fill='${tokens.colors.accent}']`)).toBeNull()
   })
 
@@ -181,22 +130,15 @@ describe("ending-resolution-ending — shared pool", () => {
     }
   })
 
-  it("CJK kicker has no letter-spacing, Latin RESOLUTION may track", () => {
-    const { root } = renderEnding("swiss")
-    const kicker = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === KICKER)!
-    expect(kicker.getAttribute("letter-spacing")).toBeNull()
-    const empty = renderEnding("swiss", { type: "ending", components: [] } as Slide)
-    const latin = Array.from(empty.root.querySelectorAll("text")).find((t) => t.textContent === "RESOLUTION")
-    expect(latin?.getAttribute("letter-spacing")).toBe("8")
+  it("tracks no line, Latin or Chinese", () => {
+    const latin = slide({ heading: "Three things to watch in 2026", subheading: "They decide whether clean power covers all growth again", components: [{ type: "bullets", items: ["Gas: IEA sees coal power up 1.4% in 2026"] }] })
+    const { markup } = renderEnding("swiss", latin)
+    expect(markup).not.toContain("letter-spacing")
   })
 
-  it("does not paint an overflow mark", () => {
-    const long = slide({
-      heading: KICKER,
-      components: [{ type: "bullets", items: ["项".repeat(80), "条".repeat(80), "目".repeat(80)] }],
-    })
+  it("cuts a label or gloss too long for its column and says so", () => {
+    const long = slide({ components: [{ type: "bullets", items: ["项".repeat(80) + "：" + "条".repeat(200)] }] })
     const { markup } = renderEnding("swiss", long)
-    expect(markup).not.toContain("…")
-    expect(markup).not.toContain("...")
+    expect(markup).toContain('data-truncated="1"')
   })
 })
