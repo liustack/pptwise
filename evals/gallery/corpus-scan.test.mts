@@ -1630,7 +1630,8 @@ describe("an unbounded axis label cannot push the plot out of its box", () => {
       // painting.
       const ends = [ys[1], ys[3]]
       for (const [i, name] of ["Alpha", "Beta"].entries()) {
-        const value = String(ends[i])
+        // Printed the English way, grouped in threes (`groupDigits`).
+        const value = ends[i]!.toLocaleString("en-US")
         const own = wideEnough.labels.find((text) => text.endsWith(` ${value}`))
         expect(own, `${name} ${value} in ${JSON.stringify(wideEnough.labels)}`).toBeDefined()
         const printedName = own!.slice(0, own!.length - value.length - 1)

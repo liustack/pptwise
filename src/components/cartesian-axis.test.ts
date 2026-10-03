@@ -155,10 +155,17 @@ describe("formatAxisTick", () => {
       [2.5, "2.5"],
       [12.5, "12.5"],
       [-0.25, "-0.25"],
-      [1500000, "1500000"],
       [1e300, "1e+300"],
     ]
     for (const [tick, label] of cases) expect(formatAxisTick(tick), String(tick)).toBe(label)
+  })
+
+  it("groups a tick's whole part the way the chart's language prints a figure", () => {
+    expect(formatAxisTick(1500000)).toBe("1,500,000")
+    expect(formatAxisTick(2000, "TWh")).toBe("2,000 TWh")
+    expect(formatAxisTick(2000, "亿千瓦时", true)).toBe("2000 亿千瓦时")
+    expect(formatAxisTick(20000, "亿千瓦时", true)).toBe("20,000 亿千瓦时")
+    expect(buildNumericAxis([0, 2800], "zero-max", "TWh").labels.at(-1)).toBe("4,000 TWh")
   })
 })
 

@@ -8,7 +8,7 @@ import { accessibleInk, graphicInk } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { mostlyChinese } from "../lib/text-script"
-import { joinUnit } from "../lib/quantity-format"
+import { groupDigits, joinUnit } from "../lib/quantity-format"
 
 type WaterfallComponent = Extract<Component, { type: "waterfall" }>
 type WaterfallItem = WaterfallComponent["items"][number]
@@ -255,13 +255,15 @@ function decimalsOf(v: number): number {
 /**
  * Every bar prints the same number of decimals, the most any authored value
  * was written with: a bridge from 4.10 by 0.48 and 0.05 reads 4.10, +0.48,
- * +0.05, never 4.1 and +0.1. A unit follows after a space ("382.1 万辆"), a
+ * +0.05, never 4.1 and +0.1. The whole part is grouped the way the bars'
+ * language prints a figure (`groupDigits`): "+2,050" in English, 「+2050」 and
+ * 「+10,575」 in Chinese. A unit follows after a space ("382.1 万辆"), a
  * percent sign or a magnitude glues on ("12%", "3.8m"), and a currency sign
  * leads.
  */
-function formatValue(v: number, unit: string | undefined, signed: boolean, decimals: number): string {
+function formatValue(v: number, unit: string | undefined, signed: boolean, decimals: number, chinese: boolean): string {
   const sign = v < 0 ? "-" : signed && v > 0 ? "+" : ""
-  return joinUnit(`${sign}${Math.abs(v).toFixed(decimals)}`, unit, " ")
+  return joinUnit(groupDigits(`${sign}${Math.abs(v).toFixed(decimals)}`, chinese), unit, " ")
 }
 
 interface CategoryLabel {
@@ -359,6 +361,7 @@ export const waterfall: SvgComponent<WaterfallComponent> = {
     const h = box.h ?? NATURAL_H
     const bars = computeBars(component.items)
     const decimals = Math.min(MAX_DECIMALS, Math.max(0, ...component.items.map((item) => decimalsOf(item.value))))
+    const chinese = mostlyChinese(component.items.map((item) => item.label))
     if (pastAxisLimit(bars)) return <DroppedContentMarker count={1} kind="component" />
     const emphasized = bars.some((bar) => bar.emphasis)
     const emphasisLabel = emphasized ? component.emphasis_label : undefined
@@ -414,7 +417,7 @@ export const waterfall: SvgComponent<WaterfallComponent> = {
           }
           const barH = yBot - yTop
           const above = bar.displayValue >= 0
-          const valueText = fitSvgLine(formatValue(bar.displayValue, component.unit, bar.kind !== "total", decimals), {
+          const valueText = fitSvgLine(formatValue(bar.displayValue, component.unit, bar.kind !== "total", decimals, chinese), {
             maxWidth: g.colW - 4,
             fontSize: VALUE_FONT,
             minFontSize: VALUE_MIN_FONT,

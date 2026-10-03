@@ -1,5 +1,5 @@
 import type { Component } from "@/ir"
-import { isPercentUnit, joinUnit } from "../../lib/quantity-format"
+import { groupDigits, isPercentUnit, joinUnit } from "../../lib/quantity-format"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { mostlyChinese } from "../../lib/text-script"
 import { emphasisSeriesPalette, recededMarkFill, rotateChartPalette } from "../../render/chart-palette"
@@ -209,10 +209,14 @@ function chartWritesChinese(chart: Chart): boolean {
   return mostlyChinese(texts)
 }
 
-/** "$4.10 → $5.35": the two values in the axis's unit, at the decimals the series was written with. */
-export function spanLabel(series: Series, first: number, last: number, unit: string | undefined): string {
+/**
+ * "$4.10 → $5.35": the two values in the axis's unit, at the decimals the
+ * series was written with, grouped the way the chart's language prints a
+ * figure (`groupDigits`).
+ */
+export function spanLabel(series: Series, first: number, last: number, unit: string | undefined, chinese: boolean): string {
   const decimals = Math.min(MAX_DECIMALS, Math.max(0, ...series.data.map((point) => decimalsOf(point.y))))
-  const format = (v: number) => joinUnit(v.toFixed(decimals), unit, " ")
+  const format = (v: number) => joinUnit(groupDigits(v.toFixed(decimals), chinese), unit, " ")
   return `${format(first)} → ${format(last)}`
 }
 
@@ -293,7 +297,7 @@ export const railComposition: Composition = ({ components, ctx, rect, setting })
       fontFamily: body,
       bold: false,
     })
-    const note = fitFixed(spanLabel(entry.series, entry.first, entry.last, unit), {
+    const note = fitFixed(spanLabel(entry.series, entry.first, entry.last, unit, chinese), {
       width: railW,
       size: NOTE_SIZE,
       lineHeight: NOTE_LINE_HEIGHT,

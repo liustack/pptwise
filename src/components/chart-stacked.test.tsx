@@ -164,7 +164,7 @@ describe("stacked chart: crowded totals", () => {
 
   it("keeps every total, and declares nothing, when the row fits", () => {
     const container = draw(crowded(4))
-    expect(valueLabels(container)).toEqual(["2000000", "2000000", "2000000", "2000000"])
+    expect(valueLabels(container)).toEqual(["2,000,000", "2,000,000", "2,000,000", "2,000,000"])
     expect(container.querySelector("[data-dropped]")).toBeNull()
   })
 })

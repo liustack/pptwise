@@ -270,7 +270,7 @@ export const columnsComposition: Composition = ({ components, ctx, rect }) => {
           key: `value-${ci}-${k}`,
           cx: x + barW / 2,
           y: top - VALUE_LIFT,
-          figure: plotNumber(bar.point.y, pointDecimals(bar.point, decimals)),
+          figure: plotNumber(bar.point.y, chinese, pointDecimals(bar.point, decimals)),
           suffix: bar.point.status === "forecast" ? forecast.suffix : "",
           size,
           bold,
@@ -283,7 +283,7 @@ export const columnsComposition: Composition = ({ components, ctx, rect }) => {
         const top = y(column.total)
         const isMarked = column.bars.some((bar) => bar.series === marked)
         const lonePoint = column.bars.length === 1 ? column.bars[0]!.point : null
-        const text = plotNumber(column.total, Math.max(...column.bars.map((b) => pointDecimals(b.point, decimals)))) +
+        const text = plotNumber(column.total, chinese, Math.max(...column.bars.map((b) => pointDecimals(b.point, decimals)))) +
           (lonePoint?.status === "forecast" ? forecast.suffix : "")
         const ink = accessibleInk(isMarked ? colors.primary : colors.text, bg, PLOT_TYPE.lead)
         const cx = rect.x + slot * (ci + 0.5)

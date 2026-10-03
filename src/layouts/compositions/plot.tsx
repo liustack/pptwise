@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import type { ComponentCtx } from "../../components/types"
+import { groupDigits } from "../../lib/quantity-format"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { mostlyChinese } from "../../lib/text-script"
 import { accessibleInk } from "../../render/ink"
@@ -55,10 +56,14 @@ export function decimalsOf(v: number): number {
   return dot < 0 || /e/i.test(text) ? 0 : text.length - dot - 1
 }
 
-/** A value as the author wrote it, with a true minus sign for a negative one. */
-export function plotNumber(v: number, decimals = decimalsOf(v), signed = false): string {
+/**
+ * A value as the author wrote it, with a true minus sign for a negative one,
+ * its whole part grouped the way the chart's language prints a figure
+ * (`groupDigits`): "2,778" in English, 「8490」 and 「10,575」 in Chinese.
+ */
+export function plotNumber(v: number, chinese: boolean, decimals = decimalsOf(v), signed = false): string {
   const sign = v < 0 ? "−" : signed && v > 0 ? "+" : ""
-  return `${sign}${Math.abs(v).toFixed(Math.min(4, decimals))}`
+  return groupDigits(`${sign}${Math.abs(v).toFixed(Math.min(4, decimals))}`, chinese)
 }
 
 /**

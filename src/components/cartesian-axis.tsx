@@ -1,6 +1,6 @@
 import type { ReactElement } from "react"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
-import { joinUnit } from "../lib/quantity-format"
+import { groupDigits, joinUnit } from "../lib/quantity-format"
 
 /**
  * Shared cartesian plot frame (scatter / bubble / line / area / bar).
@@ -169,6 +169,7 @@ export function buildNumericAxis(
   values: readonly number[],
   mode: DomainPadMode,
   unit?: string,
+  chinese = false,
 ): { domain: NumericDomain; ticks: number[]; labels: string[] } {
   const invalid = values.find((v) => !Number.isFinite(v))
   if (invalid !== undefined) {
@@ -186,7 +187,7 @@ export function buildNumericAxis(
   return {
     domain: { min: ticks[0]!, max: ticks[ticks.length - 1]! },
     ticks,
-    labels: ticks.map((t) => formatAxisTick(t, unit)),
+    labels: ticks.map((t) => formatAxisTick(t, unit, chinese)),
   }
 }
 
@@ -220,6 +221,7 @@ export function buildAlignedNumericAxis(
   mode: DomainPadMode,
   primaryTicks: readonly number[],
   unit?: string,
+  chinese = false,
 ): { domain: NumericDomain; ticks: number[]; labels: string[] } {
   const intervals = Math.max(1, primaryTicks.length - 1)
   const invalid = values.find((v) => !Number.isFinite(v))
@@ -298,7 +300,7 @@ export function buildAlignedNumericAxis(
   return {
     domain: { min: ticks[0]!, max: ticks[ticks.length - 1]! },
     ticks,
-    labels: ticks.map((t) => formatAxisTick(t, unit)),
+    labels: ticks.map((t) => formatAxisTick(t, unit, chinese)),
   }
 }
 
@@ -357,9 +359,11 @@ export function formatNiceNumber(value: number): string {
 }
 
 /** `%` glues to the number, a currency sign leads it (`$6`), and other
- *  units sit after a space (`2 周`, `4 weeks`). */
-export function formatAxisTick(value: number, unit?: string): string {
-  return joinUnit(formatNiceNumber(value), unit, " ")
+ *  units sit after a space (`2 周`, `4 weeks`). The whole part is grouped
+ *  the way the chart's language prints a figure (`groupDigits`): "2,000" on
+ *  an English chart, 「2000」 and 「20,000」 on a Chinese one. */
+export function formatAxisTick(value: number, unit?: string, chinese = false): string {
+  return joinUnit(groupDigits(formatNiceNumber(value), chinese), unit, " ")
 }
 
 /**

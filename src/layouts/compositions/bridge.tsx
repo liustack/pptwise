@@ -73,7 +73,7 @@ function bridgeShape(components: readonly Component[]): Waterfall | null {
 export function bridgeNote(unit: string | undefined, floor: number | null, chinese: boolean): string {
   const u = unit?.trim()
   if (floor === null) return u ?? ""
-  const from = plotNumber(floor)
+  const from = plotNumber(floor, chinese)
   if (chinese) return u ? `${u}，纵轴从 ${from} 起` : `纵轴从 ${from} 起`
   return u ? `${u}, axis from ${from}` : `Axis from ${from}`
 }
@@ -138,7 +138,7 @@ export const bridgeComposition: Composition = ({ components, ctx, rect }) => {
         )
       }
     }
-    const text = plotNumber(bar.displayValue, decimals, bar.kind !== "total")
+    const text = plotNumber(bar.displayValue, chinese, decimals, bar.kind !== "total")
     if (bar.kind === "total") {
       const ink = accessibleInk(colors.text, bg, PLOT_TYPE.lead)
       boxes.push(textBox(cx, yTop - VALUE_LIFT, textWidth(text, PLOT_TYPE.lead, body, true), PLOT_TYPE.lead, "middle"))

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { joinUnit } from "./quantity-format"
+import { groupDigits, joinUnit } from "./quantity-format"
 
 describe("joinUnit", () => {
   it("puts a currency sign in front of the number, after any sign", () => {
@@ -30,5 +30,30 @@ describe("joinUnit", () => {
     expect(joinUnit("3.4", "bn", " ")).toBe("3.4bn")
     expect(joinUnit("12", "K")).toBe("12K")
     expect(joinUnit("2", "km", " ")).toBe("2 km")
+  })
+})
+
+// swiss power deck (2026-10-03): the English solar chart printed 2778 TWh
+// where an English reader writes 2,778.
+describe("groupDigits", () => {
+  it("groups an English figure from four digits up", () => {
+    expect(groupDigits("2778", false)).toBe("2,778")
+    expect(groupDigits("10575", false)).toBe("10,575")
+    expect(groupDigits("1234567.25", false)).toBe("1,234,567.25")
+    expect(groupDigits("849", false)).toBe("849")
+  })
+
+  it("leaves a Chinese figure of four digits whole and groups from five", () => {
+    expect(groupDigits("8490", true)).toBe("8490")
+    expect(groupDigits("10575", true)).toBe("10,575")
+    expect(groupDigits("−12345.5", true)).toBe("−12,345.5")
+  })
+
+  it("keeps the sign, the decimals and the unit as written", () => {
+    expect(groupDigits("+6360", false)).toBe("+6,360")
+    expect(groupDigits("−3800", false)).toBe("−3,800")
+    expect(groupDigits("-2050", false)).toBe("-2,050")
+    expect(groupDigits("0.12345", false)).toBe("0.12345")
+    expect(groupDigits("1234.5678", false)).toBe("1,234.5678")
   })
 })
