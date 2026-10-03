@@ -1,0 +1,58 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "axes": {
+        "y_unit": "TWh"
+      },
+      "changes": [
+        {
+          "from": "2024",
+          "to": "2025"
+        }
+      ],
+      "series": [
+        {
+          "name": "Global solar generation",
+          "data": [
+            {
+              "x": "2015",
+              "y": 256
+            },
+            {
+              "x": "2022",
+              "y": 1333
+            },
+            {
+              "x": "2024",
+              "y": 2143
+            },
+            {
+              "x": "2025",
+              "y": 2778,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "75%",
+          "label": "of demand growth met by solar",
+          "note": "636 of 849 TWh"
+        },
+        {
+          "value": "33.8%",
+          "label": "renewables' share of generation",
+          "note": "Coal 33.0%. The IEA sees them level"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Ember (Apr 2026), IEA (Apr, Jul 2026)",
+  "notes": "Solar generation rose from 2143 TWh in 2024 to 2778 TWh, up 636 TWh or 30%, enough to meet 75% of demand growth on its own. Wind and solar together met 99%. Solar overtook wind (2715 TWh) for the first time. The IEA puts the solar increase lower: 620 TWh in Electricity 2026 and about 600 TWh in the Global Energy Review 2026. Only Ember says renewables have overtaken coal, at 33.8% against 33.0%. The IEA has both at about 34%, roughly level, and in its July mid-year update expects renewables to pull clearly ahead in 2026."
+}

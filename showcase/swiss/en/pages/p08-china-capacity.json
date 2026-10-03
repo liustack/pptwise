@@ -1,0 +1,109 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "stacked",
+      "direction": "horizontal",
+      "axes": {
+        "y_unit": "GW"
+      },
+      "series": [
+        {
+          "name": "Solar",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "China's generating capacity at the end of 2025, 3,891 GW by source",
+              "y": 1202
+            }
+          ]
+        },
+        {
+          "name": "Wind",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "China's generating capacity at the end of 2025, 3,891 GW by source",
+              "y": 640
+            }
+          ]
+        },
+        {
+          "name": "Thermal",
+          "data": [
+            {
+              "x": "China's generating capacity at the end of 2025, 3,891 GW by source",
+              "y": 1539
+            }
+          ]
+        },
+        {
+          "name": "Hydro",
+          "data": [
+            {
+              "x": "China's generating capacity at the end of 2025, 3,891 GW by source",
+              "y": 448
+            }
+          ]
+        },
+        {
+          "name": "Nuclear",
+          "data": [
+            {
+              "x": "China's generating capacity at the end of 2025, 3,891 GW by source",
+              "y": 62
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "axes": {
+        "y_unit": "GW"
+      },
+      "series": [
+        {
+          "name": "Wind and solar added each year",
+          "data": [
+            {
+              "x": "2022",
+              "y": 120
+            },
+            {
+              "x": "2023",
+              "y": 290
+            },
+            {
+              "x": "2024",
+              "y": 360
+            },
+            {
+              "x": "2025",
+              "y": 430,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "47.3%",
+          "label": "of China's capacity is wind and solar",
+          "note": "About 300 GW more than thermal"
+        },
+        {
+          "value": "83%",
+          "label": "of new capacity was renewable",
+          "note": "452 GW added in the year"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: National Bureau of Statistics of China (Feb 2026), China NEA (Jan, Feb 2026). Grid connected",
+  "notes": "China ended 2025 with 3891 GW of generating capacity, up 16.1%. Solar reached 1202 GW (up 35.4%) and wind 640 GW (up 22.9%), together 1842 GW or 47.3% of the total, about 300 GW more than thermal at 1539 GW. Annual wind and solar additions have risen four years running: 120 GW in 2022, 290 GW in 2023, 360 GW in 2024 and 430 GW in 2025. Estimates of China's 2025 solar additions vary widely: the official grid-connected AC figure is about 315 to 317 GW, while DC or installed-basis estimates from other bodies run from 370 to 415 GW. This page uses official figures only."
+}

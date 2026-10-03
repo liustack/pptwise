@@ -1,0 +1,110 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "swiss",
+  "filename": "global-power-2025-annual-report-en",
+  "meta": {
+    "organization": "Energy research team",
+    "date": "October 2026"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "Global Power Annual Report 2025",
+      "summary": "Clean power met all new demand"
+    },
+    {
+      "id": "p02-verdict",
+      "type": "content",
+      "kind": "statement",
+      "heading": "Clean power met all new demand. Not settled yet."
+    },
+    {
+      "id": "p03-ch-global",
+      "type": "chapter",
+      "heading": "Global: solar carried the growth",
+      "summary": "Supply, demand and emissions in 2025"
+    },
+    {
+      "id": "p04-bridge",
+      "type": "content",
+      "kind": "data",
+      "heading": "Clean power added 887 TWh, outpacing demand",
+      "focus": "waterfall"
+    },
+    {
+      "id": "p05-solar",
+      "type": "content",
+      "kind": "data",
+      "heading": "Solar grew 30% and met 75% of demand growth",
+      "focus": "chart"
+    },
+    {
+      "id": "p06-emissions",
+      "type": "content",
+      "kind": "fact",
+      "heading": "Power emissions held flat. They did not fall.",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p07-ch-china",
+      "type": "chapter",
+      "heading": "China: the pivot",
+      "summary": "Capacity, generation and storage"
+    },
+    {
+      "id": "p08-china-capacity",
+      "type": "content",
+      "kind": "data",
+      "heading": "China's wind and solar capacity passed thermal",
+      "focus": "chart"
+    },
+    {
+      "id": "p09-china-generation",
+      "type": "content",
+      "kind": "data",
+      "heading": "China: thermal output down 0.7%, solar up 39.8%",
+      "focus": "data_table"
+    },
+    {
+      "id": "p10-storage",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Storage added 112 GW, more than half in China",
+      "focus": "image"
+    },
+    {
+      "id": "p11-ch-2026",
+      "type": "chapter",
+      "heading": "2026: not settled yet",
+      "summary": "What has changed this year, and what comes next"
+    },
+    {
+      "id": "p12-2026-so-far",
+      "type": "content",
+      "kind": "process",
+      "heading": "Solar climbs, but gas and curtailment push back",
+      "focus": "timeline"
+    },
+    {
+      "id": "p13-slowdown",
+      "type": "content",
+      "kind": "data",
+      "heading": "Solar installs set for first fall in two decades",
+      "focus": "chart"
+    },
+    {
+      "id": "p14-ending",
+      "type": "ending",
+      "heading": "Three things to watch in 2026",
+      "summary": "They decide whether clean power covers all growth again"
+    }
+  ],
+  "branding": "full",
+  "footer": {}
+}

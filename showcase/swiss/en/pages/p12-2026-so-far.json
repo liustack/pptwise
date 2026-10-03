@@ -1,0 +1,57 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "lanes": [
+        "World",
+        "China"
+      ],
+      "milestones": [
+        {
+          "date": "H1",
+          "title": "Solar tops 10%",
+          "desc": "8.9% a year ago",
+          "lane": "World"
+        },
+        {
+          "date": "H1",
+          "title": "Coal at 49.7%",
+          "desc": "First time under half",
+          "lane": "China"
+        },
+        {
+          "date": "H1",
+          "title": "Utilization slips",
+          "desc": "Wind 90.9%, solar 91.4%",
+          "lane": "China"
+        },
+        {
+          "date": "July",
+          "title": "IEA: coal +1.4%",
+          "desc": "Gas price shock",
+          "lane": "World",
+          "highlight": true
+        },
+        {
+          "date": "End July",
+          "title": "Solar passes coal",
+          "desc": "31.5% of capacity",
+          "lane": "China"
+        },
+        {
+          "date": "August",
+          "title": "Thermal −4.3%",
+          "desc": "Steeper than July",
+          "lane": "China"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Gas prices are the global variable, curtailment the Chinese one."
+    }
+  ],
+  "footnote": "Source: Ember (Aug 2026), China NEA (Jul, Sep 2026), China NBS (Sep 2026), IEA (Jul 2026)",
+  "notes": "The good news: global solar generation reached 1564 TWh in the first half, up 18%, just over 10% of all generation. Between 11 am and 2 pm, solar met more than a quarter of the world's demand. In China, coal generated about 2500 TWh in the first half, 49.7% of the total and the first half-year below half. At the end of July China's solar capacity passed its coal capacity for the first time. Thermal output from large plants fell 4.3% in August. The headwinds: demand is growing faster, with China's power use up 5.3% in the first half and the IEA expecting 3.6% global growth in 2026. The IEA's July mid-year update, as reported in the press, blames higher gas prices on LNG disruption from the war in the Middle East. Gas prices in Asia and Europe reached their highest since the 2022 to 2023 crisis, some markets switched to coal, and the IEA expects global coal power to rise 1.4% in 2026. China's wind and solar utilization slipped to about 91% in the first half, from 94% and 95% for 2025 as a whole."
+}

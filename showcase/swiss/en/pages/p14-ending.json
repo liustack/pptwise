@@ -1,0 +1,13 @@
+{
+  "components": [
+    {
+      "type": "bullets",
+      "items": [
+        "Gas: IEA sees coal power up 1.4% in 2026",
+        "Curtailment: China's use rate near 91%",
+        "Storage: BNEF expects 158 GW added in 2026"
+      ]
+    }
+  ],
+  "notes": "In 2025 clean power met all new electricity demand. Whether it can do so a second year running depends on three things. First, whether the gas shock lifts coal power and power emissions again. The IEA expects coal power to rise 1.4% in 2026. Second, how installation and curtailment change in China now that new wind and solar sell into the market, with utilization already down to about 91% in the first half. Third, how much solar storage can move out of the middle of the day. BNEF forecasts 158 GW of storage additions in 2026."
+}
