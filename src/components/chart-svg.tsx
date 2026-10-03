@@ -8,7 +8,7 @@ import { figureStyleOf, groupDigits, joinUnit, type FigureStyle } from "../lib/q
 import { changeText } from "../lib/change-figure"
 import { mostlyChinese } from "../lib/text-script"
 import { StatusMark, statusGround, type PointStatus } from "../render/mark-status"
-import { axisTitlePairHeight, renderCartesianAxisTitles } from "./axis-titles"
+import { AXIS_TITLE_BAND_H, AXIS_TITLE_SIZE, axisTitlePairHeight, renderAxisTitlePair, renderCartesianAxisTitles } from "./axis-titles"
 import {
   buildAlignedNumericAxis,
   buildNumericAxis,
@@ -2345,10 +2345,10 @@ export function renderDumbbell(
    * two-endpoint value comparison with no fixed zero-anchored plot box (its
    * own `vx()` domain floats to the data's actual min/max, see this
    * function's own domain-safety comment above), so no gridline surface to
-   * anchor a title against either. Kept for signature parity, same as
-   * `renderPie`'s own `_showGrid`. */
+   * show. Kept for signature parity, same as `renderPie`'s own `_showGrid`.
+   * Its value axis is named all the same: see `dumbbellCaption`. */
   _showGrid?: boolean,
-  _component?: ChartInput,
+  component?: ChartInput,
   bgHex?: string,
   _axisColor?: string,
   fontFamily?: string,
@@ -2385,7 +2385,9 @@ export function renderDumbbell(
   const toValueTexts = toData.slice(0, rows).map((d) => chartFigure(d.y, dumbbellFigures))
   const { labelW, valueW, plotW } = allocateDumbbellBands(w, categoryTexts, toValueTexts)
   const plotX = x0 + labelW + DUMBBELL_LABEL_GAP
-  const rowH = h / rows
+  const caption = dumbbellCaption(component, dumbbellFigures.chinese)
+  const captionH = caption.values || caption.rows ? AXIS_TITLE_BAND_H : 0
+  const rowH = (h - captionH) / rows
   const vx = (v: number) => plotX + ((v - min) / (max - min)) * plotW
   const toLabelMaxWidth = Math.max(0, valueW - DUMBBELL_TO_LABEL_INSET)
   const fromLabelMaxWidth = Math.max(plotW, valueW)
@@ -2468,8 +2470,37 @@ export function renderDumbbell(
           </g>
         )
       })}
+      {captionH > 0
+        ? renderAxisTitlePair({
+            x: x0,
+            y: y0 + h - captionH,
+            width: w,
+            xTitle: caption.values || undefined,
+            yTitle: caption.rows || undefined,
+            fill: bgHex ? accessibleInk(mutedColor, bgHex, AXIS_TITLE_SIZE) : mutedColor,
+            fontFamily: fontFamily ?? "",
+          })
+        : null}
     </>
   )
+}
+
+/**
+ * The line under a dumbbell that names its axes, set the way a horizontal
+ * bar chart's pair is (`renderAxisTitlePair`): the rows' title (`y_title`)
+ * with an up arrow, then the values' title and unit as the author wrote them
+ * ("2026 年指引，亿美元") with a right arrow. The values run across the rows,
+ * so their unit may be written as either axis's (`x_unit` first, as a
+ * horizontal bar reads it). Both empty when the author named neither, and the
+ * rows keep the whole height as they always did.
+ */
+function dumbbellCaption(component: ChartInput | undefined, chinese: boolean): { values: string; rows: string } {
+  const axes = component?.axes
+  const values = [axes?.x_title, axes?.x_unit ?? axes?.y_unit]
+    .map((part) => part?.trim())
+    .filter((part): part is string => Boolean(part))
+    .join(chinese ? "，" : ", ")
+  return { values, rows: axes?.y_title?.trim() ?? "" }
 }
 
 /**

@@ -538,28 +538,41 @@ describe("chart component — axes (x_title/y_title/show_grid)", () => {
     expect(texts).not.toContain("Share")
   })
 
-  it("does not render axes titles for funnel or dumbbell (not AXES_APPLICABLE_TYPES)", () => {
+  it("does not render axes titles for a funnel (not AXES_APPLICABLE_TYPES)", () => {
     const funnelComponent = {
       type: "chart" as const,
       chart_type: "funnel" as const,
       series: [{ name: "Funnel", data: [{ x: "Step1", y: 100 }, { x: "Step2", y: 50 }] }],
       axes: { x_title: "Stage", y_title: "Count" },
     }
+    const { container } = svg(chart.render(funnelComponent, box, ctx))
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+    expect(texts).not.toContain("Stage")
+    expect(texts).not.toContain("Count")
+  })
+
+  it("names a dumbbell's rows and values, with the values' unit, on a line under the rows", () => {
+    // The dumbbell used to drop its axes whole, unit included: a guidance
+    // chart in 亿美元 printed bare 1,800 and 2,000 with nothing saying what
+    // they counted.
     const dumbbellComponent = {
       type: "chart" as const,
       chart_type: "dumbbell" as const,
       series: [
-        { name: "From", data: [{ x: "A", y: 10 }] },
-        { name: "To", data: [{ x: "A", y: 20 }] },
+        { name: "First", data: [{ x: "A", y: 1800 }, { x: "B", y: 1250 }] },
+        { name: "Latest", data: [{ x: "A", y: 2000 }, { x: "B", y: 1375 }] },
       ],
-      axes: { x_title: "Stage", y_title: "Count" },
+      axes: { x_title: "2026 guidance", x_unit: "$bn", y_title: "Company" },
     }
-    for (const component of [funnelComponent, dumbbellComponent]) {
-      const { container } = svg(chart.render(component, box, ctx))
-      const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
-      expect(texts).not.toContain("Stage")
-      expect(texts).not.toContain("Count")
-    }
+    const { container } = svg(chart.render(dumbbellComponent, box, ctx))
+    const x = container.querySelector('[data-axis-title="x"]')
+    const y = container.querySelector('[data-axis-title="y"]')
+    expect(x?.textContent).toBe("2026 guidance, $bn  →")
+    expect(y?.textContent).toBe("Company  ↑")
+    // A unit written as the value's own (`y_unit`) is read the same way.
+    const yUnit = { ...dumbbellComponent, axes: { y_unit: "亿美元" } }
+    const alone = svg(chart.render(yUnit, box, ctx)).container
+    expect(alone.querySelector('[data-axis-title="x"]')?.textContent).toBe("亿美元  →")
   })
 
   // Round-4 review (`journal p05`): a bar chart draws no gridlines unless the
