@@ -1,5 +1,5 @@
 import type { Component } from "@/ir"
-import { groupDigits, isPercentUnit, joinUnit } from "../../lib/quantity-format"
+import { figureStyleOf, groupDigits, isPercentUnit, joinUnit, type FigureStyle } from "../../lib/quantity-format"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { mostlyChinese } from "../../lib/text-script"
 import { emphasisSeriesPalette, recededMarkFill, rotateChartPalette } from "../../render/chart-palette"
@@ -215,9 +215,9 @@ function chartWritesChinese(chart: Chart): boolean {
  * series was written with, grouped the way the chart's language prints a
  * figure (`groupDigits`).
  */
-export function spanLabel(series: Series, first: number, last: number, unit: string | undefined, chinese: boolean): string {
+export function spanLabel(series: Series, first: number, last: number, unit: string | undefined, figures: FigureStyle | boolean): string {
   const decimals = Math.min(MAX_DECIMALS, Math.max(0, ...series.data.map((point) => decimalsOf(point.y))))
-  const format = (v: number) => joinUnit(groupDigits(v.toFixed(decimals), chinese), unit, " ")
+  const format = (v: number) => joinUnit(groupDigits(v.toFixed(decimals), figures), unit, " ")
   return `${format(first)} → ${format(last)}`
 }
 
@@ -287,7 +287,8 @@ export const railComposition: Composition = ({ components, ctx, rect, setting })
       ? rotated
       : emphasisSeriesPalette(rotated, chart.series.length, marked, recededMarkFill(colors.muted, bg))
 
-  const chinese = chartWritesChinese(chart)
+  const figures = ctx.figures ?? figureStyleOf(chartWritesChinese(chart))
+  const chinese = figures.chinese
   const labels = []
   for (const entry of entries) {
     const unit = entry.unit
@@ -299,7 +300,7 @@ export const railComposition: Composition = ({ components, ctx, rect, setting })
       fontFamily: body,
       bold: false,
     })
-    const note = fitFixed(spanLabel(entry.series, entry.first, entry.last, unit, chinese), {
+    const note = fitFixed(spanLabel(entry.series, entry.first, entry.last, unit, figures), {
       width: railW,
       size: NOTE_SIZE,
       lineHeight: NOTE_LINE_HEIGHT,

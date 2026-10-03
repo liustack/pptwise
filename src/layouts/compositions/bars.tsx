@@ -9,7 +9,6 @@ import {
   MetaLine,
   anyMeet,
   changeText,
-  chartTexts,
   forecastWords,
   insideRect,
   layoutLegend,
@@ -23,7 +22,7 @@ import {
   seriesInk,
   textBox,
   textWidth,
-  writesChinese,
+  chartFigures,
   type InkBox,
   type LegendEntry,
 } from "./plot"
@@ -103,7 +102,8 @@ export const barsComposition: Composition = ({ components, ctx, rect }) => {
   const { colors, fonts } = ctx
   const body = fonts.body
   const bg = ctx.defaultBg ?? colors.bg
-  const chinese = writesChinese(chartTexts(chart))
+  const figures = chartFigures(chart, ctx)
+  const chinese = figures.chinese
   const marked = chart.series.findIndex((s) => s.emphasis === true)
   const right = rect.x + rect.w
   const forecast = forecastWords(chinese)
@@ -142,7 +142,7 @@ export const barsComposition: Composition = ({ components, ctx, rect }) => {
     chart.series.map((s, si) => {
       const point = s.data.find((p) => p.x === name)
       if (!point) return null
-      const text = plotNumber(point.y, chinese, pointDecimals(point, decimals)) + (point.status === "forecast" ? forecast.suffix : "")
+      const text = plotNumber(point.y, figures, pointDecimals(point, decimals)) + (point.status === "forecast" ? forecast.suffix : "")
       const bold = si === marked || point.emphasis === true
       const change = changes.find((c) => c.at === name && c.to === s.name)
       const changeLabel = change ? changeLabelFor(chart, change, chinese) : null

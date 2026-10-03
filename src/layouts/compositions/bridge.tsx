@@ -2,6 +2,7 @@ import type React from "react"
 import type { Component } from "@/ir"
 import { computeBars, truncatedFloor } from "../../components/waterfall"
 import { mostlyChinese } from "../../lib/text-script"
+import { figureStyleOf, type FigureStyle } from "../../lib/quantity-format"
 import { accessibleInk, readableOn } from "../../render/ink"
 import { gridData, gridMark, gridQuiet } from "./grid"
 import { axisInk, quietMarkFill } from "./notice"
@@ -82,10 +83,11 @@ function bridgeShape(components: readonly Component[], grid: boolean): Waterfall
 }
 
 /** The note over the plot: the unit, and where a cut axis starts. */
-export function bridgeNote(unit: string | undefined, floor: number | null, chinese: boolean): string {
+export function bridgeNote(unit: string | undefined, floor: number | null, figures: FigureStyle | boolean): string {
+  const chinese = typeof figures === "boolean" ? figures : figures.chinese
   const u = unit?.trim()
   if (floor === null) return u ?? ""
-  const from = plotNumber(floor, chinese)
+  const from = plotNumber(floor, figures)
   if (chinese) return u ? `${u}，纵轴从 ${from} 起` : `纵轴从 ${from} 起`
   return u ? `${u}, axis from ${from}` : `Axis from ${from}`
 }
@@ -100,7 +102,7 @@ export const bridgeComposition: Composition = ({ components, ctx, rect, setting 
   const { colors, fonts } = ctx
   const body = fonts.body
   const bg = ctx.defaultBg ?? colors.bg
-  const chinese = mostlyChinese(waterfall.items.map((item) => item.label))
+  const figures = ctx.figures ?? figureStyleOf(mostlyChinese(waterfall.items.map((item) => item.label)))
   const floor = truncatedFloor(bars) ?? 0
   const top = Math.max(...bars.flatMap((bar) => [bar.start, bar.end]))
   if (!(top > floor)) return null
@@ -114,7 +116,7 @@ export const bridgeComposition: Composition = ({ components, ctx, rect, setting 
   const barW = Math.min(grid ? GRID.barW : BAR_W, slot * BAR_SHARE)
   const plotH = grid ? base - (rect.y + (label ? GRID.bracketPlotTop : GRID.plotTop)) : PLOT_H
   const y = (v: number) => base - ((v - floor) / (top - floor)) * plotH
-  const note = bridgeNote(waterfall.unit, floor > 0 ? floor : null, chinese)
+  const note = bridgeNote(waterfall.unit, floor > 0 ? floor : null, figures)
   const noteY = rect.y + NOTE_BASELINE
   const boxes: InkBox[] = []
   if (note) boxes.push(textBox(rect.x, noteY, textWidth(note, PLOT_TYPE.meta, body), PLOT_TYPE.meta))
@@ -155,7 +157,7 @@ export const bridgeComposition: Composition = ({ components, ctx, rect, setting 
         )
       }
     }
-    const text = plotNumber(bar.displayValue, chinese, decimals, bar.kind !== "total")
+    const text = plotNumber(bar.displayValue, figures, decimals, bar.kind !== "total")
     if (bar.kind === "total") {
       const size = grid ? GRID.totalSize : PLOT_TYPE.lead
       const ink = accessibleInk(colors.text, bg, size)

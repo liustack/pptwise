@@ -1,6 +1,6 @@
 import type { ReactElement } from "react"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
-import { groupDigits, joinUnit } from "../lib/quantity-format"
+import { groupDigits, joinUnit, type FigureStyle } from "../lib/quantity-format"
 
 /**
  * Shared cartesian plot frame (scatter / bubble / line / area / bar).
@@ -169,7 +169,7 @@ export function buildNumericAxis(
   values: readonly number[],
   mode: DomainPadMode,
   unit?: string,
-  chinese = false,
+  figures: FigureStyle | boolean = false,
 ): { domain: NumericDomain; ticks: number[]; labels: string[] } {
   const invalid = values.find((v) => !Number.isFinite(v))
   if (invalid !== undefined) {
@@ -187,7 +187,7 @@ export function buildNumericAxis(
   return {
     domain: { min: ticks[0]!, max: ticks[ticks.length - 1]! },
     ticks,
-    labels: ticks.map((t) => formatAxisTick(t, unit, chinese)),
+    labels: ticks.map((t) => formatAxisTick(t, unit, figures)),
   }
 }
 
@@ -221,7 +221,7 @@ export function buildAlignedNumericAxis(
   mode: DomainPadMode,
   primaryTicks: readonly number[],
   unit?: string,
-  chinese = false,
+  figures: FigureStyle | boolean = false,
 ): { domain: NumericDomain; ticks: number[]; labels: string[] } {
   const intervals = Math.max(1, primaryTicks.length - 1)
   const invalid = values.find((v) => !Number.isFinite(v))
@@ -300,7 +300,7 @@ export function buildAlignedNumericAxis(
   return {
     domain: { min: ticks[0]!, max: ticks[ticks.length - 1]! },
     ticks,
-    labels: ticks.map((t) => formatAxisTick(t, unit, chinese)),
+    labels: ticks.map((t) => formatAxisTick(t, unit, figures)),
   }
 }
 
@@ -362,8 +362,8 @@ export function formatNiceNumber(value: number): string {
  *  units sit after a space (`2 周`, `4 weeks`). The whole part is grouped
  *  the way the chart's language prints a figure (`groupDigits`): "2,000" on
  *  an English chart, 「2000」 and 「20,000」 on a Chinese one. */
-export function formatAxisTick(value: number, unit?: string, chinese = false): string {
-  return joinUnit(groupDigits(formatNiceNumber(value), chinese), unit, " ")
+export function formatAxisTick(value: number, unit?: string, figures: FigureStyle | boolean = false): string {
+  return joinUnit(groupDigits(formatNiceNumber(value), figures), unit, " ")
 }
 
 /**

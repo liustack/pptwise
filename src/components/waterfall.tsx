@@ -8,7 +8,7 @@ import { accessibleInk, graphicInk } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { mostlyChinese } from "../lib/text-script"
-import { groupDigits, joinUnit } from "../lib/quantity-format"
+import { figureStyleOf, groupDigits, joinUnit, type FigureStyle } from "../lib/quantity-format"
 
 type WaterfallComponent = Extract<Component, { type: "waterfall" }>
 type WaterfallItem = WaterfallComponent["items"][number]
@@ -261,9 +261,9 @@ function decimalsOf(v: number): number {
  * percent sign or a magnitude glues on ("12%", "3.8m"), and a currency sign
  * leads.
  */
-function formatValue(v: number, unit: string | undefined, signed: boolean, decimals: number, chinese: boolean): string {
+function formatValue(v: number, unit: string | undefined, signed: boolean, decimals: number, figures: FigureStyle): string {
   const sign = v < 0 ? "-" : signed && v > 0 ? "+" : ""
-  return joinUnit(groupDigits(`${sign}${Math.abs(v).toFixed(decimals)}`, chinese), unit, " ")
+  return joinUnit(groupDigits(`${sign}${Math.abs(v).toFixed(decimals)}`, figures), unit, " ")
 }
 
 interface CategoryLabel {
@@ -361,7 +361,7 @@ export const waterfall: SvgComponent<WaterfallComponent> = {
     const h = box.h ?? NATURAL_H
     const bars = computeBars(component.items)
     const decimals = Math.min(MAX_DECIMALS, Math.max(0, ...component.items.map((item) => decimalsOf(item.value))))
-    const chinese = mostlyChinese(component.items.map((item) => item.label))
+    const figures = ctx.figures ?? figureStyleOf(mostlyChinese(component.items.map((item) => item.label)))
     if (pastAxisLimit(bars)) return <DroppedContentMarker count={1} kind="component" />
     const emphasized = bars.some((bar) => bar.emphasis)
     const emphasisLabel = emphasized ? component.emphasis_label : undefined
@@ -417,7 +417,7 @@ export const waterfall: SvgComponent<WaterfallComponent> = {
           }
           const barH = yBot - yTop
           const above = bar.displayValue >= 0
-          const valueText = fitSvgLine(formatValue(bar.displayValue, component.unit, bar.kind !== "total", decimals, chinese), {
+          const valueText = fitSvgLine(formatValue(bar.displayValue, component.unit, bar.kind !== "total", decimals, figures), {
             maxWidth: g.colW - 4,
             fontSize: VALUE_FONT,
             minFontSize: VALUE_MIN_FONT,

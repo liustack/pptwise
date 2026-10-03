@@ -14,6 +14,7 @@ import {
 import { accessibleInk } from "../render/ink";
 import { StatusMark, statusGround, statusWords } from "../render/mark-status";
 import { mostlyChinese } from "../lib/text-script";
+import type { FigureStyle } from "../lib/quantity-format";
 import { axisTitlePairHeight } from "./axis-titles";
 import {
   MIN_CARTESIAN_BOX_W,
@@ -225,11 +226,13 @@ function seriesStatus(component: ChartComponent, seriesIndex: number): "forecast
  * way. A series whose every point is a forecast or a target needs none: its
  * own swatch is hatched or outlined.
  */
-function statusEntries(component: ChartComponent): { name: string; seriesIndex: number; colorIndex: number }[] {
-  const chinese = mostlyChinese([
-    ...component.series.map((s) => s.name),
-    ...component.series.flatMap((s) => s.data.flatMap((d) => (typeof d.x === "string" ? [d.x] : []))),
-  ]);
+function statusEntries(component: ChartComponent, figures?: FigureStyle): { name: string; seriesIndex: number; colorIndex: number }[] {
+  const chinese =
+    figures?.chinese ??
+    mostlyChinese([
+      ...component.series.map((s) => s.name),
+      ...component.series.flatMap((s) => s.data.flatMap((d) => (typeof d.x === "string" ? [d.x] : []))),
+    ]);
   const words = statusWords(chinese);
   const entries: { name: string; seriesIndex: number; colorIndex: number }[] = [];
   const partial = (status: "forecast" | "target") =>
@@ -670,7 +673,7 @@ export const chart: SvgComponent<ChartComponent> = {
     // geometry the question, with the same calls the renderer will make.
     if (
       DIRECT_LABELLED.has(component.chart_type) &&
-      !seriesGutterLabelsFit(component.series, box.w, component, ctx.fonts.body)
+      !seriesGutterLabelsFit(component.series, box.w, component, ctx.fonts.body, ctx.figures)
     ) {
       return <g data-dropped={1} data-dropped-kind="component" />;
     }
@@ -708,7 +711,7 @@ export const chart: SvgComponent<ChartComponent> = {
     const headerW = box.w;
     const legendLayout = hasLegend
       ? layoutChartLegend(
-          [...buildChartModel(component.series).legend, ...statusEntries(component)],
+          [...buildChartModel(component.series).legend, ...statusEntries(component, ctx.figures)],
           headerW,
           bodyFace
         )
@@ -738,7 +741,8 @@ export const chart: SvgComponent<ChartComponent> = {
           // `ChartRenderFn`'s own `bgHex` doc comment.
           legendBg,
           ctx.colors.border ?? ctx.colors.muted,
-          bodyFace
+          bodyFace,
+          ctx.figures
         )}
         {legendLayout ? (
           <g>

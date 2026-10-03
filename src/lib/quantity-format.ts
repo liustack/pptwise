@@ -29,20 +29,46 @@ export function isMagnitudeUnit(unit: string | undefined): boolean {
 }
 
 /**
- * A written figure with its whole part grouped in threes by commas, the way
- * each language prints a figure on a chart: "2,778" and "10,575" in English,
- * 「8490」 and 「10,575」 in Chinese.
+ * How a deck prints the figures the engine writes for it: chart values, axis
+ * ticks, totals, bridge steps. `chinese` picks the words around a figure
+ * (「个百分点」 or "pts") and `groupFour` says whether a whole part of four
+ * digits is grouped ("1,650") or left whole (「1650」).
  *
  * English groups from four digits up, as the Chicago Manual of Style and AP
- * style both do. Chinese leaves a whole part of four digits alone and groups
- * from five: GB/T 15835-2011 (出版物上数字用法) lets an integer of four digits
- * or fewer go ungrouped, and Chinese statistical releases print 8490 beside
- * 10,575. The sign before the digits, the decimals after them and any unit
- * are kept as written. Only the first run of digits is the whole part, so a
- * decimal part is never grouped.
+ * style both do, so an English style always has `groupFour`. Chinese may go
+ * either way: GB/T 15835-2011 §5.1.1 groups a whole part of five digits and
+ * up and lets one of four or fewer stand ungrouped (「四位以内的整数可以不
+ * 分节」, its own example sets 1256 beside 624,000). Which of the two a deck
+ * follows is its author's choice, read off the deck (`deckFigureStyle`).
  */
-export function groupDigits(figure: string, chinese: boolean): string {
-  const from = chinese ? 5 : 4
+export interface FigureStyle {
+  readonly chinese: boolean
+  readonly groupFour: boolean
+}
+
+/** English figures: grouped from four digits. */
+export const ENGLISH_FIGURES: FigureStyle = { chinese: false, groupFour: true }
+
+/** Chinese figures as GB/T 15835 sets them by default: grouped from five digits, a four-digit whole part left whole. */
+export const CHINESE_FIGURES: FigureStyle = { chinese: true, groupFour: false }
+
+/** The style of a text judged on its own words, for a renderer that has no deck to ask. */
+export function figureStyleOf(chinese: boolean): FigureStyle {
+  return chinese ? CHINESE_FIGURES : ENGLISH_FIGURES
+}
+
+/**
+ * A written figure with its whole part grouped in threes by commas, the way
+ * a deck prints a figure: "2,778" and "10,575" in English, 「8490」 and
+ * 「10,575」 in a Chinese deck that leaves four digits whole, 「8,490」 in one
+ * whose author groups them (`FigureStyle`). A bare boolean is the language
+ * alone, with its default grouping. The sign before the digits, the
+ * decimals after them and any unit are kept as written. Only the first run
+ * of digits is the whole part, so a decimal part is never grouped.
+ */
+export function groupDigits(figure: string, style: FigureStyle | boolean): string {
+  const resolved = typeof style === "boolean" ? figureStyleOf(style) : style
+  const from = resolved.groupFour ? 4 : 5
   return figure.replace(/^(\D*?)(\d+)/u, (_all, lead: string, digits: string) =>
     digits.length < from ? `${lead}${digits}` : `${lead}${digits.replace(/\B(?=(\d{3})+$)/gu, ",")}`,
   )

@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import type { ComponentCtx } from "../../components/types"
-import { groupDigits } from "../../lib/quantity-format"
+import { figureStyleOf, groupDigits, type FigureStyle } from "../../lib/quantity-format"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { mostlyChinese } from "../../lib/text-script"
 import { accessibleInk } from "../../render/ink"
@@ -40,6 +40,14 @@ export function writesChinese(texts: readonly string[]): boolean {
   return mostlyChinese(texts)
 }
 
+/**
+ * How a plot prints its figures: the deck's way (`ctx.figures`), so every
+ * chart in one deck agrees, and otherwise by the chart's own words.
+ */
+export function chartFigures(chart: Chart, ctx: ComponentCtx): FigureStyle {
+  return ctx.figures ?? figureStyleOf(writesChinese(chartTexts(chart)))
+}
+
 /** The words a chart writes, for `writesChinese`. */
 export function chartTexts(chart: Chart): string[] {
   const texts = chart.series.map((s) => s.name)
@@ -58,12 +66,13 @@ export function decimalsOf(v: number): number {
 
 /**
  * A value as the author wrote it, with a true minus sign for a negative one,
- * its whole part grouped the way the chart's language prints a figure
- * (`groupDigits`): "2,778" in English, 「8490」 and 「10,575」 in Chinese.
+ * its whole part grouped the way the deck prints a figure (`groupDigits`):
+ * "2,778" in English, 「8490」 and 「10,575」 in Chinese, 「8,490」 in a
+ * Chinese deck whose author groups four digits.
  */
-export function plotNumber(v: number, chinese: boolean, decimals = decimalsOf(v), signed = false): string {
+export function plotNumber(v: number, figures: FigureStyle | boolean, decimals = decimalsOf(v), signed = false): string {
   const sign = v < 0 ? "−" : signed && v > 0 ? "+" : ""
-  return groupDigits(`${sign}${Math.abs(v).toFixed(Math.min(4, decimals))}`, chinese)
+  return groupDigits(`${sign}${Math.abs(v).toFixed(Math.min(4, decimals))}`, figures)
 }
 
 /**

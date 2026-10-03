@@ -2,6 +2,7 @@ import type React from "react"
 import type { Component } from "@/ir"
 import type { StyleColors, StyleShape } from "../themes/tokens"
 import type { EmphasisTreatment } from "../themes/schema"
+import type { FigureStyle } from "../lib/quantity-format"
 
 /**
  * Render context threaded through every SVG component. Colors are hex strings from
@@ -115,6 +116,15 @@ export interface ComponentCtx {
    * task's) never set it.
    */
   chartPaletteOffset?: number
+  /**
+   * How the deck prints the figures the engine writes for it: its language
+   * and whether a four-digit whole part is grouped (`deckFigureStyle`,
+   * `lib/figure-style.ts`). Set by `buildCtx` from the deck, so every chart,
+   * bridge and hand-set plot in one deck prints its figures one way.
+   * Undefined in a hand-built ctx, where each renderer judges the language
+   * on its own words as before.
+   */
+  figures?: FigureStyle
   /**
    * Theme id, used by the heading-treatment assignment table
    * (`../render/heading-treatments/assignments.ts`). Production `buildCtx`
