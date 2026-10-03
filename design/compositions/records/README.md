@@ -21,3 +21,19 @@ Settled on the company table. The round's decisions are in [rounds/2026-10-03-bu
 - Two to six columns, at most eight rows, every cell on one line.
 - No `source` on the table itself: the page's source line is where a source goes.
 - A highlighted row is IKB bold across every cell, where the board set the name and the change only.
+
+## swiss, power sample, 2026-10
+
+In the grid setting. The round's decisions are in [rounds/2026-10-03-swiss](../../rounds/2026-10-03-swiss/README.md).
+
+| board (p09) | engine |
+| :-: | :-: |
+| ![board](swiss.board.png) | ![engine](swiss.engine.png) |
+
+**What it looks like.** Headers at 16px muted over a 2px black rule, 48px rows of 20px cells with hairlines between them, a total row bold under a 2px black rule, and the highlighted row on a pale tint of the accent with every cell bold in the accent. A closing note 26px under the table on the light panel.
+
+**What it gave up.**
+
+- The board's red on its tint misses 4.5:1 by a little, so the row's text takes the least step of the accent toward black that reaches it: still red.
+- The tint is the accent at 10% over the surface (`#FBEAEA` on swiss), where the board drew `#FBE7E8`.
+- The closing note is 20px in a 64px panel, the size it is everywhere, where the board set 19px.

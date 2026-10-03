@@ -218,3 +218,65 @@ A face can now declare `fullBodyCompanions`, the component types it sets beside 
 | A deck with no chapters numbers pages plainly | `rail-numbered` prints 「01」 to 「10」 in a deck with no chapter pages, instead of a section number like "1.10" for a section that does not exist | [content-rail-numbered.tsx](../src/layouts/content-rail-numbered.tsx) | none |
 | `theme try` compares themes with different menus | a sample page whose kind a theme does not offer is left out of that theme's column and marked in the cell, instead of failing the whole comparison | [commands.ts](../src/cli/commands.ts) (`runThemeTry`), [preview-html.ts](../src/cli/preview-html.ts) | none |
 | A bullet's length leaves out its marks | the bullet length checks in validate count the words a reader sees, not the `**` around a marked run | [ir-quality.ts](../src/render/ir-quality.ts) | none |
+
+## swiss power sample, 2026-10
+
+The round redrew swiss to a fourteen-page Chinese and English annual report on the world's and China's power systems in 2025. Its decisions, the design system every swiss page follows, and every place the engine departs from the board are in [`design/rounds/2026-10-03-swiss/`](../design/rounds/2026-10-03-swiss/README.md). The rules are restated for the next design session in [Designing for swiss](./design-swiss.md).
+
+### Compositions
+
+The compositions take a third `setting`, `grid` (`CompositionSetting` in [shared.tsx](../src/layouts/compositions/shared.tsx), the inks in [grid.ts](../src/layouts/compositions/grid.ts)): the notice setting's shapes on the notice band, recoloured for a page whose data is black. Data takes the text ink, what steps back two greys, and the theme's emphasis ink (`emphasisRunInk`, swiss's red) the one mark, a forecast's hatching and the bracket that states a chart's change. Blocks that carry text stay black. A composition with no grid form ignores the setting.
+
+New:
+
+| composition | what it draws | takes | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| `share` | a share bar across the top of the band, the rest of the page handed on to the face's other compositions under it (`handOn`) | a share bar (a `stacked` chart with `direction: "horizontal"` and one category) first, then anything one of the face's compositions or the component renderer takes | [share.tsx](../src/layouts/compositions/share.tsx), [share-bar.tsx](../src/components/share-bar.tsx) | swiss, bulletin | [design/compositions/share](../design/compositions/share/README.md) |
+| `contents` | the pages a chapter holds, number and heading, drawn whole or not at all | the deck, read off the chapter page's position (`chapterContents`), so `compose` never offers it: a chapter face calls `drawContents` | [contents.tsx](../src/layouts/compositions/contents.tsx) | swiss (`decimal-index-chapter`) | [design/compositions/contents](../design/compositions/contents/README.md) |
+
+Settled compositions that grew a grid form:
+
+- `columns` draws bars black and the marked bar or series red, names one series in the unit line, hatches a forecast red, brackets the change in red, and scales its tallest column to nine tenths of the bars' height. Board: [design/compositions/columns](../design/compositions/columns/README.md).
+- `bridge` takes `emphasis_label` as a red bracket over the marked run, with the run red, an unmarked step light grey and the total black. Board: [design/compositions/bridge](../design/compositions/bridge/README.md).
+- `records` sets 2px black rules under the headers and over a total, 48px rows of 20px cells, and the highlighted row red on a pale red tint. Board: [design/compositions/records](../design/compositions/records/README.md).
+- `lanes` names the lanes and marks the highlighted milestone in red on a 2px axis. Board: [design/compositions/lanes](../design/compositions/lanes/README.md).
+- `rail` stands its figure column right of a black rule at x800, and in a band too short for stacked figures sets each note beside its 44px figure. Board: [design/compositions/rail](../design/compositions/rail/README.md).
+- `figures` sets two to four figures at the largest of 104, 72, 56 and 46px at which all fit, the marked one red. Board: [design/compositions/figures](../design/compositions/figures/README.md).
+
+`compose` hands every composition a `handOn` that draws other components with the same compositions, in the same setting, so a composition that draws part of a page can pass the rest on. bulletin's notice sheet offers `share` too, before `rail`.
+
+The tests for the grid forms and the new compositions run them on swiss and on ember, crayon or bulletin ([grid.test.tsx](../src/layouts/compositions/grid.test.tsx), [contents.test.tsx](../src/layouts/compositions/contents.test.tsx), [share-bar.test.tsx](../src/components/share-bar.test.tsx)). The gallery's 构图 band has a bulletin page for `share`.
+
+### Faces
+
+| face | what it is | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- |
+| `grid-sheet` | the ordinary content page: the chapter line, a black bold claim across the full measure on a 2px black rule, the body handed to the compositions in the grid setting, the source at 14px. Takes a full-body `waterfall` beside a `kpi_cards` | [content-grid-sheet.tsx](../src/layouts/content-grid-sheet.tsx), [grid-shared.tsx](../src/layouts/grid-shared.tsx) | swiss (points, list, comparison, process, data, evidence, hierarchy) | [design/faces/grid-sheet](../design/faces/grid-sheet/README.md) |
+| `grid-statement` | the conclusion at 56px over a heavy rule, the figures it rests on in columns | [content-grid-statement.tsx](../src/layouts/content-grid-statement.tsx) | swiss | [design/faces/grid-statement](../design/faces/grid-statement/README.md) |
+| `grid-figure` | one figure at 176px with its context, two supporting figures right of a black rule | [content-grid-figure.tsx](../src/layouts/content-grid-figure.tsx) | swiss | [design/faces/grid-figure](../design/faces/grid-figure/README.md) |
+| `image-top` | a `band` parameter: `grid` sets the claim on a black rule under the photograph and the figures in columns. Every other theme keeps `standard` | [image-pages.tsx](../src/render/image-pages.tsx) (`GridTopPage`) | swiss (`grid`) | [design/faces/image-top](../design/faces/image-top/README.md) |
+| `institutional-block` | redrawn: the organization and the date over a hairline, the title on its last line at 88px, a short red bar, the subtitle | [cover-institutional-block.tsx](../src/layouts/cover-institutional-block.tsx) | swiss | [design/faces/institutional-block](../design/faces/institutional-block/README.md) |
+| `decimal-index-chapter` | redrawn: the number at 240px in red, the name and what it covers on a rule, the chapter's pages listed under it | [chapter-decimal-index-chapter.tsx](../src/layouts/chapter-decimal-index-chapter.tsx) | swiss | [design/faces/decimal-index-chapter](../design/faces/decimal-index-chapter/README.md) |
+| `resolution-ending` | redrawn: a small line, the title at 64px, three numbered columns of label and gloss, an item written `label：gloss` split at the colon | [ending-resolution-ending.tsx](../src/layouts/ending-resolution-ending.tsx) | swiss | [design/faces/resolution-ending](../design/faces/resolution-ending/README.md) |
+
+### Motif
+
+| motif | what it draws | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- |
+| `swiss-motif` | redrawn: one 8px red bar along the top of every page. The 12px bar and the cover's grey ticks are gone | [motif-swiss-motif.tsx](../src/motifs/motif-swiss-motif.tsx) | swiss | [design/motifs/swiss-motif](../design/motifs/swiss-motif/README.md) |
+
+### Component fields
+
+| field | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| `chart.series[].data[].emphasis` | the one bar a page is about: it keeps its series' colour and the other bars step back, in the ordinary chart and the hand-set plots | [chart.ts](../src/ir/components/chart.ts), [chart-svg.tsx](../src/components/chart-svg.tsx), [plot.tsx](../src/layouts/compositions/plot.tsx) | [design/components/chart](../design/components/chart/README.md) |
+| `chart` `stacked` with `direction: "horizontal"` | a share bar: one whole as a single bar cut into its parts, each named with its value, a marked run of adjacent parts totalled under it. Every theme draws it | [chart.ts](../src/ir/components/chart.ts) (`isShareBar`), [share-bar.tsx](../src/components/share-bar.tsx), [chart.tsx](../src/components/chart.tsx) | [design/components/chart](../design/components/chart/README.md) |
+
+### Engine behaviour
+
+| behaviour | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| Figures are grouped by language | chart and waterfall values, axis ticks and totals group their digits in threes the way the chart's language prints a figure: "2,778" in English, 「8490」 and 「10,575」 in Chinese (GB/T 15835-2011 lets a four-digit integer go ungrouped) | [quantity-format.ts](../src/lib/quantity-format.ts) (`groupDigits`), [chart-svg.tsx](../src/components/chart-svg.tsx), [cartesian-axis.tsx](../src/components/cartesian-axis.tsx), [waterfall.tsx](../src/components/waterfall.tsx), [plot.tsx](../src/layouts/compositions/plot.tsx) | none |
+| The blank beside a marked run survives | a flowing emphasis span with a blank on an edge another span meets carries `xml:space="preserve"`, so `rsvg-convert` keeps the space it used to strip ("worldwide:112 GW"). Browsers and the PowerPoint export already kept it | [emphasis.ts](../src/render/emphasis.ts) (`renderEmphasisTspans`) | none |
+| A power unit stays whole | a Chinese line keeps 「亿千瓦」, 「万千瓦」, 「千瓦」 and 「千瓦时」 on one line, and a figure with 「瓦」 | [svg-text-layout.ts](../src/lib/svg-text-layout.ts) (`allowsLineBreakBetween`) | none |
+| A split label declares its colon | a face that sets an item's label apart from its gloss names the colon it set as the break (`data-gloss-break`), and the content audit reads it back | [fidelity.ts](../evals/gallery/fidelity.ts), [grid-shared.tsx](../src/layouts/grid-shared.tsx) (`FittedLines`) | none |

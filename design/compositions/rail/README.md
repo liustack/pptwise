@@ -52,3 +52,9 @@ The notice setting. The plot is no longer the chart component: `rail` hands the 
 
 - A `kpi_cards` with a note no longer sends the page to a plainer face: the note is part of the figure.
 - A full-body `waterfall` may share the page with `kpi_cards` on a face that says so (`fullBodyCompanions`). validate still refuses any other sibling.
+
+## swiss, power sample, 2026-10
+
+The figure column beside [`columns`](../columns/) on p05 and p13 and beside the short chart under [`share`](../share/) on p08, in the grid setting. See those pages' boards. The round's decisions are in [rounds/2026-10-03-swiss](../../rounds/2026-10-03-swiss/README.md).
+
+**What it looks like.** A 1px black rule at x800, the plot to x760, the column from x840: a 16px muted label, the figure bold at 52px, its note at 16px, 170px apart. The figure written `**…**` is in the accent. In a band too short for that (under a share bar) each figure steps down to 44px with its note beside it in up to two lines, 110px apart, on the board's shorter column: the rule at x780, the plot to x700, the column from x820.

@@ -29,3 +29,17 @@ Two fields: a point's `status` and the chart's `changes`. Settled on the chart p
 
 - `status` only on bar and stacked charts, `changes` only on bar and stacked charts, at most three.
 - A change from zero or less has no relative figure: validate asks for a bar above zero or a percent axis.
+
+## swiss, power sample, 2026-10
+
+Two author fields, settled on the solar page and the capacity page: see [compositions/columns](../../compositions/columns/swiss-p05.board.png) and [compositions/share](../../compositions/share/swiss.board.png). The round's decisions are in [rounds/2026-10-03-swiss](../../rounds/2026-10-03-swiss/README.md).
+
+**What it looks like.**
+
+- `series[].data[].emphasis` marks the one bar a page is about, such as the latest year in a run of years, which series emphasis cannot say on a chart of one series. The ordinary chart keeps that bar in its series' colour and steps the others back to the grey a marked series leaves the rest in. The hand-set plots set it in their mark colour: primary in the notice setting, the accent with the rest black in the grid setting.
+- A `stacked` chart with `direction: "horizontal"` and one category is a share bar: one whole as a single bar across the page, cut into its parts, each named with its value. Marking a run of adjacent parts adds their total and share under the bar, beside the largest other part's. Every theme draws it, from the same code ([`share-bar.tsx`](../../../src/components/share-bar.tsx)), in its palette.
+
+**What it gave up.**
+
+- A marked point only on a `bar` chart, one per chart, and not beside a marked series.
+- A share bar takes no second category, no value below zero and no `status`. Several marked series are allowed only there, and only as one run of adjacent parts.
