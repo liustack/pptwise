@@ -57,12 +57,22 @@ describe("ending-signoff-ending — board geometry", () => {
     const field = root.querySelector("rect[width='1280']")
     expect(field?.getAttribute("fill")).toBe(tokens.colors.primary)
     const heading = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("三件事"))!
-    // 56px on 74px lines from y196: the first baseline at y255.
+    // 56px on 74px lines from y196. The heading stands on its last line at
+    // y329, where a two-line heading's second line sits, and this one-line
+    // heading rises no higher.
     expect(heading.getAttribute("x")).toBe("80")
-    expect(heading.getAttribute("y")).toBe("255")
+    expect(heading.getAttribute("y")).toBe("329")
     expect(heading.getAttribute("font-size")).toBe("56")
     expect(heading.getAttribute("font-weight")).toBe("700")
     expect(heading.getAttribute("fill")).toBe(readableOn(tokens.colors.primary))
+  })
+
+  it("keeps a heading that fits the page's measure on one line", () => {
+    // 18 characters at 56px is 1008px: inside the 1120px measure.
+    const { root } = renderEnding("bulletin", slide("四季度国内目标，按三季度实际走势重定"))
+    const lines = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-size") === "56")
+    expect(lines.map((t) => t.textContent)).toEqual(["四季度国内目标，按三季度实际走势重定"])
+    expect(lines[0]?.getAttribute("y")).toBe("329")
   })
 
   it("sets the subheading as the small line above the heading", () => {

@@ -37,7 +37,8 @@ import { FieldHeadingLine, fieldInk } from "./field-type"
 const LEFT = 80
 const RIGHT = 1200
 const KICKER = { top: 96, size: 18, box: 26, share: 0.78, maxW: 900 }
-const TITLE = { top: 196, size: 56, box: 74, minPt: 36, maxLines: 2, maxW: 1000 }
+/** Full measure, as on the cover: the steps sit above the title. */
+const TITLE = { top: 196, size: 56, box: 74, minPt: 36, maxLines: 2, maxW: RIGHT - LEFT }
 const RULE = { y: 404, share: 0.4 }
 const ITEM_MAX = 4
 /** Columns stand on the pitch the cover's facts would, 376px for three. Each item's text stops 46px short of the next. */
@@ -62,7 +63,11 @@ export function SignoffEnding({ slide, ctx }: SvgTemplateProps) {
   })
   const showTitle = stripEmphasis(slide.heading ?? "").trim().length > 0
   const titleInk = accessibleInk(ink, field, title.fontSize)
-  const firstBaseline = centredBaseline(TITLE.top, title.lineHeight, title.fontSize)
+  // As on the cover, the title stands on its last line, where a two-line
+  // title's second line sits, so a one-line title keeps to the rule below it
+  // instead of leaving a hole above it.
+  const lastBaseline = centredBaseline(TITLE.top + (TITLE.maxLines - 1) * TITLE.box, TITLE.box, TITLE.size)
+  const firstBaseline = lastBaseline - Math.max(0, title.lines.length - 1) * title.lineHeight
 
   const kickerSource = slide.subheading?.trim()
   const kicker = kickerSource

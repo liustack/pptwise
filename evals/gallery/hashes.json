@@ -2252,9 +2252,9 @@
       "color": "1exl3c2"
     },
     "bulletin--deck--p01": {
-      "hash": "tgdw41",
-      "geometry": "1ajmh4q",
-      "color": "eij4yg"
+      "hash": "m4epxm",
+      "geometry": "1fy62hu",
+      "color": "bmjqla"
     },
     "bulletin--deck--p02": {
       "hash": "1avywbj",
@@ -2297,14 +2297,14 @@
       "color": "1sz7o3i"
     },
     "bulletin--deck--p10": {
-      "hash": "tr7z3w",
-      "geometry": "1we56f3",
+      "hash": "17ltsq8",
+      "geometry": "1kf2gmj",
       "color": "145smev"
     },
     "bulletin--face--cover--ikb-field-cover": {
-      "hash": "tgdw41",
-      "geometry": "1ajmh4q",
-      "color": "eij4yg"
+      "hash": "m4epxm",
+      "geometry": "1fy62hu",
+      "color": "bmjqla"
     },
     "bulletin--face--chapter--block-numeral-chapter": {
       "hash": "pz9c6d",
@@ -2322,8 +2322,8 @@
       "color": "fbjqrl"
     },
     "bulletin--face--ending--signoff-ending": {
-      "hash": "tr7z3w",
-      "geometry": "1we56f3",
+      "hash": "17ltsq8",
+      "geometry": "1kf2gmj",
       "color": "145smev"
     },
     "bulletin--compose--rows-answer": {
