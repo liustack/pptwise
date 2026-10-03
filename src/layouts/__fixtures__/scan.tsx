@@ -183,6 +183,30 @@ const DECLARED_PAGE: Partial<Record<string, Slide>> = {
     subheading: SCAN_SUBHEADING,
     components: [],
   } as Slide,
+  // A fact page: one figure and the bars it is read against. The generic
+  // page's bullets and prose are no figure, and the face has no place for a
+  // subheading between its claim and its figure.
+  "panel-figure": {
+    type: "content",
+    kind: "fact",
+    heading: SCAN_HEADING,
+    components: [
+      {
+        type: "kpi_cards",
+        items: [
+          { value: "4,820", unit: "万元", label: "第二季度订阅收入", note: "比去年同期高 38%" },
+          { value: "38%", label: "一年多出约 1,330 万元", delta: "up" },
+        ],
+      },
+      {
+        type: "chart",
+        chart_type: "bar",
+        direction: "horizontal",
+        axes: { x_unit: "万元" },
+        series: [{ name: "与去年同期对比", data: [{ x: "去年二季度", y: 3490 }, { x: "今年二季度", y: 4820, emphasis: true }] }],
+      },
+    ],
+  } as Slide,
 }
 
 /** The generic sample, in the same shape a registered one has. */

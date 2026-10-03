@@ -205,6 +205,8 @@ export type ContentLayoutId =
   | "grid-sheet"
   | "grid-statement"
   | "grid-figure"
+  | "panel-sheet"
+  | "panel-figure"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

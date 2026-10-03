@@ -488,6 +488,37 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
     if (cards.type === "numbered_cards") cards.items = cards.items.slice(0, 3)
     return [cards]
   }
+  // ledger's panel sheet: the board's data page, a chart in its panel with
+  // the author's figures in panels beside it.
+  if (def.id === "panel-sheet") {
+    const chart = b.chart!(lex)
+    if (chart.type !== "chart") throw new Error("the corpus chart builder returned no chart")
+    // One series over the periods, the way the board's panel draws columns:
+    // the axis is named by the panel's title bar, not an axis title.
+    const series = chart.series.slice(0, 1)
+    return [
+      { ...chart, axes: { y_title: chart.axes?.y_title, y_unit: chart.axes?.y_unit }, series },
+      { type: "kpi_cards", items: figureItems(lex, 3) },
+    ]
+  }
+  // panel-figure's lead is one figure, read against a few bars of the same
+  // measure: the figure and the two periods before it, the last bar the
+  // figure itself.
+  if (def.id === "panel-figure") {
+    const figure = lex.metrics[1]!
+    const value = Number.parseFloat(figure.value)
+    if (!Number.isFinite(value)) throw new Error(`panel-figure needs a numeric metric, and lexicon "${lex.id}" has "${figure.value}"`)
+    return [
+      { type: "kpi_cards", items: [{ value: figure.value, unit: figure.unit, label: figure.label }] },
+      {
+        type: "chart",
+        chart_type: "bar",
+        direction: "horizontal",
+        axes: { x_unit: figure.unit },
+        series: [{ name: figure.label, data: lex.periods.slice(0, 3).map((x, i) => ({ x, y: Math.round(value * [0.8, 0.9, 1][i]! * 10) / 10 })) }],
+      },
+    ]
+  }
   if (def.id === "show-figures") {
     const kpi = b.kpi_cards!(lex)
     if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 3)

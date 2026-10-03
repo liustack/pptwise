@@ -23,6 +23,8 @@ import { NoticeSheetContent } from "./content-notice-sheet"
 import { GridSheetContent } from "./content-grid-sheet"
 import { GridStatementContent } from "./content-grid-statement"
 import { GridFigureContent } from "./content-grid-figure"
+import { PanelSheetContent } from "./content-panel-sheet"
+import { PanelFigureContent } from "./content-panel-figure"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { CrayonboxPointContent } from "./content-crayonbox-point"
 import { ShowGalleryContent } from "./content-show-gallery"
@@ -47,7 +49,8 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // adds gauge-sheet, gauge-exhibit and gauge-figure: 17 pin-only, 26 in all.
 // The bulletin sample redesign adds notice-sheet: 18 pin-only, 27 in all.
 // The swiss sample redesign adds grid-sheet, grid-statement and grid-figure:
-// 21 pin-only, 30 in all.
+// 21 pin-only, 30 in all. The ledger sample redesign adds panel-sheet and
+// panel-figure: 23 pin-only, 32 in all.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
   "two-column": TwoColumnContent,
@@ -79,4 +82,6 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "grid-sheet": GridSheetContent,
   "grid-statement": GridStatementContent,
   "grid-figure": GridFigureContent,
+  "panel-sheet": PanelSheetContent,
+  "panel-figure": PanelFigureContent,
 }
