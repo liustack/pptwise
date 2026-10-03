@@ -3874,16 +3874,20 @@ function pointPlateBox(label: ValueLabelSpec): DepthBox {
 }
 
 /**
- * A marked combo line's point labels, every one of them or none.
+ * A marked combo line's point labels: every one of them, or its two ends, or
+ * none.
  *
  * Each value sits centered just above its own dot, printed with the decimals
  * the series was written with (4.10 beside 4.45, never 4.1) and the unit of
  * the axis the line reads against, a currency sign leading (`joinUnit`). The
  * labels are not nudged: a label moved off its dot reads as some other
  * point's value. So the check is plain. If any label would leave the plot,
- * touch a bar, a dot, a line segment or another label, none is painted. No
- * drop is declared, because nothing the author wrote leaves the page: the
- * axis still carries every value.
+ * touch a bar, a dot, a line segment or another label, the line prints only
+ * its first and last values, the two a line chart labels anyway, when those
+ * two are clear. A line that runs under taller bars used to print nothing at
+ * all, so its own story (45% to 96%) was told by the axis alone. Failing
+ * that, none is painted. No drop is declared, because nothing the author
+ * wrote leaves the page: the axis still carries every value.
  *
  * Each label stands on a plate in the page background (`pointPlateBox`), so
  * a gridline behind it breaks at the label rather than striking it through.
@@ -3910,16 +3914,20 @@ function comboPointLabels(opts: {
     fontFamily: opts.fontFamily,
     priority: 100,
   }))
-  const plates = labels.map(pointPlateBox)
-  if (!labelsClear(plates, [...opts.bars, ...opts.dots], opts.bounds)) return []
-  // A line is drawn over a halo, so its ink runs half the halo's width
-  // either side of the segment.
-  const reach = COMBO_LINE_HALO_W / 2
-  const crossed = plates.some((plate) => {
-    const box = { x: plate.x - reach, y: plate.y - reach, w: plate.w + reach * 2, h: plate.h + reach * 2 }
-    return opts.segments.some(([a, b]) => segmentCrossesBox(a, b, box))
-  })
-  return crossed ? [] : labels.map((label, i) => ({ label, plate: plates[i]! }))
+  const clear = (chosen: readonly ValueLabelSpec[]): { label: ValueLabelSpec; plate: DepthBox }[] | null => {
+    const plates = chosen.map(pointPlateBox)
+    if (!labelsClear(plates, [...opts.bars, ...opts.dots], opts.bounds)) return null
+    // A line is drawn over a halo, so its ink runs half the halo's width
+    // either side of the segment.
+    const reach = COMBO_LINE_HALO_W / 2
+    const crossed = plates.some((plate) => {
+      const box = { x: plate.x - reach, y: plate.y - reach, w: plate.w + reach * 2, h: plate.h + reach * 2 }
+      return opts.segments.some(([a, b]) => segmentCrossesBox(a, b, box))
+    })
+    return crossed ? null : chosen.map((label, i) => ({ label, plate: plates[i]! }))
+  }
+  const ends = labels.length > 2 ? [labels[0]!, labels[labels.length - 1]!] : null
+  return clear(labels) ?? (ends ? clear(ends) : null) ?? []
 }
 
 export function renderCombo(
