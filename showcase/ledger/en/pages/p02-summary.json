@@ -1,0 +1,27 @@
+{
+  "components": [
+    {
+      "type": "numbered_cards",
+      "items": [
+        {
+          "title": "Spending is still rising",
+          "text": "2026 guidance from the four adds up to about $732.5bn, roughly 80% above 2025. Nobody cut in July."
+        },
+        {
+          "title": "Own cash is running out",
+          "text": "Capex takes 96% of operating cash flow. Debt, equity and long leases now cover the gap.",
+          "emphasis": true
+        },
+        {
+          "title": "Demand rests on a few buyers",
+          "text": "Orders cluster in a handful of AI labs, and investors and customers are often the same firms."
+        },
+        {
+          "title": "Power is the new bottleneck",
+          "text": "Capacity prices on the biggest eastern US grid hit the cap. Texas paused new data center hookups."
+        }
+      ]
+    }
+  ],
+  "notes": "The answer first. One, spending is still accelerating. Microsoft, Alphabet, Amazon and Meta guide to $720bn to $745bn of capex for 2026, a midpoint of about $732.5bn, some 79% above the roughly $410bn they spent in 2025 on their own bases. The July round brought only raises and an accounting change. Two, and this is where we think the strain shows first: capex now takes 96% of the four's operating cash flow, Alphabet's free cash flow turned negative in Q2, and the gap is being filled with debt, equity and long leases. Three, demand is real but concentrated in a few AI labs, and investment and purchasing are tangled together. Four, the binding constraint is moving from chips to power. Our view, not company guidance: the evidence that capex rises again in 2027 is strong, since Microsoft, Alphabet, Amazon and Oracle all say it will rise or that demand outruns supply. How long it lasts depends on three things: whether funding stays easy, whether the labs' revenue can carry their purchase commitments, and whether power arrives on time. The last page asks the committee to choose an allocation."
+}

@@ -1,0 +1,46 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "732.5",
+          "unit": "$ billion",
+          "label": "2026 capex guidance midpoint for Microsoft, Alphabet, Amazon and Meta",
+          "note": "Range $720bn to $745bn. July's results brought only raises and accounting changes, no cuts."
+        },
+        {
+          "value": "79%",
+          "label": "About $320bn more in a year",
+          "delta": "up"
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "x_unit": "$bn"
+      },
+      "series": [
+        {
+          "name": "Against 2025",
+          "data": [
+            {
+              "x": "2025 actual",
+              "y": 410
+            },
+            {
+              "x": "2026 guidance midpoint",
+              "y": 732.5,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: company releases and earnings calls (Jul 2026), research team analysis. Company basis",
+  "notes": "Start with the size. The latest 2026 guidance from the four, given in July, adds up to $720bn to $745bn, a midpoint of about $732.5bn. On each firm's own basis the four spent about $410bn in 2025, so this year is about 79% more. By firm, midpoint against 2025: Microsoft up 48%, Alphabet up 119%, Amazon up 71%, Meta up 90%. These are company-basis figures: Microsoft includes finance leases, Meta includes finance lease principal, Amazon is net. Oracle's fiscal year ends in May, so it is not added in. Reuters reported Oracle's fiscal 2027 capex at up to about $95bn, about $70bn of it its own spending."
+}

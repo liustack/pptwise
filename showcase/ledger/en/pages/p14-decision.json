@@ -1,0 +1,50 @@
+{
+  "components": [
+    {
+      "type": "comparison",
+      "title": "Three options",
+      "recommended": 1,
+      "columns": [
+        "Hold current mix",
+        "Tilt to suppliers and power",
+        "Cut AI exposure"
+      ],
+      "rows": [
+        {
+          "label": "Action",
+          "cells": [
+            "Keep all three weights",
+            "Hold chips, add power, keep fast-payback clouds",
+            "Cut all three"
+          ]
+        },
+        {
+          "label": "Case",
+          "cells": [
+            "2027 capex still rising",
+            "Money flows upstream, power is the bottleneck",
+            "Cash is thin, demand is concentrated"
+          ]
+        },
+        {
+          "label": "Main risk",
+          "cells": [
+            "Clouds fall first if funding tightens",
+            "Power is tied to policy and prices",
+            "Capex still rising, too early to leave"
+          ]
+        },
+        {
+          "label": "Change course if",
+          "cells": [
+            "Anyone cuts guidance",
+            "Funding costs jump or lab revenue stalls",
+            "2027 guidance rises again"
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Research view, not company guidance. Fast payback means cloud revenue accelerating and free cash flow still positive",
+  "notes": "We ask the committee to pick one of three directions, and we recommend the middle one. Money reaches suppliers first: Nvidia, Broadcom and Micron revenues are all more than doubling, and Nvidia's forward P/E of about 16.5 is its lowest since 2015, so the trade is not crowded on valuation. The constraint is moving from chips to power, with PJM capacity prices at the cap and Texas pausing hookups, and that scarcity should last for years. Among the clouds, the market rewards accelerating cloud revenue with cash flow that still holds up and punishes spending carried by outside funding. The problem with holding the current mix is that the clouds' free cash flow is already near zero or negative, so if funding gets dearer they fall first. The problem with cutting is that the evidence for higher 2027 capex is strong, since Microsoft, Alphabet, Amazon and Oracle all say it will rise or that demand outruns supply, so leaving now is early. The middle option's own risk is that power is tied to policy and prices: rising household bills make local approvals harder, and it pays off slowly. Three signals would change our mind: a clear jump in funding costs, lab revenue falling behind its purchase commitments, and tighter grid access."
+}

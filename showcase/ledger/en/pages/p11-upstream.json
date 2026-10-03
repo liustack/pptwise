@@ -1,0 +1,90 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "axes": {
+        "y_unit": "$bn"
+      },
+      "changes": [
+        {
+          "from": "FY26Q2",
+          "to": "FY27Q2"
+        }
+      ],
+      "series": [
+        {
+          "name": "Nvidia data center revenue",
+          "data": [
+            {
+              "x": "FY25Q1",
+              "y": 22.6
+            },
+            {
+              "x": "FY25Q2",
+              "y": 26.3
+            },
+            {
+              "x": "FY25Q3",
+              "y": 30.8
+            },
+            {
+              "x": "FY25Q4",
+              "y": 35.6
+            },
+            {
+              "x": "FY26Q1",
+              "y": 39.1
+            },
+            {
+              "x": "FY26Q2",
+              "y": 41.1
+            },
+            {
+              "x": "FY26Q3",
+              "y": 51.2
+            },
+            {
+              "x": "FY26Q4",
+              "y": 62.3
+            },
+            {
+              "x": "FY27Q1",
+              "y": 75.3
+            },
+            {
+              "x": "FY27Q2",
+              "y": 89.0,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "$16.7bn",
+          "label": "Broadcom AI chip revenue, one quarter",
+          "note": "Up 221%",
+          "delta": "up"
+        },
+        {
+          "value": "$54.2bn",
+          "label": "Micron quarterly revenue",
+          "note": "Up 379% on memory prices",
+          "delta": "up"
+        },
+        {
+          "value": "$60-64bn",
+          "label": "TSMC 2026 capex budget",
+          "note": "Raised from $52-56bn",
+          "delta": "up"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Nvidia (Aug 2026), Broadcom and Micron (Sep 2026), TSMC (Jul 2026). Nvidia fiscal quarters, FY27Q2 ended July 2026",
+  "notes": "What the clouds spend becomes supplier revenue first. Nvidia's data center revenue was $89.0bn in the second quarter of fiscal 2027, to July 2026, up 117%, with a GAAP gross margin of 75%. It guided total revenue to $108bn for the next quarter, excluding China data center compute. Hyperscalers bought $48.7bn of it, and AI clouds, industrial and enterprise customers $40.3bn, the faster-growing part. Broadcom's AI semiconductor revenue was $16.7bn in the quarter, up 221%, guided to $21.7bn next. Micron's quarterly revenue was $54.2bn, up 379%, and most of its 2027 HBM capacity is already contracted. TSMC raised its 2026 capex budget from $52bn to $56bn to $60bn to $64bn. Dearer memory also pushes up the clouds' own bills: about $25bn of Microsoft's roughly $190bn plan for 2026 came from component prices, and Amazon raised its guide from about $200bn to about $220bn because of memory costs. On valuation, Nvidia trades at about 16.5 times forward earnings, its lowest since January 2015 (Reuters, citing LSEG)."
+}

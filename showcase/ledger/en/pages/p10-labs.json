@@ -1,0 +1,63 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "title": "Who is betting on the AI labs ($bn)",
+      "columns": [
+        {
+          "key": "who",
+          "label": "Who"
+        },
+        {
+          "key": "what",
+          "label": "What they committed"
+        },
+        {
+          "key": "amt",
+          "label": "Amount",
+          "align": "right"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "who": "Microsoft",
+            "what": "Commercial backlog, up only 25% without OpenAI",
+            "amt": "678"
+          }
+        },
+        {
+          "cells": {
+            "who": "Amazon",
+            "what": "Invests in OpenAI, whose AWS commitment grows $100bn",
+            "amt": "50"
+          }
+        },
+        {
+          "cells": {
+            "who": "Nvidia",
+            "what": "Guarantee on a campus leased to OpenAI, up to",
+            "amt": "105"
+          }
+        },
+        {
+          "cells": {
+            "who": "Anthropic",
+            "what": "Future compute obligations (prospectus seen by Reuters)",
+            "amt": "518"
+          }
+        },
+        {
+          "cells": {
+            "who": "Four cloud backlogs",
+            "what": "May share customers, so they do not add up",
+            "amt": "2,352"
+          },
+          "emphasis": "highlight"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Microsoft 10-K, Amazon 10-Qs, Nvidia CFO commentary (Apr to Aug 2026), Reuters (Sep 2026), research team analysis",
+  "notes": "Demand is real, but concentrated. Microsoft's commercial remaining performance obligation, signed contracts not yet booked as revenue, is $678bn, up 84%, but only 25% excluding OpenAI. In January about 45% of it came from OpenAI, and Microsoft booked $24.1bn of revenue from OpenAI in fiscal 2026. Amazon has invested $50bn in OpenAI, and OpenAI expanded its existing AWS contract by $100bn over eight years. Amazon also invested in Anthropic and offered up to $20bn of financing, and Anthropic expanded its AWS commitment by more than $100bn over ten years. Nvidia guaranteed obligations for SB Energy's Ohio campus, leased to OpenAI for 20 years, up to $105bn. Microsoft's RPO, Google Cloud's $514bn backlog, AWS's $496bn and Oracle's $664bn RPO add up to about $2.35tn, but they may draw on the same AI labs, so the sum is not four separate pools of demand. On the lab side the figures come from press reports. Reuters, citing Anthropic's IPO prospectus, reported $518bn of future cloud, compute and infrastructure obligations, 2025 revenue of nearly $4.6bn and an operating loss of more than $8bn. Bloomberg reported an annualized revenue run rate of about $65bn at the end of July. Run rates are a reported measure and cannot be netted against capex. Investors and customers being the same firms is the main risk in this chain."
+}

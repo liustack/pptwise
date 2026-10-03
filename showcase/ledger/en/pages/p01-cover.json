@@ -1,0 +1,34 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "label": "2026 guidance, four firms",
+          "value": "**732.5**",
+          "unit": "$ billion",
+          "note": "79%",
+          "delta": "up"
+        },
+        {
+          "label": "Capex share of cash flow, Q2 2026",
+          "value": "96%",
+          "note": "45% two years earlier"
+        },
+        {
+          "label": "Signed leases not yet started",
+          "value": "1.12",
+          "unit": "$ trillion",
+          "note": "Five firms"
+        },
+        {
+          "label": "PJM capacity price",
+          "value": "325",
+          "unit": "$ per MW-day",
+          "note": "**At the cap**"
+        }
+      ]
+    }
+  ],
+  "notes": "This deck uses public filings, earnings calls and releases from Microsoft, Alphabet, Amazon, Meta, Oracle and Nvidia, plus data from PJM, LBNL and the EIA, to judge where AI capex goes in 2026 and 2027, where the money ends up and where the risks sit. The last page asks the committee to choose an allocation. Data run to October 3, 2026. Capex comes in two bases. The cash basis is purchases of property and equipment from the cash flow statement. The company basis is what each firm usually quotes: Microsoft includes finance leases, Meta includes finance lease principal, and Amazon uses a net figure. Each chart uses one basis and says which. Company guidance and our own view are kept apart, and our view is labelled as such."
+}

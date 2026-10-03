@@ -1,0 +1,74 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**+79%**",
+          "label": "Four-firm total vs 2025",
+          "note": "From about $410bn to $732.5bn",
+          "delta": "up"
+        },
+        {
+          "value": "$210-222bn",
+          "label": "Implied H2 spend per quarter",
+          "note": "23% to 31% above Q2's $170.1bn"
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "dumbbell",
+      "axes": {
+        "x_title": "2026 guidance",
+        "x_unit": "$bn"
+      },
+      "series": [
+        {
+          "name": "First guide",
+          "data": [
+            {
+              "x": "Alphabet",
+              "y": 180
+            },
+            {
+              "x": "Amazon",
+              "y": 200
+            },
+            {
+              "x": "Meta",
+              "y": 125
+            },
+            {
+              "x": "Microsoft (leases reclassified, same spend)",
+              "y": 190
+            }
+          ]
+        },
+        {
+          "name": "Latest, July",
+          "data": [
+            {
+              "x": "Alphabet",
+              "y": 200
+            },
+            {
+              "x": "Amazon",
+              "y": 220
+            },
+            {
+              "x": "Meta",
+              "y": 137.5
+            },
+            {
+              "x": "Microsoft (leases reclassified, same spend)",
+              "y": 175
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: company releases and calls (Jan to Jul 2026), Amazon's $220bn via Fortune (Jul 2026). Company basis, range midpoints",
+  "notes": "Guidance went one way. Alphabet started 2026 at $175bn to $185bn in February, moved to $180bn to $190bn in April and to $195bn to $205bn in July. Meta went from $115bn to $135bn in January to $125bn to $145bn in April, then narrowed to $130bn to $145bn in July. Amazon said about $200bn in February and about $220bn in July because memory got dearer. That figure was given on the call, and we confirmed it through Fortune's report. Microsoft's April plan for calendar 2026 was about $190bn, about $25bn of it from higher component prices. In July it became about $175bn because some future leases were reclassified from finance to operating leases, and management said the investment plan had not changed, so it is not a cut. The four now total $720bn to $745bn, a midpoint of about $732.5bn, 79% above 2025. Take first-half spending away from full-year guidance and the four need about $210bn to $222bn a quarter in the second half, 23% to 31% more than the roughly $170bn of Q2 on the company basis."
+}
