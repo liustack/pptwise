@@ -39,6 +39,14 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
   "vermilion-motif": { content: ["gold-rules"], ending: ["gold-rules"] },
   "corner-ornament-motif": { content: ["masthead"], ending: ["masthead"] },
   "folio-motif": { content: ["folio"] },
+  // ledger's status bar runs across the top of every page, like a market
+  // terminal's title row (2026-10 sample redesign).
+  "poster-motif": {
+    cover: ["status-bar"],
+    chapter: ["status-bar"],
+    content: ["status-bar"],
+    ending: ["status-bar"],
+  },
 }
 
 /** Adjudicated identity pieces. Midground, original color, no intensity cap. */
@@ -171,12 +179,12 @@ describe("decor piece role roster", () => {
     }
   })
 
-  it("poster baseline is ordinary decor, not an exemption", () => {
-    for (const type of ["cover", "content", "ending"] as const) {
+  it("ledger's status bar is page chrome, on every page, and nothing else is", () => {
+    for (const type of TYPES) {
       const root = draw("poster-motif", type)
-      expect(pieceIds(root, "structure"), type).toEqual([])
+      expect(pieceIds(root, "structure"), type).toEqual(["status-bar"])
       expect(pieceIds(root, "identity"), type).toEqual([])
-      expect(root.querySelector('[data-decor-piece="baseline"]')).not.toBeNull()
+      expect(root.querySelector('[data-decor-piece="baseline"]')).toBeNull()
     }
   })
 

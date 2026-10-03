@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+Ledger has a new look, a market screen. Every page opens with a thin status bar carrying the organization after an amber dot and the date on the right. The cover sets an amber `kicker`, the title and a ticker row of up to four `kpi_cards` figures. The ending sets its `kicker`, the decision in a serif, the signals to watch in panels (write each bullet as "label: text") and the page's `footnote`, such as a disclaimer. Points, list, comparison, process, data and hierarchy pages use the new `panel-sheet` face, which adds numbered panels and a before-and-after dot plot in a panel to the shapes it takes, fact pages use `panel-figure`, and ledger now offers photo pages through the `panel` column of `image-split`. Amber is kept for the one thing a page marks, green and red only say which way a number moved, and the chart palette is amber over slate. If you copied ledger into your own theme file, its menu still names the old faces and they keep working, while `poster-motif` now draws the status bar.

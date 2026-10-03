@@ -5,7 +5,7 @@ import { measureTextUnits } from "../../lib/svg-text-layout"
 import { accessibleInk } from "../../render/ink"
 import { SmallText, fitPanelBar, paintPanel, panelInks, panelOutlineInk, panelSeriesInk, panelText, type Place } from "./panel"
 import { chartFigures, plotNumber, reportedDecimals } from "./plot"
-import { blockTag } from "./shared"
+import { blockTag, compositionTag, type Composition } from "./shared"
 
 type Chart = Extract<Component, { type: "chart" }>
 
@@ -184,4 +184,13 @@ export function shiftsPanel(chart: Chart, place: Place, ctx: ComponentCtx): Reac
       <g {...blockTag(ctx, chart)}>{nodes}</g>
     </g>
   )
+}
+
+/** The composition: a dumbbell chart alone on the page, in a panel across the band. */
+export const shiftsComposition: Composition = ({ components, ctx, rect, setting }) => {
+  if (setting !== "panel" || components.length !== 1) return null
+  const chart = components[0]!
+  if (!shiftsChart(chart)) return null
+  const drawn = shiftsPanel(chart, rect, ctx)
+  return drawn ? <g {...compositionTag("shifts")}>{drawn}</g> : null
 }

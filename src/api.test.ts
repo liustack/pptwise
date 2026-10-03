@@ -696,6 +696,26 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     expect(v.errors[0]!.message).toMatch(/^face "[a-z-]+" has no place for a kicker/)
   })
 
+  it("accepts ledger's cover kicker, and its ending's kicker and footnote, whose faces print them", () => {
+    const v = validateIr({
+      ...raw,
+      theme: { id: "ledger" },
+      slides: [
+        { type: "cover", heading: "H", kicker: "Investment committee" },
+        { type: "content", kind: "points", heading: "C", components: [{ type: "paragraph", text: "x" }] },
+        { type: "ending", heading: "E", kicker: "For the committee to decide", footnote: "Not investment advice", components: [{ type: "bullets", items: ["Funding: costs"] }] },
+      ],
+    })
+    expect(v.errors).toEqual([])
+    expect(v.ok).toBe(true)
+  })
+
+  it("still rejects a footnote on ledger's cover, whose face has no place for it", () => {
+    const v = validateIr({ ...raw, theme: { id: "ledger" }, slides: [{ type: "cover", heading: "H", footnote: "source: x" }] })
+    expect(v.ok).toBe(false)
+    expect(v.errors[0]!.message).toBe('"cover" slides do not render footnote — move this content to a content slide or remove it')
+  })
+
   it("names both offending fields, components first, when a slide carries both", () => {
     const v = validateIr({
       ...raw,

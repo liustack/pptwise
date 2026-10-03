@@ -121,7 +121,8 @@ describe("content family: body slot", () => {
           id === "resolution-ending" ||
           id === "decision-close-ending" ||
           id === "gauge-next" ||
-          id === "crayonbox-todo"
+          id === "crayonbox-todo" ||
+          id === "close-word-ending"
         ) {
           expect(entry.slots.some((s) => s.name === "body")).toBe(true)
           continue

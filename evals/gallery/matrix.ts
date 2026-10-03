@@ -338,6 +338,10 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "bulletin", kind: "list", composition: "window" },
   { theme: "bulletin", kind: "process", composition: "lanes" },
   { theme: "bulletin", kind: "data", composition: "share" },
+  // ledger's panel sheet sets the shapes in panels, and draws the two its
+  // own board added.
+  { theme: "ledger", kind: "points", composition: "tiles" },
+  { theme: "ledger", kind: "comparison", composition: "shifts" },
 ]
 
 export function buildMatrix(

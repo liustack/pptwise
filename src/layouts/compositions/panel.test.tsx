@@ -286,6 +286,7 @@ describe("the panel setting, as ledger's board draws it", () => {
     // The last column's four segments, bottom to top: Meta, Amazon, Microsoft, Alphabet.
     const last = Array.from(root!.querySelectorAll("rect")).filter((rect) => Number(rect.getAttribute("x")) > 1100 && Number(rect.getAttribute("height")) > 20)
     expect(last.map((rect) => rect.getAttribute("fill"))).toEqual([panelSeriesInk(ctx, 2), panelSeriesInk(ctx, 1), panelSeriesInk(ctx, 0), inks.mark])
+    expect(ctx.colors.chartPalette.slice(1, 4)).toEqual(["#56677A", "#3D4B5A", "#2E3A47"])
     // The legend reads in the stack's order, top first, the marked name in the mark.
     const legend = texts(root!).filter((text) => Number(text.getAttribute("y")) === 203).map(textOf)
     expect(legend).toEqual(["Alphabet", "微软", "亚马逊", "Meta"])
@@ -341,6 +342,7 @@ describe("the panel setting, as ledger's board draws it", () => {
     expect(rows).toHaveLength(4)
     const ends = rows.map((row) => row.querySelectorAll("circle")[1]!.getAttribute("fill"))
     expect(ends).toEqual([inks.mark, inks.mark, inks.mark, panelOutlineInk(ctx)])
+    expect(panelOutlineInk(ctx)).toBe("#7E93A8")
     expect(textOf(rows[3]!.querySelectorAll("text")[0]!)).toBe("微软")
     expect(textOf(rows[3]!.querySelectorAll("text")[1]!)).toBe("租赁改口径，投资不变")
   })

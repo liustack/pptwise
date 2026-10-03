@@ -71,7 +71,7 @@ describe("Branding footer suppression (W1: theme brand.suppressFooterOnCardConte
     expect(container.textContent).not.toContain("ACME")
   })
 
-  it.each(["swiss", "ledger", "thesis", "terminal", "journal"] as const)(
+  it.each(["swiss", "thesis", "terminal", "journal"] as const)(
     "%s: the same page keeps its footer (the theme does not set the flag)",
     (themeId) => {
       const doc = ir(themeId, [cardBgContentSlide], "full")
@@ -80,6 +80,14 @@ describe("Branding footer suppression (W1: theme brand.suppressFooterOnCardConte
       expect(container.textContent).toContain("ACME")
     },
   )
+
+  it("ledger: the same page keeps its footer, and the status bar carries the organization", () => {
+    const doc = ir("ledger", [cardBgContentSlide], "full")
+    const { container } = drawBranding(doc, cardBgContentSlide)
+    expect(container.querySelector("line")).not.toBeNull()
+    expect(container.textContent).not.toContain("ACME")
+    expect(container.textContent).toContain("仅供内部讨论")
+  })
 })
 
 describe('the older footer of branding: "full"', () => {

@@ -39,7 +39,29 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 行情带与封面幽灵季字退役，只留底缘暗线，stroke 走 border。章节幽灵序号
  * 改由 `ghost-section-chapter` 画，整字落在画布内）。
  *
- * **菜单分派（S1-B）**：行情屏靠数字立身，data 用通栏的 split-band 放表和图，fact 用整页大数字，画面不是它的语言，photo 不上。
+ * **2026-10 样例改版**（`design/rounds/2026-10-04-ledger/`，设计系统见
+ * `docs/design-ledger.md`）：
+ *   - 每页顶部一条 32px 状态栏（`poster-motif` 重画）：比页底更深一档的栏，
+ *     下边一条 border 线，左边琥珀小圆点加机构名，右边日期，12px 青灰字，
+ *     不放页码。底缘暗线退役。
+ *   - 内容页统一一种头部（`panel-sheet` 的 `PanelHead`）：标题字体 31/42
+ *     常规字重，整行 1152 宽，以最后一行为基准落在 y130，不提前折行。
+ *   - 数据放进深色面板（surface 填充、1px border、方角），面板顶部 36px
+ *     标题栏，左边名称、右边单位，13px 青灰。重点面板琥珀边、琥珀名称。
+ *   - 琥珀（accent，也是强调墨）是唯一强调色。绿（success）和红（danger）
+ *     只表示数值的涨跌方向，不表示好坏，也不当普通序列色。
+ *   - `chartPalette` 改成琥珀加三档蓝灰，再加一档浅蓝灰：原来第 2、3 位是
+ *     涨绿跌红，三系列以上的图会被读成涨跌。面板里未标的序列从第 2 位起按
+ *     离标记由近到远取色，空心点和未标节点取对面板对比度最高的那一档。
+ *   - 封面 `stat-cover` 重画成行情条封面，结尾 `close-word-ending` 重画成
+ *     「信号面板」收口页，都读页面的 `kicker`。结尾页的 `footnote` 印在页脚。
+ *   - 照片页上菜：`image-split` 的 `column: "panel"`，照片铺左半，右边标题
+ *     加一列大数字。
+ *
+ * **菜单分派**：行情屏按数字推进，七类内容页共用一张面板正文页
+ * （`panel-sheet`，按内容挑面板设定下的构图）。大数字页 `panel-figure`。
+ * 照片页 `image-split` 的面板栏。结论页、引语页沿用原来的脸。evidence
+ * 不上：面板页本身就是证据页。
  */
 export const INSIGHT_TOKENS: StyleTokens = {
   id: "ledger",
@@ -54,9 +76,9 @@ export const INSIGHT_TOKENS: StyleTokens = {
     danger: "#DA6354", // 跌红。kpi 箭头当字，压 surface 4.81:1，答 4.5
     warning: "#E0863A", // 深琥珀。只作线与图标，压 surface 6.23:1，不答文字门槛
     success: "#2FA97C", // 涨绿。kpi 箭头当字，压 surface 5.78:1，答 4.5
-    // 四格只作图系列与色块。可作徽章底，字走 readableOn 并答 4.5。
-    // 跌红保留涨跌语义，不直接充当正文墨。
-    chartPalette: ["#F0A63C", "#2FA97C", "#D95D4E", "#7E93A8"], // 琥珀 / 涨绿 / 跌红 / 中性青灰
+    // 只作图系列与色块。琥珀领头，其后三档蓝灰由近到远退后，最后一档浅
+    // 蓝灰给空心点和未标节点。涨绿跌红不进色序：它们只说涨跌方向。
+    chartPalette: ["#F0A63C", "#56677A", "#3D4B5A", "#2E3A47", "#7E93A8"], // 琥珀 / 蓝灰一 / 蓝灰二 / 蓝灰三 / 浅蓝灰
   },
   fonts: {
     heading: ["Lora", "Georgia", "Source Han Serif SC", "serif"],
@@ -92,15 +114,16 @@ export const INSIGHT_THEME = {
     cover: { face: "stat-cover" },
     chapter: { face: "ghost-section-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "split-band" },
+      points: { face: "panel-sheet" },
+      list: { face: "panel-sheet" },
+      comparison: { face: "panel-sheet" },
+      process: { face: "panel-sheet" },
+      data: { face: "panel-sheet" },
+      photo: { face: "image-split", params: { column: "panel" } },
       statement: { face: "statement" },
       quote: { face: "pull-quote" },
-      fact: { face: "stat-hero" },
-      hierarchy: { face: "asymmetric-triptych" },
+      fact: { face: "panel-figure" },
+      hierarchy: { face: "panel-sheet" },
     },
     ending: { face: "close-word-ending" },
   },

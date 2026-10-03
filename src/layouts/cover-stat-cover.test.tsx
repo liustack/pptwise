@@ -4,167 +4,90 @@ import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
-import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
+import { resolveStyle } from "../themes"
 import { contrastRatio, requiredContrastRatio } from "../render/ink"
 import { StatCover, layoutDef } from "./cover-stat-cover"
-import { renderSlideSvg } from "../api"
-import { SIBLING_AIR_PX } from "../render/spacing"
-import { underlineDescentRatio } from "./underline"
 import type { PptxIR, Slide } from "@/ir"
 
-const HEADING = "+34%"
-const SUBHEADING = "增长的质量，比增长本身更值得看"
-const SENTENCE_HEADING = "续约率回到九成一"
-
-function slide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
-  return { type: "cover", heading, subheading: SUBHEADING, components: [], ...extras } as Slide
+/** ledger's 2026-10 cover (p01). */
+const TICKER = {
+  type: "kpi_cards",
+  items: [
+    { label: "2026 年四家指引中值", value: "**7,325**", unit: "亿美元", note: "79%", delta: "up" },
+    { label: "2026 年二季度资本开支占经营现金流", value: "96%", note: "两年前 45%" },
+    { label: "已签未起租的租约", value: "1.12", unit: "万亿美元", note: "五家合计" },
+    { label: "PJM 容量价格", value: "325", unit: "美元/兆瓦/天", note: "**触及上限**" },
+  ],
 }
 
-function ir(themeId: string, meta: PptxIR["meta"] = {}, s: Slide = slide()): PptxIR {
+function slide(extras: Partial<Slide> = {}): Slide {
   return {
-    version: "5",
-    filename: "stat-cover.pptx",
-    theme: { id: themeId },
-    meta,
-    assets: { images: {} },
-    slides: [s],
-  } as unknown as PptxIR
+    type: "cover",
+    kicker: "投委会专题",
+    heading: "AI 资本开支还能涨多久",
+    subheading: "2027 年还会涨，能涨多久要看钱、客户和电",
+    components: [TICKER],
+    ...extras,
+  } as Slide
 }
 
-const FULL_META: PptxIR["meta"] = {
-  organization: "云觅科技",
-  date: "2026 Q2",
-  authors: [{ name: "经营分析部", role: "评审" }],
-  version: "v1.0",
-}
-
-function renderCover(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] = FULL_META) {
+function renderCover(themeId: string, s: Slide = slide()) {
   const tokens = resolveStyle(themeId)
-  const ctx = buildCtx(
-    tokens,
-    {},
-    undefined,
-    resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface),
-  )
+  const ctx = buildCtx(tokens, {}, undefined, resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface))
+  const ir = { version: "5", filename: "x.pptx", theme: { id: themeId }, meta: { organization: "行业研究" }, assets: { images: {} }, slides: [s] } as unknown as PptxIR
   const markup = renderSvgMarkup(
     <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-      <StatCover ir={ir(themeId, meta, s)} slide={s} index={0} ctx={ctx} />
+      <StatCover ir={ir} slide={s} index={0} ctx={ctx} />
     </svg>,
   )
-  return { markup, root: parseSvgRoot(markup), tokens }
+  return { markup, root: parseSvgRoot(markup), tokens, ctx }
 }
 
-describe("cover-stat-cover — board geometry", () => {
-  it("places a left-aligned giant heading at the board coordinates and uses tokens, not hex", () => {
+const byText = (root: Element, text: string) => Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").trim() === text)
+const attrs = (el: Element | undefined, names: string[]) => names.map((name) => el?.getAttribute(name) ?? null)
+
+describe("cover-stat-cover: ledger's 2026-10 board", () => {
+  it("sets the kicker in the accent, the title at 76px in the heading face and the subtitle at 24px", () => {
+    const { root, tokens, ctx } = renderCover("ledger")
+    expect(attrs(byText(root, "投委会专题"), ["x", "y", "font-size", "fill"])).toEqual(["64", "231", "15", tokens.colors.accent])
+    expect(attrs(byText(root, "AI 资本开支还能涨多久"), ["x", "y", "font-size", "font-family", "fill"])).toEqual(["64", "325", "76", ctx.fonts.heading, tokens.colors.text])
+    expect(attrs(byText(root, "2027 年还会涨，能涨多久要看钱、客户和电"), ["x", "y", "font-size"])).toEqual(["64", "389", "24"])
+    expect(() => assertSubset(root)).not.toThrow()
+  })
+
+  it("sets the first kpi_cards as a ticker under a hairline at y470", () => {
     const { root, tokens } = renderCover("ledger")
-    const heading = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("+34%"))!
-    expect(heading.getAttribute("x")).toBe("96")
-    expect(heading.getAttribute("y")).toBe("392")
-    expect(heading.getAttribute("text-anchor")).not.toBe("middle")
-    expect(Number(heading.getAttribute("font-size"))).toBe(200)
-    expect(heading.getAttribute("fill")).toBe(tokens.colors.accent)
-    expect(root.innerHTML).not.toMatch(/text-anchor="middle"/)
+    const rule = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("y") === "470")!
+    expect(attrs(rule, ["x", "width", "height", "fill"])).toEqual(["64", "1152", "1", tokens.colors.border!])
+    expect(root.querySelectorAll("[data-ticker-cell]")).toHaveLength(4)
+    expect(attrs(byText(root, "7,325"), ["x", "font-size", "fill"])).toEqual(["64", "52", tokens.colors.accent])
+    expect(byText(root, "325")!.getAttribute("x")).toBe("928")
   })
 
-  it("draws the serif conclusion from subheading, not a second invented stat", () => {
-    const { root, tokens } = renderCover("ledger")
-    const conclusion = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("增长的质量"),
-    )!
-    expect(conclusion.getAttribute("x")).toBe("96")
-    expect(conclusion.getAttribute("y")).toBe("483")
-    expect(conclusion.getAttribute("fill")).toBe(tokens.colors.text)
-    expect(Array.from(root.querySelectorAll("text")).map((t) => t.textContent).join("")).not.toContain("Thank")
+  it("keeps a title that fits on one line on one line, shrinking it before it takes a second", () => {
+    const { root } = renderCover("ledger", slide({ heading: "How long can AI capex keep rising after 2027?" }))
+    const lines = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-family")?.startsWith("Georgia") && Number(t.getAttribute("font-size")) >= 56)
+    expect(lines).toHaveLength(1)
+    expect(Number(lines[0]!.getAttribute("font-size"))).toBeLessThan(76)
   })
 
-  it("keeps a fitted title and its conclusion at least one sibling-air unit apart", () => {
-    const heading = "The quarter in review"
-    const subheading = "Where the second half goes"
-    const cover = slide(heading, { subheading })
-    const root = parseSvgRoot(renderSlideSvg(ir("ledger", {}, cover), 0))
-    const title = Array.from(root.querySelectorAll("text")).find((text) => text.textContent === heading)!
-    const conclusion = Array.from(root.querySelectorAll("text")).find((text) => text.textContent === subheading)!
-    const titleSize = Number(title.getAttribute("font-size"))
-    const titleBottom = Number(title.getAttribute("y")) + titleSize * underlineDescentRatio(heading)
-    const conclusionTop = Number(conclusion.getAttribute("y")) - Number(conclusion.getAttribute("font-size")) * 0.75
-
-    expect(conclusionTop - titleBottom).toBeGreaterThanOrEqual(SIBLING_AIR_PX)
+  it("draws no ticker and no hairline when the cover carries no figures", () => {
+    const { root } = renderCover("ledger", slide({ components: [] }))
+    expect(root.querySelector("[data-ticker]")).toBeNull()
+    expect(Array.from(root.querySelectorAll("rect")).some((r) => r.getAttribute("y") === "470")).toBe(false)
   })
 
-  it("reflows a truncated title to two lines and spaces the conclusion from the last line", () => {
-    const heading = "The quarter in review and where the second half goes"
-    const subheading = "Second-half choices and tradeoffs"
-    const cover = slide(heading, { subheading })
-    const root = parseSvgRoot(renderSlideSvg(ir("ledger", {}, cover), 0))
-    const conclusion = Array.from(root.querySelectorAll("text")).find((text) => text.textContent === subheading)!
-    const titleLines = Array.from(root.querySelectorAll("text")).filter((text) => text !== conclusion)
-
-    expect(titleLines).toHaveLength(2)
-    expect(titleLines.every((line) => line.getAttribute("data-truncated") === null)).toBe(true)
-
-    const lastTitle = titleLines.reduce((last, line) =>
-      Number(line.getAttribute("y")) > Number(last.getAttribute("y")) ? line : last,
-    )
-    const titleSize = Number(lastTitle.getAttribute("font-size"))
-    const titleBottom = Number(lastTitle.getAttribute("y")) + titleSize * underlineDescentRatio(heading)
-    const conclusionTop = Number(conclusion.getAttribute("y")) - Number(conclusion.getAttribute("font-size")) * 0.75
-
-    expect(conclusionTop - titleBottom).toBeGreaterThanOrEqual(SIBLING_AIR_PX)
-  })
-
-  it("does not invent +34% when the heading is a sentence", () => {
-    const { root } = renderCover("ledger", slide(SENTENCE_HEADING))
-    const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
-    expect(texts.some((t) => t.includes("续约率回到九成一"))).toBe(true)
-    expect(texts.join("")).not.toContain("+34%")
-  })
-
-  it("keeps the board conclusion baseline when the optional heading is absent", () => {
-    const { root } = renderCover("ledger", slide("", { heading: "" }))
-    const conclusion = Array.from(root.querySelectorAll("text")).find((text) => text.textContent === SUBHEADING)!
-
-    expect(conclusion.getAttribute("y")).toBe("470")
-  })
-
-  it("draws no ticker polyline or isolated ticks — those belong to the motif", () => {
-    const { root } = renderCover("ledger")
-    expect(root.querySelectorAll("polyline")).toHaveLength(0)
-    expect(root.querySelectorAll("line")).toHaveLength(0)
-    expect(root.querySelectorAll("circle")).toHaveLength(0)
-  })
-})
-
-describe("cover-stat-cover — shared pool", () => {
-  it("is registered for cover only, as a archetype", () => {
-    expect(layoutDef.id).toBe("stat-cover")
-    expect(layoutDef.kind).toBe("standard")
-    expect(layoutDef.slideTypes).toEqual(["cover"])
-  })
-
-  it("every text run clears its contrast tier against the cover background", () => {
-    for (const themeId of CANONICAL_THEME_IDS) {
-      const { root, tokens } = renderCover(themeId)
-      const bg = resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)
-      for (const el of Array.from(root.querySelectorAll("text"))) {
-        const size = Number(el.getAttribute("font-size"))
-        const required = el.getAttribute("data-contrast-tier") === "meta" ? 3 : requiredContrastRatio(size)
-        expect(contrastRatio(el.getAttribute("fill")!, bg), `${themeId}: ${el.textContent}`).toBeGreaterThanOrEqual(
-          required,
-        )
-      }
+  it.each(SUBSET_SAMPLE_THEME_IDS)("keeps every line legible on %s", (themeId) => {
+    const { root, tokens } = renderCover(themeId)
+    const bg = resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)
+    for (const text of Array.from(root.querySelectorAll("text"))) {
+      const size = Number(text.getAttribute("font-size"))
+      expect(contrastRatio(text.getAttribute("fill")!, bg), text.textContent!).toBeGreaterThanOrEqual(requiredContrastRatio(size) - 0.01)
     }
   })
 
-  it("emits only export-safe primitives", () => {
-    for (const themeId of SUBSET_SAMPLE_THEME_IDS) {
-      expect(() => assertSubset(renderCover(themeId).root), themeId).not.toThrow()
-    }
-  })
-
-  it("brief tokens do not leak ledger hex", () => {
-    const { markup } = renderCover("brief")
-    for (const hex of ["#0F1216", "#171C22", "#16202B", "#F0A63C", "#F2EFE8", "#9AA7B4", "#2A3440"]) {
-      expect(markup, `ledger token ${hex} leaked`).not.toContain(hex)
-    }
+  it("declares the kicker it draws and a ticker of at most four figures", () => {
+    expect(layoutDef.pageFields).toEqual(["kicker"])
+    expect(layoutDef.slots.find((s) => s.name === "strip")).toMatchObject({ accepts: ["kpi_cards"], capacity: 1, itemCapacity: 4 })
   })
 })

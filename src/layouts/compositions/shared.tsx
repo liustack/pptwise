@@ -52,6 +52,8 @@ export type CompositionId =
   | "window"
   | "lanes"
   | "share"
+  | "tiles"
+  | "shifts"
 
 /**
  * The type a composition sets its page in.

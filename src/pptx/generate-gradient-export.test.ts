@@ -66,6 +66,9 @@ describe("generatePptxBlob real theme decor gradients", () => {
   // tone-adaptive 版式那条 2026 年已换成 scrim），渐变导出链由下面这条
   // 图表渐变用例单独承担。背景渐变不算在内：`background.tsx` 刻意把它画成
   // 24 条实心 rect，本就不会产出 a:gradFill。
+  // 2026-10 ledger 样例改版后，ledger 的要点页把图表画进自己的平涂数据面板
+  // （`compositions/columns-panel.tsx`），不再经过图表组件的渐变柱，这条用例
+  // 的主题随之换成 thesis：它的要点页仍由图表组件画单系列柱。
   it("chart bar 渐变柱导出为真实 a:gradFill（2026-07-12 光晕移除后渐变链 fixture 换 chart——ledger 的 poster-motif 光晕已按用户裁决删除，渐变导出链由图表渐变持续覆盖）", async () => {
     const { generatePptxBlob } = await import("./generate")
     const chartSlide: Slide = {
@@ -82,7 +85,7 @@ describe("generatePptxBlob real theme decor gradients", () => {
         },
       ],
     } as Slide
-    const blob = await generatePptxBlob(makeIR("ledger", [chartSlide]))
+    const blob = await generatePptxBlob(makeIR("thesis", [chartSlide]))
     expect(await slideXml(blob)).toContain("a:gradFill")
   }, 30000)
 

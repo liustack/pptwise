@@ -1219,6 +1219,34 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
       footnote: lex.sources[0]!.label,
     }
   },
+  // Four numbered panels, the second the one the page lands on.
+  tiles: (lex) => ({
+    heading: lex.headings[1]!,
+    components: [
+      {
+        type: "numbered_cards",
+        items: lex.phrases.slice(0, 4).map((title, i) => ({ title, text: lex.sentences[i + 2]!, ...(i === 1 ? { emphasis: true } : {}) })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // A move per row from a first value to a later one, one row falling, the
+  // values titled and in their unit.
+  shifts: (lex) => ({
+    heading: lex.headings[3]!,
+    components: [
+      {
+        type: "chart",
+        chart_type: "dumbbell",
+        axes: { x_title: lex.chapters[0]!, x_unit: lex.metrics[0]!.unit },
+        series: [
+          { name: lex.periods[0]!, data: lex.labels.slice(8, 12).map((x, i) => ({ x, y: [1800, 2000, 1250, 1900][i]! })) },
+          { name: lex.periods[1]!, data: lex.labels.slice(8, 12).map((x, i) => ({ x, y: [2000, 2200, 1375, 1750][i]! })) },
+        ],
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
   // The combo chart with its rate line marked, the series the column then
   // sets over the emphasis stroke.
   rail: (lex) => {

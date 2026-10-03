@@ -32,7 +32,7 @@ This section is generated from the IR v5 kind vocabulary and the 24 preset menus
 | `comparison` | Comparison | Place alternatives, sides, or dimensions in direct contrast. | Containment belongs to hierarchy and direction belongs to process. | 24/24 |
 | `process` | Process | Show directed steps, a timeline, or a closed cycle. | An ordered argument without motion is points. | 24/24 |
 | `data` | Data | Make a set of numbers, a chart, or a table the subject. | Use fact when one number is the whole message. | 23/24 |
-| `photo` | Photo | Make the image itself the content. | Use evidence when an exhibit exists to support a claim. | 21/24 |
+| `photo` | Photo | Make the image itself the content. | Use evidence when an exhibit exists to support a claim. | 22/24 |
 | `statement` | Statement | Give the deck author's own proposition a full page. | Words attributed to someone else are quote. | 20/24 |
 | `quote` | Quote | Center words attributed to another speaker or source. | The deck author's own proposition is statement. | 8/24 |
 | `fact` | Fact | Build the page around one number. | A numeric set whose structure matters is data. | 18/24 |

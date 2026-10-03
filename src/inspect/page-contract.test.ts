@@ -233,13 +233,16 @@ function atCount(limit: PageLimit, legal: readonly string[], n: number): Compone
   const of = limit.of?.filter((type) => legal.includes(type)) ?? []
   switch (limit.measure) {
     case "components": {
-      const type = limit.of === undefined ? ["paragraph", "bullets"].find((t) => legal.includes(t)) : of[0]
+      const type = limit.of === undefined ? ["paragraph", "bullets", "kpi_cards"].find((t) => legal.includes(t)) : of[0]
       if (type === undefined) return undefined
       return Array.from({ length: n }, (_, i) => minimal(type, i))
     }
-    case "items":
-      if (!of.includes("bullets")) return undefined
-      return [{ type: "bullets", items: Array.from({ length: n }, (_, i) => `Point ${i}`) }]
+    case "items": {
+      if (of.includes("bullets")) return [{ type: "bullets", items: Array.from({ length: n }, (_, i) => `Point ${i}`) }]
+      if (!of.includes("kpi_cards")) return undefined
+      const base = sample("kpi_cards") as Extract<Component, { type: "kpi_cards" }>
+      return [{ ...base, items: Array.from({ length: n }, (_, i) => ({ ...base.items[0]!, label: `Figure ${i}` })) }]
+    }
     case "item width":
       return [{ type: "bullets", items: ["测".repeat(n)] }]
     case "rows": {
@@ -278,11 +281,16 @@ describe("pageContract: limits flip validate exactly at max (T7)", () => {
   it.each(pages)("%s %o", (theme, page) => {
     const bound = getThemeDefinition(theme)
     const contract = contractOf(theme, page)
-    // A face slot that needs a picture gets one first, so the page reaches
-    // the checks past the required-slot gate.
-    const base = contract.components.required.map((slot) => sample(slot.accepts[0]!))
+    // A required face slot the probe leaves empty (a picture, a figure) gets
+    // one component first, so the page reaches the checks past the
+    // required-slot gate. A slot the probe already fills gets nothing extra,
+    // or the probe would count one past what it means to.
+    const base = (components: Component[]) =>
+      contract.components.required
+        .filter((slot) => !components.some((component) => slot.accepts.includes(component.type)))
+        .map((slot) => sample(slot.accepts[0]!))
     const verdict = (components: Component[], level: PageLimit["level"]) =>
-      findings(validateIr(probeDeck(theme, page, [...base, ...components]), { theme: bound }), level)
+      findings(validateIr(probeDeck(theme, page, [...base(components), ...components]), { theme: bound }), level)
     for (const limit of contract.limits) {
       const label = `${theme} ${JSON.stringify(page)} ${JSON.stringify(limit)}`
       const atMax = atCount(limit, contract.components.legal, limit.max)

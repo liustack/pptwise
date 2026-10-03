@@ -22,4 +22,5 @@ export type MotifFooterRole = "row" | "organization"
 export const MOTIF_FOOTER_ROLES: Partial<Record<MotifId, MotifFooterRole>> = {
   "folio-motif": "row",
   "ink-motif": "organization",
+  "poster-motif": "organization",
 }

@@ -22,12 +22,14 @@ import { PANEL_HEAD_FIT, PanelHead, PanelSource, PanelStandfirst, fitPanelSource
 
 /** The compositions a panel sheet offers its body, in the panel setting. */
 const PANEL_COMPOSITIONS: readonly CompositionId[] = [
+  "tiles",
   "records",
   "table",
   // Before the lone charts: a chart beside the author's figures.
   "rail",
   "figures",
   "lanes",
+  "shifts",
   "columns",
   "bars",
 ]
