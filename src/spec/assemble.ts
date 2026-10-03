@@ -25,7 +25,7 @@ export interface AssembleResult {
   spec: DeckSpec
 }
 
-const LOCKED_KEYS = ["type", "kind", "heading"] as const
+const LOCKED_KEYS = ["type", "kind", "heading", "kicker"] as const
 
 function buildSlide(page: PageSpec, content: PageContent | undefined): Record<string, unknown> {
   const locked = {
@@ -33,6 +33,7 @@ function buildSlide(page: PageSpec, content: PageContent | undefined): Record<st
     type: page.type,
     heading: page.heading,
     ...(page.type === "content" ? { kind: page.kind } : {}),
+    ...(page.kicker !== undefined ? { kicker: page.kicker } : {}),
   }
   if (content === undefined) {
     return {
@@ -123,6 +124,7 @@ export function disassembleDeck(ir: PptxIR): {
       type: slide.type,
       heading,
       ...(slide.type === "content" ? { kind: slide.kind } : {}),
+      ...(slide.kicker !== undefined ? { kicker: slide.kicker } : {}),
       ...((slide.placeholder === true || slide.type !== "content") && slide.subheading !== undefined
         ? { summary: slide.subheading }
         : {}),

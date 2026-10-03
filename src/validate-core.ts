@@ -421,13 +421,37 @@ function checkBoundaryPageContent(ir: PptxIR, theme: ThemeDefinition): Validatio
     const layout = componentFace(ir, slide, theme)
     const stray = slide.components.filter((component) => !layout || !layoutAcceptsComponent(layout, component.type))
     if (stray.length > 0) ignored.push("components")
-    for (const field of BOUNDARY_UNRENDERED_FIELDS) if (slide[field]) ignored.push(field)
+    // A face may declare that it sets the page's source line (an ending's
+    // disclaimer at its foot, `LayoutDefinition.pageFields`).
+    for (const field of BOUNDARY_UNRENDERED_FIELDS) if (slide[field] && !layout?.pageFields?.includes(field)) ignored.push(field)
     if (ignored.length === 0) return
     errors.push({
       path: `slides.${i}`,
       page: i + 1,
       ...(slide.id !== undefined ? { slideId: slide.id } : {}),
       message: `"${slide.type}" slides do not render ${ignored.join("/")} — move this content to a content slide or remove it`,
+    })
+  })
+  return errors
+}
+
+/**
+ * A `kicker` is drawn only by a face that declares a place for it
+ * (`LayoutDefinition.pageFields`), on any page type. Every other face would
+ * leave it off the page with nothing to say so, so the page is refused,
+ * naming the face. An empty kicker asks for nothing.
+ */
+function checkKickerDrawn(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder || !slide.kicker?.trim()) return
+    const layout = componentFace(ir, slide, theme)
+    if (layout?.pageFields?.includes("kicker")) return
+    errors.push({
+      path: `slides.${i}.kicker`,
+      page: i + 1,
+      ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+      message: `${layout ? `face "${layout.id}"` : "this page's face"} has no place for a kicker — move the label into the heading or summary, or remove it`,
     })
   })
   return errors
@@ -853,6 +877,8 @@ export function validateIr(input: unknown, opts?: { theme?: ThemeDefinition }): 
   if (fullBodyErrors.length > 0) return withNormalized({ ok: false, errors: fullBodyErrors })
   const boundaryPageErrors = checkBoundaryPageContent(r.data, theme)
   if (boundaryPageErrors.length > 0) return withNormalized({ ok: false, errors: boundaryPageErrors })
+  const kickerErrors = checkKickerDrawn(r.data, theme)
+  if (kickerErrors.length > 0) return withNormalized({ ok: false, errors: kickerErrors })
   const boundarySlotErrors = checkBoundarySlotCapacity(r.data, theme)
   if (boundarySlotErrors.length > 0) return withNormalized({ ok: false, errors: boundarySlotErrors })
   const boundaryItemErrors = checkBoundaryItemCapacity(r.data, theme)

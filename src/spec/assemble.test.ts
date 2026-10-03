@@ -50,7 +50,7 @@ describe("assembleDeck", () => {
     expect(() => assembleDeck({ theme: TEST_THEME_ID, pages: [] }, {})).toThrow(/invalid spec.*no pages/s)
   })
 
-  it.each(["type", "kind", "heading"])("protects spec-owned field %s", (field) => {
+  it.each(["type", "kind", "heading", "kicker"])("protects spec-owned field %s", (field) => {
     const pages = { "body-a": { [field]: "override" } } as unknown as Record<string, PageContent>
     expect(() => assembleDeck(spec(), pages)).toThrow(new RegExp(`"${field}" is locked by the spec`))
   })
@@ -96,6 +96,18 @@ describe("assembleDeck", () => {
       components: [{ type: "paragraph", text: "Evidence" }],
     })
     expect(ir.slides[1]?.subheading).toBeUndefined()
+  })
+
+  it("carries a page's kicker from the spec to the slide, and back", () => {
+    const pages = (spec() as { pages: Record<string, unknown>[] }).pages.map((page) =>
+      page.id === "cover" ? { ...page, kicker: "Investment committee" } : page,
+    )
+    const { ir } = assembleDeck(spec({ pages }), { cover: {} })
+    expect(ir.slides[0]?.kicker).toBe("Investment committee")
+    expect(ir.slides[1]?.kicker).toBeUndefined()
+    const back = disassembleDeck(ir)
+    expect(back.spec.pages[0]).toMatchObject({ id: "cover", kicker: "Investment committee" })
+    expect(back.spec.pages[1]).not.toHaveProperty("kicker")
   })
 
   it("applies IR component defaults at the final parse boundary", () => {

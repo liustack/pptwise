@@ -686,6 +686,16 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     },
   )
 
+  it.each([
+    ["cover", { type: "cover", heading: "H", kicker: "Board review" }],
+    ["content", { type: "content", kind: "points", heading: "H", kicker: "Board review", components: [{ type: "paragraph", text: "x" }] }],
+  ] as const)("hard-rejects a kicker on a %s face with no place for it, naming the face", (_type, slide) => {
+    const v = validateIr({ ...raw, slides: [slide] })
+    expect(v.ok).toBe(false)
+    expect(v.errors[0]!.path).toBe("slides.0.kicker")
+    expect(v.errors[0]!.message).toMatch(/^face "[a-z-]+" has no place for a kicker/)
+  })
+
   it("names both offending fields, components first, when a slide carries both", () => {
     const v = validateIr({
       ...raw,

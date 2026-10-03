@@ -141,7 +141,7 @@ pptwise theme fork acme --primary '#0B5FFF' --id acme-blue
 
 ## 编写 spec
 
-合法 spec 以 `cover` 开头，以 `ending` 结束，中间使用 `content` 或 `chapter`。每页都有 `id`、`type`、`heading`。内容页还必须有 `kind`。`focus` 可以点名偏好的组件类型。`summary` 是填充步骤使用的简短内容锚点。
+合法 spec 以 `cover` 开头，以 `ending` 结束，中间使用 `content` 或 `chapter`。每页都有 `id`、`type`、`heading`。内容页还必须有 `kind`。`focus` 可以点名偏好的组件类型。`summary` 是填充步骤使用的简短内容锚点。`kicker` 是标题上方的一行短标签，比如封面上的场合。只有给它留了位置的脸才画，没有位置时 validate 会点名是哪张脸。
 
 ```json
 {

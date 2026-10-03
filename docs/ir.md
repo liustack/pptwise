@@ -76,6 +76,7 @@ Common page fields are:
 - `id`, an optional stable page identifier
 - `placeholder: true`, normally produced by an unfinished deck project
 - `heading` and `subheading`
+- `kicker`, a short label over the heading (the occasion on a cover, what an ending asks for), drawn only by a face that declares a place for it. validate refuses it on any other and names the face
 - `components`
 - `background`
 - `decor`, one controlled local primitive
@@ -83,7 +84,7 @@ Common page fields are:
 - `footnote`
 - `notes`, exported as native speaker notes
 
-Only content pages carry `kind`. Boundary pages do not. Components on a boundary page render only when the face bound by the theme menu declares compatible slots. Validation checks the effective face before output.
+Only content pages carry `kind`. Boundary pages do not. Components on a boundary page render only when the face bound by the theme menu declares compatible slots, and a boundary page's `footnote` only when that face declares it sets one (an ending's disclaimer at its foot). Validation checks the effective face before output.
 
 ## Content kinds
 

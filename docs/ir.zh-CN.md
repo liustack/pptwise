@@ -76,6 +76,7 @@ pptwise validate deck.json
 - `id`，可选的稳定页面标识
 - `placeholder: true`，通常由未完成的 deck 项目产生
 - `heading` 与 `subheading`
+- `kicker`，标题上方的一行短标签（封面上的场合、结尾页要人拍板的事），只有声明了位置的脸才画，别的脸上 validate 直接拒绝并点名是哪张脸
 - `components`
 - `background`
 - `decor`，一个受控的局部装饰原语
@@ -83,7 +84,7 @@ pptwise validate deck.json
 - `footnote`
 - `notes`，导出为原生演讲者备注
 
-只有内容页携带 `kind`，边界页不携带。边界页组件只有在主题菜单绑定的脸声明兼容槽位时才会渲染。输出前会按实际脸验证内容。
+只有内容页携带 `kind`，边界页不携带。边界页组件只有在主题菜单绑定的脸声明兼容槽位时才会渲染，边界页的 `footnote` 也只有在这张脸声明会画它时才会渲染（比如结尾页页脚的免责句）。输出前会按实际脸验证内容。
 
 ## 内容页 kind
 

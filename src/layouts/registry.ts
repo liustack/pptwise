@@ -388,6 +388,14 @@ export interface LayoutDefinition {
    */
   coverMark?: "face" | CoverMarkAnchor
   /**
+   * The page fields this face draws beyond its heading, subheading and
+   * components: `kicker`, the short label over the heading, and on a cover,
+   * chapter or ending face `footnote` (a content face always has a place for
+   * its source line). validate refuses a `kicker` on a face that does not
+   * list it, and a boundary page's `footnote` likewise.
+   */
+  pageFields?: readonly ("kicker" | "footnote")[]
+  /**
    * Structural fact of a content face: its artwork runs to the bottom edge
    * where the footer row would sit (a full-height bleed photo, its caption
    * bar), so the page carries no footer row, page number included. Narrower
