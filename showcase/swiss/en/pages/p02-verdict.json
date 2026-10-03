@@ -1,0 +1,26 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "849",
+          "label": "Global demand growth",
+          "note": "TWh, +2.8%"
+        },
+        {
+          "value": "**887**",
+          "label": "Clean power growth",
+          "note": "TWh, 636 of it solar"
+        },
+        {
+          "value": "−38",
+          "label": "Change in fossil power",
+          "note": "TWh, power emissions flat"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Ember, Global Electricity Review 2026 (Apr 2026). 2025 against 2024",
+  "notes": "This is the report's conclusion. In 2025 global electricity demand rose by 849 TWh, clean power (renewables plus nuclear) by 887 TWh, and fossil generation fell by 38 TWh, the first year without a rise since 2020. Solar did most of the work, meeting three-quarters of demand growth on its own. China was the pivot: it added 430 GW of wind and solar and its thermal output fell. But power-sector emissions only held flat. In 2026 a gas price shock has the IEA expecting coal power to rise again, and wind and solar curtailment in China is growing. That is why we call it unsettled. The report has three parts: global, China, and 2026."
+}

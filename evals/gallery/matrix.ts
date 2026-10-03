@@ -337,6 +337,7 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "bulletin", kind: "list", composition: "stack" },
   { theme: "bulletin", kind: "list", composition: "window" },
   { theme: "bulletin", kind: "process", composition: "lanes" },
+  { theme: "bulletin", kind: "data", composition: "share" },
 ]
 
 export function buildMatrix(

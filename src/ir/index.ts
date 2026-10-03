@@ -584,6 +584,8 @@ export type ChartSeries = {
     size?: number
     /** Bar and stacked only: a forecast (hatched) or a target (dashed outline), not a reported figure. */
     status?: "forecast" | "target"
+    /** Bar only: the one bar the page is about. It keeps its series' colour and the other bars step back. */
+    emphasis?: boolean
   }[]
   /** `chart_type: "combo"` only: draw this series as bars (default) or a line. */
   plot?: "bar" | "line"

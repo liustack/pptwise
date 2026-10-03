@@ -1,0 +1,31 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "storage",
+      "fit": "cover"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**112 GW**",
+          "label": "New storage added worldwide",
+          "note": "Up 48%"
+        },
+        {
+          "value": "54%",
+          "label": "Built in China",
+          "note": "The US 16%"
+        },
+        {
+          "value": "$70/kWh",
+          "label": "Average battery pack price",
+          "note": "Down 45%"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: BNEF (Dec 2025, May 2026). Battery and other new storage, excluding pumped hydro. Illustrative image",
+  "notes": "BNEF counts 112 GW / 307 GWh of new storage added worldwide in 2025, up 48%, with 54% in China and 16% in the US. The IEA and China's National Energy Administration both put the figure at about 110 GW. China's National Energy Administration reports cumulative new-type storage of 136 GW / 351 GWh at end-2025, up 84.3%, with an average duration of 2.58 hours and lithium batteries making up 96.1%. In BNEF's annual survey, stationary storage battery packs averaged $70/kWh, down 45%, the cheapest of any use for the first time. Storage is what moves solar out of the midday hours. BNEF forecasts 158 GW / 459 GWh of additions in 2026. The image is AI-generated and illustrative."
+}

@@ -1,0 +1,26 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "−0.04%",
+          "label": "Change in global power sector emissions, 2025",
+          "note": "+1.7% in 2024. The IEA also finds them flat, at about 13.9 Gt of CO2"
+        },
+        {
+          "value": "458",
+          "label": "Carbon intensity of power",
+          "note": "gCO2e per kWh, 2.7% below 2024"
+        },
+        {
+          "value": "**+0.4%**",
+          "label": "Energy-related CO2 emissions",
+          "note": "Nearly 38.4 Gt, another record"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Ember (Apr 2026), IEA (Feb, Apr 2026). Ember counts CO2 equivalent, the IEA counts CO2",
+  "notes": "Ember estimates power-sector emissions fell by 6 MtCO2e, or 0.04%, which is effectively flat, after a 1.7% rise in 2024. China fell 37 Mt and India 42 Mt, the first time this century both fell in the same year. But the US rose 52 Mt, because high gas prices pushed some generation from gas to coal, and US coal power rose 85 TWh. The IEA, counting CO2 only, also finds power emissions flat at about 13,900 Mt. Across the whole energy system, energy-related CO2 still rose 0.4% to a record of nearly 38.4 Gt (IEA, Apr 2026). So 2025 was the year clean power met new demand, not yet the year power emissions started to fall."
+}

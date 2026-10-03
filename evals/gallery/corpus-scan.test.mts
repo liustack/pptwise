@@ -323,7 +323,7 @@ describe("gallery SVG text respects the readable font floor", () => {
         if (
           !content ||
           hasDecor(el) ||
-          ["gauge-spec", "show-spec", "notice-spec"].includes(el.getAttribute("data-font-floor-exempt") ?? "")
+          ["gauge-spec", "show-spec", "notice-spec", "grid-spec"].includes(el.getAttribute("data-font-floor-exempt") ?? "")
         ) continue
         const fontSize = Number(el.getAttribute("font-size") ?? 16)
         if (fontSize < META_FONT_FLOOR_PX) {
@@ -651,9 +651,18 @@ function contractPages(lex: (typeof LEXICONS)[LanguageId], assets: CorpusAssets)
   const quoteSlide = pullQuote.slides[0] as Slide
   quoteSlide.components = [COMPONENT_BUILDERS.blockquote!(lex)]
 
+  // An ending that sets each item's label apart from its gloss, the colon
+  // between them the break: swiss's closing page.
+  const resolution = layoutPage("resolution-ending", lex, assets, "swiss")
+  const resolutionSlide = resolution.slides[0] as Slide
+  resolutionSlide.components = [
+    { type: "bullets", items: lex.metrics.slice(0, 3).map((m) => `${m.label}${lex.id === "en" ? ": " : "："}${m.value}${m.unit ?? ""}`) },
+  ]
+
   return [
     { id: "contract--stat-hero--four-metrics", ir: statHero, slideIndex: 0 },
     { id: "contract--pull-quote--authored-quote", ir: pullQuote, slideIndex: 0 },
+    { id: "contract--resolution-ending--label-gloss", ir: resolution, slideIndex: 0 },
   ]
 }
 
@@ -1630,7 +1639,8 @@ describe("an unbounded axis label cannot push the plot out of its box", () => {
       // painting.
       const ends = [ys[1], ys[3]]
       for (const [i, name] of ["Alpha", "Beta"].entries()) {
-        const value = String(ends[i])
+        // Printed the English way, grouped in threes (`groupDigits`).
+        const value = ends[i]!.toLocaleString("en-US")
         const own = wideEnough.labels.find((text) => text.endsWith(` ${value}`))
         expect(own, `${name} ${value} in ${JSON.stringify(wideEnough.labels)}`).toBeDefined()
         const printedName = own!.slice(0, own!.length - value.length - 1)

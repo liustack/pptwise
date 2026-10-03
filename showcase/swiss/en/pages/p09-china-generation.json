@@ -1,0 +1,87 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "src",
+          "label": "Source"
+        },
+        {
+          "key": "gen",
+          "label": "Output, full count (TWh)",
+          "align": "right"
+        },
+        {
+          "key": "yoy",
+          "label": "Change, full count",
+          "align": "right"
+        },
+        {
+          "key": "ind",
+          "label": "Change, large plants only",
+          "align": "right"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "src": "Thermal",
+            "gen": "6,327",
+            "yoy": "−0.7%",
+            "ind": "−1.0%"
+          }
+        },
+        {
+          "cells": {
+            "src": "Hydro",
+            "gen": "1,462",
+            "yoy": "+2.5%",
+            "ind": "+2.8%"
+          }
+        },
+        {
+          "cells": {
+            "src": "Nuclear",
+            "gen": "485",
+            "yoy": "+7.6%",
+            "ind": "+7.7%"
+          }
+        },
+        {
+          "cells": {
+            "src": "Wind",
+            "gen": "1,128",
+            "yoy": "+13.1%",
+            "ind": "+9.7%"
+          }
+        },
+        {
+          "cells": {
+            "src": "Solar",
+            "gen": "1,173",
+            "yoy": "+39.8%",
+            "ind": "+24.4%"
+          },
+          "emphasis": "highlight"
+        },
+        {
+          "cells": {
+            "src": "Total",
+            "gen": "10,575",
+            "yoy": "+4.8%",
+            "ind": "+2.2%"
+          },
+          "emphasis": "total"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "The large plant count misses much distributed solar, so this report uses the full count."
+    }
+  ],
+  "footnote": "Source: National Bureau of Statistics of China (Jan, Feb 2026)",
+  "notes": "The full count comes from the annual statistical communiqué. The large-plant count covers industrial enterprises above designated size. The two should not be mixed. On the full count, thermal output fell 0.7% and solar rose 39.8%. On the large-plant count solar rose only 24.4%, mostly because distributed solar is left out. Other readings: the China Electricity Council puts coal power output down 1.9%, with coal at 51.1% of generation, and calculates that new wind, solar and bioenergy output equalled 97.1% of the rise in power use. China's total power use was 10,368 TWh, up 5.0%."
+}

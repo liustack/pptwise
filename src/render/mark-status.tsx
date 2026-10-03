@@ -89,9 +89,13 @@ export function StatusMark({
   )
 }
 
-/** The words a forecast's label and a legend entry use, and a target's legend entry. */
-export function statusWords(chinese: boolean): { forecastSuffix: string; forecast: string; target: string } {
+/**
+ * The words a forecast's label and a legend entry use, a target's legend
+ * entry, and the entry for the reported bars beside them when one series
+ * carries both.
+ */
+export function statusWords(chinese: boolean): { forecastSuffix: string; forecast: string; target: string; reported: string } {
   return chinese
-    ? { forecastSuffix: "（预测）", forecast: "预测", target: "目标" }
-    : { forecastSuffix: " (forecast)", forecast: "Forecast", target: "Target" }
+    ? { forecastSuffix: "（预测）", forecast: "预测", target: "目标", reported: "实际" }
+    : { forecastSuffix: " (forecast)", forecast: "Forecast", target: "Target", reported: "Actual" }
 }

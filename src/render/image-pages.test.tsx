@@ -711,3 +711,54 @@ describe("image-split notice column", () => {
     expect(attr(byText(page, "来源：乘联分会"), ["x", "y", "font-size"])).toEqual(["624", "656", "14"])
   })
 })
+
+describe("image-top grid band", () => {
+  // swiss's 2026-10 storage page (p10): the photograph across the top, the
+  // claim on a black rule under it, the figures in columns.
+  const slide = (heading = "储能一年新增 1.12 亿千瓦，一半以上装在中国") =>
+    ({
+      type: "content",
+      kind: "photo",
+      heading,
+      components: [
+        { type: "image", asset_id: "hero", fit: "cover" },
+        {
+          type: "kpi_cards",
+          items: [
+            { value: "**1.12 亿千瓦**", label: "全球新型储能新增", note: "同比 +48%" },
+            { value: "54%", label: "装在中国", note: "美国 16%" },
+            { value: "70 美元/千瓦时", label: "储能电池包均价", note: "同比 −45%" },
+          ],
+        },
+      ],
+      footnote: "来源：BNEF（2025 年 12 月、2026 年 5 月）",
+    }) as Slide
+  const root = (s: Slide) => {
+    const themeId = registerTestTheme(`image-top-grid-${themeSerial++}`, "swiss", { content: { photo: { face: "image-top", params: { band: "grid" } } } })
+    return parseSvgRoot(boundSlideToSvgMarkup(makeIr(themeId, s), s, 0))
+  }
+  const attr = (el: Element | null | undefined, names: string[]) => names.map((name) => el?.getAttribute(name) ?? null)
+  const byText = (root: Element, text: string) => Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").trim() === text)
+
+  it("runs the photograph edge to edge down to y330, the claim under it on a 2px rule at y418", () => {
+    const page = root(slide())
+    expect(page.querySelector('[data-image-top-band="grid"]')).not.toBeNull()
+    expect(attr(page.querySelector("image"), ["x", "y", "width", "height"])).toEqual(["0", "0", "1280", "330"])
+    expect(attr(byText(page, "储能一年新增 1.12 亿千瓦，一半以上装在中国"), ["x", "y", "font-size", "font-weight"])).toEqual(["80", "392", "34", "700"])
+    const rule = Array.from(page.querySelectorAll('[data-image-top-band="grid"] > rect')).find((r) => r.getAttribute("height") === "2")!
+    expect(attr(rule, ["x", "y", "width"])).toEqual(["80", "418", "1120"])
+  })
+
+  it("sets the figures in columns under the rule and the source at the foot", () => {
+    const page = root(slide())
+    expect(page.querySelector('[data-gauge-module="figures"]')).not.toBeNull()
+    expect(attr(byText(page, "全球新型储能新增"), ["x", "y"])).toEqual(["80", "463"])
+    expect(attr(byText(page, "来源：BNEF（2025 年 12 月、2026 年 5 月）"), ["x", "y", "font-size"])).toEqual(["80", "666", "14"])
+  })
+
+  it("takes a second line of the claim out of the photograph", () => {
+    const page = root(slide("储能一年新增 1.12 亿千瓦，一半以上装在中国，美国占 16%，电池包均价一年降了 45%，第一次成为最便宜的用途"))
+    expect(attr(page.querySelector("image"), ["height"])).toEqual(["284"])
+    expect(page.querySelector('[data-gauge-module="figures"]')).not.toBeNull()
+  })
+})

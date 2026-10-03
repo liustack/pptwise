@@ -24,6 +24,10 @@ import { SvgContent } from "./svg-content"
 import type { PageRenderContext } from "./page-context"
 import { NOTICE_BODY_BOTTOM, NOTICE_BODY_TOP, NoticeHead, NoticeSource, fitNoticeSource } from "../layouts/notice-shared"
 import { NoticeSheetContent } from "../layouts/content-notice-sheet"
+import { GridSheetContent } from "../layouts/content-grid-sheet"
+import { FittedLines, GRID_LEFT, GRID_W, GridSource, fitGridSource, gridBodyRect } from "../layouts/grid-shared"
+import { centredBaseline } from "../layouts/compositions/type"
+import { bodySlotDropsContent } from "./step-aside"
 
 /**
  * 压图页与出血 split 页（图片排版 polish，2026-07-09 用户反馈驱动）。
@@ -707,6 +711,98 @@ function NoticeSplitPage({
   )
 }
 
+/** The grid band: swiss's 2026-10 photo page (p10). */
+const GRID_TOP = {
+  /** The photograph's foot under a one-line title; a second title line takes 46px off it. */
+  imageH: 330,
+  title: { size: 34, lineHeight: 46, foot: 402, maxLines: 2, minPt: 28 },
+  rule: { y: 418, h: 2 },
+  bodyTop: 444,
+}
+
+/**
+ * The grid band of `image-top`: swiss's photo page (p10). The photograph
+ * runs edge to edge across the top of the page down to y330. Under it the
+ * claim at 34/46 bold across the full measure, set on its last line, and a
+ * 2px black rule at y418, the grid frame's header with the photograph in
+ * place of the chapter line. Under the rule the figures the photograph
+ * shows, two to four in columns (`figures` in the grid setting), or anything
+ * else the page carries drawn by the component renderer, and the source at
+ * the foot in the frame's 14px. A two-line claim takes its second line out
+ * of the photograph, not out of the figures. A page that is not one
+ * photograph, or whose rest the band cannot hold, is drawn as a grid sheet.
+ */
+function GridTopPage({ ir, slide, index, ctx, page }: { ir: PptxIR; slide: Slide; index: number; ctx: ComponentCtx; page: PageRenderContext }) {
+  const plain = () => <GridSheetContent ir={ir} slide={slide} index={index} ctx={ctx} page={page} />
+  if (!singlePictureExact(slide)) return plain()
+  const imageSelection = findImageSelection(slide)
+  if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
+  if (!bleedSlotCanHost(imageSelection.source)) return plain()
+  const { image: imageComponent, source: imageSource } = imageSelection
+  const src = ctx.images?.[imageComponent.asset_id]?.src
+  const alt = ctx.images?.[imageComponent.asset_id]?.alt
+  const rest = slide.components.filter((component) => component !== imageSource)
+  const { colors, fonts } = ctx
+  const bg = ctx.defaultBg ?? colors.bg
+  const title = fitEmphasisHeading(slide.heading, {
+    maxWidth: GRID_W,
+    fontSize: GRID_TOP.title.size,
+    maxLines: GRID_TOP.title.maxLines,
+    minPt: GRID_TOP.title.minPt,
+    bold: true,
+    lineHeightRatio: GRID_TOP.title.lineHeight / GRID_TOP.title.size,
+    fontFamily: fonts.heading,
+  })
+  const extra = Math.max(0, title.lines.length - 1) * title.lineHeight
+  const imgH = GRID_TOP.imageH - extra
+  const lastBaseline = centredBaseline(GRID_TOP.title.foot - GRID_TOP.title.lineHeight, GRID_TOP.title.lineHeight, title.fontSize)
+  const source = fitGridSource(slide, ctx, page)
+  const rect = gridBodyRect(source, page, GRID_TOP.bodyTop)
+  const composed = rest.length > 0 ? compose({ components: rest, ctx, rect, setting: "grid" }, ["figures"]) : null
+  if (rest.length > 0 && !composed && bodySlotDropsContent(rest, rect, ctx)) return plain()
+  return (
+    <g data-image-top-band="grid">
+      {src ? (
+        <image href={src} x={0} y={0} width={W} height={imgH} preserveAspectRatio="xMidYMid slice" aria-label={alt || undefined} />
+      ) : (
+        <rect x={0} y={0} width={W} height={imgH} fill={colors.surface} />
+      )}
+      {imageComponent.caption &&
+        (() => {
+          const fitted = fitSvgLine(imageComponent.caption, { maxWidth: GRID_W, fontSize: 16, minFontSize: 16 })
+          return (
+            <>
+              <rect x={0} y={imgH - 44} width={W} height={44} fill="#0A0E14" fillOpacity={0.62} />
+              <text
+                data-truncated={fitted.truncated ? "1" : undefined}
+                x={GRID_LEFT}
+                y={imgH - 17}
+                fontSize={fitted.fontSize}
+                fontFamily={fonts.body}
+                fill="#FFFFFF"
+                fillOpacity={0.92}
+                dominantBaseline="alphabetic"
+              >
+                {fitted.text}
+              </text>
+            </>
+          )
+        })()}
+      <FittedLines
+        layout={title}
+        ctx={ctx}
+        x={GRID_LEFT}
+        y={lastBaseline - extra}
+        fill={accessibleInk(colors.text, bg, title.fontSize)}
+        bold
+      />
+      <rect x={GRID_LEFT} y={GRID_TOP.rule.y} width={GRID_W} height={GRID_TOP.rule.h} fill={accessibleInk(colors.text, bg, GRID_TOP.title.size)} />
+      {composed ?? (rest.length > 0 && <SvgContent components={rest} rect={rect} ctx={ctx} />)}
+      <GridSource source={source} ctx={ctx} />
+    </g>
+  )
+}
+
 /**
  * image_top 顶图的高度边界（2026-08-31 金样人审 L 项）。
  *
@@ -765,15 +861,23 @@ const BAND_PAD_X = 96
  * 无 image 块回落 null（调用方走模板路径）。
  */
 export function ImageTopPage({
-  ir: _ir,
+  ir,
   slide,
+  index,
   ctx,
+  page,
+  params,
 }: {
   ir: PptxIR
   slide: Slide
+  index: number
   ctx: ComponentCtx
   page: PageRenderContext
+  params?: FaceParams
 }) {
+  if (faceParam<"standard" | "grid">(params, "band", "standard") === "grid") {
+    return <GridTopPage ir={ir} slide={slide} index={index} ctx={ctx} page={page} />
+  }
   if (!singlePictureExact(slide)) return <TakeoverFallbackPage slide={slide} ctx={ctx} />
   const imageSelection = findImageSelection(slide)
   if (!imageSelection) return <MissingRequiredImageMarker slide={slide} />
@@ -1539,7 +1643,7 @@ export type TakeoverRenderer = (props: TakeoverRendererProps) => ReactNode
 /** The render dispatcher consumed by FullSlideSvg and the theme menu gate. */
 export const TAKEOVER_RENDERERS = {
   "image-split": ({ index: _index, ...props }) => ImageSplitPage(props),
-  "image-top": ({ index: _index, ...props }) => ImageTopPage(props),
+  "image-top": (props) => ImageTopPage(props),
   "image-bottom": ({ index: _index, ...props }) => ImageBottomPage(props),
   "image-annotate": ({ index: _index, ...props }) => ImageAnnotatePage(props),
 } satisfies Record<string, TakeoverRenderer>
@@ -1600,6 +1704,11 @@ export const imageTopLayoutDef: LayoutDefinition = {
   // Components left after consuming the source split into up to 3 body
   // columns, with each column hardcoded "single"
   // (image-pages.tsx:360).
+  // How the band under the photograph is set: "standard", or "grid", the
+  // claim on a black rule over the figures in columns (`GridTopPage`).
+  params: {
+    band: { type: "string", values: ["standard", "grid"] },
+  },
   id: "image-top",
   kind: "takeover",
   story: {

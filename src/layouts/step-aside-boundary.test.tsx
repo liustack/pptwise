@@ -36,6 +36,8 @@ import { GaugeFigureContent } from "./content-gauge-figure"
 import { GaugePointContent } from "./content-gauge-point"
 import { GaugeSheetContent } from "./content-gauge-sheet"
 import { NoticeSheetContent } from "./content-notice-sheet"
+import { GridSheetContent } from "./content-grid-sheet"
+import { GridStatementContent } from "./content-grid-statement"
 import { GaugeStatsContent } from "./content-gauge-stats"
 import { OneEvidenceContent } from "./content-one-evidence"
 import { QuoteStageContent } from "./content-quote-stage"
@@ -140,6 +142,12 @@ const CASES: FaceCase[] = [
   // A line chart is no shape the notice compositions draw by hand, so the
   // page takes the component renderer in the band under the notice frame.
   { face: "notice-sheet", Face: NoticeSheetContent, themeId: "bulletin", regions: ["face", "aside", "declined"] },
+  // The same on swiss's grid frame. A line chart is no shape the grid
+  // compositions draw by hand either.
+  { face: "grid-sheet", Face: GridSheetContent, themeId: "swiss", regions: ["face", "aside", "declined"] },
+  // A statement with no row of figures draws its body with the component
+  // renderer under the rule, and steps aside when that band cannot hold it.
+  { face: "grid-statement", Face: GridStatementContent, themeId: "swiss", regions: ["face", "aside", "declined"] },
   // Two figures are not this face's hero page, so the page goes to its sheet,
   // whose band the chart shares with them. On the full page the standfirst
   // and the source line leave the band less room than the step-aside sheet

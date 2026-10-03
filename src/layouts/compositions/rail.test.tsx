@@ -45,11 +45,13 @@ describe("changeLabel and spanLabel", () => {
 
   it("prints both ends at the decimals the series was written with, in the axis's unit", () => {
     const cost = series("Cost", [4.1, 4.45, 4.9, 5.35])
-    expect(spanLabel(cost, 4.1, 5.35, "$")).toBe("$4.10 → $5.35")
-    expect(spanLabel(series("Parcels", [131, 160]), 131, 160, undefined)).toBe("131 → 160")
-    expect(spanLabel(series("Share", [12, 18]), 12, 18, "%")).toBe("12% → 18%")
+    expect(spanLabel(cost, 4.1, 5.35, "$", false)).toBe("$4.10 → $5.35")
+    expect(spanLabel(series("Parcels", [131, 160]), 131, 160, undefined, false)).toBe("131 → 160")
+    expect(spanLabel(series("Share", [12, 18]), 12, 18, "%", false)).toBe("12% → 18%")
+    expect(spanLabel(series("Parcels", [2143, 2778]), 2143, 2778, "TWh", false)).toBe("2,143 TWh → 2,778 TWh")
+    expect(spanLabel(series("发电量", [2143, 12778]), 2143, 12778, "亿千瓦时", true)).toBe("2143 亿千瓦时 → 12,778 亿千瓦时")
     // A Latin magnitude glues to its figure (`joinUnit`).
-    expect(spanLabel(series("Seats", [12, 18]), 12, 18, "k")).toBe("12k → 18k")
+    expect(spanLabel(series("Seats", [12, 18]), 12, 18, "k", false)).toBe("12k → 18k")
   })
 })
 

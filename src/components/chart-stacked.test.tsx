@@ -101,10 +101,13 @@ describe("stacked chart: schema", () => {
     expect(issues.map((i) => i.path.join("."))).toEqual(["series.0.data.1.x"])
   })
 
-  it("refuses direction horizontal, which only bar draws", () => {
+  it("takes direction horizontal only as a share bar, one whole with one category", () => {
+    // Several categories on their side are no share bar: a stacked chart
+    // lies down only to draw one whole cut into its parts.
     const issues = issuesOf({ ...TWO_REGIONS, direction: "horizontal" })
-    expect(issues.map((i) => i.path.join("."))).toEqual(["direction"])
-    expect(issues[0]!.message).toMatch(/chart_type "bar"/)
+    expect(issues.map((i) => i.path.join("."))).toEqual(["series.0.data"])
+    expect(issues[0]!.message).toMatch(/one value at the same category/)
+    expect(issuesOf({ ...TWO_REGIONS, chart_type: "percent_stacked", direction: "horizontal" }).map((i) => i.path.join("."))).toContain("direction")
   })
 })
 
@@ -164,7 +167,7 @@ describe("stacked chart: crowded totals", () => {
 
   it("keeps every total, and declares nothing, when the row fits", () => {
     const container = draw(crowded(4))
-    expect(valueLabels(container)).toEqual(["2000000", "2000000", "2000000", "2000000"])
+    expect(valueLabels(container)).toEqual(["2,000,000", "2,000,000", "2,000,000", "2,000,000"])
     expect(container.querySelector("[data-dropped]")).toBeNull()
   })
 })

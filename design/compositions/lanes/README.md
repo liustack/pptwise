@@ -21,3 +21,19 @@ Settled on the regulation page. The round's decisions are in [rounds/2026-10-03-
 - Two to eight milestones on a horizontal timeline, at most two lanes. A timeline with no lanes stands every card above the axis.
 - Cards never cross the axis: the axis rises when the lower lane and the note need room, and the composition declines when it cannot.
 - 16px everywhere, where the board set some lines at 15px.
+
+## swiss, power sample, 2026-10
+
+In the grid setting. The round's decisions are in [rounds/2026-10-03-swiss](../../rounds/2026-10-03-swiss/README.md).
+
+| board (p12) | engine |
+| :-: | :-: |
+| ![board](swiss.board.png) | ![engine](swiss.engine.png) |
+
+**What it looks like.** The lane names and the highlighted milestone (its node filled, its stem, date and title) in the accent, everything else black and grey, on a 2px black axis 204px into the band (y400). The closing note on the light panel at the foot.
+
+**What it gave up.**
+
+- Dates and descriptions at 16px, where the board set 15px.
+- A title longer than its card wraps to a second line: 「IEA：煤电将回升 1.4%」 is one character longer than the board's and does not fit 146px at 16px bold.
+- The closing note is 20px in a 64px panel, where the board drew 19px in 52px.

@@ -6,6 +6,7 @@ import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
 import { contrastRatio, requiredContrastRatio } from "../render/ink"
+import { emphasisRunInk } from "../render/emphasis"
 import { DecimalIndexChapter, layoutDef } from "./chapter-decimal-index-chapter"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -41,9 +42,9 @@ function ir(themeId: string, slides: Slide[] = [chapter1, content, chapter2]): P
   } as unknown as PptxIR
 }
 
-function renderChapter(themeId: string, s: Slide = chapter2, index = 2) {
+function renderChapter(themeId: string, s: Slide = chapter2, index = 2, slides?: Slide[]) {
   const { tokens, ctx } = chapterCtx(themeId)
-  const deck = ir(themeId)
+  const deck = ir(themeId, slides)
   const markup = renderSvgMarkup(
     <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
       <DecimalIndexChapter ir={deck} slide={s} index={index} ctx={ctx} />
@@ -53,51 +54,47 @@ function renderChapter(themeId: string, s: Slide = chapter2, index = 2) {
 }
 
 describe("chapter-decimal-index-chapter — board geometry", () => {
-  it("places the decimal numeral, left title, subtitle, and grouped measuring rule", () => {
-    const { root, tokens } = renderChapter("swiss")
-    const numeral = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "2.0")
-    expect(numeral?.getAttribute("x")).toBe("96")
-    expect(numeral?.getAttribute("y")).toBe("300")
-    expect(Number(numeral?.getAttribute("font-size"))).toBe(120)
-    expect(numeral?.getAttribute("font-weight")).toBe("700")
-    expect(numeral?.getAttribute("letter-spacing")).toBeNull()
-    expect(numeral?.getAttribute("text-anchor")).toBeNull()
-
-    const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes(HEADING))
-    expect(title?.getAttribute("x")).toBe("96")
-    expect(title?.getAttribute("y")).toBe("400")
-    expect(title?.getAttribute("text-anchor")).toBeNull()
-    expect(Number(title?.getAttribute("font-size"))).toBe(48)
-    expect(title?.getAttribute("letter-spacing")).toBeNull()
-    expect(title?.getAttribute("font-weight")).toBe("700")
-
-    const sub = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("董事会构成"))
-    expect(sub?.getAttribute("x")).toBe("96")
-    expect(sub?.getAttribute("y")).toBe("454")
-    expect(sub?.getAttribute("data-contrast-tier")).toBe("meta")
-
-    const mid = root.querySelector("g[data-depth='mid']")
-    expect(mid).toBeTruthy()
-    const lines = Array.from(mid!.querySelectorAll("line"))
-    expect(lines).toHaveLength(4)
-    const rule = lines.find((l) => l.getAttribute("x1") === "96" && l.getAttribute("x2") === "1184")
-    expect(rule?.getAttribute("y1")).toBe("540")
-    expect(rule?.getAttribute("stroke-width")).toBe("1")
-    expect(rule?.getAttribute("stroke")).toBe(tokens.colors.border)
-    expect(lines.map((l) => [l.getAttribute("x1"), l.getAttribute("y1"), l.getAttribute("x2"), l.getAttribute("y2")])).toEqual(
-      expect.arrayContaining([
-        ["96", "540", "1184", "540"],
-        ["96", "536", "96", "544"],
-        ["640", "536", "640", "544"],
-        ["1184", "536", "1184", "544"],
-      ]),
-    )
-    expect(root.querySelector("rect")).toBeNull()
+  // swiss's 2026-10 chapter pages (p03, p07, p11): the number large in red
+  // on the left, the name, what it covers and a black rule on the right,
+  // and under the rule the pages the chapter holds.
+  it("sets the two-digit number at 240px in the emphasis ink, in the foreground", () => {
+    const { root, ctx } = renderChapter("swiss")
+    const numeral = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "02")!
+    expect([numeral.getAttribute("x"), numeral.getAttribute("y"), numeral.getAttribute("font-size"), numeral.getAttribute("fill")]).toEqual([
+      "80",
+      "294",
+      "240",
+      emphasisRunInk(ctx.colors),
+    ])
+    expect(numeral.getAttribute("data-depth")).toBe("fg")
   })
 
-  it("pads the first chapter as 1.0", () => {
+  it("sets the name on its last line at y209, what it covers under it, and a 2px rule at y300", () => {
+    const { root, tokens } = renderChapter("swiss")
+    const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)!
+    expect([title.getAttribute("x"), title.getAttribute("y"), title.getAttribute("font-size"), title.getAttribute("font-weight")]).toEqual(["560", "209", "48", "700"])
+    const sub = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === SUBHEADING)!
+    expect([sub.getAttribute("x"), sub.getAttribute("y"), sub.getAttribute("font-size")]).toEqual(["560", "251", "20"])
+    const rule = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("height") === "2")!
+    expect([rule.getAttribute("x"), rule.getAttribute("y"), rule.getAttribute("width"), rule.getAttribute("fill")]).toEqual(["560", "300", "640", tokens.colors.text])
+  })
+
+  it("lists the pages the chapter holds under the rule, read off the deck", () => {
+    const deck = [chapter1, content, { ...content, heading: "**下一步** 的安排" } as Slide, chapter2]
+    const { root } = renderChapter("swiss", chapter1, 0, deck)
+    const list = root.querySelector("[data-chapter-contents]")!
+    expect(list.getAttribute("data-chapter-contents")).toBe("2")
+    expect(Array.from(list.querySelectorAll("text")).map((t) => t.textContent)).toEqual(["02", "现状", "03", "下一步 的安排"])
+  })
+
+  it("draws no list for a chapter with no pages of its own", () => {
+    const { root } = renderChapter("swiss")
+    expect(root.querySelector("[data-chapter-contents]")).toBeNull()
+  })
+
+  it("pads the first chapter as 01", () => {
     const { root } = renderChapter("swiss", chapter1, 0)
-    expect(Array.from(root.querySelectorAll("text")).some((t) => t.textContent === "1.0")).toBe(true)
+    expect(Array.from(root.querySelectorAll("text")).some((t) => t.textContent === "01")).toBe(true)
   })
 
   it("does not invent a section name when heading is empty", () => {
@@ -105,31 +102,16 @@ describe("chapter-decimal-index-chapter — board geometry", () => {
     const { root, markup } = renderChapter("swiss", empty, 2)
     expect(markup).not.toContain(HEADING)
     expect(markup).not.toContain("Thank you")
-    expect(Array.from(root.querySelectorAll("text")).some((t) => t.textContent === "2.0")).toBe(true)
-    expect(root.querySelector("g[data-depth='mid']")?.querySelectorAll("line")).toHaveLength(4)
-    const titles = Array.from(root.querySelectorAll("text")).filter(
-      (t) => t.getAttribute("font-weight") === "700" && t.textContent !== "2.0",
-    )
-    expect(titles).toHaveLength(0)
-  })
-
-  it("display numeral stays 120px and does not take typeScale", () => {
-    const { root } = renderChapter("stage")
-    const numeral = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "2.0")
-    expect(Number(numeral?.getAttribute("font-size"))).toBe(120)
+    expect(Array.from(root.querySelectorAll("text")).map((t) => t.textContent)).toEqual(["02"])
   })
 
   it("uses tokens, not baked swiss hex, when another theme draws it", () => {
-    const { root, tokens } = renderChapter("bulletin")
-    expect(root.querySelector("g[data-depth='mid'] line")?.getAttribute("stroke")).toBe(tokens.colors.border)
+    const { root } = renderChapter("bulletin")
     for (const hex of SWISS_HEX) expect(root.innerHTML, hex).not.toMatch(new RegExp(hex, "i"))
   })
 
-  it("never uses accent as type or as a text-bearing banner", () => {
+  it("never puts text on a block of the accent", () => {
     const { root, tokens } = renderChapter("swiss")
-    for (const el of Array.from(root.querySelectorAll("text"))) {
-      expect(el.getAttribute("fill"), el.textContent).not.toBe(tokens.colors.accent)
-    }
     expect(root.querySelector(`rect[fill='${tokens.colors.accent}']`)).toBeNull()
   })
 })
@@ -161,18 +143,11 @@ describe("chapter-decimal-index-chapter — shared pool", () => {
     }
   })
 
-  it("does not paint an ellipsis, even on an extreme title", () => {
-    const { markup: shortMarkup } = renderChapter("swiss")
-    expect(shortMarkup).not.toContain("…")
-    expect(shortMarkup).not.toContain("...")
+  it("cuts an extreme title to two lines and says so", () => {
     const long = { type: "chapter", heading: "治".repeat(80), subheading: SUBHEADING, components: [] } as Slide
-    const { root, markup } = renderChapter("swiss", long, 2)
-    expect(markup).not.toContain("…")
-    expect(markup).not.toContain("...")
-    const title = Array.from(root.querySelectorAll("text")).find(
-      (t) => t.getAttribute("font-weight") === "700" && t.textContent !== "2.0",
-    )
-    expect((title?.textContent ?? "").length).toBeGreaterThan(0)
-    expect((title?.textContent ?? "").length).toBeLessThan(80)
+    const { root } = renderChapter("swiss", long, 2)
+    const titles = Array.from(root.querySelectorAll("text")).filter((t) => (t.textContent ?? "").startsWith("治"))
+    expect(titles).toHaveLength(2)
+    expect(titles[1]!.getAttribute("data-truncated")).toBe("1")
   })
 })

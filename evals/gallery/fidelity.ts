@@ -183,8 +183,15 @@ export interface PageFidelity {
   readonly authored: number
 }
 
+/**
+ * The text an element stands for. A face that sets an item's label apart
+ * from its gloss ("气价：IEA 预计…" as a label over a line) sets the colon as
+ * the break between them rather than as a glyph, and says so on the label's
+ * last line (`data-gloss-break`): the scan reads the separator back where it
+ * stood, so the colon is accounted for without folding colons anywhere else.
+ */
 function elementText(el: Element): string {
-  return el.textContent ?? ""
+  return (el.textContent ?? "") + (el.getAttribute("data-gloss-break") ?? "")
 }
 
 /**

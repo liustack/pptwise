@@ -25,3 +25,24 @@ Settled on two pages, both beside the figure column of [`rail`](../rail/). The r
 - One to three upright series (two to four stacked) over two to six categories, every value zero or more. Negative values, a numeric x axis and an x axis title go to the ordinary chart.
 - No gridlines and no axis: a page that needs the reader to compare against a scale should use the ordinary chart.
 - When the labels, brackets and legend cannot be set apart, the bars shrink toward half the board's height before the composition declines.
+
+## swiss, power sample, 2026-10
+
+Settled on two pages, both beside the figure column of [`rail`](../rail/), in the grid setting. The round's decisions are in [rounds/2026-10-03-swiss](../../rounds/2026-10-03-swiss/README.md).
+
+| board (p05) | engine |
+| :-: | :-: |
+| ![board](swiss-p05.board.png) | ![engine](swiss-p05.engine.png) |
+
+| board (p13) | engine |
+| :-: | :-: |
+| ![board](swiss-p13.board.png) | ![engine](swiss-p13.engine.png) |
+
+**What it looks like.** Bars black, the one the author marks (`data[].emphasis` on a point, or `emphasis` on a series) in the accent, a forecast hatched in the accent over its pale tint. Every value bold at 20px over its bar, in the bar's colour. One series names itself in the unit line (「全球太阳能发电量，万亿千瓦时」) 24px into the band, and the legend appears only to tell reported bars from forecast ones (实际, 预测) or several series apart. The change the author brackets is the page's change, so its bracket is 2px in the accent with its figure bold over it. The tallest column takes nine tenths of the bars' height over a baseline 44px above the band's foot.
+
+**Why.** Swiss draws data black and spends red on the one bar the page is about. A forecast is red because on this page the forecast is the point.
+
+**What it gave up.**
+
+- With no value axis there is no tick to round to, so the scale follows the tallest column (the board rounded 6.64 up to 7.5 by hand, which the nine tenths lands within 4px of).
+- Under a share bar (p08) the bars come down to 100px tall, where the notice setting stops at 150.

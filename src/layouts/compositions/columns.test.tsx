@@ -40,6 +40,31 @@ const draw = (chart: unknown, options: Parameters<typeof renderComposition>[2] =
   renderComposition(columnsComposition, [chart], { rect: NOTICE_PLOT, theme: "bulletin", ...options })
 
 describe("columns composition", () => {
+  it("draws a marked bar in primary with its value bold, and the other bars in a quiet grey", () => {
+    const years = {
+      type: "chart",
+      chart_type: "bar",
+      axes: { y_unit: "万亿千瓦时" },
+      series: [
+        {
+          name: "全球太阳能发电量",
+          data: [
+            { x: "2015 年", y: 0.26 },
+            { x: "2022 年", y: 1.33 },
+            { x: "2024 年", y: 2.14 },
+            { x: "2025 年", y: 2.78, emphasis: true },
+          ],
+        },
+      ],
+    }
+    const { root, tokens } = draw(years)
+    const fills = Array.from(root!.querySelectorAll('[data-plot-mark="1"] rect')).map((r) => r.getAttribute("fill"))
+    expect(fills[3]).toBe(tokens.colors.primary)
+    expect(new Set(fills.slice(0, 3)).size).toBe(1)
+    expect(fills[0]).not.toBe(tokens.colors.primary)
+    expect(attrs(byText(root!, "2.78")!, ["fill", "font-weight"])).toEqual([tokens.colors.primary, "700"])
+  })
+
   it("sets the legend and the unit over the plot on the left, and the categories under one baseline", () => {
     const { root, tokens } = draw(retail())
     expect(root!.querySelector("[data-gauge-module]")!.getAttribute("data-gauge-module")).toBe("columns")

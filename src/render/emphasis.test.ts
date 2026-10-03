@@ -118,7 +118,7 @@ describe("renderEmphasisTspans", () => {
     )
     const html = markup(result)
     expect(html).toBe(
-      '<text><tspan fill="#1A2421">a </tspan><tspan fill="#00A878" font-weight="600">b</tspan><tspan fill="#1A2421"> c</tspan></text>',
+      '<text><tspan fill="#1A2421" xml:space="preserve">a </tspan><tspan fill="#00A878" font-weight="600">b</tspan><tspan fill="#1A2421" xml:space="preserve"> c</tspan></text>',
     )
   })
 })
@@ -566,5 +566,27 @@ describe("a run placed at its own x keeps the blank it starts with", () => {
     const tspans = Array.from(markup.matchAll(/<tspan([^>]*)>([^<]*)<\/tspan>/g))
     expect(tspans.map((m) => m[2])).toEqual(["said ", "double digits", " at the group."])
     expect(tspans.map((m) => m[1]!.includes('xml:space="preserve"'))).toEqual([false, false, true])
+  })
+})
+
+// swiss power deck (2026-10-03): runs that flow on from each other have no
+// `x` of their own, and rsvg stripped the blank at the edge of each, so
+// "Added worldwide: **112 GW**, up 48%" previewed as "worldwide:112 GW".
+describe("runs that flow on from each other keep the blank between them", () => {
+  it("marks a run with a blank on an edge another run meets as preserving it", () => {
+    const tspans = renderEmphasisTspans(parseEmphasis("Added worldwide: **112 GW** and **54%** in China"), {
+      accent: "#D7282F",
+      baseFill: "#101010",
+    })
+    const markup = renderToStaticMarkup(createElement("text", null, tspans))
+    const runs = Array.from(markup.matchAll(/<tspan([^>]*)>([^<]*)<\/tspan>/g))
+    expect(runs.map((m) => m[2])).toEqual(["Added worldwide: ", "112 GW", " and ", "54%", " in China"])
+    expect(runs.map((m) => m[1]!.includes('xml:space="preserve"'))).toEqual([true, false, true, false, true])
+  })
+
+  it("leaves a run whose edges meet no blank as it was", () => {
+    const tspans = renderEmphasisTspans(parseEmphasis("增量**8870**亿千瓦时"), { accent: "#D7282F", baseFill: "#101010" })
+    const markup = renderToStaticMarkup(createElement("text", null, tspans))
+    expect(markup).not.toContain("xml:space")
   })
 })

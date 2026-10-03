@@ -1,0 +1,57 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "axes": {
+        "y_unit": "GW"
+      },
+      "changes": [
+        {
+          "from": "2025",
+          "to": "2026"
+        }
+      ],
+      "series": [
+        {
+          "name": "Global solar",
+          "data": [
+            {
+              "x": "2023",
+              "y": 452
+            },
+            {
+              "x": "2024",
+              "y": 595
+            },
+            {
+              "x": "2025",
+              "y": 664
+            },
+            {
+              "x": "2026",
+              "y": 612,
+              "status": "forecast"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "−61%",
+          "label": "China's new solar, Jan to Jul, year on year"
+        },
+        {
+          "value": "−9.5%",
+          "label": "Global renewable energy investment, 2025",
+          "note": "Total energy transition investment still up 8%"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: SolarPower Europe (Jun 2026), China NEA (Aug 2026), BNEF (Jan 2026). 2026 is a forecast",
+  "notes": "SolarPower Europe counts 664 GW of solar installed worldwide in 2025, up 12%, and expects 612 GW in 2026, down 8%, the first decline in more than two decades, mainly because it expects China to fall 24%. The 2023 and 2024 figures of 452 GW and 595 GW are derived from the increases SPE published. This is an installed-capacity count and should not be compared with IRENA's 510 GW or IEA-PVPS's figure of about 690 GW. China added 86.15 GW of solar from January to July, down 61%, and 47.07 GW of wind, down 12%, according to National Energy Administration data reported by PV Tech. Investment is already sending a signal: BNEF puts 2025 energy transition investment at $2.3 trillion, up 8%, but renewable energy investment fell 9.5% to $690 billion, and China's renewable investment fell for the first time since 2013. BNEF's total includes electric vehicles, so it cannot be added to or divided by IEA energy investment figures."
+}

@@ -47,6 +47,92 @@ describe("chart point status", () => {
   })
 })
 
+// swiss power deck (2026-10-03): one series of years whose last bar is the
+// page's point, which series emphasis cannot say with a single series.
+describe("chart point emphasis", () => {
+  const years = (marks: Record<number, Record<string, unknown>>, overrides: Record<string, unknown> = {}) => ({
+    type: "chart",
+    chart_type: "bar",
+    series: [
+      {
+        name: "全球太阳能发电量",
+        data: ["2015 年", "2022 年", "2024 年", "2025 年"].map((x, i) => ({ x, y: [0.26, 1.33, 2.14, 2.78][i], ...(marks[i] ?? {}) })),
+      },
+    ],
+    ...overrides,
+  })
+
+  it("marks the one bar the page is about", () => {
+    expect(parse([years({ 3: { emphasis: true } })]).success).toBe(true)
+    expect(parse([years({ 3: { emphasis: true } }, { direction: "horizontal" })]).success).toBe(true)
+  })
+
+  it("rejects a marked point on a chart that draws no bar of its own for it", () => {
+    expect(messages([years({ 3: { emphasis: true } }, { chart_type: "line" })]).join(" ")).toContain("draws no bar of its own")
+  })
+
+  it("rejects a second marked bar, and a marked bar beside a marked series", () => {
+    expect(messages([years({ 2: { emphasis: true }, 3: { emphasis: true } })]).join(" ")).toContain("singles out one bar")
+    const both = chart()
+    ;(both.series[1]!.data[2] as Record<string, unknown>).emphasis = true
+    expect(messages([both]).join(" ")).toContain("not both")
+  })
+})
+
+// swiss power deck (2026-10-03): China's installed capacity as one bar cut
+// into its sources, wind and solar marked as the run the page compares.
+describe("chart share bar", () => {
+  const capacity = (overrides: Record<string, unknown> = {}, parts?: unknown[]) => ({
+    type: "chart",
+    chart_type: "stacked",
+    direction: "horizontal",
+    axes: { y_unit: "亿千瓦" },
+    series: parts ?? [
+      { name: "太阳能", emphasis: true, data: [{ x: "2025 年末全国发电装机", y: 12.02 }] },
+      { name: "风电", emphasis: true, data: [{ x: "2025 年末全国发电装机", y: 6.4 }] },
+      { name: "火电", data: [{ x: "2025 年末全国发电装机", y: 15.39 }] },
+      { name: "水电", data: [{ x: "2025 年末全国发电装机", y: 4.48 }] },
+      { name: "核电", data: [{ x: "2025 年末全国发电装机", y: 0.62 }] },
+    ],
+    ...overrides,
+  })
+
+  it("draws one whole as one bar and marks a run of adjacent parts", () => {
+    expect(parse([capacity()]).success).toBe(true)
+  })
+
+  it("rejects a second category, a part below zero and a hatched part", () => {
+    const two = [
+      { name: "A", data: [{ x: "2024", y: 1 }, { x: "2025", y: 2 }] },
+      { name: "B", data: [{ x: "2024", y: 1 }, { x: "2025", y: 2 }] },
+    ]
+    expect(messages([capacity({}, two)]).join(" ")).toContain("one value at the same category")
+    const below = [
+      { name: "A", data: [{ x: "x", y: -1 }] },
+      { name: "B", data: [{ x: "x", y: 2 }] },
+    ]
+    expect(messages([capacity({}, below)]).join(" ")).toContain("cannot be below zero")
+    const hatched = [
+      { name: "A", data: [{ x: "x", y: 1, status: "forecast" }] },
+      { name: "B", data: [{ x: "x", y: 2 }] },
+    ]
+    expect(messages([capacity({}, hatched)]).join(" ")).toContain("no way to show")
+  })
+
+  it("rejects marked parts that are not next to each other", () => {
+    const apart = [
+      { name: "A", emphasis: true, data: [{ x: "x", y: 1 }] },
+      { name: "B", data: [{ x: "x", y: 2 }] },
+      { name: "C", emphasis: true, data: [{ x: "x", y: 3 }] },
+    ]
+    expect(messages([capacity({}, apart)]).join(" ")).toContain("not next to each other")
+  })
+
+  it("still keeps percent_stacked and combo upright", () => {
+    expect(messages([capacity({ chart_type: "percent_stacked" })]).join(" ")).toContain("upright columns only")
+  })
+})
+
 describe("chart changes", () => {
   const quarters = {
     type: "chart",

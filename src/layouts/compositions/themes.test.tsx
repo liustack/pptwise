@@ -214,6 +214,21 @@ const PAGES: Record<CompositionId, unknown[]> = {
     },
     { type: "callout", variant: "info", text: "For us: **cost every deal**." },
   ],
+  share: [
+    {
+      type: "chart",
+      chart_type: "stacked",
+      direction: "horizontal",
+      axes: { y_unit: "GW" },
+      series: [
+        { name: "Solar", emphasis: true, data: [{ x: "Capacity at the end of 2025, by source", y: 1202 }] },
+        { name: "Wind", emphasis: true, data: [{ x: "Capacity at the end of 2025, by source", y: 640 }] },
+        { name: "Thermal", data: [{ x: "Capacity at the end of 2025, by source", y: 1539 }] },
+        { name: "Hydro", data: [{ x: "Capacity at the end of 2025, by source", y: 448 }] },
+        { name: "Nuclear", data: [{ x: "Capacity at the end of 2025, by source", y: 62 }] },
+      ],
+    },
+  ],
 }
 
 /** Every string an author wrote on the page, less the emphasis marks, that the composition must print. */
@@ -233,6 +248,7 @@ const AUTHORED: Record<CompositionId, string[]> = {
   stack: ["Models cut in price in August", "RMB 45k", "17.8% off, vs RMB 30k in H1", "September's play", "Xiaomi: 0% or insurance"],
   window: ["October", "December", "Window open", "Help buyers claim local money", "Purchase tax", "12%, up to RMB 20k", "Pudong: 14,000 slots"],
   lanes: ["Home", "Abroad", "Brazil: 35%", "July 7", "Price Law", "Price on cost", "cost every deal"],
+  share: ["Capacity at the end of 2025, by source", "Solar", "1,202 GW", "Thermal", "1,539 GW", "Nuclear 62 GW"],
 }
 
 /**

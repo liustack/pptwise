@@ -309,7 +309,7 @@ describe("five_forces component", () => {
     // The side panel carrying the wrapped lines still holds its last line.
     const supplier = container.querySelector('rect[data-force="supplier_power"]')!
     const bottom = Number(supplier.getAttribute("y")) + Number(supplier.getAttribute("height"))
-    const lastLine = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "saturation")
+    const lastLine = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "near saturation")
     expect(lastLine).toBeTruthy()
     expect(Number(lastLine!.getAttribute("y"))).toBeLessThan(bottom)
     expect(h).toBeGreaterThan(fiveForces.measure(basic, w, georgia))

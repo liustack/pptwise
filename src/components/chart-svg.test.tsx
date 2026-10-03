@@ -877,8 +877,8 @@ describe("renderDumbbell — value-label width fitting (from.y/to.y)", () => {
     const toLabel = texts.find((t) => t.getAttribute("fill") === ACCENT)
     expect(fromLabel).toBeTruthy()
     expect(toLabel).toBeTruthy()
-    expect(fromLabel!.textContent).toBe("1234567890")
-    expect(toLabel!.textContent).toBe("1987654321")
+    expect(fromLabel!.textContent).toBe("1,234,567,890")
+    expect(toLabel!.textContent).toBe("1,987,654,321")
     expect(fromLabel!.getAttribute("data-truncated")).toBeNull()
     expect(toLabel!.getAttribute("data-truncated")).toBeNull()
     expect(Number(fromLabel!.getAttribute("font-size"))).toBe(16)
@@ -901,8 +901,8 @@ describe("renderDumbbell — value-label width fitting (from.y/to.y)", () => {
     const toLabel = texts.find((t) => t.getAttribute("fill") === ACCENT)
     expect(fromLabel).toBeTruthy()
     expect(toLabel).toBeTruthy()
-    expect(fromLabel!.textContent).toBe(String(hugeFrom))
-    expect(toLabel!.textContent).toBe(String(hugeTo))
+    expect(fromLabel!.textContent).toBe("9,007,199,254,740,991")
+    expect(toLabel!.textContent).toBe("9,007,199,254,740,990")
     expect(fromLabel!.getAttribute("data-truncated")).toBeNull()
     expect(toLabel!.getAttribute("data-truncated")).toBeNull()
   })
@@ -2123,9 +2123,11 @@ describe("a cut gutter label keeps its value", () => {
       const label = right[0]!
       // The value is what a reader cannot reconstruct, so it is the part
       // that survives. Before this the label read "战略业务单元" and 1234
-      // was nowhere on the page.
-      expect(label.endsWith("1234")).toBe(true)
-      expect(label.length).toBeLessThan(`${NAME} 1234`.length)
+      // was nowhere on the page. One Chinese name beside two Latin
+      // categories is no Chinese majority, so the figure is grouped the
+      // English way.
+      expect(label.endsWith("1,234")).toBe(true)
+      expect(label.length).toBeLessThan(`${NAME} 1,234`.length)
       const el = [...container.querySelectorAll("text[data-value-label]")].find(
         (n) => n.textContent === label,
       )!

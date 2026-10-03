@@ -53,7 +53,7 @@ describe("StatusMark", () => {
 
 describe("statusWords", () => {
   it("speaks the chart's language", () => {
-    expect(statusWords(true)).toEqual({ forecastSuffix: "（预测）", forecast: "预测", target: "目标" })
+    expect(statusWords(true)).toEqual({ forecastSuffix: "（预测）", forecast: "预测", target: "目标", reported: "实际" })
     expect(statusWords(false).forecastSuffix).toBe(" (forecast)")
   })
 })

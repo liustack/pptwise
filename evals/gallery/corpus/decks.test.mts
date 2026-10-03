@@ -24,7 +24,7 @@ describe("themeDeck corpus thicken (gallery r2 D10/D11/D12/D21)", () => {
     expect(page.type).toBe("content")
     if (page.type !== "content") throw new Error("expected content page")
     expect(page.kind).toBe("data")
-    expect(getThemeDefinition("swiss").menu.content[page.kind]?.face).toBe("split-band")
+    expect(getThemeDefinition("swiss").menu.content[page.kind]?.face).toBe("grid-sheet")
     expect(page.components[0]?.type).toBe("chart")
     expect(page.components[1]?.type).toBe("bullets")
   })

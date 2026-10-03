@@ -2,8 +2,9 @@ import type { ReactElement } from "react"
 import type { ChartSeries, Component } from "@/ir"
 import { CHART_AXIS_LIMIT } from "@/ir/components/chart"
 import { accessibleInk } from "../render/ink"
+import { recededMarkFill } from "../render/chart-palette"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
-import { joinUnit } from "../lib/quantity-format"
+import { groupDigits, joinUnit } from "../lib/quantity-format"
 import { changeText } from "../lib/change-figure"
 import { mostlyChinese } from "../lib/text-script"
 import { StatusMark, statusGround, type PointStatus } from "../render/mark-status"
@@ -486,6 +487,32 @@ function highlightsTallestBar(palette: readonly string[], accentColor: string): 
   return palette.some((color) => color.toUpperCase() === accent)
 }
 
+/** The one bar an author marked (`data[].emphasis`): its series and its category, or null. */
+function markedPointOf(series: readonly ChartSeries[]): { seriesIndex: number; x: string | number } | null {
+  for (const [seriesIndex, s] of series.entries()) {
+    const point = s.data.find((d) => d.emphasis === true)
+    if (point) return { seriesIndex, x: point.x }
+  }
+  return null
+}
+
+/**
+ * The fill of a bar in a chart with a marked bar: that bar keeps its
+ * series' colour and every other bar recedes to the grey a marked series
+ * leaves the rest in (`recededMarkFill`), so the page reads as one bar
+ * against its context. Null when no bar is marked.
+ */
+function markedPointFill(
+  marked: { seriesIndex: number; x: string | number } | null,
+  seriesIndex: number,
+  x: string | number,
+  palette: readonly string[],
+  receded: string,
+): string | null {
+  if (!marked) return null
+  return marked.seriesIndex === seriesIndex && marked.x === x ? palette[seriesIndex % palette.length]! : receded
+}
+
 /**
  * Direct labels for the two charts that carry no axis and no legend — pie
  * and funnel (`chart.tsx`'s `legendApplicable` excludes both, and always
@@ -527,9 +554,19 @@ const DIRECT_LABEL_CENTER_TO_BASELINE = 0.3
  * and the reader all see one label instead of two half-labels that can drift
  * apart. A point with no name prints its value alone.
  */
-function directLabelText(point: ChartSeries["data"][number]): string {
+function directLabelText(point: ChartSeries["data"][number], chinese: boolean): string {
   const name = String(point.x).trim()
-  return name ? `${name} ${point.y}` : String(point.y)
+  const value = chartFigure(point.y, chinese)
+  return name ? `${name} ${value}` : value
+}
+
+/**
+ * A value as a chart prints it: as the author wrote it, its whole part
+ * grouped the way the chart's language prints a figure (`groupDigits`),
+ * "2,778" on an English chart and 「8490」 on a Chinese one.
+ */
+function chartFigure(value: number, chinese: boolean): string {
+  return groupDigits(String(value), chinese)
 }
 
 function directLabelWidth(text: string, fontFamily?: string): number {
@@ -593,9 +630,10 @@ const SERIES_GUTTER_GAP = 6
 const SERIES_PLOT_MIN_W_RATIO = 0.55
 
 /** One series' end label: `name value`, or the bare value when unnamed. */
-function seriesEndLabelText(name: string | undefined, value: number): string {
+function seriesEndLabelText(name: string | undefined, value: number, chinese: boolean): string {
   const trimmed = (name ?? "").trim()
-  return trimmed ? `${trimmed} ${value}` : String(value)
+  const figure = chartFigure(value, chinese)
+  return trimmed ? `${trimmed} ${figure}` : figure
 }
 
 /** One aligned series' first and last non-null value, plus how many it kept. */
@@ -607,11 +645,12 @@ function endsOf(values: readonly (number | null)[]): { first?: number; last?: nu
 /** The end-gutter texts a line/area chart has to reserve room for. */
 function endLabelTexts(
   series: readonly { name: string; values: readonly (number | null)[] }[],
+  chinese: boolean,
   ): string[] {
   return series
     .map((s) => {
       const { last } = endsOf(s.values)
-      return last == null ? null : seriesEndLabelText(s.name, last)
+      return last == null ? null : seriesEndLabelText(s.name, last, chinese)
     })
     .filter((text): text is string => text !== null)
 }
@@ -619,11 +658,12 @@ function endLabelTexts(
 /** The start-gutter texts (bare values) a line/area chart has to reserve room for. */
 function firstValueTexts(
   series: readonly { values: readonly (number | null)[] }[],
+  chinese: boolean,
 ): string[] {
   return series
     .map((s) => {
       const { first, count } = endsOf(s.values)
-      return count < 2 || first == null ? null : String(first)
+      return count < 2 || first == null ? null : chartFigure(first, chinese)
     })
     .filter((text): text is string => text !== null)
 }
@@ -733,17 +773,17 @@ export function seriesGutterLabelsFit(
   fontFamily?: string,
 ): boolean {
   const model = buildChartModel(series)
-  const meta = cartesianMeta(component)
+  const meta = cartesianMeta(component, series)
   const values = keptValues(model.series)
   // No axis can be laid out for a value past the ceiling. The renderer
   // declines the whole chart for that, so the labels are not the question.
   if (pastAxisLimit(values)) return true
-  const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit)
+  const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit, meta.chinese)
   // Only `plotW` matters here, and it does not depend on the height or the
   // axis-title band — see `layoutCartesianPlot`.
   const geom = layoutCartesianPlot({ x0: 0, y0: 0, w, h: 0, yTickLabels: yAxis.labels, titleH: 0, fontFamily })
-  const leftTexts = firstValueTexts(model.series)
-  const rightTexts = endLabelTexts(model.series)
+  const leftTexts = firstValueTexts(model.series, meta.chinese)
+  const rightTexts = endLabelTexts(model.series, meta.chinese)
   const gutters = splitSeriesGutters(
     geom.plotW,
     gutterTextRequest(leftTexts, fontFamily),
@@ -759,7 +799,7 @@ export function seriesGutterLabelsFit(
   for (const s of model.series) {
     const { last } = endsOf(s.values)
     if (last == null) continue
-    const fit = fitProtectedLabel(seriesEndLabelText(s.name, last), String(last), avail("right"), fontFamily)
+    const fit = fitProtectedLabel(seriesEndLabelText(s.name, last, meta.chinese), chartFigure(last, meta.chinese), avail("right"), fontFamily)
     if (fit.text === "" || !fit.named) return false
   }
   return true
@@ -1103,8 +1143,10 @@ function barSlots(
  * grouped (n>=2) category, see `renderBar`'s own group-geometry comment. */
 const BAR_GROUP_EDGE_GAP = 4
 
-function cartesianMeta(component?: ChartInput) {
+function cartesianMeta(component: ChartInput | undefined, series: readonly ChartSeries[]) {
   return {
+    // The language the chart's figures are printed in (`groupDigits`).
+    chinese: chartChinese(series),
     xTitle: component?.axes?.x_title,
     yTitle: component?.axes?.y_title,
     xUnit: component?.axes?.x_unit,
@@ -1206,9 +1248,9 @@ export function renderBar(
   const model = buildChartModel(series)
   const { categories } = model
   const n = model.series.length
-  const meta = cartesianMeta(component)
+  const meta = cartesianMeta(component, series)
   if (pastAxisLimit(keptValues(model.series))) return <WholeShareDeclined />
-  const yAxis = buildNumericAxis(keptValues(model.series), "zero-max", meta.yUnit)
+  const yAxis = buildNumericAxis(keptValues(model.series), "zero-max", meta.yUnit, meta.chinese)
   const domain: ChartDomain = { min: yAxis.domain.min, max: yAxis.domain.max, degenerate: yAxis.domain.max <= yAxis.domain.min }
   // Brackets for the author's `changes` take a band over the plot, so the
   // plot and its value labels start under them.
@@ -1226,7 +1268,7 @@ export function renderBar(
   })
   const groupW = geom.plotW / Math.max(categories.length, 1)
   const yTicks = yAxis.ticks.map((t) => ({
-    label: formatAxisTick(t, meta.yUnit),
+    label: formatAxisTick(t, meta.yUnit, meta.chinese),
     pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
   }))
   const xTicks = categories.map((cat, i) => {
@@ -1244,8 +1286,11 @@ export function renderBar(
     }
   })
   const gradientId = chartGradientId("chart-bar-grad", w, h, series)
-  // A forecast or a target is drawn in its series' colour, never in the tallest-bar highlight.
-  const highlight = n <= 1 && highlightsTallestBar(palette, accentColor) && !hasPointStatus(series)
+  // A forecast or a target is drawn in its series' colour, never in the
+  // tallest-bar highlight, and a bar the author marked replaces it.
+  const marked = markedPointOf(series)
+  const receded = recededMarkFill(mutedColor, _bgHex ?? "#FFFFFF")
+  const highlight = !marked && n <= 1 && highlightsTallestBar(palette, accentColor) && !hasPointStatus(series)
   const group = fullestGroup(model.series, categories.length)
   const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
   const dataMax = Math.max(...keptValues(model.series), Number.NEGATIVE_INFINITY)
@@ -1270,7 +1315,7 @@ export function renderBar(
         risingBand(
           {
             id: `bar-${i}-${s.seriesIndex}`,
-            text: String(value),
+            text: chartFigure(value, meta.chinese),
             x: barX + perBarW / 2,
             y: barY - VALUE_LABEL_GAP,
             anchor: "middle",
@@ -1326,11 +1371,9 @@ export function renderBar(
           const barX = groupX0 + slots.get(s.seriesIndex)!
           const isMax = highlight && value === dataMax
           const { barY, barH } = verticalBarExtent(value, domain, geom.plotY, geom.plotH)
-          const fill = highlight
-            ? isMax
-              ? accentColor
-              : `url(#${gradientId})`
-            : palette[s.seriesIndex % palette.length]
+          const fill =
+            markedPointFill(marked, s.seriesIndex, cat.x, palette, receded) ??
+            (highlight ? (isMax ? accentColor : `url(#${gradientId})`) : palette[s.seriesIndex % palette.length])
           const placed = placedBars.get(`bar-${i}-${s.seriesIndex}`)
           barElements.push(
             barMark({
@@ -1419,10 +1462,10 @@ export function renderLine(
   const model = buildChartModel(series)
   const { categories } = model
   const n = model.series.length
-  const meta = cartesianMeta(component)
+  const meta = cartesianMeta(component, series)
   const values = keptValues(model.series)
   if (pastAxisLimit(values)) return <WholeShareDeclined />
-  const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit)
+  const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit, meta.chinese)
   const geom = layoutCartesianPlot({
     x0,
     y0,
@@ -1438,8 +1481,8 @@ export function renderLine(
   // the x-axis still run the full plot width; only the points move in.
   const gutters = splitSeriesGutters(
     geom.plotW,
-    gutterTextRequest(firstValueTexts(model.series), fontFamily),
-    gutterTextRequest(endLabelTexts(model.series), fontFamily),
+    gutterTextRequest(firstValueTexts(model.series, meta.chinese), fontFamily),
+    gutterTextRequest(endLabelTexts(model.series, meta.chinese), fontFamily),
   )
   const dataX = geom.plotX + gutters.leftW
   const { xForIndex, maxWidth: categoryMaxWidth } = categorySpan(
@@ -1451,7 +1494,7 @@ export function renderLine(
     geom.plotW,
   )
   const yTicks = yAxis.ticks.map((t) => ({
-    label: formatAxisTick(t, meta.yUnit),
+    label: formatAxisTick(t, meta.yUnit, meta.chinese),
     pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
   }))
   const xTicks = categories.map((cat, i) => {
@@ -1498,8 +1541,8 @@ export function renderLine(
       gutterLabels.push({
         id: `${end.s.seriesIndex}-last`,
         side: "right",
-        text: seriesEndLabelText(end.s.name, end.last.value),
-        keep: String(end.last.value),
+        text: seriesEndLabelText(end.s.name, end.last.value, meta.chinese),
+        keep: chartFigure(end.last.value, meta.chinese),
         endX: end.last.x,
         endY: end.last.y,
         priority: n - end.s.seriesIndex,
@@ -1512,7 +1555,7 @@ export function renderLine(
       gutterLabels.push({
         id: `${end.s.seriesIndex}-first`,
         side: "left",
-        text: String(end.first.value),
+        text: chartFigure(end.first.value, meta.chinese),
         endX: end.first.x,
         endY: end.first.y,
         priority: n - end.s.seriesIndex,
@@ -1804,6 +1847,7 @@ function layoutRadialSlices(
   x0: number,
   w: number,
   fullR: number,
+  chinese: boolean,
   fontFamily?: string,
 ): { r: number; slices: RadialSlice[] } {
   // One authoritative label budget, used both to size the circle and to fit
@@ -1815,7 +1859,7 @@ function layoutRadialSlices(
   // is usually also its longest: it shipped as "田野采集 " with its own value
   // clipped off, on 18 gallery pages. Geometry may grant a label *more* room
   // than the budget (a narrow band, a small slice); it never grants less.
-  const texts = data.map(directLabelText)
+  const texts = data.map((d) => directLabelText(d, chinese))
   const widest = widestDirectLabel(texts, fontFamily)
   // **The circle never grows past what the width can host beside it.**
   // `fullR` is the disc the *box* would hold, and once a radial chart
@@ -1869,7 +1913,7 @@ function layoutRadialSlices(
       // fitting it from the front took the number off first.
       fitted: fitProtectedLabel(
         texts[i]!,
-        String(d.y),
+        chartFigure(d.y, chinese),
         Math.max(labelBudget, right ? x0 + w - textX : textX - x0),
         fontFamily,
       ),
@@ -2007,7 +2051,7 @@ export function renderPie(
   // A pie wide enough for its labels (the common case: `chart.tsx` hands
   // this renderer the full component width against a fixed 240px band) keeps
   // its full radius, so the wedge geometry is untouched there.
-  const { r, slices } = layoutRadialSlices(data, total, cx, cy, x0, w, fullR, fontFamily)
+  const { r, slices } = layoutRadialSlices(data, total, cx, cy, x0, w, fullR, chartChinese(series), fontFamily)
   const labelFill = directLabelInk(textColor, bgHex)
 
   return (
@@ -2064,7 +2108,7 @@ export function renderFunnel(
   const data = series[0]?.data ?? []
   const max = Math.max(...data.map((d) => d.y), 1)
   const stepH = h / Math.max(data.length, 1)
-  const texts = data.map(directLabelText)
+  const texts = data.map((d) => directLabelText(d, chartChinese(series)))
   // One label per band, so the bands themselves are the anti-collision
   // mechanism — until a row is shorter than a line of text, at which point
   // no placement inside this component can keep neighbouring labels apart
@@ -2314,7 +2358,8 @@ export function renderDumbbell(
   const min = Math.min(0, ...all)
   const max = Math.max(...all, 1)
   const categoryTexts = fromData.slice(0, rows).map((d) => String(d.x))
-  const toValueTexts = toData.slice(0, rows).map((d) => String(d.y))
+  const chinese = chartChinese(series)
+  const toValueTexts = toData.slice(0, rows).map((d) => chartFigure(d.y, chinese))
   const { labelW, valueW, plotW } = allocateDumbbellBands(w, categoryTexts, toValueTexts)
   const plotX = x0 + labelW + DUMBBELL_LABEL_GAP
   const rowH = h / rows
@@ -2333,12 +2378,12 @@ export function renderDumbbell(
           minFontSize: DUMBBELL_LABEL_MIN_FONT_SIZE,
           bold: true,
         })
-        const fromValueLabel = fitDumbbellLine(String(from.y), {
+        const fromValueLabel = fitDumbbellLine(chartFigure(from.y, chinese), {
           maxWidth: fromLabelMaxWidth,
           fontSize: DUMBBELL_FROM_FONT_SIZE,
           minFontSize: DUMBBELL_FROM_FONT_SIZE,
         })
-        const toValueLabel = fitDumbbellLine(String(to.y), {
+        const toValueLabel = fitDumbbellLine(chartFigure(to.y, chinese), {
           maxWidth: toLabelMaxWidth,
           fontSize: DUMBBELL_TO_FONT_SIZE,
           minFontSize: DUMBBELL_TO_MIN_FONT_SIZE,
@@ -2530,10 +2575,10 @@ export function renderBarHorizontal(
   const { categories } = model
   if (categories.length === 0) return <></>
   const n = model.series.length
-  const meta = cartesianMeta(component)
+  const meta = cartesianMeta(component, series)
   const values = keptValues(model.series)
   if (pastAxisLimit(values)) return <WholeShareDeclined />
-  const xAxis = buildNumericAxis(values, "zero-max", meta.xUnit ?? meta.yUnit)
+  const xAxis = buildNumericAxis(values, "zero-max", meta.xUnit ?? meta.yUnit, meta.chinese)
   const domain: ChartDomain = { min: xAxis.domain.min, max: xAxis.domain.max, degenerate: false }
   const dataMax = Math.max(...values, Number.NEGATIVE_INFINITY)
   // A change the author asked for at a category is printed after the later
@@ -2552,11 +2597,11 @@ export function renderBarHorizontal(
   }
   const labelText = (i: number, seriesIndex: number, value: number) => {
     const change = changeAfter.get(`${i}-${seriesIndex}`)
-    return change ? `${value}  ${change}` : String(value)
+    return change ? `${chartFigure(value, chinese)}  ${change}` : chartFigure(value, chinese)
   }
   const labelTexts =
     changeAfter.size === 0
-      ? values.map((v) => String(v))
+      ? values.map((v) => chartFigure(v, chinese))
       : categories.flatMap((_cat, i) =>
           model.series.flatMap((m) => (m.values[i] == null ? [] : [labelText(i, m.seriesIndex, m.values[i]!)])),
         )
@@ -2572,11 +2617,13 @@ export function renderBarHorizontal(
   const plotH = Math.max(1, h - meta.titleH - X_TICK_BAND - BAR_H_PLOT_TOP_PAD)
   const rowH = plotH / categories.length
   const gradientId = chartGradientId("chart-barh-grad", w, h, series)
-  const highlight = n <= 1 && highlightsTallestBar(palette, accentColor) && !hasPointStatus(series)
+  const marked = markedPointOf(series)
+  const receded = recededMarkFill(mutedColor, _bgHex ?? "#FFFFFF")
+  const highlight = !marked && n <= 1 && highlightsTallestBar(palette, accentColor) && !hasPointStatus(series)
   const group = fullestGroup(model.series, categories.length)
   const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
   const xTicks = xAxis.ticks.map((t, i) => ({
-    label: formatAxisTick(t, meta.xUnit ?? meta.yUnit),
+    label: formatAxisTick(t, meta.xUnit ?? meta.yUnit, meta.chinese),
     pos: mapToPlotX(t, xAxis.domain, plotX, plotW),
     anchor: edgeAnchor(i, xAxis.ticks.length),
   }))
@@ -2679,11 +2726,9 @@ export function renderBarHorizontal(
           const barY = rowY0 + slots.get(s.seriesIndex)!
           const isMax = highlight && value === dataMax
           const { barX, barW } = horizontalBarExtent(value, domain, plotX, plotW)
-          const fill = highlight
-            ? isMax
-              ? accentColor
-              : `url(#${gradientId})`
-            : palette[s.seriesIndex % palette.length]
+          const fill =
+            markedPointFill(marked, s.seriesIndex, cat.x, palette, receded) ??
+            (highlight ? (isMax ? accentColor : `url(#${gradientId})`) : palette[s.seriesIndex % palette.length])
           barElements.push(
             barMark({
               key: `r-${s.seriesIndex}`,
@@ -2845,10 +2890,10 @@ export function renderDonut(
   const fullR = radialFullRadius(w, h)
   // Same gutter the pie yields radius to, for the same reason: a ring of
   // colored arcs with a total in the middle names none of its own slices.
-  const { r, slices } = layoutRadialSlices(data, total, cx, cy, x0, w, fullR, fontFamily)
+  const { r, slices } = layoutRadialSlices(data, total, cx, cy, x0, w, fullR, chartChinese(series), fontFamily)
   const ri = r * DONUT_HOLE_RATIO
   const labelFill = directLabelInk(textColor, bgHex)
-  const totalLabel = formatStackTotal(total)
+  const totalLabel = formatStackTotal(total, chartChinese(series))
   const fitted = fitSvgLine(totalLabel, { maxWidth: ri * 1.5, fontSize: 30, minFontSize: 16 })
   // The caption under the centre number used to be the literal word "Total",
   // printed on every deck in every language — a maintainer's word arriving on
@@ -2932,13 +2977,13 @@ export function renderScatter(
   axisColor?: string,
   fontFamily?: string,
 ): ReactElement {
-  const meta = cartesianMeta(component)
+  const meta = cartesianMeta(component, series)
   const numX = (x: string | number): number => (typeof x === "number" ? x : Number(x))
   const xsAll = series.flatMap((s) => s.data.map((d) => numX(d.x)))
   const ysAll = series.flatMap((s) => s.data.map((d) => d.y))
   if (pastAxisLimit(xsAll) || pastAxisLimit(ysAll)) return <WholeShareDeclined />
-  const xAxis = buildNumericAxis(xsAll, "fit", meta.xUnit)
-  const yAxis = buildNumericAxis(ysAll, "fit", meta.yUnit)
+  const xAxis = buildNumericAxis(xsAll, "fit", meta.xUnit, meta.chinese)
+  const yAxis = buildNumericAxis(ysAll, "fit", meta.yUnit, meta.chinese)
   const geom = layoutCartesianPlot({
     x0,
     y0,
@@ -2957,11 +3002,11 @@ export function renderScatter(
     return SCATTER_MIN_BUBBLE_R + t * (SCATTER_MAX_BUBBLE_R - SCATTER_MIN_BUBBLE_R)
   }
   const yTicks = yAxis.ticks.map((t) => ({
-    label: formatAxisTick(t, meta.yUnit),
+    label: formatAxisTick(t, meta.yUnit, meta.chinese),
     pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
   }))
   const xTicks = xAxis.ticks.map((t, i) => ({
-    label: formatAxisTick(t, meta.xUnit),
+    label: formatAxisTick(t, meta.xUnit, meta.chinese),
     pos: xForVal(t),
     anchor: edgeAnchor(i, xAxis.ticks.length),
   }))
@@ -3040,10 +3085,10 @@ export function renderArea(
 ): ReactElement {
   const model = buildChartModel(series)
   const { categories } = model
-  const meta = cartesianMeta(component)
+  const meta = cartesianMeta(component, series)
   const values = keptValues(model.series)
   if (pastAxisLimit(values)) return <WholeShareDeclined />
-  const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit)
+  const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit, meta.chinese)
   const geom = layoutCartesianPlot({
     x0,
     y0,
@@ -3059,8 +3104,8 @@ export function renderArea(
   // at all before this (no legend now, and never any endpoint values).
   const gutters = splitSeriesGutters(
     geom.plotW,
-    gutterTextRequest(firstValueTexts(model.series), fontFamily),
-    gutterTextRequest(endLabelTexts(model.series), fontFamily),
+    gutterTextRequest(firstValueTexts(model.series, meta.chinese), fontFamily),
+    gutterTextRequest(endLabelTexts(model.series, meta.chinese), fontFamily),
   )
   const dataX = geom.plotX + gutters.leftW
   const { xForIndex, maxWidth: categoryMaxWidth } = categorySpan(
@@ -3072,7 +3117,7 @@ export function renderArea(
     geom.plotW,
   )
   const yTicks = yAxis.ticks.map((t) => ({
-    label: formatAxisTick(t, meta.yUnit),
+    label: formatAxisTick(t, meta.yUnit, meta.chinese),
     pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
   }))
   const xTicks = categories.map((cat, i) => {
@@ -3099,8 +3144,8 @@ export function renderArea(
       gutterLabels.push({
         id: `${s.seriesIndex}-last`,
         side: "right",
-        text: seriesEndLabelText(s.name, last),
-        keep: String(last),
+        text: seriesEndLabelText(s.name, last, meta.chinese),
+        keep: chartFigure(last, meta.chinese),
         endX: xForIndex(kept[kept.length - 1]!),
         endY: yFor(last),
         priority: model.series.length - s.seriesIndex,
@@ -3110,7 +3155,7 @@ export function renderArea(
       gutterLabels.push({
         id: `${s.seriesIndex}-first`,
         side: "left",
-        text: String(first),
+        text: chartFigure(first, meta.chinese),
         endX: xForIndex(kept[0]!),
         endY: yFor(first),
         priority: model.series.length - s.seriesIndex,
@@ -3246,7 +3291,7 @@ export function renderGauge(
   const ri = ro * GAUGE_HOLE_RATIO
   const startA = Math.PI
   const endValue = Math.PI + frac * Math.PI
-  const valueLabel = String(value)
+  const valueLabel = chartFigure(value, chartChinese(series))
   const numFit = fitSvgLine(valueLabel, { maxWidth: ri * 1.6, fontSize: Math.min(44, ro * 0.55), minFontSize: 16 })
   const caption = series[0]?.data[0]?.x
   const captionText = caption == null ? "" : String(caption)
@@ -3369,8 +3414,8 @@ export function percentShares(values: readonly (number | null)[]): (number | nul
 }
 
 /** A column total as a person writes it: `0.1 + 0.2` prints `0.3`. */
-function formatStackTotal(value: number): string {
-  return String(Number(value.toPrecision(12)))
+function formatStackTotal(value: number, chinese: boolean): string {
+  return groupDigits(String(Number(value.toPrecision(12))), chinese)
 }
 
 /**
@@ -3451,7 +3496,7 @@ export function renderStacked(
   const percent = component?.chart_type === "percent_stacked"
   const model = buildChartModel(series)
   const { categories } = model
-  const meta = cartesianMeta(component)
+  const meta = cartesianMeta(component, series)
 
   const piles = categories.map((_cat, i) => {
     let total = 0
@@ -3486,9 +3531,9 @@ export function renderStacked(
     ? {
         domain: { min: 0, max: 100 },
         ticks: [...PERCENT_TICKS],
-        labels: PERCENT_TICKS.map((t) => formatAxisTick(t, "%")),
+        labels: PERCENT_TICKS.map((t) => formatAxisTick(t, "%", meta.chinese)),
       }
-    : buildNumericAxis([...piles.map((p) => p.up), ...piles.map((p) => p.down)], "zero-max", yUnit)
+    : buildNumericAxis([...piles.map((p) => p.up), ...piles.map((p) => p.down)], "zero-max", yUnit, meta.chinese)
   // Brackets for the author's `changes` take a band over the plot.
   const runs = percent ? [] : changeRuns(component, (x) => categories.findIndex((cat) => cat.x === x))
   const band = bracketBand(runs)
@@ -3505,7 +3550,7 @@ export function renderStacked(
   const yOf = (v: number) => mapToPlotY(v, yAxis.domain, geom.plotY, geom.plotH)
   const groupW = geom.plotW / Math.max(categories.length, 1)
   const colW = groupW * STACK_COLUMN_RATIO
-  const yTicks = yAxis.ticks.map((t) => ({ label: formatAxisTick(t, yUnit), pos: yOf(t) }))
+  const yTicks = yAxis.ticks.map((t) => ({ label: formatAxisTick(t, yUnit, meta.chinese), pos: yOf(t) }))
   const xTicks = categories.map((cat, i) => {
     const category = fitSvgLine(String(cat.x), {
       maxWidth: Math.max(8, groupW - BAR_GROUP_EDGE_GAP * 2),
@@ -3559,7 +3604,7 @@ export function renderStacked(
     ? []
     : columns.map((col, i) => ({
         id: `stack-${i}`,
-        text: formatStackTotal(piles[i]!.total),
+        text: formatStackTotal(piles[i]!.total, meta.chinese),
         x: col.colX + colW / 2,
         y: col.labelBaseY - VALUE_LABEL_GAP,
         anchor: "middle" as const,
@@ -3784,6 +3829,7 @@ function pointPlateBox(label: ValueLabelSpec): DepthBox {
 function comboPointLabels(opts: {
   points: readonly { x: number; y: number; value: number }[]
   unit?: string
+  chinese: boolean
   fontFamily?: string
   bars: readonly DepthBox[]
   dots: readonly DepthBox[]
@@ -3793,7 +3839,7 @@ function comboPointLabels(opts: {
   const decimals = Math.min(POINT_LABEL_MAX_DECIMALS, Math.max(0, ...opts.points.map((p) => decimalsOf(p.value))))
   const labels: ValueLabelSpec[] = opts.points.map((p, i) => ({
     id: `point-${i}`,
-    text: joinUnit(p.value.toFixed(decimals), opts.unit, " "),
+    text: joinUnit(groupDigits(p.value.toFixed(decimals), opts.chinese), opts.unit, " "),
     x: p.x,
     y: p.y - COMBO_DOT_R - VALUE_LABEL_GAP,
     anchor: "middle",
@@ -3831,7 +3877,7 @@ export function renderCombo(
 ): ReactElement {
   const model = buildChartModel(series)
   const { categories } = model
-  const meta = cartesianMeta(component)
+  const meta = cartesianMeta(component, series)
   // validate refuses a combo value past `CHART_AXIS_LIMIT`, since neither axis
   // can be built for it (`buildAlignedNumericAxis` throws rather than return
   // a range that misses it). Handed one around validate, the chart declines
@@ -3849,9 +3895,9 @@ export function renderCombo(
   const hasRight = axisSeries(true).length > 0
   // A bar is measured from zero, and "zero-max" keeps zero in range whatever
   // the values, so a left axis that carries a bar holds zero.
-  const yAxis = buildNumericAxis(keptValues(axisSeries(false)), axisMode(false), meta.yUnit)
+  const yAxis = buildNumericAxis(keptValues(axisSeries(false)), axisMode(false), meta.yUnit, meta.chinese)
   const y2Axis = hasRight
-    ? buildAlignedNumericAxis(keptValues(axisSeries(true)), axisMode(true), yAxis.ticks, meta.y2Unit)
+    ? buildAlignedNumericAxis(keptValues(axisSeries(true)), axisMode(true), yAxis.ticks, meta.y2Unit, meta.chinese)
     : null
   const geom = layoutCartesianPlot({
     x0,
@@ -3869,13 +3915,13 @@ export function renderCombo(
   const centerOf = (i: number) => geom.plotX + i * groupW + groupW / 2
 
   const yTicks = yAxis.ticks.map((t) => ({
-    label: formatAxisTick(t, meta.yUnit),
+    label: formatAxisTick(t, meta.yUnit, meta.chinese),
     pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
   }))
   // The right-hand ticks sit on the left axis's rows by construction, so they
   // take those rows' positions rather than recomputing them from a second
   // domain and landing a rounding error away.
-  const y2Ticks = y2Axis?.ticks.map((t, i) => ({ label: formatAxisTick(t, meta.y2Unit), pos: yTicks[i]!.pos }))
+  const y2Ticks = y2Axis?.ticks.map((t, i) => ({ label: formatAxisTick(t, meta.y2Unit, meta.chinese), pos: yTicks[i]!.pos }))
   const xTicks = categories.map((cat, i) => {
     const category = fitSvgLine(String(cat.x), {
       maxWidth: Math.max(8, groupW - BAR_GROUP_EDGE_GAP * 2),
@@ -3943,6 +3989,7 @@ export function renderCombo(
     ? comboPointLabels({
         points: marked.points,
         unit: onRight(marked.s.seriesIndex) ? meta.y2Unit : meta.yUnit,
+        chinese: meta.chinese,
         fontFamily,
         bars: barBoxes,
         dots: lineGeoms.flatMap((g) => g.points.map((p) => dotBox(p))),

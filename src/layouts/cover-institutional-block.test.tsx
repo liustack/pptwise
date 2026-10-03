@@ -15,11 +15,12 @@ function slide(heading = HEADING, subheading?: string): Slide {
   return { type: "cover", heading, subheading, components: [] } as Slide
 }
 
-function ir(themeId: string, meta: PptxIR["meta"] = {}): PptxIR {
+function ir(themeId: string, meta: PptxIR["meta"] = {}, branding?: "full"): PptxIR {
   return {
     version: "5",
     filename: "institutional-block.pptx",
     theme: { id: themeId },
+    ...(branding ? { branding, footer: {} } : {}),
     meta,
     assets: { images: {} },
     slides: [slide()],
@@ -34,7 +35,7 @@ const FULL_META: PptxIR["meta"] = {
   authors: [{ name: "战略与运营部", role: "GRID 12" }],
 }
 
-function renderCover(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] = FULL_META) {
+function renderCover(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] = FULL_META, branding?: "full") {
   const tokens = resolveStyle(themeId)
   const ctx = buildCtx(
     tokens,
@@ -44,34 +45,46 @@ function renderCover(themeId: string, s: Slide = slide(), meta: PptxIR["meta"] =
   )
   const markup = renderSvgMarkup(
     <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-      <InstitutionalBlockCover ir={ir(themeId, meta)} slide={s} index={0} ctx={ctx} />
+      <InstitutionalBlockCover ir={ir(themeId, meta, branding)} slide={s} index={0} ctx={ctx} />
     </svg>,
   )
   return { markup, root: parseSvgRoot(markup), tokens }
 }
 
 describe("cover-institutional-block — board geometry", () => {
-  it("places the kicker, giant heading, accent signature block and right byline", () => {
-    const { root, tokens } = renderCover("swiss")
-    const sign = root.querySelector("rect")!
-    expect([sign.getAttribute("x"), sign.getAttribute("y"), sign.getAttribute("width"), sign.getAttribute("height")]).toEqual([
-      "84",
-      "604",
-      "150",
-      "14",
-    ])
-    expect(sign.getAttribute("fill")).toBe(tokens.colors.accent)
+  // swiss's 2026-10 cover (p01): the organization and the date over a black
+  // hairline, the title on its last line at the lower half, a short red bar,
+  // the subtitle.
+  const subtitle = "没有危机的年份里，清洁电力首次接住全部新增用电"
 
-    const texts = Array.from(root.querySelectorAll("text"))
-    const kicker = texts.find((t) => Number(t.getAttribute("y")) === 96)!
-    expect(kicker.textContent).toBe("CLOUDSEEK INSTITUTIONAL REVIEW")
-    expect(kicker.getAttribute("x")).toBe("84")
-    expect(kicker.getAttribute("font-weight")).toBe("700")
+  it("runs the organization bold on the left of the top line, over a black hairline at y104", () => {
+    const { root, tokens } = renderCover("swiss", slide("2025 年全球电力年度报告", subtitle))
+    const org = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "CloudSeek Institutional Review")!
+    expect([org.getAttribute("x"), org.getAttribute("y"), org.getAttribute("font-size"), org.getAttribute("font-weight")]).toEqual(["80", "90", "16", "700"])
+    const rule = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("y") === "104")!
+    expect([rule.getAttribute("x"), rule.getAttribute("width"), rule.getAttribute("height"), rule.getAttribute("fill")]).toEqual(["80", "1120", "1", tokens.colors.text])
+  })
 
-    const headings = texts.filter((t) => t.getAttribute("font-weight") === "700" && t.getAttribute("x") === "76")
-    expect(headings.length).toBeGreaterThan(0)
-    expect(headings[0]!.getAttribute("font-size")).toBe("172")
-    expect(headings.map((t) => t.textContent).join("")).toBe(HEADING)
+  it("prints the date on the right of the top line when the deck prints its document meta", () => {
+    const { root } = renderCover("swiss", slide(), { ...FULL_META, date: "2026 年 10 月" }, "full")
+    const date = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("2026 年 10 月"))!
+    expect([date.getAttribute("x"), date.getAttribute("y"), date.getAttribute("text-anchor")]).toEqual(["1200", "90", "end"])
+  })
+
+  it("sets the title at 88px on its last line, the red bar under it and the subtitle at 26px", () => {
+    const { root, tokens } = renderCover("swiss", slide("2025 年全球电力年度报告", subtitle))
+    const title = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "2025 年全球电力年度报告")!
+    expect([title.getAttribute("x"), title.getAttribute("y"), title.getAttribute("font-size"), title.getAttribute("font-weight")]).toEqual(["80", "511", "88", "700"])
+    const bar = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("height") === "8")!
+    expect([bar.getAttribute("x"), bar.getAttribute("y"), bar.getAttribute("width"), bar.getAttribute("fill")]).toEqual(["80", "558", "120", tokens.colors.accent])
+    const sub = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === subtitle)!
+    expect([sub.getAttribute("y"), sub.getAttribute("font-size")]).toEqual(["618", "26"])
+  })
+
+  it("grows a two-line title upward from the same last baseline", () => {
+    const { root } = renderCover("swiss", slide("Global Power Annual Report 2025"))
+    const lines = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-size") === "88")
+    expect(lines.map((t) => t.getAttribute("y"))).toEqual(["405", "511"])
   })
 
   it("does not paint a full-height grid line through the body", () => {
@@ -87,12 +100,14 @@ describe("cover-institutional-block — shared pool", () => {
     expect(layoutDef.kind).toBe("standard")
     expect(layoutDef.slideTypes).toEqual(["cover"])
     for (const s of layoutDef.slots) expect(s.accepts).toEqual([])
+    expect(layoutDef.coverMark).toBe("face")
   })
 
-  it("bakes no hex: the signature block fill is the theme's accent on every theme", () => {
+  it("bakes no hex: the bar under the title is the theme's accent on every theme", () => {
     for (const themeId of CANONICAL_THEME_IDS) {
       const { root, tokens } = renderCover(themeId)
-      expect(root.querySelector("rect")!.getAttribute("fill"), themeId).toBe(tokens.colors.accent)
+      const bar = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("height") === "8")!
+      expect(bar.getAttribute("fill"), themeId).toBe(tokens.colors.accent)
     }
   })
 

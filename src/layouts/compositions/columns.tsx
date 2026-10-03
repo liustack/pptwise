@@ -2,6 +2,7 @@ import type React from "react"
 import type { Component } from "@/ir"
 import { accessibleInk } from "../../render/ink"
 import { statusWords } from "../../render/mark-status"
+import { gridData, gridMark, gridMarkTint, gridQuiet, gridRule } from "./grid"
 import { axisInk } from "./notice"
 import {
   PLOT_TYPE,
@@ -21,6 +22,7 @@ import {
   plotNumber,
   pointDecimals,
   reportedDecimals,
+  barInk,
   seriesInk,
   textBox,
   textWidth,
@@ -61,6 +63,16 @@ type Point = Chart["series"][number]["data"][number]
  * it), the chart palette (series when none is marked), `text` (single-bar
  * values, categories), `muted` (values of receded bars, the legend, the unit,
  * other brackets), `surface` (tints), `bg` or `defaultBg`, `fonts.body`.
+ *
+ * The grid setting (swiss's 2026-10 board, p05 and p13) draws the same
+ * plot with black data: a lone series' bars in the text ink, the bar or
+ * series the author marks in the emphasis ink (`./grid.ts`), a forecast
+ * hatched in it too, and every bracket in it, since the change it states is
+ * what the page says. One series names itself in the unit line, so the
+ * legend appears only to tell series, or reported bars from forecast ones,
+ * apart. The baseline sits 44px over the band's foot, the tallest column
+ * takes nine tenths of the bars' height, and the bars may come down to
+ * 100px tall to share a band with a share bar.
  */
 
 const MAX_SERIES = 3
@@ -92,6 +104,9 @@ const BRACKET_RISE = 56
 const BRACKET_LABEL_LIFT = 10
 /** The space a second bracket stacks above an earlier one it would cross. */
 const BRACKET_STEP = 40
+
+/** The grid setting's departures from the board's geometry. */
+const GRID = { baseFromFoot: 44, minH: 100, legGap: 34, rise: 48, loneCaptionBaseline: 24, tallest: 0.9 }
 
 /** A value waiting to be set over its bar, once every bar is known. */
 interface ValueLabel {
@@ -132,6 +147,8 @@ function columnsShape(components: readonly Component[]): Chart | null {
     if (chart.direction === "horizontal") return null
     if (chart.series.length < 1 || chart.series.length > MAX_SERIES) return null
   } else if (chart.chart_type === "stacked") {
+    // A stacked chart on its side is a share bar, which `share` draws.
+    if (chart.direction === "horizontal") return null
     if (chart.series.length < 2 || chart.series.length > MAX_STACKED_SERIES) return null
   } else return null
   if (chart.axes?.x_title) return null
@@ -187,12 +204,67 @@ export function unitCaption(chart: Chart, chinese: boolean): string {
   return parts.join(chinese ? "，" : ", ")
 }
 
+/**
+ * The grid setting's bar colour: a forecast or target in the emphasis ink.
+ * With a bar marked, that bar in it and the rest black. With a series
+ * marked, that series in it and the rest in the light grey. With nothing
+ * marked, the series black, mid grey and light grey in turn.
+ */
+function gridInk(ctx: Parameters<Composition>[0]["ctx"], chart: Chart, series: number, point: Point, marked: number): string {
+  if (point.status !== undefined) return gridMark(ctx)
+  if (chart.series.some((s) => s.data.some((p) => p.emphasis === true))) return point.emphasis === true ? gridMark(ctx) : gridData(ctx)
+  if (marked >= 0) return series === marked ? gridMark(ctx) : gridQuiet(ctx)
+  return [gridData(ctx), gridRule(ctx), gridQuiet(ctx)][series % 3]!
+}
+
+/** A grid bar painted the way its status says: a forecast hatched, a target outlined, over the emphasis ink's pale tint. */
+function gridPaint(ctx: Parameters<Composition>[0]["ctx"], color: string, status: Point["status"]): MarkPaint {
+  if (status === "forecast") return { kind: "hatch", ground: gridMarkTint(ctx), stripe: color }
+  if (status === "target") return { kind: "target", ground: gridMarkTint(ctx), stroke: color }
+  return { kind: "solid", fill: color }
+}
+
+/**
+ * The grid setting's legend: one series names itself in the unit line, so
+ * it gets a legend only when its bars are not all reported (Actual beside
+ * Forecast). Several series get an entry each, as on the board.
+ */
+function gridLegendEntries(chart: Chart, ctx: Parameters<Composition>[0]["ctx"], marked: number, chinese: boolean): LegendEntry[] {
+  const words = statusWords(chinese)
+  if (chart.series.length === 1) {
+    const s = chart.series[0]!
+    const statuses = new Set(s.data.map((p) => p.status ?? "reported"))
+    if (statuses.size === 1 && statuses.has("reported")) return []
+    const reported = s.data.find((p) => p.status === undefined)
+    const entries: LegendEntry[] = []
+    if (reported) entries.push({ name: words.reported, paint: { kind: "solid", fill: gridInk(ctx, chart, 0, reported, marked) } })
+    if (statuses.has("forecast")) entries.push({ name: words.forecast, paint: gridPaint(ctx, gridMark(ctx), "forecast") })
+    if (statuses.has("target")) entries.push({ name: words.target, paint: gridPaint(ctx, gridMark(ctx), "target") })
+    return entries
+  }
+  const entries: LegendEntry[] = chart.series.map((s, i) => ({
+    name: s.name,
+    paint: { kind: "solid", fill: gridInk(ctx, chart, i, s.data.find((p) => p.status === undefined) ?? { x: "", y: 0 }, marked) },
+  }))
+  const statuses = new Set(chart.series.flatMap((s) => s.data.map((p) => p.status)))
+  if (statuses.has("forecast")) entries.push({ name: words.forecast, paint: gridPaint(ctx, gridMark(ctx), "forecast") })
+  if (statuses.has("target")) entries.push({ name: words.target, paint: gridPaint(ctx, gridMark(ctx), "target") })
+  return entries
+}
+
+/** The grid setting's unit line: one series' name before the title and the unit. */
+function gridCaption(chart: Chart, chinese: boolean): string {
+  const lone = chart.series.length === 1 ? chart.series[0]!.name.trim() : undefined
+  const parts = [lone, chart.axes?.y_title?.trim(), chart.axes?.y_unit?.trim()].filter((p): p is string => Boolean(p))
+  return parts.join(chinese ? "，" : ", ")
+}
+
 interface Placed {
   nodes: React.ReactNode[]
   boxes: InkBox[]
 }
 
-export const columnsComposition: Composition = ({ components, ctx, rect }) => {
+export const columnsComposition: Composition = ({ components, ctx, rect, setting }) => {
   const chart = columnsShape(components)
   if (!chart) return null
   const columns = columnsOf(chart)
@@ -204,20 +276,23 @@ export const columnsComposition: Composition = ({ components, ctx, rect }) => {
   const marked = chart.series.findIndex((s) => s.emphasis === true)
   const stacked = chart.chart_type === "stacked"
   const lone = stacked || columns.every((c) => c.bars.length <= 1)
+  const grid = setting === "grid"
+  const mark = grid ? gridMark(ctx) : colors.primary
 
   const slot = rect.w / columns.length
   const fullest = Math.max(1, ...columns.map((c) => (stacked ? 1 : c.bars.length)))
   const barW = lone ? Math.min(LONE_BAR_W, slot * LONE_BAR_SHARE) : Math.min(GROUP_BAR_W, (slot * GROUP_SHARE - GROUP_GAP * (fullest - 1)) / fullest)
   if (barW < 16) return null
 
-  const base = rect.y + rect.h - BASE_FROM_FOOT
+  const base = rect.y + rect.h - (grid ? GRID.baseFromFoot : BASE_FROM_FOOT)
   const categoryY = base + CATEGORY_DROP
   const legendY = rect.y + LEGEND_BASELINE
-  const unitY = rect.y + UNIT_BASELINE
-  const legend = layoutLegend(legendEntries(chart, ctx, marked, chinese), rect.x, legendY, rect.w, body)
-  if (!legend) return null
-  const caption = unitCaption(chart, chinese)
-  const frameBoxes: InkBox[] = [legend.box]
+  const entries = grid ? gridLegendEntries(chart, ctx, marked, chinese) : legendEntries(chart, ctx, marked, chinese)
+  const legend = entries.length > 0 ? layoutLegend(entries, rect.x, legendY, rect.w, body) : null
+  if (entries.length > 0 && !legend) return null
+  const unitY = rect.y + (legend ? UNIT_BASELINE : GRID.loneCaptionBaseline)
+  const caption = grid ? gridCaption(chart, chinese) : unitCaption(chart, chinese)
+  const frameBoxes: InkBox[] = legend ? [legend.box] : []
   if (caption) frameBoxes.push(textBox(rect.x, unitY, textWidth(caption, PLOT_TYPE.meta, body), PLOT_TYPE.meta))
 
   const categoryInk = accessibleInk(colors.text, bg, PLOT_TYPE.category)
@@ -230,9 +305,14 @@ export const columnsComposition: Composition = ({ components, ctx, rect }) => {
 
   const forecast = forecastWords(chinese)
   const decimals = reportedDecimals(chart)
-  const vmax = niceCeil(Math.max(...columns.map((c) => c.total)))
+  // With no value axis there is no tick to land on, so the grid plot scales
+  // its tallest column to nine tenths of the bars' height, as the board does.
+  const tallest = Math.max(...columns.map((c) => c.total))
+  const vmax = grid ? tallest / GRID.tallest : niceCeil(tallest)
   const changes = chart.changes ?? []
   let height = changes.length > 0 ? BOARD_H_BRACKETS : BOARD_H
+  const legGap = grid ? GRID.legGap : BRACKET_LEG_GAP
+  const minH = grid ? GRID.minH : MIN_H
 
   /** Every bar's x, by column and position in it. */
   const barX = (column: number, k: number, count: number) => {
@@ -252,8 +332,8 @@ export const columnsComposition: Composition = ({ components, ctx, rect }) => {
       column.bars.forEach((bar, k) => {
         const x = barX(ci, k, column.bars.length)
         const top = y(bar.to)
-        const color = seriesInk(ctx, bar.series, marked)
-        const paint = markPaint(ctx, color, bar.point.status)
+        const color = grid ? gridInk(ctx, chart, bar.series, bar.point, marked) : barInk(ctx, chart, bar.series, bar.point, marked)
+        const paint = grid ? gridPaint(ctx, color, bar.point.status) : markPaint(ctx, color, bar.point.status)
         nodes.push(
           <g key={`bar-${ci}-${k}`} data-plot-mark="1">
             {paintMark(paint, { x, y: top, w: barW, h: Math.max(1, y(bar.from) - top) })}
@@ -262,15 +342,15 @@ export const columnsComposition: Composition = ({ components, ctx, rect }) => {
         marks.push({ x0: x, y0: top, x1: x + barW, y1: base })
         if (stacked) return
         // A value over each bar of an unstacked chart.
-        const isMarked = bar.series === marked
+        const isMarked = bar.series === marked || bar.point.emphasis === true || (grid && bar.point.status !== undefined)
         const size = lone ? PLOT_TYPE.lead : PLOT_TYPE.value
         const bold = lone || isMarked
-        const ink = accessibleInk(isMarked ? colors.primary : lone ? colors.text : colors.muted, bg, size)
+        const ink = accessibleInk(isMarked ? mark : lone ? colors.text : colors.muted, bg, size)
         valueLabels.push({
           key: `value-${ci}-${k}`,
           cx: x + barW / 2,
           y: top - VALUE_LIFT,
-          figure: plotNumber(bar.point.y, pointDecimals(bar.point, decimals)),
+          figure: plotNumber(bar.point.y, chinese, pointDecimals(bar.point, decimals)),
           suffix: bar.point.status === "forecast" ? forecast.suffix : "",
           size,
           bold,
@@ -283,9 +363,9 @@ export const columnsComposition: Composition = ({ components, ctx, rect }) => {
         const top = y(column.total)
         const isMarked = column.bars.some((bar) => bar.series === marked)
         const lonePoint = column.bars.length === 1 ? column.bars[0]!.point : null
-        const text = plotNumber(column.total, Math.max(...column.bars.map((b) => pointDecimals(b.point, decimals)))) +
+        const text = plotNumber(column.total, chinese, Math.max(...column.bars.map((b) => pointDecimals(b.point, decimals)))) +
           (lonePoint?.status === "forecast" ? forecast.suffix : "")
-        const ink = accessibleInk(isMarked ? colors.primary : colors.text, bg, PLOT_TYPE.lead)
+        const ink = accessibleInk(isMarked ? mark : colors.text, bg, PLOT_TYPE.lead)
         const cx = rect.x + slot * (ci + 0.5)
         const width = textWidth(text, PLOT_TYPE.lead, body, true)
         boxes.push(textBox(cx, top - VALUE_LIFT, width, PLOT_TYPE.lead, "middle"))
@@ -331,22 +411,23 @@ export const columnsComposition: Composition = ({ components, ctx, rect }) => {
       const ends = bracketEnds(change, columns, chart, barX, barW, y)
       if (!ends) return null
       const [a, b] = ends
-      let crossY = Math.min(a.top, b.top) - BRACKET_RISE
+      let crossY = Math.min(a.top, b.top) - (grid ? GRID.rise : BRACKET_RISE)
       for (const earlier of placedBrackets) {
         if (a.x < earlier.x1 && earlier.x0 < b.x && crossY > earlier.y - BRACKET_STEP) crossY = earlier.y - BRACKET_STEP
       }
       placedBrackets.push({ x0: a.x, x1: b.x, y: crossY })
-      const strong = b.series === marked && marked >= 0
-      const stroke = strong ? colors.primary : axisInk(ctx)
+      // The grid page's change is what the page says, so its bracket is always the marked one.
+      const strong = grid || (b.series === marked && marked >= 0)
+      const stroke = strong ? mark : axisInk(ctx)
       const text = changeText(a.value, b.value, chart.axes?.y_unit, chinese)
-      const ink = accessibleInk(strong ? colors.primary : colors.muted, bg, PLOT_TYPE.lead)
+      const ink = accessibleInk(strong ? mark : colors.muted, bg, PLOT_TYPE.lead)
       const cx = (a.x + b.x) / 2
       const labelY = crossY - BRACKET_LABEL_LIFT
       boxes.push(textBox(cx, labelY, textWidth(text, PLOT_TYPE.lead, body, strong), PLOT_TYPE.lead, "middle"))
       nodes.push(
         <g key={`change-${n}`} data-plot-change="">
           <path
-            d={`M ${a.x} ${a.top - BRACKET_LEG_GAP} V ${crossY} H ${b.x} V ${b.top - BRACKET_LEG_GAP}`}
+            d={`M ${a.x} ${a.top - legGap} V ${crossY} H ${b.x} V ${b.top - legGap}`}
             fill="none"
             stroke={stroke}
             strokeWidth={strong ? 2 : 1}
@@ -364,7 +445,7 @@ export const columnsComposition: Composition = ({ components, ctx, rect }) => {
   }
 
   let placed: Placed | null = null
-  while (height >= MIN_H) {
+  while (height >= minH) {
     placed = attempt(height)
     if (placed) break
     height = Math.floor(height * 0.9)
@@ -373,7 +454,7 @@ export const columnsComposition: Composition = ({ components, ctx, rect }) => {
 
   return (
     <g {...compositionTag("columns")} {...blockTag(ctx, chart)}>
-      {paintLegend(legend, legendY, ctx)}
+      {legend && paintLegend(legend, legendY, ctx)}
       {caption && <MetaLine text={caption} x={rect.x} y={unitY} ctx={ctx} />}
       <line x1={rect.x} y1={base} x2={rect.x + rect.w} y2={base} stroke={axisInk(ctx)} strokeWidth={1} />
       {placed.nodes}

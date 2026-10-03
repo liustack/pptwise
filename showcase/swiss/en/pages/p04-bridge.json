@@ -1,0 +1,42 @@
+{
+  "components": [
+    {
+      "type": "waterfall",
+      "unit": "TWh",
+      "emphasis_label": "Clean power +887 TWh",
+      "items": [
+        {
+          "label": "Solar",
+          "value": 636,
+          "emphasis": true
+        },
+        {
+          "label": "Wind",
+          "value": 205,
+          "emphasis": true
+        },
+        {
+          "label": "Nuclear",
+          "value": 35,
+          "emphasis": true
+        },
+        {
+          "label": "Hydro and other",
+          "value": 11,
+          "emphasis": true
+        },
+        {
+          "label": "Fossil",
+          "value": -38
+        },
+        {
+          "label": "Demand growth",
+          "value": 849,
+          "kind": "total"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Ember (Apr 2026). Hydro and other includes bioenergy, derived from the clean total",
+  "notes": "Global electricity demand rose by 849 TWh, or 2.8%, in line with the ten-year average of 2.7%. Clean power, meaning renewables plus nuclear, rose by 887 TWh, more than the rise in demand. Fossil generation fell by 38 TWh, the first year without a rise since 2020. Inside fossil, coal fell 63 TWh, gas rose 36 TWh and oil and other fossil fell 12 TWh. The IEA points the same way: renewables plus nuclear grew by more than total generation."
+}

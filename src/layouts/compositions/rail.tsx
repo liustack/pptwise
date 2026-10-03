@@ -1,5 +1,5 @@
 import type { Component } from "@/ir"
-import { isPercentUnit, joinUnit } from "../../lib/quantity-format"
+import { groupDigits, isPercentUnit, joinUnit } from "../../lib/quantity-format"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { mostlyChinese } from "../../lib/text-script"
 import { emphasisSeriesPalette, recededMarkFill, rotateChartPalette } from "../../render/chart-palette"
@@ -142,7 +142,8 @@ function railShape(components: readonly Component[]): { chart: Chart; entries: R
   if (components.length !== 1) return null
   const chart = components[0]!
   if (chart.type !== "chart" || !RAIL_TYPES.has(chart.chart_type)) return null
-  if (chart.chart_type === "bar" && chart.direction === "horizontal") return null
+  // A horizontal bar has no trend to read, and a stacked chart on its side is a share bar.
+  if (chart.direction === "horizontal") return null
   if (chart.series.length < 1 || chart.series.length > MAX_SERIES) return null
   if (chart.series.some((s) => s.data.some((point) => typeof point.x !== "string"))) return null
   // The category axis runs in first-seen order across the series, the order
@@ -209,10 +210,14 @@ function chartWritesChinese(chart: Chart): boolean {
   return mostlyChinese(texts)
 }
 
-/** "$4.10 → $5.35": the two values in the axis's unit, at the decimals the series was written with. */
-export function spanLabel(series: Series, first: number, last: number, unit: string | undefined): string {
+/**
+ * "$4.10 → $5.35": the two values in the axis's unit, at the decimals the
+ * series was written with, grouped the way the chart's language prints a
+ * figure (`groupDigits`).
+ */
+export function spanLabel(series: Series, first: number, last: number, unit: string | undefined, chinese: boolean): string {
   const decimals = Math.min(MAX_DECIMALS, Math.max(0, ...series.data.map((point) => decimalsOf(point.y))))
-  const format = (v: number) => joinUnit(v.toFixed(decimals), unit, " ")
+  const format = (v: number) => joinUnit(groupDigits(v.toFixed(decimals), chinese), unit, " ")
   return `${format(first)} → ${format(last)}`
 }
 
@@ -240,13 +245,14 @@ function swatchIsLine(chart: Chart, series: Series): boolean {
 }
 
 export const railComposition: Composition = ({ components, ctx, rect, setting }) => {
-  // The notice setting sets only the author's figures, beside a hand-set
-  // plot when one takes the chart. A chart alone goes to the plots.
-  if (setting === "notice") {
+  // The notice and grid settings set only the author's figures, beside a
+  // hand-set plot when one takes the chart. A chart alone goes to the plots.
+  if (setting === "notice" || setting === "grid") {
     return railFiguresNotice({
       components,
       ctx,
       rect,
+      setting,
       plot: (component, band) => {
         for (const draw of [columnsComposition, barsComposition, bridgeComposition]) {
           const drawn = draw({ components: [component], ctx, rect: band, setting })
@@ -293,7 +299,7 @@ export const railComposition: Composition = ({ components, ctx, rect, setting })
       fontFamily: body,
       bold: false,
     })
-    const note = fitFixed(spanLabel(entry.series, entry.first, entry.last, unit), {
+    const note = fitFixed(spanLabel(entry.series, entry.first, entry.last, unit, chinese), {
       width: railW,
       size: NOTE_SIZE,
       lineHeight: NOTE_LINE_HEIGHT,

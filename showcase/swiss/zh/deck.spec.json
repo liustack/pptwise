@@ -1,0 +1,110 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "swiss",
+  "filename": "global-power-2025-annual-report",
+  "meta": {
+    "organization": "能源研究团队",
+    "date": "2026 年 10 月"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "2025 年全球电力年度报告",
+      "summary": "没有危机的年份里，清洁电力首次接住全部新增用电"
+    },
+    {
+      "id": "p02-verdict",
+      "type": "content",
+      "kind": "statement",
+      "heading": "清洁电力接住了全部增量，但还没有定局"
+    },
+    {
+      "id": "p03-ch-global",
+      "type": "chapter",
+      "heading": "全球：太阳能接住了增量",
+      "summary": "2025 年全球电力的供需与排放"
+    },
+    {
+      "id": "p04-bridge",
+      "type": "content",
+      "kind": "data",
+      "heading": "清洁电力多发 8870 亿千瓦时，盖过了全部用电增量",
+      "focus": "waterfall"
+    },
+    {
+      "id": "p05-solar",
+      "type": "content",
+      "kind": "data",
+      "heading": "太阳能一年多发 30%，一项覆盖了四分之三的用电增量",
+      "focus": "chart"
+    },
+    {
+      "id": "p06-emissions",
+      "type": "content",
+      "kind": "fact",
+      "heading": "电力排放没有下降，只是持平",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p07-ch-china",
+      "type": "chapter",
+      "heading": "中国：全球转型的支点",
+      "summary": "装机、发电与储能"
+    },
+    {
+      "id": "p08-china-capacity",
+      "type": "content",
+      "kind": "data",
+      "heading": "中国风光一年新增 4.3 亿千瓦，装机已超过火电",
+      "focus": "chart"
+    },
+    {
+      "id": "p09-china-generation",
+      "type": "content",
+      "kind": "data",
+      "heading": "中国火电发电量降了 0.7%，太阳能发电增长近四成",
+      "focus": "data_table"
+    },
+    {
+      "id": "p10-storage",
+      "type": "content",
+      "kind": "photo",
+      "heading": "储能一年新增 1.12 亿千瓦，一半以上装在中国",
+      "focus": "image"
+    },
+    {
+      "id": "p11-ch-2026",
+      "type": "chapter",
+      "heading": "2026：还没有定局",
+      "summary": "今年以来的变化与接下来的看点"
+    },
+    {
+      "id": "p12-2026-so-far",
+      "type": "content",
+      "kind": "process",
+      "heading": "2026 年以来，太阳能继续向前，气价和消纳带来逆风",
+      "focus": "timeline"
+    },
+    {
+      "id": "p13-slowdown",
+      "type": "content",
+      "kind": "data",
+      "heading": "全球光伏新增预计在 2026 年下降，二十多年来首次",
+      "focus": "chart"
+    },
+    {
+      "id": "p14-ending",
+      "type": "ending",
+      "heading": "2026 年要盯的三件事",
+      "summary": "清洁电力能否连续第二年接住增量，取决于这三件事"
+    }
+  ],
+  "branding": "full",
+  "footer": {}
+}
