@@ -60,3 +60,4 @@ Where the engine departs from the board, it does so on purpose, for these reason
 16. Chart and bridge figures are grouped the way the chart's language prints them: 「8490」 and 「10,575」 in Chinese, "2,778" in English.
 17. A Chinese line keeps a power figure's unit whole: 「1.58 亿千瓦」 does not break before 「千瓦」, which the board held with a no-wrap span.
 18. An English paragraph does not end on one word alone: the ending's columns read "IEA sees coal power up 1.4%" over "in 2026", and the fact page's note ends "of CO2". The last word of the line before moves down, the way CSS `text-wrap: pretty` sets body text.
+19. An English title with two sentences breaks between them when the first fits its line: the statement reads "Clean power met all new demand." over "Not settled yet." rather than an even split through the first sentence.

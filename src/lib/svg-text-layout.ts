@@ -1228,6 +1228,9 @@ function wrapWithUnits(text: string, maxUnits: number, weight?: TextWeightHint):
  * arithmetic says, often inside a word, while an author's greedy line often
  * ends on their own comma: 「每个班组配一名种子用户，」 would become
  * 「每个班组配一名种子用」+「户，…」. There only a widow is worth the move.
+ * An even Latin split still gives way to a break between two sentences that
+ * fits (`preferScriptBoundaries`), the way a Chinese one gives way to a
+ * comma.
  *
  * The balanced budget starts at `max(total/N, longest token)` — flooring at
  * the longest whitespace-delimited token guarantees `splitLongToken` never
@@ -1301,16 +1304,39 @@ const ASCII_GLYPH_RE = /[\x21-\x7e]/
 const CJK_CLAUSE_END_RE = /[，、：；。！？）」』]/u
 
 /**
+ * An English sentence end inside a text: a full stop, question or
+ * exclamation mark, any closing quote or bracket after it, a space, and the
+ * next sentence opening on a capital or a figure ("demand. Not settled").
+ */
+const LATIN_SENTENCE_BREAK_RE = /[.!?]["'\u2019\u201d)\]]* +["'\u2018\u201c([]*[A-Z0-9]/
+
+/**
+ * A word that ends on a full stop without ending a sentence: an initialism
+ * ("U.S.", "e.g.") or a title or short form a name or figure follows.
+ */
+const LATIN_ABBREVIATION_RE = /^(?:(?:[A-Za-z]\.){2,}|Mr\.|Mrs\.|Ms\.|Dr\.|St\.|vs\.|No\.)$/
+
+/** True when a break between `before` and `after` falls between two English sentences. */
+function isLatinSentenceBreak(before: string, after: string): boolean {
+  const word = before.trimEnd().split(" ").pop() ?? ""
+  const next = after.trimStart().split(" ")[0] ?? ""
+  return LATIN_SENTENCE_BREAK_RE.test(`${word} ${next}`) && !LATIN_ABBREVIATION_RE.test(word.replace(/["'\u2019\u201d)\]]+$/, ""))
+}
+
+/**
  * How a line break reads, by the characters on either side of it: +2 after
- * Chinese clause punctuation (「内需缩了两成，」+「四季度怎么打」), +1 where
- * Latin meets CJK (the seam a mixed line already has), -1 between two Latin
- * words (it splits a name like "Linjiang Group"), 0 anywhere else, which for
- * Chinese is between any two characters of a phrase (「四」+「季度」).
+ * Chinese clause punctuation (「内需缩了两成，」+「四季度怎么打」) or between
+ * two English sentences ("Clean power met all new demand." + "Not settled
+ * yet."), +1 where Latin meets CJK (the seam a mixed line already has), -1
+ * between two Latin words (it splits a name like "Linjiang Group"), 0
+ * anywhere else, which for Chinese is between any two characters of a phrase
+ * (「四」+「季度」).
  */
 function breakScore(before: string, after: string): number {
   const a = before.trimEnd().slice(-1)
   const b = after.trimStart().charAt(0)
   if (CJK_CLAUSE_END_RE.test(a)) return 2
+  if (isLatinSentenceBreak(before, after)) return 2
   const asciiA = ASCII_GLYPH_RE.test(a)
   const asciiB = ASCII_GLYPH_RE.test(b)
   if ((asciiA && WIDE_CHAR_RE.test(b)) || (WIDE_CHAR_RE.test(a) && asciiB)) return 1
@@ -1328,6 +1354,11 @@ function linesScore(lines: readonly string[]): number {
 const SCRIPT_BREAK_TOLERANCE = 0.1
 /** The same, for Chinese text with clause punctuation to break after. */
 const CLAUSE_BREAK_TOLERANCE = 0.25
+/**
+ * The same, for English text with two sentences in it: none past `limit`. A
+ * sentence set whole on its line reads better than an even split through it.
+ */
+const SENTENCE_BREAK_TOLERANCE = Infinity
 
 /**
  * The search's bounds. Past either one the balanced lines stand: a
@@ -1356,11 +1387,20 @@ const SCRIPT_BREAK_BUDGET = 2_000_000
  * balanced widest, a last line at least half the widest (not the widow
  * balancing exists to remove), and no single-character CJK last line.
  *
- * Text that is all Latin or all CJK scores every split the same, so it
- * returns `balanced` without searching. The search is a dynamic programme,
- * polynomial in the pieces and lines (it used to enumerate every split and
- * took seconds on a Latin word before 81 CJK characters in a narrow cell),
- * and it gives up for `balanced` past `SCRIPT_BREAK_BUDGET` steps.
+ * A break between two English sentences scores as a Chinese comma does, and
+ * it is the one break worth an uneven split: "Clean power met all new" +
+ * "demand. Not settled yet." becomes "Clean power met all new demand." +
+ * "Not settled yet.", the way a Chinese title breaks after its comma. Text
+ * with such a break may run its widest line up to `limit`, and a last line
+ * that is a whole sentence of two words or more may be under half the
+ * widest: it is a sentence, not the widow balancing removes.
+ *
+ * Text that is all Latin with one sentence, or all CJK, scores every split
+ * the same, so it returns `balanced` without searching. The search is a
+ * dynamic programme, polynomial in the pieces and lines (it used to
+ * enumerate every split and took seconds on a Latin word before 81 CJK
+ * characters in a narrow cell), and it gives up for `balanced` past
+ * `SCRIPT_BREAK_BUDGET` steps.
  */
 function preferScriptBoundaries(
   content: string,
@@ -1368,14 +1408,21 @@ function preferScriptBoundaries(
   limit: number,
   weight?: TextWeightHint,
 ): string[] {
-  // All-Latin text scores every break between words the same, and Chinese
-  // with no clause punctuation and no Latin in it scores every break 0.
-  if (balanced.length < 2 || !WIDE_CHAR_RE.test(content)) return balanced
-  if (!ASCII_GLYPH_RE.test(content) && !CJK_CLAUSE_END_RE.test(content)) return balanced
+  // All-Latin text scores every break between words the same unless two
+  // sentences meet in it, and Chinese with no clause punctuation and no Latin
+  // in it scores every break 0.
+  if (balanced.length < 2) return balanced
+  const wide = WIDE_CHAR_RE.test(content)
+  if (!wide && !LATIN_SENTENCE_BREAK_RE.test(content)) return balanced
+  if (wide && !ASCII_GLYPH_RE.test(content) && !CJK_CLAUSE_END_RE.test(content)) return balanced
   const pieces: WrapPiece[] = tokenize(content).tokens
   const count = pieces.length
   const n = balanced.length
   if (count > SCRIPT_BREAK_MAX_PIECES || n > count) return balanced
+  const sentenceAt: boolean[] = [false]
+  for (let i = 1; i < count; i += 1) sentenceAt.push(isLatinSentenceBreak(pieces[i - 1].text, pieces[i].text))
+  const sentences = sentenceAt.includes(true)
+  if (!wide && !sentences) return balanced
 
   // Widths by prefix sums. `measureTextUnits` is a per-character sum, so a
   // line's width is the pieces' own widths plus the spaces between them.
@@ -1398,46 +1445,64 @@ function preferScriptBoundaries(
   const balancedWidest = Math.max(...balanced.map((l) => measureTextUnits(l, weight)))
   // A break after a comma is worth a less even split than a seam is: 「四季度国内目标，」
   // +「按三季度实际走势重定」 over 「四季度国内目标，按」+「三季度实际走势重定」.
-  const tolerance = CJK_CLAUSE_END_RE.test(content) ? CLAUSE_BREAK_TOLERANCE : SCRIPT_BREAK_TOLERANCE
+  const tolerance = sentences
+    ? SENTENCE_BREAK_TOLERANCE
+    : CJK_CLAUSE_END_RE.test(content)
+      ? CLAUSE_BREAK_TOLERANCE
+      : SCRIPT_BREAK_TOLERANCE
   const cap = Math.min(limit, balancedWidest * (1 + tolerance)) + 1e-9
   const baselineScore = linesScore(balanced)
   let budget = SCRIPT_BREAK_BUDGET
 
-  // A split is better with a higher score, then a narrower widest line, then
-  // earlier breaks (the order the balanced wrap itself prefers).
-  const outranks = (score: number, widest: number, starts: number[], than: typeof best): boolean => {
+  // A split is better with a higher score, then more even lines, then
+  // earlier breaks (the order the balanced wrap itself prefers). Lines are
+  // more even with a narrower widest line, except where a sentence break
+  // lets the widest run to `limit`: the sentence's own line then sets the
+  // widest whatever the others do, so evenness is the smaller sum of squared
+  // widths, which "Wind is next, and" + "storage after it." meets and
+  // "Wind is" + "next, and storage after it." does not.
+  const evener = (widest: number, spread: number, thanWidest: number, thanSpread: number): number => {
+    const [a, b] = sentences ? [spread, thanSpread] : [widest, thanWidest]
+    return Math.abs(a - b) > 1e-9 ? Math.sign(b - a) : 0
+  }
+  const outranks = (score: number, widest: number, spread: number, starts: number[], than: typeof best): boolean => {
     if (!than) return true
     if (score !== than.score) return score > than.score
-    if (Math.abs(widest - than.widest) > 1e-9) return widest < than.widest
+    const even = evener(widest, spread, than.widest, than.spread)
+    if (even !== 0) return even > 0
     for (let i = 0; i < starts.length; i += 1) if (starts[i] !== than.starts[i]) return starts[i] < than.starts[i]
     return false
   }
-  let best: { score: number; widest: number; starts: number[] } | null = null
+  let best: { score: number; widest: number; spread: number; starts: number[] } | null = null
 
   // The last line is fixed first: it starts at `last`, and every other line
   // may be at most twice its width, which keeps it from being the widow
-  // balancing removed. Pieces 0..last-1 then go into n - 1 lines by dynamic
+  // balancing removed, unless it is a whole sentence. Pieces 0..last-1 then go into n - 1 lines by dynamic
   // programming over (lines left k, start piece i), keeping per cell the
-  // best score, its widest line and the next line's start. Each cell tries
-  // only the ends a line can reach within `lineCap`, and a cell whose pieces
-  // cannot fill its lines at that width is skipped, so one last line costs
-  // at most n * count * (pieces per line) steps, and `budget` bounds the
-  // whole search.
+  // best score, its widest line, its sum of squared widths and the next
+  // line's start. Each cell tries only the ends a line can reach within
+  // `lineCap`, and a cell whose pieces cannot fill its lines at that width
+  // is skipped, so one last line costs at most n * count * (pieces per
+  // line) steps, and `budget` bounds the whole search.
   const stride = count + 1
   const score = new Float64Array(n * stride)
   const widest = new Float64Array(n * stride)
+  const spread = new Float64Array(n * stride)
   const nextStart = new Int32Array(n * stride)
   for (let last = count - 1; last >= 1; last -= 1) {
     const lastWidth = width(last, count)
     if (lastWidth > cap) break
     const lastBreak = breakAt[last]
     if (lastBreak === null || isCjkOrphanLine(joinPieces(pieces, last, count))) continue
-    const lineCap = Math.min(cap, lastWidth * 2 + 1e-9)
+    // A last line that is a whole sentence of two words or more is no widow.
+    const wholeSentence = sentenceAt[last] && pieces.slice(last + 1).some((piece) => piece.space)
+    const lineCap = wholeSentence ? cap : Math.min(cap, lastWidth * 2 + 1e-9)
     nextStart.fill(-1)
     // Level 0: nothing left to set before `last`.
     nextStart[last] = last
     score[last] = 0
     widest[last] = 0
+    spread[last] = 0
     for (let k = 1; k < n; k += 1) {
       const row = k * stride
       const below = (k - 1) * stride
@@ -1447,6 +1512,7 @@ function preferScriptBoundaries(
         let found = -1
         let bestScore = 0
         let bestWidest = 0
+        let bestSpread = 0
         for (let j = i + 1; j <= last; j += 1) {
           if ((budget -= 1) < 0) return balanced
           const w = width(i, j)
@@ -1454,17 +1520,20 @@ function preferScriptBoundaries(
           if (nextStart[below + j] < 0) continue
           const s = score[below + j] + (j < last ? (breakAt[j] ?? 0) : 0)
           const wide = Math.max(w, widest[below + j])
+          const q = w * w + spread[below + j]
           // Ascending j with strict improvement keeps the earliest break on a tie.
-          if (found < 0 || s > bestScore || (s === bestScore && wide < bestWidest - 1e-9)) {
+          if (found < 0 || s > bestScore || (s === bestScore && evener(wide, q, bestWidest, bestSpread) > 0)) {
             found = j
             bestScore = s
             bestWidest = wide
+            bestSpread = q
           }
         }
         if (found >= 0) {
           nextStart[row + i] = found
           score[row + i] = bestScore
           widest[row + i] = bestWidest
+          spread[row + i] = bestSpread
         }
       }
     }
@@ -1477,7 +1546,8 @@ function preferScriptBoundaries(
     }
     const total = score[head] + lastBreak
     const wide = Math.max(widest[head], lastWidth)
-    if (outranks(total, wide, starts, best)) best = { score: total, widest: wide, starts }
+    const sq = spread[head] + lastWidth * lastWidth
+    if (outranks(total, wide, sq, starts, best)) best = { score: total, widest: wide, spread: sq, starts }
   }
 
   if (!best || best.score <= baselineScore) return balanced

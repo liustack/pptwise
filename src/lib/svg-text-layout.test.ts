@@ -468,6 +468,67 @@ describe("layoutSvgText balanceLines (widow avoidance)", () => {
   })
 })
 
+describe("layoutSvgText balanceLines (English sentence breaks)", () => {
+  // swiss's statement heading: bold Microsoft YaHei, 56px across 1120px.
+  const heading = (text: string, maxWidth = 1120, fontSize = 56, maxLines = 2) =>
+    layoutSvgText(text, {
+      maxWidth,
+      fontSize,
+      maxLines,
+      minPt: 28,
+      bold: true,
+      fontFamily: "Microsoft YaHei",
+      balanceLines: true,
+    })
+
+  it("breaks between two sentences rather than evenly through one (swiss en statement repro)", () => {
+    // Pre-fix the even split: ["Clean power met all new", "demand. Not settled yet."].
+    const r = heading("Clean power met all new demand. Not settled yet.")
+    expect(r.lines).toEqual(["Clean power met all new demand.", "Not settled yet."])
+    expect(r.fontSize).toBe(56)
+  })
+
+  it("evens the lines a sentence break leaves", () => {
+    const r = heading("Solar passed coal in China. Wind is next, and storage after it.", 700, 48, 3)
+    expect(r.lines).toEqual(["Solar passed coal in China.", "Wind is next, and", "storage after it."])
+    expect(r.fontSize).toBe(48)
+  })
+
+  it("keeps the even split when a sentence break would set a line wider than the greedy wrap", () => {
+    const text = "Prices fell. Demand for storage across every region of the world kept growing fast."
+    const r = heading(text)
+    expect(r.lines).toEqual(["Prices fell. Demand for storage across every", "region of the world kept growing fast."])
+  })
+
+  it("does not leave a one-word sentence alone on the last line", () => {
+    // The break before "Finally." would score, and would set the lone last
+    // word the orphan rule keeps company: ["Storage is moving solar", "out of
+    // the midday hours.", "Finally."].
+    const r = heading("Storage is moving solar out of the midday hours. Finally.", 800, 56, 3)
+    expect(r.lines).toEqual(["Storage is moving", "solar out of the", "midday hours. Finally."])
+    expect(r.fontSize).toBe(56)
+  })
+
+  it("does not take an initialism's full stop for a sentence end", () => {
+    // A title-case heading capitalises the word after "U.S." too. Read as a
+    // sentence end it would split ["Coal Burn Falls as U.S.", "Grid Adds More Solar Power"].
+    const r = heading("Coal Burn Falls as U.S. Grid Adds More Solar Power")
+    expect(r.lines).toEqual(["Coal Burn Falls as U.S. Grid", "Adds More Solar Power"])
+  })
+
+  it("leaves greedy body text to the greedy wrap", () => {
+    const r = layoutSvgText("Clean power met all new demand. Not settled yet.", {
+      maxWidth: 1120,
+      fontSize: 56,
+      maxLines: 2,
+      minPt: 28,
+      bold: true,
+      fontFamily: "Microsoft YaHei",
+    })
+    expect(r.lines).toEqual(["Clean power met all new demand. Not", "settled yet."])
+  })
+})
+
 describe("tokenize atomic Latin/digit runs (task R2: fused-prefix wrap fix)", () => {
   // 缺陷（修复前）：无空格分支旧实现把整串按字符切 token（`Array.from`），
   // 一个粘在 CJK 中间、自身无空格的拉丁 run（本仓惯用语，如
