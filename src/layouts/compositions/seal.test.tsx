@@ -385,6 +385,22 @@ describe("the seal setting, as vermilion's board draws it", () => {
     expect(byText(root!, "5")).toBeUndefined()
   })
 
+  it("stands a value that lands on a grid line on a plate of the page, so the line stops short of it", () => {
+    const { root, ctx } = draw(trendComposition, [growthChart])
+    const plates = Array.from(root!.querySelectorAll("[data-label-plate]"))
+    expect(plates).toHaveLength(1)
+    const label = byText(root!, "5.4")!
+    const plate = plates[0]!
+    expect(plate.getAttribute("fill")).toBe(sealInks(ctx).ground)
+    expect(plate.nextElementSibling).toBe(label)
+    const top = numberOf(plate, "y")
+    const bottom = top + numberOf(plate, "height")
+    const crossing = Array.from(root!.querySelectorAll("line")).filter((line) => numberOf(line, "y1") > top && numberOf(line, "y1") < bottom)
+    expect(crossing).toHaveLength(1)
+    expect(numberOf(label, "y")).toBeGreaterThan(top)
+    expect(numberOf(label, "y")).toBeLessThan(bottom)
+  })
+
   it("rings the marked rate in the mark and the others in the accent", () => {
     const { root, ctx } = draw(ringsComposition, funds)
     const inks = sealInks(ctx)

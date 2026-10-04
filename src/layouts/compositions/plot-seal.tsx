@@ -3,7 +3,7 @@ import type { Component } from "@/ir"
 import type { ComponentCtx } from "../../components/types"
 import type { ContentRect } from "../../render/layout"
 import { measureTextUnits } from "../../lib/svg-text-layout"
-import { chartFigures, plotNumber, reportedDecimals, textWidth, valueDecimals } from "./plot"
+import { chartFigures, plotNumber, reportedDecimals, textBox, textWidth, valueDecimals } from "./plot"
 import { SEAL_TYPE, sealInks, sealSeriesInk, sealSmall, sealText } from "./seal"
 import { fitFixed, paintLines } from "./type"
 
@@ -218,7 +218,7 @@ export function columnsSeal(chart: Chart, rect: ContentRect, ctx: ComponentCtx):
 }
 
 /** The trend's measures, from the board: ticks on a 40px gutter, categories 28px under the plot. */
-const TREND = { gutter: 40, inset: 30, top: 34, categoryDrop: 28, dot: 5, lastDot: 7, stroke: 3, value: 16, lastValue: 18 }
+const TREND = { gutter: 40, inset: 30, top: 34, categoryDrop: 28, dot: 5, lastDot: 7, stroke: 3, value: 16, lastValue: 18, lift: 14, plate: 4 }
 
 /**
  * One series as a line over its value axis, a marked value range behind it.
@@ -312,11 +312,22 @@ export function trendSeal(chart: Chart, rect: ContentRect, ctx: ComponentCtx): R
         const x = xs[i]!
         const y = yv(d.y)
         const size = last ? TREND.lastValue : TREND.value
+        const label = plotNumber(d.y, figures, valueDecimals(d.y, decimals))
+        // A value that lands on a grid line stands on a plate of what lies
+        // under it, the band's tint or the page, so the line stops short of
+        // the figure instead of striking through it.
+        const box = textBox(x, y - TREND.lift, textWidth(label, size, body, true), size, "middle")
+        const struck = ticks.some((t) => yv(t) > box.y0 - 1 && yv(t) < box.y1 + 1)
+        const inBand = band !== undefined && y - TREND.lift >= yv(Math.max(band.from, band.to)) && y - TREND.lift <= yv(Math.min(band.from, band.to))
+        const under = inBand ? inks.band : inks.ground
         return (
           <g key={`pt-${i}`}>
             <circle cx={x} cy={y} r={last ? TREND.lastDot : TREND.dot} fill={last ? inks.mark : inks.ground} stroke={inks.mark} strokeWidth={2} />
-            <text x={x} y={y - 14} textAnchor="middle" fontFamily={body} fontSize={size} fontWeight="700" fill={sealText(last ? inks.mark : inks.ink, inks.ground, size)} dominantBaseline="alphabetic">
-              {plotNumber(d.y, figures, valueDecimals(d.y, decimals))}
+            {struck && (
+              <rect data-label-plate="" x={box.x0 - TREND.plate} y={box.y0 - TREND.plate / 2} width={box.x1 - box.x0 + TREND.plate * 2} height={box.y1 - box.y0 + TREND.plate} fill={under} />
+            )}
+            <text x={x} y={y - TREND.lift} textAnchor="middle" fontFamily={body} fontSize={size} fontWeight="700" fill={sealText(last ? inks.mark : inks.ink, under, size)} dominantBaseline="alphabetic">
+              {label}
             </text>
             <text {...sealSmall(SEAL_TYPE.label)} x={x} y={y1 + TREND.categoryDrop} textAnchor="middle" fontFamily={body} fontSize={SEAL_TYPE.label} fill={sealText(inks.ink, inks.ground, SEAL_TYPE.label)} dominantBaseline="alphabetic">
               {String(d.x)}
