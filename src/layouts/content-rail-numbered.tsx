@@ -187,12 +187,12 @@ export function RailNumberedContent({ ir, slide, index, ctx }: SvgTemplateProps)
       x: CONTENT_X,
       y: treated.contentRect.y,
       w: CONTENT_W,
-      // cycle_loop paints up to 480px regardless of the slot. A treated
-      // heading starts lower than the native rail title, so the remaining
-      // 640-y slot is shorter than that cap and the ring's last
-      // descriptions overflow the audit rect. Keep the slot tall enough
-      // for that self-bounded form.
-      h: Math.max(480, contentBottom - treated.contentRect.y),
+      // The band ends where the native one does, over the source line. It
+      // used to be held at 480px for a cycle that once drew 480px whatever
+      // its box, and ran every other body to y737, so a two-line closing
+      // note sat its panel on the source line. The cycle scales to its box
+      // now (`resolveLoop`'s height budget).
+      h: Math.max(0, contentBottom - treated.contentRect.y),
     }
     const treatedAside = stepAside({ face: "rail-numbered", slide, ctx, bodyRect: treatedRect })
     if (treatedAside) return treatedAside
