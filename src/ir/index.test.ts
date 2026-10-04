@@ -1987,3 +1987,11 @@ describe("roadmap phase icon", () => {
     expect(parseOne({ type: "roadmap", items: [{ title: "a", icon: "flag" }, { title: "b" }] }).success).toBe(true)
   })
 })
+
+describe("issue_tree branch icon and sub-points' header", () => {
+  it("takes an icon on a branch, and heads the sub-points only when it has them", () => {
+    const branches = [{ label: "a", icon: "globe", children: [{ label: "x" }] }, { label: "b" }]
+    expect(parseOne({ type: "issue_tree", question: "q?", children_column: "Fix", branches }).success).toBe(true)
+    expect(parseOne({ type: "issue_tree", question: "q?", children_column: "Fix", branches: [{ label: "a" }, { label: "b" }] }).success).toBe(false)
+  })
+})
