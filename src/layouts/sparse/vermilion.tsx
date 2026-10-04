@@ -104,6 +104,12 @@ export function statement({ ir, slide, ctx, page }: SvgTemplateProps) {
   )
 }
 
+/** The hero page's caption line, its measure, and how far under it the source sits. */
+const CAPTION_Y = 596
+const CAPTION_SIZE = 23
+const HERO_TEXT_W = 1088
+const SOURCE_DROP = 32
+
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const unit = heroUnit(slide)
@@ -111,8 +117,16 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   // A figure this line cannot set whole goes to the plain page, never cut.
   if (!fitted) return StatHeroFallbackContent({ slide, ctx })
   const unitMark = fitted.unitMark
-  const caption = heroCaption(slide)
-  const source = heroSource(slide)
+  // The caption and the source each fit one line of the type area, and the
+  // source stands a line under the caption. Both used to be set as written
+  // 16px apart, so the source ran into the caption's descenders, and a long
+  // caption ran off the page.
+  const captionText = heroCaption(slide)
+  const sourceText = heroSource(slide)
+  const caption = captionText
+    ? fitSvgLine(captionText, { maxWidth: HERO_TEXT_W, fontSize: CAPTION_SIZE, minFontSize: 16, fontFamily: fonts.body })
+    : null
+  const source = sourceText ? fitSvgLine(sourceText, { maxWidth: HERO_TEXT_W, fontSize: 16, minFontSize: 16, fontFamily: fonts.body }) : null
   return (
     <>
       <text
@@ -135,28 +149,30 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
       <path d="M 640 520 l 8 14 l -8 14 l -8 -14 z" fill={colors.accent} />
       {caption && (
         <text
+          data-truncated={caption.truncated ? "1" : undefined}
           x={640}
-          y={600}
+          y={CAPTION_Y}
           textAnchor="middle"
           fontFamily={fonts.body}
-          fontSize={23}
+          fontSize={caption.fontSize}
           fill={colors.muted}
           dominantBaseline="alphabetic"
         >
-          {caption}
+          {caption.text}
         </text>
       )}
       {source && (
         <text
+          data-truncated={source.truncated ? "1" : undefined}
           x={640}
-          y={616}
-        textAnchor="middle"
+          y={caption ? CAPTION_Y + SOURCE_DROP : CAPTION_Y}
+          textAnchor="middle"
           fontFamily={fonts.body}
-          fontSize={16}
+          fontSize={source.fontSize}
           fill={colors.muted}
           dominantBaseline="alphabetic"
         >
-          {source}
+          {source.text}
         </text>
       )}
     </>
