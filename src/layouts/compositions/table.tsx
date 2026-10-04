@@ -7,6 +7,7 @@ import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 import { rowsCarryMarks } from "../../components/tag"
 import { tablePanel } from "./table-panel"
+import { tableSeal } from "./table-seal"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -342,6 +343,7 @@ function layoutAt(
 
 export const tableComposition: Composition = (props) => {
   if (props.setting === "panel") return tablePanel(props)
+  if (props.setting === "seal") return tableSeal(props)
   const { components, ctx, rect, setting } = props
   const shape = tableShape(components)
   if (!shape) return null

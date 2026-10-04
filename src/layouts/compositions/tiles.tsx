@@ -4,6 +4,7 @@ import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { PANEL, fitPanelBar, paintPanel, panelInks, panelText, serifBaseline, type PanelBar } from "./panel"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
+import { tilesSeal } from "./tiles-seal"
 
 type NumberedCards = Extract<Component, { type: "numbered_cards" }>
 
@@ -58,7 +59,9 @@ function tilesShape(components: readonly Component[]): NumberedCards | null {
   return cards
 }
 
-export const tilesComposition: Composition = ({ components, ctx, rect, setting }) => {
+export const tilesComposition: Composition = (props) => {
+  if (props.setting === "seal") return tilesSeal(props)
+  const { components, ctx, rect, setting } = props
   if (setting !== "panel") return null
   const cards = tilesShape(components)
   if (!cards || rect.w < MIN_W) return null

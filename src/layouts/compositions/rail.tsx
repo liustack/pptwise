@@ -14,6 +14,7 @@ import { railFigures, railFiguresNotice } from "./rail-figures"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 import { railPanel } from "./rail-panel"
+import { railSeal } from "./rail-seal"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Series = Chart["series"][number]
@@ -249,6 +250,7 @@ function swatchIsLine(chart: Chart, series: Series): boolean {
 
 export const railComposition: Composition = (props) => {
   if (props.setting === "panel") return railPanel(props)
+  if (props.setting === "seal") return railSeal(props)
   const { components, ctx, rect, setting } = props
   // The notice and grid settings set only the author's figures, beside a
   // hand-set plot when one takes the chart. A chart alone goes to the plots.

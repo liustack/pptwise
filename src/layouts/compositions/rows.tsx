@@ -6,6 +6,7 @@ import { drawableItems } from "../boundary-content"
 import { closingCallout, fitClosing, fitNoticeClosing, noticeClosingCallout, paintClosing, paintNoticeClosing, type ClosingSpec } from "./closing"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
+import { rowsSeal } from "./rows-seal"
 
 type Bullets = Extract<Component, { type: "bullets" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -85,6 +86,7 @@ function rowsShape(components: readonly Component[]): { bullets: Bullets; callou
 
 export const rowsComposition: Composition = (props) => {
   if (props.setting === "notice") return noticeRows(props)
+  if (props.setting === "seal") return rowsSeal(props)
   const { components, ctx, rect } = props
   const shape = rowsShape(components)
   if (!shape) return null

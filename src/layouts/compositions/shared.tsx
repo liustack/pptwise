@@ -83,10 +83,16 @@ export type CompositionId =
  *   takes the shapes that board drew and no other did: numbered panels, a
  *   before-and-after dot plot, a row of figure panels. See `./panel.tsx`.
  *
+ * - `seal`: vermilion's 2026-10 board. A formal report on paper: items
+ *   numbered in the deck's own numerals inside small squares of the mark,
+ *   open tables under a 2px rule in the mark, the mark spent once a page on
+ *   a reversed row, a tinted row or a figure, and the accent only drawing
+ *   rules, rings and outlines. See `./seal.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */
