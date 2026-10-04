@@ -227,11 +227,10 @@ describe("numbered_pills", () => {
     expect(container.textContent).toContain("要点4")
   })
 
-  it("marks the pill when height pushes items[].sub off it", () => {
-    // Eight items in a 640×392 slot leave a 35px pill: the body and the sub
-    // both go undrawn. The body's loss was already marked and the sub's was
-    // not, so a card with a title and a sub and no body lost a word with no
-    // trace anywhere — not on the page, not in validate, not in the audit.
+  it("marks the pill when height pushes items[].text off it, and keeps a sub its title line holds", () => {
+    // Eight items in a 640×392 slot leave a 35px pill. It holds one title
+    // line and nothing under it, so a sub, which sits beside the title,
+    // reaches the page, and a body does not.
     const clinic = themeCtx("clinic")
     const eight = {
       type: "numbered_cards" as const,
@@ -239,8 +238,8 @@ describe("numbered_pills", () => {
     }
     const box = { x: 96, y: 186, w: 640, h: 392 }
     const { container } = svg(numberedCards.render(eight, box, clinic))
-    expect(container.textContent).not.toContain("SUB_1")
-    expect(container.querySelectorAll("g[data-truncated]")).toHaveLength(8)
+    expect(container.textContent).toContain("SUB_1")
+    expect(container.querySelectorAll("g[data-truncated]")).toHaveLength(0)
 
     // The body half of the same rule, which the sub joins rather than
     // replaces: a card whose text is pushed off marks its pill too.
@@ -543,6 +542,29 @@ describe("numbered_cards n=3 and n=8 stay in box", () => {
       expect(bottom - inkBottom).toBeGreaterThanOrEqual(8 - 0.01)
     }
     assertInsideBox(container, w, h)
+  })
+
+  it("keeps a body line in a pill its title and one body line fit, five cards in a short band", () => {
+    // vermilion's points page: five cards in narrow-column's 383px band.
+    // Closed up, each pill is about 64px, which a title and one body line
+    // clear with their air. A fixed 68px threshold used to drop every body.
+    const five = {
+      type: "numbered_cards" as const,
+      items: [
+        { title: "目标：去年基本完成，今年改成区间", text: "2025 年只有 CPI 没达标。2026 年增长目标改成区间。" },
+        { title: "「十五五」：不设速度目标", text: "不设五年 GDP 数值目标，碳强度五年累计降 17%。" },
+        { title: "今年以来：增长在区间内", text: "上半年 GDP 增长 4.7%，1–8 月固定资产投资 −7.2%。" },
+        { title: "价格：由负转正", text: "PPI 由负转正到 +2.0%，CPI 在 1% 左右。" },
+        { title: "对我们：跟着政策的钱走", text: "盯服务消费和设备更新政策，提前算碳账。", emphasis: true },
+      ],
+    }
+    const box = { x: 96, y: 257, w: 880, h: 383 }
+    const { container } = svg(numberedCards.render(five, box, themeCtx("vermilion")))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const words = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .join(" ")
+    for (const item of five.items) expect(words).toContain(item.text)
   })
 
   it("declines a box too short for a line of title in every pill", () => {

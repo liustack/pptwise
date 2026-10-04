@@ -143,7 +143,12 @@ function pillHeightFor(titleLines: number, bodyLines: number): number {
 
 /** Everything a pill sets inside itself, at the geometry `L` hands it. */
 function pillText(item: Item, L: PillLayout, ctx: ComponentCtx, bodyCap = BODY_MAX_LINES) {
-  const showText = L.pillH >= BODY_PILL_MIN - 4
+  // Room for words beyond the title is measured, not assumed: a pill holds
+  // as many body lines as its height clears with their air (the loop below),
+  // and a sub whenever the pill holds its title. A fixed 68px threshold used
+  // to turn the body off in a 64px pill that one body line fits, so five
+  // cards in a short band printed their titles alone.
+  const showText = pillHeightFor(1, 0) <= L.pillH
   const visualDiam = L.pillH * BADGE_DIAMETER_RATIO
   const badgeR = Math.max(0, visualDiam / 2)
   const badgeInset = Math.max(0, (L.pillH - visualDiam) / 2)
