@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -12,6 +13,10 @@ export const schema = z
           .object({
             asset_id: z.string(),
             caption: z.string().optional(),
+            /** A symbol for the caption. See the describe below. */
+            icon: IconNameSchema.optional().describe(
+              "A symbol drawn before the picture's caption, such as zap or map-pin. Only with a caption. Run `pptwise icons` for the names.",
+            ),
           })
           .strict()
       )
@@ -20,6 +25,17 @@ export const schema = z
     emphasis: z.enum(["none", "first"]).optional(),
   })
   .strict()
+  .superRefine((c, ctx) => {
+    c.items.forEach((item, i) => {
+      if (item.icon !== undefined && !item.caption?.trim()) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["items", i, "icon"],
+          message: `image_grid items[${i}] has an icon and no caption, and the icon is drawn before the caption. Give the picture a caption, or remove icon.`,
+        })
+      }
+    })
+  })
   .describe(
     "A 2-6 photo/screenshot grid with cover-crop cells.",
   )

@@ -37,6 +37,8 @@ function exactImageGrid(slide: SvgTemplateProps["slide"]): ImageGrid | null {
   if (slide.components.length !== 1) return null
   const only = slide.components[0]
   if (only?.type !== "image_grid") return null
+  // A caption's icon has no place under these frames: the ordinary grid draws it.
+  if (only.items.some((item) => item.icon !== undefined)) return null
   return only.items.length >= 4 && only.items.length <= 6 ? only : null
 }
 

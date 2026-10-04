@@ -2001,3 +2001,10 @@ describe("data_table row icon", () => {
     expect(parseOne({ type: "data_table", columns: [{ key: "a", label: "A" }, { key: "b", label: "B" }], rows: [{ cells: { a: "1", b: "2" }, icon: "server" }] }).success).toBe(true)
   })
 })
+
+describe("image_grid caption icon", () => {
+  it("takes an icon on a captioned picture, and refuses one without a caption", () => {
+    expect(parseOne({ type: "image_grid", items: [{ asset_id: "x", caption: "c", icon: "zap" }, { asset_id: "y" }] }).success).toBe(true)
+    expect(parseOne({ type: "image_grid", items: [{ asset_id: "x", icon: "zap" }, { asset_id: "y" }] }).success).toBe(false)
+  })
+})
