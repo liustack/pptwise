@@ -20,6 +20,7 @@ import {
   auditDeck,
   findContrastIssues,
   findOverlapIssues,
+  findSourceLineCrossings,
   __collectBgRegions,
   __collectImageBackedTextRuns,
   __pathBoundingBox,
@@ -2930,5 +2931,29 @@ describe("auditDeck: printed emphasis marks", () => {
     ])
     const report = auditDeck(ir)
     expect(report.findings.filter((f) => f.detail?.kind === "emphasis")).toEqual([])
+  })
+})
+
+describe("findSourceLineCrossings", () => {
+  const source = "Source: State Council, MIIT and Ministry of Finance"
+  const page = (noteBottom: number) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+    <g data-audit-box="96,552,1088,${noteBottom - 552}"><rect x="96" y="552" width="1088" height="${noteBottom - 552}" fill="#EBE3D7"/>
+      <text x="152" y="584" font-size="24">Most relevant to us: subsidized loans</text>
+      <text x="152" y="618" font-size="24">from August 1, and run for up to two years</text></g>
+    <text x="96" y="640" font-size="16" font-style="italic">${source}</text>
+  </svg>`
+
+  it("finds a body block whose panel runs over the source line", () => {
+    // rail-numbered held its band at 480px under a treated heading, and a
+    // two-line closing note's panel ran down to y652, over the source.
+    const crossings = findSourceLineCrossings(page(652), { footnote: source })
+    expect(crossings).toHaveLength(1)
+    expect(crossings[0]!.label).toContain("Most relevant")
+  })
+
+  it("passes a block that ends above the source line, and a source set inside its own frame", () => {
+    expect(findSourceLineCrossings(page(618), { footnote: source })).toEqual([])
+    const framed = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720"><g data-audit-box="96,620,1088,30"><text x="96" y="640" font-size="16">${source}</text></g></svg>`
+    expect(findSourceLineCrossings(framed, { footnote: source })).toEqual([])
   })
 })

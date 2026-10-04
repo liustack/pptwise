@@ -7,7 +7,7 @@ import { measureMonoTextUnits, measureTextUnits } from "../lib/svg-text-layout"
 import { getPlatform } from "../platform/registry"
 import { isBold, isMonoFontFamily } from "../render/fonts"
 import { dropPhrase, parseDropKind, type DropKind } from "../render/drop-marker"
-import { sourceLineMissing } from "./source-line"
+import { sourceLineElements, sourceLineMissing } from "./source-line"
 import { printedMarks } from "./printed-marks"
 import { auditSvgMarkup, findRunMisfits, parseNums, parseTransform, type OverflowIssue, type RunMisfit } from "./svg-audit"
 
@@ -2271,7 +2271,7 @@ export interface OverlapIssue {
  * *and* fully spatially contain its own children, which would then compare
  * as ~100% overlapping their own parent on every single steps-vertical page.
  */
-function collectLeafBoxes(root: Element): DerivedBox[] {
+function collectLeafBoxes(root: Element, owners: readonly Element[] = []): DerivedBox[] {
   const boxes: DerivedBox[] = []
   interface Scope {
     x: number
@@ -2310,7 +2310,9 @@ function collectLeafBoxes(root: Element): DerivedBox[] {
     const ay = oy + os * dy
     const as = os * scale
 
-    const boxAttr = el.getAttribute("data-audit-box")
+    // A box that holds one of `owners` (the source line, when the caller
+    // asks about it) is that text's own frame, not a block beside it.
+    const boxAttr = owners.some((owner) => el.contains(owner)) ? null : el.getAttribute("data-audit-box")
     let pushed = false
     if (boxAttr) {
       const parent = stack[stack.length - 1]
@@ -2570,6 +2572,48 @@ function steppedAsideFindings(markup: string, page: number, slideId: string | un
 // check reads the page against the slide.
 // ────────────────────────────────────────────────────────────────────────
 
+/**
+ * The body blocks that run over the page's source line.
+ *
+ * A face hands its body a band and declares it (`data-audit-rect`), and the
+ * overflow check holds the body to that band. A face that declared a band
+ * past its own source line passed that check while a two-line closing note
+ * sat its panel on the source: nothing compared the body with the line under
+ * it. This does: each body block (a leaf `data-audit-box`) against the ink of
+ * the text elements that spell `slide.footnote`.
+ */
+export function findSourceLineCrossings(markup: string, slide: Pick<Slide, "footnote">): DerivedBox[] {
+  const root = parseSvg(markup)
+  const lines = sourceLineElements(root, slide)
+  if (!lines) return []
+  const ink = lines.flatMap((el) => {
+    if (el.closest("[transform]")) return []
+    const content = (el.textContent ?? "").trim()
+    if (!content) return []
+    const size = Number(el.getAttribute("font-size") ?? DEFAULT_FONT_SIZE)
+    const y = Number(el.getAttribute("y") ?? 0)
+    const x = Number(el.getAttribute("x") ?? 0)
+    const width = measureTextUnits(content, { bold: isBold(el.getAttribute("font-weight")), fontFamily: el.getAttribute("font-family") ?? "" }) * size
+    const anchor = el.getAttribute("text-anchor") ?? "start"
+    const left = anchor === "end" ? x - width : anchor === "middle" ? x - width / 2 : x
+    return [{ x0: left, x1: left + width, y0: y - size * 0.8, y1: y + size * TEXT_DESCENT_RATIO }]
+  })
+  return collectLeafBoxes(root, lines).filter((box) =>
+    ink.some((line) => Math.min(box.x + box.w, line.x1) - Math.max(box.x, line.x0) > 0 && Math.min(box.y + box.h, line.y1) - Math.max(box.y, line.y0) > 1),
+  )
+}
+
+function sourceCrossingFindings(markup: string, slide: Slide, page: number, slideId: string | undefined): AuditFinding[] {
+  if (!slide.footnote?.trim()) return []
+  return findSourceLineCrossings(markup, slide).map((box) => ({
+    page,
+    ...(slideId !== undefined ? { slideId } : {}),
+    code: "overlap" as const,
+    message: `the block near "${box.label}" runs over the page's source line — the layout gave the body more height than the space above the source`,
+    detail: { box },
+  }))
+}
+
 function sourceLineFindings(markup: string, slide: Slide, page: number, slideId: string | undefined): AuditFinding[] {
   if (!slide.footnote?.trim() || !sourceLineMissing(parseSvg(markup), slide)) return []
   return [
@@ -2708,6 +2752,7 @@ function runDeterministicAudit(
     findings.push(...droppedFindings(markup, page, slideId))
     findings.push(...steppedAsideFindings(markup, page, slideId))
     findings.push(...sourceLineFindings(markup, slide, page, slideId))
+    findings.push(...sourceCrossingFindings(markup, slide, page, slideId))
     findings.push(...printedMarkFindings(markup, page, slideId))
   })
 

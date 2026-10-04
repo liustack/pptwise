@@ -44,12 +44,12 @@ function showsOpening(run: string, needle: string): boolean {
 }
 
 /**
- * True when `slide` carries a source line that `root`, the page's rendered
- * SVG, never paints.
+ * The text elements that paint `slide`'s source line on `root`, the page's
+ * rendered SVG, or `null` when no run of them does.
  */
-export function sourceLineMissing(root: Element, slide: Pick<Slide, "footnote">): boolean {
+export function sourceLineElements(root: Element, slide: Pick<Slide, "footnote">): Element[] | null {
   const needle = normalize(stripEmphasis(slide.footnote ?? ""))
-  if (needle.length === 0) return false
+  if (needle.length === 0) return null
   const texts = Array.from(root.querySelectorAll("text"))
   for (let start = 0; start < texts.length; start += 1) {
     let run = ""
@@ -58,13 +58,22 @@ export function sourceLineMissing(root: Element, slide: Pick<Slide, "footnote">)
       if (i > start && signature(el) !== signature(texts[start]!)) break
       const own = normalize(el.textContent ?? "")
       run += own
-      if (run.includes(needle)) return false
+      if (run.includes(needle)) return texts.slice(start, i + 1)
       // A cut source shows its opening and says so on the element that cut
       // it, alone or after another text the face set on the same line.
-      if (isCut(el) && showsOpening(run, needle)) return false
+      if (isCut(el) && showsOpening(run, needle)) return texts.slice(start, i + 1)
       // A run that has stopped spelling the source's opening cannot spell it.
       if (!needle.startsWith(run)) break
     }
   }
-  return true
+  return null
+}
+
+/**
+ * True when `slide` carries a source line that `root`, the page's rendered
+ * SVG, never paints.
+ */
+export function sourceLineMissing(root: Element, slide: Pick<Slide, "footnote">): boolean {
+  if (!normalize(stripEmphasis(slide.footnote ?? ""))) return false
+  return sourceLineElements(root, slide) === null
 }
