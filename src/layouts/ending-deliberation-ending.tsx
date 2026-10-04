@@ -1,190 +1,176 @@
 import type { SvgTemplateProps } from "./types"
-import { boundaryBulletItems } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
-import { fitSvgLine } from "../lib/svg-text-layout"
-import { accessibleInk, metaInk } from "../render/ink"
-import { hasCjk } from "./minimal-shared"
-import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
+import { boundaryBulletItems } from "./boundary-content"
+import { accessibleInk } from "../render/ink"
+import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading, type EmphasisHeadingLayout } from "../render/emphasis"
+import { splitRow } from "./compositions/rows"
+import { paintNumeral, sealInks, sealText } from "./compositions/seal"
+import { centredBaseline, fitFixed, paintLines } from "./compositions/type"
 
 /**
- * deliberation-ending（第八波 pinOnly）：三项安排收口。kicker 取短 heading
- * 或公开英文 ARRANGEMENTS。清单优先 bullets 前三项，否则按换行或
- * 「一、/1.」切 heading。金线 y490 收界。落款取 subheading，不写死
- * 「请领导小组审议」。无 Thank you。构图抄
- * `.issues/design-boards/wave8/b3/Vermilion.dc.html` ending：kicker y140 /
- * 22px，三条 y250/330/410，金线 x96–1184，落款 y560。
+ * deliberation-ending：公文收尾页，vermilion 2026-10 定稿（p15）重画。
  *
- * 进共享池，不是 vermilion 专用。零 theme id、零 baked hex。顶缘金双线
- * 归 motif，本版式只画收界金线。`body accepts: ["bullets"]`。
+ * 版心居中排：顶上一行小字是这一页要对方做什么（`subheading`，如「请管理层
+ * 确认分工」，18px 档案灰），下面是要决定的事（`heading`）52px 正红粗体，
+ * 再下一段 64×2 的金色短线。下面两到四张并排的卡：卡是面板色加一像素
+ * 案卷线，卡上居中一个 60px 的编号方块（甲方数字，中文 deck 写一二三），
+ * 下面是标签 28px 粗体、说明 18px 档案灰。条目来自第一个 `bullets`，写成
+ * 「标签：说明」的在冒号处拆开，冒号不再印，标签末行用 `data-gloss-break`
+ * 声明它，内容审计照样读得到。没有冒号时整条做标签，一行放不下就整条
+ * 作说明句排在编号下面。
  *
- * 板上做不到、最近落地：
- *   1. CJK kicker 不加 letter-spacing。
- *   2. 空文案不编造审议句。缺 subheading 就少画落款。
- *   3. accent 只给收界金线，绝不当文字色。
+ * 顶缘、底缘的金双线是主题 motif（`vermilion-motif`），不归本版式。
+ *
+ * 进共享池，零 theme id、零 baked hex。旧版把短 heading 当成拉开字距的
+ * 小标签排在顶上，英文就成了「T h r e e  s t e p s」，heading 也不是这一页
+ * 最大的字，本轮按定稿改成大标题。
  */
 
-const KICKER_X = 96
-const KICKER_Y = 140
-const KICKER_SIZE = 22
-const KICKER_TRACKING = 8
-const KICKER_MAX_W = 1088
-
-const ITEM_X = 96
-const ITEM_YS = [250, 330, 410] as const
-const ITEM_SIZE = 32
-const ITEM_MIN_PT = 20
-const ITEM_MAX_W = 1088
-
-const RULE_X1 = 96
-const RULE_X2 = 1184
-const RULE_Y = 490
-const RULE_STROKE = 1
-
-const SIGNOFF_X = 96
-const SIGNOFF_Y = 560
-const SIGNOFF_SIZE = 19
-const SIGNOFF_MAX_W = 1088
-
-const ARRANGEMENTS_KICKER = "ARRANGEMENTS"
-
-function withoutOverflowMark(text: string): string {
-  return text.replace(/(?:\.{3}|…)+$/u, "")
-}
+const CENTRE = 640
+const LEFT = 80
+const MEASURE = 1120
+const ASK = { size: 18, lineHeight: 30, foot: 140 } as const
+const TITLE = { size: 52, lineHeight: 70, foot: 220, minPt: 40, maxLines: 2 } as const
+const BAR = { w: 64, h: 2, y: 240 } as const
+const CARDS = { top: 290, h: 290, gap: 24 } as const
+const SQUARE = { size: 60, top: 30 } as const
+const LABEL = { size: 28, lineHeight: 40, top: 114 } as const
+const GLOSS = { size: 18, lineHeight: 28, top: 168, padX: 30, maxLines: 3 } as const
 
 /** Items of the accepted `bullets` block this face has room to draw. */
-const ITEM_MAX = 3
+const ITEM_MAX = 4
 
-function splitArrangementLines(text: string): string[] {
-  const trimmed = text.trim()
-  if (!trimmed) return []
-  const byNewline = trimmed.split(/\n+/).map((line) => line.trim()).filter(Boolean)
-  if (byNewline.length > 1) return byNewline.slice(0, 3)
-  const byCn = trimmed.split(/(?=[一二三四五六七八九十]+、)/).map((line) => line.trim()).filter(Boolean)
-  if (byCn.length > 1) return byCn.slice(0, 3)
-  const byDot = trimmed.split(/(?=(?:^|\s)\d+[.、]\s*)/).map((line) => line.trim()).filter(Boolean)
-  if (byDot.length > 1) return byDot.slice(0, 3)
-  return [trimmed]
+interface Card {
+  label: EmphasisHeadingLayout | null
+  gloss: EmphasisHeadingLayout | null
+  glossBreak: string | undefined
 }
 
-function arrangementItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = boundaryBulletItems(slide, ITEM_MAX)
-  if (bullets.length > 0) return bullets
-  return splitArrangementLines(stripEmphasis(slide.heading ?? ""))
-}
-
-function isShortKicker(heading: string): boolean {
-  if (!heading) return false
-  if (heading.includes("\n")) return false
-  if (/^[一二三四五六七八九十]+、/.test(heading)) return false
-  if (/^\d+[.、]/.test(heading)) return false
-  return true
-}
-
-function kickerSource(slide: SvgTemplateProps["slide"]): string {
-  const heading = stripEmphasis(slide.heading ?? "").trim()
-  if (boundaryBulletItems(slide, ITEM_MAX).length > 0 && isShortKicker(heading)) return heading
-  return ARRANGEMENTS_KICKER
+function fitCards(items: string[], cardW: number, fontFamily: string): Card[] | null {
+  const cards: Card[] = []
+  const fitGloss = (text: string) =>
+    fitFixed(text, { width: cardW - GLOSS.padX * 2, size: GLOSS.size, lineHeight: GLOSS.lineHeight, maxLines: GLOSS.maxLines, fontFamily, bold: false })
+  for (const item of items) {
+    const { label, gloss } = splitRow(item)
+    const head = fitFixed(label ?? gloss, { width: cardW - 24, size: LABEL.size, lineHeight: LABEL.lineHeight, maxLines: 1, fontFamily, bold: true })
+    if (!label) {
+      // An item with no label of its own is the label when it fits one line,
+      // and otherwise the card's sentence, under the number.
+      const sentence = head ? null : fitGloss(gloss)
+      if (!head && !sentence) return null
+      cards.push({ label: head, gloss: sentence, glossBreak: undefined })
+      continue
+    }
+    const desc = fitGloss(gloss)
+    if (head === null || desc === null) return null
+    const glossBreak = item.trim().slice(label.length, item.trim().length - gloss.length).trim()
+    cards.push({ label: head, gloss: desc, glossBreak })
+  }
+  return cards
 }
 
 export function DeliberationEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const items = arrangementItems(slide)
-  const kickerText = kickerSource(slide)
-  const kickerTracking = hasCjk(kickerText) ? undefined : KICKER_TRACKING
-  const signoffSource = (slide.subheading ?? "").trim()
+  const inks = sealInks(ctx)
+  const items = boundaryBulletItems(slide, ITEM_MAX)
+  const cardW = items.length > 0 ? (MEASURE - CARDS.gap * (items.length - 1)) / items.length : MEASURE
+  const cards = items.length > 0 ? fitCards(items, cardW, fonts.body) : []
 
-  const kicker = fitSvgLine(kickerText, {
-    maxWidth: KICKER_MAX_W,
-    fontSize: KICKER_SIZE,
-    minFontSize: 16,
-    letterSpacing: kickerTracking,
+  const title = fitEmphasisHeading(slide.heading, {
+    maxWidth: MEASURE,
+    fontSize: TITLE.size,
+    maxLines: TITLE.maxLines,
+    minPt: TITLE.minPt,
+    lineHeightRatio: TITLE.lineHeight / TITLE.size,
     fontFamily: fonts.heading,
     bold: true,
   })
-  const kickerPainted = withoutOverflowMark(kicker.text)
-
-  const lines = items.map((item, i) => {
-    const body = fitSvgLine(stripEmphasis(item), {
-      maxWidth: ITEM_MAX_W,
-      fontSize: ITEM_SIZE,
-      minFontSize: ITEM_MIN_PT,
-      fontFamily: fonts.heading,
-      bold: true,
-    })
-    return { y: ITEM_YS[i]!, body, painted: withoutOverflowMark(body.text) }
-  })
-
-  const signoff = signoffSource
-    ? fitEmphasisLine(signoffSource, {
-        maxWidth: SIGNOFF_MAX_W,
-        fontSize: SIGNOFF_SIZE,
-        minFontSize: 16,
-        fontFamily: fonts.body,
-      })
+  const titleInk = accessibleInk(colors.primary, bg, title.fontSize)
+  const titleLast = centredBaseline(TITLE.foot - title.lineHeight, title.lineHeight, title.fontSize)
+  const titleFirst = titleLast - Math.max(0, title.lines.length - 1) * title.lineHeight
+  // The ask stands a line over the title, and moves up with a two-line title.
+  const askFoot = ASK.foot - Math.max(0, title.lines.length - 1) * title.lineHeight
+  const ask = slide.subheading?.trim()
+    ? fitEmphasisText(slide.subheading, { maxWidth: MEASURE, fontSize: ASK.size, minPt: 16, maxLines: 1, lineHeightRatio: ASK.lineHeight / ASK.size, fontFamily: fonts.body, bold: false })
     : null
-
-  const itemInk = accessibleInk(colors.text, bg, ITEM_SIZE)
+  const askInk = accessibleInk(colors.muted, bg, ASK.size)
 
   return (
     <>
-      {kickerPainted && (
-        <text
-          data-truncated={kicker.truncated ? "1" : undefined}
-          x={KICKER_X}
-          y={KICKER_Y}
-          fontFamily={fonts.heading}
-          fontSize={kicker.fontSize}
-          fontWeight="700"
-          fill={accessibleInk(colors.primary, bg, kicker.fontSize)}
-          letterSpacing={kickerTracking}
-          dominantBaseline="alphabetic"
-        >
-          {kickerPainted}
-        </text>
-      )}
-
-      {lines.map((line, i) =>
-        line.painted ? (
-          <text
-            key={i}
-            data-truncated={line.body.truncated ? "1" : undefined}
-            x={ITEM_X}
-            y={line.y}
-            fontFamily={fonts.heading}
-            fontSize={line.body.fontSize}
-            fontWeight="700"
-            fill={itemInk}
-            dominantBaseline="alphabetic"
-          >
-            {line.painted}
-          </text>
-        ) : null,
-      )}
-
-      <line
-        data-depth="mid"
-        x1={RULE_X1}
-        y1={RULE_Y}
-        x2={RULE_X2}
-        y2={RULE_Y}
-        stroke={colors.accent}
-        strokeWidth={RULE_STROKE}
-      />
-
-      {signoff && renderEmphasisText(
-        signoff.segments,
-        headingEmphasisPaint(ctx, signoff, { baseFill: metaInk(colors.muted, bg), fontWeight: "600", fontFamily: fonts.body, bold: false }),
+      {ask &&
+        renderEmphasisHeading(
+          ask,
+          headingEmphasisPaint(ctx, ask, { baseFill: askInk, fontWeight: "700", fontFamily: fonts.body, bold: false }),
+          (_line, i) => (
             <text
-              data-contrast-tier="meta"
-              data-truncated={signoff.truncated ? "1" : undefined}
-              x={SIGNOFF_X}
-              y={SIGNOFF_Y}
+              key={`ask-${i}`}
+              data-truncated={ask.truncated ? "1" : undefined}
+              x={CENTRE}
+              y={centredBaseline(askFoot - ASK.lineHeight, ASK.lineHeight, ask.fontSize)}
+              textAnchor="middle"
               fontFamily={fonts.body}
-              fontSize={signoff.fontSize}
-              fill={metaInk(colors.muted, bg)}
+              fontSize={ask.fontSize}
+              fill={askInk}
               dominantBaseline="alphabetic"
-              />
+            />
+          ),
+        )}
+      {renderEmphasisHeading(
+        title,
+        headingEmphasisPaint(ctx, title, { baseFill: titleInk, fontWeight: "700", fontFamily: fonts.heading, bold: true }),
+        (_line, i) => (
+          <text
+            key={`title-${i}`}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={CENTRE}
+            y={titleFirst + i * title.lineHeight}
+            textAnchor="middle"
+            fontFamily={fonts.heading}
+            fontSize={title.fontSize}
+            fontWeight="700"
+            fill={titleInk}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
+      <rect x={CENTRE - BAR.w / 2} y={BAR.y} width={BAR.w} height={BAR.h} fill={colors.accent} />
+      {cards === null ? (
+        <g data-dropped={items.length} data-dropped-kind="item" />
+      ) : (
+        cards.map((card, i) => {
+          const x = LEFT + i * (cardW + CARDS.gap)
+          const cx = x + cardW / 2
+          return (
+            <g key={`card-${i}`} data-ending-card={i + 1}>
+              <rect x={x + 0.5} y={CARDS.top + 0.5} width={cardW - 1} height={CARDS.h - 1} fill={inks.panel} stroke={inks.rule} strokeWidth={1} />
+              {paintNumeral({ ctx, index: i, x: cx - SQUARE.size / 2, y: CARDS.top + SQUARE.top, size: SQUARE.size })}
+              {card.label &&
+                paintLines(card.label, {
+                  ctx,
+                  x: cx,
+                  y: centredBaseline(CARDS.top + LABEL.top, LABEL.lineHeight, LABEL.size),
+                  fill: sealText(inks.ink, inks.panel, LABEL.size),
+                  fontFamily: fonts.body,
+                  fontWeight: "700",
+                  anchor: "middle",
+                  bg: inks.panel,
+                  ...(card.glossBreak ? { lastAttrs: { "data-gloss-break": card.glossBreak } } : {}),
+                })}
+              {card.gloss &&
+                paintLines(card.gloss, {
+                  ctx,
+                  x: cx,
+                  y: centredBaseline(CARDS.top + (card.label ? GLOSS.top : LABEL.top), GLOSS.lineHeight, GLOSS.size),
+                  fill: sealText(inks.muted, inks.panel, GLOSS.size),
+                  fontFamily: fonts.body,
+                  fontWeight: "400",
+                  anchor: "middle",
+                  bg: inks.panel,
+                })}
+            </g>
+          )
+        })
       )}
     </>
   )
@@ -192,22 +178,21 @@ export function DeliberationEnding({ slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef: LayoutDefinition = {
   branding: "none",
-  // ending-deliberation-ending.tsx: three-item arrangements list,
-  // short heading or English ARRANGEMENTS kicker, accent closing rule,
-  // optional subheading sign-off. No thank-you and no invented 请审议.
-  // Optional bullets fill the list.
+  // ending-deliberation-ending.tsx: the formal close. What the page asks of
+  // the room in small type, the decision at 52px in primary, a short accent
+  // bar, and two to four numbered cards of label and gloss from the first
+  // bullets, an item written "label: gloss" split at its colon.
   id: "deliberation-ending",
   kind: "standard",
   story: {
     name: "Arranged Close",
-    story: "A kicker from the heading or labeled ARRANGEMENTS sits at the top. Up to three arrangement lines stack below, a highlight closing rule marks the boundary, and a sign-off anchors the bottom.",
-    positioning: "The closing page for up to three formal arrangements and a sign-off. The highlight rule is the only ornament.",
+    story: "What the room is asked to do stands in a small line at the top, the decision set large and centred in the brand colour under it, and the next steps as two to four numbered cards across the page, each a label and the work it means.",
+    positioning: "The closing page of a formal report that ends by asking for a decision on a few named steps.",
     audience: "Committee rooms and review panels reading the arrangements projected on a wall screen.",
     notFor: "Closings that carry informal reminders, which belong in Bare Checklist as a plain undecorated list.",
   },
   slideTypes: ["ending"],
   slots: [
-    { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
     { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
