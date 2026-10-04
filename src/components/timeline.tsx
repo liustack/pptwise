@@ -18,6 +18,8 @@ const MIN_FONT_SIZE = 16
 const TITLE_SIZE = 16
 const DESC_SIZE = 16
 const TITLE_TOP = AXIS_Y + 28
+/** A milestone's lane stands a line over its date. */
+const LANE_ABOVE_DATE = 22
 const BOTTOM_PAD = 18
 
 type Anchor = "start" | "middle" | "end"
@@ -389,17 +391,38 @@ export const timeline: SvgComponent<TimelineComponent> = {
           strokeWidth={2}
         />
         {rows.map(({ m, x, maxWidth, anchor, tx, title, desc }, i) => {
-          // A milestone on a lane names it with its date: one row has no
-          // second side of the axis for the lane to run on.
-          const date = fitSvgLine(m.lane?.trim() ? `${m.lane.trim()} · ${m.date}` : m.date, {
+          // A milestone on a lane names it on a line of its own over its date:
+          // one row has no second side of the axis for the lane to run on.
+          // The lane used to lead the date on its line, and a long date then
+          // lost its tail to the lane's name.
+          const date = fitSvgLine(m.date, {
             maxWidth,
             fontSize: 16,
             minFontSize: MIN_FONT_SIZE,
           })
+          const lane = m.lane?.trim()
+            ? fitSvgLine(m.lane.trim(), { maxWidth, fontSize: 16, minFontSize: MIN_FONT_SIZE })
+            : null
           const descTop = TITLE_TOP + title.lines.length * title.lineHeight + 2
           return (
             <g key={i}>
               <MilestoneNode m={m} cx={x} cy={AXIS_Y} baseR={8} ctx={ctx} />
+              {lane ? (
+                <text
+                  data-milestone-lane=""
+                  data-truncated={lane.truncated ? "1" : undefined}
+                  x={tx}
+                  y={AXIS_Y - LANE_ABOVE_DATE - 24}
+                  textAnchor={anchor}
+                  fill={inkWithTextFallback(ctx.colors.muted, ctx.colors.text, ctx.defaultBg ?? ctx.colors.bg, lane.fontSize)}
+                  fontSize={lane.fontSize}
+                  fontWeight="bold"
+                  fontFamily={ctx.fonts.body}
+                  dominantBaseline="alphabetic"
+                >
+                  {lane.text}
+                </text>
+              ) : null}
               <text
                 data-truncated={date.truncated ? "1" : undefined}
                 x={tx}

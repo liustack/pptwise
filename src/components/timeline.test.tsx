@@ -381,7 +381,7 @@ describe("timeline side by side in a short box", () => {
 
 
 describe("timeline lanes, drawn by the shared renderer", () => {
-  it("names a milestone's lane before its date", () => {
+  it("names a milestone's lane on a line over its date", () => {
     const laned = {
       type: "timeline" as const,
       milestones: [
@@ -390,9 +390,23 @@ describe("timeline lanes, drawn by the shared renderer", () => {
       ],
     }
     const { container } = svg(timeline.render(laned, { x: 0, y: 0, w: 1000, h: 300 }, ctx))
-    const dates = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
-    expect(dates).toContain("海外 · 7 月")
-    expect(dates).toContain("国内 · 8 月")
+    const lanes = Array.from(container.querySelectorAll("[data-milestone-lane]")).map((t) => t.textContent)
+    expect(lanes).toEqual(["海外", "国内"])
+    const date = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "7 月")!
+    const lane = container.querySelector("[data-milestone-lane]")!
+    expect(Number(lane.getAttribute("y"))).toBeLessThan(Number(date.getAttribute("y")))
+  })
+
+  it("keeps a long date whole beside a lane on a crowded row", () => {
+    const lanes = ["国内市场", "海外市场"]
+    const crowded = {
+      type: "timeline" as const,
+      milestones: Array.from({ length: 6 }, (_, i) => ({ date: `2026 年 ${i + 3} 月 15 日`, title: `事件 ${i + 1}`, lane: lanes[i % 2]! })),
+    }
+    const { container } = svg(timeline.render(crowded, { x: 0, y: 0, w: 1088 }, ctx))
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+    for (let i = 0; i < 6; i++) expect(texts).toContain(`2026 年 ${i + 3} 月 15 日`)
+    expect(container.querySelector("[data-truncated]")).toBeNull()
   })
 })
 
