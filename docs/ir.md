@@ -241,6 +241,7 @@ A page usually argues about one thing. These fields let the author say which, an
 | `gantt.items[].text` and `emphasis` | a line under the stretch's label, and the one stretch the page is about | at most one marked |
 | `timeline.milestones[].lane` and `timeline.lanes` | two tracks on one time order. `lanes` names them, the one above the axis first. A face with no room for two sides prints the lane before the date | every milestone names a lane or none does, at most two, not on a vertical timeline |
 | `kpi_cards.items[].value` written `**…**` | the one figure set in the theme's emphasis | |
+| `progress_donuts.items[].detail` and `emphasis` | a line under a rate's label with the amounts behind it ("1.18 of 1.3 trillion"), and the one rate the page is about, whose ring, figure and label take the emphasis colour | at most one marked |
 | `kpi_cards.items[].tag` | what the figure is, in a few words printed as a small tag with it (`{ "text": "Binding" }`): filled on the marked figure, outlined otherwise, grey when `quiet` | |
 | `from_to.rows[].tag` and `emphasis` | a tag after the row's values and the one measure the page is about, as on a `comparison` row | at most one marked |
 | `comparison.rows[].emphasis` | the one row the page is about: it sits on a pale tint of the emphasis colour | at most one |

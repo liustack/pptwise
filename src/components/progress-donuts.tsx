@@ -4,6 +4,7 @@ import { PptwiseError } from "../errors"
 import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk, groupValueInks } from "../render/ink"
+import { emphasisRunInk } from "../render/emphasis"
 import { FORM_BODY_FLOOR, fitFormLine, layoutAtSize } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
 
@@ -91,10 +92,17 @@ function columns(n: number, w: number): number {
   return Math.max(1, Math.min(n, Math.max(1, Math.floor((w + 8) / MIN_CELL))))
 }
 
-/** The most lines any one source takes at this width; a band always holds one. */
+/**
+ * The most lines any one item sets under its label at this width: its detail
+ * line (`items[].detail`, the amounts behind the rate) and its source. A band
+ * always holds one.
+ */
 function sourceLines(component: ProgressDonutsComponent, w: number, fontFamily: string): number {
   const cellW = w / columns(component.items.length, w)
-  return Math.max(1, ...component.items.map((item) => (item.source ? fitSource(item.source, cellW, fontFamily).lines.length : 1)))
+  return Math.max(
+    1,
+    ...component.items.map((item) => (item.detail?.trim() ? 1 : 0) + (item.source ? fitSource(item.source, cellW, fontFamily).lines.length : item.detail?.trim() ? 0 : 1)),
+  )
 }
 
 /**
@@ -141,16 +149,20 @@ export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
   // The ring stops shrinking at its 36px floor, so a short cell cannot
   // always pay for a second source line. It gives the line back instead,
   // and a source cut to one line is marked, the way it always was.
+  // A detail line is the amounts behind a rate and is never given back, so
+  // the sources give back lines only down to one under it.
+  const detailed = component.items.some((item) => item.detail?.trim())
+  const floorLines = detailed ? 2 : 1
   let lines = wanted
   let G = grid(n, box.w, h, lines)
-  while (lines > 1 && !sourcesFit(G, lines)) {
+  while (lines > floorLines && !sourcesFit(G, lines)) {
     lines -= 1
     G = grid(n, box.w, h, lines)
   }
   // The ring does not shrink past its 36px floor. A cell shorter than that
   // ring, its label and one line of source cannot hold a donut, so the row
   // declines the box rather than printing the label or source below it.
-  const sourced = component.items.some((item) => item.source)
+  const sourced = component.items.some((item) => item.source || item.detail?.trim())
   if (box.h !== undefined && !(sourced ? sourcesFit(G, lines) : labelFits(G))) {
     return (
       <g transform={`translate(${box.x},${box.y})`}>
@@ -212,11 +224,18 @@ export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
     })),
     ctx.colors.text,
   )
+  // The rate the page is about (`emphasis`) takes the emphasis ink for its
+  // ring, its figure and its label. On a theme whose emphasis ink is the
+  // accent every other ring is already drawn in, it takes the first of the
+  // primary and the text ink that is not.
+  const mark =
+    [emphasisRunInk(ctx.colors), ctx.colors.primary, ctx.colors.text].find((ink) => ink.toLowerCase() !== arc.toLowerCase()) ??
+    ctx.colors.text
 
   return (
     <g transform={`translate(${box.x},${box.y})`}>
       {values.map(({ item, cx, cy, d, headFit, tailFit, valueSize }, i) => {
-        const valueInk = valueInks[i]!
+        const valueInk = item.emphasis === true ? accessibleInk(mark, pageBg, valueSize) : valueInks[i]!
         const label = fitFormLine(item.label, {
           maxWidth: G.cellW - 16,
           fontSize: 16,
@@ -224,7 +243,12 @@ export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
           bold: true,
           fontFamily: ctx.fonts.body,
         })
-        const source = item.source ? fitSource(item.source, G.cellW, ctx.fonts.body, lines) : null
+        const detail = item.detail?.trim()
+          ? fitFormLine(item.detail.trim(), { maxWidth: G.cellW - 16, fontSize: 16, floor: FORM_BODY_FLOOR, fontFamily: ctx.fonts.body })
+          : null
+        const source = item.source ? fitSource(item.source, G.cellW, ctx.fonts.body, Math.max(1, lines - (detail ? 1 : 0))) : null
+        const sourceDrop = detail ? SOURCE_LINE : 0
+        const marked = item.emphasis === true
         const labelY = cy + G.r + G.strokeW / 2 + 22
         const iconSize = 14
         const showIcon = Boolean(item.icon) && G.r >= 48
@@ -239,7 +263,7 @@ export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
               strokeWidth={G.strokeW}
             />
             {d ? (
-              <path d={d} fill="none" stroke={arc} strokeWidth={G.strokeW} strokeLinecap="butt" />
+              <path d={d} fill="none" stroke={marked ? mark : arc} strokeWidth={G.strokeW} strokeLinecap="butt" />
             ) : null}
             {showIcon && item.icon ? (
               <Icon
@@ -301,18 +325,32 @@ export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
               textAnchor="middle"
               fontSize={label.fontSize}
               fontWeight="bold"
-              fill={ctx.colors.text}
+              fill={marked ? accessibleInk(mark, pageBg, label.fontSize) : ctx.colors.text}
               fontFamily={ctx.fonts.body}
               dominantBaseline="alphabetic"
             >
               {label.text}
             </text>
+            {detail && (
+              <text
+                data-truncated={detail.truncated ? "1" : undefined}
+                x={cx}
+                y={labelY + 18}
+                textAnchor="middle"
+                fontSize={detail.fontSize}
+                fill={accessibleInk(ctx.colors.text, pageBg, detail.fontSize)}
+                fontFamily={ctx.fonts.body}
+                dominantBaseline="alphabetic"
+              >
+                {detail.text}
+              </text>
+            )}
             {source?.lines.map((line, li) => (
               <text
                 key={`source-${li}`}
                 data-truncated={source.truncated && li === source.lines.length - 1 ? "1" : undefined}
                 x={cx}
-                y={labelY + 18 + li * SOURCE_LINE}
+                y={labelY + 18 + sourceDrop + li * SOURCE_LINE}
                 textAnchor="middle"
                 fontSize={source.fontSize}
                 fill={accessibleInk(ctx.colors.muted, pageBg, source.fontSize)}

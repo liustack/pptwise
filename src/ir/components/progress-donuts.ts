@@ -67,6 +67,14 @@ export const schema = z
             icon: IconNameSchema.optional(),
             /** 数据来源小字，如「来源: Crunchbase」。 */
             source: z.string().optional(),
+            detail: z
+              .string()
+              .optional()
+              .describe('The amounts behind the rate, such as "11770 / 13000 亿元" or "¥1.18tn of ¥1.3tn", printed on a line under the label.'),
+            emphasis: z
+              .boolean()
+              .optional()
+              .describe("Marks the one rate the page is about: its ring, figure and label take the emphasis colour. At most one."),
           })
           .strict()
           .refine((item) => parseProgressRatio(item.value, item.unit) !== null, {
@@ -79,6 +87,16 @@ export const schema = z
       .max(6, "progress_donuts accepts at most 6 rates — beyond that each dial shrinks past a readable size"),
   })
   .strict()
+  .superRefine((c, ctx) => {
+    const marked = c.items.flatMap((item, i) => (item.emphasis === true ? [i] : []))
+    if (marked.length > 1) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["items", marked[1]!, "emphasis"],
+        message: `progress_donuts marks ${marked.length} rates with emphasis, and a marked ring singles out one. Keep emphasis on the rate the page is about.`,
+      })
+    }
+  })
   .describe(
     "2-6 completion rates, each drawn as a ring filled to its own percentage. Use progress_donuts when " +
       "every value is a share of a whole — a completion rate, a coverage percentage, an attainment against " +

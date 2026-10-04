@@ -382,3 +382,35 @@ describe("progress_donuts in a box shorter than its smallest ring", () => {
   })
 })
 
+
+describe("progress_donuts detail line and marked ring", () => {
+  const funds = {
+    type: "progress_donuts" as const,
+    items: [
+      { value: "90.5%", label: "Ultra-long bonds", detail: "1.18 of 1.3 trillion", source: "to Sep 16" },
+      { value: "66.6%", label: "Local special bonds", detail: "2.93 of 4.4 trillion", source: "Jan–Aug" },
+      { value: "100%", label: "Trade-in funds", detail: "250 of 250 billion", source: "to Sep 30", emphasis: true },
+    ],
+  }
+
+  it("sets the detail under the label and the source under the detail, and marks one ring", () => {
+    for (const id of ["vermilion", "brief", "ember"]) {
+      const ctx = boundThemeCtx(id, {})
+      const { container } = render(<svg>{progressDonuts.render(funds, { x: 0, y: 0, w: 1088, h: 380 }, ctx)}</svg>)
+      const texts = Array.from(container.querySelectorAll("text"))
+      const y = (content: string) => Number(texts.find((t) => t.textContent === content)!.getAttribute("y"))
+      expect(y("1.18 of 1.3 trillion"), id).toBeGreaterThan(y("Ultra-long bonds"))
+      expect(y("to Sep 16"), id).toBeGreaterThan(y("1.18 of 1.3 trillion"))
+      expect(container.querySelector("[data-truncated]"), id).toBeNull()
+      const arcs = Array.from(container.querySelectorAll("path"))
+      const strokes = arcs.map((a) => a.getAttribute("stroke"))
+      expect(strokes[2], id).not.toBe(strokes[0])
+    }
+  })
+
+  it("refuses two marked rings", () => {
+    const deck = (component: unknown) => ({ version: "5", theme: { id: "brief" }, slides: [{ type: "content", kind: "data", heading: "x", components: [component] }] })
+    expect(validateIr(deck(funds)).ok).toBe(true)
+    expect(validateIr(deck({ ...funds, items: funds.items.map((item) => ({ ...item, emphasis: true })) })).ok).toBe(false)
+  })
+})
