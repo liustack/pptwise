@@ -41,6 +41,11 @@ export const schema = z
       .min(3, "from_to.rows needs at least 3 rows — one or two measures are a `kpi_cards` pair, not a shift")
       .max(6, "from_to.rows accepts at most 6 rows — a seventh leaves each row too short for its own number")
       .describe("3-6 measures, the same ones on both sides, in the order they should be read."),
+    /** 行名那一列的表头，如「指标」。 */
+    label_column: z
+      .string()
+      .optional()
+      .describe('The header over the measures\' names, such as "指标" or "Measure".'),
     /** 两侧之间的跨度，如「12 个月」，画在箭头下方。 */
     span: z.string().optional().describe("What separates the two states — a duration, a release, a decision. Printed under the arrow."),
   })

@@ -297,3 +297,37 @@ describe("from_to row tags and the marked measure", () => {
     expect(validateIr(deck({ ...plan, rows: plan.rows.map((row) => ({ ...row, emphasis: true })) })).ok).toBe(false)
   })
 })
+
+describe("from_to's label column header", () => {
+  const plan = {
+    type: "from_to" as const,
+    from: { title: "2025 年" },
+    to: { title: "2030 年" },
+    label_column: "指标",
+    rows: [
+      { label: "常住人口城镇化率", from: "67.9", to: "71", unit: "%" },
+      { label: "非化石能源占能源消费比重", from: "21.7", to: "25", unit: "%" },
+      { label: "人均预期寿命", from: "79.25", to: "80", unit: "岁" },
+    ],
+  }
+
+  it("heads the names' column on the state titles' baseline, set like a name in the quiet ink", () => {
+    const ctx = themed("brief")
+    const { container } = svg(fromTo.render(plan, { x: 88, y: 96, w: 1104 }, ctx))
+    const all = texts(container)
+    const header = all.find((t) => t.text === "指标")!
+    const name = all.find((t) => t.text === "常住人口城镇化率")!
+    const title = all.find((t) => t.text === "2025 年")!
+    expect(header.x).toBe(name.x)
+    expect(header.y).toBe(title.y)
+    expect(header.size).toBe(name.size)
+    expect(container.querySelector("text")!.getAttribute("fill")).not.toBe(ctx.colors.accent)
+  })
+
+  it("draws nothing over the names when the deck gives no header", () => {
+    const { label_column: _drop, ...bare } = plan
+    const { container } = svg(fromTo.render(bare, { x: 88, y: 96, w: 1104 }, themed("brief")))
+    expect(texts(container).map((t) => t.text)).not.toContain("指标")
+    expect(texts(container).filter((t) => t.y === texts(container).find((x) => x.text === "2025 年")!.y)).toHaveLength(2)
+  })
+})

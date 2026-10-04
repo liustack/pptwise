@@ -30,6 +30,8 @@ type FromToComponent = Extract<Component, { type: "from_to" }>
 
 const MAX_H = 348
 const HEAD_H = 76
+/** The state titles' size in the head band. */
+const HEAD_TITLE_SIZE = 24
 const ROW_MIN = 42
 const ROW_MAX = 76
 /** The gutter the arrow stands in, between the two value columns. */
@@ -119,7 +121,7 @@ export const fromTo: SvgComponent<FromToComponent> = {
         : null
       const titleFit = fitFormTitleLine(state.title, {
         maxWidth: inner,
-        fontSize: 24,
+        fontSize: HEAD_TITLE_SIZE,
         fontFamily: ctx.fonts.heading,
       })
       const blockH = (kickerFit ? kickerFit.fontSize + 8 : 0) + titleFit.fontSize
@@ -221,6 +223,24 @@ export const fromTo: SvgComponent<FromToComponent> = {
       ? fitFormLine(span, { maxWidth: GUTTER - 6, fontSize: FORM_BODY_FLOOR, fontFamily: ctx.fonts.body })
       : null
 
+    // The names' header stands on the starting state's title baseline, set
+    // like a name.
+    const labelText = component.label_column?.trim()
+    const labelFit = labelText ? fitFormLine(labelText, { maxWidth: g.labelW - PAD, fontSize: g.labelSize, fontFamily: ctx.fonts.body }) : null
+    const fromTitleSize = fitFormTitleLine(component.from.title, { maxWidth: g.colW - PAD * 2, fontSize: HEAD_TITLE_SIZE, fontFamily: ctx.fonts.heading }).fontSize
+    const labelHeader = labelFit ? (
+      <text
+        data-truncated={labelFit.truncated ? "1" : undefined}
+        x={0}
+        y={HEAD_H - PAD - fromTitleSize + fromTitleSize * 0.9}
+        fontFamily={ctx.fonts.body}
+        fontSize={labelFit.fontSize}
+        fill={accessibleInk(ctx.colors.muted, pageBg, labelFit.fontSize)}
+      >
+        {labelFit.text}
+      </text>
+    ) : null
+
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         <rect
@@ -233,6 +253,7 @@ export const fromTo: SvgComponent<FromToComponent> = {
           stroke={highlight}
           strokeWidth={1}
         />
+        {labelHeader}
         {header("from")}
         {header("to")}
         {component.rows.map((row, i) => {
