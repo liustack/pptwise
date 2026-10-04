@@ -78,3 +78,19 @@ In the panel setting. The round's decisions are in [rounds/2026-10-04-ledger](..
 
 - Two to four options and one to five rows. A header past two lines, a cell past three or a label past two declines.
 - The title bar prints no qualifier. "研究判断，不是公司指引" moved into the source line.
+
+## vermilion, government work report sample, 2026-10
+
+The seal setting's form, in [`table-seal.tsx`](../../../src/layouts/compositions/table-seal.tsx). The round's decisions are in [rounds/2026-10-04-vermilion](../../rounds/2026-10-04-vermilion/README.md).
+
+| board (p04) | engine |
+| :-: | :-: |
+| ![board](vermilion.board.png) | ![engine](vermilion.engine.png) |
+
+**What it looks like.** One `comparison` of up to three columns and six rows with no title, optionally followed by a `callout`. Headers at 15px over a 2px rule in the mark. Rows at least 76px tall on hairlines: the row's name bold at 19px, its cells at 17px in the quiet ink, the column the table reads toward (the recommended one, or else the later of two) with its header bold in the mark and its cells at 18px in the ink. Columns share the room by the length of what they hold. Each row's tag stands at the right edge under the `tag_column` header. The row the author marks sits on the mark's pale tint, its focus cell bold in the mark and its tag filled.
+
+**Why.** Last year's targets against this year's: what changed is the point, so the change is a tag at the end of each row and the one change the page is about is the marked row.
+
+**What it gave up.**
+
+- A row name past one line, or a cell past two lines, declines.

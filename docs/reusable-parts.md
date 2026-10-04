@@ -347,3 +347,75 @@ The tests draw every panel form on ledger and on bulletin, ember and crayon ([pa
 | A delta arrow follows its figure | a headline card's arrow follows its figure and unit on one line, and the figure is fitted to the room it leaves, where the arrow used to sit in the corner over a long figure | [kpi.tsx](../src/components/kpi.tsx) | [design/components/kpi_cards](../design/components/kpi_cards/README.md) |
 | A hub and spoke too narrow declines | a hub and spoke set in a box too narrow for its words declines instead of cutting its labels, so the page steps aside or declares the drop | [hub-spoke.tsx](../src/components/hub-spoke.tsx) | none |
 | A photo's caption has a place on a panel page | `image-split`'s panel column sets the caption over the source, so a captioned photograph keeps its column instead of falling back to a sheet that cannot hold the rest | [image-panel-split.tsx](../src/layouts/image-panel-split.tsx) | [design/faces/image-split](../design/faces/image-split/README.md) |
+
+## vermilion government work report sample, 2026-10
+
+The round redrew vermilion to a fifteen-page Chinese and English briefing on China's 2026 Government Work Report and the 15th Five-Year Plan, what has landed this year, and what it means for a manufacturer. Its decisions, the design system every vermilion page follows, and every place the engine departs from the board are in [`design/rounds/2026-10-04-vermilion/`](../design/rounds/2026-10-04-vermilion/README.md). The rules are restated for the next design session in [Designing for vermilion](./design-vermilion.md).
+
+### Compositions
+
+The compositions take a fifth `setting`, `seal` (`CompositionSetting` in [shared.tsx](../src/layouts/compositions/shared.tsx), the numbered square, the inks, the tag and the type sizes in [seal.tsx](../src/layouts/compositions/seal.tsx), the deck's numerals in [numerals.ts](../src/layouts/compositions/numerals.ts)): a formal report on paper. Items are numbered in the deck's own numerals (一、二、三 in a Chinese deck, 1, 2, 3 in an English one) in small squares of the emphasis colour, tables are open under a 2px rule of it, the mark is spent once a page, and the accent only draws. Each composition's seal form lives in its own file beside the composition (`rows-seal.tsx`, `tiles-seal.tsx`, `table-seal.tsx`, `lanes-seal.tsx`, `rail-seal.tsx`, and `plot-seal.tsx` for `columns` and `trend`), and the composition hands the page to it when the face asks for the seal setting.
+
+New:
+
+| composition | what it draws | takes | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| `roster` | six to ten short items in two columns of numbered cells, the marked one reversed out of the mark, an optional note under them | one `numbered_cards` of titles only, then optionally a `callout`. The seal setting only | [roster.tsx](../src/layouts/compositions/roster.tsx) | vermilion | [design/compositions/roster](../design/compositions/roster/README.md) |
+| `scores` | a scorecard as an open table, each verdict a tag at the right edge, a goal off track on the mark's tint | one `scorecard` of up to six rows. The seal setting only | [scores.tsx](../src/layouts/compositions/scores.tsx) | vermilion | [design/compositions/scores](../design/compositions/scores/README.md) |
+| `targets` | a plan's statement reversed out of the mark beside an open table of its targets, each with an arrow in the accent and a tag | an `insight_panel` of one row, then a `from_to` with no `kicker`, `span` or `change`. The seal setting only | [targets.tsx](../src/layouts/compositions/targets.tsx) | vermilion | [design/compositions/targets](../design/compositions/targets/README.md) |
+| `trend` | one series as a line over its value axis, a marked value range tinted behind it, every point printing its value | one `line` chart of one series and at most one band. The seal setting only, and `rail` sets it beside figures | [trend.tsx](../src/layouts/compositions/trend.tsx), [plot-seal.tsx](../src/layouts/compositions/plot-seal.tsx) | vermilion | [design/compositions/trend](../design/compositions/trend/README.md) |
+| `rings` | completion rates as large rings in a row, the amounts and the source under each | one `progress_donuts` of up to five items without icons. The seal setting only | [rings.tsx](../src/layouts/compositions/rings.tsx) | vermilion | [design/compositions/rings](../design/compositions/rings/README.md) |
+
+Settled compositions that grew a seal form:
+
+- `rows` sets two to five numbered cards, or "label: gloss" bullets, as numbered rows on hairlines, the marked one reversed out of the mark with its square white, a note panel under them. Board: [design/compositions/rows](../design/compositions/rows/README.md).
+- `tiles` sets two, four or six numbered cards as panels two by two under a bar in the accent, the marked one's bar and title in the mark. Board: [design/compositions/tiles](../design/compositions/tiles/README.md).
+- `table` sets a comparison as an open table read toward one column, each row's tag at the right edge under `tag_column`, the marked row on the mark's tint. Board: [design/compositions/table](../design/compositions/table/README.md).
+- `rail` stands a column of up to three figures beside an upright chart past a hairline, the plot grouped columns, a trend or any other chart. Board: [design/compositions/rail](../design/compositions/rail/README.md).
+- `columns` sets one to three series as grouped columns with every value printed, values below zero hanging under the zero line, the marked bar's series and category in the mark and the rest in the chart palette after its lead. Board: [design/compositions/columns](../design/compositions/columns/README.md).
+- `lanes` sets a timeline on one axis, the first lane's cards above it and the second's below it, each lane named in the mark, the highlighted milestone in the mark, a note panel under them. Board: [design/compositions/lanes](../design/compositions/lanes/README.md).
+
+The shared pieces of the seal forms are in [seal.tsx](../src/layouts/compositions/seal.tsx): `sealInks` for the inks, `paintNumeral` for a numbered square, `sealTagSpec` and `sealTagInks` for a tag, and `SEAL_SPEC` for the small type's exemption, and in [note-seal.tsx](../src/layouts/compositions/note-seal.tsx): `fitSealNote` and `paintSealNote` for a note panel.
+
+The tests draw every seal form on vermilion and on bulletin, ember and crayon ([seal.test.tsx](../src/layouts/compositions/seal.test.tsx)). The gallery's 构图 band has vermilion pages for `roster`, `scores`, `targets`, `trend`, `rings`, `table` and `lanes`.
+
+### Faces
+
+| face | what it is | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- |
+| `seal-sheet` | the ordinary content page: the claim centred and bold in the brand colour over a short accent bar, the body handed to the compositions in the seal setting, the source at 14px. Its `cards` parameter sets numbered cards as rows or as panels | [content-seal-sheet.tsx](../src/layouts/content-seal-sheet.tsx), [seal-shared.tsx](../src/layouts/seal-shared.tsx) | vermilion (points, list with `cards: "tiles"`, comparison, process, data, evidence, hierarchy) | [design/faces/seal-sheet](../design/faces/seal-sheet/README.md) |
+| `seal-figure` | one figure at 240px in the brand colour with its tag and note, and up to three supporting figures past a hairline | [content-seal-figure.tsx](../src/layouts/content-seal-figure.tsx) | vermilion (fact) | [design/faces/seal-figure](../design/faces/seal-figure/README.md) |
+| `image-split` | a `column` parameter: `seal` lays the photograph down one side edge to edge, and beside it the gold rule, the claim and a column of figures over the source | [image-seal-split.tsx](../src/layouts/image-seal-split.tsx), [image-pages.tsx](../src/render/image-pages.tsx) | vermilion (`seal`) | [design/faces/image-split](../design/faces/image-split/README.md) |
+| `red-head-cover` | redrawn: the issuing body red and bold at 52px with its Chinese characters spaced, a thick and a thin red rule, the title centred and evened over two lines | [cover-red-head-cover.tsx](../src/layouts/cover-red-head-cover.tsx) | vermilion | [design/faces/red-head-cover](../design/faces/red-head-cover/README.md) |
+| `deliberation-ending` | redrawn: the ask in a small line, the decision at 52px in the brand colour, an accent bar, and two to four numbered cards of label and gloss from the first `bullets` | [ending-deliberation-ending.tsx](../src/layouts/ending-deliberation-ending.tsx) | vermilion | [design/faces/deliberation-ending](../design/faces/deliberation-ending/README.md) |
+
+### Motif
+
+| motif | what it draws | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- |
+| `vermilion-motif` | redrawn: a gold double rule, 2px and 1px, from x64 to x1216, along the head of content pages, the foot of the cover and both on the ending | [motif-vermilion-motif.tsx](../src/motifs/motif-vermilion-motif.tsx) | vermilion | [design/motifs/vermilion-motif](../design/motifs/vermilion-motif/README.md) |
+
+### Component fields
+
+| field | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| `tag` on `comparison` and `from_to` rows, `tag_column` on `comparison` | a few words after a row's values saying what happened to it, outlined in the accent, in grey when `quiet`, filled on the marked row, under a header | [tag.tsx](../src/components/tag.tsx), [comparison.ts](../src/ir/components/comparison.ts), [from-to.ts](../src/ir/components/from-to.ts) | [design/components/comparison](../design/components/comparison/README.md), [design/components/from_to](../design/components/from_to/README.md) |
+| `emphasis` on `comparison` and `from_to` rows | marks the one row the page is about: a pale tint of the emphasis colour and its tag filled | [comparison.tsx](../src/components/comparison.tsx), [from-to.tsx](../src/components/from-to.tsx) | [design/components/comparison](../design/components/comparison/README.md) |
+| `label_column` on `from_to` | the header over the measures' names | [from-to.ts](../src/ir/components/from-to.ts), [from-to.tsx](../src/components/from-to.tsx) | [design/components/from_to](../design/components/from_to/README.md) |
+| `tag` on a `kpi_cards` item | a few words saying what a figure is, such as "Binding" | [kpi-cards.ts](../src/ir/components/kpi-cards.ts), [kpi.tsx](../src/components/kpi.tsx) | [design/components/kpi_cards](../design/components/kpi_cards/README.md) |
+| `bands` on `chart` | a value range tinted across a line, area or upright bar plot with its label, up to two | [chart.ts](../src/ir/components/chart.ts), [chart-svg.tsx](../src/components/chart-svg.tsx) | [design/components/chart](../design/components/chart/README.md) |
+| `detail` and `emphasis` on `progress_donuts` items | the amounts behind a rate, and the one rate the page is about | [progress-donuts.ts](../src/ir/components/progress-donuts.ts), [progress-donuts.tsx](../src/components/progress-donuts.tsx) | [design/components/progress_donuts](../design/components/progress_donuts/README.md) |
+| `numbered_cards` up to ten items | past eight, the ordinary cards stand in two columns | [numbered-cards.ts](../src/ir/components/numbered-cards.ts), [numbered-cards.tsx](../src/components/numbered-cards.tsx) | [design/components/numbered_cards](../design/components/numbered_cards/README.md) |
+
+### Engine behaviour
+
+| behaviour | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| Item numbers in the deck's numerals | a seal composition numbers items 一 to 九十九 in a Chinese deck and 1, 2, 3 in any other, from the deck's headings | [numerals.ts](../src/layouts/compositions/numerals.ts) | [design/compositions/rows](../design/compositions/rows/README.md) |
+| Written decimals | a chart prints a whole value with the decimals its neighbours carry (「5.0」 beside 「5.4」), where JSON had dropped the zero | [quantity-format.ts](../src/lib/quantity-format.ts), [plot.tsx](../src/layouts/compositions/plot.tsx), [chart-svg.tsx](../src/components/chart-svg.tsx) | [design/components/chart](../design/components/chart/README.md) |
+| A percent axis of shares ends at 100% | a percent chart with every value between 0 and 100 ends its axis at 100%, where the headroom used to reach 150% | [cartesian-axis.tsx](../src/components/cartesian-axis.tsx) | [design/components/chart](../design/components/chart/README.md) |
+| Spacing written as character spacing | a `<tspan dx>` between glyphs is exported as character spacing on the glyph before it, so a spaced letterhead or a tight display figure prints as the preview draws it | [svg2pptx/text.ts](../src/pptx/svg2pptx/text.ts) | [design/faces/red-head-cover](../design/faces/red-head-cover/README.md) |
+| A source line the body runs over is reported | the audit reports a block that runs over the page's source line | [deck-audit.ts](../src/audit/deck-audit.ts), [source-line.ts](../src/audit/source-line.ts) | none |
+| A squeezed last line keeps its spaces | when a fit joins a text's last lines, the space between words is kept, and a paragraph break beside Chinese joins with none | [svg-text-layout.ts](../src/lib/svg-text-layout.ts) | none |
+| A scorecard measures its columns | the ordinary scorecard sizes its columns from the words, where it used to drop the card | [scorecard.tsx](../src/components/scorecard.tsx) | none |
+| A statement keeps its quote's source | the statement face sets a quote and its source where a theme's skin has one line, instead of dropping the quote | [content-statement.tsx](../src/layouts/content-statement.tsx) | none |

@@ -15,3 +15,15 @@ Settled on the options page. See the board and engine render in [compositions/ta
 **What it gave up.**
 
 - One pick per table. The index counts columns from 0 and must name an existing column.
+
+## vermilion, government work report sample, 2026-10
+
+`rows[].tag`, `tag_column` and `rows[].emphasis`: a row says what happened to it, and the author marks the row the page is about. Settled on the targets page. See the board and engine render in [compositions/table](../../compositions/table/vermilion.board.png). The round's decisions are in [rounds/2026-10-04-vermilion](../../rounds/2026-10-04-vermilion/README.md).
+
+**What it looks like.** A tag is a few words in a small label after the row's cells, under the header `tag_column`: outlined in the accent when it says something changed, in a grey outline when `quiet: true` says nothing did, and filled in the emphasis colour on the marked row. The marked row sits on a pale tint of the emphasis colour. Every theme's ordinary table sets them, and vermilion's seal table sets them at its right edge.
+
+**Why.** Comparing two years' targets, what changed is the point, and it should not take the reader's own comparison of two cells to find it.
+
+**What it gave up.**
+
+- At most one marked row, and `tag_column` only with tags: validate refuses either.

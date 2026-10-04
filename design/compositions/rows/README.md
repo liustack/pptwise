@@ -42,3 +42,19 @@ The notice setting (`setting: "notice"`), which bulletin's `notice-sheet` passes
 
 - A card with a `sub` line is declined.
 - Three to five cards, or two to five bullets. Rows shrink to 84px before the composition declines.
+
+## vermilion, government work report sample, 2026-10
+
+The seal setting's form, in [`rows-seal.tsx`](../../../src/layouts/compositions/rows-seal.tsx). The round's decisions are in [rounds/2026-10-04-vermilion](../../rounds/2026-10-04-vermilion/README.md).
+
+| board (p02) | engine |
+| :-: | :-: |
+| ![board](vermilion.board.png) | ![engine](vermilion.engine.png) |
+
+**What it looks like.** One `numbered_cards` of two to five items with no `sub`, or a `bullets` of two to five written "label：gloss", optionally followed by a `callout`. Rows 112px apart on hairlines (taller when a title or gloss takes its second line): a 44px square in the mark with the item's number in the deck's numerals (一、二、三, or 1, 2, 3 in an English deck), the title bold at 22/32 and the gloss at 18/28 in the quiet ink. The item the author marks is reversed out of the mark, its square white and its words white. The callout closes the page as a note panel.
+
+**Why.** A summary of four points is read in order, and the one the briefing lands on is the one for the room.
+
+**What it gave up.**
+
+- The old points page's large 「04」 in a circle: the number now sits in each row's square.

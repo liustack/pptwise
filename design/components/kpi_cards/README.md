@@ -25,3 +25,15 @@ The ordinary card's delta arrow, settled while the supplier page's figures were 
 **Why.** The arrow used to stand alone in the card's top right corner, where a long figure such as 「600 至 640 亿」 ran under it, and the audit did not see the overlap.
 
 **What it gave up.** Nothing a card drew before: a card with no `delta` is unchanged.
+
+## vermilion, government work report sample, 2026-10
+
+`items[].tag`: a few words saying what a figure is, such as 「约束性指标」 or "Binding". Settled on the carbon page. See the board and engine render in [faces/seal-figure](../../faces/seal-figure/vermilion.board.png). The round's decisions are in [rounds/2026-10-04-vermilion](../../rounds/2026-10-04-vermilion/README.md).
+
+**What it looks like.** The ordinary cards print the tag as a small label on a row under the figure's label, filled in the emphasis colour on the figure the page marks with `**…**` and outlined on the others. vermilion's figure page sets the lead figure's tag filled under the figure.
+
+**Why.** A target that binds and one that is only expected read the same as numbers. The tag says which kind it is where the eye already is.
+
+**What it gave up.**
+
+- A face that sets figures by hand with no place for a tag hands the page to the ordinary cards.
