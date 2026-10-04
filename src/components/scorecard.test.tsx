@@ -164,11 +164,53 @@ describe("scorecard rendering", () => {
       ...CARD,
       rows: [{ ...CARD.rows[0]!, label: "客户续约率与席位扩容合并口径下的年度承诺" }, ...CARD.rows.slice(1)],
     }
-    const { container } = svg(scorecard.render(long, { x: 0, y: 0, w: 520, h: 412 }, ctx))
+    // 300px: too narrow for the long goal even on two lines beside four columns.
+    const { container } = svg(scorecard.render(long, { x: 0, y: 0, w: 300, h: 412 }, ctx))
     expect(container.querySelector("text")).toBeNull()
     const marker = container.querySelector("[data-dropped]")
     expect(marker!.getAttribute("data-dropped-kind")).toBe("row")
     expect(container.querySelector("[data-truncated]")).toBeNull()
+  })
+
+  it("measures its columns from its words when the fixed shares would cut a gap", () => {
+    // vermilion's 2025 page: a gap like 「比目标低 0.3 个百分点」 overruns the
+    // gap column's fixed share. The whole card used to go undrawn.
+    const ctx = themeCtx("vermilion")
+    const card = {
+      ...CARD,
+      rows: [
+        { label: "经济增长", target: "5% 左右", actual: "5.0%", gap: "持平", status: "on_track" as const, status_label: "完成" },
+        { label: "城镇调查失业率", target: "5.5% 左右", actual: "平均 5.2%", gap: "比目标低 0.3 个百分点", status: "on_track" as const, status_label: "完成" },
+        { label: "居民消费价格", target: "涨幅 2% 左右", actual: "与上年持平", gap: "低约 2 个百分点", status: "off_track" as const, status_label: "未完成" },
+      ],
+    }
+    const { container } = svg(scorecard.render(card, { x: 0, y: 0, w: 1088, h: 380 }, ctx))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+    expect(container.textContent).toContain("比目标低 0.3 个百分点")
+    expect(container.querySelectorAll("tspan")).toHaveLength(0)
+  })
+
+  it("wraps its goal, target and gap to two lines when one line each is too wide", () => {
+    const ctx = themeCtx("brief")
+    const card = {
+      ...CARD,
+      rows: [
+        { ...CARD.rows[0]!, label: "Seat renewals across the enterprise book", gap: "0.3 points below the target" },
+        ...CARD.rows.slice(1),
+      ],
+    }
+    const { container } = svg(scorecard.render(card, { x: 0, y: 0, w: 640, h: 400 }, ctx))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    const lines = Array.from(container.querySelectorAll("tspan")).map((t) => t.textContent ?? "")
+    expect(lines.join(" ")).toContain("0.3 points below the target")
+    expect(lines.join(" ")).toContain("Seat renewals across the enterprise book")
+    expect(container.querySelectorAll("tspan").length).toBeGreaterThan(0)
+    for (const text of container.querySelectorAll("text")) {
+      const x = Number(text.getAttribute("x"))
+      expect(x).toBeGreaterThanOrEqual(0)
+      expect(x).toBeLessThanOrEqual(640)
+    }
   })
 
   it("picks each ink against the size that is actually painted", () => {
