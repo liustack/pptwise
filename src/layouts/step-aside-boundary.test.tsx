@@ -41,6 +41,7 @@ import { PanelSheetContent } from "./content-panel-sheet"
 import { PanelFigureContent } from "./content-panel-figure"
 import { SealSheetContent } from "./content-seal-sheet"
 import { SealFigureContent } from "./content-seal-figure"
+import { ConsoleSheetContent } from "./content-console-sheet"
 import { GridStatementContent } from "./content-grid-statement"
 import { GaugeStatsContent } from "./content-gauge-stats"
 import { OneEvidenceContent } from "./content-one-evidence"
@@ -168,6 +169,11 @@ const CASES: FaceCase[] = [
   // A lone chart is not the figure page's one number, so the page goes
   // straight to the sheet, and is declined once that cannot hold it either.
   { face: "seal-figure", Face: SealFigureContent, themeId: "vermilion", regions: ["aside", "declined"] },
+  // terminal's console sheet draws what no composition takes with the
+  // ordinary component renderer in its band, y180 to y650, which is never
+  // smaller than the step-aside sheet's, so the page goes from the face
+  // straight to the declared drop.
+  { face: "console-sheet", Face: ConsoleSheetContent, themeId: "terminal", regions: ["face", "declined"] },
   // A statement with no row of figures draws its body with the component
   // renderer under the rule, and steps aside when that band cannot hold it.
   { face: "grid-statement", Face: GridStatementContent, themeId: "swiss", regions: ["face", "aside", "declined"] },

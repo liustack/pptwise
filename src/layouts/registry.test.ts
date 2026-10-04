@@ -39,7 +39,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     }
   }
 
-  it("has exactly 141 layout-kind entries, all traceable to one of the four real registries", () => {
+  it("has exactly 145 layout-kind entries, all traceable to one of the four real registries", () => {
     const knownIds = new Set([
       ...Object.keys(COVER_LAYOUTS),
       ...Object.keys(CHAPTER_LAYOUTS),
@@ -59,7 +59,9 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // sample redesign adds grid-sheet, grid-statement and grid-figure: 137.
     // The ledger sample redesign adds panel-sheet and panel-figure: 139.
     // The vermilion sample redesign adds seal-sheet and seal-figure: 141.
-    expect(layoutEntries).toHaveLength(141)
+    // The terminal sample redesign adds console-cover, console-chapter,
+    // console-sheet and console-ending: 145.
+    expect(layoutEntries).toHaveLength(145)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -123,7 +125,8 @@ describe("content family: body slot", () => {
           id === "decision-close-ending" ||
           id === "gauge-next" ||
           id === "crayonbox-todo" ||
-          id === "close-word-ending"
+          id === "close-word-ending" ||
+          id === "console-ending"
         ) {
           expect(entry.slots.some((s) => s.name === "body")).toBe(true)
           continue
@@ -250,18 +253,18 @@ describe("layoutsForSlideType", () => {
     for (const l of covers) expect(l.slideTypes).toContain("cover")
   })
 
-  it("cover, chapter, and ending expose 37, 36, and 34 registered layouts with no takeovers", () => {
+  it("cover, chapter, and ending expose 38, 37, and 35 registered layouts with no takeovers", () => {
     // The shared automatic pools are unchanged by the gauge family: 19, 8, 7.
-    expect(layoutsForSlideType("cover")).toHaveLength(37)
+    expect(layoutsForSlideType("cover")).toHaveLength(38)
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
-    expect(layoutsForSlideType("chapter")).toHaveLength(36)
-    expect(layoutsForSlideType("ending")).toHaveLength(34)
+    expect(layoutsForSlideType("chapter")).toHaveLength(37)
+    expect(layoutsForSlideType("ending")).toHaveLength(35)
   })
 
-  it("content includes both the 34 layouts and the 4 takeovers", () => {
+  it("content includes both the 35 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(34)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(35)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(38)
+    expect(contents).toHaveLength(39)
   })
 })

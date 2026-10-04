@@ -21,6 +21,7 @@ import { SealCloseEnding } from "./ending-seal-close-ending"
 import { GiltWordEnding } from "./ending-gilt-word-ending"
 import { WindowCloseEnding } from "./ending-window-close-ending"
 import { DeliberationEnding } from "./ending-deliberation-ending"
+import { ConsoleEnding } from "./ending-console-ending"
 import { ScorecardEnding } from "./ending-scorecard-ending"
 import { CarePlanEnding } from "./ending-care-plan-ending"
 import { SeatCtaEnding } from "./ending-seat-cta-ending"
@@ -73,4 +74,5 @@ export const ENDING_LAYOUTS: Record<EndingLayoutId, EndingLayout> = {
   "gauge-next": GaugeNextEnding,
   "crayonbox-todo": EndingCrayonboxTodo,
   "show-finale": ShowFinaleEnding,
+  "console-ending": ConsoleEnding,
 }

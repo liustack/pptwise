@@ -155,9 +155,18 @@ const OVERFLOW_TECH_MARKUP =
 const STEP_ASIDE_TECH_MARKUP =
   "<g data-face-mode=\"fallback\" data-face-stepped-aside=\"bento-panel\"><line x1=\"88\" y1=\"76\" x2=\"1192\" y2=\"76\" stroke=\"#24304A\" stroke-width=\"1.2\"></line><text x=\"88\" y=\"127\" font-size=\"34\" font-weight=\"600\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">七项要点</text><g data-audit-rect=\"88,171,1104,477\"><g data-audit-box=\"88,178.98,1104,60\"><g transform=\"translate(88,178.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 0</text></g></g><g data-audit-box=\"88,244.98,1104,60\"><g transform=\"translate(88,244.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 1</text></g></g><g data-audit-box=\"88,310.98,1104,60\"><g transform=\"translate(88,310.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 2</text></g></g><g data-audit-box=\"88,376.98,1104,60\"><g transform=\"translate(88,376.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 3</text></g></g><g data-audit-box=\"88,442.98,1104,60\"><g transform=\"translate(88,442.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 4</text></g></g><g data-audit-box=\"88,508.98,1104,60\"><g transform=\"translate(88,508.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 5</text></g></g><g data-audit-box=\"88,574.98,1104,60\"><g transform=\"translate(88,574.98)\"><circle cx=\"5\" cy=\"18.8\" r=\"3\" fill=\"#14294A\"></circle><text x=\"26\" y=\"26\" font-family=\"Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif\" font-size=\"24\" fill=\"#EAF1FA\" dominant-baseline=\"alphabetic\">要点 6</text></g></g></g></g>"
 
+/**
+ * The terminal tokens the two byte pins below were recorded under: terminal's
+ * rounded 10px cards, before its 2026-10 console redesign squared its corners.
+ * The pins test bento's own drawing, so they keep the tokens they were drawn
+ * with.
+ */
+const TERMINAL_ROUNDED = { ...resolveStyle("terminal"), shape: { ...resolveStyle("terminal").shape, radius: 10 } }
+const roundedTerminalCtx = () => boundThemeCtx("terminal", {}, undefined, undefined, undefined, undefined, TERMINAL_ROUNDED)
+
 describe("BentoPanelContent", () => {
   it("terminal tokens 下与旧 BentoTechContent 输出逐字节一致，唯一例外是 defect B 修复的 delta 箭头墨色（kpi_cards+icon_cards 混排拼盘，4-cell 网格）", () => {
-    const ctx = boundThemeCtx("terminal", {})
+    const ctx = roundedTerminalCtx()
     const deck = ir("terminal", [bentoSlide])
 
     const next = renderSvgMarkup(
@@ -258,7 +267,7 @@ describe("BentoPanelContent", () => {
   })
 
   it("terminal tokens 下单个孤立 KPI 项与旧模板逐字节一致——居中小卡退化路径（非满 rect 空壳）", () => {
-    const ctx = boundThemeCtx("terminal", {})
+    const ctx = roundedTerminalCtx()
     const deck = ir("terminal", [soloKpiSlide])
 
     const next = renderSvgMarkup(

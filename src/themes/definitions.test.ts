@@ -40,7 +40,7 @@ const BOARD: Record<string, { cover: string; chapter: string; ending: string }> 
   rally: { cover: "poster-center", chapter: "act-chapter", ending: "pill-cta-ending" },
   homeroom: { cover: "chalk-band-cover", chapter: "lesson-box-chapter", ending: "homework-close-ending" },
   ink: { cover: "vertical-title-cover", chapter: "volume-slip-chapter", ending: "seal-close-ending" },
-  terminal: { cover: "type-rule-cover", chapter: "stroke-index-chapter", ending: "rule-close-ending" },
+  terminal: { cover: "console-cover", chapter: "console-chapter", ending: "console-ending" },
   runway: { cover: "show-headline", chapter: "show-plate", ending: "show-finale" },
   journal: { cover: "issue-head-cover", chapter: "fascicle-ghost-chapter", ending: "afterword-ending" },
   luxe: { cover: "invitation-plate-cover", chapter: "gilt-ordinal-chapter", ending: "gilt-word-ending" },

@@ -59,6 +59,13 @@ export type CompositionId =
   | "targets"
   | "trend"
   | "rings"
+  | "cards"
+  | "listing"
+  | "log"
+  | "span"
+  | "plates"
+  | "paths"
+  | "screen"
 
 /**
  * The type a composition sets its page in.

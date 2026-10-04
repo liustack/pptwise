@@ -23,6 +23,7 @@ import { VolumeSlipChapter } from "./chapter-volume-slip-chapter"
 import { GiltOrdinalChapter } from "./chapter-gilt-ordinal-chapter"
 import { LookRangeChapter } from "./chapter-look-range-chapter"
 import { SealNumeralChapter } from "./chapter-seal-numeral-chapter"
+import { ConsoleChapter } from "./chapter-console-chapter"
 import { FieldBandChapter } from "./chapter-field-band-chapter"
 import { SubjectRuleChapter } from "./chapter-subject-rule-chapter"
 import { RoundMarkChapter } from "./chapter-round-mark-chapter"
@@ -78,4 +79,5 @@ export const CHAPTER_LAYOUTS: Record<ChapterLayoutId, ChapterLayout> = {
   "gauge-section": GaugeSectionChapter,
   "crayonbox-sticker": CrayonboxStickerChapter,
   "show-plate": ShowPlateChapter,
+  "console-chapter": ConsoleChapter,
 }

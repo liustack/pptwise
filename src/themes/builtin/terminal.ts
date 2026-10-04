@@ -45,7 +45,25 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 碎点退役，改为顶缘细规线，border，永不亮色。内容页青点睛必须骑在线上。
  * chapter 退让，空心序号与底规青段归 `stroke-index-chapter`）。
  *
- * **菜单分派（S1-B）**：工程件的图是要标注的架构图，photo 因此选 image-annotate，evidence 承担跑分与实测这类断言配展品的页，quote 不上。
+ * **菜单分派（S1-B）**：工程件的图是要标注的架构图，photo 因此选 image-annotate，evidence 承担跑分与实测这类断言配展品的页，quote 不上。2026-10 起各页改走 console 一套脸，见下。
+ *
+ * **2026-10 定稿重画（`design/rounds/2026-10-05-terminal/`，云中断复盘
+ * 样例）**：整套改成一块事故控制台。
+ *   - 每页左上一行等宽面包屑（青点、章节号与章节名、页码），封面写机构
+ *     与日期，章节页写 DIR，结尾写 EOF。面包屑归版式，不归 motif。
+ *   - 内容页统一走 `console-sheet`：标题 31/42 粗体整行宽，两行内底对齐，
+ *     其下一根 border 细线、左端 32×3 青段；正文交给 console 设定的构图
+ *     （方角面板、HUD 角括号、数字时间与标签一律等宽、标记的那一处落在
+ *     青色暗底上），来源 12px 等宽「src:」。photo 也走 `console-sheet`：
+ *     图组配大数字（plates）、浏览器样机配日志行（screen）都是构图。
+ *   - 封面 `console-cover`、章节 `console-chapter` 自己画满版照片和左侧
+ *     渐暗（`drawsPhoto`），不再交给公共的压图页；结尾 `console-ending`
+ *     是待办清单。
+ *   - 红、琥珀、绿只说一条信息是什么性质（故障、处置中、恢复），不说哪条
+ *     最重要，那是青色的事，一页一处。
+ *   - `shape.radius` 10 → 0（面板方角），四页型背景从对角渐变改成平铺
+ *     `#0A0F1E`，与定稿一致。statement 与 fact 本轮没有定稿，仍走原脸，
+ *     原 motif（顶缘细规线）只在这两种页上出现。
  */
 export const TECH_TOKENS: StyleTokens = {
   id: "terminal",
@@ -84,15 +102,15 @@ export const TECH_TOKENS: StyleTokens = {
     mono: ["Consolas", "Courier New"],
   },
   shape: {
-    radius: 10,
-    gapScale: 1, // bento 圆润（科技卡片感）
+    radius: 0,
+    gapScale: 1, // 控制台面板方角（2026-10 定稿）
     cover: { titleBottomAnchor: false, ruleStyle: "star-chain" },
   },
   defaultBackgrounds: {
-    cover: { kind: "gradient", from: "#0E1630", to: "#070B16", direction: "diagonal" },
-    chapter: { kind: "gradient", from: "#0E1630", to: "#070B16", direction: "diagonal" },
-    content: { kind: "gradient", from: "#0E1630", to: "#070B16", direction: "diagonal" },
-    ending: { kind: "gradient", from: "#0E1630", to: "#070B16", direction: "diagonal" },
+    cover: { kind: "color", value: "#0A0F1E" },
+    chapter: { kind: "color", value: "#0A0F1E" },
+    content: { kind: "color", value: "#0A0F1E" },
+    ending: { kind: "color", value: "#0A0F1E" },
   },
 };
 
@@ -102,7 +120,7 @@ export const TECH_THEME = {
   label: "Terminal",
   story: {
     name: "Terminal",
-    story: "Blue-black depth with a celadon glow, a hairline rule at the top, one highlight point per page. It speaks the way a maintainer explains an architecture: precise, unhurried, allergic to hype.",
+    story: "Blue-black depth with a celadon glow, a mono line at the top that says where each page sits, figures and times set as a console prints them. It speaks the way a maintainer explains an architecture: precise, unhurried, allergic to hype.",
     positioning: "Choose it for engineering talks, architecture reviews, and open-source stories where tradeoffs matter more than slogans.",
     audience: "Engineers explaining a system to engineers.",
     notFor: "Consumer launches, warm human stories, or pages that need color to carry emotion.",
@@ -110,21 +128,21 @@ export const TECH_THEME = {
   },
   style: TECH_TOKENS,
   menu: {
-    cover: { face: "type-rule-cover" },
-    chapter: { face: "stroke-index-chapter" },
+    cover: { face: "console-cover" },
+    chapter: { face: "console-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "split-band" },
-      photo: { face: "image-annotate" },
+      points: { face: "console-sheet" },
+      list: { face: "console-sheet" },
+      comparison: { face: "console-sheet" },
+      process: { face: "console-sheet" },
+      data: { face: "console-sheet" },
+      photo: { face: "console-sheet" },
       statement: { face: "statement" },
       fact: { face: "stat-hero" },
-      evidence: { face: "one-evidence" },
-      hierarchy: { face: "asymmetric-triptych" },
+      evidence: { face: "console-sheet" },
+      hierarchy: { face: "console-sheet" },
     },
-    ending: { face: "rule-close-ending" },
+    ending: { face: "console-ending" },
   },
   motif: { id: "constellation-motif" },
 } satisfies BuiltinThemeDeclaration;

@@ -346,7 +346,10 @@ export function FullSlideSvg({
   if (bgSpec.kind === "asset") {
     const { overlay: _ignored, ...withoutOverlay } = bgSpec
     bgSpec = withoutOverlay
-    if (!imageCoverTakeover) {
+    // A face that draws its own page over a photograph lays its own
+    // darkening over it (`LayoutDefinition.drawsPhoto`), so the photograph
+    // goes down clean.
+    if (!imageCoverTakeover && effectiveFace.layout?.drawsPhoto !== true) {
       // `themeDefaultBg` directly, not the slide-background-aware
       // `defaultBg` above — though the two are now (final-review Major
       // finding, this same backlog item's sub-branch fix) provably equal

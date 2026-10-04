@@ -21,7 +21,7 @@ const WAVE2 = [
   { id: "thesis", face: "thesis-plate-cover" },
   { id: "rally", face: "poster-center" },
   { id: "ledger", face: "stat-cover" },
-  { id: "terminal", face: "type-rule-cover" },
+  { id: "terminal", face: "console-cover" },
   { id: "luxe", face: "invitation-plate-cover" },
   { id: "journal", face: "issue-head-cover" },
   { id: "ink", face: "vertical-title-cover" },

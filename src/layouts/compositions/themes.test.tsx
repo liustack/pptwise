@@ -34,8 +34,10 @@ const YEARS = ["FY2023", "FY2024", "FY2025", "FY2026"]
 const PANEL_ONLY = ["tiles", "shifts"] as const
 /** The same for the seal setting's own: `seal.test.tsx` puts them on these themes. */
 const SEAL_ONLY = ["roster", "scores", "targets", "trend", "rings"] as const
-type BoardId = Exclude<CompositionId, (typeof PANEL_ONLY)[number] | (typeof SEAL_ONLY)[number]>
-const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY]
+/** The same for the console setting's own: `console.test.tsx` puts them on these themes. */
+const CONSOLE_ONLY = ["cards", "listing", "log", "span", "plates", "paths", "screen"] as const
+type BoardId = Exclude<CompositionId, (typeof PANEL_ONLY)[number] | (typeof SEAL_ONLY)[number] | (typeof CONSOLE_ONLY)[number]>
+const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY, ...CONSOLE_ONLY]
 const BOARD_IDS = COMPOSITION_IDS.filter((id): id is BoardId => !SETTING_ONLY.includes(id))
 
 /** One page per composition, in the shape each one takes. */

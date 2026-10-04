@@ -23,6 +23,13 @@ import { scoresComposition } from "./scores"
 import { targetsComposition } from "./targets"
 import { trendComposition } from "./trend"
 import { ringsComposition } from "./rings"
+import { cardsComposition } from "./cards"
+import { listingComposition } from "./listing"
+import { logComposition } from "./log"
+import { spanComposition } from "./span"
+import { platesComposition } from "./plates"
+import { pathsComposition } from "./paths"
+import { screenComposition } from "./screen"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -59,6 +66,13 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   targets: targetsComposition,
   trend: trendComposition,
   rings: ringsComposition,
+  cards: cardsComposition,
+  listing: listingComposition,
+  log: logComposition,
+  span: spanComposition,
+  plates: platesComposition,
+  paths: pathsComposition,
+  screen: screenComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
