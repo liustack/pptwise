@@ -11,7 +11,10 @@ import {
   consoleMeta,
   consoleTagWidth,
   consoleText,
+  fitBanner,
   fitMono,
+  monoWidth,
+  paintBanner,
   paintBrackets,
   paintCard,
   paintConsoleTag,
@@ -25,6 +28,7 @@ type RowCards = Extract<Component, { type: "row_cards" }>
 type NumberedCards = Extract<Component, { type: "numbered_cards" }>
 type IconCards = Extract<Component, { type: "icon_cards" }>
 type Callout = Extract<Component, { type: "callout" }>
+type VerdictBanner = Extract<Component, { type: "verdict_banner" }>
 
 /*
  * cards: findings as HUD cards in a grid, the console setting's way of
@@ -42,6 +46,13 @@ type Callout = Extract<Component, { type: "callout" }>
  * - one `numbered_cards` of three to six items, set the same way with no icon
  *   box, the card the author marks (`emphasis`) on the mark's tint. The number
  *   at the top right is the only number: no count stands beside the cards.
+ * - either of those followed by a `verdict_banner` or a `callout`: the page's
+ *   conclusion as a banner across the foot, up to two lines, the cards
+ *   shortened above it. A positive verdict or a tip sits on the mark's tint
+ *   inside an edge of it, a warning inside the warning ink, anything else on
+ *   the surface. Cards with no icon set their title level with their number,
+ *   so four of them hold a line of text each over a banner. Cards with an
+ *   icon box need their full height, and decline a banner.
  * - one `icon_cards` of two to six items, optionally followed by a `callout`:
  *   HUD cards three across (two across for four), each with brackets just
  *   inside its edge, its icon at 26px in the mark, its tag at the top right in
@@ -58,6 +69,8 @@ type Callout = Extract<Component, { type: "callout" }>
  */
 
 const GAP = 16
+/** The banner under the verdict cards: 64px for one line, 28px more for a second. */
+const CLOSING = { gap: 16, h: 64, line: 28, foot: 8 } as const
 /** HUD cards stand closer side by side than verdict cards do. */
 const HUD_COL_GAP = 12
 
@@ -68,7 +81,7 @@ const VERDICT = {
   top: 4,
   pad: 24,
   box: { top: 26, size: 44, icon: 24 },
-  index: { top: 30, box: 20, size: 13 },
+  index: { top: 30, box: 20, size: 13, gap: 16 },
   title: { top: 92, size: 23, lineHeight: 34, maxLines: 1 },
   text: { top: 136, size: 17, lineHeight: 28, maxLines: 2 },
   foot: 20,
@@ -126,25 +139,49 @@ function verdictItems(cards: RowCards | NumberedCards): VerdictItem[] | null {
   return cards.items.map((item) => ({ title: item.title, text: item.text, marked: item.emphasis === true }))
 }
 
-/** Verdict cards: `row_cards` or `numbered_cards` two across. */
-function verdictCards(block: RowCards | NumberedCards, ctx: ComponentCtx, rect: { x: number; y: number; w: number; h: number }): React.ReactElement | null {
+/**
+ * The page's closing line as the banner a console sets it in: a callout as it
+ * is, a verdict in the variant its tone reads as.
+ */
+function closingNote(block: Callout | VerdictBanner): Callout {
+  if (block.type === "callout") return block
+  const variant = block.tone === "positive" ? "tip" : block.tone === "warning" ? "warn" : "info"
+  return { type: "callout", variant, text: block.text, ...(block.icon ? { icon: block.icon } : {}) }
+}
+
+/** Verdict cards: `row_cards` or `numbered_cards` two across, with the page's closing banner under them if it has one. */
+function verdictCards(
+  block: RowCards | NumberedCards,
+  closing: Callout | VerdictBanner | undefined,
+  ctx: ComponentCtx,
+  full: { x: number; y: number; w: number; h: number },
+): React.ReactElement | null {
   if (block.items.length < 3 || block.items.length > 6) return null
   const items = verdictItems(block)
   if (!items) return null
+  const note = closing ? closingNote(closing) : null
+  const banner = note ? fitBanner(note, full.w, ctx) : null
+  if (note && !banner) return null
+  const bannerH = banner ? CLOSING.h + (banner.lines.length - 1) * CLOSING.line : 0
+  const rect = banner ? { ...full, h: full.h - CLOSING.foot - bannerH - CLOSING.gap } : full
   const cards = { items }
   const grid = gridFor(rect, cards.items.length, 2, VERDICT.h, VERDICT.top)
   if (!grid) return null
   const inks = consoleInks(ctx)
   const inner = grid.w - VERDICT.pad * 2
+  // Cards with no icon box start their title where the box would stand, level
+  // with the number, and keep clear of it.
+  const lift = cards.items.some((item) => item.icon) ? 0 : VERDICT.title.top - VERDICT.box.top
+  const titleW = lift ? inner - monoWidth("00", VERDICT.index.size) - VERDICT.index.gap : inner
   const fitted = cards.items.map((item) => {
-    const title = fitFixed(item.title, { width: inner, size: VERDICT.title.size, lineHeight: VERDICT.title.lineHeight, maxLines: VERDICT.title.maxLines, fontFamily: ctx.fonts.heading, bold: true })
+    const title = fitFixed(item.title, { width: titleW, size: VERDICT.title.size, lineHeight: VERDICT.title.lineHeight, maxLines: VERDICT.title.maxLines, fontFamily: ctx.fonts.heading, bold: true })
     const text = item.text?.trim() ? fitFixed(item.text, { width: inner, size: VERDICT.text.size, lineHeight: VERDICT.text.lineHeight, maxLines: VERDICT.text.maxLines, fontFamily: ctx.fonts.body, bold: false }) : null
     return { title, text }
   })
   if (fitted.some((f, i) => f.title === null || (cards.items[i]!.text?.trim() && f.text === null))) return null
-  const need = VERDICT.text.top + VERDICT.text.lineHeight * Math.max(1, ...fitted.map((f) => f.text?.lines.length ?? 0)) + VERDICT.foot
+  const need = VERDICT.text.top - lift + VERDICT.text.lineHeight * Math.max(1, ...fitted.map((f) => f.text?.lines.length ?? 0)) + VERDICT.foot
   if (grid.h < need) return null
-  return (
+  const drawn = (
     <g {...compositionTag("cards")} {...blockTag(ctx, block)}>
       {cards.items.map((item, i) => {
         const box = cellBox(grid, rect, i)
@@ -191,7 +228,7 @@ function verdictCards(block: RowCards | NumberedCards, ctx: ComponentCtx, rect: 
             {paintLines(title!, {
               ctx,
               x: box.x + VERDICT.pad,
-              y: baselineIn(box.y + VERDICT.title.top, VERDICT.title.lineHeight, VERDICT.title.size),
+              y: baselineIn(box.y + VERDICT.title.top - lift, VERDICT.title.lineHeight, VERDICT.title.size),
               fill: consoleText(marked ? inks.mark : inks.text, ground, VERDICT.title.size),
               fontFamily: ctx.fonts.heading,
               fontWeight: "700",
@@ -201,7 +238,7 @@ function verdictCards(block: RowCards | NumberedCards, ctx: ComponentCtx, rect: 
               ? paintLines(text, {
                   ctx,
                   x: box.x + VERDICT.pad,
-                  y: baselineIn(box.y + VERDICT.text.top, VERDICT.text.lineHeight, VERDICT.text.size),
+                  y: baselineIn(box.y + VERDICT.text.top - lift, VERDICT.text.lineHeight, VERDICT.text.size),
                   fill: consoleText(inks.body, ground, VERDICT.text.size),
                   fontFamily: ctx.fonts.body,
                   fontWeight: "400",
@@ -212,6 +249,13 @@ function verdictCards(block: RowCards | NumberedCards, ctx: ComponentCtx, rect: 
         )
       })}
     </g>
+  )
+  if (!note || !banner || !closing) return drawn
+  return (
+    <>
+      {drawn}
+      {paintBanner(note, banner, { x: full.x, y: full.y + full.h - CLOSING.foot - bannerH, w: full.w, h: bannerH }, ctx, blockTag(ctx, closing))}
+    </>
   )
 }
 
@@ -342,7 +386,10 @@ export const cardsComposition: Composition = ({ components, ctx, rect, setting }
   if (setting !== "console") return null
   const [first, second, ...rest] = components
   if (!first || rest.length > 0) return null
-  if (first.type === "row_cards" || first.type === "numbered_cards") return second ? null : verdictCards(first, ctx, rect)
+  if (first.type === "row_cards" || first.type === "numbered_cards") {
+    if (second && second.type !== "verdict_banner" && second.type !== "callout") return null
+    return verdictCards(first, second, ctx, rect)
+  }
   if (first.type !== "icon_cards") return null
   if (second && second.type !== "callout") return null
   return hudCards(first, second, ctx, rect)

@@ -213,6 +213,35 @@ describe("cards", () => {
     expect(root!.querySelectorAll("circle")).toHaveLength(0)
   })
 
+  it("lifts icon-less cards' titles level with their number, clear of it", () => {
+    const numbered = [{ type: "numbered_cards", items: (verdict[0] as { items: { title: string; text: string }[] }).items.map((item) => ({ title: item.title, text: item.text })) }]
+    const { root } = draw(cardsComposition, numbered)
+    const title = byText(root!, "SLA 只赔服务费")!
+    const number = texts(root!).find((t) => textOf(t) === "04")!
+    expect(Math.abs(numberOf(title, "y") - numberOf(number, "y"))).toBeLessThan(12)
+  })
+
+  it("closes the cards with the page's verdict as a banner under them, in the variant its tone reads as", () => {
+    const short = [{ type: "numbered_cards", items: ["多区域做到温备", "先补限流退避", "独立备用路径", "状态页搬出主云"].map((title) => ({ title, text: "一行说明" })) }]
+    for (const [tone, variant] of [["positive", "tip"], ["warning", "warn"], ["neutral", "info"]] as const) {
+      const { root } = draw(cardsComposition, [...short, { type: "verdict_banner", tone, text: "多区域做到温备，但先补限流退避和独立备用路径" }])
+      const banner = root!.querySelector("[data-console-banner]")!
+      expect(banner.getAttribute("data-console-banner")).toBe(variant)
+      expect(textOf(byText(banner, "多区域做到温备，但先补限流退避和独立备用路径")!)).toBe("多区域做到温备，但先补限流退避和独立备用路径")
+      const lastCard = Array.from(root!.querySelectorAll("[data-gauge-module='cards'] rect")).filter((r) => numberOf(r, "height") > 100).at(-1)!
+      expect(numberOf(lastCard, "y") + numberOf(lastCard, "height")).toBeLessThanOrEqual(numberOf(banner.querySelector("rect"), "y") - 16)
+    }
+    const { root } = draw(cardsComposition, [...short, { type: "callout", variant: "warn", text: "先补限流退避" }])
+    expect(root!.querySelector("[data-console-banner='warn']")).not.toBeNull()
+    // Cards with an icon box and two lines of text need their full height: under a banner they decline.
+    expect(draw(cardsComposition, [...verdict, { type: "callout", variant: "tip", text: "先补限流退避" }]).element).toBeNull()
+  })
+
+  it("declines a closing block that is not a verdict or a callout, and a verdict too long for two lines", () => {
+    expect(draw(cardsComposition, [...verdict, { type: "bullets", items: ["a"] }]).element).toBeNull()
+    expect(draw(cardsComposition, [...verdict, { type: "verdict_banner", tone: "positive", text: "很长的结论".repeat(30) }]).element).toBeNull()
+  })
+
   it("declines a verdict title past its line", () => {
     const long = [{ ...verdict[0], items: (verdict[0] as { items: object[] }).items.map((item, i) => (i === 0 ? { ...item, title: "大面积中断多是一次变更推到全部节点而且同云多开一个区域也挡不住" } : item)) }]
     expect(draw(cardsComposition, long).element).toBeNull()
