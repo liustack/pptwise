@@ -207,6 +207,23 @@ const DECLARED_PAGE: Partial<Record<string, Slide>> = {
       },
     ],
   } as Slide,
+  // The seal fact page: one lead figure with its tag and note, and the
+  // figures it rests on. The generic page's bullets and prose are no figure.
+  "seal-figure": {
+    type: "content",
+    kind: "fact",
+    heading: SCAN_HEADING,
+    components: [
+      {
+        type: "kpi_cards",
+        items: [
+          { value: "17", unit: "%", label: "五年累计降低", tag: { text: "约束性指标" }, note: "上一个五年为 18%。" },
+          { value: "3.8% 左右", label: "今年目标", note: "替代能耗指标" },
+          { value: "25%", label: "五年后占比", note: "今年为 21.7%" },
+        ],
+      },
+    ],
+  } as Slide,
 }
 
 /** The generic sample, in the same shape a registered one has. */

@@ -169,7 +169,8 @@ export function paintFigure(
 
 /** Whether an item is one these figures can set whole: no delta arrow, no icon, no source line. */
 export function plainFigure(item: KpiItem): boolean {
-  return item.delta === undefined && item.icon === undefined && !item.source?.trim()
+  // A tag has no place beside a set figure: the ordinary cards print it.
+  return item.delta === undefined && item.icon === undefined && !item.source?.trim() && item.tag === undefined
 }
 
 /** Curly or straight quotation marks an author may have written around the words. */

@@ -20,6 +20,15 @@ const comparison = (overrides: Record<string, unknown> = {}) => ({
 })
 
 describe("table composition", () => {
+  it("leaves rows with tags or a marked row to the ordinary comparison, in every setting it draws", () => {
+    const tagged = comparison({ rows: ROWS.map((row, i) => (i === 0 ? { ...row, tag: { text: "New" } } : row)) })
+    const marked = comparison({ rows: ROWS.map((row, i) => (i === 2 ? { ...row, emphasis: true } : row)) })
+    for (const setting of [undefined, "notice", "panel"] as const) {
+      expect(renderComposition(tableComposition, [tagged], { setting }).element, String(setting)).toBeNull()
+      expect(renderComposition(tableComposition, [marked], { setting }).element, String(setting)).toBeNull()
+    }
+  })
+
   it("lifts the recommended option onto a white column under a primary header", () => {
     const { root, tokens } = renderComposition(tableComposition, [comparison()])
     const [column, header] = Array.from(root!.querySelectorAll("rect"))

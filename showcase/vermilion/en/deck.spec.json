@@ -1,0 +1,119 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "vermilion",
+  "filename": "govreport-2026-briefing",
+  "meta": {
+    "organization": "Strategy Department",
+    "date": "October 2026"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "2026 Work Report and the 15th Five-Year Plan",
+      "summary": "A briefing: the key points and what they mean for us"
+    },
+    {
+      "id": "p02-summary",
+      "type": "content",
+      "kind": "points",
+      "heading": "A growth range, demand first, carbon over energy",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p03-2025",
+      "type": "content",
+      "kind": "data",
+      "heading": "2025 targets were met, except consumer prices",
+      "focus": "scorecard"
+    },
+    {
+      "id": "p04-targets",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "2026 sets a growth range and a carbon goal",
+      "focus": "comparison"
+    },
+    {
+      "id": "p05-fiscal",
+      "type": "content",
+      "kind": "data",
+      "heading": "Deficit up ¥230bn, bank bonds down ¥200bn",
+      "focus": "chart"
+    },
+    {
+      "id": "p06-tasks",
+      "type": "content",
+      "kind": "points",
+      "heading": "Domestic market first, new drivers and tech next",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p07-plan",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "The 15th Plan sets no GDP figure for five years",
+      "focus": "from_to"
+    },
+    {
+      "id": "p08-carbon",
+      "type": "content",
+      "kind": "fact",
+      "heading": "The green yardstick shifts from energy to carbon",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p09-growth",
+      "type": "content",
+      "kind": "data",
+      "heading": "H1 growth of 4.7% is in range, Q2 slowed to 4.3%",
+      "focus": "chart"
+    },
+    {
+      "id": "p10-indicators",
+      "type": "content",
+      "kind": "data",
+      "heading": "Jan–Aug: investment −7.2%, factory prices +2.0%",
+      "focus": "chart"
+    },
+    {
+      "id": "p11-policies",
+      "type": "content",
+      "kind": "process",
+      "heading": "This year's policy push: spending and industry",
+      "focus": "timeline"
+    },
+    {
+      "id": "p12-funds",
+      "type": "content",
+      "kind": "data",
+      "heading": "Money flows: 90.5% of ultra-long bonds issued",
+      "focus": "progress_donuts"
+    },
+    {
+      "id": "p13-equipment",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Equipment money is out, and loans get subsidies",
+      "focus": "image"
+    },
+    {
+      "id": "p14-implications",
+      "type": "content",
+      "kind": "list",
+      "heading": "For us: spending, equipment, carbon and exports",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p15-ending",
+      "type": "ending",
+      "heading": "Three steps for Q4",
+      "summary": "For management to confirm owners"
+    }
+  ]
+}

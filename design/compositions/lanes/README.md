@@ -55,3 +55,19 @@ In the panel setting. The round's decisions are in [rounds/2026-10-04-ledger](..
 - Two to eight milestones on a horizontal timeline. A date past one line, a title past two lines or a description past two declines.
 - A timeline has no unit field, so its `title` carries the unit.
 - The lanes' names leave the axis, where the other settings put them, for the title bar: a timeline with lanes used to print the lane name into the date.
+
+## vermilion, government work report sample, 2026-10
+
+The seal setting's form, in [`lanes-seal.tsx`](../../../src/layouts/compositions/lanes-seal.tsx). The round's decisions are in [rounds/2026-10-04-vermilion](../../rounds/2026-10-04-vermilion/README.md).
+
+| board (p11) | engine |
+| :-: | :-: |
+| ![board](vermilion.board.png) | ![engine](vermilion.engine.png) |
+
+**What it looks like.** One axis across the page, 2px in the ink, milestones in time order as equal columns. With two lanes the first lane's cards stand above the axis and the second's below it, each lane named bold in the mark on the left (two lines at most). Each card hangs from the axis on a thin stem: its date at 15px, its title bold at 17/25 and its description at 15/22. The highlighted milestone takes a filled node and its stem, date and title in the mark. A callout closes the page as a note panel.
+
+**Why.** The year's policies ran on two lines at once. Two lanes on one axis show what came when on each.
+
+**What it gave up.**
+
+- A title past two lines or a description past three of its card declines.

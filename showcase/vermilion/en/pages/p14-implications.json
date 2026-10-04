@@ -1,0 +1,28 @@
+{
+  "components": [
+    {
+      "type": "numbered_cards",
+      "items": [
+        {
+          "title": "Spending: from goods to services and loans",
+          "text": "Trade-in funds ¥50bn lower, services retail +4.9% in Jan–Aug"
+        },
+        {
+          "title": "Equipment: funds and cheaper loans",
+          "text": "¥200bn allocated, and firm loans get a 1.5 pt subsidy",
+          "emphasis": true
+        },
+        {
+          "title": "Carbon: a new yearly yardstick",
+          "text": "Carbon intensity down about 3.8% this year, 17% over five years"
+        },
+        {
+          "title": "Exports: still the bright spot",
+          "text": "Exports +13.4% in H1, goods trade +17.6% in Jan–Aug"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: 2026 Government Work Report, NBS and Ministry of Finance releases (July–September 2026)",
+  "notes": "What the four lines mean for us. Spending: central support is shifting from goods trade-ins toward services and loan subsidies. Trade-in money is ¥50 billion lower than last year, and services are growing faster than retail sales, so our consumer business should look harder at services and financing offers. Equipment: ¥200 billion for equipment upgrades is out, small firms get a 1.5-point loan subsidy on up to ¥75 million, and the AI Plus manufacturing plan is under way, so upgrade projects have both funding and cheaper credit. Carbon: the yearly target is now carbon intensity, down 17% over five years, and the Plan calls for zero-carbon factories and parks, so energy-heavy plants should get their carbon accounts in order first. Exports: exports grew 13.4% in the first half, the strongest part of demand this year, and are worth protecting."
+}

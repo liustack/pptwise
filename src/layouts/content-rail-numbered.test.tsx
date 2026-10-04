@@ -429,3 +429,30 @@ describe("rail-numbered badge in a deck with no chapters", () => {
     expect(badge(10)).toBe("10")
   })
 })
+
+describe("rail-numbered under a treated heading", () => {
+  it("ends its body band above the source line", async () => {
+    // A heading treatment (thesis's, as vermilion's did before its menu
+    // moved to the seal sheet) sends this face down its treated branch, whose
+    // band used to be held at 480px: from y257 to y737, under the source
+    // line, so a two-line closing note sat its panel on the source.
+    const { renderSlideSvg } = await import("../api")
+    const slide = {
+      type: "content",
+      kind: "process",
+      heading: "This year's policy push: spending and industry",
+      components: [
+        { type: "timeline", milestones: [{ date: "Jan 7", title: "AI Plus" }, { date: "Aug 21", title: "Bigger loan subsidies" }] },
+        { type: "callout", variant: "info", text: "Most relevant to us: subsidized loans per small firm now go up to ¥75m, from ¥50m, from August 1, and run for up to two years" },
+      ],
+      footnote: "Source: State Council, MIIT and Ministry of Finance, January–September 2026",
+    } as Slide
+    const deck = { version: "5", filename: "x.pptx", theme: { id: "thesis" }, meta: {}, assets: { images: {} }, slides: [slide] } as unknown as PptxIR
+    const markup = renderSlideSvg(deck, 0)
+    expect(markup).toContain('data-face="rail-numbered"')
+    const rect = /data-audit-rect="([\d.]+),([\d.]+),([\d.]+),([\d.]+)"/.exec(markup)!
+    const bottom = Number(rect[2]) + Number(rect[4])
+    const source = /<text[^>]*y="([\d.]+)"[^>]*>Source: State Council/.exec(markup)!
+    expect(bottom).toBeLessThanOrEqual(Number(source[1]) - 16)
+  })
+})

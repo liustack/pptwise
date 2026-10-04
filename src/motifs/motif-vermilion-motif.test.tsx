@@ -50,18 +50,20 @@ function draw(theme: string, slide: Slide) {
 
 const num = (el: Element, a: string) => Number(el.getAttribute(a))
 
+/** The gold rules: each piece a thick and a thin rect, top first. */
 function goldRules(root: Element) {
-  const lines = Array.from(root.querySelectorAll("line"))
+  const rects = Array.from(root.querySelectorAll("rect"))
   return {
-    thick: lines.find((l) => l.getAttribute("stroke-width") === "2")!,
-    thin: lines.find((l) => l.getAttribute("stroke-width") === "0.75")!,
-    lines,
+    thick: rects.filter((r) => r.getAttribute("height") === "2"),
+    thin: rects.filter((r) => r.getAttribute("height") === "1"),
+    rects,
   }
 }
 
 /**
- * vermilion-motif v3「文件金线」（第八波批 3）。只留顶缘金双线。
- * 金芒扇与底缘金菱退役。封面与章节退让。
+ * vermilion-motif v4「文件金线」（2026-10 定稿重画）。一粗一细两道金线，
+ * x64 到 1216：内容页在天头（y26 / y32），封面在地脚（y668 / y674），结尾页
+ * 天头地脚各一道。章节和稀排 face 退让。
  */
 describe("VermilionMotif（文件金线）", () => {
   it("稀排条目不带 decor：脸自带无框事实，主题 motif 照画", () => {
@@ -69,85 +71,62 @@ describe("VermilionMotif（文件金线）", () => {
     for (const kind of ["statement", "fact", "evidence"] as const) {
       expect(content[kind]?.decor, kind).toBeUndefined()
     }
-    expect(goldRules(draw("vermilion", contentSlide).root).thick).toBeTruthy()
+    expect(goldRules(draw("vermilion", contentSlide).root).thick).toHaveLength(1)
   })
 
-  it("封面与章节完全退让：红金杠 / 收界金线归版式", () => {
-    for (const slide of [coverSlide, chapterSlide]) {
-      const { root } = draw("vermilion", slide)
-      expect(root.children, slide.type).toHaveLength(0)
-      expect(root.querySelectorAll("line"), slide.type).toHaveLength(0)
-      expect(root.querySelectorAll("rect"), slide.type).toHaveLength(0)
-      expect(countDecorPieces(root), slide.type).toBe(0)
-    }
+  it("照片页由菜单关掉 motif，金线归 image-split 的 seal 栏自己画", () => {
+    expect(THEME_DEFINITIONS.vermilion.menu.content.photo?.decor).toEqual({ kind: "silent" })
   })
 
-  it("content/ending 只画顶缘金双线，包在 gold-rules 里，一件", () => {
-    for (const slide of DRAWN_SLIDES) {
+  it("章节完全退让：收界金线归版式", () => {
+    const { root } = draw("vermilion", chapterSlide)
+    expect(root.children).toHaveLength(0)
+    expect(countDecorPieces(root)).toBe(0)
+  })
+
+  it("内容页只画天头金双线，封面只画地脚，结尾页天头地脚各一道", () => {
+    const expected: [Slide, string[]][] = [
+      [contentSlide, ["gold-rules"]],
+      [coverSlide, ["gold-rules-foot"]],
+      [endingSlide, ["gold-rules", "gold-rules-foot"]],
+    ]
+    for (const [slide, pieces] of expected) {
       const { root } = draw("vermilion", slide)
+      const ids = Array.from(root.querySelectorAll(`[${DECOR_PIECE_ATTR}]`)).map((el) => el.getAttribute(DECOR_PIECE_ATTR))
+      expect(ids, slide.type).toEqual(pieces)
       const p = goldRules(root)
-      expect(p.lines, slide.type).toHaveLength(2)
-      expect(p.thick, slide.type).toBeTruthy()
-      expect(p.thin, slide.type).toBeTruthy()
-      expect(root.querySelector(`[${DECOR_PIECE_ATTR}="gold-rules"]`)).toBeTruthy()
-      expect(countDecorPieces(root), slide.type).toBe(1)
-      expect(root.querySelectorAll("rect"), slide.type).toHaveLength(0)
-      expect(root.querySelectorAll("circle"), slide.type).toHaveLength(0)
-      expect(root.querySelectorAll("polygon"), slide.type).toHaveLength(0)
-      expect(root.querySelectorAll("path"), slide.type).toHaveLength(0)
-    }
-  })
-
-  it("退役金芒扇与底缘红线中点金菱，没有孤立小件", () => {
-    for (const slide of ALL_SLIDES) {
-      const { root } = draw("vermilion", slide)
-      const rays = Array.from(root.querySelectorAll("line")).filter(
-        (l) => num(l, "x1") !== num(l, "x2") && num(l, "y1") !== num(l, "y2"),
-      )
-      expect(rays, slide.type).toHaveLength(0)
-      const diamond = Array.from(root.querySelectorAll("rect")).find((r) =>
-        (r.getAttribute("transform") ?? "").startsWith("rotate(45"),
-      )
-      expect(diamond, slide.type).toBeFalsy()
-      for (const l of Array.from(root.querySelectorAll("line"))) {
-        const span = Math.abs(num(l, "x2") - num(l, "x1"))
-        expect(span, `short isolated tick: ${l.outerHTML}`).toBeGreaterThanOrEqual(200)
-      }
+      expect(p.thick, slide.type).toHaveLength(pieces.length)
+      expect(p.thin, slide.type).toHaveLength(pieces.length)
+      expect(p.rects, slide.type).toHaveLength(pieces.length * 2)
+      for (const tag of ["line", "circle", "polygon", "path", "text"]) expect(root.querySelectorAll(tag), `${slide.type} ${tag}`).toHaveLength(0)
     }
   })
 
   it("颜色一律读 token：双线走 accent，不承字", () => {
     const t = resolveStyle("vermilion")
-    const { root } = draw("vermilion", contentSlide)
-    const p = goldRules(root)
-    expect(p.thick.getAttribute("stroke")).toBe(t.colors.accent)
-    expect(p.thin.getAttribute("stroke")).toBe(t.colors.accent)
-    expect(root.querySelectorAll("text")).toHaveLength(0)
-  })
-
-  it("顶缘双线几何：x48→1232，粗线 y22 / 细线 y30", () => {
-    const { root } = draw("vermilion", contentSlide)
-    const { thick, thin } = goldRules(root)
-    for (const l of [thick, thin]) {
-      expect(num(l, "x1")).toBe(48)
-      expect(num(l, "x2")).toBe(1232)
+    for (const slide of [coverSlide, contentSlide, endingSlide]) {
+      for (const rect of goldRules(draw("vermilion", slide).root).rects) expect(rect.getAttribute("fill"), slide.type).toBe(t.colors.accent)
     }
-    expect(num(thick, "y1")).toBe(22)
-    expect(num(thin, "y1")).toBe(30)
-    expect(thick.getAttribute("stroke-width")).toBe("2")
-    expect(thin.getAttribute("stroke-width")).toBe("0.75")
   })
 
-  it("安全区：顶缘双线全在标题区上沿 y48 之上，也不进正文区", () => {
+  it("双线几何：x64→1216，天头粗线 y26 / 细线 y32，地脚 y668 / y674", () => {
+    const top = goldRules(draw("vermilion", contentSlide).root)
+    const foot = goldRules(draw("vermilion", coverSlide).root)
+    for (const r of [...top.rects, ...foot.rects]) {
+      expect(num(r, "x")).toBe(64)
+      expect(num(r, "width")).toBe(1152)
+    }
+    expect([num(top.thick[0]!, "y"), num(top.thin[0]!, "y")]).toEqual([26, 32])
+    expect([num(foot.thick[0]!, "y"), num(foot.thin[0]!, "y")]).toEqual([668, 674])
+  })
+
+  it("安全区：天头双线全在标题区上沿 y48 之上，地脚双线在正文区之下", () => {
     for (const slide of DRAWN_SLIDES) {
       const { root } = draw("vermilion", slide)
-      for (const l of Array.from(root.querySelectorAll("line"))) {
-        expect(Math.max(num(l, "y1"), num(l, "y2"))).toBeLessThan(TITLE_ZONE.y)
-        const lo = Math.min(num(l, "y1"), num(l, "y2"))
-        const hi = Math.max(num(l, "y1"), num(l, "y2"))
-        expect(hi < BODY_ZONE.y || lo > BODY_ZONE.y + BODY_ZONE.h, `line inside the body zone: ${l.outerHTML}`).toBe(
-          true,
-        )
+      for (const r of goldRules(root).rects) {
+        const lo = num(r, "y")
+        const hi = lo + num(r, "height")
+        expect(hi <= TITLE_ZONE.y || lo >= BODY_ZONE.y + BODY_ZONE.h, `rule inside the page's text zones: ${r.outerHTML}`).toBe(true)
       }
     }
   })
@@ -190,16 +169,6 @@ describe("VermilionMotif（文件金线）", () => {
         expect(box.y).toBeGreaterThanOrEqual(0)
         expect(box.x + box.w).toBeLessThanOrEqual(1280)
         expect(box.y + box.h).toBeLessThanOrEqual(720)
-      }
-    }
-  })
-
-  it("不画任何左竖条", () => {
-    for (const slide of DRAWN_SLIDES) {
-      const { root } = draw("vermilion", slide)
-      for (const l of Array.from(root.querySelectorAll("line"))) {
-        const vertical = num(l, "x1") === num(l, "x2") && Math.abs(num(l, "y2") - num(l, "y1")) > 30
-        expect(vertical, `vertical bar rendered: ${l.outerHTML}`).toBe(false)
       }
     }
   })

@@ -1,0 +1,78 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "axes": {
+        "y_unit": "¥tn"
+      },
+      "series": [
+        {
+          "name": "2025",
+          "data": [
+            {
+              "x": "Deficit",
+              "y": 5.66
+            },
+            {
+              "x": "Local special bonds",
+              "y": 4.4
+            },
+            {
+              "x": "Ultra-long bonds",
+              "y": 1.3
+            },
+            {
+              "x": "Bank capital bonds",
+              "y": 0.5
+            }
+          ]
+        },
+        {
+          "name": "2026",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "Deficit",
+              "y": 5.89
+            },
+            {
+              "x": "Local special bonds",
+              "y": 4.4
+            },
+            {
+              "x": "Ultra-long bonds",
+              "y": 1.3
+            },
+            {
+              "x": "Bank capital bonds",
+              "y": 0.3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**¥230bn**",
+          "label": "Deficit increase on 2025",
+          "note": "Deficit ¥5.89tn, about 4% of GDP"
+        },
+        {
+          "value": "¥30tn",
+          "label": "General budget spending",
+          "note": "First time at this level"
+        },
+        {
+          "value": "¥11.89tn",
+          "label": "New government borrowing",
+          "note": "¥11.86tn in 2025"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: 2025 and 2026 Government Work Reports, Ministry of Finance 2026 budget report (March 2026)",
+  "notes": "The deficit ratio stays at about 4%, and the deficit rises by ¥230 billion to ¥5.89 trillion. Ultra-long special treasury bonds stay at ¥1.3 trillion and local government special bonds at ¥4.4 trillion. Special bonds to recapitalize the big state-owned banks fall from ¥500 billion to ¥300 billion. Added up, new government borrowing is ¥11.89 trillion, only ¥30 billion more than 2025's ¥11.86 trillion, so this is a slight step up rather than a big push. General budget spending passes ¥30 trillion for the first time. Within the ultra-long bonds, ¥800 billion goes to major strategic projects, ¥250 billion to consumer trade-ins (¥50 billion less than last year) and ¥200 billion to equipment upgrades. A new ¥100 billion fund pairs fiscal and financial tools to support domestic demand, and central budget investment is ¥755 billion."
+}

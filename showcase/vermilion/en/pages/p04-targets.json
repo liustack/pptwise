@@ -1,0 +1,70 @@
+{
+  "components": [
+    {
+      "type": "comparison",
+      "columns": [
+        "2025 target",
+        "2026 target"
+      ],
+      "rows": [
+        {
+          "label": "Growth",
+          "cells": [
+            "About 5%",
+            "\"4.5% to 5%, strive for better results in practice\""
+          ],
+          "tag": {
+            "text": "Now a range"
+          },
+          "emphasis": true
+        },
+        {
+          "label": "Jobs",
+          "cells": [
+            "Over 12 million new urban jobs, unemployment about 5.5%",
+            "Unchanged"
+          ],
+          "tag": {
+            "text": "Same",
+            "quiet": true
+          }
+        },
+        {
+          "label": "Consumer prices",
+          "cells": [
+            "Up about 2%",
+            "Unchanged, \"turn the overall price level positive\""
+          ],
+          "tag": {
+            "text": "Same",
+            "quiet": true
+          }
+        },
+        {
+          "label": "Grain output",
+          "cells": [
+            "About 1.4 trillion jin",
+            "Unchanged"
+          ],
+          "tag": {
+            "text": "Same",
+            "quiet": true
+          }
+        },
+        {
+          "label": "Green target",
+          "cells": [
+            "Energy use per unit of GDP down about 3%",
+            "CO2 per unit of GDP down about 3.8%"
+          ],
+          "tag": {
+            "text": "New measure"
+          }
+        }
+      ],
+      "tag_column": "Change"
+    }
+  ],
+  "footnote": "Source: 2025 Government Work Report (March 2025), 2026 Government Work Report (March 2026). The two green targets measure different things and cannot be compared directly",
+  "notes": "Most 2026 targets did not move: jobs, prices, grain, household income and the balance of payments are the same as last year. Two things changed. First, growth is set as a range for the first time. The original reads 经济增长4.5%—5%，在实际工作中努力争取更好结果, roughly 'growth of 4.5% to 5%, striving for better results in practice'. Second, the yearly green target switched from energy use to carbon: CO2 emissions per unit of GDP to fall about 3.8% (单位国内生产总值二氧化碳排放降低3.8%左右), where last year it was energy use per unit of GDP down about 3%. They are different measures and should not be drawn on one line. The price target is unchanged, but the report adds that it aims to turn the overall price level positive and see consumer prices recover moderately. One jin is half a kilogram, so 1.4 trillion jin is about 700 million tonnes."
+}

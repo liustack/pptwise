@@ -1,0 +1,67 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "line",
+      "axes": {
+        "y_title": "GDP, year on year",
+        "y_unit": "%"
+      },
+      "series": [
+        {
+          "name": "GDP, year on year",
+          "data": [
+            {
+              "x": "Q1 2025",
+              "y": 5.4
+            },
+            {
+              "x": "Q2 2025",
+              "y": 5.2
+            },
+            {
+              "x": "Q3 2025",
+              "y": 4.8
+            },
+            {
+              "x": "Q4 2025",
+              "y": 4.5
+            },
+            {
+              "x": "Q1 2026",
+              "y": 5.0
+            },
+            {
+              "x": "Q2 2026",
+              "y": 4.3
+            }
+          ]
+        }
+      ],
+      "bands": [
+        {
+          "from": 4.5,
+          "to": 5,
+          "label": "2026 target range 4.5% to 5%"
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**4.7%**",
+          "label": "H1 GDP growth",
+          "note": "Q1 5.0%, Q2 4.3%"
+        },
+        {
+          "value": "Oct 19",
+          "label": "Q1–Q3 data release",
+          "note": "NBS release calendar"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: NBS 2025 Statistical Communiqué, Q2 and H1 2026 GDP release (July 16)",
+  "notes": "Quarterly growth slowed through 2025: 5.4%, 5.2%, 4.8% and 4.5%. It picked up to 5.0% in the first quarter of 2026 and eased to 4.3% in the second, for 4.7% in the first half, inside the 4.5% to 5% range. The second quarter on its own was below the floor. The statistics bureau publishes third-quarter GDP on October 19, so this page stops at the first half. September's official manufacturing PMI was 50.1 and the non-manufacturing business activity index was 50.2, both just above the 50 line between expansion and contraction."
+}

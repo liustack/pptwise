@@ -5,6 +5,7 @@ import { createElement } from "react"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { fitHeadingLines } from "./heading-fit"
 import {
+  headingEmphasisPaint,
   parseEmphasis,
   stripEmphasis,
   renderEmphasisTspans,
@@ -588,5 +589,20 @@ describe("runs that flow on from each other keep the blank between them", () => 
     const tspans = renderEmphasisTspans(parseEmphasis("增量**8870**亿千瓦时"), { accent: "#D7282F", baseFill: "#101010" })
     const markup = renderToStaticMarkup(createElement("text", null, tspans))
     expect(markup).not.toContain("xml:space")
+  })
+})
+
+describe("a marked run stands apart from a heading in its own colour", () => {
+  // vermilion sets its claim in red and marks a run in that same red, and
+  // luxe sets both in gold: the mark painted in the colour of every word
+  // beside it. Such a run takes the theme's text ink instead.
+  it("gives the run the text ink when the emphasis ink is the base fill", () => {
+    const vermilion = getThemeDefinition("vermilion")!.style
+    const ctx = { colors: vermilion.colors, defaultBg: vermilion.colors.bg }
+    const onRed = headingEmphasisPaint(ctx, { fontSize: 34 }, { baseFill: vermilion.colors.primary })
+    expect(onRed.accent).not.toBe(vermilion.colors.primary)
+    expect(onRed.accent.toLowerCase()).toBe(vermilion.colors.text.toLowerCase())
+    const onInk = headingEmphasisPaint(ctx, { fontSize: 34 }, { baseFill: vermilion.colors.text })
+    expect(onInk.accent).toBe(vermilion.colors.emphasisInk)
   })
 })

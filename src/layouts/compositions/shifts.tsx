@@ -4,7 +4,7 @@ import type { ComponentCtx } from "../../components/types"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { accessibleInk } from "../../render/ink"
 import { SmallText, fitPanelBar, paintPanel, panelInks, panelOutlineInk, panelSeriesInk, panelText, type Place } from "./panel"
-import { chartFigures, plotNumber, reportedDecimals } from "./plot"
+import { chartFigures, plotNumber, reportedDecimals, valueDecimals } from "./plot"
 import { blockTag, compositionTag, type Composition } from "./shared"
 
 type Chart = Extract<Component, { type: "chart" }>
@@ -155,8 +155,8 @@ export function shiftsPanel(chart: Chart, place: Place, ctx: ComponentCtx): Reac
     const ink = rose ? inks.mark : ring
     const xa = vx(row.from)
     const xb = vx(row.to)
-    const fromText = plotNumber(row.from, figures, decimals)
-    const toText = plotNumber(row.to, figures, decimals)
+    const fromText = plotNumber(row.from, figures, valueDecimals(row.from, decimals))
+    const toText = plotNumber(row.to, figures, valueDecimals(row.to, decimals))
     const fromW = measureTextUnits(fromText, { fontFamily: body }) * FROM.labelSize
     const toW = measureTextUnits(toText, { fontFamily: body, bold: true }) * TO.labelSize
     // The two figures stand centred over their dots, or pushed outward when

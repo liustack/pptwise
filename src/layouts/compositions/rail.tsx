@@ -14,6 +14,7 @@ import { railFigures, railFiguresNotice } from "./rail-figures"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 import { railPanel } from "./rail-panel"
+import { railSeal } from "./rail-seal"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Series = Chart["series"][number]
@@ -143,6 +144,8 @@ function railShape(components: readonly Component[]): { chart: Chart; entries: R
   if (components.length !== 1) return null
   const chart = components[0]!
   if (chart.type !== "chart" || !RAIL_TYPES.has(chart.chart_type)) return null
+  // The computed column's plot draws no marked value range: the ordinary chart does.
+  if (chart.bands) return null
   // A horizontal bar has no trend to read, and a stacked chart on its side is a share bar.
   if (chart.direction === "horizontal") return null
   if (chart.series.length < 1 || chart.series.length > MAX_SERIES) return null
@@ -247,6 +250,7 @@ function swatchIsLine(chart: Chart, series: Series): boolean {
 
 export const railComposition: Composition = (props) => {
   if (props.setting === "panel") return railPanel(props)
+  if (props.setting === "seal") return railSeal(props)
   const { components, ctx, rect, setting } = props
   // The notice and grid settings set only the author's figures, beside a
   // hand-set plot when one takes the chart. A chart alone goes to the plots.

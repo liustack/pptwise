@@ -199,19 +199,20 @@ describe("MemoMotif（打字机眉行）", () => {
 })
 
 describe("memo vs heritage vs vermilion（字族用法分家）", () => {
-  it("三家顶缘双线不是同一张几何：memo 3px@y26，heritage 退役双线，vermilion 金线 2px@y22", () => {
+  it("三家顶缘双线不是同一张几何：memo 3px@y26 的线，heritage 退役双线，vermilion 金线 2px@y26 的条", () => {
     const memo = parts(draw("memo", contentSlide).root)
     const heritageCtx = boundThemeCtx("heritage", {})
     const vermilionCtx = boundThemeCtx("vermilion", {})
     const heritageRoot = render(<HeritageMotif ir={ir("heritage")} slide={coverSlide} ctx={heritageCtx} />).root
     const vermilionRoot = render(<VermilionMotif ir={ir("vermilion")} slide={contentSlide} ctx={vermilionCtx} />).root
-    const vermilionThick = Array.from(vermilionRoot.querySelectorAll("line")).find((l) => l.getAttribute("stroke-width") === "2")!
+    const vermilionThick = Array.from(vermilionRoot.querySelectorAll("rect")).find((r) => r.getAttribute("height") === "2")!
 
     expect(num(memo.thickRule, "y1")).toBe(26)
     expect(memo.thickRule.getAttribute("stroke-width")).toBe("3")
     expect(heritageRoot.querySelector("line")).toBeNull()
-    expect(num(vermilionThick, "y1")).toBe(22)
-    expect(vermilionThick.getAttribute("stroke")).toBe(resolveStyle("vermilion").colors.accent)
+    expect(vermilionRoot.querySelector("line")).toBeNull()
+    expect(num(vermilionThick, "y")).toBe(26)
+    expect(vermilionThick.getAttribute("fill")).toBe(resolveStyle("vermilion").colors.accent)
     expect(memo.thickRule.getAttribute("stroke")).toBe(resolveStyle("memo").colors.accent)
   })
 
@@ -225,7 +226,7 @@ describe("memo vs heritage vs vermilion（字族用法分家）", () => {
     const vermilionChapter = render(
       <VermilionMotif ir={ir("vermilion")} slide={chapterSlide} ctx={boundThemeCtx("vermilion", {})} />,
     ).root
-    expect(vermilionChapter.querySelector("line")).toBeNull()
+    expect(vermilionChapter.children).toHaveLength(0)
     expect(parts(draw("memo", chapterSlide).root).thickRule).toBeTruthy()
   })
 

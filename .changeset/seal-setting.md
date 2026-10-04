@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+The shared compositions take a fifth setting, `seal`, settled on vermilion's 2026-10 board: a formal report on paper. Items are numbered in the deck's own numerals (一、二、三 in a Chinese deck, 1, 2, 3 in an English one) in small squares of the emphasis colour, tables are open under a 2px rule of it, the mark is spent once a page on a reversed row, a tinted row or a figure, and the accent only draws rules, bars, arrows and outlines. `rows`, `tiles`, `table`, `lanes`, `rail` and `columns` each gain a seal form: numbered rows with the marked one reversed, numbered panels under an accent bar, an open table with tags at its right edge, a timeline on one axis with its lanes above and below, grouped columns that hang values below zero, and one line over a marked value range beside a column of figures. The headers, labels, legends and tags are the board's 14 and 15px and carry the `seal-spec` exemption the L1 audit knows. Nothing draws the setting until a face asks for it.

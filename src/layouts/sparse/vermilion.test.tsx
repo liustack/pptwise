@@ -128,6 +128,24 @@ describe("vermilion sparse faces", () => {
     expect(diamond?.getAttribute("fill")).toBe(ctx.colors.accent)
   })
 
+  it("stat-hero sets its source a line under the caption, both within the type area", () => {
+    // The source used to sit 16px under a 23px caption, into its descenders.
+    const slide: Slide = {
+      type: "content",
+      kind: "fact",
+      heading: "绿色约束的主角从能耗换成碳",
+      components: [{ type: "kpi_cards", items: [{ value: "17", unit: "%", label: "「十五五」单位 GDP 二氧化碳排放五年累计降低，约束性指标" }] }],
+      footnote: "来源：「十五五」规划纲要（2026 年 3 月），2026 年政府工作报告",
+    } as Slide
+    const { root } = render(<StatHeroContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />)
+    const texts = Array.from(root.querySelectorAll("text"))
+    const caption = texts.find((t) => (t.textContent ?? "").includes("约束性指标"))!
+    const source = texts.find((t) => (t.textContent ?? "").startsWith("来源"))!
+    const gap = Number(source.getAttribute("y")) - Number(caption.getAttribute("y"))
+    expect(gap).toBeGreaterThanOrEqual(Number(caption.getAttribute("font-size")) * 0.25 + Number(source.getAttribute("font-size")) + 8)
+    expect(Number(source.getAttribute("y"))).toBeLessThanOrEqual(648)
+  })
+
   it("one-evidence is a dossier card with a red spine and 案卷 index", () => {
     const slide: Slide = {
       type: "content",
@@ -155,5 +173,19 @@ describe("vermilion sparse faces", () => {
     expect(claim.getAttribute("fill")).toBe(ctx.colors.text)
     expect(markup).not.toContain(BOARD_CLAIM)
     expect(markup).not.toContain(LUXE_GOLD)
+  })
+
+  it("one-evidence labels the card in the deck's language", () => {
+    // An English deck used to print 「案卷 · 13」 over its exhibit.
+    const slide: Slide = {
+      type: "content",
+      kind: "points",
+      layout: "one-evidence",
+      heading: "Work orders now open 6.5 days early",
+      components: [],
+    } as Slide
+    const { markup } = render(<OneEvidenceContent ir={ir([slide])} slide={slide} index={12} ctx={ctx} />)
+    expect(markup).toContain("File · 13")
+    expect(markup).not.toContain("案卷")
   })
 })

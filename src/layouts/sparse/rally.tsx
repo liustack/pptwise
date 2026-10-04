@@ -5,7 +5,7 @@ import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
+import { deckWord, evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** rally 稀排脸：洋红收尾杠、侧幕卡。不画纸屑场。 */
@@ -135,7 +135,7 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   )
 }
 
-export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
+export function oneEvidence({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const evidence = pickEvidence(slide.components)
   const evidenceRect = { x: 600, y: 230, w: 480, h: 250 }
@@ -167,7 +167,7 @@ export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
       <rect x={160} y={502} width={960} height={8} fill={colors.accent} />
       {/* 板上 21px。accent 压 surface 3.78:1，21px 走 4.5:1 会红，24px 走大字 3:1。 */}
       <text x={224} y={292} fontFamily={fonts.body} fontSize={24} fill={colors.accent} dominantBaseline="alphabetic">
-        {`实测 · ${pad2(index + 1)}`}
+        {`${deckWord(ir, "实测", "Measured")} · ${pad2(index + 1)}`}
       </text>
       {heading.lines.map((line, i) => (
         <text

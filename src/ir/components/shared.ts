@@ -47,3 +47,27 @@ import { iconEnumError } from "../schema-error-hints"
  * already use for alias maps.
  */
 export const IconNameSchema = z.enum(PPTX_ICON_NAMES, { error: iconEnumError })
+
+/**
+ * A short label that says what happened to a row or a figure, printed in a
+ * small rounded tag beside it: 「改为区间」, 「新增」, 「不变」, "Binding".
+ * Shared by `comparison` and `from_to` rows and `kpi_cards` items, which all
+ * say what changed in the same words.
+ *
+ * Its colour is not the author's to pick. A tag on the row or figure the
+ * page marks (`emphasis`) fills in the theme's emphasis colour, a `quiet`
+ * tag (one that says nothing changed) steps back in a grey outline, and any
+ * other tag is outlined in the theme's accent.
+ */
+export const TagSchema = z
+  .object({
+    text: z
+      .string()
+      .min(1)
+      .describe('A few words for the tag, such as "改为区间", "新增" or "Unchanged". Keep it short: it is printed whole on one line.'),
+    quiet: z
+      .boolean()
+      .optional()
+      .describe("Marks a tag that says nothing changed, such as 不变 or Unchanged: it steps back in a grey outline."),
+  })
+  .strict()

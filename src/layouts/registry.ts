@@ -1,6 +1,6 @@
 /**
  * Layout registry (W2 task 1, spec §3/§6/§8): an explicit, statically-checked
- * description of what the render chain's 139 standard layouts and 4
+ * description of what the render chain's 141 standard layouts and 4
  * page-level image takeovers already draw. This is a metadata layer only.
  * It formalizes today's implicit page structure (layout JSX + the
  * FullSlideSvg takeover dispatch) into named `slots`, it does not change any
@@ -12,7 +12,7 @@
  * `export const layoutDef: LayoutDefinition` at the bottom of the matching
  * `layouts/*.tsx` file, or one of 4 uniquely-named exports at the bottom
  * of `image-pages.tsx` for the takeovers (one file implements all 4, so they
- * can't share the uniform `layoutDef` name the 139 single-layout
+ * can't share the uniform `layoutDef` name the 141 single-layout
  * files use) — so "take one layout away whole" is a single-file operation
  * instead of a two-file archaeology dig. This file's own job is now purely
  * computational aggregation: import every `layoutDef`, assemble the five
@@ -60,9 +60,9 @@
 import type { DesignStory } from "@/design-story"
 import type { STRATEGY_VALUES } from "@/ir/narrative-values"
 
-// layoutDef imports (src domain reorg wave 1, task T1d): 139 layout files
+// layoutDef imports (src domain reorg wave 1, task T1d): 141 layout files
 // (one `layoutDef` each) plus image-pages.tsx's 4 uniquely named takeover
-// exports, 143 bindings total. The original migration covered 33 layout
+// exports, 145 bindings total. The original migration covered 33 layout
 // files and 4 takeovers. Later content expansion and theme redesign waves
 // grew the registry, mostly through pin-only cover, chapter, and ending faces.
 // Grouped by family, each group in the exact
@@ -213,6 +213,8 @@ import { layoutDef as contentGridStatement } from "./content-grid-statement"
 import { layoutDef as contentGridFigure } from "./content-grid-figure"
 import { layoutDef as contentPanelSheet } from "./content-panel-sheet"
 import { layoutDef as contentPanelFigure } from "./content-panel-figure"
+import { layoutDef as contentSealSheet } from "./content-seal-sheet"
+import { layoutDef as contentSealFigure } from "./content-seal-figure"
 
 import {
   imageSplitLayoutDef,
@@ -226,7 +228,7 @@ export type Strategy = (typeof STRATEGY_VALUES)[number]
 export type SlideType = "cover" | "chapter" | "content" | "ending"
 
 /** The 20-word slot vocabulary: the union of every distinct visual region
- * observed across all 139 standard layouts and 4 takeovers (inventory's "建议 slot
+ * observed across all 141 standard layouts and 4 takeovers (inventory's "建议 slot
  * 词汇表"). Not every word is used by every entry, and `aside` currently
  * has zero occurrences as a *slot* (it only exists today as a body
  * `arrangement` — see `Arrangement` below) — kept in the vocabulary because
@@ -804,11 +806,15 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   // and its single-figure page, theme-locked.
   [contentPanelSheet.id]: contentPanelSheet,
   [contentPanelFigure.id]: contentPanelFigure,
+  // vermilion sample redesign (2026-10-04): the board's ordinary content page
+  // and its single-figure page, theme-locked.
+  [contentSealSheet.id]: contentSealSheet,
+  [contentSealFigure.id]: contentSealFigure,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Image takeover layouts (4). With the 32 standard content layouts above,
-// the content page type has 36 registered entries. These are `slide.layout`
+// Image takeover layouts (4). With the 34 standard content layouts above,
+// the content page type has 38 registered entries. These are `slide.layout`
 // ids for the page-level
 // `image-split`/`image-top`/`image-bottom`/`image-annotate` takeovers
 // (full-slide-svg.tsx's splitTakeover branch, keyed off `getLayout(slide.
@@ -829,7 +835,7 @@ const TAKEOVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [imageAnnotateLayoutDef.id]: imageAnnotateLayoutDef,
 }
 
-/** All 139 standard layouts and 4 takeover layouts, 143 entries keyed by id.
+/** All 141 standard layouts and 4 takeover layouts, 143 entries keyed by id.
  *  `kind` still spells the standard tier `"standard"`, a wire-format fossil. See
  *  {@link LayoutDefinition.kind}. */
 export const LAYOUT_REGISTRY: Record<string, LayoutDefinition> = {

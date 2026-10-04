@@ -7,6 +7,7 @@ import {
   measureMonoTextUnits,
   measureTextUnits,
   measuresExactly,
+  rejoinWrapped,
   truncateToMonoUnits,
   truncateToUnits,
 } from "./svg-text-layout"
@@ -1567,3 +1568,26 @@ describe("balanced lines prefer to break where Latin meets CJK", () => {
   })
 })
 
+
+describe("a forced merge keeps the space its wrap broke at", () => {
+  // When even the widened retries cannot bring a text to its line budget,
+  // the last line takes the rest. It used to join the leftover lines with
+  // nothing between them, so "below the" + "target" read "below thetarget",
+  // and measured a space narrower than the words it holds.
+  it("joins wrapped Latin lines with their blank and Chinese lines with nothing", () => {
+    expect(rejoinWrapped(["below the", "target"], "0.3 points below the target")).toBe("below the target")
+    expect(rejoinWrapped(["固定资产", "投资"], "固定资产投资")).toBe("固定资产投资")
+    expect(rejoinWrapped(["Supercalifrag", "ilistic"], "Supercalifragilistic")).toBe("Supercalifragilistic")
+    // Two paragraphs run together: a blank between Latin words, nothing beside Chinese.
+    expect(rejoinWrapped(["first note", "second note"], "first note\nsecond note")).toBe("first note second note")
+    expect(rejoinWrapped(["由三位师傅完成。", "三月"], "由三位师傅完成。\n三月")).toBe("由三位师傅完成。三月")
+  })
+
+  it("never runs two words together in a line it had to merge", () => {
+    const fontFamily = "Microsoft YaHei, PingFang SC, Helvetica Neue, Arial, system-ui"
+    for (const maxWidth of [80, 100, 120, 140]) {
+      const laid = layoutSvgText("0.3 points below the target", { maxWidth, fontSize: 18, minPt: 18, maxLines: 2, fontFamily })
+      expect(laid.lines.join(" ")).not.toMatch(/thetarget|belowthe|pointsbelow/)
+    }
+  })
+})

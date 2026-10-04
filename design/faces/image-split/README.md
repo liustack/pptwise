@@ -53,3 +53,19 @@ ledger's menu asks for the `panel` column (`params: { column: "panel" }`), and l
 
 - The photograph carries nothing: no caption strip, no scrim. A caption moves into the column.
 - A page that is not one photograph and what this column holds is drawn as a panel sheet under the same frame.
+
+## vermilion, government work report sample, 2026-10
+
+vermilion's menu asks for the `seal` column (`params: { column: "seal" }`), and vermilion offers photo pages for the first time. The round's decisions are in [rounds/2026-10-04-vermilion](../../rounds/2026-10-04-vermilion/README.md).
+
+| board (p13) | engine |
+| :-: | :-: |
+| ![board](vermilion.board.png) | ![engine](vermilion.engine.png) |
+
+**What it looks like.** The photograph takes the left 560px edge to edge, full height. Beside it the column draws the theme's gold double rule from x600 to x1216 (the menu turns the motif off on this page), the claim bold in the primary colour at 32/44 from x616, set on its last line at y146, and a 64 by 2 accent bar at y160. Under it, when the column is one `kpi_cards`, up to four rows 128px apart over hairlines: the label at 15px, the figure bold at 42px (in the mark when marked) and the note at 16px 324px into the row. Anything else in the column is drawn by the component renderer. The source sits at the column's foot at 14px, and a caption sits right above it. A page that asks for the photograph on the right (`image_side: "right"`) is mirrored: the photograph from x720, the rule from x64 to x680, the column from x80.
+
+**Why.** The equipment page is the one place the deck shows the thing the money buys. The column keeps the head every page wears, so the photo page still reads as part of the document.
+
+**What it gave up.**
+
+- No subheading: a page with one is drawn as a seal sheet.

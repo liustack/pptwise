@@ -235,11 +235,17 @@ A page usually argues about one thing. These fields let the author say which, an
 | --- | --- | --- |
 | `chart.series[].data[].status` | `"forecast"` hatches the bar, `"target"` draws it as a dashed outline over a pale tint. A series that mixes statuses gets a Forecast or Target legend entry, and a forecast's value label says so. | `bar` and `stacked` only |
 | `chart.series[].data[].emphasis` | the one bar the page is about, such as the latest year in a run of years: it keeps its series' colour and the other bars step back | `bar` only, one point per chart, not beside a marked series |
+| `chart.bands` | `[{ "from": 4.5, "to": 5, "label": "Target range" }]` tints a value range across the plot behind the data, labelled inside it, and the value axis grows to hold it. Write a target range this way rather than as two flat series | `line`, `area` and upright `bar`, at most 2 |
 | `chart.changes` | `[{ "from": "2025 Q3", "to": "2026 Q3" }]` draws a bracket over two columns with the change between them (relative, or in points on a `%` axis). With `"at": "BYD"`, `from` and `to` name two series compared at that category. A horizontal chart writes the change after the later bar. | `bar` and `stacked`, at most 3. A horizontal chart needs `at`, a stacked one must not have it |
 | `numbered_cards.items[].emphasis` | the one card the page lands on: its pill is filled | at most one |
 | `gantt.items[].text` and `emphasis` | a line under the stretch's label, and the one stretch the page is about | at most one marked |
 | `timeline.milestones[].lane` and `timeline.lanes` | two tracks on one time order. `lanes` names them, the one above the axis first. A face with no room for two sides prints the lane before the date | every milestone names a lane or none does, at most two, not on a vertical timeline |
 | `kpi_cards.items[].value` written `**…**` | the one figure set in the theme's emphasis | |
+| `progress_donuts.items[].detail` and `emphasis` | a line under a rate's label with the amounts behind it ("1.18 of 1.3 trillion"), and the one rate the page is about, whose ring, figure and label take the emphasis colour | at most one marked |
+| `kpi_cards.items[].tag` | what the figure is, in a few words printed as a small tag with it (`{ "text": "Binding" }`): filled on the marked figure, outlined otherwise, grey when `quiet` | |
+| `from_to.rows[].tag` and `emphasis` | a tag after the row's values and the one measure the page is about, as on a `comparison` row | at most one marked |
+| `comparison.rows[].emphasis` | the one row the page is about: it sits on a pale tint of the emphasis colour | at most one |
+| `comparison.rows[].tag` and `comparison.tag_column` | what happened to each row, in a few words printed as a small tag after its cells (`{ "text": "Now a range" }`), with `tag_column` the header over the tags. A tag on the marked row fills in the emphasis colour, a `quiet` one (nothing changed) steps back in grey, any other is outlined in the accent | `tag_column` only with tags |
 
 ```json
 {

@@ -64,7 +64,7 @@ function heroExact(slide: SvgTemplateProps["slide"]): boolean {
   return !slide.components.some(
     (component) =>
       component.type === "kpi_cards" &&
-      (component.items.length > 1 || component.items.some((item) => item.note?.trim())),
+      (component.items.length > 1 || component.items.some((item) => item.note?.trim() || item.tag)),
   )
 }
 

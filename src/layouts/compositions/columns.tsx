@@ -32,6 +32,7 @@ import {
 } from "./plot"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { columnsChart, columnsPanel } from "./columns-panel"
+import { columnsSeal } from "./plot-seal"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Point = Chart["series"][number]["data"][number]
@@ -142,7 +143,8 @@ interface Column {
 function columnsShape(components: readonly Component[]): Chart | null {
   if (components.length !== 1) return null
   const chart = components[0]!
-  if (chart.type !== "chart") return null
+  // A marked value range has no place on a plot with no value axis: the ordinary chart draws it.
+  if (chart.type !== "chart" || chart.bands) return null
   if (chart.chart_type === "bar") {
     if (chart.direction === "horizontal") return null
     if (chart.series.length < 1 || chart.series.length > MAX_SERIES) return null
@@ -265,6 +267,11 @@ interface Placed {
 }
 
 export const columnsComposition: Composition = ({ components, ctx, rect, setting }) => {
+  if (setting === "seal") {
+    const only = components.length === 1 && components[0]!.type === "chart" ? components[0]! : null
+    const drawn = only?.type === "chart" ? columnsSeal(only, rect, ctx) : null
+    return drawn ? <g {...compositionTag("columns")}>{drawn}</g> : null
+  }
   if (setting === "panel") {
     const only = components.length === 1 ? components[0]! : null
     const drawn = only && columnsChart(only) ? columnsPanel(only, rect, ctx) : null

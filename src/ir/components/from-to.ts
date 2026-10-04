@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { TagSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -16,6 +17,13 @@ const RowSchema = z
     to: z.string().min(1).describe("The value in the ending state, written as it should read."),
     unit: z.string().optional().describe("Unit printed after both values, in smaller type."),
     change: z.string().optional().describe("The move itself, in the words the deck uses for it."),
+    tag: TagSchema.optional().describe(
+      "What this measure is, in a few words printed as a small tag after its values, such as 新增 or New. Set quiet on a tag that says nothing changed.",
+    ),
+    emphasis: z
+      .boolean()
+      .optional()
+      .describe("Marks the one measure the page is about: its row is set apart and its tag fills in the emphasis colour. At most one row."),
   })
   .strict()
 
@@ -33,10 +41,25 @@ export const schema = z
       .min(3, "from_to.rows needs at least 3 rows — one or two measures are a `kpi_cards` pair, not a shift")
       .max(6, "from_to.rows accepts at most 6 rows — a seventh leaves each row too short for its own number")
       .describe("3-6 measures, the same ones on both sides, in the order they should be read."),
+    /** 行名那一列的表头，如「指标」。 */
+    label_column: z
+      .string()
+      .optional()
+      .describe('The header over the measures\' names, such as "指标" or "Measure".'),
     /** 两侧之间的跨度，如「12 个月」，画在箭头下方。 */
     span: z.string().optional().describe("What separates the two states — a duration, a release, a decision. Printed under the arrow."),
   })
   .strict()
+  .superRefine((c, ctx) => {
+    const marked = c.rows.flatMap((row, i) => (row.emphasis === true ? [i] : []))
+    if (marked.length > 1) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["rows", marked[1]!, "emphasis"],
+        message: `from_to marks ${marked.length} rows with emphasis, and a marked row singles out one. Keep emphasis on the measure the page is about.`,
+      })
+    }
+  })
   .describe(
     "Two states of the same thing, measured on the same rows, with an arrow between them. Use from_to when " +
       "every row has a value on both sides and the move between them is the argument. Use `comparison` when " +

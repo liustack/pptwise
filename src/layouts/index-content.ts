@@ -25,6 +25,8 @@ import { GridStatementContent } from "./content-grid-statement"
 import { GridFigureContent } from "./content-grid-figure"
 import { PanelSheetContent } from "./content-panel-sheet"
 import { PanelFigureContent } from "./content-panel-figure"
+import { SealSheetContent } from "./content-seal-sheet"
+import { SealFigureContent } from "./content-seal-figure"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { CrayonboxPointContent } from "./content-crayonbox-point"
 import { ShowGalleryContent } from "./content-show-gallery"
@@ -50,7 +52,8 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // The bulletin sample redesign adds notice-sheet: 18 pin-only, 27 in all.
 // The swiss sample redesign adds grid-sheet, grid-statement and grid-figure:
 // 21 pin-only, 30 in all. The ledger sample redesign adds panel-sheet and
-// panel-figure: 23 pin-only, 32 in all.
+// panel-figure: 23 pin-only, 32 in all. The vermilion sample redesign adds
+// seal-sheet and seal-figure: 25 pin-only, 34 in all.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
   "two-column": TwoColumnContent,
@@ -84,4 +87,6 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "grid-figure": GridFigureContent,
   "panel-sheet": PanelSheetContent,
   "panel-figure": PanelFigureContent,
+  "seal-sheet": SealSheetContent,
+  "seal-figure": SealFigureContent,
 }

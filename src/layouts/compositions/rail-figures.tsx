@@ -103,6 +103,7 @@ function railFiguresShape(
 ): { chart: Chart; kpis: KpiCards; remark?: Callout | Blockquote } | null {
   const [chart, kpis, remark, ...rest] = components
   if (chart?.type !== "chart" || kpis?.type !== "kpi_cards" || rest.length > 0) return null
+  if (chart.bands) return null
   if (kpis.items.length < 1 || kpis.items.length > 2 || !kpis.items.every(plainFigure)) return null
   if (remark === undefined) return { chart, kpis }
   if (remark.type === "blockquote") return { chart, kpis, remark }

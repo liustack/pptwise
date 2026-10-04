@@ -60,3 +60,19 @@ Three fixes to the ordinary chart, found while the board's charts were drawn in 
 
 - A dumbbell still draws no grid, so validate keeps warning about `show_grid` on it.
 - A Chinese deck that never writes a grouped four-digit figure keeps 「8490」 beside 「10,575」, as swiss's does.
+
+## vermilion, government work report sample, 2026-10
+
+Three changes, settled on the fiscal, growth, indicators and funds pages. See the boards and engine renders in [compositions/rail](../../compositions/rail/) and [compositions/columns](../../compositions/columns/vermilion.board.png). The round's decisions are in [rounds/2026-10-04-vermilion](../../rounds/2026-10-04-vermilion/README.md).
+
+**What it looks like.**
+
+- `bands: [{ from, to, label }]` tints a value range across the plot behind the data, with its label inside it, and the value axis grows to hold it. Line, area and upright bar charts take up to two. The seal setting's trend sets one in a tint of the accent.
+- A whole value prints with the decimals its neighbours carry: an author's 5.0 reaches the chart as 5 (JSON keeps no trailing zero) and prints 「5.0」 beside 「5.4」, and 4.4 beside 5.66 stays 「4.4」.
+- A percent chart whose values all lie between 0 and 100 ends its axis at 100%, where the headroom used to push a progress chart out to a 150% tick.
+
+**Why.** A growth path is argued against its target range, and a reader trusts figures that are written the way the source wrote them.
+
+**What it gave up.**
+
+- A theme's hand-set plot with no value axis leaves a banded chart to the ordinary chart.

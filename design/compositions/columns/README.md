@@ -68,3 +68,19 @@ In the panel setting, settled on two pages and used again beside figure panels o
 - No value axis. Bars scale to their own band, and a combo's line to its own.
 - A single bar series, a stack of two to four, or a combo of one bar series and one line. A grouped bar chart or an axis title on the categories goes to the ordinary chart.
 - The title bar prints the unit only. How the figures were counted goes in the source.
+
+## vermilion, government work report sample, 2026-10
+
+The seal setting's form, `columnsSeal` in [`plot-seal.tsx`](../../../src/layouts/compositions/plot-seal.tsx). The round's decisions are in [rounds/2026-10-04-vermilion](../../rounds/2026-10-04-vermilion/README.md).
+
+| board (p10) | engine |
+| :-: | :-: |
+| ![board](vermilion.board.png) | ![engine](vermilion.engine.png) |
+
+**What it looks like.** An upright bar chart of one to three series over two to six categories. The legend at 15px over the plot on the left, the unit on the right. Every bar prints its value. A value below zero hangs under the zero line with its value under it, the zero line set so the lowest value clears the categories. The series the author marks, or the one holding the marked bar, takes the mark, and the marked bar's category name turns bold in the mark. The other series step back in the chart palette after its lead, nearest the mark first (vermilion's warm greys).
+
+**Why.** Investment falling below zero while prices turn up is the page's argument. Hanging the negatives under the line shows it without a value axis.
+
+**What it gave up.**
+
+- No forecast or target points, no x-axis title, no bands. A chart with any of them goes to the ordinary renderer.

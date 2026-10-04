@@ -1,12 +1,23 @@
 import { parseEmphasis, sliceEmphasisForLines, stripEmphasis } from "../../render/emphasis"
 import { fitHeadingLines } from "../../render/heading-fit"
 import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
-import type { Slide } from "@/ir"
+import type { PptxIR, Slide } from "@/ir"
+import { deckWritesChinese } from "../../lib/conf-labels"
 import type { EmphasisSegment } from "../../render/emphasis"
 import { statementAttribution } from "../minimal-shared"
 
 export function pad2(n: number): string {
   return String(n).padStart(2, "0")
+}
+
+/**
+ * A skin's own label word in the deck's language: `zh` in a deck whose
+ * headings are Chinese (`deckWritesChinese`), `en` in any other. An evidence
+ * page's label used to be one Chinese word on every deck, so an English deck
+ * printed 「案卷 · 13」 over its exhibit.
+ */
+export function deckWord(ir: Pick<PptxIR, "slides">, zh: string, en: string): string {
+  return deckWritesChinese(ir) ? zh : en
 }
 
 /**

@@ -9,10 +9,12 @@ import {
   sliceEmphasisForLines,
   stripEmphasis,
 } from "../render/emphasis"
-import { accessibleInk } from "../render/ink"
+import { accessibleInk, blendOver } from "../render/ink"
 import { formLineHeight, layoutAtSize } from "./legibility"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { withBlockTitle } from "./block-title"
+import { fitSvgLine } from "../lib/svg-text-layout"
+import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
 
 type ComparisonComponent = Extract<Component, { type: "comparison" }>
 
@@ -401,8 +403,27 @@ function layoutTable(
   }
 }
 
+/**
+ * The column the rows' tags stand in, at the table's right edge: as wide as
+ * the widest tag or the tag header, whichever is wider. Zero when no row has
+ * a tag. The tags sit outside the text table, which lays out in what is left.
+ */
+function tagColumnWidth(component: ComparisonComponent, ctx: ComponentCtx): number {
+  const tags = component.rows.flatMap((row) => (row.tag ? [row.tag] : []))
+  if (tags.length === 0) return 0
+  const spec = ordinaryTagSpec(ctx)
+  const header = component.tag_column?.trim()
+  const headerW = header ? measureTextUnits(header, { bold: true, fontFamily: ctx.fonts.body }) * HEADER_FONT_SIZE : 0
+  return Math.ceil(Math.max(headerW, ...tags.map((tag) => tagWidth(tag.text, spec)))) + PAD_X * 2
+}
+
+/** The tint the marked row sits on: the emphasis ink a tenth of the way over the page. */
+function markedRowTint(ctx: ComponentCtx): string {
+  return blendOver(emphasisRunInk(ctx.colors), ctx.defaultBg ?? ctx.colors.bg, 0.1)
+}
+
 function measureDefault(component: ComparisonComponent, w: number, ctx: ComponentCtx): number {
-  const table = layoutTable(component, w, ctx.fonts.body)
+  const table = layoutTable(component, w - tagColumnWidth(component, ctx), ctx.fonts.body)
   return ROW + table.rows.reduce((s, row) => s + row.h, 0)
 }
 
@@ -411,11 +432,18 @@ function renderDefault(rawComponent: ComparisonComponent, box: ComponentBox, ctx
     // to one: every row keeps its first line, cut and marked, before any row
     // is dropped. At one line a row is `ROW` tall again, the height the
     // row-dropping below has always been measured against.
-    let table = layoutTable(rawComponent, box.w, ctx.fonts.body)
+    // Tags stand in their own column at the right edge, and the text table
+    // lays out in the width left of it.
+    const tagW = tagColumnWidth(rawComponent, ctx)
+    const textW = box.w - tagW
+    let table = layoutTable(rawComponent, textW, ctx.fonts.body)
     for (let lines = MAX_CELL_LINES - 1; lines >= 1 && box.h !== undefined; lines--) {
       if (ROW + table.rows.reduce((s, row) => s + row.h, 0) <= box.h) break
-      table = layoutTable(rawComponent, box.w, ctx.fonts.body, lines)
+      table = layoutTable(rawComponent, textW, ctx.fonts.body, lines)
     }
+    const tagHeader = tagW > 0 && rawComponent.tag_column?.trim()
+      ? fitSvgLine(rawComponent.tag_column.trim(), { maxWidth: tagW - PAD_X * 2, fontSize: HEADER_FONT_SIZE, minFontSize: MIN_FONT_SIZE, bold: true, fontFamily: ctx.fonts.body })
+      : null
 
     // Vertical graceful landing (P0 hardening, robustness deep-review D1,
     // family-sweep sibling of bullets.tsx): `rows` has no schema ceiling
@@ -530,17 +558,48 @@ function renderDefault(rawComponent: ComparisonComponent, box: ComponentBox, ctx
         />
 
 
+        {tagHeader && (
+          <text
+            data-truncated={tagHeader.truncated ? "1" : undefined}
+            x={box.w - PAD_X}
+            y={ROW / 2 + headerBaseline}
+            textAnchor="end"
+            fill={ctx.colors.text}
+            fontFamily={ctx.fonts.body}
+            fontSize={tagHeader.fontSize}
+            fontWeight="bold"
+            dominantBaseline="alphabetic"
+          >
+            {tagHeader.text}
+          </text>
+        )}
+
         {/* Data rows */}
         {rows.map((row, r) => {
           const rowY = rowTops[r]!
+          const source = rawComponent.rows[r]
+          const marked = source?.emphasis === true
+          const tint = marked ? markedRowTint(ctx) : undefined
+          const tag = source?.tag
+          const spec = ordinaryTagSpec(ctx)
           return (
             <Fragment key={`r-${r}`}>
+              {tint && <rect data-row-marked="1" x={0} y={rowY + 1} width={box.w} height={row.h - 1} fill={tint} />}
+              {tag &&
+                paintTag({
+                  tag,
+                  x: box.w - PAD_X - tagWidth(tag.text, spec),
+                  y: rowY + (row.h - spec.height) / 2,
+                  spec,
+                  inks: tagInks(ctx, tag, marked, tint ?? pageBg, spec.size),
+                })}
               {row.cells.map((cell, c) => {
                 // A wrapped cell's lines centre on the row as a block; a
                 // one-line cell sits where it always has.
                 const first = rowY + row.h / 2 - ((cell.lines.length - 1) * table.lineH) / 2 + cellBaseline
                 const recommended = c === recommendedCol
-                const fill = recommended ? recommendedCellInk! : c === 0 ? ctx.colors.muted : ctx.colors.text
+                const plainFill = recommended ? recommendedCellInk! : c === 0 ? ctx.colors.muted : ctx.colors.text
+                const fill = tint ? accessibleInk(plainFill, tint, cellFontSize) : plainFill
                 const bold = c === 0 || recommended
                 const text = (line: string, li: number) => (
                   <text

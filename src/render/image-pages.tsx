@@ -27,6 +27,8 @@ import { NoticeSheetContent } from "../layouts/content-notice-sheet"
 import { GridSheetContent } from "../layouts/content-grid-sheet"
 import { PanelSheetContent } from "../layouts/content-panel-sheet"
 import { PanelSplitPage } from "../layouts/image-panel-split"
+import { SealSheetContent } from "../layouts/content-seal-sheet"
+import { SealSplitPage } from "../layouts/image-seal-split"
 import { FittedLines, GRID_LEFT, GRID_W, GridSource, fitGridSource, gridBodyRect } from "../layouts/grid-shared"
 import { centredBaseline } from "../layouts/compositions/type"
 import { bodySlotDropsContent } from "./step-aside"
@@ -455,7 +457,7 @@ export function ImageSplitPage({
   page: PageRenderContext
   params?: FaceParams
 }) {
-  const columnId = faceParam<"standard" | "report" | "notice" | "panel">(params, "column", "standard")
+  const columnId = faceParam<"standard" | "report" | "notice" | "panel" | "seal">(params, "column", "standard")
   // A notice or panel page that is not one photograph and its facts is drawn
   // as that theme's sheet draws any other page, under the same frame, so the
   // deck keeps one heading throughout.
@@ -464,6 +466,8 @@ export function ImageSplitPage({
       <NoticeSheetContent ir={ir} slide={slide} index={0} ctx={ctx} page={page} />
     ) : columnId === "panel" ? (
       <PanelSheetContent ir={ir} slide={slide} index={0} ctx={ctx} page={page} />
+    ) : columnId === "seal" ? (
+      <SealSheetContent ir={ir} slide={slide} index={0} ctx={ctx} page={page} />
     ) : (
       <TakeoverFallbackPage slide={slide} ctx={ctx} />
     )
@@ -474,6 +478,7 @@ export function ImageSplitPage({
   const { image: imageComponent, source: imageSource } = imageSelection
   if (columnId === "notice") return <NoticeSplitPage slide={slide} ctx={ctx} imageSelection={imageSelection} />
   if (columnId === "panel") return PanelSplitPage({ slide, ctx, page, imageSelection }) ?? plain()
+  if (columnId === "seal") return SealSplitPage({ slide, ctx, page, imageSelection }) ?? plain()
   const column = SPLIT_COLUMNS[columnId]
   const imageW = column.imageW
   const textW = W - column.textX - 96
@@ -1698,7 +1703,7 @@ export const imageSplitLayoutDef: LayoutDefinition = {
   // a wider photograph beside a regular-weight title and a list of facts set
   // as ruled pairs.
   params: {
-    column: { type: "string", values: ["standard", "report", "notice", "panel"] },
+    column: { type: "string", values: ["standard", "report", "notice", "panel", "seal"] },
   },
   slots: [
     { name: "image", accepts: ["image", "image_grid", "image_compare", "device_mockup"], required: true, selection: "first" },

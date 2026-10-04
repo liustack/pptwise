@@ -44,6 +44,37 @@ export function isMagnitudeUnit(unit: string | undefined): boolean {
 export interface FigureStyle {
   readonly chinese: boolean
   readonly groupFour: boolean
+  /**
+   * The decimals a whole value prints with on one chart: its other values'
+   * (`wholeValueDecimals`), so 5 beside 5.4 and 4.8 prints "5.0". JSON keeps
+   * no trailing zero, so an author's 5.0 reaches the chart as 5. A deck's
+   * style carries none: each chart sets it from its own values.
+   */
+  readonly wholeDecimals?: number
+}
+
+/** The decimal places a value was written with, read from its shortest form. */
+export function writtenDecimals(v: number): number {
+  const text = String(Number(v.toPrecision(12)))
+  const dot = text.indexOf(".")
+  return dot < 0 || /e/i.test(text) ? 0 : text.length - dot - 1
+}
+
+/**
+ * The decimals a whole value among `values` prints with: the fewest that any
+ * value with a fraction carries, so the 5.0 an author wrote beside 5.4 and
+ * 4.8 prints "5.0" and not "5", and a whole value beside 5.66 and 4.4 prints
+ * one decimal, not two. Every value with a fraction keeps its own. 0 when no
+ * value has one.
+ */
+export function wholeValueDecimals(values: readonly number[]): number {
+  const fractional = values.filter((v) => Number.isFinite(v)).map(writtenDecimals).filter((d) => d > 0)
+  return fractional.length > 0 ? Math.min(4, ...fractional) : 0
+}
+
+/** `v` as written, a whole value printed with `wholeDecimals` decimals. */
+export function writtenFigure(v: number, wholeDecimals = 0): string {
+  return Number.isInteger(v) && wholeDecimals > 0 ? v.toFixed(wholeDecimals) : String(v)
 }
 
 /** English figures: grouped from four digits. */

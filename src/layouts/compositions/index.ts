@@ -18,6 +18,11 @@ import { trackComposition } from "./track"
 import { treeComposition } from "./tree"
 import { wavesComposition } from "./waves"
 import { windowComposition } from "./window"
+import { rosterComposition } from "./roster"
+import { scoresComposition } from "./scores"
+import { targetsComposition } from "./targets"
+import { trendComposition } from "./trend"
+import { ringsComposition } from "./rings"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -49,6 +54,11 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   share: shareComposition,
   tiles: tilesComposition,
   shifts: shiftsComposition,
+  roster: rosterComposition,
+  scores: scoresComposition,
+  targets: targetsComposition,
+  trend: trendComposition,
+  rings: ringsComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]

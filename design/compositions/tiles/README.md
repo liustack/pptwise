@@ -20,3 +20,19 @@ Settled on the conclusion page. The round's decisions are in [rounds/2026-10-04-
 
 - Three or four items. Five or more, a title past two lines, a text past three, or a panel too short for its words decline, and the page goes to the ordinary numbered cards.
 - The other settings keep setting numbered cards as rows: tiles has no form outside the panel setting.
+
+## vermilion, government work report sample, 2026-10
+
+The seal setting's form, in [`tiles-seal.tsx`](../../../src/layouts/compositions/tiles-seal.tsx), offered first on vermilion's list pages (`cards: "tiles"`). The round's decisions are in [rounds/2026-10-04-vermilion](../../rounds/2026-10-04-vermilion/README.md).
+
+| board (p14) | engine |
+| :-: | :-: |
+| ![board](vermilion.board.png) | ![engine](vermilion.engine.png) |
+
+**What it looks like.** One `numbered_cards` of two, four or six items with no `sub`, two panels to a row 16px apart. Each panel is the surface with a hairline edge and a 4px bar along its top in the accent, a 40px numbered square, the title bold at 22/32 and the text at 18/28. The item the author marks takes the mark for its bar and its title.
+
+**Why.** Implications are peers, and two by two reads as a grid of things to watch rather than a sequence.
+
+**What it gave up.**
+
+- An odd count, a `sub`, or a title or text past two lines declines, and the numbered rows set the cards.

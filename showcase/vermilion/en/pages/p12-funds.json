@@ -1,0 +1,36 @@
+{
+  "components": [
+    {
+      "type": "progress_donuts",
+      "items": [
+        {
+          "value": "90.5%",
+          "label": "Ultra-long special bonds",
+          "detail": "¥1.177tn of ¥1.3tn",
+          "source": "To Sep 16"
+        },
+        {
+          "value": "66.6%",
+          "label": "New local special bonds",
+          "detail": "¥2.929tn of ¥4.4tn",
+          "source": "Jan–Aug"
+        },
+        {
+          "value": "60.5%",
+          "label": "General budget spending",
+          "detail": "¥18.15tn of ¥30.01tn",
+          "source": "Jan–Aug"
+        },
+        {
+          "value": "100%",
+          "label": "Trade-in funds",
+          "detail": "¥250bn of ¥250bn",
+          "source": "All allocated by Sep 30",
+          "emphasis": true
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Ministry of Finance bond notices, local bond and Jan–Aug fiscal releases, Xinhua (September 30). Progress is the amount issued, spent or allocated as a share of the full year (calculated)",
+  "notes": "Ultra-long special treasury bonds: ¥1.3 trillion for the year. Adding up the Ministry of Finance's issuance notices, ¥1.177 trillion had been issued by September 16, or 90.5%, with the last auction on October 16. New local government special bonds: ¥4.4 trillion for the year, ¥2.929 trillion issued in January to August, or 66.6%. General budget spending reached ¥18.15 trillion in January to August, 60.5% of the budget. The ¥250 billion for consumer trade-ins went out in four batches, and Xinhua reported on September 30 that the last batch had been allocated. We use that latest, clearest statement because mid-year figures from the Ministry of Finance and the planning commission did not match. The ¥300 billion of bank capital bonds had not been issued as of October 4: the first ¥150 billion is set for auction on October 8, later than the May and June dates in the original calendar. The ¥800 billion for major strategic projects was fully allocated by August 21."
+}

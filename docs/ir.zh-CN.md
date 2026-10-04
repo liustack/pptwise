@@ -235,11 +235,17 @@ pptwise schema --kind data --theme brief
 | --- | --- | --- |
 | `chart.series[].data[].status` | `"forecast"` 把柱子画成斜线填充，`"target"` 画成浅色底上的虚线框。一个系列里实报和预测混着时，图例多一项「预测」或「目标」，预测柱的数值标签也写明「（预测）」。 | 只用于 `bar` 和 `stacked` |
 | `chart.series[].data[].emphasis` | 这一页说的那一根柱子，比如一串年份里的最后一年：它保留系列颜色，其余柱子退后 | 只用于 `bar`，一张图只标一个点，不能和系列的 emphasis 同时用 |
+| `chart.bands` | `[{ "from": 4.5, "to": 5, "label": "目标区间" }]` 在图后横跨一段数值区间着浅色，标签写在区间里，数值轴会放大到能装下它。目标区间这样写，不要画成两条水平的系列 | `line`、`area` 和竖着的 `bar`，最多 2 段 |
 | `chart.changes` | `[{ "from": "2025 年三季度", "to": "2026 年三季度" }]` 在两根柱上方画一个括号，写两者的变化（相对变化，`%` 轴上写百分点）。写了 `"at": "比亚迪"` 时，`from` 和 `to` 是两个系列名，在这个类别上比较。横条图把变化写在后一根条的数值后面。 | `bar` 和 `stacked`，最多 3 个。横条图必须写 `at`，堆叠图不能写 |
 | `numbered_cards.items[].emphasis` | 这一页落到的那张卡，卡片填满主色 | 最多一张 |
 | `gantt.items[].text` 与 `emphasis` | 阶段名下面的一行说明，以及这一页说的那一段 | 最多标一段 |
 | `timeline.milestones[].lane` 与 `timeline.lanes` | 同一条时间顺序上的两条泳道。`lanes` 给出两条泳道的名字，轴上方的那条在前。放不下两侧的版式把泳道名写在日期前面 | 要么每个节点都写 lane，要么都不写，最多两条，竖向时间线不能用 |
 | `kpi_cards.items[].value` 写成 `**…**` | 用主题强调色印的那一个数 | |
+| `progress_donuts.items[].detail` 与 `emphasis` | 标签下面一行，写这个完成度背后的金额（「11770 / 13000 亿元」），以及这一页讲的那一个，它的环、数字和标签用强调色 | 最多标一个 |
+| `kpi_cards.items[].tag` | 这个数是什么，用几个字印成数字旁的小标签（`{ "text": "约束性指标" }`）：标出的那个数填满，其余描边，`quiet` 的用灰色 | |
+| `from_to.rows[].tag` 与 `emphasis` | 行尾数值后的标签，以及这一页讲的那一项，和 `comparison` 的行一样 | 最多标一行 |
+| `comparison.rows[].emphasis` | 这一页讲的那一行：整行落在强调色的浅底上 | 最多一行 |
+| `comparison.rows[].tag` 与 `comparison.tag_column` | 每一行发生了什么，用几个字印成行尾的小标签（`{ "text": "改为区间" }`），`tag_column` 是标签列的表头。标出那一行的标签用强调色填满，`quiet` 的标签（没有变化）用灰色描边退后，其余用强调色描边 | `tag_column` 只能和标签一起写 |
 
 ```json
 {

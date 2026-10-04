@@ -81,7 +81,21 @@ function pillRx(pillH: number, ctx: ComponentCtx): number {
  * nothing to separate from (the box edge is not drawn), so a box too short
  * for the pills' words closes it after the gaps between pills.
  */
-function layoutPills(n: number, w: number, hHint?: number, pillGap = PILL_GAP, padY = PAD) {
+/**
+ * Past eight items the pills stand in two columns, the first half down the
+ * left and the rest down the right, so ten items keep the height five do.
+ */
+const TWO_COLUMNS_FROM = 9
+const COLUMN_GAP = 16
+
+function columnsFor(n: number): number {
+  return n >= TWO_COLUMNS_FROM ? 2 : 1
+}
+
+function layoutPills(count: number, w: number, hHint?: number, pillGap = PILL_GAP, padY = PAD) {
+  const cols = columnsFor(count)
+  // Every height below is a column's: its rows, not the item count.
+  const n = Math.ceil(count / cols)
   const gaps = Math.max(n - 1, 0) * pillGap
   let pillH = Math.min(
     88,
@@ -102,10 +116,11 @@ function layoutPills(n: number, w: number, hHint?: number, pillGap = PILL_GAP, p
   let leftSize = Math.min(preferred, maxFit)
   if (leftSize < SOFT_LEFT) leftSize = Math.min(SOFT_LEFT, maxFit)
   leftSize = Math.max(0, leftSize)
-  const pillW = Math.max(MIN_PILL_W, innerW - leftSize)
+  const pillW = Math.max(MIN_PILL_W, (innerW - leftSize - (cols - 1) * COLUMN_GAP) / cols)
   const h = Math.max(stackH, leftSize) + padY * 2
   return {
     n,
+    cols,
     pillH,
     pillW,
     pillGap,
@@ -143,7 +158,12 @@ function pillHeightFor(titleLines: number, bodyLines: number): number {
 
 /** Everything a pill sets inside itself, at the geometry `L` hands it. */
 function pillText(item: Item, L: PillLayout, ctx: ComponentCtx, bodyCap = BODY_MAX_LINES) {
-  const showText = L.pillH >= BODY_PILL_MIN - 4
+  // Room for words beyond the title is measured, not assumed: a pill holds
+  // as many body lines as its height clears with their air (the loop below),
+  // and a sub whenever the pill holds its title. A fixed 68px threshold used
+  // to turn the body off in a 64px pill that one body line fits, so five
+  // cards in a short band printed their titles alone.
+  const showText = pillHeightFor(1, 0) <= L.pillH
   const visualDiam = L.pillH * BADGE_DIAMETER_RATIO
   const badgeR = Math.max(0, visualDiam / 2)
   const badgeInset = Math.max(0, (L.pillH - visualDiam) / 2)
@@ -243,14 +263,15 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
   // down to `PILL_GAP_TIGHT`, before any sentence loses its second line.
   // The air above and below the whole stack closes next, since the box edge
   // it keeps the pills from is not drawn.
-  if (box.h != null && box.h > 0 && n > 1) {
+  const rowsN = L.n
+  if (box.h != null && box.h > 0 && rowsN > 1) {
     const needed = Math.max(...component.items.map((item) => pillText(item, L, ctx).neededH))
     if (needed > L.pillH) {
-      const gap = Math.max(PILL_GAP_TIGHT, (box.h - PAD * 2 - n * needed) / (n - 1))
+      const gap = Math.max(PILL_GAP_TIGHT, (box.h - PAD * 2 - rowsN * needed) / (rowsN - 1))
       if (gap < PILL_GAP) L = layoutPills(n, box.w, box.h, gap)
     }
     if (needed > L.pillH) {
-      const padY = Math.max(0, (box.h - n * needed - (n - 1) * L.pillGap) / 2)
+      const padY = Math.max(0, (box.h - rowsN * needed - (rowsN - 1) * L.pillGap) / 2)
       if (padY < PAD) L = layoutPills(n, box.w, box.h, L.pillGap, padY)
     }
   }
@@ -299,8 +320,11 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
         {count}
       </text>
       {component.items.map((item, i) => {
-        const pillX = pillsLeft
-        const pillY = pillsTop + i * (L.pillH + L.pillGap)
+        // Column-major: down the left column first, then the right.
+        const col = Math.floor(i / L.n)
+        const row = i % L.n
+        const pillX = pillsLeft + col * (L.pillW + COLUMN_GAP)
+        const pillY = pillsTop + row * (L.pillH + L.pillGap)
         const badgeCx = pillX + badgeInset + visualR
         const badgeCy = pillY + L.pillH / 2
         const badgeFill = ctx.colors.accent

@@ -6,7 +6,7 @@ import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
+import { deckWord, evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 import { SIBLING_AIR_PX } from "../../render/spacing"
 
@@ -88,7 +88,7 @@ export function statement({ ir, slide, index, ctx, page }: SvgTemplateProps) {
   )
 }
 
-export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
+export function oneEvidence({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const evidence = pickEvidence(slide.components)
   const heading = fitSparseHeading(slide.heading, {
@@ -146,7 +146,7 @@ export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
       {evidence && renderFittedEvidence(evidence, evidenceRect, ctx)}
       <rect x={560} y={540} width={160} height={40} fill="none" stroke={colors.accent} strokeWidth={1} />
       <text x={640} y={566} textAnchor="middle" fontFamily={fonts.body} fontSize={16} fill={colors.accent} dominantBaseline="alphabetic">
-        {`展品 № ${pad2(index + 1)}`}
+        {`${deckWord(ir, "展品", "Exhibit")} № ${pad2(index + 1)}`}
       </text>
       {source && (
         <text x={640} y={620} textAnchor="middle" fontFamily={fonts.body} fontSize={16} fill={colors.muted} dominantBaseline="alphabetic">

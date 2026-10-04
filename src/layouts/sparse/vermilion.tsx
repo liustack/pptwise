@@ -5,7 +5,7 @@ import { renderEmphasisTspans } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
+import { deckWord, evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** vermilion 稀排脸：金双线批示、金菱巨数、案卷卡。不画顶缘金双线、金芒、底菱。 */
@@ -104,6 +104,12 @@ export function statement({ ir, slide, ctx, page }: SvgTemplateProps) {
   )
 }
 
+/** The hero page's caption line, its measure, and how far under it the source sits. */
+const CAPTION_Y = 596
+const CAPTION_SIZE = 23
+const HERO_TEXT_W = 1088
+const SOURCE_DROP = 32
+
 export function statHero({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const unit = heroUnit(slide)
@@ -111,8 +117,16 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   // A figure this line cannot set whole goes to the plain page, never cut.
   if (!fitted) return StatHeroFallbackContent({ slide, ctx })
   const unitMark = fitted.unitMark
-  const caption = heroCaption(slide)
-  const source = heroSource(slide)
+  // The caption and the source each fit one line of the type area, and the
+  // source stands a line under the caption. Both used to be set as written
+  // 16px apart, so the source ran into the caption's descenders, and a long
+  // caption ran off the page.
+  const captionText = heroCaption(slide)
+  const sourceText = heroSource(slide)
+  const caption = captionText
+    ? fitSvgLine(captionText, { maxWidth: HERO_TEXT_W, fontSize: CAPTION_SIZE, minFontSize: 16, fontFamily: fonts.body })
+    : null
+  const source = sourceText ? fitSvgLine(sourceText, { maxWidth: HERO_TEXT_W, fontSize: 16, minFontSize: 16, fontFamily: fonts.body }) : null
   return (
     <>
       <text
@@ -135,35 +149,37 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
       <path d="M 640 520 l 8 14 l -8 14 l -8 -14 z" fill={colors.accent} />
       {caption && (
         <text
+          data-truncated={caption.truncated ? "1" : undefined}
           x={640}
-          y={600}
+          y={CAPTION_Y}
           textAnchor="middle"
           fontFamily={fonts.body}
-          fontSize={23}
+          fontSize={caption.fontSize}
           fill={colors.muted}
           dominantBaseline="alphabetic"
         >
-          {caption}
+          {caption.text}
         </text>
       )}
       {source && (
         <text
+          data-truncated={source.truncated ? "1" : undefined}
           x={640}
-          y={616}
-        textAnchor="middle"
+          y={caption ? CAPTION_Y + SOURCE_DROP : CAPTION_Y}
+          textAnchor="middle"
           fontFamily={fonts.body}
-          fontSize={16}
+          fontSize={source.fontSize}
           fill={colors.muted}
           dominantBaseline="alphabetic"
         >
-          {source}
+          {source.text}
         </text>
       )}
     </>
   )
 }
 
-export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
+export function oneEvidence({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const evidence = pickEvidence(slide.components)
   const evidenceRect = { x: 600, y: 230, w: 480, h: 250 }
@@ -194,7 +210,7 @@ export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
       <rect x={160} y={190} width={960} height={320} fill={colors.surface} stroke={colors.border} strokeWidth={1} />
       <rect x={160} y={190} width={10} height={320} fill={colors.primary} />
       <text x={234} y={288} fontFamily={fonts.body} fontSize={22} fill={colors.primary} dominantBaseline="alphabetic">
-        {`案卷 · ${pad2(index + 1)}`}
+        {`${deckWord(ir, "案卷", "File")} · ${pad2(index + 1)}`}
       </text>
       {heading.lines.map((line, i) => (
         <text

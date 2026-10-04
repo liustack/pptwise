@@ -541,6 +541,32 @@ export function fitEmphasisText(
  * face already measured its meta line against the panel; this is the same
  * "measure what you painted" rule reaching the runs.
  */
+/**
+ * How close two inks may come, in any one sRGB channel, before they read as
+ * the same ink. A heading set in the emphasis colour itself (vermilion's red
+ * claim, where `emphasisInk` is that red) would paint its marked run in the
+ * colour of every other word, and with no stroke under it the mark would
+ * vanish. Hue counts, so cyan beside white is two inks.
+ */
+const SAME_INK_CHANNEL = 12
+
+function sameInk(a: string, b: string): boolean {
+  const channels = (hex: string) => [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16))
+  if (!/^#[0-9a-f]{6}$/i.test(a) || !/^#[0-9a-f]{6}$/i.test(b)) return false
+  const [x, y] = [channels(a), channels(b)]
+  return x.every((v, i) => Math.abs(v - y[i]!) <= SAME_INK_CHANNEL)
+}
+
+/**
+ * A marked run's ink beside text in `baseFill`: the emphasis ink, held to the
+ * contrast its size needs, or the theme's text ink when that is the base
+ * fill's own colour.
+ */
+function runInkBeside(ctx: Pick<ComponentCtx, "colors">, baseFill: string, bg: string, fontSize: number): string {
+  const run = accessibleInk(emphasisRunInk(ctx.colors), bg, fontSize)
+  return sameInk(run, baseFill) ? accessibleInk(ctx.colors.text, bg, fontSize) : run
+}
+
 export function headingEmphasisPaint(
   ctx: Pick<ComponentCtx, "colors" | "defaultBg" | "emphasis">,
   layout: Pick<SvgTextLayout, "fontSize">,
@@ -555,7 +581,7 @@ export function headingEmphasisPaint(
 ): EmphasisHeadingPaint {
   const bg = style.bg ?? ctx.defaultBg ?? ctx.colors.bg
   return {
-    accent: style.accent ?? accessibleInk(emphasisRunInk(ctx.colors), bg, layout.fontSize),
+    accent: style.accent ?? runInkBeside(ctx, style.baseFill, bg, layout.fontSize),
     padFill: emphasisRunInk(ctx.colors),
     baseFill: style.baseFill,
     fontWeight: style.fontWeight ?? "700",

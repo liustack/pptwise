@@ -1,0 +1,47 @@
+{
+  "components": [
+    {
+      "type": "numbered_cards",
+      "items": [
+        {
+          "title": "Build a strong domestic market",
+          "emphasis": true
+        },
+        {
+          "title": "Grow new drivers of growth"
+        },
+        {
+          "title": "Self-reliance in science and technology"
+        },
+        {
+          "title": "Deepen reform in key areas"
+        },
+        {
+          "title": "Open up further at a high standard"
+        },
+        {
+          "title": "Revitalize rural areas"
+        },
+        {
+          "title": "New urbanization and regional coordination"
+        },
+        {
+          "title": "Improve people's livelihoods"
+        },
+        {
+          "title": "Speed up the green transition"
+        },
+        {
+          "title": "Prevent risks and strengthen security"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Order changes: livelihoods moved from 10th in 2025 to 8th, risk prevention from 6th to 10th"
+    }
+  ],
+  "footnote": "Source: 2026 Government Work Report (March 5, 2026), 2025 Government Work Report",
+  "notes": "The ten tasks for 2026, in order: build a strong domestic market, grow new drivers of growth, achieve self-reliance in science and technology, deepen reform in key areas, open up further, revitalize rural areas, advance urbanization and regional coordination, improve people's livelihoods, push the green transition, and prevent risks and strengthen security. Domestic demand leads for the second year running, now phrased as building a strong domestic market (着力建设强大国内市场), and the first task promises a plan to raise urban and rural incomes (制定实施城乡居民增收计划). The second task names chips, aerospace, biomedicine and the low-altitude economy as new pillar industries, and future industries such as quantum technology, biomanufacturing, embodied AI, brain-computer interfaces and 6G. The biggest moves in the order are welfare, up from tenth to eighth, and risk prevention, down from sixth to tenth."
+}

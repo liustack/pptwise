@@ -492,7 +492,7 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
   },
   "component:numbered_cards": {
     name: "编号索引",
-    story: "从 01 起编号的条目，每条一张卡片排成一列，旁边一枚圆标出总数。杂志目录页，编号是你回头引用时用的。",
+    story: "从 01 起编号的条目，每条一张卡片排成一列，超过八条排成两列，旁边一枚圆标出总数。杂志目录页，编号是你回头引用时用的。",
     positioning: "每个条目有自己的标题和一个可供引用的稳定编号。bullets 适合短行无标题的情形，steps 适合需要按顺序执行的操作步骤。",
     audience: "等会儿会指着「第三条」的读者。",
     notFor: "需要按顺序执行的操作步骤，那属于 steps。",

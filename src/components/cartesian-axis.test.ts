@@ -317,3 +317,15 @@ describe("buildAlignedNumericAxis", () => {
     for (const t of axis.ticks) expect(String(t).length).toBeLessThan(8)
   })
 })
+
+describe("a percent axis of shares stops at 100%", () => {
+  it("drops the ticks past 100 when every value lies between 0 and 100", () => {
+    expect(buildNumericAxis([90.5, 66.6, 60.5, 100], "zero-max", "%").ticks).toEqual([0, 50, 100])
+    expect(buildNumericAxis([30, 94], "zero-max", "%").domain.max).toBe(100)
+  })
+
+  it("keeps the padding on a percent axis that passes 100, and on any other unit", () => {
+    expect(buildNumericAxis([40, 120], "zero-max", "%").domain.max).toBeGreaterThan(120)
+    expect(buildNumericAxis([90.5, 100], "zero-max", "万亿元").domain.max).toBeGreaterThan(100)
+  })
+})

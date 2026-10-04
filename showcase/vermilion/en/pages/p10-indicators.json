@@ -1,0 +1,92 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "axes": {
+        "y_title": "Year to date, year on year",
+        "y_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Q1",
+          "data": [
+            {
+              "x": "Retail sales",
+              "y": 2.4
+            },
+            {
+              "x": "Fixed-asset investment",
+              "y": 1.7
+            },
+            {
+              "x": "Industrial output",
+              "y": 6.1
+            },
+            {
+              "x": "CPI",
+              "y": 0.9
+            },
+            {
+              "x": "PPI",
+              "y": -0.6
+            }
+          ]
+        },
+        {
+          "name": "H1",
+          "data": [
+            {
+              "x": "Retail sales",
+              "y": 1.3
+            },
+            {
+              "x": "Fixed-asset investment",
+              "y": -5.7
+            },
+            {
+              "x": "Industrial output",
+              "y": 5.4
+            },
+            {
+              "x": "CPI",
+              "y": 1.0
+            },
+            {
+              "x": "PPI",
+              "y": 1.5
+            }
+          ]
+        },
+        {
+          "name": "Jan–Aug",
+          "data": [
+            {
+              "x": "Retail sales",
+              "y": 1.1
+            },
+            {
+              "x": "Fixed-asset investment",
+              "y": -7.2,
+              "emphasis": true
+            },
+            {
+              "x": "Industrial output",
+              "y": 5.3
+            },
+            {
+              "x": "CPI",
+              "y": 0.9
+            },
+            {
+              "x": "PPI",
+              "y": 2.0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: NBS monthly releases for Q1 (April 16), H1 (July 15) and August (September 15, 2026)",
+  "notes": "Three points in time, to show the direction. Investment weakened most: fixed-asset investment grew 1.7% in the first quarter, fell 5.7% in the first half and 7.2% in January to August, with property development down 19.9% and private investment down 10.1%. Retail sales slowed from 2.4% to 1.1%, though retail sales of services grew 4.9% in January to August, faster than goods. Industrial output held above 5%. Prices are recovering: producer prices went from −0.6% in the first quarter to +2.0% for January to August, and +3.8% in August alone. Consumer prices are near 1%, still well short of the target of about 2%. Surveyed unemployment averaged 5.2%."
+}

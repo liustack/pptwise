@@ -4,7 +4,7 @@ import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { heroCaption, heroSource, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
+import { deckWord, evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** almanac 稀排脸：等高线格言、橄榄横线巨数、样点卡。不画 motif 左下线和右缘点。 */
@@ -103,7 +103,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   )
 }
 
-export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
+export function oneEvidence({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const evidence = pickEvidence(slide.components)
   const evidenceRect = { x: 600, y: 230, w: 480, h: 250 }
@@ -134,7 +134,7 @@ export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
       <rect x={160} y={190} width={960} height={320} fill={colors.surface} stroke={colors.border} strokeWidth={1} />
       <circle cx={238} cy={282} r={7} fill={colors.accent} />
       <text x={262} y={290} fontFamily={fonts.body} fontSize={21} fill={colors.primary} dominantBaseline="alphabetic">
-        {`样点 ${pad2(index + 1)}`}
+        {`${deckWord(ir, "样点", "Sample")} ${pad2(index + 1)}`}
       </text>
       {heading.lines.map((line, i) => (
         <text

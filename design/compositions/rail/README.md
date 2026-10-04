@@ -79,3 +79,19 @@ In the panel setting, settled on three pages: the guidance page (its dot plot in
 
 - One to three figures. A figure its panel cannot hold whole declines the page to the other compositions.
 - The bars on the lease page set each name on the left at 18px and the value after the bar, the marked bar in amber with its name and value bold.
+
+## vermilion, government work report sample, 2026-10
+
+The seal setting's form, in [`rail-seal.tsx`](../../../src/layouts/compositions/rail-seal.tsx), with the plots in [`plot-seal.tsx`](../../../src/layouts/compositions/plot-seal.tsx). The round's decisions are in [rounds/2026-10-04-vermilion](../../rounds/2026-10-04-vermilion/README.md).
+
+| board (p05) | engine |
+| :-: | :-: |
+| ![board](vermilion-p05.board.png) | ![engine](vermilion-p05.engine.png) |
+
+| board (p09) | engine |
+| :-: | :-: |
+| ![board](vermilion-p09.board.png) | ![engine](vermilion-p09.engine.png) |
+
+**What it looks like.** An upright `chart` followed by a `kpi_cards` of one to three plain figures (no delta, icon, source or tag). The figures stand in a 340px column on the right past a hairline, up to 180px apart: the label at 15px, the figure bold at 44px (38 or 32 when it does not fit, in the mark when marked) and the note at 15/22. The plot fills the rest: grouped columns (`columns`' seal form) on the fiscal page, one line over a marked range (`trend`) on the growth page, and any other chart by the component renderer.
+
+**Why.** A chart's few headline figures are what the room takes away. Standing them beside the plot keeps both on one page.

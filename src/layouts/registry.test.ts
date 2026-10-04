@@ -39,7 +39,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     }
   }
 
-  it("has exactly 139 layout-kind entries, all traceable to one of the four real registries", () => {
+  it("has exactly 141 layout-kind entries, all traceable to one of the four real registries", () => {
     const knownIds = new Set([
       ...Object.keys(COVER_LAYOUTS),
       ...Object.keys(CHAPTER_LAYOUTS),
@@ -58,7 +58,8 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // bulletin sample redesign adds notice-sheet: 133 -> 134. The swiss
     // sample redesign adds grid-sheet, grid-statement and grid-figure: 137.
     // The ledger sample redesign adds panel-sheet and panel-figure: 139.
-    expect(layoutEntries).toHaveLength(139)
+    // The vermilion sample redesign adds seal-sheet and seal-figure: 141.
+    expect(layoutEntries).toHaveLength(141)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -171,6 +172,7 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
         id === "gauge-point" ||
         id === "gauge-exhibit" ||
         id === "gauge-figure" ||
+        id === "seal-figure" ||
         id === "crayonbox-point" ||
         id === "show-gallery" ||
         id === "show-spotlight" ||
@@ -256,10 +258,10 @@ describe("layoutsForSlideType", () => {
     expect(layoutsForSlideType("ending")).toHaveLength(34)
   })
 
-  it("content includes both the 32 layouts and the 4 takeovers", () => {
+  it("content includes both the 34 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(32)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(34)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(36)
+    expect(contents).toHaveLength(38)
   })
 })

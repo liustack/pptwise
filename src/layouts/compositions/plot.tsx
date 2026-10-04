@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import type { ComponentCtx } from "../../components/types"
-import { figureStyleOf, groupDigits, type FigureStyle } from "../../lib/quantity-format"
+import { figureStyleOf, groupDigits, wholeValueDecimals, type FigureStyle } from "../../lib/quantity-format"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { mostlyChinese } from "../../lib/text-script"
 import { accessibleInk } from "../../render/ink"
@@ -76,21 +76,27 @@ export function plotNumber(v: number, figures: FigureStyle | boolean, decimals =
 }
 
 /**
- * The decimals a plot prints its reported values with: the most any reported
- * value in the chart was written with, so 11.0 beside 12.1 reads "11.0" and
- * not "11" (JSON keeps no trailing zero, so the written form is lost by the
- * time the chart arrives). A forecast or a target prints as written: it is an
- * estimate, and a decimal it was never given would claim a precision it does
- * not have, so "约 169 万辆" stays 169.
+ * The decimals a whole reported value in the chart prints with
+ * (`wholeValueDecimals`), so 11.0 beside 12.1 reads "11.0" and not "11"
+ * (JSON keeps no trailing zero, so the written form is lost by the time the
+ * chart arrives). A value with a fraction keeps its own, so 4.4 beside 5.66
+ * stays "4.4". A forecast or a target prints as written: it is an estimate,
+ * and a decimal it was never given would claim a precision it does not have,
+ * so "约 169 万辆" stays 169.
  */
 export function reportedDecimals(chart: Chart): number {
-  const reported = chart.series.flatMap((s) => s.data.filter((point) => point.status === undefined).map((point) => decimalsOf(point.y)))
-  return Math.min(4, Math.max(0, ...reported))
+  return wholeValueDecimals(chart.series.flatMap((s) => s.data.filter((point) => point.status === undefined).map((point) => point.y)))
+}
+
+/** The decimals a reported value prints with: its own, or the chart's for a whole value. */
+export function valueDecimals(v: number, wholeDecimals: number): number {
+  const own = decimalsOf(v)
+  return own > 0 ? Math.min(4, own) : wholeDecimals
 }
 
 /** The decimals one point prints with, given the chart's `reportedDecimals`. */
-export function pointDecimals(point: Point, reported: number): number {
-  return point.status === undefined ? reported : decimalsOf(point.y)
+export function pointDecimals(point: Point, wholeDecimals: number): number {
+  return point.status === undefined ? valueDecimals(point.y, wholeDecimals) : decimalsOf(point.y)
 }
 
 export { changeText } from "../../lib/change-figure"

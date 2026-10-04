@@ -7,7 +7,7 @@ import { measureTextUnits } from "../../lib/svg-text-layout"
 import { accessibleInk } from "../../render/ink"
 import { SmallText, deltaGlyph, fitPanelBar, paintPanel, panelInks, panelSeriesInk, panelText, type Place } from "./panel"
 import { blockTag } from "./shared"
-import { anyMeet, boxesMeet, chartFigures, niceCeil, plotNumber, pointDecimals, reportedDecimals, textBox, type InkBox } from "./plot"
+import { anyMeet, boxesMeet, chartFigures, niceCeil, plotNumber, pointDecimals, reportedDecimals, textBox, valueDecimals, type InkBox } from "./plot"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Series = Chart["series"][number]
@@ -69,7 +69,8 @@ interface Column {
 
 /** Whether a chart is one of the column charts this panel draws. */
 export function columnsChart(chart: Component): chart is Chart {
-  if (chart.type !== "chart" || chart.direction === "horizontal") return false
+  // A marked value range has no place on a plot with no value axis: the ordinary chart draws it.
+  if (chart.type !== "chart" || chart.direction === "horizontal" || chart.bands) return false
   if (chart.axes?.x_title) return false
   if (!chart.series.every((s) => s.data.every((point) => typeof point.x === "string" && point.y >= 0 && point.status === undefined))) return false
   if (chart.chart_type === "bar") return chart.series.length === 1
@@ -208,7 +209,7 @@ export function columnsPanel(chart: Chart, place: Place, ctx: ComponentCtx): Rea
     const markedHere = !stacked && point?.emphasis === true
     const text = stacked
       ? plotNumber(column.total, figures, Math.max(...barSeries.map((s) => pointDecimals(s.data.find((p) => p.x === column.name) ?? { x: "", y: 0 }, decimals))))
-      : plotNumber(lone, figures, decimals)
+      : plotNumber(lone, figures, valueDecimals(lone, decimals))
     const size = stacked ? STACK.totalSize : BAR.valueSize
     const bold = markedHere || (stacked && changeEnds.has(column.name))
     const ink = markedHere ? inks.mark : stacked ? ctx.colors.text : ctx.colors.muted

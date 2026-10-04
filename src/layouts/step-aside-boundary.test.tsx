@@ -39,6 +39,8 @@ import { NoticeSheetContent } from "./content-notice-sheet"
 import { GridSheetContent } from "./content-grid-sheet"
 import { PanelSheetContent } from "./content-panel-sheet"
 import { PanelFigureContent } from "./content-panel-figure"
+import { SealSheetContent } from "./content-seal-sheet"
+import { SealFigureContent } from "./content-seal-figure"
 import { GridStatementContent } from "./content-grid-statement"
 import { GaugeStatsContent } from "./content-gauge-stats"
 import { OneEvidenceContent } from "./content-one-evidence"
@@ -157,6 +159,15 @@ const CASES: FaceCase[] = [
   // A lone chart is not a fact page's figure, so the page goes straight to
   // the sheet, and is declined once that cannot hold it either.
   { face: "panel-figure", Face: PanelFigureContent, themeId: "ledger", regions: ["aside", "declined"] },
+  // vermilion's seal frame: a line chart of two series and more is no shape
+  // the seal compositions draw (a lone series is `trend`'s), so it takes the
+  // component renderer in the band, y186 to y648. That band is never smaller
+  // than the step-aside sheet's, so the page goes from the face straight to
+  // the declared drop.
+  { face: "seal-sheet", Face: SealSheetContent, themeId: "vermilion", regions: ["face", "declined"] },
+  // A lone chart is not the figure page's one number, so the page goes
+  // straight to the sheet, and is declined once that cannot hold it either.
+  { face: "seal-figure", Face: SealFigureContent, themeId: "vermilion", regions: ["aside", "declined"] },
   // A statement with no row of figures draws its body with the component
   // renderer under the rule, and steps aside when that band cannot hold it.
   { face: "grid-statement", Face: GridStatementContent, themeId: "swiss", regions: ["face", "aside", "declined"] },

@@ -279,14 +279,16 @@ describe("wave 8 batch 3 — midground identity survives FullSlideSvg", () => {
     const rules = container.querySelector('[data-decor-piece="gold-rules"]')
     expect(rules).not.toBeNull()
     expect(rules!.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
-    expect(rules!.querySelectorAll("line")).toHaveLength(2)
+    expect(rules!.querySelectorAll("rect")).toHaveLength(2)
   })
 
-  it("vermilion cover yields gold-rules so mid does not duplicate the motif pair", () => {
-    const { mid } = renderPage("vermilion", "cover")
-    expect(mid.querySelector('[data-decor-piece="gold-rules"]')).toBeNull()
-    expect(mid.querySelectorAll('[data-decor-piece="gold-rules"] line')).toHaveLength(0)
-    expect(mid.querySelectorAll("line").length).toBeLessThan(4)
+  it("vermilion cover draws its gold rules at the foot only, in the foreground", () => {
+    const { container, mid } = renderPage("vermilion", "cover")
+    expect(container.querySelector('[data-decor-piece="gold-rules"]')).toBeNull()
+    const foot = container.querySelector('[data-decor-piece="gold-rules-foot"]')
+    expect(foot!.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
+    expect(Array.from(foot!.querySelectorAll("rect")).map((rect) => rect.getAttribute("y"))).toEqual(["668", "674"])
+    expect(mid.querySelectorAll("rect, line")).toHaveLength(0)
   })
 
   it.each(["cover", "content", "ending"] as const)("arena %s keeps three energy bars at y 708 in mid", (type) => {

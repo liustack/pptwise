@@ -1,0 +1,119 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "vermilion",
+  "filename": "govreport-2026-briefing",
+  "meta": {
+    "organization": "战略部",
+    "date": "2026 年 10 月"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "2026 年政府工作报告和「十五五」规划纲要要点",
+      "summary": "学习汇报：要点解读和对我们的启示"
+    },
+    {
+      "id": "p02-summary",
+      "type": "content",
+      "kind": "points",
+      "heading": "要点：增长目标改成区间，钱往内需走，约束从能耗转向碳",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p03-2025",
+      "type": "content",
+      "kind": "data",
+      "heading": "2025 年主要目标都完成了，只有物价明显低于目标",
+      "focus": "scorecard"
+    },
+    {
+      "id": "p04-targets",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "2026 年增长目标改成区间，绿色指标由能耗换成碳",
+      "focus": "comparison"
+    },
+    {
+      "id": "p05-fiscal",
+      "type": "content",
+      "kind": "data",
+      "heading": "财政力度略增：赤字多 2300 亿元，注资国债少 2000 亿元",
+      "focus": "chart"
+    },
+    {
+      "id": "p06-tasks",
+      "type": "content",
+      "kind": "points",
+      "heading": "十项任务以「着力建设强大国内市场」开头，新动能和科技紧随其后",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p07-plan",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "「十五五」不设 GDP 数值目标，2030 年目标看结构、绿色和民生",
+      "focus": "from_to"
+    },
+    {
+      "id": "p08-carbon",
+      "type": "content",
+      "kind": "fact",
+      "heading": "绿色约束的主角从能耗换成碳：五年碳强度累计降 17%",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p09-growth",
+      "type": "content",
+      "kind": "data",
+      "heading": "上半年增长 4.7%，在目标区间内，二季度放缓到 4.3%",
+      "focus": "chart"
+    },
+    {
+      "id": "p10-indicators",
+      "type": "content",
+      "kind": "data",
+      "heading": "投资和商品消费走弱、价格回升：1–8 月固投 −7.2%，PPI +2.0%",
+      "focus": "chart"
+    },
+    {
+      "id": "p11-policies",
+      "type": "content",
+      "kind": "process",
+      "heading": "年内加码的政策沿两条线走：促消费，产业和就业",
+      "focus": "timeline"
+    },
+    {
+      "id": "p12-funds",
+      "type": "content",
+      "kind": "data",
+      "heading": "资金在加快到位：超长期国债已发九成，以旧换新资金全部下达",
+      "focus": "progress_donuts"
+    },
+    {
+      "id": "p13-equipment",
+      "type": "content",
+      "kind": "photo",
+      "heading": "设备更新资金已下达，技改贷款还能贴息",
+      "focus": "image"
+    },
+    {
+      "id": "p14-implications",
+      "type": "content",
+      "kind": "list",
+      "heading": "对我们的启示：盯住消费、设备更新、碳排放和出口四条线",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p15-ending",
+      "type": "ending",
+      "heading": "四季度先做三件事",
+      "summary": "请管理层确认分工"
+    }
+  ]
+}
