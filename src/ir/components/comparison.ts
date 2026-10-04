@@ -114,6 +114,9 @@ export const traits = {
   passthroughShell: false,
   fullBody: false,
   evidence: true,
+  // A table read across its options cannot be read at half a page: in two
+  // columns it spans both, the blocks around it in columns above and under it.
+  columnSpanning: true,
 } as const satisfies ComponentTraits
 
 export const story: DesignStory = {
