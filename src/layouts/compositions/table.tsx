@@ -5,6 +5,7 @@ import { accessibleInk, readableOn } from "../../render/ink"
 import { closingCallout, fitClosing, fitNoticeClosing, paintClosing, paintNoticeClosing, type ClosingLayout, type ClosingSpec } from "./closing"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
+import { rowsCarryMarks } from "../../components/tag"
 import { tablePanel } from "./table-panel"
 
 type Comparison = Extract<Component, { type: "comparison" }>
@@ -240,6 +241,8 @@ function tableShape(components: readonly Component[]): { comparison: Comparison;
   if (only?.type !== "comparison" || rest.length > 0) return null
   // No place for a title over the open table: the ordinary comparison prints it.
   if (only.title?.trim()) return null
+  // Nor for the rows' tags or a marked row: the ordinary comparison sets them.
+  if (only.tag_column !== undefined || rowsCarryMarks(only.rows)) return null
   if (only.columns.length < MIN_COLUMNS || only.columns.length > MAX_COLUMNS) return null
   if (only.rows.length === 0 || only.rows.length > MAX_ROWS) return null
   if (second === undefined) return { comparison: only }

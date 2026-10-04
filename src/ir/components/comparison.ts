@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { TagSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -41,9 +42,23 @@ export const schema = z
     columns: z.array(z.string()),
     rows: z.array(
       z
-        .object({ label: z.string(), cells: z.array(z.string()) })
+        .object({
+          label: z.string(),
+          cells: z.array(z.string()),
+          tag: TagSchema.optional().describe(
+            "What happened to this row, in a few words printed as a small tag after its cells, such as 改为区间, 不变 or 换指标. Set quiet on a tag that says nothing changed.",
+          ),
+          emphasis: z
+            .boolean()
+            .optional()
+            .describe("Marks the one row the page is about: it sits on a pale tint of the emphasis colour and its tag fills in that colour. At most one row."),
+        })
         .strict()
     ),
+    tag_column: z
+      .string()
+      .optional()
+      .describe('The header over the rows\' tags, such as "变化" or "Change". Only with tags.'),
     /** Index into `columns` of the option the page recommends. Its header
      * and cells are set in the primary color, bold. */
     recommended: z
@@ -62,6 +77,21 @@ export const schema = z
         code: "custom",
         path: ["recommended"],
         message: `comparison recommended is ${c.recommended}, and columns has ${c.columns.length} entr${c.columns.length === 1 ? "y" : "ies"}, so there is no column ${c.recommended} to mark. Columns count from 0: use 0 to ${Math.max(0, c.columns.length - 1)}.`,
+      })
+    }
+    const marked = c.rows.flatMap((row, i) => (row.emphasis === true ? [i] : []))
+    if (marked.length > 1) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["rows", marked[1]!, "emphasis"],
+        message: `comparison marks ${marked.length} rows with emphasis, and a marked row singles out one. Keep emphasis on the row the page is about.`,
+      })
+    }
+    if (c.tag_column !== undefined && !c.rows.some((row) => row.tag)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["tag_column"],
+        message: "comparison has a tag_column and no row has a tag, so the header would stand over an empty column. Give the rows their tags, or remove tag_column.",
       })
     }
     c.rows.forEach((row, i) => {

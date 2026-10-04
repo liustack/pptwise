@@ -568,3 +568,62 @@ describe("comparison marks and a recommended column", () => {
     for (const t of texts(container)) expect([brief.colors.text, brief.colors.muted]).toContain(t.getAttribute("fill"))
   })
 })
+
+describe("comparison row tags and the marked row", () => {
+  const targets = {
+    type: "comparison" as const,
+    columns: ["2025 target", "2026 target"],
+    tag_column: "Change",
+    rows: [
+      { label: "Growth", cells: ["About 5%", "4.5% to 5%"], tag: { text: "Now a range" }, emphasis: true },
+      { label: "Jobs", cells: ["Over 12 million", "Unchanged"], tag: { text: "Same", quiet: true } },
+      { label: "Green target", cells: ["Energy use down 3%", "CO2 down 3.8%"], tag: { text: "New measure" } },
+    ],
+  }
+  const box = { x: 0, y: 0, w: 1088 }
+
+  it("sets each tag in a column of its own, filled on the marked row, quiet ones in grey", () => {
+    for (const id of ["vermilion", "brief", "ember"]) {
+      const ctx = boundThemeCtx(id, {})
+      const { container } = svg(comparison.render(targets, box, ctx))
+      const tags = Array.from(container.querySelectorAll("g[data-tag]"))
+      expect(tags.map((t) => t.textContent), id).toEqual(["Now a range", "Same", "New measure"])
+      expect(tags.map((t) => t.getAttribute("data-tag")), id).toEqual(["marked", "quiet", ""])
+      const filled = tags[0]!.querySelector("rect")!
+      expect(filled.getAttribute("fill"), id).not.toBe("none")
+      // The tags stand right of every text cell.
+      const tagLeft = Math.min(...tags.map((t) => Number(t.querySelector("rect")!.getAttribute("x"))))
+      for (const text of container.querySelectorAll("g:not([data-tag]) > text")) {
+        if (text.closest("[data-tag]") || text.textContent === "Change") continue
+        expect(Number(text.getAttribute("x")), `${id} ${text.textContent}`).toBeLessThan(tagLeft)
+      }
+      expect(container.textContent).toContain("Change")
+      expect(container.querySelector("[data-row-marked]"), id).not.toBeNull()
+    }
+  })
+
+  it("holds every tag's words to the contrast their size needs", () => {
+    for (const id of ["vermilion", "brief", "ember", "crayon"]) {
+      const ctx = boundThemeCtx(id, {})
+      const { container } = svg(comparison.render(targets, box, ctx))
+      const tint = container.querySelector("[data-row-marked]")!.getAttribute("fill")!
+      const bg = ctx.defaultBg ?? ctx.colors.bg
+      for (const [i, tag] of Array.from(container.querySelectorAll("g[data-tag]")).entries()) {
+        const text = tag.querySelector("text")!
+        const rect = tag.querySelector("rect")!
+        const ground = rect.getAttribute("fill") !== "none" ? rect.getAttribute("fill")! : i === 0 ? tint : bg
+        expect(contrastRatio(text.getAttribute("fill")!, ground), `${id} ${text.textContent}`).toBeGreaterThanOrEqual(4.5)
+      }
+    }
+  })
+
+  it("refuses two marked rows and a tag header with no tags", async () => {
+    const { validateIr } = await import("@/api")
+    const deck = (component: unknown) => ({ version: "5", theme: { id: "brief" }, slides: [{ type: "content", kind: "comparison", heading: "x", components: [component] }] })
+    const twice = { ...targets, rows: targets.rows.map((row) => ({ ...row, emphasis: true })) }
+    expect(validateIr(deck(twice)).ok).toBe(false)
+    const bare = { ...targets, rows: targets.rows.map(({ tag: _tag, ...row }) => row) }
+    expect(validateIr(deck(bare)).ok).toBe(false)
+    expect(validateIr(deck(targets)).ok).toBe(true)
+  })
+})

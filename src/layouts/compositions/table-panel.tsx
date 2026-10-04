@@ -2,6 +2,7 @@ import type React from "react"
 import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { mostlyChinese } from "../../lib/text-script"
 import { PANEL, fitNotePanel, fitPanelBar, paintNotePanel, paintPanel, panelInks, panelText, type NotePanel } from "./panel"
+import { rowsCarryMarks } from "../../components/tag"
 import { blockTag, compositionTag, type CompositionProps } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
 
@@ -47,6 +48,8 @@ const NOTE_GAP = PANEL.gap
 export function tablePanel({ components, ctx, rect }: CompositionProps): React.ReactElement | null {
   const [comparison, second, ...rest] = components
   if (comparison?.type !== "comparison" || rest.length > 0) return null
+  // The panel has no place for row tags or a marked row: the ordinary comparison sets them.
+  if (comparison.tag_column !== undefined || rowsCarryMarks(comparison.rows)) return null
   const options = comparison.columns.length
   if (options < MIN_OPTIONS || options > MAX_OPTIONS || comparison.rows.length === 0 || comparison.rows.length > MAX_ROWS) return null
   if (second !== undefined && second.type !== "callout") return null

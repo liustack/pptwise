@@ -175,6 +175,7 @@ pptwise schema --component <type>
 - `chart`：在某个系列上写 `emphasis: true`，它保留主色，其余系列一律变灰。只适用于两个或以上系列的 `bar`、`line`、`area`、`scatter`、`stacked`、`percent_stacked` 与 `combo`，且只能标一个系列。`combo` 里被标记的线还会在每个点上方印出数值（带这条轴的单位），前提是每个数值都碰不到柱、点、线和其他数值。只要有一个碰到，就一个都不印，数值仍可从坐标轴读出。
 - `waterfall`：在页面要讲的条目上写 `emphasis: true`，这些柱填强调色，合计柱填主色，其余变灰。被标记的条目必须相邻，且不能是合计。`emphasis_label` 在横跨被标记柱的括号上方印一行说明，至少要有一个被标记的条目。
 - `comparison`：`recommended` 是 `columns` 里被推荐那一项的序号，从 0 数起。这一列的表头和单元格改用主色加粗。任何单元格都可以用 `**…**` 标出一段，画法与主题在别处标记重点的方式相同。
+- `comparison`：每一行可以带一个 `tag`，用几个字说这一行发生了什么（`{ "text": "不变", "quiet": true }`），印成行尾的小标签，`tag_column` 是标签列的表头。这一页讲的那一行写 `emphasis`：整行落在浅底上，它的标签用强调色填满。说「没有变化」的标签写 `quiet`。
 - `roadmap`：在某个阶段上写 `emphasis: true`，只有这张卡保留强调色顶条，其余卡的顶条改为主色。只能标一个阶段。
 
 ```json
