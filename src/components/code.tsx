@@ -1,10 +1,11 @@
 import type { Component } from "@/ir"
 import {
+  fitSvgLine,
   measureMonoTextUnits,
   truncateToMonoUnits,
 } from "../lib/svg-text-layout"
 import type { RenderDef, SvgComponent } from "./types"
-import { metaInk } from "../render/ink"
+import { accessibleInk, metaInk, resolveSemanticColor } from "../render/ink"
 
 type CodeComponent = Extract<Component, { type: "code" }>
 
@@ -120,16 +121,34 @@ function resolveLayout(lines: string[], w: number) {
   return { fontSize, lineHeight, textStartX, height, renderLines }
 }
 
+/**
+ * The title bar a named listing (`title`) carries over its first line: a
+ * band one step lighter than the block with the name in the gutter's grey.
+ */
+const TITLE_BAR = { h: 32, size: 16, fill: "#2A2A2A", ink: "#9DA5B4" } as const
+
+function titleBarHeight(component: CodeComponent): number {
+  return component.title?.trim() ? TITLE_BAR.h : 0
+}
+
 export const code: SvgComponent<CodeComponent> = {
   measure(component, w) {
     const lines = component.code.split("\n")
     const { height } = resolveLayout(lines, w)
-    return height
+    return height + titleBarHeight(component)
   },
   render(component, box, ctx) {
     const lines = component.code.split("\n")
     const { fontSize, lineHeight, textStartX, height, renderLines } =
       resolveLayout(lines, box.w)
+    const bar = titleBarHeight(component)
+    const title = bar
+      ? fitSvgLine(component.title!.trim(), { maxWidth: box.w - 2 * PADDING, fontSize: TITLE_BAR.size, minFontSize: TITLE_BAR.size, fontFamily: ctx.fonts.mono })
+      : null
+    // The lines the author marked are set bold in the theme's warning ink,
+    // where it reads on the block, and in the block's own text ink otherwise.
+    const marked = new Set(component.highlight_lines ?? [])
+    const markInk = accessibleInk(resolveSemanticColor("warning", ctx.colors), BG_COLOR, fontSize)
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
@@ -137,12 +156,29 @@ export const code: SvgComponent<CodeComponent> = {
           x={0}
           y={0}
           width={box.w}
-          height={height}
+          height={height + bar}
           rx={BORDER_RADIUS}
           fill={BG_COLOR}
         />
+        {title ? (
+          <g data-code-title="">
+            <rect x={0} y={0} width={box.w} height={bar} rx={BORDER_RADIUS} fill={TITLE_BAR.fill} />
+            <rect x={0} y={bar - BORDER_RADIUS} width={box.w} height={BORDER_RADIUS} fill={TITLE_BAR.fill} />
+            <text
+              data-truncated={title.truncated ? "1" : undefined}
+              x={PADDING}
+              y={Math.round(bar / 2 + TITLE_BAR.size * 0.35)}
+              fontFamily={ctx.fonts.mono}
+              fontSize={title.fontSize}
+              fill={accessibleInk(TITLE_BAR.ink, TITLE_BAR.fill, title.fontSize)}
+              dominantBaseline="alphabetic"
+            >
+              {title.text}
+            </text>
+          </g>
+        ) : null}
         {renderLines.map((line, i) => (
-          <g key={i}>
+          <g key={i} transform={bar ? `translate(0,${bar})` : undefined}>
             <text
               data-contrast-tier="meta"
               // The renderer's own counting, not a word the author wrote.
@@ -164,11 +200,13 @@ export const code: SvgComponent<CodeComponent> = {
             </text>
             <text
               data-truncated={line !== lines[i] ? "1" : undefined}
+              data-code-marked={marked.has(i + 1) ? "1" : undefined}
               x={textStartX}
               y={PADDING + i * lineHeight + fontSize}
               fontFamily={ctx.fonts.mono}
               fontSize={fontSize}
-              fill={TEXT_COLOR}
+              fontWeight={marked.has(i + 1) ? "bold" : undefined}
+              fill={marked.has(i + 1) ? markInk : TEXT_COLOR}
               dominantBaseline="alphabetic"
               xmlSpace="preserve"
             >

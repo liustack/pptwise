@@ -253,3 +253,28 @@ describe("mono exact-width model — deep-indent adversarial family (red-first, 
     }
   })
 })
+
+describe("code title and marked lines", () => {
+  const listing = {
+    type: "code" as const,
+    language: "text",
+    title: "postmortems / quotes.txt",
+    code: "# Google Cloud\n\"replicated globally within seconds\"\n# Azure\n\"There was nothing that customers could have done\"",
+    highlight_lines: [4],
+  }
+
+  it("names the listing in a title bar over its first line", () => {
+    const { container } = svg(code.render(listing, { x: 0, y: 0, w: 900 }, ctx))
+    const bar = container.querySelector("[data-code-title] text")!
+    expect(bar.textContent).toBe("postmortems / quotes.txt")
+    expect(code.measure(listing, 900, ctx)).toBe(code.measure({ ...listing, title: undefined }, 900, ctx) + 32)
+  })
+
+  it("sets the marked lines bold, the others as before", () => {
+    const { container } = svg(code.render(listing, { x: 0, y: 0, w: 900 }, ctx))
+    const marked = container.querySelectorAll("[data-code-marked='1']")
+    expect(marked).toHaveLength(1)
+    expect(marked[0]!.textContent).toContain("There was nothing")
+    expect(marked[0]!.getAttribute("font-weight")).toBe("bold")
+  })
+})

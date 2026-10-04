@@ -2014,3 +2014,13 @@ describe("icon_cards item tag", () => {
     expect(parseOne({ type: "icon_cards", items: [{ icon: "zap", title: "a", text: "b", tag: { text: "Azure 2026-02" } }, { icon: "zap", title: "c", text: "d" }] }).success).toBe(true)
   })
 })
+
+describe("code title and marked lines", () => {
+  it("names a listing and marks lines it has, each once", () => {
+    const code = { type: "code", language: "text", code: "a\nb\nc", title: "notes.txt" }
+    expect(parseOne({ ...code, highlight_lines: [2, 3] }).success).toBe(true)
+    expect(parseOne({ ...code, highlight_lines: [4] }).success).toBe(false)
+    expect(parseOne({ ...code, highlight_lines: [2, 2] }).success).toBe(false)
+    expect(parseOne({ ...code, highlight_lines: [0] }).success).toBe(false)
+  })
+})
