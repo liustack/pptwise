@@ -184,18 +184,11 @@ describe("auditDeck — understood pre-existing low-contrast sources (not audit 
   })
 
   // 2026-08-19 深底组皮肤重设计把 ledger 的 `primary` 从正红 `#E63946`
-  // 换成墨蓝 `#16202B`（设计稿把 primary 定义成让位给 accent 的色块底色）。
-  // 这处配对因此从「差一点点」变成「差很远」：原来是 `#E63946` 压面板约
-  // 4.4:1，现在是 `#16202B` 压 surface `#171C22` 的 1.04:1。
-  //
-  // 仍留在这个「已理解的既有低对比来源」块里，而不是升级成缺陷：本轮之前
-  // 它就已经是一条 low-contrast finding（这条断言本身就是证据），数量没有
-  // 新增。但根因值得写明——`architecture.tsx` 把 `colors.primary` 当**文字**
-  // 色用，而深底组重新定义后的 primary 是近乎背景色的色块底。同一根因的
-  // 另外两处（`cover-banner-title.tsx` / `ending-banner-ending.tsx`）本轮
-  // 已改走 `accessibleInk`，因为那两处是**新增**的 finding；这一处是既有的，
-  // 连同其余九个同样把 primary 当文字用的 component 一起留给下一棒裁决。
-  it("architecture.tsx's theme-derived primary-on-panel pairing is far under 4.5:1 on ledger (1.04:1 since the dark-group redesign)", () => {
+  // 换成墨蓝 `#16202B`，`architecture.tsx` 把 primary 当文字色用，层名压在
+  // surface `#171C22` 上只剩 1.04:1，这里曾把它钉成「已理解的既有低对比来源」。
+  // 2026-10 terminal 一轮让层名、构件串和层号都按所在色带走 `accessibleInk`，
+  // 这条改成回归钉：同一页不再有 low-contrast finding。
+  it("architecture's layer names read on ledger's panel since its inks are checked against the band", () => {
     const ir = deck("ledger", [
       {
         type: "content",
@@ -205,7 +198,7 @@ describe("auditDeck — understood pre-existing low-contrast sources (not audit 
       },
     ])
     const contrast = auditDeck(ir).findings.filter((f) => f.code === "low-contrast")
-    expect(contrast.some((f) => (f.detail as { fill?: string })?.fill === "#16202B")).toBe(true)
+    expect(contrast).toEqual([])
   })
 })
 
