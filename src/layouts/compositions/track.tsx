@@ -81,6 +81,8 @@ function trackShape(components: readonly Component[]): { timeline: Timeline; cal
   // No place for a title on the rule: the ordinary timeline prints it.
   if (timeline.layout === "vertical" || timeline.title?.trim()) return null
   if (timeline.milestones.length < MIN_ITEMS || timeline.milestones.length > MAX_ITEMS) return null
+  // An icon or a tone has no place on this rule: the ordinary timeline draws both.
+  if (timeline.milestones.some((m) => m.icon !== undefined || m.tone !== undefined)) return null
   if (second === undefined) return { timeline }
   const callout = closingCallout(second)
   return callout ? { timeline, callout } : null

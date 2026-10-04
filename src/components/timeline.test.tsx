@@ -395,3 +395,37 @@ describe("timeline lanes, drawn by the shared renderer", () => {
     expect(dates).toContain("国内 · 8 月")
   })
 })
+
+describe("timeline milestone tone and icon", () => {
+  const toned = {
+    type: "timeline" as const,
+    layout: "vertical" as const,
+    milestones: [
+      { date: "06:48", title: "DNS records emptied", tone: "danger" as const },
+      { date: "09:40", title: "DynamoDB back", tone: "success" as const, highlight: true },
+      { date: "11:14", title: "Lease system throttled", tone: "warning" as const, icon: "server" as const },
+    ],
+  }
+  const withTones: ComponentCtx = { ...ctx, colors: { ...ctx.colors, danger: "#C0392B", success: "#1E8449", warning: "#9A6B00" } }
+
+  it("paints each dot in the theme's ink for its tone, at either size", () => {
+    const { container } = svg(timeline.render(toned, { x: 0, y: 0, w: 900 }, withTones))
+    const dots = Array.from(container.querySelectorAll("circle"))
+    expect(dots[0]!.getAttribute("fill")).toBe("#C0392B")
+    expect(dots[1]!.getAttribute("fill")).toBe("#1E8449")
+    expect(dots[1]!.getAttribute("r")).toBe("10")
+  })
+
+  it("draws a milestone's icon in a ring of its tone on the axis", () => {
+    const { container } = svg(timeline.render(toned, { x: 0, y: 0, w: 900 }, withTones))
+    const node = container.querySelector("[data-milestone-icon='server']")!
+    expect(node).not.toBeNull()
+    expect(node.querySelector("circle")!.getAttribute("stroke")).toBe("#9A6B00")
+    expect(node.querySelector("g[transform]")).not.toBeNull()
+  })
+
+  it("draws the icon on a horizontal row too", () => {
+    const { container } = svg(timeline.render({ ...toned, layout: undefined }, { x: 0, y: 0, w: 900 }, withTones))
+    expect(container.querySelectorAll("[data-milestone-icon]")).toHaveLength(1)
+  })
+})

@@ -71,3 +71,21 @@ export const TagSchema = z
       .describe("Marks a tag that says nothing changed, such as 不变 or Unchanged: it steps back in a grey outline."),
   })
   .strict()
+
+/**
+ * How an item reads, in the colour every theme keeps for it: `danger` for
+ * something that broke or went wrong, `warning` for something to watch or
+ * still being handled, `success` for something that recovered or went
+ * right. Shared by `timeline` milestones, `kpi_cards` items and `row_cards`
+ * items, which mark an incident's turns, a figure's stakes and a log line's
+ * outcome the same way.
+ *
+ * It says what kind of news the item is, never which item the page is
+ * about: that is `emphasis` or `highlight`. A theme paints it in its own
+ * danger, warning and success inks, on a dot, an icon or the item's label.
+ */
+export const ToneSchema = z
+  .enum(["danger", "warning", "success"])
+  .describe(
+    'What kind of news the item is, painted in the theme\'s own colour for it: "danger" for something that broke, "warning" for something to watch or still being handled, "success" for something that recovered or went right.',
+  )

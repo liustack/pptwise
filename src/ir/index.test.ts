@@ -1954,3 +1954,17 @@ describe("deck branding posture", () => {
     if (!r.success) expect(r.error).toMatch(/chrome/)
   })
 })
+
+/** One content page holding `component`, parsed. */
+function parseOne(component: unknown) {
+  const d: any = minimal()
+  d.slides = [{ type: "content", kind: "points", components: [component] }]
+  return parsePptxIR(d)
+}
+
+describe("timeline milestone icon and tone", () => {
+  it("takes an icon and a tone on a milestone, and refuses a tone it does not know", () => {
+    expect(parseOne({ type: "timeline", milestones: [{ date: "06:48", title: "DNS emptied", tone: "danger", icon: "server" }, { date: "09:40", title: "Back", tone: "success" }] }).success).toBe(true)
+    expect(parseOne({ type: "timeline", milestones: [{ date: "06:48", title: "DNS emptied", tone: "red" }] }).success).toBe(false)
+  })
+})
