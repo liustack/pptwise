@@ -2008,3 +2008,9 @@ describe("image_grid caption icon", () => {
     expect(parseOne({ type: "image_grid", items: [{ asset_id: "x", icon: "zap" }, { asset_id: "y" }] }).success).toBe(false)
   })
 })
+
+describe("icon_cards item tag", () => {
+  it("takes a tag on an icon card", () => {
+    expect(parseOne({ type: "icon_cards", items: [{ icon: "zap", title: "a", text: "b", tag: { text: "Azure 2026-02" } }, { icon: "zap", title: "c", text: "d" }] }).success).toBe(true)
+  })
+})

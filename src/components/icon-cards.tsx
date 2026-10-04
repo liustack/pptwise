@@ -3,6 +3,7 @@ import type { Component } from "@/ir"
 import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
+import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
 import {
   boardTypeScale,
   fillCardType,
@@ -24,6 +25,8 @@ const TEXT_LINE_HEIGHT_RATIO = 1.4
 const GAP_NODE_TITLE = 18
 const GAP_TITLE_TEXT = 10
 const COL_INSET = 16
+/** The row a card's tag (`items[].tag`) takes under its node: the ordinary tag's 28px label and 10px of air. */
+const TAG_ROW = 38
 
 function layoutItemText(
   item: IconCardItem,
@@ -60,10 +63,11 @@ function nodeRadius(colW: number): number {
   return Math.round(Math.min(44, Math.max(NODE_R_MIN, colW * 0.16)))
 }
 
-function stackHeight(layout: ReturnType<typeof layoutItemText>, nodeSize: number): number {
+function stackHeight(layout: ReturnType<typeof layoutItemText>, nodeSize: number, tagRow = 0): number {
   return (
     nodeSize +
     GAP_NODE_TITLE +
+    tagRow +
     layout.title.lines.length * layout.title.lineHeight +
     GAP_TITLE_TEXT +
     layout.text.lines.length * layout.text.lineHeight
@@ -107,7 +111,7 @@ function geometry(
   const cut = (layouts: typeof settled.layouts) => layouts.some((l) => l.title.truncated || l.text.truncated)
   // A column always keeps its icon and a line of title, so a short enough
   // row can be overrun by the stack even with no word cut.
-  const tooTall = (res: typeof settled) => res.layouts.some((l) => stackHeight(l, res.nodeSize) > res.rowH + 1)
+  const tooTall = (res: typeof settled) => res.layouts.some((l) => stackHeight(l, res.nodeSize, res.tagRow) > res.rowH + 1)
   if (boxH !== undefined && (cut(settled.layouts) || tooTall(settled))) {
     let shortest: typeof settled | undefined
     for (let r = settled.nodeR - 1; r >= NODE_R_MIN; r--) {
@@ -135,9 +139,12 @@ function columnsAt(
 ) {
   const nodeSize = nodeR * 2
   const contentW = Math.max(24, colW - COL_INSET)
+  // Every card keeps the tag row when any card has a tag, so the titles in a
+  // row stay level.
+  const tagRow = component.items.some((item) => item.tag) ? TAG_ROW : 0
   const slotH = boxH != null ? Math.max(1, (boxH - GAP * (rows - 1)) / rows) : undefined
   const start = boardTypeScale(colW, slotH)
-  const extraAbove = nodeSize + GAP_NODE_TITLE
+  const extraAbove = nodeSize + GAP_NODE_TITLE + tagRow
   const naturalInner =
     extraAbove +
     formLineHeight(start.title) +
@@ -184,7 +191,7 @@ function columnsAt(
     ),
   )
   const measuredH = boxH === undefined ? naturalMeasured : Math.min(boxH, rows * rowH + (rows - 1) * GAP)
-  return { cols, rows, colW, nodeR, nodeSize, contentW, layouts, rowH, measuredH }
+  return { cols, rows, colW, nodeR, nodeSize, contentW, layouts, rowH, measuredH, tagRow }
 }
 
 function measureIconColumns(component: IconCardsComponent, w: number, ctx: ComponentCtx): number {
@@ -212,7 +219,7 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
   // its own height put a short body's icon below its longer neighbour's,
   // so icons and titles stepped across the row.
   const rowStackH = Array.from({ length: g.rows }, (_, row) =>
-    Math.max(...g.layouts.slice(row * g.cols, (row + 1) * g.cols).map((l) => stackHeight(l, g.nodeSize))),
+    Math.max(...g.layouts.slice(row * g.cols, (row + 1) * g.cols).map((l) => stackHeight(l, g.nodeSize, g.tagRow))),
   )
 
   return (
@@ -225,7 +232,7 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
         const layout = g.layouts[i]!
         const stackTop = rowY + (g.rowH - rowStackH[row]!) / 2
         const cy = stackTop + g.nodeR
-        const titleTop = stackTop + g.nodeSize + GAP_NODE_TITLE
+        const titleTop = stackTop + g.nodeSize + GAP_NODE_TITLE + g.tagRow
         const textTop =
           titleTop + layout.title.lines.length * layout.title.lineHeight + GAP_TITLE_TEXT
         return (
@@ -242,6 +249,7 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
               iconSize,
               ink,
             )}
+            {item.tag ? paintCardTag(item.tag, cx, stackTop + g.nodeSize + GAP_NODE_TITLE, g.contentW, ctx) : null}
             {layout.title.lines.map((line, li) => (
               <text
                 key={`t-${li}`}
@@ -279,6 +287,18 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
     </g>
   )
   },
+}
+
+/**
+ * A card's tag, centred in its row under the node, at the ordinary size and
+ * in the ordinary inks. A tag wider than the card is declared dropped rather
+ * than cut.
+ */
+function paintCardTag(tag: NonNullable<IconCardItem["tag"]>, cx: number, top: number, contentW: number, ctx: ComponentCtx): React.ReactElement {
+  const spec = ordinaryTagSpec(ctx)
+  const w = tagWidth(tag.text, spec)
+  if (w > contentW) return <g data-dropped={1} data-dropped-kind="label" />
+  return paintTag({ tag, x: cx - w / 2, y: top, spec, inks: tagInks(ctx, tag, false, ctx.defaultBg ?? ctx.colors.bg, spec.size) })
 }
 
 export const renderDef: RenderDef<IconCardsComponent> = {

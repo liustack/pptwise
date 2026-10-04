@@ -5,6 +5,7 @@ import { render } from "@testing-library/react"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { measureTextUnits } from "../lib/svg-text-layout"
+import { explodeIntoUnits } from "../render/bento-layout"
 import { iconCards } from "./icon-cards"
 import { FORM_BODY_FLOOR } from "./legibility"
 import { CANONICAL_THEME_IDS } from "../themes"
@@ -305,3 +306,26 @@ describe("icon_cards component", () => {
   })
 })
 
+
+describe("icon_cards item tag", () => {
+  const tagged = {
+    type: "icon_cards" as const,
+    items: [
+      { icon: "repeat" as const, title: "Retry storm", text: "Retries overwhelm one region, then the next.", tag: { text: "Azure 2026-02" } },
+      { icon: "layers" as const, title: "Backlog collapse", text: "Leases pile up until nothing moves.", tag: { text: "AWS 2025-10" } },
+      { icon: "refresh-cw" as const, title: "Restart together", text: "Every task restarts at once." },
+    ],
+  }
+
+  it("prints each card's tag under its node, and keeps the titles level", () => {
+    const ctx = themeCtx("brief")
+    const { container } = svg(iconCards.render(tagged, { ...BOX, h: iconCards.measure(tagged, BOX.w, ctx) }, ctx))
+    expect(Array.from(container.querySelectorAll("[data-tag]")).map((tag) => tag.textContent)).toEqual(["Azure 2026-02", "AWS 2025-10"])
+    const titles = ["Retry storm", "Backlog collapse", "Restart together"].map((t) => Array.from(container.querySelectorAll("text")).find((el) => el.textContent === t)!)
+    expect(new Set(titles.map((t) => t.getAttribute("y"))).size).toBe(1)
+  })
+
+  it("keeps tagged cards out of a bento's exploded tiles", () => {
+    expect(explodeIntoUnits([tagged]).map((unit) => unit.kind)).toEqual(["component"])
+  })
+})
