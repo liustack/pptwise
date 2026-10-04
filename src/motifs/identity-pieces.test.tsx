@@ -36,7 +36,7 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
   },
   "memo-motif": { chapter: ["masthead"], content: ["masthead"], ending: ["masthead"] },
   "luxe-motif": { cover: ["invitation"], ending: ["invitation"] },
-  "vermilion-motif": { content: ["gold-rules"], ending: ["gold-rules"] },
+  "vermilion-motif": { cover: ["gold-rules-foot"], content: ["gold-rules"], ending: ["gold-rules", "gold-rules-foot"] },
   "corner-ornament-motif": { content: ["masthead"], ending: ["masthead"] },
   "folio-motif": { content: ["folio"] },
   // ledger's status bar runs across the top of every page, like a market
