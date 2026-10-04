@@ -5,7 +5,7 @@ import { renderEmphasisTspans } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
+import { deckWord, evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** vermilion 稀排脸：金双线批示、金菱巨数、案卷卡。不画顶缘金双线、金芒、底菱。 */
@@ -163,7 +163,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   )
 }
 
-export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
+export function oneEvidence({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const evidence = pickEvidence(slide.components)
   const evidenceRect = { x: 600, y: 230, w: 480, h: 250 }
@@ -194,7 +194,7 @@ export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
       <rect x={160} y={190} width={960} height={320} fill={colors.surface} stroke={colors.border} strokeWidth={1} />
       <rect x={160} y={190} width={10} height={320} fill={colors.primary} />
       <text x={234} y={288} fontFamily={fonts.body} fontSize={22} fill={colors.primary} dominantBaseline="alphabetic">
-        {`案卷 · ${pad2(index + 1)}`}
+        {`${deckWord(ir, "案卷", "File")} · ${pad2(index + 1)}`}
       </text>
       {heading.lines.map((line, i) => (
         <text

@@ -5,7 +5,7 @@ import { renderEmphasisText } from "../../render/emphasis"
 import { heroCaption, heroSource, heroUnit, heroValue, statementAttribution } from "../minimal-shared"
 import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, pad2 } from "./shared"
+import { deckWord, evidenceSource, fitHeroLine, fitSparseHeading, pad2 } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 import { underlineYFromBaseline } from "../underline"
 
@@ -117,7 +117,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   )
 }
 
-export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
+export function oneEvidence({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const evidence = pickEvidence(slide.components)
   const evidenceRect = { x: 600, y: 230, w: 480, h: 250 }
@@ -148,7 +148,7 @@ export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
       <rect x={160} y={190} width={960} height={320} fill={colors.surface} stroke={colors.border} strokeWidth={1} />
       <rect x={160} y={190} width={960} height={8} fill={colors.primary} />
       <text x={224} y={300} fontFamily={fonts.heading} fontSize={26} fontWeight="700" fill={colors.primary} dominantBaseline="alphabetic">
-        {`依据 ${pad2(index + 1)}`}
+        {`${deckWord(ir, "依据", "Evidence")} ${pad2(index + 1)}`}
       </text>
       {heading.lines.map((line, i) =>
         renderEmphasisText(

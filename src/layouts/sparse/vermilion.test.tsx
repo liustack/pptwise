@@ -156,4 +156,18 @@ describe("vermilion sparse faces", () => {
     expect(markup).not.toContain(BOARD_CLAIM)
     expect(markup).not.toContain(LUXE_GOLD)
   })
+
+  it("one-evidence labels the card in the deck's language", () => {
+    // An English deck used to print 「案卷 · 13」 over its exhibit.
+    const slide: Slide = {
+      type: "content",
+      kind: "points",
+      layout: "one-evidence",
+      heading: "Work orders now open 6.5 days early",
+      components: [],
+    } as Slide
+    const { markup } = render(<OneEvidenceContent ir={ir([slide])} slide={slide} index={12} ctx={ctx} />)
+    expect(markup).toContain("File · 13")
+    expect(markup).not.toContain("案卷")
+  })
 })
