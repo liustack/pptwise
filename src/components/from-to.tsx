@@ -1,6 +1,8 @@
 import type { ReactElement } from "react"
 import type { Component } from "@/ir"
-import { accessibleInk, contrastRatio, graphicInk } from "../render/ink"
+import { accessibleInk, blendOver, contrastRatio, graphicInk, readableOn } from "../render/ink"
+import { emphasisRunInk } from "../render/emphasis"
+import { ordinaryTagSpec, paintTag, tagWidth } from "./tag"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { DroppedContentMarker } from "../render/drop-marker"
 import {
@@ -246,16 +248,30 @@ export const fromTo: SvgComponent<FromToComponent> = {
                 fontFamily: ctx.fonts.body,
               })
             : null
+          // A row's tag stands at the arriving column's right end, after any
+          // change. It sits on the filled column, so it takes that column's
+          // own ink: an outline, or filled on the row the page marks.
+          const tagSpec = ordinaryTagSpec(ctx)
+          const tag = row.tag
+          const tagW = tag ? tagWidth(tag.text, tagSpec) : 0
+          const tagRoom = tag ? tagW + 12 : 0
           const changeW = changeFit
             ? measureTextUnits(changeFit.text, { bold: true, fontFamily: ctx.fonts.body }) * changeFit.fontSize + 18
             : 0
+          const marked = row.emphasis === true
+          const onColumn = readableOn(highlight)
           const labelFit = fitFormLine(row.label, {
             maxWidth: g.labelW - PAD,
             fontSize: g.labelSize,
             fontFamily: ctx.fonts.body,
           })
           return (
-            <g key={`row-${i}`}>
+            <g key={`row-${i}`} data-row-marked={marked ? "1" : undefined}>
+              {/* The marked measure: a pale tint of the emphasis colour across
+                  its name and its starting value. */}
+              {marked && (
+                <rect x={0} y={top + 1} width={g.fromX + g.colW} height={g.rowH - 1} fill={blendOver(emphasisRunInk(ctx.colors), pageBg, 0.1)} />
+              )}
               {/* One rule per row across the two unfilled columns, stopping at
                   the gutter so the arrow stands in clear air. */}
               <line x1={0} y1={top} x2={g.fromX + g.colW} y2={top} stroke={border} strokeWidth={1} />
@@ -274,16 +290,35 @@ export const fromTo: SvgComponent<FromToComponent> = {
                 y={baseline}
                 fontFamily={ctx.fonts.body}
                 fontSize={labelFit.fontSize}
-                fill={ink(ctx.colors.text, labelFit.fontSize, false)}
+                fontWeight={marked ? "700" : undefined}
+                fill={
+                  marked
+                    ? accessibleInk(ctx.colors.text, blendOver(emphasisRunInk(ctx.colors), pageBg, 0.1), labelFit.fontSize)
+                    : ink(ctx.colors.text, labelFit.fontSize, false)
+                }
               >
                 {labelFit.text}
               </text>
               {value(row.from, unit, g.fromX + PAD, g.colW - PAD * 2, baseline, false, `from-${i}`)}
-              {value(row.to, unit, g.toX + PAD, g.colW - PAD * 2 - changeW, baseline, true, `to-${i}`)}
+              {value(row.to, unit, g.toX + PAD, g.colW - PAD * 2 - changeW - tagRoom, baseline, true, `to-${i}`)}
+              {tag &&
+                paintTag({
+                  tag,
+                  x: g.toX + g.colW - PAD - tagW,
+                  y: top + (g.rowH - tagSpec.height) / 2,
+                  spec: tagSpec,
+                  inks: marked
+                    ? { fill: onColumn, stroke: onColumn, text: accessibleInk(highlight, onColumn, tagSpec.size) }
+                    : {
+                        fill: null,
+                        stroke: tag.quiet ? blendOver(onColumn, highlight, 0.5) : onColumn,
+                        text: accessibleInk(onColumn, highlight, tagSpec.size),
+                      },
+                })}
               {changeFit ? (
                 <text
                   data-truncated={changeFit.truncated ? "1" : undefined}
-                  x={g.toX + g.colW - PAD}
+                  x={g.toX + g.colW - PAD - tagRoom}
                   y={baseline}
                   textAnchor="end"
                   fontFamily={ctx.fonts.body}

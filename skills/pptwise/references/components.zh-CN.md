@@ -110,7 +110,7 @@ pptwise schema --component <type>
 - 工作必须依次穿过每个环节、交接本身是重点时用 `chevron_process`；环节之间差的是程度而不是先后用 `staircase`；每一步归谁做也是论点用 `swimlane`。
 - 每个阶段都带 1-5 的情绪分、最低点就是论点时用 `journey_map`；阶段不带情绪用 `chevron_process`。
 - 一个条件把读者送上两三条路之一、每个结局各有代价时用 `decision_tree`；一条主线上带若干决策用 `flowchart`。
-- 同一批指标在两个状态下都有值、移动幅度就是论点时用 `from_to`；两边是不同主体而不是同一主体的两次用 `comparison`。
+- 同一批指标在两个状态下都有值、移动幅度就是论点时用 `from_to`；两边是不同主体而不是同一主体的两次用 `comparison`。`from_to` 的行和 `comparison` 的行一样可以带 `tag`（`{ "text": "新增" }`，印在数值之后），这一页讲的那项写 `emphasis`。
 - 一个中心概念带一组无序并列要素用 `hub_spoke`，要素闭环用 `cycle`，层层包含用 `rings`。
 - 两三个集合互相重叠、重叠处才是结论时用 `venn`，两边互相权衡用 `comparison`，层层包含用 `rings`。
 - 结果已经发生、页面在给原因分类时用 `fishbone`，方框通向某个终点时用 `flowchart`。

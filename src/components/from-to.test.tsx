@@ -261,3 +261,39 @@ describe("from_to component", () => {
     expect(a).toBe(b)
   })
 })
+
+describe("from_to row tags and the marked measure", () => {
+  const plan = {
+    type: "from_to" as const,
+    from: { title: "2025" },
+    to: { title: "2030" },
+    rows: [
+      { label: "Urbanization rate", from: "67.9", to: "71", unit: "%" },
+      { label: "Non-fossil share of energy", from: "21.7", to: "25", unit: "%", tag: { text: "New" }, emphasis: true },
+      { label: "Care-home nursing beds", from: "68", to: "73", unit: "%", tag: { text: "Added" } },
+      { label: "Life expectancy", from: "79.25", to: "80", unit: "years", tag: { text: "Same", quiet: true } },
+    ],
+  }
+
+  it("sets each tag at the arriving column's end, in that column's ink, and marks one row", () => {
+    for (const id of ["vermilion", "brief", "ember"]) {
+      const ctx = boundThemeCtx(id, {})
+      const { container } = render(<svg>{fromTo.render(plan, { x: 0, y: 0, w: 1088, h: 400 }, ctx)}</svg>)
+      const tags = Array.from(container.querySelectorAll("g[data-tag]"))
+      expect(tags.map((t) => t.textContent), id).toEqual(["New", "Added", "Same"])
+      expect(tags[0]!.querySelector("rect")!.getAttribute("fill"), id).not.toBe("none")
+      expect(container.querySelectorAll("[data-row-marked]"), id).toHaveLength(1)
+      const marked = container.querySelector("[data-row-marked]")!
+      expect(marked.textContent, id).toContain("Non-fossil share of energy")
+      const markup = renderToStaticMarkup(<svg>{fromTo.render(plan, { x: 0, y: 0, w: 1088, h: 400 }, ctx)}</svg>)
+      expect(auditSvgMarkup(markup).filter((issue) => issue.kind !== "page-overflow"), id).toEqual([])
+    }
+  })
+
+  it("refuses two marked rows", async () => {
+    const { validateIr } = await import("@/api")
+    const deck = (component: unknown) => ({ version: "5", theme: { id: "brief" }, slides: [{ type: "content", kind: "comparison", heading: "x", components: [component] }] })
+    expect(validateIr(deck(plan)).ok).toBe(true)
+    expect(validateIr(deck({ ...plan, rows: plan.rows.map((row) => ({ ...row, emphasis: true })) })).ok).toBe(false)
+  })
+})

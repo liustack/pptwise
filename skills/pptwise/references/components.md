@@ -105,7 +105,7 @@ The table gives each component's normal kind home. A component may serve more th
 - Use `chevron_process` when work passes through every stage in order and the handover between them is the point. Use `staircase` when the stages climb in degree rather than follow one another, and `swimlane` when who does each step is part of the argument.
 - Use `journey_map` when each stage carries a 1-5 feeling and the low point is the argument. Use `chevron_process` when no feeling is attached to the stages.
 - Use `decision_tree` when a condition sends the reader down one of two or three paths and each ending has its own cost. Use `flowchart` for one thread with decisions along it.
-- Use `from_to` when the same measures carry a value in both states and the size of the move is the point. Use `comparison` when the two sides are different subjects rather than one subject twice.
+- Use `from_to` when the same measures carry a value in both states and the size of the move is the point. Use `comparison` when the two sides are different subjects rather than one subject twice. A `from_to` row can carry a `tag` (`{ "text": "New" }`) printed after its values, and `emphasis` on the one measure the page is about, the way a `comparison` row does.
 - Use `hub_spoke` for one central concept with unordered peer elements attached to it. Use `cycle` when they close a loop and `rings` when they nest inside one another.
 - Use `venn` when two or three sets overlap and the shared region is the point. Use `comparison` when the sides are weighed against each other and `rings` when each set contains the next.
 - Use `fishbone` when the result is known and the page sorts the causes behind it into categories. Use `flowchart` when the boxes lead somewhere.
