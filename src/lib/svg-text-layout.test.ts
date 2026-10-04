@@ -1591,3 +1591,21 @@ describe("a forced merge keeps the space its wrap broke at", () => {
     }
   })
 })
+
+describe("a no-break space", () => {
+  const NB = String.fromCharCode(0xa0)
+
+  it("keeps the words on either side of it on one line, and stays in the line", () => {
+    const text = `Warm standby, not active-active: RTO in${NB}minutes for every${NB}region`
+    for (const maxWidth of [300, 360, 420, 520]) {
+      const layout = layoutSvgText(text, { maxWidth, fontSize: 31, maxLines: 3, fontFamily: "Microsoft YaHei" })
+      expect(layout.lines.some((line) => line.endsWith("in") || line.startsWith("minutes")), String(maxWidth)).toBe(false)
+      expect(layout.lines.some((line) => line.includes(`in${NB}minutes`)), String(maxWidth)).toBe(true)
+    }
+  })
+
+  it("still folds every other run of white space to one space", () => {
+    const layout = layoutSvgText("Warm   standby,  \t not active-active", { maxWidth: 2000, fontSize: 31, maxLines: 1, fontFamily: "Microsoft YaHei" })
+    expect(layout.lines).toEqual(["Warm standby, not active-active"])
+  })
+})

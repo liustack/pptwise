@@ -905,21 +905,42 @@ function splitWideBoundaries(word: string): string[] {
  * that constant's own comment for the full boundary discussion.
  */
 function tokenize(text: string): { tokens: WrapToken[]; spaceDelimited: boolean } {
-  const normalized = text.trim().replace(/\s+/g, " ")
+  // Every run of white space folds to one space, except a no-break space,
+  // which an author writes to keep two words on one line.
+  const normalized = text.trim().replace(/[^\S\u00a0]+/g, " ")
   if (!normalized) return { tokens: [], spaceDelimited: false }
   const spaceDelimited = normalized.includes(" ")
   if (!spaceDelimited) {
     return {
-      tokens: (normalized.match(LATIN_RUN_OR_CHAR_RE) ?? []).map((t) => ({ text: t, space: false })),
+      tokens: glueNoBreak((normalized.match(LATIN_RUN_OR_CHAR_RE) ?? []).map((t) => ({ text: t, space: false }))),
       spaceDelimited,
     }
   }
   return {
-    tokens: normalized
-      .split(" ")
-      .flatMap((word) => splitWideBoundaries(word).map((t, i) => ({ text: t, space: i === 0 }))),
+    tokens: glueNoBreak(
+      normalized.split(" ").flatMap((word) => splitWideBoundaries(word).map((t, i) => ({ text: t, space: i === 0 }))),
+    ),
     spaceDelimited,
   }
+}
+
+const NBSP = "\u00a0"
+
+/**
+ * Joins the tokens on either side of a no-break space into one, so no line
+ * ever breaks there: 「Q4 NBSP 先补」 and "in NBSP minutes" stay together.
+ */
+function glueNoBreak(tokens: WrapToken[]): WrapToken[] {
+  const out: WrapToken[] = []
+  for (const token of tokens) {
+    const prev = out[out.length - 1]
+    if (prev && !token.space && (prev.text.endsWith(NBSP) || token.text.startsWith(NBSP))) {
+      out[out.length - 1] = { text: prev.text + token.text, space: prev.space }
+      continue
+    }
+    out.push(token)
+  }
+  return out
 }
 
 /**
