@@ -1975,3 +1975,9 @@ describe("kpi_cards item tone", () => {
     expect(parseOne({ type: "kpi_cards", items: [{ value: "7+", label: "Months", tone: "red" }] }).success).toBe(false)
   })
 })
+
+describe("row_cards item tone", () => {
+  it("takes a tone on a row card", () => {
+    expect(parseOne({ type: "row_cards", items: [{ title: "a", tone: "warning" }, { title: "b" }, { title: "c" }] }).success).toBe(true)
+  })
+})

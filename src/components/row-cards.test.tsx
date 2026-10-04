@@ -237,3 +237,27 @@ describe("row_cards EN gallery trio is not silently dropped (r2 A6)", () => {
     }
   })
 })
+
+describe("row_cards item tone", () => {
+  it("paints a toned row's icon and number ring in the theme's ink for the tone", () => {
+    const terminal = boundThemeCtx("terminal", {})
+    const markup = renderSvgMarkup(
+      <svg>
+        {rowCards.render(
+          {
+            type: "row_cards",
+            items: [
+              { icon: "bell-off", title: "Google · 2025-06", text: "Status page late by 55 minutes", tone: "danger" },
+              { icon: "shield-check", title: "Google's promise", text: "Status keeps working when monitoring is down" },
+              { title: "Us", text: "Status page off the main cloud", tone: "success" },
+            ],
+          },
+          { x: 0, y: 0, w: 900 },
+          terminal,
+        )}
+      </svg>,
+    )
+    expect(markup).toContain(`stroke="${terminal.colors.danger}"`)
+    expect(markup).toContain(`stroke="${terminal.colors.success}"`)
+  })
+})

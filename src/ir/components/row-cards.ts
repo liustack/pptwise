@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { IconNameSchema } from "./shared"
+import { IconNameSchema, ToneSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -18,6 +18,8 @@ export const schema = z
             text: z.string().optional(),
             sub: z.string().optional(),
             highlight: z.boolean().optional(),
+            /** What kind of news the row is. See `ToneSchema`. */
+            tone: ToneSchema.optional(),
           })
           .strict()
       )

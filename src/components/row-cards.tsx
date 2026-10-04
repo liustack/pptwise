@@ -2,7 +2,7 @@ import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { Icon } from "../render/icons"
 import type { RenderDef, SvgComponent } from "./types"
-import { accessibleInk } from "../render/ink"
+import { accessibleInk, graphicInk, resolveSemanticColor } from "../render/ink"
 
 type RowCardsComponent = Extract<Component, { type: "row_cards" }>
 
@@ -170,6 +170,9 @@ export const rowCards: SvgComponent<RowCardsComponent> = {
           // row-cards.test.tsx's sweep for the regression pin.
           cursor += shellH + (i < visibleItems.length - 1 ? cardGap : 0)
           const hl = Boolean(item.highlight)
+          // A tone (`danger`, `warning`, `success`) says what kind of news
+          // the row is: its number ring and its icon carry it.
+          const toneInk = item.tone ? graphicInk(resolveSemanticColor(item.tone, ctx.colors), ctx.colors.surface) : undefined
           const contentTop = cardY + (shellH - contentH) / 2
           const numCy = cardY + shellH / 2
           const titleBaseline = contentTop + TITLE_SIZE
@@ -191,7 +194,7 @@ export const rowCards: SvgComponent<RowCardsComponent> = {
                 cy={numCy}
                 r={NUM_R}
                 fill="none"
-                stroke={hl ? ctx.colors.accent : ctx.colors.muted}
+                stroke={toneInk ?? (hl ? ctx.colors.accent : ctx.colors.muted)}
                 strokeWidth={1.5}
               />
               <text
@@ -212,7 +215,7 @@ export const rowCards: SvgComponent<RowCardsComponent> = {
                   x={TEXT_X}
                   y={titleBaseline - ICON_SIZE + 3}
                   size={ICON_SIZE}
-                  color={ctx.colors.accent}
+                  color={toneInk ?? ctx.colors.accent}
                 />
               )}
               <text
