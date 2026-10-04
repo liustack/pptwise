@@ -84,6 +84,8 @@ function recordsShape(components: readonly Component[]): { table: DataTable; cal
   // No place for a title over the open table: the ordinary table prints it.
   if (table.title?.trim()) return null
   if (table.columns.length > MAX_COLUMNS || table.rows.length > MAX_ROWS) return null
+  // A row's icon has no place in this table: the ordinary table draws it.
+  if (table.rows.some((row) => row.icon !== undefined)) return null
   if (second === undefined) return { table }
   const callout = noticeClosingCallout(second)
   return callout ? { table, callout } : null

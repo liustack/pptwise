@@ -1995,3 +1995,9 @@ describe("issue_tree branch icon and sub-points' header", () => {
     expect(parseOne({ type: "issue_tree", question: "q?", children_column: "Fix", branches: [{ label: "a" }, { label: "b" }] }).success).toBe(false)
   })
 })
+
+describe("data_table row icon", () => {
+  it("takes an icon on a row", () => {
+    expect(parseOne({ type: "data_table", columns: [{ key: "a", label: "A" }, { key: "b", label: "B" }], rows: [{ cells: { a: "1", b: "2" }, icon: "server" }] }).success).toBe(true)
+  })
+})
