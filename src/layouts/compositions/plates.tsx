@@ -1,5 +1,6 @@
 import type { Component } from "@/ir"
-import { kpiValueText } from "../../components/kpi"
+import { kpiFigure } from "../../components/kpi"
+import { joinUnit } from "../../lib/quantity-format"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 import { baselineIn, consoleInks, consoleText, fitBanner, fitMono, monoWidth, paintBanner, paintIcon, paintMono, toneInk } from "./console"
@@ -57,8 +58,8 @@ function drawPlates(grid: ImageGrid, kpis: KpiCards, note: Callout | undefined, 
   const ground = inks.ground
   const columns = grid.items.map((item, i) => {
     const kpi = kpis.items[i]!
-    const { text, marked } = kpiValueText(kpi.value)
-    const value = kpi.unit?.trim() ? `${text} ${kpi.unit.trim()}` : text
+    const { text, marked, unit } = kpiFigure(kpi.value, kpi.unit)
+    const value = joinUnit(text, unit?.trim() || undefined)
     const captionW = w - (item.icon ? CAPTION.icon + CAPTION.iconGap : 0)
     const caption = item.caption?.trim() ? fitMono(item.caption, { width: captionW, size: CAPTION.size, lineHeight: CAPTION.box, maxLines: 1 }) : null
     const label = fitFixed(kpi.label, { width: w, size: LABEL.size, lineHeight: LABEL.lineHeight, maxLines: LABEL.maxLines, fontFamily: ctx.fonts.body, bold: false })

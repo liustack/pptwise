@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Component } from "@/ir"
-import { kpiValueText } from "../../components/kpi"
+import { kpiFigure } from "../../components/kpi"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { parseEmphasis, stripEmphasis } from "../../render/emphasis"
@@ -102,13 +102,13 @@ export function drawTicker({ components, ctx, rect }: Pick<CompositionProps, "co
 
   const cells: Cell[] = []
   for (const item of kpis.items) {
-    const { text: value, marked } = kpiValueText(item.value)
+    const { text: value, marked, unit: ownUnit } = kpiFigure(item.value, item.unit)
     if (!value.trim()) return null
     if (measureTextUnits(value, { fontFamily: ctx.fonts.heading }) * CELL.value.size > width) return null
     const label = one(item.label, CELL.label.size)
-    const unit = item.unit?.trim() ? one(item.unit, CELL.unit.size) : null
+    const unit = ownUnit?.trim() ? one(ownUnit, CELL.unit.size) : null
     const last = lastLine(item)
-    if (!label || (item.unit?.trim() && !unit)) return null
+    if (!label || (ownUnit?.trim() && !unit)) return null
     if (last && !one(last.text, CELL.last.size, last.tone !== "quiet")) return null
     cells.push({ item, value, marked, label, unit, last })
   }

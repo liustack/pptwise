@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Component, Slide } from "@/ir"
 import type { ComponentCtx } from "../components/types"
-import { kpiValueText } from "../components/kpi"
+import { kpiFigure } from "../components/kpi"
 import type { findImageSelection } from "./find-image"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
@@ -69,10 +69,10 @@ function figureRows(
   const nodes: React.ReactNode[] = []
   for (const [i, item] of kpis.items.entries()) {
     const top = COLUMN.rowsTop + i * pitch
-    const { text: value, marked } = kpiValueText(item.value)
+    const { text: value, marked, unit } = kpiFigure(item.value, item.unit)
     if (measureTextUnits(value, { fontFamily: fonts.heading }) * COLUMN.value.size > valueW) return null
     const label = fitFixed(item.label, { width: w, size: COLUMN.label.size, lineHeight: COLUMN.label.box, maxLines: 1, fontFamily: fonts.body, bold: false })
-    const caption = [item.unit?.trim(), item.note?.trim()].filter(Boolean).join(ctx.figures?.chinese === false ? ", " : "，")
+    const caption = [unit?.trim(), item.note?.trim()].filter(Boolean).join(ctx.figures?.chinese === false ? ", " : "，")
     const note = caption
       ? fitFixed(caption, { width: w - COLUMN.note.x, size: COLUMN.note.size, lineHeight: COLUMN.note.lineHeight, maxLines: COLUMN.note.maxLines, fontFamily: fonts.body, bold: false })
       : null

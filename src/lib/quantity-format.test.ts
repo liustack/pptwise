@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest"
-import { CHINESE_FIGURES, ENGLISH_FIGURES, groupDigits, joinUnit, wholeValueDecimals, writtenFigure } from "./quantity-format"
+import { CHINESE_FIGURES, ENGLISH_FIGURES, groupDigits, isMultiplierUnit, joinUnit, wholeValueDecimals, writtenFigure } from "./quantity-format"
 
 describe("joinUnit", () => {
+  it("glues a multiplication sign to its figure, as a percent sign is", () => {
+    expect(joinUnit("199", "×")).toBe("199×")
+    expect(joinUnit("3.2", "x")).toBe("3.2x")
+    expect(joinUnit("199", "倍")).toBe("199 倍")
+    expect(isMultiplierUnit(" × ")).toBe(true)
+    expect(isMultiplierUnit("倍")).toBe(false)
+    expect(isMultiplierUnit("xs")).toBe(false)
+  })
+
   it("puts a currency sign in front of the number, after any sign", () => {
     expect(joinUnit("5.35", "$")).toBe("$5.35")
     expect(joinUnit("+0.48", "$")).toBe("+$0.48")

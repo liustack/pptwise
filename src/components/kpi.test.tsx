@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest"
 import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { kpi, rowValueFontSize, splitKpiValueWidths } from "./kpi"
+import { kpi, kpiFigure, rowValueFontSize, splitKpiValueWidths } from "./kpi"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import type { ComponentCtx } from "./types"
 import { CANONICAL_THEME_IDS } from "../themes"
@@ -416,6 +416,23 @@ describe("kpi 冗余单位去重（2026-07-10 无图矩阵真机病型：value �
     const { container } = svg(kpi.render(okComponent, { x: 80, y: 200, w: 1120 }, ctx))
     expect(container.textContent).toContain("128")
     expect(container.textContent).toContain("台")
+  })
+})
+
+describe("a multiplication sign written as the unit", () => {
+  it("joins the figure, set at the figure's size, rather than trailing it as a speck", () => {
+    const component = { type: "kpi_cards" as const, items: [{ value: "**199**", unit: "×", label: "AWS 2025-10 vs the budget" }] }
+    const { container } = svg(kpi.render(component, { x: 80, y: 200, w: 1120 }, ctx))
+    const figure = Array.from(container.querySelectorAll("text")).find((t) => t.textContent?.startsWith("199"))!
+    expect(figure.textContent).toBe("199×")
+    expect(figure.querySelector("tspan")).toBeNull()
+  })
+
+  it("is read the same way by every renderer that draws a kpi figure", () => {
+    expect(kpiFigure("**199**", "×")).toEqual({ text: "199×", marked: true, unit: undefined })
+    expect(kpiFigure("3.2", "x")).toEqual({ text: "3.2x", marked: false, unit: undefined })
+    expect(kpiFigure("199", "倍")).toEqual({ text: "199", marked: false, unit: "倍" })
+    expect(kpiFigure("35%", "%")).toEqual({ text: "35%", marked: false, unit: undefined })
   })
 })
 

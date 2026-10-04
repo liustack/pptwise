@@ -1,5 +1,5 @@
 import { Fragment } from "react"
-import { kpiValueText } from "../components/kpi"
+import { kpiFigure } from "../components/kpi"
 import type { Component } from "@/ir"
 import type { ComponentCtx } from "../components/types"
 import { renderComponent } from "../components"
@@ -69,9 +69,9 @@ export function BigNumber({
   let unitFontSize = 0
   let fittedUnit: string | null = null
   if (hero) {
-    const valueStr = kpiValueText(hero.value).text
+    const { text: valueStr, unit: heroUnit } = kpiFigure(hero.value, hero.unit)
     const valueUnits = measureTextUnits(valueStr)
-    const unitUnits = hero.unit ? measureTextUnits(hero.unit) : 0
+    const unitUnits = heroUnit ? measureTextUnits(heroUnit) : 0
     const valueMaxWidth =
       unitUnits > 0 && valueUnits > 0
         ? Math.floor((rect.w * valueUnits) / (valueUnits + unitUnits))
@@ -88,8 +88,8 @@ export function BigNumber({
     })
     unitFontSize = Math.round(fittedValue.fontSize * 0.4)
     const unitMaxWidth = rect.w - valueMaxWidth
-    fittedUnit = hero.unit
-      ? truncateToUnits(hero.unit, unitMaxWidth / fittedValue.fontSize, { bold: true, fontFamily: ctx.fonts.heading })
+    fittedUnit = heroUnit
+      ? truncateToUnits(heroUnit, unitMaxWidth / fittedValue.fontSize, { bold: true, fontFamily: ctx.fonts.heading })
       : null
   }
   const fittedLabel = hero

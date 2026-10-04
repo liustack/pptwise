@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
-import { kpiValueText } from "../../components/kpi"
-import { ENGLISH_FIGURES, groupDigits, wholeValueDecimals, writtenFigure } from "../../lib/quantity-format"
+import { kpiFigure } from "../../components/kpi"
+import { ENGLISH_FIGURES, groupDigits, joinUnit, wholeValueDecimals, writtenFigure } from "../../lib/quantity-format"
 import type { ComponentCtx } from "../../components/types"
 import { blockTag, compositionTag, type CompositionProps } from "./shared"
 import { fitFixed, paintLines } from "./type"
@@ -110,8 +110,8 @@ interface FittedFigure {
 }
 
 function fitFigure(item: KpiItem, w: number, ctx: ComponentCtx): FittedFigure | null {
-  const { text, marked } = kpiValueText(item.value)
-  const value = item.unit?.trim() ? `${text} ${item.unit.trim()}` : text
+  const { text, marked, unit } = kpiFigure(item.value, item.unit)
+  const value = joinUnit(text, unit?.trim() || undefined)
   const inner = w - FIGURE.pad * 2
   const label = fitMono(item.label, { width: inner - FIGURE.label.x, size: FIGURE.label.size, lineHeight: FIGURE.label.box, maxLines: 1 })
   if (!label) return null

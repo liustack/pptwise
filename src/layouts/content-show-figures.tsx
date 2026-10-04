@@ -1,5 +1,5 @@
 import type { Component } from "@/ir"
-import { kpiValueText } from "../components/kpi"
+import { kpiFigure } from "../components/kpi"
 import { sectionNameFor } from "../lib/derive"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { stripEmphasis } from "../render/emphasis"
@@ -52,12 +52,13 @@ function fitFigure(
   maxWidth: number,
   fontFamily: string,
 ): { text: string; fontSize: number; truncated: boolean; unit: string; unitSize: number; unitDx: number } {
-  const unit = item.unit?.trim() ?? ""
+  const figure = kpiFigure(item.value, item.unit)
+  const unit = figure.unit?.trim() ?? ""
   const unitBudget = unit ? UNIT_SIZE_RATIO + UNIT_GAP_RATIO : 0
-  const valueUnits = measureTextUnits(kpiValueText(item.value).text, { bold: true, fontFamily })
+  const valueUnits = measureTextUnits(figure.text, { bold: true, fontFamily })
   const unitUnits = measureTextUnits(unit, { bold: true, fontFamily }) * UNIT_SIZE_RATIO
   const share = valueUnits + unitUnits > 0 ? valueUnits / (valueUnits + unitUnits + (unit ? UNIT_GAP_RATIO : 0)) : 1
-  const fitted = fitSvgLine(kpiValueText(item.value).text, {
+  const fitted = fitSvgLine(figure.text, {
     maxWidth: unitBudget > 0 ? maxWidth * share : maxWidth,
     fontSize: 140,
     minFontSize: 72,

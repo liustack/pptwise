@@ -9,6 +9,7 @@ import { accessibleInk, accessibleOpacity, graphicInk, resolveSemanticColor, typ
 import { emphasisRunInk, parseEmphasis, stripEmphasis } from "../render/emphasis"
 import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
+import { isMultiplierUnit, joinUnit } from "../lib/quantity-format"
 import { layoutAtSize } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
 import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
@@ -206,8 +207,7 @@ export function rowValueFontSize(
 ): number {
   let smallest = scale.fontSize
   for (const item of items) {
-    const value = kpiValueText(item.value).text
-    const unit = dedupeKpiUnit(value, item.unit)
+    const { text: value, unit } = kpiFigure(item.value, item.unit)
     const { valueMaxWidth } = splitKpiValueWidths(value, unit, availableWidth - reserve(item), scale)
     const { fontSize } = fitSvgLine(value, {
       maxWidth: valueMaxWidth,
@@ -245,6 +245,20 @@ export function dedupeKpiUnit(
   if (!unit) return unit
   const u = unit.trim()
   return u && value.trim().endsWith(u) ? undefined : unit
+}
+
+/**
+ * A kpi item's figure and the unit set after it, the way every renderer that
+ * draws the unit apart reads them. A unit the value already ends with is
+ * dropped (`dedupeKpiUnit`). A multiplication sign joins the figure ("199×"):
+ * it is how the number is written, and set as a unit at under half the
+ * figure's size its small glyph reads as a speck.
+ */
+export function kpiFigure(value: string | number, unit: string | undefined): { text: string; marked: boolean; unit: string | undefined } {
+  const { text, marked } = kpiValueText(value)
+  const own = dedupeKpiUnit(text, unit)
+  if (isMultiplierUnit(own)) return { text: joinUnit(text, own!.trim()), marked, unit: undefined }
+  return { text, marked, unit: own }
 }
 
 /** Pitch of a source line under the label, and under the source line before it. */
@@ -445,8 +459,7 @@ export const kpi: SvgComponent<KpiComponent> = {
           // rendered text is separately truncated to fit the width share it
           // was allotted at its own (smaller) font size — together the two
           // bounds keep the card from overflowing at any value/unit length.
-          const { text: valueStr, marked } = kpiValueText(item.value)
-          const unit = dedupeKpiUnit(valueStr, item.unit)
+          const { text: valueStr, marked, unit } = kpiFigure(item.value, item.unit)
           const { valueMaxWidth, unitMaxWidth } = splitKpiValueWidths(
             valueStr,
             unit,

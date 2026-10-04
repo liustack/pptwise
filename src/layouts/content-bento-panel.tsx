@@ -23,9 +23,8 @@ import {
 } from "../lib/svg-text-layout"
 import { Icon } from "../render/icons"
 import {
-  dedupeKpiUnit,
   deltaProps,
-  kpiValueText,
+  kpiFigure,
   fitKpiUnit,
   splitKpiValueWidths,
   type KpiValueScale,
@@ -293,9 +292,9 @@ function fitBentoKpiValue(
   const valueSize = hero ? BENTO_KPI_HERO_VALUE_SIZE : BENTO_KPI_VALUE_SIZE
   // Same value/unit width split as kpi.tsx. The value keeps its budget when
   // the number and unit cannot both fit.
-  const valueStr = kpiValueText(item.value).text
-  // 冗余单位去重（同 components/kpi.tsx：value 已含 unit 结尾时丢弃，防 "35%%"）。
-  const unit = dedupeKpiUnit(valueStr, item.unit)
+  // Read as components/kpi.tsx reads it: a unit the value already ends with is
+  // dropped ("35%%"), a multiplication sign joins the figure.
+  const { text: valueStr, unit } = kpiFigure(item.value, item.unit)
   const valueScale: KpiValueScale = {
     fontSize: valueSize,
     minFontSize: BENTO_KPI_VALUE_MIN_SIZE,

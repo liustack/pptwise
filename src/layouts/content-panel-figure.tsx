@@ -3,7 +3,7 @@ import type { Component, Slide } from "@/ir"
 import type { ComponentCtx } from "../components/types"
 import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
-import { kpiValueText } from "../components/kpi"
+import { kpiFigure, kpiValueText } from "../components/kpi"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { stepAside } from "../render/step-aside"
@@ -81,17 +81,17 @@ function drawPage(slide: Slide, ctx: ComponentCtx, page: SvgTemplateProps["page"
   const top = body.y
 
   // The lead figure.
-  const { text: value } = kpiValueText(shape.lead.value)
+  const { text: value, unit: leadUnit } = kpiFigure(shape.lead.value, shape.lead.unit)
   const size = LEAD.figure.sizes.find((s) => measureTextUnits(value, { fontFamily: fonts.heading }) * s <= LEAD.width)
   if (size === undefined) return null
   const label = fitFixed(shape.lead.label, { width: LEAD.width, size: LEAD.label.size, lineHeight: LEAD.label.box, maxLines: 1, fontFamily: fonts.body, bold: false })
-  const unit = shape.lead.unit?.trim()
-    ? fitFixed(shape.lead.unit, { width: LEAD.width, size: LEAD.unit.size, lineHeight: LEAD.unit.box, maxLines: 1, fontFamily: fonts.heading, bold: false })
+  const unit = leadUnit?.trim()
+    ? fitFixed(leadUnit, { width: LEAD.width, size: LEAD.unit.size, lineHeight: LEAD.unit.box, maxLines: 1, fontFamily: fonts.heading, bold: false })
     : null
   const note = shape.lead.note?.trim()
     ? fitFixed(shape.lead.note, { width: LEAD.note.width, size: LEAD.note.size, lineHeight: LEAD.note.lineHeight, maxLines: LEAD.note.maxLines, fontFamily: fonts.body, bold: false })
     : null
-  if (!label || (shape.lead.unit?.trim() && !unit) || (shape.lead.note?.trim() && !note)) return null
+  if (!label || (leadUnit?.trim() && !unit) || (shape.lead.note?.trim() && !note)) return null
   const figureTop = top + LEAD.figure.top
   const nodes: React.ReactNode[] = [
     <g key="label">

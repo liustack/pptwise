@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import type { ComponentCtx } from "../../components/types"
-import { isCurrencyUnit, isPercentUnit, joinUnit } from "../../lib/quantity-format"
+import { isCurrencyUnit, isMultiplierUnit, isPercentUnit, joinUnit } from "../../lib/quantity-format"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { headingEmphasisPaint, renderEmphasisText, stripEmphasis, type EmphasisHeadingLayout } from "../../render/emphasis"
 import { accessibleInk } from "../../render/ink"
@@ -60,7 +60,7 @@ export function fitFigure(
   if (!written) return null
   const unitText = item.unit?.trim()
   const ownUnit = unitText && !written.endsWith(unitText) ? unitText : undefined
-  const inline = ownUnit !== undefined && (isPercentUnit(ownUnit) || isCurrencyUnit(ownUnit))
+  const inline = ownUnit !== undefined && (isPercentUnit(ownUnit) || isCurrencyUnit(ownUnit) || isMultiplierUnit(ownUnit))
   const value = inline ? joinUnit(written, ownUnit) : written
   const unit = inline ? undefined : ownUnit
   const valueW = measureTextUnits(value, { fontFamily, bold }) * size

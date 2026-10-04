@@ -1,7 +1,8 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import type { ComponentCtx } from "../../components/types"
-import { kpiValueText } from "../../components/kpi"
+import { kpiFigure } from "../../components/kpi"
+import { joinUnit } from "../../lib/quantity-format"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { blockTag, compositionTag, type CompositionProps } from "./shared"
 import { fitFixed, paintLines } from "./type"
@@ -351,8 +352,8 @@ function figurePanels(kpis: KpiCards, side: { x: number; y: number; w: number; h
   const inks = consoleInks(ctx)
   const inner = side.w - FIGURE_PANEL.pad * 2
   const fitted = kpis.items.map((item) => {
-    const { text, marked } = kpiValueText(item.value)
-    const value = item.unit?.trim() ? `${text} ${item.unit.trim()}` : text
+    const { text, marked, unit } = kpiFigure(item.value, item.unit)
+    const value = joinUnit(text, unit?.trim() || undefined)
     const label = fitFixed(item.label, { width: inner - FIGURE_PANEL.label.x, size: FIGURE_PANEL.label.size, lineHeight: FIGURE_PANEL.label.box, maxLines: 1, fontFamily: ctx.fonts.body, bold: false })
     const note = item.note?.trim() ? fitFixed(item.note, { width: inner, size: FIGURE_PANEL.note.size, lineHeight: FIGURE_PANEL.note.lineHeight, maxLines: FIGURE_PANEL.note.maxLines, fontFamily: ctx.fonts.body, bold: false }) : null
     const fits = label !== null && (!item.note?.trim() || note !== null) && monoWidth(value, FIGURE_PANEL.value.size) <= inner
