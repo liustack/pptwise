@@ -81,6 +81,9 @@ export const VERMILION_TOKENS: StyleTokens = {
     danger: "#8C1810", // 深朱。kpi 箭头当字，压 surface 8.79:1，答 4.5
     warning: "#8E6A18", // 金压深。只作线与图标，压 surface 4.69:1，不答文字门槛
     success: "#4C6B3C", // 松绿。kpi 箭头当字，压 surface 5.70:1，答 4.5
+    // `**…**` 标出的那一处落正红。金只给线、压 bg 2.26:1 承不了字，强调
+    // 原先回落到 accent，对比表里标出的那句成了金字。
+    emphasisInk: "#B02318",
     // 四格只作图系列与色块。c0、c2、c3 可作徽章底，字走 readableOn 并答 4.5。
     // c1 同 accent，只给线，压 bg 2.26:1，永不承字，不答文字门槛。
     chartPalette: ["#B02318", "#C79A3B", "#4A5C6E", "#66754F"], // 正红/金/靛灰/松绿

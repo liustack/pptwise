@@ -505,6 +505,18 @@ describe("comparison marks and a recommended column", () => {
     expect(svg(comparison.render(options, box, lecture)).container.querySelector("[data-emphasis-underline]")).not.toBeNull()
   })
 
+  it("paints a marked run on vermilion in a colour that reads as text, not its gold", () => {
+    // vermilion's accent is a gold kept for rules (2.26:1 on its paper). A
+    // marked run fell back to it, so the one phrase a page marked was the
+    // hardest one to read.
+    const vermilion = boundThemeCtx("vermilion", {})
+    const { container } = svg(comparison.render(options, box, vermilion))
+    const tspan = Array.from(container.querySelectorAll("tspan")).find((t) => t.textContent === "18% lower")
+    const fill = tspan?.getAttribute("fill") ?? textOf(container, "18% lower").getAttribute("fill")!
+    expect(fill.toLowerCase()).not.toBe(vermilion.colors.accent.toLowerCase())
+    expect(contrastRatio(fill, vermilion.defaultBg ?? vermilion.colors.bg)).toBeGreaterThanOrEqual(4.5)
+  })
+
   it("measures a marked cell without its asterisks", () => {
     const plain = { ...options, rows: options.rows.map((row) => ({ ...row, cells: row.cells.map((cell) => cell.replaceAll("**", "")) })) }
     expect(comparison.measure(options, 520, brief)).toBe(comparison.measure(plain, 520, brief))
