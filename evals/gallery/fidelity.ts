@@ -189,9 +189,12 @@ export interface PageFidelity {
  * the break between them rather than as a glyph, and says so on the label's
  * last line (`data-gloss-break`): the scan reads the separator back where it
  * stood, so the colon is accounted for without folding colons anywhere else.
+ * A face that draws the mark opening a cell (「✓ 能」) as an icon says which
+ * glyph the icon stands for on the text after it (`data-mark-lead`), and the
+ * scan reads it back in front.
  */
 function elementText(el: Element): string {
-  return (el.textContent ?? "") + (el.getAttribute("data-gloss-break") ?? "")
+  return (el.getAttribute("data-mark-lead") ?? "") + (el.textContent ?? "") + (el.getAttribute("data-gloss-break") ?? "")
 }
 
 /**
