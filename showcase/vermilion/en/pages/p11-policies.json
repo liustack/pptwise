@@ -1,0 +1,57 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "milestones": [
+        {
+          "date": "Jan 7",
+          "title": "AI Plus manufacturing",
+          "desc": "Action plan from eight ministries",
+          "lane": "Industry and jobs"
+        },
+        {
+          "date": "Jan 20",
+          "title": "Small-firm loan subsidy",
+          "desc": "1.5 pt a year, up to two years",
+          "lane": "Industry and jobs"
+        },
+        {
+          "date": "Jan 29",
+          "title": "Services spending plan",
+          "desc": "Issued by the State Council",
+          "lane": "Spending"
+        },
+        {
+          "date": "Jul 13",
+          "title": "Consumption plan to 2030",
+          "desc": "Retail sales about ¥60tn by 2030",
+          "lane": "Spending"
+        },
+        {
+          "date": "Aug 21",
+          "title": "Bigger loan subsidies",
+          "desc": "Caps up to ¥5,000 per consumer, ¥75m per firm",
+          "highlight": true,
+          "lane": "Spending"
+        },
+        {
+          "date": "Sep 28",
+          "title": "State Council meeting",
+          "desc": "More relending for tech upgrades",
+          "lane": "Industry and jobs"
+        }
+      ],
+      "lanes": [
+        "Spending",
+        "Industry and jobs"
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Most relevant to us: the August top-up lifts subsidized loans per firm to ¥75m"
+    }
+  ],
+  "footnote": "Source: policy documents from the State Council, MIIT and the Ministry of Finance, and State Council meeting releases (January–September 2026). Dates are publication dates",
+  "notes": "This year's added policies run along two lines. Spending: in January the State Council issued a plan to grow new areas of services consumption, in July it approved a plan to expand consumption over 2026–2030 that aims for retail sales of about ¥60 trillion by 2030, and in August the Ministry of Finance and others raised the yearly cap on interest subsidies for personal consumer loans from ¥3,000 to ¥5,000 and the subsidized loan amount per small firm from ¥50 million to ¥75 million, effective August 1. Industry and jobs: in January the Ministry of Industry and Information Technology and seven other agencies launched an AI Plus manufacturing action plan, and small and micro firms got a loan interest subsidy of 1.5 points a year for up to two years. In June the State Council issued a five-year employment-first plan. On September 28 a State Council executive meeting called for making good use of unused local government debt quota and more central bank relending for technology innovation and equipment upgrades."
+}

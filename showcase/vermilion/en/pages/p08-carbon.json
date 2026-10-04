@@ -1,0 +1,35 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "17",
+          "unit": "%",
+          "label": "15th Plan: cut in CO2 per unit of GDP over five years",
+          "tag": {
+            "text": "Binding"
+          },
+          "note": "The 14th Plan's cut for the same measure was 18%. The 2025 yearly target was energy, and from 2026 it is carbon."
+        },
+        {
+          "value": "About 3.8%",
+          "label": "2026 carbon intensity target",
+          "note": "Replaces 2025's \"energy use per unit of GDP down about 3%\""
+        },
+        {
+          "value": "25%",
+          "label": "Non-fossil share of energy by 2030",
+          "note": "21.7% in 2025, newly in the main table"
+        },
+        {
+          "value": "Dropped",
+          "label": "Energy intensity",
+          "note": "The text still calls for energy use per unit of GDP to fall about 10%"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: 15th Five-Year Plan Outline (March 2026), 14th Five-Year Plan Outline (March 2021), 2025 and 2026 Government Work Reports",
+  "notes": "The point is a change of lead measure, not a brand-new constraint. Carbon intensity was already binding in the 14th Plan, with an 18% cut over five years. What changed: energy intensity left the main table and survives only in the text, which still calls for energy use per unit of GDP to fall about 10% (单位GDP能耗下降10%左右). The non-fossil share of energy use became a new binding target, 25% by 2030. The yearly target moved too: 2025 asked energy use per unit of GDP to fall about 3%, and 2026 asks CO2 per unit of GDP to fall about 3.8%. The Plan also calls for zero-carbon factories and industrial parks (建设零碳工厂和园区), and the Work Report sets up a national low-carbon transition fund. For energy-heavy plants, the account to keep is now carbon emitted, not just energy used."
+}

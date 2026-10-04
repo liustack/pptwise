@@ -1,0 +1,71 @@
+{
+  "components": [
+    {
+      "type": "insight_panel",
+      "title": "Growth",
+      "rows": [
+        {
+          "label": "No five-year growth figure",
+          "text": "\"Kept in a reasonable range, set year by year\""
+        }
+      ],
+      "footnote": "20 main indicators: 12 expected, 8 binding"
+    },
+    {
+      "type": "from_to",
+      "from": {
+        "title": "2025"
+      },
+      "to": {
+        "title": "2030"
+      },
+      "label_column": "Measure",
+      "rows": [
+        {
+          "label": "Urbanization rate",
+          "from": "67.9",
+          "to": "71",
+          "unit": "%"
+        },
+        {
+          "label": "Core digital economy, share of GDP",
+          "from": "10.5",
+          "to": "12.5",
+          "unit": "%"
+        },
+        {
+          "label": "Non-fossil share of energy use",
+          "from": "21.7",
+          "to": "25",
+          "unit": "%",
+          "tag": {
+            "text": "Newly listed"
+          },
+          "emphasis": true
+        },
+        {
+          "label": "Nursing beds in care homes",
+          "from": "68",
+          "to": "73",
+          "unit": "%",
+          "tag": {
+            "text": "New"
+          }
+        },
+        {
+          "label": "High-value patents per 10k people",
+          "from": "16",
+          "to": ">22"
+        },
+        {
+          "label": "Life expectancy",
+          "from": "79.25",
+          "to": "80",
+          "unit": "years"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: 15th Five-Year Plan Outline, Table 1 (March 2026). The digital economy base is 2024 data",
+  "notes": "The Plan lists 20 main indicators: 12 expected and 8 binding. GDP growth has no five-year figure. The text says growth will be kept in a reasonable range and set year by year (国内生产总值增长保持在合理区间、各年度视情提出). The targets with numbers fall into three groups. Structure: urbanization to 71% and the core digital economy to 12.5% of GDP. Green: the non-fossil share of energy use to 25%, a binding target that is new to the main table. Welfare: new targets for the share of nursing beds in elderly care homes and a 6-point rise in childcare enrolment for under-threes, and registered nurses were added to the health workforce target. Dropped from the main table: energy intensity, the pension coverage rate, childcare places and the share of good air-quality days, among others. The digital economy base of 10.5% is a 2024 figure, starred in the Plan's table."
+}

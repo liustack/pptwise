@@ -1,0 +1,59 @@
+{
+  "components": [
+    {
+      "type": "scorecard",
+      "labels": {
+        "metric": "Measure",
+        "target": "2025 target",
+        "actual": "2025 actual",
+        "gap": "Gap",
+        "status": "Verdict"
+      },
+      "rows": [
+        {
+          "label": "GDP growth",
+          "target": "About 5%",
+          "actual": "5.0%",
+          "gap": "Level",
+          "status": "on_track",
+          "status_label": "Met"
+        },
+        {
+          "label": "New urban jobs",
+          "target": "Over 12 million",
+          "actual": "12.67 million",
+          "gap": "+0.67 million",
+          "status": "on_track",
+          "status_label": "Met"
+        },
+        {
+          "label": "Unemployment",
+          "target": "About 5.5%",
+          "actual": "5.2% average",
+          "gap": "0.3 pt lower",
+          "status": "on_track",
+          "status_label": "Met"
+        },
+        {
+          "label": "Consumer prices",
+          "target": "Up about 2%",
+          "actual": "Flat on 2024",
+          "gap": "About 2 pt short",
+          "status": "off_track",
+          "status_label": "Missed"
+        },
+        {
+          "label": "Energy intensity",
+          "target": "Down about 3%",
+          "actual": "Down 5.1%",
+          "gap": "2.1 pt better",
+          "status": "on_track",
+          "status_label": "Met"
+        }
+      ],
+      "note": "Grain output of 1.43 trillion jin and real income growth of 5.0% were also met"
+    }
+  ],
+  "footnote": "Source: 2025 and 2026 Government Work Reports, NBS 2025 Statistical Communiqué (February 28, 2026)",
+  "notes": "The 2025 targets, one by one. GDP grew 5% to ¥140.19 trillion. Cities added 12.67 million jobs, and surveyed unemployment averaged 5.2%. Grain output was 1.43 trillion jin, about 715 million tonnes. Energy use per unit of GDP fell 5.1%, beating the target of about 3%. Real per-capita disposable income grew 5.0%, matching GDP. The one clear miss was prices: the target was a rise of about 2%, and the statistics bureau's words were that consumer prices were flat for the year, while producer prices fell 2.6%. That is why this year's report says it wants to turn the overall price level positive (推动价格总水平由负转正)."
+}

@@ -1,0 +1,31 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "factory",
+      "fit": "cover"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**¥200bn**",
+          "label": "Equipment upgrade funds (ultra-long bonds)",
+          "note": "Allocated"
+        },
+        {
+          "value": "1.5 pt",
+          "label": "Yearly loan subsidy for small firms",
+          "note": "Up to two years"
+        },
+        {
+          "value": "¥75m",
+          "label": "Subsidized loan cap per firm",
+          "note": "From Aug 1, was ¥50m"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Ministry of Finance (January and August 2026). Illustration, AI-generated",
+  "notes": "For manufacturers, equipment upgrades are the most direct and usable line this year. The 2026 budget puts ¥200 billion of ultra-long special bonds into large-scale equipment upgrades, and the Ministry of Finance said on August 21 that it had been allocated. Equipment purchases grew 11.8% in 2025, one of the few bright spots in investment. On financing, small and micro firms get a loan interest subsidy of 1.5 points a year for up to two years, and since August the subsidized amount per firm is up to ¥75 million, from ¥50 million. The AI Plus manufacturing action plan from January points the same way, so upgrades and automation can be planned together. The picture is an AI-generated illustration and shows no real factory."
+}
