@@ -148,3 +148,17 @@ describe("columns composition", () => {
     expect(draw(wide, { rect: { ...NOTICE_PLOT, w: 300 } }).element).toBeNull()
   })
 })
+
+describe("columns leave a chart with a marked value range to the ordinary chart", () => {
+  it("declines in every setting it draws, alone and beside figures", async () => {
+    const { railComposition } = await import("./rail")
+    const banded = retail({ bands: [{ from: 50, to: 80, label: "Target" }] })
+    const figures = { type: "kpi_cards", items: [{ value: "71%", label: "Share" }] }
+    for (const setting of [undefined, "notice", "grid", "panel"] as const) {
+      expect(renderComposition(columnsComposition, [banded], { setting, rect: NOTICE_PLOT }).element, String(setting)).toBeNull()
+      // A rail that hands its plot to the ordinary chart keeps the range.
+      const rail = renderComposition(railComposition, [banded, figures], { setting })
+      if (rail.element) expect(rail.markup, String(setting)).toContain("data-chart-band")
+    }
+  })
+})

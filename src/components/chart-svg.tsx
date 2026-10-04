@@ -1,7 +1,7 @@
 import type { ReactElement } from "react"
 import type { ChartSeries, Component } from "@/ir"
 import { CHART_AXIS_LIMIT } from "@/ir/components/chart"
-import { accessibleInk } from "../render/ink"
+import { accessibleInk, blendOver } from "../render/ink"
 import { recededMarkFill } from "../render/chart-palette"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import { figureStyleOf, groupDigits, joinUnit, wholeValueDecimals, writtenFigure, type FigureStyle } from "../lib/quantity-format"
@@ -586,6 +586,71 @@ function directLabelText(point: ChartSeries["data"][number], figures: FigureStyl
 function chartFigure(value: number, figures: FigureStyle | boolean): string {
   const wholeDecimals = typeof figures === "boolean" ? 0 : (figures.wholeDecimals ?? 0)
   return groupDigits(writtenFigure(value, wholeDecimals), figures)
+}
+
+/** The ends of the chart's marked value ranges (`bands`), which its value axis grows to hold. */
+function bandEnds(component: ChartInput | undefined): number[] {
+  return (component?.bands ?? []).flatMap((band) => [band.from, band.to])
+}
+
+/** A band's label: 16px, one line, inside the range's top-left corner when it is tall enough to hold it. */
+const BAND_LABEL_SIZE = 16
+const BAND_LABEL_INSET = 12
+
+/**
+ * Paints the chart's marked value ranges across the plot, behind the data: a
+ * pale tint of the accent between the two ends, and the range's label in its
+ * top-left corner, or over it when the range is too shallow to hold a line.
+ */
+function renderValueBands(opts: {
+  component: ChartInput | undefined
+  domain: { min: number; max: number }
+  plotX: number
+  plotY: number
+  plotW: number
+  plotH: number
+  accentColor: string
+  textColor: string
+  bgHex: string | undefined
+  fontFamily: string | undefined
+}): ReactElement | null {
+  const bands = opts.component?.bands
+  if (!bands || bands.length === 0) return null
+  const ground = opts.bgHex ?? "#FFFFFF"
+  const fill = blendOver(opts.accentColor, ground, 0.16)
+  return (
+    <g data-chart-bands="">
+      {bands.map((band, k) => {
+        const yTop = mapToPlotY(Math.max(band.from, band.to), opts.domain, opts.plotY, opts.plotH)
+        const yBottom = mapToPlotY(Math.min(band.from, band.to), opts.domain, opts.plotY, opts.plotH)
+        const label = band.label?.trim()
+          ? fitSvgLine(band.label.trim(), { maxWidth: opts.plotW - BAND_LABEL_INSET * 2, fontSize: BAND_LABEL_SIZE, minFontSize: BAND_LABEL_SIZE, bold: true, fontFamily: opts.fontFamily })
+          : null
+        const inside = yBottom - yTop >= BAND_LABEL_SIZE + 10
+        const labelY = inside ? yTop + BAND_LABEL_SIZE + 4 : yTop - 6
+        const labelGround = inside ? fill : ground
+        return (
+          <g key={`band-${k}`} data-chart-band="">
+            <rect x={opts.plotX} y={yTop} width={opts.plotW} height={Math.max(1, yBottom - yTop)} fill={fill} />
+            {label && (
+              <text
+                data-truncated={label.truncated ? "1" : undefined}
+                x={opts.plotX + BAND_LABEL_INSET}
+                y={labelY}
+                fontFamily={opts.fontFamily}
+                fontSize={label.fontSize}
+                fontWeight="700"
+                fill={accessibleInk(blendOver(opts.textColor, opts.accentColor, 0.45), labelGround, label.fontSize)}
+                dominantBaseline="alphabetic"
+              >
+                {label.text}
+              </text>
+            )}
+          </g>
+        )
+      })}
+    </g>
+  )
 }
 
 function directLabelWidth(text: string, fontFamily?: string): number {
@@ -1274,7 +1339,7 @@ export function renderBar(
   const n = model.series.length
   const meta = cartesianMeta(component, series, figures)
   if (pastAxisLimit(keptValues(model.series))) return <WholeShareDeclined />
-  const yAxis = buildNumericAxis(keptValues(model.series), "zero-max", meta.yUnit, meta.figures)
+  const yAxis = buildNumericAxis([...keptValues(model.series), ...bandEnds(component)], "zero-max", meta.yUnit, meta.figures)
   const domain: ChartDomain = { min: yAxis.domain.min, max: yAxis.domain.max, degenerate: yAxis.domain.max <= yAxis.domain.min }
   // Brackets for the author's `changes` take a band over the plot, so the
   // plot and its value labels start under them.
@@ -1381,6 +1446,18 @@ export function renderBar(
         yTickMaxW: Math.max(0, geom.leftGutter - TICK_TO_AXIS_GAP),
         axisColor: axisColor ?? mutedColor,
         mutedColor,
+        fontFamily,
+      })}
+      {renderValueBands({
+        component,
+        domain: yAxis.domain,
+        plotX: geom.plotX,
+        plotY: geom.plotY,
+        plotW: geom.plotW,
+        plotH: geom.plotH,
+        accentColor: accentColor,
+        textColor,
+        bgHex: _bgHex,
         fontFamily,
       })}
       {categories.map((cat, i) => {
@@ -1490,7 +1567,8 @@ export function renderLine(
   const meta = cartesianMeta(component, series, figures)
   const values = keptValues(model.series)
   if (pastAxisLimit(values)) return <WholeShareDeclined />
-  const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit, meta.figures)
+  const banded = [...values, ...bandEnds(component)]
+  const yAxis = buildNumericAxis(banded, valueAxisMode(banded), meta.yUnit, meta.figures)
   const geom = layoutCartesianPlot({
     x0,
     y0,
@@ -1643,6 +1721,18 @@ export function renderLine(
         gridW: gutters.dataW,
         axisColor: axisColor ?? mutedColor,
         mutedColor,
+        fontFamily,
+      })}
+      {renderValueBands({
+        component,
+        domain: yAxis.domain,
+        plotX: geom.plotX,
+        plotY: geom.plotY,
+        plotW: geom.plotW,
+        plotH: geom.plotH,
+        accentColor: accentColor,
+        textColor,
+        bgHex: bgHex,
         fontFamily,
       })}
       {seriesEnds.map((end) => {
@@ -3151,7 +3241,8 @@ export function renderArea(
   const meta = cartesianMeta(component, series, figures)
   const values = keptValues(model.series)
   if (pastAxisLimit(values)) return <WholeShareDeclined />
-  const yAxis = buildNumericAxis(values, valueAxisMode(values), meta.yUnit, meta.figures)
+  const banded = [...values, ...bandEnds(component)]
+  const yAxis = buildNumericAxis(banded, valueAxisMode(banded), meta.yUnit, meta.figures)
   const geom = layoutCartesianPlot({
     x0,
     y0,
@@ -3240,6 +3331,18 @@ export function renderArea(
         gridW: gutters.dataW,
         axisColor: axisColor ?? mutedColor,
         mutedColor,
+        fontFamily,
+      })}
+      {renderValueBands({
+        component,
+        domain: yAxis.domain,
+        plotX: geom.plotX,
+        plotY: geom.plotY,
+        plotW: geom.plotW,
+        plotH: geom.plotH,
+        accentColor: _accentColor,
+        textColor,
+        bgHex: bgHex,
         fontFamily,
       })}
       {model.series.map((s) => {

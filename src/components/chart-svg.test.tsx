@@ -2319,3 +2319,31 @@ describe("value labels keep the decimals the author wrote", () => {
     expect(whole).toEqual(expect.arrayContaining(["100", "200", "150"]))
   })
 })
+
+describe("value bands", () => {
+  const quarters: ChartSeries[] = [
+    { name: "GDP", data: [{ x: "Q1", y: 5.4 }, { x: "Q2", y: 5.2 }, { x: "Q3", y: 4.8 }, { x: "Q4", y: 4.5 }, { x: "Q1 26", y: 5.0 }, { x: "Q2 26", y: 4.3 }] },
+  ]
+  const component = { type: "chart", chart_type: "line", series: quarters, axes: { y_unit: "%" }, bands: [{ from: 4.5, to: 5, label: "Target range" }] } as unknown as ChartComponentFixture
+
+  it("tints the range across the plot behind the line, with its label in it", () => {
+    for (const render of [renderLine, renderArea]) {
+      const { container } = svg(render(quarters, PALETTE, 0, 0, W, 360, MUTED, TEXT, ACCENT, true, component, "#FFFFFF"))
+      const band = container.querySelector("[data-chart-band] rect")!
+      expect(band).not.toBeNull()
+      expect(Number(band.getAttribute("height"))).toBeGreaterThan(20)
+      expect(container.querySelector("[data-chart-band] text")!.textContent).toBe("Target range")
+      // Drawn before the data, so the data paints over it.
+      const all = Array.from(container.querySelectorAll("rect, polyline, path"))
+      const line = all.find((el) => el.tagName === "polyline" || el.tagName === "path")
+      expect(all.indexOf(band)).toBeLessThan(all.indexOf(line!))
+    }
+  })
+
+  it("grows the value axis to hold a range past the data", () => {
+    const high = { ...component, bands: [{ from: 6, to: 7, label: "Stretch" }] } as unknown as ChartComponentFixture
+    const { container } = svg(renderBar(quarters, PALETTE, 0, 0, W, 360, MUTED, TEXT, ACCENT, false, high, "#FFFFFF"))
+    const band = container.querySelector("[data-chart-band] rect")!
+    expect(Number(band.getAttribute("y"))).toBeGreaterThanOrEqual(0)
+  })
+})

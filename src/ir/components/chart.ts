@@ -395,6 +395,24 @@ export const schema = z
           "With `at`, from and to name two series and `at` the category where their bars are compared. The change is set beside the later bar. " +
           "A change that ends on the marked series is set in the lead colour. Bar and stacked charts only.",
       ),
+    /** Value ranges marked across the plot. See the describe below. */
+    bands: z
+      .array(
+        z
+          .object({
+            from: z.number().describe("Where the range starts on the value axis."),
+            to: z.number().describe("Where it ends."),
+            label: z.string().optional().describe('What the range is, printed in it, such as "2026 年目标区间 4.5%—5%" or "Target range".'),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(2)
+      .optional()
+      .describe(
+        "Up to two value ranges marked across the plot behind the data, such as a target range a line should stay in. Each runs from `from` to `to` on the value axis, which grows to hold it, and may carry a short `label`. " +
+          "line, area and upright bar charts only. Write a range this way rather than as two flat series at its edges.",
+      ),
     series: z.array(
       z
         .object({
@@ -429,6 +447,25 @@ export const schema = z
   })
   .strict()
   .superRefine((c, ctx) => {
+    if (c.bands !== undefined) {
+      const banded = c.chart_type === "line" || c.chart_type === "area" || (c.chart_type === "bar" && c.direction !== "horizontal")
+      if (!banded) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["bands"],
+          message: `bands mark a range across a value axis that runs up the page, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart has none. Use chart_type "line", "area" or an upright "bar", or state the range in the page's text.`,
+        })
+      }
+      c.bands.forEach((band, k) => {
+        if (!Number.isFinite(band.from) || !Number.isFinite(band.to) || band.from === band.to) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["bands", k],
+            message: `bands[${k}] runs from ${band.from} to ${band.to}, which is no range. Give it two different ends.`,
+          })
+        }
+      })
+    }
     // A line or an area series carries its identity at the end of its own
     // line — `name value` in the label gutter, which is the only place those
     // two types name a series now that neither draws a legend. A series with

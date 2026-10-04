@@ -142,7 +142,8 @@ interface Column {
 function columnsShape(components: readonly Component[]): Chart | null {
   if (components.length !== 1) return null
   const chart = components[0]!
-  if (chart.type !== "chart") return null
+  // A marked value range has no place on a plot with no value axis: the ordinary chart draws it.
+  if (chart.type !== "chart" || chart.bands) return null
   if (chart.chart_type === "bar") {
     if (chart.direction === "horizontal") return null
     if (chart.series.length < 1 || chart.series.length > MAX_SERIES) return null

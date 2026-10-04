@@ -69,7 +69,8 @@ interface Column {
 
 /** Whether a chart is one of the column charts this panel draws. */
 export function columnsChart(chart: Component): chart is Chart {
-  if (chart.type !== "chart" || chart.direction === "horizontal") return false
+  // A marked value range has no place on a plot with no value axis: the ordinary chart draws it.
+  if (chart.type !== "chart" || chart.direction === "horizontal" || chart.bands) return false
   if (chart.axes?.x_title) return false
   if (!chart.series.every((s) => s.data.every((point) => typeof point.x === "string" && point.y >= 0 && point.status === undefined))) return false
   if (chart.chart_type === "bar") return chart.series.length === 1

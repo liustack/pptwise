@@ -235,6 +235,7 @@ A page usually argues about one thing. These fields let the author say which, an
 | --- | --- | --- |
 | `chart.series[].data[].status` | `"forecast"` hatches the bar, `"target"` draws it as a dashed outline over a pale tint. A series that mixes statuses gets a Forecast or Target legend entry, and a forecast's value label says so. | `bar` and `stacked` only |
 | `chart.series[].data[].emphasis` | the one bar the page is about, such as the latest year in a run of years: it keeps its series' colour and the other bars step back | `bar` only, one point per chart, not beside a marked series |
+| `chart.bands` | `[{ "from": 4.5, "to": 5, "label": "Target range" }]` tints a value range across the plot behind the data, labelled inside it, and the value axis grows to hold it. Write a target range this way rather than as two flat series | `line`, `area` and upright `bar`, at most 2 |
 | `chart.changes` | `[{ "from": "2025 Q3", "to": "2026 Q3" }]` draws a bracket over two columns with the change between them (relative, or in points on a `%` axis). With `"at": "BYD"`, `from` and `to` name two series compared at that category. A horizontal chart writes the change after the later bar. | `bar` and `stacked`, at most 3. A horizontal chart needs `at`, a stacked one must not have it |
 | `numbered_cards.items[].emphasis` | the one card the page lands on: its pill is filled | at most one |
 | `gantt.items[].text` and `emphasis` | a line under the stretch's label, and the one stretch the page is about | at most one marked |
