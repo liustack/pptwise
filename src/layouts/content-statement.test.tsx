@@ -126,6 +126,22 @@ describe("StatementContent", () => {
     expect(Number(attr.getAttribute("font-size"))).toBeGreaterThanOrEqual(16)
   })
 
+  it("sets a quote and its source on every theme, a theme's one-line skin stepping aside for them", () => {
+    // vermilion's skin, like every theme's, sets one line under the claim,
+    // and printed the source alone: the quote never reached the page.
+    const slide: Slide = {
+      ...zeroSlide,
+      heading: "增长目标改成区间",
+      components: [{ type: "blockquote", text: "在实际工作中努力争取更好结果", attribution: "2026 年政府工作报告" }],
+    } as Slide
+    for (const theme of ["vermilion", "swiss", "ledger", "brief"]) {
+      const ctx = boundThemeCtx(theme, {})
+      const { markup } = render(<StatementContent ir={ir(theme, [slide])} slide={slide} index={0} ctx={ctx} />)
+      expect(markup, theme).toContain("在实际工作中努力争取更好结果")
+      expect(markup, theme).toContain("2026 年政府工作报告")
+    }
+  })
+
   it("empty subheading and 0 components: no empty text node, heading still renders", () => {
     const ctx = boundThemeCtx("brief", {})
     const { root } = render(

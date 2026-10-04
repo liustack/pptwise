@@ -38,8 +38,18 @@ const QUOTE_ATTR_GAP = 40
 
 export function StatementContent(props: SvgTemplateProps) {
   const Face = sparseFace("statement", props.ir.theme.id)
-  if (Face) return Face(props)
+  // A theme's skin sets one line under the claim (`statementAttribution`).
+  // A quote with its source is two texts, and the skin printed the source
+  // alone, so the quote went unpainted with nothing to say so. That page
+  // steps aside to this face's own drawing, which sets both.
+  if (Face && !quotesWithSource(props.slide)) return Face(props)
   return GenericStatementContent(props)
+}
+
+/** Whether the page quotes someone and names them: two texts under the claim. */
+function quotesWithSource(slide: SvgTemplateProps["slide"]): boolean {
+  const { quote, source } = statementLines(slide)
+  return Boolean(quote && source)
 }
 
 function GenericStatementContent({ ir, slide, index, ctx }: SvgTemplateProps) {
