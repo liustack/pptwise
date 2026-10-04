@@ -24,7 +24,7 @@ function exactKpis(slide: SvgTemplateProps["slide"]): KpiCards | null {
   if (only?.type !== "kpi_cards") return null
   // Each column has one line under its figure, the source or the delta. A
   // note the author wrote as well has no place, so the page goes elsewhere.
-  if (only.items.some((item) => item.note?.trim() || item.tag)) return null
+  if (only.items.some((item) => item.note?.trim() || item.tag || item.tone)) return null
   return only.items.length >= 2 && only.items.length <= 4 ? only : null
 }
 

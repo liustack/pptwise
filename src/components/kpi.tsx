@@ -517,7 +517,7 @@ export const kpi: SvgComponent<KpiComponent> = {
                   x={cardX + 20}
                   y={cardY + 12 + contentShift}
                   size={18}
-                  color={graphicInk(ctx.colors.primary, ctx.colors.surface)}
+                  color={graphicInk(item.tone ? resolveSemanticColor(item.tone, ctx.colors) : ctx.colors.primary, ctx.colors.surface)}
                 />
               )}
               <text
@@ -555,7 +555,9 @@ export const kpi: SvgComponent<KpiComponent> = {
                 x={cardX + 20}
                 y={cardY + 96 + contentShift}
                 fontSize={fittedLabel.fontSize}
-                fill={ctx.colors.muted}
+                // A tone (`danger`, `warning`, `success`) says what kind of
+                // news the figure is, and the label carries it.
+                fill={item.tone ? accessibleInk(resolveSemanticColor(item.tone, ctx.colors), ctx.colors.surface, fittedLabel.fontSize) : ctx.colors.muted}
                 fontFamily={ctx.fonts.body}
                 dominantBaseline="alphabetic"
               >

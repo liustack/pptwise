@@ -70,7 +70,7 @@ function tickerShape(components: readonly Component[]): KpiCards | null {
   const kpis = components[0]!
   if (kpis.type !== "kpi_cards") return null
   if (kpis.items.length < MIN_ITEMS || kpis.items.length > MAX_ITEMS) return null
-  if (kpis.items.some((item) => item.icon !== undefined || item.source !== undefined || item.tag !== undefined)) return null
+  if (kpis.items.some((item) => item.icon !== undefined || item.source !== undefined || item.tag !== undefined || item.tone !== undefined)) return null
   return kpis
 }
 

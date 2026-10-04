@@ -167,10 +167,11 @@ export function paintFigure(
   )
 }
 
-/** Whether an item is one these figures can set whole: no delta arrow, no icon, no source line. */
+/** Whether an item is one these figures can set whole: no delta arrow, no icon, no source line, no tag, no tone. */
 export function plainFigure(item: KpiItem): boolean {
-  // A tag has no place beside a set figure: the ordinary cards print it.
-  return item.delta === undefined && item.icon === undefined && !item.source?.trim() && item.tag === undefined
+  // A tag has no place beside a set figure, and a tone no ink of its own
+  // here: the ordinary cards print both.
+  return item.delta === undefined && item.icon === undefined && !item.source?.trim() && item.tag === undefined && item.tone === undefined
 }
 
 /** Curly or straight quotation marks an author may have written around the words. */

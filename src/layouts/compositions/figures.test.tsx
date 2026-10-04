@@ -110,3 +110,12 @@ describe("figures leave a tagged figure to the ordinary cards", () => {
     }
   })
 })
+
+describe("figures leave a toned figure to the ordinary cards", () => {
+  it("declines in every setting it draws", () => {
+    const toned = kpis(ITEMS.map((item, i) => (i === 0 ? { ...(item as object), tone: "danger" } : item)))
+    for (const setting of [undefined, "notice", "grid", "panel"] as const) {
+      expect(renderComposition(figuresComposition, [toned], { setting }).element, String(setting)).toBeNull()
+    }
+  })
+})

@@ -51,7 +51,7 @@ function figurePage(components: readonly Component[]): KpiCards | null {
   const [only, ...rest] = components
   if (only?.type !== "kpi_cards" || rest.length > 0) return null
   if (only.items.length < 1 || only.items.length > 4) return null
-  if (only.items.some((item) => item.delta !== undefined || item.icon !== undefined || item.source?.trim())) return null
+  if (only.items.some((item) => item.delta !== undefined || item.icon !== undefined || item.source?.trim() || item.tone !== undefined)) return null
   if (only.items.slice(1).some((item) => item.tag)) return null
   return only
 }

@@ -101,7 +101,7 @@ function exactKpiBlock(slide: SvgTemplateProps["slide"]): KpiCards | null {
   const only = slide.components[0]
   // A column's one line under its figure is the source or the delta, so an
   // item that also carries a note goes to the component renderer.
-  if (only?.type === "kpi_cards" && only.items.some((item) => item.note?.trim() || item.tag)) return null
+  if (only?.type === "kpi_cards" && only.items.some((item) => item.note?.trim() || item.tag || item.tone)) return null
   return only?.type === "kpi_cards" ? only : null
 }
 

@@ -796,3 +796,18 @@ describe("kpi_cards item tag", () => {
     }
   })
 })
+
+describe("kpi_cards item tone", () => {
+  it("paints a toned figure's icon and label in the theme's ink for the tone", () => {
+    const terminal = boundThemeCtx("terminal", {})
+    const item = { value: "7+", unit: "months", label: "Two AWS regions in the Middle East", icon: "flame" as const, tone: "danger" as const }
+    const markup = renderToStaticMarkup(<svg>{kpi.render({ type: "kpi_cards", items: [item, { value: "5/8", label: "One change everywhere" }] }, { x: 0, y: 0, w: 900 }, terminal)}</svg>)
+    const danger = terminal.colors.danger!
+    expect(markup).toContain(`stroke="${danger}"`)
+    const label = new DOMParser().parseFromString(markup, "image/svg+xml").querySelectorAll("text")
+    const toned = Array.from(label).find((t) => t.textContent === "Two AWS regions in the Middle East")!
+    expect(toned.getAttribute("fill")).toBe(accessibleInk(danger, terminal.colors.surface, 16))
+    const plain = Array.from(label).find((t) => t.textContent === "One change everywhere")!
+    expect(plain.getAttribute("fill")).toBe(terminal.colors.muted)
+  })
+})

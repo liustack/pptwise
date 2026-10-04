@@ -1968,3 +1968,10 @@ describe("timeline milestone icon and tone", () => {
     expect(parseOne({ type: "timeline", milestones: [{ date: "06:48", title: "DNS emptied", tone: "red" }] }).success).toBe(false)
   })
 })
+
+describe("kpi_cards item tone", () => {
+  it("takes a tone on a figure", () => {
+    expect(parseOne({ type: "kpi_cards", items: [{ value: "7+", label: "Months", tone: "danger" }] }).success).toBe(true)
+    expect(parseOne({ type: "kpi_cards", items: [{ value: "7+", label: "Months", tone: "red" }] }).success).toBe(false)
+  })
+})
