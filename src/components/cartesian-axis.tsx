@@ -1,6 +1,6 @@
 import type { ReactElement } from "react"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
-import { groupDigits, joinUnit, type FigureStyle } from "../lib/quantity-format"
+import { groupDigits, isPercentUnit, joinUnit, type FigureStyle } from "../lib/quantity-format"
 
 /**
  * Shared cartesian plot frame (scatter / bubble / line / area / bar).
@@ -178,7 +178,7 @@ export function buildNumericAxis(
   const min = values.length ? Math.min(...values) : 0
   const max = values.length ? Math.max(...values) : 1
   const domain = paddedDomain(min, max, mode)
-  const ticks = niceTicks(domain.min, domain.max)
+  const ticks = withinWhole(niceTicks(domain.min, domain.max), min, max, unit)
   const needLo = mode === "zero-max" ? Math.min(0, min) : min
   const needHi = mode === "zero-max" ? Math.max(0, max) : max
   if (!ticksCover(ticks, needLo, needHi)) {
@@ -189,6 +189,20 @@ export function buildNumericAxis(
     ticks,
     labels: ticks.map((t) => formatAxisTick(t, unit, figures)),
   }
+}
+
+/**
+ * A percent axis whose values all lie between 0 and 100 stops at 100%.
+ *
+ * The padding over the top value is headroom for a bar or a dot, and on a
+ * share or a completion rate it pushed a chart that reaches 100% out to a
+ * 150% that no value can mean. A tick past 100 is dropped when 100 is
+ * itself a tick, which every nice step of 10, 20, 25 or 50 gives.
+ */
+function withinWhole(ticks: number[], min: number, max: number, unit: string | undefined): number[] {
+  if (!isPercentUnit(unit) || min < 0 || max > 100) return ticks
+  const whole = ticks.indexOf(100)
+  return whole >= 0 && whole < ticks.length - 1 ? ticks.slice(0, whole + 1) : ticks
 }
 
 /**
