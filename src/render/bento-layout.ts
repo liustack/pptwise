@@ -46,7 +46,9 @@ export interface BentoCell {
 export function explodeIntoUnits(components: Component[]): BentoUnit[] {
   const units: BentoUnit[] = []
   for (const component of components) {
-    if (component.type === "kpi_cards") {
+    // A figure with a tag stays in its ordinary cards, which print the tag:
+    // the exploded tile has no place for one.
+    if (component.type === "kpi_cards" && !component.items.some((item) => item.tag)) {
       for (const item of component.items) units.push({ kind: "kpi-item", item, component })
     } else if (component.type === "icon_cards") {
       for (const item of component.items)

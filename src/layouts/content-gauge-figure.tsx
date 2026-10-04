@@ -94,7 +94,7 @@ function figureItems(slide: SvgTemplateProps["slide"]): { hero: KpiItem; side: K
   const only = slide.components[0]!
   if (only.type !== "kpi_cards" || only.items.length < 1 || only.items.length > 1 + SIDE_MAX) return null
   const [hero, ...side] = only.items
-  if (!hero!.value.trim() || hero!.delta !== undefined || hero!.icon !== undefined || hero!.note?.trim()) return null
+  if (!hero!.value.trim() || hero!.delta !== undefined || hero!.icon !== undefined || hero!.note?.trim() || hero!.tag) return null
   if (side.some((item) => !plainFigure(item) || item.note?.trim())) return null
   return { hero: hero!, side }
 }

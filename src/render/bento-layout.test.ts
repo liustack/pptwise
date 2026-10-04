@@ -579,3 +579,11 @@ describe("sortUnitsByHeroWeight", () => {
     })
   })
 })
+
+describe("explodeIntoUnits keeps a tagged figure in its cards", () => {
+  it("passes a kpi_cards with a tagged item through whole, for the ordinary cards to print the tag", async () => {
+    const { explodeIntoUnits } = await import("./bento-layout")
+    const tagged = { type: "kpi_cards", items: [{ value: "17%", label: "a", tag: { text: "Binding" } }, { value: "3.8%", label: "b" }] } as never
+    expect(explodeIntoUnits([tagged]).map((unit) => unit.kind)).toEqual(["component"])
+  })
+})

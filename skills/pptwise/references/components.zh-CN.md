@@ -124,6 +124,7 @@ pptwise schema --component <type>
 - 需要逐行读取精确值时用 `data_table`，需要一眼看懂数值形态时用 `chart`，定性属性对照用 `comparison`。
 - `data_table`、`comparison`、`timeline` 需要自己的名字时写 `title`，就像报告给表格起名（「自由现金流」）。它印在块的上方，把块放进面板的主题则印在面板标题栏里。
 - 一个值对一个目标用 `chart` 内的 `gauge`，多个完成度百分比用 `progress_donuts`，一个或多个独立头条数字用 `kpi_cards`。
+- `kpi_cards` 的每一项可以写 `tag`，用几个字说这个数是什么，比如「约束性指标」「估计」（`{ "text": "约束性指标" }`），印成数字旁的小标签，这一页标出的那个数的标签会填满。
 - `kpi_cards` 的每一项可以写 `note`，交代这个数字的口径：比的基数、时间段，或背后的计数。数字出自哪里写进 `source`。图表页要点名它讲的数字，就在 `chart` 后面跟一到两项 `kpi_cards`，需要收束时再跟一个 `callout` 或 `blockquote`。会在图旁排数字栏的主题直接用作者写的数字，不再自己推算。
 - 每个类别的总量和它由哪几块组成都要看时用 `chart` 内的 `stacked`。只比构成、各类别总量相差太大没法比分块时用 `percent_stacked`，系列要并排比而不是相加时用 `bar`。
 - 两个指标共用一条类别轴时用 `chart` 内的 `combo`，比如按季度看收入和毛利率。单位不同的那个指标放到 `axis: "right"`。两个指标的类别对不上时拆成两张图。

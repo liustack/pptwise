@@ -769,3 +769,30 @@ describe("kpi marked value", () => {
     expect(plain.getAttribute("fill")).toBe(themed.colors.text)
   })
 })
+
+describe("kpi_cards item tag", () => {
+  const tagged = {
+    type: "kpi_cards" as const,
+    items: [
+      { value: "**17%**", label: "Carbon intensity cut, 2026–2030", tag: { text: "Binding" } },
+      { value: "3.8%", label: "2026 carbon intensity target", tag: { text: "New" } },
+      { value: "25%", label: "Non-fossil share by 2030" },
+    ],
+  }
+
+  it("sets a figure's tag on a row of its own under the label, and grows every card by it", () => {
+    for (const id of ["vermilion", "brief", "ember"]) {
+      const themed = boundThemeCtx(id, {})
+      const plain = { ...tagged, items: tagged.items.map(({ tag: _tag, ...item }) => item) }
+      expect(kpi.measure(tagged, 1088, themed), id).toBeGreaterThan(kpi.measure(plain, 1088, themed))
+      const { container } = svg(kpi.render(tagged, { x: 0, y: 0, w: 1088 }, themed))
+      const tags = Array.from(container.querySelectorAll("g[data-tag]"))
+      expect(tags.map((t) => t.textContent), id).toEqual(["Binding", "New"])
+      // The marked figure's tag fills in the emphasis colour, the other is an outline.
+      expect(tags[0]!.getAttribute("data-tag"), id).toBe("marked")
+      expect(tags[1]!.querySelector("rect")!.getAttribute("fill"), id).toBe("none")
+      const label = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "Carbon intensity cut, 2026–2030")!
+      expect(Number(tags[0]!.querySelector("rect")!.getAttribute("y")), id).toBeGreaterThan(Number(label.getAttribute("y")))
+    }
+  })
+})

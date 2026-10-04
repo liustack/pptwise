@@ -101,3 +101,12 @@ describe("figures composition without notes", () => {
     expect(Array.from(root!.querySelectorAll("line")).map((line) => line.getAttribute("y2"))).toEqual(["335", "335"])
   })
 })
+
+describe("figures leave a tagged figure to the ordinary cards", () => {
+  it("declines in every setting it draws", () => {
+    const tagged = kpis(ITEMS.map((item, i) => (i === 0 ? { ...(item as object), tag: { text: "新增" } } : item)))
+    for (const setting of [undefined, "notice", "grid", "panel"] as const) {
+      expect(renderComposition(figuresComposition, [tagged], { setting }).element, String(setting)).toBeNull()
+    }
+  })
+})

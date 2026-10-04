@@ -344,7 +344,7 @@ export function figureInk(ctx: ComponentCtx, item: KpiItem, marked: boolean, val
  * it at 15px within two lines. `null` when the panel cannot hold it whole.
  */
 export function fitFigurePanel(item: KpiItem, place: Place, ctx: ComponentCtx, chinese: boolean, sizes: readonly number[] = FIGURE_SIZES): FigurePanel | null {
-  if (item.icon !== undefined || item.source !== undefined) return null
+  if (item.icon !== undefined || item.source !== undefined || item.tag !== undefined) return null
   const { text: value, marked } = kpiValueText(item.value)
   if (!value.trim()) return null
   const bar = fitPanelBar(item.label, undefined, place.w, ctx)
@@ -429,7 +429,7 @@ export function paintFigurePanel(layout: FigurePanel, place: Place, ctx: Compone
 
 /** Whether a kpi_cards item can stand in a figure panel. */
 export function panelFigureItem(item: KpiItem): boolean {
-  return item.icon === undefined && item.source === undefined && kpiValueText(item.value).text.trim() !== ""
+  return item.icon === undefined && item.source === undefined && item.tag === undefined && kpiValueText(item.value).text.trim() !== ""
 }
 
 // ── Note panels ───────────────────────────────────────────────────────────

@@ -11,6 +11,7 @@ import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { layoutAtSize } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
+import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
 
 type KpiComponent = Extract<Component, { type: "kpi_cards" }>
 
@@ -274,7 +275,14 @@ function noteLines(item: KpiComponent["items"][number], cardW: number): { lines:
   return item.note?.trim() ? fitSource(item.note.trim(), cardW, NOTE_MAX_LINES) : null
 }
 
-/** 任一 item 带 source 来源行时卡加高（label 下再排一行 11px 小字），来源折成几行就加几行。note 行同理，排在来源之前。 */
+/**
+ * A tag (`items[].tag`) says what the figure is in a few words, 「约束性指标」
+ * or "Binding". It stands on a row of its own under the label, before the
+ * note and the source, and the card grows by that row.
+ */
+const TAG_ROW = 36
+
+/** 任一 item 带 source 来源行时卡加高（label 下再排一行 11px 小字），来源折成几行就加几行。note 行同理，排在来源之前。标签行排在 note 之前。 */
 function baseCardH(component: KpiComponent, cardW: number, maxLines = SOURCE_MAX_LINES): number {
   const lines = Math.max(
     0,
@@ -282,7 +290,8 @@ function baseCardH(component: KpiComponent, cardW: number, maxLines = SOURCE_MAX
       (it) => (noteLines(it, cardW)?.lines.length ?? 0) + (it.source ? fitSource(it.source, cardW, maxLines).lines.length : 0),
     ),
   )
-  return lines > 0 ? CARD_H + SOURCE_LINE * lines : CARD_H
+  const tagRow = component.items.some((it) => it.tag) ? TAG_ROW : 0
+  return (lines > 0 ? CARD_H + SOURCE_LINE * lines : CARD_H) + tagRow
 }
 
 function cardWidth(boxW: number, cols: number): number {
@@ -484,6 +493,11 @@ export const kpi: SvgComponent<KpiComponent> = {
           const fittedSource = item.source ? fitSource(item.source, cardW, sourceCap) : null
           const fittedNote = noteLines(item, cardW)
           const noteShift = (fittedNote?.lines.length ?? 0) * SOURCE_LINE
+          // Every card in the row moves its note and source under the tag row
+          // when any card has a tag, so the rows stay on one line across cards.
+          const tagShift = rawComponent.items.some((it) => it.tag) ? TAG_ROW : 0
+          const tagSpec = ordinaryTagSpec(ctx)
+          const tagFits = item.tag ? tagWidth(item.tag.text, tagSpec) <= cardW - 40 : true
           return (
             <g key={i}>
               <rect
@@ -547,12 +561,24 @@ export const kpi: SvgComponent<KpiComponent> = {
               >
                 {fittedLabel.text}
               </text>
+              {item.tag &&
+                (tagFits ? (
+                  paintTag({
+                    tag: item.tag,
+                    x: cardX + 20,
+                    y: cardY + 106 + contentShift,
+                    spec: tagSpec,
+                    inks: tagInks(ctx, item.tag, marked, ctx.colors.surface, tagSpec.size),
+                  })
+                ) : (
+                  <g data-dropped={1} data-dropped-kind="label" />
+                ))}
               {fittedNote?.lines.map((line, li) => (
                 <text
                   key={`note-${li}`}
                   data-truncated={fittedNote.truncated && li === fittedNote.lines.length - 1 ? "1" : undefined}
                   x={cardX + 20}
-                  y={cardY + 114 + li * SOURCE_LINE + contentShift}
+                  y={cardY + 114 + tagShift + li * SOURCE_LINE + contentShift}
                   fontSize={16}
                   fill={accessibleInk(ctx.colors.text, ctx.colors.surface, 16)}
                   fontFamily={ctx.fonts.body}
@@ -566,7 +592,7 @@ export const kpi: SvgComponent<KpiComponent> = {
                   key={`source-${li}`}
                   data-truncated={fittedSource.truncated && li === fittedSource.lines.length - 1 ? "1" : undefined}
                   x={cardX + 20}
-                  y={cardY + 114 + noteShift + li * SOURCE_LINE + contentShift}
+                  y={cardY + 114 + tagShift + noteShift + li * SOURCE_LINE + contentShift}
                   fontSize={16}
                   fill={ctx.colors.muted}
                   // Post-v0.3 W8 fix round (backlog item "D", task-2 review

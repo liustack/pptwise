@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { IconNameSchema } from "./shared"
+import { IconNameSchema, TagSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -18,6 +18,9 @@ export const schema = z
             .describe(
               "One short line that puts the figure in context: the base it is measured from, the period, or the counts behind it. Where the figure came from belongs in source.",
             ),
+          tag: TagSchema.optional().describe(
+            "What the figure is, in a few words printed as a small tag with it, such as 约束性指标 or Binding. A tag on the figure the page marks fills in the emphasis colour.",
+          ),
           delta: z.enum(["up", "down", "flat"]).optional(),
           icon: IconNameSchema.optional(),
           /** 数据来源小字（财经信任语言，2026-07-12 借鉴），如
