@@ -1718,6 +1718,31 @@ export function fitSvgLine(
   }
 }
 
+/**
+ * Wrapped lines joined back into one, with the blank the source had where a
+ * line broke at a space. A wrap drops the space it breaks at, so lines joined
+ * with nothing between them ran words together ("below the" + "target" as
+ * "below thetarget"), and the joined line measured a space narrower than the
+ * words it holds. A break inside a run, such as between two Chinese
+ * characters or inside a token too long for a line, keeps nothing between.
+ */
+export function rejoinWrapped(lines: readonly string[], source: string): string {
+  let joined = lines[0] ?? ""
+  for (let i = 1; i < lines.length; i += 1) {
+    const tail = Array.from(lines[i - 1]!).slice(-16).join("")
+    const head = Array.from(lines[i]!).slice(0, 16).join("")
+    const escape = (part: string) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    const gap = tail !== "" && head !== "" ? new RegExp(`${escape(tail)}(\\s+)${escape(head)}`, "u").exec(source)?.[1] : undefined
+    // A blank inside a paragraph stays. A paragraph break becomes a blank
+    // between two Latin words and nothing beside a Chinese character, the way
+    // the two paragraphs read run together.
+    const cjkEdge = /[\u3000-\u303f\u3400-\u9fff\uff00-\uffef]/u
+    const spaced = gap !== undefined && (!gap.includes("\n") || !(cjkEdge.test(Array.from(tail).pop() ?? "") || cjkEdge.test(Array.from(head)[0] ?? "")))
+    joined += (spaced ? " " : "") + lines[i]!
+  }
+  return joined
+}
+
 export function layoutSvgText(
   text: string | undefined,
   options: SvgTextLayoutOptions
@@ -1773,7 +1798,7 @@ export function layoutSvgText(
   if (legacyLines.length > maxLines) {
     legacyLines = [
       ...legacyLines.slice(0, maxLines - 1),
-      legacyLines.slice(maxLines - 1).join(""),
+      rejoinWrapped(legacyLines.slice(maxLines - 1), content),
     ]
     orphanFixed = false
   }
@@ -1902,7 +1927,7 @@ export function layoutSvgText(
     const refit = wrapWithUnits(content, maxUnitsAtFloor, weight)
     let fitted = refit.lines
     if (fitted.length > maxLines) {
-      const rest = fitted.slice(maxLines - 1).join("")
+      const rest = rejoinWrapped(fitted.slice(maxLines - 1), content)
       const last = truncateToUnits(rest, maxUnitsAtFloor, weight)
       truncated = last !== rest
       fitted = [...fitted.slice(0, maxLines - 1), last]
