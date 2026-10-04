@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { CHINESE_FIGURES, ENGLISH_FIGURES, groupDigits, joinUnit } from "./quantity-format"
+import { CHINESE_FIGURES, ENGLISH_FIGURES, groupDigits, joinUnit, wholeValueDecimals, writtenFigure } from "./quantity-format"
 
 describe("joinUnit", () => {
   it("puts a currency sign in front of the number, after any sign", () => {
@@ -64,5 +64,16 @@ describe("groupDigits", () => {
     expect(groupDigits("-2050", false)).toBe("-2,050")
     expect(groupDigits("0.12345", false)).toBe("0.12345")
     expect(groupDigits("1234.5678", false)).toBe("1,234.5678")
+  })
+})
+
+describe("wholeValueDecimals", () => {
+  it("gives a whole value the fewest decimals a value with a fraction carries", () => {
+    expect(wholeValueDecimals([5.4, 5.2, 5, 4.3])).toBe(1)
+    expect(wholeValueDecimals([5.66, 4.4, 1.3, 0.5])).toBe(1)
+    expect(wholeValueDecimals([100, 200])).toBe(0)
+    expect(writtenFigure(5, 1)).toBe("5.0")
+    expect(writtenFigure(4.4, 1)).toBe("4.4")
+    expect(writtenFigure(5.66, 1)).toBe("5.66")
   })
 })

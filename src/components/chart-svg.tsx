@@ -4,7 +4,7 @@ import { CHART_AXIS_LIMIT } from "@/ir/components/chart"
 import { accessibleInk } from "../render/ink"
 import { recededMarkFill } from "../render/chart-palette"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
-import { figureStyleOf, groupDigits, joinUnit, type FigureStyle } from "../lib/quantity-format"
+import { figureStyleOf, groupDigits, joinUnit, wholeValueDecimals, writtenFigure, type FigureStyle } from "../lib/quantity-format"
 import { changeText } from "../lib/change-figure"
 import { mostlyChinese } from "../lib/text-script"
 import { StatusMark, statusGround, type PointStatus } from "../render/mark-status"
@@ -201,7 +201,9 @@ function chartChinese(series: readonly ChartSeries[]): boolean {
  * chart's own words.
  */
 function chartFigures(series: readonly ChartSeries[], figures: FigureStyle | undefined): FigureStyle {
-  return figures ?? figureStyleOf(chartChinese(series))
+  const style = figures ?? figureStyleOf(chartChinese(series))
+  const wholeDecimals = wholeValueDecimals(series.flatMap((s) => s.data.map((point) => point.y)))
+  return wholeDecimals > 0 ? { ...style, wholeDecimals } : style
 }
 
 /** One end of a bracket: where its leg stands, how high it reaches, and the value it reads. */
@@ -577,10 +579,13 @@ function directLabelText(point: ChartSeries["data"][number], figures: FigureStyl
 /**
  * A value as a chart prints it: as the author wrote it, its whole part
  * grouped the way the chart's language prints a figure (`groupDigits`),
- * "2,778" on an English chart and 「8490」 on a Chinese one.
+ * "2,778" on an English chart and 「8490」 on a Chinese one, and a whole value
+ * with the decimals the chart's other values carry (`wholeDecimals`), 「1.0」
+ * beside 「1.3」 where it used to print 「1」.
  */
 function chartFigure(value: number, figures: FigureStyle | boolean): string {
-  return groupDigits(String(value), figures)
+  const wholeDecimals = typeof figures === "boolean" ? 0 : (figures.wholeDecimals ?? 0)
+  return groupDigits(writtenFigure(value, wholeDecimals), figures)
 }
 
 function directLabelWidth(text: string, fontFamily?: string): number {

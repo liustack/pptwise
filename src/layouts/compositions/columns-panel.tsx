@@ -7,7 +7,7 @@ import { measureTextUnits } from "../../lib/svg-text-layout"
 import { accessibleInk } from "../../render/ink"
 import { SmallText, deltaGlyph, fitPanelBar, paintPanel, panelInks, panelSeriesInk, panelText, type Place } from "./panel"
 import { blockTag } from "./shared"
-import { anyMeet, boxesMeet, chartFigures, niceCeil, plotNumber, pointDecimals, reportedDecimals, textBox, type InkBox } from "./plot"
+import { anyMeet, boxesMeet, chartFigures, niceCeil, plotNumber, pointDecimals, reportedDecimals, textBox, valueDecimals, type InkBox } from "./plot"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Series = Chart["series"][number]
@@ -208,7 +208,7 @@ export function columnsPanel(chart: Chart, place: Place, ctx: ComponentCtx): Rea
     const markedHere = !stacked && point?.emphasis === true
     const text = stacked
       ? plotNumber(column.total, figures, Math.max(...barSeries.map((s) => pointDecimals(s.data.find((p) => p.x === column.name) ?? { x: "", y: 0 }, decimals))))
-      : plotNumber(lone, figures, decimals)
+      : plotNumber(lone, figures, valueDecimals(lone, decimals))
     const size = stacked ? STACK.totalSize : BAR.valueSize
     const bold = markedHere || (stacked && changeEnds.has(column.name))
     const ink = markedHere ? inks.mark : stacked ? ctx.colors.text : ctx.colors.muted

@@ -1925,7 +1925,7 @@ describe("renderPie — direct slice labels", () => {
     expect(texts.length).toBeGreaterThan(0)
     expect(texts.length).toBeLessThan(40)
     // Whatever survives is the biggest, and none of it collides.
-    expect(texts).toContain("细分0 40")
+    expect(texts).toContain("细分0 40.0")
     expectNoOverlap(container)
     // The wedges stay and their names go, which is the trade this layout
     // makes. What it may not do is make the trade invisible.
@@ -2296,5 +2296,26 @@ describe("renderDumbbell: the end value of a row that fell", () => {
     const label = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "9.6")!
     expect(label.getAttribute("text-anchor")).toBeNull()
     expect(Number(label.getAttribute("x"))).toBeGreaterThan(Number(rose!.getAttribute("cx")))
+  })
+})
+
+describe("value labels keep the decimals the author wrote", () => {
+  // JSON keeps no trailing zero, so an author's 1.0 reaches the chart as 1.
+  // A whole value prints with the decimals its neighbours carry.
+  it("prints a whole value beside tenths with its tenth", () => {
+    const series: ChartSeries[] = [
+      { name: "H1", data: [{ x: "CPI", y: 1.0 }, { x: "PPI", y: 1.5 }, { x: "Retail", y: 1.3 }] },
+    ]
+    const { container } = svg(renderBar(series, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const labels = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+    expect(labels).toEqual(expect.arrayContaining(["1.0", "1.5", "1.3"]))
+  })
+
+  it("leaves a value with a fraction as written, and a chart of whole values whole", () => {
+    const mixed: ChartSeries[] = [{ name: "2025", data: [{ x: "A", y: 5.66 }, { x: "B", y: 4.4 }, { x: "C", y: 1 }] }]
+    const texts = Array.from(svg(renderBar(mixed, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT)).container.querySelectorAll("text")).map((t) => t.textContent)
+    expect(texts).toEqual(expect.arrayContaining(["5.66", "4.4", "1.0"]))
+    const whole = Array.from(svg(renderBar(seriesOf(100, 200, 150), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT)).container.querySelectorAll("text")).map((t) => t.textContent)
+    expect(whole).toEqual(expect.arrayContaining(["100", "200", "150"]))
   })
 })

@@ -4,7 +4,7 @@ import type { ComponentCtx } from "../../components/types"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { accessibleInk, readableOn } from "../../render/ink"
 import { SmallText, fitPanelBar, paintPanel, panelInks, panelSeriesInk, panelText, type Place } from "./panel"
-import { chartFigures, plotNumber, reportedDecimals } from "./plot"
+import { chartFigures, plotNumber, reportedDecimals, valueDecimals } from "./plot"
 import { blockTag } from "./shared"
 
 type Chart = Extract<Component, { type: "chart" }>
@@ -51,7 +51,7 @@ export function barsPanel(chart: Chart, place: Place, ctx: ComponentCtx): React.
   const body = ctx.fonts.body
   const figures = chartFigures(chart, ctx)
   const decimals = reportedDecimals(chart)
-  const values = data.map((point) => plotNumber(point.y, figures, decimals))
+  const values = data.map((point) => plotNumber(point.y, figures, valueDecimals(point.y, decimals)))
   const nameW = Math.max(...data.map((point) => measureTextUnits(String(point.x), { fontFamily: body, bold: point.emphasis === true }) * ROWS.size))
   const valueW = Math.max(...values.map((text, i) => measureTextUnits(text, { fontFamily: body, bold: data[i]!.emphasis === true }) * ROWS.size))
   const barX = place.x + ROWS.pad + Math.max(ROWS.nameColumn, nameW + ROWS.pad)
@@ -115,7 +115,7 @@ export function compareBarsPanel(
     const marked = point.emphasis === true
     const w = (point.y / max) * room
     const fill = marked ? inks.mark : quiet
-    const text = plotNumber(point.y, figures, decimals)
+    const text = plotNumber(point.y, figures, valueDecimals(point.y, decimals))
     const textW = measureTextUnits(text, { fontFamily: body, bold: true }) * COMPARE.valueSize
     if (textW + COMPARE.valueInset * 2 > w) return null
     const label = String(point.x)
