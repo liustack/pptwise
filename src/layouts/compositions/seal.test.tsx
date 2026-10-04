@@ -7,10 +7,15 @@ import type { ComponentCtx } from "../../components/types"
 import { columnsComposition } from "./columns"
 import { lanesComposition } from "./lanes"
 import { railComposition } from "./rail"
+import { ringsComposition } from "./rings"
+import { rosterComposition } from "./roster"
 import { rowsComposition } from "./rows"
+import { scoresComposition } from "./scores"
 import { sealInks, sealSeriesInk } from "./seal"
 import { tableComposition } from "./table"
+import { targetsComposition } from "./targets"
 import { tilesComposition } from "./tiles"
+import { trendComposition } from "./trend"
 import type { Composition } from "./shared"
 import { byText, renderComposition, texts, textOf } from "./__fixtures__/kit"
 
@@ -39,6 +44,22 @@ const summary = [
       { title: "今年以来：增长在区间内，投资偏弱", text: "上半年 GDP 增长 4.7%，1–8 月固定资产投资 −7.2%，PPI 由负转正到 +2.0%。" },
       { title: "对我们：跟着政策的钱和约束走", text: "盯服务消费和设备更新政策，提前算碳账，稳住出口。", emphasis: true },
     ],
+  },
+]
+
+/** p03: a scorecard of five goals, one off track, its headers named. */
+const scorecard = [
+  {
+    type: "scorecard",
+    labels: { metric: "指标", target: "2025 年目标", actual: "2025 年实际", gap: "差距", status: "判断" },
+    rows: [
+      { label: "经济增长", target: "5% 左右", actual: "5.0%", gap: "持平", status: "on_track", status_label: "完成" },
+      { label: "城镇新增就业", target: "1200 万人以上", actual: "1267 万人", gap: "+67 万人", status: "on_track", status_label: "完成" },
+      { label: "城镇调查失业率", target: "5.5% 左右", actual: "平均 5.2%", gap: "低 0.3 个百分点", status: "on_track", status_label: "完成" },
+      { label: "居民消费价格", target: "涨幅 2% 左右", actual: "与上年持平", gap: "低约 2 个百分点", status: "off_track", status_label: "未完成" },
+      { label: "单位 GDP 能耗", target: "降低 3% 左右", actual: "降低 5.1%", gap: "超 2.1 个百分点", status: "on_track", status_label: "完成" },
+    ],
+    note: "粮食产量 1.43 万亿斤、居民收入实际增长 5.0%，也都完成",
   },
 ]
 
@@ -75,6 +96,48 @@ const fiscal = [
       { value: "**2300 亿元**", label: "赤字比上年增加", note: "赤字 5.89 万亿元，赤字率 4% 左右" },
       { value: "30 万亿元", label: "一般公共预算支出", note: "首次达到" },
       { value: "11.89 万亿元", label: "新增政府债务合计", note: "上年 11.86 万亿元" },
+    ],
+  },
+]
+
+const TASKS = [
+  "着力建设强大国内市场",
+  "加紧培育壮大新动能",
+  "加快高水平科技自立自强",
+  "持续深化重点领域改革",
+  "进一步扩大高水平对外开放",
+  "扎实推进乡村全面振兴",
+  "推动新型城镇化和区域协调发展",
+  "更大力度保障和改善民生",
+  "加快推动全面绿色转型",
+  "加强重点领域风险防范化解和安全能力建设",
+]
+/** p06: ten tasks, the first marked, over a note. */
+const tasks = [
+  { type: "numbered_cards", items: TASKS.map((title, i) => ({ title, ...(i === 0 ? { emphasis: true } : {}) })) },
+  { type: "callout", variant: "info", text: "顺序变化：民生由 2025 年的第十位移到第八位，风险防范由第六位移到第十位" },
+]
+
+/** p07: the plan's statement in a block beside its targets. */
+const plan = [
+  {
+    type: "insight_panel",
+    title: "经济增长",
+    rows: [{ label: "不设五年数值目标", text: "「保持在合理区间、各年度视情提出」" }],
+    footnote: "20 项主要指标中，12 项预期性，8 项约束性",
+  },
+  {
+    type: "from_to",
+    from: { title: "2025 年" },
+    to: { title: "2030 年" },
+    label_column: "指标",
+    rows: [
+      { label: "常住人口城镇化率", from: "67.9", to: "71", unit: "%" },
+      { label: "数字经济核心产业占 GDP 比重", from: "10.5", to: "12.5", unit: "%" },
+      { label: "非化石能源占能源消费比重", from: "21.7", to: "25", unit: "%", tag: { text: "新入表" }, emphasis: true },
+      { label: "养老机构护理型床位占比", from: "68", to: "73", unit: "%", tag: { text: "新增" } },
+      { label: "每万人口高价值发明专利", from: "16", to: "＞22", unit: "件" },
+      { label: "人均预期寿命", from: "79.25", to: "80", unit: "岁" },
     ],
   },
 ]
@@ -130,6 +193,19 @@ const policies = [
   { type: "callout", variant: "info", text: "最相关的是 8 月贴息加码：企业贴息贷款单户上限提到 7500 万元" },
 ]
 
+/** p12: four completion rates with the amounts behind them, the last marked. */
+const funds = [
+  {
+    type: "progress_donuts",
+    items: [
+      { value: "90.5%", label: "超长期特别国债", detail: "11770 / 13000 亿元", source: "截至 9 月 16 日" },
+      { value: "66.6%", label: "新增专项债", detail: "29293 / 44000 亿元", source: "1–8 月" },
+      { value: "60.5%", label: "一般公共预算支出", detail: "181451 / 300100 亿元", source: "1–8 月" },
+      { value: "100%", label: "以旧换新资金", detail: "2500 / 2500 亿元", source: "截至 9 月 30 日全部下达", emphasis: true },
+    ],
+  },
+]
+
 /** p14: four numbered panels, the second the one the page lands on. */
 const implications = [
   {
@@ -146,12 +222,17 @@ const implications = [
 /** Each page, the composition that draws it, and words it must print. */
 const PAGES: { name: string; composition: Composition; components: unknown[]; authored: string[] }[] = [
   { name: "rows", composition: rowsComposition, components: summary, authored: ["一", "四", "目标：去年基本完成，今年改成区间", "稳住出口。"] },
+  { name: "scores", composition: scoresComposition, components: scorecard, authored: ["2025 年目标", "判断", "1267 万人", "低约 2 个百分点", "未完成", "也都完成"] },
   { name: "table", composition: tableComposition, components: targetsTable, authored: ["2026 年目标", "变化", "改为区间", "换指标", "单位 GDP 二氧化碳排放降低 3.8% 左右"] },
   { name: "columns beside figures", composition: railComposition, components: fiscal, authored: ["2025 年", "万亿元", "5.89", "0.3", "银行注资特别国债", "2300 亿元", "上年 11.86 万亿元"] },
+  { name: "roster", composition: rosterComposition, components: tasks, authored: ["十", "着力建设强大国内市场", "加强重点领域风险防范化解和安全能力建设", "风险防范由第六位移到第十位"] },
+  { name: "targets", composition: targetsComposition, components: plan, authored: ["经济增长", "不设五年", "数值目标", "指标", "2030 年", "79.25 岁", "＞22 件", "新入表"] },
   { name: "trend beside figures", composition: railComposition, components: growth, authored: ["GDP 单季同比", "2026 年目标区间 4.5%—5%", "5.0", "4.3", "2026Q2", "4.7%", "10 月 19 日"] },
   { name: "columns", composition: columnsComposition, components: indicators, authored: ["一季度", "1–8 月", "累计同比，%", "−7.2", "−0.6", "固定资产投资", "PPI"] },
   { name: "lanes", composition: lanesComposition, components: policies, authored: ["促消费", "产业和就业", "8 月 21 日", "贴息加码", "单户上限提到 7500 万元"] },
+  { name: "rings", composition: ringsComposition, components: funds, authored: ["90.5%", "100%", "以旧换新资金", "181451 / 300100 亿元", "截至 9 月 30 日全部下达"] },
   { name: "tiles", composition: tilesComposition, components: implications, authored: ["二", "设备更新：有钱也有贴息", "上半年出口 +13.4%，1–8 月货物进出口 +17.6%"] },
+  { name: "trend", composition: trendComposition, components: [growthChart], authored: ["GDP 单季同比", "5.4", "5.0", "4.3", "2025Q1"] },
 ]
 
 /** The fill a text sits on: the last filled rect drawn before it that covers its middle. */
@@ -226,6 +307,30 @@ describe("the seal setting, as vermilion's board draws it", () => {
     expect(Array.from(root!.querySelectorAll("[data-seal-numeral] text")).map(textOf)).toEqual(["1", "2", "3", "4"])
   })
 
+  it("sets ten tasks in two columns of five, 一 to 十, the first reversed out of the mark", () => {
+    const { root, ctx } = draw(rosterComposition, tasks)
+    const numerals = Array.from(root!.querySelectorAll("[data-seal-numeral] text"))
+    expect(numerals.map(textOf)).toEqual(["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"])
+    // The sixth item heads the right column, level with the first.
+    expect(numberOf(numerals[5], "y")).toBe(numberOf(numerals[0], "y"))
+    expect(numberOf(numerals[5], "x")).toBe(numberOf(numerals[0], "x") + (BAND.w - 24) / 2 + 24)
+    const marked = root!.querySelectorAll("[data-row-marked='1']")
+    expect(marked).toHaveLength(1)
+    expect(marked[0]!.querySelector("rect")!.getAttribute("fill")).toBe(sealInks(ctx).mark)
+    expect(root!.querySelector("[data-seal-note]")).not.toBeNull()
+  })
+
+  it("scores the goal off track on the mark's tint, its verdict filled, the others outlined", () => {
+    const { root, ctx } = draw(scoresComposition, scorecard)
+    const inks = sealInks(ctx)
+    expect(byText(root!, "居民消费价格")!.getAttribute("fill")).toBe(inks.mark)
+    expect(Array.from(root!.querySelectorAll("rect")).some((rect) => rect.getAttribute("fill") === inks.tint)).toBe(true)
+    const missed = root!.querySelector("[data-tag='marked']")!
+    expect(textOf(missed)).toBe("未完成")
+    expect(missed.querySelector("rect")!.getAttribute("fill")).toBe(inks.mark)
+    expect(root!.querySelectorAll("[data-tag='']")).toHaveLength(4)
+  })
+
   it("reads a two-year table toward the later year, the marked row tinted, the tags under their header at the right edge", () => {
     const { root, ctx } = draw(tableComposition, targetsTable)
     const inks = sealInks(ctx)
@@ -236,6 +341,27 @@ describe("the seal setting, as vermilion's board draws it", () => {
     expect(root!.querySelector("[data-row-marked='1'] rect")!.getAttribute("fill")).toBe(inks.tint)
     expect(root!.querySelector("[data-row-marked='1'] [data-tag='marked']")).not.toBeNull()
     expect(root!.querySelectorAll("[data-tag='quiet']")).toHaveLength(3)
+  })
+
+  it("sets the plan's statement on two even lines in the reversed block, and heads the measures' names", () => {
+    const { root, ctx } = draw(targetsComposition, plan)
+    const inks = sealInks(ctx)
+    const statement = Array.from(root!.querySelectorAll("[data-seal-statement] text")).filter((text) => text.getAttribute("font-size") === "34")
+    expect(statement.map(textOf)).toEqual(["不设五年", "数值目标"])
+    expect(root!.querySelector("[data-seal-statement] rect")!.getAttribute("fill")).toBe(inks.mark)
+    const header = byText(root!, "指标")!
+    expect(numberOf(header, "x")).toBe(numberOf(byText(root!, "常住人口城镇化率"), "x"))
+    // Value columns of 110px, the tag column of 110px and 20px off the edge.
+    expect(numberOf(byText(root!, "2030 年"), "x")).toBe(BAND.x + BAND.w - 130)
+    expect(numberOf(byText(root!, "2025 年"), "x")).toBe(BAND.x + BAND.w - 270)
+    expect(byText(root!, "25%")!.getAttribute("fill")).toBe(inks.mark)
+  })
+
+  it("sets a short statement on one line", () => {
+    const short = [{ ...plan[0], rows: [{ label: "不设目标", text: "「保持在合理区间」" }] }, plan[1]]
+    const { root } = draw(targetsComposition, short)
+    const statement = Array.from(root!.querySelectorAll("[data-seal-statement] text")).filter((text) => text.getAttribute("font-size") === "34")
+    expect(statement.map(textOf)).toEqual(["不设目标"])
   })
 
   it("hangs negative values under the zero line, the marked bar's series and category in the mark", () => {
@@ -250,6 +376,25 @@ describe("the seal setting, as vermilion's board draws it", () => {
     expect([category.getAttribute("fill"), category.getAttribute("font-weight")]).toEqual([inks.mark, "700"])
     expect(byText(root!, "PPI")!.getAttribute("font-weight")).not.toBe("700")
     expect(Array.from(root!.querySelectorAll("rect")).some((rect) => rect.getAttribute("fill") === sealSeriesInk(ctx, 1))).toBe(true)
+  })
+
+  it("prints a trend's values as written, its target range tinted behind the line", () => {
+    const { root } = draw(trendComposition, [growthChart])
+    expect(root!.querySelector("[data-chart-band]")).not.toBeNull()
+    expect(byText(root!, "5.0")).toBeDefined()
+    expect(byText(root!, "5")).toBeUndefined()
+  })
+
+  it("rings the marked rate in the mark and the others in the accent", () => {
+    const { root, ctx } = draw(ringsComposition, funds)
+    const inks = sealInks(ctx)
+    const marked = root!.querySelector("[data-ring-marked='1']")!
+    expect(Array.from(marked.querySelectorAll("circle")).map((c) => c.getAttribute("stroke"))).toEqual([inks.track, inks.mark])
+    const first = root!.querySelector("[data-ring-marked]")
+    expect(first).toBe(marked)
+    const others = Array.from(root!.querySelectorAll("g > path")).map((path) => path.getAttribute("stroke"))
+    expect(others).toEqual([inks.accent, inks.accent, inks.accent])
+    expect(byText(root!, "100%")!.getAttribute("fill")).toBe(inks.mark)
   })
 
   it("runs the policies on two lanes either side of the axis, the highlighted one in the mark", () => {

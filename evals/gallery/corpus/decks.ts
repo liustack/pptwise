@@ -519,6 +519,28 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
       },
     ]
   }
+  // vermilion's seal sheet: the board's overview page, numbered points with
+  // a sentence each, the last the one the page lands on.
+  if (def.id === "seal-sheet") {
+    return [
+      {
+        type: "numbered_cards",
+        items: lex.phrases.slice(0, 4).map((title, i) => ({ title, text: lex.sentences[i + 2]!, ...(i === 3 ? { emphasis: true } : {}) })),
+      },
+    ]
+  }
+  // The seal fact page: the lead figure with its tag and note, and three
+  // figures beside it, one marked.
+  if (def.id === "seal-figure") {
+    return [
+      {
+        type: "kpi_cards",
+        items: figureItems(lex, 4).map((item, i) =>
+          i === 0 ? { ...item, tag: { text: lex.labels[13]! } } : i === 2 ? { ...item, value: `**${item.value}**` } : item,
+        ),
+      },
+    ]
+  }
   if (def.id === "show-figures") {
     const kpi = b.kpi_cards!(lex)
     if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 3)
@@ -650,6 +672,8 @@ const CONTENT_FACE_KINDS: Record<string, PageKind> = {
   "grid-sheet": "data",
   "grid-statement": "statement",
   "grid-figure": "fact",
+  "seal-sheet": "points",
+  "seal-figure": "fact",
   "gauge-stats": "data",
   "image-annotate": "photo",
   "image-bottom": "photo",
@@ -1243,6 +1267,76 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
           { name: lex.periods[0]!, data: lex.labels.slice(8, 12).map((x, i) => ({ x, y: [1800, 2000, 1250, 1900][i]! })) },
           { name: lex.periods[1]!, data: lex.labels.slice(8, 12).map((x, i) => ({ x, y: [2000, 2200, 1375, 1750][i]! })) },
         ],
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // Eight short titles in two columns, the first the one the page lands on,
+  // over a closing line.
+  roster: (lex) => ({
+    heading: lex.headings[1]!,
+    components: [
+      { type: "numbered_cards", items: lex.phrases.slice(0, 8).map((title, i) => ({ title, ...(i === 0 ? { emphasis: true } : {}) })) },
+      { type: "callout", variant: "info", text: lex.verdicts.positive },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // The track's own promises scored as a table, the one off track the mark.
+  // The card's note already names the first source, so the page cites the
+  // second.
+  scores: (lex) => ({
+    heading: lex.headings[9]!,
+    components: [COMPONENT_BUILDERS.scorecard!(lex)],
+    footnote: lex.sources[1]!.label,
+  }),
+  // The plan's statement in a block beside its targets, one target marked
+  // and tagged, another tagged.
+  targets: (lex) => {
+    const plan = COMPONENT_BUILDERS.from_to!(lex)
+    return {
+      heading: lex.headings[3]!,
+      components: [
+        { type: "insight_panel", title: lex.chapters[0]!, rows: [{ label: lex.labels[8]!, text: lex.sentences[0]! }], footnote: lex.verdicts.positive },
+        plan.type === "from_to"
+          ? {
+              ...plan,
+              label_column: lex.labels[12]!,
+              rows: plan.rows.map(({ change: _change, ...row }, i) => ({
+                ...row,
+                ...(i === 1 ? { tag: { text: lex.labels[13]! }, emphasis: true } : i === 3 ? { tag: { text: lex.labels[14]! } } : {}),
+              })),
+            }
+          : plan,
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
+  // One series over five periods, a target range tinted behind it.
+  trend: (lex) => ({
+    heading: lex.headings[0]!,
+    components: [
+      {
+        type: "chart",
+        chart_type: "line",
+        axes: { y_title: lex.metrics[2]!.label, y_unit: "%" },
+        series: [{ name: lex.metrics[2]!.label, data: lex.periods.slice(0, 5).map((x, i) => ({ x, y: [5.4, 5.2, 4.8, 4.5, 5.0][i]! })) }],
+        bands: [{ from: 4.5, to: 5, label: lex.labels[10]! }],
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // Four completion rates with the amounts behind them, the last marked.
+  rings: (lex) => ({
+    heading: lex.headings[2]!,
+    components: [
+      {
+        type: "progress_donuts",
+        items: lex.metrics.slice(0, 4).map((metric, i) => ({
+          value: ["90.5%", "66.6%", "60.5%", "100%"][i]!,
+          label: metric.label,
+          detail: lex.periods[i]!,
+          ...(i === 3 ? { emphasis: true } : {}),
+        })),
       },
     ],
     footnote: lex.sources[0]!.label,

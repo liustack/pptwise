@@ -342,6 +342,15 @@ export const COMPOSITION_PAGES: readonly {
   // own board added.
   { theme: "ledger", kind: "points", composition: "tiles" },
   { theme: "ledger", kind: "comparison", composition: "shifts" },
+  // vermilion's seal sheet sets the shapes as a formal report, and draws the
+  // five its own board added.
+  { theme: "vermilion", kind: "points", composition: "roster" },
+  { theme: "vermilion", kind: "data", composition: "scores" },
+  { theme: "vermilion", kind: "comparison", composition: "targets" },
+  { theme: "vermilion", kind: "data", composition: "trend" },
+  { theme: "vermilion", kind: "data", composition: "rings" },
+  { theme: "vermilion", kind: "comparison", composition: "table" },
+  { theme: "vermilion", kind: "process", composition: "lanes" },
 ]
 
 export function buildMatrix(

@@ -54,6 +54,11 @@ export type CompositionId =
   | "share"
   | "tiles"
   | "shifts"
+  | "roster"
+  | "scores"
+  | "targets"
+  | "trend"
+  | "rings"
 
 /**
  * The type a composition sets its page in.
@@ -87,7 +92,10 @@ export type CompositionId =
  *   numbered in the deck's own numerals inside small squares of the mark,
  *   open tables under a 2px rule in the mark, the mark spent once a page on
  *   a reversed row, a tinted row or a figure, and the accent only drawing
- *   rules, rings and outlines. See `./seal.tsx`.
+ *   rules, rings and outlines. A composition offered this setting also takes
+ *   the shapes that board drew and no other did: a two-column roster of ten
+ *   items, a scorecard, targets beside the statement they rest on, a trend
+ *   over a marked range, completion rings. See `./seal.tsx`.
  *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.

@@ -66,7 +66,34 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 从正红整版改为公文米白 `#F6EFE3`（与 bg 同值）。板上章节是浅底红号块，
  * 不是整版红。红身份来自红头与号块，正文页本来就不可整版红。
  *
- * **菜单分派（S1-B）**：公文按条分述，points 的窄栏是主力，statement 承一句话的表态。红头文件不铺满版照片也不借他人之口，photo 与 quote 都不上。
+ * **菜单分派（S1-B）**：公文按条分述，statement 承一句话的表态。红头文件不借他人之口，quote 不上。2026-10 起各页改走 seal 一套脸，photo 也开了，见下。
+ *
+ * **2026-10 定稿重画（`design/rounds/2026-10-04-vermilion/`，政府工作报告
+ * 学习汇报样例）**：整套改成一份公文的版面。
+ *   - 内容页统一走 `seal-sheet`：天头金双线（motif），标题居中正红粗体
+ *     34px、整行宽、两行内均衡折行，其下 64×2 金色短线，正文交给
+ *     seal 设定的构图（中文数字方块编号、表头 2px 红线的开放表格、每页
+ *     一处红）。list 页的编号卡片排成两两一组的面板（`cards: "tiles"`），
+ *     points 页排成带编号的横行。
+ *   - fact 页走 `seal-figure`：页头照常画标题，左边 240px 红色大数字加
+ *     约束性标签与说明句，右边竖线后三条辅证。旧的 stat-hero 稀排脸不画
+ *     标题。
+ *   - 新开 photo：`image-split` 的 seal 栏，照片占左 560px，右栏金线、
+ *     标题、三行数字。照片页关掉 motif（`decor: silent`），金线由栏自己从
+ *     照片右边画起。evidence 也走 `seal-sheet`，不再用左上写死「案卷」的卡。
+ *   - 封面 `red-head-cover`、结尾 `deliberation-ending` 按定稿重画，封面
+ *     底缘与结尾天头地脚的金双线归 motif。
+ *   - `chartPalette` 改成正红加两档褐灰再加金、靛灰：定稿里次要数据一律
+ *     褐灰（#A89480、#CDBBA5），红留给这一页标出的那一组。seal 设定按
+ *     「离标记最近的取调色板第二位」上色，所以褐灰排在红后面。金退到第四，
+ *     只在没有标记、系列超过三组的普通图表里出现。
+ *   - 英文版仍用雅黑。量过 PowerPoint 自带的 msyh.ttc：雅黑的连字符墨迹
+ *     0.288em、粗 0.074em，Arial 是 0.270em、0.088em，长短一样，是普通的
+ *     连字符而不是破折号，只是字宽 0.433em 比 Arial 的 0.333em 宽，字宽表
+ *     已经计入。主题的字体按角色（heading、body）给，不按语言给。把拉丁面
+ *     换成 Arial 之类，导出端 `eaFontFaceFor` 会自动把中文落到雅黑，但
+ *     `hasExactWidthTable` 只有雅黑和 Georgia，中文版的标题与正文会从精确
+ *     字宽退回保守包络，中文版里的数字和拉丁字母也会换成 Arial。所以不换。
  */
 export const VERMILION_TOKENS: StyleTokens = {
   id: "vermilion",
@@ -84,9 +111,10 @@ export const VERMILION_TOKENS: StyleTokens = {
     // `**…**` 标出的那一处落正红。金只给线、压 bg 2.26:1 承不了字，强调
     // 原先回落到 accent，对比表里标出的那句成了金字。
     emphasisInk: "#B02318",
-    // 四格只作图系列与色块。c0、c2、c3 可作徽章底，字走 readableOn 并答 4.5。
-    // c1 同 accent，只给线，压 bg 2.26:1，永不承字，不答文字门槛。
-    chartPalette: ["#B02318", "#C79A3B", "#4A5C6E", "#66754F"], // 正红/金/靛灰/松绿
+    // 五格只作图系列与色块，字走 readableOn 并答 4.5。褐灰两档是退后的
+    // 次要数据（定稿 2026-10），压 bg 都不到 3:1，图上每根柱都印数值，
+    // 色块从不是数字的唯一载体。金同 accent，只给线，永不承字。
+    chartPalette: ["#B02318", "#A89480", "#CDBBA5", "#C79A3B", "#4A5C6E"], // 正红/褐灰/浅褐灰/金/靛灰
   },
   // Microsoft YaHei first: resolveFontFace picks the first SAFE_FONTS match,
   // and only Georgia/Microsoft YaHei carry an exact per-character width table
@@ -130,15 +158,16 @@ export const VERMILION_THEME = {
     cover: { face: "red-head-cover" },
     chapter: { face: "seal-numeral-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "split-band" },
+      points: { face: "seal-sheet" },
+      list: { face: "seal-sheet", params: { cards: "tiles" } },
+      comparison: { face: "seal-sheet" },
+      process: { face: "seal-sheet" },
+      data: { face: "seal-sheet" },
+      photo: { face: "image-split", params: { column: "seal" }, decor: { kind: "silent" } },
       statement: { face: "statement" },
-      fact: { face: "stat-hero" },
-      evidence: { face: "one-evidence" },
-      hierarchy: { face: "asymmetric-triptych" },
+      fact: { face: "seal-figure" },
+      evidence: { face: "seal-sheet" },
+      hierarchy: { face: "seal-sheet" },
     },
     ending: { face: "deliberation-ending" },
   },
