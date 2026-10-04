@@ -604,3 +604,37 @@ describe("numbered_cards marks", () => {
     expect(() => assertSubset(parseSvgRoot(renderSvgMarkup(<svg>{numberedCards.render(marked, { x: 0, y: 0, w: 880, h: 360 }, ctx)}</svg>)))).not.toThrow()
   })
 })
+
+describe("numbered_cards past eight items", () => {
+  const tasks = [
+    "Build a strong domestic market",
+    "Grow new drivers",
+    "Self-reliance in science and technology",
+    "Deepen reform in key areas",
+    "Open wider at a high standard",
+    "Revitalize the countryside",
+    "New urbanization and regional balance",
+    "Better people's livelihoods",
+    "Green transition across the board",
+    "Prevent risks and build security",
+  ]
+  const ten = { type: "numbered_cards" as const, items: tasks.map((title, i) => ({ title, ...(i === 0 ? { emphasis: true } : {}) })) }
+
+  it("sets ten items in two columns, down the left first, every title whole", () => {
+    for (const id of ["vermilion", "brief", "ember"]) {
+      const { container } = svg(numberedCards.render(ten, { x: 0, y: 0, w: 1088, h: 380 }, themeCtx(id)))
+      expect(container.querySelectorAll("[data-truncated]"), id).toHaveLength(0)
+      expect(container.querySelector("[data-dropped]"), id).toBeNull()
+      const pills = Array.from(container.querySelectorAll("g > rect")).filter((r) => Number(r.getAttribute("width")) > 200)
+      expect(pills, id).toHaveLength(10)
+      const xs = [...new Set(pills.map((p) => p.getAttribute("x")))]
+      expect(xs, id).toHaveLength(2)
+      // Items 1 to 5 down the left column, 6 to 10 down the right.
+      expect(pills[0]!.getAttribute("x"), id).toBe(pills[4]!.getAttribute("x"))
+      expect(pills[5]!.getAttribute("x"), id).not.toBe(pills[0]!.getAttribute("x"))
+      expect(pills[5]!.getAttribute("y"), id).toBe(pills[0]!.getAttribute("y"))
+      const words = Array.from(container.querySelectorAll("text")).map((t) => t.textContent).join(" ")
+      for (const task of tasks) expect(words, id).toContain(task)
+    }
+  })
+})
