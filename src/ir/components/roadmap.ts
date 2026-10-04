@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -14,6 +15,10 @@ export const schema = z
           .object({
             title: z.string(),
             period: z.string().optional(),
+            /** A symbol for the phase. See the describe below. */
+            icon: IconNameSchema.optional().describe(
+              "A symbol for the phase, drawn where its number would stand, such as shield-check or flag. Run `pptwise icons` for the names.",
+            ),
             rows: z
               .array(z.object({ label: z.string(), value: z.string() }).strict())
               .max(4)

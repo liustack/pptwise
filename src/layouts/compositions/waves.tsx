@@ -86,6 +86,8 @@ function wavesShape(components: readonly Component[]): Roadmap | null {
   if (only.type !== "roadmap") return null
   if (only.items.length < MIN_ITEMS || only.items.length > MAX_ITEMS) return null
   if (only.items.some((item) => (item.rows?.length ?? 0) > MAX_ROWS)) return null
+  // A phase's icon has no place over these columns: the ordinary roadmap draws it.
+  if (only.items.some((item) => item.icon !== undefined)) return null
   return only
 }
 

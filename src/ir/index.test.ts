@@ -1981,3 +1981,9 @@ describe("row_cards item tone", () => {
     expect(parseOne({ type: "row_cards", items: [{ title: "a", tone: "warning" }, { title: "b" }, { title: "c" }] }).success).toBe(true)
   })
 })
+
+describe("roadmap phase icon", () => {
+  it("takes an icon on a phase", () => {
+    expect(parseOne({ type: "roadmap", items: [{ title: "a", icon: "flag" }, { title: "b" }] }).success).toBe(true)
+  })
+})

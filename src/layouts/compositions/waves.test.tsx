@@ -89,3 +89,10 @@ describe("waves composition", () => {
     }
   })
 })
+
+describe("waves leave a phase's icon to the ordinary roadmap", () => {
+  it("declines a roadmap whose phase has an icon", () => {
+    expect(renderComposition(wavesComposition, roadmap()).element).not.toBeNull()
+    expect(renderComposition(wavesComposition, roadmap(ITEMS.map((item, i) => (i === 0 ? { ...(item as object), icon: "flag" } : item)))).element).toBeNull()
+  })
+})
