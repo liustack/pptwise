@@ -50,11 +50,18 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *   - `warning` `#8A6230`：牛皮褐压深（5.12:1），只作线与图标。
  *   - `success` `#3F5E48`：档案绿（6.81:1）。
  *
- * 字体：heading SimSun 族（journal / heritage / museum 先例），Windows 安全
- * 面打头保导出无 tofu。body 雅黑。mono 打头 Courier New：设计板 Courier
- * Prime 不在 `SAFE_FONTS`，白名单里的等宽是 Consolas / Courier New /
- * Lucida Console，打字机头行取 Courier New（Consolas 是编程面）。
- * 等宽并未缺席，无需退化成纯双线。
+ * 字体：heading 是宋体，西文配 Times New Roman（2026-10 样例重做）。中文仍
+ * 走 SimSun（Windows 安全面，导出无 tofu），西文和数字走 Times New Roman：
+ * PowerPoint 按字符分槽取字，SimSun 当 `<a:latin>` 时英文和数字落在它的半角
+ * 等宽格上（每个 ASCII 字 0.5em），而 Mac 预览没有 SimSun、退到 Songti SC，
+ * 西文是 Times 一路的比例衬线，两边对不上。中文公文与 Word 的中文默认版式
+ * 都是「宋体配 Times New Roman」，设计板的 Songti SC 西文也是这一路字形。
+ * 栈写成 ["Times New Roman", "SimSun", …]：`resolveFontStack` 把 SimSun 排在
+ * 第二位，导出时 SimSun 写进 run 的 `<a:ea>`（`fonts.ts` `pairedEaFace`），
+ * 预览和 PowerPoint 的西文都是 Times New Roman，中文都是宋体。body 雅黑。
+ * mono 打头 Courier New：设计板 Courier Prime 不在 `SAFE_FONTS`，白名单里的
+ * 等宽是 Consolas / Courier New / Lucida Console，打字机头行取 Courier New
+ * （Consolas 是编程面）。等宽并未缺席，无需退化成纯双线。
  *
  * 圆角 2 + gapScale 0.9：咨询报告那一档的微圆，留白收到 tight（brief
  * 是 1.0 的 medium，本主题在最近邻上只岔这一轴）。
@@ -93,9 +100,10 @@ export const MEMO_TOKENS: StyleTokens = {
     chartPalette: ["#221E18", "#A63A2B", "#4A5864", "#7A6248"], // 墨/印章红/档案蓝灰/牛皮褐
   },
   fonts: {
-    // 打字机决定的报题是宋体。SimSun/宋体 是 SAFE_FONTS 里的 CJK 衬线，
-    // 放首位保导出。Songti SC/STSong 留作 macOS 预览回退。
-    heading: ["SimSun", "宋体", "Songti SC", "STSong", "serif"],
+    // 打字机决定的报题是宋体，西文配 Times New Roman（见文件头）。SimSun/宋体
+    // 是 SAFE_FONTS 里的 CJK 衬线，跟在西文面后面就是 run 的东亚字体。
+    // Songti SC/STSong 留作 macOS 预览回退。
+    heading: ["Times New Roman", "SimSun", "宋体", "Songti SC", "STSong", "serif"],
     body: ["Microsoft YaHei", "Helvetica Neue", "Arial", "system-ui"],
     // 设计板 Courier Prime 不在 SAFE_FONTS。白名单等宽三选一，打字机头行
     // 用 Courier New（Consolas 是编程面，不承担公文眉字）。

@@ -433,6 +433,17 @@ const GEORGIA_BOLD_EXACT: Readonly<Record<number, number>> = {32:0.2539,33:0.376
 const YAHEI_REGULAR_EXACT: Readonly<Record<number, number>> = {32:0.2959,33:0.3125,34:0.4355,35:0.6382,36:0.5864,37:0.8896,38:0.8701,39:0.2563,40:0.334,41:0.334,42:0.4551,43:0.7417,44:0.2407,45:0.4326,46:0.2407,47:0.4272,48:0.5864,49:0.5864,50:0.5864,51:0.5864,52:0.5864,53:0.5864,54:0.5864,55:0.5864,56:0.5864,57:0.5864,58:0.2407,59:0.2407,60:0.7417,61:0.7417,62:0.7417,63:0.4829,64:1.0312,65:0.7036,66:0.6274,67:0.6689,68:0.7617,69:0.5498,70:0.5312,71:0.7437,72:0.7734,73:0.2939,74:0.396,75:0.6348,76:0.5132,77:0.9771,78:0.813,79:0.8149,80:0.6118,81:0.8149,82:0.6528,83:0.5771,84:0.5732,85:0.7466,86:0.6763,87:1.0176,88:0.645,89:0.6035,90:0.6201,91:0.334,92:0.416,93:0.334,94:0.7417,95:0.4482,96:0.2949,97:0.5527,98:0.6387,99:0.5015,100:0.6396,101:0.5674,102:0.3467,103:0.6396,104:0.6157,105:0.2661,106:0.2671,107:0.5444,108:0.2661,109:0.937,110:0.6162,111:0.6357,112:0.6387,113:0.6396,114:0.3818,115:0.4629,116:0.3726,117:0.6162,118:0.5249,119:0.7896,120:0.5068,121:0.5293,122:0.4917,123:0.334,124:0.269,125:0.334,126:0.7417}
 const YAHEI_BOLD_EXACT: Readonly<Record<number, number>> = {32:0.2979,33:0.3486,34:0.521,35:0.6401,36:0.6167,37:0.9312,38:0.9111,39:0.3081,40:0.3896,41:0.3896,42:0.4873,43:0.7612,44:0.2856,45:0.4365,46:0.2856,47:0.4727,48:0.6167,49:0.6167,50:0.6167,51:0.6167,52:0.6167,53:0.6167,54:0.6167,55:0.6167,56:0.6167,57:0.6167,58:0.2856,59:0.2856,60:0.7612,61:0.7612,62:0.7612,63:0.4741,64:1.0298,65:0.752,66:0.6836,67:0.6733,68:0.7915,69:0.5718,70:0.5581,71:0.7651,72:0.8213,73:0.3354,74:0.4702,75:0.6929,76:0.5469,77:1.0283,78:0.8481,79:0.8184,80:0.6572,81:0.8184,82:0.6982,83:0.6016,84:0.6255,85:0.7764,86:0.7148,87:1.0762,88:0.7002,89:0.6484,90:0.6504,91:0.3896,92:0.4644,93:0.3896,94:0.7612,95:0.4482,96:0.3335,97:0.5776,98:0.666,99:0.5166,100:0.6646,101:0.582,102:0.4053,103:0.6646,104:0.6455,105:0.2959,106:0.3018,107:0.5962,108:0.2959,109:0.9819,110:0.6479,111:0.6572,112:0.666,113:0.6646,114:0.4238,115:0.4937,116:0.4141,117:0.6479,118:0.5771,119:0.8516,120:0.585,121:0.5742,122:0.5137,123:0.3896,124:0.3413,125:0.3896,126:0.7612}
 
+// Times New Roman, Regular and Bold, read with the same cmap+hmtx parser from
+// the genuine binaries Office ships (`times.ttf` and `timesbd.ttf` in
+// PowerPoint's `DFonts`, name "Times New Roman" Regular and Bold, byte-equal
+// in their advances to macOS's Supplemental copies), each value rounded up
+// to four decimals so a stored width is never below the real one. memo sets
+// its Song headings' Latin in this face over SimSun (`fonts.ts`
+// `resolveFontStack`), the pairing a Chinese document takes for its
+// Western text.
+const TIMES_REGULAR_EXACT: Readonly<Record<number, number>> = {32:0.25,33:0.3331,34:0.4083,35:0.5,36:0.5,37:0.8331,38:0.7779,39:0.1802,40:0.3331,41:0.3331,42:0.5,43:0.564,44:0.25,45:0.3331,46:0.25,47:0.2779,48:0.5,49:0.5,50:0.5,51:0.5,52:0.5,53:0.5,54:0.5,55:0.5,56:0.5,57:0.5,58:0.2779,59:0.2779,60:0.564,61:0.564,62:0.564,63:0.4439,64:0.9209,65:0.7222,66:0.667,67:0.667,68:0.7222,69:0.6109,70:0.5562,71:0.7222,72:0.7222,73:0.3331,74:0.3892,75:0.7222,76:0.6109,77:0.8892,78:0.7222,79:0.7222,80:0.5562,81:0.7222,82:0.667,83:0.5562,84:0.6109,85:0.7222,86:0.7222,87:0.9439,88:0.7222,89:0.7222,90:0.6109,91:0.3331,92:0.2779,93:0.3331,94:0.4693,95:0.5,96:0.3331,97:0.4439,98:0.5,99:0.4439,100:0.5,101:0.4439,102:0.3331,103:0.5,104:0.5,105:0.2779,106:0.2779,107:0.5,108:0.2779,109:0.7779,110:0.5,111:0.5,112:0.5,113:0.5,114:0.3331,115:0.3892,116:0.2779,117:0.5,118:0.5,119:0.7222,120:0.5,121:0.5,122:0.4439,123:0.48,124:0.2002,125:0.48,126:0.5411}
+const TIMES_BOLD_EXACT: Readonly<Record<number, number>> = {32:0.25,33:0.3331,34:0.5552,35:0.5,36:0.5,37:1,38:0.8331,39:0.2779,40:0.3331,41:0.3331,42:0.5,43:0.5699,44:0.25,45:0.3331,46:0.25,47:0.2779,48:0.5,49:0.5,50:0.5,51:0.5,52:0.5,53:0.5,54:0.5,55:0.5,56:0.5,57:0.5,58:0.3331,59:0.3331,60:0.5699,61:0.5699,62:0.5699,63:0.5,64:0.9302,65:0.7222,66:0.667,67:0.7222,68:0.7222,69:0.667,70:0.6109,71:0.7779,72:0.7779,73:0.3892,74:0.5,75:0.7779,76:0.667,77:0.9439,78:0.7222,79:0.7779,80:0.6109,81:0.7779,82:0.7222,83:0.5562,84:0.667,85:0.7222,86:0.7222,87:1,88:0.7222,89:0.7222,90:0.667,91:0.3331,92:0.2779,93:0.3331,94:0.5811,95:0.5,96:0.3331,97:0.5,98:0.5562,99:0.4439,100:0.5562,101:0.4439,102:0.3331,103:0.5,104:0.5562,105:0.2779,106:0.3331,107:0.5562,108:0.2779,109:0.8331,110:0.5562,111:0.5,112:0.5562,113:0.5562,114:0.4439,115:0.3892,116:0.3331,117:0.5562,118:0.5,119:0.7222,120:0.5,121:0.5,122:0.4439,123:0.3941,124:0.2203,125:0.3941,126:0.5201}
+
 // SimSun and KaiTi Regular: every printable ASCII codepoint advances 128
 // units at unitsPerEm=256, exactly 0.5em, read with a standalone cmap+hmtx
 // parser from the genuine binaries Office ships (`Simsun.ttc[0]`, name
@@ -449,12 +460,15 @@ interface ExactFaceTable {
   bold: Readonly<Record<number, number>>
 }
 
-type FaceKey = "georgia" | "yahei" | "simsun-kaiti" | "unknown"
+type FaceKey = "georgia" | "yahei" | "simsun-kaiti" | "times" | "unknown"
 
 const CLASS_TABLE_FOR: Readonly<Record<FaceKey, FaceFactorTable>> = {
   georgia: GEORGIA,
   yahei: YAHEI,
   "simsun-kaiti": SIMSUN_KAITI,
+  // Its printable ASCII is exact and its symbols are bounded, so the class
+  // path only meets what neither covers, and there the envelope errs wide.
+  times: ENVELOPE,
   unknown: ENVELOPE,
 }
 
@@ -465,6 +479,7 @@ const CLASS_TABLE_FOR: Readonly<Record<FaceKey, FaceFactorTable>> = {
 const EXACT_TABLE_FOR: Readonly<Partial<Record<FaceKey, ExactFaceTable>>> = {
   georgia: { regular: GEORGIA_REGULAR_EXACT, bold: GEORGIA_BOLD_EXACT },
   yahei: { regular: YAHEI_REGULAR_EXACT, bold: YAHEI_BOLD_EXACT },
+  times: { regular: TIMES_REGULAR_EXACT, bold: TIMES_BOLD_EXACT },
 }
 
 /** Every face whose Regular weight has a genuine binary to read. */
@@ -472,6 +487,7 @@ const REGULAR_EXACT_TABLE_FOR: Readonly<Partial<Record<FaceKey, Readonly<Record<
   georgia: GEORGIA_REGULAR_EXACT,
   yahei: YAHEI_REGULAR_EXACT,
   "simsun-kaiti": SIMSUN_KAITI_REGULAR_EXACT,
+  times: TIMES_REGULAR_EXACT,
 }
 
 /**
@@ -497,6 +513,7 @@ function classifyFaceKey(fontFamily: string | undefined): FaceKey {
   if (first === "georgia") return "georgia"
   if (first === "microsoft yahei" || first === "微软雅黑") return "yahei"
   if (first === "simsun" || first === "宋体" || first === "kaiti" || first === "楷体") return "simsun-kaiti"
+  if (first === "times new roman") return "times"
   return "unknown"
 }
 

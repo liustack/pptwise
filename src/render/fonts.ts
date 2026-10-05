@@ -261,6 +261,7 @@ const PREVIEW_FALLBACK = {
 export function resolveFontStack(stack: string[], role: FontRole): string {
   const face = resolveFontFace(stack, role)
   const key = face.toLowerCase()
+  const ea = pairedEaFace(stack, role)
   const fallback =
     role === "mono"
       ? PREVIEW_FALLBACK.mono
@@ -269,7 +270,56 @@ export function resolveFontStack(stack: string[], role: FontRole): string {
         : SERIF_SAFE_FACES.has(key)
           ? PREVIEW_FALLBACK.serif
           : PREVIEW_FALLBACK.sans
-  return `${face}, ${fallback}`
+  return ea ? `${face}, ${ea}, ${fallback}` : `${face}, ${fallback}`
+}
+
+/** Lower-cases a stack member the way `resolveFontFace` reads it. */
+function stackName(raw: string): string {
+  return raw.replace(/['"]/g, "").trim()
+}
+
+/** True when `face` is a `SAFE_FONTS` member that carries CJK glyphs. */
+export function isCjkSafeFace(face: string): boolean {
+  return CJK_SAFE_FACES.has(stackName(face).toLowerCase())
+}
+
+/**
+ * The East Asian face a stack names for the CJK in a run whose Latin face
+ * carries none, or `undefined` when it names none.
+ *
+ * A stack written ["Times New Roman", "SimSun", …] asks for its Western text
+ * in Times New Roman and its Chinese in SimSun, the way a Chinese document
+ * pairs them. `resolveFontFace` takes the first face PowerPoint can draw
+ * (Times New Roman), and that face has no CJK glyphs, so the first
+ * CJK-capable safe face after it in the stack is the run's `<a:ea>` face.
+ * `resolveFontStack` writes it second in the family list, the preview draws
+ * the run's CJK from it (or from its fallback where it is not installed), and
+ * the export writes it into the run (`svg2pptx/text.ts`, `pptx-ea-fonts.ts`).
+ * A stack whose first drawable face carries CJK itself, or that names no CJK
+ * face after its Latin one, pairs nothing, and its runs take
+ * `eaFontFaceFor`'s answer as before.
+ */
+export function pairedEaFace(stack: string[], role: FontRole): string | undefined {
+  const face = resolveFontFace(stack, role)
+  if (isCjkSafeFace(face)) return undefined
+  const at = stack.findIndex((raw) => stackName(raw).toLowerCase() === face.toLowerCase())
+  if (at < 0) return undefined
+  for (const raw of stack.slice(at + 1)) {
+    if (isCjkSafeFace(raw)) return stackName(raw)
+  }
+  return undefined
+}
+
+/**
+ * The `<a:ea>` face a run exported from SVG text names, read off its
+ * `font-family` list: the face `resolveFontStack` paired with the run's
+ * Latin face, when the list carries one second, and otherwise `undefined`,
+ * so the run takes `eaFontFaceFor` of its Latin face.
+ */
+export function pairedEaFamily(fontFamily: string | null | undefined): string | undefined {
+  const [first, second] = (fontFamily ?? "").split(",").map(stackName)
+  if (!first || !second) return undefined
+  return !isCjkSafeFace(first) && isCjkSafeFace(second) ? second : undefined
 }
 
 /**

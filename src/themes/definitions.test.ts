@@ -492,9 +492,10 @@ describe("registerTheme: unmeasured-font-width console.warn", () => {
   // CJK-serif design choices with no exact width table. Every builtin's
   // *body* resolves to a face that has one. This never reaches console.warn
   // because builtins never call registerTheme; the test locks both halves.
-  it("regression: heritage/ink/journal/lecture/luxe/memo/museum/runway's heading has no exact table, every builtin's body does — but builtins never call registerTheme, so this never reaches console.warn", () => {
+  it("regression: heritage/ink/journal/lecture/luxe/museum/runway's heading has no exact table, every builtin's body does — but builtins never call registerTheme, so this never reaches console.warn", () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
-    const nonExactHeadingBuiltins = new Set(["heritage", "ink", "journal", "lecture", "luxe", "memo", "museum", "runway"])
+    // memo's heading resolves to Times New Roman over SimSun, which is measured.
+    const nonExactHeadingBuiltins = new Set(["heritage", "ink", "journal", "lecture", "luxe", "museum", "runway"])
     for (const id of CANONICAL_THEME_IDS) {
       const style = THEME_DEFINITIONS[id].style
       const headingFace = resolveFontFace(style.fonts.heading, "heading")

@@ -844,6 +844,15 @@ describe("hasExactWidthTable", () => {
     expect(hasExactWidthTable("Georgia, Songti SC, STSong, serif")).toBe(true)
   })
 
+  it("is true for Times New Roman, memo's Latin heading face, at both weights", () => {
+    expect(hasExactWidthTable("Times New Roman, SimSun, Songti SC, STSong, serif")).toBe(true)
+    // The genuine binary's advances rounded up to four places: T, h, i, r.
+    expect(measureTextUnits("Thir", { fontFamily: "Times New Roman, SimSun" })).toBeCloseTo(0.6109 + 0.5 + 0.2779 + 0.3331, 4)
+    expect(measureTextUnits("Thir", { fontFamily: "Times New Roman, SimSun", bold: true })).toBeCloseTo(0.667 + 0.5562 + 0.2779 + 0.4439, 4)
+    // Chinese in the same run is drawn from SimSun, a full em each.
+    expect(measureTextUnits("每周", { fontFamily: "Times New Roman, SimSun" })).toBeCloseTo(2, 4)
+  })
+
   it("is false for a face that classifies but has only a class-average table (SimSun/KaiTi)", () => {
     expect(hasExactWidthTable("SimSun")).toBe(false)
     expect(hasExactWidthTable("宋体")).toBe(false)
@@ -1367,7 +1376,7 @@ describe("non-ASCII marks never measure narrower than the face draws them", () =
 
   it("covers the marks and symbols a Chinese or English deck carries", () => {
     for (const ch of "·—–…“”‘’《》、。，×°‰¥€") {
-      for (const face of ["georgia", "yahei", "simsun-kaiti"] as const) {
+      for (const face of ["georgia", "yahei", "simsun-kaiti", "times"] as const) {
         expect(SYMBOL_ADVANCE_BOUNDS[face].regular[ch.charCodeAt(0)], `${face} ${ch}`).toBeDefined()
         expect(SYMBOL_ADVANCE_BOUNDS[face].bold[ch.charCodeAt(0)], `${face} bold ${ch}`).toBeDefined()
       }
@@ -1375,7 +1384,7 @@ describe("non-ASCII marks never measure narrower than the face draws them", () =
   })
 
   it("never measures a covered character below its bound or below the class average", () => {
-    const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "simsun-kaiti": "SimSun" } as const
+    const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "simsun-kaiti": "SimSun", times: "Times New Roman" } as const
     for (const [face, weights] of Object.entries(SYMBOL_ADVANCE_BOUNDS) as [keyof typeof families, (typeof SYMBOL_ADVANCE_BOUNDS)["georgia"]][]) {
       for (const [weight, table] of Object.entries(weights) as ["regular" | "bold", Record<number, number>][]) {
         for (const [cp, w] of Object.entries(table)) {
@@ -1433,7 +1442,7 @@ describe("curly quotes measure in the face that paints them", () => {
   })
 
   it("measures every quote, dash and dot a face carries at that face's own advance", () => {
-    const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "simsun-kaiti": "SimSun" } as const
+    const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "simsun-kaiti": "SimSun", times: "Times New Roman" } as const
     for (const [face, weights] of Object.entries(LATIN_FACE_MARK_ADVANCES) as [keyof typeof families, (typeof LATIN_FACE_MARK_ADVANCES)["georgia"]][]) {
       for (const [weight, table] of Object.entries(weights) as ["regular" | "bold", Record<number, number>][]) {
         for (const [cp, w] of Object.entries(table)) {

@@ -4,6 +4,7 @@ import type { TextRunData } from "./text"
 import { gradientFillXml } from "./gradient"
 import { blockMarker, pad4 } from "../pptx-animations"
 import { slideNumberObjectName } from "../pptx-slide-number"
+import { pairedTypeface } from "../pptx-ea-fonts"
 
 /**
  * The subset of a pptxgenjs `Slide` that the render layer uses. Keeping it
@@ -204,7 +205,10 @@ export function renderOp(
         fontSize: op.fontSize,
         margin: 0,
       }
-      if (op.fontFace) opts.fontFace = op.fontFace
+      // A paired East Asian face travels inside the typeface pptxgenjs writes,
+      // and `applyEaFontFaces` splits it into the run's `<a:latin>` and
+      // `<a:ea>` (pptxgenjs has no separate East Asian font option).
+      if (op.fontFace) opts.fontFace = op.eaFace ? pairedTypeface(op.fontFace, op.eaFace) : op.fontFace
       if (op.color) opts.color = op.color
       if (op.transparency != null) opts.transparency = op.transparency
       if (op.rotate) opts.rotate = op.rotate

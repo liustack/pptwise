@@ -66,6 +66,8 @@ const FACES = {
   yaheiBold: { file: `${OFFICE}msyhbd.ttc`, family: "Microsoft YaHei", subfamily: "Bold" },
   simsun: { file: `${OFFICE}Simsun.ttc`, family: "SimSun", subfamily: "Regular" },
   kaiti: { file: `${OFFICE}Kaiti.ttf`, family: "KaiTi", subfamily: "Regular" },
+  times: { file: `${OFFICE}times.ttf`, family: "Times New Roman", subfamily: "Regular" },
+  timesBold: { file: `${OFFICE}timesbd.ttf`, family: "Times New Roman", subfamily: "Bold" },
 } as const satisfies Record<string, FaceFile>
 
 type FaceName = keyof typeof FACES
@@ -181,27 +183,48 @@ function bound(cp: number, primary: readonly FaceName[], substitutes: readonly F
   return w === undefined ? undefined : ceil4(w)
 }
 
+/**
+ * The substitutes a code point no primary face carries is bounded by. Times
+ * New Roman joined the measured faces after the first four keys were
+ * written, and stays out of their substitutes so their bounds are the ones
+ * they always were.
+ */
 const ALL: readonly FaceName[] = ["georgia", "georgiaBold", "yahei", "yaheiBold", "simsun", "kaiti"]
+const ALL_WITH_TIMES: readonly FaceName[] = [...ALL, "times", "timesBold"]
+/**
+ * Times New Roman sits over SimSun when memo pairs them, and over YaHei
+ * (`eaFontFaceFor`) anywhere else, so its bound is the widest of the three.
+ */
 const TABLES = {
   georgia: { regular: ["georgia", "yahei"], bold: ["georgiaBold", "yaheiBold"] },
   yahei: { regular: ["yahei"], bold: ["yaheiBold"] },
   "simsun-kaiti": { regular: ["simsun", "kaiti"], bold: ["simsun", "kaiti"] },
+  times: { regular: ["times", "yahei", "simsun"], bold: ["timesBold", "yaheiBold", "simsun"] },
 } as const satisfies Record<string, Record<"regular" | "bold", readonly FaceName[]>>
+const SUBSTITUTES: Record<keyof typeof TABLES, readonly FaceName[]> = {
+  georgia: ALL,
+  yahei: ALL,
+  "simsun-kaiti": ALL,
+  times: ALL_WITH_TIMES,
+}
 
 const codePoints: number[] = []
 for (const [from, to] of RANGES) for (let cp = from; cp <= to; cp++) codePoints.push(cp)
 
-const literal = (primary: readonly FaceName[]): string => {
+const literal = (primary: readonly FaceName[], substitutes: readonly FaceName[]): string => {
   const entries: string[] = []
   for (const cp of codePoints) {
-    const w = bound(cp, primary, ALL)
+    const w = bound(cp, primary, substitutes)
     if (w !== undefined) entries.push(`${cp}:${w}`)
   }
   return `{${entries.join(",")}}`
 }
 
 const body = Object.entries(TABLES)
-  .map(([key, weights]) => `  ${JSON.stringify(key)}: {\n    regular: ${literal(weights.regular)},\n    bold: ${literal(weights.bold)},\n  },`)
+  .map(
+    ([key, weights]) =>
+      `  ${JSON.stringify(key)}: {\n    regular: ${literal(weights.regular, SUBSTITUTES[key as keyof typeof TABLES])},\n    bold: ${literal(weights.bold, SUBSTITUTES[key as keyof typeof TABLES])},\n  },`,
+  )
   .join("\n")
 
 /**
@@ -219,6 +242,7 @@ const LATIN_FACE_MARK_FACES = {
   georgia: { regular: ["georgia"], bold: ["georgiaBold"] },
   yahei: { regular: ["yahei"], bold: ["yaheiBold"] },
   "simsun-kaiti": { regular: ["simsun", "kaiti"], bold: ["simsun", "kaiti"] },
+  times: { regular: ["times"], bold: ["timesBold"] },
 } as const satisfies Record<keyof typeof TABLES, Record<"regular" | "bold", readonly FaceName[]>>
 
 /** The advance every one of `faces` gives the code point, or `undefined` when one lacks it or they differ. */
@@ -251,7 +275,7 @@ writeFileSync(
 // generator for which faces each bound is the widest of, and why.
 
 export const SYMBOL_ADVANCE_BOUNDS: Readonly<
-  Record<"georgia" | "yahei" | "simsun-kaiti", Readonly<Record<"regular" | "bold", Readonly<Record<number, number>>>>>
+  Record<"georgia" | "yahei" | "simsun-kaiti" | "times", Readonly<Record<"regular" | "bold", Readonly<Record<number, number>>>>>
 > = {
 ${body}
 }
@@ -262,7 +286,7 @@ ${body}
 // bound. A mark the face lacks is left out.
 
 export const LATIN_FACE_MARK_ADVANCES: Readonly<
-  Record<"georgia" | "yahei" | "simsun-kaiti", Readonly<Record<"regular" | "bold", Readonly<Record<number, number>>>>>
+  Record<"georgia" | "yahei" | "simsun-kaiti" | "times", Readonly<Record<"regular" | "bold", Readonly<Record<number, number>>>>>
 > = {
 ${markBody}
 }

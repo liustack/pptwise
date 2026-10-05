@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { resolveFontFace } from "../../render/fonts"
+import { pairedEaFace, resolveFontFace } from "../../render/fonts"
 import { contrastRatio } from "../../render/ink"
 import { TECH_TOKENS } from "./terminal"
 import { JOURNAL_TOKENS } from "./journal"
@@ -548,8 +548,9 @@ describe("memo tokens", () => {
     expect(t.id).toBe("memo")
   })
 
-  it("heading font resolves to SimSun (CJK serif, journal/heritage/museum precedent, no tofu on export)", () => {
-    expect(resolveFontFace(MEMO_TOKENS.fonts.heading, "heading")).toBe("SimSun")
+  it("heading sets Latin in Times New Roman and pairs SimSun for CJK (the Chinese document's pairing, no tofu on export)", () => {
+    expect(resolveFontFace(MEMO_TOKENS.fonts.heading, "heading")).toBe("Times New Roman")
+    expect(pairedEaFace(MEMO_TOKENS.fonts.heading, "heading")).toBe("SimSun")
   })
 
   it("body font resolves to Microsoft YaHei (exact width table)", () => {
@@ -598,8 +599,8 @@ describe("memo vs heritage vs vermilion (warm-paper / red-family split)", () => 
     expect(new Set([MEMO_TOKENS.colors.bg, HERITAGE_TOKENS.colors.bg, VERMILION_TOKENS.colors.bg]).size).toBe(3)
   })
 
-  it("heading: memo and heritage are SimSun serif, vermilion is YaHei sans (red banner carrying white type)", () => {
-    expect(resolveFontFace(MEMO_TOKENS.fonts.heading, "heading")).toBe("SimSun")
+  it("heading: memo and heritage are Song serif (memo's Latin in Times New Roman), vermilion is YaHei sans (red banner carrying white type)", () => {
+    expect(pairedEaFace(MEMO_TOKENS.fonts.heading, "heading")).toBe("SimSun")
     expect(resolveFontFace(HERITAGE_TOKENS.fonts.heading, "heading")).toBe("SimSun")
     expect(resolveFontFace(VERMILION_TOKENS.fonts.heading, "heading")).toBe("Microsoft YaHei")
   })

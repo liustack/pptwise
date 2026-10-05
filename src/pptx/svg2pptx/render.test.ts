@@ -201,6 +201,15 @@ describe("renderOp", () => {
     expect(slide.calls[0].args[0]).toMatchObject({ altText: "团队庆祝产品发布" })
   })
 
+  it("hands pptxgenjs a paired typeface when a text names an East Asian face of its own", () => {
+    const slide = recorder()
+    const text = { kind: "text", runs: [{ text: "每周 32 小时" }], x: 0, y: 0, w: 1, h: 1, fontSize: 23, align: "left" }
+    renderOp(slide, { ...text, fontFace: "Times New Roman", eaFace: "SimSun" } as Op)
+    renderOp(slide, { ...text, fontFace: "SimSun" } as Op)
+    expect((slide.calls[0].args[1] as Record<string, unknown>).fontFace).toBe("Times New Roman|SimSun")
+    expect((slide.calls[1].args[1] as Record<string, unknown>).fontFace).toBe("SimSun")
+  })
+
   it("hands a turned shape, line, path and picture their turn", () => {
     const slide = recorder()
     const box = { x: 1, y: 1, w: 2, h: 1, rotate: 2 }

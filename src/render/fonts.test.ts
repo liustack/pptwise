@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { eaFontFaceFor, isMonoFontFamily, resolveFontFace, resolveFontStack, SAFE_FONTS } from "./fonts"
+import { eaFontFaceFor, isMonoFontFamily, pairedEaFace, pairedEaFamily, resolveFontFace, resolveFontStack, SAFE_FONTS } from "./fonts"
 
 describe("resolveFontFace", () => {
   it("returns the first stack member that is a known-safe font", () => {
@@ -86,6 +86,19 @@ describe("resolveFontStack", () => {
     // terminal's heading stack resolves to Microsoft YaHei.
     const stack = resolveFontStack(["Inter", "Microsoft YaHei"], "heading")
     expect(stack).toBe("Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif")
+  })
+
+  it("names a Latin face's paired East Asian face second, before the preview fallback", () => {
+    // memo's Song heading: Western text in Times New Roman, Chinese in SimSun.
+    expect(resolveFontStack(["Times New Roman", "SimSun", "宋体", "Songti SC", "STSong", "serif"], "heading")).toBe(
+      "Times New Roman, SimSun, Songti SC, STSong, serif",
+    )
+  })
+
+  it("pairs nothing when the first drawable face carries CJK itself, or the stack names no CJK face after it", () => {
+    expect(resolveFontStack(["SimSun", "宋体", "Georgia", "serif"], "heading")).toBe("SimSun, Songti SC, STSong, serif")
+    expect(resolveFontStack(["Bower", "Georgia", "Source Han Serif SC", "serif"], "heading")).toBe("Georgia, Songti SC, STSong, serif")
+    expect(resolveFontStack(["Courier New", "Consolas"], "mono")).toBe("Courier New, Menlo, monospace")
   })
 
   it("appends a monospace preview fallback for the mono role", () => {
@@ -207,5 +220,22 @@ describe("eaFontFaceFor completeness over SAFE_FONTS", () => {
 
   it("every Latin-only face falls back to Microsoft YaHei under eaFontFaceFor", () => {
     for (const face of LATIN_ONLY_FACES) expect(eaFontFaceFor(face)).toBe("Microsoft YaHei")
+  })
+})
+
+describe("pairedEaFace and pairedEaFamily", () => {
+  it("finds the first CJK-capable safe face after the Latin face a stack resolves to", () => {
+    expect(pairedEaFace(["Times New Roman", "SimSun", "宋体"], "heading")).toBe("SimSun")
+    expect(pairedEaFace(["Sectra", "Georgia", "KaiTi"], "heading")).toBe("KaiTi")
+    expect(pairedEaFace(["SimSun", "Times New Roman"], "heading")).toBeUndefined()
+    expect(pairedEaFace(["Georgia", "Songti SC"], "heading")).toBeUndefined()
+  })
+
+  it("reads the pair back off the family list the renderer writes, and nothing else", () => {
+    expect(pairedEaFamily("Times New Roman, SimSun, Songti SC, STSong, serif")).toBe("SimSun")
+    expect(pairedEaFamily("SimSun, Songti SC, STSong, serif")).toBeUndefined()
+    expect(pairedEaFamily("Georgia, Songti SC, STSong, serif")).toBeUndefined()
+    expect(pairedEaFamily("Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif")).toBeUndefined()
+    expect(pairedEaFamily(null)).toBeUndefined()
   })
 })
