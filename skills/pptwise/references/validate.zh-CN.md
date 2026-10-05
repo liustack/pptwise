@@ -9,7 +9,7 @@ mirror_of: skills/pptwise/references/validate.md
 
 ## 小批量填充
 
-为 spec 中每张已确认页面编写 `pages/<page-id>.json`。页面文件只能包含 `components`、`background`、`image_side`、`footnote` 与 `notes`。Spec 拥有 `type`、内容页 `kind`、`heading` 和页面顺序。在页面文件中重复任何锁定字段都会硬报错。
+为 spec 中每张已确认页面编写 `pages/<page-id>.json`。页面文件只能包含 `components`、`background`、`image_side`、`footnote`、`fields`、`stamp` 与 `notes`。Spec 拥有 `type`、内容页 `kind`、`heading` 和页面顺序。在页面文件中重复任何锁定字段都会硬报错。
 
 每次最多填四页，然后运行：
 

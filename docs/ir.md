@@ -77,6 +77,7 @@ Common page fields are:
 - `placeholder: true`, normally produced by an unfinished deck project
 - `heading` and `subheading`
 - `kicker`, a short label over the heading (the occasion on a cover, what an ending asks for), drawn only by a face that declares a place for it. validate refuses it on any other and names the face
+- `fields`, one to four header lines a document form prints, each a `label`, a `value` and an optional `note` (a memo's To, From, Date and Re on its cover, Signed and Copied to under its decision), and `stamp`, a stamp pressed on the page (`text`, an optional `date`). Like `kicker`, only a face that declares a place for them draws them
 - `components`
 - `background`
 - `decor`, one controlled local primitive

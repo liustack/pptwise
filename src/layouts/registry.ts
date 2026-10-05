@@ -397,12 +397,14 @@ export interface LayoutDefinition {
   coverMark?: "face" | CoverMarkAnchor
   /**
    * The page fields this face draws beyond its heading, subheading and
-   * components: `kicker`, the short label over the heading, and on a cover,
-   * chapter or ending face `footnote` (a content face always has a place for
-   * its source line). validate refuses a `kicker` on a face that does not
-   * list it, and a boundary page's `footnote` likewise.
+   * components: `kicker`, the short label over the heading, `fields`, the
+   * label and value lines a document form prints (a memo's To and From),
+   * `stamp`, a stamp pressed on the page, and on a cover, chapter or ending
+   * face `footnote` (a content face always has a place for its source
+   * line). validate refuses a `kicker`, `fields` or `stamp` on a face that
+   * does not list it, and a boundary page's `footnote` likewise.
    */
-  pageFields?: readonly ("kicker" | "footnote")[]
+  pageFields?: readonly ("kicker" | "footnote" | "fields" | "stamp")[]
   /**
    * Structural fact of a cover or chapter face: it draws its own page over a
    * photograph background (`background.kind: "asset"`).

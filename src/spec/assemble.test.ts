@@ -110,6 +110,17 @@ describe("assembleDeck", () => {
     expect(back.spec.pages[1]).not.toHaveProperty("kicker")
   })
 
+  it("fills a page's header lines and stamp from its page file, and gives them back", () => {
+    const fields = [{ label: "To", value: "All staff" }, { label: "Signed", value: "The board", note: "Oct 2026" }]
+    const stamp = { text: "Approved", date: "2026 · 10" }
+    const { ir } = assembleDeck(spec(), { cover: { fields, stamp } })
+    expect(ir.slides[0]?.fields).toEqual(fields)
+    expect(ir.slides[0]?.stamp).toEqual(stamp)
+    const back = disassembleDeck(ir)
+    expect(back.pages.cover).toMatchObject({ fields, stamp })
+    expect(back.spec.pages[0]).not.toHaveProperty("fields")
+  })
+
   it("applies IR component defaults at the final parse boundary", () => {
     const pages = {
       "body-a": { components: [{ type: "image", asset_id: "hero" }] },
