@@ -795,11 +795,11 @@ describe("heatmap component (structure-components wave 2 task 2, value-grid fami
     ])
     expect(parsePptxIR(d).success).toBe(true)
   })
-  it("rejects more than 10 x_labels (max 10)", () => {
-    const d = withComponents([
-      heatmapComponent({ x_labels: Array.from({ length: 11 }, (_, i) => `x${i}`), values: [Array.from({ length: 11 }, () => 1), Array.from({ length: 11 }, () => 1)] }),
-    ])
-    expect(parsePptxIR(d).success).toBe(false)
+  it("takes twelve x_labels, a year of months, and rejects a thirteenth (max 12)", () => {
+    const columns = (n: number) =>
+      withComponents([heatmapComponent({ x_labels: Array.from({ length: n }, (_, i) => `x${i}`), values: [Array.from({ length: n }, () => 1), Array.from({ length: n }, () => 1)] })])
+    expect(parsePptxIR(columns(12)).success).toBe(true)
+    expect(parsePptxIR(columns(13)).success).toBe(false)
   })
   it("rejects more than 10 y_labels (max 10)", () => {
     const d = withComponents([

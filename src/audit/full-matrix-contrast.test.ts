@@ -2068,7 +2068,7 @@ describe("five_forces schema-max content (structure-components wave 2 task 1)", 
 // `heatmap.tsx`), so the value→color→ink chain needs its own dedicated
 // sweep rather than reusing swot/pest/five_forces' "assert zero findings
 // outright" shape verbatim. Two blocks below: a basic representative-content
-// sweep (mirrors the pattern above) and a schema-max 10x10 sweep, both zero
+// sweep (mirrors the pattern above) and a schema-max 12x10 sweep, both zero
 // auditDeck findings across all 13 themes — followed by a third, narrower
 // block that isolates the cell-value-text-vs-cell-fill contrast pair
 // specifically (decision 7's mandate: "any tinted/computed background needs
@@ -2111,9 +2111,9 @@ describe("heatmap contrast (structure-components wave 2 task 2)", () => {
     components: [
       {
         type: "heatmap",
-        x_labels: heatmapLabels(10, "列"),
+        x_labels: heatmapLabels(12, "列"),
         y_labels: heatmapLabels(10, "行"),
-        values: Array.from({ length: 10 }, (_, r) => Array.from({ length: 10 }, (_, c) => r * 10 + c)),
+        values: Array.from({ length: 10 }, (_, r) => Array.from({ length: 12 }, (_, c) => r * 12 + c)),
         show_values: true,
       },
     ],
@@ -2121,7 +2121,7 @@ describe("heatmap contrast (structure-components wave 2 task 2)", () => {
   markFace(HEATMAP_SCHEMA_MAX_SLIDE, "narrow-column")
 
   for (const themeId of CANONICAL_THEME_IDS) {
-    it(`${themeId}: schema-max heatmap (10x10 grid, show_values on) renders with zero auditDeck findings on the narrowest curated content layout`, () => {
+    it(`${themeId}: schema-max heatmap (12x10 grid, show_values on) renders with zero auditDeck findings on the narrowest curated content layout`, () => {
       expect(auditFindings(deckFor(themeId, HEATMAP_SCHEMA_MAX_SLIDE))).toEqual([])
     })
   }

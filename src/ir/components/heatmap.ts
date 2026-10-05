@@ -13,9 +13,9 @@ import type { DesignStory } from "../../design-story"
 export const schema = z
   .object({
     type: z.literal("heatmap"),
-    /** 列头（沿横轴，每列一个），1-10 项——1 项即单列热力图（病态但合法，
-     * 见 heatmap.tsx 头注）。 */
-    x_labels: z.array(z.string()).min(1).max(10),
+    /** 列头（沿横轴，每列一个），1-12 项——1 项即单列热力图（病态但合法，
+     * 见 heatmap.tsx 头注）。上限 12 是一年的月份数。 */
+    x_labels: z.array(z.string()).min(1).max(12),
     /** 行头（沿纵轴，每行一个），1-10 项——1 项即单行热力图。 */
     y_labels: z.array(z.string()).min(1).max(10),
     /** 值矩阵，行优先：`values[row][col]`。行数必须等于 y_labels 长度、
@@ -35,8 +35,51 @@ export const schema = z
      * 具体刻度）是两个不同语义层，同时可选、互不依赖。 */
     x_title: z.string().optional(),
     y_title: z.string().optional(),
+    /** Runs of columns marked across every row. See the describe below. */
+    bands: z
+      .array(
+        z
+          .object({
+            from: z.string().min(1).describe('The first column the run covers, written as its x_label, such as "6 月" or "Jun".'),
+            to: z.string().min(1).describe('The last column it covers, written as its x_label, such as "9 月" or "Sep". The same as from for one column.'),
+            label: z.string().min(1).describe('What the run is, printed under it, such as "2027 演唱会季 · 6 至 9 月" or "2027 season, Jun to Sep".'),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(2)
+      .optional()
+      .describe(
+        'Up to two runs of columns marked across every row, each framed and named under the grid, such as the season a plan is built around: [{ "from": "6 月", "to": "9 月", "label": "2027 演唱会季 · 6 至 9 月" }]. from and to name two x_labels, from first, and two runs do not share a column.',
+      ),
   })
   .strict()
+  .superRefine((c, ctx) => {
+    if (!c.bands) return
+    const at = (label: string) => c.x_labels.findIndex((x) => x.trim() === label.trim())
+    const taken = new Set<number>()
+    c.bands.forEach((band, k) => {
+      const from = at(band.from)
+      const to = at(band.to)
+      for (const [key, i, label] of [["from", from, band.from], ["to", to, band.to]] as const) {
+        if (i < 0) {
+          ctx.addIssue({ code: "custom", path: ["bands", k, key], message: `heatmap bands[${k}].${key} is "${label}", and no x_label reads that. Name a column as x_labels writes it: ${c.x_labels.map((x) => `"${x}"`).join(", ")}.` })
+        }
+      }
+      if (from < 0 || to < 0) return
+      if (to < from) {
+        ctx.addIssue({ code: "custom", path: ["bands", k], message: `heatmap bands[${k}] runs from "${band.from}" back to "${band.to}". Write the earlier column in from.` })
+        return
+      }
+      for (let i = from; i <= to; i++) {
+        if (taken.has(i)) {
+          ctx.addIssue({ code: "custom", path: ["bands", k], message: `heatmap bands[${k}] covers "${c.x_labels[i]}", which another band already covers. Keep the runs apart.` })
+          return
+        }
+      }
+      for (let i = from; i <= to; i++) taken.add(i)
+    })
+  })
   .refine((c) => c.values.length === c.y_labels.length, {
     message: "heatmap values row count must equal y_labels length (one row per y_label)",
     path: ["values"],
