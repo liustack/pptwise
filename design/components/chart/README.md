@@ -96,3 +96,13 @@ Three changes, settled on the fiscal, growth, indicators and funds pages. See th
 **Why.** One chart on a page can rest on weaker evidence than the rest of it, and the reader has to see that on the chart.
 
 **What it gave up.** A share bar refuses a tag, and the hand-set plots that have no place for one decline the chart.
+
+## almanac, CBAM sample, 2026-10
+
+`reference`, `data[].note` and `emphasis_label`. Settled on the exposure page (p07), the products and countries pages (p08, p09), the carbon price page (p12), the green power page (p13) and the routes page (p14): see the boards in [compositions/benchmark](../../compositions/benchmark/README.md), [compositions/breakdown](../../compositions/breakdown/almanac.board.png) and [compositions/segments](../../compositions/segments/almanac.board.png). The round's decisions are in [rounds/2026-10-05-almanac](../../rounds/2026-10-05-almanac/README.md).
+
+**What it looks like.** `reference` draws one value across a bar chart's bars as a dashed line with its label, and the legend names it with a short dashed line. A bar's `note` follows its value after a middle dot (「7.68 · 62.36 元」). A share bar's `emphasis_label` is the author's own line for the marked run, set where the run's computed total would stand, whole or not at all.
+
+**Why.** Default values are read against the EU benchmark, a price is read with its own currency beside it, and the run a page marks is named in the deck's words.
+
+**What it gave up.** A reference on bar charts only. A share bar whose `emphasis_label` is wider than the bar is not drawn.

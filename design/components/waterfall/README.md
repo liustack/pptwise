@@ -19,3 +19,13 @@ Code: [`src/components/waterfall.tsx`](../../../src/components/waterfall.tsx), s
 - The marked bars must sit side by side and cannot be totals, so one bracket always covers exactly them. A label needs at least one marked bar.
 - The floor is rounded down to a leading digit 0.8 of the levels' span below the lowest level ($4.10 to $5.35 starts at $3.00). A bridge too short to keep the cut marks clear of the bar tops draws from zero.
 - The broken axis is on for every theme. A bridge with nothing marked keeps the old colour policy byte for byte.
+
+## almanac, CBAM sample, 2026-10
+
+`items[].note`. Settled on the bridge page (p05): see the board in [compositions/formula](../../compositions/formula/almanac.board.png). The round's decisions are in [rounds/2026-10-05-almanac](../../rounds/2026-10-05-almanac/README.md).
+
+**What it looks like.** A bar's note (「3.187 吨」「0.975 × 1.370 = 1.336 吨」) is a short line under its label, in the muted ink, in mono in the yearbook setting.
+
+**Why.** A bridge of money is worked from a bridge of tonnes, and each bar shows the quantity it was priced from.
+
+**What it gave up.** One line a note, as wide as its bar's column. A longer one is cut and marked.
