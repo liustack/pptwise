@@ -58,3 +58,19 @@ The seal setting's form, in [`rows-seal.tsx`](../../../src/layouts/compositions/
 **What it gave up.**
 
 - The old points page's large 「04」 in a circle: the number now sits in each row's square.
+
+## memo, four-day week decision sample, 2026-10
+
+The memo setting's form, in [`rows-memo.tsx`](../../../src/layouts/compositions/rows-memo.tsx). Settled on the decision page (p02) and, in its narrow form, on the process page (p12, board in [compositions/annex](../annex/memo-p12.board.png)). The round's decisions are in [rounds/2026-10-05-memo](../../rounds/2026-10-05-memo/README.md).
+
+| board (p02) | engine |
+| :-: | :-: |
+| ![board](memo.board.png) | ![engine](memo.engine.png) |
+
+**What it looks like.** Across the body, each clause is 100px tall on a hairline: its numeral at 36px bold in the heading face in the mark (「一、」 in a Chinese deck), its title at 22px in the heading face, its text at 18px in a third column from x360. The marked clause (`emphasis`) sits on the mark's tint with its title in the mark. In a band narrower than 900px, beside an exhibit, the numeral is bare at 30px, the title at 20px and the text under it at 15px in the muted ink, 92px a clause.
+
+**Why.** A decision is quoted by its clause number, so the numbers are the largest thing in each row.
+
+**What it gave up.**
+
+- Three to five `numbered_cards` with no `sub`, or two to five bullets written "Label: text".

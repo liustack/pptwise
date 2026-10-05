@@ -484,3 +484,66 @@ The tests draw every console form on terminal and on vermilion and crayon ([cons
 | A no-break space holds | two words joined by a no-break space stay on one line in every wrap | [svg-text-layout.ts](../src/lib/svg-text-layout.ts) | none |
 | A multiplication sign is part of the figure | a kpi unit "×" or "x" is glued to the figure at its size, "199×" | [quantity-format.ts](../src/lib/quantity-format.ts), [kpi.tsx](../src/components/kpi.tsx) (`kpiFigure`) | [design/components/kpi_cards](../design/components/kpi_cards/README.md) |
 | Architecture inks read on their band | the layer names, items and numbers are checked against the band they sit on | [architecture.tsx](../src/components/architecture.tsx) | none |
+
+## memo four-day week decision sample, 2026-10
+
+The round redrew memo to a sixteen-page Chinese and English decision memo from management and human resources to all staff: a six-month trial of a 32-hour week at full pay from January 2027, the evidence behind it from four countries' pilots, the arithmetic it needs, the rota, the calendar, the stop conditions and who does what. Its decisions, the design system every memo page follows, and every place the engine departs from the board are in [`design/rounds/2026-10-05-memo/`](../design/rounds/2026-10-05-memo/README.md). The rules are restated for the next design session in [Designing for memo](./design-memo.md).
+
+### Compositions
+
+The compositions take a seventh `setting`, `memo` (`CompositionSetting` in [shared.tsx](../src/layouts/compositions/shared.tsx)): a typed memorandum. Tables are open on hairlines under a 2px rule of ink, figures, dates, labels and sources are typed in mono, figures the page argues from are large in the heading face, photographs are pasted in as numbered exhibits, and the red is spent once a page. The memo forms of the settled compositions live beside them (`rows-memo.tsx`, `records-memo.tsx`).
+
+New:
+
+| composition | what it draws | takes | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| `annex` | the page's body beside a column holding a pasted-in photograph, and under it a remark in the mark, evidence rows with icons, or a panel of two or three figures | one or more components, then an `image`, then optionally a `callout` with no icon or a `kpi_cards`. The memo setting only | [annex.tsx](../src/layouts/compositions/annex.tsx) | memo | [design/compositions/annex](../design/compositions/annex/README.md) |
+| `tallies` | reasons as rows: an icon, a name, the figure large in the mark, the sentence behind it | a `kpi_cards` of two to four, each with an icon, a label and a note. The memo setting only | [tallies.tsx](../src/layouts/compositions/tallies.tsx) | memo | [design/compositions/tallies](../design/compositions/tallies/README.md) |
+| `slopes` | slope charts side by side on one scale, the marked group a solid red line, a note panel beside them | two to four `line` charts of the same two categories and series, then optionally a `callout`. The memo setting only | [slopes.tsx](../src/layouts/compositions/slopes.tsx) | memo | [design/compositions/slopes](../design/compositions/slopes/README.md) |
+| `diverging` | bars that run left (better) and right (worse) from the middle, every share printed, a figure column beside them | a `percent_stacked` chart whose series carry `tone`, then optionally a `kpi_cards` of one. The memo setting only | [diverging.tsx](../src/layouts/compositions/diverging.tsx) | memo | [design/compositions/diverging](../design/compositions/diverging/README.md) |
+| `citation` | a quoted original typed in mono, who said it, and what it means in the heading face, a figures panel beside it | a `blockquote`, then optionally a meaning callout, a `kpi_cards` of two or three and a panel note. The memo setting only | [citation.tsx](../src/layouts/compositions/citation.tsx) | memo | [design/compositions/citation](../design/compositions/citation/README.md) |
+| `scales` | the case for and against in two columns, the verdict in a banner of ink | one `pros_cons`. The memo setting only | [scales.tsx](../src/layouts/compositions/scales.tsx) | memo | [design/compositions/scales](../design/compositions/scales/README.md) |
+| `catalog` | options each under its photograph, the comparison's rows down each column, the pick tagged | an `image_grid` of two to four, then a `comparison` with as many options. The memo setting only | [catalog.tsx](../src/layouts/compositions/catalog.tsx) | memo | [design/compositions/catalog](../design/compositions/catalog/README.md) |
+| `rota` | who is in on which day as blocks of ink, the days off marked, the count each day | a `data_table` of names and day columns whose cells are blank or one word. The memo setting only | [rota.tsx](../src/layouts/compositions/rota.tsx) | memo | [design/compositions/rota](../design/compositions/rota/README.md) |
+| `sum` | a sum worked on ruled paper, the answer large in the red, a note beside the pad | a `bullets` written "Label: working", a `kpi_cards` of one, then optionally a `callout`. The memo setting only | [sum.tsx](../src/layouts/compositions/sum.tsx) | memo | [design/compositions/sum](../design/compositions/sum/README.md) |
+| `schedule` | a calendar of months with the stretches as bars, the marked one in red, over a typed table of dates | a `gantt` on whole units of its `axis_labels`, then optionally a `timeline`. The memo setting only | [schedule.tsx](../src/layouts/compositions/schedule.tsx) | memo | [design/compositions/schedule](../design/compositions/schedule/README.md) |
+| `checks` | stop conditions as a checklist with a box to tick, the kind, the measure and the threshold after 「IF」, and a red banner | a `row_cards` of three to six with a text each, then optionally a `callout`. The memo setting only | [checks.tsx](../src/layouts/compositions/checks.tsx) | memo | [design/compositions/checks](../design/compositions/checks/README.md) |
+
+Settled compositions that grew a memo form:
+
+- `rows` sets numbered clauses with large red numerals in the deck's numerals, across the body in three columns or under one another beside an exhibit. Board: [design/compositions/rows](../design/compositions/rows/README.md).
+- `records` sets a table of figures with source tags, one line a cell, or a table of duties with icons, up to two lines a cell. Board: [design/compositions/records](../design/compositions/records/README.md).
+
+The shared pieces are in [memo.tsx](../src/layouts/compositions/memo.tsx): `memoInks` for the inks, `memoBaseline` for where each face's baseline sits in its line box, `fitMemo`, `paintMemo` and `paintMemoLine` for text at its exact size, `paintTracked` for spaced capitals, `paintMemoTag` for a tag, `memoNumeral` for clause numbers, `fitMemoTitle` for a title on the full measure, and `MEMO_SPEC` for the small type's exemption. The exhibit is in [exhibit.tsx](../src/layouts/compositions/exhibit.tsx) (`exhibitCaptionLayout`, `paintExhibit`), the stamp in [stamp.tsx](../src/layouts/compositions/stamp.tsx) (`fitStamp`, `paintStamp`) and the margin label in [margin.tsx](../src/layouts/compositions/margin.tsx) (`paintMargin`): any face can call them.
+
+The tests draw every memo page on memo and on terminal and crayon ([memo.test.tsx](../src/layouts/compositions/memo.test.tsx), [memo-pages.test.tsx](../src/layouts/compositions/memo-pages.test.tsx)). The gallery's 构图 band has memo pages for every new composition and for the memo forms of `rows` and `records`.
+
+### Faces
+
+| face | what it is | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- |
+| `memo-sheet` | the ordinary content page: the `kicker` in the margin, the claim in a serif over a rule of ink, the body handed to the compositions in the memo setting, the source in 12px muted type, exhibits numbered across the deck | [content-memo-sheet.tsx](../src/layouts/content-memo-sheet.tsx), [memo-shared.tsx](../src/layouts/memo-shared.tsx) | memo (every content kind but statement) | [design/faces/memo-sheet](../design/faces/memo-sheet/README.md) |
+| `memo-cover` | MEMORANDUM over a red double rule, the header lines from `fields`, the title at 60px, a red bar and the subtitle, the photograph as exhibit 1, the `stamp` | [cover-memo-cover.tsx](../src/layouts/cover-memo-cover.tsx) | memo | [design/faces/memo-cover](../design/faces/memo-cover/README.md) |
+| `memo-ending` | the `kicker` in the margin, the decision at 40px, up to three numbered clauses from `bullets`, the sign-off lines from `fields`, the `stamp` | [ending-memo-ending.tsx](../src/layouts/ending-memo-ending.tsx) | memo | [design/faces/memo-ending](../design/faces/memo-ending/README.md) |
+
+### Motif
+
+`memo-motif` is redrawn: MEMORANDUM over a red double rule on every page but the cover, and on content pages, when the deck asks for a footer, the subject at the top right and a typed folio (「第 N 页 共 M 页」) at the foot. It paints the footer row itself. Board: [design/motifs/memo-motif](../design/motifs/memo-motif/README.md).
+
+### Page and component fields
+
+| field | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| `fields` and `stamp` on a slide | header lines (label, value, note) and a stamp (words and a date) a face draws; refused on a face that has no place for them | [index.ts](../src/ir/index.ts), [validate-core.ts](../src/validate-core.ts) | [design/faces/memo-cover](../design/faces/memo-cover/README.md), [design/faces/memo-ending](../design/faces/memo-ending/README.md) |
+| `tag` on `data_table` rows | a few words leading the row's last cell as an outlined tag, the kind of source | [data-table.ts](../src/ir/components/data-table.ts), [data-table.tsx](../src/components/data-table.tsx) | [design/components/data_table](../design/components/data_table/README.md) |
+| `recommended_label` on `comparison` | who the recommended option is for, as a filled tag after its name | [comparison.ts](../src/ir/components/comparison.ts) | [design/components/comparison](../design/components/comparison/README.md) |
+| `tone` on chart series | a series in the success, danger or warning ink, so its colour says what kind of news it is | [chart.ts](../src/ir/components/chart.ts), [chart.tsx](../src/components/chart.tsx) | [design/components/chart](../design/components/chart/README.md) |
+| a marked point on `stacked` and `percent_stacked` charts | the column the page is about at full strength, the others receding | [chart.ts](../src/ir/components/chart.ts), [chart.tsx](../src/components/chart.tsx) | [design/components/chart](../design/components/chart/README.md) |
+
+### Engine behaviour
+
+| behaviour | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| Turned shapes export turned | a picture or shape inside a rotated group is written with its own rotation round the group's centre, so a turned print stays a picture, cropped and editable | [dispatch.ts](../src/pptx/svg2pptx/dispatch.ts) | [design/faces/memo-cover](../design/faces/memo-cover/README.md) |
+| A serif heading pairs a Latin face | a heading stack of Times New Roman over SimSun writes the pair to PowerPoint, Latin and figures in Times New Roman, Chinese in SimSun, and the preview measures Times New Roman exactly | [fonts.ts](../src/render/fonts.ts), [pptx-ea-fonts.ts](../src/pptx/pptx-ea-fonts.ts), [svg-text-layout.ts](../src/lib/svg-text-layout.ts) | none |
+| A cut row card description is reported | a `row_cards` description past its two lines is marked cut, so the audit reports it | [row-cards.tsx](../src/components/row-cards.tsx) | none |
