@@ -30,7 +30,7 @@ import {
   type KpiValueScale,
 } from "../components/kpi"
 import { iconCardContentHeight, renderIconCardBody } from "../components/icon-card-body"
-import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
+import { emphasisRunInk, fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk, graphicInk, groupValueInks } from "../render/ink"
 import { tryContentHeadingTreatment } from "../render/heading-treatments/render"
 import { FRAMED_CONTENT_BOTTOM } from "./framed-content-bottom"
@@ -350,6 +350,19 @@ function prepareBentoKpiValuePaints(
 
   const paints = new Map<KpiBentoUnit, BentoKpiValuePaint>()
   for (const group of groups.values()) {
+    // A group whose author marked a figure (`**…**` around its value) sets that
+    // figure in the emphasis ink and the others in the text ink, as the
+    // ordinary kpi cards do. Painting every figure in the accent left the mark
+    // nothing to stand out from.
+    const marks = group.map(({ unit }) => kpiFigure(unit.item.value, unit.item.unit).marked)
+    if (marks.some(Boolean)) {
+      group.forEach((entry, index) => {
+        const size = entry.layout.fittedValue.fontSize
+        const fill = marks[index] ? accessibleInk(emphasisRunInk(ctx.colors), ctx.colors.surface, size) : accessibleInk(ctx.colors.text, ctx.colors.surface, size)
+        paints.set(entry.unit, { layout: entry.layout, fill })
+      })
+      continue
+    }
     const fills = groupValueInks(
       group.map(({ layout }) => ({
         preferredFill: ctx.colors.accent,

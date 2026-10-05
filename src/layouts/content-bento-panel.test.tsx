@@ -197,6 +197,37 @@ describe("BentoPanelContent", () => {
     expect(next).toContain("数据来源：监控平台")
   })
 
+  it("sets the figure the author marked in the emphasis ink and the others in the text ink", () => {
+    const marked: Slide = {
+      type: "content",
+      kind: "list",
+      heading: "三个理由",
+      components: [
+        {
+          type: "kpi_cards",
+          items: [
+            { value: "全覆盖", label: "三级公立综合医院" },
+            { value: "**约 80%**", label: "替尔泊肽降价" },
+            { value: "0 个", label: "国产注射液获批" },
+          ],
+        },
+      ],
+    } as Slide
+    for (const theme of ["thesis", "terminal"]) {
+      const ctx = boundThemeCtx(theme, {})
+      const root = parseSvgRoot(
+        renderSvgMarkup(
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+            <BentoPanelContent ir={ir(theme, [marked])} slide={marked} index={0} ctx={ctx} />
+          </svg>,
+        ),
+      )
+      const fillOf = (value: string) => Array.from(root.querySelectorAll("text")).find((t) => t.textContent?.startsWith(value))!.getAttribute("fill")
+      expect(fillOf("全覆盖"), theme).toBe(fillOf("0"))
+      expect(fillOf("约 80%"), theme).not.toBe(fillOf("全覆盖"))
+    }
+  })
+
   it("lecture 4-kpi cards stay inside the content rect and do not run past the framed floor", () => {
     const kpiSlide: Slide = {
       type: "content",
