@@ -118,14 +118,47 @@ describe("share bar", () => {
     ])
   })
 
-  it("is not drawn when narrow parts' labels cannot stand clear of each other over the bar", () => {
+  it("names narrow parts in a key under the bar when their labels cannot stand clear of each other over it", () => {
     const crowded = capacity()
     crowded.series = [
       ...crowded.series,
       { name: "生物质发电", data: [{ x: crowded.series[0]!.data[0]!.x, y: 0.5 }] },
       { name: "其他电源", data: [{ x: crowded.series[0]!.data[0]!.x, y: 0.4 }] },
     ]
-    expect(draw(crowded).drawn).toBeNull()
+    const { root, drawn, fills } = draw(crowded)
+    expect(root!.querySelector("[data-share-over]")).toBeNull()
+    const keys = Array.from(root!.querySelectorAll("[data-share-key]"))
+    expect(keys.map((k) => k.querySelector("text")!.textContent)).toEqual(["核电 0.62 亿千瓦", "生物质发电 0.50 亿千瓦", "其他电源 0.40 亿千瓦"])
+    // Each swatch in its part's fill.
+    expect(keys.map((k) => k.querySelector("rect")!.getAttribute("fill"))).toEqual(fills.slice(4))
+    // The key sits under the bar and the totals under the key.
+    const barFoot = Math.max(...Array.from(root!.querySelectorAll("rect[data-share-part]")).map((r) => Number(r.getAttribute("y")) + Number(r.getAttribute("height"))))
+    const keyY = Number(keys[0]!.querySelector("text")!.getAttribute("y"))
+    expect(keyY).toBeGreaterThan(barFoot)
+    expect(Number(root!.querySelector("[data-share-total]")!.getAttribute("y"))).toBeGreaterThan(keyY)
+    expect(drawn!.height).toBeGreaterThan(SHARE_BAR_H)
+    expect(() => assertSubset(root!)).not.toThrow()
+  })
+
+  it("wraps the key into rows across the width", () => {
+    const budget: Chart = {
+      type: "chart",
+      chart_type: "stacked",
+      direction: "horizontal",
+      axes: { y_unit: "%" },
+      series: ["场外饮品站与物料", "联名包装与门店活动", "票根合作与门票激励", "内容与线上投放", "归因系统与数据", "风险准备金"].map((name, i) => ({ name, data: [{ x: "拟定比例", y: [30, 25, 15, 15, 8, 7][i]! }] })),
+    }
+    const { ctx } = testCtx("swiss")
+    const parts = shareParts(budget)!
+    const narrow = drawShareBar({ chart: budget, ctx, x: 0, y: 0, w: 520, fills: parts.map(() => "#000000"), markInk: "#000000" })!
+    const rows = new Set(Array.from(renderNode(narrow.node).root.querySelectorAll("[data-share-key] text")).map((t) => t.getAttribute("y")))
+    expect(rows.size).toBeGreaterThan(1)
+  })
+
+  it("is not drawn when a part's words are wider than the bar itself", () => {
+    const wordy = capacity()
+    wordy.series = [...wordy.series, { name: "一个名字长到整条比例条都放不下的电源类型".repeat(4), data: [{ x: wordy.series[0]!.data[0]!.x, y: 0.1 }] }]
+    expect(draw(wordy).drawn).toBeNull()
   })
 })
 
@@ -141,6 +174,29 @@ describe("share bar in the ordinary chart", () => {
       expect(fills[0], themeId).not.toBe(fills[2])
       expect(root.querySelector("[data-dropped]"), themeId).toBeNull()
       expect(texts(root)).toContain("核电 0.62 亿千瓦")
+    }
+  })
+
+  // The writer's 2027 concert budget on rally: six parts, the two thinnest
+  // too narrow for their words and too close to set them over the bar. The
+  // whole chart used to be declared dropped.
+  it("measures and draws a bar whose narrow parts go to the key, with nothing dropped", () => {
+    const budget: Chart = {
+      type: "chart",
+      chart_type: "stacked",
+      direction: "horizontal",
+      axes: { y_unit: "%" },
+      series: ["场外饮品站与物料", "联名包装与门店活动", "票根合作与门票激励", "内容与线上投放", "归因系统与数据", "风险准备金"].map((name, i) => ({ name, data: [{ x: "拟定比例", y: [30, 25, 15, 15, 8, 7][i]! }] })),
+    }
+    for (const themeId of ["rally", "brief"]) {
+      const { ctx } = testCtx(themeId)
+      const h = chart.measure(budget, 1088, ctx)
+      expect(h, themeId).toBeGreaterThan(SHARE_BAR_H - 40)
+      const { root } = renderNode(chart.render(budget, { x: 96, y: 200, w: 1088, h }, ctx))
+      expect(root.querySelector("[data-dropped]"), themeId).toBeNull()
+      expect(root.querySelectorAll("[data-share-key]").length, themeId).toBeGreaterThan(0)
+      const words = texts(root).join(" ")
+      for (const name of budget.series.map((s) => s.name)) expect(words, themeId).toContain(name)
     }
   })
 })
