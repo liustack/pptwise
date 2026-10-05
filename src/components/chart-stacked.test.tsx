@@ -645,3 +645,29 @@ describe("series tone", () => {
     expect(chartSchema.safeParse(toned).success).toBe(true)
   })
 })
+
+describe("a marked point in a stacked chart", () => {
+  const stacked: ChartComponent = {
+    type: "chart",
+    chart_type: "percent_stacked",
+    series: [
+      { name: "Better", data: [{ x: "Burnout", y: 71 }, { x: "Pace", y: 2 }] },
+      { name: "Worse", data: [{ x: "Burnout", y: 22 }, { x: "Pace", y: 62, emphasis: true }] },
+    ],
+  }
+
+  it("keeps the marked column's colours and recedes the others", () => {
+    const segs = segments(draw(stacked)).sort((a, b) => a.x - b.x)
+    const [burnoutA, burnoutB, paceA, paceB] = segs
+    expect(burnoutA!.fill).toBe(burnoutB!.fill)
+    expect(burnoutA!.fill).not.toBe(PALETTE[0])
+    expect(new Set([paceA!.fill, paceB!.fill])).toEqual(new Set([PALETTE[0], PALETTE[1]]))
+  })
+
+  it("is accepted on stacked and percent_stacked and refused on a share bar", () => {
+    expect(chartSchema.safeParse(stacked).success).toBe(true)
+    expect(chartSchema.safeParse({ ...stacked, chart_type: "stacked" }).success).toBe(true)
+    const share = { type: "chart", chart_type: "stacked", direction: "horizontal", series: [{ name: "A", data: [{ x: "All", y: 3, emphasis: true }] }, { name: "B", data: [{ x: "All", y: 4 }] }] }
+    expect(chartSchema.safeParse(share).success).toBe(false)
+  })
+})

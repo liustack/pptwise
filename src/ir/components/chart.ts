@@ -28,7 +28,8 @@ const ChartPointSchema = z
       .optional()
       .describe(
         "Marks the one bar the page is about, such as the latest year in a run of years. It keeps its series' colour and the other bars step back. " +
-          "One point per chart, on a bar chart, and not together with a series' own emphasis.",
+          "On a stacked or percent_stacked chart it marks the column the point stands in: that column keeps its colours and the other columns step back. " +
+          "One point per chart, on a bar, stacked or percent_stacked chart (not a share bar), and not together with a series' own emphasis.",
       ),
   })
   .strict()
@@ -42,11 +43,13 @@ export const POINT_STATUS_TYPES = ["bar", "stacked"] as const
 
 /**
  * Chart types whose points may carry `emphasis`: the ones that draw each
- * point as a bar of its own, one colour per series, so one bar can keep its
- * colour while the others step back. A stacked column is a whole made of its
- * series and has no one bar to single out.
+ * point as a bar or a segment of its own, so one can keep its colour while
+ * the others step back. A bar keeps its colour alone. A stacked column is a
+ * whole made of its series, so a marked point marks its column: the column
+ * keeps its colours and the others step back. A share bar has one column and
+ * marks a run of its parts with series emphasis instead.
  */
-export const POINT_EMPHASIS_TYPES = ["bar"] as const
+export const POINT_EMPHASIS_TYPES = ["bar", "stacked", "percent_stacked"] as const
 
 /**
  * Chart types that can draw `changes`: a bracket between two upright bars
@@ -861,13 +864,14 @@ export const schema = z
     if (markedPoints.length > 0) {
       const first = markedPoints[0]!
       const path = ["series", first.si, "data", first.di, "emphasis"]
-      if (!POINT_EMPHASIS_TYPES.includes(c.chart_type as (typeof POINT_EMPHASIS_TYPES)[number])) {
+      if (!POINT_EMPHASIS_TYPES.includes(c.chart_type as (typeof POINT_EMPHASIS_TYPES)[number]) || isShareBar(c)) {
         ctx.addIssue({
           code: "custom",
           path,
-          message:
-            `emphasis on a point marks the one bar the page is about, and a ${c.chart_type} chart draws no bar of its own for "${first.x}". ` +
-            `Use chart_type ${POINT_EMPHASIS_TYPES.map((t) => `"${t}"`).join(" or ")}, or say in the page's text which value it is about.`,
+          message: isShareBar(c)
+            ? `emphasis on a point marks the column the page is about, and a share bar is one column. Mark the parts the page is about with series emphasis instead.`
+            : `emphasis on a point marks the one bar the page is about, and a ${c.chart_type} chart draws no bar of its own for "${first.x}". ` +
+              `Use chart_type ${POINT_EMPHASIS_TYPES.map((t) => `"${t}"`).join(" or ")}, or say in the page's text which value it is about.`,
         })
       } else if (markedPoints.length > 1) {
         const second = markedPoints[1]!

@@ -78,15 +78,24 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
 
 /**
- * The compositions that paint a chart series' `tone` (good or bad news in the
- * theme's success and danger inks). A page whose chart gives a series a tone
- * is offered to these alone, so no hand-set plot recolours a series the
- * author said was good or bad news. The ordinary chart draws tones too.
+ * The compositions that paint the two chart marks most hand-set plots were
+ * drawn without: a series' `tone` (good or bad news in the theme's success
+ * and danger inks) and a marked point in a stacked chart (the column the
+ * page is about). A page whose chart carries either is offered to these
+ * alone, so no plot recolours a series the author called good or bad news or
+ * marks a segment where the author marked a column. The ordinary chart draws
+ * both.
  */
-const SERIES_TONE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const CHART_MARK_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
 
-function namesSeriesTone(components: readonly CompositionProps["components"][number][]): boolean {
-  return components.some((component) => component.type === "chart" && component.series.some((series) => series.tone !== undefined))
+function asksForChartMarks(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some(
+    (component) =>
+      component.type === "chart" &&
+      (component.series.some((series) => series.tone !== undefined) ||
+        ((component.chart_type === "stacked" || component.chart_type === "percent_stacked") &&
+          component.series.some((series) => series.data.some((point) => point.emphasis === true)))),
+  )
 }
 
 /**
@@ -96,9 +105,9 @@ function namesSeriesTone(components: readonly CompositionProps["components"][num
 export function compose(props: CompositionProps, ids: readonly CompositionId[] = COMPOSITION_IDS): React.ReactElement | null {
   const handOn: CompositionProps["handOn"] = (components, rect) =>
     compose({ ...props, components, rect }, ids)
-  const toned = namesSeriesTone(props.components)
+  const marked = asksForChartMarks(props.components)
   for (const id of ids) {
-    if (toned && !SERIES_TONE_COMPOSITIONS.has(id)) continue
+    if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     const drawn = COMPOSITIONS[id]({ ...props, handOn })
     if (drawn) return drawn
   }

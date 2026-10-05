@@ -181,3 +181,22 @@ describe("compositions leave a toned series to the ordinary chart", () => {
     }
   })
 })
+
+describe("compositions leave a stacked chart's marked column to the ordinary chart", () => {
+  it("offers it to no composition that cannot mark a column", async () => {
+    const { compose } = await import("./index")
+    const { boundThemeCtx } = await import("../../render/__fixtures__/theme-ctx")
+    const chart = {
+      type: "chart" as const,
+      chart_type: "stacked" as const,
+      series: [
+        { name: "A", data: [{ x: "2025", y: 1 }, { x: "2026", y: 2, emphasis: true }] },
+        { name: "B", data: [{ x: "2025", y: 2 }, { x: "2026", y: 3 }] },
+      ],
+    }
+    const ctx = boundThemeCtx("bulletin")
+    for (const setting of ["notice", "grid", "panel", "seal", "console"] as const) {
+      expect(compose({ components: [chart], ctx, rect: { x: 96, y: 200, w: 1088, h: 420 }, setting }), setting).toBeNull()
+    }
+  })
+})
