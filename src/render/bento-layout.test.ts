@@ -460,6 +460,22 @@ describe("sortUnitsByHeroWeight", () => {
     expect(sorted).toEqual([low1, low2, low3, hi1, hi2])
   })
 
+  it("keeps a promoted tier of equal units in reading order across the cells it claims (a photograph and three icon cards)", () => {
+    // The three icon cards outrank the photograph and claim the 4-unit tier's
+    // three biggest cells, 0, 3 and 1. They are equal, so they keep the order
+    // the author wrote them in across those cells: 1, 2, the photograph, 3,
+    // not 1, 3, the photograph, 2.
+    const photo = componentUnit("photo")
+    const [c1, c2, c3] = [iconCardUnit("1"), iconCardUnit("2"), iconCardUnit("3")]
+    expect(sortUnitsByHeroWeight([photo, c1, c2, c3])).toEqual([c1, c2, photo, c3])
+    // Two tiers promoted at once: each keeps its own order within the cells it takes.
+    const k1 = kpiUnit("k1")
+    const k2 = kpiUnit("k2")
+    const t = iconCardUnit("t")
+    const sorted = sortUnitsByHeroWeight([componentUnit("a"), t, k2, componentUnit("b"), k1])
+    expect(sorted).toEqual([t, componentUnit("a"), componentUnit("b"), k2, k1])
+  })
+
   it("6-unit tier: every cell is equal-area, so weight-sorting still runs but has no 'wrong cell' to avoid (rank is identity)", () => {
     const units = [
       componentUnit("a"),

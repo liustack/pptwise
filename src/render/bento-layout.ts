@@ -273,15 +273,17 @@ const CELL_AREA_RANK: Record<number, number[]> = {
  *   units) claim `rank`'s largest-area cells — each weight tier, in
  *   descending order, taking the next-biggest still-unclaimed cell(s) in
  *   `rank`'s own order. The *lowest*-weight tier (everything left over)
- *   isn't being promoted past anything, so instead of handing it whatever
- *   `rank` entries remain in `rank`'s own (tie-agnostic) order, those
- *   leftover cell indices are sorted back into ascending order first — this
- *   keeps that tier's units in the same relative left-to-right/
- *   top-to-bottom order they started in, rather than being scattered by
- *   `rank`'s ordering. (Worked example: 1 chart among 3 equal-weight components
- *   must promote only the chart into the biggest cell, leaving the 3 components
- *   in their original relative order in the remaining cells — see this
- *   file's tests.)
+ *   isn't being promoted past anything and takes the cells that remain.
+ *   Within every tier, promoted or left over, the units are equal: none
+ *   outranks another, so the tier's cells are sorted back into ascending
+ *   order before its units fill them. This keeps each tier's units in the
+ *   same relative left-to-right/top-to-bottom order they started in, rather
+ *   than being scattered by `rank`'s ordering. (Worked examples: 1 chart
+ *   among 3 equal-weight components must promote only the chart into the
+ *   biggest cell, leaving the 3 components in their original relative
+ *   order in the remaining cells; 3 icon cards beside a photograph claim
+ *   the 4-unit tier's cells 0, 3 and 1 and read 1, 2, the photograph, 3
+ *   across them, not 1, 3, the photograph, 2 — see this file's tests.)
  *
  * `layoutBento` itself is untouched: it only ever fills `cells[i]` from
  * `units[i]`, so permuting its *input* is the entire mechanism — the grid
@@ -313,24 +315,22 @@ export function sortUnitsByHeroWeight(units: BentoUnit[]): BentoUnit[] {
       const byWeight = weights[b.index] - weights[a.index]
       return byWeight !== 0 ? byWeight : a.index - b.index
     })
-    .map((entry) => entry.unit)
 
-  // `byWeightDesc` is sorted descending, so the lowest-weight tier is a
-  // contiguous run at its tail. Everything strictly above `minWeight` is
-  // "promoted" and gets a `rank`-ordered (biggest-remaining-cell-first)
-  // slot; the tail inherits whatever cells are left, sorted back into
-  // ascending cell-index order (see the doc comment above for why).
-  const minWeight = Math.min(...weights)
-  const promotedCount = weights.filter((weight) => weight > minWeight).length
-  const leftoverCells = rank.slice(promotedCount).sort((a, b) => a - b)
-
+  // `byWeightDesc` runs tier by tier, heaviest first, each tier in its
+  // original order. A tier claims the next `rank` cells (the biggest still
+  // unclaimed) and fills them in ascending cell order, so equal units keep
+  // their reading order (see the doc comment above for why).
   const result = new Array<BentoUnit>(units.length)
-  byWeightDesc.forEach((unit, weightRank) => {
-    const cellIndex =
-      weightRank < promotedCount
-        ? rank[weightRank]
-        : leftoverCells[weightRank - promotedCount]
-    result[cellIndex] = unit
-  })
+  let start = 0
+  while (start < byWeightDesc.length) {
+    const weight = weights[byWeightDesc[start].index]
+    let end = start
+    while (end < byWeightDesc.length && weights[byWeightDesc[end].index] === weight) end++
+    const cells = rank.slice(start, end).sort((a, b) => a - b)
+    byWeightDesc.slice(start, end).forEach((entry, i) => {
+      result[cells[i]] = entry.unit
+    })
+    start = end
+  }
   return result
 }

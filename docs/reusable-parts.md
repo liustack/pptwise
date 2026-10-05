@@ -734,3 +734,9 @@ The tests draw every board page on homeroom and on ember, a dark theme whose pri
 | `upper` on chart points | a value known only as a range, drawn solid to `y` and dashed on to `upper`, both ends named | [chart.ts](../src/ir/components/chart.ts), [chart-svg.tsx](../src/components/chart-svg.tsx) | [design/components/chart](../design/components/chart/README.md) |
 | `duration`, `duration_unit`, `checkpoint` and `points` on `roadmap` | a phase's length, the check at its end and what it covers, so a face can lay the phases to scale | [roadmap.ts](../src/ir/components/roadmap.ts), [roadmap.tsx](../src/components/roadmap.tsx) | [design/components/roadmap](../design/components/roadmap/README.md) |
 | `tone` on pyramid levels | a level in the success, warning or danger ink, so its colour says how guarded it is | [pyramid.ts](../src/ir/components/pyramid.ts), [pyramid.tsx](../src/components/pyramid.tsx) | [design/components/pyramid](../design/components/pyramid/README.md) |
+
+### Engine behaviour
+
+| behaviour | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| A bento keeps equal items in order | items of equal weight that outrank the rest take the grid's biggest cells in the order they were written, so three icon cards beside a photograph read 1, 2, the photograph, 3 | [bento-layout.ts](../src/render/bento-layout.ts) (`sortUnitsByHeroWeight`) | none |
