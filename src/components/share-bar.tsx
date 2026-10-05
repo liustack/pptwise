@@ -25,6 +25,7 @@ type Chart = Extract<Component, { type: "chart" }>
  * each series in it), a line under the bar states the run's total and share
  * of the whole, under the run's own left end, and beside it the largest
  * other part's, under its own: the comparison a page marks a run to make.
+ * A part's note (`data[].note`) follows its value, after a middle dot.
  * The totals are computed, so a line with no room for the second leaves it
  * out. Everything the author wrote is drawn whole, or the bar is not drawn.
  *
@@ -45,6 +46,8 @@ export interface SharePart {
   /** Index of the series it comes from. */
   seriesIndex: number
   marked: boolean
+  /** A few words printed after the part's value (`data[].note`). */
+  note?: string
 }
 
 const CAPTION = { size: 16, box: 24 }
@@ -76,7 +79,7 @@ export function shareParts(chart: Chart): SharePart[] | null {
   for (const [seriesIndex, s] of chart.series.entries()) {
     const point = s.data[0]
     if (!point || s.data.length !== 1) return null
-    parts.push({ name: s.name, value: point.y, seriesIndex, marked: s.emphasis === true })
+    parts.push({ name: s.name, value: point.y, seriesIndex, marked: s.emphasis === true, ...(point.note?.trim() ? { note: point.note.trim() } : {}) })
   }
   return parts
 }
@@ -185,7 +188,8 @@ export function drawShareBar(spec: ShareBarSpec): { node: React.ReactElement; he
   const outside: { index: number; text: string; box: Placed; tickX: number }[] = []
   const inside: { index: number; value: string }[] = []
   for (const [i, part] of parts.entries()) {
-    const value = figure(part.value, decimals, unit, figures)
+    // A part's note follows its value, after a middle dot.
+    const value = part.note ? `${figure(part.value, decimals, unit, figures)} · ${part.note}` : figure(part.value, decimals, unit, figures)
     const room = spans[i]!.x1 - spans[i]!.x0 - PART_GAP - LABEL_INSET - LABEL_TRAIL
     const fitsInside = width(part.name, NAME.size, body, true) <= room && width(value, VALUE.size, body) <= room
     if (fitsInside) {

@@ -2780,12 +2780,22 @@ export function renderBarHorizontal(
     if (i < 0 || !to || a == null || b == null) continue
     changeAfter.set(`${i}-${to.seriesIndex}`, changeText(a, b, meta.xUnit ?? meta.yUnit, chinese))
   }
+  // A bar's note (`data[].note`) follows its value, after a middle dot.
+  const noteAt = new Map<string, string>()
+  for (const [seriesIndex, s] of series.entries()) {
+    for (const point of s.data) {
+      const i = categories.findIndex((cat) => cat.x === point.x)
+      if (i >= 0 && point.note?.trim()) noteAt.set(`${i}-${seriesIndex}`, point.note.trim())
+    }
+  }
   const labelText = (i: number, seriesIndex: number, value: number) => {
     const change = changeAfter.get(`${i}-${seriesIndex}`)
-    return change ? `${chartFigure(value, meta.figures)}  ${change}` : chartFigure(value, meta.figures)
+    const note = noteAt.get(`${i}-${seriesIndex}`)
+    const figure = note ? `${chartFigure(value, meta.figures)} · ${note}` : chartFigure(value, meta.figures)
+    return change ? `${figure}  ${change}` : figure
   }
   const labelTexts =
-    changeAfter.size === 0
+    changeAfter.size === 0 && noteAt.size === 0
       ? values.map((v) => chartFigure(v, meta.figures))
       : categories.flatMap((_cat, i) =>
           model.series.flatMap((m) => (m.values[i] == null ? [] : [labelText(i, m.seriesIndex, m.values[i]!)])),

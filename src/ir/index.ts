@@ -709,6 +709,8 @@ export type ChartSeries = {
     status?: "forecast" | "target"
     /** Bar only: the one bar the page is about. It keeps its series' colour and the other bars step back. */
     emphasis?: boolean
+    /** Bars on their side and share-bar parts only: a few words printed with the value. */
+    note?: string
   }[]
   /** `chart_type: "combo"` only: draw this series as bars (default) or a line. */
   plot?: "bar" | "line"

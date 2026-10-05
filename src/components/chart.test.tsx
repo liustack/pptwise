@@ -2151,3 +2151,51 @@ describe("a bar chart's reference line", () => {
     expect(chartSchema.safeParse({ ...defaults, reference: { value: 1.37, label: "" } }).success).toBe(false)
   })
 })
+
+describe("a bar's note", () => {
+  const routes = {
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    direction: "horizontal" as const,
+    axes: { y_title: "吨钢 CO₂，世界钢协全口径" },
+    series: [
+      {
+        name: "吨钢 CO₂",
+        data: [
+          { x: "高炉转炉", y: 2.34, note: "基准线" },
+          { x: "直接还原铁电炉", y: 1.47, note: "低约 37%" },
+          { x: "废钢电炉", y: 0.69, note: "低约 70%" },
+        ],
+      },
+    ],
+  }
+
+  it("follows the value of a bar on its side, after a middle dot", () => {
+    const { container } = svg(chart.render(routes, { x: 0, y: 0, w: 900, h: 300 }, ctx))
+    const labels = Array.from(container.querySelectorAll("[data-value-label]")).map((t) => t.textContent)
+    expect(labels).toEqual(["2.34 · 基准线", "1.47 · 低约 37%", "0.69 · 低约 70%"])
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+  })
+
+  it("follows a share bar's part's value too", () => {
+    const share = {
+      type: "chart" as const,
+      chart_type: "stacked" as const,
+      direction: "horizontal" as const,
+      axes: { y_unit: "tCO₂" },
+      series: [
+        { name: "直接排放", emphasis: true, data: [{ x: "电解铝每吨排放", y: 3.0 }] },
+        { name: "电力间接排放", data: [{ x: "电解铝每吨排放", y: 7.0, note: "绿电降的是这段" }] },
+      ],
+    }
+    const { container } = svg(chart.render(share, { x: 0, y: 0, w: 1000, h: 220 }, ctx))
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "")
+    expect(texts.some((t) => t.includes("7 tCO₂ · 绿电降的是这段"))).toBe(true)
+  })
+
+  it("is refused where a bar has no line after its value", () => {
+    expect(chartSchema.safeParse(routes).success).toBe(true)
+    expect(chartSchema.safeParse({ ...routes, direction: undefined }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...routes, chart_type: "line", direction: undefined }).success).toBe(false)
+  })
+})

@@ -213,6 +213,18 @@ function asksForChartReference(components: readonly CompositionProps["components
   return components.some((component) => component.type === "chart" && component.reference !== undefined)
 }
 
+/**
+ * The compositions that draw the few words a bar or a share bar's part may
+ * carry after its value (`data[].note`). A page whose chart carries one is
+ * offered to these alone; the ordinary chart prints every note after its
+ * value.
+ */
+const CHART_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForChartNote(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.series.some((s) => s.data.some((d) => d.note !== undefined)))
+}
+
 function asksForChartTag(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.tag !== undefined)
 }
@@ -231,12 +243,14 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const noted = asksForCalloutDetail(props.components)
   const footed = asksForWaterfallNote(props.components)
   const referenced = asksForChartReference(props.components)
+  const annotated = asksForChartNote(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
     if (noted && !CALLOUT_DETAIL_COMPOSITIONS.has(id)) continue
     if (footed && !WATERFALL_NOTE_COMPOSITIONS.has(id)) continue
     if (referenced && !CHART_REFERENCE_COMPOSITIONS.has(id)) continue
+    if (annotated && !CHART_NOTE_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     const drawn = COMPOSITIONS[id]({ ...props, handOn })

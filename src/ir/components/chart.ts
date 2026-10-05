@@ -31,6 +31,14 @@ const ChartPointSchema = z
           "On a stacked or percent_stacked chart it marks the column the point stands in: that column keeps its colours and the other columns step back. " +
           "One point per chart, on a bar, stacked or percent_stacked chart (not a share bar), and not together with a series' own emphasis.",
       ),
+    /** A few words printed with the bar's value. See the describe below. */
+    note: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'A few words printed with the bar\'s value, such as "基准线", "低约 37%" or "62.36 元". Bars on their side (bar with direction "horizontal") and the parts of a share bar only.',
+      ),
   })
   .strict()
 
@@ -486,6 +494,21 @@ export const schema = z
         path: ["tag"],
         message: "a share bar has no row over it for a tag. Say what kind of figures it draws in the category's name, or remove tag.",
       })
+    }
+    // A note is printed after a bar's value, which only a bar on its side
+    // and a share bar's part have a line for.
+    const noted = (c.chart_type === "bar" && c.direction === "horizontal") || isShareBar(c)
+    if (!noted) {
+      c.series.forEach((s, si) =>
+        s.data.forEach((d, di) => {
+          if (d.note === undefined) return
+          ctx.addIssue({
+            code: "custom",
+            path: ["series", si, "data", di, "note"],
+            message: `a note is printed after a bar's value, on a bar chart on its side or a share bar, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart has no line for it. Use chart_type "bar" with direction "horizontal", or say it in the category's name.`,
+          })
+        }),
+      )
     }
     if (c.reference !== undefined && c.chart_type !== "bar") {
       ctx.addIssue({
