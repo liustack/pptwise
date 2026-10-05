@@ -739,6 +739,15 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     expect(v.errors[0]!.message).toMatch(/^face "[a-z-]+" has no place for a page tag/)
   })
 
+  it("hard-rejects a ballot on a face with no place for it, and refuses one with a single choice", () => {
+    const ballot = { choices: ["For", "Against", "Abstain"], signature: "Chair's signature" }
+    const v = validateIr({ ...raw, slides: [{ type: "ending", heading: "H", ballot, components: [{ type: "bullets", items: ["a"] }] }] })
+    expect(v.ok).toBe(false)
+    expect(v.errors[0]!.path).toBe("slides.0.ballot")
+    expect(v.errors[0]!.message).toMatch(/^face "[a-z-]+" has no place for a ballot/)
+    expect(validateIr({ ...raw, slides: [{ type: "ending", heading: "H", ballot: { choices: ["For"] } }] }).ok).toBe(false)
+  })
+
   it("refuses blank header lines and more than four of them at the schema", () => {
     const blank = validateIr({ ...raw, slides: [{ type: "cover", heading: "H", fields: [{ label: " ", value: "x" }] }] })
     expect(blank.ok).toBe(false)

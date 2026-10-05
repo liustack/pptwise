@@ -130,6 +130,13 @@ describe("assembleDeck", () => {
     expect(back.spec.pages[1]).not.toHaveProperty("tag")
   })
 
+  it("fills a page's ballot from its page file, and gives it back", () => {
+    const ballot = { choices: ["同意", "不同意", "弃权"], signature: "主任委员签字" }
+    const { ir } = assembleDeck(spec(), { "body-a": { ballot } })
+    expect(ir.slides[1]?.ballot).toEqual(ballot)
+    expect(disassembleDeck(ir).pages["body-a"]).toMatchObject({ ballot })
+  })
+
   it("applies IR component defaults at the final parse boundary", () => {
     const pages = {
       "body-a": { components: [{ type: "image", asset_id: "hero" }] },

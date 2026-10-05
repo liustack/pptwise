@@ -457,6 +457,27 @@ const CommonSlideFields = {
     .optional()
     .describe('A stamp pressed on the page, such as "已决定" or "Approved", with an optional date line under it. Drawn only by faces that have a place for it: validate says which.'),
   /**
+   * A ballot laid over the page's items: the boxes each item can be ticked
+   * in, and a line left blank to sign. Only a face that declares a place for
+   * it draws it.
+   */
+  ballot: z
+    .object({
+      choices: z
+        .array(nonBlankString("ballot.choices[]"))
+        .min(2)
+        .max(4)
+        .describe('The boxes each item can be ticked in, in order, such as ["同意", "不同意", "弃权"] or ["For", "Against", "Abstain"].'),
+      signature: nonBlankString("ballot.signature")
+        .optional()
+        .describe('The label of a line left blank to sign under the items, such as "委员会主任委员签字" or "Chair\'s signature".'),
+    })
+    .strict()
+    .optional()
+    .describe(
+      'A ballot laid over the page\'s items, so a committee can vote on each one: the boxes each item can be ticked in, and an optional line left blank to sign. Drawn only by faces that have a place for it: validate says which.',
+    ),
+  /**
    * A small tag set with the page's heading, saying what the page's evidence
    * is: the trial behind every figure on it, the draft its rules come from.
    * Only a face that declares a place for it draws it.

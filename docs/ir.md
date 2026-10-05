@@ -79,6 +79,7 @@ Common page fields are:
 - `kicker`, a short label over the heading (the occasion on a cover, what an ending asks for), drawn only by a face that declares a place for it. validate refuses it on any other and names the face
 - `tag`, a small tag set with the heading that says what the whole page rests on (`text`, and an optional `evidence` kind that colours it by its source, such as `trial` for "RCT · NEJM 2025"). Like `kicker`, only a face that declares a place for it draws it
 - `fields`, one to four header lines a document form prints, each a `label`, a `value` and an optional `note` (a memo's To, From, Date and Re on its cover, Signed and Copied to under its decision), and `stamp`, a stamp pressed on the page (`text`, an optional `date`). Like `kicker`, only a face that declares a place for them draws them
+- `ballot`, the boxes a committee ticks beside each of the page's items (`choices`, two to four, such as For, Against and Abstain) and an optional line left blank to sign (`signature`, its label). Only a face that declares a place for it draws it
 - `components`
 - `background`
 - `decor`, one controlled local primitive

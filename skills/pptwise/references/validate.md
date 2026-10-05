@@ -4,7 +4,7 @@ Read this when filling pages, assembling a deck project, rendering, auditing, pr
 
 ## Fill small batches
 
-For each confirmed spec page, write `pages/<page-id>.json`. A page file may contain only `components`, `background`, `image_side`, `footnote`, `fields`, `stamp`, `tag`, and `notes`. The spec owns `type`, content `kind`, `heading`, and page order. Repeating any locked field in a page file is a hard error.
+For each confirmed spec page, write `pages/<page-id>.json`. A page file may contain only `components`, `background`, `image_side`, `footnote`, `fields`, `stamp`, `tag`, `ballot`, and `notes`. The spec owns `type`, content `kind`, `heading`, and page order. Repeating any locked field in a page file is a hard error.
 
 Fill at most four pages, then run:
 

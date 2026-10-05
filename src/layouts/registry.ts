@@ -403,12 +403,13 @@ export interface LayoutDefinition {
    * components: `kicker`, the short label over the heading, `fields`, the
    * label and value lines a document form prints (a memo's To and From),
    * `stamp`, a stamp pressed on the page, `tag`, a small tag set with the
-   * heading that says what the page rests on, and on a cover, chapter or
-   * ending face `footnote` (a content face always has a place for its source
-   * line). validate refuses a `kicker`, `fields`, `stamp` or `tag` on a face
-   * that does not list it, and a boundary page's `footnote` likewise.
+   * heading that says what the page rests on, `ballot`, the boxes a
+   * committee ticks beside each item, and on a cover, chapter or ending face
+   * `footnote` (a content face always has a place for its source line).
+   * validate refuses a `kicker`, `fields`, `stamp`, `tag` or `ballot` on a
+   * face that does not list it, and a boundary page's `footnote` likewise.
    */
-  pageFields?: readonly ("kicker" | "footnote" | "fields" | "stamp" | "tag")[]
+  pageFields?: readonly ("kicker" | "footnote" | "fields" | "stamp" | "tag" | "ballot")[]
   /**
    * Structural fact of a cover or chapter face: it draws its own page over a
    * photograph background (`background.kind: "asset"`).
