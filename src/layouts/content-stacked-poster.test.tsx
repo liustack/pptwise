@@ -112,15 +112,14 @@ describe("StackedPosterContent", () => {
 
     // Kicker: section label (from the preceding chapter) is muted, not primary.
     // Regression lock for defect C (bench-driven fixes wave, task 4): the
-    // "Chapter NN · <section>" prefix word used to be hardcoded Chinese
-    // ("章节") regardless of deck language — asserting the full string (not
-    // just the section-name substring the earlier version of this test
-    // checked) locks the English prefix landed and stayed in this exact
-    // "Chapter 01 · " shape.
+    // prefix word used to be hardcoded Chinese ("章节") regardless of deck
+    // language, then hardcoded English ("Chapter 01") regardless of it. It
+    // follows the section name's own language now: a Chinese section reads
+    // 「第一章 · …」, a Latin one "Chapter 01 · …" (the case below).
     const kicker = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("第一章"),
+      (t.textContent ?? "").includes("· 第一章"),
     )!
-    expect(kicker.textContent).toBe("Chapter 01 · 第一章")
+    expect(kicker.textContent).toBe("第一章 · 第一章")
     expect(kicker.getAttribute("fill")).toBe(ctx.colors.muted)
 
     // Accent hairline (AccentBar inlined): the only primary-filled element.
@@ -201,12 +200,12 @@ describe("StackedPosterContent", () => {
     // 14 themes whose primary already clears the floor `accessibleInk`
     // returns it untouched, so their rendered output is byte-identical.
     // Defect C regression lock (see the poster-path kicker test above): the
-    // degrade path's own copy of the "Chapter NN · <section>" breadcrumb
-    // must carry the same English prefix.
+    // degrade path's own copy of the breadcrumb carries the same prefix in
+    // the section name's language.
     const sectionLabel = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("第一章"),
+      (t.textContent ?? "").includes("· 第一章"),
     )!
-    expect(sectionLabel.textContent).toBe("Chapter 01 · 第一章")
+    expect(sectionLabel.textContent).toBe("第一章 · 第一章")
     expect(sectionLabel.getAttribute("fill")).toBe(
       accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, Number(sectionLabel.getAttribute("font-size"))),
     )
@@ -753,5 +752,18 @@ describe("StackedPosterContent subheading", () => {
     const box = parseAudit(rect.getAttribute("data-audit-rect"))
     expect(box.y).toBe(180 + 46)
     expect(box.h).toBe(460 - 46) // contentH(460, no footnote) - SUBHEADING_SLOT_STACKED(46)
+  })
+})
+
+describe("StackedPosterContent breadcrumb language", () => {
+  it("names a Latin section's chapter in English and a Chinese one's in Chinese", () => {
+    const ctx = boundThemeCtx("homeroom", {})
+    const english = { type: "chapter", heading: "The order pool", components: [] } as unknown as Slide
+    const deck = ir("homeroom", [english, oneComponentSlide])
+    const { root } = render(<StackedPosterContent ir={deck} slide={oneComponentSlide} index={1} ctx={ctx} />)
+    expect(Array.from(root.querySelectorAll("text")).map((t) => t.textContent)).toContain("Chapter 01 · The order pool")
+    const chinese = ir("homeroom", [{ type: "chapter", heading: "订单池很大", components: [] } as unknown as Slide, oneComponentSlide])
+    const zh = render(<StackedPosterContent ir={chinese} slide={oneComponentSlide} index={1} ctx={ctx} />)
+    expect(Array.from(zh.root.querySelectorAll("text")).map((t) => t.textContent)).toContain("第一章 · 订单池很大")
   })
 })

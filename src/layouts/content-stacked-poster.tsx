@@ -8,6 +8,7 @@ import { stepAside } from "../render/step-aside"
 import { SCALABLE_TYPES } from "../render/component-traits"
 import { measureComponent, renderComponent } from "../components"
 import { chapterNumberFor, sectionNameFor } from "../lib/derive"
+import { casualHan, headingIsCjk } from "../render/heading-treatments/labels"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { fitEmphasisHeading, fitEmphasisLine, headingEmphasisPaint, renderEmphasisHeading, renderEmphasisText } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
@@ -187,6 +188,17 @@ function componentFitsSlot(component: Component, rect: ContentRect, ctx: Compone
   return measureComponent(component, rect.w, ctx) <= rect.h
 }
 
+/**
+ * The breadcrumb over the heading: the chapter's ordinal in the section
+ * name's own language, then the name. 「第一章 · 订单池很大」 on a Chinese
+ * deck, "Chapter 01 · The order pool" on any other. The word used to be
+ * written in Chinese on every deck, then in English on every deck.
+ */
+function sectionBreadcrumb(chNum: number, section: string): string {
+  const ordinal = headingIsCjk(section) ? `第${casualHan(chNum)}章` : `Chapter ${String(chNum).padStart(2, "0")}`
+  return `${ordinal} · ${section}`
+}
+
 /** The original (pre-poster) left-aligned content construction — the
  * degrade path (>=3 components, no components, or a hero/strip component too tall for its
  * slot), kept byte-identical (modulo the token replacement table above) so
@@ -197,9 +209,7 @@ function renderStackedContent(
 ) {
   const section = sectionNameFor(ir.slides, index)
   const chNum = chapterNumberFor(ir.slides, index)
-  const rawSectionLabel = section
-    ? `Chapter ${String(chNum).padStart(2, "0")} · ${section}`
-    : null
+  const rawSectionLabel = section ? sectionBreadcrumb(chNum, section) : null
   const sectionLabel = rawSectionLabel
     ? fitSvgLine(rawSectionLabel, {
         maxWidth: 1168,
@@ -426,9 +436,7 @@ export function StackedPosterContent(props: SvgTemplateProps) {
 
   const section = sectionNameFor(ir.slides, index)
   const chNum = chapterNumberFor(ir.slides, index)
-  const rawSectionLabel = section
-    ? `Chapter ${String(chNum).padStart(2, "0")} · ${section}`
-    : null
+  const rawSectionLabel = section ? sectionBreadcrumb(chNum, section) : null
   const sectionLabel = rawSectionLabel
     ? fitSvgLine(rawSectionLabel, {
         maxWidth: 900,
