@@ -2,7 +2,7 @@
 
 The side takeover: a photograph bleeding full height down one side of the page, the heading, a short accent bar and the page's other blocks in a column beside it.
 
-Code: [`src/render/image-pages.tsx`](../../../src/render/image-pages.tsx) (`ImageSplitPage`, `SPLIT_COLUMNS`). Shared by bulletin, ember, heritage, ink, journal, luxe, museum and brief.
+Code: [`src/render/image-pages.tsx`](../../../src/render/image-pages.tsx) (`ImageSplitPage`, `SPLIT_COLUMNS`). Shared by bulletin, heritage, ink, journal, luxe, museum and brief.
 
 ## brief, tea sample, 2026-10
 
