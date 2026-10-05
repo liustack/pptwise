@@ -2170,3 +2170,9 @@ describe("concept_equation excluded", () => {
     expect(parsed.success).toBe(false)
   })
 })
+
+describe("chevron_process stage icon", () => {
+  it("takes an icon on a stage", () => {
+    expect(parseOne({ type: "chevron_process", items: [{ title: "a", icon: "id-card" }, { title: "b" }, { title: "c" }] }).success).toBe(true)
+  })
+})
