@@ -32,6 +32,7 @@ import { LookbookOpenCover } from "./cover-lookbook-open-cover"
 import { RedHeadCover } from "./cover-red-head-cover"
 import { ConsoleCover } from "./cover-console-cover"
 import { MemoCover } from "./cover-memo-cover"
+import { DossierCover } from "./cover-dossier-cover"
 import { PledgeOpenCover } from "./cover-pledge-open-cover"
 import { ReportOpenCover } from "./cover-report-open-cover"
 import { CutPanelCover } from "./cover-cut-panel-cover"
@@ -83,4 +84,5 @@ export const COVER_LAYOUTS: Record<CoverLayoutId, CoverLayout> = {
   "show-headline": ShowHeadlineCover,
   "console-cover": ConsoleCover,
   "memo-cover": MemoCover,
+  "dossier-cover": DossierCover,
 }

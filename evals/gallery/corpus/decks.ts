@@ -333,7 +333,7 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
     },
     { type: "chapter", heading: lex.chapters[0]!, subheading: lex.kickers[0], components: [] },
     ...content,
-    themeId === "thesis" || themeId === "brief" || themeId === "crayon"
+    themeId === "thesis" || themeId === "brief" || themeId === "crayon" || themeId === "clinic"
       ? {
           type: "ending" as const,
           heading: lex.chapters[5]!,
@@ -551,6 +551,23 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
       {
         type: "numbered_cards",
         items: lex.phrases.slice(6, 10).map((title, i) => ({ title, text: lex.sentences[i + 8]!, ...(i === 3 ? { emphasis: true } : {}) })),
+      },
+    ]
+  }
+  // clinic's dossier sheet: the board's proposal page, three proposals on
+  // cards with their icons and where their evidence is, the first the one
+  // the page argues for.
+  if (def.id === "dossier-sheet") {
+    return [
+      {
+        type: "numbered_cards",
+        items: lex.phrases.slice(0, 3).map((title, i) => ({
+          icon: (["pill", "hospital", "clipboard-check"] as const)[i]!,
+          title,
+          text: lex.sentences[i + 2]!,
+          sub: lex.periods[i]!,
+          ...(i === 0 ? { emphasis: true } : {}),
+        })),
       },
     ]
   }
@@ -801,7 +818,7 @@ export function layoutPage(
               heading: lex.chapters[5]!,
               subheading: lex.verdicts.positive,
               components:
-                def.id === "gauge-next" || def.id === "crayonbox-todo"
+                def.id === "gauge-next" || def.id === "crayonbox-todo" || def.id === "dossier-ending"
                   ? [{ type: "bullets", items: lex.bullets.slice(0, 3) }]
                   : [],
             }
@@ -1740,6 +1757,262 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
     ],
     footnote: lex.sources[0]!.label,
   }),
+  // clinic's figure cards: three figures, each naming the kind of source it
+  // comes from, the second the one the page argues from, over a share bar
+  // whose first two parts are marked.
+  readings: (lex) => ({
+    heading: lex.headings[2]!,
+    components: [
+      {
+        type: "kpi_cards",
+        items: [0, 1, 2].map((i) => ({
+          icon: (["hospital", "trending-down", "hourglass"] as const)[i]!,
+          value: i === 1 ? `**${lex.metrics[i]!.value}**` : lex.metrics[i]!.value,
+          ...(lex.metrics[i]!.unit ? { unit: lex.metrics[i]!.unit } : {}),
+          label: lex.metrics[i]!.label,
+          note: lex.periods[i]!,
+          tag: { text: lex.labels[i + 4]!, evidence: (["official", "press", "company"] as const)[i]! },
+        })),
+      },
+      {
+        type: "chart",
+        chart_type: "stacked",
+        direction: "horizontal",
+        axes: { y_unit: "%" },
+        series: [
+          { name: lex.labels[9]!, emphasis: true, data: [{ x: lex.segmentAxis, y: 16.4 }] },
+          { name: lex.labels[8]!, emphasis: true, data: [{ x: lex.segmentAxis, y: 34.3 }] },
+          { name: lex.labels[7]!, data: [{ x: lex.segmentAxis, y: 49.3 }] },
+        ],
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // clinic's photograph beside its cases: four cases, the first two bad news.
+  inset: (lex) => ({
+    heading: lex.headings[3]!,
+    components: [
+      { type: "image", asset_id: PHOTO_ASSETS[0], caption: lex.captions[0]!, fit: "cover" },
+      dossierCases(lex),
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // The cases alone, across the body.
+  docket: (lex) => ({
+    heading: lex.headings[3]!,
+    components: [dossierCases(lex)],
+    footnote: lex.sources[0]!.label,
+  }),
+  // Four groups against their controls, the third control moving the other
+  // way, and how much more each group did beside them.
+  controlled: (lex) => {
+    const rows = [0, 1, 2, 3].map((i) => `${lex.labels[i + 11]!} · ${lex.phrases[i]!} · ${lex.periods[i]!}`)
+    return {
+      heading: lex.headings[4]!,
+      components: [
+        {
+          type: "chart",
+          chart_type: "bar",
+          direction: "horizontal",
+          axes: { y_title: lex.segmentAxis, x_title: lex.labels[0]!, y_unit: "%" },
+          series: [
+            { name: lex.labels[6]!, emphasis: true, data: rows.map((x, i) => ({ x, y: [-17.5, -14.01, -12.1, -11.8][i]! })) },
+            { name: lex.labels[5]!, data: rows.map((x, i) => ({ x, y: [-2.3, 0.3, -2.2, -3.5][i]! })) },
+          ],
+        },
+        {
+          type: "kpi_cards",
+          items: [0, 1, 2, 3].map((i) => ({ value: ["15.2", "14.3", "9.9", "8.3"][i]!, unit: "%", label: lex.labels[i + 11]!, note: lex.labels[15]! })),
+        },
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
+  // Two options head to head: their headline figures, their shares reaching
+  // four marks from one company's figures, and three side effects.
+  duel: (lex) => ({
+    heading: lex.headings[5]!,
+    components: [
+      { type: "kpi_cards", items: [0, 1].map((i) => ({ value: ["−20.2%", "−13.7%"][i]!, label: lex.phrases[i]!, note: lex.periods[i]! })) },
+      {
+        type: "chart",
+        chart_type: "bar",
+        axes: { y_title: lex.labels[0]!, y_unit: "%" },
+        tag: { text: lex.labels[5]!, evidence: "company" },
+        series: [0, 1].map((s) => ({
+          name: lex.phrases[s]!,
+          data: [0, 1, 2, 3].map((c) => ({ x: lex.labels[c + 11]!, y: [[81.6, 64.6, 48.4, 31.6], [60.5, 40.1, 27.3, 16.1]][s]![c]! })),
+        })),
+      },
+      {
+        type: "data_table",
+        columns: [
+          { key: "m", label: "" },
+          { key: "a", label: lex.phrases[0]! },
+          { key: "b", label: lex.phrases[1]! },
+        ],
+        rows: [0, 1, 2].map((i) => ({ cells: { m: lex.labels[i + 11]!, a: ["43.6%", "15.0%", "6.1%"][i]!, b: ["44.4%", "21.3%", "8.0%"][i]! } })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // An outcome trial's endpoints and its forest plot, the first marked, and a
+  // trial still to report under it.
+  forest: (lex) => ({
+    heading: lex.headings[6]!,
+    components: [
+      {
+        type: "data_table",
+        columns: [
+          { key: "e", label: lex.segmentAxis },
+          { key: "t", label: lex.phrases[0]!, align: "right" as const },
+          { key: "c", label: lex.phrases[1]!, align: "right" as const },
+          { key: "hr", label: "HR (95% CI)", align: "right" as const },
+        ],
+        rows: [0, 1, 2, 3].map((i) => ({
+          cells: { e: lex.labels[i + 11]!, t: ["6.5%", "2.5%", "4.3%", "3.4%"][i]!, c: ["8.0%", "3.0%", "5.2%", "4.1%"][i]!, hr: ["0.80 (0.72-0.90)", "0.85 (0.71-1.01)", "0.81 (0.71-0.93)", "0.82 (0.71-0.96)"][i]! },
+          ...(i === 0 ? { emphasis: "highlight" as const } : {}),
+        })),
+      },
+      { type: "callout", variant: "warn", icon: "hourglass", text: lex.verdicts.warning },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // Three groups' rates against their controls on three measures, beside the
+  // risks to watch.
+  multiples: (lex) => ({
+    heading: lex.headings[7]!,
+    components: [
+      {
+        type: "data_table",
+        title: lex.segmentAxis,
+        columns: [
+          { key: "d", label: lex.labels[6]! },
+          { key: "a", label: lex.labels[0]! },
+          { key: "b", label: lex.labels[1]! },
+          { key: "c", label: lex.labels[2]! },
+        ],
+        rows: [0, 1, 2].flatMap((i) => [
+          { cells: { d: lex.phrases[i]!, a: ["44%", "28%", "50.5%"][i]!, b: ["24%", "13%", "43.1%"][i]!, c: ["6.8%", "6.7%", "1.0%"][i]! }, tag: { text: lex.labels[i + 11]!, evidence: "label" as const }, ...(i === 2 ? { emphasis: "highlight" as const } : {}) },
+          { cells: { d: lex.labels[5]!, a: ["16%", "8%", "5.9%"][i]!, b: ["6%", "2%", "2.9%"][i]!, c: ["3.2%", "3.4%", "1.0%"][i]! } },
+        ]),
+      },
+      {
+        type: "row_cards",
+        items: [0, 1, 2, 3].map((i) => ({ icon: (["shield-alert", "triangle-alert", "eye", "bed"] as const)[i]!, title: lex.phrases[i + 4]!, text: lex.sentences[i + 2]!, tone: i === 0 ? ("danger" as const) : ("warning" as const) })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // Two groups that walk one road and part at a randomization, the regain
+  // pinned on its branch, the evidence that says the same beside it.
+  fork: (lex) => {
+    const weeks = ["0", "36 · " + lex.labels[3]!, "88"]
+    return {
+      heading: lex.headings[8]!,
+      components: [
+        {
+          type: "chart",
+          chart_type: "line",
+          axes: { y_unit: "%" },
+          series: [
+            { name: lex.labels[6]!, emphasis: true, data: weeks.map((x, i) => ({ x, y: [0, -20.9, -25.3][i]! })) },
+            { name: lex.labels[5]!, tone: "warning" as const, data: weeks.map((x, i) => ({ x, y: [0, -20.9, -9.9][i]! })) },
+          ],
+        },
+        { type: "callout", variant: "info", text: lex.labels[8]! },
+        { type: "kpi_cards", items: [0, 1, 2].map((i) => ({ label: lex.phrases[i + 6]!, value: lex.metrics[i]!.value, note: lex.periods[i]! })) },
+        { type: "callout", variant: "warn", icon: "trending-up", text: lex.verdicts.warning },
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
+  // Who qualifies where on one scale: two bands a row, a row of its own and
+  // a breach, and the note under the legend.
+  ruler: (lex) => ({
+    heading: lex.headings[9]!,
+    components: [
+      {
+        type: "comparison",
+        title: "BMI",
+        tag_column: lex.labels[15]!,
+        columns: [lex.labels[8]!, lex.labels[9]!],
+        rows: [
+          { label: lex.phrases[0]!, cells: ["27 至 <30", "≥30"], tag: { text: lex.labels[7]! }, emphasis: true },
+          { label: lex.phrases[1]!, cells: ["24 至 <28", "≥28"], tag: { text: lex.labels[11]!, quiet: true } },
+          { label: lex.phrases[2]!, cells: ["", "≥27"], tag: { text: lex.labels[12]! } },
+          { label: lex.phrases[3]!, cells: ["24 至 <28", ""], tag: { text: lex.labels[10]!, tone: "danger" as const } },
+        ],
+      },
+      { type: "callout", variant: "info", text: lex.sentences[4]! },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // What each thing cost before and after, beside the reminder that goes
+  // with the figures.
+  dumbbells: (lex) => ({
+    heading: lex.headings[10]!,
+    components: [
+      {
+        type: "chart",
+        chart_type: "dumbbell",
+        axes: { x_title: lex.labels[0]!, x_unit: "元" },
+        series: [
+          { name: lex.periods[0]!, data: [0, 1, 2, 3].map((i) => ({ x: lex.phrases[i]!, y: [4758, 2758, 2463, 1894][i]! })) },
+          { name: lex.periods[1]!, data: [0, 1, 2, 3].map((i) => ({ x: lex.phrases[i]!, y: [937, 551, 1284, 987][i]! })) },
+        ],
+      },
+      { type: "insight_panel", icon: "receipt", title: lex.phrases[4]!, rows: [0, 1].map((i) => ({ label: lex.labels[i + 11]!, text: lex.sentences[i + 3]! })), footnote: lex.verdicts.warning },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // A check in five steps, the first two able to stop it, the stop box and a
+  // note beside it.
+  gate: (lex) => ({
+    heading: lex.headings[11]!,
+    components: [
+      {
+        type: "steps",
+        items: [0, 1, 2, 3, 4].map((i) => ({ icon: (["ruler", "ban", "pill", "file-check", "receipt"] as const)[i]!, title: lex.phrases[i]!, text: lex.bullets[i]!, ...(i < 2 ? { tone: "danger" as const } : {}) })),
+      },
+      { type: "callout", variant: "warn", icon: "ban", text: lex.verdicts.warning },
+      { type: "callout", variant: "info", icon: "receipt-text", text: lex.sentences[10]! },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // What to check, a photograph, and when to look again.
+  watch: (lex) => ({
+    heading: lex.headings[12]!,
+    components: [
+      {
+        type: "row_cards",
+        items: [0, 1, 2].map((i) => ({ icon: (["activity", "shield-check", "calendar-check"] as const)[i]!, title: lex.labels[i + 11]!, text: `${lex.bullets[i]!}。${lex.bullets[i + 1]!}` })),
+      },
+      { type: "image", asset_id: PHOTO_ASSETS[1], fit: "cover" },
+      {
+        type: "timeline",
+        title: lex.labels[15]!,
+        milestones: [0, 1, 2, 3, 4].map((i) => ({ date: lex.periods[i]!, title: lex.phrases[i + 6]!, ...(i === 1 ? { highlight: true } : {}) })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+}
+
+/** clinic's cases: four, each its icon, who reported it, what happened and the figure it turns on, the first two bad news. */
+function dossierCases(lex: Lexicon): Component {
+  return {
+    type: "kpi_cards",
+    items: [0, 1, 2, 3].map((i) => ({
+      icon: (["siren", "siren", "landmark", "badge-alert"] as const)[i]!,
+      source: `${lex.labels[i + 11]!} · ${lex.periods[i]!}`,
+      label: lex.labels[i]!,
+      value: lex.metrics[i]!.value,
+      ...(lex.metrics[i]!.unit ? { unit: lex.metrics[i]!.unit } : {}),
+      note: lex.sentences[i + 2]!,
+      ...(i < 2 ? { tone: "danger" as const } : {}),
+    })),
+  }
 }
 
 /** The colon a label stands before in the lexicon's language. */
@@ -1763,7 +2036,7 @@ function figureItems(lex: Lexicon, count: number) {
  * instead of the changes it computes, and `table` at its dense size, four
  * options over a closing line.
  */
-export type CompositionVariant = "figures" | "dense" | "answer" | "console" | "memo"
+export type CompositionVariant = "figures" | "dense" | "answer" | "console" | "memo" | "dossier"
 
 const COMPOSITION_VARIANT_BODIES: Record<`${CompositionId}-${CompositionVariant}`, ((lex: Lexicon) => CompositionBody) | undefined> = {
   "rail-figures": (lex) => ({
@@ -1898,6 +2171,63 @@ const COMPOSITION_VARIANT_BODIES: Record<`${CompositionId}-${CompositionVariant}
             ...(i === 4 ? { emphasis: "highlight" as const } : {}),
           })),
       },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // clinic's dossier forms of the shared shapes: proposals as cards with their
+  // icons and where their evidence is, options with their proposals as
+  // capsules, approvals on two lanes, rules on cards two by two.
+  "rows-dossier": (lex): CompositionBody => ({
+    heading: lex.headings[1]!,
+    components: [
+      {
+        type: "numbered_cards",
+        items: [0, 1, 2].map((i) => ({ icon: (["pill", "hospital", "clipboard-check"] as const)[i]!, title: lex.bullets[i]!, text: lex.sentences[i + 2]!, sub: lex.periods[i]!, ...(i === 0 ? { emphasis: true } : {}) })),
+      },
+    ],
+  }),
+  "table-dossier": (lex): CompositionBody => ({
+    heading: lex.headings[8]!,
+    components: [
+      {
+        type: "comparison",
+        label_column: lex.segmentAxis,
+        tag_column: lex.labels[15]!,
+        columns: [lex.labels[11]!, lex.labels[12]!],
+        rows: [0, 1, 2, 3].map((i) => ({
+          icon: "pill" as const,
+          label: lex.phrases[i]!,
+          cells: [lex.sentences[i + 2]!, lex.periods[i]!],
+          tag: [{ text: lex.labels[7]!, settled: true }, { text: lex.labels[8]! }, { text: lex.labels[13]!, quiet: true }, { text: lex.labels[10]!, quiet: true, settled: true }][i]!,
+          ...(i === 0 ? { emphasis: true } : {}),
+        })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  "lanes-dossier": (lex): CompositionBody => ({
+    heading: lex.headings[5]!,
+    components: [
+      {
+        type: "timeline",
+        lanes: [lex.labels[11]!, lex.labels[12]!],
+        milestones: [
+          { date: "2024-03-12", title: lex.phrases[0]!, desc: lex.labels[0]!, lane: lex.labels[11]! },
+          { date: "2024-09-05", title: lex.phrases[1]!, lane: lex.labels[12]! },
+          { date: "2025-02-20", title: lex.phrases[2]!, desc: lex.labels[1]!, lane: lex.labels[11]! },
+          { date: "2025-08-18", title: lex.phrases[3]!, lane: lex.labels[12]!, highlight: true },
+          { date: "2026-01-09", title: lex.phrases[4]!, desc: lex.labels[2]!, lane: lex.labels[11]! },
+          { date: "2026-06-30", title: lex.phrases[5]!, lane: lex.labels[12]! },
+        ],
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  "cards-dossier": (lex): CompositionBody => ({
+    heading: lex.headings[6]!,
+    components: [
+      { type: "icon_cards", items: [0, 1].map((i) => ({ icon: (["hospital", "user-check"] as const)[i]!, title: lex.phrases[i]!, text: lex.sentences[i + 2]! })) },
+      { type: "icon_cards", items: [2, 3].map((i) => ({ icon: (["badge-check", "users"] as const)[i - 2]!, title: lex.phrases[i]!, text: lex.sentences[i + 2]! })) },
     ],
     footnote: lex.sources[0]!.label,
   }),

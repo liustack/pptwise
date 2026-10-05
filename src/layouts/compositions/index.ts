@@ -41,6 +41,18 @@ import { rotaComposition } from "./rota"
 import { sumComposition } from "./sum"
 import { scheduleComposition } from "./schedule"
 import { checksComposition } from "./checks"
+import { readingsComposition } from "./readings"
+import { insetComposition } from "./inset"
+import { docketComposition } from "./docket"
+import { controlledComposition } from "./controlled"
+import { duelComposition } from "./duel"
+import { forestComposition } from "./forest"
+import { multiplesComposition } from "./multiples"
+import { forkComposition } from "./fork"
+import { rulerComposition } from "./ruler"
+import { dumbbellsComposition } from "./dumbbells"
+import { gateComposition } from "./gate"
+import { watchComposition } from "./watch"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -95,6 +107,18 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   sum: sumComposition,
   schedule: scheduleComposition,
   checks: checksComposition,
+  readings: readingsComposition,
+  inset: insetComposition,
+  docket: docketComposition,
+  controlled: controlledComposition,
+  duel: duelComposition,
+  forest: forestComposition,
+  multiples: multiplesComposition,
+  fork: forkComposition,
+  ruler: rulerComposition,
+  dumbbells: dumbbellsComposition,
+  gate: gateComposition,
+  watch: watchComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -108,7 +132,7 @@ export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly Composition
  * marks a segment where the author marked a column. The ordinary chart draws
  * both.
  */
-const CHART_MARK_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["diverging"])
+const CHART_MARK_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["diverging", "fork"])
 
 function asksForChartMarks(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some(
@@ -126,7 +150,14 @@ function asksForChartMarks(components: readonly CompositionProps["components"][n
  * these alone, so no hand-set plot leaves it off. The ordinary chart draws it
  * at the start of its legend row.
  */
-const CHART_TAG_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const CHART_TAG_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["duel"])
+
+/**
+ * The compositions that keep their left column clear of the page tag a face
+ * sets at the top left of the band (`tagBand`). A page with one is offered
+ * to these alone; the face hands any other page the band under the tag.
+ */
+const TAG_BAND_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["duel", "forest", "fork", "gate"])
 
 function asksForChartTag(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.tag !== undefined)
@@ -141,9 +172,11 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     compose({ ...props, components, rect }, ids)
   const marked = asksForChartMarks(props.components)
   const tagged = asksForChartTag(props.components)
+  const banded = (props.tagBand ?? 0) > 0
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
+    if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     const drawn = COMPOSITIONS[id]({ ...props, handOn })
     if (drawn) return drawn
   }

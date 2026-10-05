@@ -210,13 +210,13 @@ describe("FullSlideSvg", () => {
     }
   })
 
-  it("keeps the clinic heartbeat in midground at the theme accent", () => {
-    const slide: Slide = { type: "cover", heading: "封面", components: [] }
+  it("lifts clinic's short heartbeat into the foreground at the theme accent", () => {
+    const slide: Slide = { type: "content", kind: "points", heading: "内容", components: [{ type: "paragraph", text: "正文" }] }
     const doc = irWithFace(slide, "clinic", {})
     const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
-    const piece = container.querySelector('[data-decor-piece="heartbeat"]')!
-    expect(piece.getAttribute("data-decor-role")).toBe("identity")
-    expect(piece.closest("[data-depth]")?.getAttribute("data-depth")).toBe("mid")
+    const piece = container.querySelector('[data-decor-piece="pulse"]')!
+    expect(piece.getAttribute("data-decor-role")).toBe("structure")
+    expect(piece.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
     const line = piece.querySelector("polyline")!
     expect(line.getAttribute("stroke")).toBe(resolveStyle("clinic").colors.accent)
     expect(line.getAttribute("opacity")).toBeNull()

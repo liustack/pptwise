@@ -38,8 +38,13 @@ const SEAL_ONLY = ["roster", "scores", "targets", "trend", "rings"] as const
 const CONSOLE_ONLY = ["cards", "listing", "log", "span", "plates", "paths", "screen"] as const
 /** The same for the memo setting's own: `memo-pages.test.tsx` puts them on these themes. */
 const MEMO_ONLY = ["annex", "tallies", "slopes", "diverging", "citation", "scales", "catalog", "rota", "sum", "schedule", "checks"] as const
-type BoardId = Exclude<CompositionId, (typeof PANEL_ONLY)[number] | (typeof SEAL_ONLY)[number] | (typeof CONSOLE_ONLY)[number] | (typeof MEMO_ONLY)[number]>
-const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY, ...CONSOLE_ONLY, ...MEMO_ONLY]
+/** The same for the dossier setting's own: `dossier-pages.test.tsx` puts them on these themes. */
+const DOSSIER_ONLY = ["readings", "inset", "docket", "controlled", "duel", "forest", "multiples", "fork", "ruler", "dumbbells", "gate", "watch"] as const
+type BoardId = Exclude<
+  CompositionId,
+  (typeof PANEL_ONLY)[number] | (typeof SEAL_ONLY)[number] | (typeof CONSOLE_ONLY)[number] | (typeof MEMO_ONLY)[number] | (typeof DOSSIER_ONLY)[number]
+>
+const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY, ...CONSOLE_ONLY, ...MEMO_ONLY, ...DOSSIER_ONLY]
 const BOARD_IDS = COMPOSITION_IDS.filter((id): id is BoardId => !SETTING_ONLY.includes(id))
 
 /** One page per composition, in the shape each one takes. */

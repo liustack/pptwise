@@ -207,6 +207,8 @@ export function paintDossier(
     anchor?: "start" | "middle" | "end"
     ground?: string
     attrs?: Record<string, string>
+    /** Attributes for the last line alone: a cut (`data-truncated`) or a break the next block reads back (`data-gloss-break`). */
+    lastAttrs?: Record<string, string>
   },
 ): React.ReactNode {
   return paintLines(layout, {
@@ -219,6 +221,7 @@ export function paintDossier(
     anchor: opts.anchor,
     bg: opts.ground,
     attrs: { ...dossierSmall(layout.fontSize), ...opts.attrs },
+    lastAttrs: opts.lastAttrs,
   })
 }
 

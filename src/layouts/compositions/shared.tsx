@@ -77,6 +77,18 @@ export type CompositionId =
   | "sum"
   | "schedule"
   | "checks"
+  | "readings"
+  | "inset"
+  | "docket"
+  | "controlled"
+  | "duel"
+  | "forest"
+  | "multiples"
+  | "fork"
+  | "ruler"
+  | "dumbbells"
+  | "gate"
+  | "watch"
 
 /**
  * The type a composition sets its page in.
@@ -145,7 +157,12 @@ export type CompositionId =
  *   in the mark (on its pale tint when it is a row), what it is read against
  *   (a placebo, a control) drawn as an outline, a hollow dot or a tick, the
  *   accent kept for lines and dots, and risk and cost reminders in the
- *   warning ink. See `./dossier.tsx`.
+ *   warning ink. A composition offered this setting also takes the shapes
+ *   that board drew and no other did: figure cards over a share bar, cases
+ *   beside a photograph, bars against their controls, a head-to-head, a
+ *   forest plot, small multiples of rates, a trajectory that forks, ranges
+ *   on a scale, before-and-after dumbbells, a gated process and a
+ *   monitoring plan. See `./dossier.tsx`.
  *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
@@ -175,6 +192,13 @@ export interface CompositionProps {
    * 「提议 1」 on a page whose section is 「提议」.
    */
   section?: string
+  /**
+   * The height a face's page tag (`Slide.tag`) takes at the top left of the
+   * band, from `rect.y`, when the face sets one there. A composition that
+   * knows the tag keeps its left column clear of it. 0 or omitted when the
+   * page has none.
+   */
+  tagBand?: number
   /**
    * Draws other components in a band of their own, with the compositions the
    * face offered and in the same setting, or returns `null` when none takes

@@ -45,7 +45,7 @@ const BOARD: Record<string, { cover: string; chapter: string; ending: string }> 
   journal: { cover: "issue-head-cover", chapter: "fascicle-ghost-chapter", ending: "afterword-ending" },
   luxe: { cover: "invitation-plate-cover", chapter: "gilt-ordinal-chapter", ending: "gilt-word-ending" },
   heritage: { cover: "double-frame-cover", chapter: "mirror-volume-chapter", ending: "invite-field-ending" },
-  clinic: { cover: "report-open-cover", chapter: "subject-rule-chapter", ending: "care-plan-ending" },
+  clinic: { cover: "dossier-cover", chapter: "subject-rule-chapter", ending: "dossier-ending" },
   almanac: { cover: "pledge-open-cover", chapter: "field-band-chapter", ending: "scorecard-ending" },
   ember: { cover: "corner-wedge", chapter: "ember-index-chapter", ending: "ask-ending" },
   vermilion: { cover: "red-head-cover", chapter: "seal-numeral-chapter", ending: "deliberation-ending" },

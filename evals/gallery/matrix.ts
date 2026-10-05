@@ -379,6 +379,24 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "memo", kind: "data", composition: "sum" },
   { theme: "memo", kind: "process", composition: "schedule" },
   { theme: "memo", kind: "list", composition: "checks" },
+  // clinic's dossier sheet sets the shapes as a clinical assessment file, and
+  // draws the twelve its own board added.
+  { theme: "clinic", kind: "points", composition: "rows", variant: "dossier" },
+  { theme: "clinic", kind: "comparison", composition: "table", variant: "dossier" },
+  { theme: "clinic", kind: "process", composition: "lanes", variant: "dossier" },
+  { theme: "clinic", kind: "hierarchy", composition: "cards", variant: "dossier" },
+  { theme: "clinic", kind: "list", composition: "readings" },
+  { theme: "clinic", kind: "photo", composition: "inset" },
+  { theme: "clinic", kind: "data", composition: "docket" },
+  { theme: "clinic", kind: "data", composition: "controlled" },
+  { theme: "clinic", kind: "comparison", composition: "duel" },
+  { theme: "clinic", kind: "data", composition: "forest" },
+  { theme: "clinic", kind: "comparison", composition: "multiples" },
+  { theme: "clinic", kind: "data", composition: "fork" },
+  { theme: "clinic", kind: "comparison", composition: "ruler" },
+  { theme: "clinic", kind: "data", composition: "dumbbells" },
+  { theme: "clinic", kind: "process", composition: "gate" },
+  { theme: "clinic", kind: "hierarchy", composition: "watch" },
 ]
 
 export function buildMatrix(

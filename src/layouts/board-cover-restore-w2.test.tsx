@@ -7,7 +7,6 @@ import { __resetRegisteredThemes, getThemeDefinition, THEME_DEFINITIONS } from "
 import { registerTestTheme } from "../themes/test-fixtures"
 import type { CanonicalThemeId } from "../themes"
 import type { MenuDecor } from "../themes/schema"
-import { HEARTBEAT_POINTS } from "../motifs/motif-clinic-motif"
 import type { PptxIR, Slide } from "@/ir"
 
 const COVER: Slide = {
@@ -154,9 +153,9 @@ const WAVE8_B3_LOCKS = [
   { id: "almanac", type: "cover" as const, face: "pledge-open-cover" },
   { id: "almanac", type: "chapter" as const, face: "field-band-chapter" },
   { id: "almanac", type: "ending" as const, face: "scorecard-ending" },
-  { id: "clinic", type: "cover" as const, face: "report-open-cover" },
+  { id: "clinic", type: "cover" as const, face: "dossier-cover" },
   { id: "clinic", type: "chapter" as const, face: "subject-rule-chapter" },
-  { id: "clinic", type: "ending" as const, face: "care-plan-ending" },
+  { id: "clinic", type: "ending" as const, face: "dossier-ending" },
   { id: "arena", type: "cover" as const, face: "cut-panel-cover" },
   { id: "arena", type: "chapter" as const, face: "round-mark-chapter" },
   { id: "arena", type: "ending" as const, face: "seat-cta-ending" },
@@ -178,7 +177,8 @@ describe("wave 8 batch 3 — locked cover / chapter / ending faces", () => {
     const index = type === "chapter" ? 1 : 0
     const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={index} />)
     expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe(face)
-    expect(getThemeDefinition(doc.theme.id).menu[type].decor).toEqual(expectedDecor(id, type))
+    // A face that sets its own frame (clinic's cover) suppresses the motif.
+    expect(getThemeDefinition(doc.theme.id).menu[type].decor).toEqual(materializedDecor(id, type, face))
   })
 })
 
@@ -253,11 +253,13 @@ describe("wave 8 batch 3 — midground identity survives FullSlideSvg", () => {
     expect(piece.querySelectorAll("rect")).toHaveLength(0)
   })
 
-  it("clinic cover keeps the heartbeat polyline in mid", () => {
-    const { mid } = renderPage("clinic", "cover")
-    const polylines = mid.querySelectorAll("polyline")
-    expect(polylines).toHaveLength(1)
-    expect(polylines[0]?.getAttribute("points")).toBe(HEARTBEAT_POINTS)
+  it("clinic cover draws its own heartbeat across the page, with nothing in mid", () => {
+    const { container, mid } = renderPage("clinic", "cover")
+    expect(mid.querySelectorAll("polyline")).toHaveLength(0)
+    const beat = container.querySelector("[data-dossier-heartbeat]")!
+    expect(beat.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
+    // No photograph: the line runs to the page's right edge.
+    expect(beat.getAttribute("points")!.split(" ").at(-1)).toBe("1280,410")
   })
 
   it.each(["chapter", "ending"] as const)("clinic %s has no polyline in mid", (type) => {
