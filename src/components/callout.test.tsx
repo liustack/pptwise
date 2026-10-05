@@ -10,6 +10,7 @@ import { buildCtx } from "../render/full-slide-svg"
 import { PACING_BUDGETS } from "@/narrative"
 import { findRunMisfits } from "../audit/svg-audit"
 import { measureTextUnits } from "../lib/svg-text-layout"
+import { contrastRatio } from "../render/ink"
 
 const ctx: ComponentCtx = {
   colors: {
@@ -77,14 +78,17 @@ describe("callout component", () => {
   })
 
   it("renders icon stroke matching the accent color for each variant", () => {
+    // An accent that reads on the panel as a graphic: one that does not is
+    // the case below.
+    const inked: ComponentCtx = { ...ctx, colors: { ...ctx.colors, accent: "#00785A" } }
     for (const [variant, expectedColor] of [
       ["info", "#006A4E"],
       ["warn", "#DC2626"],
-      ["tip", "#00A878"],
+      ["tip", "#00785A"],
     ] as const) {
       const b = { type: "callout" as const, variant, text: "测试" }
       const { container } = svg(
-        callout.render(b, { x: 0, y: 0, w: 800 }, ctx),
+        callout.render(b, { x: 0, y: 0, w: 800 }, inked),
       )
       const paths = container.querySelectorAll("path")
       expect(paths.length).toBeGreaterThanOrEqual(1)
@@ -146,11 +150,11 @@ describe("callout semantic color tokens", () => {
   it("leaves info and tip on primary/accent — a semantic token moves nothing else", () => {
     const themed: ComponentCtx = {
       ...ctx,
-      colors: { ...ctx.colors, danger: "#7A0B12", warning: "#8A5A00", success: "#0B5D2E" },
+      colors: { ...ctx.colors, accent: "#00785A", danger: "#7A0B12", warning: "#8A5A00", success: "#0B5D2E" },
     }
     for (const [variant, expected] of [
       ["info", "#006A4E"],
-      ["tip", "#00A878"],
+      ["tip", "#00785A"],
     ] as const) {
       const { container } = svg(
         callout.render({ type: "callout", variant, text: "测试" }, { x: 0, y: 0, w: 800 }, themed),
@@ -197,6 +201,27 @@ describe("callout semantic color tokens", () => {
         expect(h <= 6 && w >= 800 * 0.7, `${id} top/bottom bar ${w}x${h}`).toBe(false)
       }
     }
+  })
+})
+
+describe("callout icon ink", () => {
+  // rally's primary is its stage's shadow, a step under its page: an info
+  // icon painted in it sat on the panel unseen.
+  it("reads on its panel as a graphic, on every canonical theme and variant", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      const themeCtx = boundThemeCtx(id, {})
+      for (const variant of ["info", "warn", "tip"] as const) {
+        const { container } = svg(callout.render({ type: "callout", variant, text: "测试" }, { x: 0, y: 0, w: 800 }, themeCtx))
+        const panel = container.querySelector("rect")!.getAttribute("fill")!
+        const stroke = container.querySelector("path")!.getAttribute("stroke")!
+        expect(contrastRatio(stroke, panel), `${id} ${variant}`).toBeGreaterThanOrEqual(3)
+      }
+    }
+  })
+
+  it("keeps the variant's own ink wherever it already reads", () => {
+    const { container } = svg(callout.render({ type: "callout", variant: "tip", text: "测试" }, { x: 0, y: 0, w: 800 }, boundThemeCtx("rally", {})))
+    expect(container.querySelector("path")!.getAttribute("stroke")).toBe("#E84F8A")
   })
 })
 

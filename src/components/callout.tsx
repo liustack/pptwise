@@ -6,7 +6,7 @@ import {
   type EmphasisSegment,
   emphasisRunInk,
 } from "../render/emphasis"
-import { accessibleInk, resolveSemanticColor, type SemanticColorTokens } from "../render/ink"
+import { accessibleInk, graphicInk, resolveSemanticColor, type SemanticColorTokens } from "../render/ink"
 import { mixHex } from "./color-mix"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
@@ -104,7 +104,11 @@ export const callout: SvgComponent<CalloutComponent> = {
     const top = blockTop + titleH
     const panel = mixHex(ctx.colors.bg, ctx.colors.muted, 0.08)
     const ink = accessibleInk(ctx.colors.text, panel, laid.fontSize)
-    const iconColor = accentColor(component.variant, ctx)
+    // The variant's ink when it reads on the panel as a graphic, the
+    // readable ink when not: an info callout's primary on a dark theme whose
+    // primary is its stage's shadow (rally), or a tip's yellow accent on a
+    // light panel (brief), sat on the panel nearly unseen.
+    const iconColor = graphicInk(accentColor(component.variant, ctx), panel)
     const iconY = blockTop + (title ? title.fontSize : laid.fontSize) - ICON_SIZE + 3
     const tagTop = top + laid.contentH + TAG_GAP
     return (
