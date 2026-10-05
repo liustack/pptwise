@@ -1,0 +1,31 @@
+{
+  "components": [
+    {
+      "type": "bullets",
+      "items": [
+        "From January 4, 2027: 32 hours a week, same pay",
+        "Any stop rule halts it. We decide in July"
+      ]
+    }
+  ],
+  "fields": [
+    {
+      "label": "Signed",
+      "value": "Management",
+      "note": "October 2026"
+    },
+    {
+      "label": "Drafted",
+      "value": "Human Resources"
+    },
+    {
+      "label": "Copies",
+      "value": "All staff, all department heads"
+    }
+  ],
+  "stamp": {
+    "text": "Decided",
+    "date": "2026 · 10"
+  },
+  "notes": "The two decisions once more. First, from January 4, 2027, the whole company trials a four-day, 32-hour week at full pay for six months. Second, any department that trips a stop rule goes back to five days, and by the end of July we decide on the measures whether to keep it. This memo is issued by management, drafted by Human Resources and copied to all staff and department heads. Questions go to your department head or to HR."
+}

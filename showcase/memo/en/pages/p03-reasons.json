@@ -1,0 +1,39 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "icon": "heart-pulse",
+          "label": "Less burnout",
+          "value": "82%",
+          "note": "of 28 UK organisations revisited a year on saw better staff wellbeing"
+        },
+        {
+          "icon": "user-check",
+          "label": "Keeping people",
+          "value": "50%",
+          "note": "of them saw less turnover. 15% of staff would not go back to five days for any raise"
+        },
+        {
+          "icon": "user-plus",
+          "label": "Hiring",
+          "value": "32%",
+          "note": "of them hired more easily. One council saw job applications rise by more than 120%"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "weekend",
+      "caption": "A weekday morning (illustrative)"
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Revenue, accurately: \"broadly the same\""
+    }
+  ],
+  "footnote": "Source: Autonomy et al., UK pilot reports, Feb 2023 and Feb 2024, self-reported. University of Salford, Jul 2025. Images are AI-generated",
+  "notes": "Why we are doing this. First, burnout: a year after the UK pilot, researchers went back to 28 organisations and 82% reported better staff wellbeing. Second, retention: half of them reported lower turnover, and at the end of the trial 15% of employees said no pay rise would get them back to a five-day week. Third, hiring: 32% reported easier recruitment, and South Cambridgeshire Council saw job applications rise by more than 120% after its switch. These figures are self-reported by organisations and staff, and the UK pilot was run with an advocacy group, so they show a direction, not a forecast for us. Revenue growth is not one of our reasons, and a later page explains why."
+}

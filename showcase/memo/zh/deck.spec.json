@@ -1,0 +1,145 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "public"
+  },
+  "theme": "memo",
+  "filename": "four-day-week-trial-memo",
+  "meta": {
+    "organization": "管理层 · 人力资源部",
+    "date": "2026 年 10 月"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "四天工作制试点 · 决定"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "2027 年上半年，每周工作四天",
+      "summary": "1 月 4 日起，为期六个月"
+    },
+    {
+      "id": "p02-decision",
+      "type": "content",
+      "kind": "points",
+      "heading": "每周 32 小时，薪酬不变",
+      "kicker": "决定",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p03-reasons",
+      "type": "content",
+      "kind": "evidence",
+      "heading": "降低倦怠、留住人、招到人，不是指望营收上涨",
+      "kicker": "理由",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p04-wellbeing",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "最硬的证据在身心：试点组倦怠下降，对照组没变",
+      "kicker": "证据",
+      "focus": "chart"
+    },
+    {
+      "id": "p05-pace",
+      "type": "content",
+      "kind": "data",
+      "heading": "代价也真实：71% 的人倦怠下降，62% 的人说节奏变快",
+      "kicker": "代价",
+      "focus": "chart"
+    },
+    {
+      "id": "p06-revenue",
+      "type": "content",
+      "kind": "quote",
+      "heading": "营收的准确说法是「大体持平」，不是「大涨」",
+      "kicker": "营收",
+      "focus": "blockquote"
+    },
+    {
+      "id": "p07-retention",
+      "type": "content",
+      "kind": "list",
+      "heading": "九成坚持出自倡导组织的统计，独立跟踪的数字低得多",
+      "kicker": "持续性",
+      "focus": "data_table"
+    },
+    {
+      "id": "p08-weighing",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "证据支持有边界、能叫停的试点，不支持「少一天营收会涨」",
+      "kicker": "权衡",
+      "focus": "pros_cons"
+    },
+    {
+      "id": "p09-modes",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "三种模式按部门选，客服和连续在岗的岗位一律错峰",
+      "kicker": "做法",
+      "focus": "comparison"
+    },
+    {
+      "id": "p10-coverage",
+      "type": "content",
+      "kind": "evidence",
+      "heading": "错峰的底线：每个工作日都有八成人在岗",
+      "kicker": "底线",
+      "focus": "data_table"
+    },
+    {
+      "id": "p11-arithmetic",
+      "type": "content",
+      "kind": "fact",
+      "heading": "总产出不变，每小时产出要提高 25%",
+      "kicker": "算术",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p12-process",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "所以先砍会议和流程：改造两项以上的公司只有 8% 退回",
+      "kicker": "流程",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p13-timeline",
+      "type": "content",
+      "kind": "process",
+      "heading": "11 月准备，1 月 4 日开始，7 月公布去留",
+      "kicker": "时间",
+      "focus": "timeline"
+    },
+    {
+      "id": "p14-stop",
+      "type": "content",
+      "kind": "list",
+      "heading": "四类指标任何一条越线，该部门恢复五天",
+      "kicker": "停止",
+      "focus": "row_cards"
+    },
+    {
+      "id": "p15-roles",
+      "type": "content",
+      "kind": "data",
+      "heading": "11 月 30 日前，各部门交排班方案和停做清单",
+      "kicker": "职责",
+      "focus": "data_table"
+    },
+    {
+      "id": "p16-ending",
+      "type": "ending",
+      "heading": "试行每周四天、32 小时，薪酬不变，触发停止条件即叫停",
+      "kicker": "决定"
+    }
+  ]
+}

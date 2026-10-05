@@ -1,0 +1,59 @@
+{
+  "components": [
+    {
+      "type": "image_grid",
+      "items": [
+        {
+          "asset_id": "friday-office",
+          "caption": "Fridays off (illustrative)"
+        },
+        {
+          "asset_id": "service-desk",
+          "caption": "Staggered (illustrative)"
+        },
+        {
+          "asset_id": "planner",
+          "caption": "Fortnightly (illustrative)"
+        }
+      ]
+    },
+    {
+      "type": "comparison",
+      "columns": [
+        "Fridays off",
+        "Staggered",
+        "9-day fortnight"
+      ],
+      "recommended": 1,
+      "recommended_label": "For support",
+      "rows": [
+        {
+          "label": "How",
+          "cells": [
+            "The whole team off on Friday",
+            "Each person takes one weekday off",
+            "One day off a fortnight, about 7.1 hours on the other nine"
+          ]
+        },
+        {
+          "label": "Suits",
+          "cells": [
+            "Close teams, few outside calls",
+            "Support and ops, five-day cover",
+            "Teams that cannot leave a whole day"
+          ]
+        },
+        {
+          "label": "Seen in",
+          "cells": [
+            "32% of UK pilot firms",
+            "25% of UK pilot firms",
+            "Over 60% of Portugal's staff"
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Autonomy et al., UK pilot report, Feb 2023. Gomes et al., Jul 2024. One model per team: mixed schedules were one reason Magyar Telekom ended its trial. Images are AI-generated",
+  "notes": "Department heads choose the model. Fridays off: the whole department is off on Friday, which suits teams that work closely together and deal little with outsiders, with one named contact on call. Staggered: each person takes a different weekday off so all five days are covered, the only option for customer support and operations. Nine days in two weeks: one day off every second week and about 7.1 hours on each of the other nine days, 64 hours over the fortnight, for delivery teams that cannot step away for a whole day. Among 44 UK pilot companies that answered, 32% gave everyone Friday off and 25% had no shared day off. In Portugal more than 60% of staff took a day off every two weeks, though that trial cut hours to 36, not 32. One model per team: Magyar Telekom found that running four-day and five-day schedules side by side made coordination hard, one of the reasons it ended its trial after 18 months."
+}

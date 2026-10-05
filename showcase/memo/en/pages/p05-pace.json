@@ -1,0 +1,101 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "percent_stacked",
+      "series": [
+        {
+          "name": "Better",
+          "tone": "success",
+          "data": [
+            {
+              "x": "Burnout",
+              "y": 71
+            },
+            {
+              "x": "Work stress",
+              "y": 39
+            },
+            {
+              "x": "Sleep problems",
+              "y": 40
+            },
+            {
+              "x": "Workload",
+              "y": 2
+            },
+            {
+              "x": "Pace of work",
+              "y": 2
+            }
+          ]
+        },
+        {
+          "name": "No change",
+          "data": [
+            {
+              "x": "Burnout",
+              "y": 7
+            },
+            {
+              "x": "Work stress",
+              "y": 48
+            },
+            {
+              "x": "Sleep problems",
+              "y": 45
+            },
+            {
+              "x": "Workload",
+              "y": 78
+            },
+            {
+              "x": "Pace of work",
+              "y": 36
+            }
+          ]
+        },
+        {
+          "name": "Worse",
+          "tone": "danger",
+          "data": [
+            {
+              "x": "Burnout",
+              "y": 22
+            },
+            {
+              "x": "Work stress",
+              "y": 13
+            },
+            {
+              "x": "Sleep problems",
+              "y": 15
+            },
+            {
+              "x": "Workload",
+              "y": 20
+            },
+            {
+              "x": "Pace of work",
+              "y": 62,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "38→34",
+          "unit": "hrs",
+          "label": "Hours actually worked",
+          "note": "Four hours less a week, not eight"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Autonomy et al., UK pilot report, Feb 2023, self-reported. \"Better\" includes a slower pace and a lighter workload",
+  "notes": "Staff in the 61 UK pilot companies felt both sides. 71% reported less burnout, 39% less stress and 40% fewer sleep problems. But 62% said the pace of work rose, only 2% said it slowed, and 20% said their workload grew. Hours also fell by less than a full day: self-reported weekly hours went from 38 to 34. Brazil saw the same pattern, with 48.2% of staff feeling a faster pace and a third of the companies hiring to cope. That is why we cut meetings and process first rather than squeezing five days of work into four."
+}

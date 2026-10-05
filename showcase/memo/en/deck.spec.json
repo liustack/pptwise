@@ -1,0 +1,145 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "public"
+  },
+  "theme": "memo",
+  "filename": "four-day-week-trial-memo-en",
+  "meta": {
+    "organization": "Management · Human Resources",
+    "date": "October 2026"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "Four-day week pilot · Decision"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "A four-day week from January 2027",
+      "summary": "Six months from January 4, at full pay"
+    },
+    {
+      "id": "p02-decision",
+      "type": "content",
+      "kind": "points",
+      "heading": "32 hours, full pay, six months",
+      "kicker": "Decision",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p03-reasons",
+      "type": "content",
+      "kind": "evidence",
+      "heading": "Burnout, retention, hiring. Not revenue",
+      "kicker": "Reasons",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p04-wellbeing",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Burnout fell in trial firms. Not in controls.",
+      "kicker": "Evidence",
+      "focus": "chart"
+    },
+    {
+      "id": "p05-pace",
+      "type": "content",
+      "kind": "data",
+      "heading": "71% felt less burned out. 62% said work sped up",
+      "kicker": "Costs",
+      "focus": "chart"
+    },
+    {
+      "id": "p06-revenue",
+      "type": "content",
+      "kind": "quote",
+      "heading": "Revenue held broadly steady. It did not jump",
+      "kicker": "Revenue",
+      "focus": "blockquote"
+    },
+    {
+      "id": "p07-retention",
+      "type": "content",
+      "kind": "list",
+      "heading": "Advocates report 90% kept it, others fewer",
+      "kicker": "Staying power",
+      "focus": "data_table"
+    },
+    {
+      "id": "p08-weighing",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Evidence backs a bounded trial. Not a windfall.",
+      "kicker": "Weighing",
+      "focus": "pros_cons"
+    },
+    {
+      "id": "p09-modes",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Three models by team. Always-on roles stagger",
+      "kicker": "Models",
+      "focus": "comparison"
+    },
+    {
+      "id": "p10-coverage",
+      "type": "content",
+      "kind": "evidence",
+      "heading": "The floor: 80% of staff on duty every weekday",
+      "kicker": "Coverage",
+      "focus": "data_table"
+    },
+    {
+      "id": "p11-arithmetic",
+      "type": "content",
+      "kind": "fact",
+      "heading": "25% more output per hour",
+      "kicker": "Arithmetic",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p12-process",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "Fix process first: 8% of those firms reverted",
+      "kicker": "Process",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p13-timeline",
+      "type": "content",
+      "kind": "process",
+      "heading": "Start January 4. Decide by July 31.",
+      "kicker": "Schedule",
+      "focus": "timeline"
+    },
+    {
+      "id": "p14-stop",
+      "type": "content",
+      "kind": "list",
+      "heading": "One breach, back to five days",
+      "kicker": "Stop rules",
+      "focus": "row_cards"
+    },
+    {
+      "id": "p15-roles",
+      "type": "content",
+      "kind": "data",
+      "heading": "Rotas and stop-doing lists are due November 30",
+      "kicker": "Roles",
+      "focus": "data_table"
+    },
+    {
+      "id": "p16-ending",
+      "type": "ending",
+      "heading": "Trial 32 hours at full pay, stop on any breach",
+      "kicker": "Decision"
+    }
+  ]
+}

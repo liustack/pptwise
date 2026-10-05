@@ -1,0 +1,48 @@
+{
+  "components": [
+    {
+      "type": "pros_cons",
+      "pros": {
+        "title": "What holds up",
+        "items": [
+          {
+            "label": "Burnout down, health up",
+            "note": "141 organisations, controlled but not randomised"
+          },
+          {
+            "label": "Most firms kept going",
+            "note": "UK: at least 89% still running a year on"
+          },
+          {
+            "label": "Process changes help",
+            "note": "Portugal: 8% went back after two or more changes"
+          }
+        ]
+      },
+      "cons": {
+        "title": "What to watch",
+        "items": [
+          {
+            "label": "No revenue boost",
+            "note": "UK +1.4%, Germany flat, 27.3% of Brazil's firms down"
+          },
+          {
+            "label": "Faster pace",
+            "note": "UK: 62% said work sped up. Brazil: a third of firms hired"
+          },
+          {
+            "label": "Support roles struggle",
+            "note": "Krystal's staggered support desk went back"
+          },
+          {
+            "label": "Drop-outs over time",
+            "note": "Germany: 30% stopped in two years. Brazil: 2 of 20 kept it"
+          }
+        ]
+      },
+      "verdict": "So we trial it, with limits, measures and stop rules set first"
+    }
+  ],
+  "footnote": "Source: Fan et al. 2025. Autonomy et al. 2023, 2024. Gomes et al. 2024. Münster 2026. Brazil pilot 2024. InfoMoney 2025. Krystal 2023",
+  "notes": "Put the two sides together. What holds up: staff health really did improve, most firms that finished chose to continue, and firms that changed how they work were more likely to stick with it. What to watch: revenue did not rise because of it, the pressure moved from hours to intensity, customer support and always-on roles are the hardest, and some firms drop out over time. The evidence supports a trial with limits, measures and the means to stop. It does not support the claim that one day less brings more revenue. That is how we will run it."
+}

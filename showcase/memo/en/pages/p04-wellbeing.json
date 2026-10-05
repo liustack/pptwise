@@ -1,0 +1,120 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "line",
+      "axes": {
+        "y_title": "Burnout (lower is better, 1 to 5)"
+      },
+      "series": [
+        {
+          "name": "Trial: 141 orgs, 2,896 staff",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "Before",
+              "y": 2.83
+            },
+            {
+              "x": "After",
+              "y": 2.38
+            }
+          ]
+        },
+        {
+          "name": "Control: 12 firms, 285 staff",
+          "data": [
+            {
+              "x": "Before",
+              "y": 2.9
+            },
+            {
+              "x": "After",
+              "y": 2.94
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "line",
+      "axes": {
+        "y_title": "Mental health (1 to 5)"
+      },
+      "series": [
+        {
+          "name": "Trial: 141 orgs, 2,896 staff",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "Before",
+              "y": 2.93
+            },
+            {
+              "x": "After",
+              "y": 3.32
+            }
+          ]
+        },
+        {
+          "name": "Control: 12 firms, 285 staff",
+          "data": [
+            {
+              "x": "Before",
+              "y": 2.9
+            },
+            {
+              "x": "After",
+              "y": 2.93
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "line",
+      "axes": {
+        "y_title": "Physical health (1 to 5)"
+      },
+      "series": [
+        {
+          "name": "Trial: 141 orgs, 2,896 staff",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "Before",
+              "y": 3.01
+            },
+            {
+              "x": "After",
+              "y": 3.29
+            }
+          ]
+        },
+        {
+          "name": "Control: 12 firms, 285 staff",
+          "data": [
+            {
+              "x": "Before",
+              "y": 3.06
+            },
+            {
+              "x": "After",
+              "y": 3.09
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "icon": "triangle-alert",
+      "text": "Authors' caveat: “our findings probably overestimate the true effect” Not randomised, firms volunteered, staff reported. Trust the direction, not the size."
+    }
+  ],
+  "footnote": "Source: Fan et al., Nature Human Behaviour, Jul 2025. Published online 2025-07-21",
+  "notes": "This is the largest peer-reviewed study so far: 141 organisations and 2,896 employees in six countries, compared with 12 US companies and 285 people that did not change their hours. In the trial firms, weekly hours fell from 39.21 to 34.01, burnout fell from 2.83 to 2.38, mental health rose from 2.93 to 3.32 and physical health from 3.01 to 3.29. The control group barely moved: burnout 2.90 to 2.94, mental health 2.90 to 2.93, physical health 3.06 to 3.09. The chart shows the change. This is the main reason we are running a trial. The limits matter too: the study was not randomised, the firms chose to take part and were likely more open to flexible work, every result is self-reported, and the authors themselves say their findings probably overestimate the true effect of a four-day week. The paper did not measure company productivity."
+}
