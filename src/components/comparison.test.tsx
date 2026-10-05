@@ -653,3 +653,17 @@ describe("comparison label_column", () => {
     expect(Number(header.getAttribute("x"))).toBeLessThan(Number(optionA.getAttribute("x")))
   })
 })
+
+describe("comparison row icon", () => {
+  it("sets a row's icon in a column of its own before the labels, and moves the table right of it", () => {
+    const withIcon = { ...component, rows: component.rows.map((row, i) => (i === 0 ? { ...row, icon: "pill" as const } : row)) }
+    const plain = svg(comparison.render(component, { x: 0, y: 0, w: 800 }, ctx)).container
+    const iconed = svg(comparison.render(withIcon, { x: 0, y: 0, w: 800 }, ctx)).container
+    expect(iconed.querySelectorAll("g[transform*='scale']")).toHaveLength(1)
+    const labelX = (c: Element) => Number(Array.from(c.querySelectorAll("text")).find((t) => t.textContent === "价格")!.getAttribute("x"))
+    expect(labelX(iconed)).toBe(labelX(plain) + 32)
+    const icon = iconed.querySelector("g[transform*='scale']")!
+    const iconX = Number(/translate\(([\d.]+)/.exec(icon.getAttribute("transform")!)![1])
+    expect(iconX + 20).toBeLessThanOrEqual(labelX(iconed))
+  })
+})

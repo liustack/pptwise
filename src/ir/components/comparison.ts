@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { TagSchema } from "./shared"
+import { IconNameSchema, TagSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -51,6 +51,10 @@ export const schema = z
         .object({
           label: z.string(),
           cells: z.array(z.string()),
+          /** A symbol for the row. See the describe below. */
+          icon: IconNameSchema.optional().describe(
+            "A symbol for the row, drawn before its label, such as pill or server. Run `pptwise icons` for the names.",
+          ),
           tag: TagSchema.optional().describe(
             "What happened to this row, in a few words printed as a small tag after its cells, such as 改为区间, 不变 or 换指标. Set quiet on a tag that says nothing changed.",
           ),

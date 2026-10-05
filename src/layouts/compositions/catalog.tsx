@@ -39,7 +39,7 @@ export const catalogComposition: Composition = ({ components, ctx, rect, setting
   const c = comparison as Comparison
   const n = g.items.length
   if (n < 2 || n > 4 || c.columns.length !== n || g.emphasis === "first") return null
-  if (c.rows.length < 1 || c.rows.length > 4 || c.rows.some((row) => row.tag || row.emphasis) || c.title?.trim() || c.label_column !== undefined) return null
+  if (c.rows.length < 1 || c.rows.length > 4 || c.rows.some((row) => row.tag || row.emphasis || row.icon) || c.title?.trim() || c.label_column !== undefined) return null
   const inks = memoInks(ctx)
   const w = (rect.w - GAP * (n - 1)) / n
   const first = exhibitNumber ?? 1

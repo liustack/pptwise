@@ -9,7 +9,8 @@ import {
   sliceEmphasisForLines,
   stripEmphasis,
 } from "../render/emphasis"
-import { accessibleInk, blendOver } from "../render/ink"
+import { accessibleInk, blendOver, graphicInk } from "../render/ink"
+import { Icon } from "../render/icons"
 import { formLineHeight, layoutAtSize } from "./legibility"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { withBlockTitle } from "./block-title"
@@ -419,6 +420,17 @@ function tagColumnWidth(component: ComparisonComponent, ctx: ComponentCtx): numb
   return Math.ceil(Math.max(headerW, ...tags.map((tag) => tagWidth(tag.text, spec)))) + PAD_X * 2
 }
 
+/** A row's icon (`rows[].icon`): this size, before the row's label. */
+const ROW_ICON = 20
+
+/**
+ * The column the rows' icons stand in, at the table's left edge, before the
+ * labels. Zero when no row has an icon. The text table lays out right of it.
+ */
+function iconColumnWidth(component: ComparisonComponent): number {
+  return component.rows.some((row) => row.icon) ? PAD_X + ROW_ICON : 0
+}
+
 /** The tint the marked row sits on: the emphasis ink a tenth of the way over the page. */
 function markedRowTint(ctx: ComponentCtx): string {
   return blendOver(emphasisRunInk(ctx.colors), ctx.defaultBg ?? ctx.colors.bg, 0.1)
@@ -440,7 +452,8 @@ function pickLabelBand(component: ComparisonComponent, ctx: ComponentCtx): numbe
 function renderPickLabel(component: ComparisonComponent, box: ComponentBox, ctx: ComponentCtx) {
   const label = component.recommended_label?.trim()
   if (!label) return null
-  const table = layoutTable(component, box.w - tagColumnWidth(component, ctx), ctx.fonts.body)
+  const iconW = iconColumnWidth(component)
+  const table = layoutTable(component, box.w - tagColumnWidth(component, ctx) - iconW, ctx.fonts.body)
   if (table.recommendedCol < 0) return null
   const spec = ordinaryTagSpec(ctx)
   const tag = { text: label }
@@ -448,7 +461,7 @@ function renderPickLabel(component: ComparisonComponent, box: ComponentBox, ctx:
     <g data-pick-label="">
       {paintTag({
         tag,
-        x: box.x + table.offsets[table.recommendedCol]! + PAD_X,
+        x: box.x + iconW + table.offsets[table.recommendedCol]! + PAD_X,
         y: box.y,
         spec,
         inks: tagInks(ctx, tag, true, ctx.defaultBg ?? ctx.colors.bg, spec.size),
@@ -458,7 +471,7 @@ function renderPickLabel(component: ComparisonComponent, box: ComponentBox, ctx:
 }
 
 function measureDefault(component: ComparisonComponent, w: number, ctx: ComponentCtx): number {
-  const table = layoutTable(component, w - tagColumnWidth(component, ctx), ctx.fonts.body)
+  const table = layoutTable(component, w - tagColumnWidth(component, ctx) - iconColumnWidth(component), ctx.fonts.body)
   return ROW + table.rows.reduce((s, row) => s + row.h, 0)
 }
 
@@ -470,7 +483,9 @@ function renderDefault(rawComponent: ComparisonComponent, box: ComponentBox, ctx
     // Tags stand in their own column at the right edge, and the text table
     // lays out in the width left of it.
     const tagW = tagColumnWidth(rawComponent, ctx)
-    const textW = box.w - tagW
+    // Icons stand in their own column at the left edge, before the labels.
+    const iconW = iconColumnWidth(rawComponent)
+    const textW = box.w - tagW - iconW
     let table = layoutTable(rawComponent, textW, ctx.fonts.body)
     for (let lines = MAX_CELL_LINES - 1; lines >= 1 && box.h !== undefined; lines--) {
       if (ROW + table.rows.reduce((s, row) => s + row.h, 0) <= box.h) break
@@ -548,7 +563,7 @@ function renderDefault(rawComponent: ComparisonComponent, box: ComponentBox, ctx
             <text
               key={`h-${c}`}
               data-truncated={header.truncated ? "1" : undefined}
-              x={offsets[c] + PAD_X}
+              x={iconW + offsets[c] + PAD_X}
               y={ROW / 2 + headerBaseline}
               fill={c === recommendedCol ? recommendedHeaderInk : ctx.colors.text}
               fontFamily={ctx.fonts.body}
@@ -620,6 +635,15 @@ function renderDefault(rawComponent: ComparisonComponent, box: ComponentBox, ctx
           return (
             <Fragment key={`r-${r}`}>
               {tint && <rect data-row-marked="1" x={0} y={rowY + 1} width={box.w} height={row.h - 1} fill={tint} />}
+              {source?.icon ? (
+                <Icon
+                  name={source.icon}
+                  x={PAD_X}
+                  y={rowY + (row.h - ROW_ICON) / 2}
+                  size={ROW_ICON}
+                  color={graphicInk(ctx.colors.primary, tint ?? pageBg)}
+                />
+              ) : null}
               {tag &&
                 paintTag({
                   tag,
@@ -640,7 +664,7 @@ function renderDefault(rawComponent: ComparisonComponent, box: ComponentBox, ctx
                   <text
                     key={`c-${r}-${c}-${li}`}
                     data-truncated={cell.truncated && li === cell.lines.length - 1 ? "1" : undefined}
-                    x={offsets[c] + PAD_X}
+                    x={iconW + offsets[c] + PAD_X}
                     y={first + li * table.lineH}
                     fill={fill}
                     fontFamily={ctx.fonts.body}

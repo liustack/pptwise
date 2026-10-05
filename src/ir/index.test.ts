@@ -2093,3 +2093,9 @@ describe("comparison label_column", () => {
     expect(parseOne({ ...base, label_column: "" }).success).toBe(false)
   })
 })
+
+describe("comparison row icon", () => {
+  it("takes an icon on a row", () => {
+    expect(parseOne({ type: "comparison", columns: ["A"], rows: [{ label: "x", cells: ["1"], icon: "pill" }] }).success).toBe(true)
+  })
+})
