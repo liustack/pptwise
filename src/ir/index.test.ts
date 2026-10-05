@@ -2191,3 +2191,21 @@ describe("data_table marked column", () => {
     expect(parseOne(table([{ key: "a", label: "A" }, { key: "b", label: "B", align: "right", icon: "circle-help" }])).success).toBe(false)
   })
 })
+
+describe("gantt range, row icon and period", () => {
+  const items = [
+    { label: "a", start: 15, end: 18, icon: "coins", period: "第 16 至 18 个月" },
+    { label: "b", start: 6, end: 9 },
+  ]
+  it("takes a range, a row icon and a row period", () => {
+    expect(parseOne({ type: "gantt", range: { from: 0, to: 18 }, items }).success).toBe(true)
+  })
+
+  it("refuses a bar outside the range", () => {
+    expect(parseOne({ type: "gantt", range: { from: 0, to: 12 }, items }).success).toBe(false)
+  })
+
+  it("refuses a range that ends before it starts", () => {
+    expect(parseOne({ type: "gantt", range: { from: 18, to: 0 }, items }).success).toBe(false)
+  })
+})

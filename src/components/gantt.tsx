@@ -1,7 +1,8 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { recededMarkFill } from "../render/chart-palette"
-import { accessibleInk } from "../render/ink"
+import { Icon } from "../render/icons"
+import { accessibleInk, graphicInk } from "../render/ink"
 import type { RenderDef, SvgComponent } from "./types"
 
 type GanttComponent = Extract<Component, { type: "gantt" }>
@@ -36,6 +37,11 @@ type GanttComponent = Extract<Component, { type: "gantt" }>
  * a plain reading-order list of row names rather than dumbbell's "value
  * leads into the row" right-ranged layout), `fitSvgLine`-truncated the same
  * way every other component's list text is.
+ *
+ * The author may give the axis its own stretch (`range`), for a plan whose
+ * bars cover only parts of it. A row's `icon` stands before its label and a
+ * row's `period` (「第 16 至 18 个月」) is a muted line under the label, above
+ * its text.
  *
  * Row height uses the same box.h-aware uniform-stretch idiom `matrix.tsx`'s
  * `render` established (no `STRETCH_CAP_RATIO` ceiling — full-body
@@ -74,11 +80,19 @@ const AXIS_LABEL_MIN_FONT = 16
 const AXIS_BAND_H = 30
 const AXIS_LINE_GAP = 10
 
+/** The axis: the author's `range` when there is one, otherwise the bars' own stretch. */
 function axisBounds(component: GanttComponent): { min: number; max: number } {
+  if (component.range) return { min: component.range.from, max: component.range.to }
   const min = Math.min(...component.items.map((i) => i.start))
   const max = Math.max(...component.items.map((i) => i.end))
   return { min, max }
 }
+
+/** A row's icon (`items[].icon`), before its label. */
+const ROW_ICON = { size: 16, gap: 6 } as const
+/** A row's period (`items[].period`): a muted line under its label. */
+const ROW_PERIOD_FONT = 16
+const ROW_PERIOD_LINE_H = 20
 
 /** A bar's line of text (`items[].text`): under its label in the label column, up to three lines. */
 const ROW_TEXT_FONT = 16
@@ -94,11 +108,22 @@ function rowText(item: GanttComponent["items"][number]): ReturnType<typeof layou
   return layoutSvgText(text, { maxWidth: LABEL_W, fontSize: ROW_TEXT_FONT, minPt: ROW_TEXT_FONT, maxLines: ROW_TEXT_MAX_LINES, lineHeightRatio: ROW_TEXT_LINE_H / ROW_TEXT_FONT })
 }
 
-/** The height a row needs: the natural row, or its label and text stacked with air. */
-function rowNeed(item: GanttComponent["items"][number]): number {
+function rowPeriod(item: GanttComponent["items"][number]): ReturnType<typeof fitSvgLine> | null {
+  const period = item.period?.trim()
+  if (!period) return null
+  return fitSvgLine(period, { maxWidth: LABEL_W, fontSize: ROW_PERIOD_FONT, minFontSize: ROW_PERIOD_FONT })
+}
+
+/** The height of a row's label, period and text stacked, without the air around them. */
+function stackHeight(item: GanttComponent["items"][number]): number {
   const text = rowText(item)
-  if (!text) return ROW_H_NATURAL
-  return Math.max(ROW_H_NATURAL, ROW_PAD_Y * 2 + ROW_LABEL_LINE_H + text.lines.length * ROW_TEXT_LINE_H)
+  return ROW_LABEL_LINE_H + (rowPeriod(item) ? ROW_PERIOD_LINE_H : 0) + (text ? text.lines.length * ROW_TEXT_LINE_H : 0)
+}
+
+/** The height a row needs: the natural row, or its label, period and text stacked with air. */
+function rowNeed(item: GanttComponent["items"][number]): number {
+  if (!rowText(item) && !rowPeriod(item)) return ROW_H_NATURAL
+  return Math.max(ROW_H_NATURAL, ROW_PAD_Y * 2 + stackHeight(item))
 }
 
 function naturalHeight(component: GanttComponent): number {
@@ -141,25 +166,35 @@ export const gantt: SvgComponent<GanttComponent> = {
         {component.items.map((item, i) => {
           const rowY = box.y + i * (rowH + ROW_GAP)
           const cy = rowY + rowH / 2
+          const iconRoom = item.icon ? ROW_ICON.size + ROW_ICON.gap : 0
           const label = fitSvgLine(item.label, {
-            maxWidth: LABEL_W,
+            maxWidth: LABEL_W - iconRoom,
             fontSize: ROW_LABEL_FONT,
             minFontSize: ROW_LABEL_MIN_FONT,
           })
+          const period = rowPeriod(item)
           const barX = vx(item.start)
           const barW = Math.max(BAR_MIN_W, vx(item.end) - barX)
           const barY = rowY + BAR_INSET_Y
           const barH = Math.max(1, rowH - BAR_INSET_Y * 2)
           const r = Math.min(4, barH / 2)
           const text = rowText(item)
-          // With a line of text, the label and its text stack centred on the row.
-          const stackTop = text ? cy - (ROW_LABEL_LINE_H + text.lines.length * ROW_TEXT_LINE_H) / 2 : 0
-          const labelY = text ? stackTop + ROW_LABEL_LINE_H - 6 : cy + Math.round(label.fontSize * 0.35)
+          // With a period or a line of text, the label and what follows it stack centred on the row.
+          const stacked = text !== null || period !== null
+          const stackTop = stacked ? cy - stackHeight(item) / 2 : 0
+          const labelY = stacked ? stackTop + ROW_LABEL_LINE_H - 6 : cy + Math.round(label.fontSize * 0.35)
+          const textTop = stackTop + ROW_LABEL_LINE_H + (period ? ROW_PERIOD_LINE_H : 0)
+          const ground = ctx.defaultBg ?? ctx.colors.bg
           return (
             <g key={i} data-gantt-marked={item.emphasis ? "1" : undefined}>
+              {item.icon ? (
+                <g data-row-icon={item.icon}>
+                  <Icon name={item.icon} x={box.x} y={labelY - ROW_ICON.size + 3} size={ROW_ICON.size} color={graphicInk(ctx.colors.primary, ground)} />
+                </g>
+              ) : null}
               <text
                 data-truncated={label.truncated ? "1" : undefined}
-                x={box.x}
+                x={box.x + iconRoom}
                 y={labelY}
                 textAnchor="start"
                 fontSize={label.fontSize}
@@ -170,12 +205,26 @@ export const gantt: SvgComponent<GanttComponent> = {
               >
                 {label.text}
               </text>
+              {period ? (
+                <text
+                  data-gantt-period=""
+                  data-truncated={period.truncated ? "1" : undefined}
+                  x={box.x}
+                  y={stackTop + ROW_LABEL_LINE_H + ROW_PERIOD_LINE_H - 5}
+                  fontSize={period.fontSize}
+                  fill={accessibleInk(ctx.colors.muted, ground, period.fontSize)}
+                  fontFamily={ctx.fonts.body}
+                  dominantBaseline="alphabetic"
+                >
+                  {period.text}
+                </text>
+              ) : null}
               {text?.lines.map((line, k) => (
                 <text
                   key={`t-${k}`}
                   data-truncated={text.truncated && k === text.lines.length - 1 ? "1" : undefined}
                   x={box.x}
-                  y={stackTop + ROW_LABEL_LINE_H + (k + 1) * ROW_TEXT_LINE_H - 5}
+                  y={textTop + (k + 1) * ROW_TEXT_LINE_H - 5}
                   fontSize={text.fontSize}
                   fill={accessibleInk(ctx.colors.muted, ctx.defaultBg ?? ctx.colors.bg, text.fontSize)}
                   fontFamily={ctx.fonts.body}

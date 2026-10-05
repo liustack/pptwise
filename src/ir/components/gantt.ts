@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -28,6 +29,14 @@ const GanttItemSchema = z
       .boolean()
       .optional()
       .describe("Marks the one bar the page is about. It keeps the lead colour and the other bars recede. At most one item."),
+    /** A symbol for the row. See the describe below. */
+    icon: IconNameSchema.optional().describe("A symbol for the row, drawn before its label, such as coins or shield-check. Run `pptwise icons` for the names."),
+    /** How the bar's stretch reads. See the describe below. */
+    period: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('How the bar\'s stretch reads in words, such as "第 16 至 18 个月" or "Months 16 to 18", printed with the row.'),
   })
   .strict()
   .refine((item) => item.end > item.start, {
@@ -46,9 +55,36 @@ export const schema = z
     /** 可选刻度标签，沿轴均匀分布展示（不必与 items 的 start/end 值对齐
      * ——纯展示刻度，如 ["W1","W2","W3","W4"]）。 */
     axis_labels: z.array(z.string()).optional(),
+    /** The stretch the axis runs over. See the describe below. */
+    range: z
+      .object({
+        from: z.number().describe("Where the axis starts, such as 0 for the start of a plan."),
+        to: z.number().describe("Where it ends, such as 18 for the end of an 18-month plan."),
+      })
+      .strict()
+      .optional()
+      .describe(
+        'The stretch the axis runs over when it is longer than the bars, such as a whole 18-month plan whose bars cover parts of it: { "from": 0, "to": 18 }. Without it the axis runs from the first bar\'s start to the last bar\'s end. Every bar must lie inside it.',
+      ),
   })
   .strict()
   .superRefine((c, ctx) => {
+    // The axis is the plan's whole stretch, so every bar lies on it.
+    if (c.range) {
+      if (!(c.range.to > c.range.from)) {
+        ctx.addIssue({ code: "custom", path: ["range", "to"], message: `gantt range runs from ${c.range.from} to ${c.range.to}. Its end must be after its start.` })
+      } else {
+        c.items.forEach((item, i) => {
+          if (item.start < c.range!.from || item.end > c.range!.to) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["items", i],
+              message: `gantt items[${i}] runs from ${item.start} to ${item.end}, outside the range ${c.range!.from} to ${c.range!.to}. Widen range, or bring the bar inside it.`,
+            })
+          }
+        })
+      }
+    }
     // A bar keeps the lead colour so it stands out from the rest, so two
     // marked bars stand out from nothing.
     const marked = c.items.flatMap((item, i) => (item.emphasis === true ? [i] : []))

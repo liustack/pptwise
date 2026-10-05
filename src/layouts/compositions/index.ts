@@ -351,6 +351,19 @@ function asksForTableColumnMarks(components: readonly CompositionProps["componen
 }
 
 /**
+ * The compositions that draw what a gantt may carry beyond its bars and
+ * their lines: the stretch its axis runs over (`range`), a row's icon and a
+ * row's period. A page whose gantt carries any of them is offered to these
+ * alone; the ordinary gantt runs its axis over the range, sets the icon
+ * before the row's label and the period under it.
+ */
+const GANTT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForGanttDetail(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "gantt" && (component.range !== undefined || component.items.some((item) => item.icon !== undefined || item.period !== undefined)))
+}
+
+/**
  * The compositions that draw the page's ballot (`Slide.ballot`), a box for
  * each choice beside every question. A page with one is offered to these
  * alone; the face declares the ballot dropped when none takes the page.
@@ -385,6 +398,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const labelled = asksForChartRunLabel(props.components)
   const pending = asksForRoadmapBasis(props.components)
   const phased = asksForRoadmapPhases(props.components)
+  const scheduled = asksForGanttDetail(props.components)
   const columned = asksForTableColumnMarks(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
@@ -397,6 +411,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (labelled && !CHART_RUN_LABEL_COMPOSITIONS.has(id)) continue
     if (pending && !ROADMAP_BASIS_COMPOSITIONS.has(id)) continue
     if (phased && !ROADMAP_PHASE_COMPOSITIONS.has(id)) continue
+    if (scheduled && !GANTT_DETAIL_COMPOSITIONS.has(id)) continue
     if (columned && !TABLE_COLUMN_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue

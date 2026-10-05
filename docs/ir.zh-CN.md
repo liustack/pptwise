@@ -251,6 +251,7 @@ pptwise schema --kind data --theme brief
 | `data_table.columns[].emphasis` 与 `icon` | 这一页说的那一列，比如哪家都没公布的那个数：表头和格子用主色加粗，整列围一道框；列图标画在这一列每个格子的开头（`"circle-help"`） | 最多标一列；图标只用于左对齐的列 |
 | `numbered_cards.items[].emphasis` | 这一页落到的那张卡，卡片填满主色 | 最多一张 |
 | `gantt.items[].text` 与 `emphasis` | 阶段名下面的一行说明，以及这一页说的那一段 | 最多标一段 |
+| `gantt.range` 与 `gantt.items[].period` | 轴比条更长时轴跨的那一段（整个 18 个月的计划写 `{ "from": 0, "to": 18 }`），以及一条用话怎么说（「第 16 至 18 个月」） | 每条都在 range 里 |
 | `timeline.milestones[].lane` 与 `timeline.lanes` | 同一条时间顺序上的两条泳道。`lanes` 给出两条泳道的名字，轴上方的那条在前。放不下两侧的版式把泳道名写在日期前面 | 要么每个节点都写 lane，要么都不写，最多两条，竖向时间线不能用 |
 | `timeline.periods` | `[{ "from": "2026-01", "to": "2026-12", "label": "2026 年：进口计入排放，不必持有证书" }]` 把时间轴分成几段并给每段起名。按比例排日期的版式把每段画在轴上它那一截，普通时间线在节点下面一行一段地列出名字。写了 `"basis": "proposal"`（或其他尚未确定的依据）的一段画成虚线 | 最多 3 段，竖向时间线不能用 |
 | `timeline.milestones[].tag` 与 `source` | 节点现在的状态，印成小标签（`{ "text": "提案", "basis": "proposal" }`），以及日期或规则的出处，节点下面一行小字（「COM(2025) 989」）。依据尚未确定的标签画虚线 | |
