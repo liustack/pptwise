@@ -186,7 +186,7 @@ export const layoutDef = {
   kind: "standard",
   story: {
     name: "Yearbook Cover",
-    story: "A photograph fills the right half; on the left, over faint contour lines, the office and the occasion run in one tracked line above a bold title, a short ochre bar, and the run of years the report follows with what stands at its two ends.",
+    story: "A photograph fills the right half. On the left, over faint contour lines, the office and the occasion run in one tracked line above a bold title, a short ochre bar, and the run of years the report follows with what stands at its two ends.",
     positioning: "Opens a report whose subject runs for years. Choose it when the first page should already show the span the decision has to cover.",
     audience: "A board or committee about to weigh a decision that plays out over a decade.",
     notFor: "A quick update with no horizon to show, which wants a plainer cover.",
