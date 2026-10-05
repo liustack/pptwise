@@ -96,6 +96,9 @@ const AXES_APPLICABLE_CHART_TYPES: ReadonlySet<string> = new Set([
   "combo",
 ])
 
+/** Chart types with no value axis that print `axes.y_unit` after every value they name. */
+const UNIT_PRINTING_CHART_TYPES: ReadonlySet<string> = new Set(["pie", "donut", "funnel"])
+
 /** True when `axes` carries at least one real setting — `axes: {}` (every
  * sub-field omitted, schema-legal since all three are optional) has nothing
  * for a non-applicable chart_type to actually ignore, so it shouldn't warn. */
@@ -426,8 +429,11 @@ function checkSlide(
     if (component.type !== "chart" || !component.axes) continue
     if (AXES_APPLICABLE_CHART_TYPES.has(component.chart_type)) continue
     // A dumbbell names its values under the rows (`dumbbellCaption`), so only
-    // a grid it has no plot box for goes unused.
-    if (component.chart_type === "dumbbell" ? component.axes.show_grid === undefined : !hasAnyAxesSetting(component.axes)) continue
+    // a grid it has no plot box for goes unused. A pie, a donut and a funnel
+    // print the value axis's unit after every value they name, so a y_unit
+    // alone is used.
+    const { y_unit: _unit, ...others } = component.axes
+    if (component.chart_type === "dumbbell" ? component.axes.show_grid === undefined : !hasAnyAxesSetting(UNIT_PRINTING_CHART_TYPES.has(component.chart_type) ? others : component.axes)) continue
     issues.push({
       slide: index,
       severity: "warn",

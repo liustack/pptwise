@@ -389,8 +389,12 @@ export const schema = z
         y_title: z.string().optional(),
         /** Unit suffix on x-axis tick labels (`周`, `%`, `weeks`). */
         x_unit: z.string().optional(),
-        /** Unit suffix on y-axis tick labels (`%`, `千`). */
-        y_unit: z.string().optional(),
+        /** Unit suffix on y-axis tick labels (`%`, `千`). A pie, a donut
+         * and a funnel, which have no axis, print it after every value. */
+        y_unit: z
+          .string()
+          .optional()
+          .describe('The unit the values are counted in, after each tick of the value axis ("%", "千"). A pie, a donut and a funnel have no axis and print it after every value they name ("1200 个", "30%").'),
         /** `chart_type: "combo"` only: title of the right-hand value axis,
          * which exists when a series sets `axis: "right"`. */
         y2_title: z.string().optional(),

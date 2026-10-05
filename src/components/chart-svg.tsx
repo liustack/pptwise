@@ -600,10 +600,20 @@ const DIRECT_LABEL_CENTER_TO_BASELINE = 0.3
  * and the reader all see one label instead of two half-labels that can drift
  * apart. A point with no name prints its value alone.
  */
-function directLabelText(point: ChartSeries["data"][number], figures: FigureStyle | boolean): string {
+function directLabelText(point: ChartSeries["data"][number], figures: FigureStyle | boolean, unit?: string): string {
   const name = String(point.x).trim()
-  const value = chartFigure(point.y, figures)
+  const value = joinUnit(chartFigure(point.y, figures), unit?.trim() || undefined)
   return name ? `${name} ${value}` : value
+}
+
+/**
+ * The unit a pie's, a donut's or a funnel's values are counted in: the
+ * value axis's unit (`axes.y_unit`), which these charts have no axis to
+ * print on, so they print it after every value they name (「1200 个」,
+ * "30%").
+ */
+function radialUnit(component: ChartInput | undefined): string | undefined {
+  return component?.axes?.y_unit?.trim() || undefined
 }
 
 /**
@@ -2029,6 +2039,7 @@ function layoutRadialSlices(
   fullR: number,
   figures: FigureStyle | boolean,
   fontFamily?: string,
+  unit?: string,
 ): { r: number; slices: RadialSlice[] } {
   // One authoritative label budget, used both to size the circle and to fit
   // the text. Measuring the leftover geometry back out instead costs a float
@@ -2039,7 +2050,7 @@ function layoutRadialSlices(
   // is usually also its longest: it shipped as "田野采集 " with its own value
   // clipped off, on 18 gallery pages. Geometry may grant a label *more* room
   // than the budget (a narrow band, a small slice); it never grants less.
-  const texts = data.map((d) => directLabelText(d, figures))
+  const texts = data.map((d) => directLabelText(d, figures, unit))
   const widest = widestDirectLabel(texts, fontFamily)
   // **The circle never grows past what the width can host beside it.**
   // `fullR` is the disc the *box* would hold, and once a radial chart
@@ -2216,7 +2227,7 @@ export function renderPie(
    * uniform call shape (same convention `_accentColor` above already
    * established for this function). */
   _showGrid?: boolean,
-  _component?: ChartInput,
+  component?: ChartInput,
   bgHex?: string,
   _axisColor?: string,
   fontFamily?: string,
@@ -2232,7 +2243,7 @@ export function renderPie(
   // A pie wide enough for its labels (the common case: `chart.tsx` hands
   // this renderer the full component width against a fixed 240px band) keeps
   // its full radius, so the wedge geometry is untouched there.
-  const { r, slices } = layoutRadialSlices(data, total, cx, cy, x0, w, fullR, chartFigures(series, figures), fontFamily)
+  const { r, slices } = layoutRadialSlices(data, total, cx, cy, x0, w, fullR, chartFigures(series, figures), fontFamily, radialUnit(component))
   const labelFill = directLabelInk(textColor, bgHex)
 
   return (
@@ -2281,7 +2292,7 @@ export function renderFunnel(
    * surface to anchor a title against. Kept for signature parity, same as
    * `renderPie`'s own `_showGrid`. */
   _showGrid?: boolean,
-  _component?: ChartInput,
+  component?: ChartInput,
   bgHex?: string,
   _axisColor?: string,
   fontFamily?: string,
@@ -2290,7 +2301,7 @@ export function renderFunnel(
   const data = series[0]?.data ?? []
   const max = Math.max(...data.map((d) => d.y), 1)
   const stepH = h / Math.max(data.length, 1)
-  const texts = data.map((d) => directLabelText(d, chartFigures(series, figures)))
+  const texts = data.map((d) => directLabelText(d, chartFigures(series, figures), radialUnit(component)))
   // One label per band, so the bands themselves are the anti-collision
   // mechanism — until a row is shorter than a line of text, at which point
   // no placement inside this component can keep neighbouring labels apart
@@ -3138,10 +3149,10 @@ export function renderDonut(
   const fullR = radialFullRadius(w, h)
   // Same gutter the pie yields radius to, for the same reason: a ring of
   // colored arcs with a total in the middle names none of its own slices.
-  const { r, slices } = layoutRadialSlices(data, total, cx, cy, x0, w, fullR, chartFigures(series, figures), fontFamily)
+  const { r, slices } = layoutRadialSlices(data, total, cx, cy, x0, w, fullR, chartFigures(series, figures), fontFamily, radialUnit(component))
   const ri = r * DONUT_HOLE_RATIO
   const labelFill = directLabelInk(textColor, bgHex)
-  const totalLabel = formatStackTotal(total, chartFigures(series, figures))
+  const totalLabel = joinUnit(formatStackTotal(total, chartFigures(series, figures)), radialUnit(component))
   const fitted = fitSvgLine(totalLabel, { maxWidth: ri * 1.5, fontSize: 30, minFontSize: 16 })
   // The caption under the centre number used to be the literal word "Total",
   // printed on every deck in every language — a maintainer's word arriving on
