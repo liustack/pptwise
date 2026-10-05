@@ -448,6 +448,17 @@ describe("the memo board's pages on memo", () => {
     expect(root!.querySelector("[data-memo-side-note]")).not.toBeNull()
   })
 
+  it("sum leaves the pad's rules out behind the answer, so none strikes through its figure", () => {
+    const { root } = draw(ARITHMETIC)
+    const answer = texts(root!).find((t) => textOf(t).startsWith("25"))!
+    const baseline = Number(answer.getAttribute("y"))
+    const size = Number(answer.getAttribute("font-size"))
+    const hairlines = Array.from(root!.querySelectorAll("[data-memo-pad] > rect[height='1']")).map((r) => Number(r.getAttribute("y")))
+    expect(hairlines.length).toBeGreaterThan(3)
+    // The band the gallery audit reads as struck through: from 0.85em over the baseline down to it.
+    expect(hairlines.filter((y) => y > baseline - 0.85 * size && y < baseline)).toEqual([])
+  })
+
   it("schedule letters the stretches in their bars, the marked one in the mark, and keeps the year under the calendar", () => {
     const { root, ctx } = draw(TIMETABLE)
     expect(root!.querySelector("[data-memo-stretch='marked'] rect")!.getAttribute("fill")).toBe(memoInks(ctx).mark)

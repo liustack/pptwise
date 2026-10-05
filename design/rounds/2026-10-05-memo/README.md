@@ -64,4 +64,5 @@ Where the engine departs from the board, it does so on purpose, for these reason
 13. The cover's exhibit caption is cut when it is too long for its print, and says so to the audit. A cover cannot step aside.
 14. The statement page and the chapter page have no board in this round. They keep `statement` and `issue-line-chapter` under the new motif. The old faces `memo-head` and `decision-close-ending` stay registered for theme files that name them.
 15. Memo's chart palette now runs ink, slate, brown and then red. With red second, any chart of two series painted its second series red whether or not it was the one the page was about.
-16. Every board photograph was a sample image. The cover's was generated again for the showcase: empty desks on a Friday morning, no people, no writing, no logos.
+16. The arithmetic page leaves the pad's rules out from the ink rule to the foot of the answer's line. The board ruled straight through the 25%, and a rule through a figure that tall reads as a line struck through it, which the gallery's audit counts as rework.
+17. Every board photograph was a sample image. The cover's was generated again for the showcase: empty desks on a Friday morning, no people, no writing, no logos.

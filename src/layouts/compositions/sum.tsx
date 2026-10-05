@@ -16,7 +16,8 @@ type Callout = Extract<Component, { type: "callout" }>
 
 /*
  * sum: a sum worked on ruled paper, memo's 2026-10 board (the arithmetic page,
- * p11). A panel of the paper ruled every 48px like a pad. Each line of the
+ * p11). A panel of the paper ruled every 48px like a pad, the rules left out
+ * behind the answer so none crosses its figure. Each line of the
  * working is a label in the muted mono and its figures in mono, one to a
  * ruled line. A 2px rule of ink closes the working, and under it the answer:
  * its label, and the figure set very large in the heading face in the mark.
@@ -75,8 +76,12 @@ export const sumComposition: Composition = ({ components, ctx, rect, setting }) 
   if (answerTop + ANSWER.lineHeight > padTop + PAD.h || padTop + PAD.h > rect.y + rect.h) return null
   const side = note ? fitNote(note as Callout, ctx, inks) : null
   if (note && !side) return null
+  // The pad is ruled every 48px, but not across the answer: a rule through
+  // a figure that tall reads as a line struck through it. The answer stands
+  // in the clear band from the ink rule to the foot of its line box.
+  const answerFoot = answerTop - ANSWER.rise + ANSWER.lineHeight
   const rulings: number[] = []
-  for (let y = padTop + PAD.ruled - 1; y < padTop + PAD.h - 1; y += PAD.ruled) rulings.push(y)
+  for (let y = padTop + PAD.ruled - 1; y < padTop + PAD.h - 1; y += PAD.ruled) if (y < answerTop || y > answerFoot) rulings.push(y)
   return (
     <g {...compositionTag("sum")}>
       <g data-memo-pad="">
