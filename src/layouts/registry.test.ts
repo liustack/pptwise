@@ -119,6 +119,7 @@ describe("content family: body slot", () => {
           id === "action-pad-ending" ||
           id === "signoff-ending" ||
           id === "pill-cta-ending" ||
+          id === "ask-ending" ||
           id === "defense-close-ending" ||
           id === "homework-close-ending" ||
           id === "reminder-list-ending" ||
