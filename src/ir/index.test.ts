@@ -2024,3 +2024,11 @@ describe("code title and marked lines", () => {
     expect(parseOne({ ...code, highlight_lines: [0] }).success).toBe(false)
   })
 })
+
+describe("data_table row tag", () => {
+  it("takes a tag on a row and refuses an empty one", () => {
+    const table = (tag: unknown) => ({ type: "data_table", columns: [{ key: "a", label: "A" }, { key: "b", label: "B" }], rows: [{ cells: { a: "1", b: "2" }, tag }] })
+    expect(parseOne(table({ text: "倡导" })).success).toBe(true)
+    expect(parseOne(table({ text: "" })).success).toBe(false)
+  })
+})

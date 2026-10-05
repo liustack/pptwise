@@ -5,6 +5,7 @@ import { accessibleInk, graphicInk } from "../render/ink"
 import { Icon } from "../render/icons"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { withBlockTitle } from "./block-title"
+import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
 
 type DataTableComponent = Extract<Component, { type: "data_table" }>
 type DataTableRow = DataTableComponent["rows"][number]
@@ -66,6 +67,18 @@ function iconRoom(row: DataTableRow, c: number): number {
   return c === 0 && row.icon ? ROW_ICON.size + ROW_ICON.gap : 0
 }
 
+/** Air between a row's tag (`rows[].tag`) and the words after it. */
+const TAG_GAP = 8
+
+/**
+ * The room a row's tag takes at the start of column `c`: the last column's,
+ * when the row has one. The tag says what kind of row it is, so it leads the
+ * cell that describes the row's kind or source.
+ */
+function tagRoom(row: DataTableRow, c: number, columns: number, ctx: ComponentCtx): number {
+  return c === columns - 1 && row.tag ? tagWidth(row.tag.text, ordinaryTagSpec(ctx)) + TAG_GAP : 0
+}
+
 function cellText(row: DataTableRow, key: string): string {
   const v = row.cells[key]
   return v === undefined ? "" : String(v)
@@ -94,9 +107,13 @@ function computeColumnWidths(
   columns: readonly DataTableColumn[],
   rows: readonly DataTableRow[],
   totalW: number,
+  ctx: ComponentCtx,
 ): { widths: number[]; offsets: number[] } {
   const weights = columns.map((col, c) => {
-    const units = [measureTextUnits(col.label), ...rows.map((r) => measureTextUnits(cellText(r, col.key)) + iconRoom(r, c) / 16)]
+    const units = [
+      measureTextUnits(col.label),
+      ...rows.map((r) => measureTextUnits(cellText(r, col.key)) + (iconRoom(r, c) + tagRoom(r, c, columns.length, ctx)) / 16),
+    ]
     return Math.max(...units, 1)
   })
   const totalWeight = weights.reduce((s, w) => s + w, 0)
@@ -192,7 +209,7 @@ export const dataTable: SvgComponent<DataTableComponent> = {
     const rows = hiddenRowCount > 0 ? component.rows.slice(0, visibleRowCount) : component.rows
     const totalRows = rows.length + 1 // header + 可见数据行
 
-    const { widths, offsets } = computeColumnWidths(component.columns, rows, box.w)
+    const { widths, offsets } = computeColumnWidths(component.columns, rows, box.w, ctx)
     const borderColor = ctx.colors.border ?? ctx.colors.muted
 
     const headerFits = component.columns.map((col, c) =>
@@ -283,10 +300,24 @@ export const dataTable: SvgComponent<DataTableComponent> = {
                   color={graphicInk(ctx.colors.primary, fill ?? ctx.defaultBg ?? ctx.colors.bg)}
                 />
               ) : null}
+              {row.tag
+                ? (() => {
+                    const spec = ordinaryTagSpec(ctx)
+                    const last = component.columns.length - 1
+                    const ground = fill ?? ctx.defaultBg ?? ctx.colors.bg
+                    return paintTag({
+                      tag: row.tag,
+                      x: offsets[last]! + PAD_X,
+                      y: rowY + (ROW - spec.height) / 2,
+                      spec,
+                      inks: tagInks(ctx, row.tag, row.emphasis === "highlight", ground, spec.size),
+                    })
+                  })()
+                : null}
               {component.columns.map((col, c) => {
                 const text = cellText(row, col.key)
                 if (!text) return null
-                const room = iconRoom(row, c)
+                const room = iconRoom(row, c) + tagRoom(row, c, component.columns.length, ctx)
                 const fit = fitSvgLine(text, {
                   maxWidth: widths[c] - PAD_X * 2 - room,
                   fontSize: CELL_FONT_SIZE,

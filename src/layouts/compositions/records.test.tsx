@@ -71,3 +71,12 @@ describe("records leave a row's icon to the ordinary table", () => {
     }
   })
 })
+
+describe("records leave a row's tag to the ordinary table", () => {
+  it("declines a table whose row has a tag, in every setting it draws", () => {
+    const tagged = table({ rows: [{ cells: { co: "极氪", q3: "110,034 辆", yoy: "约 +108%", note: "9X" }, tag: { text: "新势力" } }] })
+    for (const setting of [undefined, "notice", "panel", "console"] as const) {
+      expect(draw([tagged], { setting }).element, String(setting)).toBeNull()
+    }
+  })
+})

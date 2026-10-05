@@ -87,6 +87,8 @@ function recordsShape(components: readonly Component[]): { table: DataTable; cal
   if (table.columns.length > MAX_COLUMNS || table.rows.length > MAX_ROWS) return null
   // A row's icon has no place in this table: the ordinary table draws it.
   if (table.rows.some((row) => row.icon !== undefined)) return null
+  // Nor for a row's tag: the ordinary table, or a setting that sets tags, draws it.
+  if (table.rows.some((row) => row.tag !== undefined)) return null
   if (second === undefined) return { table }
   const callout = noticeClosingCallout(second)
   return callout ? { table, callout } : null

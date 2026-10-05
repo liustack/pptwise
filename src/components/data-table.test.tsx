@@ -295,3 +295,26 @@ describe("data_table row icon", () => {
     expect(container.querySelectorAll("g[transform^='translate']").length).toBeGreaterThan(1)
   })
 })
+
+describe("data_table row tag", () => {
+  it("draws a row's tag at the start of its last cell and moves the cell's words past it", () => {
+    const table = {
+      type: "data_table" as const,
+      columns: [
+        { key: "pilot", label: "Pilot" },
+        { key: "type", label: "Source" },
+      ],
+      rows: [
+        { cells: { pilot: "UK", type: "Academics, advocates involved" }, tag: { text: "Advocate" } },
+        { cells: { pilot: "Germany", type: "University tracking report" } },
+      ],
+    }
+    const { container } = svg(dataTable.render(table, { x: 0, y: 0, w: 900 }, ctx))
+    const texts = Array.from(container.querySelectorAll("text"))
+    const tagged = texts.find((t) => t.textContent === "Academics, advocates involved")!
+    const plain = texts.find((t) => t.textContent === "University tracking report")!
+    expect(Number(tagged.getAttribute("x"))).toBeGreaterThan(Number(plain.getAttribute("x")) + 40)
+    expect(texts.some((t) => t.textContent === "Advocate")).toBe(true)
+    expect(container.querySelector("g[data-tag]")).not.toBeNull()
+  })
+})
