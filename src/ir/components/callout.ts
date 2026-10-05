@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { IconNameSchema } from "./shared"
+import { IconNameSchema, TagSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -7,8 +7,14 @@ export const schema = z
   .object({
     type: z.literal("callout"),
     variant: z.enum(["info", "warn", "tip"]),
+    /** A short bold line over the text. See the describe below. */
+    title: z.string().min(1).optional().describe('A short bold line over the text, naming what the note is about, such as "谁付" or "Who pays".'),
     text: z.string(),
     icon: IconNameSchema.optional(),
+    /** What the note rests on. See the describe below. */
+    tag: TagSchema.optional().describe(
+      'A few words that say what the note rests on, printed as a small tag under its text, such as "企业口径 · 据报道" or "Ours after verification". Give it a basis or an evidence kind to say how firm it is.',
+    ),
   })
   .strict()
 

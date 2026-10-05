@@ -316,3 +316,38 @@ describe("callout: a marked run under brief's highlighter", () => {
     }
   })
 })
+
+describe("a callout's title and tag", () => {
+  const noted = {
+    type: "callout" as const,
+    variant: "warn" as const,
+    icon: "file-check" as const,
+    title: "1.57 是据报道的行业协会口径",
+    text: "不是本企业实测。用实际值不加 10% 至 30% 的加成，但必须过欧盟认可的核查。",
+    tag: { text: "本企业实测：待核查后填入", basis: "pending" as const },
+  }
+
+  it("sets the title bold over the text and the tag under it, all inside the panel", () => {
+    const { container } = svg(callout.render(noted, { x: 0, y: 0, w: 900 }, ctx))
+    const title = container.querySelector("[data-callout-title]")!
+    expect(title.textContent).toBe("1.57 是据报道的行业协会口径")
+    expect(title.getAttribute("font-weight")).toBe("700")
+    const body = Array.from(container.querySelectorAll("text")).find((t) => (t.textContent ?? "").startsWith("不是本企业实测"))!
+    expect(Number(body.getAttribute("y"))).toBeGreaterThan(Number(title.getAttribute("y")))
+    const tag = container.querySelector("[data-callout-tag] rect")!
+    expect(Number(tag.getAttribute("y"))).toBeGreaterThan(Number(body.getAttribute("y")))
+    expect(tag.getAttribute("stroke-dasharray")).not.toBeNull()
+    const panel = container.querySelector("rect")!
+    expect(Number(tag.getAttribute("y")) + Number(tag.getAttribute("height"))).toBeLessThanOrEqual(Number(panel.getAttribute("height")))
+  })
+
+  it("grows by the title and the tag it carries", () => {
+    const bare = { type: "callout" as const, variant: "warn" as const, text: noted.text }
+    expect(callout.measure(noted, 900, ctx)).toBeGreaterThan(callout.measure(bare, 900, ctx) + 28 + 12)
+  })
+
+  it("declares a tag wider than its text's measure dropped, never squeezed", () => {
+    const { container } = svg(callout.render({ ...noted, tag: { text: "很长的标签".repeat(12) } }, { x: 0, y: 0, w: 400 }, ctx))
+    expect(container.querySelector("[data-dropped]")).not.toBeNull()
+  })
+})

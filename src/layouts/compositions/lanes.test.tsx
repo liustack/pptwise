@@ -87,3 +87,14 @@ describe("a timeline whose axis is divided into spans", () => {
     expect(compose({ components: [sourced], ctx, rect: NOTICE_BAND, setting: "notice" }, ["lanes", "track"])).toBeNull()
   })
 })
+
+describe("a callout with a title or a tag", () => {
+  it("is left to the ordinary callout, which draws both, by every shared composition", () => {
+    const { ctx } = testCtx("bulletin")
+    const titled = { type: "callout", variant: "info", title: "对我们的意思", text: "国内每档促销要算清成本" } as unknown as Component
+    const tagged = { type: "callout", variant: "info", text: "国内每档促销要算清成本", tag: { text: "企业口径", evidence: "company" } } as unknown as Component
+    expect(compose({ components: [rules() as unknown as Component, titled], ctx, rect: NOTICE_BAND, setting: "notice" }, ["lanes", "track"])).toBeNull()
+    expect(compose({ components: [rules() as unknown as Component, tagged], ctx, rect: NOTICE_BAND, setting: "notice" }, ["lanes", "track"])).toBeNull()
+    expect(compose({ components: [rules() as unknown as Component, note as unknown as Component], ctx, rect: NOTICE_BAND, setting: "notice" }, ["lanes", "track"])).not.toBeNull()
+  })
+})

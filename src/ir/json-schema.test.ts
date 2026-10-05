@@ -182,7 +182,7 @@ describe("componentJsonSchema", () => {
     expect(callout.$schema).toBe("https://json-schema.org/draft/2020-12/schema")
     expect(callout.component).toBe("callout")
     expect((callout.properties as Record<string, unknown>).type).toEqual({ type: "string", const: "callout" })
-    expect(Object.keys(defsOf(callout))).toEqual([ICON_NAME_DEF_ID])
+    expect(Object.keys(defsOf(callout))).toEqual([TAG_DEF_ID, ICON_NAME_DEF_ID])
     expectRefsResolve(callout)
 
     const bullets = componentJsonSchema("bullets")

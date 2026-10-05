@@ -177,6 +177,18 @@ function asksForTimelineDetail(components: readonly CompositionProps["components
   )
 }
 
+/**
+ * The compositions that draw a callout's title and its tag. A page whose
+ * callout carries either is offered to these alone, so no hand-set closing
+ * line or note leaves them off. The ordinary callout sets the title bold over
+ * its text and the tag under it.
+ */
+const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForCalloutDetail(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "callout" && (component.title !== undefined || component.tag !== undefined))
+}
+
 function asksForChartTag(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.tag !== undefined)
 }
@@ -192,9 +204,11 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const tagged = asksForChartTag(props.components)
   const banded = (props.tagBand ?? 0) > 0
   const detailed = asksForTimelineDetail(props.components)
+  const noted = asksForCalloutDetail(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
+    if (noted && !CALLOUT_DETAIL_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     const drawn = COMPOSITIONS[id]({ ...props, handOn })
