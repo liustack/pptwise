@@ -2,7 +2,9 @@
 import { describe, expect, it } from "vitest"
 import { assertSubset } from "../../render/subset-validate"
 import { wavesComposition } from "./waves"
-import { attrs, BAND, byText, renderComposition, texts, textOf } from "./__fixtures__/kit"
+import { attrs, BAND, byText, renderComposition, testCtx, texts, textOf } from "./__fixtures__/kit"
+import { compose } from "."
+import type { Component } from "@/ir"
 
 const ITEMS = [
   { title: "Pilot", period: "Months 1 to 3", rows: [{ label: "Depots", value: "3" }, { label: "Target", value: "$0.40 off per parcel" }] },
@@ -94,5 +96,14 @@ describe("waves leave a phase's icon to the ordinary roadmap", () => {
   it("declines a roadmap whose phase has an icon", () => {
     expect(renderComposition(wavesComposition, roadmap()).element).not.toBeNull()
     expect(renderComposition(wavesComposition, roadmap(ITEMS.map((item, i) => (i === 0 ? { ...(item as object), icon: "flag" } : item)))).element).toBeNull()
+  })
+})
+
+describe("a roadmap row that is not settled", () => {
+  it("is offered to no hand-set roadmap that would print it as settled, so the ordinary roadmap marks it", () => {
+    const { ctx } = testCtx("brief")
+    const pending = ITEMS.map((item, i) => (i === 0 ? { ...item, rows: [...item.rows, { label: "Budget", value: "To be set", basis: "pending" }] } : item))
+    expect(compose({ components: roadmap() as unknown as Component[], ctx, rect: BAND }, ["waves"])).not.toBeNull()
+    expect(compose({ components: roadmap(pending) as unknown as Component[], ctx, rect: BAND }, ["waves"])).toBeNull()
   })
 })

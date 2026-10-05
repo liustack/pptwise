@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { IconNameSchema } from "./shared"
+import { BasisSchema, IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -20,7 +20,18 @@ export const schema = z
               "A symbol for the phase, drawn where its number would stand, such as shield-check or flag. Run `pptwise icons` for the names.",
             ),
             rows: z
-              .array(z.object({ label: z.string(), value: z.string() }).strict())
+              .array(
+                z
+                  .object({
+                    label: z.string(),
+                    value: z.string(),
+                    /** What the row's value rests on. See the describe below. */
+                    basis: BasisSchema.optional().describe(
+                      'What the row\'s value rests on, such as "pending" for a budget line still to be set ("核算与核查费用：待定"). A value that is not settled is marked dashed.',
+                    ),
+                  })
+                  .strict(),
+              )
               .max(4)
               .optional(),
             /** Marks the one phase the page is about: its card alone keeps

@@ -237,6 +237,19 @@ function asksForChartRunLabel(components: readonly CompositionProps["components"
   return components.some((component) => component.type === "chart" && component.emphasis_label !== undefined)
 }
 
+/**
+ * The compositions that mark a roadmap row whose value is not settled
+ * (`rows[].basis`), such as a budget line still to be set. A page whose
+ * roadmap carries one is offered to these alone, so no hand-set roadmap
+ * prints a pending figure as if it were settled; the ordinary roadmap
+ * underlines it dashed.
+ */
+const ROADMAP_BASIS_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForRoadmapBasis(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "roadmap" && component.items.some((item) => (item.rows ?? []).some((row) => row.basis !== undefined)))
+}
+
 function asksForChartTag(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.tag !== undefined)
 }
@@ -257,6 +270,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const referenced = asksForChartReference(props.components)
   const annotated = asksForChartNote(props.components)
   const labelled = asksForChartRunLabel(props.components)
+  const pending = asksForRoadmapBasis(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -265,6 +279,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (referenced && !CHART_REFERENCE_COMPOSITIONS.has(id)) continue
     if (annotated && !CHART_NOTE_COMPOSITIONS.has(id)) continue
     if (labelled && !CHART_RUN_LABEL_COMPOSITIONS.has(id)) continue
+    if (pending && !ROADMAP_BASIS_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     const drawn = COMPOSITIONS[id]({ ...props, handOn })

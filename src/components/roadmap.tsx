@@ -4,6 +4,7 @@ import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-lay
 import { accessibleInk, graphicInk } from "../render/ink"
 import { Icon } from "../render/icons"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
+import { basisInk, basisUnsettled, TAG_DASH } from "./tag"
 
 type RoadmapComponent = Extract<Component, { type: "roadmap" }>
 type RoadmapItem = RoadmapComponent["items"][number]
@@ -60,6 +61,8 @@ interface RowLayout {
   label: { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean }
   value: { lines: string[]; fontSize: number; lineHeight: number }
   height: number
+  /** What the value rests on (`rows[].basis`): one that is not settled is underlined dashed. */
+  basis?: NonNullable<NonNullable<RoadmapItem["rows"]>[number]["basis"]>
 }
 interface CardLayout {
   period: { text: string; fontSize: number; truncated: boolean } | null
@@ -172,6 +175,7 @@ function cardLayout(
       label,
       value,
       height: Math.max(VALUE_LH, value.lines.length * value.lineHeight, label.lines.length * label.lineHeight),
+      ...(r.basis ? { basis: r.basis } : {}),
     }
   })
   const rowsH = rows.reduce((s, r) => s + r.height, 0) + Math.max(0, rows.length - 1) * ROW_GAP
@@ -314,6 +318,18 @@ function renderCard(
                 {line}
               </text>
             ))}
+            {basisUnsettled(row.basis) ? (
+              <line
+                data-roadmap-basis={row.basis}
+                x1={x + PAD_X + layout.labelColW}
+                y1={rowTop + VALUE_SIZE + (row.value.lines.length - 1) * row.value.lineHeight + 4}
+                x2={x + PAD_X + layout.labelColW + Math.max(...row.value.lines.map((line) => measureTextUnits(line, { bold: true, fontFamily: ctx.fonts.body }) * row.value.fontSize))}
+                y2={rowTop + VALUE_SIZE + (row.value.lines.length - 1) * row.value.lineHeight + 4}
+                stroke={graphicInk(basisInk(ctx.colors, row.basis!), ctx.colors.surface)}
+                strokeWidth={1}
+                strokeDasharray={TAG_DASH}
+              />
+            ) : null}
           </g>
         )
       })}

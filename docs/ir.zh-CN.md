@@ -251,6 +251,7 @@ pptwise schema --kind data --theme brief
 | `timeline.milestones[].tag` 与 `source` | 节点现在的状态，印成小标签（`{ "text": "提案", "basis": "proposal" }`），以及日期或规则的出处，节点下面一行小字（「COM(2025) 989」）。依据尚未确定的标签画虚线 | |
 | `callout.title` 与 `callout.tag` | 提示上方一行粗体的小标题（「谁付」），以及正文下面一枚小标签，说明这条提示依据的是什么（`{ "text": "企业口径 · 据报道", "evidence": "company" }`） | |
 | `waterfall.items[].note` | 柱子名称下面一行短注，比如它代表的数量（「3.187 吨」） | |
+| `roadmap.items[].rows[].basis` | 这一行的值依据的是什么，比如还没定下来的预算项写 `"pending"`。尚未确定的值用虚线标出 | |
 | `kpi_cards.items[].value` 写成 `**…**` | 用主题强调色印的那一个数 | |
 | `progress_donuts.items[].detail` 与 `emphasis` | 标签下面一行，写这个完成度背后的金额（「11770 / 13000 亿元」），以及这一页讲的那一个，它的环、数字和标签用强调色 | 最多标一个 |
 | `kpi_cards.items[].tag` | 这个数是什么，用几个字印成数字旁的小标签（`{ "text": "约束性指标" }`）：标出的那个数填满，其余描边，`quiet` 的用灰色 | |

@@ -251,6 +251,7 @@ A page usually argues about one thing. These fields let the author say which, an
 | `timeline.milestones[].tag` and `source` | where a milestone stands, as a small tag (`{ "text": "Proposal", "basis": "proposal" }`), and where its date or rule comes from, a small line under it ("COM(2025) 989"). A tag with a basis that is not settled is dashed | |
 | `callout.title` and `callout.tag` | a short bold line over the note ("Who pays"), and what the note rests on as a small tag under its text (`{ "text": "Company figure, as reported", "evidence": "company" }`) | |
 | `waterfall.items[].note` | a short line under a bar's label, such as the quantity it stands for ("3.187 t") | |
+| `roadmap.items[].rows[].basis` | what a row's value rests on, such as `"pending"` for a budget line still to be set. A value that is not settled is marked dashed | |
 | `kpi_cards.items[].value` written `**…**` | the one figure set in the theme's emphasis | |
 | `progress_donuts.items[].detail` and `emphasis` | a line under a rate's label with the amounts behind it ("1.18 of 1.3 trillion"), and the one rate the page is about, whose ring, figure and label take the emphasis colour | at most one marked |
 | `kpi_cards.items[].tag` | what the figure is, in a few words printed as a small tag with it (`{ "text": "Binding" }`): filled on the marked figure, outlined otherwise, grey when `quiet` | |
