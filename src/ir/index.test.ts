@@ -1676,7 +1676,7 @@ describe("steps component", () => {
   it("rejects an unknown field on an item (strict)", () => {
     const d: any = minimal()
     const component = stepsComponent(2)
-    ;(component.items[0] as any).icon = "rocket"
+    ;(component.items[0] as any).href = "https://example.com"
     d.slides = [{ type: "content", kind: "points", components: [component] }]
     expect(parsePptxIR(d).success).toBe(false)
   })
@@ -2039,5 +2039,63 @@ describe("comparison recommended_label", () => {
     expect(parseOne({ ...base, recommended: 1, recommended_label: "For support" }).success).toBe(true)
     expect(parseOne({ ...base, recommended_label: "For support" }).success).toBe(false)
     expect(parseOne({ ...base, recommended: 1, recommended_label: " " }).success).toBe(false)
+  })
+})
+
+describe("tag evidence", () => {
+  it("takes the kind of source a tag names, and refuses a kind it does not know", () => {
+    const kpi = (tag: unknown) => ({ type: "kpi_cards", items: [{ value: "1", label: "a", tag }] })
+    expect(parseOne(kpi({ text: "RCT · 期刊", evidence: "trial" })).success).toBe(true)
+    expect(parseOne(kpi({ text: "企业口径", evidence: "company" })).success).toBe(true)
+    expect(parseOne(kpi({ text: "x", evidence: "rumour" })).success).toBe(false)
+  })
+})
+
+describe("tag tone", () => {
+  it("takes what kind of news a tag says, and refuses a tone it does not know", () => {
+    const row = (tag: unknown) => ({ type: "comparison", columns: ["A"], rows: [{ label: "x", cells: ["1"], tag }] })
+    expect(parseOne(row({ text: "超说明书", tone: "danger" })).success).toBe(true)
+    expect(parseOne(row({ text: "x", tone: "neutral" })).success).toBe(false)
+  })
+})
+
+describe("tag settled", () => {
+  it("takes a settled verdict on a tag", () => {
+    const row = (tag: unknown) => ({ type: "comparison", columns: ["A"], rows: [{ label: "x", cells: ["1"], tag }] })
+    expect(parseOne(row({ text: "纳入", settled: true })).success).toBe(true)
+    expect(parseOne(row({ text: "不纳入", settled: true, quiet: true })).success).toBe(true)
+  })
+})
+
+describe("numbered_cards item icon", () => {
+  it("takes an icon on an item", () => {
+    expect(parseOne({ type: "numbered_cards", items: [{ title: "a", icon: "pill" }, { title: "b" }, { title: "c" }] }).success).toBe(true)
+  })
+})
+
+describe("steps item icon and tone", () => {
+  it("takes an icon and a tone on a step, and refuses a tone it does not know", () => {
+    expect(parseOne({ type: "steps", items: [{ title: "a", text: "b", icon: "ruler", tone: "danger" }, { title: "c", text: "d" }] }).success).toBe(true)
+    expect(parseOne({ type: "steps", items: [{ title: "a", text: "b", tone: "stop" }, { title: "c", text: "d" }] }).success).toBe(false)
+  })
+})
+
+describe("insight_panel icon", () => {
+  it("takes an icon on a panel", () => {
+    expect(parseOne({ type: "insight_panel", title: "t", icon: "receipt", rows: [{ label: "a", text: "b" }] }).success).toBe(true)
+  })
+})
+
+describe("comparison label_column", () => {
+  it("takes a header over the rows' labels, and refuses an empty one", () => {
+    const base = { type: "comparison", columns: ["A", "B"], rows: [{ label: "x", cells: ["1", "2"] }] }
+    expect(parseOne({ ...base, label_column: "药品" }).success).toBe(true)
+    expect(parseOne({ ...base, label_column: "" }).success).toBe(false)
+  })
+})
+
+describe("comparison row icon", () => {
+  it("takes an icon on a row", () => {
+    expect(parseOne({ type: "comparison", columns: ["A"], rows: [{ label: "x", cells: ["1"], icon: "pill" }] }).success).toBe(true)
   })
 })

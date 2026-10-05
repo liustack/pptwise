@@ -194,6 +194,8 @@ describe("rows composition, notice setting", () => {
   it("declines a card with a sub line, more than five rows, and rows the band cannot hold at 84px", () => {
     const withSub = findings(null)
     expect(notice([{ ...withSub, items: [{ ...withSub.items[0]!, sub: "国内" }, ...withSub.items.slice(1)] }]).element).toBeNull()
+    // A card's icon has no place in these rows: the ordinary cards draw it.
+    expect(notice([{ ...withSub, items: [{ ...withSub.items[0]!, icon: "pill" }, ...withSub.items.slice(1)] }]).element).toBeNull()
     const six = { type: "numbered_cards", items: Array.from({ length: 6 }, (_, i) => ({ title: `第 ${i + 1} 条`, text: "说明" })) }
     expect(notice([six]).element).toBeNull()
     expect(notice([findings()], { ...NOTICE_BAND, h: 320 }).element).toBeNull()

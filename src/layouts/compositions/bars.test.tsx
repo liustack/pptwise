@@ -71,3 +71,14 @@ describe("bars composition", () => {
     expect(draw(share(), { rect: { ...NOTICE_PLOT, h: 200 } }).element).toBeNull()
   })
 })
+
+describe("a chart's tag through compose", () => {
+  it("is offered to no hand-set plot that leaves it off, so the ordinary chart draws it", async () => {
+    const { compose } = await import(".")
+    const { testCtx } = await import("./__fixtures__/kit")
+    const { ctx } = testCtx("bulletin")
+    const tagged = { ...share(), tag: { text: "企业口径", evidence: "company" } }
+    expect(compose({ components: [share()] as never, ctx, rect: NOTICE_PLOT, setting: "notice" })).not.toBeNull()
+    expect(compose({ components: [tagged] as never, ctx, rect: NOTICE_PLOT, setting: "notice" })).toBeNull()
+  })
+})

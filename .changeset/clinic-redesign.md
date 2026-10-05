@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+Clinic has a new look, a clinical assessment file. Every content page uses `dossier-sheet`: the section's label beside a short heartbeat, the point in bold over a hairline, the source small at the foot, and the body drawn in the `dossier` setting. A page's `tag` (the evidence the whole page rests on) is a capsule over the body. The cover uses `dossier-cover`, with the submitting office and its request over the title, a heartbeat across to a full-height photograph, and header lines from the page's `fields`. The ending uses `dossier-ending`: each item to decide on its own numbered card, a box per choice when the page carries a `ballot`, and who submits it, when, and a line to sign. When the deck asks for a footer, the motif prints the deck's label at the top right and the office and 「N / M」 at the foot. Marked text now takes clinic's deep teal instead of its light accent. If you copied clinic into your own theme file, its menu still names the old faces and keeps working as before.

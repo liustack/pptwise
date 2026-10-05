@@ -264,3 +264,25 @@ describe("steps on every theme", () => {
   })
 })
 
+
+describe("steps icon and tone", () => {
+  it("draws a step's icon in its badge where its number would stand", () => {
+    const ctx = boundThemeCtx("clinic")
+    const withIcon = { ...threeSteps, items: threeSteps.items.map((item, i) => (i === 1 ? { ...item, icon: "ban" as const } : item)) }
+    const { container } = svg(steps.render(withIcon, { x: 0, y: 0, w: 1088 }, ctx))
+    const numbers = Array.from(container.querySelectorAll("text")).map((t) => t.textContent).filter((t) => /^\d\d$/.test(t ?? ""))
+    expect(numbers).toEqual(["01", "03"])
+    expect(container.querySelectorAll("g[transform*='scale']")).toHaveLength(1)
+  })
+
+  it("rings a step that can stop the process in the theme's danger ink", () => {
+    const ctx = boundThemeCtx("clinic")
+    const gated = { ...threeSteps, items: threeSteps.items.map((item, i) => (i === 0 ? { ...item, tone: "danger" as const } : item)) }
+    const { container } = svg(steps.render(gated, { x: 0, y: 0, w: 1088 }, ctx))
+    const rings = Array.from(container.querySelectorAll("circle")).map((c) => c.getAttribute("stroke"))
+    expect(rings[0]).toBe(ctx.colors.danger)
+    expect(rings[1]).toBe(ctx.colors.primary)
+    const first = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "01")!
+    expect(first.getAttribute("fill")).toBe(ctx.colors.danger)
+  })
+})

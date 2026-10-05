@@ -113,8 +113,8 @@ describe("no footer by default", () => {
 })
 
 describe("the footer row, when the deck asks for it", () => {
-  // memo types its folio rather than printing the shared row: its own case below.
-  const SHARED_ROW_THEMES = CANONICAL_THEME_IDS.filter((theme) => theme !== "memo")
+  // memo and clinic set their folios rather than printing the shared row: their own cases below.
+  const SHARED_ROW_THEMES = CANONICAL_THEME_IDS.filter((theme) => theme !== "memo" && theme !== "clinic")
 
   it.each(SHARED_ROW_THEMES)("%s: every mark in its place, on content pages only", (theme) => {
     const ir = zhDeck(theme, { footer: ALL_MARKS })
@@ -178,6 +178,31 @@ describe("the footer row, when the deck asks for it", () => {
       for (const t of Array.from(row.querySelectorAll("text"))) {
         expect(t.getAttribute("y")).toBe(row.querySelector("text")!.getAttribute("y"))
         expect(t.getAttribute("data-font-floor-exempt")).toBe("memo-spec")
+      }
+      expect(texts(root).filter((t) => t.includes(ORG))).toHaveLength(1)
+    })
+  })
+
+  it("clinic: the office and 「N / M」 in its folio, the label at the top right, on content pages only", () => {
+    const ir = zhDeck("clinic", { footer: ALL_MARKS })
+    ir.slides.forEach((slide, index) => {
+      const root = page(ir, index)
+      if (slide.type !== "content") {
+        expect(root.querySelectorAll('[data-field="slidenum"]'), `clinic ${slide.type}: page number`).toHaveLength(0)
+        expect(root.querySelector("[data-footer]"), `clinic ${slide.type}: footer row`).toBeNull()
+        expect(root.querySelector("[data-dossier-subject]"), `clinic ${slide.type}: subject`).toBeNull()
+        return
+      }
+      // The deck's label is the file's subject, at the top right.
+      expect(root.querySelector("[data-dossier-subject]")!.textContent).toBe("2026 年中期业绩 | 2026.08")
+      const row = root.querySelector('[data-footer="row"]')!
+      // The reporting office at the left, then the draft and confidentiality
+      // marks, then 「N / M」 with N the slide-number field.
+      expect(texts(row)).toEqual([ORG, "讨论稿 · 内部资料，请勿外传", String(index + 1), `/ ${ir.slides.length}`])
+      expect(row.querySelector('[data-field="slidenum"]')!.textContent).toBe(String(index + 1))
+      for (const t of Array.from(row.querySelectorAll("text"))) {
+        expect(t.getAttribute("y")).toBe(row.querySelector("text")!.getAttribute("y"))
+        expect(t.getAttribute("data-font-floor-exempt")).toBe("dossier-spec")
       }
       expect(texts(root).filter((t) => t.includes(ORG))).toHaveLength(1)
     })

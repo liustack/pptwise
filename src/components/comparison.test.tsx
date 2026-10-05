@@ -642,3 +642,28 @@ describe("comparison recommended_label", () => {
     expect(container.querySelector("g[data-pick-label] rect")?.getAttribute("fill")).not.toBe("none")
   })
 })
+
+describe("comparison label_column", () => {
+  it("heads the rows' labels with the author's words, bold like the other headers", () => {
+    const { container } = svg(comparison.render({ ...component, label_column: "维度" }, { x: 0, y: 0, w: 800 }, ctx))
+    const header = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "维度")!
+    expect(header.getAttribute("font-weight")).toBe("bold")
+    const optionA = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "方案A")!
+    expect(header.getAttribute("y")).toBe(optionA.getAttribute("y"))
+    expect(Number(header.getAttribute("x"))).toBeLessThan(Number(optionA.getAttribute("x")))
+  })
+})
+
+describe("comparison row icon", () => {
+  it("sets a row's icon in a column of its own before the labels, and moves the table right of it", () => {
+    const withIcon = { ...component, rows: component.rows.map((row, i) => (i === 0 ? { ...row, icon: "pill" as const } : row)) }
+    const plain = svg(comparison.render(component, { x: 0, y: 0, w: 800 }, ctx)).container
+    const iconed = svg(comparison.render(withIcon, { x: 0, y: 0, w: 800 }, ctx)).container
+    expect(iconed.querySelectorAll("g[transform*='scale']")).toHaveLength(1)
+    const labelX = (c: Element) => Number(Array.from(c.querySelectorAll("text")).find((t) => t.textContent === "价格")!.getAttribute("x"))
+    expect(labelX(iconed)).toBe(labelX(plain) + 32)
+    const icon = iconed.querySelector("g[transform*='scale']")!
+    const iconX = Number(/translate\(([\d.]+)/.exec(icon.getAttribute("transform")!)![1])
+    expect(iconX + 20).toBeLessThanOrEqual(labelX(iconed))
+  })
+})

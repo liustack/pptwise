@@ -90,6 +90,7 @@ const NON_TEXT_KEYS = new Set([
   "plot", // combo series: drawn as bars or as a line
   "axis", // combo series: read against the left or the right value axis
   "status", // chart point: a forecast or a target, drawn as hatching or a dashed outline
+  "evidence", // tag: the kind of source it rests on, drawn as the ink its capsule takes
   // Handles and pointers, not prose.
   "asset_id", // asset handle
   "icon", // icon name from a fixed set

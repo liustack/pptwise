@@ -41,7 +41,7 @@ export const rosterComposition: Composition = ({ components, ctx, rect, setting 
   if (cards?.type !== "numbered_cards" || rest.length > 0) return null
   const list = cards as NumberedCards
   if (list.items.length < MIN_ITEMS || list.items.length > MAX_ITEMS) return null
-  if (list.items.some((item) => item.text?.trim() || item.sub?.trim())) return null
+  if (list.items.some((item) => item.text?.trim() || item.sub?.trim() || item.icon)) return null
   if (second !== undefined && (second.type !== "callout" || second.icon !== undefined)) return null
   const cellW = (rect.w - COLUMN_GAP) / 2
   if (cellW < MIN_CELL_W) return null

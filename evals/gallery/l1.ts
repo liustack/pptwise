@@ -1053,9 +1053,10 @@ function walkText(
         // tags, 15px headers and labels) and of terminal's console pages (12
         // to 15px mono labels, tags, crumb and source) and of memo's typed
         // pages (12 to 15px mono labels, captions, running head and folio,
-        // the source line and notes) are approved board sizes, like brief's
-        // meta.
-        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec"].includes(
+        // the source line and notes) and of clinic's dossier pages (12 to
+        // 15px capsules, labels, legends, subject, folio and source) are
+        // approved board sizes, like brief's meta.
+        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec"].includes(
           el.getAttribute("data-font-floor-exempt") ?? "",
         )
         if (!decor && !fontFloorExempt && fontSizeAttr !== null && Number(fontSizeAttr) < FONT_FLOOR) {

@@ -56,6 +56,8 @@ function tilesShape(components: readonly Component[]): NumberedCards | null {
   const cards = components[0]!
   if (cards.type !== "numbered_cards") return null
   if (cards.items.length < 3 || cards.items.length > 4) return null
+  // A card's icon has no place on these tiles: the ordinary cards draw it.
+  if (cards.items.some((item) => item.icon)) return null
   return cards
 }
 

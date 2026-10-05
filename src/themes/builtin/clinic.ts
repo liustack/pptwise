@@ -63,6 +63,21 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 心搏线。顶缘心电线与右缘细胞圈退役）。
  *
  * **菜单分派（S1-B）**：诊疗件求稳，七道常规讲法就够，photo 用可加角注的 image-annotate 承影像图。高潮页会把临床语气带偏，宣言、引用、大数字、单证据都不上。
+ *
+ * **2026-10 样例重做（`design/rounds/2026-10-05-clinic/`）**：照着定稿画成一份
+ * 临床评估档案。封面换成 `dossier-cover`（汇报部门和提请事由一行、粗体标题、
+ * 横穿到照片边的心搏线、议题依据日期三栏、右侧整幅照片），结尾换成
+ * `dossier-ending`（要表决的条目一条一张卡，带 `ballot` 时每条有勾选框，底部
+ * 提请栏和签字线）。七道内容讲法都走 `dossier-sheet`：左上短心搏线后面是页面
+ * 的 `kicker`，标题 30px 粗体用满整行，正文交给 dossier 设定下的构图，每个数
+ * 字旁边一枚证据胶囊标来源性质。页眉页脚归 `clinic-motif`。章节页没有定稿，
+ * 留在 `subject-rule-chapter`。菜单的七道讲法不变：宣言、引用、大数字、单证
+ * 据仍不上，上面那条 S1-B 的取舍照旧。
+ *
+ * `emphasisInk` 设为深青绿 `#0E6B5C`（与 primary 同值）：定稿里一页的唯一重点
+ * （标记的数字、提议 1 的整块卡、重点行的字）都是深青绿，浅青 accent 只给线
+ * 与点。accent 压 bg 3.12:1，承不了正文字，上面那条「浅青只给线与点」的裁定
+ * 因此落到实处：`**…**` 的强调从此是深青绿，不再借浅青。
  */
 export const PULSE_TOKENS: StyleTokens = {
   id: "clinic",
@@ -74,6 +89,7 @@ export const PULSE_TOKENS: StyleTokens = {
     text: "#1E2B27", // 墨绿黑（13.56:1）
     muted: "#5A6C66", // 手术服灰（5.14:1），校准记录见文件头注释
     border: "#D5E2DC", // 病历线。只作线，永不承字，不答文字门槛
+    emphasisInk: "#0E6B5C", // 一页唯一的重点：深青绿，压 bg 5.92:1，答 4.5。浅青 accent 只给线与点（见文件头 2026-10 条）
     danger: "#B3282B", // 诊室红。kpi 箭头当字，压 surface 6.32:1，答 4.5
     warning: "#B9722F", // 警示褐（压 surface 3.73:1，只作线与图标）——第四轮起不再兼任 chartPalette 第四色
     success: "#157A52", // 青绿偏绿。kpi 箭头当字，压 surface 5.22:1，答 4.5
@@ -117,18 +133,18 @@ export const PULSE_THEME = {
   },
   style: PULSE_TOKENS,
   menu: {
-    cover: { face: "report-open-cover" },
+    cover: { face: "dossier-cover" },
     chapter: { face: "subject-rule-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "split-band" },
-      photo: { face: "image-annotate" },
-      hierarchy: { face: "asymmetric-triptych" },
+      points: { face: "dossier-sheet" },
+      list: { face: "dossier-sheet" },
+      comparison: { face: "dossier-sheet" },
+      process: { face: "dossier-sheet" },
+      data: { face: "dossier-sheet" },
+      photo: { face: "dossier-sheet" },
+      hierarchy: { face: "dossier-sheet" },
     },
-    ending: { face: "care-plan-ending" },
+    ending: { face: "dossier-ending" },
   },
   motif: { id: "clinic-motif" },
 } satisfies BuiltinThemeDeclaration;

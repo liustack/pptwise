@@ -1,0 +1,31 @@
+{
+  "components": [
+    {
+      "type": "bullets",
+      "items": [
+        "Drugs: Tirzepatide, Wegovy, mazdutide per case",
+        "Scope: Weight clinic, endocrinology, nutrition",
+        "Rules: Checks first, self-pay, six-month review"
+      ]
+    }
+  ],
+  "fields": [
+    {
+      "label": "Submitted by",
+      "value": "Department of Pharmacy"
+    },
+    {
+      "label": "Date",
+      "value": "October 2026"
+    }
+  ],
+  "ballot": {
+    "choices": [
+      "For",
+      "Against",
+      "Abstain"
+    ],
+    "signature": "Committee chair's signature"
+  },
+  "notes": "We ask the committee to vote on three items. One, the drugs: list tirzepatide and semaglutide 2.4 mg, Wegovy. Mazdutide stays off the formulary and is bought case by case, ecnoglutide is deferred, and liraglutide 3.0 mg and benaglutide are not listed. Two, prescribers: only the weight management clinic, endocrinology and clinical nutrition, by doctors the hospital has trained and authorized. Three, the rules: pharmacists run the five pre-dispensing checks, all weight-loss prescriptions are self-pay, three groups of measures are tracked, with a first review at six months and further reviews at the three outside dates in 2027. If the committee approves, the Department of Pharmacy will draft the detailed rules with the medical affairs, IT and insurance offices."
+}

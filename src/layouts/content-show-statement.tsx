@@ -18,7 +18,8 @@ type StatementItem = { title: string; body: string }
 function exactStatement(slide: SvgTemplateProps["slide"]): NumberedCards | Bullets | null {
   if (slide.components.length !== 1) return null
   const only = slide.components[0]
-  if (only?.type === "numbered_cards") return only.items.length <= 3 ? only : null
+  // A card's icon has no place in the statement: the ordinary cards draw it.
+  if (only?.type === "numbered_cards") return only.items.length <= 3 && !only.items.some((item) => item.icon) ? only : null
   if (only?.type === "bullets") return only.items.length >= 1 && only.items.length <= 3 ? only : null
   return null
 }

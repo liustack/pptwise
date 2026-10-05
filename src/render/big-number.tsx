@@ -1,5 +1,5 @@
 import { Fragment } from "react"
-import { kpiFigure } from "../components/kpi"
+import { kpiFigure, unitGap } from "../components/kpi"
 import type { Component } from "@/ir"
 import type { ComponentCtx } from "../components/types"
 import { renderComponent } from "../components"
@@ -71,6 +71,10 @@ export function BigNumber({
   if (hero) {
     const { text: valueStr, unit: heroUnit } = kpiFigure(hero.value, hero.unit)
     const valueUnits = measureTextUnits(valueStr)
+    // The unit is painted after its gap (`unitGap`), a space before any unit
+    // a reader does not glue to the digits. The gap comes out of the unit's
+    // own share, as on a kpi card.
+    const gap = heroUnit ? unitGap(heroUnit) : ""
     const unitUnits = heroUnit ? measureTextUnits(heroUnit) : 0
     const valueMaxWidth =
       unitUnits > 0 && valueUnits > 0
@@ -88,9 +92,13 @@ export function BigNumber({
     })
     unitFontSize = Math.round(fittedValue.fontSize * 0.4)
     const unitMaxWidth = rect.w - valueMaxWidth
-    fittedUnit = heroUnit
-      ? truncateToUnits(heroUnit, unitMaxWidth / fittedValue.fontSize, { bold: true, fontFamily: ctx.fonts.heading })
-      : null
+    const fitted = heroUnit
+      ? truncateToUnits(heroUnit, unitMaxWidth / fittedValue.fontSize - measureTextUnits(gap, { bold: true, fontFamily: ctx.fonts.heading }), {
+          bold: true,
+          fontFamily: ctx.fonts.heading,
+        })
+      : ""
+    fittedUnit = fitted ? `${gap}${fitted}` : null
   }
   const fittedLabel = hero
     ? fitSvgLine(hero.label, {
@@ -129,6 +137,7 @@ export function BigNumber({
             fontWeight="bold"
             fill={heroInk}
             dominantBaseline="alphabetic"
+            xmlSpace={fittedUnit?.startsWith(" ") ? "preserve" : undefined}
           >
             {fittedValue.text}
             {fittedUnit != null && (

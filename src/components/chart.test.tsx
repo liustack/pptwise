@@ -2056,3 +2056,48 @@ describe("chart point status and change brackets", () => {
     expect(labels).toContain("23.3  −4.5 个百分点")
   })
 })
+
+describe("chart tag", () => {
+  const twoSeries = {
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    axes: { y_title: "减重达标比例", y_unit: "%" },
+    series: [
+      { name: "替尔泊肽", data: [{ x: "≥10%", y: 81.6 }, { x: "≥15%", y: 64.6 }] },
+      { name: "司美格鲁肽", data: [{ x: "≥10%", y: 60.5 }, { x: "≥15%", y: 40.1 }] },
+    ],
+  }
+
+  it("sets its tag at the start of the legend row, the legend still right-aligned, the plot where it was", () => {
+    const tagged = { ...twoSeries, tag: { text: "企业口径", evidence: "company" as const } }
+    const box = { x: 0, y: 0, w: 900, h: 360 }
+    const plain = svg(chart.render(twoSeries, box, ctx)).container
+    const withTag = svg(chart.render(tagged, box, ctx)).container
+    const tag = withTag.querySelector("[data-tag]")!
+    expect(tag.querySelector("text")!.textContent).toBe("企业口径")
+    expect(Number(tag.querySelector("rect")!.getAttribute("x"))).toBeLessThan(1)
+    const legendName = (c: Element) => Array.from(c.querySelectorAll("text")).find((t) => t.textContent === "司美格鲁肽")!.getAttribute("x")
+    expect(legendName(withTag)).toBe(legendName(plain))
+    expect(withTag.querySelector("[data-dropped]")).toBeNull()
+    expect(chart.measure(tagged, 900, ctx)).toBe(chart.measure(twoSeries, 900, ctx))
+  })
+
+  it("gives a chart with no legend a header row for its tag", () => {
+    const pie = { type: "chart" as const, chart_type: "pie" as const, series: [{ name: "s", data: [{ x: "a", y: 1 }, { x: "b", y: 2 }] }] }
+    expect(chart.measure({ ...pie, tag: { text: "企业口径" } }, 900, ctx)).toBe(chart.measure(pie, 900, ctx) + 52)
+  })
+
+  it("refuses a tag on a share bar", () => {
+    const share = {
+      type: "chart",
+      chart_type: "stacked",
+      direction: "horizontal",
+      series: [
+        { name: "肥胖", data: [{ x: "成人", y: 16.4 }] },
+        { name: "超重", data: [{ x: "成人", y: 34.3 }] },
+      ],
+      tag: { text: "官方文件" },
+    }
+    expect(chartSchema.safeParse(share).success).toBe(false)
+  })
+})

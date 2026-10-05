@@ -71,3 +71,20 @@ The seal setting's form, in [`lanes-seal.tsx`](../../../src/layouts/compositions
 **What it gave up.**
 
 - A title past two lines or a description past three of its card declines.
+
+## clinic, GLP-1 formulary review sample, 2026-10
+
+The dossier setting's form, in [`lanes-dossier.tsx`](../../../src/layouts/compositions/lanes-dossier.tsx). Settled on the approvals page (p10). The round's decisions are in [rounds/2026-10-05-clinic](../../rounds/2026-10-05-clinic/README.md).
+
+| board (p10) | engine |
+| :-: | :-: |
+| ![board](clinic.board.png) | ![engine](clinic.engine.png) |
+
+**What it looks like.** The years run along one 2px axis across the page, each milestone at its date's place. The first lane (approvals) stands above it: a dot on the axis, a thin accent line up to its date, its title bold and its description under it, on one of two tiers. The second lane (indications, policy, patents) hangs below: a diamond on the axis, a ghost line down to its date and title, on one of four tiers. Each lane is named at the left over its side of the axis. Labels are placed by a search over the tiers that keeps every label clear of its neighbours and of the other stems. The milestone the page is about (`highlight`) is in the mark.
+
+**Why.** Approvals and the events around them are one calendar, read as two kinds.
+
+**What it gave up.**
+
+- One horizontal `timeline` of two lanes with dated milestones.
+- The lower lane's labels stand where the search puts them, not always where the board put them by hand.

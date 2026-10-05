@@ -77,6 +77,18 @@ export type CompositionId =
   | "sum"
   | "schedule"
   | "checks"
+  | "readings"
+  | "inset"
+  | "docket"
+  | "controlled"
+  | "duel"
+  | "forest"
+  | "multiples"
+  | "fork"
+  | "ruler"
+  | "dumbbells"
+  | "gate"
+  | "watch"
 
 /**
  * The type a composition sets its page in.
@@ -139,10 +151,23 @@ export type CompositionId =
  *   a calendar over its dates, a checklist of stop conditions. See
  *   `./memo.tsx`.
  *
+ * - `dossier`: clinic's 2026-10 board. A clinical assessment file: figures
+ *   on rounded cards over hairlines, each source named in a rounded capsule
+ *   outlined in the ink its kind of source takes, the thing a page is about
+ *   in the mark (on its pale tint when it is a row), what it is read against
+ *   (a placebo, a control) drawn as an outline, a hollow dot or a tick, the
+ *   accent kept for lines and dots, and risk and cost reminders in the
+ *   warning ink. A composition offered this setting also takes the shapes
+ *   that board drew and no other did: figure cards over a share bar, cases
+ *   beside a photograph, bars against their controls, a head-to-head, a
+ *   forest plot, small multiples of rates, a trajectory that forks, ranges
+ *   on a scale, before-and-after dumbbells, a gated process and a
+ *   monitoring plan. See `./dossier.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */
@@ -161,6 +186,19 @@ export interface CompositionProps {
    * pages before it. 1 when omitted. Only the memo setting numbers exhibits.
    */
   exhibitNumber?: number
+  /**
+   * The section the page sits in (its `kicker`), handed down by a face that
+   * numbers a page's items after it: the dossier setting labels proposals
+   * 「提议 1」 on a page whose section is 「提议」.
+   */
+  section?: string
+  /**
+   * The height a face's page tag (`Slide.tag`) takes at the top left of the
+   * band, from `rect.y`, when the face sets one there. A composition that
+   * knows the tag keeps its left column clear of it. 0 or omitted when the
+   * page has none.
+   */
+  tagBand?: number
   /**
    * Draws other components in a band of their own, with the compositions the
    * face offered and in the same setting, or returns `null` when none takes

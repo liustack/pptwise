@@ -1,0 +1,161 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "clinic",
+  "filename": "glp1-formulary-review",
+  "meta": {
+    "organization": "药学部",
+    "date": "2026 年 10 月"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "GLP-1 类减重药进院评估 · 药事会审议"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "GLP-1 类减重药进院评估与院内管理方案",
+      "summary": "提请药事管理与药物治疗学委员会审议"
+    },
+    {
+      "id": "p02-proposal",
+      "type": "content",
+      "kind": "points",
+      "heading": "建议纳入替尔泊肽和司美格鲁肽 2.4 mg，限门诊开具、前置审核、自费结算",
+      "focus": "numbered_cards",
+      "kicker": "提议"
+    },
+    {
+      "id": "p03-why-now",
+      "type": "content",
+      "kind": "list",
+      "heading": "体重管理门诊今年必须开，替尔泊肽药费又降了约八成",
+      "focus": "kpi_cards",
+      "kicker": "背景"
+    },
+    {
+      "id": "p04-outside",
+      "type": "content",
+      "kind": "photo",
+      "heading": "院外已有假药和医保代开案例，患者需要一条规范的院内渠道",
+      "focus": "image",
+      "kicker": "背景"
+    },
+    {
+      "id": "p05-china",
+      "type": "content",
+      "kind": "data",
+      "heading": "三个品种在中国人群试验中，较安慰剂多减重 8 到 15 个百分点",
+      "focus": "chart",
+      "kicker": "疗效"
+    },
+    {
+      "id": "p06-h2h",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "唯一头对头：替尔泊肽 −20.2%，司美格鲁肽 −13.7%",
+      "focus": "chart",
+      "kicker": "疗效"
+    },
+    {
+      "id": "p07-select",
+      "type": "content",
+      "kind": "data",
+      "heading": "心血管获益只有司美格鲁肽有证据：SELECT 主要终点 HR 0.80",
+      "focus": "data_table",
+      "kicker": "心血管"
+    },
+    {
+      "id": "p08-safety",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "胃肠道反应最常见，甲状腺和胆囊风险要筛查和随访",
+      "focus": "data_table",
+      "kicker": "安全性"
+    },
+    {
+      "id": "p09-rebound",
+      "type": "content",
+      "kind": "data",
+      "heading": "停药就反弹：SURMOUNT-4 停药组 52 周回升 14.0%",
+      "focus": "chart",
+      "kicker": "安全性"
+    },
+    {
+      "id": "p10-approvals",
+      "type": "content",
+      "kind": "process",
+      "heading": "在华已有 6 个减重品种获批，诺和盈又增心血管和 MASH 适应证",
+      "focus": "timeline",
+      "kicker": "审批"
+    },
+    {
+      "id": "p11-thresholds",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "诺和盈的 BMI 门槛是 30/27，穆峰达和信尔美是 28/24",
+      "focus": "comparison",
+      "kicker": "审批"
+    },
+    {
+      "id": "p12-cost",
+      "type": "content",
+      "kind": "data",
+      "heading": "替尔泊肽 4 周药费降到千元以内，但医保只报糖尿病，减重全自费",
+      "focus": "chart",
+      "kicker": "费用"
+    },
+    {
+      "id": "p13-formulary",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "建议纳入替尔泊肽和诺和盈，玛仕度肽个案走临时采购",
+      "focus": "comparison",
+      "kicker": "建议"
+    },
+    {
+      "id": "p14-scope",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "限定在体重管理门诊和两个专科开具，药师专人审核",
+      "focus": "image",
+      "kicker": "管理"
+    },
+    {
+      "id": "p15-audit",
+      "type": "content",
+      "kind": "process",
+      "heading": "处方前置审核分五步，存在禁忌或门槛不符即拦截",
+      "focus": "steps",
+      "kicker": "管理"
+    },
+    {
+      "id": "p16-pharmacist",
+      "type": "content",
+      "kind": "photo",
+      "heading": "药师还要防滥用：首诊评估风险，盯住跨机构就诊和剂量异常",
+      "focus": "image",
+      "kicker": "管理"
+    },
+    {
+      "id": "p17-monitoring",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "按有效性、安全性、依从性监测，上线 6 个月首次复评",
+      "focus": "row_cards",
+      "kicker": "监测"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "heading": "请委员会表决三项",
+      "kicker": "表决"
+    }
+  ]
+}

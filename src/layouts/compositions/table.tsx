@@ -9,6 +9,7 @@ import { rowsCarryMarks } from "../../components/tag"
 import { tablePanel } from "./table-panel"
 import { tableSeal } from "./table-seal"
 import { tableConsole } from "./table-console"
+import { tableDossier } from "./table-dossier"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -343,9 +344,15 @@ function layoutAt(
 }
 
 export const tableComposition: Composition = (props) => {
+  // The dossier table sets the labels' header, the rows' icons and the
+  // proposal capsules itself.
+  if (props.setting === "dossier") return tableDossier(props)
   // The recommended option's label has no place in these tables: the
   // ordinary comparison draws it over its column.
   if (props.components.some((component) => component.type === "comparison" && component.recommended_label?.trim())) return null
+  // Nor do the header over the rows' labels and a row's icon: the ordinary
+  // comparison sets them.
+  if (props.components.some((component) => component.type === "comparison" && (component.label_column !== undefined || component.rows.some((row) => row.icon)))) return null
   if (props.setting === "panel") return tablePanel(props)
   if (props.setting === "seal") return tableSeal(props)
   if (props.setting === "console") return tableConsole(props)

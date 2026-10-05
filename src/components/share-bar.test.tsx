@@ -77,6 +77,25 @@ describe("share bar", () => {
     expect(contrastRatio(totals[0]!.getAttribute("fill")!, ctx.defaultBg ?? ctx.colors.bg)).toBeGreaterThanOrEqual(4.5)
   })
 
+  it("states a share of a whole of 100% once, not again as its share", () => {
+    const weight: Chart = {
+      type: "chart",
+      chart_type: "stacked",
+      direction: "horizontal",
+      axes: { y_unit: "%" },
+      series: [
+        { name: "肥胖", emphasis: true, data: [{ x: "成人体重状况（2018 年）", y: 16.4 }] },
+        { name: "超重", emphasis: true, data: [{ x: "成人体重状况（2018 年）", y: 34.3 }] },
+        { name: "其他", data: [{ x: "成人体重状况（2018 年）", y: 49.3 }] },
+      ],
+    }
+    const totals = (c: Chart) => Array.from(draw(c).root!.querySelectorAll("[data-share-total]")).map((t) => t.textContent)
+    expect(totals(weight)).toEqual(["肥胖和超重 50.7%", "其他 49.3%"])
+    // Percentages of something other than this whole still say their share of it.
+    const partial = { ...weight, series: weight.series.slice(0, 2) }
+    expect(totals(partial)[0]).toBe("肥胖和超重 50.7%，占 100.0%")
+  })
+
   it("prints no totals line when nothing is marked", () => {
     const { root, drawn } = draw(capacity(false))
     expect(root!.querySelectorAll("[data-share-total]")).toHaveLength(0)

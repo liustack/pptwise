@@ -3,7 +3,7 @@ import type { Component } from "@/ir"
 import { isShareBar } from "@/ir/components/chart"
 
 export { isShareBar }
-import { figureStyleOf, groupDigits, joinUnit, type FigureStyle } from "../lib/quantity-format"
+import { figureStyleOf, groupDigits, isPercentUnit, joinUnit, type FigureStyle } from "../lib/quantity-format"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { mostlyChinese } from "../lib/text-script"
 import { accessibleInk, blendOver, readableOn } from "../render/ink"
@@ -110,10 +110,21 @@ function runName(names: readonly string[], chinese: boolean): string {
   return `${head}${chinese ? "和" : " and "}${names[names.length - 1]}`
 }
 
-/** "太阳能和风电 18.42 亿千瓦，占 47.3%" or "Solar and Wind 1,842 GW, 47.3%". */
-function totalText(name: string, sum: string, share: number, chinese: boolean): string {
+/**
+ * "太阳能和风电 18.42 亿千瓦，占 47.3%" or "Solar and Wind 1,842 GW, 47.3%".
+ * When the parts are themselves shares of a whole of 100% (`ofHundred`), the
+ * figure already is the share, so it stands alone (「肥胖和超重 50.7%」), not
+ * 「肥胖和超重 50.7%，占 50.7%」.
+ */
+function totalText(name: string, sum: string, share: number, chinese: boolean, ofHundred: boolean): string {
+  if (ofHundred) return `${name} ${sum}`
   const pct = `${share.toFixed(1)}%`
   return chinese ? `${name} ${sum}，占 ${pct}` : `${name} ${sum}, ${pct}`
+}
+
+/** Whether the parts are percentages that make up the whole: a percent unit, and a total of 100 to within the rounding of the parts. */
+function sharesOfHundred(unit: string | undefined, total: number, parts: number): boolean {
+  return isPercentUnit(unit) && Math.abs(total - 100) <= 0.05 * Math.max(1, parts)
 }
 
 function width(text: string, size: number, fontFamily: string, bold = false): number {
@@ -198,7 +209,8 @@ export function drawShareBar(spec: ShareBarSpec): { node: React.ReactElement; he
   const totals: { text: string; x: number; ink: string }[] = []
   if (marked.length > 0) {
     const sum = marked.reduce((s, i) => s + parts[i]!.value, 0)
-    const text = totalText(runName(marked.map((i) => parts[i]!.name), chinese), figure(sum, decimals, unit, figures), (sum / total) * 100, chinese)
+    const ofHundred = sharesOfHundred(unit, total, parts.length)
+    const text = totalText(runName(marked.map((i) => parts[i]!.name), chinese), figure(sum, decimals, unit, figures), (sum / total) * 100, chinese, ofHundred)
     const at = spans[marked[0]!]!.x0
     if (at + width(text, TOTALS.size, body, true) <= x + w) {
       totals.push({ text, x: at, ink: accessibleInk(spec.markInk, bg, TOTALS.size) })
@@ -206,7 +218,7 @@ export function drawShareBar(spec: ShareBarSpec): { node: React.ReactElement; he
       const rival = others.reduce<number | null>((best, i) => (best === null || parts[i]!.value > parts[best]!.value ? i : best), null)
       if (rival !== null) {
         const other = parts[rival]!
-        const otherText = totalText(other.name, figure(other.value, decimals, unit, figures), (other.value / total) * 100, chinese)
+        const otherText = totalText(other.name, figure(other.value, decimals, unit, figures), (other.value / total) * 100, chinese, ofHundred)
         const otherW = width(otherText, TOTALS.size, body, true)
         const otherX = Math.min(spans[rival]!.x0, x + w - otherW)
         const first: Placed = { x0: at, x1: at + width(text, TOTALS.size, body, true) }

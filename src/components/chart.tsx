@@ -32,6 +32,7 @@ import {
   seriesGutterLabelsFit,
 } from "./chart-svg";
 import { buildChartModel } from "./chart-model";
+import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag";
 import type { RenderDef, SvgComponent } from "./types";
 import {
   renderArea,
@@ -454,9 +455,17 @@ function tonedSeriesPalette(
   });
 }
 
+/**
+ * Whether the chart sets a header row over its plot: for its legend, or for
+ * its tag (`tag`), which stands at the start of the row with the legend
+ * right-aligned beside it.
+ */
 function hasHeaderRow(component: ChartComponent): boolean {
-  return legendApplicable(component);
+  return legendApplicable(component) || component.tag !== undefined;
 }
+
+/** Air between the chart's tag and the first legend entry. */
+const TAG_LEGEND_GAP = 24;
 
 function axisTitlesOf(component: ChartComponent): {
   xTitle?: string;
@@ -736,10 +745,16 @@ export const chart: SvgComponent<ChartComponent> = {
 
     const hasLegend = legendApplicable(component);
     const headerW = box.w;
+    // The chart's tag stands at the start of the header row, the legend
+    // right-aligned in what is left. A tag wider than the whole row is
+    // declared dropped, never squeezed.
+    const tagSpec = ordinaryTagSpec(ctx);
+    const tagW = component.tag ? tagWidth(component.tag.text, tagSpec) : 0;
+    const tagFits = component.tag !== undefined && tagW <= headerW;
     const legendLayout = hasLegend
       ? layoutChartLegend(
           [...buildChartModel(component.series).legend, ...statusEntries(component, ctx.figures)],
-          headerW,
+          tagFits ? headerW - tagW - TAG_LEGEND_GAP : headerW,
           bodyFace
         )
       : null;
@@ -771,6 +786,11 @@ export const chart: SvgComponent<ChartComponent> = {
           bodyFace,
           ctx.figures
         )}
+        {component.tag
+          ? tagFits
+            ? paintTag({ tag: component.tag, x: 0, y: 0, spec: tagSpec, inks: tagInks(ctx, component.tag, false, legendBg, tagSpec.size) })
+            : <g data-dropped={1} data-dropped-kind="tag" />
+          : null}
         {legendLayout ? (
           <g>
             {legendLayout.slots.map((slot) => {

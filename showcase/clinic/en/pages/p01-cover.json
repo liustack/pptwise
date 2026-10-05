@@ -1,0 +1,25 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "pen",
+      "fit": "cover",
+      "caption": "Illustration: an injection pen (AI-generated)"
+    }
+  ],
+  "fields": [
+    {
+      "label": "Agenda",
+      "value": "Drugs · prescribers · review rules"
+    },
+    {
+      "label": "Evidence",
+      "value": "Trials · labels · national documents · reimbursement list"
+    },
+    {
+      "label": "Date",
+      "value": "October 2026"
+    }
+  ],
+  "notes": "This is the Department of Pharmacy's review for the Pharmacy and Therapeutics Committee on GLP-1 weight-loss drugs: whether to add them to the hospital formulary, which ones, and how to control their use. We start with the proposal, then why the decision cannot wait, then the evidence on efficacy, cardiovascular outcomes, safety and weight regain, the approvals and label thresholds in China, cost and insurance, and finally the drugs we recommend, the controls, the monitoring plan and the three items for the vote. Every figure comes from journal papers, drug labels, filings by China's NMPA and National Healthcare Security Administration, or press reports of prices, and each data page names its source. This is a formulary decision, not advice on treating any individual patient."
+}

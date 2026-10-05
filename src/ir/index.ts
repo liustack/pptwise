@@ -34,6 +34,7 @@ import { HexTokenSchema } from "../themes/hex"
 import { KIND_VALUES } from "./narrative-values"
 import { componentTypeError } from "./schema-error-hints"
 import { FooterSchema, nonBlankString } from "./footer"
+import { TagSchema } from "./components/shared"
 import { schema as bulletsSchema } from "./components/bullets"
 import { schema as paragraphSchema } from "./components/paragraph"
 import { schema as blockquoteSchema } from "./components/blockquote"
@@ -455,6 +456,35 @@ const CommonSlideFields = {
     .strict()
     .optional()
     .describe('A stamp pressed on the page, such as "已决定" or "Approved", with an optional date line under it. Drawn only by faces that have a place for it: validate says which.'),
+  /**
+   * A ballot laid over the page's items: the boxes each item can be ticked
+   * in, and a line left blank to sign. Only a face that declares a place for
+   * it draws it.
+   */
+  ballot: z
+    .object({
+      choices: z
+        .array(nonBlankString("ballot.choices[]"))
+        .min(2)
+        .max(4)
+        .describe('The boxes each item can be ticked in, in order, such as ["同意", "不同意", "弃权"] or ["For", "Against", "Abstain"].'),
+      signature: nonBlankString("ballot.signature")
+        .optional()
+        .describe('The label of a line left blank to sign under the items, such as "委员会主任委员签字" or "Chair\'s signature".'),
+    })
+    .strict()
+    .optional()
+    .describe(
+      'A ballot laid over the page\'s items, so a committee can vote on each one: the boxes each item can be ticked in, and an optional line left blank to sign. Drawn only by faces that have a place for it: validate says which.',
+    ),
+  /**
+   * A small tag set with the page's heading, saying what the page's evidence
+   * is: the trial behind every figure on it, the draft its rules come from.
+   * Only a face that declares a place for it draws it.
+   */
+  tag: TagSchema.optional().describe(
+    'A small tag set with the page\'s heading, saying what the whole page rests on, such as "RCT · NEJM 2025 · 751 例" or "Draft for comment, June 2026". Give it an evidence kind to colour it by its source. Drawn only by faces that have a place for it: validate says which.',
+  ),
   components: z.array(ComponentSchema).default([]),
   background: BackgroundSpecSchema.optional(),
   // 图片排版 P4：受控装饰原语——模型只有选择权，绘制由渲染层完成。

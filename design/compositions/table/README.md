@@ -110,3 +110,19 @@ The console setting's form, in [`table-console.tsx`](../../../src/layouts/compos
 **What it gave up.**
 
 - Two to five options and up to six rows, at most one rating, no `title`, row tags or marked row.
+
+## clinic, GLP-1 formulary review sample, 2026-10
+
+The dossier setting's form, in [`table-dossier.tsx`](../../../src/layouts/compositions/table-dossier.tsx). Settled on the formulary page (p13). The round's decisions are in [rounds/2026-10-05-clinic](../../rounds/2026-10-05-clinic/README.md).
+
+| board (p13) | engine |
+| :-: | :-: |
+| ![board](clinic.board.png) | ![engine](clinic.engine.png) |
+
+**What it looks like.** An open table under a 2px rule of ink, 82px a row: each option's icon and its name bold, its cells, and at the right the proposal as a capsule 120 by 34 that says how settled it is. A settled yes (`settled`, or the tag on the row the page marks) is filled with the mark, a conditional yes outlined in the mark, an open no or a deferral outlined in the ghost ink (`quiet`), a settled no filled in a quiet grey. A row's icon is in the mark when its proposal is a yes and in the ghost ink when it is not. The labels' column is named by `label_column`, the capsules' by `tag_column`, and the row the page is about sits on the mark's tint.
+
+**Why.** A formulary decision is four answers, not two, and the room should see at a glance which are settled.
+
+**What it gave up.**
+
+- One `comparison` of one to three columns and two to five rows, every row with a tag, with no title or recommended column.

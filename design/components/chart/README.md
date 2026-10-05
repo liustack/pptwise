@@ -86,3 +86,13 @@ Three changes, settled on the fiscal, growth, indicators and funds pages. See th
 **Why.** On a page about who got better and who got worse, the colours have to say which is which, and the reader's eye goes to the column the page is about.
 
 **What it gave up.** Tone is refused on a share bar and a pie, whose colours are the parts.
+
+## clinic, GLP-1 formulary review sample, 2026-10
+
+`tag` on a chart. Settled on the head-to-head page (p06): see the board in [compositions/duel](../../compositions/duel/clinic.board.png). The round's decisions are in [rounds/2026-10-05-clinic](../../rounds/2026-10-05-clinic/README.md).
+
+**What it looks like.** A chart may carry one tag, set at the left of its header row in the ordinary chart and beside the chart's title in clinic's `duel` (「企业口径」, outlined in brown as a company's own figures).
+
+**Why.** One chart on a page can rest on weaker evidence than the rest of it, and the reader has to see that on the chart.
+
+**What it gave up.** A share bar refuses a tag, and the hand-set plots that have no place for one decline the chart.

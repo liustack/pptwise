@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest"
 import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { kpi, kpiFigure, rowValueFontSize, splitKpiValueWidths } from "./kpi"
+import { kpi, kpiFigure, rowValueFontSize, splitKpiValueWidths, unitGap } from "./kpi"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import type { ComponentCtx } from "./types"
 import { CANONICAL_THEME_IDS } from "../themes"
@@ -252,6 +252,26 @@ describe("kpi component", () => {
     expect(Number(unitTspan.getAttribute("font-size"))).toBe(
       Math.round(valueFontSize * 0.45),
     )
+  })
+
+  it("sets a word unit a space after its figure, Latin or Chinese, and glues a percent sign, a magnitude and a multiplier", () => {
+    const component = {
+      type: "kpi_cards" as const,
+      items: [
+        { value: "2", unit: "months", label: "a" },
+        { value: "936.70", unit: "元", label: "b" },
+        { value: "12", unit: "%", label: "c" },
+        { value: "3.4", unit: "bn", label: "d" },
+      ],
+    }
+    const { container } = svg(kpi.render(component, { x: 0, y: 0, w: 1120 }, ctx))
+    const values = Array.from(container.querySelectorAll("text")).filter((t) => t.querySelector("tspan"))
+    expect(values.map((t) => t.textContent)).toEqual(["2 months", "936.70 元", "12%", "3.4bn"])
+    // A leading space in a tspan is dropped by renderers that strip each
+    // chunk's ends unless the text preserves it.
+    expect(values.map((t) => t.getAttribute("xml:space"))).toEqual(["preserve", "preserve", null, null])
+    expect(unitGap("weeks")).toBe(" ")
+    expect(unitGap("×")).toBe("")
   })
 
   it("truncates a pathologically long unit so it cannot overflow the card", () => {
@@ -570,7 +590,9 @@ describe("kpi value/unit width split puts the number first", () => {
     expect(card.value).toBe("5")
     expect(card.valueTruncated).toBe(false)
     if (card.unit) {
-      expect("weeks".startsWith(card.unit)).toBe(true)
+      // The unit is set a space after its figure (`unitGap`).
+      expect(card.unit.startsWith(" ")).toBe(true)
+      expect("weeks".startsWith(card.unit.slice(1))).toBe(true)
       expect(card.unit).not.toContain("…")
     }
   })
@@ -612,7 +634,7 @@ describe("kpi value/unit width split puts the number first", () => {
       (t) => t.getAttribute("y") === "58",
     )
     expect(valueTexts.map((t) => t.getAttribute("font-size"))).toEqual(["39", "39", "39", "39"])
-    expect(valueTexts.map((t) => t.textContent)).toEqual(["102kunits", "91%", "88%", "5weeks"])
+    expect(valueTexts.map((t) => t.textContent)).toEqual(["102k units", "91%", "88%", "5 weeks"])
   })
 
   it("hands back the same width split as before wherever the value already fits", () => {

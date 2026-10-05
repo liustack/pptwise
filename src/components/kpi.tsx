@@ -9,7 +9,7 @@ import { accessibleInk, accessibleOpacity, graphicInk, resolveSemanticColor, typ
 import { emphasisRunInk, parseEmphasis, stripEmphasis } from "../render/emphasis"
 import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
-import { isMultiplierUnit, joinUnit } from "../lib/quantity-format"
+import { isMagnitudeUnit, isMultiplierUnit, isPercentUnit, joinUnit } from "../lib/quantity-format"
 import { layoutAtSize } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
 import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
@@ -154,7 +154,22 @@ export function splitKpiValueWidths(
 }
 
 /**
- * The unit tspan's text, or `null` when it has no room worth drawing.
+ * What a figure and its unit are set apart by: nothing before a percent sign,
+ * a Latin magnitude or a multiplication sign, which a reader glues to the
+ * digits ("12%", "2m", "199×"), and a space before any other unit, Latin or
+ * Chinese ("2 months", 「936.70 元」), the way `joinUnit` writes them and the
+ * way pptwise spaces figures in Chinese text (「2026 年 10 月」).
+ *
+ * A renderer that sets the unit apart in a smaller tspan paints this gap at
+ * the head of the tspan, so the unit never touches the last digit.
+ */
+export function unitGap(unit: string): "" | " " {
+  return isPercentUnit(unit) || isMagnitudeUnit(unit) || isMultiplierUnit(unit) ? "" : " "
+}
+
+/**
+ * The unit tspan's text, its gap (`unitGap`) first, or `null` when it has no
+ * room worth drawing.
  *
  * Shared with `content-bento-panel.tsx` for the same reason
  * `splitKpiValueWidths` is. The `null` cases are what the value-first split
@@ -162,7 +177,10 @@ export function splitKpiValueWidths(
  * degenerate results read badly glued to a number — an empty tspan is a
  * stray empty run in the exported OOXML, and a lone "…" after a figure reads
  * as a truncated *number* ("5…"), which is the very misreading this whole
- * fix exists to prevent.
+ * fix exists to prevent. The gap comes out of the unit's own share
+ * (`splitKpiValueWidths` divides the line by the words alone), so the number
+ * keeps exactly the room it had, and a unit with nothing left after its gap
+ * is dropped with it.
  */
 export function fitKpiUnit(
   unit: string | undefined,
@@ -171,8 +189,10 @@ export function fitKpiUnit(
   fontFamily?: string,
 ): string | null {
   if (!unit) return null
-  const fitted = truncateToUnits(unit, unitMaxWidth / unitFontSize, { bold: true, fontFamily })
-  return fitted === "" ? null : fitted
+  const gap = unitGap(unit)
+  const gapUnits = gap ? measureTextUnits(gap, { bold: true, fontFamily }) : 0
+  const fitted = truncateToUnits(unit, unitMaxWidth / unitFontSize - gapUnits, { bold: true, fontFamily })
+  return fitted === "" ? null : `${gap}${fitted}`
 }
 
 /**
@@ -542,6 +562,7 @@ export const kpi: SvgComponent<KpiComponent> = {
                 fill={marked ? accessibleInk(emphasisRunInk(ctx.colors), ctx.colors.surface, fittedValue.fontSize) : ctx.colors.text}
                 fontFamily={ctx.fonts.heading}
                 dominantBaseline="alphabetic"
+                xmlSpace={fittedUnit?.startsWith(" ") ? "preserve" : undefined}
               >
                 {fittedValue.text}
                 {fittedUnit != null && (

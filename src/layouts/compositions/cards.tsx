@@ -3,6 +3,7 @@ import type { Component } from "@/ir"
 import type { ComponentCtx } from "../../components/types"
 import { fitFixed, paintLines } from "./type"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import { cardsDossier } from "./cards-dossier"
 import {
   CALLOUT_ICON,
   CONSOLE_SPEC,
@@ -136,7 +137,7 @@ function verdictItems(cards: RowCards | NumberedCards): VerdictItem[] | null {
     return cards.items.map((item) => ({ icon: item.icon, title: item.title, text: item.text, marked: item.highlight === true }))
   }
   if (cards.items.some((item) => item.sub?.trim())) return null
-  return cards.items.map((item) => ({ title: item.title, text: item.text, marked: item.emphasis === true }))
+  return cards.items.map((item) => ({ icon: item.icon, title: item.title, text: item.text, marked: item.emphasis === true }))
 }
 
 /**
@@ -382,7 +383,9 @@ function paintClosing(note: Callout, f: FittedClosing, box: { x: number; y: numb
   )
 }
 
-export const cardsComposition: Composition = ({ components, ctx, rect, setting }) => {
+export const cardsComposition: Composition = (props) => {
+  if (props.setting === "dossier") return cardsDossier(props)
+  const { components, ctx, rect, setting } = props
   if (setting !== "console") return null
   const [first, second, ...rest] = components
   if (!first || rest.length > 0) return null

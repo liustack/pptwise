@@ -1,0 +1,81 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "lanes": [
+        "Weight-loss approvals (NMPA approval date)",
+        "New indications, policy and patents"
+      ],
+      "milestones": [
+        {
+          "date": "2023-06-30",
+          "title": "Liraglutide",
+          "lane": "Weight-loss approvals (NMPA approval date)",
+          "desc": "3.0 mg"
+        },
+        {
+          "date": "2023-07-25",
+          "title": "Benaglutide",
+          "lane": "Weight-loss approvals (NMPA approval date)"
+        },
+        {
+          "date": "2024-06-18",
+          "title": "Wegovy",
+          "lane": "Weight-loss approvals (NMPA approval date)",
+          "desc": "Semaglutide 2.4 mg"
+        },
+        {
+          "date": "2024-07-16",
+          "title": "Tirzepatide",
+          "lane": "Weight-loss approvals (NMPA approval date)",
+          "desc": "Weight loss"
+        },
+        {
+          "date": "2024-10-12",
+          "title": "Obesity guideline",
+          "lane": "New indications, policy and patents"
+        },
+        {
+          "date": "2025-06-24",
+          "title": "Mazdutide",
+          "lane": "Weight-loss approvals (NMPA approval date)",
+          "desc": "Weight loss"
+        },
+        {
+          "date": "2025-06-30",
+          "title": "Tirzepatide: sleep apnea",
+          "lane": "New indications, policy and patents"
+        },
+        {
+          "date": "2025-12-16",
+          "title": "Wegovy: heart",
+          "lane": "New indications, policy and patents",
+          "highlight": true
+        },
+        {
+          "date": "2026-01-01",
+          "title": "New insurance list",
+          "lane": "New indications, policy and patents"
+        },
+        {
+          "date": "2026-03-03",
+          "title": "Ecnoglutide",
+          "lane": "Weight-loss approvals (NMPA approval date)",
+          "desc": "Weight loss"
+        },
+        {
+          "date": "2026-03-20",
+          "title": "Semaglutide patent ends",
+          "lane": "New indications, policy and patents"
+        },
+        {
+          "date": "2026-09-08",
+          "title": "Wegovy: MASH",
+          "lane": "New indications, policy and patents"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: NMPA approval notices (July 2023 to Sept 2026). Dates are NMPA approval dates, not company announcements. Under review: mazdutide 9 mg, oral semaglutide 25 mg, domestic semaglutide",
+  "notes": "All approval dates here are the dates China's NMPA approved the drug, not the dates companies announced it. Six drugs are approved for weight loss: liraglutide 3.0 mg from Huadong on June 30, 2023, benaglutide on July 25, 2023, semaglutide 2.4 mg as Wegovy on June 18, 2024, tirzepatide on July 16, 2024 as a supplement to its May diabetes approval under the same approval numbers, mazdutide on June 24, 2025, and ecnoglutide on March 3, 2026. Wegovy has since added a cardiovascular indication, on December 16, 2025, and MASH with moderate to advanced liver fibrosis, on September 8, 2026. Tirzepatide also added obstructive sleep apnea on June 30, 2025. The June 25, July 19, June 27 and March 6 dates often seen in the press are when notices were published or companies announced. Still under review: mazdutide 9 mg, oral semaglutide 25 mg and several domestic semaglutide injections."
+}

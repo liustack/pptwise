@@ -1,0 +1,82 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "dumbbell",
+      "axes": {
+        "x_title": "4-week cost",
+        "x_unit": "¥"
+      },
+      "series": [
+        {
+          "name": "Before",
+          "data": [
+            {
+              "x": "Tirzepatide 10 mg",
+              "y": 4758
+            },
+            {
+              "x": "Tirzepatide 5 mg",
+              "y": 2758
+            },
+            {
+              "x": "Wegovy 2.4 mg",
+              "y": 2463
+            },
+            {
+              "x": "Wegovy 1.7 mg",
+              "y": 1894
+            },
+            {
+              "x": "Mazdutide 6 mg (retail)",
+              "y": 2920
+            }
+          ]
+        },
+        {
+          "name": "Early 2026",
+          "data": [
+            {
+              "x": "Tirzepatide 10 mg",
+              "y": 937
+            },
+            {
+              "x": "Tirzepatide 5 mg",
+              "y": 551
+            },
+            {
+              "x": "Wegovy 2.4 mg",
+              "y": 1284
+            },
+            {
+              "x": "Wegovy 1.7 mg",
+              "y": 987
+            },
+            {
+              "x": "Mazdutide 6 mg (retail)",
+              "y": 2020
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "insight_panel",
+      "icon": "receipt",
+      "title": "Insurance pays for type 2 diabetes only",
+      "rows": [
+        {
+          "label": "2025 list · tirzepatide limit",
+          "text": "“Glycemic control in adults with type 2 diabetes”"
+        },
+        {
+          "label": "Basic insurance drug rules, Article 8",
+          "text": "Drugs for “weight loss, cosmetic” use are excluded"
+        }
+      ],
+      "footnote": "Weight loss is self-pay, mazdutide is not listed"
+    }
+  ],
+  "footnote": "Source: hospital prices reported by China News Service and Time Weekly (Jan 2026), mazdutide from JD.com retail, rounded to ¥1. NHSA reimbursement list, 2025 edition",
+  "notes": "These are 4-week drug costs, all from press reports, since the insurance payment standard is not published. Since January 1, 2026 hospitals have charged tirzepatide at its reimbursement-list price: 10 mg fell from ¥4,758 to ¥936.70 per 4 weeks and 5 mg from ¥2,758 to ¥551.00, about 80%, and hospitals such as Nanjing Drum Tower say self-paying patients pay the new price too. Wegovy's prices were cut in late December 2025, starting in Sichuan and followed by Yunnan, Hebei and Liaoning, which Novo Nordisk described as its own decision: 2.4 mg fell from ¥2,463 to ¥1,284.36, about 48%, and 1.7 mg from ¥1,893.67 to ¥987.48. Mazdutide has no hospital price in our sources, so we use the JD.com retail price on January 12, 2026: ¥1,010 for a box of two 6 mg pens, about ¥2,020 for 4 weeks at one pen a week, against about ¥2,920 at launch. On insurance, the 2025 national list restricts semaglutide, tirzepatide and liraglutide to type 2 diabetes. Mazdutide and ecnoglutide are not on the list, and benaglutide was removed, with its transition ending on June 30, 2026. The rule behind this is that drugs mainly for weight loss are excluded from the list. In April 2024 the National Healthcare Security Administration said that writing weight-loss prescriptions to insurance may be fraud on the fund, with fines of two to five times the amount and 3 to 12 months' suspension of insurance billing."
+}

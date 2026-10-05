@@ -1,7 +1,8 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import { wrapClip } from "./clip-text"
-import { readableOn } from "../render/ink"
+import { accessibleInk, graphicInk, readableOn, resolveSemanticColor } from "../render/ink"
+import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
 import {
   FORM_BODY_FLOOR,
@@ -90,30 +91,45 @@ function measureSteps(component: StepsComponent, w: number, ctx: ComponentCtx): 
   return arrowH + FOOT_GAP + foot + FOOT_DESCENT
 }
 
+/** An icon drawn in the badge in place of the number. */
+const BADGE_ICON = 22
+
+/**
+ * The step's badge: its number, or its icon where the number would stand
+ * (the chevrons already say the order). A step with a `tone` rings its badge
+ * and sets its number or icon in the theme's ink for that kind of step, a
+ * check that can stop the process in its danger ink.
+ */
 function renderBadge(
   cx: number,
   cy: number,
   index: number,
   fill: string,
   ctx: ComponentCtx,
+  item: { icon?: string; tone?: "danger" | "warning" | "success" },
 ): React.ReactElement {
   const label = padIndex(index)
   const pageBg = ctx.defaultBg ?? ctx.colors.bg
+  const mark = item.tone ? resolveSemanticColor(item.tone, ctx.colors) : fill
   return (
     <>
-      <circle cx={cx} cy={cy} r={BADGE_R} fill={pageBg} stroke={fill} strokeWidth={2.5} />
-      <text
-        x={cx}
-        y={cy + 7}
-        textAnchor="middle"
-        fontSize={16}
-        fontWeight="700"
-        fill={fill}
-        fontFamily={ctx.fonts.body}
-        dominantBaseline="alphabetic"
-      >
-        {label}
-      </text>
+      <circle cx={cx} cy={cy} r={BADGE_R} fill={pageBg} stroke={item.tone ? graphicInk(mark, pageBg) : fill} strokeWidth={2.5} />
+      {item.icon ? (
+        <Icon name={item.icon} x={cx - BADGE_ICON / 2} y={cy - BADGE_ICON / 2} size={BADGE_ICON} color={graphicInk(mark, pageBg)} />
+      ) : (
+        <text
+          x={cx}
+          y={cy + 7}
+          textAnchor="middle"
+          fontSize={16}
+          fontWeight="700"
+          fill={item.tone ? accessibleInk(mark, pageBg, 16) : fill}
+          fontFamily={ctx.fonts.body}
+          dominantBaseline="alphabetic"
+        >
+          {label}
+        </text>
+      )}
     </>
   )
 }
@@ -188,7 +204,7 @@ export const steps: SvgComponent<StepsComponent> = {
         return (
           <g key={i}>
             <path d={chevronPath(x, y, slotW, arrowH)} fill={fill} />
-            {renderBadge(cx, cy, i, fill, ctx)}
+            {renderBadge(cx, cy, i, fill, ctx, item)}
             <text
               data-truncated={title.truncated ? "1" : undefined}
               x={titleX}

@@ -58,7 +58,7 @@ const VALUE_AIR = 12
 function targetsShape(components: readonly Component[]): { panel: InsightPanel; plan: FromTo } | null {
   const [panel, plan, ...rest] = components
   if (panel?.type !== "insight_panel" || plan?.type !== "from_to" || rest.length > 0) return null
-  if (panel.rows.length !== 1) return null
+  if (panel.rows.length !== 1 || panel.icon) return null
   if (plan.from.kicker?.trim() || plan.to.kicker?.trim() || plan.span?.trim()) return null
   if (plan.rows.some((row) => row.change?.trim())) return null
   return { panel, plan }

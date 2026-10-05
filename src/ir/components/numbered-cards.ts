@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -16,6 +17,10 @@ export const schema = z
             title: z.string(),
             text: z.string().optional(),
             sub: z.string().optional(),
+            /** A symbol for the item. See the describe below. */
+            icon: IconNameSchema.optional().describe(
+              "A symbol for the item, drawn between its number and its title, such as pill or hospital. Run `pptwise icons` for the names.",
+            ),
             /** The one item the page lands on. See the describe below. */
             emphasis: z
               .boolean()

@@ -1,0 +1,123 @@
+{
+  "tag": {
+    "text": "RCT · NEJM 2025 · 751 patients · 72 weeks · open label",
+    "evidence": "trial"
+  },
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "−20.2%",
+          "label": "Tirzepatide",
+          "note": "Weight change · waist −18.4 cm"
+        },
+        {
+          "value": "−13.7%",
+          "label": "Semaglutide",
+          "note": "Weight change · waist −13.0 cm"
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "axes": {
+        "y_title": "Share reaching target",
+        "y_unit": "%"
+      },
+      "tag": {
+        "text": "Company figures",
+        "evidence": "company"
+      },
+      "series": [
+        {
+          "name": "Tirzepatide",
+          "data": [
+            {
+              "x": "≥10% loss",
+              "y": 81.6
+            },
+            {
+              "x": "≥15% loss",
+              "y": 64.6
+            },
+            {
+              "x": "≥20% loss",
+              "y": 48.4
+            },
+            {
+              "x": "≥25% loss",
+              "y": 31.6
+            }
+          ]
+        },
+        {
+          "name": "Semaglutide",
+          "data": [
+            {
+              "x": "≥10% loss",
+              "y": 60.5
+            },
+            {
+              "x": "≥15% loss",
+              "y": 40.1
+            },
+            {
+              "x": "≥20% loss",
+              "y": 27.3
+            },
+            {
+              "x": "≥25% loss",
+              "y": 16.1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "m",
+          "label": ""
+        },
+        {
+          "key": "t",
+          "label": "Tirzepatide",
+          "align": "right"
+        },
+        {
+          "key": "s",
+          "label": "Semaglutide",
+          "align": "right"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "m": "Nausea",
+            "t": "43.6%",
+            "s": "44.4%"
+          }
+        },
+        {
+          "cells": {
+            "m": "Vomiting",
+            "t": "15.0%",
+            "s": "21.3%"
+          }
+        },
+        {
+          "cells": {
+            "m": "Stopped (company)",
+            "t": "6.1%",
+            "s": "8.0%"
+          }
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: SURMOUNT-5 (NEJM 2025, Lilly-funded). Target shares and the stop rate are from Lilly, nausea and vomiting from ClinicalTrials.gov registry counts",
+  "notes": "SURMOUNT-5 is the only published head-to-head trial of tirzepatide against semaglutide. It enrolled 751 adults with obesity and without diabetes for 72 weeks. It was open label and funded by Eli Lilly, which the committee should keep in mind. Weight fell 20.2% on tirzepatide, with a 95% confidence interval of 21.4% to 19.1%, and 13.7% on semaglutide, interval 14.9% to 12.6%. Waist size fell 18.4 cm and 13.0 cm. The shares reaching each target come from Lilly's press release, using the treatment-regimen estimand: 81.6% against 60.5% lost at least 10%, and 31.6% against 16.1% lost at least 25%. The registry reports higher shares because it counts only patients with evaluable data, so the two sets should not be mixed. Side effects were similar: nausea 43.6% against 44.4% and vomiting 15.0% against 21.3%, calculated from ClinicalTrials.gov counts. Stopping for side effects, 6.1% against 8.0%, is the company's figure."
+}

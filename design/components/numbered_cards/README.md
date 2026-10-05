@@ -27,3 +27,13 @@ Up to ten items, settled on the ten tasks page. See the board and engine render 
 **What it gave up.**
 
 - Still one marked item. The board also set two more titles bold, which the field cannot say: see the round's decisions.
+
+## clinic, GLP-1 formulary review sample, 2026-10
+
+`items[].icon`. Settled on the proposal page (p02): see the board in [compositions/rows](../../compositions/rows/clinic-p02.board.png). The round's decisions are in [rounds/2026-10-05-clinic](../../rounds/2026-10-05-clinic/README.md).
+
+**What it looks like.** An item may carry a symbol from the built-in set. The ordinary cards draw it between the number and the title; clinic's proposal cards set it large under the number.
+
+**Why.** A proposal about drugs, about wards and about rules reads faster with a symbol for each.
+
+**What it gave up.** The compositions that set their own numerals without a place for a symbol decline items that carry one.

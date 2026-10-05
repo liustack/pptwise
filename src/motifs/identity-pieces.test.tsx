@@ -35,6 +35,10 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
     ending: ["red-bar"],
   },
   "memo-motif": { chapter: ["masthead"], content: ["masthead"], ending: ["masthead"] },
+  // clinic's short heartbeat heads every page but the cover, which sets its
+  // own across the page (2026-10 sample redesign). The folio joins it on a
+  // content page of a deck that asks for one.
+  "clinic-motif": { chapter: ["pulse"], content: ["pulse"], ending: ["pulse"] },
   "luxe-motif": { cover: ["invitation"], ending: ["invitation"] },
   "vermilion-motif": { cover: ["gold-rules-foot"], content: ["gold-rules"], ending: ["gold-rules", "gold-rules-foot"] },
   "corner-ornament-motif": { content: ["masthead"], ending: ["masthead"] },
@@ -53,7 +57,6 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
 const IDENTITY_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], readonly string[]>>>> = {
   "crayonbox-motif": { content: ["crayonbox-stars", "crayonbox-sun"] },
   "ink-motif": { content: ["seal"] },
-  "clinic-motif": { cover: ["heartbeat"] },
   // bulletin's square steps are its mark, in the same blue as the bar under
   // every heading, so they keep their full colour on every page (2026-10
   // sample redesign).

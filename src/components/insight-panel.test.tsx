@@ -150,3 +150,16 @@ describe("insight_panel component", () => {
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
   })
 })
+
+describe("insight_panel icon", () => {
+  it("draws the panel's icon before its title and moves the title right of it", () => {
+    const plain = svg(insightPanel.render(panel, { x: 0, y: 0, w: 400 }, ctx)).container
+    const withIcon = svg(insightPanel.render({ ...panel, icon: "receipt" }, { x: 0, y: 0, w: 400 }, ctx)).container
+    const titleX = (c: Element) => Number(Array.from(c.querySelectorAll("text")).find((t) => t.textContent === panel.title)!.getAttribute("x"))
+    expect(plain.querySelectorAll("g[transform*='scale']")).toHaveLength(0)
+    const icon = withIcon.querySelector("g[transform*='scale']")!
+    const iconX = Number(/translate\(([\d.]+)/.exec(icon.getAttribute("transform")!)![1])
+    expect(iconX).toBe(titleX(plain))
+    expect(titleX(withIcon)).toBe(titleX(plain) + 28)
+  })
+})

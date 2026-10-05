@@ -2,11 +2,15 @@ import type React from "react"
 import type { Component } from "@/ir"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { emphasisRunInk } from "../render/emphasis"
-import { blendOver, contrastRatio, readableOn, requiredContrastRatio } from "../render/ink"
+import { blendOver, contrastRatio, readableOn, requiredContrastRatio, resolveSemanticColor } from "../render/ink"
+import type { StyleColors } from "../themes/tokens"
 import type { ComponentCtx } from "./types"
 
 /** A row's or a figure's tag (`TagSchema`): a few words and whether it steps back. */
 export type Tag = NonNullable<Extract<Component, { type: "comparison" }>["rows"][number]["tag"]>
+
+/** What kind of source a tag names (`EvidenceKindSchema`). */
+export type EvidenceKind = NonNullable<Tag["evidence"]>
 
 /*
  * The tag a row or a figure carries: a few words in a small rounded label,
@@ -18,6 +22,13 @@ export type Tag = NonNullable<Extract<Component, { type: "comparison" }>["rows"]
  *
  * - on the row or figure the page marks, the tag fills in the theme's
  *   emphasis ink with the readable ink on it, the page's one mark;
+ * - a `settled` tag, a verdict that is final, fills the same way, or in a
+ *   pale grey with muted words when it is also `quiet` (a final no);
+ * - a tag that says what kind of news it is (`tone`) is outlined in the
+ *   theme's ink for that news, a breach in its danger ink;
+ * - a tag that names its source (`evidence`) is outlined in the ink that kind
+ *   of source takes (`evidenceInk`), the same kind in the same ink across a
+ *   deck;
  * - a `quiet` tag, one that says nothing changed, is outlined in the muted
  *   ink and steps back;
  * - any other tag is outlined in the theme's accent.
@@ -70,14 +81,66 @@ export function inkToward(preferred: string, toward: string, ground: string, siz
   return readableOn(ground)
 }
 
+/**
+ * The chart palette's inks that are neither the theme's primary nor its
+ * accent nor its emphasis ink, in order: the quieter series colours a theme
+ * keeps for things that are not the page's lead.
+ */
+function secondaryInks(colors: Pick<StyleColors, "chartPalette" | "primary" | "accent" | "emphasisInk">): string[] {
+  const taken = new Set([colors.primary, colors.accent, colors.emphasisInk].filter((c): c is string => Boolean(c)).map((c) => c.toUpperCase()))
+  return colors.chartPalette.filter((c) => !taken.has(c.toUpperCase()))
+}
+
+/**
+ * The ink a kind of source takes, read from the theme's tokens so a fork
+ * recolours it: a trial in a journal and an official document in the
+ * primary, the strongest ink the theme keeps for marks; a product label and
+ * a trial registry in the first of the palette's quieter series colours; a
+ * draft out for comment in the next; a company's own figures in the warning
+ * ink, a claim to read with care; a press report in the muted ink.
+ */
+export function evidenceInk(
+  colors: Pick<StyleColors, "chartPalette" | "primary" | "accent" | "emphasisInk" | "muted" | "text" | "danger" | "warning" | "success">,
+  kind: EvidenceKind,
+): string {
+  const quieter = secondaryInks(colors)
+  switch (kind) {
+    case "trial":
+    case "official":
+      return colors.primary
+    case "label":
+    case "registry":
+      return quieter[0] ?? colors.primary
+    case "draft":
+      return quieter[1] ?? colors.text
+    case "company":
+      return resolveSemanticColor("warning", colors)
+    case "press":
+      return colors.muted
+  }
+}
+
+/** How much of the muted ink a settled quiet tag's grey fill takes over its ground. */
+const SETTLED_QUIET_FILL = 0.12
+
 /** The inks a tag paints with on `ground`. `marked` is the row or figure the page marks. */
 export function tagInks(ctx: ComponentCtx, tag: Tag, marked: boolean, ground: string, size: number): TagInks {
   const { colors } = ctx
-  if (marked) {
+  if (marked || (tag.settled && !tag.quiet)) {
     const fill = emphasisRunInk(colors)
     return { fill, stroke: fill, text: readableOn(fill) }
   }
-  const line = tag.quiet ? colors.muted : colors.accent
+  if (tag.settled) {
+    const fill = blendOver(colors.muted, ground, SETTLED_QUIET_FILL)
+    return { fill, stroke: fill, text: inkToward(colors.muted, colors.text, fill, size) }
+  }
+  const line = tag.tone
+    ? resolveSemanticColor(tag.tone, colors)
+    : tag.evidence
+      ? evidenceInk(colors, tag.evidence)
+      : tag.quiet
+        ? colors.muted
+        : colors.accent
   return { fill: null, stroke: line, text: inkToward(line, colors.text, ground, size) }
 }
 
@@ -100,7 +163,7 @@ export function paintTag(opts: {
   const w = opts.width ?? tagWidth(tag.text, spec)
   const r = spec.height / 2
   return (
-    <g key={opts.key} data-tag={tag.quiet ? "quiet" : inks.fill ? "marked" : ""}>
+    <g key={opts.key} data-tag={tag.quiet ? (inks.fill ? "settled-quiet" : "quiet") : inks.fill ? "marked" : ""}>
       <rect
         x={x + (inks.fill ? 0 : 0.5)}
         y={y + (inks.fill ? 0 : 0.5)}

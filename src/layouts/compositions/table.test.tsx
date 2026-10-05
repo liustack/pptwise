@@ -248,3 +248,17 @@ describe("table leaves the recommended option's label to the ordinary comparison
     }
   })
 })
+
+describe("table composition and a header over the labels", () => {
+  it("hands a comparison with a label_column to the ordinary comparison", () => {
+    const comparison = { type: "comparison", columns: ["方案 A", "方案 B"], rows: [{ label: "价格", cells: ["100", "200"] }, { label: "交期", cells: ["2 周", "4 周"] }], label_column: "维度" }
+    expect(renderComposition(tableComposition, [comparison]).element).toBeNull()
+  })
+})
+
+describe("table composition and a row's icon", () => {
+  it("hands a comparison whose rows carry icons to the ordinary comparison", () => {
+    const comparison = { type: "comparison", columns: ["方案 A", "方案 B"], rows: [{ label: "价格", cells: ["100", "200"], icon: "pill" }, { label: "交期", cells: ["2 周", "4 周"] }] }
+    expect(renderComposition(tableComposition, [comparison]).element).toBeNull()
+  })
+})

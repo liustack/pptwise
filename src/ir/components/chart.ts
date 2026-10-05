@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { isPercentUnit } from "../../lib/quantity-format"
-import { ToneSchema } from "./shared"
+import { TagSchema, ToneSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -386,6 +386,10 @@ export const schema = z
       })
       .strict()
       .optional(),
+    /** A small tag over the chart. See the describe below. */
+    tag: TagSchema.optional().describe(
+      'A few words over the chart saying what kind of figures it draws, such as 企业口径 or "Company figures", printed as a small tag at the start of its legend row. Give it an evidence kind to colour it by its source. Not on a share bar.',
+    ),
     /** Changes the chart states between two of its bars. See the describe below. */
     changes: z
       .array(
@@ -463,6 +467,15 @@ export const schema = z
   })
   .strict()
   .superRefine((c, ctx) => {
+    // A share bar is one bar across the page with its parts named on it, and
+    // has no legend row for a tag to stand in.
+    if (c.tag !== undefined && isShareBar(c)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["tag"],
+        message: "a share bar has no row over it for a tag. Say what kind of figures it draws in the category's name, or remove tag.",
+      })
+    }
     if (c.bands !== undefined) {
       const banded = c.chart_type === "line" || c.chart_type === "area" || (c.chart_type === "bar" && c.direction !== "horizontal")
       if (!banded) {

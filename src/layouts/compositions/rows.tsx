@@ -8,6 +8,7 @@ import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
 import { rowsSeal } from "./rows-seal"
 import { rowsMemo } from "./rows-memo"
+import { rowsDossier } from "./rows-dossier"
 
 type Bullets = Extract<Component, { type: "bullets" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -89,6 +90,7 @@ export const rowsComposition: Composition = (props) => {
   if (props.setting === "notice") return noticeRows(props)
   if (props.setting === "seal") return rowsSeal(props)
   if (props.setting === "memo") return rowsMemo(props)
+  if (props.setting === "dossier") return rowsDossier(props)
   const { components, ctx, rect } = props
   const shape = rowsShape(components)
   if (!shape) return null
@@ -185,7 +187,7 @@ export const rowsComposition: Composition = (props) => {
  * the page's answer (`numbered_cards` `emphasis`) is reversed out of a
  * primary block, 8px clear of the row above it.
  *
- * Takes: `[numbered_cards]` of three to five items with no `sub`, or
+ * Takes: `[numbered_cards]` of three to five items with no `sub` or `icon`, or
  * `[bullets]` of two to five items, each optionally followed by an `info` or
  * `tip` `callout`, set as the notice closing panel.
  *
@@ -221,7 +223,7 @@ function noticeRowsShape(components: readonly Component[]): { rows: NoticeRow[];
   let rows: NoticeRow[]
   if (first.type === "numbered_cards") {
     const cards = first as NumberedCards
-    if (cards.items.length > N_MAX_ITEMS || cards.items.some((item) => item.sub?.trim())) return null
+    if (cards.items.length > N_MAX_ITEMS || cards.items.some((item) => item.sub?.trim() || item.icon)) return null
     rows = cards.items.map((item) => ({ label: item.title, gloss: item.text ?? "", marked: item.emphasis === true }))
   } else if (first.type === "bullets") {
     const items = drawableItems(first.items)

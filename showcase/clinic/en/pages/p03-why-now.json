@@ -1,0 +1,80 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "All",
+          "label": "Public tertiary general hospitals must run a weight clinic in 2026",
+          "note": "One of the National Health Commission's ten pledges for 2026",
+          "icon": "hospital",
+          "tag": {
+            "text": "Official",
+            "evidence": "official"
+          }
+        },
+        {
+          "value": "**80%**",
+          "label": "Tirzepatide price cut from January 1, 2026",
+          "note": "10 mg, 4 weeks: ¥4,758 down to ¥936.70",
+          "icon": "trending-down",
+          "tag": {
+            "text": "Press",
+            "evidence": "press"
+          }
+        },
+        {
+          "value": "None",
+          "label": "Domestic semaglutide injections approved",
+          "note": "Patent expired March 2026, as of Sept 8",
+          "icon": "hourglass",
+          "tag": {
+            "text": "Company",
+            "evidence": "company"
+          }
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "stacked",
+      "direction": "horizontal",
+      "axes": {
+        "y_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Obese",
+          "data": [
+            {
+              "x": "Adult weight in China (2018)",
+              "y": 16.4
+            }
+          ],
+          "emphasis": true
+        },
+        {
+          "name": "Overweight",
+          "data": [
+            {
+              "x": "Adult weight in China (2018)",
+              "y": 34.3
+            }
+          ],
+          "emphasis": true
+        },
+        {
+          "name": "Other",
+          "data": [
+            {
+              "x": "Adult weight in China (2018)",
+              "y": 49.3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: National Health Commission (Feb 2026), China News Service (Jan 2026), Zhifei filing (Sept 2026), national weight management guidance (2024)",
+  "notes": "Four reasons to decide at this meeting. The first is the mandate: at its February 12, 2026 briefing, the National Health Commission listed weight management clinics in every public tertiary general hospital as one of its ten public service pledges for the year. Its March 2025 notice already told these clinics to use drugs rationally and strictly by indication, so the formulary and prescribing rules have to be in place before the clinic opens. The second is price: since the 2025 national reimbursement list took effect on January 1, 2026, hospitals have charged the listed price for tirzepatide. The 10 mg strength fell from ¥4,758 to ¥936.70 per 4 weeks, about 80%, and hospitals say self-paying patients pay the new price too. These are prices reported in the press, as the reimbursement standard itself is not published. The third is need: China's 2024 weight management guideline cites an adult overweight rate of 34.3% and obesity rate of 16.4% in 2018. The fourth is that waiting for generics is not an option yet. The main semaglutide compound patent expired in March 2026, but a September 8 company filing says no domestic semaglutide injection has been approved, and Novo Nordisk says its data protection runs to April 2027."
+}

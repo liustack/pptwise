@@ -88,6 +88,8 @@ export type CoverLayoutId =
   | "console-cover"
   // memo sample redesign (2026-10-05): the typed memorandum's cover.
   | "memo-cover"
+  // clinic sample redesign (2026-10-05): the assessment file's cover.
+  | "dossier-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -168,6 +170,8 @@ export type EndingLayoutId =
   | "console-ending"
   // memo sample redesign (2026-10-05): the typed memorandum's sign-off.
   | "memo-ending"
+  // clinic sample redesign (2026-10-05): the assessment file's ballot.
+  | "dossier-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -223,6 +227,8 @@ export type ContentLayoutId =
   | "console-sheet"
   // memo sample redesign: the board's ordinary content page. Theme-locked.
   | "memo-sheet"
+  // clinic sample redesign: the board's ordinary content page. Theme-locked.
+  | "dossier-sheet"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"
