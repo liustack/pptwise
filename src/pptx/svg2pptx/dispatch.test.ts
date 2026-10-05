@@ -591,6 +591,30 @@ describe("rotated shapes, pictures and lines", () => {
     expect(centre(image).y).toBeCloseTo(want.y, 5)
   })
 
+  // A picture whose natural size is not its box: `image.ts` writes the
+  // natural size to w/h and the box to `sizing`, and the box is what turns.
+  const ONE_PX_PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+
+  it("turns a fitted picture around the centre of the box it paints into, not its natural size", () => {
+    const ops = svgToOps(
+      parseSvg(`<g transform="rotate(2 1000 315)"><image x="808" y="158" width="384" height="292" preserveAspectRatio="xMidYMid slice" href="${ONE_PX_PNG}"/></g>`),
+    )
+    const image = ops[0] as Extract<Op, { kind: "image" }>
+    expect(image.sizing).toBeDefined()
+    expect(image.sizing!.w * PX_PER_IN).toBeCloseTo(384, 5)
+    const want = applyPoint(parseTransform("rotate(2 1000 315)"), 1000, 304)
+    expect((image.x + image.sizing!.w / 2) * PX_PER_IN).toBeCloseTo(want.x, 5)
+    expect((image.y + image.sizing!.h / 2) * PX_PER_IN).toBeCloseTo(want.y, 5)
+  })
+
+  it("scales a fitted picture's box with its group", () => {
+    const ops = svgToOps(parseSvg(`<g transform="scale(2)"><image x="10" y="20" width="100" height="50" preserveAspectRatio="xMidYMid slice" href="${ONE_PX_PNG}"/></g>`))
+    const image = ops[0] as Extract<Op, { kind: "image" }>
+    expect([image.x * PX_PER_IN, image.y * PX_PER_IN]).toEqual([20, 40])
+    expect(image.sizing!.w * PX_PER_IN).toBeCloseTo(200, 5)
+    expect(image.sizing!.h * PX_PER_IN).toBeCloseTo(100, 5)
+  })
+
   it("leaves an unrotated leaf without a turn", () => {
     const ops = svgToOps(parseSvg(`<g transform="translate(10,10)"><rect x="0" y="0" width="96" height="96" fill="#000"/></g>`))
     expect((ops[0] as Extract<Op, { kind: "shape" }>).rotate).toBeUndefined()

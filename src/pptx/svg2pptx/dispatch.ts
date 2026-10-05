@@ -118,9 +118,23 @@ function scaleOp(op: Op, sx: number, sy: number): Op {
           ? { rectRadius: op.rectRadius * avg }
           : {}),
       }
+    case "image":
+      // A fitted picture paints into its sizing box. Its own w/h are the
+      // picture's natural size, which only sets the crop, so the box scales
+      // with it and the crop stays the same.
+      return { ...op, ...box, ...(op.sizing ? { sizing: { ...op.sizing, w: op.sizing.w * sx, h: op.sizing.h * sy } } : {}) }
     default:
       return { ...op, ...box }
   }
+}
+
+/**
+ * The size of the box a leaf op paints into. A picture fitted with `sizing`
+ * (`image.ts`) paints into the sizing box, and its own `w`/`h` carry the
+ * picture's natural size for the crop. Every other op paints into `w`/`h`.
+ */
+function paintedSize(op: Op): { w: number; h: number } {
+  return op.kind === "image" && op.sizing ? { w: op.sizing.w, h: op.sizing.h } : { w: op.w, h: op.h }
 }
 
 /**
@@ -335,12 +349,14 @@ function clockwiseDeg(ctm: Matrix): number {
 function positionRotatedBox(op: Exclude<Op, TextOp>, ctm: Matrix): Op {
   const scale = matrixScale(ctm) || 1
   const sized = scaleOp(op, scale, scale)
-  const centre = applyPoint(ctm, (op.x + op.w / 2) * PX_PER_IN, (op.y + op.h / 2) * PX_PER_IN)
+  const box = paintedSize(op)
+  const centre = applyPoint(ctm, (op.x + box.w / 2) * PX_PER_IN, (op.y + box.h / 2) * PX_PER_IN)
+  const drawn = paintedSize(sized)
   const rotate = clockwiseDeg(ctm)
   return {
     ...sized,
-    x: pxToIn(centre.x) - sized.w / 2,
-    y: pxToIn(centre.y) - sized.h / 2,
+    x: pxToIn(centre.x) - drawn.w / 2,
+    y: pxToIn(centre.y) - drawn.h / 2,
     ...(rotate ? { rotate } : {}),
   } as Op
 }
