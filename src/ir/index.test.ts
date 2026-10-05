@@ -2079,3 +2079,9 @@ describe("steps item icon and tone", () => {
     expect(parseOne({ type: "steps", items: [{ title: "a", text: "b", tone: "stop" }, { title: "c", text: "d" }] }).success).toBe(false)
   })
 })
+
+describe("insight_panel icon", () => {
+  it("takes an icon on a panel", () => {
+    expect(parseOne({ type: "insight_panel", title: "t", icon: "receipt", rows: [{ label: "a", text: "b" }] }).success).toBe(true)
+  })
+})

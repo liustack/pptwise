@@ -57,7 +57,7 @@ function stackShape(components: readonly Component[]): { kpis: KpiCards; panel: 
   const [kpis, panel, ...rest] = components
   if (kpis?.type !== "kpi_cards" || panel?.type !== "insight_panel" || rest.length > 0) return null
   if (kpis.items.length < MIN_FIGURES || kpis.items.length > MAX_FIGURES || !kpis.items.every(plainFigure)) return null
-  if (panel.footnote?.trim()) return null
+  if (panel.footnote?.trim() || panel.icon) return null
   return { kpis, panel }
 }
 

@@ -27,6 +27,8 @@ function exactSpotlight(slide: SvgTemplateProps["slide"]): {
   if (images.length !== 1 || panels.length > 1) return null
   if (slide.components.some((component) => component.type !== "image" && component.type !== "insight_panel")) return null
   if ((panels[0]?.rows.length ?? 0) > 3) return null
+  // A panel's icon has no place on the spotlight: the ordinary panel draws it.
+  if (panels[0]?.icon) return null
   return { image: images[0]!, panel: panels[0] }
 }
 

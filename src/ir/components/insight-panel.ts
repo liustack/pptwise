@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -8,6 +9,10 @@ export const schema = z
     /** 带标题的策略/观点面板：标题压色条 + 若干 label/描述行 + 可选贴底
      * 脚注。常作 aside 侧栏块与数据并置（观点/纪律/结论）。 */
     title: z.string(),
+    /** A symbol for the panel. See the describe below. */
+    icon: IconNameSchema.optional().describe(
+      "A symbol for the panel, drawn before its title, such as receipt or scale. Run `pptwise icons` for the names.",
+    ),
     rows: z
       .array(z.object({ label: z.string(), text: z.string() }).strict())
       .min(1)

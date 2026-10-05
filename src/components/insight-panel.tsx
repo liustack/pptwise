@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
-import { accessibleInk } from "../render/ink"
+import { accessibleInk, graphicInk } from "../render/ink"
+import { Icon } from "../render/icons"
 import { formTextClipMarker } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
 
@@ -29,6 +30,11 @@ const LABEL_COL_MIN = 56
 
 const FOOT_SIZE = 16
 const GAP_ROWS_FOOT = 16
+
+/** The panel's icon stands before its title, on the title's line, and the title moves right of it. */
+const ICON_SIZE = 20
+const ICON_GAP = 8
+const ICON_SHIFT = ICON_SIZE + ICON_GAP
 
 /**
  * `truncated` travels with the wrapped text on both fields below. The panel
@@ -73,7 +79,7 @@ function panelLayout(
 ): PanelLayout {
   const contentW = w - PAD_X * 2
   const title = fitSvgLine(component.title, {
-    maxWidth: contentW,
+    maxWidth: contentW - (component.icon ? ICON_SHIFT : 0),
     fontSize: TITLE_SIZE,
     minFontSize: 16,
     bold: true,
@@ -147,9 +153,18 @@ export const insightPanel: SvgComponent<InsightPanelComponent> = {
           fill={ctx.colors.surface}
           {...(ctx.colors.cardStroke ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 } : {})}
         />
+        {component.icon ? (
+          <Icon
+            name={component.icon}
+            x={box.x + PAD_X}
+            y={titleBaseline - TITLE_SIZE * 0.85 - (ICON_SIZE - TITLE_SIZE) / 2}
+            size={ICON_SIZE}
+            color={graphicInk(ctx.colors.accent, ctx.colors.surface)}
+          />
+        ) : null}
         <text
           data-truncated={layout.title.truncated ? "1" : undefined}
-          x={box.x + PAD_X}
+          x={box.x + PAD_X + (component.icon ? ICON_SHIFT : 0)}
           y={titleBaseline}
           fontSize={layout.title.fontSize}
           fontWeight="700"
