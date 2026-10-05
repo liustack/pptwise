@@ -8,6 +8,9 @@ import type { MotifId } from "./types"
  *   words and page number, through the same `FooterRow` the shared footer
  *   uses. folio-motif is brief's footer: brief's content faces leave the
  *   brand frame to it.
+ *   memo-motif is memo's typed folio: the organization at the left, 「第 N
+ *   页 共 M 页」 at the right in mono, and the deck's `label` moved up into
+ *   the running head as the memo's subject.
  * - `"organization"`: the motif prints the organization somewhere of its
  *   own, and the shared row carries everything else. ink's colophon rail
  *   sets the organization in a vertical column down the right edge.
@@ -21,6 +24,7 @@ export type MotifFooterRole = "row" | "organization"
 
 export const MOTIF_FOOTER_ROLES: Partial<Record<MotifId, MotifFooterRole>> = {
   "folio-motif": "row",
+  "memo-motif": "row",
   "ink-motif": "organization",
   "poster-motif": "organization",
 }

@@ -99,7 +99,13 @@ describe("componentsForKind", () => {
         }
       }).sort(),
     )
-    expect([...quote.components].sort()).toEqual(["blockquote", "paragraph"])
+    // The union is every theme's own list put together. A pull quote takes the
+    // quote alone, while memo's sheet sets a quote with what it means and the
+    // figures it is read against, so its list is every component.
+    const union = new Set(Object.values(quote.themes).flatMap((offer) => offer.components))
+    expect([...quote.components].sort()).toEqual([...union].sort())
+    expect(Object.values(quote.themes).some((offer) => [...offer.components].sort().join() === "blockquote,paragraph")).toBe(true)
+    expect(quote.themes.memo!.components.length).toBe(COMPONENT_TYPES.length)
     expect(componentsForKind("data").components.length).toBe(COMPONENT_TYPES.length)
   })
 

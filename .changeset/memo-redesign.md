@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+Memo has a new look, a typed memorandum. Every content page but a statement uses `memo-sheet`: the section's label in red in the left margin, the point in a serif over a rule of ink, the source typed small at the foot, and eleven new shapes drawn as the memo types them (reasons with their figures beside a pasted-in photograph, slope charts, bars that run left and right, a quoted original with its meaning, a weighing with its verdict, options under their photographs, a rota, a sum on ruled paper, a calendar over its dates and a checklist of stop conditions). The cover and ending use `memo-cover` and `memo-ending`, with header lines, a stamp and sign-off lines from the page's `fields` and `stamp`. Photo and evidence pages are on memo's menu now. Titles stay on one line when they fit and break at a comma when they do not. The running head and the folio (「第 N 页 共 M 页」) are typed by the motif when the deck asks for a footer. Chart series without a mark take ink, slate and brown before the seal red. If you copied memo into your own theme file, its menu still names the old faces and keeps working as before.

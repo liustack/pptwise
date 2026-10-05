@@ -9,6 +9,7 @@ import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
 import { recordsPanel } from "./records-panel"
 import { recordsConsole } from "./records-console"
+import { recordsMemo } from "./records-memo"
 
 type DataTable = Extract<Component, { type: "data_table" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -87,6 +88,8 @@ function recordsShape(components: readonly Component[]): { table: DataTable; cal
   if (table.columns.length > MAX_COLUMNS || table.rows.length > MAX_ROWS) return null
   // A row's icon has no place in this table: the ordinary table draws it.
   if (table.rows.some((row) => row.icon !== undefined)) return null
+  // Nor for a row's tag: the ordinary table, or a setting that sets tags, draws it.
+  if (table.rows.some((row) => row.tag !== undefined)) return null
   if (second === undefined) return { table }
   const callout = noticeClosingCallout(second)
   return callout ? { table, callout } : null
@@ -100,6 +103,7 @@ function cell(row: DataTable["rows"][number], key: string): string {
 export const recordsComposition: Composition = (props) => {
   if (props.setting === "panel") return recordsPanel(props)
   if (props.setting === "console") return recordsConsole(props)
+  if (props.setting === "memo") return recordsMemo(props)
   const { components, ctx, rect, setting } = props
   const shape = recordsShape(components)
   if (!shape) return null

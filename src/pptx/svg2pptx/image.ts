@@ -29,6 +29,11 @@ export interface ImageOp {
    * 也不该凭空造一个空串。
    */
   alt?: string
+  /**
+   * Degrees clockwise around the box's centre, matching pptxgenjs `rotate`.
+   * Set by `svg2pptx/dispatch.ts` when the leaf's CTM carries a turn.
+   */
+  rotate?: number
   /** Set by `svg2pptx/dispatch.ts` when this leaf lives under a `data-blk`-tagged `<g>` (wave-C S3, `elements === "auto"` only). */
   blockIndex?: number
 }

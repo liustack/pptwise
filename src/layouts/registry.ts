@@ -1,6 +1,6 @@
 /**
  * Layout registry (W2 task 1, spec §3/§6/§8): an explicit, statically-checked
- * description of what the render chain's 145 standard layouts and 4
+ * description of what the render chain's 148 standard layouts and 4
  * page-level image takeovers already draw. This is a metadata layer only.
  * It formalizes today's implicit page structure (layout JSX + the
  * FullSlideSvg takeover dispatch) into named `slots`, it does not change any
@@ -12,7 +12,7 @@
  * `export const layoutDef: LayoutDefinition` at the bottom of the matching
  * `layouts/*.tsx` file, or one of 4 uniquely-named exports at the bottom
  * of `image-pages.tsx` for the takeovers (one file implements all 4, so they
- * can't share the uniform `layoutDef` name the 145 single-layout
+ * can't share the uniform `layoutDef` name the 148 single-layout
  * files use) — so "take one layout away whole" is a single-file operation
  * instead of a two-file archaeology dig. This file's own job is now purely
  * computational aggregation: import every `layoutDef`, assemble the five
@@ -60,9 +60,9 @@
 import type { DesignStory } from "@/design-story"
 import type { STRATEGY_VALUES } from "@/ir/narrative-values"
 
-// layoutDef imports (src domain reorg wave 1, task T1d): 145 layout files
+// layoutDef imports (src domain reorg wave 1, task T1d): 148 layout files
 // (one `layoutDef` each) plus image-pages.tsx's 4 uniquely named takeover
-// exports, 149 bindings total. The original migration covered 33 layout
+// exports, 152 bindings total. The original migration covered 33 layout
 // files and 4 takeovers. Later content expansion and theme redesign waves
 // grew the registry, mostly through pin-only cover, chapter, and ending faces.
 // Grouped by family, each group in the exact
@@ -103,6 +103,7 @@ import { layoutDef as coverInvitationPlateCover } from "./cover-invitation-plate
 import { layoutDef as coverLookbookOpenCover } from "./cover-lookbook-open-cover"
 import { layoutDef as coverRedHeadCover } from "./cover-red-head-cover"
 import { layoutDef as coverConsoleCover } from "./cover-console-cover"
+import { layoutDef as coverMemoCover } from "./cover-memo-cover"
 import { layoutDef as coverPledgeOpenCover } from "./cover-pledge-open-cover"
 import { layoutDef as coverReportOpenCover } from "./cover-report-open-cover"
 import { layoutDef as coverCutPanelCover } from "./cover-cut-panel-cover"
@@ -171,6 +172,7 @@ import { layoutDef as endingGiltWordEnding } from "./ending-gilt-word-ending"
 import { layoutDef as endingWindowCloseEnding } from "./ending-window-close-ending"
 import { layoutDef as endingDeliberationEnding } from "./ending-deliberation-ending"
 import { layoutDef as endingConsoleEnding } from "./ending-console-ending"
+import { layoutDef as endingMemoEnding } from "./ending-memo-ending"
 import { layoutDef as endingScorecardEnding } from "./ending-scorecard-ending"
 import { layoutDef as endingCarePlanEnding } from "./ending-care-plan-ending"
 import { layoutDef as endingSeatCtaEnding } from "./ending-seat-cta-ending"
@@ -218,6 +220,7 @@ import { layoutDef as contentPanelSheet } from "./content-panel-sheet"
 import { layoutDef as contentPanelFigure } from "./content-panel-figure"
 import { layoutDef as contentSealSheet } from "./content-seal-sheet"
 import { layoutDef as contentConsoleSheet } from "./content-console-sheet"
+import { layoutDef as contentMemoSheet } from "./content-memo-sheet"
 import { layoutDef as contentSealFigure } from "./content-seal-figure"
 
 import {
@@ -232,7 +235,7 @@ export type Strategy = (typeof STRATEGY_VALUES)[number]
 export type SlideType = "cover" | "chapter" | "content" | "ending"
 
 /** The 20-word slot vocabulary: the union of every distinct visual region
- * observed across all 145 standard layouts and 4 takeovers (inventory's "建议 slot
+ * observed across all 148 standard layouts and 4 takeovers (inventory's "建议 slot
  * 词汇表"). Not every word is used by every entry, and `aside` currently
  * has zero occurrences as a *slot* (it only exists today as a body
  * `arrangement` — see `Arrangement` below) — kept in the vocabulary because
@@ -397,12 +400,14 @@ export interface LayoutDefinition {
   coverMark?: "face" | CoverMarkAnchor
   /**
    * The page fields this face draws beyond its heading, subheading and
-   * components: `kicker`, the short label over the heading, and on a cover,
-   * chapter or ending face `footnote` (a content face always has a place for
-   * its source line). validate refuses a `kicker` on a face that does not
-   * list it, and a boundary page's `footnote` likewise.
+   * components: `kicker`, the short label over the heading, `fields`, the
+   * label and value lines a document form prints (a memo's To and From),
+   * `stamp`, a stamp pressed on the page, and on a cover, chapter or ending
+   * face `footnote` (a content face always has a place for its source
+   * line). validate refuses a `kicker`, `fields` or `stamp` on a face that
+   * does not list it, and a boundary page's `footnote` likewise.
    */
-  pageFields?: readonly ("kicker" | "footnote")[]
+  pageFields?: readonly ("kicker" | "footnote" | "fields" | "stamp")[]
   /**
    * Structural fact of a cover or chapter face: it draws its own page over a
    * photograph background (`background.kind: "asset"`).
@@ -590,6 +595,8 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverShowHeadline.id]: coverShowHeadline,
   // terminal sample redesign (2026-10-05).
   [coverConsoleCover.id]: coverConsoleCover,
+  // memo sample redesign (2026-10-05).
+  [coverMemoCover.id]: coverMemoCover,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -681,6 +688,8 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingShowFinale.id]: endingShowFinale,
   // terminal sample redesign (2026-10-05).
   [endingConsoleEnding.id]: endingConsoleEnding,
+  // memo sample redesign (2026-10-05).
+  [endingMemoEnding.id]: endingMemoEnding,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -836,6 +845,9 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   // terminal sample redesign (2026-10-05): the board's ordinary content page,
   // theme-locked.
   [contentConsoleSheet.id]: contentConsoleSheet,
+  // memo sample redesign (2026-10-05): the board's ordinary content page,
+  // theme-locked.
+  [contentMemoSheet.id]: contentMemoSheet,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -861,7 +873,7 @@ const TAKEOVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [imageAnnotateLayoutDef.id]: imageAnnotateLayoutDef,
 }
 
-/** All 145 standard layouts and 4 takeover layouts, 149 entries keyed by id.
+/** All 148 standard layouts and 4 takeover layouts, 152 entries keyed by id.
  *  `kind` still spells the standard tier `"standard"`, a wire-format fossil. See
  *  {@link LayoutDefinition.kind}. */
 export const LAYOUT_REGISTRY: Record<string, LayoutDefinition> = {

@@ -61,6 +61,15 @@ describe("generatePptxBlob CJK east-asian font-slot (a:ea)", () => {
     expect(xml).not.toContain('<a:ea typeface="Georgia"')
   }, 30000)
 
+  it("memo theme (Times New Roman over SimSun heading): the heading's runs carry Times New Roman for Latin and SimSun for CJK", async () => {
+    const { generatePptxBlob } = await import("./generate")
+    const ir = makeIR("memo", [contentSlide("每周 32 小时 Thirty-two hours", "中文正文 body text 混排", false)])
+
+    const xml = await slideXml(await generatePptxBlob(ir))
+    expect(xml).toMatch(/<a:latin typeface="Times New Roman"[^>]*\/><a:ea typeface="SimSun"/)
+    expect(xml).not.toContain("|")
+  }, 30000)
+
   it("terminal theme (Microsoft YaHei heading+body): <a:ea> self-references Microsoft YaHei", async () => {
     const { generatePptxBlob } = await import("./generate")
     const ir = makeIR("terminal", [contentSlide("中文标题 CJK Heading", "中文正文 body text 混排", false)])

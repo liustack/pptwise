@@ -2024,3 +2024,20 @@ describe("code title and marked lines", () => {
     expect(parseOne({ ...code, highlight_lines: [0] }).success).toBe(false)
   })
 })
+
+describe("data_table row tag", () => {
+  it("takes a tag on a row and refuses an empty one", () => {
+    const table = (tag: unknown) => ({ type: "data_table", columns: [{ key: "a", label: "A" }, { key: "b", label: "B" }], rows: [{ cells: { a: "1", b: "2" }, tag }] })
+    expect(parseOne(table({ text: "倡导" })).success).toBe(true)
+    expect(parseOne(table({ text: "" })).success).toBe(false)
+  })
+})
+
+describe("comparison recommended_label", () => {
+  const base = { type: "comparison", columns: ["A", "B"], rows: [{ label: "x", cells: ["1", "2"] }] }
+  it("takes a label over the recommended option, and refuses one without a pick or a blank one", () => {
+    expect(parseOne({ ...base, recommended: 1, recommended_label: "For support" }).success).toBe(true)
+    expect(parseOne({ ...base, recommended_label: "For support" }).success).toBe(false)
+    expect(parseOne({ ...base, recommended: 1, recommended_label: " " }).success).toBe(false)
+  })
+})

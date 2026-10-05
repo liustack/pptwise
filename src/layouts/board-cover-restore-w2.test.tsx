@@ -192,9 +192,9 @@ const WAVE8_B4_LOCKS = [
   { id: "swiss", type: "cover" as const, face: "institutional-block" },
   { id: "swiss", type: "chapter" as const, face: "decimal-index-chapter" },
   { id: "swiss", type: "ending" as const, face: "resolution-ending" },
-  { id: "memo", type: "cover" as const, face: "memo-head" },
+  { id: "memo", type: "cover" as const, face: "memo-cover" },
   { id: "memo", type: "chapter" as const, face: "issue-line-chapter" },
-  { id: "memo", type: "ending" as const, face: "decision-close-ending" },
+  { id: "memo", type: "ending" as const, face: "memo-ending" },
   { id: "playbill", type: "cover" as const, face: "bill-head" },
   { id: "playbill", type: "chapter" as const, face: "day-bill-chapter" },
   { id: "playbill", type: "ending" as const, face: "ticket-cta-ending" },
@@ -219,7 +219,8 @@ describe("wave 8 batch 4 — locked cover / chapter / ending faces", () => {
     const index = type === "chapter" ? 1 : 0
     const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={index} />)
     expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe(face)
-    expect(getThemeDefinition(doc.theme.id).menu[type].decor).toEqual(expectedDecor(id, type))
+    // A face that sets its own frame (memo's cover) suppresses the motif.
+    expect(getThemeDefinition(doc.theme.id).menu[type].decor).toEqual(materializedDecor(id, type, face))
   })
 })
 

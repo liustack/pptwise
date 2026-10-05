@@ -30,6 +30,17 @@ import { spanComposition } from "./span"
 import { platesComposition } from "./plates"
 import { pathsComposition } from "./paths"
 import { screenComposition } from "./screen"
+import { annexComposition } from "./annex"
+import { talliesComposition } from "./tallies"
+import { slopesComposition } from "./slopes"
+import { divergingComposition } from "./diverging"
+import { citationComposition } from "./citation"
+import { scalesComposition } from "./scales"
+import { catalogComposition } from "./catalog"
+import { rotaComposition } from "./rota"
+import { sumComposition } from "./sum"
+import { scheduleComposition } from "./schedule"
+import { checksComposition } from "./checks"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -73,9 +84,41 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   plates: platesComposition,
   paths: pathsComposition,
   screen: screenComposition,
+  annex: annexComposition,
+  tallies: talliesComposition,
+  slopes: slopesComposition,
+  diverging: divergingComposition,
+  citation: citationComposition,
+  scales: scalesComposition,
+  catalog: catalogComposition,
+  rota: rotaComposition,
+  sum: sumComposition,
+  schedule: scheduleComposition,
+  checks: checksComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
+
+/**
+ * The compositions that paint the two chart marks most hand-set plots were
+ * drawn without: a series' `tone` (good or bad news in the theme's success
+ * and danger inks) and a marked point in a stacked chart (the column the
+ * page is about). A page whose chart carries either is offered to these
+ * alone, so no plot recolours a series the author called good or bad news or
+ * marks a segment where the author marked a column. The ordinary chart draws
+ * both.
+ */
+const CHART_MARK_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["diverging"])
+
+function asksForChartMarks(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some(
+    (component) =>
+      component.type === "chart" &&
+      (component.series.some((series) => series.tone !== undefined) ||
+        ((component.chart_type === "stacked" || component.chart_type === "percent_stacked") &&
+          component.series.some((series) => series.data.some((point) => point.emphasis === true)))),
+  )
+}
 
 /**
  * Asks each composition in `ids` in turn whether it takes these components,
@@ -84,7 +127,9 @@ export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly Composition
 export function compose(props: CompositionProps, ids: readonly CompositionId[] = COMPOSITION_IDS): React.ReactElement | null {
   const handOn: CompositionProps["handOn"] = (components, rect) =>
     compose({ ...props, components, rect }, ids)
+  const marked = asksForChartMarks(props.components)
   for (const id of ids) {
+    if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     const drawn = COMPOSITIONS[id]({ ...props, handOn })
     if (drawn) return drawn
   }

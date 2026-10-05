@@ -1,0 +1,27 @@
+{
+  "components": [
+    {
+      "type": "numbered_cards",
+      "items": [
+        {
+          "title": "Hours and pay",
+          "text": "All full-time staff work 32 hours a week. Pay, bonus base, leave and benefits stay the same"
+        },
+        {
+          "title": "Dates",
+          "text": "Prepare in November and December. Trial from January 4 to June 30, 2027"
+        },
+        {
+          "title": "Model",
+          "text": "Each department picks one of three models. Support and always-on roles stagger"
+        },
+        {
+          "title": "Keep or stop",
+          "text": "We decide in July on measures agreed now. A team that trips a stop rule goes back at once",
+          "emphasis": true
+        }
+      ]
+    }
+  ],
+  "notes": "Four terms. First, every full-time employee, management included, works 32 hours a week instead of 40, with salary, bonus base, leave and benefits unchanged. Second, November and December are for preparation, the trial starts on Monday, January 4, 2027 and ends on June 30. Third, departments choose their model from three options on a later page, and customer support and other always-on roles can only use staggered days off. Fourth, this is a trial, not a promise: in July we decide, against measures agreed in advance, whether to keep it, and any team that trips a stop rule during the trial returns to five days straight away."
+}

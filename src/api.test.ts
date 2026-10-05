@@ -717,6 +717,25 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     expect(v.errors[0]!.message).toBe('"cover" slides do not render footnote — move this content to a content slide or remove it')
   })
 
+  it.each([
+    ["fields", "cover", { type: "cover", heading: "H", fields: [{ label: "To", value: "All staff" }] }, /has no place for header lines \(fields\)/],
+    ["stamp", "ending", { type: "ending", heading: "H", stamp: { text: "Approved", date: "2026 · 10" } }, /has no place for a stamp/],
+    ["fields", "content", { type: "content", kind: "points", heading: "H", fields: [{ label: "Re", value: "x" }], components: [{ type: "paragraph", text: "x" }] }, /has no place for header lines/],
+  ] as const)("hard-rejects %s on a %s face with no place for them, naming the face", (field, _type, slide, message) => {
+    const v = validateIr({ ...raw, slides: [slide] })
+    expect(v.ok).toBe(false)
+    expect(v.errors[0]!.path).toBe(`slides.0.${field}`)
+    expect(v.errors[0]!.message).toMatch(/^face "[a-z-]+" /)
+    expect(v.errors[0]!.message).toMatch(message)
+  })
+
+  it("refuses blank header lines and more than four of them at the schema", () => {
+    const blank = validateIr({ ...raw, slides: [{ type: "cover", heading: "H", fields: [{ label: " ", value: "x" }] }] })
+    expect(blank.ok).toBe(false)
+    const five = Array.from({ length: 5 }, (_, i) => ({ label: `L${i}`, value: "v" }))
+    expect(validateIr({ ...raw, slides: [{ type: "cover", heading: "H", fields: five }] }).ok).toBe(false)
+  })
+
   it("names both offending fields, components first, when a slide carries both", () => {
     const v = validateIr({
       ...raw,

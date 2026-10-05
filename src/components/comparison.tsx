@@ -422,6 +422,39 @@ function markedRowTint(ctx: ComponentCtx): string {
   return blendOver(emphasisRunInk(ctx.colors), ctx.defaultBg ?? ctx.colors.bg, 0.1)
 }
 
+/** Air between the recommended option's label (`recommended_label`) and the header under it. */
+const PICK_LABEL_GAP = 8
+
+/** The band over the header the recommended option's label stands in, or 0 with no label. */
+function pickLabelBand(component: ComparisonComponent, ctx: ComponentCtx): number {
+  return component.recommended !== undefined && component.recommended_label?.trim() ? ordinaryTagSpec(ctx).height + PICK_LABEL_GAP : 0
+}
+
+/**
+ * The recommended option's label: a filled tag over its column, in the band
+ * the table leaves above its header, where it says who the pick is for. The
+ * table's own rows and rules are drawn under the band as they always are.
+ */
+function renderPickLabel(component: ComparisonComponent, box: ComponentBox, ctx: ComponentCtx) {
+  const label = component.recommended_label?.trim()
+  if (!label) return null
+  const table = layoutTable(component, box.w - tagColumnWidth(component, ctx), ctx.fonts.body)
+  if (table.recommendedCol < 0) return null
+  const spec = ordinaryTagSpec(ctx)
+  const tag = { text: label }
+  return (
+    <g data-pick-label="">
+      {paintTag({
+        tag,
+        x: box.x + table.offsets[table.recommendedCol]! + PAD_X,
+        y: box.y,
+        spec,
+        inks: tagInks(ctx, tag, true, ctx.defaultBg ?? ctx.colors.bg, spec.size),
+      })}
+    </g>
+  )
+}
+
 function measureDefault(component: ComparisonComponent, w: number, ctx: ComponentCtx): number {
   const table = layoutTable(component, w - tagColumnWidth(component, ctx), ctx.fonts.body)
   return ROW + table.rows.reduce((s, row) => s + row.h, 0)
@@ -644,10 +677,18 @@ function renderDefault(rawComponent: ComparisonComponent, box: ComponentBox, ctx
 
 export const comparison: SvgComponent<ComparisonComponent> = {
   measure(component, w, ctx) {
-    return measureDefault(component, w, ctx)
+    return pickLabelBand(component, ctx) + measureDefault(component, w, ctx)
   },
   render(component, box, ctx) {
-    return renderDefault(component, box, ctx)
+    const band = pickLabelBand(component, ctx)
+    if (band === 0) return renderDefault(component, box, ctx)
+    const below = { ...box, y: box.y + band, ...(box.h !== undefined ? { h: box.h - band } : {}) }
+    return (
+      <g>
+        {renderPickLabel(component, box, ctx)}
+        {renderDefault(component, below, ctx)}
+      </g>
+    )
   },
 }
 

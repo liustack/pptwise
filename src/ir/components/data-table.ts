@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { IconNameSchema } from "./shared"
+import { IconNameSchema, TagSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -44,6 +44,10 @@ const DataTableRowSchema = z
     /** A symbol for the row. See the describe below. */
     icon: IconNameSchema.optional().describe(
       "A symbol for the row, drawn at its start before the first cell, such as server or cloud. Run `pptwise icons` for the names.",
+    ),
+    /** What kind of row it is. See the describe below. */
+    tag: TagSchema.optional().describe(
+      "What kind of row it is, in a word or two printed as a small tag at the start of the row's last cell, such as 倡导, 独立 or Independent, when the rows sort into a few kinds the reader should tell apart. Set quiet on a tag that says nothing in particular.",
     ),
   })
   .strict()

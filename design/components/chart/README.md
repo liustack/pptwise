@@ -76,3 +76,13 @@ Three changes, settled on the fiscal, growth, indicators and funds pages. See th
 **What it gave up.**
 
 - A theme's hand-set plot with no value axis leaves a banded chart to the ordinary chart.
+
+## memo, four-day week decision sample, 2026-10
+
+`series[].tone`, and a marked point on a `stacked` or `percent_stacked` chart. Settled on the cost page (p05): see the board in [compositions/diverging](../../compositions/diverging/memo.board.png). The round's decisions are in [rounds/2026-10-05-memo](../../rounds/2026-10-05-memo/README.md).
+
+**What it looks like.** A series with `tone: "success"`, `"danger"` or `"warning"` takes that ink in place of its palette colour. A point marked with `emphasis` on a stacked chart keeps its column at full strength and lets the other columns recede.
+
+**Why.** On a page about who got better and who got worse, the colours have to say which is which, and the reader's eye goes to the column the page is about.
+
+**What it gave up.** Tone is refused on a share bar and a pie, whose colours are the parts.

@@ -261,3 +261,14 @@ describe("row_cards item tone", () => {
     expect(markup).toContain(`stroke="${terminal.colors.success}"`)
   })
 })
+
+describe("row_cards cut text", () => {
+  it("marks a description past its two lines as cut, where the deck audit looks for it", () => {
+    const long = "A description long enough to run well past the two lines a row card gives its text, so the renderer has to cut it somewhere on the second line and leave words out."
+    const markup = renderSvgMarkup(
+      <svg viewBox="0 0 1280 720">{rowCards.render({ type: "row_cards", items: [{ title: "One", text: long }, { title: "Two", text: "Short." }] }, { x: 96, y: 200, w: 520 }, ctx)}</svg>,
+    )
+    // The deck audit reports every `data-truncated="1"` as content-truncated.
+    expect(markup.match(/data-truncated="1"/g)).toHaveLength(1)
+  })
+})

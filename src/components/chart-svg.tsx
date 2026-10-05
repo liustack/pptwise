@@ -3738,6 +3738,10 @@ export function renderStacked(
   })
 
   const segmentBoxes: DepthBox[] = []
+  // A marked point marks its column: the column keeps its colours, the
+  // others recede to the grey a marked bar leaves the rest of a bar chart in.
+  const markedPoint = markedPointOf(series)
+  const recededColumn = markedPoint ? recededMarkFill(mutedColor, bgHex ?? "#FFFFFF") : null
   const columns = categories.map((cat, i) => {
     const colX = geom.plotX + i * groupW + (groupW - colW) / 2
     let up = 0
@@ -3761,7 +3765,7 @@ export function renderStacked(
           y: segTop,
           w: colW,
           h: bottom - segTop,
-          fill: palette[s.seriesIndex % palette.length]!,
+          fill: recededColumn && cat.x !== markedPoint!.x ? recededColumn : palette[s.seriesIndex % palette.length]!,
           status: pointStatusAt(series, s.seriesIndex, cat.x),
           bg: bgHex ?? "#FFFFFF",
           ...(bgHex ? { stroke: { color: bgHex, width: STACK_SEPARATOR_W } } : {}),

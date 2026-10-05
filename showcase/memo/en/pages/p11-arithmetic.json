@@ -1,0 +1,28 @@
+{
+  "components": [
+    {
+      "type": "bullets",
+      "items": [
+        "Weekly hours: 40 → 32",
+        "Total output: the same",
+        "Output per hour: 40 ÷ 32 = 1.25"
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "25%",
+          "label": "Rise needed"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "A warning: Krystal went back to five days partly because the extra rest did not lift output by the 20% it needed.\nSo we cannot just ask people to push harder. Meetings and process go first."
+    }
+  ],
+  "footnote": "Source: Krystal, Sep 2023, company account",
+  "notes": "This is the plain arithmetic behind the whole decision. We work 40 hours a week today. Cut to 32 with the same total output, and every hour has to produce 25% more. Better rest alone will not close a gap that size. Krystal's support team is the example: the company said the extra recovery time did not raise output by the 20% it needed, the work became more stressful, and it went back to five days. So the process changes on the next page are not a nice extra. They decide whether the trial can work at all."
+}

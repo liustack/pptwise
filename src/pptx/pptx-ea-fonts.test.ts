@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import JSZip from "jszip"
-import { applyEaFontFaces } from "./pptx-ea-fonts"
+import { applyEaFontFaces, pairedTypeface } from "./pptx-ea-fonts"
 
 /**
  * One `<p:sp>` text run shaped like pptxgenjs's real `genXmlTextRunProperties`
@@ -100,6 +100,24 @@ describe("applyEaFontFaces", () => {
     expect(xml).toContain('<a:latin typeface="Georgia" pitchFamily="34" charset="0"/>')
     expect(xml).toContain('<a:ea typeface="Microsoft YaHei" pitchFamily="34" charset="-122"/>')
     expect(xml).not.toContain('<a:ea typeface="Georgia"')
+  })
+
+  it("splits a paired typeface into the run's Latin and East Asian faces, and gives every other slot the Latin one", async () => {
+    // pptxgenjs writes the one fontFace it is handed into all three slots.
+    const paired = pairedTypeface("Times New Roman", "SimSun")
+    const out = await applyEaFontFaces(await buildPptx([runXml(paired)]))
+    const xml = await slideXml(out)
+    expect(xml).toContain('<a:latin typeface="Times New Roman" pitchFamily="34" charset="0"/>')
+    expect(xml).toContain('<a:ea typeface="SimSun" pitchFamily="34" charset="-122"/>')
+    expect(xml).toContain('<a:cs typeface="Times New Roman" pitchFamily="34" charset="-120"/>')
+    expect(xml).not.toContain("|")
+  })
+
+  it("keeps a split pair when patched again", async () => {
+    const once = await applyEaFontFaces(await buildPptx([runXml(pairedTypeface("Times New Roman", "SimSun"))]))
+    const twice = await applyEaFontFaces(once)
+    expect(await slideXml(twice)).toBe(await slideXml(once))
+    expect(await slideXml(twice)).toContain('<a:ea typeface="SimSun"')
   })
 
   it("self-references a CJK-capable latin face (SimSun -> SimSun), still rewriting explicitly", async () => {

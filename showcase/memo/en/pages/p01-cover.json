@@ -1,0 +1,32 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "cover-friday",
+      "caption": "A quiet Friday morning (illustrative)"
+    }
+  ],
+  "fields": [
+    {
+      "label": "To",
+      "value": "All staff and department heads"
+    },
+    {
+      "label": "From",
+      "value": "Management · Human Resources"
+    },
+    {
+      "label": "Date",
+      "value": "October 2026"
+    },
+    {
+      "label": "Re",
+      "value": "Trial of a 32-hour, four-day week at full pay"
+    }
+  ],
+  "stamp": {
+    "text": "Decided",
+    "date": "2026 · 10"
+  },
+  "notes": "This memo records a management decision: from Monday, January 4, 2027, the whole company will trial a four-day, 32-hour week at full pay for six months, after two months of preparation in November and December. The pages that follow set out the terms, the reasons, the evidence for and against, how each department will run it, how we will judge it, when we will stop, and who does what. Outside figures come from published research and official sources, named on each page."
+}

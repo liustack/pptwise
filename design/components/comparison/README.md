@@ -27,3 +27,13 @@ Settled on the options page. See the board and engine render in [compositions/ta
 **What it gave up.**
 
 - At most one marked row, and `tag_column` only with tags: validate refuses either.
+
+## memo, four-day week decision sample, 2026-10
+
+`recommended_label`. Settled on the three models page (p09): see the board in [compositions/catalog](../../compositions/catalog/memo.board.png). The round's decisions are in [rounds/2026-10-05-memo](../../rounds/2026-10-05-memo/README.md).
+
+**What it looks like.** A few words that say who the recommended option is for (「客服用这个」, "For support"), as a filled tag in the mark after the option's name. It needs `recommended`.
+
+**Why.** A recommendation is clearer when it says for whom.
+
+**What it gave up.** The `table` composition declines a comparison that carries one.

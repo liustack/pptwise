@@ -36,6 +36,15 @@ describe("textToOp", () => {
     expect(op.runs).toEqual([{ text: "Hello", bold: true }])
   })
 
+  it("carries the East Asian face a family list pairs with its Latin face, and none otherwise", () => {
+    const paired = textToOp(textEl('<text x="96" y="120" font-size="31" font-family="Times New Roman, SimSun, Songti SC, STSong, serif">每周 32 小时</text>'))
+    expect(paired.fontFace).toBe("Times New Roman")
+    expect(paired.eaFace).toBe("SimSun")
+    const plain = textToOp(textEl('<text x="96" y="120" font-size="31" font-family="SimSun, Songti SC, STSong, serif">每周 32 小时</text>'))
+    expect(plain.fontFace).toBe("SimSun")
+    expect(plain.eaFace).toBeUndefined()
+  })
+
   it("left-aligns and anchors at x for the default (start) anchor", () => {
     const op = textToOp(textEl('<text x="96" y="120" font-size="32">Hi</text>'))
     expect(op.align).toBe("left")

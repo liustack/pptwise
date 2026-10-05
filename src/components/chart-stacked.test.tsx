@@ -616,3 +616,58 @@ describe("percent_stacked chart: drawing", () => {
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
   })
 })
+
+describe("series tone", () => {
+  const toned: ChartComponent = {
+    type: "chart",
+    chart_type: "percent_stacked",
+    series: [
+      { name: "Better", tone: "success", data: [{ x: "Burnout", y: 71 }, { x: "Pace", y: 2 }] },
+      { name: "Same", data: [{ x: "Burnout", y: 7 }, { x: "Pace", y: 36 }] },
+      { name: "Worse", tone: "danger", data: [{ x: "Burnout", y: 22 }, { x: "Pace", y: 62 }] },
+    ],
+  }
+
+  it("paints a toned series in its tone's ink and leaves an untoned one on the palette", () => {
+    const fills = [...new Set(segments(draw(toned)).map((s) => s.fill))]
+    expect(fills).toContain(PALETTE[1])
+    // The fixture names no success or danger ink, so the theme fallbacks paint them.
+    expect(fills).not.toContain(PALETTE[0])
+    expect(fills).not.toContain(PALETTE[2])
+    expect(fills).toHaveLength(3)
+  })
+
+  it("is refused on a chart that does not colour its series one by one", () => {
+    expect(chartSchema.safeParse({ ...toned, chart_type: "pie", series: [toned.series[0]] }).success).toBe(false)
+    expect(
+      chartSchema.safeParse({ type: "chart", chart_type: "stacked", direction: "horizontal", series: [{ name: "A", tone: "danger", data: [{ x: "All", y: 3 }] }, { name: "B", data: [{ x: "All", y: 4 }] }] }).success,
+    ).toBe(false)
+    expect(chartSchema.safeParse(toned).success).toBe(true)
+  })
+})
+
+describe("a marked point in a stacked chart", () => {
+  const stacked: ChartComponent = {
+    type: "chart",
+    chart_type: "percent_stacked",
+    series: [
+      { name: "Better", data: [{ x: "Burnout", y: 71 }, { x: "Pace", y: 2 }] },
+      { name: "Worse", data: [{ x: "Burnout", y: 22 }, { x: "Pace", y: 62, emphasis: true }] },
+    ],
+  }
+
+  it("keeps the marked column's colours and recedes the others", () => {
+    const segs = segments(draw(stacked)).sort((a, b) => a.x - b.x)
+    const [burnoutA, burnoutB, paceA, paceB] = segs
+    expect(burnoutA!.fill).toBe(burnoutB!.fill)
+    expect(burnoutA!.fill).not.toBe(PALETTE[0])
+    expect(new Set([paceA!.fill, paceB!.fill])).toEqual(new Set([PALETTE[0], PALETTE[1]]))
+  })
+
+  it("is accepted on stacked and percent_stacked and refused on a share bar", () => {
+    expect(chartSchema.safeParse(stacked).success).toBe(true)
+    expect(chartSchema.safeParse({ ...stacked, chart_type: "stacked" }).success).toBe(true)
+    const share = { type: "chart", chart_type: "stacked", direction: "horizontal", series: [{ name: "A", data: [{ x: "All", y: 3, emphasis: true }] }, { name: "B", data: [{ x: "All", y: 4 }] }] }
+    expect(chartSchema.safeParse(share).success).toBe(false)
+  })
+})

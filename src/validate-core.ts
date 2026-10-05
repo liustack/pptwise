@@ -435,24 +435,40 @@ function checkBoundaryPageContent(ir: PptxIR, theme: ThemeDefinition): Validatio
   return errors
 }
 
+/** The page fields a face draws only when it declares a place for them, and what an author does with one that has none. */
+const FACE_PAGE_FIELDS = [
+  { field: "kicker", name: "a kicker", fix: "move the label into the heading or summary, or remove it" },
+  { field: "fields", name: "header lines (fields)", fix: "move them into the subheading or a component, or remove them" },
+  { field: "stamp", name: "a stamp", fix: "say it in the heading or a component, or remove it" },
+] as const
+
+/** Whether the slide asks for `field` at all: an empty kicker asks for nothing. */
+function asksFor(slide: PptxIR["slides"][number], field: (typeof FACE_PAGE_FIELDS)[number]["field"]): boolean {
+  if (field === "kicker") return Boolean(slide.kicker?.trim())
+  return slide[field] !== undefined
+}
+
 /**
- * A `kicker` is drawn only by a face that declares a place for it
- * (`LayoutDefinition.pageFields`), on any page type. Every other face would
- * leave it off the page with nothing to say so, so the page is refused,
- * naming the face. An empty kicker asks for nothing.
+ * A `kicker`, `fields` or a `stamp` is drawn only by a face that declares a
+ * place for it (`LayoutDefinition.pageFields`), on any page type. Every
+ * other face would leave it off the page with nothing to say so, so the page
+ * is refused, naming the face. An empty kicker asks for nothing.
  */
 function checkKickerDrawn(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
   const errors: ValidationIssue[] = []
   ir.slides.forEach((slide, i) => {
-    if (slide.placeholder || !slide.kicker?.trim()) return
-    const layout = componentFace(ir, slide, theme)
-    if (layout?.pageFields?.includes("kicker")) return
-    errors.push({
-      path: `slides.${i}.kicker`,
-      page: i + 1,
-      ...(slide.id !== undefined ? { slideId: slide.id } : {}),
-      message: `${layout ? `face "${layout.id}"` : "this page's face"} has no place for a kicker — move the label into the heading or summary, or remove it`,
-    })
+    if (slide.placeholder) return
+    for (const { field, name, fix } of FACE_PAGE_FIELDS) {
+      if (!asksFor(slide, field)) continue
+      const layout = componentFace(ir, slide, theme)
+      if (layout?.pageFields?.includes(field)) continue
+      errors.push({
+        path: `slides.${i}.${field}`,
+        page: i + 1,
+        ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+        message: `${layout ? `face "${layout.id}"` : "this page's face"} has no place for ${name} — ${fix}`,
+      })
+    }
   })
   return errors
 }

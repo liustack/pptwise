@@ -118,9 +118,21 @@ function scaleOp(op: Op, sx: number, sy: number): Op {
           ? { rectRadius: op.rectRadius * avg }
           : {}),
       }
-    default:
-      return { ...op, ...box }
+    case "image":
+      // A fitted picture paints into its sizing box. Its own w/h are the
+      // picture's natural size, which only sets the crop, so the box scales
+      // with it and the crop stays the same.
+      return { ...op, ...box, ...(op.sizing ? { sizing: { ...op.sizing, w: op.sizing.w * sx, h: op.sizing.h * sy } } : {}) }
   }
+}
+
+/**
+ * The size of the box a leaf op paints into. A picture fitted with `sizing`
+ * (`image.ts`) paints into the sizing box, and its own `w`/`h` carry the
+ * picture's natural size for the crop. Every other op paints into `w`/`h`.
+ */
+function paintedSize(op: Op): { w: number; h: number } {
+  return op.kind === "image" && op.sizing ? { w: op.sizing.w, h: op.sizing.h } : { w: op.w, h: op.h }
 }
 
 /**
@@ -290,10 +302,12 @@ function walk(
 
 /** Fold a leaf op's inherited transform into its geometry. */
 function positionLeafOp(op: Op, el: Element, ctm: Matrix): Op {
-  // 本渲染器只发 translate/scale。Rotated text still takes the dedicated
-  // path below (kept after cartesian y-titles stopped emitting rotate(-90)).
-  // 非文本叶子上的旋转/斜切仍不在受控子集内（出现时按未缩放处理）。
-  if (op.kind === "text" && Math.abs(rotationDeg(ctm)) > 0.5) return positionRotatedText(op, el, ctm)
+  // A turned leaf keeps its own size and turns around its own centre, which
+  // is what PowerPoint's `rot` does: text through the baseline construction
+  // below, every other shape through its box. Skew is not in the subset.
+  if (Math.abs(rotationDeg(ctm)) > 0.5) {
+    return op.kind === "text" ? positionRotatedText(op, el, ctm) : positionRotatedBox(op, ctm)
+  }
   const origin = applyPoint(ctm, 0, 0)
   const positioned = translateOp(scaleOp(op, ctm[0], ctm[3]), pxToIn(origin.x), pxToIn(origin.y))
   // A text box's width is measured against the canvas, so it is only right
@@ -302,6 +316,47 @@ function positionLeafOp(op: Op, el: Element, ctm: Matrix): Op {
   // other op kind carries real local geometry that the scale+translate above
   // already maps correctly. See `anchorTextBox`'s own doc comment.
   return positioned.kind === "text" ? anchorTextBox(positioned) : positioned
+}
+
+/** An SVG turn as PowerPoint's clockwise `rotate`, in [0, 360), cardinals snapped. */
+function clockwiseDeg(ctm: Matrix): number {
+  // SVG and OOXML share a y-down canvas, so the SVG angle maps onto
+  // pptxgenjs clockwise `rotate` without a sign flip. -90° (up the page)
+  // becomes 270°. Cardinals snap for numerical cleanliness. 4° stays 4°.
+  let rotate = ((rotationDeg(ctm) % 360) + 360) % 360
+  if (Math.abs(rotate - 270) < 0.5) rotate = 270
+  else if (Math.abs(rotate - 180) < 0.5) rotate = 180
+  else if (Math.abs(rotate - 90) < 0.5) rotate = 90
+  else if (rotate < 0.5 || Math.abs(rotate - 360) < 0.5) rotate = 0
+  return rotate
+}
+
+/**
+ * Map a turned shape, picture, line or path to its own box plus `rotate`.
+ *
+ * A rotation followed by a translation moves every point of a shape the way
+ * a turn around the shape's own centre and a move of that centre do, and
+ * that is the only turn PowerPoint knows (`a:xfrm rot`, around the box's
+ * centre). So the box keeps its size (scaled by the matrix's uniform scale),
+ * its centre goes where the matrix sends it, and the turn is written as
+ * `rotate`. The geometry inside the box (a path's points, a line's flips, a
+ * picture's crop) turns with it unchanged. A memo's pasted-in exhibit, its
+ * stamp, and a tilted sticker export as turned, editable shapes this way,
+ * where they used to export upright and shrunk by the angle's cosine.
+ */
+function positionRotatedBox(op: Exclude<Op, TextOp>, ctm: Matrix): Op {
+  const scale = matrixScale(ctm) || 1
+  const sized = scaleOp(op, scale, scale)
+  const box = paintedSize(op)
+  const centre = applyPoint(ctm, (op.x + box.w / 2) * PX_PER_IN, (op.y + box.h / 2) * PX_PER_IN)
+  const drawn = paintedSize(sized)
+  const rotate = clockwiseDeg(ctm)
+  return {
+    ...sized,
+    x: pxToIn(centre.x) - drawn.w / 2,
+    y: pxToIn(centre.y) - drawn.h / 2,
+    ...(rotate ? { rotate } : {}),
+  } as Op
 }
 
 /**
@@ -329,14 +384,7 @@ function positionRotatedText(op: TextOp, el: Element, ctm: Matrix): TextOp {
   const localY = op.y * PX_PER_IN + firstBaselineEm(op.fontFace) * lineSize
   const anchor = applyPoint(ctm, localX, localY)
   const scale = matrixScale(ctm) || 1
-  const svgDeg = rotationDeg(ctm)
-  // SVG and OOXML share a y-down canvas, so the SVG angle maps onto
-  // pptxgenjs clockwise `rotate` without a sign flip. -90° (up the page)
-  // becomes 270°. Cardinals snap for numerical cleanliness. 4° stays 4°.
-  let rotate = ((svgDeg % 360) + 360) % 360
-  if (Math.abs(rotate - 270) < 0.5) rotate = 270
-  else if (Math.abs(rotate - 90) < 0.5) rotate = 90
-  else if (rotate < 0.5 || Math.abs(rotate - 360) < 0.5) rotate = 0
+  const rotate = clockwiseDeg(ctm)
 
   const text = op.runs.map((r) => r.text).join("")
   const units = measureTextUnits(text, {

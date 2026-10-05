@@ -1,0 +1,118 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "pilot",
+          "label": "Pilot"
+        },
+        {
+          "key": "when",
+          "label": "When"
+        },
+        {
+          "key": "kept",
+          "label": "Still running"
+        },
+        {
+          "key": "n",
+          "label": "Sample"
+        },
+        {
+          "key": "type",
+          "label": "Source"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "pilot": "UK",
+            "when": "End of pilot",
+            "kept": "92%",
+            "n": "61 firms",
+            "type": "Academics with advocates"
+          },
+          "tag": {
+            "text": "Advocate"
+          }
+        },
+        {
+          "cells": {
+            "pilot": "UK",
+            "when": "A year on",
+            "kept": "at least 89%",
+            "n": "61 firms",
+            "type": "Same"
+          },
+          "tag": {
+            "text": "Advocate"
+          }
+        },
+        {
+          "cells": {
+            "pilot": "Global sample",
+            "when": "12–24 months",
+            "kept": "90%",
+            "n": "197 firms",
+            "type": "Unreviewed working paper"
+          },
+          "tag": {
+            "text": "Advocate"
+          }
+        },
+        {
+          "cells": {
+            "pilot": "Germany",
+            "when": "End of pilot",
+            "kept": "73%",
+            "n": "41 orgs",
+            "type": "University with advocates"
+          },
+          "tag": {
+            "text": "Independent"
+          }
+        },
+        {
+          "cells": {
+            "pilot": "Germany",
+            "when": "Two years on",
+            "kept": "70%",
+            "n": "40 orgs",
+            "type": "University follow-up"
+          },
+          "tag": {
+            "text": "Independent"
+          }
+        },
+        {
+          "cells": {
+            "pilot": "Portugal",
+            "when": "End of pilot",
+            "kept": "17, 5 scaled back",
+            "n": "21 firms",
+            "type": "Government, university"
+          },
+          "tag": {
+            "text": "Independent"
+          }
+        },
+        {
+          "cells": {
+            "pilot": "Brazil",
+            "when": "A year on",
+            "kept": "10% (2 firms)",
+            "n": "20 firms",
+            "type": "Press report"
+          },
+          "tag": {
+            "text": "Press"
+          },
+          "emphasis": "highlight"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Autonomy et al. 2023, 2024. Schor et al. 2025. University of Münster 2024, 2026. Gomes et al. 2024. InfoMoney 2025",
+  "notes": "How many kept going depends on who counted and for how long. In the UK, 56 of 61 companies continued at the end of the trial and at least 54 were still running it a year later. Across 197 companies tracked by the advocacy group 4 Day Week Global, about one in ten went back to five days. These companies volunteered and were recruited by an advocacy group, so they wanted it to work. Outside that circle, and over longer periods, the numbers are much lower. In Germany, 30% of 40 organisations had stopped two years on, most often because they could not deliver reliably at peak times or found the model too rigid. In Portugal, 4 of 21 firms went back to five days and 5 scaled back. In Brazil, only 2 of 20 companies formally kept it a year later."
+}

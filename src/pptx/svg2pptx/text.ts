@@ -1,6 +1,6 @@
 import { ptToPx, pxToIn, pxToPt, SLIDE_W_IN } from "../../constants"
 import { collapseWhitespaceRuns, preservesWhitespace } from "@/lib/svg-whitespace"
-import { isBold } from "../../render/fonts"
+import { isBold, pairedEaFamily } from "../../render/fonts"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { firstBaselineEm, lineHeightPx } from "./baseline"
 import { svgColorToHex } from "./color"
@@ -36,6 +36,13 @@ export interface TextOp {
   w: number
   h: number
   fontFace?: string
+  /**
+   * The face the run's CJK takes when its `font-family` pairs one with a
+   * Latin face that has none (`fonts.ts` `pairedEaFace`, memo's Song
+   * headings: Times New Roman over SimSun). Absent on every other op, whose
+   * runs take `eaFontFaceFor` of `fontFace` (`pptx-ea-fonts.ts`).
+   */
+  eaFace?: string
   fontSize: number
   color?: string
   transparency?: number
@@ -442,6 +449,7 @@ export function textToOps(el: Element): TextOp[] {
   const fontSizePx = num(el, "font-size", 16)
   const align = anchorToAlign(el.getAttribute("text-anchor"))
   const fontFace = firstFontFamily(el.getAttribute("font-family"))
+  const eaFace = pairedEaFamily(el.getAttribute("font-family"))
   const segments = layOutSegments(
     buildRawRuns(el, isBold(el.getAttribute("font-weight")), isItalic(el.getAttribute("font-style"))),
     { x: num(el, "x"), y: num(el, "y"), align, sizePx: fontSizePx, fontFamily: fontFace },
@@ -484,6 +492,7 @@ export function textToOps(el: Element): TextOp[] {
       align: segmentAlign,
     })
     if (fontFace) op.fontFace = fontFace
+    if (eaFace) op.eaFace = eaFace
     if (color) op.color = color
     if (opacity < 1) op.transparency = Math.round((1 - opacity) * 100)
     if (fieldAttr === "slidenum") {

@@ -11,7 +11,7 @@ import {
   recededMarkFill,
   rotateChartPalette,
 } from "../render/chart-palette";
-import { accessibleInk } from "../render/ink";
+import { accessibleInk, resolveSemanticColor } from "../render/ink";
 import { StatusMark, statusGround, statusWords } from "../render/mark-status";
 import { mostlyChinese } from "../lib/text-script";
 import type { FigureStyle } from "../lib/quantity-format";
@@ -431,6 +431,29 @@ function markedSeriesIndex(component: ChartComponent): number {
   return component.series.findIndex((s) => s.emphasis === true);
 }
 
+/**
+ * The series palette once each series that names a `tone` takes its tone's
+ * ink: good news in the success ink, bad news in the danger ink, the way
+ * every theme already colours a figure's direction. Indexed by series, the
+ * array every renderer and the legend both read. With a series marked, the
+ * others still recede, a toned one included, and a toned marked series keeps
+ * its tone rather than the lead colour. A chart with no tone gets `palette`
+ * back untouched.
+ */
+function tonedSeriesPalette(
+  component: ChartComponent,
+  palette: readonly string[],
+  marked: number,
+  colors: Parameters<typeof resolveSemanticColor>[1]
+): string[] {
+  if (!component.series.some((s) => s.tone)) return [...palette];
+  return component.series.map((s, i) => {
+    const own = palette[i % palette.length]!;
+    if (!s.tone) return own;
+    return marked < 0 || marked === i ? resolveSemanticColor(s.tone, colors) : own;
+  });
+}
+
 function hasHeaderRow(component: ChartComponent): boolean {
   return legendApplicable(component);
 }
@@ -696,7 +719,8 @@ export const chart: SvgComponent<ChartComponent> = {
     // legend both read, so swatch and mark cannot disagree. Unmarked charts
     // take the rotated palette untouched.
     const marked = markedSeriesIndex(component);
-    const palette =
+    const palette = tonedSeriesPalette(
+      component,
       marked < 0
         ? rotated
         : emphasisSeriesPalette(
@@ -704,7 +728,10 @@ export const chart: SvgComponent<ChartComponent> = {
             component.series.length,
             marked,
             recededMarkFill(ctx.colors.muted, legendBg)
-          );
+          ),
+      marked,
+      ctx.colors
+    );
     const bodyFace = ctx.fonts.body;
 
     const hasLegend = legendApplicable(component);

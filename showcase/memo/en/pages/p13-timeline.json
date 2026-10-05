@@ -1,0 +1,75 @@
+{
+  "components": [
+    {
+      "type": "gantt",
+      "axis_labels": [
+        "Oct 2026",
+        "Nov",
+        "Dec",
+        "Jan 2027",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul"
+      ],
+      "items": [
+        {
+          "label": "Prepare, 2 months",
+          "start": 1,
+          "end": 3
+        },
+        {
+          "label": "Trial, 6 months · 32 hours a week",
+          "start": 3,
+          "end": 9,
+          "emphasis": true
+        },
+        {
+          "label": "Decide",
+          "start": 9,
+          "end": 10
+        }
+      ]
+    },
+    {
+      "type": "timeline",
+      "milestones": [
+        {
+          "date": "Oct 2026",
+          "title": "This memo",
+          "desc": "Teams pick a model"
+        },
+        {
+          "date": "Nov 30",
+          "title": "Plans due",
+          "desc": "Rota, stop-doing list, on-call cover"
+        },
+        {
+          "date": "Jan 4, 2027",
+          "title": "Trial starts",
+          "desc": "32 hours a week, same pay",
+          "highlight": true
+        },
+        {
+          "date": "Mar 31",
+          "title": "Midpoint review",
+          "desc": "Second survey, rotas can change"
+        },
+        {
+          "date": "Jun 30",
+          "title": "Trial ends",
+          "desc": "Third survey"
+        },
+        {
+          "date": "By Jul 31",
+          "title": "Decision",
+          "desc": "Team by team, against the baseline"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Autonomy et al., UK pilot report, Feb 2023, for two months of preparation before a six-month trial. The baseline is November and December",
+  "notes": "The timeline. This memo goes out in October. Preparation starts on November 1: HR runs the first staff survey, and each department pulls its November and December figures for customer response, output, overtime and contractor spend as the baseline. Rotas, stop-doing lists and cover plans are due by November 30. The trial starts on Monday, January 4, 2027. On March 31 we review it at the midpoint with a second survey, and rotas can change. It ends on June 30 with a third survey. By July 31 we decide, department by department, against the baseline. In weeks with a public holiday, the holiday is the short day and there is no extra day off."
+}

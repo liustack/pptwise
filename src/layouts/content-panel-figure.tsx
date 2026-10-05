@@ -66,6 +66,8 @@ function figureShape(slide: Slide): FigurePage | null {
   const chart = second?.type === "chart" ? second : null
   if (second !== undefined && !chart) return null
   if (chart && (!barsChart(chart) || first.items.length > 2)) return null
+  // A series tone has no place in the bars beside the figure.
+  if (chart?.series.some((series) => series.tone !== undefined)) return null
   return { lead: first.items[0]!, kpis: first, chart, others: first.items.slice(1) }
 }
 

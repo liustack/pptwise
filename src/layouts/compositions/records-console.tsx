@@ -123,6 +123,8 @@ export function recordsConsole({ components, ctx, rect }: CompositionProps): Rea
   if (table?.type !== "data_table" || rest.length > 0) return null
   if (kpis && kpis.type !== "kpi_cards") return null
   if (table.source?.trim() || table.columns.length > 6 || table.rows.length > 10) return null
+  // A row's tag has no place in the console's table: the ordinary table draws it.
+  if (table.rows.some((row) => row.tag !== undefined)) return null
   const side = kpis ? { x: rect.x + rect.w - SIDE.w, y: rect.y, w: SIDE.w, h: rect.h } : null
   const figures = kpis && side ? figurePanels(kpis, side, ctx) : null
   if (kpis && !figures) return null

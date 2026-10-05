@@ -1,0 +1,187 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "title": "示例：十人客服组的错峰排班",
+      "columns": [
+        {
+          "key": "who",
+          "label": "组员"
+        },
+        {
+          "key": "mon",
+          "label": "周一"
+        },
+        {
+          "key": "tue",
+          "label": "周二"
+        },
+        {
+          "key": "wed",
+          "label": "周三"
+        },
+        {
+          "key": "thu",
+          "label": "周四"
+        },
+        {
+          "key": "fri",
+          "label": "周五"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "user",
+          "cells": {
+            "who": "组员 A",
+            "mon": "休",
+            "tue": "",
+            "wed": "",
+            "thu": "",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "组员 B",
+            "mon": "休",
+            "tue": "",
+            "wed": "",
+            "thu": "",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "组员 C",
+            "mon": "",
+            "tue": "休",
+            "wed": "",
+            "thu": "",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "组员 D",
+            "mon": "",
+            "tue": "休",
+            "wed": "",
+            "thu": "",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "组员 E",
+            "mon": "",
+            "tue": "",
+            "wed": "休",
+            "thu": "",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "组员 F",
+            "mon": "",
+            "tue": "",
+            "wed": "休",
+            "thu": "",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "组员 G",
+            "mon": "",
+            "tue": "",
+            "wed": "",
+            "thu": "休",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "组员 H",
+            "mon": "",
+            "tue": "",
+            "wed": "",
+            "thu": "休",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "组员 I",
+            "mon": "",
+            "tue": "",
+            "wed": "",
+            "thu": "",
+            "fri": "休"
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "组员 J",
+            "mon": "",
+            "tue": "",
+            "wed": "",
+            "thu": "",
+            "fri": "休"
+          }
+        },
+        {
+          "emphasis": "total",
+          "cells": {
+            "who": "在岗",
+            "mon": "8 / 10",
+            "tue": "8 / 10",
+            "wed": "8 / 10",
+            "thu": "8 / 10",
+            "fri": "8 / 10"
+          }
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "headset",
+      "caption": "错峰后的客服席位（示意）"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "icon": "headset",
+          "value": "50%",
+          "label": "最忙那天在岗",
+          "note": "Krystal"
+        },
+        {
+          "icon": "clock",
+          "value": "94% → 92%",
+          "label": "三日内首次回复率",
+          "note": "苏格兰 SOSE"
+        },
+        {
+          "icon": "building-2",
+          "value": "21 / 24",
+          "label": "服务指标改善或持平",
+          "note": "南剑桥郡议会"
+        }
+      ]
+    }
+  ],
+  "footnote": "来源：Krystal 官网（2023 年 9 月），Civil Service World（2025 年 8 月），索尔福德大学（2025 年 7 月）。配图为 AI 生成",
+  "notes": "错峰最容易出问题。英国主机商 Krystal 的客服团队让一半人周一休、一半人周五休，结果最忙的那天只有一半人在岗，客户支持变慢，员工反而更累，原定六个月的试行提前结束，2023 年 10 月恢复五天，改成提早一小时下班，并另招了 5 名客服。苏格兰的一家政府机构 SOSE 用错峰维持了服务，但客户咨询三个工作日内首次回复的比例从 94% 降到 92%，按时回复的总量是增加的。我们的规则：客服和需要连续在岗的团队，休息日均匀摊到周一到周五，每个工作日都有八成人在岗，每人配一个顶班搭档。哪一天在岗低于八成，部门负责人要当天调整。"
+}

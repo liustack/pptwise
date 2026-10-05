@@ -1,0 +1,66 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "who",
+          "label": "Who"
+        },
+        {
+          "key": "prep",
+          "label": "Preparation (Nov to Dec)"
+        },
+        {
+          "key": "trial",
+          "label": "Trial (Jan to Jun)"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "users",
+          "cells": {
+            "who": "Management",
+            "prep": "Approve plans, confirm stop rules",
+            "trial": "Review monthly, rule on any breach"
+          }
+        },
+        {
+          "icon": "clipboard-check",
+          "cells": {
+            "who": "Human Resources",
+            "prep": "Baseline survey, attendance and rota rules",
+            "trial": "Midpoint and final surveys, evaluation"
+          }
+        },
+        {
+          "icon": "user-check",
+          "cells": {
+            "who": "Department heads",
+            "prep": "Model, rota, stop-doing list by Nov 30",
+            "trial": "Weekly customer and output measures, monthly report"
+          },
+          "emphasis": "highlight"
+        },
+        {
+          "icon": "headset",
+          "cells": {
+            "who": "Support teams",
+            "prep": "Stagger days off, pair everyone with a cover buddy",
+            "trial": "At least 80% on duty every weekday"
+          }
+        },
+        {
+          "icon": "coffee",
+          "cells": {
+            "who": "All staff",
+            "prep": "Baseline survey, ideas on what to cut",
+            "trial": "Days off stay off, urgent work goes on-call"
+          }
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Autonomy et al., UK pilot report, Feb 2023, for the cover buddies of staggered teams",
+  "notes": "Who does what. Management approves each department's plan and confirms the stop-rule thresholds, then reviews the measures every month during the trial and decides when a rule trips. HR runs the three surveys, sets the time-keeping and rota rules, answers questions and writes the final evaluation. Department heads carry the most weight: pick the model, set the rota, file the stop-doing list by November 30, then track customer and output measures every week and report monthly. Support and always-on teams stagger their days off and pair everyone with a cover buddy so at least 80% of the team is in every weekday. Everyone else: please take the baseline survey and tell your department head which meetings and steps you would cut. Days off stay off, and anything urgent goes to the on-call rota."
+}

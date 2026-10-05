@@ -4,6 +4,7 @@ import type { TextRunData } from "./text"
 import { gradientFillXml } from "./gradient"
 import { blockMarker, pad4 } from "../pptx-animations"
 import { slideNumberObjectName } from "../pptx-slide-number"
+import { pairedTypeface } from "../pptx-ea-fonts"
 
 /**
  * The subset of a pptxgenjs `Slide` that the render layer uses. Keeping it
@@ -145,6 +146,7 @@ export function renderOp(
       if (op.fill) opts.fill = op.fill
       if (op.line) opts.line = op.line
       if ("rectRadius" in op && op.rectRadius != null) opts.rectRadius = op.rectRadius
+      if (op.rotate) opts.rotate = op.rotate
       if (op.gradientFill) opts.objectName = gradientObjectName(slideIndex, patches.length)
       // Must run before the gradient patch is recorded below: it may append
       // the blk marker onto `opts.objectName`, and the patch has to target
@@ -167,6 +169,7 @@ export function renderOp(
       }
       if (op.flipH) opts.flipH = true
       if (op.flipV) opts.flipV = true
+      if (op.rotate) opts.rotate = op.rotate
       withBlockMarker(opts, op, slideIndex, opIndex)
       slide.addShape("line", opts)
       break
@@ -179,6 +182,7 @@ export function renderOp(
         h: op.h,
         points: op.points,
       }
+      if (op.rotate) opts.rotate = op.rotate
       if (op.fill) opts.fill = op.fill
       if (op.line) opts.line = op.line
       if (op.gradientFill) opts.objectName = gradientObjectName(slideIndex, patches.length)
@@ -201,7 +205,10 @@ export function renderOp(
         fontSize: op.fontSize,
         margin: 0,
       }
-      if (op.fontFace) opts.fontFace = op.fontFace
+      // A paired East Asian face travels inside the typeface pptxgenjs writes,
+      // and `applyEaFontFaces` splits it into the run's `<a:latin>` and
+      // `<a:ea>` (pptxgenjs has no separate East Asian font option).
+      if (op.fontFace) opts.fontFace = op.eaFace ? pairedTypeface(op.fontFace, op.eaFace) : op.fontFace
       if (op.color) opts.color = op.color
       if (op.transparency != null) opts.transparency = op.transparency
       if (op.rotate) opts.rotate = op.rotate
@@ -220,6 +227,7 @@ export function renderOp(
     case "image": {
       const opts: Record<string, unknown> = { x: op.x, y: op.y, w: op.w, h: op.h, data: op.data }
       if (op.sizing) opts.sizing = op.sizing
+      if (op.rotate) opts.rotate = op.rotate
       // A11Y-01 alt 链路：pptxgenjs 的 `altText` 落到导出 XML 的
       // `p:cNvPr@descr`（PowerPoint「编辑替换文字」读写的就是它，见
       // node_modules/pptxgenjs 的 image 分支）。没有 alt 的资产不设这个 key

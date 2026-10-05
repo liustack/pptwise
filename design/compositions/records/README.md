@@ -79,3 +79,23 @@ The console setting's form, in [`records-console.tsx`](../../../src/layouts/comp
 
 - Up to six columns and ten rows. A table with its own `source` line sends the page back.
 - Column widths come from the words, so they land a few pixels off a board placed by hand.
+
+## memo, four-day week decision sample, 2026-10
+
+The memo setting's form, in [`records-memo.tsx`](../../../src/layouts/compositions/records-memo.tsx). Settled on the staying power page (p07) and the duties page (p15). The round's decisions are in [rounds/2026-10-05-memo](../../rounds/2026-10-05-memo/README.md).
+
+| board (p07) | engine |
+| :-: | :-: |
+| ![board](memo-p07.board.png) | ![engine](memo-p07.engine.png) |
+
+| board (p15) | engine |
+| :-: | :-: |
+| ![board](memo-p15.board.png) | ![engine](memo-p15.engine.png) |
+
+**What it looks like.** An open table under 13px mono headers and a 2px rule of ink, hairlines between rows, no fill but the marked row's tint. A table of figures (p07), one whose column after the first holds a figure in every cell, sets 56px rows on one line: the first figure column at 22px bold in the heading face, later figure columns in mono, the rest in the muted body face. A row's `tag` leads its last cell as a square outlined tag, each kind in its own quiet ink and the marked row's in the mark. Any other table is a table of duties (p15): 80px rows, the party after its icon in the heading face, the duties at 16px up to two lines.
+
+**Why.** Where a figure comes from matters as much as the figure: an advocate's count, a university's follow-up and a press report are not the same evidence.
+
+**What it gave up.**
+
+- Every cell of a table of figures on one line. A table whose columns do not fit the band that way sends the page back: write the cells short.

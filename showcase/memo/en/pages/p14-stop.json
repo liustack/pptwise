@@ -1,0 +1,37 @@
+{
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "headset",
+          "title": "Customers: first response time",
+          "text": "over 10% slower than baseline for 4 weeks running"
+        },
+        {
+          "icon": "trending-down",
+          "title": "Output: the team's core measure",
+          "text": "over 5% below baseline for 2 months running"
+        },
+        {
+          "icon": "wallet",
+          "title": "Cost: overtime and contractors",
+          "text": "added cover costs over 3% of the team's payroll"
+        },
+        {
+          "icon": "gauge",
+          "title": "People: burnout and stress",
+          "text": "the midpoint survey scores worse than baseline"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "icon": "circle-stop",
+      "text": "Then: five days again within two weeks. HR takes it to management, pay is unchanged and other teams carry on"
+    }
+  ],
+  "footnote": "Source: Autonomy et al., UK pilot report, Feb 2023, on a conditional four-day week. The thresholds are our policy, not research findings",
+  "notes": "We judge the trial and stop it with the same four measures: customers, output, cost and people, each against the November and December baseline. Any breach is acted on straight away, not in July. Customers: first response time more than 10% slower than baseline for four weeks running. Output: the department's own core measure, such as sales, on-time delivery or tickets closed, more than 5% below baseline for two months running. Cost: overtime and contractor spend added to cover the day off exceeds 3% of the department's payroll, a sign the work has moved rather than shrunk. People: burnout or stress in the midpoint survey worse than at baseline. When a rule trips, HR takes it to management within two weeks and that department returns to five days while the others carry on. Going back to five days does not affect pay."
+}

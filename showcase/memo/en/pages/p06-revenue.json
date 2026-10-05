@@ -1,0 +1,33 @@
+{
+  "components": [
+    {
+      "type": "blockquote",
+      "text": "Companies' revenue, for instance, stayed broadly the same over the trial period, rising by 1.4% on average.",
+      "attribution": "Autonomy et al., UK pilot report, February 2023"
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Meaning: revenue held level, up 1.4% weighted by firm size"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**+1.4%**",
+          "label": "23 firms, start to end of the trial"
+        },
+        {
+          "value": "+34.5%",
+          "label": "Another 24 firms, against the year before"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "One report, two measures: Never mix them, and name both when you quote one"
+    }
+  ],
+  "notes": "You may have read that a four-day week raised revenue by 35%. That misreads the UK report. It gives two numbers. For the 23 companies that reported it, revenue from the start to the end of the trial rose 1.4% on average, weighted by company size, which the report itself calls broadly the same. The 35% compares a different group of 24 companies with the same period a year earlier, so it includes ordinary business growth and is not the same comparison. Other pilots tell the same story: in Germany revenue and profit showed no significant change from the year before, and in Brazil 27.3% of companies saw revenue fall and 36.4% saw profit fall. Microsoft Japan's often-quoted 39.9% rise in sales per employee covers one month, August 2019, and Microsoft later added that it was not achieved by the four-day week alone. Our expectation for revenue is to hold it, not to grow it."
+}

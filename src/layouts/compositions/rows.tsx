@@ -7,6 +7,7 @@ import { closingCallout, fitClosing, fitNoticeClosing, noticeClosingCallout, pai
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
 import { rowsSeal } from "./rows-seal"
+import { rowsMemo } from "./rows-memo"
 
 type Bullets = Extract<Component, { type: "bullets" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -87,6 +88,7 @@ function rowsShape(components: readonly Component[]): { bullets: Bullets; callou
 export const rowsComposition: Composition = (props) => {
   if (props.setting === "notice") return noticeRows(props)
   if (props.setting === "seal") return rowsSeal(props)
+  if (props.setting === "memo") return rowsMemo(props)
   const { components, ctx, rect } = props
   const shape = rowsShape(components)
   if (!shape) return null

@@ -1,0 +1,187 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "title": "Example: a ten-person support team, staggered",
+      "columns": [
+        {
+          "key": "who",
+          "label": "Agent"
+        },
+        {
+          "key": "mon",
+          "label": "Mon"
+        },
+        {
+          "key": "tue",
+          "label": "Tue"
+        },
+        {
+          "key": "wed",
+          "label": "Wed"
+        },
+        {
+          "key": "thu",
+          "label": "Thu"
+        },
+        {
+          "key": "fri",
+          "label": "Fri"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "user",
+          "cells": {
+            "who": "Agent A",
+            "mon": "Off",
+            "tue": "",
+            "wed": "",
+            "thu": "",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "Agent B",
+            "mon": "Off",
+            "tue": "",
+            "wed": "",
+            "thu": "",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "Agent C",
+            "mon": "",
+            "tue": "Off",
+            "wed": "",
+            "thu": "",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "Agent D",
+            "mon": "",
+            "tue": "Off",
+            "wed": "",
+            "thu": "",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "Agent E",
+            "mon": "",
+            "tue": "",
+            "wed": "Off",
+            "thu": "",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "Agent F",
+            "mon": "",
+            "tue": "",
+            "wed": "Off",
+            "thu": "",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "Agent G",
+            "mon": "",
+            "tue": "",
+            "wed": "",
+            "thu": "Off",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "Agent H",
+            "mon": "",
+            "tue": "",
+            "wed": "",
+            "thu": "Off",
+            "fri": ""
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "Agent I",
+            "mon": "",
+            "tue": "",
+            "wed": "",
+            "thu": "",
+            "fri": "Off"
+          }
+        },
+        {
+          "icon": "user",
+          "cells": {
+            "who": "Agent J",
+            "mon": "",
+            "tue": "",
+            "wed": "",
+            "thu": "",
+            "fri": "Off"
+          }
+        },
+        {
+          "emphasis": "total",
+          "cells": {
+            "who": "On duty",
+            "mon": "8 / 10",
+            "tue": "8 / 10",
+            "wed": "8 / 10",
+            "thu": "8 / 10",
+            "fri": "8 / 10"
+          }
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "headset",
+      "caption": "The support desk (illustrative)"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "icon": "headset",
+          "value": "50%",
+          "label": "On duty, busiest day",
+          "note": "Krystal"
+        },
+        {
+          "icon": "clock",
+          "value": "94% → 92%",
+          "label": "3-day first replies",
+          "note": "SOSE, Scotland"
+        },
+        {
+          "icon": "building-2",
+          "value": "21 / 24",
+          "label": "Services held or better",
+          "note": "South Cambridgeshire"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Krystal, Sep 2023, company account. Civil Service World, Aug 2025. University of Salford, Jul 2025. Image is AI-generated",
+  "notes": "Staggering is where things go wrong. Krystal, a UK hosting company, gave half its support team Mondays off and half Fridays off, so on the busiest day only half the team was in. Support slowed, staff felt more pressure, and the six-month trial ended early: from October 2023 the team went back to five days with an earlier finish and five more hires. Scotland's SOSE kept its service going with staggered days, but the share of enquiries answered within three working days slipped from 94% to 92%, while the number answered on time went up. South Cambridgeshire Council reported 21 of 24 services improved or held steady, though its evaluators did not prove the four-day week caused it. Our rule: support and always-on teams spread days off evenly from Monday to Friday, so at least 80% of the team is on duty every weekday, and everyone has a cover buddy. If a day falls below 80%, the department head fixes it that day."
+}

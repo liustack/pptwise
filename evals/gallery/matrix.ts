@@ -364,6 +364,21 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "terminal", kind: "data", composition: "records", variant: "console" },
   { theme: "terminal", kind: "comparison", composition: "table", variant: "console" },
   { theme: "terminal", kind: "process", composition: "waves", variant: "console" },
+  // memo's memo sheet sets the shapes as a typed memorandum, and draws the
+  // eleven its own board added.
+  { theme: "memo", kind: "points", composition: "rows", variant: "memo" },
+  { theme: "memo", kind: "data", composition: "records", variant: "memo" },
+  { theme: "memo", kind: "points", composition: "annex" },
+  { theme: "memo", kind: "points", composition: "tallies" },
+  { theme: "memo", kind: "data", composition: "slopes" },
+  { theme: "memo", kind: "data", composition: "diverging" },
+  { theme: "memo", kind: "quote", composition: "citation" },
+  { theme: "memo", kind: "comparison", composition: "scales" },
+  { theme: "memo", kind: "comparison", composition: "catalog" },
+  { theme: "memo", kind: "process", composition: "rota" },
+  { theme: "memo", kind: "data", composition: "sum" },
+  { theme: "memo", kind: "process", composition: "schedule" },
+  { theme: "memo", kind: "list", composition: "checks" },
 ]
 
 export function buildMatrix(

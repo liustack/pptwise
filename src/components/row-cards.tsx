@@ -234,6 +234,9 @@ export const rowCards: SvgComponent<RowCardsComponent> = {
                 ? text.lines.map((line, li) => (
                     <text
                       key={li}
+                      // A description past its two lines is cut: say so on
+                      // its last line, so the audit reports the lost words.
+                      data-truncated={text.truncated && li === text.lines.length - 1 ? "1" : undefined}
                       x={TEXT_X}
                       y={textTop + (li + 1) * text.lineHeight - 4}
                       fontSize={text.fontSize}

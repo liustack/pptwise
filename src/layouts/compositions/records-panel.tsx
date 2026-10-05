@@ -59,6 +59,8 @@ export function recordsPanel({ components, ctx, rect }: CompositionProps): React
   if (table.columns.length < 2 || table.columns.length > MAX_COLUMNS || table.rows.length > MAX_ROWS) return null
   // A row's icon has no place in this panel: the ordinary table draws it.
   if (table.rows.some((row) => row.icon !== undefined)) return null
+  // Nor for a row's tag.
+  if (table.rows.some((row) => row.tag !== undefined)) return null
   if (second !== undefined && second.type !== "callout") return null
   const note = second?.type === "callout" ? fitNotePanel(second, rect.w, ctx) : null
   if (second && !note) return null

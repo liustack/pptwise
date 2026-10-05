@@ -1,5 +1,5 @@
 import JSZip from "jszip"
-import { eaFontFaceFor } from "@/render/fonts"
+import { eaFontFaceFor, isCjkSafeFace } from "@/render/fonts"
 
 /**
  * CJK east-asian font-slot patch (follow-up to borrow-wave Task 3's
@@ -87,7 +87,41 @@ const SLIDE_PART_RE = /^ppt\/slides\/slide\d+\.xml$/
  * assumption fails loud there (and independently, in the real-pptxgenjs e2e
  * leg) instead of shipping a malformed package silently.
  */
-const LATIN_EA_RE = /<a:latin typeface="([^"]*)"([^>]*?)\/>(?:<a:ea typeface="[^"]*"([^>]*?)\/>)?/g
+const LATIN_EA_RE = /<a:latin typeface="([^"]*)"([^>]*?)\/>(?:<a:ea typeface="([^"]*)"([^>]*?)\/>)?/g
+
+/**
+ * Joins a run's Latin face and the East Asian face its stack pairs with it
+ * (`fonts.ts` `pairedEaFace`) into the one typeface pptxgenjs writes, so
+ * `patchEaFontsInXml` can split them back into `<a:latin>` and `<a:ea>`.
+ * pptxgenjs has a single `fontFace` and writes it into every font slot, and
+ * a run's East Asian face cannot be told from its Latin one after that. No
+ * face name carries a vertical bar.
+ */
+const PAIR_SEPARATOR = "|"
+
+export function pairedTypeface(latinFace: string, eaFace: string): string {
+  return `${latinFace}${PAIR_SEPARATOR}${eaFace}`
+}
+
+/**
+ * The East Asian face a run that was not handed a pair ends up with: the one
+ * it already names when that is a CJK face other than its Latin one (a pair
+ * this patch split on an earlier pass), and `eaFontFaceFor` of its Latin face
+ * otherwise (the mirror pptxgenjs writes, a face with no CJK, or none).
+ */
+function keptEaFace(latin: string, written: string | undefined): string {
+  if (written && written !== latin && isCjkSafeFace(written) && !isCjkSafeFace(latin)) return written
+  return eaFontFaceFor(latin)
+}
+
+/** A paired typeface as its two faces, or the Latin face alone with no pair. */
+function splitTypeface(typeface: string): { latin: string; ea?: string } {
+  const at = typeface.indexOf(PAIR_SEPARATOR)
+  return at < 0 ? { latin: typeface } : { latin: typeface.slice(0, at), ea: typeface.slice(at + PAIR_SEPARATOR.length) }
+}
+
+/** Any typeface left paired after the `<a:latin>`/`<a:ea>` rewrite: a `<a:cs>` or `<a:sym>` slot, which takes the Latin face. */
+const PAIRED_TYPEFACE_RE = /typeface="([^"|]*)\|[^"]*"/g
 
 /**
  * Rewrite one slide part's full XML text so every `<a:latin>` run/paragraph-
@@ -106,11 +140,15 @@ const LATIN_EA_RE = /<a:latin typeface="([^"]*)"([^>]*?)\/>(?:<a:ea typeface="[^
  * byte-identical text.
  */
 function patchEaFontsInXml(xml: string): string {
-  return xml.replace(
-    LATIN_EA_RE,
-    (_full, latinFace: string, latinAttrs: string, eaAttrs: string | undefined) =>
-      `<a:latin typeface="${latinFace}"${latinAttrs}/><a:ea typeface="${eaFontFaceFor(latinFace)}"${eaAttrs ?? ""}/>`,
-  )
+  return xml
+    .replace(
+      LATIN_EA_RE,
+      (_full, typeface: string, latinAttrs: string, written: string | undefined, eaAttrs: string | undefined) => {
+        const { latin, ea } = splitTypeface(typeface)
+        return `<a:latin typeface="${latin}"${latinAttrs}/><a:ea typeface="${ea ?? keptEaFace(latin, written)}"${eaAttrs ?? ""}/>`
+      },
+    )
+    .replace(PAIRED_TYPEFACE_RE, (_full, latin: string) => `typeface="${latin}"`)
 }
 
 /**

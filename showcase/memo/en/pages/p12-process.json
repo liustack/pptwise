@@ -1,0 +1,48 @@
+{
+  "components": [
+    {
+      "type": "numbered_cards",
+      "items": [
+        {
+          "title": "30-minute meetings",
+          "text": "No meetings on Wednesday mornings. Over an hour needs sign-off"
+        },
+        {
+          "title": "Written updates",
+          "text": "One weekly note replaces the status meeting"
+        },
+        {
+          "title": "Two sign-offs at most",
+          "text": "For routine approvals"
+        },
+        {
+          "title": "A stop-doing list per team",
+          "text": "The reports and steps we drop for the trial",
+          "emphasis": true
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "standup",
+      "caption": "A whiteboard stand-up (illustrative)"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**8%**",
+          "label": "Two or more changes",
+          "note": "Portugal, 21 firms: share that went back"
+        },
+        {
+          "value": "38%",
+          "label": "One change or none",
+          "note": "Portugal, 21 firms: share that went back"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Gomes and Fontinha, Portugal pilot final report, Jul 2024, 21 firms. Image is AI-generated",
+  "notes": "If each hour must produce 25% more, the hours that produce nothing have to go first. In Portugal's government-backed pilot, only 8% of the firms that made two or more process changes went back to five days, against 38% of those that made one change or none. We are making four changes. Meetings default to 30 minutes, Wednesday mornings are meeting-free, and anything over an hour needs the department head's approval. Weekly status meetings become one written update. Routine approvals need no more than two signatures. Most important, every department files a stop-doing list by November 30, naming the reports and steps it will drop during the trial."
+}
