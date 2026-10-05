@@ -56,11 +56,12 @@ describe("window composition", () => {
   })
 })
 
-describe("a gantt with a range, a row icon or a period", () => {
+describe("a gantt with a range, a row icon, a period or a marked span", () => {
   it.each([
     ["a range", { range: { from: 0, to: 4 } }],
     ["a row icon", { items: calendar().items.map((item, i) => (i === 0 ? { ...item, icon: "coins" } : item)) }],
     ["a period", { items: calendar().items.map((item, i) => (i === 0 ? { ...item, period: "10 月至 11 月" } : item)) }],
+    ["a marked span", { bands: [{ from: calendar().items[0]!.start, to: calendar().items[0]!.end, label: "旺季" }] }],
   ])("is offered to no hand-set gantt when it carries %s", async (_name, overrides) => {
     const { compose } = await import(".")
     const { testCtx } = await import("./__fixtures__/kit")

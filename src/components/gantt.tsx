@@ -2,7 +2,8 @@ import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { recededMarkFill } from "../render/chart-palette"
 import { Icon } from "../render/icons"
-import { accessibleInk, graphicInk } from "../render/ink"
+import { measureTextUnits } from "../lib/svg-text-layout"
+import { accessibleInk, blendOver, graphicInk, liftedInk } from "../render/ink"
 import type { RenderDef, SvgComponent } from "./types"
 
 type GanttComponent = Extract<Component, { type: "gantt" }>
@@ -43,6 +44,10 @@ type GanttComponent = Extract<Component, { type: "gantt" }>
  * row's `period` (「第 16 至 18 个月」) is a muted line under the label, above
  * its text.
  *
+ * A span of the axis the author marks (`bands`, such as the season a plan
+ * is built around) is tinted behind the bars in the accent and named under
+ * the axis, centred under its span, in a line of its own.
+ *
  * Row height uses the same box.h-aware uniform-stretch idiom `matrix.tsx`'s
  * `render` established (no `STRETCH_CAP_RATIO` ceiling — full-body
  * components never go through `growStretchables`' capped path).
@@ -79,6 +84,8 @@ const AXIS_LABEL_FONT = 16
 const AXIS_LABEL_MIN_FONT = 16
 const AXIS_BAND_H = 30
 const AXIS_LINE_GAP = 10
+/** A marked span (`bands`): the accent at this strength behind the bars, and its name in a line of its own under the axis. */
+const SPAN = { tint: 0.12, line: 28, size: 16 } as const
 
 /** The axis: the author's `range` when there is one, otherwise the bars' own stretch. */
 function axisBounds(component: GanttComponent): { min: number; max: number } {
@@ -126,10 +133,14 @@ function rowNeed(item: GanttComponent["items"][number]): number {
   return Math.max(ROW_H_NATURAL, ROW_PAD_Y * 2 + stackHeight(item))
 }
 
+/** The band under the rows: the axis labels' line and the spans' names' line, when there are any. */
+function bottomBand(component: GanttComponent): number {
+  return ((component.axis_labels?.length ?? 0) > 0 ? AXIS_BAND_H : 0) + (component.bands?.length ? SPAN.line : 0)
+}
+
 function naturalHeight(component: GanttComponent): number {
   const n = component.items.length
-  const hasAxisLabels = (component.axis_labels?.length ?? 0) > 0
-  const reservedBottom = hasAxisLabels ? AXIS_BAND_H : 0
+  const reservedBottom = bottomBand(component)
   const rows = Math.max(...component.items.map(rowNeed))
   return n * rows + (n - 1) * ROW_GAP + reservedBottom
 }
@@ -141,7 +152,7 @@ export const gantt: SvgComponent<GanttComponent> = {
   render(component, box, ctx) {
     const n = component.items.length
     const hasAxisLabels = (component.axis_labels?.length ?? 0) > 0
-    const reservedBottom = hasAxisLabels ? AXIS_BAND_H : 0
+    const reservedBottom = bottomBand(component)
     const naturalH = naturalHeight(component)
     // box.h-aware uniform stretch (matrix.tsx's own idiom) — no
     // STRETCH_CAP_RATIO ceiling, this component fills whatever it's handed.
@@ -160,9 +171,37 @@ export const gantt: SvgComponent<GanttComponent> = {
 
     const axisLabels = component.axis_labels ?? []
     const axisY = box.y + rowsH + AXIS_LINE_GAP
+    const ground = ctx.defaultBg ?? ctx.colors.bg
+    const spanTop = box.y + rowsH + (hasAxisLabels ? AXIS_BAND_H : 0)
+    const spans = (component.bands ?? []).map((band) => {
+      const x0 = vx(band.from)
+      const x1 = vx(band.to)
+      const name = fitSvgLine(band.label.trim(), { maxWidth: box.w, fontSize: SPAN.size, minFontSize: SPAN.size, bold: true, fontFamily: ctx.fonts.body })
+      const half = (measureTextUnits(name.text, { bold: true, fontFamily: ctx.fonts.body }) * name.fontSize) / 2
+      const cx = Math.min(box.x + box.w - half, Math.max(box.x + half, (x0 + x1) / 2))
+      return { x0, x1, name, cx, label: band.label.trim() }
+    })
 
     return (
       <g>
+        {spans.map((span, k) => (
+          <g key={`span-${k}`} data-gantt-band={span.label}>
+            <rect x={span.x0} y={box.y} width={Math.max(1, span.x1 - span.x0)} height={rowsH} fill={blendOver(ctx.colors.accent, ground, SPAN.tint)} />
+            <text
+              data-truncated={span.name.truncated ? "1" : undefined}
+              x={span.cx}
+              y={spanTop + Math.round(SPAN.line / 2 + span.name.fontSize * 0.385)}
+              textAnchor="middle"
+              fontSize={span.name.fontSize}
+              fontWeight="700"
+              fill={liftedInk(ctx.colors.accent, ground, span.name.fontSize)}
+              fontFamily={ctx.fonts.body}
+              dominantBaseline="alphabetic"
+            >
+              {span.name.text}
+            </text>
+          </g>
+        ))}
         {component.items.map((item, i) => {
           const rowY = box.y + i * (rowH + ROW_GAP)
           const cy = rowY + rowH / 2
