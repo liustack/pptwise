@@ -18,7 +18,7 @@ const COVER: Slide = {
 
 const WAVE2 = [
   { id: "thesis", face: "thesis-plate-cover" },
-  { id: "rally", face: "poster-center" },
+  { id: "rally", face: "marquee-cover" },
   { id: "ledger", face: "stat-cover" },
   { id: "terminal", face: "console-cover" },
   { id: "luxe", face: "invitation-plate-cover" },

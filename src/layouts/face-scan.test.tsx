@@ -32,11 +32,12 @@ import { ENDING_LAYOUTS } from "./index-ending"
  * to a rendering that can draw it.
  *
  * Only the generic sample provokes this, and only here: `quote-stage` wants
- * a quote and the generic content page carries bullets and prose. Stepping
+ * a quote, `marquee-statement` one row of touchpoints or one paragraph under
+ * its claim, and the generic content page carries bullets and prose. Stepping
  * aside is the correct answer to that page, so it is asserted rather than
  * tolerated — every other face must hold its own composition.
  */
-const STEPS_ASIDE = new Set(["quote-stage"])
+const STEPS_ASIDE = new Set(["quote-stage", "marquee-statement"])
 
 const ASIDE_MARKER = "data-face-stepped-aside"
 const DROP_MARKER = "data-dropped"

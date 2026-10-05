@@ -93,6 +93,21 @@ import { locksComposition } from "./locks"
 import { registerComposition } from "./register"
 import { runwayComposition } from "./runway"
 import { usesComposition } from "./uses"
+import { crestComposition } from "./crest"
+import { branchComposition } from "./branch"
+import { seasonComposition } from "./season"
+import { makeupComposition } from "./makeup"
+import { originsComposition } from "./origins"
+import { routeComposition } from "./route"
+import { spotsComposition } from "./spots"
+import { wallComposition } from "./wall"
+import { loopComposition } from "./loop"
+import { stubsComposition } from "./stubs"
+import { fallbacksComposition } from "./fallbacks"
+import { timetableComposition } from "./timetable"
+import { scoreboardComposition } from "./scoreboard"
+import { allotmentComposition } from "./allotment"
+import { asksComposition } from "./asks"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -199,6 +214,21 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   register: registerComposition,
   runway: runwayComposition,
   uses: usesComposition,
+  crest: crestComposition,
+  branch: branchComposition,
+  season: seasonComposition,
+  makeup: makeupComposition,
+  origins: originsComposition,
+  route: routeComposition,
+  spots: spotsComposition,
+  wall: wallComposition,
+  loop: loopComposition,
+  stubs: stubsComposition,
+  fallbacks: fallbacksComposition,
+  timetable: timetableComposition,
+  scoreboard: scoreboardComposition,
+  allotment: allotmentComposition,
+  asks: asksComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -270,7 +300,7 @@ function asksForTimelineDetail(components: readonly CompositionProps["components
  * line or note leaves them off. The ordinary callout sets the title bold over
  * its text and the tag under it.
  */
-const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods", "funnel"])
+const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods", "funnel", "crest", "branch"])
 
 function asksForCalloutDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "callout" && (component.title !== undefined || component.tag !== undefined))
@@ -330,7 +360,7 @@ function asksForChartRange(components: readonly CompositionProps["components"][n
  * these alone; the ordinary share bar sets it where its computed total
  * would stand.
  */
-const CHART_RUN_LABEL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["breakdown", "segments"])
+const CHART_RUN_LABEL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["breakdown", "segments", "makeup", "allotment"])
 
 function asksForChartRunLabel(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.emphasis_label !== undefined)
@@ -368,7 +398,7 @@ function asksForRoadmapPhases(components: readonly CompositionProps["components"
  * is offered to these alone; the ordinary table outlines the marked column
  * and sets the icon before each of its cells.
  */
-const TABLE_COLUMN_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["rivals"])
+const TABLE_COLUMN_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["rivals", "loop"])
 
 function asksForTableColumnMarks(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "data_table" && component.columns.some((col) => col.emphasis !== undefined || col.icon !== undefined))
@@ -381,7 +411,7 @@ function asksForTableColumnMarks(components: readonly CompositionProps["componen
  * alone; the ordinary gantt runs its axis over the range, sets the icon
  * before the row's label and the period under it.
  */
-const GANTT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["bets"])
+const GANTT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["bets", "timetable"])
 
 function asksForGanttDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "gantt" && (component.range !== undefined || component.items.some((item) => item.icon !== undefined || item.period !== undefined)))
@@ -393,7 +423,7 @@ function asksForGanttDetail(components: readonly CompositionProps["components"][
  * is offered to these alone; the ordinary gantt tints each span and names it
  * in a line under its axis.
  */
-const GANTT_BAND_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const GANTT_BAND_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["timetable"])
 
 function asksForGanttBands(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "gantt" && component.bands !== undefined)
@@ -404,7 +434,7 @@ function asksForGanttBands(components: readonly CompositionProps["components"][n
  * each choice beside every question. A page with one is offered to these
  * alone; the face declares the ballot dropped when none takes the page.
  */
-const BALLOT_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["quiz"])
+const BALLOT_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["quiz", "asks"])
 
 function asksForRoadmapBasis(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "roadmap" && component.items.some((item) => (item.rows ?? []).some((row) => row.basis !== undefined)))

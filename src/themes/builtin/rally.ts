@@ -41,10 +41,22 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 色块底，不是画在 bg 上的字。画在 primary 上的字由 `readableOn`/
  * `accessibleInk` 自适应取墨（白字 16.73:1）。
  *
- * 装饰见 `../../motifs/motif-rally-motif.tsx`（右上一簇纸屑，最多三枚
- * 斜方片，opacity 0.5，避字。封面口号左齐走 poster-center 的 textAnchor start）。
+ * 装饰见 `../../motifs/motif-rally-motif.tsx`（v8：内容页右上一小撮七枚四色纸屑，
+ * 按页号撒，避字；右下「N / M」页脚。v7 的三枚斜方片随 2026-10 定稿退役）。
  *
  * **菜单分派（S1-B）**：海报腔：data 交给居中的 stacked-poster（一张图当主角的海报路径），photo 用顶部满幅的 image-top，营销讲自己的话，quote 不上。
+ *
+ * **2026-10 活动策划案定稿**（设计源 `design/rounds/2026-10-06-rally/`，规则见
+ * `docs/design-rally.md`）：每一页是一份活动策划案的一个分区。左上一张票根
+ * （洋红票面写分区编号，侧幕紫票身写分区名，页面的 `kicker`），右上一小撮纸屑
+ * （四色，按页号撒，motif 画），右下「N / M」。封面 `marquee-cover`（满版人海
+ * 照片、下暗渐变、72px 标题、洋红副题、带图标的描边胶囊），分区页
+ * `marquee-chapter`，收尾 `marquee-ending`（满版纸屑舞台、下一步三点、作者
+ * 写的洋红钮）。一句话方案 `marquee-statement`（没有标题栏，引子加 72px 两行
+ * 大字，上下两带纸屑）。其余内容页全走 `marquee-sheet`：34px 特粗标题，正文交给
+ * marquee 设定里的构图。色值不动：洋红是主音，洋红上的字一律深墨（primary
+ * 压暗），图表和纸屑同用四色。旧的 poster-center / act-chapter / pill-cta-ending /
+ * stacked-poster 等脸不再挂在 rally 上，quote 照旧不上。
  */
 export const CAMPAIGN_TOKENS: StyleTokens = {
   id: "rally",
@@ -94,21 +106,21 @@ export const CAMPAIGN_THEME = {
   },
   style: CAMPAIGN_TOKENS,
   menu: {
-    cover: { face: "poster-center" },
-    chapter: { face: "act-chapter" },
+    cover: { face: "marquee-cover" },
+    chapter: { face: "marquee-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "stacked-poster" },
-      photo: { face: "image-top" },
-      statement: { face: "statement" },
-      fact: { face: "stat-hero" },
-      evidence: { face: "one-evidence" },
-      hierarchy: { face: "asymmetric-triptych" },
+      points: { face: "marquee-sheet" },
+      list: { face: "marquee-sheet" },
+      comparison: { face: "marquee-sheet" },
+      process: { face: "marquee-sheet" },
+      data: { face: "marquee-sheet" },
+      photo: { face: "marquee-sheet" },
+      statement: { face: "marquee-statement" },
+      fact: { face: "marquee-sheet" },
+      evidence: { face: "marquee-sheet" },
+      hierarchy: { face: "marquee-sheet" },
     },
-    ending: { face: "pill-cta-ending" },
+    ending: { face: "marquee-ending" },
   },
   motif: { id: "rally-motif" },
 } satisfies BuiltinThemeDeclaration;

@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+rally is redrawn as a campaign proposal staged as a show, one magenta lit on one thing a page and confetti thrown at the top right. Its cover lays the photograph under a darkening from the foot, a ticket stub with what the deck is and who brings it when, the title huge over the campaign's line in magenta and its facts as pills; its chapter page numbers the section on the same stub over a burst of confetti; its one-line plan sets the claim huge in two lines with the author's marked words in magenta, over a row of touchpoints; its ending recaps the next steps on a dotted line and sets a button of magenta with the author's own words. Every content page names its section on a ticket stub numbered in the order the sections first appear (`kicker`), sets its claim bold across the measure and hands its body to fifteen new compositions in a marquee setting. The deck's office and label stand at the bottom left and 「N / M」 at the bottom right in rally's own folio.

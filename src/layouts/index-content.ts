@@ -33,6 +33,8 @@ import { YearbookSheetContent } from "./content-yearbook-sheet"
 import { LessonSheetContent } from "./content-lesson-sheet"
 import { PitchSheetContent } from "./content-pitch-sheet"
 import { PitchPhotoContent } from "./content-pitch-photo"
+import { MarqueeSheetContent } from "./content-marquee-sheet"
+import { MarqueeStatementContent } from "./content-marquee-statement"
 import { SealFigureContent } from "./content-seal-figure"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { CrayonboxPointContent } from "./content-crayonbox-point"
@@ -66,7 +68,9 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // redesign adds dossier-sheet: 28 pin-only, 37 in all. The almanac sample
 // redesign adds yearbook-sheet: 29 pin-only, 38 in all. The homeroom sample
 // redesign adds lesson-sheet: 30 pin-only, 39 in all. The ember sample
-// redesign adds pitch-sheet and pitch-photo: 32 pin-only, 41 in all.
+// redesign adds pitch-sheet and pitch-photo: 32 pin-only, 41 in all. The
+// rally sample redesign adds marquee-sheet and marquee-statement: 34
+// pin-only, 43 in all.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
   "two-column": TwoColumnContent,
@@ -109,4 +113,6 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "lesson-sheet": LessonSheetContent,
   "pitch-sheet": PitchSheetContent,
   "pitch-photo": PitchPhotoContent,
+  "marquee-sheet": MarqueeSheetContent,
+  "marquee-statement": MarqueeStatementContent,
 }

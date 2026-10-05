@@ -443,6 +443,23 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "ember", kind: "list", composition: "register" },
   { theme: "ember", kind: "process", composition: "runway" },
   { theme: "ember", kind: "data", composition: "uses" },
+  // rally's marquee sheet sets the shapes as a campaign proposal staged as a
+  // show, and draws the fifteen its own board added.
+  { theme: "rally", kind: "fact", composition: "crest" },
+  { theme: "rally", kind: "comparison", composition: "branch" },
+  { theme: "rally", kind: "process", composition: "season" },
+  { theme: "rally", kind: "data", composition: "makeup" },
+  { theme: "rally", kind: "hierarchy", composition: "origins" },
+  { theme: "rally", kind: "process", composition: "route" },
+  { theme: "rally", kind: "photo", composition: "spots" },
+  { theme: "rally", kind: "comparison", composition: "wall" },
+  { theme: "rally", kind: "process", composition: "loop" },
+  { theme: "rally", kind: "list", composition: "stubs" },
+  { theme: "rally", kind: "comparison", composition: "fallbacks" },
+  { theme: "rally", kind: "process", composition: "timetable" },
+  { theme: "rally", kind: "list", composition: "scoreboard" },
+  { theme: "rally", kind: "hierarchy", composition: "allotment" },
+  { theme: "rally", kind: "points", composition: "asks" },
 ]
 
 export function buildMatrix(
