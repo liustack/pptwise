@@ -125,7 +125,7 @@ describe("kindJsonSchema", () => {
     expect(doc.kind).toBe("fact")
     expect(doc.components).toEqual(componentsForKind("fact", { theme: "brief" }).components)
     expect(doc.oneOf).toEqual((doc.components as string[]).map((type) => ({ $ref: `#/$defs/${type}` })))
-    expect(Object.keys(doc.$defs as object).sort()).toEqual(["IconName", "kpi_cards", "paragraph"])
+    expect(Object.keys(doc.$defs as object).sort()).toEqual(["IconName", "Tag", "kpi_cards", "paragraph"])
   })
 
   it("prints a legal refusal instead of an empty oneOf when the face takes no component", () => {

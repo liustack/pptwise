@@ -3,12 +3,13 @@
  *
  * `z.toJSONSchema` inlines every shared fragment by default. The IR reuses
  * the 62-member component union on all four page types and the 1,758-name
- * icon enum on five fields, so the naive output ran to 2.6 MB. Three
+ * icon enum on five fields, so the naive output ran to 2.6 MB. Four
  * fragments carry a stable `id` in zod's registry instead, which makes the
  * emitter hoist each into `$defs` once and point at it by name: every
  * component under its own type name, the union as `Component`, the icon
- * enum as `IconName`. Named refs are what let `componentJsonSchema` cut one
- * component out with exactly the `$defs` it needs.
+ * enum as `IconName`, and the tag that rows, figures, cards, charts and
+ * pages share as `Tag`. Named refs are what let `componentJsonSchema` cut
+ * one component out with exactly the `$defs` it needs.
  *
  * The ids are attached to the existing schema instances through the same
  * global registry `.describe()` writes to, so validation, error hints, and
@@ -16,11 +17,12 @@
  */
 import { z } from "zod"
 import { PptwiseError } from "../errors"
-import { IconNameSchema } from "./components/shared"
+import { IconNameSchema, TagSchema } from "./components/shared"
 import { COMPONENT_TYPES, ComponentSchema, PptxIRSchema } from "./index"
 
 export const COMPONENT_UNION_DEF_ID = "Component"
 export const ICON_NAME_DEF_ID = "IconName"
+export const TAG_DEF_ID = "Tag"
 
 /** What the model view says where the closed enum used to be. */
 export const ICON_NAME_MODEL_DESCRIPTION =
@@ -37,6 +39,7 @@ function registerDefIds(): void {
     z.globalRegistry.add(schema, { ...(z.globalRegistry.get(schema) ?? {}), id })
   }
   withId(IconNameSchema, ICON_NAME_DEF_ID)
+  withId(TagSchema, TAG_DEF_ID)
   withId(ComponentSchema, COMPONENT_UNION_DEF_ID)
   for (const option of ComponentSchema.options) withId(option, option.shape.type.value)
   idsRegistered = true

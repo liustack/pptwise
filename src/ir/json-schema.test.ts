@@ -4,6 +4,7 @@ import { COMPONENT_TYPES } from "@/ir"
 import {
   COMPONENT_UNION_DEF_ID,
   ICON_NAME_DEF_ID,
+  TAG_DEF_ID,
   componentJsonSchema,
   irJsonSchema,
   type JsonSchemaDocument,
@@ -18,6 +19,7 @@ import {
 const EXPECTED_DEFS = [
   "Component",
   "IconName",
+  "Tag",
   "architecture",
   "blockquote",
   "bmc",
@@ -108,10 +110,18 @@ function expectRefsResolve(doc: JsonSchemaDocument): void {
 }
 
 describe("irJsonSchema", () => {
-  it("hoists every component, the component union, and the icon enum into named $defs", () => {
+  it("hoists every component, the component union, the icon enum and the shared tag into named $defs", () => {
     const schema = irJsonSchema()
     expect(Object.keys(defsOf(schema)).sort()).toEqual(EXPECTED_DEFS)
-    expect(EXPECTED_DEFS).toEqual([COMPONENT_UNION_DEF_ID, ICON_NAME_DEF_ID, ...[...COMPONENT_TYPES].sort()])
+    expect(EXPECTED_DEFS).toEqual([COMPONENT_UNION_DEF_ID, ICON_NAME_DEF_ID, TAG_DEF_ID, ...[...COMPONENT_TYPES].sort()])
+  })
+
+  it("keeps each use site's own words about its tag beside the shared definition", () => {
+    const kpi = componentJsonSchema("kpi_cards") as unknown as { properties: { items: { items: { properties: { tag: { $ref: string; description: string } } } } }; $defs: Record<string, unknown> }
+    const tag = kpi.properties.items.items.properties.tag
+    expect(tag.$ref).toBe(`#/$defs/${TAG_DEF_ID}`)
+    expect(tag.description).toMatch(/^What the figure is/)
+    expect(kpi.$defs).toHaveProperty(TAG_DEF_ID)
   })
 
   it("stays under the context budget in both print modes", () => {
