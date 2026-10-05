@@ -436,6 +436,14 @@ export const schema = z
         "Up to two value ranges marked across the plot behind the data, such as a target range a line should stay in. Each runs from `from` to `to` on the value axis, which grows to hold it, and may carry a short `label`. " +
           "line, area and upright bar charts only. Write a range this way rather than as two flat series at its edges.",
       ),
+    /** The line a share bar states for its marked run. See the describe below. */
+    emphasis_label: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'One line a share bar states for its marked parts, in the author\'s words, such as what they add up to: "第 73 章制品 €93.5 亿，占 69.5%" or "Downstream goods €9.35bn, 69.5%". It replaces the total the bar would compute. A share bar (stacked, direction "horizontal") with at least one marked series only.',
+      ),
     /** One value drawn as a line across the plot. See the describe below. */
     reference: z
       .object({
@@ -509,6 +517,21 @@ export const schema = z
           })
         }),
       )
+    }
+    if (c.emphasis_label !== undefined) {
+      if (!isShareBar(c)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["emphasis_label"],
+          message: `emphasis_label is the line a share bar states for its marked parts, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart is not a share bar. Use chart_type "stacked" with direction "horizontal", or say it in the page's text.`,
+        })
+      } else if (!c.series.some((s) => s.emphasis === true)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["emphasis_label"],
+          message: `emphasis_label names the marked parts, and no series has emphasis: true. Mark the parts the line speaks for, or remove emphasis_label.`,
+        })
+      }
     }
     if (c.reference !== undefined && c.chart_type !== "bar") {
       ctx.addIssue({

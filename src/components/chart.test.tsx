@@ -2199,3 +2199,33 @@ describe("a bar's note", () => {
     expect(chartSchema.safeParse({ ...routes, chart_type: "line", direction: undefined }).success).toBe(false)
   })
 })
+
+describe("a share bar's own line for its marked run", () => {
+  const exposure = {
+    type: "chart" as const,
+    chart_type: "stacked" as const,
+    direction: "horizontal" as const,
+    axes: { y_unit: "亿欧元" },
+    emphasis_label: "第 73 章制品 €93.5 亿，占 69.5%",
+    series: [
+      { name: "第 72 章钢材", data: [{ x: "2025 年欧盟自中国进口的 CBAM 钢铁", y: 41.0 }] },
+      { name: "7326 其他钢制品", emphasis: true, data: [{ x: "2025 年欧盟自中国进口的 CBAM 钢铁", y: 34.0 }] },
+      { name: "7308 钢结构件", emphasis: true, data: [{ x: "2025 年欧盟自中国进口的 CBAM 钢铁", y: 24.1 }] },
+      { name: "7318 螺钉螺栓", emphasis: true, data: [{ x: "2025 年欧盟自中国进口的 CBAM 钢铁", y: 17.0 }] },
+      { name: "第 73 章其余", emphasis: true, data: [{ x: "2025 年欧盟自中国进口的 CBAM 钢铁", y: 18.4 }] },
+    ],
+  }
+
+  it("stands where the computed total would, in the author's words", () => {
+    const { container } = svg(chart.render(exposure, { x: 0, y: 0, w: 1152, h: 220 }, ctx))
+    const totals = Array.from(container.querySelectorAll("[data-share-total]")).map((t) => t.textContent)
+    expect(totals[0]).toBe("第 73 章制品 €93.5 亿，占 69.5%")
+    expect(totals.slice(1).every((t) => !(t ?? "").startsWith("7326"))).toBe(true)
+  })
+
+  it("is refused on anything but a share bar with a marked run", () => {
+    expect(chartSchema.safeParse(exposure).success).toBe(true)
+    expect(chartSchema.safeParse({ ...exposure, series: exposure.series.map(({ emphasis: _e, ...s }) => s) }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...exposure, chart_type: "bar" }).success).toBe(false)
+  })
+})

@@ -104,3 +104,23 @@ describe("a bar's note through compose", () => {
     expect(compose({ components: [noted] as never, ctx, rect: NOTICE_PLOT, setting: "notice" })).toBeNull()
   })
 })
+
+describe("a share bar's own line for its run through compose", () => {
+  it("is offered to no hand-set plot that leaves it off, so the ordinary share bar states it", async () => {
+    const { compose } = await import(".")
+    const { testCtx } = await import("./__fixtures__/kit")
+    const { ctx } = testCtx("swiss")
+    const bar = {
+      type: "chart",
+      chart_type: "stacked",
+      direction: "horizontal",
+      axes: { y_unit: "亿千瓦" },
+      emphasis_label: "清洁电力合计过半",
+      series: [
+        { name: "太阳能", emphasis: true, data: [{ x: "装机", y: 10 }] },
+        { name: "火电", data: [{ x: "装机", y: 14 }] },
+      ],
+    }
+    expect(compose({ components: [bar] as never, ctx, rect: NOTICE_PLOT, setting: "grid" })).toBeNull()
+  })
+})

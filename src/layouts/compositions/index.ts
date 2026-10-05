@@ -225,6 +225,18 @@ function asksForChartNote(components: readonly CompositionProps["components"][nu
   return components.some((component) => component.type === "chart" && component.series.some((s) => s.data.some((d) => d.note !== undefined)))
 }
 
+/**
+ * The compositions that state a share bar's `emphasis_label`, the author's
+ * own line for its marked run. A page whose chart carries one is offered to
+ * these alone; the ordinary share bar sets it where its computed total
+ * would stand.
+ */
+const CHART_RUN_LABEL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForChartRunLabel(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.emphasis_label !== undefined)
+}
+
 function asksForChartTag(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.tag !== undefined)
 }
@@ -244,6 +256,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const footed = asksForWaterfallNote(props.components)
   const referenced = asksForChartReference(props.components)
   const annotated = asksForChartNote(props.components)
+  const labelled = asksForChartRunLabel(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -251,6 +264,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (footed && !WATERFALL_NOTE_COMPOSITIONS.has(id)) continue
     if (referenced && !CHART_REFERENCE_COMPOSITIONS.has(id)) continue
     if (annotated && !CHART_NOTE_COMPOSITIONS.has(id)) continue
+    if (labelled && !CHART_RUN_LABEL_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     const drawn = COMPOSITIONS[id]({ ...props, handOn })
