@@ -550,6 +550,11 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   // homeroom's lesson sheet: the board's recap page, four pairs of words
   // chalked on the board with a line each, one underlined.
   if (def.id === "lesson-sheet") return COMPOSITION_BODIES.blackboard(lex).components
+  // ember's pitch sheet: the board's ask page, the ask beside its uses as a
+  // bar, over what it is measured against. Its photo page: one figure lit
+  // beside the photograph.
+  if (def.id === "pitch-sheet") return COMPOSITION_BODIES.uses(lex).components
+  if (def.id === "pitch-photo") return COMPOSITION_BODIES.spotlight(lex).components
   // memo's sheet: the board's decision page, four clauses numbered in the
   // deck's numerals with a sentence each, the last the one the page lands on.
   if (def.id === "memo-sheet") {
@@ -812,7 +817,7 @@ export function layoutPage(
                   : lex.deckTitle,
           subheading: lex.deckSubtitle,
           components:
-            def.id === "gauge-verdict"
+            def.id === "gauge-verdict" || def.id === "pitch-cover"
               ? [{ type: "bullets", items: lex.bullets.slice(0, 3) }]
               : [],
         }
@@ -825,7 +830,10 @@ export function layoutPage(
             components:
               def.id === "lesson-chapter"
                 ? [{ type: "row_cards", items: [0, 1, 2].map((i) => ({ icon: (["lightbulb", "triangle-alert", "gauge"] as const)[i]!, title: lex.bullets[i]! })) }]
-                : [],
+                : // ember's act of a pitch says what the act covers, a line each with an icon.
+                  def.id === "pitch-chapter"
+                  ? [{ type: "row_cards", items: [0, 1, 2, 3].map((i) => ({ icon: (["package", "trending-up", "map-pin", "users"] as const)[i]!, title: lex.bullets[i]! })) }]
+                  : [],
           }
         : slideType === "ending"
           ? {
@@ -840,7 +848,13 @@ export function layoutPage(
                         { type: "numbered_cards", items: [0, 1, 2].map((i) => ({ title: lex.phrases[i]!, text: lex.labels[i]! })) },
                         { type: "callout", variant: "tip", title: lex.kickers[5]!, text: lex.sentences[11]! },
                       ]
-                    : [],
+                    : // ember's close: the steps the round pays for and the button's words.
+                      def.id === "pitch-ending"
+                      ? [
+                          { type: "timeline", milestones: [0, 1, 2].map((i) => ({ date: lex.periods[i]!, title: lex.phrases[i]!, icon: (["file-check", "hospital", "coins"] as const)[i]! })) },
+                          { type: "paragraph", text: lex.kickers[5]! },
+                        ]
+                      : [],
             }
           : {
               type: "content",
@@ -2574,6 +2588,204 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
       },
       { type: "callout", variant: "tip", text: lex.verdicts.positive },
     ],
+  }),
+  // ember's pitch sheet sets the shapes a seed-round pitch makes its case
+  // in: a part set against its whole, why now as steps, a funnel, rivals, the
+  // wedge as a sum, bets with their windows, two groups that cannot be
+  // compared, gates, risks, a runway with its gate and the ask with its uses.
+  expanse: (lex) => ({
+    heading: lex.headings[3]!,
+    components: [
+      {
+        type: "kpi_cards",
+        items: [
+          { value: `${lex.levels[0]!.value} ${lex.levels[0]!.unit}`, label: lex.levels[0]!.title },
+          { value: `**${lex.levels[3]!.value} ${lex.levels[3]!.unit}**`, label: lex.levels[3]!.title },
+          { value: "12%", label: lex.bullets[3]! },
+        ],
+      },
+      { type: "paragraph", text: lex.sentences[5]! },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  stairs: (lex) => ({
+    heading: lex.headings[2]!,
+    components: [
+      {
+        type: "timeline",
+        milestones: [0, 1, 2].map((i) => ({
+          date: lex.periods[i]!,
+          icon: (["file-check", "route", "trending-up"] as const)[i]!,
+          title: lex.phrases[i]!,
+          desc: `${lex.sentences[i]!} ${lex.bullets[i]!}`,
+          ...(i === 2 ? { highlight: true } : {}),
+        })),
+      },
+      { type: "callout", variant: "info", text: lex.sentences[6]! },
+    ],
+    footnote: lex.sources[1]!.label,
+  }),
+  funnel: (lex) => ({
+    heading: lex.headings[4]!,
+    components: [
+      { type: "chart", chart_type: "funnel", axes: { y_unit: lex.levels[0]!.unit }, series: [{ name: lex.decision, data: lex.levels.map((level) => ({ x: level.title, y: Number(level.value) })) }] },
+      { type: "kpi_cards", items: [{ value: `${lex.metrics[1]!.value} ${lex.metrics[1]!.unit}`, label: lex.phrases[11]!, note: lex.sentences[3]! }] },
+      { type: "callout", variant: "info", title: lex.kickers[2]!, text: lex.sentences[4]! },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  rivals: (lex) => ({
+    heading: lex.headings[8]!,
+    components: [
+      {
+        type: "data_table",
+        columns: [
+          { key: "who", label: lex.segmentAxis },
+          { key: "how", label: lex.kickers[1]! },
+          { key: "what", label: lex.kickers[2]! },
+          { key: "when", label: lex.periodAxis },
+          { key: "open", label: lex.phrases[1]!, emphasis: true, icon: "circle-help" },
+        ],
+        rows: [0, 1, 2].map((i) => ({
+          icon: (["package", "truck", "store"] as const)[i]!,
+          cells: { who: lex.labels[i]!, how: lex.phrases[i + 3]!, what: lex.bullets[i]!, when: lex.periods[i]!, open: lex.labels[i + 12]! },
+        })),
+      },
+      { type: "callout", variant: "info", text: lex.verdicts.neutral },
+    ],
+    footnote: lex.sources[1]!.label,
+  }),
+  equation: (lex) => ({
+    heading: lex.headings[6]!,
+    components: [
+      {
+        type: "concept_equation",
+        operands: [
+          { icon: "route", label: lex.phrases[0]!, value: `${lex.metrics[0]!.value}${lex.metrics[0]!.unit}`, note: lex.bullets[0]! },
+          { icon: "map-pin", label: lex.phrases[5]!, value: `${lex.metrics[1]!.value} ${lex.metrics[1]!.unit}`, note: lex.bullets[2]! },
+        ],
+        result: { label: lex.phrases[6]!, value: `${lex.labels[0]!} + ${lex.labels[1]!}`, note: lex.bullets[3]! },
+        excluded: { icon: "ban", label: lex.kickers[4]!, value: lex.labels[2]!, note: lex.verdicts.neutral },
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  spotlight: (lex) => ({
+    heading: lex.headings[7]!,
+    components: [
+      { type: "image", asset_id: PHOTO_ASSETS[0], fit: "cover", caption: lex.labels[7]! },
+      {
+        type: "kpi_cards",
+        items: [0, 1, 2].map((i) => ({ value: `${i === 0 ? "**" : ""}${lex.metrics[i]!.value} ${lex.metrics[i]!.unit}${i === 0 ? "**" : ""}`, label: lex.metrics[i]!.label })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  bets: (lex) => ({
+    heading: lex.headings[11]!,
+    components: [
+      {
+        type: "gantt",
+        range: { from: 0, to: 18 },
+        axis_labels: [lex.periods[0]!, lex.periods[4]!],
+        items: [0, 1, 2].map((i) => ({
+          label: lex.phrases[i]!,
+          icon: (["coins", "trending-up", "shield-check"] as const)[i]!,
+          start: [12, 6, 0][i]!,
+          end: [18, 12, 6][i]!,
+          period: lex.periods[3 - i]!,
+          text: lex.sentences[i]!,
+          ...(i === 0 ? { emphasis: true } : {}),
+        })),
+      },
+    ],
+    footnote: lex.sources[1]!.label,
+  }),
+  divide: (lex) => ({
+    heading: lex.headings[7]!,
+    components: [
+      {
+        type: "kpi_cards",
+        items: [0, 1, 2, 3].map((i) => ({ value: lex.metrics[i]!.value, unit: lex.metrics[i]!.unit, label: lex.metrics[i]!.label, tag: { text: lex.labels[i < 2 ? 10 : 11]! } })),
+      },
+      { type: "verdict_banner", text: lex.verdicts.warning, tone: "neutral", icon: "target" },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  locks: (lex) => ({
+    heading: lex.headings[5]!,
+    components: [
+      {
+        type: "chevron_process",
+        items: [0, 1, 2, 3, 4].map((i) => ({
+          title: lex.stages[i]!,
+          text: lex.bullets[i]!,
+          icon: (["fingerprint-pattern", "id-card", "umbrella", "file-check", "badge-check"] as const)[i]!,
+        })),
+      },
+      {
+        type: "kpi_cards",
+        items: [
+          { value: `${lex.metrics[2]!.value}${lex.metrics[2]!.unit}`, label: lex.phrases[8]!, note: lex.sentences[6]! },
+          { value: `${lex.metrics[5]!.value} ${lex.metrics[5]!.unit}`, label: lex.phrases[10]!, note: lex.sentences[11]! },
+        ],
+      },
+    ],
+    footnote: lex.sources[1]!.label,
+  }),
+  register: (lex) => ({
+    heading: lex.headings[0]!,
+    components: [
+      {
+        type: "data_table",
+        columns: [
+          { key: "risk", label: lex.kickers[0]! },
+          { key: "case", label: lex.kickers[2]! },
+          { key: "plan", label: lex.kickers[1]! },
+          { key: "when", label: lex.periodAxis },
+        ],
+        rows: [0, 1, 2, 3].map((i) => ({
+          icon: (["construction", "triangle-alert", "zap", "umbrella"] as const)[i]!,
+          cells: { risk: lex.phrases[i]!, case: lex.sentences[i]!, plan: lex.bullets[i]!, when: lex.periods[i]! },
+          ...(i === 0 ? { emphasis: "highlight" as const } : {}),
+        })),
+      },
+    ],
+    footnote: lex.sources[1]!.label,
+  }),
+  runway: (lex) => ({
+    heading: lex.headings[11]!,
+    components: [
+      {
+        type: "roadmap",
+        duration_unit: lex.id === "zh" ? "个月" : "months",
+        items: [0, 1, 2].map((i) => ({
+          title: lex.phrases[i + 6]!,
+          period: lex.periods[i]!,
+          icon: (["file-check", "hospital", "coins"] as const)[i]!,
+          duration: 6,
+          points: [lex.bullets[i]!, lex.labels[i + 4]!],
+          ...(i === 0 ? { checkpoint: lex.kickers[2]!, emphasis: true } : {}),
+        })),
+      },
+      { type: "callout", variant: "warn", icon: "flag", text: lex.verdicts.warning },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  uses: (lex) => ({
+    heading: lex.headings[10]!,
+    components: [
+      { type: "kpi_cards", items: [{ value: lex.bullets[5]!, label: lex.kickers[5]!, note: lex.sentences[10]! }] },
+      {
+        type: "chart",
+        chart_type: "stacked",
+        direction: "horizontal",
+        axes: { y_unit: "%" },
+        series: [0, 1, 2, 3].map((i) => ({ name: lex.phrases[i]!, data: [{ x: lex.metrics[4]!.label, y: [35, 30, 20, 15][i]! }] })),
+      },
+      { type: "callout", variant: "info", icon: "hand-coins", text: lex.verdicts.neutral },
+    ],
+    footnote: lex.sources[0]!.label,
   }),
   phases: (lex) => {
     const colon = colonOf(lex)

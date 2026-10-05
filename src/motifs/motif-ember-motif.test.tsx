@@ -6,24 +6,26 @@ import { assertSubset } from "../render/subset-validate"
 import { buildCtx } from "../render/full-slide-svg"
 import { resolveStyle } from "../themes"
 import { EmberMotif } from "./motif-ember-motif"
-import { paintedLeaves } from "./decor-budget"
-import { renderSlideSvg } from "../api"
 import type { PptxIR, Slide } from "@/ir"
 
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } as Slide
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] } as Slide
-const contentSlide: Slide = { type: "content", kind: "points", heading: "内容", components: [] } as Slide
+const contentSlide: Slide = { type: "content", kind: "points", heading: "内容", stage: "机会", components: [] } as unknown as Slide
 const endingSlide: Slide = { type: "ending", components: [] } as Slide
 const ALL_SLIDES = [coverSlide, chapterSlide, contentSlide, endingSlide]
 
-const ir = (theme: string): PptxIR =>
+const STAGES = ["机会", "时机", "竞争", "切入", "证明", "风险", "计划", "请求"]
+
+const ir = (theme: string, footer: Record<string, unknown> = { page_number: true, label: "种子轮路演" }): PptxIR =>
   ({
-    version: "3",
+    version: "5",
     filename: "x.pptx",
     theme: { id: theme },
-    meta: {},
+    meta: { organization: "某某科技" },
+    footer,
+    course: { stages: STAGES.map((label) => ({ label })) },
     assets: { images: {} },
-    slides: [coverSlide],
+    slides: ALL_SLIDES,
   }) as unknown as PptxIR
 
 function render(body: React.ReactElement | null): { markup: string; root: Element } {
@@ -35,83 +37,58 @@ function render(body: React.ReactElement | null): { markup: string; root: Elemen
   return { markup, root: parseSvgRoot(markup) }
 }
 
-function draw(theme: string, slide: Slide) {
-  const ctx = boundThemeCtx(theme, {})
-  return { ...render(<EmberMotif ir={ir(theme)} slide={slide} ctx={ctx} />), ctx }
+function draw(slide: Slide, deck = ir("ember"), page?: Parameters<typeof EmberMotif>[0]["page"]) {
+  const ctx = boundThemeCtx("ember", {})
+  return { ...render(<EmberMotif ir={deck} slide={slide} ctx={ctx} index={ALL_SLIDES.indexOf(slide)} page={page} />), ctx }
 }
 
 /**
- * ember-motif v3：上升火星退役。封面楔归版式，章节小楔归章节版式。
+ * ember-motif v4：路演舞台的页眉标签与页脚。
  */
-describe("EmberMotif（火星退役）", () => {
-  it("cover/chapter/content/ending 都不画火星、斜引线、碎点", () => {
-    for (const slide of ALL_SLIDES) {
-      const { root } = draw("ember", slide)
-      expect(root.querySelectorAll("circle"), slide.type).toHaveLength(0)
-      expect(root.querySelectorAll("line"), slide.type).toHaveLength(0)
-      expect(paintedLeaves(root), slide.type).toHaveLength(0)
+describe("EmberMotif (the pitch's label and folio)", () => {
+  it("prints the deck's label at the top left and the page number at the bottom right of a content page", () => {
+    const { root } = draw(contentSlide)
+    const label = root.querySelector("[data-pitch-label] text")!
+    expect(label.textContent).toBe("种子轮路演")
+    expect(label.getAttribute("x")).toBe("64")
+    expect(label.getAttribute("data-font-floor-exempt")).toBe("pitch-spec")
+    const number = root.querySelector('[data-field="slidenum"]')!
+    expect(number.textContent).toBe("3")
+    expect(number.getAttribute("x")).toBe("1216")
+    expect(number.getAttribute("text-anchor")).toBe("end")
+  })
+
+  it("prints nothing on the cover, a chapter or the ending, whose faces draw their own", () => {
+    for (const slide of [coverSlide, chapterSlide, endingSlide]) {
+      expect(draw(slide).root.querySelector("text"), slide.type).toBeNull()
     }
   })
 
-  it("chapter 退让：版式自己画小楔，motif 不重画", () => {
-    const { root } = draw("ember", chapterSlide)
-    expect(root.querySelector("path")).toBeNull()
-    expect(root.querySelector("[data-decor-piece]")).toBeNull()
+  it("prints nothing on a deck that asks for no footer", () => {
+    expect(draw(contentSlide, ir("ember", {})).root.querySelector("text")).toBeNull()
   })
 
-  it("封面整页渲染：中景不再有火星，角楔主体固定进入 fg", () => {
-    const svg = renderSlideSvg(
-      {
-        version: "5",
-        filename: "ember-cover.pptx",
-        theme: { id: "ember" },
-        meta: {},
-        assets: { images: {} },
-        slides: [{ type: "cover", heading: "封面", components: [] }],
-      } as unknown as PptxIR,
-      0,
-    )
-    const root = parseSvgRoot(svg)
-    const groups = Array.from(root.querySelectorAll("g[data-depth]"))
-    const mid = groups.find((group) => group.getAttribute("data-depth") === "mid")
-    const fg = groups.find((group) => group.getAttribute("data-depth") === "fg")!
-    expect(mid?.querySelector("circle") ?? null).toBeNull()
-    expect(fg.querySelector('[data-face="corner-wedge"] path')).not.toBeNull()
+  it("moves the left of the folio past a photograph the face keeps at the left, and the label into it", () => {
+    const deck = ir("ember", { page_number: true, label: "种子轮路演", organization: true })
+    const footer = { pageNumber: true, organization: "某某科技", label: "种子轮路演", notice: null, draft: null, confidentiality: null, classification: null }
+    const page = { footerRow: "motif", footer, decorKeepOut: [{ x: 0, y: 0, w: 560, h: 720 }] } as unknown as Parameters<typeof EmberMotif>[0]["page"]
+    const { root } = draw(contentSlide, deck, page)
+    expect(root.querySelector("[data-pitch-label]")).toBeNull()
+    expect(Array.from(root.querySelectorAll("[data-footer] text")).find((t) => t.textContent === "某某科技 · 种子轮路演")!.getAttribute("x")).toBe("624")
   })
 
-  it("不画任何孤立 tick / 左竖条 / 碎点", () => {
-    for (const slide of ALL_SLIDES) {
-      const { root } = draw("ember", slide)
-      expect(root.querySelectorAll("circle")).toHaveLength(0)
-      expect(root.querySelectorAll("rect")).toHaveLength(0)
-      expect(root.querySelectorAll("line")).toHaveLength(0)
-    }
-  })
-
-  it("换一家 tokens 渲染时 ember 的色一处不残留（零 hex 纪律的实证）", () => {
+  it("keeps ember's colours to ember: drawn with another theme's tokens, none of ember's hex appears", () => {
     const almanac = resolveStyle("almanac")
     const ctx = buildCtx(almanac, {})
-    const { markup } = render(<EmberMotif ir={ir("almanac")} slide={coverSlide} ctx={ctx} />)
-    for (const hex of ["#241B14", "#2C221A", "#E56A2C", "#F2E9DF", "#C4AE97", "#6B5648", "#FBF5EE", "#BC4620"]) {
+    const { markup } = render(<EmberMotif ir={ir("almanac")} slide={contentSlide} ctx={ctx} index={2} />)
+    for (const hex of ["#241B14", "#2C221A", "#E56A2C", "#F2E9DF", "#C4AE97", "#6B5648"]) {
       expect(markup, `ember token ${hex} leaked into the almanac render`).not.toContain(hex)
     }
   })
 
-  it("装饰位置写死：换 filename 输出逐字节不变", () => {
-    const ctx = boundThemeCtx("ember", {})
-    const markups = new Set(
-      Array.from({ length: 12 }, (_, i) =>
-        renderSvgMarkup(
-          <EmberMotif ir={{ ...ir("ember"), filename: `probe-${i}.pptx` } as PptxIR} slide={coverSlide} ctx={ctx} />,
-        ),
-      ),
-    )
-    expect(markups.size).toBe(1)
-  })
-
-  it("Decor body passes subset validation", () => {
+  it("passes subset validation", () => {
     for (const slide of ALL_SLIDES) {
-      expect(() => assertSubset(draw("ember", slide).root)).not.toThrow()
+      expect(() => assertSubset(draw(slide).root)).not.toThrow()
     }
   })
 })

@@ -107,6 +107,7 @@ import { layoutDef as coverMemoCover } from "./cover-memo-cover"
 import { layoutDef as coverDossierCover } from "./cover-dossier-cover"
 import { layoutDef as coverYearbookCover } from "./cover-yearbook-cover"
 import { layoutDef as coverLessonCover } from "./cover-lesson-cover"
+import { layoutDef as coverPitchCover } from "./cover-pitch-cover"
 import { layoutDef as coverPledgeOpenCover } from "./cover-pledge-open-cover"
 import { layoutDef as coverReportOpenCover } from "./cover-report-open-cover"
 import { layoutDef as coverCutPanelCover } from "./cover-cut-panel-cover"
@@ -140,6 +141,7 @@ import { layoutDef as chapterLookRangeChapter } from "./chapter-look-range-chapt
 import { layoutDef as chapterSealNumeralChapter } from "./chapter-seal-numeral-chapter"
 import { layoutDef as chapterConsoleChapter } from "./chapter-console-chapter"
 import { layoutDef as chapterLessonChapter } from "./chapter-lesson-chapter"
+import { layoutDef as chapterPitchChapter } from "./chapter-pitch-chapter"
 import { layoutDef as chapterFieldBandChapter } from "./chapter-field-band-chapter"
 import { layoutDef as chapterSubjectRuleChapter } from "./chapter-subject-rule-chapter"
 import { layoutDef as chapterRoundMarkChapter } from "./chapter-round-mark-chapter"
@@ -180,6 +182,7 @@ import { layoutDef as endingMemoEnding } from "./ending-memo-ending"
 import { layoutDef as endingDossierEnding } from "./ending-dossier-ending"
 import { layoutDef as endingYearbookEnding } from "./ending-yearbook-ending"
 import { layoutDef as endingLessonEnding } from "./ending-lesson-ending"
+import { layoutDef as endingPitchEnding } from "./ending-pitch-ending"
 import { layoutDef as endingScorecardEnding } from "./ending-scorecard-ending"
 import { layoutDef as endingCarePlanEnding } from "./ending-care-plan-ending"
 import { layoutDef as endingSeatCtaEnding } from "./ending-seat-cta-ending"
@@ -231,6 +234,8 @@ import { layoutDef as contentMemoSheet } from "./content-memo-sheet"
 import { layoutDef as contentDossierSheet } from "./content-dossier-sheet"
 import { layoutDef as contentYearbookSheet } from "./content-yearbook-sheet"
 import { layoutDef as contentLessonSheet } from "./content-lesson-sheet"
+import { layoutDef as contentPitchSheet } from "./content-pitch-sheet"
+import { layoutDef as contentPitchPhoto } from "./content-pitch-photo"
 import { layoutDef as contentSealFigure } from "./content-seal-figure"
 
 import {
@@ -618,6 +623,8 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverYearbookCover.id]: coverYearbookCover,
   // homeroom sample redesign (2026-10-06).
   [coverLessonCover.id]: coverLessonCover,
+  // ember sample redesign (2026-10-06).
+  [coverPitchCover.id]: coverPitchCover,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -667,6 +674,8 @@ const CHAPTER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [chapterConsoleChapter.id]: chapterConsoleChapter,
   // homeroom sample redesign (2026-10-06).
   [chapterLessonChapter.id]: chapterLessonChapter,
+  // ember sample redesign (2026-10-06).
+  [chapterPitchChapter.id]: chapterPitchChapter,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -719,6 +728,8 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingYearbookEnding.id]: endingYearbookEnding,
   // homeroom sample redesign (2026-10-06).
   [endingLessonEnding.id]: endingLessonEnding,
+  // ember sample redesign (2026-10-06).
+  [endingPitchEnding.id]: endingPitchEnding,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -886,6 +897,10 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   // homeroom sample redesign (2026-10-06): the board's ordinary content page,
   // theme-locked.
   [contentLessonSheet.id]: contentLessonSheet,
+  // ember sample redesign (2026-10-06): the board's ordinary content page
+  // and its photograph page, theme-locked.
+  [contentPitchSheet.id]: contentPitchSheet,
+  [contentPitchPhoto.id]: contentPitchPhoto,
 }
 
 // ─────────────────────────────────────────────────────────────────────────

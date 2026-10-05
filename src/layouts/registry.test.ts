@@ -39,7 +39,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     }
   }
 
-  it("has exactly 158 layout-kind entries, all traceable to one of the four real registries", () => {
+  it("has exactly 163 layout-kind entries, all traceable to one of the four real registries", () => {
     const knownIds = new Set([
       ...Object.keys(COVER_LAYOUTS),
       ...Object.keys(CHAPTER_LAYOUTS),
@@ -65,8 +65,10 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // redesign adds dossier-cover, dossier-sheet and dossier-ending: 151. The
     // almanac sample redesign adds yearbook-cover, yearbook-sheet and
     // yearbook-ending: 154. The homeroom sample redesign adds lesson-cover,
-    // lesson-chapter, lesson-sheet and lesson-ending: 158.
-    expect(layoutEntries).toHaveLength(158)
+    // lesson-chapter, lesson-sheet and lesson-ending: 158. The ember sample
+    // redesign adds pitch-cover, pitch-chapter, pitch-sheet, pitch-photo and
+    // pitch-ending: 163.
+    expect(layoutEntries).toHaveLength(163)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -139,7 +141,10 @@ describe("content family: body slot", () => {
           id === "yearbook-ending" ||
           id === "lesson-cover" ||
           id === "lesson-chapter" ||
-          id === "lesson-ending"
+          id === "lesson-ending" ||
+          id === "pitch-cover" ||
+          id === "pitch-chapter" ||
+          id === "pitch-ending"
         ) {
           expect(entry.slots.some((s) => s.name === "body")).toBe(true)
           continue
@@ -268,18 +273,18 @@ describe("layoutsForSlideType", () => {
     for (const l of covers) expect(l.slideTypes).toContain("cover")
   })
 
-  it("cover, chapter, and ending expose 42, 38, and 39 registered layouts with no takeovers", () => {
+  it("cover, chapter, and ending expose 43, 39, and 40 registered layouts with no takeovers", () => {
     // The shared automatic pools are unchanged by the gauge family: 19, 8, 7.
-    expect(layoutsForSlideType("cover")).toHaveLength(42)
+    expect(layoutsForSlideType("cover")).toHaveLength(43)
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
-    expect(layoutsForSlideType("chapter")).toHaveLength(38)
-    expect(layoutsForSlideType("ending")).toHaveLength(39)
+    expect(layoutsForSlideType("chapter")).toHaveLength(39)
+    expect(layoutsForSlideType("ending")).toHaveLength(40)
   })
 
-  it("content includes both the 39 layouts and the 4 takeovers", () => {
+  it("content includes both the 41 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(39)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(41)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(43)
+    expect(contents).toHaveLength(45)
   })
 })

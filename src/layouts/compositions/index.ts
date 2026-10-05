@@ -81,6 +81,18 @@ import { rulesComposition } from "./rules"
 import { tiersComposition } from "./tiers"
 import { methodsComposition } from "./methods"
 import { blackboardComposition } from "./blackboard"
+import { expanseComposition } from "./expanse"
+import { stairsComposition } from "./stairs"
+import { funnelComposition } from "./funnel"
+import { rivalsComposition } from "./rivals"
+import { equationComposition } from "./equation"
+import { spotlightComposition } from "./spotlight"
+import { betsComposition } from "./bets"
+import { divideComposition } from "./divide"
+import { locksComposition } from "./locks"
+import { registerComposition } from "./register"
+import { runwayComposition } from "./runway"
+import { usesComposition } from "./uses"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -175,6 +187,18 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   tiers: tiersComposition,
   methods: methodsComposition,
   blackboard: blackboardComposition,
+  expanse: expanseComposition,
+  stairs: stairsComposition,
+  funnel: funnelComposition,
+  rivals: rivalsComposition,
+  equation: equationComposition,
+  spotlight: spotlightComposition,
+  bets: betsComposition,
+  divide: divideComposition,
+  locks: locksComposition,
+  register: registerComposition,
+  runway: runwayComposition,
+  uses: usesComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -246,7 +270,7 @@ function asksForTimelineDetail(components: readonly CompositionProps["components
  * line or note leaves them off. The ordinary callout sets the title bold over
  * its text and the tag under it.
  */
-const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods"])
+const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods", "funnel"])
 
 function asksForCalloutDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "callout" && (component.title !== undefined || component.tag !== undefined))
@@ -329,7 +353,7 @@ const ROADMAP_BASIS_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<Compositi
  * the length to the period line, the points under the title and the
  * checkpoint as a tag under them.
  */
-const ROADMAP_PHASE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["syllabus"])
+const ROADMAP_PHASE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["syllabus", "runway"])
 
 function asksForRoadmapPhases(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some(
@@ -344,7 +368,7 @@ function asksForRoadmapPhases(components: readonly CompositionProps["components"
  * is offered to these alone; the ordinary table outlines the marked column
  * and sets the icon before each of its cells.
  */
-const TABLE_COLUMN_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const TABLE_COLUMN_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["rivals"])
 
 function asksForTableColumnMarks(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "data_table" && component.columns.some((col) => col.emphasis !== undefined || col.icon !== undefined))
@@ -357,7 +381,7 @@ function asksForTableColumnMarks(components: readonly CompositionProps["componen
  * alone; the ordinary gantt runs its axis over the range, sets the icon
  * before the row's label and the period under it.
  */
-const GANTT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const GANTT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["bets"])
 
 function asksForGanttDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "gantt" && (component.range !== undefined || component.items.some((item) => item.icon !== undefined || item.period !== undefined)))
