@@ -17,6 +17,7 @@ import {
   paintIcon,
   paintMono,
   paintPanel,
+  toneInk,
   type ConsoleInks,
 } from "./console"
 
@@ -37,7 +38,7 @@ type KpiItem = KpiCards["items"][number]
  * Two kinds of table:
  *
  * - A table of figures, every cell a number written with its unit ("99.99%",
- *   "4.38 分钟", "26.3 秒"), is set in mono in tall rows: the first column at
+ *   "4.38 分钟", "26.3 秒") and no row with an icon, is set in mono in tall rows: the first column at
  *   32px bold, the second at 20px, any later column at 18px in the muted ink,
  *   the columns after the first set flush right in 130px.
  * - Any other table sets its first column at 16px and the rest at 15px in the
@@ -46,7 +47,8 @@ type KpiItem = KpiCards["items"][number]
  *   or muted ink, sets its first words, up to a comma, bold in that ink, and
  *   whatever follows the comma after them in the muted ink: 「✓ 能，数据要在区域外」.
  *
- * The figure panels each hold an icon in the mark, a label in the muted ink,
+ * The figure panels each hold an icon in the mark, a label in the muted ink
+ * (both in the tone's ink when the figure has a `tone`),
  * the figure in bold mono at 38px and a note under it. The figure the author
  * marks (`**…**`) sits on the mark's tint inside an edge of it, in the mark.
  *
@@ -135,7 +137,9 @@ export function recordsConsole({ components, ctx, rect }: CompositionProps): Rea
   )
 }
 
+/** A table of figures, every cell a number with its unit. A row with an icon is set as text, where the icon has its place before the first cell. */
 function figureTable(table: DataTable): boolean {
+  if (table.rows.some((row) => row.icon)) return false
   return table.columns.length <= 3 && table.rows.every((row) => table.columns.every((column) => FIGURE_CELL.test(cellText(row, column.key))))
 }
 
@@ -378,15 +382,17 @@ function paintFigure(
 ): React.ReactElement {
   const ground = f.marked ? inks.tint : inks.surface
   const x = box.x + FIGURE_PANEL.pad
+  // A tone says what kind of news the figure is, on its icon and its label.
+  const toned = toneInk(inks, f.item.tone)
   return (
-    <g data-figure-marked={f.marked ? "1" : undefined}>
+    <g data-figure-marked={f.marked ? "1" : undefined} data-figure-tone={f.item.tone}>
       {paintCard(box, inks, f.marked)}
-      {f.item.icon ? paintIcon(f.item.icon, x, box.y + FIGURE_PANEL.icon.top, FIGURE_PANEL.icon.size, inks.mark, ground) : null}
+      {f.item.icon ? paintIcon(f.item.icon, x, box.y + FIGURE_PANEL.icon.top, FIGURE_PANEL.icon.size, toned ?? inks.mark, ground) : null}
       {paintLines(f.label!, {
         ctx,
         x: f.item.icon ? x + FIGURE_PANEL.label.x : x,
         y: baselineIn(box.y + FIGURE_PANEL.label.top, FIGURE_PANEL.label.box, FIGURE_PANEL.label.size),
-        fill: consoleText(inks.muted, ground, FIGURE_PANEL.label.size),
+        fill: consoleText(toned ?? inks.muted, ground, FIGURE_PANEL.label.size),
         fontFamily: ctx.fonts.body,
         fontWeight: "400",
         bg: ground,

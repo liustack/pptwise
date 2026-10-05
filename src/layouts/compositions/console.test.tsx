@@ -175,6 +175,20 @@ describe("records, table, waves and rail in the console setting", () => {
     expect(byText(root!, "199 倍")!.getAttribute("fill")).toBe(consoleInks(ctx).mark)
   })
 
+  it("colours a figure panel's icon and label in its tone", () => {
+    const toned = [sla[0], { ...(sla[1] as object), items: (sla[1] as { items: object[] }).items.map((item, i) => (i === 0 ? { ...item, tone: "danger" } : item)) }]
+    const { root, ctx } = draw(recordsComposition, toned)
+    const panel = root!.querySelector("[data-figure-tone='danger']")!
+    expect(byText(panel, "抵扣上限")!.getAttribute("fill")).toBe(consoleInks(ctx).danger)
+  })
+
+  it("draws a row's icon before its first cell, and sets a table of figures with one as text rather than lose it", () => {
+    const withIcons = [{ ...(sla[0] as object), rows: (sla[0] as { rows: object[] }).rows.map((row, i) => (i === 1 ? { ...row, icon: "server" } : row)) }, sla[1]]
+    const { root } = draw(recordsComposition, withIcons)
+    expect(root!.querySelectorAll("[data-console-icon='server']")).toHaveLength(1)
+    expect(byText(root!, "99.99%")!.getAttribute("font-size")).not.toBe("32")
+  })
+
   it("sets the options as cards, the recommended one selected, cost as a meter and RPO in bold mono", () => {
     const { root, ctx } = draw(tableComposition, tiers)
     const inks = consoleInks(ctx)
@@ -252,6 +266,24 @@ describe("the console's shared pieces", () => {
     expect(root.querySelectorAll("[data-checklist-item]")).toHaveLength(2)
     expect(texts(root).filter((t) => textOf(t) === "[ ]")).toHaveLength(2)
     expect(drawChecklist({ items: [...items, ...items, ...items], ctx, rect: { x: 64, y: 350, w: 1152, h: 300 } })).toBeNull()
+  })
+
+  it("marks the checklist item the author highlights, and draws an item's icon and tone", () => {
+    for (const theme of ["terminal", "vermilion"] as const) {
+      const { ctx } = testCtx(theme)
+      const inks = consoleInks(ctx)
+      const items = [
+        { due: "2026 Q4", title: "限流与退避", gloss: "重试退避、队列限流", marked: true, icon: "repeat" },
+        { due: "2027 Q1", title: "独立备用路径", gloss: "入口、身份各留一条路", icon: "route", tone: "warning" as const },
+      ]
+      const { root } = renderNode(drawChecklist({ items, ctx, rect: { x: 64, y: 350, w: 1152, h: 300 } })!)
+      const [first, second] = Array.from(root.querySelectorAll("[data-checklist-item]"))
+      expect(first!.getAttribute("data-checklist-item")).toBe("marked")
+      expect(first!.querySelector("rect")!.getAttribute("fill")).toBe(inks.tint)
+      expect(byText(first!, "限流与退避")!.getAttribute("fill")).toBe(inks.mark)
+      expect(second!.querySelector("[data-console-icon='route']")).not.toBeNull()
+      expect(texts(second!).find((t) => textOf(t) === "[ ]")!.getAttribute("fill")).toBe(inks.warning)
+    }
   })
 
   it("lists a chapter's pages as a directory, whole or not at all", () => {

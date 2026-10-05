@@ -18,7 +18,8 @@ import { CONSOLE_LEFT, CONSOLE_W, ConsoleCrumb } from "./console-shared"
  * 左端一段 32×3 的强调色。副题有就 18px 灰排在线下。再下面是待办清单
  * （`drawChecklist`）：每项一张卡，「[ ]」等宽强调色、何时（等宽灰）、
  * 做什么（22px 粗体）、要做到什么（17px）。条目来自第一个 `timeline`
- * （日期、标题、说明）或第一个 `bullets`（写成「标签：说明」的在冒号处
+ * （日期、标题、说明，泳道写在日期前，`highlight` 那项落在强调色暗底上，
+ * 图标站在标题前，`tone` 给方框和图标上色）或第一个 `bullets`（写成「标签：说明」的在冒号处
  * 拆开，冒号不再印，用 `data-gloss-break` 声明），最多四项。
  *
  * 不画 motif：面包屑就是这一页的家具。零 theme id、零 hex。
@@ -34,7 +35,16 @@ const ITEM_MAX = 4
 /** The items the checklist draws: a timeline's milestones, or a bullets block's lines split at their colon. */
 function checklistItems(slide: Slide): ChecklistItem[] {
   const block = boundarySlotBlock(slide, ["timeline", "bullets"])
-  if (block?.type === "timeline") return block.milestones.slice(0, ITEM_MAX).map((m) => ({ due: m.date, title: m.title, gloss: m.desc }))
+  if (block?.type === "timeline")
+    return block.milestones.slice(0, ITEM_MAX).map((m) => ({
+      // A milestone's lane leads its date, the way the crumb leads a page: 「平台 · 2026 Q4」.
+      due: m.lane ? `${m.lane} · ${m.date}` : m.date,
+      title: m.title,
+      gloss: m.desc,
+      ...(m.highlight ? { marked: true } : {}),
+      ...(m.icon ? { icon: m.icon } : {}),
+      ...(m.tone ? { tone: m.tone } : {}),
+    }))
   if (block?.type !== "bullets") return []
   return drawableItems(block.items)
     .slice(0, ITEM_MAX)

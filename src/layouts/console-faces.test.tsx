@@ -114,6 +114,28 @@ describe("console ending", () => {
     expect(all.some((t) => t.startsWith("EOF"))).toBe(true)
   })
 
+  it("keeps every field a milestone carries: its lane before its date, its highlight, its icon", () => {
+    const ir = deck([
+      ending([
+        {
+          type: "timeline",
+          lanes: ["平台", "业务"],
+          milestones: [
+            { date: "2026 Q4", title: "限流与退避", lane: "平台", highlight: true, icon: "repeat" },
+            { date: "2027 Q1", title: "独立备用路径", lane: "业务" },
+          ],
+        },
+      ]),
+    ])
+    expect(validateIr(ir).ok).toBe(true)
+    const svg = renderSlideSvg(ir, 0)
+    const all = texts(svg)
+    expect(all).toContain("平台 · 2026 Q4")
+    expect(all).toContain("业务 · 2027 Q1")
+    expect(svg).toContain('data-checklist-item="marked"')
+    expect(svg).toContain('data-console-icon="repeat"')
+  })
+
   it("splits a bullet written 「标签：说明」 at its colon", () => {
     const all = texts(renderSlideSvg(deck([ending([{ type: "bullets", items: ["限流与退避：重试退避、队列限流"] }])]), 0))
     expect(all).toContain("限流与退避")
