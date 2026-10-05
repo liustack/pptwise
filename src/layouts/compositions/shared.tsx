@@ -114,10 +114,24 @@ export type CompositionId =
  *   scale, pictures over their figures, a question's failure points beside
  *   their fixes, a device beside its log lines. See `./console.tsx`.
  *
+ * - `memo`: memo's 2026-10 board. A typed memorandum on paper: titles,
+ *   item numbers and the figures a page argues from in the heading face,
+ *   labels, dates, sums and quoted originals in the typewriter's mono face,
+ *   items numbered 「一、」 in the deck's own numerals, open tables under a
+ *   2px rule of ink, the thing a page lands on on a pale tint of the mark,
+ *   good news in the success ink and bad news in the mark itself, and
+ *   photographs pasted in as turned exhibits. A composition offered this
+ *   setting also takes the shapes that board drew and no other did: figures
+ *   beside an exhibit, a slope chart of two groups, bars that diverge from
+ *   the middle, a quoted original and what it means, a weighing in two
+ *   columns, options under their photographs, a rota, a sum on ruled paper,
+ *   a calendar over its dates, a checklist of stop conditions. See
+ *   `./memo.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */
@@ -130,6 +144,12 @@ export interface CompositionProps {
   inks?: CompositionInks
   /** The type the page is set in. Omitted, `board`. */
   setting?: CompositionSetting
+  /**
+   * The number the page's first exhibit takes (「附图 N」), counted across the
+   * deck by the face that sets the page: one more than the pictures on the
+   * pages before it. 1 when omitted. Only the memo setting numbers exhibits.
+   */
+  exhibitNumber?: number
   /**
    * Draws other components in a band of their own, with the compositions the
    * face offered and in the same setting, or returns `null` when none takes

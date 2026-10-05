@@ -9,6 +9,7 @@ import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
 import { recordsPanel } from "./records-panel"
 import { recordsConsole } from "./records-console"
+import { recordsMemo } from "./records-memo"
 
 type DataTable = Extract<Component, { type: "data_table" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -102,6 +103,7 @@ function cell(row: DataTable["rows"][number], key: string): string {
 export const recordsComposition: Composition = (props) => {
   if (props.setting === "panel") return recordsPanel(props)
   if (props.setting === "console") return recordsConsole(props)
+  if (props.setting === "memo") return recordsMemo(props)
   const { components, ctx, rect, setting } = props
   const shape = recordsShape(components)
   if (!shape) return null
