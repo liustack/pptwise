@@ -59,7 +59,10 @@ export const funnelComposition: Composition = ({ components, ctx, rect, setting 
   const chinese = ctx.figures?.chinese ?? mostlyChinese(data.map((d) => String(d.x)))
   const unit = c.axes?.y_unit?.trim() || undefined
   const max = data[0]!.y
-  const widthOf = (y: number) => SHAPE.w * Math.pow(y / max, SHAPE.power)
+  // Rounded to the hundredth: a fractional power's last bits differ between
+  // V8 releases, and printed in full they made the page's markup, and its
+  // gallery hash, depend on which Node drew it.
+  const widthOf = (y: number) => Math.round(SHAPE.w * Math.pow(y / max, SHAPE.power) * 100) / 100
   const pitch = Math.min(SHAPE.pitch, (rect.h - SHAPE.top + SHAPE.gap) / data.length)
   const levelH = pitch - SHAPE.gap
   // Four levels share the board's three levels' height; a level shorter than

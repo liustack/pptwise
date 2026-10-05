@@ -165,6 +165,13 @@ describe("the ember board's pages on ember", () => {
     expect(byText(root!, "对我们意味着")!.getAttribute("data-tracking")).toBe("2")
   })
 
+  it("funnel prints its levels' corners to the hundredth, so every Node draws the same markup", () => {
+    const { root } = draw("p05-funnel")
+    const numbers = Array.from(root!.querySelectorAll("[data-pitch-level] polygon")).flatMap((p) => p.getAttribute("points")!.split(/[ ,]/))
+    expect(numbers.length).toBeGreaterThan(0)
+    for (const n of numbers) expect(n).toMatch(/^-?\d+(\.\d{1,3})?$/)
+  })
+
   it("rivals frames the marked column in the fire with its icon before every cell", () => {
     const { root } = draw("p06-landscape")
     const column = root!.querySelector("[data-pitch-fire='column']")!
