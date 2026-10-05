@@ -49,6 +49,23 @@ import { iconEnumError } from "../schema-error-hints"
 export const IconNameSchema = z.enum(PPTX_ICON_NAMES, { error: iconEnumError })
 
 /**
+ * What kind of source a figure rests on, so a reader can weigh it: a trial
+ * published in a journal, a product's approved label, a company's own
+ * figures, a press report, a draft out for comment, an official document, a
+ * trial registry. A tag that names its source (`TagSchema.evidence`) is
+ * outlined in the ink every theme keeps for that kind, the same kind in the
+ * same ink across a deck, so the page tells a journal's figure from a
+ * company's at a glance.
+ */
+export const EVIDENCE_KINDS = ["trial", "label", "company", "press", "draft", "official", "registry"] as const
+
+export const EvidenceKindSchema = z
+  .enum(EVIDENCE_KINDS)
+  .describe(
+    'What kind of source the tag names, outlined in the ink the theme keeps for it: "trial" for a trial published in a journal, "label" for a product\'s approved label, "company" for a company\'s own figures, "press" for a press report, "draft" for a draft out for comment, "official" for a government or regulator\'s document, "registry" for a trial registry.',
+  )
+
+/**
  * A short label that says what happened to a row or a figure, printed in a
  * small rounded tag beside it: 「改为区间」, 「新增」, 「不变」, "Binding".
  * Shared by `comparison` and `from_to` rows and `kpi_cards` items, which all
@@ -69,6 +86,8 @@ export const TagSchema = z
       .boolean()
       .optional()
       .describe("Marks a tag that says nothing changed, such as 不变 or Unchanged: it steps back in a grey outline."),
+    /** What kind of source the tag names. See `EvidenceKindSchema`. */
+    evidence: EvidenceKindSchema.optional(),
   })
   .strict()
 

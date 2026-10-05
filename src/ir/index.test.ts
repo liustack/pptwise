@@ -2041,3 +2041,12 @@ describe("comparison recommended_label", () => {
     expect(parseOne({ ...base, recommended: 1, recommended_label: " " }).success).toBe(false)
   })
 })
+
+describe("tag evidence", () => {
+  it("takes the kind of source a tag names, and refuses a kind it does not know", () => {
+    const kpi = (tag: unknown) => ({ type: "kpi_cards", items: [{ value: "1", label: "a", tag }] })
+    expect(parseOne(kpi({ text: "RCT · 期刊", evidence: "trial" })).success).toBe(true)
+    expect(parseOne(kpi({ text: "企业口径", evidence: "company" })).success).toBe(true)
+    expect(parseOne(kpi({ text: "x", evidence: "rumour" })).success).toBe(false)
+  })
+})
