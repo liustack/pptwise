@@ -325,7 +325,7 @@ describe("icon_cards item tag", () => {
     expect(new Set(titles.map((t) => t.getAttribute("y"))).size).toBe(1)
   })
 
-  it("keeps tagged cards out of a bento's exploded tiles", () => {
-    expect(explodeIntoUnits([tagged]).map((unit) => unit.kind)).toEqual(["component"])
+  it("explodes tagged cards into a bento's tiles, which set each tag beside its icon", () => {
+    expect(explodeIntoUnits([tagged]).map((unit) => unit.kind)).toEqual(tagged.items.map(() => "icon-card-item"))
   })
 })

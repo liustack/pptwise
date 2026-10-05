@@ -46,11 +46,14 @@ export interface BentoCell {
 export function explodeIntoUnits(components: Component[]): BentoUnit[] {
   const units: BentoUnit[] = []
   for (const component of components) {
-    // A figure or an icon card with a tag stays in its ordinary cards, which
-    // print the tag: the exploded tile has no place for one.
+    // A figure with a tag stays in its ordinary cards, which print the tag:
+    // the exploded figure tile has no place for one. An icon card's tile sets
+    // its tag beside its icon (`icon-card-body.tsx`), so tagged icon cards
+    // explode like any others. Kept whole, four of them shared one bento
+    // cell and lost their titles and text to its width.
     if (component.type === "kpi_cards" && !component.items.some((item) => item.tag)) {
       for (const item of component.items) units.push({ kind: "kpi-item", item, component })
-    } else if (component.type === "icon_cards" && !component.items.some((item) => item.tag)) {
+    } else if (component.type === "icon_cards") {
       for (const item of component.items)
         units.push({ kind: "icon-card-item", item, component })
     } else {

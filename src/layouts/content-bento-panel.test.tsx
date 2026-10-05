@@ -658,6 +658,37 @@ describe("BentoPanelContent", () => {
     })
   })
 
+  // The writer's 2027 concert deck, p12: four city programmes tagged 凭票根
+  // beside one figure. Kept whole, the four shared one cell, four across, and
+  // lost their titles and text to its width.
+  it("explodes tagged icon cards and sets each tag beside its card's icon, every word whole", () => {
+    for (const theme of ["thesis", "arena"]) {
+      const ctx = boundThemeCtx(theme, {})
+      const cities: Component = {
+        type: "icon_cards",
+        items: [
+          { icon: "landmark", title: "国家：跟着演出去旅行", text: "2025 年 1 月国办文件写进全国措施", tag: { text: "凭票根" } },
+          { icon: "map-pin", title: "南京：乐享 1+3", text: "453 家商户，观演前后一周凭票享优惠", tag: { text: "凭票根" } },
+          { icon: "ticket", title: "上海浦东：票根兑优惠", text: "财政补贴 30%，商家让利 20%", tag: { text: "凭票根" } },
+          { icon: "bus-front", title: "青岛：票根经济 3.0", text: "超过 800 家商户，开散场接驳专线", tag: { text: "凭票根" } },
+        ],
+      }
+      const slide = { type: "content", kind: "list", heading: "四地的票根政策", components: [cities, { type: "kpi_cards", items: [{ value: "1:6.85", label: "协会测算", note: "方法未公开" }] }] } as Slide
+      const markup = renderSvgMarkup(
+        <svg xmlns="http://www.w3.org/2000/svg">
+          <BentoPanelContent ir={ir(theme, [slide])} slide={slide} index={0} ctx={ctx} />
+        </svg>,
+      )
+      const root = parseSvgRoot(markup)
+      expect(() => assertSubset(root), theme).not.toThrow()
+      expect(root.querySelectorAll("[data-icon-card-tag]"), theme).toHaveLength(4)
+      expect(root.querySelector("[data-truncated]"), theme).toBeNull()
+      expect(root.querySelector("[data-dropped]"), theme).toBeNull()
+      const words = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "").join("")
+      for (const item of (cities as Extract<Component, { type: "icon_cards" }>).items) expect(words, theme).toContain(item.title)
+    }
+  })
+
   it("keeps a steps component as one whole bento cell, not exploded into per-item cards", () => {
     const ctx = boundThemeCtx("terminal", {})
     const stepsComponent: Component = {
