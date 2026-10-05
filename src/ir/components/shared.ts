@@ -106,6 +106,13 @@ export const TagSchema = z
       .describe("Marks a tag that says nothing changed, such as 不变 or Unchanged: it steps back in a grey outline."),
     /** What kind of source the tag names. See `EvidenceKindSchema`. */
     evidence: EvidenceKindSchema.optional(),
+    /** A verdict that is final rather than open. See the describe below. */
+    settled: z
+      .boolean()
+      .optional()
+      .describe(
+        "Marks a tag whose verdict is final, such as 纳入, 不纳入 or Approved, against one still open or conditional, such as 暂缓 or Case by case: it is filled instead of outlined, in the emphasis colour, or in grey on a quiet tag.",
+      ),
     /** What kind of news the tag is. See `ToneSchema`. */
     tone: ToneSchema.optional().describe(
       'What kind of news the tag says, outlined in the theme\'s own colour for it: "danger" for a breach or a risk, such as 超说明书 or Off-label, "warning" for something to watch, "success" for something that went right.',

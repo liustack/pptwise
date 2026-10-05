@@ -2058,3 +2058,11 @@ describe("tag tone", () => {
     expect(parseOne(row({ text: "x", tone: "neutral" })).success).toBe(false)
   })
 })
+
+describe("tag settled", () => {
+  it("takes a settled verdict on a tag", () => {
+    const row = (tag: unknown) => ({ type: "comparison", columns: ["A"], rows: [{ label: "x", cells: ["1"], tag }] })
+    expect(parseOne(row({ text: "纳入", settled: true })).success).toBe(true)
+    expect(parseOne(row({ text: "不纳入", settled: true, quiet: true })).success).toBe(true)
+  })
+})

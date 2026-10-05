@@ -22,6 +22,8 @@ export type EvidenceKind = NonNullable<Tag["evidence"]>
  *
  * - on the row or figure the page marks, the tag fills in the theme's
  *   emphasis ink with the readable ink on it, the page's one mark;
+ * - a `settled` tag, a verdict that is final, fills the same way, or in a
+ *   pale grey with muted words when it is also `quiet` (a final no);
  * - a tag that says what kind of news it is (`tone`) is outlined in the
  *   theme's ink for that news, a breach in its danger ink;
  * - a tag that names its source (`evidence`) is outlined in the ink that kind
@@ -118,12 +120,19 @@ export function evidenceInk(
   }
 }
 
+/** How much of the muted ink a settled quiet tag's grey fill takes over its ground. */
+const SETTLED_QUIET_FILL = 0.12
+
 /** The inks a tag paints with on `ground`. `marked` is the row or figure the page marks. */
 export function tagInks(ctx: ComponentCtx, tag: Tag, marked: boolean, ground: string, size: number): TagInks {
   const { colors } = ctx
-  if (marked) {
+  if (marked || (tag.settled && !tag.quiet)) {
     const fill = emphasisRunInk(colors)
     return { fill, stroke: fill, text: readableOn(fill) }
+  }
+  if (tag.settled) {
+    const fill = blendOver(colors.muted, ground, SETTLED_QUIET_FILL)
+    return { fill, stroke: fill, text: inkToward(colors.muted, colors.text, fill, size) }
   }
   const line = tag.tone
     ? resolveSemanticColor(tag.tone, colors)
@@ -154,7 +163,7 @@ export function paintTag(opts: {
   const w = opts.width ?? tagWidth(tag.text, spec)
   const r = spec.height / 2
   return (
-    <g key={opts.key} data-tag={tag.quiet ? "quiet" : inks.fill ? "marked" : ""}>
+    <g key={opts.key} data-tag={tag.quiet ? (inks.fill ? "settled-quiet" : "quiet") : inks.fill ? "marked" : ""}>
       <rect
         x={x + (inks.fill ? 0 : 0.5)}
         y={y + (inks.fill ? 0 : 0.5)}

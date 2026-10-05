@@ -68,3 +68,19 @@ describe("a tag that says what kind of news it is", () => {
     expect(tagInks(ctx, { text: "x", tone: "warning", evidence: "trial" }, false, ground, 16).stroke).toBe(resolveSemanticColor("warning", ctx.colors))
   })
 })
+
+describe("a settled tag", () => {
+  it("fills a final yes like the marked row's tag and a final no in grey, its words legible", () => {
+    const ctx = boundThemeCtx("clinic")
+    const ground = ctx.defaultBg ?? ctx.colors.bg
+    const marked = tagInks(ctx, { text: "纳入" }, true, ground, 16)
+    const yes = tagInks(ctx, { text: "纳入", settled: true }, false, ground, 16)
+    expect(yes).toEqual(marked)
+    const no = tagInks(ctx, { text: "不纳入", settled: true, quiet: true }, false, ground, 16)
+    expect(no.fill).not.toBeNull()
+    expect(no.fill).not.toBe(ground)
+    expect(contrastRatio(no.text, no.fill!)).toBeGreaterThanOrEqual(requiredContrastRatio(16))
+    // An open verdict stays outlined.
+    expect(tagInks(ctx, { text: "暂缓", quiet: true }, false, ground, 16).fill).toBeNull()
+  })
+})
