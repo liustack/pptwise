@@ -161,15 +161,20 @@ const TAG_BAND_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>
 
 /**
  * The compositions that draw what a timeline carries beyond its dated
- * milestones: the spans its axis is divided into (`periods`). A page whose
- * timeline carries them is offered to these alone, so no hand-set timeline
- * leaves them off. The ordinary timeline draws them as a row of named spans
- * under its milestones.
+ * milestones: the spans its axis is divided into (`periods`), and a
+ * milestone's tag and source. A page whose timeline carries any of them is
+ * offered to these alone, so no hand-set timeline leaves them off. The
+ * ordinary timeline draws them all: the spans as a row of named spans under
+ * its milestones, a source and a tag under a milestone's words.
  */
-const TIMELINE_SPAN_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const TIMELINE_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
 
-function asksForTimelineSpans(components: readonly CompositionProps["components"][number][]): boolean {
-  return components.some((component) => component.type === "timeline" && component.periods !== undefined)
+function asksForTimelineDetail(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some(
+    (component) =>
+      component.type === "timeline" &&
+      (component.periods !== undefined || component.milestones.some((m) => m.tag !== undefined || m.source !== undefined)),
+  )
 }
 
 function asksForChartTag(components: readonly CompositionProps["components"][number][]): boolean {
@@ -186,10 +191,10 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const marked = asksForChartMarks(props.components)
   const tagged = asksForChartTag(props.components)
   const banded = (props.tagBand ?? 0) > 0
-  const spanned = asksForTimelineSpans(props.components)
+  const detailed = asksForTimelineDetail(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
-    if (spanned && !TIMELINE_SPAN_COMPOSITIONS.has(id)) continue
+    if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     const drawn = COMPOSITIONS[id]({ ...props, handOn })

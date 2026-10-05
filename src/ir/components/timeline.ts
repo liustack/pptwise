@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { BasisSchema, IconNameSchema, ToneSchema } from "./shared"
+import { BasisSchema, IconNameSchema, TagSchema, ToneSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -58,6 +58,16 @@ export const schema = z
           ),
           /** What kind of turn it is. See `ToneSchema`. */
           tone: ToneSchema.optional(),
+          /** Where the milestone stands. See the describe below. */
+          tag: TagSchema.optional().describe(
+            'A few words that say where the milestone stands, printed as a small tag with it, such as "已定", "谈判中" or "Proposal". Give it a basis to say how firm it is: "proposal" for a rule not yet law.',
+          ),
+          /** Where the date comes from. See the describe below. */
+          source: z
+            .string()
+            .min(1)
+            .optional()
+            .describe('Where the date or the rule comes from, printed small under the milestone, such as the act that sets it: "实施条例 (EU) 2025/2621" or "COM(2025) 989".'),
           /** Which of two tracks the milestone runs on. See the describe below. */
           lane: z
             .string()

@@ -483,3 +483,46 @@ describe("timeline periods, drawn by the shared renderer", () => {
     expect(timeline.measure(spanned, 1000, ctx)).toBe(timeline.measure(bare, 1000, ctx) + 16 + 2 * 26)
   })
 })
+
+describe("a milestone's tag and source, drawn by the shared renderer", () => {
+  const rules = {
+    type: "timeline" as const,
+    milestones: [
+      { date: "2027", title: "默认值最迟复审", desc: "加成 2028 年起升到 30%", tag: { text: "已定" }, source: "实施条例 (EU) 2025/2621" },
+      { date: "2028", title: "下游扩围拟起适用", tag: { text: "谈判中", basis: "proposal" as const }, source: "COM(2025) 989" },
+      { date: "2038", title: "免费配额清零拟推迟", tag: { text: "提案", basis: "proposal" as const } },
+    ],
+  }
+
+  it("sets each source under its milestone's words and each tag under that, in a row", () => {
+    const { container } = svg(timeline.render(rules, { x: 0, y: 0, w: 1100 }, ctx))
+    const sources = Array.from(container.querySelectorAll("[data-milestone-source]")).map((t) => t.textContent)
+    expect(sources).toEqual(["实施条例 (EU) 2025/2621", "COM(2025) 989"])
+    const tags = Array.from(container.querySelectorAll("[data-milestone-tag] text")).map((t) => t.textContent)
+    expect(tags).toEqual(["已定", "谈判中", "提案"])
+    const desc = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "加成 2028 年起升到 30%")!
+    const source = container.querySelector("[data-milestone-source]")!
+    expect(Number(source.getAttribute("y"))).toBeGreaterThan(Number(desc.getAttribute("y")))
+    expect(Number(container.querySelector("[data-milestone-tag] rect")!.getAttribute("y"))).toBeGreaterThan(Number(source.getAttribute("y")) - 12)
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+  })
+
+  it("dashes the tag of a rule that is only proposed", () => {
+    const { container } = svg(timeline.render(rules, { x: 0, y: 0, w: 1100 }, ctx))
+    const outlines = Array.from(container.querySelectorAll("[data-milestone-tag] rect")).map((r) => r.getAttribute("stroke-dasharray"))
+    expect(outlines[0]).toBeNull()
+    expect(outlines[1]).not.toBeNull()
+  })
+
+  it("measures them into its height, side by side and stacked", () => {
+    const bare = { ...rules, milestones: rules.milestones.map(({ tag: _tag, source: _source, ...m }) => m) }
+    expect(timeline.measure(rules, 1100, ctx)).toBeGreaterThan(timeline.measure(bare, 1100, ctx) + 28)
+    const vertical = { ...rules, layout: "vertical" as const }
+    const bareVertical = { ...bare, layout: "vertical" as const }
+    expect(timeline.measure(vertical, 900, ctx)).toBeGreaterThan(timeline.measure(bareVertical, 900, ctx) + 3 * 28)
+    const { container } = svg(timeline.render(vertical, { x: 0, y: 0, w: 900 }, ctx))
+    expect(container.querySelectorAll("[data-milestone-tag]")).toHaveLength(3)
+    expect(container.querySelectorAll("[data-milestone-source]")).toHaveLength(2)
+  })
+})

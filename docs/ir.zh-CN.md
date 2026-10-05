@@ -245,6 +245,7 @@ pptwise schema --kind data --theme brief
 | `gantt.items[].text` 与 `emphasis` | 阶段名下面的一行说明，以及这一页说的那一段 | 最多标一段 |
 | `timeline.milestones[].lane` 与 `timeline.lanes` | 同一条时间顺序上的两条泳道。`lanes` 给出两条泳道的名字，轴上方的那条在前。放不下两侧的版式把泳道名写在日期前面 | 要么每个节点都写 lane，要么都不写，最多两条，竖向时间线不能用 |
 | `timeline.periods` | `[{ "from": "2026-01", "to": "2026-12", "label": "2026 年：进口计入排放，不必持有证书" }]` 把时间轴分成几段并给每段起名。按比例排日期的版式把每段画在轴上它那一截，普通时间线在节点下面一行一段地列出名字。写了 `"basis": "proposal"`（或其他尚未确定的依据）的一段画成虚线 | 最多 3 段，竖向时间线不能用 |
+| `timeline.milestones[].tag` 与 `source` | 节点现在的状态，印成小标签（`{ "text": "提案", "basis": "proposal" }`），以及日期或规则的出处，节点下面一行小字（「COM(2025) 989」）。依据尚未确定的标签画虚线 | |
 | `kpi_cards.items[].value` 写成 `**…**` | 用主题强调色印的那一个数 | |
 | `progress_donuts.items[].detail` 与 `emphasis` | 标签下面一行，写这个完成度背后的金额（「11770 / 13000 亿元」），以及这一页讲的那一个，它的环、数字和标签用强调色 | 最多标一个 |
 | `kpi_cards.items[].tag` | 这个数是什么，用几个字印成数字旁的小标签（`{ "text": "约束性指标" }`）：标出的那个数填满，其余描边，`quiet` 的用灰色 | |

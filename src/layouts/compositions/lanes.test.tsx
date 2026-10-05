@@ -77,4 +77,13 @@ describe("a timeline whose axis is divided into spans", () => {
     }
     expect(compose({ components: [rules() as unknown as Component], ctx, rect: NOTICE_BAND, setting: "notice" }, ["lanes", "track"])).not.toBeNull()
   })
+
+  it("leaves a milestone's tag and source to the ordinary timeline too", () => {
+    const { ctx } = testCtx("bulletin")
+    const base = rules() as unknown as { milestones: Record<string, unknown>[] }
+    const tagged = { ...base, milestones: base.milestones.map((m, i) => (i === 0 ? { ...m, tag: { text: "已定" } } : m)) } as unknown as Component
+    const sourced = { ...base, milestones: base.milestones.map((m, i) => (i === 0 ? { ...m, source: "实施条例 (EU) 2025/2621" } : m)) } as unknown as Component
+    expect(compose({ components: [tagged], ctx, rect: NOTICE_BAND, setting: "notice" }, ["lanes", "track"])).toBeNull()
+    expect(compose({ components: [sourced], ctx, rect: NOTICE_BAND, setting: "notice" }, ["lanes", "track"])).toBeNull()
+  })
 })

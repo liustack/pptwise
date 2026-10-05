@@ -159,6 +159,21 @@ describe("console ending", () => {
     expect(svg).toMatch(/data-dropped="1" data-dropped-kind="label"/)
   })
 
+  it("declares a milestone's tag and source lost, a checklist line having no place for them", () => {
+    const ir = deck([
+      ending([
+        {
+          type: "timeline",
+          milestones: [
+            { date: "2026 Q4", title: "限流与退避", tag: { text: "已定" }, source: "评审纪要" },
+            { date: "2027 Q1", title: "独立备用路径" },
+          ],
+        },
+      ]),
+    ])
+    expect(renderSlideSvg(ir, 0)).toMatch(/data-dropped="2" data-dropped-kind="label"/)
+  })
+
   it("refuses more milestones than the checklist draws", () => {
     const milestones = Array.from({ length: 5 }, (_, i) => ({ date: `Q${i + 1}`, title: `第 ${i + 1} 项` }))
     const v = validateIr(deck([ending([{ type: "timeline", milestones }])]))

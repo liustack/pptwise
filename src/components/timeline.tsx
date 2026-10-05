@@ -6,7 +6,7 @@ import { accessibleInk, blendOver, contrastRatio, graphicInk, requiredContrastRa
 import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { withBlockTitle } from "./block-title"
-import { basisInk, basisUnsettled, TAG_DASH } from "./tag"
+import { basisInk, basisUnsettled, paintTag, TAG_DASH, tagInks, tagWidth } from "./tag"
 
 type TimelineComponent = Extract<Component, { type: "timeline" }>
 
@@ -19,6 +19,14 @@ const MIN_FONT_SIZE = 16
 const TITLE_SIZE = 16
 const DESC_SIZE = 16
 const TITLE_TOP = AXIS_Y + 28
+/** A milestone's source line, under its description. */
+const SOURCE_SIZE = 16
+/** A milestone's tag, under its words: the ordinary tag's 28px label. */
+const MILESTONE_TAG = { gap: 10, h: 28 } as const
+/** The ordinary tag's measures (`ordinaryTagSpec`) in a face. */
+function milestoneTagSpec(fontFamily: string) {
+  return { size: 16, height: MILESTONE_TAG.h, padX: 12, fontFamily }
+}
 /** A milestone's lane stands a line over its date. */
 const LANE_ABOVE_DATE = 22
 const BOTTOM_PAD = 18
@@ -135,16 +143,29 @@ function milestoneLayout(component: TimelineComponent, w: number, fontFamily: st
           lineHeightRatio: 1.3,
         })
       : null
+    const source = m.source?.trim()
+      ? layoutSvgText(m.source.trim(), {
+          maxWidth,
+          fontSize: SOURCE_SIZE,
+          maxLines: 2,
+          lineHeightRatio: 1.3,
+        })
+      : null
+    const tagW = m.tag ? tagWidth(m.tag.text, milestoneTagSpec(fontFamily)) : 0
     const titleH = title.lines.length * title.lineHeight
     const descH = desc ? desc.lines.length * desc.lineHeight + 6 : 0
+    const sourceH = source ? source.lines.length * source.lineHeight + 4 : 0
+    const tagH = m.tag ? MILESTONE_TAG.gap + MILESTONE_TAG.h : 0
     // The ink the label actually spans, not the room it was offered.
     const inkW = Math.max(
       0,
       ...title.lines.map((line) => measureTextUnits(line, { bold: true, fontFamily }) * title.fontSize),
       ...(desc?.lines ?? []).map((line) => measureTextUnits(line, { fontFamily }) * desc!.fontSize),
+      ...(source?.lines ?? []).map((line) => measureTextUnits(line, { fontFamily }) * source!.fontSize),
+      Math.min(tagW, maxWidth),
     )
     const left = anchor === "start" ? tx : anchor === "end" ? tx - inkW : tx - inkW / 2
-    return { m, i, x, maxWidth, anchor, tx, title, desc, belowH: 28 + titleH + descH, left, right: left + inkW }
+    return { m, i, x, maxWidth, anchor, tx, title, desc, source, tagW, belowH: 28 + titleH + descH + sourceH + tagH, left, right: left + inkW }
   }
   const rows = component.milestones.map((m, i) => {
     const x = n === 1 ? w / 2 : PAD + i * step
@@ -168,6 +189,14 @@ function milestoneLayout(component: TimelineComponent, w: number, fontFamily: st
     }
   }
   return rows
+}
+
+/** A milestone's tag, at the ordinary tag's size; one wider than the room its milestone has is declared dropped. */
+function MilestoneTag({ tag, marked, x, y, w, room, ctx }: { tag: NonNullable<Milestone["tag"]>; marked: boolean; x: number; y: number; w: number; room: number; ctx: ComponentCtx }) {
+  if (w > room) return <g data-dropped={1} data-dropped-kind="label" />
+  const spec = milestoneTagSpec(ctx.fonts.body)
+  const ground = ctx.defaultBg ?? ctx.colors.bg
+  return <g data-milestone-tag="">{paintTag({ tag, x, y, spec, inks: tagInks(ctx, tag, marked, ground, spec.size), width: w })}</g>
 }
 
 /**
@@ -236,7 +265,7 @@ const V_DESC_SIZE = 14
 const V_ROW_GAP = 26
 const V_TOP_PAD = 8
 
-function verticalLayout(component: TimelineComponent, w: number) {
+function verticalLayout(component: TimelineComponent, w: number, fontFamily: string) {
   const textW = Math.max(1, w - V_TEXT_X)
   return component.milestones.map((m) => {
     const title = fitSvgLine(m.title, {
@@ -252,10 +281,21 @@ function verticalLayout(component: TimelineComponent, w: number) {
           lineHeightRatio: 1.35,
         })
       : null
+    const source = m.source?.trim()
+      ? layoutSvgText(m.source.trim(), {
+          maxWidth: textW,
+          fontSize: V_DESC_SIZE,
+          maxLines: 2,
+          lineHeightRatio: 1.35,
+        })
+      : null
+    const tagW = m.tag ? tagWidth(m.tag.text, milestoneTagSpec(fontFamily)) : 0
     const rowH =
       Math.round(V_TITLE_SIZE * 1.3) +
-      (desc ? desc.lines.length * desc.lineHeight + 4 : 0)
-    return { m, title, desc, rowH }
+      (desc ? desc.lines.length * desc.lineHeight + 4 : 0) +
+      (source ? source.lines.length * source.lineHeight + 4 : 0) +
+      (m.tag ? MILESTONE_TAG.h + 6 : 0)
+    return { m, title, desc, source, tagW, rowH, textW }
   })
 }
 
@@ -296,7 +336,7 @@ function renderVertical(
   box: ComponentBox,
   ctx: ComponentCtx,
 ): React.ReactElement {
-  const allRows = verticalLayout(component, box.w)
+  const allRows = verticalLayout(component, box.w, ctx.fonts.body)
   const allRowTops: number[] = []
   let cursor = V_TOP_PAD
   for (const r of allRows) {
@@ -332,7 +372,7 @@ function renderVertical(
           strokeWidth={2}
         />
       )}
-      {rows.map(({ m, title, desc }, i) => {
+      {rows.map(({ m, title, desc, source, tagW, textW }, i) => {
         const top = rowTops[i]
         const nodeCy = top + 8
         const hl = Boolean(m.highlight)
@@ -391,6 +431,34 @@ function renderVertical(
                   </text>
                 ))
               : null}
+            {source
+              ? source.lines.map((line, li) => (
+                  <text
+                    key={`s${li}`}
+                    data-milestone-source=""
+                    data-truncated={source.truncated && li === source.lines.length - 1 ? "1" : undefined}
+                    x={V_TEXT_X}
+                    y={nodeCy + 7 + Math.round(V_TITLE_SIZE * 1.3) + (desc ? desc.lines.length * desc.lineHeight + 4 : 0) + li * source.lineHeight}
+                    fontSize={source.fontSize}
+                    fill={ctx.colors.muted}
+                    fontFamily={ctx.fonts.body}
+                    dominantBaseline="alphabetic"
+                  >
+                    {line}
+                  </text>
+                ))
+              : null}
+            {m.tag ? (
+              <MilestoneTag
+                tag={m.tag}
+                marked={hl}
+                x={V_TEXT_X}
+                y={nodeCy + 7 + Math.round(V_TITLE_SIZE * 1.3) + (desc ? desc.lines.length * desc.lineHeight + 4 : 0) + (source ? source.lines.length * source.lineHeight + 4 : 0) - 14}
+                w={tagW}
+                room={textW}
+                ctx={ctx}
+              />
+            ) : null}
           </g>
         )
       })}
@@ -401,7 +469,7 @@ function renderVertical(
 
 function measureDefault(component: TimelineComponent, w: number, fontFamily: string): number {
   if (component.layout === "vertical") {
-    const rows = verticalLayout(component, w)
+    const rows = verticalLayout(component, w, fontFamily)
     const total = rows.reduce((sum, r) => sum + r.rowH + V_ROW_GAP, V_TOP_PAD)
     return total - V_ROW_GAP + BOTTOM_PAD
   }
@@ -445,7 +513,7 @@ export const timeline: SvgComponent<TimelineComponent> = {
           stroke={ctx.colors.border ?? ctx.colors.muted}
           strokeWidth={2}
         />
-        {rows.map(({ m, x, maxWidth, anchor, tx, title, desc }, i) => {
+        {rows.map(({ m, x, maxWidth, anchor, tx, title, desc, source, tagW }, i) => {
           // A milestone on a lane names it on a line of its own over its date:
           // one row has no second side of the axis for the lane to run on.
           // The lane used to lead the date on its line, and a long date then
@@ -459,6 +527,9 @@ export const timeline: SvgComponent<TimelineComponent> = {
             ? fitSvgLine(m.lane.trim(), { maxWidth, fontSize: 16, minFontSize: MIN_FONT_SIZE })
             : null
           const descTop = TITLE_TOP + title.lines.length * title.lineHeight + 2
+          const sourceTop = descTop + (desc ? desc.lines.length * desc.lineHeight + 4 : 0)
+          const tagTop = sourceTop + (source ? source.lines.length * source.lineHeight : 0) - 12 + MILESTONE_TAG.gap
+          const tagX = anchor === "start" ? tx : anchor === "end" ? tx - tagW : tx - tagW / 2
           return (
             <g key={i}>
               <MilestoneNode m={m} cx={x} cy={AXIS_Y} baseR={8} ctx={ctx} />
@@ -528,6 +599,25 @@ export const timeline: SvgComponent<TimelineComponent> = {
                     </text>
                   ))
                 : null}
+              {source
+                ? source.lines.map((line, li) => (
+                    <text
+                      key={`s${li}`}
+                      data-milestone-source=""
+                      data-truncated={source.truncated && li === source.lines.length - 1 ? "1" : undefined}
+                      x={tx}
+                      y={sourceTop + li * source.lineHeight}
+                      textAnchor={anchor}
+                      fill={inkWithTextFallback(ctx.colors.muted, ctx.colors.text, ctx.defaultBg ?? ctx.colors.bg, source.fontSize)}
+                      fontSize={source.fontSize}
+                      fontFamily={ctx.fonts.body}
+                      dominantBaseline="alphabetic"
+                    >
+                      {line}
+                    </text>
+                  ))
+                : null}
+              {m.tag ? <MilestoneTag tag={m.tag} marked={Boolean(m.highlight)} x={tagX} y={tagTop} w={tagW} room={maxWidth} ctx={ctx} /> : null}
             </g>
           )
         })}
