@@ -1676,7 +1676,7 @@ describe("steps component", () => {
   it("rejects an unknown field on an item (strict)", () => {
     const d: any = minimal()
     const component = stepsComponent(2)
-    ;(component.items[0] as any).icon = "rocket"
+    ;(component.items[0] as any).href = "https://example.com"
     d.slides = [{ type: "content", kind: "points", components: [component] }]
     expect(parsePptxIR(d).success).toBe(false)
   })
@@ -2070,5 +2070,12 @@ describe("tag settled", () => {
 describe("numbered_cards item icon", () => {
   it("takes an icon on an item", () => {
     expect(parseOne({ type: "numbered_cards", items: [{ title: "a", icon: "pill" }, { title: "b" }, { title: "c" }] }).success).toBe(true)
+  })
+})
+
+describe("steps item icon and tone", () => {
+  it("takes an icon and a tone on a step, and refuses a tone it does not know", () => {
+    expect(parseOne({ type: "steps", items: [{ title: "a", text: "b", icon: "ruler", tone: "danger" }, { title: "c", text: "d" }] }).success).toBe(true)
+    expect(parseOne({ type: "steps", items: [{ title: "a", text: "b", tone: "stop" }, { title: "c", text: "d" }] }).success).toBe(false)
   })
 })
