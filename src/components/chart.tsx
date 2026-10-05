@@ -285,17 +285,31 @@ const LEGEND_LINE_SWATCH_H = 3;
  * dumbbell is one row read left to right rather than two independent series.
  * A palette swatch beside those names would be a legend describing a chart
  * that is not on the page.
+ *
+ * A bar chart with one bar marked (`data[].emphasis`) is the same case: the
+ * marked bar keeps its series' colour and every other bar recedes to grey
+ * (`markedPointFill`, `chart-svg.tsx`). A series none of whose bars is the
+ * marked one is drawn all in that grey, and its swatch is that grey too
+ * (`receded`), so no swatch names a colour no bar on the page has.
  */
 function legendSwatchFill(
   component: ChartComponent,
   seriesIndex: number,
   palette: string[],
   mutedColor: string,
-  accentColor: string
+  accentColor: string,
+  receded: string | null = null
 ): string {
   if (component.chart_type === "dumbbell")
     return seriesIndex === 0 ? mutedColor : accentColor;
+  if (receded !== null) return receded;
   return palette[seriesIndex % palette.length]!;
+}
+
+/** The series of the one bar a bar chart marks (`data[].emphasis`), or -1. */
+function markedBarSeries(component: ChartComponent): number {
+  if (component.chart_type !== "bar") return -1;
+  return component.series.findIndex((s) => s.data.some((d) => d.emphasis === true));
 }
 
 /**
@@ -740,6 +754,7 @@ export const chart: SvgComponent<ChartComponent> = {
     // legend both read, so swatch and mark cannot disagree. Unmarked charts
     // take the rotated palette untouched.
     const marked = markedSeriesIndex(component);
+    const markedBar = markedBarSeries(component);
     const palette = tonedSeriesPalette(
       component,
       marked < 0
@@ -855,7 +870,10 @@ export const chart: SvgComponent<ChartComponent> = {
                       slot.colorIndex,
                       palette,
                       ctx.colors.muted,
-                      ctx.colors.accent
+                      ctx.colors.accent,
+                      markedBar >= 0 && slot.seriesIndex >= 0 && slot.seriesIndex !== markedBar
+                        ? recededMarkFill(ctx.colors.muted, legendBg)
+                        : null
                     )}
                   />
                   )}

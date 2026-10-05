@@ -1987,6 +1987,28 @@ describe("chart point emphasis", () => {
   it("draws no tallest-bar gradient beside a marked bar", () => {
     expect(draw(years()).querySelector("linearGradient")).toBeNull()
   })
+
+  it("greys the swatch of a series whose bars all stepped back, so the legend names only colours on the page", () => {
+    const paths = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      series: [
+        { name: "默认值路径", data: [{ x: "2026", y: 144 }, { x: "2027", y: 169 }, { x: "2028", y: 197, emphasis: true }] },
+        { name: "实际值情景", data: [{ x: "2026", y: 14 }, { x: "2027", y: 16 }, { x: "2028", y: 22 }] },
+      ],
+    }
+    for (const direction of [undefined, "horizontal"] as const) {
+      const container = draw(direction ? { ...paths, direction } : paths)
+      const marks = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]')).map((r) => r.getAttribute("fill")!)
+      const grey = marks.find((f) => f !== PALETTE[0])!
+      const swatches = Array.from(container.querySelectorAll("rect"))
+        .filter((r) => !r.hasAttribute("data-plot-mark") && r.getAttribute("width") === "10" && r.getAttribute("height") === "10")
+        .map((r) => r.getAttribute("fill"))
+      expect(swatches, direction).toEqual([PALETTE[0], grey])
+      // No swatch names a colour no bar has.
+      for (const fill of swatches) expect(marks, direction).toContain(fill)
+    }
+  })
 })
 
 describe("chart point status and change brackets", () => {
