@@ -2057,7 +2057,12 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
       currentTy = ty
 
       const content = directText(el)
-      if (content && !inMidgroundSubtree) {
+      // A word drawn as an outline only (`fill="none"` with a stroke) is
+      // read by its stroke: that is the ink a reader sees, and the export
+      // writes it as the run's outline (`svg2pptx/text.ts`). A text with
+      // neither fill nor stroke paints nothing and has no contrast to judge.
+      const ink = currentFill === "none" ? (el.getAttribute("stroke") ?? "none") : currentFill
+      if (content && !inMidgroundSubtree && ink !== "none") {
         const pairedPadFill = resolveCandidateFill(el.getAttribute("data-emphasis-pad-fill"))
         const explicitPadBackground = typeof pairedPadFill === "string" ? pairedPadFill : null
         const background = explicitPadBackground ?? backgroundAt(tx, ty)
@@ -2107,9 +2112,9 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
             // sample outside of — this can only ever lower the reported
             // ratio relative to the pre-change behavior, never raise it.
             let worstBg = background
-            let worstRatio = contrastRatio(blendOver(currentFill, background, alpha), background)
+            let worstRatio = contrastRatio(blendOver(ink, background, alpha), background)
             for (const candidate of candidates) {
-              const ratio = contrastRatio(blendOver(currentFill, candidate, alpha), candidate)
+              const ratio = contrastRatio(blendOver(ink, candidate, alpha), candidate)
               if (ratio < worstRatio) {
                 worstRatio = ratio
                 worstBg = candidate
@@ -2118,7 +2123,7 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
             if (worstRatio < required) {
               issues.push({
                 text: content.slice(0, 24),
-                fill: currentFill,
+                fill: ink,
                 background: worstBg,
                 ratio: worstRatio,
                 required,
@@ -2145,7 +2150,7 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
             right: left + width,
             baseline: ty,
             fontSize: renderedFontSize,
-            fill: currentFill,
+            fill: ink,
             alpha,
             required,
           })
