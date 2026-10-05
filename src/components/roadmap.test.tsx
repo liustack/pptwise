@@ -109,6 +109,26 @@ describe("roadmap component", () => {
     expect(other.querySelector("[data-truncated]")).toBeNull()
   })
 
+  it("says so when a value runs past its two lines, and never of one that fits", () => {
+    const long = {
+      type: "roadmap" as const,
+      items: [
+        {
+          title: "定方法",
+          rows: [{ label: "核算", value: "按欧盟方法核算 2026 年直接排放，约定欧盟认可的核查机构，梳理欧盟客户合同里的 CBAM 费用条款，并把核算与核查费用列入预算" }],
+        },
+        { title: "实地核查", rows: [{ label: "核查", value: "首个核查年度实地查厂" }] },
+        { title: "首次清缴", rows: [{ label: "清缴", value: "申报人清缴 2026 年证书" }] },
+      ],
+    }
+    const { container } = svg(roadmap.render(long, { x: 0, y: 0, w: 1088 }, ctx))
+    const cut = Array.from(container.querySelectorAll("text[data-truncated]"))
+    expect(cut).toHaveLength(1)
+    expect(cut[0]!.textContent!.length).toBeGreaterThan(0)
+    expect("按欧盟方法核算 2026 年直接排放，约定欧盟认可的核查机构，梳理欧盟客户合同里的 CBAM 费用条款，并把核算与核查费用列入预算").toContain(cut[0]!.textContent!.replace(/…$/, ""))
+    expect(svg(roadmap.render(threePhase, { x: 0, y: 0, w: 1088 }, ctx)).container.querySelector("[data-truncated]")).toBeNull()
+  })
+
   it("sets each value on its label's baseline", () => {
     // The value started at 14.5px under the 16px floor: it painted at 16 but
     // was placed as if it were 14.5, a pixel and a half above its label.

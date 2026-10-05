@@ -59,7 +59,7 @@ const LABEL_VALUE_GAP = 12
 
 interface RowLayout {
   label: { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean }
-  value: { lines: string[]; fontSize: number; lineHeight: number }
+  value: { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean }
   height: number
   /** What the value rests on (`rows[].basis`): one that is not settled is underlined dashed. */
   basis?: NonNullable<NonNullable<RoadmapItem["rows"]>[number]["basis"]>
@@ -307,6 +307,8 @@ function renderCard(
             {row.value.lines.map((line, li) => (
               <text
                 key={li}
+                // Two lines is all a value has: one cut there says so, the way its label does.
+                data-truncated={row.value.truncated && li === row.value.lines.length - 1 ? "1" : undefined}
                 x={x + PAD_X + layout.labelColW}
                 y={rowTop + VALUE_SIZE + li * row.value.lineHeight}
                 fontSize={row.value.fontSize}
