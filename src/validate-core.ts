@@ -440,6 +440,7 @@ const FACE_PAGE_FIELDS = [
   { field: "kicker", name: "a kicker", fix: "move the label into the heading or summary, or remove it" },
   { field: "fields", name: "header lines (fields)", fix: "move them into the subheading or a component, or remove them" },
   { field: "stamp", name: "a stamp", fix: "say it in the heading or a component, or remove it" },
+  { field: "tag", name: "a page tag", fix: "say it in the subheading or the source line, or remove it" },
 ] as const
 
 /** Whether the slide asks for `field` at all: an empty kicker asks for nothing. */
@@ -449,7 +450,7 @@ function asksFor(slide: PptxIR["slides"][number], field: (typeof FACE_PAGE_FIELD
 }
 
 /**
- * A `kicker`, `fields` or a `stamp` is drawn only by a face that declares a
+ * A `kicker`, `fields`, a `stamp` or a page `tag` is drawn only by a face that declares a
  * place for it (`LayoutDefinition.pageFields`), on any page type. Every
  * other face would leave it off the page with nothing to say so, so the page
  * is refused, naming the face. An empty kicker asks for nothing.

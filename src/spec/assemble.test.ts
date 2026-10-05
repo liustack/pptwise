@@ -121,6 +121,15 @@ describe("assembleDeck", () => {
     expect(back.spec.pages[0]).not.toHaveProperty("fields")
   })
 
+  it("fills a page's tag from its page file, and gives it back", () => {
+    const tag = { text: "RCT · NEJM 2025", evidence: "trial" as const }
+    const { ir } = assembleDeck(spec(), { "body-a": { tag } })
+    expect(ir.slides[1]?.tag).toEqual(tag)
+    const back = disassembleDeck(ir)
+    expect(back.pages["body-a"]).toMatchObject({ tag })
+    expect(back.spec.pages[1]).not.toHaveProperty("tag")
+  })
+
   it("applies IR component defaults at the final parse boundary", () => {
     const pages = {
       "body-a": { components: [{ type: "image", asset_id: "hero" }] },

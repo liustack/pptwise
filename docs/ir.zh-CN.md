@@ -77,6 +77,7 @@ pptwise validate deck.json
 - `placeholder: true`，通常由未完成的 deck 项目产生
 - `heading` 与 `subheading`
 - `kicker`，标题上方的一行短标签（封面上的场合、结尾页要人拍板的事），只有声明了位置的脸才画，别的脸上 validate 直接拒绝并点名是哪张脸
+- `tag`，和标题放在一起的一枚小标签，说明整页依据的是什么（`text`，可选的 `evidence` 按来源性质上色，比如「RCT · NEJM 2025」写 `trial`）。和 `kicker` 一样，只有声明了位置的脸才画
 - `fields`，一到四行公文抬头，每行一个 `label`、一个 `value`、可选的 `note`（备忘录封面的致、发、日期、事由，结尾决定下的签发、抄送），以及 `stamp`，盖在页上的一枚印章（`text`，可选的 `date`）。和 `kicker` 一样，只有声明了位置的脸才画
 - `components`
 - `background`

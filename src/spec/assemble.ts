@@ -12,6 +12,7 @@ export interface PageContent {
   footnote?: string
   fields?: Slide["fields"]
   stamp?: Slide["stamp"]
+  tag?: Slide["tag"]
   notes?: string
 }
 
@@ -19,7 +20,7 @@ export interface PageContent {
  * The fields a page file may fill, in the order assembly copies them onto
  * the slide. Everything else a slide carries is the spec's.
  */
-export const PAGE_FILL_FIELDS = ["components", "background", "image_side", "footnote", "fields", "stamp", "notes"] as const satisfies readonly (keyof PageContent)[]
+export const PAGE_FILL_FIELDS = ["components", "background", "image_side", "footnote", "fields", "stamp", "tag", "notes"] as const satisfies readonly (keyof PageContent)[]
 
 export interface AssembleResult {
   ir: PptxIR
@@ -159,6 +160,7 @@ function extractPageContent(slide: Slide): PageContent {
   if (slide.footnote !== undefined) content.footnote = slide.footnote
   if (slide.fields !== undefined) content.fields = slide.fields
   if (slide.stamp !== undefined) content.stamp = slide.stamp
+  if (slide.tag !== undefined) content.tag = slide.tag
   if (slide.notes !== undefined) content.notes = slide.notes
   return content
 }

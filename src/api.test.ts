@@ -729,6 +729,16 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     expect(v.errors[0]!.message).toMatch(message)
   })
 
+  it("hard-rejects a page tag on a face with no place for it, naming the face", () => {
+    const v = validateIr({
+      ...raw,
+      slides: [{ type: "content", kind: "points", heading: "H", tag: { text: "RCT · NEJM 2025", evidence: "trial" }, components: [{ type: "paragraph", text: "x" }] }],
+    })
+    expect(v.ok).toBe(false)
+    expect(v.errors[0]!.path).toBe("slides.0.tag")
+    expect(v.errors[0]!.message).toMatch(/^face "[a-z-]+" has no place for a page tag/)
+  })
+
   it("refuses blank header lines and more than four of them at the schema", () => {
     const blank = validateIr({ ...raw, slides: [{ type: "cover", heading: "H", fields: [{ label: " ", value: "x" }] }] })
     expect(blank.ok).toBe(false)
