@@ -189,6 +189,18 @@ function asksForCalloutDetail(components: readonly CompositionProps["components"
   return components.some((component) => component.type === "callout" && (component.title !== undefined || component.tag !== undefined))
 }
 
+/**
+ * The compositions that draw the short line a waterfall's bar may carry under
+ * its label (`items[].note`). A page whose waterfall carries one is offered
+ * to these alone; the ordinary waterfall sets every note in a line of its own
+ * under the bars' names.
+ */
+const WATERFALL_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForWaterfallNote(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "waterfall" && component.items.some((item) => item.note !== undefined))
+}
+
 function asksForChartTag(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.tag !== undefined)
 }
@@ -205,10 +217,12 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const banded = (props.tagBand ?? 0) > 0
   const detailed = asksForTimelineDetail(props.components)
   const noted = asksForCalloutDetail(props.components)
+  const footed = asksForWaterfallNote(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
     if (noted && !CALLOUT_DETAIL_COMPOSITIONS.has(id)) continue
+    if (footed && !WATERFALL_NOTE_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     const drawn = COMPOSITIONS[id]({ ...props, handOn })

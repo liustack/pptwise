@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest"
 import { readableOn } from "../../render/ink"
 import { assertSubset } from "../../render/subset-validate"
 import { bridgeComposition, bridgeNote } from "./bridge"
-import { attrs, byText, NOTICE_PLOT, renderComposition, texts, textOf } from "./__fixtures__/kit"
+import { compose } from "."
+import type { Component } from "@/ir"
+import { attrs, byText, NOTICE_PLOT, renderComposition, testCtx, texts, textOf } from "./__fixtures__/kit"
 
 /** bulletin's 2026-10 mix page (p04): retail from 382.1 to 300.2, the fall in combustion cars marked. */
 const mix = (overrides: Record<string, unknown> = {}) => ({
@@ -59,5 +61,15 @@ describe("bridge composition", () => {
   it("declines a bridge that crosses zero and one with a label line over its marked bars", () => {
     expect(draw(mix({ items: [{ label: "A", value: 10, kind: "total" }, { label: "B", value: -30 }] })).element).toBeNull()
     expect(draw(mix({ emphasis_label: "燃油车占减量的 84%" })).element).toBeNull()
+  })
+})
+
+describe("a waterfall whose bars carry notes", () => {
+  it("is left to the ordinary waterfall, which sets the notes under the names", () => {
+    const { ctx } = testCtx("bulletin")
+    const base = mix() as unknown as { items: Record<string, unknown>[] }
+    const noted = { ...base, items: base.items.map((item, i) => (i === 0 ? { ...item, note: "零售" } : item)) } as unknown as Component
+    expect(compose({ components: [noted], ctx, rect: NOTICE_PLOT, setting: "notice" }, ["bridge"])).toBeNull()
+    expect(compose({ components: [mix() as unknown as Component], ctx, rect: NOTICE_PLOT, setting: "notice" }, ["bridge"])).not.toBeNull()
   })
 })

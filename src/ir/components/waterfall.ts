@@ -20,6 +20,12 @@ export const schema = z
             label: z.string(),
             value: z.number(),
             kind: z.enum(["delta", "total"]).optional(),
+            /** A short line under the bar's label. See the describe below. */
+            note: z
+              .string()
+              .min(1)
+              .optional()
+              .describe('A short line under the bar\'s label, such as the quantity it stands for: "3.187 吨", "+0.319 t" or "0.975 × 1.370 = 1.336 t".'),
             /** Marks the bars the page is about. Marked bars run in one
              * unbroken stretch and are never a total. */
             emphasis: z
