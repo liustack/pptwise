@@ -136,7 +136,7 @@ function verdictItems(cards: RowCards | NumberedCards): VerdictItem[] | null {
     return cards.items.map((item) => ({ icon: item.icon, title: item.title, text: item.text, marked: item.highlight === true }))
   }
   if (cards.items.some((item) => item.sub?.trim())) return null
-  return cards.items.map((item) => ({ title: item.title, text: item.text, marked: item.emphasis === true }))
+  return cards.items.map((item) => ({ icon: item.icon, title: item.title, text: item.text, marked: item.emphasis === true }))
 }
 
 /**

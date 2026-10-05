@@ -185,7 +185,7 @@ export const rowsComposition: Composition = (props) => {
  * the page's answer (`numbered_cards` `emphasis`) is reversed out of a
  * primary block, 8px clear of the row above it.
  *
- * Takes: `[numbered_cards]` of three to five items with no `sub`, or
+ * Takes: `[numbered_cards]` of three to five items with no `sub` or `icon`, or
  * `[bullets]` of two to five items, each optionally followed by an `info` or
  * `tip` `callout`, set as the notice closing panel.
  *
@@ -221,7 +221,7 @@ function noticeRowsShape(components: readonly Component[]): { rows: NoticeRow[];
   let rows: NoticeRow[]
   if (first.type === "numbered_cards") {
     const cards = first as NumberedCards
-    if (cards.items.length > N_MAX_ITEMS || cards.items.some((item) => item.sub?.trim())) return null
+    if (cards.items.length > N_MAX_ITEMS || cards.items.some((item) => item.sub?.trim() || item.icon)) return null
     rows = cards.items.map((item) => ({ label: item.title, gloss: item.text ?? "", marked: item.emphasis === true }))
   } else if (first.type === "bullets") {
     const items = drawableItems(first.items)

@@ -208,6 +208,25 @@ function isNumLabel(text: string | null): boolean {
 
 
 describe("numbered_pills", () => {
+  it("draws an item's icon between its number and its title, and moves the title clear of it", () => {
+    const clinic = themeCtx("clinic")
+    const plain = cards(3, { text: "一句说明。" })
+    const withIcon = { ...plain, items: plain.items.map((item, i) => (i === 0 ? { ...item, icon: "pill" as const } : item)) }
+    const box = { x: 0, y: 0, w: 1088 }
+    const titleX = (c: typeof plain) => {
+      const { container } = svg(numberedCards.render(c, box, clinic))
+      return Number(Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "要点1")!.getAttribute("x"))
+    }
+    const { container } = svg(numberedCards.render(withIcon, box, clinic))
+    const icons = container.querySelectorAll("g[transform*='scale']")
+    expect(icons).toHaveLength(1)
+    const badge = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "01")!
+    const iconX = Number(/translate\(([\d.]+)/.exec(icons[0]!.getAttribute("transform")!)![1])
+    expect(iconX).toBeGreaterThan(Number(badge.getAttribute("x")))
+    expect(titleX(withIcon)).toBeGreaterThan(iconX + 20)
+    expect(titleX(withIcon)).toBeGreaterThan(titleX(plain))
+  })
+
   it("paints items[].sub, right-aligned, without pushing the title off its own pill", () => {
     const clinic = themeCtx("clinic")
     const withSub = cards(4, { text: "一句说明。", sub: "一季度" })

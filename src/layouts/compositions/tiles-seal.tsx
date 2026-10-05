@@ -36,7 +36,7 @@ function tilesShape(components: readonly Component[]): NumberedCards | null {
   const [only, ...rest] = components
   if (only?.type !== "numbered_cards" || rest.length > 0) return null
   const n = only.items.length
-  if (n % 2 !== 0 || n < 2 || n > 6 || only.items.some((item) => item.sub?.trim())) return null
+  if (n % 2 !== 0 || n < 2 || n > 6 || only.items.some((item) => item.sub?.trim() || item.icon)) return null
   return only
 }
 

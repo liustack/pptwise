@@ -18,7 +18,7 @@ type Callout = Extract<Component, { type: "callout" }>
  * marks as the page's answer (`numbered_cards` `emphasis`) is a whole row
  * reversed out of the mark, its square turned white.
  *
- * Takes: `[numbered_cards]` of two to five items with no `sub`, or
+ * Takes: `[numbered_cards]` of two to five items with no `sub` or `icon`, or
  * `[bullets]` of two to five items written "Label: gloss", each optionally
  * followed by a `callout` set as a note panel under the rows.
  *
@@ -53,7 +53,7 @@ function rowsShape(components: readonly Component[]): { rows: SealRow[]; source:
   let rows: SealRow[]
   if (first.type === "numbered_cards") {
     const cards = first as NumberedCards
-    if (cards.items.length < MIN_ITEMS || cards.items.length > MAX_ITEMS || cards.items.some((item) => item.sub?.trim())) return null
+    if (cards.items.length < MIN_ITEMS || cards.items.length > MAX_ITEMS || cards.items.some((item) => item.sub?.trim() || item.icon)) return null
     rows = cards.items.map((item) => ({ title: item.title, gloss: item.text ?? "", marked: item.emphasis === true }))
   } else if (first.type === "bullets") {
     const items = drawableItems(first.items)

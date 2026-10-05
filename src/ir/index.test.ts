@@ -2066,3 +2066,9 @@ describe("tag settled", () => {
     expect(parseOne(row({ text: "不纳入", settled: true, quiet: true })).success).toBe(true)
   })
 })
+
+describe("numbered_cards item icon", () => {
+  it("takes an icon on an item", () => {
+    expect(parseOne({ type: "numbered_cards", items: [{ title: "a", icon: "pill" }, { title: "b" }, { title: "c" }] }).success).toBe(true)
+  })
+})

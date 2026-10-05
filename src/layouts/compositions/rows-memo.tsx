@@ -22,7 +22,7 @@ type NumberedCards = Extract<Component, { type: "numbered_cards" }>
  * an exhibit (the process fixes, p12), the text sits under the title in the
  * muted ink, the number bare at 30px and the title at 20px, 92px a row.
  *
- * Takes: `[numbered_cards]` of three to five items with no `sub`, or
+ * Takes: `[numbered_cards]` of three to five items with no `sub` or `icon`, or
  * `[bullets]` of two to five items written "Label: text".
  *
  * Declines: a `sub` line, a title past its lines, text past two lines, a
@@ -66,7 +66,7 @@ function rowsShape(components: readonly Component[]): { rows: MemoRow[]; source:
   if (first === undefined || rest.length > 0) return null
   if (first.type === "numbered_cards") {
     const cards = first as NumberedCards
-    if (cards.items.length > MAX_ITEMS || cards.items.some((item) => item.sub?.trim())) return null
+    if (cards.items.length > MAX_ITEMS || cards.items.some((item) => item.sub?.trim() || item.icon)) return null
     return { rows: cards.items.map((item) => ({ title: item.title, text: item.text ?? "", marked: item.emphasis === true })), source: first }
   }
   if (first.type === "bullets") {

@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, measureTextUnits } from "@/lib/svg-text-layout"
-import { accessibleInk, blendOver, readableOn } from "../render/ink"
+import { accessibleInk, blendOver, graphicInk, readableOn } from "../render/ink"
+import { Icon } from "../render/icons"
 import {
   headingEmphasisPaint,
   layoutEmphasisText,
@@ -70,6 +71,26 @@ const BASELINE_DROP = 0.85
 const SUB_GAP = 16
 const SUB_MAX_W = 180
 const SUB_MAX_SHARE = 0.34
+
+/**
+ * `items[].icon` stands between the number badge and the words, so the
+ * number a reader refers to the card by stays where it is and the symbol
+ * says what the card is about. Its size follows the pill, capped at the
+ * board size most icons are drawn at.
+ */
+const ICON_MAX = 24
+const ICON_PILL_RATIO = 0.36
+const ICON_GAP = 12
+
+/** The icon's size in a pill `pillH` tall. */
+function iconSize(pillH: number): number {
+  return Math.min(ICON_MAX, Math.round(pillH * ICON_PILL_RATIO))
+}
+
+/** How far an item's words move right for its icon. */
+function iconShift(item: { icon?: string }, pillH: number): number {
+  return item.icon ? iconSize(pillH) + ICON_GAP : 0
+}
 
 /** Fully rounded ends unless the theme's own radius token says otherwise. */
 function pillRx(pillH: number, ctx: ComponentCtx): number {
@@ -168,7 +189,7 @@ function pillText(item: Item, L: PillLayout, ctx: ComponentCtx, bodyCap = BODY_M
   const badgeR = Math.max(0, visualDiam / 2)
   const badgeInset = Math.max(0, (L.pillH - visualDiam) / 2)
   const badgeRight = badgeInset + 2 * badgeR
-  const textX = badgeRight + BADGE_TEXT_GAP
+  const textX = badgeRight + BADGE_TEXT_GAP + iconShift(item, L.pillH)
   const textRight = L.pillW - TEXT_PAD
   const subCap = Math.min(SUB_MAX_W, Math.max(0, (textRight - textX) * SUB_MAX_SHARE))
   const sub =
@@ -332,7 +353,7 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
         const badgeFont = Math.min(22, badgeR * 2 * 0.42)
         const badgeInk = readableOn(ctx.colors.accent)
         const badgeRight = badgeCx + badgeR
-        const textX = badgeRight + BADGE_TEXT_GAP
+        const textX = badgeRight + BADGE_TEXT_GAP + iconShift(item, L.pillH)
         const textRight = pillX + L.pillW - TEXT_PAD
         const { sub, title, titleBlockH, body } = pillText(item, L, ctx)
         // Centred by ink, not by line boxes: a line's leading sits mostly
@@ -388,6 +409,15 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
             >
               {num}
             </text>
+            {item.icon ? (
+              <Icon
+                name={item.icon}
+                x={badgeRight + BADGE_TEXT_GAP}
+                y={badgeCy - iconSize(L.pillH) / 2}
+                size={iconSize(L.pillH)}
+                color={marked ? onPill : graphicInk(ctx.colors.primary, surface)}
+              />
+            ) : null}
             {title.lines.map((line, li) =>
               renderEmphasisText(
                 title.segments[li] ?? [{ text: line, emphasized: false }],

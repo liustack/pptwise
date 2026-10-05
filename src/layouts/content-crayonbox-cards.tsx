@@ -33,7 +33,8 @@ const FOUR_RAYS: readonly DoodleRay[] = [
 function exactCardBlock(slide: SvgTemplateProps["slide"]): NumberedCards | null {
   if (slide.components.length !== 1) return null
   const only = slide.components[0]
-  return only?.type === "numbered_cards" ? only : null
+  // A card's icon has no place on the stickers: the ordinary cards draw it.
+  return only?.type === "numbered_cards" && !only.items.some((item) => item.icon) ? only : null
 }
 
 function cardBodyLines(item: NumberedCards["items"][number], fontFamily: string) {
