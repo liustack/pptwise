@@ -1,0 +1,85 @@
+{
+  "stage": "Risks",
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "risk",
+          "label": "Risk"
+        },
+        {
+          "key": "case",
+          "label": "What has happened"
+        },
+        {
+          "key": "plan",
+          "label": "Our response"
+        },
+        {
+          "key": "when",
+          "label": "When"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "construction",
+          "cells": {
+            "risk": "Obstacles",
+            "case": "Two Amazon MK30s hit a crane and caught fire (2025-10, NTSB)",
+            "plan": "Survey every leg, log cranes daily",
+            "when": "Months 1-6"
+          },
+          "emphasis": "highlight"
+        },
+        {
+          "icon": "triangle-alert",
+          "cells": {
+            "risk": "Forced landing",
+            "case": "Phoenix Wings' Ark 80 parachuted down in Shenzhen (2026-02)",
+            "plan": "Routes off crowds, a parachute on board",
+            "when": "Months 1-6"
+          }
+        },
+        {
+          "icon": "zap",
+          "cells": {
+            "risk": "Power lines",
+            "case": "Wing landed on power lines, about 2,000 homes cut off (2022-09)",
+            "plan": "Pads and routes clear of overhead lines",
+            "when": "Months 7-9"
+          }
+        },
+        {
+          "icon": "volume-2",
+          "cells": {
+            "risk": "Noise",
+            "case": "Wing's Canberra trial led to a noise review (2019)",
+            "plan": "Parks and suburbs first, notify residents before moving in",
+            "when": "Months 10-15"
+          }
+        },
+        {
+          "icon": "umbrella",
+          "cells": {
+            "risk": "Insurance",
+            "case": "China's minimum cover due only around 2027",
+            "plan": "Full third-party cover before the first flight",
+            "when": "Months 1-6"
+          }
+        },
+        {
+          "icon": "coins",
+          "cells": {
+            "risk": "Funding",
+            "case": "Operators drew 2.2% of big low-altitude deals (H1 2026, global)",
+            "plan": "Spend by milestone, check each one",
+            "when": "Throughout"
+          }
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: NTSB (2025-10), DoNews (2026-02-12), ABC (2022-09-30), Region (2019-06-19), NDRC (2026-02), ITjuzi (2026-07)",
+  "notes": "Our risk register. Every risk here has a real precedent, and we state only the facts. In October 2025 in Arizona, two Amazon MK30 drones hit a moving crane one after the other and their batteries caught fire. No one was hurt, and the NTSB has issued a preliminary report. In February 2026 a Phoenix Wings Ark 80 came down under its parachute in Shenzhen. The company called it an operator error during a test. In September 2022 a Wing delivery drone landed on power lines in Australia and about 2,000 homes lost power. In 2019, Wing's trial in Canberra drew noise complaints and a federal review. On insurance, China plans to set up mandatory cover by around 2027, and the minimum amount is not set yet. And on money: in the first half of 2026, operating services drew only about 2.2 percent of large low-altitude funding deals, global figures from ITjuzi. Most of it went to passenger eVTOL aircraft. Our responses: survey every route leg by leg and update temporary obstacles such as cranes daily. Keep routes away from crowds and fly with parachutes. Site landing points and routes clear of overhead lines. Start in parks and suburbs and notify residents before entering a community. Buy full third-party cover before the first flight, without waiting for the mandatory standard. And spend by milestone, with each stage checked on its own. These responses are plans. They go into our operations manual for the licensing review."
+}

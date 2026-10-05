@@ -1,0 +1,154 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "spacious",
+    "audience": "executive"
+  },
+  "theme": "ember",
+  "filename": "lowalt-delivery-pitch-zh",
+  "meta": {
+    "date": "2026 年 10 月"
+  },
+  "footer": {
+    "page_number": true,
+    "label": "种子轮路演"
+  },
+  "course": {
+    "stages": [
+      {
+        "label": "机会"
+      },
+      {
+        "label": "时机"
+      },
+      {
+        "label": "竞争"
+      },
+      {
+        "label": "切入"
+      },
+      {
+        "label": "证明"
+      },
+      {
+        "label": "风险"
+      },
+      {
+        "label": "计划"
+      },
+      {
+        "label": "请求"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "低空即时配送：先飞医疗和社区",
+      "summary": "一家还没开飞的公司，用 18 个月证明三件事",
+      "kicker": "种子轮路演"
+    },
+    {
+      "id": "p02-chapter-opportunity",
+      "type": "chapter",
+      "heading": "订单池很大，天上几乎还是空的"
+    },
+    {
+      "id": "p03-gap",
+      "type": "content",
+      "kind": "data",
+      "heading": "一年 600 亿单即时配送，无人机多年累计才过百万单",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p04-why-now",
+      "type": "content",
+      "kind": "process",
+      "heading": "为什么是现在：规则、顺序、定位三年接连落地",
+      "focus": "timeline"
+    },
+    {
+      "id": "p05-funnel",
+      "type": "content",
+      "kind": "data",
+      "heading": "深圳规划的起降点里，148 个专给医疗",
+      "focus": "chart"
+    },
+    {
+      "id": "p06-landscape",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "先行者证明了能飞、能拿证，还没证明能赚钱",
+      "focus": "data_table"
+    },
+    {
+      "id": "p07-chapter-wedge",
+      "type": "chapter",
+      "heading": "从哪里切进去，18 个月证明什么"
+    },
+    {
+      "id": "p08-wedge",
+      "type": "content",
+      "kind": "points",
+      "heading": "切入点从规则和规划推出来：先医疗和社区，先园区和城郊",
+      "focus": "concept_equation"
+    },
+    {
+      "id": "p09-medical",
+      "type": "content",
+      "kind": "photo",
+      "heading": "医疗单够轻、够急，先行者已经送过 460 万管标本",
+      "focus": "image"
+    },
+    {
+      "id": "p10-hypotheses",
+      "type": "content",
+      "kind": "list",
+      "heading": "要证明三个假设：成本、密度、安全",
+      "focus": "gantt"
+    },
+    {
+      "id": "p11-unit-economics",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "成本口径不同不可比：骑手有数，无人机只有降幅",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p12-compliance",
+      "type": "content",
+      "kind": "process",
+      "heading": "合规是门槛：开飞前要过五道关，评估规则还在换版",
+      "focus": "chevron_process"
+    },
+    {
+      "id": "p13-risks",
+      "type": "content",
+      "kind": "list",
+      "heading": "每条风险都有真实先例，我们先写应对再上天",
+      "focus": "data_table"
+    },
+    {
+      "id": "p14-milestones",
+      "type": "content",
+      "kind": "process",
+      "heading": "18 个月：先拿证，再开医疗航线，最后对表成本",
+      "focus": "roadmap"
+    },
+    {
+      "id": "p15-ask",
+      "type": "content",
+      "kind": "data",
+      "heading": "本轮请求：支撑 18 个月里程碑，六成用在取证和航线",
+      "focus": "chart"
+    },
+    {
+      "id": "p16-ending",
+      "type": "ending",
+      "heading": "一起把第一条医疗航线飞起来",
+      "summary": "18 个月，三道验证：先拿证，再开医疗航线，最后对表成本"
+    }
+  ]
+}

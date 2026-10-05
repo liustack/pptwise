@@ -1,0 +1,52 @@
+{
+  "stage": "Proof",
+  "components": [
+    {
+      "type": "chevron_process",
+      "items": [
+        {
+          "title": "Registration",
+          "text": "Two mandatory standards from 2026-05-01",
+          "icon": "fingerprint-pattern"
+        },
+        {
+          "title": "Pilot license",
+          "text": "Required to fly a small drone",
+          "icon": "id-card"
+        },
+        {
+          "title": "Liability cover",
+          "text": "Required for commercial flights",
+          "icon": "umbrella"
+        },
+        {
+          "title": "Risk assessment",
+          "text": "SORA 2.5 guide still out for comment",
+          "icon": "file-check"
+        },
+        {
+          "title": "Operating certificate",
+          "text": "CCAR-92, valid for 24 months",
+          "icon": "badge-check"
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "RMB 50k-500k",
+          "label": "Cost of skipping it",
+          "note": "Fine for flying without a certificate (Regulations, Art. 49)"
+        },
+        {
+          "value": "120 m",
+          "label": "Below 120 m is not open sky",
+          "note": "Airspace over airports and key sites is controlled (Art. 19)"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: State Council drone regulations, CCAR-92, CAAC consultation notice (2026-04-15), Xinhua (2025-12-10)",
+  "notes": "The regulatory path. To run commercial deliveries with small drones, there are five steps before the first flight. One, registration: two mandatory national standards on real-name registration and remote identification took effect on May 1, 2026. Two, anyone flying a small drone needs a pilot license. Three, commercial flights must carry liability insurance. Four, specific-category operations need a risk assessment. China uses the SORA method, and in April 2026 CAAC put out a draft guide based on SORA 2.5 for comment. It has not taken effect yet. Five, the operating certificate itself, valid for 24 months under CCAR-92 and then renewed. The gate is real: flying without an operating certificate carries a fine of 50,000 to 500,000 yuan. And staying below 120 meters does not mean free airspace: the areas around airports and key facilities are controlled. Because the assessment rules are changing, we prepare to the 2.5 draft and re-check when the final version is published. For us this is a barrier and a moat at once, and our first milestone is getting the certificate."
+}

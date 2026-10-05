@@ -1,0 +1,30 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "chapter-rooftop"
+  },
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "target",
+          "title": "楔子：医疗加社区，先园区和城郊"
+        },
+        {
+          "icon": "flask-conical",
+          "title": "三个待验证的假设"
+        },
+        {
+          "icon": "shield-check",
+          "title": "五道合规关口和六条风险"
+        },
+        {
+          "icon": "flag",
+          "title": "18 个月里程碑和本轮请求"
+        }
+      ]
+    }
+  ],
+  "notes": "第二部分：我们从哪里切进去，以及为什么是这里。背景图为 AI 生成的示意图。"
+}

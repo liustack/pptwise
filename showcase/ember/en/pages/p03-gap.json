@@ -1,0 +1,28 @@
+{
+  "stage": "Opportunity",
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "60bn",
+          "label": "Instant delivery orders in China in 2025, one year"
+        },
+        {
+          "value": "**1m+**",
+          "label": "Meituan's commercial drone orders, all years"
+        },
+        {
+          "value": "About 2 in 100,000",
+          "label": "Several years of drone orders over one year of all orders, scale only"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "The orders all move on the ground and the sky's share is close to zero. That does not prove demand. It proves the space is still open."
+    }
+  ],
+  "footnote": "Source: CFLP 2026 instant logistics report (via Yicai, 2026-03-26), Meituan (2026-09-11, company figure), IT Home (2026-07-22). Illustration: the squares are not to scale",
+  "notes": "One point on this page: the order pool is enormous and drones have almost none of it. China handled more than 60 billion instant delivery orders in 2025, according to the China Federation of Logistics and Purchasing. On the drone side, Meituan, the furthest along, passed 1 million commercial orders in total only by the end of June 2026, counting every year since it started. Set that multi-year total against one year of orders and you get about 2 in 100,000. The two numbers are not on the same basis, so we only use the ratio to show the order of magnitude: the sky is still empty."
+}

@@ -1,0 +1,30 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "chapter-night"
+  },
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "package",
+          "title": "60bn orders a year, drones 1m+ in all"
+        },
+        {
+          "icon": "trending-up",
+          "title": "Why now: three years, three policies"
+        },
+        {
+          "icon": "map-pin",
+          "title": "Medical landing points in Shenzhen's plan"
+        },
+        {
+          "icon": "users",
+          "title": "What six pioneers have proven"
+        }
+      ]
+    }
+  ],
+  "notes": "First, the opportunity. On the ground, instant delivery in China is one of the largest order pools in the world. In the air, the share is close to zero. The background photo is an AI-generated illustration."
+}

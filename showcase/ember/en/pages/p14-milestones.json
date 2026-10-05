@@ -1,0 +1,62 @@
+{
+  "stage": "Plan",
+  "components": [
+    {
+      "type": "roadmap",
+      "duration_unit": "months",
+      "items": [
+        {
+          "title": "Operating certificate",
+          "period": "Months 1 to 6",
+          "icon": "file-check",
+          "duration": 6,
+          "checkpoint": "Gate: month 6",
+          "points": [
+            "Certificate and pilot licenses",
+            "Full third-party cover",
+            "Specific-category risk assessment"
+          ],
+          "emphasis": true
+        },
+        {
+          "title": "First medical route",
+          "period": "Months 7 to 9",
+          "icon": "hospital",
+          "duration": 3,
+          "points": [
+            "Point to point, in a park or suburb",
+            "Tests hypothesis 3: steady flying"
+          ]
+        },
+        {
+          "title": "Community points",
+          "period": "Months 10 to 15",
+          "icon": "map-pin",
+          "duration": 6,
+          "points": [
+            "From medical sites to community pads",
+            "Tests hypothesis 2: orders climb"
+          ]
+        },
+        {
+          "title": "Cost check",
+          "period": "Months 16 to 18",
+          "icon": "coins",
+          "duration": 3,
+          "points": [
+            "Same basis as RMB 4.54",
+            "Raise the next round on three data sets"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "icon": "flag",
+      "text": "Gate: no operating certificate by month 6, and route spending stops until we have one"
+    }
+  ],
+  "footnote": "This is a plan. Months count from the close of this round",
+  "notes": "Eighteen months, four milestones, each one checked on its own. Months 1 to 6: get the operating certificate and pilot licenses, buy full insurance and complete the specific-category risk assessment. This is the gate, and nothing after it matters if we do not pass it. Months 7 to 9: open our first medical route, point to point in a business park or suburb, and answer hypothesis three, whether we fly safely and steadily. Months 10 to 15: extend from medical points to community delivery points and answer hypothesis two, whether orders per point keep climbing. Months 16 to 18: calculate our cost per order on the same basis and check it against the courier figure of 4.54 yuan, which answers hypothesis one. Then we raise the next round on those three data sets. We have set ourselves a gate: if we do not have the operating certificate by month 6, we stop spending on routes and landing points until we do, rather than gamble investors' money. All of this is a plan, and months count from the close of this round."
+}

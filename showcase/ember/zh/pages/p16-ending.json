@@ -1,0 +1,29 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "milestones": [
+        {
+          "date": "第 6 个月",
+          "title": "运营合格证",
+          "icon": "file-check"
+        },
+        {
+          "date": "第 9 个月",
+          "title": "首条医疗航线",
+          "icon": "hospital"
+        },
+        {
+          "date": "第 18 个月",
+          "title": "同口径成本数据",
+          "icon": "coins"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "约个时间聊"
+    }
+  ],
+  "notes": "最后重复一遍请求：本轮支撑 18 个月里程碑，从拿证到第一条医疗航线，再到第一组能和骑手对表的成本数据。欢迎会后约时间细谈。"
+}

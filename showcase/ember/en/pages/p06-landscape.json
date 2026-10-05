@@ -1,0 +1,101 @@
+{
+  "stage": "Rivals",
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "who",
+          "label": "Pioneer"
+        },
+        {
+          "key": "scene",
+          "label": "Main use"
+        },
+        {
+          "key": "scale",
+          "label": "Public scale"
+        },
+        {
+          "key": "network",
+          "label": "Network"
+        },
+        {
+          "key": "cost",
+          "label": "Cost per order",
+          "emphasis": true,
+          "icon": "circle-help"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "utensils",
+          "cells": {
+            "who": "Meituan",
+            "scene": "Food, medical",
+            "scale": "1m+ orders",
+            "network": "70 routes, 6 cities",
+            "cost": "Not published"
+          }
+        },
+        {
+          "icon": "package",
+          "cells": {
+            "who": "Phoenix Wings",
+            "scene": "Parcels, cross-sea",
+            "scale": "600-700 flights a day",
+            "network": "383 routes, Shenzhen",
+            "cost": "Not published"
+          }
+        },
+        {
+          "icon": "truck",
+          "cells": {
+            "who": "JD Logistics",
+            "scene": "Rural last mile",
+            "scale": "78 villages, Zizhong",
+            "network": "78 routes, Zizhong",
+            "cost": "Not published"
+          }
+        },
+        {
+          "icon": "hospital",
+          "cells": {
+            "who": "Antwork",
+            "scene": "Mostly medical",
+            "scale": "2.6m km flown",
+            "network": "55 cities",
+            "cost": "Not published"
+          }
+        },
+        {
+          "icon": "plane",
+          "cells": {
+            "who": "Zipline",
+            "scene": "Medical, retail",
+            "scale": "2.5m+ deliveries",
+            "network": "About 70% in the US",
+            "cost": "Not published"
+          }
+        },
+        {
+          "icon": "store",
+          "cells": {
+            "who": "Wing",
+            "scene": "Retail",
+            "scale": "1m+ deliveries",
+            "network": "270+ Walmart sites, 2027",
+            "cost": "Not published"
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "None of the six publishes an absolute cost per order, and Meituan only says it falls 40% to 50% a year. Whoever does this sum first has the say."
+    }
+  ],
+  "footnote": "Source: Meituan, SF, JD, Antwork, Zipline and Wing releases and press reports (2025-07 to 2026-07), company figures",
+  "notes": "The competitive landscape. Four in China. Meituan runs urban food and medical deliveries, has passed 1 million orders in total, flies 70 routes across six cities including Shenzhen, Beijing, Shanghai, Guangzhou, Hong Kong and Dubai, and holds China's first operating certificate for low-altitude logistics with full-area coverage. SF Express's Phoenix Wings runs parcels, cross-sea and intercity routes, with 168 drones and 383 routes in Shenzhen and 600 to 700 flights a day. JD Logistics runs rural last-mile routes in Zizhong, Sichuan, where its first 78 routes reach 78 villages. Antwork is mostly medical, active in 55 cities, with 2.6 million kilometers flown. Abroad, Zipline has passed 2.5 million deliveries and was valued at 7.6 billion dollars in January. Wing has passed 1 million and plans more than 270 Walmart sites by 2027. The takeaway: the pioneers have shown that drones can fly, get licensed and build networks. None has published an actual cost per order. Meituan only says its cost per order falls 40 to 50 percent a year. Whether this makes money is still an open question, and that is the question our data will answer. All figures are company statements or press reports."
+}

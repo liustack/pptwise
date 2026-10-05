@@ -1,0 +1,29 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "milestones": [
+        {
+          "date": "Month 6",
+          "title": "Operating certificate",
+          "icon": "file-check"
+        },
+        {
+          "date": "Month 9",
+          "title": "First medical route",
+          "icon": "hospital"
+        },
+        {
+          "date": "Month 18",
+          "title": "Same-basis cost data",
+          "icon": "coins"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Let's set a time"
+    }
+  ],
+  "notes": "To repeat the ask: this round funds 18 months of milestones, from the operating certificate, to our first medical route, to the first cost figures we can check against couriers. We would welcome a follow-up conversation."
+}

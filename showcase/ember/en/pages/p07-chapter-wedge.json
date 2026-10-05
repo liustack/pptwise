@@ -1,0 +1,30 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "chapter-rooftop"
+  },
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "target",
+          "title": "The wedge: medical plus community, parks first"
+        },
+        {
+          "icon": "flask-conical",
+          "title": "Three hypotheses to test"
+        },
+        {
+          "icon": "shield-check",
+          "title": "Five compliance gates and six risks"
+        },
+        {
+          "icon": "flag",
+          "title": "18-month milestones and this round's ask"
+        }
+      ]
+    }
+  ],
+  "notes": "Part two: where we enter, why there, and what the next 18 months must prove. The background photo is an AI-generated illustration."
+}

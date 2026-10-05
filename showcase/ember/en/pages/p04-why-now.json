@@ -1,0 +1,36 @@
+{
+  "stage": "Timing",
+  "components": [
+    {
+      "type": "timeline",
+      "milestones": [
+        {
+          "date": "2024",
+          "icon": "file-check",
+          "title": "Rules in force",
+          "desc": "Drone regulations and CCAR-92 took effect on January 1. Certificates, licenses and cover got one bar"
+        },
+        {
+          "date": "2025",
+          "icon": "route",
+          "title": "The order is set",
+          "desc": "NDRC: cargo, segregated airspace and outskirts first. Cargo delivery is first in line"
+        },
+        {
+          "date": "2026",
+          "icon": "trending-up",
+          "title": "Status raised",
+          "desc": "Third year running in the Government Work Report. Named an emerging pillar industry",
+          "highlight": true
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "The base is growing too: 45.3m drone flight hours in 2025 (up 69.89%) and 38,872 licensed operators"
+    }
+  ],
+  "footnote": "Source: drone regulations, CCAR-92, NDRC briefing (2025-12-31), Government Work Reports 2024 to 2026, CAAC 2025 statistics",
+  "notes": "Why now. Three reasons, one per year. On January 1, 2024, the State Council's interim drone regulations and CAAC's CCAR-92 took effect on the same day, and commercial drone flying got a clear licensing path for the first time. At the end of 2025, the NDRC set the order of entry at a press briefing: cargo before passengers, segregated airspace before shared airspace, outskirts before city centers. Instant delivery is cargo, so it comes first. City centers come last, which is both the opening and the constraint. In 2026 the low-altitude economy appeared in the Government Work Report for the third year running, moving from a new growth engine, to safe and healthy development, to an emerging pillar industry. The base is growing too: drones in China flew 45.3 million hours in 2025, up almost 70%, and the number of units holding an operating certificate doubled in a year to 38,872. Most of those hours are crop spraying and inspection, not delivery."
+}

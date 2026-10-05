@@ -1,0 +1,41 @@
+{
+  "stage": "Wedge",
+  "components": [
+    {
+      "type": "concept_equation",
+      "operands": [
+        {
+          "icon": "route",
+          "label": "Order of entry",
+          "value": "Cargo",
+          "note": "Segregated airspace and outskirts first (NDRC)"
+        },
+        {
+          "icon": "map-pin",
+          "label": "City plan",
+          "value": "413",
+          "note": "Shenzhen community points, 148 of them medical"
+        },
+        {
+          "icon": "hospital",
+          "label": "Proven demand",
+          "value": "4.6m",
+          "note": "Medical sample tubes Antwork has flown (company figure)"
+        }
+      ],
+      "result": {
+        "label": "Our wedge",
+        "value": "Medical + community",
+        "note": "Parks and suburbs with pads first"
+      },
+      "excluded": {
+        "icon": "ban",
+        "label": "Not yet",
+        "value": "Peak-hour food downtown",
+        "note": "Last in the order of entry, and Meituan's home turf"
+      }
+    }
+  ],
+  "footnote": "Source: NDRC briefing (2025-12-31), Shenzhen low-altitude infrastructure plan (Shenzhen DRC), China.com (2025-11-26, company figure)",
+  "notes": "We did not pick this entry point by instinct. It falls out of public information. First, the order of entry: the NDRC was explicit, cargo before passengers, segregated airspace before shared airspace, outskirts before city centers. So we start with cargo, in parks and suburbs where segregated airspace is easiest to draw. Second, the landing-point plan: Shenzhen plans 413 community delivery points, 148 of them medical. The endpoints are already in the plan, so we do not have to persuade the city to build them. Put the two together and you get our wedge: medical first, then community, starting from business parks and suburbs that already have landing points. Just as important is what we will not do first: food orders at peak hours in city centers. That comes last in the order of entry, and it is Meituan's home ground. We will not take it head on."
+}
