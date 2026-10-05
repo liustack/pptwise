@@ -123,8 +123,6 @@ function scaleOp(op: Op, sx: number, sy: number): Op {
       // picture's natural size, which only sets the crop, so the box scales
       // with it and the crop stays the same.
       return { ...op, ...box, ...(op.sizing ? { sizing: { ...op.sizing, w: op.sizing.w * sx, h: op.sizing.h * sy } } : {}) }
-    default:
-      return { ...op, ...box }
   }
 }
 
