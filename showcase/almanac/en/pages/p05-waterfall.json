@@ -1,0 +1,62 @@
+{
+  "years": {
+    "from": 2026,
+    "to": 2034,
+    "marked": [
+      2026
+    ]
+  },
+  "tag": {
+    "text": "Reg. 2025/2083 Art. 6(2)(c) · Reg. 2025/2620 formula 6",
+    "basis": "law"
+  },
+  "components": [
+    {
+      "type": "waterfall",
+      "unit": "€",
+      "items": [
+        {
+          "label": "China default",
+          "value": 240.2,
+          "kind": "total",
+          "note": "3.187 t"
+        },
+        {
+          "label": "10% markup",
+          "value": 24.0,
+          "note": "+0.319 t"
+        },
+        {
+          "label": "Free allocation",
+          "value": -100.7,
+          "note": "0.975 × 1.370 = 1.336 t",
+          "emphasis": true
+        },
+        {
+          "label": "Due",
+          "value": 163.5,
+          "kind": "total",
+          "note": "2.170 t"
+        }
+      ]
+    },
+    {
+      "type": "code",
+      "language": "formula",
+      "title": "Formula",
+      "code": "n = D × (1 + m)\n  − factor × CSCF × BM\ncost = n × P\nP = €75.36"
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "D: default 3.187",
+        "m: markup 10%",
+        "factor: 97.5%",
+        "CSCF: 100%",
+        "BM: EU benchmark 1.370"
+      ]
+    }
+  ],
+  "footnote": "Source: Regs (EU) 2025/2621 (defaults) and 2025/2620 (benchmarks), Decision (EU) 2026/1862 (CSCF). Coil 7208, Q1 2026 price €75.36",
+  "notes": "Here is how €163.5 per tonne comes about. Step one: the EU default value for Chinese hot-rolled coil is 3.187 tonnes of CO2 equivalent per tonne, worth about €240 at €75.36. Step two: filing on default values adds a markup, 10% in 2026, taking emissions to 3.506 tonnes and adding about €24. Step three deducts the free allocation adjustment. Formula 6 of the implementing regulation sets it as the CBAM factor times the cross-sectoral correction factor times the EU benchmark, 0.975 × 1.00 × 1.370, or 1.336 tonnes, about €101. Step four would deduct carbon prices already paid in China, which we set at zero for the reasons on the China carbon price slide. What remains is 2.170 tonnes, about €163.5 per tonne. Step three is the key: the free part is set by the EU benchmark and has nothing to do with our own emissions. Every tonne above the benchmark is charged in full from the first year."
+}

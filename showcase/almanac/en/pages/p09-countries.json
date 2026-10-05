@@ -1,0 +1,79 @@
+{
+  "years": {
+    "from": 2026,
+    "to": 2034,
+    "marked": [
+      2026
+    ]
+  },
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "y_title": "Hot-rolled flat 7208 default, tCO₂e/t (before markup)"
+      },
+      "reference": {
+        "value": 1.37,
+        "label": "EU benchmark 1.370"
+      },
+      "series": [
+        {
+          "name": "Hot-rolled flat 7208 default",
+          "data": [
+            {
+              "x": "India",
+              "y": 4.28
+            },
+            {
+              "x": "China",
+              "y": 3.187,
+              "emphasis": true
+            },
+            {
+              "x": "Ukraine",
+              "y": 2.483
+            },
+            {
+              "x": "Turkey",
+              "y": 2.428
+            },
+            {
+              "x": "Vietnam",
+              "y": 2.35
+            },
+            {
+              "x": "South Korea",
+              "y": 2.118
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**About €63**",
+          "label": "More per tonne of Chinese coil than Turkish, 2026",
+          "note": "€163.5 against €100.6",
+          "icon": "scale"
+        },
+        {
+          "value": "2.3×",
+          "label": "China's default against the 1.370 EU benchmark",
+          "note": "South Korea 1.5×, Turkey 1.8×",
+          "icon": "trending-up"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "This compares everyone on defaults. Once rivals report actual values, the gap changes."
+    }
+  ],
+  "footnote": "Source: Regulations (EU) 2025/2621, 2026/1740 (before markup), 2025/2620. Leading 2025 EU suppliers, ordered by default value",
+  "notes": "Default values are set at each exporting country's average emission intensity, then marked up. China's default for hot-rolled coil is 3.187 tonnes per tonne, 2.3 times the 1.370 EU benchmark. Among the main rival sources in the EU market, Turkey sits at 2.428, South Korea 2.118, Vietnam 2.350 and Ukraine 2.483, all below us. Only India, at 4.280, is higher. In money, on default values Chinese coil costs about €163.5 per tonne in 2026 against about €100.6 for Turkish coil, about €63 more, and South Korean coil costs even less, about €75. As long as we stay on defaults, our quotes start at a disadvantage to Turkish and Korean mills. That is the plainest commercial case for actual values."
+}

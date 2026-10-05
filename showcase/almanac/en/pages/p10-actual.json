@@ -1,0 +1,103 @@
+{
+  "years": {
+    "from": 2026,
+    "to": 2034,
+    "marked": [
+      2026,
+      2027,
+      2028,
+      2029,
+      2030,
+      2031,
+      2032,
+      2033,
+      2034
+    ]
+  },
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "axes": {
+        "y_title": "Unwrought aluminium, cost per tonne",
+        "y_unit": "€"
+      },
+      "tag": {
+        "text": "A demo at €75.36, not a forecast",
+        "basis": "estimate"
+      },
+      "series": [
+        {
+          "name": "Default path",
+          "data": [
+            {
+              "x": "2026",
+              "y": 144
+            },
+            {
+              "x": "2027",
+              "y": 169
+            },
+            {
+              "x": "2028",
+              "y": 197
+            },
+            {
+              "x": "2030",
+              "y": 239
+            },
+            {
+              "x": "2034",
+              "y": 294
+            }
+          ]
+        },
+        {
+          "name": "Actual at 1.57",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "2026",
+              "y": 14
+            },
+            {
+              "x": "2027",
+              "y": 16
+            },
+            {
+              "x": "2028",
+              "y": 22
+            },
+            {
+              "x": "2030",
+              "y": 63
+            },
+            {
+              "x": "2034",
+              "y": 118
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "ingots",
+      "fit": "cover",
+      "caption": "Illustration: primary aluminium ingots (AI-generated)"
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "icon": "file-check",
+      "title": "1.57 is a reported industry average",
+      "text": "Not our measured value. Actual values skip the 10% to 30% markup, but must pass EU-accredited verification.",
+      "tag": {
+        "text": "Our own value: after verification",
+        "basis": "pending"
+      }
+    }
+  ],
+  "footnote": "Source: industry association figure (reported by Jiemian, 23 May 2026), Regs 2025/2621 and 2025/2620. The photo is an AI illustration",
+  "notes": "The fastest lever is replacing default values with verified actual emissions, for two reasons: actual values carry no 10% to 30% markup, and the benchmark follows our real production route. Take unwrought aluminium. Its default value is 3.000, counted as 3.3 tonnes after markup, which costs about €144 per tonne in 2026. The China Nonferrous Metals Industry Association has been reported as putting the sector's average direct emissions for primary aluminium at about 1.57 tonnes. Filed at that level and verified, the cost would be about €14 per tonne in 2026, €63 in 2030 and €118 in 2034, saving about €1.3 million per 10,000 tonnes exported in 2026. Three caveats. First, 1.57 is an industry average scenario, not our measurement, and our own figure will be filled in after verification. Second, a real filing builds the free allocation from process benchmarks step by step, while this uses the column B benchmark as an approximation, so the result will differ. Third, amounts from 2027 also hold the price at €75.36 and are not a forecast. Steel works the same way: every 0.1 tonne of actual emissions below the default saves about €7.5 per tonne. The photo is an AI-generated illustration."
+}

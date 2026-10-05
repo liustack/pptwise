@@ -1,0 +1,153 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "almanac",
+  "filename": "cbam-2026-esg-committee",
+  "meta": {
+    "organization": "可持续发展部",
+    "date": "2026 年 10 月"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "CBAM 开始计费：先改报实际排放",
+      "summary": "董事会 ESG 委员会汇报"
+    },
+    {
+      "id": "p02-ask",
+      "type": "content",
+      "kind": "points",
+      "heading": "请委员会定两件事：改报实际排放，为三条线列预算项",
+      "focus": "row_cards",
+      "kicker": "决定"
+    },
+    {
+      "id": "p03-timeline",
+      "type": "content",
+      "kind": "process",
+      "heading": "2026 年的进口，2027 年 9 月 30 日前一次申报清缴",
+      "focus": "timeline",
+      "kicker": "时间"
+    },
+    {
+      "id": "p04-curve",
+      "type": "content",
+      "kind": "data",
+      "heading": "默认值路径下，热轧卷每吨从约 €164 涨到 2034 年约 €312",
+      "focus": "chart",
+      "kicker": "账单"
+    },
+    {
+      "id": "p05-waterfall",
+      "type": "content",
+      "kind": "data",
+      "heading": "€164 的来历：默认值加 10%，免费部分只按欧盟基准扣",
+      "focus": "waterfall",
+      "kicker": "账单"
+    },
+    {
+      "id": "p06-miscalc",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "常见误算按排放的 97.5% 扣免费配额，每吨少算 €150 以上",
+      "focus": "comparison",
+      "kicker": "账单"
+    },
+    {
+      "id": "p07-exposure",
+      "type": "content",
+      "kind": "data",
+      "heading": "中国是欧盟最大的 CBAM 钢铁来源，€134.6 亿里七成是制品",
+      "focus": "chart",
+      "kicker": "暴露"
+    },
+    {
+      "id": "p08-products",
+      "type": "content",
+      "kind": "photo",
+      "heading": "制品的默认值是钢板的两倍：螺钉螺栓 2026 年每吨约 €428",
+      "focus": "image",
+      "kicker": "暴露"
+    },
+    {
+      "id": "p09-countries",
+      "type": "content",
+      "kind": "data",
+      "heading": "按默认值，中国热轧卷每吨比土耳其多付约 €63",
+      "focus": "chart",
+      "kicker": "暴露"
+    },
+    {
+      "id": "p10-actual",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "最快的降费是改报实际排放：铝按行业均值情景每吨降到约 €14",
+      "focus": "chart",
+      "kicker": "降费"
+    },
+    {
+      "id": "p11-verify",
+      "type": "content",
+      "kind": "process",
+      "heading": "改报实际值要先过核查：首个核查年度必须实地查厂",
+      "focus": "steps",
+      "kicker": "核查"
+    },
+    {
+      "id": "p12-china-price",
+      "type": "content",
+      "kind": "fact",
+      "heading": "能拿中国碳价抵扣的很少：钢铝配额盈亏不超过 3%",
+      "focus": "kpi_cards",
+      "kicker": "抵扣"
+    },
+    {
+      "id": "p13-green-power",
+      "type": "content",
+      "kind": "photo",
+      "heading": "绿电和绿证今天不减 CBAM 账单，但国内考核已经在要",
+      "focus": "kpi_cards",
+      "kicker": "绿电"
+    },
+    {
+      "id": "p14-routes",
+      "type": "content",
+      "kind": "data",
+      "heading": "工艺路线是十年的事：电炉、直接还原铁、氢冶金要分开算",
+      "focus": "image_grid",
+      "kicker": "工艺"
+    },
+    {
+      "id": "p15-rules",
+      "type": "content",
+      "kind": "list",
+      "heading": "规则还在变：默认值复审、下游扩围、免费配额延期",
+      "focus": "kpi_cards",
+      "kicker": "规则"
+    },
+    {
+      "id": "p16-roadmap",
+      "type": "content",
+      "kind": "process",
+      "heading": "路线图：2027 年 9 月 30 日前交出核查后的排放",
+      "focus": "roadmap",
+      "kicker": "路线"
+    },
+    {
+      "id": "p17-ending",
+      "type": "ending",
+      "heading": "请委员会今天决定三件事",
+      "summary": "可持续发展部 · 2026 年 10 月",
+      "kicker": "决定"
+    }
+  ]
+}

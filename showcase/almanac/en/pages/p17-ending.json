@@ -1,0 +1,17 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "wind"
+  },
+  "components": [
+    {
+      "type": "bullets",
+      "items": [
+        "Actual values: **count and verify 2026 emissions**",
+        "Green power: budget certificates for the quota",
+        "Routes: fund EAF and DRI studies"
+      ]
+    }
+  ],
+  "notes": "To close, the three decisions we ask for today. The first is the most urgent: approve the switch to actual values, start calculating 2026 direct emissions and book an accredited verifier now, because the accreditation system is still being built and the first verified year needs a site visit. Second, budget green certificates to meet the domestic quota. They do not lower the CBAM bill today, but domestic rules and buyers already ask for them. Third, add electric arc furnace and DRI feasibility studies to the budget, so a route is set before free allocation ends in 2034. Amounts for all three follow once quotes and scope are settled. If the rules change materially, we will come back with an update. The background photo is an AI-generated illustration."
+}

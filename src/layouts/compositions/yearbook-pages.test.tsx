@@ -164,7 +164,9 @@ describe("the almanac board's pages on almanac", () => {
     const inks = yearbookInks(ctx)
     const fills = Array.from(root!.querySelectorAll("[data-yearbook-bar] rect")).map((r) => r.getAttribute("fill"))
     expect(fills).toEqual([inks.quiet, inks.ghost, inks.accent, inks.mark])
-    expect(root!.querySelectorAll("[data-yearbook-parameters] text")).toHaveLength(12)
+    // Five parameters, each its symbol and what it stands for.
+    expect(root!.querySelectorAll("[data-yearbook-parameters] text")).toHaveLength(10)
+    expect(byText(root!, "P = €75.36")).toBeDefined()
     expect(byText(root!, "− 因子 × CSCF × BM")!.getAttribute("data-formula-indent")).toBe("2")
   })
 

@@ -1,0 +1,50 @@
+{
+  "years": {
+    "from": 2026,
+    "to": 2034,
+    "marked": [
+      2026
+    ]
+  },
+  "components": [
+    {
+      "type": "comparison",
+      "columns": [
+        "Common shortcut",
+        "The legal formula"
+      ],
+      "recommended": 1,
+      "rows": [
+        {
+          "label": "Free allocation",
+          "cells": [
+            "Emissions × 97.5%",
+            "0.975 × EU benchmark 1.370"
+          ]
+        },
+        {
+          "label": "Coil, per tonne in 2026",
+          "cells": [
+            "About €3.6 to €6",
+            "About €163.5"
+          ],
+          "emphasis": true
+        },
+        {
+          "label": "Basis",
+          "cells": [
+            "Several media and consultancy sites",
+            "Implementing Regulation (EU) 2025/2620, formula 6"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "**Why the gap:** the deduction is EU benchmark × factor, not emissions × factor. China's default of 3.187 is far above the 1.370 benchmark, and everything above it is charged from year one. Price, budget and negotiate by the legal formula."
+    }
+  ],
+  "footnote": "Source: Implementing Regulation (EU) 2025/2620 formula 6, Decision (EU) 2026/1862 (CSCF 100%), Directive 2023/959",
+  "notes": "The most widely shared shortcut multiplies emissions by 2.5%, treating free allocation as 97.5% of a company's own emissions. On that basis, hot-rolled coil would cost only €3.6 to €6 per tonne in 2026. It does not match the legal text. Formula 6 of Implementing Regulation 2025/2620 sets the free allocation adjustment as the CBAM factor times the cross-sectoral correction factor times the benchmark. It deducts 97.5% of the EU benchmark, not 97.5% of our emissions. The default value for Chinese coil, 3.187 tonnes, is 2.3 times the 1.370 benchmark, and everything above the benchmark is charged in full from the first year. The two methods differ by more than €150 per tonne. The point of this slide is one shared basis: sales quotes, finance budgets and contract talks all use the legal formula, or we badly understate the cost."
+}

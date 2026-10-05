@@ -1,0 +1,153 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "almanac",
+  "filename": "cbam-2026-esg-committee-en",
+  "meta": {
+    "organization": "Sustainability Department",
+    "date": "October 2026"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "CBAM is live: cut the bill with verified data",
+      "summary": "Briefing for the Board ESG Committee"
+    },
+    {
+      "id": "p02-ask",
+      "type": "content",
+      "kind": "points",
+      "heading": "Two asks: verified data and three budget lines",
+      "focus": "row_cards",
+      "kicker": "Decision"
+    },
+    {
+      "id": "p03-timeline",
+      "type": "content",
+      "kind": "process",
+      "heading": "2026 imports are settled once, by 30 Sept 2027",
+      "focus": "timeline",
+      "kicker": "Timing"
+    },
+    {
+      "id": "p04-curve",
+      "type": "content",
+      "kind": "data",
+      "heading": "Coil on defaults: €164/t in 2026, €312/t in 2034",
+      "focus": "chart",
+      "kicker": "The bill"
+    },
+    {
+      "id": "p05-waterfall",
+      "type": "content",
+      "kind": "data",
+      "heading": "€164: defaults plus 10%, less 97.5% of benchmark",
+      "focus": "waterfall",
+      "kicker": "The bill"
+    },
+    {
+      "id": "p06-miscalc",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "The 97.5%-of-emissions shortcut misses €150/t",
+      "focus": "comparison",
+      "kicker": "The bill"
+    },
+    {
+      "id": "p07-exposure",
+      "type": "content",
+      "kind": "data",
+      "heading": "China tops EU CBAM steel imports, 70% downstream",
+      "focus": "chart",
+      "kicker": "Exposure"
+    },
+    {
+      "id": "p08-products",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Bolts carry twice coil's default: €428/t in 2026",
+      "focus": "image",
+      "kicker": "Exposure"
+    },
+    {
+      "id": "p09-countries",
+      "type": "content",
+      "kind": "data",
+      "heading": "Defaults put Chinese coil €63/t above Turkish",
+      "focus": "chart",
+      "kicker": "Exposure"
+    },
+    {
+      "id": "p10-actual",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "Fastest lever: verified data, aluminium to €14/t",
+      "focus": "chart",
+      "kicker": "Savings"
+    },
+    {
+      "id": "p11-verify",
+      "type": "content",
+      "kind": "process",
+      "heading": "Verification first: an on-site visit in year one",
+      "focus": "steps",
+      "kicker": "Verification"
+    },
+    {
+      "id": "p12-china-price",
+      "type": "content",
+      "kind": "fact",
+      "heading": "China's carbon price offsets little: ±3% at most",
+      "focus": "kpi_cards",
+      "kicker": "Offsets"
+    },
+    {
+      "id": "p13-green-power",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Green power cuts no CBAM yet, but quotas need it",
+      "focus": "kpi_cards",
+      "kicker": "Green power"
+    },
+    {
+      "id": "p14-routes",
+      "type": "content",
+      "kind": "data",
+      "heading": "EAF, DRI and hydrogen: a decade, measured apart",
+      "focus": "image_grid",
+      "kicker": "Routes"
+    },
+    {
+      "id": "p15-rules",
+      "type": "content",
+      "kind": "list",
+      "heading": "Three rules still moving, from 2027 to 2038",
+      "focus": "kpi_cards",
+      "kicker": "Rules"
+    },
+    {
+      "id": "p16-roadmap",
+      "type": "content",
+      "kind": "process",
+      "heading": "Roadmap: verified 2026 data by 30 September 2027",
+      "focus": "roadmap",
+      "kicker": "Roadmap"
+    },
+    {
+      "id": "p17-ending",
+      "type": "ending",
+      "heading": "Three decisions for the committee today",
+      "summary": "Sustainability Department · October 2026",
+      "kicker": "Decision"
+    }
+  ]
+}

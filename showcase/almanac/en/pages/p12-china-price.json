@@ -1,0 +1,72 @@
+{
+  "years": {
+    "from": 2026,
+    "to": 2034,
+    "marked": [
+      2026
+    ]
+  },
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**±3%**",
+          "label": "2026 allowances for steel and aluminium",
+          "note": "Allowances roughly match verified emissions, so a firm pays for at most about 3% of them.",
+          "tag": {
+            "text": "MEE climate rule (2026) No. 1",
+            "basis": "law"
+          }
+        }
+      ]
+    },
+    {
+      "type": "code",
+      "language": "formula",
+      "code": "A = E × (1 + α), −3% ≤ α ≤ +3%"
+    },
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "y_title": "2025 carbon price, €/t CO₂",
+        "y_unit": "€"
+      },
+      "series": [
+        {
+          "name": "2025 average",
+          "data": [
+            {
+              "x": "EU EUA",
+              "y": 73.43
+            },
+            {
+              "x": "China CEA",
+              "y": 7.68,
+              "emphasis": true,
+              "note": "¥62.36"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "About 9.6×",
+          "label": "EU against China price, 2025 averages at ECB rates",
+          "note": "On defaults, only the EU's annual default price can be deducted",
+          "tag": {
+            "text": "Article 9 rules: still a draft",
+            "evidence": "draft"
+          }
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: MEE climate rule (2026) No. 1 (1 Sept 2026), MEE 2025 national carbon market data (1 Jan 2026), EEX auctions, ECB rates, Reg. 2025/2083 Art. 9",
+  "notes": "CBAM lets declarants deduct a carbon price actually paid in the country of origin, but for us there is little to deduct, for three reasons. First, since China's national carbon market took in steel and aluminium smelting, allowances for 2024 equalled verified emissions, so they were essentially free. For 2026 the formula is allowances equal emissions times one plus α, with α between minus 3% and plus 3%, so a company pays real money for at most about 3% of its emissions. Second, the price gap is wide: in 2025 the EU auction average was €73.43 against 62.36 yuan, about €7.68, in China's market, roughly 9.6 times apart. Third, the implementing rules for the deduction under Article 9 were reportedly published only as a draft in May 2026, and we have found no vote since. Filing on default values allows only the Commission's annual default carbon price, and none has been published for China. As a rough upper bound, a 3% shortfall works out to about €0.37 of carbon price paid per tonne of CO2, so our estimates set the deduction at zero."
+}

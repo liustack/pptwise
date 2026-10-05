@@ -1,0 +1,71 @@
+{
+  "years": {
+    "from": 2026,
+    "to": 2034,
+    "marked": [
+      2027,
+      2028,
+      2034
+    ]
+  },
+  "components": [
+    {
+      "type": "timeline",
+      "periods": [
+        {
+          "from": "2026",
+          "to": "2034",
+          "label": "Current law: free allocation ends in 2034",
+          "basis": "law"
+        },
+        {
+          "from": "2034",
+          "to": "2038",
+          "label": "Proposal: to 2038",
+          "basis": "proposal"
+        }
+      ],
+      "milestones": [
+        {
+          "date": "2027",
+          "title": "Defaults reviewed",
+          "desc": "Markup rises to 30% from 2028",
+          "icon": "file-text",
+          "tag": {
+            "text": "Set"
+          },
+          "source": "Implementing Reg. (EU) 2025/2621"
+        },
+        {
+          "date": "2028",
+          "title": "Downstream goods join",
+          "desc": "More steel and aluminium goods",
+          "icon": "layers",
+          "tag": {
+            "text": "In talks",
+            "basis": "proposal"
+          },
+          "source": "COM(2025) 989, in trilogue"
+        },
+        {
+          "date": "2038",
+          "title": "Free allocation ends later",
+          "desc": "Coil about €297 in 2034 (proposal case)",
+          "icon": "hourglass",
+          "tag": {
+            "text": "Proposal",
+            "basis": "proposal"
+          },
+          "source": "COM(2026) 616 (2026-07-17)"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Neither proposal is law yet, so our estimates follow current law. We review each quarter and return when they change."
+    }
+  ],
+  "footnote": "Source: European Parliament Legislative Observatory 2025/0419(COD), COM(2026) 616 (17 July 2026), Reg. 2025/2621",
+  "notes": "Three rules are still moving. First, default values must be reviewed by 2027 at the latest, and the markup rises to 30% from 2028. That much is settled. Second, the downstream extension. In December 2025 the Commission proposed COM(2025) 989 to bring more downstream steel and aluminium goods into CBAM from 1 January 2028. Parliament adopted its amendments at first reading on 15 September, and trilogue talks come next. It is not law. Third, the EU ETS review proposal COM(2026) 616 would push the end of free allocation from 2034 to 2038. If adopted, coil in 2034 would cost about €297 per tonne instead of €312 and unwrought aluminium about €278 instead of €294, a limited change, and it has not been adopted. Our estimates all follow current law and treat proposals as scenarios only. The Sustainability Department will track them each quarter and come back to the committee when something material changes."
+}

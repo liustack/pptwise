@@ -1,0 +1,24 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "port"
+  },
+  "components": [
+    {
+      "type": "timeline",
+      "title": "Free allocation (the CBAM factor) falls from 97.5% to 0",
+      "milestones": [
+        {
+          "date": "2026",
+          "title": "97.5%"
+        },
+        {
+          "date": "2034",
+          "title": "0%",
+          "highlight": true
+        }
+      ]
+    }
+  ],
+  "notes": "This is the Sustainability Department's decision briefing for the Board ESG Committee. The EU Carbon Border Adjustment Mechanism (CBAM) entered its definitive period on 1 January 2026. The steel and aluminium goods we ship to the EU are already counting embedded emissions, and the certificates for all of 2026 are surrendered in one go by 30 September 2027. The deck uses only the legal texts, official EU and Chinese data, and industry figures whose basis is stated. None of our own export volumes, emissions or profits appear here. Costs are given per tonne and per 10,000 tonnes exported, and wherever our own data is needed the slide says it is still to come. Every amount from 2027 onward holds the certificate price at €75.36: it is a demonstration, not a carbon price forecast. The cover photo is an AI-generated illustration."
+}
