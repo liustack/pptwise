@@ -1,0 +1,75 @@
+{
+  "tag": {
+    "text": "RCT · NEJM 2023 · 17,604 patients · CV disease · no diabetes",
+    "evidence": "trial"
+  },
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "e",
+          "label": "Endpoint"
+        },
+        {
+          "key": "s",
+          "label": "Semaglutide",
+          "align": "right"
+        },
+        {
+          "key": "p",
+          "label": "Placebo",
+          "align": "right"
+        },
+        {
+          "key": "hr",
+          "label": "HR (95% CI)",
+          "align": "right"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "e": "Major adverse CV events",
+            "s": "6.5%",
+            "p": "8.0%",
+            "hr": "0.80 (0.72-0.90)"
+          },
+          "emphasis": "highlight"
+        },
+        {
+          "cells": {
+            "e": "Cardiovascular death",
+            "s": "2.5%",
+            "p": "3.0%",
+            "hr": "0.85 (0.71-1.01), not significant"
+          }
+        },
+        {
+          "cells": {
+            "e": "Death from any cause",
+            "s": "4.3%",
+            "p": "5.2%",
+            "hr": "0.81 (0.71-0.93)"
+          }
+        },
+        {
+          "cells": {
+            "e": "Heart failure composite",
+            "s": "3.4%",
+            "p": "4.1%",
+            "hr": "0.82 (0.71-0.96)"
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "icon": "hourglass",
+      "text": "Tirzepatide's outcome trial, SURMOUNT-MMO, is due in October 2027, with no results yet"
+    }
+  ],
+  "footnote": "Source: SELECT (NEJM 2023, mean follow-up 39.8 months, BMI ≥27), ACC summary, ClinicalTrials.gov NCT05556512",
+  "notes": "Only semaglutide has cardiovascular outcome evidence. SELECT enrolled 17,604 patients aged 45 or older with established cardiovascular disease, a BMI of 27 or more and no diabetes, followed for 39.8 months on average. The primary endpoint, cardiovascular death, non-fatal heart attack or non-fatal stroke, occurred in 569 patients, 6.5%, on semaglutide and 701, 8.0%, on placebo: a hazard ratio of 0.80, with a 95% confidence interval of 0.72 to 0.90. Cardiovascular death alone had a hazard ratio of 0.85 with an interval crossing 1, so it was not significant. Death from any cause had a hazard ratio of 0.81 and the heart failure composite 0.82. China approved the matching indication for Wegovy on December 16, 2025: to reduce major cardiovascular events in adults with established cardiovascular disease and a BMI of at least 27. Tirzepatide's equivalent trial, SURMOUNT-MMO, is still running, with primary completion expected in October 2027. SELECT also had a cost: 16.6% stopped for adverse events against 8.2%, and 10.0% against 2.0% for gastrointestinal events."
+}

@@ -1,0 +1,90 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "y_title": "Trial · drug · size and length",
+        "x_title": "Weight change",
+        "y_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Drug",
+          "data": [
+            {
+              "x": "SURMOUNT-CN · Tirzepatide 15 mg · 210 patients · 52 weeks",
+              "y": -17.5
+            },
+            {
+              "x": "GLORY-1 · Mazdutide 6 mg · 610 patients · 48 weeks",
+              "y": -14.01
+            },
+            {
+              "x": "STEP 12 · Semaglutide 2.4 mg · 242 patients · 44 weeks",
+              "y": -12.1
+            },
+            {
+              "x": "STEP 7 China · Semaglutide 2.4 mg · 300 patients · 44 weeks",
+              "y": -11.8
+            }
+          ],
+          "emphasis": true
+        },
+        {
+          "name": "Placebo",
+          "data": [
+            {
+              "x": "SURMOUNT-CN · Tirzepatide 15 mg · 210 patients · 52 weeks",
+              "y": -2.3
+            },
+            {
+              "x": "GLORY-1 · Mazdutide 6 mg · 610 patients · 48 weeks",
+              "y": 0.3
+            },
+            {
+              "x": "STEP 12 · Semaglutide 2.4 mg · 242 patients · 44 weeks",
+              "y": -2.2
+            },
+            {
+              "x": "STEP 7 China · Semaglutide 2.4 mg · 300 patients · 44 weeks",
+              "y": -3.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "15.2",
+          "unit": "points",
+          "label": "SURMOUNT-CN",
+          "note": "More than placebo"
+        },
+        {
+          "value": "14.3",
+          "unit": "points",
+          "label": "GLORY-1",
+          "note": "More than placebo"
+        },
+        {
+          "value": "9.9",
+          "unit": "points",
+          "label": "STEP 12",
+          "note": "More than placebo"
+        },
+        {
+          "value": "8.3",
+          "unit": "points",
+          "label": "STEP 7 China",
+          "note": "More than placebo"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: JAMA 2024, NEJM 2025, Lancet Diabetes Endocrinol 2026, Diabetes Obes Metab 2025. Not directly comparable",
+  "notes": "This page covers Chinese patients only. All four trials compare a drug with placebo, and the main measure is weight change from baseline. SURMOUNT-CN tested tirzepatide in 210 adults without diabetes at 29 sites in China for 52 weeks: weight fell 17.5% on 15 mg against 2.3% on placebo, and 85.8% against 29.3% lost at least 5%. GLORY-1 tested mazdutide in 610 Chinese adults for 48 weeks: weight fell 14.01% on 6 mg while the placebo group gained 0.30%. These are the journal and label figures, from multiple imputation. The company's announcement used another model and reported 14.8%. Semaglutide has two sets of Chinese data. The prespecified China subgroup of STEP 7, 300 patients over 44 weeks, lost 11.8% against 3.5%. It is a subgroup, not a separate confirmatory trial. STEP 12 enrolled 242 Chinese adults with lower BMI and lost 12.1% against 2.2% over 44 weeks. The gaps over placebo are our own calculation from these figures. The trials differ in patients, length and statistics, so the bars should not be ranked against each other. For a direct comparison, see the head-to-head trial on the next page."
+}

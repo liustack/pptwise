@@ -1,0 +1,58 @@
+{
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "activity",
+          "title": "Efficacy",
+          "text": "Share losing ≥5% by 3 to 6 months. Under 5%, consider stopping"
+        },
+        {
+          "icon": "shield-check",
+          "title": "Safety",
+          "text": "Serious events such as pancreatitis. Stops for side effects. Lean mass loss over 5%"
+        },
+        {
+          "icon": "calendar-check",
+          "title": "Adherence",
+          "text": "Still treated at six months. Follow-up visits kept"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "nutrition",
+      "fit": "cover"
+    },
+    {
+      "type": "timeline",
+      "title": "Review dates",
+      "milestones": [
+        {
+          "date": "Launch",
+          "title": "On the formulary"
+        },
+        {
+          "date": "+6 months",
+          "title": "First review",
+          "highlight": true
+        },
+        {
+          "date": "2027-04",
+          "title": "Data protection ends"
+        },
+        {
+          "date": "2027-10",
+          "title": "SURMOUNT-MMO due"
+        },
+        {
+          "date": "2027-12",
+          "title": "Insurance deal ends"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Chinese Pharmaceutical Association draft (June 2026), China obesity guideline (2024), ClinicalTrials.gov. AI illustration",
+  "notes": "We would track three groups of measures, taken from the quality indicators in the Chinese Pharmaceutical Association's draft standard. Efficacy: the share of patients losing at least 5% after 3 to 6 months at the highest tolerated dose, and HbA1c control in patients with diabetes. China's obesity guideline says drug treatment that does not achieve at least 5% weight loss should be stopped. Safety: serious adverse events such as acute pancreatitis, severe allergy and cholecystitis, the share stopping for side effects, and the share losing more than 5% of baseline lean mass. Adherence: the share still treated at six months and the clinic follow-up rate. About two in three US patients stop within a year, so this one needs watching. We would review the program six months after launch. Three outside events could change today's judgment: Novo Nordisk says semaglutide's data protection runs to April 2027, after which domestic generics may be approved. Tirzepatide's outcome trial, SURMOUNT-MMO, is expected to finish in October 2027. And the reimbursement agreements for both drugs run to December 31, 2027. The picture is an AI-generated illustration."
+}

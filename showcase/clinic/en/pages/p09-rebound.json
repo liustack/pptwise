@@ -1,0 +1,86 @@
+{
+  "tag": {
+    "text": "RCT · JAMA 2024 · 36 weeks on the drug, then drug or placebo",
+    "evidence": "trial"
+  },
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "line",
+      "axes": {
+        "y_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Kept taking it",
+          "data": [
+            {
+              "x": "Week 0",
+              "y": 0
+            },
+            {
+              "x": "Week 36 · Randomized",
+              "y": -20.9
+            },
+            {
+              "x": "Week 88",
+              "y": -25.3
+            }
+          ],
+          "emphasis": true
+        },
+        {
+          "name": "Switched to placebo",
+          "data": [
+            {
+              "x": "Week 0",
+              "y": 0
+            },
+            {
+              "x": "Week 36 · Randomized",
+              "y": -20.9
+            },
+            {
+              "x": "Week 88",
+              "y": -9.9
+            }
+          ],
+          "tone": "warning"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Up 14.0% from week 36"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "label": "STEP 4 · semaglutide",
+          "value": "Kept −7.9%, switched +6.9%",
+          "note": "48 weeks after randomization, JAMA 2021"
+        },
+        {
+          "label": "STEP 1 extension · semaglutide",
+          "value": "Regained 11.6 points in a year",
+          "note": "Net loss down to 5.6%"
+        },
+        {
+          "label": "BMJ 2026 meta-analysis",
+          "value": "Regained 0.4 kg a month",
+          "note": "37 studies, 9,341 people"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "icon": "trending-up",
+      "text": "US real world: about 2 in 3 stop within a year"
+    }
+  ],
+  "footnote": "Source: SURMOUNT-4 (JAMA 2024), STEP 4 (JAMA 2021), STEP 1 extension (Diabetes Obes Metab 2022), BMJ 2026, China obesity guideline (2024)",
+  "notes": "Every study agrees that weight comes back after stopping. In STEP 4, patients took semaglutide for 20 weeks and lost 10.6%, then were randomized for 48 weeks: those who continued lost another 7.9%, those switched to placebo regained 6.9%. In SURMOUNT-4, patients took tirzepatide for 36 weeks and lost 20.9%. Over the next 52 weeks, those who continued lost another 5.5% and those switched to placebo regained 14.0%. 89.5% of those who continued kept at least 80% of the weight they had lost, against 16.6% of those who stopped. A 2026 BMJ meta-analysis of 37 studies and 9,341 people found an average regain of 0.4 kg a month after stopping, with cardiometabolic measures back at baseline in about 1.4 years. US real-world data cited in China's obesity guideline show about two in three patients stop within a year. For the hospital this means two things. Patients must hear before they start that this is long-term treatment and that the cost is long-term too. And the stopping rules and follow-up belong in the control plan, not just the prescribing."
+}

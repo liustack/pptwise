@@ -1,0 +1,37 @@
+{
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "clipboard-list",
+          "title": "First visit",
+          "text": "Screen misuse risk with DAST-10"
+        },
+        {
+          "icon": "scan-search",
+          "title": "Monitoring",
+          "text": "Flag doctor shopping and dose jumps"
+        },
+        {
+          "icon": "bed",
+          "title": "Surgery",
+          "text": "Check aspiration risk before anesthesia or endoscopy"
+        },
+        {
+          "icon": "baby",
+          "title": "Special groups",
+          "text": "Not in pregnancy or nursing, confirm no pregnancy"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "pharmacist",
+      "fit": "cover",
+      "caption": "Illustration: a pharmacist at a review workstation (AI-generated)"
+    }
+  ],
+  "footnote": "Source: Chinese Pharmaceutical Association, draft standard on weight-loss drugs in hospitals (June 26, 2026)",
+  "notes": "Beyond reviewing prescriptions, pharmacists also guard against misuse. These steps come from the Chinese Pharmaceutical Association's draft standard posted in June 2026. It is still a draft for comment, and we propose following it until the final version appears. First, screen for drug misuse risk at the first visit with the DAST-10 questionnaire. Second, the draft asks hospitals to monitor GLP-1 prescriptions for unusual patterns, such as frequent visits to different institutions or doses rising abnormally fast, which needs IT support for alerts. Third, special groups: the drugs are not used in pregnancy or breastfeeding, and aspiration risk must be managed around surgery and sedated endoscopy, which the US Wegovy and Zepbound labels also list as a warning. The picture is an AI-generated illustration."
+}

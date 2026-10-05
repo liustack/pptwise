@@ -1,0 +1,47 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "pharmacy",
+      "fit": "cover",
+      "caption": "Illustration: a hospital outpatient pharmacy (AI-generated)"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "icon": "siren",
+          "source": "NMPA · Sept 2024",
+          "label": "Goods",
+          "value": "¥35m",
+          "note": "Fake diet drugs containing semaglutide, made and sold",
+          "tone": "danger"
+        },
+        {
+          "icon": "siren",
+          "source": "Ministry of Public Security · Mar 2025",
+          "label": "Case value",
+          "value": "Over ¥22m",
+          "note": "Shanghai diet-injection ring, 15 sites, 40 arrested",
+          "tone": "danger"
+        },
+        {
+          "icon": "landmark",
+          "source": "NHSA · Apr 2024",
+          "label": "Fine",
+          "value": "2 to 5 times",
+          "note": "Billing weight loss to insurance may be fraud"
+        },
+        {
+          "icon": "badge-alert",
+          "source": "NMPA · Sept 2024",
+          "label": "Warning",
+          "value": "Strictly limited",
+          "note": "Who may use weight-loss drugs is limited"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: NMPA (Sept 2024), Ministry of Public Security (Mar 2025), National Healthcare Security Administration (Apr 2024)",
+  "notes": "The risks outside hospitals are on the official record. In September 2024, China's drug regulator, the NMPA, published online drug sale cases including a ring that made and sold diet drugs containing semaglutide worth ¥35 million, and a beauty salon that sold unlabeled injections over WeChat for more than ¥10 million. In March 2025 the Ministry of Public Security reported a Shanghai case with 15 sites, 40 arrests and over ¥22 million involved. On insurance, the National Healthcare Security Administration said in April 2024 that weight loss is not covered, and that writing weight-loss prescriptions as if for diabetes may be treated as fraud on the insurance fund, with fines of two to five times the amount and suspension of insurance billing for 3 to 12 months. In the first two months of 2024, semaglutide was reimbursed more than 700,000 times. The NMPA's consumer warning says that some of these drugs are approved for obesity and overweight, but only for strictly defined patients. A proper hospital supply with prescription review is how we bring patients back from these channels. The picture is an AI-generated illustration."
+}

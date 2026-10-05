@@ -1,0 +1,161 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "clinic",
+  "filename": "glp1-formulary-review",
+  "meta": {
+    "organization": "Department of Pharmacy",
+    "date": "October 2026"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "GLP-1 formulary review · P&T committee"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "GLP-1 Weight-Loss Drugs: Formulary Review",
+      "summary": "For decision by the Pharmacy and Therapeutics Committee"
+    },
+    {
+      "id": "p02-proposal",
+      "type": "content",
+      "kind": "points",
+      "heading": "List tirzepatide and Wegovy, with three controls",
+      "focus": "numbered_cards",
+      "kicker": "Proposal"
+    },
+    {
+      "id": "p03-why-now",
+      "type": "content",
+      "kind": "list",
+      "heading": "Weight clinics are due, tirzepatide down 80%",
+      "focus": "kpi_cards",
+      "kicker": "Context"
+    },
+    {
+      "id": "p04-outside",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Outside hospitals: fake drugs, insurance fraud",
+      "focus": "image",
+      "kicker": "Context"
+    },
+    {
+      "id": "p05-china",
+      "type": "content",
+      "kind": "data",
+      "heading": "Chinese trials: 8 to 15 points more than placebo",
+      "focus": "chart",
+      "kicker": "Efficacy"
+    },
+    {
+      "id": "p06-h2h",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Tirzepatide −20.2% vs semaglutide −13.7%",
+      "focus": "chart",
+      "kicker": "Efficacy"
+    },
+    {
+      "id": "p07-select",
+      "type": "content",
+      "kind": "data",
+      "heading": "Only semaglutide has CV outcome data: HR 0.80",
+      "focus": "data_table",
+      "kicker": "Heart"
+    },
+    {
+      "id": "p08-safety",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Mostly GI effects, then thyroid and biliary risk",
+      "focus": "data_table",
+      "kicker": "Safety"
+    },
+    {
+      "id": "p09-rebound",
+      "type": "content",
+      "kind": "data",
+      "heading": "Weight returns on stopping: +14.0% in a year",
+      "focus": "chart",
+      "kicker": "Safety"
+    },
+    {
+      "id": "p10-approvals",
+      "type": "content",
+      "kind": "process",
+      "heading": "Six approved in China, Wegovy adds CV and MASH",
+      "focus": "timeline",
+      "kicker": "Approvals"
+    },
+    {
+      "id": "p11-thresholds",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Label BMI bars: Wegovy 30/27. Others use 28/24",
+      "focus": "comparison",
+      "kicker": "Approvals"
+    },
+    {
+      "id": "p12-cost",
+      "type": "content",
+      "kind": "data",
+      "heading": "Tirzepatide: under ¥1,000 per 4 weeks, self-pay",
+      "focus": "chart",
+      "kicker": "Cost"
+    },
+    {
+      "id": "p13-formulary",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "List tirzepatide and Wegovy, mazdutide per case",
+      "focus": "comparison",
+      "kicker": "Proposal"
+    },
+    {
+      "id": "p14-scope",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "Three units prescribe, a pharmacist reviews",
+      "focus": "image",
+      "kicker": "Management"
+    },
+    {
+      "id": "p15-audit",
+      "type": "content",
+      "kind": "process",
+      "heading": "Five checks before dispensing, failures stop it",
+      "focus": "steps",
+      "kicker": "Management"
+    },
+    {
+      "id": "p16-pharmacist",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Pharmacists also guard against misuse",
+      "focus": "image",
+      "kicker": "Management"
+    },
+    {
+      "id": "p17-monitoring",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "Three metric groups, first review at six months",
+      "focus": "row_cards",
+      "kicker": "Monitoring"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "heading": "Three items for the committee's vote",
+      "kicker": "Vote"
+    }
+  ]
+}

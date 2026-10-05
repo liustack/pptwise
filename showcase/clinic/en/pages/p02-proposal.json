@@ -1,0 +1,29 @@
+{
+  "components": [
+    {
+      "type": "numbered_cards",
+      "items": [
+        {
+          "icon": "pill",
+          "title": "Drugs: list tirzepatide and Wegovy, mazdutide per case",
+          "text": "Strongest Chinese and head-to-head data, and Wegovy alone has outcome data",
+          "sub": "Evidence: pages 5 to 13",
+          "emphasis": true
+        },
+        {
+          "icon": "hospital",
+          "title": "Who prescribes: the weight clinic, endocrinology, nutrition",
+          "text": "Only trained, authorized doctors, with a pharmacist reviewing every prescription first",
+          "sub": "Evidence: page 14"
+        },
+        {
+          "icon": "clipboard-check",
+          "title": "Rules: check the label threshold, weight loss is self-pay",
+          "text": "Track efficacy, safety and adherence, with the first review six months after launch",
+          "sub": "Evidence: pages 15 to 17"
+        }
+      ]
+    }
+  ],
+  "notes": "Three proposals, which the last page asks the committee to vote on one by one. First, the drugs: list tirzepatide and semaglutide 2.4 mg, sold as Wegovy. Tirzepatide produced the largest weight loss in the only head-to-head trial and in its Chinese trial, and its price fell by about 80% this year. Wegovy is the only drug with cardiovascular outcome evidence and gained a cardiovascular indication in China in December 2025. Mazdutide, a domestic drug, has good Chinese data but no outcome data, and at retail prices costs about ¥2,020 per 4 weeks, more than the other two, so we propose buying it case by case rather than listing it. The rest stay off the formulary. Second, who prescribes: the weight management clinic, endocrinology and clinical nutrition, by doctors who have been trained and authorized, with a pharmacist reviewing each prescription before it is dispensed. Third, the rules: check each patient against the label threshold for that drug, bill all weight-loss prescriptions as self-pay, track three groups of measures, and review the program six months after launch."
+}

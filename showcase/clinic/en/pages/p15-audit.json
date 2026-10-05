@@ -1,0 +1,54 @@
+{
+  "tag": {
+    "text": "Basis: Chinese Pharmaceutical Association draft (June 2026)",
+    "evidence": "draft"
+  },
+  "components": [
+    {
+      "type": "steps",
+      "items": [
+        {
+          "icon": "ruler",
+          "title": "Threshold",
+          "text": "BMI, comorbidities and body build against the label",
+          "tone": "danger"
+        },
+        {
+          "icon": "ban",
+          "title": "Exclusions",
+          "text": "MTC or MEN2 history, pregnancy, nursing",
+          "tone": "danger"
+        },
+        {
+          "icon": "pill",
+          "title": "Co-meds",
+          "text": "Levothyroxine, warfarin, oral contraceptives"
+        },
+        {
+          "icon": "file-check",
+          "title": "Off-label",
+          "text": "Signed consent and a filed record"
+        },
+        {
+          "icon": "receipt",
+          "title": "Billing",
+          "text": "Weight loss self-pay, diabetes under insurance rules"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "icon": "ban",
+      "text": "Stop: a contraindication, a missed threshold, or appearance anxiety"
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "receipt-text",
+      "text": "Tirzepatide for diabetes and for weight loss is one product, so billing follows the diagnosis"
+    }
+  ],
+  "footnote": "Source: Chinese Pharmaceutical Association draft standard on weight-loss drugs in hospitals (June 2026), 2025 national reimbursement list",
+  "notes": "We propose five checks before a weight-loss prescription is dispensed. The first four come from the first checkpoint in the Chinese Pharmaceutical Association's draft standard. The fifth is ours, for insurance. One, threshold: check BMI and body composition against the label of the drug prescribed, since Wegovy's threshold differs from the other two. Two, contraindications: rule out a personal or family history of medullary thyroid cancer or MEN2, confirm that women of childbearing age are not pregnant, and do not use in pregnancy or breastfeeding. Three, interactions: focus on narrow-margin drugs such as levothyroxine, warfarin and oral contraceptives. Four, off-label use: the draft requires a signed off-label consent form and a filed record. Five, billing: weight-loss prescriptions are always self-pay and diabetes prescriptions follow the reimbursement list. Tirzepatide's two indications share one product and one set of approval numbers, so the system must bill by diagnosis. The draft says prescriptions for patients with contraindications or appearance anxiety should be stopped, and we add any patient below the label threshold."
+}

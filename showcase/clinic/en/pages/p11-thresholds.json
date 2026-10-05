@@ -1,0 +1,76 @@
+{
+  "components": [
+    {
+      "type": "comparison",
+      "title": "BMI",
+      "columns": [
+        "Overweight band, 1+ comorbidity",
+        "Obesity band"
+      ],
+      "tag_column": "Review note",
+      "rows": [
+        {
+          "label": "Wegovy, liraglutide 3.0 mg",
+          "cells": [
+            "27 to <30, comorbidity",
+            "≥30, obesity"
+          ],
+          "tag": {
+            "text": "Higher bar"
+          },
+          "emphasis": true
+        },
+        {
+          "label": "Tirzepatide, mazdutide",
+          "cells": [
+            "24 to <28, comorbidity",
+            "≥28, obesity"
+          ],
+          "tag": {
+            "text": "Matches guidance",
+            "quiet": true
+          }
+        },
+        {
+          "label": "National weight guidance",
+          "cells": [
+            "24 to <28, complication",
+            "≥28, <5% loss after 3 to 6 months"
+          ],
+          "tag": {
+            "text": "Reference",
+            "quiet": true
+          }
+        },
+        {
+          "label": "Wegovy for heart disease",
+          "cells": [
+            "",
+            "≥27, established CV disease"
+          ],
+          "tag": {
+            "text": "Check apart"
+          }
+        },
+        {
+          "label": "Wegovy at BMI 24 to <28",
+          "cells": [
+            "24 to <28, off-label",
+            ""
+          ],
+          "tag": {
+            "text": "Off-label",
+            "tone": "danger"
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "STEP 12 has Chinese data at BMI 24 to <28, the Wegovy label is unchanged"
+    }
+  ],
+  "footnote": "Source: Novo Nordisk, Lilly and Huadong announcements, mazdutide label, national weight management guidance (2024), STEP 12 (2026)",
+  "notes": "There are two sets of label thresholds, so prescriptions must be checked against the label of the drug prescribed. Wegovy and liraglutide 3.0 mg follow the international standard: a BMI of 30 or more, or 27 to 30 with at least one weight-related comorbidity. Tirzepatide and mazdutide follow the Chinese standard: 28 or more, or 24 or more with at least one comorbidity, the same cut-offs as China's 2024 weight management guidance. That guidance also says patients with obesity should first try 3 to 6 months of lifestyle change and move to drugs if they lose less than 5%. Wegovy's cardiovascular indication is separate: established cardiovascular disease and a BMI of at least 27. A note on STEP 12: it studied Chinese adults with a BMI of 24 to 28, who lost 12.1%, but we found no approval moving Wegovy's Chinese label to 28/24. Prescribing Wegovy at those levels is therefore off-label and needs informed consent and a filing. We could not find the official BMI threshold for ecnoglutide."
+}

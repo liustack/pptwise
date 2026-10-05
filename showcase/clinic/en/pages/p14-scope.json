@@ -1,0 +1,42 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "clinic-room",
+      "fit": "cover",
+      "caption": "Illustration: a weight clinic consulting room (AI-generated)"
+    },
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "hospital",
+          "title": "Where",
+          "text": "Weight clinic, endocrinology, nutrition"
+        },
+        {
+          "icon": "user-check",
+          "title": "Who",
+          "text": "Hospital-authorized doctors only"
+        }
+      ]
+    },
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "badge-check",
+          "title": "Review",
+          "text": "A trained pharmacist in each clinic"
+        },
+        {
+          "icon": "users",
+          "title": "Follow-up",
+          "text": "Endocrine, nutrition, surgery, pharmacy"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: National Health Commission notice (Mar 2025), Chinese Pharmaceutical Association draft (June 2026). The three units and one pharmacist per clinic are our proposal, not a national rule",
+  "notes": "We propose that only three units prescribe these drugs for weight loss: the weight management clinic, endocrinology and clinical nutrition. Other departments would not write weight-loss prescriptions, and diabetes prescribing stays under the current rules. To be clear, there is no national rule limiting which departments may prescribe. None of our three research passes found one, so this is a hospital rule. There is precedent abroad: Belgium's regulator requires that, for obesity, the first prescription come from an endocrinologist working in a multidisciplinary setting. Prescribing rights would go to doctors trained and authorized by the hospital. For pharmacists, the Chinese Pharmaceutical Association's draft standard asks for at least one specially trained pharmacist per institution, at intermediate title or above with three years' relevant experience. We propose at least one per clinic. Follow-up would be shared by endocrinology, clinical nutrition, bariatric surgery and pharmacy, following the National Health Commission's March 2025 notice and the draft standard. The picture is an AI-generated illustration."
+}

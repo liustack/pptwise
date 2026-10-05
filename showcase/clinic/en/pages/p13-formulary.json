@@ -1,0 +1,78 @@
+{
+  "components": [
+    {
+      "type": "comparison",
+      "label_column": "Drug",
+      "columns": [
+        "Main evidence",
+        "4-week cost"
+      ],
+      "tag_column": "Proposal",
+      "rows": [
+        {
+          "icon": "pill",
+          "label": "Tirzepatide",
+          "cells": [
+            "Head-to-head −20.2%, Chinese trial −17.5%, outcome data due 2027",
+            "¥551 to ¥937"
+          ],
+          "tag": {
+            "text": "List",
+            "settled": true
+          },
+          "emphasis": true
+        },
+        {
+          "icon": "pill",
+          "label": "Semaglutide 2.4 mg",
+          "cells": [
+            "Only drug with outcome data, SELECT HR 0.80",
+            "¥987 to ¥1,284"
+          ],
+          "tag": {
+            "text": "List",
+            "settled": true
+          }
+        },
+        {
+          "icon": "pill",
+          "label": "Mazdutide",
+          "cells": [
+            "Chinese trial −14.01%, no outcome data, nausea 50.5%",
+            "About ¥2,020 (retail)"
+          ],
+          "tag": {
+            "text": "Per case"
+          }
+        },
+        {
+          "icon": "pill",
+          "label": "Ecnoglutide",
+          "cells": [
+            "Label BMI threshold and price not found",
+            "Not found"
+          ],
+          "tag": {
+            "text": "Defer",
+            "quiet": true
+          }
+        },
+        {
+          "icon": "pill",
+          "label": "Liraglutide, benaglutide",
+          "cells": [
+            "Weaker: 5.4% over placebo, −6.0% at 16 weeks",
+            "Liraglutide about ¥1,550 (30 days)"
+          ],
+          "tag": {
+            "text": "Do not list",
+            "quiet": true,
+            "settled": true
+          }
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: trials and labels on earlier pages, China obesity guideline (2024), press-reported prices (Jan 2026). Cost ranges use common doses",
+  "notes": "Putting the evidence together, this is what we propose. List tirzepatide: in the only head-to-head trial it cut weight by 20.2% over 72 weeks, in its Chinese trial by 17.5% over 52 weeks, it now costs ¥551 to ¥937 per 4 weeks, and its label uses the Chinese 28/24 threshold. Its weakness is that outcome data arrive only in 2027. List semaglutide 2.4 mg, Wegovy: it is the only drug with cardiovascular outcome evidence, SELECT's hazard ratio of 0.80, and it is approved in China for that use, which suits patients with established heart disease. Mazdutide is a domestic drug that cut weight by 14.01% over 48 weeks in GLORY-1, but it has no outcome data, causes nausea in half of patients and costs about ¥2,020 per 4 weeks at retail, so we propose buying it case by case rather than listing it. Ecnoglutide was approved only in March 2026 and we could not find its label threshold or price, so we defer it. Liraglutide 3.0 mg adds only 5.4% over placebo at 56 weeks, is injected daily and costs about ¥1,550 for 30 days, and benaglutide has only 16 weeks of phase 3 data with a 6.0% loss and has left the reimbursement list. We propose listing neither."
+}

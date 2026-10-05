@@ -1,0 +1,123 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "title": "Incidence",
+      "columns": [
+        {
+          "key": "d",
+          "label": "Drug"
+        },
+        {
+          "key": "n",
+          "label": "Nausea",
+          "align": "right"
+        },
+        {
+          "key": "v",
+          "label": "Vomiting",
+          "align": "right"
+        },
+        {
+          "key": "q",
+          "label": "Stopped",
+          "align": "right"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "d": "Semaglutide 2.4 mg",
+            "n": "44%",
+            "v": "24%",
+            "q": "6.8%"
+          },
+          "tag": {
+            "text": "US label",
+            "evidence": "label"
+          }
+        },
+        {
+          "cells": {
+            "d": "Placebo",
+            "n": "16%",
+            "v": "6%",
+            "q": "3.2%"
+          }
+        },
+        {
+          "cells": {
+            "d": "Tirzepatide 15 mg",
+            "n": "28%",
+            "v": "13%",
+            "q": "6.7%"
+          },
+          "tag": {
+            "text": "US label",
+            "evidence": "label"
+          }
+        },
+        {
+          "cells": {
+            "d": "Placebo",
+            "n": "8%",
+            "v": "2%",
+            "q": "3.4%"
+          }
+        },
+        {
+          "cells": {
+            "d": "Mazdutide 6 mg",
+            "n": "50.5%",
+            "v": "43.1%",
+            "q": "1.0%"
+          },
+          "emphasis": "highlight",
+          "tag": {
+            "text": "Chinese label",
+            "evidence": "label"
+          }
+        },
+        {
+          "cells": {
+            "d": "Placebo",
+            "n": "5.9%",
+            "v": "2.9%",
+            "q": "1.0%"
+          }
+        }
+      ]
+    },
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "shield-alert",
+          "title": "Thyroid C-cell tumors",
+          "text": "On all three labels. Barred with MTC or MEN2 history",
+          "tone": "danger"
+        },
+        {
+          "icon": "triangle-alert",
+          "title": "Gallbladder and bile duct",
+          "text": "RR 2.29 in weight-loss trials, 76-trial meta-analysis",
+          "tone": "warning"
+        },
+        {
+          "icon": "eye",
+          "title": "Optic nerve (NAION)",
+          "text": "Very rare with semaglutide, EMA, June 2025",
+          "tone": "warning"
+        },
+        {
+          "icon": "bed",
+          "title": "Aspiration under anesthesia",
+          "text": "US label warning, check before surgery or endoscopy",
+          "tone": "warning"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: US Wegovy and Zepbound labels, Chinese mazdutide label, JAMA Intern Med 2022, EMA (June 2025). Not directly comparable",
+  "notes": "Most side effects are gastrointestinal. Each drug's figures come from its own label, from different trials, so they should not be ranked. Semaglutide 2.4 mg uses the pooled weight-loss trials on the US Wegovy label: nausea 44% against 16% on placebo, vomiting 24% against 6%, and 6.8% against 3.2% stopped for side effects. Tirzepatide 15 mg uses the US Zepbound label, pooling SURMOUNT-1 and 2: nausea 28% against 8%, and 6.7% against 3.4% stopped. Mazdutide 6 mg uses its Chinese label, from GLORY-1: nausea 50.5% and vomiting 43.1% against 5.9% and 2.9%, yet only 1.0% stopped in both groups. We could not obtain the Chinese labels for Wegovy and tirzepatide with their rates, so we use the US labels. There are four class risks. Thyroid C-cell tumors: all three labels carry a warning, and the drugs must not be used with a history of medullary thyroid cancer or MEN2. Gallbladder and bile duct disease: a meta-analysis of 76 randomized trials with over 100,000 patients found a relative risk of 2.29 in weight-loss trials. NAION, an optic nerve condition: the EMA concluded in June 2025 that it is a very rare side effect of semaglutide. China's adverse reaction monitoring center relayed this, but we found no Chinese label change. Aspiration under anesthesia or deep sedation is a warning on both US labels. Separately, the FDA asked in January 2026 for the suicidal ideation warning to be removed."
+}
