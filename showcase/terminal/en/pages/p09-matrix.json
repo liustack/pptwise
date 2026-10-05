@@ -1,0 +1,93 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "case",
+          "label": "Incident"
+        },
+        {
+          "key": "scope",
+          "label": "Scope"
+        },
+        {
+          "key": "az",
+          "label": "AZs"
+        },
+        {
+          "key": "region",
+          "label": "Regions, same cloud"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "case": "AWS use1-az4 · 2026-05",
+            "scope": "One AZ",
+            "az": "✓ Yes",
+            "region": "✓ Yes"
+          },
+          "icon": "server"
+        },
+        {
+          "cells": {
+            "case": "Azure West US 2 · 2026-05",
+            "scope": "Two AZs in one region",
+            "az": "✕ No",
+            "region": "✓ Yes"
+          },
+          "icon": "thermometer"
+        },
+        {
+          "cells": {
+            "case": "Google us-west1 · 2026-08",
+            "scope": "One region's network",
+            "az": "✕ No",
+            "region": "✓ Yes"
+          },
+          "icon": "cable"
+        },
+        {
+          "cells": {
+            "case": "AWS us-east-1 · 2025-10",
+            "scope": "One region, some global features",
+            "az": "✕ No",
+            "region": "✓ Yes, mostly, IAM tied to us-east-1"
+          },
+          "icon": "database"
+        },
+        {
+          "cells": {
+            "case": "AWS Middle East · 2026-03",
+            "scope": "Two regions, several AZs",
+            "az": "✕ No",
+            "region": "✓ Yes, with off-region backups"
+          },
+          "icon": "building-2"
+        },
+        {
+          "cells": {
+            "case": "Google 2025-06, Azure 2026-02",
+            "scope": "Global or multi-region control plane",
+            "az": "✕ No",
+            "region": "✕ No"
+          },
+          "emphasis": "highlight",
+          "icon": "globe"
+        },
+        {
+          "cells": {
+            "case": "Cloudflare, Azure Front Door",
+            "scope": "Global edge network",
+            "az": "— n/a",
+            "region": "— n/a, needs a backup entry"
+          },
+          "icon": "network"
+        }
+      ]
+    }
+  ],
+  "footnote": "official postmortems and AWS status pages (Oct 2025 to Sep 2026), team summary. use1-az4 scope as stated by AWS",
+  "notes": "One question: which kind of redundancy stops which kind of failure. Every cell rests on the vendors' own words. A single-AZ failure is stopped by multi-AZ: AWS's thermal event in use1-az4 in May was one zone by AWS's account, though Coinbase said it saw failures across several zones. Next, single-region failures. The Azure West US 2 storm hit two physical zones in one region, so multi-AZ did not help, and Microsoft's report recommends multi-region. For Google us-west1, the report says other regions remained fully operational. AWS us-east-1 is mostly yes: DynamoDB global table replicas elsewhere kept working, but IAM, Redshift and console sign-in had us-east-1 dependencies, which we come back to later. In the Middle East, two regions were damaged across several zones, and only customers with backups outside the region could recover elsewhere. The highlighted row matters most. Against a global or multi-region control plane failure like Google in June or Azure in February, a second region in the same cloud does nothing, and Azure says customers could not have avoided it. For global edge networks like Cloudflare and Azure Front Door, regions do not apply at all. What helps is a backup entry point: after the Front Door outage, Microsoft moved the Azure Portal and other key entry points to active-active with the ability to fail away from Front Door."
+}

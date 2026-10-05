@@ -1,0 +1,16 @@
+{
+  "components": [
+    {
+      "type": "code",
+      "language": "text",
+      "code": "# Google Cloud · 2025-06-12 · Service Control quota policy\n\"this metadata was replicated globally within seconds.\"\n\n# Cloudflare · 2025-12-05 · global configuration system\n\"propagates changes within seconds to the entire fleet of servers in our network\"\n\n# Cloudflare · 2025-12-19 · Code Orange, on Nov 18 and Dec 5\n\"In both events, a wrong configuration took down our network in seconds.\"\n\n# Azure · 2026-02-02 · a policy job that reached many regions\n\"There was nothing that customers could have done to avoid or minimize\n impact from this specific service incident.\"",
+      "title": "postmortems / quotes.txt",
+      "highlight_lines": [
+        11,
+        12
+      ]
+    }
+  ],
+  "footnote": "Google Cloud 复盘（2025-06-13），Cloudflare 复盘（2025-12-05）和 Code Orange（2025-12-19），Azure 复盘 FNJ8-VQZ。照录原文",
+  "notes": "这页是四段原文，来自三家厂商。Google 6 月那次：配额管理是全球统一的，一条带空字段的策略几秒内复制到全球，所有区域的 Service Control 同时进入崩溃循环。Cloudflare 12 月那次：用来关掉内部测试工具的全局配置系统不做逐步发布，几秒内推到全网。Cloudflare 在 12 月 19 日的 Code Orange 文章里把 11 月和 12 月两次归成同一个原因：一份错误配置几秒内拖垮了网络。Azure 2 月那次：一个安全策略作业本来是逐区域发布的，但健康评估有缺陷，错误的目标状态在很短时间内扩散到多个公有云区域。Azure 在复盘里直接写了：这次事故，客户做什么都避免不了，也减轻不了。对我们的含义有两层：这类故障，在同一家云上多开一个区域挡不住。我们自己的配置发布，也不能有这种一次推到全部的通道。"
+}

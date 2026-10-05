@@ -1,0 +1,122 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "technical"
+  },
+  "theme": "terminal",
+  "filename": "cloud-outage-ha-review-en",
+  "meta": {
+    "organization": "Infrastructure team · Architecture review",
+    "date": "2026-10"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "Cloud outage review: priorities for our HA",
+      "summary": "What 13 official outage records mean for our multi-region plan",
+      "kicker": "13 outages · 2025-06 → 2026-09 · official postmortems and status pages only"
+    },
+    {
+      "id": "p02-verdict",
+      "type": "content",
+      "kind": "points",
+      "heading": "Warm standby, but fix retries and paths first",
+      "focus": "row_cards"
+    },
+    {
+      "id": "p03-chapter-review",
+      "type": "chapter",
+      "heading": "Review: what 13 outages tell us"
+    },
+    {
+      "id": "p04-windows",
+      "type": "content",
+      "kind": "data",
+      "heading": "5 of 8 major outages: one change pushed to all",
+      "focus": "chart"
+    },
+    {
+      "id": "p05-seconds",
+      "type": "content",
+      "kind": "evidence",
+      "heading": "Bad config reached everything in seconds",
+      "focus": "code"
+    },
+    {
+      "id": "p06-cascade",
+      "type": "content",
+      "kind": "process",
+      "heading": "DynamoDB took 2h 52m, the outage 14h 32m",
+      "focus": "timeline"
+    },
+    {
+      "id": "p07-recovery",
+      "type": "content",
+      "kind": "list",
+      "heading": "Retries, backlogs and restarts drag out recovery",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p08-physical",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Storm, power, fiber work: one region at a time",
+      "focus": "image_grid"
+    },
+    {
+      "id": "p09-matrix",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Regions stop regional faults, not global pushes",
+      "focus": "data_table"
+    },
+    {
+      "id": "p10-chapter-decide",
+      "type": "chapter",
+      "heading": "Decision: which tier, what first"
+    },
+    {
+      "id": "p11-sla",
+      "type": "content",
+      "kind": "data",
+      "heading": "SLAs refund fees: 99.99% allows 4.38 min a month",
+      "focus": "data_table"
+    },
+    {
+      "id": "p12-tiers",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Warm standby, not active-active: RTO in minutes",
+      "focus": "comparison"
+    },
+    {
+      "id": "p13-paths",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "Every key dependency needs an independent path",
+      "focus": "issue_tree"
+    },
+    {
+      "id": "p14-observe",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Keep status and alerts off the cloud they watch",
+      "focus": "device_mockup"
+    },
+    {
+      "id": "p15-roadmap",
+      "type": "content",
+      "kind": "process",
+      "heading": "Roadmap: retries in Q4, warm standby in Q2 2027",
+      "focus": "roadmap"
+    },
+    {
+      "id": "p16-ending",
+      "type": "ending",
+      "heading": "Go **warm standby**. Fix retries and paths first"
+    }
+  ]
+}

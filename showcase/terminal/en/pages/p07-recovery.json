@@ -1,0 +1,57 @@
+{
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "repeat",
+          "title": "Retry storms cross regions",
+          "text": "Retries swamped East US, then West US.",
+          "tag": {
+            "text": "Azure 2026-02"
+          }
+        },
+        {
+          "icon": "layers",
+          "title": "Backlog into collapse",
+          "text": "The lease backlog stalled until throttled.",
+          "tag": {
+            "text": "AWS 2025-10"
+          }
+        },
+        {
+          "icon": "refresh-cw",
+          "title": "Everything restarts at once",
+          "text": "Tasks restarted into one table, no backoff.",
+          "tag": {
+            "text": "Google 2025-06"
+          }
+        },
+        {
+          "icon": "log-in",
+          "title": "Login backlog",
+          "text": "Login retries degraded the dashboard again.",
+          "tag": {
+            "text": "Cloudflare 2025-11"
+          }
+        },
+        {
+          "icon": "hard-drive",
+          "title": "Sequential checks",
+          "text": "Cooling back in 1h 31m, storage checks 14h.",
+          "tag": {
+            "text": "Azure 2026-05"
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "tip",
+      "icon": "timer",
+      "text": "We can do this now: the first four run in our services too. Capped, jittered retries and queue throttling need no new region."
+    }
+  ],
+  "footnote": "Azure, AWS, Google Cloud and Cloudflare postmortems (June 2025 to May 2026)",
+  "notes": "Why does recovery take so long? The same causes show up across vendors, and none of them is the original fault. Azure in February: automatic retries, meant for resilience, overloaded the managed identity backend, and resilient routing then sent the retry traffic to West US and overloaded that too. Two rounds of scaling out did not help, and in the end they drained all traffic and brought it back slowly. AWS in October: the lease system fell into congestive collapse and needed throttling and staged restarts. Google in June: tasks in us-central1 restarted together and all hit the same Spanner table, and the report admits Service Control lacked randomized exponential backoff. Google calls it a herd effect. Cloudflare in November: after the core recovered, a backlog of logins plus retries made the dashboard unavailable again from 14:40 to 15:30. Azure West US 2 in May: cooling came back in 1h 31m, but storage validation has to run sequentially and took about 14 hours. The first four exist in our own services: client retries, batch restarts and queue backlogs. None of them needs a second region. We can fix them in Q4."
+}

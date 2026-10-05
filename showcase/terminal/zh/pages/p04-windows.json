@@ -1,0 +1,75 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "x_title": "事故窗口",
+        "x_unit": "分钟"
+      },
+      "series": [
+        {
+          "name": "单区域故障",
+          "data": [
+            {
+              "x": "Azure West US 2 · 2026-05",
+              "y": 1326
+            },
+            {
+              "x": "AWS us-east-1 · 2025-10",
+              "y": 872
+            }
+          ]
+        },
+        {
+          "name": "全局变更推到全部",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "Azure Front Door · 2025-10",
+              "y": 504
+            },
+            {
+              "x": "Azure 多区域 · 2026-02",
+              "y": 387
+            },
+            {
+              "x": "Cloudflare 全网 · 2025-11",
+              "y": 190
+            },
+            {
+              "x": "Google 全球 API · 2025-06",
+              "y": 180
+            },
+            {
+              "x": "Cloudflare WAF · 2025-12",
+              "y": 25
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**5/8**",
+          "label": "一次变更推到全部",
+          "note": "全局配置、策略或数据很快推到全部节点",
+          "icon": "zap"
+        },
+        {
+          "value": "7+",
+          "unit": "个月",
+          "label": "AWS 中东两个区域",
+          "note": "从 3 月 1 日算起，设施遭无人机袭击，部分数据已确认无法恢复",
+          "icon": "flame",
+          "tone": "danger"
+        }
+      ]
+    }
+  ],
+  "footnote": "四家厂商官方复盘和状态页，团队计算。Google 按迷你报告 3 小时，Cloudflare 11 月到核心恢复，Azure 2 月为主体",
+  "notes": "这张图是 8 起重大中断的事故窗口，按根因分成两类。青色是全局变更这一类，共 5 起：Azure Front Door 2025 年 10 月的客户配置元数据、Azure 2026 年 2 月的存储策略作业、Cloudflare 2025 年 11 月的 Bot Management 特征文件、Google 2025 年 6 月的配额策略、Cloudflare 12 月的 WAF 全局配置。它们的窗口不一定最长，但影响面是全球或多个区域。灰色是单区域故障：Azure West US 2 的雷暴 22 小时 6 分，AWS us-east-1 的 DNS 竞态 14 小时 32 分，窗口更长，但只伤一个区域。第 8 起是 AWS 中东两个区域，到 2026 年 9 月 15 日的状态页更新仍未恢复，没法画进同一张图。另外 5 起篇幅较小：AWS use1-az4 的热事件、Google europe-west4-a 的电压跌落加制冷、Google us-west1 的光纤维护、Azure West US 2026 年 7 月的出口网络抢修、Cloudflare 2026 年 2 月误撤回约 1,100 条 BYOIP 前缀，前三起后面几页会用到。下游也受牵连：Azure 2 月那次，GitHub Actions 的托管 runner 不可用，原文写 All regions and runner types were impacted。口径说明：时长是厂商公布的整体窗口，不是每个客户的停机时间。Google 6 月那次迷你报告写 3 小时，最后一个产品 7 小时 27 分后才恢复，这里用 3 小时。Cloudflare 11 月那次核心流量 3 小时 10 分恢复，全部 5 小时 46 分，这里用前者。Azure 2 月那次主体 6 小时 27 分，加上托管标识是 12 小时 2 分。AWS 10 月按 PES 的 14 小时 32 分，状态页晚了 41 分钟宣布全部恢复。"
+}

@@ -1,0 +1,40 @@
+{
+  "components": [
+    {
+      "type": "device_mockup",
+      "device": "browser",
+      "asset_id": "mock-dashboard",
+      "url": "status.internal / overview"
+    },
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "bell-off",
+          "title": "Google · 2025-06",
+          "text": "状态页受连累，晚 55 分钟才发公告",
+          "tone": "danger"
+        },
+        {
+          "icon": "radio-tower",
+          "title": "Cloudflare · 2025-11",
+          "text": "状态页也挂了，一度疑为 DDoS",
+          "tone": "danger"
+        },
+        {
+          "icon": "shield-check",
+          "title": "Google 承诺",
+          "text": "主监控挂了，通报设施也要能用"
+        },
+        {
+          "icon": "flag",
+          "title": "我们",
+          "text": "状态页、告警和值班通知不走主云",
+          "highlight": true
+        }
+      ]
+    }
+  ],
+  "footnote": "Google Cloud 事故复盘（2025-06-13），Cloudflare 事故复盘（2025-11-18）。界面为 AI 生成的示意图",
+  "notes": "观测和通报也是一条依赖。Google 6 月那次，状态页自己也受这次故障影响，原文写 due to the Cloud Service Health infrastructure being down due to this outage，首条公告在事故开始 55 分钟后才发出。Cloudflare 11 月那次，不托管在 Cloudflare 上的状态页恰好也挂了，团队一度以为是 DDoS 攻击，耽误了判断。Google 事后承诺：即使 Google Cloud 和主监控产品都挂了，监控和通报设施也要能用。我们的做法：状态页、告警通道和值班联络放在主云之外，至少有一条不依赖主云的路径能把消息发出去。"
+}

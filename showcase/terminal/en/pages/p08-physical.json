@@ -1,0 +1,49 @@
+{
+  "components": [
+    {
+      "type": "image_grid",
+      "items": [
+        {
+          "asset_id": "grid-cooling",
+          "caption": "Azure West US 2 · 2026-05",
+          "icon": "thermometer"
+        },
+        {
+          "asset_id": "grid-power",
+          "caption": "Google europe-west4-a · 2026-07",
+          "icon": "zap"
+        },
+        {
+          "asset_id": "grid-fiber",
+          "caption": "Google us-west1 · 2026-08",
+          "icon": "cable"
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "22h 06m",
+          "label": "A storm hit two zones"
+        },
+        {
+          "value": "44°C",
+          "label": "Backup cooling under construction"
+        },
+        {
+          "value": "One region",
+          "label": "Bandwidth squeezed, others fine"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "tip",
+      "icon": "shield-check",
+      "text": "Each hit one region. Multi-region in the same cloud holds."
+    }
+  ],
+  "footnote": "Azure PIR GHRP-84G, Google Cloud incident reports (2026-07-25, 2026-08-27). Images are AI-generated illustrations",
+  "notes": "Single-region physical and network failures do happen, and all three of these have official reports. Azure West US 2, May 29, 2026: a storm caused voltage sags and swells across several data centers, cooling went into protective lockout and equipment shut down on heat. It hit two physical availability zones in the same region, a 22h 6m window. Google europe-west4-a, July 2026: a 3 ms utility voltage dip while backup cooling was unavailable because of construction work, and the room reached 44°C. Google's official duration is 14h 55m. Google us-west1, August 20, 2026: planned fiber maintenance squeezed bandwidth between data centers, automatic rerouting failed, and Spanner and metadata latency cascaded downstream. The report says other regions remained fully operational and unaffected. What they share: each hit one region. Microsoft's West US 2 report recommends multi-region for mission-critical workloads. AWS also had a thermal event in use1-az4 in May 2026, which AWS describes as a single availability zone. The three images are AI-generated illustrations, not photos of the incidents."
+}

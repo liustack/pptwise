@@ -1,0 +1,40 @@
+{
+  "components": [
+    {
+      "type": "device_mockup",
+      "device": "browser",
+      "asset_id": "mock-dashboard",
+      "url": "status.internal / overview"
+    },
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "bell-off",
+          "title": "Google · 2025-06",
+          "text": "Status page hit too, first post 55 min late",
+          "tone": "danger"
+        },
+        {
+          "icon": "radio-tower",
+          "title": "Cloudflare · 2025-11",
+          "text": "Status page down too, first read as DDoS",
+          "tone": "danger"
+        },
+        {
+          "icon": "shield-check",
+          "title": "Google's promise",
+          "text": "Comms must work when monitoring is down"
+        },
+        {
+          "icon": "flag",
+          "title": "Us",
+          "text": "Status, alerts and paging off the main cloud",
+          "highlight": true
+        }
+      ]
+    }
+  ],
+  "footnote": "Google Cloud incident report (2025-06-13), Cloudflare postmortem (2025-11-18). Dashboard is an AI-generated illustration",
+  "notes": "Observability and communication are a dependency too. In Google's June outage the status page itself was affected, in the report's words due to the Cloud Service Health infrastructure being down due to this outage, and the first public post came 55 minutes after the start. In Cloudflare's November outage, its status page, which is not hosted on Cloudflare, happened to go down at the same time, and the team suspected a DDoS attack for a while. Google committed afterwards that monitoring and communication must keep working even when Google Cloud and its primary monitoring products are down. Our plan: the status page, alerting and on-call paging live outside the main cloud, with at least one path to get a message out that does not depend on it."
+}

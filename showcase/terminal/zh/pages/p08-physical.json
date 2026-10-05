@@ -1,0 +1,49 @@
+{
+  "components": [
+    {
+      "type": "image_grid",
+      "items": [
+        {
+          "asset_id": "grid-cooling",
+          "caption": "Azure West US 2 · 2026-05",
+          "icon": "thermometer"
+        },
+        {
+          "asset_id": "grid-power",
+          "caption": "Google europe-west4-a · 2026-07",
+          "icon": "zap"
+        },
+        {
+          "asset_id": "grid-fiber",
+          "caption": "Google us-west1 · 2026-08",
+          "icon": "cable"
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "22h 06m",
+          "label": "雷暴打中两个可用区"
+        },
+        {
+          "value": "44°C",
+          "label": "备用冷源恰在施工"
+        },
+        {
+          "value": "单区域",
+          "label": "带宽被压缩，其他区域照常"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "tip",
+      "icon": "shield-check",
+      "text": "三起都只伤一个区域，同云多区域挡得住"
+    }
+  ],
+  "footnote": "Microsoft Azure 复盘 GHRP-84G，Google Cloud 复盘（2026-07-25、2026-08-27）。图为 AI 生成的示意图",
+  "notes": "单区域的物理和网络故障是真实存在的，这三起都有官方复盘。Azure West US 2，2026 年 5 月 29 日：雷暴引起多个数据中心电压骤降和骤升，制冷进入保护锁定，设备过热停机，影响到同一区域的两个物理可用区，事故窗口 22 小时 6 分。Google europe-west4-a，2026 年 7 月：市电 3 毫秒的电压跌落，加上备用冷源因施工不可用，机房升到 44°C，官方时长 14 小时 55 分。Google us-west1，2026 年 8 月 20 日：计划内光纤维护压缩了数据中心之间的带宽，自动改道失败，Spanner 和元数据服务延迟连锁影响下游，原文写其他区域 remained fully operational and unaffected。三起的共同点：都只伤一个区域。Microsoft 在 West US 2 的复盘里直接建议关键业务采用多区域。另外，AWS 2026 年 5 月 use1-az4 也有一次热事件导致断电，按 AWS 的说法只影响一个可用区。三张配图由 AI 生成，仅作示意，不是事故现场。"
+}

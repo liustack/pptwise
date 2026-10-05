@@ -1,0 +1,25 @@
+{
+  "notes": "To repeat the ask: take multi-region to warm standby, and fix retries, backoff and independent paths first. With approval, phase one starts in Q4.",
+  "components": [
+    {
+      "type": "timeline",
+      "milestones": [
+        {
+          "date": "Q4 2026",
+          "title": "Throttling and backoff",
+          "desc": "Retry backoff, queue throttling, staged config"
+        },
+        {
+          "date": "Q1 2027",
+          "title": "Independent paths",
+          "desc": "Entry, identity and status each get a path"
+        },
+        {
+          "date": "Q2 2027",
+          "title": "Warm standby region",
+          "desc": "RPO in seconds, RTO in minutes"
+        }
+      ]
+    }
+  ]
+}

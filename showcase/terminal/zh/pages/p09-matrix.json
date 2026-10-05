@@ -1,0 +1,93 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "case",
+          "label": "事故"
+        },
+        {
+          "key": "scope",
+          "label": "故障范围"
+        },
+        {
+          "key": "az",
+          "label": "多可用区"
+        },
+        {
+          "key": "region",
+          "label": "同云多区域"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "case": "AWS use1-az4 · 2026-05",
+            "scope": "单可用区",
+            "az": "✓ 能",
+            "region": "✓ 能"
+          },
+          "icon": "server"
+        },
+        {
+          "cells": {
+            "case": "Azure West US 2 · 2026-05",
+            "scope": "一个区域的两个可用区",
+            "az": "✕ 不能",
+            "region": "✓ 能"
+          },
+          "icon": "thermometer"
+        },
+        {
+          "cells": {
+            "case": "Google us-west1 · 2026-08",
+            "scope": "单区域网络",
+            "az": "✕ 不能",
+            "region": "✓ 能"
+          },
+          "icon": "cable"
+        },
+        {
+          "cells": {
+            "case": "AWS us-east-1 · 2025-10",
+            "scope": "单区域，牵连部分全局功能",
+            "az": "✕ 不能",
+            "region": "✓ 能，大体能，IAM 依赖 us-east-1"
+          },
+          "icon": "database"
+        },
+        {
+          "cells": {
+            "case": "AWS 中东 · 2026-03",
+            "scope": "两个区域，跨多个可用区",
+            "az": "✕ 不能",
+            "region": "✓ 能，数据要在区域外"
+          },
+          "icon": "building-2"
+        },
+        {
+          "cells": {
+            "case": "Google 2025-06、Azure 2026-02",
+            "scope": "全球或多区域控制面",
+            "az": "✕ 不能",
+            "region": "✕ 不能"
+          },
+          "emphasis": "highlight",
+          "icon": "globe"
+        },
+        {
+          "cells": {
+            "case": "Cloudflare、Azure Front Door",
+            "scope": "全球边缘网络",
+            "az": "— 不适用",
+            "region": "— 不适用，要备用入口"
+          },
+          "icon": "network"
+        }
+      ]
+    }
+  ],
+  "footnote": "各事故的官方复盘和 AWS 状态页（2025 年 10 月至 2026 年 9 月），团队按原文归纳。use1-az4 按 AWS 的单可用区说法",
+  "notes": "这张表回答一个问题：哪种冗余能挡住哪种故障。依据都是官方原文。单可用区的故障，多可用区就能挡住，AWS 5 月 use1-az4 的热事件是这一类，按 AWS 的说法只影响一个可用区，不过 Coinbase 说自己看到多个可用区受影响。往下是单区域故障：Azure West US 2 的雷暴同时打中同一区域的两个物理可用区，多可用区没用，但 Microsoft 在复盘里建议关键业务做多区域。Google us-west1 那次，原文写其他区域 remained fully operational。AWS us-east-1 那次大体能挡住，DynamoDB 全球表在其他区域的副本照常可用，但 IAM、Redshift、控制台登录有 us-east-1 的依赖，这一点后面会单独讲。AWS 中东那次，两个区域跨多个可用区受损，只有数据在区域外有备份的客户能在别的区域恢复。最关键的是高亮这一行：Google 6 月和 Azure 2 月这种全球或多区域控制面的故障，同云多区域挡不住，Azure 原话是客户做什么都避免不了。Cloudflare 和 Azure Front Door 这类全球边缘网络，区域根本不适用，要的是一条备用入口。挡全局变更要靠独立的备用路径：Microsoft 在 Front Door 事故后，把 Azure Portal 等关键入口改成多活，可以绕开 Front Door。"
+}

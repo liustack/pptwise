@@ -1,0 +1,80 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "sla",
+          "label": "SLA 允许的停机"
+        },
+        {
+          "key": "month",
+          "label": "每月",
+          "align": "right"
+        },
+        {
+          "key": "year",
+          "label": "每年",
+          "align": "right"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "sla": "99.9%",
+            "month": "43.8 分钟",
+            "year": "8.77 小时"
+          }
+        },
+        {
+          "cells": {
+            "sla": "99.95%",
+            "month": "21.9 分钟",
+            "year": "4.38 小时"
+          }
+        },
+        {
+          "cells": {
+            "sla": "99.99%",
+            "month": "4.38 分钟",
+            "year": "52.6 分钟"
+          },
+          "emphasis": "highlight"
+        },
+        {
+          "cells": {
+            "sla": "99.999%",
+            "month": "26.3 秒",
+            "year": "5.26 分钟"
+          }
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "当月服务费",
+          "label": "抵扣上限",
+          "note": "AWS、Google、Azure 都是。Azure 写明不补偿 lost revenue",
+          "icon": "receipt"
+        },
+        {
+          "value": "99.99%",
+          "label": "三家虚拟机 SLA 最高档",
+          "note": "同一区域多可用区，没有多区域档",
+          "icon": "server"
+        },
+        {
+          "value": "**199**",
+          "unit": "倍",
+          "label": "AWS 2025-10 窗口是月度额度的",
+          "note": "872 分钟对 4.38 分钟，按整窗不可用估算",
+          "icon": "timer"
+        }
+      ]
+    }
+  ],
+  "footnote": "AWS EC2 SLA、Google Compute Engine SLA、Microsoft Online Services SLA（2026 年 10 月版），团队计算。按平均月 30.4375 天",
+  "notes": "SLA 能不能替我们兜底？不能。先看额度：99.99% 一个月只允许 4.38 分钟，前面每一起事故的窗口都远超这个数，AWS 10 月那次 872 分钟，是月度额度的 199 倍，这是假设整个窗口完全不可用的示意，真实抵扣要按各产品对停机的定义和我们自己的资源算。再看赔什么：AWS、Google、Azure 的抵扣上限都是该服务当月的费用，只能抵以后的账单，Azure 合同原文写明不补偿营收损失。Cloudflare Business 版在任意 12 个月里最多抵一个月月费。还有一点：EC2、Compute Engine、Azure VM 三份条款的最高档，都是同一区域多可用区 99.99%，没有单独的多区域档，DynamoDB 全球表是我们读到的唯一跨区域 99.999% 档。结论：SLA 是账单条款，不是可用性保障，停机的业务损失由我们自己承担。口径：这里按平均月 30.4375 天算，Google 和 Microsoft 文档按 30 天月印的是 4.32 分钟。"
+}
