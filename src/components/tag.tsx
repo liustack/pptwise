@@ -55,9 +55,12 @@ export interface TagSpec {
   fontFamily: string
 }
 
+/** The ordinary tag's height, 28px around 16px words. */
+export const ORDINARY_TAG_HEIGHT = 28
+
 /** The ordinary size: 16px words in a 28px label, the floor every theme's body type keeps. */
 export function ordinaryTagSpec(ctx: ComponentCtx): TagSpec {
-  return { size: 16, height: 28, padX: 12, fontFamily: ctx.fonts.body }
+  return { size: 16, height: ORDINARY_TAG_HEIGHT, padX: 12, fontFamily: ctx.fonts.body }
 }
 
 /** The label's width for `text` at `spec`. */

@@ -2132,3 +2132,19 @@ describe("comparison row icon", () => {
     expect(parseOne({ type: "comparison", columns: ["A"], rows: [{ label: "x", cells: ["1"], icon: "pill" }] }).success).toBe(true)
   })
 })
+
+describe("roadmap timed phases", () => {
+  const phase = (extra: Record<string, unknown> = {}) => ({ title: "a", ...extra })
+  const road = (items: unknown[], extra: Record<string, unknown> = {}) => ({ type: "roadmap", items, ...extra })
+  it("takes a length on every phase in one unit, a checkpoint and up to three points", () => {
+    expect(parseOne(road([phase({ duration: 15, checkpoint: "小测一", points: ["a", "b"] }), phase({ duration: 7 })], { duration_unit: "分钟" })).success).toBe(true)
+    expect(parseOne(road([phase({ points: ["a", "b", "c", "d"] }), phase()])).success).toBe(false)
+    expect(parseOne(road([phase({ points: [] }), phase()])).success).toBe(false)
+  })
+  it("refuses lengths on some phases only, lengths with no unit, and a unit with no lengths", () => {
+    expect(parseOne(road([phase({ duration: 15 }), phase()], { duration_unit: "分钟" })).success).toBe(false)
+    expect(parseOne(road([phase({ duration: 15 }), phase({ duration: 7 })])).success).toBe(false)
+    expect(parseOne(road([phase(), phase()], { duration_unit: "分钟" })).success).toBe(false)
+    expect(parseOne(road([phase({ duration: 0 }), phase({ duration: 7 })], { duration_unit: "分钟" })).success).toBe(false)
+  })
+})

@@ -293,6 +293,23 @@ function asksForChartRunLabel(components: readonly CompositionProps["components"
  */
 const ROADMAP_BASIS_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["phases"])
 
+/**
+ * The compositions that draw what a roadmap's phases may carry beyond their
+ * title, period and rows: how long each lasts (`duration`), the check held as
+ * it ends (`checkpoint`) and what it covers (`points`). A page whose roadmap
+ * carries any of them is offered to these alone; the ordinary roadmap adds
+ * the length to the period line, the points under the title and the
+ * checkpoint as a tag under them.
+ */
+const ROADMAP_PHASE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForRoadmapPhases(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some(
+    (component) =>
+      component.type === "roadmap" && component.items.some((item) => item.duration !== undefined || item.checkpoint !== undefined || item.points !== undefined),
+  )
+}
+
 function asksForRoadmapBasis(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "roadmap" && component.items.some((item) => (item.rows ?? []).some((row) => row.basis !== undefined)))
 }
@@ -320,6 +337,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const ranged = asksForChartRange(props.components)
   const labelled = asksForChartRunLabel(props.components)
   const pending = asksForRoadmapBasis(props.components)
+  const phased = asksForRoadmapPhases(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -330,6 +348,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (ranged && !CHART_RANGE_COMPOSITIONS.has(id)) continue
     if (labelled && !CHART_RUN_LABEL_COMPOSITIONS.has(id)) continue
     if (pending && !ROADMAP_BASIS_COMPOSITIONS.has(id)) continue
+    if (phased && !ROADMAP_PHASE_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue

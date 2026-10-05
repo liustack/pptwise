@@ -34,6 +34,27 @@ export const schema = z
               )
               .max(4)
               .optional(),
+            /** How long the phase lasts. See the describe below. */
+            duration: z
+              .number()
+              .positive()
+              .optional()
+              .describe(
+                "How long the phase lasts, counted in the roadmap's duration_unit, such as 15. Give every phase one, and a face that lays phases to scale draws each as long as it lasts.",
+              ),
+            /** A check held as the phase ends. See the describe below. */
+            checkpoint: z
+              .string()
+              .min(1)
+              .optional()
+              .describe('A check held as the phase ends, such as "小测一", "Quiz 1" or "Gate review", marked where the phase ends and named on its card.'),
+            /** What the phase covers. See the describe below. */
+            points: z
+              .array(z.string().min(1))
+              .min(1)
+              .max(3)
+              .optional()
+              .describe('What the phase covers, one to three short lines, such as ["四项研究", "两种帮倒忙"] or ["Four studies", "Two traps"], printed as a short list on its card.'),
             /** Marks the one phase the page is about: its card alone keeps
              * the accent bar, and the others take the primary color. */
             emphasis: z
@@ -45,9 +66,32 @@ export const schema = z
       )
       .min(2)
       .max(4),
+    /** The unit every phase's duration is counted in. See the describe below. */
+    duration_unit: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('The unit every phase\'s duration is counted in, such as "分钟", "min", "weeks" or "个月". Required once the phases carry a duration.'),
   })
   .strict()
   .superRefine((c, ctx) => {
+    // Phases laid to scale are laid end to end: every phase needs a length,
+    // and every length the same unit.
+    const timed = c.items.filter((item) => item.duration !== undefined).length
+    if (timed > 0 && timed < c.items.length) {
+      const missing = c.items.findIndex((item) => item.duration === undefined)
+      ctx.addIssue({
+        code: "custom",
+        path: ["items", missing, "duration"],
+        message: `${timed} of the roadmap's ${c.items.length} phases have a duration. Give every phase one, so they can be laid end to end, or none.`,
+      })
+    }
+    if (timed > 0 && c.duration_unit === undefined) {
+      ctx.addIssue({ code: "custom", path: ["duration_unit"], message: 'the phases carry a duration and the roadmap names no unit for it. Add duration_unit, such as "分钟" or "weeks".' })
+    }
+    if (timed === 0 && c.duration_unit !== undefined) {
+      ctx.addIssue({ code: "custom", path: ["duration_unit"], message: "duration_unit names the unit of the phases' durations, and no phase has one. Give each phase a duration, or remove duration_unit." })
+    }
     // The accent bar singles one phase out, so two marked phases single out
     // nothing.
     const marked = c.items.flatMap((item, i) => (item.emphasis === true ? [i] : []))
