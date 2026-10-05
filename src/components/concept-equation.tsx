@@ -1,7 +1,8 @@
 import type { ReactElement } from "react"
 import type { Component } from "@/ir"
 import { DroppedContentMarker } from "../render/drop-marker"
-import { accessibleInk } from "../render/ink"
+import { Icon } from "../render/icons"
+import { accessibleInk, graphicInk } from "../render/ink"
 import { anyCut } from "./declared-fit"
 import {
   FORM_BODY_FLOOR,
@@ -22,6 +23,7 @@ type ConceptEquationComponent = Extract<Component, { type: "concept_equation" }>
  * 两个字形，画在面板之间的通道里，跟着面板一起缩放。
  *
  * 面板高度由最高的一块决定，三块用同一个高度，等号两边才是一条线上的东西。
+ * 要素带 `icon` 时，图标画在面板文字栈的最上面，占一行 24px 加 10px 间距。
  */
 
 const GAP = 16
@@ -34,6 +36,8 @@ const RESULT_SHARE = 1.12
 const CARD_RADIUS = 2
 const MIN_H = 190
 const MAX_H = 340
+/** A term's icon, at the top of its panel's text stack. */
+const ICON = { size: 24, gap: 10 } as const
 
 interface Slot {
   x: number
@@ -57,13 +61,14 @@ function slots(n: number, w: number): { terms: Slot[]; result: Slot; operators: 
 }
 
 interface TermText {
+  icon?: string
   value?: { text: string; fontSize: number; truncated: boolean }
   label: ReturnType<typeof layoutFormTitle>
   note: ReturnType<typeof layoutFormBody> | null
 }
 
 function layoutTerm(
-  term: { label: string; value?: string; note?: string },
+  term: { label: string; value?: string; note?: string; icon?: string },
   innerW: number,
   ctx: ComponentCtx,
 ): TermText {
@@ -92,17 +97,23 @@ function layoutTerm(
       })
     : null
   return {
+    ...(term.icon ? { icon: term.icon } : {}),
     value: fittedValue && { text: fittedValue.text, fontSize: fittedValue.fontSize, truncated: fittedValue.truncated },
     label,
     note,
   }
 }
 
+function iconHeight(text: TermText): number {
+  return text.icon ? ICON.size + ICON.gap : 0
+}
+
 function termHeight(text: TermText): number {
+  const iconH = iconHeight(text)
   const valueH = text.value ? text.value.fontSize * 1.28 : 0
   const labelH = text.label.lines.length * text.label.lineHeight
   const noteH = text.note ? text.note.lines.length * text.note.lineHeight + 12 : 0
-  return PAD_Y * 2 + valueH + labelH + noteH
+  return PAD_Y * 2 + iconH + valueH + labelH + noteH
 }
 
 /** The narrowest panel that can hold a word at the readable floor. */
@@ -172,12 +183,23 @@ export const conceptEquation: SvgComponent<ConceptEquationComponent> = {
       const noteInk = filled
         ? accessibleInk(ctx.colors.surface, ground, text.note?.fontSize ?? FORM_BODY_FLOOR)
         : accessibleInk(ctx.colors.muted, ctx.colors.surface, text.note?.fontSize ?? FORM_BODY_FLOOR)
+      const iconH = iconHeight(text)
       const valueH = text.value ? text.value.fontSize * 1.28 : 0
       const labelH = text.label.lines.length * text.label.lineHeight
       const noteH = text.note ? text.note.lines.length * text.note.lineHeight + 12 : 0
-      let y = (h - (valueH + labelH + noteH)) / 2
+      let y = (h - (iconH + valueH + labelH + noteH)) / 2
       const left = slot.x + PAD_X
       const nodes: ReactElement[] = []
+      if (text.icon) {
+        // The icon is a graphic, so it needs 3:1 on its panel, not a text's 4.5:1.
+        const iconInk = filled ? graphicInk(ctx.colors.surface, ground) : graphicInk(ctx.colors.primary, ground)
+        nodes.push(
+          <g key="icon" data-term-icon={text.icon}>
+            <Icon name={text.icon} x={left} y={y} size={ICON.size} color={iconInk} />
+          </g>,
+        )
+        y += iconH
+      }
       if (text.value) {
         nodes.push(
           <text
@@ -264,6 +286,7 @@ export const conceptEquation: SvgComponent<ConceptEquationComponent> = {
     )
   },
 }
+
 
 export const renderDef: RenderDef<ConceptEquationComponent> = {
   type: "concept_equation",

@@ -2148,3 +2148,14 @@ describe("roadmap timed phases", () => {
     expect(parseOne(road([phase({ duration: 0 }), phase({ duration: 7 })], { duration_unit: "分钟" })).success).toBe(false)
   })
 })
+
+describe("concept_equation term icon", () => {
+  it("takes an icon on a term and on the result", () => {
+    expect(parseOne({ type: "concept_equation", operands: [{ label: "a", icon: "route" }, { label: "b" }], result: { label: "c", icon: "target" } }).success).toBe(true)
+  })
+
+  it("refuses an icon name the catalog does not have", () => {
+    expect(parseOne({ type: "concept_equation", operands: [{ label: "a", icon: "no-such-icon" }, { label: "b" }], result: { label: "c" } }).success).toBe(false)
+  })
+})
+

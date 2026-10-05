@@ -158,3 +158,26 @@ describe("concept_equation component", () => {
     expect(a).toBe(b)
   })
 })
+
+describe("concept_equation term icon", () => {
+  it("draws a term's icon at the top of its panel, above the figure", () => {
+    const withIcon = {
+      ...two,
+      operands: [{ ...two.operands[0]!, icon: "route" as const }, two.operands[1]!],
+    }
+    const { container } = svg(conceptEquation.render(withIcon, { x: 80, y: 80, w: 1088 }, themed("ledger")))
+    const icons = container.querySelectorAll("g[data-term-icon]")
+    expect(icons).toHaveLength(1)
+    expect(icons[0]!.getAttribute("data-term-icon")).toBe("route")
+    const iconY = Number(/translate\([\d.]+,([\d.]+)\)/.exec(icons[0]!.querySelector("g")!.getAttribute("transform")!)![1])
+    const value = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "5 周")!
+    expect(iconY + 24).toBeLessThan(Number(value.getAttribute("y")) - 24)
+  })
+
+  it("makes every panel tall enough for the icon", () => {
+    const ctx = themed("ledger")
+    const withIcon = { ...two, operands: two.operands.map((term) => ({ ...term, icon: "route" as const })) }
+    expect(conceptEquation.measure(withIcon, 1088, ctx)).toBeGreaterThan(conceptEquation.measure(two, 1088, ctx))
+  })
+})
+

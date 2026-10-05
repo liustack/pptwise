@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -7,6 +8,10 @@ const TermSchema = z
     label: z.string().min(1).describe("What this term is — the name the reader reads it by."),
     value: z.string().optional().describe("Optional figure for the term, printed large."),
     note: z.string().optional().describe("Optional single line under the term."),
+    /** A symbol for the term. See the describe below. */
+    icon: IconNameSchema.optional().describe(
+      "A symbol for the term, drawn at the top of its panel, such as route or hospital. Run `pptwise icons` for the names.",
+    ),
   })
   .strict()
 
