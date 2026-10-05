@@ -160,6 +160,14 @@ describe("auditL1 planted defects", () => {
     expect(codes(svg)).toContain("strikethrough")
   })
 
+  it("does not flag a line that strikes its words out on purpose (data-strike)", () => {
+    const svg = wrap(
+      `<text x="100" y="200" font-size="22">核心城区的餐饮高峰单</text>` +
+        `<line data-strike="" x1="100" y1="193" x2="320" y2="193" stroke="#C4AE97" stroke-width="1.5"/>`,
+    )
+    expect(codes(svg)).not.toContain("strikethrough")
+  })
+
   it("does not flag a legal underline below the baseline as strikethrough", () => {
     const svg = wrap(
       `<text x="100" y="200" font-size="80">客户与收入结构</text>` +

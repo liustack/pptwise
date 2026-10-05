@@ -841,7 +841,9 @@ function collectGeometry(root: Element, paintOrder: ReadonlyMap<Element, number>
 
     const tag = el.tagName.toLowerCase()
     const order = paintOrder.get(el) ?? 0
-    if (tag === "line") {
+    // A line marked `data-strike` strikes out the words under it on purpose,
+    // as in `collectDividers`: no strikethrough to report.
+    if (tag === "line" && !el.hasAttribute("data-strike")) {
       const x1 = ax + Number(el.getAttribute("x1") ?? 0) * as
       const x2 = ax + Number(el.getAttribute("x2") ?? 0) * as
       const y1 = ay + Number(el.getAttribute("y1") ?? 0) * as
