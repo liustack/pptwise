@@ -217,6 +217,17 @@ describe("the ember board's pages on ember", () => {
     expect(root!.querySelector("[data-pitch-gate-rule]")!.closest("[data-pitch-fire='gate']")).not.toBeNull()
   })
 
+  it("runway lets a point that wraps push the next one down by its extra line", () => {
+    const [road, rule] = PITCH_BOARD["p14-milestones"]!.components as [Extract<Component, { type: "roadmap" }>, Component]
+    const items = road.items.map((item, i) => (i === 1 ? { ...item, points: ["园区或城郊医疗点对点，先飞最短的那一条航线", "验证假设 3：安全稳定复飞"] } : item))
+    const element = compose({ components: [{ ...road, items }, rule], ctx: chinese(testCtx("ember").ctx), rect: BAND, setting: "pitch" }, PITCH_IDS)
+    const phase = renderNode(element!).root.querySelectorAll("[data-pitch-phase]")[1]!
+    const [first, second] = Array.from(phase.querySelectorAll("[data-pitch-point]")).map((g) => Array.from(g.querySelectorAll("text")).slice(1).map((t) => Number(t.getAttribute("y"))))
+    expect(first).toHaveLength(2)
+    // The second point starts a line plus the board's gap under the first one's last line.
+    expect(second![0]! - first![1]!).toBe(20 + 24)
+  })
+
   it("uses cuts the bar by share and lights the first part and its swatch", () => {
     const { root } = draw("p15-ask")
     const parts = Array.from(root!.querySelectorAll("[data-pitch-use] > * > g > rect, [data-pitch-use] > g > rect"))

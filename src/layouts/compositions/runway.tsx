@@ -15,7 +15,9 @@ type Callout = Extract<Component, { type: "callout" }>
  * fire stands on the bar with the check named under it. Under the bar a card
  * a phase: a band of the hairline across its top (the ivory on the phase the
  * page is about), its icon and its period small and grey, its title bold and
- * what it covers as short lines. Under the cards, when the page has one, the
+ * what it covers as short lines, each point under the last with the board's
+ * gap between them, so a point that wraps pushes the next one down rather
+ * than running into it. Under the cards, when the page has one, the
  * gate's rule in an outline of the fire with its icon.
  *
  * Takes, in the pitch setting: a `roadmap` of two to four phases that all
@@ -23,15 +25,15 @@ type Callout = Extract<Component, { type: "callout" }>
  * `callout` with no title or tag.
  *
  * Declines: a tick's name wider than its share of the bar, a period or a
- * title past one line, a point past two lines or more points than the card
- * holds, the check's name wider than the bar's room under it, and the rule
+ * title past one line, a point past two lines or points running past the
+ * card's foot, the check's name wider than the bar's room under it, and the rule
  * past one line.
  *
  * Reads: the pitch inks (`./pitch.tsx`), the body and heading faces.
  */
 
 const AXIS = { label: { top: 10, size: 12, lineHeight: 0 }, tick: { top: 18, h: 14 }, track: { top: 32, h: 6 }, gem: { top: 22, half: 13 }, check: { top: 56, h: 24, size: 13 } } as const
-const CARD = { top: 100, h: 250, gap: 20, pad: 20, edge: 3, icon: { top: 20, size: 22 }, period: { x: 52, top: 18, size: 13, lineHeight: 24 }, title: { top: 54, size: 20, lineHeight: 32 }, points: { top: 100, pitch: 44, size: 14, lineHeight: 20, maxLines: 2, dot: 10 } } as const
+const CARD = { top: 100, h: 250, gap: 20, pad: 20, edge: 3, icon: { top: 20, size: 22 }, period: { x: 52, top: 18, size: 13, lineHeight: 24 }, title: { top: 54, size: 20, lineHeight: 32 }, points: { top: 100, gap: 24, size: 14, lineHeight: 20, maxLines: 2, dot: 10 }, bottom: 20 } as const
 const GATE = { top: 370, h: 60, padX: 64, icon: { x: 22, size: 22 }, size: 18, lineHeight: 28 } as const
 
 /** A tick's name: 「起点」 and 「第 3 个月」 in a Chinese deck, "Start" and "3 months" in any other. */
@@ -88,7 +90,17 @@ export const runwayComposition: Composition = ({ components, ctx, rect, setting 
       points: points.map((point) => fitPitch(point, { width: inner - CARD.points.dot, size: CARD.points.size, lineHeight: CARD.points.lineHeight, maxLines: CARD.points.maxLines }, ctx)),
     }
   })
-  if (phases.some((p) => !p.title || (p.item.period?.trim() && !p.period) || p.points.some((pt) => !pt) || CARD.points.top + p.points.length * CARD.points.pitch > CARD.h + 4)) return null
+  if (phases.some((p) => !p.title || (p.item.period?.trim() && !p.period) || p.points.some((pt) => !pt))) return null
+  // Each point starts where the last one's lines end, plus the board's gap.
+  const tops = phases.map((p) => {
+    let top = CARD.points.top
+    return p.points.map((pt) => {
+      const at = top
+      top += pt!.lines.length * CARD.points.lineHeight + CARD.points.gap
+      return at
+    })
+  })
+  if (phases.some((p, i) => p.points.length > 0 && tops[i]!.at(-1)! + p.points.at(-1)!.lines.length * CARD.points.lineHeight > CARD.h - CARD.bottom)) return null
   const gated = phases.find((p) => p.item.checkpoint?.trim())
   const checkName = gated?.item.checkpoint?.trim() ?? ""
   if (gated && pitchWidth(checkName, AXIS.check.size, ctx, true) > 240) return null
@@ -124,8 +136,8 @@ export const runwayComposition: Composition = ({ components, ctx, rect, setting 
               {paintPitch(p.title!, { ctx, x: x + CARD.pad, top: top + CARD.title.top, bold: true, fill: pitchText(inks.ink, inks.card, CARD.title.size), ground: inks.card })}
               {p.points.map((pt, j) => (
                 <g key={j} data-pitch-point="">
-                  {paintPitchLine("·", { ctx, x: x + CARD.pad, top: top + CARD.points.top + j * CARD.points.pitch, lineHeight: CARD.points.lineHeight, size: CARD.points.size, fill: pitchText(inks.ink, inks.card, CARD.points.size) })}
-                  {paintPitch(pt!, { ctx, x: x + CARD.pad + CARD.points.dot, top: top + CARD.points.top + j * CARD.points.pitch, fill: pitchText(inks.ink, inks.card, CARD.points.size), ground: inks.card })}
+                  {paintPitchLine("·", { ctx, x: x + CARD.pad, top: top + tops[p.i]![j]!, lineHeight: CARD.points.lineHeight, size: CARD.points.size, fill: pitchText(inks.ink, inks.card, CARD.points.size) })}
+                  {paintPitch(pt!, { ctx, x: x + CARD.pad + CARD.points.dot, top: top + tops[p.i]![j]!, fill: pitchText(inks.ink, inks.card, CARD.points.size), ground: inks.card })}
                 </g>
               ))}
             </g>
