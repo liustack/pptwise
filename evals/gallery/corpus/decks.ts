@@ -547,6 +547,9 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   // almanac's yearbook sheet: the board's decision page, what the year came
   // to on three cards over the two things the members are asked to settle.
   if (def.id === "yearbook-sheet") return yearbookAsk(lex).components
+  // homeroom's lesson sheet: the board's recap page, four pairs of words
+  // chalked on the board with a line each, one underlined.
+  if (def.id === "lesson-sheet") return COMPOSITION_BODIES.blackboard(lex).components
   // memo's sheet: the board's decision page, four clauses numbered in the
   // deck's numerals with a sentence each, the last the one the page lands on.
   if (def.id === "memo-sheet") {
@@ -814,7 +817,16 @@ export function layoutPage(
               : [],
         }
       : slideType === "chapter"
-        ? { type: "chapter", heading: lex.chapters[1]!, subheading: lex.kickers[1], components: [] }
+        ? {
+            type: "chapter",
+            heading: lex.chapters[1]!,
+            subheading: lex.kickers[1],
+            // homeroom's part of a lesson says what the part covers on three cards.
+            components:
+              def.id === "lesson-chapter"
+                ? [{ type: "row_cards", items: [0, 1, 2].map((i) => ({ icon: (["lightbulb", "triangle-alert", "gauge"] as const)[i]!, title: lex.bullets[i]! })) }]
+                : [],
+          }
         : slideType === "ending"
           ? {
               type: "ending",
@@ -823,7 +835,12 @@ export function layoutPage(
               components:
                 def.id === "gauge-next" || def.id === "crayonbox-todo" || def.id === "dossier-ending" || def.id === "yearbook-ending"
                   ? [{ type: "bullets", items: lex.bullets.slice(0, 3) }]
-                  : [],
+                  : def.id === "lesson-ending"
+                    ? [
+                        { type: "numbered_cards", items: [0, 1, 2].map((i) => ({ title: lex.phrases[i]!, text: lex.labels[i]! })) },
+                        { type: "callout", variant: "tip", title: lex.kickers[5]!, text: lex.sentences[11]! },
+                      ]
+                    : [],
             }
           : {
               type: "content",
@@ -1058,6 +1075,8 @@ interface CompositionBody {
   readonly years?: NonNullable<Slide["years"]>
   /** What the page as a whole rests on, set by the compositions that take one. */
   readonly tag?: NonNullable<Slide["tag"]>
+  /** The boxes a quiz page ticks beside each question. */
+  readonly ballot?: NonNullable<Slide["ballot"]>
 }
 
 /**
@@ -2334,6 +2353,228 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
       { type: "callout", variant: "info", text: lex.verdicts.neutral },
     ],
   }),
+  // homeroom's lesson sheet sets the shapes as a class taught from a
+  // handout: goals with boxes to tick, the class by the minute, studies
+  // with their kind of study in a pill, a quiz and its stamped answers, the
+  // recap on a board. The quarter's review taught as a lesson.
+  objectives: (lex) => ({
+    heading: lex.headings[11]!,
+    components: [
+      { type: "image", asset_id: PHOTO_ASSETS[0], fit: "cover", caption: lex.labels[7]! },
+      { type: "icon_cards", items: [0, 1, 2].map((i) => ({ icon: (["list-checks", "shield-alert", "clipboard-check"] as const)[i]!, title: lex.phrases[i]!, text: lex.sentences[[0, 3, 10][i]!]!, tag: { text: lex.periods[i]! } })) },
+      { type: "callout", variant: "tip", text: lex.bullets[3]! },
+    ],
+  }),
+  syllabus: (lex) => ({
+    heading: lex.headings[3]!,
+    components: [
+      {
+        type: "roadmap",
+        duration_unit: lex.id === "zh" ? "分钟" : "min",
+        items: [0, 1, 2, 3].map((i) => ({
+          period: lex.labels[i]!,
+          title: lex.stages[i]!,
+          icon: (["lightbulb", "gavel", "clipboard-check", "notebook-pen"] as const)[i]!,
+          duration: [15, 9, 15, 6][i]!,
+          points: [lex.labels[i + 4]!, lex.labels[i + 8]!],
+          ...(i === 0 || i === 2 ? { checkpoint: lex.periods[i === 0 ? 0 : 1]! } : {}),
+          rows: [{ label: lex.kickers[0]!, value: lex.labels[i + 12]! }],
+          ...(i === 2 ? { emphasis: true } : {}),
+        })),
+      },
+      { type: "callout", variant: "tip", icon: "hand", text: lex.verdicts.neutral },
+    ],
+  }),
+  studies: (lex) => ({
+    heading: lex.headings[2]!,
+    components: [
+      {
+        type: "kpi_cards",
+        items: [0, 1, 2, 3].map((i) => ({
+          icon: (["pencil-line", "headset", "briefcase", "users"] as const)[i]!,
+          label: `${lex.labels[i + 8]!}${colonOf(lex)}${lex.metrics[i]!.label}`,
+          value: i === 0 ? `**${lex.metrics[i]!.value}**` : lex.metrics[i]!.value,
+          ...(lex.metrics[i]!.unit ? { unit: lex.metrics[i]!.unit } : {}),
+          note: lex.labels[i]!,
+          source: lex.labels[i + 12]!,
+          tag: { text: lex.periods[i]!, evidence: i < 2 ? ("trial" as const) : ("preprint" as const) },
+        })),
+      },
+      { type: "callout", variant: "warn", icon: "info", text: lex.verdicts.neutral },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  cohorts: (lex) => ({
+    heading: lex.headings[6]!,
+    components: [
+      {
+        type: "comparison",
+        columns: [lex.labels[12]!, lex.labels[13]!],
+        rows: [
+          { label: lex.phrases[0]!, cells: [`${lex.labels[0]!}${colonOf(lex)}+36%`, `${lex.labels[1]!}${colonOf(lex)}${lex.labels[7]!}`] },
+          { label: lex.phrases[1]!, cells: [`${lex.labels[2]!}${colonOf(lex)}+43%`, `${lex.labels[3]!}${colonOf(lex)}+17%`] },
+        ],
+      },
+      { type: "callout", variant: "info", text: lex.bullets[1]! },
+      { type: "insight_panel", title: lex.kickers[1]!, rows: [0, 1].map((i) => ({ label: lex.phrases[i + 4]!, text: lex.periods[i]! })), footnote: lex.labels[6]! },
+      { type: "callout", variant: "tip", icon: "graduation-cap", text: lex.sentences[6]! },
+    ],
+  }),
+  diptych: (lex) => ({
+    heading: lex.headings[7]!,
+    components: [
+      { type: "insight_panel", icon: "triangle-alert", title: lex.phrases[7]!, rows: [{ label: lex.labels[7]!, text: lex.bullets[4]! }], footnote: lex.sentences[7]! },
+      {
+        type: "chart",
+        chart_type: "bar",
+        direction: "horizontal",
+        axes: { x_title: lex.metrics[1]!.label, x_unit: "%" },
+        tag: { text: lex.periods[2]!, evidence: "preprint" },
+        series: [{ name: lex.metrics[1]!.label, data: [{ x: lex.labels[12]!, y: 84.5 }, { x: lex.labels[13]!, y: 60, upper: 70, emphasis: true }] }],
+      },
+      { type: "insight_panel", icon: "file-warning", title: lex.phrases[9]!, rows: [{ label: lex.labels[7]!, text: lex.bullets[5]! }], footnote: lex.labels[4]! },
+      {
+        type: "chart",
+        chart_type: "bar",
+        direction: "horizontal",
+        axes: { x_unit: "%" },
+        tag: { text: lex.periods[3]!, evidence: "company" },
+        series: [{ name: lex.metrics[4]!.label, data: [{ x: lex.phrases[10]!, y: 1.8, upper: 24.2, emphasis: true }, { x: lex.phrases[11]!, y: 17, upper: 33 }] }],
+      },
+      { type: "callout", variant: "tip", icon: "user-check", text: lex.verdicts.positive },
+    ],
+  }),
+  estimates: (lex) => ({
+    heading: lex.headings[8]!,
+    components: [
+      {
+        type: "chart",
+        chart_type: "bar",
+        direction: "horizontal",
+        axes: { x_title: lex.metrics[3]!.label, x_unit: "%" },
+        series: [{ name: lex.metrics[3]!.label, data: [lex.labels[8]!, lex.labels[9]!, lex.labels[10]!, lex.labels[11]!, lex.labels[12]!].map((x, i) => ({ x, y: [-24, -39, -38, -20, 19][i]!, ...(i === 4 ? { emphasis: true } : {}) })) }],
+      },
+      { type: "kpi_cards", items: [{ icon: "gauge", value: "**39**", unit: lex.id === "zh" ? "个百分点" : "points", label: lex.metrics[5]!.label, note: lex.bullets[2]!, tag: { text: lex.periods[4]!, evidence: "preprint" } }] },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  quiz: (lex) => ({
+    heading: lex.headings[9]!,
+    ballot: { choices: lex.id === "zh" ? ["可以", "不行", "先别急"] : ["Yes", "No", "Not yet"] },
+    components: [
+      { type: "image", asset_id: PHOTO_ASSETS[1], fit: "cover", caption: lex.labels[7]! },
+      { type: "row_cards", items: [0, 1, 2].map((i) => ({ title: lex.periods[i]!, text: lex.bullets[i]! })) },
+    ],
+  }),
+  answers: (lex) => ({
+    heading: lex.headings[10]!,
+    components: [
+      {
+        type: "row_cards",
+        items: [0, 1, 2].map((i) => ({
+          title: `${lex.periods[i]!}${colonOf(lex)}${(lex.id === "zh" ? ["可以", "不行", "先别急"] : ["Yes", "No", "Not yet"])[i]!}`,
+          text: lex.bullets[i]!,
+          sub: lex.labels[i + 4]!,
+          tone: (["success", "danger", "warning"] as const)[i]!,
+        })),
+      },
+      { type: "callout", variant: "info", text: lex.verdicts.neutral },
+    ],
+  }),
+  cases: (lex) => ({
+    heading: lex.headings[0]!,
+    components: [
+      {
+        type: "comparison",
+        columns: [lex.labels[7]!, lex.labels[6]!, lex.kickers[2]!],
+        rows: [0, 1, 2].map((i) => ({
+          label: lex.labels[i + 8]!,
+          icon: (["file-warning", "gavel", "plane"] as const)[i]!,
+          tag: { text: lex.periods[i]!, quiet: true },
+          cells: [lex.bullets[i]!, lex.labels[i + 12]!, lex.sources[i]!.label],
+        })),
+      },
+      { type: "callout", variant: "info", icon: "message-square-quote", text: lex.verdicts.warning },
+      { type: "kpi_cards", items: [{ value: `**${lex.metrics[0]!.value}**`, label: lex.metrics[0]!.label }] },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  ranking: (lex) => ({
+    heading: lex.headings[5]!,
+    components: [
+      {
+        type: "chart",
+        chart_type: "bar",
+        direction: "horizontal",
+        axes: { x_title: lex.metrics[2]!.label, x_unit: "%" },
+        tag: { text: lex.periods[4]!, evidence: "company" },
+        series: [{ name: lex.metrics[2]!.label, data: [0, 1, 2, 3, 4, 5].map((i) => ({ x: lex.phrases[i]!, y: [72, 66, 57, 56, 56, 48][i]!, ...(i === 5 ? { emphasis: true } : {}) })) }],
+      },
+      { type: "callout", variant: "info", icon: "ban", title: lex.labels[8]!, text: lex.verdicts.neutral },
+      { type: "chart", chart_type: "bar", direction: "horizontal", axes: { x_unit: "%" }, series: [{ name: lex.labels[8]!, data: [12, 13, 14].map((i, j) => ({ x: lex.labels[i]!, y: [67, 56, 33][j]!, ...(j === 0 ? { emphasis: true } : {}) })) }] },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  rules: (lex) => ({
+    heading: lex.headings[4]!,
+    components: [
+      {
+        type: "icon_cards",
+        items: [0, 1, 2, 3, 4, 5].map((i) => ({
+          icon: (["lock", "shield-check", "user-check", "badge-info", "history", "siren"] as const)[i]!,
+          title: lex.phrases[i + 6]!,
+          text: lex.bullets[i]!,
+          tag: { text: lex.labels[i]!, basis: "law" as const },
+        })),
+      },
+    ],
+    footnote: lex.sources[1]!.label,
+  }),
+  tiers: (lex) => ({
+    heading: lex.headings[1]!,
+    components: [
+      { type: "pyramid", layers: [12, 13, 14].map((i, j) => ({ label: lex.labels[i]!, tone: (["danger", "warning", "success"] as const)[j]! })) },
+      {
+        type: "icon_cards",
+        items: [0, 1, 2].map((i) => ({
+          icon: (["lock", "shield-check", "globe"] as const)[i]!,
+          title: lex.phrases[i]!,
+          text: `${lex.id === "zh" ? "例如" : "For example"}${colonOf(lex)}${lex.labels[i]!}, ${lex.labels[i + 4]!}`,
+        })),
+      },
+    ],
+    footnote: lex.sources[1]!.label,
+  }),
+  methods: (lex) => ({
+    heading: lex.headings[12]!,
+    components: [
+      {
+        type: "image_grid",
+        items: [0, 1, 2].map((i) => ({
+          asset_id: PHOTO_ASSETS[i % PHOTO_ASSETS.length]!,
+          caption: `${lex.labels[i]!}${colonOf(lex)}${lex.phrases[i + 3]!}`,
+          icon: (["file-text", "message-square-quote", "pencil-line"] as const)[i]!,
+        })),
+      },
+      { type: "callout", variant: "tip", title: lex.kickers[5]!, text: lex.bullets[0]! },
+    ],
+    footnote: lex.sources[2]!.label,
+  }),
+  blackboard: (lex) => ({
+    heading: lex.headings[11]!,
+    components: [
+      {
+        type: "row_cards",
+        items: [0, 1, 2, 3].map((i) => ({
+          icon: (["list-checks", "lock", "user-check", "siren"] as const)[i]!,
+          title: `${lex.labels[i]!} · ${lex.labels[i + 4]!}`,
+          text: lex.bullets[i]!,
+          ...(i === 1 ? { highlight: true } : {}),
+        })),
+      },
+      { type: "callout", variant: "tip", text: lex.verdicts.positive },
+    ],
+  }),
   phases: (lex) => {
     const colon = colonOf(lex)
     const tbd = lex.id === "zh" ? "待定" : "TBD"
@@ -2671,6 +2912,7 @@ export function compositionPage(
     ...(body.kicker ? { kicker: body.kicker } : {}),
     ...(body.years ? { years: body.years } : {}),
     ...(body.tag ? { tag: body.tag } : {}),
+    ...(body.ballot ? { ballot: body.ballot } : {}),
   } as Slide
   return deckShell(lex, assets, themeId, `composition-${composition}${variant ? `-${variant}` : ""}-${themeId}-${lex.id}`, [slide])
 }

@@ -413,6 +413,22 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "almanac", kind: "photo", composition: "survey" },
   { theme: "almanac", kind: "process", composition: "outlook" },
   { theme: "almanac", kind: "process", composition: "phases" },
+  // homeroom's lesson sheet sets the shapes as a class taught from a
+  // handout, and draws the fourteen its own board added.
+  { theme: "homeroom", kind: "list", composition: "objectives" },
+  { theme: "homeroom", kind: "process", composition: "syllabus" },
+  { theme: "homeroom", kind: "data", composition: "studies" },
+  { theme: "homeroom", kind: "comparison", composition: "cohorts" },
+  { theme: "homeroom", kind: "comparison", composition: "diptych" },
+  { theme: "homeroom", kind: "data", composition: "estimates" },
+  { theme: "homeroom", kind: "list", composition: "quiz" },
+  { theme: "homeroom", kind: "comparison", composition: "answers" },
+  { theme: "homeroom", kind: "comparison", composition: "cases" },
+  { theme: "homeroom", kind: "data", composition: "ranking" },
+  { theme: "homeroom", kind: "list", composition: "rules" },
+  { theme: "homeroom", kind: "hierarchy", composition: "tiers" },
+  { theme: "homeroom", kind: "photo", composition: "methods" },
+  { theme: "homeroom", kind: "points", composition: "blackboard" },
 ]
 
 export function buildMatrix(

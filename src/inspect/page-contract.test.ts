@@ -239,6 +239,7 @@ function atCount(limit: PageLimit, legal: readonly string[], n: number): Compone
     }
     case "items": {
       if (of.includes("bullets")) return [{ type: "bullets", items: Array.from({ length: n }, (_, i) => `Point ${i}`) }]
+      if (of.includes("numbered_cards")) return [{ type: "numbered_cards", items: Array.from({ length: n }, (_, i) => ({ title: `Task ${i}` })) }]
       if (!of.includes("kpi_cards")) return undefined
       const base = sample("kpi_cards") as Extract<Component, { type: "kpi_cards" }>
       return [{ ...base, items: Array.from({ length: n }, (_, i) => ({ ...base.items[0]!, label: `Figure ${i}` })) }]

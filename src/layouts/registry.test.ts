@@ -39,7 +39,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     }
   }
 
-  it("has exactly 154 layout-kind entries, all traceable to one of the four real registries", () => {
+  it("has exactly 158 layout-kind entries, all traceable to one of the four real registries", () => {
     const knownIds = new Set([
       ...Object.keys(COVER_LAYOUTS),
       ...Object.keys(CHAPTER_LAYOUTS),
@@ -64,8 +64,9 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // memo-cover, memo-sheet and memo-ending: 148. The clinic sample
     // redesign adds dossier-cover, dossier-sheet and dossier-ending: 151. The
     // almanac sample redesign adds yearbook-cover, yearbook-sheet and
-    // yearbook-ending: 154.
-    expect(layoutEntries).toHaveLength(154)
+    // yearbook-ending: 154. The homeroom sample redesign adds lesson-cover,
+    // lesson-chapter, lesson-sheet and lesson-ending: 158.
+    expect(layoutEntries).toHaveLength(158)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -134,7 +135,10 @@ describe("content family: body slot", () => {
           id === "memo-ending" ||
           id === "dossier-ending" ||
           id === "yearbook-cover" ||
-          id === "yearbook-ending"
+          id === "yearbook-ending" ||
+          id === "lesson-cover" ||
+          id === "lesson-chapter" ||
+          id === "lesson-ending"
         ) {
           expect(entry.slots.some((s) => s.name === "body")).toBe(true)
           continue
@@ -188,7 +192,9 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
         id === "show-gallery" ||
         id === "show-spotlight" ||
         id === "show-statement" ||
-        id === "show-figures"
+        id === "show-figures" ||
+        // The lesson board's two-study page sets two panels with their charts and a closing tip: five.
+        id === "lesson-sheet"
       )
         continue
       const body = LAYOUT_REGISTRY[id].slots.find((s) => s.name === "body")
@@ -261,18 +267,18 @@ describe("layoutsForSlideType", () => {
     for (const l of covers) expect(l.slideTypes).toContain("cover")
   })
 
-  it("cover, chapter, and ending expose 41, 37, and 38 registered layouts with no takeovers", () => {
+  it("cover, chapter, and ending expose 42, 38, and 39 registered layouts with no takeovers", () => {
     // The shared automatic pools are unchanged by the gauge family: 19, 8, 7.
-    expect(layoutsForSlideType("cover")).toHaveLength(41)
+    expect(layoutsForSlideType("cover")).toHaveLength(42)
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
-    expect(layoutsForSlideType("chapter")).toHaveLength(37)
-    expect(layoutsForSlideType("ending")).toHaveLength(38)
+    expect(layoutsForSlideType("chapter")).toHaveLength(38)
+    expect(layoutsForSlideType("ending")).toHaveLength(39)
   })
 
-  it("content includes both the 38 layouts and the 4 takeovers", () => {
+  it("content includes both the 39 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(38)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(39)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(42)
+    expect(contents).toHaveLength(43)
   })
 })

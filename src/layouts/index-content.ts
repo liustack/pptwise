@@ -30,6 +30,7 @@ import { ConsoleSheetContent } from "./content-console-sheet"
 import { MemoSheetContent } from "./content-memo-sheet"
 import { DossierSheetContent } from "./content-dossier-sheet"
 import { YearbookSheetContent } from "./content-yearbook-sheet"
+import { LessonSheetContent } from "./content-lesson-sheet"
 import { SealFigureContent } from "./content-seal-figure"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { CrayonboxPointContent } from "./content-crayonbox-point"
@@ -61,7 +62,8 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // redesign adds console-sheet: 26 pin-only, 35 in all. The memo sample
 // redesign adds memo-sheet: 27 pin-only, 36 in all. The clinic sample
 // redesign adds dossier-sheet: 28 pin-only, 37 in all. The almanac sample
-// redesign adds yearbook-sheet: 29 pin-only, 38 in all.
+// redesign adds yearbook-sheet: 29 pin-only, 38 in all. The homeroom sample
+// redesign adds lesson-sheet: 30 pin-only, 39 in all.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
   "two-column": TwoColumnContent,
@@ -101,4 +103,5 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "memo-sheet": MemoSheetContent,
   "dossier-sheet": DossierSheetContent,
   "yearbook-sheet": YearbookSheetContent,
+  "lesson-sheet": LessonSheetContent,
 }
