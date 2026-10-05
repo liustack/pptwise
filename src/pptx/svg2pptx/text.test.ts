@@ -341,3 +341,18 @@ describe("textToOp: the footer's page-number field", () => {
     ).toThrow(/one line of one run/)
   })
 })
+
+describe("an outlined text", () => {
+  it("exports a text with no fill and a stroke as an outline over a fully transparent fill of the same colour", () => {
+    const op = textToOp(textEl('<text x="64" y="300" font-size="200" fill="none" stroke="#E56A2C" stroke-width="2" font-weight="700">01</text>'))
+    expect(op.outline).toEqual({ color: "E56A2C", size: 1.5 })
+    expect(op.color).toBe("E56A2C")
+    expect(op.transparency).toBe(100)
+  })
+
+  it("leaves a filled text without an outline, its stroke or not", () => {
+    const op = textToOp(textEl('<text x="64" y="300" font-size="20" fill="#1A1A1A" stroke="#E56A2C">01</text>'))
+    expect(op.outline).toBeUndefined()
+    expect(op.color).toBe("1A1A1A")
+  })
+})

@@ -157,6 +157,24 @@ describe("renderOp", () => {
     ])
   })
 
+  it("passes a text op's outline through to addText", () => {
+    const slide = recorder()
+    renderOp(slide, {
+      kind: "text",
+      runs: [{ text: "01" }],
+      x: 1,
+      y: 2,
+      w: 3,
+      h: 2,
+      fontSize: 150,
+      color: "E56A2C",
+      transparency: 100,
+      outline: { color: "E56A2C", size: 1.5 },
+      align: "left",
+    } as Op)
+    expect(slide.calls[0].args[1]).toMatchObject({ color: "E56A2C", transparency: 100, outline: { color: "E56A2C", size: 1.5 } })
+  })
+
   it("passes a text op's rotate through to addText", () => {
     const slide = recorder()
     renderOp(slide, {
