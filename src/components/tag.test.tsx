@@ -56,3 +56,15 @@ describe("a tag that names its source", () => {
     expect(outlines).toEqual([ctx.colors.chartPalette[2], resolveSemanticColor("warning", ctx.colors)])
   })
 })
+
+describe("a tag that says what kind of news it is", () => {
+  it("is outlined in the theme's ink for that news, ahead of its source's", () => {
+    const ctx = boundThemeCtx("clinic")
+    const ground = ctx.defaultBg ?? ctx.colors.bg
+    const danger = tagInks(ctx, { text: "超说明书", tone: "danger" }, false, ground, 16)
+    expect(danger.fill).toBeNull()
+    expect(danger.stroke).toBe(resolveSemanticColor("danger", ctx.colors))
+    expect(contrastRatio(danger.text, ground)).toBeGreaterThanOrEqual(requiredContrastRatio(16))
+    expect(tagInks(ctx, { text: "x", tone: "warning", evidence: "trial" }, false, ground, 16).stroke).toBe(resolveSemanticColor("warning", ctx.colors))
+  })
+})

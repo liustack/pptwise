@@ -22,6 +22,8 @@ export type EvidenceKind = NonNullable<Tag["evidence"]>
  *
  * - on the row or figure the page marks, the tag fills in the theme's
  *   emphasis ink with the readable ink on it, the page's one mark;
+ * - a tag that says what kind of news it is (`tone`) is outlined in the
+ *   theme's ink for that news, a breach in its danger ink;
  * - a tag that names its source (`evidence`) is outlined in the ink that kind
  *   of source takes (`evidenceInk`), the same kind in the same ink across a
  *   deck;
@@ -123,7 +125,13 @@ export function tagInks(ctx: ComponentCtx, tag: Tag, marked: boolean, ground: st
     const fill = emphasisRunInk(colors)
     return { fill, stroke: fill, text: readableOn(fill) }
   }
-  const line = tag.evidence ? evidenceInk(colors, tag.evidence) : tag.quiet ? colors.muted : colors.accent
+  const line = tag.tone
+    ? resolveSemanticColor(tag.tone, colors)
+    : tag.evidence
+      ? evidenceInk(colors, tag.evidence)
+      : tag.quiet
+        ? colors.muted
+        : colors.accent
   return { fill: null, stroke: line, text: inkToward(line, colors.text, ground, size) }
 }
 

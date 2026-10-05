@@ -2050,3 +2050,11 @@ describe("tag evidence", () => {
     expect(parseOne(kpi({ text: "x", evidence: "rumour" })).success).toBe(false)
   })
 })
+
+describe("tag tone", () => {
+  it("takes what kind of news a tag says, and refuses a tone it does not know", () => {
+    const row = (tag: unknown) => ({ type: "comparison", columns: ["A"], rows: [{ label: "x", cells: ["1"], tag }] })
+    expect(parseOne(row({ text: "超说明书", tone: "danger" })).success).toBe(true)
+    expect(parseOne(row({ text: "x", tone: "neutral" })).success).toBe(false)
+  })
+})
