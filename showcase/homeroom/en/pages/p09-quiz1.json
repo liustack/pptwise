@@ -1,0 +1,36 @@
+{
+  "stage": "Quiz 1",
+  "ballot": {
+    "choices": [
+      "Yes",
+      "No",
+      "Not yet"
+    ]
+  },
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "quiz-hand",
+      "fit": "cover",
+      "caption": "Illustration: a class (AI-generated)"
+    },
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "title": "Case 1",
+          "text": "A new hire polishes their weekly report with an approved AI tool, then rereads it"
+        },
+        {
+          "title": "Case 2",
+          "text": "An old hand puts AI-calculated quarterly growth into a report for the boss, unchecked"
+        },
+        {
+          "title": "Case 3",
+          "text": "Feeling much faster, a manager tells the whole team: every task goes to AI first"
+        }
+      ]
+    }
+  ],
+  "notes": "Time for the first quiz. Three cases: is this a good way to use AI? Take a minute, talk it over with your neighbor if you like, then put your hand up and tell us what you think and why."
+}

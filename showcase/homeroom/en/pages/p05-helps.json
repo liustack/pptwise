@@ -1,0 +1,63 @@
+{
+  "stage": "Part 1",
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "icon": "pencil-line",
+          "label": "Writing: time taken",
+          "value": "**−40%**",
+          "note": "Quality scores up 18% too",
+          "source": "453 professionals",
+          "tag": {
+            "text": "Peer-reviewed · Science 2023",
+            "evidence": "trial"
+          }
+        },
+        {
+          "icon": "headset",
+          "label": "Support: issues resolved per hour",
+          "value": "+15%",
+          "note": "One company's support team",
+          "source": "5,172 agents",
+          "tag": {
+            "text": "Peer-reviewed · QJE 2025",
+            "evidence": "trial"
+          }
+        },
+        {
+          "icon": "briefcase",
+          "label": "Planning: tasks within AI's reach",
+          "value": "25.1%",
+          "unit": "faster",
+          "note": "12.2% more tasks done",
+          "source": "Consultants, 18 tasks",
+          "tag": {
+            "text": "Working paper · HBS 2023",
+            "evidence": "preprint"
+          }
+        },
+        {
+          "icon": "users",
+          "label": "Teams: one with AI matched two",
+          "value": "1 ≈ 2",
+          "note": "In 16.4% less time",
+          "source": "776 staff on product plans",
+          "tag": {
+            "text": "Working paper · NBER 2025",
+            "evidence": "preprint"
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "icon": "info",
+      "text": "Four studies, four sets of people, tasks and units. Don't compare these figures or add them up."
+    }
+  ],
+  "footnote": "Source: Science (Jul 2023), QJE (Feb 2025), HBS working paper 24-013 (Sep 2023), NBER working paper w33641 (Mar 2025)",
+  "notes": "The good news first. These four are experiments or natural experiments, not self-reported surveys. Writing: 453 college-educated professionals did writing tasks from their own field, and the group with AI finished 40% faster with quality scores 18% higher. That was published in Science. Customer support: 5,172 agents at one company got an AI assistant in stages and resolved 15% more issues per hour on average, published in the Quarterly Journal of Economics. Consulting: in a randomized experiment with 758 consultants, those using AI on 18 tasks within AI's reach were 25.1% faster and completed 12.2% more. Teamwork: 776 employees at a consumer goods company worked on real new-product plans, and one person with AI produced plans as good as a two-person team without AI, in 16.4% less time. The units differ: time, issues resolved, quality. So don't compare them and don't add them up. What they share is the kind of work: writing, editing, summarizing and drafting plans."
+}

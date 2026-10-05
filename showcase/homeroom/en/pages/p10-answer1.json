@@ -1,0 +1,34 @@
+{
+  "stage": "Quiz 1",
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "title": "Case 1: Yes",
+          "text": "A new hire polishes their weekly report with an approved AI tool, then rereads it",
+          "sub": "Writing is its strength, and new hires gain most. Reread before sending. See pages 5 and 6",
+          "tone": "success"
+        },
+        {
+          "title": "Case 2: No",
+          "text": "An old hand puts AI-calculated quarterly growth into a report for the boss, unchecked",
+          "sub": "Calculations and fact checks may be beyond it. A person checks every figure. See page 7",
+          "tone": "danger"
+        },
+        {
+          "title": "Case 3: Not yet",
+          "text": "Feeling much faster, a manager tells the whole team: every task goes to AI first",
+          "sub": "Feeling faster isn't being faster. Try a few kinds of work and log the results. See page 8",
+          "tone": "warning"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Ask in order: is this work it's good at, who checks the result, and do the numbers support rolling it out?"
+    }
+  ],
+  "notes": "Here are the answers. Case 1, yes: writing and editing are where the research shows AI helping most, new colleagues gain the most, and it's an approved tool. Just reread it before you send it. Case 2, no: calculating, looking up and checking facts may fall outside what it can do. We saw that when a task is beyond it, accuracy with AI fell from 84.5% to about 60% to 70%. A person must check numbers before they go into a report, which is our rule 3, coming up later. Case 3, not yet: the manager feels faster, but feeling isn't measuring. Experienced developers thought they were 20% faster and were 19% slower. Try a few kinds of work first, log the time and rework, then decide whether to roll it out."
+}

@@ -1,0 +1,208 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "instructional",
+    "pacing": "dense",
+    "audience": "public"
+  },
+  "theme": "homeroom",
+  "filename": "genai-at-work-training-en",
+  "meta": {
+    "organization": "Learning & Development",
+    "date": "October 2026"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "All-staff training · Using generative AI well at work"
+  },
+  "course": {
+    "stages": [
+      {
+        "label": "Goals"
+      },
+      {
+        "label": "Part 1"
+      },
+      {
+        "label": "Quiz 1",
+        "quiz": true
+      },
+      {
+        "label": "Part 2"
+      },
+      {
+        "label": "Part 3"
+      },
+      {
+        "label": "Quiz 2",
+        "quiz": true
+      },
+      {
+        "label": "Wrap-up"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "Work with AI, safely and well",
+      "summary": "Generative AI on the job: what to hand it, what never to give it, how to check its work",
+      "kicker": "All-staff class"
+    },
+    {
+      "id": "p02-goals",
+      "type": "content",
+      "kind": "list",
+      "heading": "After this class, you can do three things",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p03-agenda",
+      "type": "content",
+      "kind": "process",
+      "heading": "Three parts, two quizzes, 45 minutes",
+      "focus": "roadmap"
+    },
+    {
+      "id": "p04-part1",
+      "type": "chapter",
+      "heading": "Where it helps, and where it backfires",
+      "summary": "First, the research: work it makes faster and better, and work it gets wrong",
+      "kicker": "Part 1"
+    },
+    {
+      "id": "p05-helps",
+      "type": "content",
+      "kind": "data",
+      "heading": "In writing, support and planning, AI paid off",
+      "focus": "kpi_cards",
+      "kicker": "Part 1 · Where it helps"
+    },
+    {
+      "id": "p06-novice",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Beginners gain most: the weakest fifth up 36%",
+      "focus": "comparison",
+      "kicker": "Part 1 · Where it helps"
+    },
+    {
+      "id": "p07-backfire",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Two traps: work beyond it, and made-up facts",
+      "focus": "chart",
+      "kicker": "Part 1 · Where it backfires"
+    },
+    {
+      "id": "p08-feeling",
+      "type": "content",
+      "kind": "data",
+      "heading": "Felt 20% faster, was 19% slower. Measure it",
+      "focus": "chart",
+      "kicker": "Part 1 · Where it backfires"
+    },
+    {
+      "id": "p09-quiz1",
+      "type": "content",
+      "kind": "list",
+      "heading": "Quiz 1: is this a good way to use AI?",
+      "focus": "row_cards",
+      "kicker": "Quiz 1"
+    },
+    {
+      "id": "p10-answer1",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Answers: yes, no, and not yet",
+      "focus": "row_cards",
+      "kicker": "Quiz 1"
+    },
+    {
+      "id": "p11-part2",
+      "type": "chapter",
+      "heading": "Three real cases: who paid?",
+      "summary": "A leak, invented case law, a chatbot's wrong answer: the people and companies using AI bore the cost",
+      "kicker": "Part 2"
+    },
+    {
+      "id": "p12-cases",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "In each case, people paid, not the tool",
+      "focus": "comparison",
+      "kicker": "Part 2 · Three real cases"
+    },
+    {
+      "id": "p13-habits",
+      "type": "content",
+      "kind": "data",
+      "heading": "48% put company data into AI, 67% under bans",
+      "focus": "chart",
+      "kicker": "Part 2 · Staff survey"
+    },
+    {
+      "id": "p14-part3",
+      "type": "chapter",
+      "heading": "Our rules and methods",
+      "summary": "Six rules, each with its grounds. Three methods for checking before anything goes out",
+      "kicker": "Part 3"
+    },
+    {
+      "id": "p15-rules",
+      "type": "content",
+      "kind": "list",
+      "heading": "Our six rules, and what each one rests on",
+      "focus": "icon_cards",
+      "kicker": "Part 3 · Our rules"
+    },
+    {
+      "id": "p16-grading",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "Rule 1: grade the data before AI sees it",
+      "focus": "pyramid",
+      "kicker": "Part 3 · Rule 1"
+    },
+    {
+      "id": "p17-methods",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Brief it, set the rules, check every line",
+      "focus": "image_grid",
+      "kicker": "Part 3 · Three methods"
+    },
+    {
+      "id": "p18-quiz2",
+      "type": "content",
+      "kind": "list",
+      "heading": "Quiz 2: is this OK?",
+      "focus": "row_cards",
+      "kicker": "Quiz 2"
+    },
+    {
+      "id": "p19-answer2",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Answers: no to all three, by rules 1, 2, 4 and 6",
+      "focus": "row_cards",
+      "kicker": "Quiz 2"
+    },
+    {
+      "id": "p20-recap",
+      "type": "content",
+      "kind": "points",
+      "heading": "Before you go, copy four pairs off the board",
+      "focus": "row_cards",
+      "kicker": "Wrap-up · The board"
+    },
+    {
+      "id": "p21-homework",
+      "type": "ending",
+      "heading": "Homework: three exercises",
+      "kicker": "Wrap-up · Homework"
+    }
+  ]
+}

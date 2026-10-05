@@ -1,0 +1,33 @@
+{
+  "stage": "Part 3",
+  "components": [
+    {
+      "type": "image_grid",
+      "items": [
+        {
+          "asset_id": "method-desk",
+          "caption": "Brief it: paste in the material, ask it to use only that",
+          "icon": "file-text"
+        },
+        {
+          "asset_id": "method-board",
+          "caption": "Set the rules: “to be confirmed” if it isn't there, facts apart from guesses",
+          "icon": "message-square-quote"
+        },
+        {
+          "asset_id": "method-redpen",
+          "caption": "Check every line: open the source, line by line",
+          "icon": "pencil-line"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "tip",
+      "title": "The one line that helps most",
+      "text": "If the answer isn't in the material, say “to be confirmed”. Don't fill the gap."
+    }
+  ],
+  "footnote": "Source: UK government, AI Insights: prompt engineering (updated Aug 2026), Government of Canada, guide on the use of generative AI (Sep 2026). Images are AI-generated",
+  "notes": "Finally, three methods that work, drawn from guidance published by the UK and Canadian governments. One, brief it: the more specific the request, the closer the result. Say what the task is, who it's for and where it will be used, paste in the material it may use, and tell it to use only that material. Two, set the rules: tell it to answer 'to be confirmed' when the material doesn't contain the answer. The UK guidance calls this crucial for avoiding made-up answers. Ask it to keep facts from the source separate from its own inferences. Three, check every line: open the original sources and check the output line by line, and where you do use AI-generated content, label it as required. The three photos are AI-generated illustrations."
+}

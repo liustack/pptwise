@@ -1,0 +1,208 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "instructional",
+    "pacing": "dense",
+    "audience": "public"
+  },
+  "theme": "homeroom",
+  "filename": "genai-at-work-training-zh",
+  "meta": {
+    "organization": "培训部",
+    "date": "2026 年 10 月"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "全员培训 · 在工作中用好生成式 AI"
+  },
+  "course": {
+    "stages": [
+      {
+        "label": "目标"
+      },
+      {
+        "label": "环节一"
+      },
+      {
+        "label": "小测一",
+        "quiz": true
+      },
+      {
+        "label": "环节二"
+      },
+      {
+        "label": "环节三"
+      },
+      {
+        "label": "小测二",
+        "quiz": true
+      },
+      {
+        "label": "小结"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "在工作中安全、有效地用生成式 AI",
+      "summary": "哪些活交给它，哪些信息不能给它，交出去之前怎么把关",
+      "kicker": "全员培训课"
+    },
+    {
+      "id": "p02-goals",
+      "type": "content",
+      "kind": "list",
+      "heading": "学完这节课，你能做到三件事",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p03-agenda",
+      "type": "content",
+      "kind": "process",
+      "heading": "三个环节、两次小测，45 分钟讲完",
+      "focus": "roadmap"
+    },
+    {
+      "id": "p04-part1",
+      "type": "chapter",
+      "heading": "它在哪儿帮忙，哪儿帮倒忙",
+      "summary": "先看研究：哪些活交给它又快又好，哪些活交给它反而出错",
+      "kicker": "环节一"
+    },
+    {
+      "id": "p05-helps",
+      "type": "content",
+      "kind": "data",
+      "heading": "写作、客服、做方案，用上 AI 的人又快又好",
+      "focus": "kpi_cards",
+      "kicker": "环节一 · 它在哪儿帮忙"
+    },
+    {
+      "id": "p06-novice",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "收益最大的是新手：技能最低的五分之一提高 36%",
+      "focus": "comparison",
+      "kicker": "环节一 · 它在哪儿帮忙"
+    },
+    {
+      "id": "p07-backfire",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "两种帮倒忙：任务超出它的能力，内容是它编的",
+      "focus": "chart",
+      "kicker": "环节一 · 哪儿帮倒忙"
+    },
+    {
+      "id": "p08-feeling",
+      "type": "content",
+      "kind": "data",
+      "heading": "以为快了 20%，实测慢了 19%：感觉不能当证据",
+      "focus": "chart",
+      "kicker": "环节一 · 哪儿帮倒忙"
+    },
+    {
+      "id": "p09-quiz1",
+      "type": "content",
+      "kind": "list",
+      "heading": "小测一：这三件事，能不能这样用 AI？",
+      "focus": "row_cards",
+      "kicker": "小测一"
+    },
+    {
+      "id": "p10-answer1",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "答案：润色周报可以，数字直接用不行，铺开先别急",
+      "focus": "row_cards",
+      "kicker": "小测一"
+    },
+    {
+      "id": "p11-part2",
+      "type": "chapter",
+      "heading": "三个真实案例：出了错谁来担",
+      "summary": "泄露、编造、说错话，后果都落在用它的人和公司身上",
+      "kicker": "环节二"
+    },
+    {
+      "id": "p12-cases",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "三星、律师、航空公司：担责的是人和公司，不是工具",
+      "focus": "comparison",
+      "kicker": "环节二 · 三个真实案例"
+    },
+    {
+      "id": "p13-habits",
+      "type": "content",
+      "kind": "data",
+      "heading": "近一半员工把公司信息传进公共 AI，禁用了反而更多",
+      "focus": "chart",
+      "kicker": "环节二 · 员工调查"
+    },
+    {
+      "id": "p14-part3",
+      "type": "chapter",
+      "heading": "我们的规则和方法",
+      "summary": "六条规则，每条都有依据。三个方法，交出去之前把好关",
+      "kicker": "环节三"
+    },
+    {
+      "id": "p15-rules",
+      "type": "content",
+      "kind": "list",
+      "heading": "我们的六条规则，每一条都有依据",
+      "focus": "icon_cards",
+      "kicker": "环节三 · 我们的规则"
+    },
+    {
+      "id": "p16-grading",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "规则一：先看信息是哪一级，再决定能不能交给 AI",
+      "focus": "pyramid",
+      "kicker": "环节三 · 规则一"
+    },
+    {
+      "id": "p17-methods",
+      "type": "content",
+      "kind": "photo",
+      "heading": "三个好用的方法：给足资料、讲清规矩、逐条核对",
+      "focus": "image_grid",
+      "kicker": "环节三 · 三个方法"
+    },
+    {
+      "id": "p18-quiz2",
+      "type": "content",
+      "kind": "list",
+      "heading": "小测二：这三件事，能不能这样做？",
+      "focus": "row_cards",
+      "kicker": "小测二"
+    },
+    {
+      "id": "p19-answer2",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "答案：三件都不行，分别对照规则一和二、四、六",
+      "focus": "row_cards",
+      "kicker": "小测二"
+    },
+    {
+      "id": "p20-recap",
+      "type": "content",
+      "kind": "points",
+      "heading": "板书上这八个词，下课前抄下来",
+      "focus": "row_cards",
+      "kicker": "小结 · 板书"
+    },
+    {
+      "id": "p21-homework",
+      "type": "ending",
+      "heading": "课后作业：三道题",
+      "kicker": "小结 · 课后作业"
+    }
+  ]
+}

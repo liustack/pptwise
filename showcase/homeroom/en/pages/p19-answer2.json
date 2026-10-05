@@ -1,0 +1,35 @@
+{
+  "stage": "Quiz 2",
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "title": "Case 1: No",
+          "text": "Pasting a complaint, with the customer's name and phone, into a personal AI account",
+          "sub": "Rules 1 and 2: personal data stays out of public tools, approved tools only",
+          "tone": "danger"
+        },
+        {
+          "title": "Case 2: No",
+          "text": "Making an event poster with AI, then cropping off its AI label before we post it",
+          "sub": "Rule 4: declare what you publish, never remove labels",
+          "tone": "danger"
+        },
+        {
+          "title": "Case 3: No",
+          "text": "Finding you pasted a client list into public AI last week, and letting it go: nobody knows",
+          "sub": "Rule 6: report at once, the sooner the less damage. The one people get wrong",
+          "tone": "danger"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Reporting isn't confessing. It gives the company time to fix it."
+    }
+  ],
+  "footnote": "Grounds: PIPL Arts. 21, 23 and 57. AI Labeling Measures Art. 10 (in force Sep 1, 2025). Data Security Law Art. 29",
+  "notes": "The answer is no to all three. Case 1: a customer's name and phone number are personal information, which rule 1 keeps out of public tools. A personal account also breaks rule 2, because there's no agreement in place for it to process personal information, which is exactly what Articles 21 and 23 of the PIPL cover. Case 2: publishing an AI-generated poster means declaring it under Article 10 of the Labeling Measures, which also bars anyone from maliciously removing or altering labels. That's rule 4. Case 3 is the one people get wrong: you leaked something and decided to let it go. Article 29 of the Data Security Law requires immediate remedies when a risk is found, and Article 57 of the PIPL requires immediate remedies and notification after a leak. Under rule 6, report it right away to your manager and to information security. Reporting isn't confessing. It gives the company time to fix it."
+}

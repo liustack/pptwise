@@ -1,0 +1,97 @@
+{
+  "stage": "Part 1",
+  "components": [
+    {
+      "type": "insight_panel",
+      "icon": "triangle-alert",
+      "title": "Work beyond its reach",
+      "rows": [
+        {
+          "label": "The test",
+          "text": "Consultants on an analysis task outside AI's reach"
+        }
+      ],
+      "footnote": "Tasks that look equally hard can sit on either side of the line. Unsure? Try it first on a case whose answer you know."
+    },
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "x_title": "Accuracy",
+        "x_unit": "%"
+      },
+      "tag": {
+        "text": "Working paper · HBS 2023",
+        "evidence": "preprint"
+      },
+      "series": [
+        {
+          "name": "Accuracy",
+          "data": [
+            {
+              "x": "Without AI",
+              "y": 84.5
+            },
+            {
+              "x": "With AI",
+              "y": 60,
+              "upper": 70,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "insight_panel",
+      "icon": "file-warning",
+      "title": "Content it makes up",
+      "rows": [
+        {
+          "label": "The test",
+          "text": "108 models summarize a given text, and nothing else"
+        }
+      ],
+      "footnote": "Give it the source, and ask for “to be confirmed”"
+    },
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "x_unit": "%"
+      },
+      "tag": {
+        "text": "Vendor benchmark · Vectara 2026-09",
+        "evidence": "company"
+      },
+      "series": [
+        {
+          "name": "Made-up share",
+          "data": [
+            {
+              "x": "Summaries adding things the text never said (108 models)",
+              "y": 1.8,
+              "upper": 24.2,
+              "emphasis": true
+            },
+            {
+              "x": "Legal research tools' hallucination rate",
+              "y": 17,
+              "upper": 33
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "tip",
+      "icon": "user-check",
+      "text": "Same safety net for both: a person checks before it goes out."
+    }
+  ],
+  "footnote": "Source: HBS working paper 24-013 (Sep 2023), Vectara hallucination leaderboard, a vendor benchmark (Sep 22, 2026), J. Empirical Legal Studies (2025)",
+  "notes": "Now the other side. AI backfires in two ways. First, when the task is beyond it. In the same consulting experiment, the other half of the consultants did an analysis task outside AI's reach. The control group without AI got it right about 84.5% of the time. The two groups with AI dropped to about 60% and 70%. The hard part is that both kinds of task look about equally difficult, so it's hard to tell in advance which side of the line you're on. Second, it makes things up, which people call hallucination. There's no single hallucination rate. It depends on how you test. One fairly gentle test asks a model only to summarize a text it's given. Even then, across 108 models, between 1.8% and 24.2% of summaries added content the text didn't contain. Specialist tools are no exception: a peer-reviewed study of two vendors' legal research tools found hallucination rates of 17% to 33%. The last row is what to do about it."
+}

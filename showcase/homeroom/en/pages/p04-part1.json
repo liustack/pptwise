@@ -1,0 +1,23 @@
+{
+  "stage": "Part 1",
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "lightbulb",
+          "title": "Four studies: writing, support, planning, teams"
+        },
+        {
+          "icon": "triangle-alert",
+          "title": "Two traps: beyond its reach, made-up content"
+        },
+        {
+          "icon": "gauge",
+          "title": "Felt and measured, 39 points apart"
+        }
+      ]
+    }
+  ],
+  "notes": "Part 1. Let's start with the research: where AI really helps, and where it backfires."
+}
