@@ -69,9 +69,26 @@ export const schema = z
       .describe(
         "Index into columns (0 is the first) of the one option the page recommends. Its header and cells are set bold in the primary color.",
       ),
+    /** Who the recommended option is for. See the describe below. */
+    recommended_label: z
+      .string()
+      .optional()
+      .describe(
+        'A few words printed as a filled tag over the recommended option, saying who it is for or why, such as "客服用这个" or "For support teams". Only with recommended.',
+      ),
   })
   .strict()
   .superRefine((c, ctx) => {
+    if (c.recommended_label !== undefined && (c.recommended === undefined || !c.recommended_label.trim())) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["recommended_label"],
+        message:
+          c.recommended === undefined
+            ? "comparison has a recommended_label and no recommended option for it to stand over. Set recommended to the option's column index, or remove recommended_label."
+            : "comparison recommended_label is blank. Write the few words it says, or remove it.",
+      })
+    }
     if (c.recommended !== undefined && c.recommended >= c.columns.length) {
       ctx.addIssue({
         code: "custom",

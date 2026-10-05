@@ -239,3 +239,12 @@ describe("table composition, notice setting", () => {
     expect(texts(root!).map(textOf).join(" ")).not.toContain("**")
   })
 })
+
+describe("table leaves the recommended option's label to the ordinary comparison", () => {
+  it("declines in every setting", () => {
+    const labelled = comparison({ recommended_label: "For support teams" })
+    for (const setting of [undefined, "notice", "grid", "panel", "seal", "console"] as const) {
+      expect(renderComposition(tableComposition, [labelled], { setting }).element, String(setting)).toBeNull()
+    }
+  })
+})

@@ -627,3 +627,18 @@ describe("comparison row tags and the marked row", () => {
     expect(validateIr(deck(targets)).ok).toBe(true)
   })
 })
+
+describe("comparison recommended_label", () => {
+  const picked = { ...component, recommended: 1, recommended_label: "客服用这个" }
+
+  it("stands a filled tag over the recommended column and moves the table down under it", () => {
+    const plainH = comparison.measure(component, 900, ctx)
+    expect(comparison.measure(picked, 900, ctx)).toBe(plainH + 36)
+    const { container } = svg(comparison.render(picked, { x: 0, y: 0, w: 900 }, ctx))
+    const label = container.querySelector("g[data-pick-label] text")
+    expect(label?.textContent).toBe("客服用这个")
+    const header = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "方案B")!
+    expect(Number(label!.getAttribute("x"))).toBeGreaterThan(Number(header.getAttribute("x")))
+    expect(container.querySelector("g[data-pick-label] rect")?.getAttribute("fill")).not.toBe("none")
+  })
+})
