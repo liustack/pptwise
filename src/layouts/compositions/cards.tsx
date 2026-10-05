@@ -3,6 +3,7 @@ import type { Component } from "@/ir"
 import type { ComponentCtx } from "../../components/types"
 import { fitFixed, paintLines } from "./type"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import { cardsDossier } from "./cards-dossier"
 import {
   CALLOUT_ICON,
   CONSOLE_SPEC,
@@ -382,7 +383,9 @@ function paintClosing(note: Callout, f: FittedClosing, box: { x: number; y: numb
   )
 }
 
-export const cardsComposition: Composition = ({ components, ctx, rect, setting }) => {
+export const cardsComposition: Composition = (props) => {
+  if (props.setting === "dossier") return cardsDossier(props)
+  const { components, ctx, rect, setting } = props
   if (setting !== "console") return null
   const [first, second, ...rest] = components
   if (!first || rest.length > 0) return null

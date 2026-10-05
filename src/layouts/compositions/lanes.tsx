@@ -8,6 +8,7 @@ import { blockTag, compositionTag, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
 import { lanesPanel } from "./lanes-panel"
 import { lanesSeal } from "./lanes-seal"
+import { lanesDossier } from "./lanes-dossier"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -93,6 +94,7 @@ function lanesShape(components: readonly Component[]): { timeline: Timeline; cal
 export const lanesComposition: Composition = (props) => {
   if (props.setting === "panel") return lanesPanel(props)
   if (props.setting === "seal") return lanesSeal(props)
+  if (props.setting === "dossier") return lanesDossier(props)
   const { components, ctx, rect, setting } = props
   const shape = lanesShape(components)
   if (!shape) return null
