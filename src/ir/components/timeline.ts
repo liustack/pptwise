@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { IconNameSchema, ToneSchema } from "./shared"
+import { BasisSchema, IconNameSchema, ToneSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -20,6 +20,29 @@ export const schema = z
       .optional()
       .describe(
         'The two lanes the milestones run on, the one drawn above the axis first, such as ["Home", "Abroad"]. Optional: without it the lane named first runs above. Every milestone\'s lane must be one of them.',
+      ),
+    /** The spans the axis is divided into. See the describe below. */
+    periods: z
+      .array(
+        z
+          .object({
+            from: z.string().min(1).describe("Where the span starts, written the way the milestones write their dates, such as 2026-01 or 2026."),
+            to: z.string().min(1).describe("Where it ends, such as 2026-12 or 2034."),
+            label: z
+              .string()
+              .min(1)
+              .describe('What the span is, printed with it, such as "2026 年：进口计入排放，不必持有证书" or "Current law: free allocation ends in 2034".'),
+            basis: BasisSchema.optional().describe(
+              'What the span rests on, such as "proposal" for one that exists only if a proposal passes, or "law" for one the law sets. A span that is not settled is drawn dashed.',
+            ),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(3)
+      .optional()
+      .describe(
+        'Up to three spans the axis is divided into, each named with its label, such as the year imports are only counted and the year certificates are bought: [{ "from": "2026-01", "to": "2026-12", "label": "2026: counted, nothing to buy" }]. Write from and to the way the milestones write their dates. A horizontal timeline only.',
       ),
     milestones: z.array(
       z
@@ -85,6 +108,13 @@ export const schema = z
         code: "custom",
         path: ["milestones"],
         message: `the milestones name ${lanes.length} lanes (${lanes.map((l) => `"${l}"`).join(", ")}), and a timeline runs one lane above its axis and one below. Use two lanes at most, or split the timeline.`,
+      })
+    }
+    if (c.periods !== undefined && c.layout === "vertical") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["periods"],
+        message: `periods divide a horizontal axis into spans, and layout "vertical" has none. Remove layout, or remove periods.`,
       })
     }
     if (lanes.length > 0 && c.layout === "vertical") {

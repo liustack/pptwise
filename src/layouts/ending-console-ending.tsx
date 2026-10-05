@@ -78,6 +78,10 @@ export function ConsoleEnding({ ir, slide, index, ctx, page }: SvgTemplateProps)
   const subInk = accessibleInk(colors.muted, ground, SUB.size)
   const listTop = sub ? SUB.top + sub.lines.length * SUB.lineHeight + SUB.gap : LIST.top
   const items = checklistItems(slide)
+  // A checklist has no axis to divide into spans: a timeline's periods are
+  // declared lost rather than left off unsaid.
+  const block = boundarySlotBlock(slide, ["timeline", "bullets"])
+  const spans = block?.type === "timeline" ? (block.periods?.length ?? 0) : 0
   const checklist = items.length > 0 ? drawChecklist({ items, ctx, rect: { x: CONSOLE_LEFT, y: listTop, w: CONSOLE_W, h: LIST.foot - listTop } }) : null
   return (
     <>
@@ -120,6 +124,7 @@ export function ConsoleEnding({ ir, slide, index, ctx, page }: SvgTemplateProps)
           )
         : null}
       {checklist ?? (items.length > 0 ? <g data-dropped={items.length} data-dropped-kind="item" /> : null)}
+      {spans > 0 ? <g data-dropped={spans} data-dropped-kind="label" /> : null}
     </>
   )
 }

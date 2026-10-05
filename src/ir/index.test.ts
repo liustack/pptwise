@@ -2051,6 +2051,23 @@ describe("tag evidence", () => {
   })
 })
 
+describe("timeline periods", () => {
+  const base = { type: "timeline", milestones: [{ date: "2026-01-01", title: "a" }, { date: "2027-09-30", title: "b" }] }
+  it("takes up to three named spans, one resting on a proposal", () => {
+    const periods = [
+      { from: "2026-01", to: "2026-12", label: "2026" },
+      { from: "2034", to: "2038", label: "提案：延到 2038", basis: "proposal" },
+    ]
+    expect(parseOne({ ...base, periods }).success).toBe(true)
+    expect(parseOne({ ...base, periods: [...periods, ...periods] }).success).toBe(false)
+    expect(parseOne({ ...base, periods: [{ from: "2026", to: "2027", label: "" }] }).success).toBe(false)
+  })
+
+  it("refuses spans on a vertical timeline, which has no axis across the page", () => {
+    expect(parseOne({ ...base, layout: "vertical", periods: [{ from: "2026", to: "2027", label: "x" }] }).success).toBe(false)
+  })
+})
+
 describe("tag basis", () => {
   it("takes what a tag's figure or rule rests on, and refuses a basis it does not know", () => {
     const kpi = (tag: unknown) => ({ type: "kpi_cards", items: [{ value: "1", label: "a", tag }] })

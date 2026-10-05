@@ -2,10 +2,11 @@ import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
-import { accessibleInk, contrastRatio, graphicInk, requiredContrastRatio, resolveSemanticColor } from "../render/ink"
+import { accessibleInk, blendOver, contrastRatio, graphicInk, requiredContrastRatio, resolveSemanticColor } from "../render/ink"
 import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { withBlockTitle } from "./block-title"
+import { basisInk, basisUnsettled, TAG_DASH } from "./tag"
 
 type TimelineComponent = Extract<Component, { type: "timeline" }>
 
@@ -167,6 +168,60 @@ function milestoneLayout(component: TimelineComponent, w: number, fontFamily: st
     }
   }
   return rows
+}
+
+/**
+ * The spans the axis is divided into (`periods`), one row each under the
+ * milestones: a swatch, the span's label, and its run from one date to the
+ * other in the muted ink. The milestones stand evenly along the axis, not by
+ * date, so the spans are named rather than laid on it. A span that is not
+ * settled (a proposal, an estimate, a pending one) draws its swatch as a
+ * dashed outline in its basis's ink; the others fill it with a pale step of
+ * the primary, the accent and the muted ink in turn.
+ */
+const PERIOD = { gap: 16, lineHeight: 26, size: 16, swatch: { w: 28, h: 8, gap: 10 }, runGap: 10 } as const
+const PERIOD_TINT = 0.35
+
+type Period = NonNullable<TimelineComponent["periods"]>[number]
+
+function periodsHeight(component: TimelineComponent): number {
+  const n = component.periods?.length ?? 0
+  return n === 0 ? 0 : PERIOD.gap + n * PERIOD.lineHeight
+}
+
+function PeriodRows({ periods, top, w, ctx }: { periods: readonly Period[]; top: number; w: number; ctx: ComponentCtx }) {
+  const ground = ctx.defaultBg ?? ctx.colors.bg
+  const tints = [ctx.colors.primary, ctx.colors.accent, ctx.colors.muted]
+  const labelX = PAD + PERIOD.swatch.w + PERIOD.swatch.gap
+  return (
+    <g data-timeline-periods="">
+      {periods.map((period, i) => {
+        const y = top + i * PERIOD.lineHeight
+        const run = `${period.from} → ${period.to}`
+        const runW = measureTextUnits(run, { fontFamily: ctx.fonts.body }) * PERIOD.size
+        const label = fitSvgLine(period.label, { maxWidth: Math.max(1, w - PAD - labelX - PERIOD.runGap - runW), fontSize: PERIOD.size, minFontSize: PERIOD.size, bold: true, fontFamily: ctx.fonts.body })
+        const labelW = measureTextUnits(label.text, { bold: true, fontFamily: ctx.fonts.body }) * label.fontSize
+        const dashed = basisUnsettled(period.basis)
+        const swatchY = y + (PERIOD.lineHeight - PERIOD.swatch.h) / 2
+        const baseline = Math.round(y + PERIOD.lineHeight / 2 + PERIOD.size * 0.36)
+        return (
+          <g key={i} data-timeline-period={period.basis ?? ""}>
+            {dashed ? (
+              <rect x={PAD + 0.5} y={swatchY + 0.5} width={PERIOD.swatch.w - 1} height={PERIOD.swatch.h - 1} rx={3} fill="none" stroke={graphicInk(basisInk(ctx.colors, period.basis!), ground)} strokeWidth={1} strokeDasharray={TAG_DASH} />
+            ) : (
+              <rect x={PAD} y={swatchY} width={PERIOD.swatch.w} height={PERIOD.swatch.h} rx={3} fill={blendOver(period.basis ? basisInk(ctx.colors, period.basis) : tints[i % tints.length]!, ground, PERIOD_TINT)} />
+            )}
+            <text data-truncated={label.truncated ? "1" : undefined} x={labelX} y={baseline} fill={accessibleInk(ctx.colors.text, ground, PERIOD.size)} fontSize={label.fontSize} fontWeight="bold" fontFamily={ctx.fonts.body} dominantBaseline="alphabetic">
+              {label.text}
+            </text>
+            <text x={labelX + labelW + PERIOD.runGap} y={baseline} fill={inkWithTextFallback(ctx.colors.muted, ctx.colors.text, ground, PERIOD.size)} fontSize={PERIOD.size} fontFamily={ctx.fonts.body} dominantBaseline="alphabetic">
+              {run}
+            </text>
+          </g>
+        )
+      })}
+    </g>
+  )
 }
 
 // ── 竖排版式（2026-07-11 用户借鉴编辑部竖排时间线）：左 date 右对齐、
@@ -352,7 +407,7 @@ function measureDefault(component: TimelineComponent, w: number, fontFamily: str
   }
   const rows = milestoneLayout(component, w, fontFamily)
   const maxBelow = rows.reduce((mx, r) => Math.max(mx, r.belowH), 48)
-  return AXIS_Y + maxBelow + BOTTOM_PAD
+  return AXIS_Y + maxBelow + periodsHeight(component) + BOTTOM_PAD
 }
 
 export const timeline: SvgComponent<TimelineComponent> = {
@@ -365,8 +420,8 @@ export const timeline: SvgComponent<TimelineComponent> = {
     // shorter than the tallest of them gives lines back from the bottom:
     // description lines first, then a title's second line, each cut marked.
     // With one line of each still too tall, the timeline declines the box.
-    const depth = (r: ReturnType<typeof milestoneLayout>) =>
-      AXIS_Y + r.reduce((mx, row) => Math.max(mx, row.belowH), 48)
+    const below = (r: ReturnType<typeof milestoneLayout>) => r.reduce((mx, row) => Math.max(mx, row.belowH), 48)
+    const depth = (r: ReturnType<typeof milestoneLayout>) => AXIS_Y + below(r) + periodsHeight(component)
     let rows = milestoneLayout(component, box.w, ctx.fonts.body)
     if (box.h !== undefined && box.h > 0 && depth(rows) + BOTTOM_PAD > box.h) {
       const ladder: LineCaps[] = [
@@ -476,6 +531,7 @@ export const timeline: SvgComponent<TimelineComponent> = {
             </g>
           )
         })}
+        {component.periods ? <PeriodRows periods={component.periods} top={AXIS_Y + below(rows) + PERIOD.gap} w={box.w} ctx={ctx} /> : null}
       </g>
     )
   },

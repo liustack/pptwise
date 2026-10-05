@@ -2,7 +2,9 @@
 import { describe, expect, it } from "vitest"
 import { assertSubset } from "../../render/subset-validate"
 import { lanesComposition } from "./lanes"
-import { attrs, byText, NOTICE_BAND, renderComposition, texts, textOf } from "./__fixtures__/kit"
+import { compose } from "."
+import type { Component } from "@/ir"
+import { attrs, byText, NOTICE_BAND, renderComposition, testCtx, texts, textOf } from "./__fixtures__/kit"
 
 /** bulletin's 2026-10 regulation page (p11): home rules above the axis, trade rules abroad below. */
 const rules = (overrides: Record<string, unknown> = {}) => ({
@@ -63,5 +65,16 @@ describe("lanes composition", () => {
   it("declines a vertical timeline and cards that cannot stay clear of the axis", () => {
     expect(draw([rules({ layout: "vertical" })]).element).toBeNull()
     expect(draw([rules(), note], { rect: { ...NOTICE_BAND, h: 330 } }).element).toBeNull()
+  })
+})
+
+describe("a timeline whose axis is divided into spans", () => {
+  it("is left to the ordinary timeline, which names its spans, by every shared timeline composition", () => {
+    const { ctx } = testCtx("bulletin")
+    const spanned = rules({ periods: [{ from: "7 月", to: "8 月", label: "第一阶段" }] }) as unknown as Component
+    for (const setting of ["board", "notice", "grid", "panel", "seal", "dossier"] as const) {
+      expect(compose({ components: [spanned], ctx, rect: NOTICE_BAND, setting }, ["lanes", "track"]), setting).toBeNull()
+    }
+    expect(compose({ components: [rules() as unknown as Component], ctx, rect: NOTICE_BAND, setting: "notice" }, ["lanes", "track"])).not.toBeNull()
   })
 })

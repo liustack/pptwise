@@ -443,3 +443,43 @@ describe("timeline milestone tone and icon", () => {
     expect(container.querySelectorAll("[data-milestone-icon]")).toHaveLength(1)
   })
 })
+
+describe("timeline periods, drawn by the shared renderer", () => {
+  const spanned = {
+    type: "timeline" as const,
+    periods: [
+      { from: "2026-01", to: "2026-12", label: "2026 年：进口计入排放" },
+      { from: "2034", to: "2038", label: "提案：延到 2038", basis: "proposal" as const },
+    ],
+    milestones: [
+      { date: "2026-01-01", title: "正式期开始" },
+      { date: "2027-09-30", title: "首次申报并清缴", highlight: true },
+      { date: "2027-11-01", title: "2026 年证书作废" },
+    ],
+  }
+
+  it("names every span under the milestones with its label and its run", () => {
+    const { container } = svg(timeline.render(spanned, { x: 0, y: 0, w: 1000 }, ctx))
+    const rows = Array.from(container.querySelectorAll("[data-timeline-period]"))
+    expect(rows).toHaveLength(2)
+    const texts = Array.from(container.querySelectorAll("[data-timeline-periods] text")).map((t) => t.textContent)
+    expect(texts).toEqual(["2026 年：进口计入排放", "2026-01 → 2026-12", "提案：延到 2038", "2034 → 2038"])
+    // The spans stand under the lowest milestone words.
+    const lowest = Math.max(...Array.from(container.querySelectorAll("text")).filter((t) => !t.closest("[data-timeline-periods]")).map((t) => Number(t.getAttribute("y"))))
+    expect(Number(container.querySelector("[data-timeline-periods] text")!.getAttribute("y"))).toBeGreaterThan(lowest)
+  })
+
+  it("dashes a span that rests on a proposal and fills the others", () => {
+    const { container } = svg(timeline.render(spanned, { x: 0, y: 0, w: 1000 }, ctx))
+    const [settled, proposed] = Array.from(container.querySelectorAll("[data-timeline-period] rect"))
+    expect(settled!.getAttribute("stroke-dasharray")).toBeNull()
+    expect(settled!.getAttribute("fill")).not.toBe("none")
+    expect(proposed!.getAttribute("stroke-dasharray")).not.toBeNull()
+    expect(proposed!.getAttribute("fill")).toBe("none")
+  })
+
+  it("measures the spans' rows into its height", () => {
+    const bare = { ...spanned, periods: undefined }
+    expect(timeline.measure(spanned, 1000, ctx)).toBe(timeline.measure(bare, 1000, ctx) + 16 + 2 * 26)
+  })
+})

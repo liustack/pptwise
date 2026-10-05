@@ -244,6 +244,7 @@ A page usually argues about one thing. These fields let the author say which, an
 | `numbered_cards.items[].emphasis` | the one card the page lands on: its pill is filled | at most one |
 | `gantt.items[].text` and `emphasis` | a line under the stretch's label, and the one stretch the page is about | at most one marked |
 | `timeline.milestones[].lane` and `timeline.lanes` | two tracks on one time order. `lanes` names them, the one above the axis first. A face with no room for two sides prints the lane before the date | every milestone names a lane or none does, at most two, not on a vertical timeline |
+| `timeline.periods` | `[{ "from": "2026-01", "to": "2026-12", "label": "2026: counted, nothing to buy" }]` divides the axis into named spans. A face that lays dates to scale draws each span along its stretch of the axis; the ordinary timeline names them in a row under its milestones. A span with `"basis": "proposal"` (or any basis not yet settled) is drawn dashed | at most 3, not on a vertical timeline |
 | `kpi_cards.items[].value` written `**…**` | the one figure set in the theme's emphasis | |
 | `progress_donuts.items[].detail` and `emphasis` | a line under a rate's label with the amounts behind it ("1.18 of 1.3 trillion"), and the one rate the page is about, whose ring, figure and label take the emphasis colour | at most one marked |
 | `kpi_cards.items[].tag` | what the figure is, in a few words printed as a small tag with it (`{ "text": "Binding" }`): filled on the marked figure, outlined otherwise, grey when `quiet` | |
