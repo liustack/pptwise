@@ -93,6 +93,36 @@ type ChartInput = Extract<Component, { type: "chart" }>
 /** How much of a status bar's colour tints the ground under its hatching or outline. */
 const STATUS_GROUND_SHARE = 0.25
 
+/**
+ * A value known only as a range (`data[].upper`): the stretch from its low
+ * end to its high one, drawn past the solid bar as a pale tint of the bar's
+ * colour inside a dashed outline of it, so the bar reads as reaching
+ * somewhere into that stretch.
+ */
+export const RANGE_DASH = "3 2"
+
+export function RangeReach({ x, y, w, h, color, ground }: { x: number; y: number; w: number; h: number; color: string; ground: string }): ReactElement {
+  return (
+    <rect
+      data-plot-mark="1"
+      data-range-reach="1"
+      x={x + 0.5}
+      y={y + 0.5}
+      width={Math.max(0, w - 1)}
+      height={Math.max(0, h - 1)}
+      fill={statusGround(color, ground, STATUS_GROUND_SHARE)}
+      stroke={color}
+      strokeWidth={1}
+      strokeDasharray={RANGE_DASH}
+    />
+  )
+}
+
+/** A range's figure: its two ends, 「60 至 70」 in a Chinese deck and "60–70" in any other. */
+export function rangeFigure(low: number, high: number, figures: FigureStyle): string {
+  return figures.chinese ? `${chartFigure(low, figures)} 至 ${chartFigure(high, figures)}` : `${chartFigure(low, figures)}–${chartFigure(high, figures)}`
+}
+
 /** The status the author gave the point a bar draws, if any (`chart` point `status`). */
 function pointStatusAt(series: readonly ChartSeries[], seriesIndex: number, x: string | number): PointStatus | undefined {
   return series[seriesIndex]?.data.find((d) => d.x === x)?.status
@@ -202,7 +232,7 @@ function chartChinese(series: readonly ChartSeries[]): boolean {
  */
 function chartFigures(series: readonly ChartSeries[], figures: FigureStyle | undefined): FigureStyle {
   const style = figures ?? figureStyleOf(chartChinese(series))
-  const wholeDecimals = wholeValueDecimals(series.flatMap((s) => s.data.map((point) => point.y)))
+  const wholeDecimals = wholeValueDecimals(series.flatMap((s) => s.data.flatMap((point) => (point.upper === undefined ? [point.y] : [point.y, point.upper]))))
   return wholeDecimals > 0 ? { ...style, wholeDecimals } : style
 }
 
@@ -2763,7 +2793,17 @@ export function renderBarHorizontal(
   const meta = cartesianMeta(component, series, figures)
   const values = keptValues(model.series)
   if (pastAxisLimit(values)) return <WholeShareDeclined />
-  const xAxis = buildNumericAxis([...values, ...referenceEnds(component)], "zero-max", meta.xUnit ?? meta.yUnit, meta.figures)
+  // A value known only as a range (`data[].upper`) reaches the axis at its
+  // high end: its bar is solid to its low end and dashed on to the high one.
+  const upperAt = new Map<string, number>()
+  for (const [seriesIndex, s] of series.entries()) {
+    for (const point of s.data) {
+      const i = categories.findIndex((cat) => cat.x === point.x)
+      if (i >= 0 && point.upper !== undefined) upperAt.set(`${i}-${seriesIndex}`, point.upper)
+    }
+  }
+  if (pastAxisLimit([...upperAt.values()])) return <WholeShareDeclined />
+  const xAxis = buildNumericAxis([...values, ...upperAt.values(), ...referenceEnds(component)], "zero-max", meta.xUnit ?? meta.yUnit, meta.figures)
   const domain: ChartDomain = { min: xAxis.domain.min, max: xAxis.domain.max, degenerate: false }
   const dataMax = Math.max(...values, Number.NEGATIVE_INFINITY)
   // A change the author asked for at a category is printed after the later
@@ -2791,11 +2831,13 @@ export function renderBarHorizontal(
   const labelText = (i: number, seriesIndex: number, value: number) => {
     const change = changeAfter.get(`${i}-${seriesIndex}`)
     const note = noteAt.get(`${i}-${seriesIndex}`)
-    const figure = note ? `${chartFigure(value, meta.figures)} · ${note}` : chartFigure(value, meta.figures)
+    const upper = upperAt.get(`${i}-${seriesIndex}`)
+    const value_ = upper === undefined ? chartFigure(value, meta.figures) : rangeFigure(value, upper, meta.figures)
+    const figure = note ? `${value_} · ${note}` : value_
     return change ? `${figure}  ${change}` : figure
   }
   const labelTexts =
-    changeAfter.size === 0 && noteAt.size === 0
+    changeAfter.size === 0 && noteAt.size === 0 && upperAt.size === 0
       ? values.map((v) => chartFigure(v, meta.figures))
       : categories.flatMap((_cat, i) =>
           model.series.flatMap((m) => (m.values[i] == null ? [] : [labelText(i, m.seriesIndex, m.values[i]!)])),
@@ -2840,12 +2882,14 @@ export function renderBarHorizontal(
       if (value == null) continue
       const barY = rowY0 + slots.get(s.seriesIndex)!
       const { barX, barW } = horizontalBarExtent(value, domain, plotX, plotW)
-      hBarBoxes.push({ x: barX, y: barY, w: barW, h: perBarH })
+      const upper = upperAt.get(`${i}-${s.seriesIndex}`)
+      const reachW = upper === undefined ? barW : horizontalBarExtent(upper, domain, plotX, plotW).barW
+      hBarBoxes.push({ x: barX, y: barY, w: reachW, h: perBarH })
       const labelY = barY + perBarH / 2 + 4
       hBarSpecs.push({
         id: `hbar-${i}-${s.seriesIndex}`,
         text: labelText(i, s.seriesIndex, value),
-        x: barX + barW + BAR_H_VALUE_GAP,
+        x: barX + reachW + BAR_H_VALUE_GAP,
         y: labelY,
         anchor: "start",
         fontSize: VALUE_FONT_SIZE,
@@ -2937,6 +2981,13 @@ export function renderBarHorizontal(
               opacity: highlight ? (isMax ? 1 : 0.75) : 1,
             }),
           )
+          const upper = upperAt.get(`${i}-${s.seriesIndex}`)
+          if (upper !== undefined) {
+            const reach = horizontalBarExtent(upper, domain, plotX, plotW)
+            barElements.push(
+              <RangeReach key={`u-${s.seriesIndex}`} x={barX + barW} y={barY} w={reach.barX + reach.barW - (barX + barW)} h={perBarH} color={fill.startsWith("url(") ? accentColor : fill} ground={_bgHex ?? "#FFFFFF"} />,
+            )
+          }
           const placed = placedHBars.get(`hbar-${i}-${s.seriesIndex}`)
           if (placed) {
             barElements.push(

@@ -2251,3 +2251,44 @@ describe("a share bar's own line for its marked run", () => {
     expect(chartSchema.safeParse({ ...exposure, chart_type: "bar" }).success).toBe(false)
   })
 })
+
+describe("a bar whose value is known only as a range", () => {
+  const accuracy = {
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    direction: "horizontal" as const,
+    axes: { x_title: "正确率", x_unit: "%" },
+    series: [{ name: "正确率", data: [{ x: "不用 AI", y: 84.5 }, { x: "用 AI", y: 60, upper: 70, emphasis: true }] }],
+  }
+
+  it("is solid to its low end and dashed on to its high end, its label naming both", () => {
+    const { container } = svg(chart.render(accuracy, { x: 0, y: 0, w: 900, h: 300 }, ctx))
+    const reach = container.querySelector("[data-range-reach]")!
+    expect(reach.getAttribute("stroke-dasharray")).toBe("3 2")
+    const labels = Array.from(container.querySelectorAll("[data-value-label]")).map((t) => t.textContent)
+    expect(labels).toEqual(["84.5", "60.0 至 70.0"])
+    // The dashed reach starts where the solid bar ends and the label follows it.
+    const bars = Array.from(container.querySelectorAll("rect[data-plot-mark]:not([data-range-reach])"))
+    const solid = bars[1]!
+    const solidEnd = Number(solid.getAttribute("x")) + Number(solid.getAttribute("width"))
+    expect(Math.abs(Number(reach.getAttribute("x")) - 0.5 - solidEnd)).toBeLessThan(1)
+    const label = container.querySelectorAll("[data-value-label]")[1]!
+    expect(Number(label.getAttribute("x"))).toBeGreaterThan(Number(reach.getAttribute("x")) + Number(reach.getAttribute("width")))
+    expect(() => assertSubset(container.querySelector("svg")!)).not.toThrow()
+  })
+
+  it("prints its ends with an en dash outside a Chinese deck", () => {
+    const en = { ...accuracy, axes: { x_unit: "%" }, series: [{ name: "Accuracy", data: [{ x: "Without AI", y: 84.5 }, { x: "With AI", y: 60, upper: 70 }] }] }
+    const { container } = svg(chart.render(en, { x: 0, y: 0, w: 900, h: 220 }, ctx))
+    expect(Array.from(container.querySelectorAll("[data-value-label]")).map((t) => t.textContent)).toContain("60.0–70.0")
+  })
+
+  it("is refused off a bar on its side, below zero, upside down, or beside a status", () => {
+    expect(chartSchema.safeParse(accuracy).success).toBe(true)
+    expect(chartSchema.safeParse({ ...accuracy, direction: undefined }).success).toBe(false)
+    const point = (p: Record<string, unknown>) => ({ ...accuracy, series: [{ name: "x", data: [{ x: "a", y: 60, ...p }] }] })
+    expect(chartSchema.safeParse(point({ upper: 50 })).success).toBe(false)
+    expect(chartSchema.safeParse(point({ y: -5, upper: 5 })).success).toBe(false)
+    expect(chartSchema.safeParse(point({ upper: 70, status: "forecast" })).success).toBe(false)
+  })
+})

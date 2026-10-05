@@ -261,6 +261,18 @@ function asksForChartNote(components: readonly CompositionProps["components"][nu
 }
 
 /**
+ * The compositions that draw a bar whose value is known only as a range
+ * (`data[].upper`). A page whose chart carries one is offered to these
+ * alone; the ordinary chart draws the bar solid to its low end and dashed on
+ * to its high one, its label naming both ends.
+ */
+const CHART_RANGE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForChartRange(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.series.some((s) => s.data.some((d) => d.upper !== undefined)))
+}
+
+/**
  * The compositions that state a share bar's `emphasis_label`, the author's
  * own line for its marked run. A page whose chart carries one is offered to
  * these alone; the ordinary share bar sets it where its computed total
@@ -305,6 +317,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const footed = asksForWaterfallNote(props.components)
   const referenced = asksForChartReference(props.components)
   const annotated = asksForChartNote(props.components)
+  const ranged = asksForChartRange(props.components)
   const labelled = asksForChartRunLabel(props.components)
   const pending = asksForRoadmapBasis(props.components)
   for (const id of ids) {
@@ -314,6 +327,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (footed && !WATERFALL_NOTE_COMPOSITIONS.has(id)) continue
     if (referenced && !CHART_REFERENCE_COMPOSITIONS.has(id)) continue
     if (annotated && !CHART_NOTE_COMPOSITIONS.has(id)) continue
+    if (ranged && !CHART_RANGE_COMPOSITIONS.has(id)) continue
     if (labelled && !CHART_RUN_LABEL_COMPOSITIONS.has(id)) continue
     if (pending && !ROADMAP_BASIS_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue

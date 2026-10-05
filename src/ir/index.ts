@@ -767,6 +767,8 @@ export type ChartSeries = {
     emphasis?: boolean
     /** Bars on their side and share-bar parts only: a few words printed with the value. */
     note?: string
+    /** Bars on their side only: the high end of a value known only as a range, `y` its low end. */
+    upper?: number
   }[]
   /** `chart_type: "combo"` only: draw this series as bars (default) or a line. */
   plot?: "bar" | "line"
