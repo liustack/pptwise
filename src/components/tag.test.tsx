@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest"
 import { render } from "@testing-library/react"
 import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { contrastRatio, requiredContrastRatio, resolveSemanticColor } from "../render/ink"
-import { EVIDENCE_KINDS } from "../ir/components/shared"
+import { BASIS_KINDS, EVIDENCE_KINDS } from "../ir/components/shared"
 import { dataTable } from "./data-table"
-import { evidenceInk, tagInks } from "./tag"
+import { basisInk, evidenceInk, paintTag, ordinaryTagSpec, tagInks, TAG_DASH } from "./tag"
 
 describe("a tag that names its source", () => {
   it("outlines each kind of source in its own ink, read from the theme's tokens", () => {
@@ -82,5 +82,46 @@ describe("a settled tag", () => {
     expect(contrastRatio(no.text, no.fill!)).toBeGreaterThanOrEqual(requiredContrastRatio(16))
     // An open verdict stays outlined.
     expect(tagInks(ctx, { text: "暂缓", quiet: true }, false, ground, 16).fill).toBeNull()
+  })
+})
+
+describe("a tag that says what it rests on", () => {
+  it("outlines the law in the primary, an estimate and a proposal in the accent, a pending figure in the muted ink", () => {
+    const { colors } = boundThemeCtx("almanac")
+    expect(basisInk(colors, "law")).toBe(colors.primary)
+    expect(basisInk(colors, "estimate")).toBe(colors.accent)
+    expect(basisInk(colors, "proposal")).toBe(colors.accent)
+    expect(basisInk(colors, "pending")).toBe(colors.muted)
+  })
+
+  it("dashes the three that are not settled and keeps the law solid", () => {
+    const ctx = boundThemeCtx("almanac")
+    const ground = ctx.defaultBg ?? ctx.colors.bg
+    const dash = (basis: (typeof BASIS_KINDS)[number]) => {
+      const tag = { text: "x", basis }
+      const { container } = render(<svg>{paintTag({ tag, x: 0, y: 0, spec: ordinaryTagSpec(ctx), inks: tagInks(ctx, tag, false, ground, 16) })}</svg>)
+      return container.querySelector("[data-tag-basis] rect")!.getAttribute("stroke-dasharray")
+    }
+    expect(dash("law")).toBeNull()
+    expect(dash("estimate")).toBe(TAG_DASH)
+    expect(dash("pending")).toBe(TAG_DASH)
+    expect(dash("proposal")).toBe(TAG_DASH)
+  })
+
+  it("keeps every basis legible on the page in every built-in theme it is drawn on", () => {
+    for (const theme of ["almanac", "clinic", "brief", "terminal", "memo", "crayon"]) {
+      const ctx = boundThemeCtx(theme)
+      const ground = ctx.defaultBg ?? ctx.colors.bg
+      for (const basis of BASIS_KINDS) {
+        const inks = tagInks(ctx, { text: "x", basis }, false, ground, 16)
+        expect(inks.fill).toBeNull()
+        expect(contrastRatio(inks.text, ground), `${theme} ${basis}`).toBeGreaterThanOrEqual(requiredContrastRatio(16))
+      }
+    }
+  })
+
+  it("still fills the tag on the figure the page marks, whatever it rests on", () => {
+    const ctx = boundThemeCtx("almanac")
+    expect(tagInks(ctx, { text: "x", basis: "proposal" }, true, ctx.colors.bg, 16).fill).not.toBeNull()
   })
 })
