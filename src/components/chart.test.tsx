@@ -2101,3 +2101,53 @@ describe("chart tag", () => {
     expect(chartSchema.safeParse(share).success).toBe(false)
   })
 })
+
+describe("a bar chart's reference line", () => {
+  const defaults = {
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    direction: "horizontal" as const,
+    axes: { y_title: "热轧扁平材 7208 默认值，tCO₂e/吨（加成前）" },
+    reference: { value: 1.37, label: "欧盟基准 1.370" },
+    series: [
+      {
+        name: "默认值",
+        data: [
+          { x: "印度", y: 4.28 },
+          { x: "中国", y: 3.187, emphasis: true },
+          { x: "土耳其", y: 2.428 },
+          { x: "韩国", y: 2.118 },
+        ],
+      },
+    ],
+  }
+
+  it("draws the value dashed down a plot on its side, inside the plot, and names it in the legend", () => {
+    const { container } = svg(chart.render(defaults, { x: 0, y: 0, w: 900, h: 360 }, ctx))
+    const line = container.querySelector("[data-chart-reference]")!
+    expect(line.getAttribute("stroke-dasharray")).not.toBeNull()
+    expect(line.getAttribute("x1")).toBe(line.getAttribute("x2"))
+    const bars = Array.from(container.querySelectorAll("rect")).filter((r) => Number(r.getAttribute("height")) > 10)
+    const left = Math.min(...bars.map((b) => Number(b.getAttribute("x"))))
+    const right = Math.max(...bars.map((b) => Number(b.getAttribute("x")) + Number(b.getAttribute("width"))))
+    expect(Number(line.getAttribute("x1"))).toBeGreaterThan(left)
+    expect(Number(line.getAttribute("x1"))).toBeLessThan(right)
+    expect(container.querySelector("[data-legend-reference]")).not.toBeNull()
+    expect(Array.from(container.querySelectorAll("text")).map((t) => t.textContent)).toContain("欧盟基准 1.370")
+  })
+
+  it("draws it across an upright plot, and grows the value axis to hold a value past the bars", () => {
+    const upright = { ...defaults, direction: undefined, reference: { value: 6, label: "上限 6" } }
+    const { container } = svg(chart.render(upright, { x: 0, y: 0, w: 900, h: 360 }, ctx))
+    const line = container.querySelector("[data-chart-reference]")!
+    expect(line.getAttribute("y1")).toBe(line.getAttribute("y2"))
+    const tallest = Math.min(...Array.from(container.querySelectorAll("rect")).filter((r) => Number(r.getAttribute("height")) > 10).map((b) => Number(b.getAttribute("y"))))
+    expect(Number(line.getAttribute("y1"))).toBeLessThan(tallest)
+  })
+
+  it("is refused on any chart but a bar chart", () => {
+    expect(chartSchema.safeParse(defaults).success).toBe(true)
+    expect(chartSchema.safeParse({ ...defaults, chart_type: "line", direction: undefined }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...defaults, reference: { value: 1.37, label: "" } }).success).toBe(false)
+  })
+})

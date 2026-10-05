@@ -25,6 +25,7 @@ import {
 import { labelLinePitch } from "./label-collision";
 import {
   barHorizontalMinBodyH,
+  REFERENCE_STROKE,
   CHART_BODY_H,
   CHART_MIN_BODY_H,
   DIRECT_LABEL_FONT_SIZE,
@@ -205,13 +206,24 @@ function legendApplicable(component: ChartComponent): boolean {
   if (SINGLE_SERIES.has(component.chart_type)) return false;
   if (DIRECT_LABELLED.has(component.chart_type)) return false;
   // A hatched forecast or a dashed target needs a key saying so, even on a
-  // chart of one series.
-  return component.series.length >= 2 || component.series.some((s) => s.data.some((d) => d.status !== undefined));
+  // chart of one series, and so does a reference line.
+  return (
+    component.series.length >= 2 ||
+    component.series.some((s) => s.data.some((d) => d.status !== undefined)) ||
+    component.reference !== undefined
+  );
 }
 
 /** Legend entries a chart's point statuses add: a forecast swatch, a target swatch. */
 const FORECAST_ENTRY = -1;
 const TARGET_ENTRY = -2;
+/** The legend entry that names the chart's reference line, drawn as a short dashed line. */
+const REFERENCE_ENTRY = -3;
+
+/** The legend entry a reference line adds, named by its label. */
+function referenceEntries(component: ChartComponent): { name: string; seriesIndex: number; colorIndex: number }[] {
+  return component.reference ? [{ name: component.reference.label, seriesIndex: REFERENCE_ENTRY, colorIndex: 0 }] : [];
+}
 
 /** The status every point of a series shares, when they all share one: its legend swatch is drawn that way. */
 function seriesStatus(component: ChartComponent, seriesIndex: number): "forecast" | "target" | undefined {
@@ -753,7 +765,7 @@ export const chart: SvgComponent<ChartComponent> = {
     const tagFits = component.tag !== undefined && tagW <= headerW;
     const legendLayout = hasLegend
       ? layoutChartLegend(
-          [...buildChartModel(component.series).legend, ...statusEntries(component, ctx.figures)],
+          [...buildChartModel(component.series).legend, ...statusEntries(component, ctx.figures), ...referenceEntries(component)],
           tagFits ? headerW - tagW - TAG_LEGEND_GAP : headerW,
           bodyFace
         )
@@ -802,7 +814,18 @@ export const chart: SvgComponent<ChartComponent> = {
               );
               return (
                 <g key={slot.seriesIndex}>
-                  {slot.seriesIndex < 0 || seriesStatus(component, slot.seriesIndex) ? (
+                  {slot.seriesIndex === REFERENCE_ENTRY ? (
+                    <line
+                      data-legend-reference=""
+                      x1={swatchX}
+                      y1={swatchY + LEGEND_SWATCH_SIZE / 2}
+                      x2={swatchX + LEGEND_SWATCH_SIZE}
+                      y2={swatchY + LEGEND_SWATCH_SIZE / 2}
+                      stroke={ctx.colors.text}
+                      strokeWidth={REFERENCE_STROKE}
+                      strokeDasharray="3 2"
+                    />
+                  ) : slot.seriesIndex < 0 || seriesStatus(component, slot.seriesIndex) ? (
                     <StatusMark
                       status={slot.seriesIndex === FORECAST_ENTRY ? "forecast" : slot.seriesIndex === TARGET_ENTRY ? "target" : seriesStatus(component, slot.seriesIndex)!}
                       color={palette[slot.colorIndex % palette.length]!}

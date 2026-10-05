@@ -82,3 +82,14 @@ describe("a chart's tag through compose", () => {
     expect(compose({ components: [tagged] as never, ctx, rect: NOTICE_PLOT, setting: "notice" })).toBeNull()
   })
 })
+
+describe("a chart's reference line through compose", () => {
+  it("is offered to no hand-set plot that leaves it off, so the ordinary chart draws it", async () => {
+    const { compose } = await import(".")
+    const { testCtx } = await import("./__fixtures__/kit")
+    const { ctx } = testCtx("bulletin")
+    const referenced = { ...share(), reference: { value: 10, label: "基准" } }
+    expect(compose({ components: [share()] as never, ctx, rect: NOTICE_PLOT, setting: "notice" })).not.toBeNull()
+    expect(compose({ components: [referenced] as never, ctx, rect: NOTICE_PLOT, setting: "notice" })).toBeNull()
+  })
+})

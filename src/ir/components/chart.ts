@@ -428,6 +428,17 @@ export const schema = z
         "Up to two value ranges marked across the plot behind the data, such as a target range a line should stay in. Each runs from `from` to `to` on the value axis, which grows to hold it, and may carry a short `label`. " +
           "line, area and upright bar charts only. Write a range this way rather than as two flat series at its edges.",
       ),
+    /** One value drawn as a line across the plot. See the describe below. */
+    reference: z
+      .object({
+        value: z.number().describe("Where the line stands on the value axis."),
+        label: z.string().min(1).describe('What the value is, such as "欧盟基准 1.370" or "EU benchmark 1.370".'),
+      })
+      .strict()
+      .optional()
+      .describe(
+        'One value drawn as a dashed line across the bars, such as a benchmark, an average or a threshold the bars are read against: { "value": 1.37, "label": "EU benchmark 1.370" }. The value axis grows to hold it, and its label names the line in the legend. Bar charts only, upright or on their side. Write a benchmark this way rather than as a bar of its own.',
+      ),
     series: z.array(
       z
         .object({
@@ -475,6 +486,16 @@ export const schema = z
         path: ["tag"],
         message: "a share bar has no row over it for a tag. Say what kind of figures it draws in the category's name, or remove tag.",
       })
+    }
+    if (c.reference !== undefined && c.chart_type !== "bar") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["reference"],
+        message: `a reference is a line across bars, and a ${c.chart_type} chart has none. Use chart_type "bar", or mark a range with bands on a line or area chart.`,
+      })
+    }
+    if (c.reference !== undefined && !(Math.abs(c.reference.value) <= CHART_AXIS_LIMIT)) {
+      ctx.addIssue({ code: "custom", path: ["reference", "value"], message: `reference.value is ${c.reference.value}, past what a value axis can draw. Write it in the same unit as the bars.` })
     }
     if (c.bands !== undefined) {
       const banded = c.chart_type === "line" || c.chart_type === "area" || (c.chart_type === "bar" && c.direction !== "horizontal")

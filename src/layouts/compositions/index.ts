@@ -201,6 +201,18 @@ function asksForWaterfallNote(components: readonly CompositionProps["components"
   return components.some((component) => component.type === "waterfall" && component.items.some((item) => item.note !== undefined))
 }
 
+/**
+ * The compositions that draw a bar chart's reference line (`reference`), a
+ * value such as a benchmark drawn dashed across the bars. A page whose chart
+ * carries one is offered to these alone; the ordinary chart draws the line
+ * and names it in its legend.
+ */
+const CHART_REFERENCE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForChartReference(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.reference !== undefined)
+}
+
 function asksForChartTag(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.tag !== undefined)
 }
@@ -218,11 +230,13 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const detailed = asksForTimelineDetail(props.components)
   const noted = asksForCalloutDetail(props.components)
   const footed = asksForWaterfallNote(props.components)
+  const referenced = asksForChartReference(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
     if (noted && !CALLOUT_DETAIL_COMPOSITIONS.has(id)) continue
     if (footed && !WATERFALL_NOTE_COMPOSITIONS.has(id)) continue
+    if (referenced && !CHART_REFERENCE_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     const drawn = COMPOSITIONS[id]({ ...props, handOn })
