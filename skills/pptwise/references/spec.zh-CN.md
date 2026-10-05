@@ -110,7 +110,7 @@ pptwise theme fork acme --primary '#0B5FFF' --id acme-blue
 | `stage` | Stage | keynote | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
 | `lecture` | Lecture | education | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
 | `swiss` | Swiss | institutional | low | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
-| `memo` | Memo | business, institutional | low | 9 | `points`, `list`, `comparison`, `process`, `data`, `statement`, `quote`, `fact`, `hierarchy` |
+| `memo` | Memo | business, institutional | low | 11 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `evidence`, `hierarchy` |
 | `playbill` | Playbill | event, entertainment | high | 9 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `hierarchy` |
 <!-- generated:end themes -->
 

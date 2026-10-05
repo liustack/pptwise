@@ -30,6 +30,17 @@ import { spanComposition } from "./span"
 import { platesComposition } from "./plates"
 import { pathsComposition } from "./paths"
 import { screenComposition } from "./screen"
+import { annexComposition } from "./annex"
+import { talliesComposition } from "./tallies"
+import { slopesComposition } from "./slopes"
+import { divergingComposition } from "./diverging"
+import { citationComposition } from "./citation"
+import { scalesComposition } from "./scales"
+import { catalogComposition } from "./catalog"
+import { rotaComposition } from "./rota"
+import { sumComposition } from "./sum"
+import { scheduleComposition } from "./schedule"
+import { checksComposition } from "./checks"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -73,6 +84,17 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   plates: platesComposition,
   paths: pathsComposition,
   screen: screenComposition,
+  annex: annexComposition,
+  tallies: talliesComposition,
+  slopes: slopesComposition,
+  diverging: divergingComposition,
+  citation: citationComposition,
+  scales: scalesComposition,
+  catalog: catalogComposition,
+  rota: rotaComposition,
+  sum: sumComposition,
+  schedule: scheduleComposition,
+  checks: checksComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -86,7 +108,7 @@ export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly Composition
  * marks a segment where the author marked a column. The ordinary chart draws
  * both.
  */
-const CHART_MARK_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const CHART_MARK_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["diverging"])
 
 function asksForChartMarks(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some(

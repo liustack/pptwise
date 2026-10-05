@@ -544,6 +544,16 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
       },
     ]
   }
+  // memo's sheet: the board's decision page, four clauses numbered in the
+  // deck's numerals with a sentence each, the last the one the page lands on.
+  if (def.id === "memo-sheet") {
+    return [
+      {
+        type: "numbered_cards",
+        items: lex.phrases.slice(6, 10).map((title, i) => ({ title, text: lex.sentences[i + 8]!, ...(i === 3 ? { emphasis: true } : {}) })),
+      },
+    ]
+  }
   // The seal fact page: the lead figure with its tag and note, and three
   // figures beside it, one marked.
   if (def.id === "seal-figure") {
@@ -1484,6 +1494,257 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
     ],
     footnote: lex.sources[0]!.label,
   }),
+  // memo's typed memorandum: the page's points beside a photograph pasted in
+  // as an exhibit, a remark in the mark under it.
+  annex: (lex) => ({
+    heading: lex.headings[1]!,
+    components: [
+      { type: "bullets", items: lex.bullets.slice(0, 4) },
+      { type: "image", asset_id: PHOTO_ASSETS[0], caption: lex.captions[0]!, fit: "cover" },
+      { type: "callout", variant: "info", text: lex.verdicts.warning },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // memo's reasons: three rows, each its icon, its name, its figure in the
+  // mark and the sentence behind it.
+  tallies: (lex) => ({
+    heading: lex.headings[2]!,
+    components: [
+      {
+        type: "kpi_cards",
+        // The three short figures: a tally's figure is set at 48px in a 160px column.
+        items: [0, 4, 5]
+          .map((m) => lex.metrics[m]!)
+          .map((metric, i) => ({
+            icon: (["piggy-bank", "hourglass", "clock"] as const)[i]!,
+            value: metric.value,
+            ...(metric.unit ? { unit: metric.unit } : {}),
+            label: metric.label,
+            note: lex.sentences[[2, 9, 10][i]!]!,
+          })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // memo's slope charts: three measures before and after for two groups,
+  // the first marked, and the authors' caveat beside them.
+  slopes: (lex) => ({
+    heading: lex.headings[5]!,
+    components: [
+      ...[0, 1, 2].map(
+        (i): Component => ({
+          type: "chart",
+          chart_type: "line",
+          axes: { y_title: lex.labels[i]! },
+          series: [
+            {
+              name: lex.labels[12]!,
+              emphasis: true,
+              data: [
+                { x: lex.periods[0]!, y: [2.8, 2.9, 3.0][i]! },
+                { x: lex.periods[4]!, y: [2.4, 3.3, 3.3][i]! },
+              ],
+            },
+            {
+              name: lex.labels[13]!,
+              data: [
+                { x: lex.periods[0]!, y: [2.9, 2.9, 3.1][i]! },
+                { x: lex.periods[4]!, y: [2.9, 2.9, 3.1][i]! },
+              ],
+            },
+          ],
+        }),
+      ),
+      {
+        type: "callout",
+        variant: "warn",
+        icon: "triangle-alert",
+        text: `${lex.kickers[4]!}${colonOf(lex)}“${lex.bullets[4]!}” ${lex.verdicts.neutral}`,
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // memo's diverging bars: who got better and who got worse on four
+  // measures, the last one's worse share marked, and the figure beside them.
+  diverging: (lex) => ({
+    heading: lex.headings[3]!,
+    components: [
+      {
+        type: "chart",
+        chart_type: "percent_stacked",
+        series: [
+          { name: lex.labels[12]!, tone: "success", data: lex.phrases.slice(0, 4).map((x, i) => ({ x, y: [62, 35, 20, 8][i]! })) },
+          { name: lex.labels[13]!, data: lex.phrases.slice(0, 4).map((x, i) => ({ x, y: [20, 45, 50, 30][i]! })) },
+          {
+            name: lex.labels[14]!,
+            tone: "danger",
+            data: lex.phrases.slice(0, 4).map((x, i) => ({ x, y: [18, 20, 30, 62][i]!, ...(i === 3 ? { emphasis: true } : {}) })),
+          },
+        ],
+      },
+      {
+        type: "kpi_cards",
+        items: [
+          {
+            value: lex.metrics[0]!.value,
+            ...(lex.metrics[0]!.unit ? { unit: lex.metrics[0]!.unit } : {}),
+            label: lex.metrics[0]!.label,
+            note: lex.periods[0]!,
+          },
+        ],
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // memo's quoted original: the quote typed as written, what it means, and
+  // the two figures it is read against in a panel with their shared note.
+  citation: (lex) => ({
+    heading: lex.headings[7]!,
+    components: [
+      { type: "blockquote", text: lex.quote.text, attribution: lex.quote.attribution },
+      { type: "callout", variant: "info", text: `${lex.kickers[5]!}${colonOf(lex)}${lex.verdicts.positive}` },
+      {
+        type: "kpi_cards",
+        items: lex.metrics
+          .slice(0, 2)
+          .map((metric, i) => ({
+            value: i === 0 ? `**${metric.value}**` : metric.value,
+            ...(metric.unit ? { unit: metric.unit } : {}),
+            label: metric.label,
+          })),
+      },
+      { type: "callout", variant: "info", text: `${lex.kickers[2]!}${colonOf(lex)}${lex.verdicts.neutral}` },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // memo's weighing: the case for and against a proposal, and the verdict in
+  // a banner of ink.
+  scales: (lex) => ({
+    heading: lex.headings[9]!,
+    components: [
+      {
+        type: "pros_cons",
+        pros: { title: lex.debate.forTitle, items: lex.debate.pros.slice(0, 3) },
+        cons: { title: lex.debate.againstTitle, items: lex.debate.cons.slice(0, 4) },
+        verdict: lex.debate.verdict,
+      },
+    ],
+    footnote: lex.sources[2]!.label,
+  }),
+  // memo's options under their photographs: three columns, the second the
+  // recommended one with its label.
+  catalog: (lex) => ({
+    heading: lex.headings[4]!,
+    components: [
+      { type: "image_grid", items: PHOTO_ASSETS.slice(0, 3).map((asset_id, i) => ({ asset_id, caption: lex.phrases[i + 6]! })) },
+      {
+        type: "comparison",
+        columns: lex.phrases.slice(6, 9),
+        recommended: 1,
+        recommended_label: lex.kickers[3]!,
+        rows: [0, 1].map((r) => ({ label: lex.labels[r]!, cells: [0, 1, 2].map((c) => lex.bullets[(r * 3 + c) % lex.bullets.length]!) })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // memo's rota: six people across five days, each off one day, and how many
+  // are in each day.
+  rota: (lex) => {
+    const off = lex.id === "zh" ? "休" : "Off"
+    const days = lex.periods.slice(0, 5)
+    return {
+      heading: lex.headings[10]!,
+      components: [
+        {
+          type: "data_table",
+          title: lex.chapters[3]!,
+          columns: [{ key: "who", label: lex.kickers[0]! }, ...days.map((label, d) => ({ key: `d${d}`, label }))],
+          rows: [
+            ...lex.people
+              .slice(0, 6)
+              .map((person, p) => ({
+                icon: "user" as const,
+                cells: Object.fromEntries([["who", person.name], ...days.map((_, d) => [`d${d}`, d === p % 5 ? off : ""])]),
+              })),
+            {
+              emphasis: "total" as const,
+              cells: Object.fromEntries([
+                ["who", lex.id === "zh" ? "在岗" : "In"],
+                ...days.map((_, d) => [`d${d}`, d === 0 ? "4 / 6" : "5 / 6"]),
+              ]),
+            },
+          ],
+        },
+      ],
+      footnote: lex.sources[1]!.label,
+    }
+  },
+  // memo's sum on ruled paper: three lines of working, the answer in the
+  // mark, and a note beside the pad.
+  sum: (lex) => ({
+    heading: lex.headings[2]!,
+    components: [
+      {
+        type: "bullets",
+        items: [
+          `${lex.metrics[1]!.label}${colonOf(lex)}6500 × 22 = 143000`,
+          `${lex.labels[2]!}${colonOf(lex)}2100 × 22 = 46200`,
+          `${lex.labels[0]!}${colonOf(lex)}143000 + 46200 = 189200`,
+        ],
+      },
+      { type: "kpi_cards", items: [{ value: "18.9", unit: lex.id === "zh" ? "万" : "k", label: lex.labels[0]! }] },
+      { type: "callout", variant: "info", text: `${lex.kickers[4]!}${colonOf(lex)}${lex.bullets[4]!}\n${lex.verdicts.warning}` },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // memo's calendar: three stretches over five months, the second marked,
+  // over the dates as a typed table.
+  schedule: (lex) => ({
+    heading: lex.headings[4]!,
+    components: [
+      {
+        type: "gantt",
+        axis_labels: lex.periods.slice(0, 5),
+        items: [
+          { label: lex.stages[0]!, start: 0, end: 1 },
+          { label: lex.stages[2]!, start: 1, end: 4, emphasis: true },
+          { label: lex.stages[5]!, start: 4, end: 5 },
+        ],
+      },
+      {
+        type: "timeline",
+        milestones: [0, 1, 3, 5].map((s, i) => ({
+          date: lex.periods[[0, 1, 3, 4][i]!]!,
+          title: lex.stages[s]!,
+          desc: lex.labels[i + 4]!,
+          ...(i === 2 ? { highlight: true } : {}),
+        })),
+      },
+    ],
+    footnote: lex.sources[1]!.label,
+  }),
+  // memo's checklist: four conditions, each its kind and measure and the
+  // threshold, and what happens once one trips in a banner.
+  checks: (lex) => ({
+    heading: lex.headings[8]!,
+    components: [
+      {
+        type: "row_cards",
+        items: [0, 1, 2, 3].map((i) => ({
+          icon: (["wallet", "hourglass", "hammer", "heart-pulse"] as const)[i]!,
+          title: `${lex.labels[i]!}${colonOf(lex)}${lex.phrases[i + 2]!}`,
+          text: lex.bullets[i + 1]!,
+        })),
+      },
+      { type: "callout", variant: "warn", icon: "circle-stop", text: lex.verdicts.warning },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+}
+
+/** The colon a label stands before in the lexicon's language. */
+function colonOf(lex: Lexicon): string {
+  return lex.id === "zh" ? "：" : ": "
 }
 
 /** The figures the column beside a chart or a row of figures sets: label, value and a note. */
@@ -1502,7 +1763,7 @@ function figureItems(lex: Lexicon, count: number) {
  * instead of the changes it computes, and `table` at its dense size, four
  * options over a closing line.
  */
-export type CompositionVariant = "figures" | "dense" | "answer" | "console"
+export type CompositionVariant = "figures" | "dense" | "answer" | "console" | "memo"
 
 const COMPOSITION_VARIANT_BODIES: Record<`${CompositionId}-${CompositionVariant}`, ((lex: Lexicon) => CompositionBody) | undefined> = {
   "rail-figures": (lex) => ({
@@ -1607,6 +1868,39 @@ const COMPOSITION_VARIANT_BODIES: Record<`${CompositionId}-${CompositionVariant}
       ],
     }
   },
+  // memo's forms of the shared shapes: a decision's clauses numbered in the
+  // deck's numerals, and a table of figures whose rows carry the kind of
+  // source they come from as tags.
+  "rows-memo": (lex): CompositionBody => ({
+    heading: lex.headings[12]!,
+    components: [
+      {
+        type: "numbered_cards",
+        items: lex.phrases.slice(6, 10).map((title, i) => ({ title, text: lex.sentences[i + 8]!, ...(i === 3 ? { emphasis: true } : {}) })),
+      },
+    ],
+  }),
+  "records-memo": (lex): CompositionBody => ({
+    heading: lex.headings[9]!,
+    components: [
+      {
+        type: "data_table",
+        columns: [
+          { key: "item", label: lex.segmentAxis },
+          { key: "goal", label: lex.labels[12]! },
+          { key: "note", label: lex.labels[13]! },
+        ],
+        rows: lex.goals
+          .slice(0, 5)
+          .map((goal, i) => ({
+            cells: { item: goal.title, goal: goal.actual, note: goal.gap },
+            tag: { text: lex.tags[[2, 3, 4, 2, 3][i]!]! },
+            ...(i === 4 ? { emphasis: "highlight" as const } : {}),
+          })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
 } as Record<`${CompositionId}-${CompositionVariant}`, ((lex: Lexicon) => CompositionBody) | undefined>
 
 /** One page drawn by one shared composition, on `themeId`, under the face its menu gives `kind`. */

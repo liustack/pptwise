@@ -1,8 +1,9 @@
 import type React from "react"
 import type { ComponentCtx } from "../../components/types"
-import { emphasisRunInk, stripEmphasis, type EmphasisHeadingLayout } from "../../render/emphasis"
+import { attachEmphasis, emphasisRunInk, fitEmphasisHeading, stripEmphasis, type EmphasisHeadingLayout } from "../../render/emphasis"
 import { accessibleInk, blendOver, metaInk, readableOn, resolveSemanticColor } from "../../render/ink"
-import { measureTextUnits } from "../../lib/svg-text-layout"
+import { inkToward } from "../../components/tag"
+import { allowsLineBreakBetween, measureTextUnits } from "../../lib/svg-text-layout"
 import { fitMono, monoWidth } from "./console"
 import { chineseNumeral } from "./numerals"
 import { fitFixed, paintLines } from "./type"
@@ -100,6 +101,15 @@ export function memoQuietInks(ctx: ComponentCtx): string[] {
 /** `ink` held to the contrast `size` needs on `ground`. */
 export function memoText(ink: string, ground: string, size: number): string {
   return accessibleInk(ink, ground, size)
+}
+
+/**
+ * `ink` where it reads on `ground` at `size`, otherwise the least step of it
+ * toward the text ink that does: a quiet grey stays as light as contrast
+ * lets it, rather than falling back to black.
+ */
+export function memoStepped(ink: string, toward: string, ground: string, size: number): string {
+  return inkToward(ink, toward, ground, size)
 }
 
 /** Quiet text (a source, a label) held to the 3:1 a meta line needs. */
@@ -202,13 +212,14 @@ export function paintMemo(
   })
 }
 
-/** One line of text that is known to fit, painted at its line box's `top`. */
+/** One line of text that is known to fit, painted at its line box's `top`, or on `baseline` when given. */
 export function paintMemoLine(
   text: string,
   opts: {
     ctx: ComponentCtx
     x: number
     top: number
+    baseline?: number
     lineHeight: number
     size: number
     face: MemoFace
@@ -225,7 +236,7 @@ export function paintMemoLine(
       {...memoSmall(opts.size)}
       {...opts.attrs}
       x={opts.x}
-      y={memoBaseline(opts.top, opts.lineHeight, opts.size, opts.face)}
+      y={opts.baseline ?? memoBaseline(opts.top, opts.lineHeight, opts.size, opts.face)}
       textAnchor={opts.anchor && opts.anchor !== "start" ? opts.anchor : undefined}
       fontFamily={memoFamily(opts.ctx, opts.face)}
       fontSize={opts.size}
@@ -339,4 +350,73 @@ export function paintTracked(opts: {
 /** The tracked width of `text`, as `paintTracked` sets it. */
 export function trackedWidth(text: string, size: number, face: MemoFace, tracking: number, ctx: ComponentCtx, bold = false): number {
   return memoWidth(text, size, face, ctx, bold) + Math.max(0, Array.from(text).length - 1) * tracking
+}
+
+const WIDE_CHAR = /[\u2E80-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFFEF\u3000-\u303F]/u
+/** Where a line may end on a clause: after Chinese clause punctuation, or after a Latin one before a space. */
+const CJK_CLAUSE_END = /[，、：；。！？）」』]$/u
+const LATIN_CLAUSE_END = /[.,:;!?)"”]$/u
+
+/**
+ * A title fitted the way a memo types it: on one line whenever it fits the
+ * measure, and when it does not, on two lines whose first is as full as it
+ * can be, ending on the last clause punctuation that lets both lines fit
+ * (「试行每周四天、32 小时，薪酬不变，」+「触发停止条件即叫停」), or where the
+ * line runs out when no clause seam fits. It is never broken early to even
+ * the lines. Too long for two lines at `minPt`, it falls back to the shared
+ * heading fit, which cuts it and says so.
+ */
+export function fitMemoTitle(
+  text: string | undefined,
+  opts: {
+    maxWidth: number
+    fontSize: number
+    minPt: number
+    lineHeight: number
+    fontFamily: string
+    bold?: boolean
+  },
+): EmphasisHeadingLayout {
+  const plain = stripEmphasis(text ?? "").trim()
+  const weight = { fontFamily: opts.fontFamily, bold: opts.bold ?? true }
+  const ratio = opts.lineHeight / opts.fontSize
+  const units = (s: string) => measureTextUnits(s, weight)
+  const done = (lines: string[], size: number) =>
+    attachEmphasis(text, {
+      lines,
+      fontSize: size,
+      lineHeight: Math.round(size * ratio),
+      truncated: false,
+    })
+  if (!plain) return done([], opts.fontSize)
+  const chars = Array.from(plain)
+  for (let size = opts.fontSize; size >= opts.minPt; size -= 1) {
+    const room = opts.maxWidth / size
+    if (units(plain) <= room) return done([plain], size)
+    let latestSeam = 0
+    let latest = 0
+    for (let i = 1; i < chars.length; i += 1) {
+      const before = chars[i - 1]!
+      const after = chars[i]!
+      const space = after === " "
+      if (!space && !WIDE_CHAR.test(before) && !WIDE_CHAR.test(after)) continue
+      if (!space && !allowsLineBreakBetween(before, after)) continue
+      const first = chars.slice(0, i).join("").trimEnd()
+      const second = chars.slice(i).join("").trimStart()
+      if (!first || !second || units(first) > room || units(second) > room) continue
+      latest = i
+      if (CJK_CLAUSE_END.test(first) || (space && LATIN_CLAUSE_END.test(first))) latestSeam = i
+    }
+    const at = latestSeam || latest
+    if (at > 0) return done([chars.slice(0, at).join("").trimEnd(), chars.slice(at).join("").trimStart()], size)
+  }
+  return fitEmphasisHeading(text, {
+    maxWidth: opts.maxWidth,
+    fontSize: opts.fontSize,
+    maxLines: 2,
+    minPt: opts.minPt,
+    lineHeightRatio: ratio,
+    fontFamily: opts.fontFamily,
+    bold: opts.bold ?? true,
+  })
 }

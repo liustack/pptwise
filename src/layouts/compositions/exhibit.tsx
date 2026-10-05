@@ -79,9 +79,21 @@ export interface ExhibitSpec {
   fit?: "cover" | "contain"
 }
 
-/** The caption a spec prints, fitted, or `null` when it does not fit its print. */
-export function exhibitCaptionLayout(spec: ExhibitSpec, ctx: ComponentCtx): EmphasisHeadingLayout | null {
-  return fitExhibitCaption(exhibitCaption(spec.number, spec.caption, memoChinese(ctx)), spec.box.w)
+/**
+ * The caption a spec prints, fitted, or `null` when it does not fit its
+ * print. With `cut`, for a face that cannot step aside (a cover), the longest
+ * head of it that fits instead, marked cut so the audit reports it.
+ */
+export function exhibitCaptionLayout(spec: ExhibitSpec, ctx: ComponentCtx, opts: { cut?: boolean } = {}): EmphasisHeadingLayout | null {
+  const text = exhibitCaption(spec.number, spec.caption, memoChinese(ctx))
+  const fitted = fitExhibitCaption(text, spec.box.w)
+  if (fitted || !opts.cut) return fitted
+  const chars = Array.from(text)
+  for (let n = chars.length - 1; n > 0; n--) {
+    const head = fitExhibitCaption(chars.slice(0, n).join(""), spec.box.w)
+    if (head) return { ...head, truncated: true }
+  }
+  return null
 }
 
 /**
@@ -123,6 +135,7 @@ export function paintExhibit(spec: ExhibitSpec, caption: EmphasisHeadingLayout, 
         face: "mono",
         fill: memoText(inks.muted, PRINT_WHITE, EXHIBIT.caption.size),
         ground: PRINT_WHITE,
+        ...(caption.truncated ? { lastAttrs: { "data-truncated": "1" } } : {}),
       })}
     </g>
   )

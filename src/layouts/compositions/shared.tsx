@@ -66,6 +66,17 @@ export type CompositionId =
   | "plates"
   | "paths"
   | "screen"
+  | "annex"
+  | "tallies"
+  | "slopes"
+  | "diverging"
+  | "citation"
+  | "scales"
+  | "catalog"
+  | "rota"
+  | "sum"
+  | "schedule"
+  | "checks"
 
 /**
  * The type a composition sets its page in.

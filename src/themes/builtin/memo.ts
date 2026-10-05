@@ -41,7 +41,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *     journal 先例「数字赢」压深到 `#675E51`（压 mix 4.72 / 压 bg 5.66 /
  *     压 surface 6.01）。
  *   - `border` `#E4DFD2`：便笺栏线。
- *   - `chartPalette` 四色：墨 / 印章红 / 档案蓝灰 / 牛皮褐。蓝灰饱和度
+ *   - `chartPalette` 四色：墨 / 档案蓝灰 / 牛皮褐 / 印章红（2026-10 起红排最后，见下）。蓝灰饱和度
  *     0.15、牛皮褐 0.26，都不进蓝橙禁忌的 vivid 带。实测压 bg 14.72 /
  *     5.72 / 6.50 / 5.09:1。白字压四格全过 4.5（people-cards 徽章底）。
  *
@@ -83,6 +83,21 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 四页 defaultBackgrounds 仍是便笺纸，角色色 hex 与 fonts 不动。
  *
  * **菜单分派（S1-B）**：打字机备忘录是纯文本件，hierarchy 用主次三分讲选项与从属，photo 会破掉它的纸面语域，不上，evidence 的展品页同理不上。
+ *
+ * **2026-10 样例重做（`design/rounds/2026-10-05-memo/`）**：照着定稿画成一份
+ * 打字机备忘录。封面换成 `memo-cover`（MEMORANDUM 加红双线、致发日期事由
+ * 四栏、宋体大标题、贴在纸上的附图 1、「已决定」印章），结尾换成
+ * `memo-ending`（页边栏、决定、签发栏、印章）。除 statement 外的内容页都走
+ * `memo-sheet`：左边红色宋体页边栏写页面的 `kicker`，标题和正文从 x240 起，
+ * 正文交给 memo 设定下的构图。照片按「附图 N」贴在纸上，所以 photo 和
+ * evidence 现在也上菜单，上面那条 S1-B 的裁决作废。页眉页脚归
+ * `memo-motif`。章节页没有定稿，留在 `issue-line-chapter`，statement 留在
+ * `statement`。
+ *
+ * 图表色板改为墨、档案蓝灰、牛皮褐、印章红：印章红是一页唯一的重点，原先
+ * 排在第二位，任何两个系列的图第二个系列都是红的，不管它是不是这一页要说的
+ * 那个。现在没标重点的系列先用墨、蓝灰、褐，红排到第四。色值不变，只换
+ * 顺序。
  */
 export const MEMO_TOKENS: StyleTokens = {
   id: "memo",
@@ -97,7 +112,7 @@ export const MEMO_TOKENS: StyleTokens = {
     danger: "#8B2418", // 沉朱（压 surface 8.38:1）
     warning: "#8A6230", // 牛皮褐压深（5.12:1），只作线与图标
     success: "#3F5E48", // 档案绿（6.81:1）
-    chartPalette: ["#221E18", "#A63A2B", "#4A5864", "#7A6248"], // 墨/印章红/档案蓝灰/牛皮褐
+    chartPalette: ["#221E18", "#4A5864", "#7A6248", "#A63A2B"], // 墨/档案蓝灰/牛皮褐/印章红（红排最后，见文件头）
   },
   fonts: {
     // 打字机决定的报题是宋体，西文配 Times New Roman（见文件头）。SimSun/宋体
@@ -132,20 +147,22 @@ export const MEMO_THEME = {
   },
   style: MEMO_TOKENS,
   menu: {
-    cover: { face: "memo-head" },
+    cover: { face: "memo-cover" },
     chapter: { face: "issue-line-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "split-band" },
+      points: { face: "memo-sheet" },
+      list: { face: "memo-sheet" },
+      comparison: { face: "memo-sheet" },
+      process: { face: "memo-sheet" },
+      data: { face: "memo-sheet" },
+      photo: { face: "memo-sheet" },
       statement: { face: "statement" },
-      quote: { face: "pull-quote" },
-      fact: { face: "stat-hero" },
-      hierarchy: { face: "asymmetric-triptych" },
+      quote: { face: "memo-sheet" },
+      fact: { face: "memo-sheet" },
+      evidence: { face: "memo-sheet" },
+      hierarchy: { face: "memo-sheet" },
     },
-    ending: { face: "decision-close-ending" },
+    ending: { face: "memo-ending" },
   },
   motif: { id: "memo-motif" },
 } satisfies BuiltinThemeDeclaration;

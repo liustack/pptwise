@@ -5,7 +5,7 @@ import { rowsComposition } from "./rows"
 import { exhibitAngle, exhibitCaption, exhibitCaptionLayout, paintExhibit } from "./exhibit"
 import { fitStamp, paintStamp, STAMP } from "./stamp"
 import { paintMargin } from "./margin"
-import { memoInks, memoNumeral, memoQuietInks } from "./memo"
+import { fitMemoTitle, memoInks, memoNumeral, memoQuietInks } from "./memo"
 import { attrs, byText, renderComposition, renderNode, testCtx, texts, textOf } from "./__fixtures__/kit"
 import type { ComponentCtx } from "../../components/types"
 
@@ -37,6 +37,46 @@ describe("the memo setting's inks and numerals", () => {
     const quiet = memoQuietInks(ctx)
     expect(quiet[quiet.length - 1]).toBe(ctx.colors.chartPalette[0])
     expect(quiet).not.toContain(memoInks(ctx).mark)
+  })
+})
+
+describe("a memo title, typed on the full measure", () => {
+  const SONG = "Times New Roman, SimSun, Songti SC, STSong, serif"
+  const fit = (text: string, maxWidth = 976, fontSize = 40) =>
+    fitMemoTitle(text, {
+      maxWidth,
+      fontSize,
+      minPt: 28,
+      lineHeight: fontSize * 1.4,
+      fontFamily: SONG,
+    })
+
+  it("keeps a title that fits on one line", () => {
+    expect(fit("五天变四天，薪酬不变").lines).toEqual(["五天变四天，薪酬不变"])
+  })
+
+  it("breaks a title too long for one line at the last comma that keeps the first line full", () => {
+    expect(fit("试行每周四天、32 小时，薪酬不变，触发停止条件即叫停").lines).toEqual(["试行每周四天、32 小时，薪酬不变，", "触发停止条件即叫停"])
+  })
+
+  it("breaks an English title at its last clause seam that fits, never earlier to even the lines", () => {
+    const { lines, fontSize } = fit("Four days and 32 hours a week at the same pay, stopped the moment a condition trips")
+    expect(fontSize).toBe(40)
+    expect(lines).toEqual(["Four days and 32 hours a week at the same pay,", "stopped the moment a condition trips"])
+  })
+
+  it("runs the first line out where no clause seam fits, then shrinks, then cuts and says so", () => {
+    const run = fit("这一行没有任何逗号所以只能在放不下的地方折到第二行去继续写完剩下的这些字")
+    expect(run.lines).toHaveLength(2)
+    expect(Array.from(run.lines[0]!).length).toBe(24)
+    const cut = fit("太长".repeat(60))
+    expect(cut.truncated).toBe(true)
+  })
+
+  it("keeps the author's emphasis on the words it marked", () => {
+    const fitted = fit("先定**停止条件**，再开始试行")
+    expect(fitted.lines).toEqual(["先定停止条件，再开始试行"])
+    expect(fitted.segments[0]!.filter((segment) => segment.emphasized).map((segment) => segment.text)).toEqual(["停止条件"])
   })
 })
 

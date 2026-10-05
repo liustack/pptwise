@@ -42,6 +42,7 @@ import { PanelFigureContent } from "./content-panel-figure"
 import { SealSheetContent } from "./content-seal-sheet"
 import { SealFigureContent } from "./content-seal-figure"
 import { ConsoleSheetContent } from "./content-console-sheet"
+import { MemoSheetContent } from "./content-memo-sheet"
 import { GridStatementContent } from "./content-grid-statement"
 import { GaugeStatsContent } from "./content-gauge-stats"
 import { OneEvidenceContent } from "./content-one-evidence"
@@ -174,6 +175,12 @@ const CASES: FaceCase[] = [
   // smaller than the step-aside sheet's, so the page goes from the face
   // straight to the declared drop.
   { face: "console-sheet", Face: ConsoleSheetContent, themeId: "terminal", regions: ["face", "declined"] },
+  // memo's sheet: a line chart of many series is no shape the memo
+  // compositions draw, so the page takes the component renderer in the band
+  // under the claim, y186 to y640. The step-aside sheet holds no series more
+  // than that band does, so the page goes from the face straight to the
+  // declared drop.
+  { face: "memo-sheet", Face: MemoSheetContent, themeId: "memo", regions: ["face", "declined"] },
   // A statement with no row of figures draws its body with the component
   // renderer under the rule, and steps aside when that band cannot hold it.
   { face: "grid-statement", Face: GridStatementContent, themeId: "swiss", regions: ["face", "aside", "declined"] },

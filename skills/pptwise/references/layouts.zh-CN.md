@@ -37,10 +37,10 @@ mirror_of: skills/pptwise/references/layouts.md
 | `comparison` | 对比 | 把两边、多个方案或多个维度直接对照。 | 包含关系用 hierarchy，有方向的变化用 process。 | 24/24 |
 | `process` | 流程 | 表达有方向的步骤、时间线或闭环。 | 只有论证递进而没有运动关系时用 points。 | 24/24 |
 | `data` | 数据 | 让一组数字、图表或表格成为页面主角。 | 只有一个数字承担全部信息时用 fact。 | 23/24 |
-| `photo` | 图像 | 让画面本身成为内容。 | 展品是为断言服务时用 evidence。 | 23/24 |
+| `photo` | 图像 | 让画面本身成为内容。 | 展品是为断言服务时用 evidence。 | 24/24 |
 | `statement` | 宣言 | 让作者自己的一句话立论占据整页。 | 借别人之口时用 quote。 | 20/24 |
 | `quote` | 引用 | 以他人或外部来源的话为中心。 | 作者自己的立论用 statement。 | 8/24 |
 | `fact` | 大数字 | 让一个数字承担整页冲击。 | 要看一组数字的结构时用 data。 | 18/24 |
-| `evidence` | 单证据 | 把一个断言与一件支持它的展品配对。 | 画面自己就是内容时用 photo。 | 10/24 |
+| `evidence` | 单证据 | 把一个断言与一件支持它的展品配对。 | 画面自己就是内容时用 photo。 | 11/24 |
 | `hierarchy` | 层级 | 表达包含、层级或组成关系。 | 先后关系用 process，并排对照用 comparison。 | 22/24 |
 <!-- generated:end kinds -->

@@ -27,6 +27,7 @@ import { PanelSheetContent } from "./content-panel-sheet"
 import { PanelFigureContent } from "./content-panel-figure"
 import { SealSheetContent } from "./content-seal-sheet"
 import { ConsoleSheetContent } from "./content-console-sheet"
+import { MemoSheetContent } from "./content-memo-sheet"
 import { SealFigureContent } from "./content-seal-figure"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { CrayonboxPointContent } from "./content-crayonbox-point"
@@ -55,7 +56,8 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // 21 pin-only, 30 in all. The ledger sample redesign adds panel-sheet and
 // panel-figure: 23 pin-only, 32 in all. The vermilion sample redesign adds
 // seal-sheet and seal-figure: 25 pin-only, 34 in all. The terminal sample
-// redesign adds console-sheet: 26 pin-only, 35 in all.
+// redesign adds console-sheet: 26 pin-only, 35 in all. The memo sample
+// redesign adds memo-sheet: 27 pin-only, 36 in all.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
   "two-column": TwoColumnContent,
@@ -92,4 +94,5 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "seal-sheet": SealSheetContent,
   "seal-figure": SealFigureContent,
   "console-sheet": ConsoleSheetContent,
+  "memo-sheet": MemoSheetContent,
 }

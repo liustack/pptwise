@@ -55,7 +55,7 @@ const BOARD: Record<string, { cover: string; chapter: string; ending: string }> 
   stage: { cover: "poster-center", chapter: "one-word-chapter", ending: "release-close-ending" },
   lecture: { cover: "board-head", chapter: "chalk-rule-chapter", ending: "next-lecture-ending" },
   swiss: { cover: "institutional-block", chapter: "decimal-index-chapter", ending: "resolution-ending" },
-  memo: { cover: "memo-head", chapter: "issue-line-chapter", ending: "decision-close-ending" },
+  memo: { cover: "memo-cover", chapter: "issue-line-chapter", ending: "memo-ending" },
   playbill: { cover: "bill-head", chapter: "day-bill-chapter", ending: "ticket-cta-ending" },
 }
 
