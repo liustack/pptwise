@@ -16,3 +16,13 @@ Settled on the chapter pages (p03, p07, p11): see the board on [faces/decimal-in
 
 - The list is the deck's own words, so it is drawn whole or not at all: rows tighten to 52px when every heading is one line and 72px does not hold them, and a chapter with more pages than that, or a heading past two lines, leaves the chapter page without its list.
 - A heading's `**…**` marks are stripped: the list quotes the headings, it does not restate their emphasis.
+
+## terminal, cloud outage review sample, 2026-10
+
+The console setting's form, in [`contents-console.tsx`](../../../src/layouts/compositions/contents-console.tsx), on terminal's [`console-chapter`](../../faces/console-chapter/). Settled on the chapter pages (p03, p10): see the boards there. The round's decisions are in [rounds/2026-10-05-terminal](../../rounds/2026-10-05-terminal/README.md).
+
+**What it looks like.** One row per content page, 38px apart: 「├─ 04」 in 15px mono in the mark, the heading at 17px in the bright ink, whole, two lines when it needs two.
+
+**Why.** A console lists a directory as a tree. The page numbers say where to turn.
+
+**What it gave up.** The same as the other settings: the list is drawn whole or not at all.

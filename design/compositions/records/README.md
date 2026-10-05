@@ -58,3 +58,24 @@ In the panel setting, settled on two pages. The round's decisions are in [rounds
 
 - Two to six columns, one to eight rows, no `source` of its own. A cell past one line at its size declines.
 - A table has no unit field, so its `title` carries the unit ("自由现金流（亿美元）").
+
+## terminal, cloud outage review sample, 2026-10
+
+The console setting's form, in [`records-console.tsx`](../../../src/layouts/compositions/records-console.tsx). The round's decisions are in [rounds/2026-10-05-terminal](../../rounds/2026-10-05-terminal/README.md).
+
+| board (p09) | engine |
+| :-: | :-: |
+| ![board](terminal-p09.board.png) | ![engine](terminal-p09.engine.png) |
+
+| board (p11) | engine |
+| :-: | :-: |
+| ![board](terminal-p11.board.png) | ![engine](terminal-p11.engine.png) |
+
+**What it looks like.** A `data_table` in a panel, headers in 13px mono over a hairline, each row on a hairline. A highlighted row sits on the mark's tint with a 3px bar of the mark down its left edge. A table of figures (p11) is set in mono in tall rows: the first column at 32px bold, the second at 20px, later columns at 18px muted, flush right. Any other table (p09) sets its cells at 15 to 16px, up to two lines. A cell that opens with ✓, ✕ or — draws it as an icon in the success, danger or muted ink, its first words bold in that ink and anything after the comma muted: 「✓ 能，数据要在区域外」. A following `kpi_cards` stands beside the table as figure panels, the marked one on the mark's tint.
+
+**Why.** A redundancy matrix is read by its ticks and crosses, and an SLA table by its figures.
+
+**What it gave up.**
+
+- Up to six columns and ten rows. A table with its own `source` line sends the page back.
+- Column widths come from the words, so they land a few pixels off a board placed by hand.

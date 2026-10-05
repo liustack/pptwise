@@ -95,3 +95,19 @@ The seal setting's form, in [`rail-seal.tsx`](../../../src/layouts/compositions/
 **What it looks like.** An upright `chart` followed by a `kpi_cards` of one to three plain figures (no delta, icon, source or tag). The figures stand in a 340px column on the right past a hairline, up to 180px apart: the label at 15px, the figure bold at 44px (38 or 32 when it does not fit, in the mark when marked) and the note at 15/22. The plot fills the rest: grouped columns (`columns`' seal form) on the fiscal page, one line over a marked range (`trend`) on the growth page, and any other chart by the component renderer.
 
 **Why.** A chart's few headline figures are what the room takes away. Standing them beside the plot keeps both on one page.
+
+## terminal, cloud outage review sample, 2026-10
+
+The console setting's form, in [`rail-console.tsx`](../../../src/layouts/compositions/rail-console.tsx). The round's decisions are in [rounds/2026-10-05-terminal](../../rounds/2026-10-05-terminal/README.md).
+
+| board (p04) | engine |
+| :-: | :-: |
+| ![board](terminal.board.png) | ![engine](terminal.engine.png) |
+
+**What it looks like.** A horizontal `bar` chart in a panel, its legend along the top (the marked series first), the axis title and unit at the right in mono. Each category is a row: its name at 15px and, written 「名称 · 注」, its note under it in 12px mono, then its bar (the longest 400px, in the mark for the marked series, the chart palette after its lead for the others) and its value in bold mono. Rows 56px apart, down to 44px, or 32px when no category has a note. Beside it a `kpi_cards` of one to three figure panels: icon and label in mono, the figure in bold mono, its note. The marked figure sits on the mark's tint at 72px, the others at 52px. A figure with a `tone` takes the tone's ink for its icon and label.
+
+**Why.** The incident windows are a ranking, and the share of them that was one change pushed everywhere is the headline.
+
+**What it gave up.**
+
+- Only horizontal bars with one bar a category. Twelve categories fit when none has a note. With notes the rows stop at 44px apart, and a chart that needs more room goes to the ordinary chart.

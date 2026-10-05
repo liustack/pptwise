@@ -419,3 +419,68 @@ The tests draw every seal form on vermilion and on bulletin, ember and crayon ([
 | A squeezed last line keeps its spaces | when a fit joins a text's last lines, the space between words is kept, and a paragraph break beside Chinese joins with none | [svg-text-layout.ts](../src/lib/svg-text-layout.ts) | none |
 | A scorecard measures its columns | the ordinary scorecard sizes its columns from the words, where it used to drop the card | [scorecard.tsx](../src/components/scorecard.tsx) | none |
 | A statement keeps its quote's source | the statement face sets a quote and its source where a theme's skin has one line, instead of dropping the quote | [content-statement.tsx](../src/layouts/content-statement.tsx) | none |
+
+## terminal cloud outage review sample, 2026-10
+
+The round redrew terminal to a sixteen-page Chinese and English technical review of thirteen cloud outages from June 2025 to September 2026, read from the providers' own postmortems and status pages, ending in what the infrastructure team builds first. Its decisions, the design system every terminal page follows, and every place the engine departs from the board are in [`design/rounds/2026-10-05-terminal/`](../design/rounds/2026-10-05-terminal/README.md). The rules are restated for the next design session in [Designing for terminal](./design-terminal.md).
+
+### Compositions
+
+The compositions take a sixth `setting`, `console` (`CompositionSetting` in [shared.tsx](../src/layouts/compositions/shared.tsx)): an incident console. Evidence sits in square panels, a finding's card carries HUD brackets, every figure, time, tag, label and source is mono, the mark is spent once a page on its dark tint, and the danger, warning and success inks say what kind of news a line is. Each settled composition's console form lives in its own file beside it (`rail-console.tsx`, `records-console.tsx`, `table-console.tsx`, `waves-console.tsx`, `contents-console.tsx`), and the composition hands the page to it when the face asks for the console setting.
+
+New:
+
+| composition | what it draws | takes | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| `cards` | verdict cards two across (icon box, number, title, text), or HUD cards three across with brackets and a mono tag, the marked card on the mark's tint, a closing callout in the next cell or a closing verdict as a banner | a `row_cards` or `numbered_cards` of three to six, optionally then a `verdict_banner` or `callout`, or an `icon_cards` of two to six, optionally then a `callout`. The console setting only | [cards.tsx](../src/layouts/compositions/cards.tsx) | terminal | [design/compositions/cards](../design/compositions/cards/README.md) |
+| `listing` | a code block as a terminal window: a title bar, numbered lines in mono, comments muted, quoted lines in the mark, marked lines bold in the warning ink | one `code`, alone. The console setting only | [listing.tsx](../src/layouts/compositions/listing.tsx) | terminal | [design/compositions/listing](../design/compositions/listing/README.md) |
+| `log` | a timeline as an incident log in a panel, a dot in each milestone's tone, and up to three components in a column beside it | a `timeline` of two to seven milestones on no lanes, then up to three components another composition takes. The console setting only | [log.tsx](../src/layouts/compositions/log.tsx) | terminal | [design/compositions/log](../design/compositions/log/README.md) |
+| `span` | two or three lengths of time to scale, the marked one solid in the mark, a toned one outlined with the marked length echoed inside, a note panel or two | a `kpi_cards` of durations written as a console prints them ("2h52m"), then up to two callouts. The console setting only | [span.tsx](../src/layouts/compositions/span.tsx) | terminal | [design/compositions/span](../design/compositions/span/README.md) |
+| `plates` | photographs in a row, each over its mono caption, its figure in bold mono and its label, a banner under them | an `image_grid` of two to four, then a `kpi_cards` of as many plain figures, then optionally a `callout`. The console setting only | [plates.tsx](../src/layouts/compositions/plates.tsx) | terminal | [design/compositions/plates](../design/compositions/plates/README.md) |
+| `paths` | an issue tree as failure points beside the path each one needs, under ✕ and ✓ headers, the marked branch's fix on the mark's tint | one `issue_tree` with a `children_column`, two to five branches of one or two sub-points. The console setting only | [paths.tsx](../src/layouts/compositions/paths.tsx) | terminal | [design/compositions/paths](../design/compositions/paths/README.md) |
+| `screen` | a browser window with its address beside log lines, each line's icon and name in its tone, the highlighted one on the mark's tint | a `device_mockup` browser, then a `row_cards` of three to five with no `sub`. The console setting only | [screen.tsx](../src/layouts/compositions/screen.tsx) | terminal | [design/compositions/screen](../design/compositions/screen/README.md) |
+
+Settled compositions that grew a console form:
+
+- `rail` sets a horizontal bar chart in a panel with its legend on top and a mono note under each category name, beside one to three figure panels, the marked one larger on the mark's tint. Board: [design/compositions/rail](../design/compositions/rail/README.md).
+- `records` sets a data table in a panel: a table of figures in mono in tall rows, any other table with ✓, ✕ and — cells as icons in their inks, figure panels beside it. Board: [design/compositions/records](../design/compositions/records/README.md).
+- `table` sets a comparison's options as cards T1 to Tn, a rating row as a meter, a measure row in bold mono, the recommended card selected. Board: [design/compositions/table](../design/compositions/table/README.md).
+- `waves` sets a roadmap as phases along one line, each a card of label and value rows, the marked phase on the mark's tint, a warning banner under them. Board: [design/compositions/waves](../design/compositions/waves/README.md).
+- `contents` lists a chapter's pages as a directory, 「├─ 04」 in mono. Board: [design/compositions/contents](../design/compositions/contents/README.md).
+
+The shared pieces of the console forms are in [console.tsx](../src/layouts/compositions/console.tsx): `consoleInks` for the inks, `paintPanel`, `paintCard` and `paintBrackets` for panels and HUD cards, `monoWidth`, `fitMono` and `paintMono` for mono text measured at the widest mono advance, `paintConsoleTag` for a tag, `paintMeter` for a rating, `fitNotePanel` and `paintNotePanel` for a note, `fitBanner` and `paintBanner` for a closing banner, and `CONSOLE_SPEC` for the small type's exemption. The crumb is in [crumb.tsx](../src/layouts/compositions/crumb.tsx) (`crumbFor`, `paintCrumb`) and the checklist in [checklist.tsx](../src/layouts/compositions/checklist.tsx) (`drawChecklist`): any face can call them.
+
+The tests draw every console form on terminal and on vermilion and crayon ([console.test.tsx](../src/layouts/compositions/console.test.tsx), [console-compositions.test.tsx](../src/layouts/compositions/console-compositions.test.tsx)). The gallery's 构图 band has terminal pages for every new composition and for the console forms of `rail`, `records`, `table` and `waves`.
+
+### Faces
+
+| face | what it is | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- |
+| `console-sheet` | the ordinary content page: the crumb, the claim across the full measure over a hairline with a segment of the mark, the body handed to the compositions in the console setting, the source in 12px mono | [content-console-sheet.tsx](../src/layouts/content-console-sheet.tsx), [console-shared.tsx](../src/layouts/console-shared.tsx) | terminal (points, list, comparison, process, data, photo, evidence, hierarchy) | [design/faces/console-sheet](../design/faces/console-sheet/README.md) |
+| `console-cover` | a full-bleed photograph darkened from the left, the crumb, the title at 60px, a bar, the subtitle and a mono `kicker` | [cover-console-cover.tsx](../src/layouts/cover-console-cover.tsx), [console-photo.tsx](../src/layouts/console-photo.tsx) | terminal | [design/faces/console-cover](../design/faces/console-cover/README.md) |
+| `console-chapter` | the photograph darkened as on the cover, the chapter number at 110px mono, the title, and the chapter's pages as a directory | [chapter-console-chapter.tsx](../src/layouts/chapter-console-chapter.tsx) | terminal | [design/faces/console-chapter](../design/faces/console-chapter/README.md) |
+| `console-ending` | the decision at 48px with its marked run, and up to four items from the first `timeline` or `bullets` as a checklist of 「[ ]」 boxes | [ending-console-ending.tsx](../src/layouts/ending-console-ending.tsx) | terminal | [design/faces/console-ending](../design/faces/console-ending/README.md) |
+
+### Component fields
+
+| field | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| `icon` and `tone` on `timeline` milestones | a symbol in a ring on the node, and the node in the danger, warning or success ink | [timeline.ts](../src/ir/components/timeline.ts), [timeline.tsx](../src/components/timeline.tsx) | [design/components/timeline](../design/components/timeline/README.md) |
+| `tone` on `kpi_cards` and `row_cards` items | the figure's or card's icon and label in the tone's ink | [shared.ts](../src/ir/components/shared.ts) (`ToneSchema`), [kpi.tsx](../src/components/kpi.tsx), [row-cards.tsx](../src/components/row-cards.tsx) | [design/components/kpi_cards](../design/components/kpi_cards/README.md), [design/components/row_cards](../design/components/row_cards/README.md) |
+| `icon` on `roadmap` items | a symbol where the phase's number stood | [roadmap.ts](../src/ir/components/roadmap.ts), [roadmap.tsx](../src/components/roadmap.tsx) | [design/components/roadmap](../design/components/roadmap/README.md) |
+| `icon` on `issue_tree` branches, `children_column` | a symbol before a branch's label, and the name of the sub-points' column | [issue-tree.ts](../src/ir/components/issue-tree.ts), [issue-tree.tsx](../src/components/issue-tree.tsx) | [design/components/issue_tree](../design/components/issue_tree/README.md) |
+| `icon` on `data_table` rows | a symbol before a row's first cell | [data-table.ts](../src/ir/components/data-table.ts), [data-table.tsx](../src/components/data-table.tsx) | [design/components/data_table](../design/components/data_table/README.md) |
+| `icon` on `image_grid` items | a symbol before a caption | [image-grid.ts](../src/ir/components/image-grid.ts), [image-grid.tsx](../src/components/image-grid.tsx) | [design/components/image_grid](../design/components/image_grid/README.md) |
+| `tag` on `icon_cards` items | a few words under a card's icon, such as the incident behind it | [icon-cards.ts](../src/ir/components/icon-cards.ts), [icon-cards.tsx](../src/components/icon-cards.tsx) | [design/components/icon_cards](../design/components/icon_cards/README.md) |
+| `title` and `highlight_lines` on `code` | a title bar naming the block, and the lines the page is about bold in the warning ink | [code.ts](../src/ir/components/code.ts), [code.tsx](../src/components/code.tsx) | [design/components/code](../design/components/code/README.md) |
+
+### Engine behaviour
+
+| behaviour | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| A face that draws its own photograph | a cover or chapter face with `drawsPhoto` keeps its page when the slide has a background photograph, and the engine lays no darkening of its own, so the face's kicker and components still draw | [registry.ts](../src/layouts/registry.ts), [layout-selection.ts](../src/render/layout-selection.ts), [full-slide-svg.tsx](../src/render/full-slide-svg.tsx) | [design/faces/console-cover](../design/faces/console-cover/README.md) |
+| Tables span both columns | a `comparison` or `data_table` beside another component takes the full width, where it used to be split into half a page | [comparison.ts](../src/ir/components/comparison.ts), [data-table.ts](../src/ir/components/data-table.ts) | none |
+| A milestone's lane on its own line | the ordinary timeline names a lane over the date, where it used to lead the date and cut it short | [timeline.tsx](../src/components/timeline.tsx) | [design/components/timeline](../design/components/timeline/README.md) |
+| A no-break space holds | two words joined by a no-break space stay on one line in every wrap | [svg-text-layout.ts](../src/lib/svg-text-layout.ts) | none |
+| A multiplication sign is part of the figure | a kpi unit "×" or "x" is glued to the figure at its size, "199×" | [quantity-format.ts](../src/lib/quantity-format.ts), [kpi.tsx](../src/components/kpi.tsx) (`kpiFigure`) | [design/components/kpi_cards](../design/components/kpi_cards/README.md) |
+| Architecture inks read on their band | the layer names, items and numbers are checked against the band they sit on | [architecture.tsx](../src/components/architecture.tsx) | none |

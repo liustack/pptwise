@@ -60,7 +60,7 @@ pptwise schema --component <type> # the component's fields and limits, when a co
 
 For a face, add the face's story from `pptwise inspect <deck-dir> --page <id>` on a page that uses it, and the current render from `pptwise preview <deck-dir>`.
 
-For a bulletin page, attach [Designing for bulletin](./design-bulletin.md) as well, for a swiss page [Designing for swiss](./design-swiss.md), for a ledger page [Designing for ledger](./design-ledger.md), and for a vermilion page [Designing for vermilion](./design-vermilion.md): each holds the design system that theme's board settled.
+For a bulletin page, attach [Designing for bulletin](./design-bulletin.md) as well, for a swiss page [Designing for swiss](./design-swiss.md), for a ledger page [Designing for ledger](./design-ledger.md), for a vermilion page [Designing for vermilion](./design-vermilion.md), and for a terminal page [Designing for terminal](./design-terminal.md): each holds the design system that theme's board settled.
 
 When the part in question already has a settled board, attach it too: look for its folder under [`design/`](../design/README.md) and its entry in [Reusable parts](./reusable-parts.md). A new direction for a settled part has to say what it changes about the settled design and why.
 

@@ -20,3 +20,19 @@ Code: [`src/layouts/compositions/waves.tsx`](../../../src/layouts/compositions/w
 - Two to four phases, at most two measures each. A plan with more goes back to the ordinary roadmap.
 - Every column runs to the same fixed depth (382px under the band's top), so the band must be at least that tall.
 - All first measures share one size so the row reads level. When one of them is long, all of them step down to 24px together.
+
+## terminal, cloud outage review sample, 2026-10
+
+The console setting's form, in [`waves-console.tsx`](../../../src/layouts/compositions/waves-console.tsx). The round's decisions are in [rounds/2026-10-05-terminal](../../rounds/2026-10-05-terminal/README.md).
+
+| board (p15) | engine |
+| :-: | :-: |
+| ![board](terminal.board.png) | ![engine](terminal.engine.png) |
+
+**What it looks like.** A 2px line across the band, a node per phase, the period in mono over it. Under the line each `roadmap` phase is a card: its name bold at 22px, its `icon` at the top right, its rows on hairlines with a 12px mono label and a 15px value. The marked phase has a filled node, its period bold in the mark and its card on the mark's tint. A closing callout is a banner across the foot, a warning inside an edge of the warning ink.
+
+**Why.** A roadmap read left to right, with what the review must decide under it.
+
+**What it gave up.**
+
+- Two to five phases. A label, name or value past its room sends the page back.

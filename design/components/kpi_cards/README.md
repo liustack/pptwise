@@ -37,3 +37,13 @@ The ordinary card's delta arrow, settled while the supplier page's figures were 
 **What it gave up.**
 
 - A face that sets figures by hand with no place for a tag hands the page to the ordinary cards.
+
+## terminal, cloud outage review sample, 2026-10
+
+`items[].tone`, and a multiplication sign as a unit. Settled on the incident windows page (p04): see the board in [compositions/rail](../../compositions/rail/terminal.board.png). The round's decisions are in [rounds/2026-10-05-terminal](../../rounds/2026-10-05-terminal/README.md).
+
+**What it looks like.** A figure with a `tone` (`danger`, `warning`, `success`) takes the tone's ink for its icon and its label, in the ordinary card and the console panels. A unit that is a multiplication sign ("×", "x") is glued to the figure at the figure's size, "199×", in every renderer that draws kpi figures.
+
+**Why.** "7+ months between incidents" is bad news, and the label should say so. A "×" set as a suffix at under half the figure's size read as a speck.
+
+**What it gave up.** Faces that set one figure as a hero with no room for a coloured label decline a tone.

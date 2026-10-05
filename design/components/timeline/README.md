@@ -15,3 +15,13 @@ Settled on the regulation page. See the board and engine render in [compositions
 **What it gave up.**
 
 - Every milestone names a lane, or none does. At most two lanes, and none on a vertical timeline. validate refuses the rest.
+
+## terminal, cloud outage review sample, 2026-10
+
+`milestones[].icon` and `milestones[].tone`. Settled on the cascade page (p06): see the board in [compositions/log](../../compositions/log/terminal.board.png). The round's decisions are in [rounds/2026-10-05-terminal](../../rounds/2026-10-05-terminal/README.md).
+
+**What it looks like.** In the ordinary timeline, a milestone's icon sits in a 13px ring on its node, and its tone colours the node in the theme's danger, warning or success ink. A milestone's lane is named on a line of its own over its date. In the console log the tone colours the dot and the icon replaces it.
+
+**Why.** "DNS records were emptied" and "DynamoDB recovered" are different kinds of turn, and the reader should see which before reading the words.
+
+**What it gave up.** Faces that set milestones by hand without room for an icon or a tone decline a timeline that carries them.
