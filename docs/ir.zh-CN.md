@@ -63,6 +63,7 @@ pptwise validate deck.json
 | `brand` | object | Deck logo 的资产 id 与角落位置。 |
 | `branding` | enum | logo 出现在哪里：`full`、`cover-only` 或 `minimal`。省略等于 `cover-only`。 |
 | `footer` | object | 页码以及页面角落的其他小标记。省略就什么都不印。见[页脚标记](#页脚标记)。 |
+| `course` | object | 一场讲授依次经过的几段（`stages`，两到八段，每段一个 `label`，可选 `quiz: true`），比如一堂课的各个环节和小测。每页用自己的 `stage` 说明属于哪一段。 |
 | `slides` | array | 有序页面。 |
 
 根对象是严格结构，未知字段会让验证失败。
@@ -81,6 +82,7 @@ pptwise validate deck.json
 - `fields`，一到四行公文抬头，每行一个 `label`、一个 `value`、可选的 `note`（备忘录封面的致、发、日期、事由，结尾决定下的签发、抄送），以及 `stamp`，盖在页上的一枚印章（`text`，可选的 `date`）。和 `kicker` 一样，只有声明了位置的脸才画
 - `ballot`，委员会在每个条目旁勾选的方框（`choices`，两到四个，比如同意、不同意、弃权），以及可选的一行签字栏（`signature`，签字栏的名字）。只有声明了位置的脸才画
 - `years`，整份 deck 跟踪的一段年份和本页讲到的年份（`from`、`to`、`marked`，比如 2026 到 2034，点亮 2026 和 2027），画成页眉里的一条年份刻度，本页的年份点亮。最多 13 年。只有声明了位置的脸才画
+- `stage`，本页属于 deck 的 `course` 里的哪一段，照那一段的 `label` 写（「环节一」），画成一排胶囊，本页那段点亮，小测段画虚线。需要 deck 写了 `course`，而且必须是其中一段。只有声明了位置的脸才画
 - `components`
 - `background`
 - `decor`，一个受控的局部装饰原语

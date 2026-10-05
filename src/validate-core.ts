@@ -33,6 +33,7 @@ import { CATEGORY_FOLDING_TYPES } from "./ir/components/chart"
 import { FULL_BODY_TYPES } from "./render/component-traits"
 import { checkIrQuality, type QualityIssue } from "./render/ir-quality"
 import { footerFitIssues } from "./render/footer-marks"
+import { courseStageIssues } from "./render/course-marks"
 import { resolveFontStack } from "./render/fonts"
 import { componentFace, resolveEffectiveFace } from "./render/layout-selection"
 import { boundarySlotBlocks, drawableItems } from "./layouts/boundary-content"
@@ -443,6 +444,7 @@ const FACE_PAGE_FIELDS = [
   { field: "tag", name: "a page tag", fix: "say it in the subheading or the source line, or remove it" },
   { field: "ballot", name: "a ballot", fix: "list the choices in a component, or remove it" },
   { field: "years", name: "a strip of years", fix: "name the years in the heading, or remove it" },
+  { field: "stage", name: "a course stage", fix: "name the stage in the kicker or the heading, or remove it" },
 ] as const
 
 /** Whether the slide asks for `field` at all: an empty kicker asks for nothing. */
@@ -452,7 +454,7 @@ function asksFor(slide: PptxIR["slides"][number], field: (typeof FACE_PAGE_FIELD
 }
 
 /**
- * A `kicker`, `fields`, a `stamp`, a page `tag`, a `ballot` or `years` is drawn only by a face that declares a
+ * A `kicker`, `fields`, a `stamp`, a page `tag`, a `ballot`, `years` or a `stage` is drawn only by a face that declares a
  * place for it (`LayoutDefinition.pageFields`), on any page type. Every
  * other face would leave it off the page with nothing to say so, so the page
  * is refused, naming the face. An empty kicker asks for nothing.
@@ -900,6 +902,8 @@ export function validateIr(input: unknown, opts?: { theme?: ThemeDefinition }): 
   if (boundaryPageErrors.length > 0) return withNormalized({ ok: false, errors: boundaryPageErrors })
   const kickerErrors = checkKickerDrawn(r.data, theme)
   if (kickerErrors.length > 0) return withNormalized({ ok: false, errors: kickerErrors })
+  const stageErrors = courseStageIssues(r.data, resolveFontStack(theme.style.fonts.body, "body"))
+  if (stageErrors.length > 0) return withNormalized({ ok: false, errors: stageErrors })
   const boundarySlotErrors = checkBoundarySlotCapacity(r.data, theme)
   if (boundarySlotErrors.length > 0) return withNormalized({ ok: false, errors: boundarySlotErrors })
   const boundaryItemErrors = checkBoundaryItemCapacity(r.data, theme)

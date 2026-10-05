@@ -411,13 +411,14 @@ export interface LayoutDefinition {
    * `stamp`, a stamp pressed on the page, `tag`, a small tag set with the
    * heading that says what the page rests on, `ballot`, the boxes a
    * committee ticks beside each item, `years`, the strip of years a running
-   * head draws with the page's own years lit, and on a cover, chapter or
-   * ending face `footnote` (a content face always has a place for its
-   * source line). validate refuses a `kicker`, `fields`, `stamp`, `tag`,
-   * `ballot` or `years` on a face that does not list it, and a boundary
-   * page's `footnote` likewise.
+   * head draws with the page's own years lit, `stage`, the deck's course
+   * drawn as a strip of pills with the page's own stage lit, and on a cover,
+   * chapter or ending face `footnote` (a content face always has a place for
+   * its source line). validate refuses a `kicker`, `fields`, `stamp`, `tag`,
+   * `ballot`, `years` or `stage` on a face that does not list it, and a
+   * boundary page's `footnote` likewise.
    */
-  pageFields?: readonly ("kicker" | "footnote" | "fields" | "stamp" | "tag" | "ballot" | "years")[]
+  pageFields?: readonly ("kicker" | "footnote" | "fields" | "stamp" | "tag" | "ballot" | "years" | "stage")[]
   /**
    * Structural fact of a cover or chapter face: it draws its own page over a
    * photograph background (`background.kind: "asset"`).

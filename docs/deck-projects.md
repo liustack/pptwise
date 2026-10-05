@@ -76,7 +76,7 @@ intent -> narrative -> theme -> spec -> fill -> render
 }
 ```
 
-The spec owns narrative, theme binding, output filename, metadata, deck brand, branding posture, footer marks, page order, each page's id, type, heading, and every content page's kind. `summary` and `focus` are optional fill guidance. Prefer a component type for `focus`.
+The spec owns narrative, theme binding, output filename, metadata, deck brand, branding posture, footer marks, the course a talk runs through (`course`, whose stages each page file names with `stage`), page order, each page's id, type, heading, and every content page's kind. `summary` and `focus` are optional fill guidance. Prefer a component type for `focus`.
 
 Validate it before filling pages:
 
@@ -113,7 +113,7 @@ Validation resolves the bound theme. A content kind absent from its menu is a ha
 }
 ```
 
-The fillable fields are `components`, `background`, `image_side`, `footnote`, `fields`, `stamp`, `tag`, `ballot`, `years`, and `notes`. Page files cannot contain `type`, `kind`, or `heading`. Those are locked by the spec. An orphan file whose id is absent from the spec is also a hard error.
+The fillable fields are `components`, `background`, `image_side`, `footnote`, `fields`, `stamp`, `tag`, `ballot`, `years`, `stage`, and `notes`. Page files cannot contain `type`, `kind`, or `heading`. Those are locked by the spec. An orphan file whose id is absent from the spec is also a hard error.
 
 Fill in batches of at most four pages, then run assemble and validate. This keeps capacity and component mistakes local.
 

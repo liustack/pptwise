@@ -63,6 +63,7 @@ pptwise validate deck.json
 | `brand` | object | Deck logo asset id and corner position. |
 | `branding` | enum | Where the logo appears: `full`, `cover-only`, or `minimal`. Omission equals `cover-only`. |
 | `footer` | object | Page number and other small marks in the page corners. Omission prints none. See [Footer marks](#footer-marks). |
+| `course` | object | The stages a talk runs through in order (`stages`, two to eight, each a `label` and an optional `quiz: true`), such as the parts and quizzes of a lesson. Each page names its own `stage`. |
 | `slides` | array | Ordered pages. |
 
 The root object is strict. Unknown fields fail validation.
@@ -81,6 +82,7 @@ Common page fields are:
 - `fields`, one to four header lines a document form prints, each a `label`, a `value` and an optional `note` (a memo's To, From, Date and Re on its cover, Signed and Copied to under its decision), and `stamp`, a stamp pressed on the page (`text`, an optional `date`). Like `kicker`, only a face that declares a place for them draws them
 - `ballot`, the boxes a committee ticks beside each of the page's items (`choices`, two to four, such as For, Against and Abstain) and an optional line left blank to sign (`signature`, its label). Only a face that declares a place for it draws it
 - `years`, the run of years a deck follows and the ones this page is about (`from`, `to`, and `marked`, such as 2026 to 2034 with 2026 and 2027 marked), drawn as a strip of years in the running head with the page's own years lit. At most 13 years. Only a face that declares a place for it draws it
+- `stage`, which stage of the deck's `course` this page belongs to, written as that stage's label ("Part 1"), drawn as the course's strip of pills with this stage lit and a quiz stage dashed. It needs the deck's `course` and must name one of its stages. Only a face that declares a place for it draws it
 - `components`
 - `background`
 - `decor`, one controlled local primitive

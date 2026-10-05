@@ -9,6 +9,7 @@ import { PptwiseError } from "../errors"
 import {
   BrandSchema,
   COMPONENT_TYPES,
+  CourseSchema,
   DeckBrandingSchema,
   FooterSchema,
   footerSettingIssues,
@@ -126,6 +127,12 @@ export const DeckSpecSchema = z
      * none of them, and assemble writes nothing into the IR.
      */
     footer: FooterSchema.optional(),
+    /**
+     * The stages the talk runs through, reused verbatim from the IR's own
+     * `course` field (`CourseSchema`, `../ir`) so the spec and IR cannot
+     * drift. Optional, no default. Each page file names its own `stage`.
+     */
+    course: CourseSchema.optional(),
     pages: z.array(PageSpecSchema),
   })
   .strict()
@@ -384,6 +391,7 @@ function checkOverflowVocabulary(spec: DeckSpec): SpecValidationIssue[] {
   }
   consider(spec.meta, "meta")
   consider(spec.footer, "footer")
+  consider(spec.course, "course")
   consider(spec.pages, "pages")
   return errors
 }
