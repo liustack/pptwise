@@ -5,6 +5,7 @@ import {
   COMPONENT_UNION_DEF_ID,
   ICON_NAME_DEF_ID,
   TAG_DEF_ID,
+  YEARS_DEF_ID,
   componentJsonSchema,
   irJsonSchema,
   type JsonSchemaDocument,
@@ -20,6 +21,7 @@ const EXPECTED_DEFS = [
   "Component",
   "IconName",
   "Tag",
+  "Years",
   "architecture",
   "blockquote",
   "bmc",
@@ -110,10 +112,10 @@ function expectRefsResolve(doc: JsonSchemaDocument): void {
 }
 
 describe("irJsonSchema", () => {
-  it("hoists every component, the component union, the icon enum and the shared tag into named $defs", () => {
+  it("hoists every component, the component union, the icon enum, the shared tag and the strip of years into named $defs", () => {
     const schema = irJsonSchema()
     expect(Object.keys(defsOf(schema)).sort()).toEqual(EXPECTED_DEFS)
-    expect(EXPECTED_DEFS).toEqual([COMPONENT_UNION_DEF_ID, ICON_NAME_DEF_ID, TAG_DEF_ID, ...[...COMPONENT_TYPES].sort()])
+    expect(EXPECTED_DEFS).toEqual([COMPONENT_UNION_DEF_ID, ICON_NAME_DEF_ID, TAG_DEF_ID, YEARS_DEF_ID, ...[...COMPONENT_TYPES].sort()])
   })
 
   it("keeps each use site's own words about its tag beside the shared definition", () => {

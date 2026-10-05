@@ -108,7 +108,7 @@ spec 的 `footer` 不要，deck 就不印页码、机构名、日期和保密字
 
 ### 5. 填页面
 
-每批至多写四个 `pages/<id>.json`。页面文件可以含 `components`、`background`、`image_side`、`footnote`、`fields`、`stamp`、`tag`、`ballot`、`notes`。不要重复 `type`、`kind`、`heading`，它们归 spec。
+每批至多写四个 `pages/<id>.json`。页面文件可以含 `components`、`background`、`image_side`、`footnote`、`fields`、`stamp`、`tag`、`ballot`、`years`、`notes`。不要重复 `type`、`kind`、`heading`，它们归 spec。
 
 选择服务本页 `kind` 的组件。`quote` 是页面讲法，引用组件名是 `blockquote`。组件归属与相似项对照见 `references/components.md`。节奏与容量见 `references/density.md`。图片流程见 `references/images.md`。
 

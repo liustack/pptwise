@@ -106,7 +106,7 @@ The 11 words and their boundaries are in `references/layouts.md`. Full spec guid
 
 ### 5. Fill pages
 
-Write `pages/<id>.json` in batches of at most four. A page file may contain `components`, `background`, `image_side`, `footnote`, `fields`, `stamp`, `tag`, `ballot`, and `notes`. Never repeat `type`, `kind`, or `heading`, because the spec owns them.
+Write `pages/<id>.json` in batches of at most four. A page file may contain `components`, `background`, `image_side`, `footnote`, `fields`, `stamp`, `tag`, `ballot`, `years`, and `notes`. Never repeat `type`, `kind`, or `heading`, because the spec owns them.
 
 Choose components that serve the page's `kind`. `quote` is a page kind. The quotation component is `blockquote`. Component ownership and lookalike choices are in `references/components.md`. Pacing and physical capacity are in `references/density.md`. Image workflows are in `references/images.md`.
 

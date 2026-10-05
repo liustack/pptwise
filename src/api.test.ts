@@ -748,6 +748,20 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     expect(validateIr({ ...raw, slides: [{ type: "ending", heading: "H", ballot: { choices: ["For"] } }] }).ok).toBe(false)
   })
 
+  it("hard-rejects a strip of years on a face with no place for it, and refuses a run it cannot hold", () => {
+    const years = { from: 2026, to: 2034, marked: [2026, 2027] }
+    const v = validateIr({ ...raw, slides: [{ type: "content", kind: "points", heading: "H", years, components: [{ type: "paragraph", text: "x" }] }] })
+    expect(v.ok).toBe(false)
+    expect(v.errors[0]!.path).toBe("slides.0.years")
+    expect(v.errors[0]!.message).toMatch(/^face "[a-z-]+" has no place for a strip of years/)
+    const page = (y: unknown) => validateIr({ ...raw, slides: [{ type: "content", kind: "points", heading: "H", years: y, components: [{ type: "paragraph", text: "x" }] }] })
+    expect(page({ from: 2034, to: 2026, marked: [2030] }).errors[0]!.message).toMatch(/which is no run/)
+    expect(page({ from: 2026, to: 2040, marked: [2030] }).errors[0]!.message).toMatch(/holds 13 at most/)
+    expect(page({ from: 2026, to: 2034, marked: [2038] }).errors[0]!.message).toMatch(/outside the run/)
+    expect(page({ from: 2026, to: 2034, marked: [2027, 2027] }).errors[0]!.message).toMatch(/repeats 2027/)
+    expect(page({ from: 2026, to: 2034, marked: [] }).ok).toBe(false)
+  })
+
   it("refuses blank header lines and more than four of them at the schema", () => {
     const blank = validateIr({ ...raw, slides: [{ type: "cover", heading: "H", fields: [{ label: " ", value: "x" }] }] })
     expect(blank.ok).toBe(false)
