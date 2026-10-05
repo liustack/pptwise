@@ -640,9 +640,9 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
       const v = validateIr({
         ...raw,
         // thesis ending now accepts bullets (defense-close), and terminal's
-        // checklist close takes them too. ember's locked ending still has no
-        // body slot.
-        theme: { id: type === "ending" ? "ember" : "thesis" },
+        // checklist close takes them too, as does ember's ask with its
+        // button's words. ink's seal close still has no body slot.
+        theme: { id: type === "ending" ? "ink" : "thesis" },
         slides: [{ type, heading: "H", components: [bullets] }],
       })
       expect(v.ok).toBe(false)
@@ -847,7 +847,7 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
   it("sets slideId when the offending slide has one (same shape as checkLayoutApplicability/checkFullBodyExclusivity)", () => {
     const v = validateIr({
       ...raw,
-      theme: { id: "ember" },
+      theme: { id: "ink" },
       slides: [{ type: "ending", id: "p-end", heading: "Thanks", components: [bullets] }],
     })
     expect(v.ok).toBe(false)
@@ -1014,7 +1014,7 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
   it("pacing binds but the layout allows more (bento-panel exception): names both sides", () => {
     const v = validateIr({
       ...raw,
-      theme: { id: "ember" },
+      theme: { id: "arena" },
       narrative: { pacing: "balanced" },
       slides: [raw.slides[0], denseSlide(5, { kind: "list" })],
     })

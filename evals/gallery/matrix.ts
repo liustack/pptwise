@@ -429,6 +429,20 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "homeroom", kind: "hierarchy", composition: "tiers" },
   { theme: "homeroom", kind: "photo", composition: "methods" },
   { theme: "homeroom", kind: "points", composition: "blackboard" },
+  // ember's pitch sheet sets the shapes as a pitch on a dark stage, and
+  // draws the twelve its own board added; its photo page sets the spotlight.
+  { theme: "ember", kind: "data", composition: "expanse" },
+  { theme: "ember", kind: "process", composition: "stairs" },
+  { theme: "ember", kind: "data", composition: "funnel" },
+  { theme: "ember", kind: "comparison", composition: "rivals" },
+  { theme: "ember", kind: "points", composition: "equation" },
+  { theme: "ember", kind: "photo", composition: "spotlight" },
+  { theme: "ember", kind: "list", composition: "bets" },
+  { theme: "ember", kind: "comparison", composition: "divide" },
+  { theme: "ember", kind: "process", composition: "locks" },
+  { theme: "ember", kind: "list", composition: "register" },
+  { theme: "ember", kind: "process", composition: "runway" },
+  { theme: "ember", kind: "data", composition: "uses" },
 ]
 
 export function buildMatrix(

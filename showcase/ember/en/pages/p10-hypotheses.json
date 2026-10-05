@@ -1,0 +1,45 @@
+{
+  "stage": "Proof",
+  "components": [
+    {
+      "type": "gantt",
+      "range": {
+        "from": 0,
+        "to": 18
+      },
+      "axis_labels": [
+        "Month 1",
+        "Month 18"
+      ],
+      "items": [
+        {
+          "label": "Cost per order below a courier's",
+          "icon": "coins",
+          "start": 15,
+          "end": 18,
+          "period": "Tested in months 16 to 18",
+          "text": "Benchmark: Meituan's delivery cost, about RMB 4.54 an order in 2022 (our calculation)",
+          "emphasis": true
+        },
+        {
+          "label": "Orders per landing point keep climbing",
+          "icon": "trending-up",
+          "start": 9,
+          "end": 15,
+          "period": "Tested in months 10 to 15",
+          "text": "Benchmark: Meituan sites went from about 10 to as many as 400 orders a day (company figure)"
+        },
+        {
+          "label": "Safe, steady flying once licensed",
+          "icon": "shield-check",
+          "start": 6,
+          "end": 9,
+          "period": "Tested in months 7 to 9",
+          "text": "Benchmark: drones in Shenzhen flew cargo on more than 1m flights in 2025"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Meituan 2022 annual results (our calculation), Yicai Global (2026-05-22, company figure), Shenzhen government (2026-02-27)",
+  "notes": "Over 18 months we have three hypotheses to prove, and each one has a public number to check against. Hypothesis one, the one that matters most: our cost per order on medical and community routes is lower than a courier's. The latest public courier figure we can calculate is Meituan's 2022 delivery cost of 80.19 billion yuan over 17.67 billion orders, about 4.54 yuan per order. That is our calculation, not a figure Meituan publishes. Hypothesis two: orders per landing point keep climbing. Meituan has said a single site went from about 10 orders a day to as many as 400. That is a company figure, and we treat it as a ceiling, not a target. Hypothesis three: once licensed, we can fly safely and steadily. Shenzhen logged more than a million cargo drone flights in 2025, so this road has been traveled. We answer them in months 7 to 9, 10 to 15 and 16 to 18."
+}

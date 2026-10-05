@@ -36,7 +36,15 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *
  * 装饰见 `src/motifs/motif-ember-motif.tsx`（上升火星退役，角楔归版式）。
  *
- * **菜单分派（S1-B）**：路演页面靠密排的卡组与曲线推进，data 走单张主角图的 stacked-poster。原声明不供任何疏排高潮页，本轮照旧不上。
+ * **2026-10 路演舞台定稿**（设计源 `design/rounds/2026-10-06-ember/`，规则见
+ * `docs/design-ember.md`）：每一页是路演的一拍。封面 `pitch-cover`（满版照片、
+ * 下暗渐变、火橙角楔），章节 `pitch-chapter`（满版照片、左暗渐变、火橙描边
+ * 巨号），收尾 `pitch-ending`（角楔加作者写的火橙钮）。内容页全走
+ * `pitch-sheet`：右上一条段落导轨（deck 的 `course`，页面的 `stage` 点亮），
+ * 34px 标题，正文交给 pitch 设定里的构图；照片页走 `pitch-photo`（左半照片、
+ * 右栏一枚火橙巨字）。左上的场合和右下的页码归 `ember-motif`。色值不动：
+ * 火橙仍只亮一处，火橙上的字一律深墨。旧的 corner-wedge / ember-index-chapter /
+ * ask-ending / stacked-poster 等脸不再挂在 ember 上。
  */
 export const EMBER_TOKENS: StyleTokens = {
   id: "ember",
@@ -101,18 +109,18 @@ export const EMBER_THEME = {
   },
   style: EMBER_TOKENS,
   menu: {
-    cover: { face: "corner-wedge" },
-    chapter: { face: "ember-index-chapter" },
+    cover: { face: "pitch-cover" },
+    chapter: { face: "pitch-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "stacked-poster" },
-      photo: { face: "image-split" },
-      hierarchy: { face: "asymmetric-triptych" },
+      points: { face: "pitch-sheet" },
+      list: { face: "pitch-sheet" },
+      comparison: { face: "pitch-sheet" },
+      process: { face: "pitch-sheet" },
+      data: { face: "pitch-sheet" },
+      photo: { face: "pitch-photo" },
+      hierarchy: { face: "pitch-sheet" },
     },
-    ending: { face: "ask-ending" },
+    ending: { face: "pitch-ending" },
   },
   motif: { id: "ember-motif" },
 } satisfies BuiltinThemeDeclaration;

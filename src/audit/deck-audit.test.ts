@@ -633,6 +633,15 @@ describe("findContrastIssues — low-contrast", () => {
     expect(issues[0].ratio).toBeLessThan(4.5)
   })
 
+  it("reads a word drawn as an outline by its stroke", () => {
+    const outlined = (stroke: string) => page("#241B14", `<text x="64" y="300" font-size="200" fill="none" stroke="${stroke}" stroke-width="2">01</text>`)
+    expect(findContrastIssues(outlined("#E56A2C"))).toEqual([])
+    const faint = findContrastIssues(outlined("#2C221A"))
+    expect(faint).toHaveLength(1)
+    expect(faint[0]!.fill).toBe("#2C221A")
+    expect(findContrastIssues(page("#241B14", `<text x="64" y="300" font-size="20" fill="none">hidden</text>`))).toEqual([])
+  })
+
   it("passes normal theme-text-color body text", () => {
     const markup = page(BG, `<text x="96" y="200" font-size="20" fill="#051C2C">normal heading-ink body text</text>`)
     expect(findContrastIssues(markup)).toEqual([])

@@ -46,6 +46,12 @@ export interface TextOp {
   fontSize: number
   color?: string
   transparency?: number
+  /**
+   * The outline of a text drawn as an outline only (`fill="none"` with a
+   * `stroke`): the glyphs' edge in this colour and width, their fill left
+   * fully transparent. ember's chapter number. Absent on every other op.
+   */
+  outline?: { color: string; size: number }
   align: "left" | "center" | "right"
   /**
    * Degrees clockwise, matching pptxgenjs `addText` `rotate`. Set by
@@ -462,7 +468,12 @@ export function textToOps(el: Element): TextOp[] {
   }
   const fontSize = pxToPt(fontSizePx)
   const fill = el.getAttribute("fill")
-  const color = fill && fill !== "none" ? svgColorToHex(fill) : undefined
+  // A text with no fill and a stroke is an outline: PowerPoint draws the
+  // glyphs' edge as the run's line and keeps their fill, fully transparent,
+  // in the same colour so an editor that drops the line still shows the word.
+  const stroke = el.getAttribute("stroke")
+  const outline = fill === "none" && stroke && stroke !== "none" ? { color: svgColorToHex(stroke), size: pxToPt(num(el, "stroke-width", 1) || 1) } : undefined
+  const color = outline ? outline.color : fill && fill !== "none" ? svgColorToHex(fill) : undefined
   const opacity = elementOpacity(el)
   // letter-spacing 故意不映射（2026-07-10 全主题导出审计定案）：曾映射为
   // charSpacing（spc），但 LibreOffice 对 spc+CJK 的宽度计算与渲染不一致，
@@ -494,7 +505,10 @@ export function textToOps(el: Element): TextOp[] {
     if (fontFace) op.fontFace = fontFace
     if (eaFace) op.eaFace = eaFace
     if (color) op.color = color
-    if (opacity < 1) op.transparency = Math.round((1 - opacity) * 100)
+    if (outline) {
+      op.outline = outline
+      op.transparency = 100
+    } else if (opacity < 1) op.transparency = Math.round((1 - opacity) * 100)
     if (fieldAttr === "slidenum") {
       if (segments.length !== 1 || segment.runs.length !== 1) {
         throw new Error("svg2pptx: a slide-number field must be one line of one run")

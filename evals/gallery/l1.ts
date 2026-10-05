@@ -841,7 +841,9 @@ function collectGeometry(root: Element, paintOrder: ReadonlyMap<Element, number>
 
     const tag = el.tagName.toLowerCase()
     const order = paintOrder.get(el) ?? 0
-    if (tag === "line") {
+    // A line marked `data-strike` strikes out the words under it on purpose,
+    // as in `collectDividers`: no strikethrough to report.
+    if (tag === "line" && !el.hasAttribute("data-strike")) {
       const x1 = ax + Number(el.getAttribute("x1") ?? 0) * as
       const x2 = ax + Number(el.getAttribute("x2") ?? 0) * as
       const y1 = ay + Number(el.getAttribute("y1") ?? 0) * as
@@ -1059,9 +1061,10 @@ function walkText(
         // 15px capsules, labels, legends, subject, folio and source) and of
         // almanac's yearbook pages (11 to 15px years, section, pills, labels,
         // notes, folio and source) and of homeroom's lesson pages (12 to 15px
-        // labels, pills, notes, the running head, folio and source) are
-        // approved board sizes, like brief's meta.
-        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec", "lesson-spec"].includes(
+        // labels, pills, notes, the running head, folio and source) and of
+        // ember's pitch pages (11 to 15px labels, the rail, notes, folio and
+        // source) are approved board sizes, like brief's meta.
+        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec", "lesson-spec", "pitch-spec"].includes(
           el.getAttribute("data-font-floor-exempt") ?? "",
         )
         if (!decor && !fontFloorExempt && fontSizeAttr !== null && Number(fontSizeAttr) < FONT_FLOOR) {

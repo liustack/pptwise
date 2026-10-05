@@ -39,6 +39,11 @@ type DataTableColumn = DataTableComponent["columns"][number]
  *    纯函数，`box.h` 大于自然高度时不做任何拉伸（"capped" = 零增长，最严格
  *    的上限）。
  *
+ * 标出的一列（`columns[].emphasis`）：表头和这一列的格子都用强调色加粗
+ * （`accessibleInk` 现测，落在强调行底色上也照测），整列从表头到底线围一
+ * 道 1px 强调色框。列图标（`columns[].icon`）画在这一列每个有字的格子开头，
+ * 排在行图标之后，字往后让。
+ *
  * 缺失 cell key（渲染空单元格）与多余 cell key（schema 级 hard error，见
  * `ir/components/data-table.ts` 的 superRefine）的契约边界完全在 IR 层解决
  * ——渲染层只管按 `column.key` 查 `row.cells[key]`，查不到就是空字符串，
@@ -65,6 +70,11 @@ const ROW_ICON = { size: 18, gap: 8 } as const
 /** The room a row's icon takes at the start of column `c`: the first column's, when the row has one. */
 function iconRoom(row: DataTableRow, c: number): number {
   return c === 0 && row.icon ? ROW_ICON.size + ROW_ICON.gap : 0
+}
+
+/** The room a column's icon (`columns[].icon`) takes at the start of each of its cells that has words. */
+function columnIconRoom(col: DataTableColumn, text: string): number {
+  return col.icon && text ? ROW_ICON.size + ROW_ICON.gap : 0
 }
 
 /** Air between a row's tag (`rows[].tag`) and the words after it. */
@@ -112,7 +122,7 @@ function computeColumnWidths(
   const weights = columns.map((col, c) => {
     const units = [
       measureTextUnits(col.label),
-      ...rows.map((r) => measureTextUnits(cellText(r, col.key)) + (iconRoom(r, c) + tagRoom(r, c, columns.length, ctx)) / 16),
+      ...rows.map((r) => measureTextUnits(cellText(r, col.key)) + (iconRoom(r, c) + columnIconRoom(col, cellText(r, col.key)) + tagRoom(r, c, columns.length, ctx)) / 16),
     ]
     return Math.max(...units, 1)
   })
@@ -223,6 +233,8 @@ export const dataTable: SvgComponent<DataTableComponent> = {
     )
 
     const tableBottomY = totalRows * ROW
+    const ground = ctx.defaultBg ?? ctx.colors.bg
+    const markedColumn = component.columns.findIndex((col) => col.emphasis === true)
     const sourceFit = component.source
       ? fitSvgLine(component.source, {
           maxWidth: box.w,
@@ -255,7 +267,7 @@ export const dataTable: SvgComponent<DataTableComponent> = {
               x={x}
               y={ROW / 2 + Math.round(fit.fontSize * 0.35)}
               textAnchor={textAnchor}
-              fill={ctx.colors.text}
+              fill={c === markedColumn ? accessibleInk(ctx.colors.primary, ground, fit.fontSize) : ctx.colors.text}
               fontFamily={ctx.fonts.body}
               fontSize={fit.fontSize}
               fontWeight="bold"
@@ -281,6 +293,20 @@ export const dataTable: SvgComponent<DataTableComponent> = {
           />
         ))}
         <line x1={0} y1={totalRows * ROW} x2={box.w} y2={totalRows * ROW} stroke={borderColor} strokeWidth={1} />
+
+        {/* The marked column, outlined from its header to the table's foot. */}
+        {markedColumn >= 0 ? (
+          <rect
+            data-marked-column={component.columns[markedColumn]!.key}
+            x={offsets[markedColumn]! + 0.5}
+            y={0.5}
+            width={widths[markedColumn]! - 1}
+            height={tableBottomY - 1}
+            fill="none"
+            stroke={graphicInk(ctx.colors.primary, ground)}
+            strokeWidth={1}
+          />
+        ) : null}
 
         {/* 数据行文字——强调行落在自绘底色上，用 accessibleInk 现测；普通行
             直接 colors.text（表体不填色，对比度已由「clears 4.5:1 against
@@ -317,32 +343,52 @@ export const dataTable: SvgComponent<DataTableComponent> = {
               {component.columns.map((col, c) => {
                 const text = cellText(row, col.key)
                 if (!text) return null
-                const room = iconRoom(row, c) + tagRoom(row, c, component.columns.length, ctx)
+                const before = iconRoom(row, c)
+                const room = before + columnIconRoom(col, text) + tagRoom(row, c, component.columns.length, ctx)
+                const marked = c === markedColumn
+                const cellBold = bold || marked
                 const fit = fitSvgLine(text, {
                   maxWidth: widths[c] - PAD_X * 2 - room,
                   fontSize: CELL_FONT_SIZE,
                   minFontSize: MIN_FONT_SIZE,
-                  bold,
+                  bold: cellBold,
                   fontFamily: ctx.fonts.body,
                 })
                 const aligned = alignedX(col.align, offsets[c], widths[c])
                 const { textAnchor } = aligned
                 const x = textAnchor === "start" ? aligned.x + room : aligned.x
-                return (
+                const cellGround = fill ?? ground
+                const ink = marked ? accessibleInk(ctx.colors.primary, cellGround, fit.fontSize) : fill ? accessibleInk(ctx.colors.text, fill, fit.fontSize) : ctx.colors.text
+                const cell = (
                   <text
                     key={`c-${r}-${c}`}
                     data-truncated={fit.truncated ? "1" : undefined}
                     x={x}
                     y={rowY + ROW / 2 + Math.round(fit.fontSize * 0.35)}
                     textAnchor={textAnchor}
-                    fill={fill ? accessibleInk(ctx.colors.text, fill, fit.fontSize) : ctx.colors.text}
+                    fill={ink}
                     fontFamily={ctx.fonts.body}
                     fontSize={fit.fontSize}
-                    fontWeight={bold ? "bold" : "normal"}
+                    fontWeight={cellBold ? "bold" : "normal"}
                     dominantBaseline="alphabetic"
                   >
                     {fit.text}
                   </text>
+                )
+                if (!col.icon) return cell
+                return (
+                  <g key={`c-${r}-${c}`}>
+                    <g data-column-icon={col.icon}>
+                      <Icon
+                        name={col.icon}
+                        x={aligned.x + before}
+                        y={rowY + (ROW - ROW_ICON.size) / 2}
+                        size={ROW_ICON.size}
+                        color={graphicInk(ctx.colors.primary, cellGround)}
+                      />
+                    </g>
+                    {cell}
+                  </g>
                 )
               })}
             </g>

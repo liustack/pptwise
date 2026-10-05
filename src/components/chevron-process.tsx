@@ -1,6 +1,7 @@
 import type { ReactElement } from "react"
 import type { Component } from "@/ir"
-import { accessibleInk } from "../render/ink"
+import { Icon } from "../render/icons"
+import { accessibleInk, graphicInk } from "../render/ink"
 import {
   boxTooShort,
   FORM_BODY_FLOOR,
@@ -22,7 +23,8 @@ type ChevronProcessComponent = Extract<Component, { type: "chevron_process" }>
  * 内凹，尖与凹刚好互补，所以整条带子读作一条通道而不是几个方块。序号和
  * 环节名画在箭头里，说明行画在箭头下方的页面底色上。终点环整块反色填满、
  * 字反白（填色见 formHighlightFill）——突出一环只有这一种做法。全部
- * polygon/text 原语，导出安全。
+ * polygon/text 原语，导出安全。环节带 `icon` 时，图标画在序号那一行的
+ * 右端（文字区的右上角），标题行不让位。
  */
 
 /** Notch depth: how far the point juts out, and how far the next one bites in. */
@@ -37,6 +39,8 @@ const NOTE_GAP = 18
  * chevron rather than losing its tail.
  */
 const NOTE_MAX_LINES = 2
+/** A stage's icon, on the line of its number at the right of its text. */
+const ICON_SIZE = 18
 
 interface Chevron {
   i: number
@@ -181,6 +185,17 @@ export const chevronProcess: SvgComponent<ChevronProcessComponent> = {
               >
                 {index}
               </text>
+              {item.icon ? (
+                <g data-stage-icon={item.icon}>
+                  <Icon
+                    name={item.icon}
+                    x={c.textLeft + textW - ICON_SIZE}
+                    y={top + (formLineHeight(g.indexSize) - ICON_SIZE) / 2}
+                    size={ICON_SIZE}
+                    color={graphicInk(filled ? ctx.colors.surface : ctx.colors.primary, fill)}
+                  />
+                </g>
+              ) : null}
               {titleLayout.lines.map((line, li) => (
                 <text
                   key={`title-${li}`}

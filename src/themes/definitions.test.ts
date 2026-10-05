@@ -47,7 +47,7 @@ const BOARD: Record<string, { cover: string; chapter: string; ending: string }> 
   heritage: { cover: "double-frame-cover", chapter: "mirror-volume-chapter", ending: "invite-field-ending" },
   clinic: { cover: "dossier-cover", chapter: "subject-rule-chapter", ending: "dossier-ending" },
   almanac: { cover: "yearbook-cover", chapter: "field-band-chapter", ending: "yearbook-ending" },
-  ember: { cover: "corner-wedge", chapter: "ember-index-chapter", ending: "ask-ending" },
+  ember: { cover: "pitch-cover", chapter: "pitch-chapter", ending: "pitch-ending" },
   vermilion: { cover: "red-head-cover", chapter: "seal-numeral-chapter", ending: "deliberation-ending" },
   crayon: { cover: "crayonbox-open", chapter: "crayonbox-sticker", ending: "crayonbox-todo" },
   arena: { cover: "cut-panel-cover", chapter: "round-mark-chapter", ending: "seat-cta-ending" },

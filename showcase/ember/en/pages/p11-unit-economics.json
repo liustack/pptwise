@@ -1,0 +1,50 @@
+{
+  "stage": "Proof",
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "4.54",
+          "unit": "RMB/order",
+          "label": "Meituan's 2022 delivery cost over its instant orders (our calculation)",
+          "tag": {
+            "text": "Courier side · absolute figures"
+          }
+        },
+        {
+          "value": "6.9",
+          "unit": "RMB/order",
+          "label": "Essence estimate on food orders only, a smaller base",
+          "tag": {
+            "text": "Courier side · absolute figures"
+          }
+        },
+        {
+          "value": "40-50%",
+          "unit": "/year",
+          "label": "Yearly fall in Meituan's drone cost per order, no absolute figure",
+          "tag": {
+            "text": "Drone side · only trends and estimates abroad"
+          }
+        },
+        {
+          "value": "5-7",
+          "unit": "USD/order",
+          "label": "Barclays on automated delivery in high-wage US and Europe",
+          "tag": {
+            "text": "Drone side · only trends and estimates abroad"
+          }
+        }
+      ]
+    },
+    {
+      "type": "verdict_banner",
+      "text": "To prove: on the same basis, a medical route under RMB 4.54 an order",
+      "tone": "neutral",
+      "icon": "target"
+    }
+  ],
+  "footnote": "Source: Meituan 2022 annual results (our calculation), Essence International (2023-10-13), Yicai Global (2026-05-22), Barclays (2026-04)",
+  "notes": "What the unit economics have to prove. First, an admission: the figures on the two sides are on different bases and cannot share one axis. On the courier side, the most reliable figure is the one we calculated from Meituan's 2022 annual results: 80.19 billion yuan of delivery-related cost over 17.67 billion instant delivery orders, about 4.54 yuan per order. Essence International used a smaller base, first-party food orders only, and got 6.9 yuan. Meituan stopped disclosing both inputs after 2023. On the drone side, Meituan only says its cost per order falls 40 to 50 percent a year and has never published an absolute figure, and no other Chinese operator has either. Barclays estimates 5 to 7 dollars per autonomous delivery in high-wage markets, which is Western labor cost and cannot be carried over to China. So today the unit economics have no public answer. What we must prove is that on the same basis, total cost over total orders, our medical routes come in under 4.54 yuan per order."
+}

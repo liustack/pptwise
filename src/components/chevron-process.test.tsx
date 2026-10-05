@@ -295,3 +295,20 @@ describe("chevron_process component", () => {
     expect(a).toBe(b)
   })
 })
+
+describe("chevron_process stage icon", () => {
+  it("draws a stage's icon on the line of its number, at the right of its text", () => {
+    const ctx = boundThemeCtx("ledger", {})
+    const component = {
+      type: "chevron_process" as const,
+      items: [{ title: "实名登记", icon: "id-card" as const }, { title: "操控员执照" }, { title: "运营合格证", icon: "badge-check" as const }],
+    }
+    const { container } = render(<svg viewBox="0 0 1280 720">{chevronProcess.render(component, { x: 0, y: 0, w: 1088 }, ctx)}</svg>)
+    const icons = Array.from(container.querySelectorAll("g[data-stage-icon]"))
+    expect(icons.map((g) => g.getAttribute("data-stage-icon"))).toEqual(["id-card", "badge-check"])
+    const number = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "01")!
+    const at = /translate\(([\d.]+),([\d.]+)\)/.exec(icons[0]!.querySelector("g")!.getAttribute("transform")!)!
+    expect(Number(at[1])).toBeGreaterThan(Number(number.getAttribute("x")) + 30)
+    expect(Number(at[2])).toBeLessThan(Number(number.getAttribute("y")))
+  })
+})

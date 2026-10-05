@@ -1,0 +1,30 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "chapter-night"
+  },
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "package",
+          "title": "一年 600 亿单，无人机多年才过百万"
+        },
+        {
+          "icon": "trending-up",
+          "title": "为什么是现在：三年三道政策"
+        },
+        {
+          "icon": "map-pin",
+          "title": "深圳规划里的医疗起降点"
+        },
+        {
+          "icon": "users",
+          "title": "六家先行者证明了什么"
+        }
+      ]
+    }
+  ],
+  "notes": "先看机会：地面上的即时配送已经是全世界最大的订单池之一，天上的份额几乎是零。背景图为 AI 生成的示意图。"
+}

@@ -1,0 +1,49 @@
+{
+  "stage": "Opportunity",
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "funnel",
+      "axes": {
+        "y_unit": "points"
+      },
+      "series": [
+        {
+          "name": "Shenzhen landing points planned for 2026",
+          "data": [
+            {
+              "x": "All landing points, 2026 target",
+              "y": 1200
+            },
+            {
+              "x": "Community delivery",
+              "y": 413
+            },
+            {
+              "x": "Medical",
+              "y": 148
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "1,284",
+          "label": "Already built",
+          "note": "Landing points in Shenzhen at end-2025, past the 1,200 target"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "title": "What it means for us",
+      "text": "Medical and community pads are written into the plan. We do not have to talk a city into building them."
+    }
+  ],
+  "footnote": "Source: Shenzhen DRC low-altitude infrastructure plan 2024 to 2026, Shenzhen government (2026-02-27). Plan targets, except the 1,284 built",
+  "notes": "From the national order pool down to what our first city lets us serve. We start in Shenzhen because it is the only city that splits its landing points by use in a published plan. The plan calls for more than 1,200 landing points by 2026, of which 413 are for community delivery, and of those, 148 are for medical and 265 for shopping districts. These are targets, not built sites. The built count is keeping up: Shenzhen had 1,284 landing points by the end of 2025, already past the 1,200 target, and drones carried freight on more than 1 million flights that year across 310 cargo routes. Our serviceable market starts from those 148 medical points and 413 community points."
+}

@@ -154,3 +154,37 @@ describe("gantt text and emphasis", () => {
     expect(() => assertSubset(parseSvgRoot(renderSvgMarkup(<svg>{gantt.render(plan, { x: 0, y: 0, w: 1000, h: 300 }, ctx)}</svg>)))).not.toThrow()
   })
 })
+
+describe("gantt range, row icon and period", () => {
+  const plan = {
+    type: "gantt" as const,
+    range: { from: 0, to: 18 },
+    items: [
+      { label: "成本", start: 15, end: 18, icon: "coins" as const, period: "第 16 至 18 个月", text: "参照：每笔约 4.54 元" },
+      { label: "密度", start: 9, end: 15, period: "第 10 至 15 个月" },
+      { label: "安全", start: 6, end: 9 },
+    ],
+  }
+
+  it("runs the axis over the author's range rather than the bars' own stretch", () => {
+    const box = { x: 0, y: 0, w: 1000, h: 300 }
+    const { container } = render(<svg>{gantt.render(plan, box, ctx)}</svg>)
+    const bars = Array.from(container.querySelectorAll("rect"))
+    const plotX = 160 + 14
+    const plotW = 1000 - 160 - 14 - 16
+    expect(Number(bars[0]!.getAttribute("x"))).toBeCloseTo(plotX + (15 / 18) * plotW, 3)
+    expect(Number(bars[2]!.getAttribute("x"))).toBeCloseTo(plotX + (6 / 18) * plotW, 3)
+  })
+
+  it("sets a row's icon before its label and its period under it", () => {
+    const { container } = render(<svg>{gantt.render(plan, { x: 0, y: 0, w: 1000 }, ctx)}</svg>)
+    expect(Array.from(container.querySelectorAll("g[data-row-icon]")).map((g) => g.getAttribute("data-row-icon"))).toEqual(["coins"])
+    const label = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "成本")!
+    expect(Number(label.getAttribute("x"))).toBeGreaterThan(16)
+    const periods = Array.from(container.querySelectorAll("text[data-gantt-period]"))
+    expect(periods.map((t) => t.textContent)).toEqual(["第 16 至 18 个月", "第 10 至 15 个月"])
+    expect(Number(periods[0]!.getAttribute("y"))).toBeGreaterThan(Number(label.getAttribute("y")))
+    const text = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "参照：每笔约 4.54 元")!
+    expect(Number(text.getAttribute("y"))).toBeGreaterThan(Number(periods[0]!.getAttribute("y")))
+  })
+})

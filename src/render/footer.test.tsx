@@ -113,8 +113,8 @@ describe("no footer by default", () => {
 })
 
 describe("the footer row, when the deck asks for it", () => {
-  // memo, clinic, almanac and homeroom set their folios rather than printing the shared row: their own cases below.
-  const SHARED_ROW_THEMES = CANONICAL_THEME_IDS.filter((theme) => theme !== "memo" && theme !== "clinic" && theme !== "almanac" && theme !== "homeroom")
+  // memo, clinic, almanac, homeroom and ember set their folios rather than printing the shared row: their own cases below.
+  const SHARED_ROW_THEMES = CANONICAL_THEME_IDS.filter((theme) => theme !== "memo" && theme !== "clinic" && theme !== "almanac" && theme !== "homeroom" && theme !== "ember")
 
   it.each(SHARED_ROW_THEMES)("%s: every mark in its place, on content pages only", (theme) => {
     const ir = zhDeck(theme, { footer: ALL_MARKS })
@@ -247,6 +247,26 @@ describe("the footer row, when the deck asks for it", () => {
         expect(t.getAttribute("data-font-floor-exempt")).toBe("lesson-spec")
       }
       expect(row.querySelector("text")!.getAttribute("x")).toBe("64")
+      expect(texts(root).filter((t) => t.includes(ORG))).toHaveLength(1)
+    })
+  })
+
+  it("ember: the label at the top left and the organization, marks and page number in its folio, on content pages only", () => {
+    const ir = zhDeck("ember", { footer: ALL_MARKS })
+    ir.slides.forEach((slide, index) => {
+      const root = page(ir, index)
+      if (slide.type !== "content") {
+        expect(root.querySelectorAll('[data-field="slidenum"]'), `ember ${slide.type}: page number`).toHaveLength(0)
+        expect(root.querySelector("[data-footer]"), `ember ${slide.type}: footer row`).toBeNull()
+        return
+      }
+      const row = root.querySelector('[data-footer="row"]')!
+      expect(texts(row)).toEqual([ORG, "讨论稿 · 内部资料，请勿外传", String(index + 1)])
+      expect(row.querySelector('[data-field="slidenum"]')!.textContent).toBe(String(index + 1))
+      for (const t of Array.from(row.querySelectorAll("text"))) expect(t.getAttribute("data-font-floor-exempt")).toBe("pitch-spec")
+      const label = root.querySelector("[data-pitch-label] text")!
+      expect(label.textContent).toBe("2026 年中期业绩 | 2026.08")
+      expect(label.getAttribute("x")).toBe("64")
       expect(texts(root).filter((t) => t.includes(ORG))).toHaveLength(1)
     })
   })

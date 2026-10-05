@@ -80,3 +80,17 @@ describe("records leave a row's tag to the ordinary table", () => {
     }
   })
 })
+
+describe("a table that marks a column", () => {
+  it("is offered to no hand-set table, so the ordinary table outlines the column", async () => {
+    const { compose } = await import(".")
+    const { testCtx } = await import("./__fixtures__/kit")
+    const { ctx } = testCtx("bulletin")
+    const plain = table()
+    expect(compose({ components: [plain] as never, ctx, rect: NOTICE_BAND, setting: "notice" })).not.toBeNull()
+    const columns = (plain.columns as { key: string; label: string }[]).map((col, i) => (i === 3 ? { ...col, emphasis: true } : col))
+    expect(compose({ components: [table({ columns })] as never, ctx, rect: NOTICE_BAND, setting: "notice" })).toBeNull()
+    const iconed = (plain.columns as { key: string; label: string }[]).map((col, i) => (i === 3 ? { ...col, icon: "circle-help" } : col))
+    expect(compose({ components: [table({ columns: iconed })] as never, ctx, rect: NOTICE_BAND, setting: "notice" })).toBeNull()
+  })
+})

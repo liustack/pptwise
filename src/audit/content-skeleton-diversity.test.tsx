@@ -146,8 +146,8 @@ function skeletonKey(skeleton: readonly RegionTuple[]): string {
 const ALL_CONTENT_IDS = Object.keys(CONTENT_LAYOUTS) as ContentLayoutId[]
 
 describe("content layout skeleton diversity (content-layout expansion wave, T3 acceptance metric)", () => {
-  it("covers all 39 registered content layouts", () => {
-    expect(ALL_CONTENT_IDS).toHaveLength(39)
+  it("covers all 41 registered content layouts", () => {
+    expect(ALL_CONTENT_IDS).toHaveLength(41)
   })
 
   it("the full-region skeleton set resolves to >= 6 distinct classes across the pool (was ~4 under the rejected first-box-only reading)", () => {

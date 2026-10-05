@@ -119,3 +119,13 @@ Three changes, settled on the fiscal, growth, indicators and funds pages. See th
 
 - Bars on their side only, at zero or above, and not beside a status.
 - A page whose chart carries a range is offered to `diptych` alone among the hand-set plots.
+
+## ember, low-altitude delivery pitch sample, 2026-10
+
+`axes.y_unit` on a pie, a donut and a funnel. Settled on the landing points page (p05): see the board in [compositions/funnel](../../compositions/funnel/ember.board.png), and the ask page (p15) in [compositions/uses](../../compositions/uses/ember.board.png). The round's decisions are in [rounds/2026-10-06-ember](../../rounds/2026-10-06-ember/README.md).
+
+**What it looks like.** A pie, a donut and a funnel print the value axis's unit after every value they name (「1200 个」, "30%"), and a donut after its centre total. `funnel` prints it on each level and `uses` on each part of the share bar.
+
+**Why.** 「1200」 alone on a funnel could be points, yuan or orders. These charts have no axis to carry the unit, so the values carry it.
+
+**What it gave up.** A `y_unit` alone no longer draws the `chart_axes_ignored` warning on these charts. Their other axis settings still do.

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -7,6 +8,10 @@ const TermSchema = z
     label: z.string().min(1).describe("What this term is — the name the reader reads it by."),
     value: z.string().optional().describe("Optional figure for the term, printed large."),
     note: z.string().optional().describe("Optional single line under the term."),
+    /** A symbol for the term. See the describe below. */
+    icon: IconNameSchema.optional().describe(
+      "A symbol for the term, drawn at the top of its panel, such as route or hospital. Run `pptwise icons` for the names.",
+    ),
   })
   .strict()
 
@@ -22,8 +27,23 @@ export const schema = z
       .max(3, "concept_equation accepts at most 3 terms — a fourth leaves each panel too narrow to hold its own figure")
       .describe("2-3 terms added together, in the order they should be read."),
     result: TermSchema.describe("What the terms add up to."),
+    /** What the result leaves out on purpose. See the describe below. */
+    excluded: TermSchema.optional().describe(
+      'What the result leaves out on purpose, drawn under the equation in a dashed outline with its figure struck through, such as { "label": "先不做", "value": "核心城区的餐饮高峰单", "note": "它排在放行顺序最后" } or { "label": "Not yet", "value": "Lunch-hour food in the city core" }. Give it a value: the value is what is struck.',
+    ),
   })
   .strict()
+  .superRefine((c, ctx) => {
+    // The struck figure is the thing left out, so an exclusion without one
+    // would strike nothing.
+    if (c.excluded && !c.excluded.value?.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["excluded", "value"],
+        message: "concept_equation excluded names what the result leaves out in its value, which is drawn struck through. Write the value, or remove excluded.",
+      })
+    }
+  })
   .describe(
     "Two or three terms adding up to one result, drawn as panels joined by a plus and an equals sign. Use " +
       "concept_equation when the argument is that these things together produce that thing. Use `icon_cards` " +

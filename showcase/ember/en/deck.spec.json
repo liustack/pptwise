@@ -1,0 +1,154 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "spacious",
+    "audience": "executive"
+  },
+  "theme": "ember",
+  "filename": "lowalt-delivery-pitch-en",
+  "meta": {
+    "date": "October 2026"
+  },
+  "footer": {
+    "page_number": true,
+    "label": "Seed round"
+  },
+  "course": {
+    "stages": [
+      {
+        "label": "Opportunity"
+      },
+      {
+        "label": "Timing"
+      },
+      {
+        "label": "Rivals"
+      },
+      {
+        "label": "Wedge"
+      },
+      {
+        "label": "Proof"
+      },
+      {
+        "label": "Risks"
+      },
+      {
+        "label": "Plan"
+      },
+      {
+        "label": "Ask"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "Drone delivery in cities: medical first",
+      "summary": "We have not flown yet. In 18 months we prove three things.",
+      "kicker": "Seed round"
+    },
+    {
+      "id": "p02-chapter-opportunity",
+      "type": "chapter",
+      "heading": "Huge demand, a near-empty sky"
+    },
+    {
+      "id": "p03-gap",
+      "type": "content",
+      "kind": "data",
+      "heading": "60bn orders a year. Drones: 1m+ in total",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p04-why-now",
+      "type": "content",
+      "kind": "process",
+      "heading": "Why now: rules, then sequence, then status",
+      "focus": "timeline"
+    },
+    {
+      "id": "p05-funnel",
+      "type": "content",
+      "kind": "data",
+      "heading": "Shenzhen plans 1,200 landing points, 148 medical",
+      "focus": "chart"
+    },
+    {
+      "id": "p06-landscape",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Flying and licensing proven. Profit is not",
+      "focus": "data_table"
+    },
+    {
+      "id": "p07-chapter-wedge",
+      "type": "chapter",
+      "heading": "Where we start, what we prove"
+    },
+    {
+      "id": "p08-wedge",
+      "type": "content",
+      "kind": "points",
+      "heading": "Policy and pad plans point us to medical first",
+      "focus": "concept_equation"
+    },
+    {
+      "id": "p09-medical",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Light, urgent loads: 4.6m samples already flown",
+      "focus": "image"
+    },
+    {
+      "id": "p10-hypotheses",
+      "type": "content",
+      "kind": "list",
+      "heading": "Three hypotheses to prove: cost, density, safety",
+      "focus": "gantt"
+    },
+    {
+      "id": "p11-unit-economics",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Courier cost has a figure. Drones only a trend",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p12-compliance",
+      "type": "content",
+      "kind": "process",
+      "heading": "Compliance is the gate: five steps before flying",
+      "focus": "chevron_process"
+    },
+    {
+      "id": "p13-risks",
+      "type": "content",
+      "kind": "list",
+      "heading": "Every risk has happened before. We plan for each",
+      "focus": "data_table"
+    },
+    {
+      "id": "p14-milestones",
+      "type": "content",
+      "kind": "process",
+      "heading": "18 months: license, medical route, cost check",
+      "focus": "roadmap"
+    },
+    {
+      "id": "p15-ask",
+      "type": "content",
+      "kind": "data",
+      "heading": "The ask: 18 months, 60% to licensing and routes",
+      "focus": "chart"
+    },
+    {
+      "id": "p16-ending",
+      "type": "ending",
+      "heading": "Let's fly the first medical route together",
+      "summary": "18 months, three tests: license first, then a medical route, then a cost check"
+    }
+  ]
+}

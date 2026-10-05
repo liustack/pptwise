@@ -2148,3 +2148,64 @@ describe("roadmap timed phases", () => {
     expect(parseOne(road([phase({ duration: 0 }), phase({ duration: 7 })], { duration_unit: "分钟" })).success).toBe(false)
   })
 })
+
+describe("concept_equation term icon", () => {
+  it("takes an icon on a term and on the result", () => {
+    expect(parseOne({ type: "concept_equation", operands: [{ label: "a", icon: "route" }, { label: "b" }], result: { label: "c", icon: "target" } }).success).toBe(true)
+  })
+
+  it("refuses an icon name the catalog does not have", () => {
+    expect(parseOne({ type: "concept_equation", operands: [{ label: "a", icon: "no-such-icon" }, { label: "b" }], result: { label: "c" } }).success).toBe(false)
+  })
+})
+
+describe("concept_equation excluded", () => {
+  const base = { type: "concept_equation", operands: [{ label: "a" }, { label: "b" }], result: { label: "c" } }
+  it("takes what the result leaves out, with its value", () => {
+    expect(parseOne({ ...base, excluded: { label: "先不做", value: "核心城区的餐饮高峰单", note: "它排在放行顺序最后", icon: "ban" } }).success).toBe(true)
+  })
+
+  it("refuses an exclusion with no value to strike", () => {
+    const parsed = parseOne({ ...base, excluded: { label: "先不做" } })
+    expect(parsed.success).toBe(false)
+  })
+})
+
+describe("chevron_process stage icon", () => {
+  it("takes an icon on a stage", () => {
+    expect(parseOne({ type: "chevron_process", items: [{ title: "a", icon: "id-card" }, { title: "b" }, { title: "c" }] }).success).toBe(true)
+  })
+})
+
+describe("data_table marked column", () => {
+  const table = (columns: unknown[]) => ({ type: "data_table", columns, rows: [{ cells: { a: "1", b: "2" } }] })
+  it("takes one marked column and a column icon on a left-aligned column", () => {
+    expect(parseOne(table([{ key: "a", label: "A" }, { key: "b", label: "B", emphasis: true, icon: "circle-help" }])).success).toBe(true)
+  })
+
+  it("refuses two marked columns", () => {
+    expect(parseOne(table([{ key: "a", label: "A", emphasis: true }, { key: "b", label: "B", emphasis: true }])).success).toBe(false)
+  })
+
+  it("refuses a column icon on a column aligned right", () => {
+    expect(parseOne(table([{ key: "a", label: "A" }, { key: "b", label: "B", align: "right", icon: "circle-help" }])).success).toBe(false)
+  })
+})
+
+describe("gantt range, row icon and period", () => {
+  const items = [
+    { label: "a", start: 15, end: 18, icon: "coins", period: "第 16 至 18 个月" },
+    { label: "b", start: 6, end: 9 },
+  ]
+  it("takes a range, a row icon and a row period", () => {
+    expect(parseOne({ type: "gantt", range: { from: 0, to: 18 }, items }).success).toBe(true)
+  })
+
+  it("refuses a bar outside the range", () => {
+    expect(parseOne({ type: "gantt", range: { from: 0, to: 12 }, items }).success).toBe(false)
+  })
+
+  it("refuses a range that ends before it starts", () => {
+    expect(parseOne({ type: "gantt", range: { from: 18, to: 0 }, items }).success).toBe(false)
+  })
+})

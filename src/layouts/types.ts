@@ -94,6 +94,8 @@ export type CoverLayoutId =
   | "yearbook-cover"
   // homeroom sample redesign (2026-10-06): the lesson's board beside the classroom.
   | "lesson-cover"
+  // ember sample redesign (2026-10-06): the pitch's photograph with the fire's wedge.
+  | "pitch-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -137,6 +139,8 @@ export type ChapterLayoutId =
   | "console-chapter"
   // homeroom sample redesign (2026-10-06): a part of the lesson on a band of board.
   | "lesson-chapter"
+  // ember sample redesign (2026-10-06): an act of the pitch, its number outlined in the fire.
+  | "pitch-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -182,6 +186,8 @@ export type EndingLayoutId =
   | "yearbook-ending"
   // homeroom sample redesign (2026-10-06): the lesson's homework.
   | "lesson-ending"
+  // ember sample redesign (2026-10-06): the pitch's close and its button.
+  | "pitch-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -243,6 +249,9 @@ export type ContentLayoutId =
   | "yearbook-sheet"
   // homeroom sample redesign: the board's ordinary content page. Theme-locked.
   | "lesson-sheet"
+  // ember sample redesign: the board's ordinary content page and its photograph page. Theme-locked.
+  | "pitch-sheet"
+  | "pitch-photo"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

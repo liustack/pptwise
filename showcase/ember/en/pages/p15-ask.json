@@ -1,0 +1,69 @@
+{
+  "stage": "Ask",
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "18 months,\nthree tests",
+          "label": "This round",
+          "note": "From licensing to our first same-basis cost data. The amount follows the milestones and due diligence."
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "stacked",
+      "direction": "horizontal",
+      "axes": {
+        "y_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Licensing and safety",
+          "data": [
+            {
+              "x": "Planned share of this round",
+              "y": 30
+            }
+          ]
+        },
+        {
+          "name": "Routes and pads",
+          "data": [
+            {
+              "x": "Planned share of this round",
+              "y": 30
+            }
+          ]
+        },
+        {
+          "name": "Fleet and upkeep",
+          "data": [
+            {
+              "x": "Planned share of this round",
+              "y": 25
+            }
+          ]
+        },
+        {
+          "name": "Team and operations",
+          "data": [
+            {
+              "x": "Planned share of this round",
+              "y": 15
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "hand-coins",
+      "text": "Benchmark: urban drone logistics rounds run to tens of millions of RMB (Antwork C+, 2025-11)"
+    }
+  ],
+  "footnote": "Source: China.com (2025-11-26). The shares are our plan, not an estimate",
+  "notes": "Our ask: fund the four milestones over 18 months. We are not putting an invented amount on the slide. Here is how the money would be spent: 60 percent on licensing and routes, with licensing and the safety system at 30 percent, routes and landing points at 30 percent, the fleet and its upkeep at 25 percent, and the team and operations at 15 percent. These shares are our proposal and will be refined in due diligence. For scale, a public benchmark: urban drone logistics operators have raised single rounds in the tens of millions of yuan, for example Antwork's C+ round in November 2025."
+}

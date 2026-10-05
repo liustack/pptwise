@@ -12,8 +12,10 @@ import type { PptxIR, Slide } from "@/ir"
 const HEADING = "我们在募 **3000 万**，用来把数据源扩三倍。"
 const SUBHEADING = "18 个月 · 覆盖六大类目 · 现金流转正"
 
+const CTA = "约个时间聊"
+
 function endingSlide(heading = HEADING, extras: Partial<Slide> = {}): Slide {
-  return { type: "ending", heading, subheading: SUBHEADING, components: [], ...extras } as Slide
+  return { type: "ending", heading, subheading: SUBHEADING, components: [{ type: "paragraph", text: CTA }], ...extras } as Slide
 }
 
 function ir(themeId: string, s: Slide): PptxIR {
@@ -55,7 +57,7 @@ describe("ending-ask-ending — board geometry", () => {
     expect(button.getAttribute("x")).toBe("96")
     expect(button.getAttribute("height")).toBe("60")
     expect(button.getAttribute("fill")).toBe(tokens.colors.primary)
-    const cta = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "Let's talk")!
+    const cta = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === CTA)!
     expect(cta.getAttribute("text-anchor")).toBe("middle")
     expect(cta.getAttribute("fill")).toBe(readableOn(tokens.colors.primary))
   })
@@ -78,10 +80,17 @@ describe("ending-ask-ending — board geometry", () => {
     expect(root.innerHTML).not.toMatch(/#241B14/i)
   })
 
-  it("falls back to an English ask, not a thank-you", () => {
-    const { root } = renderEnding("ember", endingSlide("", { heading: undefined }))
-    expect(root.textContent).toContain("We're raising.")
-    expect(root.textContent).toContain("Let's talk")
+  it("prints no words the author did not write: no heading and no button of its own", () => {
+    const { root } = renderEnding("ember", endingSlide("", { heading: undefined, components: [] }))
+    expect(root.textContent).not.toContain("We're raising.")
+    expect(root.textContent).not.toContain("Let's talk")
+    expect(root.querySelector("[data-ask-cta]")).toBeNull()
+  })
+
+  it("takes the button's words from the first bullet, or the paragraph", () => {
+    const fromBullet = renderEnding("ember", endingSlide(HEADING, { components: [{ type: "bullets", items: ["Book a call"] }] as Slide["components"] }))
+    expect(fromBullet.root.querySelector("[data-ask-cta] text")!.textContent).toBe("Book a call")
+    expect(renderEnding("ember").root.querySelector("[data-ask-cta] text")!.textContent).toBe(CTA)
   })
 })
 
@@ -100,7 +109,7 @@ describe("ending-ask-ending — shared pool", () => {
         Array.from(root.querySelectorAll("rect")).find((el) => el.getAttribute("y") === "540")?.getAttribute("fill") ??
         tokens.colors.primary
       for (const el of Array.from(root.querySelectorAll("text"))) {
-        const onButton = el.textContent === "Let's talk"
+        const onButton = el.textContent === CTA
         const surface = onButton ? buttonFill : pageBg
         const size = Number(el.getAttribute("font-size"))
         const required = el.getAttribute("data-contrast-tier") === "meta" ? 3 : requiredContrastRatio(size)

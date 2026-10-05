@@ -803,6 +803,27 @@ describe("checkIrQuality", () => {
     expect(codes(quality(ir))).not.toContain("chart_axes_ignored")
   })
 
+  it("does not warn when a pie, a donut or a funnel names only its unit, which it prints after every value", () => {
+    for (const chart_type of ["pie", "donut", "funnel"] as const) {
+      const ir = makeIR([
+        {
+          type: "content",
+          kind: "points",
+          heading: "Pipeline",
+          components: [
+            {
+              type: "chart",
+              chart_type,
+              axes: { y_unit: "个" },
+              series: [{ name: "Stages", data: [{ x: "A", y: 1200 }, { x: "B", y: 413 }] }],
+            },
+          ],
+        },
+      ])
+      expect(codes(quality(ir))).not.toContain("chart_axes_ignored")
+    }
+  })
+
   it("warns when a funnel or dumbbell chart sets axes", () => {
     for (const chart_type of ["funnel", "dumbbell"] as const) {
       const ir = makeIR([

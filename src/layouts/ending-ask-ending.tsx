@@ -1,5 +1,7 @@
 import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
+import type { Slide } from "@/ir"
+import { boundaryBulletItems, boundarySlotBlock } from "./boundary-content"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk, readableOn } from "../render/ink"
@@ -11,7 +13,10 @@ import { fitEmphasisLine, headingEmphasisPaint, parseEmphasis, renderEmphasisTex
  * 主题逐字节仍是变色）。钮是这一页唯一的色块。
  *
  * pinOnly，不进 fullLayoutSet。零 theme id、零 hex。颜色只走 ctx。
- * 公开面英文：缺省标题 "We're raising."，钮文 "Let's talk"。
+ * 钮上的字是作者写的：页面第一个 `bullets` 的第一条，没有就取 `paragraph`。
+ * 两样都没有就不画钮，也不替作者编一句；没写标题就不画标题。原先缺省的
+ * 英文标题 "We're raising." 和钮文 "Let's talk" 印在中文 deck 上，2026-10
+ * 退役。
  *
  * 服务场景：路演收束、pitch 要下一步。任何需要「开口要资源 + 一枚色钮」
  * 而不是 Thank you 的主题都可以钉。
@@ -36,13 +41,25 @@ const CTA_H = 60
 const CTA_MIN_W = 280
 const CTA_PAD_X = 36
 const CTA_SIZE = 22
-const CTA_LABEL = "Let's talk"
-const FALLBACK_HEADING = "We're raising."
+/** Items of the accepted `bullets` block this face has room to draw: the button's one line. */
+const ITEM_MAX = 1
+
+/** The button's words as the author wrote them: the first bullet, or the paragraph. */
+function ctaSource(slide: Slide): string | null {
+  const item = boundaryBulletItems(slide, ITEM_MAX)[0]
+  if (item) return stripEmphasis(item).trim()
+  const para = boundarySlotBlock(slide, ["paragraph"])
+  if (para?.type === "paragraph") {
+    const text = stripEmphasis(para.text).trim()
+    if (text) return text
+  }
+  return null
+}
 
 export function AskEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const defaultBg = ctx.defaultBg ?? colors.bg
-  const headingSource = slide.heading || FALLBACK_HEADING
+  const headingSource = slide.heading ?? ""
   const plainHeading = stripEmphasis(headingSource)
   const segments = parseEmphasis(headingSource)
 
@@ -68,10 +85,12 @@ export function AskEnding({ slide, ctx }: SvgTemplateProps) {
       })
   const subY = Math.max(SUB_Y, headingLastY + Math.round(heading.fontSize * 0.36) + (subheading?.fontSize ?? SUB_SIZE))
 
-  const ctaLabel = fitSvgLine(CTA_LABEL, {
+  const cta = ctaSource(slide)
+  const ctaLabel = fitSvgLine(cta ?? "", {
     maxWidth: 640,
     fontSize: CTA_SIZE,
     minFontSize: 16,
+    bold: true,
     fontFamily: fonts.heading,
   })
   const ctaWidth = Math.max(
@@ -124,19 +143,24 @@ export function AskEnding({ slide, ctx }: SvgTemplateProps) {
           />,
         )}
 
-      <rect x={CTA_X} y={CTA_Y} width={ctaWidth} height={CTA_H} fill={ctaFill} />
-      <text
-        x={CTA_X + ctaWidth / 2}
-        y={ctaTextY}
-        textAnchor="middle"
-        fontFamily={fonts.heading}
-        fontSize={ctaLabel.fontSize}
-        fontWeight="700"
-        fill={ctaInk}
-        dominantBaseline="alphabetic"
-      >
-        {ctaLabel.text}
-      </text>
+      {cta ? (
+        <g data-ask-cta="">
+          <rect x={CTA_X} y={CTA_Y} width={ctaWidth} height={CTA_H} fill={ctaFill} />
+          <text
+            data-truncated={ctaLabel.truncated ? "1" : undefined}
+            x={CTA_X + ctaWidth / 2}
+            y={ctaTextY}
+            textAnchor="middle"
+            fontFamily={fonts.heading}
+            fontSize={ctaLabel.fontSize}
+            fontWeight="700"
+            fill={ctaInk}
+            dominantBaseline="alphabetic"
+          >
+            {ctaLabel.text}
+          </text>
+        </g>
+      ) : null}
     </>
   )
 }
@@ -158,5 +182,7 @@ export const layoutDef: LayoutDefinition = {
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
     { name: "meta", accepts: [] },
+    // The button's words: one bullet, or a paragraph.
+    { name: "body", accepts: ["bullets", "paragraph"], capacity: 1, itemCapacity: ITEM_MAX },
   ],
 }

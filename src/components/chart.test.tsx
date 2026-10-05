@@ -1051,6 +1051,19 @@ describe("chart component — chart-depth subtypes (scatter / area / donut / gau
     expect(Array.from(container.querySelectorAll("text")).map((t) => t.textContent)).toContain("100")
   })
 
+  it("prints the value axis's unit after every value a funnel, a pie and a donut name, and after a donut's total", () => {
+    const data = [{ x: "起降点总目标", y: 1200 }, { x: "其中社区配送", y: 413 }]
+    const named = (chart_type: "funnel" | "pie" | "donut", extra: Record<string, unknown> = {}) => {
+      const { container } = svg(chart.render({ type: "chart" as const, chart_type, axes: { y_unit: "个" }, series: [{ name: "深圳起降点", data }], ...extra }, box, ctx))
+      return Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+    }
+    expect(named("funnel")).toEqual(expect.arrayContaining(["起降点总目标 1200 个", "其中社区配送 413 个"]))
+    expect(named("pie")).toEqual(expect.arrayContaining(["起降点总目标 1200 个"]))
+    expect(named("donut", { center_total: true })).toEqual(expect.arrayContaining(["其中社区配送 413 个", "1613 个"]))
+    const { container } = svg(chart.render({ type: "chart" as const, chart_type: "donut" as const, axes: { y_unit: "%" }, series: [{ name: "S", data: [{ x: "A", y: 40 }, { x: "B", y: 60 }] }] }, box, ctx))
+    expect(Array.from(container.querySelectorAll("text")).map((t) => t.textContent)).toEqual(["A 40%", "B 60%"])
+  })
+
   it("dispatches gauge to the half-ring renderer (track + arc paths and the centered value)", () => {
     const component = {
       type: "chart" as const,

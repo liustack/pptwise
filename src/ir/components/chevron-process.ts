@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -20,6 +21,10 @@ export const schema = z
               .describe(
                 "Optional short note printed under the chevron, not inside it. It wraps to a second line when it needs one, and two lines is all it gets."
               ),
+            /** A symbol for the stage. See the describe below. */
+            icon: IconNameSchema.optional().describe(
+              "A symbol for the stage, drawn at the top right of its chevron on the line of its number, such as id-card or badge-check. Run `pptwise icons` for the names.",
+            ),
           })
           .strict()
       )

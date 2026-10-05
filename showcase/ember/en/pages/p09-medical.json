@@ -1,0 +1,30 @@
+{
+  "stage": "Wedge",
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "photo-medkit",
+      "caption": "Illustration, AI-generated",
+      "fit": "cover"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**4.6m**",
+          "label": "Medical sample tubes Antwork had flown by Nov 2025, company figure"
+        },
+        {
+          "value": "810k",
+          "label": "Lab samples and drugs Meituan had flown by June 2026"
+        },
+        {
+          "value": "2.5 kg",
+          "label": "Payload of Meituan's 4th-generation drone, room for a sample box"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: China.com (2025-11-26), IT Home (2026-07-22, 2023-07-05), company figures",
+  "notes": "Why medical first. One, the loads are light: a sample or a pack of medicine weighs little, and Meituan's fourth-generation drone carries up to 2.5 kilograms, which covers almost every medical order. Two, they are urgent: lab samples and urgent medicine are time-sensitive, and the customer paying for speed is an institution, not a shopper comparing fees order by order. Three, other operators have already proven this use case: Antwork has flown 4.6 million medical samples, and Meituan has delivered more than 810,000 lab samples and drug packages. Both are company figures. We do not need to prove that medical demand exists. We need to prove we can serve it at a lower cost. The picture is an AI-generated illustration."
+}

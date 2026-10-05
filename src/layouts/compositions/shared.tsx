@@ -118,6 +118,18 @@ export type CompositionId =
   | "tiers"
   | "methods"
   | "blackboard"
+  | "expanse"
+  | "stairs"
+  | "funnel"
+  | "rivals"
+  | "equation"
+  | "spotlight"
+  | "bets"
+  | "divide"
+  | "locks"
+  | "register"
+  | "runway"
+  | "uses"
 
 /**
  * The type a composition sets its page in.
@@ -224,10 +236,22 @@ export type CompositionId =
  *   their grounds, levels from the most guarded down, methods under their
  *   photographs and the blackboard. See `./lesson.tsx`.
  *
+ * - `pitch`: ember's 2026-10 board. A founder on a dark stage: figures set
+ *   large, cards a step lighter than the ground with no outline, words in
+ *   the ivory of the text and the warm grey of the muted ink, and the
+ *   theme's accent (the fire) on one thing a page, with the dark ink on it.
+ *   A composition offered this setting draws the shapes that board drew and
+ *   no other did: a whole set over a field of squares with the part a dot,
+ *   steps that climb, a funnel, rivals with the column none has published,
+ *   a wedge worked out as a sum with what it leaves out struck, one figure
+ *   lit beside a photograph, bets with their windows, two groups of figures
+ *   that cannot be compared, gates locked in a row, a risk register, a
+ *   runway with its gate, and the ask with its uses. See `./pitch.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */

@@ -1,0 +1,17 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "cover-dusk"
+  },
+  "components": [
+    {
+      "type": "bullets",
+      "items": [
+        "Medical + community",
+        "Parks and suburbs first",
+        "Three tests in 18 months"
+      ]
+    }
+  ],
+  "notes": "We are building drone delivery for cities, and we start with two kinds of orders only: medical and community. To be clear up front, we have not started commercial operations. Today is not about traction. It is about three things: why now, where we enter, and what we will prove with data in 18 months. Every outside figure in this deck comes from public regulations, official statistics or company announcements, and each page names its source. The cover photo is an AI-generated illustration."
+}

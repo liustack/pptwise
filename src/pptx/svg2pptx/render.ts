@@ -211,6 +211,7 @@ export function renderOp(
       if (op.fontFace) opts.fontFace = op.eaFace ? pairedTypeface(op.fontFace, op.eaFace) : op.fontFace
       if (op.color) opts.color = op.color
       if (op.transparency != null) opts.transparency = op.transparency
+      if (op.outline) opts.outline = op.outline
       if (op.rotate) opts.rotate = op.rotate
       // SVG <text> 是逐行预排的单行文本——pptx 文本框的自动换行只会在
       // 字体回退/charSpacing 使字宽变化时把行内文字挤到第二行并被单行高

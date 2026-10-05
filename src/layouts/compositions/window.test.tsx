@@ -55,3 +55,17 @@ describe("window composition", () => {
     expect(draw([calendar(), { ...facts, items: facts.items.slice(0, 1) }]).element).toBeNull()
   })
 })
+
+describe("a gantt with a range, a row icon or a period", () => {
+  it.each([
+    ["a range", { range: { from: 0, to: 4 } }],
+    ["a row icon", { items: calendar().items.map((item, i) => (i === 0 ? { ...item, icon: "coins" } : item)) }],
+    ["a period", { items: calendar().items.map((item, i) => (i === 0 ? { ...item, period: "10 月至 11 月" } : item)) }],
+  ])("is offered to no hand-set gantt when it carries %s", async (_name, overrides) => {
+    const { compose } = await import(".")
+    const { testCtx } = await import("./__fixtures__/kit")
+    const { ctx } = testCtx("bulletin")
+    expect(compose({ components: [calendar(), facts] as never, ctx, rect: NOTICE_BAND, setting: "notice" }, ["window"])).not.toBeNull()
+    expect(compose({ components: [calendar(overrides), facts] as never, ctx, rect: NOTICE_BAND, setting: "notice" }, ["window"])).toBeNull()
+  })
+})

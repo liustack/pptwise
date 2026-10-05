@@ -318,3 +318,46 @@ describe("data_table row tag", () => {
     expect(container.querySelector("g[data-tag]")).not.toBeNull()
   })
 })
+
+describe("data_table marked column and column icon", () => {
+  const marked = {
+    type: "data_table" as const,
+    columns: [
+      { key: "who", label: "先行者" },
+      { key: "scale", label: "公开规模" },
+      { key: "cost", label: "单均成本", emphasis: true, icon: "circle-help" as const },
+    ],
+    rows: [
+      { cells: { who: "美团", scale: "累计超过 100 万单", cost: "未公布" } },
+      { cells: { who: "迅蚁", scale: "累计飞行 260 万千米", cost: "未公布" }, emphasis: "highlight" as const },
+    ],
+  }
+
+  it("outlines the marked column from its header to the table's foot and sets its words bold in the primary", () => {
+    const { container } = svg(dataTable.render(marked, { x: 0, y: 0, w: 1000 }, ctx))
+    const frame = container.querySelector("rect[data-marked-column]")!
+    expect(frame.getAttribute("data-marked-column")).toBe("cost")
+    expect(frame.getAttribute("fill")).toBe("none")
+    expect(Number(frame.getAttribute("height"))).toBeGreaterThan(44 * 3 - 2)
+    const header = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "单均成本")!
+    expect(header.getAttribute("fill")).toBe(ctx.colors.primary)
+    const cells = Array.from(container.querySelectorAll("text")).filter((t) => t.textContent === "未公布")
+    expect(cells).toHaveLength(2)
+    for (const cell of cells) expect(cell.getAttribute("font-weight")).toBe("bold")
+  })
+
+  it("sets the column's icon before each of its cells and moves the words after it", () => {
+    const { container } = svg(dataTable.render(marked, { x: 0, y: 0, w: 1000 }, ctx))
+    const icons = Array.from(container.querySelectorAll("g[data-column-icon]"))
+    expect(icons).toHaveLength(2)
+    const cell = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "未公布")!
+    const iconX = Number(/translate\(([\d.]+)/.exec(icons[0]!.querySelector("g")!.getAttribute("transform")!)![1])
+    expect(Number(cell.getAttribute("x"))).toBeGreaterThanOrEqual(iconX + 18)
+  })
+
+  it("draws no frame and no column icon on a table that marks none", () => {
+    const { container } = svg(dataTable.render(basic, { x: 0, y: 0, w: 1000 }, ctx))
+    expect(container.querySelector("rect[data-marked-column]")).toBeNull()
+    expect(container.querySelector("g[data-column-icon]")).toBeNull()
+  })
+})
