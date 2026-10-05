@@ -78,13 +78,27 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
 
 /**
+ * The compositions that paint a chart series' `tone` (good or bad news in the
+ * theme's success and danger inks). A page whose chart gives a series a tone
+ * is offered to these alone, so no hand-set plot recolours a series the
+ * author said was good or bad news. The ordinary chart draws tones too.
+ */
+const SERIES_TONE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function namesSeriesTone(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.series.some((series) => series.tone !== undefined))
+}
+
+/**
  * Asks each composition in `ids` in turn whether it takes these components,
  * and returns the first drawing, or `null` when none of them does.
  */
 export function compose(props: CompositionProps, ids: readonly CompositionId[] = COMPOSITION_IDS): React.ReactElement | null {
   const handOn: CompositionProps["handOn"] = (components, rect) =>
     compose({ ...props, components, rect }, ids)
+  const toned = namesSeriesTone(props.components)
   for (const id of ids) {
+    if (toned && !SERIES_TONE_COMPOSITIONS.has(id)) continue
     const drawn = COMPOSITIONS[id]({ ...props, handOn })
     if (drawn) return drawn
   }

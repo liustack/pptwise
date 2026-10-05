@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { isPercentUnit } from "../../lib/quantity-format"
+import { ToneSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -167,6 +168,13 @@ export function isShareBar(c: { chart_type: string; direction?: "horizontal" | "
  * color to spend on one of them.
  */
 export const SERIES_EMPHASIS_TYPES = ["bar", "line", "area", "scatter", "stacked", "percent_stacked", "combo"] as const
+
+/**
+ * Chart types whose series may carry a `tone`: the ones that color their
+ * series one by one in a shared plot box. A share bar colors its parts its
+ * own way and takes none.
+ */
+export const SERIES_TONE_TYPES = SERIES_EMPHASIS_TYPES
 
 type ChartInput = {
   chart_type: string
@@ -441,6 +449,11 @@ export const schema = z
               "Marks the one series the page is about. It keeps the lead color and the others turn grey. At most one series, on bar, line, area, scatter, stacked, percent_stacked or combo charts with two or more series. A marked combo line also prints its values. " +
                 "A share bar (a stacked chart with direction \"horizontal\") may mark a run of adjacent parts, and states the run's total and share under it.",
             ),
+          /** What kind of news the series is. See `ToneSchema` and the describe below. */
+          tone: ToneSchema.optional().describe(
+            'What kind of news the series is, drawn in the colour every theme keeps for it: "success" for the share that got better, "danger" for the share that got worse, "warning" for one to watch. ' +
+              "Use it when a series is good or bad news by what it counts, such as the people whose burnout fell beside those whose pace rose. On bar, line, area, scatter, stacked, percent_stacked or combo charts, not a share bar.",
+          ),
         })
         .strict(),
     ),
@@ -797,6 +810,21 @@ export const schema = z
         }
       })
     }
+    // A tone colours a series in the shared plot box it is drawn in, the way
+    // the palette would. A pie, a funnel or a share bar colours its parts its
+    // own way, and the tone would reach the page nowhere.
+    c.series.forEach((s, si) => {
+      if (s.tone === undefined) return
+      const applies = SERIES_TONE_TYPES.includes(c.chart_type as (typeof SERIES_TONE_TYPES)[number]) && !isShareBar(c)
+      if (applies) return
+      ctx.addIssue({
+        code: "custom",
+        path: ["series", si, "tone"],
+        message:
+          `a series tone colours the series as good or bad news in a plot that colours its series one by one, and a ${isShareBar(c) ? "share bar" : `${c.chart_type} chart`} does not. ` +
+          `Remove tone, or use chart_type ${SERIES_TONE_TYPES.map((t) => `"${t}"`).join(", ")}.`,
+      })
+    })
     // Emphasis takes one series out of the palette and greys the rest, which
     // only says something where several series share one plot box in their
     // own colors. Two marked series are two answers, and the grey is gone.

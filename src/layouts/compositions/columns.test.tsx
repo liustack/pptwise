@@ -162,3 +162,22 @@ describe("columns leave a chart with a marked value range to the ordinary chart"
     }
   })
 })
+
+describe("compositions leave a toned series to the ordinary chart", () => {
+  it("offers a page whose chart gives a series a tone to no composition that cannot paint it", async () => {
+    const { compose } = await import("./index")
+    const { boundThemeCtx } = await import("../../render/__fixtures__/theme-ctx")
+    const chart = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      series: [
+        { name: "2025", data: [{ x: "A", y: 1 }, { x: "B", y: 2 }] },
+        { name: "2026", tone: "success" as const, data: [{ x: "A", y: 2 }, { x: "B", y: 3 }] },
+      ],
+    }
+    const ctx = boundThemeCtx("bulletin")
+    for (const setting of ["notice", "grid", "panel", "seal", "console"] as const) {
+      expect(compose({ components: [chart], ctx, rect: { x: 96, y: 200, w: 1088, h: 420 }, setting }), setting).toBeNull()
+    }
+  })
+})
