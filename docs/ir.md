@@ -257,6 +257,7 @@ A page usually argues about one thing. These fields let the author say which, an
 | `roadmap.items[].rows[].basis` | what a row's value rests on, such as `"pending"` for a budget line still to be set. A value that is not settled is marked dashed | |
 | `roadmap.items[].duration` and `roadmap.duration_unit` | how long each phase lasts and the unit they are counted in (`15` and `"min"`), on every phase or none. The ordinary roadmap adds the length to the period line ("Part 1 · 15 min"), and a face that lays phases to scale draws each as long as it lasts | |
 | `roadmap.items[].checkpoint` and `roadmap.items[].points` | a check held as the phase ends ("Quiz 1"), as a tag on its card, and one to three short lines on what it covers | |
+| `pyramid.layers[].tone` | what kind of news a level is (`danger`, `warning`, `success`), its band painted in the theme's own ink for it, such as data graded from what must never leave to what is safe. Every level or none | |
 | `kpi_cards.items[].value` written `**…**` | the one figure set in the theme's emphasis | |
 | `progress_donuts.items[].detail` and `emphasis` | a line under a rate's label with the amounts behind it ("1.18 of 1.3 trillion"), and the one rate the page is about, whose ring, figure and label take the emphasis colour | at most one marked |
 | `kpi_cards.items[].tag` | what the figure is, in a few words printed as a small tag with it (`{ "text": "Binding" }`): filled on the marked figure, outlined otherwise, grey when `quiet` | |

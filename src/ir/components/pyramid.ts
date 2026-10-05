@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { ToneSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -18,6 +19,10 @@ export const schema = z
               .string()
               .optional()
               .describe("One line explaining the level, printed in the legend beside the drawing."),
+            /** What kind of news the level is. See the describe below. */
+            tone: ToneSchema.optional().describe(
+              'What kind of news the level is, its band painted in the theme\'s own colour for it: "danger" for the level to guard most, such as personal data, "warning" for one to handle with care, "success" for one that is safe. Give every level a tone or none.',
+            ),
           })
           .strict()
       )
@@ -26,6 +31,18 @@ export const schema = z
       .describe("The levels from the top down. The first entry is the apex."),
   })
   .strict()
+  .superRefine((c, ctx) => {
+    // A ramp of tones reads only when every band has one: a band left in the
+    // primary's ramp among them would read as a fourth kind of news.
+    const toned = c.layers.filter((layer) => layer.tone !== undefined).length
+    if (toned > 0 && toned < c.layers.length) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["layers", c.layers.findIndex((layer) => layer.tone === undefined), "tone"],
+        message: `${toned} of the pyramid's ${c.layers.length} levels have a tone. Give every level one, or none.`,
+      })
+    }
+  })
   .describe(
     "3-6 levels stacked into a pyramid, apex first, each level optionally explained in a legend beside the " +
       "drawing. Use pyramid when each level rests on the one below it — a claim over its evidence, a rank " +

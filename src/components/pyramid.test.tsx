@@ -167,3 +167,35 @@ describe("pyramid ramp spread", () => {
     }
   })
 })
+
+describe("pyramid layer tone", () => {
+  const graded = {
+    type: "pyramid" as const,
+    layers: [
+      { label: "个人信息、商业秘密", tone: "danger" as const },
+      { label: "内部资料", tone: "warning" as const },
+      { label: "公开信息", tone: "success" as const },
+    ],
+  }
+
+  it("paints each band in the theme's own ink for its tone, darkened only as far as its label needs", () => {
+    const ctx = themed("homeroom")
+    const { container } = svg(pyramid.render(graded, BOX, ctx))
+    const bands = Array.from(container.querySelectorAll("polygon")).map((p) => p.getAttribute("fill")!)
+    expect(bands[0]).toBe(ctx.colors.danger)
+    expect(bands[2]).toBe(ctx.colors.success)
+    // homeroom's warning amber is too light for white words at 20px: the band steps darker until they read.
+    expect(bands[1]).not.toBe(ctx.colors.primary)
+    for (const [i, fill] of bands.entries()) {
+      const label = container.querySelectorAll("polygon + text")[i]!
+      expect(contrastRatio(label.getAttribute("fill")!, fill)).toBeGreaterThanOrEqual(requiredContrastRatio(20))
+    }
+    expect(() => assertSubset(container.querySelector("svg")!)).not.toThrow()
+  })
+
+  it("is refused on some levels only", async () => {
+    const { schema } = await import("@/ir/components/pyramid")
+    expect(schema.safeParse(graded).success).toBe(true)
+    expect(schema.safeParse({ ...graded, layers: [graded.layers[0], { label: "内部资料" }, graded.layers[2]] }).success).toBe(false)
+  })
+})
