@@ -2159,3 +2159,14 @@ describe("concept_equation term icon", () => {
   })
 })
 
+describe("concept_equation excluded", () => {
+  const base = { type: "concept_equation", operands: [{ label: "a" }, { label: "b" }], result: { label: "c" } }
+  it("takes what the result leaves out, with its value", () => {
+    expect(parseOne({ ...base, excluded: { label: "先不做", value: "核心城区的餐饮高峰单", note: "它排在放行顺序最后", icon: "ban" } }).success).toBe(true)
+  })
+
+  it("refuses an exclusion with no value to strike", () => {
+    const parsed = parseOne({ ...base, excluded: { label: "先不做" } })
+    expect(parsed.success).toBe(false)
+  })
+})

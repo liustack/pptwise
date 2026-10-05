@@ -181,3 +181,40 @@ describe("concept_equation term icon", () => {
   })
 })
 
+describe("concept_equation excluded", () => {
+  const withExcluded = {
+    ...two,
+    excluded: { label: "先不做", value: "核心城区的餐饮高峰单", note: "它排在放行顺序最后", icon: "ban" as const },
+  }
+
+  it("draws what the result leaves out under the equation, its figure struck through", () => {
+    const ctx = themed("ledger")
+    const { container } = svg(conceptEquation.render(withExcluded, { x: 80, y: 80, w: 1088 }, ctx))
+    const strip = container.querySelector("g[data-excluded]")!
+    expect(strip).not.toBeNull()
+    const texts = Array.from(strip.querySelectorAll("text")).map((t) => t.textContent)
+    expect(texts).toEqual(["先不做", "核心城区的餐饮高峰单", "它排在放行顺序最后"])
+    const strike = strip.querySelector("line[data-strike]")!
+    const value = Array.from(strip.querySelectorAll("text")).find((t) => t.textContent === "核心城区的餐饮高峰单")!
+    expect(Number(strike.getAttribute("y1"))).toBeLessThan(Number(value.getAttribute("y")))
+    expect(Number(strike.getAttribute("x2")) - Number(strike.getAttribute("x1"))).toBeGreaterThan(150)
+    expect(strip.querySelector("rect")!.getAttribute("stroke-dasharray")).toBeTruthy()
+    expect(strip.querySelector("g[data-term-icon='ban']")).not.toBeNull()
+    // The strip sits under the panels.
+    const panels = Array.from(container.querySelectorAll("rect")).filter((r) => !r.closest("g[data-excluded]"))
+    const panelBottom = Math.max(...panels.map((r) => Number(r.getAttribute("y")) + Number(r.getAttribute("height"))))
+    expect(Number(strip.querySelector("rect")!.getAttribute("y"))).toBeGreaterThanOrEqual(panelBottom)
+  })
+
+  it("measures the strip into the component's height", () => {
+    const ctx = themed("ledger")
+    expect(conceptEquation.measure(withExcluded, 1088, ctx)).toBeGreaterThan(conceptEquation.measure(two, 1088, ctx) + 80)
+  })
+
+  it("declines whole when the strip does not fit the height it is given", () => {
+    const ctx = themed("ledger")
+    const h = conceptEquation.measure(two, 1088, ctx)
+    const { container } = svg(conceptEquation.render(withExcluded, { x: 80, y: 80, w: 1088, h }, ctx))
+    expect(container.querySelector("[data-dropped]")).not.toBeNull()
+  })
+})

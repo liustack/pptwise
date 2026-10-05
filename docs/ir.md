@@ -247,6 +247,7 @@ A page usually argues about one thing. These fields let the author say which, an
 | `chart.series[].data[].note` | a few words printed after a bar's value, after a middle dot ("2.34 · baseline", "€7.68 · ¥62.36") | `bar` on its side and the parts of a share bar only |
 | `chart.series[].data[].upper` | the high end of a value known only as a range, `y` its low end: the bar is solid to `y` and dashed on to `upper`, its label naming both ends ("60–70") | `bar` on its side only, at zero or above |
 | `chart.emphasis_label` | a share bar's line for its marked parts in the author's own words ("Downstream goods €9.35bn, 69.5%"), set where the computed total would stand | a share bar with at least one marked series |
+| `concept_equation.excluded` | what the result leaves out on purpose, as a term (`{ "label": "Not yet", "value": "Lunch-hour food in the city core", "note": "Last in the order of release" }`): drawn under the equation in a dashed outline, its value struck through | needs a value |
 | `numbered_cards.items[].emphasis` | the one card the page lands on: its pill is filled | at most one |
 | `gantt.items[].text` and `emphasis` | a line under the stretch's label, and the one stretch the page is about | at most one marked |
 | `timeline.milestones[].lane` and `timeline.lanes` | two tracks on one time order. `lanes` names them, the one above the axis first. A face with no room for two sides prints the lane before the date | every milestone names a lane or none does, at most two, not on a vertical timeline |
