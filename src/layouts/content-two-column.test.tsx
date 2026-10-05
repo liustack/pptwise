@@ -119,9 +119,9 @@ describe("TwoColumnContent", () => {
     expect(kpiValues).toEqual(expect.arrayContaining(["102k", "91", "88", "5"]))
     // The 165px wrap cell ellipsizes "Average delivery time". The unit
     // tspan on the value "5" is the fourth metric, not the bullet's word
-    // "weeks".
+    // "weeks", set a space after its figure (`unitGap`).
     const weeksValue = kpiValueEls.find((t) => ownText(t) === "5")
-    expect(weeksValue?.querySelector("tspan")?.textContent).toBe("weeks")
+    expect(weeksValue?.querySelector("tspan")?.textContent).toBe(" weeks")
   })
 
   it("a lone chart on two-column stays on the page and is not glued to the rule line", () => {

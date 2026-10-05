@@ -512,6 +512,7 @@ function renderKpiCardBody(
         fill={valueFill}
         fontFamily={ctx.fonts.heading}
         dominantBaseline="alphabetic"
+        xmlSpace={fittedUnit?.startsWith(" ") ? "preserve" : undefined}
       >
         {fittedValue.text}
         {fittedUnit != null && (
