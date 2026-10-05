@@ -2047,6 +2047,7 @@ describe("tag evidence", () => {
     const kpi = (tag: unknown) => ({ type: "kpi_cards", items: [{ value: "1", label: "a", tag }] })
     expect(parseOne(kpi({ text: "RCT · 期刊", evidence: "trial" })).success).toBe(true)
     expect(parseOne(kpi({ text: "企业口径", evidence: "company" })).success).toBe(true)
+    expect(parseOne(kpi({ text: "工作论文 · NBER 2025", evidence: "preprint" })).success).toBe(true)
     expect(parseOne(kpi({ text: "x", evidence: "rumour" })).success).toBe(false)
   })
 })

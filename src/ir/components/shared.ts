@@ -68,19 +68,20 @@ export const ToneSchema = z
 
 /**
  * What kind of source a figure rests on, so a reader can weigh it: a trial
- * published in a journal, a product's approved label, a company's own
- * figures, a press report, a draft out for comment, an official document, a
- * trial registry. A tag that names its source (`TagSchema.evidence`) is
+ * or a study published in a peer-reviewed journal, a product's approved
+ * label, a company's own figures, a press report, a draft out for comment,
+ * an official document, a trial registry, a working paper or a preprint
+ * that no journal has reviewed yet. A tag that names its source (`TagSchema.evidence`) is
  * outlined in the ink every theme keeps for that kind, the same kind in the
  * same ink across a deck, so the page tells a journal's figure from a
  * company's at a glance.
  */
-export const EVIDENCE_KINDS = ["trial", "label", "company", "press", "draft", "official", "registry"] as const
+export const EVIDENCE_KINDS = ["trial", "label", "company", "press", "draft", "official", "registry", "preprint"] as const
 
 export const EvidenceKindSchema = z
   .enum(EVIDENCE_KINDS)
   .describe(
-    'What kind of source the tag names, outlined in the ink the theme keeps for it: "trial" for a trial published in a journal, "label" for a product\'s approved label, "company" for a company\'s own figures, "press" for a press report, "draft" for a draft out for comment, "official" for a government or regulator\'s document, "registry" for a trial registry.',
+    'What kind of source the tag names, outlined in the ink the theme keeps for it: "trial" for a trial or a study published in a peer-reviewed journal, "label" for a product\'s approved label, "company" for a company\'s own figures, "press" for a press report, "draft" for a draft out for comment, "official" for a government or regulator\'s document, "registry" for a trial registry, "preprint" for a working paper or a preprint no journal has reviewed yet.',
   )
 
 /**
