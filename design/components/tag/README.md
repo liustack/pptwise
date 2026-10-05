@@ -23,3 +23,15 @@ Settled on the background page (p03), the head-to-head page (p06), the safety pa
 **Why.** A board budgets on law and verified figures. What is only estimated, pending or proposed has to look different wherever it appears, and the same everywhere.
 
 **What it gave up.** `basis` is a different question from `evidence` (what kind of source reported a figure), and a tag takes at most one of the two.
+
+## homeroom, AI-at-work training sample, 2026-10
+
+`evidence: "preprint"`. Settled on the four studies page (p05): see the board in [compositions/studies](../../compositions/studies/homeroom.board.png). The round's decisions are in [rounds/2026-10-06-homeroom](../../rounds/2026-10-06-homeroom/README.md).
+
+**What it looks like.** A working paper or a preprint is its own kind of source, apart from a study a journal has published (`trial`). The ordinary tag outlines it in the ink a draft takes; the lesson setting in the warning ink, beside a journal's in the success ink.
+
+**Why.** A training audience should see which findings have been through review and which have not.
+
+**What it gave up.**
+
+- Nothing a tag drew before.

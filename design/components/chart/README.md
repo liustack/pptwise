@@ -106,3 +106,16 @@ Three changes, settled on the fiscal, growth, indicators and funds pages. See th
 **Why.** Default values are read against the EU benchmark, a price is read with its own currency beside it, and the run a page marks is named in the deck's words.
 
 **What it gave up.** A reference on bar charts only. A share bar whose `emphasis_label` is wider than the bar is not drawn.
+
+## homeroom, AI-at-work training sample, 2026-10
+
+`series[].data[].upper`. Settled on the two ways it backfires page (p07): see the board in [compositions/diptych](../../compositions/diptych/homeroom.board.png). The round's decisions are in [rounds/2026-10-06-homeroom](../../rounds/2026-10-06-homeroom/README.md).
+
+**What it looks like.** On a bar chart on its side, a value known only as a range: the bar solid to `y` and dashed on to `upper` over a pale tint of its colour, its label naming both ends (「60 至 70」, "60–70").
+
+**Why.** Two groups that scored about 60% and 70% are one finding with a spread, not two bars.
+
+**What it gave up.**
+
+- Bars on their side only, at zero or above, and not beside a status.
+- A page whose chart carries a range is offered to `diptych` alone among the hand-set plots.
