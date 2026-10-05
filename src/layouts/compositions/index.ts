@@ -121,6 +121,18 @@ function asksForChartMarks(components: readonly CompositionProps["components"][n
 }
 
 /**
+ * The compositions that draw a chart's `tag`, the few words over it saying
+ * what kind of figures it draws. A page whose chart carries one is offered to
+ * these alone, so no hand-set plot leaves it off. The ordinary chart draws it
+ * at the start of its legend row.
+ */
+const CHART_TAG_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForChartTag(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.tag !== undefined)
+}
+
+/**
  * Asks each composition in `ids` in turn whether it takes these components,
  * and returns the first drawing, or `null` when none of them does.
  */
@@ -128,8 +140,10 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const handOn: CompositionProps["handOn"] = (components, rect) =>
     compose({ ...props, components, rect }, ids)
   const marked = asksForChartMarks(props.components)
+  const tagged = asksForChartTag(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
+    if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     const drawn = COMPOSITIONS[id]({ ...props, handOn })
     if (drawn) return drawn
   }
