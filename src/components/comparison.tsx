@@ -300,7 +300,9 @@ function layoutTable(
   // 先丢多余的空首表头，再判首列重复：两种笔误叠在一起时，只有空表头
   // 已经丢掉，dedupeLabelColumn 的「cells 与 columns 等长」判据才成立。
   const normalized = dedupeLabelColumn(dropBlankLeadingHeader(raw))
-  const { labelHeader } = normalized
+  // The author's own header over the labels wins over one recovered from a
+  // duplicated first column.
+  const labelHeader = raw.label_column?.trim() || normalized.labelHeader
   // A cell may mark a run with `**`. Everything that measures, wraps or cuts
   // reads the text without the marks, and the marks come back at paint time.
   const component: ComparisonComponent = {

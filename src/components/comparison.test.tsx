@@ -642,3 +642,14 @@ describe("comparison recommended_label", () => {
     expect(container.querySelector("g[data-pick-label] rect")?.getAttribute("fill")).not.toBe("none")
   })
 })
+
+describe("comparison label_column", () => {
+  it("heads the rows' labels with the author's words, bold like the other headers", () => {
+    const { container } = svg(comparison.render({ ...component, label_column: "维度" }, { x: 0, y: 0, w: 800 }, ctx))
+    const header = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "维度")!
+    expect(header.getAttribute("font-weight")).toBe("bold")
+    const optionA = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "方案A")!
+    expect(header.getAttribute("y")).toBe(optionA.getAttribute("y"))
+    expect(Number(header.getAttribute("x"))).toBeLessThan(Number(optionA.getAttribute("x")))
+  })
+})

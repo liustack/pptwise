@@ -346,6 +346,8 @@ export const tableComposition: Composition = (props) => {
   // The recommended option's label has no place in these tables: the
   // ordinary comparison draws it over its column.
   if (props.components.some((component) => component.type === "comparison" && component.recommended_label?.trim())) return null
+  // Nor does the header over the rows' labels: the ordinary comparison sets it.
+  if (props.components.some((component) => component.type === "comparison" && component.label_column !== undefined)) return null
   if (props.setting === "panel") return tablePanel(props)
   if (props.setting === "seal") return tableSeal(props)
   if (props.setting === "console") return tableConsole(props)

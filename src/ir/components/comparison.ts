@@ -40,6 +40,12 @@ export const schema = z
       .optional()
       .describe('A short name for the comparison, printed over it, such as "三个方案" or "Three options". A theme that sets it in a panel prints the title in the panel\'s title bar.'),
     columns: z.array(z.string()),
+    /** The header over the rows' labels. See the describe below. */
+    label_column: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('The header over the rows\' labels, saying what they are, such as "药品" or "Option". Without it that header stays empty.'),
     rows: z.array(
       z
         .object({

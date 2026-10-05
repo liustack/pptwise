@@ -2085,3 +2085,11 @@ describe("insight_panel icon", () => {
     expect(parseOne({ type: "insight_panel", title: "t", icon: "receipt", rows: [{ label: "a", text: "b" }] }).success).toBe(true)
   })
 })
+
+describe("comparison label_column", () => {
+  it("takes a header over the rows' labels, and refuses an empty one", () => {
+    const base = { type: "comparison", columns: ["A", "B"], rows: [{ label: "x", cells: ["1", "2"] }] }
+    expect(parseOne({ ...base, label_column: "药品" }).success).toBe(true)
+    expect(parseOne({ ...base, label_column: "" }).success).toBe(false)
+  })
+})
