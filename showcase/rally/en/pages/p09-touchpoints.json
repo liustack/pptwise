@@ -1,0 +1,36 @@
+{
+  "components": [
+    {
+      "type": "image_grid",
+      "emphasis": "first",
+      "items": [
+        {
+          "asset_id": "kioskwide",
+          "caption": "Outside: A drink station, fresh cups, a code on each. Illustration (AI-generated)",
+          "icon": "cup-soda"
+        },
+        {
+          "asset_id": "wristband",
+          "caption": "Inside: Only what the promoter allows. Illustration (AI-generated)",
+          "icon": "sparkles"
+        },
+        {
+          "asset_id": "exit",
+          "caption": "After: Drinks at shuttle stops, store vouchers. Illustration (AI-generated)",
+          "icon": "moon-star"
+        },
+        {
+          "asset_id": "riverside",
+          "caption": "City: A drink for a ticket stub, with local merchants. Illustration (AI-generated)",
+          "icon": "map-pin"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "text": "Beijing police have banned bottled drinks at big events (Beijing, one holiday, not a national rule): we never hand out bottles to carry in"
+    }
+  ],
+  "notes": "The touchpoint map: four places, one job in each. Outside: drink stations in the queues and at shuttle points, freshly made cups drunk on the spot, a code printed on every cup. Inside: the promoter and venue decide, and we only discuss official drinks and fan activities they allow. After: refreshments at the shuttle stops and late-night store vouchers. City: we sign up as a ticket-stub merchant, so a stub buys a drink in our stores, and we sell a city-edition co-branded pack. Beijing police listed bottled drinks among banned items in their notice for large events over the 2026 Dragon Boat holiday. That applies to Beijing at that time, not nationally, but it shows that getting bottles into venues is unreliable, so we never hand out bottles for fans to carry in. All four images are AI-generated illustrations."
+}

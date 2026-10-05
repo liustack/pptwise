@@ -1,0 +1,79 @@
+{
+  "components": [
+    {
+      "type": "heatmap",
+      "x_labels": [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
+      ],
+      "y_labels": [
+        "Concerts",
+        "Festivals"
+      ],
+      "values": [
+        [
+          0,
+          0,
+          0,
+          0,
+          2,
+          0,
+          0,
+          3,
+          3,
+          0,
+          2,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          3,
+          0,
+          1,
+          1,
+          1,
+          3,
+          0,
+          0
+        ]
+      ],
+      "bands": [
+        {
+          "from": "Jun",
+          "to": "Sep",
+          "label": "2027 concert season · Jun to Sep"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Concerts: most shows in Aug and Sep, box office highs in May and Nov"
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Festivals: 60+ shows at May Day, 40+ at National Day, Jul to Sep next"
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Shading marks peaks only. The 2024 monthly chart carries no values"
+    }
+  ],
+  "footnote": "Source: CAPA and Dengta Pro, 2024 large-show market report (Apr 2025)",
+  "notes": "The summer calendar. In the CAPA and Dengta Pro report on 2024, large concerts had box office highs in May, August, September and November, and the number of shows peaked in August and September. Festivals peak twice, over the May Day and National Day holidays, with more than 60 shows at May Day and more than 40 at National Day. July to September is only their second tier. The report's monthly chart carries no values, so we mark peaks rather than drawing a curve. Dengta Pro's first-half 2026 figures agree: May was the biggest concert month at RMB 4.73 billion. We set the 2027 season for June to September, covering the summer break and the August and September concert peak."
+}

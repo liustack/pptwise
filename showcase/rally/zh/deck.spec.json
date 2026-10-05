@@ -1,0 +1,37 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "rally",
+  "filename": "concert-season-2027-zh",
+  "meta": {
+    "organization": "市场部",
+    "date": "2026 年 10 月"
+  },
+  "footer": {
+    "page_number": true
+  },
+  "pages": [
+    { "id": "p01-cover", "type": "cover", "heading": "2027 夏季演唱会季", "summary": "开场前，散场后：在跨城歌迷的演唱会周末里接住他们", "kicker": "提案" },
+    { "id": "p02-idea", "type": "content", "kind": "statement", "heading": "2027 年夏天，我们不进场馆抢冠名，去**开场前**和**散场后**\n接住跨城歌迷", "kicker": "一句话方案", "focus": "icon_cards" },
+    { "id": "p03-market", "type": "content", "kind": "fact", "heading": "大型演出一年 4338.58 万人次，票房占全国一半以上", "kicker": "大盘", "focus": "kpi_cards" },
+    { "id": "p04-split", "type": "content", "kind": "comparison", "heading": "演唱会和音乐节在分岔：2025 年演唱会观众涨 30.8%，音乐节跌 6.1%", "kicker": "分岔", "focus": "chart" },
+    { "id": "p05-season", "type": "content", "kind": "process", "heading": "演唱会场次 8 至 9 月见顶，音乐节高峰在五一和十一", "kicker": "档期", "focus": "heatmap" },
+    { "id": "p06-audience", "type": "content", "kind": "data", "heading": "七成以上观众是 18 至 34 岁，女性约占三分之二", "kicker": "人群", "focus": "chart" },
+    { "id": "p07-crosscity", "type": "content", "kind": "hierarchy", "heading": "64.2% 的演唱会观众跨城而来，城市越小，外地观众越多", "kicker": "跨城", "focus": "chart" },
+    { "id": "p08-weekend", "type": "content", "kind": "process", "heading": "跨城歌迷的演唱会周末：78.5% 待两天以上，98.4% 在当地吃饭", "kicker": "周末", "focus": "steps" },
+    { "id": "p09-touchpoints", "type": "content", "kind": "photo", "heading": "触点地图：场外、场内、场后、城市，每处只做一件事", "kicker": "触点", "focus": "image_grid" },
+    { "id": "p10-cases", "type": "content", "kind": "comparison", "heading": "同行做过饮品站、联名和买赠门票，但没有一例公开可归因的销量", "kicker": "同行", "focus": "icon_cards" },
+    { "id": "p11-attribution", "type": "content", "kind": "process", "heading": "每个触点都带一个码，从领杯到复购都能算回场次", "kicker": "归因", "focus": "chevron_process" },
+    { "id": "p12-city", "type": "content", "kind": "list", "heading": "城市已在用票根接住歌迷，我们做票根商户，凭票根换一杯", "kicker": "城市", "focus": "icon_cards" },
+    { "id": "p13-planb", "type": "content", "kind": "comparison", "heading": "六类风险最近两年都发生过，每一类先写好预案", "kicker": "预案", "focus": "data_table" },
+    { "id": "p14-schedule", "type": "content", "kind": "process", "heading": "10 月拍板，明年 6 月首站开场，9 月底收官复盘", "kicker": "排期", "focus": "gantt" },
+    { "id": "p15-kpi", "type": "content", "kind": "list", "heading": "KPI 看板只放能核销的数，目标值在首站复盘后再定", "kicker": "看板", "focus": "icon_cards" },
+    { "id": "p16-budget", "type": "content", "kind": "hierarchy", "heading": "预算按六类拟定比例，归因和风险准备金单列、不挪用", "kicker": "预算", "focus": "chart" },
+    { "id": "p17-asks", "type": "content", "kind": "points", "heading": "请管理层定四件事：方向、预算、归因口径、风险授权", "kicker": "请示", "focus": "numbered_cards" },
+    { "id": "p18-ending", "type": "ending", "heading": "10 月拍板，11 月开谈第一站", "summary": "开场前，散场后 · 2027 夏季演唱会季", "kicker": "下一步" }
+  ]
+}

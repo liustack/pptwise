@@ -1,0 +1,54 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "43.39",
+          "unit": "million",
+          "label": "2025 · up 18.81%",
+          "note": "Admissions to shows for 5,000 or more. Up another 20.37% in H1 2026."
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "axes": {
+        "y_unit": "RMB bn"
+      },
+      "series": [
+        {
+          "name": "Big-show box office",
+          "data": [
+            {
+              "x": "2019",
+              "y": 3.96
+            },
+            {
+              "x": "2023",
+              "y": 17.8
+            },
+            {
+              "x": "2024",
+              "y": 29.64
+            },
+            {
+              "x": "2025",
+              "y": 32.45,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "title": "Over half of all box office",
+      "text": "35.4% in 2023, 51.1% in 2024, about 52.6% in 2025 (324.48 ÷ 616.55)"
+    }
+  ],
+  "footnote": "Sources: CAPA 2025 annual brief (Jan 2026), H1 2026 figures (Jul 2026), CAPA and Dengta Pro report (Apr 2025)",
+  "notes": "Why live shows. Shows with 5,000 or more seats, which means stadium and arena concerts and festivals, drew 43.39 million admissions in 2025, up 18.81%, and took RMB 32.45 billion at the box office, up 9.49%. Dividing by China's total live-show box office of RMB 61.66 billion gives about 52.6%, so big live shows are now the core of the market. The first half of 2026 is growing faster still: 23.28 million admissions, up 20.37%, and RMB 17.11 billion, up 17.70%. We sell drinks, so we count people rather than tickets, and that is the number on this page. Note that CAPA restated its 2025 national figures on a comparable basis, so admissions from different years should not be joined into one trend line."
+}

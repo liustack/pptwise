@@ -1,0 +1,69 @@
+{
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "qr-code",
+          "title": "Cup codes",
+          "text": "Cups picked up and scanned, by city and show",
+          "tag": {
+            "text": "Target: set after the first stop",
+            "tone": "warning"
+          }
+        },
+        {
+          "icon": "store",
+          "title": "Voucher redemption",
+          "text": "Redeemed within 7 days ÷ issued",
+          "tag": {
+            "text": "Target: set after the first stop",
+            "tone": "warning"
+          }
+        },
+        {
+          "icon": "package",
+          "title": "Co-brand uplift",
+          "text": "Weekly co-brand sales, show city minus control",
+          "tag": {
+            "text": "Target: set after the first stop",
+            "tone": "warning"
+          }
+        },
+        {
+          "icon": "repeat",
+          "title": "30-day repeat",
+          "text": "Scanned members who buy again within 30 days",
+          "tag": {
+            "text": "Target: set after the first stop",
+            "tone": "warning"
+          }
+        },
+        {
+          "icon": "ticket",
+          "title": "Stub swaps",
+          "text": "Stub redemptions, by city and merchant",
+          "tag": {
+            "text": "Target: set after the first stop",
+            "tone": "warning"
+          }
+        },
+        {
+          "icon": "message-circle-warning",
+          "title": "Sentiment",
+          "text": "Negative share. A trigger starts the 4-hour drill",
+          "tag": {
+            "text": "Target: set after the first stop",
+            "tone": "warning"
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "The board goes to management weekly. No code, no project."
+    }
+  ],
+  "notes": "The KPI board. Only numbers we can redeem go on the board. Impressions and trending topics stay off. Six measures. Cup codes: cups picked up and scanned at stations, by city and show. Voucher redemption: vouchers redeemed within seven days of the show divided by vouchers issued. Co-brand uplift: weekly co-branded sales in show cities minus similar control cities, the closest we get to true incremental sales. Thirty-day repeat: the share of scanned members who buy again within 30 days. Stub swaps: stub redemptions by city and merchant. Sentiment: the share of negative mentions, where a trigger starts the four-hour response. We set no targets yet, because no published case gives a credible baseline. The first stop sets the baseline, and targets for the second tranche follow. The board goes to management every week."
+}

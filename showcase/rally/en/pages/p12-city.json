@@ -1,0 +1,55 @@
+{
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "landmark",
+          "title": "National: Travel for a Show",
+          "text": "A national measure since January 2025",
+          "tag": {
+            "text": "Show your stub"
+          }
+        },
+        {
+          "icon": "map-pin",
+          "title": "Nanjing: Enjoy 1+3",
+          "text": "453 merchants, deals a week either side",
+          "tag": {
+            "text": "Show your stub"
+          }
+        },
+        {
+          "icon": "ticket",
+          "title": "Pudong, Shanghai: Stub rewards",
+          "text": "District pays 30%, merchants 20%, real-name checks",
+          "tag": {
+            "text": "Show your stub"
+          }
+        },
+        {
+          "icon": "bus-front",
+          "title": "Qingdao: Stub Economy 3.0",
+          "text": "800+ merchants, shuttles at start and end",
+          "tag": {
+            "text": "Show your stub"
+          }
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "1:6.85",
+          "label": "CAPA estimate: other spending per RMB 1 of tickets",
+          "note": "Method unpublished. It shows why cities welcome shows, not what we earn.",
+          "icon": "building-2",
+          "tone": "warning"
+        }
+      ]
+    }
+  ],
+  "footnote": "Sources: State Council (Jan 2025), Yangtse Evening Post (Oct 2025), Pudong government (Jun 2025), China News Service (Jun 2026), CAPA (Jan 2026)",
+  "notes": "Working with cities. Cities are already reaching out to travelling fans. A State Council General Office document in January 2025 made travelling for a show a national measure. Nanjing's 1+3 scheme, running since May 2025, gives discounts at sights, hotels and restaurants, and malls to anyone holding a ticket on the day of a show or within a week either side. 453 merchants had joined by October. Shanghai's Pudong district ran stub rewards from May to September 2025: e-tickets bought hotel and sight discounts, with the district paying 30% and merchants 20%, and booking names had to match ticket names. Qingdao's stub economy 3.0 this year has more than 800 merchants, longer metro hours and post-show shuttle lines. CAPA estimates that each RMB 1 of large-show tickets brought RMB 6.85 of other spending in 2025, more than RMB 220 billion in all, but the method is unpublished. It explains why cities court shows. It cannot measure our return. Our move is to join these schemes as a stub merchant: show a stub in our stores and get a drink, with the voucher coded like everything else."
+}

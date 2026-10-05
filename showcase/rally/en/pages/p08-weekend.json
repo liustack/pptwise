@@ -1,0 +1,83 @@
+{
+  "components": [
+    {
+      "type": "steps",
+      "items": [
+        {
+          "icon": "train-front",
+          "title": "Travel",
+          "text": "Rail to the show"
+        },
+        {
+          "icon": "cup-soda",
+          "title": "Before",
+          "text": "Queue outside"
+        },
+        {
+          "icon": "music",
+          "title": "During",
+          "text": "Inside is the promoter's. We sell nothing inside",
+          "tone": "warning"
+        },
+        {
+          "icon": "moon-star",
+          "title": "After",
+          "text": "Find a meal"
+        },
+        {
+          "icon": "map-pin",
+          "title": "Next day",
+          "text": "Shops and sights"
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**78.5%**",
+          "label": "Stay two days or more",
+          "note": "Two days 41.5%, three 24.2%, four to five 11.7%"
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "y_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Share who spent on each at the destination (not how the money splits)",
+          "data": [
+            {
+              "x": "Food",
+              "y": 98.4,
+              "emphasis": true
+            },
+            {
+              "x": "Tickets",
+              "y": 96.4
+            },
+            {
+              "x": "City transport",
+              "y": 68.1
+            },
+            {
+              "x": "Shopping, merch",
+              "y": 64.7
+            },
+            {
+              "x": "Sights",
+              "y": 30.2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: CAPA-commissioned survey (last out-of-town show in 2024, N=830, Apr 2025)",
+  "notes": "The on-site journey: one travelling fan's concert weekend. A survey commissioned by CAPA asked 830 people about their last out-of-town concert in 2024. 78.5% stayed two days or more: 41.5% two days, 24.2% three. 98.4% ate locally, 68.1% paid for city transport, 64.7% went shopping, merchandise included, and 30.2% bought tickets for local sights. Total spending at the destination on that trip was RMB 500 to 2,000 for 52%. These are shares of people with each kind of spending, not a split of the money, so we do not draw a spending pie. Rail operators ran more than 100 fan trains in 2025. The show itself belongs to the promoter and venue, so our touchpoints sit before the show, after it, and the next day."
+}

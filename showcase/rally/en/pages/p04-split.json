@@ -1,0 +1,60 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "line",
+      "axes": {
+        "y_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Concerts",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "2024",
+              "y": 0
+            },
+            {
+              "x": "2025",
+              "y": 30.8
+            }
+          ]
+        },
+        {
+          "name": "Festivals",
+          "data": [
+            {
+              "x": "2024",
+              "y": 0
+            },
+            {
+              "x": "2025",
+              "y": -6.1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "mic-vocal",
+      "title": "Concerts · our 2027 bet",
+      "text": "Nearly 38m admissions · 2,496 shows · RMB 29.56bn box office (+13.7%)"
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "tent",
+      "title": "Festivals",
+      "text": "5.46m admissions · 547 shows · about 40 shows Mar to May 2026, 90+ a year before",
+      "tag": {
+        "text": "Press",
+        "evidence": "press"
+      }
+    }
+  ],
+  "footnote": "Sources: CAPA and Dengta Pro (Apr 2026), Jiemian (Apr 2026). Spring 2026 show counts come from industry sources",
+  "notes": "Why concerts rather than festivals. Both are big live shows of 5,000 or more, but they are moving apart. In 2025 large concerts numbered 2,496, took RMB 29.56 billion, up 13.7%, and drew nearly 38 million admissions, up 30.8%. Large festivals numbered 547, flat on the year, and took RMB 2.89 billion, up 22%, but admissions fell 6.1% to 5.46 million: prices up, people down. Dengta Pro's platform figures for the first half of 2026 show a wider gap, RMB 14.54 billion for concerts against RMB 0.98 billion for festivals. These are company figures and do not add up with CAPA's. On supply, tickets on sale per concert rose 11% in the first half. For festivals, an industry source told Jiemian there were about 40 shows from March to May this year against more than 90 a year earlier, with Foshan Strawberry and Changsha Malanshan among those cancelled or postponed, and sponsors vetting deals harder. So the summer 2027 budget goes to concerts."
+}

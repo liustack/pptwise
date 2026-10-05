@@ -1,0 +1,26 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "crowd"
+  },
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "calendar-days",
+          "title": "June to September"
+        },
+        {
+          "icon": "map-pin",
+          "title": "Outside · After · City"
+        },
+        {
+          "icon": "qr-code",
+          "title": "A code at every touchpoint"
+        }
+      ]
+    }
+  ],
+  "notes": "This is the marketing team's proposal to management on whether to put the summer 2027 budget behind large concerts, and how. We start with the one-line plan, then why live shows, why concerts rather than festivals, the summer calendar and who the audience is. Then the touchpoint map, what peers have done, how we will attribute sales, the city ticket-stub schemes, risks and Plan B, the timeline, the KPI board and the budget split, and we close on four decisions for management. Market figures come from the China Association of Performing Arts (CAPA), its joint reports with Dengta Pro, and press reports, with a source on every data page. The plan contains none of our own sales, user or budget figures: everything about us is written as a plan or as something to test. The cover image is an AI-generated illustration."
+}

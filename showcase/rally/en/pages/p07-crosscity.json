@@ -1,0 +1,94 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "percent_stacked",
+      "axes": {
+        "x_title": "By host city tier, 2024",
+        "y_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Local",
+          "data": [
+            {
+              "x": "Tier 1",
+              "y": 46.5
+            },
+            {
+              "x": "Tier 2",
+              "y": 35.1
+            },
+            {
+              "x": "Tier 3",
+              "y": 28.3
+            },
+            {
+              "x": "Tier 4",
+              "y": 18.6
+            }
+          ]
+        },
+        {
+          "name": "Same province",
+          "data": [
+            {
+              "x": "Tier 1",
+              "y": 10.2
+            },
+            {
+              "x": "Tier 2",
+              "y": 20.7
+            },
+            {
+              "x": "Tier 3",
+              "y": 37.0
+            },
+            {
+              "x": "Tier 4",
+              "y": 48.5
+            }
+          ]
+        },
+        {
+          "name": "Other province",
+          "data": [
+            {
+              "x": "Tier 1",
+              "y": 43.3
+            },
+            {
+              "x": "Tier 2",
+              "y": 44.2
+            },
+            {
+              "x": "Tier 3",
+              "y": 34.7
+            },
+            {
+              "x": "Tier 4",
+              "y": 33.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "train",
+      "fit": "cover",
+      "caption": "Illustration (AI-generated)"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**64.2%**",
+          "label": "of 2024 big-concert crowds came from another city (festivals 62.2%)"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: CAPA and Dengta Pro (Apr 2025, Dengta platform data)",
+  "notes": "Where they come from. In 2024, 64.2% of large-concert audiences travelled from another city, and 62.2% of festival audiences. By the tier of the host city, shows in Tier 1 cities still draw 46.5% local fans, while in Tier 4 cities locals are only 18.6% and 48.5% come from elsewhere in the province. The smaller the city, the more outsiders. The cities with the highest share of travelling concert fans were Xianyang at 93.4%, Yantai at 88.7% and Changzhou at 87.9%. Reports of the 2025 figures, 64.6% for concerts and 68.4% for festivals, disagree on whether they count other cities or other provinces, so we use the checked 2024 numbers. For us it means fans take the train, check into a hotel and eat out, so stations, hotels, late-night food and the city itself are all touchpoints. The image is an AI-generated illustration."
+}

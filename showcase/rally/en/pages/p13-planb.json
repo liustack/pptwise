@@ -1,0 +1,64 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "e",
+          "label": "Risk · public case"
+        },
+        {
+          "key": "p",
+          "label": "Plan B"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "cloud-lightning",
+          "cells": {
+            "e": "Weather: Typhoon Bavi cancelled 3 G.E.M. shows in Hangzhou, Jul 2026",
+            "p": "Kit moves cities, vouchers follow the new dates"
+          }
+        },
+        {
+          "icon": "siren",
+          "cells": {
+            "e": "Execution: Genki Forest's Beijing festival cut sets short and fans demanded refunds, May 2025",
+            "p": "No festival of our own. The stage is the promoter's, we run stations outside"
+          }
+        },
+        {
+          "icon": "user-x",
+          "cells": {
+            "e": "Artist: After Zhang Zhehan, Aug 2021, 26 brands quit within 4 hours 21 minutes",
+            "p": "Show deals only, never endorsement, a morals clause, assets down within 4 hours"
+          }
+        },
+        {
+          "icon": "ticket-x",
+          "cells": {
+            "e": "Scalpers: A Zhenjiang ring took 60,000+ tickets in two years, RMB 16m+ profit",
+            "p": "Prize tickets are real-name, the winner attends"
+          }
+        },
+        {
+          "icon": "rotate-ccw",
+          "cells": {
+            "e": "Refunds: Concert complaints doubled in H1 2025, over 90% about refunds",
+            "p": "Refund rules for prize tickets stated up front, platform rules apply"
+          }
+        },
+        {
+          "icon": "ban",
+          "emphasis": "highlight",
+          "cells": {
+            "e": "Bottle ban: Beijing police notice for the 2026 Dragon Boat holiday",
+            "p": "Fresh cups finished on the spot, no bottles to carry in"
+          }
+        }
+      ]
+    }
+  ],
+  "footnote": "Sources: Guancha, China Music Business News, Jiemian, CCTV News, Legal Daily (citing the China Consumers' Association), Beijing police",
+  "notes": "Risks and Plan B. All six risks have happened in the past two years. Weather: in July 2026 Typhoon Bavi cancelled three G.E.M. shows in Hangzhou, and the promoter refunded tickets and covered travel and hotels. In May a gale damaged the stage at the Bubble Island festival in Tianjin. Our station kit can move to another city, and vouchers follow the new date. Execution: at Genki Forest's own Beijing festival on 1 May 2025 a band arrived late, the headline set shrank from the advertised 30 minutes to about seven, the crowd chanted for refunds and the brand's social account was swamped. When a brand runs the festival, the brand takes the blame, so we will not run one. Promoters run the stage and we run the stations outside. Artists: after the Zhang Zhehan affair in August 2021, Wahaha cut ties first and 26 brands followed within 4 hours 21 minutes. We sign show-level deals only, no endorsements, with a morals clause, and take every asset down within four hours if needed. Scalpers: a ring in Zhenjiang grabbed more than 60,000 tickets in two years and made over RMB 16 million. Prize tickets are real-name, so the winner is the person who attends. Refunds: the China Consumers' Association says concert complaints doubled in the first half of 2025 and more than 90% concerned refunds, so prize-ticket refund rules are set out in advance. The last one is ours alone: Beijing police listed bottled drinks as banned at large events over the 2026 Dragon Boat holiday. That is a Beijing notice, not a national rule, but our default is freshly made cups finished on the spot."
+}

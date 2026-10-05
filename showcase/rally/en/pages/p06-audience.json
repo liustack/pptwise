@@ -1,0 +1,171 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "stacked",
+      "direction": "horizontal",
+      "emphasis_label": "Aged 18 to 34: 74.9%",
+      "series": [
+        {
+          "name": "Teens",
+          "data": [
+            {
+              "x": "Concerts",
+              "y": 3.6
+            }
+          ]
+        },
+        {
+          "name": "18-24",
+          "data": [
+            {
+              "x": "Concerts",
+              "y": 25.8
+            }
+          ],
+          "emphasis": true
+        },
+        {
+          "name": "25-29",
+          "data": [
+            {
+              "x": "Concerts",
+              "y": 31.1
+            }
+          ],
+          "emphasis": true
+        },
+        {
+          "name": "30-34",
+          "data": [
+            {
+              "x": "Concerts",
+              "y": 18.0
+            }
+          ],
+          "emphasis": true
+        },
+        {
+          "name": "35-39",
+          "data": [
+            {
+              "x": "Concerts",
+              "y": 10.3
+            }
+          ]
+        },
+        {
+          "name": "40-44",
+          "data": [
+            {
+              "x": "Concerts",
+              "y": 5.4
+            }
+          ]
+        },
+        {
+          "name": "45+",
+          "data": [
+            {
+              "x": "Concerts",
+              "y": 5.9
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "stacked",
+      "direction": "horizontal",
+      "emphasis_label": "Aged 18 to 34: 84.9%",
+      "series": [
+        {
+          "name": "Teens",
+          "data": [
+            {
+              "x": "Festivals",
+              "y": 5.0
+            }
+          ]
+        },
+        {
+          "name": "18-24",
+          "data": [
+            {
+              "x": "Festivals",
+              "y": 36.2
+            }
+          ],
+          "emphasis": true
+        },
+        {
+          "name": "25-29",
+          "data": [
+            {
+              "x": "Festivals",
+              "y": 33.3
+            }
+          ],
+          "emphasis": true
+        },
+        {
+          "name": "30-34",
+          "data": [
+            {
+              "x": "Festivals",
+              "y": 15.4
+            }
+          ],
+          "emphasis": true
+        },
+        {
+          "name": "35-39",
+          "data": [
+            {
+              "x": "Festivals",
+              "y": 6.0
+            }
+          ]
+        },
+        {
+          "name": "40-44",
+          "data": [
+            {
+              "x": "Festivals",
+              "y": 2.2
+            }
+          ]
+        },
+        {
+          "name": "45+",
+          "data": [
+            {
+              "x": "Festivals",
+              "y": 1.9
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**66.1%**",
+          "label": "of concert-goers are women",
+          "note": "67.1% at festivals (2024). Born 2000 or later: 32.5% of the live music crowd (2025)",
+          "icon": "venus"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "icon": "user-round-search",
+      "text": "The market is not the show: 44.5% of Dao Lang's tour crowd was over 50. Pick shows by each artist's own audience."
+    }
+  ],
+  "footnote": "Sources: CAPA and Dengta Pro (Apr 2025, Dengta platform data), CAPA live music report (DoNews, Apr 2026)",
+  "notes": "Who comes. In 2024, 66.1% of large-concert audiences were women and 74.9% were aged 18 to 34, adding 25.8% aged 18 to 24, 31.1% aged 25 to 29 and 18.0% aged 30 to 34. Festival crowds are younger still: 84.9% aged 18 to 34, 67.1% women. In 2025, people born in 2000 or later made up 32.5% of the live music audience. That is exactly who a young drinks brand wants. But the market is not the show. Household-name singers pull the age up: 44.5% of Dao Lang's 2024 tour audience was 50 or older, against 20.3% for Wakin Chau and 10.7% for Andy Lau. So we choose shows by the artist's own audience profile, not by the market average. That is our first test for any artist: their audience overlaps with 18 to 34. Then many tour dates, no public controversy, and acceptance of a morals clause. The profile data come from the Dengta platform, so they are effectively company figures."
+}

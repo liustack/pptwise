@@ -1,0 +1,41 @@
+{
+  "ballot": {
+    "choices": [
+      "Approve",
+      "Revisit"
+    ]
+  },
+  "components": [
+    {
+      "type": "numbered_cards",
+      "items": [
+        {
+          "icon": "target",
+          "title": "Direction: Concerts, outside and in the city",
+          "text": "No naming rights, no festival of our own, June to September 2027",
+          "sub": "See pp. 3 to 9",
+          "emphasis": true
+        },
+        {
+          "icon": "wallet",
+          "title": "Budget: Six shares, two tranches",
+          "text": "Second tranche after the first stop passes, amounts to follow",
+          "sub": "See p. 16"
+        },
+        {
+          "icon": "qr-code",
+          "title": "Attribution: No code, no project",
+          "text": "Weekly board to management, targets after the first stop",
+          "sub": "See pp. 10, 11, 15"
+        },
+        {
+          "icon": "shield-alert",
+          "title": "Authority: Marketing head acts on artist risk",
+          "text": "Show deals with morals clauses, assets down within 4 hours",
+          "sub": "See p. 13"
+        }
+      ]
+    }
+  ],
+  "notes": "Four decisions for today. First, direction: in summer 2027 we back the outside of the venue and the city at large concerts, with no naming rights and no festival of our own, from June to September. Second, budget: six categories, released in two tranches, the second only after the first stop passes review, with amounts submitted separately. Third, the attribution rule: no code, no project. The board goes to management weekly and targets are set after the first stop. Fourth, risk authority: artist deals are show-level with a morals clause, and if something happens the head of marketing can take down every asset within four hours without waiting for sign-off. In 2021, 26 brands walked away in just over four hours. Slow is costly."
+}
