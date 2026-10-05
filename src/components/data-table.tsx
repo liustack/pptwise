@@ -1,7 +1,8 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { mixHex } from "./color-mix"
-import { accessibleInk } from "../render/ink"
+import { accessibleInk, graphicInk } from "../render/ink"
+import { Icon } from "../render/icons"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { withBlockTitle } from "./block-title"
 
@@ -57,6 +58,13 @@ const SOURCE_LH = 16
 /** measure()/render() 都用这个常量预留脚注带高度——两处必须读同一个值，
  * 否则会重演 matrix.tsx 头注记录的 measure()/render() 高度对不上的事故。 */
 const SOURCE_BAND = SOURCE_GAP + SOURCE_LH
+/** A row's icon (`rows[].icon`), at the row's start, and the room it takes from the first cell. */
+const ROW_ICON = { size: 18, gap: 8 } as const
+
+/** The room a row's icon takes at the start of column `c`: the first column's, when the row has one. */
+function iconRoom(row: DataTableRow, c: number): number {
+  return c === 0 && row.icon ? ROW_ICON.size + ROW_ICON.gap : 0
+}
 
 function cellText(row: DataTableRow, key: string): string {
   const v = row.cells[key]
@@ -87,9 +95,9 @@ function computeColumnWidths(
   rows: readonly DataTableRow[],
   totalW: number,
 ): { widths: number[]; offsets: number[] } {
-  const weights = columns.map((col) => {
-    const texts = [col.label, ...rows.map((r) => cellText(r, col.key))]
-    return Math.max(...texts.map((t) => measureTextUnits(t)), 1)
+  const weights = columns.map((col, c) => {
+    const units = [measureTextUnits(col.label), ...rows.map((r) => measureTextUnits(cellText(r, col.key)) + iconRoom(r, c) / 16)]
+    return Math.max(...units, 1)
   })
   const totalWeight = weights.reduce((s, w) => s + w, 0)
   const raw = weights.map((w) => (totalWeight > 0 ? (w / totalWeight) * totalW : totalW / columns.length))
@@ -266,17 +274,29 @@ export const dataTable: SvgComponent<DataTableComponent> = {
           const rowY = (r + 1) * ROW
           return (
             <g key={`r-${r}`}>
+              {row.icon ? (
+                <Icon
+                  name={row.icon}
+                  x={offsets[0]! + PAD_X}
+                  y={rowY + (ROW - ROW_ICON.size) / 2}
+                  size={ROW_ICON.size}
+                  color={graphicInk(ctx.colors.primary, fill ?? ctx.defaultBg ?? ctx.colors.bg)}
+                />
+              ) : null}
               {component.columns.map((col, c) => {
                 const text = cellText(row, col.key)
                 if (!text) return null
+                const room = iconRoom(row, c)
                 const fit = fitSvgLine(text, {
-                  maxWidth: widths[c] - PAD_X * 2,
+                  maxWidth: widths[c] - PAD_X * 2 - room,
                   fontSize: CELL_FONT_SIZE,
                   minFontSize: MIN_FONT_SIZE,
                   bold,
                   fontFamily: ctx.fonts.body,
                 })
-                const { x, textAnchor } = alignedX(col.align, offsets[c], widths[c])
+                const aligned = alignedX(col.align, offsets[c], widths[c])
+                const { textAnchor } = aligned
+                const x = textAnchor === "start" ? aligned.x + room : aligned.x
                 return (
                   <text
                     key={`c-${r}-${c}`}

@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { IconNameSchema, TagSchema } from "./shared"
+import { IconNameSchema, TagSchema, ToneSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -23,6 +23,8 @@ export const schema = z
           ),
           delta: z.enum(["up", "down", "flat"]).optional(),
           icon: IconNameSchema.optional(),
+          /** What kind of news the figure is. See `ToneSchema`. */
+          tone: ToneSchema.optional(),
           /** 数据来源小字（财经信任语言，2026-07-12 借鉴），如
            * 「来源: Crunchbase」。 */
           source: z.string().optional(),

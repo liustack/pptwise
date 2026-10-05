@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import type { ComponentCtx } from "../../components/types"
-import { kpiValueText } from "../../components/kpi"
+import { kpiFigure, kpiValueText } from "../../components/kpi"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { emphasisRunInk, parseEmphasis } from "../../render/emphasis"
@@ -324,7 +324,7 @@ export interface FigurePanel {
 
 /** The line under a figure: its unit, then its note, in the deck's punctuation. */
 export function figureCaption(item: KpiItem, chinese: boolean): string {
-  const parts = [item.unit?.trim(), item.note?.trim()].filter((part): part is string => Boolean(part))
+  const parts = [kpiFigure(item.value, item.unit).unit?.trim(), item.note?.trim()].filter((part): part is string => Boolean(part))
   return parts.join(chinese ? "，" : ", ")
 }
 
@@ -344,8 +344,8 @@ export function figureInk(ctx: ComponentCtx, item: KpiItem, marked: boolean, val
  * it at 15px within two lines. `null` when the panel cannot hold it whole.
  */
 export function fitFigurePanel(item: KpiItem, place: Place, ctx: ComponentCtx, chinese: boolean, sizes: readonly number[] = FIGURE_SIZES): FigurePanel | null {
-  if (item.icon !== undefined || item.source !== undefined || item.tag !== undefined) return null
-  const { text: value, marked } = kpiValueText(item.value)
+  if (item.icon !== undefined || item.source !== undefined || item.tag !== undefined || item.tone !== undefined) return null
+  const { text: value, marked } = kpiFigure(item.value, item.unit)
   if (!value.trim()) return null
   const bar = fitPanelBar(item.label, undefined, place.w, ctx)
   if (!bar) return null
@@ -429,7 +429,7 @@ export function paintFigurePanel(layout: FigurePanel, place: Place, ctx: Compone
 
 /** Whether a kpi_cards item can stand in a figure panel. */
 export function panelFigureItem(item: KpiItem): boolean {
-  return item.icon === undefined && item.source === undefined && item.tag === undefined && kpiValueText(item.value).text.trim() !== ""
+  return item.icon === undefined && item.source === undefined && item.tag === undefined && item.tone === undefined && kpiValueText(item.value).text.trim() !== ""
 }
 
 // ── Note panels ───────────────────────────────────────────────────────────

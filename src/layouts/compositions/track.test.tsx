@@ -70,3 +70,13 @@ describe("track composition", () => {
     expect(renderComposition(trackComposition, [timeline(), CLOSING], { rect: { ...BAND, h: 320 } }).element).toBeNull()
   })
 })
+
+describe("track leaves a milestone's icon and tone to the ordinary timeline", () => {
+  it("declines a timeline that carries either", () => {
+    expect(renderComposition(trackComposition, [timeline()]).element).not.toBeNull()
+    const iconed = MILESTONES.map((m, i) => (i === 0 ? { ...m, icon: "flag" } : m))
+    const toned = MILESTONES.map((m, i) => (i === 0 ? { ...m, tone: "danger" } : m))
+    expect(renderComposition(trackComposition, [timeline({ milestones: iconed })]).element).toBeNull()
+    expect(renderComposition(trackComposition, [timeline({ milestones: toned })]).element).toBeNull()
+  })
+})

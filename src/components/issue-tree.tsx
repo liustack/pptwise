@@ -1,11 +1,14 @@
+import type React from "react"
 import type { Component } from "@/ir"
-import { accessibleInk, readableOn } from "../render/ink"
+import { issueTreeLeafCount } from "@/ir/components/issue-tree"
+import { accessibleInk, graphicInk, readableOn } from "../render/ink"
+import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { mixHex } from "./color-mix"
 import { anyCut } from "./declared-fit"
 import { FORM_BODY_FLOOR, fitFormLine, layoutFormBody } from "./legibility"
 import { orthogonalConnectorRight, tidyTree } from "./tree-layout"
-import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
+import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type IssueTreeComponent = Extract<Component, { type: "issue_tree" }>
 
@@ -39,6 +42,10 @@ const LEAF_PX = 17
 const NOTE_PX = FORM_BODY_FLOOR
 const MIN_COL_W = 120
 const LINE_RATIO = 1.28
+/** A hypothesis's icon, before its label, and the room it takes. */
+const BRANCH_ICON = { size: 20, gap: 10 } as const
+/** The header over the sub-points (`children_column`): a muted line in a row of its own over the tree. */
+const COLUMN_HEAD = { size: 16, row: 32, baseline: 20 } as const
 /** Air above and below a stack of lines inside a box. */
 const BOX_PAD_Y = 10
 
@@ -83,12 +90,27 @@ function hairline(ctx: ComponentCtx): string {
   return ctx.colors.border ?? mixHex(ctx.colors.muted, ctx.colors.bg, 0.45)
 }
 
+/** The row the sub-points' header takes over the tree, or none. */
+function headRow(component: IssueTreeComponent): number {
+  return component.children_column?.trim() ? COLUMN_HEAD.row : 0
+}
+
 export const issueTree: SvgComponent<IssueTreeComponent> = {
   measure(component) {
-    return naturalHeight(component)
+    return naturalHeight(component) + headRow(component)
   },
 
   render(component, box, ctx) {
+    const head = headRow(component)
+    const tree = drawTree(component, head > 0 ? { ...box, y: box.y + head, ...(box.h !== undefined ? { h: box.h - head } : {}) } : box, ctx)
+    const drawn = tree && head > 0 ? issueTreeWithHead({ component, box, ctx, tree }) : tree
+    return drawn ?? <DroppedContentMarker count={issueTreeLeafCount(component.branches) + component.branches.length + 1 + (head > 0 ? 1 : 0)} kind="item" />
+  },
+}
+
+/** The tree drawn in `box`, or `null` when a box is too short or a line does not fit. */
+function drawTree(component: IssueTreeComponent, box: ComponentBox, ctx: ComponentCtx): React.ReactElement | null {
+  {
     const counts = leafCounts(component)
     const leafTotal = counts.reduce((n, c) => n + c, 0)
     const h = box.h ?? naturalHeight(component)
@@ -100,9 +122,7 @@ export const issueTree: SvgComponent<IssueTreeComponent> = {
     // any one branch, less a gutter; a leaf box gets one pitch less a gutter.
     const branchBoxH = Math.min(BRANCH_BOX_H, pitch * Math.min(...counts) - BRANCH_BAND_PAD)
     const leafBoxH = Math.min(LEAF_BOX_H, pitch - LEAF_GAP)
-    const decline = () => (
-      <DroppedContentMarker count={leafTotal + component.branches.length + 1} kind="item" />
-    )
+    const decline = () => null
 
     if (
       leafW < MIN_COL_W ||
@@ -126,7 +146,7 @@ export const issueTree: SvgComponent<IssueTreeComponent> = {
     const rootBoxH = Math.max(ROOT_BOX_H, rootFit.lines.length * rootFit.lineHeight + 40)
 
     const branches = component.branches.map((branch) => {
-      const inner = branchW - PAD_X * 2
+      const inner = branchW - PAD_X * 2 - (branch.icon ? BRANCH_ICON.size + BRANCH_ICON.gap : 0)
       return {
         branch,
         label: fitFormLine(branch.label, {
@@ -231,6 +251,7 @@ export const issueTree: SvgComponent<IssueTreeComponent> = {
           const cy = tree.branches[i]!
           const filled = branch.emphasis === true
           const labelY = note ? cy - 2 : cy + label.fontSize * 0.35
+          const textX = branchX + PAD_X + (branch.icon ? BRANCH_ICON.size + BRANCH_ICON.gap : 0)
           return (
             <g key={`b${i}`}>
               <rect
@@ -243,8 +264,17 @@ export const issueTree: SvgComponent<IssueTreeComponent> = {
                 stroke={filled ? "none" : rule}
                 strokeWidth={filled ? 0 : 1}
               />
+              {branch.icon ? (
+                <Icon
+                  name={branch.icon}
+                  x={branchX + PAD_X}
+                  y={cy - BRANCH_ICON.size / 2}
+                  size={BRANCH_ICON.size}
+                  color={filled ? graphicInk(filledInk, ctx.colors.primary) : graphicInk(ctx.colors.primary, surface)}
+                />
+              ) : null}
               <text
-                x={branchX + PAD_X}
+                x={textX}
                 y={labelY}
                 fontSize={label.fontSize}
                 fontWeight="bold"
@@ -256,7 +286,7 @@ export const issueTree: SvgComponent<IssueTreeComponent> = {
               </text>
               {note ? (
                 <text
-                  x={branchX + PAD_X}
+                  x={textX}
                   y={cy + note.fontSize + 6}
                   fontSize={note.fontSize}
                   fill={
@@ -304,7 +334,53 @@ export const issueTree: SvgComponent<IssueTreeComponent> = {
         ))}
       </g>
     )
-  },
+  }
+}
+
+/**
+ * The tree under its sub-points' header: the header in a row of its own, a
+ * muted bold line set where the sub-point column starts, the tree below it.
+ * A header that does not fit its line declines the whole tree.
+ */
+function issueTreeWithHead({
+  component,
+  box,
+  ctx,
+  tree,
+}: {
+  component: IssueTreeComponent
+  box: ComponentBox
+  ctx: ComponentCtx
+  tree: React.ReactElement
+}): React.ReactElement | null {
+  const leafX = box.w * (ROOT_COL + BRANCH_COL) + GUTTER * 2
+  const leafW = box.w - leafX
+  const ground = ctx.defaultBg ?? ctx.colors.bg
+  const head = fitFormLine(component.children_column!.trim(), {
+    maxWidth: Math.max(1, leafW),
+    fontSize: COLUMN_HEAD.size,
+    floor: FORM_BODY_FLOOR,
+    bold: true,
+    fontFamily: ctx.fonts.body,
+  })
+  if (anyCut([head])) return null
+  return (
+    <g>
+      <text
+        data-issue-tree-column=""
+        x={box.x + leafX}
+        y={box.y + COLUMN_HEAD.baseline}
+        fontSize={head.fontSize}
+        fontWeight="bold"
+        fill={accessibleInk(ctx.colors.muted, ground, head.fontSize)}
+        fontFamily={ctx.fonts.body}
+        dominantBaseline="alphabetic"
+      >
+        {head.text}
+      </text>
+      {tree}
+    </g>
+  )
 }
 
 export const renderDef: RenderDef<IssueTreeComponent> = {

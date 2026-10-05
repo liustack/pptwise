@@ -1,0 +1,16 @@
+{
+  "components": [
+    {
+      "type": "code",
+      "language": "text",
+      "code": "# Google Cloud · 2025-06-12 · Service Control quota policy\n\"this metadata was replicated globally within seconds.\"\n\n# Cloudflare · 2025-12-05 · global configuration system\n\"propagates changes within seconds to the entire fleet of servers in our network\"\n\n# Cloudflare · 2025-12-19 · Code Orange, on Nov 18 and Dec 5\n\"In both events, a wrong configuration took down our network in seconds.\"\n\n# Azure · 2026-02-02 · a policy job that reached many regions\n\"There was nothing that customers could have done to avoid or minimize\n impact from this specific service incident.\"",
+      "title": "postmortems / quotes.txt",
+      "highlight_lines": [
+        11,
+        12
+      ]
+    }
+  ],
+  "footnote": "Google Cloud (2025-06-13), Cloudflare (2025-12-05, Code Orange 2025-12-19), Azure PIR FNJ8-VQZ. Quoted verbatim",
+  "notes": "Four quotes from three vendors. Google, June: quota management is global, so a policy with blank fields was replicated worldwide within seconds and Service Control crashed in every region at once. Cloudflare, December: the global configuration system used to switch off an internal test tool does no gradual rollout, so the change hit the whole network in seconds. In its Code Orange post on December 19, Cloudflare put November and December down to the same cause: a wrong configuration took the network down in seconds. Azure, February: a security policy job was rolled out region by region, but a defect in the health assessment let the bad targeting state spread across public cloud regions in a short window. Azure's PIR says it plainly: there was nothing customers could have done. Two takeaways. A second region in the same cloud does not help here. And our own config rollout must not have a push-to-everything path either."
+}

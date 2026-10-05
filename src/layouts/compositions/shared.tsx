@@ -59,6 +59,13 @@ export type CompositionId =
   | "targets"
   | "trend"
   | "rings"
+  | "cards"
+  | "listing"
+  | "log"
+  | "span"
+  | "plates"
+  | "paths"
+  | "screen"
 
 /**
  * The type a composition sets its page in.
@@ -97,10 +104,20 @@ export type CompositionId =
  *   items, a scorecard, targets beside the statement they rest on, a trend
  *   over a marked range, completion rings. See `./seal.tsx`.
  *
+ * - `console`: terminal's 2026-10 board. An incident console: square panels
+ *   on a dark page, figures, times, labels and the source in a mono face, the
+ *   mark spent once a page on a card or row set on its dark tint inside an
+ *   edge of it, and the theme's danger, warning and success inks only for
+ *   what kind of news a line is. A composition offered this setting also
+ *   takes the shapes that board drew and no other did: HUD cards with icons,
+ *   a code listing as a terminal window, a timeline as a log, durations to
+ *   scale, pictures over their figures, a question's failure points beside
+ *   their fixes, a device beside its log lines. See `./console.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */

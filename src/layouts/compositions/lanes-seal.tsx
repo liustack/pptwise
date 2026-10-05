@@ -49,6 +49,8 @@ function lanesShape(components: readonly Component[]): { timeline: Timeline; cal
   if (timeline?.type !== "timeline" || rest.length > 0) return null
   if (timeline.layout === "vertical" || timeline.title?.trim()) return null
   if (timeline.milestones.length < MIN_ITEMS || timeline.milestones.length > MAX_ITEMS) return null
+  // An icon or a tone has no place on these lanes: the ordinary timeline draws both.
+  if (timeline.milestones.some((m) => m.icon !== undefined || m.tone !== undefined)) return null
   if (second === undefined) return { timeline }
   if (second.type !== "callout" || second.icon !== undefined) return null
   return { timeline, callout: second }

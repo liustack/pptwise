@@ -84,6 +84,8 @@ export type CoverLayoutId =
   | "gauge-verdict"
   | "crayonbox-open"
   | "show-headline"
+  // terminal sample redesign (2026-10-05): the incident console's cover.
+  | "console-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -123,6 +125,8 @@ export type ChapterLayoutId =
   | "gauge-section"
   | "crayonbox-sticker"
   | "show-plate"
+  // terminal sample redesign (2026-10-05): the incident console's chapter page.
+  | "console-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -158,6 +162,8 @@ export type EndingLayoutId =
   | "gauge-next"
   | "crayonbox-todo"
   | "show-finale"
+  // terminal sample redesign (2026-10-05): the incident console's close.
+  | "console-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -209,6 +215,8 @@ export type ContentLayoutId =
   | "panel-figure"
   | "seal-sheet"
   | "seal-figure"
+  // terminal sample redesign: the board's ordinary content page. Theme-locked.
+  | "console-sheet"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

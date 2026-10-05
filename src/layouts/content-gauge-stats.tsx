@@ -1,5 +1,5 @@
 import type { Component } from "@/ir"
-import { kpiValueText } from "../components/kpi"
+import { kpiFigure } from "../components/kpi"
 import type { SvgTemplateProps } from "./types"
 import { stepAside } from "../render/step-aside"
 import type { LayoutDefinition } from "./registry"
@@ -101,12 +101,12 @@ function exactKpiBlock(slide: SvgTemplateProps["slide"]): KpiCards | null {
   const only = slide.components[0]
   // A column's one line under its figure is the source or the delta, so an
   // item that also carries a note goes to the component renderer.
-  if (only?.type === "kpi_cards" && only.items.some((item) => item.note?.trim() || item.tag)) return null
+  if (only?.type === "kpi_cards" && only.items.some((item) => item.note?.trim() || item.tag || item.tone)) return null
   return only?.type === "kpi_cards" ? only : null
 }
 
 function labelWithUnit(item: KpiCards["items"][number]): string {
-  const unit = item.unit?.trim()
+  const unit = kpiFigure(item.value, item.unit).unit?.trim()
   return unit ? `${item.label} · ${unit}` : item.label
 }
 
@@ -181,7 +181,7 @@ export function GaugeStatsContent({ ir, slide, index, ctx, page }: SvgTemplatePr
   const droppedStats = kpis ? Math.max(0, kpis.items.length - 4) : 0
   const stats = (kpis?.items.slice(0, 4) ?? []).map((item, itemIndex) => ({
     x: STAT_X[itemIndex]!,
-    value: fitSvgLine(kpiValueText(item.value).text, {
+    value: fitSvgLine(kpiFigure(item.value, item.unit).text, {
       maxWidth: STAT_W[itemIndex]!,
       fontSize: VALUE_SIZE,
       minFontSize: 32,

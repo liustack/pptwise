@@ -1050,9 +1050,10 @@ function walkText(
         // bulletin's and swiss's 14px source lines, swiss's 15px chapter line
         // the small type of ledger's panels (13px title bars and source,
         // 14 and 15px labels) and of vermilion's seal pages (14px source and
-        // tags, 15px headers and labels) are approved board sizes, like
-        // brief's meta.
-        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec"].includes(
+        // tags, 15px headers and labels) and of terminal's console pages (12
+        // to 15px mono labels, tags, crumb and source) are approved board
+        // sizes, like brief's meta.
+        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec"].includes(
           el.getAttribute("data-font-floor-exempt") ?? "",
         )
         if (!decor && !fontFloorExempt && fontSizeAttr !== null && Number(fontSizeAttr) < FONT_FLOOR) {

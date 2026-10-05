@@ -147,3 +147,25 @@ describe("image_compare component", () => {
     expect(images[1].hasAttribute("aria-label")).toBe(false)
   })
 })
+
+describe("image_grid caption icon", () => {
+  it("draws a caption's icon where the accent rule would stand", () => {
+    const { container } = svg(
+      imageGrid.render(
+        {
+          type: "image_grid",
+          items: [
+            { asset_id: "a", caption: "Azure West US 2", icon: "cloud-lightning" },
+            { asset_id: "b", caption: "Google europe-west4-a" },
+            { asset_id: "c", caption: "Google us-west1" },
+          ],
+        },
+        { x: 0, y: 0, w: 1000 },
+        ctx,
+      ),
+    )
+    const rules = Array.from(container.querySelectorAll("rect")).filter((r) => r.getAttribute("width") === "16" && r.getAttribute("height") === "3")
+    expect(rules).toHaveLength(2)
+    expect(container.querySelectorAll("path, line, circle, polyline").length).toBeGreaterThan(0)
+  })
+})

@@ -30,6 +30,7 @@ import { VerticalTitleCover } from "./cover-vertical-title-cover"
 import { InvitationPlateCover } from "./cover-invitation-plate-cover"
 import { LookbookOpenCover } from "./cover-lookbook-open-cover"
 import { RedHeadCover } from "./cover-red-head-cover"
+import { ConsoleCover } from "./cover-console-cover"
 import { PledgeOpenCover } from "./cover-pledge-open-cover"
 import { ReportOpenCover } from "./cover-report-open-cover"
 import { CutPanelCover } from "./cover-cut-panel-cover"
@@ -79,4 +80,5 @@ export const COVER_LAYOUTS: Record<CoverLayoutId, CoverLayout> = {
   "gauge-verdict": GaugeVerdictCover,
   "crayonbox-open": CrayonboxOpenCover,
   "show-headline": ShowHeadlineCover,
+  "console-cover": ConsoleCover,
 }

@@ -1,0 +1,80 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "title": "us-east-1 · 2025-10-20 · UTC",
+      "milestones": [
+        {
+          "date": "06:48",
+          "title": "DNS 记录被清空",
+          "desc": "端点 IP 全部消失",
+          "tone": "danger",
+          "icon": "server-crash"
+        },
+        {
+          "date": "09:40",
+          "title": "DynamoDB 恢复",
+          "desc": "开始后 2 小时 52 分",
+          "highlight": true,
+          "tone": "success",
+          "icon": "database"
+        },
+        {
+          "date": "11:14",
+          "title": "租约系统限流重启",
+          "desc": "积压成拥塞崩溃",
+          "tone": "warning",
+          "icon": "gauge"
+        },
+        {
+          "date": "12:30",
+          "title": "NLB 连接报错",
+          "desc": "健康检查时好时坏",
+          "tone": "danger",
+          "icon": "network"
+        },
+        {
+          "date": "16:36",
+          "title": "关掉 NLB 自动切换",
+          "desc": "止住节点被反复移出",
+          "tone": "warning",
+          "icon": "power"
+        },
+        {
+          "date": "21:20",
+          "title": "事件结束",
+          "desc": "共 14 小时 32 分",
+          "tone": "success",
+          "icon": "circle-check"
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**2h52m**",
+          "label": "DynamoDB 不可达"
+        },
+        {
+          "value": "14h32m",
+          "label": "整个事件",
+          "tone": "danger"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "故障本身 vs 事故窗口：5 倍：拖长它的是积压和连锁，不是故障本身"
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "icon": "siren",
+      "text": "原文：\"DWFM had entered a state of congestive collapse\"，而且没有现成的恢复手册。"
+    }
+  ],
+  "footnote": "AWS DynamoDB 事故复盘（2025 年 10 月）。时间为 UTC，结束按复盘的 21:20，状态页写 22:01",
+  "notes": "这是 AWS 2025 年 10 月 20 日 us-east-1 那次的级联过程。根因是 DynamoDB 的 DNS 管理系统里一个潜藏的竞态，一个严重延迟的执行器用旧计划覆盖了新计划，另一个执行器的清理程序又删掉了这份旧计划，区域端点的 IP 地址就被清空了，而且自动化修不回来，只能人工修。DNS 在 09:25 恢复，客户端缓存过期后 DynamoDB 在 09:40 恢复，前后 2 小时 52 分。但后面还有 11 个多小时：EC2 管理物理机租约的系统依赖 DynamoDB，租约陆续超时，DNS 恢复后要一次性重建大量租约，超时又重新排队，陷入拥塞崩溃，AWS 原文说这种情况没有现成的恢复手册，最后靠限流加分批重启。接着网络配置积压，NLB 健康检查对新实例时好时坏，节点被反复移出 DNS，16:36 AWS 只好关掉 NLB 的自动切换。EC2 20:50 全面恢复，PES 写的事件结束是 21:20，状态页宣布全部恢复是 22:01，受影响的 Redshift 集群到第二天 11:05 才全部恢复。另外两点值得记住：事故前已经在跑的 EC2 实例全程健康。DynamoDB 全球表在其他区域的副本照常可读写。"
+}

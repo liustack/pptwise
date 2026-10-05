@@ -1,0 +1,63 @@
+{
+  "components": [
+    {
+      "type": "comparison",
+      "columns": [
+        "Backup & restore",
+        "Pilot light",
+        "Warm standby",
+        "Active-active"
+      ],
+      "recommended": 2,
+      "rows": [
+        {
+          "label": "RPO",
+          "cells": [
+            "Hours",
+            "Minutes",
+            "Seconds",
+            "Near zero"
+          ]
+        },
+        {
+          "label": "RTO",
+          "cells": [
+            "Within 24h",
+            "Tens of minutes",
+            "Minutes",
+            "Potentially zero"
+          ]
+        },
+        {
+          "label": "Always running",
+          "cells": [
+            "Backups only",
+            "Databases and storage",
+            "Scaled-down full stack",
+            "Full stack in several regions"
+          ]
+        },
+        {
+          "label": "Built at failover",
+          "cells": [
+            "All infrastructure",
+            "App servers",
+            "Nothing, scale up only",
+            "Nothing"
+          ]
+        },
+        {
+          "label": "Cost",
+          "cells": [
+            "$",
+            "$$",
+            "$$$",
+            "$$$$"
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "AWS Well-Architected REL13-BP02, AWS DR whitepaper. Cost is the whitepaper's relative scale, no vendor publishes a dollar gap",
+  "notes": "To pick a tier we use AWS's four, the only vendor guidance with minute-level targets. They rise in cost and complexity and fall in RTO and RPO. Backup and restore: only backups, infrastructure is built after the event, RPO in hours, RTO within 24 hours. Pilot light: databases and object storage always on, app servers built after the event, RPO in minutes, RTO in tens of minutes. Warm standby: a scaled-down but fully functional copy always running, RPO in seconds, RTO in minutes. Active-active: several regions taking traffic at once, RPO near zero, RTO potentially zero. We recommend warm standby. The single-region windows we saw ran from about 2 to 22 hours, and an RTO in minutes keeps us clear of all of them. The fourth row is why not pilot light: backup and pilot light both need to create resources during the failover, and in October new EC2 launches in us-east-1 failed for hours, while in February Azure VMs could not be deployed or scaled in several regions. AWS's own guidance lists dependency on control plane operations during recovery as an anti-pattern. Warm standby already runs the whole stack and only needs to scale up. AWS calls active-active the most complex and costly approach, and it still does not protect against data corruption or a global config push. Cost is only relative: the whitepaper goes from one dollar sign to four, Google only says smaller RTO and RPO cost more, and nobody publishes a dollar figure."
+}

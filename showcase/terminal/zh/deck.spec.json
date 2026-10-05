@@ -1,0 +1,122 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "technical"
+  },
+  "theme": "terminal",
+  "filename": "cloud-outage-ha-review-zh",
+  "meta": {
+    "organization": "基础架构组 · 技术评审",
+    "date": "2026-10"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "云中断复盘：高可用先补什么",
+      "summary": "13 起云中断的官方记录，决定多区域做到哪一档、先做哪几件事",
+      "kicker": "13 起事故 · 2025-06 → 2026-09 · 只用官方复盘和状态页"
+    },
+    {
+      "id": "p02-verdict",
+      "type": "content",
+      "kind": "points",
+      "heading": "结论：多区域做到温备，但先补限流退避和独立备用路径",
+      "focus": "row_cards"
+    },
+    {
+      "id": "p03-chapter-review",
+      "type": "chapter",
+      "heading": "复盘：13 起中断说了什么"
+    },
+    {
+      "id": "p04-windows",
+      "type": "content",
+      "kind": "data",
+      "heading": "8 起重大中断里 5 起是同一类：一次变更推到全部",
+      "focus": "chart"
+    },
+    {
+      "id": "p05-seconds",
+      "type": "content",
+      "kind": "evidence",
+      "heading": "复盘原话：坏配置几秒内推到全部，客户做什么都挡不住",
+      "focus": "code"
+    },
+    {
+      "id": "p06-cascade",
+      "type": "content",
+      "kind": "process",
+      "heading": "AWS 那次 DynamoDB 坏了 2 小时 52 分，事故拖到 14 小时 32 分",
+      "focus": "timeline"
+    },
+    {
+      "id": "p07-recovery",
+      "type": "content",
+      "kind": "list",
+      "heading": "拖长恢复的是重试、积压和同时重启，不是故障本身",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p08-physical",
+      "type": "content",
+      "kind": "photo",
+      "heading": "单区域的物理和网络故障是真的：雷暴、电压跌落、光纤维护",
+      "focus": "image_grid"
+    },
+    {
+      "id": "p09-matrix",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "同云多区域挡得住单区域故障，挡不住全局变更",
+      "focus": "data_table"
+    },
+    {
+      "id": "p10-chapter-decide",
+      "type": "chapter",
+      "heading": "决定：做到哪一档，先做哪几件"
+    },
+    {
+      "id": "p11-sla",
+      "type": "content",
+      "kind": "data",
+      "heading": "SLA 只赔服务费：99.99% 一个月只允许停机 4.38 分钟",
+      "focus": "data_table"
+    },
+    {
+      "id": "p12-tiers",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "灾备四档选温备：RPO 秒级、RTO 分钟级，不上多活",
+      "focus": "comparison"
+    },
+    {
+      "id": "p13-paths",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "入口、身份、配置发布、数据，各留一条不走同一控制面的路",
+      "focus": "issue_tree"
+    },
+    {
+      "id": "p14-observe",
+      "type": "content",
+      "kind": "photo",
+      "heading": "状态页和告警要搬出主云：Google 首条公告晚了 55 分钟",
+      "focus": "device_mockup"
+    },
+    {
+      "id": "p15-roadmap",
+      "type": "content",
+      "kind": "process",
+      "heading": "路线图：Q4 先补限流和发布，2027 Q2 上第二区域温备",
+      "focus": "roadmap"
+    },
+    {
+      "id": "p16-ending",
+      "type": "ending",
+      "heading": "多区域做到**温备**，先补限流退避和独立备用路径"
+    }
+  ]
+}

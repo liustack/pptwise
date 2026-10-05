@@ -2,7 +2,8 @@ import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
-import { accessibleInk, contrastRatio, requiredContrastRatio } from "../render/ink"
+import { accessibleInk, contrastRatio, graphicInk, requiredContrastRatio, resolveSemanticColor } from "../render/ink"
+import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { withBlockTitle } from "./block-title"
 
@@ -17,28 +18,56 @@ const MIN_FONT_SIZE = 16
 const TITLE_SIZE = 16
 const DESC_SIZE = 16
 const TITLE_TOP = AXIS_Y + 28
+/** A milestone's lane stands a line over its date. */
+const LANE_ABOVE_DATE = 22
 const BOTTOM_PAD = 18
 
 type Anchor = "start" | "middle" | "end"
 
+type Milestone = TimelineComponent["milestones"][number]
+
 /**
- * The dot a milestone gets, from the one authored fact that changes it:
- * `highlight`, the turn the author marked. A marked node grows and takes
- * the accent, an unmarked one stays the quieter primary.
+ * The dot a milestone gets, from the authored facts that change it:
+ * `highlight`, the turn the author marked, and `tone`, the kind of news it
+ * is. A marked node grows and takes the accent, an unmarked one stays the
+ * quieter primary, and a tone paints the dot in the theme's own ink for it
+ * (danger, warning or success) at either size.
  *
- * Both layouts read the field through here. The horizontal row used to
- * ignore it outright — every dot came out `r=8` in the accent, so a deck
- * that named its turning point got a row of identical circles and the
+ * Both layouts read the fields through here. The horizontal row used to
+ * ignore `highlight` outright — every dot came out `r=8` in the accent, so a
+ * deck that named its turning point got a row of identical circles and the
  * reader was left to guess which one it was.
  */
 function milestoneDot(
-  highlight: boolean | undefined,
+  m: Pick<Milestone, "highlight" | "tone">,
   baseR: number,
   colors: ComponentCtx["colors"],
+  ground: string,
 ): { r: number; fill: string } {
-  return highlight
-    ? { r: baseR + 3, fill: colors.accent }
-    : { r: baseR, fill: colors.primary }
+  const r = m.highlight ? baseR + 3 : baseR
+  if (m.tone) return { r, fill: graphicInk(resolveSemanticColor(m.tone, colors), ground) }
+  return { r, fill: m.highlight ? colors.accent : colors.primary }
+}
+
+/** The ring a milestone with an icon is drawn in, its radius on the axis. */
+const ICON_NODE = { r: 13, size: 16 } as const
+
+/**
+ * A milestone's node: its dot, or, when the author gave it an icon, the icon
+ * in a ring of the dot's colour on the page, so the axis still reads as one
+ * line of nodes.
+ */
+function MilestoneNode({ m, cx, cy, baseR, ctx }: { m: Milestone; cx: number; cy: number; baseR: number; ctx: ComponentCtx }) {
+  const ground = ctx.defaultBg ?? ctx.colors.bg
+  const dot = milestoneDot(m, baseR, ctx.colors, ground)
+  if (!m.icon) return <circle cx={cx} cy={cy} r={dot.r} fill={dot.fill} />
+  const ink = graphicInk(dot.fill, ground)
+  return (
+    <g data-milestone-icon={m.icon}>
+      <circle cx={cx} cy={cy} r={ICON_NODE.r} fill={ground} stroke={ink} strokeWidth={m.highlight ? 2 : 1.5} />
+      <Icon name={m.icon} x={cx - ICON_NODE.size / 2} y={cy - ICON_NODE.size / 2} size={ICON_NODE.size} color={ink} />
+    </g>
+  )
 }
 
 function inkWithTextFallback(
@@ -279,7 +308,7 @@ function renderVertical(
             </text>
             {/* 高亮只落在圆点。日期与标题统一从 muted/text 推导，避免
                 身份色与正文墨在同一高亮项里混用。 */}
-            <circle cx={V_AXIS_X} cy={nodeCy} {...milestoneDot(hl, 7, ctx.colors)} />
+            <MilestoneNode m={m} cx={V_AXIS_X} cy={nodeCy} baseR={7} ctx={ctx} />
             <text
               data-truncated={title.truncated ? "1" : undefined}
               x={V_TEXT_X}
@@ -362,17 +391,38 @@ export const timeline: SvgComponent<TimelineComponent> = {
           strokeWidth={2}
         />
         {rows.map(({ m, x, maxWidth, anchor, tx, title, desc }, i) => {
-          // A milestone on a lane names it with its date: one row has no
-          // second side of the axis for the lane to run on.
-          const date = fitSvgLine(m.lane?.trim() ? `${m.lane.trim()} · ${m.date}` : m.date, {
+          // A milestone on a lane names it on a line of its own over its date:
+          // one row has no second side of the axis for the lane to run on.
+          // The lane used to lead the date on its line, and a long date then
+          // lost its tail to the lane's name.
+          const date = fitSvgLine(m.date, {
             maxWidth,
             fontSize: 16,
             minFontSize: MIN_FONT_SIZE,
           })
+          const lane = m.lane?.trim()
+            ? fitSvgLine(m.lane.trim(), { maxWidth, fontSize: 16, minFontSize: MIN_FONT_SIZE })
+            : null
           const descTop = TITLE_TOP + title.lines.length * title.lineHeight + 2
           return (
             <g key={i}>
-              <circle cx={x} cy={AXIS_Y} {...milestoneDot(m.highlight, 8, ctx.colors)} />
+              <MilestoneNode m={m} cx={x} cy={AXIS_Y} baseR={8} ctx={ctx} />
+              {lane ? (
+                <text
+                  data-milestone-lane=""
+                  data-truncated={lane.truncated ? "1" : undefined}
+                  x={tx}
+                  y={AXIS_Y - LANE_ABOVE_DATE - 24}
+                  textAnchor={anchor}
+                  fill={inkWithTextFallback(ctx.colors.muted, ctx.colors.text, ctx.defaultBg ?? ctx.colors.bg, lane.fontSize)}
+                  fontSize={lane.fontSize}
+                  fontWeight="bold"
+                  fontFamily={ctx.fonts.body}
+                  dominantBaseline="alphabetic"
+                >
+                  {lane.text}
+                </text>
+              ) : null}
               <text
                 data-truncated={date.truncated ? "1" : undefined}
                 x={tx}

@@ -1,0 +1,7 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "cover-aisle"
+  },
+  "notes": "This review uses the vendors' own postmortems and status pages from Google Cloud, AWS, Microsoft Azure, Cloudflare and GitHub, covering 13 cloud outages between June 2025 and September 2026. The question for the board: do we invest in multi-region and failover, how far do we take it, and what do we do first. Data as of October 4, 2026."
+}

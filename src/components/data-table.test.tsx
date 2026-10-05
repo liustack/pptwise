@@ -273,3 +273,25 @@ describe("data_table component", () => {
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
   })
 })
+
+describe("data_table row icon", () => {
+  it("draws a row's icon at its start and moves the first cell past it", () => {
+    const table = {
+      type: "data_table" as const,
+      columns: [
+        { key: "case", label: "Incident" },
+        { key: "scope", label: "Scope" },
+      ],
+      rows: [
+        { cells: { case: "AWS use1-az4", scope: "One zone" }, icon: "server" as const },
+        { cells: { case: "Azure West US 2", scope: "Two zones" } },
+      ],
+    }
+    const { container } = svg(dataTable.render(table, { x: 0, y: 0, w: 900 }, ctx))
+    const texts = Array.from(container.querySelectorAll("text"))
+    const iconed = texts.find((t) => t.textContent === "AWS use1-az4")!
+    const plain = texts.find((t) => t.textContent === "Azure West US 2")!
+    expect(Number(iconed.getAttribute("x")) - Number(plain.getAttribute("x"))).toBe(26)
+    expect(container.querySelectorAll("g[transform^='translate']").length).toBeGreaterThan(1)
+  })
+})

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -40,6 +41,10 @@ const DataTableRowSchema = z
     /** highlight=强调单行（如"本期"）、total=汇总行（如"合计"）。两者都是
      * 纯展示态、不参与任何计算——v1 无公式。 */
     emphasis: z.enum(["highlight", "total"]).optional(),
+    /** A symbol for the row. See the describe below. */
+    icon: IconNameSchema.optional().describe(
+      "A symbol for the row, drawn at its start before the first cell, such as server or cloud. Run `pptwise icons` for the names.",
+    ),
   })
   .strict()
 
@@ -117,6 +122,9 @@ export const traits = {
   passthroughShell: true,
   fullBody: false,
   evidence: true,
+  // A table of columns cannot be read at half a page: in two columns it
+  // spans both, the blocks around it in columns above and under it.
+  columnSpanning: true,
 } as const satisfies ComponentTraits
 
 export const story: DesignStory = {

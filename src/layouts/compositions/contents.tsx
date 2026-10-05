@@ -7,6 +7,7 @@ import { accessibleInk } from "../../render/ink"
 import { markInk } from "./grid"
 import { ruleInk, type CompositionSetting } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
+import { drawContentsConsole } from "./contents-console"
 
 /*
  * contents: what a chapter holds, listed on its chapter page. Each content
@@ -73,6 +74,7 @@ export function drawContents({
   rect: ContentRect
   setting?: CompositionSetting
 }): React.ReactElement | null {
+  if (setting === "console") return drawContentsConsole({ entries, ctx, rect })
   if (entries.length === 0) return null
   const { colors, fonts } = ctx
   const body = fonts.body

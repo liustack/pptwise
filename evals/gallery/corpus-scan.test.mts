@@ -323,7 +323,7 @@ describe("gallery SVG text respects the readable font floor", () => {
         if (
           !content ||
           hasDecor(el) ||
-          ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec"].includes(el.getAttribute("data-font-floor-exempt") ?? "")
+          ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec"].includes(el.getAttribute("data-font-floor-exempt") ?? "")
         ) continue
         const fontSize = Number(el.getAttribute("font-size") ?? 16)
         if (fontSize < META_FONT_FLOOR_PX) {
@@ -347,15 +347,17 @@ describe("gallery SVG text respects the readable font floor", () => {
  * What the corpus holds today: 26 component-band specimens per device — the
  * component band draws this type twice, once as a browser window and once as a
  * phone — plus the four sample-deck pages whose narrative includes a product
- * screenshot. Pinned per device, because a corpus that covered only browsers
+ * screenshot, and terminal's console window on its composition page
+ * (`screen`). Pinned per device, because a corpus that covered only browsers
  * left the phone branch of both the component and this test unexecuted.
  */
-const EXPECTED_DEVICE_PAGES = 56
-const EXPECTED_BY_DEVICE = { browser: 30, phone: 26 }
+const EXPECTED_DEVICE_PAGES = 57
+const EXPECTED_BY_DEVICE = { browser: 31, phone: 26 }
 const EXPECTED_DECK_PAGES = [
   "bulletin--deck--p09",
   "homeroom--deck--p07",
   "luxe--deck--p07",
+  "terminal--compose--screen",
   "terminal--deck--p07",
 ]
 
@@ -552,7 +554,22 @@ describe("every device_mockup page in the corpus shows its frame", () => {
         offenders.push(`${id}: frame drawn around the missing-asset placeholder`)
       }
 
-      if (device === "browser") {
+      if (device === "browser" && frame.getAttribute("data-device-frame") === "console") {
+        // terminal's console window (`screen`): a rounded well inside the edge
+        // ink, its bar a drawn path, the address in the bar, no traffic
+        // lights or pill.
+        const window = rects.find((r) => Number(r.getAttribute("rx")) > 0 && r.getAttribute("stroke"))
+        const bar = Array.from(frame.querySelectorAll("path")).find((p) => /A/.test(p.getAttribute("d") ?? ""))
+        if (!drawn(window)) {
+          offenders.push(`${id}: no painted console window`)
+          continue
+        }
+        if (!drawn(bar)) offenders.push(`${id}: no painted window bar`)
+        if (authored.url !== undefined && !(frame.textContent ?? "").includes(authored.url)) offenders.push(`${id}: url not on the page`)
+        const w = Number(window!.getAttribute("width"))
+        const h = Number(window!.getAttribute("height"))
+        if (Math.abs(w / h - BROWSER_ASPECT) > 0.12) offenders.push(`${id}: aspect ${(w / h).toFixed(2)}`)
+      } else if (device === "browser") {
         // The window bar is a drawn path carrying paint, not an attribute claim.
         const bar = Array.from(frame.querySelectorAll("path")).find((p) =>
           /^M \d[\d.]* \d[\d.]* A /.test(p.getAttribute("d") ?? ""),

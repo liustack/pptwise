@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { IconNameSchema, ToneSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -28,6 +29,12 @@ export const schema = z
           desc: z.string().optional(),
           /** 强调节点：accent 色 + 大圆点（时间线上的「转折点」语义）。 */
           highlight: z.boolean().optional(),
+          /** A symbol for the milestone. See the describe below. */
+          icon: IconNameSchema.optional().describe(
+            "A symbol for the milestone, drawn in its node on the axis, such as server or flag. Run `pptwise icons` for the names.",
+          ),
+          /** What kind of turn it is. See `ToneSchema`. */
+          tone: ToneSchema.optional(),
           /** Which of two tracks the milestone runs on. See the describe below. */
           lane: z
             .string()

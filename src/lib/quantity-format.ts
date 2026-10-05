@@ -29,6 +29,18 @@ export function isMagnitudeUnit(unit: string | undefined): boolean {
 }
 
 /**
+ * A multiplication sign written as a unit: "199×", "3.2x". It is part of how
+ * the figure is written, glued to it like a percent sign, and its glyph is
+ * small: set as a suffix at under half the figure's size it reads as a speck.
+ */
+const MULTIPLIER = new Set(["×", "x"])
+
+/** Whether `unit` is a multiplication sign, glued to its figure. */
+export function isMultiplierUnit(unit: string | undefined): boolean {
+  return unit !== undefined && MULTIPLIER.has(unit.trim())
+}
+
+/**
  * How a deck prints the figures the engine writes for it: chart values, axis
  * ticks, totals, bridge steps. `chinese` picks the words around a figure
  * (「个百分点」 or "pts") and `groupFour` says whether a whole part of four
@@ -107,13 +119,14 @@ export function groupDigits(figure: string, style: FigureStyle | boolean): strin
 
 /**
  * `number` with `unit` attached as a reader expects it: a currency sign
- * before the digits and after any `+` or `-` (`+$0.48`, `-$2`), a percent sign
- * or a Latin magnitude glued after them (`12%`, `2m`), and any other unit
+ * before the digits and after any `+` or `-` (`+$0.48`, `-$2`), a percent sign,
+ * a Latin magnitude or a multiplication sign glued after them (`12%`, `2m`,
+ * `199×`), and any other unit
  * after `gap`.
  */
 export function joinUnit(number: string, unit?: string, gap: "" | " " = " "): string {
   if (!unit) return number
-  if (PERCENT.has(unit) || MAGNITUDE.has(unit)) return `${number}${unit}`
+  if (PERCENT.has(unit) || MAGNITUDE.has(unit) || MULTIPLIER.has(unit)) return `${number}${unit}`
   const currency = CURRENCY_LEAD.exec(unit)
   if (currency) {
     const sign = /^[+\-−]/.test(number) ? number[0] : ""

@@ -80,6 +80,8 @@ export function lanesPanel({ components, ctx, rect }: CompositionProps): React.R
   const [timeline, second, ...rest] = components
   if (timeline?.type !== "timeline" || rest.length > 0 || timeline.layout === "vertical") return null
   if (timeline.milestones.length < MIN_ITEMS || timeline.milestones.length > MAX_ITEMS) return null
+  // An icon or a tone has no place in this panel: the ordinary timeline draws both.
+  if (timeline.milestones.some((m) => m.icon !== undefined || m.tone !== undefined)) return null
   if (second !== undefined && second.type !== "callout") return null
   const note: NotePanel | null = second?.type === "callout" ? fitNotePanel(second, rect.w, ctx) : null
   if (second && !note) return null

@@ -94,3 +94,19 @@ The seal setting's form, in [`table-seal.tsx`](../../../src/layouts/compositions
 **What it gave up.**
 
 - A row name past one line, or a cell past two lines, declines.
+
+## terminal, cloud outage review sample, 2026-10
+
+The console setting's form, in [`table-console.tsx`](../../../src/layouts/compositions/table-console.tsx). The round's decisions are in [rounds/2026-10-05-terminal](../../rounds/2026-10-05-terminal/README.md).
+
+| board (p12) | engine |
+| :-: | :-: |
+| ![board](terminal.board.png) | ![engine](terminal.engine.png) |
+
+**What it looks like.** Each option of a `comparison` is a card: T1, T2… in mono, its name bold at 24px, its rows down the card on hairlines, the row's label in 12px mono and its value under it. The `recommended` option sits on the mark's tint inside an edge of it with a filled SELECT tag. A row whose cells are one symbol repeated ("$", "$$", "$$$") is a rating drawn as a meter under the name. A row named by a short code in capitals (RPO, RTO) sets its values in bold mono at 17px.
+
+**Why.** Four tiers are four choices with a cost each. The pick reads as selected, not as a bolder column.
+
+**What it gave up.**
+
+- Two to five options and up to six rows, at most one rating, no `title`, row tags or marked row.

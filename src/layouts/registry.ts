@@ -1,6 +1,6 @@
 /**
  * Layout registry (W2 task 1, spec §3/§6/§8): an explicit, statically-checked
- * description of what the render chain's 141 standard layouts and 4
+ * description of what the render chain's 145 standard layouts and 4
  * page-level image takeovers already draw. This is a metadata layer only.
  * It formalizes today's implicit page structure (layout JSX + the
  * FullSlideSvg takeover dispatch) into named `slots`, it does not change any
@@ -12,7 +12,7 @@
  * `export const layoutDef: LayoutDefinition` at the bottom of the matching
  * `layouts/*.tsx` file, or one of 4 uniquely-named exports at the bottom
  * of `image-pages.tsx` for the takeovers (one file implements all 4, so they
- * can't share the uniform `layoutDef` name the 141 single-layout
+ * can't share the uniform `layoutDef` name the 145 single-layout
  * files use) — so "take one layout away whole" is a single-file operation
  * instead of a two-file archaeology dig. This file's own job is now purely
  * computational aggregation: import every `layoutDef`, assemble the five
@@ -60,9 +60,9 @@
 import type { DesignStory } from "@/design-story"
 import type { STRATEGY_VALUES } from "@/ir/narrative-values"
 
-// layoutDef imports (src domain reorg wave 1, task T1d): 141 layout files
+// layoutDef imports (src domain reorg wave 1, task T1d): 145 layout files
 // (one `layoutDef` each) plus image-pages.tsx's 4 uniquely named takeover
-// exports, 145 bindings total. The original migration covered 33 layout
+// exports, 149 bindings total. The original migration covered 33 layout
 // files and 4 takeovers. Later content expansion and theme redesign waves
 // grew the registry, mostly through pin-only cover, chapter, and ending faces.
 // Grouped by family, each group in the exact
@@ -102,6 +102,7 @@ import { layoutDef as coverVerticalTitleCover } from "./cover-vertical-title-cov
 import { layoutDef as coverInvitationPlateCover } from "./cover-invitation-plate-cover"
 import { layoutDef as coverLookbookOpenCover } from "./cover-lookbook-open-cover"
 import { layoutDef as coverRedHeadCover } from "./cover-red-head-cover"
+import { layoutDef as coverConsoleCover } from "./cover-console-cover"
 import { layoutDef as coverPledgeOpenCover } from "./cover-pledge-open-cover"
 import { layoutDef as coverReportOpenCover } from "./cover-report-open-cover"
 import { layoutDef as coverCutPanelCover } from "./cover-cut-panel-cover"
@@ -133,6 +134,7 @@ import { layoutDef as chapterVolumeSlipChapter } from "./chapter-volume-slip-cha
 import { layoutDef as chapterGiltOrdinalChapter } from "./chapter-gilt-ordinal-chapter"
 import { layoutDef as chapterLookRangeChapter } from "./chapter-look-range-chapter"
 import { layoutDef as chapterSealNumeralChapter } from "./chapter-seal-numeral-chapter"
+import { layoutDef as chapterConsoleChapter } from "./chapter-console-chapter"
 import { layoutDef as chapterFieldBandChapter } from "./chapter-field-band-chapter"
 import { layoutDef as chapterSubjectRuleChapter } from "./chapter-subject-rule-chapter"
 import { layoutDef as chapterRoundMarkChapter } from "./chapter-round-mark-chapter"
@@ -168,6 +170,7 @@ import { layoutDef as endingSealCloseEnding } from "./ending-seal-close-ending"
 import { layoutDef as endingGiltWordEnding } from "./ending-gilt-word-ending"
 import { layoutDef as endingWindowCloseEnding } from "./ending-window-close-ending"
 import { layoutDef as endingDeliberationEnding } from "./ending-deliberation-ending"
+import { layoutDef as endingConsoleEnding } from "./ending-console-ending"
 import { layoutDef as endingScorecardEnding } from "./ending-scorecard-ending"
 import { layoutDef as endingCarePlanEnding } from "./ending-care-plan-ending"
 import { layoutDef as endingSeatCtaEnding } from "./ending-seat-cta-ending"
@@ -214,6 +217,7 @@ import { layoutDef as contentGridFigure } from "./content-grid-figure"
 import { layoutDef as contentPanelSheet } from "./content-panel-sheet"
 import { layoutDef as contentPanelFigure } from "./content-panel-figure"
 import { layoutDef as contentSealSheet } from "./content-seal-sheet"
+import { layoutDef as contentConsoleSheet } from "./content-console-sheet"
 import { layoutDef as contentSealFigure } from "./content-seal-figure"
 
 import {
@@ -228,7 +232,7 @@ export type Strategy = (typeof STRATEGY_VALUES)[number]
 export type SlideType = "cover" | "chapter" | "content" | "ending"
 
 /** The 20-word slot vocabulary: the union of every distinct visual region
- * observed across all 141 standard layouts and 4 takeovers (inventory's "建议 slot
+ * observed across all 145 standard layouts and 4 takeovers (inventory's "建议 slot
  * 词汇表"). Not every word is used by every entry, and `aside` currently
  * has zero occurrences as a *slot* (it only exists today as a body
  * `arrangement` — see `Arrangement` below) — kept in the vocabulary because
@@ -400,6 +404,19 @@ export interface LayoutDefinition {
    */
   pageFields?: readonly ("kicker" | "footnote")[]
   /**
+   * Structural fact of a cover or chapter face: it draws its own page over a
+   * photograph background (`background.kind: "asset"`).
+   *
+   * Such a page otherwise goes to the shared photo renderer (`ImageCoverPage`,
+   * the `image-cover` route in `render/layout-selection.ts`), which sets the
+   * heading in white over a dark scrim and draws nothing the face would: no
+   * kicker, no component, none of the face's furniture. A face that declares
+   * this keeps the page. The photograph is painted under it edge to edge with
+   * no scrim of its own, the face lays whatever darkening it was drawn with
+   * over it, and its slots and page fields stay open to the author.
+   */
+  drawsPhoto?: true
+  /**
    * Structural fact of a content face: its artwork runs to the bottom edge
    * where the footer row would sit (a full-height bleed photo, its caption
    * bar), so the page carries no footer row, page number included. Narrower
@@ -510,7 +527,7 @@ export interface LayoutDefinition {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Cover layouts (37 total: 19 auto-selectable and 18 pin-only).
+// Cover layouts (38 total: 19 auto-selectable and 19 pin-only).
 // The board-cover-fidelity wave grew the group from 9 to 13 in 2026-08-22.
 // It added institutional-block / memo-head / board-head / bill-head, four
 // board constructions that were not in the pool. They were appended after
@@ -571,10 +588,12 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverGaugeVerdict.id]: coverGaugeVerdict,
   [coverCrayonboxOpen.id]: coverCrayonboxOpen,
   [coverShowHeadline.id]: coverShowHeadline,
+  // terminal sample redesign (2026-10-05).
+  [coverConsoleCover.id]: coverConsoleCover,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Chapter layouts (36 total: 8 auto-selectable and 28 pin-only).
+// Chapter layouts (37 total: 8 auto-selectable and 29 pin-only).
 // The original eight carry a chapter-number `watermark`. Later theme-specific
 // faces may express the ordinal through a different named slot.
 // Chapter layouts do not read components, so none has a body slot.
@@ -616,12 +635,14 @@ const CHAPTER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [chapterGaugeSection.id]: chapterGaugeSection,
   [chapterCrayonboxSticker.id]: chapterCrayonboxSticker,
   [chapterShowPlate.id]: chapterShowPlate,
+  // terminal sample redesign (2026-10-05).
+  [chapterConsoleChapter.id]: chapterConsoleChapter,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Ending layouts (34 total: 7 auto-selectable and 27 pin-only).
-// Fourteen endings declare a body slot for their own constrained closing-page
-// content. The other 20 have no body slot.
+// Ending layouts (35 total: 7 auto-selectable and 28 pin-only).
+// Sixteen endings declare a body slot for their own constrained closing-page
+// content. The other 19 have no body slot.
 // ─────────────────────────────────────────────────────────────────────────
 const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingMastheadEnding.id]: endingMastheadEnding,
@@ -658,6 +679,8 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingGaugeNext.id]: endingGaugeNext,
   [endingCrayonboxTodo.id]: endingCrayonboxTodo,
   [endingShowFinale.id]: endingShowFinale,
+  // terminal sample redesign (2026-10-05).
+  [endingConsoleEnding.id]: endingConsoleEnding,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -810,11 +833,14 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   // and its single-figure page, theme-locked.
   [contentSealSheet.id]: contentSealSheet,
   [contentSealFigure.id]: contentSealFigure,
+  // terminal sample redesign (2026-10-05): the board's ordinary content page,
+  // theme-locked.
+  [contentConsoleSheet.id]: contentConsoleSheet,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Image takeover layouts (4). With the 34 standard content layouts above,
-// the content page type has 38 registered entries. These are `slide.layout`
+// Image takeover layouts (4). With the 35 standard content layouts above,
+// the content page type has 39 registered entries. These are `slide.layout`
 // ids for the page-level
 // `image-split`/`image-top`/`image-bottom`/`image-annotate` takeovers
 // (full-slide-svg.tsx's splitTakeover branch, keyed off `getLayout(slide.
@@ -835,7 +861,7 @@ const TAKEOVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [imageAnnotateLayoutDef.id]: imageAnnotateLayoutDef,
 }
 
-/** All 141 standard layouts and 4 takeover layouts, 143 entries keyed by id.
+/** All 145 standard layouts and 4 takeover layouts, 149 entries keyed by id.
  *  `kind` still spells the standard tier `"standard"`, a wire-format fossil. See
  *  {@link LayoutDefinition.kind}. */
 export const LAYOUT_REGISTRY: Record<string, LayoutDefinition> = {

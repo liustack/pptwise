@@ -62,3 +62,12 @@ describe("records composition", () => {
     expect(draw([long]).element).toBeNull()
   })
 })
+
+describe("records leave a row's icon to the ordinary table", () => {
+  it("declines a table whose row has an icon, in every setting it draws", () => {
+    const iconed = table({ rows: [{ cells: { co: "极氪", q3: "110,034 辆", yoy: "约 +108%", note: "9X" }, icon: "car" }] })
+    for (const setting of [undefined, "notice", "panel"] as const) {
+      expect(draw([iconed], { setting }).element, String(setting)).toBeNull()
+    }
+  })
+})

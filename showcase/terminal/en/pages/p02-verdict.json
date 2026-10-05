@@ -1,0 +1,31 @@
+{
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "zap",
+          "title": "Big outages: one change pushed everywhere",
+          "text": "5 of 8 major outages pushed a global config or policy to every node fast. Another region on the same cloud would not stop it.",
+          "highlight": true
+        },
+        {
+          "icon": "cloud-lightning",
+          "title": "Regional failures are real, regions hold",
+          "text": "Storms, voltage dips and fiber work each hit one region. The others kept running."
+        },
+        {
+          "icon": "repeat",
+          "title": "Retries and backlogs drag out recovery",
+          "text": "AWS: DynamoDB was back in 2h 52m. The outage ran 14h 32m."
+        },
+        {
+          "icon": "receipt",
+          "title": "SLAs refund fees, not revenue",
+          "text": "99.99% allows 4.38 min a month. Credits cap at one month's fee, revenue is not covered."
+        }
+      ]
+    }
+  ],
+  "notes": "The answer first. We went through 13 cloud outages from June 2025 to September 2026, eight of them major, using what the vendors themselves published. Four findings. One: the outages with the widest blast radius were almost never hardware. A config or policy got pushed everywhere within seconds or minutes, and a second region in the same cloud does nothing against that. Two: single-region physical and network failures are real, from storms and power dips to fiber work and, in the Middle East, facilities destroyed outright. Multi-region does contain those. Three: recovery takes far longer than the fault itself, and what stretches it is retries, backlogs and everything restarting at once. Four: SLAs refund future fees. So our recommendation: take the second region to warm standby, not active-active. Give entry, identity and config rollout each a backup path that does not share a control plane. And ship throttling and backoff in Q4 without waiting for the new region."
+}

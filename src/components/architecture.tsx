@@ -1,5 +1,6 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
+import { accessibleInk } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -106,9 +107,12 @@ export const architecture: SvgComponent<ArchitectureComponent> = {
           const slot = bottomUp ? count - 1 - i : i
           const layerY = slot * LAYER_H
           const fill = layerFill(ctx)
-          const titleInk = ctx.colors.primary
-          const bodyInk = ctx.colors.text
-          const indexInk = ctx.colors.muted
+          // Every ink is checked against the band it sits on: a dark theme's
+          // primary is a fill colour, close to its own panel, and painted
+          // raw it left the layer names at 1.2:1.
+          const titleInk = accessibleInk(ctx.colors.primary, fill, TITLE_FONT_SIZE)
+          const bodyInk = accessibleInk(ctx.colors.text, fill, ITEMS_FONT_SIZE)
+          const indexInk = accessibleInk(ctx.colors.muted, fill, INDEX_FONT_SIZE)
           const title = fitSvgLine(layer.title, {
             maxWidth: titleMax,
             fontSize: TITLE_FONT_SIZE,

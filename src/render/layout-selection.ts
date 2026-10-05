@@ -121,8 +121,10 @@ export function resolveEffectiveFace(ir: PptxIR, slide: Slide, theme: ThemeDefin
     }
   }
 
+  // A cover or chapter over a photograph goes to the shared photo renderer,
+  // unless its face draws its own page over the photograph.
   const background = slide.background ?? theme.style.defaultBackgrounds[slide.type]
-  if (background.kind === "asset" && (slide.type === "cover" || slide.type === "chapter")) {
+  if (background.kind === "asset" && (slide.type === "cover" || slide.type === "chapter") && layout.drawsPhoto !== true) {
     return { route: "image-cover", entry, layoutId, layout }
   }
 

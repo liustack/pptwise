@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import type { ComponentCtx } from "../../components/types"
-import { kpiValueText } from "../../components/kpi"
+import { kpiFigure, kpiValueText } from "../../components/kpi"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { mostlyChinese } from "../../lib/text-script"
 import type { EmphasisHeadingLayout } from "../../render/emphasis"
@@ -79,7 +79,7 @@ function fitLead(kpis: KpiCards, paragraph: Paragraph, place: Place, ctx: Compon
   if (kpis.items.length !== 1 || !item || !panelFigureItem(item)) return null
   const bar = fitPanelBar(item.label, undefined, place.w, ctx)
   if (!bar) return null
-  const { text: value, marked } = kpiValueText(item.value)
+  const { text: value, marked } = kpiFigure(item.value, item.unit)
   const column = LEAD.textX - LEAD.pad * 2
   const size = LEAD.sizes.find((s) => measureTextUnits(value, { fontFamily: ctx.fonts.heading }) * s <= column)
   if (size === undefined) return null

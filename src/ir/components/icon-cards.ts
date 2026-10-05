@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { IconNameSchema } from "./shared"
+import { IconNameSchema, TagSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -14,6 +14,9 @@ export const schema = z
             icon: IconNameSchema,
             title: z.string(),
             text: z.string(),
+            tag: TagSchema.optional().describe(
+              "A few words that place the card, printed as a small tag on it, such as where or when the item comes from: Azure 2026-02. Set quiet on a tag that should step back.",
+            ),
           })
           .strict()
       )

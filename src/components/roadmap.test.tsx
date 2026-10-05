@@ -210,3 +210,25 @@ describe("roadmap emphasis", () => {
     expect(markup(withFalse)).toBe(markup(threePhase))
   })
 })
+
+describe("roadmap phase icon", () => {
+  it("draws a phase's icon in its badge in place of the number", () => {
+    const { container } = svg(
+      roadmap.render(
+        {
+          type: "roadmap",
+          items: [
+            { title: "Throttle and back off", period: "2026 Q4", icon: "timer" },
+            { title: "Independent paths", period: "2027 Q1" },
+          ],
+        },
+        { x: 0, y: 0, w: 900 },
+        ctx,
+      ),
+    )
+    const numbers = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+    expect(numbers).not.toContain("01")
+    expect(numbers).toContain("02")
+    expect(container.querySelectorAll("g[transform^='translate']").length).toBeGreaterThan(0)
+  })
+})

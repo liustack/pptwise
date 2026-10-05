@@ -1,7 +1,8 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
-import { accessibleInk } from "../render/ink"
+import { accessibleInk, graphicInk } from "../render/ink"
+import { Icon } from "../render/icons"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type RoadmapComponent = Extract<Component, { type: "roadmap" }>
@@ -25,6 +26,8 @@ const BAR_H = 8
 
 const BADGE_R = 19
 const BADGE_FONT = 16
+/** An icon drawn in the badge in place of the number. */
+const BADGE_ICON = 18
 const BASELINE_FUDGE = 0.32
 const BADGE_TOP = BAR_H + 16 // 徽章顶到卡顶
 
@@ -197,6 +200,7 @@ function renderCard(
   cardH: number,
   ctx: ComponentCtx,
   barFill: string,
+  icon?: string,
 ): React.ReactElement {
   const r = ctx.shape?.radius ?? CARD_RADIUS
   const cx = x + PAD_X + BADGE_R
@@ -223,18 +227,25 @@ function renderCard(
           that file's `renderBadge` comment for the full defect history.
           `accessibleInk` is a no-op (byte-identical) on every theme where
           white already clears 4.5:1. */}
-      <text
-        x={cx}
-        y={cy + Math.round(BADGE_FONT * BASELINE_FUDGE)}
-        textAnchor="middle"
-        fontSize={BADGE_FONT}
-        fontWeight="700"
-        fill={accessibleInk("#FFFFFF", ctx.colors.primary, BADGE_FONT)}
-        fontFamily={ctx.fonts.body}
-        dominantBaseline="alphabetic"
-      >
-        {num}
-      </text>
+      {/* A phase with an icon shows it in the badge where its number
+          would stand: the number is the card's place in the row, the icon
+          what the phase is about. */}
+      {icon ? (
+        <Icon name={icon} x={cx - BADGE_ICON / 2} y={cy - BADGE_ICON / 2} size={BADGE_ICON} color={graphicInk("#FFFFFF", ctx.colors.primary)} />
+      ) : (
+        <text
+          x={cx}
+          y={cy + Math.round(BADGE_FONT * BASELINE_FUDGE)}
+          textAnchor="middle"
+          fontSize={BADGE_FONT}
+          fontWeight="700"
+          fill={accessibleInk("#FFFFFF", ctx.colors.primary, BADGE_FONT)}
+          fontFamily={ctx.fonts.body}
+          dominantBaseline="alphabetic"
+        >
+          {num}
+        </text>
+      )}
       {layout.period ? (
         // Arc-bbox root fix (fix/arc-bbox): same defect family as this
         // file's own badge-digit `accessibleInk` guard above — `deck-
@@ -331,7 +342,7 @@ export const roadmap: SvgComponent<RoadmapComponent> = {
     return (
       <g>
         {layouts.map((layout, i) =>
-          renderCard(layout, i, box.x + i * (cardW + GAP), box.y, cardW, cardH, ctx, barFill(component.items[i]!)),
+          renderCard(layout, i, box.x + i * (cardW + GAP), box.y, cardW, cardH, ctx, barFill(component.items[i]!), component.items[i]!.icon),
         )}
       </g>
     )

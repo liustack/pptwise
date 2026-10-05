@@ -1,5 +1,7 @@
 import type { Component } from "@/ir"
 import { fitSvgLine } from "../lib/svg-text-layout"
+import { graphicInk } from "../render/ink"
+import { Icon } from "../render/icons"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type ImageGridComponent = Extract<Component, { type: "image_grid" }>
@@ -172,7 +174,12 @@ function renderDefault(component: ImageGridComponent, box: Parameters<SvgCompone
                     // caption 左对齐 + accent 短线前缀（杂志图注惯例），
                     // 弃居中 muted 的"占位感"
                     <>
-                      <rect x={cell.x} y={ruleY} width={16} height={3} fill={ctx.colors.accent} />
+                      {/* An icon the author gave the caption stands where the rule would. */}
+                      {item.icon ? (
+                        <Icon name={item.icon} x={cell.x} y={ruleY - 3} size={16} color={graphicInk(ctx.colors.accent, ctx.defaultBg ?? ctx.colors.bg)} />
+                      ) : (
+                        <rect x={cell.x} y={ruleY} width={16} height={3} fill={ctx.colors.accent} />
+                      )}
                       <text
                         data-truncated={fitted.truncated ? "1" : undefined}
                         x={cell.x + 24}

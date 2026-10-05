@@ -1,0 +1,80 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "sla",
+          "label": "Downtime an SLA allows"
+        },
+        {
+          "key": "month",
+          "label": "Per month",
+          "align": "right"
+        },
+        {
+          "key": "year",
+          "label": "Per year",
+          "align": "right"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "sla": "99.9%",
+            "month": "43.8 min",
+            "year": "8.77 h"
+          }
+        },
+        {
+          "cells": {
+            "sla": "99.95%",
+            "month": "21.9 min",
+            "year": "4.38 h"
+          }
+        },
+        {
+          "cells": {
+            "sla": "99.99%",
+            "month": "4.38 min",
+            "year": "52.6 min"
+          },
+          "emphasis": "highlight"
+        },
+        {
+          "cells": {
+            "sla": "99.999%",
+            "month": "26.3 s",
+            "year": "5.26 min"
+          }
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "1 month's fee",
+          "label": "Credit cap",
+          "note": "AWS, Google and Azure alike. Azure excludes lost revenue in writing",
+          "icon": "receipt"
+        },
+        {
+          "value": "99.99%",
+          "label": "Top VM SLA tier at all three",
+          "note": "Multi-AZ in one region, no multi-region tier",
+          "icon": "server"
+        },
+        {
+          "value": "**199**",
+          "unit": "×",
+          "label": "AWS 2025-10 window vs the monthly budget",
+          "note": "872 min vs 4.38 min, if fully down",
+          "icon": "timer"
+        }
+      ]
+    }
+  ],
+  "footnote": "AWS EC2, Google Compute Engine and Microsoft Online Services SLAs (Oct 2026), team math. Month of 30.4375 days",
+  "notes": "Can the SLA cover us? No. First the budget: 99.99% allows 4.38 minutes a month. Every incident window we looked at is far beyond that. The AWS window in October was 872 minutes, 199 times the monthly budget. That assumes the whole window was a full outage and is only illustrative, since real credits depend on each product's definition of downtime and on our own resources. Then what they pay: AWS, Google and Azure cap credits at that service's monthly fee, paid as credit against future bills, and Microsoft's contract states that credits do not compensate for lost revenue. Cloudflare Business caps credits at one month's fee in any 12 months. One more point: the top tier in the EC2, Compute Engine and Azure VM terms is multi-AZ within one region at 99.99%. None has a multi-region tier. DynamoDB global tables are the only cross-region 99.999% tier we found. Bottom line: an SLA is a billing clause, not an availability guarantee, and the business cost of downtime is ours. Method: we use an average month of 30.4375 days. Google's and Microsoft's docs use a 30-day month and print 4.32 minutes."
+}

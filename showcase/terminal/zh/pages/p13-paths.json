@@ -1,0 +1,54 @@
+{
+  "components": [
+    {
+      "type": "issue_tree",
+      "question": "会拖垮多区域的单点",
+      "branches": [
+        {
+          "label": "入口与 DNS 只有一条路",
+          "note": "Azure Front Door 全球中断 8 小时 24 分",
+          "children": [
+            {
+              "label": "备用入口，可绕开主 CDN"
+            }
+          ],
+          "icon": "globe"
+        },
+        {
+          "label": "身份绑在一个区域",
+          "note": "所有区域的 Redshift 用 IAM 用户查不了",
+          "children": [
+            {
+              "label": "登录和权限解析不依赖单一区域"
+            }
+          ],
+          "emphasis": true,
+          "icon": "key-round"
+        },
+        {
+          "label": "配置一次推到全部",
+          "note": "8 起重大中断里 5 起",
+          "children": [
+            {
+              "label": "分批推送，读不到新配置沿用上一版"
+            }
+          ],
+          "icon": "git-branch"
+        },
+        {
+          "label": "数据只在一个区域",
+          "note": "AWS 巴林区域只在本区的数据已无法恢复",
+          "children": [
+            {
+              "label": "跨区域副本，加区域外备份"
+            }
+          ],
+          "icon": "database"
+        }
+      ],
+      "children_column": "各留一条独立的路"
+    }
+  ],
+  "footnote": "Azure 复盘 YKYN-BWZ，AWS DynamoDB 事故复盘（2025 年 10 月），AWS 状态页（2026-09-15），团队归纳",
+  "notes": "多区域只有在依赖也跨区域时才管用。这张树回答：就算切到了第二区域，还会挂在哪。第一，入口和 DNS：Azure Front Door 2025 年 10 月全球中断 8 小时 24 分，Microsoft 事后把 Azure Portal 等关键入口改成多活，可以绕开 Front Door。第二，身份，这是最容易被忽略的一条：AWS 10 月那次，工作负载在别的区域也没用，所有区域的 Redshift 用 IAM 用户都跑不了查询，因为解析用户组要调 us-east-1 的 IAM 接口，IAM Identity Center 配在 us-east-1 的客户也登录不了。第三，配置发布：8 起重大中断里 5 起是一次推到全部，Cloudflare 的 Code Orange 把配置变更改成带健康检查的逐步发布，读不了新配置时沿用上一版，并为 18 个关键服务建了备用授权路径，2026 年 5 月宣布完成。第四，数据：DynamoDB 全球表那天在其他区域照常可读写，而 AWS 巴林区域只放在本区的数据，9 月已确认无法恢复。观测和通报是第五条，下一页单独讲。"
+}

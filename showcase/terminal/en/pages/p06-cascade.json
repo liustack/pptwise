@@ -1,0 +1,80 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "title": "us-east-1 · 2025-10-20 · UTC",
+      "milestones": [
+        {
+          "date": "06:48",
+          "title": "DNS record emptied",
+          "desc": "Endpoint IPs gone",
+          "tone": "danger",
+          "icon": "server-crash"
+        },
+        {
+          "date": "09:40",
+          "title": "DynamoDB recovers",
+          "desc": "+2h 52m",
+          "highlight": true,
+          "tone": "success",
+          "icon": "database"
+        },
+        {
+          "date": "11:14",
+          "title": "Leases throttled",
+          "desc": "Backlog had collapsed",
+          "tone": "warning",
+          "icon": "gauge"
+        },
+        {
+          "date": "12:30",
+          "title": "NLB errors begin",
+          "desc": "Health checks flapping",
+          "tone": "danger",
+          "icon": "network"
+        },
+        {
+          "date": "16:36",
+          "title": "NLB failover off",
+          "desc": "Stops node removals",
+          "tone": "warning",
+          "icon": "power"
+        },
+        {
+          "date": "21:20",
+          "title": "Event ends",
+          "desc": "14h 32m total",
+          "tone": "success",
+          "icon": "circle-check"
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**2h52m**",
+          "label": "DynamoDB unreachable"
+        },
+        {
+          "value": "14h32m",
+          "label": "Whole event",
+          "tone": "danger"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Fault vs incident window: 5×: backlogs and cascades stretched it, not the fault"
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "icon": "siren",
+      "text": "Verbatim: \"DWFM had entered a state of congestive collapse\", with no runbook to follow."
+    }
+  ],
+  "footnote": "AWS DynamoDB post-event summary (Oct 2025). Times in UTC. End per the summary, status page says 22:01",
+  "notes": "This is the cascade in us-east-1 on October 20, 2025. The root cause was a latent race condition in DynamoDB's DNS management. A badly delayed Enactor applied an old plan over a new one, another Enactor's cleanup then deleted that old plan, and every IP for the regional endpoint vanished. The automation could not repair it, so engineers had to. DNS was restored at 09:25 and DynamoDB recovered at 09:40 once client caches expired: 2h 52m. Then came another 11 hours or so. EC2's lease manager for physical hosts, DWFM, depends on DynamoDB. Leases timed out, and when DNS came back it had to rebuild a huge number of them at once. Timeouts re-queued work and it fell into congestive collapse. AWS writes that there was no established recovery procedure, and it took throttling and staged restarts. Network configuration then backed up, NLB health checks flapped for new instances and nodes kept getting pulled from DNS, so at 16:36 AWS turned off NLB's automatic failover. EC2 was fully back at 20:50, the summary puts the end at 21:20, the status page declared full recovery at 22:01, and the last affected Redshift clusters came back at 11:05 the next day. Two points worth keeping: EC2 instances already running before the event stayed healthy throughout, and DynamoDB global table replicas in other regions kept serving reads and writes."
+}

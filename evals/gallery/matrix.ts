@@ -351,6 +351,19 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "vermilion", kind: "data", composition: "rings" },
   { theme: "vermilion", kind: "comparison", composition: "table" },
   { theme: "vermilion", kind: "process", composition: "lanes" },
+  // terminal's console sheet sets the shapes as an incident console, and
+  // draws the seven its own board added.
+  { theme: "terminal", kind: "points", composition: "cards" },
+  { theme: "terminal", kind: "evidence", composition: "listing" },
+  { theme: "terminal", kind: "process", composition: "log" },
+  { theme: "terminal", kind: "data", composition: "span" },
+  { theme: "terminal", kind: "photo", composition: "plates" },
+  { theme: "terminal", kind: "hierarchy", composition: "paths" },
+  { theme: "terminal", kind: "photo", composition: "screen" },
+  { theme: "terminal", kind: "data", composition: "rail", variant: "console" },
+  { theme: "terminal", kind: "data", composition: "records", variant: "console" },
+  { theme: "terminal", kind: "comparison", composition: "table", variant: "console" },
+  { theme: "terminal", kind: "process", composition: "waves", variant: "console" },
 ]
 
 export function buildMatrix(

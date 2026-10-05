@@ -529,13 +529,15 @@ function checkBoundaryItemCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
     for (const slot of layout.slots) {
       if (slot.itemCapacity === undefined || slot.accepts === "any") continue
       for (const component of boundarySlotBlocks(slide, slot.accepts)) {
-        if (!("items" in component) || !Array.isArray(component.items)) continue
+        // A timeline's items are its milestones.
+        const list: unknown = "items" in component ? component.items : "milestones" in component ? component.milestones : undefined
+        if (!Array.isArray(list)) continue
         // The count is what the face will draw, not what the array holds:
         // `drawableItems` drops the blanks every face already skipped, so a
         // page is never rejected for items nobody was going to print. Only a
         // list of plain strings can hold a blank — a structured item (a KPI,
         // a card) always draws something, so those count as authored.
-        const raw: readonly unknown[] = component.items
+        const raw: readonly unknown[] = list
         const strings = raw.filter((item): item is string => typeof item === "string")
         const count = strings.length === raw.length ? drawableItems(strings).length : raw.length
         if (count <= slot.itemCapacity) continue

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -12,6 +13,9 @@ const BranchSchema = z
   .object({
     label: z.string().min(1).describe("One hypothesis the question splits into."),
     note: z.string().optional().describe("One line saying how much of the question this branch accounts for."),
+    icon: IconNameSchema.optional().describe(
+      "A symbol for the hypothesis, drawn before its label, such as globe or database. Run `pptwise icons` for the names.",
+    ),
     emphasis: z
       .literal(true)
       .optional()
@@ -39,6 +43,12 @@ export const schema = z
      * 全树三层封顶、末端条目合计不超过 8 条。线的含义是「拆解成」，汇报从属用
      * org_tree，按条件分叉且每条边是一个判断用 flowchart。 */
     question: z.string().min(1).describe("The question the whole tree answers, written as a question."),
+    /** 末端条目那一列的表头，如「各留一条独立的路」。 */
+    children_column: z
+      .string()
+      .min(1)
+      .optional()
+      .describe('The header over the sub-points, saying what they are, such as "各留一条独立的路" or "What we do about each". Only with sub-points.'),
     branches: z
       .array(BranchSchema)
       .min(2, "issue_tree.branches needs at least 2 hypotheses — a question that splits one way has not been split")
@@ -49,6 +59,10 @@ export const schema = z
   .refine((c) => issueTreeLeafCount(c.branches) <= LEAF_CAP, {
     error: `issue_tree draws at most ${LEAF_CAP} end points across the whole tree — past that each one is a line of text too short to say anything. Cut the weakest hypothesis, or give the deepest branch its own page.`,
     path: ["branches"],
+  })
+  .refine((c) => c.children_column === undefined || c.branches.some((b) => (b.children?.length ?? 0) > 0), {
+    error: "issue_tree has a children_column and no branch has sub-points, so the header would stand over an empty column. Give the branches their sub-points, or remove children_column.",
+    path: ["children_column"],
   })
   .refine((c) => c.branches.filter((b) => b.emphasis).length <= 1, {
     error: "issue_tree marks at most one branch with emphasis — two filled branches say neither is the answer.",

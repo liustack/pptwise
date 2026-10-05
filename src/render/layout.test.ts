@@ -80,6 +80,19 @@ describe("layoutContent variants", () => {
     })
   })
 
+  it("two_column lets a comparison or a data table span the row, the note after it under it", () => {
+    const contentRect: ContentRect = { x: 96, y: 228, w: 1088, h: 400 }
+    const comparison: Component = { type: "comparison", columns: ["甲", "乙"], rows: [{ label: "成本", cells: ["低", "高"] }] }
+    const table: Component = { type: "data_table", columns: [{ key: "a", label: "A" }, { key: "b", label: "B" }], rows: [{ cells: { a: "1", b: "2" } }] }
+    const note: Component = { type: "callout", variant: "tip", text: "温备平时就跑着整套服务。" }
+    for (const wide of [comparison, table]) {
+      const placed = layoutContent("two_column", [wide, note], contentRect, ctx)
+      expect(placed[0]!.box).toEqual({ x: 96, y: 228, w: 1088 })
+      expect(placed[1]!.box.w).toBe(1088)
+      expect(placed[1]!.box.y).toBeGreaterThan(228 + measureComponent(wide, 1088, ctx))
+    }
+  })
+
   it("kpi_focus hoists kpi_cards to a full-width top row", () => {
     const placed = layoutContent("kpi_focus", [para, kpi, list], rect, ctx)
     expect(placed[0].component.type).toBe("kpi_cards")

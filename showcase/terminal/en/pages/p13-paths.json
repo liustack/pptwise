@@ -1,0 +1,54 @@
+{
+  "components": [
+    {
+      "type": "issue_tree",
+      "question": "Single points that sink every region",
+      "branches": [
+        {
+          "label": "One way in",
+          "note": "Azure Front Door down 8h 24m",
+          "children": [
+            {
+              "label": "Backup entry around the CDN"
+            }
+          ],
+          "icon": "globe"
+        },
+        {
+          "label": "Identity in one region",
+          "note": "Redshift IAM queries failed everywhere",
+          "children": [
+            {
+              "label": "Sign-in that survives a region"
+            }
+          ],
+          "emphasis": true,
+          "icon": "key-round"
+        },
+        {
+          "label": "Config pushed to all",
+          "note": "5 of 8 major outages",
+          "children": [
+            {
+              "label": "Staged, fall back to last good"
+            }
+          ],
+          "icon": "git-branch"
+        },
+        {
+          "label": "Data in one region",
+          "note": "Bahrain: region-only data unrecoverable",
+          "children": [
+            {
+              "label": "Replicas plus off-region backup"
+            }
+          ],
+          "icon": "database"
+        }
+      ],
+      "children_column": "One independent path each"
+    }
+  ],
+  "footnote": "Azure PIR YKYN-BWZ, AWS DynamoDB post-event summary (Oct 2025), AWS status page (2026-09-15), team summary",
+  "notes": "Multi-region only works if the dependencies are multi-region too. This tree asks what can still take us down after we fail over. One, entry and DNS: Azure Front Door was down globally for 8h 24m in October 2025, and Microsoft then moved the Azure Portal and other key entry points to active-active with the ability to fail away from Front Door. Two, identity, the one teams miss most often: in AWS's October outage, running in another region was not enough. Redshift customers in every region could not run queries with IAM user credentials, because resolving user groups called the IAM API in us-east-1, and customers with IAM Identity Center in us-east-1 could not sign in. Three, config rollout: 5 of the 8 major outages were one push to everywhere. Cloudflare's Code Orange moved config changes to health-checked staged rollout, falls back to the last good config when a new one cannot be read, and built backup authorization paths for 18 critical services, declared complete in May 2026. Four, data: DynamoDB global tables kept serving in other regions that day, while data hosted only in AWS's Bahrain region was declared unrecoverable in September. Observability is the fifth, on the next page."
+}

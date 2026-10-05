@@ -529,6 +529,21 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
       },
     ]
   }
+  // terminal's console sheet: the board's verdict page, four findings with
+  // their icons, the first the one the page lands on.
+  if (def.id === "console-sheet") {
+    return [
+      {
+        type: "row_cards",
+        items: lex.phrases.slice(0, 4).map((title, i) => ({
+          icon: (["zap", "cloud-lightning", "repeat", "receipt"] as const)[i]!,
+          title,
+          text: lex.sentences[i + 2]!,
+          ...(i === 0 ? { highlight: true } : {}),
+        })),
+      },
+    ]
+  }
   // The seal fact page: the lead figure with its tag and note, and three
   // figures beside it, one marked.
   if (def.id === "seal-figure") {
@@ -1355,6 +1370,120 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
       footnote: lex.sources[0]!.label,
     }
   },
+  // terminal's terminal window: a short listing with comments, quoted lines
+  // and one line marked.
+  listing: (lex) => ({
+    heading: lex.headings[3]!,
+    components: [
+      {
+        type: "code",
+        language: "text",
+        title: "notes / quotes.txt",
+        code: [`# ${lex.chapters[0]!}`, `"${lex.sentences[0]!}"`, "", `# ${lex.chapters[1]!}`, `"${lex.sentences[1]!}"`].join("\n"),
+        highlight_lines: [5],
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // terminal's log: six times down one rule, each turn's tone a dot, the
+  // recovery highlighted, two durations to scale and a quoted note beside it.
+  log: (lex) => ({
+    heading: lex.headings[5]!,
+    components: [
+      {
+        type: "timeline",
+        title: lex.chapters[1]!,
+        milestones: lex.phrases.slice(0, 6).map((title, i) => ({
+          date: ["06:48", "09:40", "11:14", "12:30", "16:36", "21:20"][i]!,
+          title,
+          desc: lex.labels[i]!,
+          tone: (["danger", "success", "warning", "danger", "warning", "success"] as const)[i]!,
+          ...(i === 1 ? { highlight: true } : {}),
+        })),
+      },
+      { type: "kpi_cards", items: [{ value: "**2h52m**", label: lex.labels[6]! }, { value: "14h32m", label: lex.labels[7]!, tone: "danger" }] },
+      { type: "callout", variant: "info", text: `${lex.labels[8]!}：${lex.verdicts.positive}` },
+      { type: "callout", variant: "warn", icon: "siren", text: `${lex.labels[9]!}："${lex.sentences[0]!}"` },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // The same two durations alone: the board's cascade page without its log.
+  span: (lex) => ({
+    heading: lex.headings[5]!,
+    components: [
+      { type: "kpi_cards", items: [{ value: "**2h52m**", label: lex.labels[6]! }, { value: "14h32m", label: lex.labels[7]!, tone: "danger" }] },
+      { type: "callout", variant: "info", text: `${lex.labels[8]!}：${lex.verdicts.positive}` },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // terminal's pictures over their figures: three photographs, each with
+  // where and when, its figure and what happened, and a banner under them.
+  plates: (lex) => ({
+    heading: lex.headings[6]!,
+    components: [
+      { type: "image_grid", items: PHOTO_ASSETS.slice(0, 3).map((asset_id, i) => ({ asset_id, caption: lex.captions[i]! })) },
+      { type: "kpi_cards", items: lex.metrics.slice(0, 3).map((metric) => ({ value: metric.unit ? `${metric.value} ${metric.unit}` : metric.value, label: metric.label })) },
+      { type: "callout", variant: "tip", icon: "shield-check", text: lex.verdicts.positive },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // terminal's paths: four failure points, each beside its fix, the second
+  // the one the page warns about.
+  paths: (lex) => ({
+    heading: lex.headings[7]!,
+    components: [
+      {
+        type: "issue_tree",
+        question: lex.labels[0]!,
+        children_column: lex.labels[1]!,
+        branches: lex.phrases.slice(0, 4).map((label, i) => ({
+          label,
+          note: lex.labels[i + 2]!,
+          icon: (["globe", "key-round", "git-branch", "database"] as const)[i]!,
+          children: [{ label: lex.labels[i + 6]! }],
+          ...(i === 1 ? { emphasis: true as const } : {}),
+        })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // terminal's screen: a dashboard in a browser beside four log lines, two
+  // of them bad news and the last the page's answer.
+  screen: (lex) => ({
+    heading: lex.headings[8]!,
+    components: [
+      { type: "device_mockup", device: "browser", asset_id: PHOTO_ASSETS[0]!, url: "status.internal / overview" },
+      {
+        type: "row_cards",
+        items: lex.labels.slice(0, 4).map((title, i) => ({
+          icon: (["bell-off", "radio-tower", "shield-check", "flag"] as const)[i]!,
+          title,
+          text: lex.phrases[i]!,
+          ...(i < 2 ? { tone: "danger" as const } : {}),
+          ...(i === 3 ? { highlight: true } : {}),
+        })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  // terminal's HUD cards: five findings with their icons and where each came
+  // from, and the way forward in the sixth cell.
+  cards: (lex) => ({
+    heading: lex.headings[4]!,
+    components: [
+      {
+        type: "icon_cards",
+        items: lex.phrases.slice(0, 5).map((title, i) => ({
+          icon: (["repeat", "layers", "refresh-cw", "log-in", "hard-drive"] as const)[i]!,
+          title,
+          text: lex.sentences[i + 2]!,
+          tag: { text: lex.periods[i]! },
+        })),
+      },
+      { type: "callout", variant: "tip", icon: "timer", text: `${lex.labels[0]!}：${lex.verdicts.positive}` },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
 }
 
 /** The figures the column beside a chart or a row of figures sets: label, value and a note. */
@@ -1373,7 +1502,7 @@ function figureItems(lex: Lexicon, count: number) {
  * instead of the changes it computes, and `table` at its dense size, four
  * options over a closing line.
  */
-export type CompositionVariant = "figures" | "dense" | "answer"
+export type CompositionVariant = "figures" | "dense" | "answer" | "console"
 
 const COMPOSITION_VARIANT_BODIES: Record<`${CompositionId}-${CompositionVariant}`, ((lex: Lexicon) => CompositionBody) | undefined> = {
   "rail-figures": (lex) => ({
@@ -1407,6 +1536,77 @@ const COMPOSITION_VARIANT_BODIES: Record<`${CompositionId}-${CompositionVariant}
     ],
     footnote: lex.sources[0]!.label,
   }),
+  // terminal's console forms of the shared shapes: windows ranked beside two
+  // figures, a matrix of marked cells, options as cards with a rating and a
+  // measure, a roadmap over its decision.
+  "rail-console": (lex): CompositionBody => ({
+    heading: lex.headings[0]!,
+    components: [
+      {
+        type: "chart",
+        chart_type: "bar",
+        direction: "horizontal",
+        axes: { x_title: lex.labels[0]!, ...(lex.metrics[0]!.unit ? { x_unit: lex.metrics[0]!.unit } : {}) },
+        series: [
+          { name: lex.labels[1]!, data: lex.phrases.slice(0, 2).map((x, i) => ({ x: `${lex.labels[i + 4]!} · ${lex.periods[i]!}`, y: [1326, 872][i]! })) },
+          { name: lex.labels[2]!, emphasis: true, data: lex.phrases.slice(2, 6).map((x, i) => ({ x: `${lex.labels[i + 6]!} · ${lex.periods[(i + 2) % 4]!}`, y: [504, 387, 190, 25][i]! })) },
+        ],
+      },
+      {
+        type: "kpi_cards",
+        items: [
+          { value: "**5/8**", label: lex.labels[2]!, note: lex.periods[0]!, icon: "zap" as const },
+          { value: "7+", ...(lex.metrics[1]!.unit ? { unit: lex.metrics[1]!.unit } : {}), label: lex.labels[3]!, note: lex.periods[1]!, icon: "flame" as const, tone: "danger" as const },
+        ],
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  "records-console": (lex): CompositionBody => ({
+    heading: lex.headings[9]!,
+    components: [
+      {
+        type: "data_table",
+        columns: [
+          { key: "case", label: lex.labels[0]! },
+          { key: "scope", label: lex.labels[1]! },
+          { key: "a", label: lex.labels[2]! },
+          { key: "b", label: lex.labels[3]! },
+        ],
+        rows: lex.phrases.slice(0, 5).map((phrase, i) => ({
+          cells: { case: lex.labels[i + 4]!, scope: lex.labels[i + 9]!, a: ["✓ ", "✕ ", "✕ ", "— ", "✕ "][i]! + lex.periods[i % 4]!, b: ["✓ ", "✓ ", "✕ ", "— ", "✓ "][i]! + lex.periods[(i + 1) % 4]! },
+          ...(i === 2 ? { emphasis: "highlight" as const } : {}),
+        })),
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  "table-console": (lex): CompositionBody => ({
+    heading: lex.headings[9]!,
+    components: [
+      {
+        type: "comparison",
+        recommended: 2,
+        columns: [lex.labels[8]!, lex.labels[9]!, lex.labels[10]!, lex.labels[11]!],
+        rows: [
+          { label: "RPO", cells: [lex.periods[0]!, lex.periods[1]!, lex.periods[2]!, lex.periods[3]!] },
+          { label: lex.labels[0]!, cells: lex.phrases.slice(0, 4) },
+          { label: lex.labels[1]!, cells: ["$", "$$", "$$$", "$$$$"] },
+        ],
+      },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  "waves-console": (lex): CompositionBody => {
+    const roadmap = COMPONENT_BUILDERS.roadmap!(lex)
+    return {
+      heading: lex.headings[11]!,
+      components: [
+        roadmap.type === "roadmap" ? { ...roadmap, items: roadmap.items.map((item, i) => (i === 0 ? { ...item, emphasis: true as const } : item)) } : roadmap,
+        { type: "callout" as const, variant: "warn" as const, icon: "flag" as const, text: lex.verdicts.warning },
+      ],
+    }
+  },
 } as Record<`${CompositionId}-${CompositionVariant}`, ((lex: Lexicon) => CompositionBody) | undefined>
 
 /** One page drawn by one shared composition, on `themeId`, under the face its menu gives `kind`. */

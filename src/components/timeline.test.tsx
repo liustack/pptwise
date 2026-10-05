@@ -381,7 +381,7 @@ describe("timeline side by side in a short box", () => {
 
 
 describe("timeline lanes, drawn by the shared renderer", () => {
-  it("names a milestone's lane before its date", () => {
+  it("names a milestone's lane on a line over its date", () => {
     const laned = {
       type: "timeline" as const,
       milestones: [
@@ -390,8 +390,56 @@ describe("timeline lanes, drawn by the shared renderer", () => {
       ],
     }
     const { container } = svg(timeline.render(laned, { x: 0, y: 0, w: 1000, h: 300 }, ctx))
-    const dates = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
-    expect(dates).toContain("海外 · 7 月")
-    expect(dates).toContain("国内 · 8 月")
+    const lanes = Array.from(container.querySelectorAll("[data-milestone-lane]")).map((t) => t.textContent)
+    expect(lanes).toEqual(["海外", "国内"])
+    const date = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "7 月")!
+    const lane = container.querySelector("[data-milestone-lane]")!
+    expect(Number(lane.getAttribute("y"))).toBeLessThan(Number(date.getAttribute("y")))
+  })
+
+  it("keeps a long date whole beside a lane on a crowded row", () => {
+    const lanes = ["国内市场", "海外市场"]
+    const crowded = {
+      type: "timeline" as const,
+      milestones: Array.from({ length: 6 }, (_, i) => ({ date: `2026 年 ${i + 3} 月 15 日`, title: `事件 ${i + 1}`, lane: lanes[i % 2]! })),
+    }
+    const { container } = svg(timeline.render(crowded, { x: 0, y: 0, w: 1088 }, ctx))
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+    for (let i = 0; i < 6; i++) expect(texts).toContain(`2026 年 ${i + 3} 月 15 日`)
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+  })
+})
+
+describe("timeline milestone tone and icon", () => {
+  const toned = {
+    type: "timeline" as const,
+    layout: "vertical" as const,
+    milestones: [
+      { date: "06:48", title: "DNS records emptied", tone: "danger" as const },
+      { date: "09:40", title: "DynamoDB back", tone: "success" as const, highlight: true },
+      { date: "11:14", title: "Lease system throttled", tone: "warning" as const, icon: "server" as const },
+    ],
+  }
+  const withTones: ComponentCtx = { ...ctx, colors: { ...ctx.colors, danger: "#C0392B", success: "#1E8449", warning: "#9A6B00" } }
+
+  it("paints each dot in the theme's ink for its tone, at either size", () => {
+    const { container } = svg(timeline.render(toned, { x: 0, y: 0, w: 900 }, withTones))
+    const dots = Array.from(container.querySelectorAll("circle"))
+    expect(dots[0]!.getAttribute("fill")).toBe("#C0392B")
+    expect(dots[1]!.getAttribute("fill")).toBe("#1E8449")
+    expect(dots[1]!.getAttribute("r")).toBe("10")
+  })
+
+  it("draws a milestone's icon in a ring of its tone on the axis", () => {
+    const { container } = svg(timeline.render(toned, { x: 0, y: 0, w: 900 }, withTones))
+    const node = container.querySelector("[data-milestone-icon='server']")!
+    expect(node).not.toBeNull()
+    expect(node.querySelector("circle")!.getAttribute("stroke")).toBe("#9A6B00")
+    expect(node.querySelector("g[transform]")).not.toBeNull()
+  })
+
+  it("draws the icon on a horizontal row too", () => {
+    const { container } = svg(timeline.render({ ...toned, layout: undefined }, { x: 0, y: 0, w: 900 }, withTones))
+    expect(container.querySelectorAll("[data-milestone-icon]")).toHaveLength(1)
   })
 })

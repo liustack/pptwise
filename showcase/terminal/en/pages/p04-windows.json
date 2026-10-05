@@ -1,0 +1,75 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "x_title": "Incident window",
+        "x_unit": "min"
+      },
+      "series": [
+        {
+          "name": "Single region",
+          "data": [
+            {
+              "x": "Azure West US 2 · 2026-05",
+              "y": 1326
+            },
+            {
+              "x": "AWS us-east-1 · 2025-10",
+              "y": 872
+            }
+          ]
+        },
+        {
+          "name": "Pushed everywhere",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "Azure Front Door · 2025-10",
+              "y": 504
+            },
+            {
+              "x": "Azure multi-region · 2026-02",
+              "y": 387
+            },
+            {
+              "x": "Cloudflare network · 2025-11",
+              "y": 190
+            },
+            {
+              "x": "Google Cloud APIs · 2025-06",
+              "y": 180
+            },
+            {
+              "x": "Cloudflare WAF · 2025-12",
+              "y": 25
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**5/8**",
+          "label": "One change pushed everywhere",
+          "note": "Global config, policy or data reached every node fast",
+          "icon": "zap"
+        },
+        {
+          "value": "7+",
+          "unit": "months",
+          "label": "AWS Middle East, two regions",
+          "note": "Since March 1, drone strikes on facilities, some data confirmed lost",
+          "icon": "flame",
+          "tone": "danger"
+        }
+      ]
+    }
+  ],
+  "footnote": "vendor postmortems, team math. Google: mini report, Cloudflare Nov: core recovery, Azure Feb: main phase",
+  "notes": "These are the incident windows for the eight major outages, split by root cause. Teal is one change pushed everywhere, five of the eight: Azure Front Door in October 2025 (customer config metadata), Azure in February 2026 (a storage policy job), Cloudflare in November 2025 (the Bot Management feature file), Google Cloud in June 2025 (a quota policy) and Cloudflare in December 2025 (a global WAF config). Their windows are not the longest, but the blast radius was global or multi-region. Grey is single-region: the Azure West US 2 storm at 22h 6m and the AWS us-east-1 DNS race at 14h 32m. Longer, but contained to one region. The eighth is AWS in the Middle East. As of the September 15 status update the two regions had not recovered, so it does not fit on the same chart. On definitions: these are vendor-wide incident windows, not any one customer's downtime. Google's mini report says 3 hours, while the last product recovered after 7h 27m. We use 3 hours. Cloudflare's core traffic recovered in 3h 10m and everything in 5h 46m. We use the former. Azure's main phase in February was 6h 27m, or 12h 2m including managed identity. AWS uses the post-event summary's 14h 32m. The other five incidents are smaller: the AWS use1-az4 thermal event, the Google europe-west4-a voltage dip with cooling unavailable, Google us-west1 fiber maintenance, Azure West US egress network repair in July 2026, and Cloudflare withdrawing about 1,100 BYOIP prefixes in February 2026. The first three come up later. The impact also ran downstream: in Azure's February outage, GitHub Actions hosted runners were unavailable, and the PIR says all regions and runner types were impacted."
+}

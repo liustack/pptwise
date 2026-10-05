@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { stripEmphasis } from "../../render/emphasis"
 import { accessibleInk } from "../../render/ink"
+import { wavesConsole } from "./waves-console"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 
@@ -86,10 +87,14 @@ function wavesShape(components: readonly Component[]): Roadmap | null {
   if (only.type !== "roadmap") return null
   if (only.items.length < MIN_ITEMS || only.items.length > MAX_ITEMS) return null
   if (only.items.some((item) => (item.rows?.length ?? 0) > MAX_ROWS)) return null
+  // A phase's icon has no place over these columns: the ordinary roadmap draws it.
+  if (only.items.some((item) => item.icon !== undefined)) return null
   return only
 }
 
-export const wavesComposition: Composition = ({ components, ctx, rect }) => {
+export const wavesComposition: Composition = (props) => {
+  if (props.setting === "console") return wavesConsole(props)
+  const { components, ctx, rect } = props
   const roadmap = wavesShape(components)
   if (!roadmap) return null
   const { colors, fonts } = ctx

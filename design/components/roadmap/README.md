@@ -15,3 +15,13 @@ Settled on the plan page. See the board and engine render in [compositions/waves
 **What it gave up.**
 
 - At most one marked phase.
+
+## terminal, cloud outage review sample, 2026-10
+
+`items[].icon`. Settled on the roadmap page (p15): see the board in [compositions/waves](../../compositions/waves/terminal.board.png). The round's decisions are in [rounds/2026-10-05-terminal](../../rounds/2026-10-05-terminal/README.md).
+
+**What it looks like.** The ordinary roadmap sets a phase's icon where its badge number stood. The console form sets it at the card's top right.
+
+**Why.** A phase named "限流与退避" and one named "第二区域温备" read faster with a symbol each.
+
+**What it gave up.** Nothing a roadmap drew before: a phase with no icon keeps its number.

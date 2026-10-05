@@ -147,3 +147,35 @@ describe("issue_tree component", () => {
     expect(svg(issueTree.render(tree, BOX, themed("brief"))).container.innerHTML).toBe(first)
   })
 })
+
+describe("issue_tree branch icons and the sub-points' header", () => {
+  const tree = {
+    type: "issue_tree" as const,
+    question: "What can take down multi-region?",
+    children_column: "One independent path each",
+    branches: [
+      { label: "One way in", icon: "globe" as const, children: [{ label: "A backup entry" }] },
+      { label: "Identity in one region", icon: "key-round" as const, emphasis: true as const, children: [{ label: "Sign-in in every region" }] },
+      { label: "Config pushed everywhere", children: [{ label: "Push in batches" }] },
+    ],
+  }
+
+  it("heads the sub-point column and gives the header its own row", () => {
+    const ctx = themed("brief")
+    const without = issueTree.measure({ ...tree, children_column: undefined }, 1000, ctx)
+    expect(issueTree.measure(tree, 1000, ctx)).toBe(without + 32)
+    const { container } = svg(issueTree.render(tree, { x: 0, y: 0, w: 1000, h: issueTree.measure(tree, 1000, ctx) }, ctx))
+    const head = container.querySelector("[data-issue-tree-column]")!
+    expect(head.textContent).toBe("One independent path each")
+    const leaf = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "A backup entry")!
+    expect(Number(head.getAttribute("x"))).toBeLessThan(Number(leaf.getAttribute("x")))
+  })
+
+  it("draws a branch's icon before its label and moves the label past it", () => {
+    const ctx = themed("brief")
+    const { container } = svg(issueTree.render(tree, { x: 0, y: 0, w: 1000, h: issueTree.measure(tree, 1000, ctx) }, ctx))
+    const iconed = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "One way in")!
+    const plain = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "Config pushed everywhere")!
+    expect(Number(iconed.getAttribute("x")) - Number(plain.getAttribute("x"))).toBe(30)
+  })
+})

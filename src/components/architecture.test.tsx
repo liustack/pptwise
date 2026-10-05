@@ -2,6 +2,7 @@
 import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import { architecture } from "./architecture"
+import { contrastRatio } from "../render/ink"
 import type { ComponentCtx } from "./types"
 
 const ctx: ComponentCtx = {
@@ -353,3 +354,22 @@ describe("architecture layer-stack", () => {
   })
 })
 
+
+describe("architecture inks read against the band they sit on", () => {
+  // terminal's 2026-10 deck: a dark theme's primary is a fill colour, close
+  // to its own panel, and the layer names came out at 1.2:1.
+  const dark: ComponentCtx = {
+    ...ctx,
+    colors: { ...ctx.colors, bg: "#0A0F1E", surface: "#121A30", panel: "#121A30", primary: "#1E2A4A", accent: "#53E0D2", text: "#E6EDF7", muted: "#8A9BB8" },
+  }
+
+  it("keeps the primary where it reads, and falls back where it does not", () => {
+    const light = svg(architecture.render({ type: "architecture", layers }, { x: 0, y: 0, w: 1100 }, ctx)).container
+    const title = (root: Element) => Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "Presentation")!
+    expect(title(light).getAttribute("fill")).toBe("#006A4E")
+    const onDark = svg(architecture.render({ type: "architecture", layers }, { x: 0, y: 0, w: 1100 }, dark)).container
+    const fill = title(onDark).getAttribute("fill")!
+    expect(fill).not.toBe("#1E2A4A")
+    expect(contrastRatio(fill, "#121A30")).toBeGreaterThanOrEqual(4.5)
+  })
+})

@@ -1,0 +1,97 @@
+{
+  "components": [
+    {
+      "type": "roadmap",
+      "items": [
+        {
+          "title": "Throttling and backoff",
+          "period": "Q4 2026",
+          "emphasis": true,
+          "rows": [
+            {
+              "label": "Retries",
+              "value": "Capped backoff"
+            },
+            {
+              "label": "Queues",
+              "value": "Length throttling"
+            },
+            {
+              "label": "Rollout",
+              "value": "Staged pushes"
+            },
+            {
+              "label": "Flags",
+              "value": "Off by default"
+            }
+          ],
+          "icon": "repeat"
+        },
+        {
+          "title": "Independent paths",
+          "period": "Q1 2027",
+          "rows": [
+            {
+              "label": "Entry",
+              "value": "Backup DNS"
+            },
+            {
+              "label": "Identity",
+              "value": "Multi-region"
+            },
+            {
+              "label": "Status",
+              "value": "Off main cloud"
+            }
+          ],
+          "icon": "route"
+        },
+        {
+          "title": "Warm standby region",
+          "period": "Q2 2027",
+          "rows": [
+            {
+              "label": "Size",
+              "value": "Scaled down"
+            },
+            {
+              "label": "Data",
+              "value": "Replicas, backups"
+            },
+            {
+              "label": "RPO",
+              "value": "Seconds"
+            },
+            {
+              "label": "RTO",
+              "value": "Minutes"
+            }
+          ],
+          "icon": "server"
+        },
+        {
+          "title": "Failover drills",
+          "period": "Q3 2027 on",
+          "rows": [
+            {
+              "label": "Cadence",
+              "value": "Quarterly"
+            },
+            {
+              "label": "Then",
+              "value": "Revisit active-active"
+            }
+          ],
+          "icon": "refresh-cw"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "icon": "flag",
+      "text": "Decide today: warm standby, not active-active. Throttling, backoff and staged rollout ship in Q4."
+    }
+  ],
+  "notes": "The order is deliberate. Q4 goes first on work that needs no new region but shortens recovery directly: jittered exponential backoff with caps on retries and throttling on queue length, the two problems that keep coming up in the Google, AWS, Azure and Cloudflare reports. Config rollout moves to staged pushes, and risky changes ship behind flags that are off by default, which answers the push-to-everything class. Q1 2027 adds independent paths for entry and DNS, identity and observability. In Q2 the second region goes live as warm standby, scaled down but fully functional, with cross-region replicas and backups kept outside the region, targeting an RPO in seconds and an RTO in minutes. From Q3 we run a regional failover drill every quarter, and the results come back to this board before anyone proposes active-active. Each phase can be signed off on its own. What we are asking the board to decide today: warm standby, not active-active, and throttling, backoff and staged rollout in Q4 without waiting for the new region."
+}

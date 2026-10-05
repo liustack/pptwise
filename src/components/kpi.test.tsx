@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest"
 import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { kpi, rowValueFontSize, splitKpiValueWidths } from "./kpi"
+import { kpi, kpiFigure, rowValueFontSize, splitKpiValueWidths } from "./kpi"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import type { ComponentCtx } from "./types"
 import { CANONICAL_THEME_IDS } from "../themes"
@@ -419,6 +419,23 @@ describe("kpi 冗余单位去重（2026-07-10 无图矩阵真机病型：value �
   })
 })
 
+describe("a multiplication sign written as the unit", () => {
+  it("joins the figure, set at the figure's size, rather than trailing it as a speck", () => {
+    const component = { type: "kpi_cards" as const, items: [{ value: "**199**", unit: "×", label: "AWS 2025-10 vs the budget" }] }
+    const { container } = svg(kpi.render(component, { x: 80, y: 200, w: 1120 }, ctx))
+    const figure = Array.from(container.querySelectorAll("text")).find((t) => t.textContent?.startsWith("199"))!
+    expect(figure.textContent).toBe("199×")
+    expect(figure.querySelector("tspan")).toBeNull()
+  })
+
+  it("is read the same way by every renderer that draws a kpi figure", () => {
+    expect(kpiFigure("**199**", "×")).toEqual({ text: "199×", marked: true, unit: undefined })
+    expect(kpiFigure("3.2", "x")).toEqual({ text: "3.2x", marked: false, unit: undefined })
+    expect(kpiFigure("199", "倍")).toEqual({ text: "199", marked: false, unit: "倍" })
+    expect(kpiFigure("35%", "%")).toEqual({ text: "35%", marked: false, unit: undefined })
+  })
+})
+
 // P0 hardening (robustness deep-review D1's horizontal-axis sibling, review
 // round 2): `items` has no schema ceiling (unlike icon_cards/row_cards,
 // which cap at 6). Pre-fix, `cardW = (box.w - GAP*(n-1)) / n` had no floor
@@ -794,5 +811,20 @@ describe("kpi_cards item tag", () => {
       const label = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "Carbon intensity cut, 2026–2030")!
       expect(Number(tags[0]!.querySelector("rect")!.getAttribute("y")), id).toBeGreaterThan(Number(label.getAttribute("y")))
     }
+  })
+})
+
+describe("kpi_cards item tone", () => {
+  it("paints a toned figure's icon and label in the theme's ink for the tone", () => {
+    const terminal = boundThemeCtx("terminal", {})
+    const item = { value: "7+", unit: "months", label: "Two AWS regions in the Middle East", icon: "flame" as const, tone: "danger" as const }
+    const markup = renderToStaticMarkup(<svg>{kpi.render({ type: "kpi_cards", items: [item, { value: "5/8", label: "One change everywhere" }] }, { x: 0, y: 0, w: 900 }, terminal)}</svg>)
+    const danger = terminal.colors.danger!
+    expect(markup).toContain(`stroke="${danger}"`)
+    const label = new DOMParser().parseFromString(markup, "image/svg+xml").querySelectorAll("text")
+    const toned = Array.from(label).find((t) => t.textContent === "Two AWS regions in the Middle East")!
+    expect(toned.getAttribute("fill")).toBe(accessibleInk(danger, terminal.colors.surface, 16))
+    const plain = Array.from(label).find((t) => t.textContent === "One change everywhere")!
+    expect(plain.getAttribute("fill")).toBe(terminal.colors.muted)
   })
 })

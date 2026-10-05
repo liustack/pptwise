@@ -24,8 +24,11 @@ describe("the corpus pages that show the shared compositions", () => {
       const lex = nativeLexiconFor(spec.theme)
       const ir = compositionPage(lex, await corpusAssets(lex), spec.theme, spec.kind, spec.composition, spec.variant)
       const svg = renderSlideSvg(ir, 0)
-      const drawnBy = [...svg.matchAll(/data-gauge-module="([a-z]+)"/g)].map((m) => m[1])
-      expect(drawnBy).toEqual([spec.composition])
+      const drawnBy = [...svg.matchAll(/data-gauge-module="([a-z]+)"/g)].map((m) => m[1]!)
+      // The page's composition draws it, and may hand part of it on to
+      // another (`handOn`): a log sets the durations beside it with `span`.
+      expect(drawnBy[0]).toBe(spec.composition)
+      expect(drawnBy.slice(1).every((id) => (COMPOSITION_IDS as readonly string[]).includes(id) && id !== spec.composition)).toBe(true)
       expect(svg).not.toMatch(/data-dropped="[1-9]/)
       expect(svg).not.toContain("data-truncated")
       expect(svg).not.toContain("data-face-stepped-aside")

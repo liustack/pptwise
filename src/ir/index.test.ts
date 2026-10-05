@@ -1954,3 +1954,73 @@ describe("deck branding posture", () => {
     if (!r.success) expect(r.error).toMatch(/chrome/)
   })
 })
+
+/** One content page holding `component`, parsed. */
+function parseOne(component: unknown) {
+  const d: any = minimal()
+  d.slides = [{ type: "content", kind: "points", components: [component] }]
+  return parsePptxIR(d)
+}
+
+describe("timeline milestone icon and tone", () => {
+  it("takes an icon and a tone on a milestone, and refuses a tone it does not know", () => {
+    expect(parseOne({ type: "timeline", milestones: [{ date: "06:48", title: "DNS emptied", tone: "danger", icon: "server" }, { date: "09:40", title: "Back", tone: "success" }] }).success).toBe(true)
+    expect(parseOne({ type: "timeline", milestones: [{ date: "06:48", title: "DNS emptied", tone: "red" }] }).success).toBe(false)
+  })
+})
+
+describe("kpi_cards item tone", () => {
+  it("takes a tone on a figure", () => {
+    expect(parseOne({ type: "kpi_cards", items: [{ value: "7+", label: "Months", tone: "danger" }] }).success).toBe(true)
+    expect(parseOne({ type: "kpi_cards", items: [{ value: "7+", label: "Months", tone: "red" }] }).success).toBe(false)
+  })
+})
+
+describe("row_cards item tone", () => {
+  it("takes a tone on a row card", () => {
+    expect(parseOne({ type: "row_cards", items: [{ title: "a", tone: "warning" }, { title: "b" }, { title: "c" }] }).success).toBe(true)
+  })
+})
+
+describe("roadmap phase icon", () => {
+  it("takes an icon on a phase", () => {
+    expect(parseOne({ type: "roadmap", items: [{ title: "a", icon: "flag" }, { title: "b" }] }).success).toBe(true)
+  })
+})
+
+describe("issue_tree branch icon and sub-points' header", () => {
+  it("takes an icon on a branch, and heads the sub-points only when it has them", () => {
+    const branches = [{ label: "a", icon: "globe", children: [{ label: "x" }] }, { label: "b" }]
+    expect(parseOne({ type: "issue_tree", question: "q?", children_column: "Fix", branches }).success).toBe(true)
+    expect(parseOne({ type: "issue_tree", question: "q?", children_column: "Fix", branches: [{ label: "a" }, { label: "b" }] }).success).toBe(false)
+  })
+})
+
+describe("data_table row icon", () => {
+  it("takes an icon on a row", () => {
+    expect(parseOne({ type: "data_table", columns: [{ key: "a", label: "A" }, { key: "b", label: "B" }], rows: [{ cells: { a: "1", b: "2" }, icon: "server" }] }).success).toBe(true)
+  })
+})
+
+describe("image_grid caption icon", () => {
+  it("takes an icon on a captioned picture, and refuses one without a caption", () => {
+    expect(parseOne({ type: "image_grid", items: [{ asset_id: "x", caption: "c", icon: "zap" }, { asset_id: "y" }] }).success).toBe(true)
+    expect(parseOne({ type: "image_grid", items: [{ asset_id: "x", icon: "zap" }, { asset_id: "y" }] }).success).toBe(false)
+  })
+})
+
+describe("icon_cards item tag", () => {
+  it("takes a tag on an icon card", () => {
+    expect(parseOne({ type: "icon_cards", items: [{ icon: "zap", title: "a", text: "b", tag: { text: "Azure 2026-02" } }, { icon: "zap", title: "c", text: "d" }] }).success).toBe(true)
+  })
+})
+
+describe("code title and marked lines", () => {
+  it("names a listing and marks lines it has, each once", () => {
+    const code = { type: "code", language: "text", code: "a\nb\nc", title: "notes.txt" }
+    expect(parseOne({ ...code, highlight_lines: [2, 3] }).success).toBe(true)
+    expect(parseOne({ ...code, highlight_lines: [4] }).success).toBe(false)
+    expect(parseOne({ ...code, highlight_lines: [2, 2] }).success).toBe(false)
+    expect(parseOne({ ...code, highlight_lines: [0] }).success).toBe(false)
+  })
+})
