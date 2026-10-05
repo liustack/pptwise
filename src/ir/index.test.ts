@@ -2051,6 +2051,38 @@ describe("tag evidence", () => {
   })
 })
 
+describe("timeline periods", () => {
+  const base = { type: "timeline", milestones: [{ date: "2026-01-01", title: "a" }, { date: "2027-09-30", title: "b" }] }
+  it("takes up to three named spans, one resting on a proposal", () => {
+    const periods = [
+      { from: "2026-01", to: "2026-12", label: "2026" },
+      { from: "2034", to: "2038", label: "提案：延到 2038", basis: "proposal" },
+    ]
+    expect(parseOne({ ...base, periods }).success).toBe(true)
+    expect(parseOne({ ...base, periods: [...periods, ...periods] }).success).toBe(false)
+    expect(parseOne({ ...base, periods: [{ from: "2026", to: "2027", label: "" }] }).success).toBe(false)
+  })
+
+  it("refuses spans on a vertical timeline, which has no axis across the page", () => {
+    expect(parseOne({ ...base, layout: "vertical", periods: [{ from: "2026", to: "2027", label: "x" }] }).success).toBe(false)
+  })
+})
+
+describe("tag basis", () => {
+  it("takes what a tag's figure or rule rests on, and refuses a basis it does not know", () => {
+    const kpi = (tag: unknown) => ({ type: "kpi_cards", items: [{ value: "1", label: "a", tag }] })
+    expect(parseOne(kpi({ text: "演示 · 碳价冻结在 €75.36，不是预测", basis: "estimate" })).success).toBe(true)
+    expect(parseOne(kpi({ text: "条例 (EU) 2025/2083", basis: "law" })).success).toBe(true)
+    expect(parseOne(kpi({ text: "x", basis: "rumour" })).success).toBe(false)
+  })
+
+  it("refuses a basis beside a settled verdict or a kind of source, which say the same a second time", () => {
+    const kpi = (tag: unknown) => ({ type: "kpi_cards", items: [{ value: "1", label: "a", tag }] })
+    expect(parseOne(kpi({ text: "x", basis: "pending", settled: true })).success).toBe(false)
+    expect(parseOne(kpi({ text: "x", basis: "law", evidence: "official" })).success).toBe(false)
+  })
+})
+
 describe("tag tone", () => {
   it("takes what kind of news a tag says, and refuses a tone it does not know", () => {
     const row = (tag: unknown) => ({ type: "comparison", columns: ["A"], rows: [{ label: "x", cells: ["1"], tag }] })

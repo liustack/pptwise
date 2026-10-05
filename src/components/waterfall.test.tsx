@@ -547,3 +547,39 @@ describe("waterfall emphasis", () => {
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
   })
 })
+
+describe("a waterfall bar's note", () => {
+  const noted = {
+    type: "waterfall" as const,
+    unit: "€/吨",
+    items: [
+      { label: "中国默认值", value: 240.2, kind: "total" as const, note: "3.187 吨" },
+      { label: "加成 10%", value: 24.0, note: "+0.319 吨" },
+      { label: "免费配额调整", value: -100.7, note: "1.336 吨", emphasis: true },
+      { label: "应清缴", value: 163.5, kind: "total" as const, note: "2.170 吨" },
+    ],
+  }
+
+  it("sets every note in a line of its own under the bars' names", () => {
+    const { container } = svg(waterfall.render(noted, { x: 0, y: 0, w: 900, h: 420 }, ctx))
+    const notes = Array.from(container.querySelectorAll("[data-waterfall-note]"))
+    expect(notes.map((n) => n.textContent)).toEqual(["3.187 吨", "+0.319 吨", "1.336 吨", "2.170 吨"])
+    const name = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "中国默认值")!
+    expect(Number(notes[0]!.getAttribute("y"))).toBeGreaterThan(Number(name.getAttribute("y")))
+    expect(Number(notes[0]!.getAttribute("y"))).toBeLessThanOrEqual(420)
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+  })
+
+  it("gives the plot's height to the notes' line, so the bars stay clear of the names", () => {
+    const bare = { ...noted, items: noted.items.map(({ note: _note, ...item }) => item) }
+    const top = (c: Element) => Math.min(...Array.from(c.querySelectorAll("rect")).map((r) => Number(r.getAttribute("y"))))
+    const bottom = (c: Element) => Math.max(...Array.from(c.querySelectorAll("rect")).map((r) => Number(r.getAttribute("y")) + Number(r.getAttribute("height"))))
+    const withNotes = svg(waterfall.render(noted, { x: 0, y: 0, w: 900, h: 420 }, ctx)).container
+    const without = svg(waterfall.render(bare, { x: 0, y: 0, w: 900, h: 420 }, ctx)).container
+    expect(bottom(withNotes) - top(withNotes)).toBeLessThan(bottom(without) - top(without))
+  })
+
+  it("refuses a blank note", () => {
+    expect(waterfallSchema.safeParse({ ...noted, items: noted.items.map((item, i) => (i === 0 ? { ...item, note: "" } : item)) }).success).toBe(false)
+  })
+})

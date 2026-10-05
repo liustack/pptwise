@@ -12,6 +12,9 @@ export type Tag = NonNullable<Extract<Component, { type: "comparison" }>["rows"]
 /** What kind of source a tag names (`EvidenceKindSchema`). */
 export type EvidenceKind = NonNullable<Tag["evidence"]>
 
+/** What a tag says its figure or rule rests on (`BasisSchema`). */
+export type BasisKind = NonNullable<Tag["basis"]>
+
 /*
  * The tag a row or a figure carries: a few words in a small rounded label,
  * such as 「改为区间」, 「不变」, 「新增」. Every renderer that prints one goes
@@ -26,6 +29,9 @@ export type EvidenceKind = NonNullable<Tag["evidence"]>
  *   pale grey with muted words when it is also `quiet` (a final no);
  * - a tag that says what kind of news it is (`tone`) is outlined in the
  *   theme's ink for that news, a breach in its danger ink;
+ * - a tag that says what it rests on (`basis`) is outlined in the ink that
+ *   basis takes (`basisInk`), solid for the law and dashed for an estimate,
+ *   a pending figure or a proposal, which are not settled yet;
  * - a tag that names its source (`evidence`) is outlined in the ink that kind
  *   of source takes (`evidenceInk`), the same kind in the same ink across a
  *   deck;
@@ -64,6 +70,8 @@ export interface TagInks {
   fill: string | null
   stroke: string
   text: string
+  /** Whether the outline is dashed: a basis that is not settled yet. */
+  dashed?: boolean
 }
 
 /**
@@ -120,6 +128,32 @@ export function evidenceInk(
   }
 }
 
+/**
+ * The ink a basis takes, read from the theme's tokens so a fork recolours
+ * it: the law in the primary, as an official document is; an estimate and a
+ * proposal in the accent, the two a reader must not take for settled fact;
+ * a pending figure in the muted ink.
+ */
+export function basisInk(colors: Pick<StyleColors, "primary" | "accent" | "muted">, basis: BasisKind): string {
+  switch (basis) {
+    case "law":
+      return colors.primary
+    case "estimate":
+    case "proposal":
+      return colors.accent
+    case "pending":
+      return colors.muted
+  }
+}
+
+/** Whether a basis is not settled yet, so its tag and what it marks are drawn dashed. */
+export function basisUnsettled(basis: BasisKind | undefined): boolean {
+  return basis !== undefined && basis !== "law"
+}
+
+/** The dash an unsettled tag's outline takes: short, so the tag still reads as one label. */
+export const TAG_DASH = "3 2"
+
 /** How much of the muted ink a settled quiet tag's grey fill takes over its ground. */
 const SETTLED_QUIET_FILL = 0.12
 
@@ -136,12 +170,14 @@ export function tagInks(ctx: ComponentCtx, tag: Tag, marked: boolean, ground: st
   }
   const line = tag.tone
     ? resolveSemanticColor(tag.tone, colors)
-    : tag.evidence
-      ? evidenceInk(colors, tag.evidence)
-      : tag.quiet
-        ? colors.muted
-        : colors.accent
-  return { fill: null, stroke: line, text: inkToward(line, colors.text, ground, size) }
+    : tag.basis
+      ? basisInk(colors, tag.basis)
+      : tag.evidence
+        ? evidenceInk(colors, tag.evidence)
+        : tag.quiet
+          ? colors.muted
+          : colors.accent
+  return { fill: null, stroke: line, text: inkToward(line, colors.text, ground, size), ...(basisUnsettled(tag.basis) ? { dashed: true } : {}) }
 }
 
 /**
@@ -163,7 +199,7 @@ export function paintTag(opts: {
   const w = opts.width ?? tagWidth(tag.text, spec)
   const r = spec.height / 2
   return (
-    <g key={opts.key} data-tag={tag.quiet ? (inks.fill ? "settled-quiet" : "quiet") : inks.fill ? "marked" : ""}>
+    <g key={opts.key} data-tag={tag.quiet ? (inks.fill ? "settled-quiet" : "quiet") : inks.fill ? "marked" : ""} data-tag-basis={tag.basis}>
       <rect
         x={x + (inks.fill ? 0 : 0.5)}
         y={y + (inks.fill ? 0 : 0.5)}
@@ -173,6 +209,7 @@ export function paintTag(opts: {
         fill={inks.fill ?? "none"}
         stroke={inks.fill ? undefined : inks.stroke}
         strokeWidth={inks.fill ? undefined : 1}
+        strokeDasharray={!inks.fill && inks.dashed ? TAG_DASH : undefined}
       />
       <text
         {...opts.attrs}

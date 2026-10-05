@@ -1,0 +1,48 @@
+{
+  "years": {
+    "from": 2026,
+    "to": 2034,
+    "marked": [
+      2026,
+      2027
+    ]
+  },
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "receipt-euro",
+          "title": "The bill is already running",
+          "text": "Priced on default values: about €164 per tonne of coil, due 30 Sept 2027"
+        },
+        {
+          "icon": "file-check",
+          "title": "Fastest cut: report actual emissions",
+          "text": "At the industry average, aluminium drops from about €144 to €14 per tonne, once verified"
+        },
+        {
+          "icon": "sprout",
+          "title": "Green power and new routes: no cut yet",
+          "text": "Green power answers Chinese quotas and buyers. Routes must be set before 2034"
+        }
+      ]
+    },
+    {
+      "type": "insight_panel",
+      "icon": "gavel",
+      "title": "For the committee",
+      "rows": [
+        {
+          "label": "Approve actual values",
+          "text": "Start accounting 2026 emissions and book an accredited verifier"
+        },
+        {
+          "label": "Add three budget lines",
+          "text": "Verification, green certificates, EAF and DRI studies"
+        }
+      ]
+    }
+  ],
+  "notes": "The answer first. One, the money is already accruing. Everything imported since 1 January 2026 counts, and on the EU's default values for China a tonne of hot-rolled coil costs about €164, all settled on 30 September 2027. Two, the fastest and cheapest way to lower that is not green power but replacing default values with verified actual emissions. At the aluminium industry average, the cost per tonne would fall from about €144 to about €14. Three, green power and certificates do not reduce the CBAM bill today, but China already sets green power quotas for aluminium smelting and RE100 recognises Chinese certificates, and a new steel or aluminium route has to be chosen before free allocation ends in 2034. So we ask the committee for two decisions: switch to actual values and start verification now, and put verification, green power and route studies into the budget. Amounts follow once we have verifier quotes and a study scope."
+}

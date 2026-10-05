@@ -1,0 +1,77 @@
+{
+  "years": {
+    "from": 2026,
+    "to": 2034,
+    "marked": [
+      2028,
+      2029,
+      2030,
+      2031,
+      2032,
+      2033,
+      2034
+    ]
+  },
+  "components": [
+    {
+      "type": "image_grid",
+      "items": [
+        {
+          "asset_id": "scrap",
+          "caption": "Scrap"
+        },
+        {
+          "asset_id": "eaf",
+          "caption": "Electric arc furnace"
+        },
+        {
+          "asset_id": "dri",
+          "caption": "Direct reduction shaft"
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "y_title": "tCO₂ per tonne of steel, worldsteel full scope (not CBAM's)"
+      },
+      "series": [
+        {
+          "name": "tCO₂ per tonne",
+          "data": [
+            {
+              "x": "BF-BOF",
+              "y": 2.34,
+              "note": "baseline"
+            },
+            {
+              "x": "DRI-EAF",
+              "y": 1.47,
+              "note": "37% lower"
+            },
+            {
+              "x": "Scrap EAF",
+              "y": 0.69,
+              "note": "70% lower"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "atom",
+      "title": "Hydrogen pilot: about 70% less CO₂",
+      "text": "HBIS Zhangxuan's 1.2 Mt plant, against a long-process plant of its size.",
+      "tag": {
+        "text": "Company figure, as reported",
+        "evidence": "company"
+      }
+    }
+  ],
+  "footnote": "Source: worldsteel Sustainability Indicators 2025, HBIS Zhangxuan pilot (company figure). The photos are AI illustrations",
+  "notes": "Changing the production route is the real way to cut direct emissions, but it takes a decade, and the figures must be read on their own basis. By worldsteel's 2024 data, the blast furnace route emits 2.34 tonnes of CO2 per tonne of crude steel, scrap-based electric arc furnaces 0.69, about 70% lower, and direct reduced iron fed to an electric arc furnace 1.47, about 37% lower. Those two figures are worldsteel's broad basis, covering Scope 1, Scope 2 and part of Scope 3, which is not the CBAM boundary of direct emissions only, so they cannot go straight into the certificate formula. On hydrogen, HBIS Zhangxuan says its 1.2 million tonne pilot emits 70% less than a blast furnace route of the same size, a company figure carried by the media. One CBAM detail: after a switch to an electric arc furnace the benchmark changes too, to 0.072 for scrap-based hot-rolled coil and 0.481 for the DRI route, so the lower emissions only show up through actual values. We found no reusable figure for the investment per tonne of such conversions in China, so the study scope and budget are still to be set. The photos are AI-generated illustrations."
+}

@@ -1,0 +1,96 @@
+{
+  "years": {
+    "from": 2026,
+    "to": 2034,
+    "marked": [
+      2026
+    ]
+  },
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "stacked",
+      "direction": "horizontal",
+      "axes": {
+        "y_unit": "€bn"
+      },
+      "emphasis_label": "Ch. 73 articles €9.35bn, 69.5%",
+      "series": [
+        {
+          "name": "Ch. 72 steel",
+          "data": [
+            {
+              "x": "EU imports of CBAM steel from China, 2025, by value",
+              "y": 4.1
+            }
+          ]
+        },
+        {
+          "name": "7326 articles",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "EU imports of CBAM steel from China, 2025, by value",
+              "y": 3.4
+            }
+          ]
+        },
+        {
+          "name": "7308 structures",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "EU imports of CBAM steel from China, 2025, by value",
+              "y": 2.41
+            }
+          ]
+        },
+        {
+          "name": "7318 bolts",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "EU imports of CBAM steel from China, 2025, by value",
+              "y": 1.7
+            }
+          ]
+        },
+        {
+          "name": "Other Ch. 73",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "EU imports of CBAM steel from China, 2025, by value",
+              "y": 1.84
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "9.07 Mt",
+          "label": "CBAM steel from China, 2025",
+          "note": "Worth €13.46bn",
+          "icon": "ship"
+        },
+        {
+          "value": "**21.1%**",
+          "label": "Share of non-EU imports, first",
+          "note": "Turkey second at €7.18bn",
+          "icon": "chart-column"
+        },
+        {
+          "value": "€3.25bn",
+          "label": "Aluminium, 613,000 t, 10.7%",
+          "note": "42% is other articles, 7616",
+          "icon": "package"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Eurostat Comext DS-045409 (updated 15 Sept 2026), summed by Annex I codes. EU import values",
+  "notes": "This is exposure at industry level, not our own figures. In 2025 the EU imported about 9.07 million tonnes of CBAM-covered steel from China, worth €13.46 billion and 21.1% of the value of such imports from outside the EU. China ranks first, ahead of Turkey at €7.18 billion. The mix matters. Chapter 72 plate and coil account for only €4.1 billion. About 70% of the value is Chapter 73 goods: other steel articles at €3.4 billion, structures at €2.41 billion, bolts and screws at €1.7 billion. Aluminium follows the same pattern: of €3.25 billion, 42% is other aluminium articles under 7616 and unwrought aluminium is only €40 million. Downstream goods carry far higher default values, as the next slide shows. We built these figures from Eurostat raw data, adding and removing codes line by line against Annex I, and the values are EU import statistics. Our own export volumes and product mix are still to come from finance and sales, matched by CN code."
+}

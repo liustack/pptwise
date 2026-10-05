@@ -77,9 +77,10 @@ Common page fields are:
 - `placeholder: true`, normally produced by an unfinished deck project
 - `heading` and `subheading`
 - `kicker`, a short label over the heading (the occasion on a cover, what an ending asks for), drawn only by a face that declares a place for it. validate refuses it on any other and names the face
-- `tag`, a small tag set with the heading that says what the whole page rests on (`text`, and an optional `evidence` kind that colours it by its source, such as `trial` for "RCT · NEJM 2025"). Like `kicker`, only a face that declares a place for it draws it
+- `tag`, a small tag set with the heading that says what the whole page rests on (`text`, and an optional `evidence` kind that colours it by its source, such as `trial` for "RCT · NEJM 2025", or a `basis` that says how firm what it marks is: `law`, `estimate`, `pending` or `proposal`, the last three dashed). Like `kicker`, only a face that declares a place for it draws it
 - `fields`, one to four header lines a document form prints, each a `label`, a `value` and an optional `note` (a memo's To, From, Date and Re on its cover, Signed and Copied to under its decision), and `stamp`, a stamp pressed on the page (`text`, an optional `date`). Like `kicker`, only a face that declares a place for them draws them
 - `ballot`, the boxes a committee ticks beside each of the page's items (`choices`, two to four, such as For, Against and Abstain) and an optional line left blank to sign (`signature`, its label). Only a face that declares a place for it draws it
+- `years`, the run of years a deck follows and the ones this page is about (`from`, `to`, and `marked`, such as 2026 to 2034 with 2026 and 2027 marked), drawn as a strip of years in the running head with the page's own years lit. At most 13 years. Only a face that declares a place for it draws it
 - `components`
 - `background`
 - `decor`, one controlled local primitive
@@ -240,9 +241,17 @@ A page usually argues about one thing. These fields let the author say which, an
 | `chart.series[].data[].emphasis` | the one bar the page is about, such as the latest year in a run of years: it keeps its series' colour and the other bars step back | `bar` only, one point per chart, not beside a marked series |
 | `chart.bands` | `[{ "from": 4.5, "to": 5, "label": "Target range" }]` tints a value range across the plot behind the data, labelled inside it, and the value axis grows to hold it. Write a target range this way rather than as two flat series | `line`, `area` and upright `bar`, at most 2 |
 | `chart.changes` | `[{ "from": "2025 Q3", "to": "2026 Q3" }]` draws a bracket over two columns with the change between them (relative, or in points on a `%` axis). With `"at": "BYD"`, `from` and `to` name two series compared at that category. A horizontal chart writes the change after the later bar. | `bar` and `stacked`, at most 3. A horizontal chart needs `at`, a stacked one must not have it |
+| `chart.reference` | `{ "value": 1.37, "label": "EU benchmark 1.370" }` draws one value as a dashed line across the bars, such as a benchmark or a threshold, names it in the legend, and grows the value axis to hold it. Write a benchmark this way rather than as a bar of its own | `bar` only, upright or on its side |
+| `chart.series[].data[].note` | a few words printed after a bar's value, after a middle dot ("2.34 · baseline", "€7.68 · ¥62.36") | `bar` on its side and the parts of a share bar only |
+| `chart.emphasis_label` | a share bar's line for its marked parts in the author's own words ("Downstream goods €9.35bn, 69.5%"), set where the computed total would stand | a share bar with at least one marked series |
 | `numbered_cards.items[].emphasis` | the one card the page lands on: its pill is filled | at most one |
 | `gantt.items[].text` and `emphasis` | a line under the stretch's label, and the one stretch the page is about | at most one marked |
 | `timeline.milestones[].lane` and `timeline.lanes` | two tracks on one time order. `lanes` names them, the one above the axis first. A face with no room for two sides prints the lane before the date | every milestone names a lane or none does, at most two, not on a vertical timeline |
+| `timeline.periods` | `[{ "from": "2026-01", "to": "2026-12", "label": "2026: counted, nothing to buy" }]` divides the axis into named spans. A face that lays dates to scale draws each span along its stretch of the axis; the ordinary timeline names them in a row under its milestones. A span with `"basis": "proposal"` (or any basis not yet settled) is drawn dashed | at most 3, not on a vertical timeline |
+| `timeline.milestones[].tag` and `source` | where a milestone stands, as a small tag (`{ "text": "Proposal", "basis": "proposal" }`), and where its date or rule comes from, a small line under it ("COM(2025) 989"). A tag with a basis that is not settled is dashed | |
+| `callout.title` and `callout.tag` | a short bold line over the note ("Who pays"), and what the note rests on as a small tag under its text (`{ "text": "Company figure, as reported", "evidence": "company" }`) | |
+| `waterfall.items[].note` | a short line under a bar's label, such as the quantity it stands for ("3.187 t") | |
+| `roadmap.items[].rows[].basis` | what a row's value rests on, such as `"pending"` for a budget line still to be set. A value that is not settled is marked dashed | |
 | `kpi_cards.items[].value` written `**…**` | the one figure set in the theme's emphasis | |
 | `progress_donuts.items[].detail` and `emphasis` | a line under a rate's label with the amounts behind it ("1.18 of 1.3 trillion"), and the one rate the page is about, whose ring, figure and label take the emphasis colour | at most one marked |
 | `kpi_cards.items[].tag` | what the figure is, in a few words printed as a small tag with it (`{ "text": "Binding" }`): filled on the marked figure, outlined otherwise, grey when `quiet` | |

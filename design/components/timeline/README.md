@@ -25,3 +25,13 @@ Settled on the regulation page. See the board and engine render in [compositions
 **Why.** "DNS records were emptied" and "DynamoDB recovered" are different kinds of turn, and the reader should see which before reading the words.
 
 **What it gave up.** Faces that set milestones by hand without room for an icon or a tone decline a timeline that carries them.
+
+## almanac, CBAM sample, 2026-10
+
+`periods`, and `tag` and `source` on milestones. Settled on the timeline page (p03) and the rules page (p15): see the boards in [compositions/calendar](../../compositions/calendar/almanac.board.png) and [compositions/outlook](../../compositions/outlook/almanac.board.png). The round's decisions are in [rounds/2026-10-05-almanac](../../rounds/2026-10-05-almanac/README.md).
+
+**What it looks like.** `periods` names stretches of time (`from`, `to`, `label`, and an optional `basis`). The ordinary timeline spaces its milestones evenly, so it names the spans rather than laying them on the axis: one row each under the milestones, a swatch, the span's label bold and its run from one date to the other in the muted ink, the swatch of a span that is not settled a dashed outline in its basis's ink. The yearbook's `calendar` and `outlook` lay the spans on a scaled axis instead. A milestone's `source` is a quiet line under its description and its `tag` a small tag under that.
+
+**Why.** A year that is counted and a year that is paid, or a span that is law and one that is only proposed, are stretches of time, not points on it.
+
+**What it gave up.** Up to three periods, each dated the way the milestones are. A face that sets milestones by hand without room for a tag or a source declines a timeline that carries them.

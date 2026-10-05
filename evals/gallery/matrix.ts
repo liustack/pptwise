@@ -397,6 +397,22 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "clinic", kind: "data", composition: "dumbbells" },
   { theme: "clinic", kind: "process", composition: "gate" },
   { theme: "clinic", kind: "hierarchy", composition: "watch" },
+  // almanac's yearbook sheet sets the shapes as a long-run yearbook, and
+  // draws the fourteen its own board added.
+  { theme: "almanac", kind: "points", composition: "motion" },
+  { theme: "almanac", kind: "process", composition: "calendar" },
+  { theme: "almanac", kind: "data", composition: "horizon" },
+  { theme: "almanac", kind: "data", composition: "formula" },
+  { theme: "almanac", kind: "comparison", composition: "errata" },
+  { theme: "almanac", kind: "data", composition: "breakdown" },
+  { theme: "almanac", kind: "data", composition: "benchmark" },
+  { theme: "almanac", kind: "data", composition: "paired" },
+  { theme: "almanac", kind: "process", composition: "procedure" },
+  { theme: "almanac", kind: "data", composition: "magnitude" },
+  { theme: "almanac", kind: "data", composition: "segments" },
+  { theme: "almanac", kind: "photo", composition: "survey" },
+  { theme: "almanac", kind: "process", composition: "outlook" },
+  { theme: "almanac", kind: "process", composition: "phases" },
 ]
 
 export function buildMatrix(

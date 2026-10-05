@@ -333,7 +333,7 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
     },
     { type: "chapter", heading: lex.chapters[0]!, subheading: lex.kickers[0], components: [] },
     ...content,
-    themeId === "thesis" || themeId === "brief" || themeId === "crayon" || themeId === "clinic"
+    themeId === "thesis" || themeId === "brief" || themeId === "crayon" || themeId === "clinic" || themeId === "almanac"
       ? {
           type: "ending" as const,
           heading: lex.chapters[5]!,
@@ -544,6 +544,9 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
       },
     ]
   }
+  // almanac's yearbook sheet: the board's decision page, what the year came
+  // to on three cards over the two things the members are asked to settle.
+  if (def.id === "yearbook-sheet") return yearbookAsk(lex).components
   // memo's sheet: the board's decision page, four clauses numbered in the
   // deck's numerals with a sentence each, the last the one the page lands on.
   if (def.id === "memo-sheet") {
@@ -818,7 +821,7 @@ export function layoutPage(
               heading: lex.chapters[5]!,
               subheading: lex.verdicts.positive,
               components:
-                def.id === "gauge-next" || def.id === "crayonbox-todo" || def.id === "dossier-ending"
+                def.id === "gauge-next" || def.id === "crayonbox-todo" || def.id === "dossier-ending" || def.id === "yearbook-ending"
                   ? [{ type: "bullets", items: lex.bullets.slice(0, 3) }]
                   : [],
             }
@@ -1049,6 +1052,12 @@ interface CompositionBody {
   readonly heading: string
   readonly components: Component[]
   readonly footnote?: string
+  /** The section a yearbook page names beside its sprout. */
+  readonly kicker?: string
+  /** The years a yearbook page is about, lit on its strip. */
+  readonly years?: NonNullable<Slide["years"]>
+  /** What the page as a whole rests on, set by the compositions that take one. */
+  readonly tag?: NonNullable<Slide["tag"]>
 }
 
 /**
@@ -1997,6 +2006,386 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
     ],
     footnote: lex.sources[0]!.label,
   }),
+  // almanac's yearbook sheet sets the shapes as a long-run yearbook: the
+  // section beside the sprout, the years the page is about lit on its strip,
+  // and what a figure or a rule rests on as a pill. The farm's fifth year in
+  // the shapes the board drew.
+  motion: (lex) => yearbookAsk(lex),
+  calendar: (lex) => ({
+    heading: lex.headings[2]!,
+    kicker: lex.kickers[0]!,
+    years: { from: 2022, to: 2030, marked: [2026] },
+    components: [
+      {
+        type: "timeline",
+        periods: [
+          { from: "2026-03", to: "2026-05", label: lex.labels[9]! },
+          { from: "2026-06", to: "2026-08", label: lex.labels[10]! },
+          { from: "2026-09", to: "2026-11", label: lex.labels[11]! },
+        ],
+        milestones: (["2026-03-05", "2026-06-05", "2026-07-22", "2026-09-23", "2026-11-22"] as const).map((date, i) => ({
+          date,
+          title: lex.stages[i]!,
+          desc: lex.periods[i]!,
+          ...(i === 2 ? { highlight: true } : {}),
+        })),
+      },
+      { type: "kpi_cards", items: [0, 3, 4].map((m, i) => ({ value: i === 0 ? `**${lex.metrics[m]!.value}**` : lex.metrics[m]!.value, ...(lex.metrics[m]!.unit ? { unit: lex.metrics[m]!.unit } : {}), label: lex.metrics[m]!.label, note: lex.bullets[m]! })) },
+      { type: "callout", variant: "info", icon: "droplets", title: lex.stages[2]!, text: lex.sentences[4]! },
+    ],
+    footnote: lex.sources[0]!.label,
+  }),
+  horizon: (lex) => {
+    const years = [2022, 2023, 2024, 2025, 2026]
+    const crops = [12, 16, 21, 24, Number(lex.metrics[2]!.value)]
+    return {
+      heading: lex.headings[1]!,
+      kicker: lex.kickers[1]!,
+      years: { from: 2022, to: 2030, marked: [2022, 2026] },
+      components: [
+        {
+          type: "chart",
+          chart_type: "line",
+          axes: { ...(lex.metrics[0]!.unit ? { y_unit: lex.metrics[0]!.unit } : {}) },
+          series: [
+            { name: lex.labels[5]!, emphasis: true, data: years.map((y, i) => ({ x: String(y), y: [1.1, 1.5, 1.9, 2.4, 2.9][i]! })) },
+            { name: lex.labels[3]!, data: years.map((y, i) => ({ x: String(y), y: [1.3, 1.5, 1.8, 2.1, 2.4][i]! })) },
+            { name: lex.labels[6]!, data: years.map((y, i) => ({ x: String(y), y: [1.0, 1.2, 1.5, 1.8, 2.1][i]! })) },
+          ],
+        },
+        {
+          type: "timeline",
+          title: lex.metrics[2]!.label,
+          milestones: years.map((y, i) => ({ date: String(y), title: `${crops[i]!}${lex.metrics[2]!.unit ? ` ${lex.metrics[2]!.unit}` : ""}`, ...(i === years.length - 1 ? { highlight: true } : {}) })),
+        },
+        {
+          type: "kpi_cards",
+          items: [
+            { value: `**${lex.metrics[0]!.value}**`, ...(lex.metrics[0]!.unit ? { unit: lex.metrics[0]!.unit } : {}), label: lex.labels[5]!, note: lex.bullets[0]!, icon: "sprout" as const },
+            { value: "1.1", ...(lex.metrics[0]!.unit ? { unit: lex.metrics[0]!.unit } : {}), label: lex.positions.points[7]!.label, note: lex.sources[0]!.ref ?? lex.sources[0]!.label, icon: "hourglass" as const },
+          ],
+        },
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
+  formula: (lex) => {
+    const colon = colonOf(lex)
+    // The year's books in thousands, which close on the lexicon's surplus.
+    const unit = lex.id === "zh" ? "千元" : "k"
+    return {
+      heading: lex.headings[9]!,
+      kicker: lex.kickers[4]!,
+      years: { from: 2022, to: 2030, marked: [2026] },
+      tag: { text: lex.sources[1]!.ref ?? lex.sources[1]!.label },
+      components: [
+        {
+          type: "waterfall",
+          unit,
+          items: [
+            { label: lex.labels[13]!, value: 847, kind: "total" as const },
+            { label: lex.labels[14]!, value: 126.1 },
+            { label: lex.chain.support[0]!.label, value: -314 },
+            { label: lex.chain.support[1]!.label, value: -248 },
+            { label: lex.chain.support[2]!.label, value: -408, emphasis: true },
+            { label: lex.metrics[5]!.label, value: 3.1, kind: "total" as const },
+          ],
+        },
+        { type: "code", language: "formula", title: lex.metrics[5]!.label, code: "S = R1 + R2\n  − C1 − C2 − C3" },
+        {
+          type: "bullets",
+          items: [
+            `R1${colon}${lex.labels[13]!}`,
+            `R2${colon}${lex.labels[14]!}`,
+            `C1${colon}${lex.chain.support[0]!.label}`,
+            `C2${colon}${lex.chain.support[1]!.label}`,
+            `C3${colon}${lex.chain.support[2]!.label}`,
+          ],
+        },
+      ],
+      footnote: lex.sources[1]!.label,
+    }
+  },
+  errata: (lex) => ({
+    heading: lex.headings[7]!,
+    kicker: lex.kickers[4]!,
+    years: { from: 2022, to: 2030, marked: [2026] },
+    components: [
+      {
+        type: "comparison",
+        columns: [lex.iceberg.aboveLabel, lex.iceberg.belowLabel],
+        recommended: 1,
+        // The farm's targets against its books, the shortfall marked, the
+        // one it beat set small under it.
+        rows: [0, 2, 1].map((g, i) => ({ label: lex.goals[g]!.title, cells: [lex.goals[g]!.target, lex.goals[g]!.actual], ...(i === 1 ? { emphasis: true } : {}) })),
+      },
+      { type: "callout", variant: "info", text: lex.callouts.info },
+    ],
+  }),
+  breakdown: (lex) => {
+    const area = lex.metrics[1]!
+    return {
+      heading: lex.headings[0]!,
+      kicker: lex.kickers[0]!,
+      years: { from: 2022, to: 2030, marked: [2026] },
+      components: [
+        {
+          type: "chart",
+          chart_type: "stacked",
+          direction: "horizontal",
+          axes: { ...(area.unit ? { y_unit: area.unit } : {}) },
+          emphasis_label: `${lex.labels[5]!} 52${area.unit ? ` ${area.unit}` : ""}${lex.id === "zh" ? "，占 60%" : ", 60%"}`,
+          series: [
+            { name: lex.labels[5]!, emphasis: true, data: [{ x: area.label, y: 52 }] },
+            { name: lex.labels[6]!, data: [{ x: area.label, y: 20 }] },
+            { name: lex.labels[3]!, data: [{ x: area.label, y: 14 }] },
+          ],
+        },
+        {
+          type: "kpi_cards",
+          items: [1, 2, 3].map((m, i) => ({
+            value: i === 0 ? `**${lex.metrics[m]!.value}**` : lex.metrics[m]!.value,
+            ...(lex.metrics[m]!.unit ? { unit: lex.metrics[m]!.unit } : {}),
+            label: lex.metrics[m]!.label,
+            note: lex.phrases[[9, 2, 6][i]!]!,
+            icon: (["map", "sprout", "package"] as const)[i]!,
+          })),
+        },
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
+  benchmark: (lex) => {
+    const om = lex.metrics[0]!
+    const points = [0, 1, 4].map((p) => lex.positions.points[p]!.label)
+    return {
+      heading: lex.headings[1]!,
+      kicker: lex.kickers[1]!,
+      years: { from: 2022, to: 2030, marked: [2026] },
+      components: [
+        { type: "image", asset_id: PHOTO_ASSETS[0], fit: "cover", caption: lex.captions[0]! },
+        {
+          type: "chart",
+          chart_type: "bar",
+          direction: "horizontal",
+          axes: { y_title: om.label, ...(om.unit ? { y_unit: om.unit } : {}) },
+          reference: { value: 2.8, label: lex.goals[1]!.target },
+          series: [{ name: om.label, data: points.map((x, i) => ({ x, y: [2.9, 2.1, 1.2][i]!, ...(i === 0 ? { emphasis: true } : {}) })) }],
+        },
+        {
+          type: "kpi_cards",
+          items: [
+            { value: `**${om.value}**`, ...(om.unit ? { unit: om.unit } : {}), label: points[0]!, note: lex.bullets[0]!, icon: "sprout" as const },
+            { value: "1.2", ...(om.unit ? { unit: om.unit } : {}), label: points[2]!, note: lex.sources[0]!.ref ?? lex.sources[0]!.label, icon: "scale" as const },
+          ],
+        },
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
+  paired: (lex) => {
+    const renewal = lex.metrics[3]!
+    const years = [2022, 2023, 2024, 2025, 2026]
+    return {
+      heading: lex.headings[7]!,
+      kicker: lex.kickers[4]!,
+      years: { from: 2022, to: 2030, marked: [2022, 2026] },
+      components: [
+        {
+          type: "chart",
+          chart_type: "bar",
+          axes: { y_title: renewal.label, ...(renewal.unit ? { y_unit: renewal.unit } : {}) },
+          series: [
+            { name: lex.labels[14]!, data: years.map((y, i) => ({ x: String(y), y: [55, 58, 60, 61, 63][i]! })) },
+            { name: lex.labels[13]!, emphasis: true, data: years.map((y, i) => ({ x: String(y), y: [62, 70, 78, 83, Number(renewal.value)][i]! })) },
+          ],
+        },
+        { type: "image", asset_id: PHOTO_ASSETS[2], fit: "cover", caption: lex.captions[1]! },
+        {
+          type: "callout",
+          variant: "warn",
+          icon: "file-text",
+          title: lex.threats[1]!,
+          text: lex.callouts.warn,
+          tag: { text: lex.phrases[6]!, basis: "pending" },
+        },
+      ],
+    }
+  },
+  procedure: (lex) => ({
+    heading: lex.headings[6]!,
+    kicker: lex.kickers[2]!,
+    years: { from: 2022, to: 2030, marked: [2026] },
+    components: [
+      {
+        type: "steps",
+        items: [0, 1, 2, 3].map((i) => ({
+          icon: (["sprout", "bird", "droplets", "wheat"] as const)[i]!,
+          title: i === 1 ? `**${lex.stages[i]!}**` : lex.stages[i]!,
+          text: lex.sentences[[3, 5, 4, 8][i]!]!,
+        })),
+      },
+      {
+        type: "comparison",
+        columns: [lex.labels[6]!, lex.labels[5]!],
+        recommended: 1,
+        rows: [
+          { label: lex.metrics[0]!.label, cells: [`2.1${lex.metrics[0]!.unit ?? ""}`, `2.9${lex.metrics[0]!.unit ?? ""}`] },
+          { label: lex.phrases[3]!, cells: [lex.debate.pros[1]!.note!, lex.debate.pros[1]!.label] },
+          { label: lex.labels[13]!, cells: [lex.debate.pros[3]!.note!, lex.debate.pros[3]!.label] },
+        ],
+      },
+    ],
+  }),
+  magnitude: (lex) => {
+    const om = lex.metrics[0]!
+    const unit = om.unit ?? ""
+    return {
+      heading: lex.headings[1]!,
+      kicker: lex.kickers[1]!,
+      years: { from: 2022, to: 2030, marked: [2022, 2026] },
+      components: [
+        { type: "kpi_cards", items: [{ value: `**${om.value}${unit}**`, label: om.label, note: lex.sentences[1]!, tag: { text: lex.sources[0]!.label } }] },
+        { type: "code", language: "formula", code: `${om.value}${unit} ÷ 1.1${unit} ≈ 2.6` },
+        {
+          type: "chart",
+          chart_type: "bar",
+          direction: "horizontal",
+          axes: { y_title: om.label, ...(om.unit ? { y_unit: om.unit } : {}) },
+          series: [
+            {
+              name: om.label,
+              data: [
+                { x: lex.positions.points[0]!.label, y: Number(om.value) },
+                { x: lex.positions.points[7]!.label, y: 1.1, emphasis: true, note: "2022" },
+              ],
+            },
+          ],
+        },
+        { type: "kpi_cards", items: [{ value: "2.6×", label: lex.bullets[0]!, note: lex.sources[0]!.ref ?? lex.sources[0]!.label, tag: { text: lex.phrases[9]!, basis: "estimate" } }] },
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
+  segments: (lex) => {
+    const compost = lex.metrics[4]!
+    return {
+      heading: lex.headings[8]!,
+      kicker: lex.kickers[2]!,
+      years: { from: 2022, to: 2030, marked: [2026] },
+      components: [
+        { type: "image", asset_id: PHOTO_ASSETS[3], fit: "cover", caption: lex.captions[2]! },
+        {
+          type: "chart",
+          chart_type: "stacked",
+          direction: "horizontal",
+          axes: { ...(compost.unit ? { y_unit: compost.unit } : {}) },
+          emphasis_label: lex.bullets[4]!,
+          series: [
+            { name: lex.labels[0]!, emphasis: true, data: [{ x: compost.label, y: 120 }] },
+            { name: lex.labels[2]!, data: [{ x: compost.label, y: 70, note: lex.phrases[7]! }] },
+          ],
+        },
+        { type: "callout", variant: "info", text: lex.callouts.tip },
+        {
+          type: "kpi_cards",
+          items: [
+            { value: `**${compost.value}**`, ...(compost.unit ? { unit: compost.unit } : {}), label: compost.label, note: lex.bullets[4]!, icon: "recycle" as const },
+            { value: lex.metrics[0]!.value, ...(lex.metrics[0]!.unit ? { unit: lex.metrics[0]!.unit } : {}), label: lex.metrics[0]!.label, note: lex.bullets[0]!, icon: "sprout" as const },
+          ],
+        },
+      ],
+      footnote: lex.sources[0]!.label,
+    }
+  },
+  survey: (lex) => ({
+    heading: lex.headings[3]!,
+    kicker: lex.kickers[2]!,
+    years: { from: 2022, to: 2030, marked: [2026] },
+    components: [
+      { type: "image_grid", items: [0, 1, 2].map((i) => ({ asset_id: PHOTO_ASSETS[i]!, caption: lex.labels[i + 5]! })) },
+      {
+        type: "chart",
+        chart_type: "bar",
+        direction: "horizontal",
+        axes: { y_title: lex.sources[1]!.label, y_unit: "%" },
+        series: [{ name: lex.sources[1]!.label, data: lex.chain.links.map((link, i) => ({ x: link.label, y: Number(link.value), ...(i === 3 ? { emphasis: true } : {}) })) }],
+      },
+      { type: "callout", variant: "info", icon: "users", title: lex.phrases[10]!, text: lex.sentences[10]! },
+    ],
+  }),
+  outlook: (lex) => ({
+    heading: lex.headings[12]!,
+    kicker: lex.kickers[5]!,
+    years: { from: 2022, to: 2032, marked: [2027] },
+    components: [
+      {
+        type: "timeline",
+        periods: [
+          { from: "2022", to: "2027", label: lex.phrases[9]!, basis: "law" as const },
+          { from: "2027", to: "2032", label: lex.debate.proposal, basis: "proposal" as const },
+        ],
+        milestones: [
+          { date: "2026", title: lex.bullets[5]!, desc: lex.sentences[9]!, icon: "receipt" as const, tag: { text: lex.sources[1]!.ref ?? lex.sources[1]!.label }, source: lex.sources[1]!.label },
+          { date: "2027", title: lex.threats[1]!, desc: lex.verdicts.warning, icon: "file-text" as const, tag: { text: lex.id === "zh" ? "在谈" : "Negotiating", basis: "proposal" as const }, source: lex.orgs[3]! },
+          { date: "2028", title: lex.debate.proposal, desc: lex.debate.cons[0]!.label, icon: "shovel" as const, tag: { text: lex.id === "zh" ? "提议" : "Proposed", basis: "proposal" as const }, source: lex.orgs[1]! },
+        ],
+      },
+      { type: "callout", variant: "info", text: lex.verdicts.neutral },
+    ],
+  }),
+  phases: (lex) => {
+    const colon = colonOf(lex)
+    const tbd = lex.id === "zh" ? "待定" : "TBD"
+    const months = lex.wheel.sectors.map((sector) => sector.value)
+    return {
+      heading: lex.headings[11]!,
+      kicker: lex.kickers[5]!,
+      years: { from: 2022, to: 2030, marked: [2026, 2027] },
+      components: [
+        {
+          type: "roadmap",
+          items: [
+            {
+              title: lex.stages[4]!,
+              period: months[4]!,
+              rows: [
+                { label: lex.labels[5]!, value: lex.debate.cons[0]!.label },
+                { label: lex.labels[7]!, value: lex.bullets[4]! },
+                { label: lex.kickers[4]!, value: `${lex.phrases[6]!}${colon}${tbd}`, basis: "pending" as const },
+              ],
+            },
+            {
+              title: lex.stages[5]!,
+              period: months[5]!,
+              emphasis: true,
+              rows: [
+                { label: lex.phrases[9]!, value: lex.threats[1]! },
+                { label: lex.labels[13]!, value: lex.verdicts.warning },
+              ],
+            },
+            {
+              title: lex.stages[0]!,
+              period: months[0]!,
+              rows: [
+                { label: lex.labels[1]!, value: lex.sentences[11]! },
+                { label: lex.labels[4]!, value: lex.phrases[5]! },
+                { label: lex.kickers[4]!, value: `${lex.labels[8]!}${colon}${tbd}`, basis: "pending" as const },
+              ],
+            },
+            {
+              title: lex.stages[1]!,
+              period: months[1]!,
+              rows: [
+                { label: lex.phrases[3]!, value: lex.choices[0]!.title },
+                { label: lex.labels[0]!, value: lex.choices[0]!.detail },
+              ],
+            },
+          ],
+        },
+      ],
+    }
+  },
 }
 
 /** clinic's cases: four, each its icon, who reported it, what happened and the figure it turns on, the first two bad news. */
@@ -2012,6 +2401,34 @@ function dossierCases(lex: Lexicon): Component {
       note: lex.sentences[i + 2]!,
       ...(i < 2 ? { tone: "danger" as const } : {}),
     })),
+  }
+}
+
+/**
+ * almanac's ask: what the year came to on three cards, each its icon, and
+ * the two things the members are asked to settle. The board's decision page,
+ * which the yearbook sheet hands to `motion`.
+ */
+function yearbookAsk(lex: Lexicon): CompositionBody {
+  return {
+    heading: lex.headings[0]!,
+    kicker: lex.kickers[0]!,
+    years: { from: 2022, to: 2030, marked: [2026, 2027] },
+    components: [
+      {
+        type: "row_cards",
+        items: [0, 1, 2].map((i) => ({ icon: (["sprout", "bird", "receipt"] as const)[i]!, title: lex.bullets[[0, 2, 5][i]!]!, text: lex.sentences[[1, 6, 9][i]!]! })),
+      },
+      {
+        type: "insight_panel",
+        icon: "gavel",
+        title: lex.decision,
+        rows: [
+          { label: lex.phrases[9]!, text: lex.sentences[11]! },
+          { label: lex.phrases[11]!, text: lex.verdicts.warning },
+        ],
+      },
+    ],
   }
 }
 
@@ -2251,6 +2668,9 @@ export function compositionPage(
     heading: body.heading,
     components: body.components,
     ...(body.footnote ? { footnote: body.footnote } : {}),
+    ...(body.kicker ? { kicker: body.kicker } : {}),
+    ...(body.years ? { years: body.years } : {}),
+    ...(body.tag ? { tag: body.tag } : {}),
   } as Slide
   return deckShell(lex, assets, themeId, `composition-${composition}${variant ? `-${variant}` : ""}-${themeId}-${lex.id}`, [slide])
 }

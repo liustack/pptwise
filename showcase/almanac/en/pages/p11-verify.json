@@ -1,0 +1,70 @@
+{
+  "years": {
+    "from": 2026,
+    "to": 2034,
+    "marked": [
+      2026,
+      2027
+    ]
+  },
+  "components": [
+    {
+      "type": "steps",
+      "items": [
+        {
+          "icon": "calculator",
+          "title": "Calculate",
+          "text": "Reg. 2025/2547 sets the method. Steel and aluminium: direct emissions only"
+        },
+        {
+          "icon": "badge-check",
+          "title": "Hire a verifier",
+          "text": "Accredited by a member state body. Non-EU firms may apply"
+        },
+        {
+          "icon": "factory",
+          "title": "**Site visit**",
+          "text": "On site in the first verified year, then at least every second year"
+        },
+        {
+          "icon": "send",
+          "title": "Hand over",
+          "text": "To the EU declarant, with the 2026 declaration by 30 Sept 2027"
+        }
+      ]
+    },
+    {
+      "type": "comparison",
+      "columns": [
+        "Default values",
+        "Actual values"
+      ],
+      "recommended": 1,
+      "rows": [
+        {
+          "label": "Verification",
+          "cells": [
+            "Not required",
+            "Required, by an accredited verifier"
+          ]
+        },
+        {
+          "label": "Markup",
+          "cells": [
+            "10% in 2026, 30% from 2028",
+            "None"
+          ]
+        },
+        {
+          "label": "China's carbon price",
+          "cells": [
+            "Annual default price only",
+            "Price actually paid"
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Implementing Regs (EU) 2025/2546, 2025/2547, 2025/2621, Delegated Reg. 2025/2551, Reg. 2025/2083 Art. 9",
+  "notes": "Switching to actual values is not a matter of typing in a number. It takes four steps. First, calculate embedded emissions using the method in Implementing Regulation 2025/2547, counting only direct emissions for steel and aluminium. Second, engage an accredited verifier. Accreditation comes from a national accreditation body in an EU member state, firms registered outside the EU may apply, and verifiers already accredited for the EU ETS can extend their scope. The accreditation rules only came out in December 2025 and the system is still being built, so the sooner we book, the better. Third, the first verified year requires a physical site visit, after which remote verification is possible under conditions, with a site visit at least every second year. Fourth, hand the verified data to the EU declarant in time for the 2026 declaration due on 30 September 2027. The table shows the difference between the two routes. Defaults are easy and need no verification, but carry a markup, and China's carbon price can only be deducted at the Commission's annual default price. Note also that China's product carbon footprint certification, issued under 2025 rules from the national certification authority, is a separate system and does not count as CBAM verification."
+}

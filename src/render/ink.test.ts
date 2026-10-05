@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { accessibleInk, accessibleOpacity, contrastRatio, graphicInk, groupValueInks, metaInk, readableOn, requiredContrastRatio, resolveSemanticColor } from "./ink"
+import { accessibleInk, accessibleOpacity, contrastRatio, graphicInk, groupValueInks, liftedInk, metaInk, readableOn, requiredContrastRatio, resolveSemanticColor } from "./ink"
 import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
 
 // `readableOn`'s own behavior is unchanged by the W4 fix-round extraction
@@ -94,6 +94,28 @@ describe("accessibleInk", () => {
     expect(ratio).toBeLessThan(4.5)
     expect(accessibleInk(fill, bg, 24)).toBe(fill) // large text: 3:1 clears
     expect(accessibleInk(fill, bg, 16)).toBe(readableOn(bg)) // body text: needs 4.5:1, falls back
+  })
+})
+
+describe("liftedInk", () => {
+  it("keeps an ink that already reads", () => {
+    expect(liftedInk("#FFC72C", "#0A0E14", 68)).toBe("#FFC72C")
+  })
+
+  it("lifts a dark red toward white until it reads on a dark ground, and no further", () => {
+    const ground = "#3D3F43"
+    const ink = liftedInk("#8C4A3C", ground, 68)
+    expect(contrastRatio("#8C4A3C", ground)).toBeLessThan(3)
+    expect(contrastRatio(ink, ground)).toBeGreaterThanOrEqual(3)
+    // Still a red, not the white beside it.
+    expect(ink).not.toBe("#FFFFFF")
+    const [r, g] = [1, 3].map((i) => Number.parseInt(ink.slice(i, i + 2), 16))
+    expect(r!).toBeGreaterThan(g!)
+  })
+
+  it("darkens toward ink on a light ground", () => {
+    const ink = liftedInk("#FFC72C", "#FFFFFF", 16)
+    expect(contrastRatio(ink, "#FFFFFF")).toBeGreaterThanOrEqual(4.5)
   })
 })
 

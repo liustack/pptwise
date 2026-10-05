@@ -39,6 +39,11 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
   // own across the page (2026-10 sample redesign). The folio joins it on a
   // content page of a deck that asks for one.
   "clinic-motif": { chapter: ["pulse"], content: ["pulse"], ending: ["pulse"] },
+  // almanac's sprout heads every content page beside its section (2026-10
+  // sample redesign); the cover and the close set their own, and the olive
+  // chapter would hide it. The folio joins it on a content page of a deck
+  // that asks for one.
+  "almanac-motif": { content: ["sprout"] },
   "luxe-motif": { cover: ["invitation"], ending: ["invitation"] },
   "vermilion-motif": { cover: ["gold-rules-foot"], content: ["gold-rules"], ending: ["gold-rules", "gold-rules-foot"] },
   "corner-ornament-motif": { content: ["masthead"], ending: ["masthead"] },
@@ -98,6 +103,7 @@ function themeForMotif(id: MotifId): string {
     "playbill-motif": "playbill",
     "arena-motif": "arena",
     "clinic-motif": "clinic",
+    "almanac-motif": "almanac",
     "corner-ornament-motif": "journal",
     "poster-motif": "ledger",
   }

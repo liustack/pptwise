@@ -1,0 +1,92 @@
+{
+  "years": {
+    "from": 2026,
+    "to": 2034,
+    "marked": [
+      2026,
+      2027
+    ]
+  },
+  "tag": {
+    "text": "Regulation (EU) 2025/2083, amended Art. 6, 20, 22 to 24",
+    "basis": "law"
+  },
+  "components": [
+    {
+      "type": "timeline",
+      "periods": [
+        {
+          "from": "2026-01",
+          "to": "2026-12",
+          "label": "2026: imports counted, no certificates held"
+        },
+        {
+          "from": "2027-01",
+          "to": "2027-12",
+          "label": "2027: sales, surrender, cancellation"
+        }
+      ],
+      "milestones": [
+        {
+          "date": "2026-01-01",
+          "title": "Charging starts",
+          "desc": "Imports start counting"
+        },
+        {
+          "date": "2026-04-07",
+          "title": "Q1 price €75.36",
+          "desc": "Quarterly in 2026"
+        },
+        {
+          "date": "2027-02-01",
+          "title": "Sales open",
+          "desc": "Then 50% held quarterly"
+        },
+        {
+          "date": "2027-09-30",
+          "title": "First declaration",
+          "desc": "All of 2026 settled at once",
+          "highlight": true
+        },
+        {
+          "date": "2027-11-01",
+          "title": "Unused 2026 void",
+          "desc": "Resale only in 2027"
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "label": "Q1 2026 price",
+          "value": "€75.36",
+          "note": "Published · 2026-04-07"
+        },
+        {
+          "label": "Q2 2026 price",
+          "value": "€75.28",
+          "note": "Published · 2026-07-06"
+        },
+        {
+          "label": "Q3 2026 price",
+          "value": "**€82.32**",
+          "note": "Recalculated by the legal method",
+          "tag": {
+            "text": "Pending",
+            "basis": "pending"
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "landmark",
+      "title": "Who pays",
+      "text": "Legally the EU's authorised CBAM declarant, not our plant. Contracts decide who bears it."
+    }
+  ],
+  "footnote": "Source: Regulation (EU) 2025/2083, European Commission price page, EEX auctions",
+  "notes": "The date that matters is 30 September 2027. All 2026 imports are declared and settled that day in a single step. Certificates only go on sale on 1 February 2027, so nothing is bought during 2026, but emissions are already being counted. In 2026 the certificate price follows each quarter's EU ETS auction price: €75.36 for the first quarter and €75.28 for the second. The Commission was due to publish the third quarter on 5 October. Recalculating it from EEX auction data with the legal method gives €82.32, which is our recalculation, not an official figure. From 2027, declarants must hold certificates covering 50% of the year's embedded emissions at the end of each quarter, so cash is tied up from then on. Legally, the payer is the authorised CBAM declarant in the EU, meaning our importer or its agent, not our plant. Who carries the cost in the end depends on pricing and contract terms, which the roadmap deals with."
+}

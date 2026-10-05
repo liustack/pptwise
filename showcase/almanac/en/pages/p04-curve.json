@@ -1,0 +1,259 @@
+{
+  "years": {
+    "from": 2026,
+    "to": 2034,
+    "marked": [
+      2026,
+      2027,
+      2028,
+      2029,
+      2030,
+      2031,
+      2032,
+      2033,
+      2034
+    ]
+  },
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "line",
+      "axes": {
+        "y_unit": "€"
+      },
+      "tag": {
+        "text": "A demo at €75.36, not a forecast",
+        "basis": "estimate"
+      },
+      "series": [
+        {
+          "name": "Carbon steel bolts",
+          "data": [
+            {
+              "x": "2026",
+              "y": 428
+            },
+            {
+              "x": "2027",
+              "y": 479
+            },
+            {
+              "x": "2028",
+              "y": 532
+            },
+            {
+              "x": "2029",
+              "y": 545
+            },
+            {
+              "x": "2030",
+              "y": 572
+            },
+            {
+              "x": "2031",
+              "y": 584
+            },
+            {
+              "x": "2032",
+              "y": 597
+            },
+            {
+              "x": "2033",
+              "y": 610
+            },
+            {
+              "x": "2034",
+              "y": 625
+            }
+          ]
+        },
+        {
+          "name": "Aluminium plate",
+          "data": [
+            {
+              "x": "2026",
+              "y": 232
+            },
+            {
+              "x": "2027",
+              "y": 266
+            },
+            {
+              "x": "2028",
+              "y": 303
+            },
+            {
+              "x": "2029",
+              "y": 317
+            },
+            {
+              "x": "2030",
+              "y": 346
+            },
+            {
+              "x": "2031",
+              "y": 360
+            },
+            {
+              "x": "2032",
+              "y": 374
+            },
+            {
+              "x": "2033",
+              "y": 388
+            },
+            {
+              "x": "2034",
+              "y": 404
+            }
+          ]
+        },
+        {
+          "name": "Hot-rolled coil",
+          "data": [
+            {
+              "x": "2026",
+              "y": 164
+            },
+            {
+              "x": "2027",
+              "y": 190
+            },
+            {
+              "x": "2028",
+              "y": 219
+            },
+            {
+              "x": "2029",
+              "y": 232
+            },
+            {
+              "x": "2030",
+              "y": 259
+            },
+            {
+              "x": "2031",
+              "y": 272
+            },
+            {
+              "x": "2032",
+              "y": 285
+            },
+            {
+              "x": "2033",
+              "y": 298
+            },
+            {
+              "x": "2034",
+              "y": 312
+            }
+          ],
+          "emphasis": true
+        },
+        {
+          "name": "Unwrought aluminium",
+          "data": [
+            {
+              "x": "2026",
+              "y": 144
+            },
+            {
+              "x": "2027",
+              "y": 169
+            },
+            {
+              "x": "2028",
+              "y": 197
+            },
+            {
+              "x": "2029",
+              "y": 211
+            },
+            {
+              "x": "2030",
+              "y": 239
+            },
+            {
+              "x": "2031",
+              "y": 252
+            },
+            {
+              "x": "2032",
+              "y": 265
+            },
+            {
+              "x": "2033",
+              "y": 279
+            },
+            {
+              "x": "2034",
+              "y": 294
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "timeline",
+      "title": "CBAM factor",
+      "milestones": [
+        {
+          "date": "2026",
+          "title": "97.5%"
+        },
+        {
+          "date": "2027",
+          "title": "95%"
+        },
+        {
+          "date": "2028",
+          "title": "90%"
+        },
+        {
+          "date": "2029",
+          "title": "77.5%"
+        },
+        {
+          "date": "2030",
+          "title": "51.5%"
+        },
+        {
+          "date": "2031",
+          "title": "39%"
+        },
+        {
+          "date": "2032",
+          "title": "26.5%"
+        },
+        {
+          "date": "2033",
+          "title": "14%"
+        },
+        {
+          "date": "2034",
+          "title": "0%",
+          "highlight": true
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**€163.5**",
+          "label": "Coil per tonne, 2026",
+          "note": "€1.64m per 10,000 t exported",
+          "icon": "receipt-euro"
+        },
+        {
+          "value": "€312",
+          "label": "Coil per tonne, 2034",
+          "note": "Free allocation gone",
+          "icon": "calendar-clock"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: calculated from Regulations (EU) 2025/2621 and 2025/2620 and Directive 2023/959. From 2027 the amounts hold the price at €75.36 as a demonstration",
+  "notes": "This is what we pay per tonne. All four lines follow the default path, where we do nothing and the declarant files the EU's default values for China. Hot-rolled coil costs about €163.5 per tonne in 2026, or about €1.64 million per 10,000 tonnes exported. It rises every year for two reasons: free allocation falls by law from 97.5% to zero in 2034, and the default-value markup climbs from 10% to 30% from 2028. By 2034 coil costs about €312 per tonne, unwrought aluminium about €294, aluminium plate about €404 and carbon steel bolts about €625. To be clear, the certificate price is held at the first-quarter 2026 level of €75.36 throughout, so the chart shows what the rules alone do. It is not a carbon price forecast. On sensitivity, every €10 on the certificate price moves the 2026 coil cost by about €21.7 per tonne. Our recalculated third-quarter price is €82.32, which the Commission has not yet published."
+}

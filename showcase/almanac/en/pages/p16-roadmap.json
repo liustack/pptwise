@@ -1,0 +1,96 @@
+{
+  "years": {
+    "from": 2026,
+    "to": 2034,
+    "marked": [
+      2026,
+      2027,
+      2028
+    ]
+  },
+  "components": [
+    {
+      "type": "roadmap",
+      "items": [
+        {
+          "title": "Method and verifier",
+          "period": "Q4 2026",
+          "rows": [
+            {
+              "label": "Data",
+              "value": "2026 emissions by the EU method"
+            },
+            {
+              "label": "Verify",
+              "value": "Book an accredited verifier"
+            },
+            {
+              "label": "Deals",
+              "value": "Review buyers' CBAM clauses"
+            },
+            {
+              "label": "Budget",
+              "value": "Verification: TBD",
+              "basis": "pending"
+            }
+          ]
+        },
+        {
+          "title": "Site verification",
+          "period": "H1 2027",
+          "rows": [
+            {
+              "label": "Verify",
+              "value": "First-year site visit"
+            },
+            {
+              "label": "Power",
+              "value": "Certificates to the quota"
+            },
+            {
+              "label": "Report",
+              "value": "Align Scope 1 and 2 with verification"
+            },
+            {
+              "label": "Budget",
+              "value": "Certificates: TBD",
+              "basis": "pending"
+            }
+          ]
+        },
+        {
+          "title": "First surrender",
+          "period": "30 Sept 2027",
+          "emphasis": true,
+          "rows": [
+            {
+              "label": "Send",
+              "value": "Verified emissions to the declarant"
+            },
+            {
+              "label": "Settle",
+              "value": "2026 certificates surrendered"
+            }
+          ]
+        },
+        {
+          "title": "Route study",
+          "period": "From 2028",
+          "rows": [
+            {
+              "label": "Study",
+              "value": "Compare EAF and DRI routes"
+            },
+            {
+              "label": "Budget",
+              "value": "Study: TBD",
+              "basis": "pending"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Regulation (EU) 2025/2083 Art. 6(1) and 22, Reg. 2025/2546, China MOF climate standard Art. 28",
+  "notes": "The roadmap works back from 30 September 2027. In the fourth quarter of 2026: calculate 2026 direct emissions with the EU method, book an accredited verifier, and review contracts with EU buyers to see how CBAM costs are shared. In the first half of 2027: complete the first-year site verification, buy green certificates to meet the domestic quota, and align the Scope 1 and Scope 2 figures in our sustainability report with the verified CBAM data. Article 28 of the Ministry of Finance climate disclosure standard asks for Scope 1, 2 and 3 to be disclosed separately. By 30 September 2027: hand verified emissions to the declarant so they replace the defaults. From 2028, when the markup rises to 30%: start the feasibility study comparing electric arc furnace and DRI routes. The budget lists items only. Verification awaits verifier quotes, certificate volumes await the confirmed quota, and the study awaits its scope. We will bring amounts back to the committee once they are known."
+}

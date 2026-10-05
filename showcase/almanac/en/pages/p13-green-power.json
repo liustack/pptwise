@@ -1,0 +1,79 @@
+{
+  "years": {
+    "from": 2026,
+    "to": 2034,
+    "marked": [
+      2026,
+      2027
+    ]
+  },
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "solar",
+      "fit": "cover",
+      "caption": "Illustration: rooftop solar on a steel plant (AI-generated)"
+    },
+    {
+      "type": "chart",
+      "chart_type": "stacked",
+      "direction": "horizontal",
+      "axes": {
+        "y_unit": "tCO₂"
+      },
+      "emphasis_label": "CBAM counts only this",
+      "series": [
+        {
+          "name": "Direct",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "A tonne of aluminium's emissions, in two parts",
+              "y": 3.0
+            }
+          ]
+        },
+        {
+          "name": "Indirect, power (Scope 2)",
+          "data": [
+            {
+              "x": "A tonne of aluminium's emissions, in two parts",
+              "y": 7.0,
+              "note": "Green power cuts this part, not on the bill today"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Direct uses the EU default of 3.000; indirect = 13,202 kWh × 0.5306 kgCO₂/kWh. Guidance No.3: green certificates may not set emission factors."
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**0**",
+          "label": "CBAM certificates saved today",
+          "note": "Steel and aluminium count direct only",
+          "icon": "scale"
+        },
+        {
+          "value": "25.2% to 70%",
+          "label": "Smelter green power quotas, 2025",
+          "note": "By province, via certificates",
+          "icon": "zap"
+        },
+        {
+          "value": "About ¥83",
+          "label": "Certificates per tonne of aluminium",
+          "note": "13.2 at ¥6.32, RE100 accepts",
+          "icon": "sun"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Regulation (EU) 2023/956 Annex II, Guidance No.3 (14 Aug 2026), NDRC and NEA notice 669 (2025), NEA, MEE. The photo is an AI illustration",
+  "notes": "Green power needs two answers. On today's CBAM bill: steel and aluminium sit in Annex II, which counts only direct emissions, so indirect emissions from purchased power are excluded. The Commission's Guidance No.3 of 14 August 2026 says in so many words that using market-based instruments such as guarantees of origin or green certificates to set emission factors is not allowed. Buying green power or certificates therefore saves no CBAM certificates today. Green power cuts Scope 2. Why do it anyway: first, China already enforces it. The 2025 quotas from the NDRC and the National Energy Administration require aluminium smelters to source 25.2% to 70% green power depending on the province, checked against green certificates, while steel is monitored but not yet assessed. Second, since May 2025 RE100 fully recognises Chinese green certificates, which European buyers will ask about. Third, law firms report that the EU plans to assess in 2027 whether to bring indirect emissions from steel and aluminium into CBAM, with nothing decided. On cost, a tonne of primary aluminium uses about 13,202 kWh according to the China Nonferrous Metals Industry Association, or about 13.2 certificates, about ¥83 at the August average of ¥6.32 for 2026-vintage certificates. The photo is an AI-generated illustration."
+}

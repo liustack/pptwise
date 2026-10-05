@@ -113,7 +113,7 @@ Validation resolves the bound theme. A content kind absent from its menu is a ha
 }
 ```
 
-The fillable fields are `components`, `background`, `image_side`, `footnote`, `fields`, `stamp`, `tag`, `ballot`, and `notes`. Page files cannot contain `type`, `kind`, or `heading`. Those are locked by the spec. An orphan file whose id is absent from the spec is also a hard error.
+The fillable fields are `components`, `background`, `image_side`, `footnote`, `fields`, `stamp`, `tag`, `ballot`, `years`, and `notes`. Page files cannot contain `type`, `kind`, or `heading`. Those are locked by the spec. An orphan file whose id is absent from the spec is also a hard error.
 
 Fill in batches of at most four pages, then run assemble and validate. This keeps capacity and component mistakes local.
 

@@ -15,7 +15,7 @@ import {
   headingEmphasisPaint,
   renderEmphasisHeading,
 } from "./emphasis"
-import { accessibleInk } from "./ink"
+import { accessibleInk, blendOver, liftedInk } from "./ink"
 import { showsDocumentMeta } from "./document-meta"
 import { footnoteBaselineFor } from "./branding-geometry"
 import { compose } from "../layouts/compositions"
@@ -235,15 +235,27 @@ function TakeoverFallbackPage({ slide, ctx }: { slide: Slide; ctx: ComponentCtx 
 }
 
 /** 暗 scrim：上浅下深三段（文字集中在中下部），图保持清晰可辨。 */
+const SCRIM_INK = "#0A0E14"
+const SCRIM_ALPHA = 0.3
+
 function DarkScrim() {
   return (
     <>
-      <rect x={0} y={0} width={W} height={H} fill="#0A0E14" fillOpacity={0.3} />
-      <rect x={0} y={Math.round(H * 0.55)} width={W} height={Math.round(H * 0.45)} fill="#0A0E14" fillOpacity={0.28} />
-      <rect x={0} y={Math.round(H * 0.78)} width={W} height={Math.round(H * 0.22)} fill="#0A0E14" fillOpacity={0.3} />
+      <rect x={0} y={0} width={W} height={H} fill={SCRIM_INK} fillOpacity={SCRIM_ALPHA} />
+      <rect x={0} y={Math.round(H * 0.55)} width={W} height={Math.round(H * 0.45)} fill={SCRIM_INK} fillOpacity={0.28} />
+      <rect x={0} y={Math.round(H * 0.78)} width={W} height={Math.round(H * 0.22)} fill={SCRIM_INK} fillOpacity={0.3} />
     </>
   )
 }
+
+/**
+ * What the words on the photo cover are read against: the lightest of the
+ * scrim's bands over a photograph's middle grey. The photograph is not known
+ * when the page is drawn, and the theme's accent, chosen for its own page,
+ * can sink into it (a dark red over a harbour at dusk read 1.48:1), so the
+ * accent the cover sets in words is lifted toward white until it reads here.
+ */
+const PHOTO_COVER_GROUND = blendOver(SCRIM_INK, "#808080", SCRIM_ALPHA)
 
 /**
  * cover/chapter 的 asset 背景页：清晰大图 + 暗遮罩 + 白字（左下构图）。
@@ -263,6 +275,7 @@ export function ImageCoverPage({
 }) {
   const accent = ctx.colors.accent
   const isChapter = slide.type === "chapter"
+  const wordInk = (fontSize: number) => liftedInk(accent, PHOTO_COVER_GROUND, fontSize)
   const org = page.metadataOn ? ir.meta.organization : undefined
   const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
 
@@ -300,7 +313,7 @@ export function ImageCoverPage({
           fontSize={30}
           fontWeight={700}
           fontFamily={ctx.fonts.heading}
-          fill={accent}
+          fill={wordInk(30)}
           dominantBaseline="alphabetic"
         >
           {String(Math.max(1, chapterNo)).padStart(2, "0")}
@@ -322,7 +335,7 @@ export function ImageCoverPage({
       )}
       {renderEmphasisHeading(
         title,
-        headingEmphasisPaint(ctx, title, { baseFill: "#FFFFFF", accent: accent, fontWeight: "700", fontFamily: ctx.fonts.heading }),
+        headingEmphasisPaint(ctx, title, { baseFill: "#FFFFFF", accent: wordInk(title.fontSize), fontWeight: "700", fontFamily: ctx.fonts.heading }),
         (_line, i) => (
           <text
             key={i}
@@ -339,7 +352,7 @@ export function ImageCoverPage({
       <rect x={96} y={baseY + 16} width={92} height={5} fill={accent} />
       {renderEmphasisHeading(
         sub,
-        headingEmphasisPaint(ctx, sub, { baseFill: "#FFFFFF", accent: accent, fontFamily: ctx.fonts.body, bold: false }),
+        headingEmphasisPaint(ctx, sub, { baseFill: "#FFFFFF", accent: wordInk(sub.fontSize), fontFamily: ctx.fonts.body, bold: false }),
         (_line, i) => (
           <text
             key={i}

@@ -404,6 +404,49 @@ export const COMPONENT_TYPES: readonly string[] = ComponentSchema.options.map((o
 
 // ── Slide ──
 
+/** The most years a page's strip of years runs across. Past thirteen its years crowd each other's labels. */
+export const MAX_YEARS_SPAN = 13
+
+/**
+ * The run of years a deck follows, `from` to `to`, and the years one page is
+ * about (`marked`), lit on the strip. A deck that runs from a law's first
+ * year to its last writes the same run on every page and lights a different
+ * part of it on each.
+ */
+export const YearsSchema = z
+  .object({
+    from: z.number().int().describe("The first year of the run, such as 2026."),
+    to: z.number().int().describe("The last year of the run, such as 2034."),
+    marked: z
+      .array(z.number().int())
+      .min(1)
+      .describe("The years this page is about, lit on the strip, such as [2026, 2027]. Each lies between from and to."),
+  })
+  .strict()
+  .superRefine((years, ctx) => {
+    if (years.to <= years.from) {
+      ctx.addIssue({ code: "custom", path: ["to"], message: `years runs from ${years.from} to ${years.to}, which is no run. Give a last year after the first.` })
+      return
+    }
+    if (years.to - years.from + 1 > MAX_YEARS_SPAN) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["to"],
+        message: `years runs over ${years.to - years.from + 1} years, from ${years.from} to ${years.to}, and the strip holds ${MAX_YEARS_SPAN} at most. Shorten the run, or name the later years in the heading.`,
+      })
+    }
+    years.marked.forEach((year, i) => {
+      if (year < years.from || year > years.to) {
+        ctx.addIssue({ code: "custom", path: ["marked", i], message: `years.marked[${i}] is ${year}, outside the run from ${years.from} to ${years.to}. Mark a year inside it.` })
+      } else if (years.marked.indexOf(year) !== i) {
+        ctx.addIssue({ code: "custom", path: ["marked", i], message: `years.marked[${i}] repeats ${year}. Mark each year once.` })
+      }
+    })
+  })
+  .describe(
+    'The run of years a deck follows and the years this page is about, drawn as a strip of years with those years lit: { "from": 2026, "to": 2034, "marked": [2026, 2027] }. At most 13 years. Drawn only by faces that have a place for it: validate says which.',
+  )
+
 const CommonSlideFields = {
   // 稳定页标识（W5 spec/assemble 注入，裸 IR 可省）。schema 层不做跨 slide
   // 校验——同 deck 内重复 id 是 validateIr 的硬错误。
@@ -485,6 +528,12 @@ const CommonSlideFields = {
   tag: TagSchema.optional().describe(
     'A small tag set with the page\'s heading, saying what the whole page rests on, such as "RCT · NEJM 2025 · 751 例" or "Draft for comment, June 2026". Give it an evidence kind to colour it by its source. Drawn only by faces that have a place for it: validate says which.',
   ),
+  /**
+   * The run of years a deck follows and the ones this page is about, drawn
+   * as a strip of years in the page's running head with those years lit.
+   * Only a face that declares a place for it draws it.
+   */
+  years: YearsSchema.optional(),
   components: z.array(ComponentSchema).default([]),
   background: BackgroundSpecSchema.optional(),
   // 图片排版 P4：受控装饰原语——模型只有选择权，绘制由渲染层完成。
@@ -660,6 +709,8 @@ export type ChartSeries = {
     status?: "forecast" | "target"
     /** Bar only: the one bar the page is about. It keeps its series' colour and the other bars step back. */
     emphasis?: boolean
+    /** Bars on their side and share-bar parts only: a few words printed with the value. */
+    note?: string
   }[]
   /** `chart_type: "combo"` only: draw this series as bars (default) or a line. */
   plot?: "bar" | "line"

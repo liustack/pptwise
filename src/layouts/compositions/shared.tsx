@@ -1,5 +1,6 @@
 import type React from "react"
 import type { Component } from "@/ir"
+import type { Tag } from "../../components/tag"
 import type { ComponentCtx } from "../../components/types"
 import type { ContentRect } from "../../render/layout"
 import { blendOver, readableOn } from "../../render/ink"
@@ -89,6 +90,20 @@ export type CompositionId =
   | "dumbbells"
   | "gate"
   | "watch"
+  | "motion"
+  | "calendar"
+  | "horizon"
+  | "formula"
+  | "errata"
+  | "breakdown"
+  | "benchmark"
+  | "paired"
+  | "procedure"
+  | "magnitude"
+  | "segments"
+  | "survey"
+  | "outlook"
+  | "phases"
 
 /**
  * The type a composition sets its page in.
@@ -164,10 +179,25 @@ export type CompositionId =
  *   on a scale, before-and-after dumbbells, a gated process and a
  *   monitoring plan. See `./dossier.tsx`.
  *
+ * - `yearbook`: almanac's 2026-10 board. A long-term account kept year by
+ *   year: figures on flat cards over hairlines, figures, years, dates and
+ *   formulas in the mono face, every figure that is not a settled fact
+ *   marked by a small pill (a § before a provision of law, a dash around an
+ *   estimate, a pending figure, a proposed rule or a company's claim), the
+ *   mark for what the page settles on and the accent once a page for the
+ *   money that comes due. A composition offered this setting draws the
+ *   shapes that board drew and no other did: background beside a decision
+ *   card, a calendar laid to scale, long curves over a table of years, a
+ *   bridge beside its formula, a wrong sum beside the right one, a whole cut
+ *   into amounts with a bracket, bars against a benchmark, paired columns, a
+ *   procedure over its table, one figure set huge, a whole cut in two with
+ *   what each part means, three routes under their photographs, rules on a
+ *   year axis and phases with their budget lines. See `./yearbook.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */
@@ -199,6 +229,13 @@ export interface CompositionProps {
    * page has none.
    */
   tagBand?: number
+  /**
+   * The page's own tag (`Slide.tag`), handed to a setting that sets it inside
+   * the body where its board drew it: the yearbook cites the law a page rests
+   * on under the figures it governs. A page with one is offered only to the
+   * compositions that place it; the face sets it itself otherwise.
+   */
+  pageTag?: Tag
   /**
    * Draws other components in a band of their own, with the compositions the
    * face offered and in the same setting, or returns `null` when none takes

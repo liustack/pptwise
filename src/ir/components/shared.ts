@@ -84,6 +84,23 @@ export const EvidenceKindSchema = z
   )
 
 /**
+ * What a figure or a rule rests on, so a reader knows how firm it is: a
+ * provision of law in force, a figure the author worked out under a stated
+ * assumption, a figure or item still to be confirmed or filled in, a rule
+ * that is only proposed. A tag with a basis (`TagSchema.basis`) is outlined
+ * in the ink every theme keeps for it, solid for the law and dashed for the
+ * three that are not settled yet, so a page tells the law from a scenario
+ * at a glance.
+ */
+export const BASIS_KINDS = ["law", "estimate", "pending", "proposal"] as const
+
+export const BasisSchema = z
+  .enum(BASIS_KINDS)
+  .describe(
+    'What it rests on, so a reader knows how firm it is: "law" for a provision in force, which the tag cites; "estimate" for a figure worked out under a stated assumption, not published and not a forecast; "pending" for a figure or item still to be confirmed or filled in; "proposal" for a rule proposed or still negotiated, not yet law.',
+  )
+
+/**
  * A short label that says what happened to a row or a figure, printed in a
  * small rounded tag beside it: 「改为区间」, 「新增」, 「不变」, "Binding".
  * Shared by `comparison` and `from_to` rows and `kpi_cards` items, which all
@@ -117,5 +134,19 @@ export const TagSchema = z
     tone: ToneSchema.optional().describe(
       'What kind of news the tag says, outlined in the theme\'s own colour for it: "danger" for a breach or a risk, such as 超说明书 or Off-label, "warning" for something to watch, "success" for something that went right.',
     ),
+    /** What the figure or rule rests on. See `BasisSchema`. */
+    basis: BasisSchema.optional(),
   })
   .strict()
+  .superRefine((tag, ctx) => {
+    // A basis says how firm the thing is: a settled verdict contradicts the
+    // three that are not settled and repeats the law, and a kind of source
+    // answers the same question a second time.
+    if (tag.basis === undefined) return
+    if (tag.settled) {
+      ctx.addIssue({ code: "custom", path: ["settled"], message: `a tag with basis "${tag.basis}" already says how firm it is, and settled says it a second time. Keep one of them.` })
+    }
+    if (tag.evidence !== undefined) {
+      ctx.addIssue({ code: "custom", path: ["evidence"], message: `a tag with basis "${tag.basis}" already says what it rests on, and evidence "${tag.evidence}" says it a second time. Keep one of them.` })
+    }
+  })

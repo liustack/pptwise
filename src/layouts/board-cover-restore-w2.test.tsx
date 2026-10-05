@@ -25,7 +25,7 @@ const WAVE2 = [
   { id: "journal", face: "issue-head-cover" },
   { id: "ink", face: "vertical-title-cover" },
   { id: "museum", face: "poster-center" },
-  { id: "almanac", face: "pledge-open-cover" },
+  { id: "almanac", face: "yearbook-cover" },
   { id: "heritage", face: "double-frame-cover" },
 ] as const
 
@@ -150,9 +150,9 @@ const WAVE8_B3_LOCKS = [
   { id: "vermilion", type: "cover" as const, face: "red-head-cover" },
   { id: "vermilion", type: "chapter" as const, face: "seal-numeral-chapter" },
   { id: "vermilion", type: "ending" as const, face: "deliberation-ending" },
-  { id: "almanac", type: "cover" as const, face: "pledge-open-cover" },
+  { id: "almanac", type: "cover" as const, face: "yearbook-cover" },
   { id: "almanac", type: "chapter" as const, face: "field-band-chapter" },
-  { id: "almanac", type: "ending" as const, face: "scorecard-ending" },
+  { id: "almanac", type: "ending" as const, face: "yearbook-ending" },
   { id: "clinic", type: "cover" as const, face: "dossier-cover" },
   { id: "clinic", type: "chapter" as const, face: "subject-rule-chapter" },
   { id: "clinic", type: "ending" as const, face: "dossier-ending" },
@@ -267,14 +267,22 @@ describe("wave 8 batch 3 — midground identity survives FullSlideSvg", () => {
     expect(mid.querySelectorAll("polyline")).toHaveLength(0)
   })
 
-  it.each(["cover", "content", "ending"] as const)("almanac %s keeps three contour paths", (type) => {
-    const { mid } = renderPage("almanac", type)
-    expect(mid.querySelectorAll("path")).toHaveLength(3)
+  it("almanac cover draws its own six contour lines, with nothing in mid", () => {
+    const { container, mid } = renderPage("almanac", "cover")
+    expect(mid.querySelectorAll("path")).toHaveLength(0)
+    expect(container.querySelectorAll("[data-yearbook-contours] path")).toHaveLength(6)
   })
 
-  it("almanac chapter has no contour paths", () => {
-    const { mid } = renderPage("almanac", "chapter")
-    expect(mid.querySelectorAll("path")).toHaveLength(0)
+  it("almanac content heads its page with the sprout, a structure piece in the foreground", () => {
+    const { container } = renderPage("almanac", "content")
+    const sprout = container.querySelector('[data-decor-piece="sprout"]')!
+    expect(sprout.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
+    expect(sprout.querySelector("[data-yearbook-icon='sprout']")).not.toBeNull()
+  })
+
+  it.each(["chapter", "ending"] as const)("almanac %s carries no motif piece: the close sets its own sprout, the olive chapter none", (type) => {
+    const { container } = renderPage("almanac", type)
+    expect(container.querySelector('[data-decor-piece="sprout"]')).toBeNull()
   })
 
   it.each(["content", "ending"] as const)("vermilion %s paints gold double rules in the foreground", (type) => {

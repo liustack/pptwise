@@ -1987,6 +1987,28 @@ describe("chart point emphasis", () => {
   it("draws no tallest-bar gradient beside a marked bar", () => {
     expect(draw(years()).querySelector("linearGradient")).toBeNull()
   })
+
+  it("greys the swatch of a series whose bars all stepped back, so the legend names only colours on the page", () => {
+    const paths = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      series: [
+        { name: "默认值路径", data: [{ x: "2026", y: 144 }, { x: "2027", y: 169 }, { x: "2028", y: 197, emphasis: true }] },
+        { name: "实际值情景", data: [{ x: "2026", y: 14 }, { x: "2027", y: 16 }, { x: "2028", y: 22 }] },
+      ],
+    }
+    for (const direction of [undefined, "horizontal"] as const) {
+      const container = draw(direction ? { ...paths, direction } : paths)
+      const marks = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]')).map((r) => r.getAttribute("fill")!)
+      const grey = marks.find((f) => f !== PALETTE[0])!
+      const swatches = Array.from(container.querySelectorAll("rect"))
+        .filter((r) => !r.hasAttribute("data-plot-mark") && r.getAttribute("width") === "10" && r.getAttribute("height") === "10")
+        .map((r) => r.getAttribute("fill"))
+      expect(swatches, direction).toEqual([PALETTE[0], grey])
+      // No swatch names a colour no bar has.
+      for (const fill of swatches) expect(marks, direction).toContain(fill)
+    }
+  })
 })
 
 describe("chart point status and change brackets", () => {
@@ -2099,5 +2121,133 @@ describe("chart tag", () => {
       tag: { text: "官方文件" },
     }
     expect(chartSchema.safeParse(share).success).toBe(false)
+  })
+})
+
+describe("a bar chart's reference line", () => {
+  const defaults = {
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    direction: "horizontal" as const,
+    axes: { y_title: "热轧扁平材 7208 默认值，tCO₂e/吨（加成前）" },
+    reference: { value: 1.37, label: "欧盟基准 1.370" },
+    series: [
+      {
+        name: "默认值",
+        data: [
+          { x: "印度", y: 4.28 },
+          { x: "中国", y: 3.187, emphasis: true },
+          { x: "土耳其", y: 2.428 },
+          { x: "韩国", y: 2.118 },
+        ],
+      },
+    ],
+  }
+
+  it("draws the value dashed down a plot on its side, inside the plot, and names it in the legend", () => {
+    const { container } = svg(chart.render(defaults, { x: 0, y: 0, w: 900, h: 360 }, ctx))
+    const line = container.querySelector("[data-chart-reference]")!
+    expect(line.getAttribute("stroke-dasharray")).not.toBeNull()
+    expect(line.getAttribute("x1")).toBe(line.getAttribute("x2"))
+    const bars = Array.from(container.querySelectorAll("rect")).filter((r) => Number(r.getAttribute("height")) > 10)
+    const left = Math.min(...bars.map((b) => Number(b.getAttribute("x"))))
+    const right = Math.max(...bars.map((b) => Number(b.getAttribute("x")) + Number(b.getAttribute("width"))))
+    expect(Number(line.getAttribute("x1"))).toBeGreaterThan(left)
+    expect(Number(line.getAttribute("x1"))).toBeLessThan(right)
+    expect(container.querySelector("[data-legend-reference]")).not.toBeNull()
+    expect(Array.from(container.querySelectorAll("text")).map((t) => t.textContent)).toContain("欧盟基准 1.370")
+  })
+
+  it("draws it across an upright plot, and grows the value axis to hold a value past the bars", () => {
+    const upright = { ...defaults, direction: undefined, reference: { value: 6, label: "上限 6" } }
+    const { container } = svg(chart.render(upright, { x: 0, y: 0, w: 900, h: 360 }, ctx))
+    const line = container.querySelector("[data-chart-reference]")!
+    expect(line.getAttribute("y1")).toBe(line.getAttribute("y2"))
+    const tallest = Math.min(...Array.from(container.querySelectorAll("rect")).filter((r) => Number(r.getAttribute("height")) > 10).map((b) => Number(b.getAttribute("y"))))
+    expect(Number(line.getAttribute("y1"))).toBeLessThan(tallest)
+  })
+
+  it("is refused on any chart but a bar chart", () => {
+    expect(chartSchema.safeParse(defaults).success).toBe(true)
+    expect(chartSchema.safeParse({ ...defaults, chart_type: "line", direction: undefined }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...defaults, reference: { value: 1.37, label: "" } }).success).toBe(false)
+  })
+})
+
+describe("a bar's note", () => {
+  const routes = {
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    direction: "horizontal" as const,
+    axes: { y_title: "吨钢 CO₂，世界钢协全口径" },
+    series: [
+      {
+        name: "吨钢 CO₂",
+        data: [
+          { x: "高炉转炉", y: 2.34, note: "基准线" },
+          { x: "直接还原铁电炉", y: 1.47, note: "低约 37%" },
+          { x: "废钢电炉", y: 0.69, note: "低约 70%" },
+        ],
+      },
+    ],
+  }
+
+  it("follows the value of a bar on its side, after a middle dot", () => {
+    const { container } = svg(chart.render(routes, { x: 0, y: 0, w: 900, h: 300 }, ctx))
+    const labels = Array.from(container.querySelectorAll("[data-value-label]")).map((t) => t.textContent)
+    expect(labels).toEqual(["2.34 · 基准线", "1.47 · 低约 37%", "0.69 · 低约 70%"])
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+  })
+
+  it("follows a share bar's part's value too", () => {
+    const share = {
+      type: "chart" as const,
+      chart_type: "stacked" as const,
+      direction: "horizontal" as const,
+      axes: { y_unit: "tCO₂" },
+      series: [
+        { name: "直接排放", emphasis: true, data: [{ x: "电解铝每吨排放", y: 3.0 }] },
+        { name: "电力间接排放", data: [{ x: "电解铝每吨排放", y: 7.0, note: "绿电降的是这段" }] },
+      ],
+    }
+    const { container } = svg(chart.render(share, { x: 0, y: 0, w: 1000, h: 220 }, ctx))
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "")
+    expect(texts.some((t) => t.includes("7 tCO₂ · 绿电降的是这段"))).toBe(true)
+  })
+
+  it("is refused where a bar has no line after its value", () => {
+    expect(chartSchema.safeParse(routes).success).toBe(true)
+    expect(chartSchema.safeParse({ ...routes, direction: undefined }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...routes, chart_type: "line", direction: undefined }).success).toBe(false)
+  })
+})
+
+describe("a share bar's own line for its marked run", () => {
+  const exposure = {
+    type: "chart" as const,
+    chart_type: "stacked" as const,
+    direction: "horizontal" as const,
+    axes: { y_unit: "亿欧元" },
+    emphasis_label: "第 73 章制品 €93.5 亿，占 69.5%",
+    series: [
+      { name: "第 72 章钢材", data: [{ x: "2025 年欧盟自中国进口的 CBAM 钢铁", y: 41.0 }] },
+      { name: "7326 其他钢制品", emphasis: true, data: [{ x: "2025 年欧盟自中国进口的 CBAM 钢铁", y: 34.0 }] },
+      { name: "7308 钢结构件", emphasis: true, data: [{ x: "2025 年欧盟自中国进口的 CBAM 钢铁", y: 24.1 }] },
+      { name: "7318 螺钉螺栓", emphasis: true, data: [{ x: "2025 年欧盟自中国进口的 CBAM 钢铁", y: 17.0 }] },
+      { name: "第 73 章其余", emphasis: true, data: [{ x: "2025 年欧盟自中国进口的 CBAM 钢铁", y: 18.4 }] },
+    ],
+  }
+
+  it("stands where the computed total would, in the author's words", () => {
+    const { container } = svg(chart.render(exposure, { x: 0, y: 0, w: 1152, h: 220 }, ctx))
+    const totals = Array.from(container.querySelectorAll("[data-share-total]")).map((t) => t.textContent)
+    expect(totals[0]).toBe("第 73 章制品 €93.5 亿，占 69.5%")
+    expect(totals.slice(1).every((t) => !(t ?? "").startsWith("7326"))).toBe(true)
+  })
+
+  it("is refused on anything but a share bar with a marked run", () => {
+    expect(chartSchema.safeParse(exposure).success).toBe(true)
+    expect(chartSchema.safeParse({ ...exposure, series: exposure.series.map(({ emphasis: _e, ...s }) => s) }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...exposure, chart_type: "bar" }).success).toBe(false)
   })
 })

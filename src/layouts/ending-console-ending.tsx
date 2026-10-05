@@ -78,6 +78,14 @@ export function ConsoleEnding({ ir, slide, index, ctx, page }: SvgTemplateProps)
   const subInk = accessibleInk(colors.muted, ground, SUB.size)
   const listTop = sub ? SUB.top + sub.lines.length * SUB.lineHeight + SUB.gap : LIST.top
   const items = checklistItems(slide)
+  // A checklist has no axis to divide into spans and no line for a
+  // milestone's tag or source: they are declared lost rather than left off
+  // unsaid.
+  const block = boundarySlotBlock(slide, ["timeline", "bullets"])
+  const spans =
+    block?.type === "timeline"
+      ? (block.periods?.length ?? 0) + block.milestones.slice(0, ITEM_MAX).reduce((n, m) => n + (m.tag ? 1 : 0) + (m.source ? 1 : 0), 0)
+      : 0
   const checklist = items.length > 0 ? drawChecklist({ items, ctx, rect: { x: CONSOLE_LEFT, y: listTop, w: CONSOLE_W, h: LIST.foot - listTop } }) : null
   return (
     <>
@@ -120,6 +128,7 @@ export function ConsoleEnding({ ir, slide, index, ctx, page }: SvgTemplateProps)
           )
         : null}
       {checklist ?? (items.length > 0 ? <g data-dropped={items.length} data-dropped-kind="item" /> : null)}
+      {spans > 0 ? <g data-dropped={spans} data-dropped-kind="label" /> : null}
     </>
   )
 }

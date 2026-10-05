@@ -630,7 +630,7 @@ describe("runSchema / runThemes", () => {
   it("slices one component under --component and one kind under --kind", async () => {
     const callout = JSON.parse(await runSchema({ component: "callout" })) as { component: string; $defs: Record<string, unknown> }
     expect(callout.component).toBe("callout")
-    expect(Object.keys(callout.$defs)).toEqual(["IconName"])
+    expect(Object.keys(callout.$defs)).toEqual(["Tag", "IconName"])
     const fact = JSON.parse(await runSchema({ kind: "fact", theme: "brief" })) as { kind: string; components: string[] }
     expect(fact.kind).toBe("fact")
     expect([...fact.components].sort()).toEqual(["kpi_cards", "paragraph"])

@@ -25,6 +25,9 @@ type Chart = Extract<Component, { type: "chart" }>
  * each series in it), a line under the bar states the run's total and share
  * of the whole, under the run's own left end, and beside it the largest
  * other part's, under its own: the comparison a page marks a run to make.
+ * A part's note (`data[].note`) follows its value, after a middle dot, and
+ * the chart's `emphasis_label`, the author's own line for the marked run,
+ * stands where the run's computed total would.
  * The totals are computed, so a line with no room for the second leaves it
  * out. Everything the author wrote is drawn whole, or the bar is not drawn.
  *
@@ -45,6 +48,8 @@ export interface SharePart {
   /** Index of the series it comes from. */
   seriesIndex: number
   marked: boolean
+  /** A few words printed after the part's value (`data[].note`). */
+  note?: string
 }
 
 const CAPTION = { size: 16, box: 24 }
@@ -76,7 +81,7 @@ export function shareParts(chart: Chart): SharePart[] | null {
   for (const [seriesIndex, s] of chart.series.entries()) {
     const point = s.data[0]
     if (!point || s.data.length !== 1) return null
-    parts.push({ name: s.name, value: point.y, seriesIndex, marked: s.emphasis === true })
+    parts.push({ name: s.name, value: point.y, seriesIndex, marked: s.emphasis === true, ...(point.note?.trim() ? { note: point.note.trim() } : {}) })
   }
   return parts
 }
@@ -185,7 +190,8 @@ export function drawShareBar(spec: ShareBarSpec): { node: React.ReactElement; he
   const outside: { index: number; text: string; box: Placed; tickX: number }[] = []
   const inside: { index: number; value: string }[] = []
   for (const [i, part] of parts.entries()) {
-    const value = figure(part.value, decimals, unit, figures)
+    // A part's note follows its value, after a middle dot.
+    const value = part.note ? `${figure(part.value, decimals, unit, figures)} · ${part.note}` : figure(part.value, decimals, unit, figures)
     const room = spans[i]!.x1 - spans[i]!.x0 - PART_GAP - LABEL_INSET - LABEL_TRAIL
     const fitsInside = width(part.name, NAME.size, body, true) <= room && width(value, VALUE.size, body) <= room
     if (fitsInside) {
@@ -207,12 +213,18 @@ export function drawShareBar(spec: ShareBarSpec): { node: React.ReactElement; he
   // under its own left end. Computed, so a second total with no room is left out.
   const marked = parts.flatMap((p, i) => (p.marked ? [i] : []))
   const totals: { text: string; x: number; ink: string }[] = []
+  const authored = chart.emphasis_label?.trim()
   if (marked.length > 0) {
     const sum = marked.reduce((s, i) => s + parts[i]!.value, 0)
     const ofHundred = sharesOfHundred(unit, total, parts.length)
-    const text = totalText(runName(marked.map((i) => parts[i]!.name), chinese), figure(sum, decimals, unit, figures), (sum / total) * 100, chinese, ofHundred)
-    const at = spans[marked[0]!]!.x0
-    if (at + width(text, TOTALS.size, body, true) <= x + w) {
+    // The author's own line for the run, when the chart carries one, stands
+    // where the computed total would. It is drawn whole or not at all: a line
+    // wider than the bar leaves the bar undrawn.
+    const text = authored ?? totalText(runName(marked.map((i) => parts[i]!.name), chinese), figure(sum, decimals, unit, figures), (sum / total) * 100, chinese, ofHundred)
+    const textW = width(text, TOTALS.size, body, true)
+    if (authored && textW > w) return null
+    const at = authored ? Math.min(spans[marked[0]!]!.x0, x + w - textW) : spans[marked[0]!]!.x0
+    if (at + textW <= x + w) {
       totals.push({ text, x: at, ink: accessibleInk(spec.markInk, bg, TOTALS.size) })
       const others = parts.flatMap((p, i) => (p.marked ? [] : [i]))
       const rival = others.reduce<number | null>((best, i) => (best === null || parts[i]!.value > parts[best]!.value ? i : best), null)
@@ -221,7 +233,7 @@ export function drawShareBar(spec: ShareBarSpec): { node: React.ReactElement; he
         const otherText = totalText(other.name, figure(other.value, decimals, unit, figures), (other.value / total) * 100, chinese, ofHundred)
         const otherW = width(otherText, TOTALS.size, body, true)
         const otherX = Math.min(spans[rival]!.x0, x + w - otherW)
-        const first: Placed = { x0: at, x1: at + width(text, TOTALS.size, body, true) }
+        const first: Placed = { x0: at, x1: at + textW }
         if (!meets(first, { x0: otherX, x1: otherX + otherW })) totals.push({ text: otherText, x: otherX, ink: accessibleInk(colors.text, bg, TOTALS.size) })
       }
     }

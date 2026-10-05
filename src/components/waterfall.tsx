@@ -156,6 +156,8 @@ export interface Bar {
   displayValue: number
   /** The author marked this bar (`items[].emphasis`). Never a total. */
   emphasis: boolean
+  /** The short line under the bar's label (`items[].note`). */
+  note?: string
 }
 
 /** Deterministic running-total derivation — see file header. Pure function of
@@ -164,9 +166,10 @@ export function computeBars(items: readonly WaterfallItem[]): Bar[] {
   let running = 0
   const bars: Bar[] = items.map((item) => {
     const emphasis = item.emphasis === true
+    const note = item.note?.trim() ? { note: item.note.trim() } : {}
     if (item.kind === "total") {
       running = item.value
-      return { label: item.label, start: 0, end: item.value, kind: "total", displayValue: item.value, emphasis }
+      return { label: item.label, start: 0, end: item.value, kind: "total", displayValue: item.value, emphasis, ...note }
     }
     const start = running
     running = running + item.value
@@ -177,6 +180,7 @@ export function computeBars(items: readonly WaterfallItem[]): Bar[] {
       kind: item.value < 0 ? "fall" : "rise",
       displayValue: item.value,
       emphasis,
+      ...note,
     }
   })
   const last = items[items.length - 1]
@@ -297,6 +301,8 @@ interface Geom {
   categories: CategoryLabel[]
   /** Lines the tallest category name takes, and so the band every name hangs in. */
   categoryLines: number
+  /** Whether any bar carries a note, which takes a line of its own under every name. */
+  notes: boolean
   /** Where the axis starts when it is truncated, else null. */
   floor: number | null
 }
@@ -316,11 +322,12 @@ function geom(bars: Bar[], w: number, h: number, topBand: number): Geom {
   const colW = w / bars.length
   const categories = bars.map((bar) => categoryLabel(bar.label, colW - 4))
   const categoryLines = Math.max(1, ...categories.map((c) => c.lines.length))
+  const notes = bars.some((bar) => bar.note !== undefined)
   // A second line of names takes its height from the plot, so the bars and
   // the value labels under a falling bar keep the clearance they had above a
-  // single line.
+  // single line. A line of notes under the names does the same.
   const plotTop = topBand + LABEL_TOP_PAD
-  const plotH = Math.max(1, h - plotTop - LABEL_BOTTOM_PAD - (categoryLines - 1) * CATEGORY_LINE_H)
+  const plotH = Math.max(1, h - plotTop - LABEL_BOTTOM_PAD - (categoryLines - 1 + (notes ? 1 : 0)) * CATEGORY_LINE_H)
   const barInset = Math.min(BAR_INSET_MAX, colW * BAR_INSET_RATIO)
   const scale = (floor: number | null) => {
     const { min, max } = yDomain(bars, floor)
@@ -334,7 +341,7 @@ function geom(bars: Bar[], w: number, h: number, topBand: number): Geom {
     const shortest = Math.min(...bars.filter((b) => b.kind === "total").map((b) => y(floor!) - y(b.end)))
     if (shortest < BREAK_MIN_BAR_H) floor = null
   }
-  return { bars, colW, barInset, plotTop, plotH, valueToY: scale(floor), categories, categoryLines, floor }
+  return { bars, colW, barInset, plotTop, plotH, valueToY: scale(floor), categories, categoryLines, notes, floor }
 }
 
 /** The two background strokes across a total bar's foot that say it is cut. */
@@ -428,7 +435,8 @@ export const waterfall: SvgComponent<WaterfallComponent> = {
           const category = g.categories[i]!
           // Names hang from one line across every column: the first line of
           // each sits where the first line of the tallest one does.
-          const categoryY = box.y + h - CATEGORY_BOTTOM_MARGIN - (g.categoryLines - 1) * CATEGORY_LINE_H
+          const categoryY = box.y + h - CATEGORY_BOTTOM_MARGIN - (g.categoryLines - 1 + (g.notes ? 1 : 0)) * CATEGORY_LINE_H
+          const note = bar.note ? fitSvgLine(bar.note, { maxWidth: g.colW - 4, fontSize: CATEGORY_FONT, minFontSize: CATEGORY_MIN_FONT }) : null
           // A receded bar's value recedes with it.
           const valueInk = accessibleInk(
             emphasized && !bar.emphasis && bar.kind !== "total" ? ctx.colors.muted : ctx.colors.text,
@@ -474,6 +482,21 @@ export const waterfall: SvgComponent<WaterfallComponent> = {
                   {line}
                 </text>
               ))}
+              {note ? (
+                <text
+                  data-waterfall-note=""
+                  data-truncated={note.truncated ? "1" : undefined}
+                  x={barX + barW / 2}
+                  y={categoryY + g.categoryLines * CATEGORY_LINE_H}
+                  textAnchor="middle"
+                  fontSize={note.fontSize}
+                  fill={accessibleInk(ctx.colors.muted, bg, note.fontSize)}
+                  fontFamily={ctx.fonts.body}
+                  dominantBaseline="alphabetic"
+                >
+                  {note.text}
+                </text>
+              ) : null}
             </g>
           )
         })}

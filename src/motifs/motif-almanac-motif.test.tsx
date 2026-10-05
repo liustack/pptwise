@@ -3,36 +3,29 @@ import { describe, expect, it } from "vitest"
 import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
-import { blendOver, contrastRatio } from "../render/ink"
-import { CONTENT_DECOR_CONTRAST_CEILING, countDecorPieces, DECOR_PIECE_ATTR, leafOpacity, leafPaint, MAX_DECOR_PIECES, paintedLeaves } from "./decor-budget"
+import { SLIDE_NUMBER_FIELD } from "../render/footer"
 import { AlmanacMotif } from "./motif-almanac-motif"
+import { countDecorPieces, DECOR_PIECE_ATTR, MAX_DECOR_PIECES } from "./decor-budget"
 import type { PptxIR, Slide } from "@/ir"
 
 const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } as Slide
 const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] } as Slide
 const contentSlide: Slide = { type: "content", kind: "points", heading: "内容", components: [] } as Slide
 const endingSlide: Slide = { type: "ending", components: [] } as Slide
-/** chapter 不画（整版 primary 底），其余三档画同一张。 */
-const DRAWN_SLIDES = [coverSlide, contentSlide, endingSlide]
 
-const BODY_ZONE = { x: 96, y: 200, w: 1040, h: 420 }
-const FOOTER_ZONE = { x: 48, y: 664, w: 1184, h: 44 }
-const BOARD_PATHS = [
-  "M 0 80 Q 220 40 430 74 T 760 60",
-  "M 0 56 Q 180 18 360 44 T 640 30",
-  "M 0 20 Q 140 2 280 16",
-] as const
+/** almanac's hexes, none of which may survive a render on another theme's tokens. */
+const ALMANAC_HEX = ["#EFE9DC", "#F7F3E8", "#4D5D39", "#B25E38", "#2B2A22", "#656155", "#D8D0BC"]
 
-const ir = (theme: string): PptxIR =>
+/** A deck of 17 pages that asks for the board's folio: the office and the page number. */
+const ir = (theme: string, footer = true): PptxIR =>
   ({
-    version: "3",
+    version: "5",
     filename: "x.pptx",
     theme: { id: theme },
-    meta: {},
+    meta: { organization: "可持续发展部" },
+    ...(footer ? { footer: { page_number: true, organization: true } } : {}),
     assets: { images: {} },
-    slides: [coverSlide],
+    slides: [coverSlide, ...Array.from({ length: 15 }, () => contentSlide), endingSlide],
   }) as unknown as PptxIR
 
 function render(body: React.ReactElement | null): { markup: string; root: Element } {
@@ -44,193 +37,66 @@ function render(body: React.ReactElement | null): { markup: string; root: Elemen
   return { markup, root: parseSvgRoot(markup) }
 }
 
-function draw(theme: string, slide: Slide) {
+function draw(theme: string, slide: Slide, index = 1, footer = true) {
   const ctx = boundThemeCtx(theme, {})
-  return { ...render(<AlmanacMotif ir={ir(theme)} slide={slide} ctx={ctx} />), ctx }
+  return { ...render(<AlmanacMotif ir={ir(theme, footer)} slide={slide} ctx={ctx} index={index} />), ctx }
 }
 
-/**
- * 采样一条只含 M / Q / T 的二次贝塞尔折线的纵向极值。T 的控制点是前一段
- * 控制点相对终点的反射，不能直接读 `d` 里的数字。
- */
-function pathYRange(d: string): { min: number; max: number } {
-  const tokens = d.trim().split(/\s+/)
-  let i = 0
-  let x = 0
-  let y = 0
-  let prevCx = 0
-  let prevCy = 0
-  let min = Infinity
-  let max = -Infinity
-  const note = (yy: number) => {
-    min = Math.min(min, yy)
-    max = Math.max(max, yy)
-  }
-  const sampleQ = (x0: number, y0: number, cx: number, cy: number, x1: number, y1: number) => {
-    for (let s = 0; s <= 200; s++) {
-      const t = s / 200
-      const mt = 1 - t
-      note(mt * mt * y0 + 2 * mt * t * cy + t * t * y1)
-    }
-    void x0
-    void x1
-    void cx
-  }
-  while (i < tokens.length) {
-    const cmd = tokens[i]!
-    if (cmd === "M") {
-      x = Number(tokens[i + 1])
-      y = Number(tokens[i + 2])
-      note(y)
-      prevCx = x
-      prevCy = y
-      i += 3
-    } else if (cmd === "Q") {
-      const cx = Number(tokens[i + 1])
-      const cy = Number(tokens[i + 2])
-      const x1 = Number(tokens[i + 3])
-      const y1 = Number(tokens[i + 4])
-      sampleQ(x, y, cx, cy, x1, y1)
-      prevCx = cx
-      prevCy = cy
-      x = x1
-      y = y1
-      i += 5
-    } else if (cmd === "T") {
-      const x1 = Number(tokens[i + 1])
-      const y1 = Number(tokens[i + 2])
-      const cx = 2 * x - prevCx
-      const cy = 2 * y - prevCy
-      sampleQ(x, y, cx, cy, x1, y1)
-      prevCx = cx
-      prevCy = cy
-      x = x1
-      y = y1
-      i += 3
-    } else {
-      throw new Error(`unexpected path token: ${cmd}`)
-    }
-  }
-  return { min, max }
-}
+const texts = (root: Element) => Array.from(root.querySelectorAll("text")).map((t) => t.textContent)
 
 /**
- * almanac-motif v3「等高线」（第八波批 3）。
- * 设计源：`.issues/design-boards/wave8/b3/Terra.dc.html`
+ * almanac-motif，2026-10 定稿（`design/rounds/2026-10-05-almanac/`）：内容页
+ * 左上一枚 sprout，页脚左边汇报部门、右边「N / M」。封面和结尾页的脸自己画，
+ * 整版橄榄底的章节页不画。
  */
-describe("AlmanacMotif（等高线）", () => {
-  it("cover/content/ending 画同一张：三条左上顶缘等高线，一件", () => {
-    for (const slide of DRAWN_SLIDES) {
-      const { root } = draw("almanac", slide)
-      expect(Array.from(root.querySelectorAll("path")), `contours on ${slide.type}`).toHaveLength(3)
-      expect(Array.from(root.querySelectorAll("circle")), `no seeds on ${slide.type}`).toHaveLength(0)
-      expect(root.querySelector(`[${DECOR_PIECE_ATTR}="contours"]`)).toBeTruthy()
-      expect(countDecorPieces(root), slide.type).toBe(1)
+describe("AlmanacMotif（长期年鉴的页眉页脚）", () => {
+  it.each([
+    ["封面", coverSlide, 0],
+    ["章节页", chapterSlide, 2],
+    ["结尾页", endingSlide, 16],
+  ] as const)("%s一笔不画", (_name, slide, index) => {
+    const { root } = draw("almanac", slide, index)
+    expect(root.children).toHaveLength(0)
+  })
+
+  it("内容页左上一枚 18px 的 sprout，橄榄色，是页面骨架", () => {
+    const { root, ctx } = draw("almanac", contentSlide)
+    const sprout = root.querySelector(`[${DECOR_PIECE_ATTR}="sprout"]`)!
+    expect(sprout.getAttribute("data-decor-role")).toBe("structure")
+    const icon = sprout.querySelector("[data-yearbook-icon='sprout'] g")!
+    expect(icon.getAttribute("transform")).toBe("translate(64,24) scale(0.75)")
+    expect(sprout.querySelector("[stroke]")!.getAttribute("stroke")).toBe(ctx.colors.primary)
+  })
+
+  it("页脚左边汇报部门，右边「N / M」，N 是页码字段，12px 带 yearbook-spec 豁免", () => {
+    const { root } = draw("almanac", contentSlide, 4)
+    const row = root.querySelector('[data-footer="row"]')!
+    expect(texts(row)).toEqual(["可持续发展部", "5", "/ 17"])
+    expect(row.querySelector(`[data-field="${SLIDE_NUMBER_FIELD}"]`)!.textContent).toBe("5")
+    for (const t of Array.from(row.querySelectorAll("text"))) {
+      expect(t.getAttribute("font-size")).toBe("12")
+      expect(t.getAttribute("data-font-floor-exempt")).toBe("yearbook-spec")
+      expect(Number(t.getAttribute("y"))).toBeGreaterThan(690)
     }
+    const [office, number] = Array.from(row.querySelectorAll("text"))
+    expect(office!.getAttribute("x")).toBe("64")
+    expect(Number(number!.getAttribute("x"))).toBeLessThan(1216)
   })
 
-  it("chapter 完全退让——整版 primary 橄榄底上画 border 细线等于看不见", () => {
-    const { root } = draw("almanac", chapterSlide)
-    expect(Array.from(root.querySelectorAll("path"))).toHaveLength(0)
-    expect(Array.from(root.querySelectorAll("circle"))).toHaveLength(0)
-    expect(countDecorPieces(root)).toBe(0)
+  it("deck 不要页脚时只画 sprout", () => {
+    const { root } = draw("almanac", contentSlide, 4, false)
+    expect(root.querySelector("[data-footer]")).toBeNull()
+    expect(root.querySelector(`[${DECOR_PIECE_ATTR}="sprout"]`)).not.toBeNull()
   })
 
-  it("颜色一律读 token：等高线走 border，1.5px，退役种子点", () => {
-    const t = resolveStyle("almanac")
-    const { root } = draw("almanac", coverSlide)
-    const contours = Array.from(root.querySelectorAll("path"))
-    expect(contours).toHaveLength(3)
-    for (const p of contours) {
-      expect(p.getAttribute("stroke")).toBe(t.colors.border)
-      expect(p.getAttribute("stroke-width")).toBe("1.5")
-      expect(p.getAttribute("fill")).toBe("none")
-    }
-    expect(root.querySelectorAll("circle")).toHaveLength(0)
-  })
-
-  it("等高线几何：三条都按板抄，自 x0 起贴左上顶缘", () => {
-    const { root } = draw("almanac", coverSlide)
-    const ds = Array.from(root.querySelectorAll("path")).map((p) => p.getAttribute("d")!)
-    expect(ds).toEqual([...BOARD_PATHS])
-  })
-
-  it("安全区：等高线整组落在正文区上沿 y200 之上、页脚 meta 带之上", () => {
-    const { root } = draw("almanac", coverSlide)
-    for (const p of Array.from(root.querySelectorAll("path"))) {
-      const { min, max } = pathYRange(p.getAttribute("d")!)
-      expect(max, `contour drops into the body zone: ${p.getAttribute("d")}`).toBeLessThan(BODY_ZONE.y)
-      expect(min, `contour rises off the canvas: ${p.getAttribute("d")}`).toBeGreaterThanOrEqual(0)
-      expect(max, `contour drops into the footer band: ${p.getAttribute("d")}`).toBeLessThan(FOOTER_ZONE.y)
-    }
-  })
-
-  it("没有孤立小件：不画种子点、不画左竖条、不画短 tick", () => {
-    for (const slide of DRAWN_SLIDES) {
-      const { root } = draw("almanac", slide)
-      expect(root.querySelectorAll("circle")).toHaveLength(0)
-      expect(root.querySelectorAll("text")).toHaveLength(0)
-      for (const r of Array.from(root.querySelectorAll("rect"))) {
-        expect(Number(r.getAttribute("width")) < 40 && Number(r.getAttribute("height")) > 30).toBe(false)
-      }
-      for (const l of Array.from(root.querySelectorAll("line"))) {
-        const vertical = Number(l.getAttribute("x1")) === Number(l.getAttribute("x2"))
-        expect(vertical, `vertical bar rendered: ${l.outerHTML}`).toBe(false)
-      }
-    }
-  })
-
-  it("件数不超过预算，叶子都包在 data-decor-piece 里", () => {
-    for (const slide of [...DRAWN_SLIDES, chapterSlide]) {
-      const { root } = draw("almanac", slide)
-      expect(countDecorPieces(root)).toBeLessThanOrEqual(MAX_DECOR_PIECES)
-      for (const el of paintedLeaves(root)) {
-        expect(el.closest(`[${DECOR_PIECE_ATTR}]`), el.outerHTML).toBeTruthy()
-      }
-    }
-  })
-
-  it("内容页叶子按 3:1 天花板退底", () => {
+  it("最多两件，形状都在受控子集里", () => {
     const { root } = draw("almanac", contentSlide)
-    const tokens = resolveStyle("almanac")
-    const ground = tokens.colors.bg
-    for (const el of paintedLeaves(root)) {
-      const paint = leafPaint(el)
-      if (!paint) continue
-      const ratio = contrastRatio(blendOver(paint.color, ground, leafOpacity(el)), ground)
-      expect(ratio).toBeLessThan(CONTENT_DECOR_CONTRAST_CEILING)
-    }
+    expect(countDecorPieces(root)).toBeLessThanOrEqual(MAX_DECOR_PIECES)
+    expect(() => assertSubset(root)).not.toThrow()
   })
 
   it("换一家 tokens 渲染时颜色跟着换，almanac 的色一处不残留（零 hex 纪律的实证）", () => {
-    const heritage = resolveStyle("heritage")
-    const ctx = buildCtx(heritage, {})
-    const { markup } = render(<AlmanacMotif ir={ir("heritage")} slide={coverSlide} ctx={ctx} />)
-    expect(markup).toContain(heritage.colors.border)
-    for (const hex of ["#EFE9DC", "#F7F3E8", "#4D5D39", "#B25E38", "#2B2A22", "#656155", "#D8D0BC"]) {
-      expect(markup, `almanac token ${hex} leaked into the heritage render`).not.toContain(hex)
-    }
-  })
-
-  it("装饰位置写死：换 filename 输出逐字节不变", () => {
-    const ctx = boundThemeCtx("almanac", {})
-    const markups = new Set(
-      Array.from({ length: 12 }, (_, i) =>
-        renderSvgMarkup(
-          <AlmanacMotif ir={{ ...ir("almanac"), filename: `probe-${i}.pptx` } as PptxIR} slide={coverSlide} ctx={ctx} />,
-        ),
-      ),
-    )
-    expect(markups.size).toBe(1)
-  })
-
-  it("cover 与 ending 画同一张", () => {
-    expect(draw("almanac", coverSlide).markup).toBe(draw("almanac", endingSlide).markup)
-  })
-
-  it("Decor body passes subset validation", () => {
-    for (const slide of [...DRAWN_SLIDES, chapterSlide]) {
-      expect(() => assertSubset(draw("almanac", slide).root)).not.toThrow()
-    }
+    const { markup } = draw("clinic", contentSlide)
+    for (const hex of ALMANAC_HEX) expect(markup.toUpperCase()).not.toContain(hex)
   })
 })

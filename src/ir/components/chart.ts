@@ -31,6 +31,14 @@ const ChartPointSchema = z
           "On a stacked or percent_stacked chart it marks the column the point stands in: that column keeps its colours and the other columns step back. " +
           "One point per chart, on a bar, stacked or percent_stacked chart (not a share bar), and not together with a series' own emphasis.",
       ),
+    /** A few words printed with the bar's value. See the describe below. */
+    note: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'A few words printed with the bar\'s value, such as "基准线", "低约 37%" or "62.36 元". Bars on their side (bar with direction "horizontal") and the parts of a share bar only.',
+      ),
   })
   .strict()
 
@@ -428,6 +436,25 @@ export const schema = z
         "Up to two value ranges marked across the plot behind the data, such as a target range a line should stay in. Each runs from `from` to `to` on the value axis, which grows to hold it, and may carry a short `label`. " +
           "line, area and upright bar charts only. Write a range this way rather than as two flat series at its edges.",
       ),
+    /** The line a share bar states for its marked run. See the describe below. */
+    emphasis_label: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'One line a share bar states for its marked parts, in the author\'s words, such as what they add up to: "第 73 章制品 €93.5 亿，占 69.5%" or "Downstream goods €9.35bn, 69.5%". It replaces the total the bar would compute. A share bar (stacked, direction "horizontal") with at least one marked series only.',
+      ),
+    /** One value drawn as a line across the plot. See the describe below. */
+    reference: z
+      .object({
+        value: z.number().describe("Where the line stands on the value axis."),
+        label: z.string().min(1).describe('What the value is, such as "欧盟基准 1.370" or "EU benchmark 1.370".'),
+      })
+      .strict()
+      .optional()
+      .describe(
+        'One value drawn as a dashed line across the bars, such as a benchmark, an average or a threshold the bars are read against: { "value": 1.37, "label": "EU benchmark 1.370" }. The value axis grows to hold it, and its label names the line in the legend. Bar charts only, upright or on their side. Write a benchmark this way rather than as a bar of its own.',
+      ),
     series: z.array(
       z
         .object({
@@ -475,6 +502,46 @@ export const schema = z
         path: ["tag"],
         message: "a share bar has no row over it for a tag. Say what kind of figures it draws in the category's name, or remove tag.",
       })
+    }
+    // A note is printed after a bar's value, which only a bar on its side
+    // and a share bar's part have a line for.
+    const noted = (c.chart_type === "bar" && c.direction === "horizontal") || isShareBar(c)
+    if (!noted) {
+      c.series.forEach((s, si) =>
+        s.data.forEach((d, di) => {
+          if (d.note === undefined) return
+          ctx.addIssue({
+            code: "custom",
+            path: ["series", si, "data", di, "note"],
+            message: `a note is printed after a bar's value, on a bar chart on its side or a share bar, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart has no line for it. Use chart_type "bar" with direction "horizontal", or say it in the category's name.`,
+          })
+        }),
+      )
+    }
+    if (c.emphasis_label !== undefined) {
+      if (!isShareBar(c)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["emphasis_label"],
+          message: `emphasis_label is the line a share bar states for its marked parts, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart is not a share bar. Use chart_type "stacked" with direction "horizontal", or say it in the page's text.`,
+        })
+      } else if (!c.series.some((s) => s.emphasis === true)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["emphasis_label"],
+          message: `emphasis_label names the marked parts, and no series has emphasis: true. Mark the parts the line speaks for, or remove emphasis_label.`,
+        })
+      }
+    }
+    if (c.reference !== undefined && c.chart_type !== "bar") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["reference"],
+        message: `a reference is a line across bars, and a ${c.chart_type} chart has none. Use chart_type "bar", or mark a range with bands on a line or area chart.`,
+      })
+    }
+    if (c.reference !== undefined && !(Math.abs(c.reference.value) <= CHART_AXIS_LIMIT)) {
+      ctx.addIssue({ code: "custom", path: ["reference", "value"], message: `reference.value is ${c.reference.value}, past what a value axis can draw. Write it in the same unit as the bars.` })
     }
     if (c.bands !== undefined) {
       const banded = c.chart_type === "line" || c.chart_type === "area" || (c.chart_type === "bar" && c.direction !== "horizontal")

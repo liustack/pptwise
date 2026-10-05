@@ -25,3 +25,13 @@ Settled on the plan page. See the board and engine render in [compositions/waves
 **Why.** A phase named "限流与退避" and one named "第二区域温备" read faster with a symbol each.
 
 **What it gave up.** Nothing a roadmap drew before: a phase with no icon keeps its number.
+
+## almanac, CBAM sample, 2026-10
+
+`rows[].basis`. Settled on the roadmap page (p16): see the board in [compositions/phases](../../compositions/phases/almanac.board.png). The round's decisions are in [rounds/2026-10-05-almanac](../../rounds/2026-10-05-almanac/README.md).
+
+**What it looks like.** A row whose value is not settled (a budget line still to be priced, 「核算与核查费用：待定」) is underlined dashed in the ordinary roadmap, and stands at its card's foot in a dashed pill in the yearbook setting.
+
+**Why.** A plan that asks for money shows which of its lines are not priced yet.
+
+**What it gave up.** A row's value is two lines at most. One cut there is now marked, as its label already was.

@@ -163,6 +163,25 @@ export function accessibleInk(preferredFill: string, bgHex: string, fontSizePx: 
 }
 
 /**
+ * `preferredFill` lifted toward the ink that reads on `bgHex` (white on a
+ * dark ground, near-black on a light one) by the least that clears the
+ * contrast floor at `fontSizePx`, in twentieths. Where `accessibleInk` gives
+ * the hue up for the plain ink outright, this keeps it: a marked run beside
+ * white words on a dark ground has to read and still be a different ink.
+ * The plain ink only when no lift short of it reads.
+ */
+export function liftedInk(preferredFill: string, bgHex: string, fontSizePx: number): string {
+  const need = requiredContrastRatio(fontSizePx)
+  if (contrastRatio(preferredFill, bgHex) >= need) return preferredFill
+  const toward = readableOn(bgHex)
+  for (let step = 1; step < 20; step++) {
+    const ink = blendOver(toward, preferredFill, step / 20)
+    if (contrastRatio(ink, bgHex) >= need) return ink
+  }
+  return toward
+}
+
+/**
  * WCAG 2.1 SC 1.4.11 non-text contrast floor. A graphic that carries meaning
  * — an icon stroke, a state rule — has no font size to relieve it, so the
  * one number applies at every size.

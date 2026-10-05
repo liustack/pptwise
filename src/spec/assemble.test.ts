@@ -137,6 +137,13 @@ describe("assembleDeck", () => {
     expect(disassembleDeck(ir).pages["body-a"]).toMatchObject({ ballot })
   })
 
+  it("fills a page's strip of years from its page file, and gives it back", () => {
+    const years = { from: 2026, to: 2034, marked: [2026, 2027] }
+    const { ir } = assembleDeck(spec(), { "body-a": { years } })
+    expect(ir.slides[1]?.years).toEqual(years)
+    expect(disassembleDeck(ir).pages["body-a"]).toMatchObject({ years })
+  })
+
   it("applies IR component defaults at the final parse boundary", () => {
     const pages = {
       "body-a": { components: [{ type: "image", asset_id: "hero" }] },

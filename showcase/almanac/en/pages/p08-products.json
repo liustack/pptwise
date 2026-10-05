@@ -1,0 +1,72 @@
+{
+  "years": {
+    "from": 2026,
+    "to": 2034,
+    "marked": [
+      2026,
+      2034
+    ]
+  },
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "fasteners",
+      "fit": "cover",
+      "caption": "Illustration: fastener warehouse (AI-generated)"
+    },
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "y_title": "China default, tCO₂e/t (before markup)"
+      },
+      "reference": {
+        "value": 1.37,
+        "label": "EU benchmark about 1.37"
+      },
+      "series": [
+        {
+          "name": "China default",
+          "data": [
+            {
+              "x": "Hot-rolled 7208",
+              "y": 3.187
+            },
+            {
+              "x": "Structures 7308",
+              "y": 6.035
+            },
+            {
+              "x": "Steel bolts 7318 15",
+              "y": 6.375,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**€428**",
+          "label": "Bolts, per tonne in 2026",
+          "note": "2.6 times hot-rolled coil",
+          "icon": "receipt-euro"
+        },
+        {
+          "value": "€625",
+          "label": "Bolts, per tonne in 2034",
+          "icon": "calendar-clock",
+          "tag": {
+            "text": "A demo at €75.36, not a forecast",
+            "basis": "estimate"
+          }
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Regulations (EU) 2025/2621, 2026/1740, 2025/2620, at €75.36. The photo is an AI-generated illustration",
+  "notes": "Downstream goods cost more because their default values carry the emissions of the whole production chain, taken at the Chinese average and then marked up. The default for carbon steel bolts is 6.375 tonnes per tonne, exactly twice the 3.187 for hot-rolled coil. Steel structures carry 6.035, aluminium foil and other aluminium articles 5.559. On the default path, bolts cost about €428 per tonne in 2026, 2.6 times coil, or about €4.28 million per 10,000 tonnes exported. With the price held, they reach about €625 per tonne in 2034. The more downstream goods in our export mix, the more urgent the switch to actual values, because that is where defaults and real emissions tend to differ most. Our measured product emissions will be filled in after verification. The photo is an AI-generated illustration."
+}

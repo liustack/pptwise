@@ -593,6 +593,40 @@ function bandEnds(component: ChartInput | undefined): number[] {
   return (component?.bands ?? []).flatMap((band) => [band.from, band.to])
 }
 
+/** The chart's reference value (`reference`), which its value axis grows to hold. */
+function referenceEnds(component: ChartInput | undefined): number[] {
+  return component?.reference ? [component.reference.value] : []
+}
+
+/** The reference line's dash and weight, the legend's swatch drawn the same way. */
+export const REFERENCE_DASH = "5 4"
+export const REFERENCE_STROKE = 1.5
+
+/**
+ * The chart's reference value drawn as a dashed line across the plot, over
+ * the bars, in the text ink: across an upright plot at the value's height, or
+ * down a plot on its side at the value's place. The legend names it.
+ */
+function renderReferenceLine(opts: {
+  component: ChartInput | undefined
+  domain: { min: number; max: number }
+  plotX: number
+  plotY: number
+  plotW: number
+  plotH: number
+  across: boolean
+  color: string
+}): ReactElement | null {
+  const reference = opts.component?.reference
+  if (!reference) return null
+  if (opts.across) {
+    const y = mapToPlotY(reference.value, opts.domain, opts.plotY, opts.plotH)
+    return <line data-chart-reference="" x1={opts.plotX} y1={y} x2={opts.plotX + opts.plotW} y2={y} stroke={opts.color} strokeWidth={REFERENCE_STROKE} strokeDasharray={REFERENCE_DASH} />
+  }
+  const x = mapToPlotX(reference.value, opts.domain, opts.plotX, opts.plotW)
+  return <line data-chart-reference="" x1={x} y1={opts.plotY} x2={x} y2={opts.plotY + opts.plotH} stroke={opts.color} strokeWidth={REFERENCE_STROKE} strokeDasharray={REFERENCE_DASH} />
+}
+
 /** A band's label: 16px, one line, inside the range's top-left corner when it is tall enough to hold it. */
 const BAND_LABEL_SIZE = 16
 const BAND_LABEL_INSET = 12
@@ -1339,7 +1373,7 @@ export function renderBar(
   const n = model.series.length
   const meta = cartesianMeta(component, series, figures)
   if (pastAxisLimit(keptValues(model.series))) return <WholeShareDeclined />
-  const yAxis = buildNumericAxis([...keptValues(model.series), ...bandEnds(component)], "zero-max", meta.yUnit, meta.figures)
+  const yAxis = buildNumericAxis([...keptValues(model.series), ...bandEnds(component), ...referenceEnds(component)], "zero-max", meta.yUnit, meta.figures)
   const domain: ChartDomain = { min: yAxis.domain.min, max: yAxis.domain.max, degenerate: yAxis.domain.max <= yAxis.domain.min }
   // Brackets for the author's `changes` take a band over the plot, so the
   // plot and its value labels start under them.
@@ -1510,6 +1544,7 @@ export function renderBar(
         }
         return <g key={cat.key}>{barElements}</g>
       })}
+      {renderReferenceLine({ component, domain: yAxis.domain, plotX: geom.plotX, plotY: geom.plotY, plotW: geom.plotW, plotH: geom.plotH, across: true, color: textColor })}
       {placedLabels === null ? <g data-dropped={barLabelSpecs.length} data-dropped-kind="value-label" /> : null}
       {runs.map((run, k) => {
         const ends = runs.length > 0 ? barBracketEnds(run, model.series, categories, barEnds, placedBars) : null
@@ -2728,7 +2763,7 @@ export function renderBarHorizontal(
   const meta = cartesianMeta(component, series, figures)
   const values = keptValues(model.series)
   if (pastAxisLimit(values)) return <WholeShareDeclined />
-  const xAxis = buildNumericAxis(values, "zero-max", meta.xUnit ?? meta.yUnit, meta.figures)
+  const xAxis = buildNumericAxis([...values, ...referenceEnds(component)], "zero-max", meta.xUnit ?? meta.yUnit, meta.figures)
   const domain: ChartDomain = { min: xAxis.domain.min, max: xAxis.domain.max, degenerate: false }
   const dataMax = Math.max(...values, Number.NEGATIVE_INFINITY)
   // A change the author asked for at a category is printed after the later
@@ -2745,12 +2780,22 @@ export function renderBarHorizontal(
     if (i < 0 || !to || a == null || b == null) continue
     changeAfter.set(`${i}-${to.seriesIndex}`, changeText(a, b, meta.xUnit ?? meta.yUnit, chinese))
   }
+  // A bar's note (`data[].note`) follows its value, after a middle dot.
+  const noteAt = new Map<string, string>()
+  for (const [seriesIndex, s] of series.entries()) {
+    for (const point of s.data) {
+      const i = categories.findIndex((cat) => cat.x === point.x)
+      if (i >= 0 && point.note?.trim()) noteAt.set(`${i}-${seriesIndex}`, point.note.trim())
+    }
+  }
   const labelText = (i: number, seriesIndex: number, value: number) => {
     const change = changeAfter.get(`${i}-${seriesIndex}`)
-    return change ? `${chartFigure(value, meta.figures)}  ${change}` : chartFigure(value, meta.figures)
+    const note = noteAt.get(`${i}-${seriesIndex}`)
+    const figure = note ? `${chartFigure(value, meta.figures)} · ${note}` : chartFigure(value, meta.figures)
+    return change ? `${figure}  ${change}` : figure
   }
   const labelTexts =
-    changeAfter.size === 0
+    changeAfter.size === 0 && noteAt.size === 0
       ? values.map((v) => chartFigure(v, meta.figures))
       : categories.flatMap((_cat, i) =>
           model.series.flatMap((m) => (m.values[i] == null ? [] : [labelText(i, m.seriesIndex, m.values[i]!)])),
@@ -2913,6 +2958,7 @@ export function renderBarHorizontal(
         }
         return <g key={cat.key}>{barElements}</g>
       })}
+      {renderReferenceLine({ component, domain: xAxis.domain, plotX, plotY, plotW, plotH, across: false, color: textColor })}
       {placedHLabels === null ? <g data-dropped={hBarSpecs.length} data-dropped-kind="value-label" /> : null}
       {renderCartesianAxisTitles({
         plotX,

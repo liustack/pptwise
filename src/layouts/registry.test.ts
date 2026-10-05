@@ -39,7 +39,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     }
   }
 
-  it("has exactly 151 layout-kind entries, all traceable to one of the four real registries", () => {
+  it("has exactly 154 layout-kind entries, all traceable to one of the four real registries", () => {
     const knownIds = new Set([
       ...Object.keys(COVER_LAYOUTS),
       ...Object.keys(CHAPTER_LAYOUTS),
@@ -62,8 +62,10 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // The terminal sample redesign adds console-cover, console-chapter,
     // console-sheet and console-ending: 145. The memo sample redesign adds
     // memo-cover, memo-sheet and memo-ending: 148. The clinic sample
-    // redesign adds dossier-cover, dossier-sheet and dossier-ending: 151.
-    expect(layoutEntries).toHaveLength(151)
+    // redesign adds dossier-cover, dossier-sheet and dossier-ending: 151. The
+    // almanac sample redesign adds yearbook-cover, yearbook-sheet and
+    // yearbook-ending: 154.
+    expect(layoutEntries).toHaveLength(154)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -130,7 +132,9 @@ describe("content family: body slot", () => {
           id === "close-word-ending" ||
           id === "console-ending" ||
           id === "memo-ending" ||
-          id === "dossier-ending"
+          id === "dossier-ending" ||
+          id === "yearbook-cover" ||
+          id === "yearbook-ending"
         ) {
           expect(entry.slots.some((s) => s.name === "body")).toBe(true)
           continue
@@ -257,18 +261,18 @@ describe("layoutsForSlideType", () => {
     for (const l of covers) expect(l.slideTypes).toContain("cover")
   })
 
-  it("cover, chapter, and ending expose 40, 37, and 37 registered layouts with no takeovers", () => {
+  it("cover, chapter, and ending expose 41, 37, and 38 registered layouts with no takeovers", () => {
     // The shared automatic pools are unchanged by the gauge family: 19, 8, 7.
-    expect(layoutsForSlideType("cover")).toHaveLength(40)
+    expect(layoutsForSlideType("cover")).toHaveLength(41)
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
     expect(layoutsForSlideType("chapter")).toHaveLength(37)
-    expect(layoutsForSlideType("ending")).toHaveLength(37)
+    expect(layoutsForSlideType("ending")).toHaveLength(38)
   })
 
-  it("content includes both the 37 layouts and the 4 takeovers", () => {
+  it("content includes both the 38 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(37)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(38)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(41)
+    expect(contents).toHaveLength(42)
   })
 })
