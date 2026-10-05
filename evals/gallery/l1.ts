@@ -588,7 +588,9 @@ function collectDividers(root: Element, paintOrder: ReadonlyMap<Element, number>
     const as = os * scale
     const tag = el.tagName.toLowerCase()
     const order = paintOrder.get(el) ?? 0
-    if (tag === "line") {
+    // A line marked `data-strike` strikes out the words under it on purpose:
+    // the yearbook draws a wrong sum crossed through.
+    if (tag === "line" && !el.hasAttribute("data-strike")) {
       const x1 = ax + Number(el.getAttribute("x1") ?? 0) * as
       const x2 = ax + Number(el.getAttribute("x2") ?? 0) * as
       const y1 = ay + Number(el.getAttribute("y1") ?? 0) * as
@@ -1054,9 +1056,11 @@ function walkText(
         // to 15px mono labels, tags, crumb and source) and of memo's typed
         // pages (12 to 15px mono labels, captions, running head and folio,
         // the source line and notes) and of clinic's dossier pages (12 to
-        // 15px capsules, labels, legends, subject, folio and source) are
-        // approved board sizes, like brief's meta.
-        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec"].includes(
+        // 15px capsules, labels, legends, subject, folio and source) and of
+        // almanac's yearbook pages (11 to 15px years, section, pills, labels,
+        // notes, folio and source) are approved board sizes, like brief's
+        // meta.
+        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec"].includes(
           el.getAttribute("data-font-floor-exempt") ?? "",
         )
         if (!decor && !fontFloorExempt && fontSizeAttr !== null && Number(fontSizeAttr) < FONT_FLOOR) {

@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+Almanac has a new look, a long-run yearbook. Every content page except `statement` uses `yearbook-sheet`: the page's `kicker` beside a sprout at the top left, a strip of years at the top right that lights the page's `years`, the point in bold over a hairline, the source small at the foot, and the body drawn in the `yearbook` setting. A page's `tag` (what the whole page rests on) is set where its composition places it, or over the body. The cover uses `yearbook-cover`: the page's photograph squared on the right, contour lines under the office and occasion, the title, a short rule in the accent and a scale of years from the page's `timeline`. The ending uses `yearbook-ending`: the photograph under a scrim from the left and each decision on its own card, the marked one in the accent. When the deck asks for a footer, the motif prints the office at the left and 「N / M」 at the right. If you copied almanac into your own theme file, its menu still names the old faces and keeps working as before.

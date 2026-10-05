@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+The shared compositions take a ninth setting, `yearbook`: a long-term account kept year by year, the way a board reads where a cost is heading. Figures sit on flat cards over hairlines, and years, dates and formulas are set in the mono face. Every figure or rule that is not a settled fact carries a small pill that says what it rests on: a § before a provision of law, a dashed outline in the accent around an estimate, a pending figure or a proposed rule. Fourteen compositions draw the shapes this setting adds: background beside a decision card (`motion`), months laid to scale (`calendar`), long curves over a table of years (`horizon`), a bridge beside its formula (`formula`), a wrong sum beside the right one (`errata`), a whole cut into amounts with a bracket (`breakdown`), bars against a benchmark (`benchmark`), paired columns beside a photograph (`paired`), a procedure over its table (`procedure`), one figure set huge (`magnitude`), a whole cut in two with what each part means (`segments`), routes under their photographs (`survey`), rules on a year axis (`outlook`) and phases with their budget lines (`phases`).

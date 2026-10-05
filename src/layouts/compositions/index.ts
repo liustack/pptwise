@@ -53,6 +53,20 @@ import { rulerComposition } from "./ruler"
 import { dumbbellsComposition } from "./dumbbells"
 import { gateComposition } from "./gate"
 import { watchComposition } from "./watch"
+import { motionComposition } from "./motion"
+import { calendarComposition } from "./calendar"
+import { horizonComposition } from "./horizon"
+import { formulaComposition } from "./formula"
+import { errataComposition } from "./errata"
+import { breakdownComposition } from "./breakdown"
+import { benchmarkComposition } from "./benchmark"
+import { pairedComposition } from "./paired"
+import { procedureComposition } from "./procedure"
+import { magnitudeComposition } from "./magnitude"
+import { segmentsComposition } from "./segments"
+import { surveyComposition } from "./survey"
+import { outlookComposition } from "./outlook"
+import { phasesComposition } from "./phases"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -119,6 +133,20 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   dumbbells: dumbbellsComposition,
   gate: gateComposition,
   watch: watchComposition,
+  motion: motionComposition,
+  calendar: calendarComposition,
+  horizon: horizonComposition,
+  formula: formulaComposition,
+  errata: errataComposition,
+  breakdown: breakdownComposition,
+  benchmark: benchmarkComposition,
+  paired: pairedComposition,
+  procedure: procedureComposition,
+  magnitude: magnitudeComposition,
+  segments: segmentsComposition,
+  survey: surveyComposition,
+  outlook: outlookComposition,
+  phases: phasesComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -150,7 +178,7 @@ function asksForChartMarks(components: readonly CompositionProps["components"][n
  * these alone, so no hand-set plot leaves it off. The ordinary chart draws it
  * at the start of its legend row.
  */
-const CHART_TAG_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["duel"])
+const CHART_TAG_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["duel", "horizon", "paired"])
 
 /**
  * The compositions that keep their left column clear of the page tag a face
@@ -160,6 +188,13 @@ const CHART_TAG_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId
 const TAG_BAND_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["duel", "forest", "fork", "gate"])
 
 /**
+ * The compositions that set the page's own tag inside the body (`pageTag`),
+ * where the yearbook board cited the law a page rests on. A page with one is
+ * offered to these alone; the face sets the tag itself otherwise.
+ */
+const PAGE_TAG_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "formula"])
+
+/**
  * The compositions that draw what a timeline carries beyond its dated
  * milestones: the spans its axis is divided into (`periods`), and a
  * milestone's tag and source. A page whose timeline carries any of them is
@@ -167,7 +202,7 @@ const TAG_BAND_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>
  * ordinary timeline draws them all: the spans as a row of named spans under
  * its milestones, a source and a tag under a milestone's words.
  */
-const TIMELINE_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const TIMELINE_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "outlook"])
 
 function asksForTimelineDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some(
@@ -183,7 +218,7 @@ function asksForTimelineDetail(components: readonly CompositionProps["components
  * line or note leaves them off. The ordinary callout sets the title bold over
  * its text and the tag under it.
  */
-const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey"])
 
 function asksForCalloutDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "callout" && (component.title !== undefined || component.tag !== undefined))
@@ -195,7 +230,7 @@ function asksForCalloutDetail(components: readonly CompositionProps["components"
  * to these alone; the ordinary waterfall sets every note in a line of its own
  * under the bars' names.
  */
-const WATERFALL_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const WATERFALL_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["formula"])
 
 function asksForWaterfallNote(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "waterfall" && component.items.some((item) => item.note !== undefined))
@@ -207,7 +242,7 @@ function asksForWaterfallNote(components: readonly CompositionProps["components"
  * carries one is offered to these alone; the ordinary chart draws the line
  * and names it in its legend.
  */
-const CHART_REFERENCE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const CHART_REFERENCE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["benchmark"])
 
 function asksForChartReference(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.reference !== undefined)
@@ -219,7 +254,7 @@ function asksForChartReference(components: readonly CompositionProps["components
  * offered to these alone; the ordinary chart prints every note after its
  * value.
  */
-const CHART_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const CHART_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["magnitude", "segments", "survey"])
 
 function asksForChartNote(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.series.some((s) => s.data.some((d) => d.note !== undefined)))
@@ -231,7 +266,7 @@ function asksForChartNote(components: readonly CompositionProps["components"][nu
  * these alone; the ordinary share bar sets it where its computed total
  * would stand.
  */
-const CHART_RUN_LABEL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const CHART_RUN_LABEL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["breakdown", "segments"])
 
 function asksForChartRunLabel(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.emphasis_label !== undefined)
@@ -244,7 +279,7 @@ function asksForChartRunLabel(components: readonly CompositionProps["components"
  * prints a pending figure as if it were settled; the ordinary roadmap
  * underlines it dashed.
  */
-const ROADMAP_BASIS_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const ROADMAP_BASIS_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["phases"])
 
 function asksForRoadmapBasis(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "roadmap" && component.items.some((item) => (item.rows ?? []).some((row) => row.basis !== undefined)))
@@ -259,8 +294,9 @@ function asksForChartTag(components: readonly CompositionProps["components"][num
  * and returns the first drawing, or `null` when none of them does.
  */
 export function compose(props: CompositionProps, ids: readonly CompositionId[] = COMPOSITION_IDS): React.ReactElement | null {
+  // What a composition hands on is drawn under the page's tag it has set.
   const handOn: CompositionProps["handOn"] = (components, rect) =>
-    compose({ ...props, components, rect }, ids)
+    compose({ ...props, components, rect, pageTag: undefined }, ids)
   const marked = asksForChartMarks(props.components)
   const tagged = asksForChartTag(props.components)
   const banded = (props.tagBand ?? 0) > 0
@@ -282,6 +318,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (pending && !ROADMAP_BASIS_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
+    if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue
     const drawn = COMPOSITIONS[id]({ ...props, handOn })
     if (drawn) return drawn
   }

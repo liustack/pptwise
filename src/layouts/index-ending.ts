@@ -24,6 +24,7 @@ import { DeliberationEnding } from "./ending-deliberation-ending"
 import { ConsoleEnding } from "./ending-console-ending"
 import { MemoEnding } from "./ending-memo-ending"
 import { DossierEnding } from "./ending-dossier-ending"
+import { YearbookEnding } from "./ending-yearbook-ending"
 import { ScorecardEnding } from "./ending-scorecard-ending"
 import { CarePlanEnding } from "./ending-care-plan-ending"
 import { SeatCtaEnding } from "./ending-seat-cta-ending"
@@ -79,4 +80,5 @@ export const ENDING_LAYOUTS: Record<EndingLayoutId, EndingLayout> = {
   "console-ending": ConsoleEnding,
   "memo-ending": MemoEnding,
   "dossier-ending": DossierEnding,
+  "yearbook-ending": YearbookEnding,
 }

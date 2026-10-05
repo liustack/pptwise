@@ -57,6 +57,18 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * border 色细线，退役左下簇与右缘种子点。chapter 整版橄榄底上完全不画）。
  *
  * **菜单分派（S1-B）**：ESG 报告靠承诺与实证说话，statement 与 evidence 都上，photo 用顶部满幅的 image-top 放田野照片，quote 不上。
+ *
+ * **2026-10 样例重做（`design/rounds/2026-10-05-almanac/`）**：照着定稿画成一本
+ * 长期年鉴。封面换成 `yearbook-cover`（右侧整幅照片裁成正方形，左栏铺等高线，
+ * 汇报部门和场合一行、粗体标题、赭石短线、一条年份刻度和日期），结尾换成
+ * `yearbook-ending`（照片铺底、左侧压暗，要决定的事一条一张卡，标了重点的那条
+ * 用赭石）。宣言之外的九道内容讲法都走 `yearbook-sheet`：左上嫩芽后面是页面的
+ * `kicker`，右上一条年份条点亮页面的 `years`，标题 30px 粗体压一条细线，正文
+ * 交给 yearbook 设定下的构图，口径小牌标出法条、演示估算、待核查和提案。页眉
+ * 页脚归 `almanac-motif`（左上嫩芽，页脚左边汇报部门、右边「N / M」），上面
+ * 「等高线 v3」那句只剩历史意义。章节页和宣言页没有定稿，留在
+ * `field-band-chapter` 和 `statement`。菜单的讲法集合不变，上面那条 S1-B 的
+ * 取舍照旧。
  */
 export const TERRA_TOKENS: StyleTokens = {
   id: "almanac",
@@ -113,21 +125,21 @@ export const TERRA_THEME = {
   },
   style: TERRA_TOKENS,
   menu: {
-    cover: { face: "pledge-open-cover" },
+    cover: { face: "yearbook-cover" },
     chapter: { face: "field-band-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "split-band" },
-      photo: { face: "image-top" },
+      points: { face: "yearbook-sheet" },
+      list: { face: "yearbook-sheet" },
+      comparison: { face: "yearbook-sheet" },
+      process: { face: "yearbook-sheet" },
+      data: { face: "yearbook-sheet" },
+      photo: { face: "yearbook-sheet" },
       statement: { face: "statement" },
-      fact: { face: "stat-hero" },
-      evidence: { face: "one-evidence" },
-      hierarchy: { face: "asymmetric-triptych" },
+      fact: { face: "yearbook-sheet" },
+      evidence: { face: "yearbook-sheet" },
+      hierarchy: { face: "yearbook-sheet" },
     },
-    ending: { face: "scorecard-ending" },
+    ending: { face: "yearbook-ending" },
   },
   motif: { id: "almanac-motif" },
 } satisfies BuiltinThemeDeclaration;

@@ -80,6 +80,10 @@ export interface PaintSpec {
   attrs?: Record<string, string>
   /** Attributes the last line's `<text>` carries as well, such as `data-gloss-break`. */
   lastAttrs?: Record<string, string>
+  /** The ink a `**…**` run takes, when a setting draws its marked runs in an ink of its own. */
+  runInk?: string
+  /** The weight a `**…**` run takes, when a setting sets its marked runs heavier than the line. */
+  runWeight?: "700"
 }
 
 /**
@@ -93,10 +97,11 @@ export function paintLines(layout: EmphasisHeadingLayout, spec: PaintSpec): Reac
     layout,
     headingEmphasisPaint(spec.ctx, layout, {
       baseFill: spec.fill,
-      fontWeight: spec.fontWeight,
+      fontWeight: spec.runWeight ?? spec.fontWeight,
       fontFamily: spec.fontFamily,
       bold,
       bg: spec.bg,
+      ...(spec.runInk ? { accent: spec.runInk } : {}),
     }),
     (_line, index) => (
       <text
