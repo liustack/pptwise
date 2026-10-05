@@ -2176,3 +2176,18 @@ describe("chevron_process stage icon", () => {
     expect(parseOne({ type: "chevron_process", items: [{ title: "a", icon: "id-card" }, { title: "b" }, { title: "c" }] }).success).toBe(true)
   })
 })
+
+describe("data_table marked column", () => {
+  const table = (columns: unknown[]) => ({ type: "data_table", columns, rows: [{ cells: { a: "1", b: "2" } }] })
+  it("takes one marked column and a column icon on a left-aligned column", () => {
+    expect(parseOne(table([{ key: "a", label: "A" }, { key: "b", label: "B", emphasis: true, icon: "circle-help" }])).success).toBe(true)
+  })
+
+  it("refuses two marked columns", () => {
+    expect(parseOne(table([{ key: "a", label: "A", emphasis: true }, { key: "b", label: "B", emphasis: true }])).success).toBe(false)
+  })
+
+  it("refuses a column icon on a column aligned right", () => {
+    expect(parseOne(table([{ key: "a", label: "A" }, { key: "b", label: "B", align: "right", icon: "circle-help" }])).success).toBe(false)
+  })
+})

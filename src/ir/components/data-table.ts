@@ -28,6 +28,17 @@ const DataTableColumnSchema = z
     key: z.string(),
     label: z.string(),
     align: z.enum(["left", "center", "right"]).optional(),
+    /** The one column the page is about. See the describe below. */
+    emphasis: z
+      .boolean()
+      .optional()
+      .describe(
+        "Marks the one column the page is about, such as the figure no company has published: its header and cells are set bold in the emphasis colour and the column is outlined. At most one column.",
+      ),
+    /** A symbol before every cell of the column. See the describe below. */
+    icon: IconNameSchema.optional().describe(
+      "A symbol drawn before every cell of the column, such as circle-help on figures nobody has published. A left-aligned column only. Run `pptwise icons` for the names.",
+    ),
   })
   .strict()
 
@@ -81,6 +92,28 @@ export const schema = z
         message: `data_table column keys must be unique — duplicated: ${duplicateKeys.map((k) => `'${k}'`).join(", ")}`,
       })
     }
+
+    // A marked column stands out from the rest, so two marked columns
+    // stand out from nothing.
+    const marked = c.columns.flatMap((col, i) => (col.emphasis === true ? [i] : []))
+    if (marked.length > 1) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["columns", marked[1]!, "emphasis"],
+        message: `data_table marks ${marked.length} columns with emphasis, and a marked column singles out one. Keep emphasis on the column the page is about.`,
+      })
+    }
+    // A column's icon stands before each cell's words, so the words start
+    // after it at the left of the column.
+    c.columns.forEach((col, i) => {
+      if (col.icon && col.align !== undefined && col.align !== "left") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["columns", i, "icon"],
+          message: `data_table column "${col.key}" carries an icon and is ${col.align}-aligned. The icon stands before each cell at the left of the column: remove align, or remove the icon.`,
+        })
+      }
+    })
 
     // rows[].cells 的每个 key 必须是某个已声明列的 key——多出的 key 只可能
     // 来自模型编造了一个不存在的列（结构性误解），而不是"数据碰巧多了一

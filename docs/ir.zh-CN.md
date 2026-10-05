@@ -248,6 +248,7 @@ pptwise schema --kind data --theme brief
 | `chart.series[].data[].upper` | 只知道一个区间的数值的上端，`y` 是下端：条形实画到 `y`，再用虚线画到 `upper`，标签写两端（「60 至 70」） | 只限横放的 `bar`，且不小于零 |
 | `chart.emphasis_label` | 份额条为标出的那几段写的一行字，用作者自己的话（「第 73 章制品 €93.5 亿，占 69.5%」），放在原本自动算出的合计的位置 | 只用于份额条，至少标出一个系列 |
 | `concept_equation.excluded` | 结果有意不收的那一样，写法和一个要素相同（`{ "label": "先不做", "value": "核心城区的餐饮高峰单", "note": "它排在放行顺序最后" }`）：画在等式下面的虚线框里，数字上划一道删除线 | 必须有 value |
+| `data_table.columns[].emphasis` 与 `icon` | 这一页说的那一列，比如哪家都没公布的那个数：表头和格子用主色加粗，整列围一道框；列图标画在这一列每个格子的开头（`"circle-help"`） | 最多标一列；图标只用于左对齐的列 |
 | `numbered_cards.items[].emphasis` | 这一页落到的那张卡，卡片填满主色 | 最多一张 |
 | `gantt.items[].text` 与 `emphasis` | 阶段名下面的一行说明，以及这一页说的那一段 | 最多标一段 |
 | `timeline.milestones[].lane` 与 `timeline.lanes` | 同一条时间顺序上的两条泳道。`lanes` 给出两条泳道的名字，轴上方的那条在前。放不下两侧的版式把泳道名写在日期前面 | 要么每个节点都写 lane，要么都不写，最多两条，竖向时间线不能用 |

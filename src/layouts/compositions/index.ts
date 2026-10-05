@@ -339,6 +339,18 @@ function asksForRoadmapPhases(components: readonly CompositionProps["components"
 }
 
 /**
+ * The compositions that draw a table's marked column (`columns[].emphasis`)
+ * and a column's icon (`columns[].icon`). A page whose table carries either
+ * is offered to these alone; the ordinary table outlines the marked column
+ * and sets the icon before each of its cells.
+ */
+const TABLE_COLUMN_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForTableColumnMarks(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "data_table" && component.columns.some((col) => col.emphasis !== undefined || col.icon !== undefined))
+}
+
+/**
  * The compositions that draw the page's ballot (`Slide.ballot`), a box for
  * each choice beside every question. A page with one is offered to these
  * alone; the face declares the ballot dropped when none takes the page.
@@ -373,6 +385,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const labelled = asksForChartRunLabel(props.components)
   const pending = asksForRoadmapBasis(props.components)
   const phased = asksForRoadmapPhases(props.components)
+  const columned = asksForTableColumnMarks(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -384,6 +397,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (labelled && !CHART_RUN_LABEL_COMPOSITIONS.has(id)) continue
     if (pending && !ROADMAP_BASIS_COMPOSITIONS.has(id)) continue
     if (phased && !ROADMAP_PHASE_COMPOSITIONS.has(id)) continue
+    if (columned && !TABLE_COLUMN_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue
