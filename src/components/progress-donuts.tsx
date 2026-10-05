@@ -3,7 +3,7 @@ import { parseProgressRatio } from "@/ir/components/progress-donuts"
 import { PptwiseError } from "../errors"
 import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
-import { accessibleInk, groupValueInks } from "../render/ink"
+import { accessibleInk, graphicInk, groupValueInks } from "../render/ink"
 import { emphasisRunInk } from "../render/emphasis"
 import { FORM_BODY_FLOOR, fitFormLine, layoutAtSize } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
@@ -227,10 +227,13 @@ export const progressDonuts: SvgComponent<ProgressDonutsComponent> = {
   // The rate the page is about (`emphasis`) takes the emphasis ink for its
   // ring, its figure and its label. On a theme whose emphasis ink is the
   // accent every other ring is already drawn in, it takes the first of the
-  // primary and the text ink that is not.
+  // primary and the text ink that is not, and that reads on the page as a
+  // ring: rally's primary is its stage's shadow, and a marked ring in it
+  // vanished beside the accent ones.
   const mark =
-    [emphasisRunInk(ctx.colors), ctx.colors.primary, ctx.colors.text].find((ink) => ink.toLowerCase() !== arc.toLowerCase()) ??
-    ctx.colors.text
+    [emphasisRunInk(ctx.colors), ctx.colors.primary, ctx.colors.text].find(
+      (ink) => ink.toLowerCase() !== arc.toLowerCase() && graphicInk(ink, pageBg) === ink,
+    ) ?? ctx.colors.text
 
   return (
     <g transform={`translate(${box.x},${box.y})`}>

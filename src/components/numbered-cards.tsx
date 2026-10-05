@@ -1,6 +1,6 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, measureTextUnits } from "@/lib/svg-text-layout"
-import { accessibleInk, blendOver, graphicInk, readableOn } from "../render/ink"
+import { accessibleInk, blendOver, emphasisFill, graphicInk, readableOn } from "../render/ink"
 import { Icon } from "../render/icons"
 import {
   headingEmphasisPaint,
@@ -369,12 +369,16 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
           formTextOmissionMarker(item.text ?? "", body ?? { lines: [] }) ??
           formTextOmissionMarker(item.sub ?? "", { lines: sub ? [sub.text] : [] })
         // The item the page lands on (`emphasis`) fills its pill in primary
-        // and reverses its words out of it.
+        // and reverses its words out of it. On a theme whose primary does not
+        // stand off its cards (rally's is its stage's shadow, a step darker
+        // than the cards) the marked pill sank below the others: it takes
+        // the theme's text ink instead, the house rule for a featured card.
         const marked = item.emphasis === true
-        const pillFill = marked ? ctx.colors.primary : surface
-        const onPill = readableOn(ctx.colors.primary)
+        const markFill = emphasisFill(ctx.colors.primary, ctx.colors.text, surface)
+        const pillFill = marked ? markFill : surface
+        const onPill = readableOn(markFill)
         const titleInk = marked ? onPill : ctx.colors.text
-        const bodyInk = marked ? accessibleInk(blendOver(onPill, ctx.colors.primary, 0.82), ctx.colors.primary, FORM_BODY_FLOOR) : ctx.colors.muted
+        const bodyInk = marked ? accessibleInk(blendOver(onPill, markFill, 0.82), markFill, FORM_BODY_FLOOR) : ctx.colors.muted
         const paint = (fontSize: number, base: string, bold: boolean) =>
           headingEmphasisPaint(ctx, { fontSize }, {
             baseFill: base,
