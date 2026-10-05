@@ -546,3 +546,53 @@ describe("rotated text leaves (arbitrary small angles)", () => {
     expect(baseline.y).toBeCloseTo(svgAnchor.y, 5)
   })
 })
+
+describe("rotated shapes, pictures and lines", () => {
+  /** The box's centre on the canvas, in px. */
+  const centre = (op: Op) => ({ x: (op.x + op.w / 2) * PX_PER_IN, y: (op.y + op.h / 2) * PX_PER_IN })
+
+  it("turns a rect in a rotated group around its own centre, at its own size", () => {
+    const ops = svgToOps(
+      parseSvg(`<g transform="rotate(2 1000 315)"><rect x="800" y="150" width="400" height="330" fill="#FFFFFF"/></g>`),
+    )
+    const [rect] = ops as Extract<Op, { kind: "shape" }>[]
+    expect(rect!.rotate).toBeCloseTo(2, 5)
+    expect(rect!.w * PX_PER_IN).toBeCloseTo(400, 5)
+    expect(rect!.h * PX_PER_IN).toBeCloseTo(330, 5)
+    const want = applyPoint(parseTransform("rotate(2 1000 315)"), 1000, 315)
+    expect(centre(rect!).x).toBeCloseTo(want.x, 5)
+    expect(centre(rect!).y).toBeCloseTo(want.y, 5)
+  })
+
+  it("writes a counter-clockwise turn as its clockwise equivalent and moves an off-centre box with the group", () => {
+    const ops = svgToOps(
+      parseSvg(`<g transform="rotate(-8 905 557)"><rect x="830" y="520" width="150" height="74" fill="none" stroke="#A63A2B" stroke-width="3"/></g>`),
+    )
+    const rect = ops[0] as Extract<Op, { kind: "shape" }>
+    expect(rect.rotate).toBeCloseTo(352, 5)
+    const want = applyPoint(parseTransform("rotate(-8 905 557)"), 905, 557)
+    expect(centre(rect).x).toBeCloseTo(want.x, 5)
+    expect(centre(rect).y).toBeCloseTo(want.y, 5)
+    expect(rect.line?.width).toBeCloseTo(pxToPt(3), 5)
+  })
+
+  it("turns a picture with its frame, keeping its crop", () => {
+    const ops = svgToOps(
+      parseSvg(
+        `<g transform="rotate(-2 1048 346)"><image x="888" y="204" width="320" height="262" preserveAspectRatio="xMidYMid slice" href="data:image/png;base64,AAA"/></g>`,
+      ),
+    )
+    const image = ops[0] as Extract<Op, { kind: "image" }>
+    expect(image.rotate).toBeCloseTo(358, 5)
+    expect(image.w * PX_PER_IN).toBeCloseTo(320, 5)
+    // The picture's own centre, (1048, 335), turned around the group's.
+    const want = applyPoint(parseTransform("rotate(-2 1048 346)"), 1048, 335)
+    expect(centre(image).x).toBeCloseTo(want.x, 5)
+    expect(centre(image).y).toBeCloseTo(want.y, 5)
+  })
+
+  it("leaves an unrotated leaf without a turn", () => {
+    const ops = svgToOps(parseSvg(`<g transform="translate(10,10)"><rect x="0" y="0" width="96" height="96" fill="#000"/></g>`))
+    expect((ops[0] as Extract<Op, { kind: "shape" }>).rotate).toBeUndefined()
+  })
+})

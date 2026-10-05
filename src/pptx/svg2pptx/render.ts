@@ -145,6 +145,7 @@ export function renderOp(
       if (op.fill) opts.fill = op.fill
       if (op.line) opts.line = op.line
       if ("rectRadius" in op && op.rectRadius != null) opts.rectRadius = op.rectRadius
+      if (op.rotate) opts.rotate = op.rotate
       if (op.gradientFill) opts.objectName = gradientObjectName(slideIndex, patches.length)
       // Must run before the gradient patch is recorded below: it may append
       // the blk marker onto `opts.objectName`, and the patch has to target
@@ -167,6 +168,7 @@ export function renderOp(
       }
       if (op.flipH) opts.flipH = true
       if (op.flipV) opts.flipV = true
+      if (op.rotate) opts.rotate = op.rotate
       withBlockMarker(opts, op, slideIndex, opIndex)
       slide.addShape("line", opts)
       break
@@ -179,6 +181,7 @@ export function renderOp(
         h: op.h,
         points: op.points,
       }
+      if (op.rotate) opts.rotate = op.rotate
       if (op.fill) opts.fill = op.fill
       if (op.line) opts.line = op.line
       if (op.gradientFill) opts.objectName = gradientObjectName(slideIndex, patches.length)
@@ -220,6 +223,7 @@ export function renderOp(
     case "image": {
       const opts: Record<string, unknown> = { x: op.x, y: op.y, w: op.w, h: op.h, data: op.data }
       if (op.sizing) opts.sizing = op.sizing
+      if (op.rotate) opts.rotate = op.rotate
       // A11Y-01 alt 链路：pptxgenjs 的 `altText` 落到导出 XML 的
       // `p:cNvPr@descr`（PowerPoint「编辑替换文字」读写的就是它，见
       // node_modules/pptxgenjs 的 image 分支）。没有 alt 的资产不设这个 key
