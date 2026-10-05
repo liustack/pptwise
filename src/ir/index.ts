@@ -447,6 +447,46 @@ export const YearsSchema = z
     'The run of years a deck follows and the years this page is about, drawn as a strip of years with those years lit: { "from": 2026, "to": 2034, "marked": [2026, 2027] }. At most 13 years. Drawn only by faces that have a place for it: validate says which.',
   )
 
+/** The most stages a course runs through. Past eight its strip of pills crowds the running head. */
+export const MAX_COURSE_STAGES = 8
+
+/**
+ * The stages a talk runs through in order, such as the parts and the quizzes
+ * of a lesson, and which of them are checks on what the room has learned.
+ * A deck writes it once; each page names its own `stage`, and a face that has
+ * a place for it draws the whole run as a strip of pills with that stage lit.
+ */
+export const CourseSchema = z
+  .object({
+    stages: z
+      .array(
+        z
+          .object({
+            label: nonBlankString("course.stages[].label").describe('The stage as the strip names it, in a few characters, such as "环节一", "小测一" or "Part 1".'),
+            quiz: z
+              .boolean()
+              .optional()
+              .describe("Marks a stage where the room checks what it has learned, such as a quiz or a test: its pill is drawn dashed."),
+          })
+          .strict(),
+      )
+      .min(2)
+      .max(MAX_COURSE_STAGES)
+      .describe(`Two to ${MAX_COURSE_STAGES} stages in the order the talk runs through them.`),
+  })
+  .strict()
+  .superRefine((course, ctx) => {
+    course.stages.forEach((stage, i) => {
+      const label = stage.label.trim()
+      if (course.stages.findIndex((other) => other.label.trim() === label) !== i) {
+        ctx.addIssue({ code: "custom", path: ["stages", i, "label"], message: `course.stages[${i}] repeats "${label}". Name each stage once, so a page's stage says which one it is.` })
+      }
+    })
+  })
+  .describe(
+    'The stages a talk runs through in order, such as the parts and quizzes of a lesson: { "stages": [{ "label": "目标" }, { "label": "环节一" }, { "label": "小测一", "quiz": true }] }. Each page names its own stage. Drawn only by faces that have a place for a page\'s stage: validate says which.',
+  )
+
 const CommonSlideFields = {
   // 稳定页标识（W5 spec/assemble 注入，裸 IR 可省）。schema 层不做跨 slide
   // 校验——同 deck 内重复 id 是 validateIr 的硬错误。
@@ -534,6 +574,16 @@ const CommonSlideFields = {
    * Only a face that declares a place for it draws it.
    */
   years: YearsSchema.optional(),
+  /**
+   * Which stage of the deck's `course` this page belongs to, written as the
+   * stage's label. A face that has a place for it draws the course as a
+   * strip of pills with this stage lit.
+   */
+  stage: nonBlankString("stage")
+    .optional()
+    .describe(
+      'Which stage of the deck\'s course this page belongs to, written as its label, such as "环节一" or "Part 1". Requires the deck\'s course. Drawn only by faces that have a place for it: validate says which.',
+    ),
   components: z.array(ComponentSchema).default([]),
   background: BackgroundSpecSchema.optional(),
   // 图片排版 P4：受控装饰原语——模型只有选择权，绘制由渲染层完成。
@@ -676,11 +726,17 @@ export const PptxIRSchema = z
      * `branding: "full"`, the older footer it always had). See `./footer.ts`.
      */
     footer: FooterSchema.optional(),
+    /**
+     * The stages the talk runs through, written once for the deck. Each
+     * page names its own `stage`; see {@link CourseSchema}.
+     */
+    course: CourseSchema.optional(),
     slides: z.array(SlideSchema),
   })
   .strict()
 
 export type PptxIR = z.infer<typeof PptxIRSchema>
+export type Course = z.infer<typeof CourseSchema>
 export type Component = z.infer<typeof ComponentSchema>
 export type BackgroundSpec = z.infer<typeof BackgroundSpecSchema>
 export type Slide = z.infer<typeof SlideSchema>
@@ -711,6 +767,8 @@ export type ChartSeries = {
     emphasis?: boolean
     /** Bars on their side and share-bar parts only: a few words printed with the value. */
     note?: string
+    /** Bars on their side only: the high end of a value known only as a range, `y` its low end. */
+    upper?: number
   }[]
   /** `chart_type: "combo"` only: draw this series as bars (default) or a line. */
   plot?: "bar" | "line"

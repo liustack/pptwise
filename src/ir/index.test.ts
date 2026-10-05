@@ -2047,6 +2047,7 @@ describe("tag evidence", () => {
     const kpi = (tag: unknown) => ({ type: "kpi_cards", items: [{ value: "1", label: "a", tag }] })
     expect(parseOne(kpi({ text: "RCT · 期刊", evidence: "trial" })).success).toBe(true)
     expect(parseOne(kpi({ text: "企业口径", evidence: "company" })).success).toBe(true)
+    expect(parseOne(kpi({ text: "工作论文 · NBER 2025", evidence: "preprint" })).success).toBe(true)
     expect(parseOne(kpi({ text: "x", evidence: "rumour" })).success).toBe(false)
   })
 })
@@ -2129,5 +2130,21 @@ describe("comparison label_column", () => {
 describe("comparison row icon", () => {
   it("takes an icon on a row", () => {
     expect(parseOne({ type: "comparison", columns: ["A"], rows: [{ label: "x", cells: ["1"], icon: "pill" }] }).success).toBe(true)
+  })
+})
+
+describe("roadmap timed phases", () => {
+  const phase = (extra: Record<string, unknown> = {}) => ({ title: "a", ...extra })
+  const road = (items: unknown[], extra: Record<string, unknown> = {}) => ({ type: "roadmap", items, ...extra })
+  it("takes a length on every phase in one unit, a checkpoint and up to three points", () => {
+    expect(parseOne(road([phase({ duration: 15, checkpoint: "小测一", points: ["a", "b"] }), phase({ duration: 7 })], { duration_unit: "分钟" })).success).toBe(true)
+    expect(parseOne(road([phase({ points: ["a", "b", "c", "d"] }), phase()])).success).toBe(false)
+    expect(parseOne(road([phase({ points: [] }), phase()])).success).toBe(false)
+  })
+  it("refuses lengths on some phases only, lengths with no unit, and a unit with no lengths", () => {
+    expect(parseOne(road([phase({ duration: 15 }), phase()], { duration_unit: "分钟" })).success).toBe(false)
+    expect(parseOne(road([phase({ duration: 15 }), phase({ duration: 7 })])).success).toBe(false)
+    expect(parseOne(road([phase(), phase()], { duration_unit: "分钟" })).success).toBe(false)
+    expect(parseOne(road([phase({ duration: 0 }), phase({ duration: 7 })], { duration_unit: "分钟" })).success).toBe(false)
   })
 })

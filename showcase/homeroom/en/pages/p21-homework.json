@@ -1,0 +1,32 @@
+{
+  "stage": "Wrap-up",
+  "stamp": {
+    "text": "Homework"
+  },
+  "components": [
+    {
+      "type": "numbered_cards",
+      "items": [
+        {
+          "title": "Try one real task this week with the three methods",
+          "text": "Brief it, set the rules, check every line"
+        },
+        {
+          "title": "Check yourself against the six rules",
+          "text": "Write down the one you forget most"
+        },
+        {
+          "title": "Log the time and the rework",
+          "text": "Compare with doing it without AI"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "tip",
+      "title": "Hand it in",
+      "text": "Give your notes to your manager by next Wednesday. Questions? Ask L&D any time"
+    }
+  ],
+  "notes": "Last, your homework: three exercises. One, pick a real task this week and do it with an approved tool, using the three methods. Two, check yourself against the six rules and note which one you're most likely to forget. Three, log the time and the rework, and compare with how you'd normally do it. Hand your notes to your manager by next Wednesday. If anything's unclear, ask Learning and Development any time. Thank you."
+}

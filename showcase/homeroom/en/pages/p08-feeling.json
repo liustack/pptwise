@@ -1,0 +1,60 @@
+{
+  "stage": "Part 1",
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "x_title": "Change in time to finish a task (negative is faster)",
+        "x_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Change in time",
+          "data": [
+            {
+              "x": "Developers' forecast",
+              "y": -24
+            },
+            {
+              "x": "Economists' forecast",
+              "y": -39
+            },
+            {
+              "x": "ML experts' forecast",
+              "y": -38
+            },
+            {
+              "x": "Developers' own estimate after",
+              "y": -20
+            },
+            {
+              "x": "Measured",
+              "y": 19,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "icon": "gauge",
+          "value": "**39**",
+          "unit": "points",
+          "label": "Gap between how it felt and what was measured",
+          "note": "Trying a new way of working? Log the time and rework, not just how it felt.",
+          "tag": {
+            "text": "Working paper · METR 2025-07",
+            "evidence": "preprint"
+          }
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: METR, arXiv 2507.09089 (working paper, Jul 2025): 16 experienced developers, 246 tasks, AI allowed at random",
+  "notes": "Why can't we trust how it feels? This was a randomized controlled trial. Sixteen experienced open-source developers worked on 246 real tasks in projects they'd contributed to for years, and each task was randomly assigned to allow AI or not. Beforehand, the developers expected AI to make them 24% faster, and economists and machine learning experts predicted 38% to 39% faster. Afterwards, the developers estimated they'd been 20% faster. Measured, the tasks with AI took 19% longer. That's a 39-point gap between feeling and fact. This doesn't mean AI is useless for coding. It means that on work you know well, your sense of speed isn't evidence. The team ran a follow-up in 2026, but they say themselves that its data is unreliable, so we don't use it here. Our advice: before you roll out a new way of working, log the time and the rework, and let the numbers decide."
+}

@@ -1,0 +1,44 @@
+{
+  "stage": "Part 3",
+  "components": [
+    {
+      "type": "pyramid",
+      "layers": [
+        {
+          "label": "Personal & secret",
+          "tone": "danger"
+        },
+        {
+          "label": "Internal",
+          "tone": "warning"
+        },
+        {
+          "label": "Public",
+          "tone": "success"
+        }
+      ]
+    },
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "lock",
+          "title": "Never in public AI tools",
+          "text": "For example: client lists and phone numbers, source code, quotes, unpublished financials"
+        },
+        {
+          "icon": "shield-check",
+          "title": "Approved company tools only",
+          "text": "For example: internal processes, meeting plans, drafts without personal data"
+        },
+        {
+          "icon": "globe",
+          "title": "Fine in approved tools",
+          "text": "For example: website articles, published reports, public regulations"
+        }
+      ]
+    }
+  ],
+  "footnote": "Grounds: DSL Art. 21. PIPL Arts. 21, 23 and 28. UK government guidance to civil servants on generative AI (Jan 2024)",
+  "notes": "Rule 1 gets its own slide because you'll use it most. First, work out which level the information is at. Public information, like website articles, published reports and public regulations, is fine to use in approved company tools. Internal material, like internal processes, meeting schedules and drafts with no personal data, stays inside approved company tools, never a personal account or a public tool. The top level is personal data and trade secrets: client lists and phone numbers, source code, quotes, financials not yet published. These never go into public AI tools. Sensitive personal information, such as health, financial accounts and location history, has stricter requirements under Article 28 of the PIPL. The UK government's guidance to its civil servants puts it plainly: never put sensitive information or personal data into these tools. If you're not sure which level something is, treat it as the higher one and ask your department's data owner."
+}

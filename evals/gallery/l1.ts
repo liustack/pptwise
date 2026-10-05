@@ -1058,9 +1058,10 @@ function walkText(
         // the source line and notes) and of clinic's dossier pages (12 to
         // 15px capsules, labels, legends, subject, folio and source) and of
         // almanac's yearbook pages (11 to 15px years, section, pills, labels,
-        // notes, folio and source) are approved board sizes, like brief's
-        // meta.
-        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec"].includes(
+        // notes, folio and source) and of homeroom's lesson pages (12 to 15px
+        // labels, pills, notes, the running head, folio and source) are
+        // approved board sizes, like brief's meta.
+        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec", "lesson-spec"].includes(
           el.getAttribute("data-font-floor-exempt") ?? "",
         )
         if (!decor && !fontFloorExempt && fontSizeAttr !== null && Number(fontSizeAttr) < FONT_FLOOR) {

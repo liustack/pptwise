@@ -1,0 +1,66 @@
+{
+  "stage": "Part 3",
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "lock",
+          "title": "1. Grade your data",
+          "text": "Personal data, trade secrets and unpublished business material stay out of public AI",
+          "tag": {
+            "text": "PIPL · DSL",
+            "basis": "law"
+          }
+        },
+        {
+          "icon": "shield-check",
+          "title": "2. Approved tools only",
+          "text": "Use approved tools on company accounts, never a personal account for work",
+          "tag": {
+            "text": "PIPL Art. 21",
+            "basis": "law"
+          }
+        },
+        {
+          "icon": "user-check",
+          "title": "3. A person checks",
+          "text": "Facts, figures, quotes, code and promises are checked before they go out",
+          "tag": {
+            "text": "Framework 6.3.1",
+            "basis": "law"
+          }
+        },
+        {
+          "icon": "badge-info",
+          "title": "4. Label what you publish",
+          "text": "Declare AI-generated content you publish, and never remove its label",
+          "tag": {
+            "text": "Labeling Measures Art. 10",
+            "basis": "law"
+          }
+        },
+        {
+          "icon": "history",
+          "title": "5. Keep the record",
+          "text": "Keep prompts, drafts and edits, to show your work if copyright is questioned",
+          "tag": {
+            "text": "Zhangjiagang ruling",
+            "basis": "law"
+          }
+        },
+        {
+          "icon": "siren",
+          "title": "6. Report mistakes",
+          "text": "Sent the wrong data or used wrong content? Report it at once, don't quietly fix it",
+          "tag": {
+            "text": "DSL Art. 29",
+            "basis": "law"
+          }
+        }
+      ]
+    }
+  ],
+  "footnote": "Grounds: PIPL, Data Security Law (DSL), AI Safety Governance Framework 2.0 (Sep 2025), AI Labeling Measures (in force Sep 2025), Zhangjiagang ruling",
+  "notes": "These are the company's six rules. The tag on each card shows what it rests on. Rule 1, grade your data: personal information, sensitive personal information, trade secrets and unpublished business material never go into public AI tools. That rests on Articles 21, 23 and 28 of the Personal Information Protection Law and Article 21 of the Data Security Law. The next slide covers it in detail. Rule 2, approved tools and company accounts only: handing personal information to an outside tool counts in law as entrusting someone else to process it, and Article 21 of the PIPL requires an agreement and oversight first. A personal account can't provide either. Rule 3, a person checks: facts, figures, quotes, code and commitments to others are checked by a person before they go out. That follows section 6.3.1 of the AI Safety Governance Framework 2.0, published in September 2025 by China's national cybersecurity standards committee, which calls for human review. The lawyers and the airline are what happens without it. Rule 4, label what you publish: Article 10 of the Measures for Labeling AI-Generated Synthetic Content, in force since September 1, 2025, says anyone publishing such content must declare it, and no one may remove or tamper with the labels. Whether to label internal material is the company's own choice, and we ask for one line at the end saying where AI was used. Rule 5, keep the record: this one is about copyright. In a case in Zhangjiagang, the plaintiff couldn't produce the original records of how the images were generated, and the court held they weren't protected works. The US Copyright Office also says prompts alone aren't enough for protection. Keeping the record is how you show what's your own work. Rule 6, report mistakes: Article 29 of the Data Security Law requires immediate remedial action when a risk is found, and Article 57 of the PIPL requires immediate remedies and notification after a leak. The sooner you report, the easier it is to fix. The lawyers' case shows that digging in only makes things worse."
+}

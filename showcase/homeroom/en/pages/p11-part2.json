@@ -1,0 +1,23 @@
+{
+  "stage": "Part 2",
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "file-warning",
+          "title": "Samsung: 3 leaks in under 20 days"
+        },
+        {
+          "icon": "gavel",
+          "title": "Lawyers and an airline: liable for what AI said"
+        },
+        {
+          "icon": "users",
+          "title": "47-country staff survey: the risk is in our habits"
+        }
+      ]
+    }
+  ],
+  "notes": "Part 2: three real cases. All three come from published reporting or court decisions you can look up. The question to keep in mind: when it went wrong, who paid?"
+}

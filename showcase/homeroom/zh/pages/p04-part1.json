@@ -1,0 +1,23 @@
+{
+  "stage": "环节一",
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "lightbulb",
+          "title": "四项研究：写作、客服、做方案、团队"
+        },
+        {
+          "icon": "triangle-alert",
+          "title": "两种帮倒忙：超出能力，内容编造"
+        },
+        {
+          "icon": "gauge",
+          "title": "感觉和实测差了 39 个百分点"
+        }
+      ]
+    }
+  ],
+  "notes": "环节一，我们先看研究：AI 在哪些活上真的帮忙，在哪些活上会帮倒忙。"
+}

@@ -144,6 +144,16 @@ describe("assembleDeck", () => {
     expect(disassembleDeck(ir).pages["body-a"]).toMatchObject({ years })
   })
 
+  it("carries the deck's course from the spec and a page's stage from its page file, and gives both back", () => {
+    const course = { stages: [{ label: "Goals" }, { label: "Part 1" }, { label: "Quiz 1", quiz: true }] }
+    const { ir } = assembleDeck(spec({ course }), { "body-a": { stage: "Part 1" } })
+    expect(ir.course).toEqual(course)
+    expect(ir.slides[1]?.stage).toBe("Part 1")
+    const back = disassembleDeck(ir)
+    expect(back.spec.course).toEqual(course)
+    expect(back.pages["body-a"]).toMatchObject({ stage: "Part 1" })
+  })
+
   it("applies IR component defaults at the final parse boundary", () => {
     const pages = {
       "body-a": { components: [{ type: "image", asset_id: "hero" }] },

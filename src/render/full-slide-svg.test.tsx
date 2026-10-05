@@ -591,10 +591,14 @@ describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlo
       components: [{ type: "paragraph", text: "文" }],
       background: { kind: "asset", asset_id: "bg1" },
     } as Slide
+    // homeroom's tokens on the native narrow-column face: homeroom's own
+    // menu now sets its points on the lesson sheet, so a test theme keeps
+    // the probe on the face whose subheading reads ctx.defaultBg.
+    const themeId = registerTestTheme(`full-slide-svg-${testThemeSerial++}`, "homeroom", { content: { points: "narrow-column" } })
     const doc: PptxIR = {
       version: "5",
       filename: "deck.pptx",
-      theme: { id: "homeroom" },
+      theme: { id: themeId },
       meta: {},
       assets: { images: { bg1: { src: "data:image/png;base64,AAAA" } } },
       slides: [slide],

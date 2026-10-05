@@ -106,6 +106,7 @@ import { layoutDef as coverConsoleCover } from "./cover-console-cover"
 import { layoutDef as coverMemoCover } from "./cover-memo-cover"
 import { layoutDef as coverDossierCover } from "./cover-dossier-cover"
 import { layoutDef as coverYearbookCover } from "./cover-yearbook-cover"
+import { layoutDef as coverLessonCover } from "./cover-lesson-cover"
 import { layoutDef as coverPledgeOpenCover } from "./cover-pledge-open-cover"
 import { layoutDef as coverReportOpenCover } from "./cover-report-open-cover"
 import { layoutDef as coverCutPanelCover } from "./cover-cut-panel-cover"
@@ -138,6 +139,7 @@ import { layoutDef as chapterGiltOrdinalChapter } from "./chapter-gilt-ordinal-c
 import { layoutDef as chapterLookRangeChapter } from "./chapter-look-range-chapter"
 import { layoutDef as chapterSealNumeralChapter } from "./chapter-seal-numeral-chapter"
 import { layoutDef as chapterConsoleChapter } from "./chapter-console-chapter"
+import { layoutDef as chapterLessonChapter } from "./chapter-lesson-chapter"
 import { layoutDef as chapterFieldBandChapter } from "./chapter-field-band-chapter"
 import { layoutDef as chapterSubjectRuleChapter } from "./chapter-subject-rule-chapter"
 import { layoutDef as chapterRoundMarkChapter } from "./chapter-round-mark-chapter"
@@ -177,6 +179,7 @@ import { layoutDef as endingConsoleEnding } from "./ending-console-ending"
 import { layoutDef as endingMemoEnding } from "./ending-memo-ending"
 import { layoutDef as endingDossierEnding } from "./ending-dossier-ending"
 import { layoutDef as endingYearbookEnding } from "./ending-yearbook-ending"
+import { layoutDef as endingLessonEnding } from "./ending-lesson-ending"
 import { layoutDef as endingScorecardEnding } from "./ending-scorecard-ending"
 import { layoutDef as endingCarePlanEnding } from "./ending-care-plan-ending"
 import { layoutDef as endingSeatCtaEnding } from "./ending-seat-cta-ending"
@@ -227,6 +230,7 @@ import { layoutDef as contentConsoleSheet } from "./content-console-sheet"
 import { layoutDef as contentMemoSheet } from "./content-memo-sheet"
 import { layoutDef as contentDossierSheet } from "./content-dossier-sheet"
 import { layoutDef as contentYearbookSheet } from "./content-yearbook-sheet"
+import { layoutDef as contentLessonSheet } from "./content-lesson-sheet"
 import { layoutDef as contentSealFigure } from "./content-seal-figure"
 
 import {
@@ -411,13 +415,14 @@ export interface LayoutDefinition {
    * `stamp`, a stamp pressed on the page, `tag`, a small tag set with the
    * heading that says what the page rests on, `ballot`, the boxes a
    * committee ticks beside each item, `years`, the strip of years a running
-   * head draws with the page's own years lit, and on a cover, chapter or
-   * ending face `footnote` (a content face always has a place for its
-   * source line). validate refuses a `kicker`, `fields`, `stamp`, `tag`,
-   * `ballot` or `years` on a face that does not list it, and a boundary
-   * page's `footnote` likewise.
+   * head draws with the page's own years lit, `stage`, the deck's course
+   * drawn as a strip of pills with the page's own stage lit, and on a cover,
+   * chapter or ending face `footnote` (a content face always has a place for
+   * its source line). validate refuses a `kicker`, `fields`, `stamp`, `tag`,
+   * `ballot`, `years` or `stage` on a face that does not list it, and a
+   * boundary page's `footnote` likewise.
    */
-  pageFields?: readonly ("kicker" | "footnote" | "fields" | "stamp" | "tag" | "ballot" | "years")[]
+  pageFields?: readonly ("kicker" | "footnote" | "fields" | "stamp" | "tag" | "ballot" | "years" | "stage")[]
   /**
    * Structural fact of a cover or chapter face: it draws its own page over a
    * photograph background (`background.kind: "asset"`).
@@ -611,6 +616,8 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverDossierCover.id]: coverDossierCover,
   // almanac sample redesign (2026-10-05).
   [coverYearbookCover.id]: coverYearbookCover,
+  // homeroom sample redesign (2026-10-06).
+  [coverLessonCover.id]: coverLessonCover,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -658,6 +665,8 @@ const CHAPTER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [chapterShowPlate.id]: chapterShowPlate,
   // terminal sample redesign (2026-10-05).
   [chapterConsoleChapter.id]: chapterConsoleChapter,
+  // homeroom sample redesign (2026-10-06).
+  [chapterLessonChapter.id]: chapterLessonChapter,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -708,6 +717,8 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingDossierEnding.id]: endingDossierEnding,
   // almanac sample redesign (2026-10-05).
   [endingYearbookEnding.id]: endingYearbookEnding,
+  // homeroom sample redesign (2026-10-06).
+  [endingLessonEnding.id]: endingLessonEnding,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -872,6 +883,9 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   // almanac sample redesign (2026-10-05): the board's ordinary content page,
   // theme-locked.
   [contentYearbookSheet.id]: contentYearbookSheet,
+  // homeroom sample redesign (2026-10-06): the board's ordinary content page,
+  // theme-locked.
+  [contentLessonSheet.id]: contentLessonSheet,
 }
 
 // ─────────────────────────────────────────────────────────────────────────

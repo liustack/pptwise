@@ -55,9 +55,12 @@ export interface TagSpec {
   fontFamily: string
 }
 
+/** The ordinary tag's height, 28px around 16px words. */
+export const ORDINARY_TAG_HEIGHT = 28
+
 /** The ordinary size: 16px words in a 28px label, the floor every theme's body type keeps. */
 export function ordinaryTagSpec(ctx: ComponentCtx): TagSpec {
-  return { size: 16, height: 28, padX: 12, fontFamily: ctx.fonts.body }
+  return { size: 16, height: ORDINARY_TAG_HEIGHT, padX: 12, fontFamily: ctx.fonts.body }
 }
 
 /** The label's width for `text` at `spec`. */
@@ -104,7 +107,8 @@ function secondaryInks(colors: Pick<StyleColors, "chartPalette" | "primary" | "a
  * recolours it: a trial in a journal and an official document in the
  * primary, the strongest ink the theme keeps for marks; a product label and
  * a trial registry in the first of the palette's quieter series colours; a
- * draft out for comment in the next; a company's own figures in the warning
+ * draft out for comment and a working paper no journal has reviewed yet in
+ * the next, the two that are not final; a company's own figures in the warning
  * ink, a claim to read with care; a press report in the muted ink.
  */
 export function evidenceInk(
@@ -120,6 +124,7 @@ export function evidenceInk(
     case "registry":
       return quieter[0] ?? colors.primary
     case "draft":
+    case "preprint":
       return quieter[1] ?? colors.text
     case "company":
       return resolveSemanticColor("warning", colors)

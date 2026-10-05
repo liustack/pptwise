@@ -92,6 +92,8 @@ export type CoverLayoutId =
   | "dossier-cover"
   // almanac sample redesign (2026-10-05): the yearbook's cover over its photograph.
   | "yearbook-cover"
+  // homeroom sample redesign (2026-10-06): the lesson's board beside the classroom.
+  | "lesson-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -133,6 +135,8 @@ export type ChapterLayoutId =
   | "show-plate"
   // terminal sample redesign (2026-10-05): the incident console's chapter page.
   | "console-chapter"
+  // homeroom sample redesign (2026-10-06): a part of the lesson on a band of board.
+  | "lesson-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -176,6 +180,8 @@ export type EndingLayoutId =
   | "dossier-ending"
   // almanac sample redesign (2026-10-05): the yearbook's decisions over a photograph.
   | "yearbook-ending"
+  // homeroom sample redesign (2026-10-06): the lesson's homework.
+  | "lesson-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -235,6 +241,8 @@ export type ContentLayoutId =
   | "dossier-sheet"
   // almanac sample redesign: the board's ordinary content page. Theme-locked.
   | "yearbook-sheet"
+  // homeroom sample redesign: the board's ordinary content page. Theme-locked.
+  | "lesson-sheet"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

@@ -16,6 +16,7 @@ import type { MotifId } from "./types"
  *   top right as the file's subject.
  *   almanac-motif is almanac's yearbook folio: the organization, the label
  *   and the notice at the left, 「N / M」 at the right.
+ *   homeroom-motif is homeroom's lesson folio, the same row.
  * - `"organization"`: the motif prints the organization somewhere of its
  *   own, and the shared row carries everything else. ink's colophon rail
  *   sets the organization in a vertical column down the right edge.
@@ -32,6 +33,7 @@ export const MOTIF_FOOTER_ROLES: Partial<Record<MotifId, MotifFooterRole>> = {
   "memo-motif": "row",
   "clinic-motif": "row",
   "almanac-motif": "row",
+  "homeroom-motif": "row",
   "ink-motif": "organization",
   "poster-motif": "organization",
 }

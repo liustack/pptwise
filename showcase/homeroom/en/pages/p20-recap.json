@@ -1,0 +1,37 @@
+{
+  "stage": "Wrap-up",
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "list-checks",
+          "title": "Pick it · Measure it",
+          "text": "Hand it writing, editing and summarizing. Log time and rework before rolling out"
+        },
+        {
+          "icon": "lock",
+          "title": "Grade it · Approved tools",
+          "text": "Personal data and trade secrets stay out of public tools. Approved tools only",
+          "highlight": true
+        },
+        {
+          "icon": "user-check",
+          "title": "Check it · Label it",
+          "text": "Check facts, figures and quotes before they go out. Declare what you publish"
+        },
+        {
+          "icon": "siren",
+          "title": "Keep it · Report it",
+          "text": "Keep your prompts and drafts. If something goes wrong, report it at once"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "tip",
+      "text": "Back to page 2: have you ticked all three goals?"
+    }
+  ],
+  "notes": "Before you go, copy these four pairs off the board. Pick the task and measure it: hand it writing, editing and summarizing, and before you roll out a new way of working, log the time and the rework. Grade the data and use approved tools: personal data and trade secrets stay out of public tools, and only approved tools are used. This pair matters most. Check it and label it: check facts, figures and quotes before they go out, and declare AI content you publish. Keep records and report mistakes: keep your prompts and drafts, and if something goes wrong, report it at once."
+}

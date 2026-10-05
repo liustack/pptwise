@@ -1,0 +1,36 @@
+{
+  "stage": "Quiz 2",
+  "ballot": {
+    "choices": [
+      "Yes",
+      "No",
+      "Not yet"
+    ]
+  },
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "quiz-pair",
+      "fit": "cover",
+      "caption": "Illustration: a class (AI-generated)"
+    },
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "title": "Case 1",
+          "text": "Pasting a complaint, with the customer's name and phone, into a personal AI account"
+        },
+        {
+          "title": "Case 2",
+          "text": "Making an event poster with AI, then cropping off its AI label before we post it"
+        },
+        {
+          "title": "Case 3",
+          "text": "Finding you pasted a client list into public AI last week, and letting it go: nobody knows"
+        }
+      ]
+    }
+  ],
+  "notes": "Second quiz. Three cases, all easy to run into at work. A hint: hold each one up against the six rules. Is it OK, and which rule does it touch? Again, take a minute and talk it over with your neighbor."
+}

@@ -391,10 +391,10 @@ export function pillWidth(text: string, ctx: ComponentCtx): number {
   return Math.ceil(Math.max(allowance, yearbookWidth(text, PILL.size, ctx, true)) + PILL.padX * 2)
 }
 
-/** Whether a tag says what it marks is not settled: a basis other than the law, or a source that is a draft, a claim or a report. */
+/** Whether a tag says what it marks is not settled: a basis other than the law, or a source that is a draft, a preprint, a claim or a report. */
 export function pillUnsettled(tag: Tag): boolean {
   if (tag.basis !== undefined) return tag.basis !== "law"
-  return tag.evidence === "draft" || tag.evidence === "company" || tag.evidence === "press"
+  return tag.evidence === "draft" || tag.evidence === "preprint" || tag.evidence === "company" || tag.evidence === "press"
 }
 
 /**

@@ -45,6 +45,7 @@ import { ConsoleSheetContent } from "./content-console-sheet"
 import { MemoSheetContent } from "./content-memo-sheet"
 import { DossierSheetContent } from "./content-dossier-sheet"
 import { YearbookSheetContent } from "./content-yearbook-sheet"
+import { LessonSheetContent } from "./content-lesson-sheet"
 import { GridStatementContent } from "./content-grid-statement"
 import { GaugeStatsContent } from "./content-gauge-stats"
 import { OneEvidenceContent } from "./content-one-evidence"
@@ -192,6 +193,9 @@ const CASES: FaceCase[] = [
   // almanac's yearbook sheet: the same, in its band x64 to x1216 and y186 to
   // y640 under the claim and the strip of years.
   { face: "yearbook-sheet", Face: YearbookSheetContent, themeId: "almanac", regions: ["face", "declined"] },
+  // homeroom's lesson sheet: the same, in its band x64 to x1216 and y196 to
+  // y640 under the claim and the pen's wavy line.
+  { face: "lesson-sheet", Face: LessonSheetContent, themeId: "homeroom", regions: ["face", "declined"] },
   // A statement with no row of figures draws its body with the component
   // renderer under the rule, and steps aside when that band cannot hold it.
   { face: "grid-statement", Face: GridStatementContent, themeId: "swiss", regions: ["face", "aside", "declined"] },

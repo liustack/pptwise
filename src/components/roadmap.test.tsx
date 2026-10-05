@@ -270,3 +270,32 @@ describe("a roadmap row's basis", () => {
     expect(Array.from(container.querySelectorAll("text")).map((t) => t.textContent)).toContain("核算与核查费用：待定")
   })
 })
+
+describe("a roadmap's timed phases", () => {
+  const lesson = {
+    type: "roadmap" as const,
+    duration_unit: "分钟",
+    items: [
+      { period: "环节一", title: "它在哪儿帮忙", duration: 15, points: ["四项研究", "两种帮倒忙"], checkpoint: "小测一", rows: [{ label: "目标", value: "会挑任务" }] },
+      { period: "环节二", title: "三个真实案例", duration: 7, points: ["三星、律师、航空公司"], rows: [{ label: "目标", value: "会避开风险" }] },
+    ],
+  }
+
+  it("adds each phase's length to its period, its points under the title and its checkpoint as a tag", () => {
+    const { container } = svg(roadmap.render(lesson, { x: 0, y: 0, w: 900 }, ctx))
+    const words = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+    expect(words).toEqual(expect.arrayContaining(["环节一 · 15 分钟", "环节二 · 7 分钟", "· 四项研究", "· 两种帮倒忙", "· 三星、律师、航空公司", "小测一", "会挑任务"]))
+    expect(container.querySelectorAll("[data-roadmap-checkpoint]")).toHaveLength(1)
+    expect(container.querySelector("[data-truncated], [data-dropped]")).toBeNull()
+    // The rows sit under the checkpoint, not over it.
+    const tag = container.querySelector("[data-roadmap-checkpoint] rect")!
+    const goal = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "会挑任务")!
+    expect(Number(goal.getAttribute("y"))).toBeGreaterThan(Number(tag.getAttribute("y")) + Number(tag.getAttribute("height")))
+    expect(() => assertSubset(container.querySelector("svg")!)).not.toThrow()
+  })
+
+  it("measures the taller card the points and the checkpoint make", () => {
+    const plain = { ...lesson, duration_unit: undefined, items: lesson.items.map(({ title, period, rows }) => ({ title, period, rows })) }
+    expect(roadmap.measure(lesson, 900, ctx)).toBeGreaterThan(roadmap.measure(plain, 900, ctx))
+  })
+})

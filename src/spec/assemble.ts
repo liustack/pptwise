@@ -15,6 +15,7 @@ export interface PageContent {
   tag?: Slide["tag"]
   ballot?: Slide["ballot"]
   years?: Slide["years"]
+  stage?: Slide["stage"]
   notes?: string
 }
 
@@ -22,7 +23,7 @@ export interface PageContent {
  * The fields a page file may fill, in the order assembly copies them onto
  * the slide. Everything else a slide carries is the spec's.
  */
-export const PAGE_FILL_FIELDS = ["components", "background", "image_side", "footnote", "fields", "stamp", "tag", "ballot", "years", "notes"] as const satisfies readonly (keyof PageContent)[]
+export const PAGE_FILL_FIELDS = ["components", "background", "image_side", "footnote", "fields", "stamp", "tag", "ballot", "years", "stage", "notes"] as const satisfies readonly (keyof PageContent)[]
 
 export interface AssembleResult {
   ir: PptxIR
@@ -102,6 +103,7 @@ export function assembleDeck(
     ...(deckSpec.brand !== undefined ? { brand: deckSpec.brand } : {}),
     ...(deckSpec.branding !== undefined ? { branding: deckSpec.branding } : {}),
     ...(deckSpec.footer !== undefined ? { footer: deckSpec.footer } : {}),
+    ...(deckSpec.course !== undefined ? { course: deckSpec.course } : {}),
     meta: deckSpec.meta,
     slides: deckSpec.pages.map((page) => buildSlide(page, pages[page.id])),
   }
@@ -147,6 +149,7 @@ export function disassembleDeck(ir: PptxIR): {
       ...(ir.brand !== undefined ? { brand: ir.brand } : {}),
       ...(ir.branding !== undefined ? { branding: ir.branding } : {}),
       ...(ir.footer !== undefined ? { footer: ir.footer } : {}),
+      ...(ir.course !== undefined ? { course: ir.course } : {}),
       meta: ir.meta,
       pages: pageSpecs,
     },
@@ -165,6 +168,7 @@ function extractPageContent(slide: Slide): PageContent {
   if (slide.tag !== undefined) content.tag = slide.tag
   if (slide.ballot !== undefined) content.ballot = slide.ballot
   if (slide.years !== undefined) content.years = slide.years
+  if (slide.stage !== undefined) content.stage = slide.stage
   if (slide.notes !== undefined) content.notes = slide.notes
   return content
 }

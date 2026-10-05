@@ -1,0 +1,71 @@
+{
+  "stage": "Part 2",
+  "components": [
+    {
+      "type": "comparison",
+      "columns": [
+        "What happened",
+        "Who paid",
+        "Source"
+      ],
+      "rows": [
+        {
+          "label": "Samsung",
+          "icon": "file-warning",
+          "tag": {
+            "text": "Mar to May 2023",
+            "quiet": true
+          },
+          "cells": [
+            "Within 20 days of allowing a public AI tool, staff pasted in source code and meeting notes: 3 leaks",
+            "The company banned staff from generative AI",
+            "Economist Korea, Bloomberg"
+          ]
+        },
+        {
+          "label": "Lawyers",
+          "icon": "gavel",
+          "tag": {
+            "text": "Jun 22, 2023",
+            "quiet": true
+          },
+          "cells": [
+            "Filed case law AI made up, and stood by it when challenged",
+            "Fined $5,000, the court found bad faith",
+            "S.D.N.Y."
+          ]
+        },
+        {
+          "label": "Airline",
+          "icon": "plane",
+          "tag": {
+            "text": "Feb 14, 2024",
+            "quiet": true
+          },
+          "cells": [
+            "Its chatbot said a bereavement fare could be claimed later. It couldn't",
+            "Paid CA$812.02, its “separate legal entity” claim rejected",
+            "BC Civil Resolution Tribunal"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "message-square-quote",
+      "text": "The judge: using a reliable AI tool isn't improper, but checking it is the lawyer's job."
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**2,145**",
+          "label": "court rulings on AI-invented content (as of Oct 4, 2026)"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Economist Korea (Mar 2023), Bloomberg (May 2023), S.D.N.Y. (Jun 22, 2023), BC Civil Resolution Tribunal (Feb 14, 2024), Charlotin hallucination database",
+  "notes": "Three cases. First, Samsung. In March 2023, Korean media reported that less than 20 days after Samsung's semiconductor division allowed a public AI chatbot, there had been three leaks: one engineer pasted source code from an equipment measurement database to ask for a bug fix, another pasted yield and defect-detection code to ask for optimization, and a third turned a meeting recording into text and pasted it in to get minutes. In May, Samsung banned staff from using generative AI tools. Second, two New York lawyers and their firm filed case law that AI had invented. When the court questioned it, they insisted the cases were real. The court found bad faith and fined them $5,000, jointly. The judge said up front that using a reliable AI tool isn't improper, but lawyers have a gatekeeping duty to check what they file. This keeps happening: as of October 4, 2026, one researcher's database lists 2,145 court decisions involving AI-invented content. Third, Air Canada. The chatbot on its website told a passenger that a bereavement fare could be claimed after travel. It couldn't. The airline argued the chatbot was a separate legal entity responsible for its own actions. The tribunal called that a remarkable submission, held the airline responsible for all the information on its website, and ordered it to pay 812.02 Canadian dollars. What the three have in common: the tool didn't carry the blame. The people and the company did."
+}

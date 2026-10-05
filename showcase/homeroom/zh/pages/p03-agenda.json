@@ -1,0 +1,85 @@
+{
+  "stage": "目标",
+  "components": [
+    {
+      "type": "roadmap",
+      "duration_unit": "分钟",
+      "items": [
+        {
+          "period": "环节一",
+          "title": "它在哪儿帮忙，哪儿帮倒忙",
+          "icon": "lightbulb",
+          "duration": 15,
+          "points": [
+            "四项研究",
+            "两种帮倒忙"
+          ],
+          "checkpoint": "小测一",
+          "rows": [
+            {
+              "label": "目标",
+              "value": "会挑任务"
+            }
+          ]
+        },
+        {
+          "period": "环节二",
+          "title": "三个真实案例",
+          "icon": "gavel",
+          "duration": 7,
+          "points": [
+            "三星、律师、航空公司",
+            "47 国员工调查"
+          ],
+          "rows": [
+            {
+              "label": "目标",
+              "value": "会避开风险"
+            }
+          ]
+        },
+        {
+          "period": "环节三",
+          "title": "我们的规则和方法",
+          "icon": "clipboard-check",
+          "duration": 15,
+          "points": [
+            "六条规则",
+            "三个方法"
+          ],
+          "checkpoint": "小测二",
+          "rows": [
+            {
+              "label": "目标",
+              "value": "会照规则做"
+            }
+          ],
+          "emphasis": true
+        },
+        {
+          "period": "小结",
+          "title": "板书和课后练习",
+          "icon": "notebook-pen",
+          "duration": 5,
+          "points": [
+            "八个关键词",
+            "课后三道题"
+          ],
+          "rows": [
+            {
+              "label": "目标",
+              "value": "三个目标回顾"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "tip",
+      "icon": "hand",
+      "text": "课堂约定：随时举手提问。两次小测可以和旁边的同事商量。"
+    }
+  ],
+  "notes": "今天分三个环节。环节一讲 AI 的长处和短处，都来自公开发表的研究，结束有一次小测。环节二讲三个真实案例，看看出了问题以后谁来担。环节三是今天的重点，讲公司的六条规则和三个好用的方法，结束有第二次小测。最后五分钟做小结，布置课后练习。开场和提问留了三分钟。"
+}

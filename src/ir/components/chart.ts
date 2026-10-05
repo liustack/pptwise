@@ -39,6 +39,13 @@ const ChartPointSchema = z
       .describe(
         'A few words printed with the bar\'s value, such as "基准线", "低约 37%" or "62.36 元". Bars on their side (bar with direction "horizontal") and the parts of a share bar only.',
       ),
+    /** The high end of a value only known as a range. See the describe below. */
+    upper: z
+      .number()
+      .optional()
+      .describe(
+        'The high end when a value is only known as a range, with y its low end: y 60 and upper 70 for "60% to 70%", or y 1.8 and upper 24.2 for rates that run from 1.8% to 24.2% across 108 models. The bar is drawn solid to y and dashed on to upper, and its label names both ends. Bars on their side (bar with direction "horizontal") only.',
+      ),
   })
   .strict()
 
@@ -518,6 +525,28 @@ export const schema = z
         }),
       )
     }
+    // A range is a bar on its side drawn solid to its low end and dashed on
+    // to its high end, its label naming both.
+    const ranged = c.chart_type === "bar" && c.direction === "horizontal"
+    c.series.forEach((s, si) =>
+      s.data.forEach((d, di) => {
+        if (d.upper === undefined) return
+        const path = ["series", si, "data", di, "upper"]
+        if (!ranged) {
+          ctx.addIssue({
+            code: "custom",
+            path,
+            message: `upper draws a value known only as a range, on a bar chart on its side, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart has no such bar. Use chart_type "bar" with direction "horizontal", or write the range in the category's name.`,
+          })
+        } else if (d.y < 0) {
+          ctx.addIssue({ code: "custom", path, message: `a range is drawn from zero to its low end ${d.y} and on to upper, and a bar below zero has no such run. Give ranges at zero or above.` })
+        } else if (!(d.upper > d.y)) {
+          ctx.addIssue({ code: "custom", path, message: `upper is ${d.upper} and y is ${d.y}. A range runs from y up to upper: give upper the higher end.` })
+        } else if (d.status !== undefined) {
+          ctx.addIssue({ code: "custom", path, message: `a bar marked "${d.status}" already says it is not a reported figure. Give it a range or a status, not both.` })
+        }
+      }),
+    )
     if (c.emphasis_label !== undefined) {
       if (!isShareBar(c)) {
         ctx.addIssue({

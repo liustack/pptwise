@@ -1,0 +1,85 @@
+{
+  "stage": "Goals",
+  "components": [
+    {
+      "type": "roadmap",
+      "duration_unit": "min",
+      "items": [
+        {
+          "period": "Part 1",
+          "title": "Helps and backfires",
+          "icon": "lightbulb",
+          "duration": 15,
+          "points": [
+            "Four studies",
+            "Two traps"
+          ],
+          "checkpoint": "Quiz 1",
+          "rows": [
+            {
+              "label": "Goal",
+              "value": "Pick the right tasks"
+            }
+          ]
+        },
+        {
+          "period": "Part 2",
+          "title": "Three real cases",
+          "icon": "gavel",
+          "duration": 7,
+          "points": [
+            "Samsung, lawyers, airline",
+            "47-country staff survey"
+          ],
+          "rows": [
+            {
+              "label": "Goal",
+              "value": "Spot the risks"
+            }
+          ]
+        },
+        {
+          "period": "Part 3",
+          "title": "Our rules and methods",
+          "icon": "clipboard-check",
+          "duration": 15,
+          "points": [
+            "Six rules",
+            "Three methods"
+          ],
+          "checkpoint": "Quiz 2",
+          "rows": [
+            {
+              "label": "Goal",
+              "value": "Follow our rules"
+            }
+          ],
+          "emphasis": true
+        },
+        {
+          "period": "Wrap-up",
+          "title": "The board and homework",
+          "icon": "notebook-pen",
+          "duration": 5,
+          "points": [
+            "Four pairs of key words",
+            "Three exercises"
+          ],
+          "rows": [
+            {
+              "label": "Goal",
+              "value": "All three, reviewed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "tip",
+      "icon": "hand",
+      "text": "Ground rules: put your hand up any time, and feel free to talk the quizzes over with your neighbor."
+    }
+  ],
+  "notes": "Today has three parts. Part 1 covers what AI is good and bad at, all from published research, and ends with a quiz. Part 2 looks at three real cases and asks who paid when things went wrong. Part 3 is the heart of today: the company's six rules and three methods that work, followed by a second quiz. We finish with a five-minute recap and the homework. Three minutes are set aside for the opening and questions."
+}

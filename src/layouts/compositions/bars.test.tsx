@@ -124,3 +124,14 @@ describe("a share bar's own line for its run through compose", () => {
     expect(compose({ components: [bar] as never, ctx, rect: NOTICE_PLOT, setting: "grid" })).toBeNull()
   })
 })
+
+describe("a ranged bar through compose", () => {
+  it("is offered to no hand-set plot that would draw it as one value, so the ordinary chart draws its range", async () => {
+    const { compose } = await import(".")
+    const { testCtx } = await import("./__fixtures__/kit")
+    const { ctx } = testCtx("bulletin")
+    const base = share({ changes: undefined }) as unknown as { series: { data: Record<string, unknown>[] }[] }
+    const ranged = { ...base, series: base.series.map((s, i) => (i === 0 ? { ...s, data: s.data.map((d, k) => (k === 0 ? { ...d, upper: 30 } : d)) } : s)) }
+    expect(compose({ components: [ranged] as never, ctx, rect: NOTICE_PLOT, setting: "notice" })).toBeNull()
+  })
+})

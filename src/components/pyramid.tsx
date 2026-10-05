@@ -1,6 +1,6 @@
 import type { Component } from "@/ir"
 import { DroppedContentMarker } from "../render/drop-marker"
-import { contrastRatio, readableOn, relativeLuminance, requiredContrastRatio } from "../render/ink"
+import { contrastRatio, readableOn, relativeLuminance, requiredContrastRatio, resolveSemanticColor } from "../render/ink"
 import { mixHex } from "./color-mix"
 import { anyCut } from "./declared-fit"
 import { FORM_BODY_FLOOR, fitFormLine, layoutFormBody } from "./legibility"
@@ -77,7 +77,14 @@ function rampEnd(ctx: ComponentCtx): string {
   return spread >= RAMP_MIN_SPREAD ? ctx.colors.bg : mixHex(readableOn(ctx.colors.bg), ctx.colors.primary, 0.45)
 }
 
-function layerFill(ctx: ComponentCtx, i: number, n: number): string {
+/**
+ * A band's fill: the theme's own ink for the level's tone when the author
+ * gave one (`layers[].tone`), so a ramp of risk reads danger, warning,
+ * success; otherwise its step down the primary's ramp. Either way pushed
+ * until its label reads.
+ */
+function layerFill(ctx: ComponentCtx, i: number, n: number, tone?: PyramidComponent["layers"][number]["tone"]): string {
+  if (tone) return legibleBand(resolveSemanticColor(tone, ctx.colors), LABEL_PX)
   const t = n <= 1 ? 0 : (i / (n - 1)) * 0.78
   return legibleBand(mixHex(ctx.colors.primary, rampEnd(ctx), t), LABEL_PX)
 }
@@ -164,7 +171,7 @@ export const pyramid: SvgComponent<PyramidComponent> = {
           const bottom = top + bandH - LAYER_GAP
           const ht = halfAt(i)
           const hb = halfAt(i + 1)
-          const fill = layerFill(ctx, i, n)
+          const fill = layerFill(ctx, i, n, layer.tone)
           const ink = readableOn(fill)
           const label = bands[i]!
           return (
@@ -211,7 +218,7 @@ export const pyramid: SvgComponent<PyramidComponent> = {
                     y={y + legendCardH / 2 - SWATCH / 2}
                     width={SWATCH}
                     height={SWATCH}
-                    fill={layerFill(ctx, i, n)}
+                    fill={layerFill(ctx, i, n, component.layers[i]!.tone)}
                   />
                   {note?.lines.map((line, k) => (
                     <text

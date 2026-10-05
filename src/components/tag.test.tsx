@@ -17,6 +17,7 @@ describe("a tag that names its source", () => {
     expect(evidenceInk(colors, "label")).toBe(colors.chartPalette[2])
     expect(evidenceInk(colors, "registry")).toBe(colors.chartPalette[2])
     expect(evidenceInk(colors, "draft")).toBe(colors.chartPalette[3])
+    expect(evidenceInk(colors, "preprint")).toBe(colors.chartPalette[3])
     expect(evidenceInk(colors, "company")).toBe(resolveSemanticColor("warning", colors))
     expect(evidenceInk(colors, "press")).toBe(colors.muted)
   })

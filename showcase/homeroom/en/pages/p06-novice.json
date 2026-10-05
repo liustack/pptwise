@@ -1,0 +1,56 @@
+{
+  "stage": "Part 1",
+  "components": [
+    {
+      "type": "comparison",
+      "columns": [
+        "Weaker to begin with",
+        "Stronger to begin with"
+      ],
+      "rows": [
+        {
+          "label": "Support, 5,172 agents",
+          "cells": [
+            "Least skilled fifth: +36%",
+            "Most skilled fifth: almost no change, quality dipped"
+          ]
+        },
+        {
+          "label": "Consultants",
+          "cells": [
+            "Below average: +43%",
+            "Above average: +17%"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "The two studies group people differently: support by skill fifths, consulting by above or below average"
+    },
+    {
+      "type": "insight_panel",
+      "title": "Ramp-up",
+      "rows": [
+        {
+          "label": "New agents with two months of AI",
+          "text": "2 months"
+        },
+        {
+          "label": "Agents with 6+ months and no AI",
+          "text": "6+ months"
+        }
+      ],
+      "footnote": "Performed alike"
+    },
+    {
+      "type": "callout",
+      "variant": "tip",
+      "icon": "graduation-cap",
+      "text": "For new colleagues, it's like a coach at your elbow. For old hands, the speed-up is small, so watch the quality."
+    }
+  ],
+  "footnote": "Source: Brynjolfsson et al., arXiv preprint v2 (Nov 2024), published in QJE (2025). HBS working paper 24-013 (Sep 2023)",
+  "notes": "The second finding is more interesting: the gains go mostly to beginners and to people who were weaker to begin with. In the support study, the least skilled fifth of agents resolved 36% more issues per hour. The most skilled fifth barely improved, and their resolution rates and customer satisfaction slipped a little. The consulting experiment shows the same pattern: people below average improved 43%, people above average 17%. One more figure: new agents with two months of AI performed like agents with more than six months on the job and no AI. So for new colleagues, AI is a real help. If you're experienced, don't expect it to make you much faster, and keep an eye on whether it pulls your quality down."
+}

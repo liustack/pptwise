@@ -63,6 +63,7 @@ pptwise validate deck.json
 | `brand` | object | Deck logo 的资产 id 与角落位置。 |
 | `branding` | enum | logo 出现在哪里：`full`、`cover-only` 或 `minimal`。省略等于 `cover-only`。 |
 | `footer` | object | 页码以及页面角落的其他小标记。省略就什么都不印。见[页脚标记](#页脚标记)。 |
+| `course` | object | 一场讲授依次经过的几段（`stages`，两到八段，每段一个 `label`，可选 `quiz: true`），比如一堂课的各个环节和小测。每页用自己的 `stage` 说明属于哪一段。 |
 | `slides` | array | 有序页面。 |
 
 根对象是严格结构，未知字段会让验证失败。
@@ -81,6 +82,7 @@ pptwise validate deck.json
 - `fields`，一到四行公文抬头，每行一个 `label`、一个 `value`、可选的 `note`（备忘录封面的致、发、日期、事由，结尾决定下的签发、抄送），以及 `stamp`，盖在页上的一枚印章（`text`，可选的 `date`）。和 `kicker` 一样，只有声明了位置的脸才画
 - `ballot`，委员会在每个条目旁勾选的方框（`choices`，两到四个，比如同意、不同意、弃权），以及可选的一行签字栏（`signature`，签字栏的名字）。只有声明了位置的脸才画
 - `years`，整份 deck 跟踪的一段年份和本页讲到的年份（`from`、`to`、`marked`，比如 2026 到 2034，点亮 2026 和 2027），画成页眉里的一条年份刻度，本页的年份点亮。最多 13 年。只有声明了位置的脸才画
+- `stage`，本页属于 deck 的 `course` 里的哪一段，照那一段的 `label` 写（「环节一」），画成一排胶囊，本页那段点亮，小测段画虚线。需要 deck 写了 `course`，而且必须是其中一段。只有声明了位置的脸才画
 - `components`
 - `background`
 - `decor`，一个受控的局部装饰原语
@@ -243,6 +245,7 @@ pptwise schema --kind data --theme brief
 | `chart.changes` | `[{ "from": "2025 年三季度", "to": "2026 年三季度" }]` 在两根柱上方画一个括号，写两者的变化（相对变化，`%` 轴上写百分点）。写了 `"at": "比亚迪"` 时，`from` 和 `to` 是两个系列名，在这个类别上比较。横条图把变化写在后一根条的数值后面。 | `bar` 和 `stacked`，最多 3 个。横条图必须写 `at`，堆叠图不能写 |
 | `chart.reference` | `{ "value": 1.37, "label": "欧盟基准 1.370" }` 在柱子上横（或竖）画一条虚线，标出一个参照值，比如基准或门槛，图例里写它的名字，数值轴会放大到能装下它。基准这样写，不要画成一根自己的柱子 | 只用于 `bar`，竖柱横条都行 |
 | `chart.series[].data[].note` | 印在柱子数值后面的几个字，用间隔点隔开（「2.34 · 基准线」「€7.68 · 62.36 元」） | 只用于横条 `bar` 和份额条的各段 |
+| `chart.series[].data[].upper` | 只知道一个区间的数值的上端，`y` 是下端：条形实画到 `y`，再用虚线画到 `upper`，标签写两端（「60 至 70」） | 只限横放的 `bar`，且不小于零 |
 | `chart.emphasis_label` | 份额条为标出的那几段写的一行字，用作者自己的话（「第 73 章制品 €93.5 亿，占 69.5%」），放在原本自动算出的合计的位置 | 只用于份额条，至少标出一个系列 |
 | `numbered_cards.items[].emphasis` | 这一页落到的那张卡，卡片填满主色 | 最多一张 |
 | `gantt.items[].text` 与 `emphasis` | 阶段名下面的一行说明，以及这一页说的那一段 | 最多标一段 |
@@ -252,6 +255,9 @@ pptwise schema --kind data --theme brief
 | `callout.title` 与 `callout.tag` | 提示上方一行粗体的小标题（「谁付」），以及正文下面一枚小标签，说明这条提示依据的是什么（`{ "text": "企业口径 · 据报道", "evidence": "company" }`） | |
 | `waterfall.items[].note` | 柱子名称下面一行短注，比如它代表的数量（「3.187 吨」） | |
 | `roadmap.items[].rows[].basis` | 这一行的值依据的是什么，比如还没定下来的预算项写 `"pending"`。尚未确定的值用虚线标出 | |
+| `roadmap.items[].duration` 与 `roadmap.duration_unit` | 每个阶段多长，以及按什么单位算（`15` 与 `"分钟"`），要么每个阶段都写，要么都不写。普通路线图把时长接在时段后面（「环节一 · 15 分钟」），按比例排阶段的脸按时长画出每段的长短 | |
+| `roadmap.items[].checkpoint` 与 `roadmap.items[].points` | 阶段结束时的一次检查（「小测一」），画成卡上的一枚小标签，以及一到三行这一段讲什么 | |
+| `pyramid.layers[].tone` | 这一层是哪种消息（`danger`、`warning`、`success`），色带用主题自己的那种颜色，比如信息分级，从绝不能外传到可以公开。要么每层都写，要么都不写 | |
 | `kpi_cards.items[].value` 写成 `**…**` | 用主题强调色印的那一个数 | |
 | `progress_donuts.items[].detail` 与 `emphasis` | 标签下面一行，写这个完成度背后的金额（「11770 / 13000 亿元」），以及这一页讲的那一个，它的环、数字和标签用强调色 | 最多标一个 |
 | `kpi_cards.items[].tag` | 这个数是什么，用几个字印成数字旁的小标签（`{ "text": "约束性指标" }`）：标出的那个数填满，其余描边，`quiet` 的用灰色 | |

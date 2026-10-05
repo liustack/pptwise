@@ -35,3 +35,16 @@ Settled on the plan page. See the board and engine render in [compositions/waves
 **Why.** A plan that asks for money shows which of its lines are not priced yet.
 
 **What it gave up.** A row's value is two lines at most. One cut there is now marked, as its label already was.
+
+## homeroom, AI-at-work training sample, 2026-10
+
+`items[].duration`, `duration_unit`, `items[].checkpoint` and `items[].points`. Settled on the agenda page (p03): see the board in [compositions/syllabus](../../compositions/syllabus/homeroom.board.png). The round's decisions are in [rounds/2026-10-06-homeroom](../../rounds/2026-10-06-homeroom/README.md).
+
+**What it looks like.** The ordinary roadmap adds a phase's length to its period line (「环节一 · 15 分钟」), its points as a short list under the title and its checkpoint as a tag under them. `syllabus` lays the phases to scale on a bar and rings each checkpoint where its phase ends.
+
+**Why.** A lesson plan is phases with lengths and checks; writing them as fields lets a face lay them to scale.
+
+**What it gave up.**
+
+- A length on every phase or none, in one unit.
+- A page whose roadmap carries any of the four is offered to `syllabus` alone among the hand-set roadmaps.

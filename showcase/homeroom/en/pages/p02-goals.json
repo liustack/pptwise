@@ -1,0 +1,46 @@
+{
+  "stage": "Goals",
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "classroom",
+      "fit": "cover",
+      "caption": "Illustration: a training room (AI-generated)"
+    },
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "list-checks",
+          "title": "Pick the right tasks",
+          "text": "Know where AI really helps, and where it backfires",
+          "tag": {
+            "text": "Part 1"
+          }
+        },
+        {
+          "icon": "shield-alert",
+          "title": "Spot the risks",
+          "text": "Leaks, made-up facts, copyright and labeling",
+          "tag": {
+            "text": "Part 2"
+          }
+        },
+        {
+          "icon": "clipboard-check",
+          "title": "Follow our rules",
+          "text": "Work by our six rules, and check three ways before sending",
+          "tag": {
+            "text": "Part 3"
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "tip",
+      "text": "Before we finish, come back here and tick all three boxes"
+    }
+  ],
+  "notes": "Here's what you'll be able to do by the end. One, pick the right tasks: know which work AI makes faster and better, and which work it gets wrong. Two, spot the risks: leaking company information, invented facts, copyright, and labeling what you publish are the four most common traps. Three, follow our rules: the company has six rules for using AI. We'll go through each one and show you what it rests on."
+}

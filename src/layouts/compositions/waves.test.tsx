@@ -107,3 +107,14 @@ describe("a roadmap row that is not settled", () => {
     expect(compose({ components: roadmap(pending) as unknown as Component[], ctx, rect: BAND }, ["waves"])).toBeNull()
   })
 })
+
+describe("a roadmap's timed phases through compose", () => {
+  it.each([
+    ["a length on each phase", { duration_unit: "weeks", items: ITEMS.map((item, i) => ({ ...item, duration: 4 + i })) }],
+    ["a checkpoint", { items: [{ ...ITEMS[0]!, checkpoint: "Gate review" }, ...ITEMS.slice(1)] }],
+    ["points", { items: [{ ...ITEMS[0]!, points: ["Pilot depots"] }, ...ITEMS.slice(1)] }],
+  ])("is offered to no hand-set roadmap that leaves out %s, so the ordinary roadmap draws it", (_name, roadmapFields) => {
+    const { ctx } = testCtx("brief")
+    expect(compose({ components: [{ type: "roadmap", ...roadmapFields }] as unknown as Component[], ctx, rect: BAND })).toBeNull()
+  })
+})

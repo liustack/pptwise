@@ -63,6 +63,7 @@ pptwise validate deck.json
 | `brand` | object | Deck logo asset id and corner position. |
 | `branding` | enum | Where the logo appears: `full`, `cover-only`, or `minimal`. Omission equals `cover-only`. |
 | `footer` | object | Page number and other small marks in the page corners. Omission prints none. See [Footer marks](#footer-marks). |
+| `course` | object | The stages a talk runs through in order (`stages`, two to eight, each a `label` and an optional `quiz: true`), such as the parts and quizzes of a lesson. Each page names its own `stage`. |
 | `slides` | array | Ordered pages. |
 
 The root object is strict. Unknown fields fail validation.
@@ -81,6 +82,7 @@ Common page fields are:
 - `fields`, one to four header lines a document form prints, each a `label`, a `value` and an optional `note` (a memo's To, From, Date and Re on its cover, Signed and Copied to under its decision), and `stamp`, a stamp pressed on the page (`text`, an optional `date`). Like `kicker`, only a face that declares a place for them draws them
 - `ballot`, the boxes a committee ticks beside each of the page's items (`choices`, two to four, such as For, Against and Abstain) and an optional line left blank to sign (`signature`, its label). Only a face that declares a place for it draws it
 - `years`, the run of years a deck follows and the ones this page is about (`from`, `to`, and `marked`, such as 2026 to 2034 with 2026 and 2027 marked), drawn as a strip of years in the running head with the page's own years lit. At most 13 years. Only a face that declares a place for it draws it
+- `stage`, which stage of the deck's `course` this page belongs to, written as that stage's label ("Part 1"), drawn as the course's strip of pills with this stage lit and a quiz stage dashed. It needs the deck's `course` and must name one of its stages. Only a face that declares a place for it draws it
 - `components`
 - `background`
 - `decor`, one controlled local primitive
@@ -243,6 +245,7 @@ A page usually argues about one thing. These fields let the author say which, an
 | `chart.changes` | `[{ "from": "2025 Q3", "to": "2026 Q3" }]` draws a bracket over two columns with the change between them (relative, or in points on a `%` axis). With `"at": "BYD"`, `from` and `to` name two series compared at that category. A horizontal chart writes the change after the later bar. | `bar` and `stacked`, at most 3. A horizontal chart needs `at`, a stacked one must not have it |
 | `chart.reference` | `{ "value": 1.37, "label": "EU benchmark 1.370" }` draws one value as a dashed line across the bars, such as a benchmark or a threshold, names it in the legend, and grows the value axis to hold it. Write a benchmark this way rather than as a bar of its own | `bar` only, upright or on its side |
 | `chart.series[].data[].note` | a few words printed after a bar's value, after a middle dot ("2.34 · baseline", "€7.68 · ¥62.36") | `bar` on its side and the parts of a share bar only |
+| `chart.series[].data[].upper` | the high end of a value known only as a range, `y` its low end: the bar is solid to `y` and dashed on to `upper`, its label naming both ends ("60–70") | `bar` on its side only, at zero or above |
 | `chart.emphasis_label` | a share bar's line for its marked parts in the author's own words ("Downstream goods €9.35bn, 69.5%"), set where the computed total would stand | a share bar with at least one marked series |
 | `numbered_cards.items[].emphasis` | the one card the page lands on: its pill is filled | at most one |
 | `gantt.items[].text` and `emphasis` | a line under the stretch's label, and the one stretch the page is about | at most one marked |
@@ -252,6 +255,9 @@ A page usually argues about one thing. These fields let the author say which, an
 | `callout.title` and `callout.tag` | a short bold line over the note ("Who pays"), and what the note rests on as a small tag under its text (`{ "text": "Company figure, as reported", "evidence": "company" }`) | |
 | `waterfall.items[].note` | a short line under a bar's label, such as the quantity it stands for ("3.187 t") | |
 | `roadmap.items[].rows[].basis` | what a row's value rests on, such as `"pending"` for a budget line still to be set. A value that is not settled is marked dashed | |
+| `roadmap.items[].duration` and `roadmap.duration_unit` | how long each phase lasts and the unit they are counted in (`15` and `"min"`), on every phase or none. The ordinary roadmap adds the length to the period line ("Part 1 · 15 min"), and a face that lays phases to scale draws each as long as it lasts | |
+| `roadmap.items[].checkpoint` and `roadmap.items[].points` | a check held as the phase ends ("Quiz 1"), as a tag on its card, and one to three short lines on what it covers | |
+| `pyramid.layers[].tone` | what kind of news a level is (`danger`, `warning`, `success`), its band painted in the theme's own ink for it, such as data graded from what must never leave to what is safe. Every level or none | |
 | `kpi_cards.items[].value` written `**…**` | the one figure set in the theme's emphasis | |
 | `progress_donuts.items[].detail` and `emphasis` | a line under a rate's label with the amounts behind it ("1.18 of 1.3 trillion"), and the one rate the page is about, whose ring, figure and label take the emphasis colour | at most one marked |
 | `kpi_cards.items[].tag` | what the figure is, in a few words printed as a small tag with it (`{ "text": "Binding" }`): filled on the marked figure, outlined otherwise, grey when `quiet` | |

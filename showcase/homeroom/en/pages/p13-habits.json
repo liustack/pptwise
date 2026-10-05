@@ -1,0 +1,87 @@
+{
+  "stage": "Part 2",
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "x_title": "Staff who use AI at work who say they have done this",
+        "x_unit": "%"
+      },
+      "tag": {
+        "text": "Corporate survey · self-reported · 32,352 staff, 47 countries",
+        "evidence": "company"
+      },
+      "series": [
+        {
+          "name": "Have done this",
+          "data": [
+            {
+              "x": "Put in less effort, knowing AI is there",
+              "y": 72
+            },
+            {
+              "x": "Used AI output without evaluating it",
+              "y": 66
+            },
+            {
+              "x": "Hid AI use or passed it off as their own",
+              "y": 57
+            },
+            {
+              "x": "Made mistakes at work because of AI",
+              "y": 56
+            },
+            {
+              "x": "Used AI without knowing if allowed",
+              "y": 56
+            },
+            {
+              "x": "Uploaded company data to public AI",
+              "y": 48,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "ban",
+      "title": "Uploaded company data, by policy",
+      "text": "Bans alone don't work. People need tools, rules and training."
+    },
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "x_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Uploaded company data",
+          "data": [
+            {
+              "x": "AI banned",
+              "y": 67,
+              "emphasis": true
+            },
+            {
+              "x": "A usage policy",
+              "y": 56
+            },
+            {
+              "x": "No policy",
+              "y": 33
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: University of Melbourne & KPMG, Trust, attitudes and use of AI: a global study 2025 (Apr 2025)",
+  "notes": "Are these one-offs? Look at a survey of more than 32,000 employees in 47 countries, led by the University of Melbourne with KPMG, asking people who use AI at work. 48% admit uploading company information, such as financial, sales or customer data, to public AI tools. 66% have used AI output without evaluating it. 57% have hidden their use of AI or passed AI work off as their own. 56% have made mistakes at work because of AI, and 56% have used AI without knowing whether it was allowed. Now the number on the right: among staff whose company bans generative AI, the share who had uploaded company information was highest of all, at 67%. It was 56% where there's a usage policy and 33% where there's none. The report's conclusion: bans don't work on their own, and having a policy doesn't guarantee people follow it. People need clear guidance and training. That's why we're here today. Bear in mind these are self-reported, so the real figures may be higher. This is a corporate survey, led by a university."
+}

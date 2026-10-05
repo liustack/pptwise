@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Component } from "@/ir"
+import type { Component, Slide } from "@/ir"
 import type { Tag } from "../../components/tag"
 import type { ComponentCtx } from "../../components/types"
 import type { ContentRect } from "../../render/layout"
@@ -104,6 +104,20 @@ export type CompositionId =
   | "survey"
   | "outlook"
   | "phases"
+  | "objectives"
+  | "syllabus"
+  | "studies"
+  | "cohorts"
+  | "diptych"
+  | "estimates"
+  | "quiz"
+  | "answers"
+  | "cases"
+  | "ranking"
+  | "rules"
+  | "tiers"
+  | "methods"
+  | "blackboard"
 
 /**
  * The type a composition sets its page in.
@@ -194,10 +208,26 @@ export type CompositionId =
  *   what each part means, three routes under their photographs, rules on a
  *   year axis and phases with their budget lines. See `./yearbook.tsx`.
  *
+ * - `lesson`: homeroom's 2026-10 board. A class taught from a handout:
+ *   cards of handout paper rounded 10px over a hairline, their icons in the
+ *   mark, a 4px edge of the correcting pen (the accent) on the card a page is
+ *   about, questions on ruled paper with a red margin, answers stamped in the
+ *   success, danger or warning ink, the recap chalked on a board of the
+ *   primary darkened, a sticky note for the one line to remember, and every
+ *   study's kind in a small pill (a journal's in the success ink, a working
+ *   paper's in the warning ink, a law's in the pen). A composition offered
+ *   this setting draws the shapes that board drew and no other did: goals
+ *   with boxes to tick beside a photograph, a class laid out by the minute,
+ *   studies side by side, the weaker group against the stronger, two studies
+ *   with their charts, expectations against a measurement, a quiz and its
+ *   answers, cases, a ranking with one item broken down, house rules with
+ *   their grounds, levels from the most guarded down, methods under their
+ *   photographs and the blackboard. See `./lesson.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */
@@ -236,6 +266,12 @@ export interface CompositionProps {
    * compositions that place it; the face sets it itself otherwise.
    */
   pageTag?: Tag
+  /**
+   * The page's ballot (`Slide.ballot`), handed to a setting that sets a box
+   * for each choice beside every question: the lesson's quiz. A page with one
+   * is offered to the compositions that draw it alone.
+   */
+  ballot?: Slide["ballot"]
   /**
    * Draws other components in a band of their own, with the compositions the
    * face offered and in the same setting, or returns `null` when none takes

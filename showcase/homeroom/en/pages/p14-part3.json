@@ -1,0 +1,23 @@
+{
+  "stage": "Part 3",
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "clipboard-check",
+          "title": "Six rules, and what each rests on"
+        },
+        {
+          "icon": "layers",
+          "title": "Three grades of data: grade it, then decide"
+        },
+        {
+          "icon": "pencil-line",
+          "title": "Three methods: brief it, set rules, check"
+        }
+      ]
+    }
+  ],
+  "notes": "Part 3 is the heart of today: the company's six rules and three methods that work. The rules aren't there to stop you using AI. They're there so you can use it with confidence."
+}

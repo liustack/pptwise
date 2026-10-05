@@ -1,0 +1,23 @@
+{
+  "stage": "环节三",
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "clipboard-check",
+          "title": "六条规则和每条的依据"
+        },
+        {
+          "icon": "layers",
+          "title": "信息分三级：先分级，再决定"
+        },
+        {
+          "icon": "pencil-line",
+          "title": "三个方法：给资料、讲规矩、逐条核"
+        }
+      ]
+    }
+  ],
+  "notes": "环节三是今天的重点：公司的六条规则和三个好用的方法。规则不是为了不让大家用，而是让大家放心用。"
+}

@@ -762,6 +762,20 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     expect(page({ from: 2026, to: 2034, marked: [] }).ok).toBe(false)
   })
 
+  it("hard-rejects a course stage on a face with no place for it, and refuses a course it cannot read", () => {
+    const course = { stages: [{ label: "目标" }, { label: "环节一" }, { label: "小测一", quiz: true }] }
+    const v = validateIr({ ...raw, course, slides: [{ type: "content", kind: "points", heading: "H", stage: "环节一", components: [{ type: "paragraph", text: "x" }] }] })
+    expect(v.ok).toBe(false)
+    expect(v.errors[0]!.path).toBe("slides.0.stage")
+    expect(v.errors[0]!.message).toMatch(/^face "[a-z-]+" has no place for a course stage/)
+    const deck = (c: unknown) => validateIr({ ...raw, course: c, slides: [{ type: "content", kind: "points", heading: "H", components: [{ type: "paragraph", text: "x" }] }] })
+    expect(deck(course).ok).toBe(true)
+    expect(deck({ stages: [{ label: "环节一" }, { label: "环节一" }] }).errors[0]!.message).toMatch(/repeats "环节一"/)
+    expect(deck({ stages: [{ label: "环节一" }] }).ok).toBe(false)
+    expect(deck({ stages: [{ label: " " }, { label: "环节一" }] }).ok).toBe(false)
+    expect(deck({ stages: Array.from({ length: 9 }, (_, i) => ({ label: `S${i}` })) }).ok).toBe(false)
+  })
+
   it("refuses blank header lines and more than four of them at the schema", () => {
     const blank = validateIr({ ...raw, slides: [{ type: "cover", heading: "H", fields: [{ label: " ", value: "x" }] }] })
     expect(blank.ok).toBe(false)

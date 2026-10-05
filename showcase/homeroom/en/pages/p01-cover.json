@@ -1,0 +1,18 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "classroom"
+  },
+  "components": [
+    {
+      "type": "bullets",
+      "items": [
+        "45 minutes",
+        "3 parts",
+        "2 quizzes",
+        "Homework"
+      ]
+    }
+  ],
+  "notes": "Hello, everyone. Over the next 45 minutes we'll cover how to use generative AI at work safely and well. We won't recommend any tool. We'll cover three things: what work to hand it, what information never to give it, and how to check its work before it goes out. There are two quizzes along the way and a short piece of homework at the end."
+}

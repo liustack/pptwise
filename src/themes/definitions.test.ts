@@ -38,7 +38,7 @@ const BOARD: Record<string, { cover: string; chapter: string; ending: string }> 
   thesis: { cover: "thesis-plate-cover", chapter: "folio-ghost-chapter", ending: "defense-close-ending" },
   ledger: { cover: "stat-cover", chapter: "ghost-section-chapter", ending: "close-word-ending" },
   rally: { cover: "poster-center", chapter: "act-chapter", ending: "pill-cta-ending" },
-  homeroom: { cover: "chalk-band-cover", chapter: "lesson-box-chapter", ending: "homework-close-ending" },
+  homeroom: { cover: "lesson-cover", chapter: "lesson-chapter", ending: "lesson-ending" },
   ink: { cover: "vertical-title-cover", chapter: "volume-slip-chapter", ending: "seal-close-ending" },
   terminal: { cover: "console-cover", chapter: "console-chapter", ending: "console-ending" },
   runway: { cover: "show-headline", chapter: "show-plate", ending: "show-finale" },

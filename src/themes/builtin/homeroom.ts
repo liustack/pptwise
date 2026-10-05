@@ -56,6 +56,20 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 铅笔虚线退役）。
  *
  * **菜单分派（S1-B）**：讲义纸只做讲清楚的七道常规讲法，课堂不喊口号也不刷大数字，宣言、引用、大数字、单证据一律不上。
+ *
+ * **2026-10 样例重做（`design/rounds/2026-10-06-homeroom/`）**：照着定稿画成
+ * 一堂课。封面换成 `lesson-cover`（左半板书深蓝、底边木色板槽，部门和场合、
+ * 白色大标题、粉笔色波浪线、课程信息胶囊和日期，右半教室照片），章节页换成
+ * `lesson-chapter`（通栏板书带，环节名写在描边小框里，作者自己写，不再固定写
+ * LESSON；带下三张卡说这一环节学什么），结尾换成 `lesson-ending`（横线纸上的
+ * 课后作业、黄色便利贴和「作业」印章）。七道内容讲法都走 `lesson-sheet`：左上
+ * 是页面的 `kicker`（单元小标签），右上是 deck 的 `course` 画成的课程进度条，
+ * 本页的 `stage` 点亮，标题 30px 粗体底对齐，下面一道 108px 的批改笔波浪线，
+ * 正文交给 lesson 设定下的构图。页脚归 `homeroom-motif`（左边部门和课程，右边
+ * 「N / M」），上面「横线簿格线 v3」那几句只剩历史意义，格线如今是横线纸题卡
+ * 和作业纸自己的。色板角色不动，讲义雾蓝 #4A6B8A 与批改红 #B96A5E 的对比度裁
+ * 定照旧，小于 24px 的红字和琥珀字由构图逐级压深到读得清。菜单的讲法集合不
+ * 变，上面那条 S1-B 的取舍照旧。
  */
 export const CLASSROOM_TOKENS: StyleTokens = {
   id: "homeroom",
@@ -106,18 +120,18 @@ export const CLASSROOM_THEME = {
   },
   style: CLASSROOM_TOKENS,
   menu: {
-    cover: { face: "chalk-band-cover" },
-    chapter: { face: "lesson-box-chapter" },
+    cover: { face: "lesson-cover" },
+    chapter: { face: "lesson-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "split-band" },
-      photo: { face: "image-top" },
-      hierarchy: { face: "asymmetric-triptych" },
+      points: { face: "lesson-sheet" },
+      list: { face: "lesson-sheet" },
+      comparison: { face: "lesson-sheet" },
+      process: { face: "lesson-sheet" },
+      data: { face: "lesson-sheet" },
+      photo: { face: "lesson-sheet" },
+      hierarchy: { face: "lesson-sheet" },
     },
-    ending: { face: "homework-close-ending" },
+    ending: { face: "lesson-ending" },
   },
   motif: { id: "homeroom-motif" },
 } satisfies BuiltinThemeDeclaration;

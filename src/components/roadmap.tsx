@@ -4,7 +4,7 @@ import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-lay
 import { accessibleInk, graphicInk } from "../render/ink"
 import { Icon } from "../render/icons"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
-import { basisInk, basisUnsettled, TAG_DASH } from "./tag"
+import { basisInk, basisUnsettled, ORDINARY_TAG_HEIGHT, ordinaryTagSpec, paintTag, TAG_DASH, tagInks, tagWidth } from "./tag"
 
 type RoadmapComponent = Extract<Component, { type: "roadmap" }>
 type RoadmapItem = RoadmapComponent["items"][number]
@@ -43,6 +43,12 @@ const TITLE_SIZE = 19
 const TITLE_LH = Math.round(TITLE_SIZE * 1.4)
 const GAP_BADGE_TITLE = 14
 const GAP_TITLE_ROWS = 16
+/** A phase's points (`points`), one line each under its title, and the gap above them. */
+const POINT_SIZE = 16
+const POINT_LH = 24
+const GAP_TITLE_POINTS = 10
+/** The checkpoint's tag (`checkpoint`) under the points, and the gap above it. */
+const GAP_CHECKPOINT = 10
 
 const LABEL_SIZE = 16
 /** The label column's share of the card when the values need the rest. */
@@ -67,6 +73,10 @@ interface RowLayout {
 interface CardLayout {
   period: { text: string; fontSize: number; truncated: boolean } | null
   title: { text: string; fontSize: number; truncated: boolean }
+  /** What the phase covers (`points`), one fitted line each. */
+  points: { text: string; fontSize: number; truncated: boolean }[]
+  /** The check held as the phase ends (`checkpoint`), as a tag under the points. */
+  checkpoint: string | null
   rows: RowLayout[]
   labelColW: number
   contentH: number
@@ -111,15 +121,28 @@ function roundedTopBarPath(x: number, y: number, w: number, h: number, r: number
 // `TITLE_LH`/badge constants, never their own fitted `.fontSize`) but take
 // the same real values for consistency now that this function threads them
 // anyway.
+/**
+ * The phase's period line: its own period, and how long it lasts when the
+ * roadmap times its phases (`duration` in `duration_unit`), after a middle
+ * dot: 「环节一 · 15 分钟」, "Part 1 · 15 min".
+ */
+export function roadmapPeriodText(item: RoadmapItem, unit: string | undefined): string | undefined {
+  const length = item.duration !== undefined && unit ? `${item.duration} ${unit}` : undefined
+  const parts = [item.period?.trim(), length].filter((part): part is string => Boolean(part))
+  return parts.length > 0 ? parts.join(" · ") : undefined
+}
+
 function cardLayout(
   item: RoadmapItem,
   cardW: number,
   headingFontFamily?: string,
   bodyFontFamily?: string,
+  unit?: string,
 ): CardLayout {
   const contentW = cardW - PAD_X * 2
-  const period = item.period
-    ? fitSvgLine(item.period, {
+  const periodText = roadmapPeriodText(item, unit)
+  const period = periodText
+    ? fitSvgLine(periodText, {
         maxWidth: contentW - BADGE_R * 2 - 12,
         fontSize: PERIOD_SIZE,
         minFontSize: 16,
@@ -134,6 +157,10 @@ function cardLayout(
     bold: true,
     fontFamily: headingFontFamily,
   })
+  const points = (item.points ?? []).map((point) =>
+    fitSvgLine(`· ${point}`, { maxWidth: contentW, fontSize: POINT_SIZE, minFontSize: 16, fontFamily: bodyFontFamily }),
+  )
+  const checkpoint = item.checkpoint?.trim() || null
   const rowItems = item.rows ?? []
   // Label column width = widest label plus the gap, clamped so the value
   // column keeps a usable width. The clamp used to be a flat 42% of the card
@@ -184,10 +211,14 @@ function cardLayout(
     BADGE_R * 2 +
     GAP_BADGE_TITLE +
     TITLE_LH +
+    (points.length ? GAP_TITLE_POINTS + points.length * POINT_LH : 0) +
+    (checkpoint ? GAP_CHECKPOINT + ORDINARY_TAG_HEIGHT : 0) +
     (rows.length ? GAP_TITLE_ROWS + rowsH : 0)
   return {
     period,
     title,
+    points,
+    checkpoint,
     rows,
     labelColW,
     contentH,
@@ -211,7 +242,11 @@ function renderCard(
   const cy = y + BADGE_TOP + BADGE_R
   const num = String(index + 1).padStart(2, "0")
   const titleBaseline = y + BADGE_TOP + BADGE_R * 2 + GAP_BADGE_TITLE + TITLE_SIZE
-  let rowY = titleBaseline + GAP_TITLE_ROWS
+  const pointsTop = titleBaseline + (layout.points.length ? GAP_TITLE_POINTS : 0)
+  const checkpointTop = pointsTop + layout.points.length * POINT_LH + GAP_CHECKPOINT
+  let rowY = titleBaseline + (layout.points.length ? GAP_TITLE_POINTS + layout.points.length * POINT_LH : 0) + (layout.checkpoint ? GAP_CHECKPOINT + ORDINARY_TAG_HEIGHT : 0) + GAP_TITLE_ROWS
+  const tagSpec = ordinaryTagSpec(ctx)
+  const checkpointTag = layout.checkpoint ? { text: layout.checkpoint } : null
   return (
     <g key={index}>
       <rect
@@ -285,6 +320,30 @@ function renderCard(
       >
         {layout.title.text}
       </text>
+      {layout.points.map((point, pi) => (
+        <text
+          key={`p${pi}`}
+          data-roadmap-point=""
+          data-truncated={point.truncated ? "1" : undefined}
+          x={x + PAD_X}
+          y={pointsTop + POINT_SIZE + pi * POINT_LH}
+          fontSize={point.fontSize}
+          fill={ctx.colors.muted}
+          fontFamily={ctx.fonts.body}
+          dominantBaseline="alphabetic"
+        >
+          {point.text}
+        </text>
+      ))}
+      {checkpointTag ? (
+        tagWidth(checkpointTag.text, tagSpec) <= cardW - PAD_X * 2 ? (
+          <g data-roadmap-checkpoint="">
+            {paintTag({ tag: checkpointTag, x: x + PAD_X, y: checkpointTop, spec: tagSpec, inks: tagInks(ctx, checkpointTag, false, ctx.colors.surface, tagSpec.size) })}
+          </g>
+        ) : (
+          <g data-dropped={1} data-dropped-kind="label" />
+        )
+      ) : null}
       {layout.rows.map((row, ri) => {
         const rowTop = rowY
         rowY += row.height + ROW_GAP
@@ -344,13 +403,13 @@ export const roadmap: SvgComponent<RoadmapComponent> = {
     const n = component.items.length
     const cardW = (w - GAP * (n - 1)) / n
     return Math.max(
-      ...component.items.map((it) => cardLayout(it, cardW, ctx.fonts.heading, ctx.fonts.body).cardH),
+      ...component.items.map((it) => cardLayout(it, cardW, ctx.fonts.heading, ctx.fonts.body, component.duration_unit).cardH),
     )
   },
   render(component, box, ctx) {
     const n = component.items.length
     const cardW = (box.w - GAP * (n - 1)) / n
-    const layouts = component.items.map((it) => cardLayout(it, cardW, ctx.fonts.heading, ctx.fonts.body))
+    const layouts = component.items.map((it) => cardLayout(it, cardW, ctx.fonts.heading, ctx.fonts.body, component.duration_unit))
     const measuredH = Math.max(...layouts.map((l) => l.cardH))
     // 均分密度拉伸：box.h 由布局分配时，卡高吃满（内容顶对齐，底部留白）。
     const cardH = Math.max(measuredH, box.h ?? measuredH)
