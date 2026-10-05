@@ -74,3 +74,23 @@ The memo setting's form, in [`rows-memo.tsx`](../../../src/layouts/compositions/
 **What it gave up.**
 
 - Three to five `numbered_cards` with no `sub`, or two to five bullets written "Label: text".
+
+## clinic, GLP-1 formulary review sample, 2026-10
+
+The dossier setting's form, in [`rows-dossier.tsx`](../../../src/layouts/compositions/rows-dossier.tsx). Settled on the proposal page (p02) and, as a column of duties, on the pharmacist page (p16). The round's decisions are in [rounds/2026-10-05-clinic](../../rounds/2026-10-05-clinic/README.md).
+
+| board (p02) | engine |
+| :-: | :-: |
+| ![board](clinic-p02.board.png) | ![engine](clinic-p02.engine.png) |
+
+| board (p16) | engine |
+| :-: | :-: |
+| ![board](clinic-p16.board.png) | ![engine](clinic-p16.engine.png) |
+
+**What it looks like.** Each proposal is a card 132px tall across the body: its number after the page's section (「提议 1」, from `kicker`) small, bold and tracked, its icon at 40px under it, its title bold at 24px and its text muted at 16px, and at the right a capsule with the item's `sub` (「依据见第 5 至 13 页」). The proposal the page lands on (`emphasis`) is the card filled with the mark, its words reversed out of it. Beside a photograph, a `row_cards` with an icon on every item becomes a column of duties: the icon on a disc of the mark's tint, the title bold and the text muted under it, hairlines between the rows.
+
+**Why.** A submission states its proposals first, each with where its evidence is, so the committee can turn to it.
+
+**What it gave up.**
+
+- Two or three `numbered_cards`, or three to five `row_cards` with icons and no sub, tone or highlight.

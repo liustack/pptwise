@@ -547,3 +547,72 @@ The tests draw every memo page on memo and on terminal and crayon ([memo.test.ts
 | Turned shapes export turned | a picture or shape inside a rotated group is written with its own rotation round the group's centre, so a turned print stays a picture, cropped and editable | [dispatch.ts](../src/pptx/svg2pptx/dispatch.ts) | [design/faces/memo-cover](../design/faces/memo-cover/README.md) |
 | A serif heading pairs a Latin face | a heading stack of Times New Roman over SimSun writes the pair to PowerPoint, Latin and figures in Times New Roman, Chinese in SimSun, and the preview measures Times New Roman exactly | [fonts.ts](../src/render/fonts.ts), [pptx-ea-fonts.ts](../src/pptx/pptx-ea-fonts.ts), [svg-text-layout.ts](../src/lib/svg-text-layout.ts) | none |
 | A cut row card description is reported | a `row_cards` description past its two lines is marked cut, so the audit reports it | [row-cards.tsx](../src/components/row-cards.tsx) | none |
+
+## clinic GLP-1 formulary review sample, 2026-10
+
+The round redrew clinic to an eighteen-page Chinese and English submission from a hospital pharmacy department to its pharmacy and therapeutics committee: which GLP-1 weight-loss drugs to list, who may prescribe them and under which rules, with the evidence behind each answer, ending on the three items the committee votes on. Its decisions, the design system every clinic page follows, and every place the engine departs from the board are in [`design/rounds/2026-10-05-clinic/`](../design/rounds/2026-10-05-clinic/README.md). The rules are restated for the next design session in [Designing for clinic](./design-clinic.md).
+
+### Compositions
+
+The compositions take an eighth `setting`, `dossier` (`CompositionSetting` in [shared.tsx](../src/layouts/compositions/shared.tsx)): a clinical assessment file. Figures sit on rounded white cards over hairlines, every source is named in a small capsule outlined in its kind's ink, the result a page argues from is in the mark and what it is read against is drawn in outline, the accent draws lines and dots only, and risks and costs take the warning ink. The dossier forms of the settled compositions live beside them (`rows-dossier.tsx`, `table-dossier.tsx`, `lanes-dossier.tsx`, `cards-dossier.tsx`).
+
+New:
+
+| composition | what it draws | takes | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| `readings` | figures on cards, each with its source capsule, the marked one in the mark, over a share bar with the marked parts' total | a `kpi_cards` of two to four with icons, then optionally a share bar. The dossier setting only | [readings.tsx](../src/layouts/compositions/readings.tsx) | clinic | [design/compositions/readings](../design/compositions/readings/README.md) |
+| `inset` | a 400px photograph at the left or right of the band with its caption, the rest of the page beside it drawn by the other compositions | an `image` first or last and one or more components. The dossier setting only | [inset.tsx](../src/layouts/compositions/inset.tsx) | clinic | [design/compositions/inset](../design/compositions/inset/README.md) |
+| `docket` | cases on file, one a row: who reported it and when, what happened, the figure it turns on, bad news in the danger ink | a `kpi_cards` of two to five, each with an icon and a source. The dossier setting only | [docket.tsx](../src/layouts/compositions/docket.tsx) | clinic | [design/compositions/docket](../design/compositions/docket/README.md) |
+| `controlled` | each trial's drug as a solid bar and its control as an outline (or a tick when it moved the other way), the gain over the control at the right | a horizontal `bar` chart of two series, one marked, then a `kpi_cards` with an item per category. The dossier setting only | [controlled.tsx](../src/layouts/compositions/controlled.tsx) | clinic | [design/compositions/controlled](../design/compositions/controlled/README.md) |
+| `duel` | two options' headline figures with bars, their shares as grouped columns under the chart's tag, a row of 「a vs b」 figures | `kpi_cards` of two, an upright `bar` chart of two series, a `data_table` of one to three rows. The dossier setting only | [duel.tsx](../src/layouts/compositions/duel.tsx) | clinic | [design/compositions/duel](../design/compositions/duel/README.md) |
+| `forest` | endpoints in a table with a forest plot of their hazard ratios against a dashed line at 1, the primary endpoint marked, a note card under it | a `data_table` of four columns whose last reads as a ratio, then optionally a `callout` with an icon. The dossier setting only | [forest.tsx](../src/layouts/compositions/forest.tsx) | clinic | [design/compositions/forest](../design/compositions/forest/README.md) |
+| `multiples` | each drug's rates as bars with its control as a tick, one scale a measure, beside risk cards | a `data_table` pairing each drug's row with its control's, then optionally a `row_cards` with icons. The dossier setting only | [multiples.tsx](../src/layouts/compositions/multiples.tsx) | clinic | [design/compositions/multiples](../design/compositions/multiples/README.md) |
+| `fork` | one line to a split, then the marked group on in the mark and the other off dashed with its note, evidence cards beside it | a `line` chart of two series that part, then optional callouts and a `kpi_cards`. The dossier setting only | [fork.tsx](../src/layouts/compositions/fork.tsx) | clinic | [design/compositions/fork](../design/compositions/fork/README.md) |
+| `ruler` | bands on one ticked scale, a row's highest band solid, a breach dashed, a tag at the right of each row | a `comparison` whose cells are ranges, then optionally a `callout`. The dossier setting only | [ruler.tsx](../src/layouts/compositions/ruler.tsx) | clinic | [design/compositions/ruler](../design/compositions/ruler/README.md) |
+| `dumbbells` | before and after as a hollow dot and a dot in the mark, the change at the right, a reminder panel beside them | a `dumbbell` chart of two series, then optionally an `insight_panel`. The dossier setting only | [dumbbells.tsx](../src/layouts/compositions/dumbbells.tsx) | clinic | [design/compositions/dumbbells](../design/compositions/dumbbells/README.md) |
+| `gate` | steps as cards with arrows, dashed lines from the steps that can stop it into a stop box, a note beside it | a `steps` of two to five, then a `warn` callout and optionally an `info` one. The dossier setting only | [gate.tsx](../src/layouts/compositions/gate.tsx) | clinic | [design/compositions/gate](../design/compositions/gate/README.md) |
+| `watch` | a card per kind of check with boxes to tick, a photograph, and the review dates on one axis | a `row_cards` with icons, an `image` and a horizontal `timeline`. The dossier setting only | [watch.tsx](../src/layouts/compositions/watch.tsx) | clinic | [design/compositions/watch](../design/compositions/watch/README.md) |
+
+Settled compositions that grew a dossier form:
+
+- `rows` sets proposals as cards under the page's section (「提议 1」), the marked one filled with the mark, or duties beside a photograph. Board: [design/compositions/rows](../design/compositions/rows/README.md).
+- `table` sets each option's proposal as a capsule that says how settled it is. Board: [design/compositions/table](../design/compositions/table/README.md).
+- `lanes` sets two kinds of event on one calendar, the second lane's labels placed by a search over four tiers. Board: [design/compositions/lanes](../design/compositions/lanes/README.md).
+- `cards` sets rules on cards two by two. Board: [design/compositions/cards](../design/compositions/cards/README.md).
+
+The shared pieces are in [dossier.tsx](../src/layouts/compositions/dossier.tsx): `dossierInks` for the inks, `dossierSeries` for the series inks without the accent, `dossierText` and `dossierOn` for words that read on what they sit on, `dossierSolid` for a solid fill that carries words, `fitDossier`, `paintDossier` and `paintDossierLine` for text at its exact size, `paintDossierTracked` for spaced labels, `chipInk`, `chipWidth` and `paintChip` for a source capsule, `paintDossierCard` and `paintTopEdge` for a card, `paintDossierIcon` for a symbol, `heartbeatPoints` for the heartbeat, and `DOSSIER_SPEC` for the small type's exemption. `paintPhoto` in [inset.tsx](../src/layouts/compositions/inset.tsx) sets a cropped photograph. Any face can call them.
+
+The tests draw every board page on clinic and on ember and crayon ([dossier.test.tsx](../src/layouts/compositions/dossier.test.tsx), [dossier-pages.test.tsx](../src/layouts/compositions/dossier-pages.test.tsx)). The gallery's 构图 band has clinic pages for every new composition and for the dossier forms of `rows`, `table`, `lanes` and `cards`.
+
+### Faces
+
+| face | what it is | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- |
+| `dossier-sheet` | the ordinary content page: the `kicker` beside the heartbeat, the claim bold at 30px over a hairline with a bar of the mark, the page's `tag` as a capsule over the body, the body handed to the compositions in the dossier setting, the source in 12px muted type | [content-dossier-sheet.tsx](../src/layouts/content-dossier-sheet.tsx), [dossier-shared.tsx](../src/layouts/dossier-shared.tsx) | clinic (every content kind on its menu) | [design/faces/dossier-sheet](../design/faces/dossier-sheet/README.md) |
+| `dossier-cover` | the office and its request, the title at 44px, a heartbeat across to a full-height photograph, the header lines from `fields` | [cover-dossier-cover.tsx](../src/layouts/cover-dossier-cover.tsx) | clinic | [design/faces/dossier-cover](../design/faces/dossier-cover/README.md) |
+| `dossier-ending` | the question at 40px, up to four items from `bullets` on numbered cards with their kinds, a box per choice from `ballot`, the `fields` and a line to sign | [ending-dossier-ending.tsx](../src/layouts/ending-dossier-ending.tsx) | clinic | [design/faces/dossier-ending](../design/faces/dossier-ending/README.md) |
+
+### Motif
+
+`clinic-motif` is redrawn: a short heartbeat at the top left of every page but the cover, and on content pages, when the deck asks for a footer, the subject at the top right and a folio (「N / M」) at the foot. It paints the footer row itself. Board: [design/motifs/clinic-motif](../design/motifs/clinic-motif/README.md).
+
+### Page and component fields
+
+| field | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| `tag` on a slide | the evidence the whole page rests on, a capsule the face sets with the heading; refused on a face that has no place for it | [index.ts](../src/ir/index.ts), [validate-core.ts](../src/validate-core.ts) | [design/faces/dossier-sheet](../design/faces/dossier-sheet/README.md) |
+| `ballot` on a slide | the choices a committee votes with and a line to sign; refused on a face that has no place for it | [index.ts](../src/ir/index.ts), [validate-core.ts](../src/validate-core.ts) | [design/faces/dossier-ending](../design/faces/dossier-ending/README.md) |
+| `evidence`, `settled` and `tone` on a tag | the kind of source behind a figure, a verdict that is settled, the kind of news | [shared.ts](../src/ir/components/shared.ts), [tag.tsx](../src/components/tag.tsx) | [design/components/tag](../design/components/tag/README.md) |
+| `tag` on `chart` | a capsule for the evidence one chart rests on | [chart.ts](../src/ir/components/chart.ts), [chart.tsx](../src/components/chart.tsx) | [design/components/chart](../design/components/chart/README.md) |
+| `label_column` and row `icon` on `comparison` | a header for the labels' column, a symbol before a row's label | [comparison.ts](../src/ir/components/comparison.ts), [comparison.tsx](../src/components/comparison.tsx) | [design/components/comparison](../design/components/comparison/README.md) |
+| `icon` on `numbered_cards` items | a symbol between the number and the title | [numbered-cards.ts](../src/ir/components/numbered-cards.ts) | [design/components/numbered_cards](../design/components/numbered_cards/README.md) |
+| `icon` and `tone` on `steps` items | a symbol in place of the number, a ring in the tone's ink for a step that can stop the process | [steps.ts](../src/ir/components/steps.ts), [steps.tsx](../src/components/steps.tsx) | [design/components/steps](../design/components/steps/README.md) |
+| `icon` on `insight_panel` | a symbol before the panel's title | [insight-panel.ts](../src/ir/components/insight-panel.ts) | [design/components/insight_panel](../design/components/insight_panel/README.md) |
+
+### Engine behaviour
+
+| behaviour | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| A word unit stands a space after its figure | a figure's unit is set after a space when it is a word (「6 个」, "4 weeks"), and glued when it is a percent, a magnitude or a multiplier (「80%」「1.2万」「3x」) | [kpi.tsx](../src/components/kpi.tsx) | none |
+| A solid fill carries its words | a fill too light for the words on it steps toward the ink until they read, and on a dark page the words turn dark | [dossier.tsx](../src/layouts/compositions/dossier.tsx) | [design/compositions/readings](../design/compositions/readings/README.md) |
+| A dropped separator is declared | a face that sets text apart at a colon, comma or full stop the author wrote says so on the element (`data-gloss-break`), so the audit reads it back | [ending-dossier-ending.tsx](../src/layouts/ending-dossier-ending.tsx), [forest.tsx](../src/layouts/compositions/forest.tsx), [watch.tsx](../src/layouts/compositions/watch.tsx) | none |

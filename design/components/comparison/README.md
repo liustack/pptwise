@@ -37,3 +37,13 @@ Settled on the options page. See the board and engine render in [compositions/ta
 **Why.** A recommendation is clearer when it says for whom.
 
 **What it gave up.** The `table` composition declines a comparison that carries one.
+
+## clinic, GLP-1 formulary review sample, 2026-10
+
+`label_column`, `rows[].icon`, and tags that say they are settled (`settled`). Settled on the formulary page (p13): see the board in [compositions/table](../../compositions/table/clinic.board.png). The round's decisions are in [rounds/2026-10-05-clinic](../../rounds/2026-10-05-clinic/README.md).
+
+**What it looks like.** `label_column` names the column of row labels (「药品」), where the header stood empty. A row's `icon` stands before its label. A row's tag with `settled: true` is filled, a `quiet` one outlined in grey, and both together a quiet grey fill.
+
+**Why.** A formulary table is read by its first column, and a proposal's tag has to say whether the answer is settled or open.
+
+**What it gave up.** The compositions that set the label column by hand decline a comparison with row icons or a named label column, unless they draw them.
