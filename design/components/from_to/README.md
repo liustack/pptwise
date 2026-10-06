@@ -15,3 +15,15 @@ Settled on the plan page. See the board and engine render in [compositions/targe
 **What it gave up.**
 
 - At most one marked row: validate refuses two.
+
+## proposal, rooftop solar and storage proposal sample, 2026-10
+
+Settled on the storage discount page (p09): see the board and engine render in [compositions/drift](../../compositions/drift/). The round's decisions are in [rounds/2026-10-06-proposal](../../rounds/2026-10-06-proposal/README.md).
+
+**What it looks like.** A row can carry an `icon` before its name and a `note` under it (「CNESA 估算，426 号新政前后」). The ordinary renderer sets the icon before the row's name and the note under it in the muted ink.
+
+**Why.** A measure that moved needs to say who measured it. The note keeps the source on the row it belongs to.
+
+**What it gave up.**
+
+- vermilion's `targets` composition leaves a row with an icon or a note to the ordinary renderer, which draws both.
