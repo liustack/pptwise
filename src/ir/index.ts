@@ -487,6 +487,24 @@ export const CourseSchema = z
     'The stages a talk runs through in order, such as the parts and quizzes of a lesson: { "stages": [{ "label": "目标" }, { "label": "环节一" }, { "label": "小测一", "quiz": true }] }. Each page names its own stage. Drawn only by faces that have a place for a page\'s stage: validate says which.',
   )
 
+/**
+ * A ballot laid over a page's items: the boxes each item can be ticked in,
+ * and a line left blank to sign. Every page type takes it, so the printed
+ * schema keeps it once under `$defs` (`json-schema.ts`).
+ */
+export const BallotSchema = z
+  .object({
+    choices: z
+      .array(nonBlankString("ballot.choices[]"))
+      .min(2)
+      .max(4)
+      .describe('The boxes each item can be ticked in, in order, such as ["同意", "不同意", "弃权"] or ["For", "Against", "Abstain"].'),
+    signature: nonBlankString("ballot.signature")
+      .optional()
+      .describe('The label of a line left blank to sign under the items, such as "委员会主任委员签字" or "Chair\'s signature".'),
+  })
+  .strict()
+
 const CommonSlideFields = {
   // 稳定页标识（W5 spec/assemble 注入，裸 IR 可省）。schema 层不做跨 slide
   // 校验——同 deck 内重复 id 是 validateIr 的硬错误。
@@ -544,20 +562,7 @@ const CommonSlideFields = {
    * in, and a line left blank to sign. Only a face that declares a place for
    * it draws it.
    */
-  ballot: z
-    .object({
-      choices: z
-        .array(nonBlankString("ballot.choices[]"))
-        .min(2)
-        .max(4)
-        .describe('The boxes each item can be ticked in, in order, such as ["同意", "不同意", "弃权"] or ["For", "Against", "Abstain"].'),
-      signature: nonBlankString("ballot.signature")
-        .optional()
-        .describe('The label of a line left blank to sign under the items, such as "委员会主任委员签字" or "Chair\'s signature".'),
-    })
-    .strict()
-    .optional()
-    .describe(
+  ballot: BallotSchema.optional().describe(
       'A ballot laid over the page\'s items, so a committee can vote on each one: the boxes each item can be ticked in, and an optional line left blank to sign. Drawn only by faces that have a place for it: validate says which.',
     ),
   /**

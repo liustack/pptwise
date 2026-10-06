@@ -3,13 +3,13 @@
  *
  * `z.toJSONSchema` inlines every shared fragment by default. The IR reuses
  * the 62-member component union on all four page types and the 1,758-name
- * icon enum on five fields, so the naive output ran to 2.6 MB. Six
+ * icon enum on five fields, so the naive output ran to 2.6 MB. Seven
  * fragments carry a stable `id` in zod's registry instead, which makes the
  * emitter hoist each into `$defs` once and point at it by name: every
  * component under its own type name, the union as `Component`, the icon
  * enum as `IconName`, the tag that rows, figures, cards, charts and pages
  * share as `Tag`, the kind of news a figure, row or milestone is as `Tone`,
- * and a page's strip of years as `Years`. Named refs are what let `componentJsonSchema` cut
+ * a page's strip of years as `Years`, and a page's ballot as `Ballot`. Named refs are what let `componentJsonSchema` cut
  * one component out with exactly the `$defs` it needs.
  *
  * The ids are attached to the existing schema instances through the same
@@ -19,13 +19,14 @@
 import { z } from "zod"
 import { PptwiseError } from "../errors"
 import { IconNameSchema, TagSchema, ToneSchema } from "./components/shared"
-import { COMPONENT_TYPES, ComponentSchema, PptxIRSchema, YearsSchema } from "./index"
+import { BallotSchema, COMPONENT_TYPES, ComponentSchema, PptxIRSchema, YearsSchema } from "./index"
 
 export const COMPONENT_UNION_DEF_ID = "Component"
 export const ICON_NAME_DEF_ID = "IconName"
 export const TAG_DEF_ID = "Tag"
 export const TONE_DEF_ID = "Tone"
 export const YEARS_DEF_ID = "Years"
+export const BALLOT_DEF_ID = "Ballot"
 
 /** What the model view says where the closed enum used to be. */
 export const ICON_NAME_MODEL_DESCRIPTION =
@@ -45,6 +46,7 @@ function registerDefIds(): void {
   withId(TagSchema, TAG_DEF_ID)
   withId(ToneSchema, TONE_DEF_ID)
   withId(YearsSchema, YEARS_DEF_ID)
+  withId(BallotSchema, BALLOT_DEF_ID)
   withId(ComponentSchema, COMPONENT_UNION_DEF_ID)
   for (const option of ComponentSchema.options) withId(option, option.shape.type.value)
   idsRegistered = true

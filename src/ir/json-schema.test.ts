@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { validateIr } from "@/api"
 import { COMPONENT_TYPES } from "@/ir"
 import {
+  BALLOT_DEF_ID,
   COMPONENT_UNION_DEF_ID,
   ICON_NAME_DEF_ID,
   TAG_DEF_ID,
@@ -19,6 +20,7 @@ import {
  * moving every `$ref` that pointed at it.
  */
 const EXPECTED_DEFS = [
+  "Ballot",
   "Component",
   "IconName",
   "Tag",
@@ -117,7 +119,7 @@ describe("irJsonSchema", () => {
   it("hoists every component, the component union, the icon enum, the shared tag and the strip of years into named $defs", () => {
     const schema = irJsonSchema()
     expect(Object.keys(defsOf(schema)).sort()).toEqual(EXPECTED_DEFS)
-    expect(EXPECTED_DEFS).toEqual([COMPONENT_UNION_DEF_ID, ICON_NAME_DEF_ID, TAG_DEF_ID, TONE_DEF_ID, YEARS_DEF_ID, ...[...COMPONENT_TYPES].sort()])
+    expect(EXPECTED_DEFS).toEqual([BALLOT_DEF_ID, COMPONENT_UNION_DEF_ID, ICON_NAME_DEF_ID, TAG_DEF_ID, TONE_DEF_ID, YEARS_DEF_ID, ...[...COMPONENT_TYPES].sort()])
   })
 
   it("keeps each use site's own words about its tag beside the shared definition", () => {
@@ -134,6 +136,12 @@ describe("irJsonSchema", () => {
     expect(tone.$ref).toBe(`#/$defs/${TONE_DEF_ID}`)
     expect(tone.description).toMatch(/^What kind of step it is/)
     expect(steps.$defs).toHaveProperty(TONE_DEF_ID)
+  })
+
+  it("keeps the page's ballot once, every page type pointing at it beside its own description", () => {
+    const json = JSON.stringify(irJsonSchema())
+    expect(json.match(new RegExp(`"\\$ref":"#/\\$defs/${BALLOT_DEF_ID}"`, "g"))).toHaveLength(4)
+    expect(json.match(/The boxes each item can be ticked in, in order/g)).toHaveLength(1)
   })
 
   it("stays under the context budget in both print modes", () => {
