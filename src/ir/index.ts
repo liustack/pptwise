@@ -792,7 +792,7 @@ export type ChartSeries = {
     status?: "forecast" | "target"
     /** Bar only: the one bar the page is about. It keeps its series' colour and the other bars step back. */
     emphasis?: boolean
-    /** Bars on their side and share-bar parts only: a few words printed with the value. */
+    /** Bars on their side, share-bar parts and line points only: a few words printed with the value. */
     note?: string
     /** Bars on their side only: the high end of a value known only as a range, `y` its low end. */
     upper?: number

@@ -2329,10 +2329,12 @@ describe("a bar's note", () => {
     expect(texts.some((t) => t.includes("7 tCO₂ · 绿电降的是这段"))).toBe(true)
   })
 
-  it("is refused where a bar has no line after its value", () => {
+  it("is refused where a bar has no line after its value and no point stands for it", () => {
     expect(chartSchema.safeParse(routes).success).toBe(true)
     expect(chartSchema.safeParse({ ...routes, direction: undefined }).success).toBe(false)
-    expect(chartSchema.safeParse({ ...routes, chart_type: "line", direction: undefined }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...routes, chart_type: "area", direction: undefined }).success).toBe(false)
+    // A line takes it beside its point.
+    expect(chartSchema.safeParse({ ...routes, chart_type: "line", direction: undefined }).success).toBe(true)
   })
 })
 
@@ -2436,5 +2438,34 @@ describe("a chart's title", () => {
     const a = svg(renderDef.render(bare, { ...box, h: 360 }, ctx)).container.innerHTML
     const b = svg(chart.render(bare, { ...box, h: 360 }, ctx)).container.innerHTML
     expect(a).toBe(b)
+  })
+})
+
+describe("a note on a point of a line", () => {
+  const ratio = [2.87, 2.75, 2.65, 2.55, 2.53, 2.57, 2.65, 2.69, 2.67, 2.63, 2.59]
+  const line = (notes: Record<number, string>) => ({
+    type: "chart" as const,
+    chart_type: "line" as const,
+    series: [{ name: "比值", data: ratio.map((y, i) => ({ x: String(2015 + i), y, ...(notes[i] ? { note: notes[i] } : {}) })) }],
+  })
+
+  it("is accepted on a line and still refused on an upright bar", () => {
+    expect(chartSchema.safeParse(line({ 4: "最低" })).success).toBe(true)
+    expect(chartSchema.safeParse({ ...line({ 4: "最低" }), chart_type: "bar" }).success).toBe(false)
+  })
+
+  it("prints an interior note with its value, under a low point and over a high one", () => {
+    const { container } = svg(chart.render(line({ 4: "最低", 7: "回升" }), { ...box, h: 360 }, ctx))
+    const notes = Array.from(container.querySelectorAll("[data-point-note]"))
+    expect(notes.map((el) => el.textContent)).toEqual(["最低 2.53", "回升 2.69"])
+    const dots = Array.from(container.querySelectorAll("polyline"))[0]!.getAttribute("points")!.split(" ").map((p) => p.split(",").map(Number))
+    const [low, high] = notes
+    expect(Number(low!.getAttribute("y"))).toBeGreaterThan(dots[4]![1]!)
+    expect(Number(high!.getAttribute("y"))).toBeLessThan(dots[7]![1]!)
+  })
+
+  it("prints only the note by the first and last points, whose value the gutter prints", () => {
+    const { container } = svg(chart.render(line({ 0: "起点" }), { ...box, h: 360 }, ctx))
+    expect(Array.from(container.querySelectorAll("[data-point-note]")).map((el) => el.textContent)).toEqual(["起点"])
   })
 })

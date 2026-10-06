@@ -1614,6 +1614,69 @@ export function renderBar(
   )
 }
 
+/**
+ * The few words an author writes on a point of a line (`data[].note`), such
+ * as 「最低」 on the lowest year or 「回升」 on the year it recovers. An
+ * interior point prints its note and its value; the first and last points
+ * already print their value in the gutter, so only the note stands by them.
+ * A point lower than the points beside it takes its words under it and any
+ * other point over it, so they never sit on the line that runs into it.
+ */
+function renderLineNotes({
+  component,
+  seriesEnds,
+  categories,
+  n,
+  fill,
+  fontFamily,
+  figures,
+}: {
+  component?: ChartInput
+  seriesEnds: readonly { s: { seriesIndex: number }; resolved: readonly { i: number; x: number; y: number; value: number }[] }[]
+  categories: readonly { x: string | number }[]
+  n: number
+  fill: string | undefined
+  fontFamily?: string
+  figures: FigureStyle | boolean
+}): ReactElement | null {
+  if (!component) return null
+  const labels: ReactElement[] = []
+  for (const end of seriesEnds) {
+    const source = component.series[end.s.seriesIndex]
+    if (!source) continue
+    end.resolved.forEach((point, k) => {
+      const note = source.data.find((d) => String(d.x) === String(categories[point.i]!.x))?.note?.trim()
+      if (!note) return
+      const edge = k === 0 || k === end.resolved.length - 1
+      const prev = end.resolved[k - 1]
+      const next = end.resolved[k + 1]
+      const low = (prev !== undefined || next !== undefined) && (!prev || prev.value > point.value) && (!next || next.value > point.value)
+      const text = edge ? note : `${note} ${chartFigure(point.value, figures)}`
+      labels.push(
+        <text
+          key={`note-${end.s.seriesIndex}-${point.i}`}
+          data-value-label="1"
+          data-point-note=""
+          x={point.x}
+          y={low ? point.y + LINE_NOTE_GAP + VALUE_FONT_SIZE * 0.8 : point.y - LINE_NOTE_GAP}
+          textAnchor={edgeAnchor(point.i, n)}
+          fontSize={VALUE_FONT_SIZE}
+          fontWeight={VALUE_FONT_WEIGHT}
+          fontFamily={fontFamily}
+          fill={fill}
+          dominantBaseline="alphabetic"
+        >
+          {text}
+        </text>,
+      )
+    })
+  }
+  return labels.length > 0 ? <g data-line-notes="">{labels}</g> : null
+}
+
+/** Air between a noted point and the words over or under it. */
+const LINE_NOTE_GAP = 10
+
 export function renderLine(
   series: ChartSeries[],
   palette: string[],
@@ -1913,6 +1976,15 @@ export function renderLine(
             {...(crowded && bgHex ? { stroke: bgHex, strokeWidth: 1 } : {})}
           />
         )
+      })}
+      {renderLineNotes({
+        component,
+        seriesEnds,
+        categories,
+        n: categories.length,
+        fill: directLabelInk(textColor, bgHex),
+        fontFamily,
+        figures: meta.figures,
       })}
       {renderSeriesGutterLabels({
         labels: gutterLabels,

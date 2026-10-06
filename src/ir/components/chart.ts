@@ -37,7 +37,7 @@ const ChartPointSchema = z
       .min(1)
       .optional()
       .describe(
-        'A few words printed with the bar\'s value, such as "基准线", "低约 37%" or "62.36 元". Bars on their side (bar with direction "horizontal") and the parts of a share bar only.',
+        'A few words printed with the value, such as "基准线", "低约 37%" or "62.36 元": after the value of a bar on its side or a share bar\'s part, and beside a point of a line, such as "最低" on its lowest year or "回升" on the year it recovers. Bars on their side (bar with direction "horizontal"), the parts of a share bar and lines only.',
       ),
     /** The high end of a value only known as a range. See the describe below. */
     upper: z
@@ -519,8 +519,8 @@ export const schema = z
       })
     }
     // A note is printed after a bar's value, which only a bar on its side
-    // and a share bar's part have a line for.
-    const noted = (c.chart_type === "bar" && c.direction === "horizontal") || isShareBar(c)
+    // and a share bar's part have a line for, or beside a point of a line.
+    const noted = (c.chart_type === "bar" && c.direction === "horizontal") || isShareBar(c) || c.chart_type === "line"
     if (!noted) {
       c.series.forEach((s, si) =>
         s.data.forEach((d, di) => {
@@ -528,7 +528,7 @@ export const schema = z
           ctx.addIssue({
             code: "custom",
             path: ["series", si, "data", di, "note"],
-            message: `a note is printed after a bar's value, on a bar chart on its side or a share bar, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart has no line for it. Use chart_type "bar" with direction "horizontal", or say it in the category's name.`,
+            message: `a note is printed after a bar's value, on a bar chart on its side or a share bar, or beside a point of a line, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart has no place for it. Use chart_type "bar" with direction "horizontal" or "line", or say it in the category's name.`,
           })
         }),
       )
