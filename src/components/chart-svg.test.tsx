@@ -2347,3 +2347,35 @@ describe("value bands", () => {
     expect(Number(band.getAttribute("y"))).toBeGreaterThanOrEqual(0)
   })
 })
+
+describe("a point the gaps leave alone", () => {
+  // B has no 2020, so its 2019 point stands between the axis and a gap.
+  const gapped: ChartSeries[] = [
+    { name: "A", data: [{ x: "2019", y: 1 }, { x: "2020", y: 2 }, { x: "2021", y: 3 }, { x: "2022", y: 4 }] },
+    { name: "B", data: [{ x: "2019", y: 4 }, { x: "2021", y: 2 }, { x: "2022", y: 1 }] },
+  ]
+
+  it("is drawn as a dot in its series' colour on a line chart, where its start value points", () => {
+    const { container } = svg(renderLine(gapped, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const lone = Array.from(container.querySelectorAll("[data-lone-point]"))
+    expect(lone).toHaveLength(1)
+    expect(lone[0]!.getAttribute("fill")).toBe(PALETTE[1])
+    // B's line runs only from 2021 to 2022, and its 2019 value is the dot's.
+    const lines = Array.from(container.querySelectorAll("polyline")).map((p) => p.getAttribute("points")!.trim().split(/\s+/).length)
+    expect(lines.sort()).toEqual([2, 4])
+  })
+
+  it("is drawn as a dot on an area chart", () => {
+    const { container } = svg(renderArea(gapped, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    expect(container.querySelectorAll("[data-lone-point]")).toHaveLength(1)
+  })
+
+  it("leaves a series' last point to its endpoint dot", () => {
+    const tail: ChartSeries[] = [
+      { name: "A", data: [{ x: "1", y: 1 }, { x: "2", y: 2 }, { x: "3", y: 3 }] },
+      { name: "B", data: [{ x: "1", y: 2 }, { x: "3", y: 1 }] },
+    ]
+    const { container } = svg(renderLine(tail, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    expect(container.querySelectorAll("[data-lone-point]")).toHaveLength(1)
+  })
+})

@@ -1956,16 +1956,22 @@ export function renderLine(
                 />
               </>
             )}
-            {runs.map((run, runIdx) => (
-              <polyline
-                key={`ln-${runIdx}`}
-                data-plot-mark="1"
-                points={run.map((c) => `${c.x},${c.y}`).join(" ")}
-                fill="none"
-                stroke={palette[sIdx % palette.length]}
-                strokeWidth={2}
-              />
-            ))}
+            {runs.map((run, runIdx) =>
+              // A point the gaps leave alone has no line to sit on, so it is a
+              // dot; the series' last point already carries its endpoint dot.
+              run.length === 1 && run[0] !== last ? (
+                <circle key={`ln-${runIdx}`} data-plot-mark="1" data-lone-point="1" cx={run[0]!.x} cy={run[0]!.y} r={ENDPOINT_DOT_R} fill={palette[sIdx % palette.length]} />
+              ) : (
+                <polyline
+                  key={`ln-${runIdx}`}
+                  data-plot-mark="1"
+                  points={run.map((c) => `${c.x},${c.y}`).join(" ")}
+                  fill="none"
+                  stroke={palette[sIdx % palette.length]}
+                  strokeWidth={2}
+                />
+              ),
+            )}
           </g>
         )
       })}
@@ -3622,16 +3628,21 @@ export function renderArea(
                 stroke="none"
               />
             ))}
-            {runs.map((run, ri) => (
-              <polyline
-                key={`ln-${ri}`}
-                data-plot-mark="1"
-                points={run.map((c) => `${c.x},${c.y}`).join(" ")}
-                fill="none"
-                stroke={color}
-                strokeWidth={2}
-              />
-            ))}
+            {runs.map((run, ri) =>
+              // A point the gaps leave alone has no line or fill to show it, so it is a dot.
+              run.length === 1 ? (
+                <circle key={`ln-${ri}`} data-plot-mark="1" data-lone-point="1" cx={run[0]!.x} cy={run[0]!.y} r={ENDPOINT_DOT_R} fill={color} />
+              ) : (
+                <polyline
+                  key={`ln-${ri}`}
+                  data-plot-mark="1"
+                  points={run.map((c) => `${c.x},${c.y}`).join(" ")}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={2}
+                />
+              ),
+            )}
           </g>
         )
       })}
