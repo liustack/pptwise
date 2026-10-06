@@ -5,9 +5,10 @@ import type { LayoutDefinition } from "../layouts/registry"
 import { renderComponent, measureComponent } from "../components"
 import { layoutContentFit, stackBottom } from "./layout"
 import { DroppedContentMarker } from "./drop-marker"
+import { CaptionText, fitCaptionLine } from "./caption-line"
 import { bleedSlotCanHost, findImageSelection, singlePictureExact } from "../layouts/find-image"
 import { CANVAS_W_PX, CANVAS_H_PX } from "../constants"
-import { layoutSvgText, fitSvgLine } from "../lib/svg-text-layout"
+import { layoutSvgText } from "../lib/svg-text-layout"
 import { scaleTypePx } from "./heading-fit"
 import {
   fitEmphasisHeading,
@@ -579,26 +580,12 @@ export function ImageSplitPage({
       )}
       {imageComponent.caption &&
         (() => {
-          const fitted = fitSvgLine(imageComponent.caption, {
-            maxWidth: imageW - 48,
-            fontSize: 16,
-            minFontSize: 16,
-          })
+          const fitted = fitCaptionLine(imageComponent.caption, imageW - 48)
+          if (!fitted) return null
           return (
             <>
               <rect x={imgX} y={SPLIT_IMG_H - 44} width={imageW} height={44} fill="#0A0E14" fillOpacity={0.62} />
-              <text
-                data-truncated={fitted.truncated ? "1" : undefined}
-                x={imgX + 24}
-                y={SPLIT_IMG_H - 17}
-                fontSize={fitted.fontSize}
-                fontFamily={ctx.fonts.body}
-                fill="#FFFFFF"
-                fillOpacity={0.92}
-                dominantBaseline="alphabetic"
-              >
-                {fitted.text}
-              </text>
+              <CaptionText fitted={fitted} ctx={ctx} x={imgX + 24} y={SPLIT_IMG_H - 17} fill="#FFFFFF" fillOpacity={0.92} ground="#0A0E14" />
             </>
           )
         })()}
@@ -708,22 +695,12 @@ function NoticeSplitPage({
       )}
       {imageComponent.caption &&
         (() => {
-          const fitted = fitSvgLine(imageComponent.caption, { maxWidth: NOTICE_SPLIT.imageW - 48, fontSize: 16, minFontSize: 16 })
+          const fitted = fitCaptionLine(imageComponent.caption, NOTICE_SPLIT.imageW - 48)
+          if (!fitted) return null
           return (
             <>
               <rect x={imgX} y={H - 44} width={NOTICE_SPLIT.imageW} height={44} fill="#0A0E14" fillOpacity={0.62} />
-              <text
-                data-truncated={fitted.truncated ? "1" : undefined}
-                x={imgX + 24}
-                y={H - 17}
-                fontSize={fitted.fontSize}
-                fontFamily={ctx.fonts.body}
-                fill="#FFFFFF"
-                fillOpacity={0.92}
-                dominantBaseline="alphabetic"
-              >
-                {fitted.text}
-              </text>
+              <CaptionText fitted={fitted} ctx={ctx} x={imgX + 24} y={H - 17} fill="#FFFFFF" fillOpacity={0.92} ground="#0A0E14" />
             </>
           )
         })()}
@@ -796,22 +773,12 @@ function GridTopPage({ ir, slide, index, ctx, page }: { ir: PptxIR; slide: Slide
       )}
       {imageComponent.caption &&
         (() => {
-          const fitted = fitSvgLine(imageComponent.caption, { maxWidth: GRID_W, fontSize: 16, minFontSize: 16 })
+          const fitted = fitCaptionLine(imageComponent.caption, GRID_W)
+          if (!fitted) return null
           return (
             <>
               <rect x={0} y={imgH - 44} width={W} height={44} fill="#0A0E14" fillOpacity={0.62} />
-              <text
-                data-truncated={fitted.truncated ? "1" : undefined}
-                x={GRID_LEFT}
-                y={imgH - 17}
-                fontSize={fitted.fontSize}
-                fontFamily={fonts.body}
-                fill="#FFFFFF"
-                fillOpacity={0.92}
-                dominantBaseline="alphabetic"
-              >
-                {fitted.text}
-              </text>
+              <CaptionText fitted={fitted} ctx={ctx} x={GRID_LEFT} y={imgH - 17} fill="#FFFFFF" fillOpacity={0.92} ground="#0A0E14" />
             </>
           )
         })()}
@@ -999,26 +966,12 @@ export function ImageTopPage({
           剩下像素，作者写的那行字一个字都没上过页。 */}
       {imageComponent.caption &&
         (() => {
-          const fitted = fitSvgLine(imageComponent.caption, {
-            maxWidth: W - BAND_PAD_X * 2,
-            fontSize: 16,
-            minFontSize: 16,
-          })
+          const fitted = fitCaptionLine(imageComponent.caption, W - BAND_PAD_X * 2)
+          if (!fitted) return null
           return (
             <>
               <rect x={0} y={imgH - 44} width={W} height={44} fill="#0A0E14" fillOpacity={0.62} />
-              <text
-                data-truncated={fitted.truncated ? "1" : undefined}
-                x={BAND_PAD_X}
-                y={imgH - 17}
-                fontSize={fitted.fontSize}
-                fontFamily={ctx.fonts.body}
-                fill="#FFFFFF"
-                fillOpacity={0.92}
-                dominantBaseline="alphabetic"
-              >
-                {fitted.text}
-              </text>
+              <CaptionText fitted={fitted} ctx={ctx} x={BAND_PAD_X} y={imgH - 17} fill="#FFFFFF" fillOpacity={0.92} ground="#0A0E14" />
             </>
           )
         })()}
@@ -1273,7 +1226,7 @@ function ImageAnnotateSoloPage({
   // face's caption line as well would print it twice.
   const caption =
     imageComponent.caption && !device
-      ? fitSvgLine(imageComponent.caption, { maxWidth: 620, fontSize: 16, minFontSize: 16 })
+      ? fitCaptionLine(imageComponent.caption, 620)
       : null
 
   // 竖向从上往下紧排，间距是常量而非「剩余空间的一份」。
@@ -1416,18 +1369,15 @@ function ImageAnnotateSoloPage({
         </>
       )}
       {caption && (
-        <text
-          data-truncated={caption.truncated ? "1" : undefined}
+        <CaptionText
+          fitted={caption}
+          ctx={ctx}
           x={hasNotes ? frameX : W / 2}
           y={bodyTop + frameH + ANN_CAPTION_DROP}
-          textAnchor={hasNotes ? "start" : "middle"}
-          fontSize={caption.fontSize}
-          fontFamily={ctx.fonts.body}
+          anchor={hasNotes ? "start" : "middle"}
           fill={ctx.colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {caption.text}
-        </text>
+          ground={ctx.defaultBg ?? ctx.colors.bg}
+        />
       )}
       {notes.map((note, i) => (
         <g key={i}>
@@ -1626,27 +1576,12 @@ export function ImageBottomPage({
       )}
       {imageComponent.caption &&
         (() => {
-          const fitted = fitSvgLine(imageComponent.caption, {
-            maxWidth: W - 240,
-            fontSize: 16,
-            minFontSize: 16,
-          })
+          const fitted = fitCaptionLine(imageComponent.caption, W - 240)
+          if (!fitted) return null
           return (
             <>
               <rect x={0} y={captionBottom - 40} width={W} height={40} fill="#0A0E14" fillOpacity={0.55} />
-              <text
-                data-truncated={fitted.truncated ? "1" : undefined}
-                x={W / 2}
-                y={captionBottom - 15}
-                textAnchor="middle"
-                fontSize={fitted.fontSize}
-                fontFamily={ctx.fonts.body}
-                fill="#FFFFFF"
-                fillOpacity={0.92}
-                dominantBaseline="alphabetic"
-              >
-                {fitted.text}
-              </text>
+              <CaptionText fitted={fitted} ctx={ctx} x={W / 2} y={captionBottom - 15} anchor="middle" fill="#FFFFFF" fillOpacity={0.92} ground="#0A0E14" />
             </>
           )
         })()}

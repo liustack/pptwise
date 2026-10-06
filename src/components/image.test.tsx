@@ -178,3 +178,18 @@ describe("a numbered image", () => {
     expect(caption.querySelector("[data-exhibit-label]")!.getAttribute("font-weight")).toBe("700")
   })
 })
+
+describe("image caption marks", () => {
+  it("paints a marked run of the caption as a run, not its asterisks, and keeps an exhibit number bold before it", () => {
+    const marked = { type: "image" as const, asset_id: "hero", fit: "contain" as const, caption: "示意图：**车间里的老工人**（AI 生成）" }
+    const { container } = svg(image.render(marked, { x: 0, y: 0, w: 1120 }, ctx))
+    const line = Array.from(container.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("车间里的老工人"))!
+    expect(line.textContent).toBe("示意图：车间里的老工人（AI 生成）")
+    const run = Array.from(line.querySelectorAll("tspan")).find((t) => t.textContent === "车间里的老工人")!
+    expect(run.getAttribute("font-weight")).not.toBeNull()
+    const numbered = svg(image.render(marked, { x: 0, y: 0, w: 1120 }, { ...ctx, exhibitLabels: new Map([[marked, "图 1"]]) }))
+    const lead = numbered.container.querySelector("[data-exhibit-label]")!
+    expect(lead.textContent).toBe("图 1")
+    expect(lead.closest("text")!.textContent).toBe("图 1　示意图：车间里的老工人（AI 生成）")
+  })
+})
