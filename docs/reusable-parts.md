@@ -678,7 +678,7 @@ The tests draw every board page on almanac and on ember and crayon ([yearbook-pa
 | :-- | :-- | :-- | :-- |
 | A cut roadmap value is reported | a roadmap row's value past its two lines is marked cut, so the audit reports it | [roadmap.tsx](../src/components/roadmap.tsx) | none |
 | Accent words over a photograph read | on the shared photo cover and chapter, the accent the marked words and a chapter's number take is lifted toward white until it reads over the darkened photograph | [image-pages.tsx](../src/render/image-pages.tsx), [ink.ts](../src/render/ink.ts) (`liftedInk`) | none |
-| A bar legend names only colours on the page | in a bar chart with one bar marked, the swatch of a series whose bars all step back to grey is that grey | [chart.tsx](../src/components/chart.tsx) | none |
+| A bar legend names each series in the colour its bars are drawn in | in a bar chart with one bar marked, a swatch takes the fill of the bars it names: the grey they step back to for any series with a bar besides the marked one, and the series' own colour only when the marked bar is its one bar. A Forecast or Target entry follows its bars the same way | [chart.tsx](../src/components/chart.tsx) | none |
 
 ## homeroom AI-at-work training sample, 2026-10
 

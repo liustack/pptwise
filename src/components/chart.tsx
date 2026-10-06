@@ -288,9 +288,10 @@ const LEGEND_LINE_SWATCH_H = 3;
  *
  * A bar chart with one bar marked (`data[].emphasis`) is the same case: the
  * marked bar keeps its series' colour and every other bar recedes to grey
- * (`markedPointFill`, `chart-svg.tsx`). A series none of whose bars is the
- * marked one is drawn all in that grey, and its swatch is that grey too
- * (`receded`), so no swatch names a colour no bar on the page has.
+ * (`markedPointFill`, `chart-svg.tsx`). A swatch then takes the fill of the
+ * bars it names (`markedBarSwatch`), so it is that grey for any series with
+ * a bar other than the marked one. Named in its own colour, such a series
+ * left its grey bars looking like another series' bars.
  */
 function legendSwatchFill(
   component: ChartComponent,
@@ -298,18 +299,34 @@ function legendSwatchFill(
   palette: string[],
   mutedColor: string,
   accentColor: string,
-  receded: string | null = null
+  receded: string
 ): string {
   if (component.chart_type === "dumbbell")
     return seriesIndex === 0 ? mutedColor : accentColor;
-  if (receded !== null) return receded;
-  return palette[seriesIndex % palette.length]!;
+  return markedBarSwatch(component, seriesIndex, palette, receded);
 }
 
-/** The series of the one bar a bar chart marks (`data[].emphasis`), or -1. */
-function markedBarSeries(component: ChartComponent): number {
-  if (component.chart_type !== "bar") return -1;
-  return component.series.findIndex((s) => s.data.some((d) => d.emphasis === true));
+/**
+ * The fill a legend entry's bars are drawn in, in a bar chart with one bar
+ * marked: the series' own colour only when every bar the entry names is the
+ * marked one, and otherwise the grey every other bar steps back to. `names`
+ * picks the series' bars the entry stands for: all of them for the series'
+ * own swatch, the forecasts for a Forecast entry. Without a marked bar it is
+ * the series' palette colour, as it always was.
+ */
+function markedBarSwatch(
+  component: ChartComponent,
+  seriesIndex: number,
+  palette: readonly string[],
+  receded: string,
+  names: (point: ChartComponent["series"][number]["data"][number]) => boolean = () => true
+): string {
+  const own = palette[seriesIndex % palette.length]!;
+  if (component.chart_type !== "bar") return own;
+  const marked = component.series.flatMap((s, si) => s.data.filter((d) => d.emphasis === true).map(() => si))[0];
+  if (marked === undefined) return own;
+  const bars = component.series[seriesIndex]?.data.filter(names) ?? [];
+  return bars.some((d) => !(seriesIndex === marked && d.emphasis === true)) ? receded : own;
 }
 
 /**
@@ -754,7 +771,7 @@ export const chart: SvgComponent<ChartComponent> = {
     // legend both read, so swatch and mark cannot disagree. Unmarked charts
     // take the rotated palette untouched.
     const marked = markedSeriesIndex(component);
-    const markedBar = markedBarSeries(component);
+    const receded = recededMarkFill(ctx.colors.muted, legendBg);
     const palette = tonedSeriesPalette(
       component,
       marked < 0
@@ -763,7 +780,7 @@ export const chart: SvgComponent<ChartComponent> = {
             rotated,
             component.series.length,
             marked,
-            recededMarkFill(ctx.colors.muted, legendBg)
+            receded
           ),
       marked,
       ctx.colors
@@ -788,6 +805,21 @@ export const chart: SvgComponent<ChartComponent> = {
     const legendLeft = legendLayout ? headerW - legendLayout.groupW : headerW;
 
     const swatchY = HEADER_BASELINE_Y - LEGEND_SWATCH_SIZE;
+    // A status entry is drawn in the fill of the bars it names: the Forecast
+    // or Target entry in its series' forecasts or targets, a series that is
+    // all one status in its own bars.
+    const statusSwatch = (slot: LegendSlot): string =>
+      markedBarSwatch(
+        component,
+        slot.colorIndex,
+        palette,
+        receded,
+        slot.seriesIndex === FORECAST_ENTRY
+          ? (d) => d.status === "forecast"
+          : slot.seriesIndex === TARGET_ENTRY
+            ? (d) => d.status === "target"
+            : undefined
+      );
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
@@ -843,8 +875,8 @@ export const chart: SvgComponent<ChartComponent> = {
                   ) : slot.seriesIndex < 0 || seriesStatus(component, slot.seriesIndex) ? (
                     <StatusMark
                       status={slot.seriesIndex === FORECAST_ENTRY ? "forecast" : slot.seriesIndex === TARGET_ENTRY ? "target" : seriesStatus(component, slot.seriesIndex)!}
-                      color={palette[slot.colorIndex % palette.length]!}
-                      ground={statusGround(palette[slot.colorIndex % palette.length]!, legendBg, 0.25)}
+                      color={statusSwatch(slot)}
+                      ground={statusGround(statusSwatch(slot), legendBg, 0.25)}
                       x={swatchX}
                       y={swatchY}
                       w={LEGEND_SWATCH_SIZE}
@@ -871,9 +903,7 @@ export const chart: SvgComponent<ChartComponent> = {
                       palette,
                       ctx.colors.muted,
                       ctx.colors.accent,
-                      markedBar >= 0 && slot.seriesIndex >= 0 && slot.seriesIndex !== markedBar
-                        ? recededMarkFill(ctx.colors.muted, legendBg)
-                        : null
+                      receded
                     )}
                   />
                   )}

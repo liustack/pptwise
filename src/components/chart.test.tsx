@@ -2001,26 +2001,67 @@ describe("chart point emphasis", () => {
     expect(draw(years()).querySelector("linearGradient")).toBeNull()
   })
 
-  it("greys the swatch of a series whose bars all stepped back, so the legend names only colours on the page", () => {
+  /** The legend's square swatches, in legend order. */
+  const swatches = (container: Element) =>
+    Array.from(container.querySelectorAll("rect"))
+      .filter((r) => !r.hasAttribute("data-plot-mark") && r.getAttribute("width") === "10" && r.getAttribute("height") === "10")
+      .map((r) => r.getAttribute("fill"))
+
+  // The writer's payback page: five Jiangsu cases with one marked, beside one
+  // Guangdong reference. Four Jiangsu bars and the Guangdong bar are grey.
+  // The legend named Jiangsu in its own colour and Guangdong in grey, so the
+  // four grey Jiangsu bars read as Guangdong's.
+  it("names each series in the colour its bars are drawn in, so a grey bar is never read as another series", () => {
+    const payback = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      series: [
+        { name: "江苏每 MW", data: [{ x: "按平段", y: 4.2 }, { x: "按 0.45 元", y: 6.1, emphasis: true }, { x: "余电 0.391 元", y: 6.5 }, { x: "按谷段", y: 7.3 }] },
+        { name: "广东参照", data: [{ x: "按 0.803 元", y: 3.0 }] },
+      ],
+    }
+    for (const direction of [undefined, "horizontal"] as const) {
+      const container = draw(direction ? { ...payback, direction } : payback)
+      const marks = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]')).map((r) => r.getAttribute("fill")!)
+      const grey = marks.find((f) => f !== PALETTE[0])!
+      expect(marks.filter((f) => f === PALETTE[0]), direction).toHaveLength(1)
+      expect(swatches(container), direction).toEqual([grey, grey])
+    }
+  })
+
+  it("keeps the colour of a series whose one bar is the marked bar", () => {
     const paths = {
       type: "chart" as const,
       chart_type: "bar" as const,
       series: [
-        { name: "默认值路径", data: [{ x: "2026", y: 144 }, { x: "2027", y: 169 }, { x: "2028", y: 197, emphasis: true }] },
-        { name: "实际值情景", data: [{ x: "2026", y: 14 }, { x: "2027", y: 16 }, { x: "2028", y: 22 }] },
+        { name: "默认值路径", data: [{ x: "2026", y: 144 }, { x: "2027", y: 169 }, { x: "2028", y: 197 }] },
+        { name: "实际值情景", data: [{ x: "2028", y: 22, emphasis: true }] },
       ],
     }
     for (const direction of [undefined, "horizontal"] as const) {
       const container = draw(direction ? { ...paths, direction } : paths)
       const marks = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]')).map((r) => r.getAttribute("fill")!)
-      const grey = marks.find((f) => f !== PALETTE[0])!
-      const swatches = Array.from(container.querySelectorAll("rect"))
-        .filter((r) => !r.hasAttribute("data-plot-mark") && r.getAttribute("width") === "10" && r.getAttribute("height") === "10")
-        .map((r) => r.getAttribute("fill"))
-      expect(swatches, direction).toEqual([PALETTE[0], grey])
-      // No swatch names a colour no bar has.
-      for (const fill of swatches) expect(marks, direction).toContain(fill)
+      const grey = marks.find((f) => f !== PALETTE[1])!
+      expect(swatches(container), direction).toEqual([grey, PALETTE[1]])
+      for (const fill of swatches(container)) expect(marks, direction).toContain(fill)
     }
+  })
+
+  it("hatches the forecast entry in the grey its forecast bars step back to", () => {
+    const plan = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      series: [
+        { name: "装机", data: [{ x: "2025", y: 10, emphasis: true }, { x: "2026", y: 12, status: "forecast" as const }, { x: "2027", y: 14, status: "forecast" as const }] },
+        { name: "并网", data: [{ x: "2025", y: 8 }, { x: "2026", y: 9 }, { x: "2027", y: 11 }] },
+      ],
+    }
+    const container = draw(plan)
+    const bars = Array.from(container.querySelectorAll('[data-mark-status="forecast"][data-plot-mark="1"] path')).map((p) => p.getAttribute("stroke"))
+    const entry = Array.from(container.querySelectorAll('[data-mark-status="forecast"]:not([data-plot-mark]) path')).map((p) => p.getAttribute("stroke"))
+    expect(bars).toHaveLength(2)
+    expect(new Set(bars).size).toBe(1)
+    expect(entry).toEqual([bars[0]])
   })
 })
 
