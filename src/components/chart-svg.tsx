@@ -25,7 +25,7 @@ import {
   Y_TICK_MAX_W_RATIO,
   type DomainPadMode,
 } from "./cartesian-axis"
-import { buildChartModel, zeroAxisRatio, type ChartDomain } from "./chart-model"
+import { buildChartModel, gapHeight, insertGaps, zeroAxisRatio, type ChartDomain } from "./chart-model"
 import { boxesIntersect, TEXT_INK_DESCENT, type DepthBox } from "../render/depth-contract/geometry"
 import {
   labelLinePitch,
@@ -1461,7 +1461,9 @@ export function renderBar(
   fontFamily?: string,
   figures?: FigureStyle,
 ): ReactElement {
-  const model = buildChartModel(series)
+  // A category the author kept with no published value (`gaps`) takes its
+  // place on the axis as a dashed outline with its label.
+  const { model, gapAt } = insertGaps(buildChartModel(series), component?.gaps)
   const { categories } = model
   const n = model.series.length
   const meta = cartesianMeta(component, series, figures)
@@ -1516,11 +1518,23 @@ export function renderBar(
   const barLabelSpecs: ValueLabelSpec[] = []
   const barBoxes: DepthBox[] = []
   const barEnds = new Map<string, BracketEnd>()
+  // A gap's outline stands as tall as the bars run on average, its label over it.
+  const gapTop = verticalBarExtent(gapHeight(model), domain, geom.plotY, geom.plotH)
+  const gapBoxes = new Map<number, DepthBox>()
   for (let i = 0; i < categories.length; i++) {
     const groupX0 = geom.plotX + i * groupW + BAR_GROUP_EDGE_GAP
     const usableW = groupW - BAR_GROUP_EDGE_GAP * 2
     const perBarW = group <= 1 ? usableW : Math.max(1, (usableW - (group - 1) * BAR_GROUP_EDGE_GAP) / group)
     const slots = barSlots(model.series, i, usableW, perBarW, BAR_GROUP_EDGE_GAP)
+    const gap = gapAt.get(i)
+    if (gap !== undefined) {
+      const box = { x: groupX0, y: gapTop.barY, w: usableW, h: gapTop.barH }
+      gapBoxes.set(i, box)
+      barBoxes.push(box)
+      barLabelSpecs.push(
+        risingBand({ id: `gap-${i}`, text: gap, x: groupX0 + usableW / 2, y: box.y - VALUE_LABEL_GAP, anchor: "middle", fontSize: VALUE_FONT_SIZE, fontFamily, priority: 100 }, top),
+      )
+    }
     for (const s of model.series) {
       const value = s.values[i]
       if (value == null) continue
@@ -1635,6 +1649,20 @@ export function renderBar(
             )
           }
         }
+        const gapBox = gapBoxes.get(i)
+        if (gapBox) {
+          const placed = placedBars.get(`gap-${i}`)
+          barElements.push(
+            <g key="gap" data-chart-gap={String(cat.x)}>
+              <rect x={gapBox.x + 0.5} y={gapBox.y + 0.5} width={Math.max(0, gapBox.w - 1)} height={Math.max(0, gapBox.h - 1)} fill="none" stroke={graphicInk(mutedColor, _bgHex ?? "#FFFFFF")} strokeWidth={1} strokeDasharray="4 3" />
+              {placed ? (
+                <text x={placed.x} y={placed.y} textAnchor="middle" fontSize={VALUE_FONT_SIZE} fontFamily={fontFamily} fill={accessibleInk(mutedColor, _bgHex ?? "#FFFFFF", VALUE_FONT_SIZE)} dominantBaseline="alphabetic">
+                  {placed.text}
+                </text>
+              ) : null}
+            </g>,
+          )
+        }
         return <g key={cat.key}>{barElements}</g>
       })}
       {renderReferenceLine({ component, domain: yAxis.domain, plotX: geom.plotX, plotY: geom.plotY, plotW: geom.plotW, plotH: geom.plotH, across: true, color: textColor })}
@@ -1666,6 +1694,9 @@ export function renderBar(
     </>
   )
 }
+
+/** How far over the axis a line's gap label (`gaps[].label`) stands. */
+const GAP_LABEL_LIFT = 8
 
 /**
  * The few words an author writes on a point of a line (`data[].note`), such
@@ -1769,7 +1800,9 @@ export function renderLine(
   fontFamily?: string,
   figures?: FigureStyle,
 ): ReactElement {
-  const model = buildChartModel(series)
+  // A category the author kept with no published value (`gaps`) breaks
+  // every line there, its label standing over the axis.
+  const { model, gapAt } = insertGaps(buildChartModel(series), component?.gaps)
   const { categories } = model
   const n = model.series.length
   const meta = cartesianMeta(component, series, figures)
@@ -1948,10 +1981,11 @@ export function renderLine(
         })
         // "Line break" for a missing category (roadmap's model-driven rule):
         // split into contiguous runs at each gap, one <polyline> per run.
-        // n<=1 never has a gap (a single series owns every category by
-        // construction — chart-model.ts's own union-order rule), so this is
-        // always exactly one run spanning every point, byte-identical to the
-        // old always-one-polyline-per-series shape. A series with zero
+        // n<=1 has a gap only where the author kept one (`gaps`): a single
+        // series otherwise owns every category by construction (chart-model.ts's
+        // own union-order rule), so this is exactly one run spanning every
+        // point, byte-identical to the old always-one-polyline-per-series
+        // shape. A series with zero
         // resolved points (empty `data`) still renders one empty polyline,
         // matching the old unconditional `<polyline points={pts} .../>`.
         const runs: Resolved[][] = []
@@ -1987,12 +2021,16 @@ export function renderLine(
                     <stop offset="100%" stopColor={accentColor} stopOpacity={AREA_FILL_BOTTOM_ALPHA} />
                   </linearGradient>
                 </defs>
-                <polygon
-                  data-plot-mark="1"
-                  points={`${runs[0]!.map((c) => `${c.x},${c.y}`).join(" ")} ${last.x},${baselineY} ${first.x},${baselineY}`}
-                  fill={`url(#${areaId})`}
-                  stroke="none"
-                />
+                {/* One fill under each run: a gap the author kept breaks the area as it breaks the line. */}
+                {runs.map((run, runIdx) => (
+                  <polygon
+                    key={`area-${runIdx}`}
+                    data-plot-mark="1"
+                    points={`${run.map((c) => `${c.x},${c.y}`).join(" ")} ${run[run.length - 1]!.x},${baselineY} ${run[0]!.x},${baselineY}`}
+                    fill={`url(#${areaId})`}
+                    stroke="none"
+                  />
+                ))}
               </>
             )}
             {runs.map((run, runIdx) =>
@@ -2064,6 +2102,21 @@ export function renderLine(
           </g>
         )
       })}
+      {[...gapAt].map(([i, label]) => (
+        <text
+          key={`gap-${i}`}
+          data-chart-gap={String(categories[i]!.x)}
+          x={xForIndex(i)}
+          y={geom.plotY + geom.plotH - GAP_LABEL_LIFT}
+          textAnchor="middle"
+          fontSize={VALUE_FONT_SIZE}
+          fontFamily={fontFamily}
+          fill={accessibleInk(mutedColor, bgHex ?? "#FFFFFF", VALUE_FONT_SIZE)}
+          dominantBaseline="alphabetic"
+        >
+          {label}
+        </text>
+      ))}
       {renderLineNotes({
         component,
         seriesEnds,

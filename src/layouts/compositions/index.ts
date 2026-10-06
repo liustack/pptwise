@@ -560,6 +560,18 @@ function asksForChartIcons(components: readonly CompositionProps["components"][n
 }
 
 /**
+ * The compositions that keep a place for a category with no published value
+ * (`gaps`). A page whose chart carries one is offered to these alone; the
+ * ordinary bar draws a dashed outline there with its label, and the
+ * ordinary line breaks there.
+ */
+const CHART_GAP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForChartGaps(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.gaps !== undefined)
+}
+
+/**
  * The compositions that draw what a gantt marks beyond its stretches: a
  * single moment across the bars (`milestones`) and a stretch not settled
  * (`items[].basis`). A page whose gantt carries either is offered to these
@@ -617,6 +629,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const awaited = asksForMilestoneStatus(props.components)
   const momentous = asksForGanttMoments(props.components)
   const iconed = asksForChartIcons(props.components)
+  const gapped = asksForChartGaps(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -638,6 +651,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (awaited && !MILESTONE_STATUS_COMPOSITIONS.has(id)) continue
     if (momentous && !GANTT_MOMENT_COMPOSITIONS.has(id)) continue
     if (iconed && !CHART_ICON_COMPOSITIONS.has(id)) continue
+    if (gapped && !CHART_GAP_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue

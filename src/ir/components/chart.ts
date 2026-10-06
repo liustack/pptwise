@@ -80,6 +80,9 @@ export const MAX_CHART_CHANGES = 3
 /** The most `markers` one line chart draws. Past three, their labels crowd the band over the plot. */
 export const MAX_CHART_MARKERS = 3
 
+/** The most `gaps` one chart keeps. Past three, the empty places outweigh the values. */
+export const MAX_CHART_GAPS = 3
+
 /**
  * Chart types that draw exactly one series and name its parts on the marks
  * themselves: a pie, a donut, a funnel and a gauge are each one whole divided
@@ -491,6 +494,23 @@ export const schema = z
       .describe(
         'Up to three dashed lines drawn down a line chart where a category begins, such as the ages a rule changes at: [{ "before": "50-54 岁", "label": "女 50 岁" }]. Each stands halfway between the category it names and the one before it, its label over the plot. Line charts only, on a category that is not the first.',
       ),
+    /** Places kept for categories with no published value. See the describe below. */
+    gaps: z
+      .array(
+        z
+          .object({
+            after: z.string().min(1).describe('The category it follows, such as "2017".'),
+            x: z.string().min(1).describe('Its name on the axis, such as "2018".'),
+            label: z.string().min(1).describe('What it says, such as "未公布" or "Not published".'),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(MAX_CHART_GAPS)
+      .optional()
+      .describe(
+        'Places kept for categories with no published value, such as a year a survey skipped: [{ "after": "2017", "x": "2018", "label": "未公布" }]. Upright bar and line charts only.',
+      ),
     series: z.array(
       z
         .object({
@@ -609,6 +629,26 @@ export const schema = z
         }
       }),
     )
+    // A gap is a category kept with no value, placed after one the chart
+    // has, so it needs an axis of categories running across the page.
+    if (c.gaps !== undefined) {
+      const gapped = (c.chart_type === "bar" && c.direction !== "horizontal") || c.chart_type === "line"
+      if (!gapped) {
+        ctx.addIssue({ code: "custom", path: ["gaps"], message: `gaps keep a place on an axis of categories across the page, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart has none. Use an upright "bar" or a "line", or say what is missing in the page's text.` })
+      } else {
+        const order: string[] = []
+        for (const s of c.series) for (const d of s.data) if (!order.includes(String(d.x))) order.push(String(d.x))
+        const placed: string[] = []
+        c.gaps.forEach((g, gi) => {
+          if (order.includes(g.x.trim()) || placed.includes(g.x.trim())) {
+            ctx.addIssue({ code: "custom", path: ["gaps", gi, "x"], message: `gaps[${gi}].x is "${g.x}", which the chart already has. A gap is a category with no value: name one the series leave out.` })
+          } else if (!order.includes(g.after.trim()) && !placed.includes(g.after.trim())) {
+            ctx.addIssue({ code: "custom", path: ["gaps", gi, "after"], message: `gaps[${gi}].after is "${g.after}", which is not one of the chart's categories (${order.map((x) => `"${x}"`).join(", ")}) or an earlier gap. Name the category the gap follows, as the series write it.` })
+          }
+          placed.push(g.x.trim())
+        })
+      }
+    }
     // A range is a bar on its side drawn solid to its low end and dashed on
     // to its high end, its label naming both.
     const ranged = c.chart_type === "bar" && c.direction === "horizontal"

@@ -2600,3 +2600,56 @@ describe("a symbol before a bar's category", () => {
     expect(axisX(iconed) - axisX(container)).toBe(24)
   })
 })
+
+describe("a place kept for a category with no published value", () => {
+  const heavy = {
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    axes: { y_unit: "%" },
+    gaps: [
+      { after: "2017", x: "2018", label: "未公布" },
+      { after: "2021", x: "2022", label: "未公布" },
+    ],
+    series: [{ name: "一年读 10 本以上", data: [["2017", 10.2], ["2019", 11.1], ["2020", 11.6], ["2021", 11.9], ["2023", 12.3]].map(([x, y]) => ({ x: x as string, y: y as number })) }],
+  }
+
+  it("is accepted after a category the chart has, on an upright bar or a line", () => {
+    expect(chartSchema.safeParse(heavy).success).toBe(true)
+    expect(chartSchema.safeParse({ ...heavy, chart_type: "line" }).success).toBe(true)
+    expect(chartSchema.safeParse({ ...heavy, gaps: [{ after: "2017", x: "2018", label: "未公布" }, { after: "2018", x: "2018.5", label: "未公布" }] }).success).toBe(true)
+    expect(chartSchema.safeParse({ ...heavy, direction: "horizontal" }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...heavy, chart_type: "area" }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...heavy, gaps: [{ after: "2016", x: "2018", label: "未公布" }] }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...heavy, gaps: [{ after: "2017", x: "2019", label: "未公布" }] }).success).toBe(false)
+  })
+
+  it("draws a dashed outline with its label where the bar would stand, its name on the axis", () => {
+    const { container } = svg(chart.render(heavy, { ...box, h: 360 }, ctx))
+    const gaps = Array.from(container.querySelectorAll("[data-chart-gap]"))
+    expect(gaps.map((g) => g.getAttribute("data-chart-gap"))).toEqual(["2018", "2022"])
+    for (const g of gaps) {
+      expect(g.querySelector("rect")!.getAttribute("stroke-dasharray")).toBe("4 3")
+      expect(g.querySelector("rect")!.getAttribute("fill")).toBe("none")
+      expect(g.querySelector("text")!.textContent).toBe("未公布")
+    }
+    const ticks = Array.from(container.querySelectorAll('[data-axis-tick="x"]')).map((el) => el.textContent)
+    expect(ticks).toEqual(["2017", "2018", "2019", "2020", "2021", "2022", "2023"])
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+  })
+
+  it("breaks a line there and names it over the axis", () => {
+    const papers = {
+      type: "chart" as const,
+      chart_type: "line" as const,
+      gaps: [{ after: "2015", x: "2016", label: "留空" }],
+      series: [
+        { name: "报纸", data: [["2015", 45.7], ["2017", 37.6], ["2018", 35.1]].map(([x, y]) => ({ x: x as string, y: y as number })) },
+        { name: "期刊", data: [["2015", 34.6], ["2017", 25.3], ["2018", 23.4]].map(([x, y]) => ({ x: x as string, y: y as number })) },
+      ],
+    }
+    const { container } = svg(chart.render(papers, { ...box, h: 360 }, ctx))
+    expect(container.querySelectorAll("[data-lone-point]")).toHaveLength(2)
+    expect(container.querySelector("[data-chart-gap]")!.textContent).toBe("留空")
+    expect(Array.from(container.querySelectorAll("polyline"))).toHaveLength(2)
+  })
+})
