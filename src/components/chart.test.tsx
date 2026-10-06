@@ -2653,3 +2653,46 @@ describe("a place kept for a category with no published value", () => {
     expect(Array.from(container.querySelectorAll("polyline"))).toHaveLength(2)
   })
 })
+
+describe("value ranges on a bar on its side", () => {
+  const effects = {
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    direction: "horizontal" as const,
+    bands: [
+      { from: -0.4, to: 0, label: "← 屏幕比纸差" },
+      { from: 0, to: 0.1, label: "纸比屏幕差 →" },
+    ],
+    series: [
+      { name: "Delgado 等，2018", data: [["总体", -0.21], ["说明文", -0.27], ["叙事文", 0.01]].map(([x, y]) => ({ x: x as string, y: y as number })) },
+      { name: "Clinton，2019", data: [["总体", -0.25], ["说明文", -0.32], ["叙事文", -0.04]].map(([x, y]) => ({ x: x as string, y: y as number })) },
+    ],
+  }
+
+  it("is accepted on a bar on its side as on an upright one", () => {
+    expect(chartSchema.safeParse(effects).success).toBe(true)
+    expect(chartSchema.safeParse({ ...effects, chart_type: "scatter" }).success).toBe(false)
+  })
+
+  it("tints each range down the rows and names it in a row over the plot, from its own left end", () => {
+    const { container } = svg(chart.render(effects, { ...box, h: 360 }, ctx))
+    const bands = Array.from(container.querySelectorAll("[data-chart-band]"))
+    expect(bands).toHaveLength(2)
+    const axis = container.querySelector('[data-axis="x"]')!
+    const plotTop = Number(container.querySelector('[data-axis="y"]')!.getAttribute("y1"))
+    const plotBottom = Number(axis.getAttribute("y1"))
+    for (const band of bands) {
+      const rect = band.querySelector("rect")!
+      expect(Number(rect.getAttribute("y"))).toBeCloseTo(plotTop, 3)
+      expect(Number(rect.getAttribute("height"))).toBeCloseTo(plotBottom - plotTop, 3)
+      expect(Number(band.querySelector("text")!.getAttribute("y"))).toBeLessThan(plotTop)
+    }
+    const [below, above] = bands.map((b) => b.querySelector("rect")!)
+    // The two ranges meet at zero, and the one that ends the plot names itself from that end.
+    expect(Number(below!.getAttribute("x")) + Number(below!.getAttribute("width"))).toBeCloseTo(Number(above!.getAttribute("x")), 3)
+    expect(bands[0]!.querySelector("text")!.textContent).toBe("← 屏幕比纸差")
+    expect(Number(bands[1]!.querySelector("text")!.getAttribute("x"))).toBeCloseTo(Number(above!.getAttribute("x")), 3)
+    expect(below!.getAttribute("fill")).not.toBe(above!.getAttribute("fill"))
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+  })
+})

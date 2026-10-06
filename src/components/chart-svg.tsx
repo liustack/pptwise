@@ -780,6 +780,66 @@ function renderValueBands(opts: {
   )
 }
 
+/** The row over a plot on its side that holds its bands' labels. */
+const BAND_ROW = BAND_LABEL_SIZE + 12
+
+/**
+ * Paints the chart's marked value ranges down a plot on its side, behind the
+ * bars: a pale tint of the accent between the two ends, the full height of
+ * the rows, and each range's label in the row over the plot, from the range's
+ * own left end, or ending at its right end when that is where the plot ends.
+ */
+function renderValueBandsDown(opts: {
+  component: ChartInput | undefined
+  domain: { min: number; max: number }
+  plotX: number
+  plotY: number
+  plotW: number
+  plotH: number
+  accentColor: string
+  textColor: string
+  bgHex: string | undefined
+  fontFamily: string | undefined
+}): ReactElement | null {
+  const bands = opts.component?.bands
+  if (!bands || bands.length === 0) return null
+  const ground = opts.bgHex ?? "#FFFFFF"
+  const right = opts.plotX + opts.plotW
+  return (
+    <g data-chart-bands="">
+      {bands.map((band, k) => {
+        // Two ranges often meet, at zero say, so the second takes half the tint and the seam shows.
+        const fill = blendOver(opts.accentColor, ground, k === 0 ? 0.16 : 0.08)
+        const xLeft = mapToPlotX(Math.min(band.from, band.to), opts.domain, opts.plotX, opts.plotW)
+        const xRight = mapToPlotX(Math.max(band.from, band.to), opts.domain, opts.plotX, opts.plotW)
+        const atEnd = Math.abs(xRight - right) < 0.5 && Math.abs(xLeft - opts.plotX) >= 0.5
+        const room = atEnd ? xRight - opts.plotX : right - xLeft
+        const label = band.label?.trim() ? fitSvgLine(band.label.trim(), { maxWidth: room, fontSize: BAND_LABEL_SIZE, minFontSize: BAND_LABEL_SIZE, bold: true, fontFamily: opts.fontFamily }) : null
+        return (
+          <g key={`band-${k}`} data-chart-band="">
+            <rect x={xLeft} y={opts.plotY} width={Math.max(1, xRight - xLeft)} height={opts.plotH} fill={fill} />
+            {label && (
+              <text
+                data-truncated={label.truncated ? "1" : undefined}
+                x={atEnd ? xRight : xLeft}
+                y={opts.plotY - BAND_ROW + BAND_LABEL_SIZE}
+                textAnchor={atEnd ? "end" : undefined}
+                fontFamily={opts.fontFamily}
+                fontSize={label.fontSize}
+                fontWeight="700"
+                fill={accessibleInk(blendOver(opts.textColor, opts.accentColor, 0.45), ground, label.fontSize)}
+                dominantBaseline="alphabetic"
+              >
+                {label.text}
+              </text>
+            )}
+          </g>
+        )
+      })}
+    </g>
+  )
+}
+
 function directLabelWidth(text: string, fontFamily?: string): number {
   return measureTextUnits(text, { bold: true, fontFamily }) * DIRECT_LABEL_FONT_SIZE
 }
@@ -2956,11 +3016,11 @@ const BAR_H_PLOT_TOP_PAD = 4
  * on top of each other. The plot is the body less the top pad and the x-tick
  * band (`renderBarHorizontal`), so this is what `chart.measure` asks for.
  */
-export function barHorizontalMinBodyH(categories: number, seriesCount: number): number {
+export function barHorizontalMinBodyH(categories: number, seriesCount: number, banded = false): number {
   const n = Math.max(1, seriesCount)
   const barsH = 2 * BAR_H_ROW_EDGE_GAP + n * BAR_H_MIN_THICKNESS + (n - 1) * BAR_H_ROW_EDGE_GAP
   const rowH = Math.max(labelLinePitch(TICK_FONT_SIZE), barsH)
-  return Math.ceil(categories * rowH) + BAR_H_PLOT_TOP_PAD + X_TICK_BAND
+  return Math.ceil(categories * rowH) + BAR_H_PLOT_TOP_PAD + X_TICK_BAND + (banded ? BAND_ROW : 0)
 }
 
 /**
@@ -3031,7 +3091,7 @@ export function renderBarHorizontal(
     }
   }
   if (pastAxisLimit([...upperAt.values()])) return <WholeShareDeclined />
-  const xAxis = buildNumericAxis([...values, ...upperAt.values(), ...referenceEnds(component)], "zero-max", meta.xUnit ?? meta.yUnit, meta.figures)
+  const xAxis = buildNumericAxis([...values, ...upperAt.values(), ...referenceEnds(component), ...bandEnds(component)], "zero-max", meta.xUnit ?? meta.yUnit, meta.figures)
   const domain: ChartDomain = { min: xAxis.domain.min, max: xAxis.domain.max, degenerate: false }
   const dataMax = Math.max(...values, Number.NEGATIVE_INFINITY)
   // A change the author asked for at a category is printed after the later
@@ -3086,8 +3146,10 @@ export function renderBarHorizontal(
   )
   const plotX = x0 + iconBand + labelW + BAR_H_BAND_GAP
   const plotW = Math.max(1, w - iconBand - labelW - BAR_H_BAND_GAP - valueW)
-  const plotY = y0 + BAR_H_PLOT_TOP_PAD
-  const plotH = Math.max(1, h - meta.titleH - X_TICK_BAND - BAR_H_PLOT_TOP_PAD)
+  // Marked value ranges (`bands`) name themselves in a row over the plot.
+  const bandRow = (component?.bands?.length ?? 0) > 0 ? BAND_ROW : 0
+  const plotY = y0 + BAR_H_PLOT_TOP_PAD + bandRow
+  const plotH = Math.max(1, h - meta.titleH - X_TICK_BAND - BAR_H_PLOT_TOP_PAD - bandRow)
   const rowH = plotH / categories.length
   const gradientId = chartGradientId("chart-barh-grad", w, h, series)
   const marked = markedPointOf(series)
@@ -3181,6 +3243,7 @@ export function renderBarHorizontal(
         mutedColor,
         fontFamily,
       })}
+      {renderValueBandsDown({ component, domain: xAxis.domain, plotX, plotY, plotW, plotH, accentColor, textColor, bgHex: _bgHex, fontFamily })}
       {categories.map((cat, i) => {
         // Row geometry, mirrors renderBar's group geometry comment: n<=1
         // keeps the old unconditional `Math.max(4, rowH - 10)` floor

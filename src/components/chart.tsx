@@ -626,7 +626,7 @@ function horizontalBarBodyH(component: ChartComponent): number {
     return 0;
   const rows = buildChartModel(component.series).categories.length;
   if (rows === 0) return 0;
-  return barHorizontalMinBodyH(rows, component.series.length);
+  return barHorizontalMinBodyH(rows, component.series.length, (component.bands?.length ?? 0) > 0);
 }
 
 /** The header row and the axis-title band a chart stacks on its body. */

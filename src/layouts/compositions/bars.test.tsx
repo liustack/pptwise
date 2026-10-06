@@ -148,3 +148,14 @@ describe("a bar on its side with symbols before its categories", () => {
     expect(compose({ ...props, components: [iconed as never] }, ["bars"])).toBeNull()
   })
 })
+
+describe("a bar on its side with value ranges marked", () => {
+  it("goes to the ordinary chart, which tints each range down the rows, not to the bars", async () => {
+    const { compose } = await import(".")
+    const { testCtx } = await import("./__fixtures__/kit")
+    const { ctx } = testCtx("bulletin")
+    const props = { ctx, rect: NOTICE_PLOT, setting: "notice" as const }
+    const banded = share({ bands: [{ from: 0, to: 10, label: "Small makers" }] })
+    expect(compose({ ...props, components: [banded as never] }, ["bars"])).toBeNull()
+  })
+})

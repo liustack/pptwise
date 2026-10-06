@@ -572,6 +572,18 @@ function asksForChartGaps(components: readonly CompositionProps["components"][nu
 }
 
 /**
+ * The compositions that draw the value ranges a bar chart on its side marks
+ * (`bands`), such as what a value below zero means. A page whose chart
+ * carries them is offered to these alone; the ordinary bar on its side tints
+ * each range down the rows and names it in a row over the plot.
+ */
+const CHART_SIDE_BAND_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForSideBands(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.chart_type === "bar" && component.direction === "horizontal" && (component.bands?.length ?? 0) > 0)
+}
+
+/**
  * The compositions that draw what a gantt marks beyond its stretches: a
  * single moment across the bars (`milestones`) and a stretch not settled
  * (`items[].basis`). A page whose gantt carries either is offered to these
@@ -630,6 +642,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const momentous = asksForGanttMoments(props.components)
   const iconed = asksForChartIcons(props.components)
   const gapped = asksForChartGaps(props.components)
+  const sideBanded = asksForSideBands(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -652,6 +665,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (momentous && !GANTT_MOMENT_COMPOSITIONS.has(id)) continue
     if (iconed && !CHART_ICON_COMPOSITIONS.has(id)) continue
     if (gapped && !CHART_GAP_COMPOSITIONS.has(id)) continue
+    if (sideBanded && !CHART_SIDE_BAND_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue

@@ -457,7 +457,7 @@ export const schema = z
       .optional()
       .describe(
         "Up to two value ranges marked across the plot behind the data, such as a target range a line should stay in. Each runs from `from` to `to` on the value axis, which grows to hold it, and may carry a short `label`. " +
-          "line, area and upright bar charts only. Write a range this way rather than as two flat series at its edges.",
+          "line, area and bar charts only. Write a range this way rather than as two flat series at its edges.",
       ),
     /** The line a share bar states for its marked run. See the describe below. */
     emphasis_label: z
@@ -697,12 +697,12 @@ export const schema = z
       ctx.addIssue({ code: "custom", path: ["reference", "value"], message: `reference.value is ${c.reference.value}, past what a value axis can draw. Write it in the same unit as the bars.` })
     }
     if (c.bands !== undefined) {
-      const banded = c.chart_type === "line" || c.chart_type === "area" || (c.chart_type === "bar" && c.direction !== "horizontal")
+      const banded = c.chart_type === "line" || c.chart_type === "area" || c.chart_type === "bar"
       if (!banded) {
         ctx.addIssue({
           code: "custom",
           path: ["bands"],
-          message: `bands mark a range across a value axis that runs up the page, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart has none. Use chart_type "line", "area" or an upright "bar", or state the range in the page's text.`,
+          message: `bands mark a range along a value axis, and a ${c.chart_type} chart has none to mark. Use chart_type "line", "area" or "bar", or state the range in the page's text.`,
         })
       }
       c.bands.forEach((band, k) => {
