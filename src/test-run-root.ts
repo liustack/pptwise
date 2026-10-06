@@ -16,6 +16,9 @@
  * on the way in, but only when the process that owns one (its pid is in
  * `owner.pid`) is gone and the root has been idle long enough, so a run
  * still going in another checkout keeps its files.
+ *
+ * scripts/e2e.mts holds a root of its own the same way, through
+ * `openRunRoot`, for itself and the CLI processes it drives.
  */
 import { lstatSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
@@ -122,9 +125,10 @@ export function openRunRoot(parent: string): RunRoot {
   const saved = keys.map((key) => [key, process.env[key]] as const)
   for (const key of keys) process.env[key] = root
   // Vitest answers Ctrl-C with process.exit() and skips the globalSetup
-  // teardown, and an uncaught error ends a script without reaching its
-  // cleanup code. Both still fire "exit", so the root goes on those paths
-  // too. Only a SIGKILL or a crash of node itself leaves it for the sweep.
+  // teardown, and a script that dies of an uncaught error or calls
+  // process.exit() never reaches a teardown call placed after its work.
+  // All of these still fire "exit", so the root goes on those paths too.
+  // Only a SIGKILL or a crash of node itself leaves it for the sweep.
   const onExit = () => removeRoot(root)
   process.once("exit", onExit)
   let open = true
