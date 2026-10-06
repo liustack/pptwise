@@ -2469,3 +2469,38 @@ describe("a note on a point of a line", () => {
     expect(Array.from(container.querySelectorAll("[data-point-note]")).map((el) => el.textContent)).toEqual(["起点"])
   })
 })
+
+describe("markers on a line", () => {
+  const ages = ["45-49 岁", "50-54 岁", "55-59 岁", "60-64 岁", "65-69 岁"]
+  const cliff = {
+    type: "chart" as const,
+    chart_type: "line" as const,
+    markers: [
+      { before: "50-54 岁", label: "女 50 岁" },
+      { before: "60-64 岁", label: "男 60 岁" },
+    ],
+    series: [
+      { name: "城镇男性", data: [88.9, 82.8, 68.2, 27.8, 19.4].map((y, i) => ({ x: ages[i]!, y })) },
+      { name: "城镇女性", data: [69.0, 45.7, 25.4, 13.3, 9.8].map((y, i) => ({ x: ages[i]!, y })) },
+    ],
+  }
+
+  it("is accepted on a line before any category but the first", () => {
+    expect(chartSchema.safeParse(cliff).success).toBe(true)
+    expect(chartSchema.safeParse({ ...cliff, markers: [{ before: "45-49 岁", label: "x" }] }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...cliff, markers: [{ before: "70-74 岁", label: "x" }] }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...cliff, markers: [cliff.markers[0], cliff.markers[0]] }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...cliff, chart_type: "bar" }).success).toBe(false)
+  })
+
+  it("stands halfway between its category and the one before it, its label over the plot", () => {
+    const { container } = svg(chart.render(cliff, { ...box, h: 360 }, ctx))
+    const xs = Array.from(container.querySelectorAll("polyline"))[0]!.getAttribute("points")!.split(" ").map((p) => Number(p.split(",")[0]))
+    const marks = Array.from(container.querySelectorAll("[data-chart-marker]"))
+    expect(marks.map((m) => m.getAttribute("data-chart-marker"))).toEqual(["女 50 岁", "男 60 岁"])
+    const lineOf = (m: Element) => m.querySelector("line")!
+    expect(Number(lineOf(marks[0]!).getAttribute("x1"))).toBeCloseTo((xs[0]! + xs[1]!) / 2, 3)
+    expect(Number(lineOf(marks[1]!).getAttribute("x1"))).toBeCloseTo((xs[2]! + xs[3]!) / 2, 3)
+    for (const m of marks) expect(Number(m.querySelector("text")!.getAttribute("y"))).toBeLessThan(Number(lineOf(m).getAttribute("y1")))
+  })
+})

@@ -1,7 +1,7 @@
 import type { ReactElement } from "react"
 import type { ChartSeries, Component } from "@/ir"
 import { CHART_AXIS_LIMIT } from "@/ir/components/chart"
-import { accessibleInk, blendOver } from "../render/ink"
+import { accessibleInk, blendOver, graphicInk } from "../render/ink"
 import { recededMarkFill } from "../render/chart-palette"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import { figureStyleOf, groupDigits, joinUnit, wholeValueDecimals, writtenFigure, type FigureStyle } from "../lib/quantity-format"
@@ -1677,6 +1677,23 @@ function renderLineNotes({
 /** Air between a noted point and the words over or under it. */
 const LINE_NOTE_GAP = 10
 
+/** The band a line's markers take over the plot for their labels, and the air under a label. */
+const MARKER_BAND = 30
+const MARKER_LABEL_GAP = 10
+
+/**
+ * The author's markers on a line (`markers`), each at the index of the
+ * category it stands before, in the order the author wrote them. A marker
+ * whose category the chart does not carry, or that names the first one, is
+ * refused by validate, so none is skipped here in practice.
+ */
+function lineMarkers(component: ChartInput | undefined, categories: readonly { x: string | number }[]): { at: number; label: string }[] {
+  return (component?.markers ?? []).flatMap((m) => {
+    const at = categories.findIndex((cat) => String(cat.x) === m.before.trim())
+    return at > 0 ? [{ at, label: m.label.trim() }] : []
+  })
+}
+
 export function renderLine(
   series: ChartSeries[],
   palette: string[],
@@ -1707,11 +1724,14 @@ export function renderLine(
   if (pastAxisLimit(values)) return <WholeShareDeclined />
   const banded = [...values, ...bandEnds(component)]
   const yAxis = buildNumericAxis(banded, valueAxisMode(banded), meta.yUnit, meta.figures)
+  // The author's markers take a band over the plot for their labels.
+  const markers = lineMarkers(component, categories)
+  const markerBand = markers.length > 0 ? MARKER_BAND : 0
   const geom = layoutCartesianPlot({
     x0,
-    y0,
+    y0: y0 + markerBand,
     w,
-    h,
+    h: h - markerBand,
     yTickLabels: yAxis.labels,
     titleH: meta.titleH,
     fontFamily,
@@ -1975,6 +1995,28 @@ export function renderLine(
             fill={marker.color}
             {...(crowded && bgHex ? { stroke: bgHex, strokeWidth: 1 } : {})}
           />
+        )
+      })}
+      {markers.map((marker) => {
+        const x = (xForIndex(marker.at - 1) + xForIndex(marker.at)) / 2
+        const ground = bgHex ?? "#FFFFFF"
+        return (
+          <g key={`marker-${marker.at}`} data-chart-marker={marker.label}>
+            <line x1={x} y1={geom.plotY} x2={x} y2={geom.plotY + geom.plotH} stroke={graphicInk(accentColor, ground)} strokeWidth={1.4} strokeDasharray="5 4" />
+            <text
+              data-value-label="1"
+              x={x}
+              y={y0 + markerBand - MARKER_LABEL_GAP}
+              textAnchor="middle"
+              fontSize={VALUE_FONT_SIZE}
+              fontWeight={VALUE_FONT_WEIGHT}
+              fontFamily={fontFamily}
+              fill={accessibleInk(accentColor, ground, VALUE_FONT_SIZE)}
+              dominantBaseline="alphabetic"
+            >
+              {marker.label}
+            </text>
+          </g>
         )
       })}
       {renderLineNotes({

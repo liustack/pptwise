@@ -179,6 +179,8 @@ See the [SKILL component guide](../skills/pptwise/references/components.md) for 
 
 `axes` titles and units apply to `bar`, `stacked`, `percent_stacked`, `combo`, `line`, `area`, and `scatter`. Within one series, a category may appear once.
 
+`markers` draws up to three dashed lines down a `line` chart where a category begins, such as the ages a rule changes at: `[{ "before": "Age 50-54", "label": "Women, 50" }]`. Each stands halfway between the category it names and the one before it, its label over the plot.
+
 `title` names the chart in one line set over it, as a table's title is ("Workers per retiree, 2015 to 2025"). A theme that numbers its figures prints the number before it ("Figure 3").
 
 `bar` prints each value beside its bar, above it or past its end, when every value fits there clear of the bars and inside the chart. Otherwise it prints none, and export stops on that page until the numbers are shorter (divide them and name the unit in `y_unit`, or `x_unit` for `direction: "horizontal"`) or the chart has fewer categories or series. A horizontal bar chart grows taller with its category count, so each category keeps a row of its own.

@@ -75,6 +75,9 @@ export const CHANGE_TYPES = ["bar", "stacked"] as const
 /** The most `changes` one chart draws. Past three, the brackets crowd the bars they read. */
 export const MAX_CHART_CHANGES = 3
 
+/** The most `markers` one line chart draws. Past three, their labels crowd the band over the plot. */
+export const MAX_CHART_MARKERS = 3
+
 /**
  * Chart types that draw exactly one series and name its parts on the marks
  * themselves: a pie, a donut, a funnel and a gauge are each one whole divided
@@ -470,6 +473,22 @@ export const schema = z
       .describe(
         'One value drawn as a dashed line across the bars, such as a benchmark, an average or a threshold the bars are read against: { "value": 1.37, "label": "EU benchmark 1.370" }. The value axis grows to hold it, and its label names the line in the legend. Bar charts only, upright or on their side. Write a benchmark this way rather than as a bar of its own.',
       ),
+    /** Lines down a line chart where a category begins. See the describe below. */
+    markers: z
+      .array(
+        z
+          .object({
+            before: z.string().min(1).describe('The category the line stands before, halfway between it and the one before it, such as "50-54 岁" or "Age 50-54".'),
+            label: z.string().min(1).describe('What happens there, printed over the line, such as "女 50 岁" or "Women, 50".'),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(MAX_CHART_MARKERS)
+      .optional()
+      .describe(
+        'Up to three dashed lines drawn down a line chart where a category begins, such as the ages a rule changes at: [{ "before": "50-54 岁", "label": "女 50 岁" }]. Each stands halfway between the category it names and the one before it, its label over the plot. Line charts only, on a category that is not the first.',
+      ),
     series: z.array(
       z
         .object({
@@ -532,6 +551,26 @@ export const schema = z
           })
         }),
       )
+    }
+    // A marker stands between two categories of a line, so it needs a line
+    // and a category with one before it.
+    if (c.markers !== undefined) {
+      if (c.chart_type !== "line") {
+        ctx.addIssue({ code: "custom", path: ["markers"], message: `markers are lines drawn down a line chart between two categories, and a ${c.chart_type} chart has no place for them. Use chart_type "line", or remove markers.` })
+      } else {
+        const order: string[] = []
+        for (const s of c.series) for (const d of s.data) if (!order.includes(String(d.x))) order.push(String(d.x))
+        c.markers.forEach((m, mi) => {
+          const at = order.indexOf(m.before.trim())
+          if (at < 0) {
+            ctx.addIssue({ code: "custom", path: ["markers", mi, "before"], message: `markers[${mi}].before is "${m.before}", which is not one of the chart's categories (${order.map((x) => `"${x}"`).join(", ")}). Write a category as the series write it.` })
+          } else if (at === 0) {
+            ctx.addIssue({ code: "custom", path: ["markers", mi, "before"], message: `markers[${mi}].before is "${m.before}", the chart's first category, and a marker stands between a category and the one before it. Name a later category.` })
+          } else if (c.markers!.findIndex((other) => other.before.trim() === m.before.trim()) !== mi) {
+            ctx.addIssue({ code: "custom", path: ["markers", mi, "before"], message: `markers[${mi}] stands before "${m.before}" as an earlier marker does. Keep one marker a place.` })
+          }
+        })
+      }
     }
     // A range is a bar on its side drawn solid to its low end and dashed on
     // to its high end, its label naming both.

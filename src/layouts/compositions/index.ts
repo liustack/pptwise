@@ -484,6 +484,18 @@ function asksForChartTitle(components: readonly CompositionProps["components"][n
 }
 
 /**
+ * The compositions that draw a line chart's markers (`markers`), the dashed
+ * lines where a category begins. A page whose chart carries one is offered
+ * to these alone; the ordinary line draws each marker with its label over
+ * the plot.
+ */
+const CHART_MARKER_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForChartMarkers(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.markers !== undefined)
+}
+
+/**
  * The compositions that draw the page's ballot (`Slide.ballot`), a box for
  * each choice beside every question. A page with one is offered to these
  * alone; the face declares the ballot dropped when none takes the page.
@@ -523,6 +535,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const columned = asksForTableColumnMarks(props.components)
   const carded = asksForIconCardDetail(props.components)
   const captioned = asksForChartTitle(props.components)
+  const thresholded = asksForChartMarkers(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -539,6 +552,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (columned && !TABLE_COLUMN_COMPOSITIONS.has(id)) continue
     if (carded && !ICON_CARD_DETAIL_COMPOSITIONS.has(id)) continue
     if (captioned && !CHART_TITLE_COMPOSITIONS.has(id)) continue
+    if (thresholded && !CHART_MARKER_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue
