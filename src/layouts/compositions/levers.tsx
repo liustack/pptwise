@@ -12,7 +12,7 @@ type Callout = Extract<Component, { type: "callout" }>
  * (p07). At the left, bars on their side from one axis: the first series'
  * name in small grey over its bars, each bar's case right-aligned before it,
  * the bars in the second petrol and the case the page rests on in the
- * tangerine, each bar's value bold after it with its note in small grey;
+ * brick red, each bar's value bold after it with its note in small grey;
  * under a dashed line the second series, a reference, its name in small grey
  * and its bars in the sky; dotted lines at the axis's round values, named
  * under the bars with the axis's unit. At the right, a card a lever (its

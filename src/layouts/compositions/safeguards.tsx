@@ -12,7 +12,7 @@ type Panel = Extract<Component, { type: "insight_panel" }>
  * for it, proposal's 2026-10 board (p14). Three columns. Under its title in
  * small tracked grey, the first column's cards: the rule's icon in petrol,
  * its name bold, the tag that settles it (`settled`) as a chip of the
- * tangerine, what it asks. Under its title, the second column's cards, each
+ * brick red, what it asks. Under its title, the second column's cards, each
  * a lesson: its icon in the danger ink (`tone: "danger"`), its name bold,
  * what happened in grey, and what is done about it, its lead in bold petrol
  * (「我们的做法：」). At the right, the panel as a block of petrol: its icon

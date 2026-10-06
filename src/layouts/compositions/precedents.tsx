@@ -14,7 +14,7 @@ type Callout = Extract<Component, { type: "callout" }>
  * in a white disc, its name bold over its scale in grey, its figure at 18px
  * in petrol, and what kind of source the figure is as a white chip at the
  * right; the record the page leans on (a row marked `highlight`) with a
- * tangerine edge at its left and its chip in the tangerine. Under the rows, a
+ * brick-red edge at its left and its chip in the brick red. Under the rows, a
  * line with a grey icon on what the records do not show.
  *
  * Takes, in the binder setting: a `data_table` with a title, three columns

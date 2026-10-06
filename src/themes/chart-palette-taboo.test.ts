@@ -48,6 +48,16 @@
 // a chart on, and keeps every pair in the palette distinguishable — see the
 // per-palette assertions below and each theme file's own header for the
 // measured numbers.
+//
+// ## proposal, 2026-10-06
+//
+// proposal shipped its board's petrol #2F6A8A beside a tangerine #F26B3A
+// (hue 16), held here for a day as an adjudicated exception. The maintainer
+// then ruled the taboo stands: the petrol stays and the tangerine becomes a
+// brick red #B8412C (hue 9, under the orange band's 15). proposal now passes
+// the sweep with no exception. The sky #8DBBD3 and the sand #B0956A are block
+// fills that never carry a mark alone (2.06:1 and 2.86:1 on the paper, see
+// proposal.ts), so only the brick red is held to the floors below.
 import { describe, expect, it } from "vitest"
 import { THEME_STYLES, CANONICAL_THEME_IDS } from "./index"
 import { contrastRatio } from "@/render/ink"
@@ -135,11 +145,6 @@ const ADJUDICATED: Record<string, string> = {
     "电金 #FFD84D 与冰蓝 #4DC3FF：这张表是电光绿/品红/冰蓝/电金，红蓝对抗" +
     "加一块金牌位，胜负语义入图，不是「蓝与橙二选一」的配色故事。电金是" +
     "奖牌位，冰蓝是蓝队，设计板写死了这四格。若用户后续点名，这里就是要改的那一格。",
-  proposal:
-    "石油蓝 #2F6A8A (hue 201) 与橘 #F26B3A (hue 16)：提案书的设计系统由维护者" +
-    "逐页批过（design/rounds/2026-10-06-proposal/），任务书点名图表色就是石油蓝、" +
-    "橘、天青、沙色。橘在图里只标一件事（每页至多一处），其余系列是石油蓝和天青，" +
-    "不是两种亮色平分一张图。若维护者后续按禁忌改，这里就是要改的那一格。",
 }
 
 describe("chart palette: no vivid orange beside a vivid blue (round-4 taboo)", () => {
@@ -188,6 +193,26 @@ describe("chart palette: no vivid orange beside a vivid blue (round-4 taboo)", (
       "#9A7CFF",
       "#4BD98A",
     ])
+  })
+})
+
+describe("proposal's brick red (2026-10-06)", () => {
+  const BRICK = "#B8412C"
+
+  it("takes the tangerine's place and leaves the other three colours as they were", () => {
+    expect(THEME_STYLES["proposal"].colors.chartPalette).toEqual(["#2F6A8A", BRICK, "#8DBBD3", "#B0956A"])
+    expect(hueSat(BRICK).hue).toBeLessThan(15)
+  })
+
+  it("reads on the paper and the sand and stands apart from every sibling", () => {
+    const t = THEME_STYLES["proposal"]
+    for (const bg of [t.colors.bg, t.colors.surface]) {
+      expect(contrastRatio(BRICK, bg), `${BRICK} on ${bg}`).toBeGreaterThanOrEqual(3)
+    }
+    for (const sibling of t.colors.chartPalette) {
+      if (sibling === BRICK) continue
+      expect(deltaE(BRICK, sibling), `${BRICK} sits on top of ${sibling}`).toBeGreaterThan(20)
+    }
   })
 })
 

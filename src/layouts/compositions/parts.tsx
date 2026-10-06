@@ -8,7 +8,7 @@ type ImageGrid = Extract<Component, { type: "image_grid" }>
 /*
  * parts: what a solution is made of, proposal's 2026-10 board (p11). A card
  * a part, side by side: its photograph across the card's top, its number in
- * a petrol disc on the photograph (the first in the tangerine when the grid
+ * a petrol disc on the photograph (the first in the brick red when the grid
  * leads with it, `emphasis: "first"`), its tag as a white chip at the
  * photograph's right; under the photograph its icon and name in petrol and a
  * few lines on it. A part whose tag is not settled yet (a `basis` of

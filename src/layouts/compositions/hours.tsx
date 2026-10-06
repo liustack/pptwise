@@ -14,7 +14,7 @@ type Kpis = Extract<Component, { type: "kpi_cards" }>
  * short name written in it when the run is two hours or more, and at the
  * right the row's figure and its prices. A run of hours the page is about
  * (the heat grid's `bands`) is framed across the rows in a dashed outline of
- * the tangerine, named over it in the darker tangerine with its icon. Under
+ * the brick red, named over it in the brick red with its icon. Under
  * the rows the hours' ticks, a label every so many hours, and a key naming
  * every step beside the grid's own note at the right.
  *

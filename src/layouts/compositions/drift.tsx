@@ -13,7 +13,7 @@ type Callout = Extract<Component, { type: "callout" }>
  * a rule (2px of petrol over the first, a hairline over the rest): its icon
  * in petrol, its name bold over its note in small grey, the value it had at
  * 38px in a faded grey, an arrow, the value it has now at 38px in petrol (the
- * measure the page is about in the tangerine), each with its unit after it in
+ * measure the page is about in the brick red), each with its unit after it in
  * small type, and what the move is as a pale petrol chip at the right. Under
  * the rows a hairline, then a bar of sand with the note's icon and one line.
  *

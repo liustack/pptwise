@@ -16,8 +16,8 @@ type Callout = Extract<Component, { type: "callout" }>
  * right, and what kind of source it rests on as an outlined chip. At the
  * right the working: a card with what is worked out, the formula in italic,
  * the figures put in, and the result at 40px in petrol; under it the answer
- * the page lands on as a block of the tangerine, its result at 60px in the
- * text ink. Under both, a line under a hairline saying what the sum leaves
+ * the page lands on as a block of the brick red, its result at 60px in
+ * white. Under both, a line under a hairline saying what the sum leaves
  * out.
  *
  * The table's first column names each input after its symbol and a space

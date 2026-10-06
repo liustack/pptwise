@@ -11,8 +11,7 @@ type Callout = Extract<Component, { type: "callout" }>
  * checkpoints: how a project runs step by step, each step closed by a paper
  * the client signs off, proposal's 2026-10 board (p16). Over the steps a
  * chain of arrows in petrol, each with the step's date (「第 1 步」), the
- * step the page dwells on (`highlight`) in the tangerine with the text ink on
- * it. Under each arrow a card: the step's icon in petrol, its name bold, what
+ * step the page dwells on (`highlight`) in the brick red with white on it. Under each arrow a card: the step's icon in petrol, its name bold, what
  * is done, a hairline, then the paper it closes with: what the paper is for
  * in small grey (「交贵司确认」) over the paper bold in petrol, and the rule the
  * step rests on in small grey (`source`). Under the cards, a bar of the pale

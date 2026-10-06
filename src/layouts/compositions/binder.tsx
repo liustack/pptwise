@@ -17,12 +17,13 @@ import { centredBaseline, fitFixed, paintLines } from "./type"
  * White paper, cards of warm sand (the theme's surface) over no outline, the
  * petrol of the primary for titles, figures and the one dark block a page may
  * carry, a second petrol and a pale sky from the chart palette for bars and
- * steps, and the accent, a tangerine, on one thing a page: the figure the
+ * steps, and the accent, a brick red, on one thing a page: the figure the
  * page lands on, the answer block, a chip, the box to tick. Words set on the
- * tangerine are in the text ink, never white. Small words in tangerine take
- * the theme's emphasis ink, a darker tangerine that reads on paper. Down the
- * right edge runs a column of binder tabs, one a section of the proposal, the
- * page's own sticking out in petrol.
+ * accent are in the text ink where it reads there and white where it does
+ * not, which on the brick red is white. Small words in the accent take the
+ * theme's emphasis ink, on proposal the brick red itself, which reads on the
+ * paper and the sand. Down the right edge runs a column of binder tabs, one a
+ * section of the proposal, the page's own sticking out in petrol.
  *
  * The board's small type (11 to 15px labels, chips, notes, the source and the
  * folio) is under the 16px floor and carries the `binder-spec` exemption the
@@ -67,13 +68,13 @@ export interface BinderInks {
   rule: string
   /** Ticks and a blank to fill: the hairline two steps darker. */
   tick: string
-  /** The tangerine: the accent. */
+  /** The brick red: the accent. */
   fire: string
-  /** Small words in the tangerine: the theme's emphasis ink, a darker tangerine. */
+  /** Small words in the brick red: the theme's emphasis ink, on proposal the brick red itself. */
   fireText: string
-  /** The tangerine at a tint over the paper: a lead row. */
+  /** The brick red at a tint over the paper: a lead row. */
   firePale: string
-  /** Words on the tangerine: the text ink. */
+  /** Words on the brick red: the text ink where it reads at 4.5, otherwise the readable ink, white on the brick red. */
   onFire: string
   /** Words on petrol and on a photograph darkened with it. */
   onDeep: string
@@ -89,7 +90,7 @@ const PALE_MIX = 0.12
 const SKY_PALE_MIX = 0.36
 /** #8A949C on the board: the muted ink 28% of the way to the paper. */
 const FADE_MIX = 0.28
-/** #FDEBE2 on the board: the tangerine at 14% over the paper. */
+/** The accent at 14% over the paper: #FDEBE2 under the board's tangerine, #F5E4E1 under the brick red. */
 const FIRE_PALE_MIX = 0.14
 /** #CFC8BC and #B9B3A8 on the board: the hairline toward the text ink. */
 const RULE_MIX = 0.1
@@ -341,7 +342,7 @@ export function paintBinderCard(
 }
 
 /**
- * The lead on a page. Every shape a composition paints in the tangerine sits
+ * The lead on a page. Every shape a composition paints in the brick red sits
  * inside one of these groups, so a test can find what the page lights.
  */
 export function Lead({ id, children }: { id: string; children: React.ReactNode }): React.ReactElement {

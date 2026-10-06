@@ -13,8 +13,8 @@ type Kpis = Extract<Component, { type: "kpi_cards" }>
 /**
  * binder-cover：提案书的封面，proposal 2026-10 定稿（p01）。
  *
- * 左边一张白纸的提案页：左上日期（`meta.date`，14px 灰粗），中段一枚橘色
- * 胶囊写呈给谁（页面的 `kicker`，「呈 贵司管理层」，深墨字），标题 50px 特粗
+ * 左边一张白纸的提案页：左上日期（`meta.date`，14px 灰粗），中段一枚砖红
+ * 胶囊写呈给谁（页面的 `kicker`，「呈 贵司管理层」，白字），标题 50px 特粗
  * 石油蓝，一行放得下就一行；下面 20px 灰色副题；一条发丝线；线下一排三个
  * 关键数（页面的 `kpi_cards`，每项数值 26px 石油蓝粗，名字和注各一行 13px
  * 灰）；左下角是页面的 `footnote`（「图为 AI 生成的示意图」）。右边 560 宽
@@ -110,7 +110,7 @@ export function BinderCover({ ir, slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   // cover-binder-cover.tsx: proposal's cover. A white proposal page at the
-  // left with the date, a tangerine chip naming who it is for, the title, the
+  // left with the date, a brick-red chip naming who it is for, the title, the
   // line under it and three figures under a hairline; the page's photograph
   // down the right 560px.
   id: "binder-cover",

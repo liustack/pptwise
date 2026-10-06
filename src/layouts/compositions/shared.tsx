@@ -297,8 +297,8 @@ export type CompositionId =
  *   management in a ring binder: white paper, cards of warm sand with no
  *   outline, the primary's petrol for titles, figures and the one dark block
  *   a page may carry, the chart palette's second petrol and sky for bars and
- *   steps, and the accent, a tangerine, on one thing a page with the text ink
- *   on it, small tangerine words in the theme's emphasis ink. A composition
+ *   steps, and the accent, a brick red, on one thing a page with white on it,
+ *   small brick-red words in the theme's emphasis ink. A composition
  *   offered this setting draws the shapes that board drew and no other did:
  *   what the client gets as figure cards, a day's tariff bands, places side
  *   by side as cards, a sum worked out beside its inputs, what moves a

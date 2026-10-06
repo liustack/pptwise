@@ -12,7 +12,7 @@ type Callout = Extract<Component, { type: "callout" }>
  * (p12). A card a column: its name at 21px in petrol, who it suits under it
  * in small grey (the comparison's first row, with no label), and where that
  * line ends on a part marked whole after a " · " (「适合：不想占用资金 ·
- * **贵司出资 0 元**」), that part as a chip of the tangerine under it; then the
+ * **贵司出资 0 元**」), that part as a chip of the brick red under it; then the
  * marked row's label in small grey over its figure at 34px in petrol (28px
  * for a figure of nine characters or more), the part of the figure's cell
  * after a " · " as a line under it (「约 44.0 万元 · 节省全部归贵司」); then each

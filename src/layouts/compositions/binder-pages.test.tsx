@@ -132,12 +132,12 @@ describe.each(["proposal", "brief", "rally"])("the proposal board's pages on %s"
 })
 
 describe("the proposal board's pages on proposal", () => {
-  it.each(Object.keys(BINDER_BOARD))("%s lights at most one thing in the tangerine", (name) => {
+  it.each(Object.keys(BINDER_BOARD))("%s lights at most one thing in the brick red", (name) => {
     const { root, ctx } = draw(name)
     const fire = binderInks(ctx).fire.toUpperCase()
     const leads = new Set(Array.from(root!.querySelectorAll("[data-binder-lead]")).map((el) => el.getAttribute("data-binder-lead")))
     expect(leads.size, name).toBeLessThanOrEqual(1)
-    // Nothing outside a lead group is painted in the tangerine.
+    // Nothing outside a lead group is painted in the brick red.
     for (const el of Array.from(root!.querySelectorAll("[fill], [stroke]"))) {
       if (el.closest("[data-binder-lead]")) continue
       expect((el.getAttribute("fill") ?? "").toUpperCase(), name).not.toBe(fire)
@@ -145,7 +145,7 @@ describe("the proposal board's pages on proposal", () => {
     }
   })
 
-  it("gains sets each figure at 40px, the marked one in the tangerine over the sand", () => {
+  it("gains sets each figure at 40px, the marked one in the brick red over the sand", () => {
     const { root, ctx } = draw("p02-promise")
     const figure = byText(root!, "6.1 至 7.7 年")!
     expect(figure.getAttribute("font-size")).toBe("40")
@@ -170,7 +170,7 @@ describe("the proposal board's pages on proposal", () => {
     expect(byText(root!, "苏发改价格发〔2025〕426 号")).toBeDefined()
   })
 
-  it("regions sets the aside of a figure as a chip beside it and the marked verdict in the tangerine", () => {
+  it("regions sets the aside of a figure as a chip beside it and the marked verdict in the brick red", () => {
     const { root } = draw("p05-provinces")
     expect(byText(root!, "约 0.76")).toBeDefined()
     expect(root!.querySelector("[data-binder-chip='示意']")!.getAttribute("data-aside-brackets")).toBe("（）")
@@ -178,7 +178,7 @@ describe("the proposal board's pages on proposal", () => {
     expect(root!.querySelector("[data-binder-note] rect")).not.toBeNull()
   })
 
-  it("workings sets each input's symbol in a disc and the answer as a block of the tangerine", () => {
+  it("workings sets each input's symbol in a disc and the answer as a block of the brick red", () => {
     const { root, ctx } = draw("p06-pv-math")
     expect(Array.from(root!.querySelectorAll("[data-binder-input]")).map((el) => el.getAttribute("data-binder-input"))).toEqual(["E", "p", "O", "I"])
     expect(byText(root!, "E")!.getAttribute("font-style")).toBe("italic")
@@ -190,7 +190,7 @@ describe("the proposal board's pages on proposal", () => {
     expect(byText(root!, "6.1 年")!.getAttribute("font-size")).toBe("60")
   })
 
-  it("levers scales the bars to a round axis, the marked case in the tangerine and the reference in the sky", () => {
+  it("levers scales the bars to a round axis, the marked case in the brick red and the reference in the sky", () => {
     const { root, ctx } = draw("p07-sensitivity")
     const inks = binderInks(ctx)
     const bar = (name: string) => root!.querySelector(`[data-binder-bar-case='${name}'] rect`)!
@@ -210,7 +210,7 @@ describe("the proposal board's pages on proposal", () => {
     expect(byText(root!, "1111.3 元")!.getAttribute("font-size")).toBe("44")
   })
 
-  it("drift fades what was, sets what is in petrol and the marked measure in the tangerine", () => {
+  it("drift fades what was, sets what is in petrol and the marked measure in the brick red", () => {
     const { root, ctx } = draw("p09-storage-discount")
     const inks = binderInks(ctx)
     expect(byText(root!, "5.4")!.getAttribute("fill")).toBe(inks.fade)
@@ -218,7 +218,7 @@ describe("the proposal board's pages on proposal", () => {
     expect(byText(root!, "0.65") ?? byText(root!, "约 0.65")).toBeDefined()
   })
 
-  it("parts numbers the parts, the first in the tangerine, and dashes the card whose tag is not settled", () => {
+  it("parts numbers the parts, the first in the brick red, and dashes the card whose tag is not settled", () => {
     const { root } = draw("p11-solution")
     expect(root!.querySelector("[data-binder-lead='part'] [data-binder-part-number='1']")).not.toBeNull()
     const storage = root!.querySelector("[data-binder-part='储能柜']")!
@@ -234,7 +234,7 @@ describe("the proposal board's pages on proposal", () => {
     expect(byText(root!, "44.0 万元减租金")!.getAttribute("font-size")).toBe("28")
   })
 
-  it("precedents sets the title as an outlined chip and the audited record on a tangerine edge", () => {
+  it("precedents sets the title as an outlined chip and the audited record on a brick-red edge", () => {
     const { root } = draw("p13-references")
     expect(root!.querySelector("[data-binder-chip='均非我方项目'] rect")!.getAttribute("fill")).toBe("none")
     expect(root!.querySelector("[data-binder-precedent='亿晶光电江苏四座电站'] [data-binder-lead='precedent'] path")).not.toBeNull()
@@ -254,7 +254,7 @@ describe("the proposal board's pages on proposal", () => {
     expect(root!.querySelector("[data-binder-risk='电价时段再调整'] rect")!.getAttribute("fill")).toBe(binderInks(ctx).firePale)
   })
 
-  it("checkpoints chains the steps, the highlighted one in the tangerine, and splits each step's paper off its text", () => {
+  it("checkpoints chains the steps, the highlighted one in the brick red, and splits each step's paper off its text", () => {
     const { root } = draw("p16-roadmap")
     expect(root!.querySelectorAll("[data-binder-step-arrow]")).toHaveLength(6)
     expect(root!.querySelector("[data-binder-lead='step'] [data-binder-step-arrow='3']")).not.toBeNull()
