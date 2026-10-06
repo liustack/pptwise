@@ -451,23 +451,42 @@ describe("gallery face band corpus", () => {
 })
 
 describe("gallery corpus", () => {
-  it("renders every page in every table through the real render chain", async () => {
-    // Deliberately the whole matrix, not a sample: a corpus page that stops
-    // rendering is a hole in the review, and which page it is cannot be
-    // predicted from which code changed.
+  // Deliberately the whole matrix, not a sample: a corpus page that stops
+  // rendering is a hole in the review, and which page it is cannot be
+  // predicted from which code changed.
+  //
+  // The matrix renders one section at a time, each section its own test on
+  // its own clock. It used to be one test over all of it, and that test's
+  // limit had to grow with every theme added: at 2704 pages it ran past 120s
+  // on the Windows CI runner, and the failure did not say which theme was
+  // slow. A section takes seconds, so the default limit holds as themes are
+  // added, and a failure names the section it happened in.
+  const sections = [...themeIds, UNSERVED_SECTION]
+
+  it("splits into sections that hold every page of the matrix exactly once", async () => {
+    const whole = buildMatrix(themeIds, await assets()).map((j) => j.id)
+    const split: string[] = []
+    for (const section of sections) {
+      split.push(...buildMatrix(themeIds, await assets(), { section }).map((j) => j.id))
+    }
+    expect(split.sort()).toEqual(whole.sort())
+  })
+
+  it.each(sections)("renders every page of the %s section through the real render chain", async (section) => {
     const { renderMatrix } = await import("../evals/gallery/render")
     const { mkdtempSync } = await import("node:fs")
     const { tmpdir } = await import("node:os")
     const { join } = await import("node:path")
 
-    const jobs = buildMatrix(themeIds, await assets())
+    const jobs = buildMatrix(themeIds, await assets(), { section })
+    expect(jobs.length).toBeGreaterThan(0)
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-"))
     const { manifest } = renderMatrix(jobs, outDir, "test")
 
     const failures = manifest.pages.filter((p) => p.skipped).map((p) => `${p.id}: ${p.skipped}`)
     expect(failures).toEqual([])
     expect(manifest.pages.length).toBe(jobs.length)
-  }, 120_000)
+  })
 
   it("fingerprints every rendered page in both halves", async () => {
     // Verdicts are stamped with these, and a page that shipped without them

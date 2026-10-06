@@ -8,7 +8,7 @@
  * this file.
  */
 
-import { mkdtempSync, writeFileSync } from "node:fs"
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -31,8 +31,14 @@ const assets = Object.fromEntries(
   await Promise.all(LANGUAGE_IDS.map(async (id) => [id, await corpusAssets(LEXICONS[id])] as const)),
 ) as Record<LanguageId, Awaited<ReturnType<typeof corpusAssets>>>
 const jobs = buildMatrix(themeIds, assets)
+// Only the manifest is kept. The rendered files are renderMatrix's scratch.
 const outDir = mkdtempSync(join(tmpdir(), "pptwise-hashes-"))
-const { manifest } = renderMatrix(jobs, outDir, "pin")
+let manifest: ReturnType<typeof renderMatrix>["manifest"]
+try {
+  manifest = renderMatrix(jobs, outDir, "pin").manifest
+} finally {
+  rmSync(outDir, { recursive: true, force: true })
+}
 const gold = hashesFromManifest(manifest)
 writeFileSync(OUT, `${JSON.stringify(gold, null, 2)}\n`)
 console.log(`wrote ${Object.keys(gold.pages).length} page hashes to ${OUT}`)

@@ -2,7 +2,7 @@
 //
 // L2 unit tests inject ProcessRunner and never spawn grok.
 
-import { mkdtempSync, readFileSync, readdirSync } from "node:fs"
+import { existsSync, mkdtempSync, readFileSync, readdirSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
@@ -175,5 +175,24 @@ describe("judgeL2", () => {
       source: "l2",
       findings: ["taboo"],
     })
+    expect(existsSync(join(workdir, "page.png"))).toBe(true)
+  })
+
+  it("removes the workdir it made itself, after a verdict and after a failure alike", async () => {
+    // A live run judges every page in the matrix. A workdir left per page
+    // was a PNG and a rubric copy left in the temp directory per page.
+    const workdirs: string[] = []
+    const runner = (code: number): ProcessRunner => async (req) => {
+      workdirs.push(req.cwd!)
+      expect(existsSync(join(req.cwd!, "page.png"))).toBe(true)
+      const stdout = JSON.stringify({ ...PAGE, verdict: "pass", note: "", findings: [], source: "l2", confidence: 0.9, rubricHits: [] })
+      return { code, stdout, stderr: code === 0 ? "" : "grok failed" }
+    }
+    await judgeL2({ svg: SVG, page: PAGE, l1: auditL1(SVG), run: runner(0), grokBin: "grok", playwright: false })
+    await expect(
+      judgeL2({ svg: SVG, page: PAGE, l1: auditL1(SVG), run: runner(1), grokBin: "grok", playwright: false }),
+    ).rejects.toThrow(/grok exited 1/)
+    expect(workdirs).toHaveLength(2)
+    for (const workdir of workdirs) expect(existsSync(workdir)).toBe(false)
   })
 })

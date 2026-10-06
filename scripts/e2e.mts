@@ -6,6 +6,7 @@ import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import JSZip from "jszip"
 import type * as Sharp from "sharp"
+import { openRunRoot } from "../src/test-run-root"
 
 const OUT = ".e2e-out"
 mkdirSync(OUT, { recursive: true })
@@ -46,6 +47,10 @@ function shCapture(cmd: string, args: string[]): { status: number; stdout: strin
     return { status, stdout: stdout ?? "", stderr: stderr ?? "" }
   }
 }
+
+// Every temp directory this run makes, its own and the CLI children's, lands
+// in one root that goes away when the run ends, a failed leg included.
+const runRoot = openRunRoot(tmpdir())
 
 // Child CLI processes inherit this env. pptwiseHome() copies ~/.pptpress or
 // ~/.pptfast into ~/.pptwise when the new dir is missing, so this gate must
@@ -1207,7 +1212,18 @@ console.log("--- content packs leg ---")
   console.log("content packs leg OK (quiet without a license, installed then current, listed as a pack theme, bound and rendered)")
 }
 
+// A temp directory the CLI does not remove stays on the user's machine until
+// the OS gets round to it. Every CLI child above ran with its temp directory
+// inside this run's root, and each leg removed what it made, so a pptwise-*
+// entry still there, other than this script's home, was left behind.
+console.log("--- temp directory leg ---")
+const leftovers = readdirSync(runRoot.root).filter((name) => name.startsWith("pptwise-") && join(runRoot.root, name) !== e2eHome)
+if (leftovers.length > 0) {
+  throw new Error(`e2e: temp directory leg found leftovers in the temp directory: ${leftovers.join(", ")}`)
+}
+console.log("temp directory leg OK (nothing named pptwise-* left in the temp directory)")
+
 console.log("e2e OK")
 } finally {
-  rmSync(e2eHome, { recursive: true, force: true })
+  runRoot.teardown()
 }

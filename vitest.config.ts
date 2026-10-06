@@ -12,6 +12,9 @@ export default defineConfig({
       "scripts/**/*.test.mts",
       "evals/**/*.test.mts",
     ],
+    // One temp root per run, removed at the end. Every os.tmpdir() in the
+    // workers and in the CLI children they spawn lands inside it.
+    globalSetup: ["src/test-run-root.ts"],
     setupFiles: ["src/test-setup.ts"],
     // 60s, not 15s, because the heaviest sweeps genuinely need it. They are
     // slow, not hung. Measured on a 10-core machine, `vitest run` forking 10
@@ -19,7 +22,6 @@ export default defineConfig({
     //
     //   test                                    solo    in a full run
     //   all-themes.test.ts / rally           3.9s    10.2-17.1s
-    //   gallery.test.mts / gallery corpus       4.8s    11.0-15.0s
     //   audit-baseline.test.ts / journal        0.7s    1.5-10.1s
     //
     // Ten workers on ten cores costs each worker a 2.5-4.5x slowdown, so a
@@ -33,12 +35,16 @@ export default defineConfig({
     // 60s keeps ~3.5x headroom over the worst measured run and still surfaces
     // a real hang loudly (the whole suite takes 85-140s).
     //
+    // scripts/gallery.test.mts renders the gallery corpus one section per
+    // test. It used to be one test over the whole matrix on its own 120s
+    // limit, which the Windows CI runner overran once the matrix reached 2704
+    // pages. The largest section, brief at 254 pages, took 3.1s in a run of
+    // that file alone on the same 10-core machine.
+    //
     // evals/gallery/corpus-scan.test.mts renders the ~2450-page matrix once
     // in beforeAll (hook timeout 300s). The six original gallery files each
     // used to render that matrix on their own. Those six re-renders are now
     // one shared render. Each `it` in that file still uses this default 60s.
-    // The `gallery.test.mts / gallery corpus` 4.8s measurement above is
-    // still valid.
     //
     // evals/gallery/cross-language-capacity.test.mts used to need 600s as a
     // single 24-theme `it`. It now samples four themes on this default 60s.
