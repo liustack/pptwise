@@ -345,8 +345,6 @@ const LEGEND_SWATCH_SIZE = 10;
 /** Legend name font size (px) — 11 → 12 to match the header unit caption. */
 const LEGEND_FONT_SIZE = 16;
 const LEGEND_MIN_FONT_SIZE = 16;
-/** Per-entry name budget (px) before `fitSvgLine` shrinks/truncates it. */
-const LEGEND_NAME_MAX_W = 160;
 /** Gap (px) between a swatch and its own name. */
 const LEGEND_SWATCH_GAP = 6;
 /**
@@ -362,14 +360,38 @@ const LEGEND_ENTRY_PITCH = 100;
  * for Microsoft YaHei on a Mac), so the gap has to absorb that.
  */
 const LEGEND_ENTRY_GAP = 20;
+/**
+ * Baseline-to-baseline pitch (px) of a legend that runs onto a second or
+ * third row: one and a half times the names' size. Each row it adds moves
+ * the plot down by this much, so the tallest bar's label keeps its clearance
+ * under the last row.
+ */
+const LEGEND_ROW_PITCH = 24;
+/**
+ * The most rows a legend takes. Past three, the chart has more series than a
+ * reader can match to their bars, and the names that do not fit are declared.
+ */
+const LEGEND_MAX_ROWS = 3;
 
 type LegendSlot = {
   seriesIndex: number;
   colorIndex: number;
+  /** The legend row the entry stands in, from 0. */
+  row: number;
+  /** The entry's left edge, from the left of its row's group. */
   slotX: number;
   fitted: ReturnType<typeof fitSvgLine>;
   width: number;
 };
+
+interface LegendLayout {
+  slots: LegendSlot[];
+  droppedCount: number;
+  /** How many rows the header gives the legend, at least one. */
+  rows: number;
+  /** Each row's group width, which the caller right-aligns. */
+  rowWidths: number[];
+}
 
 function legendNameWidth(
   fitted: ReturnType<typeof fitSvgLine>,
@@ -380,33 +402,37 @@ function legendNameWidth(
 
 /**
  * Lays out a chart's legend entries (chart-model.ts's `ChartModel.legend`,
- * already in input series order) against `availW` px. Slots pack left to
- * right with a `LEGEND_ENTRY_PITCH` swatch-to-swatch pitch, or the fitted
- * entry plus `LEGEND_ENTRY_GAP` when that is larger. The caller right-aligns the group by offsetting `slotX`
- * with `availW - groupW`.
+ * already in input series order) in rows `rowW` px wide, the first row
+ * `firstRowW` wide because the chart's tag stands at its start. Within a row
+ * slots pack left to right with a `LEGEND_ENTRY_PITCH` swatch-to-swatch
+ * pitch, or the entry plus `LEGEND_ENTRY_GAP` when that is larger. The
+ * caller right-aligns each row.
+ *
+ * **A name is set whole.** It takes the width it needs, up to a whole row.
+ * Each name used to have 160px whatever room the row had, about eighteen
+ * Latin characters, and lost the rest. A row that cannot hold the next name
+ * hands it to the next row, down to `LEGEND_MAX_ROWS`, and the header grows
+ * by a row's pitch for each row it adds (`headerRowH`). Only a name wider
+ * than a whole row is cut, and it says so with `data-truncated`.
  *
  * **What fits is named, and the rest is declared.** A slide never carries a
  * count of what it left out: an overflow mark is bookkeeping the audience
  * did not ask for, in a vocabulary only this repo reads. So entries that do
- * not fit are simply not drawn, and every one of them is declared through
- * `data-dropped` — the marker `slideToRender` sums and
+ * not fit in the last row are simply not drawn, and every one of them is
+ * declared through `data-dropped` — the marker `slideToRender` sums and
  * `checkContentDropGate` (`../pptx/generate.ts`) refuses to export. A
- * 24-series bar chart at 1120px paints the names that fit and ships nothing
+ * 60-series bar chart at 1120px paints the names that fit and ships nothing
  * until the author gives the chart fewer series or a wider band.
  */
 function layoutChartLegend(
   legend: ReturnType<typeof buildChartModel>["legend"],
-  availW: number,
+  rowW: number,
+  firstRowW: number,
   fontFamily: string
-): {
-  slots: LegendSlot[];
-  droppedCount: number;
-  /** Total width of the right-aligned group. */
-  groupW: number;
-} {
+): LegendLayout {
   const prepared = legend.map((entry) => {
     const fitted = fitSvgLine(entry.name, {
-      maxWidth: LEGEND_NAME_MAX_W,
+      maxWidth: Math.max(0, rowW - LEGEND_SWATCH_SIZE - LEGEND_SWATCH_GAP),
       fontSize: LEGEND_FONT_SIZE,
       minFontSize: LEGEND_MIN_FONT_SIZE,
       fontFamily,
@@ -425,40 +451,32 @@ function layoutChartLegend(
   const pitchAfter = (width: number) =>
     Math.max(LEGEND_ENTRY_PITCH, width + LEGEND_ENTRY_GAP);
 
-  function pack(count: number) {
-    const slots: LegendSlot[] = [];
-    for (let i = 0; i < count; i++) {
-      const e = prepared[i]!;
-      const slotX =
-        i === 0 ? 0 : slots[i - 1]!.slotX + pitchAfter(prepared[i - 1]!.width);
-      slots.push({
-        seriesIndex: e.seriesIndex,
-        colorIndex: e.colorIndex,
-        slotX,
-        fitted: e.fitted,
-        width: e.width,
-      });
+  const slots: LegendSlot[] = [];
+  const rowWidths = [0];
+  let row = 0;
+  for (let i = 0; i < prepared.length; i++) {
+    const e = prepared[i]!;
+    for (;;) {
+      const prev = slots.length > 0 && slots[slots.length - 1]!.row === row ? slots[slots.length - 1]! : undefined;
+      const slotX = prev ? prev.slotX + pitchAfter(prev.width) : 0;
+      if (slotX + e.width <= (row === 0 ? firstRowW : rowW)) {
+        slots.push({ seriesIndex: e.seriesIndex, colorIndex: e.colorIndex, row, slotX, fitted: e.fitted, width: e.width });
+        rowWidths[row] = slotX + e.width;
+        break;
+      }
+      if (row + 1 >= LEGEND_MAX_ROWS || (!prev && row > 0)) {
+        return { slots, droppedCount: prepared.length - i, rows: lastRow(slots), rowWidths: rowWidths.slice(0, lastRow(slots)) };
+      }
+      row += 1;
+      rowWidths.push(0);
     }
-    if (count === 0) {
-      return { slots, groupW: 0 };
-    }
-    const last = slots[count - 1]!;
-    return { slots, groupW: last.slotX + last.width };
   }
+  return { slots, droppedCount: 0, rows: lastRow(slots), rowWidths: rowWidths.slice(0, lastRow(slots)) };
+}
 
-  let visible = prepared.length;
-  while (visible > 0) {
-    const packed = pack(visible);
-    if (packed.groupW <= availW) {
-      return {
-        slots: packed.slots,
-        droppedCount: prepared.length - visible,
-        groupW: packed.groupW,
-      };
-    }
-    visible -= 1;
-  }
-  return { slots: [], droppedCount: prepared.length, groupW: 0 };
+/** How many rows the placed slots take, at least one. */
+function lastRow(slots: readonly LegendSlot[]): number {
+  return slots.length > 0 ? slots[slots.length - 1]!.row + 1 : 1;
 }
 
 const SERIES_EMPHASIS: ReadonlySet<ChartComponent["chart_type"]> = new Set(
@@ -611,14 +629,38 @@ function horizontalBarBodyH(component: ChartComponent): number {
 }
 
 /** The header row and the axis-title band a chart stacks on its body. */
-function chartFrameH(component: ChartComponent): number {
+function chartFrameH(component: ChartComponent, w: number, ctx: ComponentCtx): number {
   const { xTitle, yTitle, y2Title } = axisTitlesOf(component);
-  return (hasHeaderRow(component) ? HEADER_ROW_H : 0) + axisTitlePairHeight(xTitle, yTitle, y2Title);
+  return headerRowH(component, w, ctx) + axisTitlePairHeight(xTitle, yTitle, y2Title);
 }
 
-function measureChartH(component: ChartComponent): number {
+/**
+ * The legend laid out at width `w`: the rows the chart's header gives it,
+ * the first one shortened by the chart's tag when there is one. Null when
+ * the chart draws no legend.
+ */
+function chartLegendLayout(component: ChartComponent, w: number, ctx: ComponentCtx): LegendLayout | null {
+  if (!legendApplicable(component)) return null;
+  const tagW = component.tag ? tagWidth(component.tag.text, ordinaryTagSpec(ctx)) : 0;
+  const tagFits = component.tag !== undefined && tagW <= w;
+  return layoutChartLegend(
+    [...buildChartModel(component.series).legend, ...statusEntries(component, ctx.figures), ...referenceEntries(component)],
+    w,
+    tagFits ? w - tagW - TAG_LEGEND_GAP : w,
+    ctx.fonts.body
+  );
+}
+
+/** The header the plot is moved down by: one row, and a row's pitch for each further legend row. */
+function headerRowH(component: ChartComponent, w: number, ctx: ComponentCtx): number {
+  if (!hasHeaderRow(component)) return 0;
+  const rows = chartLegendLayout(component, w, ctx)?.rows ?? 1;
+  return HEADER_ROW_H + (rows - 1) * LEGEND_ROW_PITCH;
+}
+
+function measureChartH(component: ChartComponent, w: number, ctx: ComponentCtx): number {
   return (
-    chartFrameH(component) +
+    chartFrameH(component, w, ctx) +
     Math.max(
       CHART_H,
       directLabelBodyH(component),
@@ -646,9 +688,9 @@ function measureChartH(component: ChartComponent): number {
  */
 function chartMinHeight(component: ChartComponent, w: number, ctx: ComponentCtx): number {
   if (isShareBar(component)) return shareBarHeight(component, w, ctx);
-  if (!axesApplicable(component)) return measureChartH(component);
+  if (!axesApplicable(component)) return measureChartH(component, w, ctx);
   return (
-    chartFrameH(component) +
+    chartFrameH(component, w, ctx) +
     Math.max(CHART_MIN_BODY_H, directLabelBodyH(component), horizontalBarBodyH(component))
   );
 }
@@ -678,7 +720,7 @@ function renderShare(component: ChartComponent, box: { x: number; y: number; w: 
 export const chart: SvgComponent<ChartComponent> = {
   measure(component, w, ctx) {
     if (isShareBar(component)) return shareBarHeight(component, w, ctx);
-    return measureChartH(component);
+    return measureChartH(component, w, ctx);
   },
   render(component, box, ctx) {
     if (isShareBar(component)) return renderShare(component, box, ctx);
@@ -687,7 +729,7 @@ export const chart: SvgComponent<ChartComponent> = {
     // (pie/funnel/dumbbell) `axes` is read as if it were entirely absent, so
     // the field is honestly ignored rather than partially/silently honored.
     const axes = axesApplicable(component) ? component.axes : undefined;
-    const headerH = hasHeaderRow(component) ? HEADER_ROW_H : 0;
+    const headerH = headerRowH(component, box.w, ctx);
     const minimum = chartMinHeight(component, box.w, ctx);
     // A component draws inside the box it accepted, or it declines. This used
     // to read `Math.max(CHART_H + titleH, allocated)`: handed a box shorter
@@ -787,7 +829,6 @@ export const chart: SvgComponent<ChartComponent> = {
     );
     const bodyFace = ctx.fonts.body;
 
-    const hasLegend = legendApplicable(component);
     const headerW = box.w;
     // The chart's tag stands at the start of the header row, the legend
     // right-aligned in what is left. A tag wider than the whole row is
@@ -795,16 +836,9 @@ export const chart: SvgComponent<ChartComponent> = {
     const tagSpec = ordinaryTagSpec(ctx);
     const tagW = component.tag ? tagWidth(component.tag.text, tagSpec) : 0;
     const tagFits = component.tag !== undefined && tagW <= headerW;
-    const legendLayout = hasLegend
-      ? layoutChartLegend(
-          [...buildChartModel(component.series).legend, ...statusEntries(component, ctx.figures), ...referenceEntries(component)],
-          tagFits ? headerW - tagW - TAG_LEGEND_GAP : headerW,
-          bodyFace
-        )
-      : null;
-    const legendLeft = legendLayout ? headerW - legendLayout.groupW : headerW;
-
-    const swatchY = HEADER_BASELINE_Y - LEGEND_SWATCH_SIZE;
+    // The same layout `headerRowH` measured the header with, so the rows
+    // drawn are the rows the plot was moved down for.
+    const legendLayout = chartLegendLayout(component, headerW, ctx);
     // A status entry is drawn in the fill of the bars it names: the Forecast
     // or Target entry in its series' forecasts or targets, a series that is
     // all one status in its own bars.
@@ -853,7 +887,9 @@ export const chart: SvgComponent<ChartComponent> = {
         {legendLayout ? (
           <g>
             {legendLayout.slots.map((slot) => {
-              const swatchX = legendLeft + slot.slotX;
+              // Each row is right-aligned on its own, a row's pitch under the last.
+              const swatchX = headerW - legendLayout.rowWidths[slot.row]! + slot.slotX;
+              const swatchY = HEADER_BASELINE_Y + slot.row * LEGEND_ROW_PITCH - LEGEND_SWATCH_SIZE;
               const nameFill = accessibleInk(
                 ctx.colors.muted,
                 legendBg,
@@ -910,7 +946,7 @@ export const chart: SvgComponent<ChartComponent> = {
                   <text
                     data-truncated={slot.fitted.truncated ? "1" : undefined}
                     x={swatchX + LEGEND_SWATCH_SIZE + LEGEND_SWATCH_GAP}
-                    y={HEADER_BASELINE_Y}
+                    y={HEADER_BASELINE_Y + slot.row * LEGEND_ROW_PITCH}
                     fontSize={slot.fitted.fontSize}
                     fill={nameFill}
                     fontFamily={bodyFace}
@@ -921,7 +957,7 @@ export const chart: SvgComponent<ChartComponent> = {
                 </g>
               );
             })}
-            {/* Series the row could not name are declared, never counted
+            {/* Series the rows could not name are declared, never counted
                 on the page: the export refuses instead. */}
             {legendLayout.droppedCount > 0 && (
               <g

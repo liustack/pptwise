@@ -183,17 +183,18 @@ const CASES: Case[] = [
   {
     name: "a chart legend declares the series names it could not draw",
     kind: "series-name",
-    authored: 24,
+    authored: 16,
     render: () => {
+      // Every name set whole, four a row and three rows at most.
       const component = {
         type: "chart" as const,
         chart_type: "bar" as const,
-        series: Array.from({ length: 24 }, (_, i) => ({ name: `S${i + 1}`, data: [{ x: "A", y: i + 1 }] })),
+        series: Array.from({ length: 16 }, (_, i) => ({ name: `Regional enterprise accounts ${i + 1}`, data: [{ x: "A", y: i + 1 }] })),
       }
       return svg(chart.render(component, { x: 0, y: 0, w: 1120, h: chart.measure(component, 1120, ctx) }, ctx))
         .container
     },
-    painted: (c) => textsMatching(c, (t) => /^S\d+$/.test((t.textContent ?? "").trim())),
+    painted: (c) => textsMatching(c, (t) => /^Regional enterprise accounts \d+$/.test((t.textContent ?? "").trim())),
   },
 ]
 
