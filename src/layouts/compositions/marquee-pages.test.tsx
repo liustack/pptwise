@@ -200,6 +200,19 @@ describe("the rally board's pages on rally", () => {
     expect(texts(root!).filter((t) => textOf(t) === "示意图（AI 生成）")).toHaveLength(4)
   })
 
+  // Every board page draws over a source line as well as without one: the
+  // touchpoint map's closing line used to sit where the source starts, and
+  // the whole map was declined on a page with a source.
+  it.each(Object.keys(MARQUEE_BOARD))("%s draws over a source line too", (name) => {
+    const page = MARQUEE_BOARD[name]!
+    const { ctx } = testCtx("rally")
+    const element = compose({ components: page.components, ctx: chinese(ctx), rect: band(true), setting: "marquee", ballot: page.ballot }, MARQUEE_IDS)
+    expect(element).not.toBeNull()
+    const { root } = renderNode(element!)
+    const close = root.querySelector("[data-marquee-close] text")
+    if (close) expect(Number(close.getAttribute("y"))).toBeLessThan(640)
+  })
+
   it("wall sets every case with its tag and the count on a card of the lead", () => {
     const { root } = draw("p10-cases")
     expect(root!.querySelectorAll("[data-case]")).toHaveLength(6)

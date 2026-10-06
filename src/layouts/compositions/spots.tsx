@@ -11,7 +11,8 @@ type ImageGrid = Extract<Component, { type: "image_grid" }>
  * the plan does there, and a small grey note on the picture. The first card
  * is outlined in the accent when the grid marks it (`emphasis: "first"`), its
  * icon in the accent; the others' icons are grey. Under them a closing line
- * in bold, in the warning ink for a `warn` callout.
+ * in bold, in the warning ink for a `warn` callout, raised to clear a source
+ * line when the page has one.
  *
  * A caption is written "name：what is done there", and may add a sentence
  * about the picture (「…，杯上带码。示意图（AI 生成）」): the name stands
@@ -32,7 +33,8 @@ type ImageGrid = Extract<Component, { type: "image_grid" }>
 const GRID = { top: 4, col: 584, row: 214 } as const
 const PHOTO = { w: 260, h: 196, r: 10 } as const
 const CARD = { x: 272, w: 296, h: 196, edge: 2, icon: { x: 20, y: 20, size: 26 }, name: { x: 58, top: 18, size: 24, lineHeight: 32, w: 220 }, job: { x: 20, top: 66, size: 16, lineHeight: 26, maxLines: 2, w: 260 }, note: { x: 20, top: 150, size: 12, lineHeight: 22, w: 260 } } as const
-const CLOSE = { top: 434, size: 14, lineHeight: 24 } as const
+/** The closing line at y622 as on the board, raised to clear a source line under the band, at least `gap` under the cards. */
+const CLOSE = { top: 434, size: 14, lineHeight: 24, gap: 12 } as const
 
 export const spotsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "marquee") return null
@@ -41,7 +43,9 @@ export const spotsComposition: Composition = ({ components, ctx, rect, setting }
   if (close !== undefined && (close.type !== "callout" || close.title || close.icon || close.tag)) return null
   const g = grid as ImageGrid
   if (g.items.length < 2 || g.items.length > 4 || g.items.some((it) => !it.icon || !it.caption?.trim())) return null
-  if (rect.w < GRID.col + CARD.x + CARD.w || rect.h < (close ? CLOSE.top + CLOSE.lineHeight : GRID.top + Math.ceil(g.items.length / 2) * GRID.row - 18)) return null
+  const cardsFoot = GRID.top + Math.ceil(g.items.length / 2) * GRID.row - 18
+  const closeTop = Math.min(CLOSE.top, rect.h - CLOSE.lineHeight)
+  if (rect.w < GRID.col + CARD.x + CARD.w || rect.h < cardsFoot || (close && closeTop < cardsFoot + CLOSE.gap)) return null
   const inks = marqueeInks(ctx)
   const spots = g.items.map((it, i) => {
     const name = splitName(it.caption!)
@@ -80,7 +84,7 @@ export const spotsComposition: Composition = ({ components, ctx, rect, setting }
           )
         })}
       </g>
-      {close && closeFit ? <g {...blockTag(ctx, close)} data-marquee-close="">{paintMarquee(closeFit, { ctx, x: rect.x, top: rect.y + CLOSE.top, bold: true, fill: marqueeText(closeInk, inks.ground, CLOSE.size), ground: inks.ground })}</g> : null}
+      {close && closeFit ? <g {...blockTag(ctx, close)} data-marquee-close="">{paintMarquee(closeFit, { ctx, x: rect.x, top: rect.y + closeTop, bold: true, fill: marqueeText(closeInk, inks.ground, CLOSE.size), ground: inks.ground })}</g> : null}
     </g>
   )
 }
