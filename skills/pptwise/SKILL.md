@@ -155,7 +155,7 @@ Use `--draft` or `--allow-dropped-content` only when the user explicitly request
 | Author's own proposition | `statement` | `verdict_banner`, `callout`, or no component |
 | Another speaker's words | `quote` | `blockquote` |
 | One number as the message | `fact` | one-item `kpi_cards`, `pictogram`, or no component |
-| Claim plus one exhibit | `evidence` | `image`, `chart`, `data_table`, `code`, `device_mockup` |
+| Claim plus one exhibit | `evidence` | `image`, `chart`, `data_table`, `code`, `device_mockup`, `sketch` |
 | Containment or levels | `hierarchy` | `architecture`, `bmc`, `five_forces`, `rings`, `hub_spoke`, `decision_tree`, `org_tree`, `issue_tree`, `pyramid`, `iceberg`, `pillar_model`, `fishbone`, `segmented_wheel` |
 
 ## Rules

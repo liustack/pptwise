@@ -97,6 +97,7 @@ import { schema as positioningMapSchema } from "./components/positioning-map"
 import { schema as conceptEquationSchema } from "./components/concept-equation"
 import { schema as segmentedWheelSchema } from "./components/segmented-wheel"
 import { schema as prosConsSchema } from "./components/pros-cons"
+import { schema as sketchSchema } from "./components/sketch"
 
 // Re-exported so IR, spec, theme menus, and public tooling share one exact
 // semantic vocabulary instead of maintaining independent string unions.
@@ -325,7 +326,7 @@ export {
   type FooterSettingIssue,
 } from "./footer"
 
-// ── Components（62 种）──
+// ── Components（63 种）──
 
 export const ComponentSchema = z.discriminatedUnion("type", [
   bulletsSchema,
@@ -390,6 +391,7 @@ export const ComponentSchema = z.discriminatedUnion("type", [
   conceptEquationSchema,
   segmentedWheelSchema,
   prosConsSchema,
+  sketchSchema,
 ], { error: componentTypeError })
 
 /**

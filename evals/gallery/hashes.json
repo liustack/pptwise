@@ -471,6 +471,11 @@
       "geometry": "tl3ryr",
       "color": "1iyb38j"
     },
+    "almanac--comp--sketch--zh": {
+      "hash": "vle54a",
+      "geometry": "2ijria",
+      "color": "5wn87f"
+    },
     "almanac--comp--staircase--zh": {
       "hash": "mmbfts",
       "geometry": "yx1iml",
@@ -960,6 +965,11 @@
       "hash": "16f1x1b",
       "geometry": "1wi7bqj",
       "color": "2e90do"
+    },
+    "arena--comp--sketch--zh": {
+      "hash": "v8r1gn",
+      "geometry": "16r1lyk",
+      "color": "i8mznh"
     },
     "arena--comp--staircase--zh": {
       "hash": "hfc3c5",
@@ -2131,6 +2141,21 @@
       "geometry": "1591pia",
       "color": "1nlol9y"
     },
+    "brief--comp--sketch--zh": {
+      "hash": "9o5f1s",
+      "geometry": "1a3xdri",
+      "color": "1fa1gap"
+    },
+    "brief--comp--sketch--en": {
+      "hash": "kypvv7",
+      "geometry": "7nwbu1",
+      "color": "1fa1gap"
+    },
+    "brief--comp--sketch--mixed": {
+      "hash": "hgdik",
+      "geometry": "e2uos4",
+      "color": "1fa1gap"
+    },
     "brief--comp--staircase--zh": {
       "hash": "1xhihdc",
       "geometry": "nyyv2m",
@@ -2741,6 +2766,11 @@
       "geometry": "13rjew2",
       "color": "slx92d"
     },
+    "bulletin--comp--sketch--zh": {
+      "hash": "1s9h8d2",
+      "geometry": "pd8jmw",
+      "color": "ywps1n"
+    },
     "bulletin--comp--staircase--zh": {
       "hash": "5bt6hs",
       "geometry": "1tq5ikf",
@@ -3266,6 +3296,11 @@
       "geometry": "1nylbt6",
       "color": "117e4gp"
     },
+    "clinic--comp--sketch--zh": {
+      "hash": "zhqs7e",
+      "geometry": "1hw08uu",
+      "color": "msq7e8"
+    },
     "clinic--comp--staircase--zh": {
       "hash": "1ir3fo5",
       "geometry": "1oj12oi",
@@ -3740,6 +3775,11 @@
       "hash": "1f2yokd",
       "geometry": "r1vvui",
       "color": "142kexe"
+    },
+    "crayon--comp--sketch--zh": {
+      "hash": "padh8d",
+      "geometry": "1h5rucp",
+      "color": "occvsb"
     },
     "crayon--comp--staircase--zh": {
       "hash": "wgimry",
@@ -4256,6 +4296,11 @@
       "geometry": "1e8aigb",
       "color": "fluyaf"
     },
+    "ember--comp--sketch--zh": {
+      "hash": "1xx0jsp",
+      "geometry": "147g35g",
+      "color": "bxwmta"
+    },
     "ember--comp--staircase--zh": {
       "hash": "1iyjd0s",
       "geometry": "1s1jlnx",
@@ -4745,6 +4790,11 @@
       "hash": "1qsowk1",
       "geometry": "habb7q",
       "color": "7pluv8"
+    },
+    "heritage--comp--sketch--zh": {
+      "hash": "ssrzzw",
+      "geometry": "meyqb6",
+      "color": "jczuii"
     },
     "heritage--comp--staircase--zh": {
       "hash": "8hobjd",
@@ -5261,6 +5311,11 @@
       "geometry": "1d2ffob",
       "color": "1txeyr9"
     },
+    "homeroom--comp--sketch--zh": {
+      "hash": "pwrobz",
+      "geometry": "iq244e",
+      "color": "133u3tf"
+    },
     "homeroom--comp--staircase--zh": {
       "hash": "pqznv9",
       "geometry": "1sfszf8",
@@ -5750,6 +5805,11 @@
       "hash": "c2ofkj",
       "geometry": "1ykwd9j",
       "color": "5y2glx"
+    },
+    "ink--comp--sketch--zh": {
+      "hash": "1mf86jv",
+      "geometry": "6k53cd",
+      "color": "1lbwd6f"
     },
     "ink--comp--staircase--zh": {
       "hash": "16xmgxg",
@@ -6241,6 +6301,11 @@
       "geometry": "g4wa78",
       "color": "3it2xs"
     },
+    "journal--comp--sketch--zh": {
+      "hash": "wecf2x",
+      "geometry": "1rx7bbl",
+      "color": "1w2womo"
+    },
     "journal--comp--staircase--zh": {
       "hash": "18qradb",
       "geometry": "h20pj0",
@@ -6731,6 +6796,11 @@
       "geometry": "61kt6c",
       "color": "flusmc"
     },
+    "lecture--comp--sketch--zh": {
+      "hash": "1pzaycr",
+      "geometry": "6dl5mh",
+      "color": "618hud"
+    },
     "lecture--comp--staircase--zh": {
       "hash": "1lzmu9r",
       "geometry": "1e9f63f",
@@ -7205,6 +7275,11 @@
       "hash": "atjd2v",
       "geometry": "3bd9xf",
       "color": "1xr0a4m"
+    },
+    "ledger--comp--sketch--zh": {
+      "hash": "1s1w3ik",
+      "geometry": "wm6ozu",
+      "color": "i0m0sl"
     },
     "ledger--comp--staircase--zh": {
       "hash": "1rrvhm7",
@@ -7695,6 +7770,11 @@
       "hash": "jx2ebb",
       "geometry": "185rcp",
       "color": "1n8tsrd"
+    },
+    "luxe--comp--sketch--zh": {
+      "hash": "r0n8oo",
+      "geometry": "rlmdce",
+      "color": "1vmlhhl"
     },
     "luxe--comp--staircase--zh": {
       "hash": "d4hby",
@@ -8211,6 +8291,11 @@
       "geometry": "evexm0",
       "color": "af633t"
     },
+    "memo--comp--sketch--zh": {
+      "hash": "xvu6tb",
+      "geometry": "1ehjh8f",
+      "color": "1g4kp77"
+    },
     "memo--comp--staircase--zh": {
       "hash": "1x94zkp",
       "geometry": "8jue5b",
@@ -8701,6 +8786,11 @@
       "geometry": "8yllrf",
       "color": "9p8mxb"
     },
+    "museum--comp--sketch--zh": {
+      "hash": "10yqgp7",
+      "geometry": "cvmlny",
+      "color": "uygqq2"
+    },
     "museum--comp--staircase--zh": {
       "hash": "274tj6",
       "geometry": "lbqbo1",
@@ -9185,6 +9275,11 @@
       "hash": "x0mjmy",
       "geometry": "9625n3",
       "color": "1mkhxni"
+    },
+    "playbill--comp--sketch--zh": {
+      "hash": "1d9hkzx",
+      "geometry": "152j1sa",
+      "color": "1oo6tc0"
     },
     "playbill--comp--staircase--zh": {
       "hash": "10vp4mm",
@@ -9705,6 +9800,11 @@
       "hash": "yk1sul",
       "geometry": "g9ndco",
       "color": "g18qn2"
+    },
+    "proposal--comp--sketch--zh": {
+      "hash": "1q05fin",
+      "geometry": "kk0tfr",
+      "color": "6ej9r3"
     },
     "proposal--comp--staircase--zh": {
       "hash": "1xw6oi7",
@@ -10231,6 +10331,11 @@
       "geometry": "1qqsfrf",
       "color": "1fwktwe"
     },
+    "rally--comp--sketch--zh": {
+      "hash": "1kcgkfx",
+      "geometry": "wmtm7x",
+      "color": "p2t8fv"
+    },
     "rally--comp--staircase--zh": {
       "hash": "1w9h9ud",
       "geometry": "qvch8n",
@@ -10710,6 +10815,11 @@
       "hash": "1m4xyqp",
       "geometry": "1v5gd5g",
       "color": "1hhow5w"
+    },
+    "runway--comp--sketch--zh": {
+      "hash": "bq7y0z",
+      "geometry": "dmy61c",
+      "color": "xua02c"
     },
     "runway--comp--staircase--zh": {
       "hash": "2xem4k",
@@ -11201,6 +11311,11 @@
       "geometry": "bqlzxc",
       "color": "ph30fg"
     },
+    "stage--comp--sketch--zh": {
+      "hash": "1udb7tr",
+      "geometry": "nuq7xp",
+      "color": "13isyz7"
+    },
     "stage--comp--staircase--zh": {
       "hash": "500f9r",
       "geometry": "16fgtmc",
@@ -11660,6 +11775,11 @@
       "hash": "13qg1f0",
       "geometry": "1i2u5r6",
       "color": "o3p2md"
+    },
+    "swiss--comp--sketch--zh": {
+      "hash": "1wdxc77",
+      "geometry": "p0e5w5",
+      "color": "qzgplp"
     },
     "swiss--comp--staircase--zh": {
       "hash": "727zsi",
@@ -12171,6 +12291,11 @@
       "geometry": "1cz5mvx",
       "color": "cy0mz8"
     },
+    "terminal--comp--sketch--zh": {
+      "hash": "s5l2dl",
+      "geometry": "11d7334",
+      "color": "1qcx59y"
+    },
     "terminal--comp--staircase--zh": {
       "hash": "xe5klh",
       "geometry": "1w8wwwd",
@@ -12252,9 +12377,9 @@
       "color": "6q1mrm"
     },
     "thesis--deck--p07": {
-      "hash": "zzu5eq",
-      "geometry": "c1xuzw",
-      "color": "1pdm5ed"
+      "hash": "ssvh87",
+      "geometry": "vdzd59",
+      "color": "3xtpkn"
     },
     "thesis--deck--p08": {
       "hash": "14wffam",
@@ -12665,6 +12790,11 @@
       "hash": "1s8lgwz",
       "geometry": "1wen96a",
       "color": "1bfs7o2"
+    },
+    "thesis--comp--sketch--zh": {
+      "hash": "1wtdpke",
+      "geometry": "m3dfr2",
+      "color": "3xtpkn"
     },
     "thesis--comp--staircase--zh": {
       "hash": "1fijqw5",
@@ -13180,6 +13310,11 @@
       "hash": "1xv7d34",
       "geometry": "1wobfl6",
       "color": "1a84mhq"
+    },
+    "vermilion--comp--sketch--zh": {
+      "hash": "vc7jp3",
+      "geometry": "1fvyruc",
+      "color": "1imtf83"
     },
     "vermilion--comp--staircase--zh": {
       "hash": "1on4imf",

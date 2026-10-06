@@ -750,6 +750,22 @@ const COVERAGE_ENTRIES: Record<string, unknown> = {
     cons: { title: "Against", items: [{ label: "Contracts reopen" }, { label: "Billing rework" }] },
     verdict: "Trial it on new business this quarter.",
   }),
+  // sketch's own hard check is the groups rule: a difference-in-differences
+  // sketch names its treated group and its control, and a discontinuity names
+  // none.
+  "coverage/sketch-valid": minimalDeck({
+    type: "sketch",
+    kind: "difference_in_differences",
+    at: "Reform starts",
+    x_title: "Time",
+    groups: ["New-rule cohorts", "Neighbouring cohorts"],
+  }),
+  "coverage/sketch-tripwire": minimalDeck({
+    type: "sketch",
+    kind: "difference_in_differences",
+    at: "Reform starts",
+    x_title: "Time",
+  }),
   "coverage/segmented_wheel-valid": minimalDeck({
     type: "segmented_wheel",
     center: "Customer success",

@@ -49,6 +49,7 @@ export const THEME_TABLE_REQUIRED_SURFACES = [
   "segmented_wheel",
   "rings",
   "pros_cons",
+  "sketch",
   "positioning_map",
   "venn",
   "fishbone",
@@ -136,7 +137,7 @@ function chart(chart_type: ThemeChartType, direction?: "horizontal"): ThemeConte
  * is noted on chart slots.
  */
 export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = {
-  thesis: [slot("icon_cards"), slot("paragraph"), chart("funnel"), slot("quote_wall"), slot("callout"), slot("code"), slot("insight_panel")],
+  thesis: [slot("icon_cards"), slot("paragraph"), chart("funnel"), slot("quote_wall"), slot("sketch"), slot("code"), slot("insight_panel")],
   arena: [chart("scatter"), slot("verdict_banner"), slot("insight_panel"), slot("pros_cons"), slot("waterfall"), slot("heatmap"), slot("gantt")],
   rally: [chart("dumbbell"), slot("hub_spoke"), slot("insight_panel"), slot("swot"), slot("pest"), slot("five_forces"), slot("bmc")],
   homeroom: [chart("gauge"), slot("image_grid"), slot("image"), slot("image_compare"), slot("device_mockup"), slot("data_table"), slot("pillar_model")],

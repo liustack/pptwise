@@ -157,7 +157,7 @@ pptwise render deck-dir/
 | 作者自己的立论 | `statement` | `verdict_banner`、`callout`，也可以没有组件 |
 | 借别人之口 | `quote` | `blockquote` |
 | 一个数字就是全部 | `fact` | 单项 `kpi_cards`、`pictogram`，也可以没有组件 |
-| 断言配一件展品 | `evidence` | `image`、`chart`、`data_table`、`code`、`device_mockup` |
+| 断言配一件展品 | `evidence` | `image`、`chart`、`data_table`、`code`、`device_mockup`、`sketch` |
 | 包含或层级 | `hierarchy` | `architecture`、`bmc`、`five_forces`、`rings`、`hub_spoke`、`decision_tree`、`org_tree`、`issue_tree`、`pyramid`、`iceberg`、`pillar_model` |
 
 ## 规则

@@ -144,7 +144,7 @@ Narrative guides the argument, tone, theme choice, body-text baseline, and edito
 
 ## Components
 
-`components` is a discriminated union of 62 typed units. Ask the installed schema for exact fields, one component or one kind at a time:
+`components` is a discriminated union of 63 typed units. Ask the installed schema for exact fields, one component or one kind at a time:
 
 ```bash
 pptwise schema --component kpi_cards
@@ -156,6 +156,8 @@ The attributed prose component is `blockquote`. There is no component type named
 `swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, and `sankey` occupy the full body and must be the page's only component. A face may name the companions it sets beside one of them: bulletin's content page sets a `waterfall` or a `gantt` beside a `kpi_cards`, so on bulletin that pair validates and nothing else joins it.
 
 A `waterfall` reads every bar against one value axis, so every item's `value`, and every running total a bar ends at, must stay within 1e300 in size. To get under it, divide every item by the same power of ten and name the unit in `unit`, so the bars keep their proportions.
+
+`sketch` draws, with no figures, how a study tells its effect apart: `"kind": "discontinuity"` is an outcome that jumps at a cutoff (`at`), two fitted lines over scattered points with the jump's arrow and its name (`effect`). `"kind": "difference_in_differences"` is a treated group's trend leaving its control's after an event (`at`), the path it would have kept drawn dashed and both `groups` named at their lines' ends. `direction` says which way the outcome moves.
 
 See the [SKILL component guide](../skills/pptwise/references/components.md) for semantic kind ownership and close component choices.
 

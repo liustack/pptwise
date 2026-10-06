@@ -57,6 +57,7 @@ import { traits as scorecardTraits } from "@/ir/components/scorecard"
 import { traits as pictogramTraits } from "@/ir/components/pictogram"
 import { traits as wordCloudTraits } from "@/ir/components/word-cloud"
 import { traits as vennTraits } from "@/ir/components/venn"
+import { traits as sketchTraits } from "@/ir/components/sketch"
 import { traits as fishboneTraits } from "@/ir/components/fishbone"
 import { traits as positioningMapTraits } from "@/ir/components/positioning-map"
 import { traits as conceptEquationTraits } from "@/ir/components/concept-equation"
@@ -196,6 +197,7 @@ const ALL_TRAITS: Record<ComponentType, ComponentTraits> = {
   pictogram: pictogramTraits,
   word_cloud: wordCloudTraits,
   venn: vennTraits,
+  sketch: sketchTraits,
   fishbone: fishboneTraits,
   positioning_map: positioningMapTraits,
   concept_equation: conceptEquationTraits,

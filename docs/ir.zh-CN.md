@@ -144,7 +144,7 @@ IR v5 没有 `seed`、`layout`、`beat` 或 `arrangement`，也不接受这些�
 
 ## 组件
 
-`components` 是由 62 种类型化单元组成的可辨识联合。精确字段应查询当前安装的 schema，一次查一个组件或一个 kind：
+`components` 是由 63 种类型化单元组成的可辨识联合。精确字段应查询当前安装的 schema，一次查一个组件或一个 kind：
 
 ```bash
 pptwise schema --component kpi_cards
@@ -156,6 +156,8 @@ pptwise schema --kind data --theme brief
 `swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap` 与 `sankey` 会占满正文区，必须独占页面。版式可以声明它在这些组件旁边能放哪些组件：bulletin 的内容页在 `waterfall` 或 `gantt` 旁边放一个 `kpi_cards`，所以在 bulletin 上这一对能通过校验，再加别的不行。
 
 `waterfall` 的每根柱都读同一根数值轴，所以每条 `value`，以及每根柱落到的累计值，绝对值都不能超过 1e300。超了就把所有条目除以同一个十的幂，把单位写进 `unit`，这样各柱的比例不变。
+
+`sketch` 不画数字，只示意研究怎么把效应认出来：`"kind": "discontinuity"` 是结果在门槛（`at`）处跳一下，散点上两段拟合线，中间一个箭头标出跳跃（`effect`）。`"kind": "difference_in_differences"` 是处理组在某件事（`at`）之后离开对照组，原本会走的路画成虚线，两组的名字（`groups`）印在各自线尾。`direction` 说结果往哪个方向走。
 
 组件的 kind 归属与相近选择见 [SKILL 组件指南](../skills/pptwise/references/components.zh-CN.md)。
 

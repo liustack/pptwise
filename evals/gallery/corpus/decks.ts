@@ -193,6 +193,7 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   segmented_wheel: "hierarchy",
   rings: "hierarchy",
   pros_cons: "comparison",
+  sketch: "evidence",
   positioning_map: "comparison",
   venn: "comparison",
   matrix: "comparison",

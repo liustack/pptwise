@@ -86,6 +86,7 @@ const EXPECTED_DEFS = [
   "sankey",
   "scorecard",
   "segmented_wheel",
+  "sketch",
   "staircase",
   "steps",
   "swimlane",

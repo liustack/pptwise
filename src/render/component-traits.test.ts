@@ -50,6 +50,7 @@ import { traits as positioningMapTraits } from "@/ir/components/positioning-map"
 import { traits as conceptEquationTraits } from "@/ir/components/concept-equation"
 import { traits as segmentedWheelTraits } from "@/ir/components/segmented-wheel"
 import { traits as prosConsTraits } from "@/ir/components/pros-cons"
+import { traits as sketchTraits } from "@/ir/components/sketch"
 import {
   EVIDENCE_TYPES,
   FULL_BODY_TYPES,
@@ -81,6 +82,7 @@ const DOMAIN_FILE_TRAITS: readonly (readonly [string, { readonly evidence: boole
   ["concept_equation", conceptEquationTraits],
   ["segmented_wheel", segmentedWheelTraits],
   ["pros_cons", prosConsTraits],
+  ["sketch", sketchTraits],
   ["bullets", bulletsTraits],
   ["paragraph", paragraphTraits],
   ["blockquote", blockquoteTraits],
@@ -269,6 +271,8 @@ describe("PASSTHROUGH_SHELL_TYPES equivalence (was content-bento-panel.tsx:134-1
       "segmented_wheel",
       "concept_equation",
       "pros_cons",
+      // A sketch draws its own frame, cutoff and labels: one composed figure.
+      "sketch",
     ]
     expect(new Set(PASSTHROUGH_SHELL_TYPES)).toEqual(new Set(current))
     expect(PASSTHROUGH_SHELL_TYPES.size).toBe(current.length)
