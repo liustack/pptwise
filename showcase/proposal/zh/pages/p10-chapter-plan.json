@@ -1,0 +1,27 @@
+{
+  "stage": "方案",
+  "background": {
+    "kind": "asset",
+    "asset_id": "chapter-install"
+  },
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "layers",
+          "title": "方案由哪几块组成，储能什么时候才装"
+        },
+        {
+          "icon": "wallet",
+          "title": "自投、合同能源管理、融资租赁怎么选"
+        },
+        {
+          "icon": "shield-check",
+          "title": "安全、风险、实施路线、报价和需要的资料"
+        }
+      ]
+    }
+  ],
+  "notes": "第二部分讲方案怎么落地：装什么，三种出资方式怎么选，安全和风险怎么管，从踏勘到运维怎么走，报价怎么列，需要贵司提供什么。背景图为 AI 生成的示意图。"
+}

@@ -1,0 +1,68 @@
+{
+  "stage": "Delivery",
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "risk",
+          "label": "Risk"
+        },
+        {
+          "key": "basis",
+          "label": "Public basis"
+        },
+        {
+          "key": "answer",
+          "label": "Our response",
+          "icon": "shield-check"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "clock",
+          "cells": {
+            "risk": "Tariff hours shift",
+            "basis": "Jiangsu and Zhejiang made midday off-peak, and No. 1656 leaves market customers to their contracts",
+            "answer": "Size to self-use, and rework the numbers yearly on current prices"
+          },
+          "emphasis": "highlight"
+        },
+        {
+          "icon": "trending-down",
+          "cells": {
+            "risk": "Export price",
+            "basis": "No. 136 sends exports to market, and Jiangsu's bids run RMB 0.25-0.391/kWh with no win guaranteed",
+            "answer": "Rely little on export, and model it at RMB 0.25/kWh"
+          }
+        },
+        {
+          "icon": "building-2",
+          "cells": {
+            "risk": "Roof loading, title",
+            "basis": "NEA No. 7, Articles 17-19, and a ruling that a new owner is not bound by an old EMC",
+            "answer": "A structural check, and a contract covering sale, demolition and compensation"
+          }
+        },
+        {
+          "icon": "solar-panel",
+          "cells": {
+            "risk": "Degradation",
+            "basis": "Output falls a little every year, and the figures so far do not deduct it",
+            "answer": "A degradation limit and warranty in the contract, checks on delivery"
+          }
+        },
+        {
+          "icon": "plug-zap",
+          "cells": {
+            "risk": "Grid capacity",
+            "basis": "NEA No. 7: when capacity runs short, applications queue in order",
+            "answer": "Check the county's open capacity before the survey"
+          }
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: NDRC Document No. 136 (2025), NEA Document No. 7 (2025), Jiangsu bidding notice, case (2022) Zhe 06 Min Zhong 4075 (Zhong Lun review)",
+  "notes": "Five risks, each with its public basis and what we do about it. Storage safety has the previous page to itself. The biggest is that time-of-use hours change again: Jiangsu and Zhejiang have already moved midday to off-peak, and Document No. 1656 leaves market customers to set prices by contract. So we size the system to what you use yourself and rework the numbers every year on current prices and your contract. Second, the price for surplus power: since Document No. 136 all exported power goes to market, Jiangsu's guaranteed price for new projects is bid between RMB 0.25 and RMB 0.391 with no guarantee of winning, and the press reports five provinces have already excluded new commercial rooftop projects from it. So we rely little on export and model it at RMB 0.25. Third, the roof: Document No. 7 requires clear title and sound structure, fire safety and waterproofing, and a Zhejiang court held that a new owner of a sold plant was not bound by the previous owner's EMC, so the contract must deal with sale, demolition and compensation. Panel degradation is not deducted in the figures so far, so the contract sets a degradation limit and warranty. Last, grid capacity: when it runs short, applications queue, so we check before the survey."
+}

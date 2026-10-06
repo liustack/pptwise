@@ -1,0 +1,64 @@
+{
+  "stage": "Plan",
+  "components": [
+    {
+      "type": "comparison",
+      "columns": [
+        "Self-funded",
+        "Energy contract (EMC)",
+        "Finance lease"
+      ],
+      "rows": [
+        {
+          "label": "",
+          "cells": [
+            "Suits: cash to spare, all the savings",
+            "Suits: keeping your cash free · **You pay RMB 0**",
+            "Suits: owning it, paying over time"
+          ]
+        },
+        {
+          "label": "Jiangsu, per MW a year",
+          "emphasis": true,
+          "cells": [
+            "About RMB 440,000 · All savings are yours",
+            "About RMB 129,000 · Billed at 73.5% of tariff, surplus to investor",
+            "RMB 440,000 less rent · Savings yours after rent"
+          ]
+        },
+        {
+          "label": "Who pays",
+          "cells": [
+            "You, about RMB 2.7 m per MW",
+            "The investor, not you",
+            "The lessor first, then your rent"
+          ]
+        },
+        {
+          "label": "Output and equipment risk",
+          "cells": [
+            "Yours",
+            "The investor's",
+            "Yours"
+          ]
+        },
+        {
+          "label": "At the end of the term",
+          "cells": [
+            "Yours throughout",
+            "Handed over after 20 years (sample)",
+            "Yours under the lease"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "handshake",
+      "text": "73.5% for 20 years comes from one listed company's filing, not an industry norm. The press reports Jiangsu EMC discounts narrowing from 60% to 80% of tariff. Yours is negotiated on your own tariff and roof."
+    }
+  ],
+  "footnote": "Source: Laibao Hi-Tech EMC filing (2024-10-30, company figures), Jiemian (2026-06-23). EMC: 1.08 m kWh × RMB 0.45 × 26.5% ≈ RMB 129,000",
+  "notes": "Whether to put money in is a trade-off. Self-funded, you invest about RMB 2.7 million per MW, keep all the savings, about RMB 440,000 per MW a year in Jiangsu, and carry the output and equipment risk, with maintenance done by you or contracted to us. Under an energy management contract, an investor pays for the system, carries the risk and maintains it, and you pay a discount on the grid's time-of-use tariff for the power you use. The public sample is a filing by a listed Shenzhen company: a 20-year term, power billed at 73.5% of the matching grid time-of-use price, surplus to the investor and the system handed over at the end. At that discount you would save about RMB 129,000 per MW a year in Jiangsu without investing anything. It is one company's sample, not an industry standard, and the press reports that Jiangsu discounts have narrowed from 60% to 80% of tariff. A finance lease sits between the two: the lessor pays up front, you pay rent, and the savings after rent are yours. Note that lending has tightened since Document No. 136: the press reports low-voltage projects are now financed at RMB 1.6 to 1.8 per watt and high-voltage projects at no more than RMB 2.2, so part of the cost may need your own funds."
+}

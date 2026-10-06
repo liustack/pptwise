@@ -1,0 +1,61 @@
+{
+  "stage": "Numbers",
+  "components": [
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Gross per cycle = 1,000 kWh × (discharge price − charge price ÷ 86.5%)",
+      "tag": {
+        "text": "86.5% efficiency, CPIA"
+      }
+    },
+    {
+      "type": "comparison",
+      "title": "Two-part, 1-10 kV, RMB/kWh",
+      "columns": [
+        "Jiangsu, Oct",
+        "Shantou, Guangdong, Sep"
+      ],
+      "rows": [
+        {
+          "label": "Cycle 1",
+          "cells": [
+            "Off 0.3828 → Peak 0.9566: RMB 514.1",
+            "Off 0.2635 → Peak 1.0827: RMB 778.1"
+          ]
+        },
+        {
+          "label": "Cycle 2",
+          "cells": [
+            "Off 0.3828 → Std 0.6400: RMB 197.5",
+            "Std 0.6483 → Peak 1.0827: RMB 333.2"
+          ]
+        },
+        {
+          "label": "A day, two cycles",
+          "emphasis": true,
+          "cells": [
+            "RMB 711.5",
+            "RMB 1,111.3 · excl. top peak"
+          ]
+        },
+        {
+          "label": "300 to 330 days a year",
+          "cells": [
+            "RMB 213k-235k",
+            "RMB 333k-367k"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "icon": "triangle-alert",
+      "title": "A ceiling, not a return",
+      "text": "Nothing deducted for O&M, fade, depth of discharge, sharing or finance, and the days are assumed. Payback comes from your load curve."
+    }
+  ],
+  "footnote": "Source: State Grid Jiangsu (Oct 2026) and Guangdong Grid Shantou zone (Sep 2026) price lists, two-part 1-10 kV. CPIA system efficiency 86.5%. k = thousand",
+  "notes": "Storage uses one formula: each discharge earns the discharge price minus the charge price divided by efficiency, taken as CPIA's 86.5%. In Jiangsu in October the battery can cycle twice a day: charge off-peak and discharge at peak for RMB 514.1 per MWh, then charge off-peak and discharge at standard for RMB 197.5, RMB 711.5 a day in all. In Guangdong's Shantou zone in September, off-peak to peak earns RMB 778.1 and standard to peak RMB 333.2, RMB 1,111.3 a day, without counting the critical peak. At 300 to 330 operating days, a MWh in Jiangsu grosses RMB 213,000 to 235,000 a year. These are ceilings: nothing is taken off for O&M, capacity fade, depth of discharge, revenue sharing with the site owner or finance, and the operating days are an assumption with no authoritative source. That is why this page gives no payback. We work out a storage payback only once we have your 15-minute load curve and your price contract."
+}

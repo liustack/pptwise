@@ -1,0 +1,30 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "cover-roof"
+  },
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "1.08 m kWh",
+          "label": "A year from 1 MW of solar",
+          "note": "Jiangsu official figure"
+        },
+        {
+          "value": "6.1 to 7.7 yrs",
+          "label": "Payback, self-funded",
+          "note": "Per MW, Jiangsu"
+        },
+        {
+          "value": "RMB 0",
+          "label": "Your outlay",
+          "note": "Under an energy contract"
+        }
+      ]
+    }
+  ],
+  "footnote": "Image is AI-generated and illustrative",
+  "notes": "This proposal answers what your management team asks first: how much a year, how long to pay back, whether you have to put money in, whether the roof and production are affected, whether storage is safe, and who answers if something goes wrong. Every figure is worked per MW of solar or per MWh of storage, with its inputs and sources on the page. Your own numbers come from your last twelve months of power bills and your electricity supply contract. The cover image is AI-generated and illustrative."
+}

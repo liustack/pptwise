@@ -1,0 +1,171 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "customer"
+  },
+  "theme": "proposal",
+  "filename": "rooftop-pv-storage-proposal-zh",
+  "meta": {
+    "date": "2026 年 10 月"
+  },
+  "footer": {
+    "page_number": true,
+    "label": "屋顶光伏与储能方案 · 呈 贵司管理层"
+  },
+  "course": {
+    "stages": [
+      {
+        "label": "概要"
+      },
+      {
+        "label": "算账"
+      },
+      {
+        "label": "方案"
+      },
+      {
+        "label": "落地"
+      },
+      {
+        "label": "决定"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "让屋顶替贵司付一部分电费",
+      "summary": "工商业分布式光伏与储能方案",
+      "kicker": "呈 贵司管理层"
+    },
+    {
+      "id": "p02-promise",
+      "type": "content",
+      "kind": "points",
+      "heading": "电价时段改了，光伏仍能回本，储能先算清再上",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p03-chapter-numbers",
+      "type": "chapter",
+      "heading": "先算账：电价变了，屋顶还值多少",
+      "summary": "这一部分回答",
+      "kicker": "第一部分 · 算账"
+    },
+    {
+      "id": "p04-tou",
+      "type": "content",
+      "kind": "data",
+      "heading": "江苏、浙江把中午改成了低谷，广东白天仍以高峰为主",
+      "focus": "heatmap"
+    },
+    {
+      "id": "p05-provinces",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "峰谷差广东最大、江苏最小，10 千伏以上用户按自己的合同算",
+      "focus": "comparison"
+    },
+    {
+      "id": "p06-pv-math",
+      "type": "content",
+      "kind": "data",
+      "heading": "江苏每 MW 光伏：一年发电约 108 万 kWh，净省约 44 万元",
+      "focus": "data_table"
+    },
+    {
+      "id": "p07-sensitivity",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "回本快慢看两件事：白天自己用掉多少，按什么电价算",
+      "focus": "chart"
+    },
+    {
+      "id": "p08-storage-math",
+      "type": "content",
+      "kind": "data",
+      "heading": "储能每 MWh 一天最多毛赚：江苏约 712 元，广东约 1111 元",
+      "focus": "comparison"
+    },
+    {
+      "id": "p09-storage-discount",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "储能的账要打折看：价差收窄，成本回升，回收期被拉长",
+      "focus": "from_to"
+    },
+    {
+      "id": "p10-chapter-plan",
+      "type": "chapter",
+      "heading": "再定方案：装什么，谁出钱，怎么落地",
+      "summary": "这一部分回答",
+      "kicker": "第二部分 · 方案与落地"
+    },
+    {
+      "id": "p11-solution",
+      "type": "content",
+      "kind": "list",
+      "heading": "方案由四块组成：光伏先上，储能测算过线再装",
+      "focus": "image_grid"
+    },
+    {
+      "id": "p12-models",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "自投每 MW 年省约 44 万元，EMC 不出钱年省约 13 万元",
+      "focus": "comparison"
+    },
+    {
+      "id": "p13-references",
+      "type": "content",
+      "kind": "evidence",
+      "heading": "同类厂房已经在做：公开记录里的五个参照",
+      "focus": "data_table"
+    },
+    {
+      "id": "p14-safety",
+      "type": "content",
+      "kind": "list",
+      "heading": "储能安全按强制国标和 65 号文做，事故教训写进设计",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p15-risks",
+      "type": "content",
+      "kind": "list",
+      "heading": "五个风险，每个都有公开依据和我们的应对",
+      "focus": "data_table"
+    },
+    {
+      "id": "p16-roadmap",
+      "type": "content",
+      "kind": "process",
+      "heading": "从踏勘到运维六步走，每一步都有贵司确认的检查点",
+      "focus": "timeline"
+    },
+    {
+      "id": "p17-pricing",
+      "type": "content",
+      "kind": "list",
+      "heading": "报价按造价构成逐项列，屋顶加固和电网接入单独报",
+      "focus": "data_table"
+    },
+    {
+      "id": "p18-documents",
+      "type": "content",
+      "kind": "list",
+      "heading": "请贵司提供六份资料，测算就换成贵司自己的账",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p19-ending",
+      "type": "ending",
+      "heading": "请贵司定三件事，我们就开始踏勘",
+      "summary": "收到资料后，按贵司自己的电价出测算和踏勘报告",
+      "kicker": "屋顶光伏与储能方案 · 呈 贵司管理层"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "stage": "算账",
+  "background": {
+    "kind": "asset",
+    "asset_id": "chapter-dawn"
+  },
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "clock",
+          "title": "电价时段改了以后，屋顶光伏每 MW 还能省多少"
+        },
+        {
+          "icon": "sun",
+          "title": "白天自己用掉多少、按什么电价算，回本差多少"
+        },
+        {
+          "icon": "battery-charging",
+          "title": "储能的毛收益上限是多少，为什么要打折看"
+        }
+      ]
+    }
+  ],
+  "notes": "第一部分讲账：电价时段怎么变了，每 MW 光伏和每 MWh 储能各能省多少，哪些数要打折看。背景图为 AI 生成的示意图。"
+}

@@ -1,0 +1,27 @@
+{
+  "stage": "Numbers",
+  "background": {
+    "kind": "asset",
+    "asset_id": "chapter-dawn"
+  },
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "clock",
+          "title": "What 1 MW of rooftop solar still saves now the tariff hours have moved"
+        },
+        {
+          "icon": "sun",
+          "title": "How much you use by day, at what price, and how payback moves with it"
+        },
+        {
+          "icon": "battery-charging",
+          "title": "The most storage can gross, and why that figure needs discounting"
+        }
+      ]
+    }
+  ],
+  "notes": "Part one is the numbers: how the time-of-use bands have changed, what 1 MW of solar and 1 MWh of storage can each save, and which figures need discounting. The background image is AI-generated and illustrative."
+}
