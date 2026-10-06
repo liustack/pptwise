@@ -45,6 +45,8 @@ export const platesComposition: Composition = ({ components, ctx, rect, setting 
   if (setting !== "console") return null
   const [grid, kpis, note, ...rest] = components
   if (grid?.type !== "image_grid" || kpis?.type !== "kpi_cards" || rest.length > 0) return null
+  // A picture's tag has no place here: the ordinary grid draws it.
+  if (grid.items.some((item) => item.tag)) return null
   if (note && note.type !== "callout") return null
   return drawPlates(grid, kpis, note as Callout | undefined, { ctx, rect })
 }

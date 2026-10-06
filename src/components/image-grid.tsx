@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { graphicInk } from "../render/ink"
 import { Icon } from "../render/icons"
+import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type ImageGridComponent = Extract<Component, { type: "image_grid" }>
@@ -141,6 +142,30 @@ function renderCell({
   )
 }
 
+/** Air between a picture's tag and the picture's top right corner. */
+const TAG_INSET = 10
+
+/**
+ * A picture's tag (`items[].tag`, such as 「选配」), at its top right corner on
+ * a plate of the page so it reads over any photograph, outlined or filled the
+ * way every tag is. A tag wider than its picture is declared dropped.
+ */
+function PictureTag({ tag, cell, ctx }: { tag: NonNullable<ImageGridComponent["items"][number]["tag"]>; cell: { x: number; y: number; w: number; h: number }; ctx: ComponentCtx }) {
+  const spec = ordinaryTagSpec(ctx)
+  const w = tagWidth(tag.text, spec)
+  if (w > cell.w - TAG_INSET * 2) return <g data-dropped={1} data-dropped-kind="label" />
+  const plate = ctx.defaultBg ?? ctx.colors.bg
+  const inks = tagInks(ctx, tag, false, plate, spec.size)
+  const x = cell.x + cell.w - TAG_INSET - w
+  const y = cell.y + TAG_INSET
+  return (
+    <g data-picture-tag="">
+      {inks.fill ? null : <rect x={x} y={y} width={w} height={spec.height} rx={spec.height / 2} fill={plate} />}
+      {paintTag({ tag, x, y, spec, inks })}
+    </g>
+  )
+}
+
 function measureDefault(component: ImageGridComponent, w: number): number {
   // 单行形态的 caption 挂在网格下方，要额外的高；多行形态的收在格内，不要。
   const below = captionsVisible(component) && !multiRow(component) ? CAPTION_H : 0
@@ -162,6 +187,7 @@ function renderDefault(component: ImageGridComponent, box: Parameters<SvgCompone
           return (
             <g key={i}>
               {renderCell({ src, alt, cell: imageCell, ctx })}
+              {item.tag ? <PictureTag tag={item.tag} cell={imageCell} ctx={ctx} /> : null}
               {item.caption &&
                 (() => {
                   const fitted = fitSvgLine(item.caption, {

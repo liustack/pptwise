@@ -257,3 +257,13 @@ describe("the homeroom board's pages on homeroom", () => {
     expect(board.root!.querySelector("[data-lesson-chalk='marked']")).not.toBeNull()
   })
 })
+
+describe("a picture's tag", () => {
+  const withTag = (components: readonly unknown[]) => (components as { type: string; items?: Record<string, unknown>[] }[]).map((c) => (c.type === "image_grid" ? { ...c, items: c.items!.map((it, i) => (i === 1 ? { ...it, tag: { text: "选配", basis: "pending" } } : it)) } : c))
+  it("leaves the methods page to the ordinary grid, which draws the tag", () => {
+    const page = LESSON_BOARD["p17-methods"]!
+    const { ctx } = testCtx("homeroom")
+    expect(compose({ components: page.components, ctx: chinese(ctx), rect: BAND, setting: "lesson" }, ["methods"])).not.toBeNull()
+    expect(compose({ components: withTag(page.components) as Component[], ctx: chinese(ctx), rect: BAND, setting: "lesson" }, ["methods"])).toBeNull()
+  })
+})

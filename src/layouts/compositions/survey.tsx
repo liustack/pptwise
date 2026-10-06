@@ -54,6 +54,8 @@ export const surveyComposition: Composition = ({ components, ctx, rect, setting 
   if (setting !== "yearbook") return null
   const [grid, chart, note, ...rest] = components
   if (grid?.type !== "image_grid" || chart?.type !== "chart" || note?.type !== "callout" || rest.length > 0) return null
+  // A picture's tag has no place here: the ordinary grid draws it.
+  if (grid.items.some((item) => item.tag)) return null
   const g = grid as ImageGrid
   const c = chart as Chart
   const n_ = note as Callout

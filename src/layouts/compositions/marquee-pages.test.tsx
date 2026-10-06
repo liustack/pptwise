@@ -297,3 +297,14 @@ describe("the rally board's pages on rally", () => {
     expect(compose({ components: page.components, ctx, rect: band(false), setting: "marquee" }, ["asks"])).toBeNull()
   })
 })
+
+describe("a picture's tag", () => {
+  const withTag = (components: readonly unknown[]) => (components as { type: string; items?: Record<string, unknown>[] }[]).map((c) => (c.type === "image_grid" ? { ...c, items: c.items!.map((it, i) => (i === 1 ? { ...it, tag: { text: "选配", basis: "pending" } } : it)) } : c))
+  it("leaves the touchpoints page to the ordinary grid, which draws the tag", () => {
+    const page = MARQUEE_BOARD["p09-touchpoints"]!
+    const { ctx } = testCtx("rally")
+    const props = { ctx: chinese(ctx), rect: band(page.sourced), setting: "marquee" as const }
+    expect(compose({ ...props, components: page.components }, ["spots"])).not.toBeNull()
+    expect(compose({ ...props, components: withTag(page.components) as Component[] }, ["spots"])).toBeNull()
+  })
+})

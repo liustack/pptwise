@@ -35,6 +35,8 @@ export const catalogComposition: Composition = ({ components, ctx, rect, setting
   if (setting !== "memo") return null
   const [grid, comparison, ...rest] = components
   if (grid?.type !== "image_grid" || comparison?.type !== "comparison" || rest.length > 0) return null
+  // A picture's tag has no place here: the ordinary grid draws it.
+  if (grid.items.some((item) => item.tag)) return null
   const g = grid as ImageGrid
   const c = comparison as Comparison
   const n = g.items.length

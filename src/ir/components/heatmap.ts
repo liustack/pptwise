@@ -43,7 +43,7 @@ export const schema = z
       .min(2)
       .max(12)
       .optional()
-      .describe("Print every Nth column label from the first, such as 6 for the hours 0, 6, 12 and 18 of a day. The rest still name their columns for bands."),
+      .describe("Print every Nth column label from the first, such as 6 for a day's hours."),
     /** Named steps the values fall into. See the describe below. */
     steps: z
       .array(
@@ -52,7 +52,7 @@ export const schema = z
             max: z
               .number()
               .optional()
-              .describe("The step's highest value. Every step but the last has one, each above the one before."),
+              .describe("The step's highest value. The last step has none."),
             label: z
               .string()
               .refine((v) => v.trim() !== "", { message: "heatmap steps[].label must not be blank" })
@@ -69,7 +69,7 @@ export const schema = z
       .max(5)
       .optional()
       .describe(
-        'Two to five named steps, lowest first, each cell taking the colour of the step its value falls in (at or under its max), such as a day\'s tariff bands: [{ "max": 0.5, "label": "低谷", "short": "谷" }, { "label": "高峰", "short": "峰" }]. Not with domain.',
+        'Two to five named steps, lowest first, each cell coloured by the step its value falls in: [{ "max": 0.5, "label": "低谷", "short": "谷" }, { "label": "高峰" }]. Not with domain.',
       ),
     /** Runs of columns marked across every row. See the describe below. */
     bands: z

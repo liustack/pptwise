@@ -335,3 +335,14 @@ describe("the yearbook's small rules", () => {
     expect(ys[0]! + ys[1]!).toBeCloseTo(772, 5)
   })
 })
+
+describe("a picture's tag", () => {
+  const withTag = (components: readonly unknown[]) => (components as { type: string; items?: Record<string, unknown>[] }[]).map((c) => (c.type === "image_grid" ? { ...c, items: c.items!.map((it, i) => (i === 1 ? { ...it, tag: { text: "选配", basis: "pending" } } : it)) } : c))
+  it("leaves the routes page to the ordinary grid, which draws the tag", () => {
+    const page = YEARBOOK_BOARD["p14-routes"]!
+    const { ctx } = testCtx("almanac")
+    const props = { ctx: chinese(ctx), rect: BAND, setting: "yearbook" as const, section: page.kicker, pageTag: page.tag }
+    expect(compose({ ...props, components: page.components }, ["survey"])).not.toBeNull()
+    expect(compose({ ...props, components: withTag(page.components) as Component[] }, ["survey"])).toBeNull()
+  })
+})
