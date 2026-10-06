@@ -3,6 +3,7 @@ import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { mixHex } from "./color-mix"
 import { axisTitlePairHeight, renderAxisTitlePair } from "./axis-titles"
 import { accessibleInk, contrastRatio, graphicInk, liftedInk, readableOn } from "../render/ink"
+import { Icon } from "../render/icons"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type HeatmapComponent = Extract<Component, { type: "heatmap" }>
@@ -56,8 +57,9 @@ type HeatmapComponent = Extract<Component, { type: "heatmap" }>
  *
  * A run of columns the author marks (`bands`, such as the season a plan is
  * built around) is framed across every row by a dashed outline in the
- * accent, and named under the grid, centred under its run, before the axis
- * titles. A name wider than the grid is cut and marked.
+ * accent, and named under the grid, centred under its run with its icon
+ * before the name, before the axis titles. A name wider than the grid is cut
+ * and marked.
  *
  * Named steps (`steps`, such as a day's tariff bands) replace the continuous
  * ramp: every cell takes the colour of the step its value falls in, the
@@ -85,8 +87,8 @@ const COL_LABEL_FONT = 16
 const COL_LABEL_MIN_FONT = 16
 const VALUE_FONT = 16
 const VALUE_MIN_FONT = 16
-/** A marked run of columns (`bands`): its dashed frame, and its name in a line under the grid. */
-const BAND = { pad: 4, stroke: 2, dash: "6 5", r: 8, line: 30, size: 16 } as const
+/** A marked run of columns (`bands`): its dashed frame, and its name in a line under the grid, an icon before it when it has one. */
+const BAND = { pad: 4, stroke: 2, dash: "6 5", r: 8, line: 30, size: 16, icon: { size: 18, gap: 6 } } as const
 /** The key under a grid of named steps (`steps`): a swatch and the step's name each, in one line. */
 const KEY = { line: 30, swatch: 14, gap: 8, itemGap: 24, size: 16 } as const
 
@@ -266,9 +268,9 @@ function rowLabelColumnW(labels: readonly string[], w: number): number {
 }
 
 /** The columns each marked run covers, as indices into `x_labels`. */
-function bandSpans(component: HeatmapComponent): { from: number; to: number; label: string }[] {
+function bandSpans(component: HeatmapComponent): { from: number; to: number; label: string; icon?: string }[] {
   const at = (label: string) => component.x_labels.findIndex((x) => x.trim() === label.trim())
-  return (component.bands ?? []).map((band) => ({ from: at(band.from), to: at(band.to), label: band.label.trim() }))
+  return (component.bands ?? []).map((band) => ({ from: at(band.from), to: at(band.to), label: band.label.trim(), icon: band.icon }))
 }
 
 function gridGeom(component: HeatmapComponent, w: number) {
@@ -312,11 +314,13 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
     const bands = bandSpans(component).map((band) => {
       const x0 = colX(band.from) - BAND.pad
       const x1 = colX(band.to) + cellW + BAND.pad
-      const name = fitSvgLine(band.label, { maxWidth: box.w, fontSize: BAND.size, minFontSize: BAND.size, bold: true, fontFamily: ctx.fonts.body })
-      // The name stands centred under its run, slid inside the grid when the run sits at an edge.
-      const half = (measureTextUnits(name.text, { bold: true, fontFamily: ctx.fonts.body }) * name.fontSize) / 2
-      const cx = Math.min(box.x + box.w - half, Math.max(box.x + half, (x0 + x1) / 2))
-      return { ...band, x0, x1, name, cx }
+      const iconRoom = band.icon ? BAND.icon.size + BAND.icon.gap : 0
+      const name = fitSvgLine(band.label, { maxWidth: box.w - iconRoom, fontSize: BAND.size, minFontSize: BAND.size, bold: true, fontFamily: ctx.fonts.body })
+      // The name, its icon before it, stands centred under its run, slid
+      // inside the grid when the run sits at an edge.
+      const half = (iconRoom + measureTextUnits(name.text, { bold: true, fontFamily: ctx.fonts.body }) * name.fontSize) / 2
+      const mid = Math.min(box.x + box.w - half, Math.max(box.x + half, (x0 + x1) / 2))
+      return { ...band, x0, x1, name, cx: mid + iconRoom / 2, iconX: mid - half }
     })
 
     // A label printed every few columns has the run up to the next printed one.
@@ -439,6 +443,15 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
               strokeWidth={BAND.stroke}
               strokeDasharray={BAND.dash}
             />
+            {band.icon ? (
+              <Icon
+                name={band.icon}
+                x={band.iconX}
+                y={gridTop + actualGridH + BAND.pad + (BAND.line - BAND.icon.size) / 2}
+                size={BAND.icon.size}
+                color={graphicInk(ctx.colors.accent, ground)}
+              />
+            ) : null}
             <text
               data-truncated={band.name.truncated ? "1" : undefined}
               x={band.cx}

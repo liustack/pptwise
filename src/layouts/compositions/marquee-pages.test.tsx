@@ -169,13 +169,14 @@ describe("the rally board's pages on rally", () => {
     expect(byText(root!, "演唱会：8、9 月场次见顶，5、11 月票房高点")).toBeDefined()
   })
 
-  it("season leaves a grid in named steps, or labelled every few columns, to the ordinary heat grid", () => {
+  it("season leaves a grid in named steps, labelled every few columns or with a band's icon, to the ordinary heat grid", () => {
     const page = MARQUEE_BOARD["p05-season"]!
     const { ctx } = testCtx("rally")
     const [grid, ...rest] = page.components as [Extract<Component, { type: "heatmap" }>, ...Component[]]
     const stepped = { ...grid, steps: [{ max: 1, label: "淡季" }, { max: 2, label: "平季" }, { label: "旺季" }] }
     const sparse = { ...grid, label_every: 3 }
-    for (const heat of [stepped, sparse]) {
+    const iconned = { ...grid, bands: grid.bands!.map((b) => ({ ...b, icon: "sun" })) }
+    for (const heat of [stepped, sparse, iconned]) {
       expect(compose({ components: [heat, ...rest], ctx: chinese(ctx), rect: band(page.sourced), setting: "marquee" }, ["season"])).toBeNull()
     }
   })

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -42,9 +43,7 @@ export const schema = z
       .min(2)
       .max(12)
       .optional()
-      .describe(
-        'Print the column labels every so many columns, starting with the first, the way an axis of hours is labelled every six: 6 prints "0 时", "6 时", "12 时" and "18 时" of 24 hourly columns. The other labels still name their columns for bands. Omitted, every label is printed.',
-      ),
+      .describe("Print every Nth column label from the first, such as 6 for the hours 0, 6, 12 and 18 of a day. The rest still name their columns for bands."),
     /** Named steps the values fall into. See the describe below. */
     steps: z
       .array(
@@ -53,16 +52,16 @@ export const schema = z
             max: z
               .number()
               .optional()
-              .describe("The highest value the step takes. Every step but the last has one, each higher than the one before. The last step takes every value above."),
+              .describe("The step's highest value. Every step but the last has one, each above the one before."),
             label: z
               .string()
               .refine((v) => v.trim() !== "", { message: "heatmap steps[].label must not be blank" })
-              .describe('The step\'s name, printed in the key under the grid, such as "低谷" or "Off-peak".'),
+              .describe('Its name in the key, such as "低谷" or "Off-peak".'),
             short: z
               .string()
               .refine((v) => v.trim() !== "", { message: "heatmap steps[].short must not be blank" })
               .optional()
-              .describe('A shorter name the cells print, such as "谷" or "Off". Without it the cells print nothing, or their values with show_values.'),
+              .describe('A shorter name the cells print, such as "谷" or "Off".'),
           })
           .strict(),
       )
@@ -70,7 +69,7 @@ export const schema = z
       .max(5)
       .optional()
       .describe(
-        'Two to five named steps the values fall into, lowest first, so each cell takes its step\'s colour rather than a shade of its own, such as the tariff bands of a day: [{ "max": 0.5, "label": "低谷", "short": "谷" }, { "max": 0.9, "label": "平段", "short": "平" }, { "label": "高峰", "short": "峰" }]. A value at or under a step\'s max falls in that step. Not with domain, which sets a continuous scale.',
+        'Two to five named steps, lowest first, each cell taking the colour of the step its value falls in (at or under its max), such as a day\'s tariff bands: [{ "max": 0.5, "label": "低谷", "short": "谷" }, { "label": "高峰", "short": "峰" }]. Not with domain.',
       ),
     /** Runs of columns marked across every row. See the describe below. */
     bands: z
@@ -80,6 +79,7 @@ export const schema = z
             from: z.string().min(1).describe('The first column the run covers, written as its x_label, such as "6 月" or "Jun".'),
             to: z.string().min(1).describe('The last column it covers, written as its x_label, such as "9 月" or "Sep". The same as from for one column.'),
             label: z.string().min(1).describe('What the run is, printed under it, such as "2027 演唱会季 · 6 至 9 月" or "2027 season, Jun to Sep".'),
+            icon: IconNameSchema.optional().describe("A symbol before the run's name, such as sun."),
           })
           .strict(),
       )

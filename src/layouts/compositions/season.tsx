@@ -21,7 +21,7 @@ type Callout = Extract<Component, { type: "callout" }>
  *
  * Takes, in the marquee setting: a `heatmap` of one to three rows and four to
  * twelve columns with no titles, no values printed, no named steps and every
- * column label printed, at most one band;
+ * column label printed, at most one band with no icon;
  * then one `callout` a row whose text starts with the row's name and a colon
  * (「演唱会：8、9 月场次见顶」), in the rows' order; then optionally one more
  * `callout`, the note. Callouts with no title, icon or tag.
@@ -86,7 +86,7 @@ export const seasonComposition: Composition = ({ components, ctx, rect, setting 
   const cols = h.x_labels.length
   // Named steps print their names in the cells and a key, and a sparse
   // axis prints every few labels: the ordinary grid draws both.
-  if (rows < 1 || rows > 3 || cols < 4 || cols > 12 || h.show_values || h.x_title || h.y_title || h.steps || h.label_every !== undefined || (h.bands?.length ?? 0) > 1) return null
+  if (rows < 1 || rows > 3 || cols < 4 || cols > 12 || h.show_values || h.x_title || h.y_title || h.steps || h.label_every !== undefined || (h.bands?.length ?? 0) > 1 || h.bands?.some((b) => b.icon)) return null
   if (notes.some((n) => n.type !== "callout" || n.title || n.icon || n.tag)) return null
   const callouts = notes as Callout[]
   const keyed = callouts.slice(0, rows).map((c, i) => {

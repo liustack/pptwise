@@ -419,6 +419,22 @@ describe("heatmap component", () => {
       expect(heatmapSchema.safeParse({ ...season, bands: [{ from: "5 月", to: "5 月", label: "one month" }] }).success).toBe(true)
     })
 
+    it("sets a run's icon before its name, the pair centred under the run", () => {
+      const sunny = { ...season, bands: [{ ...season.bands[0]!, icon: "sun" }] }
+      expect(heatmapSchema.safeParse(sunny).success).toBe(true)
+      expect(heatmapSchema.safeParse({ ...season, bands: [{ ...season.bands[0]!, icon: "not-an-icon" }] }).success).toBe(false)
+      const { container } = svg(heatmap.render(sunny, { x: 0, y: 0, w: 1100, h: 320 }, ctx))
+      const band = container.querySelector("[data-heatmap-band]")!
+      const icon = band.querySelector("g[transform]")!
+      expect(icon).not.toBeNull()
+      const iconX = Number(/translate\(([-\d.]+),/.exec(icon.getAttribute("transform")!)![1])
+      const name = band.querySelector("text")!
+      const plain = svg(heatmap.render(season, { x: 0, y: 0, w: 1100, h: 320 }, ctx)).container.querySelector("[data-heatmap-band] text")!
+      // The icon takes room before the name, so the name moves right by half of it.
+      expect(Number(name.getAttribute("x"))).toBeCloseTo(Number(plain.getAttribute("x")) + 12, 5)
+      expect(iconX).toBeLessThan(Number(name.getAttribute("x")) - 100)
+    })
+
     it("keeps its contrast and its primitives", () => {
       const markup = renderSvgMarkup(<svg xmlns="http://www.w3.org/2000/svg">{heatmap.render(season, { x: 0, y: 0, w: 1100, h: 320 }, ctx)}</svg>)
       expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
