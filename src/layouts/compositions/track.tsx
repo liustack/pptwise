@@ -19,10 +19,11 @@ type Callout = Extract<Component, { type: "callout" }>
  * across the page (no `layout: "vertical"`) with two to six milestones, and
  * the callout is `info` or `tip` with no icon.
  *
- * Declines: a vertical timeline, one milestone or more than six, a warning
- * callout or one with an icon, anything else on the page, a date past one
- * line of its column at 16px, a title past two lines at 22px, a description
- * past two lines at 16px, a closing line past two lines at 24px, and a page
+ * Declines: a vertical timeline, one milestone or more than six, a timeline
+ * on lanes, a milestone with an icon or a tone, a warning callout or one
+ * with an icon, anything else on the page, a date past one line of its
+ * column at 16px, a title past two lines at 22px, a description past two
+ * lines at 16px, a closing line past two lines at 24px, and a page
  * taller than the band.
  *
  * Band: the milestones share the full width, each column at least 160px,
@@ -83,6 +84,9 @@ function trackShape(components: readonly Component[]): { timeline: Timeline; cal
   if (timeline.milestones.length < MIN_ITEMS || timeline.milestones.length > MAX_ITEMS) return null
   // An icon or a tone has no place on this rule: the ordinary timeline draws both.
   if (timeline.milestones.some((m) => m.icon !== undefined || m.tone !== undefined)) return null
+  // Nor a lane's name: every milestone stands on the one side of the rule,
+  // and the ordinary timeline names each one's lane over its date.
+  if (timeline.lanes !== undefined || timeline.milestones.some((m) => m.lane !== undefined)) return null
   if (second === undefined) return { timeline }
   const callout = closingCallout(second)
   return callout ? { timeline, callout } : null
