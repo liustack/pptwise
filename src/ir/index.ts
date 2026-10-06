@@ -527,6 +527,44 @@ export const BallotSchema = z
     })
   })
 
+/**
+ * The page fields only some faces draw: the label over a heading, a form's
+ * header lines, a stamp and a page's stage. Every page type takes them, so
+ * the printed schema keeps each once under `$defs` (`json-schema.ts`), its
+ * description with it.
+ */
+export const KickerSchema = z
+  .string()
+  .describe('A short label set over the heading, such as the occasion on a cover ("Investment committee") or what an ending asks for ("For decision"). Drawn only by faces that have a place for it: validate says which.')
+
+export const FieldsSchema = z
+  .array(
+    z
+      .object({
+        label: nonBlankString("fields[].label").describe('The line\'s label, such as "致", "To" or "Signed".'),
+        value: nonBlankString("fields[].value").describe('What the line says, such as "全体员工" or "All staff".'),
+        note: z.string().optional().describe('A short aside after the value, such as the date beside a signature.'),
+      })
+      .strict(),
+  )
+  .min(1)
+  .max(4)
+  .describe(
+    'One to four header lines a document form prints, each a label and its value: To, From, Date and Re on a memo\'s cover, or Signed, Drafted and Copied to under its decision. Drawn only by faces that have a place for them: validate says which.',
+  )
+
+export const StampSchema = z
+  .object({
+    text: nonBlankString("stamp.text").describe('The stamp\'s words, such as "已决定" or "Approved". Keep them to a few characters.'),
+    date: z.string().optional().describe('A line under the words, such as "2026 · 10".'),
+  })
+  .strict()
+  .describe('A stamp pressed on the page, such as "已决定" or "Approved", with an optional date line under it. Drawn only by faces that have a place for it: validate says which.')
+
+export const StageSchema = nonBlankString("stage").describe(
+  'Which stage of the deck\'s course this page belongs to, written as its label, such as "环节一" or "Part 1". Requires the deck\'s course. Drawn only by faces that have a place for it: validate says which.',
+)
+
 const CommonSlideFields = {
   // 稳定页标识（W5 spec/assemble 注入，裸 IR 可省）。schema 层不做跨 slide
   // 校验——同 deck 内重复 id 是 validateIr 的硬错误。
@@ -541,44 +579,19 @@ const CommonSlideFields = {
    * declares a place for it (`LayoutDefinition.pageFields`) draws it, and
    * validate refuses it on any other.
    */
-  kicker: z
-    .string()
-    .optional()
-    .describe('A short label set over the heading, such as the occasion on a cover ("Investment committee") or what an ending asks for ("For decision"). Drawn only by faces that have a place for it: validate says which.'),
+  kicker: KickerSchema.optional(),
   /**
    * The header lines a document form prints, each a label and its value:
    * To, From, Date and Re on a memo's cover, Signed, Drafted and Copied to
    * under its decision. Like `kicker`, only a face that declares a place for
    * them (`LayoutDefinition.pageFields`) draws them.
    */
-  fields: z
-    .array(
-      z
-        .object({
-          label: nonBlankString("fields[].label").describe('The line\'s label, such as "致", "To" or "Signed".'),
-          value: nonBlankString("fields[].value").describe('What the line says, such as "全体员工" or "All staff".'),
-          note: z.string().optional().describe('A short aside after the value, such as the date beside a signature.'),
-        })
-        .strict(),
-    )
-    .min(1)
-    .max(4)
-    .optional()
-    .describe(
-      'One to four header lines a document form prints, each a label and its value: To, From, Date and Re on a memo\'s cover, or Signed, Drafted and Copied to under its decision. Drawn only by faces that have a place for them: validate says which.',
-    ),
+  fields: FieldsSchema.optional(),
   /**
    * A stamp pressed on the page, its words and an optional date under them.
    * Only a face that declares a place for it draws it.
    */
-  stamp: z
-    .object({
-      text: nonBlankString("stamp.text").describe('The stamp\'s words, such as "已决定" or "Approved". Keep them to a few characters.'),
-      date: z.string().optional().describe('A line under the words, such as "2026 · 10".'),
-    })
-    .strict()
-    .optional()
-    .describe('A stamp pressed on the page, such as "已决定" or "Approved", with an optional date line under it. Drawn only by faces that have a place for it: validate says which.'),
+  stamp: StampSchema.optional(),
   /**
    * A ballot laid over the page's items: the boxes each item can be ticked
    * in, and a line left blank to sign. Only a face that declares a place for
@@ -606,11 +619,7 @@ const CommonSlideFields = {
    * stage's label. A face that has a place for it draws the course as a
    * strip of pills with this stage lit.
    */
-  stage: nonBlankString("stage")
-    .optional()
-    .describe(
-      'Which stage of the deck\'s course this page belongs to, written as its label, such as "环节一" or "Part 1". Requires the deck\'s course. Drawn only by faces that have a place for it: validate says which.',
-    ),
+  stage: StageSchema.optional(),
   components: z.array(ComponentSchema).default([]),
   background: BackgroundSpecSchema.optional(),
   // 图片排版 P4：受控装饰原语——模型只有选择权，绘制由渲染层完成。

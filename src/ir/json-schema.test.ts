@@ -4,7 +4,11 @@ import { COMPONENT_TYPES } from "@/ir"
 import {
   BALLOT_DEF_ID,
   COMPONENT_UNION_DEF_ID,
+  FIELDS_DEF_ID,
   ICON_NAME_DEF_ID,
+  KICKER_DEF_ID,
+  STAGE_DEF_ID,
+  STAMP_DEF_ID,
   TAG_DEF_ID,
   TONE_DEF_ID,
   YEARS_DEF_ID,
@@ -22,7 +26,11 @@ import {
 const EXPECTED_DEFS = [
   "Ballot",
   "Component",
+  "Fields",
   "IconName",
+  "Kicker",
+  "Stage",
+  "Stamp",
   "Tag",
   "Tone",
   "Years",
@@ -119,7 +127,7 @@ describe("irJsonSchema", () => {
   it("hoists every component, the component union, the icon enum, the shared tag and the strip of years into named $defs", () => {
     const schema = irJsonSchema()
     expect(Object.keys(defsOf(schema)).sort()).toEqual(EXPECTED_DEFS)
-    expect(EXPECTED_DEFS).toEqual([BALLOT_DEF_ID, COMPONENT_UNION_DEF_ID, ICON_NAME_DEF_ID, TAG_DEF_ID, TONE_DEF_ID, YEARS_DEF_ID, ...[...COMPONENT_TYPES].sort()])
+    expect(EXPECTED_DEFS).toEqual([BALLOT_DEF_ID, COMPONENT_UNION_DEF_ID, FIELDS_DEF_ID, ICON_NAME_DEF_ID, KICKER_DEF_ID, STAGE_DEF_ID, STAMP_DEF_ID, TAG_DEF_ID, TONE_DEF_ID, YEARS_DEF_ID, ...[...COMPONENT_TYPES].sort()])
   })
 
   it("keeps each use site's own words about its tag beside the shared definition", () => {
@@ -142,6 +150,16 @@ describe("irJsonSchema", () => {
     const json = JSON.stringify(irJsonSchema())
     expect(json.match(new RegExp(`"\\$ref":"#/\\$defs/${BALLOT_DEF_ID}"`, "g"))).toHaveLength(4)
     expect(json.match(/The boxes each item can be ticked in, in order/g)).toHaveLength(1)
+  })
+
+  it("keeps the page fields only some faces draw once, every page type pointing at each", () => {
+    const json = JSON.stringify(irJsonSchema())
+    for (const id of [KICKER_DEF_ID, FIELDS_DEF_ID, STAMP_DEF_ID, STAGE_DEF_ID]) {
+      expect(json.match(new RegExp(`"\\$ref":"#/\\$defs/${id}"`, "g")), id).toHaveLength(4)
+    }
+    expect(json.match(/One to four header lines a document form prints/g)).toHaveLength(1)
+    expect(json.match(/A stamp pressed on the page/g)).toHaveLength(1)
+    expect(json.match(/Which stage of the deck's course this page belongs to/g)).toHaveLength(1)
   })
 
   it("stays under the context budget in both print modes", () => {
