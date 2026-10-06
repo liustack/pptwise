@@ -13,7 +13,7 @@ type Callout = Extract<Component, { type: "callout" }>
  * naming the offer with its icon, then a card per thing the client gets:
  * its icon, what it is in two lines of 20px bold, a hairline, the figure at
  * 40px in petrol, and a note in two lines; the figure the page lands on
- * (written `**…**`) in the tangerine. Under the cards, one bar of the pale
+ * (written `**…**`) in the brick red. Under the cards, one bar of the pale
  * petrol with its icon and one line.
  *
  * Takes, in the binder setting: optionally a `verdict_banner` (the line over

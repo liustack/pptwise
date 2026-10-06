@@ -18,7 +18,8 @@ type RowCards = Extract<Component, { type: "row_cards" }>
  * 满版照片（页面自己的 `background` 资产），从左往右压一层石油蓝的渐变
  * （96% → 46% 处 86% → 82% 处 25% → 右缘 10%），右缘照旧是活页夹的索引签，
  * 这一章的那一签亮着（页面的 `stage`），其余几签白底。左边一个 120px 特粗的
- * 橘色章号（「01」，按章节页在全稿里出现的次序数），下面一行 16px 的章名
+ * 砖红章号（「01」，按章节页在全稿里出现的次序数，砖红压石油蓝不够大字的
+ * 3:1 时由 `binderText` 往白挪最小一步），下面一行 16px 的章名
  * （页面的 `kicker`，「第一部分 · 算账」），标题 44px 特粗白字，一行放得下
  * 就一行；再下面一行 14px 小字（页面的 `subheading`，「这一部分回答」），
  * 最后是这一章要回答的问题（页面的 `row_cards`，每项一个白色图标和一句
@@ -102,16 +103,16 @@ export function BinderChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 export const layoutDef = {
   // chapter-binder-chapter.tsx: proposal's chapter page. The page's
   // photograph under a petrol darkening from the left, the binder's tabs with
-  // the chapter's lit, the chapter's number huge in the tangerine, its name,
+  // the chapter's lit, the chapter's number huge in the brick red, its name,
   // the title in white and the questions the chapter answers.
   id: "binder-chapter",
   kind: "standard",
   story: {
     name: "Binder Chapter",
-    story: "The page's photograph under petrol darkening from the left, the chapter's number huge in tangerine, its title in white, and the questions this part answers, each with its icon. The binder's tab for the part sticks out at the right.",
+    story: "The page's photograph under petrol darkening from the left, the chapter's number huge in brick red, its title in white, and the questions this part answers, each with its icon. The binder's tab for the part sticks out at the right.",
     positioning: "Opens a part of a proposal. Choose it when the client should know, before the figures, which of their questions the next pages settle.",
     audience: "A client's management reading a proposal part by part.",
-    notFor: "A quiet report chapter, where a photograph and a tangerine number would read as a sales piece.",
+    notFor: "A quiet report chapter, where a photograph and a brick-red number would read as a sales piece.",
   },
   slideTypes: ["chapter"],
   slots: [

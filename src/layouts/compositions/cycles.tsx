@@ -18,7 +18,7 @@ type Callout = Extract<Component, { type: "callout" }>
  * figure's cell after a " · " (「1111.3 元 · 未计尖峰」), and the day's figure at
  * 44px in petrol; at the right
  * the last row's label and its range bold. Under the cards, the warning in a
- * box outlined in the tangerine, its icon in the darker tangerine, its title
+ * box outlined in the brick red, its icon in the brick red too, its title
  * bold and its text grey.
  *
  * A cycle's cell is written "buy → sell：earns" (「谷 0.3828 → 峰 0.9566：514.1
@@ -166,8 +166,9 @@ export const cyclesComposition: Composition = ({ components, ctx, rect, setting 
       <g {...blockTag(ctx, wn)} data-binder-warning="">
         <Lead id="warning">
           <rect x={rect.x + WARN.border / 2} y={warnTop + WARN.border / 2} width={rect.w - WARN.border} height={WARN.h - WARN.border} rx={12 - WARN.border / 2} fill="none" stroke={inks.fire} strokeWidth={WARN.border} />
+          {/* The icon is lit with its box: on a theme whose emphasis ink is the accent itself, it is the same ink. */}
+          {wn.icon ? paintBinderIcon(wn.icon, rect.x + WARN.icon.x, warnTop + WARN.icon.y, WARN.icon.size, inks.fireText, inks.ground) : null}
         </Lead>
-        {wn.icon ? paintBinderIcon(wn.icon, rect.x + WARN.icon.x, warnTop + WARN.icon.y, WARN.icon.size, inks.fireText, inks.ground) : null}
         {paintBinder(warnTitle, { ctx, x: rect.x + WARN.textX, top: warnTop + WARN.title.top, bold: true, fill: binderText(inks.ink, inks.ground, WARN.title.size) })}
         {paintBinder(warnText, { ctx, x: rect.x + WARN.textX, top: warnTop + WARN.text.top, fill: binderText(inks.muted, inks.ground, WARN.text.size) })}
       </g>

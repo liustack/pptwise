@@ -12,8 +12,8 @@ type Table = Extract<Component, { type: "data_table" }>
  * with its icon in petrol, its item bold, what it covers, how it is priced
  * bold, and its amount. An amount still to be set (a cell of dashes, 「— — —」)
  * is a blank to fill, in a pale grey with air between the dashes. The row
- * the page leads with (marked `highlight`) sits on the tangerine's tint, its
- * tag a chip of the tangerine after what it covers.
+ * the page leads with (marked `highlight`) sits on the brick red's tint, its
+ * tag a chip of the brick red after what it covers.
  *
  * Takes, in the binder setting: two to four `data_table`s, each with a title,
  * the same three or four columns (keys and headers) and one to five rows, each

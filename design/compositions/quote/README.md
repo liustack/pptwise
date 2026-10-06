@@ -12,7 +12,7 @@ Settled on the pricing page (p17). The round's decisions are in [rounds/2026-10-
 | :-: | :-: |
 | ![board](proposal.board.png) | ![engine](proposal.engine.png) |
 
-**What it looks like.** One framed sheet with its column headers on a band of sand, then each table a group: its title as a small tracked line in petrol, its rows under it, each with its icon in petrol, its item bold, what it covers, how it is priced bold and its amount. An amount still to be set (「— — —」) is a blank to fill in a grey with air between the dashes. The row the page leads with sits on the tangerine's tint, its tag a chip of the tangerine after what it covers.
+**What it looks like.** One framed sheet with its column headers on a band of sand, then each table a group: its title as a small tracked line in petrol, its rows under it, each with its icon in petrol, its item bold, what it covers, how it is priced bold and its amount. An amount still to be set (「— — —」) is a blank to fill in a grey with air between the dashes. The row the page leads with sits on the brick red's tint, its tag a chip of the brick red after what it covers.
 
 **Why.** A quote before a survey cannot have prices. Listing every line by the industry's own cost breakdown, with the blanks left visibly blank, shows what the price will be made of and that nothing is hidden.
 

@@ -12,7 +12,7 @@ Settled on the roadmap page (p16). The round's decisions are in [rounds/2026-10-
 | :-: | :-: |
 | ![board](proposal.board.png) | ![engine](proposal.engine.png) |
 
-**What it looks like.** Over the steps a chain of arrows in petrol, each with the step's date (「第 1 步」), the step the page dwells on in the tangerine with the ink on it. Under each arrow a card of sand: the step's icon in petrol, its name bold, what is done, a hairline, then what the paper is for in small grey (「交贵司确认」) over the paper bold in petrol, and the rule the step rests on in small grey. Under the cards, a bar of the pale petrol with the note's icon, its title bold before its text.
+**What it looks like.** Over the steps a chain of arrows in petrol, each with the step's date (「第 1 步」), the step the page dwells on in the brick red with white on it. Under each arrow a card of sand: the step's icon in petrol, its name bold, what is done, a hairline, then what the paper is for in small grey (「交贵司确认」) over the paper bold in petrol, and the rule the step rests on in small grey. Under the cards, a bar of the pale petrol with the note's icon, its title bold before its text.
 
 **Why.** A client signs off a proposal more easily when every step ends in a paper they hold. The chain says the order, the cards say what each step hands over.
 

@@ -12,7 +12,7 @@ Settled on the tariff hours page (p04). The round's decisions are in [rounds/202
 | :-: | :-: |
 | ![board](proposal.board.png) | ![engine](proposal.engine.png) |
 
-**What it looks like.** A row a place: its name at 18px bold over the document it rests on in small grey, then the day as one band of runs, each run as wide as its hours and coloured by its step (the sky's tint, the sky, the second petrol, petrol), its short name written in it when the run is two hours or more, and at the right the row's figure in petrol with its prices in grey. The hours the page is about (the heat grid's band, 「午间 10-14 点」) are framed across the rows in a dashed outline of the tangerine, named over it in the darker tangerine with its icon. Under the rows the hours' ticks, a label every six hours, and a key of the steps beside the grid's note at the right.
+**What it looks like.** A row a place: its name at 18px bold over the document it rests on in small grey, then the day as one band of runs, each run as wide as its hours and coloured by its step (the sky's tint, the sky, the second petrol, petrol), its short name written in it when the run is two hours or more, and at the right the row's figure in petrol with its prices in grey. The hours the page is about (the heat grid's band, 「午间 10-14 点」) are framed across the rows in a dashed outline of the brick red, named over it in the brick red with its icon. Under the rows the hours' ticks, a label every six hours, and a key of the steps beside the grid's note at the right.
 
 **Why.** A tariff change is a change in when a day is cheap. Laying three places' days on one clock shows that midday moved to the off-peak in two of them, which is the whole case for re-checking a rooftop's sums.
 

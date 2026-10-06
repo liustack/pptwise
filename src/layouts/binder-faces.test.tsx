@@ -20,7 +20,7 @@ await installNodePlatform()
  */
 
 const PHOTO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-const TANGERINE = "#F26B3A"
+const BRICK = "#B8412C"
 const PETROL = "#0E3B53"
 const LABEL = "屋顶光伏与储能方案 · 呈 贵司管理层"
 
@@ -103,11 +103,14 @@ describe("the binder faces on proposal", () => {
     expect(v.ok, JSON.stringify(v.errors)).toBe(true)
   })
 
-  it("cover: the date, a tangerine chip naming who it is for, the title in petrol, three figures and the photograph down the right", () => {
+  it("cover: the date, a brick-red chip naming who it is for in white, the title in petrol, three figures and the photograph down the right", () => {
     const root = page(ir, 0)
     expect(root.querySelector("[data-face='binder-cover']")).not.toBeNull()
     expect(byText(root, "2026 年 10 月")).toBeDefined()
-    expect(root.querySelector("[data-binder-lead='kicker'] rect")!.getAttribute("fill")).toBe(TANGERINE)
+    expect(root.querySelector("[data-binder-lead='kicker'] rect")!.getAttribute("fill")).toBe(BRICK)
+    const kicker = root.querySelector("[data-binder-lead='kicker'] text")!
+    expect(kicker.getAttribute("fill")).toBe("#FFFFFF")
+    expect(contrastRatio(kicker.getAttribute("fill")!, BRICK)).toBeGreaterThanOrEqual(4.5)
     expect(byText(root, "让屋顶替贵司付一部分电费")!.getAttribute("fill")).toBe(PETROL)
     expect(byText(root, "让屋顶替贵司付一部分电费")!.getAttribute("font-size")).toBe("50")
     expect(root.querySelectorAll("[data-binder-facts] text").length).toBeGreaterThanOrEqual(6)
@@ -149,10 +152,14 @@ describe("the binder faces on proposal", () => {
     expect(tabRun("概要", 15, { fonts: { heading: "x", body: "x" } } as never)).toBe(2 * 15 + 2 * TABS.tracking)
   })
 
-  it("chapter: the chapter's number in the tangerine, its name and title in white, the questions, the tabs over the photograph", () => {
+  it("chapter: the chapter's number in the brick red lifted to read on petrol, its name and title in white, the questions, the tabs over the photograph", () => {
     const root = page(ir, 2)
     expect(root.querySelector("[data-face='binder-chapter']")).not.toBeNull()
-    expect(root.querySelector("[data-binder-lead='chapter-number']")!.textContent!.replace(/\s/g, "")).toBe("01")
+    const number = root.querySelector("[data-binder-lead='chapter-number']")!
+    expect(number.textContent!.replace(/\s/g, "")).toBe("01")
+    // The brick red reads at 2.17 on petrol, under the 3:1 a 120px figure needs: the least step toward white.
+    expect(number.querySelector("text")!.getAttribute("fill")).toBe("#c66756")
+    expect(contrastRatio(number.querySelector("text")!.getAttribute("fill")!, PETROL)).toBeGreaterThanOrEqual(3)
     expect(byText(root, "先算账：电价变了，屋顶还值多少")!.getAttribute("fill")).toBe("#FFFFFF")
     expect(root.querySelectorAll("[data-binder-questions] [data-binder-icon]")).toHaveLength(3)
     expect(root.querySelector("[data-binder-tab-lit]")!.getAttribute("data-binder-tab")).toBe("算账")
@@ -179,9 +186,9 @@ describe("the binder faces on proposal", () => {
     ])
     expect(byText(root, "01")).toBeDefined()
     const button = root.querySelector("[data-binder-lead='ask']")!
-    expect(button.querySelector("rect")!.getAttribute("fill")).toBe(TANGERINE)
-    expect(byText(root, "约踏勘时间")!.getAttribute("fill")).not.toBe("#FFFFFF")
-    expect(contrastRatio(byText(root, "约踏勘时间")!.getAttribute("fill")!, TANGERINE)).toBeGreaterThanOrEqual(4.5)
+    expect(button.querySelector("rect")!.getAttribute("fill")).toBe(BRICK)
+    expect(byText(root, "约踏勘时间")!.getAttribute("fill")).toBe("#FFFFFF")
+    expect(contrastRatio(byText(root, "约踏勘时间")!.getAttribute("fill")!, BRICK)).toBeGreaterThanOrEqual(4.5)
     expect(byText(root, "收到资料后，按贵司自己的电价出测算和踏勘报告")).toBeDefined()
     expect(root.querySelector("[data-binder-tab-lit]")!.getAttribute("data-binder-tab")).toBe("决定")
   })

@@ -16,7 +16,7 @@ type Callout = Extract<Component, { type: "callout" }>
  * petrol, a trailing aside in brackets on that figure set beside it as a grey
  * chip (「约 0.76（示意）」); last, the comparison's closing row with no label
  * as a verdict chip a card, sky on paper, the one marked whole (`**…**`) in
- * the tangerine. Under the cards, the note as a block of petrol with its
+ * the brick red. Under the cards, the note as a block of petrol with its
  * icon, its title bold and its text in the paper's white.
  *
  * Takes, in the binder setting: a `comparison` of two to four columns with

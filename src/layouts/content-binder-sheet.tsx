@@ -66,11 +66,11 @@ export const layoutDef = {
   story: {
     name: "Binder Sheet",
     story:
-      "Each page is a leaf of a proposal binder, its section's tab sticking out at the right. The claim stands in petrol at the top, the case on white paper in sand cards and petrol figures, with one tangerine mark on what the page lands on.",
+      "Each page is a leaf of a proposal binder, its section's tab sticking out at the right. The claim stands in petrol at the top, the case on white paper in sand cards and petrol figures, with one brick-red mark on what the page lands on.",
     positioning:
       "Serves every content kind in one proposal grammar. Choose it for a proposal a client's management reads section by section, where every page should say what the client gets, what it costs and what has to be decided.",
     audience: "A client's management weighing a proposal: the owner, the plant manager, the finance lead.",
-    notFor: "An internal report or a research paper, where one tangerine mark a page and a client's name in the margins would read as a sales piece.",
+    notFor: "An internal report or a research paper, where one brick-red mark a page and a client's name in the margins would read as a sales piece.",
   },
   slideTypes: ["content"],
   slots: [

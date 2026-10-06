@@ -12,7 +12,7 @@ Settled on the three provinces page (p05). The round's decisions are in [rounds/
 | :-: | :-: |
 | ![board](proposal.board.png) | ![engine](proposal.engine.png) |
 
-**What it looks like.** A card of sand a place: its name at 24px in petrol, the document under it in small grey, a hairline, then each labelled row as its label in small grey over its value at 16px bold, and the marked row as its label over a figure at 36px in petrol, an aside in brackets on that figure set beside it as a grey chip (「约 0.76（示意）」). Last, the closing row as a verdict chip a card, petrol on the sky's tint, the one marked whole in the tangerine. Under the cards, the note as a block of petrol with its icon, its title bold and its text in white.
+**What it looks like.** A card of sand a place: its name at 24px in petrol, the document under it in small grey, a hairline, then each labelled row as its label in small grey over its value at 16px bold, and the marked row as its label over a figure at 36px in petrol, an aside in brackets on that figure set beside it as a grey chip (「约 0.76（示意）」). Last, the closing row as a verdict chip a card, petrol on the sky's tint, the one marked whole in the brick red. Under the cards, the note as a block of petrol with its icon, its title bold and its text in white.
 
 **Why.** The same rule reads differently by place. One card each, with the figure in the same spot, lets the reader compare across without a table.
 

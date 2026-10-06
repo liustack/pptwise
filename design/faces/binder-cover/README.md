@@ -12,7 +12,7 @@ Settled on p01. The round's decisions are in [rounds/2026-10-06-proposal](../../
 | :-: | :-: |
 | ![board](proposal.board.png) | ![engine](proposal.engine.png) |
 
-**What it looks like.** At the left a white page: the date at the top (`meta.date`, 14px bold in the grey), a chip of the tangerine naming who the proposal is for (the page's `kicker`, 「呈 贵司管理层」, in the ink with its characters 2px apart), the title at 50/66 bold in petrol on one line whenever it fits, its line at 20px in the grey, a hairline, and the page's `kpi_cards` as three figures 208px apart, each at 26px bold in petrol over its label and note in two lines of 13px grey. At the foot the page's `footnote` (「图为 AI 生成的示意图」). At the right, 560px wide and full height, the page's own `background` photograph.
+**What it looks like.** At the left a white page: the date at the top (`meta.date`, 14px bold in the grey), a chip of the brick red naming who the proposal is for (the page's `kicker`, 「呈 贵司管理层」, in white with its characters 2px apart), the title at 50/66 bold in petrol on one line whenever it fits, its line at 20px in the grey, a hairline, and the page's `kpi_cards` as three figures 208px apart, each at 26px bold in petrol over its label and note in two lines of 13px grey. At the foot the page's `footnote` (「图为 AI 生成的示意图」). At the right, 560px wide and full height, the page's own `background` photograph.
 
 **Why.** A proposal is addressed. The chip says to whom, and the three figures say what they stand to gain before the first page turns.
 

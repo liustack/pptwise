@@ -12,7 +12,7 @@ Settled on the storage safety page (p14). The round's decisions are in [rounds/2
 | :-: | :-: |
 | ![board](proposal.board.png) | ![engine](proposal.engine.png) |
 
-**What it looks like.** Three columns. Under its title in small tracked grey, the rules: each card's icon in petrol, its name bold, the tag that settles it as a chip of the tangerine, what it asks. Under its title, the lessons: each card's icon in the danger ink, its name bold, what happened in grey, then what is done about it with its lead in bold petrol (「我们的做法：」). At the right the panel as a block of petrol: its icon and title in white, a row a party under a faint rule (who in a quiet white over what they answer for, bold), its footnote at its foot.
+**What it looks like.** Three columns. Under its title in small tracked grey, the rules: each card's icon in petrol, its name bold, the tag that settles it as a chip of the brick red, what it asks. Under its title, the lessons: each card's icon in the danger ink, its name bold, what happened in grey, then what is done about it with its lead in bold petrol (「我们的做法：」). At the right the panel as a block of petrol: its icon and title in white, a row a party under a faint rule (who in a quiet white over what they answer for, bold), its footnote at its foot.
 
 **Why.** Storage safety is where a client's caution starts. The binding rule, the fires that already happened and the name of who is liable, side by side, answer it without reassurance.
 

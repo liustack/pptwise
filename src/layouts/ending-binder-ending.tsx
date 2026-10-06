@@ -16,10 +16,10 @@ type Paragraph = Extract<Component, { type: "paragraph" }>
  * 左上一行 deck 的标签（页面的 `kicker`，与内容页左上同一写法，「·」之前
  * 石油蓝），右缘索引签亮着最后一签（页面的 `stage`）。标题 44px 特粗石油蓝，
  * 一行放得下就一行。下面一排卡（页面的 `numbered_cards`，两到四件事），每张
- * 卡：编号 15px 深橘粗（「01」），这件事 21px 特粗两行内，说明 14px 灰两行内，
+ * 卡：编号 15px 砖红粗（「01」），这件事 21px 特粗两行内，说明 14px 灰两行内，
  * 一条发丝线，线下每个选项一个勾选框加 15px 粗体字。选项是页面 `ballot` 的
  * `choices`，某一件事另有选项时取 `ballot.item_choices` 里它那一组。最下一枚
- * 橘色按钮，钮上的字是作者写的（页面的 `paragraph`，「约踏勘时间」），深墨
+ * 砖红按钮，钮上的字是作者写的（页面的 `paragraph`，「约踏勘时间」），白色
  * 粗体；按钮右边一行 16px 灰字（页面的 `subheading`）。钮的字作者没写就不画钮。
  *
  * 不画 motif，不画页脚（共享页脚只上内容页）。零 theme id、零 hex。
@@ -110,12 +110,12 @@ export const layoutDef = {
   // ending-binder-ending.tsx: proposal's close. The deck's label, the binder
   // tabs with the last lit, the closing line in petrol, a card for each thing
   // the client is asked to decide with a box for each choice, and a button of
-  // the tangerine with the author's own words beside a grey line.
+  // the brick red with the author's own words beside a grey line.
   id: "binder-ending",
   kind: "standard",
   story: {
     name: "Binder Close",
-    story: "The things the client is asked to decide, each on a card with a box to tick for every choice, under the closing line in petrol, and one tangerine button with the author's own words for the next step.",
+    story: "The things the client is asked to decide, each on a card with a box to tick for every choice, under the closing line in petrol, and one brick-red button with the author's own words for the next step.",
     positioning: "Closes a proposal on what the client decides. Choose it when the last page should leave a client's management a short list to tick and a clear next step.",
     audience: "A client's management at the end of a proposal, deciding what to sign off.",
     notFor: "A thank-you page or a contact sheet, which want a quieter close.",

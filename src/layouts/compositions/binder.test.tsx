@@ -14,17 +14,21 @@ describe("binderInks", () => {
     expect(inks.ground).toBe("#FFFFFF")
     expect(inks.card).toBe("#F3F0EA")
     expect(inks.deep).toBe("#0E3B53")
-    expect(inks.fire).toBe("#F26B3A")
-    expect(inks.fireText).toBe("#C2491B")
-    expect(inks.onFire).toBe("#14212B")
+    // The brick red the maintainer put in place of the board's tangerine: one
+    // ink for blocks and small words alike, white on it.
+    expect(inks.fire).toBe("#B8412C")
+    expect(inks.fireText).toBe("#B8412C")
+    expect(inks.onFire).toBe("#FFFFFF")
     expect(inks.data).toBe("#2F6A8A")
     expect(inks.sky).toBe("#8DBBD3")
-    // Mixed toward the paper by the board's own proportions: #E4EDF2, #D6E6EF, #FDEBE2, #8A949C.
+    // Mixed toward the paper by the board's own proportions: the pale petrol
+    // and the pale sky as on the board (#E4EDF2, #D6E6EF), the brick red's
+    // tint, and the faded grey from the grey darkened past the board's.
     for (const [ink, board] of [
       [inks.pale, "#E4EDF2"],
       [inks.skyPale, "#D6E6EF"],
-      [inks.firePale, "#FDEBE2"],
-      [inks.fade, "#8A949C"],
+      [inks.firePale, "#F5E4E1"],
+      [inks.fade, "#858D94"],
     ] as const) {
       const a = parseInt(ink.slice(1), 16)
       const b = parseInt(board.slice(1), 16)

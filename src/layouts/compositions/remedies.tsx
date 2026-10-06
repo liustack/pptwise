@@ -10,8 +10,8 @@ type Table = Extract<Component, { type: "data_table" }>
  * under their headers in small grey and a 2px rule of petrol: a row a risk,
  * its icon in petrol and its name bold, what the public record says, and the
  * answer bold after the column's icon in the success ink (a shield). The risk
- * the page leads with (a row marked `highlight`) sits on the tangerine's tint
- * with a tangerine edge at its left. Hairlines between the rows.
+ * the page leads with (a row marked `highlight`) sits on the brick red's tint
+ * with a brick-red edge at its left. Hairlines between the rows.
  *
  * Takes, in the binder setting: a `data_table` of three columns, the last
  * with an icon, no title, source or marked column, two to five rows, each
