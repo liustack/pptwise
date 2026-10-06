@@ -6,6 +6,7 @@ import { Icon } from "../render/icons"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { withBlockTitle } from "./block-title"
 import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
+import { formLineHeight, layoutAtSize } from "./legibility"
 
 type DataTableComponent = Extract<Component, { type: "data_table" }>
 type DataTableRow = DataTableComponent["rows"][number]
@@ -191,9 +192,206 @@ function rowFill(emphasis: DataTableRow["emphasis"], ctx: ComponentCtx): string 
   return null
 }
 
+/** A cell's words wrapped at the cell size: this ratio between baselines, three lines at most. */
+const CELL_LINE_RATIO = 1.25
+const MAX_CELL_LINES = 3
+const CELL_LINE_H = formLineHeight(CELL_FONT_SIZE, CELL_LINE_RATIO)
+
+/** One cell's words as they are set: one line, or the lines a long text wraps to. */
+interface CellLayout {
+  lines: string[]
+  fontSize: number
+  truncated: boolean
+}
+
+/** One row's cells, column by column (null where the row has no words), and its height. */
+interface RowLayout {
+  cells: (CellLayout | null)[]
+  h: number
+}
+
+/**
+ * The rows' cells set in columns `widths` wide.
+ *
+ * A cell that fits its column is one line, set exactly as it always was. A
+ * cell longer than its column wraps onto up to `maxLines` lines at the same
+ * size, and its row grows by a line's pitch for each line its tallest cell
+ * adds. Every cell used to be one line, so a sentence in a column of short
+ * words lost its tail to a `data-truncated` mark, and an author's only ways
+ * out were to cut the words or switch to a comparison. At `maxLines` 1 this
+ * is that one-line table, every row `ROW` tall.
+ */
+function layoutRows(
+  component: DataTableComponent,
+  rows: readonly DataTableRow[],
+  widths: readonly number[],
+  maxLines: number,
+  ctx: ComponentCtx,
+): RowLayout[] {
+  const markedColumn = component.columns.findIndex((col) => col.emphasis === true)
+  return rows.map((row) => {
+    const cells = component.columns.map((col, c): CellLayout | null => {
+      const text = cellText(row, col.key)
+      if (!text) return null
+      const room = iconRoom(row, c) + columnIconRoom(col, text) + tagRoom(row, c, component.columns.length, ctx)
+      const bold = row.emphasis === "total" || c === markedColumn
+      const maxWidth = widths[c]! - PAD_X * 2 - room
+      const fit = fitSvgLine(text, {
+        maxWidth,
+        fontSize: CELL_FONT_SIZE,
+        minFontSize: MIN_FONT_SIZE,
+        bold,
+        fontFamily: ctx.fonts.body,
+      })
+      if (!fit.truncated || maxLines <= 1 || maxWidth <= 0) return { lines: [fit.text], fontSize: fit.fontSize, truncated: fit.truncated }
+      const wrapped = layoutAtSize(text, {
+        maxWidth,
+        fontSize: CELL_FONT_SIZE,
+        maxLines,
+        lineHeightRatio: CELL_LINE_RATIO,
+        bold,
+        fontFamily: ctx.fonts.body,
+      })
+      return { lines: wrapped.lines, fontSize: wrapped.fontSize, truncated: wrapped.truncated }
+    })
+    const lines = Math.max(1, ...cells.map((cell) => cell?.lines.length ?? 1))
+    return { cells, h: ROW + (lines - 1) * CELL_LINE_H }
+  })
+}
+
+function rowsHeight(rows: readonly RowLayout[]): number {
+  return rows.reduce((sum, row) => sum + row.h, 0)
+}
+
+/** Whether a header would be cut to fit its column at one line. */
+function headersCut(columns: readonly DataTableColumn[], widths: readonly number[], ctx: ComponentCtx): boolean {
+  return columns.some(
+    (col, c) =>
+      fitSvgLine(col.label, {
+        maxWidth: widths[c]! - PAD_X * 2,
+        fontSize: HEADER_FONT_SIZE,
+        minFontSize: MIN_FONT_SIZE,
+        bold: true,
+        fontFamily: ctx.fonts.body,
+      }).truncated,
+  )
+}
+
+/** Each column's width with its header and every cell on one line. */
+function naturalWidths(component: DataTableComponent, ctx: ComponentCtx): number[] {
+  const markedColumn = component.columns.findIndex((col) => col.emphasis === true)
+  const fontFamily = ctx.fonts.body
+  return component.columns.map((col, c) => {
+    const headerW = measureTextUnits(col.label, { bold: true, fontFamily }) * HEADER_FONT_SIZE
+    const cellW = Math.max(
+      0,
+      ...component.rows.map((row) => {
+        const text = cellText(row, col.key)
+        if (!text) return 0
+        const bold = row.emphasis === "total" || c === markedColumn
+        const room = iconRoom(row, c) + columnIconRoom(col, text) + tagRoom(row, c, component.columns.length, ctx)
+        return measureTextUnits(text, { bold, fontFamily }) * CELL_FONT_SIZE + room
+      }),
+    )
+    return Math.max(MIN_COL_W, Math.max(headerW, cellW) + PAD_X * 2)
+  })
+}
+
+/**
+ * Columns sized from what each one needs, for a table that wraps. Every
+ * column that needs less than an even share of what is left keeps its
+ * natural width, so a column of short words is never squeezed to wrap them,
+ * and the widest columns split the rest and wrap (`comparison.tsx`'s
+ * `fillColumns`). Proportional shares gave a sentence's column nearly the
+ * whole table and broke two-character words in the columns beside it.
+ */
+function fillColumns(natural: readonly number[], totalW: number): { widths: number[]; offsets: number[] } {
+  const sum = natural.reduce((s, w) => s + w, 0)
+  let widths: number[]
+  if (sum <= totalW) widths = natural.map((w) => w + ((totalW - sum) * w) / sum)
+  else {
+    let remaining = totalW
+    let left = natural.length
+    let cap = totalW / natural.length
+    for (const w of [...natural].sort((a, b) => a - b)) {
+      if (w * left <= remaining) {
+        remaining -= w
+        left -= 1
+      } else {
+        cap = remaining / left
+        break
+      }
+    }
+    cap = Math.max(cap, MIN_COL_W)
+    widths = natural.map((w) => Math.min(w, cap))
+  }
+  // A box narrower than every column's floor keeps the table inside it, as
+  // `computeColumnWidths` does.
+  const total = widths.reduce((s, w) => s + w, 0)
+  if (total > totalW && total > 0) widths = widths.map((w) => (w * totalW) / total)
+  const offsets: number[] = []
+  let x = 0
+  for (const w of widths) {
+    offsets.push(x)
+    x += w
+  }
+  return { widths, offsets }
+}
+
+/**
+ * The table laid out for a box `w` wide and at most `budget` tall (header
+ * and rows, not the source line).
+ *
+ * A table whose headers and cells all fit one line is set as it always was:
+ * proportional columns, every row `ROW` tall. One that would cut a word
+ * sizes its columns from what each needs instead (`fillColumns`) and wraps a
+ * cell longer than its column onto up to `MAX_CELL_LINES` lines. A box
+ * shorter than that gives back cell lines first, down to one line a row with
+ * the cuts marked, before a row goes (`comparison.tsx` does the same). Only a
+ * table taller than the box at one line a row loses rows, declared with
+ * `data-dropped`, the way it always did.
+ */
+function layoutTable(component: DataTableComponent, w: number, budget: number, ctx: ComponentCtx) {
+  const legacy = computeColumnWidths(component.columns, component.rows, w, ctx)
+  const oneLine = layoutRows(component, component.rows, legacy.widths, 1, ctx)
+  const cuts = headersCut(component.columns, legacy.widths, ctx) || oneLine.some((row) => row.cells.some((cell) => cell?.truncated))
+  if (!cuts) {
+    if (ROW + rowsHeight(oneLine) <= budget) return { ...legacy, rows: oneLine, hidden: 0 }
+    return dropRows(component, budget, ctx, (kept) => computeColumnWidths(component.columns, kept, w, ctx))
+  }
+  const sized = fillColumns(naturalWidths(component, ctx), w)
+  for (let maxLines = MAX_CELL_LINES; maxLines >= 1; maxLines--) {
+    const rows = layoutRows(component, component.rows, sized.widths, maxLines, ctx)
+    if (ROW + rowsHeight(rows) <= budget) return { ...sized, rows, hidden: 0 }
+  }
+  return dropRows(component, budget, ctx, (kept) => fillColumns(naturalWidths({ ...component, rows: [...kept] }, ctx), w))
+}
+
+/**
+ * The rows that fit `budget` at one line a row, in columns sized for those
+ * rows alone.
+ *
+ * 只预留 1 个 ROW 给表头，别的不留：可见数据行 + 表头一共要放进
+ * budget，所以上限就是 floor(budget / ROW) - 1。下限钳到 1
+ * （row-cards.tsx"绝不渲染零个可见单元"先例）。列宽按可见行重算，
+ * 与 comparison.tsx 先算截断、再算列宽的顺序一致。
+ */
+function dropRows(
+  component: DataTableComponent,
+  budget: number,
+  ctx: ComponentCtx,
+  columnsFor: (kept: readonly DataTableRow[]) => { widths: number[]; offsets: number[] },
+) {
+  const visible = Math.max(1, Math.min(component.rows.length, Math.floor(budget / ROW) - 1))
+  const kept = component.rows.slice(0, visible)
+  const columns = columnsFor(kept)
+  return { ...columns, rows: layoutRows(component, kept, columns.widths, 1, ctx), hidden: component.rows.length - visible }
+}
+
 export const dataTable: SvgComponent<DataTableComponent> = {
-  measure(component) {
-    return (component.rows.length + 1) * ROW + (component.source ? SOURCE_BAND : 0)
+  measure(component, w, ctx) {
+    const table = layoutTable(component, w, Number.POSITIVE_INFINITY, ctx)
+    return ROW + rowsHeight(table.rows) + (component.source ? SOURCE_BAND : 0)
   },
 
   render(component, box, ctx) {
@@ -202,24 +400,16 @@ export const dataTable: SvgComponent<DataTableComponent> = {
     // `stretchable: false`（traits），所以这里收到的 box.h 要么是
     // undefined（自然渲染），要么是 layout.ts 兜底分支给的、小于自然高度
     // 的预算——从未见过比自然高度更大的 box.h，但即便出现也只是让
-    // truncBudget 更宽松，不会触发任何拉伸（这个函数从不主动把行拉高）。
-    const truncBudget = (box.h ?? Number.POSITIVE_INFINITY) - sourceBand
-    const fullRowCount = component.rows.length
-    const naturalRowsH = (fullRowCount + 1) * ROW
-    let visibleRowCount = fullRowCount
-    if (naturalRowsH > truncBudget) {
-      // 只预留 1 个 ROW 给表头，别的不留：可见数据行 + 表头一共要放进
-      // truncBudget，所以上限就是 floor(truncBudget / ROW) - 1。这条注释
-      // 一度写成"表头 1 行 + 底部留白 1 行"，与代码里的单个 -1 对不上，
-      // 而那第二行本来是留给已经不再绘制的溢出提示的。下限钳到 1
-      // （row-cards.tsx"绝不渲染零个可见单元"先例）。
-      visibleRowCount = Math.max(1, Math.min(fullRowCount, Math.floor(truncBudget / ROW) - 1))
+    // 预算更宽松，不会触发任何拉伸（这个函数从不主动把行拉高）。
+    const table = layoutTable(component, box.w, (box.h ?? Number.POSITIVE_INFINITY) - sourceBand, ctx)
+    const { widths, offsets, rows: laid, hidden: hiddenRowCount } = table
+    const rows = component.rows.slice(0, laid.length)
+    const rowTops: number[] = []
+    let top = ROW
+    for (const row of laid) {
+      rowTops.push(top)
+      top += row.h
     }
-    const hiddenRowCount = fullRowCount - visibleRowCount
-    const rows = hiddenRowCount > 0 ? component.rows.slice(0, visibleRowCount) : component.rows
-    const totalRows = rows.length + 1 // header + 可见数据行
-
-    const { widths, offsets } = computeColumnWidths(component.columns, rows, box.w, ctx)
     const borderColor = ctx.colors.border ?? ctx.colors.muted
 
     const headerFits = component.columns.map((col, c) =>
@@ -232,7 +422,7 @@ export const dataTable: SvgComponent<DataTableComponent> = {
       }),
     )
 
-    const tableBottomY = totalRows * ROW
+    const tableBottomY = top
     const ground = ctx.defaultBg ?? ctx.colors.bg
     const markedColumn = component.columns.findIndex((col) => col.emphasis === true)
     const sourceFit = component.source
@@ -251,8 +441,7 @@ export const dataTable: SvgComponent<DataTableComponent> = {
         {rows.map((row, r) => {
           const fill = rowFill(row.emphasis, ctx)
           if (!fill) return null
-          const rowY = (r + 1) * ROW
-          return <rect key={`bg-${r}`} x={0} y={rowY} width={box.w} height={ROW} fill={fill} />
+          return <rect key={`bg-${r}`} x={0} y={rowTops[r]} width={box.w} height={laid[r]!.h} fill={fill} />
         })}
 
         {/* 表头文字——不加底色填充，加粗 + 下方一条正文色重规则线表达层级
@@ -281,18 +470,18 @@ export const dataTable: SvgComponent<DataTableComponent> = {
         {/* 规则线：表头下重线（2px 正文色）、数据行间细线（1px border）、
             收尾底线（1px border）——`comparison.tsx` 同一三级规则线。 */}
         <line x1={0} y1={ROW} x2={box.w} y2={ROW} stroke={ctx.colors.text} strokeWidth={2} />
-        {Array.from({ length: rows.length - 1 }, (_, k) => (
+        {rowTops.slice(1).map((y, k) => (
           <line
             key={`sep-${k}`}
             x1={0}
-            y1={(k + 2) * ROW}
+            y1={y}
             x2={box.w}
-            y2={(k + 2) * ROW}
+            y2={y}
             stroke={borderColor}
             strokeWidth={1}
           />
         ))}
-        <line x1={0} y1={totalRows * ROW} x2={box.w} y2={totalRows * ROW} stroke={borderColor} strokeWidth={1} />
+        <line x1={0} y1={tableBottomY} x2={box.w} y2={tableBottomY} stroke={borderColor} strokeWidth={1} />
 
         {/* The marked column, outlined from its header to the table's foot. */}
         {markedColumn >= 0 ? (
@@ -310,18 +499,20 @@ export const dataTable: SvgComponent<DataTableComponent> = {
 
         {/* 数据行文字——强调行落在自绘底色上，用 accessibleInk 现测；普通行
             直接 colors.text（表体不填色，对比度已由「clears 4.5:1 against
-            every real page background」这条既有安全网覆盖）。 */}
+            every real page background」这条既有安全网覆盖）。一行变高时，
+            行图标、标签和每格的几行字都在这一行里居中。 */}
         {rows.map((row, r) => {
           const fill = rowFill(row.emphasis, ctx)
           const bold = row.emphasis === "total"
-          const rowY = (r + 1) * ROW
+          const rowY = rowTops[r]!
+          const rowH = laid[r]!.h
           return (
             <g key={`r-${r}`}>
               {row.icon ? (
                 <Icon
                   name={row.icon}
                   x={offsets[0]! + PAD_X}
-                  y={rowY + (ROW - ROW_ICON.size) / 2}
+                  y={rowY + (rowH - ROW_ICON.size) / 2}
                   size={ROW_ICON.size}
                   color={graphicInk(ctx.colors.primary, fill ?? ctx.defaultBg ?? ctx.colors.bg)}
                 />
@@ -334,37 +525,34 @@ export const dataTable: SvgComponent<DataTableComponent> = {
                     return paintTag({
                       tag: row.tag,
                       x: offsets[last]! + PAD_X,
-                      y: rowY + (ROW - spec.height) / 2,
+                      y: rowY + (rowH - spec.height) / 2,
                       spec,
                       inks: tagInks(ctx, row.tag, row.emphasis === "highlight", ground, spec.size),
                     })
                   })()
                 : null}
               {component.columns.map((col, c) => {
+                const fit = laid[r]!.cells[c]
+                if (!fit) return null
                 const text = cellText(row, col.key)
-                if (!text) return null
                 const before = iconRoom(row, c)
                 const room = before + columnIconRoom(col, text) + tagRoom(row, c, component.columns.length, ctx)
                 const marked = c === markedColumn
                 const cellBold = bold || marked
-                const fit = fitSvgLine(text, {
-                  maxWidth: widths[c] - PAD_X * 2 - room,
-                  fontSize: CELL_FONT_SIZE,
-                  minFontSize: MIN_FONT_SIZE,
-                  bold: cellBold,
-                  fontFamily: ctx.fonts.body,
-                })
                 const aligned = alignedX(col.align, offsets[c], widths[c])
                 const { textAnchor } = aligned
                 const x = textAnchor === "start" ? aligned.x + room : aligned.x
                 const cellGround = fill ?? ground
                 const ink = marked ? accessibleInk(ctx.colors.primary, cellGround, fit.fontSize) : fill ? accessibleInk(ctx.colors.text, fill, fit.fontSize) : ctx.colors.text
-                const cell = (
+                // A wrapped cell's lines centre on the row as a block. A
+                // one-line cell in a one-line row sits where it always has.
+                const first = rowY + rowH / 2 - ((fit.lines.length - 1) * CELL_LINE_H) / 2 + Math.round(fit.fontSize * 0.35)
+                const lines = fit.lines.map((line, li) => (
                   <text
-                    key={`c-${r}-${c}`}
-                    data-truncated={fit.truncated ? "1" : undefined}
+                    key={`c-${r}-${c}-${li}`}
+                    data-truncated={fit.truncated && li === fit.lines.length - 1 ? "1" : undefined}
                     x={x}
-                    y={rowY + ROW / 2 + Math.round(fit.fontSize * 0.35)}
+                    y={first + li * CELL_LINE_H}
                     textAnchor={textAnchor}
                     fill={ink}
                     fontFamily={ctx.fonts.body}
@@ -372,22 +560,22 @@ export const dataTable: SvgComponent<DataTableComponent> = {
                     fontWeight={cellBold ? "bold" : "normal"}
                     dominantBaseline="alphabetic"
                   >
-                    {fit.text}
+                    {line}
                   </text>
-                )
-                if (!col.icon) return cell
+                ))
+                if (!col.icon) return lines
                 return (
                   <g key={`c-${r}-${c}`}>
                     <g data-column-icon={col.icon}>
                       <Icon
                         name={col.icon}
                         x={aligned.x + before}
-                        y={rowY + (ROW - ROW_ICON.size) / 2}
+                        y={rowY + (rowH - ROW_ICON.size) / 2}
                         size={ROW_ICON.size}
                         color={graphicInk(ctx.colors.primary, cellGround)}
                       />
                     </g>
-                    {cell}
+                    {lines}
                   </g>
                 )
               })}
