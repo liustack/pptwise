@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
 import { contrastRatio } from "../../render/ink"
-import { decimalsIn, fixedValue, jointLabel, niceTop, periodicalInks, quoteMarkFamily, withUnitText, writtenValue, cjkOnly } from "./periodical"
+import { decimalsIn, fixedValue, jointLabel, niceTop, periodicalInks, withUnitText, writtenValue, cjkOnly } from "./periodical"
 import { fitDropCap } from "./foreword"
 import { zeroAxis } from "./chronicle"
 import { testCtx } from "./__fixtures__/kit"
@@ -62,7 +62,7 @@ describe("reading and writing the author's figures", () => {
   })
 })
 
-describe("the drop cap and the quotation mark", () => {
+describe("the drop cap", () => {
   it("drops the note's first character and sets three lines beside it, the rest at the measure", () => {
     const { ctx } = testCtx("journal")
     const text = "今年我们把十年的全国国民阅读调查从头读了一遍，想回答一个常被问起的问题：大家还在读书吗？答案比担心的好，也比想的复杂。读书的人和本数几乎没动，动的是读的方式和花的时间，而跌得最狠的那一条线，正好是我们自己。"
@@ -75,11 +75,5 @@ describe("the drop cap and the quotation mark", () => {
   it("will not drop a cap from a note with marked runs", () => {
     const { ctx } = testCtx("journal")
     expect(fitDropCap("今年**我们**读了一遍。", ctx)).toBeNull()
-  })
-
-  it("sets a Chinese deck's quotation mark in the heading's East Asian face", () => {
-    const { ctx } = testCtx("journal")
-    expect(quoteMarkFamily(ctx, true).startsWith("SimSun")).toBe(true)
-    expect(quoteMarkFamily(ctx, false)).toBe(ctx.fonts.heading)
   })
 })

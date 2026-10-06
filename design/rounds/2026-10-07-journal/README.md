@@ -61,7 +61,7 @@ Where the engine departs from the board, it does so on purpose, for these reason
 7. On the channels page (p12) every share prints its value, 11.9 included, as the author wrote it with one decimal. The board left a short share blank.
 8. On the effects page (p15) the zero line is cut clear of 「+0.01」, which sits on it.
 9. Small words that would read below 4.5:1 on what they sit on, the linen grey's and brick red's among them, are moved toward the ink until they do.
-10. A Chinese deck's quotation mark is set in the heading's East Asian face, SimSun, the shape the board drew in Songti.
+10. A quotation mark is set in the heading serif, Times New Roman, in a Chinese deck as in any other, and reads heavier than the board's Songti teardrop. SimSun's 「“」 is a full-width glyph drawn in the right half of its em, so a mark set in SimSun ran into the words in PowerPoint.
 11. The quotation page prints the page's source at its foot when the page has one. The board's p08 had none.
 12. In the English deck the share bar names literature 「Lit.」 inside its narrow part and spells it out in the note under the bar, and every claim is written to fit one line at 32px.
 13. The section page (`fascicle-ghost-chapter`) and the statement page are unchanged. The board drew neither.

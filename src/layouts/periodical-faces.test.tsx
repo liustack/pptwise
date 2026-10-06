@@ -130,6 +130,14 @@ describe("the periodical faces on journal", () => {
     expect(attribution.startsWith("—")).toBe(false)
   })
 
+  it("quote: sets the quotation mark in the heading's own family in a Chinese deck, so it stands where it is drawn in PowerPoint too", () => {
+    // SimSun's 「“」 is a full-width glyph drawn in the right half of its em:
+    // a mark set in SimSun alone lands on the words in PowerPoint's export.
+    const mark = draw(ir, 2).querySelector("[data-periodical-quote-mark]")!
+    expect(mark.getAttribute("font-family")).toBe(draw(ir, 2).querySelector("[data-periodical-claim] text, [data-periodical-quote] text")!.getAttribute("font-family"))
+    expect(mark.getAttribute("font-family")!.startsWith("Times New Roman")).toBe(true)
+  })
+
   it("quote: sets the page's source at the foot, as every other page does, whether it sets the words as a quotation or not", () => {
     const footnote = "来源：第 23 次全国国民阅读调查"
     const quoted = draw(deck([cover(), quote({ footnote } as Partial<Slide>)]), 1)

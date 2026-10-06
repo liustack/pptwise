@@ -163,6 +163,14 @@ describe("the journal board's pages on journal", () => {
     expect(Number(claim.getAttribute("x"))).toBeGreaterThan(500)
   })
 
+  it("witness and longform set the pull quote's mark in the heading's own family, Chinese deck or not", () => {
+    for (const name of ["p07-magazine", "p16-essay"]) {
+      const { root, ctx } = draw(name)
+      const mark = Array.from(root!.querySelectorAll("[data-periodical-pull-quote] text")).find((t) => t.textContent === "“")!
+      expect(mark.getAttribute("font-family"), name).toBe(ctx.fonts.heading)
+    }
+  })
+
   it("headline sets the figure huge with its unit attached and breaks the trend where a year was left blank", () => {
     const { root, ctx } = draw("p06-periodicals")
     const figure = root!.querySelector("[data-periodical-lead='figure'] text")!

@@ -1,7 +1,6 @@
 import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
-import { manuscriptChinese } from "./manuscript"
-import { fitPeriodical, paintPeriodical, periodicalBaseline, periodicalInks, periodicalText, placeClaim, quoteMarkFamily } from "./periodical"
+import { fitPeriodical, paintPeriodical, periodicalBaseline, periodicalInks, periodicalText, placeClaim } from "./periodical"
 
 type Paragraph = Extract<Component, { type: "paragraph" }>
 type Quote = Extract<Component, { type: "blockquote" }>
@@ -57,7 +56,7 @@ export const longformComposition: Composition = ({ components, ctx, rect, settin
       <g {...blockTag(ctx, q)} data-periodical-pull-quote="">
         <rect x={rect.x} y={rect.y + RULES.top - RULES.w / 2} width={rect.w} height={RULES.w} fill={inks.lead} />
         <rect x={rect.x} y={rect.y + RULES.bottom - RULES.w / 2} width={rect.w} height={RULES.w} fill={inks.lead} />
-        <text x={rect.x} y={periodicalBaseline(rect.y + MARK.top, MARK.size, MARK.size, true)} fontFamily={quoteMarkFamily(ctx, manuscriptChinese(ctx, [q.text]))} fontSize={MARK.size} fontWeight="700" fill={periodicalText(inks.brick, ground, MARK.size)} dominantBaseline="alphabetic">
+        <text x={rect.x} y={periodicalBaseline(rect.y + MARK.top, MARK.size, MARK.size, true)} fontFamily={ctx.fonts.heading} fontSize={MARK.size} fontWeight="700" fill={periodicalText(inks.brick, ground, MARK.size)} dominantBaseline="alphabetic">
           {"“"}
         </text>
         {paintPeriodical(words, { ctx, x: rect.x + QUOTE.x, top: rect.y + QUOTE.top, serif: true, bold: true, fill: periodicalText(inks.brick, ground, QUOTE.size) })}

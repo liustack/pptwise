@@ -11,9 +11,7 @@ import {
   periodicalInks,
   periodicalText,
   periodicalTrackedWidth,
-  quoteMarkFamily,
 } from "./compositions/periodical"
-import { manuscriptChinese } from "./compositions/manuscript"
 import { MastheadRules, MastheadSection, PeriodicalClaim, PeriodicalSource, fitPeriodicalSource, periodicalBodyRect } from "./periodical-shared"
 import { SvgContent } from "../render/svg-content"
 
@@ -91,7 +89,7 @@ export function PeriodicalQuoteContent({ slide, ctx }: SvgTemplateProps) {
           {paintPeriodicalTracked({ ctx, text: label, x: LABEL.x, y: periodicalBaseline(LABEL.top, LABEL.lineHeight, LABEL.size), size: LABEL.size, tracking: labelFits ? labelTracking : 0, bold: true, fill: periodicalText(inks.brick, ground, LABEL.size) })}
         </g>
       ) : null}
-      <text data-periodical-quote-mark="" x={MARK.x} y={periodicalBaseline(MARK.top, MARK.lineHeight, MARK.size, true)} fontFamily={quoteMarkFamily(ctx, manuscriptChinese(ctx, [quote?.text ?? "", slide.heading ?? ""]))} fontSize={MARK.size} fontWeight="700" fill={periodicalText(inks.brick, ground, MARK.size)} dominantBaseline="alphabetic">
+      <text data-periodical-quote-mark="" x={MARK.x} y={periodicalBaseline(MARK.top, MARK.lineHeight, MARK.size, true)} fontFamily={ctx.fonts.heading} fontSize={MARK.size} fontWeight="700" fill={periodicalText(inks.brick, ground, MARK.size)} dominantBaseline="alphabetic">
         {"“"}
       </text>
       {lines ? <g data-periodical-quote="">{paintPeriodical(lines, { ctx, x: QUOTE.x, top: QUOTE.top, serif: true, bold: true, fill: periodicalText(inks.ink, ground, QUOTE.size) })}</g> : null}

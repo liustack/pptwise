@@ -1,6 +1,6 @@
 import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
-import { manuscriptChinese, wholeMark } from "./manuscript"
+import { wholeMark } from "./manuscript"
 import {
   PHOTO_CAPTION,
   PeriodicalPhoto,
@@ -14,7 +14,6 @@ import {
   periodicalInks,
   periodicalText,
   placeClaim,
-  quoteMarkFamily,
 } from "./periodical"
 
 type Image = Extract<Component, { type: "image" }>
@@ -73,7 +72,6 @@ export const witnessComposition: Composition = ({ components, ctx, rect, setting
   const inks = periodicalInks(ctx)
   const ground = inks.ground
   const x0 = rect.x + COLUMN.x
-  const chinese = manuscriptChinese(ctx, [q.text])
   return (
     <g {...compositionTag("witness")}>
       <g {...blockTag(ctx, img)}>
@@ -97,7 +95,7 @@ export const witnessComposition: Composition = ({ components, ctx, rect, setting
       <g {...blockTag(ctx, q)} data-periodical-pull-quote="">
         <rect x={x0} y={rect.y + QUOTE.top - 0.5} width={COLUMN.w} height={1} fill={inks.lead} />
         <rect x={x0} y={rect.y + QUOTE.top + QUOTE.h - 0.5} width={COLUMN.w} height={1} fill={inks.lead} />
-        <text x={x0} y={periodicalBaseline(rect.y + QUOTE.top + QUOTE.mark.dy, QUOTE.mark.size, QUOTE.mark.size, true)} fontFamily={quoteMarkFamily(ctx, chinese)} fontSize={QUOTE.mark.size} fontWeight="700" fill={periodicalText(inks.brick, ground, QUOTE.mark.size)} dominantBaseline="alphabetic">
+        <text x={x0} y={periodicalBaseline(rect.y + QUOTE.top + QUOTE.mark.dy, QUOTE.mark.size, QUOTE.mark.size, true)} fontFamily={ctx.fonts.heading} fontSize={QUOTE.mark.size} fontWeight="700" fill={periodicalText(inks.brick, ground, QUOTE.mark.size)} dominantBaseline="alphabetic">
           {"“"}
         </text>
         {paintPeriodical(words, { ctx, x: x0 + QUOTE.text.dx, top: rect.y + QUOTE.top + QUOTE.text.dy, serif: true, bold: true, fill: periodicalText(inks.brick, ground, QUOTE.text.size) })}

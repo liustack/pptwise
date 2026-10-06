@@ -5,7 +5,6 @@ import { inkToward } from "../../components/tag"
 import { stripEmphasis, type EmphasisHeadingLayout } from "../../render/emphasis"
 import { Icon } from "../../render/icons"
 import { blendOver, graphicInk, metaInk, readableOn } from "../../render/ink"
-import { isCjkSafeFace } from "../../render/fonts"
 import {
   fitManuscript,
   manuscriptBaseline,
@@ -410,16 +409,4 @@ export function withUnitText(figure: string, unit: string | undefined): string {
 export function placeClaim(claim: ((column: { x: number; w: number }) => React.ReactElement | null) | undefined, column: { x: number; w: number }): React.ReactElement | null | false {
   if (!claim) return null
   return claim(column) ?? false
-}
-
-/**
- * The family a quotation mark is set in: in a Chinese deck the heading's
- * East Asian face, whose 「“」 is the teardrop the board drew, and in any
- * other the heading serif itself.
- */
-export function quoteMarkFamily(ctx: ComponentCtx, chinese: boolean): string {
-  if (!chinese) return ctx.fonts.heading
-  const faces = ctx.fonts.heading.split(",").map((face) => face.trim())
-  const at = faces.findIndex((face) => isCjkSafeFace(face))
-  return at > 0 ? faces.slice(at).join(", ") : ctx.fonts.heading
 }
