@@ -169,6 +169,17 @@ describe("the rally board's pages on rally", () => {
     expect(byText(root!, "演唱会：8、9 月场次见顶，5、11 月票房高点")).toBeDefined()
   })
 
+  it("season leaves a grid in named steps, or labelled every few columns, to the ordinary heat grid", () => {
+    const page = MARQUEE_BOARD["p05-season"]!
+    const { ctx } = testCtx("rally")
+    const [grid, ...rest] = page.components as [Extract<Component, { type: "heatmap" }>, ...Component[]]
+    const stepped = { ...grid, steps: [{ max: 1, label: "淡季" }, { max: 2, label: "平季" }, { label: "旺季" }] }
+    const sparse = { ...grid, label_every: 3 }
+    for (const heat of [stepped, sparse]) {
+      expect(compose({ components: [heat, ...rest], ctx: chinese(ctx), rect: band(page.sourced), setting: "marquee" }, ["season"])).toBeNull()
+    }
+  })
+
   it("makeup prints a share inside its part where it fits and under it where it does not", () => {
     const { root } = draw("p06-audience")
     expect(root!.querySelectorAll("[data-marquee-makeup]")).toHaveLength(2)
