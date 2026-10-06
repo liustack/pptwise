@@ -135,3 +135,16 @@ describe("a ranged bar through compose", () => {
     expect(compose({ components: [ranged] as never, ctx, rect: NOTICE_PLOT, setting: "notice" })).toBeNull()
   })
 })
+
+describe("a bar on its side with symbols before its categories", () => {
+  it("goes to the ordinary chart, which sets each symbol before its name, not to the bars", async () => {
+    const { compose } = await import(".")
+    const { testCtx } = await import("./__fixtures__/kit")
+    const { ctx } = testCtx("bulletin")
+    const props = { ctx, rect: NOTICE_PLOT, setting: "notice" as const }
+    const plain = share()
+    const iconed = { ...plain, series: plain.series.map((s, si) => ({ ...s, data: s.data.map((d) => (si === 0 ? { ...d, icon: "car" } : d)) })) }
+    expect(compose({ ...props, components: [plain as never] }, ["bars"])).not.toBeNull()
+    expect(compose({ ...props, components: [iconed as never] }, ["bars"])).toBeNull()
+  })
+})

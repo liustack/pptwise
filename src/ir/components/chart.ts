@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { isPercentUnit } from "../../lib/quantity-format"
-import { TagSchema, ToneSchema } from "./shared"
+import { IconNameSchema, TagSchema, ToneSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -39,6 +39,8 @@ const ChartPointSchema = z
       .describe(
         'A few words printed with the value, such as "基准线", "低约 37%" or "62.36 元": after the value of a bar on its side or a share bar\'s part, and beside a point of a line, such as "最低" on its lowest year or "回升" on the year it recovers. Bars on their side (bar with direction "horizontal"), the parts of a share bar and lines only.',
       ),
+    /** A symbol set before the category's name. See the describe below. */
+    icon: IconNameSchema.optional().describe("A symbol set before the category's name. Bars on their side only, on the first series."),
     /** The high end of a value only known as a range. See the describe below. */
     upper: z
       .number()
@@ -592,6 +594,21 @@ export const schema = z
         })
       }
     }
+    // A symbol stands before a category's name, which only a bar on its side
+    // sets in a column of its own. It names the category, so the first series
+    // carries it.
+    const iconed = c.chart_type === "bar" && c.direction === "horizontal"
+    c.series.forEach((s, si) =>
+      s.data.forEach((d, di) => {
+        if (d.icon === undefined) return
+        const path = ["series", si, "data", di, "icon"]
+        if (!iconed) {
+          ctx.addIssue({ code: "custom", path, message: `an icon is set before a category's name, on a bar chart on its side, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart sets its names elsewhere. Use chart_type "bar" with direction "horizontal", or remove icon.` })
+        } else if (si > 0) {
+          ctx.addIssue({ code: "custom", path, message: `an icon names its category, and series[${si}] is not the first series. Give the category's icon on the first series' point.` })
+        }
+      }),
+    )
     // A range is a bar on its side drawn solid to its low end and dashed on
     // to its high end, its label naming both.
     const ranged = c.chart_type === "bar" && c.direction === "horizontal"

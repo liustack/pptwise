@@ -807,6 +807,8 @@ export type ChartSeries = {
     note?: string
     /** Bars on their side only: the high end of a value known only as a range, `y` its low end. */
     upper?: number
+    /** Bars on their side only, on the first series: a symbol set before the category's name. */
+    icon?: string
   }[]
   /** `chart_type: "combo"` only: draw this series as bars (default) or a line. */
   plot?: "bar" | "line"

@@ -2544,3 +2544,59 @@ describe("a numbered chart", () => {
     expect(svg(renderDef.render(line, { ...box, h: 360 }, ctx)).container.querySelector("[data-exhibit-label]")).toBeNull()
   })
 })
+
+describe("a symbol before a bar's category", () => {
+  const ways = {
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    direction: "horizontal" as const,
+    axes: { x_unit: "%" },
+    series: [
+      {
+        name: "2025 年接触率",
+        data: [
+          { x: "手机阅读", y: 79.0, icon: "smartphone" as const },
+          { x: "听书", y: 38.7, icon: "headphones" as const, emphasis: true },
+          { x: "视频讲书", y: 6.3, icon: "clapperboard" as const },
+        ],
+      },
+    ],
+  }
+
+  it("is accepted on the first series of a bar on its side only", () => {
+    expect(chartSchema.safeParse(ways).success).toBe(true)
+    expect(chartSchema.safeParse({ ...ways, direction: "vertical" }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...ways, chart_type: "line", direction: undefined }).success).toBe(false)
+    const second = { ...ways, series: [{ name: "2017", data: ways.series[0]!.data.map(({ icon: _icon, ...d }) => d) }, ways.series[0]!] }
+    expect(chartSchema.safeParse(second).success).toBe(false)
+  })
+
+  it("stands in a column of its own at the chart's left edge, beside its category's row", () => {
+    const { container } = svg(chart.render(ways, { ...box, h: 300 }, ctx))
+    const icons = Array.from(container.querySelectorAll("[data-chart-icon]"))
+    expect(icons.map((el) => el.getAttribute("data-chart-icon"))).toEqual(["smartphone", "headphones", "clapperboard"])
+    const at = (el: Element) => el.querySelector("g")!.getAttribute("transform")!.match(/translate\(([\d.]+),([\d.]+)\)/)!.slice(1).map(Number)
+    // One column: every symbol at the same left edge, the chart's own.
+    expect(new Set(icons.map((el) => at(el)[0])).size).toBe(1)
+    const axisX = Number(container.querySelector('[data-axis="y"]')!.getAttribute("x1"))
+    expect(at(icons[0]!)[0]).toBeLessThan(axisX)
+    const ticks = Array.from(container.querySelectorAll('[data-axis-tick="y"]'))
+    expect(ticks.map((el) => el.textContent)).toEqual(["手机阅读", "听书", "视频讲书"])
+    // Each name keeps clear of its symbol, and each symbol sits on its own row.
+    for (const [i, el] of icons.entries()) {
+      const tick = ticks[i]!
+      const width = measureTextUnits(tick.textContent!, {}) * Number(tick.getAttribute("font-size"))
+      expect(Number(tick.getAttribute("x")) - width).toBeGreaterThan(at(el)[0]! + 16)
+      expect(Math.abs(at(el)[1]! + 8 - (Number(tick.getAttribute("y")) - 0.35 * Number(tick.getAttribute("font-size"))))).toBeLessThan(1)
+    }
+  })
+
+  it("leaves a chart without symbols where it was", () => {
+    const plain = { ...ways, series: [{ ...ways.series[0]!, data: ways.series[0]!.data.map(({ icon: _icon, ...d }) => d) }] }
+    const { container } = svg(chart.render(plain, { ...box, h: 300 }, ctx))
+    expect(container.querySelector("[data-chart-icon]")).toBeNull()
+    const iconed = svg(chart.render(ways, { ...box, h: 300 }, ctx)).container
+    const axisX = (c: Element) => Number(c.querySelector('[data-axis="y"]')!.getAttribute("x1"))
+    expect(axisX(iconed) - axisX(container)).toBe(24)
+  })
+})

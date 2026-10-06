@@ -8,6 +8,7 @@ import { figureStyleOf, groupDigits, joinUnit, wholeValueDecimals, writtenFigure
 import { changeText } from "../lib/change-figure"
 import { mostlyChinese } from "../lib/text-script"
 import { StatusMark, statusGround, type PointStatus } from "../render/mark-status"
+import { Icon } from "../render/icons"
 import { AXIS_TITLE_BAND_H, AXIS_TITLE_SIZE, axisTitlePairHeight, renderAxisTitlePair, renderCartesianAxisTitles } from "./axis-titles"
 import {
   buildAlignedNumericAxis,
@@ -2857,6 +2858,11 @@ const BAR_H_VALUE_GAP = 8
 /** Gap between the category band and the plot. */
 const BAR_H_BAND_GAP = 12
 /**
+ * A category's symbol (`data[].icon`): this big, at the left edge of the
+ * chart in a column of its own, with this much air before the names.
+ */
+const BAR_H_ICON = { size: 16, gap: 8 } as const
+/**
  * Fit budget headroom for the horizontal bar's category labels.
  *
  * The label band is flush against the chart's own left edge and the label
@@ -3011,14 +3017,22 @@ export function renderBarHorizontal(
       : categories.flatMap((_cat, i) =>
           model.series.flatMap((m) => (m.values[i] == null ? [] : [labelText(i, m.seriesIndex, m.values[i]!)])),
         )
+  // A category's symbol (`data[].icon`, on the first series) stands in a
+  // column of its own at the chart's left edge, before the names.
+  const iconAt = new Map<number, string>()
+  for (const point of series[0]?.data ?? []) {
+    const i = categories.findIndex((cat) => cat.x === point.x)
+    if (i >= 0 && point.icon) iconAt.set(i, point.icon)
+  }
+  const iconBand = iconAt.size > 0 ? BAR_H_ICON.size + BAR_H_ICON.gap : 0
   const { labelW, valueW } = barHorizontalBands(
     categories.map((cat) => String(cat.x)),
     labelTexts,
-    w,
+    w - iconBand,
     fontFamily,
   )
-  const plotX = x0 + labelW + BAR_H_BAND_GAP
-  const plotW = Math.max(1, w - labelW - BAR_H_BAND_GAP - valueW)
+  const plotX = x0 + iconBand + labelW + BAR_H_BAND_GAP
+  const plotW = Math.max(1, w - iconBand - labelW - BAR_H_BAND_GAP - valueW)
   const plotY = y0 + BAR_H_PLOT_TOP_PAD
   const plotH = Math.max(1, h - meta.titleH - X_TICK_BAND - BAR_H_PLOT_TOP_PAD)
   const rowH = plotH / categories.length
@@ -3178,6 +3192,11 @@ export function renderBarHorizontal(
         }
         return <g key={cat.key}>{barElements}</g>
       })}
+      {[...iconAt].map(([i, name]) => (
+        <g key={`icon-${i}`} data-chart-icon={name}>
+          <Icon name={name} x={x0} y={plotY + i * rowH + rowH / 2 - BAR_H_ICON.size / 2} size={BAR_H_ICON.size} color={graphicInk(mutedColor, _bgHex ?? "#FFFFFF")} />
+        </g>
+      ))}
       {renderReferenceLine({ component, domain: xAxis.domain, plotX, plotY, plotW, plotH, across: false, color: textColor })}
       {placedHLabels === null ? <g data-dropped={hBarSpecs.length} data-dropped-kind="value-label" /> : null}
       {renderCartesianAxisTitles({
