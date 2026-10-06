@@ -169,6 +169,12 @@ describe("dossier ballot", () => {
     expect(page.querySelectorAll("[data-dossier-motion]")).toHaveLength(3)
   })
 
+  it("declares a ballot with boxes of an item's own dropped: its boxes stand in shared columns", () => {
+    const own = { ...ending, ballot: { ...(ending as Slide).ballot!, item_choices: [{ item: 2, choices: ["纳入", "暂缓"] }] } } as Slide
+    const page = root(deck([cover, own]), 1)
+    expect(page.querySelector("[data-dropped]")).not.toBeNull()
+  })
+
   it("refuses a ballot on a cover, which has no place for one", () => {
     const result = validateIr(deck([{ ...cover, ballot: { choices: ["同意", "不同意"] } } as Slide]))
     expect(result.ok).toBe(false)

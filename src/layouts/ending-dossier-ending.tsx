@@ -104,6 +104,8 @@ export function DossierEnding({ slide, ctx }: SvgTemplateProps) {
   const signature = ballot?.signature?.trim()
   return (
     <>
+      {/* Every item's boxes stand in the same columns: boxes of an item's own have no place. */}
+      {ballot?.item_choices ? <g data-dropped={1} data-dropped-kind="label" /> : null}
       <DossierSection slide={slide} ctx={ctx} />
       {renderEmphasisHeading(title, headingEmphasisPaint(ctx, title, { baseFill: titleInk, fontWeight: "700", fontFamily: ctx.fonts.heading, bold: true }), (_line, i) => (
         <text

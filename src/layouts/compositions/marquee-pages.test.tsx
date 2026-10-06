@@ -308,3 +308,13 @@ describe("a picture's tag", () => {
     expect(compose({ ...props, components: withTag(page.components) as Component[] }, ["spots"])).toBeNull()
   })
 })
+
+describe("a ballot with boxes of an item's own", () => {
+  it("leaves the requests, whose stubs share two boxes", () => {
+    const page = MARQUEE_BOARD["p17-asks"]!
+    const { ctx } = testCtx("rally")
+    const props = { ctx: chinese(ctx), rect: band(page.sourced), setting: "marquee" as const, components: page.components }
+    expect(compose({ ...props, ballot: page.ballot }, ["asks"])).not.toBeNull()
+    expect(compose({ ...props, ballot: { ...page.ballot!, item_choices: [{ item: 1, choices: ["批准", "缓议"] }] } }, ["asks"])).toBeNull()
+  })
+})

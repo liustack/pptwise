@@ -2210,3 +2210,13 @@ describe("gantt range, row icon and period", () => {
     expect(parseOne({ type: "gantt", range: { from: 18, to: 0 }, items }).success).toBe(false)
   })
 })
+
+describe("ballot.item_choices", () => {
+  const page = (ballot: unknown) => ({ version: "5", theme: { id: "brief" }, slides: [{ type: "ending", heading: "定三件事", ballot }] })
+  it("takes boxes of an item's own and refuses an item named twice", () => {
+    expect(parsePptxIR(page({ choices: ["同意", "再议"], item_choices: [{ item: 3, choices: ["自投", "EMC", "融资租赁"] }] })).success).toBe(true)
+    expect(parsePptxIR(page({ choices: ["同意", "再议"], item_choices: [{ item: 3, choices: ["自投"] }] })).success).toBe(false)
+    expect(parsePptxIR(page({ choices: ["同意", "再议"], item_choices: [{ item: 0, choices: ["a", "b"] }] })).success).toBe(false)
+    expect(parsePptxIR(page({ choices: ["同意", "再议"], item_choices: [{ item: 2, choices: ["a", "b"] }, { item: 2, choices: ["c", "d"] }] })).success).toBe(false)
+  })
+})

@@ -64,7 +64,8 @@ const PHOTO = { w: 400, h: 420, gap: 30, caption: { gap: 6, size: 12, lineHeight
 const CHOICE = { w: 74, right: 8, top: 50, box: 18, label: { dx: 24, baseline: 64, size: 13 }, before: 26 } as const
 
 export const quizComposition: Composition = ({ components, ctx, rect, setting, ballot }) => {
-  if (setting !== "lesson" || !ballot) return null
+  // Every question here is ticked in the same boxes.
+  if (setting !== "lesson" || !ballot || ballot.item_choices) return null
   const image = components[0]?.type === "image" ? (components[0] as Image) : null
   const [cards, ...rest] = components.slice(image ? 1 : 0)
   if (cards?.type !== "row_cards" || rest.length > 0) return null

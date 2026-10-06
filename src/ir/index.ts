@@ -502,8 +502,29 @@ export const BallotSchema = z
     signature: nonBlankString("ballot.signature")
       .optional()
       .describe('The label of a line left blank to sign under the items, such as "委员会主任委员签字" or "Chair\'s signature".'),
+    item_choices: z
+      .array(
+        z
+          .object({
+            item: z.number().int().min(1).describe("The item, counted from 1."),
+            choices: z.array(nonBlankString("ballot.item_choices[].choices[]")).min(2).max(4).describe("Its own boxes."),
+          })
+          .strict(),
+      )
+      .min(1)
+      .optional()
+      .describe('Items whose boxes differ from choices, such as a pick among options: [{ "item": 3, "choices": ["自投", "EMC", "融资租赁"] }].'),
   })
   .strict()
+  .superRefine((ballot, ctx) => {
+    const seen = new Set<number>()
+    ballot.item_choices?.forEach((entry, i) => {
+      if (seen.has(entry.item)) {
+        ctx.addIssue({ code: "custom", path: ["item_choices", i, "item"], message: `ballot.item_choices names item ${entry.item} twice. Give each item its boxes once.` })
+      }
+      seen.add(entry.item)
+    })
+  })
 
 const CommonSlideFields = {
   // 稳定页标识（W5 spec/assemble 注入，裸 IR 可省）。schema 层不做跨 slide

@@ -279,3 +279,13 @@ describe("icon cards with a title or a tone", () => {
     expect(compose({ ...props, components: [{ ...cards, items: cards.items.map((it, i) => (i === 0 ? { ...it, tone: "danger" as const } : it)) }, ...rest] }, ["rules"])).toBeNull()
   })
 })
+
+describe("a ballot with boxes of an item's own", () => {
+  it("leaves the quiz, whose questions share their boxes", () => {
+    const page = LESSON_BOARD["p09-quiz1"]!
+    const { ctx } = testCtx("homeroom")
+    const props = { ctx: chinese(ctx), rect: BAND, setting: "lesson" as const, components: page.components }
+    expect(compose({ ...props, ballot: page.ballot }, ["quiz"])).not.toBeNull()
+    expect(compose({ ...props, ballot: { ...page.ballot!, item_choices: [{ item: 1, choices: ["可以", "不行"] }] } }, ["quiz"])).toBeNull()
+  })
+})
