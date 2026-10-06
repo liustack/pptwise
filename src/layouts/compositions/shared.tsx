@@ -145,6 +145,21 @@ export type CompositionId =
   | "scoreboard"
   | "allotment"
   | "asks"
+  | "gains"
+  | "hours"
+  | "regions"
+  | "workings"
+  | "levers"
+  | "cycles"
+  | "drift"
+  | "parts"
+  | "plans"
+  | "precedents"
+  | "safeguards"
+  | "remedies"
+  | "checkpoints"
+  | "quote"
+  | "papers"
 
 /**
  * The type a composition sets its page in.
@@ -278,10 +293,24 @@ export type CompositionId =
  *   filled, a budget cut into shares and requests to tick. See
  *   `./marquee.tsx`.
  *
+ * - `binder`: proposal's 2026-10 board. A proposal handed to a client's
+ *   management in a ring binder: white paper, cards of warm sand with no
+ *   outline, the primary's petrol for titles, figures and the one dark block
+ *   a page may carry, the chart palette's second petrol and sky for bars and
+ *   steps, and the accent, a tangerine, on one thing a page with the text ink
+ *   on it, small tangerine words in the theme's emphasis ink. A composition
+ *   offered this setting draws the shapes that board drew and no other did:
+ *   what the client gets as figure cards, a day's tariff bands, places side
+ *   by side as cards, a sum worked out beside its inputs, what moves a
+ *   result, what a store earns a day, what has moved, what a solution is made
+ *   of, the ways to pay, public records, safeguards, a risk register with its
+ *   remedies, steps with the papers that close them, a price list as one
+ *   sheet and a checklist of what to hand over. See `./binder.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */

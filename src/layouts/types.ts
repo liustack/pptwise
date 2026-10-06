@@ -98,6 +98,8 @@ export type CoverLayoutId =
   | "pitch-cover"
   // rally sample redesign (2026-10-06): the campaign's photograph with its ticket stub and confetti.
   | "marquee-cover"
+  // proposal theme (2026-10-06): a white proposal page beside the client's photograph.
+  | "binder-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -145,6 +147,8 @@ export type ChapterLayoutId =
   | "pitch-chapter"
   // rally sample redesign (2026-10-06): a section of the campaign, its ticket stub and confetti.
   | "marquee-chapter"
+  // proposal theme (2026-10-06): a part of the proposal over its photograph, its tab lit.
+  | "binder-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -194,6 +198,8 @@ export type EndingLayoutId =
   | "pitch-ending"
   // rally sample redesign (2026-10-06): the campaign's next steps and its button.
   | "marquee-ending"
+  // proposal theme (2026-10-06): what the client is asked to decide, a box per choice, and its button.
+  | "binder-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -261,6 +267,8 @@ export type ContentLayoutId =
   // rally sample redesign: the board's ordinary content page and its one-line plan. Theme-locked.
   | "marquee-sheet"
   | "marquee-statement"
+  // proposal theme: the board's ordinary content page. Theme-locked.
+  | "binder-sheet"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

@@ -108,6 +108,21 @@ import { timetableComposition } from "./timetable"
 import { scoreboardComposition } from "./scoreboard"
 import { allotmentComposition } from "./allotment"
 import { asksComposition } from "./asks"
+import { gainsComposition } from "./gains"
+import { hoursComposition } from "./hours"
+import { regionsComposition } from "./regions"
+import { workingsComposition } from "./workings"
+import { leversComposition } from "./levers"
+import { cyclesComposition } from "./cycles"
+import { driftComposition } from "./drift"
+import { partsComposition } from "./parts"
+import { plansComposition } from "./plans"
+import { precedentsComposition } from "./precedents"
+import { safeguardsComposition } from "./safeguards"
+import { remediesComposition } from "./remedies"
+import { checkpointsComposition } from "./checkpoints"
+import { quoteComposition } from "./quote"
+import { papersComposition } from "./papers"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -229,6 +244,21 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   scoreboard: scoreboardComposition,
   allotment: allotmentComposition,
   asks: asksComposition,
+  gains: gainsComposition,
+  hours: hoursComposition,
+  regions: regionsComposition,
+  workings: workingsComposition,
+  levers: leversComposition,
+  cycles: cyclesComposition,
+  drift: driftComposition,
+  parts: partsComposition,
+  plans: plansComposition,
+  precedents: precedentsComposition,
+  safeguards: safeguardsComposition,
+  remedies: remediesComposition,
+  checkpoints: checkpointsComposition,
+  quote: quoteComposition,
+  papers: papersComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -284,7 +314,7 @@ const PAGE_TAG_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>
  * ordinary timeline draws them all: the spans as a row of named spans under
  * its milestones, a source and a tag under a milestone's words.
  */
-const TIMELINE_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "outlook"])
+const TIMELINE_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "outlook", "checkpoints"])
 
 function asksForTimelineDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some(
@@ -300,7 +330,7 @@ function asksForTimelineDetail(components: readonly CompositionProps["components
  * line or note leaves them off. The ordinary callout sets the title bold over
  * its text and the tag under it.
  */
-const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods", "funnel", "crest", "branch"])
+const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods", "funnel", "crest", "branch", "regions", "levers", "cycles", "checkpoints"])
 
 function asksForCalloutDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "callout" && (component.title !== undefined || component.tag !== undefined))
@@ -336,7 +366,7 @@ function asksForChartReference(components: readonly CompositionProps["components
  * offered to these alone; the ordinary chart prints every note after its
  * value.
  */
-const CHART_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["magnitude", "segments", "survey"])
+const CHART_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["magnitude", "segments", "survey", "levers"])
 
 function asksForChartNote(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.series.some((s) => s.data.some((d) => d.note !== undefined)))
@@ -398,7 +428,7 @@ function asksForRoadmapPhases(components: readonly CompositionProps["components"
  * is offered to these alone; the ordinary table outlines the marked column
  * and sets the icon before each of its cells.
  */
-const TABLE_COLUMN_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["rivals", "loop"])
+const TABLE_COLUMN_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["rivals", "loop", "remedies"])
 
 function asksForTableColumnMarks(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "data_table" && component.columns.some((col) => col.emphasis !== undefined || col.icon !== undefined))
@@ -436,7 +466,7 @@ function asksForGanttBands(components: readonly CompositionProps["components"][n
  * to these alone; the ordinary cards set the title over them and draw a
  * card's icon in the theme's ink for its news.
  */
-const ICON_CARD_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const ICON_CARD_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["safeguards"])
 
 function asksForIconCardDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "icon_cards" && (Boolean(component.title?.trim()) || component.items.some((item) => item.tone !== undefined)))

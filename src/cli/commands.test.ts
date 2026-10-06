@@ -767,9 +767,9 @@ describe("runSchema / runThemes", () => {
     expect(lines).toContain("alarm-clock")
     expect(JSON.parse(runIcons(true))).toEqual(lines)
   })
-  it("prints 24 themes, json mode parses", async () => {
-    expect((await runThemes(false)).split("\n")).toHaveLength(24)
-    expect(JSON.parse(await runThemes(true))).toHaveLength(24)
+  it("prints 25 themes, json mode parses", async () => {
+    expect((await runThemes(false)).split("\n")).toHaveLength(25)
+    expect(JSON.parse(await runThemes(true))).toHaveLength(25)
   })
   it("JSON objects include occasions and identity without replacing listThemes label", async () => {
     const rows = JSON.parse(await runThemes(true)) as Array<{
@@ -780,7 +780,7 @@ describe("runSchema / runThemes", () => {
       identity: unknown
       source: unknown
     }>
-    expect(rows).toHaveLength(24)
+    expect(rows).toHaveLength(25)
     expect(Object.keys(rows[0]!)).toEqual(expect.arrayContaining(["id", "label", "colors", "occasions", "identity", "source"]))
     expect(rows.every((row) => row.source === "builtin")).toBe(true)
     for (const row of rows) {

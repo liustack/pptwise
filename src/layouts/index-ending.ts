@@ -28,6 +28,7 @@ import { YearbookEnding } from "./ending-yearbook-ending"
 import { LessonEnding } from "./ending-lesson-ending"
 import { PitchEnding } from "./ending-pitch-ending"
 import { MarqueeEnding } from "./ending-marquee-ending"
+import { BinderEnding } from "./ending-binder-ending"
 import { ScorecardEnding } from "./ending-scorecard-ending"
 import { CarePlanEnding } from "./ending-care-plan-ending"
 import { SeatCtaEnding } from "./ending-seat-cta-ending"
@@ -87,4 +88,5 @@ export const ENDING_LAYOUTS: Record<EndingLayoutId, EndingLayout> = {
   "lesson-ending": LessonEnding,
   "pitch-ending": PitchEnding,
   "marquee-ending": MarqueeEnding,
+  "binder-ending": BinderEnding,
 }

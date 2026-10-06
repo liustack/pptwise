@@ -323,7 +323,7 @@ describe("gallery SVG text respects the readable font floor", () => {
         if (
           !content ||
           hasDecor(el) ||
-          ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec", "lesson-spec", "pitch-spec", "marquee-spec"].includes(el.getAttribute("data-font-floor-exempt") ?? "")
+          ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec", "lesson-spec", "pitch-spec", "marquee-spec", "binder-spec"].includes(el.getAttribute("data-font-floor-exempt") ?? "")
         ) continue
         const fontSize = Number(el.getAttribute("font-size") ?? 16)
         if (fontSize < META_FONT_FLOOR_PX) {
@@ -344,15 +344,15 @@ describe("gallery SVG text respects the readable font floor", () => {
 // ---------------------------------------------------------------------------
 
 /**
- * What the corpus holds today: 26 component-band specimens per device — the
+ * What the corpus holds today: 27 component-band specimens per device — the
  * component band draws this type twice, once as a browser window and once as a
  * phone — plus the four sample-deck pages whose narrative includes a product
  * screenshot, and terminal's console window on its composition page
  * (`screen`). Pinned per device, because a corpus that covered only browsers
  * left the phone branch of both the component and this test unexecuted.
  */
-const EXPECTED_DEVICE_PAGES = 57
-const EXPECTED_BY_DEVICE = { browser: 31, phone: 26 }
+const EXPECTED_DEVICE_PAGES = 59
+const EXPECTED_BY_DEVICE = { browser: 32, phone: 27 }
 const EXPECTED_DECK_PAGES = [
   "bulletin--deck--p09",
   "homeroom--deck--p07",

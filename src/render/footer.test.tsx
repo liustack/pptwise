@@ -113,8 +113,8 @@ describe("no footer by default", () => {
 })
 
 describe("the footer row, when the deck asks for it", () => {
-  // memo, clinic, almanac, homeroom, ember and rally set their folios rather than printing the shared row: their own cases below.
-  const OWN_FOLIO_THEMES = new Set(["memo", "clinic", "almanac", "homeroom", "ember", "rally"])
+  // memo, clinic, almanac, homeroom, ember, rally and proposal set their folios rather than printing the shared row: their own cases below.
+  const OWN_FOLIO_THEMES = new Set(["memo", "clinic", "almanac", "homeroom", "ember", "rally", "proposal"])
   const SHARED_ROW_THEMES = CANONICAL_THEME_IDS.filter((theme) => !OWN_FOLIO_THEMES.has(theme))
 
   it.each(SHARED_ROW_THEMES)("%s: every mark in its place, on content pages only", (theme) => {
@@ -289,6 +289,29 @@ describe("the footer row, when the deck asks for it", () => {
         expect(t.getAttribute("data-font-floor-exempt")).toBe("marquee-spec")
       }
       expect(row.querySelector("text")!.getAttribute("x")).toBe("64")
+      expect(texts(root).filter((t) => t.includes(ORG))).toHaveLength(1)
+    })
+  })
+
+  it("proposal: the label at the top left, the office at the left and the marks and page number at the right, on content pages only", () => {
+    const ir = zhDeck("proposal", { footer: ALL_MARKS })
+    ir.slides.forEach((slide, index) => {
+      const root = page(ir, index)
+      if (slide.type !== "content") {
+        expect(root.querySelectorAll('[data-field="slidenum"]'), `proposal ${slide.type}: page number`).toHaveLength(0)
+        expect(root.querySelector("[data-footer]"), `proposal ${slide.type}: footer row`).toBeNull()
+        expect(root.querySelector("[data-binder-label]"), `proposal ${slide.type}: label`).toBeNull()
+        return
+      }
+      const row = root.querySelector('[data-footer="row"]')!
+      expect(texts(row)).toEqual([ORG, "讨论稿 · 内部资料，请勿外传", String(index + 1)])
+      const number = row.querySelector('[data-field="slidenum"]')!
+      expect(number.textContent).toBe(String(index + 1))
+      expect([number.getAttribute("x"), number.getAttribute("text-anchor")]).toEqual(["1196", "end"])
+      for (const t of Array.from(row.querySelectorAll("text"))) expect(t.getAttribute("data-font-floor-exempt")).toBe("binder-spec")
+      const label = root.querySelector("[data-binder-label]")!
+      expect(label.textContent).toBe("2026 年中期业绩 | 2026.08")
+      expect(label.querySelector("text")!.getAttribute("x")).toBe("64")
       expect(texts(root).filter((t) => t.includes(ORG))).toHaveLength(1)
     })
   })

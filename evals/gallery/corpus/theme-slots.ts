@@ -160,6 +160,7 @@ export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = 
   terminal: [slot("icon_cards"), slot("data_table"), slot("waterfall"), slot("code"), slot("device_mockup"), slot("decision_tree"), slot("roadmap")],
   almanac: [slot("icon_cards"), slot("iceberg"), slot("timeline"), slot("pest"), slot("image_compare"), slot("rings"), slot("pictogram")],
   vermilion: [slot("comparison"), slot("kpi_cards"), slot("gantt"), slot("from_to"), slot("people_cards"), slot("code"), slot("architecture")],
+  proposal: [slot("kpi_cards"), slot("comparison"), slot("data_table"), slot("timeline"), slot("from_to"), slot("icon_cards"), slot("pros_cons")],
 }
 
 /** Build the lead component for one theme-table content slot. */

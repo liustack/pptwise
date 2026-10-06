@@ -6,6 +6,7 @@ import { PosterMotif } from "./motif-poster-motif"
 import { ToneAdaptiveMotif } from "./motif-tone-adaptive-motif"
 import { ConstellationMotif } from "./motif-constellation-motif"
 import { RallyMotif } from "./motif-rally-motif"
+import { ProposalMotif } from "./motif-proposal-motif"
 import { HomeroomMotif } from "./motif-homeroom-motif"
 import { InkMotif } from "./motif-ink-motif"
 import { LuxeMotif } from "./motif-luxe-motif"
@@ -57,4 +58,5 @@ export const MOTIFS: Record<MotifId, Motif> = {
   "gauge-motif": GaugeMotif,
   "crayonbox-motif": CrayonboxMotif,
   "folio-motif": FolioMotif,
+  "proposal-motif": ProposalMotif,
 }

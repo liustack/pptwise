@@ -15,7 +15,7 @@ import type { DesignStoryField } from "@/design-story"
  * that no card will ever read.
  */
 export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, string>>>> = {
-  // ── themes (24) ─────────────────────────────────────────────────────────
+  // ── themes (25) ─────────────────────────────────────────────────────────
 
   "theme:thesis": {
     name: "论文",
@@ -208,6 +208,14 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     audience: "一个部门在正式场合向上和向外汇报。",
     notFor: "新创品牌、活泼风格，或应该显得随意的场合。",
     lineage: "中式公文，红与金落在纸面上。",
+  },
+  "theme:proposal": {
+    name: "提案书",
+    story: "客户一页页翻开活页夹，每一页都看得到自己得到什么、要花多少钱、要定哪件事。",
+    positioning: "客户管理层要对一份提案、方案或投标点头，签字之前得先看清钱、计划和风险时用它。",
+    audience: "供应商把提案摆到客户老板、厂长和财务负责人面前。",
+    notFor: "内部报告或研究论文，一页页请读者拍板会读成推销。",
+    lineage: "装在活页夹里的客户提案：分隔标签、标好价的报价单、一张客户要交的资料清单。",
   },
 
   // ── kinds (11) ──────────────────────────────────────────────────────────
@@ -1635,6 +1643,34 @@ export const STORY_ZH: Readonly<Record<string, Partial<Record<DesignStoryField, 
     positioning: "适用于照片和证据，一张必需图片加至多四条标注列表。选它来像教科书图解一样标注图片中的细节。",
     audience: "观众需要在画面中辨认具体细节的讲座或培训。",
     notFor: "搭配自由形式文字块而非标注的图片，适合「侧图接管」。",
+  },
+  "layout:binder-sheet": {
+    name: "活页内页",
+    story: "每页是提案活页夹里的一张纸，所在部分的标签从右边缘伸出来。论断用石油蓝横在页顶，论据摆在白纸上：沙色卡片、石油蓝数字，页面落脚的那件事上一个橘色记号。",
+    positioning: "用一套提案语法承接所有讲法。客户管理层按部分翻读提案、每页都该说清得到什么、花多少、要定什么时选它。",
+    audience: "掂量一份提案的客户管理层：老板、厂长、财务负责人。",
+    notFor: "内部报告或研究论文，每页一个橘色记号、页边写着客户会读成推销。",
+  },
+  "layout:binder-cover": {
+    name: "提案封面",
+    story: "白色的提案页挨着一张客户同类现场的照片：日期、一枚写明呈给谁的标签、石油蓝标题、一行副题，以及提案立足的三个数字。",
+    positioning: "为递给客户管理层的提案开场。第一页就该说清写给谁、客户能得到多少（用数字说）时选它。",
+    audience: "翻开写给自己的提案的客户管理层。",
+    notFor: "内部报告或主题演讲，写给客户的封面会读成推销。",
+  },
+  "layout:binder-chapter": {
+    name: "活页分篇",
+    story: "整页照片上从左压过来一层石油蓝，章节号用橘色放到很大，标题是白字，下面列出这一部分要回答的问题，每条带图标。这一部分的活页标签从右边伸出来。",
+    positioning: "为提案的一个部分开篇。想让客户在看数字之前先知道接下来几页回答他哪些问题时选它。",
+    audience: "一部分一部分读提案的客户管理层。",
+    notFor: "安静的报告章节，照片和橘色大号会读成推销。",
+  },
+  "layout:binder-ending": {
+    name: "签批收尾",
+    story: "客户要定的几件事，每件一张卡片，每个选项一个勾选框，上方是石油蓝的收尾句，再加一个橘色按钮，写着作者自己定的下一步。",
+    positioning: "用客户要拍板的事给提案收尾。最后一页该给客户管理层留一张短短的勾选单和一个明确的下一步时选它。",
+    audience: "读到提案最后、决定签批什么的客户管理层。",
+    notFor: "致谢页或联系方式页，它们要的是更安静的收尾。",
   },
   "component:org_tree": {
     name: "汇报线",

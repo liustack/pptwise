@@ -126,18 +126,22 @@ function consultingPadDeck(): PptxIR {
 // `**` markers. 96 of the 110 hashes move. The matrix keeps its original job
 // — proving an unassigned theme does not drift — and gains the assertion that
 // makes the old hashes un-recapturable: no page may contain a literal marker.
+//
+// Recaptured (proposal theme, 2026-10-06). proposal joins the unassigned
+// matrix: 23 themes × five paths = 115 hashes. Only the five `proposal|*`
+// keys are new. The other 110 paths stay byte-identical.
 const fixture = JSON.parse(
   readFileSync(EMPHASIS_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }
 
 describe("unassigned emphasis forms stay pinned to the depth-contract fixture", () => {
   const pages = auditEmphasisUnassignedPages()
-  it("covers 22 themes across five real render paths", () => {
+  it("covers 23 themes across five real render paths", () => {
     expect(UNASSIGNED).not.toContain("lecture")
     expect(UNASSIGNED).not.toContain("brief")
-    expect(UNASSIGNED).toHaveLength(22)
-    expect(Object.keys(pages)).toHaveLength(110)
-    expect(Object.keys(fixture.pages)).toHaveLength(110)
+    expect(UNASSIGNED).toHaveLength(23)
+    expect(Object.keys(pages)).toHaveLength(115)
+    expect(Object.keys(fixture.pages)).toHaveLength(115)
   })
 
   it.each(Object.keys(fixture.pages))("%s", (key) => {

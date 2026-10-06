@@ -30,6 +30,7 @@ import { MEMO_LEXICON } from "./memo"
 import { MUSEUM_LEXICON } from "./museum"
 import { PLAYBILL_LEXICON } from "./playbill"
 import { PULSE_LEXICON } from "./clinic"
+import { PROPOSAL_LEXICON } from "./proposal"
 import { RUNWAY_LEXICON } from "./runway"
 import { STAGE_LEXICON } from "./stage"
 import { SWISS_LEXICON } from "./swiss"
@@ -54,6 +55,7 @@ export const NATIVE_LEXICONS: Readonly<Record<string, Lexicon>> = {
   memo: MEMO_LEXICON,
   museum: MUSEUM_LEXICON,
   playbill: PLAYBILL_LEXICON,
+  proposal: PROPOSAL_LEXICON,
   clinic: PULSE_LEXICON,
   runway: RUNWAY_LEXICON,
   stage: STAGE_LEXICON,

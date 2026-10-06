@@ -74,8 +74,8 @@ function renderKinds(locale: Locale): string {
     locale === "zh" ? "### 讲法全量表" : "### Complete kind vocabulary",
     "",
     locale === "zh"
-      ? "本段由 IR v5 的讲法词表与 24 个预设菜单生成。最后一列表示有多少预设菜单提供该讲法。"
-      : "This section is generated from the IR v5 kind vocabulary and the 24 preset menus. The final column shows how many preset menus offer each kind.",
+      ? `本段由 IR v5 的讲法词表与 ${THEME_PRESETS.length} 个预设菜单生成。最后一列表示有多少预设菜单提供该讲法。`
+      : `This section is generated from the IR v5 kind vocabulary and the ${THEME_PRESETS.length} preset menus. The final column shows how many preset menus offer each kind.`,
     "",
     locale === "zh"
       ? "| kind | 中文 | 何时使用 | 边界 | 预设菜单 |"
@@ -85,7 +85,7 @@ function renderKinds(locale: Locale): string {
   for (const kind of KIND_VALUES) {
     const copy = KIND_GUIDANCE[kind][locale]
     const offeredBy = THEME_PRESETS.filter((preset) => offeredKinds(preset.id).includes(kind)).length
-    lines.push(`| \`${kind}\` | ${copy.label} | ${copy.use} | ${copy.boundary} | ${offeredBy}/24 |`)
+    lines.push(`| \`${kind}\` | ${copy.label} | ${copy.use} | ${copy.boundary} | ${offeredBy}/${THEME_PRESETS.length} |`)
   }
   return lines.join("\n")
 }

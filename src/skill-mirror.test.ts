@@ -157,8 +157,8 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
       expect(text.indexOf("pptwise packs sync")).toBeLessThan(text.indexOf("pptwise themes --json"))
       expect(text.indexOf("pptwise packs sync")).toBeLessThan(text.indexOf("### 3."))
     }
-    expect(read(EN_REL)).toMatch(/2\. A workspace `themes\/` directory.*\n3\. Installed content packs.*\n4\. The 24 factory presets\./)
-    expect(read(ZH_REL)).toMatch(/2\. 从当前目录向上查找工作区 `themes\/`。\n3\. 已装的内容包.*\n4\. 24 个出厂预设。/)
+    expect(read(EN_REL)).toMatch(/2\. A workspace `themes\/` directory.*\n3\. Installed content packs.*\n4\. The 25 factory presets\./)
+    expect(read(ZH_REL)).toMatch(/2\. 从当前目录向上查找工作区 `themes\/`。\n3\. 已装的内容包.*\n4\. 25 个出厂预设。/)
     for (const rel of [REF("spec.md"), REF("spec.zh-CN.md")]) {
       expect(read(rel)).toMatch(/\n3\. (Installed content packs|已装的内容包).*\n4\. /)
     }

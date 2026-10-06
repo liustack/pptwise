@@ -1,7 +1,7 @@
 /**
  * The factory preset library.
  *
- * The 24 built-ins are no longer a closed set of "the themes pptwise has".
+ * The 25 built-ins are no longer a closed set of "the themes pptwise has".
  * They are the shelf a new workspace theme is copied off (charter: 创建 =
  * 拷贝, `.issues/2026-08-30-theme-first-principles/charter.md`). This module
  * is the read source for that copy: it names what is on the shelf, what

@@ -26,11 +26,12 @@ import { LECTURE_THEME } from "./builtin/lecture";
 import { SWISS_THEME } from "./builtin/swiss";
 import { MEMO_THEME } from "./builtin/memo";
 import { PLAYBILL_THEME } from "./builtin/playbill";
+import { PROPOSAL_THEME } from "./builtin/proposal";
 import type { BuiltinThemeDeclaration } from "./schema";
 
 /**
- * The 24 canonical theme ids, registered/renderable（产品口径 24 套主题、
- * 24 个 id）。命名规矩：id、label、story.name 一律命名腔调或体裁，
+ * The 25 canonical theme ids, registered/renderable（产品口径 25 套主题、
+ * 25 个 id）。命名规矩：id、label、story.name 一律命名腔调或体裁，
  * 不命名行业、职能、受众或组织类型（见 `design-story.ts`；九个场景名
  * 已在改名批次里一次性换掉，旧 id 直接硬错并报出新名，见
  * `retired-ids.ts`）（brief Brief / bulletin Bulletin /
@@ -81,6 +82,7 @@ export const CANONICAL_THEME_IDS = [
   "swiss",
   "memo",
   "playbill",
+  "proposal",
 ] as const;
 
 export type CanonicalThemeId = (typeof CANONICAL_THEME_IDS)[number];
@@ -111,6 +113,7 @@ export const BUILTIN_THEME_FILES = {
   swiss: SWISS_THEME,
   memo: MEMO_THEME,
   playbill: PLAYBILL_THEME,
+  proposal: PROPOSAL_THEME,
 } satisfies Record<CanonicalThemeId, BuiltinThemeDeclaration>;
 
 /** 场景 id → 英文场景名（plan 卡片徽章等对用户展示处用，接口统一英文）。 */

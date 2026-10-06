@@ -2,7 +2,7 @@
 //
 // Theme structure, S1-B (menu model). A theme's structure is its menu: one
 // face per boundary page type, one face per content kind it serves. This
-// file is the acceptance suite for what that buys — that the 24 built-ins
+// file is the acceptance suite for what that buys — that the 25 built-ins
 // really are 24 distinct structures, that every face a menu names is one the
 // renderer can draw, that rendering is deterministic, that a bound theme
 // never reaches outside its own menu, and that each theme's three boundary
@@ -100,7 +100,7 @@ describe("24 themes, 24 structures", () => {
       expect(twin, `${id} and ${twin} declare the identical menu`).toBeUndefined()
       seen.set(signature, id)
     }
-    expect(seen.size).toBe(24)
+    expect(seen.size).toBe(25)
   })
 
   it("no two themes share the same three boundary faces", () => {
@@ -108,7 +108,7 @@ describe("24 themes, 24 structures", () => {
       const menu = BUILTIN_THEME_FILES[id].menu
       return [menu.cover.face, menu.chapter.face, menu.ending.face].join("|")
     })
-    expect(new Set(boundaries).size).toBe(24)
+    expect(new Set(boundaries).size).toBe(25)
   })
 
   it("the served kind vocabulary genuinely differs across themes — this is a design axis, not a formality", () => {
@@ -217,8 +217,8 @@ describe("boundary faces under pathological content", () => {
     })),
   )
 
-  it("sanity: 72 theme×boundary-face combinations exist to audit — 24 themes, three locked faces each", () => {
-    expect(combos).toHaveLength(72)
+  it("sanity: 75 theme×boundary-face combinations exist to audit — 25 themes, three locked faces each", () => {
+    expect(combos).toHaveLength(75)
   })
 
   for (const { themeId, slideType, face } of combos) {

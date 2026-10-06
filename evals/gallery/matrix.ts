@@ -44,7 +44,7 @@ export const BAND_IDS = ["deck", "face", "compose", "aside", "component"] as con
  * them. `compose` shows the shared compositions (`src/layouts/compositions/`)
  * on the themes whose faces hand pages to them, see `COMPOSITION_PAGES`.
  * `aside` exists to show the shared step-aside (`src/render/step-aside.tsx`)
- * to a reviewer, and three pages cover that rendering for all 24 skins
+ * to a reviewer, and three pages cover that rendering for all 25 skins
  * because the sheet is the same sheet on every one of them. See
  * `STEP_ASIDE_PAGES`.
  */
@@ -460,6 +460,23 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "rally", kind: "list", composition: "scoreboard" },
   { theme: "rally", kind: "hierarchy", composition: "allotment" },
   { theme: "rally", kind: "points", composition: "asks" },
+  // proposal's binder sheet sets the shapes as a client proposal in a ring
+  // binder, and draws the fifteen its own board added.
+  { theme: "proposal", kind: "points", composition: "gains" },
+  { theme: "proposal", kind: "data", composition: "hours" },
+  { theme: "proposal", kind: "comparison", composition: "regions" },
+  { theme: "proposal", kind: "data", composition: "workings" },
+  { theme: "proposal", kind: "comparison", composition: "levers" },
+  { theme: "proposal", kind: "data", composition: "cycles" },
+  { theme: "proposal", kind: "comparison", composition: "drift" },
+  { theme: "proposal", kind: "photo", composition: "parts" },
+  { theme: "proposal", kind: "comparison", composition: "plans" },
+  { theme: "proposal", kind: "evidence", composition: "precedents" },
+  { theme: "proposal", kind: "list", composition: "safeguards" },
+  { theme: "proposal", kind: "list", composition: "remedies" },
+  { theme: "proposal", kind: "process", composition: "checkpoints" },
+  { theme: "proposal", kind: "list", composition: "quote" },
+  { theme: "proposal", kind: "hierarchy", composition: "papers" },
 ]
 
 export function buildMatrix(

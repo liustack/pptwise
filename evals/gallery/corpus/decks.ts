@@ -23,6 +23,7 @@ import { registerTestTheme, type TestThemeFaces } from "@/themes/test-fixtures"
 import { CHART_VARIANTS, COMPONENT_BUILDERS, PHOTO_ASSETS, PHONE_SCREENSHOT_ASSET, SCREENSHOT_ASSET } from "./components"
 import type { LanguageId, Lexicon } from "./lexicon"
 import { THEME_CONTENT_SLOTS, buildThemeSlot } from "./theme-slots"
+import { BINDER_BODIES } from "./binder-bodies"
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/images")
 
@@ -562,6 +563,9 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   // filled with their pending targets. Its one-line plan: the touchpoints
   // under the claim.
   if (def.id === "marquee-sheet") return COMPOSITION_BODIES.scoreboard(lex).components
+  // proposal's binder sheet: the board's sum, the inputs beside the working
+  // and the answer the page lands on.
+  if (def.id === "binder-sheet") return COMPOSITION_BODIES.workings(lex).components
   if (def.id === "marquee-statement") {
     return [{ type: "icon_cards", items: [0, 1, 2].map((i) => ({ icon: (["cup-soda", "package", "ticket"] as const)[i]!, title: lex.labels[i]!, text: lex.bullets[i]! })) }]
   }
@@ -1130,6 +1134,11 @@ interface CompositionBody {
  * composition it names, whole.
  */
 const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBody> = {
+  // proposal's binder sheet: what the client gets, a day's bands, places as
+  // cards, the sum, what moves it, a day's earnings, what has moved, the
+  // parts, the ways to pay, public records, safeguards, the risks, the steps,
+  // the quote and the papers to hand over.
+  ...BINDER_BODIES,
   rows: (lex) => ({
     heading: lex.headings[1]!,
     components: [
