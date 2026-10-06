@@ -473,6 +473,17 @@ function asksForIconCardDetail(components: readonly CompositionProps["components
 }
 
 /**
+ * The compositions that draw a chart's title (`title`), the name set over
+ * it. A page whose chart carries one is offered to these alone; the ordinary
+ * chart sets the title over it as a table does.
+ */
+const CHART_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForChartTitle(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && Boolean(component.title?.trim()))
+}
+
+/**
  * The compositions that draw the page's ballot (`Slide.ballot`), a box for
  * each choice beside every question. A page with one is offered to these
  * alone; the face declares the ballot dropped when none takes the page.
@@ -511,6 +522,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const seasoned = asksForGanttBands(props.components)
   const columned = asksForTableColumnMarks(props.components)
   const carded = asksForIconCardDetail(props.components)
+  const captioned = asksForChartTitle(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -526,6 +538,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (seasoned && !GANTT_BAND_COMPOSITIONS.has(id)) continue
     if (columned && !TABLE_COLUMN_COMPOSITIONS.has(id)) continue
     if (carded && !ICON_CARD_DETAIL_COMPOSITIONS.has(id)) continue
+    if (captioned && !CHART_TITLE_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue

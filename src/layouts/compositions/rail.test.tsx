@@ -224,3 +224,14 @@ describe("rail composition, notice setting", () => {
     expect(byText(root!, "−29%")!.getAttribute("fill")).toBe(tokens.colors.primary)
   })
 })
+
+describe("a chart with a title", () => {
+  it("goes to the ordinary chart, which sets the title over it, not to the rail", async () => {
+    const { compose } = await import(".")
+    const { testCtx } = await import("./__fixtures__/kit")
+    const { ctx } = testCtx("brief")
+    const props = { ctx, rect: BAND_ABOVE_SOURCE }
+    expect(compose({ ...props, components: [combo() as never] }, ["rail"])).not.toBeNull()
+    expect(compose({ ...props, components: [combo(true, { title: "Parcels and cost per parcel" }) as never] }, ["rail"])).toBeNull()
+  })
+})

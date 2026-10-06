@@ -2406,3 +2406,35 @@ describe("a bar whose value is known only as a range", () => {
     expect(chartSchema.safeParse(point({ upper: 70, status: "forecast" })).success).toBe(false)
   })
 })
+
+describe("a chart's title", () => {
+  const line = {
+    type: "chart" as const,
+    chart_type: "line" as const,
+    title: "参保职工与参保离退休人员之比",
+    series: [{ name: "比值", data: [{ x: "2015", y: 2.87 }, { x: "2020", y: 2.57 }, { x: "2025", y: 2.59 }] }],
+  }
+
+  it("is accepted on every chart type", () => {
+    expect(chartSchema.safeParse(line).success).toBe(true)
+    expect(chartSchema.safeParse({ ...line, chart_type: "pie", series: [{ name: "a", data: [{ x: "a", y: 1 }, { x: "b", y: 2 }] }] }).success).toBe(true)
+  })
+
+  it("is set over the chart, which moves down under it", () => {
+    const { container } = svg(renderDef.render(line, { ...box, h: 360 }, ctx))
+    const title = container.querySelector("[data-block-title] > text")!
+    expect(title.textContent).toBe("参保职工与参保离退休人员之比")
+    expect(renderDef.measure(line, box.w, ctx)).toBe(renderDef.measure({ ...line, title: undefined }, box.w, ctx) + 32)
+    // Under the title, the chart is drawn as it would be in the rest of its box.
+    const { title: _title, ...bare } = line
+    const below = svg(chart.render(bare, { ...box, y: box.y + 32, h: 328 }, ctx)).container.querySelector("svg")!.innerHTML
+    expect(container.querySelector("[data-block-title]")!.innerHTML).toContain(below)
+  })
+
+  it("leaves a chart without one exactly as it was", () => {
+    const { title: _title, ...bare } = line
+    const a = svg(renderDef.render(bare, { ...box, h: 360 }, ctx)).container.innerHTML
+    const b = svg(chart.render(bare, { ...box, h: 360 }, ctx)).container.innerHTML
+    expect(a).toBe(b)
+  })
+})

@@ -5,13 +5,13 @@ import { accessibleInk } from "../render/ink"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 /**
- * A block's own title: one line naming a table, an options comparison or a
- * timeline ("自由现金流", "2026 年外部融资和长期承诺"), set over it at 16px
- * bold in the text ink, the block drawn in the rest of its box. A face that
- * sets the block in a panel prints the title in the panel's title bar
- * instead (`layouts/compositions/panel.tsx`), and a composition with no
- * place for a title declines the block, so the ordinary renderer draws it
- * here.
+ * A block's own title: one line naming a table, an options comparison, a
+ * timeline, a set of cards or a chart ("自由现金流", "2026 年外部融资和长期
+ * 承诺"), set over it at 16px bold in the text ink, the block drawn in the
+ * rest of its box. A face that sets the block in a panel prints the title
+ * in the panel's title bar instead (`layouts/compositions/panel.tsx`), and a
+ * composition with no place for a title declines the block, so the ordinary
+ * renderer draws it here.
  *
  * Wraps a component's `measure` and `render`: a block with no title is
  * measured and drawn exactly as before.
@@ -20,7 +20,7 @@ import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./type
 /** The title's line box: a 16px line on a 20px baseline, 12px of air under it. */
 export const BLOCK_TITLE = { size: 16, baseline: 20, band: 32 } as const
 
-type Titled = Extract<Component, { type: "data_table" | "comparison" | "timeline" | "icon_cards" }>
+type Titled = Extract<Component, { type: "data_table" | "comparison" | "timeline" | "icon_cards" | "chart" }>
 
 function titleOf(component: Titled): string | undefined {
   return component.title?.trim() || undefined

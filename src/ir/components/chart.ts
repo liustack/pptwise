@@ -313,6 +313,10 @@ function checkChanges(c: ChartInput, ctx: z.RefinementCtx): void {
 export const schema = z
   .object({
     type: z.literal("chart"),
+    title: z
+      .string()
+      .optional()
+      .describe('A short name for the chart, printed over it, such as "参保职工与离退休人员之比" or "Workers per retiree". A theme that numbers its figures prints it after the figure\'s number.'),
     /** dumbbell（2026-07-12 借鉴）：哑铃变化图——series[0]=起点值、
      * series[1]=终点值（等长同 x 标签），每行「起点●———●终点」显变化。
      * bar 可加 direction:"horizontal" 横条排名（长标签友好）。
