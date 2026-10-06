@@ -108,7 +108,6 @@ describe("swiss sparse faces", () => {
       type: "content",
       kind: "fact",
       layout: "stat-hero",
-      heading: "年度总收入",
       components: [{ type: "kpi_cards", items: [{ value: "1142.6", unit: "万元", label: "年度总收入" }] }],
     } as Slide
     const { root } = render(<StatHeroContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />)

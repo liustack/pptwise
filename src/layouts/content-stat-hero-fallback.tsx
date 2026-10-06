@@ -9,9 +9,11 @@ import { fitSvgLine } from "../lib/svg-text-layout"
 
 /**
  * The page stat-hero hands over when its hero construction cannot hold what
- * the author wrote: more than one metric (`heroExact` in
- * `content-stat-hero.tsx`), or one figure too long to set whole on the hero
- * line at the skin's floor size (`fitHeroLine` in `sparse/shared.ts`).
+ * the author wrote: more than one metric, a figure with an icon, a delta, a
+ * note, a tag or a tone, a heading the figure does not repeat, or a
+ * subheading beside a cited source (`heroExact` in `content-stat-hero.tsx`),
+ * or one figure too long to set whole on the hero line at the skin's floor
+ * size (`fitHeroLine` in `sparse/shared.ts`).
  *
  * Its own module, not a function inside `content-stat-hero.tsx`, because the
  * eighteen theme skins under `sparse/` hand their page over too, and they are

@@ -439,10 +439,13 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   // stat-hero's one slot is the hero itself: fed an annotation, the heading
   // has to carry the 180px hero figure and the corpus' long English heading
   // overruns the render-safety floor. Author the page as intended — a KPI
-  // whose value is the hero — so the heading drops to the caption row.
+  // whose value is the hero, with no heading over it (`layoutPage`). The hero
+  // sets the card's value, unit, label and source and nothing else, so the
+  // card carries no icon and no delta: either one, or a heading, steps the
+  // face aside (`heroExact`), and this band is here to show the face.
   if (def.id === "stat-hero") {
-    const kpi = b.kpi_cards!(lex) as Component & { items?: unknown[] }
-    if (Array.isArray(kpi.items)) kpi.items = kpi.items.slice(0, 1)
+    const kpi = b.kpi_cards!(lex)
+    if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 1).map(({ value, unit, label, source }) => ({ value, unit, label, source }))
     return [kpi]
   }
   if (def.id === "gauge-stats") {
@@ -875,10 +878,10 @@ export function layoutPage(
           : {
               type: "content",
               kind: kind!,
-              // stat-hero's heading is a hero caption capped at two short
-              // lines — the corpus' default row overruns its render-safety
-              // floor in English. headings[11] is each lexicon's shortest.
-              heading: def.id === "stat-hero" ? lex.headings[11]! : lex.headings[7]!,
+              // stat-hero sets no heading over its figure: one written
+              // there has nowhere on the hero to go, and the face steps
+              // aside for it.
+              heading: def.id === "stat-hero" ? undefined : lex.headings[7]!,
               components: bodyFor(def, lex),
               footnote: lex.sources[1]!.label,
               ...(def.kind === "takeover" ? { image_side: "right" as const } : {}),
