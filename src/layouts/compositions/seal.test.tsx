@@ -357,6 +357,14 @@ describe("the seal setting, as vermilion's board draws it", () => {
     expect(byText(root!, "25%")!.getAttribute("fill")).toBe(inks.mark)
   })
 
+  it("leaves a plan whose rows carry an icon or a note to the ordinary renderer", () => {
+    const table = plan[1] as { rows: Record<string, unknown>[] }
+    for (const extra of [{ icon: "users" }, { note: "统计公报" }]) {
+      const marked = [plan[0], { ...table, rows: table.rows.map((row, i) => (i === 0 ? { ...row, ...extra } : row)) }]
+      expect(draw(targetsComposition, marked).root).toBeNull()
+    }
+  })
+
   it("sets a short statement on one line", () => {
     const short = [{ ...plan[0], rows: [{ label: "不设目标", text: "「保持在合理区间」" }] }, plan[1]]
     const { root } = draw(targetsComposition, short)

@@ -331,3 +331,48 @@ describe("from_to's label column header", () => {
     expect(texts(container).filter((t) => t.y === texts(container).find((x) => x.text === "2025 年")!.y)).toHaveLength(2)
   })
 })
+
+describe("from_to rows with an icon and a note", () => {
+  const discount = {
+    type: "from_to" as const,
+    from: { title: "此前" },
+    to: { title: "现在" },
+    rows: [
+      { label: "江苏峰谷价差", icon: "arrow-down-up", note: "CNESA 估算，426 号新政前后", from: "约 0.85", to: "约 0.65", unit: "元/kWh", tag: { text: "降约 25%" } },
+      { label: "2 小时系统中标价", icon: "trending-up", note: "CNESA，上半年均价", from: "约 553", to: "599.3", unit: "元/kWh", tag: { text: "涨 8.3%" } },
+      { label: "浙江储能回收期", icon: "clock", note: "NRDC 与 CNESA 估计", from: "5.4", to: "9.1", unit: "年", emphasis: true },
+    ],
+  }
+
+  it("sets the icon before the name and the note under it, both inside the names' column", () => {
+    const ctx = themed("brief")
+    const { container } = svg(fromTo.render(discount, { x: 88, y: 96, w: 1104 }, ctx))
+    const all = texts(container)
+    const name = all.find((t) => t.text === "江苏峰谷价差")!
+    const note = all.find((t) => t.text === "CNESA 估算，426 号新政前后")!
+    const value = all.find((t) => t.text.startsWith("约 0.85"))!
+    expect(name.x).toBeGreaterThan(20)
+    expect(note.x).toBe(name.x)
+    expect(note.y).toBeGreaterThan(name.y)
+    // The name moves up to make room: the pair straddles the row's value line.
+    expect(name.y).toBeLessThan(value.y)
+    expect(note.y).toBeGreaterThan(value.y)
+    expect(container.querySelectorAll("g[transform^='translate(0,']").length).toBeGreaterThanOrEqual(3)
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+  })
+
+  it("keeps a row without them exactly where it was", () => {
+    const ctx = themed("brief")
+    const plain = { ...discount, rows: discount.rows.map(({ icon: _i, note: _n, ...row }) => row) }
+    const a = texts(svg(fromTo.render(plain, { x: 88, y: 96, w: 1104 }, ctx)).container).find((t) => t.text === "江苏峰谷价差")!
+    expect(a.x).toBe(0)
+  })
+
+  it("keeps the note readable on the marked row's tint", () => {
+    const ctx = themed("brief")
+    const markup = renderToStaticMarkup(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">{fromTo.render(discount, { x: 88, y: 96, w: 1104 }, ctx)}</svg>)
+    expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
+    const note = Array.from(parseSvgRoot(markup).querySelectorAll("text")).find((t) => t.textContent === "NRDC 与 CNESA 估计")!
+    expect(contrastRatio(note.getAttribute("fill")!, ctx.colors.bg)).toBeGreaterThanOrEqual(4.5)
+  })
+})

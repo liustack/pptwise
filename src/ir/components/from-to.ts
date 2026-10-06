@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { TagSchema } from "./shared"
+import { IconNameSchema, TagSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -13,6 +13,8 @@ const StateSchema = z
 const RowSchema = z
   .object({
     label: z.string().min(1).describe("What this row measures."),
+    icon: IconNameSchema.optional().describe("A symbol before the row's name."),
+    note: z.string().min(1).optional().describe('A short line under the name, such as where the figures come from: "CNESA estimate".'),
     from: z.string().min(1).describe("The value in the starting state, written as it should read."),
     to: z.string().min(1).describe("The value in the ending state, written as it should read."),
     unit: z.string().optional().describe("Unit printed after both values, in smaller type."),
