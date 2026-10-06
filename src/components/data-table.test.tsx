@@ -205,7 +205,7 @@ describe("data_table component", () => {
       expect(dataTable.measure(withSource, 900, ctx)).toBeGreaterThan(dataTable.measure(basic, 900, ctx))
     })
 
-    it("is independent of box width (deterministic per row count)", () => {
+    it("is independent of box width while every cell fits one line", () => {
       expect(dataTable.measure(basic, 400, ctx)).toBe(dataTable.measure(basic, 1200, ctx))
     })
   })
@@ -242,6 +242,51 @@ describe("data_table component", () => {
     const { container } = svg(dataTable.render(longContent, { x: 0, y: 0, w: 300 }, ctx))
     const truncated = Array.from(container.querySelectorAll("text[data-truncated='1']"))
     expect(truncated.length).toBeGreaterThan(0)
+  })
+
+  // The writer's pricing page: a few words in most cells and a sentence in
+  // one. Every cell was one line, so the sentence lost its tail under a
+  // data-truncated mark, and the only ways out were to cut the words or
+  // move to a comparison.
+  describe("a cell longer than its column", () => {
+    const pricing = {
+      type: "data_table" as const,
+      columns: [
+        { key: "item", label: "报价项" },
+        { key: "what", label: "包含什么" },
+        { key: "how", label: "计价方式" },
+      ],
+      rows: [
+        { cells: { item: "组件", what: "光伏组件", how: "元/W" } },
+        { cells: { item: "屋顶加固", what: "按结构复核结果出具加固方案，包括檩条、支撑和防水层的局部更换，不需要加固的屋顶此项为零，报价时单独列出", how: "按项单列" }, emphasis: "highlight" as const },
+        { cells: { item: "电网接入", what: "按电网接入意见改造", how: "按项单列" } },
+      ],
+    }
+    const words = (container: Element) =>
+      Array.from(container.querySelectorAll("text"))
+        .map((t) => t.textContent ?? "")
+        .join("")
+
+    it("wraps onto more lines, whole, and the row grows to hold them", () => {
+      const h = dataTable.measure(pricing, 900, ctx)
+      const { container } = svg(dataTable.render(pricing, { x: 0, y: 0, w: 900, h }, ctx))
+      expect(container.querySelector("[data-truncated]")).toBeNull()
+      expect(container.querySelector("[data-dropped]")).toBeNull()
+      expect(words(container)).toContain(pricing.rows[1]!.cells.what)
+      const oneLine = { ...pricing, rows: pricing.rows.map((row, i) => (i === 1 ? { ...row, cells: { ...row.cells, what: "按结构复核结果" } } : row)) }
+      expect(h).toBeGreaterThan(dataTable.measure(oneLine, 900, ctx))
+      // The marked row's fill covers the whole of its taller row.
+      const fill = Array.from(container.querySelectorAll("rect")).find((r) => r.getAttribute("height") !== null && Number(r.getAttribute("height")) > 44)
+      expect(fill).toBeTruthy()
+    })
+
+    it("gives back lines, cut and marked, before it drops a row", () => {
+      const natural = dataTable.measure(pricing, 900, ctx)
+      const { container } = svg(dataTable.render(pricing, { x: 0, y: 0, w: 900, h: natural - 20 }, ctx))
+      expect(container.querySelector("[data-dropped]")).toBeNull()
+      expect(container.querySelector("[data-truncated]")).not.toBeNull()
+      expect(words(container)).toContain("电网接入")
+    })
   })
 
   it("renders the schema-max shape (8 columns x 12 rows) without throwing", () => {

@@ -6,6 +6,10 @@ import { timeline } from "./timeline"
 import type { ComponentCtx } from "./types"
 import { contrastRatio } from "../render/ink"
 import { measureTextUnits } from "../lib/svg-text-layout"
+import { BUILTIN_THEME_IDS, type PptxIR } from "@/ir"
+import { schema as timelineSchema } from "@/ir/components/timeline"
+import { boundSlideToSvgMarkup } from "../render/__fixtures__/bound-slide"
+import { getThemeDefinition } from "../themes/definitions"
 
 const ctx: ComponentCtx = {
   colors: {
@@ -407,6 +411,48 @@ describe("timeline lanes, drawn by the shared renderer", () => {
     const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
     for (let i = 0; i < 6; i++) expect(texts).toContain(`2026 年 ${i + 3} 月 15 日`)
     expect(container.querySelector("[data-truncated]")).toBeNull()
+  })
+})
+
+// The schema told an author that a timeline with lanes runs one lane above
+// its axis and one below. The ordinary timeline keeps one row and prints
+// each milestone's lane over its date. Only a few themes set a laned
+// timeline on two sides of an axis. The description now says which, and
+// this holds it to what every theme's process page draws.
+describe("the schema says how a timeline on lanes is drawn", () => {
+  const laned = {
+    type: "timeline",
+    lanes: ["国内", "海外"],
+    milestones: [
+      { date: "2026-01", title: "价格法修订", desc: "征求意见稿发布", lane: "国内" },
+      { date: "2026-03", title: "巴西关税", lane: "海外" },
+      { date: "2026-05", title: "实施细则", desc: "配套文件落地", lane: "国内" },
+      { date: "2026-07", title: "欧盟复审", lane: "海外" },
+    ],
+  }
+  const drawn = BUILTIN_THEME_IDS.filter((theme) => getThemeDefinition(theme).menu.content.process !== undefined).map((theme) => {
+    const slide = { type: "content", kind: "process", heading: "两条线上的四件事", components: [laned] } as unknown as PptxIR["slides"][number]
+    const ir = { version: "5", filename: "x", theme: { id: theme }, meta: {}, assets: { images: {} }, slides: [slide] } as unknown as PptxIR
+    const markup = boundSlideToSvgMarkup(ir, slide, 0)
+    return { theme, markup, oneRow: markup.includes("data-milestone-lane") }
+  })
+  const lane = timelineSchema.shape.milestones.element.shape.lane.description ?? ""
+  const lanes = timelineSchema.shape.lanes.description ?? ""
+
+  it("every theme names both lanes", () => {
+    for (const { theme, markup } of drawn) for (const name of laned.lanes) expect(markup, `${theme}: ${name}`).toContain(name)
+  })
+
+  it("says the ordinary timeline keeps one row and prints the lane over the date", () => {
+    expect(lane).toMatch(/one row/)
+    expect(lane).toMatch(/over its date/)
+    expect(lanes).not.toMatch(/drawn above the axis first/)
+  })
+
+  it("names exactly the themes that set the lanes on two sides of an axis", () => {
+    const split = drawn.filter((d) => !d.oneRow).map((d) => d.theme)
+    expect(split.length).toBeGreaterThan(0)
+    for (const { theme, oneRow } of drawn) expect(new RegExp(`\\b${theme}\\b`, "i").test(lane), theme).toBe(!oneRow)
   })
 })
 

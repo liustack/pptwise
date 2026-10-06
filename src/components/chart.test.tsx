@@ -726,11 +726,19 @@ describe("chart component — legend (n>=2 series)", () => {
   // The legend's names sit on the header row's baseline. Value labels name
   // their family too now (rsvg set a family-less label in a serif), so the
   // family alone no longer tells a legend name from a plot label.
+  // A legend that runs onto further rows sets them a row's pitch lower, and
+  // a name is the element right after its swatch.
   function legendTexts(container: HTMLElement): Element[] {
+    const swatch = (el: Element | null) =>
+      el !== null &&
+      ((el.tagName === "rect" && el.getAttribute("width") === "10" && el.getAttribute("height") === "10") ||
+        el.hasAttribute("data-legend-reference") ||
+        el.hasAttribute("data-mark-status"))
     return Array.from(container.querySelectorAll("text")).filter(
       (t) =>
         t.getAttribute("font-family") === ctx.fonts.body &&
-        t.getAttribute("y") === "16" &&
+        ["16", "40", "64"].includes(t.getAttribute("y") ?? "") &&
+        swatch(t.previousElementSibling) &&
         !t.hasAttribute("data-axis-tick") &&
         !t.hasAttribute("data-axis-title"),
     )
@@ -877,8 +885,57 @@ describe("chart component — legend (n>=2 series)", () => {
     expect(chartSchema.safeParse(dumbbell([from, { name: "2026", data: [{ x: "A", y: 14 }] }])).success).toBe(false)
   })
 
-  it("name overflow: a series name longer than its slot truncates via fitSvgLine, marked data-truncated", () => {
-    const longName = "A Very Long Series Name That Overflows The Legend Slot Width Budget Easily"
+  // The writer's payback page in English: "Guangdong reference, company
+  // figures" printed as "Guangdong reference," on a header row with 800px to
+  // spare. Every name had a fixed 160px whatever room the row had, about 18
+  // Latin characters, and the rest was cut.
+  it("names a long series whole when the row has room for it", () => {
+    const payback = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      direction: "horizontal" as const,
+      series: [
+        { name: "Jiangsu, per MW", data: [{ x: "RMB 0.64", y: 4.2 }, { x: "RMB 0.45", y: 6.1 }] },
+        { name: "Guangdong reference, company figures", data: [{ x: "RMB 0.803", y: 3.0 }] },
+      ],
+    }
+    const { container } = svg(chart.render(payback, { ...box, h: chart.measure(payback, box.w, ctx) }, ctx))
+    const texts = legendTexts(container)
+    expect(texts.map((t) => t.textContent)).toEqual(["Jiangsu, per MW", "Guangdong reference, company figures"])
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+  })
+
+  // Six names of about thirty characters take some 1700px, and the row has
+  // 1120. The row used to cut each to 160px. With the names whole, the ones
+  // that do not fit go on a second row, and the plot gives that row room.
+  it("sets the names one row cannot hold on a second row, whole, and moves the plot down by it", () => {
+    const regions = ["North America enterprise accounts", "Western Europe enterprise accounts", "Asia Pacific enterprise accounts", "Latin America mid-market accounts", "Middle East mid-market accounts", "Africa self-serve accounts"]
+    const wide = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      series: regions.map((name, i) => ({ name, data: [{ x: "Q1", y: 10 + i }, { x: "Q2", y: 12 + i }] })),
+    }
+    const short = { ...wide, series: wide.series.map((s, i) => ({ ...s, name: `R${i + 1}` })) }
+    const { container } = svg(chart.render(wide, { ...box, h: chart.measure(wide, box.w, ctx) }, ctx))
+    const texts = legendTexts(container)
+    expect(texts.map((t) => t.textContent)).toEqual(regions)
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    const rows = [...new Set(texts.map((t) => t.getAttribute("y")))]
+    expect(rows).toEqual(["16", "40"])
+    for (const t of texts) {
+      const x = Number(t.getAttribute("x"))
+      const w = measureTextUnits(t.textContent!, { fontFamily: ctx.fonts.body }) * Number(t.getAttribute("font-size"))
+      expect(x).toBeGreaterThanOrEqual(0)
+      expect(x + w).toBeLessThanOrEqual(box.w + 1)
+    }
+    expect(chart.measure(wide, box.w, ctx)).toBe(chart.measure(short, box.w, ctx) + 24)
+  })
+
+  // A name takes the width it needs, up to a whole row. Only one wider than
+  // the whole row is cut, and the cut is declared.
+  it("name overflow: a series name wider than a whole row truncates via fitSvgLine, marked data-truncated", () => {
+    const longName = "A Very Long Series Name That Overflows The Legend Slot Width Budget Easily ".repeat(3).trim()
     const component = {
       type: "chart" as const,
       chart_type: "bar" as const,
@@ -894,8 +951,9 @@ describe("chart component — legend (n>=2 series)", () => {
   })
 
   it("count overflow: names the entries that fit and paints no count of the rest", () => {
-    // Header-row packing starts at 72px per short name, so a 1120px plot
-    // holds ~15 of these. 24 is enough to force the drop.
+    // Header-row packing starts at 100px per short name, so a 1120px plot
+    // holds 11 of these a row and 33 in its three rows. 60 is enough to
+    // force the drop.
     //
     // Two defects were fixed on this line in turn. The first was a bare
     // `data-dropped` count on a legend that had quietly dropped thirteen
@@ -903,13 +961,15 @@ describe("chart component — legend (n>=2 series)", () => {
     // second was the fix: an overflow mark painted on the slide. A slide
     // carries no bookkeeping, so the row now names what it can and declares
     // the rest, and the export refuses the deck.
-    const manySeries = Array.from({ length: 24 }, (_, i) => ({
+    const manySeries = Array.from({ length: 60 }, (_, i) => ({
       name: `S${i + 1}`,
       data: [{ x: "A", y: i + 1 }],
     }))
     const component = { type: "chart" as const, chart_type: "bar" as const, series: manySeries }
     const { container } = svg(chart.render(component, box, ctx))
-    const dropped = container.querySelector("[data-dropped]")!
+    // Sixty bars in one category also leave their values no room, which is
+    // declared on its own marker.
+    const dropped = container.querySelector('[data-dropped-kind="series-name"]')!
     const droppedCount = Number(dropped.getAttribute("data-dropped"))
     expect(droppedCount).toBeGreaterThan(0)
     const nameEntries = legendTexts(container)
@@ -961,8 +1021,8 @@ describe("chart component — legend (n>=2 series)", () => {
   })
 
   it("audit-visibility: deck-audit reads both the truncated name and the dropped-count marker as content-truncated/content-dropped findings", () => {
-    const longName = "A Very Long Series Name That Overflows The Legend Slot Width Budget Easily And Then Some"
-    const manySeries = Array.from({ length: 24 }, (_, i) => ({
+    const longName = "A Very Long Series Name That Overflows The Legend Slot Width Budget Easily And Then Some ".repeat(3).trim()
+    const manySeries = Array.from({ length: 60 }, (_, i) => ({
       name: i === 0 ? longName : `S${i + 1}`,
       data: [{ x: "A", y: i + 1 }],
     }))
@@ -2001,26 +2061,67 @@ describe("chart point emphasis", () => {
     expect(draw(years()).querySelector("linearGradient")).toBeNull()
   })
 
-  it("greys the swatch of a series whose bars all stepped back, so the legend names only colours on the page", () => {
+  /** The legend's square swatches, in legend order. */
+  const swatches = (container: Element) =>
+    Array.from(container.querySelectorAll("rect"))
+      .filter((r) => !r.hasAttribute("data-plot-mark") && r.getAttribute("width") === "10" && r.getAttribute("height") === "10")
+      .map((r) => r.getAttribute("fill"))
+
+  // The writer's payback page: five Jiangsu cases with one marked, beside one
+  // Guangdong reference. Four Jiangsu bars and the Guangdong bar are grey.
+  // The legend named Jiangsu in its own colour and Guangdong in grey, so the
+  // four grey Jiangsu bars read as Guangdong's.
+  it("names each series in the colour its bars are drawn in, so a grey bar is never read as another series", () => {
+    const payback = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      series: [
+        { name: "江苏每 MW", data: [{ x: "按平段", y: 4.2 }, { x: "按 0.45 元", y: 6.1, emphasis: true }, { x: "余电 0.391 元", y: 6.5 }, { x: "按谷段", y: 7.3 }] },
+        { name: "广东参照", data: [{ x: "按 0.803 元", y: 3.0 }] },
+      ],
+    }
+    for (const direction of [undefined, "horizontal"] as const) {
+      const container = draw(direction ? { ...payback, direction } : payback)
+      const marks = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]')).map((r) => r.getAttribute("fill")!)
+      const grey = marks.find((f) => f !== PALETTE[0])!
+      expect(marks.filter((f) => f === PALETTE[0]), direction).toHaveLength(1)
+      expect(swatches(container), direction).toEqual([grey, grey])
+    }
+  })
+
+  it("keeps the colour of a series whose one bar is the marked bar", () => {
     const paths = {
       type: "chart" as const,
       chart_type: "bar" as const,
       series: [
-        { name: "默认值路径", data: [{ x: "2026", y: 144 }, { x: "2027", y: 169 }, { x: "2028", y: 197, emphasis: true }] },
-        { name: "实际值情景", data: [{ x: "2026", y: 14 }, { x: "2027", y: 16 }, { x: "2028", y: 22 }] },
+        { name: "默认值路径", data: [{ x: "2026", y: 144 }, { x: "2027", y: 169 }, { x: "2028", y: 197 }] },
+        { name: "实际值情景", data: [{ x: "2028", y: 22, emphasis: true }] },
       ],
     }
     for (const direction of [undefined, "horizontal"] as const) {
       const container = draw(direction ? { ...paths, direction } : paths)
       const marks = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]')).map((r) => r.getAttribute("fill")!)
-      const grey = marks.find((f) => f !== PALETTE[0])!
-      const swatches = Array.from(container.querySelectorAll("rect"))
-        .filter((r) => !r.hasAttribute("data-plot-mark") && r.getAttribute("width") === "10" && r.getAttribute("height") === "10")
-        .map((r) => r.getAttribute("fill"))
-      expect(swatches, direction).toEqual([PALETTE[0], grey])
-      // No swatch names a colour no bar has.
-      for (const fill of swatches) expect(marks, direction).toContain(fill)
+      const grey = marks.find((f) => f !== PALETTE[1])!
+      expect(swatches(container), direction).toEqual([grey, PALETTE[1]])
+      for (const fill of swatches(container)) expect(marks, direction).toContain(fill)
     }
+  })
+
+  it("hatches the forecast entry in the grey its forecast bars step back to", () => {
+    const plan = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      series: [
+        { name: "装机", data: [{ x: "2025", y: 10, emphasis: true }, { x: "2026", y: 12, status: "forecast" as const }, { x: "2027", y: 14, status: "forecast" as const }] },
+        { name: "并网", data: [{ x: "2025", y: 8 }, { x: "2026", y: 9 }, { x: "2027", y: 11 }] },
+      ],
+    }
+    const container = draw(plan)
+    const bars = Array.from(container.querySelectorAll('[data-mark-status="forecast"][data-plot-mark="1"] path')).map((p) => p.getAttribute("stroke"))
+    const entry = Array.from(container.querySelectorAll('[data-mark-status="forecast"]:not([data-plot-mark]) path')).map((p) => p.getAttribute("stroke"))
+    expect(bars).toHaveLength(2)
+    expect(new Set(bars).size).toBe(1)
+    expect(entry).toEqual([bars[0]])
   })
 })
 

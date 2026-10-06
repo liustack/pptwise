@@ -6,7 +6,10 @@ import { assertSubset } from "../render/subset-validate"
 import { StatHeroContent, layoutDef } from "./content-stat-hero"
 import { FACES } from "./sparse/registry"
 import { measureTextUnits } from "../lib/svg-text-layout"
-import type { PptxIR, Slide } from "@/ir"
+import { Icon } from "../render/icons"
+import { BUILTIN_THEME_IDS, type PptxIR, type Slide } from "@/ir"
+import { boundSlideToSvgMarkup } from "../render/__fixtures__/bound-slide"
+import { getThemeDefinition } from "../themes/definitions"
 
 const CJK_LONG =
   "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及跨可用区容灾演练的完整落地路径说明"
@@ -46,11 +49,12 @@ describe("layoutDef", () => {
 describe("StatHeroContent", () => {
   it("kpi value is the giant number, its own label is the caption, source is kpi.source", () => {
     const ctx = boundThemeCtx("crayon", {})
+    // No heading over the figure: the hero has no line for one, and a page
+    // that writes one steps the face aside (below).
     const slide: Slide = {
       type: "content",
       kind: "points",
       layout: "stat-hero",
-      heading: "三年累计服务人次",
       components: [
         {
           type: "kpi_cards",
@@ -185,7 +189,6 @@ describe("StatHeroContent", () => {
       type: "content",
       kind: "points",
       layout: "stat-hero",
-      heading: "三年累计服务人次",
       components: [{ type: "kpi_cards", items: [{ value: "95.7", unit: "%", label: "完成率" }] }],
     } as Slide
     const { root } = render(
@@ -215,7 +218,6 @@ describe("a hero figure is never cut", () => {
       type: "content",
       kind: "fact",
       layout: "stat-hero",
-      heading: item.label,
       ...extra,
       components: [{ type: "kpi_cards", items: [item] }],
     } as unknown as Slide
@@ -281,5 +283,111 @@ describe("a hero figure is never cut", () => {
     const runs = figureRuns(root, value)
     expect(runs.length, theme).toBeGreaterThan(0)
     for (const run of runs) expect(run.text.includes(value) || run.marked, `${theme}: "${run.text}"`).toBe(true)
+  })
+})
+
+// The hero sets a figure, its unit, one caption line (the card's label) and a
+// source line. A page with a figure on it carried more than that: the
+// heading the author wrote over it, the card's icon and its delta arrow, and
+// a subheading beside a source. The face drew none of them and left nothing
+// on the page or in the markup to say so, on every theme that serves `fact`
+// with this face. It now steps aside for such a page, and the plain page it
+// hands over draws every one of them.
+describe("the hero steps aside for a figure it cannot set whole", () => {
+  const SKINNED = Object.entries(FACES)
+    .filter(([, faces]) => faces?.["stat-hero"] !== undefined)
+    .map(([theme]) => theme)
+  // crayon has no skin: the generic face.
+  const THEMES = [...SKINNED, "crayon"]
+
+  const ICON = "trending-up"
+  /** A path the icon draws, which appears verbatim wherever it is drawn. */
+  const iconMark = /\bd="([^"]+)"/.exec(renderSvgMarkup(<Icon name={ICON} x={0} y={0} size={24} color="#000000" />))![1]!
+
+  function page(theme: string, extra: Partial<Slide>, item: Record<string, unknown> = {}) {
+    const ctx = boundThemeCtx(theme, {})
+    const slide = {
+      type: "content",
+      kind: "fact",
+      components: [{ type: "kpi_cards", items: [{ value: "38", unit: "克", label: "整机重量", ...item }] }],
+      ...extra,
+    } as unknown as Slide
+    return render(<StatHeroContent ir={ir(theme, [slide])} slide={slide} index={0} ctx={ctx} />)
+  }
+
+  function handedOver(root: Element): boolean {
+    return root.querySelector('[data-hero-mode="fallback"], [data-face-mode="fallback"]') !== null
+  }
+
+  it.each(THEMES)("%s draws a heading written over the figure", (theme) => {
+    const { markup, root } = page(theme, { heading: "眼镜不该让人看起来像半个机器人" })
+    expect(handedOver(root), theme).toBe(true)
+    expect(markup, theme).toContain("眼镜不该让人看起来像半个机器人")
+    expect(markup, theme).toContain("整机重量")
+  })
+
+  // Written twice, the words are drawn twice: once over the card, once as
+  // its label.
+  it.each(THEMES)("%s draws a heading that repeats the figure's label", (theme) => {
+    const { markup, root } = page(theme, { heading: "整机重量" })
+    expect(handedOver(root), theme).toBe(true)
+    expect(markup.split("整机重量").length - 1, theme).toBeGreaterThanOrEqual(2)
+  })
+
+  it.each(THEMES)("%s draws the figure's icon", (theme) => {
+    const { markup, root } = page(theme, {}, { icon: ICON })
+    expect(handedOver(root), theme).toBe(true)
+    expect(markup, theme).toContain(iconMark)
+  })
+
+  it.each(THEMES)("%s draws the figure's delta", (theme) => {
+    const { markup, root } = page(theme, {}, { delta: "down" })
+    expect(handedOver(root), theme).toBe(true)
+    expect(markup, theme).toContain("↓")
+  })
+
+  it.each(THEMES)("%s draws a subheading the source line has no room for", (theme) => {
+    const { markup, root } = page(theme, { subheading: "量产样机 · 不含镜片" }, { source: "量产测试报告" })
+    expect(handedOver(root), theme).toBe(true)
+    expect(markup, theme).toContain("量产样机 · 不含镜片")
+    expect(markup, theme).toContain("量产测试报告")
+  })
+
+  it.each(THEMES)("%s keeps the hero for a figure with nothing written beside it", (theme) => {
+    const { markup, root } = page(theme, { footnote: "量产测试报告" }, { source: "盲测 n=120" })
+    expect(handedOver(root), theme).toBe(false)
+    expect(markup, theme).toContain("整机重量")
+    expect(markup, theme).toContain("量产测试报告")
+  })
+})
+
+// The same page through the whole route, on every built-in theme that serves
+// `fact`: whichever face the menu picks, the hero or a sheet with a figure on
+// it, every word the author wrote reaches the page, and the figure's icon and
+// delta with them. The faces that set one figure large (gauge-figure,
+// panel-figure, grid-figure, seal-figure) already stepped aside for what they
+// could not set. stat-hero did not, on eleven themes.
+describe("every theme's fact page keeps what its author wrote", () => {
+  const ICON = "trending-up"
+  const iconMark = /\bd="([^"]+)"/.exec(renderSvgMarkup(<Icon name={ICON} x={0} y={0} size={24} color="#000000" />))![1]!
+  const FACT_THEMES = BUILTIN_THEME_IDS.filter((theme) => getThemeDefinition(theme).menu.content.fact !== undefined)
+
+  it.each(FACT_THEMES)("%s", (theme) => {
+    const slide = {
+      type: "content",
+      kind: "fact",
+      heading: "眼镜不该让人看起来像半个机器人",
+      subheading: "量产样机，不含镜片",
+      footnote: "目光 One 量产测试报告",
+      components: [
+        { type: "kpi_cards", items: [{ value: "38", unit: "克", label: "整机重量", icon: ICON, delta: "down", source: "佩戴舒适度盲测" }] },
+      ],
+    } as unknown as Slide
+    const markup = boundSlideToSvgMarkup(ir(theme, [slide]), slide, 0)
+    for (const words of ["眼镜不该让人看起来像半个机器人", "量产样机，不含镜片", "目光 One 量产测试报告", "38", "克", "整机重量", "佩戴舒适度盲测", "↓"]) {
+      expect(markup, `${theme}: ${words}`).toContain(words)
+    }
+    expect(markup, `${theme}: icon`).toContain(iconMark)
+    expect(markup, theme).not.toMatch(/data-(?:dropped|truncated)="[1-9]/)
   })
 })

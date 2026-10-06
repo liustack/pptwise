@@ -1,4 +1,5 @@
 import type { Slide } from "@/ir"
+import { stripEmphasis } from "../render/emphasis"
 
 /**
  * Convert an em tracking value to SVG `letterSpacing` px at `fontSize`.
@@ -255,4 +256,25 @@ export function heroSource(slide: Slide): string | undefined {
     if (sub) return sub
   }
   return undefined
+}
+
+/**
+ * Whether the page's own heading and subheading land somewhere on the hero.
+ *
+ * With no figure component they always do: the heading is the hero and the
+ * subheading its caption. With a figure, the hero line is the figure and the
+ * caption row is the card's label (`heroValue`, `heroCaption`), and the
+ * heading has no line of its own, so a page with a figure on it lands its
+ * heading nowhere. A heading that repeats the label word for word still
+ * counts: the author wrote it twice and the hero would set it once. The
+ * subheading lands only on an empty source line (`heroSource`), so one
+ * beside a cited source lands nowhere either. The face that reads these
+ * steps aside for such a page rather than leave a line of it out.
+ */
+export function heroSetsPageText(slide: Slide): boolean {
+  const kpi = kpiHero(slide)
+  if (!kpi) return true
+  if (stripEmphasis(slide.heading ?? "").trim()) return false
+  const sub = slide.subheading?.trim()
+  return !sub || !joinSources(kpi.source, slide.footnote)
 }

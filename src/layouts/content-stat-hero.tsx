@@ -9,7 +9,7 @@ import {
 } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
-import { heroCaption, heroSource, heroUnit, heroValue, latinUpper, trackingPx } from "./minimal-shared"
+import { heroCaption, heroSetsPageText, heroSource, heroUnit, heroValue, latinUpper, trackingPx } from "./minimal-shared"
 import { sparseFace } from "./sparse/registry"
 import { StatHeroFallbackContent } from "./content-stat-hero-fallback"
 
@@ -49,7 +49,7 @@ const CAPTION_LINE_RATIO = 1.25
 
 /**
  * Whether this page is the one thing this face can draw: a single hero
- * figure.
+ * figure, with nothing written on the page the hero has no place for.
  *
  * A `kpi_cards` component carrying more than one item is four numbers, and
  * this face has exactly one place to put a number. Drawing the first and
@@ -57,15 +57,25 @@ const CAPTION_LINE_RATIO = 1.25
  * aside instead and the page is drawn by the ordinary component renderer,
  * which shows every card. Same guard shape as `show-statement` and
  * `show-spotlight`.
+ *
+ * The one figure is held to the same rule. The hero sets its value, its unit,
+ * its label as the caption and its source, and nothing else of the card: an
+ * icon, a delta arrow, a note, a tag or a tone is something the author wrote
+ * that this page would leave off. So is a heading over the figure, which the
+ * hero has no line for, and a subheading beside a cited source
+ * (`heroSetsPageText`). All eighteen theme skins and the generic face are
+ * reached through this one guard, so every one of them steps aside.
  */
 function heroExact(slide: SvgTemplateProps["slide"]): boolean {
-  // A figure's note (`items[].note`) is a line the author wrote, and the
-  // hero line has its caption and its source line and nowhere for a third.
-  return !slide.components.some(
+  const unset = slide.components.some(
     (component) =>
       component.type === "kpi_cards" &&
-      (component.items.length > 1 || component.items.some((item) => item.note?.trim() || item.tag || item.tone)),
+      (component.items.length > 1 ||
+        component.items.some(
+          (item) => item.note?.trim() || item.tag || item.tone || item.icon !== undefined || item.delta !== undefined,
+        )),
   )
+  return !unset && heroSetsPageText(slide)
 }
 
 export function StatHeroContent(props: SvgTemplateProps) {

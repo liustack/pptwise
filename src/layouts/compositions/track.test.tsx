@@ -80,3 +80,16 @@ describe("track leaves a milestone's icon and tone to the ordinary timeline", ()
     expect(renderComposition(trackComposition, [timeline({ milestones: toned })]).element).toBeNull()
   })
 })
+
+// A timeline on two lanes keeps one time order and names each milestone's
+// lane. This rule has one side for every milestone and no place for a
+// lane's name, and it used to take such a timeline and draw it with every
+// lane name gone. It declines, and the ordinary timeline names each lane
+// over its date.
+describe("track leaves a timeline on lanes to the ordinary timeline", () => {
+  it("declines a timeline whose milestones name lanes", () => {
+    const laned = MILESTONES.map((m, i) => ({ ...m, lane: i % 2 === 0 ? "国内" : "海外" }))
+    expect(renderComposition(trackComposition, [timeline({ milestones: laned })]).element).toBeNull()
+    expect(renderComposition(trackComposition, [timeline({ milestones: laned, lanes: ["国内", "海外"] })]).element).toBeNull()
+  })
+})

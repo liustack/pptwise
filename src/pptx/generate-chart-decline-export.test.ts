@@ -105,7 +105,7 @@ describe("a declined chart blocks the export", () => {
  * declared instead, so this deck does not ship until an author gives the
  * chart fewer series or a wider band.
  */
-function manySeriesBarDeck(seriesCount: number): PptxIR {
+function manySeriesBarDeck(seriesCount: number, name: (i: number) => string = (i) => `S${i + 1}`): PptxIR {
   return {
     version: "5",
     filename: "chart-legend-overflow-fixture",
@@ -122,7 +122,7 @@ function manySeriesBarDeck(seriesCount: number): PptxIR {
             type: "chart",
             chart_type: "bar",
             series: Array.from({ length: seriesCount }, (_, i) => ({
-              name: `S${i + 1}`,
+              name: name(i),
               data: [{ x: "A", y: i + 1 }],
             })),
           },
@@ -132,17 +132,23 @@ function manySeriesBarDeck(seriesCount: number): PptxIR {
   } as unknown as PptxIR
 }
 
+/**
+ * Sixteen series named at length. The legend sets every name whole and runs
+ * onto three rows at most, four of these names a row, so four are left over.
+ */
+const LONG_NAMES = (i: number) => `Regional enterprise accounts ${String(i + 1).padStart(2, "0")}`
+
 describe("a legend that cannot name every series stops the export", () => {
-  it("refuses a 24-series bar chart, and the message tells the author to shorten it", async () => {
+  it("refuses a bar chart whose legend cannot name every series, and the message tells the author to shorten it", async () => {
     // The legend lost series names, and the message says so: an author sent
     // looking for "14 content blocks" on a one-component page finds nothing.
-    await expect(generatePptx(manySeriesBarDeck(24))).rejects.toThrow(
+    await expect(generatePptx(manySeriesBarDeck(16, LONG_NAMES))).rejects.toThrow(
       /deck drops content that does not fit the content area.*: \d+ series names\./s,
     )
   })
 
   it("paints no overflow count on the page it refuses", () => {
-    const svg = renderSlideSvg(validateIr(manySeriesBarDeck(24)).ir!, 0)
+    const svg = renderSlideSvg(validateIr(manySeriesBarDeck(16, LONG_NAMES)).ir!, 0)
     expect(svg).toMatch(/data-dropped="[1-9]/)
     expect(svg).not.toContain("data-legend-overflow")
     // No text node is a bare plus-and-count.
