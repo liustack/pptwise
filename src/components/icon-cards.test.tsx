@@ -11,6 +11,8 @@ import { FORM_BODY_FLOOR } from "./legibility"
 import { CANONICAL_THEME_IDS } from "../themes"
 import { PPTX_ICON_NAMES } from "@/icons/catalog"
 import type { ComponentCtx } from "./types"
+import type { PptxIR } from "@/ir"
+import { auditDeck } from "../audit/deck-audit"
 
 function svg(node: React.ReactElement) {
   return render(<svg>{node}</svg>)
@@ -323,6 +325,82 @@ describe("icon_cards item tag", () => {
     expect(Array.from(container.querySelectorAll("[data-tag]")).map((tag) => tag.textContent)).toEqual(["Azure 2026-02", "AWS 2025-10"])
     const titles = ["Retry storm", "Backlog collapse", "Restart together"].map((t) => Array.from(container.querySelectorAll("text")).find((el) => el.textContent === t)!)
     expect(new Set(titles.map((t) => t.getAttribute("y"))).size).toBe(1)
+  })
+
+  // The writer's references page on brief: six tagged cards in its 412px
+  // band. The tag row took the height the text needed, and with the node at
+  // its natural size no line of any card's text was left. A text with no
+  // line left did not count as cut, so the node never gave up its height,
+  // and the six texts went missing under a mark the audit read as a cut
+  // title.
+  const references = {
+    type: "icon_cards" as const,
+    items: [
+      { icon: "factory" as const, title: "深圳莱宝高科光明工厂", text: "光伏 2.541 MWp，EMC 20 年，预计年发电 295.6 万 kWh、年省约 62.90 万元", tag: { text: "企业口径", evidence: "company" as const } },
+      { icon: "factory" as const, title: "常州钟楼金瑞达园区", text: "光伏一期约 1.6 MW，年均发电 146.7 万 kWh，年省约 36 万元", tag: { text: "项目口径", evidence: "official" as const } },
+      { icon: "battery-charging" as const, title: "常州钟楼智谷工场", text: "光伏 0.9 MWp 加储能 1.33 MW，年化发电超过 100 万度，收益超过 20 万元", tag: { text: "项目口径", evidence: "official" as const } },
+      { icon: "zap" as const, title: "扬州高邮泰晶厂区", text: "光伏 4 万 kW，储能 27.6 MW/80.25 MWh，预计年消纳绿电 5000 万 kWh", tag: { text: "供电公司口径", evidence: "press" as const } },
+      { icon: "file-check" as const, title: "亿晶光电江苏四座电站", text: "0.81 至 3.49 MW，一年 991 至 1098 小时，自用率 77.7% 至 91.0%", tag: { text: "会计师审计", evidence: "company" as const } },
+      { icon: "search" as const, title: "贵司的数", text: "按贵司的电费单、负荷曲线和屋顶条件算，参照只说明同类厂房做得成", tag: { text: "待贵司资料", quiet: true } },
+    ],
+  }
+
+  it("shrinks the node before a tagged card's text goes, and draws every text whole", () => {
+    const ctx = themeCtx("brief")
+    const { container } = svg(iconCards.render(references, { x: 96, y: 200, w: 1088, h: 412 }, ctx))
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    // A line breaks at a space, and the space goes with the break.
+    const words = Array.from(container.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .join("")
+      .replace(/\s+/g, "")
+    for (const item of references.items) expect(words).toContain(item.text.replace(/\s+/g, ""))
+  })
+
+  // 336px leaves each row 160px: at the smallest node a tagged card keeps
+  // its title and not one line of its text. The cards used to draw like
+  // that, six titles over six missing texts. A card with nothing of its
+  // text left declines the box, so the page finds a taller one or says what
+  // it lost.
+  it("declines a box where even the smallest node leaves a tagged card no line of its text", () => {
+    const { container } = svg(iconCards.render(references, { x: 96, y: 200, w: 1088, h: 336 }, themeCtx("brief")))
+    expect(container.querySelectorAll("circle, text")).toHaveLength(0)
+    expect(container.querySelector("[data-dropped]")?.getAttribute("data-dropped-kind")).toBe("component")
+  })
+
+  // The same cards on the page itself, the way the deck drew them. The audit
+  // used to read the mark left on a card with no text as a cut title,
+  // quoting the tag and the title back. Under a standfirst the band is
+  // shorter still: each card now keeps a line of its text, and what the
+  // audit quotes is that line, the text that was cut.
+  it("draws them whole on brief's page, and the audit names the text it cuts, not the title", () => {
+    const page = (subheading?: string): PptxIR =>
+      ({
+        version: "5",
+        filename: "references",
+        theme: { id: "brief" },
+        meta: {},
+        assets: { images: {} },
+        slides: [
+          {
+            type: "content",
+            kind: "list",
+            heading: "同类厂房已经在做：公开记录里的五个参照",
+            ...(subheading ? { subheading } : {}),
+            footnote: "来源：莱宝高科公告（2024-10-30），常州市钟楼区政府（2025-04-11）。均非我方项目",
+            components: [references],
+          },
+        ],
+      }) as unknown as PptxIR
+    expect(auditDeck(page()).findings).toEqual([])
+    const cut = auditDeck(page("五家公开记录，一家待补")).findings.filter((f) => f.code === "content-truncated")
+    expect(cut.length).toBeGreaterThan(0)
+    for (const finding of cut) {
+      const quoted = String((finding.detail as { text: string }).text)
+      expect(references.items.some((item) => item.text.startsWith(quoted.replace(/…$/, "")))).toBe(true)
+      expect(references.items.some((item) => quoted.includes(item.title))).toBe(false)
+    }
   })
 
   it("explodes tagged cards into a bento's tiles, which set each tag beside its icon", () => {

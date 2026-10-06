@@ -53,7 +53,10 @@ function layoutItemText(
           lineHeightRatio: TEXT_LINE_HEIGHT_RATIO,
           fontFamily: ctx.fonts.body,
         })
-      : { lines: [] as string[], fontSize: bodySize, lineHeight: 0, truncated: false }
+      : // No line left for a text the card has is the whole text cut, and
+        // says so: `geometry` reads `truncated` to decide whether the node
+        // should give up height first.
+        { lines: [] as string[], fontSize: bodySize, lineHeight: 0, truncated: item.text.trim().length > 0 }
   return { title, text }
 }
 
@@ -112,16 +115,22 @@ function geometry(
   // A column always keeps its icon and a line of title, so a short enough
   // row can be overrun by the stack even with no word cut.
   const tooTall = (res: typeof settled) => res.layouts.some((l) => stackHeight(l, res.nodeSize, res.tagRow) > res.rowH + 1)
+  // A cut text keeps its opening and marks the cut. A text with no line
+  // left keeps nothing of itself: a tag row under the node can take the
+  // height a row of cards had for it.
+  const textless = (res: typeof settled) =>
+    res.layouts.some((l, i) => l.text.lines.length === 0 && component.items[i]!.text.trim().length > 0)
   if (boxH !== undefined && (cut(settled.layouts) || tooTall(settled))) {
     let shortest: typeof settled | undefined
     for (let r = settled.nodeR - 1; r >= NODE_R_MIN; r--) {
       const smaller = columnsAt(component, w, ctx, cols, rows, colW, r, boxH)
       if (!cut(smaller.layouts) && !tooTall(smaller)) return { ...smaller, declined: false }
-      if (!shortest && !tooTall(smaller)) shortest = smaller
+      if (!shortest && !tooTall(smaller) && !textless(smaller)) shortest = smaller
     }
-    if (!tooTall(settled)) return { ...settled, declined: false }
-    // Even the smallest icon leaves a column taller than its row: the cards
-    // decline the box rather than drawing above and below it.
+    if (!tooTall(settled) && !textless(settled)) return { ...settled, declined: false }
+    // Even the smallest icon leaves a column taller than its row, or a card
+    // with not one line of its text: the cards decline the box rather than
+    // drawing above and below it, or drawing a title over a missing text.
     return shortest ? { ...shortest, declined: false } : { ...settled, declined: true }
   }
   return { ...settled, declined: false }
