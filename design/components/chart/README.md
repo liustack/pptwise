@@ -142,3 +142,21 @@ Three changes, settled on the fiscal, growth, indicators and funds pages. See th
 
 - validate refuses a marker on a category the chart does not have, more than three markers, markers on any chart but a line, and steps on any series but a scatter's.
 - The hand-set compositions that draw their own chart leave a titled chart to the ordinary one, except those that take a title (`ladder`, `backdrop`, `thresholds`, `partition`).
+
+## journal, annual letter to readers sample, 2026-10
+
+`icon` on a point of a bar chart on its side, `gaps` on an upright bar or a line chart, and `bands` on a bar chart on its side. Settled on the ways of reading (p04), the periodicals page (p06), heavy readers (p09), who reads less (p10) and print against screen (p15): see the boards and engine renders in [compositions/measures](../../compositions/measures/), [compositions/headline](../../compositions/headline/), [compositions/census](../../compositions/census/), [compositions/contrast](../../compositions/contrast/) and [compositions/effects](../../compositions/effects/). The round's decisions are in [rounds/2026-10-07-journal](../../rounds/2026-10-07-journal/README.md).
+
+**What it looks like.**
+
+- `data[].icon` on the first series of a bar chart on its side sets a symbol before each category's name. The ordinary chart sets the symbols in a column of their own at its left edge.
+- `gaps: [{ after, x, label }]` keeps a place on the category axis for a value nobody published. A bar chart draws a dashed outline there, about as tall as its bars run, with the label over it. A line breaks there and sets the label over the axis.
+- `bands` on a bar chart on its side tint each range down the rows and name it in a row over the plot, and the value axis grows to hold them, as a line, an area and an upright bar already did.
+
+**Why.** A reader knows a way of reading by its symbol before its name. A year a survey skipped is not a zero, and joining over it invents a value. An effect size is read against which side of zero is worse.
+
+**What it gave up.**
+
+- Symbols only on a bar chart on its side, and only on the first series.
+- Gaps only on upright bars and lines, three at most, each after a category the chart has or an earlier gap.
+- Two bands at most on a bar chart on its side.
