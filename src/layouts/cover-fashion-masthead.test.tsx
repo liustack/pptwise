@@ -115,7 +115,7 @@ describe("cover-fashion-masthead — bold-metrics fix red-first (user-reported c
     // correction) rather than one blanket conservative number applied
     // everywhere regardless of which face actually renders.
     const cases: Array<[theme: string, expectFace: string]> = [
-      ["thesis", "Georgia"],
+      ["thesis", "Times New Roman"],
       ["ledger", "Georgia"],
       ["rally", "Microsoft YaHei"],
       ["homeroom", "Microsoft YaHei"],

@@ -57,9 +57,9 @@ describe("SplitDiagonalCover", () => {
     const RUN = "Brandxxxxxxxxxxxxxxx"
     const literalPin = `${RUN}：让工程团队将大模型推理性能提升`
     const literalSlide: Slide = { type: "cover", heading: literalPin, components: [] } as Slide
-    const ctx = boundThemeCtx("thesis", {})
+    const ctx = boundThemeCtx("brief", {})
     const out = renderSvgMarkup(
-      <SplitDiagonalCover ir={ir("thesis")} slide={literalSlide} index={0} ctx={ctx} />,
+      <SplitDiagonalCover ir={ir("brief")} slide={literalSlide} index={0} ctx={ctx} />,
     )
     const root = parseSvgRoot(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
@@ -95,9 +95,9 @@ describe("SplitDiagonalCover", () => {
     const RUN = "Brandxxxxxxxxxx"
     const heading15 = `${RUN}：让工程团队将大模型推理性能提升`
     const slide15: Slide = { type: "cover", heading: heading15, components: [] } as Slide
-    const ctx = boundThemeCtx("thesis", {})
+    const ctx = boundThemeCtx("brief", {})
     const out = renderSvgMarkup(
-      <SplitDiagonalCover ir={ir("thesis")} slide={slide15} index={0} ctx={ctx} />,
+      <SplitDiagonalCover ir={ir("brief")} slide={slide15} index={0} ctx={ctx} />,
     )
     const root = parseSvgRoot(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
@@ -160,9 +160,9 @@ describe("SplitDiagonalCover", () => {
     const RUN = "OpenAPIGateway"
     const fusedHeading = "统一接入层OpenAPIGateway让跨团队协作效率显著提升"
     const fusedSlide: Slide = { type: "cover", heading: fusedHeading, components: [] } as Slide
-    const ctx = boundThemeCtx("thesis", {})
+    const ctx = boundThemeCtx("brief", {})
     const out = renderSvgMarkup(
-      <SplitDiagonalCover ir={ir("thesis")} slide={fusedSlide} index={0} ctx={ctx} />,
+      <SplitDiagonalCover ir={ir("brief")} slide={fusedSlide} index={0} ctx={ctx} />,
     )
     const root = parseSvgRoot(
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,

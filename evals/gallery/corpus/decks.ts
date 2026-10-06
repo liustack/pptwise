@@ -24,6 +24,7 @@ import { CHART_VARIANTS, COMPONENT_BUILDERS, PHOTO_ASSETS, PHONE_SCREENSHOT_ASSE
 import type { LanguageId, Lexicon } from "./lexicon"
 import { THEME_CONTENT_SLOTS, buildThemeSlot } from "./theme-slots"
 import { BINDER_BODIES } from "./binder-bodies"
+import { MANUSCRIPT_BODIES } from "./manuscript-bodies"
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/images")
 
@@ -193,6 +194,7 @@ const COMPONENT_KINDS: Record<Component["type"], PageKind> = {
   segmented_wheel: "hierarchy",
   rings: "hierarchy",
   pros_cons: "comparison",
+  sketch: "evidence",
   positioning_map: "comparison",
   venn: "comparison",
   matrix: "comparison",
@@ -566,6 +568,9 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   // proposal's binder sheet: the board's sum, the inputs beside the working
   // and the answer the page lands on.
   if (def.id === "binder-sheet") return COMPOSITION_BODIES.workings(lex).components
+  // thesis's manuscript sheet: the board's table of studies, the marked
+  // column tinted and the caveat under it.
+  if (def.id === "manuscript-sheet") return COMPOSITION_BODIES.tabulation(lex).components
   if (def.id === "marquee-statement") {
     return [{ type: "icon_cards", items: [0, 1, 2].map((i) => ({ icon: (["cup-soda", "package", "ticket"] as const)[i]!, title: lex.labels[i]!, text: lex.bullets[i]! })) }]
   }
@@ -1139,6 +1144,12 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
   // parts, the ways to pay, public records, safeguards, the risks, the steps,
   // the quote and the papers to hand over.
   ...BINDER_BODIES,
+  // thesis's manuscript sheet: the question beside its figure, the statutory
+  // ladder, the dose against its whole, figures beside a trend, a line with
+  // its thresholds, the table of studies, a whole and where it went, studies
+  // side by side, the literature map, hypotheses, survey rounds, two designs,
+  // threats, the schedule and the questions for the committee.
+  ...MANUSCRIPT_BODIES,
   rows: (lex) => ({
     heading: lex.headings[1]!,
     components: [

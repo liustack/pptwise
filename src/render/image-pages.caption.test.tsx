@@ -76,3 +76,17 @@ describe("image-bottom caption band vs branding posture", () => {
     expect(bandYs(boundSlideToSvgMarkup(makeIr("full", SILENT_THEME_ID), slide, 0))).toEqual([680])
   })
 })
+
+describe("a takeover's caption marks", () => {
+  it.each(["image-bottom", "image-split", "image-top", "image-annotate"])("%s paints a marked run of the caption, not its asterisks", (face) => {
+    registerTestTheme(`caption-marks-${face}`, "brief", { content: { photo: face } })
+    const marked: Slide = {
+      ...slide,
+      components: [{ type: "image", asset_id: "hero", fit: "cover", caption: "示意图：**车间里的老工人**（AI 生成）" }, { type: "bullets", items: ["对象：受新规约束的城镇职工", "问题一：到龄以后就业有没有上升"] }],
+    }
+    const ir = { ...makeIr(undefined, `caption-marks-${face}`), slides: [marked] }
+    const markup = boundSlideToSvgMarkup(ir, marked, 0)
+    expect(markup).not.toContain("**")
+    expect(markup).toMatch(/<tspan[^>]*>车间里的老工人<\/tspan>/)
+  })
+})

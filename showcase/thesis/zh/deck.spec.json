@@ -1,0 +1,142 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "technical"
+  },
+  "theme": "thesis",
+  "filename": "retirement-age-thesis-proposal-zh",
+  "meta": {
+    "date": "2026 年 10 月"
+  },
+  "footer": {
+    "page_number": true,
+    "label": "硕士学位论文开题报告"
+  },
+  "course": {
+    "stages": [
+      {
+        "label": "问题与背景"
+      },
+      {
+        "label": "文献与缺口"
+      },
+      {
+        "label": "研究设计"
+      },
+      {
+        "label": "计划"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "渐进式延迟法定退休年龄\n对 50 至 60 岁人群劳动参与的影响"
+    },
+    {
+      "id": "p02-question",
+      "type": "content",
+      "kind": "photo",
+      "heading": "研究问题：延迟退休让 50 至 60 岁的人多工作了吗"
+    },
+    {
+      "id": "p03-policy",
+      "type": "content",
+      "kind": "data",
+      "heading": "三类人群分 15 年把法定退休年龄提高 3 至 5 岁，2039 年全部到位"
+    },
+    {
+      "id": "p04-dose",
+      "type": "content",
+      "kind": "fact",
+      "heading": "到 2026 年底，实际最多只延迟了 5 个月和 8 个月"
+    },
+    {
+      "id": "p05-why",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "人口在变老，参保职工与参保离退休人员之比从 2.87 降到 2.59"
+    },
+    {
+      "id": "p06-cliff",
+      "type": "content",
+      "kind": "data",
+      "heading": "七普城镇就业人口比率在法定退休年龄附近断崖下跌"
+    },
+    {
+      "id": "p07-ch-lit",
+      "type": "chapter",
+      "heading": "文献：国际证据方向一致",
+      "summary": "中国还缺改革后的因果评估"
+    },
+    {
+      "id": "p08-intl",
+      "type": "content",
+      "kind": "data",
+      "heading": "六项同口径研究方向一致：资格年龄窗口内就业上升 6.3 至 21.2 个百分点"
+    },
+    {
+      "id": "p09-france",
+      "type": "content",
+      "kind": "evidence",
+      "heading": "法国把领取年龄提高 1 岁：退休少了 47.8 个百分点，就业只接住 20.9"
+    },
+    {
+      "id": "p10-china",
+      "type": "content",
+      "kind": "list",
+      "heading": "中国旧制度的断点研究：单位各异，都不是新政效果"
+    },
+    {
+      "id": "p11-gap",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "文献地图：改革后的中国这一行还是空白"
+    },
+    {
+      "id": "p12-hypotheses",
+      "type": "content",
+      "kind": "list",
+      "heading": "三个假设：到龄就业上升，部分流向失业，隔代照料减少"
+    },
+    {
+      "id": "p13-data",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "两套公开数据都停在新政之前，所以要设数据闸门"
+    },
+    {
+      "id": "p14-design",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "识别分两层：先用旧阈值断点打基准，过闸后再比较相邻出生队列"
+    },
+    {
+      "id": "p15-threats",
+      "type": "content",
+      "kind": "evidence",
+      "heading": "五个威胁里，处理剂量小最难绕开"
+    },
+    {
+      "id": "p16-plan",
+      "type": "content",
+      "kind": "process",
+      "heading": "进度：2027 年 6 月查数据闸门，两条路都能成文"
+    },
+    {
+      "id": "p17-asks",
+      "type": "content",
+      "kind": "list",
+      "heading": "请委员会指导四个问题"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "heading": "恳请各位老师批评指正",
+      "kicker": "本报告要点"
+    }
+  ]
+}

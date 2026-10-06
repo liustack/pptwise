@@ -144,7 +144,7 @@ IR v5 没有 `seed`、`layout`、`beat` 或 `arrangement`，也不接受这些�
 
 ## 组件
 
-`components` 是由 62 种类型化单元组成的可辨识联合。精确字段应查询当前安装的 schema，一次查一个组件或一个 kind：
+`components` 是由 63 种类型化单元组成的可辨识联合。精确字段应查询当前安装的 schema，一次查一个组件或一个 kind：
 
 ```bash
 pptwise schema --component kpi_cards
@@ -156,6 +156,8 @@ pptwise schema --kind data --theme brief
 `swot`、`bmc`、`waterfall`、`gantt`、`pest`、`five_forces`、`heatmap` 与 `sankey` 会占满正文区，必须独占页面。版式可以声明它在这些组件旁边能放哪些组件：bulletin 的内容页在 `waterfall` 或 `gantt` 旁边放一个 `kpi_cards`，所以在 bulletin 上这一对能通过校验，再加别的不行。
 
 `waterfall` 的每根柱都读同一根数值轴，所以每条 `value`，以及每根柱落到的累计值，绝对值都不能超过 1e300。超了就把所有条目除以同一个十的幂，把单位写进 `unit`，这样各柱的比例不变。
+
+`sketch` 不画数字，只示意研究怎么把效应认出来：`"kind": "discontinuity"` 是结果在门槛（`at`）处跳一下，散点上两段拟合线，中间一个箭头标出跳跃（`effect`）。`"kind": "difference_in_differences"` 是处理组在某件事（`at`）之后离开对照组，原本会走的路画成虚线，两组的名字（`groups`）印在各自线尾。`direction` 说结果往哪个方向走。
 
 组件的 kind 归属与相近选择见 [SKILL 组件指南](../skills/pptwise/references/components.zh-CN.md)。
 
@@ -178,6 +180,12 @@ pptwise schema --kind data --theme brief
 | `gauge` | 一个值对一个目标。 | 恰好 1 个，且只有一个点 |
 
 `axes` 的标题和单位作用于 `bar`、`stacked`、`percent_stacked`、`combo`、`line`、`area` 与 `scatter`。同一系列里一个类别只能出现一次。
+
+`scatter` 的系列写 `steps: true`，点就连成阶梯：每个值保持到下一个点再跳过去，比如按出生年月排的法定退休年龄。点按 x 从小到大写，每一级开始的地方写一个点。这样的系列不画圆点。
+
+`markers` 在 `line` 图上某个类别开始的地方画一条竖虚线，最多三条，比如规则改变的年龄：`[{ "before": "50-54 岁", "label": "女 50 岁" }]`。每条线立在它点名的类别和前一个类别正中间，标签印在图上方。
+
+`title` 是图的名字，像表格的标题一样印在图上方一行（「参保职工与参保离退休人员之比，2015 至 2025 年」）。给图编号的主题把编号印在它前面（「图 3」）。
 
 `bar` 在每根柱旁边印出它的数值，竖柱印在柱顶上方，横条印在条的末端。只有全部数值都能印在不压柱、不出图的位置时才印，否则一个都不印，这一页的导出会停下，直到数字改短（除以十的幂，把单位写进 `y_unit`，横条写进 `x_unit`）或减少类别、系列。横条图会随类别数长高，保证每个类别各占一行。
 
@@ -244,7 +252,7 @@ pptwise schema --kind data --theme brief
 | `chart.bands` | `[{ "from": 4.5, "to": 5, "label": "目标区间" }]` 在图后横跨一段数值区间着浅色，标签写在区间里，数值轴会放大到能装下它。目标区间这样写，不要画成两条水平的系列 | `line`、`area` 和竖着的 `bar`，最多 2 段 |
 | `chart.changes` | `[{ "from": "2025 年三季度", "to": "2026 年三季度" }]` 在两根柱上方画一个括号，写两者的变化（相对变化，`%` 轴上写百分点）。写了 `"at": "比亚迪"` 时，`from` 和 `to` 是两个系列名，在这个类别上比较。横条图把变化写在后一根条的数值后面。 | `bar` 和 `stacked`，最多 3 个。横条图必须写 `at`，堆叠图不能写 |
 | `chart.reference` | `{ "value": 1.37, "label": "欧盟基准 1.370" }` 在柱子上横（或竖）画一条虚线，标出一个参照值，比如基准或门槛，图例里写它的名字，数值轴会放大到能装下它。基准这样写，不要画成一根自己的柱子 | 只用于 `bar`，竖柱横条都行 |
-| `chart.series[].data[].note` | 印在柱子数值后面的几个字，用间隔点隔开（「2.34 · 基准线」「€7.68 · 62.36 元」） | 只用于横条 `bar` 和份额条的各段 |
+| `chart.series[].data[].note` | 印在柱子数值后面的几个字，用间隔点隔开（「2.34 · 基准线」「€7.68 · 62.36 元」），或印在折线的点旁（最低的一年下面印「最低 2.53」，回升的一年上面印「回升 2.69」） | 只用于横条 `bar`、份额条的各段和 `line` |
 | `chart.series[].data[].upper` | 只知道一个区间的数值的上端，`y` 是下端：条形实画到 `y`，再用虚线画到 `upper`，标签写两端（「60 至 70」） | 只限横放的 `bar`，且不小于零 |
 | `chart.emphasis_label` | 份额条为标出的那几段写的一行字，用作者自己的话（「第 73 章制品 €93.5 亿，占 69.5%」），放在原本自动算出的合计的位置 | 只用于份额条，至少标出一个系列 |
 | `concept_equation.excluded` | 结果有意不收的那一样，写法和一个要素相同（`{ "label": "先不做", "value": "核心城区的餐饮高峰单", "note": "它排在放行顺序最后" }`）：画在等式下面的虚线框里，数字上划一道删除线 | 必须有 value |
@@ -255,9 +263,11 @@ pptwise schema --kind data --theme brief
 | `heatmap.steps` 和 `heatmap.label_every` | `[{ "max": 0.5, "label": "低谷", "short": "谷" }, { "max": 0.9, "label": "平段", "short": "平" }, { "label": "高峰", "short": "峰" }]` 从低到高写出数值落进的几档，比如一天的分时电价：每格取它那一档的颜色、印那一档的简称，格子下方一行图例写出每一档的名字。`label_every: 6` 从第一列起每六列印一个列头，像 24 小时的时间轴那样 | 2 到 5 档，除最后一档外都写 `max` 且逐档升高，不能和 `domain` 同时写。`label_every` 取 2 到 12 |
 | `gantt.range` 与 `gantt.items[].period` | 轴比条更长时轴跨的那一段（整个 18 个月的计划写 `{ "from": 0, "to": 18 }`），以及一条用话怎么说（「第 16 至 18 个月」） | 每条都在 range 里 |
 | `gantt.bands` | `[{ "from": 8, "to": 12, "label": "演唱会季 6 至 9 月" }]` 在横条后面给轴上一段着浅色，名字写在轴下面，比如方案押注的档期。`from` 和 `to` 用横条自己的轴 | 最多 2 段，互不重叠，落在轴内 |
+| `gantt.milestones` 与 `gantt.items[].basis` | `[{ "at": 8.5, "label": "数据闸门 · 2027 年 6 月" }]` 在条形上标一个时间点，一条线竖穿各行，下面一枚菱形和它的标签，比如计划转向的一次检查。条形的 `basis`（`"pending"` 表示要满足条件才做的工作）画成虚线框。`axis_labels` 里写空字符串的刻度不标字，这样可以每隔几格标一个 | 时间点最多 2 个，落在轴内 |
 | `timeline.milestones[].lane` 与 `timeline.lanes` | 同一条时间顺序上的两条泳道。`lanes` 给出两条泳道的名字，第一条在前。普通时间线把节点排成一行，每个节点的泳道名单独一行写在日期上方。bulletin、clinic、ledger、swiss、vermilion 在版面放得下时把带泳道的时间线横跨整页排开，第一条泳道在轴上方，第二条在轴下方 | 要么每个节点都写 lane，要么都不写，最多两条，竖向时间线不能用 |
 | `timeline.periods` | `[{ "from": "2026-01", "to": "2026-12", "label": "2026 年：进口计入排放，不必持有证书" }]` 把时间轴分成几段并给每段起名。按比例排日期的版式把每段画在轴上它那一截，普通时间线在节点下面一行一段地列出名字。写了 `"basis": "proposal"`（或其他尚未确定的依据）的一段画成虚线 | 最多 3 段，竖向时间线不能用 |
 | `timeline.milestones[].tag` 与 `source` | 节点现在的状态，印成小标签（`{ "text": "提案", "basis": "proposal" }`），以及日期或规则的出处，节点下面一行小字（「COM(2025) 989」）。依据尚未确定的标签画虚线 | |
+| `timeline.milestones[].status` | `"pending"` 表示还没成真的节点，比如已经做完、数据还没公布的一轮调查：节点画成空心 | |
 | `callout.title` 与 `callout.tag` | 提示上方一行粗体的小标题（「谁付」），以及正文下面一枚小标签，说明这条提示依据的是什么（`{ "text": "企业口径 · 据报道", "evidence": "company" }`） | |
 | `waterfall.items[].note` | 柱子名称下面一行短注，比如它代表的数量（「3.187 吨」） | |
 | `roadmap.items[].rows[].basis` | 这一行的值依据的是什么，比如还没定下来的预算项写 `"pending"`。尚未确定的值用虚线标出 | |
@@ -269,6 +279,7 @@ pptwise schema --kind data --theme brief
 | `kpi_cards.items[].tag` | 这个数是什么，用几个字印成数字旁的小标签（`{ "text": "约束性指标" }`）：标出的那个数填满，其余描边，`quiet` 的用灰色 | |
 | `from_to.rows[].tag` 与 `emphasis` | 行尾数值后的标签，以及这一页讲的那一项，和 `comparison` 的行一样 | 最多标一行 |
 | `icon_cards.title` 与 `icon_cards.items[].tone` | 印在卡片上方的短名，比如一页里某一栏的栏头（「按什么做」），以及一张卡是哪一类消息（`danger`、`warning`、`success`），它的图标用主题给这类消息的颜色，比如一起过去的事故 | |
+| `matrix.columns`、`matrix.rows`、`matrix.title` 与 `matrix.items[].empty` | 网格各列的名字印在列上方，各行的名字印在行左边，每行可带图标（`{ "label": "国际改革评估", "icon": "globe" }`），网格上方一行短名，以及一个什么都还没找到的格子，画成虚线框、字在中间。配 `"tone": "accent"` 时虚线用强调色，表示这一页要说的空白 | 列名个数等于 `cols`，每行一个行名 |
 | `image_grid.items[].tag` | 图上的几个字，比如选配的那一张（`{ "text": "选配", "basis": "pending" }`），垫一块页面底色印在图的右上角，描边还是填色和别处的标签一样 | |
 | `from_to.rows[].icon` 与 `note` | 指标名前的图标（`"clock"`），以及名字下面一行小字，比如数字从哪来（「CNESA 估算，426 号新政前后」） | |
 | `comparison.rows[].emphasis` | 这一页讲的那一行：整行落在强调色的浅底上 | 最多一行 |

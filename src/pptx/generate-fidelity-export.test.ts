@@ -489,6 +489,13 @@ const COMPONENT_BY_TYPE: Record<Component["type"], Component> = {
       { label: "Renewal", value: "60 days out" },
     ],
   },
+  sketch: {
+    type: "sketch",
+    kind: "difference_in_differences",
+    at: "Reform starts",
+    x_title: "Time",
+    groups: ["New-rule cohorts", "Neighbouring cohorts"],
+  },
   pros_cons: {
     type: "pros_cons",
     pros: {
@@ -656,6 +663,7 @@ function noAssetIr(): PptxIR {
       contentSlide("concept_equation", [COMPONENT_BY_TYPE.concept_equation]),
       contentSlide("segmented_wheel", [COMPONENT_BY_TYPE.segmented_wheel]),
       contentSlide("pros_cons", [COMPONENT_BY_TYPE.pros_cons]),
+      contentSlide("sketch", [COMPONENT_BY_TYPE.sketch]),
       { type: "ending", heading: "Thanks", components: [] },
     ],
   }

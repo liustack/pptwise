@@ -17,7 +17,7 @@ const COVER: Slide = {
 } as Slide
 
 const WAVE2 = [
-  { id: "thesis", face: "thesis-plate-cover" },
+  { id: "thesis", face: "manuscript-cover" },
   { id: "rally", face: "marquee-cover" },
   { id: "ledger", face: "stat-cover" },
   { id: "terminal", face: "console-cover" },
@@ -100,9 +100,9 @@ describe("board-cover-restore wave 2 — locked cover faces", () => {
 })
 
 const WAVE8_B2_LOCKS = [
-  { id: "thesis", type: "cover" as const, face: "thesis-plate-cover" },
-  { id: "thesis", type: "chapter" as const, face: "folio-ghost-chapter" },
-  { id: "thesis", type: "ending" as const, face: "defense-close-ending" },
+  { id: "thesis", type: "cover" as const, face: "manuscript-cover" },
+  { id: "thesis", type: "chapter" as const, face: "manuscript-chapter" },
+  { id: "thesis", type: "ending" as const, face: "manuscript-ending" },
   { id: "homeroom", type: "cover" as const, face: "lesson-cover" },
   { id: "homeroom", type: "chapter" as const, face: "lesson-chapter" },
   { id: "homeroom", type: "ending" as const, face: "lesson-ending" },

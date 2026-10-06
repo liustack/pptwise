@@ -224,3 +224,26 @@ describe("rail composition, notice setting", () => {
     expect(byText(root!, "−29%")!.getAttribute("fill")).toBe(tokens.colors.primary)
   })
 })
+
+describe("a chart with a title", () => {
+  it("goes to the ordinary chart, which sets the title over it, not to the rail", async () => {
+    const { compose } = await import(".")
+    const { testCtx } = await import("./__fixtures__/kit")
+    const { ctx } = testCtx("brief")
+    const props = { ctx, rect: BAND_ABOVE_SOURCE }
+    expect(compose({ ...props, components: [combo() as never] }, ["rail"])).not.toBeNull()
+    expect(compose({ ...props, components: [combo(true, { title: "Parcels and cost per parcel" }) as never] }, ["rail"])).toBeNull()
+  })
+})
+
+describe("a line with markers", () => {
+  it("goes to the ordinary line, which draws them, not to the rail", async () => {
+    const { compose } = await import(".")
+    const { testCtx } = await import("./__fixtures__/kit")
+    const { ctx } = testCtx("brief")
+    const line = { type: "chart", chart_type: "line", series: [series("Share", [10, 12, 15, 18])] }
+    const props = { ctx, rect: BAND_ABOVE_SOURCE }
+    expect(compose({ ...props, components: [line as never] }, ["rail"])).not.toBeNull()
+    expect(compose({ ...props, components: [{ ...line, markers: [{ before: "FY2025", label: "New rule" }] } as never] }, ["rail"])).toBeNull()
+  })
+})

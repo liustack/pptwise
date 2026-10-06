@@ -1,0 +1,63 @@
+{
+  "stage": "Design",
+  "components": [
+    {
+      "type": "comparison",
+      "columns": [
+        "Design 1: old thresholds · Can start now",
+        "Design 2: adjacent cohorts · After the gate"
+      ],
+      "rows": [
+        {
+          "label": "Treated",
+          "cells": [
+            "People just past 50, 55 or 60",
+            "Men born from January 1965, and so on"
+          ]
+        },
+        {
+          "label": "Control",
+          "cells": [
+            "People just short of those ages",
+            "Born a few months earlier, retiring at the old age"
+          ]
+        },
+        {
+          "label": "Assumption",
+          "cells": [
+            "Everything else is smooth at the threshold",
+            "Without the reform, adjacent cohorts move in parallel"
+          ]
+        },
+        {
+          "label": "Method",
+          "cells": [
+            "Fuzzy discontinuity, McCrary density test",
+            "Staggered difference in differences, pre-trend tests"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sketch",
+      "kind": "discontinuity",
+      "at": "Statutory age",
+      "x_title": "Age",
+      "y_title": "In work",
+      "effect": "Jump = effect",
+      "direction": "down"
+    },
+    {
+      "type": "sketch",
+      "kind": "difference_in_differences",
+      "at": "Reform starts",
+      "x_title": "Time",
+      "groups": [
+        "New-rule cohorts",
+        "Neighbouring cohorts"
+      ]
+    }
+  ],
+  "footnote": "Methods: Lee and Lemieux (2010), Calonico, Cattaneo and Titiunik (2014), McCrary (2008), Callaway and Sant'Anna (2021), Roth et al. (2023)",
+  "notes": "Identification has two layers. Design 1 can start now. Using pre-reform CHARLS and CFPS data, I run a fuzzy regression discontinuity at the former statutory ages of 50, 55 and 60, with age in months as the running variable. The treated are people just past the threshold, the controls those just short of it, and the key assumption is that everything else is continuous at the threshold. For bandwidths and robust confidence intervals I follow Calonico, Cattaneo and Titiunik 2014, I use McCrary's 2008 density test to check for manipulation of the running variable, and the framework follows Lee and Lemieux's 2010 review. This estimates the jump at the former ages, as a benchmark. Design 2 waits for the data gate. It compares adjacent cohorts born only months apart who face different statutory ages, for example men born from January 1965 against men born a few months earlier who retire at 60. For women the reform starts with those born in January 1970 and January 1975. This is how the Austrian, French and British studies work. Because treatment timing is staggered by birth month, I use the Callaway and Sant'Anna 2021 estimator for staggered difference-in-differences and Roth and coauthors' 2023 methods for pre-trend tests. The key assumption is that, without the reform, adjacent cohorts would have followed parallel employment paths at the same age. The Australian case shows this needs serious testing. The photo is an AI-generated illustration."
+}

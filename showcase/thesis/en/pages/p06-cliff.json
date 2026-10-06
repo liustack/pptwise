@@ -1,0 +1,108 @@
+{
+  "stage": "Question",
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "line",
+      "title": "Employment ratio = the employed ÷ people of that age and sex, urban = cities + towns¹",
+      "axes": {
+        "y_unit": "%"
+      },
+      "markers": [
+        {
+          "before": "50-54",
+          "label": "Women 50"
+        },
+        {
+          "before": "55-59",
+          "label": "Women 55"
+        },
+        {
+          "before": "60-64",
+          "label": "Men 60"
+        }
+      ],
+      "series": [
+        {
+          "name": "Urban men",
+          "data": [
+            {
+              "x": "45-49",
+              "y": 88.9
+            },
+            {
+              "x": "50-54",
+              "y": 82.8
+            },
+            {
+              "x": "55-59",
+              "y": 68.2
+            },
+            {
+              "x": "60-64",
+              "y": 27.8
+            },
+            {
+              "x": "65-69",
+              "y": 19.4
+            }
+          ]
+        },
+        {
+          "name": "Urban women",
+          "data": [
+            {
+              "x": "45-49",
+              "y": 69.0
+            },
+            {
+              "x": "50-54",
+              "y": 45.7
+            },
+            {
+              "x": "55-59",
+              "y": 25.4
+            },
+            {
+              "x": "60-64",
+              "y": 13.3
+            },
+            {
+              "x": "65-69",
+              "y": 9.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**−40.4**",
+          "unit": "points",
+          "label": "Urban men, 55-59 to 60-64",
+          "note": "68.2% to 27.8%, across 60"
+        },
+        {
+          "value": "−23.3",
+          "unit": "points",
+          "label": "Urban women, 45-49 to 50-54",
+          "note": "69.0% to 45.7%, across 50"
+        },
+        {
+          "value": "−20.3",
+          "unit": "points",
+          "label": "Urban women, 50-54 to 55-59",
+          "note": "45.7% to 25.4%, across 55"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "A cross-section under the old rules: not a causal effect, not participation"
+    }
+  ],
+  "footnote": "China Population Census Yearbook 2020, long form: employed (tables 4-1) ÷ population (tables 1-4), worked out. Employed means an hour or more of paid work in the census week",
+  "notes": "The employment cliff at the statutory ages. The official communiqués give no national employment rates by sex and urban or rural residence for ages 50 to 64, so I computed these from the 2020 census long form: the employed population divided by the population of the same age and sex in the same tables. The census yearbook has no unemployment table by age, so this is an employment-to-population ratio, not a labor force participation rate. Employment follows the census definition, at least one hour of paid work in the week of 25 to 31 October 2020, including retirees who still work. Urban means cities plus towns, by place of residence. For urban men the ratio is 68.2 percent at 55 to 59 and 27.8 percent at 60 to 64, a drop of 40.4 points across age 60. For urban women the cliff comes in two steps: 69.0 percent at 45 to 49, 45.7 percent at 50 to 54 and 25.4 percent at 55 to 59, matching the former ages of 50 and 55. For comparison, rural men at 60 to 64 are still at 63.6 percent and decline gently. This is a cross-section under the old rules, not a causal effect, but it shows the statutory age is a hard threshold for urban employment, and the reform moves that threshold."
+}

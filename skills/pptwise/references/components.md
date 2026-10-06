@@ -93,6 +93,7 @@ The table gives each component's normal kind home. A component may serve more th
 | `concept_equation` | `points`, `statement` |
 | `segmented_wheel` | `hierarchy`, `list` |
 | `pros_cons` | `comparison` |
+| `sketch` | `evidence`, `hierarchy` |
 
 ## Lookalikes
 
@@ -113,6 +114,7 @@ The table gives each component's normal kind home. A component may serve more th
 - Use `concept_equation` when two or three things together produce a fourth and the addition is the argument. Use `icon_cards` when the items produce nothing between them.
 - Use `segmented_wheel` when four to eight equal parts together make up one whole. Use `cycle` when the last part returns to the first and `pie` inside `chart` when the parts are unequal shares.
 - Use `pros_cons` when both columns argue about the same proposal and the page has to land on a verdict. Use `comparison` when the columns are two different subjects.
+- Use `sketch` to show how a study tells its effect apart, a jump at a cutoff or a treated trend leaving its control, before there are figures. Use `chart` when there are real figures to plot.
 - Use `roadmap` for workstreams without a shared numeric axis. Use `gantt` for dated bars on one shared axis.
 - Use `pest` for the four external macro factors. Use `swot` for internal and external strategic assessment.
 - Use `sankey` when band width carries an amount through branches and merges, and a gap should show where a flow is not accounted for. Use `flowchart` when branches carry decisions rather than quantities.

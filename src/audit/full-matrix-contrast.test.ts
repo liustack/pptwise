@@ -1529,6 +1529,11 @@ const MUTED_SURFACE_CLASS: Record<string, MutedSurfaceClass> = {
   // glyph's stroke and the card outline's stroke fallback, neither a text
   // fill; the verdict band prints `accessibleInk` against its own primary.
   pros_cons: "flat-surface",
+  // sketch.tsx prints its axis titles in `colors.muted` on the ambient page
+  // background through `accessibleInk(colors.muted, defaultBg, …)`; its other
+  // words take the accent, the primary or the chart palette's pebble through
+  // the same call.
+  sketch: "page-bg",
   // progress-donuts.tsx paints `colors.muted` as the ring *track* stroke
   // (never a text fill); its source line is `accessibleInk(colors.muted,
   // pageBg, …)` on the ambient page background, same shape as timeline's.

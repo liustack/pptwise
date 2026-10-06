@@ -2329,10 +2329,12 @@ describe("a bar's note", () => {
     expect(texts.some((t) => t.includes("7 tCO₂ · 绿电降的是这段"))).toBe(true)
   })
 
-  it("is refused where a bar has no line after its value", () => {
+  it("is refused where a bar has no line after its value and no point stands for it", () => {
     expect(chartSchema.safeParse(routes).success).toBe(true)
     expect(chartSchema.safeParse({ ...routes, direction: undefined }).success).toBe(false)
-    expect(chartSchema.safeParse({ ...routes, chart_type: "line", direction: undefined }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...routes, chart_type: "area", direction: undefined }).success).toBe(false)
+    // A line takes it beside its point.
+    expect(chartSchema.safeParse({ ...routes, chart_type: "line", direction: undefined }).success).toBe(true)
   })
 })
 
@@ -2404,5 +2406,141 @@ describe("a bar whose value is known only as a range", () => {
     expect(chartSchema.safeParse(point({ upper: 50 })).success).toBe(false)
     expect(chartSchema.safeParse(point({ y: -5, upper: 5 })).success).toBe(false)
     expect(chartSchema.safeParse(point({ upper: 70, status: "forecast" })).success).toBe(false)
+  })
+})
+
+describe("a chart's title", () => {
+  const line = {
+    type: "chart" as const,
+    chart_type: "line" as const,
+    title: "参保职工与参保离退休人员之比",
+    series: [{ name: "比值", data: [{ x: "2015", y: 2.87 }, { x: "2020", y: 2.57 }, { x: "2025", y: 2.59 }] }],
+  }
+
+  it("is accepted on every chart type", () => {
+    expect(chartSchema.safeParse(line).success).toBe(true)
+    expect(chartSchema.safeParse({ ...line, chart_type: "pie", series: [{ name: "a", data: [{ x: "a", y: 1 }, { x: "b", y: 2 }] }] }).success).toBe(true)
+  })
+
+  it("is set over the chart, which moves down under it", () => {
+    const { container } = svg(renderDef.render(line, { ...box, h: 360 }, ctx))
+    const title = container.querySelector("[data-block-title] > text")!
+    expect(title.textContent).toBe("参保职工与参保离退休人员之比")
+    expect(renderDef.measure(line, box.w, ctx)).toBe(renderDef.measure({ ...line, title: undefined }, box.w, ctx) + 32)
+    // Under the title, the chart is drawn as it would be in the rest of its box.
+    const { title: _title, ...bare } = line
+    const below = svg(chart.render(bare, { ...box, y: box.y + 32, h: 328 }, ctx)).container.querySelector("svg")!.innerHTML
+    expect(container.querySelector("[data-block-title]")!.innerHTML).toContain(below)
+  })
+
+  it("leaves a chart without one exactly as it was", () => {
+    const { title: _title, ...bare } = line
+    const a = svg(renderDef.render(bare, { ...box, h: 360 }, ctx)).container.innerHTML
+    const b = svg(chart.render(bare, { ...box, h: 360 }, ctx)).container.innerHTML
+    expect(a).toBe(b)
+  })
+})
+
+describe("a note on a point of a line", () => {
+  const ratio = [2.87, 2.75, 2.65, 2.55, 2.53, 2.57, 2.65, 2.69, 2.67, 2.63, 2.59]
+  const line = (notes: Record<number, string>) => ({
+    type: "chart" as const,
+    chart_type: "line" as const,
+    series: [{ name: "比值", data: ratio.map((y, i) => ({ x: String(2015 + i), y, ...(notes[i] ? { note: notes[i] } : {}) })) }],
+  })
+
+  it("is accepted on a line and still refused on an upright bar", () => {
+    expect(chartSchema.safeParse(line({ 4: "最低" })).success).toBe(true)
+    expect(chartSchema.safeParse({ ...line({ 4: "最低" }), chart_type: "bar" }).success).toBe(false)
+  })
+
+  it("prints an interior note with its value, under a low point and over a high one", () => {
+    const { container } = svg(chart.render(line({ 4: "最低", 7: "回升" }), { ...box, h: 360 }, ctx))
+    const notes = Array.from(container.querySelectorAll("[data-point-note]"))
+    expect(notes.map((el) => el.textContent)).toEqual(["最低 2.53", "回升 2.69"])
+    const dots = Array.from(container.querySelectorAll("polyline"))[0]!.getAttribute("points")!.split(" ").map((p) => p.split(",").map(Number))
+    const [low, high] = notes
+    expect(Number(low!.getAttribute("y"))).toBeGreaterThan(dots[4]![1]!)
+    expect(Number(high!.getAttribute("y"))).toBeLessThan(dots[7]![1]!)
+  })
+
+  it("prints only the note by the first and last points, whose value the gutter prints", () => {
+    const { container } = svg(chart.render(line({ 0: "起点" }), { ...box, h: 360 }, ctx))
+    expect(Array.from(container.querySelectorAll("[data-point-note]")).map((el) => el.textContent)).toEqual(["起点"])
+  })
+})
+
+describe("markers on a line", () => {
+  const ages = ["45-49 岁", "50-54 岁", "55-59 岁", "60-64 岁", "65-69 岁"]
+  const cliff = {
+    type: "chart" as const,
+    chart_type: "line" as const,
+    markers: [
+      { before: "50-54 岁", label: "女 50 岁" },
+      { before: "60-64 岁", label: "男 60 岁" },
+    ],
+    series: [
+      { name: "城镇男性", data: [88.9, 82.8, 68.2, 27.8, 19.4].map((y, i) => ({ x: ages[i]!, y })) },
+      { name: "城镇女性", data: [69.0, 45.7, 25.4, 13.3, 9.8].map((y, i) => ({ x: ages[i]!, y })) },
+    ],
+  }
+
+  it("is accepted on a line before any category but the first", () => {
+    expect(chartSchema.safeParse(cliff).success).toBe(true)
+    expect(chartSchema.safeParse({ ...cliff, markers: [{ before: "45-49 岁", label: "x" }] }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...cliff, markers: [{ before: "70-74 岁", label: "x" }] }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...cliff, markers: [cliff.markers[0], cliff.markers[0]] }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...cliff, chart_type: "bar" }).success).toBe(false)
+  })
+
+  it("stands halfway between its category and the one before it, its label over the plot", () => {
+    const { container } = svg(chart.render(cliff, { ...box, h: 360 }, ctx))
+    const xs = Array.from(container.querySelectorAll("polyline"))[0]!.getAttribute("points")!.split(" ").map((p) => Number(p.split(",")[0]))
+    const marks = Array.from(container.querySelectorAll("[data-chart-marker]"))
+    expect(marks.map((m) => m.getAttribute("data-chart-marker"))).toEqual(["女 50 岁", "男 60 岁"])
+    const lineOf = (m: Element) => m.querySelector("line")!
+    expect(Number(lineOf(marks[0]!).getAttribute("x1"))).toBeCloseTo((xs[0]! + xs[1]!) / 2, 3)
+    expect(Number(lineOf(marks[1]!).getAttribute("x1"))).toBeCloseTo((xs[2]! + xs[3]!) / 2, 3)
+    for (const m of marks) expect(Number(m.querySelector("text")!.getAttribute("y"))).toBeLessThan(Number(lineOf(m).getAttribute("y1")))
+  })
+})
+
+describe("a scatter series joined as steps", () => {
+  const ladder = {
+    type: "chart" as const,
+    chart_type: "scatter" as const,
+    series: [{ name: "男职工", steps: true, data: [{ x: 1962, y: 60 }, { x: 1965, y: 60.08 }, { x: 1965.33, y: 60.17 }, { x: 1988, y: 63 }] }],
+  }
+
+  it("is accepted on a scatter whose points run in order of x", () => {
+    expect(chartSchema.safeParse(ladder).success).toBe(true)
+    expect(chartSchema.safeParse({ ...ladder, chart_type: "line" }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...ladder, series: [{ ...ladder.series[0], data: [...ladder.series[0]!.data].reverse() }] }).success).toBe(false)
+  })
+
+  it("holds each value to the next point and jumps there, with no dots", async () => {
+    const { stepPoints } = await import("./chart-svg")
+    expect(stepPoints([[0, 10], [5, 8], [9, 8]])).toBe("0,10 5,10 5,8 9,8 9,8")
+    const { container } = svg(chart.render(ladder, { ...box, h: 360 }, ctx))
+    expect(container.querySelectorAll("[data-steps]")).toHaveLength(1)
+    expect(container.querySelectorAll("circle")).toHaveLength(0)
+  })
+})
+
+describe("a numbered chart", () => {
+  it("prints the number its face gives it before its title, in the primary colour", () => {
+    const line = {
+      type: "chart" as const,
+      chart_type: "line" as const,
+      title: "参保职工与参保离退休人员之比",
+      series: [{ name: "比值", data: [{ x: "2015", y: 2.87 }, { x: "2025", y: 2.59 }] }],
+    }
+    const numbered = { ...ctx, exhibitLabels: new Map([[line, "图 3"]]) }
+    const { container } = svg(renderDef.render(line, { ...box, h: 360 }, numbered))
+    const title = container.querySelector("[data-block-title] > text")!
+    expect(title.textContent).toBe("图 3　参保职工与参保离退休人员之比")
+    expect(title.querySelector("[data-exhibit-label]")!.getAttribute("fill")).toBe(ctx.colors.primary)
+    // Without a number from the face the title is set as before.
+    expect(svg(renderDef.render(line, { ...box, h: 360 }, ctx)).container.querySelector("[data-exhibit-label]")).toBeNull()
   })
 })

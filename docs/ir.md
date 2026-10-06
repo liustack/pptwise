@@ -144,7 +144,7 @@ Narrative guides the argument, tone, theme choice, body-text baseline, and edito
 
 ## Components
 
-`components` is a discriminated union of 62 typed units. Ask the installed schema for exact fields, one component or one kind at a time:
+`components` is a discriminated union of 63 typed units. Ask the installed schema for exact fields, one component or one kind at a time:
 
 ```bash
 pptwise schema --component kpi_cards
@@ -156,6 +156,8 @@ The attributed prose component is `blockquote`. There is no component type named
 `swot`, `bmc`, `waterfall`, `gantt`, `pest`, `five_forces`, `heatmap`, and `sankey` occupy the full body and must be the page's only component. A face may name the companions it sets beside one of them: bulletin's content page sets a `waterfall` or a `gantt` beside a `kpi_cards`, so on bulletin that pair validates and nothing else joins it.
 
 A `waterfall` reads every bar against one value axis, so every item's `value`, and every running total a bar ends at, must stay within 1e300 in size. To get under it, divide every item by the same power of ten and name the unit in `unit`, so the bars keep their proportions.
+
+`sketch` draws, with no figures, how a study tells its effect apart: `"kind": "discontinuity"` is an outcome that jumps at a cutoff (`at`), two fitted lines over scattered points with the jump's arrow and its name (`effect`). `"kind": "difference_in_differences"` is a treated group's trend leaving its control's after an event (`at`), the path it would have kept drawn dashed and both `groups` named at their lines' ends. `direction` says which way the outcome moves.
 
 See the [SKILL component guide](../skills/pptwise/references/components.md) for semantic kind ownership and close component choices.
 
@@ -178,6 +180,12 @@ See the [SKILL component guide](../skills/pptwise/references/components.md) for 
 | `gauge` | One value against a target. | exactly 1, with one point |
 
 `axes` titles and units apply to `bar`, `stacked`, `percent_stacked`, `combo`, `line`, `area`, and `scatter`. Within one series, a category may appear once.
+
+A `scatter` series with `steps: true` joins its points as a staircase, each value held until the next point and then jumping to it, such as a statutory age by date of birth: write the points in order of x, one where each step begins. Its points are not dotted.
+
+`markers` draws up to three dashed lines down a `line` chart where a category begins, such as the ages a rule changes at: `[{ "before": "Age 50-54", "label": "Women, 50" }]`. Each stands halfway between the category it names and the one before it, its label over the plot.
+
+`title` names the chart in one line set over it, as a table's title is ("Workers per retiree, 2015 to 2025"). A theme that numbers its figures prints the number before it ("Figure 3").
 
 `bar` prints each value beside its bar, above it or past its end, when every value fits there clear of the bars and inside the chart. Otherwise it prints none, and export stops on that page until the numbers are shorter (divide them and name the unit in `y_unit`, or `x_unit` for `direction: "horizontal"`) or the chart has fewer categories or series. A horizontal bar chart grows taller with its category count, so each category keeps a row of its own.
 
@@ -244,7 +252,7 @@ A page usually argues about one thing. These fields let the author say which, an
 | `chart.bands` | `[{ "from": 4.5, "to": 5, "label": "Target range" }]` tints a value range across the plot behind the data, labelled inside it, and the value axis grows to hold it. Write a target range this way rather than as two flat series | `line`, `area` and upright `bar`, at most 2 |
 | `chart.changes` | `[{ "from": "2025 Q3", "to": "2026 Q3" }]` draws a bracket over two columns with the change between them (relative, or in points on a `%` axis). With `"at": "BYD"`, `from` and `to` name two series compared at that category. A horizontal chart writes the change after the later bar. | `bar` and `stacked`, at most 3. A horizontal chart needs `at`, a stacked one must not have it |
 | `chart.reference` | `{ "value": 1.37, "label": "EU benchmark 1.370" }` draws one value as a dashed line across the bars, such as a benchmark or a threshold, names it in the legend, and grows the value axis to hold it. Write a benchmark this way rather than as a bar of its own | `bar` only, upright or on its side |
-| `chart.series[].data[].note` | a few words printed after a bar's value, after a middle dot ("2.34 · baseline", "€7.68 · ¥62.36") | `bar` on its side and the parts of a share bar only |
+| `chart.series[].data[].note` | a few words printed after a bar's value, after a middle dot ("2.34 · baseline", "€7.68 · ¥62.36"), or beside a point of a line ("Low 2.53" under the lowest year, "Rebound 2.69" over the year it recovers) | `bar` on its side, the parts of a share bar and `line` only |
 | `chart.series[].data[].upper` | the high end of a value known only as a range, `y` its low end: the bar is solid to `y` and dashed on to `upper`, its label naming both ends ("60–70") | `bar` on its side only, at zero or above |
 | `chart.emphasis_label` | a share bar's line for its marked parts in the author's own words ("Downstream goods €9.35bn, 69.5%"), set where the computed total would stand | a share bar with at least one marked series |
 | `concept_equation.excluded` | what the result leaves out on purpose, as a term (`{ "label": "Not yet", "value": "Lunch-hour food in the city core", "note": "Last in the order of release" }`): drawn under the equation in a dashed outline, its value struck through | needs a value |
@@ -255,9 +263,11 @@ A page usually argues about one thing. These fields let the author say which, an
 | `heatmap.steps` and `heatmap.label_every` | `[{ "max": 0.5, "label": "Off-peak", "short": "Off" }, { "max": 0.9, "label": "Flat", "short": "Flat" }, { "label": "Peak", "short": "Peak" }]` names the steps the values fall into, lowest first, such as a day's tariff bands: each cell takes its step's colour and prints its short name, and a key under the grid names every step. `label_every: 6` prints every sixth column label, from the first, as on an axis of 24 hours | 2 to 5 steps, each but the last with a higher `max`, not with `domain`. `label_every` from 2 to 12 |
 | `gantt.range` and `gantt.items[].period` | the stretch the axis runs over when it is longer than the bars (`{ "from": 0, "to": 18 }` for a whole 18-month plan), and how a bar's stretch reads in words ("Months 16 to 18") | every bar inside the range |
 | `gantt.bands` | `[{ "from": 8, "to": 12, "label": "Concert season, Jun to Sep" }]` tints a span of the axis behind the bars and names it under the axis, such as the season a plan is built around. `from` and `to` are on the bars' own axis | at most 2, apart, inside the axis |
+| `gantt.milestones` and `gantt.items[].basis` | `[{ "at": 8.5, "label": "Data gate, June 2027" }]` marks a single moment across the bars, a line down the rows with a diamond and its label under them, such as a check the plan turns on. A bar's `basis` (`"pending"` for work that happens only if a condition is met) draws it as a dashed outline. A blank `axis_labels` entry leaves its tick unnamed, so a label can stand every few units | at most 2 moments, inside the axis |
 | `timeline.milestones[].lane` and `timeline.lanes` | two tracks on one time order. `lanes` names them, the first lane first. The ordinary timeline keeps its milestones in one row and prints each one's lane on a line of its own over its date. Bulletin, clinic, ledger, swiss and vermilion set a timeline on lanes across the page when it fits there, the first lane above the axis and the second below it | every milestone names a lane or none does, at most two, not on a vertical timeline |
 | `timeline.periods` | `[{ "from": "2026-01", "to": "2026-12", "label": "2026: counted, nothing to buy" }]` divides the axis into named spans. A face that lays dates to scale draws each span along its stretch of the axis; the ordinary timeline names them in a row under its milestones. A span with `"basis": "proposal"` (or any basis not yet settled) is drawn dashed | at most 3, not on a vertical timeline |
 | `timeline.milestones[].tag` and `source` | where a milestone stands, as a small tag (`{ "text": "Proposal", "basis": "proposal" }`), and where its date or rule comes from, a small line under it ("COM(2025) 989"). A tag with a basis that is not settled is dashed | |
+| `timeline.milestones[].status` | `"pending"` for a milestone that has not come to pass, such as a survey round carried out whose data is not out yet: its node is drawn hollow | |
 | `callout.title` and `callout.tag` | a short bold line over the note ("Who pays"), and what the note rests on as a small tag under its text (`{ "text": "Company figure, as reported", "evidence": "company" }`) | |
 | `waterfall.items[].note` | a short line under a bar's label, such as the quantity it stands for ("3.187 t") | |
 | `roadmap.items[].rows[].basis` | what a row's value rests on, such as `"pending"` for a budget line still to be set. A value that is not settled is marked dashed | |
@@ -269,6 +279,7 @@ A page usually argues about one thing. These fields let the author say which, an
 | `kpi_cards.items[].tag` | what the figure is, in a few words printed as a small tag with it (`{ "text": "Binding" }`): filled on the marked figure, outlined otherwise, grey when `quiet` | |
 | `from_to.rows[].tag` and `emphasis` | a tag after the row's values and the one measure the page is about, as on a `comparison` row | at most one marked |
 | `icon_cards.title` and `icon_cards.items[].tone` | a short name set over the cards, such as the heading of one column of a page ("What we follow"), and what kind of news a card is (`danger`, `warning`, `success`), its icon drawn in the theme's own ink for it, such as a past incident | |
+| `matrix.columns`, `matrix.rows`, `matrix.title` and `matrix.items[].empty` | the names of a grid's columns over them and of its rows at their left, each row with an optional icon (`{ "label": "Reforms abroad", "icon": "globe" }`), a short name over the grid, and a cell where nothing has been found, drawn as a dashed outline with its words in the middle. With `"tone": "accent"` the outline takes the accent, as the gap a page is about | as many column names as `cols`, a row name for every row |
 | `image_grid.items[].tag` | a few words on a picture, such as one that is optional (`{ "text": "Optional", "basis": "pending" }`), set at its top right corner on a plate of the page, outlined or filled as every tag is | |
 | `from_to.rows[].icon` and `note` | a symbol before a measure's name (`"clock"`), and a short line under it, such as where the figures come from ("CNESA estimate, before and after the new tariff") | |
 | `comparison.rows[].emphasis` | the one row the page is about: it sits on a pale tint of the emphasis colour | at most one |

@@ -1,7 +1,7 @@
 import type { ReactElement } from "react"
 import type { ChartSeries, Component } from "@/ir"
 import { CHART_AXIS_LIMIT } from "@/ir/components/chart"
-import { accessibleInk, blendOver } from "../render/ink"
+import { accessibleInk, blendOver, graphicInk } from "../render/ink"
 import { recededMarkFill } from "../render/chart-palette"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import { figureStyleOf, groupDigits, joinUnit, wholeValueDecimals, writtenFigure, type FigureStyle } from "../lib/quantity-format"
@@ -429,6 +429,58 @@ function edgeAnchor(i: number, n: number): "start" | "middle" | "end" {
   if (i === 0) return "start"
   if (i === n - 1) return "end"
   return "middle"
+}
+
+/** Air between two counted labels on a thinned point axis. */
+const COUNTED_LABEL_GAP = 8
+
+/**
+ * Every how many points a point axis names its category: 1, unless the
+ * categories count evenly (2015, 2016, … or 10, 20, 30) and the widest of
+ * them does not fit the room between two points even at the floor size.
+ * Such a run reads whole from every k-th label, so the axis names every
+ * k-th point at k times the room instead of cutting every label to a stub.
+ */
+export function countedLabelStep(labels: readonly string[], room: number, fontFamily?: string): number {
+  if (labels.length < 3 || room <= 0) return 1
+  const values = labels.map((label) => (/^-?\d+(\.\d+)?$/u.test(label.trim()) ? Number(label.trim()) : Number.NaN))
+  if (values.some((v) => !Number.isFinite(v))) return 1
+  const step = values[1]! - values[0]!
+  if (step === 0 || values.some((v, i) => i > 0 && Math.abs(v - values[i - 1]! - step) > 1e-9)) return 1
+  const widest = Math.max(...labels.map((label) => measureTextUnits(label.trim(), { fontFamily })))
+  if (widest * CATEGORY_MIN_FONT_SIZE <= room) return 1
+  return Math.min(labels.length - 1, Math.ceil((widest * CATEGORY_FONT_SIZE + COUNTED_LABEL_GAP) / room))
+}
+
+/**
+ * The tick labels along a point axis, a line's or an area's categories.
+ *
+ * Each label gets the room between two points, shrinking to the floor size
+ * and then cut and marked. A run of categories that counts evenly is named
+ * every k-th point instead (`countedLabelStep`): a half-width chart of the
+ * years 2015 to 2025 printed 「201 201 201」. Categories that do not count are
+ * each the author's own word and keep their own room.
+ */
+function pointAxisTicks(categories: readonly { x: string | number }[], xForIndex: (i: number) => number, room: number, fontFamily?: string) {
+  const step = countedLabelStep(categories.map((cat) => String(cat.x)), room, fontFamily)
+  return categories.flatMap((cat, i) => {
+    if (i % step !== 0) return []
+    const category = fitSvgLine(String(cat.x), {
+      maxWidth: room * step,
+      fontSize: CATEGORY_FONT_SIZE,
+      minFontSize: CATEGORY_MIN_FONT_SIZE,
+      fontFamily,
+    })
+    return [
+      {
+        label: category.text,
+        pos: xForIndex(i),
+        truncated: category.truncated,
+        fontSize: category.fontSize,
+        anchor: edgeAnchor(i, categories.length),
+      },
+    ]
+  })
 }
 
 /**
@@ -1614,6 +1666,86 @@ export function renderBar(
   )
 }
 
+/**
+ * The few words an author writes on a point of a line (`data[].note`), such
+ * as 「最低」 on the lowest year or 「回升」 on the year it recovers. An
+ * interior point prints its note and its value; the first and last points
+ * already print their value in the gutter, so only the note stands by them.
+ * A point lower than the points beside it takes its words under it and any
+ * other point over it, so they never sit on the line that runs into it.
+ */
+function renderLineNotes({
+  component,
+  seriesEnds,
+  categories,
+  n,
+  fill,
+  fontFamily,
+  figures,
+}: {
+  component?: ChartInput
+  seriesEnds: readonly { s: { seriesIndex: number }; resolved: readonly { i: number; x: number; y: number; value: number }[] }[]
+  categories: readonly { x: string | number }[]
+  n: number
+  fill: string | undefined
+  fontFamily?: string
+  figures: FigureStyle | boolean
+}): ReactElement | null {
+  if (!component) return null
+  const labels: ReactElement[] = []
+  for (const end of seriesEnds) {
+    const source = component.series[end.s.seriesIndex]
+    if (!source) continue
+    end.resolved.forEach((point, k) => {
+      const note = source.data.find((d) => String(d.x) === String(categories[point.i]!.x))?.note?.trim()
+      if (!note) return
+      const edge = k === 0 || k === end.resolved.length - 1
+      const prev = end.resolved[k - 1]
+      const next = end.resolved[k + 1]
+      const low = (prev !== undefined || next !== undefined) && (!prev || prev.value > point.value) && (!next || next.value > point.value)
+      const text = edge ? note : `${note} ${chartFigure(point.value, figures)}`
+      labels.push(
+        <text
+          key={`note-${end.s.seriesIndex}-${point.i}`}
+          data-value-label="1"
+          data-point-note=""
+          x={point.x}
+          y={low ? point.y + LINE_NOTE_GAP + VALUE_FONT_SIZE * 0.8 : point.y - LINE_NOTE_GAP}
+          textAnchor={edgeAnchor(point.i, n)}
+          fontSize={VALUE_FONT_SIZE}
+          fontWeight={VALUE_FONT_WEIGHT}
+          fontFamily={fontFamily}
+          fill={fill}
+          dominantBaseline="alphabetic"
+        >
+          {text}
+        </text>,
+      )
+    })
+  }
+  return labels.length > 0 ? <g data-line-notes="">{labels}</g> : null
+}
+
+/** Air between a noted point and the words over or under it. */
+const LINE_NOTE_GAP = 10
+
+/** The band a line's markers take over the plot for their labels, and the air under a label. */
+const MARKER_BAND = 30
+const MARKER_LABEL_GAP = 10
+
+/**
+ * The author's markers on a line (`markers`), each at the index of the
+ * category it stands before, in the order the author wrote them. A marker
+ * whose category the chart does not carry, or that names the first one, is
+ * refused by validate, so none is skipped here in practice.
+ */
+function lineMarkers(component: ChartInput | undefined, categories: readonly { x: string | number }[]): { at: number; label: string }[] {
+  return (component?.markers ?? []).flatMap((m) => {
+    const at = categories.findIndex((cat) => String(cat.x) === m.before.trim())
+    return at > 0 ? [{ at, label: m.label.trim() }] : []
+  })
+}
+
 export function renderLine(
   series: ChartSeries[],
   palette: string[],
@@ -1644,11 +1776,14 @@ export function renderLine(
   if (pastAxisLimit(values)) return <WholeShareDeclined />
   const banded = [...values, ...bandEnds(component)]
   const yAxis = buildNumericAxis(banded, valueAxisMode(banded), meta.yUnit, meta.figures)
+  // The author's markers take a band over the plot for their labels.
+  const markers = lineMarkers(component, categories)
+  const markerBand = markers.length > 0 ? MARKER_BAND : 0
   const geom = layoutCartesianPlot({
     x0,
-    y0,
+    y0: y0 + markerBand,
     w,
-    h,
+    h: h - markerBand,
     yTickLabels: yAxis.labels,
     titleH: meta.titleH,
     fontFamily,
@@ -1675,21 +1810,7 @@ export function renderLine(
     label: formatAxisTick(t, meta.yUnit, meta.figures),
     pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
   }))
-  const xTicks = categories.map((cat, i) => {
-    const category = fitSvgLine(String(cat.x), {
-      maxWidth: categoryMaxWidth,
-      fontSize: CATEGORY_FONT_SIZE,
-      minFontSize: CATEGORY_MIN_FONT_SIZE,
-      fontFamily,
-    })
-    return {
-      label: category.text,
-      pos: xForIndex(i),
-      truncated: category.truncated,
-      fontSize: category.fontSize,
-      anchor: edgeAnchor(i, categories.length),
-    }
-  })
+  const xTicks = pointAxisTicks(categories, xForIndex, categoryMaxWidth, fontFamily)
 
   type Resolved = { i: number; x: number; y: number; value: number }
   const seriesEnds = model.series.map((s) => {
@@ -1873,16 +1994,22 @@ export function renderLine(
                 />
               </>
             )}
-            {runs.map((run, runIdx) => (
-              <polyline
-                key={`ln-${runIdx}`}
-                data-plot-mark="1"
-                points={run.map((c) => `${c.x},${c.y}`).join(" ")}
-                fill="none"
-                stroke={palette[sIdx % palette.length]}
-                strokeWidth={2}
-              />
-            ))}
+            {runs.map((run, runIdx) =>
+              // A point the gaps leave alone has no line to sit on, so it is a
+              // dot; the series' last point already carries its endpoint dot.
+              run.length === 1 && run[0] !== last ? (
+                <circle key={`ln-${runIdx}`} data-plot-mark="1" data-lone-point="1" cx={run[0]!.x} cy={run[0]!.y} r={ENDPOINT_DOT_R} fill={palette[sIdx % palette.length]} />
+              ) : (
+                <polyline
+                  key={`ln-${runIdx}`}
+                  data-plot-mark="1"
+                  points={run.map((c) => `${c.x},${c.y}`).join(" ")}
+                  fill="none"
+                  stroke={palette[sIdx % palette.length]}
+                  strokeWidth={2}
+                />
+              ),
+            )}
           </g>
         )
       })}
@@ -1913,6 +2040,37 @@ export function renderLine(
             {...(crowded && bgHex ? { stroke: bgHex, strokeWidth: 1 } : {})}
           />
         )
+      })}
+      {markers.map((marker) => {
+        const x = (xForIndex(marker.at - 1) + xForIndex(marker.at)) / 2
+        const ground = bgHex ?? "#FFFFFF"
+        return (
+          <g key={`marker-${marker.at}`} data-chart-marker={marker.label}>
+            <line x1={x} y1={geom.plotY} x2={x} y2={geom.plotY + geom.plotH} stroke={graphicInk(accentColor, ground)} strokeWidth={1.4} strokeDasharray="5 4" />
+            <text
+              data-value-label="1"
+              x={x}
+              y={y0 + markerBand - MARKER_LABEL_GAP}
+              textAnchor="middle"
+              fontSize={VALUE_FONT_SIZE}
+              fontWeight={VALUE_FONT_WEIGHT}
+              fontFamily={fontFamily}
+              fill={accessibleInk(accentColor, ground, VALUE_FONT_SIZE)}
+              dominantBaseline="alphabetic"
+            >
+              {marker.label}
+            </text>
+          </g>
+        )
+      })}
+      {renderLineNotes({
+        component,
+        seriesEnds,
+        categories,
+        n: categories.length,
+        fill: directLabelInk(textColor, bgHex),
+        fontFamily,
+        figures: meta.figures,
       })}
       {renderSeriesGutterLabels({
         labels: gutterLabels,
@@ -3209,6 +3367,20 @@ export function renderDonut(
 }
 
 /**
+ * A staircase through `points` in order: each value held to the next
+ * point's x, then a jump to its value. The polyline the step series of a
+ * scatter is drawn as (`series[].steps`).
+ */
+export function stepPoints(points: readonly (readonly [number, number])[]): string {
+  const out: string[] = []
+  points.forEach(([x, y], i) => {
+    if (i > 0) out.push(`${x},${points[i - 1]![1]}`)
+    out.push(`${x},${y}`)
+  })
+  return out.join(" ")
+}
+
+/**
  * scatter 散点/气泡图：数值 x/y 点集。两个轴都走拟合域（不强制含 0），
  * 刻度在绘图区外，轴线相交于原点。点可选 size：有则半径按面积（sqrt）缩放
  * 为气泡，无则统一小圆点。
@@ -3287,7 +3459,17 @@ export function renderScatter(
       })}
       {series.map((s, sIdx) => (
         <g key={sIdx}>
-          {s.data.map((d, di) => {
+          {component?.series[sIdx]?.steps ? (
+            <polyline
+              data-plot-mark="1"
+              data-steps=""
+              points={stepPoints(s.data.map((d) => [xForVal(numX(d.x)), mapToPlotY(d.y, yAxis.domain, geom.plotY, geom.plotH)] as const))}
+              fill="none"
+              stroke={palette[sIdx % palette.length]}
+              strokeWidth={2}
+            />
+          ) : null}
+          {component?.series[sIdx]?.steps ? null : s.data.map((d, di) => {
             const color = palette[sIdx % palette.length]
             return (
               <circle
@@ -3382,21 +3564,7 @@ export function renderArea(
     label: formatAxisTick(t, meta.yUnit, meta.figures),
     pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
   }))
-  const xTicks = categories.map((cat, i) => {
-    const category = fitSvgLine(String(cat.x), {
-      maxWidth: categoryMaxWidth,
-      fontSize: CATEGORY_FONT_SIZE,
-      minFontSize: CATEGORY_MIN_FONT_SIZE,
-      fontFamily,
-    })
-    return {
-      label: category.text,
-      pos: xForIndex(i),
-      truncated: category.truncated,
-      fontSize: category.fontSize,
-      anchor: edgeAnchor(i, categories.length),
-    }
-  })
+  const xTicks = pointAxisTicks(categories, xForIndex, categoryMaxWidth, fontFamily)
   const gutterLabels: GutterLabel[] = []
   for (const s of model.series) {
     const { first, last, count } = endsOf(s.values)
@@ -3484,16 +3652,21 @@ export function renderArea(
                 stroke="none"
               />
             ))}
-            {runs.map((run, ri) => (
-              <polyline
-                key={`ln-${ri}`}
-                data-plot-mark="1"
-                points={run.map((c) => `${c.x},${c.y}`).join(" ")}
-                fill="none"
-                stroke={color}
-                strokeWidth={2}
-              />
-            ))}
+            {runs.map((run, ri) =>
+              // A point the gaps leave alone has no line or fill to show it, so it is a dot.
+              run.length === 1 ? (
+                <circle key={`ln-${ri}`} data-plot-mark="1" data-lone-point="1" cx={run[0]!.x} cy={run[0]!.y} r={ENDPOINT_DOT_R} fill={color} />
+              ) : (
+                <polyline
+                  key={`ln-${ri}`}
+                  data-plot-mark="1"
+                  points={run.map((c) => `${c.x},${c.y}`).join(" ")}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={2}
+                />
+              ),
+            )}
           </g>
         )
       })}

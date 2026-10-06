@@ -37,7 +37,7 @@ const ChartPointSchema = z
       .min(1)
       .optional()
       .describe(
-        'A few words printed with the bar\'s value, such as "基准线", "低约 37%" or "62.36 元". Bars on their side (bar with direction "horizontal") and the parts of a share bar only.',
+        'A few words printed with the value, such as "基准线", "低约 37%" or "62.36 元": after the value of a bar on its side or a share bar\'s part, and beside a point of a line, such as "最低" on its lowest year or "回升" on the year it recovers. Bars on their side (bar with direction "horizontal"), the parts of a share bar and lines only.',
       ),
     /** The high end of a value only known as a range. See the describe below. */
     upper: z
@@ -74,6 +74,9 @@ export const CHANGE_TYPES = ["bar", "stacked"] as const
 
 /** The most `changes` one chart draws. Past three, the brackets crowd the bars they read. */
 export const MAX_CHART_CHANGES = 3
+
+/** The most `markers` one line chart draws. Past three, their labels crowd the band over the plot. */
+export const MAX_CHART_MARKERS = 3
 
 /**
  * Chart types that draw exactly one series and name its parts on the marks
@@ -313,6 +316,10 @@ function checkChanges(c: ChartInput, ctx: z.RefinementCtx): void {
 export const schema = z
   .object({
     type: z.literal("chart"),
+    title: z
+      .string()
+      .optional()
+      .describe('A short name for the chart, printed over it, such as "参保职工与离退休人员之比" or "Workers per retiree". A theme that numbers its figures prints it after the figure\'s number.'),
     /** dumbbell（2026-07-12 借鉴）：哑铃变化图——series[0]=起点值、
      * series[1]=终点值（等长同 x 标签），每行「起点●———●终点」显变化。
      * bar 可加 direction:"horizontal" 横条排名（长标签友好）。
@@ -466,6 +473,22 @@ export const schema = z
       .describe(
         'One value drawn as a dashed line across the bars, such as a benchmark, an average or a threshold the bars are read against: { "value": 1.37, "label": "EU benchmark 1.370" }. The value axis grows to hold it, and its label names the line in the legend. Bar charts only, upright or on their side. Write a benchmark this way rather than as a bar of its own.',
       ),
+    /** Lines down a line chart where a category begins. See the describe below. */
+    markers: z
+      .array(
+        z
+          .object({
+            before: z.string().min(1).describe('The category the line stands before, halfway between it and the one before it, such as "50-54 岁" or "Age 50-54".'),
+            label: z.string().min(1).describe('What happens there, printed over the line, such as "女 50 岁" or "Women, 50".'),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(MAX_CHART_MARKERS)
+      .optional()
+      .describe(
+        'Up to three dashed lines drawn down a line chart where a category begins, such as the ages a rule changes at: [{ "before": "50-54 岁", "label": "女 50 岁" }]. Each stands halfway between the category it names and the one before it, its label over the plot. Line charts only, on a category that is not the first.',
+      ),
     series: z.array(
       z
         .object({
@@ -494,6 +517,13 @@ export const schema = z
               "Marks the one series the page is about. It keeps the lead color and the others turn grey. At most one series, on bar, line, area, scatter, stacked, percent_stacked or combo charts with two or more series. A marked combo line also prints its values. " +
                 "A share bar (a stacked chart with direction \"horizontal\") may mark a run of adjacent parts, and states the run's total and share under it.",
             ),
+          /** A scatter series joined as steps. See the describe below. */
+          steps: z
+            .boolean()
+            .optional()
+            .describe(
+              "scatter only: joins the series' points as steps, each value held until the next point and then jumping to it, such as a statutory age by date of birth or a rate by income band. Write the points in order of x, one where each step begins. The points are not dotted.",
+            ),
           /** What kind of news the series is. See `ToneSchema` and the describe below. */
           tone: ToneSchema.optional().describe(
             'What kind of news the series is, drawn in the colour every theme keeps for it: "success" for the share that got better, "danger" for the share that got worse, "warning" for one to watch. ' +
@@ -515,8 +545,8 @@ export const schema = z
       })
     }
     // A note is printed after a bar's value, which only a bar on its side
-    // and a share bar's part have a line for.
-    const noted = (c.chart_type === "bar" && c.direction === "horizontal") || isShareBar(c)
+    // and a share bar's part have a line for, or beside a point of a line.
+    const noted = (c.chart_type === "bar" && c.direction === "horizontal") || isShareBar(c) || c.chart_type === "line"
     if (!noted) {
       c.series.forEach((s, si) =>
         s.data.forEach((d, di) => {
@@ -524,10 +554,43 @@ export const schema = z
           ctx.addIssue({
             code: "custom",
             path: ["series", si, "data", di, "note"],
-            message: `a note is printed after a bar's value, on a bar chart on its side or a share bar, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart has no line for it. Use chart_type "bar" with direction "horizontal", or say it in the category's name.`,
+            message: `a note is printed after a bar's value, on a bar chart on its side or a share bar, or beside a point of a line, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart has no place for it. Use chart_type "bar" with direction "horizontal" or "line", or say it in the category's name.`,
           })
         }),
       )
+    }
+    // Steps join a scatter's points in order of x, holding each value.
+    c.series.forEach((s, si) => {
+      if (!s.steps) return
+      if (c.chart_type !== "scatter") {
+        ctx.addIssue({ code: "custom", path: ["series", si, "steps"], message: `steps join a scatter's points as a staircase, and a ${c.chart_type} chart has none. Use chart_type "scatter" with numeric x, or remove steps.` })
+        return
+      }
+      const xs = s.data.map((d) => Number(d.x))
+      const back = xs.findIndex((x, i) => i > 0 && !(x >= xs[i - 1]!))
+      if (back > 0) {
+        ctx.addIssue({ code: "custom", path: ["series", si, "data", back, "x"], message: `series[${si}] joins its points as steps in order of x, and point ${back} (x ${s.data[back]!.x}) comes before point ${back - 1} (x ${s.data[back - 1]!.x}). Write the points in order of x.` })
+      }
+    })
+    // A marker stands between two categories of a line, so it needs a line
+    // and a category with one before it.
+    if (c.markers !== undefined) {
+      if (c.chart_type !== "line") {
+        ctx.addIssue({ code: "custom", path: ["markers"], message: `markers are lines drawn down a line chart between two categories, and a ${c.chart_type} chart has no place for them. Use chart_type "line", or remove markers.` })
+      } else {
+        const order: string[] = []
+        for (const s of c.series) for (const d of s.data) if (!order.includes(String(d.x))) order.push(String(d.x))
+        c.markers.forEach((m, mi) => {
+          const at = order.indexOf(m.before.trim())
+          if (at < 0) {
+            ctx.addIssue({ code: "custom", path: ["markers", mi, "before"], message: `markers[${mi}].before is "${m.before}", which is not one of the chart's categories (${order.map((x) => `"${x}"`).join(", ")}). Write a category as the series write it.` })
+          } else if (at === 0) {
+            ctx.addIssue({ code: "custom", path: ["markers", mi, "before"], message: `markers[${mi}].before is "${m.before}", the chart's first category, and a marker stands between a category and the one before it. Name a later category.` })
+          } else if (c.markers!.findIndex((other) => other.before.trim() === m.before.trim()) !== mi) {
+            ctx.addIssue({ code: "custom", path: ["markers", mi, "before"], message: `markers[${mi}] stands before "${m.before}" as an earlier marker does. Keep one marker a place.` })
+          }
+        })
+      }
     }
     // A range is a bar on its side drawn solid to its low end and dashed on
     // to its high end, its label naming both.

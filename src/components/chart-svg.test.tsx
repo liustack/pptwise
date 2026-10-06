@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import {
   SERIES_GUTTER_OVERHEAD,
+  countedLabelStep,
   splitSeriesGutters,
   renderArea,
   renderBar,
@@ -2345,5 +2346,60 @@ describe("value bands", () => {
     const { container } = svg(renderBar(quarters, PALETTE, 0, 0, W, 360, MUTED, TEXT, ACCENT, false, high, "#FFFFFF"))
     const band = container.querySelector("[data-chart-band] rect")!
     expect(Number(band.getAttribute("y"))).toBeGreaterThanOrEqual(0)
+  })
+})
+
+describe("a point the gaps leave alone", () => {
+  // B has no 2020, so its 2019 point stands between the axis and a gap.
+  const gapped: ChartSeries[] = [
+    { name: "A", data: [{ x: "2019", y: 1 }, { x: "2020", y: 2 }, { x: "2021", y: 3 }, { x: "2022", y: 4 }] },
+    { name: "B", data: [{ x: "2019", y: 4 }, { x: "2021", y: 2 }, { x: "2022", y: 1 }] },
+  ]
+
+  it("is drawn as a dot in its series' colour on a line chart, where its start value points", () => {
+    const { container } = svg(renderLine(gapped, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    const lone = Array.from(container.querySelectorAll("[data-lone-point]"))
+    expect(lone).toHaveLength(1)
+    expect(lone[0]!.getAttribute("fill")).toBe(PALETTE[1])
+    // B's line runs only from 2021 to 2022, and its 2019 value is the dot's.
+    const lines = Array.from(container.querySelectorAll("polyline")).map((p) => p.getAttribute("points")!.trim().split(/\s+/).length)
+    expect(lines.sort()).toEqual([2, 4])
+  })
+
+  it("is drawn as a dot on an area chart", () => {
+    const { container } = svg(renderArea(gapped, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    expect(container.querySelectorAll("[data-lone-point]")).toHaveLength(1)
+  })
+
+  it("leaves a series' last point to its endpoint dot", () => {
+    const tail: ChartSeries[] = [
+      { name: "A", data: [{ x: "1", y: 1 }, { x: "2", y: 2 }, { x: "3", y: 3 }] },
+      { name: "B", data: [{ x: "1", y: 2 }, { x: "3", y: 1 }] },
+    ]
+    const { container } = svg(renderLine(tail, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+    expect(container.querySelectorAll("[data-lone-point]")).toHaveLength(1)
+  })
+})
+
+describe("a point axis whose categories count", () => {
+  const years = Array.from({ length: 11 }, (_, i) => String(2015 + i))
+  const ratio: ChartSeries[] = [{ name: "比值", data: years.map((x, i) => ({ x, y: 2.5 + (i % 4) / 10 })) }]
+  const xLabels = (container: Element) => Array.from(container.querySelectorAll("[data-axis-tick='x']")).map((t) => t.textContent)
+
+  it("names every other year in a half-width chart rather than cutting each to a stub", () => {
+    const { container } = svg(renderLine(ratio, PALETTE, 0, 0, 520, H, MUTED, TEXT, ACCENT))
+    expect(xLabels(container)).toEqual(["2015", "2017", "2019", "2021", "2023", "2025"])
+    expect(container.querySelector("[data-axis-tick='x'][data-truncated]")).toBeNull()
+  })
+
+  it("names every year where they fit, and an area chart thins the same way", () => {
+    expect(xLabels(svg(renderLine(ratio, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT)).container)).toEqual(years)
+    expect(xLabels(svg(renderArea(ratio, PALETTE, 0, 0, 520, H, MUTED, TEXT, ACCENT)).container)).toHaveLength(6)
+  })
+
+  it("keeps every name of categories that do not count, cut and marked", () => {
+    expect(countedLabelStep(["华北地区", "华东地区", "华南地区", "西南地区"], 20)).toBe(1)
+    expect(countedLabelStep(["2015", "2016", "2018"], 20)).toBe(1)
+    expect(countedLabelStep(["2015", "2016", "2017"], 20)).toBeGreaterThan(1)
   })
 })

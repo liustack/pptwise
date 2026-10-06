@@ -456,3 +456,56 @@ describe("matrix in a half-page column", () => {
   })
 })
 
+
+describe("a matrix's names, title and empty cells", () => {
+  const map = {
+    type: "matrix" as const,
+    title: "已有证据覆盖了什么",
+    cols: 2,
+    columns: ["就业效应", "去向"],
+    rows: [{ label: "国际改革评估", icon: "globe" as const }, { label: "中国新政之后" }],
+    items: [{ title: "方向一致", tone: "info" as const }, { title: "失业上升", tone: "info" as const }, { title: "空白", empty: true, tone: "accent" as const }, { title: "本次检索未见", empty: true }],
+  }
+
+  it("is accepted with a name for every column and row, and refused with too few", async () => {
+    const { schema } = await import("../ir/components/matrix")
+    expect(schema.safeParse(map).success).toBe(true)
+    expect(schema.safeParse({ ...map, columns: ["就业效应"] }).success).toBe(false)
+    expect(schema.safeParse({ ...map, rows: [map.rows[0]] }).success).toBe(false)
+  })
+
+  it("names the columns over the grid and the rows at its left, and moves the cells clear of both", () => {
+    const { container } = svg(matrix.render(map, { x: 100, y: 100, w: 900 }, ctx))
+    const cols = Array.from(container.querySelectorAll("[data-matrix-column]"))
+    expect(cols.map((c) => c.textContent)).toEqual(["就业效应", "去向"])
+    const rows = Array.from(container.querySelectorAll("[data-matrix-row]"))
+    expect(rows.map((r) => r.getAttribute("data-matrix-row"))).toEqual(["国际改革评估", "中国新政之后"])
+    expect(rows[0]!.querySelector("[data-icon], g, path")).not.toBeNull()
+    const firstCell = container.querySelector("[data-audit-box]")!.getAttribute("data-audit-box")!.split(",").map(Number)
+    expect(firstCell[0]!).toBeGreaterThan(100 + 100)
+    expect(firstCell[1]!).toBeGreaterThan(Number(cols[0]!.getAttribute("y")))
+    expect(Number(cols[0]!.getAttribute("x"))).toBe(firstCell[0])
+  })
+
+  it("draws an empty cell as a dashed outline with its words in the middle, the accent's for the gap", () => {
+    const { container } = svg(matrix.render(map, { x: 100, y: 100, w: 900 }, ctx))
+    const empties = Array.from(container.querySelectorAll("[data-matrix-empty]"))
+    expect(empties).toHaveLength(2)
+    for (const e of empties) {
+      const rect = e.querySelector("rect")!
+      expect(rect.getAttribute("fill")).toBe("none")
+      expect(rect.getAttribute("stroke-dasharray")).toBe("6 4")
+      expect(e.querySelector("text")!.getAttribute("text-anchor")).toBe("middle")
+    }
+    expect(empties[0]!.querySelector("rect")!.getAttribute("stroke")).not.toBe(empties[1]!.querySelector("rect")!.getAttribute("stroke"))
+  })
+
+  it("sets its title over it, and measures the names and title in", async () => {
+    const { renderDef } = await import("./matrix")
+    const bare = { ...map, title: undefined, columns: undefined, rows: undefined }
+    expect(renderDef.measure(map, 900, ctx)).toBe(renderDef.measure({ ...map, title: undefined }, 900, ctx) + 32)
+    expect(matrix.measure({ ...map, title: undefined }, 900, ctx)).toBeGreaterThan(matrix.measure(bare, 900, ctx))
+    const { container } = svg(renderDef.render(map, { x: 0, y: 0, w: 900 }, ctx))
+    expect(container.querySelector("[data-block-title] > text")!.textContent).toBe("已有证据覆盖了什么")
+  })
+})

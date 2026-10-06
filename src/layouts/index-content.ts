@@ -36,6 +36,7 @@ import { PitchPhotoContent } from "./content-pitch-photo"
 import { MarqueeSheetContent } from "./content-marquee-sheet"
 import { MarqueeStatementContent } from "./content-marquee-statement"
 import { BinderSheetContent } from "./content-binder-sheet"
+import { ManuscriptSheetContent } from "./content-manuscript-sheet"
 import { SealFigureContent } from "./content-seal-figure"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { CrayonboxPointContent } from "./content-crayonbox-point"
@@ -72,6 +73,7 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // redesign adds pitch-sheet and pitch-photo: 32 pin-only, 41 in all. The
 // rally sample redesign adds marquee-sheet and marquee-statement: 34
 // pin-only, 43 in all. The proposal theme adds binder-sheet: 35 pin-only, 44
+// in all. The thesis sample redesign adds manuscript-sheet: 36 pin-only, 45
 // in all.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
@@ -118,4 +120,5 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "marquee-sheet": MarqueeSheetContent,
   "marquee-statement": MarqueeStatementContent,
   "binder-sheet": BinderSheetContent,
+  "manuscript-sheet": ManuscriptSheetContent,
 }

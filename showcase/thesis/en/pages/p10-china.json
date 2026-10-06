@@ -1,0 +1,57 @@
+{
+  "stage": "Literature",
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "icon": "door-open",
+          "label": "Retirement jumps",
+          "tag": {
+            "text": "Points · retirement rate"
+          },
+          "source": "Lei, Tan and Zhao 2010 · China Economic Quarterly",
+          "note": "2005 1% census sample, discontinuity with instruments",
+          "value": "Men at 60 +7 to 11　Women at 50 +8 to 13"
+        },
+        {
+          "icon": "baby",
+          "label": "Grandchild care",
+          "tag": {
+            "text": "Points · chance of caring"
+          },
+          "source": "Feng and Zhang 2018 · Feminist Economics",
+          "note": "CHARLS 2011 and 2013, identified by the statutory age",
+          "value": "Women +29　Men +21"
+        },
+        {
+          "icon": "heart-pulse",
+          "label": "Self-rated health",
+          "tag": {
+            "text": "Points · fair or poor"
+          },
+          "source": "Che and Li 2018 · China Economic Review",
+          "note": "CHNS, statutory age as the instrument",
+          "value": "White-collar −34"
+        },
+        {
+          "icon": "shopping-basket",
+          "label": "Spending",
+          "tag": {
+            "text": "Non-durables"
+          },
+          "source": "Li, Shi and Wu 2015 · AER Papers & Proceedings",
+          "note": "Urban Household Survey, discontinuity",
+          "value": "−20%"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "The four measure different outcomes in different units and are not ranked. Each identifies the jump at 50, 55 or 60 under the old rules¹"
+    }
+  ],
+  "footnote": "All four are peer-reviewed journal versions, figures checked against the papers",
+  "notes": "China's existing studies all identify the jump at the old thresholds of 50, 55 and 60. None of them measures the new policy. The four cards use different units, so I do not rank them. The first stage: Lei, Tan and Zhao, China Economic Quarterly 2010, use urban-registered people in the 2005 one-percent population sample. At 60, men's retirement rate jumps 7 to 11 points, at 50 women's jumps 8 to 13 points, and at 55 only 2 to 3 points. The jumps are modest, which says reaching the age is not the same as retiring, and that a fuzzy discontinuity design is the right frame. Care: Feng and Zhang, Feminist Economics 2018, use CHARLS and find that retiring raises the probability of caring for grandchildren by 29 points for women and 21 for men. Health: Che and Li, China Economic Review 2018, use CHNS and find white-collar retirees' chance of reporting fair or poor health falls 34 points. Spending: Li, Shi and Wu, AER Papers and Proceedings 2015, use the Urban Household Survey and find retirement cuts non-durable spending by 20 percent. Causal studies of labor supply itself are the rarer kind. Most look at health, spending and care."
+}

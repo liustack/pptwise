@@ -477,6 +477,23 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "proposal", kind: "process", composition: "checkpoints" },
   { theme: "proposal", kind: "list", composition: "quote" },
   { theme: "proposal", kind: "hierarchy", composition: "papers" },
+  // thesis's manuscript sheet sets the shapes as a thesis proposal sets its
+  // evidence, and draws the fifteen its own board added.
+  { theme: "thesis", kind: "photo", composition: "inquiry" },
+  { theme: "thesis", kind: "data", composition: "ladder" },
+  { theme: "thesis", kind: "fact", composition: "reach" },
+  { theme: "thesis", kind: "comparison", composition: "backdrop" },
+  { theme: "thesis", kind: "data", composition: "thresholds" },
+  { theme: "thesis", kind: "data", composition: "tabulation" },
+  { theme: "thesis", kind: "evidence", composition: "partition" },
+  { theme: "thesis", kind: "list", composition: "findings" },
+  { theme: "thesis", kind: "comparison", composition: "coverage" },
+  { theme: "thesis", kind: "list", composition: "propositions" },
+  { theme: "thesis", kind: "comparison", composition: "cadence" },
+  { theme: "thesis", kind: "hierarchy", composition: "designs" },
+  { theme: "thesis", kind: "evidence", composition: "hazards" },
+  { theme: "thesis", kind: "process", composition: "itinerary" },
+  { theme: "thesis", kind: "list", composition: "queries" },
 ]
 
 export function buildMatrix(

@@ -53,7 +53,7 @@ export function MarqueeEnding({ slide, index, ctx }: SvgTemplateProps) {
   }))
   const stepsFit =
     milestones.length <= STEPS.max &&
-    fitted.every((f) => f.date && f.title && !f.m.desc?.trim() && !f.m.tag && !f.m.source && !f.m.highlight && !f.m.tone && !f.m.lane && !f.m.icon) &&
+    fitted.every((f) => f.date && f.title && !f.m.desc?.trim() && !f.m.tag && !f.m.source && !f.m.highlight && !f.m.tone && !f.m.lane && !f.m.icon && !f.m.status) &&
     !steps?.lanes &&
     !steps?.periods &&
     !steps?.title

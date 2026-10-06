@@ -589,6 +589,17 @@ export const COMPONENT_BUILDERS: Record<string, (lex: Lexicon) => Component> = {
     verdict: lex.debate.verdict,
   }),
 
+  // A schematic with no figures: two of this world's groups parting after a
+  // turn in its own time axis. The words are the lexicon's, the shape the
+  // drawing's own.
+  sketch: (lex) => ({
+    type: "sketch",
+    kind: "difference_in_differences",
+    at: lex.labels[0]!,
+    x_title: lex.periodAxis,
+    groups: [lex.sets.labels[0]!, lex.sets.labels[1]!],
+  }),
+
   rings: (lex) => ({
     type: "rings",
     items: slice(lex.labels, 3).map((label, i) => ({ label, desc: lex.sentences[i]! })),

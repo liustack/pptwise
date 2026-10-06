@@ -25,6 +25,9 @@ import type { MotifId } from "./types"
  *   proposal-motif is proposal's binder folio: the organization and the
  *   notice at the left, the page number at the right, and the deck's `label`
  *   moved up to the top left as the proposal's running label.
+ *   rail-motif is thesis's book folio: the page number centred at the foot,
+ *   the organization and the notice at the left, and the deck's `label`
+ *   moved up to the top left as the thesis's running head.
  * - `"organization"`: the motif prints the organization somewhere of its
  *   own, and the shared row carries everything else. ink's colophon rail
  *   sets the organization in a vertical column down the right edge.
@@ -45,6 +48,7 @@ export const MOTIF_FOOTER_ROLES: Partial<Record<MotifId, MotifFooterRole>> = {
   "ember-motif": "row",
   "rally-motif": "row",
   "proposal-motif": "row",
+  "rail-motif": "row",
   "ink-motif": "organization",
   "poster-motif": "organization",
 }

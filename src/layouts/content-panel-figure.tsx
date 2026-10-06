@@ -68,8 +68,8 @@ function figureShape(slide: Slide): FigurePage | null {
   if (chart && (!barsChart(chart) || first.items.length > 2)) return null
   // A series tone has no place in the bars beside the figure.
   if (chart?.series.some((series) => series.tone !== undefined)) return null
-  // Nor a chart's tag, its reference line, a bar's note or a range.
-  if (chart?.tag || chart?.reference || chart?.series.some((s) => s.data.some((d) => d.note !== undefined || d.upper !== undefined))) return null
+  // Nor a chart's title, its tag, its reference line, a bar's note or a range.
+  if (chart?.title?.trim() || chart?.tag || chart?.reference || chart?.series.some((s) => s.data.some((d) => d.note !== undefined || d.upper !== undefined))) return null
   return { lead: first.items[0]!, kpis: first, chart, others: first.items.slice(1) }
 }
 

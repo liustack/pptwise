@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { IconNameSchema } from "./shared"
+import { BasisSchema, IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -37,6 +37,10 @@ const GanttItemSchema = z
       .min(1)
       .optional()
       .describe('How the bar\'s stretch reads in words, such as "第 16 至 18 个月" or "Months 16 to 18", printed with the row.'),
+    /** What the stretch rests on. See the describe below. */
+    basis: BasisSchema.optional().describe(
+      'What the stretch rests on, such as "pending" for work that happens only if a condition is met, or one of two paths still to be chosen. A stretch that is not settled is drawn as a dashed outline.',
+    ),
   })
   .strict()
   .refine((item) => item.end > item.start, {
@@ -65,6 +69,22 @@ export const schema = z
       .optional()
       .describe(
         'The stretch the axis runs over when it is longer than the bars, such as a whole 18-month plan whose bars cover parts of it: { "from": 0, "to": 18 }. Without it the axis runs from the first bar\'s start to the last bar\'s end. Every bar must lie inside it.',
+      ),
+    /** Single moments marked across the bars. See the describe below. */
+    milestones: z
+      .array(
+        z
+          .object({
+            at: z.number().describe("Where the moment stands, on the same axis as the bars' start and end, such as 8.5 for the middle of the ninth month."),
+            label: z.string().min(1).describe('What happens then, printed by its mark under the bars, such as "数据闸门 · 2027 年 6 月" or "Data gate, June 2027".'),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(2)
+      .optional()
+      .describe(
+        'Up to two moments marked across the bars, each a line down the rows with a diamond and its label under them, such as a check the plan turns on: [{ "at": 8.5, "label": "Data gate, June 2027" }]. Each lies inside the axis.',
       ),
     /** Spans of the axis marked behind the bars. See the describe below. */
     bands: z
@@ -118,6 +138,15 @@ export const schema = z
           })
         } else if (c.bands!.some((other, j) => j < k && band.from < other.to && other.from < band.to)) {
           ctx.addIssue({ code: "custom", path: ["bands", k], message: `gantt bands[${k}] overlaps another band. Keep the spans apart.` })
+        }
+      })
+    }
+    if (c.milestones) {
+      const lo = c.range ? c.range.from : Math.min(...c.items.map((item) => item.start))
+      const hi = c.range ? c.range.to : Math.max(...c.items.map((item) => item.end))
+      c.milestones.forEach((m, k) => {
+        if (m.at < lo || m.at > hi) {
+          ctx.addIssue({ code: "custom", path: ["milestones", k, "at"], message: `gantt milestones[${k}] stands at ${m.at}, outside the axis from ${lo} to ${hi}. Bring it inside${c.range ? " the range" : " the bars' stretch, or give the gantt a range"}.` })
         }
       })
     }

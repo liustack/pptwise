@@ -1,0 +1,142 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "technical"
+  },
+  "theme": "thesis",
+  "filename": "retirement-age-thesis-proposal-en",
+  "meta": {
+    "date": "October 2026"
+  },
+  "footer": {
+    "page_number": true,
+    "label": "Master's thesis proposal"
+  },
+  "course": {
+    "stages": [
+      {
+        "label": "Question"
+      },
+      {
+        "label": "Literature"
+      },
+      {
+        "label": "Design"
+      },
+      {
+        "label": "Plan"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "China's retirement-age rise\nand work at 50 to 60"
+    },
+    {
+      "id": "p02-question",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Does a later retirement age keep people at work?"
+    },
+    {
+      "id": "p03-policy",
+      "type": "content",
+      "kind": "data",
+      "heading": "Three groups retire 3 to 5 years later by 2039"
+    },
+    {
+      "id": "p04-dose",
+      "type": "content",
+      "kind": "fact",
+      "heading": "By end-2026, retirement moved back 5 or 8 months"
+    },
+    {
+      "id": "p05-why",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Contributors per retiree fell from 2.87 to 2.59"
+    },
+    {
+      "id": "p06-cliff",
+      "type": "content",
+      "kind": "data",
+      "heading": "2020 census: urban work falls off at legal ages"
+    },
+    {
+      "id": "p07-ch-lit",
+      "type": "chapter",
+      "heading": "Literature: the evidence abroad agrees",
+      "summary": "China still has no causal study after the reform"
+    },
+    {
+      "id": "p08-intl",
+      "type": "content",
+      "kind": "data",
+      "heading": "Six comparable studies: employment +6.3 to +21.2"
+    },
+    {
+      "id": "p09-france",
+      "type": "content",
+      "kind": "evidence",
+      "heading": "France: retirement −47.8 points, work only +20.9"
+    },
+    {
+      "id": "p10-china",
+      "type": "content",
+      "kind": "list",
+      "heading": "China's threshold studies all predate the reform"
+    },
+    {
+      "id": "p11-gap",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Literature map: post-reform China is still blank"
+    },
+    {
+      "id": "p12-hypotheses",
+      "type": "content",
+      "kind": "list",
+      "heading": "Hypotheses: more work, some jobless, less care"
+    },
+    {
+      "id": "p13-data",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Both public datasets stop before the reform"
+    },
+    {
+      "id": "p14-design",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "Identify in two layers: a baseline, then cohorts"
+    },
+    {
+      "id": "p15-threats",
+      "type": "content",
+      "kind": "evidence",
+      "heading": "Of five threats, the small dose is the hardest"
+    },
+    {
+      "id": "p16-plan",
+      "type": "content",
+      "kind": "process",
+      "heading": "Plan: a June 2027 data gate, a thesis either way"
+    },
+    {
+      "id": "p17-asks",
+      "type": "content",
+      "kind": "list",
+      "heading": "Four questions for the committee"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "heading": "Thank you. I welcome the committee's comments",
+      "kicker": "This proposal in three points"
+    }
+  ]
+}

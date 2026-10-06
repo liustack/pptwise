@@ -69,11 +69,13 @@ const ICON_NODE = { r: 13, size: 16 } as const
 function MilestoneNode({ m, cx, cy, baseR, ctx }: { m: Milestone; cx: number; cy: number; baseR: number; ctx: ComponentCtx }) {
   const ground = ctx.defaultBg ?? ctx.colors.bg
   const dot = milestoneDot(m, baseR, ctx.colors, ground)
+  // A milestone still to come is a ring of its dot's colour on the page.
+  if (!m.icon && m.status === "pending") return <circle data-milestone-pending="" cx={cx} cy={cy} r={dot.r - 1} fill={ground} stroke={graphicInk(dot.fill, ground)} strokeWidth={2} />
   if (!m.icon) return <circle cx={cx} cy={cy} r={dot.r} fill={dot.fill} />
   const ink = graphicInk(dot.fill, ground)
   return (
     <g data-milestone-icon={m.icon}>
-      <circle cx={cx} cy={cy} r={ICON_NODE.r} fill={ground} stroke={ink} strokeWidth={m.highlight ? 2 : 1.5} />
+      <circle cx={cx} cy={cy} r={ICON_NODE.r} fill={ground} stroke={ink} strokeWidth={m.highlight ? 2 : 1.5} strokeDasharray={m.status === "pending" ? "3 2" : undefined} />
       <Icon name={m.icon} x={cx - ICON_NODE.size / 2} y={cy - ICON_NODE.size / 2} size={ICON_NODE.size} color={ink} />
     </g>
   )

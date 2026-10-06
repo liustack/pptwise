@@ -86,6 +86,8 @@ const AXIS_BAND_H = 30
 const AXIS_LINE_GAP = 10
 /** A marked span (`bands`): the accent at this strength behind the bars, and its name in a line of its own under the axis. */
 const SPAN = { tint: 0.12, line: 28, size: 16 } as const
+/** A marked moment (`milestones`): a line down the rows, a diamond under them and its label beside it, in a line of its own under the axis. */
+const MOMENT = { line: 32, diamond: 9, gap: 8, size: 16, stroke: 1.6 } as const
 
 /** The axis: the author's `range` when there is one, otherwise the bars' own stretch. */
 function axisBounds(component: GanttComponent): { min: number; max: number } {
@@ -135,7 +137,7 @@ function rowNeed(item: GanttComponent["items"][number]): number {
 
 /** The band under the rows: the axis labels' line and the spans' names' line, when there are any. */
 function bottomBand(component: GanttComponent): number {
-  return ((component.axis_labels?.length ?? 0) > 0 ? AXIS_BAND_H : 0) + (component.bands?.length ? SPAN.line : 0)
+  return ((component.axis_labels?.length ?? 0) > 0 ? AXIS_BAND_H : 0) + (component.bands?.length ? SPAN.line : 0) + (component.milestones?.length ? MOMENT.line : 0)
 }
 
 function naturalHeight(component: GanttComponent): number {
@@ -181,6 +183,19 @@ export const gantt: SvgComponent<GanttComponent> = {
       const cx = Math.min(box.x + box.w - half, Math.max(box.x + half, (x0 + x1) / 2))
       return { x0, x1, name, cx, label: band.label.trim() }
     })
+
+    const momentTop = spanTop + (spans.length > 0 ? SPAN.line : 0)
+    const moments = (component.milestones ?? []).map((m) => {
+      const x = vx(m.at)
+      const room = box.x + box.w - (x + MOMENT.diamond + MOMENT.gap)
+      const leftRoom = x - MOMENT.diamond - MOMENT.gap - box.x
+      const name = fitSvgLine(m.label.trim(), { maxWidth: Math.max(room, leftRoom), fontSize: MOMENT.size, minFontSize: MOMENT.size, bold: true, fontFamily: ctx.fonts.body })
+      const nameW = measureTextUnits(name.text, { bold: true, fontFamily: ctx.fonts.body }) * name.fontSize
+      // The label stands at the diamond's right, or at its left when the right has no room.
+      const right = nameW <= room
+      return { x, name, right, label: m.label.trim() }
+    })
+    const momentInk = graphicInk(ctx.colors.accent, ground)
 
     return (
       <g>
@@ -272,14 +287,30 @@ export const gantt: SvgComponent<GanttComponent> = {
                   {line}
                 </text>
               ))}
-              <rect
-                x={barX}
-                y={barY}
-                width={barW}
-                height={barH}
-                rx={r}
-                fill={marked && !item.emphasis ? receded : ctx.colors.accent}
-              />
+              {item.basis ? (
+                // A stretch not settled: a dashed outline of the bar's colour.
+                <rect
+                  data-gantt-unsettled={item.basis}
+                  x={barX + 0.8}
+                  y={barY + 0.8}
+                  width={Math.max(1, barW - 1.6)}
+                  height={Math.max(1, barH - 1.6)}
+                  rx={r}
+                  fill="none"
+                  stroke={graphicInk(marked && !item.emphasis ? receded : ctx.colors.accent, ground)}
+                  strokeWidth={1.6}
+                  strokeDasharray="5 3"
+                />
+              ) : (
+                <rect
+                  x={barX}
+                  y={barY}
+                  width={barW}
+                  height={barH}
+                  rx={r}
+                  fill={marked && !item.emphasis ? receded : ctx.colors.accent}
+                />
+              )}
             </g>
           )
         })}
@@ -298,7 +329,10 @@ export const gantt: SvgComponent<GanttComponent> = {
               const frac = axisLabels.length > 1 ? i / (axisLabels.length - 1) : 0.5
               const cx = plotX + frac * plotW
               const anchor = i === 0 ? "start" : i === axisLabels.length - 1 ? "end" : "middle"
-              const maxWidth = plotW / Math.max(axisLabels.length - 1, 1)
+              // A blank label leaves its tick unnamed and lends its room to the named label beside it.
+              let span = 1
+              while (i + span < axisLabels.length - 1 && !axisLabels[i + span]!.trim()) span++
+              const maxWidth = (plotW / Math.max(axisLabels.length - 1, 1)) * span
               const fitted = fitSvgLine(text, {
                 maxWidth,
                 fontSize: AXIS_LABEL_FONT,
@@ -322,6 +356,30 @@ export const gantt: SvgComponent<GanttComponent> = {
             })}
           </>
         )}
+        {moments.map((moment, k) => {
+          const cy = momentTop + MOMENT.line / 2
+          const d = MOMENT.diamond
+          return (
+            <g key={`moment-${k}`} data-gantt-moment={moment.label}>
+              {/* The line runs down the rows and stops over the axis, so it never crosses a label. */}
+              <line x1={moment.x} y1={box.y} x2={moment.x} y2={box.y + rowsH} stroke={momentInk} strokeWidth={MOMENT.stroke} />
+              <path d={`M ${moment.x} ${cy - d} L ${moment.x + d} ${cy} L ${moment.x} ${cy + d} L ${moment.x - d} ${cy} Z`} fill={momentInk} />
+              <text
+                data-truncated={moment.name.truncated ? "1" : undefined}
+                x={moment.right ? moment.x + d + MOMENT.gap : moment.x - d - MOMENT.gap}
+                y={cy + Math.round(moment.name.fontSize * 0.35)}
+                textAnchor={moment.right ? "start" : "end"}
+                fontSize={moment.name.fontSize}
+                fontWeight="700"
+                fill={ctx.colors.text}
+                fontFamily={ctx.fonts.body}
+                dominantBaseline="alphabetic"
+              >
+                {moment.name.text}
+              </text>
+            </g>
+          )
+        })}
       </g>
     )
   },

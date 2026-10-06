@@ -4,6 +4,9 @@ import { axisTitlePairHeight, renderAxisTitlePair } from "./axis-titles"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { boxTooShort, formTextClipMarker, layoutAtSize } from "./legibility"
 import { mixHex } from "./color-mix"
+import { withBlockTitle } from "./block-title"
+import { Icon } from "../render/icons"
+import { accessibleInk, graphicInk } from "../render/ink"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type MatrixComponent = Extract<Component, { type: "matrix" }>
@@ -32,6 +35,22 @@ const PAD_BOTTOM = 16
  * every cell in the grid grows with the tallest one so the rows stay even.
  */
 const TITLE_MAX_LINES = 4
+
+/**
+ * The names an author gives the columns and rows (`columns`, `rows`): the
+ * columns' over the grid in a band of their own, the rows' in a column at
+ * the left, each row's name centred on its row with its icon before it.
+ */
+const COL_HEAD = { size: 16, band: 32, baseline: 20 } as const
+const ROW_HEAD = { size: 16, lineHeight: 22, maxLines: 2, maxW: 220, share: 0.24, gap: 16, icon: { size: 20, gap: 8 } } as const
+
+function rowHeadW(component: MatrixComponent, w: number): number {
+  return component.rows ? Math.min(ROW_HEAD.maxW, Math.round(w * ROW_HEAD.share)) + ROW_HEAD.gap : 0
+}
+
+function colHeadH(component: MatrixComponent): number {
+  return component.columns ? COL_HEAD.band : 0
+}
 
 function toneFill(tone: MatrixItem["tone"], ctx: ComponentCtx): string {
   switch (tone) {
@@ -89,8 +108,9 @@ function cellLayout(item: MatrixItem, cardW: number, fontFamily?: string, maxLin
 function gridGeom(component: MatrixComponent, w: number, fontFamily?: string, maxLines = TITLE_MAX_LINES) {
   const cols = component.cols
   const rows = Math.ceil(component.items.length / cols)
-  const titleH = axisTitlePairHeight(component.x_title, component.y_title)
-  const cardW = (w - CARD_GAP * (cols - 1)) / cols
+  // The column heads sit over the grid, so they count with the titles under it.
+  const titleH = axisTitlePairHeight(component.x_title, component.y_title) + colHeadH(component)
+  const cardW = (w - rowHeadW(component, w) - CARD_GAP * (cols - 1)) / cols
   const contentH = Math.max(
     ...component.items.map((it) => cellLayout(it, cardW, fontFamily, maxLines).contentH),
     TITLE_LH,
@@ -131,7 +151,10 @@ export const matrix: SvgComponent<MatrixComponent> = {
         </g>
       )
     }
-    const gridTop = box.y
+    const headH = colHeadH(component)
+    const gridTop = box.y + headH
+    const gridLeft = box.x + rowHeadW(component, box.w)
+    const ground = ctx.defaultBg ?? ctx.colors.bg
     // 按 box.h 把每行卡等分拉伸（内容顶对齐），铺满可用高。The title pair
     // now sits *below* the grid. Two height semantics meet here, and the
     // pair must come off exactly once — off whichever one actually includes
@@ -147,15 +170,93 @@ export const matrix: SvgComponent<MatrixComponent> = {
     const actualGridH = rows * rowH + (rows - 1) * CARD_GAP
     const titleY = gridTop + actualGridH
     const r = ctx.shape?.radius ?? CARD_RADIUS
+    const headW = rowHeadW(component, box.w) - (component.rows ? ROW_HEAD.gap : 0)
     return (
       <g>
+        {(component.columns ?? []).map((name, col) => {
+          const fit = fitSvgLine(name, { maxWidth: cardW, fontSize: COL_HEAD.size, minFontSize: COL_HEAD.size, bold: true, fontFamily: ctx.fonts.body })
+          return (
+            <text
+              key={`col-${col}`}
+              data-matrix-column={name}
+              data-truncated={fit.truncated ? "1" : undefined}
+              x={gridLeft + col * (cardW + CARD_GAP)}
+              y={box.y + COL_HEAD.baseline}
+              fontSize={fit.fontSize}
+              fontWeight="700"
+              fill={accessibleInk(ctx.colors.muted, ground, fit.fontSize)}
+              fontFamily={ctx.fonts.body}
+              dominantBaseline="alphabetic"
+            >
+              {fit.text}
+            </text>
+          )
+        })}
+        {(component.rows ?? []).map((head, row) => {
+          const iconRoom = head.icon ? ROW_HEAD.icon.size + ROW_HEAD.icon.gap : 0
+          const fit = layoutAtSize(head.label, { maxWidth: headW - iconRoom, fontSize: ROW_HEAD.size, maxLines: ROW_HEAD.maxLines, lineHeightRatio: ROW_HEAD.lineHeight / ROW_HEAD.size, bold: true, fontFamily: ctx.fonts.heading })
+          const cy = gridTop + row * (rowH + CARD_GAP) + rowH / 2
+          const top = cy - (fit.lines.length * ROW_HEAD.lineHeight) / 2
+          return (
+            <g key={`row-${row}`} data-matrix-row={head.label}>
+              {head.icon ? <Icon name={head.icon} x={box.x} y={cy - ROW_HEAD.icon.size / 2} size={ROW_HEAD.icon.size} color={graphicInk(ctx.colors.primary, ground)} /> : null}
+              {fit.lines.map((line, li) => (
+                <text
+                  key={li}
+                  data-truncated={formTextClipMarker(fit, li)}
+                  x={box.x + iconRoom}
+                  y={Math.round(top + li * ROW_HEAD.lineHeight + ROW_HEAD.lineHeight / 2 + fit.fontSize * 0.35)}
+                  fontSize={fit.fontSize}
+                  fontWeight="700"
+                  fill={ctx.colors.text}
+                  fontFamily={ctx.fonts.heading}
+                  dominantBaseline="alphabetic"
+                >
+                  {line}
+                </text>
+              ))}
+            </g>
+          )
+        })}
         {component.items.map((item, i) => {
           const col = i % cols
           const row = Math.floor(i / cols)
-          const x = box.x + col * (cardW + CARD_GAP)
+          const x = gridLeft + col * (cardW + CARD_GAP)
           const y = gridTop + row * (rowH + CARD_GAP)
           const cell = cellLayout(item, cardW, ctx.fonts.heading, maxLines)
           const titleBaseline = y + PAD_TOP + TITLE_SIZE
+          if (item.empty) {
+            // Nothing found: a dashed outline on the page, its words in the middle.
+            const stroke = graphicInk(item.tone === "accent" ? ctx.colors.accent : ctx.colors.muted, ground)
+            const words = item.tone === "accent" ? accessibleInk(ctx.colors.accent, ground, cell.title.fontSize) : accessibleInk(ctx.colors.muted, ground, cell.title.fontSize)
+            const top = y + rowH / 2 - (cell.title.lines.length * TITLE_LH) / 2
+            return (
+              <g key={i} data-audit-box={`${x},${y},${cardW}`} data-matrix-empty="">
+                <rect data-plot-mark="1" x={x + 0.7} y={y + 0.7} width={cardW - 1.4} height={rowH - 1.4} rx={r} fill="none" stroke={stroke} strokeWidth={1.4} strokeDasharray="6 4" />
+                {cell.title.lines.map((line, li) => (
+                  <text
+                    key={`title-${li}`}
+                    data-truncated={formTextClipMarker(cell.title, li)}
+                    x={x + cardW / 2}
+                    y={Math.round(top + li * TITLE_LH + TITLE_LH / 2 + cell.title.fontSize * 0.35)}
+                    textAnchor="middle"
+                    fontSize={cell.title.fontSize}
+                    fontWeight="700"
+                    fill={words}
+                    fontFamily={ctx.fonts.heading}
+                    dominantBaseline="alphabetic"
+                  >
+                    {line}
+                  </text>
+                ))}
+                {cell.tag ? (
+                  <text data-truncated={cell.tag.truncated ? "1" : undefined} x={x + cardW / 2} y={Math.round(top + cell.title.lines.length * TITLE_LH + GAP_TITLE_TAG + TAG_SIZE)} textAnchor="middle" fontSize={cell.tag.fontSize} fill={accessibleInk(ctx.colors.muted, ground, cell.tag.fontSize)} fontFamily={ctx.fonts.body} dominantBaseline="alphabetic">
+                    {cell.tag.text}
+                  </text>
+                ) : null}
+              </g>
+            )
+          }
           return (
             <g key={i} data-audit-box={`${x},${y},${cardW}`}>
               <rect
@@ -215,4 +316,5 @@ export const matrix: SvgComponent<MatrixComponent> = {
   },
 }
 
-export const renderDef: RenderDef<MatrixComponent> = { type: "matrix", measure: matrix.measure, render: matrix.render }
+// A title, when the grid carries one, is set over it as on a table.
+export const renderDef: RenderDef<MatrixComponent> = withBlockTitle({ type: "matrix", measure: matrix.measure, render: matrix.render })

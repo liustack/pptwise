@@ -144,6 +144,14 @@ export interface ComponentCtx {
    * Omitted equals `"tint"`.
    */
   emphasis?: EmphasisTreatment
+  /**
+   * The number a face that numbers its figures and tables gives a block on
+   * this page (「图 3」, "Table 1"), keyed by the block. A titled block and a
+   * captioned image print it, in the primary colour and bold, before their
+   * title or caption. Set by the face for the page it draws; undefined
+   * everywhere else, so nothing is numbered.
+   */
+  exhibitLabels?: ReadonlyMap<Component, string>
 }
 
 /**

@@ -51,6 +51,19 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * `rail-motif`，id 不改。章节金短线与幽灵章号归章节版式，不进 motif。
  *
  * **菜单分派（S1-B）**：论文腔十一词全上：photo 用带角注的 image-annotate（学术里的图就是配注的图版），evidence 是断言加展品的本行，虽然旧 sparse 表没给 one-evidence，本轮按词表补齐。
+ *
+ * **2026-10 开题答辩手稿定稿**（设计源 `design/rounds/2026-10-06-thesis/`，规则见
+ * `docs/design-thesis.md`）：每一页是一份论文的一页。书眉左边是 deck 的标签
+ * （`footer.label`，motif 画），右边是祖母绿的分节号（页面的 `stage`，「§2
+ * 文献与缺口」），下面一条学者金细线；标题 30px 衬线粗体，底部对齐；图和表像
+ * 论文一样按 deck 顺序编号（「图 3」「表 1」），来源写成页脚注，正文里用祖母绿
+ * 上标数字指过去；页码居中在底部。封面 `manuscript-cover`（题名页加右侧照片），
+ * 章节页 `manuscript-chapter`（照片上压象牙纸渐变、120px 分节号、全片目录），
+ * 结尾 `manuscript-ending`（作者写的小标题、三条要点、46px 结束语）。statement
+ * 和 quote 照旧用 statement 与 pull-quote，其余内容页全走 `manuscript-sheet`，
+ * 正文交给 manuscript 设定里的构图。色值不动。标题字体从 Georgia 换成 Times New
+ * Roman 配宋体：定稿是宋体排的，数字是等高数字，Georgia 的旧式数字在「5 个月」
+ * 「23.0%」这类大数字上会掉到基线下面。
  */
 export const ACADEMIC_TOKENS: StyleTokens = {
   id: "thesis",
@@ -70,7 +83,9 @@ export const ACADEMIC_TOKENS: StyleTokens = {
     chartPalette: ["#0E6245", "#A8861D", "#3F5B8C", "#8A8471"], // 祖母绿/学者金/靛青/卵石灰
   },
   fonts: {
-    heading: ["Sectra", "Georgia", "Source Han Serif SC", "serif"],
+    // Times New Roman for the Latin and its lining figures, SimSun for the
+    // Chinese, Songti where the preview has no SimSun: the board's Songti.
+    heading: ["Times New Roman", "SimSun", "宋体", "Songti SC", "STSong", "serif"],
     body: ["Inter", "PingFang SC", "system-ui"],
   },
   shape: {
@@ -100,22 +115,22 @@ export const ACADEMIC_THEME = {
   },
   style: ACADEMIC_TOKENS,
   menu: {
-    cover: { face: "thesis-plate-cover" },
-    chapter: { face: "folio-ghost-chapter" },
+    cover: { face: "manuscript-cover" },
+    chapter: { face: "manuscript-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "split-band" },
-      photo: { face: "image-annotate" },
+      points: { face: "manuscript-sheet" },
+      list: { face: "manuscript-sheet" },
+      comparison: { face: "manuscript-sheet" },
+      process: { face: "manuscript-sheet" },
+      data: { face: "manuscript-sheet" },
+      photo: { face: "manuscript-sheet" },
       statement: { face: "statement" },
       quote: { face: "pull-quote" },
-      fact: { face: "stat-hero" },
-      evidence: { face: "one-evidence" },
-      hierarchy: { face: "asymmetric-triptych" },
+      fact: { face: "manuscript-sheet" },
+      evidence: { face: "manuscript-sheet" },
+      hierarchy: { face: "manuscript-sheet" },
     },
-    ending: { face: "defense-close-ending" },
+    ending: { face: "manuscript-ending" },
   },
   motif: { id: "rail-motif" },
 } satisfies BuiltinThemeDeclaration;

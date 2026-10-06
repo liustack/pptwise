@@ -5,13 +5,13 @@ import { accessibleInk } from "../render/ink"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 /**
- * A block's own title: one line naming a table, an options comparison or a
- * timeline ("自由现金流", "2026 年外部融资和长期承诺"), set over it at 16px
- * bold in the text ink, the block drawn in the rest of its box. A face that
- * sets the block in a panel prints the title in the panel's title bar
- * instead (`layouts/compositions/panel.tsx`), and a composition with no
- * place for a title declines the block, so the ordinary renderer draws it
- * here.
+ * A block's own title: one line naming a table, an options comparison, a
+ * timeline, a set of cards, a chart or a grid ("自由现金流", "2026 年外部融资和长期
+ * 承诺"), set over it at 16px bold in the text ink, the block drawn in the
+ * rest of its box. A face that sets the block in a panel prints the title
+ * in the panel's title bar instead (`layouts/compositions/panel.tsx`), and a
+ * composition with no place for a title declines the block, so the ordinary
+ * renderer draws it here.
  *
  * Wraps a component's `measure` and `render`: a block with no title is
  * measured and drawn exactly as before.
@@ -20,7 +20,7 @@ import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./type
 /** The title's line box: a 16px line on a 20px baseline, 12px of air under it. */
 export const BLOCK_TITLE = { size: 16, baseline: 20, band: 32 } as const
 
-type Titled = Extract<Component, { type: "data_table" | "comparison" | "timeline" | "icon_cards" }>
+type Titled = Extract<Component, { type: "data_table" | "comparison" | "timeline" | "icon_cards" | "chart" | "matrix" }>
 
 function titleOf(component: Titled): string | undefined {
   return component.title?.trim() || undefined
@@ -40,7 +40,7 @@ export function withBlockTitle<T extends Titled>(def: RenderDef<T>): RenderDef<T
     }
     return (
       <g data-block-title="">
-        <BlockTitle title={title} box={box} ctx={ctx} />
+        <BlockTitle title={title} label={ctx.exhibitLabels?.get(component)} box={box} ctx={ctx} />
         {def.render(component, inner, ctx)}
       </g>
     )
@@ -51,8 +51,14 @@ export function withBlockTitle<T extends Titled>(def: RenderDef<T>): RenderDef<T
   return { type: def.type, measure, render, ...(minHeight ? { minHeight } : {}) }
 }
 
-function BlockTitle({ title, box, ctx }: { title: string; box: ComponentBox; ctx: ComponentCtx }): React.ReactElement {
-  const fit = fitSvgLine(title, {
+/**
+ * The title's line. A block the face numbers (`ctx.exhibitLabels`) prints its
+ * number first, in the primary colour, a full-width space before the title.
+ */
+function BlockTitle({ title, label, box, ctx }: { title: string; label?: string; box: ComponentBox; ctx: ComponentCtx }): React.ReactElement {
+  const ground = ctx.defaultBg ?? ctx.colors.bg
+  const lead = label ? `${label}\u3000` : ""
+  const fit = fitSvgLine(`${lead}${title}`, {
     maxWidth: box.w,
     fontSize: BLOCK_TITLE.size,
     minFontSize: BLOCK_TITLE.size,
@@ -67,10 +73,19 @@ function BlockTitle({ title, box, ctx }: { title: string; box: ComponentBox; ctx
       fontFamily={ctx.fonts.body}
       fontSize={fit.fontSize}
       fontWeight="bold"
-      fill={accessibleInk(ctx.colors.text, ctx.defaultBg ?? ctx.colors.bg, fit.fontSize)}
+      fill={accessibleInk(ctx.colors.text, ground, fit.fontSize)}
       dominantBaseline="alphabetic"
     >
-      {fit.text}
+      {lead && fit.text.startsWith(lead) ? (
+        <>
+          <tspan data-exhibit-label="" fill={accessibleInk(ctx.colors.primary, ground, fit.fontSize)}>
+            {label}
+          </tspan>
+          {fit.text.slice(label!.length)}
+        </>
+      ) : (
+        fit.text
+      )}
     </text>
   )
 }

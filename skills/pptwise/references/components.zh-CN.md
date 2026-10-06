@@ -98,6 +98,7 @@ pptwise schema --component <type>
 | `concept_equation` | `points`、`statement` |
 | `segmented_wheel` | `hierarchy`、`list` |
 | `pros_cons` | `comparison` |
+| `sketch` | `evidence`, `hierarchy` |
 
 ## 相近组件
 
@@ -118,6 +119,7 @@ pptwise schema --component <type>
 - 两三个要素加起来得到一个结果、相加本身就是论证时用 `concept_equation`，条目之间不产生结果时用 `icon_cards`。
 - 四到八块对等的部分合起来正好是一个整体时用 `segmented_wheel`，末段回到首段用 `cycle`，各块占比不等用 `chart` 内的 `pie`。
 - 两栏说的是同一个方案的正反两面、最后要落一句结论时用 `pros_cons`，两栏是两个不同对象时用 `comparison`。
+- 还没有数字、要先说明研究怎么把效应认出来（门槛处的跳跃，或处理组在某件事之后离开对照组）时用 `sketch`。有真实数字可画时用 `chart`。
 - 没有共享数值轴的工作线用 `roadmap`，在同一日期轴上比较条形用 `gantt`。
 - 四类外部宏观因素用 `pest`，同时评估内外部战略条件用 `swot`。
 - 带宽承载数量并发生分支与汇合时用 `sankey`：宽度即论据，缺口显示未核算的流量。分支表达决策而非数量时用 `flowchart`。

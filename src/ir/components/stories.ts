@@ -40,6 +40,7 @@ import * as logoWall from "./logo-wall"
 import * as productCards from "./product-cards"
 import * as quoteWall from "./quote-wall"
 import * as prosCons from "./pros-cons"
+import * as sketch from "./sketch"
 import * as rings from "./rings"
 import * as roadmap from "./roadmap"
 import * as rowCards from "./row-cards"
@@ -121,6 +122,7 @@ const COMPONENT_STORY_MODULES: Readonly<Record<string, ComponentStoryModule>> = 
   product_cards: productCards,
   quote_wall: quoteWall,
   pros_cons: prosCons,
+  sketch,
   rings,
   roadmap,
   row_cards: rowCards,

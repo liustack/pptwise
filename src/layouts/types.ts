@@ -100,6 +100,8 @@ export type CoverLayoutId =
   | "marquee-cover"
   // proposal theme (2026-10-06): a white proposal page beside the client's photograph.
   | "binder-cover"
+  // thesis sample redesign (2026-10-06): a thesis title page beside a photograph.
+  | "manuscript-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -149,6 +151,8 @@ export type ChapterLayoutId =
   | "marquee-chapter"
   // proposal theme (2026-10-06): a part of the proposal over its photograph, its tab lit.
   | "binder-chapter"
+  // thesis sample redesign (2026-10-06): a section of a thesis with the talk's contents.
+  | "manuscript-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -200,6 +204,8 @@ export type EndingLayoutId =
   | "marquee-ending"
   // proposal theme (2026-10-06): what the client is asked to decide, a box per choice, and its button.
   | "binder-ending"
+  // thesis sample redesign (2026-10-06): the points a thesis talk leaves and its closing line.
+  | "manuscript-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -269,6 +275,8 @@ export type ContentLayoutId =
   | "marquee-statement"
   // proposal theme: the board's ordinary content page. Theme-locked.
   | "binder-sheet"
+  // thesis sample redesign: the board's ordinary content page. Theme-locked.
+  | "manuscript-sheet"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

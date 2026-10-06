@@ -58,6 +58,11 @@ export const schema = z
           ),
           /** What kind of turn it is. See `ToneSchema`. */
           tone: ToneSchema.optional(),
+          /** A milestone that has not come to pass. See the describe below. */
+          status: z
+            .enum(["pending"])
+            .optional()
+            .describe('"pending" for a milestone that has not come to pass, such as a survey round carried out whose data is not out yet: its node is drawn hollow.'),
           /** Where the milestone stands. See the describe below. */
           tag: TagSchema.optional().describe(
             'A few words that say where the milestone stands, printed as a small tag with it, such as "已定", "谈判中" or "Proposal". Give it a basis to say how firm it is: "proposal" for a rule not yet law.',

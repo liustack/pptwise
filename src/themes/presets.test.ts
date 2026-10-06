@@ -56,13 +56,13 @@ describe("the factory preset shelf", () => {
   })
 
   it("pushes the theme-wide motif down into every entry whose face can take one", () => {
-    const copy = copyThemePreset("thesis", "fork-motif")
+    const copy = copyThemePreset("lecture", "fork-motif")
     expect(copy.motif).toBeUndefined()
-    expect(copy.menu.cover.decor).toEqual({ kind: "motif", id: "rail-motif" })
-    expect(copy.menu.content.points?.decor).toEqual({ kind: "motif", id: "rail-motif" })
+    expect(copy.menu.cover.decor).toEqual({ kind: "motif", id: "lecture-motif" })
+    expect(copy.menu.content.points?.decor).toEqual({ kind: "motif", id: "lecture-motif" })
     // A sparse climax face is frameless (branding: "none") but the theme
     // motif still paints on it, so the pushdown writes the anchor here too.
-    expect(copy.menu.content.statement?.decor).toEqual({ kind: "motif", id: "rail-motif" })
+    expect(copy.menu.content.statement?.decor).toEqual({ kind: "motif", id: "lecture-motif" })
   })
 
   it("leaves a motif-less preset's entries undecorated", () => {

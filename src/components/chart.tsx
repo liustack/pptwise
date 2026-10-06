@@ -33,6 +33,7 @@ import {
   seriesGutterLabelsFit,
 } from "./chart-svg";
 import { buildChartModel } from "./chart-model";
+import { withBlockTitle } from "./block-title";
 import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag";
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types";
 import {
@@ -972,9 +973,10 @@ export const chart: SvgComponent<ChartComponent> = {
   },
 };
 
-export const renderDef: RenderDef<ChartComponent> = {
+// A title, when the chart carries one, is set over it as on a table.
+export const renderDef: RenderDef<ChartComponent> = withBlockTitle({
   type: "chart",
   measure: chart.measure,
   render: chart.render,
   minHeight: chartMinHeight,
-};
+});

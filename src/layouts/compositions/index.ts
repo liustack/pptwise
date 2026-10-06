@@ -123,6 +123,21 @@ import { remediesComposition } from "./remedies"
 import { checkpointsComposition } from "./checkpoints"
 import { quoteComposition } from "./quote"
 import { papersComposition } from "./papers"
+import { inquiryComposition } from "./inquiry"
+import { ladderComposition } from "./ladder"
+import { reachComposition } from "./reach"
+import { backdropComposition } from "./backdrop"
+import { thresholdsComposition } from "./thresholds"
+import { tabulationComposition } from "./tabulation"
+import { partitionComposition } from "./partition"
+import { findingsComposition } from "./findings"
+import { coverageComposition } from "./coverage"
+import { propositionsComposition } from "./propositions"
+import { cadenceComposition } from "./cadence"
+import { designsComposition } from "./designs"
+import { hazardsComposition } from "./hazards"
+import { itineraryComposition } from "./itinerary"
+import { queriesComposition } from "./queries"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -259,6 +274,21 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   checkpoints: checkpointsComposition,
   quote: quoteComposition,
   papers: papersComposition,
+  inquiry: inquiryComposition,
+  ladder: ladderComposition,
+  reach: reachComposition,
+  backdrop: backdropComposition,
+  thresholds: thresholdsComposition,
+  tabulation: tabulationComposition,
+  partition: partitionComposition,
+  findings: findingsComposition,
+  coverage: coverageComposition,
+  propositions: propositionsComposition,
+  cadence: cadenceComposition,
+  designs: designsComposition,
+  hazards: hazardsComposition,
+  itinerary: itineraryComposition,
+  queries: queriesComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -314,7 +344,7 @@ const PAGE_TAG_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>
  * ordinary timeline draws them all: the spans as a row of named spans under
  * its milestones, a source and a tag under a milestone's words.
  */
-const TIMELINE_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "outlook", "checkpoints"])
+const TIMELINE_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "outlook", "checkpoints", "cadence"])
 
 function asksForTimelineDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some(
@@ -330,7 +360,7 @@ function asksForTimelineDetail(components: readonly CompositionProps["components
  * line or note leaves them off. The ordinary callout sets the title bold over
  * its text and the tag under it.
  */
-const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods", "funnel", "crest", "branch", "regions", "levers", "cycles", "checkpoints"])
+const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods", "funnel", "crest", "branch", "regions", "levers", "cycles", "checkpoints", "cadence"])
 
 function asksForCalloutDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "callout" && (component.title !== undefined || component.tag !== undefined))
@@ -366,7 +396,7 @@ function asksForChartReference(components: readonly CompositionProps["components
  * offered to these alone; the ordinary chart prints every note after its
  * value.
  */
-const CHART_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["magnitude", "segments", "survey", "levers"])
+const CHART_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["magnitude", "segments", "survey", "levers", "backdrop", "partition"])
 
 function asksForChartNote(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.series.some((s) => s.data.some((d) => d.note !== undefined)))
@@ -428,7 +458,7 @@ function asksForRoadmapPhases(components: readonly CompositionProps["components"
  * is offered to these alone; the ordinary table outlines the marked column
  * and sets the icon before each of its cells.
  */
-const TABLE_COLUMN_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["rivals", "loop", "remedies"])
+const TABLE_COLUMN_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["rivals", "loop", "remedies", "tabulation"])
 
 function asksForTableColumnMarks(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "data_table" && component.columns.some((col) => col.emphasis !== undefined || col.icon !== undefined))
@@ -441,7 +471,7 @@ function asksForTableColumnMarks(components: readonly CompositionProps["componen
  * alone; the ordinary gantt runs its axis over the range, sets the icon
  * before the row's label and the period under it.
  */
-const GANTT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["bets", "timetable"])
+const GANTT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["bets", "timetable", "itinerary"])
 
 function asksForGanttDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "gantt" && (component.range !== undefined || component.items.some((item) => item.icon !== undefined || item.period !== undefined)))
@@ -470,6 +500,64 @@ const ICON_CARD_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<Compos
 
 function asksForIconCardDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "icon_cards" && (Boolean(component.title?.trim()) || component.items.some((item) => item.tone !== undefined)))
+}
+
+/**
+ * The compositions that draw a chart's title (`title`), the name set over
+ * it. A page whose chart carries one is offered to these alone; the ordinary
+ * chart sets the title over it as a table does.
+ */
+const CHART_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["ladder", "backdrop", "thresholds", "partition"])
+
+function asksForChartTitle(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && Boolean(component.title?.trim()))
+}
+
+/**
+ * The compositions that draw a line chart's markers (`markers`), the dashed
+ * lines where a category begins. A page whose chart carries one is offered
+ * to these alone; the ordinary line draws each marker with its label over
+ * the plot.
+ */
+const CHART_MARKER_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["thresholds"])
+
+function asksForChartMarkers(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.markers !== undefined)
+}
+
+/**
+ * The compositions that draw a scatter series joined as steps
+ * (`series[].steps`). A page whose chart carries one is offered to these
+ * alone; the ordinary scatter draws the staircase.
+ */
+const CHART_STEP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["ladder"])
+
+function asksForChartSteps(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.series.some((s) => s.steps === true))
+}
+
+/**
+ * The compositions that draw a milestone still to come (`status`). A page
+ * whose timeline carries one is offered to these alone; the ordinary
+ * timeline draws its node hollow.
+ */
+const MILESTONE_STATUS_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["cadence"])
+
+function asksForMilestoneStatus(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "timeline" && component.milestones.some((m) => m.status !== undefined))
+}
+
+/**
+ * The compositions that draw what a gantt marks beyond its stretches: a
+ * single moment across the bars (`milestones`) and a stretch not settled
+ * (`items[].basis`). A page whose gantt carries either is offered to these
+ * alone; the ordinary gantt draws a moment as a line with a diamond under
+ * the bars and an unsettled stretch dashed.
+ */
+const GANTT_MOMENT_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["itinerary"])
+
+function asksForGanttMoments(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "gantt" && (component.milestones !== undefined || component.items.some((item) => item.basis !== undefined)))
 }
 
 /**
@@ -511,6 +599,11 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const seasoned = asksForGanttBands(props.components)
   const columned = asksForTableColumnMarks(props.components)
   const carded = asksForIconCardDetail(props.components)
+  const captioned = asksForChartTitle(props.components)
+  const thresholded = asksForChartMarkers(props.components)
+  const stepped = asksForChartSteps(props.components)
+  const awaited = asksForMilestoneStatus(props.components)
+  const momentous = asksForGanttMoments(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -526,6 +619,11 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (seasoned && !GANTT_BAND_COMPOSITIONS.has(id)) continue
     if (columned && !TABLE_COLUMN_COMPOSITIONS.has(id)) continue
     if (carded && !ICON_CARD_DETAIL_COMPOSITIONS.has(id)) continue
+    if (captioned && !CHART_TITLE_COMPOSITIONS.has(id)) continue
+    if (thresholded && !CHART_MARKER_COMPOSITIONS.has(id)) continue
+    if (stepped && !CHART_STEP_COMPOSITIONS.has(id)) continue
+    if (awaited && !MILESTONE_STATUS_COMPOSITIONS.has(id)) continue
+    if (momentous && !GANTT_MOMENT_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue

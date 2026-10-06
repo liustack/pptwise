@@ -129,3 +129,16 @@ Three changes, settled on the fiscal, growth, indicators and funds pages. See th
 **Why.** 「1200」 alone on a funnel could be points, yuan or orders. These charts have no axis to carry the unit, so the values carry it.
 
 **What it gave up.** A `y_unit` alone no longer draws the `chart_axes_ignored` warning on these charts. Their other axis settings still do.
+
+## thesis, retirement age thesis proposal sample, 2026-10
+
+`title`, `note` on a line point, `markers` on a line chart and `steps` on a scatter series. Settled on the statutory ladder (p03), why it matters (p05), the employment cliff (p06) and France's decomposition (p09): see the boards and engine renders in [compositions/ladder](../../compositions/ladder/), [compositions/backdrop](../../compositions/backdrop/), [compositions/thresholds](../../compositions/thresholds/) and [compositions/partition](../../compositions/partition/). The round's decisions are in [rounds/2026-10-06-thesis](../../rounds/2026-10-06-thesis/README.md).
+
+**What it looks like.** A chart carries a short name over it (`title`), as a table and a timeline do. The ordinary chart sets it over the plot, and a theme that numbers its figures prints the number before it (「图 3　参保职工 ÷ 参保离退休人员」). A point on a line may carry a `note`, named beside the point (「2019 最低 2.53」). A line chart's `markers` (up to three, each `{ before, label }`) draw a dashed line down the plot where a category begins, named over the plot in a band the chart reserves. A scatter series with `steps` is joined as a staircase in the order of its x values.
+
+**Why.** A thesis figure is numbered and named, its turns are read off the line, a rule's thresholds are where the line falls, and a schedule that rises a month at a time is a staircase.
+
+**What it gave up.**
+
+- validate refuses a marker on a category the chart does not have, more than three markers, markers on any chart but a line, and steps on any series but a scatter's.
+- The hand-set compositions that draw their own chart leave a titled chart to the ordinary one, except those that take a title (`ladder`, `backdrop`, `thresholds`, `partition`).

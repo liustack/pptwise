@@ -60,6 +60,7 @@ import { renderDef as scorecardRenderDef } from "./scorecard"
 import { renderDef as pictogramRenderDef } from "./pictogram"
 import { renderDef as wordCloudRenderDef } from "./word-cloud"
 import { renderDef as vennRenderDef } from "./venn"
+import { renderDef as sketchRenderDef } from "./sketch"
 import { renderDef as fishboneRenderDef } from "./fishbone"
 import { renderDef as positioningMapRenderDef } from "./positioning-map"
 import { renderDef as conceptEquationRenderDef } from "./concept-equation"
@@ -144,6 +145,7 @@ const RENDER_DEFS: Record<ComponentType, RenderDef> = {
   pictogram: pictogramRenderDef,
   word_cloud: wordCloudRenderDef,
   venn: vennRenderDef,
+  sketch: sketchRenderDef,
   fishbone: fishboneRenderDef,
   positioning_map: positioningMapRenderDef,
   concept_equation: conceptEquationRenderDef,

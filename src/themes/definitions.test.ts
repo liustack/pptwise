@@ -35,7 +35,7 @@ const ENDING_REGISTRY: Record<string, unknown> = ENDING_LAYOUTS
 const BOARD: Record<string, { cover: string; chapter: string; ending: string }> = {
   brief: { cover: "gauge-verdict", chapter: "gauge-section", ending: "gauge-next" },
   bulletin: { cover: "ikb-field-cover", chapter: "block-numeral-chapter", ending: "signoff-ending" },
-  thesis: { cover: "thesis-plate-cover", chapter: "folio-ghost-chapter", ending: "defense-close-ending" },
+  thesis: { cover: "manuscript-cover", chapter: "manuscript-chapter", ending: "manuscript-ending" },
   ledger: { cover: "stat-cover", chapter: "ghost-section-chapter", ending: "close-word-ending" },
   rally: { cover: "marquee-cover", chapter: "marquee-chapter", ending: "marquee-ending" },
   homeroom: { cover: "lesson-cover", chapter: "lesson-chapter", ending: "lesson-ending" },
