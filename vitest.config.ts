@@ -12,6 +12,9 @@ export default defineConfig({
       "scripts/**/*.test.mts",
       "evals/**/*.test.mts",
     ],
+    // One temp root per run, removed at the end. Every os.tmpdir() in the
+    // workers and in the CLI children they spawn lands inside it.
+    globalSetup: ["src/test-run-root.ts"],
     setupFiles: ["src/test-setup.ts"],
     // 60s, not 15s, because the heaviest sweeps genuinely need it. They are
     // slow, not hung. Measured on a 10-core machine, `vitest run` forking 10

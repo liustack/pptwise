@@ -2,6 +2,18 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import '@testing-library/jest-dom/vitest'
+import { RUN_ROOT_ENV } from './test-run-root'
+
+// src/test-run-root.ts (globalSetup) points the temp variables at a root
+// that the run removes when it ends. Every temp directory a test makes is
+// only cleaned up because it lands there, so a worker that did not inherit
+// the root must stop here instead of leaking into the system temp dir.
+const runRoot = process.env[RUN_ROOT_ENV]
+if (!runRoot || tmpdir() !== runRoot) {
+  throw new Error(
+    `os.tmpdir() is ${tmpdir()}, not the run root ${runRoot ?? "(unset)"}: vitest.config.ts globalSetup must run src/test-run-root.ts`,
+  )
+}
 
 // pptwiseHome() / previewRoot() copy ~/.pptpress or ~/.pptfast into
 // ~/.pptwise when the new dir is missing. A test that unsets the env and
@@ -9,7 +21,7 @@ import '@testing-library/jest-dom/vitest'
 // Every worker gets a private home before any test file runs. Tests that
 // need "env unset" still delete the variable and pass an injectable homedir.
 if (process.env.PPTWISE_HOME === undefined || process.env.PPTWISE_HOME === "") {
-  process.env.PPTWISE_HOME = mkdtempSync(join(tmpdir(), "pptwise-vitest-home-"))
+  process.env.PPTWISE_HOME = mkdtempSync(join(runRoot, "pptwise-vitest-home-"))
 }
 for (const key of Object.keys(process.env)) {
   if (key.startsWith("PPTPRESS_") || key.startsWith("PPTFAST_")) delete process.env[key]
