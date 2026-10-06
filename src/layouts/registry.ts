@@ -1,6 +1,6 @@
 /**
  * Layout registry (W2 task 1, spec §3/§6/§8): an explicit, statically-checked
- * description of what the render chain's 154 standard layouts and 4
+ * description of what the render chain's 172 standard layouts and 4
  * page-level image takeovers already draw. This is a metadata layer only.
  * It formalizes today's implicit page structure (layout JSX + the
  * FullSlideSvg takeover dispatch) into named `slots`, it does not change any
@@ -109,6 +109,7 @@ import { layoutDef as coverYearbookCover } from "./cover-yearbook-cover"
 import { layoutDef as coverLessonCover } from "./cover-lesson-cover"
 import { layoutDef as coverPitchCover } from "./cover-pitch-cover"
 import { layoutDef as coverMarqueeCover } from "./cover-marquee-cover"
+import { layoutDef as coverBinderCover } from "./cover-binder-cover"
 import { layoutDef as coverPledgeOpenCover } from "./cover-pledge-open-cover"
 import { layoutDef as coverReportOpenCover } from "./cover-report-open-cover"
 import { layoutDef as coverCutPanelCover } from "./cover-cut-panel-cover"
@@ -144,6 +145,7 @@ import { layoutDef as chapterConsoleChapter } from "./chapter-console-chapter"
 import { layoutDef as chapterLessonChapter } from "./chapter-lesson-chapter"
 import { layoutDef as chapterPitchChapter } from "./chapter-pitch-chapter"
 import { layoutDef as chapterMarqueeChapter } from "./chapter-marquee-chapter"
+import { layoutDef as chapterBinderChapter } from "./chapter-binder-chapter"
 import { layoutDef as chapterFieldBandChapter } from "./chapter-field-band-chapter"
 import { layoutDef as chapterSubjectRuleChapter } from "./chapter-subject-rule-chapter"
 import { layoutDef as chapterRoundMarkChapter } from "./chapter-round-mark-chapter"
@@ -186,6 +188,7 @@ import { layoutDef as endingYearbookEnding } from "./ending-yearbook-ending"
 import { layoutDef as endingLessonEnding } from "./ending-lesson-ending"
 import { layoutDef as endingPitchEnding } from "./ending-pitch-ending"
 import { layoutDef as endingMarqueeEnding } from "./ending-marquee-ending"
+import { layoutDef as endingBinderEnding } from "./ending-binder-ending"
 import { layoutDef as endingScorecardEnding } from "./ending-scorecard-ending"
 import { layoutDef as endingCarePlanEnding } from "./ending-care-plan-ending"
 import { layoutDef as endingSeatCtaEnding } from "./ending-seat-cta-ending"
@@ -241,6 +244,7 @@ import { layoutDef as contentPitchSheet } from "./content-pitch-sheet"
 import { layoutDef as contentPitchPhoto } from "./content-pitch-photo"
 import { layoutDef as contentMarqueeSheet } from "./content-marquee-sheet"
 import { layoutDef as contentMarqueeStatement } from "./content-marquee-statement"
+import { layoutDef as contentBinderSheet } from "./content-binder-sheet"
 import { layoutDef as contentSealFigure } from "./content-seal-figure"
 
 import {
@@ -632,6 +636,8 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverPitchCover.id]: coverPitchCover,
   // rally sample redesign (2026-10-06).
   [coverMarqueeCover.id]: coverMarqueeCover,
+  // proposal theme (2026-10-06).
+  [coverBinderCover.id]: coverBinderCover,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -685,6 +691,8 @@ const CHAPTER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [chapterPitchChapter.id]: chapterPitchChapter,
   // rally sample redesign (2026-10-06).
   [chapterMarqueeChapter.id]: chapterMarqueeChapter,
+  // proposal theme (2026-10-06).
+  [chapterBinderChapter.id]: chapterBinderChapter,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -741,6 +749,8 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingPitchEnding.id]: endingPitchEnding,
   // rally sample redesign (2026-10-06).
   [endingMarqueeEnding.id]: endingMarqueeEnding,
+  // proposal theme (2026-10-06).
+  [endingBinderEnding.id]: endingBinderEnding,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -916,11 +926,14 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   // and its one-line plan, theme-locked.
   [contentMarqueeSheet.id]: contentMarqueeSheet,
   [contentMarqueeStatement.id]: contentMarqueeStatement,
+  // proposal theme (2026-10-06): the board's ordinary content page,
+  // theme-locked.
+  [contentBinderSheet.id]: contentBinderSheet,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Image takeover layouts (4). With the 35 standard content layouts above,
-// the content page type has 39 registered entries. These are `slide.layout`
+// Image takeover layouts (4). With the 44 standard content layouts above,
+// the content page type has 48 registered entries. These are `slide.layout`
 // ids for the page-level
 // `image-split`/`image-top`/`image-bottom`/`image-annotate` takeovers
 // (full-slide-svg.tsx's splitTakeover branch, keyed off `getLayout(slide.
@@ -941,7 +954,7 @@ const TAKEOVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [imageAnnotateLayoutDef.id]: imageAnnotateLayoutDef,
 }
 
-/** All 154 standard layouts and 4 takeover layouts, 158 entries keyed by id.
+/** All 172 standard layouts and 4 takeover layouts, 176 entries keyed by id.
  *  `kind` still spells the standard tier `"standard"`, a wire-format fossil. See
  *  {@link LayoutDefinition.kind}. */
 export const LAYOUT_REGISTRY: Record<string, LayoutDefinition> = {

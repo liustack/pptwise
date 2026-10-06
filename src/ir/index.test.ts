@@ -795,11 +795,12 @@ describe("heatmap component (structure-components wave 2 task 2, value-grid fami
     ])
     expect(parsePptxIR(d).success).toBe(true)
   })
-  it("takes twelve x_labels, a year of months, and rejects a thirteenth (max 12)", () => {
+  it("takes twelve x_labels, a year of months, and 24, a day of hours, and rejects a 25th (max 24)", () => {
     const columns = (n: number) =>
       withComponents([heatmapComponent({ x_labels: Array.from({ length: n }, (_, i) => `x${i}`), values: [Array.from({ length: n }, () => 1), Array.from({ length: n }, () => 1)] })])
     expect(parsePptxIR(columns(12)).success).toBe(true)
-    expect(parsePptxIR(columns(13)).success).toBe(false)
+    expect(parsePptxIR(columns(24)).success).toBe(true)
+    expect(parsePptxIR(columns(25)).success).toBe(false)
   })
   it("rejects more than 10 y_labels (max 10)", () => {
     const d = withComponents([
@@ -2207,5 +2208,15 @@ describe("gantt range, row icon and period", () => {
 
   it("refuses a range that ends before it starts", () => {
     expect(parseOne({ type: "gantt", range: { from: 18, to: 0 }, items }).success).toBe(false)
+  })
+})
+
+describe("ballot.item_choices", () => {
+  const page = (ballot: unknown) => ({ version: "5", theme: { id: "brief" }, slides: [{ type: "ending", heading: "定三件事", ballot }] })
+  it("takes boxes of an item's own and refuses an item named twice", () => {
+    expect(parsePptxIR(page({ choices: ["同意", "再议"], item_choices: [{ item: 3, choices: ["自投", "EMC", "融资租赁"] }] })).success).toBe(true)
+    expect(parsePptxIR(page({ choices: ["同意", "再议"], item_choices: [{ item: 3, choices: ["自投"] }] })).success).toBe(false)
+    expect(parsePptxIR(page({ choices: ["同意", "再议"], item_choices: [{ item: 0, choices: ["a", "b"] }] })).success).toBe(false)
+    expect(parsePptxIR(page({ choices: ["同意", "再议"], item_choices: [{ item: 2, choices: ["a", "b"] }, { item: 2, choices: ["c", "d"] }] })).success).toBe(false)
   })
 })

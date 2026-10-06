@@ -1,0 +1,84 @@
+{
+  "stage": "Numbers",
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "name",
+          "label": "Input"
+        },
+        {
+          "key": "how",
+          "label": ""
+        },
+        {
+          "key": "value",
+          "label": "Value",
+          "align": "right"
+        },
+        {
+          "key": "kind",
+          "label": "Source"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "name": "E Annual output",
+            "how": "1 MW × 1,080 h, Jiangsu bidding notice",
+            "value": "1.08 m kWh",
+            "kind": "Policy text"
+          }
+        },
+        {
+          "cells": {
+            "name": "p Price replaced",
+            "how": "Jiangsu 9:00-15:00 average, May 2026",
+            "value": "RMB 0.45/kWh",
+            "kind": "Press"
+          }
+        },
+        {
+          "cells": {
+            "name": "O O&M",
+            "how": "RMB 0.046/W a year, CPIA 2024",
+            "value": "RMB 46,000/yr",
+            "kind": "Industry body"
+          }
+        },
+        {
+          "cells": {
+            "name": "I Investment",
+            "how": "RMB 2.70/W, CPIA 2024",
+            "value": "RMB 2.70 m",
+            "kind": "Industry body"
+          }
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "label": "Net saving a year",
+          "value": "RMB 440,000",
+          "note": "E × p − O = 1.08 m × 0.45 − 46,000"
+        },
+        {
+          "label": "Simple payback",
+          "value": "**6.1 years**",
+          "note": "I ÷ net saving = 2.70 m ÷ 440,000"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "info",
+      "text": "All used on site, before degradation, tax, finance and roof rent. Your case is reworked from your bills and contract."
+    }
+  ],
+  "footnote": "Source: Jiangsu DRC bidding notice (2025-11-11), CPIA PV roadmap (2024-2025 edition), The Paper (2026-08-18)",
+  "notes": "This is the account for one megawatt, with a source for each input. Output uses the parameter in Jiangsu's official bidding notice: an average of 1,080 hours a year for this kind of plant over the last three years, on the AC side, so 1 MW makes 1.08 million kWh. The price replaced is RMB 0.45, a press-reported statistic: the average Jiangsu price between 9:00 and 15:00 was RMB 0.78 in May 2025 and RMB 0.45 in May 2026. Cost and O&M are CPIA's 2024 figures for commercial and industrial rooftop systems: RMB 2.70 per watt to build and RMB 0.046 per watt a year for basic maintenance. With all the power used on site, the bill falls by RMB 486,000 a year. Less RMB 46,000 of O&M, that is about RMB 440,000 net, and the RMB 2.7 million pays back in about 6.1 years. That is a simple payback, before panel degradation, tax, finance and roof rent. One caveat on units: if the RMB 2.70 per watt is priced on the DC side while the 1,080 hours are AC, CPIA's 1:1.25 DC-to-AC ratio would stretch the payback by about a quarter."
+}

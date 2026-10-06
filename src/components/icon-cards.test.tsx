@@ -407,3 +407,44 @@ describe("icon_cards item tag", () => {
     expect(explodeIntoUnits([tagged]).map((unit) => unit.kind)).toEqual(tagged.items.map(() => "icon-card-item"))
   })
 })
+
+describe("a title over the cards and a card's tone", () => {
+  const lessons = {
+    type: "icon_cards" as const,
+    title: "公开事故的教训",
+    items: [
+      { icon: "flame", title: "广州黄埔「6·14」事故", text: "电池包测试时热失控后闪爆", tone: "danger" as const },
+      { icon: "zap", title: "深圳龙华储能柜起火", text: "初步认定为充电过载" },
+    ],
+  }
+
+  it("is accepted on the set and on a card", async () => {
+    const { schema } = await import("../ir/components/icon-cards")
+    expect(schema.safeParse(lessons).success).toBe(true)
+    expect(schema.safeParse({ ...lessons, items: [{ ...lessons.items[0], tone: "bad" }, lessons.items[1]] }).success).toBe(false)
+  })
+
+  it("sets the title over the cards and moves them under it", async () => {
+    const { renderDef } = await import("./icon-cards")
+    const ctx = boundThemeCtx("brief", {})
+    const { container } = svg(renderDef.render(lessons, { x: 0, y: 0, w: 900, h: 320 }, ctx) as React.ReactElement)
+    const title = container.querySelector("[data-block-title] > text")!
+    expect(title.textContent).toBe("公开事故的教训")
+    const firstCircle = container.querySelector("circle")!
+    expect(Number(firstCircle.getAttribute("cy")) - Number(firstCircle.getAttribute("r"))).toBeGreaterThan(Number(title.getAttribute("y")))
+    expect(renderDef.measure(lessons, 900, ctx)).toBe(renderDef.measure({ ...lessons, title: undefined }, 900, ctx) + 32)
+  })
+
+  it("draws a toned card's icon in the theme's ink for its news, the others in the accent", () => {
+    const ctx = boundThemeCtx("brief", {})
+    const markup = markupOf(iconCards.render(lessons, { x: 0, y: 0, w: 900, h: 280 }, ctx))
+    const strokes = Array.from(parseSvgRoot(markup).querySelectorAll("g[transform] [stroke]")).map((el) => el.getAttribute("stroke"))
+    expect(strokes).toContain(ctx.colors.danger)
+    expect(strokes).toContain(ctx.colors.accent)
+  })
+
+  it("keeps a titled set whole in a bento grid, and tiles a toned one", () => {
+    expect(explodeIntoUnits([lessons]).map((u) => u.kind)).toEqual(["component"])
+    expect(explodeIntoUnits([{ ...lessons, title: undefined }]).map((u) => u.kind)).toEqual(["icon-card-item", "icon-card-item"])
+  })
+})

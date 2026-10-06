@@ -31,7 +31,7 @@ type FromTo = Extract<Component, { type: "from_to" }>
  * from_to's `label_column` heads the names.
  *
  * Takes: `[insight_panel, from_to]` where the panel has one row, and the
- * from_to three to six rows with no `kicker`, `span` or `change`. The seal
+ * from_to three to six rows with no `kicker`, `span`, `change`, `icon` or `note`. The seal
  * setting only.
  *
  * Declines: a statement past two lines of the block at 34px, the plan's
@@ -60,7 +60,7 @@ function targetsShape(components: readonly Component[]): { panel: InsightPanel; 
   if (panel?.type !== "insight_panel" || plan?.type !== "from_to" || rest.length > 0) return null
   if (panel.rows.length !== 1 || panel.icon) return null
   if (plan.from.kicker?.trim() || plan.to.kicker?.trim() || plan.span?.trim()) return null
-  if (plan.rows.some((row) => row.change?.trim())) return null
+  if (plan.rows.some((row) => row.change?.trim() || row.icon || row.note)) return null
   return { panel, plan }
 }
 

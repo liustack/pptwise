@@ -46,3 +46,4 @@ export type MotifId =
   | "gauge-motif" // 2026-08-25：brief 量规定位角标，左上两条直线构成 ⌐
   | "crayonbox-motif" // 2026-08-25：一盒蜡笔右上角阳光黄太阳与星贴纸组
   | "folio-motif" // 2026-10-02：brief 定稿页脚，y664 细线 + 左机构名右保密级别，不印页码
+  | "proposal-motif" // 2026-10-06：proposal 提案书页眉标签与页码（左上 deck 标签，右下页码字段）

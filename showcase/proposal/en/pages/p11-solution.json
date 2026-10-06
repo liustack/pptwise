@@ -1,0 +1,37 @@
+{
+  "stage": "Plan",
+  "components": [
+    {
+      "type": "image_grid",
+      "emphasis": "first",
+      "items": [
+        {
+          "asset_id": "grid-pv",
+          "icon": "solar-panel",
+          "caption": "Rooftop solar: Sized to roof loading and daytime load, used on site first"
+        },
+        {
+          "asset_id": "grid-ess",
+          "icon": "battery-charging",
+          "caption": "Storage: Modelled on your load curve, in only if it clears the bar after O&M, fade and sharing",
+          "tag": {
+            "text": "Optional",
+            "basis": "pending"
+          }
+        },
+        {
+          "asset_id": "grid-switch",
+          "icon": "plug-zap",
+          "caption": "Grid connection: Built to the grid's connection opinion, no work before it is issued"
+        },
+        {
+          "asset_id": "om-worker",
+          "icon": "hard-hat",
+          "caption": "Operation: Output, self-use, export and savings reconciled monthly and reported to you"
+        }
+      ]
+    }
+  ],
+  "footnote": "Images are AI-generated and illustrative",
+  "notes": "The proposal has four parts. The first is the rooftop array, sized to what the roof can carry and to your daytime load, so that most of the power is used on site and little depends on export. The second is storage, which is not included by default: we model it on your 15-minute load curve and your price contract, and propose it only if it still pays after O&M, degradation and revenue sharing. The third is the grid connection and switchgear work, built to the connection opinion the grid issues. The fourth is operation and energy reporting: output, self-use, export and savings are reconciled and reported to you every month."
+}

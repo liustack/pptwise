@@ -5,6 +5,7 @@ import { emphasisRunInk } from "../render/emphasis"
 import { ordinaryTagSpec, paintTag, tagWidth } from "./tag"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { DroppedContentMarker } from "../render/drop-marker"
+import { Icon } from "../render/icons"
 import {
   FORM_BODY_FLOOR,
   fitFormLine,
@@ -26,7 +27,14 @@ type FromToComponent = Extract<Component, { type: "from_to" }>
  *
  * 窄到 MIN_W 以下时整幅退场并 `data-dropped` 声明：三列各自的字挤不下，
  * 挤出来的不是一张表，是三列残句。
+ *
+ * A row's icon (`rows[].icon`) stands before its name, the name moving right
+ * after it. A row's note (`rows[].note`) sits under the name in the muted
+ * ink, the name moving up half a line to make room.
  */
+
+/** A row's icon, before its name, and the room it takes from the name's column. */
+const ROW_ICON = { size: 18, gap: 8 } as const
 
 const MAX_H = 348
 const HEAD_H = 76
@@ -281,11 +289,17 @@ export const fromTo: SvgComponent<FromToComponent> = {
             : 0
           const marked = row.emphasis === true
           const onColumn = readableOn(highlight)
+          const iconRoom = row.icon ? ROW_ICON.size + ROW_ICON.gap : 0
           const labelFit = fitFormLine(row.label, {
-            maxWidth: g.labelW - PAD,
+            maxWidth: g.labelW - PAD - iconRoom,
             fontSize: g.labelSize,
             fontFamily: ctx.fonts.body,
           })
+          const note = row.note?.trim()
+          const noteFit = note ? fitFormLine(note, { maxWidth: g.labelW - PAD - iconRoom, fontSize: g.labelSize, fontFamily: ctx.fonts.body }) : null
+          // With a note, the name moves up half a line and the note sits under it.
+          const noteLead = Math.round(g.labelSize * 1.25)
+          const labelBase = noteFit ? baseline - noteLead / 2 : baseline
           return (
             <g key={`row-${i}`} data-row-marked={marked ? "1" : undefined}>
               {/* The marked measure: a pale tint of the emphasis colour across
@@ -305,10 +319,31 @@ export const fromTo: SvgComponent<FromToComponent> = {
                 strokeWidth={1}
                 strokeOpacity={0.35}
               />
+              {row.icon ? (
+                <Icon
+                  name={row.icon}
+                  x={0}
+                  y={labelBase - labelFit.fontSize * 0.35 - ROW_ICON.size / 2}
+                  size={ROW_ICON.size}
+                  color={graphicInk(ctx.colors.primary, marked ? blendOver(emphasisRunInk(ctx.colors), pageBg, 0.1) : pageBg)}
+                />
+              ) : null}
+              {noteFit ? (
+                <text
+                  data-truncated={noteFit.truncated ? "1" : undefined}
+                  x={iconRoom}
+                  y={labelBase + noteLead}
+                  fontFamily={ctx.fonts.body}
+                  fontSize={noteFit.fontSize}
+                  fill={accessibleInk(ctx.colors.muted, marked ? blendOver(emphasisRunInk(ctx.colors), pageBg, 0.1) : pageBg, noteFit.fontSize)}
+                >
+                  {noteFit.text}
+                </text>
+              ) : null}
               <text
                 data-truncated={labelFit.truncated ? "1" : undefined}
-                x={0}
-                y={baseline}
+                x={iconRoom}
+                y={labelBase}
                 fontFamily={ctx.fonts.body}
                 fontSize={labelFit.fontSize}
                 fontWeight={marked ? "700" : undefined}

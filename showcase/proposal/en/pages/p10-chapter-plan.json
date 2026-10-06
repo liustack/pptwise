@@ -1,0 +1,27 @@
+{
+  "stage": "Plan",
+  "background": {
+    "kind": "asset",
+    "asset_id": "chapter-install"
+  },
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "layers",
+          "title": "What the system is made of, and when storage goes in"
+        },
+        {
+          "icon": "wallet",
+          "title": "Self-funded, energy contract or finance lease: how to choose"
+        },
+        {
+          "icon": "shield-check",
+          "title": "Safety, risks, the steps, the quote and the documents we need"
+        }
+      ]
+    }
+  ],
+  "notes": "Part two is how it gets done: what to install, how to choose among three ways to fund it, how safety and risk are handled, the steps from survey to operation, how the quote is laid out, and what we need from you. The background image is AI-generated and illustrative."
+}

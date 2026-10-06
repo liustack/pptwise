@@ -71,7 +71,7 @@ pptwise themes --json
 1. deck 目录。
 2. 从当前目录向上查找工作区 `themes/`。
 3. 已装的内容包（`pptwise packs list`）。
-4. 24 个出厂预设。
+4. 25 个出厂预设。
 
 按请求与工作区信号，用 `occasions` 和 `identity` 筛出候选。用固定样张比较 2 到 4 个候选：
 

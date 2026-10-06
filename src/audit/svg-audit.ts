@@ -14,10 +14,13 @@ const PAGE = { w: 1280, h: 720 }
 interface Box { x: number; y: number; w: number }
 interface Rect extends Box { h: number }
 
-// This renderer only ever emits `translate(dx,dy)`, `scale(s)`, or the two
-// composed as `translate(dx,dy) scale(s)` (uniform scale, e.g. bento-card
-// content scale-to-fit or icon scale) — never rotation or non-uniform scale,
-// so a single scalar is enough.
+// The translate and uniform scale of an element's `transform`, the two forms
+// the content layer composes boxes with (bento-card content scale-to-fit,
+// icon scale), reduced to one offset and one scalar. A turn (`rotate`, which
+// stamps, notes and proposal's binder tabs do draw) is not in this
+// reduction: `auditSvgMarkup` below walks the whole transform list as an
+// affine map instead, and `deck-audit.ts` sets a shape under any other form
+// apart (`hasUnmodelledTransform`).
 //
 // Exported (W6 task 1) so `deck-audit.ts`'s new contrast/overlap walkers —
 // which need this exact same transform accumulation over the exact same
@@ -35,6 +38,71 @@ export function parseTransform(el: Element): { dx: number; dy: number; scale: nu
     dy: tm ? Number(tm[2]) : 0,
     scale: sm ? Number(sm[1]) : 1,
   }
+}
+
+/** A 2D affine map in SVG's `matrix(a b c d e f)` order: x' = a·x + c·y + e, y' = b·x + d·y + f. */
+type Affine = readonly [number, number, number, number, number, number]
+
+const IDENTITY: Affine = [1, 0, 0, 1, 0, 0]
+
+/** `m` after `n`: the map that applies `n` first, then `m`. */
+function compose(m: Affine, n: Affine): Affine {
+  return [
+    m[0] * n[0] + m[2] * n[1],
+    m[1] * n[0] + m[3] * n[1],
+    m[0] * n[2] + m[2] * n[3],
+    m[1] * n[2] + m[3] * n[3],
+    m[0] * n[4] + m[2] * n[5] + m[4],
+    m[1] * n[4] + m[3] * n[5] + m[5],
+  ]
+}
+
+function apply(m: Affine, x: number, y: number): [number, number] {
+  return [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]]
+}
+
+/** Whether a map keeps the page's axes: no turn, no skew. */
+function axisAligned(m: Affine): boolean {
+  return m[1] === 0 && m[2] === 0
+}
+
+/**
+ * An element's whole `transform` list as one affine map, applied right to
+ * left as SVG does: `translate`, `scale`, `rotate` (about a point too),
+ * `skewX`, `skewY` and `matrix`.
+ */
+function parseAffine(el: Element): Affine {
+  const t = el.getAttribute("transform")
+  if (!t) return IDENTITY
+  let m = IDENTITY
+  for (const [, name, args] of t.matchAll(/([a-zA-Z]+)\s*\(([^)]*)\)/g)) {
+    const n = (args ?? "").split(/[\s,]+/).filter(Boolean).map(Number)
+    const rad = ((n[0] ?? 0) * Math.PI) / 180
+    let op: Affine = IDENTITY
+    if (name === "translate") op = [1, 0, 0, 1, n[0] ?? 0, n[1] ?? 0]
+    else if (name === "scale") op = [n[0] ?? 1, 0, 0, n[1] ?? n[0] ?? 1, 0, 0]
+    else if (name === "rotate") {
+      const [cx, cy] = [n[1] ?? 0, n[2] ?? 0]
+      const turn: Affine = [Math.cos(rad), Math.sin(rad), -Math.sin(rad), Math.cos(rad), 0, 0]
+      op = compose(compose([1, 0, 0, 1, cx, cy], turn), [1, 0, 0, 1, -cx, -cy])
+    } else if (name === "skewX") op = [1, 0, Math.tan(rad), 1, 0, 0]
+    else if (name === "skewY") op = [1, Math.tan(rad), 0, 1, 0, 0]
+    else if (name === "matrix" && n.length === 6) op = n as unknown as Affine
+    m = compose(m, op)
+  }
+  return m
+}
+
+/**
+ * A box declared in a frame, carried to the page: exact under a translate
+ * and scale, else the axis-aligned bounds of its turned corners.
+ */
+function boxOnPage(m: Affine, x: number, y: number, w: number, h: number): Rect {
+  if (axisAligned(m)) return { x: m[4] + m[0] * x, y: m[5] + m[3] * y, w: m[0] * w, h: m[3] * h }
+  const corners = [apply(m, x, y), apply(m, x + w, y), apply(m, x, y + h), apply(m, x + w, y + h)]
+  const xs = corners.map((c) => c[0])
+  const ys = corners.map((c) => c[1])
+  return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }
 }
 
 /** Exported alongside `parseTransform` — see that function's doc comment. */
@@ -122,46 +190,39 @@ export function auditSvgMarkup(markup: string): OverflowIssue[] {
   const root = doc.documentElement
   const issues: OverflowIssue[] = []
 
-  const visit = (
-    el: Element,
-    ox: number,
-    oy: number,
-    os: number,
-    box: Box | null,
-    rect: Rect | null,
-  ) => {
-    const { dx, dy, scale } = parseTransform(el)
-    // Compose (ox,oy,os) — "absolute = (ox,oy) + os * local" — with this
-    // element's own translate/scale, in the SVG-transform-list order
-    // (translate applied to local coordinates, then the accumulated parent
-    // transform), so any component scaled to fit (bento cards) still gets
-    // correctly-scaled text metrics rather than false-positive overflow.
-    const ax = ox + os * dx
-    const ay = oy + os * dy
-    const as = os * scale
+  const visit = (el: Element, parent: Affine, box: Box | null, rect: Rect | null) => {
+    // The element's own transform list composed under its parent's, in the
+    // SVG order: a component scaled to fit (bento cards) gets correctly
+    // scaled text metrics, and a line turned about a point (a stamp, a
+    // binder's tab) is read where it is drawn rather than where it would
+    // stand unturned.
+    const m = compose(parent, parseAffine(el))
 
     // A declaration is stated in the same frame as the ink beneath the
-    // element that carries it, so it is composed with the accumulated
-    // transform exactly like the `<text>` coordinates below. Read literally,
-    // a box declared inside a scaled or translated subtree was compared
-    // against text coordinates that had already been carried to the page.
+    // element that carries it, so it is carried to the page exactly like the
+    // `<text>` coordinates below. Read literally, a box declared inside a
+    // scaled or translated subtree was compared against text coordinates
+    // that had already been carried to the page.
     const boxAttr = el.getAttribute("data-audit-box")
     if (boxAttr) {
       const [x, y, w] = parseNums(boxAttr)
-      box = { x: ax + as * x, y: ay + as * y, w: as * w }
+      const onPage = boxOnPage(m, x!, y!, w!, 0)
+      box = { x: onPage.x, y: onPage.y, w: onPage.w }
     }
     const rectAttr = el.getAttribute("data-audit-rect")
     if (rectAttr) {
       const [x, y, w, h] = parseNums(rectAttr)
-      rect = { x: ax + as * x, y: ay + as * y, w: as * w, h: as * h }
+      rect = boxOnPage(m, x!, y!, w!, h!)
     }
 
     if (el.tagName.toLowerCase() === "text") {
       const content = (el.textContent ?? "").trim()
       if (content) {
-        const fontSize = Number(el.getAttribute("font-size") ?? 16) * as
-        const tx = ax + Number(el.getAttribute("x") ?? 0) * as
-        const ty = ay + Number(el.getAttribute("y") ?? 0) * as
+        // The map's length scale: its own factor under a translate and
+        // scale, the length of a turned unit step otherwise.
+        const scale = axisAligned(m) ? m[0] : Math.hypot(m[0], m[1])
+        const fontSize = Number(el.getAttribute("font-size") ?? 16) * scale
+        const [tx, ty] = apply(m, Number(el.getAttribute("x") ?? 0), Number(el.getAttribute("y") ?? 0))
         // Mono-face branch (borrow-wave Task 3 fix round, 2026-07-21 — see
         // `isMonoFontFamily`'s derivation comment in fonts.ts) stays exact
         // and weight-blind: `measureMonoTextUnits` takes no weight
@@ -179,10 +240,18 @@ export function auditSvgMarkup(markup: string): OverflowIssue[] {
         // "estimator/audit shared-blindness" gap root-cause.md S4.2 named
         // as the mechanism that let the reported cover-overflow defect
         // audit clean (0 findings) while visibly overflowing in PowerPoint.
-        const width = textLineWidth(el, content, fontSize, as)
+        const width = textLineWidth(el, content, fontSize, scale)
         const anchor = el.getAttribute("text-anchor") ?? "start"
-        const left = anchor === "end" ? tx - width : anchor === "middle" ? tx - width / 2 : tx
-        const right = left + width
+        const lead = anchor === "end" ? -width : anchor === "middle" ? -width / 2 : 0
+        // The baseline runs along the map's turned x axis: across the page
+        // unturned, down it under a quarter turn.
+        const [ux, uy] = axisAligned(m) ? [1, 0] : [m[0] / scale, m[1] / scale]
+        const start: [number, number] = [tx + ux * lead, ty + uy * lead]
+        const end: [number, number] = [start[0] + ux * width, start[1] + uy * width]
+        const left = Math.min(start[0], end[0])
+        const right = Math.max(start[0], end[0])
+        const top = Math.min(start[1], end[1])
+        const foot = Math.max(start[1], end[1])
         const label = content.slice(0, 24)
 
         if (box && (right > box.x + box.w + TOL || left < box.x - TOL)) {
@@ -192,32 +261,33 @@ export function auditSvgMarkup(markup: string): OverflowIssue[] {
             detail: `text [${left.toFixed(0)},${right.toFixed(0)}] exceeds box x=${box.x} w=${box.w}`,
           })
         }
-        if (rect && ty + fontSize * 0.25 > rect.y + rect.h + TOL) {
+        if (rect && foot + fontSize * 0.25 > rect.y + rect.h + TOL) {
           issues.push({
             kind: "v-overflow",
             text: label,
-            detail: `baseline ${ty.toFixed(0)} below rect bottom ${rect.y + rect.h}`,
+            detail: `baseline ${foot.toFixed(0)} below rect bottom ${rect.y + rect.h}`,
           })
         }
         // data-bleed：显式声明的出血排印（时尚杂志出血大号语法，2026-07-10）
         // 不算 page-overflow——审计语义是抓「意外」溢出，声明过的溢出是设计。
         if (
           !el.hasAttribute("data-bleed") &&
-          (right > PAGE.w + TOL || left < -TOL || ty > PAGE.h + TOL || ty < -TOL)
+          (right > PAGE.w + TOL || left < -TOL || foot > PAGE.h + TOL || top < -TOL)
         ) {
+          const ys = top === foot ? `${ty.toFixed(0)}` : `[${top.toFixed(0)},${foot.toFixed(0)}]`
           issues.push({
             kind: "page-overflow",
             text: label,
-            detail: `text [${left.toFixed(0)},${right.toFixed(0)}] y=${ty.toFixed(0)} outside 1280x720`,
+            detail: `text [${left.toFixed(0)},${right.toFixed(0)}] y=${ys} outside 1280x720`,
           })
         }
       }
     }
 
-    for (const child of Array.from(el.children)) visit(child, ax, ay, as, box, rect)
+    for (const child of Array.from(el.children)) visit(child, m, box, rect)
   }
 
-  visit(root, 0, 0, 1, null, null)
+  visit(root, IDENTITY, null, null)
   return issues
 }
 

@@ -48,6 +48,7 @@ import { YearbookSheetContent } from "./content-yearbook-sheet"
 import { LessonSheetContent } from "./content-lesson-sheet"
 import { PitchSheetContent } from "./content-pitch-sheet"
 import { MarqueeSheetContent } from "./content-marquee-sheet"
+import { BinderSheetContent } from "./content-binder-sheet"
 import { MarqueeStatementContent } from "./content-marquee-statement"
 import { PitchPhotoContent } from "./content-pitch-photo"
 import { GridStatementContent } from "./content-grid-statement"
@@ -206,6 +207,9 @@ const CASES: FaceCase[] = [
   // rally's marquee sheet: the same, in its band x64 to x1216 and y188
   // (under the ticket stub and the claim) to y640.
   { face: "marquee-sheet", Face: MarqueeSheetContent, themeId: "rally", regions: ["face", "declined"] },
+  // proposal's binder sheet: the same, in its band x64 to x1196 and y172
+  // (under the claim, left of the binder's tabs) to y640.
+  { face: "binder-sheet", Face: BinderSheetContent, themeId: "proposal", regions: ["face", "declined"] },
   // A chart is not the one-line plan's row of touchpoints, so the page goes
   // straight to the sheet, and is declined once that cannot hold it either.
   { face: "marquee-statement", Face: MarqueeStatementContent, themeId: "rally", regions: ["aside", "declined"] },

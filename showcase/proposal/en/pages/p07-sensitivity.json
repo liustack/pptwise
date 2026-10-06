@@ -1,0 +1,79 @@
+{
+  "stage": "Numbers",
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "x_unit": "yrs"
+      },
+      "series": [
+        {
+          "name": "Jiangsu per MW, simple payback",
+          "data": [
+            {
+              "x": "All on site, standard 0.64",
+              "y": 4.2,
+              "note": "RMB 645,000 a year"
+            },
+            {
+              "x": "All on site, RMB 0.45",
+              "y": 6.1,
+              "note": "RMB 440,000 a year",
+              "emphasis": true
+            },
+            {
+              "x": "58.46% on site, surplus 0.391",
+              "y": 6.5,
+              "note": "RMB 414,000 a year"
+            },
+            {
+              "x": "All on site, off-peak 0.3828",
+              "y": 7.3,
+              "note": "RMB 367,000 a year"
+            },
+            {
+              "x": "58.46% on site, surplus 0.25",
+              "y": 7.7,
+              "note": "RMB 350,000 a year"
+            }
+          ]
+        },
+        {
+          "name": "Guangdong reference, company figures",
+          "data": [
+            {
+              "x": "1,163 h at RMB 0.803",
+              "y": 3.0,
+              "note": "RMB 888,000 a year"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "sun",
+          "title": "How much you use by day",
+          "text": "Jiangsu's three-year average is 58.46% used on site, the rest exported. The more you use, the faster it pays."
+        },
+        {
+          "icon": "receipt",
+          "title": "At what price",
+          "text": "Power used on site replaces RMB 0.3828 to 0.64. Surplus bids RMB 0.25 to 0.391, with no win guaranteed."
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "title": "None of these paybacks deduct:",
+      "text": "degradation, tax, finance, roof rent or inverter replacement. With cost on the DC side and output on the AC side, add about a quarter."
+    }
+  ],
+  "footnote": "Source: inputs as on the previous page, Jiangsu bidding range and three-year average, Laibao Hi-Tech filing for Guangdong. Payback = RMB 2.7 m ÷ net saving",
+  "notes": "Two things drive the payback. The first is how much of the daytime output you use yourself. In Jiangsu's official parameters, distributed systems that export their surplus sent 41.54% to the grid on average over three years, which means 58.46% was used on site. The second is the price each kWh is worth: what you would otherwise pay for the power you use, and what the surplus sells for. New projects in Jiangsu bid for a guaranteed price between RMB 0.25 and RMB 0.391, and a bid is not guaranteed to win. Across these combinations, simple payback per MW in Jiangsu runs from 4.2 to 7.7 years, and 6.1 years with all power used on site at RMB 0.45. The Guangdong bar is a reference, worked from a listed Shenzhen company's EMC filing: a weighted price of about RMB 0.803 for the solar hours and a forecast 1,163 hours, giving about 3.0 years. Those are company figures. Your own share of self-use and your own prices come from twelve months of time-of-use readings and your supply contract. Guangdong's edge is not guaranteed either: if Guangdong also moves midday to off-peak, it narrows, so a Guangdong plant should also be worked on current hours and its own contract."
+}

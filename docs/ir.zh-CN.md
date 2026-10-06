@@ -80,7 +80,7 @@ pptwise validate deck.json
 - `kicker`，标题上方的一行短标签（封面上的场合、结尾页要人拍板的事），只有声明了位置的脸才画，别的脸上 validate 直接拒绝并点名是哪张脸
 - `tag`，和标题放在一起的一枚小标签，说明整页依据的是什么（`text`，可选的 `evidence` 按来源性质上色，比如「RCT · NEJM 2025」写 `trial`，或者用 `basis` 说明它标的东西有多确定：`law`、`estimate`、`pending`、`proposal`，后三种画虚线）。和 `kicker` 一样，只有声明了位置的脸才画
 - `fields`，一到四行公文抬头，每行一个 `label`、一个 `value`、可选的 `note`（备忘录封面的致、发、日期、事由，结尾决定下的签发、抄送），以及 `stamp`，盖在页上的一枚印章（`text`，可选的 `date`）。和 `kicker` 一样，只有声明了位置的脸才画
-- `ballot`，委员会在每个条目旁勾选的方框（`choices`，两到四个，比如同意、不同意、弃权），以及可选的一行签字栏（`signature`，签字栏的名字）。只有声明了位置的脸才画
+- `ballot`，委员会在每个条目旁勾选的方框（`choices`，两到四个，比如同意、不同意、弃权），可选的一行签字栏（`signature`，签字栏的名字），以及某一条另有自己的方框时写在 `item_choices` 里（比如在几个选项里选一个：`[{ "item": 3, "choices": ["自投", "EMC", "融资租赁"] }]`，条目从 1 数起）。只有声明了位置的脸才画
 - `years`，整份 deck 跟踪的一段年份和本页讲到的年份（`from`、`to`、`marked`，比如 2026 到 2034，点亮 2026 和 2027），画成页眉里的一条年份刻度，本页的年份点亮。最多 13 年。只有声明了位置的脸才画
 - `stage`，本页属于 deck 的 `course` 里的哪一段，照那一段的 `label` 写（「环节一」），画成一排胶囊，本页那段点亮，小测段画虚线。需要 deck 写了 `course`，而且必须是其中一段。只有声明了位置的脸才画
 - `components`
@@ -251,7 +251,8 @@ pptwise schema --kind data --theme brief
 | `data_table.columns[].emphasis` 与 `icon` | 这一页说的那一列，比如哪家都没公布的那个数：表头和格子用主色加粗，整列围一道框；列图标画在这一列每个格子的开头（`"circle-help"`） | 最多标一列；图标只用于左对齐的列 |
 | `numbered_cards.items[].emphasis` | 这一页落到的那张卡，卡片填满主色 | 最多一张 |
 | `gantt.items[].text` 与 `emphasis` | 阶段名下面的一行说明，以及这一页说的那一段 | 最多标一段 |
-| `heatmap.bands` | `[{ "from": "6 月", "to": "9 月", "label": "2027 演唱会季 · 6 至 9 月" }]` 用虚线框把一段列横跨所有行框起来，名字写在格子下方，比如方案押注的档期。`from` 和 `to` 写两个 `x_labels` | 最多 2 段，互不重叠。热力格最多 12 列，正好一年的月份 |
+| `heatmap.bands` | `[{ "from": "6 月", "to": "9 月", "label": "2027 演唱会季 · 6 至 9 月" }]` 用虚线框把一段列横跨所有行框起来，名字写在格子下方，比如方案押注的档期，`icon` 画在名字前面（`"sun"`）。`from` 和 `to` 写两个 `x_labels` | 最多 2 段，互不重叠。热力格最多 24 列，正好一天的小时 |
+| `heatmap.steps` 和 `heatmap.label_every` | `[{ "max": 0.5, "label": "低谷", "short": "谷" }, { "max": 0.9, "label": "平段", "short": "平" }, { "label": "高峰", "short": "峰" }]` 从低到高写出数值落进的几档，比如一天的分时电价：每格取它那一档的颜色、印那一档的简称，格子下方一行图例写出每一档的名字。`label_every: 6` 从第一列起每六列印一个列头，像 24 小时的时间轴那样 | 2 到 5 档，除最后一档外都写 `max` 且逐档升高，不能和 `domain` 同时写。`label_every` 取 2 到 12 |
 | `gantt.range` 与 `gantt.items[].period` | 轴比条更长时轴跨的那一段（整个 18 个月的计划写 `{ "from": 0, "to": 18 }`），以及一条用话怎么说（「第 16 至 18 个月」） | 每条都在 range 里 |
 | `gantt.bands` | `[{ "from": 8, "to": 12, "label": "演唱会季 6 至 9 月" }]` 在横条后面给轴上一段着浅色，名字写在轴下面，比如方案押注的档期。`from` 和 `to` 用横条自己的轴 | 最多 2 段，互不重叠，落在轴内 |
 | `timeline.milestones[].lane` 与 `timeline.lanes` | 同一条时间顺序上的两条泳道。`lanes` 给出两条泳道的名字，第一条在前。普通时间线把节点排成一行，每个节点的泳道名单独一行写在日期上方。bulletin、clinic、ledger、swiss、vermilion 在版面放得下时把带泳道的时间线横跨整页排开，第一条泳道在轴上方，第二条在轴下方 | 要么每个节点都写 lane，要么都不写，最多两条，竖向时间线不能用 |
@@ -267,6 +268,9 @@ pptwise schema --kind data --theme brief
 | `progress_donuts.items[].detail` 与 `emphasis` | 标签下面一行，写这个完成度背后的金额（「11770 / 13000 亿元」），以及这一页讲的那一个，它的环、数字和标签用强调色 | 最多标一个 |
 | `kpi_cards.items[].tag` | 这个数是什么，用几个字印成数字旁的小标签（`{ "text": "约束性指标" }`）：标出的那个数填满，其余描边，`quiet` 的用灰色 | |
 | `from_to.rows[].tag` 与 `emphasis` | 行尾数值后的标签，以及这一页讲的那一项，和 `comparison` 的行一样 | 最多标一行 |
+| `icon_cards.title` 与 `icon_cards.items[].tone` | 印在卡片上方的短名，比如一页里某一栏的栏头（「按什么做」），以及一张卡是哪一类消息（`danger`、`warning`、`success`），它的图标用主题给这类消息的颜色，比如一起过去的事故 | |
+| `image_grid.items[].tag` | 图上的几个字，比如选配的那一张（`{ "text": "选配", "basis": "pending" }`），垫一块页面底色印在图的右上角，描边还是填色和别处的标签一样 | |
+| `from_to.rows[].icon` 与 `note` | 指标名前的图标（`"clock"`），以及名字下面一行小字，比如数字从哪来（「CNESA 估算，426 号新政前后」） | |
 | `comparison.rows[].emphasis` | 这一页讲的那一行：整行落在强调色的浅底上 | 最多一行 |
 | `comparison.rows[].tag` 与 `comparison.tag_column` | 每一行发生了什么，用几个字印成行尾的小标签（`{ "text": "改为区间" }`），`tag_column` 是标签列的表头。标出那一行的标签用强调色填满，`quiet` 的标签（没有变化）用灰色描边退后，其余用强调色描边 | `tag_column` 只能和标签一起写 |
 

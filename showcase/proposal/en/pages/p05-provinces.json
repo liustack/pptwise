@@ -1,0 +1,57 @@
+{
+  "stage": "Numbers",
+  "components": [
+    {
+      "type": "comparison",
+      "columns": [
+        "Jiangsu",
+        "Zhejiang",
+        "Guangdong"
+      ],
+      "rows": [
+        {
+          "label": "",
+          "cells": [
+            "Jiangsu DRC No. 426 (2025)",
+            "Zhejiang DRC No. 112 (2026)",
+            "Guangdong DRC No. 331 (2021)"
+          ]
+        },
+        {
+          "label": "At midday",
+          "cells": [
+            "Off-peak, 10:00-14:00",
+            "Off-peak, 11:00-14:00",
+            "Peak 10-12, standard 12-14"
+          ]
+        },
+        {
+          "label": "Spread (RMB/kWh)",
+          "emphasis": true,
+          "cells": [
+            "0.5738",
+            "0.76 (est.)",
+            "0.8192 (Shantou)"
+          ]
+        },
+        {
+          "label": "",
+          "cells": [
+            "Midday solar mostly offsets off-peak",
+            "Midday solar mostly offsets off-peak",
+            "**Daytime solar mostly offsets peak**"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "receipt",
+      "title": "Above 10 kV, your supply contract sets the price",
+      "text": "NDRC No. 1656, Article 35: from 1 March 2026, customers trading in the market leave the administered bands. Jiangsu retail packages still set peak and valley at least 60% from standard."
+    }
+  ],
+  "footnote": "Source: provincial time-of-use rules and grid agency price lists, NDRC Document No. 1656 (2025), Jiangsu DRC Document No. 1141 (2025)",
+  "notes": "On the 1 to 10 kV two-part tariff, the peak-valley spread is RMB 0.5738 in Jiangsu and RMB 0.8192 in Guangdong's Shantou zone. For Zhejiang we work out about RMB 0.76 under Document No. 112, as an illustration. The bigger difference is midday: Jiangsu and Zhejiang now price it off-peak, Guangdong still prices it peak and standard. For solar, that decides how much each self-used kWh is worth. For storage, all three provinces allow two charge and discharge cycles a day, but Guangdong's spread is wider. One more point matters a great deal: most plants connected at 10 kV and above already buy on the market. Article 35 of NDRC Document No. 1656 says administered time-of-use prices no longer apply to them, from 1 March 2026. In Jiangsu, retail packages that set time-of-use prices must still put peak and valley at least 60% above and below standard. If you buy on the market, the grid agency prices in these pages are only a guide, and the final numbers come from your own supply contract."
+}

@@ -57,6 +57,7 @@ const BOARD: Record<string, { cover: string; chapter: string; ending: string }> 
   swiss: { cover: "institutional-block", chapter: "decimal-index-chapter", ending: "resolution-ending" },
   memo: { cover: "memo-cover", chapter: "issue-line-chapter", ending: "memo-ending" },
   playbill: { cover: "bill-head", chapter: "day-bill-chapter", ending: "ticket-cta-ending" },
+  proposal: { cover: "binder-cover", chapter: "binder-chapter", ending: "binder-ending" },
 }
 
 describe("THEME_DEFINITIONS", () => {
@@ -166,6 +167,7 @@ describe("THEME_DEFINITIONS", () => {
       "show-statement": "runway",
       "show-figures": "runway",
       "show-spotlight": "runway",
+      "binder-sheet": "proposal",
     }
     for (const [face, owner] of Object.entries(exclusive)) {
       for (const id of CANONICAL_THEME_IDS) {
@@ -511,10 +513,10 @@ describe("registerTheme: unmeasured-font-width console.warn", () => {
 })
 
 describe("assertContrastFloor", () => {
-  // The 24 builtins never go through `registerTheme` (a THEME_DEFINITIONS /
+  // The 25 builtins never go through `registerTheme` (a THEME_DEFINITIONS /
   // registerTheme cycle would crash at module eval), so this sweeps them
   // through the underlying validation function directly.
-  it("all 24 canonical themes clear the 3.0 floor for colors.text and colors.muted on every slide type", () => {
+  it("all 25 canonical themes clear the 3.0 floor for colors.text and colors.muted on every slide type", () => {
     for (const id of CANONICAL_THEME_IDS) {
       expect(() => assertContrastFloor(id, THEME_DEFINITIONS[id].style)).not.toThrow()
     }
@@ -526,7 +528,7 @@ describe("getInstalledThemeIds", () => {
     __resetRegisteredThemes()
   })
 
-  it("starts as exactly the 24 builtins", () => {
+  it("starts as exactly the 25 builtins", () => {
     expect(getInstalledThemeIds()).toEqual([...CANONICAL_THEME_IDS].sort())
   })
 

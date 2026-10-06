@@ -17,6 +17,7 @@ export type IdentityStrength = (typeof IDENTITY_STRENGTHS)[number]
  */
 export const OCCASION_VOCAB = {
   business: "Corporate proposals, consulting reports, and general commercial decks.",
+  sales: "Client proposals, solution offers, and bids a customer signs off.",
   institutional: "Quiet org voice: annual reports, policy briefings, audits, and memos.",
   finance: "Markets, terminals, and financial insight.",
   marketing: "Campaigns, brand launches, and promotional storytelling.",
@@ -98,4 +99,6 @@ export const THEME_OCCASIONS: Record<BuiltinThemeId, ThemeOccasionRecord> = {
   memo: { occasions: ["business", "institutional"], identity: "low" },
   // 荧光嗓门活动宣发，任务书点名强表达
   playbill: { occasions: ["event", "entertainment"], identity: "high" },
+  // 递到客户管理层手里的提案书：提案、解决方案、投标，比 brief 暖、敢用橘
+  proposal: { occasions: ["sales", "business"], identity: "medium" },
 }

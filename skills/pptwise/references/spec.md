@@ -107,6 +107,7 @@ This section is generated from the preset library and each preset menu. `identit
 | `swiss` | Swiss | institutional | low | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
 | `memo` | Memo | business, institutional | low | 11 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `evidence`, `hierarchy` |
 | `playbill` | Playbill | event, entertainment | high | 9 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `hierarchy` |
+| `proposal` | Proposal | sales, business | medium | 9 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `fact`, `evidence`, `hierarchy` |
 <!-- generated:end themes -->
 
 ## The 11 content kinds

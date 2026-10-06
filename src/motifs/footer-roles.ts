@@ -22,6 +22,9 @@ import type { MotifId } from "./types"
  *   left as the occasion beside the rail.
  *   rally-motif is rally's campaign folio: the organization, the label and
  *   the notice at the left, 「N / M」 at the right.
+ *   proposal-motif is proposal's binder folio: the organization and the
+ *   notice at the left, the page number at the right, and the deck's `label`
+ *   moved up to the top left as the proposal's running label.
  * - `"organization"`: the motif prints the organization somewhere of its
  *   own, and the shared row carries everything else. ink's colophon rail
  *   sets the organization in a vertical column down the right edge.
@@ -41,6 +44,7 @@ export const MOTIF_FOOTER_ROLES: Partial<Record<MotifId, MotifFooterRole>> = {
   "homeroom-motif": "row",
   "ember-motif": "row",
   "rally-motif": "row",
+  "proposal-motif": "row",
   "ink-motif": "organization",
   "poster-motif": "organization",
 }

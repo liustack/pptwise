@@ -1,0 +1,64 @@
+{
+  "stage": "Decide",
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "receipt",
+          "title": "12 months of power bills",
+          "text": "For: time-of-use energy, demand charges, real prices",
+          "tag": {
+            "text": "Finance"
+          }
+        },
+        {
+          "icon": "handshake",
+          "title": "Supply contract",
+          "text": "For: real peak and valley prices above 10 kV, or the agency note",
+          "tag": {
+            "text": "Your retailer"
+          }
+        },
+        {
+          "icon": "activity",
+          "title": "15-minute load curve",
+          "text": "For: daytime self-use and storage cycle times",
+          "tag": {
+            "text": "Meters"
+          }
+        },
+        {
+          "icon": "ruler",
+          "title": "Roof drawings, title",
+          "text": "For: loading check, title, the roof agreement",
+          "tag": {
+            "text": "Facilities, legal"
+          }
+        },
+        {
+          "icon": "plug-zap",
+          "title": "Single-line diagram",
+          "text": "For: transformer size, connection point, demand",
+          "tag": {
+            "text": "Engineering"
+          }
+        },
+        {
+          "icon": "calendar",
+          "title": "Shifts and shutdowns",
+          "text": "For: weekend self-use, installation windows",
+          "tag": {
+            "text": "Production"
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "With these, we work out your own numbers and survey report. Each one you tick removes an assumption."
+    }
+  ],
+  "notes": "Everything so far is worked per MW and per MWh on industry and policy parameters. These six documents turn it into your own numbers. The most important is the first: twelve months of power bills, which show your time-of-use consumption, demand charges and real prices. If you connect at 10 kV or above and buy on the market, your supply contract matters just as much, because it sets your peak and valley prices. The 15-minute load curve shows how much daytime power you can use yourself and whether storage is worth it. Roof drawings and proof of title support the structural check and the roof agreement, and the single-line diagram the choice of connection point. The shift pattern and shutdown plan tell us how much you use at weekends and on holidays, and let us schedule installation around production."
+}

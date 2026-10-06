@@ -44,6 +44,8 @@ export const methodsComposition: Composition = ({ components, ctx, rect, setting
   if (setting !== "lesson") return null
   const [grid, note, ...rest] = components
   if (grid?.type !== "image_grid" || rest.length > 0) return null
+  // A picture's tag has no place here: the ordinary grid draws it.
+  if (grid.items.some((item) => item.tag)) return null
   if (note !== undefined && (note.type !== "callout" || note.tag || note.icon)) return null
   const g = grid as ImageGrid
   const n = g.items.length

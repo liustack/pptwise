@@ -221,6 +221,9 @@ describe("pageContract: errors and warnings", () => {
 function minimal(type: string, i: number): Component {
   if (type === "paragraph") return { type: "paragraph", text: `Block ${i}` }
   if (type === "bullets") return { type: "bullets", items: [`Point ${i}`] }
+  // One plain figure: the sample's four, with icons and deltas, would count
+  // against a face's item limit too, not just the block count being probed.
+  if (type === "kpi_cards") return { type: "kpi_cards", items: [{ value: `${i}`, label: `Figure ${i}` }] }
   return sample(type)
 }
 

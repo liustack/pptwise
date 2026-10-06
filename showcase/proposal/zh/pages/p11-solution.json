@@ -1,0 +1,37 @@
+{
+  "stage": "方案",
+  "components": [
+    {
+      "type": "image_grid",
+      "emphasis": "first",
+      "items": [
+        {
+          "asset_id": "grid-pv",
+          "icon": "solar-panel",
+          "caption": "屋顶光伏：按屋顶承重和白天负荷定容量，优先自己用掉"
+        },
+        {
+          "asset_id": "grid-ess",
+          "icon": "battery-charging",
+          "caption": "储能柜：按负荷曲线测算，扣完运维、衰减和分成后过线才装",
+          "tag": {
+            "text": "选配",
+            "basis": "pending"
+          }
+        },
+        {
+          "asset_id": "grid-switch",
+          "icon": "plug-zap",
+          "caption": "并网与配电：按电网接入意见改造，取得并网意见后才开工"
+        },
+        {
+          "asset_id": "om-worker",
+          "icon": "hard-hat",
+          "caption": "运维与能源管理：发电、自用、余电和节省逐月对账，报告给贵司"
+        }
+      ]
+    }
+  ],
+  "footnote": "图为 AI 生成的示意图",
+  "notes": "方案分四块。第一块是屋顶光伏，容量按屋顶承重和白天的用电负荷定，优先自己用掉，少靠余电上网。第二块是储能，不默认配，要用贵司的 15 分钟负荷曲线和电价合同测算，扣完运维、衰减和分成之后过线才装。第三块是并网和配电改造，按电网出具的接入意见做。第四块是运维和能源管理，发电量、自用电量、余电量和节省金额每月对账，报告给贵司。"
+}

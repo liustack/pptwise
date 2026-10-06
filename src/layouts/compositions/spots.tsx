@@ -40,6 +40,8 @@ export const spotsComposition: Composition = ({ components, ctx, rect, setting }
   if (setting !== "marquee") return null
   const [grid, close, ...rest] = components
   if (grid?.type !== "image_grid" || rest.length > 0) return null
+  // A picture's tag has no place on these cards: the ordinary grid draws it.
+  if (grid.items.some((item) => item.tag)) return null
   if (close !== undefined && (close.type !== "callout" || close.title || close.icon || close.tag)) return null
   const g = grid as ImageGrid
   if (g.items.length < 2 || g.items.length > 4 || g.items.some((it) => !it.icon || !it.caption?.trim())) return null

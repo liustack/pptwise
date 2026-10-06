@@ -1,0 +1,155 @@
+{
+  "stage": "落地",
+  "components": [
+    {
+      "type": "data_table",
+      "title": "光伏主体 · 按瓦计价",
+      "columns": [
+        {
+          "key": "item",
+          "label": "报价项"
+        },
+        {
+          "key": "what",
+          "label": "包含什么"
+        },
+        {
+          "key": "how",
+          "label": "计价方式"
+        },
+        {
+          "key": "amount",
+          "label": "金额（按踏勘结果出具）"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "solar-panel",
+          "cells": {
+            "item": "组件",
+            "what": "光伏组件",
+            "how": "元/W",
+            "amount": "— — —"
+          }
+        },
+        {
+          "icon": "zap",
+          "cells": {
+            "item": "逆变器",
+            "what": "组串式逆变器",
+            "how": "元/W",
+            "amount": "— — —"
+          }
+        },
+        {
+          "icon": "hard-hat",
+          "cells": {
+            "item": "支架、电缆和建安",
+            "what": "支架、直流交流电缆、安装施工",
+            "how": "元/W",
+            "amount": "— — —"
+          }
+        }
+      ]
+    },
+    {
+      "type": "data_table",
+      "title": "按项单列 · 随现场条件",
+      "columns": [
+        {
+          "key": "item",
+          "label": "报价项"
+        },
+        {
+          "key": "what",
+          "label": "包含什么"
+        },
+        {
+          "key": "how",
+          "label": "计价方式"
+        },
+        {
+          "key": "amount",
+          "label": "金额（按踏勘结果出具）"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "server",
+          "cells": {
+            "item": "一次和二次设备",
+            "what": "箱变、开关箱、预制舱、监控计量",
+            "how": "按项",
+            "amount": "— — —"
+          }
+        },
+        {
+          "icon": "plug-zap",
+          "cells": {
+            "item": "电网接入",
+            "what": "按电网接入意见改造",
+            "how": "按项单列",
+            "amount": "— — —"
+          }
+        },
+        {
+          "icon": "building-2",
+          "cells": {
+            "item": "屋顶加固",
+            "what": "按结构复核结果",
+            "how": "按项单列",
+            "amount": "— — —"
+          },
+          "emphasis": "highlight",
+          "tag": {
+            "text": "不需要则为零"
+          }
+        },
+        {
+          "icon": "landmark",
+          "cells": {
+            "item": "屋顶租赁和管理费用",
+            "what": "租用他方屋顶的租金，设计和报批",
+            "how": "按年，按项",
+            "amount": "— — —"
+          }
+        }
+      ]
+    },
+    {
+      "type": "data_table",
+      "title": "选配",
+      "columns": [
+        {
+          "key": "item",
+          "label": "报价项"
+        },
+        {
+          "key": "what",
+          "label": "包含什么"
+        },
+        {
+          "key": "how",
+          "label": "计价方式"
+        },
+        {
+          "key": "amount",
+          "label": "金额（按踏勘结果出具）"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "battery-charging",
+          "cells": {
+            "item": "储能",
+            "what": "电池柜、变流器、消防和安全论证",
+            "how": "元/kWh，测算过线才报",
+            "amount": "— — —"
+          }
+        }
+      ]
+    }
+  ],
+  "footnote": "报价项按 CPIA 光伏路线图（2024-2025 年）的工商业分布式造价构成列出，运维按元/W·年另报",
+  "notes": "报价结构按 CPIA 路线图里工商业分布式的造价构成逐项列：组件、组串式逆变器、支架、电缆、建安、电网接入、屋顶租赁、屋顶加固、一次设备、二次设备和管理费用。光伏主体按每瓦计价，接入、加固这类跟现场条件强相关的项目按项单列，这样贵司能看清每一块钱花在哪里。屋顶加固特别说明：踏勘做结构复核，需要加固才报，不需要就是零，不打包进每瓦单价。储能是选配，按每 kWh 计价，测算过线才报价。运维按每瓦每年另报。具体金额以报价单为准，按踏勘结果出具。"
+}

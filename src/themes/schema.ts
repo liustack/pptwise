@@ -238,6 +238,7 @@ export const MOTIF_IDS = [
   "gauge-motif",
   "crayonbox-motif",
   "folio-motif",
+  "proposal-motif",
 ] as const satisfies readonly MotifId[]
 
 type MissingMotifId = Exclude<MotifId, (typeof MOTIF_IDS)[number]>

@@ -630,7 +630,7 @@ describe("runSchema / runThemes", () => {
   it("slices one component under --component and one kind under --kind", async () => {
     const callout = JSON.parse(await runSchema({ component: "callout" })) as { component: string; $defs: Record<string, unknown> }
     expect(callout.component).toBe("callout")
-    expect(Object.keys(callout.$defs)).toEqual(["Tag", "IconName"])
+    expect(Object.keys(callout.$defs)).toEqual(["Tag", "Tone", "IconName"])
     const fact = JSON.parse(await runSchema({ kind: "fact", theme: "brief" })) as { kind: string; components: string[] }
     expect(fact.kind).toBe("fact")
     expect([...fact.components].sort()).toEqual(["kpi_cards", "paragraph"])
@@ -767,9 +767,9 @@ describe("runSchema / runThemes", () => {
     expect(lines).toContain("alarm-clock")
     expect(JSON.parse(runIcons(true))).toEqual(lines)
   })
-  it("prints 24 themes, json mode parses", async () => {
-    expect((await runThemes(false)).split("\n")).toHaveLength(24)
-    expect(JSON.parse(await runThemes(true))).toHaveLength(24)
+  it("prints 25 themes, json mode parses", async () => {
+    expect((await runThemes(false)).split("\n")).toHaveLength(25)
+    expect(JSON.parse(await runThemes(true))).toHaveLength(25)
   })
   it("JSON objects include occasions and identity without replacing listThemes label", async () => {
     const rows = JSON.parse(await runThemes(true)) as Array<{
@@ -780,7 +780,7 @@ describe("runSchema / runThemes", () => {
       identity: unknown
       source: unknown
     }>
-    expect(rows).toHaveLength(24)
+    expect(rows).toHaveLength(25)
     expect(Object.keys(rows[0]!)).toEqual(expect.arrayContaining(["id", "label", "colors", "occasions", "identity", "source"]))
     expect(rows.every((row) => row.source === "builtin")).toBe(true)
     for (const row of rows) {

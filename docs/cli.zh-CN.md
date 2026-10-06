@@ -41,7 +41,7 @@ pptwise preview deck-dir/ --html
 | `spec validate <file>` | 验证主题形状的 deck spec。 |
 | `assemble <dir|name>` | 把 deck 项目合并成派生 IR v5。 |
 | `disassemble <ir.json>` | 把 IR v5 拆成 spec、页面文件与资产。 |
-| `themes` | 列出 24 个出厂预设与已装内容包的主题，附元数据。 |
+| `themes` | 列出 25 个出厂预设与已装内容包的主题，附元数据。 |
 | `theme new` | 把命名主题拷贝为自包含 v2 文件。 |
 | `theme fork` | 拷贝主题，并围绕新锚色重推导配色。 |
 | `theme try` | 用两到四个主题渲染固定试衣样稿。 |
@@ -116,7 +116,7 @@ pptwise icons [--json]
 pptwise spec validate deck-dir/deck.spec.json
 ```
 
-IR schema 把每个共享片段只放进 `$defs` 一次：每个组件用自己的类型名，组件联合叫 `Component`，图标名枚举叫 `IconName`，行、数字、卡片、图表和页面共用的小标签叫 `Tag`，页面的年份刻度叫 `Years`。默认输出一行，加 `--pretty` 才缩进。
+IR schema 把每个共享片段只放进 `$defs` 一次：每个组件用自己的类型名，组件联合叫 `Component`，图标名枚举叫 `IconName`，行、数字、卡片、图表和页面共用的小标签叫 `Tag`，数字、行和节点是哪一类消息叫 `Tone`，页面的年份刻度叫 `Years`，页面的表决框叫 `Ballot`。默认输出一行，加 `--pretty` 才缩进。
 
 `--component` 打印一个组件的 schema，只带它用到的 `$defs`。`--kind` 打印该 kind 页面可以放的组件、每个内置主题和每个已装包内主题为它绑定的脸（读不了的包会被略过，并在 stderr 说明）、这些组件的 `oneOf` 以及它们的 `$defs`。加 `--theme` 只回答绑定主题的情况。主题名按 `validate` 解析 spec 主题的同一顺序查找：先 deck 目录（`theme.json`、`<name>.theme.json`），再工作区 `themes/`，再已装内容包，最后内置预设。deck 目录取 `--deck <dir>`，没给时当前目录含 `deck.spec.json`，或含该主题名的 deck 本地文件（`theme.json`、`<name>.theme.json`、`<name>.json`）就算 deck，`validate deck.json` 也是从裸 IR 所在目录读主题的。脸不画任何组件时，列表为空，`oneOf` 的位置换成 `not: {}`。列表来自 validate 用的同一条主题菜单路线，列表之外的组件会被 `validate` 拒绝。未知的类型、kind 或主题会失败并列出合法名字。
 

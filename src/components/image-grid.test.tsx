@@ -169,3 +169,42 @@ describe("image_grid caption icon", () => {
     expect(container.querySelectorAll("path, line, circle, polyline").length).toBeGreaterThan(0)
   })
 })
+
+describe("a picture's tag", () => {
+  const grid = {
+    type: "image_grid" as const,
+    items: [
+      { asset_id: "a", caption: "屋顶光伏" },
+      { asset_id: "b", caption: "储能柜", tag: { text: "选配", basis: "pending" as const } },
+      { asset_id: "c", caption: "并网与配电" },
+    ],
+  }
+
+  it("is accepted on a picture", async () => {
+    const { schema } = await import("../ir/components/image-grid")
+    expect(schema.safeParse(grid).success).toBe(true)
+  })
+
+  it("sits at the picture's top right corner on a plate of the page, dashed while not settled", () => {
+    const { container } = svg(imageGrid.render(grid, box, ctx))
+    const tag = container.querySelector("[data-picture-tag]")!
+    expect(tag.textContent).toBe("选配")
+    const images = Array.from(container.querySelectorAll("image"))
+    const second = images[1]!
+    // Each picture is drawn at its cell's corner, moved there by its group.
+    const [cx, cy] = /translate\(([-\d.]+),([-\d.]+)\)/.exec(second.parentElement!.getAttribute("transform")!)!.slice(1).map(Number) as [number, number]
+    const [plate, label] = Array.from(tag.querySelectorAll("rect"))
+    expect(plate!.getAttribute("fill")).toBe(ctx.colors.bg)
+    const right = cx + Number(second.getAttribute("width"))
+    expect(Number(plate!.getAttribute("x")) + Number(plate!.getAttribute("width"))).toBeCloseTo(right - 10, 5)
+    expect(Number(plate!.getAttribute("y"))).toBe(cy + 10)
+    expect(label!.getAttribute("stroke-dasharray")).toBeTruthy()
+    expect(container.querySelectorAll("[data-picture-tag]")).toHaveLength(1)
+  })
+
+  it("is declared dropped when wider than its picture", () => {
+    const wide = { ...grid, items: grid.items.map((it, i) => (i === 1 ? { ...it, tag: { text: "一个比这张小图宽得多的标签，放不下就声明" } } : it)) }
+    const { container } = svg(imageGrid.render(wide, { x: 0, y: 0, w: 420 }, ctx))
+    expect(container.querySelector("[data-dropped]")).not.toBeNull()
+  })
+})

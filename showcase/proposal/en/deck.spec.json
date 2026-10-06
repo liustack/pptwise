@@ -1,0 +1,171 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "customer"
+  },
+  "theme": "proposal",
+  "filename": "rooftop-pv-storage-proposal-en",
+  "meta": {
+    "date": "October 2026"
+  },
+  "footer": {
+    "page_number": true,
+    "label": "Rooftop solar and storage proposal · For your management team"
+  },
+  "course": {
+    "stages": [
+      {
+        "label": "Summary"
+      },
+      {
+        "label": "Numbers"
+      },
+      {
+        "label": "Plan"
+      },
+      {
+        "label": "Delivery"
+      },
+      {
+        "label": "Decide"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "Let your roof pay part of your power bill",
+      "summary": "Commercial rooftop solar and storage",
+      "kicker": "For your management team"
+    },
+    {
+      "id": "p02-promise",
+      "type": "content",
+      "kind": "points",
+      "heading": "Solar still pays back. Storage has to prove it",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p03-chapter-numbers",
+      "type": "chapter",
+      "heading": "First, the numbers under the new tariffs",
+      "summary": "This part answers",
+      "kicker": "Part 1 · The numbers"
+    },
+    {
+      "id": "p04-tou",
+      "type": "content",
+      "kind": "data",
+      "heading": "Midday is now off-peak in Jiangsu and Zhejiang",
+      "focus": "heatmap"
+    },
+    {
+      "id": "p05-provinces",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Above 10 kV, your own contract sets the price",
+      "focus": "comparison"
+    },
+    {
+      "id": "p06-pv-math",
+      "type": "content",
+      "kind": "data",
+      "heading": "1 MW in Jiangsu saves about RMB 440,000 a year",
+      "focus": "data_table"
+    },
+    {
+      "id": "p07-sensitivity",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Payback: how much you use by day, at what price",
+      "focus": "chart"
+    },
+    {
+      "id": "p08-storage-math",
+      "type": "content",
+      "kind": "data",
+      "heading": "Storage tops out at RMB 712/MWh a day in Jiangsu",
+      "focus": "comparison"
+    },
+    {
+      "id": "p09-storage-discount",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Discount storage: narrower spreads, higher costs",
+      "focus": "from_to"
+    },
+    {
+      "id": "p10-chapter-plan",
+      "type": "chapter",
+      "heading": "Then the plan: what, who pays, how it gets built",
+      "summary": "This part answers",
+      "kicker": "Part 2 · Plan and delivery"
+    },
+    {
+      "id": "p11-solution",
+      "type": "content",
+      "kind": "list",
+      "heading": "Four parts: solar first, storage only if it pays",
+      "focus": "image_grid"
+    },
+    {
+      "id": "p12-models",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Fund it and save RMB 440,000/MW, or pay nothing",
+      "focus": "comparison"
+    },
+    {
+      "id": "p13-references",
+      "type": "content",
+      "kind": "evidence",
+      "heading": "Plants like yours already do it: five references",
+      "focus": "data_table"
+    },
+    {
+      "id": "p14-safety",
+      "type": "content",
+      "kind": "list",
+      "heading": "Storage meets GB 44240, No. 65 and past lessons",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p15-risks",
+      "type": "content",
+      "kind": "list",
+      "heading": "Five risks, each with a source and a response",
+      "focus": "data_table"
+    },
+    {
+      "id": "p16-roadmap",
+      "type": "content",
+      "kind": "process",
+      "heading": "Six steps, each closed by a document you sign",
+      "focus": "timeline"
+    },
+    {
+      "id": "p17-pricing",
+      "type": "content",
+      "kind": "list",
+      "heading": "Itemised quote: roof and grid work priced apart",
+      "focus": "data_table"
+    },
+    {
+      "id": "p18-documents",
+      "type": "content",
+      "kind": "list",
+      "heading": "Six documents turn these numbers into your own",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p19-ending",
+      "type": "ending",
+      "heading": "Three decisions, and we start the survey",
+      "summary": "Once your documents arrive, we work out your numbers and the survey report",
+      "kicker": "Rooftop solar and storage proposal · For your management team"
+    }
+  ]
+}

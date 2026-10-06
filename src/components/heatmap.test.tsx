@@ -374,10 +374,8 @@ describe("heatmap component", () => {
       bands: [{ from: "6 月", to: "9 月", label: "2027 演唱会季 · 6 至 9 月" }],
     }
 
-    it("takes twelve columns, one a month, and no more", () => {
+    it("takes twelve columns, one a month", () => {
       expect(heatmapSchema.safeParse(season).success).toBe(true)
-      const thirteen = { ...season, x_labels: [...months, "13"], values: season.values.map((row) => [...row, 0]), bands: undefined }
-      expect(heatmapSchema.safeParse(thirteen).success).toBe(false)
     })
 
     it("frames the run across every row in the accent, dashed, and names it under the grid", () => {
@@ -421,11 +419,110 @@ describe("heatmap component", () => {
       expect(heatmapSchema.safeParse({ ...season, bands: [{ from: "5 月", to: "5 月", label: "one month" }] }).success).toBe(true)
     })
 
+    it("sets a run's icon before its name, the pair centred under the run", () => {
+      const sunny = { ...season, bands: [{ ...season.bands[0]!, icon: "sun" }] }
+      expect(heatmapSchema.safeParse(sunny).success).toBe(true)
+      expect(heatmapSchema.safeParse({ ...season, bands: [{ ...season.bands[0]!, icon: "not-an-icon" }] }).success).toBe(false)
+      const { container } = svg(heatmap.render(sunny, { x: 0, y: 0, w: 1100, h: 320 }, ctx))
+      const band = container.querySelector("[data-heatmap-band]")!
+      const icon = band.querySelector("g[transform]")!
+      expect(icon).not.toBeNull()
+      const iconX = Number(/translate\(([-\d.]+),/.exec(icon.getAttribute("transform")!)![1])
+      const name = band.querySelector("text")!
+      const plain = svg(heatmap.render(season, { x: 0, y: 0, w: 1100, h: 320 }, ctx)).container.querySelector("[data-heatmap-band] text")!
+      // The icon takes room before the name, so the name moves right by half of it.
+      expect(Number(name.getAttribute("x"))).toBeCloseTo(Number(plain.getAttribute("x")) + 12, 5)
+      expect(iconX).toBeLessThan(Number(name.getAttribute("x")) - 100)
+    })
+
     it("keeps its contrast and its primitives", () => {
       const markup = renderSvgMarkup(<svg xmlns="http://www.w3.org/2000/svg">{heatmap.render(season, { x: 0, y: 0, w: 1100, h: 320 }, ctx)}</svg>)
       expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
       const name = parseSvgRoot(markup).querySelector("[data-heatmap-band] text")!
       expect(contrastRatio(name.getAttribute("fill")!, ctx.colors.bg)).toBeGreaterThanOrEqual(4.5)
+    })
+  })
+
+  describe("a day of hours in named steps (steps, label_every)", () => {
+    const hours = Array.from({ length: 24 }, (_, i) => `${i} 时`)
+    const tariff = (prices: number[][]) => ({
+      type: "heatmap" as const,
+      x_labels: hours,
+      y_labels: ["江苏 10 月", "广东汕头 9 月"],
+      values: prices,
+      label_every: 6,
+      steps: [
+        { max: 0.5, label: "低谷", short: "谷" },
+        { max: 0.9, label: "平段", short: "平" },
+        { max: 1.3, label: "高峰", short: "峰" },
+        { label: "尖峰", short: "尖" },
+      ],
+    })
+    const jiangsu = hours.map((_, h) => (h >= 10 && h < 14 ? 0.3828 : h >= 15 && h < 22 ? 0.9566 : 0.64))
+    const guangdong = hours.map((_, h) => (h < 8 ? 0.2635 : h === 11 || h === 15 || h === 16 ? 1.3465 : h === 10 || h === 14 || h >= 17 && h < 19 ? 1.0827 : 0.6483))
+    const day = tariff([jiangsu, guangdong])
+
+    it("takes 24 columns, a day of hours, and no more", () => {
+      expect(heatmapSchema.safeParse(day).success).toBe(true)
+      const extra = { ...day, x_labels: [...hours, "24 时"], values: day.values.map((row) => [...row, 0.5]), label_every: undefined }
+      expect(heatmapSchema.safeParse(extra).success).toBe(false)
+    })
+
+    it("colours each cell by the step its value falls in, the steps evenly darker, and prints its short name", () => {
+      const { container } = svg(heatmap.render(day, { x: 0, y: 0, w: 1100, h: 260 }, ctx))
+      const cells = Array.from(container.querySelectorAll("rect[data-plot-mark]"))
+      expect(cells).toHaveLength(48)
+      const fillAt = (row: number, h: number) => cells[row * 24 + h]!.getAttribute("fill")
+      // 0.3828 and 0.2635 are both valley: one colour, whatever the value.
+      expect(fillAt(0, 11)).toBe(fillAt(1, 3))
+      // valley, flat, peak and top all differ, each darker than the last.
+      const fills = [fillAt(0, 11), fillAt(0, 0), fillAt(0, 16), fillAt(1, 11)]
+      expect(new Set(fills).size).toBe(4)
+      const contrastToPrimary = fills.map((f) => contrastRatio(f!, ctx.colors.primary))
+      for (let i = 1; i < 4; i++) expect(contrastToPrimary[i]!).toBeLessThan(contrastToPrimary[i - 1]!)
+      const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+      expect(texts.filter((t) => t === "尖")).toHaveLength(3)
+    })
+
+    it("names every step in a key under the grid", () => {
+      const { container } = svg(heatmap.render(day, { x: 0, y: 0, w: 1100, h: 260 }, ctx))
+      const key = container.querySelector("[data-heatmap-key]")!
+      expect(Array.from(key.querySelectorAll("text")).map((t) => t.textContent)).toEqual(["低谷", "平段", "高峰", "尖峰"])
+      const lastRow = Array.from(container.querySelectorAll("rect[data-plot-mark]")).pop()!
+      for (const swatch of Array.from(key.querySelectorAll("rect"))) {
+        expect(Number(swatch.getAttribute("y"))).toBeGreaterThan(Number(lastRow.getAttribute("y")) + Number(lastRow.getAttribute("height")))
+      }
+      expect(heatmap.measure(day, 1100, ctx)).toBe(heatmap.measure({ ...day, steps: undefined }, 1100, ctx) + 30)
+    })
+
+    it("prints a column label every six columns, from the first", () => {
+      const { container } = svg(heatmap.render(day, { x: 0, y: 0, w: 1100, h: 260 }, ctx))
+      const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+      expect(hours.filter((label) => texts.includes(label))).toEqual(["0 时", "6 时", "12 时", "18 时"])
+      expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    })
+
+    it("refuses steps out of order, a missing or extra max, steps beside a domain, and a label step past the grid", () => {
+      const parse = (patch: object) => heatmapSchema.safeParse({ ...day, ...patch }).success
+      expect(parse({ steps: [{ max: 0.9, label: "a" }, { max: 0.5, label: "b" }, { label: "c" }] })).toBe(false)
+      expect(parse({ steps: [{ label: "a" }, { label: "b" }] })).toBe(false)
+      expect(parse({ steps: [{ max: 0.5, label: "a" }, { max: 2, label: "b" }] })).toBe(false)
+      expect(parse({ domain: { min: 0, max: 2 } })).toBe(false)
+      expect(parse({ steps: [{ max: 0.5, label: " " }, { label: "b" }] })).toBe(false)
+      expect(parse({ label_every: 24 })).toBe(false)
+      expect(parse({ label_every: 1 })).toBe(false)
+    })
+
+    it("keeps its cell ink readable and its primitives", () => {
+      const markup = renderSvgMarkup(<svg xmlns="http://www.w3.org/2000/svg">{heatmap.render(day, { x: 0, y: 0, w: 1100, h: 260 }, ctx)}</svg>)
+      expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
+      const root = parseSvgRoot(markup)
+      const cells = Array.from(root.querySelectorAll("rect[data-plot-mark]"))
+      for (const cell of cells) {
+        const text = cell.nextElementSibling
+        if (text?.tagName !== "text") continue
+        expect(contrastRatio(text.getAttribute("fill")!, cell.getAttribute("fill")!)).toBeGreaterThanOrEqual(4.5)
+      }
     })
   })
 

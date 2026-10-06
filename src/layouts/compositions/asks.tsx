@@ -31,7 +31,8 @@ type NumberedCards = Extract<Component, { type: "numbered_cards" }>
 const TICKETS = { top: 8, col: 584, row: 214, w: 568, h: 198, seam: 440, hole: 7, icon: { x: 24, y: 24, size: 26 }, label: { x: 62, top: 22, size: 15, lineHeight: 30, tracking: 2 }, title: { x: 24, top: 66, size: 22, lineHeight: 32, maxLines: 2, w: 400 }, text: { x: 24, top: 136, size: 14, lineHeight: 22, maxLines: 2, w: 400 }, box: { x: 462, top: 50, pitch: 56, size: 22, w: 2, r: 4 }, choice: { x: 494, size: 15, lineHeight: 26 }, ref: { x: 452, top: 160, size: 11, lineHeight: 22, w: 112 } } as const
 
 export const asksComposition: Composition = ({ components, ctx, rect, setting, ballot }) => {
-  if (setting !== "marquee" || !ballot || ballot.choices.length !== 2 || ballot.signature) return null
+  // Every stub holds the same two boxes.
+  if (setting !== "marquee" || !ballot || ballot.choices.length !== 2 || ballot.signature || ballot.item_choices) return null
   const [cards, ...rest] = components
   if (cards?.type !== "numbered_cards" || rest.length > 0) return null
   const nc = cards as NumberedCards

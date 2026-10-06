@@ -1,0 +1,42 @@
+{
+  "stage": "Summary",
+  "components": [
+    {
+      "type": "verdict_banner",
+      "tone": "positive",
+      "icon": "handshake",
+      "text": "You get three things"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "icon": "sun",
+          "label": "Daytime power\nfrom your own roof",
+          "value": "1.08 m kWh",
+          "note": "A year from 1 MW of solar\nJiangsu official figure, 1,080 h"
+        },
+        {
+          "icon": "calculator",
+          "label": "A payback worked from\nyour bills and contract",
+          "value": "**6.1 to 7.7 yrs**",
+          "note": "Simple payback, self-funded, per MW\nBefore degradation, tax and finance"
+        },
+        {
+          "icon": "file-check",
+          "label": "A contract naming who pays,\nwho runs it, who is liable",
+          "value": "RMB 0",
+          "note": "Your outlay under an energy contract\nSavings shared through a discount"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "tip",
+      "icon": "battery-charging",
+      "text": "Storage is not in by default: it goes in only if your load curve clears the bar after O&M, fade and sharing."
+    }
+  ],
+  "footnote": "Source: Jiangsu DRC bidding notice (2025-11-11), CPIA PV roadmap (2024-2025 edition), The Paper (2026-08-18)",
+  "notes": "The short answer first. Jiangsu and Zhejiang have moved midday into the off-peak band, and many plant owners now assume rooftop solar no longer pays. On Jiangsu's official parameters and industry cost data, 1 MW of solar makes about 1.08 million kWh a year, and a self-funded system pays back in 6.1 to 7.7 years, depending on how much of that power you use yourself and what the surplus sells for. If you would rather not invest, an energy management contract lets an investor fund the system while you pay a discounted tariff for the power. Storage is different: spreads are narrowing and costs are rising, so we only propose it once your own load curve shows it pays."
+}

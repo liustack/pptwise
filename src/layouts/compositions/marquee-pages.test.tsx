@@ -169,6 +169,18 @@ describe("the rally board's pages on rally", () => {
     expect(byText(root!, "演唱会：8、9 月场次见顶，5、11 月票房高点")).toBeDefined()
   })
 
+  it("season leaves a grid in named steps, labelled every few columns or with a band's icon, to the ordinary heat grid", () => {
+    const page = MARQUEE_BOARD["p05-season"]!
+    const { ctx } = testCtx("rally")
+    const [grid, ...rest] = page.components as [Extract<Component, { type: "heatmap" }>, ...Component[]]
+    const stepped = { ...grid, steps: [{ max: 1, label: "淡季" }, { max: 2, label: "平季" }, { label: "旺季" }] }
+    const sparse = { ...grid, label_every: 3 }
+    const iconned = { ...grid, bands: grid.bands!.map((b) => ({ ...b, icon: "sun" })) }
+    for (const heat of [stepped, sparse, iconned]) {
+      expect(compose({ components: [heat, ...rest], ctx: chinese(ctx), rect: band(page.sourced), setting: "marquee" }, ["season"])).toBeNull()
+    }
+  })
+
   it("makeup prints a share inside its part where it fits and under it where it does not", () => {
     const { root } = draw("p06-audience")
     expect(root!.querySelectorAll("[data-marquee-makeup]")).toHaveLength(2)
@@ -283,5 +295,26 @@ describe("the rally board's pages on rally", () => {
     const page = MARQUEE_BOARD["p17-asks"]!
     const { ctx } = testCtx("rally")
     expect(compose({ components: page.components, ctx, rect: band(false), setting: "marquee" }, ["asks"])).toBeNull()
+  })
+})
+
+describe("a picture's tag", () => {
+  const withTag = (components: readonly unknown[]) => (components as { type: string; items?: Record<string, unknown>[] }[]).map((c) => (c.type === "image_grid" ? { ...c, items: c.items!.map((it, i) => (i === 1 ? { ...it, tag: { text: "选配", basis: "pending" } } : it)) } : c))
+  it("leaves the touchpoints page to the ordinary grid, which draws the tag", () => {
+    const page = MARQUEE_BOARD["p09-touchpoints"]!
+    const { ctx } = testCtx("rally")
+    const props = { ctx: chinese(ctx), rect: band(page.sourced), setting: "marquee" as const }
+    expect(compose({ ...props, components: page.components }, ["spots"])).not.toBeNull()
+    expect(compose({ ...props, components: withTag(page.components) as Component[] }, ["spots"])).toBeNull()
+  })
+})
+
+describe("a ballot with boxes of an item's own", () => {
+  it("leaves the requests, whose stubs share two boxes", () => {
+    const page = MARQUEE_BOARD["p17-asks"]!
+    const { ctx } = testCtx("rally")
+    const props = { ctx: chinese(ctx), rect: band(page.sourced), setting: "marquee" as const, components: page.components }
+    expect(compose({ ...props, ballot: page.ballot }, ["asks"])).not.toBeNull()
+    expect(compose({ ...props, ballot: { ...page.ballot!, item_choices: [{ item: 1, choices: ["批准", "缓议"] }] } }, ["asks"])).toBeNull()
   })
 })

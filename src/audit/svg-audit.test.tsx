@@ -147,6 +147,41 @@ describe("auditSvgMarkup", () => {
     expect(issues).toHaveLength(1)
     expect(issues[0].kind).toBe("h-overflow")
   })
+
+  // A name set up a binder's tab at the right edge (proposal's Latin tabs)
+  // turns a quarter about its own middle: the line runs down the page, not
+  // across it. Read unturned, "Delivery" ran x=[1227,1288] off a page its
+  // glyphs never leave, on every content page of the English deck.
+  it("reads a line turned about a point where it is drawn, down the page", () => {
+    const turned = (angle: number) =>
+      auditSvgMarkup(wrap(`<g transform="rotate(${angle} 1258 200)"><text x="1258" y="200" font-size="13" text-anchor="middle">Delivery</text></g>`))
+    expect(turned(90)).toEqual([])
+    expect(turned(-90)).toEqual([])
+    // Unturned, the same line does leave the page.
+    expect(turned(0).map((i) => i.kind)).toEqual(["page-overflow"])
+  })
+
+  it("still flags a turned line whose run leaves the page at the foot", () => {
+    const issues = auditSvgMarkup(
+      wrap(`<g transform="rotate(90 1258 690)"><text x="1258" y="690" font-size="20">a name far too long for the tab</text></g>`),
+    )
+    expect(issues.map((i) => i.kind)).toEqual(["page-overflow"])
+    expect(issues[0]!.detail).toMatch(/y=\[690,\d+\]/)
+  })
+
+  it("composes a turn with the translate and scale around it", () => {
+    // Turned a quarter, the 264px line runs from y=10 to y=274 at x=1250.
+    // Translated by 20 it sits at x=1270, inside the page.
+    const inside = auditSvgMarkup(
+      wrap(`<g transform="translate(20,0)"><g transform="rotate(90 1250 10)"><text x="1250" y="10" font-size="20">OVERFLOWOVERFLOWOVER</text></g></g>`),
+    )
+    expect(inside).toEqual([])
+    // Doubled, the same turned line runs past the foot.
+    const doubled = auditSvgMarkup(
+      wrap(`<g transform="scale(2)"><g transform="rotate(90 600 300)"><text x="600" y="300" font-size="20">OVERFLOWOVERFLOWOVER</text></g></g>`),
+    )
+    expect(doubled.map((i) => i.kind)).toEqual(["page-overflow"])
+  })
 })
 
 // borrow-wave Task 3 review round (2026-07-21): a permanent regression for

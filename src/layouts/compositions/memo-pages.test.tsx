@@ -502,3 +502,11 @@ describe("what the memo board's compositions decline", () => {
     expect(COMPOSITIONS.rota({ components: [busy] as Component[], ctx: chinese(ctx), rect: BAND, setting: "memo" })).toBeNull()
   })
 })
+
+describe("a picture's tag", () => {
+  const withTag = (components: readonly unknown[]) => (components as { type: string; items?: Record<string, unknown>[] }[]).map((c) => (c.type === "image_grid" ? { ...c, items: c.items!.map((it, i) => (i === 1 ? { ...it, tag: { text: "选配", basis: "pending" } } : it)) } : c))
+  it("leaves the options page to the ordinary grid, which draws the tag", () => {
+    expect(draw(MODES).element).not.toBeNull()
+    expect(compose({ components: withTag(MODES) as Component[], ctx: chinese(testCtx("memo").ctx), rect: BAND, setting: "memo" }, ["catalog"])).toBeNull()
+  })
+})

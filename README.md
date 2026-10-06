@@ -43,7 +43,7 @@ Issues are welcome any time. [Open one](https://github.com/liustack/pptwise/issu
 
 **⚡ Tell your AI what to cover, get the deck.** You bring the intent, the engine turns semantic page kinds and typed components into a coherent theme-bound deck. The same bound input renders the same output every time.
 
-**✏️ Open it in PowerPoint and keep working.** Every heading, bullet, and chart bar opens in PowerPoint for you to retype and restyle. Chart and table figures are the exception: every bar and cell is an editable shape with editable text, not a native PowerPoint chart or table object carrying data, so to change the numbers, have your AI rebuild that page. Start from 24 factory themes, copy one into your workspace, or extract colors and fonts from a deck your company already uses.
+**✏️ Open it in PowerPoint and keep working.** Every heading, bullet, and chart bar opens in PowerPoint for you to retype and restyle. Chart and table figures are the exception: every bar and cell is an editable shape with editable text, not a native PowerPoint chart or table object carrying data, so to change the numbers, have your AI rebuild that page. Start from 25 factory themes, copy one into your workspace, or extract colors and fonts from a deck your company already uses.
 
 **🔌 Installs into the agent you already use.** One command puts pptwise into DeepSeek Harness, Claude Code, or any agent that reads a skill folder (Codex and friends), and it knows how to build a deck the moment it lands.
 

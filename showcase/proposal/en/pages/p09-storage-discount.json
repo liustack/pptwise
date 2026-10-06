@@ -1,0 +1,58 @@
+{
+  "stage": "Numbers",
+  "components": [
+    {
+      "type": "from_to",
+      "from": {
+        "title": "Before"
+      },
+      "to": {
+        "title": "Now"
+      },
+      "rows": [
+        {
+          "icon": "arrow-down-up",
+          "label": "Jiangsu peak-valley spread",
+          "note": "CNESA estimate, before and after No. 426, approximate",
+          "from": "0.85",
+          "to": "0.65",
+          "unit": "RMB/kWh",
+          "tag": {
+            "text": "Down about 25%"
+          }
+        },
+        {
+          "icon": "trending-up",
+          "label": "2-hour system bid price",
+          "note": "CNESA, H1 averages, mostly large systems, 2025 derived",
+          "from": "553",
+          "to": "599.3",
+          "unit": "RMB/kWh",
+          "tag": {
+            "text": "Up 8.3%"
+          }
+        },
+        {
+          "icon": "clock",
+          "label": "Zhejiang storage payback",
+          "note": "NRDC and CNESA estimate, before and after the change",
+          "from": "5.4",
+          "to": "9.1",
+          "unit": "yrs",
+          "tag": {
+            "text": "Research estimate"
+          },
+          "emphasis": true
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "trending-down",
+      "text": "Customer-side storage added in Q1 2026 fell about 50% year on year. No subsidy counted: the only ones found have expired."
+    }
+  ],
+  "footnote": "Source: CNESA (Yicai 2025-05-27, Xinhua 2026-06-01, 08-28), NRDC and CNESA (Jiemian 2025-12-17). Bid prices are H1 averages, mostly large-scale storage",
+  "notes": "The previous page was a ceiling. This one shows why it needs discounting. First, spreads are narrowing: CNESA estimates that Jiangsu's Document No. 426 cut the peak-valley spread from about RMB 0.85 to about RMB 0.65, roughly a quarter. Second, costs are rising: CNESA reports that the average winning bid for a 2-hour system was RMB 599.3 per kWh in the first half of 2026, up 8.3% on a year earlier. That price is mostly for large grid-scale projects, not commercial cabinets, and the 2025 figure is worked back from the growth rate. Third, the research groups NRDC and CNESA estimate that Zhejiang's new rules stretch the payback of commercial storage from 5.4 to 9.1 years. The market has noticed: customer-side storage added in the first quarter of 2026 fell by about half on a year earlier, with the end of fixed time-of-use bands, narrower spreads and fading subsidies among the reasons. On subsidies, we only found local, temporary payments for peak discharge in summer and winter, such as RMB 1 per kWh in central Wenzhou, which ended on 31 January 2026, so none is counted. Our advice: model storage first, and install it only if it clears the bar."
+}

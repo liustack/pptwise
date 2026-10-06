@@ -1,0 +1,155 @@
+{
+  "stage": "Delivery",
+  "components": [
+    {
+      "type": "data_table",
+      "title": "Solar · Priced per watt",
+      "columns": [
+        {
+          "key": "item",
+          "label": "Line"
+        },
+        {
+          "key": "what",
+          "label": "Covers"
+        },
+        {
+          "key": "how",
+          "label": "Priced as"
+        },
+        {
+          "key": "amount",
+          "label": "Amount (after the survey)"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "solar-panel",
+          "cells": {
+            "item": "Modules",
+            "what": "Solar panels",
+            "how": "RMB/W",
+            "amount": "— — —"
+          }
+        },
+        {
+          "icon": "zap",
+          "cells": {
+            "item": "Inverters",
+            "what": "String inverters",
+            "how": "RMB/W",
+            "amount": "— — —"
+          }
+        },
+        {
+          "icon": "hard-hat",
+          "cells": {
+            "item": "Mounting, cabling, installation",
+            "what": "Racking, DC and AC cable, site work",
+            "how": "RMB/W",
+            "amount": "— — —"
+          }
+        }
+      ]
+    },
+    {
+      "type": "data_table",
+      "title": "Itemised · Set by site conditions",
+      "columns": [
+        {
+          "key": "item",
+          "label": "Line"
+        },
+        {
+          "key": "what",
+          "label": "Covers"
+        },
+        {
+          "key": "how",
+          "label": "Priced as"
+        },
+        {
+          "key": "amount",
+          "label": "Amount (after the survey)"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "server",
+          "cells": {
+            "item": "Primary and secondary kit",
+            "what": "Transformer, switchgear, monitoring, metering",
+            "how": "Per item",
+            "amount": "— — —"
+          }
+        },
+        {
+          "icon": "plug-zap",
+          "cells": {
+            "item": "Grid connection",
+            "what": "Works the grid's opinion requires",
+            "how": "Separate line",
+            "amount": "— — —"
+          }
+        },
+        {
+          "icon": "building-2",
+          "cells": {
+            "item": "Roof strengthening",
+            "what": "As the structural check finds",
+            "how": "Separate line",
+            "amount": "— — —"
+          },
+          "emphasis": "highlight",
+          "tag": {
+            "text": "Zero if not needed"
+          }
+        },
+        {
+          "icon": "landmark",
+          "cells": {
+            "item": "Roof rent and management",
+            "what": "Rent for a roof not owned, design, permits",
+            "how": "Per year, per item",
+            "amount": "— — —"
+          }
+        }
+      ]
+    },
+    {
+      "type": "data_table",
+      "title": "Optional",
+      "columns": [
+        {
+          "key": "item",
+          "label": "Line"
+        },
+        {
+          "key": "what",
+          "label": "Covers"
+        },
+        {
+          "key": "how",
+          "label": "Priced as"
+        },
+        {
+          "key": "amount",
+          "label": "Amount (after the survey)"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "battery-charging",
+          "cells": {
+            "item": "Storage",
+            "what": "Cabinets, converters, fire systems, safety study",
+            "how": "RMB/kWh, if it pays",
+            "amount": "— — —"
+          }
+        }
+      ]
+    }
+  ],
+  "footnote": "Lines follow CPIA's cost breakdown for commercial rooftop solar (PV roadmap 2024-2025 edition). O&M is quoted per watt a year",
+  "notes": "The quote follows CPIA's cost breakdown for commercial and industrial rooftop systems line by line: modules, string inverters, racking, cabling, installation, grid connection, roof rent, roof strengthening, primary equipment, secondary equipment and management. The array itself is priced per watt. Lines that depend on the site, such as grid connection and roof strengthening, are priced on their own so you can see where every yuan goes. Roof strengthening in particular: the survey includes a structural check, and strengthening is quoted only if it is needed, otherwise it is zero, never folded into the per-watt price. Storage is optional, priced per kWh, and quoted only if the model shows it pays. O&M is quoted separately per watt a year. Amounts are set in the quotation after the survey."
+}

@@ -6,6 +6,7 @@ describe("suggestThemes", () => {
     expect(suggestThemes({ occasions: ["finance"] })).toEqual(["ledger"])
     expect(suggestThemes({ occasions: ["fashion"] })).toEqual(["runway"])
     expect(suggestThemes({ occasions: ["kids"] })).toEqual(["crayon"])
+    expect(suggestThemes({ occasions: ["sales"] })).toEqual(["proposal"])
     const educationAndKids = suggestThemes({ occasions: ["education", "kids"] })
     expect(educationAndKids[0]).toBe("crayon")
     expect(educationAndKids).toContain("thesis")
@@ -18,6 +19,7 @@ describe("suggestThemes", () => {
       "bulletin",
       "memo",
       "brief",
+      "proposal",
     ])
     expect(suggestThemes({ occasions: ["education"], identity: "high" })).toEqual([
       "crayon",

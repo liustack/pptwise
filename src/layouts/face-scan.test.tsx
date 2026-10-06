@@ -154,7 +154,7 @@ describe.sequential("the registry scan and what it covers", () => {
     // the combinations that scan finished asserting on rather than the ones the
     // registration table promises.
     it("covers at least the 1,776 face x theme combinations the deleted copies held", () => {
-      expect(CANONICAL_THEME_IDS.length).toBe(24)
+      expect(CANONICAL_THEME_IDS.length).toBe(25)
       expect(LEGACY_COMBINATIONS.size).toBeGreaterThanOrEqual(1776)
       expect(SCANNED_COMBINATIONS.size).toBeGreaterThanOrEqual(3120)
     })

@@ -257,3 +257,35 @@ describe("the homeroom board's pages on homeroom", () => {
     expect(board.root!.querySelector("[data-lesson-chalk='marked']")).not.toBeNull()
   })
 })
+
+describe("a picture's tag", () => {
+  const withTag = (components: readonly unknown[]) => (components as { type: string; items?: Record<string, unknown>[] }[]).map((c) => (c.type === "image_grid" ? { ...c, items: c.items!.map((it, i) => (i === 1 ? { ...it, tag: { text: "选配", basis: "pending" } } : it)) } : c))
+  it("leaves the methods page to the ordinary grid, which draws the tag", () => {
+    const page = LESSON_BOARD["p17-methods"]!
+    const { ctx } = testCtx("homeroom")
+    expect(compose({ components: page.components, ctx: chinese(ctx), rect: BAND, setting: "lesson" }, ["methods"])).not.toBeNull()
+    expect(compose({ components: withTag(page.components) as Component[], ctx: chinese(ctx), rect: BAND, setting: "lesson" }, ["methods"])).toBeNull()
+  })
+})
+
+describe("icon cards with a title or a tone", () => {
+  it("go to the ordinary cards, which draw both, not to the rules", () => {
+    const page = LESSON_BOARD["p15-rules"]!
+    const { ctx } = testCtx("homeroom")
+    const [cards, ...rest] = page.components as [Extract<Component, { type: "icon_cards" }>, ...Component[]]
+    const props = { ctx: chinese(ctx), rect: BAND, setting: "lesson" as const }
+    expect(compose({ ...props, components: page.components }, ["rules"])).not.toBeNull()
+    expect(compose({ ...props, components: [{ ...cards, title: "公司规定" }, ...rest] }, ["rules"])).toBeNull()
+    expect(compose({ ...props, components: [{ ...cards, items: cards.items.map((it, i) => (i === 0 ? { ...it, tone: "danger" as const } : it)) }, ...rest] }, ["rules"])).toBeNull()
+  })
+})
+
+describe("a ballot with boxes of an item's own", () => {
+  it("leaves the quiz, whose questions share their boxes", () => {
+    const page = LESSON_BOARD["p09-quiz1"]!
+    const { ctx } = testCtx("homeroom")
+    const props = { ctx: chinese(ctx), rect: BAND, setting: "lesson" as const, components: page.components }
+    expect(compose({ ...props, ballot: page.ballot }, ["quiz"])).not.toBeNull()
+    expect(compose({ ...props, ballot: { ...page.ballot!, item_choices: [{ item: 1, choices: ["可以", "不行"] }] } }, ["quiz"])).toBeNull()
+  })
+})

@@ -1,0 +1,59 @@
+{
+  "stage": "Delivery",
+  "components": [
+    {
+      "type": "timeline",
+      "milestones": [
+        {
+          "date": "Step 1",
+          "title": "Survey",
+          "desc": "Roof structure, switch room, connection point. You sign off: Survey report",
+          "icon": "search"
+        },
+        {
+          "date": "Step 2",
+          "title": "Design, model",
+          "desc": "Worked from your bills and contract. You sign off: The model",
+          "icon": "calculator"
+        },
+        {
+          "date": "Step 3",
+          "title": "Grid opinion, filing",
+          "desc": "No work starts before the grid opinion. You sign off: Opinion and filing",
+          "icon": "file-check",
+          "source": "No. 7, Articles 12, 17, 26",
+          "highlight": true
+        },
+        {
+          "date": "Step 4",
+          "title": "Build",
+          "desc": "Structure, fire and waterproofing to standard. You sign off: As-built records",
+          "icon": "hard-hat",
+          "source": "No. 7, Article 19"
+        },
+        {
+          "date": "Step 5",
+          "title": "Grid acceptance",
+          "desc": "Runs once it passes inspection. You sign off: Inspection report",
+          "icon": "plug-zap",
+          "source": "No. 7, Article 31"
+        },
+        {
+          "date": "Step 6",
+          "title": "Operation",
+          "desc": "Output and savings reconciled monthly. You sign off: Monthly report",
+          "icon": "wrench"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "clipboard-check",
+      "title": "Storage adds three safety gates:",
+      "text": "safety study · completion safety check · review after start (No. 65)"
+    }
+  ],
+  "footnote": "Source: NEA Document No. 7 (2025), Articles 12 to 35, NEA Document No. 65 (2025). Timing for each step is set after the survey",
+  "notes": "Six steps, in the order NEA Document No. 7 sets. First the survey: roof structure, switch room and connection point, with a structural opinion. Second, the design and the numbers, worked from your bills and contract. Third, the step that matters most: apply to the grid, and start no work until its connection opinion is in hand, while the investor files the project on its AC capacity, which is you if self-funded and the investor under an EMC. Fourth, construction by a qualified contractor to the structural, fire, waterproofing, wind and lightning requirements. Fifth, grid acceptance: the grid reviews the equipment test reports and the system runs once it passes inspection. Sixth, operation, reconciled monthly. Each step ends with a document for you to sign off. If storage is included, Document No. 65 adds three safety gates. Once running, Document No. 7 allows the export mode to be changed once."
+}

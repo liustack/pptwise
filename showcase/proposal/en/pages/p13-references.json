@@ -1,0 +1,89 @@
+{
+  "stage": "Plan",
+  "components": [
+    {
+      "type": "data_table",
+      "title": "None of these are our projects",
+      "columns": [
+        {
+          "key": "name",
+          "label": ""
+        },
+        {
+          "key": "scale",
+          "label": ""
+        },
+        {
+          "key": "num",
+          "label": ""
+        }
+      ],
+      "rows": [
+        {
+          "icon": "factory",
+          "cells": {
+            "name": "Laibao Hi-Tech, Guangming, Shenzhen",
+            "scale": "2.541 MWp solar, energy contract",
+            "num": "About RMB 629,000 a year, forecast"
+          },
+          "tag": {
+            "text": "Company figure"
+          }
+        },
+        {
+          "icon": "factory",
+          "cells": {
+            "name": "Jinruida park, Zhonglou, Changzhou",
+            "scale": "About 1.6 MW solar",
+            "num": "1.467 m kWh, about RMB 360,000 a year"
+          },
+          "tag": {
+            "text": "District government"
+          }
+        },
+        {
+          "icon": "battery-charging",
+          "cells": {
+            "name": "Zhigu Works, Zhonglou, Changzhou",
+            "scale": "0.9 MWp solar + 1.33 MW storage",
+            "num": "Over RMB 200,000 a year"
+          },
+          "tag": {
+            "text": "District government"
+          }
+        },
+        {
+          "icon": "zap",
+          "cells": {
+            "name": "Taijing plants, Gaoyou, Yangzhou",
+            "scale": "40 MW solar + 80.25 MWh storage",
+            "num": "About RMB 20 m a year"
+          },
+          "tag": {
+            "text": "Power supplier"
+          }
+        },
+        {
+          "icon": "file-check",
+          "cells": {
+            "name": "EGing PV, four Jiangsu sites",
+            "scale": "0.81 to 3.49 MW",
+            "num": "991 to 1,098 h, 77.7% to 91.0% used on site"
+          },
+          "tag": {
+            "text": "Audited"
+          },
+          "emphasis": "highlight"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "tip",
+      "icon": "lightbulb",
+      "text": "References show plants like yours make it work. What you save is worked from your own bills, load curve and roof."
+    }
+  ],
+  "footnote": "Source: Laibao Hi-Tech (2024-10-30), Zhonglou District, Changzhou (2025-04-11), Yangtse Evening Post (2026-07-01), EGing PV (2025-04-29)",
+  "notes": "All five references come from public records. None is our project. They show what plants like yours have done and what figures they have published. Laibao Hi-Tech's plant in Guangming, Shenzhen, runs a 2.541 MWp array under a 20-year EMC, with forecast savings of about RMB 629,000 a year and forecast output of 2.956 million kWh. Changzhou's Zhonglou district reported two parks: Jinruida's first phase, about 1.6 MW, makes 1.467 million kWh a year and saves about RMB 360,000. That is about 917 hours per MW, below Jiangsu's official parameter, which is a reminder that each roof's real output has to be measured. Zhigu Works pairs solar with storage. The Taijing plants in Gaoyou, Yangzhou, are a large solar and storage microgrid with an expected 50 million kWh of green power a year, in figures given by the power supply company. The most useful line is EGing PV's four Jiangsu sites, whose data an accounting firm audited: 991 to 1,098 hours a year, with 77.7% to 91.0% of the power used on site. References only show that it can be done. What you would save still depends on your own documents."
+}

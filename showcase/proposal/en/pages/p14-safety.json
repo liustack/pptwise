@@ -1,0 +1,65 @@
+{
+  "stage": "Delivery",
+  "components": [
+    {
+      "type": "icon_cards",
+      "title": "What we build to",
+      "items": [
+        {
+          "icon": "shield-check",
+          "title": "GB 44240-2024",
+          "text": "In force since 1 August 2025. Only batteries tested to it, with the test reports filed with you.",
+          "tag": {
+            "text": "Mandatory national standard",
+            "settled": true
+          }
+        },
+        {
+          "icon": "file-check",
+          "title": "NEA Document No. 65 (2025)",
+          "text": "A safety study at feasibility, safety responsibility named in the filing, a completion check and a review after start."
+        }
+      ]
+    },
+    {
+      "type": "icon_cards",
+      "title": "Lessons from public incidents",
+      "items": [
+        {
+          "icon": "flame",
+          "tone": "danger",
+          "title": "Huangpu, Guangzhou, 14 June",
+          "text": "A pack ran away under test and exploded, one death. What we do: cabinets away from workshops and walkways, with gas detection and venting."
+        },
+        {
+          "icon": "zap",
+          "tone": "danger",
+          "title": "Cabinet fire, Longhua, Shenzhen",
+          "text": "Preliminary cause: overcharging heated the battery. What we do: charge limits, with trips and alarms on heat or current."
+        }
+      ]
+    },
+    {
+      "type": "insight_panel",
+      "title": "Who answers if it goes wrong",
+      "icon": "scale",
+      "rows": [
+        {
+          "label": "Self-funded",
+          "text": "Safety owner: you"
+        },
+        {
+          "label": "Energy contract",
+          "text": "Safety owner: the investor"
+        },
+        {
+          "label": "Design, build and O&M",
+          "text": "Ours, by contract"
+        }
+      ],
+      "footnote": "The filing names the safety owner"
+    }
+  ],
+  "footnote": "Source: GB 44240-2024, NEA Document No. 65 (2025), Huangpu District incident report (published 2026-03-23), Southern Metropolis Daily (2026-06-15)",
+  "notes": "Storage safety is now a hard requirement. GB 44240-2024 is a mandatory national standard for lithium cells and battery packs used in energy storage, in force since 1 August 2025. NEA Document No. 65, issued with four other agencies, requires every electrochemical storage project to study its safety conditions at the feasibility stage, name the party responsible for safety when it is filed, inspect its safety systems on completion and run a safety review after a period of operation. It makes no exception for customer-side storage. Two public incidents shape our design. The first is in an official report published by Huangpu District, Guangzhou: in June 2024, at a storage company's workshop, a lithium iron phosphate pack in a test cabinet went into thermal runaway, the gas it released built up and exploded, and one person died. That happened in testing, not in a plant's operating system, but the lesson is the same: flammable gas has to be detected and vented, and cabinets kept apart from where people work. The second, reported by Southern Metropolis Daily, is a storage cabinet fire in Longhua, Shenzhen, with overcharging named as the preliminary cause and no one hurt. Hence the charge limits and automatic trips with alarms."
+}

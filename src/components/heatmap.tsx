@@ -3,6 +3,7 @@ import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { mixHex } from "./color-mix"
 import { axisTitlePairHeight, renderAxisTitlePair } from "./axis-titles"
 import { accessibleInk, contrastRatio, graphicInk, liftedInk, readableOn } from "../render/ink"
+import { Icon } from "../render/icons"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type HeatmapComponent = Extract<Component, { type: "heatmap" }>
@@ -47,7 +48,7 @@ type HeatmapComponent = Extract<Component, { type: "heatmap" }>
  * discipline `gantt.tsx`'s `axisBounds`/`chart-svg.tsx`'s `renderDumbbell`
  * `vx()` fix already established for this codebase's other value→geometry
  * mappings. Values feed *color* here, never geometry (cell rect extents come
- * from `x_labels.length`/`y_labels.length` alone, schema-capped at 12 columns by 10 rows) —
+ * from `x_labels.length`/`y_labels.length` alone, schema-capped at 24 columns by 10 rows) —
  * so `MAX_CHART_GEOMETRY_PX`'s own EMU-overflow trap has no analog to guard
  * here; `generate-heatmap-export.test.ts` verifies an extreme-magnitude
  * value (feeding only `valueT`'s ratio, clamped to [0,1]) exports cleanly
@@ -56,8 +57,17 @@ type HeatmapComponent = Extract<Component, { type: "heatmap" }>
  *
  * A run of columns the author marks (`bands`, such as the season a plan is
  * built around) is framed across every row by a dashed outline in the
- * accent, and named under the grid, centred under its run, before the axis
- * titles. A name wider than the grid is cut and marked.
+ * accent, and named under the grid, centred under its run with its icon
+ * before the name, before the axis titles. A name wider than the grid is cut
+ * and marked.
+ *
+ * Named steps (`steps`, such as a day's tariff bands) replace the continuous
+ * ramp: every cell takes the colour of the step its value falls in, the
+ * steps spaced evenly along the same surface-to-primary ramp, each cell
+ * prints its step's short name (or its value with `show_values`), and a key
+ * under the grid names every step beside its swatch. A grid of many columns
+ * may print its labels every few columns (`label_every`, every six of a
+ * day's 24 hours); the others still name their columns for `bands`.
  */
 
 const CELL_GAP = 3
@@ -77,8 +87,10 @@ const COL_LABEL_FONT = 16
 const COL_LABEL_MIN_FONT = 16
 const VALUE_FONT = 16
 const VALUE_MIN_FONT = 16
-/** A marked run of columns (`bands`): its dashed frame, and its name in a line under the grid. */
-const BAND = { pad: 4, stroke: 2, dash: "6 5", r: 8, line: 30, size: 16 } as const
+/** A marked run of columns (`bands`): its dashed frame, and its name in a line under the grid, an icon before it when it has one. */
+const BAND = { pad: 4, stroke: 2, dash: "6 5", r: 8, line: 30, size: 16, icon: { size: 18, gap: 6 } } as const
+/** The key under a grid of named steps (`steps`): a swatch and the step's name each, in one line. */
+const KEY = { line: 30, swatch: 14, gap: 8, itemGap: 24, size: 16 } as const
 
 /**
  * Floor on the ramp's interpolation fraction (`valueT`'s output is always
@@ -106,6 +118,22 @@ function valueT(v: number, domain: { min: number; max: number }): number {
   const range = domain.max - domain.min
   if (range <= 0) return 0.5
   return Math.max(0, Math.min(1, (v - domain.min) / range))
+}
+
+/** The step a value falls in: the first whose max it does not pass, the last otherwise. */
+export function heatmapStepOf(v: number, steps: NonNullable<HeatmapComponent["steps"]>): number {
+  const i = steps.findIndex((step) => step.max !== undefined && v <= step.max)
+  return i < 0 ? steps.length - 1 : i
+}
+
+/** Where step `i` of `n` sits on the ramp: evenly spaced from its light end to its dark one. */
+export function heatmapStepT(i: number, n: number): number {
+  return n <= 1 ? 0.5 : i / (n - 1)
+}
+
+/** Whether column `col`'s label is printed: every one, or every `label_every`th from the first. */
+export function heatmapLabelShown(component: Pick<HeatmapComponent, "label_every">, col: number): boolean {
+  return component.label_every === undefined || col % component.label_every === 0
 }
 
 function resolveDomain(component: HeatmapComponent): { min: number; max: number } {
@@ -240,16 +268,16 @@ function rowLabelColumnW(labels: readonly string[], w: number): number {
 }
 
 /** The columns each marked run covers, as indices into `x_labels`. */
-function bandSpans(component: HeatmapComponent): { from: number; to: number; label: string }[] {
+function bandSpans(component: HeatmapComponent): { from: number; to: number; label: string; icon?: string }[] {
   const at = (label: string) => component.x_labels.findIndex((x) => x.trim() === label.trim())
-  return (component.bands ?? []).map((band) => ({ from: at(band.from), to: at(band.to), label: band.label.trim() }))
+  return (component.bands ?? []).map((band) => ({ from: at(band.from), to: at(band.to), label: band.label.trim(), icon: band.icon }))
 }
 
 function gridGeom(component: HeatmapComponent, w: number) {
   const cols = component.x_labels.length
   const rows = component.y_labels.length
-  // The band names take a line of their own under the grid, above the titles.
-  const titleH = axisTitlePairHeight(component.x_title, component.y_title) + (component.bands?.length ? BAND.line : 0)
+  // The band names and the steps' key take a line each under the grid, above the titles.
+  const titleH = axisTitlePairHeight(component.x_title, component.y_title) + (component.bands?.length ? BAND.line : 0) + (component.steps ? KEY.line : 0)
   const gridX0 = rowLabelColumnW(component.y_labels, w)
   const gridW = Math.max(1, w - gridX0)
   const cellW = (gridW - CELL_GAP * (cols - 1)) / cols
@@ -276,7 +304,9 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
     const rowH = Math.max(NATURAL_CELL_H, (availGridH - (rows - 1) * CELL_GAP) / rows)
     const actualGridH = rows * rowH + (rows - 1) * CELL_GAP
     const bandH = component.bands?.length ? BAND.line : 0
-    const titleY = gridTop + actualGridH + bandH
+    const keyH = component.steps ? KEY.line : 0
+    const keyTop = gridTop + actualGridH + bandH
+    const titleY = keyTop + keyH
     const r = Math.min(4, ctx.shape?.radius ?? CELL_RADIUS)
     const domain = resolveDomain(component)
     const ground = ctx.defaultBg ?? ctx.colors.bg
@@ -284,16 +314,34 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
     const bands = bandSpans(component).map((band) => {
       const x0 = colX(band.from) - BAND.pad
       const x1 = colX(band.to) + cellW + BAND.pad
-      const name = fitSvgLine(band.label, { maxWidth: box.w, fontSize: BAND.size, minFontSize: BAND.size, bold: true, fontFamily: ctx.fonts.body })
-      // The name stands centred under its run, slid inside the grid when the run sits at an edge.
-      const half = (measureTextUnits(name.text, { bold: true, fontFamily: ctx.fonts.body }) * name.fontSize) / 2
-      const cx = Math.min(box.x + box.w - half, Math.max(box.x + half, (x0 + x1) / 2))
-      return { ...band, x0, x1, name, cx }
+      const iconRoom = band.icon ? BAND.icon.size + BAND.icon.gap : 0
+      const name = fitSvgLine(band.label, { maxWidth: box.w - iconRoom, fontSize: BAND.size, minFontSize: BAND.size, bold: true, fontFamily: ctx.fonts.body })
+      // The name, its icon before it, stands centred under its run, slid
+      // inside the grid when the run sits at an edge.
+      const half = (iconRoom + measureTextUnits(name.text, { bold: true, fontFamily: ctx.fonts.body }) * name.fontSize) / 2
+      const mid = Math.min(box.x + box.w - half, Math.max(box.x + half, (x0 + x1) / 2))
+      return { ...band, x0, x1, name, cx: mid + iconRoom / 2, iconX: mid - half }
     })
 
+    // A label printed every few columns has the run up to the next printed one.
+    const labelRoom = (component.label_every ?? 1) * (cellW + CELL_GAP) - CELL_GAP
     const colLabelFits = component.x_labels.map((label) =>
-      fitSvgLine(label, { maxWidth: cellW - COL_LABEL_PAD * 2, fontSize: COL_LABEL_FONT, minFontSize: COL_LABEL_MIN_FONT }),
+      fitSvgLine(label, { maxWidth: labelRoom - COL_LABEL_PAD * 2, fontSize: COL_LABEL_FONT, minFontSize: COL_LABEL_MIN_FONT }),
     )
+    const steps = component.steps
+    const stepFill = (i: number) => cellFill(heatmapStepT(i, steps!.length), ctx, true)
+    const key = steps
+      ? (() => {
+          let cursor = box.x + gridX0
+          return steps.map((step, i) => {
+            const room = Math.max(1, box.x + box.w - cursor - KEY.swatch - KEY.gap)
+            const name = fitSvgLine(step.label.trim(), { maxWidth: room, fontSize: KEY.size, minFontSize: KEY.size, fontFamily: ctx.fonts.body })
+            const x = cursor
+            cursor += KEY.swatch + KEY.gap + measureTextUnits(name.text, { fontFamily: ctx.fonts.body }) * name.fontSize + KEY.itemGap
+            return { x, name, fill: stepFill(i) }
+          })
+        })()
+      : []
     const rowLabelFits = component.y_labels.map((label) =>
       fitSvgLine(label, {
         maxWidth: gridX0 - ROW_LABEL_PAD * 2,
@@ -305,6 +353,7 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
     return (
       <g>
         {colLabelFits.map((fit, col) => {
+          if (!heatmapLabelShown(component, col)) return null
           const cx = box.x + gridX0 + col * (cellW + CELL_GAP) + cellW / 2
           return (
             <text
@@ -345,9 +394,11 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
           rowValues.map((v, col) => {
             const x = box.x + gridX0 + col * (cellW + CELL_GAP)
             const y = gridTop + row * (rowH + CELL_GAP)
-            const fill = cellFill(valueT(v, domain), ctx, component.show_values)
-            const valueFit = component.show_values
-              ? fitSvgLine(String(v), { maxWidth: cellW - CELL_PAD * 2, fontSize: VALUE_FONT, minFontSize: VALUE_MIN_FONT })
+            const step = steps ? heatmapStepOf(v, steps) : -1
+            const cellText = component.show_values ? String(v) : steps ? (steps[step]!.short?.trim() ?? "") : ""
+            const fill = steps ? stepFill(step) : cellFill(valueT(v, domain), ctx, component.show_values)
+            const valueFit = cellText
+              ? fitSvgLine(cellText, { maxWidth: cellW - CELL_PAD * 2, fontSize: VALUE_FONT, minFontSize: VALUE_MIN_FONT })
               : null
             return (
               <g key={`${row}-${col}`}>
@@ -392,6 +443,15 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
               strokeWidth={BAND.stroke}
               strokeDasharray={BAND.dash}
             />
+            {band.icon ? (
+              <Icon
+                name={band.icon}
+                x={band.iconX}
+                y={gridTop + actualGridH + BAND.pad + (BAND.line - BAND.icon.size) / 2}
+                size={BAND.icon.size}
+                color={graphicInk(ctx.colors.accent, ground)}
+              />
+            ) : null}
             <text
               data-truncated={band.name.truncated ? "1" : undefined}
               x={band.cx}
@@ -407,6 +467,26 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
             </text>
           </g>
         ))}
+        {key.length ? (
+          <g data-heatmap-key="">
+            {key.map((item, i) => (
+              <g key={i}>
+                <rect x={item.x} y={keyTop + (KEY.line - KEY.swatch) / 2} width={KEY.swatch} height={KEY.swatch} rx={Math.min(3, r)} fill={item.fill} />
+                <text
+                  data-truncated={item.name.truncated ? "1" : undefined}
+                  x={item.x + KEY.swatch + KEY.gap}
+                  y={keyTop + Math.round(KEY.line / 2 + item.name.fontSize * 0.385)}
+                  fontSize={item.name.fontSize}
+                  fill={ctx.colors.muted}
+                  fontFamily={ctx.fonts.body}
+                  dominantBaseline="alphabetic"
+                >
+                  {item.name.text}
+                </text>
+              </g>
+            ))}
+          </g>
+        ) : null}
         {renderAxisTitlePair({
           x: box.x,
           y: titleY,

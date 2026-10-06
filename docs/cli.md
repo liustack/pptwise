@@ -41,7 +41,7 @@ Fill no more than four pages between validation passes, and read each page's con
 | `spec validate <file>` | Validate a theme-shaped deck spec. |
 | `assemble <dir|name>` | Merge a deck project into derived IR v5. |
 | `disassemble <ir.json>` | Split IR v5 into a spec, page files, and assets. |
-| `themes` | List the 24 factory presets and installed pack themes, with metadata. |
+| `themes` | List the 25 factory presets and installed pack themes, with metadata. |
 | `theme new` | Copy a named theme into a self-contained v2 file. |
 | `theme fork` | Copy a theme and rederive its palette around new anchors. |
 | `theme try` | Render the fixed fitting-room sample across two to four themes. |
@@ -116,7 +116,7 @@ pptwise icons [--json]
 pptwise spec validate deck-dir/deck.spec.json
 ```
 
-The IR schema keeps every shared piece in `$defs` once: each component under its own type name, the component union as `Component`, the icon-name enum as `IconName`, the tag rows, figures, cards, charts and pages share as `Tag`, and a page's strip of years as `Years`. Output is one line unless `--pretty` is passed.
+The IR schema keeps every shared piece in `$defs` once: each component under its own type name, the component union as `Component`, the icon-name enum as `IconName`, the tag rows, figures, cards, charts and pages share as `Tag`, the kind of news a figure, row or milestone is as `Tone`, a page's strip of years as `Years`, and a page's ballot as `Ballot`. Output is one line unless `--pretty` is passed.
 
 `--component` prints one component's schema with only the `$defs` it needs. `--kind` prints the components a page of that kind may hold, the face each built-in theme and each installed pack theme binds to it (a pack that cannot be read is left out, with a note on stderr), a `oneOf` over those components, and their `$defs`. Add `--theme` to answer for the bound theme alone. The name resolves the way `validate` resolves a spec's theme: the deck directory first (`theme.json`, `<name>.theme.json`), then workspace `themes/`, then installed packs, then the presets. The deck directory is `--deck <dir>`, or the cwd when it holds `deck.spec.json` or a deck-local file for that name (`theme.json`, `<name>.theme.json`, `<name>.json`), which is where `validate deck.json` reads a bare IR's theme from. A face that draws no component prints an empty list and `not: {}` in place of the `oneOf`. The list comes from the same theme-menu route validate uses, so a component outside it fails `validate`. An unknown type, kind, or theme fails and lists the valid names.
 

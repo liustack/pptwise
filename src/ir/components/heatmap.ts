@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { IconNameSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -13,9 +14,9 @@ import type { DesignStory } from "../../design-story"
 export const schema = z
   .object({
     type: z.literal("heatmap"),
-    /** 列头（沿横轴，每列一个），1-12 项——1 项即单列热力图（病态但合法，
-     * 见 heatmap.tsx 头注）。上限 12 是一年的月份数。 */
-    x_labels: z.array(z.string()).min(1).max(12),
+    /** 列头（沿横轴，每列一个），1-24 项——1 项即单列热力图（病态但合法，
+     * 见 heatmap.tsx 头注）。上限 24 是一天的小时数（一年的月份数 12 在其内）。 */
+    x_labels: z.array(z.string()).min(1).max(24),
     /** 行头（沿纵轴，每行一个），1-10 项——1 项即单行热力图。 */
     y_labels: z.array(z.string()).min(1).max(10),
     /** 值矩阵，行优先：`values[row][col]`。行数必须等于 y_labels 长度、
@@ -35,6 +36,41 @@ export const schema = z
      * 具体刻度）是两个不同语义层，同时可选、互不依赖。 */
     x_title: z.string().optional(),
     y_title: z.string().optional(),
+    /** Print every Nth column label. See the describe below. */
+    label_every: z
+      .number()
+      .int()
+      .min(2)
+      .max(12)
+      .optional()
+      .describe("Print every Nth column label from the first, such as 6 for a day's hours."),
+    /** Named steps the values fall into. See the describe below. */
+    steps: z
+      .array(
+        z
+          .object({
+            max: z
+              .number()
+              .optional()
+              .describe("The step's highest value. The last step has none."),
+            label: z
+              .string()
+              .refine((v) => v.trim() !== "", { message: "heatmap steps[].label must not be blank" })
+              .describe('Its name in the key, such as "低谷" or "Off-peak".'),
+            short: z
+              .string()
+              .refine((v) => v.trim() !== "", { message: "heatmap steps[].short must not be blank" })
+              .optional()
+              .describe('A shorter name the cells print, such as "谷" or "Off".'),
+          })
+          .strict(),
+      )
+      .min(2)
+      .max(5)
+      .optional()
+      .describe(
+        'Two to five named steps, lowest first, each cell coloured by the step its value falls in: [{ "max": 0.5, "label": "低谷", "short": "谷" }, { "label": "高峰" }]. Not with domain.',
+      ),
     /** Runs of columns marked across every row. See the describe below. */
     bands: z
       .array(
@@ -43,6 +79,7 @@ export const schema = z
             from: z.string().min(1).describe('The first column the run covers, written as its x_label, such as "6 月" or "Jun".'),
             to: z.string().min(1).describe('The last column it covers, written as its x_label, such as "9 月" or "Sep". The same as from for one column.'),
             label: z.string().min(1).describe('What the run is, printed under it, such as "2027 演唱会季 · 6 至 9 月" or "2027 season, Jun to Sep".'),
+            icon: IconNameSchema.optional().describe("A symbol before the run's name, such as sun."),
           })
           .strict(),
       )
@@ -55,6 +92,27 @@ export const schema = z
   })
   .strict()
   .superRefine((c, ctx) => {
+    if (c.steps) {
+      const last = c.steps.length - 1
+      c.steps.forEach((step, i) => {
+        if (i < last && step.max === undefined) {
+          ctx.addIssue({ code: "custom", path: ["steps", i, "max"], message: `heatmap steps[${i}] has no max. Every step but the last names the highest value it takes.` })
+        }
+        if (i === last && step.max !== undefined) {
+          ctx.addIssue({ code: "custom", path: ["steps", i, "max"], message: `heatmap steps[${i}] is the last step and takes every value above the one before, so it has no max. Remove it, or add a step above.` })
+        }
+        const prev = i > 0 ? c.steps![i - 1]!.max : undefined
+        if (i < last && step.max !== undefined && prev !== undefined && step.max <= prev) {
+          ctx.addIssue({ code: "custom", path: ["steps", i, "max"], message: `heatmap steps[${i}].max is ${step.max}, not above the step before (${prev}). Write the steps lowest first.` })
+        }
+      })
+      if (c.domain) {
+        ctx.addIssue({ code: "custom", path: ["domain"], message: "heatmap has steps and a domain. The steps colour each cell by the step its value falls in, and a domain sets a continuous scale. Keep one of them." })
+      }
+    }
+    if (c.label_every !== undefined && c.label_every >= c.x_labels.length) {
+      ctx.addIssue({ code: "custom", path: ["label_every"], message: `heatmap label_every is ${c.label_every} and the grid has ${c.x_labels.length} column(s), so only the first label would print. Use a smaller step, or remove label_every.` })
+    }
     if (!c.bands) return
     const at = (label: string) => c.x_labels.findIndex((x) => x.trim() === label.trim())
     const taken = new Set<number>()

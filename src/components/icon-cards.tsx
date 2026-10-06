@@ -4,6 +4,8 @@ import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
+import { withBlockTitle } from "./block-title"
+import { graphicInk, resolveSemanticColor } from "../render/ink"
 import {
   boardTypeScale,
   fillCardType,
@@ -256,7 +258,8 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
               cx - iconSize / 2,
               cy - iconSize / 2,
               iconSize,
-              ink,
+              // A card that says what kind of news it is draws its icon in the theme's ink for it.
+              item.tone ? graphicInk(resolveSemanticColor(item.tone, ctx.colors), fill) : ink,
             )}
             {item.tag ? paintCardTag(item.tag, cx, stackTop + g.nodeSize + GAP_NODE_TITLE, g.contentW, ctx) : null}
             {layout.title.lines.map((line, li) => (
@@ -310,8 +313,9 @@ function paintCardTag(tag: NonNullable<IconCardItem["tag"]>, cx: number, top: nu
   return paintTag({ tag, x: cx - w / 2, y: top, spec, inks: tagInks(ctx, tag, false, ctx.defaultBg ?? ctx.colors.bg, spec.size) })
 }
 
-export const renderDef: RenderDef<IconCardsComponent> = {
+// A title, when the cards carry one, is set over them as on a table.
+export const renderDef: RenderDef<IconCardsComponent> = withBlockTitle({
   type: "icon_cards",
   measure: iconCards.measure,
   render: iconCards.render,
-}
+})

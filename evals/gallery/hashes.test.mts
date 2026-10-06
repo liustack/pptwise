@@ -129,7 +129,7 @@ describe("gold sample against a live render", () => {
         themeIds,
         assets,
         // One section is enough to catch a stale pin: the mechanism is what is
-        // under test, and rendering all 24 skins' component bands here would
+        // under test, and rendering all 25 skins' component bands here would
         // add nine seconds to every `pnpm check`.
         { only: "component", languages: ["zh"], section: "brief" },
       ),

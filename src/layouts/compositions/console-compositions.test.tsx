@@ -334,3 +334,10 @@ describe("plates, paths and screen", () => {
   })
 })
 
+describe("a picture's tag", () => {
+  const withTag = (components: readonly unknown[]) => (components as { type: string; items?: Record<string, unknown>[] }[]).map((c) => (c.type === "image_grid" ? { ...c, items: c.items!.map((it, i) => (i === 1 ? { ...it, tag: { text: "选配", basis: "pending" } } : it)) } : c))
+  it("leaves the pictures over their figures to the ordinary grid, which draws the tag", () => {
+    expect(draw(platesComposition, physical).root).not.toBeNull()
+    expect(draw(platesComposition, withTag(physical)).root).toBeNull()
+  })
+})
