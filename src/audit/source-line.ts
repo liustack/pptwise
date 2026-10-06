@@ -18,6 +18,11 @@ import { stripEmphasis } from "../render/emphasis"
  * element that says it was cut (`data-truncated`) shows its opening: the cut
  * itself is the truncation check's to report.
  *
+ * A source the author wrote as several lines is several notes, and a face
+ * may set them apart, each after its own number (thesis's numbered notes).
+ * So when no run spells the whole of it, it still counts as painted when a
+ * run spells each of its lines.
+ *
  * The comparison folds what a renderer may change without losing a word:
  * case, whitespace and the ellipsis a fit appends.
  */
@@ -43,14 +48,8 @@ function showsOpening(run: string, needle: string): boolean {
   return false
 }
 
-/**
- * The text elements that paint `slide`'s source line on `root`, the page's
- * rendered SVG, or `null` when no run of them does.
- */
-export function sourceLineElements(root: Element, slide: Pick<Slide, "footnote">): Element[] | null {
-  const needle = normalize(stripEmphasis(slide.footnote ?? ""))
-  if (needle.length === 0) return null
-  const texts = Array.from(root.querySelectorAll("text"))
+/** The elements of the first run of `texts` that spells `needle`, or `null`. */
+function runSpelling(texts: Element[], needle: string): Element[] | null {
   for (let start = 0; start < texts.length; start += 1) {
     let run = ""
     for (let i = start; i < texts.length; i += 1) {
@@ -67,6 +66,27 @@ export function sourceLineElements(root: Element, slide: Pick<Slide, "footnote">
     }
   }
   return null
+}
+
+/**
+ * The text elements that paint `slide`'s source line on `root`, the page's
+ * rendered SVG, or `null` when no run of them does.
+ */
+export function sourceLineElements(root: Element, slide: Pick<Slide, "footnote">): Element[] | null {
+  const source = stripEmphasis(slide.footnote ?? "")
+  const needle = normalize(source)
+  if (needle.length === 0) return null
+  const texts = Array.from(root.querySelectorAll("text"))
+  const whole = runSpelling(texts, needle)
+  if (whole) return whole
+  const notes = source
+    .split(/\n+/)
+    .map(normalize)
+    .filter(Boolean)
+  if (notes.length < 2) return null
+  const runs = notes.map((note) => runSpelling(texts, note))
+  if (runs.some((run) => run === null)) return null
+  return [...new Set(runs.flatMap((run) => run!))]
 }
 
 /**

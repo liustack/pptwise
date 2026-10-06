@@ -49,3 +49,25 @@ describe("sourceLineMissing on a line shared with another text", () => {
     expect(sourceLineMissing(page, { footnote: SOURCE })).toBe(true)
   })
 })
+
+describe("sourceLineMissing on a source of several notes", () => {
+  const NOTES = "Hesketh et al. (2025), Journal of Population Economics.\nRabaté et al. (2024), Journal of Public Economics."
+
+  it("finds notes the face sets apart, each after its own number", () => {
+    const page = root(
+      `<text font-size="11">1</text><text font-size="11">Hesketh et al. (2025), Journal of Population Economics.</text>` +
+        `<text font-size="11">2</text><text font-size="11">Rabaté et al. (2024), Journal of</text><text font-size="11">Public Economics.</text>`,
+    )
+    expect(sourceLineMissing(page, { footnote: NOTES })).toBe(false)
+  })
+
+  it("still finds notes a face joins onto one line", () => {
+    const page = root(`<text font-size="12">Hesketh et al. (2025), Journal of Population Economics. Rabaté et al. (2024), Journal of Public Economics.</text>`)
+    expect(sourceLineMissing(page, { footnote: NOTES })).toBe(false)
+  })
+
+  it("is true when one of the notes is never painted", () => {
+    const page = root(`<text font-size="11">1</text><text font-size="11">Hesketh et al. (2025), Journal of Population Economics.</text>`)
+    expect(sourceLineMissing(page, { footnote: NOTES })).toBe(true)
+  })
+})
