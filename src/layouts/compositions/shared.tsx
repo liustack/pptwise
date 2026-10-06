@@ -130,6 +130,21 @@ export type CompositionId =
   | "register"
   | "runway"
   | "uses"
+  | "crest"
+  | "branch"
+  | "season"
+  | "makeup"
+  | "origins"
+  | "route"
+  | "spots"
+  | "wall"
+  | "loop"
+  | "stubs"
+  | "fallbacks"
+  | "timetable"
+  | "scoreboard"
+  | "allotment"
+  | "asks"
 
 /**
  * The type a composition sets its page in.
@@ -248,10 +263,25 @@ export type CompositionId =
  *   that cannot be compared, gates locked in a row, a risk register, a
  *   runway with its gate, and the ask with its uses. See `./pitch.tsx`.
  *
+ * - `marquee`: rally's 2026-10 board. A campaign proposal staged as a show:
+ *   cards a step lighter than the house rounded 12px, words in the light of
+ *   the text and the grey of the muted ink, charts and decoration in the
+ *   palette's four confetti colours, and the theme's accent as the lead on
+ *   what a page is about, with a dark ink drawn from the primary on it. A
+ *   composition offered this setting draws the shapes that board drew and no
+ *   other did: one figure set huge over its run of bars, two branches from
+ *   one start, a year's heat with a season framed, crowds cut into shares
+ *   with a bracket, stacked shares beside a photograph and a figure, a route
+ *   through a weekend, touchpoints beside their photographs, a wall of
+ *   cases, a loop that brings results back, ticket stubs, a plan B for each
+ *   risk, a schedule by the month with its season, a scoreboard still to be
+ *   filled, a budget cut into shares and requests to tick. See
+ *   `./marquee.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */

@@ -1063,8 +1063,10 @@ function walkText(
         // notes, folio and source) and of homeroom's lesson pages (12 to 15px
         // labels, pills, notes, the running head, folio and source) and of
         // ember's pitch pages (11 to 15px labels, the rail, notes, folio and
-        // source) are approved board sizes, like brief's meta.
-        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec", "lesson-spec", "pitch-spec"].includes(
+        // source) and of rally's marquee pages (11 to 15px labels, the ticket
+        // stub, notes, folio and source) are approved board sizes, like
+        // brief's meta.
+        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec", "lesson-spec", "pitch-spec", "marquee-spec"].includes(
           el.getAttribute("data-font-floor-exempt") ?? "",
         )
         if (!decor && !fontFloorExempt && fontSizeAttr !== null && Number(fontSizeAttr) < FONT_FLOOR) {

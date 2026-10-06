@@ -26,6 +26,7 @@ import { SealNumeralChapter } from "./chapter-seal-numeral-chapter"
 import { ConsoleChapter } from "./chapter-console-chapter"
 import { LessonChapter } from "./chapter-lesson-chapter"
 import { PitchChapter } from "./chapter-pitch-chapter"
+import { MarqueeChapter } from "./chapter-marquee-chapter"
 import { FieldBandChapter } from "./chapter-field-band-chapter"
 import { SubjectRuleChapter } from "./chapter-subject-rule-chapter"
 import { RoundMarkChapter } from "./chapter-round-mark-chapter"
@@ -84,4 +85,5 @@ export const CHAPTER_LAYOUTS: Record<ChapterLayoutId, ChapterLayout> = {
   "console-chapter": ConsoleChapter,
   "lesson-chapter": LessonChapter,
   "pitch-chapter": PitchChapter,
+  "marquee-chapter": MarqueeChapter,
 }

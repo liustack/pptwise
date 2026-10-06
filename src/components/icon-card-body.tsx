@@ -3,6 +3,7 @@ import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, truncateToUnits } from "../lib/svg-text-layout"
 import { Icon } from "../render/icons"
 import { graphicInk } from "../render/ink"
+import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
 import type { ComponentBox, ComponentCtx } from "./types"
 
 type IconCardsComponent = Extract<Component, { type: "icon_cards" }>
@@ -12,6 +13,10 @@ type IconCardsComponent = Extract<Component, { type: "icon_cards" }>
  * without any card shell around it. Shared between the bento panel's own
  * card cells and terminal's exploded icon-card units, which each paint their
  * own shell and hand this the padded content area inside it.
+ *
+ * A card's tag (`items[].tag`) stands beside its icon, on the icon's row,
+ * at the ordinary size and in the ordinary inks. A row as tall as the
+ * taller of the two, so a tag adds no height beside an icon of its size.
  */
 
 export type IconCardItem = IconCardsComponent["items"][number]
@@ -34,6 +39,13 @@ const TEXT_FONT_SIZE = 16
 // description text.
 const TEXT_LINE_HEIGHT_RATIO = 1.4
 const TEXT_MAX_LINES = 2
+/** Air between the icon and a tag beside it. */
+const GAP_ICON_TAG = 12
+
+/** The icon's row: as tall as the icon, or as the tag beside it when that is taller. */
+function iconRowHeight(item: IconCardItem, iconSize: number, ctx: ComponentCtx | undefined): number {
+  return item.tag && ctx ? Math.max(iconSize, ordinaryTagSpec(ctx).height) : iconSize
+}
 
 interface IconCardTextLayout {
   title: { text: string; lines: string[]; fontSize: number; lineHeight: number; truncated: boolean }
@@ -128,12 +140,13 @@ function layoutIconCard(
 export function iconCardContentHeight(
   item: IconCardItem,
   contentW: number,
-  opts: IconCardLayoutOptions = {}
+  opts: IconCardLayoutOptions = {},
+  ctx?: ComponentCtx
 ): number {
   const iconSize = opts.iconSize ?? ICON_SIZE
   const { title, text } = layoutIconCard(item, contentW, opts)
   return (
-    iconSize +
+    iconRowHeight(item, iconSize, ctx) +
     GAP_ICON_TITLE +
     title.lines.length * title.lineHeight +
     GAP_TITLE_TEXT +
@@ -158,17 +171,29 @@ export function renderIconCardBody(
 ): React.ReactElement {
   const iconSize = opts.iconSize ?? ICON_SIZE
   const { title, text } = layoutIconCard(item, box.w, opts)
-  const titleTopY = box.y + iconSize + GAP_ICON_TITLE
+  const rowH = iconRowHeight(item, iconSize, ctx)
+  const titleTopY = box.y + rowH + GAP_ICON_TITLE
   const textTopY = titleTopY + title.lines.length * title.lineHeight + GAP_TITLE_TEXT
+  const spec = ordinaryTagSpec(ctx)
+  const tagW = item.tag ? tagWidth(item.tag.text, spec) : 0
+  const tagX = box.x + iconSize + GAP_ICON_TAG
   return (
     <>
       <Icon
         name={item.icon}
         x={box.x}
-        y={box.y}
+        y={box.y + (rowH - iconSize) / 2}
         size={iconSize}
         color={graphicInk(ctx.colors.primary, ctx.colors.surface)}
       />
+      {item.tag ? (
+        // A tag wider than the room beside the icon is declared dropped rather than cut.
+        tagX + tagW <= box.x + box.w ? (
+          <g data-icon-card-tag="">{paintTag({ tag: item.tag, x: tagX, y: box.y + (rowH - spec.height) / 2, spec, inks: tagInks(ctx, item.tag, false, ctx.colors.surface, spec.size), width: tagW })}</g>
+        ) : (
+          <g data-dropped={1} data-dropped-kind="label" />
+        )
+      ) : null}
       {title.lines.map((line, i) => (
         <text
           key={`title-${i}`}

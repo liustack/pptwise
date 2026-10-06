@@ -4,7 +4,7 @@ import {
   SERIES_EMPHASIS_TYPES,
   SINGLE_SERIES_TYPES,
 } from "@/ir/components/chart";
-import { drawShareBar, SHARE_BAR_H, shareFills, shareParts } from "./share-bar";
+import { drawShareBar, shareBarHeight, shareFills, shareParts } from "./share-bar";
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout";
 import {
   emphasisSeriesPalette,
@@ -34,7 +34,7 @@ import {
 } from "./chart-svg";
 import { buildChartModel } from "./chart-model";
 import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag";
-import type { RenderDef, SvgComponent } from "./types";
+import type { ComponentCtx, RenderDef, SvgComponent } from "./types";
 import {
   renderArea,
   renderBar,
@@ -627,8 +627,8 @@ function measureChartH(component: ChartComponent): number {
  * it: a callout a few words longer sent the page to the step-aside layout, or
  * at spacious pacing lost the callout, while 92px of the band stood empty.
  */
-function chartMinHeight(component: ChartComponent): number {
-  if (isShareBar(component)) return SHARE_BAR_H;
+function chartMinHeight(component: ChartComponent, w: number, ctx: ComponentCtx): number {
+  if (isShareBar(component)) return shareBarHeight(component, w, ctx);
   if (!axesApplicable(component)) return measureChartH(component);
   return (
     chartFrameH(component) +
@@ -640,7 +640,7 @@ function chartMinHeight(component: ChartComponent): number {
  * A share bar (`isShareBar`) in the ordinary chart: each part its palette
  * colour, or, with a run marked, the run in the lead colour and every other
  * part in the grey a marked series leaves the rest in. Declared dropped when
- * a part's name and value have nowhere to go.
+ * a part's name and value have nowhere to go, not even the key under the bar.
  */
 function renderShare(component: ChartComponent, box: { x: number; y: number; w: number }, ctx: Parameters<SvgComponent<ChartComponent>["render"]>[2]) {
   const parts = shareParts(component);
@@ -659,8 +659,8 @@ function renderShare(component: ChartComponent, box: { x: number; y: number; w: 
 }
 
 export const chart: SvgComponent<ChartComponent> = {
-  measure(component) {
-    if (isShareBar(component)) return SHARE_BAR_H;
+  measure(component, w, ctx) {
+    if (isShareBar(component)) return shareBarHeight(component, w, ctx);
     return measureChartH(component);
   },
   render(component, box, ctx) {
@@ -671,7 +671,7 @@ export const chart: SvgComponent<ChartComponent> = {
     // the field is honestly ignored rather than partially/silently honored.
     const axes = axesApplicable(component) ? component.axes : undefined;
     const headerH = hasHeaderRow(component) ? HEADER_ROW_H : 0;
-    const minimum = chartMinHeight(component);
+    const minimum = chartMinHeight(component, box.w, ctx);
     // A component draws inside the box it accepted, or it declines. This used
     // to read `Math.max(CHART_H + titleH, allocated)`: handed a box shorter
     // than its own measured minimum, the chart quietly drew that minimum

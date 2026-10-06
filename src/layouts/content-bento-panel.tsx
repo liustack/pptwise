@@ -686,7 +686,7 @@ function renderIconCard(
     titleFontSize: BENTO_ICON_CARD_TITLE_SIZE,
     iconSize: BENTO_ICON_CARD_ICON_SIZE,
     titleMaxLines: 2,
-  })
+  }, ctx)
   const innerY =
     box.y + BENTO_CARD_TOP_PAD + Math.max(0, (budgetH - contentH) / 2)
   return (
@@ -738,7 +738,7 @@ function cellOverBudget(cell: BentoCell, ctx: ComponentCtx): boolean {
         titleFontSize: BENTO_ICON_CARD_TITLE_SIZE,
         titleMaxLines: 2,
         iconSize: BENTO_ICON_CARD_ICON_SIZE,
-      }) > budgetH
+      }, ctx) > budgetH
     )
   }
   if (SCALABLE_TYPES.has(unit.component.type)) return false

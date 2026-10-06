@@ -47,6 +47,8 @@ import { DossierSheetContent } from "./content-dossier-sheet"
 import { YearbookSheetContent } from "./content-yearbook-sheet"
 import { LessonSheetContent } from "./content-lesson-sheet"
 import { PitchSheetContent } from "./content-pitch-sheet"
+import { MarqueeSheetContent } from "./content-marquee-sheet"
+import { MarqueeStatementContent } from "./content-marquee-statement"
 import { PitchPhotoContent } from "./content-pitch-photo"
 import { GridStatementContent } from "./content-grid-statement"
 import { GaugeStatsContent } from "./content-gauge-stats"
@@ -201,6 +203,12 @@ const CASES: FaceCase[] = [
   // ember's pitch sheet: the same, in its band x64 to x1216 and y196 (under
   // the page's subheading) to y640 under the rail and the claim.
   { face: "pitch-sheet", Face: PitchSheetContent, themeId: "ember", regions: ["face", "declined"] },
+  // rally's marquee sheet: the same, in its band x64 to x1216 and y188
+  // (under the ticket stub and the claim) to y640.
+  { face: "marquee-sheet", Face: MarqueeSheetContent, themeId: "rally", regions: ["face", "declined"] },
+  // A chart is not the one-line plan's row of touchpoints, so the page goes
+  // straight to the sheet, and is declined once that cannot hold it either.
+  { face: "marquee-statement", Face: MarqueeStatementContent, themeId: "rally", regions: ["aside", "declined"] },
   // ember's photo page: the chart goes to the column beside the photograph,
   // x624 to x1216 and y280 to y640. The step-aside sheet sets the photograph
   // over the chart and has no more room for its series than the column, so

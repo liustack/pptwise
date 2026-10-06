@@ -1,0 +1,25 @@
+{
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "cup-soda",
+          "title": "Drink stations",
+          "text": "Fresh cups, a code on each"
+        },
+        {
+          "icon": "package",
+          "title": "Co-branded packs",
+          "text": "Pack codes track sell-through"
+        },
+        {
+          "icon": "ticket",
+          "title": "Stub swaps",
+          "text": "Store vouchers track visits"
+        }
+      ]
+    }
+  ],
+  "notes": "The plan in one line. The campaign is called Before the Show, After the Encore. We do not chase naming rights inside the stadium. We meet fans in the hours before they go in and after they come out: drink stations outside the venue, co-branded packs, and a drink in exchange for a ticket stub. The following pages show why. Nearly two in three big-concert fans travel from another city, most stay two days or more, and nearly all of them eat locally, so their time and money are spent outside the venue. Inside belongs to the promoter and the venue, and Beijing police have banned bottled drinks at large events. Every touchpoint carries a code (cup codes, pack codes, store vouchers), so after the first stop we can count what worked before we spend more."
+}

@@ -1,0 +1,161 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "rally",
+  "filename": "concert-season-2027-en",
+  "meta": {
+    "organization": "Marketing",
+    "date": "October 2026"
+  },
+  "footer": {
+    "page_number": true
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "Summer Concerts 2027",
+      "summary": "Before the show, after the encore: meet fans on their concert weekend",
+      "kicker": "Proposal"
+    },
+    {
+      "id": "p02-idea",
+      "type": "content",
+      "kind": "statement",
+      "heading": "Skip naming rights, meet fans\n**before** and **after**",
+      "kicker": "The idea",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p03-market",
+      "type": "content",
+      "kind": "fact",
+      "heading": "43.39m at big shows, over half the box office",
+      "kicker": "Market",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p04-split",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Concert crowds grew 30.8%, festivals fell 6.1%",
+      "kicker": "The split",
+      "focus": "chart"
+    },
+    {
+      "id": "p05-season",
+      "type": "content",
+      "kind": "process",
+      "heading": "Concerts peak Aug to Sep, festivals May and Oct",
+      "kicker": "Calendar",
+      "focus": "heatmap"
+    },
+    {
+      "id": "p06-audience",
+      "type": "content",
+      "kind": "data",
+      "heading": "Over 70% are aged 18 to 34, about 2 in 3 women",
+      "kicker": "Audience",
+      "focus": "chart"
+    },
+    {
+      "id": "p07-crosscity",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "64.2% of fans travel in, more in smaller cities",
+      "kicker": "Travel",
+      "focus": "chart"
+    },
+    {
+      "id": "p08-weekend",
+      "type": "content",
+      "kind": "process",
+      "heading": "78.5% stay 2+ days, 98.4% eat locally",
+      "kicker": "Weekend",
+      "focus": "steps"
+    },
+    {
+      "id": "p09-touchpoints",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Touchpoint map: four places, one job in each",
+      "kicker": "Touchpoints",
+      "focus": "image_grid"
+    },
+    {
+      "id": "p10-cases",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Plenty of activations, zero attributable sales",
+      "kicker": "Peers",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p11-attribution",
+      "type": "content",
+      "kind": "process",
+      "heading": "A code at every touchpoint, traced to the show",
+      "kicker": "Attribution",
+      "focus": "chevron_process"
+    },
+    {
+      "id": "p12-city",
+      "type": "content",
+      "kind": "list",
+      "heading": "Cities reward stubs, so we swap stubs for drinks",
+      "kicker": "Cities",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p13-planb",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "All six risks have happened. Each has a Plan B",
+      "kicker": "Plan B",
+      "focus": "data_table"
+    },
+    {
+      "id": "p14-schedule",
+      "type": "content",
+      "kind": "process",
+      "heading": "Sign off now, first stop in June",
+      "kicker": "Schedule",
+      "focus": "gantt"
+    },
+    {
+      "id": "p15-kpi",
+      "type": "content",
+      "kind": "list",
+      "heading": "KPIs count only redemptions, targets come later",
+      "kicker": "Scoreboard",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p16-budget",
+      "type": "content",
+      "kind": "hierarchy",
+      "heading": "Six budget lines, with 15% ring-fenced",
+      "kicker": "Budget",
+      "focus": "chart"
+    },
+    {
+      "id": "p17-asks",
+      "type": "content",
+      "kind": "points",
+      "heading": "Four decisions: direction, budget, codes, risk",
+      "kicker": "Decisions",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "heading": "Sign off in October, first talks in November",
+      "summary": "Before the Show, After the Encore · Summer 2027",
+      "kicker": "Next"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "components": [
+    {
+      "type": "gantt",
+      "axis_labels": [
+        "2026.10",
+        "11",
+        "12",
+        "2027.1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10"
+      ],
+      "bands": [
+        {
+          "from": 8,
+          "to": 12,
+          "label": "Concert season Jun to Sep"
+        }
+      ],
+      "items": [
+        {
+          "label": "Sign-off",
+          "start": 0,
+          "end": 1
+        },
+        {
+          "label": "Cities and shows",
+          "text": "With promoters, venues",
+          "start": 1,
+          "end": 4
+        },
+        {
+          "label": "Packs, boards, stubs",
+          "text": "Ready by May",
+          "start": 2,
+          "end": 8
+        },
+        {
+          "label": "First stop",
+          "text": "Pass review, then tranche 2",
+          "start": 8,
+          "end": 9,
+          "emphasis": true,
+          "icon": "star"
+        },
+        {
+          "label": "Season",
+          "text": "Covers the Aug and Sep peak",
+          "start": 9,
+          "end": 12
+        },
+        {
+          "label": "Wrap-up review",
+          "start": 11,
+          "end": 12
+        }
+      ]
+    }
+  ],
+  "notes": "The timeline. Sign-off this October. From November to January we choose cities and negotiate with promoters and venues, favouring cities with many concerts, a high share of travelling fans and an existing ticket-stub scheme. Co-branded pack design starts in December and production finishes before May, with the pack codes printed in production. The attribution board, stub merchants and store vouchers are also ready by May. The first stop opens in June 2027, the most important bar on the chart: the second budget tranche is released only if the first stop passes review. July to September is the full concert season, covering the August and September peak, and the final review is due at the end of September."
+}

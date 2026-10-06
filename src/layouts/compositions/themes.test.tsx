@@ -46,6 +46,8 @@ const YEARBOOK_ONLY = ["motion", "calendar", "horizon", "formula", "errata", "br
 const LESSON_ONLY = ["objectives", "syllabus", "studies", "cohorts", "diptych", "estimates", "quiz", "answers", "cases", "ranking", "rules", "tiers", "methods", "blackboard"] as const
 /** The same for the pitch setting's own: `pitch-pages.test.tsx` puts them on these themes. */
 const PITCH_ONLY = ["expanse", "stairs", "funnel", "rivals", "equation", "spotlight", "bets", "divide", "locks", "register", "runway", "uses"] as const
+/** The same for the marquee setting's own: `marquee-pages.test.tsx` puts them on these themes. */
+const MARQUEE_ONLY = ["crest", "branch", "season", "makeup", "origins", "route", "spots", "wall", "loop", "stubs", "fallbacks", "timetable", "scoreboard", "allotment", "asks"] as const
 type BoardId = Exclude<
   CompositionId,
   | (typeof PANEL_ONLY)[number]
@@ -56,8 +58,9 @@ type BoardId = Exclude<
   | (typeof YEARBOOK_ONLY)[number]
   | (typeof LESSON_ONLY)[number]
   | (typeof PITCH_ONLY)[number]
+  | (typeof MARQUEE_ONLY)[number]
 >
-const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY, ...CONSOLE_ONLY, ...MEMO_ONLY, ...DOSSIER_ONLY, ...YEARBOOK_ONLY, ...LESSON_ONLY, ...PITCH_ONLY]
+const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY, ...CONSOLE_ONLY, ...MEMO_ONLY, ...DOSSIER_ONLY, ...YEARBOOK_ONLY, ...LESSON_ONLY, ...PITCH_ONLY, ...MARQUEE_ONLY]
 const BOARD_IDS = COMPOSITION_IDS.filter((id): id is BoardId => !SETTING_ONLY.includes(id))
 
 /** One page per composition, in the shape each one takes. */

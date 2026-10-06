@@ -5,6 +5,7 @@ import { render } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
+import { contrastRatio } from "../render/ink"
 import { numberedCards } from "./numbered-cards"
 import type { ComponentCtx } from "./types"
 import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR } from "./legibility"
@@ -621,6 +622,18 @@ describe("numbered_cards marks", () => {
     expect(cards[0]!.querySelector("rect")!.getAttribute("fill")).toBe(ctx.colors.primary)
     expect(Array.from(cards[0]!.querySelectorAll("text")).find((t) => t.textContent === "四季度怎么打")!.getAttribute("fill")).toBe("#FFFFFF")
     expect(() => assertSubset(parseSvgRoot(renderSvgMarkup(<svg>{numberedCards.render(marked, { x: 0, y: 0, w: 880, h: 360 }, ctx)}</svg>)))).not.toThrow()
+  })
+
+  // rally's primary is its stage's shadow, a step darker than its cards: a
+  // pill filled in it sank below the plain ones under their accent badges.
+  it("fills it in the text ink on a theme whose primary does not stand off its cards", () => {
+    const ctx = boundThemeCtx("rally", {})
+    expect(contrastRatio(ctx.colors.primary, ctx.colors.surface)).toBeLessThan(3)
+    const { container } = svg(numberedCards.render(marked, { x: 0, y: 0, w: 880, h: 360 }, ctx))
+    const card = container.querySelector("[data-card-marked]")!
+    expect(card.querySelector("rect")!.getAttribute("fill")).toBe(ctx.colors.text)
+    const title = Array.from(card.querySelectorAll("text")).find((t) => t.textContent === "四季度怎么打")!
+    expect(contrastRatio(title.getAttribute("fill")!, ctx.colors.text)).toBeGreaterThanOrEqual(4.5)
   })
 })
 

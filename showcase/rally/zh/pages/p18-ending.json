@@ -1,0 +1,30 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "confetti"
+  },
+  "components": [
+    {
+      "type": "timeline",
+      "milestones": [
+        {
+          "date": "11 月",
+          "title": "拿出首批城市和场次清单"
+        },
+        {
+          "date": "12 月",
+          "title": "联名包装立项"
+        },
+        {
+          "date": "2027 年 6 月",
+          "title": "首站开场"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "拍板，开场"
+    }
+  ],
+  "notes": "如果今天能拍板，11 月拿出首批城市和场次清单，开始和主办方谈第一站，12 月联名包装立项，2027 年 6 月首站开场。背景图是 AI 生成的示意图。"
+}

@@ -1,0 +1,91 @@
+{
+  "components": [
+    {
+      "type": "chevron_process",
+      "items": [
+        {
+          "title": "Issue codes",
+          "text": "Cup, pack and stub codes, by city and show",
+          "icon": "qr-code"
+        },
+        {
+          "title": "Scan",
+          "text": "A mini program issues a store voucher",
+          "icon": "smartphone"
+        },
+        {
+          "title": "Redeem",
+          "text": "Each redemption traces to its touchpoint",
+          "icon": "store"
+        },
+        {
+          "title": "Repeat",
+          "text": "Did they buy again within 30 days?",
+          "icon": "repeat"
+        },
+        {
+          "title": "Compare",
+          "text": "Against similar cities with no show",
+          "icon": "scale"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Each review feeds the codes for the next stop"
+    },
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "t",
+          "label": "Touchpoint"
+        },
+        {
+          "key": "c",
+          "label": "Code",
+          "emphasis": true
+        },
+        {
+          "key": "y",
+          "label": "Tells us"
+        },
+        {
+          "key": "n",
+          "label": "To test at the first stop"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "cup-soda",
+          "cells": {
+            "t": "Drink station",
+            "c": "Cup code",
+            "y": "Pickups by city and show",
+            "n": "Does a sample turn into a store sale?"
+          }
+        },
+        {
+          "icon": "package",
+          "cells": {
+            "t": "Co-branded pack",
+            "c": "Pack code",
+            "y": "Scan rate and sell-through",
+            "n": "Are the buyers new customers?"
+          }
+        },
+        {
+          "icon": "ticket",
+          "cells": {
+            "t": "Stub swap",
+            "c": "Voucher",
+            "y": "Out-of-town fans in our stores",
+            "n": "Do they keep buying back home?"
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "How we attribute. Every touchpoint issues a code: the cup code at drink stations, the pack code on co-branded packs and the store voucher for stub swaps, each carrying the city and the show. Fans scan to get a store voucher in our mini program, redeem it in our stores or convenience stores, and each redemption traces back to a show and a touchpoint. Then we check whether people who scanned buy again within 30 days. The last step matters most: comparing show cities with similar cities that had no show, on co-branded and store sales, tells us whether the extra sales came from the concert. The table says what each code can tell us and what the first stop still has to test. The central question is whether a free sample at the venue turns into a store purchase. No peer has published a figure for that step."
+}

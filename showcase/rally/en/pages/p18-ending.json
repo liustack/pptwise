@@ -1,0 +1,30 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "confetti"
+  },
+  "components": [
+    {
+      "type": "timeline",
+      "milestones": [
+        {
+          "date": "November",
+          "title": "First list of cities and shows"
+        },
+        {
+          "date": "December",
+          "title": "Co-branded packs approved"
+        },
+        {
+          "date": "June 2027",
+          "title": "First stop opens"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Sign off, curtain up"
+    }
+  ],
+  "notes": "If we decide today, we bring the first list of cities and shows in November and start talks with promoters for the first stop, kick off the co-branded packs in December, and open the first stop in June 2027. The background image is an AI-generated illustration."
+}

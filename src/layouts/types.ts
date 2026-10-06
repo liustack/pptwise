@@ -96,6 +96,8 @@ export type CoverLayoutId =
   | "lesson-cover"
   // ember sample redesign (2026-10-06): the pitch's photograph with the fire's wedge.
   | "pitch-cover"
+  // rally sample redesign (2026-10-06): the campaign's photograph with its ticket stub and confetti.
+  | "marquee-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -141,6 +143,8 @@ export type ChapterLayoutId =
   | "lesson-chapter"
   // ember sample redesign (2026-10-06): an act of the pitch, its number outlined in the fire.
   | "pitch-chapter"
+  // rally sample redesign (2026-10-06): a section of the campaign, its ticket stub and confetti.
+  | "marquee-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -188,6 +192,8 @@ export type EndingLayoutId =
   | "lesson-ending"
   // ember sample redesign (2026-10-06): the pitch's close and its button.
   | "pitch-ending"
+  // rally sample redesign (2026-10-06): the campaign's next steps and its button.
+  | "marquee-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -252,6 +258,9 @@ export type ContentLayoutId =
   // ember sample redesign: the board's ordinary content page and its photograph page. Theme-locked.
   | "pitch-sheet"
   | "pitch-photo"
+  // rally sample redesign: the board's ordinary content page and its one-line plan. Theme-locked.
+  | "marquee-sheet"
+  | "marquee-statement"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

@@ -6,6 +6,7 @@ import { assertSubset } from "../render/subset-validate"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { contrastRatio } from "../render/ink"
 import { heatmap } from "./heatmap"
+import { schema as heatmapSchema } from "../ir/components/heatmap"
 import type { ComponentCtx } from "./types"
 
 const ctx: ComponentCtx = {
@@ -358,6 +359,74 @@ describe("heatmap component", () => {
     }
     const { container } = svg(heatmap.render(big, { x: 0, y: 0, w: 880, h: 400 }, ctx))
     expect(container.querySelectorAll("rect")).toHaveLength(100)
+  })
+
+  describe("a year of months with a marked run (bands)", () => {
+    const months = Array.from({ length: 12 }, (_, i) => `${i + 1} 月`)
+    const season = {
+      type: "heatmap" as const,
+      x_labels: months,
+      y_labels: ["演唱会", "音乐节"],
+      values: [
+        [0, 0, 0, 0, 2, 0, 0, 3, 3, 0, 2, 0],
+        [0, 0, 0, 0, 3, 0, 1, 1, 1, 3, 0, 0],
+      ],
+      bands: [{ from: "6 月", to: "9 月", label: "2027 演唱会季 · 6 至 9 月" }],
+    }
+
+    it("takes twelve columns, one a month, and no more", () => {
+      expect(heatmapSchema.safeParse(season).success).toBe(true)
+      const thirteen = { ...season, x_labels: [...months, "13"], values: season.values.map((row) => [...row, 0]), bands: undefined }
+      expect(heatmapSchema.safeParse(thirteen).success).toBe(false)
+    })
+
+    it("frames the run across every row in the accent, dashed, and names it under the grid", () => {
+      const { container } = svg(heatmap.render(season, { x: 0, y: 0, w: 1100, h: 320 }, ctx))
+      const band = container.querySelector("[data-heatmap-band]")!
+      const frame = band.querySelector("rect")!
+      const cells = Array.from(container.querySelectorAll("rect[data-plot-mark]"))
+      const june = cells[5]!
+      const september = cells[8]!
+      const x = Number(frame.getAttribute("x"))
+      const w = Number(frame.getAttribute("width"))
+      expect(x).toBeLessThan(Number(june.getAttribute("x")))
+      expect(x + w).toBeGreaterThan(Number(september.getAttribute("x")) + Number(september.getAttribute("width")))
+      expect(frame.getAttribute("stroke-dasharray")).toBeTruthy()
+      expect(frame.getAttribute("fill")).toBe("none")
+      const name = band.querySelector("text")!
+      expect(name.textContent).toBe("2027 演唱会季 · 6 至 9 月")
+      const lastRow = cells[cells.length - 1]!
+      expect(Number(name.getAttribute("y"))).toBeGreaterThan(Number(lastRow.getAttribute("y")) + Number(lastRow.getAttribute("height")))
+    })
+
+    it("measures a line for the run's name, so the grid keeps its height", () => {
+      const without = { ...season, bands: undefined }
+      expect(heatmap.measure(season, 1100, ctx)).toBe(heatmap.measure(without, 1100, ctx) + 30)
+    })
+
+    it("refuses a run naming a column the grid does not have, running backwards, or sharing a column", () => {
+      const missing = heatmapSchema.safeParse({ ...season, bands: [{ from: "6 月", to: "13 月", label: "x" }] })
+      expect(missing.success).toBe(false)
+      if (!missing.success) expect(missing.error.issues[0]!.message).toContain('"13 月"')
+      expect(heatmapSchema.safeParse({ ...season, bands: [{ from: "9 月", to: "6 月", label: "x" }] }).success).toBe(false)
+      expect(
+        heatmapSchema.safeParse({
+          ...season,
+          bands: [
+            { from: "6 月", to: "9 月", label: "a" },
+            { from: "9 月", to: "10 月", label: "b" },
+          ],
+        }).success,
+      ).toBe(false)
+      expect(heatmapSchema.safeParse({ ...season, bands: [{ from: "5 月", to: "5 月", label: "one month" }] }).success).toBe(true)
+    })
+
+    it("keeps its contrast and its primitives", () => {
+      const markup = renderSvgMarkup(<svg xmlns="http://www.w3.org/2000/svg">{heatmap.render(season, { x: 0, y: 0, w: 1100, h: 320 }, ctx)}</svg>)
+      expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
+      const name = parseSvgRoot(markup).querySelector("[data-heatmap-band] text")!
+      expect(contrastRatio(name.getAttribute("fill")!, ctx.colors.bg)).toBeGreaterThanOrEqual(4.5)
+    })
   })
 
   it("measure()/render() are deterministic — same input, same output", () => {

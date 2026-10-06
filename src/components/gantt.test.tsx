@@ -188,3 +188,61 @@ describe("gantt range, row icon and period", () => {
     expect(Number(text.getAttribute("y"))).toBeGreaterThan(Number(periods[0]!.getAttribute("y")))
   })
 })
+
+describe("gantt marked spans (bands)", () => {
+  const season = {
+    type: "gantt" as const,
+    axis_labels: ["2026.10", "11", "12", "2027.1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+    items: [
+      { label: "拍板立项", start: 0, end: 1 },
+      { label: "首站试点", start: 8, end: 9, emphasis: true },
+      { label: "演唱会季执行", start: 9, end: 12 },
+    ],
+    bands: [{ from: 8, to: 12, label: "演唱会季 6 至 9 月" }],
+  }
+
+  it("tints the span behind the bars and names it under the axis", () => {
+    const box = { x: 0, y: 0, w: 1000, h: 300 }
+    const { container } = render(<svg>{gantt.render(season, box, ctx)}</svg>)
+    const band = container.querySelector("[data-gantt-band]")!
+    const tint = band.querySelector("rect")!
+    const plotX = 160 + 14
+    const plotW = 1000 - 160 - 14 - 16
+    expect(Number(tint.getAttribute("x"))).toBeCloseTo(plotX + (8 / 12) * plotW, 3)
+    expect(Number(tint.getAttribute("width"))).toBeCloseTo((4 / 12) * plotW, 3)
+    // The tint is painted first, so every bar stands over it.
+    const first = container.querySelector("g > *")!
+    expect(first.hasAttribute("data-gantt-band")).toBe(true)
+    const name = band.querySelector("text")!
+    expect(name.textContent).toBe("演唱会季 6 至 9 月")
+    const axisLabel = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "2026.10")!
+    expect(Number(name.getAttribute("y"))).toBeGreaterThan(Number(axisLabel.getAttribute("y")))
+    expect(Number(name.getAttribute("y"))).toBeLessThanOrEqual(300)
+  })
+
+  it("measures a line for the span's name", () => {
+    expect(gantt.measure(season, 1000, ctx)).toBe(gantt.measure({ ...season, bands: undefined }, 1000, ctx) + 28)
+  })
+
+  it("refuses a span outside the axis, running backwards, or over another", async () => {
+    const { schema } = await import("../ir/components/gantt")
+    expect(schema.safeParse(season).success).toBe(true)
+    expect(schema.safeParse({ ...season, bands: [{ from: 8, to: 13, label: "x" }] }).success).toBe(false)
+    expect(schema.safeParse({ ...season, range: { from: 0, to: 13 }, bands: [{ from: 8, to: 13, label: "x" }] }).success).toBe(true)
+    expect(schema.safeParse({ ...season, bands: [{ from: 9, to: 8, label: "x" }] }).success).toBe(false)
+    expect(
+      schema.safeParse({
+        ...season,
+        bands: [
+          { from: 2, to: 6, label: "a" },
+          { from: 5, to: 9, label: "b" },
+        ],
+      }).success,
+    ).toBe(false)
+  })
+
+  it("keeps its primitives", () => {
+    const markup = renderSvgMarkup(<svg xmlns="http://www.w3.org/2000/svg">{gantt.render(season, { x: 0, y: 0, w: 1000, h: 300 }, ctx)}</svg>)
+    expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
+  })
+})

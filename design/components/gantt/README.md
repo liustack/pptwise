@@ -28,3 +28,16 @@ Settled on the subsidy page. See the board and engine render in [compositions/wi
 
 - Every bar inside the range: validate refuses one outside it.
 - A gantt with a range, a row icon or a period is offered to `bets` alone among the hand-set gantts, and the other faces draw it with the ordinary gantt.
+
+## rally, summer concert season proposal sample, 2026-10
+
+`bands`. Settled on the schedule page (p14): see the board and engine render in [compositions/timetable](../../compositions/timetable/). The round's decisions are in [rounds/2026-10-06-rally](../../rounds/2026-10-06-rally/README.md).
+
+**What it looks like.** A gantt marks a span of its axis (`{ "from": 8, "to": 12, "label": "演唱会季 6 至 9 月" }`), such as the season a plan is built around: the ordinary gantt tints the span behind the bars and names it in a line under its axis. `timetable` sets the same span as the board drew it, with a thin rule at every month.
+
+**Why.** A schedule is read against the season it has to land in.
+
+**What it gave up.**
+
+- validate refuses a span outside the axis, one that runs backwards, and two that overlap.
+- A gantt with bands is offered to `timetable` alone among the hand-set gantts, and the other faces draw it with the ordinary gantt.

@@ -66,6 +66,10 @@ const IDENTITY_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], r
   // every heading, so they keep their full colour on every page (2026-10
   // sample redesign).
   "bulletin-motif": { cover: ["ikb-steps"], chapter: ["ikb-steps"], content: ["ikb-steps"], ending: ["ikb-steps"] },
+  // rally's confetti is thrown in the palette's four colours, which the
+  // charts share, so it keeps its colour on every content page (2026-10
+  // sample redesign). The cover, the sections and the close throw their own.
+  "rally-motif": { content: ["confetti"] },
 }
 
 function slideOf(type: Slide["type"]): Slide {

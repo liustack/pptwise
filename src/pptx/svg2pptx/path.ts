@@ -1,5 +1,5 @@
 import { pxToIn } from "../../constants"
-import { applyFill, extractStroke } from "./style"
+import { applyFill, extractStroke, type LineSpec } from "./style"
 import type { GradientDef } from "./gradient"
 
 /**
@@ -44,7 +44,7 @@ export interface PathOp {
   fill?: { color: string; transparency?: number }
   /** Set alongside `fill` (a solid placeholder) when `fill` was `url(#id)`. */
   gradientFill?: GradientDef
-  line?: { color: string; width: number }
+  line?: LineSpec
   /**
    * Degrees clockwise around the box's centre, matching pptxgenjs `rotate`.
    * Set by `svg2pptx/dispatch.ts` when the leaf's CTM carries a turn.
@@ -223,7 +223,15 @@ function parsePathData(d: string): Seg[] {
       cmd = "l"
     }
     const rel = cmd === cmd.toLowerCase()
-    switch (cmd.toUpperCase()) {
+    // A drawing command straight after a close starts a new subpath at the
+    // closed one's first point (SVG 1.1 §8.3.3). DrawingML has no implicit
+    // start there: a lineTo after <a:close/> with no moveTo of its own made
+    // PowerPoint drop the whole path (lucide's scale, "…zV7", lost both pans).
+    const upper = cmd.toUpperCase()
+    if (upper !== "M" && upper !== "Z" && "close" in (segs[segs.length - 1] ?? {})) {
+      segs.push({ x: sx, y: sy, moveTo: true })
+    }
+    switch (upper) {
       case "M": {
         const x = next()
         const y = next()

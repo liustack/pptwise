@@ -66,6 +66,23 @@ export const schema = z
       .describe(
         'The stretch the axis runs over when it is longer than the bars, such as a whole 18-month plan whose bars cover parts of it: { "from": 0, "to": 18 }. Without it the axis runs from the first bar\'s start to the last bar\'s end. Every bar must lie inside it.',
       ),
+    /** Spans of the axis marked behind the bars. See the describe below. */
+    bands: z
+      .array(
+        z
+          .object({
+            from: z.number().describe("Where the span starts, on the same axis as the bars' start and end."),
+            to: z.number().describe("Where it ends."),
+            label: z.string().min(1).describe('What the span is, printed under the axis, such as "演唱会季 6 至 9 月" or "Concert season, Jun to Sep".'),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(2)
+      .optional()
+      .describe(
+        'Up to two spans of the axis marked behind the bars, each tinted and named under the axis, such as the season a plan is built around: [{ "from": 8, "to": 12, "label": "演唱会季 6 至 9 月" }]. Each lies inside the axis (range, or the bars\' own stretch), ends after it starts, and keeps clear of the other.',
+      ),
   })
   .strict()
   .superRefine((c, ctx) => {
@@ -87,6 +104,23 @@ export const schema = z
     }
     // A bar keeps the lead colour so it stands out from the rest, so two
     // marked bars stand out from nothing.
+    if (c.bands) {
+      const lo = c.range ? c.range.from : Math.min(...c.items.map((item) => item.start))
+      const hi = c.range ? c.range.to : Math.max(...c.items.map((item) => item.end))
+      c.bands.forEach((band, k) => {
+        if (!(band.to > band.from)) {
+          ctx.addIssue({ code: "custom", path: ["bands", k, "to"], message: `gantt bands[${k}] runs from ${band.from} to ${band.to}. Its end must be after its start.` })
+        } else if (band.from < lo || band.to > hi) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["bands", k],
+            message: `gantt bands[${k}] runs from ${band.from} to ${band.to}, outside the axis from ${lo} to ${hi}. Bring it inside${c.range ? " the range" : " the bars' stretch, or give the gantt a range"}.`,
+          })
+        } else if (c.bands!.some((other, j) => j < k && band.from < other.to && other.from < band.to)) {
+          ctx.addIssue({ code: "custom", path: ["bands", k], message: `gantt bands[${k}] overlaps another band. Keep the spans apart.` })
+        }
+      })
+    }
     const marked = c.items.flatMap((item, i) => (item.emphasis === true ? [i] : []))
     if (marked.length > 1) {
       ctx.addIssue({

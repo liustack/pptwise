@@ -602,4 +602,10 @@ describe("explodeIntoUnits keeps a tagged figure in its cards", () => {
     const tagged = { type: "kpi_cards", items: [{ value: "17%", label: "a", tag: { text: "Binding" } }, { value: "3.8%", label: "b" }] } as never
     expect(explodeIntoUnits([tagged]).map((unit) => unit.kind)).toEqual(["component"])
   })
+
+  it("explodes tagged icon cards, whose tiles set the tag beside the icon", async () => {
+    const { explodeIntoUnits } = await import("./bento-layout")
+    const tagged = { type: "icon_cards", items: [{ icon: "map-pin", title: "南京", text: "453 家商户", tag: { text: "凭票根" } }, { icon: "ticket", title: "上海", text: "补贴 30%" }] } as never
+    expect(explodeIntoUnits([tagged]).map((unit) => unit.kind)).toEqual(["icon-card-item", "icon-card-item"])
+  })
 })

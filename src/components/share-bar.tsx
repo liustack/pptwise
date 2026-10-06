@@ -21,7 +21,11 @@ type Chart = Extract<Component, { type: "chart" }>
  * Each part carries its name and its value inside it, set in whichever ink
  * reads on its fill. A part too narrow for them gets them over the bar,
  * right-aligned to its own end, on the caption's line, with a short tick
- * down to it. When the author marks a run of adjacent parts (`emphasis` on
+ * down to it. When those labels over the bar would run into the caption or
+ * each other (several thin parts side by side), the parts too narrow for
+ * their words are named in a key under the bar instead: a swatch of each
+ * one's fill, then its name and value, in rows across the width. When the
+ * author marks a run of adjacent parts (`emphasis` on
  * each series in it), a line under the bar states the run's total and share
  * of the whole, under the run's own left end, and beside it the largest
  * other part's, under its own: the comparison a page marks a run to make.
@@ -68,11 +72,29 @@ const TOTALS = { size: 18, drop: 30 }
 const LABEL_AIR = 24
 /** The tick from an outside label down toward its part stops this short of the bar. */
 const TICK_GAP = 2
+/**
+ * The key under the bar: rows of 16px words on a 24px line, 14px under the
+ * bar, each entry a 12px swatch of its part's fill 8px before its words.
+ */
+const KEY = { gap: 14, size: 16, line: 24, swatch: 12, swatchGap: 8 } as const
 /** How far ink reaches below a baseline, as a share of the size. */
 const DESCENT = 0.22
 
 /** The bar's natural height from its top: the caption, the bar and the totals line. */
 export const SHARE_BAR_H = BAR_TOP + BAR_H + TOTALS.drop + Math.ceil(TOTALS.size * DESCENT)
+
+/**
+ * The height `chart` draws to at width `w`, a key under the bar included:
+ * what the ordinary chart measures a share bar at. `SHARE_BAR_H` for a bar
+ * that cannot be drawn, whose decline its render declares.
+ */
+export function shareBarHeight(chart: Chart, w: number, ctx: ComponentCtx): number {
+  const parts = shareParts(chart)
+  if (!parts) return SHARE_BAR_H
+  // Fills and inks set no geometry.
+  const drawn = drawShareBar({ chart, ctx, x: 0, y: 0, w, fills: parts.map(() => "#000000"), markInk: "#000000" })
+  return drawn ? Math.max(drawn.height, SHARE_BAR_H) : SHARE_BAR_H
+}
 
 /** The parts of a share bar, in the author's order, or `null` for a chart that is not one. */
 export function shareParts(chart: Chart): SharePart[] | null {
@@ -158,7 +180,7 @@ const meets = (a: Placed, b: Placed) => a.x0 < b.x1 + LABEL_AIR && b.x0 < a.x1 +
 
 /**
  * The share bar drawn whole in its band, with its height, or `null` when a
- * part's name and value cannot be set either inside it or over the bar.
+ * part's name and value cannot be set inside it, over the bar or in the key.
  */
 export function drawShareBar(spec: ShareBarSpec): { node: React.ReactElement; height: number } | null {
   const { chart, ctx, x, y, w, fills } = spec
@@ -202,12 +224,30 @@ export function drawShareBar(spec: ShareBarSpec): { node: React.ReactElement; he
     const right = Math.min(x + w, spans[i]!.x1 - PART_GAP / 2)
     outside.push({ index: i, text, box: { x0: right - width(text, CAPTION.size, body), x1: right }, tickX: (spans[i]!.x0 + spans[i]!.x1 - PART_GAP) / 2 })
   }
-  // Labels over the bar stand clear of the caption and of each other.
+  // Labels over the bar stand clear of the caption and of each other, or
+  // the parts they name go to a key under the bar.
   const overhead = [captionBox, ...outside.map((o) => o.box)]
-  for (let i = 0; i < overhead.length; i++) {
-    if (overhead[i]!.x0 < x - 0.5) return null
-    for (let j = i + 1; j < overhead.length; j++) if (meets(overhead[i]!, overhead[j]!)) return null
+  const overheadClear = overhead.every((a, i) => a.x0 >= x - 0.5 && overhead.slice(i + 1).every((b) => !meets(a, b)))
+  const keyed: { index: number; text: string; x: number; row: number }[] = []
+  if (!overheadClear) {
+    let kx = x
+    let row = 0
+    for (const label of outside) {
+      const entryW = KEY.swatch + KEY.swatchGap + width(label.text, KEY.size, body)
+      if (entryW > w) return null
+      if (kx > x && kx + entryW > x + w) {
+        row++
+        kx = x
+      }
+      keyed.push({ index: label.index, text: label.text, x: kx, row })
+      kx += entryW + LABEL_AIR
+    }
+    outside.length = 0
   }
+  const keyRows = keyed.length > 0 ? keyed[keyed.length - 1]!.row + 1 : 0
+  const keyTop = barTop + BAR_H + KEY.gap
+  // Where the bar's furniture ends: its foot, or the key's last line.
+  const foot = keyRows > 0 ? keyTop + keyRows * KEY.line : barTop + BAR_H
 
   // The totals line: the marked run's, then the largest other part's, each
   // under its own left end. Computed, so a second total with no room is left out.
@@ -238,7 +278,8 @@ export function drawShareBar(spec: ShareBarSpec): { node: React.ReactElement; he
       }
     }
   }
-  const height = totals.length > 0 ? SHARE_BAR_H : BAR_TOP + BAR_H
+  const totalsBaseline = foot + TOTALS.drop
+  const height = (totals.length > 0 ? totalsBaseline + Math.ceil(TOTALS.size * DESCENT) : foot) - y
 
   const nodes: React.ReactNode[] = []
   for (const [i, span] of spans.entries()) {
@@ -288,9 +329,20 @@ export function drawShareBar(spec: ShareBarSpec): { node: React.ReactElement; he
       </g>,
     )
   }
+  for (const entry of keyed) {
+    const baseline = keyTop + entry.row * KEY.line + Math.round(KEY.line / 2 + KEY.size * 0.385)
+    nodes.push(
+      <g key={`key-${entry.index}`} data-share-key={parts[entry.index]!.name}>
+        <rect x={entry.x} y={baseline - KEY.size * 0.385 - KEY.swatch / 2} width={KEY.swatch} height={KEY.swatch} rx={2} fill={fills[entry.index]!} />
+        <text x={entry.x + KEY.swatch + KEY.swatchGap} y={baseline} fontFamily={body} fontSize={KEY.size} fill={captionInk} dominantBaseline="alphabetic">
+          {entry.text}
+        </text>
+      </g>,
+    )
+  }
   for (const [k, t] of totals.entries()) {
     nodes.push(
-      <text key={`total-${k}`} data-share-total="" x={t.x} y={barTop + BAR_H + TOTALS.drop} fontFamily={body} fontSize={TOTALS.size} fontWeight="700" fill={t.ink} dominantBaseline="alphabetic">
+      <text key={`total-${k}`} data-share-total="" x={t.x} y={totalsBaseline} fontFamily={body} fontSize={TOTALS.size} fontWeight="700" fill={t.ink} dominantBaseline="alphabetic">
         {t.text}
       </text>,
     )

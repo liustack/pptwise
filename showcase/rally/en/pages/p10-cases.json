@@ -1,0 +1,76 @@
+{
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "cup-soda",
+          "title": "Hushang Ayi · Tea · 2024",
+          "text": "Tour combo for two, 700+ stores in 12 cities. 10,000 sold in 10 minutes",
+          "tag": {
+            "text": "Company figure",
+            "evidence": "company"
+          }
+        },
+        {
+          "icon": "zap",
+          "title": "Zhanma · Energy drink · 2025",
+          "text": "Named every drink station at Strawberry Xinjiang. Nearly 80,000 fans (whole festival)",
+          "tag": {
+            "text": "Advertorial",
+            "evidence": "company"
+          }
+        },
+        {
+          "icon": "milk",
+          "title": "Changqing · Dairy · 2025",
+          "text": "Co-branded pack, buy yogurt to win tickets. Not disclosed",
+          "tag": {
+            "text": "Trade media",
+            "evidence": "press"
+          }
+        },
+        {
+          "icon": "ice-cream-cone",
+          "title": "Yili Xujinhuan · Dairy · 2024",
+          "text": "Named 3 concerts, stalls on site. 1.1bn+ Weibo impressions",
+          "tag": {
+            "text": "Company figure",
+            "evidence": "company"
+          }
+        },
+        {
+          "icon": "wine",
+          "title": "Yanghe M6+ · Baijiu · 2024",
+          "text": "8-city tour sponsor, scan a cap to win tickets. 5bn+ video views",
+          "tag": {
+            "text": "Company figure",
+            "evidence": "company"
+          }
+        },
+        {
+          "icon": "megaphone",
+          "title": "Pepsi · Soft drinks · 2023",
+          "text": "Title sponsor, TFBOYS 10th anniversary in Xi'an. No brand results disclosed",
+          "tag": {
+            "text": "Press",
+            "evidence": "press"
+          }
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "0",
+          "unit": "cases",
+          "label": "Published sales anyone can attribute",
+          "note": "Every result is reach, trends or sell-outs. Not one figure traces back to sales"
+        }
+      ]
+    }
+  ],
+  "footnote": "Sources: Digitaling (Mar 2024, Jun 2024, Jun 2025), 21st Century Business Herald, China.com, Jiemian, Xin Caijing. All results self-reported",
+  "notes": "What peers have done. Drinks, tea and dairy brands already have a full playbook at live shows: naming rights, drink stations, tie-in combos, co-branded packs, buy-a-product-win-a-ticket and scan-to-win. Hushang Ayi ran a two-cup combo with Jason Zhang's 2024 tour in more than 700 stores across 12 cities and, by company and platform figures, sold 10,000 in ten minutes, while its ordering system also crashed. Zhanma named every drink station at Strawberry Festival Xinjiang. The nearly 80,000 fans were the whole festival, not people reached by the brand. Changqing's co-branded pack let shoppers win tickets by buying yogurt, with no results disclosed. Yili Xujinhuan and Yanghe reported impressions and video views. The key point is that published results are almost all self-reported impressions, trending topics and sell-outs. We could not find a single published, attributable figure for sales or repeat purchase. That is the gap this plan closes: every contact has to count back to sales."
+}

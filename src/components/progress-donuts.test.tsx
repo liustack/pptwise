@@ -10,7 +10,7 @@ import { PptwiseError } from "../errors"
 import type { Component } from "@/ir"
 import type { ComponentCtx } from "./types"
 import { CANONICAL_THEME_IDS } from "../themes"
-import { accessibleInk } from "../render/ink"
+import { accessibleInk, contrastRatio } from "../render/ink"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 
@@ -405,6 +405,17 @@ describe("progress_donuts detail line and marked ring", () => {
       const arcs = Array.from(container.querySelectorAll("path"))
       const strokes = arcs.map((a) => a.getAttribute("stroke"))
       expect(strokes[2], id).not.toBe(strokes[0])
+    }
+  })
+
+  it("marks the ring in an ink that reads on the page, on every canonical theme", () => {
+    // rally's primary is its stage's shadow: a marked ring in it vanished
+    // beside the accent ones.
+    for (const id of CANONICAL_THEME_IDS) {
+      const ctx = boundThemeCtx(id, {})
+      const { container } = render(<svg>{progressDonuts.render(funds, { x: 0, y: 0, w: 1088, h: 380 }, ctx)}</svg>)
+      const stroke = Array.from(container.querySelectorAll("path"))[2]!.getAttribute("stroke")!
+      expect(contrastRatio(stroke, ctx.defaultBg ?? ctx.colors.bg), id).toBeGreaterThanOrEqual(3)
     }
   })
 

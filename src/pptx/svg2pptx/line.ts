@@ -1,6 +1,6 @@
 import { PX_PER_IN, pxToIn, pxToPt } from "../../constants"
 import { svgColorToHex, svgColorTransparency } from "./color"
-import { elementOpacity } from "./style"
+import { elementOpacity, mapDashArray, type DashType } from "./style"
 
 /** EMU per inch — `node_modules/pptxgenjs`'s own `EMU` constant, replicated
  * here because this is the one place in the render chain that needs to
@@ -19,21 +19,6 @@ const EMU_PER_IN = 914400
 function roundsToZeroEmu(px: number): boolean {
   return Math.round((Math.abs(px) / PX_PER_IN) * EMU_PER_IN) === 0
 }
-
-/**
- * pptxgenjs line dash type.
- * Valid values from pptxgenjs types/index.d.ts line 1040:
- * 'solid' | 'dash' | 'dashDot' | 'lgDash' | 'lgDashDot' | 'lgDashDotDot' | 'sysDash' | 'sysDot'
- */
-type DashType =
-  | "solid"
-  | "dash"
-  | "dashDot"
-  | "lgDash"
-  | "lgDashDot"
-  | "lgDashDotDot"
-  | "sysDash"
-  | "sysDot"
 
 /**
  * A pptxgenjs line draw op, produced from an SVG `<line>`.
@@ -80,26 +65,6 @@ function num(el: Element, name: string, fallback = 0): number {
   const v = el.getAttribute(name)
   if (v == null) return fallback
   return parseFloat(v) || fallback
-}
-
-/**
- * Map SVG `stroke-dasharray` to a pptxgenjs `dashType`.
- *
- * Minimal mapping (not attempting to cover every SVG pattern):
- * - absent / empty → undefined (solid, omitted from op)
- * - dash length ≤ 2 (dot-like, e.g. "1,3" / "2,4") → "sysDot"
- * - anything else → "dash"
- *
- * pptxgenjs valid dashType values (types/index.d.ts line 1040):
- * 'solid' | 'dash' | 'dashDot' | 'lgDash' | 'lgDashDot' | 'lgDashDotDot' | 'sysDash' | 'sysDot'
- */
-function mapDashArray(el: Element): DashType | undefined {
-  const raw = el.getAttribute("stroke-dasharray")
-  if (!raw || raw === "none") return undefined
-  const parts = raw.split(/[\s,]+/).map(Number).filter((n) => !isNaN(n))
-  if (parts.length === 0) return undefined
-  // First value is the dash/dot length. If ≤ 2px it looks like a dot pattern.
-  return parts[0] <= 2 ? "sysDot" : "dash"
 }
 
 /** Convert an SVG `<line>` element to a pptxgenjs line op. */

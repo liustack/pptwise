@@ -61,7 +61,8 @@ export const shareComposition: Composition = ({ components, ctx, rect, setting, 
     surface: ctx.colors.surface,
   })
   const drawn = drawShareBar({ chart: shape.chart, ctx, x: rect.x, y: rect.y + BAR_TOP, w: rect.w, fills, markInk: mark })
-  if (!drawn) return null
+  // A key under the bar can make it taller than the band.
+  if (!drawn || BAR_TOP + drawn.height > rect.h) return null
   const restTop = rect.y + BAR_TOP + drawn.height + REST_GAP
   const restRect = { x: rect.x, y: restTop, w: rect.w, h: rect.y + rect.h - restTop }
   let rest: React.ReactElement | null = null
