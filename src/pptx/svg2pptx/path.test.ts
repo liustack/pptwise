@@ -25,6 +25,24 @@ describe("a dashed stroke", () => {
   })
 })
 
+describe("a subpath after a close", () => {
+  // lucide's scale draws each pan as "m19 8 3 8a5 5 0 0 1-6 0zV7": the V
+  // after the z starts again from the pan's first point. Exported as a bare
+  // lineTo after <a:close/>, PowerPoint dropped the whole pan.
+  it("starts at the closed subpath's first point with a moveTo of its own", () => {
+    const op = pathToOp(svgEl("path", 'd="m19 8 3 8a5 5 0 0 1-6 0zV7" fill="none" stroke="#000"'))!
+    const close = op.points.findIndex((p) => "close" in p)
+    expect(op.points[close + 1]).toMatchObject({ moveTo: true })
+    const start = op.points[0] as { x: number; y: number }
+    expect(op.points[close + 1]).toMatchObject({ x: start.x, y: start.y })
+  })
+
+  it("adds nothing when the close is followed by a moveTo", () => {
+    const op = pathToOp(svgEl("path", 'd="M0 0 L10 0 L10 10 Z M20 20 L30 30" fill="none" stroke="#000"'))!
+    expect(op.points.filter((p) => "moveTo" in p && p.moveTo)).toHaveLength(2)
+  })
+})
+
 describe("polygonToOp", () => {
   it("builds a closed custGeom with a tight bbox and bbox-relative points", () => {
     const op = polygonToOp(
