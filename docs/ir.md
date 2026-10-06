@@ -268,6 +268,7 @@ A page usually argues about one thing. These fields let the author say which, an
 | `progress_donuts.items[].detail` and `emphasis` | a line under a rate's label with the amounts behind it ("1.18 of 1.3 trillion"), and the one rate the page is about, whose ring, figure and label take the emphasis colour | at most one marked |
 | `kpi_cards.items[].tag` | what the figure is, in a few words printed as a small tag with it (`{ "text": "Binding" }`): filled on the marked figure, outlined otherwise, grey when `quiet` | |
 | `from_to.rows[].tag` and `emphasis` | a tag after the row's values and the one measure the page is about, as on a `comparison` row | at most one marked |
+| `icon_cards.title` and `icon_cards.items[].tone` | a short name set over the cards, such as the heading of one column of a page ("What we follow"), and what kind of news a card is (`danger`, `warning`, `success`), its icon drawn in the theme's own ink for it, such as a past incident | |
 | `image_grid.items[].tag` | a few words on a picture, such as one that is optional (`{ "text": "Optional", "basis": "pending" }`), set at its top right corner on a plate of the page, outlined or filled as every tag is | |
 | `from_to.rows[].icon` and `note` | a symbol before a measure's name (`"clock"`), and a short line under it, such as where the figures come from ("CNESA estimate, before and after the new tariff") | |
 | `comparison.rows[].emphasis` | the one row the page is about: it sits on a pale tint of the emphasis colour | at most one |

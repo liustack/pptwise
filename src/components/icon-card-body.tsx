@@ -2,7 +2,7 @@ import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, truncateToUnits } from "../lib/svg-text-layout"
 import { Icon } from "../render/icons"
-import { graphicInk } from "../render/ink"
+import { graphicInk, resolveSemanticColor } from "../render/ink"
 import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
 import type { ComponentBox, ComponentCtx } from "./types"
 
@@ -184,7 +184,7 @@ export function renderIconCardBody(
         x={box.x}
         y={box.y + (rowH - iconSize) / 2}
         size={iconSize}
-        color={graphicInk(ctx.colors.primary, ctx.colors.surface)}
+        color={graphicInk(item.tone ? resolveSemanticColor(item.tone, ctx.colors) : ctx.colors.primary, ctx.colors.surface)}
       />
       {item.tag ? (
         // A tag wider than the room beside the icon is declared dropped rather than cut.

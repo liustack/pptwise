@@ -268,6 +268,7 @@ pptwise schema --kind data --theme brief
 | `progress_donuts.items[].detail` 与 `emphasis` | 标签下面一行，写这个完成度背后的金额（「11770 / 13000 亿元」），以及这一页讲的那一个，它的环、数字和标签用强调色 | 最多标一个 |
 | `kpi_cards.items[].tag` | 这个数是什么，用几个字印成数字旁的小标签（`{ "text": "约束性指标" }`）：标出的那个数填满，其余描边，`quiet` 的用灰色 | |
 | `from_to.rows[].tag` 与 `emphasis` | 行尾数值后的标签，以及这一页讲的那一项，和 `comparison` 的行一样 | 最多标一行 |
+| `icon_cards.title` 与 `icon_cards.items[].tone` | 印在卡片上方的短名，比如一页里某一栏的栏头（「按什么做」），以及一张卡是哪一类消息（`danger`、`warning`、`success`），它的图标用主题给这类消息的颜色，比如一起过去的事故 | |
 | `image_grid.items[].tag` | 图上的几个字，比如选配的那一张（`{ "text": "选配", "basis": "pending" }`），垫一块页面底色印在图的右上角，描边还是填色和别处的标签一样 | |
 | `from_to.rows[].icon` 与 `note` | 指标名前的图标（`"clock"`），以及名字下面一行小字，比如数字从哪来（「CNESA 估算，426 号新政前后」） | |
 | `comparison.rows[].emphasis` | 这一页讲的那一行：整行落在强调色的浅底上 | 最多一行 |

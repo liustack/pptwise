@@ -94,7 +94,7 @@ export function MarqueeStatementContent(props: SvgTemplateProps) {
     slide.components.every((c) => c === cards || c === paragraph) &&
     (lead === null || leadFit !== null) &&
     claim !== null &&
-    (!cards || (points.length <= POINTS.max && fitted.every((f) => f.name && (f.desc || !f.p.text.trim()) && !f.p.tag))) &&
+    (!cards || (!cards.title?.trim() && points.length <= POINTS.max && fitted.every((f) => f.name && (f.desc || !f.p.text.trim()) && !f.p.tag && !f.p.tone))) &&
     (!paragraph || para !== null)
   if (!fits) {
     // This face draws one shape only, so anything else goes to the sheet,

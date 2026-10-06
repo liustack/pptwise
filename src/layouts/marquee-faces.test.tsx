@@ -125,6 +125,14 @@ describe("the marquee faces on rally", () => {
     expect(texts(root)).toContain("上海")
   })
 
+  it("statement: hands touchpoints with a title or a tone to the sheet, which draws them", () => {
+    const base = statement().components[0] as Extract<Slide["components"][number], { type: "icon_cards" }>
+    for (const cards of [{ ...base, title: "三个触点" }, { ...base, items: base.items.map((it, i) => (i === 0 ? { ...it, tone: "warning" as const } : it)) }]) {
+      const root = page(deck([cover(), statement({ components: [cards] as Slide["components"] })]), 1)
+      expect(root.querySelector("[data-face-stepped-aside='marquee-statement']")).not.toBeNull()
+    }
+  })
+
   it("splits a heading at its last comma and keeps the author's lines", () => {
     expect(splitStatement("Skip naming rights, meet fans\n**before** and **after**")).toEqual({ lead: "Skip naming rights,", lines: ["meet fans", "**before** and **after**"] })
     expect(splitStatement("没有逗号的一句话")).toEqual({ lead: null, lines: ["没有逗号的一句话"] })

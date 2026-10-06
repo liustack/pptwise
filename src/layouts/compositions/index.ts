@@ -430,6 +430,19 @@ function asksForGanttBands(components: readonly CompositionProps["components"][n
 }
 
 /**
+ * The compositions that draw what icon cards may carry beyond their icon,
+ * title, text and tag: a title over the set (`title`) and the kind of news a
+ * card is (`items[].tone`). A page whose icon cards carry either is offered
+ * to these alone; the ordinary cards set the title over them and draw a
+ * card's icon in the theme's ink for its news.
+ */
+const ICON_CARD_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForIconCardDetail(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "icon_cards" && (Boolean(component.title?.trim()) || component.items.some((item) => item.tone !== undefined)))
+}
+
+/**
  * The compositions that draw the page's ballot (`Slide.ballot`), a box for
  * each choice beside every question. A page with one is offered to these
  * alone; the face declares the ballot dropped when none takes the page.
@@ -467,6 +480,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const scheduled = asksForGanttDetail(props.components)
   const seasoned = asksForGanttBands(props.components)
   const columned = asksForTableColumnMarks(props.components)
+  const carded = asksForIconCardDetail(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -481,6 +495,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (scheduled && !GANTT_DETAIL_COMPOSITIONS.has(id)) continue
     if (seasoned && !GANTT_BAND_COMPOSITIONS.has(id)) continue
     if (columned && !TABLE_COLUMN_COMPOSITIONS.has(id)) continue
+    if (carded && !ICON_CARD_DETAIL_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue

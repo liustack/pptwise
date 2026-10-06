@@ -267,3 +267,15 @@ describe("a picture's tag", () => {
     expect(compose({ components: withTag(page.components) as Component[], ctx: chinese(ctx), rect: BAND, setting: "lesson" }, ["methods"])).toBeNull()
   })
 })
+
+describe("icon cards with a title or a tone", () => {
+  it("go to the ordinary cards, which draw both, not to the rules", () => {
+    const page = LESSON_BOARD["p15-rules"]!
+    const { ctx } = testCtx("homeroom")
+    const [cards, ...rest] = page.components as [Extract<Component, { type: "icon_cards" }>, ...Component[]]
+    const props = { ctx: chinese(ctx), rect: BAND, setting: "lesson" as const }
+    expect(compose({ ...props, components: page.components }, ["rules"])).not.toBeNull()
+    expect(compose({ ...props, components: [{ ...cards, title: "公司规定" }, ...rest] }, ["rules"])).toBeNull()
+    expect(compose({ ...props, components: [{ ...cards, items: cards.items.map((it, i) => (i === 0 ? { ...it, tone: "danger" as const } : it)) }, ...rest] }, ["rules"])).toBeNull()
+  })
+})

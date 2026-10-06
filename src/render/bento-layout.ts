@@ -53,7 +53,8 @@ export function explodeIntoUnits(components: Component[]): BentoUnit[] {
     // cell and lost their titles and text to its width.
     if (component.type === "kpi_cards" && !component.items.some((item) => item.tag)) {
       for (const item of component.items) units.push({ kind: "kpi-item", item, component })
-    } else if (component.type === "icon_cards") {
+    } else if (component.type === "icon_cards" && !component.title?.trim()) {
+      // A titled set stays whole, so its title stands over its cards.
       for (const item of component.items)
         units.push({ kind: "icon-card-item", item, component })
     } else {

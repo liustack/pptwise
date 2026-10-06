@@ -1,11 +1,12 @@
 import { z } from "zod"
-import { IconNameSchema, TagSchema } from "./shared"
+import { IconNameSchema, TagSchema, ToneSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
 export const schema = z
   .object({
     type: z.literal("icon_cards"),
+    title: z.string().optional().describe('A short name printed over the cards, such as "按什么做".'),
     /** 2-4 项单行并列，5-6 项自动 2 行 3 列宫格（2026-07-11 用户借鉴）。 */
     items: z
       .array(
@@ -17,6 +18,7 @@ export const schema = z
             tag: TagSchema.optional().describe(
               "A few words that place the card, printed as a small tag on it, such as where or when the item comes from: Azure 2026-02. Set quiet on a tag that should step back.",
             ),
+            tone: ToneSchema.optional(),
           })
           .strict()
       )
