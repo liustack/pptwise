@@ -41,3 +41,16 @@ Settled on the subsidy page. See the board and engine render in [compositions/wi
 
 - validate refuses a span outside the axis, one that runs backwards, and two that overlap.
 - A gantt with bands is offered to `timetable` alone among the hand-set gantts, and the other faces draw it with the ordinary gantt.
+
+## thesis, retirement age thesis proposal sample, 2026-10
+
+`milestones` and an item's `basis`. Settled on the schedule page (p16): see the board and engine render in [compositions/itinerary](../../compositions/itinerary/). The round's decisions are in [rounds/2026-10-06-thesis](../../rounds/2026-10-06-thesis/README.md).
+
+**What it looks like.** A gantt names up to two moments on its axis (`{ "at": 9, "label": "数据闸门：2027 年 6 月" }`): the ordinary gantt draws a line down the rows, a diamond under them and the moment's name beside it. A stretch whose `basis` is not settled is drawn as a dashed outline rather than a filled bar.
+
+**Why.** The plan turns on one moment, the data gate, and one stretch of work depends on what happens there.
+
+**What it gave up.**
+
+- validate refuses a moment outside the axis and more than two.
+- A gantt with a moment is offered to `itinerary` alone among the hand-set gantts, and the other faces draw it with the ordinary gantt.

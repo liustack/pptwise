@@ -35,3 +35,13 @@ Settled on the regulation page. See the board and engine render in [compositions
 **Why.** A year that is counted and a year that is paid, or a span that is law and one that is only proposed, are stretches of time, not points on it.
 
 **What it gave up.** Up to three periods, each dated the way the milestones are. A face that sets milestones by hand without room for a tag or a source declines a timeline that carries them.
+
+## thesis, retirement age thesis proposal sample, 2026-10
+
+`status: "pending"` on a milestone. Settled on the data gate (p13): see the board and engine render in [compositions/cadence](../../compositions/cadence/). The round's decisions are in [rounds/2026-10-06-thesis](../../rounds/2026-10-06-thesis/README.md).
+
+**What it looks like.** A milestone carried out and not yet released is drawn hollow: the ordinary timeline sets its node as a ring in the line's colour on the page, and `cadence` sets the round as a hollow dot on its lane.
+
+**Why.** A survey round fielded in 2024 whose data no one can use yet is the reason the study waits. A filled dot would say the data exists.
+
+**What it gave up.** One status, `pending`. A face that sets milestones by hand without a hollow node declines a timeline that carries it.
