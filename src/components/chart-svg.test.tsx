@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import {
   SERIES_GUTTER_OVERHEAD,
+  countedLabelStep,
   splitSeriesGutters,
   renderArea,
   renderBar,
@@ -2377,5 +2378,28 @@ describe("a point the gaps leave alone", () => {
     ]
     const { container } = svg(renderLine(tail, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
     expect(container.querySelectorAll("[data-lone-point]")).toHaveLength(1)
+  })
+})
+
+describe("a point axis whose categories count", () => {
+  const years = Array.from({ length: 11 }, (_, i) => String(2015 + i))
+  const ratio: ChartSeries[] = [{ name: "比值", data: years.map((x, i) => ({ x, y: 2.5 + (i % 4) / 10 })) }]
+  const xLabels = (container: Element) => Array.from(container.querySelectorAll("[data-axis-tick='x']")).map((t) => t.textContent)
+
+  it("names every other year in a half-width chart rather than cutting each to a stub", () => {
+    const { container } = svg(renderLine(ratio, PALETTE, 0, 0, 520, H, MUTED, TEXT, ACCENT))
+    expect(xLabels(container)).toEqual(["2015", "2017", "2019", "2021", "2023", "2025"])
+    expect(container.querySelector("[data-axis-tick='x'][data-truncated]")).toBeNull()
+  })
+
+  it("names every year where they fit, and an area chart thins the same way", () => {
+    expect(xLabels(svg(renderLine(ratio, PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT)).container)).toEqual(years)
+    expect(xLabels(svg(renderArea(ratio, PALETTE, 0, 0, 520, H, MUTED, TEXT, ACCENT)).container)).toHaveLength(6)
+  })
+
+  it("keeps every name of categories that do not count, cut and marked", () => {
+    expect(countedLabelStep(["华北地区", "华东地区", "华南地区", "西南地区"], 20)).toBe(1)
+    expect(countedLabelStep(["2015", "2016", "2018"], 20)).toBe(1)
+    expect(countedLabelStep(["2015", "2016", "2017"], 20)).toBeGreaterThan(1)
   })
 })

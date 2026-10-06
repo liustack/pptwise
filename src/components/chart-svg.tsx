@@ -431,6 +431,58 @@ function edgeAnchor(i: number, n: number): "start" | "middle" | "end" {
   return "middle"
 }
 
+/** Air between two counted labels on a thinned point axis. */
+const COUNTED_LABEL_GAP = 8
+
+/**
+ * Every how many points a point axis names its category: 1, unless the
+ * categories count evenly (2015, 2016, … or 10, 20, 30) and the widest of
+ * them does not fit the room between two points even at the floor size.
+ * Such a run reads whole from every k-th label, so the axis names every
+ * k-th point at k times the room instead of cutting every label to a stub.
+ */
+export function countedLabelStep(labels: readonly string[], room: number, fontFamily?: string): number {
+  if (labels.length < 3 || room <= 0) return 1
+  const values = labels.map((label) => (/^-?\d+(\.\d+)?$/u.test(label.trim()) ? Number(label.trim()) : Number.NaN))
+  if (values.some((v) => !Number.isFinite(v))) return 1
+  const step = values[1]! - values[0]!
+  if (step === 0 || values.some((v, i) => i > 0 && Math.abs(v - values[i - 1]! - step) > 1e-9)) return 1
+  const widest = Math.max(...labels.map((label) => measureTextUnits(label.trim(), { fontFamily })))
+  if (widest * CATEGORY_MIN_FONT_SIZE <= room) return 1
+  return Math.min(labels.length - 1, Math.ceil((widest * CATEGORY_FONT_SIZE + COUNTED_LABEL_GAP) / room))
+}
+
+/**
+ * The tick labels along a point axis, a line's or an area's categories.
+ *
+ * Each label gets the room between two points, shrinking to the floor size
+ * and then cut and marked. A run of categories that counts evenly is named
+ * every k-th point instead (`countedLabelStep`): a half-width chart of the
+ * years 2015 to 2025 printed 「201 201 201」. Categories that do not count are
+ * each the author's own word and keep their own room.
+ */
+function pointAxisTicks(categories: readonly { x: string | number }[], xForIndex: (i: number) => number, room: number, fontFamily?: string) {
+  const step = countedLabelStep(categories.map((cat) => String(cat.x)), room, fontFamily)
+  return categories.flatMap((cat, i) => {
+    if (i % step !== 0) return []
+    const category = fitSvgLine(String(cat.x), {
+      maxWidth: room * step,
+      fontSize: CATEGORY_FONT_SIZE,
+      minFontSize: CATEGORY_MIN_FONT_SIZE,
+      fontFamily,
+    })
+    return [
+      {
+        label: category.text,
+        pos: xForIndex(i),
+        truncated: category.truncated,
+        fontSize: category.fontSize,
+        anchor: edgeAnchor(i, categories.length),
+      },
+    ]
+  })
+}
+
 /**
  * Where category `i` of `n` sits inside the data span, and how much width its
  * tick label may claim.
@@ -1758,21 +1810,7 @@ export function renderLine(
     label: formatAxisTick(t, meta.yUnit, meta.figures),
     pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
   }))
-  const xTicks = categories.map((cat, i) => {
-    const category = fitSvgLine(String(cat.x), {
-      maxWidth: categoryMaxWidth,
-      fontSize: CATEGORY_FONT_SIZE,
-      minFontSize: CATEGORY_MIN_FONT_SIZE,
-      fontFamily,
-    })
-    return {
-      label: category.text,
-      pos: xForIndex(i),
-      truncated: category.truncated,
-      fontSize: category.fontSize,
-      anchor: edgeAnchor(i, categories.length),
-    }
-  })
+  const xTicks = pointAxisTicks(categories, xForIndex, categoryMaxWidth, fontFamily)
 
   type Resolved = { i: number; x: number; y: number; value: number }
   const seriesEnds = model.series.map((s) => {
@@ -3526,21 +3564,7 @@ export function renderArea(
     label: formatAxisTick(t, meta.yUnit, meta.figures),
     pos: mapToPlotY(t, yAxis.domain, geom.plotY, geom.plotH),
   }))
-  const xTicks = categories.map((cat, i) => {
-    const category = fitSvgLine(String(cat.x), {
-      maxWidth: categoryMaxWidth,
-      fontSize: CATEGORY_FONT_SIZE,
-      minFontSize: CATEGORY_MIN_FONT_SIZE,
-      fontFamily,
-    })
-    return {
-      label: category.text,
-      pos: xForIndex(i),
-      truncated: category.truncated,
-      fontSize: category.fontSize,
-      anchor: edgeAnchor(i, categories.length),
-    }
-  })
+  const xTicks = pointAxisTicks(categories, xForIndex, categoryMaxWidth, fontFamily)
   const gutterLabels: GutterLabel[] = []
   for (const s of model.series) {
     const { first, last, count } = endsOf(s.values)
