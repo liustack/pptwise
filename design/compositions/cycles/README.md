@@ -12,7 +12,7 @@ Settled on the storage sum page (p08). The round's decisions are in [rounds/2026
 | :-: | :-: |
 | ![board](proposal.board.png) | ![engine](proposal.engine.png) |
 
-**What it looks like.** Over the cards the formula on a bar of the pale petrol, bold in petrol, with what it rests on as a white chip at the right. A card of sand a place: its name at 20px in petrol, the unit at its right in small grey, then a line a cycle (the cycle's name as a white chip, what it buys at and sells at with an arrow between, what it earns at the right), a hairline, the day's figure at 44px in petrol with its label and note in small grey, and at the right the year's range bold. Under the cards, the warning in a box outlined in the tangerine, its icon in the darker tangerine.
+**What it looks like.** Over the cards the formula on a bar of the pale petrol, bold in petrol, with what it rests on as a white chip at the right. A card of sand a place: its name at 20px in petrol, the unit at its right in small grey, then a line a cycle (the cycle's name as a white chip, what it buys at and sells at with an arrow between, what it earns at the right), a hairline, the day's figure at 44px in petrol with its label and note in small grey, and at the right the year's range bold. Under the cards, the warning in a box outlined in the brick red, its icon in the brick red too.
 
 **Why.** A battery's case is two trades a day. Writing each trade out, then the day and the year, shows the figure is a ceiling the proposal does not count as income.
 

@@ -12,7 +12,7 @@ Settled on the sensitivity page (p07). The round's decisions are in [rounds/2026
 | :-: | :-: |
 | ![board](proposal.board.png) | ![engine](proposal.engine.png) |
 
-**What it looks like.** At the left, bars on their side from one axis: each case right-aligned before its bar, the bars in the second petrol and the case the page rests on in the tangerine, each value bold after its bar with its note in small grey. Under a dashed line a reference series in the sky. Dotted lines at the axis's round values, named under the bars with the unit. At the right a card a lever (its icon, its name in petrol, a few lines on it), and under them, in a box outlined by a hairline, what none of the figures has taken off yet, its title bold before its text.
+**What it looks like.** At the left, bars on their side from one axis: each case right-aligned before its bar, the bars in the second petrol and the case the page rests on in the brick red, each value bold after its bar with its note in small grey. Under a dashed line a reference series in the sky. Dotted lines at the axis's round values, named under the bars with the unit. At the right a card a lever (its icon, its name in petrol, a few lines on it), and under them, in a box outlined by a hairline, what none of the figures has taken off yet, its title bold before its text.
 
 **Why.** A payback is a range, not a number. Showing which case the proposal is read at, among the cases around it, and naming the two things that move it, is what makes the figure believable.
 

@@ -12,7 +12,7 @@ Settled on the funding models page (p12). The round's decisions are in [rounds/2
 | :-: | :-: |
 | ![board](proposal.board.png) | ![engine](proposal.engine.png) |
 
-**What it looks like.** A card of sand a way to pay: its name at 21px in petrol, who it suits in small grey and, after a " · ", a part marked whole as a chip of the tangerine under it (「贵司出资 0 元」). Then the marked row's label in small grey over its figure at 34px in petrol (28px for a figure of nine characters or more), with the part after a " · " as a line under it. Then each labelled row under a hairline as its label in small grey over its value at 14px bold. Under the cards, a bar of the pale petrol with the note's icon and two lines.
+**What it looks like.** A card of sand a way to pay: its name at 21px in petrol, who it suits in small grey and, after a " · ", a part marked whole as a chip of the brick red under it (「贵司出资 0 元」). Then the marked row's label in small grey over its figure at 34px in petrol (28px for a figure of nine characters or more), with the part after a " · " as a line under it. Then each labelled row under a hairline as its label in small grey over its value at 14px bold. Under the cards, a bar of the pale petrol with the note's icon and two lines.
 
 **Why.** Who pays decides who owns the equipment and who keeps the savings. Setting each way on its own card, with the same rows in the same places, lets the finance lead pick by reading across.
 

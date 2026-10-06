@@ -12,7 +12,7 @@ Settled on the per-MW sum page (p06), the page a proposal is judged on. The roun
 | :-: | :-: |
 | ![board](proposal.board.png) | ![engine](proposal.engine.png) |
 
-**What it looks like.** At the left the inputs as a ruled table under a 2px rule of petrol: each input's symbol in a petrol disc (「E」, 「p」, 「O」, 「I」), its name bold over how it is reached in small grey, its value at 20px in petrol to the right, and what kind of source it rests on as an outlined chip. At the right a card with what is worked out, the formula in italic, the figures put in and the result at 40px in petrol, and under it the answer the page lands on as a block of the tangerine, its result at 60px in the text ink. Under both, a line under a hairline saying what the sum leaves out.
+**What it looks like.** At the left the inputs as a ruled table under a 2px rule of petrol: each input's symbol in a petrol disc (「E」, 「p」, 「O」, 「I」), its name bold over how it is reached in small grey, its value at 20px in petrol to the right, and what kind of source it rests on as an outlined chip. At the right a card with what is worked out, the formula in italic, the figures put in and the result at 40px in petrol, and under it the answer the page lands on as a block of the brick red, its result at 60px in white. Under both, a line under a hairline saying what the sum leaves out.
 
 **Why.** A finance lead checks a proposal by redoing its sum. Every input with its source and every step of the working on one page lets them do it without asking.
 

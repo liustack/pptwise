@@ -12,7 +12,7 @@ Settled on the solution page (p11). The round's decisions are in [rounds/2026-10
 | :-: | :-: |
 | ![board](proposal.board.png) | ![engine](proposal.engine.png) |
 
-**What it looks like.** A card a part, side by side: its photograph across the card's top, its number in a petrol disc on the photograph (the first in the tangerine when the grid leads with it), its tag as a white chip at the photograph's right, and under the photograph its icon and name in petrol and a few lines on it. A part whose tag is not settled yet (a `basis` of estimate, pending or proposal, 「选配」) is a card outlined dashed.
+**What it looks like.** A card a part, side by side: its photograph across the card's top, its number in a petrol disc on the photograph (the first in the brick red when the grid leads with it), its tag as a white chip at the photograph's right, and under the photograph its icon and name in petrol and a few lines on it. A part whose tag is not settled yet (a `basis` of estimate, pending or proposal, 「选配」) is a card outlined dashed.
 
 **Why.** A client buys parts they can picture. A photograph each, and the optional part marked by its outline, says what is in the offer and what is not yet.
 
