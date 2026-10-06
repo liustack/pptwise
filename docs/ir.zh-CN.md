@@ -264,6 +264,7 @@ pptwise schema --kind data --theme brief
 | `timeline.milestones[].lane` 与 `timeline.lanes` | 同一条时间顺序上的两条泳道。`lanes` 给出两条泳道的名字，第一条在前。普通时间线把节点排成一行，每个节点的泳道名单独一行写在日期上方。bulletin、clinic、ledger、swiss、vermilion 在版面放得下时把带泳道的时间线横跨整页排开，第一条泳道在轴上方，第二条在轴下方 | 要么每个节点都写 lane，要么都不写，最多两条，竖向时间线不能用 |
 | `timeline.periods` | `[{ "from": "2026-01", "to": "2026-12", "label": "2026 年：进口计入排放，不必持有证书" }]` 把时间轴分成几段并给每段起名。按比例排日期的版式把每段画在轴上它那一截，普通时间线在节点下面一行一段地列出名字。写了 `"basis": "proposal"`（或其他尚未确定的依据）的一段画成虚线 | 最多 3 段，竖向时间线不能用 |
 | `timeline.milestones[].tag` 与 `source` | 节点现在的状态，印成小标签（`{ "text": "提案", "basis": "proposal" }`），以及日期或规则的出处，节点下面一行小字（「COM(2025) 989」）。依据尚未确定的标签画虚线 | |
+| `timeline.milestones[].status` | `"pending"` 表示还没成真的节点，比如已经做完、数据还没公布的一轮调查：节点画成空心 | |
 | `callout.title` 与 `callout.tag` | 提示上方一行粗体的小标题（「谁付」），以及正文下面一枚小标签，说明这条提示依据的是什么（`{ "text": "企业口径 · 据报道", "evidence": "company" }`） | |
 | `waterfall.items[].note` | 柱子名称下面一行短注，比如它代表的数量（「3.187 吨」） | |
 | `roadmap.items[].rows[].basis` | 这一行的值依据的是什么，比如还没定下来的预算项写 `"pending"`。尚未确定的值用虚线标出 | |

@@ -572,3 +572,27 @@ describe("a milestone's tag and source, drawn by the shared renderer", () => {
     expect(container.querySelectorAll("[data-milestone-source]")).toHaveLength(2)
   })
 })
+
+describe("a milestone still to come", () => {
+  const rounds = {
+    type: "timeline" as const,
+    milestones: [
+      { date: "2020", title: "2020 年数据" },
+      { date: "2022", title: "2021-23 追踪", status: "pending" as const },
+    ],
+  }
+
+  it("is accepted as pending and nothing else", () => {
+    expect(timelineSchema.safeParse(rounds).success).toBe(true)
+    expect(timelineSchema.safeParse({ ...rounds, milestones: [{ date: "2022", title: "x", status: "late" }] }).success).toBe(false)
+  })
+
+  it("draws its node as a ring on the page, the others filled", () => {
+    const ctx = boundThemeCtx("brief", {})
+    const { container } = render(<svg>{timeline.render(rounds, { x: 0, y: 0, w: 900 }, ctx)}</svg>)
+    const ring = container.querySelector("[data-milestone-pending]")!
+    expect(ring.getAttribute("fill")).toBe(ctx.defaultBg ?? ctx.colors.bg)
+    expect(ring.getAttribute("stroke")).toBeTruthy()
+    expect(container.querySelectorAll("circle:not([data-milestone-pending])").length).toBeGreaterThanOrEqual(1)
+  })
+})

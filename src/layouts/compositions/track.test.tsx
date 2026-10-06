@@ -93,3 +93,15 @@ describe("track leaves a timeline on lanes to the ordinary timeline", () => {
     expect(renderComposition(trackComposition, [timeline({ milestones: laned, lanes: ["国内", "海外"] })]).element).toBeNull()
   })
 })
+
+describe("a timeline with a milestone still to come", () => {
+  it("goes to the ordinary timeline, which draws its node hollow, not to the track", async () => {
+    const { compose } = await import(".")
+    const { testCtx } = await import("./__fixtures__/kit")
+    const { ctx } = testCtx("brief")
+    const props = { ctx, rect: BAND_ABOVE_SOURCE }
+    expect(compose({ ...props, components: [timeline() as never, CLOSING as never] }, ["track"])).not.toBeNull()
+    const pending = timeline({ milestones: MILESTONES.map((m, i) => (i === 4 ? { ...m, status: "pending" } : m)) })
+    expect(compose({ ...props, components: [pending as never, CLOSING as never] }, ["track"])).toBeNull()
+  })
+})

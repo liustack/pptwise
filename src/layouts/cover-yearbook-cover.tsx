@@ -165,7 +165,7 @@ export function YearbookCover({ ir, slide, ctx }: SvgTemplateProps) {
                 />
               ))
             : null}
-          {scale.timeline.milestones.some((m) => m.desc || m.tag || m.source || m.icon || m.lane) || scale.timeline.periods ? (
+          {scale.timeline.milestones.some((m) => m.desc || m.tag || m.source || m.icon || m.lane || m.status) || scale.timeline.periods ? (
             <g data-dropped={1} data-dropped-kind="label" />
           ) : null}
         </g>

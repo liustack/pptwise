@@ -42,7 +42,7 @@ export function PitchEnding({ slide, ctx }: SvgTemplateProps) {
   }))
   const stepsFit =
     milestones.length <= STEPS.max &&
-    fitted.every((f) => f.date && f.title && !f.m.desc?.trim() && !f.m.tag && !f.m.source && !f.m.highlight && !f.m.tone && !f.m.lane) &&
+    fitted.every((f) => f.date && f.title && !f.m.desc?.trim() && !f.m.tag && !f.m.source && !f.m.highlight && !f.m.tone && !f.m.lane && !f.m.status) &&
     !steps?.lanes &&
     !steps?.periods &&
     !steps?.title

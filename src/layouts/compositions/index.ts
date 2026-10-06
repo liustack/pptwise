@@ -507,6 +507,17 @@ function asksForChartSteps(components: readonly CompositionProps["components"][n
 }
 
 /**
+ * The compositions that draw a milestone still to come (`status`). A page
+ * whose timeline carries one is offered to these alone; the ordinary
+ * timeline draws its node hollow.
+ */
+const MILESTONE_STATUS_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForMilestoneStatus(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "timeline" && component.milestones.some((m) => m.status !== undefined))
+}
+
+/**
  * The compositions that draw the page's ballot (`Slide.ballot`), a box for
  * each choice beside every question. A page with one is offered to these
  * alone; the face declares the ballot dropped when none takes the page.
@@ -548,6 +559,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const captioned = asksForChartTitle(props.components)
   const thresholded = asksForChartMarkers(props.components)
   const stepped = asksForChartSteps(props.components)
+  const awaited = asksForMilestoneStatus(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -566,6 +578,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (captioned && !CHART_TITLE_COMPOSITIONS.has(id)) continue
     if (thresholded && !CHART_MARKER_COMPOSITIONS.has(id)) continue
     if (stepped && !CHART_STEP_COMPOSITIONS.has(id)) continue
+    if (awaited && !MILESTONE_STATUS_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue
