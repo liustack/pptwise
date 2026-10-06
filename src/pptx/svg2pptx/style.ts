@@ -32,11 +32,47 @@ function matchUrlId(value: string): string | null {
   return m ? m[2] : null
 }
 
+/**
+ * pptxgenjs line dash type.
+ * Valid values from pptxgenjs types/index.d.ts line 1040:
+ * 'solid' | 'dash' | 'dashDot' | 'lgDash' | 'lgDashDot' | 'lgDashDotDot' | 'sysDash' | 'sysDot'
+ */
+export type DashType =
+  | "solid"
+  | "dash"
+  | "dashDot"
+  | "lgDash"
+  | "lgDashDot"
+  | "lgDashDotDot"
+  | "sysDash"
+  | "sysDot"
+
 /** A pptxgenjs line/stroke spec (hash-less hex + width in points). */
 export interface LineSpec {
   color: string
   width: number
+  dashType?: DashType
   transparency?: number
+}
+
+/**
+ * Map SVG `stroke-dasharray` to a pptxgenjs `dashType`.
+ *
+ * Minimal mapping (not attempting to cover every SVG pattern):
+ * - absent / empty → undefined (solid, omitted from op)
+ * - dash length ≤ 2 (dot-like, e.g. "1,3" / "2,4") → "sysDot"
+ * - anything else → "dash"
+ *
+ * Every stroked element reads it, a rect, a circle or a path as well as a
+ * line: a dashed outline used to export solid from anything but a `<line>`.
+ */
+export function mapDashArray(el: Element): DashType | undefined {
+  const raw = el.getAttribute("stroke-dasharray")
+  if (!raw || raw === "none") return undefined
+  const parts = raw.split(/[\s,]+/).map(Number).filter((n) => !isNaN(n))
+  if (parts.length === 0) return undefined
+  // First value is the dash/dot length. If ≤ 2px it looks like a dot pattern.
+  return parts[0] <= 2 ? "sysDot" : "dash"
 }
 
 function num(el: Element, name: string, fallback = 0): number {
@@ -134,6 +170,8 @@ export function extractStroke(el: Element): LineSpec | undefined {
     color: svgColorToHex(stroke),
     width: pxToPt(num(el, "stroke-width", 1) || 1),
   }
+  const dashType = mapDashArray(el)
+  if (dashType) out.dashType = dashType
   const transparency = combineTransparency(
     svgColorTransparency(stroke),
     elementOpacity(el, "stroke-opacity"),

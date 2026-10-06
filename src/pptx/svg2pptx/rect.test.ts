@@ -52,6 +52,13 @@ describe("rectToOp", () => {
     expect(op.line).toEqual({ color: "000000", width: 1.5 }) // 2px → 1.5pt
   })
 
+  // rally's season frame and its dashed note: a dashed outline exported
+  // solid, because only a <line> read stroke-dasharray.
+  it("keeps a dashed outline dashed, rounded or not", () => {
+    expect(rectToOp(rectEl('x="0" y="0" width="96" height="96" stroke="#E84F8A" stroke-width="2" stroke-dasharray="6 5"')).line).toEqual({ color: "E84F8A", width: 1.5, dashType: "dash" })
+    expect(rectToOp(rectEl('x="0" y="0" width="96" height="96" rx="10" fill="none" stroke="#E84F8A" stroke-width="2" stroke-dasharray="6 5"')).line?.dashType).toBe("dash")
+  })
+
   it("omits fill when the rect has no fill", () => {
     const op = rectToOp(
       rectEl('x="0" y="0" width="96" height="96" stroke="#000" stroke-width="1"'),

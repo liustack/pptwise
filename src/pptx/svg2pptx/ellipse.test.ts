@@ -22,6 +22,12 @@ function ellipseEl(attrs: string): Element {
   return el
 }
 
+describe("a dashed circle", () => {
+  it("keeps its dash", () => {
+    expect(circleToOp(circleEl('cx="50" cy="50" r="20" fill="none" stroke="#000" stroke-dasharray="4 3"')).line?.dashType).toBe("dash")
+  })
+})
+
 describe("circleToOp", () => {
   it("converts a filled circle to an ellipse shape op with correct bbox", () => {
     // cx=192 cy=96 r=96 → bbox x=96 y=0 w=192 h=192 → inches x=1 y=0 w=2 h=2

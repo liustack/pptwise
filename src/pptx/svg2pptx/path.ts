@@ -1,5 +1,5 @@
 import { pxToIn } from "../../constants"
-import { applyFill, extractStroke } from "./style"
+import { applyFill, extractStroke, type LineSpec } from "./style"
 import type { GradientDef } from "./gradient"
 
 /**
@@ -44,7 +44,7 @@ export interface PathOp {
   fill?: { color: string; transparency?: number }
   /** Set alongside `fill` (a solid placeholder) when `fill` was `url(#id)`. */
   gradientFill?: GradientDef
-  line?: { color: string; width: number }
+  line?: LineSpec
   /**
    * Degrees clockwise around the box's centre, matching pptxgenjs `rotate`.
    * Set by `svg2pptx/dispatch.ts` when the leaf's CTM carries a turn.

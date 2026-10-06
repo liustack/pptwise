@@ -13,6 +13,18 @@ function svgEl(tag: string, attrs: string): Element {
   return el
 }
 
+describe("a dashed stroke", () => {
+  // rally's dotted branch: a dotted curve exported as a solid line.
+  it("carries its dash onto a path's line, dots as dots", () => {
+    const op = pathToOp(svgEl("path", 'd="M 0 0 C 50 0, 100 50, 200 100" fill="none" stroke="#B3A6C7" stroke-width="10" stroke-linecap="round" stroke-dasharray="2 16"'))
+    expect(op?.line?.dashType).toBe("sysDot")
+  })
+
+  it("leaves a solid path solid", () => {
+    expect(pathToOp(svgEl("path", 'd="M 0 0 L 100 100" fill="none" stroke="#000"'))?.line?.dashType).toBeUndefined()
+  })
+})
+
 describe("polygonToOp", () => {
   it("builds a closed custGeom with a tight bbox and bbox-relative points", () => {
     const op = polygonToOp(
