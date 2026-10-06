@@ -906,7 +906,7 @@ describe("chart component — legend (n>=2 series)", () => {
   })
 
   // Six names of about thirty characters take some 1700px, and the row has
-  // 1120. The row used to cut each to 160px; with the names whole, the ones
+  // 1120. The row used to cut each to 160px. With the names whole, the ones
   // that do not fit go on a second row, and the plot gives that row room.
   it("sets the names one row cannot hold on a second row, whole, and moves the plot down by it", () => {
     const regions = ["North America enterprise accounts", "Western Europe enterprise accounts", "Asia Pacific enterprise accounts", "Latin America mid-market accounts", "Middle East mid-market accounts", "Africa self-serve accounts"]
