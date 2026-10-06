@@ -2125,6 +2125,35 @@ describe("heatmap contrast (structure-components wave 2 task 2)", () => {
       expect(auditFindings(deckFor(themeId, HEATMAP_SCHEMA_MAX_SLIDE))).toEqual([])
     })
   }
+
+  // A day of hours in named steps: 24 columns, labelled every six, each
+  // cell printing its step's short name on that step's fill.
+  const HEATMAP_DAY_SLIDE: Slide = {
+    type: "content",
+    kind: "points",
+    heading: HEADING,
+    components: [
+      {
+        type: "heatmap",
+        x_labels: heatmapLabels(24, "").map((h) => `${h} 时`),
+        y_labels: ["江苏", "浙江", "广东"],
+        values: [0, 1, 2].map((r) => Array.from({ length: 24 }, (_, c) => ((c + r * 3) % 8) * 0.2)),
+        label_every: 6,
+        steps: [
+          { max: 0.3, label: "低谷", short: "谷" },
+          { max: 0.7, label: "平段", short: "平" },
+          { max: 1.1, label: "高峰", short: "峰" },
+          { label: "尖峰", short: "尖" },
+        ],
+      },
+    ],
+  } as Slide
+
+  for (const themeId of CANONICAL_THEME_IDS) {
+    it(`${themeId}: a 24-hour heatmap in named steps renders with zero auditDeck findings`, () => {
+      expect(auditFindings(deckFor(themeId, HEATMAP_DAY_SLIDE))).toEqual([])
+    })
+  }
 })
 
 // The cell-fill x ink probe named above: isolates value→color→ink

@@ -251,7 +251,8 @@ pptwise schema --kind data --theme brief
 | `data_table.columns[].emphasis` 与 `icon` | 这一页说的那一列，比如哪家都没公布的那个数：表头和格子用主色加粗，整列围一道框；列图标画在这一列每个格子的开头（`"circle-help"`） | 最多标一列；图标只用于左对齐的列 |
 | `numbered_cards.items[].emphasis` | 这一页落到的那张卡，卡片填满主色 | 最多一张 |
 | `gantt.items[].text` 与 `emphasis` | 阶段名下面的一行说明，以及这一页说的那一段 | 最多标一段 |
-| `heatmap.bands` | `[{ "from": "6 月", "to": "9 月", "label": "2027 演唱会季 · 6 至 9 月" }]` 用虚线框把一段列横跨所有行框起来，名字写在格子下方，比如方案押注的档期。`from` 和 `to` 写两个 `x_labels` | 最多 2 段，互不重叠。热力格最多 12 列，正好一年的月份 |
+| `heatmap.bands` | `[{ "from": "6 月", "to": "9 月", "label": "2027 演唱会季 · 6 至 9 月" }]` 用虚线框把一段列横跨所有行框起来，名字写在格子下方，比如方案押注的档期。`from` 和 `to` 写两个 `x_labels` | 最多 2 段，互不重叠。热力格最多 24 列，正好一天的小时 |
+| `heatmap.steps` 和 `heatmap.label_every` | `[{ "max": 0.5, "label": "低谷", "short": "谷" }, { "max": 0.9, "label": "平段", "short": "平" }, { "label": "高峰", "short": "峰" }]` 从低到高写出数值落进的几档，比如一天的分时电价：每格取它那一档的颜色、印那一档的简称，格子下方一行图例写出每一档的名字。`label_every: 6` 从第一列起每六列印一个列头，像 24 小时的时间轴那样 | 2 到 5 档，除最后一档外都写 `max` 且逐档升高，不能和 `domain` 同时写。`label_every` 取 2 到 12 |
 | `gantt.range` 与 `gantt.items[].period` | 轴比条更长时轴跨的那一段（整个 18 个月的计划写 `{ "from": 0, "to": 18 }`），以及一条用话怎么说（「第 16 至 18 个月」） | 每条都在 range 里 |
 | `gantt.bands` | `[{ "from": 8, "to": 12, "label": "演唱会季 6 至 9 月" }]` 在横条后面给轴上一段着浅色，名字写在轴下面，比如方案押注的档期。`from` 和 `to` 用横条自己的轴 | 最多 2 段，互不重叠，落在轴内 |
 | `timeline.milestones[].lane` 与 `timeline.lanes` | 同一条时间顺序上的两条泳道。`lanes` 给出两条泳道的名字，第一条在前。普通时间线把节点排成一行，每个节点的泳道名单独一行写在日期上方。bulletin、clinic、ledger、swiss、vermilion 在版面放得下时把带泳道的时间线横跨整页排开，第一条泳道在轴上方，第二条在轴下方 | 要么每个节点都写 lane，要么都不写，最多两条，竖向时间线不能用 |
