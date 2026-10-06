@@ -246,3 +246,48 @@ describe("gantt marked spans (bands)", () => {
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
   })
 })
+
+describe("a gantt's moments and unsettled stretches", () => {
+  const months = ["2026-10", "", "", "2027-01", "", "", "04", "", "", "07", "", "", "10", "", "", "2028-01", "", "", "04", "", ""]
+  const plan = {
+    type: "gantt" as const,
+    range: { from: 0, to: 20 },
+    axis_labels: months,
+    milestones: [{ at: 8.5, label: "数据闸门 · 2027 年 6 月" }],
+    items: [
+      { label: "旧阈值断点基准", start: 4, end: 10 },
+      { label: "设计二或深化基准", start: 9, end: 15, basis: "pending" as const },
+    ],
+  }
+
+  it("is accepted with a moment inside the axis, refused outside it", async () => {
+    const { schema } = await import("../ir/components/gantt")
+    expect(schema.safeParse(plan).success).toBe(true)
+    expect(schema.safeParse({ ...plan, milestones: [{ at: 21, label: "x" }] }).success).toBe(false)
+    expect(schema.safeParse({ ...plan, items: [plan.items[0], { ...plan.items[1], basis: "maybe" }] }).success).toBe(false)
+  })
+
+  it("draws a moment as a line down the rows and a diamond with its label under them", () => {
+    const { container } = render(<svg>{gantt.render(plan, { x: 0, y: 0, w: 1100, h: 300 }, ctx)}</svg>)
+    const moment = container.querySelector("[data-gantt-moment]")!
+    expect(moment.getAttribute("data-gantt-moment")).toBe("数据闸门 · 2027 年 6 月")
+    const line = moment.querySelector("line")!
+    const diamond = moment.querySelector("path")!
+    expect(Number(line.getAttribute("y2"))).toBeLessThan(Number(diamond.getAttribute("d")!.split(" ")[2]))
+    expect(moment.querySelector("text")!.textContent).toBe("数据闸门 · 2027 年 6 月")
+  })
+
+  it("draws an unsettled stretch as a dashed outline", () => {
+    const { container } = render(<svg>{gantt.render(plan, { x: 0, y: 0, w: 1100, h: 300 }, ctx)}</svg>)
+    const outline = container.querySelector("[data-gantt-unsettled]")!
+    expect(outline.getAttribute("fill")).toBe("none")
+    expect(outline.getAttribute("stroke-dasharray")).toBe("5 3")
+  })
+
+  it("lets a named axis label take the room of the blank ones after it", () => {
+    const { container } = render(<svg>{gantt.render(plan, { x: 0, y: 0, w: 1100, h: 300 }, ctx)}</svg>)
+    const labels = Array.from(container.querySelectorAll("text")).filter((t) => months.includes(t.textContent ?? "-") && t.textContent)
+    expect(labels.map((t) => t.textContent)).toEqual(["2026-10", "2027-01", "04", "07", "10", "2028-01", "04"])
+    for (const t of labels) expect(t.getAttribute("data-truncated")).toBeNull()
+  })
+})

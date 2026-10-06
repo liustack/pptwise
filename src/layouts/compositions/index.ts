@@ -518,6 +518,19 @@ function asksForMilestoneStatus(components: readonly CompositionProps["component
 }
 
 /**
+ * The compositions that draw what a gantt marks beyond its stretches: a
+ * single moment across the bars (`milestones`) and a stretch not settled
+ * (`items[].basis`). A page whose gantt carries either is offered to these
+ * alone; the ordinary gantt draws a moment as a line with a diamond under
+ * the bars and an unsettled stretch dashed.
+ */
+const GANTT_MOMENT_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForGanttMoments(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "gantt" && (component.milestones !== undefined || component.items.some((item) => item.basis !== undefined)))
+}
+
+/**
  * The compositions that draw the page's ballot (`Slide.ballot`), a box for
  * each choice beside every question. A page with one is offered to these
  * alone; the face declares the ballot dropped when none takes the page.
@@ -560,6 +573,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const thresholded = asksForChartMarkers(props.components)
   const stepped = asksForChartSteps(props.components)
   const awaited = asksForMilestoneStatus(props.components)
+  const momentous = asksForGanttMoments(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -579,6 +593,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (thresholded && !CHART_MARKER_COMPOSITIONS.has(id)) continue
     if (stepped && !CHART_STEP_COMPOSITIONS.has(id)) continue
     if (awaited && !MILESTONE_STATUS_COMPOSITIONS.has(id)) continue
+    if (momentous && !GANTT_MOMENT_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue

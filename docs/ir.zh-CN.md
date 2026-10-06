@@ -261,6 +261,7 @@ pptwise schema --kind data --theme brief
 | `heatmap.steps` 和 `heatmap.label_every` | `[{ "max": 0.5, "label": "低谷", "short": "谷" }, { "max": 0.9, "label": "平段", "short": "平" }, { "label": "高峰", "short": "峰" }]` 从低到高写出数值落进的几档，比如一天的分时电价：每格取它那一档的颜色、印那一档的简称，格子下方一行图例写出每一档的名字。`label_every: 6` 从第一列起每六列印一个列头，像 24 小时的时间轴那样 | 2 到 5 档，除最后一档外都写 `max` 且逐档升高，不能和 `domain` 同时写。`label_every` 取 2 到 12 |
 | `gantt.range` 与 `gantt.items[].period` | 轴比条更长时轴跨的那一段（整个 18 个月的计划写 `{ "from": 0, "to": 18 }`），以及一条用话怎么说（「第 16 至 18 个月」） | 每条都在 range 里 |
 | `gantt.bands` | `[{ "from": 8, "to": 12, "label": "演唱会季 6 至 9 月" }]` 在横条后面给轴上一段着浅色，名字写在轴下面，比如方案押注的档期。`from` 和 `to` 用横条自己的轴 | 最多 2 段，互不重叠，落在轴内 |
+| `gantt.milestones` 与 `gantt.items[].basis` | `[{ "at": 8.5, "label": "数据闸门 · 2027 年 6 月" }]` 在条形上标一个时间点，一条线竖穿各行，下面一枚菱形和它的标签，比如计划转向的一次检查。条形的 `basis`（`"pending"` 表示要满足条件才做的工作）画成虚线框。`axis_labels` 里写空字符串的刻度不标字，这样可以每隔几格标一个 | 时间点最多 2 个，落在轴内 |
 | `timeline.milestones[].lane` 与 `timeline.lanes` | 同一条时间顺序上的两条泳道。`lanes` 给出两条泳道的名字，第一条在前。普通时间线把节点排成一行，每个节点的泳道名单独一行写在日期上方。bulletin、clinic、ledger、swiss、vermilion 在版面放得下时把带泳道的时间线横跨整页排开，第一条泳道在轴上方，第二条在轴下方 | 要么每个节点都写 lane，要么都不写，最多两条，竖向时间线不能用 |
 | `timeline.periods` | `[{ "from": "2026-01", "to": "2026-12", "label": "2026 年：进口计入排放，不必持有证书" }]` 把时间轴分成几段并给每段起名。按比例排日期的版式把每段画在轴上它那一截，普通时间线在节点下面一行一段地列出名字。写了 `"basis": "proposal"`（或其他尚未确定的依据）的一段画成虚线 | 最多 3 段，竖向时间线不能用 |
 | `timeline.milestones[].tag` 与 `source` | 节点现在的状态，印成小标签（`{ "text": "提案", "basis": "proposal" }`），以及日期或规则的出处，节点下面一行小字（「COM(2025) 989」）。依据尚未确定的标签画虚线 | |

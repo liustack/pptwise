@@ -318,3 +318,15 @@ describe("a ballot with boxes of an item's own", () => {
     expect(compose({ ...props, ballot: { ...page.ballot!, item_choices: [{ item: 1, choices: ["批准", "缓议"] }] } }, ["asks"])).toBeNull()
   })
 })
+
+describe("a gantt with a moment or an unsettled stretch", () => {
+  it("leaves the schedule to the ordinary gantt, which draws both", () => {
+    const page = MARQUEE_BOARD["p14-schedule"]!
+    const { ctx } = testCtx("rally")
+    const props = { ctx: chinese(ctx), rect: band(page.sourced), setting: "marquee" as const }
+    const [plan] = page.components as [Extract<Component, { type: "gantt" }>]
+    expect(compose({ ...props, components: [plan] }, ["timetable"])).not.toBeNull()
+    expect(compose({ ...props, components: [{ ...plan, milestones: [{ at: 8, label: "首站开票" }] }] }, ["timetable"])).toBeNull()
+    expect(compose({ ...props, components: [{ ...plan, items: plan.items.map((it, i) => (i === 5 ? { ...it, basis: "pending" as const } : it)) }] }, ["timetable"])).toBeNull()
+  })
+})
