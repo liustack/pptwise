@@ -52,6 +52,8 @@ const MARQUEE_ONLY = ["crest", "branch", "season", "makeup", "origins", "route",
 const BINDER_ONLY = ["gains", "hours", "regions", "workings", "levers", "cycles", "drift", "parts", "plans", "precedents", "safeguards", "remedies", "checkpoints", "quote", "papers"] as const
 /** The same for the manuscript setting's own: `manuscript-pages.test.tsx` puts them on these themes. */
 const MANUSCRIPT_ONLY = ["inquiry", "ladder", "reach", "backdrop", "thresholds", "tabulation", "partition", "findings", "coverage", "propositions", "cadence", "designs", "hazards", "itinerary", "queries"] as const
+/** The same for the periodical setting's own: `periodical-pages.test.tsx` puts them on these themes. */
+const PERIODICAL_ONLY = ["foreword", "chronicle", "measures", "elapsed", "headline", "witness", "census", "contrast", "bracket", "mix", "twins", "parallel", "effects", "longform", "pledges"] as const
 type BoardId = Exclude<
   CompositionId,
   | (typeof PANEL_ONLY)[number]
@@ -65,8 +67,9 @@ type BoardId = Exclude<
   | (typeof MARQUEE_ONLY)[number]
   | (typeof BINDER_ONLY)[number]
   | (typeof MANUSCRIPT_ONLY)[number]
+  | (typeof PERIODICAL_ONLY)[number]
 >
-const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY, ...CONSOLE_ONLY, ...MEMO_ONLY, ...DOSSIER_ONLY, ...YEARBOOK_ONLY, ...LESSON_ONLY, ...PITCH_ONLY, ...MARQUEE_ONLY, ...BINDER_ONLY, ...MANUSCRIPT_ONLY]
+const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY, ...CONSOLE_ONLY, ...MEMO_ONLY, ...DOSSIER_ONLY, ...YEARBOOK_ONLY, ...LESSON_ONLY, ...PITCH_ONLY, ...MARQUEE_ONLY, ...BINDER_ONLY, ...MANUSCRIPT_ONLY, ...PERIODICAL_ONLY]
 const BOARD_IDS = COMPOSITION_IDS.filter((id): id is BoardId => !SETTING_ONLY.includes(id))
 
 /** One page per composition, in the shape each one takes. */

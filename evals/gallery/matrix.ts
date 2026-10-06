@@ -494,6 +494,23 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "thesis", kind: "evidence", composition: "hazards" },
   { theme: "thesis", kind: "process", composition: "itinerary" },
   { theme: "thesis", kind: "list", composition: "queries" },
+  // journal's periodical sheet sets the shapes as a small magazine's letter
+  // to its readers sets its figures, and draws the fifteen its own board added.
+  { theme: "journal", kind: "points", composition: "foreword" },
+  { theme: "journal", kind: "data", composition: "chronicle" },
+  { theme: "journal", kind: "comparison", composition: "measures" },
+  { theme: "journal", kind: "photo", composition: "elapsed" },
+  { theme: "journal", kind: "fact", composition: "headline" },
+  { theme: "journal", kind: "photo", composition: "witness" },
+  { theme: "journal", kind: "data", composition: "census" },
+  { theme: "journal", kind: "comparison", composition: "contrast" },
+  { theme: "journal", kind: "data", composition: "bracket" },
+  { theme: "journal", kind: "hierarchy", composition: "mix" },
+  { theme: "journal", kind: "comparison", composition: "twins" },
+  { theme: "journal", kind: "list", composition: "parallel" },
+  { theme: "journal", kind: "comparison", composition: "effects" },
+  { theme: "journal", kind: "points", composition: "longform" },
+  { theme: "journal", kind: "list", composition: "pledges" },
 ]
 
 export function buildMatrix(

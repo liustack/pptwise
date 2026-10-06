@@ -6,7 +6,6 @@ import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle, CANONICAL_THEME_IDS } from "../themes"
 import { contrastRatio, metaInk, requiredContrastRatio } from "../render/ink"
-import { renderSlideSvg } from "../api"
 import { IssueHeadCover, layoutDef } from "./cover-issue-head-cover"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -163,17 +162,9 @@ describe("cover-issue-head-cover — shared pool", () => {
 })
 
 describe("cover-issue-head-cover — optical center", () => {
-  it("does not stack a motif foot line under the layout foot, and hangs the title closer to the masthead", () => {
-    const deck: PptxIR = {
-      version: "5",
-      filename: "issue-head-center.pptx",
-      theme: { id: "journal" },
-      meta: FULL_META,
-      assets: { images: {} },
-      seed: 1,
-      slides: [{ type: "cover", layout: "issue-head-cover", heading: HEADING, subheading: SUBHEADING, components: [] }],
-    } as unknown as PptxIR
-    const root = parseSvgRoot(renderSlideSvg(deck, 0))
+  it("draws no foot line or issue mark of its own, and hangs the title closer to the masthead", () => {
+    // journal no longer names this face, so it is drawn directly on journal's tokens.
+    const { root } = renderCover("journal")
     expect(root.querySelector('line[y1="712"]')).toBeNull()
     expect(Array.from(root.querySelectorAll("text")).some((t) => (t.textContent ?? "").includes("№"))).toBe(false)
     const title = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("县城咖啡"))

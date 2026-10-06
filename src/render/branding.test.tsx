@@ -71,7 +71,7 @@ describe("Branding footer suppression (W1: theme brand.suppressFooterOnCardConte
     expect(container.textContent).not.toContain("ACME")
   })
 
-  it.each(["swiss", "lecture", "terminal", "journal"] as const)(
+  it.each(["swiss", "lecture", "terminal"] as const)(
     "%s: the same page keeps its footer (the theme does not set the flag)",
     (themeId) => {
       const doc = ir(themeId, [cardBgContentSlide], "full")

@@ -50,10 +50,9 @@ describe("journal (ex-magazine) tokens", () => {
     expect(t.id).toBe("journal")
   })
 
-  it("heading font resolves to SimSun (the ikb tofu lesson: single exported face, CJK serif must be SimSun)", () => {
-    expect(resolveFontFace(JOURNAL_TOKENS.fonts.heading, "heading")).toBe(
-      "SimSun",
-    )
+  it("heading sets Latin in Times New Roman and pairs SimSun for CJK (the ikb tofu lesson: the CJK serif must be SimSun; 2026-10 the board's lining figures)", () => {
+    expect(resolveFontFace(JOURNAL_TOKENS.fonts.heading, "heading")).toBe("Times New Roman")
+    expect(pairedEaFace(JOURNAL_TOKENS.fonts.heading, "heading")).toBe("SimSun")
   })
 
   it("does not set an accentPool (single, restrained accent color)", () => {

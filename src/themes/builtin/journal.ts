@@ -46,10 +46,10 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * chapter 底色仍与正文同纸（`#EFEBE1`），journal 的章节页靠排印分段不靠
  * 满版色块。
  *
- * 装饰见 `src/motifs/motif-corner-ornament-motif.tsx`（报头双线 v2：
- * 顶缘文武双线 + 底缘单线 + 线上中点期号）——journal 的锚点 motif 是
- * `corner-ornament-motif`，thesis / luxe / heritage 三家在各自的候选集里
- * 也借它，本轮换血因此波及那三家的借用页（归因见编辑组报告）。
+ * 装饰见 `src/motifs/motif-corner-ornament-motif.tsx`（v3，2026-10 定稿重画：
+ * 刊头的栏目名与期号、页脚居中的页码「· N ·」；v2 的顶缘文武双线、底缘单线和
+ * 「№」退役）。journal 的锚点 motif 是 `corner-ornament-motif`，内置主题里
+ * 只有 journal 用它。
  *
  * **第八波刊头规制（2026-08-23，`.issues/design-boards/wave8/b2/Journal.dc.html`）**：
  * 封面改为刊头规制（`issue-head-cover`：左齐刊名 + 右齐日期 + y148/156 文武
@@ -59,6 +59,23 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 内容 / ending 继续页缘文武双线 + 期号，chapter 继续退让。
  *
  * **菜单分派（S1-B）**：铅字编辑腔：quote 是期刊的看家页（pull-quote），photo 用图文对开的 image-split，evidence 的实证格式属于论文不属于特稿，不上。
+ *
+ * **2026-10 年度长信定稿**（设计源 `design/rounds/2026-10-07-journal/`，规则见
+ * `docs/design-journal.md`）：每一页是一本小刊物自己的一页。刊头一行小字压在
+ * 一粗一细两条通栏线上（y50、y55）：左边栏目名（页脚的 `organization`，
+ * 「致读者」，motif 画），中间赭红分栏名（页面的 `kicker`，「十年」，脸画），
+ * 右边期号（页脚的 `label`，motif 画）。标题 32px 衬线粗体，底部对齐在 y158，
+ * 一行放得下就一行，放不下在逗号或冒号处断；有照片从刊头一直落到页底的页，
+ * 标题让到照片旁边。图注是赭红「图 N」加图题，下面一行衬线斜体的编辑短评；
+ * 图按 deck 顺序编号，照片不编号。来源一两行小字在页底，页码「· 3 ·」居中。
+ * 每页一处重点用赭红：作者标了哪根就红哪根，其余铅字黑或亚麻灰。封面
+ * `periodical-cover`（刊头大字、期号、赭红封面故事、带页码的封面要目、右侧
+ * 照片），结尾 `periodical-ending`（作者写的分栏名、作者断行的后记、右对齐
+ * 的落款），quote 走 `periodical-quote`（作者写什么出处就印什么，不加破折号），
+ * statement 照旧，其余内容页全走 `periodical-sheet`，正文交给 periodical 设定
+ * 里的构图。章节页照旧用 fascicle-ghost-chapter。色值不动。标题字体从
+ * SimSun 打头换成 Times New Roman 配宋体：定稿是宋体排的，数字是等高数字，
+ * 拉丁部分用 Times New Roman 才对得上，中文仍由 SimSun 承担，导出不会豆腐块。
  */
 
 export const JOURNAL_TOKENS: StyleTokens = {
@@ -79,10 +96,10 @@ export const JOURNAL_TOKENS: StyleTokens = {
     chartPalette: ["#2C2C2A", "#8C4A3C", "#4E5E4A", "#827C6B"],
   },
   fonts: {
-    // SimSun 前置：导出的 pptx 单字体无法回退。Georgia/serif 是纯拉丁衬线，
-    // 无 CJK 字形，中文标题会渲染成豆腐块。CJK 安全衬线白名单里唯一合适
-    // 的是 SimSun/宋体，用它承担期刊的报题气质。
-    heading: ["SimSun", "宋体", "Georgia", "serif"],
+    // Times New Roman for the Latin and its lining figures, SimSun for the
+    // Chinese (the export pairs the two, so no CJK tofu), Songti where the
+    // preview has no SimSun: the board's Songti.
+    heading: ["Times New Roman", "SimSun", "宋体", "Songti SC", "STSong", "serif"],
     body: ["Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Arial", "system-ui"],
     mono: ["Consolas", "Courier New"],
   },
@@ -113,21 +130,21 @@ export const JOURNAL_THEME = {
   },
   style: JOURNAL_TOKENS,
   menu: {
-    cover: { face: "issue-head-cover" },
+    cover: { face: "periodical-cover" },
     chapter: { face: "fascicle-ghost-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "split-band" },
-      photo: { face: "image-split" },
+      points: { face: "periodical-sheet" },
+      list: { face: "periodical-sheet" },
+      comparison: { face: "periodical-sheet" },
+      process: { face: "periodical-sheet" },
+      data: { face: "periodical-sheet" },
+      photo: { face: "periodical-sheet" },
       statement: { face: "statement" },
-      quote: { face: "pull-quote" },
-      fact: { face: "stat-hero" },
-      hierarchy: { face: "asymmetric-triptych" },
+      quote: { face: "periodical-quote" },
+      fact: { face: "periodical-sheet" },
+      hierarchy: { face: "periodical-sheet" },
     },
-    ending: { face: "afterword-ending" },
+    ending: { face: "periodical-ending" },
   },
   motif: { id: "corner-ornament-motif" },
 } satisfies BuiltinThemeDeclaration;

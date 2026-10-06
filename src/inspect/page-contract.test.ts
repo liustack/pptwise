@@ -224,6 +224,7 @@ function minimal(type: string, i: number): Component {
   // One plain figure: the sample's four, with icons and deltas, would count
   // against a face's item limit too, not just the block count being probed.
   if (type === "kpi_cards") return { type: "kpi_cards", items: [{ value: `${i}`, label: `Figure ${i}` }] }
+  if (type === "blockquote") return { type: "blockquote", text: `Words ${i}` }
   return sample(type)
 }
 
@@ -236,7 +237,8 @@ function atCount(limit: PageLimit, legal: readonly string[], n: number): Compone
   const of = limit.of?.filter((type) => legal.includes(type)) ?? []
   switch (limit.measure) {
     case "components": {
-      const type = limit.of === undefined ? ["paragraph", "bullets", "kpi_cards"].find((t) => legal.includes(t)) : of[0]
+      // A face that takes only a quote is probed with quotes.
+      const type = limit.of === undefined ? ["paragraph", "bullets", "kpi_cards", "blockquote"].find((t) => legal.includes(t)) : of[0]
       if (type === undefined) return undefined
       return Array.from({ length: n }, (_, i) => minimal(type, i))
     }

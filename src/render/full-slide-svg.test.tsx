@@ -396,13 +396,15 @@ describe("asset background auto scrim (image-layouts P1)", () => {
   })
 
   it("lifts a marked run's accent until it reads over the scrimmed photograph, still apart from the white", () => {
-    // journal's accent, a dark red chosen for its paper, read 1.48:1 over a harbour photograph.
+    // A dark red accent chosen for its paper (journal's read 1.48:1 over a
+    // harbour photograph, before journal's cover drew its photograph itself;
+    // ink's is the same kind of red) all but vanishes over the scrim.
     const slide: Slide = { ...bgSlide, heading: "CBAM 开始计费：**先改报实际排放**" }
-    const { container } = render(<BoundSlideSvg ir={{ ...withAsset("journal"), slides: [slide] }} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={{ ...withAsset("ink"), slides: [slide] }} slide={slide} index={0} />)
     const run = Array.from(container.querySelectorAll("tspan")).find((t) => t.textContent === "先改报实际排放")!
     const fill = run.getAttribute("fill")!
     expect(fill).not.toBe("#FFFFFF")
-    expect(fill).not.toBe(getThemeDefinition("journal").style.colors.accent)
+    expect(fill).not.toBe(getThemeDefinition("ink").style.colors.accent)
     // The scrim's lightest band over a photograph's middle grey.
     expect(contrastRatio(fill, blendOver("#0A0E14", "#808080", 0.3))).toBeGreaterThanOrEqual(3)
   })

@@ -127,7 +127,7 @@ describe("image-split / image-top gallery English heading overflow", () => {
   it("image-top wraps a longer English heading instead of shrinking one overflowing line, and the band grows", () => {
     const heading = `${GALLERY_EN_HEADING} across every region`
     const slide = makeSlide(heading)
-    const root = renderRoot("journal", "image-top", slide)
+    const root = renderRoot("heritage", "image-top", slide)
     const titles = titleNodes(root, heading)
     expect(titles.length).toBeGreaterThanOrEqual(2)
     for (const t of titles) {
