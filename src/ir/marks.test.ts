@@ -215,7 +215,7 @@ describe("timeline lanes", () => {
   it("rejects a third lane, a lane the timeline does not name, and lanes on a vertical timeline", () => {
     expect(messages([{ type: "timeline", milestones: milestones(["国内", "海外", "欧洲"]) }]).join(" ")).toContain("3 lanes")
     expect(messages([{ type: "timeline", lanes: ["国内", "海外"], milestones: milestones(["国内", "欧洲"]) }]).join(" ")).toContain("Use one of them")
-    expect(messages([{ type: "timeline", layout: "vertical", milestones: milestones(["国内", "海外"]) }]).join(" ")).toContain("no sides")
+    expect(messages([{ type: "timeline", layout: "vertical", milestones: milestones(["国内", "海外"]) }]).join(" ")).toContain("no place for a milestone's lane")
   })
 
   it("rejects lanes when no milestone sits on one", () => {

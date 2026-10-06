@@ -13,13 +13,13 @@ export const schema = z
     /** 版式：缺省 horizontal（存量语义）。vertical=左 date/中轴圆点/右
      * 标题描述的编辑部竖排时间线，适合 4-8 个叙事型节点。 */
     layout: z.enum(["horizontal", "vertical"]).optional(),
-    /** The lanes' names, the one above the axis first. See the describe below. */
+    /** The lanes' names, the first lane first. See the describe below. */
     lanes: z
       .array(z.string())
       .length(2)
       .optional()
       .describe(
-        'The two lanes the milestones run on, the one drawn above the axis first, such as ["Home", "Abroad"]. Optional: without it the lane named first runs above. Every milestone\'s lane must be one of them.',
+        'The names of the two lanes the milestones run on, the first lane first, such as ["Home", "Abroad"]. Optional: without it the lane a milestone names first is the first lane. Every milestone\'s lane must be one of them. Where a theme sets the lanes on two sides of the axis, the first lane stands above it.',
       ),
     /** The spans the axis is divided into. See the describe below. */
     periods: z
@@ -73,7 +73,7 @@ export const schema = z
             .string()
             .optional()
             .describe(
-              'The track this milestone belongs to, such as "Home" and "Abroad". A timeline with lanes keeps one time order across both, one lane above the axis and one below (the timeline\'s lanes field says which, otherwise the lane named first runs above). Every milestone names a lane, or none does. At most two lanes.',
+              'The track this milestone belongs to, such as "Home" and "Abroad". The milestones keep one time order across both lanes. The ordinary timeline sets them in one row and prints each milestone\'s lane on a line of its own over its date. Bulletin, clinic, ledger, swiss and vermilion set a timeline on lanes across the page when it fits there, the first lane above the axis and the second below it, and the timeline\'s lanes field says which lane is first. Every milestone names a lane, or none does. At most two lanes.',
             ),
         })
         .strict()
@@ -82,7 +82,8 @@ export const schema = z
   .strict()
   .superRefine((c, ctx) => {
     // Lanes split one time order into two tracks. A milestone with no lane
-    // would belong to neither, and a third lane has no side of the axis left.
+    // would belong to neither, and the faces that set lanes on two sides of
+    // an axis have no third side.
     const laned = c.milestones.filter((m) => m.lane !== undefined).length
     if (laned > 0 && laned < c.milestones.length) {
       const i = c.milestones.findIndex((m) => m.lane === undefined)
@@ -117,7 +118,7 @@ export const schema = z
       ctx.addIssue({
         code: "custom",
         path: ["milestones"],
-        message: `the milestones name ${lanes.length} lanes (${lanes.map((l) => `"${l}"`).join(", ")}), and a timeline runs one lane above its axis and one below. Use two lanes at most, or split the timeline.`,
+        message: `the milestones name ${lanes.length} lanes (${lanes.map((l) => `"${l}"`).join(", ")}), and a timeline runs on two lanes at most. Keep two, or split the timeline.`,
       })
     }
     if (c.periods !== undefined && c.layout === "vertical") {
@@ -131,7 +132,7 @@ export const schema = z
       ctx.addIssue({
         code: "custom",
         path: ["layout"],
-        message: `lanes run above and below a horizontal axis, and layout "vertical" has no sides. Remove layout, or remove lane from the milestones.`,
+        message: `layout "vertical" has no place for a milestone's lane. Remove layout, or remove lane from the milestones.`,
       })
     }
   })
