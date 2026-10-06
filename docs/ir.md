@@ -179,6 +179,8 @@ See the [SKILL component guide](../skills/pptwise/references/components.md) for 
 
 `axes` titles and units apply to `bar`, `stacked`, `percent_stacked`, `combo`, `line`, `area`, and `scatter`. Within one series, a category may appear once.
 
+A `scatter` series with `steps: true` joins its points as a staircase, each value held until the next point and then jumping to it, such as a statutory age by date of birth: write the points in order of x, one where each step begins. Its points are not dotted.
+
 `markers` draws up to three dashed lines down a `line` chart where a category begins, such as the ages a rule changes at: `[{ "before": "Age 50-54", "label": "Women, 50" }]`. Each stands halfway between the category it names and the one before it, its label over the plot.
 
 `title` names the chart in one line set over it, as a table's title is ("Workers per retiree, 2015 to 2025"). A theme that numbers its figures prints the number before it ("Figure 3").

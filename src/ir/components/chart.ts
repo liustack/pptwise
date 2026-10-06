@@ -517,6 +517,13 @@ export const schema = z
               "Marks the one series the page is about. It keeps the lead color and the others turn grey. At most one series, on bar, line, area, scatter, stacked, percent_stacked or combo charts with two or more series. A marked combo line also prints its values. " +
                 "A share bar (a stacked chart with direction \"horizontal\") may mark a run of adjacent parts, and states the run's total and share under it.",
             ),
+          /** A scatter series joined as steps. See the describe below. */
+          steps: z
+            .boolean()
+            .optional()
+            .describe(
+              "scatter only: joins the series' points as steps, each value held until the next point and then jumping to it, such as a statutory age by date of birth or a rate by income band. Write the points in order of x, one where each step begins. The points are not dotted.",
+            ),
           /** What kind of news the series is. See `ToneSchema` and the describe below. */
           tone: ToneSchema.optional().describe(
             'What kind of news the series is, drawn in the colour every theme keeps for it: "success" for the share that got better, "danger" for the share that got worse, "warning" for one to watch. ' +
@@ -552,6 +559,19 @@ export const schema = z
         }),
       )
     }
+    // Steps join a scatter's points in order of x, holding each value.
+    c.series.forEach((s, si) => {
+      if (!s.steps) return
+      if (c.chart_type !== "scatter") {
+        ctx.addIssue({ code: "custom", path: ["series", si, "steps"], message: `steps join a scatter's points as a staircase, and a ${c.chart_type} chart has none. Use chart_type "scatter" with numeric x, or remove steps.` })
+        return
+      }
+      const xs = s.data.map((d) => Number(d.x))
+      const back = xs.findIndex((x, i) => i > 0 && !(x >= xs[i - 1]!))
+      if (back > 0) {
+        ctx.addIssue({ code: "custom", path: ["series", si, "data", back, "x"], message: `series[${si}] joins its points as steps in order of x, and point ${back} (x ${s.data[back]!.x}) comes before point ${back - 1} (x ${s.data[back - 1]!.x}). Write the points in order of x.` })
+      }
+    })
     // A marker stands between two categories of a line, so it needs a line
     // and a category with one before it.
     if (c.markers !== undefined) {

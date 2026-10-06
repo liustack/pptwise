@@ -496,6 +496,17 @@ function asksForChartMarkers(components: readonly CompositionProps["components"]
 }
 
 /**
+ * The compositions that draw a scatter series joined as steps
+ * (`series[].steps`). A page whose chart carries one is offered to these
+ * alone; the ordinary scatter draws the staircase.
+ */
+const CHART_STEP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForChartSteps(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.series.some((s) => s.steps === true))
+}
+
+/**
  * The compositions that draw the page's ballot (`Slide.ballot`), a box for
  * each choice beside every question. A page with one is offered to these
  * alone; the face declares the ballot dropped when none takes the page.
@@ -536,6 +547,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const carded = asksForIconCardDetail(props.components)
   const captioned = asksForChartTitle(props.components)
   const thresholded = asksForChartMarkers(props.components)
+  const stepped = asksForChartSteps(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -553,6 +565,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (carded && !ICON_CARD_DETAIL_COMPOSITIONS.has(id)) continue
     if (captioned && !CHART_TITLE_COMPOSITIONS.has(id)) continue
     if (thresholded && !CHART_MARKER_COMPOSITIONS.has(id)) continue
+    if (stepped && !CHART_STEP_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue

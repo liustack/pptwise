@@ -3323,6 +3323,20 @@ export function renderDonut(
 }
 
 /**
+ * A staircase through `points` in order: each value held to the next
+ * point's x, then a jump to its value. The polyline the step series of a
+ * scatter is drawn as (`series[].steps`).
+ */
+export function stepPoints(points: readonly (readonly [number, number])[]): string {
+  const out: string[] = []
+  points.forEach(([x, y], i) => {
+    if (i > 0) out.push(`${x},${points[i - 1]![1]}`)
+    out.push(`${x},${y}`)
+  })
+  return out.join(" ")
+}
+
+/**
  * scatter 散点/气泡图：数值 x/y 点集。两个轴都走拟合域（不强制含 0），
  * 刻度在绘图区外，轴线相交于原点。点可选 size：有则半径按面积（sqrt）缩放
  * 为气泡，无则统一小圆点。
@@ -3401,7 +3415,17 @@ export function renderScatter(
       })}
       {series.map((s, sIdx) => (
         <g key={sIdx}>
-          {s.data.map((d, di) => {
+          {component?.series[sIdx]?.steps ? (
+            <polyline
+              data-plot-mark="1"
+              data-steps=""
+              points={stepPoints(s.data.map((d) => [xForVal(numX(d.x)), mapToPlotY(d.y, yAxis.domain, geom.plotY, geom.plotH)] as const))}
+              fill="none"
+              stroke={palette[sIdx % palette.length]}
+              strokeWidth={2}
+            />
+          ) : null}
+          {component?.series[sIdx]?.steps ? null : s.data.map((d, di) => {
             const color = palette[sIdx % palette.length]
             return (
               <circle

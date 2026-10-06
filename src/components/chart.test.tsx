@@ -2504,3 +2504,25 @@ describe("markers on a line", () => {
     for (const m of marks) expect(Number(m.querySelector("text")!.getAttribute("y"))).toBeLessThan(Number(lineOf(m).getAttribute("y1")))
   })
 })
+
+describe("a scatter series joined as steps", () => {
+  const ladder = {
+    type: "chart" as const,
+    chart_type: "scatter" as const,
+    series: [{ name: "男职工", steps: true, data: [{ x: 1962, y: 60 }, { x: 1965, y: 60.08 }, { x: 1965.33, y: 60.17 }, { x: 1988, y: 63 }] }],
+  }
+
+  it("is accepted on a scatter whose points run in order of x", () => {
+    expect(chartSchema.safeParse(ladder).success).toBe(true)
+    expect(chartSchema.safeParse({ ...ladder, chart_type: "line" }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...ladder, series: [{ ...ladder.series[0], data: [...ladder.series[0]!.data].reverse() }] }).success).toBe(false)
+  })
+
+  it("holds each value to the next point and jumps there, with no dots", async () => {
+    const { stepPoints } = await import("./chart-svg")
+    expect(stepPoints([[0, 10], [5, 8], [9, 8]])).toBe("0,10 5,10 5,8 9,8 9,8")
+    const { container } = svg(chart.render(ladder, { ...box, h: 360 }, ctx))
+    expect(container.querySelectorAll("[data-steps]")).toHaveLength(1)
+    expect(container.querySelectorAll("circle")).toHaveLength(0)
+  })
+})
