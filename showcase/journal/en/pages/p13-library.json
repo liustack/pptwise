@@ -1,0 +1,98 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "title": "Public library visits and loans, each on its own axis",
+      "axes": {
+        "y_unit": "millions"
+      },
+      "series": [
+        {
+          "name": "Visits",
+          "data": [
+            {
+              "x": "2019",
+              "y": 901
+            },
+            {
+              "x": "2020",
+              "y": 541
+            },
+            {
+              "x": "2021",
+              "y": 746
+            },
+            {
+              "x": "2022",
+              "y": 790
+            },
+            {
+              "x": "2023",
+              "y": 1161
+            },
+            {
+              "x": "2024",
+              "y": 1340
+            },
+            {
+              "x": "2025",
+              "y": 1470
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "title": "Public library visits and loans, each on its own axis",
+      "axes": {
+        "y_unit": "millions"
+      },
+      "series": [
+        {
+          "name": "Loans",
+          "data": [
+            {
+              "x": "2019",
+              "y": 614
+            },
+            {
+              "x": "2020",
+              "y": 421
+            },
+            {
+              "x": "2021",
+              "y": 587
+            },
+            {
+              "x": "2022",
+              "y": 607
+            },
+            {
+              "x": "2023",
+              "y": 783
+            },
+            {
+              "x": "2024",
+              "y": 840
+            },
+            {
+              "x": "2025",
+              "y": 830,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Books lent per visit fell from 0.68 to 0.56. Only 16.2% of urban adults have used a library."
+    }
+  ],
+  "footnote": "Sources: Ministry of Culture and Tourism statistical bulletins, 2019 to 2025, and the 23rd National Reading Survey",
+  "notes": "The library page surprised us most. In 2025 China's public libraries counted 1.47 billion visits, 63% more than in 2019. People came back, and in greater numbers than before the pandemic. But loans were only 830 million, 35% above 2019, and 0.3% below 2024, the first fall since 2020. Loans per visit went from 0.68 in 2019 to 0.56 in 2025. More and more, people go to the library to sit, study and attend events: libraries held 354,000 events in 2025. Meanwhile only 16.2% of urban adults say they have used a library. The two charts use different units, each on its own axis, and should not be compared bar for bar."
+}

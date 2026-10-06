@@ -1,0 +1,147 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "storytelling",
+    "pacing": "dense",
+    "audience": "public"
+  },
+  "theme": "journal",
+  "filename": "still-reading-letter-en",
+  "meta": {
+    "organization": "To Our Readers",
+    "date": "October 2026"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "Autumn 2026 · Annual letter"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "Autumn 2026 · An annual letter to our subscribers",
+      "heading": "Are we still reading?",
+      "summary": "Ten years of reading surveys, and what the editor wants to tell you"
+    },
+    {
+      "id": "p02-note",
+      "type": "content",
+      "kind": "points",
+      "kicker": "Editor's note",
+      "heading": "People still read books, just differently"
+    },
+    {
+      "id": "p03-books",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Ten years",
+      "heading": "Ten years on, readers went from 58.4% to 60.0%"
+    },
+    {
+      "id": "p04-ways",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "How we read",
+      "heading": "79.0% read on phones, 38.7% listen to books"
+    },
+    {
+      "id": "p05-time",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "Time",
+      "heading": "Print time held, phone time grew far more"
+    },
+    {
+      "id": "p06-periodicals",
+      "type": "content",
+      "kind": "fact",
+      "kicker": "Periodicals",
+      "heading": "Periodicals fell hardest, by more than half"
+    },
+    {
+      "id": "p07-magazine",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "Periodicals",
+      "heading": "Every periodical line points down, ours too"
+    },
+    {
+      "id": "p08-reasons",
+      "type": "content",
+      "kind": "quote",
+      "kicker": "Non-readers",
+      "heading": "In the words of people who do not read"
+    },
+    {
+      "id": "p09-heavy",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Heavy readers",
+      "heading": "Heavy readers rose from 10.2% to 13.5%"
+    },
+    {
+      "id": "p10-gap",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Who reads less",
+      "heading": "Rural adults lag by 18.4 points, kids read more"
+    },
+    {
+      "id": "p11-market",
+      "type": "content",
+      "kind": "data",
+      "kicker": "The book trade",
+      "heading": "Sales are 86% of 2019, at 58% of list price"
+    },
+    {
+      "id": "p12-channels",
+      "type": "content",
+      "kind": "hierarchy",
+      "kicker": "The book trade",
+      "heading": "Content commerce now sells four in ten books"
+    },
+    {
+      "id": "p13-library",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Libraries",
+      "heading": "Library visits up 63% on 2019, but loans fell"
+    },
+    {
+      "id": "p14-world",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Elsewhere",
+      "heading": "Others ask differently, so we do not rank them"
+    },
+    {
+      "id": "p15-screen",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Print and screen",
+      "heading": "Print beats screens, but only by a small effect"
+    },
+    {
+      "id": "p16-essay",
+      "type": "content",
+      "kind": "points",
+      "kicker": "Long read",
+      "heading": "Readers left the periodical habit, not books"
+    },
+    {
+      "id": "p17-plans",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Our plans",
+      "heading": "Our four plans, each drawn from these numbers"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "kicker": "Afterword",
+      "heading": "Still reading, differently.\nSo are we, with you.",
+      "summary": "The Editors\nOctober 2026"
+    }
+  ]
+}

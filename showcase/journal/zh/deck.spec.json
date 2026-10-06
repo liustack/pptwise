@@ -1,0 +1,147 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "storytelling",
+    "pacing": "dense",
+    "audience": "public"
+  },
+  "theme": "journal",
+  "filename": "still-reading-letter-zh",
+  "meta": {
+    "organization": "致读者",
+    "date": "2026 年 10 月"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "二〇二六年秋 · 年度长信"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "二〇二六年秋 · 一封写给订阅读者的年度长信",
+      "heading": "我们还在读书吗",
+      "summary": "十年阅读调查读下来，主编想和你说的话"
+    },
+    {
+      "id": "p02-note",
+      "type": "content",
+      "kind": "points",
+      "kicker": "编者按",
+      "heading": "读书的人没变少，变的是读法"
+    },
+    {
+      "id": "p03-books",
+      "type": "content",
+      "kind": "data",
+      "kicker": "十年",
+      "heading": "十年里，读书的人从 58.4% 到 60.0%，人均纸书只多了 0.23 本"
+    },
+    {
+      "id": "p04-ways",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "读法",
+      "heading": "变的是读法：79.0% 的人用手机读，38.7% 的人用耳朵听"
+    },
+    {
+      "id": "p05-time",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "时间",
+      "heading": "纸书的时间没少，手机的时间多得多"
+    },
+    {
+      "id": "p06-periodicals",
+      "type": "content",
+      "kind": "fact",
+      "kicker": "报刊",
+      "heading": "跌得最狠的是报刊：期刊阅读率十年少了一半还多"
+    },
+    {
+      "id": "p07-magazine",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "报刊",
+      "heading": "报刊的线都在往下走，我们也在其中"
+    },
+    {
+      "id": "p08-reasons",
+      "type": "content",
+      "kind": "quote",
+      "kicker": "不读的人",
+      "heading": "不读书的人自己说"
+    },
+    {
+      "id": "p09-heavy",
+      "type": "content",
+      "kind": "data",
+      "kicker": "常读的人",
+      "heading": "常读书的人在慢慢变多：一年读 10 本以上纸书的人从 10.2% 升到 13.5%"
+    },
+    {
+      "id": "p10-gap",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "谁读得少",
+      "heading": "城镇和农村差 18.4 个百分点，孩子比大人读得多"
+    },
+    {
+      "id": "p11-market",
+      "type": "content",
+      "kind": "data",
+      "kicker": "书业",
+      "heading": "书卖得更少也更便宜：码洋只有 2019 年的 86%，平均 5.8 折"
+    },
+    {
+      "id": "p12-channels",
+      "type": "content",
+      "kind": "hierarchy",
+      "kicker": "书业",
+      "heading": "四成的书在内容电商卖出，少儿和教辅占码洋一半多"
+    },
+    {
+      "id": "p13-library",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "图书馆",
+      "heading": "去图书馆的人比 2019 年多 63%，借出的书却比上年少了 0.3%"
+    },
+    {
+      "id": "p14-world",
+      "type": "content",
+      "kind": "list",
+      "kicker": "别处",
+      "heading": "别的国家也在问这个问题，但问法不同，只能并排看"
+    },
+    {
+      "id": "p15-screen",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "纸与屏",
+      "heading": "纸比屏幕读得懂一点，差距是小效应，主要在说明文和限时阅读"
+    },
+    {
+      "id": "p16-essay",
+      "type": "content",
+      "kind": "points",
+      "kicker": "长文",
+      "heading": "读者没有离开书，离开的是报刊上那段固定的时间"
+    },
+    {
+      "id": "p17-plans",
+      "type": "content",
+      "kind": "list",
+      "kicker": "编辑部的打算",
+      "heading": "接下来一年，编辑部打算做四件事，每件都从这些数字里来"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "kicker": "后记",
+      "heading": "人还在读，只是换了读法。\n我们也换一种做法，接着陪你读。",
+      "summary": "编辑部\n二〇二六年十月"
+    }
+  ]
+}

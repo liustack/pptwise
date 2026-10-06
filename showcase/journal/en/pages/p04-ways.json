@@ -1,0 +1,59 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "title": "Adults using each way of reading in 2025 (%), one person may use several",
+      "axes": {
+        "x_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Share of adults in 2025",
+          "data": [
+            {
+              "x": "Phone",
+              "y": 79.0,
+              "icon": "smartphone"
+            },
+            {
+              "x": "Computer",
+              "y": 66.4,
+              "icon": "book-marked"
+            },
+            {
+              "x": "Listening",
+              "y": 38.7,
+              "icon": "headphones",
+              "emphasis": true
+            },
+            {
+              "x": "E-reader",
+              "y": 21.3,
+              "icon": "book-open"
+            },
+            {
+              "x": "Book videos",
+              "y": 6.3,
+              "icon": "clapperboard"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Digital reading rose from 64.0% to 80.8% of adults in ten years, and has barely moved since 2019."
+    },
+    {
+      "type": "image",
+      "asset_id": "listening",
+      "fit": "cover",
+      "caption": "Listening by the window (AI-generated)"
+    }
+  ],
+  "footnote": "Source: 13th, 17th and 23rd National Reading Surveys",
+  "notes": "What changed is how people read. In 2025, 79.0% of adults read on a phone, 66.4% read online on a computer, 38.7% listened to books, 21.3% used an e-reader and 6.3% watched videos about books. These overlap, since one person can read on a phone and listen too, so they do not add up. Listening has grown most steadily: it was 17.0% in 2016. The overall share who read digitally in some way went from 64.0% in 2015 to 79.3% in 2019, then rose only 1.5 points in six years. Its scope also shifted: it still counted CD-ROMs in 2016, and from the 22nd round it explicitly includes listening and book videos."
+}

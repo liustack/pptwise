@@ -1,0 +1,72 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "bands": [
+        {
+          "from": -0.4,
+          "to": 0,
+          "label": "← Screens did worse"
+        },
+        {
+          "from": 0,
+          "to": 0.1,
+          "label": "Print did worse →"
+        }
+      ],
+      "series": [
+        {
+          "name": "Delgado et al. 2018",
+          "data": [
+            {
+              "x": "Overall",
+              "y": -0.21
+            },
+            {
+              "x": "Informational",
+              "y": -0.27
+            },
+            {
+              "x": "Narrative",
+              "y": 0.01
+            },
+            {
+              "x": "Timed",
+              "y": -0.26
+            },
+            {
+              "x": "Self-paced",
+              "y": -0.09
+            }
+          ]
+        },
+        {
+          "name": "Clinton 2019",
+          "data": [
+            {
+              "x": "Overall",
+              "y": -0.25
+            },
+            {
+              "x": "Informational",
+              "y": -0.32
+            },
+            {
+              "x": "Narrative",
+              "y": -0.04
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "A Hedges' g of about 0.2 is a small effect, not “21% better understanding”. Print readers also judge their own understanding better."
+    }
+  ],
+  "footnote": "Sources: Delgado et al. (2018), Educational Research Review 25, Clinton (2019), Journal of Research in Reading 42(2). Both are meta-analyses. Clinton does not report timed and self-paced reading apart",
+  "notes": "How much does paper beat the screen? Two meta-analyses agree: comprehension on screens is slightly worse than on paper. Delgado and colleagues pooled 54 studies with over 171,000 participants in 2018 and found an overall effect size g of -0.21. Clinton pooled 33 randomized experiments in 2019 and found -0.25. In statistics that is a small effect, and it must not be read as \"21% better comprehension on paper\". The gap sits mainly in informational texts and timed reading. With stories there is almost no difference, and when readers set their own pace the gap shrinks. Clinton also found print readers judge how much they understood more accurately, while screen readers tend to overrate themselves. One more caveat: none of these experiments covered short video or reading through conversations with AI."
+}

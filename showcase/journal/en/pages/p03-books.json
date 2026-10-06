@@ -1,0 +1,118 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "line",
+      "title": "Books read per adult a year, counting all adults, survey years 2015 to 2025",
+      "series": [
+        {
+          "name": "Print",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "2015",
+              "y": 4.58
+            },
+            {
+              "x": "2016",
+              "y": 4.65
+            },
+            {
+              "x": "2017",
+              "y": 4.66
+            },
+            {
+              "x": "2018",
+              "y": 4.67
+            },
+            {
+              "x": "2019",
+              "y": 4.65
+            },
+            {
+              "x": "2020",
+              "y": 4.7
+            },
+            {
+              "x": "2021",
+              "y": 4.76
+            },
+            {
+              "x": "2022",
+              "y": 4.78
+            },
+            {
+              "x": "2023",
+              "y": 4.75
+            },
+            {
+              "x": "2024",
+              "y": 4.79
+            },
+            {
+              "x": "2025",
+              "y": 4.81
+            }
+          ]
+        },
+        {
+          "name": "E-books",
+          "data": [
+            {
+              "x": "2015",
+              "y": 3.26
+            },
+            {
+              "x": "2016",
+              "y": 3.21
+            },
+            {
+              "x": "2017",
+              "y": 3.12
+            },
+            {
+              "x": "2018",
+              "y": 3.32
+            },
+            {
+              "x": "2019",
+              "y": 2.84,
+              "note": "E-books dip to 2.84 in 2019"
+            },
+            {
+              "x": "2020",
+              "y": 3.29
+            },
+            {
+              "x": "2021",
+              "y": 3.3
+            },
+            {
+              "x": "2022",
+              "y": 3.33
+            },
+            {
+              "x": "2023",
+              "y": 3.4
+            },
+            {
+              "x": "2024",
+              "y": 3.52
+            },
+            {
+              "x": "2025",
+              "y": 3.58
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "4.81 is an average, lifted by a few heavy readers. No median is published."
+    }
+  ],
+  "footnote": "Source: 13th to 23rd National Reading Surveys (Chinese Academy of Press and Publication)",
+  "notes": "The first chart is how many books the average adult read each year. Print went from 4.58 to 4.81, up just 0.23. E-books went from 3.26 to 3.58, with a dip to 2.84 in 2019. Over the same decade, by the survey's own measure, the share of adults who read books moved from 58.4% to 60.0%. So the number of readers and the number of books barely moved. Two cautions. The survey's sample and method changed several times, to online and phone interviews from 2020 and mainly face to face again in 2025, so a change of a tenth of a point a year means little. And 4.81 is a mean, with no median published, so most people read fewer."
+}
