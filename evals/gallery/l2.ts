@@ -3,7 +3,7 @@
  * ProcessRunner is injectable so unit tests never spawn grok.
  */
 
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -208,7 +208,19 @@ export interface JudgeL2Input {
 }
 
 export async function judgeL2(input: JudgeL2Input): Promise<L2Verdict> {
-  const workdir = input.workdir ?? mkdtempSync(join(tmpdir(), "pptwise-l2-"))
+  if (input.workdir !== undefined) return judgeL2In(input.workdir, input)
+  // A workdir the caller passes is the caller's to keep. One made here holds
+  // only this page's PNG and its rubric copy, and a full run judges every
+  // page, so it goes as soon as the verdict is in.
+  const workdir = mkdtempSync(join(tmpdir(), "pptwise-l2-"))
+  try {
+    return await judgeL2In(workdir, input)
+  } finally {
+    rmSync(workdir, { recursive: true, force: true })
+  }
+}
+
+async function judgeL2In(workdir: string, input: JudgeL2Input): Promise<L2Verdict> {
   const rubricDir = input.rubricDir ?? DEFAULT_RUBRIC_DIR
   const run = input.run ?? defaultProcessRunner
   const grokBin = input.grokBin ?? "grok"

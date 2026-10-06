@@ -8,7 +8,7 @@
  * the process.
  */
 
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -116,10 +116,16 @@ async function main(): Promise<void> {
       await Promise.all(LANGUAGE_IDS.map(async (id) => [id, await corpusAssets(LEXICONS[id])] as const)),
     ) as Record<LanguageId, CorpusAssets>
     const jobs = buildMatrix(themeIds, assets)
+    // The audit reads the SVGs from memory, so the rendered files are only
+    // renderMatrix's scratch. Left behind, each run kept a whole matrix.
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-evals-gallery-"))
-    const rendered = renderMatrix(jobs, outDir, "eval")
-    manifest = rendered.manifest
-    svgs = new Map(rendered.svgs)
+    try {
+      const rendered = renderMatrix(jobs, outDir, "eval")
+      manifest = rendered.manifest
+      svgs = new Map(rendered.svgs)
+    } finally {
+      rmSync(outDir, { recursive: true, force: true })
+    }
   }
 
   const current = hashesFromManifest(manifest)
