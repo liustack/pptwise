@@ -78,7 +78,10 @@ export const image: SvgComponent<ImageComponent> = {
         />
         {component.caption &&
           (() => {
-            const fittedCaption = fitSvgLine(component.caption, {
+            // A face that numbers its figures puts the number first (「图 1」).
+            const label = ctx.exhibitLabels?.get(component)
+            const lead = label ? `${label}\u3000` : ""
+            const fittedCaption = fitSvgLine(`${lead}${component.caption}`, {
               maxWidth: box.w - 24,
               fontSize: 16,
               minFontSize: 16,
@@ -119,7 +122,16 @@ export const image: SvgComponent<ImageComponent> = {
                   fontFamily={ctx.fonts.body}
                   dominantBaseline="alphabetic"
                 >
-                  {fittedCaption.text}
+                  {lead && fittedCaption.text.startsWith(lead) ? (
+                    <>
+                      <tspan data-exhibit-label="" fontWeight="700">
+                        {label}
+                      </tspan>
+                      {fittedCaption.text.slice(label!.length)}
+                    </>
+                  ) : (
+                    fittedCaption.text
+                  )}
                 </text>
               </>
             )

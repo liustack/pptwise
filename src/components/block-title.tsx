@@ -40,7 +40,7 @@ export function withBlockTitle<T extends Titled>(def: RenderDef<T>): RenderDef<T
     }
     return (
       <g data-block-title="">
-        <BlockTitle title={title} box={box} ctx={ctx} />
+        <BlockTitle title={title} label={ctx.exhibitLabels?.get(component)} box={box} ctx={ctx} />
         {def.render(component, inner, ctx)}
       </g>
     )
@@ -51,8 +51,14 @@ export function withBlockTitle<T extends Titled>(def: RenderDef<T>): RenderDef<T
   return { type: def.type, measure, render, ...(minHeight ? { minHeight } : {}) }
 }
 
-function BlockTitle({ title, box, ctx }: { title: string; box: ComponentBox; ctx: ComponentCtx }): React.ReactElement {
-  const fit = fitSvgLine(title, {
+/**
+ * The title's line. A block the face numbers (`ctx.exhibitLabels`) prints its
+ * number first, in the primary colour, a full-width space before the title.
+ */
+function BlockTitle({ title, label, box, ctx }: { title: string; label?: string; box: ComponentBox; ctx: ComponentCtx }): React.ReactElement {
+  const ground = ctx.defaultBg ?? ctx.colors.bg
+  const lead = label ? `${label}\u3000` : ""
+  const fit = fitSvgLine(`${lead}${title}`, {
     maxWidth: box.w,
     fontSize: BLOCK_TITLE.size,
     minFontSize: BLOCK_TITLE.size,
@@ -67,10 +73,19 @@ function BlockTitle({ title, box, ctx }: { title: string; box: ComponentBox; ctx
       fontFamily={ctx.fonts.body}
       fontSize={fit.fontSize}
       fontWeight="bold"
-      fill={accessibleInk(ctx.colors.text, ctx.defaultBg ?? ctx.colors.bg, fit.fontSize)}
+      fill={accessibleInk(ctx.colors.text, ground, fit.fontSize)}
       dominantBaseline="alphabetic"
     >
-      {fit.text}
+      {lead && fit.text.startsWith(lead) ? (
+        <>
+          <tspan data-exhibit-label="" fill={accessibleInk(ctx.colors.primary, ground, fit.fontSize)}>
+            {label}
+          </tspan>
+          {fit.text.slice(label!.length)}
+        </>
+      ) : (
+        fit.text
+      )}
     </text>
   )
 }

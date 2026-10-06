@@ -2526,3 +2526,21 @@ describe("a scatter series joined as steps", () => {
     expect(container.querySelectorAll("circle")).toHaveLength(0)
   })
 })
+
+describe("a numbered chart", () => {
+  it("prints the number its face gives it before its title, in the primary colour", () => {
+    const line = {
+      type: "chart" as const,
+      chart_type: "line" as const,
+      title: "参保职工与参保离退休人员之比",
+      series: [{ name: "比值", data: [{ x: "2015", y: 2.87 }, { x: "2025", y: 2.59 }] }],
+    }
+    const numbered = { ...ctx, exhibitLabels: new Map([[line, "图 3"]]) }
+    const { container } = svg(renderDef.render(line, { ...box, h: 360 }, numbered))
+    const title = container.querySelector("[data-block-title] > text")!
+    expect(title.textContent).toBe("图 3　参保职工与参保离退休人员之比")
+    expect(title.querySelector("[data-exhibit-label]")!.getAttribute("fill")).toBe(ctx.colors.primary)
+    // Without a number from the face the title is set as before.
+    expect(svg(renderDef.render(line, { ...box, h: 360 }, ctx)).container.querySelector("[data-exhibit-label]")).toBeNull()
+  })
+})

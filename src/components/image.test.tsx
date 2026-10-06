@@ -167,3 +167,14 @@ describe("image component", () => {
     expect(Number(img.getAttribute("height"))).toBeLessThanOrEqual(340)
   })
 })
+
+describe("a numbered image", () => {
+  it("prints the number its face gives it before its caption, bold", () => {
+    const shot = { type: "image" as const, asset_id: "hero", fit: "cover" as const, caption: "示意：车间里的老工人" }
+    const numbered = { ...ctx, exhibitLabels: new Map([[shot, "图 1"]]) }
+    const { container } = svg(image.render(shot, { x: 0, y: 0, w: 900 }, numbered))
+    const caption = Array.from(container.querySelectorAll("text")).find((t) => t.textContent?.includes("车间"))!
+    expect(caption.textContent).toBe("图 1　示意：车间里的老工人")
+    expect(caption.querySelector("[data-exhibit-label]")!.getAttribute("font-weight")).toBe("700")
+  })
+})
