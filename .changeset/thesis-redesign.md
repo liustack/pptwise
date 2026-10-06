@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+thesis is redrawn as a thesis proposal set as the pages of a manuscript. Every content page carries a running head, the deck's label at the top left and the page's section in emerald at the top right (its `stage`, numbered by its place in the deck's `course`), over a gold rule, the claim in a bookish serif bottom-aligned over the body, figures and tables numbered across the deck (「图 3」, 「表 1」), each line of the page's `footnote` a numbered note over the folio with the text pointing to it by a superscript, and the page number centred at the foot. Its cover is a title page beside a photograph with the report's `fields` on ruled lines, its chapter page lays ivory over the photograph with the section's number huge in emerald and the whole deck's contents with the section lit, and its ending lists the points the talk leaves under the author's own small title (`kicker`) over a large closing line. The heading face is now Times New Roman with SimSun, so figures stand on the baseline.

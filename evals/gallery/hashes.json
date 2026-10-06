@@ -12347,524 +12347,559 @@
       "color": "147dq82"
     },
     "thesis--deck--p01": {
-      "hash": "84ooui",
-      "geometry": "1r7c4gn",
-      "color": "12igom7"
+      "hash": "n150il",
+      "geometry": "g9rgv4",
+      "color": "h4cm4g"
     },
     "thesis--deck--p02": {
-      "hash": "w0o9qy",
-      "geometry": "utikuu",
-      "color": "16k53uk"
+      "hash": "1l4jz90",
+      "geometry": "w2rz8t",
+      "color": "bjbr5r"
     },
     "thesis--deck--p03": {
-      "hash": "1ffvbsk",
-      "geometry": "1upl3ze",
-      "color": "16igq7"
+      "hash": "ya3j1a",
+      "geometry": "1ums7sd",
+      "color": "1nuqbvo"
     },
     "thesis--deck--p04": {
-      "hash": "1tiqpaw",
-      "geometry": "1ekerim",
-      "color": "12rihfj"
+      "hash": "f41akv",
+      "geometry": "25bm3c",
+      "color": "1k1rteq"
     },
     "thesis--deck--p05": {
-      "hash": "79yh99",
-      "geometry": "1kpzd65",
-      "color": "dhjbak"
+      "hash": "1d3lre0",
+      "geometry": "fcjlyj",
+      "color": "i3tq6i"
     },
     "thesis--deck--p06": {
-      "hash": "l5dn30",
-      "geometry": "1h0ancz",
-      "color": "6q1mrm"
+      "hash": "b84q4d",
+      "geometry": "iopk5b",
+      "color": "1lit0m0"
     },
     "thesis--deck--p07": {
-      "hash": "ssvh87",
-      "geometry": "vdzd59",
-      "color": "3xtpkn"
+      "hash": "1a3dz2a",
+      "geometry": "6bd5jz",
+      "color": "tcow0p"
     },
     "thesis--deck--p08": {
-      "hash": "14wffam",
-      "geometry": "1uchi5v",
-      "color": "1gq3086"
+      "hash": "1j5xo4c",
+      "geometry": "1ir7gks",
+      "color": "8valw8"
     },
     "thesis--deck--p09": {
-      "hash": "jjjb4p",
-      "geometry": "pmmlwp",
-      "color": "1pzkd7p"
+      "hash": "119ywm7",
+      "geometry": "5rdmje",
+      "color": "12iplp7"
     },
     "thesis--deck--p10": {
-      "hash": "kvdyit",
-      "geometry": "5z5byj",
-      "color": "1bjcg02"
+      "hash": "njikjo",
+      "geometry": "1es7oo1",
+      "color": "1esegwf"
     },
-    "thesis--face--cover--thesis-plate-cover": {
-      "hash": "84ooui",
-      "geometry": "1r7c4gn",
-      "color": "12igom7"
+    "thesis--face--cover--manuscript-cover": {
+      "hash": "n150il",
+      "geometry": "g9rgv4",
+      "color": "h4cm4g"
     },
-    "thesis--face--chapter--folio-ghost-chapter": {
-      "hash": "1yy5f6l",
-      "geometry": "pl34xt",
-      "color": "16k53uk"
+    "thesis--face--chapter--manuscript-chapter": {
+      "hash": "1opxanf",
+      "geometry": "1507jwq",
+      "color": "bjbr5r"
     },
-    "thesis--face--points--narrow-column": {
-      "hash": "15abdq5",
-      "geometry": "dw2krq",
-      "color": "1m00ok9"
-    },
-    "thesis--face--list--bento-panel": {
-      "hash": "1qyadu5",
-      "geometry": "1g4uiff",
-      "color": "1lvstsx"
-    },
-    "thesis--face--comparison--two-column": {
-      "hash": "1nye4td",
-      "geometry": "k7pa47",
-      "color": "rw7baz"
-    },
-    "thesis--face--process--rail-numbered": {
-      "hash": "10f8s53",
-      "geometry": "1gcpxlh",
-      "color": "19xb01i"
-    },
-    "thesis--face--data--split-band": {
-      "hash": "1w8d9f2",
-      "geometry": "yk5kwa",
-      "color": "1lnoho5"
-    },
-    "thesis--face--photo--image-annotate": {
-      "hash": "hb7uhy",
-      "geometry": "c47oa",
-      "color": "1ghur1n"
+    "thesis--face--points--manuscript-sheet": {
+      "hash": "rgfex9",
+      "geometry": "1ok0kvx",
+      "color": "zjjk82"
     },
     "thesis--face--statement--statement": {
-      "hash": "12ljqth",
-      "geometry": "1un3npr",
+      "hash": "126rwqt",
+      "geometry": "33sv87",
       "color": "mgijd3"
     },
     "thesis--face--quote--pull-quote": {
-      "hash": "17wmtlt",
-      "geometry": "cf9424",
+      "hash": "zj2n37",
+      "geometry": "tdbh4e",
       "color": "14arqw6"
     },
-    "thesis--face--fact--stat-hero": {
-      "hash": "1ik3n5v",
-      "geometry": "v95bvn",
-      "color": "1t52jak"
+    "thesis--face--ending--manuscript-ending": {
+      "hash": "19rs95o",
+      "geometry": "1dmpsjc",
+      "color": "dlo6rg"
     },
-    "thesis--face--evidence--one-evidence": {
-      "hash": "zer2qv",
-      "geometry": "1b4ex1k",
-      "color": "1a7jns7"
+    "thesis--compose--inquiry": {
+      "hash": "1r1vor1",
+      "geometry": "1vwle44",
+      "color": "z16ten"
     },
-    "thesis--face--hierarchy--asymmetric-triptych": {
-      "hash": "1jtcjws",
-      "geometry": "6fqczf",
-      "color": "1xpvxit"
+    "thesis--compose--ladder": {
+      "hash": "n8kgte",
+      "geometry": "1mijnit",
+      "color": "sdz7up"
     },
-    "thesis--face--ending--defense-close-ending": {
-      "hash": "1uvm9z6",
-      "geometry": "1c44r5e",
-      "color": "zh3eb0"
+    "thesis--compose--reach": {
+      "hash": "16i3f86",
+      "geometry": "s6jd9s",
+      "color": "s2aaf7"
+    },
+    "thesis--compose--backdrop": {
+      "hash": "18fodfp",
+      "geometry": "p89d7z",
+      "color": "1kxytp4"
+    },
+    "thesis--compose--thresholds": {
+      "hash": "1w00jyb",
+      "geometry": "rl7ksp",
+      "color": "7q509v"
+    },
+    "thesis--compose--tabulation": {
+      "hash": "ypdj9g",
+      "geometry": "18uujb6",
+      "color": "l1k3c"
+    },
+    "thesis--compose--partition": {
+      "hash": "dpuy9r",
+      "geometry": "1q1s2wa",
+      "color": "10zie96"
+    },
+    "thesis--compose--findings": {
+      "hash": "1mulvv",
+      "geometry": "jexrt5",
+      "color": "1tn3mnj"
+    },
+    "thesis--compose--coverage": {
+      "hash": "1snhcqk",
+      "geometry": "4drema",
+      "color": "kd90hx"
+    },
+    "thesis--compose--propositions": {
+      "hash": "153qwac",
+      "geometry": "1cfeyyg",
+      "color": "pggv06"
+    },
+    "thesis--compose--cadence": {
+      "hash": "1z102t8",
+      "geometry": "b25lni",
+      "color": "1mczw1i"
+    },
+    "thesis--compose--designs": {
+      "hash": "1mbos1z",
+      "geometry": "1qp0mra",
+      "color": "108hofp"
+    },
+    "thesis--compose--hazards": {
+      "hash": "9qefyg",
+      "geometry": "ly23z9",
+      "color": "136ume6"
+    },
+    "thesis--compose--itinerary": {
+      "hash": "d1hpe8",
+      "geometry": "m0agfd",
+      "color": "s8812o"
+    },
+    "thesis--compose--queries": {
+      "hash": "3v7zw5",
+      "geometry": "1e2e2ks",
+      "color": "y7emwa"
     },
     "thesis--comp--architecture--zh": {
-      "hash": "xlg1jc",
-      "geometry": "valui7",
-      "color": "1e9t1qb"
+      "hash": "8txxcl",
+      "geometry": "19gyk4h",
+      "color": "64nme1"
     },
     "thesis--comp--blockquote--zh": {
-      "hash": "h2jtwu",
-      "geometry": "n5j5dv",
+      "hash": "38ljxw",
+      "geometry": "1hgy2d1",
       "color": "14arqw6"
     },
     "thesis--comp--bmc--zh": {
-      "hash": "jak3cc",
-      "geometry": "9mkl7z",
-      "color": "sndfc8"
+      "hash": "1frrbk4",
+      "geometry": "yafszs",
+      "color": "17hoc4d"
     },
     "thesis--comp--bullets--zh": {
-      "hash": "p5xy8e",
-      "geometry": "ips8ql",
-      "color": "13kdl21"
+      "hash": "1iaiuw6",
+      "geometry": "10z6gj1",
+      "color": "1fxjdbg"
     },
     "thesis--comp--callout--zh": {
-      "hash": "16jbe8i",
-      "geometry": "1cbsua1",
-      "color": "qjum4u"
+      "hash": "yc533h",
+      "geometry": "1grxh0s",
+      "color": "138h81n"
     },
     "thesis--comp--chart-area--zh": {
-      "hash": "1bherhe",
-      "geometry": "1oa6io3",
-      "color": "1wtibd8"
+      "hash": "qvcymu",
+      "geometry": "1m7u6yy",
+      "color": "1lj7th5"
     },
     "thesis--comp--chart-bar--zh": {
-      "hash": "e6blqk",
-      "geometry": "1rlh23d",
-      "color": "1upvvkn"
+      "hash": "1954sv8",
+      "geometry": "14nqew0",
+      "color": "1ohtwu"
     },
     "thesis--comp--chart-bar-horizontal--zh": {
-      "hash": "1fvt8pf",
-      "geometry": "bu3som",
-      "color": "10dx7t2"
+      "hash": "1fxgkli",
+      "geometry": "1nu4z8k",
+      "color": "161w01r"
     },
     "thesis--comp--chart-combo--zh": {
-      "hash": "173003p",
-      "geometry": "1fvgv2d",
-      "color": "1jtcv80"
+      "hash": "rvpwai",
+      "geometry": "1a3x3oj",
+      "color": "yq8ei5"
     },
     "thesis--comp--chart-donut--zh": {
-      "hash": "17d7unk",
-      "geometry": "l31o1t",
-      "color": "2ki67k"
+      "hash": "1a1gkml",
+      "geometry": "1vj9jgu",
+      "color": "ug5bf9"
     },
     "thesis--comp--chart-dumbbell--zh": {
-      "hash": "1d3bj0c",
-      "geometry": "1n0kkdg",
-      "color": "1vbw8j2"
+      "hash": "12fg91m",
+      "geometry": "fy6v0s",
+      "color": "15ycn1n"
     },
     "thesis--comp--chart-funnel--zh": {
-      "hash": "efpqey",
-      "geometry": "1qrzsiv",
-      "color": "wbc2ei"
+      "hash": "1k0w0zb",
+      "geometry": "z81oe8",
+      "color": "19jp5sj"
     },
     "thesis--comp--chart-gauge--zh": {
-      "hash": "1hs4zf2",
-      "geometry": "19d5oeu",
-      "color": "1lnchbc"
+      "hash": "10d3oca",
+      "geometry": "1ys5j56",
+      "color": "1e7s405"
     },
     "thesis--comp--chart-line--zh": {
-      "hash": "1e76art",
-      "geometry": "11jjz5m",
-      "color": "1xl14pc"
+      "hash": "t8blij",
+      "geometry": "q3sczz",
+      "color": "tzp4th"
     },
     "thesis--comp--chart-percent-stacked--zh": {
-      "hash": "pecpu4",
-      "geometry": "lsahye",
-      "color": "1axvx7m"
+      "hash": "1retgdl",
+      "geometry": "yckm2c",
+      "color": "1hnvld7"
     },
     "thesis--comp--chart-pie--zh": {
-      "hash": "4zjn6q",
-      "geometry": "1lvvb5a",
-      "color": "4vbl6f"
+      "hash": "z5z84v",
+      "geometry": "pr864n",
+      "color": "n8158u"
     },
     "thesis--comp--chart-scatter--zh": {
-      "hash": "1vouso6",
-      "geometry": "1vl8aow",
-      "color": "11spjf9"
+      "hash": "ztfzos",
+      "geometry": "1ywxfml",
+      "color": "zokdpw"
     },
     "thesis--comp--chart-stacked--zh": {
-      "hash": "il7mfk",
-      "geometry": "1cctsdh",
-      "color": "r0xp6q"
+      "hash": "i11q18",
+      "geometry": "1huoum8",
+      "color": "107j9ln"
     },
     "thesis--comp--chevron-process--zh": {
-      "hash": "hgyb7i",
-      "geometry": "1l6ee21",
-      "color": "16mbo0f"
+      "hash": "28e0cz",
+      "geometry": "1fdt93u",
+      "color": "1nt5h02"
     },
     "thesis--comp--code--zh": {
-      "hash": "199uls7",
-      "geometry": "190i3o6",
-      "color": "1gq3086"
+      "hash": "yedijv",
+      "geometry": "19xo5hh",
+      "color": "8valw8"
     },
     "thesis--comp--comparison--zh": {
-      "hash": "wqpbjn",
-      "geometry": "1ai8dxd",
-      "color": "164p3bh"
+      "hash": "1e6kglo",
+      "geometry": "1l3zxrg",
+      "color": "9z7j2s"
     },
     "thesis--comp--concept-equation--zh": {
-      "hash": "c7mllh",
-      "geometry": "13cusue",
-      "color": "1lh3q0c"
+      "hash": "12udvlo",
+      "geometry": "1b70es8",
+      "color": "7j7pq7"
     },
     "thesis--comp--cycle--zh": {
-      "hash": "1h0iq3o",
-      "geometry": "ghu6ec",
-      "color": "1wt143m"
+      "hash": "4gl25u",
+      "geometry": "1vgdy4p",
+      "color": "101gedw"
     },
     "thesis--comp--data-table--zh": {
-      "hash": "1685ixi",
-      "geometry": "1id1f4b",
-      "color": "8kmhlq"
+      "hash": "146lmsa",
+      "geometry": "2z6wyo",
+      "color": "j4mxi8"
     },
     "thesis--comp--decision-tree--zh": {
-      "hash": "ag1nu5",
-      "geometry": "2yxlly",
-      "color": "16sdp7v"
+      "hash": "pc8c0r",
+      "geometry": "1buky3s",
+      "color": "4vj7ey"
     },
     "thesis--comp--device-mockup-browser--zh": {
-      "hash": "igh8u9",
-      "geometry": "6fbo2y",
-      "color": "1jeviz"
+      "hash": "c2ohmn",
+      "geometry": "s2b20m",
+      "color": "1d44m4q"
     },
     "thesis--comp--device-mockup-phone--zh": {
-      "hash": "qfgeo6",
-      "geometry": "jak6ql",
-      "color": "1l9ntke"
+      "hash": "lixxt0",
+      "geometry": "118ibet",
+      "color": "stkdmf"
     },
     "thesis--comp--fishbone--zh": {
-      "hash": "13f7wpj",
-      "geometry": "1214dd5",
-      "color": "22ir7p"
+      "hash": "v8lg88",
+      "geometry": "1x5w1eb",
+      "color": "uhw47"
     },
     "thesis--comp--five-forces--zh": {
-      "hash": "189l5fu",
-      "geometry": "1tpxhsq",
-      "color": "14qgkd1"
+      "hash": "9rlbhf",
+      "geometry": "1n1uzz6",
+      "color": "1z5rvf"
     },
     "thesis--comp--flowchart--zh": {
-      "hash": "veuc6r",
-      "geometry": "1qv0aw5",
-      "color": "1wgmb77"
+      "hash": "1lvscl8",
+      "geometry": "1y3gmcf",
+      "color": "15ny3qp"
     },
     "thesis--comp--from-to--zh": {
-      "hash": "19ov3fg",
-      "geometry": "3arcwl",
-      "color": "4jekef"
+      "hash": "1x9e77h",
+      "geometry": "1b89ldt",
+      "color": "1avaxtb"
     },
     "thesis--comp--gantt--zh": {
-      "hash": "1rhjkx1",
-      "geometry": "16fa0ux",
-      "color": "18fv9ek"
+      "hash": "etm95m",
+      "geometry": "z0ohxp",
+      "color": "1xpq6iy"
     },
     "thesis--comp--harvey-balls--zh": {
-      "hash": "1pihlsr",
-      "geometry": "ooe0dp",
-      "color": "1uw4lvo"
+      "hash": "uxiv",
+      "geometry": "uv6vo4",
+      "color": "14gij4a"
     },
     "thesis--comp--heatmap--zh": {
-      "hash": "anl056",
-      "geometry": "hqh0o9",
-      "color": "1n68nkv"
+      "hash": "1qqtdqm",
+      "geometry": "14kggx0",
+      "color": "18bno65"
     },
     "thesis--comp--hub-spoke--zh": {
-      "hash": "nj4yk",
-      "geometry": "1y30kdd",
-      "color": "sznmgl"
+      "hash": "18oxlnt",
+      "geometry": "6rxcml",
+      "color": "59k2nr"
     },
     "thesis--comp--iceberg--zh": {
-      "hash": "ay2iq5",
-      "geometry": "17dk07k",
-      "color": "g0pwhk"
+      "hash": "1nbz39j",
+      "geometry": "1pq0ukh",
+      "color": "t4zw2u"
     },
     "thesis--comp--icon-cards--zh": {
-      "hash": "1vonufu",
-      "geometry": "r8z4mh",
-      "color": "1n5dt0d"
+      "hash": "1ujilh1",
+      "geometry": "1u7d6ha",
+      "color": "1qcoaj0"
     },
     "thesis--comp--image--zh": {
-      "hash": "aeyeyz",
-      "geometry": "k2kamc",
-      "color": "xlmi8f"
+      "hash": "5km1cp",
+      "geometry": "1x6dr13",
+      "color": "1tpa542"
     },
     "thesis--comp--image-compare--zh": {
-      "hash": "1rqrlbc",
-      "geometry": "1g411j8",
-      "color": "10i1l9y"
+      "hash": "1t53uu0",
+      "geometry": "j6kz1e",
+      "color": "rrfidx"
     },
     "thesis--comp--image-grid--zh": {
-      "hash": "1skkx1o",
-      "geometry": "11n5wzq",
-      "color": "1sxfmad"
+      "hash": "m8nzjp",
+      "geometry": "jliza7",
+      "color": "1ua2a40"
     },
     "thesis--comp--insight-panel--zh": {
-      "hash": "qc88j6",
-      "geometry": "1o2613m",
-      "color": "1pzkd7p"
+      "hash": "3ev9dk",
+      "geometry": "yquk4b",
+      "color": "12iplp7"
     },
     "thesis--comp--issue-tree--zh": {
-      "hash": "hgpxmp",
-      "geometry": "1rinnex",
-      "color": "bsqqkp"
+      "hash": "162xxme",
+      "geometry": "3y8f0t",
+      "color": "2ao6i7"
     },
     "thesis--comp--journey-map--zh": {
-      "hash": "3e18xi",
-      "geometry": "hyioun",
-      "color": "1ruphr2"
+      "hash": "118qydt",
+      "geometry": "fx73rq",
+      "color": "ka139v"
     },
     "thesis--comp--kpi-cards--zh": {
-      "hash": "rselxm",
-      "geometry": "1854k8o",
-      "color": "ogsaqg"
+      "hash": "1gw5vjz",
+      "geometry": "11dwy4j",
+      "color": "hjty31"
     },
     "thesis--comp--logo-wall--zh": {
-      "hash": "1wcxbnp",
-      "geometry": "1i1jmxn",
-      "color": "a44i7t"
+      "hash": "u2ol0l",
+      "geometry": "u7anm7",
+      "color": "sh6s90"
     },
     "thesis--comp--matrix--zh": {
-      "hash": "1teq80i",
-      "geometry": "qm6nd0",
-      "color": "15x705k"
+      "hash": "wk8fex",
+      "geometry": "1kmvfj5",
+      "color": "1t9kp4l"
     },
     "thesis--comp--numbered-cards--zh": {
-      "hash": "1witucd",
-      "geometry": "1rhnomk",
-      "color": "1ptrzo3"
+      "hash": "oqsuo5",
+      "geometry": "1stfej9",
+      "color": "18n55cx"
     },
     "thesis--comp--org-tree--zh": {
-      "hash": "1g7ktr2",
-      "geometry": "1fvmly6",
-      "color": "1m3612i"
+      "hash": "1rcri7h",
+      "geometry": "1scyji4",
+      "color": "16vgr3o"
     },
     "thesis--comp--paragraph--zh": {
-      "hash": "hj57d5",
-      "geometry": "oum1k",
-      "color": "1emasu0"
+      "hash": "eb316q",
+      "geometry": "q49ejk",
+      "color": "1hiwz85"
     },
     "thesis--comp--people-cards--zh": {
-      "hash": "twbje1",
-      "geometry": "7fj6dm",
-      "color": "120n9fu"
+      "hash": "lb4wmt",
+      "geometry": "1spuw4h",
+      "color": "1ka3hwe"
     },
     "thesis--comp--pest--zh": {
-      "hash": "fr4fql",
-      "geometry": "lqgban",
-      "color": "ze85io"
+      "hash": "9m1zbk",
+      "geometry": "5teygb",
+      "color": "12t1dva"
     },
     "thesis--comp--pictogram--zh": {
-      "hash": "10ze23",
-      "geometry": "1yhv4e6",
-      "color": "gid9p7"
+      "hash": "14vfsnt",
+      "geometry": "1vfsrbv",
+      "color": "hz2bfl"
     },
     "thesis--comp--pillar-model--zh": {
-      "hash": "11tpnnh",
-      "geometry": "1vcoxwd",
-      "color": "uqktp0"
+      "hash": "1rz4ff4",
+      "geometry": "1o7grpj",
+      "color": "15s8woi"
     },
     "thesis--comp--positioning-map--zh": {
-      "hash": "1bau3gy",
-      "geometry": "16bwdsx",
-      "color": "1xy1ez"
+      "hash": "mrhr4a",
+      "geometry": "1oej28m",
+      "color": "nde3n5"
     },
     "thesis--comp--product-cards--zh": {
-      "hash": "1v895b4",
-      "geometry": "1ncoih0",
-      "color": "1hmcpmc"
+      "hash": "1lid7dh",
+      "geometry": "vy0p4t",
+      "color": "1yowg9l"
     },
     "thesis--comp--progress-donuts--zh": {
-      "hash": "7szeuy",
-      "geometry": "14ynygu",
-      "color": "9ii5ij"
+      "hash": "jok5r9",
+      "geometry": "6gc35d",
+      "color": "17r4b9u"
     },
     "thesis--comp--pros-cons--zh": {
-      "hash": "6t2ikb",
-      "geometry": "1k99sxf",
-      "color": "1mig20o"
+      "hash": "985jov",
+      "geometry": "15vjens",
+      "color": "1iarv7q"
     },
     "thesis--comp--pyramid--zh": {
-      "hash": "742yev",
-      "geometry": "n6ywbp",
-      "color": "1qbne52"
+      "hash": "18eeyzk",
+      "geometry": "4rxas1",
+      "color": "1ppn0ks"
     },
     "thesis--comp--quote-wall--zh": {
-      "hash": "vtao1d",
-      "geometry": "pvl3bw",
-      "color": "6q1mrm"
+      "hash": "1ap3ovk",
+      "geometry": "1g4o08o",
+      "color": "1lit0m0"
     },
     "thesis--comp--rings--zh": {
-      "hash": "1pn6ckj",
-      "geometry": "15r0rxe",
-      "color": "cxo4tt"
+      "hash": "18x50b0",
+      "geometry": "1rkl5q7",
+      "color": "e1on9b"
     },
     "thesis--comp--roadmap--zh": {
-      "hash": "6o4zj",
-      "geometry": "1p5or18",
-      "color": "1eqrldp"
+      "hash": "w8qbza",
+      "geometry": "hyivav",
+      "color": "1n07o44"
     },
     "thesis--comp--row-cards--zh": {
-      "hash": "7eyqnr",
-      "geometry": "1p25inc",
-      "color": "1rkt5y"
+      "hash": "14s59vg",
+      "geometry": "15brjq0",
+      "color": "1juccl0"
     },
     "thesis--comp--sankey--zh": {
-      "hash": "1f7qp6n",
-      "geometry": "1h5hytq",
-      "color": "gfdskv"
+      "hash": "883dwq",
+      "geometry": "i8facy",
+      "color": "bzdt5p"
     },
     "thesis--comp--scorecard--zh": {
-      "hash": "19clnax",
-      "geometry": "v0wvse",
-      "color": "1ri22kx"
+      "hash": "14ocdrp",
+      "geometry": "o8pc6d",
+      "color": "rs9smf"
     },
     "thesis--comp--segmented-wheel--zh": {
-      "hash": "1s8lgwz",
-      "geometry": "1wen96a",
-      "color": "1bfs7o2"
+      "hash": "e7cdja",
+      "geometry": "p4xd6g",
+      "color": "jgq1mw"
     },
     "thesis--comp--sketch--zh": {
-      "hash": "1wtdpke",
-      "geometry": "m3dfr2",
-      "color": "3xtpkn"
+      "hash": "1ufmk01",
+      "geometry": "1vdt4pg",
+      "color": "tcow0p"
     },
     "thesis--comp--staircase--zh": {
-      "hash": "1fijqw5",
-      "geometry": "1p6v5hr",
-      "color": "7e5f9q"
+      "hash": "ppnesl",
+      "geometry": "qgotgf",
+      "color": "gdpjxv"
     },
     "thesis--comp--steps--zh": {
-      "hash": "ses6r7",
-      "geometry": "x2xz9p",
-      "color": "xff8qe"
+      "hash": "1gg6qc3",
+      "geometry": "14el0zz",
+      "color": "11w4zov"
     },
     "thesis--comp--swimlane--zh": {
-      "hash": "eld393",
-      "geometry": "pmflog",
-      "color": "7rb15o"
+      "hash": "vurguu",
+      "geometry": "1si2xoz",
+      "color": "1i3d80l"
     },
     "thesis--comp--swot--zh": {
-      "hash": "1ijyy5a",
-      "geometry": "ptcof3",
-      "color": "1ylv1h1"
+      "hash": "1ukljr9",
+      "geometry": "1jk8oxz",
+      "color": "1fbhoqf"
     },
     "thesis--comp--timeline--zh": {
-      "hash": "oohvn4",
-      "geometry": "1c9nss1",
-      "color": "e4dkhf"
+      "hash": "165v8ku",
+      "geometry": "emesnj",
+      "color": "1mw7cxa"
     },
     "thesis--comp--value-chain--zh": {
-      "hash": "oqic3i",
-      "geometry": "1vgc2xz",
-      "color": "pn9ib5"
+      "hash": "1fzr1ea",
+      "geometry": "og5jb6",
+      "color": "1oalsd3"
     },
     "thesis--comp--venn--zh": {
-      "hash": "1oymco6",
-      "geometry": "19u6tp7",
-      "color": "1a8tvy9"
+      "hash": "ejvyhj",
+      "geometry": "nw6pfz",
+      "color": "1ajdp3v"
     },
     "thesis--comp--verdict-banner--zh": {
-      "hash": "t0x5dr",
-      "geometry": "1tbtei0",
-      "color": "1638l18"
+      "hash": "ve7h58",
+      "geometry": "8sooxh",
+      "color": "3fvm15"
     },
     "thesis--comp--waterfall--zh": {
-      "hash": "1gnz1pw",
-      "geometry": "1x1cje6",
-      "color": "53f5o0"
+      "hash": "1vkbiim",
+      "geometry": "1ufbmhp",
+      "color": "1ui2nq"
     },
     "thesis--comp--word-cloud--zh": {
-      "hash": "12v7j9y",
-      "geometry": "gzf2ji",
-      "color": "17zs7td"
+      "hash": "a756jm",
+      "geometry": "18pyepx",
+      "color": "8iujwf"
     },
     "thesis--adj--data-table--zh": {
-      "hash": "ms0vo",
-      "geometry": "b1eymy",
-      "color": "774s1z"
+      "hash": "q6xhgl",
+      "geometry": "vs24px",
+      "color": "or6rwy"
     },
     "thesis--adj--row-cards--zh": {
-      "hash": "580w6f",
-      "geometry": "1jqnku9",
-      "color": "sfjaqz"
+      "hash": "1kbmmop",
+      "geometry": "ao05wt",
+      "color": "1f7evje"
     },
     "thesis--adj--paragraph--zh": {
-      "hash": "1xcfxjy",
-      "geometry": "1ry8m84",
-      "color": "xbriil"
+      "hash": "176zbi5",
+      "geometry": "ux0fad",
+      "color": "zss5sf"
     },
     "thesis--adj--flowchart--zh": {
-      "hash": "1cv1r4b",
-      "geometry": "1lzvk3i",
-      "color": "1xi6xc2"
+      "hash": "1qjub5v",
+      "geometry": "13h5u70",
+      "color": "1if2bf"
     },
     "vermilion--deck--p01": {
       "hash": "pxfp4q",
@@ -13446,6 +13481,11 @@
       "geometry": "3nfjsg",
       "color": "1j18mv5"
     },
+    "unserved--face--defense-close-ending": {
+      "hash": "ejjuia",
+      "geometry": "is4ing",
+      "color": "1g3kdzw"
+    },
     "unserved--face--editorial-masthead": {
       "hash": "j4ugho",
       "geometry": "1wd73uj",
@@ -13470,6 +13510,11 @@
       "hash": "65herw",
       "geometry": "w7069p",
       "color": "jpazs7"
+    },
+    "unserved--face--folio-ghost-chapter": {
+      "hash": "8xh5u1",
+      "geometry": "9gt5h5",
+      "color": "13f0jng"
     },
     "unserved--face--gauge-stats": {
       "hash": "177dnki",
@@ -13620,6 +13665,11 @@
       "hash": "9ubo4x",
       "geometry": "cmxl5v",
       "color": "du7zwc"
+    },
+    "unserved--face--thesis-plate-cover": {
+      "hash": "1ds97f",
+      "geometry": "17yq0i6",
+      "color": "zvtbet"
     },
     "unserved--face--tone-adaptive-chapter": {
       "hash": "2brqir",

@@ -64,7 +64,7 @@ const POINT_R = 2.6
  */
 const LABEL_GAP = { over: 10, under: 6, side: 6, effect: 10 } as const
 
-export function SketchDrawing({ sketch, box, inks, size, fontFamily }: { sketch: SketchComponent; box: SketchBox; inks: SketchInks; size: number; fontFamily: string }): ReactElement {
+export function SketchDrawing({ sketch, box, inks, size, fontFamily, textAttrs }: { sketch: SketchComponent; box: SketchBox; inks: SketchInks; size: number; fontFamily: string; textAttrs?: Record<string, string> }): ReactElement {
   const { x, y, w, h } = box
   const k = h / BASE_H
   const down = sketch.direction === "down"
@@ -73,7 +73,7 @@ export function SketchDrawing({ sketch, box, inks, size, fontFamily }: { sketch:
   // A label's baseline drawn for an outcome going up, mirrored with the drawing for one going down.
   const mirrored = (baseline: number) => (down ? 2 * y + h - baseline + size * 0.8 : baseline)
   const text = (key: string, content: string, tx: number, ty: number, fill: string, anchor: "start" | "middle" | "end", bold = false) => (
-    <text key={key} x={tx} y={ty} textAnchor={anchor === "start" ? undefined : anchor} fontFamily={fontFamily} fontSize={size} fontWeight={bold ? "700" : undefined} fill={fill} dominantBaseline="alphabetic">
+    <text key={key} {...textAttrs} x={tx} y={ty} textAnchor={anchor === "start" ? undefined : anchor} fontFamily={fontFamily} fontSize={size} fontWeight={bold ? "700" : undefined} fill={fill} dominantBaseline="alphabetic">
       {content}
     </text>
   )

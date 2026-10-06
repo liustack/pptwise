@@ -49,6 +49,7 @@ import { LessonSheetContent } from "./content-lesson-sheet"
 import { PitchSheetContent } from "./content-pitch-sheet"
 import { MarqueeSheetContent } from "./content-marquee-sheet"
 import { BinderSheetContent } from "./content-binder-sheet"
+import { ManuscriptSheetContent } from "./content-manuscript-sheet"
 import { MarqueeStatementContent } from "./content-marquee-statement"
 import { PitchPhotoContent } from "./content-pitch-photo"
 import { GridStatementContent } from "./content-grid-statement"
@@ -210,6 +211,9 @@ const CASES: FaceCase[] = [
   // proposal's binder sheet: the same, in its band x64 to x1196 and y172
   // (under the claim, left of the binder's tabs) to y640.
   { face: "binder-sheet", Face: BinderSheetContent, themeId: "proposal", regions: ["face", "declined"] },
+  // thesis's manuscript sheet: the same, in its band x64 to x1216 and y168
+  // (under the claim) down to 16px over the notes' rule, or y648 without notes.
+  { face: "manuscript-sheet", Face: ManuscriptSheetContent, themeId: "thesis", regions: ["face", "declined"] },
   // A chart is not the one-line plan's row of touchpoints, so the page goes
   // straight to the sheet, and is declined once that cannot hold it either.
   { face: "marquee-statement", Face: MarqueeStatementContent, themeId: "rally", regions: ["aside", "declined"] },

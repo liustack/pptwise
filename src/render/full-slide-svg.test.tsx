@@ -75,7 +75,7 @@ describe("FullSlideSvg", () => {
   })
 
   it("emits one bg, mid, and fg group in fixed paint order", () => {
-    const doc: PptxIR = { ...irWithFace(contentSlide, "thesis", {}), branding: "full" }
+    const doc: PptxIR = { ...irWithFace(contentSlide, "lecture", {}), branding: "full" }
     const { container } = render(<BoundSlideSvg ir={doc} slide={contentSlide} index={0} />)
     const groups = Array.from(container.querySelectorAll("svg > g[data-depth]"))
 
@@ -380,7 +380,7 @@ describe("asset background auto scrim (image-layouts P1)", () => {
     // cover 压图页由 ImageCoverPage 接管：暗遮罩（低透，图清晰可辨）+ 白字，
     // 模型的 overlay 被忽略，P1 的雾面 scrim 不再用于 cover/chapter。
     const { container } = render(
-      <BoundSlideSvg ir={withAsset("thesis")} slide={bgSlide} index={0} />,
+      <BoundSlideSvg ir={withAsset("lecture")} slide={bgSlide} index={0} />,
     )
     const rects = Array.from(container.querySelectorAll("rect"))
     expect(rects.some((r) => r.getAttribute("fill") === "#000000")).toBe(false)
@@ -412,7 +412,7 @@ describe("asset background auto scrim (image-layouts P1)", () => {
       ...bgSlide,
       components: [{ type: "bullets", items: ["Bound face content"] }],
     }
-    const doc: PptxIR = { ...withAsset("thesis"), slides: [slide] }
+    const doc: PptxIR = { ...withAsset("lecture"), slides: [slide] }
 
     expect(slideToRender(doc, slide, 0, getThemeDefinition(doc.theme.id)).dropped).toBe(1)
   })
@@ -802,11 +802,12 @@ describe("content kind 确定性菜单分发", () => {
   })
 
   it.each([
-    ["points", "narrow-column"],
-    ["list", "bento-panel"],
-    ["comparison", "two-column"],
-    ["process", "rail-numbered"],
-    ["data", "split-band"],
+    ["points", "manuscript-sheet"],
+    ["list", "manuscript-sheet"],
+    ["comparison", "manuscript-sheet"],
+    ["process", "manuscript-sheet"],
+    ["data", "manuscript-sheet"],
+    ["statement", "statement"],
   ] as const)("thesis 的 %s kind 命中 %s", (kind, face) => {
     const slide: Slide = {
       type: "content",
@@ -1083,7 +1084,7 @@ describe("deck branding posture vs theme motif", () => {
   })
 
   it("explicit branding full still draws the content-page footer rule", () => {
-    const full: PptxIR = { ...ir([pinnedContent]), branding: "full" }
+    const full: PptxIR = { ...ir([pinnedContent]), theme: { id: "lecture" }, branding: "full" }
     const markup = renderSvgMarkup(<BoundSlideSvg ir={full} slide={pinnedContent} index={0} />)
     expect(markup).toContain('y1="664"')
     expect(markup).toContain("ACME")

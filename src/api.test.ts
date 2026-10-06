@@ -786,7 +786,7 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
   it("names both offending fields, components first, when a slide carries both", () => {
     const v = validateIr({
       ...raw,
-      theme: { id: "thesis" },
+      theme: { id: "ledger" },
       slides: [{ type: "cover", heading: "H", components: [bullets], footnote: "source: x" }],
     })
     expect(v.ok).toBe(false)

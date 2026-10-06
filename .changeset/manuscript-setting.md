@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+The shared compositions gain a manuscript setting, drawn on thesis's 2026-10 board and read entirely from the theme's tokens: cards a step lighter than the page, the primary for figures and the lead line, the accent for rules, dots and pale grounds only, and figures and tables numbered across the deck by the face that offers them. It draws a research question beside its figure with its terms, a statutory ladder stepped by birth month beside its groups, a dose against its whole with where it stood before, figures beside a trend with its turns named, a line that falls at the thresholds a rule turns on, a table of studies with its marked column tinted and its caveat, a whole and where it went as parts laid end to end, studies side by side on cards, a literature map with its empty cells framed, hypotheses with their signs and bases, survey rounds on lanes against the day a reform began, two designs each with its sketch, a threats table, a schedule with the moment it turns on, and the questions for the committee.

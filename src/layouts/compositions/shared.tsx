@@ -160,6 +160,21 @@ export type CompositionId =
   | "checkpoints"
   | "quote"
   | "papers"
+  | "inquiry"
+  | "ladder"
+  | "reach"
+  | "backdrop"
+  | "thresholds"
+  | "tabulation"
+  | "partition"
+  | "findings"
+  | "coverage"
+  | "propositions"
+  | "cadence"
+  | "designs"
+  | "hazards"
+  | "itinerary"
+  | "queries"
 
 /**
  * The type a composition sets its page in.
@@ -307,10 +322,24 @@ export type CompositionId =
  *   remedies, steps with the papers that close them, a price list as one
  *   sheet and a checklist of what to hand over. See `./binder.tsx`.
  *
+ * - `manuscript`: thesis's 2026-10 board. A research proposal or a defense
+ *   set as a page of a thesis: ivory paper, emerald for the evidence and the
+ *   one thing a page lands on, scholar's gold only as rules, dots and pale
+ *   grounds, figures and tables numbered across the deck as a paper numbers
+ *   them (「图 3」, 「表 1」), and sources as numbered footnotes the text
+ *   points at with superscripts. A composition offered this setting draws
+ *   the shapes that board drew and no other did: a question beside its
+ *   figure, a statutory ladder, a dose against its whole, figures beside a
+ *   trend, a line with its thresholds, a table of comparable studies, a whole
+ *   and where it went, studies side by side, a map of the literature with its
+ *   gaps, hypotheses, survey rounds against a reform, two designs with their
+ *   sketches, threats and their answers, a schedule with its gate and
+ *   questions for a committee. See `./manuscript.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */

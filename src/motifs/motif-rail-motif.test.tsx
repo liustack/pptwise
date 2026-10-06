@@ -3,132 +3,81 @@ import { describe, expect, it } from "vitest"
 import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
-import { buildCtx } from "../render/full-slide-svg"
-import { resolveStyle } from "../themes"
+import { contrastRatio } from "../render/ink"
 import { RailMotif } from "./motif-rail-motif"
-import { countDecorPieces, DECOR_PIECE_ATTR, MAX_DECOR_PIECES } from "./decor-budget"
+import { countDecorPieces } from "./decor-budget"
+import { MOTIF_FOOTER_ROLES } from "./footer-roles"
 import type { PptxIR, Slide } from "@/ir"
 
-const coverSlide: Slide = { type: "cover", heading: "封面", components: [] } as Slide
-const chapterSlide: Slide = { type: "chapter", heading: "章节", components: [] } as Slide
-const contentSlide: Slide = { type: "content", kind: "points", heading: "内容", components: [] } as Slide
-const endingSlide: Slide = { type: "ending", components: [] } as Slide
+const slideOf = (type: Slide["type"]): Slide => ({ type, heading: "标题", components: [] }) as unknown as Slide
 
-const ir = (theme: string): PptxIR =>
-  ({
-    version: "3",
-    filename: "x.pptx",
-    theme: { id: theme },
-    meta: {},
-    assets: { images: {} },
-    slides: [coverSlide],
-  }) as unknown as PptxIR
+const deck = (slides: Slide[], footer: PptxIR["footer"], meta: PptxIR["meta"] = {}, theme = "thesis"): PptxIR =>
+  ({ version: "5", theme: { id: theme }, meta, assets: { images: {} }, footer, slides }) as unknown as PptxIR
 
-function render(body: React.ReactElement | null): { markup: string; root: Element } {
+function draw(ir: PptxIR, index: number, theme = "thesis") {
+  const ctx = boundThemeCtx(theme, {})
   const markup = renderSvgMarkup(
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
-      {body}
+      <RailMotif ir={ir} slide={ir.slides[index]!} ctx={ctx} index={index} />
     </svg>,
   )
-  return { markup, root: parseSvgRoot(markup) }
+  return { markup, root: parseSvgRoot(markup), ctx }
 }
 
-function draw(theme: string, slide: Slide) {
-  const ctx = boundThemeCtx(theme, {})
-  return { ...render(<RailMotif ir={ir(theme)} slide={slide} ctx={ctx} />), ctx }
-}
-
-const num = (el: Element, a: string) => Number(el.getAttribute(a))
+const four = (footer: PptxIR["footer"], meta: PptxIR["meta"] = {}, theme = "thesis") =>
+  deck([slideOf("cover"), slideOf("content"), slideOf("chapter"), slideOf("ending")], footer, meta, theme)
 
 /**
- * rail-motif v3「开卷金线」（第八波批 2 演化）。
- * 设计源：`.issues/design-boards/wave8/b2/Academic.dc.html`
+ * rail-motif v4: the running head's label at the top left and the folio of a
+ * thesis's content page, the page number centred at the foot. Design source
+ * `design/rounds/2026-10-06-thesis/`.
  */
-describe("RailMotif（开卷金线）", () => {
-  it("cover 只画一条开卷金线，包在 opening-rule 里", () => {
-    const { root } = draw("thesis", coverSlide)
-    const lines = Array.from(root.querySelectorAll("line"))
-    expect(lines).toHaveLength(1)
-    expect(root.querySelectorAll("circle")).toHaveLength(0)
-    expect(root.querySelectorAll("path")).toHaveLength(0)
-    expect(root.querySelector(`[${DECOR_PIECE_ATTR}="opening-rule"]`)).toBeTruthy()
-    expect(countDecorPieces(root)).toBe(1)
+describe("RailMotif (the running label and the folio)", () => {
+  it("sets the deck's label at the top left of the running head, tracked, in the grey", () => {
+    const { root, ctx } = draw(four({ page_number: true, label: "硕士学位论文开题报告" }), 1)
+    const label = root.querySelector("[data-manuscript-running-label]")!
+    expect(label.textContent!.replace(/\s/g, "")).toBe("硕士学位论文开题报告")
+    const first = label.querySelector("text")!
+    expect(Number(first.getAttribute("x"))).toBe(64)
+    expect(Number(first.getAttribute("y"))).toBeLessThan(52)
+    expect(first.getAttribute("font-size")).toBe("12")
+    expect(contrastRatio(first.getAttribute("fill")!, ctx.colors.bg)).toBeGreaterThanOrEqual(3)
   })
 
-  it("cover 金线几何：y120、x96–1184、stroke 2，走 accent", () => {
-    const t = resolveStyle("thesis")
-    const { root } = draw("thesis", coverSlide)
-    const line = root.querySelector("line")!
-    expect([num(line, "x1"), num(line, "y1"), num(line, "x2"), num(line, "y2")]).toEqual([96, 120, 1184, 120])
-    expect(line.getAttribute("stroke")).toBe(t.colors.accent)
-    expect(line.getAttribute("stroke-width")).toBe("2")
-    expect(line.hasAttribute("data-depth")).toBe(false)
-    expect(line.getAttribute("fill")).not.toBe("none")
+  it("centres the page number at the foot in the heading serif as PowerPoint's slide-number field, the office at the left and the marks at the right", () => {
+    const { root, ctx } = draw(four({ page_number: true, organization: true, draft: "讨论稿", confidentiality: "footer" }, { organization: "某某大学", confidentiality: "internal" }), 1)
+    const folio = root.querySelector("[data-manuscript-folio] text")!
+    expect(folio.textContent).toBe("2")
+    expect(folio.getAttribute("data-field")).toBe("slidenum")
+    expect([folio.getAttribute("x"), folio.getAttribute("text-anchor")]).toEqual(["640", "middle"])
+    expect(folio.getAttribute("font-family")).toBe(ctx.fonts.heading)
+    const row = Array.from(root.querySelectorAll("[data-footer='row'] text")).map((t) => t.textContent)
+    expect(row[0]).toBe("某某大学")
+    expect(row[1]).toContain("讨论稿")
   })
 
-  it("chapter 完全退让：幽灵号与金短线归章节版式", () => {
-    const { root } = draw("thesis", chapterSlide)
-    expect(root.children).toHaveLength(0)
-    expect(root.querySelectorAll("line")).toHaveLength(0)
-    expect(root.querySelectorAll("circle")).toHaveLength(0)
+  it("drops a label too long for the left half of the running head and says so", () => {
+    const { root } = draw(four({ page_number: true, label: "一个长到会撞上右边分节号的页眉标签，一个长到会撞上右边分节号的页眉标签，再长一点" }), 1)
+    expect(root.querySelector("[data-manuscript-running-label]")).toBeNull()
+    expect(root.querySelector("[data-dropped-kind='label']")).not.toBeNull()
   })
 
-  it("content 与 ending 不画第二条金线", () => {
-    for (const slide of [contentSlide, endingSlide]) {
-      const { root } = draw("thesis", slide)
-      expect(root.querySelectorAll("line"), slide.type).toHaveLength(0)
-      expect(root.querySelectorAll("circle"), slide.type).toHaveLength(0)
-      expect(countDecorPieces(root), slide.type).toBe(0)
-    }
+  it("paints nothing on the cover, a chapter or the close, nor on a deck that asks for no footer", () => {
+    for (const i of [0, 2, 3]) expect(draw(four({ page_number: true, label: "标签" }), i).root.querySelector("text")).toBeNull()
+    expect(draw(deck([slideOf("content")], undefined), 0).root.querySelector("text")).toBeNull()
   })
 
-  it("退役五枚空心点与右上双线角标，没有孤立 tick", () => {
-    for (const slide of [coverSlide, chapterSlide, contentSlide, endingSlide]) {
-      const { root } = draw("thesis", slide)
-      expect(root.querySelectorAll("circle")).toHaveLength(0)
-      for (const l of Array.from(root.querySelectorAll("line"))) {
-        const span = Math.abs(num(l, "x2") - num(l, "x1"))
-        expect(span, `short isolated tick: ${l.outerHTML}`).toBeGreaterThanOrEqual(200)
-        expect(num(l, "x1")).not.toBeGreaterThanOrEqual(1200)
-      }
-    }
+  it("keeps to the decoration budget and the editable primitives, and paints the footer row itself", () => {
+    const { markup, root } = draw(four({ page_number: true, label: "标签" }), 1)
+    expect(countDecorPieces(root)).toBeLessThanOrEqual(3)
+    expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
+    expect(MOTIF_FOOTER_ROLES["rail-motif"]).toBe("row")
   })
 
-  it("件数不超过预算，叶子都包在 data-decor-piece 里", () => {
-    for (const slide of [coverSlide, chapterSlide, contentSlide, endingSlide]) {
-      const { root } = draw("thesis", slide)
-      expect(countDecorPieces(root)).toBeLessThanOrEqual(MAX_DECOR_PIECES)
-      for (const el of Array.from(root.querySelectorAll("line,circle,rect"))) {
-        expect(el.closest(`[${DECOR_PIECE_ATTR}]`), el.outerHTML).toBeTruthy()
-      }
-    }
-  })
-
-  it("换一家 tokens 渲染时颜色跟着换，thesis 的色一处不残留", () => {
-    const brief = resolveStyle("brief")
-    const ctx = buildCtx(brief, {})
-    const { markup } = render(<RailMotif ir={ir("brief")} slide={coverSlide} ctx={ctx} />)
-    expect(markup).toContain(brief.colors.accent)
-    for (const hex of ["#F5F3EC", "#FCFBF6", "#0E6245", "#A8861D", "#23251F", "#62655B", "#DDD9C8"]) {
-      expect(markup, `thesis token ${hex} leaked into the brief render`).not.toContain(hex)
-    }
-  })
-
-  it("装饰位置写死：换 filename 输出逐字节不变", () => {
-    const ctx = boundThemeCtx("thesis", {})
-    const markups = new Set(
-      Array.from({ length: 12 }, (_, i) =>
-        renderSvgMarkup(
-          <RailMotif ir={{ ...ir("thesis"), filename: `probe-${i}.pptx` } as PptxIR} slide={coverSlide} ctx={ctx} />,
-        ),
-      ),
-    )
-    expect(markups.size).toBe(1)
-  })
-
-  it("Decor body passes subset validation", () => {
-    for (const slide of [coverSlide, chapterSlide, contentSlide, endingSlide]) {
-      expect(() => assertSubset(draw("thesis", slide).root)).not.toThrow()
+  it("takes another theme's tokens whole, and leaves none of thesis's colours", () => {
+    const { markup } = draw(four({ page_number: true, label: "标签" }, {}, "rally"), 1, "rally")
+    for (const hex of ["#F5F3EC", "#FCFBF6", "#0E6245", "#A8861D", "#23251F", "#62655B"]) {
+      expect(markup, `thesis token ${hex} leaked into the rally render`).not.toContain(hex)
     }
   })
 })

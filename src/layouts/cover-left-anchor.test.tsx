@@ -147,9 +147,9 @@ describe("LeftAnchorCover", () => {
 
     it("wraps to 3 lines and shrinks to fontSize=47 — matches fitHeadingLines(maxWidth=360) directly", () => {
       const reportedSlide: Slide = { type: "cover", heading: REPORTED_HEADING, components: [] } as Slide
-      const ctx = buildCtx(tokensWithoutCover("thesis"), {})
+      const ctx = buildCtx(tokensWithoutCover("brief"), {})
       const out = renderSvgMarkup(
-        <LeftAnchorCover ir={ir("thesis")} slide={reportedSlide} index={0} ctx={ctx} />,
+        <LeftAnchorCover ir={ir("brief")} slide={reportedSlide} index={0} ctx={ctx} />,
       )
       const root = parseSvgRoot(
         `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
@@ -159,8 +159,9 @@ describe("LeftAnchorCover", () => {
       )
       expect(titleLines.length).toBe(3)
       // bold-metrics fix (2026-07-24): 44, not the pre-fix 47 -- this
-      // heading renders `fontWeight="600"` (LeftAnchorCover.tsx), thesis's
-      // heading face resolves to Georgia, and Georgia Bold's real per-
+      // heading renders `fontWeight="600"` (LeftAnchorCover.tsx), brief's
+      // heading face resolves to Georgia (thesis's did until its 2026-10
+      // redesign moved it to Times New Roman), and Georgia Bold's real per-
       // character advances (the round-2 exact model, svg-text-layout.ts's
       // `GEORGIA_BOLD_EXACT`) size this line a hair larger than round 1's
       // class-average-plus-margin estimate did (43) -- this string's actual
@@ -187,9 +188,9 @@ describe("LeftAnchorCover", () => {
       const longer =
         "DSpark：让大规模语言模型推理速度提升 60-85% 的关键工程突破与实践路径"
       const longerSlide: Slide = { type: "cover", heading: longer, components: [] } as Slide
-      const ctx = buildCtx(tokensWithoutCover("thesis"), {})
+      const ctx = buildCtx(tokensWithoutCover("brief"), {})
       const out = renderSvgMarkup(
-        <LeftAnchorCover ir={ir("thesis")} slide={longerSlide} index={0} ctx={ctx} />,
+        <LeftAnchorCover ir={ir("brief")} slide={longerSlide} index={0} ctx={ctx} />,
       )
       const root = parseSvgRoot(
         `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
@@ -231,9 +232,9 @@ describe("LeftAnchorCover", () => {
       const RUN = "Brandxxxxxxxxxxxxxxx"
       const literalPin = `${RUN}：让工程团队将大模型推理性能提升`
       const literalSlide: Slide = { type: "cover", heading: literalPin, components: [] } as Slide
-      const ctx = buildCtx(tokensWithoutCover("thesis"), {})
+      const ctx = buildCtx(tokensWithoutCover("brief"), {})
       const out = renderSvgMarkup(
-        <LeftAnchorCover ir={ir("thesis")} slide={literalSlide} index={0} ctx={ctx} />,
+        <LeftAnchorCover ir={ir("brief")} slide={literalSlide} index={0} ctx={ctx} />,
       )
       const root = parseSvgRoot(
         `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
@@ -263,8 +264,8 @@ describe("LeftAnchorCover", () => {
       const RUN = "Brandxxxxxxxxxxx"
       const heading16 = `${RUN}：让工程团队将大模型推理性能提升`
       const slide16: Slide = { type: "cover", heading: heading16, components: [] } as Slide
-      const ctx = buildCtx(tokensWithoutCover("thesis"), {})
-      const out = renderSvgMarkup(<LeftAnchorCover ir={ir("thesis")} slide={slide16} index={0} ctx={ctx} />)
+      const ctx = buildCtx(tokensWithoutCover("brief"), {})
+      const out = renderSvgMarkup(<LeftAnchorCover ir={ir("brief")} slide={slide16} index={0} ctx={ctx} />)
       const root = parseSvgRoot(
         `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
       )
@@ -294,9 +295,9 @@ describe("LeftAnchorCover", () => {
       const RUN = "OpenAPIGateway"
       const fusedHeading = "统一接入层OpenAPIGateway让跨团队协作效率显著提升"
       const fusedSlide: Slide = { type: "cover", heading: fusedHeading, components: [] } as Slide
-      const ctx = buildCtx(tokensWithoutCover("thesis"), {})
+      const ctx = buildCtx(tokensWithoutCover("brief"), {})
       const out = renderSvgMarkup(
-        <LeftAnchorCover ir={ir("thesis")} slide={fusedSlide} index={0} ctx={ctx} />,
+        <LeftAnchorCover ir={ir("brief")} slide={fusedSlide} index={0} ctx={ctx} />,
       )
       const root = parseSvgRoot(
         `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${out}</svg>`,
