@@ -545,8 +545,8 @@ if (schemaDoc.$defs?.IconName?.type !== "string" || schemaDoc.$defs?.IconName?.e
 const componentDoc = JSON.parse(sh("node", ["dist/cli.js", "schema", "--component", "callout", "--pretty"])) as { component?: string; $defs?: Record<string, unknown> }
 // A slice carries the shared definitions its component uses and no others:
 // a callout's icon and its tag.
-if (componentDoc.component !== "callout" || Object.keys(componentDoc.$defs ?? {}).sort().join() !== "IconName,Tag") {
-  throw new Error(`e2e: schema leg — expected callout's slice with only IconName and Tag in $defs, got ${JSON.stringify(Object.keys(componentDoc.$defs ?? {}))}`)
+if (componentDoc.component !== "callout" || Object.keys(componentDoc.$defs ?? {}).sort().join() !== "IconName,Tag,Tone") {
+  throw new Error(`e2e: schema leg — expected callout's slice with only IconName, Tag and Tone in $defs, got ${JSON.stringify(Object.keys(componentDoc.$defs ?? {}))}`)
 }
 const kindDoc = JSON.parse(sh("node", ["dist/cli.js", "schema", "--kind", "fact", "--theme", "brief"])) as { components?: string[] }
 if ([...(kindDoc.components ?? [])].sort().join() !== "kpi_cards,paragraph") {
