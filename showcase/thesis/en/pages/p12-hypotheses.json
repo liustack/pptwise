@@ -1,0 +1,46 @@
+{
+  "stage": "Design",
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "arrow-up-right",
+          "title": "H1: More work past the old age",
+          "tag": {
+            "text": "Expected +"
+          },
+          "text": "People past the old age but short of the new one are more likely in work. Ground: the six studies on page 8"
+        },
+        {
+          "icon": "git-fork",
+          "title": "H2: Some go into unemployment",
+          "tag": {
+            "text": "Expected +"
+          },
+          "text": "Fewer retirements do not all become work. Article 7 keeps benefits to the new age. Ground: Rabaté and Rochut (2020), Article 7"
+        },
+        {
+          "icon": "arrow-down-right",
+          "title": "H3: Less grandchild care",
+          "tag": {
+            "text": "Expected −"
+          },
+          "text": "Women who retired at 50 now work five more years, and their care time is squeezed most. Ground: Feng and Zhang (2018), Feng and Han (2017)"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "img-grandparent",
+      "fit": "cover",
+      "caption": "Illustration: collecting a grandchild (AI-generated)"
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Directions only, no sizes: a 5 to 8 month dose by end-2026 may be too small to detect"
+    }
+  ],
+  "notes": "Three hypotheses, each stated as a direction only. H1: employment rises past the former age. People who have passed the former statutory age but not reached the new one are more likely to be employed than people of the same age under the old rules. The basis is the six comparable studies on page 8, all positive. An IFS report from 2025 also finds that in the UK all of the extra employment came from women still working at 58, so I will split the sample by work status before the former age. H2: lower retirement does not all turn into work, and unemployment rises. In France retirement fell 47.8 points and employment took only 20.9. In the Netherlands, Rabaté, Jongen and Atav find disability up 12.7. In China, Article 7 of the Measures extends unemployment benefit up to the statutory age, a ready channel. H3: women's grandchild care falls. Feng and Zhang find retirement raises women's probability of caring by 29 points. Feng and Han, World Economy 2017, simulate with CHARLS that raising women's retirement age to 55 would cut care among women aged 51 to 60 by 12 points. Women formerly retiring at 50 must work five more years and lose the most care time. I do not predict sizes. By the end of 2026 the dose is five to eight months, the effects may be too small to detect, and I will report that honestly. The photo is an AI-generated illustration."
+}

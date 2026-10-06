@@ -1,0 +1,104 @@
+{
+  "stage": "Literature",
+  "components": [
+    {
+      "type": "data_table",
+      "title": "Change in employment and retirement in the affected age window after the pension age rose (points)¹",
+      "columns": [
+        {
+          "key": "s",
+          "label": "Country · study"
+        },
+        {
+          "key": "r",
+          "label": "Reform"
+        },
+        {
+          "key": "t",
+          "label": "Measured"
+        },
+        {
+          "key": "e",
+          "label": "Employment",
+          "align": "right",
+          "emphasis": true
+        },
+        {
+          "key": "x",
+          "label": "Retirement",
+          "align": "right"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "s": "Austria · Staubli and Zweimüller 2013",
+            "r": "Men 60→62, women 55→58.25",
+            "t": "Affected window",
+            "e": "Men +9.8 / women +11.0",
+            "x": "−24.8 / −25.4"
+          }
+        },
+        {
+          "cells": {
+            "s": "UK · Cribb et al. 2016",
+            "r": "Women 60→61",
+            "t": "At 60",
+            "e": "+6.3",
+            "x": "−11.5"
+          }
+        },
+        {
+          "cells": {
+            "s": "France · Rabaté and Rochut 2020",
+            "r": "Minimum age 60→61",
+            "t": "At 60",
+            "e": "+20.9",
+            "x": "−47.8"
+          }
+        },
+        {
+          "cells": {
+            "s": "Germany · Geyer and Welteke 2021",
+            "r": "Women born from 1952, 60→63",
+            "t": "Over 60",
+            "e": "+13.5",
+            "x": "−27.6"
+          },
+          "tag": {
+            "text": "Cited"
+          }
+        },
+        {
+          "cells": {
+            "s": "UK · Cribb et al. 2022",
+            "r": "Men and women 65→66",
+            "t": "At 65",
+            "e": "Men +7.4 / women +8.5",
+            "x": "Not reported"
+          },
+          "tag": {
+            "text": "Working paper",
+            "evidence": "preprint"
+          }
+        },
+        {
+          "cells": {
+            "s": "Netherlands · Rabaté et al. 2024",
+            "r": "65→66 and 4 months",
+            "t": "A month past the old age",
+            "e": "+21.2",
+            "x": "−59.5"
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Australia (Atalay and Barrett 2015) measures the yearly chance of retiring and stays out of the table. Morris (2022) finds the effect on women's participation falls by two thirds and loses significance once cohort trends are controlled²"
+    }
+  ],
+  "footnote": "Journal versions throughout. The German row is cited from Rabaté, Jongen and Atav (2024), table 6. UK 2022 is IFS Working Paper 22/07\nAtalay and Barrett, Review of Economics and Statistics 2015. Morris, Review of Economics of the Household 2022",
+  "notes": "International evidence. I put only studies with the same outcome in one table: the change in the probability of employment inside the eligibility window, in percentage points. Each row shows the size of the reform and when the effect was measured. Because these differ, I draw no forest plot with a common slope and compute no pooled mean. In order of publication: in Austria, Staubli and Zweimüller, Journal of Public Economics 2013, the early retirement age rose from 60 to 62 for men and from 55 to 58.25 for women, and employment rose 9.75 points for men and 11 for women. In the UK, Cribb, Emmerson and Tetlow, Labour Economics 2016, women's state pension age went from 60 to 61 and employment rose 6.3 points. In France, Rabaté and Rochut, Journal of Pension Economics and Finance 2020, the minimum claiming age went from 60 to 61 and employment at 60 rose 20.9 points. In Germany, Geyer and Welteke, Journal of Human Resources 2021, the early retirement age for women born from 1952 went from 60 to 63, and employment rose 13.5 points. I take that journal figure from Table 6 of Rabaté and coauthors 2024. In the UK, Cribb, Emmerson and O'Brien 2022, the state pension age went from 65 to 66 and employment at 65 rose 7.4 points for men and 8.5 for women. That paper is still an IFS working paper. In the Netherlands, Rabaté, Jongen and Atav, AEJ: Economic Policy 2024, the state pension age went from 65 to 66 and 4 months, and employment rose 21.2 points. Every study points the same way. Working paper and journal numbers often differ, for example Austria's working paper has 6.8 for men against 9.75 in the journal, so I always cite the journal version. Australia sits apart. Atalay and Barrett 2015 measure the fall in the probability of retiring per year of higher eligibility age, 12 to 19 points, which is a different outcome. And Morris 2022, using earlier data, finds that women's participation was already trending up by cohort before the reform. Once that trend is controlled, the effect on women's participation shrinks by about two-thirds and is no longer significant. That is a direct warning for my own design."
+}

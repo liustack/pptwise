@@ -1,0 +1,75 @@
+{
+  "stage": "Literature",
+  "components": [
+    {
+      "type": "matrix",
+      "title": "What the evidence covers (rows: where it comes from, columns: the question)",
+      "cols": 3,
+      "columns": [
+        "Employment effect",
+        "Where people go",
+        "Mechanisms: care, health, spending"
+      ],
+      "rows": [
+        {
+          "label": "Reforms abroad",
+          "icon": "globe"
+        },
+        {
+          "label": "China, old thresholds",
+          "icon": "landmark"
+        },
+        {
+          "label": "China, after the reform",
+          "icon": "circle-help"
+        }
+      ],
+      "items": [
+        {
+          "title": "Agree in direction, +6.3 to +21.2",
+          "tone": "info"
+        },
+        {
+          "title": "France unemployment +13.4, Netherlands disability +12.7",
+          "tone": "info"
+        },
+        {
+          "title": "Italy shows people acting ahead",
+          "tone": "info"
+        },
+        {
+          "title": "Retirement jumps are clear, few look at work itself",
+          "tone": "info"
+        },
+        {
+          "title": "None found in this search",
+          "empty": true
+        },
+        {
+          "title": "Care, health and spending well covered",
+          "tone": "info"
+        },
+        {
+          "title": "Blank",
+          "empty": true,
+          "tone": "accent"
+        },
+        {
+          "title": "Blank",
+          "empty": true,
+          "tone": "accent"
+        },
+        {
+          "title": "Only projections, simulations and opinion studies"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "The gap: no causal study on post-reform microdata, and both public datasets stop before the reform¹"
+    }
+  ],
+  "footnote": "The studies on pages 8 to 10, Zhao and Li (2025), searched to 6 October 2026",
+  "notes": "A map of the literature, with three outcomes across and three kinds of evidence down. Abroad, six comparable studies agree on the employment effect, the spillovers into unemployment and disability are clear in France, the Netherlands and Austria, and on mechanisms and demand there is Italy's forward-looking response and firm-level work. In China under the old rules, the retirement jump is well established, but causal studies of labor supply are few, my search found none on unemployment or disability spillovers, and there are more studies on care, health and spending. In the row for China after the reform, employment and spillovers are blank. What exists is projections, ex-ante simulations, social media sentiment analysis and broker estimates, for example Zhao and Li's 2025 projection in Exploration and Free Views. China Galaxy Securities estimates the reform adds 1 to 1.5 million urban workers a year at first. That is a research firm's estimate, not an official figure. The gap is that row: no causal evaluation after the reform, and public data that stop before it."
+}

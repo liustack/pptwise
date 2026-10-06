@@ -1,0 +1,26 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "img-archive"
+  },
+  "fields": [
+    {
+      "label": "Field",
+      "value": "Labour economics"
+    },
+    {
+      "label": "Degree",
+      "value": "Master of Economics"
+    },
+    {
+      "label": "Report",
+      "value": "Thesis proposal"
+    },
+    {
+      "label": "Date",
+      "value": "October 2026"
+    }
+  ],
+  "footnote": "Image is AI-generated and illustrative",
+  "notes": "Good morning. My proposal asks how China's gradual rise in the statutory retirement age affects labor force participation at ages 50 to 60. I start with the research question, then the policy and why it matters, the literature, my hypotheses, data and identification, the threats to identification and the timeline, and I end with four questions I would like the committee's advice on. The research has not started yet. Every figure in this deck comes from the policy texts, official statistics or published studies, and every data page names its source. None of them is a result of this study."
+}

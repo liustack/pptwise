@@ -1,0 +1,85 @@
+{
+  "stage": "Plan",
+  "components": [
+    {
+      "type": "gantt",
+      "range": {
+        "from": 0,
+        "to": 20
+      },
+      "axis_labels": [
+        "2026-10",
+        "",
+        "",
+        "2027-01",
+        "",
+        "",
+        "04",
+        "",
+        "",
+        "07",
+        "",
+        "",
+        "10",
+        "",
+        "",
+        "2028-01",
+        "",
+        "",
+        "04",
+        "",
+        ""
+      ],
+      "milestones": [
+        {
+          "at": 8.5,
+          "label": "Data gate · June 2027"
+        }
+      ],
+      "items": [
+        {
+          "label": "Literature and pre-reform picture",
+          "start": 0,
+          "end": 7,
+          "icon": "book-open",
+          "period": "2026-10 to 2027-04"
+        },
+        {
+          "label": "Old-threshold baseline",
+          "start": 4,
+          "end": 10,
+          "icon": "git-compare",
+          "period": "2027-02 to 2027-07"
+        },
+        {
+          "label": "Power analysis",
+          "start": 6,
+          "end": 9,
+          "icon": "sigma",
+          "period": "2027-04 to 2027-06"
+        },
+        {
+          "label": "Design 2 or a deeper baseline",
+          "start": 9,
+          "end": 15,
+          "icon": "git-fork",
+          "period": "2027-07 to 2027-12",
+          "basis": "pending"
+        },
+        {
+          "label": "Writing and defense",
+          "start": 11,
+          "end": 20,
+          "icon": "scroll-text",
+          "period": "2027-09 to 2028-05"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Past the gate: evaluate the reform on adjacent cohorts. Otherwise: write it up on the old-threshold baseline and the power analysis, 20 months in all"
+    }
+  ],
+  "notes": "The plan runs 20 months, from October 2026 to the defense in May 2028. The first half year covers the literature, the policy and the pre-reform profile. The first half of 2027 covers the old-threshold baseline and the power analysis. June 2027 is the data gate, when I check whether CHARLS or CFPS has released a post-reform wave. If so, the second half of 2027 goes to design 2, the adjacent-cohort comparison. If not, I deepen the baseline and the power analysis and the thesis rests on them. Either way, writing starts in September 2027, the pre-defense is in March 2028 and the defense in May."
+}

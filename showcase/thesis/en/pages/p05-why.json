@@ -1,0 +1,91 @@
+{
+  "stage": "Question",
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**23.0%**",
+          "label": "Share of the population aged 60 and over",
+          "tag": {
+            "text": "End of 2025¹"
+          }
+        },
+        {
+          "value": "−6.62m",
+          "label": "People aged 16 to 59, on a year earlier"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "img-exercise",
+      "fit": "cover",
+      "caption": "Illustration: morning exercise (AI-generated)"
+    },
+    {
+      "type": "chart",
+      "chart_type": "line",
+      "title": "Urban employee pensions: contributors ÷ retirees²",
+      "series": [
+        {
+          "name": "Ratio",
+          "data": [
+            {
+              "x": "2015",
+              "y": 2.87
+            },
+            {
+              "x": "2016",
+              "y": 2.75
+            },
+            {
+              "x": "2017",
+              "y": 2.65
+            },
+            {
+              "x": "2018",
+              "y": 2.55
+            },
+            {
+              "x": "2019",
+              "y": 2.53,
+              "note": "low"
+            },
+            {
+              "x": "2020",
+              "y": 2.57
+            },
+            {
+              "x": "2021",
+              "y": 2.65
+            },
+            {
+              "x": "2022",
+              "y": 2.69,
+              "note": "rebound"
+            },
+            {
+              "x": "2023",
+              "y": 2.67
+            },
+            {
+              "x": "2024",
+              "y": 2.63
+            },
+            {
+              "x": "2025",
+              "y": 2.59
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Not a steady fall: lowest in 2019, up in 2022, then down. A ratio of two head counts, not the dependency ratio"
+    }
+  ],
+  "footnote": "National Bureau of Statistics, Statistical Communiqué on the 2025 National Economic and Social Development\nMinistry of Human Resources and Social Security, statistical bulletins 2015 to 2025, ratio worked from them",
+  "notes": "Why this matters. On the left, the population: at the end of 2025, 323.38 million people were aged 60 or over, 23.0 percent of the total, and 15.9 percent were 65 or over. People aged 16 to 59 numbered 851.36 million, 6.62 million fewer than a year earlier. Life expectancy at birth reached 79.25 years in 2025. That is a National Health Commission figure, which I have seen only as reported by Xinhua and Science and Technology Daily. On the right is the ratio of contributing workers to retirees in the urban employee pension scheme, from 2015 to 2025. I computed it by dividing the two counts in the Ministry of Human Resources and Social Security's annual communiqués. The communiqués have no column called a dependency ratio, so I do not call it one. It was 2.87 in 2015 and 2.59 in 2025, but it did not fall steadily: it bottomed at 2.53 in 2019, rose back to 2.69 in 2022, and has fallen since. The National Bureau of Statistics and the ministry also differ by 80,000 on 2025 enrollment, 546.80 million against 546.72 million. The ratio uses the ministry's count. The photo is an AI-generated illustration."
+}

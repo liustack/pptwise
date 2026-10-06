@@ -1,0 +1,109 @@
+{
+  "stage": "Design",
+  "components": [
+    {
+      "type": "timeline",
+      "title": "Survey rounds against the reform (filled: released, hollow: carried out, not yet released)¹",
+      "lanes": [
+        "CHARLS: 45 and over, spouses",
+        "CFPS: whole households"
+      ],
+      "periods": [
+        {
+          "from": "2025",
+          "to": "2027",
+          "label": "Reform 2025-01-01"
+        }
+      ],
+      "milestones": [
+        {
+          "date": "2010",
+          "title": "2010",
+          "lane": "CFPS: whole households"
+        },
+        {
+          "date": "2011",
+          "title": "2011",
+          "lane": "CHARLS: 45 and over, spouses"
+        },
+        {
+          "date": "2012",
+          "title": "2012",
+          "lane": "CFPS: whole households"
+        },
+        {
+          "date": "2013",
+          "title": "2013",
+          "lane": "CHARLS: 45 and over, spouses"
+        },
+        {
+          "date": "2014",
+          "title": "2014",
+          "lane": "CFPS: whole households"
+        },
+        {
+          "date": "2015",
+          "title": "2015",
+          "lane": "CHARLS: 45 and over, spouses"
+        },
+        {
+          "date": "2016",
+          "title": "2016",
+          "lane": "CFPS: whole households"
+        },
+        {
+          "date": "2018",
+          "title": "2018",
+          "lane": "CHARLS: 45 and over, spouses"
+        },
+        {
+          "date": "2018",
+          "title": "2018",
+          "lane": "CFPS: whole households"
+        },
+        {
+          "date": "2020",
+          "title": "2020",
+          "lane": "CHARLS: 45 and over, spouses"
+        },
+        {
+          "date": "2020",
+          "title": "2020",
+          "lane": "CFPS: whole households"
+        },
+        {
+          "date": "2022",
+          "title": "2021-23 round",
+          "lane": "CHARLS: 45 and over, spouses",
+          "status": "pending"
+        },
+        {
+          "date": "2022",
+          "title": "2022",
+          "lane": "CFPS: whole households"
+        },
+        {
+          "date": "2024",
+          "title": "Round 8",
+          "lane": "CFPS: whole households",
+          "status": "pending"
+        },
+        {
+          "date": "2026",
+          "title": "Round 9 starts",
+          "lane": "CFPS: whole households",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "lock",
+      "title": "Data gate: June 2027",
+      "text": "Until a post-reform round is released, no policy effect is estimated, only the pre-reform picture and the old-threshold baseline. Past the gate, compare adjacent cohorts, otherwise deepen the baseline"
+    }
+  ],
+  "footnote": "CHARLS website and data portal (2020 data released 16 November 2023), CFPS website, 2022 data launch (2 November 2024) and round 9 notice (3 July 2026), checked to 6 October 2026",
+  "notes": "Data. Both public microdata sets stop before the reform. CHARLS, run by Peking University and Wuhan University, covers people aged 45 and over and their spouses. Its 2011 baseline had about 10,000 households and 17,000 people, and the latest public wave is 2020, released on 16 November 2023. The project page lists a 2021 to 2023 follow-up, but I found no release notice for it. CFPS interviews every member of the household. Its 2010 baseline had nearly 15,000 households and its public data run to 2022. The eighth wave was fielded in 2024 with no release notice yet, and the ninth wave only began fieldwork on 3 July 2026. So the proposal has to state a data gate: without post-reform data, no difference-in-differences estimate of the new policy. Before the gate, what can be done is a pre-reform profile and a discontinuity baseline at the old thresholds. CHARLS suits retirement, pension claiming, care and spouse effects. CFPS covers all ages and suits family spillovers, though in my judgment its detail on original statutory age and pension type is thinner than CHARLS."
+}

@@ -1,0 +1,57 @@
+{
+  "stage": "文献与缺口",
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "icon": "door-open",
+          "label": "退休率跳升",
+          "tag": {
+            "text": "个百分点 · 退休率"
+          },
+          "source": "雷晓燕、谭力、赵耀辉 2010 · 《经济学（季刊）》",
+          "note": "2005 年 1% 抽样，断点回归加工具变量",
+          "value": "男 60 岁 +7 至 11　女 50 岁 +8 至 13"
+        },
+        {
+          "icon": "baby",
+          "label": "隔代照料",
+          "tag": {
+            "text": "个百分点 · 照料概率"
+          },
+          "source": "Feng 和 Zhang 2018 · Feminist Economics",
+          "note": "CHARLS 2011、2013，法定年龄识别",
+          "value": "女 +29　男 +21"
+        },
+        {
+          "icon": "heart-pulse",
+          "label": "自评健康",
+          "tag": {
+            "text": "个百分点 · 「一般或差」"
+          },
+          "source": "Che 和 Li 2018 · China Economic Review",
+          "note": "CHNS，以法定年龄为工具变量",
+          "value": "白领 −34"
+        },
+        {
+          "icon": "shopping-basket",
+          "label": "消费",
+          "tag": {
+            "text": "非耐用品支出"
+          },
+          "source": "Li、Shi 和 Wu 2015 · AER Papers & Proceedings",
+          "note": "城镇住户调查，断点回归",
+          "value": "−20%"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "四项的结果变量和单位各不相同，不比大小。识别的都是旧制度下 50、55、60 岁的跳跃¹"
+    }
+  ],
+  "footnote": "四项均为同行评审期刊版，数字已核",
+  "notes": "中国已有的研究，识别的都是旧制度下 50、55、60 岁的跳跃，不是新政效果。四项的单位各不相同，所以不按大小排。第一阶段：雷晓燕、谭力、赵耀辉 2010 年发表在《经济学（季刊）》，用 2005 年 1% 人口抽样的城市户口样本，男性到 60 岁退休率跳升 7 到 11 个百分点，女性到 50 岁跳升 8 到 13 个百分点，到 55 岁只有 2 到 3 个百分点。跳升不大，说明到龄并不等于退休，也说明模糊断点是合适的框架。照料：Feng 和 Zhang 2018 年 Feminist Economics，用 CHARLS，退休后提供隔代照料的概率女性上升 29 个百分点，男性 21 个百分点。健康：Che 和 Li 2018 年 China Economic Review，用 CHNS，白领退休后自评健康一般或差的概率下降 34 个百分点。消费：Li、Shi、Wu 2015 年 AER P&P，用城镇住户调查，退休使非耐用品支出下降 20%。直接看劳动供给的因果研究反而少，多数研究看健康、消费和照料。"
+}

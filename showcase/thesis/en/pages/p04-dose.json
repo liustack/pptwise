@@ -1,0 +1,62 @@
+{
+  "stage": "Question",
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "x_unit": "months"
+      },
+      "series": [
+        {
+          "name": "End of 2025",
+          "data": [
+            {
+              "x": "Men and women formerly 55",
+              "y": 3
+            },
+            {
+              "x": "Women formerly 50",
+              "y": 4
+            }
+          ]
+        },
+        {
+          "name": "End of 2026",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "Men and women formerly 55",
+              "y": 5
+            },
+            {
+              "x": "Women formerly 50",
+              "y": 8
+            }
+          ]
+        },
+        {
+          "name": "In full",
+          "data": [
+            {
+              "x": "Men and women formerly 55",
+              "y": 36
+            },
+            {
+              "x": "Women formerly 50",
+              "y": 60
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "A small dose: two years in, at most a seventh of the full change has happened, the hardest constraint on identification¹"
+    }
+  ],
+  "footnote": "Worked from Annexes 1 to 3: a man born in September 1965 retires in December 2025, 3 months later, and one born in July 1966 in December 2026, 5 months later",
+  "notes": "This is the biggest constraint on the whole design. From the official tables, people who had reached retirement age by the end of 2025 had been delayed by at most three months, men and women formerly retiring at 55, or four months, women formerly retiring at 50. By the end of 2026 it is five and eight months. A man born in July 1966 retires in December 2026, five months later than under the old rule, and a woman born in April 1976 who would have retired at 50 retires eight months later. The full phase-in is 36 to 60 months, so only a small first step has happened. For the study this means a small treatment dose. CHARLS and CFPS interview roughly every two years, so few people fall inside a window of a few months, and statistical power will be tight. That is why I run the power analysis before any estimation. Page 15 comes back to it."
+}

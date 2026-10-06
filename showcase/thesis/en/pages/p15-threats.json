@@ -1,0 +1,59 @@
+{
+  "stage": "Design",
+  "components": [
+    {
+      "type": "comparison",
+      "title": "Threats to identification and the answers",
+      "label_column": "Threat",
+      "columns": [
+        "Why it matters",
+        "Answer"
+      ],
+      "rows": [
+        {
+          "label": "Small dose",
+          "icon": "hourglass",
+          "emphasis": true,
+          "cells": [
+            "At most 5 to 8 months by the end of 2026, few people in the window",
+            "Power analysis first, reporting the smallest detectable effect"
+          ]
+        },
+        {
+          "label": "Parallel trends fail",
+          "icon": "git-compare",
+          "cells": [
+            "Morris (2022) on Australia: the effect falls by two thirds with cohort trends",
+            "An event study over many periods, with birth-cohort trends"
+          ]
+        },
+        {
+          "label": "Anticipation",
+          "icon": "calendar-range",
+          "cells": [
+            "Three and a half months between the Decision and its start",
+            "Test whether people short of the age changed after September 2024"
+          ]
+        },
+        {
+          "label": "Other policies",
+          "icon": "layers",
+          "cells": [
+            "Flexible retirement, longer unemployment benefit, more contribution years from 2030",
+            "Separate estimates for work, unemployment and claiming, sample ending 2029"
+          ]
+        },
+        {
+          "label": "Who is covered",
+          "icon": "user-round",
+          "cells": [
+            "Only urban employees are bound, and whether a woman was under 50 or 55 is hard to tell",
+            "Rebuild it from occupation, employer and scheme, with sensitivity checks"
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "The Decision, the Measures and their annexes (13 September 2024), Morris (2022), Atalay and Barrett (2015)",
+  "notes": "Five threats to identification, and the first is the hardest to get around. Small dose: by the end of 2026 people reaching retirement age are delayed five to eight months at most, surveys come round about every two years, and few people fall inside that window. So I run a power analysis first, report the minimum detectable effect, and if nothing is detectable I say so. Parallel trends: Morris 2022 re-estimated Atalay and Barrett's 2015 Australian study and found women's participation was already rising by cohort before the reform. Controlling for that trend cut the effect by about two-thirds. My response is an event study on several pre-reform waves with cohort trends included. Anticipation: the Decision was published on 13 September 2024 and took effect on 1 January 2025, only three and a half months later. Geyer and Welteke found no anticipation before 60 in Germany, but I will test whether people approaching the age changed course early. Other policies: flexible early retirement weakens the first stage, Article 7 opens an unemployment channel, and the minimum contribution period starts rising in 2030. Ending the sample in 2029 avoids that last one. Who is covered: the rules bind only people in the urban employee pension scheme, and whether a woman's former age was 50 or 55 depends on her original statutory age, which surveys do not always record, so I rebuild it from occupation and employer type. Outcome definitions also need care: the census counts one hour of paid work as employment, while CHARLS has its own threshold for farm work."
+}

@@ -1,0 +1,37 @@
+{
+  "stage": "Plan",
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "lock",
+          "title": "Q1: If the gate stays shut",
+          "text": "No post-reform data by June 2027: can the baseline and power analysis carry the thesis?"
+        },
+        {
+          "icon": "users",
+          "title": "Q2: Which control group",
+          "text": "Adjacent cohorts only, or also members of the residents' pension scheme the rules do not bind?"
+        },
+        {
+          "icon": "target",
+          "title": "Q3: How many outcomes",
+          "text": "Work, unemployment, claiming and grandchild care, or work alone?"
+        },
+        {
+          "icon": "user-round",
+          "title": "Q4: Telling the women apart",
+          "text": "Is rebuilding the 50 or 55 rule from occupation and employer acceptable?"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "img-notebook",
+      "fit": "cover",
+      "caption": "Illustration: a sketch in a notebook (AI-generated)"
+    }
+  ],
+  "notes": "I would value the committee's advice on four questions. First, if no post-reform data are public by June 2027, is a thesis built on the pre-reform profile, the old-threshold baseline and the power analysis acceptable for the degree? Second, should the control group be adjacent cohorts only, or should it add members of the urban and rural residents' pension scheme, whom the new rules do not bind? That sample is larger, but the two groups differ a great deal. Third, should I report employment, unemployment, pension claiming and grandchild care, or focus on employment first? Fourth, surveys do not always record whether a woman's original statutory age was 50 or 55. Is rebuilding it from occupation and employer type acceptable? The photo is an AI-generated illustration."
+}

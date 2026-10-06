@@ -1,0 +1,26 @@
+{
+  "stage": "Question",
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "img-worker",
+      "fit": "cover",
+      "caption": "Illustration: an older worker on a shop floor (AI-generated)"
+    },
+    {
+      "type": "paragraph",
+      "text": "Are people past the old statutory age but short of the new one more likely to be in work?¹"
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "Who: Urban employees aged 50 to 60",
+        "Q1: Does work rise past the old age?",
+        "Q2: Work, unemployment or care?",
+        "Adds: The first post-reform causal study"
+      ]
+    }
+  ],
+  "footnote": "Searched to 6 October 2026: no causal study on post-reform microdata was found (three searches agree)",
+  "notes": "There is one research question: does the gradual rise in the statutory retirement age keep urban workers aged 50 to 60 in work? It splits in two. First, are people who have passed their old retirement age but not yet reached the new one more likely to be employed? Second, where do the months of delayed pension go: into work, into unemployment, or out of the time they used to spend caring for grandchildren? The expected contribution is that, as far as I could find up to 6 October 2026, no study has yet used post-reform microdata to estimate the causal effect, so this would be the first. But I need to be clear about the limit up front: whether I can estimate the new policy's effect depends on when post-reform survey data are released. Page 13 sets out that data gate. The photo is an AI-generated illustration."
+}
