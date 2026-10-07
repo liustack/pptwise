@@ -405,7 +405,9 @@ interface PaintedShape {
 
 /** Axis-aligned rect containment — shared by `<rect>`/`<image>`/`<path>`/
  * `<polygon>` (the last two via `pathBoundingBox`/`polygonBoundingBox`'s own
- * bbox, see each function's doc comment). For `<path>`/`<polygon>`/`<image>`
+ * bbox, see each function's doc comment, and only where no exact outline is
+ * registered: a solid `<polygon>` and a `<path>` of straight segments go
+ * through `polygonShape` instead). For `<path>`/`<polygon>`/`<image>`
  * this is the shape's *bounding box*, never its outline, even where the bbox
  * itself is now tight/exact (line and arc geometry) rather than an
  * over-approximation. For `<rect>` the box **is** the outline — except at a
@@ -1050,6 +1052,80 @@ function polygonShape(pts: readonly [number, number][], fill: string | null): Pa
   }
 }
 
+/**
+ * The vertices of a `<path>` drawn in straight segments only (`M`/`L`/`H`/
+ * `V`/`Z`, absolute or relative) as one subpath, or `null` for anything
+ * else: a curve, an arc, a second subpath, or a `d` the walk cannot read.
+ * Such a path paints exactly the polygon its vertices outline, filled as if
+ * closed whether or not it ends in `Z`, so `polygonShape` is its exact
+ * containment test. Its bounding box is not: horizon-wedge's navy wedge is a
+ * trapezoid with a slanted top, and its box reached up over the subtitle on
+ * the light page above it, grading gray on the page as gray on navy.
+ */
+function straightPathPoints(d: string): [number, number][] | null {
+  const tokens = tokenizePathD(d)
+  const pts: [number, number][] = []
+  let i = 0
+  let cmd = ""
+  let cx = 0
+  let cy = 0
+  let closed = false
+  const num = (): number => {
+    const t = tokens[i++]
+    if (t === undefined || /[a-zA-Z]/.test(t)) throw new Error("malformed")
+    const n = Number(t)
+    if (!Number.isFinite(n)) throw new Error("malformed")
+    return n
+  }
+  try {
+    while (i < tokens.length) {
+      // Anything after the close is a second subpath (or stray numbers).
+      if (closed) return null
+      if (/[a-zA-Z]/.test(tokens[i]!)) cmd = tokens[i++]!
+      else if (cmd === "M") cmd = "L"
+      else if (cmd === "m") cmd = "l"
+      else if (cmd === "") return null
+      const rel = cmd === cmd.toLowerCase()
+      switch (cmd.toUpperCase()) {
+        case "M": {
+          if (pts.length > 0) return null
+          const x = num()
+          const y = num()
+          cx = rel ? cx + x : x
+          cy = rel ? cy + y : y
+          break
+        }
+        case "L": {
+          const x = num()
+          const y = num()
+          cx = rel ? cx + x : x
+          cy = rel ? cy + y : y
+          break
+        }
+        case "H": {
+          const x = num()
+          cx = rel ? cx + x : x
+          break
+        }
+        case "V": {
+          const y = num()
+          cy = rel ? cy + y : y
+          break
+        }
+        case "Z":
+          closed = true
+          continue
+        default:
+          return null
+      }
+      pts.push([cx, cy])
+    }
+  } catch {
+    return null
+  }
+  return pts.length >= 3 ? pts : null
+}
+
 function polygonBoundingBox(pointsAttr: string): { x: number; y: number; w: number; h: number } | null {
   const nums = pointsAttr
     .trim()
@@ -1085,13 +1161,13 @@ function polygonBoundingBox(pointsAttr: string): { x: number; y: number; w: numb
  * exact extrema (derivative roots for curves, endpoint -> center
  * parameterization for arcs — see `pathBoundingBoxByGrammar`'s own doc
  * comment). Still not a true path-*outline* bbox in the "is this pixel
- * actually inside the filled shape" sense (a concave polygon's bbox covers
- * area outside the shape) — `rectShape`'s own doc comment already covers
- * why that's fine here: every caller tests containment against this
- * function's bbox, never the path's exact outline, and the one large
- * opaque non-decor `<path>` background this renderer draws
- * (`cover-split-diagonal.tsx`'s straight-edged colour panel) has vertices
- * that *are* its extremes, so the bbox is exact there regardless.
+ * actually inside the filled shape" sense: a slanted or concave shape's box
+ * covers area outside it. Attribution therefore does not use this box for
+ * a path drawn in straight segments, which registers its own outline
+ * (`straightPathPoints`). A box with vertices at its extremes is still not
+ * the shape when an edge is slanted, as `cover-split-diagonal.tsx`'s panel
+ * and horizon-wedge's wedge both are. This box remains the containment test
+ * for curved paths and the geometry of the page-level `regions` table.
  *
  * Falls back to `pathBoundingBoxByTokenMinMax` (the pre-fix behavior) only
  * for a `d` string the grammar walk can't parse — genuinely malformed
@@ -1870,6 +1946,9 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
           localH = bbox.h
         }
         localWedge = parseWedgePath(dAttr)
+        // A path of straight segments registers its own outline, the same
+        // exact test a `<polygon>` gets, instead of its bounding box.
+        if (!localWedge) localPolyPts = straightPathPoints(dAttr)
       } else if (tag === "polygon") {
         localPolyPts = polygonPoints(el.getAttribute("points") ?? "")
         // sweep2 T4: `<polygon>` joins the registration gate here (it used
@@ -1967,8 +2046,8 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
                   resolvedFill,
                 ),
               )
-            } else if (tag === "polygon" && localPolyPts && resolvedFill !== null) {
-              // 实色 polygon：精确轮廓注册（压字归因可用）。
+            } else if (localPolyPts && resolvedFill !== null) {
+              // 实色 polygon 与直边 path：精确轮廓注册（压字归因可用）。
               paintedShapes.push(
                 polygonShape(localPolyPts.map(([px, py]) => [ax + px * as, ay + py * as] as [number, number]), resolvedFill),
               )
