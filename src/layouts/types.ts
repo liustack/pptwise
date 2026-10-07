@@ -104,6 +104,8 @@ export type CoverLayoutId =
   | "manuscript-cover"
   // journal sample redesign (2026-10-07): a small magazine's cover beside a photograph.
   | "periodical-cover"
+  // ink sample redesign (2026-10-07): a title slip hung beside a photograph.
+  | "scroll-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -155,6 +157,8 @@ export type ChapterLayoutId =
   | "binder-chapter"
   // thesis sample redesign (2026-10-06): a section of a thesis with the talk's contents.
   | "manuscript-chapter"
+  // ink sample redesign (2026-10-07): a volume opens beside its mounted painting.
+  | "scroll-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -210,6 +214,8 @@ export type EndingLayoutId =
   | "manuscript-ending"
   // journal sample redesign (2026-10-07): a magazine's afterword and its sign-off.
   | "periodical-ending"
+  // ink sample redesign (2026-10-07): the scroll's colophon and seal.
+  | "scroll-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -285,6 +291,10 @@ export type ContentLayoutId =
   | "periodical-sheet"
   // journal sample redesign: the board's quotation page. Theme-locked.
   | "periodical-quote"
+  // ink sample redesign: the board's ordinary content page. Theme-locked.
+  | "scroll-sheet"
+  // ink sample redesign: the board's quotation page. Theme-locked.
+  | "scroll-quote"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

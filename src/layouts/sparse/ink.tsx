@@ -1,5 +1,4 @@
 import type { SvgTemplateProps } from "../types"
-import { footerOrganization } from "../../render/document-meta"
 import type { EmphasisSegment } from "../../render/emphasis"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import {
@@ -12,8 +11,9 @@ import {
 } from "../minimal-shared"
 import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
+import { verticalForm } from "../compositions/scroll"
 
-/** ink 稀排脸：竖排格言、验印巨数、竖排引文。引文页 motif 画左下半山、不画右缘落款列。 */
+/** ink 稀排脸：竖排格言、验印巨数、竖排引文。机构与年月由 ink-motif v2 竖排在右缘，脸不再另画落款列。 */
 
 function VerticalRun({
   segments,
@@ -46,18 +46,25 @@ function VerticalRun({
     Array.from(seg.text).flatMap((ch) => {
       seen += 1
       if (seen === breakAt) return []
+      // Punctuation sits the way vertical type sets it: a comma or a full
+      // stop in the upper right of its cell, a bracket in its vertical form.
+      const form = verticalForm(ch)
+      const cx = Math.round((x + form.dx * size) * 100) / 100
+      const cy = Math.round((y + i * size + form.dy * size) * 100) / 100
+      const middle = Math.round((y + i * size - size * 0.38) * 100) / 100
       const el = (
         <text
           key={`${x}-${i}`}
-          x={x}
-          y={y + i * size}
+          x={cx}
+          y={form.turn ? Math.round((middle + size * 0.35) * 100) / 100 : cy}
+          transform={form.turn ? `rotate(90 ${cx} ${middle})` : undefined}
           textAnchor="middle"
           fontFamily={fontFamily}
           fontSize={size}
           fill={seg.emphasized ? accent : baseFill}
           dominantBaseline="alphabetic"
         >
-          {ch}
+          {form.ch}
         </text>
       )
       i += 1
@@ -66,7 +73,7 @@ function VerticalRun({
   )
 }
 
-export function statement({ ir, slide, ctx, page }: SvgTemplateProps) {
+export function statement({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const verse = slide.heading ?? ""
   const latin = !hasCjk(verse)
@@ -132,9 +139,9 @@ export function statement({ ir, slide, ctx, page }: SvgTemplateProps) {
   })
   const columns = heading.lines.slice(0, 2)
   const xs = [1000, 880]
-  // The organization is a footer mark on a content page: it prints only
-  // when the deck asks for it.
-  const org = footerOrganization(page, ir)
+  // The organization stands down the right margin with the date, where the
+  // motif sets it on every content page (ink-motif v2), so the page prints
+  // it once.
   return (
     <>
       <rect x={1042} y={110} width={18} height={66} fill={colors.accent} />
@@ -151,17 +158,6 @@ export function statement({ ir, slide, ctx, page }: SvgTemplateProps) {
           />
         </g>
       ))}
-      {org && (
-        <VerticalRun
-          segments={[{ text: org, emphasized: false }]}
-          x={180}
-          y={440}
-          size={20}
-          baseFill={colors.muted}
-          accent={colors.accent}
-          fontFamily={fonts.heading}
-        />
-      )}
       {cited && (
         <text
           data-truncated={cited.truncated ? "1" : undefined}

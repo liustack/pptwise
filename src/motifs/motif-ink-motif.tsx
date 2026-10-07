@@ -1,199 +1,91 @@
 import type { DecorProps } from "./types"
 import { DecorPiece } from "./decor-piece"
-import { leafRecessOpacity } from "./decor-budget"
-import { asciiDigitsToHan, CJK_DIGITS } from "../render/heading-treatments/labels"
-import { footerOrganization, showsDocumentMeta } from "../render/document-meta"
+import { SLIDE_NUMBER_FIELD } from "../render/footer"
+import { footerRowItems, footerRowWanted, resolveDeckFooter, type DeckFooter } from "../render/footer-marks"
+import { SCROLL_META, SCROLL_SPEC, joinColumnLabels, scrollBaseline, scrollInks, scrollMeta } from "../layouts/compositions/scroll"
+import { EDGES, ScrollHall, SCROLL_LEFT } from "../layouts/scroll-shared"
 
 /**
- * ink-motif（第八波批 2，沿用半山 + 落款列）。
+ * ink-motif v2 —— 挂起来的卷轴的边、右缘竖排的讲堂与年月、右下的页码，
+ * ink 2026-10 定稿重画（设计源 `design/rounds/2026-10-07-ink/`）。
  *
- * 马远式克制还在，按页型拆开，免得和板上的竖题、中轴印打架：
- *   - **封面**：只画左下半山。竖题占右，落款列（x≥1220）会撞，朱砂大方印
- *     归 `vertical-title-cover`，motif 不再画第二枚。
- *   - **章节**：整页退让。卷号、淡墨曲线归 `volume-slip-chapter`。
- *   - **内容**：右缘落款列留下（x≥1220），机构名 / 年月 / 列底小印。内容页
- *     没有版式印，这一列仍是 org 的唯一出场位置。
+ * **id 没改，画的东西整个换了**（同 corner-ornament-motif v3 的做法：id 是
+ * 注册表键，改名牵动 schema 与测试）。v1 的「封面左下半山 + 内容页右缘落款
+ * 列 + 列底小印」随定稿退役：半山与小印都是没人读的装饰，落款列里的年月是
+ * 从 `meta.date` 换算的汉字，英文 deck 也印成「二〇二六年十月」，机构名逐
+ * 字母竖排。
  *
- * 落款列里的字是页脚信息，不是装饰（2026-10-02 页脚裁决：默认不印页脚，
- * motif 不能借装饰之名印）。所以列线与小印照画，字只在 deck 要时出现：
- *   - 机构名：deck 的页脚要印机构名时（`footer.organization`，或旧式
- *     `branding: "full"`）。此时共享页脚那一行不再印机构名，这一列就是它
- *     的位置（`footer-roles.ts` 记为 `"organization"`）。
- *   - 年月：和封面、结尾页的日期同一个开关（`showsDocumentMeta`，即
- *     `branding: "full"`）。
- *   - **ending**：半山改右下（板上 path 从右缘进来）。中轴印归
- *     `seal-close-ending`，motif 不画落款列，避免和右下墨形叠在一起。
+ * 内容页：页面两侧各一道发丝线（x70、x1210，y40 到 y680），卷轴的边，总在。
+ * 右缘竖排 deck 的机构名接页脚的 `label`（作者写的年月，「文化讲堂」「二〇二六
+ * 年十月」），13px 灰褐、字距 6px，从 y48 起；拉丁文转九十度从上往下读，
+ * 不逐字母竖排。左缘竖排的卷名是页面的 `kicker`，归脸画。页码在右下，贴着
+ * 右边那道边（x1210 右对齐，y680 那一行），12px 楷书灰褐，是 PowerPoint 的
+ * 页码字段。左下是 `footer.notice`，页码左边是草稿和保密标记，11px 灰。本
+ * motif 在 `footer-roles.ts` 里记为 `"row"`：页脚这一行（连同 `organization`
+ * 和 `label`）由它来印，共享页脚让位。
  *
- * 竖排仍然是逐字 `<text>`（不用 `writing-mode`）。列容量由 `orgCapacity()`
- * 按几何倒推。零 theme id、零 hex，颜色全部来自 ctx。叶子走
- * 落款列与半山走 `leafRecessOpacity`。朱砂印是身份件，原色满画，不减淡。
- * 输出包进 `DecorPiece`。
+ * 封面、章节页和结尾页的脸自己画全，不要 motif。小字带 `scroll-spec` 豁免。
+ * 零 theme id、零 hex。
  */
 
-const RAIL_X = 1220
-const RAIL_Y1 = 64
-const RAIL_Y2 = 656
-const RAIL_STROKE = 1.2
+const FOLIO = { right: EDGES.right, top: 680, lineHeight: 20, size: 12, quiet: 11, gap: 16 } as const
 
-/** 逐字竖排的列心（`textAnchor="middle"`），与印章同一条中轴。 */
-const COLUMN_X = 1244
-const ORG_FIRST_Y = 88
-const ORG_STEP = 30
-const ORG_SIZE = 19
-const DATE_STEP = 26
-const DATE_SIZE = 17
-const BLOCK_GAP = 34
-const COLUMN_LAST_BASELINE = 596
-
-const SEAL_X = 1231
-const SEAL_Y = 614
-const SEAL_SIZE = 26
-const SEAL_RADIUS = 2
-const SEAL_INNER_SIZE = 17
-const SEAL_INNER_INSET = (SEAL_SIZE - SEAL_INNER_SIZE) / 2
-const SEAL_INNER_STROKE = 1.4
-
-/** 封面左下残山。几何写死，不读内容。 */
-const REMNANT_LEFT = "M -40 720 Q 140 640 330 690 Q 430 708 500 720 Z"
-/** ending 右下残山。板上 path 从右缘进来。 */
-const REMNANT_RIGHT = "M 1320 720 Q 1140 640 950 690 Q 850 708 780 720 Z"
-const REMNANT_OPACITY = 0.06
-
-/**
- * `ir.meta.date` → 竖排年月的逐字数组，如 `2026-08-15` → 二〇二六年八月。
- * 只认「四位年 + 非数字分隔 + 一到两位月」。读不懂就整块不画。
- */
-function colophonDateGlyphs(date: string | undefined): string[] {
-  const m = /^(\d{4})\D+(\d{1,2})(?:\D|$)/.exec(date ?? "")
-  if (!m) return []
-  const month = Number(m[2])
-  if (month < 1 || month > 12) return []
-  const monthGlyphs =
-    month < 10
-      ? [CJK_DIGITS[month]]
-      : month === 10
-        ? ["十"]
-        : ["十", CJK_DIGITS[month - 10]]
-  return [...asciiDigitsToHan(m[1]), "年", ...monthGlyphs, "月"]
+/** Whether this page carries the margin's words and the folio: the page decision first, the deck's own marks when rendered alone. */
+function drawsRow({ ir, slide, page }: DecorProps): boolean {
+  if (page) return page.footerRow === "motif"
+  return slide.type === "content" && footerRowWanted(footerRowItems(resolveDeckFooter(ir)))
 }
 
-function orgCapacity(dateGlyphCount: number): number {
-  const dateSpan = dateGlyphCount > 0 ? BLOCK_GAP + (dateGlyphCount - 1) * DATE_STEP : 0
-  const room = COLUMN_LAST_BASELINE - ORG_FIRST_Y - dateSpan
-  return Math.max(1, Math.floor(room / ORG_STEP) + 1)
-}
-
-function fitOrgGlyphs(org: string, capacity: number): { glyphs: string[]; truncated: boolean } {
-  const glyphs = [...org]
-  if (glyphs.length <= capacity) return { glyphs, truncated: false }
-  return { glyphs: glyphs.slice(0, capacity), truncated: true }
-}
-
-function Remnant({ d, ctx, slideType }: { d: string; ctx: DecorProps["ctx"]; slideType: string }) {
-  const bg = ctx.defaultBg ?? ctx.colors.bg
-  return (
-    <DecorPiece id="remnant">
-      <path
-        d={d}
-        fill={ctx.colors.primary}
-        opacity={leafRecessOpacity(slideType, ctx.colors.primary, bg, REMNANT_OPACITY)}
-      />
-    </DecorPiece>
-  )
-}
-
-function Seal({ ctx }: { ctx: DecorProps["ctx"] }) {
-  const { colors } = ctx
-  return (
-    <DecorPiece id="seal" role="identity">
-      <rect
-        x={SEAL_X}
-        y={SEAL_Y}
-        width={SEAL_SIZE}
-        height={SEAL_SIZE}
-        rx={SEAL_RADIUS}
-        fill={colors.accent}
-      />
-      <rect
-        x={SEAL_X + SEAL_INNER_INSET}
-        y={SEAL_Y + SEAL_INNER_INSET}
-        width={SEAL_INNER_SIZE}
-        height={SEAL_INNER_SIZE}
-        fill={colors.accent}
-        stroke={colors.surface}
-        strokeWidth={SEAL_INNER_STROKE}
-      />
-    </DecorPiece>
-  )
-}
-
-export function InkMotif({ slide, ir, ctx, page }: DecorProps) {
-  if (slide.type === "chapter") return null
-
-  if (slide.type === "cover") {
-    return <Remnant d={REMNANT_LEFT} ctx={ctx} slideType={slide.type} />
-  }
-
-  if (slide.type === "ending") {
-    return <Remnant d={REMNANT_RIGHT} ctx={ctx} slideType={slide.type} />
-  }
-
-  const { colors } = ctx
-  const dateGlyphs = showsDocumentMeta(page, ir, slide) ? colophonDateGlyphs(ir.meta.date) : []
-  const orgSource = footerOrganization(page, ir) ?? ""
-  const org = fitOrgGlyphs(orgSource, orgCapacity(dateGlyphs.length))
-  const orgLastY = ORG_FIRST_Y + Math.max(0, org.glyphs.length - 1) * ORG_STEP
-  const dateFirstY = org.glyphs.length > 0 ? orgLastY + BLOCK_GAP : ORG_FIRST_Y
-  const bg = ctx.defaultBg ?? colors.bg
-  const border = colors.border ?? colors.muted
-
+export function InkMotif(props: DecorProps) {
+  const { ir, slide, page, ctx } = props
+  if (slide.type !== "content") return null
+  const inks = scrollInks(ctx)
+  const row = drawsRow(props)
+  const footer: DeckFooter = page?.footer ?? resolveDeckFooter(ir)
+  const hall = row ? joinColumnLabels([footer.organization, footer.label]) : ""
   return (
     <>
-      <DecorPiece id="colophon">
-        <line
-          x1={RAIL_X}
-          y1={RAIL_Y1}
-          x2={RAIL_X}
-          y2={RAIL_Y2}
-          stroke={border}
-          strokeWidth={RAIL_STROKE}
-          opacity={leafRecessOpacity(slide.type, border, bg)}
-        />
-
-        {org.glyphs.map((ch, i) => (
-          <text
-            key={`org-${i}`}
-            data-contrast-tier="meta"
-            data-truncated={org.truncated && i === org.glyphs.length - 1 ? "1" : undefined}
-            x={COLUMN_X}
-            y={ORG_FIRST_Y + i * ORG_STEP}
-            fontFamily={ctx.fonts.heading}
-            fontSize={ORG_SIZE}
-            fill={colors.muted}
-            textAnchor="middle"
-            dominantBaseline="alphabetic"
-          >
-            {ch}
-          </text>
-        ))}
-
-        {dateGlyphs.map((ch, i) => (
-          <text
-            key={`date-${i}`}
-            data-contrast-tier="meta"
-            x={COLUMN_X}
-            y={dateFirstY + i * DATE_STEP}
-            fontFamily={ctx.fonts.heading}
-            fontSize={DATE_SIZE}
-            fill={colors.muted}
-            textAnchor="middle"
-            dominantBaseline="alphabetic"
-          >
-            {ch}
-          </text>
-        ))}
+      <DecorPiece id="edges" role="structure">
+        <rect x={EDGES.left - EDGES.w / 2} y={EDGES.top} width={EDGES.w} height={EDGES.bottom - EDGES.top} fill={inks.line} />
+        <rect x={EDGES.right - EDGES.w / 2} y={EDGES.top} width={EDGES.w} height={EDGES.bottom - EDGES.top} fill={inks.line} />
       </DecorPiece>
-      <Seal ctx={ctx} />
+      {hall ? (
+        <DecorPiece id="hall" role="structure">
+          <ScrollHall text={hall} ctx={ctx} />
+        </DecorPiece>
+      ) : null}
+      {row ? (
+        <DecorPiece id="folio" role="structure">
+          <ScrollFolio {...props} footer={footer} />
+        </DecorPiece>
+      ) : null}
     </>
+  )
+}
+
+/** The folio: the page number against the right edge, the notice at the left, the draft and confidentiality marks before the number. */
+function ScrollFolio({ ir, slide, ctx, index, footer }: DecorProps & { footer: DeckFooter }) {
+  const inks = scrollInks(ctx)
+  const meta = scrollMeta(inks.taupe, inks.ground)
+  const quiet = scrollMeta(inks.muted, inks.ground)
+  const quietY = scrollBaseline(FOLIO.top, FOLIO.lineHeight, FOLIO.quiet)
+  const y = scrollBaseline(FOLIO.top, FOLIO.lineHeight, FOLIO.size, true)
+  const pageIndex = index ?? Math.max(0, ir.slides.indexOf(slide))
+  const rightText = [footer.draft, footer.confidentiality?.placement === "footer" ? footer.confidentiality.text : null].filter((part): part is string => Boolean(part)).join(" · ")
+  const quietText = (content: string, x: number, anchor: "start" | "end") => (
+    <text {...SCROLL_SPEC} {...SCROLL_META} x={x} y={quietY} textAnchor={anchor === "end" ? "end" : undefined} fontFamily={ctx.fonts.body} fontSize={FOLIO.quiet} fill={quiet} dominantBaseline="alphabetic">
+      {content}
+    </text>
+  )
+  return (
+    <g data-footer="row">
+      {footer.notice ? quietText(footer.notice, SCROLL_LEFT, "start") : null}
+      {rightText ? quietText(rightText, FOLIO.right - (footer.pageNumber ? 40 : 0) - (footer.pageNumber ? FOLIO.gap : 0), "end") : null}
+      {footer.pageNumber ? (
+        <text {...SCROLL_SPEC} {...SCROLL_META} data-field={SLIDE_NUMBER_FIELD} x={FOLIO.right} y={y} textAnchor="end" fontFamily={ctx.fonts.heading} fontSize={FOLIO.size} fill={meta} dominantBaseline="alphabetic">
+          {String(pageIndex + 1)}
+        </text>
+      ) : null}
+    </g>
   )
 }

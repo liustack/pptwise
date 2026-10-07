@@ -190,6 +190,20 @@ export type CompositionId =
   | "effects"
   | "longform"
   | "pledges"
+  | "opening"
+  | "strata"
+  | "handscroll"
+  | "revival"
+  | "nations"
+  | "genres"
+  | "bases"
+  | "ages"
+  | "archive"
+  | "scenes"
+  | "daily"
+  | "excerpts"
+  | "glyphs"
+  | "statute"
 
 /**
  * The type a composition sets its page in.
@@ -370,10 +384,31 @@ export type CompositionId =
  *   under a pull quote, and plans numbered beside a photograph. See
  *   `./periodical.tsx`.
  *
+ * - `scroll`: ink's 2026-10 board. A public lecture hung as a scroll: rice
+ *   paper, ink for words and the darkest marks, a ramp of greys from the ink
+ *   to the paper for what is told apart by depth, and cinnabar (the theme's
+ *   accent) once a page on large type or the one thing the page is about.
+ *   Titles, figures and the lines a page reads aloud are set in the heading
+ *   face, labels and sources in the body sans, nothing slanted, and Chinese
+ *   may stand upright down a column with its punctuation in vertical form. A
+ *   composition offered this setting places the page's claim (`claim`) and
+ *   its source (`source`) itself, over the body or beside a photograph that
+ *   runs the height of the page, and draws the shapes that board drew and no
+ *   other did: three figures over a line read aloud, a pyramid of tiers with
+ *   what each holds beside it, a long scroll of years to scale with its
+ *   running count, two figures beside a photograph, countries as bars beside
+ *   how they are counted, items and their sub-items as twin bars, batches
+ *   beside a table of counts that must not be added, a share bar of ages
+ *   with its run bracketed, two figures and a progress bar beside a
+ *   photograph, three photographs over four figures, a table by the day
+ *   beside a photograph, quoted findings with their sources, five large
+ *   characters each over its column of words, and a statute set upright.
+ *   See `./scroll.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */
@@ -432,9 +467,21 @@ export interface CompositionProps {
    * composition declines. Handed down by a face whose board lets a
    * composition move the claim beside a photograph (journal's periodical
    * sheet): the band it hands starts at the top of the claim's box rather
-   * than under the claim, and a composition offered it draws it once.
+   * than under the claim, and a composition offered it draws it once. A
+   * board that sets the claim larger beside a photograph names its `size`
+   * and the `foot` its last line ends on; a face whose board has one claim
+   * size reads neither.
    */
-  claim?: (column: { x: number; w: number }) => React.ReactElement | null
+  claim?: (column: { x: number; w: number; size?: number; foot?: number }) => React.ReactElement | null
+  /**
+   * The page's source line, drawn by the face's own rules into the column a
+   * composition gives it (`x` from the band's left, `w` its measure), or
+   * `null` when it does not fit that column, in which case the composition
+   * declines. Handed down only when the page has a source, by a face whose
+   * board moves the source under the column beside a photograph (ink's
+   * scroll sheet); a composition offered it draws it once.
+   */
+  source?: (column: { x: number; w: number }) => React.ReactElement | null
 }
 
 export interface CompositionInks {

@@ -511,6 +511,23 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "journal", kind: "comparison", composition: "effects" },
   { theme: "journal", kind: "points", composition: "longform" },
   { theme: "journal", kind: "list", composition: "pledges" },
+  // ink's scroll sheet sets the shapes as a public lecture hung as a scroll
+  // sets them, and draws the thirteen its own board added; its quotation
+  // page sets the statute upright.
+  { theme: "ink", kind: "points", composition: "opening" },
+  { theme: "ink", kind: "hierarchy", composition: "strata" },
+  { theme: "ink", kind: "process", composition: "handscroll" },
+  { theme: "ink", kind: "photo", composition: "revival" },
+  { theme: "ink", kind: "comparison", composition: "nations" },
+  { theme: "ink", kind: "data", composition: "genres" },
+  { theme: "ink", kind: "list", composition: "bases" },
+  { theme: "ink", kind: "data", composition: "ages" },
+  { theme: "ink", kind: "photo", composition: "archive" },
+  { theme: "ink", kind: "data", composition: "scenes" },
+  { theme: "ink", kind: "photo", composition: "daily" },
+  { theme: "ink", kind: "list", composition: "excerpts" },
+  { theme: "ink", kind: "list", composition: "glyphs" },
+  { theme: "ink", kind: "quote", composition: "statute" },
 ]
 
 export function buildMatrix(

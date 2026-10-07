@@ -161,7 +161,7 @@ describe("FullSlideSvg", () => {
     expect(bar.closest("[data-decor-piece]")?.getAttribute("data-decor-role")).toBe("structure")
   })
 
-  it("keeps the ink vermilion seal at the theme accent, unfaded", () => {
+  it("keeps ink's scroll edges as page chrome in the hairline ink, unfaded", () => {
     const slide: Slide = {
       type: "content",
       kind: "points",
@@ -173,13 +173,13 @@ describe("FullSlideSvg", () => {
       meta: { organization: "云觅", date: "2026-08-15" },
     }
     const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
-    const accent = resolveStyle("ink").colors.accent
-    const seals = Array.from(container.querySelectorAll('[data-depth="mid"] [data-identity] rect'))
-    expect(seals.length).toBeGreaterThan(0)
-    for (const seal of seals) {
-      expect(seal.getAttribute("fill")).toBe(accent)
-      expect(seal.getAttribute("opacity")).toBeNull()
-      expect(seal.getAttribute("fill-opacity")).toBeNull()
+    const border = resolveStyle("ink").colors.border
+    const edges = Array.from(container.querySelectorAll('[data-decor-piece="edges"] rect'))
+    expect(edges).toHaveLength(2)
+    for (const edge of edges) {
+      expect(edge.getAttribute("fill")).toBe(border)
+      expect(edge.getAttribute("opacity")).toBeNull()
+      expect(edge.closest("[data-decor-piece]")?.getAttribute("data-decor-role")).toBe("structure")
     }
   })
 
@@ -398,13 +398,13 @@ describe("asset background auto scrim (image-layouts P1)", () => {
   it("lifts a marked run's accent until it reads over the scrimmed photograph, still apart from the white", () => {
     // A dark red accent chosen for its paper (journal's read 1.48:1 over a
     // harbour photograph, before journal's cover drew its photograph itself;
-    // ink's is the same kind of red) all but vanishes over the scrim.
+    // memo's is the same kind of red) all but vanishes over the scrim.
     const slide: Slide = { ...bgSlide, heading: "CBAM 开始计费：**先改报实际排放**" }
-    const { container } = render(<BoundSlideSvg ir={{ ...withAsset("ink"), slides: [slide] }} slide={slide} index={0} />)
+    const { container } = render(<BoundSlideSvg ir={{ ...withAsset("memo"), slides: [slide] }} slide={slide} index={0} />)
     const run = Array.from(container.querySelectorAll("tspan")).find((t) => t.textContent === "先改报实际排放")!
     const fill = run.getAttribute("fill")!
     expect(fill).not.toBe("#FFFFFF")
-    expect(fill).not.toBe(getThemeDefinition("ink").style.colors.accent)
+    expect(fill).not.toBe(getThemeDefinition("memo").style.colors.accent)
     // The scrim's lightest band over a photograph's middle grey.
     expect(contrastRatio(fill, blendOver("#0A0E14", "#808080", 0.3))).toBeGreaterThanOrEqual(3)
   })

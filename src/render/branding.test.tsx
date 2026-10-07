@@ -105,18 +105,10 @@ describe('the older footer of branding: "full"', () => {
     expect(container.querySelector("line")).not.toBeNull()
   })
 
-  it("ink: the colophon rail carries the organization, so the row leaves it out", () => {
-    const doc = ir("ink", [plainContentSlide], "full")
-    const { container } = drawBranding(doc, plainContentSlide)
-    expect(container.textContent).not.toContain("ACME")
-    expect(container.textContent).toContain("Internal")
-    // ink draws its own frame and keeps the shared rule off.
-    expect(container.querySelector("line")).toBeNull()
-  })
-
   it.each([
     ["brief", "folio-motif"],
     ["thesis", "rail-motif"],
+    ["ink", "ink-motif"],
   ] as const)("%s: %s draws the whole row, so the shared fragment draws none", (themeId, _motif) => {
     const doc = ir(themeId, [plainContentSlide], "full")
     const { container } = drawBranding(doc, plainContentSlide)

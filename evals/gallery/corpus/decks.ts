@@ -26,6 +26,7 @@ import { THEME_CONTENT_SLOTS, buildThemeSlot } from "./theme-slots"
 import { BINDER_BODIES } from "./binder-bodies"
 import { MANUSCRIPT_BODIES } from "./manuscript-bodies"
 import { PERIODICAL_BODIES } from "./periodical-bodies"
+import { SCROLL_BODIES } from "./scroll-bodies"
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/images")
 
@@ -577,6 +578,10 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   // Its quotation page: one quote.
   if (def.id === "periodical-sheet") return COMPOSITION_BODIES.chronicle(lex).components
   if (def.id === "periodical-quote") return [b.blockquote!(lex)]
+  // ink's scroll sheet: the board's long scroll of years with its running
+  // count. Its quotation page: one quote.
+  if (def.id === "scroll-sheet") return COMPOSITION_BODIES.handscroll(lex).components
+  if (def.id === "scroll-quote") return [b.blockquote!(lex)]
   if (def.id === "marquee-statement") {
     return [{ type: "icon_cards", items: [0, 1, 2].map((i) => ({ icon: (["cup-soda", "package", "ticket"] as const)[i]!, title: lex.labels[i]!, text: lex.bullets[i]! })) }]
   }
@@ -762,6 +767,7 @@ const CONTENT_FACE_KINDS: Record<string, PageKind> = {
   "one-evidence": "evidence",
   "pull-quote": "quote",
   "periodical-quote": "quote",
+  "scroll-quote": "quote",
   "quiet-frame": "points",
   "quote-stage": "quote",
   "rail-numbered": "process",
@@ -1163,6 +1169,12 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
   // book trade bracketed, channels and categories, two libraries, the world
   // side by side, print against screen, the long read and the plans.
   ...PERIODICAL_BODIES,
+  // ink's scroll sheet: three figures over a line read aloud, the pyramid of
+  // tiers, the long scroll of years, Yimakan's two figures, the countries,
+  // the categories, the bearers' counts, the ages, the record project, life
+  // after the lists, the Spring Festival by the day, the problems on record
+  // and the five things to do; and the statute its quotation page sets.
+  ...SCROLL_BODIES,
   rows: (lex) => ({
     heading: lex.headings[1]!,
     components: [

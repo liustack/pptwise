@@ -35,6 +35,17 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 四页 defaultBackgrounds 保持宣纸米，不改角色色。
  *
  * **菜单分派（S1-B）**：留白是水墨的第一性，points 因此改用居中透气的 quiet-frame 而不是带页码水印的窄栏，evidence 的展品腔与它相斥，不上。
+ *
+ * **v4 卷轴讲堂（2026-10-07，`design/rounds/2026-10-07-ink/`）**：整套重画成
+ * 挂起来的卷轴。内容页两侧两道卷轴边，右缘竖排讲堂与年月（`ink-motif` v2），
+ * 左缘竖排朱砂卷名（页面的 `kicker`），标题楷书 34px 一行到底、放不下在逗号
+ * 冒号处断、底对齐 y152。除 statement 外的内容 kind 全交给 `scroll-sheet`，
+ * 它把正文交给 scroll 设定的构图；quote 走竖排法条的 `scroll-quote`；封面、
+ * 章节、结尾换成 `scroll-cover`（题签加朱砂印）、`scroll-chapter`（画芯）、
+ * `scroll-ending`（竖排落款加印）。朱砂一页一处，只给大字、印、一处重点。
+ * 标题字体改为 Times New Roman 配楷体：拉丁文与数字走 Times，中文走楷体
+ * （KaiTi，Windows 与 PowerPoint 自带；预览机没有时落 Kaiti SC、STKaiti）。
+ * statement 页不变，定稿没画。
  */
 export const INK_TOKENS: StyleTokens = {
   id: "ink",
@@ -54,7 +65,10 @@ export const INK_TOKENS: StyleTokens = {
     chartPalette: ["#1F1C18", "#C3272B", "#8A8071", "#B5A36F"],
   },
   fonts: {
-    heading: ["KaiTi", "楷体", "SimSun", "宋体", "serif"],
+    // Times New Roman for the Latin and the figures, KaiTi for the Chinese
+    // (the export pairs the two), Kaiti SC or STKaiti where the preview has
+    // no KaiTi.
+    heading: ["Times New Roman", "KaiTi", "楷体", "Kaiti SC", "STKaiti", "serif"],
     body: ["Microsoft YaHei", "PingFang SC", "Helvetica Neue", "system-ui"],
   },
   shape: { radius: 8, gapScale: 1.3 }, // 圆角柔和（水墨无锋，用户裁决）+ v3 留白拉到 airy 档
@@ -81,21 +95,21 @@ export const INK_THEME = {
   style: INK_TOKENS,
   brand: { suppressFooterRule: true },
   menu: {
-    cover: { face: "vertical-title-cover" },
-    chapter: { face: "volume-slip-chapter" },
+    cover: { face: "scroll-cover" },
+    chapter: { face: "scroll-chapter" },
     content: {
-      points: { face: "quiet-frame" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "split-band" },
-      photo: { face: "image-split" },
+      points: { face: "scroll-sheet" },
+      list: { face: "scroll-sheet" },
+      comparison: { face: "scroll-sheet" },
+      process: { face: "scroll-sheet" },
+      data: { face: "scroll-sheet" },
+      photo: { face: "scroll-sheet" },
       statement: { face: "statement" },
-      quote: { face: "pull-quote" },
-      fact: { face: "stat-hero" },
-      hierarchy: { face: "asymmetric-triptych" },
+      quote: { face: "scroll-quote" },
+      fact: { face: "scroll-sheet" },
+      hierarchy: { face: "scroll-sheet" },
     },
-    ending: { face: "seal-close-ending" },
+    ending: { face: "scroll-ending" },
   },
   motif: { id: "ink-motif" },
 } satisfies BuiltinThemeDeclaration;
