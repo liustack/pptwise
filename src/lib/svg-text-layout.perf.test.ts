@@ -12,10 +12,17 @@ import { layoutSvgText, measureTextUnits } from "./svg-text-layout"
 // catches a return to exponential time, not a slow machine.
 const LIMIT_MS = 50
 
+/** The fastest of five runs. A scheduler or garbage collector pause lands on
+ *  one run, a return to exponential time lands on all of them. */
 function timed<T>(run: () => T): { value: T; ms: number } {
-  const start = performance.now()
-  const value = run()
-  return { value, ms: performance.now() - start }
+  let ms = Number.POSITIVE_INFINITY
+  let value = run()
+  for (let i = 0; i < 5; i++) {
+    const start = performance.now()
+    value = run()
+    ms = Math.min(ms, performance.now() - start)
+  }
+  return { value, ms }
 }
 
 describe("balanced wrapping stays fast on long mixed text", () => {
