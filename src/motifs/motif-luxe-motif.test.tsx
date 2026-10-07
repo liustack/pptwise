@@ -17,7 +17,7 @@ const contentSlide: Slide = { type: "content", kind: "points", heading: "内容"
 const endingSlide: Slide = { type: "ending", components: [] } as Slide
 const ALL_SLIDES = [coverSlide, chapterSlide, contentSlide, endingSlide]
 const DRAWN_SLIDES = [coverSlide, endingSlide]
-const YIELD_SLIDES = [chapterSlide, contentSlide]
+const YIELD_SLIDES = [chapterSlide]
 
 const LUXE_HEX = ["#0B0908", "#14110E", "#171310", "#C6A15B", "#F5EFE3", "#A89A82", "#2E2822"]
 
@@ -56,7 +56,7 @@ function frameLines(root: Element, strokeWidth: string) {
  * 设计源：`.issues/design-boards/wave8/b3/Luxe.dc.html`
  */
 describe("LuxeMotif（请柬金框）", () => {
-  it("cover and ending draw the double gilt frame, chapter and content yield", () => {
+  it("cover and ending draw the double gilt frame, chapter yields", () => {
     for (const slide of DRAWN_SLIDES) {
       const { root } = draw("luxe", slide)
       expect(frameLines(root, "1"), `no outer frame on ${slide.type}`).toHaveLength(4)
@@ -132,10 +132,32 @@ describe("LuxeMotif（请柬金框）", () => {
     expect(root.querySelector("[data-decor-piece]")).toBeNull()
   })
 
-  it("content 退让：内容页无框", () => {
-    const { root } = draw("luxe", contentSlide)
-    expect(root.querySelector("rect")).toBeNull()
-    expect(paintedLeaves(root)).toHaveLength(0)
+  it("content：卡纸内框离页边 24px，走 border；照片铺到中间时框从脸说的地方起", () => {
+    const { root, tokens } = draw("luxe", contentSlide)
+    const lines = Array.from(root.querySelectorAll("[data-decor-piece='stock'] line"))
+    expect(lines).toHaveLength(4)
+    for (const line of lines) expect(line.getAttribute("stroke")).toBe(tokens.colors.border)
+    const xs = lines.flatMap((l) => [Number(l.getAttribute("x1")), Number(l.getAttribute("x2"))])
+    expect(Math.min(...xs)).toBe(24.5)
+    expect(Math.max(...xs)).toBe(1255.5)
+    // No footer marks on this deck: no hallmark either.
+    expect(root.querySelector("[data-decor-piece='hallmark']")).toBeNull()
+    const tokensCtx = buildCtx(tokens, {}, undefined, tokens.colors.bg)
+    const half = render(<LuxeMotif ir={ir("luxe")} slide={contentSlide} ctx={tokensCtx} frameLeft={584} />).root
+    expect(Math.min(...Array.from(half.querySelectorAll("[data-decor-piece='stock'] line")).flatMap((l) => [Number(l.getAttribute("x1")), Number(l.getAttribute("x2"))]))).toBe(584.5)
+  })
+
+  it("content：deck 要页脚时左下是场合与年月，右下页码打成金印记，是 PowerPoint 的页码字段", () => {
+    const tokens = resolveStyle("luxe")
+    const ctx = buildCtx(tokens, {}, undefined, tokens.colors.bg)
+    const deck = { ...ir("luxe"), meta: { organization: "年度经销商大会" }, footer: { page_number: true, organization: true, label: "二〇二六年十月" }, slides: [coverSlide, contentSlide] } as unknown as PptxIR
+    const { root } = render(<LuxeMotif ir={deck} slide={contentSlide} ctx={ctx} index={1} />)
+    const row = root.querySelector("[data-decor-piece='hallmark']")!
+    const words = Array.from(row.querySelectorAll("text")).map((t) => t.textContent)
+    expect(words[0]).toBe("年度经销商大会 · 二〇二六年十月")
+    const folio = row.querySelector("[data-field]")!
+    expect(folio.textContent).toBe("2")
+    expect(row.querySelectorAll("[data-invitation-hallmark] rect")).toHaveLength(2)
   })
 
   it("content-page motif paints recede below the 3:1 large-text floor", () => {

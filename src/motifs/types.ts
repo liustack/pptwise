@@ -18,6 +18,13 @@ export interface DecorProps {
    * mark that depends on where the page sits. Decoration never does.
    */
   index?: number
+  /**
+   * Where the page's own frame starts, when the face runs a photograph from
+   * the page's left edge and asks the motif to frame only the rest of the
+   * page: the `data-frame-left` a face's drawing carries, read off the body
+   * by the page renderer. Only a motif that frames the page reads it.
+   */
+  frameLeft?: number
 }
 
 /** Motif（原 per-theme Decor）：签名对齐 templates/types.ts 的 DecorProps，可为 null。 */

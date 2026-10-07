@@ -4,7 +4,7 @@ import type React from "react"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import { recededMarkFill } from "../render/chart-palette"
 import { DroppedContentMarker } from "../render/drop-marker"
-import { accessibleInk, graphicInk } from "../render/ink"
+import { accessibleInk, graphicInk, liftedGraphicInk } from "../render/ink"
 import { withBlockTitle } from "./block-title"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -230,20 +230,27 @@ function yDomain(bars: readonly Bar[], floor: number | null): { min: number; max
   return min === max ? { min: min - 1, max: max + 1 } : { min, max }
 }
 
-function fillFor(kind: BarKind, ctx: ComponentCtx): string {
+/**
+ * A fall and a total are painted in the primary, which some themes keep as a
+ * ground for white type a step off their page (luxe's near-black on its
+ * black, ledger's, terminal's): such a bar is lifted toward the readable ink
+ * until it reads at 3:1 on the page, a lighter shade of the same colour.
+ * Every theme whose primary already reads keeps it unchanged.
+ */
+function fillFor(kind: BarKind, ctx: ComponentCtx, bg: string): string {
   switch (kind) {
     case "rise":
       return ctx.colors.accent
     case "fall":
-      return ctx.colors.primary
+      return liftedGraphicInk(ctx.colors.primary, bg)
     case "total":
-      return mixHex(ctx.colors.primary, ctx.colors.accent, 0.5)
+      return liftedGraphicInk(mixHex(ctx.colors.primary, ctx.colors.accent, 0.5), bg)
   }
 }
 
 /** Bar fill once the author has marked bars: see the file header's Emphasis. */
-function emphasisFillFor(bar: Bar, ctx: ComponentCtx, receded: string): string {
-  if (bar.kind === "total") return ctx.colors.primary
+function emphasisFillFor(bar: Bar, ctx: ComponentCtx, receded: string, bg: string): string {
+  if (bar.kind === "total") return liftedGraphicInk(ctx.colors.primary, bg)
   return bar.emphasis ? ctx.colors.accent : receded
 }
 
@@ -452,7 +459,7 @@ export const waterfall: SvgComponent<WaterfallComponent> = {
                 y={yTop}
                 width={barW}
                 height={barH}
-                fill={emphasized ? emphasisFillFor(bar, ctx, receded) : fillFor(bar.kind, ctx)}
+                fill={emphasized ? emphasisFillFor(bar, ctx, receded, bg) : fillFor(bar.kind, ctx, bg)}
               />
               {g.floor !== null && bar.kind === "total" ? breakMarks(barX, barW, yBot, bg) : null}
               <text

@@ -21,7 +21,7 @@ const WAVE2 = [
   { id: "rally", face: "marquee-cover" },
   { id: "ledger", face: "stat-cover" },
   { id: "terminal", face: "console-cover" },
-  { id: "luxe", face: "invitation-plate-cover" },
+  { id: "luxe", face: "invitation-cover" },
   { id: "journal", face: "periodical-cover" },
   { id: "ink", face: "scroll-cover" },
   { id: "museum", face: "poster-center" },
@@ -137,9 +137,9 @@ describe("wave 8 batch 2 — locked cover / chapter / ending faces", () => {
 })
 
 const WAVE8_B3_LOCKS = [
-  { id: "luxe", type: "cover" as const, face: "invitation-plate-cover" },
-  { id: "luxe", type: "chapter" as const, face: "gilt-ordinal-chapter" },
-  { id: "luxe", type: "ending" as const, face: "gilt-word-ending" },
+  { id: "luxe", type: "cover" as const, face: "invitation-cover" },
+  { id: "luxe", type: "chapter" as const, face: "invitation-chapter" },
+  { id: "luxe", type: "ending" as const, face: "invitation-ending" },
   { id: "runway", type: "cover" as const, face: "show-headline" },
   { id: "runway", type: "chapter" as const, face: "show-plate" },
   { id: "runway", type: "ending" as const, face: "show-finale" },
@@ -233,14 +233,12 @@ function renderPage(themeId: string, type: "cover" | "chapter" | "content" | "en
 }
 
 describe("wave 8 batch 3 — midground identity survives FullSlideSvg", () => {
-  it.each(["cover", "ending"] as const)("luxe %s paints the eight-line invitation frame in the foreground", (type) => {
+  it.each(["cover", "ending"] as const)("luxe %s draws its own gilt frame in the foreground, with no motif frame", (type) => {
     const { container } = renderPage("luxe", type)
-    const piece = container.querySelector('[data-decor-piece="invitation"]')!
-    expect(piece.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
-    const lines = Array.from(piece.querySelectorAll("line"))
-    expect(lines.filter((el) => el.getAttribute("stroke-width") === "1")).toHaveLength(4)
-    expect(lines.filter((el) => el.getAttribute("stroke-width") === "0.5")).toHaveLength(4)
-    expect(piece.querySelectorAll("rect")).toHaveLength(0)
+    expect(container.querySelector('[data-decor-piece="invitation"]')).toBeNull()
+    const gilt = container.querySelector("[data-invitation-gilt]")!
+    expect(gilt.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
+    expect(gilt.querySelectorAll("line")).toHaveLength(8)
   })
 
   it("clinic cover draws its own heartbeat across the page, with nothing in mid", () => {

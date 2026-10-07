@@ -540,6 +540,20 @@ describe("center_mirror luxe", () => {
     expect(diamond.getAttribute("d")).toBe("M 640 156 l 5 7 l -5 7 l -5 -7 z")
   })
 
+  it("a title of two lines carries its diamond under the second line, clear of its type", () => {
+    const long = `${HEADING}，${HEADING}，${HEADING}`
+    const { treated } = withChapter("luxe", { heading: long })
+    const root = rootOf(treated!.chrome)
+    const lines = texts(root).filter((t) => num(t, "font-size") === 42 || (t.textContent ?? "").length > 10)
+    const titleLines = lines.filter((t) => t.getAttribute("text-anchor") === "middle" && num(t, "y") >= 130)
+    expect(titleLines.length).toBe(2)
+    const lastBaseline = Math.max(...titleLines.map((t) => num(t, "y")))
+    const diamond = root.querySelector("path")!
+    // The diamond keeps the 26px it stands under a one-line title's baseline.
+    expect(diamond.getAttribute("d")).toBe(`M 640 ${lastBaseline + 26} l 5 7 l -5 7 l -5 -7 z`)
+    expect(treated!.contentRect.y).toBeGreaterThan(lastBaseline + 26 + 14)
+  })
+
   it("no-title: no anchor", () => {
     const { treated } = withChapter("luxe", { heading: "" })
     expect(treated!.contentRect.y).toBe(64)

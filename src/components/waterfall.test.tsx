@@ -583,3 +583,23 @@ describe("a waterfall bar's note", () => {
     expect(waterfallSchema.safeParse({ ...noted, items: noted.items.map((item, i) => (i === 0 ? { ...item, note: "" } : item)) }).success).toBe(false)
   })
 })
+
+describe("waterfall on a theme whose primary is a ground", () => {
+  // luxe, ledger, rally, terminal, museum, stage and lecture keep their primary for blocks under white type,
+  // a step off their page: a fall, a total or a bracket painted in it vanished into the page.
+  const dark: ComponentCtx = {
+    ...ctx,
+    colors: { bg: "#0B0908", surface: "#14110E", primary: "#171310", accent: "#C6A15B", text: "#F5EFE3", muted: "#A89A82", chartPalette: ["#C6A15B"] },
+  }
+  const bridge = { type: "waterfall" as const, emphasis_label: "Costs", items: [{ label: "Q1", value: 820, type: "total" as const }, { label: "New", value: 340 }, { label: "Churn", value: -95, emphasis: true }, { label: "Staff", value: -210, emphasis: true }] }
+  const plain = { type: "waterfall" as const, items: [{ label: "Q1", value: 820, type: "total" as const }, { label: "New", value: 340 }, { label: "Churn", value: -95 }] }
+  const rects = (c: Parameters<typeof waterfall.render>[0]) => Array.from(parseSvgRoot(renderSvgMarkup(<svg>{waterfall.render(c, bridgeBox, dark)}</svg>)).querySelectorAll("rect"))
+
+  it("lifts a fall and a total off the page until each reads at 3:1", () => {
+    for (const bar of rects(plain)) expect(contrastRatio(bar.getAttribute("fill")!, dark.colors.bg), bar.getAttribute("fill")!).toBeGreaterThanOrEqual(3)
+  })
+
+  it("lifts the totals and the bracket of a marked bridge the same way", () => {
+    for (const bar of rects(bridge)) expect(contrastRatio(bar.getAttribute("fill")!, dark.colors.bg), bar.getAttribute("fill")!).toBeGreaterThanOrEqual(3)
+  })
+})

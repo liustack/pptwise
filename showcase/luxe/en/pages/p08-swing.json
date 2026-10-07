@@ -1,0 +1,94 @@
+{
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "title": "Chow Tai Fook",
+          "text": "Fixed-price share of mainland retail value",
+          "sub": "Per-gram retail value up 21.0%"
+        },
+        {
+          "title": "Luk Fook",
+          "text": "Fixed-price share of group retail value",
+          "sub": "Per-gram same-store volume up 13%, back from a fall"
+        },
+        {
+          "title": "Chow Sang Sang",
+          "text": "Mainland same-store, H1 2026",
+          "sub": "Fixed price down 20%, per gram up 34%"
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "dumbbell",
+      "title": "While gold rose",
+      "axes": {
+        "x_unit": "%"
+      },
+      "series": [
+        {
+          "name": "FY2025",
+          "data": [
+            {
+              "x": "Chow Tai Fook",
+              "y": 30.6
+            }
+          ]
+        },
+        {
+          "name": "FY2026",
+          "data": [
+            {
+              "x": "Chow Tai Fook",
+              "y": 35.4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "dumbbell",
+      "title": "After gold fell",
+      "axes": {
+        "x_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Apr-Jun 2025",
+          "data": [
+            {
+              "x": "Chow Tai Fook",
+              "y": 34.0
+            },
+            {
+              "x": "Luk Fook",
+              "y": 24
+            }
+          ]
+        },
+        {
+          "name": "Apr-Jun 2026",
+          "data": [
+            {
+              "x": "Chow Tai Fook",
+              "y": 29.0
+            },
+            {
+              "x": "Luk Fook",
+              "y": 18
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Each company reports its own period and base, so read each one's direction and do not rank them"
+    }
+  ],
+  "footnote": "Source: Chow Tai Fook FY2026 results and quarterly update, Luk Fook quarterly retail update, Chow Sang Sang 2026 interim results. Company figures",
+  "notes": "Fixed pricing, where a piece carries one price rather than a price per gram, has been the talk of the trade. The leading brands did push it up. At Chow Tai Fook, whose FY2026 ran from April 2025 to March this year, fixed-price jewellery reached 35.4% of mainland retail value, up from 30.6%. Luk Fook's fixed-price sales rose by half in the same year. But once gold fell back in the second quarter, all three swung the same way. Chow Tai Fook's fixed-price share fell to 29.0% in April to June, while retail value of gold priced by weight rose 21%. Luk Fook's fixed-price share dropped from 24% a year earlier to 18%, and same-store volume of gold sold by weight turned from a fall to a rise. At Chow Sang Sang, mainland same-store sales of fixed-price products fell 20% in the first half while weight-priced products rose 34%. Each company uses a different base, so we read the direction and do not rank them. There is no official national figure for fixed-price share, and we will not give you one. The conclusion: fixed pricing is one leg to stand on, not a one-way street."
+}

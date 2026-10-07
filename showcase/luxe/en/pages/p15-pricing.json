@@ -1,0 +1,49 @@
+{
+  "components": [
+    {
+      "type": "comparison",
+      "columns": [
+        "Fixed price · per piece",
+        "By weight"
+      ],
+      "rows": [
+        {
+          "label": "Which pieces",
+          "cells": [
+            "Design, small heritage, complex work",
+            "Plain gold, heavy pieces, bars, coins"
+          ]
+        },
+        {
+          "label": "When gold rises",
+          "cells": [
+            "Price holds, its share rises",
+            "Price follows, buyers go lighter"
+          ]
+        },
+        {
+          "label": "When gold falls",
+          "cells": [
+            "Looks dear, review and reprice",
+            "Price follows, recovers first"
+          ]
+        },
+        {
+          "label": "Margin from",
+          "cells": [
+            "Design and craft in the price",
+            "Labour charge, gold at cost"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "title": "Rules for both",
+      "text": "tags show pricing method, weight, purity and labour charge, and nothing is charged beyond the tag"
+    }
+  ],
+  "footnote": "Basis: disclosures on page 8, Laopu Gold prospectus (priced at launch, not moved by small swings in gold), SAMR Order No. 56",
+  "notes": "On pricing, we propose standing on two legs. Fixed prices go on design pieces, small heritage pieces and complex work. Customers are buying design and craft, and the price does not move with the daily gold price. When gold rises those pieces look like good value and their share goes up. When gold falls they look dear and their share drops back, which is what our three listed peers saw this spring. So a fixed price cannot be set and forgotten. It needs reviewing on a schedule and changing when it should. Laopu Gold prices every piece at launch, and even it repriced three times in 2025. Pricing by weight goes on plain gold, heavy pure gold and bars and coins, where customers look at weight and today's price and can check the sum. When gold falls, that leg recovers first. Whichever leg, tags must be complete under the price-marking rules, with nothing added beyond the tag. Which pieces go on which leg is one of the things we will decide together."
+}

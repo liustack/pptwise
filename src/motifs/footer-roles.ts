@@ -37,6 +37,9 @@ import type { MotifId } from "./types"
  *   crayonbox-motif is crayon's folio: the organization, the label and the
  *   notice at the bottom left, the page number in a pale disc of the page's
  *   section crayon at the right.
+ *   luxe-motif is luxe's card stock folio: the organization and the
+ *   deck's `label` at the bottom left, the page number struck as a
+ *   hallmark at the bottom right.
  * - `"organization"`: the motif prints the organization somewhere of its
  *   own, and the shared row carries everything else.
  *
@@ -60,5 +63,6 @@ export const MOTIF_FOOTER_ROLES: Partial<Record<MotifId, MotifFooterRole>> = {
   "corner-ornament-motif": "row",
   "ink-motif": "row",
   "crayonbox-motif": "row",
+  "luxe-motif": "row",
   "poster-motif": "organization",
 }

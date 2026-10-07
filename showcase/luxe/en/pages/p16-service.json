@@ -1,0 +1,31 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "tray",
+      "fit": "cover"
+    },
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "repeat",
+          "title": "Trade-ins",
+          "text": "About a fifth of jewellery demand. Follow the industry standard, and receipts state loss and discount"
+        },
+        {
+          "icon": "recycle",
+          "title": "Buybacks",
+          "text": "Since the tax change, prices include VAT and buybacks do not. Work the quote out in front of the customer"
+        },
+        {
+          "icon": "shield-check",
+          "title": "Gold risk",
+          "text": "Log each store's gold by weight and its price exposure first, then talk about hedging"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: China Gold Association (13 Dec 2025, a fifth is an incomplete count), World Gold Council VAT explainer (7 Nov 2025). AI-generated illustration",
+  "notes": "Store services. Trade-ins first. By the China Gold Association's incomplete count, trade-ins are about a fifth of national jewellery demand. Last December the association led an industry standard for gold trade-in services: testing on camera with the customer present, consent before any destructive test, and a receipt that states gold content, weight, loss and discount. We propose every store works to it. Then buybacks. Since the tax change, jewellery sale prices include VAT and buyback prices do not, so the gap has widened and customers can feel short-changed. Work out every buyback quote in front of the customer. Last, gold-price risk. Our listed peers all hedge: Chow Tai Fook's hedge ratio by weight was 39.0% at the end of FY2026, and Chow Sang Sang hedges about 40% of its gold inventory, while Laopu Gold's prospectus says it uses no hedging instruments. When gold rises, a hedge shows a book loss first: Chow Tai Fook booked fair-value losses on gold loans of over 12 billion Hong Kong dollars across two years, so hedging is not as simple as buying insurance. We propose a first step: record each store's gold weight and price exposure, then talk about how to hedge. These are company figures. The picture is an illustration."
+}

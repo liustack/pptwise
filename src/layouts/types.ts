@@ -105,6 +105,8 @@ export type CoverLayoutId =
   | "scroll-cover"
   // crayon sample redesign (2026-10-08): a welcome sign drawn in crayon beside a framed photograph.
   | "crayonbox-cover"
+  // luxe sample redesign (2026-10-08): a gilt invitation card beside a photograph.
+  | "invitation-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -157,6 +159,8 @@ export type ChapterLayoutId =
   | "scroll-chapter"
   // crayon sample redesign (2026-10-08): a part's number on a tilted block of its section's crayon.
   | "crayonbox-chapter"
+  // luxe sample redesign (2026-10-08): a part opens under a veil inside a gilt frame.
+  | "invitation-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -213,6 +217,8 @@ export type EndingLayoutId =
   | "scroll-ending"
   // crayon sample redesign (2026-10-08): the next meeting and the contact cards over a veiled photograph.
   | "crayonbox-ending"
+  // luxe sample redesign (2026-10-08): the invitation signed by the house.
+  | "invitation-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -293,6 +299,8 @@ export type ContentLayoutId =
   | "scroll-quote"
   // crayon sample redesign: the board's ordinary content page. Theme-locked.
   | "crayonbox-sheet"
+  // luxe sample redesign: the board's ordinary content page. Theme-locked.
+  | "invitation-sheet"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

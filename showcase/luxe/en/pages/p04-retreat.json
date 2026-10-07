@@ -1,0 +1,50 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "−27%",
+          "label": "30 Sep close 907.32 yuan/g, 27% below the record close",
+          "note": "Still 14% above the 2025 average of 798.12 yuan/g (calculated from daily quotes)"
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "line",
+      "series": [
+        {
+          "name": "Au99.99 close",
+          "data": [
+            {
+              "x": "29 Jan 2026",
+              "y": 1243.02,
+              "note": "Record close"
+            },
+            {
+              "x": "30 Sep 2026",
+              "y": 907.32,
+              "note": "Close"
+            }
+          ]
+        },
+        {
+          "name": "2025 full-year average",
+          "data": [
+            {
+              "x": "29 Jan 2026",
+              "y": 798.12
+            },
+            {
+              "x": "30 Sep 2026",
+              "y": 798.12
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Shanghai Gold Exchange Au99.99 daily quotes. In yuan per gram. The fall and the 2025 average are calculated from daily quotes",
+  "notes": "How far has it fallen? 30 September was the last trading day before the National Day holiday. Gold closed at 907.32 yuan a gram, 27% below the record close of 1,243.02 on 29 January. London tells the same story: the LBMA afternoon price peaked at 5,405 US dollars an ounce in January and stood at 4,156.40 on 6 October, 23.1% lower. But look at the other side too. 907 yuan is still 14% above the 2025 average of 798, a figure we calculated from the exchange's daily quotes. Gold is not going back to where it was, and it will not rise forever either. For us, volatility is the new normal, and stocking, pricing and inventory all have to start from that."
+}

@@ -1,0 +1,38 @@
+{
+  "components": [
+    {
+      "type": "from_to",
+      "label_column": "Gold drawn for jewellery, not investment",
+      "from": {
+        "kicker": "Until 31 Oct 2025",
+        "title": "Caishui [2002] No. 142"
+      },
+      "to": {
+        "kicker": "From 1 Nov 2025",
+        "title": "MOF and STA Announcement 2025 No. 11"
+      },
+      "rows": [
+        {
+          "label": "Invoice received",
+          "from": "Special VAT invoice",
+          "to": "Ordinary invoice"
+        },
+        {
+          "label": "Input VAT counted as",
+          "from": "13% backed out of price",
+          "to": "Invoice amount × 6%"
+        },
+        {
+          "label": "Credit per 100 yuan of gold",
+          "from": "About 11.50",
+          "to": "6.00",
+          "unit": "yuan",
+          "change": "About 5.50 yuan less",
+          "emphasis": true
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Ministry of Finance and State Taxation Administration, both documents in full. Credit calculated by the announcement's formulas: 100 × 13 ÷ 113, 100 × 6%",
+  "notes": "The third change is tax. Announcement No. 11 of 2025 from the Ministry of Finance and the State Taxation Administration took effect on 1 November last year and runs to the end of 2027. What matters most to us is gold drawn from the exchange to make jewellery. Before, that gold came with a special VAT invoice and the 13% rate was backed out of the price, so every 100 yuan of gold carried about 11.50 yuan of input VAT credit. Now jewellery counts as non-investment use, the exchange issues only an ordinary invoice, and the credit is the invoice amount times a 6% deduction rate: 6 yuan per 100. The 5.50 or so that is lost is an extra cost in what we pay for gold. We worked that figure out from the formulas in the two texts. Whether and how much of it reaches retail prices, the announcement does not say, so please do not describe it as a uniform 5.5% rise in jewellery prices. The World Gold Council saw in Shenzhen's Shuibei market that store jewellery prices rose from 3 November, and that gold bars from non-member channels, such as independent gold shops and brand franchise stores, went up by about 13%. Most of us in this room are in that channel, so the cost of buying in bars needs working out again."
+}

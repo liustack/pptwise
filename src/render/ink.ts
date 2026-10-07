@@ -212,6 +212,24 @@ export function graphicInk(preferredFill: string, bgHex: string): string {
     : readableOn(bgHex)
 }
 
+/**
+ * `preferredFill` for a graphic mark (a bar, a stroke that carries meaning)
+ * lifted toward the ink that reads on `bgHex` by the least that clears the
+ * non-text 3:1 floor, in twentieths. Where `graphicInk` gives the colour up
+ * for plain white or near-black, this keeps its hue: a dark primary on a
+ * dark page becomes a lighter shade of itself, still darker than the accent
+ * beside it. The plain ink only when no lift short of it reads.
+ */
+export function liftedGraphicInk(preferredFill: string, bgHex: string): string {
+  if (contrastRatio(preferredFill, bgHex) >= CONTRAST_RATIO_GRAPHIC) return preferredFill
+  const toward = readableOn(bgHex)
+  for (let step = 1; step < 20; step++) {
+    const ink = blendOver(toward, preferredFill, step / 20)
+    if (contrastRatio(ink, bgHex) >= CONTRAST_RATIO_GRAPHIC) return ink
+  }
+  return toward
+}
+
 /** One sibling value's preferred graphic ink and the surface it renders on. */
 export interface GroupValueInkInput {
   readonly preferredFill: string

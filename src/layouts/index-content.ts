@@ -41,6 +41,7 @@ import { PeriodicalQuoteContent } from "./content-periodical-quote"
 import { ScrollSheetContent } from "./content-scroll-sheet"
 import { ScrollQuoteContent } from "./content-scroll-quote"
 import { CrayonboxSheetContent } from "./content-crayonbox-sheet"
+import { InvitationSheetContent } from "./content-invitation-sheet"
 import { SealFigureContent } from "./content-seal-figure"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { CrayonboxPointContent } from "./content-crayonbox-point"
@@ -83,6 +84,7 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // periodical-quote: 38 pin-only, 47 in all. The ink sample redesign adds
 // scroll-sheet and scroll-quote: 40 pin-only, 49 in all. The crayon sample
 // redesign adds crayonbox-sheet: 49 in all after the three retired themes.
+// The luxe sample redesign adds invitation-sheet: 50 in all.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
   "two-column": TwoColumnContent,
@@ -133,4 +135,5 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "scroll-sheet": ScrollSheetContent,
   "scroll-quote": ScrollQuoteContent,
   "crayonbox-sheet": CrayonboxSheetContent,
+  "invitation-sheet": InvitationSheetContent,
 }

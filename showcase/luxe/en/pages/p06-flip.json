@@ -1,0 +1,53 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "2.6",
+          "unit": "×",
+          "label": "In H1 2026 bars and coins took 2.6 times the gold jewellery did",
+          "note": "In 2025 bars and coins passed jewellery for the first time"
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "x_unit": "t"
+      },
+      "series": [
+        {
+          "name": "Bars and coins",
+          "data": [
+            {
+              "x": "2025",
+              "y": 504.2
+            },
+            {
+              "x": "H1 2026",
+              "y": 339.3
+            }
+          ]
+        },
+        {
+          "name": "Gold jewellery",
+          "data": [
+            {
+              "x": "2025",
+              "y": 363.8
+            },
+            {
+              "x": "H1 2026",
+              "y": 132.1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: China Gold Association market data for 2025 and H1 2026. China Gold Association basis. The multiple is calculated",
+  "notes": "This is the most important change of the day. In the China Gold Association's figures, bars and coins used 504.2 tonnes of gold in 2025, up 35%, while jewellery used 363.8 tonnes, down 31.6%. It was the first time bars and coins came out ahead. The gap widened in the first half of this year: jewellery fell by another third to 132.1 tonnes, while bars and coins reached 339.3 tonnes, 2.6 times as much. The World Gold Council counts differently and its numbers are not the same, but it reaches the same conclusion: 2025 was the first year bars and coins overtook jewellery. Customers have not left gold. They have moved money from jewellery into bars and coins. In the association's own words, demand for bars at gold shops is strong but the margin is thin. So we can sell bars, but bars will not carry a store's margin."
+}

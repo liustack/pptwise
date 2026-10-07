@@ -198,8 +198,9 @@ describe("FullSlideSvg", () => {
   })
 
   it("paints the luxe invitation frame in the foreground at the theme accent", () => {
+    // luxe's own cover draws its gilt card itself since the 2026-10-08 redesign; the motif still frames a cover face that leaves it room.
     const slide: Slide = { type: "cover", heading: "封面", components: [] }
-    const doc = irWithFace(slide, "luxe", {})
+    const doc = irWithFace(slide, "luxe", { cover: "invitation-plate-cover" })
     const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     const piece = container.querySelector('[data-decor-piece="invitation"]')!
     expect(piece.getAttribute("data-decor-role")).toBe("structure")

@@ -44,7 +44,10 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
   // chapter would hide it. The folio joins it on a content page of a deck
   // that asks for one.
   "almanac-motif": { content: ["sprout"] },
-  "luxe-motif": { cover: ["invitation"], ending: ["invitation"] },
+  // luxe's card stock frames every content page (2026-10 sample redesign);
+  // the hallmark joins it on a deck that asks for footer marks. The v1 gilt
+  // frame stays for a cover or an ending face that leaves it room.
+  "luxe-motif": { cover: ["invitation"], content: ["stock"], ending: ["invitation"] },
   "vermilion-motif": { cover: ["gold-rules-foot"], content: ["gold-rules"], ending: ["gold-rules", "gold-rules-foot"] },
   // journal's masthead words and folio stand on a content page of a deck that
   // asks for footer marks (2026-10 sample redesign); the cover and the close

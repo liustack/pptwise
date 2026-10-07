@@ -1,0 +1,23 @@
+{
+  "components": [
+    {
+      "type": "image_grid",
+      "items": [
+        {
+          "asset_id": "bangle",
+          "caption": "Heritage: Heavy, hand-made, a core profit"
+        },
+        {
+          "asset_id": "filigree",
+          "caption": "Design: Light, distinctive, higher value"
+        },
+        {
+          "asset_id": "charms",
+          "caption": "Light: Under 10 g, **45%** of units sold"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: World Gold Council China gold jewellery retail insights 2025 (576 store managers), China Gold Association H1 2025 release. AI-generated illustrations",
+  "notes": "Product. Next year we want new lines to go three ways. First, heritage gold, the hand-hammered gufa style. In a World Gold Council survey of 576 store managers, heritage and hard gold are still retailers' core source of profit, and heavy hand-made heritage pieces sell steadily in boutiques. Second, design pieces. In the China Gold Association's words from the first half of last year, light, design-led, higher value-added jewellery is still in favour. Third, light pieces. In the same survey, pieces under 10 grams made up 45% of units sold in stores, against 37% in 2023. One more figure worth keeping in mind: jewellery bought to wear oneself was 37% of store sales, up from 27% in 2024, while wedding jewellery fell from 24% to 19%. How much of each goes into the range is not for head office to impose. We will decide it with you, region by region. The pictures on this page are illustrations."
+}

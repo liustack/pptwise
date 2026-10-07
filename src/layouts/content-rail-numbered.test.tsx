@@ -447,8 +447,13 @@ describe("rail-numbered under a treated heading", () => {
       ],
       footnote: "Source: State Council, MIIT and Ministry of Finance, January–September 2026",
     } as Slide
+    // luxe's own process page is its invitation sheet since the 2026-10-08 redesign; its treatment still reaches rail-numbered put there by value.
+    const { BUILTIN_THEME_FILES } = await import("../themes")
+    const { compileBuiltinTheme } = await import("../themes/definitions")
+    const file = BUILTIN_THEME_FILES.luxe
+    const theme = compileBuiltinTheme({ ...file, menu: { ...file.menu, content: { ...file.menu.content, process: { face: "rail-numbered" } } } })
     const deck = { version: "5", filename: "x.pptx", theme: { id: "luxe" }, meta: {}, assets: { images: {} }, slides: [slide] } as unknown as PptxIR
-    const markup = renderSlideSvg(deck, 0)
+    const markup = renderSlideSvg(deck, 0, { theme })
     expect(markup).toContain('data-face="rail-numbered"')
     const rect = /data-audit-rect="([\d.]+),([\d.]+),([\d.]+),([\d.]+)"/.exec(markup)!
     const bottom = Number(rect[2]) + Number(rect[4])

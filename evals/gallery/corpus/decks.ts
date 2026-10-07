@@ -29,6 +29,7 @@ import { MANUSCRIPT_BODIES } from "./manuscript-bodies"
 import { PERIODICAL_BODIES } from "./periodical-bodies"
 import { SCROLL_BODIES } from "./scroll-bodies"
 import { CRAYONBOX_BODIES } from "./crayonbox-bodies"
+import { INVITATION_BODIES } from "./invitation-bodies"
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/images")
 
@@ -584,6 +585,8 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   if (def.id === "scroll-quote") return [b.blockquote!(lex)]
   // crayon's crayonbox sheet: the board's five coloured cards of the areas a child grows in.
   if (def.id === "crayonbox-sheet") return COMPOSITION_BODIES.swatches(lex).components
+  // luxe's invitation sheet: the board's run of bars beside its figure.
+  if (def.id === "invitation-sheet") return COMPOSITION_BODIES.climb(lex).components
   if (def.id === "marquee-statement") {
     return [{ type: "icon_cards", items: [0, 1, 2].map((i) => ({ icon: (["cup-soda", "package", "ticket"] as const)[i]!, title: lex.labels[i]!, text: lex.bullets[i]! })) }]
   }
@@ -1136,6 +1139,8 @@ interface CompositionBody {
   readonly tag?: NonNullable<Slide["tag"]>
   /** The boxes a quiz page ticks beside each question. */
   readonly ballot?: NonNullable<Slide["ballot"]>
+  /** The stamp a reply card stands down its stub. */
+  readonly stamp?: NonNullable<Slide["stamp"]>
 }
 
 /**
@@ -1185,6 +1190,12 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
   // each body advises, the lunch tray, the eye check, settling in, the safety
   // badges and the ticklist.
   ...CRAYONBOX_BODIES,
+  // luxe's invitation sheet: the programme, a run of bars carried on hatched,
+  // a figure beside a fall and beside pairs of bars, the balance, the swing,
+  // stores closed and opened, a tax rule as two cards, a standard's years,
+  // a catalogue of pieces, two ways of pricing, the half page photograph and
+  // the reply card.
+  ...INVITATION_BODIES,
   rows: (lex) => ({
     heading: lex.headings[1]!,
     components: [
@@ -3501,6 +3512,7 @@ export function compositionPage(
     ...(body.years ? { years: body.years } : {}),
     ...(body.tag ? { tag: body.tag } : {}),
     ...(body.ballot ? { ballot: body.ballot } : {}),
+    ...(body.stamp ? { stamp: body.stamp } : {}),
   } as Slide
   return deckShell(lex, assets, themeId, `composition-${composition}${variant ? `-${variant}` : ""}-${themeId}-${lex.id}`, [slide])
 }

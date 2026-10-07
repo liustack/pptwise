@@ -43,7 +43,7 @@ const BOARD: Record<string, { cover: string; chapter: string; ending: string }> 
   terminal: { cover: "console-cover", chapter: "console-chapter", ending: "console-ending" },
   runway: { cover: "show-headline", chapter: "show-plate", ending: "show-finale" },
   journal: { cover: "periodical-cover", chapter: "fascicle-ghost-chapter", ending: "periodical-ending" },
-  luxe: { cover: "invitation-plate-cover", chapter: "gilt-ordinal-chapter", ending: "gilt-word-ending" },
+  luxe: { cover: "invitation-cover", chapter: "invitation-chapter", ending: "invitation-ending" },
   clinic: { cover: "dossier-cover", chapter: "subject-rule-chapter", ending: "dossier-ending" },
   almanac: { cover: "yearbook-cover", chapter: "field-band-chapter", ending: "yearbook-ending" },
   ember: { cover: "pitch-cover", chapter: "pitch-chapter", ending: "pitch-ending" },
@@ -486,14 +486,14 @@ describe("registerTheme: unmeasured-font-width console.warn", () => {
     warnSpy.mockRestore()
   })
 
-  // Four builtins resolve their *heading* to SimSun or KaiTi — deliberate
+  // Three builtins resolve their *heading* to SimSun — deliberate
   // CJK-serif design choices with no exact width table. Every builtin's
   // *body* resolves to a face that has one. This never reaches console.warn
   // because builtins never call registerTheme; the test locks both halves.
-  it("regression: lecture/luxe/museum/runway's heading has no exact table, every builtin's body does — but builtins never call registerTheme, so this never reaches console.warn", () => {
+  it("regression: lecture/museum/runway's heading has no exact table, every builtin's body does — but builtins never call registerTheme, so this never reaches console.warn", () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
-    // memo's, thesis's and journal's headings resolve to Times New Roman over SimSun, and ink's over KaiTi, which is measured.
-    const nonExactHeadingBuiltins = new Set(["lecture", "luxe", "museum", "runway"])
+    // memo's, thesis's, journal's and luxe's headings resolve to Times New Roman over SimSun, and ink's over KaiTi, which is measured.
+    const nonExactHeadingBuiltins = new Set(["lecture", "museum", "runway"])
     for (const id of CANONICAL_THEME_IDS) {
       const style = THEME_DEFINITIONS[id].style
       const headingFace = resolveFontFace(style.fonts.heading, "heading")

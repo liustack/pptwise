@@ -1,0 +1,56 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "360.1",
+          "unit": "t",
+          "label": "2025",
+          "note": "Down 25%",
+          "delta": "down",
+          "tag": {
+            "text": "Gold used"
+          }
+        },
+        {
+          "value": "136",
+          "unit": "t",
+          "label": "H1 2026",
+          "note": "Down 30%",
+          "delta": "down",
+          "tag": {
+            "text": "Gold used"
+          }
+        },
+        {
+          "value": "281.4",
+          "unit": "bn yuan",
+          "label": "2025",
+          "note": "Up 8%",
+          "delta": "up",
+          "tag": {
+            "text": "Money spent"
+          }
+        },
+        {
+          "value": "141.9",
+          "unit": "bn yuan",
+          "label": "H1 2026",
+          "note": "Up 2%",
+          "delta": "up",
+          "tag": {
+            "text": "Money spent"
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "World Gold Council basis. Spending is tonnes times the average Au9999 price, an estimate without labour charges, brand premiums or tax, not what tills took in. Not added to or set against the China Gold Association's tonnes"
+    }
+  ],
+  "footnote": "Source: World Gold Council, China gold market reviews for 2025 and H1 2026",
+  "notes": "Jewellery used a quarter less gold, yet customers spent 8% more. In World Gold Council figures, mainland China's jewellery took 360.1 tonnes of gold in 2025, a quarter less, while spending reached 281.4 billion yuan, 8% more and close to the 2023 record of 281.8 billion. In the first half of this year jewellery took 136 tonnes, 30% less, and spending was 141.9 billion yuan, still up 2%. A word on the basis: the council estimates spending by multiplying tonnes by the gold price, so it leaves out labour charges, brand premiums and tax and is not the same as what our tills take in. The China Gold Association counts 363.8 tonnes of jewellery for 2025. That is a separate set of statistics, and we do not add the two together or divide one by the other. The point is simple. Customers still want to spend. Each piece is just lighter."
+}

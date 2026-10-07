@@ -39,7 +39,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     }
   }
 
-  it("has exactly 175 layout-kind entries, all traceable to one of the four real registries", () => {
+  it("has exactly 183 layout-kind entries, all traceable to one of the four real registries", () => {
     const knownIds = new Set([
       ...Object.keys(COVER_LAYOUTS),
       ...Object.keys(CHAPTER_LAYOUTS),
@@ -80,8 +80,10 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // seat-cta-ending, bill-head, day-bill-chapter, ticket-cta-ending,
     // mono-bleed, double-frame-cover, mirror-volume-chapter,
     // invite-field-ending): 175. The crayon redesign adds crayonbox-cover,
-    // crayonbox-chapter, crayonbox-sheet and crayonbox-ending: 179.
-    expect(layoutEntries).toHaveLength(179)
+    // crayonbox-chapter, crayonbox-sheet and crayonbox-ending: 179. The luxe
+    // redesign adds invitation-cover, invitation-chapter, invitation-sheet and
+    // invitation-ending: 183.
+    expect(layoutEntries).toHaveLength(183)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -232,7 +234,9 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
         // The scroll's quotation page takes its one passage.
         id === "scroll-quote" ||
         // The crayonbox's studies page sets five blocks: a photograph, two studies, a caution, the lead and the things to do.
-        id === "crayonbox-sheet"
+        id === "crayonbox-sheet" ||
+        // The invitation's swing page sets five blocks: the houses, two dumbbells and the line under them.
+        id === "invitation-sheet"
       )
         continue
       const body = LAYOUT_REGISTRY[id].slots.find((s) => s.name === "body")
@@ -304,18 +308,18 @@ describe("layoutsForSlideType", () => {
     for (const l of covers) expect(l.slideTypes).toContain("cover")
   })
 
-  it("cover, chapter, and ending expose 46, 41, and 43 registered layouts with no takeovers", () => {
+  it("cover, chapter, and ending expose 47, 42, and 44 registered layouts with no takeovers", () => {
     // The shared automatic pools are unchanged by the gauge family: 19, 8, 7.
-    expect(layoutsForSlideType("cover")).toHaveLength(46)
+    expect(layoutsForSlideType("cover")).toHaveLength(47)
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
-    expect(layoutsForSlideType("chapter")).toHaveLength(41)
-    expect(layoutsForSlideType("ending")).toHaveLength(43)
+    expect(layoutsForSlideType("chapter")).toHaveLength(42)
+    expect(layoutsForSlideType("ending")).toHaveLength(44)
   })
 
-  it("content includes both the 49 layouts and the 4 takeovers", () => {
+  it("content includes both the 50 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(49)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(50)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(53)
+    expect(contents).toHaveLength(54)
   })
 })
