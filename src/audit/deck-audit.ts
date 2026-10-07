@@ -2560,14 +2560,15 @@ function overlapFindings(markup: string, page: number, slideId: string | undefin
 // exactly one place (the render chain itself) that decides what got cut.
 // ────────────────────────────────────────────────────────────────────────
 
-/** First N characters of an element's own text content, trimmed — same
- *  "prefix, not full text" convention `overflowMessage`/`contrastMessage`
- *  already use for `issue.text`/`label`. */
-const TEXT_PREFIX_LEN = 24
-
-function truncatedMessage(prefix: string): string {
+/**
+ * The message quotes the cut line whole, as it stands on the page. The other
+ * findings name their text by its first 24 characters, which is enough to
+ * find a label; a cut line is often a long one, and its opening words alone
+ * did not tell an author which of several similar lines was cut.
+ */
+function truncatedMessage(line: string): string {
   return (
-    `text "${prefix}" was truncated to fit — widen the layout, shorten the source ` +
+    `text "${line}" was truncated to fit — widen the layout, shorten the source ` +
     `content, or accept the cut if the tail wasn't essential`
   )
 }
@@ -2577,12 +2578,11 @@ function truncatedFindings(markup: string, page: number, slideId: string | undef
   const els = Array.from(root.querySelectorAll('[data-truncated="1"]'))
   return els.map((el) => {
     const text = (el.textContent ?? "").trim()
-    const prefix = text.slice(0, TEXT_PREFIX_LEN)
     return {
       page,
       ...(slideId !== undefined ? { slideId } : {}),
       code: "content-truncated" as const,
-      message: truncatedMessage(prefix),
+      message: truncatedMessage(text),
       detail: { text },
     }
   })
