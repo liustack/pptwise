@@ -34,6 +34,9 @@ import type { MotifId } from "./types"
  *   ink-motif is ink's scroll folio: the page number against the right
  *   edge at the foot, the notice at the left, and the organization and the
  *   deck's `label` standing upright down the right margin.
+ *   crayonbox-motif is crayon's folio: the organization, the label and the
+ *   notice at the bottom left, the page number in a pale disc of the page's
+ *   section crayon at the right.
  * - `"organization"`: the motif prints the organization somewhere of its
  *   own, and the shared row carries everything else.
  *
@@ -56,5 +59,6 @@ export const MOTIF_FOOTER_ROLES: Partial<Record<MotifId, MotifFooterRole>> = {
   "rail-motif": "row",
   "corner-ornament-motif": "row",
   "ink-motif": "row",
+  "crayonbox-motif": "row",
   "poster-motif": "organization",
 }

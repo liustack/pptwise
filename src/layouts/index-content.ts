@@ -40,6 +40,7 @@ import { PeriodicalSheetContent } from "./content-periodical-sheet"
 import { PeriodicalQuoteContent } from "./content-periodical-quote"
 import { ScrollSheetContent } from "./content-scroll-sheet"
 import { ScrollQuoteContent } from "./content-scroll-quote"
+import { CrayonboxSheetContent } from "./content-crayonbox-sheet"
 import { SealFigureContent } from "./content-seal-figure"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { CrayonboxPointContent } from "./content-crayonbox-point"
@@ -80,7 +81,8 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // in all. The thesis sample redesign adds manuscript-sheet: 36 pin-only, 45
 // in all. The journal sample redesign adds periodical-sheet and
 // periodical-quote: 38 pin-only, 47 in all. The ink sample redesign adds
-// scroll-sheet and scroll-quote: 40 pin-only, 49 in all.
+// scroll-sheet and scroll-quote: 40 pin-only, 49 in all. The crayon sample
+// redesign adds crayonbox-sheet: 49 in all after the three retired themes.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
   "two-column": TwoColumnContent,
@@ -130,4 +132,5 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "periodical-quote": PeriodicalQuoteContent,
   "scroll-sheet": ScrollSheetContent,
   "scroll-quote": ScrollQuoteContent,
+  "crayonbox-sheet": CrayonboxSheetContent,
 }

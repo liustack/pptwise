@@ -265,15 +265,17 @@ function componentEntries(): ComponentEntry[] {
  *
  * Every other page in this matrix is inside its face, which is the whole
  * point of the corpus and also why none of them shows what happens when a
- * face cannot cope. These three do. One per family that suppresses something
+ * face cannot cope. These two do. One per family that suppresses something
  * of the theme's own on its ordinary page, because that suppression is what a
  * stepped-aside page must not inherit: `gauge-sheet` declares
- * `branding: "none"` because brief's footer is its motif, `crayonbox-cards`
- * and `show-figures` declare `suppressMotif`.
+ * `branding: "none"` because brief's footer is its motif, and `show-figures`
+ * declares `suppressMotif`. crayon's `crayonbox-cards` was the third until
+ * crayon's list page left it for the crayonbox sheet (2026-10), which
+ * declines rather than steps aside; `step-aside-identity.test.tsx` keeps its
+ * case.
  *
  * Each is one ordinary corpus component under a lead-in sentence: a
- * from-to shift, a three-ring onion, a five-person
- * roster. Nothing here is inflated to force the outcome — every one of them
+ * from-to shift, a three-ring onion. Nothing here is inflated to force the outcome — every one of them
  * fits its face on its own, and it is the sentence above it that takes the
  * page past what the face can hold, which is exactly the shape a real deck
  * runs into. `step-aside-corpus.test.mts` holds both halves.
@@ -286,7 +288,6 @@ export const STEP_ASIDE_PAGES: readonly {
 }[] = [
   { theme: "brief", kind: "data", face: "gauge-sheet", component: "from_to" },
   { theme: "runway", kind: "data", face: "show-figures", component: "rings" },
-  { theme: "crayon", kind: "list", face: "crayonbox-cards", component: "people_cards" },
 ]
 
 /**
@@ -528,6 +529,22 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "ink", kind: "list", composition: "excerpts" },
   { theme: "ink", kind: "list", composition: "glyphs" },
   { theme: "ink", kind: "quote", composition: "statute" },
+  // crayon's crayonbox sheet sets the shapes as a parents' meeting drawn in
+  // crayon sets them, and draws the fourteen its own board added.
+  { theme: "crayon", kind: "process", composition: "crayons" },
+  { theme: "crayon", kind: "list", composition: "stickies" },
+  { theme: "crayon", kind: "comparison", composition: "waiver" },
+  { theme: "crayon", kind: "data", composition: "storeys" },
+  { theme: "crayon", kind: "list", composition: "swatches" },
+  { theme: "crayon", kind: "statement", composition: "yardstick" },
+  { theme: "crayon", kind: "process", composition: "arc" },
+  { theme: "crayon", kind: "list", composition: "magnets" },
+  { theme: "crayon", kind: "comparison", composition: "crosscheck" },
+  { theme: "crayon", kind: "photo", composition: "tray" },
+  { theme: "crayon", kind: "data", composition: "checkup" },
+  { theme: "crayon", kind: "photo", composition: "backing" },
+  { theme: "crayon", kind: "list", composition: "badges" },
+  { theme: "crayon", kind: "points", composition: "ticks" },
 ]
 
 export function buildMatrix(

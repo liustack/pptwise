@@ -28,6 +28,7 @@ import { BINDER_BODIES } from "./binder-bodies"
 import { MANUSCRIPT_BODIES } from "./manuscript-bodies"
 import { PERIODICAL_BODIES } from "./periodical-bodies"
 import { SCROLL_BODIES } from "./scroll-bodies"
+import { CRAYONBOX_BODIES } from "./crayonbox-bodies"
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/images")
 
@@ -581,6 +582,8 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   // count. Its quotation page: one quote.
   if (def.id === "scroll-sheet") return COMPOSITION_BODIES.handscroll(lex).components
   if (def.id === "scroll-quote") return [b.blockquote!(lex)]
+  // crayon's crayonbox sheet: the board's five coloured cards of the areas a child grows in.
+  if (def.id === "crayonbox-sheet") return COMPOSITION_BODIES.swatches(lex).components
   if (def.id === "marquee-statement") {
     return [{ type: "icon_cards", items: [0, 1, 2].map((i) => ({ icon: (["cup-soda", "package", "ticket"] as const)[i]!, title: lex.labels[i]!, text: lex.bullets[i]! })) }]
   }
@@ -1176,6 +1179,12 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
   // after the lists, the Spring Festival by the day, the problems on record
   // and the five things to do; and the statute its quotation page sets.
   ...SCROLL_BODIES,
+  // crayon's crayonbox sheet: the contents as crayons, the law's sticky
+  // notes, what is free and what is not, enrolment on two storeys, the five
+  // areas, the crossed-out ruler, the day on the sun's arc, the fridge, what
+  // each body advises, the lunch tray, the eye check, settling in, the safety
+  // badges and the ticklist.
+  ...CRAYONBOX_BODIES,
   rows: (lex) => ({
     heading: lex.headings[1]!,
     components: [

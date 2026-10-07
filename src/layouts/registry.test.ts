@@ -79,8 +79,9 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // ten faces only those themes drew (cut-panel-cover, round-mark-chapter,
     // seat-cta-ending, bill-head, day-bill-chapter, ticket-cta-ending,
     // mono-bleed, double-frame-cover, mirror-volume-chapter,
-    // invite-field-ending): 175.
-    expect(layoutEntries).toHaveLength(175)
+    // invite-field-ending): 175. The crayon redesign adds crayonbox-cover,
+    // crayonbox-chapter, crayonbox-sheet and crayonbox-ending: 179.
+    expect(layoutEntries).toHaveLength(179)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -145,6 +146,7 @@ describe("content family: body slot", () => {
           id === "decision-close-ending" ||
           id === "gauge-next" ||
           id === "crayonbox-todo" ||
+          id === "crayonbox-ending" ||
           id === "close-word-ending" ||
           id === "console-ending" ||
           id === "memo-ending" ||
@@ -228,7 +230,9 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
         // The scroll's record page sets five blocks: a photograph, two figures, a progress bar and its line.
         id === "scroll-sheet" ||
         // The scroll's quotation page takes its one passage.
-        id === "scroll-quote"
+        id === "scroll-quote" ||
+        // The crayonbox's studies page sets five blocks: a photograph, two studies, a caution, the lead and the things to do.
+        id === "crayonbox-sheet"
       )
         continue
       const body = LAYOUT_REGISTRY[id].slots.find((s) => s.name === "body")
@@ -300,18 +304,18 @@ describe("layoutsForSlideType", () => {
     for (const l of covers) expect(l.slideTypes).toContain("cover")
   })
 
-  it("cover, chapter, and ending expose 45, 40, and 42 registered layouts with no takeovers", () => {
+  it("cover, chapter, and ending expose 46, 41, and 43 registered layouts with no takeovers", () => {
     // The shared automatic pools are unchanged by the gauge family: 19, 8, 7.
-    expect(layoutsForSlideType("cover")).toHaveLength(45)
+    expect(layoutsForSlideType("cover")).toHaveLength(46)
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
-    expect(layoutsForSlideType("chapter")).toHaveLength(40)
-    expect(layoutsForSlideType("ending")).toHaveLength(42)
+    expect(layoutsForSlideType("chapter")).toHaveLength(41)
+    expect(layoutsForSlideType("ending")).toHaveLength(43)
   })
 
-  it("content includes both the 48 layouts and the 4 takeovers", () => {
+  it("content includes both the 49 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(48)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(49)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(52)
+    expect(contents).toHaveLength(53)
   })
 })

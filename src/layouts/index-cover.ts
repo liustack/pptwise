@@ -39,6 +39,7 @@ import { BinderCover } from "./cover-binder-cover"
 import { ManuscriptCover } from "./cover-manuscript-cover"
 import { PeriodicalCover } from "./cover-periodical-cover"
 import { ScrollCover } from "./cover-scroll-cover"
+import { CrayonboxCover } from "./cover-crayonbox-cover"
 import { PledgeOpenCover } from "./cover-pledge-open-cover"
 import { ReportOpenCover } from "./cover-report-open-cover"
 import { GaugeVerdictCover } from "./cover-gauge-verdict"
@@ -95,4 +96,5 @@ export const COVER_LAYOUTS: Record<CoverLayoutId, CoverLayout> = {
   "manuscript-cover": ManuscriptCover,
   "periodical-cover": PeriodicalCover,
   "scroll-cover": ScrollCover,
+  "crayonbox-cover": CrayonboxCover,
 }

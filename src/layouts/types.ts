@@ -103,6 +103,8 @@ export type CoverLayoutId =
   | "periodical-cover"
   // ink sample redesign (2026-10-07): a title slip hung beside a photograph.
   | "scroll-cover"
+  // crayon sample redesign (2026-10-08): a welcome sign drawn in crayon beside a framed photograph.
+  | "crayonbox-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -153,6 +155,8 @@ export type ChapterLayoutId =
   | "manuscript-chapter"
   // ink sample redesign (2026-10-07): a volume opens beside its mounted painting.
   | "scroll-chapter"
+  // crayon sample redesign (2026-10-08): a part's number on a tilted block of its section's crayon.
+  | "crayonbox-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -207,6 +211,8 @@ export type EndingLayoutId =
   | "periodical-ending"
   // ink sample redesign (2026-10-07): the scroll's colophon and seal.
   | "scroll-ending"
+  // crayon sample redesign (2026-10-08): the next meeting and the contact cards over a veiled photograph.
+  | "crayonbox-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -285,6 +291,8 @@ export type ContentLayoutId =
   | "scroll-sheet"
   // ink sample redesign: the board's quotation page. Theme-locked.
   | "scroll-quote"
+  // crayon sample redesign: the board's ordinary content page. Theme-locked.
+  | "crayonbox-sheet"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

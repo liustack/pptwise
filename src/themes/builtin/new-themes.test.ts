@@ -220,8 +220,9 @@ describe("crayon tokens", () => {
     )
   })
 
-  it("does not set an accentPool (single, restrained crayon-orange accent)", () => {
-    expect(CRAYON_TOKENS.colors.accentPool).toBeUndefined()
+  it("carries its five section crayons in an accentPool, in section order", () => {
+    // crayon 2026-10: each of a deck's sections wears one crayon of the box.
+    expect(CRAYON_TOKENS.colors.accentPool).toEqual(["#14B4FF", "#15D157", "#FF6A12", "#F25C54", "#7452E0"])
   })
 
   it("shape.radius is 12 (roundest built-in — same homeroom-affinity register)", () => {

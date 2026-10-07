@@ -46,6 +46,22 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * `#FFF1D6`）。阳光黄永不承字。
  *
  * **菜单分派（S1-B）**：蜡笔盒家族接管并列与宣言（list 走 crayonbox-cards，statement 走本来无人认领的 crayonbox-point），低龄课不摆数据也不讲层级，data、hierarchy、quote、fact、evidence 都不上。
+ *
+ * **v2 一盒蜡笔（2026-10-08，`design/rounds/2026-10-08-crayon/`）**：整套按家长会
+ * 定稿重画。内容页的 kind 全交给 `crayonbox-sheet`，它把正文交给 crayonbox 设定
+ * 的构图：左上一枚分区彩色胶囊（页面的 `kicker`，分区按出现顺序取五支蜡笔的颜色），
+ * 标题 34px 粗圆体一行到底、放不下在逗号冒号处断、底对齐 y146，标题下一笔三道
+ * 错开的蜡笔线，卡片描两遍边。封面、章节、结尾换成 `crayonbox-cover`、
+ * `crayonbox-chapter`（歪色块编号）、`crayonbox-ending`（联系卡）。motif 重画：
+ * 右上太阳加两颗多边形星，左下机构名与学期，右下分区浅色圆里的页码。定稿画了
+ * 数据页（在园人数、近视率），菜单因此加上 `data`。
+ *
+ * 五支分区蜡笔进 `accentPool`，按分区顺序：天蓝 `#14B4FF`、草绿 `#15D157`、
+ * 亮橘 `#FF6A12`、蜡笔红 `#F25C54`、蜡笔紫 `#7452E0`。阳光黄仍是图表色第四格。
+ * 本仓库 `contrastRatio` 实测：深蓝黑压红 4.70:1，压紫 2.94:1（紫底一律白字，
+ * 白字压紫 5.22:1），黄底一律深蓝黑字。橘色要承字时用定稿的焦橘 `#C24E00`，
+ * 记为 `emphasisInk`（压 bg 4.58:1，压 surface 4.79:1，答 4.5），作者用
+ * `**…**` 标出的字也走它；绿色承字用 `success` `#0E8437`（压 bg 4.59:1）。
  */
 export const CRAYON_TOKENS: StyleTokens = {
   id: "crayon",
@@ -62,10 +78,14 @@ export const CRAYON_TOKENS: StyleTokens = {
     danger: "#C71559", // 糖果粉压深，压 surface 5.71:1
     warning: "#A67C00", // 阳光黄压深，压 surface 3.82:1，只作线与图标
     success: "#0E8437", // 草绿压深，压 surface 4.80:1
+    emphasisInk: "#C24E00", // 焦橘：橘色承字时的墨，压 bg 4.58:1，压 surface 4.79:1
     // 一盒四色亮糖果蜡笔。四格压 bg 2.23 / 2.74 / 1.95 / 1.40。
     // 这是设计裁定的例外。厚笔画图形在奶油底上可辨，不受 3.0 图表标记线
     // 约束。旧 crayon 的 #F5B700（1.68）已有同款先例。四格永不承字。
     chartPalette: ["#14B4FF", "#FF6A12", "#15D157", "#FFD100"],
+    // 一盒五支分区蜡笔，按分区出现顺序取色：天蓝、草绿、亮橘、蜡笔红、蜡笔紫。
+    // 都是色块与线，承字时走 accessibleInk / liftedInk：紫底白字，其余深蓝黑字。
+    accentPool: ["#14B4FF", "#15D157", "#FF6A12", "#F25C54", "#7452E0"],
   },
   fonts: {
     heading: ["Microsoft YaHei", "PingFang SC", "Helvetica Neue", "system-ui"],
@@ -95,17 +115,18 @@ export const CRAYON_THEME = {
   },
   style: CRAYON_TOKENS,
   menu: {
-    cover: { face: "crayonbox-open" },
-    chapter: { face: "crayonbox-sticker" },
+    cover: { face: "crayonbox-cover" },
+    chapter: { face: "crayonbox-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "crayonbox-cards" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      photo: { face: "image-top" },
-      statement: { face: "crayonbox-point" },
+      points: { face: "crayonbox-sheet" },
+      list: { face: "crayonbox-sheet" },
+      comparison: { face: "crayonbox-sheet" },
+      process: { face: "crayonbox-sheet" },
+      data: { face: "crayonbox-sheet" },
+      photo: { face: "crayonbox-sheet" },
+      statement: { face: "crayonbox-sheet" },
     },
-    ending: { face: "crayonbox-todo" },
+    ending: { face: "crayonbox-ending" },
   },
   motif: { id: "crayonbox-motif" },
 } satisfies BuiltinThemeDeclaration;

@@ -53,6 +53,7 @@ import { ManuscriptSheetContent } from "./content-manuscript-sheet"
 import { PeriodicalSheetContent } from "./content-periodical-sheet"
 import { PeriodicalQuoteContent } from "./content-periodical-quote"
 import { ScrollSheetContent } from "./content-scroll-sheet"
+import { CrayonboxSheetContent } from "./content-crayonbox-sheet"
 import { ScrollQuoteContent } from "./content-scroll-quote"
 import { MarqueeStatementContent } from "./content-marquee-statement"
 import { PitchPhotoContent } from "./content-pitch-photo"
@@ -227,6 +228,9 @@ const CASES: FaceCase[] = [
   // ink's scroll sheet: the same, under the claim from y190 down to y640,
   // over the source line.
   { face: "scroll-sheet", Face: ScrollSheetContent, themeId: "ink", regions: ["face", "declined"] },
+  // crayon's crayonbox sheet: the same, under the claim from y186 down to
+  // y640, over the source line.
+  { face: "crayonbox-sheet", Face: CrayonboxSheetContent, themeId: "crayon", regions: ["face", "declined"] },
   // A chart is not a passage, so the quotation page sets the claim over the
   // page and the body under it, in the sheet's own band.
   { face: "scroll-quote", Face: ScrollQuoteContent, themeId: "ink", regions: ["face", "declined"] },

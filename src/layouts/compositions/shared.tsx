@@ -204,6 +204,20 @@ export type CompositionId =
   | "excerpts"
   | "glyphs"
   | "statute"
+  | "crayons"
+  | "stickies"
+  | "waiver"
+  | "storeys"
+  | "swatches"
+  | "yardstick"
+  | "arc"
+  | "magnets"
+  | "crosscheck"
+  | "tray"
+  | "checkup"
+  | "backing"
+  | "badges"
+  | "ticks"
 
 /**
  * The type a composition sets its page in.
@@ -405,10 +419,26 @@ export type CompositionId =
  *   characters each over its column of words, and a statute set upright.
  *   See `./scroll.tsx`.
  *
+ * - `crayonbox`: crayon's 2026-10 board. A box of crayons on drawing
+ *   paper: words in a deep navy ink, the deck's sections coloured in order
+ *   by five crayons (the theme's `accentPool`), sunny yellow for what is
+ *   only drawn, cards rounded and outlined twice as if traced, a filled
+ *   crayon carrying the navy or white, and a colour that must carry words
+ *   lifted toward the ink until it reads. A composition offered this
+ *   setting places the page's claim (`claim`) and its source (`source`)
+ *   itself, and draws the shapes that board drew and no other did: the
+ *   contents as a row of crayons, rules as sticky notes, what is in and
+ *   out with a worked sum, bars and a rate on two storeys, a card of its
+ *   own colour a thing, a crossed-out ruler under a large claim, a day on
+ *   the sun's arc, notes pinned to a fridge door, what several bodies say
+ *   side by side, figures beside a framed photograph, an eye check beside
+ *   its advice, studies beside things to tick, round safety badges and big
+ *   boxes to tick beside a photograph. See `./crayonbox.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll" | "crayonbox"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */
@@ -472,7 +502,18 @@ export interface CompositionProps {
    * and the `foot` its last line ends on; a face whose board has one claim
    * size reads neither.
    */
-  claim?: (column: { x: number; w: number; size?: number; foot?: number }) => React.ReactElement | null
+  claim?: (column: {
+    x: number
+    w: number
+    size?: number
+    foot?: number
+    /** The claim's line box, for a board that sets it larger. */
+    lineHeight?: number
+    /** The most lines the claim may take in the column; it answers `null` past them. */
+    maxLines?: number
+    /** The stroke a crayonbox claim is underlined with: its length, its gap under the foot and its width. */
+    underline?: { w: number; gap: number; stroke: number }
+  }) => React.ReactElement | null
   /**
    * The page's source line, drawn by the face's own rules into the column a
    * composition gives it (`x` from the band's left, `w` its measure), or
@@ -481,7 +522,7 @@ export interface CompositionProps {
    * board moves the source under the column beside a photograph (ink's
    * scroll sheet); a composition offered it draws it once.
    */
-  source?: (column: { x: number; w: number }) => React.ReactElement | null
+  source?: (column: { x: number; w: number; top?: number }) => React.ReactElement | null
 }
 
 export interface CompositionInks {
@@ -492,6 +533,12 @@ export interface CompositionInks {
    * composition derives one from the tokens, see `quietInkOn`.
    */
   quietOnPrimary?: string
+  /**
+   * The crayon of the section the page sits in, handed down by a face that
+   * colours its sections (crayon's crayonbox sheet): a table's header band,
+   * a list's boxes and a photograph's frame take it.
+   */
+  section?: string
 }
 
 /**

@@ -31,11 +31,11 @@ const { LEXICONS } = await import("./corpus/lexicon")
 await installNodePlatform()
 
 /**
- * Five of the nine, verbatim from the ratchet this change emptied: the pages
- * only the step-aside closes.
+ * Four of the nine, verbatim from the ratchet this change emptied: the pages
+ * only the step-aside closes. The fifth, crayon's bar chart, now fits the
+ * crayonbox sheet crayon moved to in 2026-10, and is held below.
  */
 const CLOSED_OVERFLOWS: readonly string[] = [
-  "crayon · chart · bar · en: 1×component",
   "crayon · people_cards · en: 1×component",
   "crayon · rings · en: 1×component",
   "runway · people_cards · en: 1×component",
@@ -43,13 +43,14 @@ const CLOSED_OVERFLOWS: readonly string[] = [
 ]
 
 /**
- * The other four. A chart on a cartesian plot now draws a shorter plot
+ * The other five. A chart on a cartesian plot now draws a shorter plot
  * before its page loses it (`chartMinHeight`, `layoutContentFit`), and these
- * four fit crayon's band that way, so they never reach the step-aside.
+ * fit crayon's band that way, so they never reach the step-aside.
  * Listed so that holding stays a claim the test makes, not one it forgot.
  */
 const HELD_BY_CHART_FLOOR: readonly string[] = [
   "crayon · chart · area",
+  "crayon · chart · bar",
   "crayon · chart · bar horizontal",
   "crayon · chart · line",
   "crayon · chart · scatter",
@@ -71,7 +72,7 @@ async function dropsOn(themeId: string, id: string): Promise<string[]> {
 }
 
 describe("the nine overflows the step-aside closed", () => {
-  it("the five only it closes come back when it always declines", { timeout: 300_000 }, async () => {
+  it("the four only it closes come back when it always declines", { timeout: 300_000 }, async () => {
     const found: string[] = []
     for (const entry of CLOSED_OVERFLOWS) {
       const [themeId, componentId] = entry.split(" · ")
@@ -83,7 +84,7 @@ describe("the nine overflows the step-aside closed", () => {
     expect(found.sort()).toEqual([...CLOSED_OVERFLOWS].sort())
   })
 
-  it("the four charts stay whole without it, drawn down to their floor", { timeout: 300_000 }, async () => {
+  it("the five charts stay whole without it, drawn down to their floor", { timeout: 300_000 }, async () => {
     for (const entry of HELD_BY_CHART_FLOOR) {
       const [themeId] = entry.split(" · ")
       const id = entry.slice(themeId!.length + 3)
