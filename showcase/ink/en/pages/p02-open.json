@@ -1,0 +1,33 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "45",
+          "label": "On UNESCO's lists and register",
+          "note": "As of December 2025",
+          "icon": "globe"
+        },
+        {
+          "value": "1,557",
+          "label": "National representative items",
+          "note": "Five State Council batches, 2006 to 2021",
+          "icon": "scroll-text"
+        },
+        {
+          "value": "**3,994**",
+          "label": "National representative bearers",
+          "note": "End of 2025, statistical bulletin",
+          "icon": "user-round"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "A list records an item. A skill or a custom lives in the people who know it and still do it. Today: first the lists, then the people, then how it returns to daily life."
+    }
+  ],
+  "footnote": "Source: China ICH website (Dec 2025), State Council list notices, 2025 statistical bulletin of the Ministry of Culture and Tourism",
+  "notes": "Three numbers to start. 45 is the number of Chinese elements on UNESCO's intangible heritage lists and register as of December 2025: 40 on the Representative List, 3 on the Urgent Safeguarding List and 2 in the Register of Good Safeguarding Practices. 1,557 is the number of national representative items the State Council published in five batches between 2006 and 2021. 3,994 is the number of national representative bearers in the 2025 statistical bulletin of the Ministry of Culture and Tourism. That last figure has several different counts, which we will come back to. The first two numbers say how long the lists are. The third is about people. My argument tonight: the lists are long now, and whether heritage lives on depends on who still practises it and who is learning it."
+}

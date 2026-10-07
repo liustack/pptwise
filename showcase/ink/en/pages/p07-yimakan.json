@@ -1,0 +1,34 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "river",
+      "caption": "Illustration (AI-generated)",
+      "fit": "cover"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "5",
+          "label": "could perform it in full, 2011"
+        },
+        {
+          "value": "**121**",
+          "label": "bearers, December 2025"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Sung storytelling of the Hezhen people. Urgent list in 2011, Representative List in 2025, and its safeguarding plan entered the register of good practices."
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "The two counts differ slightly: the first is people who could perform it in full, the second is bearers"
+    }
+  ],
+  "footnote": "Source: Xinhua interview with a Ministry of Culture and Tourism official (11 Dec 2025), China ICH website",
+  "notes": "A story. Yimakan is the sung storytelling of the Hezhen people. When it entered the Urgent Safeguarding List in 2011, only five bearers could perform it in full. In December 2025 an official of the Ministry of Culture and Tourism told Xinhua it now has 121 bearers. That same month Yimakan moved to the Representative List, and its safeguarding plan entered the Register of Good Safeguarding Practices, meaning UNESCO treats it as a model others can learn from. From urgent case to model took 14 years. Note that the two figures count slightly different things: five people who could perform it in full, and 121 bearers. Both come from the same interview. The picture is an AI-generated illustration, not a photograph of Yimakan."
+}

@@ -1,0 +1,124 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "milestones": [
+        {
+          "date": "2001",
+          "title": "Kunqu"
+        },
+        {
+          "date": "2003",
+          "title": "Guqin"
+        },
+        {
+          "date": "2005",
+          "title": "Muqam, Long Song"
+        },
+        {
+          "date": "2009",
+          "title": "25 in a year: paper-cut, calligraphy"
+        },
+        {
+          "date": "2010",
+          "title": "Acupuncture, Peking Opera"
+        },
+        {
+          "date": "2011",
+          "title": "Shadow play, Yimakan"
+        },
+        {
+          "date": "2016",
+          "title": "24 Solar Terms"
+        },
+        {
+          "date": "2020",
+          "title": "Taijiquan"
+        },
+        {
+          "date": "2022",
+          "title": "Tea craft"
+        },
+        {
+          "date": "2024",
+          "title": "Spring Festival",
+          "highlight": true
+        }
+      ],
+      "periods": [
+        {
+          "from": "2001",
+          "to": "2008",
+          "label": "Masterpieces, before the lists"
+        },
+        {
+          "from": "2008",
+          "to": "2025",
+          "label": "Today's lists and register"
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "scatter",
+      "series": [
+        {
+          "name": "Total",
+          "steps": true,
+          "data": [
+            {
+              "x": 2008,
+              "y": 4
+            },
+            {
+              "x": 2009,
+              "y": 29
+            },
+            {
+              "x": 2010,
+              "y": 34
+            },
+            {
+              "x": 2011,
+              "y": 36
+            },
+            {
+              "x": 2012,
+              "y": 37
+            },
+            {
+              "x": 2013,
+              "y": 38
+            },
+            {
+              "x": 2016,
+              "y": 39
+            },
+            {
+              "x": 2018,
+              "y": 40
+            },
+            {
+              "x": 2020,
+              "y": 42
+            },
+            {
+              "x": 2022,
+              "y": 43
+            },
+            {
+              "x": 2024,
+              "y": 44
+            },
+            {
+              "x": 2025,
+              "y": 45
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Counted by first inscription, moves between lists not counted twice. Source: UNESCO China page, NPC Standing Committee inspection report, Annex Table 4 (Nov 2024)",
+  "notes": "Think of this as a long scroll. In 2001 UNESCO proclaimed Kunqu Opera one of the first Masterpieces of the Oral and Intangible Heritage of Humanity, before today's lists existed. The Guqin followed in 2003, and in 2005 the Uyghur Muqam of Xinjiang and the Mongolian Long Song, shared with Mongolia. The convention was adopted in 2003 and China joined in 2004. In 2008 these four were folded into the Representative List. 2009 brought 25 elements in a single year, among them paper-cutting, calligraphy, Xuan paper and the Dragon Boat Festival. Peking Opera and acupuncture came in 2010, shadow puppetry and Hezhen Yimakan storytelling in 2011. Then one or two every few years: the Twenty-Four Solar Terms in 2016, Taijiquan and the Wangchuan ceremony in 2020, traditional tea processing in 2022, and the Spring Festival in December 2024. In 2025 the safeguarding plan for Yimakan entered the Register of Good Safeguarding Practices, bringing the total to 45. One counting detail: in 2024 three elements, and in 2025 Yimakan itself, moved from the Urgent Safeguarding List to the Representative List. A move does not add to the total, so this scroll counts each element once, in the year it first entered a list."
+}

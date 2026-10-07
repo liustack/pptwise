@@ -1,0 +1,61 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "lanterns",
+      "caption": "Illustration (AI-generated)",
+      "fit": "cover"
+    },
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "h",
+          "label": "Holiday"
+        },
+        {
+          "key": "d",
+          "label": "Days"
+        },
+        {
+          "key": "t",
+          "label": "Trips (million)"
+        },
+        {
+          "key": "p",
+          "label": "Per day (million)"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "h": "Spring Festival 2025",
+            "d": "8 days",
+            "t": "501",
+            "p": "62.6"
+          }
+        },
+        {
+          "cells": {
+            "h": "Spring Festival 2026",
+            "d": "9 days",
+            "t": "596",
+            "p": "66.2"
+          },
+          "emphasis": "highlight"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Trips per day rose from 62.6 million to 66.2 million, up 5.7%"
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "The travel rush is another count: 9.41 billion cross-region trips over 40 days in 2026, going home and to work included, not tourism. Nor can the rise be credited to the listing."
+    }
+  ],
+  "footnote": "Source: Ministry of Culture and Tourism (Feb 2025, Feb 2026), Ministry of Transport (Apr 2026)",
+  "notes": "In December 2024 the Spring Festival was inscribed on UNESCO's Representative List. The ministry called the 2025 holiday the first Spring Festival after inscription. Over that 8-day holiday, people made 501 million domestic trips and spent 677.0 billion yuan. The 2026 holiday lasted 9 days, one day longer, with 596 million trips and 803.5 billion yuan spent. Because the holidays differ in length, a per-day comparison is fairer: 62.6 million trips a day, then 66.2 million, up 5.7 percent. That rise cannot be credited to the inscription, since many things drive holiday travel. And the travel-rush figure you often hear is another count altogether: 9.41 billion cross-region trips over the 40 days of the 2026 travel season, which includes people going home and going to work, not just tourism. The picture is an AI-generated illustration."
+}

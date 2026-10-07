@@ -1,0 +1,52 @@
+{
+  "components": [
+    {
+      "type": "image_grid",
+      "items": [
+        {
+          "asset_id": "workshop",
+          "caption": "Workshops",
+          "icon": "store"
+        },
+        {
+          "asset_id": "carving",
+          "caption": "Training",
+          "icon": "users"
+        },
+        {
+          "asset_id": "school",
+          "caption": "Schools",
+          "icon": "school"
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**14,900**",
+          "label": "Heritage workshops, end of 2025",
+          "note": "Statistical bulletin"
+        },
+        {
+          "value": "About 1.3",
+          "unit": "million",
+          "label": "People with work or income from them",
+          "note": "SCIO press conference, Sep 2026"
+        },
+        {
+          "value": "51,000+",
+          "label": "Training places, 149 colleges",
+          "note": "Ministry reply, Dec 2025"
+        },
+        {
+          "value": "3,369",
+          "label": "Heritage schools",
+          "note": "NPC report, 2024"
+        }
+      ]
+    }
+  ],
+  "footnote": "Pictures are AI-generated illustrations. Platform figures for heritage videos and sales are company counts, not evidence that transmission is improving, so they are not on this page",
+  "notes": "People, objects, daily life: the Ministry of Culture and Tourism's 2023 guidance on heritage and tourism asks that heritage be seen in its people, its objects and its everyday setting. Three directions. First, heritage workshops, which organise craftspeople to produce in villages and neighbourhoods. The 2025 statistical bulletin counts 14,900 of them at the end of 2025, and a State Council Information Office press conference in September 2026 said they bring jobs or extra income to about 1.3 million people. Reports during 2025 gave several other workshop counts that do not match, so I use only these two. Second, the training programme that sends bearers to universities: by the end of 2024, 149 colleges had run more than 1,430 courses with over 51,000 places. Third, schools: 3,369 primary and secondary schools are designated heritage schools, and 25 universities offer an undergraduate degree in heritage conservation. A word on short-video and e-commerce platforms, which also publish heritage views and sales: those are the companies' own figures, defined differently by each platform. They cannot be added up, and they are not evidence that transmission is getting healthier. All three pictures are AI-generated illustrations."
+}

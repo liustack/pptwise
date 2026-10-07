@@ -1,0 +1,103 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "title": "Named in each of six batches",
+      "series": [
+        {
+          "name": "Named in each batch",
+          "data": [
+            {
+              "x": "2007",
+              "y": 226
+            },
+            {
+              "x": "2008",
+              "y": 551
+            },
+            {
+              "x": "2009",
+              "y": 711
+            },
+            {
+              "x": "2012",
+              "y": 498
+            },
+            {
+              "x": "2018",
+              "y": 1082
+            },
+            {
+              "x": "2025",
+              "y": 942,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "when",
+          "label": "As of"
+        },
+        {
+          "key": "n",
+          "label": "Bearers"
+        },
+        {
+          "key": "basis",
+          "label": "What it counts"
+        },
+        {
+          "key": "src",
+          "label": "Source"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "when": "End of 2023",
+            "n": "2,241",
+            "basis": "Living",
+            "src": "Bulletin"
+          },
+          "emphasis": "highlight"
+        },
+        {
+          "cells": {
+            "when": "2024",
+            "n": "3,068",
+            "basis": "First five batches",
+            "src": "NPC report"
+          }
+        },
+        {
+          "cells": {
+            "when": "May 2025",
+            "n": "3,107",
+            "basis": "Living, of 3,997",
+            "src": "National Library"
+          }
+        },
+        {
+          "cells": {
+            "when": "End of 2025",
+            "n": "3,994",
+            "basis": "Living not stated",
+            "src": "Bulletin"
+          }
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "These counts measure different things and cannot be joined into a growth line. Far fewer bearers are living than were ever named."
+    }
+  ],
+  "footnote": "Source: Ministry of Culture and Tourism batch notices, 2023 and 2025 statistical bulletins, NPC report (2024), National Library of China",
+  "notes": "China began naming national representative bearers in 2007. There have been six batches: 226, 551, 711, 498, then 1,082 in 2018 and 942 in 2025, which add up to 4,010. But ask how many national bearers there are now and you get several answers, each counting something different. Please do not join them into a growth line. The 2023 statistical bulletin counted 2,241 living national bearers, while the first five batches added up to 3,068. The National Library's recording exhibition gave 3,997 as of May 2025, of whom 3,107 were living. The 2025 bulletin says 3,994 and does not say whether they are living. Over three years of reviews, the ministry also withdrew the title from 12 people and found 22 no longer able to pass on their skill. The official sources do not explain how these counts fit together. From the numbers alone, 3,994 looks closer to a register count that may still include people who have died. The two figures labelled as living are 2,241 and 3,107."
+}

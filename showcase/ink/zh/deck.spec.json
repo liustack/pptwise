@@ -1,0 +1,161 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "storytelling",
+    "pacing": "balanced",
+    "audience": "public"
+  },
+  "theme": "ink",
+  "filename": "ich-today-lecture-zh",
+  "meta": {
+    "organization": "文化讲堂",
+    "date": "2026-10"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "二〇二六年十月"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "公众讲座",
+      "heading": "非遗怎样活在今天",
+      "summary": "从名录，到人，再回到生活"
+    },
+    {
+      "id": "p02-open",
+      "type": "content",
+      "kind": "points",
+      "kicker": "引子",
+      "heading": "名录已经很长，非遗能不能活下去，要看还有没有人在做",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p03-law",
+      "type": "content",
+      "kind": "quote",
+      "kicker": "引子",
+      "heading": "非遗不只是手艺，也包括相关的实物和场所",
+      "focus": "blockquote"
+    },
+    {
+      "id": "p04-system",
+      "type": "content",
+      "kind": "hierarchy",
+      "kicker": "引子",
+      "heading": "四级名录已超过 10 万项，再加上传承人、保护区和一部专门的法",
+      "focus": "pyramid"
+    },
+    {
+      "id": "p05-vol1",
+      "type": "chapter",
+      "kicker": "卷之一",
+      "heading": "先看名录",
+      "summary": "联合国的名录，国家的名录"
+    },
+    {
+      "id": "p06-scroll",
+      "type": "content",
+      "kind": "process",
+      "kicker": "卷之一　先看名录",
+      "heading": "从 2001 年的昆曲到 2024 年的春节，进入联合国名录、名册的已有 45 项",
+      "focus": "timeline"
+    },
+    {
+      "id": "p07-yimakan",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "卷之一　先看名录",
+      "heading": "伊玛堪的 14 年：从 5 位到 121 名",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p08-world",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "卷之一　先看名录",
+      "heading": "45 项在教科文组织各国页面里最多，后面是土耳其 32 项、法国 30 项",
+      "focus": "chart"
+    },
+    {
+      "id": "p09-categories",
+      "type": "content",
+      "kind": "data",
+      "kicker": "卷之一　先看名录",
+      "heading": "十大门类里传统技艺最多，有 287 项，传统医药只有 23 项",
+      "focus": "chart"
+    },
+    {
+      "id": "p10-vol2",
+      "type": "chapter",
+      "kicker": "卷之二",
+      "heading": "名录之后，是人",
+      "summary": "项目写在名录上，手艺只在人身上"
+    },
+    {
+      "id": "p11-bearers",
+      "type": "content",
+      "kind": "list",
+      "kicker": "卷之二　名录之后是人",
+      "heading": "国家级传承人六批相加 4010 人，\n「总数」却有好几种口径，不能连成一条线",
+      "focus": "data_table"
+    },
+    {
+      "id": "p12-aging",
+      "type": "content",
+      "kind": "data",
+      "kicker": "卷之二　名录之后是人",
+      "heading": "2018 年第五批 1082 名传承人，60 岁以上占 58.3%",
+      "focus": "chart"
+    },
+    {
+      "id": "p13-records",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "卷之二　名录之后是人",
+      "heading": "71 人没等到自己的记录做完",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p14-life",
+      "type": "content",
+      "kind": "data",
+      "kicker": "卷之二　名录之后是人",
+      "heading": "见人见物见生活：手艺回到工坊、课堂和校园",
+      "focus": "image_grid"
+    },
+    {
+      "id": "p15-spring",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "卷之二　名录之后是人",
+      "heading": "春节入遗后，\n按天算出游多了 5.7%",
+      "focus": "data_table"
+    },
+    {
+      "id": "p16-problems",
+      "type": "content",
+      "kind": "list",
+      "kicker": "卷之二　名录之后是人",
+      "heading": "问题写在官方文件里：重申报轻保护、简单模仿，还有冒牌非遗",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p17-todo",
+      "type": "content",
+      "kind": "list",
+      "kicker": "卷之二　名录之后是人",
+      "heading": "留给大家的五件事：去看，去问，去查，去记，去学",
+      "focus": "row_cards"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "kicker": "公众讲座",
+      "heading": "名录记下名字，手艺要靠人传下去。",
+      "summary": "文化和自然遗产日\n每年 6 月第二个星期六"
+    }
+  ]
+}

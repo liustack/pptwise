@@ -1,0 +1,56 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "hands",
+      "caption": "Illustration (AI-generated)",
+      "fit": "cover"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**71**",
+          "label": "died while being recorded"
+        },
+        {
+          "value": "397",
+          "label": "died after their record was done"
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "stacked",
+      "direction": "horizontal",
+      "emphasis_label": "Finished: 1,279, 56%",
+      "series": [
+        {
+          "name": "Finished",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "Rescue recording started for 2,290 bearers",
+              "y": 1279
+            }
+          ]
+        },
+        {
+          "name": "In progress",
+          "data": [
+            {
+              "x": "Rescue recording started for 2,290 bearers",
+              "y": 1011
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Over 75,000 hours of raw footage and 148 million characters of oral history. For some, this is all that remains."
+    }
+  ],
+  "footnote": "As of May 2025. Source: National Library of China, ICH recording project exhibition",
+  "notes": "The rescue recording project sets out to capture what each national bearer knows, in film, oral history and documents, while they are still with us. By May 2025 it had started on 2,290 bearers and finished 1,279. The other 1,011 are still in progress. Seventy-one bearers died before their own record was finished. Another 397 died after it was completed, and that record is now what remains. Together that is 468 people, 20.4 percent of everyone the project has started on. By the same date the project had gathered more than 75,000 hours of raw footage. The picture is an AI-generated illustration."
+}
