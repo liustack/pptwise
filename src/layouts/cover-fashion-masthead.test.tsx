@@ -119,7 +119,7 @@ describe("cover-fashion-masthead — bold-metrics fix red-first (user-reported c
       ["ledger", "Georgia"],
       ["rally", "Microsoft YaHei"],
       ["homeroom", "Microsoft YaHei"],
-      ["ink", "KaiTi"],
+      ["ink", "Times New Roman"],
     ]
 
     for (const [theme, expectFace] of cases) {

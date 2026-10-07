@@ -1069,9 +1069,10 @@ function walkText(
         // and of thesis's manuscript pages (11 to 15px captions, labels,
         // chips, axis names, the running label, notes and folio) and of
         // journal's periodical pages (10 to 15px captions, axis names, the
-        // masthead, the source and the folio) are approved board sizes, like
-        // brief's meta.
-        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec", "lesson-spec", "pitch-spec", "marquee-spec", "binder-spec", "manuscript-spec", "periodical-spec"].includes(
+        // masthead, the source and the folio) and of ink's scroll pages (11 to
+        // 15px labels, notes, the margins, the source and the folio) are
+        // approved board sizes, like brief's meta.
+        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec", "lesson-spec", "pitch-spec", "marquee-spec", "binder-spec", "manuscript-spec", "periodical-spec", "scroll-spec"].includes(
           el.getAttribute("data-font-floor-exempt") ?? "",
         )
         if (!decor && !fontFloorExempt && fontSizeAttr !== null && Number(fontSizeAttr) < FONT_FLOOR) {

@@ -51,6 +51,10 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
   // set their own, and the chapter page keeps clear.
   "corner-ornament-motif": { content: ["folio", "masthead"] },
   "folio-motif": { content: ["folio"] },
+  // ink's scroll edges hang down every content page (2026-10 sample
+  // redesign); the hall and the folio join them on a deck that asks for
+  // footer marks, and the cover, the chapter and the close draw their own.
+  "ink-motif": { content: ["edges"] },
   // ledger's status bar runs across the top of every page, like a market
   // terminal's title row (2026-10 sample redesign).
   "poster-motif": {
@@ -64,7 +68,6 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
 /** Adjudicated identity pieces. Midground, original color, no intensity cap. */
 const IDENTITY_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], readonly string[]>>>> = {
   "crayonbox-motif": { content: ["crayonbox-stars", "crayonbox-sun"] },
-  "ink-motif": { content: ["seal"] },
   // bulletin's square steps are its mark, in the same blue as the bar under
   // every heading, so they keep their full colour on every page (2026-10
   // sample redesign).
@@ -181,10 +184,10 @@ describe("decor piece role roster", () => {
   })
 
   it("identity pieces keep data-identity for the midground skip", () => {
-    const root = draw("ink-motif", "content")
-    const seal = root.querySelector('[data-decor-piece="seal"]')!
-    expect(seal.getAttribute(DECOR_ROLE_ATTR)).toBe("identity")
-    expect(seal.getAttribute(IDENTITY_ATTR)).toBe("true")
+    const root = draw("bulletin-motif", "content")
+    const steps = root.querySelector('[data-decor-piece="ikb-steps"]')!
+    expect(steps.getAttribute(DECOR_ROLE_ATTR)).toBe("identity")
+    expect(steps.getAttribute(IDENTITY_ATTR)).toBe("true")
   })
 
   it("heritage, playbill, and arena motifs mark neither structure nor identity", () => {

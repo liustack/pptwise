@@ -60,8 +60,9 @@ describe("ink sparse faces", () => {
     // the page. The closing full stop of this verse used to vanish with the
     // comma and leave no mark anywhere (codex render review, F2 fallout).
     expect(Array.from(root.querySelectorAll("text")).some((t) => t.textContent === "。")).toBe(true)
-    const org = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "云")
-    expect(org?.getAttribute("x")).toBe("180")
+    // The organization stands down the right margin, where ink-motif v2 sets
+    // it on every content page, so the face no longer prints a second column.
+    expect(Array.from(root.querySelectorAll("text")).some((t) => t.textContent === "云")).toBe(false)
     const emptySeal = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("width") === "34")
     expect(emptySeal?.getAttribute("stroke")).toBe(ctx.colors.accent)
     expect(markup).not.toContain(BAKED_COLOPHON)
@@ -91,7 +92,7 @@ describe("ink sparse faces", () => {
     expect(first?.getAttribute("fill")).toBe(ctx.colors.primary)
   })
 
-  it("statement without organization omits the left colophon column", () => {
+  it("statement sets no left colophon column", () => {
     const slide: Slide = { type: "content", kind: "points", layout: "statement", heading: VERSE, components: [] } as Slide
     const { root } = render(
       <StatementContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,

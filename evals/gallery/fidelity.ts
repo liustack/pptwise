@@ -50,6 +50,7 @@
 import type { Component, PptxIR, Slide } from "@/ir"
 import type { LayoutDefinition } from "@/layouts/registry"
 import { stripEmphasis } from "@/render/emphasis"
+import { horizontalForm } from "@/layouts/compositions/scroll"
 import { resolveEffectiveFace } from "@/render/layout-selection"
 import { getPlatform } from "@/platform/registry"
 import type { ThemeDefinition } from "@/themes/definitions"
@@ -156,9 +157,14 @@ export function authoredTexts(slide: Slide): AuthoredText[] {
  * answers a question with an assertion, or drops the question mark
  * altogether, has not reproduced what its author wrote, and an exception
  * built for one column break must not cover for it.
+ *
+ * A bracket or a dash set upright down a column takes its vertical form
+ * (「《」 as 「︽」); it is read back as the mark the author wrote.
  */
 export function normalize(text: string): string {
-  return text
+  return Array.from(text)
+    .map(horizontalForm)
+    .join("")
     .toLowerCase()
     .replace(/\s+/g, "")
     .replace(/…/g, "")

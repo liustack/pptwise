@@ -1,0 +1,161 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "storytelling",
+    "pacing": "balanced",
+    "audience": "public"
+  },
+  "theme": "ink",
+  "filename": "ich-today-lecture-en",
+  "meta": {
+    "organization": "Culture Lecture Hall",
+    "date": "2026-10"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "October 2026"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "Public Lecture",
+      "heading": "How Intangible Heritage Lives On Today",
+      "summary": "From the lists, to the people, back to everyday life"
+    },
+    {
+      "id": "p02-open",
+      "type": "content",
+      "kind": "points",
+      "kicker": "Prologue",
+      "heading": "The lists are long. Heritage lives in people",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p03-law",
+      "type": "content",
+      "kind": "quote",
+      "kicker": "Prologue",
+      "heading": "Heritage includes its objects and places",
+      "focus": "blockquote"
+    },
+    {
+      "id": "p04-system",
+      "type": "content",
+      "kind": "hierarchy",
+      "kicker": "Prologue",
+      "heading": "Over 100,000 items on four tiers of lists",
+      "focus": "pyramid"
+    },
+    {
+      "id": "p05-vol1",
+      "type": "chapter",
+      "kicker": "Volume One",
+      "heading": "First, the lists",
+      "summary": "UNESCO's lists, and China's own"
+    },
+    {
+      "id": "p06-scroll",
+      "type": "content",
+      "kind": "process",
+      "kicker": "Volume One · The Lists",
+      "heading": "Kunqu to Spring Festival: 45 on UNESCO's lists",
+      "focus": "timeline"
+    },
+    {
+      "id": "p07-yimakan",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "Volume One · The Lists",
+      "heading": "Yimakan's 14 years: from 5 to 121",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p08-world",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Volume One · The Lists",
+      "heading": "45 is the most on UNESCO's country pages",
+      "focus": "chart"
+    },
+    {
+      "id": "p09-categories",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Volume One · The Lists",
+      "heading": "Craftsmanship leads with 287, medicine has 23",
+      "focus": "chart"
+    },
+    {
+      "id": "p10-vol2",
+      "type": "chapter",
+      "kicker": "Volume Two",
+      "heading": "Behind the lists, people",
+      "summary": "An item stays on the list. A skill lives only in someone's hands"
+    },
+    {
+      "id": "p11-bearers",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Volume Two · The People",
+      "heading": "Six batches, 4,010 bearers, and no single total",
+      "focus": "data_table"
+    },
+    {
+      "id": "p12-aging",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Volume Two · The People",
+      "heading": "58.3% of the 2018 batch were 60 or older",
+      "focus": "chart"
+    },
+    {
+      "id": "p13-records",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "Volume Two · The People",
+      "heading": "71 bearers died before their record was done",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p14-life",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Volume Two · The People",
+      "heading": "Crafts return to workshops, classes, schools",
+      "focus": "image_grid"
+    },
+    {
+      "id": "p15-spring",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "Volume Two · The People",
+      "heading": "After listing, trips rose 5.7% a day",
+      "focus": "data_table"
+    },
+    {
+      "id": "p16-problems",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Volume Two · The People",
+      "heading": "On record: listing over care, copycats, fakes",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p17-todo",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Volume Two · The People",
+      "heading": "Five things: see, ask, check, record, learn",
+      "focus": "row_cards"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "kicker": "Public Lecture",
+      "heading": "Lists keep names. People keep skills alive.",
+      "summary": "Cultural and Natural Heritage Day\nThe second Saturday of every June"
+    }
+  ]
+}

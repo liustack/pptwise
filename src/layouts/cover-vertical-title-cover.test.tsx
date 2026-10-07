@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
-import { BoundSlideSvg } from "../render/__fixtures__/bound-slide"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { SUBSET_SAMPLE_THEME_IDS } from "../render/subset-sample-themes"
@@ -378,17 +377,5 @@ describe("cover-vertical-title-cover — seal rules", () => {
     expect(dot?.getAttribute("x")).toBe("1048")
     expect(dot?.getAttribute("y")).toBe("480")
     expect(dot?.getAttribute("fill")).toBe(tokens.colors.accent)
-  })
-})
-
-describe("cover-vertical-title-cover — FullSlideSvg remnant", () => {
-  it("keeps the left remnant mountain when the org foot is present", () => {
-    const s = slide(HEADING, {  })
-    const markup = renderSvgMarkup(<BoundSlideSvg ir={ir("ink", FULL_META, s)} slide={s} index={0} />)
-    const root = parseSvgRoot(markup)
-    const remnant = root.querySelector('[data-decor-piece="remnant"]')
-    expect(remnant).not.toBeNull()
-    expect(remnant?.innerHTML ?? "").toContain("M -40 720 Q 140 640")
-    expect(remnant?.querySelector("path")).not.toBeNull()
   })
 })

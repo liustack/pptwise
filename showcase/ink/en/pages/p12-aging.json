@@ -1,0 +1,85 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "stacked",
+      "direction": "horizontal",
+      "emphasis_label": "60 or older: 631 people, 58.3%",
+      "series": [
+        {
+          "name": "Under 40",
+          "data": [
+            {
+              "x": "Fifth batch, named in 2018: 1,082 national bearers by age (this batch only)",
+              "y": 7
+            }
+          ]
+        },
+        {
+          "name": "40 to 59",
+          "data": [
+            {
+              "x": "Fifth batch, named in 2018: 1,082 national bearers by age (this batch only)",
+              "y": 444
+            }
+          ]
+        },
+        {
+          "name": "60 to 69",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "Fifth batch, named in 2018: 1,082 national bearers by age (this batch only)",
+              "y": 287
+            }
+          ]
+        },
+        {
+          "name": "70 to 79",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "Fifth batch, named in 2018: 1,082 national bearers by age (this batch only)",
+              "y": 237
+            }
+          ]
+        },
+        {
+          "name": "80 and over",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "Fifth batch, named in 2018: 1,082 national bearers by age (this batch only)",
+              "y": 107
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "63.29",
+          "unit": "years",
+          "label": "Average age of the fifth batch",
+          "icon": "hourglass"
+        },
+        {
+          "value": "65",
+          "unit": "or older",
+          "label": "Average age of national bearers in the provinces inspected, over 70 in half of them (NPC, 2024)",
+          "icon": "users"
+        },
+        {
+          "value": "0.6",
+          "unit": "%",
+          "label": "Under 40 in the fifth batch, 7 people",
+          "icon": "sprout"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Guangming Daily and Beijing News (May 2018), NPC Standing Committee inspection report (Nov 2024)",
+  "notes": "The bearers are getting older. There is no national age table for all national bearers. The fullest data are from the fifth batch, named in 2018, as reported in the press at the time. Of 1,082 people, 107 were 80 or older, 237 were in their seventies, 287 in their sixties, 444 between 40 and 59, and only 7 were under 40. That makes 631 people aged 60 or older, 58.3 percent, with an average age of 63.29. This describes the 2018 batch only, not all bearers. The 2024 inspection report of the National People's Congress Standing Committee adds that in the provinces it inspected, the average age of national bearers was above 65 everywhere, and above 70 in half of them. I could not find a published age breakdown for the sixth batch of 2025."
+}

@@ -1,0 +1,48 @@
+{
+  "components": [
+    {
+      "type": "pyramid",
+      "layers": [
+        {
+          "label": "National",
+          "note": "1,557 items"
+        },
+        {
+          "label": "Provincial"
+        },
+        {
+          "label": "City"
+        },
+        {
+          "label": "County"
+        }
+      ]
+    },
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "users",
+          "title": "Representative bearers",
+          "text": "Six national batches, more than 90,000 across all four tiers"
+        },
+        {
+          "icon": "map-pin",
+          "title": "Cultural ecology zones",
+          "text": "21 national zones, plus 2 experimental ones"
+        },
+        {
+          "icon": "scale",
+          "title": "The ICH Law",
+          "text": "In force since 2011, 6 chapters and 45 articles"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Over 100,000 items across the four tiers"
+    }
+  ],
+  "footnote": "Source: ICH Law (2011), State Council General Office circular (2005), NPC Standing Committee inspection report (Nov 2024), China ICH website",
+  "notes": "The system rests on four tiers of lists. The national list is published by the State Council: 1,557 items in five batches, or 3,610 entries when each applying region or organisation is counted separately. Provincial governments keep the second tier. Both of these are written into Article 18 of the law. The city and county tiers come from a 2005 circular of the State Council General Office. The law itself only goes as far as the provincial level, a gap that members of the National People's Congress Standing Committee have pointed out. All four tiers together hold more than 100,000 items. Around the lists sit three more pieces. First, representative bearers: 3,994 at national level at the end of 2025, and more than 90,000 across all four tiers. Second, cultural ecology protection zones: 21 at national level plus 2 experimental zones, which is why the press often says 23. Third, the law itself, in force since 1 June 2011."
+}

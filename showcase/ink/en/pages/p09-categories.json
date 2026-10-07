@@ -1,0 +1,109 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "series": [
+        {
+          "name": "Items",
+          "data": [
+            {
+              "x": "Craftsmanship",
+              "y": 287
+            },
+            {
+              "x": "Music",
+              "y": 189
+            },
+            {
+              "x": "Folk customs",
+              "y": 183
+            },
+            {
+              "x": "Drama",
+              "y": 171
+            },
+            {
+              "x": "Folk literature",
+              "y": 167
+            },
+            {
+              "x": "Quyi storytelling",
+              "y": 145
+            },
+            {
+              "x": "Dance",
+              "y": 144
+            },
+            {
+              "x": "Fine arts",
+              "y": 139
+            },
+            {
+              "x": "Sports, games, acrobatics",
+              "y": 109
+            },
+            {
+              "x": "Medicine",
+              "y": 23
+            }
+          ]
+        },
+        {
+          "name": "Entries, by region or organisation",
+          "data": [
+            {
+              "x": "Craftsmanship",
+              "y": 629
+            },
+            {
+              "x": "Music",
+              "y": 431
+            },
+            {
+              "x": "Folk customs",
+              "y": 492
+            },
+            {
+              "x": "Drama",
+              "y": 473
+            },
+            {
+              "x": "Folk literature",
+              "y": 251
+            },
+            {
+              "x": "Quyi storytelling",
+              "y": 213
+            },
+            {
+              "x": "Dance",
+              "y": 356
+            },
+            {
+              "x": "Fine arts",
+              "y": 417
+            },
+            {
+              "x": "Sports, games, acrobatics",
+              "y": 166
+            },
+            {
+              "x": "Medicine",
+              "y": 182,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Medicine's 23 items split into 182 entries, 7.9 per item"
+    }
+  ],
+  "footnote": "Source: NPC Standing Committee inspection report, Annex Table 1 (Nov 2024), data from the Ministry of Culture and Tourism",
+  "notes": "The 1,557 national items fall into ten categories. Traditional craftsmanship is the largest with 287 items, 18.4 percent: think of Xuan paper, Longquan celadon or tea processing. Then come traditional music with 189, folk customs 183, traditional drama 171 and folk literature 167. Traditional medicine is the smallest with only 23 items, but they split into 182 entries, because the same practice was nominated by many regions and organisations: 7.9 per item, the most of any category. Entries are counted by applying region or organisation, 3,610 across all five batches. A small detail for the curious: the first batch in 2006 used older category names, and today's names date from 2008. Quyi is the Chinese umbrella term for storytelling, ballad singing and comic dialogue."
+}

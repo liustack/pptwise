@@ -233,7 +233,8 @@ describe("rail-numbered badge vs heading treatment", () => {
   })
 
   it("ink title and vertical-kicker chars do not intersect the badge", () => {
-    const { root } = renderRailPage("ink")
+    // ink's own process page is its scroll sheet since the 2026-10-07 redesign; its treatment still reaches rail-numbered put there by value.
+    const { root } = renderAssignedRailPage("ink")
     expectBadgeClear("ink", root, GALLERY_HEADING)
     const kickers = kickerBoxes(walkTextBoxes(root))
     expect(kickers.length, "ink should still paint a stacked kicker").toBeGreaterThan(0)

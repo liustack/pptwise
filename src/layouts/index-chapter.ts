@@ -29,6 +29,7 @@ import { PitchChapter } from "./chapter-pitch-chapter"
 import { MarqueeChapter } from "./chapter-marquee-chapter"
 import { BinderChapter } from "./chapter-binder-chapter"
 import { ManuscriptChapter } from "./chapter-manuscript-chapter"
+import { ScrollChapter } from "./chapter-scroll-chapter"
 import { FieldBandChapter } from "./chapter-field-band-chapter"
 import { SubjectRuleChapter } from "./chapter-subject-rule-chapter"
 import { RoundMarkChapter } from "./chapter-round-mark-chapter"
@@ -90,4 +91,5 @@ export const CHAPTER_LAYOUTS: Record<ChapterLayoutId, ChapterLayout> = {
   "marquee-chapter": MarqueeChapter,
   "binder-chapter": BinderChapter,
   "manuscript-chapter": ManuscriptChapter,
+  "scroll-chapter": ScrollChapter,
 }

@@ -40,6 +40,7 @@ import { MarqueeCover } from "./cover-marquee-cover"
 import { BinderCover } from "./cover-binder-cover"
 import { ManuscriptCover } from "./cover-manuscript-cover"
 import { PeriodicalCover } from "./cover-periodical-cover"
+import { ScrollCover } from "./cover-scroll-cover"
 import { PledgeOpenCover } from "./cover-pledge-open-cover"
 import { ReportOpenCover } from "./cover-report-open-cover"
 import { CutPanelCover } from "./cover-cut-panel-cover"
@@ -99,4 +100,5 @@ export const COVER_LAYOUTS: Record<CoverLayoutId, CoverLayout> = {
   "binder-cover": BinderCover,
   "manuscript-cover": ManuscriptCover,
   "periodical-cover": PeriodicalCover,
+  "scroll-cover": ScrollCover,
 }

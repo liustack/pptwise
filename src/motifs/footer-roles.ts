@@ -31,9 +31,11 @@ import type { MotifId } from "./types"
  *   corner-ornament-motif is journal's magazine folio: 「· 3 ·」 centred at
  *   the foot, the notice at the left, and the organization and the deck's
  *   `label` moved up into the masthead as the column's name and the issue.
+ *   ink-motif is ink's scroll folio: the page number against the right
+ *   edge at the foot, the notice at the left, and the organization and the
+ *   deck's `label` standing upright down the right margin.
  * - `"organization"`: the motif prints the organization somewhere of its
- *   own, and the shared row carries everything else. ink's colophon rail
- *   sets the organization in a vertical column down the right edge.
+ *   own, and the shared row carries everything else.
  *
  * A fact of the motif, read page by page from the motif that actually
  * paints there (`render/page-context.ts`). A page whose motif is silenced
@@ -53,6 +55,6 @@ export const MOTIF_FOOTER_ROLES: Partial<Record<MotifId, MotifFooterRole>> = {
   "proposal-motif": "row",
   "rail-motif": "row",
   "corner-ornament-motif": "row",
-  "ink-motif": "organization",
+  "ink-motif": "row",
   "poster-motif": "organization",
 }

@@ -1,299 +1,102 @@
 // @vitest-environment jsdom
 //
-// ink-motif wave 8 batch 2: keep the remnant mountain and the colophon
-// rail, split by page type so they do not collide with the new pinOnly
-// faces. Cover keeps the left remnant only. Chapter yields. Content keeps
-// the rail at x>=1220. Ending moves the remnant to the lower right.
+// ink-motif v2, ink's 2026-10 board: the scroll's two edges on every content
+// page, the hall and the date upright down the right margin and the folio
+// against the right edge when the deck asks for footer marks. The cover, the
+// chapter and the close draw their own and carry none of it.
 import { describe, expect, it } from "vitest"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { resolveStyle } from "../themes"
-import { THEME_DEFINITIONS } from "../themes/definitions"
 import { InkMotif } from "./motif-ink-motif"
-import {
-  CONTENT_DECOR_CONTRAST_CEILING,
-  countDecorPieces,
-  leafOpacity,
-  leafPaint,
-  paintedLeaves,
-} from "./decor-budget"
-import { blendOver, contrastRatio } from "../render/ink"
-import { textInkBox } from "../render/depth-contract/geometry"
+import { countDecorPieces } from "./decor-budget"
+import { contrastRatio } from "../render/ink"
+import { horizontalForm } from "../layouts/compositions/scroll"
 import type { PptxIR, Slide } from "@/ir"
 
 const slideOf = (type: Slide["type"]): Slide =>
-  (type === "content"
-    ? { type, kind: "points", heading: "标题", components: [] }
-    : { type, heading: "标题", components: [] }) as Slide
-const SLIDE_TYPES = ["cover", "chapter", "content", "ending"] as const
+  (type === "content" ? { type, kind: "points", heading: "标题", components: [] } : { type, heading: "标题", components: [] }) as Slide
 
-const REMNANT_LEFT = "M -40 720 Q 140 640 330 690 Q 430 708 500 720 Z"
-const REMNANT_RIGHT = "M 1320 720 Q 1140 640 950 690 Q 850 708 780 720 Z"
-const RAIL_X = 1220
-const BR_LOGO = { x: 1120, y: 630, w: 96, h: 40 }
-
-/**
- * The rail's words are footer marks: the organization when the deck's footer
- * prints it, the year and month when the deck shows its date. `branding:
- * "full"` asks for both, so the fixture declares it unless a test passes its
- * own deck-level fields.
- */
-function ir(
-  meta: PptxIR["meta"] = { organization: "云帆科技", date: "2026-08-15" },
-  deck: Partial<Pick<PptxIR, "branding" | "footer">> = { branding: "full" },
-): PptxIR {
+function ir(meta: PptxIR["meta"], footer?: PptxIR["footer"]): PptxIR {
   return {
     version: "5",
     filename: "ink-motif.pptx",
     theme: { id: "ink" },
     meta,
-    ...deck,
+    ...(footer ? { footer } : {}),
     assets: { images: {} },
-    slides: [slideOf("cover")],
+    slides: [slideOf("cover"), slideOf("content"), slideOf("content")],
   } as unknown as PptxIR
 }
 
 const tokens = resolveStyle("ink")
 
-function render(type: Slide["type"], meta?: PptxIR["meta"], deck?: Partial<Pick<PptxIR, "branding" | "footer">>) {
+function render(type: Slide["type"], doc: PptxIR, index = 1) {
   const defaultBg = resolveBackgroundHex(tokens.defaultBackgrounds[type], tokens.colors.surface)
-  const pageCtx = buildCtx(tokens, {}, undefined, defaultBg)
+  const ctx = buildCtx(tokens, {}, undefined, defaultBg)
+  const slide = type === "content" ? doc.slides[index]! : slideOf(type)
   const markup = renderSvgMarkup(
-    <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-      <InkMotif ir={ir(meta, deck)} slide={slideOf(type)} ctx={pageCtx} />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+      <InkMotif ir={doc} slide={slide} index={index} ctx={ctx} />
     </svg>,
   )
-  return { markup, root: parseSvgRoot(markup), defaultBg }
+  return { root: parseSvgRoot(markup), markup, ctx }
 }
 
-describe("ink-motif colophon words are footer marks (2026-10-02 footer ruling)", () => {
-  it("a deck that asks for no footer gets the rail and the seal, and no words", () => {
-    for (const deck of [{}, { branding: "cover-only" as const }, { branding: "minimal" as const }]) {
-      const { root } = render("content", undefined, deck)
-      expect(root.querySelectorAll("text"), JSON.stringify(deck)).toHaveLength(0)
-      expect(root.querySelector('[data-decor-piece="colophon"] line')).not.toBeNull()
-      expect(root.querySelector('[data-decor-piece="seal"]')).not.toBeNull()
-    }
+const ZH = ir({ organization: "文化讲堂", date: "2026-10" }, { page_number: true, organization: true, label: "二〇二六年十月" })
+const EN = ir({ organization: "Culture Lecture Hall", date: "2026-10" }, { page_number: true, organization: true, label: "October 2026" })
+
+describe("ink-motif", () => {
+  it.each(["cover", "chapter", "ending"] as const)("draws nothing on the %s, which draws its own", (type) => {
+    expect(render(type, ZH).root.querySelector("[data-decor-piece]")).toBeNull()
   })
 
-  it("footer.organization prints the organization down the rail; the date waits for the date switch", () => {
-    const { root } = render("content", undefined, { footer: { organization: true } })
-    expect(Array.from(root.querySelectorAll("text")).map((t) => t.textContent).join("")).toBe("云帆科技")
-  })
-})
-
-describe("ink-motif wave 8 — remnant mountain and colophon rail by page type", () => {
-  it("cover paints only the left remnant, no rail and no second seal", () => {
-    const { root } = render("cover")
-    expect(countDecorPieces(root)).toBe(1)
-    expect(root.querySelector("[data-decor-piece]")?.getAttribute("data-decor-piece")).toBe("remnant")
-    expect(root.querySelectorAll("path")).toHaveLength(1)
-    expect(root.querySelector("path")?.getAttribute("d")).toBe(REMNANT_LEFT)
-    expect(root.querySelector("path")?.getAttribute("opacity")).toBe("0.06")
-    expect(root.querySelector("path")?.getAttribute("fill")).toBe(tokens.colors.primary)
-    expect(root.querySelectorAll("line")).toHaveLength(0)
-    expect(root.querySelectorAll("rect")).toHaveLength(0)
-    expect(root.querySelectorAll("text")).toHaveLength(0)
+  it("hangs every content page between two edges in the hairline ink", () => {
+    const { root } = render("content", ir({ organization: "文化讲堂" }))
+    const edges = Array.from(root.querySelectorAll('[data-decor-piece="edges"] rect'))
+    expect(edges.map((e) => [e.getAttribute("x"), e.getAttribute("y"), e.getAttribute("height"), e.getAttribute("fill")])).toEqual([
+      ["69.5", "40", "640", tokens.colors.border],
+      ["1209.5", "40", "640", tokens.colors.border],
+    ])
+    // A deck that asks for no footer marks gets no words in the margin and no folio.
+    expect(root.querySelector("text")).toBeNull()
   })
 
-  it("chapter yields completely", () => {
-    const { root } = render("chapter")
-    expect(root.children).toHaveLength(0)
-    expect(countDecorPieces(root)).toBe(0)
-  })
-
-  it("ending paints the right remnant, no rail and no motif seal", () => {
-    const { root } = render("ending")
-    expect(countDecorPieces(root)).toBe(1)
-    expect(root.querySelector("path")?.getAttribute("d")).toBe(REMNANT_RIGHT)
-    expect(root.querySelector("path")?.getAttribute("opacity")).toBe("0.06")
-    expect(root.querySelectorAll("line")).toHaveLength(0)
-    expect(root.querySelectorAll("rect")).toHaveLength(0)
-    expect(root.querySelectorAll("text")).toHaveLength(0)
-  })
-
-  it("content keeps the colophon rail at or right of x1220, with a separate identity seal", () => {
-    const { root } = render("content")
-    expect(countDecorPieces(root)).toBe(2)
-    expect(
-      Array.from(root.querySelectorAll("[data-decor-piece]")).map((el) => el.getAttribute("data-decor-piece")),
-    ).toEqual(["colophon", "seal"])
-    expect(root.querySelectorAll("path")).toHaveLength(0)
-    expect(root.querySelectorAll("line")).toHaveLength(1)
-    expect(root.querySelectorAll("rect")).toHaveLength(2)
-    expect(Array.from(root.querySelectorAll("text")).map((t) => t.textContent).join("")).toBe(
-      "云帆科技二〇二六年八月",
-    )
-
-    const xs: { what: string; x: number }[] = []
-    for (const el of Array.from(root.querySelectorAll("line"))) {
-      xs.push({ what: "line x1", x: Number(el.getAttribute("x1")) })
-      xs.push({ what: "line x2", x: Number(el.getAttribute("x2")) })
-    }
-    for (const el of Array.from(root.querySelectorAll("rect"))) {
-      xs.push({ what: "rect x", x: Number(el.getAttribute("x")) })
-    }
-    for (const el of Array.from(root.querySelectorAll("text"))) {
-      const size = Number(el.getAttribute("font-size"))
-      xs.push({ what: `glyph "${el.textContent}" left edge`, x: Number(el.getAttribute("x")) - size / 2 })
-    }
-    expect(xs.length).toBeGreaterThan(10)
-    for (const { what, x } of xs) expect(x, what).toBeGreaterThanOrEqual(RAIL_X)
-  })
-
-  it("content rail ink stays clear of the bottom-right logo box", () => {
-    const { root } = render("content")
-    const RULE_HALF_STROKE = 0.6
-    const inkLeftEdges: number[] = [RAIL_X - RULE_HALF_STROKE]
-    for (const el of Array.from(root.querySelectorAll("rect"))) {
-      inkLeftEdges.push(Number(el.getAttribute("x")))
-    }
-    for (const el of Array.from(root.querySelectorAll("text"))) {
-      inkLeftEdges.push(Number(el.getAttribute("x")) - Number(el.getAttribute("font-size")) / 2)
-    }
-    for (const x of inkLeftEdges) expect(x).toBeGreaterThan(BR_LOGO.x + BR_LOGO.w)
-  })
-
-  it("content-page rail recedes below the 3:1 large-text floor", () => {
-    const { root, defaultBg } = render("content")
-    for (const el of paintedLeaves(root)) {
-      if (el.closest("[data-identity]")) continue
-      const paint = leafPaint(el)
-      if (!paint) continue
-      const composite = blendOver(paint.color, defaultBg, leafOpacity(el))
-      expect(contrastRatio(composite, defaultBg)).toBeLessThan(CONTENT_DECOR_CONTRAST_CEILING)
-    }
-  })
-
-  it("稀排条目不带 decor：脸自带无框事实，主题 motif 照画", () => {
-    const content = THEME_DEFINITIONS.ink.menu.content
-    for (const kind of ["statement", "quote", "fact"] as const) {
-      expect(content[kind]?.decor, kind).toBeUndefined()
-    }
-  })
-
-  it("the vermilion seal keeps the theme accent at full strength", () => {
-    const { root } = render("content")
-    const piece = root.querySelector('[data-decor-piece="seal"]')!
-    expect(piece.getAttribute("data-decor-role")).toBe("identity")
-    expect(piece.getAttribute("data-identity")).toBe("true")
-    const rects = Array.from(piece.querySelectorAll("rect"))
-    expect(rects).toHaveLength(2)
-    for (const rect of rects) {
-      expect(rect.getAttribute("fill")).toBe(tokens.colors.accent)
-      expect(rect.getAttribute("opacity")).toBeNull()
-    }
-  })
-
-  it("content column glyphs stay inside the canvas", () => {
-    const { root } = render("content")
-    for (const el of Array.from(root.querySelectorAll("text"))) {
-      const box = textInkBox({
-        content: el.textContent ?? "",
-        x: Number(el.getAttribute("x")),
-        y: Number(el.getAttribute("y")),
-        fontSize: Number(el.getAttribute("font-size")),
-        fontFamily: el.getAttribute("font-family") ?? "",
-        fontWeight: el.getAttribute("font-weight"),
-        textAnchor: el.getAttribute("text-anchor") ?? "start",
-      })
-      expect(box.x).toBeGreaterThanOrEqual(0)
-      expect(box.y).toBeGreaterThanOrEqual(0)
-      expect(box.x + box.w).toBeLessThanOrEqual(1280)
-      expect(box.y + box.h).toBeLessThanOrEqual(720)
-    }
-  })
-
-  it("the column stays clear of the seal — the last glyph's baseline never reaches it", () => {
-    const { root } = render("content", { organization: "云".repeat(20), date: "2026-11-01" })
-    const SEAL_TOP = 614
-    const baselines = Array.from(root.querySelectorAll("text")).map((t) => Number(t.getAttribute("y")))
-    expect(Math.max(...baselines)).toBeLessThan(SEAL_TOP)
-  })
-
-  it("a too-long org is cut and marked, never drawn as an ellipsis", () => {
-    const { root, markup } = render("content", { organization: "云".repeat(20), date: "2026-08-15" })
-    const glyphs = Array.from(root.querySelectorAll("text"))
-    const orgGlyphs = glyphs.filter((t) => Number(t.getAttribute("font-size")) === 19)
-    expect(orgGlyphs.length).toBeLessThan(20)
-    expect(markup).not.toContain("…")
-    expect(orgGlyphs[orgGlyphs.length - 1].textContent).toBe("云")
-    expect(orgGlyphs[orgGlyphs.length - 1].getAttribute("data-truncated")).toBe("1")
-    const short = render("content").root.querySelectorAll('[data-truncated="1"]')
-    expect(short).toHaveLength(0)
-  })
-
-  it("records the column's real capacity limit: 11 glyphs with a date, and what that excludes", () => {
-    const glyphCount = (org: string, date = "2026-08-15") =>
-      Array.from(
-        render("content", { organization: org, date }).root.querySelectorAll("text"),
-      ).filter((t) => Number(t.getAttribute("font-size")) === 19).length
-    const truncates = (org: string) =>
-      render("content", { organization: org, date: "2026-08-15" }).root.querySelectorAll(
-        '[data-truncated="1"]',
-      ).length > 0
-
-    expect(glyphCount("云".repeat(11))).toBe(11)
-    expect(truncates("云".repeat(11))).toBe(false)
-    expect(truncates("云".repeat(12))).toBe(true)
-    expect(truncates("云帆科技")).toBe(false)
-    expect(truncates("北京云帆科技有限公司")).toBe(false)
-    expect(truncates("北京云帆科技有限责任公司")).toBe(true)
-    expect(truncates("Meridian Analytics")).toBe(true)
-    expect(glyphCount("云".repeat(20), "not a date")).toBe(17)
-  })
-
-  it("the year/month renders in Chinese numerals, and an unreadable date renders nothing rather than a guess", () => {
-    const glyphsFor = (date: string | undefined) =>
-      Array.from(render("content", { organization: "甲", date }).root.querySelectorAll("text"))
-        .map((t) => t.textContent)
-        .join("")
-    expect(glyphsFor("2026-08-15")).toBe("甲二〇二六年八月")
-    expect(glyphsFor("2026-10-01")).toBe("甲二〇二六年十月")
-    expect(glyphsFor("2026-11-30")).toBe("甲二〇二六年十一月")
-    expect(glyphsFor("2026/1/9")).toBe("甲二〇二六年一月")
-    expect(glyphsFor("Q3 FY26")).toBe("甲")
-    expect(glyphsFor("2026-13-01")).toBe("甲")
-    expect(glyphsFor(undefined)).toBe("甲")
-  })
-
-  it("carries no meta at all when the deck declares neither org nor date — just the rule and the seal", () => {
-    const { root } = render("content", {})
-    expect(root.querySelectorAll("text")).toHaveLength(0)
-    expect(root.querySelectorAll("line")).toHaveLength(1)
-    expect(root.querySelectorAll("rect")).toHaveLength(2)
-  })
-
-  it("every color comes from a theme token — no baked hex anywhere in the file", () => {
-    const { root } = render("content")
-    const { colors } = tokens
-    expect(root.querySelector("line")!.getAttribute("stroke")).toBe(colors.border)
-    const [seal, inner] = Array.from(root.querySelectorAll("rect"))
-    expect(seal.getAttribute("fill")).toBe(colors.accent)
-    expect(inner.getAttribute("stroke")).toBe(colors.surface)
-    expect(inner.getAttribute("fill")).toBe(colors.accent)
-    for (const t of Array.from(root.querySelectorAll("text"))) {
-      expect(t.getAttribute("fill")).toBe(colors.muted)
+  it("stands the hall and the date upright down the right margin and sets the folio against the right edge", () => {
+    const { root, ctx } = render("content", ZH, 1)
+    const hall = root.querySelector("[data-scroll-hall]")!
+    expect(hall.getAttribute("data-scroll-hall")).toBe("文化讲堂　二〇二六年十月")
+    const cells = Array.from(hall.querySelectorAll("text"))
+    expect(cells.map((t) => horizontalForm(t.textContent ?? "")).join("")).toBe("文化讲堂二〇二六年十月")
+    // One column at x1237, from y48, a cell every 19px.
+    expect(new Set(cells.map((t) => t.getAttribute("x")))).toEqual(new Set(["1237"]))
+    expect(Number(cells[1]!.getAttribute("y")) - Number(cells[0]!.getAttribute("y"))).toBe(19)
+    const number = root.querySelector('[data-field="slidenum"]')!
+    expect([number.textContent, number.getAttribute("x"), number.getAttribute("text-anchor")]).toEqual(["2", "1210", "end"])
+    for (const t of [...cells, number]) {
       expect(t.getAttribute("data-contrast-tier")).toBe("meta")
+      expect(contrastRatio(t.getAttribute("fill")!, ctx.colors.bg)).toBeGreaterThanOrEqual(3)
     }
+    expect(countDecorPieces(root)).toBeLessThanOrEqual(3)
+    expect(() => assertSubset(root)).not.toThrow()
   })
 
-  it("emits only export-safe primitives (the SVG -> DrawingML subset)", () => {
-    for (const type of SLIDE_TYPES) {
-      expect(() => assertSubset(render(type).root), type).not.toThrow()
-    }
+  it("turns a Latin hall and date a quarter to read from the top, never letter by letter", () => {
+    const { root } = render("content", EN, 1)
+    const hall = root.querySelector("[data-scroll-hall]")!
+    expect(hall.getAttribute("data-scroll-hall")).toBe("Culture Lecture Hall · October 2026")
+    expect(hall.querySelector("[data-scroll-turned]")!.getAttribute("transform")).toBe("rotate(90 1252 48)")
+    expect(hall.querySelector("[data-scroll-column]")).toBeNull()
   })
 
-  it("is a pure function of (theme, slide type, deck meta) — repeated renders are byte-identical", () => {
-    for (const type of SLIDE_TYPES) {
-      expect(render(type).markup).toBe(render(type).markup)
-    }
-  })
-
-  it("does not invent isolated corner ticks", () => {
-    expect(countDecorPieces(render("cover").root)).toBe(1)
-    expect(countDecorPieces(render("content").root)).toBe(2)
-    expect(countDecorPieces(render("ending").root)).toBe(1)
+  it("sets the notice at the left and the draft and confidentiality marks before the folio", () => {
+    const doc = ir({ organization: "文化讲堂", confidentiality: "internal" }, { page_number: true, notice: "版权所有", draft: "讨论稿", confidentiality: "footer" })
+    const { root } = render("content", doc, 2)
+    const row = root.querySelector('[data-footer="row"]')!
+    const texts = Array.from(row.querySelectorAll("text"))
+    expect(texts.map((t) => t.textContent)).toEqual(["版权所有", "讨论稿 · 仅供内部讨论", "3"])
+    expect(texts[0]!.getAttribute("x")).toBe("110")
+    expect(Number(texts[1]!.getAttribute("x"))).toBeLessThan(1170)
   })
 })

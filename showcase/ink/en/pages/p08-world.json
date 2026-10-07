@@ -1,0 +1,61 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "series": [
+        {
+          "name": "Elements on UNESCO's lists",
+          "data": [
+            {
+              "x": "China",
+              "y": 45,
+              "emphasis": true
+            },
+            {
+              "x": "Türkiye",
+              "y": 32
+            },
+            {
+              "x": "France",
+              "y": 30
+            },
+            {
+              "x": "Iran",
+              "y": 27
+            },
+            {
+              "x": "Spain",
+              "y": 26
+            },
+            {
+              "x": "Azerbaijan",
+              "y": 24
+            },
+            {
+              "x": "Japan",
+              "y": 23
+            },
+            {
+              "x": "Rep. of Korea",
+              "y": 23
+            },
+            {
+              "x": "Croatia",
+              "y": 23
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "title": "How these are counted",
+      "text": "Each country's own UNESCO page, all three lists together. A shared element counts once for every country in it, so the figures cannot be added up. “Most in the world” is how China's ICH website and Xinhua put it. The bulletin only says “45 in total”, and UNESCO publishes no ranking."
+    }
+  ],
+  "footnote": "Source: UNESCO country pages (accessed 6 Oct 2026), China ICH website, Xinhua (5 Dec 2024)",
+  "notes": "How does that compare? Each country's page on UNESCO's intangible heritage site states how many elements it has inscribed. Checking 27 countries on 6 October 2026, China's 45 is the highest, followed by Türkiye with 32, France 30, Iran 27, Spain 26, Azerbaijan 24, and Japan, the Republic of Korea and Croatia with 23 each. Two caveats. These totals combine all three lists, and an element shared by several countries counts once for each of them. The Mongolian Long Song, for example, counts for both China and Mongolia. So the figures cannot be added together. And the phrase most in the world comes from China's ICH website and Xinhua, not from UNESCO, which does not publish rankings. The 2025 statistical bulletin itself simply says 45. Worldwide, 849 elements from 157 countries were inscribed as of December 2025."
+}

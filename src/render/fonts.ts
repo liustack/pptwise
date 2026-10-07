@@ -265,7 +265,7 @@ export function resolveFontStack(stack: string[], role: FontRole): string {
   const fallback =
     role === "mono"
       ? PREVIEW_FALLBACK.mono
-      : KAITI_SAFE_FACES.has(key)
+      : KAITI_SAFE_FACES.has(key) || (ea !== undefined && KAITI_SAFE_FACES.has(ea.toLowerCase()))
         ? PREVIEW_FALLBACK.kaiti
         : SERIF_SAFE_FACES.has(key)
           ? PREVIEW_FALLBACK.serif

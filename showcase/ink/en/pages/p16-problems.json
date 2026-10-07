@@ -1,0 +1,42 @@
+{
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "file-warning",
+          "title": "Listing over care",
+          "text": "“An emphasis on listing over protection, and on numbers over quality”",
+          "tag": {
+            "text": "NPC Standing Committee inspection report, 2024"
+          }
+        },
+        {
+          "icon": "layers",
+          "title": "Copycat tourism",
+          "text": "Heritage tourism shows “blind imitation and simple copying”",
+          "tag": {
+            "text": "Same report"
+          }
+        },
+        {
+          "icon": "hand-coins",
+          "title": "Thin local funding",
+          "text": "Some local heritage budgets fall year after year, and a second national survey has not started",
+          "tag": {
+            "text": "Same report"
+          }
+        },
+        {
+          "icon": "shield-alert",
+          "title": "**Fake “heritage”**",
+          "text": "Misused logos, invented bearers, health claims: 197 products pulled, 35 shops closed",
+          "tag": {
+            "text": "Supreme People's Procuratorate cases, Mar 2026"
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "Now the problems, each one from a public document. First, the 2024 inspection report of the National People's Congress Standing Committee says plainly that there is an emphasis on listing rather than protection, and on numbers rather than quality. Getting on a list is a moment. Protecting is the work of years. Second, the same report finds that heritage and tourism are combined at a shallow level, with blind imitation and simple copying, and a 2023 ministry guideline asks places to avoid copy-paste, look-alike development. Third, local funding is thin: some local heritage budgets have fallen year after year, some counties rich in heritage have no protection office, and a second national heritage survey has not yet been organised. Fourth, fake heritage. In typical cases published by the Supreme People's Procuratorate in March 2026, sellers used China's official heritage logo without permission, livestreams invented items and bearers, health products claimed cures, and some people handed out knock-off heritage certificates. The result: 35 online shops closed, 13 livestream accounts suspended, 197 products taken down and fines of 400,000 yuan."
+}
