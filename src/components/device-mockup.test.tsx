@@ -4,6 +4,8 @@ import { render } from "@testing-library/react"
 import { deviceMockup } from "./device-mockup"
 import { contrastRatio } from "../render/ink"
 import type { ComponentCtx } from "./types"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
+import { CANONICAL_THEME_IDS } from "../themes"
 
 const ctx: ComponentCtx = {
   colors: {
@@ -227,6 +229,30 @@ describe("device_mockup component — phone", () => {
     const captionEl = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "调度")
     expect(captionEl).not.toBeUndefined()
   })
+})
+
+// The caption band is painted in the theme primary and its words used to be
+// set in `colors.surface` without a check. Where primary is a dark block
+// fill on a dark theme, both are dark: rally's caption sat at 1.25:1 and
+// luxe's at 1.02:1. The band is also opaque now, so the ink is measured
+// against the colour that is actually painted under it.
+describe("device_mockup caption band on every theme", () => {
+  for (const device of ["browser", "phone"] as const) {
+    it(`${device}: sets the caption in an ink its own opaque band can read`, () => {
+      for (const id of CANONICAL_THEME_IDS) {
+        const themeCtx = boundThemeCtx(id, { dash: { src: "data:image/png;base64,AAAA" } })
+        const component = { type: "device_mockup" as const, device, asset_id: "dash", caption: "调度仪表盘" }
+        const { container } = svg(deviceMockup.render(component, { x: 0, y: 0, w: 1120 }, themeCtx))
+        const caption = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "调度仪表盘")!
+        const band = caption.previousElementSibling!
+        expect(band.tagName.toLowerCase(), id).toBe("rect")
+        expect(band.getAttribute("fill"), id).toBe(themeCtx.colors.primary)
+        expect(band.getAttribute("fill-opacity"), id).toBeNull()
+        const ratio = contrastRatio(caption.getAttribute("fill")!, band.getAttribute("fill")!)
+        expect(ratio, id).toBeGreaterThanOrEqual(4.5)
+      }
+    })
+  }
 })
 
 // Review fix round, Important-2: on a near-black theme (terminal: bg #060A13 vs
