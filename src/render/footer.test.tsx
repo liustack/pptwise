@@ -113,8 +113,8 @@ describe("no footer by default", () => {
 })
 
 describe("the footer row, when the deck asks for it", () => {
-  // memo, clinic, almanac, homeroom, ember, rally, proposal and thesis set their folios rather than printing the shared row: their own cases below.
-  const OWN_FOLIO_THEMES = new Set(["memo", "clinic", "almanac", "homeroom", "ember", "rally", "proposal", "thesis"])
+  // memo, clinic, almanac, homeroom, ember, rally, proposal, thesis and journal set their folios rather than printing the shared row: their own cases below.
+  const OWN_FOLIO_THEMES = new Set(["memo", "clinic", "almanac", "homeroom", "ember", "rally", "proposal", "thesis", "journal"])
   const SHARED_ROW_THEMES = CANONICAL_THEME_IDS.filter((theme) => !OWN_FOLIO_THEMES.has(theme))
 
   it.each(SHARED_ROW_THEMES)("%s: every mark in its place, on content pages only", (theme) => {
@@ -339,13 +339,38 @@ describe("the footer row, when the deck asks for it", () => {
     })
   })
 
+  it("journal: the organization and the label in the masthead, 「· N ·」 centred at the foot and the marks at the right, on content pages only", () => {
+    const ir = zhDeck("journal", { footer: ALL_MARKS })
+    ir.slides.forEach((slide, index) => {
+      const root = page(ir, index)
+      if (slide.type !== "content") {
+        expect(root.querySelectorAll('[data-field="slidenum"]'), `journal ${slide.type}: page number`).toHaveLength(0)
+        expect(root.querySelector("[data-footer]"), `journal ${slide.type}: footer row`).toBeNull()
+        return
+      }
+      const row = root.querySelector('[data-footer="row"]')!
+      expect(texts(row)).toEqual(["讨论稿 · 内部资料，请勿外传", "·", String(index + 1), "·"])
+      const number = row.querySelector('[data-field="slidenum"]')!
+      expect([number.getAttribute("x"), number.getAttribute("text-anchor")]).toEqual(["640", "middle"])
+      for (const t of Array.from(row.querySelectorAll("text"))) expect(t.getAttribute("data-font-floor-exempt")).toBe("periodical-spec")
+      // The organization is the column's name at the top left, the label the issue at the top right.
+      expect(root.querySelector("[data-periodical-column]")!.textContent).toBe(ORG)
+      expect(root.querySelector("[data-periodical-issue]")!.textContent).toBe("2026 年中期业绩 | 2026.08")
+      expect(texts(root).filter((t) => t.includes(ORG))).toHaveLength(1)
+    })
+  })
+
   it("a page number alone carries no rule over it", () => {
-    for (const theme of ["swiss", "brief", "journal"]) {
+    for (const theme of ["swiss", "brief"]) {
       const ir = zhDeck(theme, { footer: { page_number: true } })
       const root = page(ir, 1)
       expect(footerRules(root), theme).toHaveLength(0)
       expect(texts(root.querySelector('[data-footer="row"]')!)).toEqual(["2"])
     }
+    // journal's folio stands between two points.
+    const root = page(zhDeck("journal", { footer: { page_number: true } }), 1)
+    expect(footerRules(root)).toHaveLength(0)
+    expect(texts(root.querySelector('[data-footer="row"]')!)).toEqual(["·", "2", "·"])
   })
 
   it("a photo page whose image runs to the bottom edge carries no footer row; one with room keeps it", () => {
@@ -365,7 +390,7 @@ describe("the footer row, when the deck asks for it", () => {
       return page(result.ir!, 1)
     }
     // image-split: a full-height bleed column with its caption bar at the bottom.
-    for (const theme of ["ink", "journal", "museum"]) {
+    for (const theme of ["ink", "heritage", "museum"]) {
       expect(photo(theme).querySelector("[data-footer]"), theme).toBeNull()
     }
     // image-top: the photo stays at the top, the footer has its line.

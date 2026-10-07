@@ -352,3 +352,44 @@ export function buildChartModel(series: ChartSeries[]): ChartModel {
 
   return { categories, series: alignedSeries, domain: computeChartDomain(kept), duplicates, legend }
 }
+
+// ── gaps ──
+
+/** A place an author kept on the category axis for a value nobody published. */
+export type ChartGap = { after: string; x: string; label: string }
+
+/**
+ * `model` with each of the author's `gaps` set into its categories after the
+ * category it names (`after`, or an earlier gap), every series empty there,
+ * and the label each gap carries by its category index. The domain does not
+ * move: a gap has no value. Without gaps, `model` itself and an empty map.
+ */
+export function insertGaps(model: ChartModel, gaps: readonly ChartGap[] | undefined): { model: ChartModel; gapAt: Map<number, string> } {
+  if (!gaps || gaps.length === 0) return { model, gapAt: new Map() }
+  const categories = [...model.categories]
+  const series = model.series.map((s) => ({ ...s, values: [...s.values] }))
+  const labels: { key: CategoryKey; label: string }[] = []
+  for (const gap of gaps) {
+    const at = categories.findIndex((cat) => String(cat.x).trim() === gap.after.trim())
+    if (at < 0) continue
+    const key = categoryKeyOf(gap.x)
+    categories.splice(at + 1, 0, { key, x: gap.x })
+    for (const s of series) s.values.splice(at + 1, 0, null)
+    labels.push({ key, label: gap.label })
+  }
+  const gapAt = new Map(labels.map((g) => [categories.findIndex((cat) => cat.key === g.key), g.label]))
+  return { model: { ...model, categories, series }, gapAt }
+}
+
+/**
+ * How tall a gap's outline stands: the mean of the series whose values run
+ * highest on average, so the empty place looks about as tall as the bars
+ * beside it without claiming any one value.
+ */
+export function gapHeight(model: ChartModel): number {
+  const means = model.series.map((s) => {
+    const kept = s.values.filter((v): v is number => v !== null)
+    return kept.length > 0 ? kept.reduce((a, b) => a + b, 0) / kept.length : 0
+  })
+  return Math.max(0, ...means)
+}

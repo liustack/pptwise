@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+journal is redrawn as a small periodical's annual letter to its readers. Every content page carries a masthead over a heavy rule and a hairline: the column's name at the left (the deck's `organization`), the page's section in brick red in the middle (its `kicker`) and the issue at the right (the footer's `label`), the claim in a bookish serif ending on one line, figures numbered across the deck with the editor's comment under each, the source at the foot and the page number as 「· 3 ·」 in the middle. Its cover sets the masthead large beside a photograph with the issue, the cover story in brick red and the cover lines with the pages they point to (`fields`), its quotation page prints the attribution exactly as written with no dash added, and its ending sets the closing words as the author broke them with the sign-off (`subheading`) right-aligned under a rule and the section the author wrote. The heading face is now Times New Roman with SimSun, so figures stand on the baseline.

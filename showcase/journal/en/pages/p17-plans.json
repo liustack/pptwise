@@ -1,0 +1,41 @@
+{
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "book-open",
+          "title": "A long read you can finish, every issue",
+          "text": "Why: print time held for ten years, and 45.9% would most like a print book"
+        },
+        {
+          "icon": "headphones",
+          "title": "Audio editions of our main pieces",
+          "text": "Why: 38.7% of adults listen to books, so a piece should be heard to the end"
+        },
+        {
+          "icon": "library",
+          "title": "Reader evenings in public libraries",
+          "text": "Why: visits are 63% above 2019, while loans have stalled"
+        },
+        {
+          "icon": "pen-line",
+          "title": "Every figure with its definition",
+          "text": "Why: almost every number in this letter has to be read with its definition"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "library",
+      "fit": "cover",
+      "caption": "Reading room of a public library (AI-generated)"
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "These are the editors' plans, not things already done. Sources are on the earlier pages."
+    }
+  ],
+  "notes": "For the coming year the editors plan four things, each drawn from the numbers before. First, one long read in every issue, short enough to finish in one sitting, because print reading time held for ten years and 45.9% say they would most like to read a print book. Second, audio editions of our main pieces, because 38.7% of adults already listen to books and a good piece should be listenable to the end. Third, moving our reader evenings into public libraries, where visits are 63% above 2019 while loans have stalled. We would like to meet you at those long tables. Fourth, every figure we print will carry its source and definition, and this letter is our first practice. These are plans, not results. How far we get, we will report next year."
+}

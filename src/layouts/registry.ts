@@ -1,6 +1,6 @@
 /**
  * Layout registry (W2 task 1, spec §3/§6/§8): an explicit, statically-checked
- * description of what the render chain's 176 standard layouts and 4
+ * description of what the render chain's 180 standard layouts and 4
  * page-level image takeovers already draw. This is a metadata layer only.
  * It formalizes today's implicit page structure (layout JSX + the
  * FullSlideSvg takeover dispatch) into named `slots`, it does not change any
@@ -111,6 +111,7 @@ import { layoutDef as coverPitchCover } from "./cover-pitch-cover"
 import { layoutDef as coverMarqueeCover } from "./cover-marquee-cover"
 import { layoutDef as coverBinderCover } from "./cover-binder-cover"
 import { layoutDef as coverManuscriptCover } from "./cover-manuscript-cover"
+import { layoutDef as coverPeriodicalCover } from "./cover-periodical-cover"
 import { layoutDef as coverPledgeOpenCover } from "./cover-pledge-open-cover"
 import { layoutDef as coverReportOpenCover } from "./cover-report-open-cover"
 import { layoutDef as coverCutPanelCover } from "./cover-cut-panel-cover"
@@ -192,6 +193,7 @@ import { layoutDef as endingPitchEnding } from "./ending-pitch-ending"
 import { layoutDef as endingMarqueeEnding } from "./ending-marquee-ending"
 import { layoutDef as endingBinderEnding } from "./ending-binder-ending"
 import { layoutDef as endingManuscriptEnding } from "./ending-manuscript-ending"
+import { layoutDef as endingPeriodicalEnding } from "./ending-periodical-ending"
 import { layoutDef as endingScorecardEnding } from "./ending-scorecard-ending"
 import { layoutDef as endingCarePlanEnding } from "./ending-care-plan-ending"
 import { layoutDef as endingSeatCtaEnding } from "./ending-seat-cta-ending"
@@ -249,6 +251,8 @@ import { layoutDef as contentMarqueeSheet } from "./content-marquee-sheet"
 import { layoutDef as contentMarqueeStatement } from "./content-marquee-statement"
 import { layoutDef as contentBinderSheet } from "./content-binder-sheet"
 import { layoutDef as contentManuscriptSheet } from "./content-manuscript-sheet"
+import { layoutDef as contentPeriodicalSheet } from "./content-periodical-sheet"
+import { layoutDef as contentPeriodicalQuote } from "./content-periodical-quote"
 import { layoutDef as contentSealFigure } from "./content-seal-figure"
 
 import {
@@ -644,6 +648,8 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverBinderCover.id]: coverBinderCover,
   // thesis sample redesign (2026-10-06).
   [coverManuscriptCover.id]: coverManuscriptCover,
+  // journal sample redesign (2026-10-07).
+  [coverPeriodicalCover.id]: coverPeriodicalCover,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -761,6 +767,8 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingBinderEnding.id]: endingBinderEnding,
   // thesis sample redesign (2026-10-06).
   [endingManuscriptEnding.id]: endingManuscriptEnding,
+  // journal sample redesign (2026-10-07).
+  [endingPeriodicalEnding.id]: endingPeriodicalEnding,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -942,11 +950,17 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   // thesis sample redesign (2026-10-06): the board's ordinary content page,
   // theme-locked.
   [contentManuscriptSheet.id]: contentManuscriptSheet,
+  // journal sample redesign (2026-10-07): the board's ordinary content page,
+  // theme-locked.
+  [contentPeriodicalSheet.id]: contentPeriodicalSheet,
+  // journal sample redesign (2026-10-07): the board's quotation page,
+  // theme-locked.
+  [contentPeriodicalQuote.id]: contentPeriodicalQuote,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Image takeover layouts (4). With the 45 standard content layouts above,
-// the content page type has 49 registered entries. These are `slide.layout`
+// Image takeover layouts (4). With the 47 standard content layouts above,
+// the content page type has 51 registered entries. These are `slide.layout`
 // ids for the page-level
 // `image-split`/`image-top`/`image-bottom`/`image-annotate` takeovers
 // (full-slide-svg.tsx's splitTakeover branch, keyed off `getLayout(slide.
@@ -967,7 +981,7 @@ const TAKEOVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [imageAnnotateLayoutDef.id]: imageAnnotateLayoutDef,
 }
 
-/** All 176 standard layouts and 4 takeover layouts, 180 entries keyed by id.
+/** All 180 standard layouts and 4 takeover layouts, 184 entries keyed by id.
  *  `kind` still spells the standard tier `"standard"`, a wire-format fossil. See
  *  {@link LayoutDefinition.kind}. */
 export const LAYOUT_REGISTRY: Record<string, LayoutDefinition> = {

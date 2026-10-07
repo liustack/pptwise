@@ -1,0 +1,26 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "desk"
+  },
+  "fields": [
+    {
+      "label": "03",
+      "value": "Ten years on, the same readers, the same books"
+    },
+    {
+      "label": "06",
+      "value": "Periodicals fell hardest, and we are among them"
+    },
+    {
+      "label": "11",
+      "value": "Books sell less, cheaper, and somewhere else"
+    },
+    {
+      "label": "17",
+      "value": "Four things the editors plan for the year ahead"
+    }
+  ],
+  "footnote": "Cover image is AI-generated and illustrative",
+  "notes": "Every autumn the editors write a long letter to our subscribers. This year it asks one question: are we still reading? Most figures come from China's National Reading Survey, run by the Chinese Academy of Press and Publication (CAPP). It is released each April for the year before, so \"2025\" in this letter always means the survey year. Book market figures come from OpenBook, library figures from the Ministry of Culture and Tourism, and figures from abroad from Pew Research Center, the US National Endowment for the Arts, Japan's Agency for Cultural Affairs and the UK's National Literacy Trust. Every data page names its source and how the figure is defined. The letter gives none of our own subscription or sales numbers, and our plans are written as plans. The photographs are AI-generated illustrations."
+}

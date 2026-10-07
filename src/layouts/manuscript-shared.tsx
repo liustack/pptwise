@@ -266,7 +266,7 @@ export function manuscriptBodyRect(notes: FittedNotes | null, top = MANUSCRIPT_B
 
 // ── Figures and tables numbered across the deck ────────────────────────
 
-type Exhibit = "figure" | "table"
+export type Exhibit = "figure" | "table"
 
 /**
  * What a component counts as on a manuscript page: a figure (a chart or a
@@ -298,13 +298,18 @@ export function exhibitKind(component: Component, slide: Pick<Slide, "type"> & {
  * before it and before it on its own page, in reading order. 「图 3」 and
  * 「表 1」 in a Chinese deck, "Figure 3" and "Table 1" in any other.
  */
-export function exhibitLabels(ir: Pick<PptxIR, "slides">, index: number, chinese: boolean): Map<Component, string> {
+export function exhibitLabels(
+  ir: Pick<PptxIR, "slides">,
+  index: number,
+  chinese: boolean,
+  kindOf: (component: Component, slide: Pick<Slide, "type"> & { kind?: string }) => Exhibit | null = exhibitKind,
+): Map<Component, string> {
   const counts: Record<Exhibit, number> = { figure: 0, table: 0 }
   const labels = new Map<Component, string>()
   ir.slides.slice(0, index + 1).forEach((slide, at) => {
     if (slide.type !== "content") return
     for (const component of slide.components) {
-      const kind = exhibitKind(component, slide)
+      const kind = kindOf(component, slide)
       if (!kind) continue
       counts[kind] += 1
       if (at === index) labels.set(component, exhibitWord(kind, counts[kind], chinese))

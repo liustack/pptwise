@@ -46,7 +46,10 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
   "almanac-motif": { content: ["sprout"] },
   "luxe-motif": { cover: ["invitation"], ending: ["invitation"] },
   "vermilion-motif": { cover: ["gold-rules-foot"], content: ["gold-rules"], ending: ["gold-rules", "gold-rules-foot"] },
-  "corner-ornament-motif": { content: ["masthead"], ending: ["masthead"] },
+  // journal's masthead words and folio stand on a content page of a deck that
+  // asks for footer marks (2026-10 sample redesign); the cover and the close
+  // set their own, and the chapter page keeps clear.
+  "corner-ornament-motif": { content: ["folio", "masthead"] },
   "folio-motif": { content: ["folio"] },
   // ledger's status bar runs across the top of every page, like a market
   // terminal's title row (2026-10 sample redesign).
@@ -77,12 +80,13 @@ function slideOf(type: Slide["type"]): Slide {
 }
 
 /**
- * A motif that is the deck's own footer (`folio-motif`) only paints on a
+ * A motif that is the deck's own footer (`folio-motif`, and journal's
+ * masthead words and folio, `corner-ornament-motif`) only paints on a
  * content page of a deck that asks for footer marks, so the roster renders
  * it under `branding: "full"`, which still stands for the organization and
  * the confidentiality mark. Every other motif keeps the omitted posture.
  */
-const FULL_BRANDING_MOTIFS: ReadonlySet<MotifId> = new Set(["folio-motif"])
+const FULL_BRANDING_MOTIFS: ReadonlySet<MotifId> = new Set(["folio-motif", "corner-ornament-motif"])
 
 function irOf(theme: string, slide: Slide, motif?: MotifId): PptxIR {
   return {

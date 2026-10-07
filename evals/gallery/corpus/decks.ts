@@ -25,6 +25,7 @@ import type { LanguageId, Lexicon } from "./lexicon"
 import { THEME_CONTENT_SLOTS, buildThemeSlot } from "./theme-slots"
 import { BINDER_BODIES } from "./binder-bodies"
 import { MANUSCRIPT_BODIES } from "./manuscript-bodies"
+import { PERIODICAL_BODIES } from "./periodical-bodies"
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/images")
 
@@ -571,6 +572,11 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   // thesis's manuscript sheet: the board's table of studies, the marked
   // column tinted and the caveat under it.
   if (def.id === "manuscript-sheet") return COMPOSITION_BODIES.tabulation(lex).components
+  // journal's periodical sheet: the board's ten years of reading on one
+  // line, its ends named and its dip ringed, the comment under the caption.
+  // Its quotation page: one quote.
+  if (def.id === "periodical-sheet") return COMPOSITION_BODIES.chronicle(lex).components
+  if (def.id === "periodical-quote") return [b.blockquote!(lex)]
   if (def.id === "marquee-statement") {
     return [{ type: "icon_cards", items: [0, 1, 2].map((i) => ({ icon: (["cup-soda", "package", "ticket"] as const)[i]!, title: lex.labels[i]!, text: lex.bullets[i]! })) }]
   }
@@ -755,6 +761,7 @@ const CONTENT_FACE_KINDS: Record<string, PageKind> = {
   "narrow-column": "points",
   "one-evidence": "evidence",
   "pull-quote": "quote",
+  "periodical-quote": "quote",
   "quiet-frame": "points",
   "quote-stage": "quote",
   "rail-numbered": "process",
@@ -1150,6 +1157,12 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
   // side by side, the literature map, hypotheses, survey rounds, two designs,
   // threats, the schedule and the questions for the committee.
   ...MANUSCRIPT_BODIES,
+  // journal's periodical sheet: the editor's note, ten years on one line,
+  // ways of reading, minutes against a year, the figure set huge, the
+  // magazine's own lines, the years nobody published, town and country, the
+  // book trade bracketed, channels and categories, two libraries, the world
+  // side by side, print against screen, the long read and the plans.
+  ...PERIODICAL_BODIES,
   rows: (lex) => ({
     heading: lex.headings[1]!,
     components: [

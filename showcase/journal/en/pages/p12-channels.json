@@ -1,0 +1,163 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "percent_stacked",
+      "title": "Retail sales by channel (%)",
+      "axes": {
+        "y_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Marketplaces",
+          "data": [
+            {
+              "x": "2022",
+              "y": 45.1
+            },
+            {
+              "x": "2023",
+              "y": 41.5
+            },
+            {
+              "x": "2024",
+              "y": 40.9
+            },
+            {
+              "x": "2025",
+              "y": 32.4
+            }
+          ]
+        },
+        {
+          "name": "Content commerce",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "2022",
+              "y": 16.4
+            },
+            {
+              "x": "2023",
+              "y": 26.7
+            },
+            {
+              "x": "2024",
+              "y": 30.4
+            },
+            {
+              "x": "2025",
+              "y": 40.5
+            }
+          ]
+        },
+        {
+          "name": "Other online",
+          "data": [
+            {
+              "x": "2022",
+              "y": 23.2
+            },
+            {
+              "x": "2023",
+              "y": 19.9
+            },
+            {
+              "x": "2024",
+              "y": 14.7
+            },
+            {
+              "x": "2025",
+              "y": 13.4
+            }
+          ]
+        },
+        {
+          "name": "Bookstores",
+          "data": [
+            {
+              "x": "2022",
+              "y": 15.3
+            },
+            {
+              "x": "2023",
+              "y": 11.9
+            },
+            {
+              "x": "2024",
+              "y": 14.0
+            },
+            {
+              "x": "2025",
+              "y": 13.7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Content commerce means apps such as Douyin, Kuaishou and Xiaohongshu."
+    },
+    {
+      "type": "image",
+      "asset_id": "bookshop",
+      "fit": "cover",
+      "caption": "A small corner bookshop (AI-generated)"
+    },
+    {
+      "type": "chart",
+      "chart_type": "stacked",
+      "direction": "horizontal",
+      "axes": {
+        "y_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Children's",
+          "data": [
+            {
+              "x": "2025 sales by category (%)",
+              "y": 28.79
+            }
+          ]
+        },
+        {
+          "name": "Study aids",
+          "data": [
+            {
+              "x": "2025 sales by category (%)",
+              "y": 26.47
+            }
+          ]
+        },
+        {
+          "name": "Lit.",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "2025 sales by category (%)",
+              "y": 8.84
+            }
+          ]
+        },
+        {
+          "name": "Other",
+          "data": [
+            {
+              "x": "2025 sales by category (%)",
+              "y": 35.9
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Literature (Lit.) is only 8.84%. Other is 100 less the three named categories."
+    }
+  ],
+  "footnote": "Source: OpenBook (company figures), via the German Book Information Centre",
+  "notes": "Where books sell, and what sells. In 2025 content commerce, the apps that sell through recommended videos and posts, such as Douyin, Kuaishou and Xiaohongshu, sold 40.53% of books by list price and became the largest channel for the first time. Four years earlier it was 16.42%. Traditional online marketplaces fell from 45.06% to 32.37%. Bookstores held 13.65% in 2025. Their share rose from 11.93% to 13.99% between 2023 and 2024, but that crosses OpenBook's restatement, and bookstore sales themselves kept falling. As for what sells: children's books were 28.79% of list-price sales and study aids 26.47%, together more than half, while literature was 8.84%. In 2024 the average discount in content commerce was over 60%, so books there sold below 40% of list price, the same story as the deepening discounts on the previous page. Source details: OpenBook, as reported in the German Book Information Centre Beijing's Buchmarkt China 2025."
+}

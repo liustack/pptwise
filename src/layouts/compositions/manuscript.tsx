@@ -237,6 +237,8 @@ export interface ManuscriptPaint {
   attrs?: Record<string, string>
   lastAttrs?: Record<string, string>
   italic?: boolean
+  /** The ink a marked run and a superscript take before contrast holds it, emerald when omitted. */
+  lit?: string
 }
 
 /**
@@ -246,7 +248,7 @@ export interface ManuscriptPaint {
 export function paintManuscript(layout: EmphasisHeadingLayout, opts: ManuscriptPaint): React.ReactNode {
   const inks = manuscriptInks(opts.ctx)
   const ground = opts.ground ?? inks.ground
-  const lit = manuscriptText(inks.deep, ground, layout.fontSize)
+  const lit = manuscriptText(opts.lit ?? inks.deep, ground, layout.fontSize)
   const first = opts.baseline ?? manuscriptBaseline(opts.top ?? 0, layout.lineHeight, layout.fontSize, opts.serif === true)
   return layout.lines.map((line, i) => (
     <text
@@ -294,7 +296,7 @@ export function paintManuscriptLine(
       dominantBaseline="alphabetic"
       xmlSpace={keepsSpaces(text) ? "preserve" : undefined}
     >
-      {paintRuns(runsOf(parseEmphasis(text)), manuscriptText(inks.deep, ground, opts.size))}
+      {paintRuns(runsOf(parseEmphasis(text)), manuscriptText(opts.lit ?? inks.deep, ground, opts.size))}
     </text>
   )
 }
@@ -304,7 +306,7 @@ export function paintManuscriptLine(
  * `<tspan dx>` before each one after the first so the export carries the
  * spacing as character spacing.
  */
-export function paintManuscriptTracked(opts: { ctx: ComponentCtx; text: string; x: number; y: number; size: number; tracking: number; fill: string; serif?: boolean; bold?: boolean; anchor?: "start" | "middle" | "end"; attrs?: Record<string, string> }): React.ReactElement {
+export function paintManuscriptTracked(opts: { ctx: ComponentCtx; text: string; x: number; y: number; size: number; tracking: number; fill: string; serif?: boolean; bold?: boolean; weight?: "700" | "800"; anchor?: "start" | "middle" | "end"; attrs?: Record<string, string> }): React.ReactElement {
   const chars = Array.from(opts.text)
   return (
     <text
@@ -315,7 +317,7 @@ export function paintManuscriptTracked(opts: { ctx: ComponentCtx; text: string; 
       textAnchor={opts.anchor && opts.anchor !== "start" ? opts.anchor : undefined}
       fontFamily={manuscriptFamily(opts.ctx, opts.serif === true)}
       fontSize={opts.size}
-      fontWeight={opts.bold ? "700" : undefined}
+      fontWeight={opts.weight ?? (opts.bold ? "700" : undefined)}
       fill={opts.fill}
       dominantBaseline="alphabetic"
       data-tracking={opts.tracking}

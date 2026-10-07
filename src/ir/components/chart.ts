@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { isPercentUnit } from "../../lib/quantity-format"
-import { TagSchema, ToneSchema } from "./shared"
+import { IconNameSchema, TagSchema, ToneSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -39,6 +39,8 @@ const ChartPointSchema = z
       .describe(
         'A few words printed with the value, such as "基准线", "低约 37%" or "62.36 元": after the value of a bar on its side or a share bar\'s part, and beside a point of a line, such as "最低" on its lowest year or "回升" on the year it recovers. Bars on their side (bar with direction "horizontal"), the parts of a share bar and lines only.',
       ),
+    /** A symbol set before the category's name. See the describe below. */
+    icon: IconNameSchema.optional().describe("A symbol set before the category's name. Bars on their side only, on the first series."),
     /** The high end of a value only known as a range. See the describe below. */
     upper: z
       .number()
@@ -77,6 +79,9 @@ export const MAX_CHART_CHANGES = 3
 
 /** The most `markers` one line chart draws. Past three, their labels crowd the band over the plot. */
 export const MAX_CHART_MARKERS = 3
+
+/** The most `gaps` one chart keeps. Past three, the empty places outweigh the values. */
+export const MAX_CHART_GAPS = 3
 
 /**
  * Chart types that draw exactly one series and name its parts on the marks
@@ -452,7 +457,7 @@ export const schema = z
       .optional()
       .describe(
         "Up to two value ranges marked across the plot behind the data, such as a target range a line should stay in. Each runs from `from` to `to` on the value axis, which grows to hold it, and may carry a short `label`. " +
-          "line, area and upright bar charts only. Write a range this way rather than as two flat series at its edges.",
+          "line, area and bar charts only. Write a range this way rather than as two flat series at its edges.",
       ),
     /** The line a share bar states for its marked run. See the describe below. */
     emphasis_label: z
@@ -488,6 +493,23 @@ export const schema = z
       .optional()
       .describe(
         'Up to three dashed lines drawn down a line chart where a category begins, such as the ages a rule changes at: [{ "before": "50-54 岁", "label": "女 50 岁" }]. Each stands halfway between the category it names and the one before it, its label over the plot. Line charts only, on a category that is not the first.',
+      ),
+    /** Places kept for categories with no published value. See the describe below. */
+    gaps: z
+      .array(
+        z
+          .object({
+            after: z.string().min(1).describe('The category it follows, such as "2017".'),
+            x: z.string().min(1).describe('Its name on the axis, such as "2018".'),
+            label: z.string().min(1).describe('What it says, such as "未公布" or "Not published".'),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(MAX_CHART_GAPS)
+      .optional()
+      .describe(
+        'Places kept for categories with no published value, such as a year a survey skipped: [{ "after": "2017", "x": "2018", "label": "未公布" }]. Upright bar and line charts only.',
       ),
     series: z.array(
       z
@@ -592,6 +614,41 @@ export const schema = z
         })
       }
     }
+    // A symbol stands before a category's name, which only a bar on its side
+    // sets in a column of its own. It names the category, so the first series
+    // carries it.
+    const iconed = c.chart_type === "bar" && c.direction === "horizontal"
+    c.series.forEach((s, si) =>
+      s.data.forEach((d, di) => {
+        if (d.icon === undefined) return
+        const path = ["series", si, "data", di, "icon"]
+        if (!iconed) {
+          ctx.addIssue({ code: "custom", path, message: `an icon is set before a category's name, on a bar chart on its side, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart sets its names elsewhere. Use chart_type "bar" with direction "horizontal", or remove icon.` })
+        } else if (si > 0) {
+          ctx.addIssue({ code: "custom", path, message: `an icon names its category, and series[${si}] is not the first series. Give the category's icon on the first series' point.` })
+        }
+      }),
+    )
+    // A gap is a category kept with no value, placed after one the chart
+    // has, so it needs an axis of categories running across the page.
+    if (c.gaps !== undefined) {
+      const gapped = (c.chart_type === "bar" && c.direction !== "horizontal") || c.chart_type === "line"
+      if (!gapped) {
+        ctx.addIssue({ code: "custom", path: ["gaps"], message: `gaps keep a place on an axis of categories across the page, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart has none. Use an upright "bar" or a "line", or say what is missing in the page's text.` })
+      } else {
+        const order: string[] = []
+        for (const s of c.series) for (const d of s.data) if (!order.includes(String(d.x))) order.push(String(d.x))
+        const placed: string[] = []
+        c.gaps.forEach((g, gi) => {
+          if (order.includes(g.x.trim()) || placed.includes(g.x.trim())) {
+            ctx.addIssue({ code: "custom", path: ["gaps", gi, "x"], message: `gaps[${gi}].x is "${g.x}", which the chart already has. A gap is a category with no value: name one the series leave out.` })
+          } else if (!order.includes(g.after.trim()) && !placed.includes(g.after.trim())) {
+            ctx.addIssue({ code: "custom", path: ["gaps", gi, "after"], message: `gaps[${gi}].after is "${g.after}", which is not one of the chart's categories (${order.map((x) => `"${x}"`).join(", ")}) or an earlier gap. Name the category the gap follows, as the series write it.` })
+          }
+          placed.push(g.x.trim())
+        })
+      }
+    }
     // A range is a bar on its side drawn solid to its low end and dashed on
     // to its high end, its label naming both.
     const ranged = c.chart_type === "bar" && c.direction === "horizontal"
@@ -640,12 +697,12 @@ export const schema = z
       ctx.addIssue({ code: "custom", path: ["reference", "value"], message: `reference.value is ${c.reference.value}, past what a value axis can draw. Write it in the same unit as the bars.` })
     }
     if (c.bands !== undefined) {
-      const banded = c.chart_type === "line" || c.chart_type === "area" || (c.chart_type === "bar" && c.direction !== "horizontal")
+      const banded = c.chart_type === "line" || c.chart_type === "area" || c.chart_type === "bar"
       if (!banded) {
         ctx.addIssue({
           code: "custom",
           path: ["bands"],
-          message: `bands mark a range across a value axis that runs up the page, and a ${c.chart_type}${c.direction === "horizontal" ? " on its side" : ""} chart has none. Use chart_type "line", "area" or an upright "bar", or state the range in the page's text.`,
+          message: `bands mark a range along a value axis, and a ${c.chart_type} chart has none to mark. Use chart_type "line", "area" or "bar", or state the range in the page's text.`,
         })
       }
       c.bands.forEach((band, k) => {

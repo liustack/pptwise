@@ -1,0 +1,33 @@
+{
+  "components": [
+    {
+      "type": "paragraph",
+      "text": "This year we read ten years of China's National Reading Survey from start to finish, to answer a question we are often asked: are people still reading? The answer is better than we feared and more complicated than we thought. The share of readers and the books they read barely moved. What moved was how people read and where their time goes, and the line that fell furthest is our own."
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "icon": "book-open",
+          "value": "60.0%",
+          "label": "Adults who read books",
+          "note": "58.4% in 2015"
+        },
+        {
+          "icon": "smartphone",
+          "value": "80.8%",
+          "label": "Adults who read digitally",
+          "note": "64.0% in 2015"
+        },
+        {
+          "icon": "newspaper",
+          "value": "**16.6%**",
+          "label": "Adults who read periodicals",
+          "note": "34.6% in 2015"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: 13th and 23rd National Reading Surveys (Chinese Academy of Press and Publication, survey years 2015 and 2025), adults, as the survey defines its rates",
+  "notes": "The short version: people are not reading fewer books, they are reading in different ways, and when reading changes shape, periodicals lose first. That includes us. One number for each part. By the survey's own measure, the share of adults who read books went from 58.4% to 60.0% in ten years, barely a change. The share who read digitally in some form went from 64.0% to 80.8%. The share who read periodicals fell from 34.6% to 16.6%, more than halved. The book reading rate is the survey's own indicator, and its releases do not say whether it counts print only, so we do not turn it into \"four in ten adults never read a print book\"."
+}

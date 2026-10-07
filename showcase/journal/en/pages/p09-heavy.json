@@ -1,0 +1,79 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "title": "Adults reading 10 or more print books a year (%)",
+      "gaps": [
+        {
+          "after": "2017",
+          "x": "2018",
+          "label": "Not published"
+        },
+        {
+          "after": "2021",
+          "x": "2022",
+          "label": "Not published"
+        }
+      ],
+      "series": [
+        {
+          "name": "Adults reading 10 or more print books a year",
+          "data": [
+            {
+              "x": "2017",
+              "y": 10.2
+            },
+            {
+              "x": "2019",
+              "y": 11.1
+            },
+            {
+              "x": "2020",
+              "y": 11.6
+            },
+            {
+              "x": "2021",
+              "y": 11.9
+            },
+            {
+              "x": "2023",
+              "y": 12.3
+            },
+            {
+              "x": "2024",
+              "y": 13.2
+            },
+            {
+              "x": "2025",
+              "y": 13.5,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "No figures could be verified for 2018 and 2022, so they are left blank."
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "45.9%",
+          "label": "Would most like a print book",
+          "note": "Several answers may count since 2024"
+        },
+        {
+          "value": "30.3%",
+          "label": "Satisfied with their reading",
+          "note": "Dissatisfied 13.8%, neutral 46.2%"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: 15th to 23rd National Reading Surveys",
+  "notes": "Heavy readers are a minority, but a slowly growing one. Adults who read ten or more print books a year were 10.2% in 2017 and 13.5% in 2025, up 3.3 points in eight years. We could not verify 2018 or 2022, so those years are blank, not filled in. Another pair of numbers says more: 45.9% say their preferred way to read is to pick up a print book, yet only 30.3% are satisfied with their own reading. There is a gap between wanting to read and getting to read, and that gap is where a reading magazine belongs. Since 2024 the answers to the preference question add up to more than 100%, so several answers may be allowed, and we do not draw it as a pie."
+}

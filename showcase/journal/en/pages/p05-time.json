@@ -1,0 +1,57 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "subway",
+      "fit": "cover",
+      "caption": "A metro car at rush hour (AI-generated)"
+    },
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "x_unit": "min"
+      },
+      "series": [
+        {
+          "name": "2017",
+          "data": [
+            {
+              "x": "Phone use a day",
+              "y": 80.43,
+              "icon": "smartphone",
+              "note": "Dashed line: 80.43 min in 2017"
+            },
+            {
+              "x": "Print reading a day",
+              "y": 20.38,
+              "icon": "book-open",
+              "note": "Dashed line: 20.38 min in 2017"
+            }
+          ]
+        },
+        {
+          "name": "2025",
+          "data": [
+            {
+              "x": "Phone use a day",
+              "y": 109.54
+            },
+            {
+              "x": "Print reading a day",
+              "y": 24.68,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Short video reaches 1.074 billion people, 95.4% of internet users. No data shows how much reading time it takes. We can only say both are happening at once."
+    }
+  ],
+  "footnote": "Sources: 15th and 23rd National Reading Surveys, CNNIC 57th report. Phone time for 2015 and 2016 was measured under another name and is left out",
+  "notes": "Where did the time go? In 2025 the average adult spent 109.54 minutes a day on a phone and 24.68 minutes reading print books, about 4.4 times as much on the phone. But print time did not shrink. It was 19.69 minutes in 2015, so it grew by about five minutes. The survey renamed the phone measure in 2017, from phone reading time to phone use time, so we start the phone figure at 80.43 minutes in 2017. The phone figure jumped by more than 15 minutes in 2019, exactly when the survey's sample and method changed, so read that year with care. These daily times overlap and cannot be added into one day. By the end of 2025, 1.074 billion people used short-video apps, almost every internet user. Did short video take reading time away? We found no study that can answer that, so we only say the two are happening at the same time, not that one caused the other."
+}

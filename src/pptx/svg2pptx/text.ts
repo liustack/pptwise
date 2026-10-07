@@ -21,6 +21,14 @@ export interface TextRunData {
    * after it and nowhere else. See `layOutSegments`.
    */
   charSpacing?: number
+  /**
+   * The run's own face, when its `<tspan>` names a `font-family` of its own:
+   * a unit set in the body face after a figure in the heading serif. The
+   * text's face otherwise. `eaFace` is the East Asian face that family pairs
+   * with it, as on the text (`pairedEaFamily`).
+   */
+  fontFace?: string
+  eaFace?: string
 }
 
 /**
@@ -184,7 +192,7 @@ interface RawRun {
 
 type Align = TextOp["align"]
 
-function buildRawRuns(el: Element, baseBold: boolean, baseItalic: boolean): RawRun[] {
+function buildRawRuns(el: Element, baseBold: boolean, baseItalic: boolean, baseFace: string | undefined): RawRun[] {
   // `xml:space` is inherited and a child may override it. The `<text>` reads
   // whatever an ancestor folded onto it (`dispatch.ts`), and each direct
   // child reads its own declaration over that. `code.tsx` is the producer
@@ -215,8 +223,19 @@ function buildRawRuns(el: Element, baseBold: boolean, baseItalic: boolean): RawR
       throw new Error("svg2pptx: <tspan y> is not exported; use dy or a separate <text>")
     }
     const run: TextRunData = { text: child.textContent ?? "" }
-    if (isBold(child.getAttribute("font-weight")) || baseBold) run.bold = true
-    if (isItalic(child.getAttribute("font-style")) || baseItalic) run.italic = true
+    // A tspan's own weight, style and family replace the text's, as they do
+    // in SVG: a unit set regular after a bold figure stays regular.
+    const weight = child.getAttribute("font-weight")
+    if (weight !== null ? isBold(weight) : baseBold) run.bold = true
+    const style = child.getAttribute("font-style")
+    if (style !== null ? isItalic(style) : baseItalic) run.italic = true
+    const family = child.getAttribute("font-family")
+    const face = firstFontFamily(family)
+    if (face && face !== baseFace) {
+      run.fontFace = face
+      const ea = pairedEaFamily(family)
+      if (ea) run.eaFace = ea
+    }
     const fill = child.getAttribute("fill")
     if (fill && fill !== "none") run.color = svgColorToHex(fill)
     const fs = child.getAttribute("font-size")
@@ -364,7 +383,7 @@ function advanceOfChunk(
 function advancePx(runs: readonly TextRunData[], baseSizePx: number, fontFamily: string | undefined): number {
   return runs.reduce((sum, run) => {
     const sizePx = run.fontSize != null ? ptToPx(run.fontSize) : baseSizePx
-    const glyphs = measureTextUnits(run.text, { fontFamily, bold: run.bold === true }) * sizePx
+    const glyphs = measureTextUnits(run.text, { fontFamily: run.fontFace ?? fontFamily, bold: run.bold === true }) * sizePx
     const spacing = ptToPx(run.charSpacing ?? 0) * Array.from(run.text).length
     return sum + glyphs + spacing
   }, 0)
@@ -457,7 +476,7 @@ export function textToOps(el: Element): TextOp[] {
   const fontFace = firstFontFamily(el.getAttribute("font-family"))
   const eaFace = pairedEaFamily(el.getAttribute("font-family"))
   const segments = layOutSegments(
-    buildRawRuns(el, isBold(el.getAttribute("font-weight")), isItalic(el.getAttribute("font-style"))),
+    buildRawRuns(el, isBold(el.getAttribute("font-weight")), isItalic(el.getAttribute("font-style")), fontFace),
     { x: num(el, "x"), y: num(el, "y"), align, sizePx: fontSizePx, fontFamily: fontFace },
   )
   if (segments.length > 1 && align !== "left") {

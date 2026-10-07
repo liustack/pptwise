@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+The shared compositions gain a periodical setting, drawn on journal's 2026-10 board and read entirely from the theme's tokens: the claim in a bookish serif ending on one line, every figure numbered across the deck with its title in the accent and the editor's comment under it in italic, one lead in the accent per page and no bar turned red for being the tallest. It draws an editor's note with a drop cap beside three figures, two lines over ten years from zero, bars with a symbol before each name beside a photograph, minutes against an earlier year marked on each bar, one figure huge beside the small trend it ends, a photograph over figures with a pull quote, a run of bars with dashed places for the years nobody published beside two figures, pairs of bars over the years beside a card, a run with its change bracketed and a column of discounts, shares by column beside a photograph and one share bar, two small multiples on their own scales, surveys side by side in a table, effects on one scale with the zero line, a long read in two columns under a pull quote, and plans numbered 一 to 四 with why beside a photograph.

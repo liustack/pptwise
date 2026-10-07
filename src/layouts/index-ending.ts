@@ -30,6 +30,7 @@ import { PitchEnding } from "./ending-pitch-ending"
 import { MarqueeEnding } from "./ending-marquee-ending"
 import { BinderEnding } from "./ending-binder-ending"
 import { ManuscriptEnding } from "./ending-manuscript-ending"
+import { PeriodicalEnding } from "./ending-periodical-ending"
 import { ScorecardEnding } from "./ending-scorecard-ending"
 import { CarePlanEnding } from "./ending-care-plan-ending"
 import { SeatCtaEnding } from "./ending-seat-cta-ending"
@@ -91,4 +92,5 @@ export const ENDING_LAYOUTS: Record<EndingLayoutId, EndingLayout> = {
   "marquee-ending": MarqueeEnding,
   "binder-ending": BinderEnding,
   "manuscript-ending": ManuscriptEnding,
+  "periodical-ending": PeriodicalEnding,
 }

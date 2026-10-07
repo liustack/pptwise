@@ -2544,3 +2544,155 @@ describe("a numbered chart", () => {
     expect(svg(renderDef.render(line, { ...box, h: 360 }, ctx)).container.querySelector("[data-exhibit-label]")).toBeNull()
   })
 })
+
+describe("a symbol before a bar's category", () => {
+  const ways = {
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    direction: "horizontal" as const,
+    axes: { x_unit: "%" },
+    series: [
+      {
+        name: "2025 年接触率",
+        data: [
+          { x: "手机阅读", y: 79.0, icon: "smartphone" as const },
+          { x: "听书", y: 38.7, icon: "headphones" as const, emphasis: true },
+          { x: "视频讲书", y: 6.3, icon: "clapperboard" as const },
+        ],
+      },
+    ],
+  }
+
+  it("is accepted on the first series of a bar on its side only", () => {
+    expect(chartSchema.safeParse(ways).success).toBe(true)
+    expect(chartSchema.safeParse({ ...ways, direction: "vertical" }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...ways, chart_type: "line", direction: undefined }).success).toBe(false)
+    const second = { ...ways, series: [{ name: "2017", data: ways.series[0]!.data.map(({ icon: _icon, ...d }) => d) }, ways.series[0]!] }
+    expect(chartSchema.safeParse(second).success).toBe(false)
+  })
+
+  it("stands in a column of its own at the chart's left edge, beside its category's row", () => {
+    const { container } = svg(chart.render(ways, { ...box, h: 300 }, ctx))
+    const icons = Array.from(container.querySelectorAll("[data-chart-icon]"))
+    expect(icons.map((el) => el.getAttribute("data-chart-icon"))).toEqual(["smartphone", "headphones", "clapperboard"])
+    const at = (el: Element) => el.querySelector("g")!.getAttribute("transform")!.match(/translate\(([\d.]+),([\d.]+)\)/)!.slice(1).map(Number)
+    // One column: every symbol at the same left edge, the chart's own.
+    expect(new Set(icons.map((el) => at(el)[0])).size).toBe(1)
+    const axisX = Number(container.querySelector('[data-axis="y"]')!.getAttribute("x1"))
+    expect(at(icons[0]!)[0]).toBeLessThan(axisX)
+    const ticks = Array.from(container.querySelectorAll('[data-axis-tick="y"]'))
+    expect(ticks.map((el) => el.textContent)).toEqual(["手机阅读", "听书", "视频讲书"])
+    // Each name keeps clear of its symbol, and each symbol sits on its own row.
+    for (const [i, el] of icons.entries()) {
+      const tick = ticks[i]!
+      const width = measureTextUnits(tick.textContent!, {}) * Number(tick.getAttribute("font-size"))
+      expect(Number(tick.getAttribute("x")) - width).toBeGreaterThan(at(el)[0]! + 16)
+      expect(Math.abs(at(el)[1]! + 8 - (Number(tick.getAttribute("y")) - 0.35 * Number(tick.getAttribute("font-size"))))).toBeLessThan(1)
+    }
+  })
+
+  it("leaves a chart without symbols where it was", () => {
+    const plain = { ...ways, series: [{ ...ways.series[0]!, data: ways.series[0]!.data.map(({ icon: _icon, ...d }) => d) }] }
+    const { container } = svg(chart.render(plain, { ...box, h: 300 }, ctx))
+    expect(container.querySelector("[data-chart-icon]")).toBeNull()
+    const iconed = svg(chart.render(ways, { ...box, h: 300 }, ctx)).container
+    const axisX = (c: Element) => Number(c.querySelector('[data-axis="y"]')!.getAttribute("x1"))
+    expect(axisX(iconed) - axisX(container)).toBe(24)
+  })
+})
+
+describe("a place kept for a category with no published value", () => {
+  const heavy = {
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    axes: { y_unit: "%" },
+    gaps: [
+      { after: "2017", x: "2018", label: "未公布" },
+      { after: "2021", x: "2022", label: "未公布" },
+    ],
+    series: [{ name: "一年读 10 本以上", data: [["2017", 10.2], ["2019", 11.1], ["2020", 11.6], ["2021", 11.9], ["2023", 12.3]].map(([x, y]) => ({ x: x as string, y: y as number })) }],
+  }
+
+  it("is accepted after a category the chart has, on an upright bar or a line", () => {
+    expect(chartSchema.safeParse(heavy).success).toBe(true)
+    expect(chartSchema.safeParse({ ...heavy, chart_type: "line" }).success).toBe(true)
+    expect(chartSchema.safeParse({ ...heavy, gaps: [{ after: "2017", x: "2018", label: "未公布" }, { after: "2018", x: "2018.5", label: "未公布" }] }).success).toBe(true)
+    expect(chartSchema.safeParse({ ...heavy, direction: "horizontal" }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...heavy, chart_type: "area" }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...heavy, gaps: [{ after: "2016", x: "2018", label: "未公布" }] }).success).toBe(false)
+    expect(chartSchema.safeParse({ ...heavy, gaps: [{ after: "2017", x: "2019", label: "未公布" }] }).success).toBe(false)
+  })
+
+  it("draws a dashed outline with its label where the bar would stand, its name on the axis", () => {
+    const { container } = svg(chart.render(heavy, { ...box, h: 360 }, ctx))
+    const gaps = Array.from(container.querySelectorAll("[data-chart-gap]"))
+    expect(gaps.map((g) => g.getAttribute("data-chart-gap"))).toEqual(["2018", "2022"])
+    for (const g of gaps) {
+      expect(g.querySelector("rect")!.getAttribute("stroke-dasharray")).toBe("4 3")
+      expect(g.querySelector("rect")!.getAttribute("fill")).toBe("none")
+      expect(g.querySelector("text")!.textContent).toBe("未公布")
+    }
+    const ticks = Array.from(container.querySelectorAll('[data-axis-tick="x"]')).map((el) => el.textContent)
+    expect(ticks).toEqual(["2017", "2018", "2019", "2020", "2021", "2022", "2023"])
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+  })
+
+  it("breaks a line there and names it over the axis", () => {
+    const papers = {
+      type: "chart" as const,
+      chart_type: "line" as const,
+      gaps: [{ after: "2015", x: "2016", label: "留空" }],
+      series: [
+        { name: "报纸", data: [["2015", 45.7], ["2017", 37.6], ["2018", 35.1]].map(([x, y]) => ({ x: x as string, y: y as number })) },
+        { name: "期刊", data: [["2015", 34.6], ["2017", 25.3], ["2018", 23.4]].map(([x, y]) => ({ x: x as string, y: y as number })) },
+      ],
+    }
+    const { container } = svg(chart.render(papers, { ...box, h: 360 }, ctx))
+    expect(container.querySelectorAll("[data-lone-point]")).toHaveLength(2)
+    expect(container.querySelector("[data-chart-gap]")!.textContent).toBe("留空")
+    expect(Array.from(container.querySelectorAll("polyline"))).toHaveLength(2)
+  })
+})
+
+describe("value ranges on a bar on its side", () => {
+  const effects = {
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    direction: "horizontal" as const,
+    bands: [
+      { from: -0.4, to: 0, label: "← 屏幕比纸差" },
+      { from: 0, to: 0.1, label: "纸比屏幕差 →" },
+    ],
+    series: [
+      { name: "Delgado 等，2018", data: [["总体", -0.21], ["说明文", -0.27], ["叙事文", 0.01]].map(([x, y]) => ({ x: x as string, y: y as number })) },
+      { name: "Clinton，2019", data: [["总体", -0.25], ["说明文", -0.32], ["叙事文", -0.04]].map(([x, y]) => ({ x: x as string, y: y as number })) },
+    ],
+  }
+
+  it("is accepted on a bar on its side as on an upright one", () => {
+    expect(chartSchema.safeParse(effects).success).toBe(true)
+    expect(chartSchema.safeParse({ ...effects, chart_type: "scatter" }).success).toBe(false)
+  })
+
+  it("tints each range down the rows and names it in a row over the plot, from its own left end", () => {
+    const { container } = svg(chart.render(effects, { ...box, h: 360 }, ctx))
+    const bands = Array.from(container.querySelectorAll("[data-chart-band]"))
+    expect(bands).toHaveLength(2)
+    const axis = container.querySelector('[data-axis="x"]')!
+    const plotTop = Number(container.querySelector('[data-axis="y"]')!.getAttribute("y1"))
+    const plotBottom = Number(axis.getAttribute("y1"))
+    for (const band of bands) {
+      const rect = band.querySelector("rect")!
+      expect(Number(rect.getAttribute("y"))).toBeCloseTo(plotTop, 3)
+      expect(Number(rect.getAttribute("height"))).toBeCloseTo(plotBottom - plotTop, 3)
+      expect(Number(band.querySelector("text")!.getAttribute("y"))).toBeLessThan(plotTop)
+    }
+    const [below, above] = bands.map((b) => b.querySelector("rect")!)
+    // The two ranges meet at zero, and the one that ends the plot names itself from that end.
+    expect(Number(below!.getAttribute("x")) + Number(below!.getAttribute("width"))).toBeCloseTo(Number(above!.getAttribute("x")), 3)
+    expect(bands[0]!.querySelector("text")!.textContent).toBe("← 屏幕比纸差")
+    expect(Number(bands[1]!.querySelector("text")!.getAttribute("x"))).toBeCloseTo(Number(above!.getAttribute("x")), 3)
+    expect(below!.getAttribute("fill")).not.toBe(above!.getAttribute("fill"))
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+  })
+})

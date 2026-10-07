@@ -1,0 +1,79 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "who",
+          "label": "Survey"
+        },
+        {
+          "key": "ask",
+          "label": "What it asks"
+        },
+        {
+          "key": "now",
+          "label": "Result"
+        },
+        {
+          "key": "before",
+          "label": "Earlier"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "flag",
+          "cells": {
+            "who": "US · Pew, 2025",
+            "ask": "Read at least one book in the past 12 months, even in part",
+            "now": "75%",
+            "before": "78% in 2011"
+          }
+        },
+        {
+          "icon": "flag",
+          "cells": {
+            "who": "US · NEA, 2022",
+            "ask": "Read a book for pleasure in the past year, not for work or school",
+            "now": "48.5%",
+            "before": "54.6% in 2012"
+          }
+        },
+        {
+          "icon": "flag",
+          "cells": {
+            "who": "Japan · Culture agency, 2024",
+            "ask": "Aged 16 and over, read no book in a month",
+            "now": "62.6%",
+            "before": "Method changed"
+          }
+        },
+        {
+          "icon": "flag",
+          "cells": {
+            "who": "UK · NLT, 2026",
+            "ask": "Aged 8 to 18, enjoy reading in their free time",
+            "now": "36.1%",
+            "before": "32.7% in 2025"
+          }
+        },
+        {
+          "icon": "flag",
+          "cells": {
+            "who": "China · Reading survey, 2025",
+            "ask": "Adults who read books, as the survey defines it",
+            "now": "60.0%",
+            "before": "58.4% in 2015"
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Not the same question. Read them side by side, never as a ranking."
+    }
+  ],
+  "footnote": "Sources: Pew Research Center (2026-04), NEA 2022 Survey of Public Participation in the Arts, Japan's Agency for Cultural Affairs (2024-09), UK National Literacy Trust (2025, 2026), 13th and 23rd National Reading Surveys",
+  "notes": "Other countries ask the same question, each in its own way, so this table can only be read side by side, never as a league table. Pew in the US asks whether you read at least one book in the past twelve months, in print, digital or audio, whole or in part. It was 75% in 2025, about where it has been for over a decade. The National Endowment for the Arts asks about reading not for work or school: 48.5% in 2022, down from 54.6% in 2012. Japan's Agency for Cultural Affairs asks people aged 16 and over how many books they read in a month, excluding magazines and manga, and 62.6% said none, but it switched from face-to-face to mail surveys in 2020, so older figures do not compare directly. The UK's National Literacy Trust asks children aged 8 to 18 whether they enjoy reading in their free time: 32.7% in 2025, the lowest in twenty years, and 36.1% in 2026. The China row is the book reading rate as the National Reading Survey defines it. Five questions, five ways of answering. Read each country's own direction."
+}

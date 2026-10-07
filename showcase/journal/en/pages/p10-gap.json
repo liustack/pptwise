@@ -1,0 +1,94 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "title": "Adults who read books, urban and rural (%)",
+      "gaps": [
+        {
+          "after": "2022",
+          "x": "2023 on",
+          "label": "Not published"
+        }
+      ],
+      "series": [
+        {
+          "name": "Urban",
+          "data": [
+            {
+              "x": "2017",
+              "y": 67.5
+            },
+            {
+              "x": "2019",
+              "y": 67.9
+            },
+            {
+              "x": "2020",
+              "y": 68.3
+            },
+            {
+              "x": "2021",
+              "y": 68.5
+            },
+            {
+              "x": "2022",
+              "y": 68.6
+            }
+          ]
+        },
+        {
+          "name": "Rural",
+          "data": [
+            {
+              "x": "2017",
+              "y": 49.3
+            },
+            {
+              "x": "2019",
+              "y": 49.8
+            },
+            {
+              "x": "2020",
+              "y": 49.9
+            },
+            {
+              "x": "2021",
+              "y": 50.0
+            },
+            {
+              "x": "2022",
+              "y": 50.2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Print books per adult in 2022: urban 5.61, rural 3.77."
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "icon": "baby",
+          "tag": {
+            "text": "Children aged 0 to 17"
+          },
+          "value": "**86.7%**",
+          "label": "Read books, against 60.0% of adults"
+        },
+        {
+          "value": "11.72",
+          "unit": "books",
+          "label": "Books read per child a year",
+          "note": "Children's and adults' books are counted differently, so compare only the rates"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: 15th, 17th to 20th and 23rd National Reading Surveys",
+  "notes": "Who reads less? The urban-rural gap is steady. In 2022 the book reading rate was 68.6% for urban adults and 50.2% for rural adults, a gap of 18.4 points that barely narrowed in five years. Urban adults read 5.61 print books a year, rural adults 3.77. These are the latest urban-rural figures in any public release. Releases since 2023 say only that cities read more, with no numbers. At the other end are children: 86.7% of those aged 0 to 17 read books, 11.72 a year on average, with 36.82 minutes of print reading a day, all well above adults. The ones reading less are adults, rural adults most of all. Recent releases give no adult reading rates by age or education."
+}

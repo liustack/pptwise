@@ -1,0 +1,89 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "tag": {
+            "text": "Price paid, share of list price"
+          },
+          "label": "2022",
+          "value": "66%"
+        },
+        {
+          "label": "2023",
+          "value": "61%"
+        },
+        {
+          "label": "2025",
+          "value": "**58%**"
+        },
+        {
+          "label": "Q1 2026",
+          "value": "56%"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "2025: list-price sales −2.24%, net sales −3.80%"
+    },
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "title": "Retail book sales at list price (bn yuan)",
+      "tag": {
+        "text": "Company figures · restated basis from 2025"
+      },
+      "changes": [
+        {
+          "from": "2019",
+          "to": "2025"
+        }
+      ],
+      "series": [
+        {
+          "name": "Retail book sales at list price",
+          "data": [
+            {
+              "x": "2019",
+              "y": 128.6
+            },
+            {
+              "x": "2020",
+              "y": 122.1
+            },
+            {
+              "x": "2021",
+              "y": 124.1
+            },
+            {
+              "x": "2022",
+              "y": 109.5
+            },
+            {
+              "x": "2023",
+              "y": 114.6
+            },
+            {
+              "x": "2024",
+              "y": 112.9
+            },
+            {
+              "x": "2025",
+              "y": 110.4,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Figures published on the old basis ran about 25.7% lower and cannot join this line."
+    }
+  ],
+  "footnote": "Sources: OpenBook (company figures), via the German Book Information Centre's Buchmarkt China 2024 and 2025, and Huxiu citing OpenBook (Q1 2026)",
+  "notes": "Books are selling less, and more cheaply. By OpenBook's count, retail book sales at list price were 110.4 billion yuan in 2025, down 2.24% on the year and only 86% of 2019. List-price sales count books at their cover price. Net sales count what buyers actually paid, and those fell 3.80% in 2025, faster than list-price sales, because discounts keep deepening: books sold at 58% of list price on average in 2025 and at 56% in the first quarter of 2026. One caution on definitions. In early 2025 OpenBook changed its estimation method and restated 2019 to 2023 upward by about 25.7%. The 2023 figure first published as 91.2 billion yuan became 114.6 billion. The chart shows the restated series. The old figures cannot be joined to it, and growth should never be computed between an old and a new figure. Another tracker, Zhongjin Yiyun, puts the 2025 fall at 11.2%, far from OpenBook. We use OpenBook only."
+}

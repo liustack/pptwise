@@ -102,6 +102,8 @@ export type CoverLayoutId =
   | "binder-cover"
   // thesis sample redesign (2026-10-06): a thesis title page beside a photograph.
   | "manuscript-cover"
+  // journal sample redesign (2026-10-07): a small magazine's cover beside a photograph.
+  | "periodical-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -206,6 +208,8 @@ export type EndingLayoutId =
   | "binder-ending"
   // thesis sample redesign (2026-10-06): the points a thesis talk leaves and its closing line.
   | "manuscript-ending"
+  // journal sample redesign (2026-10-07): a magazine's afterword and its sign-off.
+  | "periodical-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -277,6 +281,10 @@ export type ContentLayoutId =
   | "binder-sheet"
   // thesis sample redesign: the board's ordinary content page. Theme-locked.
   | "manuscript-sheet"
+  // journal sample redesign: the board's ordinary content page. Theme-locked.
+  | "periodical-sheet"
+  // journal sample redesign: the board's quotation page. Theme-locked.
+  | "periodical-quote"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

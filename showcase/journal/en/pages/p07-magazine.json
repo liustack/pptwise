@@ -1,0 +1,42 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "magazines",
+      "fit": "cover",
+      "caption": "Spines of old magazines (AI-generated)"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "icon": "book-marked",
+          "value": "1.57",
+          "unit": "issues",
+          "label": "Periodicals read a year",
+          "note": "4.91 in 2015, 68% fewer"
+        },
+        {
+          "icon": "clock",
+          "value": "2.77",
+          "unit": "min",
+          "label": "Periodical reading a day",
+          "note": "8.83 min in 2015"
+        },
+        {
+          "icon": "newspaper",
+          "value": "21.2",
+          "unit": "%",
+          "label": "Adults who read newspapers",
+          "note": "45.7% in 2015"
+        }
+      ]
+    },
+    {
+      "type": "blockquote",
+      "text": "These are not someone else's numbers. A magazine kept alive by its subscribers stands on these lines."
+    }
+  ],
+  "footnote": "Source: 13th and 23rd National Reading Surveys, adults. The 68% fall is computed from the two years: 1.57 ÷ 4.91 − 1",
+  "notes": "A closer look. The average adult read 4.91 print periodical issues a year in 2015 and 1.57 in 2025, about 68% fewer. Daily time with periodicals fell from 8.83 to 2.77 minutes. Newspapers fell further: the reading rate went from 45.7% to 21.2%, and issues per adult from 54.76 to 11.59 a year. These lines describe the whole periodical press, and they describe us. We do not list our own subscription figures here. This letter is about readers and how they read, not about our accounts."
+}

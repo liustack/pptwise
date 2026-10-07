@@ -8,6 +8,7 @@ import { figureStyleOf, groupDigits, joinUnit, wholeValueDecimals, writtenFigure
 import { changeText } from "../lib/change-figure"
 import { mostlyChinese } from "../lib/text-script"
 import { StatusMark, statusGround, type PointStatus } from "../render/mark-status"
+import { Icon } from "../render/icons"
 import { AXIS_TITLE_BAND_H, AXIS_TITLE_SIZE, axisTitlePairHeight, renderAxisTitlePair, renderCartesianAxisTitles } from "./axis-titles"
 import {
   buildAlignedNumericAxis,
@@ -24,7 +25,7 @@ import {
   Y_TICK_MAX_W_RATIO,
   type DomainPadMode,
 } from "./cartesian-axis"
-import { buildChartModel, zeroAxisRatio, type ChartDomain } from "./chart-model"
+import { buildChartModel, gapHeight, insertGaps, zeroAxisRatio, type ChartDomain } from "./chart-model"
 import { boxesIntersect, TEXT_INK_DESCENT, type DepthBox } from "../render/depth-contract/geometry"
 import {
   labelLinePitch,
@@ -779,6 +780,66 @@ function renderValueBands(opts: {
   )
 }
 
+/** The row over a plot on its side that holds its bands' labels. */
+const BAND_ROW = BAND_LABEL_SIZE + 12
+
+/**
+ * Paints the chart's marked value ranges down a plot on its side, behind the
+ * bars: a pale tint of the accent between the two ends, the full height of
+ * the rows, and each range's label in the row over the plot, from the range's
+ * own left end, or ending at its right end when that is where the plot ends.
+ */
+function renderValueBandsDown(opts: {
+  component: ChartInput | undefined
+  domain: { min: number; max: number }
+  plotX: number
+  plotY: number
+  plotW: number
+  plotH: number
+  accentColor: string
+  textColor: string
+  bgHex: string | undefined
+  fontFamily: string | undefined
+}): ReactElement | null {
+  const bands = opts.component?.bands
+  if (!bands || bands.length === 0) return null
+  const ground = opts.bgHex ?? "#FFFFFF"
+  const right = opts.plotX + opts.plotW
+  return (
+    <g data-chart-bands="">
+      {bands.map((band, k) => {
+        // Two ranges often meet, at zero say, so the second takes half the tint and the seam shows.
+        const fill = blendOver(opts.accentColor, ground, k === 0 ? 0.16 : 0.08)
+        const xLeft = mapToPlotX(Math.min(band.from, band.to), opts.domain, opts.plotX, opts.plotW)
+        const xRight = mapToPlotX(Math.max(band.from, band.to), opts.domain, opts.plotX, opts.plotW)
+        const atEnd = Math.abs(xRight - right) < 0.5 && Math.abs(xLeft - opts.plotX) >= 0.5
+        const room = atEnd ? xRight - opts.plotX : right - xLeft
+        const label = band.label?.trim() ? fitSvgLine(band.label.trim(), { maxWidth: room, fontSize: BAND_LABEL_SIZE, minFontSize: BAND_LABEL_SIZE, bold: true, fontFamily: opts.fontFamily }) : null
+        return (
+          <g key={`band-${k}`} data-chart-band="">
+            <rect x={xLeft} y={opts.plotY} width={Math.max(1, xRight - xLeft)} height={opts.plotH} fill={fill} />
+            {label && (
+              <text
+                data-truncated={label.truncated ? "1" : undefined}
+                x={atEnd ? xRight : xLeft}
+                y={opts.plotY - BAND_ROW + BAND_LABEL_SIZE}
+                textAnchor={atEnd ? "end" : undefined}
+                fontFamily={opts.fontFamily}
+                fontSize={label.fontSize}
+                fontWeight="700"
+                fill={accessibleInk(blendOver(opts.textColor, opts.accentColor, 0.45), ground, label.fontSize)}
+                dominantBaseline="alphabetic"
+              >
+                {label.text}
+              </text>
+            )}
+          </g>
+        )
+      })}
+    </g>
+  )
+}
+
 function directLabelWidth(text: string, fontFamily?: string): number {
   return measureTextUnits(text, { bold: true, fontFamily }) * DIRECT_LABEL_FONT_SIZE
 }
@@ -1460,7 +1521,9 @@ export function renderBar(
   fontFamily?: string,
   figures?: FigureStyle,
 ): ReactElement {
-  const model = buildChartModel(series)
+  // A category the author kept with no published value (`gaps`) takes its
+  // place on the axis as a dashed outline with its label.
+  const { model, gapAt } = insertGaps(buildChartModel(series), component?.gaps)
   const { categories } = model
   const n = model.series.length
   const meta = cartesianMeta(component, series, figures)
@@ -1515,11 +1578,23 @@ export function renderBar(
   const barLabelSpecs: ValueLabelSpec[] = []
   const barBoxes: DepthBox[] = []
   const barEnds = new Map<string, BracketEnd>()
+  // A gap's outline stands as tall as the bars run on average, its label over it.
+  const gapTop = verticalBarExtent(gapHeight(model), domain, geom.plotY, geom.plotH)
+  const gapBoxes = new Map<number, DepthBox>()
   for (let i = 0; i < categories.length; i++) {
     const groupX0 = geom.plotX + i * groupW + BAR_GROUP_EDGE_GAP
     const usableW = groupW - BAR_GROUP_EDGE_GAP * 2
     const perBarW = group <= 1 ? usableW : Math.max(1, (usableW - (group - 1) * BAR_GROUP_EDGE_GAP) / group)
     const slots = barSlots(model.series, i, usableW, perBarW, BAR_GROUP_EDGE_GAP)
+    const gap = gapAt.get(i)
+    if (gap !== undefined) {
+      const box = { x: groupX0, y: gapTop.barY, w: usableW, h: gapTop.barH }
+      gapBoxes.set(i, box)
+      barBoxes.push(box)
+      barLabelSpecs.push(
+        risingBand({ id: `gap-${i}`, text: gap, x: groupX0 + usableW / 2, y: box.y - VALUE_LABEL_GAP, anchor: "middle", fontSize: VALUE_FONT_SIZE, fontFamily, priority: 100 }, top),
+      )
+    }
     for (const s of model.series) {
       const value = s.values[i]
       if (value == null) continue
@@ -1634,6 +1709,20 @@ export function renderBar(
             )
           }
         }
+        const gapBox = gapBoxes.get(i)
+        if (gapBox) {
+          const placed = placedBars.get(`gap-${i}`)
+          barElements.push(
+            <g key="gap" data-chart-gap={String(cat.x)}>
+              <rect x={gapBox.x + 0.5} y={gapBox.y + 0.5} width={Math.max(0, gapBox.w - 1)} height={Math.max(0, gapBox.h - 1)} fill="none" stroke={graphicInk(mutedColor, _bgHex ?? "#FFFFFF")} strokeWidth={1} strokeDasharray="4 3" />
+              {placed ? (
+                <text x={placed.x} y={placed.y} textAnchor="middle" fontSize={VALUE_FONT_SIZE} fontFamily={fontFamily} fill={accessibleInk(mutedColor, _bgHex ?? "#FFFFFF", VALUE_FONT_SIZE)} dominantBaseline="alphabetic">
+                  {placed.text}
+                </text>
+              ) : null}
+            </g>,
+          )
+        }
         return <g key={cat.key}>{barElements}</g>
       })}
       {renderReferenceLine({ component, domain: yAxis.domain, plotX: geom.plotX, plotY: geom.plotY, plotW: geom.plotW, plotH: geom.plotH, across: true, color: textColor })}
@@ -1665,6 +1754,9 @@ export function renderBar(
     </>
   )
 }
+
+/** How far over the axis a line's gap label (`gaps[].label`) stands. */
+const GAP_LABEL_LIFT = 8
 
 /**
  * The few words an author writes on a point of a line (`data[].note`), such
@@ -1768,7 +1860,9 @@ export function renderLine(
   fontFamily?: string,
   figures?: FigureStyle,
 ): ReactElement {
-  const model = buildChartModel(series)
+  // A category the author kept with no published value (`gaps`) breaks
+  // every line there, its label standing over the axis.
+  const { model, gapAt } = insertGaps(buildChartModel(series), component?.gaps)
   const { categories } = model
   const n = model.series.length
   const meta = cartesianMeta(component, series, figures)
@@ -1947,10 +2041,11 @@ export function renderLine(
         })
         // "Line break" for a missing category (roadmap's model-driven rule):
         // split into contiguous runs at each gap, one <polyline> per run.
-        // n<=1 never has a gap (a single series owns every category by
-        // construction — chart-model.ts's own union-order rule), so this is
-        // always exactly one run spanning every point, byte-identical to the
-        // old always-one-polyline-per-series shape. A series with zero
+        // n<=1 has a gap only where the author kept one (`gaps`): a single
+        // series otherwise owns every category by construction (chart-model.ts's
+        // own union-order rule), so this is exactly one run spanning every
+        // point, byte-identical to the old always-one-polyline-per-series
+        // shape. A series with zero
         // resolved points (empty `data`) still renders one empty polyline,
         // matching the old unconditional `<polyline points={pts} .../>`.
         const runs: Resolved[][] = []
@@ -1986,12 +2081,16 @@ export function renderLine(
                     <stop offset="100%" stopColor={accentColor} stopOpacity={AREA_FILL_BOTTOM_ALPHA} />
                   </linearGradient>
                 </defs>
-                <polygon
-                  data-plot-mark="1"
-                  points={`${runs[0]!.map((c) => `${c.x},${c.y}`).join(" ")} ${last.x},${baselineY} ${first.x},${baselineY}`}
-                  fill={`url(#${areaId})`}
-                  stroke="none"
-                />
+                {/* One fill under each run: a gap the author kept breaks the area as it breaks the line. */}
+                {runs.map((run, runIdx) => (
+                  <polygon
+                    key={`area-${runIdx}`}
+                    data-plot-mark="1"
+                    points={`${run.map((c) => `${c.x},${c.y}`).join(" ")} ${run[run.length - 1]!.x},${baselineY} ${run[0]!.x},${baselineY}`}
+                    fill={`url(#${areaId})`}
+                    stroke="none"
+                  />
+                ))}
               </>
             )}
             {runs.map((run, runIdx) =>
@@ -2063,6 +2162,21 @@ export function renderLine(
           </g>
         )
       })}
+      {[...gapAt].map(([i, label]) => (
+        <text
+          key={`gap-${i}`}
+          data-chart-gap={String(categories[i]!.x)}
+          x={xForIndex(i)}
+          y={geom.plotY + geom.plotH - GAP_LABEL_LIFT}
+          textAnchor="middle"
+          fontSize={VALUE_FONT_SIZE}
+          fontFamily={fontFamily}
+          fill={accessibleInk(mutedColor, bgHex ?? "#FFFFFF", VALUE_FONT_SIZE)}
+          dominantBaseline="alphabetic"
+        >
+          {label}
+        </text>
+      ))}
       {renderLineNotes({
         component,
         seriesEnds,
@@ -2857,6 +2971,11 @@ const BAR_H_VALUE_GAP = 8
 /** Gap between the category band and the plot. */
 const BAR_H_BAND_GAP = 12
 /**
+ * A category's symbol (`data[].icon`): this big, at the left edge of the
+ * chart in a column of its own, with this much air before the names.
+ */
+const BAR_H_ICON = { size: 16, gap: 8 } as const
+/**
  * Fit budget headroom for the horizontal bar's category labels.
  *
  * The label band is flush against the chart's own left edge and the label
@@ -2897,11 +3016,11 @@ const BAR_H_PLOT_TOP_PAD = 4
  * on top of each other. The plot is the body less the top pad and the x-tick
  * band (`renderBarHorizontal`), so this is what `chart.measure` asks for.
  */
-export function barHorizontalMinBodyH(categories: number, seriesCount: number): number {
+export function barHorizontalMinBodyH(categories: number, seriesCount: number, banded = false): number {
   const n = Math.max(1, seriesCount)
   const barsH = 2 * BAR_H_ROW_EDGE_GAP + n * BAR_H_MIN_THICKNESS + (n - 1) * BAR_H_ROW_EDGE_GAP
   const rowH = Math.max(labelLinePitch(TICK_FONT_SIZE), barsH)
-  return Math.ceil(categories * rowH) + BAR_H_PLOT_TOP_PAD + X_TICK_BAND
+  return Math.ceil(categories * rowH) + BAR_H_PLOT_TOP_PAD + X_TICK_BAND + (banded ? BAND_ROW : 0)
 }
 
 /**
@@ -2972,7 +3091,7 @@ export function renderBarHorizontal(
     }
   }
   if (pastAxisLimit([...upperAt.values()])) return <WholeShareDeclined />
-  const xAxis = buildNumericAxis([...values, ...upperAt.values(), ...referenceEnds(component)], "zero-max", meta.xUnit ?? meta.yUnit, meta.figures)
+  const xAxis = buildNumericAxis([...values, ...upperAt.values(), ...referenceEnds(component), ...bandEnds(component)], "zero-max", meta.xUnit ?? meta.yUnit, meta.figures)
   const domain: ChartDomain = { min: xAxis.domain.min, max: xAxis.domain.max, degenerate: false }
   const dataMax = Math.max(...values, Number.NEGATIVE_INFINITY)
   // A change the author asked for at a category is printed after the later
@@ -3011,16 +3130,26 @@ export function renderBarHorizontal(
       : categories.flatMap((_cat, i) =>
           model.series.flatMap((m) => (m.values[i] == null ? [] : [labelText(i, m.seriesIndex, m.values[i]!)])),
         )
+  // A category's symbol (`data[].icon`, on the first series) stands in a
+  // column of its own at the chart's left edge, before the names.
+  const iconAt = new Map<number, string>()
+  for (const point of series[0]?.data ?? []) {
+    const i = categories.findIndex((cat) => cat.x === point.x)
+    if (i >= 0 && point.icon) iconAt.set(i, point.icon)
+  }
+  const iconBand = iconAt.size > 0 ? BAR_H_ICON.size + BAR_H_ICON.gap : 0
   const { labelW, valueW } = barHorizontalBands(
     categories.map((cat) => String(cat.x)),
     labelTexts,
-    w,
+    w - iconBand,
     fontFamily,
   )
-  const plotX = x0 + labelW + BAR_H_BAND_GAP
-  const plotW = Math.max(1, w - labelW - BAR_H_BAND_GAP - valueW)
-  const plotY = y0 + BAR_H_PLOT_TOP_PAD
-  const plotH = Math.max(1, h - meta.titleH - X_TICK_BAND - BAR_H_PLOT_TOP_PAD)
+  const plotX = x0 + iconBand + labelW + BAR_H_BAND_GAP
+  const plotW = Math.max(1, w - iconBand - labelW - BAR_H_BAND_GAP - valueW)
+  // Marked value ranges (`bands`) name themselves in a row over the plot.
+  const bandRow = (component?.bands?.length ?? 0) > 0 ? BAND_ROW : 0
+  const plotY = y0 + BAR_H_PLOT_TOP_PAD + bandRow
+  const plotH = Math.max(1, h - meta.titleH - X_TICK_BAND - BAR_H_PLOT_TOP_PAD - bandRow)
   const rowH = plotH / categories.length
   const gradientId = chartGradientId("chart-barh-grad", w, h, series)
   const marked = markedPointOf(series)
@@ -3114,6 +3243,7 @@ export function renderBarHorizontal(
         mutedColor,
         fontFamily,
       })}
+      {renderValueBandsDown({ component, domain: xAxis.domain, plotX, plotY, plotW, plotH, accentColor, textColor, bgHex: _bgHex, fontFamily })}
       {categories.map((cat, i) => {
         // Row geometry, mirrors renderBar's group geometry comment: n<=1
         // keeps the old unconditional `Math.max(4, rowH - 10)` floor
@@ -3178,6 +3308,11 @@ export function renderBarHorizontal(
         }
         return <g key={cat.key}>{barElements}</g>
       })}
+      {[...iconAt].map(([i, name]) => (
+        <g key={`icon-${i}`} data-chart-icon={name}>
+          <Icon name={name} x={x0} y={plotY + i * rowH + rowH / 2 - BAR_H_ICON.size / 2} size={BAR_H_ICON.size} color={graphicInk(mutedColor, _bgHex ?? "#FFFFFF")} />
+        </g>
+      ))}
       {renderReferenceLine({ component, domain: xAxis.domain, plotX, plotY, plotW, plotH, across: false, color: textColor })}
       {placedHLabels === null ? <g data-dropped={hBarSpecs.length} data-dropped-kind="value-label" /> : null}
       {renderCartesianAxisTitles({

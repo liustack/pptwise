@@ -1,0 +1,130 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "16.6",
+          "unit": "%",
+          "label": "Adults who read periodicals in 2025",
+          "note": "34.6% in 2015"
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "chart_type": "line",
+      "title": "Adults who read newspapers and periodicals (%)",
+      "axes": {
+        "y_unit": "%"
+      },
+      "gaps": [
+        {
+          "after": "2015",
+          "x": "2016",
+          "label": "blank"
+        }
+      ],
+      "series": [
+        {
+          "name": "Newspapers",
+          "data": [
+            {
+              "x": "2015",
+              "y": 45.7
+            },
+            {
+              "x": "2017",
+              "y": 37.6
+            },
+            {
+              "x": "2018",
+              "y": 35.1
+            },
+            {
+              "x": "2019",
+              "y": 27.6
+            },
+            {
+              "x": "2020",
+              "y": 25.5
+            },
+            {
+              "x": "2021",
+              "y": 24.6
+            },
+            {
+              "x": "2022",
+              "y": 23.5
+            },
+            {
+              "x": "2023",
+              "y": 23.1
+            },
+            {
+              "x": "2024",
+              "y": 22.5
+            },
+            {
+              "x": "2025",
+              "y": 21.2
+            }
+          ]
+        },
+        {
+          "name": "Periodicals",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "2015",
+              "y": 34.6
+            },
+            {
+              "x": "2017",
+              "y": 25.3
+            },
+            {
+              "x": "2018",
+              "y": 23.4
+            },
+            {
+              "x": "2019",
+              "y": 19.3
+            },
+            {
+              "x": "2020",
+              "y": 18.7
+            },
+            {
+              "x": "2021",
+              "y": 18.4
+            },
+            {
+              "x": "2022",
+              "y": 17.7
+            },
+            {
+              "x": "2023",
+              "y": 17.5
+            },
+            {
+              "x": "2024",
+              "y": 17.1
+            },
+            {
+              "x": "2025",
+              "y": 16.6
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Neither 2016 figure could be verified, so both lines break there."
+    }
+  ],
+  "footnote": "Source: 13th to 23rd National Reading Surveys",
+  "notes": "One number on this page: 16.6%. In 2025, only 16.6% of adults read a periodical, against 34.6% ten years earlier. That is more than half gone. Of every way of reading the survey tracks, newspapers and magazines fell furthest, and the newspaper reading rate also fell from 45.7% to 21.2%. We are a periodical. This line is about us."
+}

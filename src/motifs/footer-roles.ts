@@ -28,6 +28,9 @@ import type { MotifId } from "./types"
  *   rail-motif is thesis's book folio: the page number centred at the foot,
  *   the organization and the notice at the left, and the deck's `label`
  *   moved up to the top left as the thesis's running head.
+ *   corner-ornament-motif is journal's magazine folio: 「· 3 ·」 centred at
+ *   the foot, the notice at the left, and the organization and the deck's
+ *   `label` moved up into the masthead as the column's name and the issue.
  * - `"organization"`: the motif prints the organization somewhere of its
  *   own, and the shared row carries everything else. ink's colophon rail
  *   sets the organization in a vertical column down the right edge.
@@ -49,6 +52,7 @@ export const MOTIF_FOOTER_ROLES: Partial<Record<MotifId, MotifFooterRole>> = {
   "rally-motif": "row",
   "proposal-motif": "row",
   "rail-motif": "row",
+  "corner-ornament-motif": "row",
   "ink-motif": "organization",
   "poster-motif": "organization",
 }

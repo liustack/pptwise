@@ -175,6 +175,21 @@ export type CompositionId =
   | "hazards"
   | "itinerary"
   | "queries"
+  | "foreword"
+  | "chronicle"
+  | "measures"
+  | "elapsed"
+  | "headline"
+  | "witness"
+  | "census"
+  | "contrast"
+  | "bracket"
+  | "mix"
+  | "twins"
+  | "parallel"
+  | "effects"
+  | "longform"
+  | "pledges"
 
 /**
  * The type a composition sets its page in.
@@ -336,10 +351,29 @@ export type CompositionId =
  *   sketches, threats and their answers, a schedule with its gate and
  *   questions for a committee. See `./manuscript.tsx`.
  *
+ * - `periodical`: journal's 2026-10 board. A small magazine's own pages:
+ *   warm paper, every bar and line the page does not lead with in the ink of
+ *   the type, the accent (journal's ochre red) on the one thing a page is
+ *   about, a figure's number in the accent before its caption and the
+ *   editor's comment under it in an italic serif, and photographs with a
+ *   plain italic caption. A composition offered this setting places the
+ *   page's claim itself (`claim`), over the body or beside a photograph that
+ *   runs up to the masthead, and draws the shapes that board drew and no
+ *   other did: an editor's note with its drop cap beside three figures, ten
+ *   years of a reading on one line, ways of reading as bars with their
+ *   symbols, minutes against an earlier year, one figure set huge beside its
+ *   small trend, figures over a pull quote beside a photograph, bars with
+ *   the years nobody published, pairs of bars beside a card, bars with their
+ *   change bracketed beside a column of figures, shares by column beside a
+ *   photograph and a share bar, two small multiples on their own axes, a
+ *   side-by-side table, effects on one scale, a long read in two columns
+ *   under a pull quote, and plans numbered beside a photograph. See
+ *   `./periodical.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */
@@ -391,6 +425,16 @@ export interface CompositionProps {
    * a page (a share bar over a chart and its figures) can pass the rest on.
    */
   handOn?: (components: readonly Component[], rect: ContentRect) => React.ReactElement | null
+  /**
+   * The page's claim, drawn by the face's own rules into the column a
+   * composition gives it (`x` from the band's left, `w` its measure), or
+   * `null` when the claim would not fit that column whole, in which case the
+   * composition declines. Handed down by a face whose board lets a
+   * composition move the claim beside a photograph (journal's periodical
+   * sheet): the band it hands starts at the top of the claim's box rather
+   * than under the claim, and a composition offered it draws it once.
+   */
+  claim?: (column: { x: number; w: number }) => React.ReactElement | null
 }
 
 export interface CompositionInks {

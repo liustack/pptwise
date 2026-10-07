@@ -37,6 +37,8 @@ import { MarqueeSheetContent } from "./content-marquee-sheet"
 import { MarqueeStatementContent } from "./content-marquee-statement"
 import { BinderSheetContent } from "./content-binder-sheet"
 import { ManuscriptSheetContent } from "./content-manuscript-sheet"
+import { PeriodicalSheetContent } from "./content-periodical-sheet"
+import { PeriodicalQuoteContent } from "./content-periodical-quote"
 import { SealFigureContent } from "./content-seal-figure"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { CrayonboxPointContent } from "./content-crayonbox-point"
@@ -74,7 +76,8 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // rally sample redesign adds marquee-sheet and marquee-statement: 34
 // pin-only, 43 in all. The proposal theme adds binder-sheet: 35 pin-only, 44
 // in all. The thesis sample redesign adds manuscript-sheet: 36 pin-only, 45
-// in all.
+// in all. The journal sample redesign adds periodical-sheet and
+// periodical-quote: 38 pin-only, 47 in all.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
   "two-column": TwoColumnContent,
@@ -121,4 +124,6 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "marquee-statement": MarqueeStatementContent,
   "binder-sheet": BinderSheetContent,
   "manuscript-sheet": ManuscriptSheetContent,
+  "periodical-sheet": PeriodicalSheetContent,
+  "periodical-quote": PeriodicalQuoteContent,
 }

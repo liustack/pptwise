@@ -138,6 +138,21 @@ import { designsComposition } from "./designs"
 import { hazardsComposition } from "./hazards"
 import { itineraryComposition } from "./itinerary"
 import { queriesComposition } from "./queries"
+import { forewordComposition } from "./foreword"
+import { chronicleComposition } from "./chronicle"
+import { measuresComposition } from "./measures"
+import { elapsedComposition } from "./elapsed"
+import { headlineComposition } from "./headline"
+import { witnessComposition } from "./witness"
+import { censusComposition } from "./census"
+import { contrastComposition } from "./contrast"
+import { bracketComposition } from "./bracket"
+import { mixComposition } from "./mix"
+import { twinsComposition } from "./twins"
+import { parallelComposition } from "./parallel"
+import { effectsComposition } from "./effects"
+import { longformComposition } from "./longform"
+import { pledgesComposition } from "./pledges"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -289,6 +304,21 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   hazards: hazardsComposition,
   itinerary: itineraryComposition,
   queries: queriesComposition,
+  foreword: forewordComposition,
+  chronicle: chronicleComposition,
+  measures: measuresComposition,
+  elapsed: elapsedComposition,
+  headline: headlineComposition,
+  witness: witnessComposition,
+  census: censusComposition,
+  contrast: contrastComposition,
+  bracket: bracketComposition,
+  mix: mixComposition,
+  twins: twinsComposition,
+  parallel: parallelComposition,
+  effects: effectsComposition,
+  longform: longformComposition,
+  pledges: pledgesComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -320,7 +350,7 @@ function asksForChartMarks(components: readonly CompositionProps["components"][n
  * these alone, so no hand-set plot leaves it off. The ordinary chart draws it
  * at the start of its legend row.
  */
-const CHART_TAG_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["duel", "horizon", "paired", "diptych", "ranking"])
+const CHART_TAG_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["duel", "horizon", "paired", "diptych", "ranking", "bracket"])
 
 /**
  * The compositions that keep their left column clear of the page tag a face
@@ -396,7 +426,7 @@ function asksForChartReference(components: readonly CompositionProps["components
  * offered to these alone; the ordinary chart prints every note after its
  * value.
  */
-const CHART_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["magnitude", "segments", "survey", "levers", "backdrop", "partition"])
+const CHART_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["magnitude", "segments", "survey", "levers", "backdrop", "partition", "chronicle", "elapsed"])
 
 function asksForChartNote(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.series.some((s) => s.data.some((d) => d.note !== undefined)))
@@ -507,7 +537,7 @@ function asksForIconCardDetail(components: readonly CompositionProps["components
  * it. A page whose chart carries one is offered to these alone; the ordinary
  * chart sets the title over it as a table does.
  */
-const CHART_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["ladder", "backdrop", "thresholds", "partition"])
+const CHART_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["ladder", "backdrop", "thresholds", "partition", "chronicle", "measures", "headline", "census", "contrast", "bracket", "mix", "twins"])
 
 function asksForChartTitle(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && Boolean(component.title?.trim()))
@@ -548,6 +578,42 @@ function asksForMilestoneStatus(components: readonly CompositionProps["component
 }
 
 /**
+ * The compositions that draw a symbol before a bar's category
+ * (`series[].data[].icon`). A page whose chart carries one is offered to
+ * these alone; the ordinary bar on its side sets each symbol in a column of
+ * its own before the names.
+ */
+const CHART_ICON_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["measures", "elapsed"])
+
+function asksForChartIcons(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.series.some((s) => s.data.some((d) => d.icon !== undefined)))
+}
+
+/**
+ * The compositions that keep a place for a category with no published value
+ * (`gaps`). A page whose chart carries one is offered to these alone; the
+ * ordinary bar draws a dashed outline there with its label, and the
+ * ordinary line breaks there.
+ */
+const CHART_GAP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["headline", "census", "contrast"])
+
+function asksForChartGaps(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.gaps !== undefined)
+}
+
+/**
+ * The compositions that draw the value ranges a bar chart on its side marks
+ * (`bands`), such as what a value below zero means. A page whose chart
+ * carries them is offered to these alone; the ordinary bar on its side tints
+ * each range down the rows and names it in a row over the plot.
+ */
+const CHART_SIDE_BAND_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["effects"])
+
+function asksForSideBands(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.chart_type === "bar" && component.direction === "horizontal" && (component.bands?.length ?? 0) > 0)
+}
+
+/**
  * The compositions that draw what a gantt marks beyond its stretches: a
  * single moment across the bars (`milestones`) and a stretch not settled
  * (`items[].basis`). A page whose gantt carries either is offered to these
@@ -582,7 +648,7 @@ function asksForChartTag(components: readonly CompositionProps["components"][num
 export function compose(props: CompositionProps, ids: readonly CompositionId[] = COMPOSITION_IDS): React.ReactElement | null {
   // What a composition hands on is drawn under the page's tag it has set.
   const handOn: CompositionProps["handOn"] = (components, rect) =>
-    compose({ ...props, components, rect, pageTag: undefined, ballot: undefined }, ids)
+    compose({ ...props, components, rect, pageTag: undefined, ballot: undefined, claim: undefined }, ids)
   const marked = asksForChartMarks(props.components)
   const tagged = asksForChartTag(props.components)
   const banded = (props.tagBand ?? 0) > 0
@@ -604,6 +670,9 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const stepped = asksForChartSteps(props.components)
   const awaited = asksForMilestoneStatus(props.components)
   const momentous = asksForGanttMoments(props.components)
+  const iconed = asksForChartIcons(props.components)
+  const gapped = asksForChartGaps(props.components)
+  const sideBanded = asksForSideBands(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -624,6 +693,9 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (stepped && !CHART_STEP_COMPOSITIONS.has(id)) continue
     if (awaited && !MILESTONE_STATUS_COMPOSITIONS.has(id)) continue
     if (momentous && !GANTT_MOMENT_COMPOSITIONS.has(id)) continue
+    if (iconed && !CHART_ICON_COMPOSITIONS.has(id)) continue
+    if (gapped && !CHART_GAP_COMPOSITIONS.has(id)) continue
+    if (sideBanded && !CHART_SIDE_BAND_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue
