@@ -363,10 +363,24 @@ export function verticalForm(ch: string): { ch: string; dx: number; dy: number; 
   return { ch, dx: 0, dy: 0, turn: TURNED.has(ch) }
 }
 
+/** Each vertical form back to the mark it stands for. Where two marks share a
+ *  form (『 and “ both stand as ﹃), the first one listed is read back. */
+const HORIZONTAL_FORMS: ReadonlyMap<string, string> = new Map(
+  Object.entries(VERTICAL_FORMS)
+    .reverse()
+    .map(([from, to]) => [to, from]),
+)
+
 /** The character a vertical form stands for, so a reader of the page reads it back as written. */
 export function horizontalForm(ch: string): string {
-  for (const [from, to] of Object.entries(VERTICAL_FORMS)) if (to === ch) return from
-  return ch
+  return HORIZONTAL_FORMS.get(ch) ?? ch
+}
+
+const ANY_VERTICAL_FORM = new RegExp(`[${[...HORIZONTAL_FORMS.keys()].join("")}]`, "gu")
+
+/** A text with every vertical form in it read back as the mark it stands for. */
+export function horizontalText(text: string): string {
+  return text.replace(ANY_VERTICAL_FORM, horizontalForm)
 }
 
 /** Where a CJK cell's baseline sits below its top, as a fraction of the size. */
