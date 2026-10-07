@@ -16,11 +16,12 @@ const ChartPointSchema = z
     size: z.number().nonnegative().optional(),
     /** A value nobody has reported yet. See `POINT_STATUS_TYPES`. */
     status: z
-      .enum(["forecast", "target"])
+      .enum(["forecast", "target", "estimate"])
       .optional()
       .describe(
         'A value that is not a reported figure. "forecast" is an estimate of what will happen: its bar is hatched, and a lone bar\'s label says it is a forecast. ' +
-          '"target" is a level a plan calls for: its bar is drawn as a dashed outline. Bar and stacked charts only.',
+          '"target" is a level a plan calls for: its bar is drawn as a dashed outline. ' +
+          '"estimate" is a past value nobody published, worked out from figures that were, such as a year read back from "1.8 points lower than in 2018": its bar is drawn pale inside a dashed outline. Bar and stacked charts only.',
       ),
     /** The one bar the page is about. See `POINT_EMPHASIS_TYPES`. */
     emphasis: z

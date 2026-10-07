@@ -12,7 +12,7 @@ import {
   rotateChartPalette,
 } from "../render/chart-palette";
 import { accessibleInk, resolveSemanticColor } from "../render/ink";
-import { StatusMark, statusGround, statusWords } from "../render/mark-status";
+import { StatusMark, statusGround, statusWords, type PointStatus } from "../render/mark-status";
 import { mostlyChinese } from "../lib/text-script";
 import type { FigureStyle } from "../lib/quantity-format";
 import { axisTitlePairHeight } from "./axis-titles";
@@ -218,6 +218,7 @@ function legendApplicable(component: ChartComponent): boolean {
 /** Legend entries a chart's point statuses add: a forecast swatch, a target swatch. */
 const FORECAST_ENTRY = -1;
 const TARGET_ENTRY = -2;
+const ESTIMATE_ENTRY = -4;
 /** The legend entry that names the chart's reference line, drawn as a short dashed line. */
 const REFERENCE_ENTRY = -3;
 
@@ -227,7 +228,7 @@ function referenceEntries(component: ChartComponent): { name: string; seriesInde
 }
 
 /** The status every point of a series shares, when they all share one: its legend swatch is drawn that way. */
-function seriesStatus(component: ChartComponent, seriesIndex: number): "forecast" | "target" | undefined {
+function seriesStatus(component: ChartComponent, seriesIndex: number): PointStatus | undefined {
   const data = component.series[seriesIndex]?.data ?? [];
   const first = data[0]?.status;
   return first !== undefined && data.every((d) => d.status === first) ? first : undefined;
@@ -249,12 +250,14 @@ function statusEntries(component: ChartComponent, figures?: FigureStyle): { name
     ]);
   const words = statusWords(chinese);
   const entries: { name: string; seriesIndex: number; colorIndex: number }[] = [];
-  const partial = (status: "forecast" | "target") =>
+  const partial = (status: PointStatus) =>
     component.series.findIndex((s, i) => seriesStatus(component, i) === undefined && s.data.some((d) => d.status === status));
   const forecast = partial("forecast");
   const target = partial("target");
   if (forecast >= 0) entries.push({ name: words.forecast, seriesIndex: FORECAST_ENTRY, colorIndex: forecast });
   if (target >= 0) entries.push({ name: words.target, seriesIndex: TARGET_ENTRY, colorIndex: target });
+  const estimate = partial("estimate");
+  if (estimate >= 0) entries.push({ name: words.estimate, seriesIndex: ESTIMATE_ENTRY, colorIndex: estimate });
   return entries;
 }
 
@@ -853,7 +856,9 @@ export const chart: SvgComponent<ChartComponent> = {
           ? (d) => d.status === "forecast"
           : slot.seriesIndex === TARGET_ENTRY
             ? (d) => d.status === "target"
-            : undefined
+            : slot.seriesIndex === ESTIMATE_ENTRY
+              ? (d) => d.status === "estimate"
+              : undefined
       );
 
     return (
@@ -911,7 +916,7 @@ export const chart: SvgComponent<ChartComponent> = {
                     />
                   ) : slot.seriesIndex < 0 || seriesStatus(component, slot.seriesIndex) ? (
                     <StatusMark
-                      status={slot.seriesIndex === FORECAST_ENTRY ? "forecast" : slot.seriesIndex === TARGET_ENTRY ? "target" : seriesStatus(component, slot.seriesIndex)!}
+                      status={slot.seriesIndex === FORECAST_ENTRY ? "forecast" : slot.seriesIndex === TARGET_ENTRY ? "target" : slot.seriesIndex === ESTIMATE_ENTRY ? "estimate" : seriesStatus(component, slot.seriesIndex)!}
                       color={statusSwatch(slot)}
                       ground={statusGround(statusSwatch(slot), legendBg, 0.25)}
                       x={swatchX}

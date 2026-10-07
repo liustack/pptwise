@@ -655,6 +655,19 @@ function asksForGanttMoments(components: readonly CompositionProps["components"]
 }
 
 /**
+ * The compositions that draw a bar worked out from published figures
+ * (`data[].status: "estimate"`). A page whose chart carries one is offered
+ * to these alone, so no hand-set plot draws an estimate as a reported bar;
+ * the ordinary chart draws it pale inside a dashed outline and names it in
+ * its legend.
+ */
+const CHART_ESTIMATE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForChartEstimate(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.series.some((s) => s.data.some((d) => d.status === "estimate")))
+}
+
+/**
  * The compositions that draw the page's ballot (`Slide.ballot`), a box for
  * each choice beside every question. A page with one is offered to these
  * alone; the face declares the ballot dropped when none takes the page.
@@ -701,6 +714,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const iconed = asksForChartIcons(props.components)
   const gapped = asksForChartGaps(props.components)
   const sideBanded = asksForSideBands(props.components)
+  const estimated = asksForChartEstimate(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -724,6 +738,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (iconed && !CHART_ICON_COMPOSITIONS.has(id)) continue
     if (gapped && !CHART_GAP_COMPOSITIONS.has(id)) continue
     if (sideBanded && !CHART_SIDE_BAND_COMPOSITIONS.has(id)) continue
+    if (estimated && !CHART_ESTIMATE_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue

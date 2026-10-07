@@ -28,7 +28,7 @@ describe("hatchPath", () => {
 })
 
 describe("StatusMark", () => {
-  const draw = (status: "forecast" | "target") =>
+  const draw = (status: "forecast" | "target" | "estimate") =>
     parseSvgRoot(
       renderSvgMarkup(
         <svg>
@@ -49,11 +49,19 @@ describe("StatusMark", () => {
     const rect = draw("target").querySelector("rect")!
     expect([rect.getAttribute("x"), rect.getAttribute("width"), rect.getAttribute("stroke-dasharray")]).toEqual(["11", "58", "6 4"])
   })
+
+  it("draws an estimate pale inside a heavier dashed outline, darker than a target's ground", () => {
+    const rect = draw("estimate").querySelector("rect")!
+    expect([rect.getAttribute("x"), rect.getAttribute("width"), rect.getAttribute("stroke-dasharray"), rect.getAttribute("stroke")]).toEqual(["11.5", "57", "8 6", "#0032A0"])
+    expect(rect.getAttribute("fill")).not.toBe("#D4DCEF")
+    expect(rect.getAttribute("fill")).not.toBe("#0032A0")
+  })
 })
 
 describe("statusWords", () => {
   it("speaks the chart's language", () => {
-    expect(statusWords(true)).toEqual({ forecastSuffix: "（预测）", forecast: "预测", target: "目标", reported: "实际" })
+    expect(statusWords(true)).toEqual({ forecastSuffix: "（预测）", forecast: "预测", target: "目标", estimate: "推算", reported: "实际" })
+    expect(statusWords(false).estimate).toBe("Estimate")
     expect(statusWords(false).forecastSuffix).toBe(" (forecast)")
   })
 })

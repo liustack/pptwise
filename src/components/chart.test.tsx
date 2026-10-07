@@ -2161,6 +2161,21 @@ describe("chart point status and change brackets", () => {
     expect(names).toContain("目标")
   })
 
+  it("draws an estimated bar pale in a dashed outline and names it in the legend", () => {
+    const vision = {
+      type: "chart" as const,
+      chart_type: "bar" as const,
+      axes: { y_unit: "%" },
+      series: [{ name: "6 岁儿童近视率", data: [{ x: "2018 年", y: 14.5, status: "estimate" as const }, { x: "2020 年", y: 14.3 }, { x: "2022 年", y: 12.7 }] }],
+    }
+    const container = draw(vision)
+    const bar = container.querySelector('rect[data-mark-status="estimate"][data-plot-mark="1"]')!
+    expect(bar.getAttribute("stroke-dasharray")).toBe("8 6")
+    expect(bar.getAttribute("stroke")).toBe(ctx.colors.chartPalette[0])
+    expect(container.querySelectorAll('rect[data-mark-status="estimate"]').length).toBeGreaterThanOrEqual(2)
+    expect(Array.from(container.querySelectorAll("text")).map((t) => t.textContent)).toContain("推算")
+  })
+
   it("draws a bracket over two columns with the change between them", () => {
     const quarters = {
       type: "chart" as const,

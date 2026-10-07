@@ -33,13 +33,14 @@ const chart = (overrides: Record<string, unknown> = {}, nine: Record<string, unk
 })
 
 describe("chart point status", () => {
-  it("marks a bar as a forecast or a target", () => {
+  it("marks a bar as a forecast, a target or an estimate", () => {
     expect(parse([chart({}, { status: "forecast" })]).success).toBe(true)
     expect(parse([chart({}, { status: "target" })]).success).toBe(true)
+    expect(parse([chart({}, { status: "estimate" })]).success).toBe(true)
   })
 
   it("rejects a status the drawing does not know", () => {
-    expect(parse([chart({}, { status: "estimate" })]).success).toBe(false)
+    expect(parse([chart({}, { status: "guess" })]).success).toBe(false)
   })
 
   it("rejects a status on a chart that draws no bar of its own for the point", () => {
