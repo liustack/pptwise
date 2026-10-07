@@ -91,20 +91,14 @@ function rgbToHex(r: number, g: number, b: number): string {
 }
 
 /**
- * Ascent/descent as a fraction of `fontSize`, defining the vertical band
- * `worstCaseSample` grids over — no real font metrics are available at
- * audit time (this renderer never embeds/queries a font file), so both are
- * the same kind of declared-size-relative heuristic `deck-audit.ts`'s own
- * `TEXT_DESCENT_RATIO` (0.25, used for v-overflow/derived-box-height) is —
- * `SAMPLE_DESCENT_RATIO` mirrors it exactly for consistency between the two
- * auditors' notion of "how far below the baseline a glyph's ink extends".
- * `SAMPLE_ASCENT_RATIO` (0.75) is this task's own addition — no existing
- * constant to mirror since nothing before this needed a text run's *top*
- * edge — a standard approximation for common UI sans-serif cap-height/
- * ascender proportion.
+ * Ascent as a fraction of `fontSize`, the top of the vertical band
+ * `worstCaseSample` grids over — a standard approximation for common UI
+ * sans-serif cap-height/ascender proportion, the same 0.75 `deck-audit.ts`'s
+ * contrast walk uses (`TEXT_INK_ASCENT_RATIO`). The band's bottom is the
+ * run's own `descent`, which the walk measures with `inkDescentEm` and
+ * hands over with the run, so the raster and the SVG walk grid one box.
  */
 const SAMPLE_ASCENT_RATIO = 0.75
-const SAMPLE_DESCENT_RATIO = 0.25
 
 /**
  * Minimum contiguous low-contrast patch size (px, both axes, at the
@@ -245,7 +239,7 @@ function averageWindow(image: RasterizedImage, cx: number, cy: number): { r: num
  */
 function worstCaseSample(run: ImageBackedTextRun, image: RasterizedImage): WorstCaseSample | null {
   const top = run.baseline - run.fontSize * SAMPLE_ASCENT_RATIO
-  const bottom = run.baseline + run.fontSize * SAMPLE_DESCENT_RATIO
+  const bottom = run.baseline + run.descent
   let worst: WorstCaseSample | null = null
 
   const ys = samplePositions(top, bottom)

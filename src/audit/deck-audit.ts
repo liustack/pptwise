@@ -9,6 +9,7 @@ import { isBold, isMonoFontFamily } from "../render/fonts"
 import { dropPhrase, parseDropKind, type DropKind } from "../render/drop-marker"
 import { sourceLineElements, sourceLineMissing } from "./source-line"
 import { printedMarks } from "./printed-marks"
+import { inkDescentEm } from "./ink-descent"
 import { auditSvgMarkup, findRunMisfits, parseNums, parseTransform, type OverflowIssue, type RunMisfit } from "./svg-audit"
 
 /**
@@ -176,19 +177,17 @@ const DEFAULT_FONT_SIZE = 16
 const DECORATIVE_ALPHA = 0.4
 
 /**
- * A text run's ink box, as fractions of its rendered font size above and
- * below the baseline — the band `backgroundsUnderRun` grids over. The
- * descent mirrors `TEXT_DESCENT_RATIO` further down this file (which
- * `findOverlapIssues` and `svg-audit.ts`'s v-overflow check already share),
- * and the pair together mirrors `pixel-audit.ts`'s own
- * `SAMPLE_ASCENT_RATIO`/`SAMPLE_DESCENT_RATIO` — the raster auditor grids
- * exactly this same estimated box, so the two auditors agree on where a
- * run's ink actually is. No real font metrics exist at audit time (this
- * renderer never embeds or queries a font file), so both numbers are the
- * usual declared-size-relative approximation, not measurements.
+ * A text run's ink box above the baseline, as a fraction of its rendered
+ * font size — the top of the band `backgroundsUnderRun` grids over, and the
+ * same `SAMPLE_ASCENT_RATIO` `pixel-audit.ts` grids the raster with, so the
+ * two auditors agree on where a run's ink is. The band's bottom is
+ * `inkDescentEm` (`./ink-descent.ts`): a quarter em for a run with a
+ * descender, the baseline's overshoot for one without, read off the
+ * exported faces' glyph outlines. The walk hands that depth to the pixel
+ * layer with each image-backed run, so the raster is gridded over the same
+ * box.
  */
 const TEXT_INK_ASCENT_RATIO = 0.75
-const TEXT_INK_DESCENT_RATIO = 0.25
 
 /**
  * Sample spacing for `backgroundsUnderRun`, as a fraction of the run's own
@@ -1460,6 +1459,8 @@ export interface ImageBackedTextRun {
   left: number
   right: number
   baseline: number
+  /** How far the run's ink reaches below `baseline`, in px (`inkDescentEm` times the rendered size). */
+  descent: number
   fontSize: number
   fill: string
   alpha: number
@@ -2166,8 +2167,8 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
             // (fix/decor-contrast-attribution — see `backgroundsUnderRun`'s
             // own doc comment). Anchor-aware left/right is the identical
             // formula the `imageBackedRuns` branch below already used; the
-            // vertical band is `TEXT_INK_ASCENT_RATIO`/
-            // `TEXT_INK_DESCENT_RATIO`. A run whose whole box sits on one
+            // vertical band is `TEXT_INK_ASCENT_RATIO` above the baseline
+            // and `inkDescentEm` below it. A run whose whole box sits on one
             // background resolves to exactly what `backgroundAt(tx, ty)`
             // returned before this change — the single-background case is
             // every page's overwhelmingly common one, so this is a widening
@@ -2181,7 +2182,7 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
                     left,
                     left + width,
                     ty - renderedFontSize * TEXT_INK_ASCENT_RATIO,
-                    ty + renderedFontSize * TEXT_INK_DESCENT_RATIO,
+                    ty + renderedFontSize * inkDescentEm(content),
                     renderedFontSize * BG_SAMPLE_STRIDE_EM,
                   )
                 : []
@@ -2228,6 +2229,7 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
             left,
             right: left + width,
             baseline: ty,
+            descent: renderedFontSize * inkDescentEm(content),
             fontSize: renderedFontSize,
             fill: ink,
             alpha,
