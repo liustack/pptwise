@@ -1,6 +1,6 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, truncateToUnits } from "../lib/svg-text-layout"
-import { accessibleInk, emphasisFill, readableOn } from "../render/ink"
+import { accessibleInk, emphasisFill, liftedInk, readableOn } from "../render/ink"
 import { mixHex } from "./color-mix"
 import { deriveInitials } from "./people-initials"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -18,7 +18,10 @@ type QuoteItem = QuoteWallComponent["quotes"][number]
  * 不是一个洞。
  *
  * 引号是装饰，不承载信息：它取卡底与正文墨之间的一档浅调，永远不是
- * accent。
+ * accent。浅调混得太浅时，48px 的引号连大字的 3:1 都过不了（各主题
+ * 1.53 到 2.79），同 blockquote 引号修过的毛病。所以混出来的浅调再朝
+ * 卡底上读得清的那支墨提，提到刚过 3:1 为止（liftedInk），仍比正文退后
+ * 一档。
  */
 
 const GAP = 24
@@ -188,7 +191,7 @@ function cardInks(featured: boolean, ctx: ComponentCtx) {
       // 文字要求的 4.5:1。过不了就退回满墨。
       role: accessibleInk(mixHex(fill, ink, SOFT_INK_MIX), fill, ROLE_FONT_SIZE),
       rule: mixHex(fill, ink, 0.3),
-      mark: mixHex(fill, ink, 0.42),
+      mark: liftedInk(mixHex(fill, ink, 0.42), fill, MARK_FONT_SIZE),
       avatarFill: ink,
       stroke: undefined as string | undefined,
     }
@@ -200,7 +203,7 @@ function cardInks(featured: boolean, ctx: ComponentCtx) {
     name: ctx.colors.text,
     role: accessibleInk(ctx.colors.muted, fill, ROLE_FONT_SIZE),
     rule: stroke ?? mixHex(fill, ctx.colors.text, 0.2),
-    mark: mixHex(fill, ctx.colors.text, 0.22),
+    mark: liftedInk(mixHex(fill, ctx.colors.text, 0.22), fill, MARK_FONT_SIZE),
     avatarFill: mixHex(fill, ctx.colors.text, 0.14),
     stroke,
   }

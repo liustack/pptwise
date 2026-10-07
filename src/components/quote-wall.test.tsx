@@ -6,6 +6,8 @@ import { assertSubset } from "../render/subset-validate"
 import { parseSvgRoot } from "../render/serialize"
 import { contrastRatio } from "../render/ink"
 import { quoteWall } from "./quote-wall"
+import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
+import { CANONICAL_THEME_IDS } from "../themes"
 import type { ComponentCtx } from "./types"
 
 const ctx: ComponentCtx = {
@@ -146,6 +148,28 @@ describe("quote_wall component", () => {
       renderToStaticMarkup(<svg viewBox="0 0 1280 720">{quoteWall.render(three, { x: 88, y: 120, w: 1104 }, ctx)}</svg>),
     )
     expect(() => assertSubset(parseSvgRoot(markup))).not.toThrow()
+  })
+})
+
+// The open-quote mark is a quieter tone than the words, mixed between the
+// card and its ink. Mixed that far it fell under the 3:1 a 48px glyph is held
+// to on every theme, between 1.53:1 and 2.79:1, the same failure
+// blockquote's mark was fixed for. It is lifted toward the ink only as far
+// as the floor, so it reads and still sits behind the words.
+describe("quote_wall open-quote mark on every theme", () => {
+  it("reads at its size on every card and stays quieter than the words", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      const { container } = svg(quoteWall.render(three, box, boundThemeCtx(id, {})))
+      for (const card of Array.from(container.querySelectorAll("g[data-audit-box]"))) {
+        const shell = card.querySelector("rect")!.getAttribute("fill")!
+        const texts = Array.from(card.querySelectorAll("text"))
+        const mark = texts.find((t) => t.textContent === "\u201c")!
+        const body = texts.find((t) => t.textContent!.length > 6)!
+        const markRatio = contrastRatio(mark.getAttribute("fill")!, shell)
+        expect(markRatio, id).toBeGreaterThanOrEqual(3)
+        expect(markRatio, id).toBeLessThan(contrastRatio(body.getAttribute("fill")!, shell))
+      }
+    }
   })
 })
 
