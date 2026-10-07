@@ -162,7 +162,10 @@ export const journeyMap: SvgComponent<JourneyMapComponent> = {
     // Laid out before the tree is built rather than inside it: the drop count
     // is a prop on a sibling element, and a counter mutated by one child while
     // another reads it depends on JSX evaluation order to be right.
-    const chanceLayouts = component.stages.map((stage) => {
+    // The dip's card is painted bold, so its words are laid out bold: at the
+    // regular width a Latin phrase ran past the card's edge and under the
+    // next card.
+    const chanceLayouts = component.stages.map((stage, i) => {
       const value = stage.opportunity?.trim() ?? ""
       if (!value) return null
       return {
@@ -172,6 +175,7 @@ export const journeyMap: SvgComponent<JourneyMapComponent> = {
           fontSize: FORM_BODY_FLOOR,
           maxLines: 2,
           fontFamily: ctx.fonts.body,
+          bold: i === g.low,
         }),
       }
     })
