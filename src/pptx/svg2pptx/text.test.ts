@@ -99,6 +99,27 @@ describe("textToOp", () => {
       { text: "B", color: "FF0000", bold: true },
     ])
   })
+
+  it("takes a tspan's own weight, style and face over the text's, as the preview does", () => {
+    // A figure in the heading serif, bold, with its unit regular in the body
+    // face: the unit used to export bold and in the figure's face.
+    const op = textToOp(
+      textEl(
+        '<text x="0" y="0" font-size="46" font-weight="700" font-style="italic" font-family="Times New Roman, SimSun, serif">1.57<tspan font-size="16" font-weight="400" font-style="normal" font-family="Microsoft YaHei, PingFang SC, sans-serif">期</tspan><tspan font-family="Times New Roman, SimSun, serif">%</tspan></text>',
+      ),
+    )
+    expect(op.fontFace).toBe("Times New Roman")
+    expect(op.runs).toEqual([
+      { text: "1.57", bold: true, italic: true },
+      { text: "期", fontSize: 12, fontFace: "Microsoft YaHei" },
+      { text: "%", bold: true, italic: true },
+    ])
+  })
+
+  it("pairs a tspan's own Latin face with the East Asian face its family names", () => {
+    const op = textToOp(textEl('<text x="0" y="0" font-size="20" font-family="Microsoft YaHei, sans-serif">共<tspan font-family="Times New Roman, SimSun, serif">1.57</tspan></text>'))
+    expect(op.runs[1]).toEqual({ text: "1.57", fontFace: "Times New Roman", eaFace: "SimSun" })
+  })
 })
 
 describe("text opacity", () => {

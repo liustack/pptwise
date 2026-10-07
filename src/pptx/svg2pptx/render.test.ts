@@ -228,6 +228,27 @@ describe("renderOp", () => {
     expect((slide.calls[1].args[1] as Record<string, unknown>).fontFace).toBe("SimSun")
   })
 
+  it("hands pptxgenjs a run's own face, paired when it names an East Asian face", () => {
+    const slide = recorder()
+    renderOp(slide, {
+      kind: "text",
+      runs: [{ text: "1.57", bold: true }, { text: "期", fontFace: "Microsoft YaHei" }, { text: "共", fontFace: "Times New Roman", eaFace: "SimSun" }],
+      x: 0,
+      y: 0,
+      w: 1,
+      h: 1,
+      fontSize: 34,
+      fontFace: "Times New Roman",
+      eaFace: "SimSun",
+      align: "left",
+    } as Op)
+    expect(slide.calls[0].args[0]).toEqual([
+      { text: "1.57", options: { bold: true } },
+      { text: "期", options: { fontFace: "Microsoft YaHei" } },
+      { text: "共", options: { fontFace: "Times New Roman|SimSun" } },
+    ])
+  })
+
   it("hands a turned shape, line, path and picture their turn", () => {
     const slide = recorder()
     const box = { x: 1, y: 1, w: 2, h: 1, rotate: 2 }

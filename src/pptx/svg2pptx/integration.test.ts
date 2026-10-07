@@ -189,3 +189,22 @@ describe("svg2pptx gradient export", () => {
     ).rejects.toThrow(/not found in any slide/)
   })
 })
+
+describe("a tspan's own face and weight in the written slide", () => {
+  it("writes a unit set regular in the body face after a bold figure in the heading serif as such", async () => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720"><text x="64" y="272" font-size="46" font-weight="700" font-family="Times New Roman, SimSun, serif">1.57<tspan font-size="16" font-weight="400" font-family="Microsoft YaHei, PingFang SC, sans-serif">期</tspan></text></svg>`
+    const pptx = new PptxGenJS()
+    pptx.defineLayout({ name: "W", width: 13.333, height: 7.5 })
+    pptx.layout = "W"
+    renderOps(pptx.addSlide() as unknown as SlideLike, svgToOps(parseSvg(svg)))
+    const zip = await JSZip.loadAsync((await pptx.write({ outputType: "nodebuffer" })) as Uint8Array)
+    const xml = await zip.file("ppt/slides/slide1.xml")!.async("string")
+    const runs = Array.from(xml.matchAll(/<a:r><a:rPr([^>]*)>(.*?)<\/a:rPr><a:t>([^<]*)<\/a:t><\/a:r>/g)).map(([, attrs, props, text]) => ({ text, bold: / b="1"/.test(attrs!), latin: /<a:latin typeface="([^"]+)"/.exec(props!)?.[1] }))
+    // pptxgenjs writes a paired face whole, and the package patch
+    // (`applyEaFontFaces`) splits it into the run's latin and ea later.
+    expect(runs).toEqual([
+      { text: "1.57", bold: true, latin: "Times New Roman|SimSun" },
+      { text: "期", bold: false, latin: "Microsoft YaHei" },
+    ])
+  })
+})
