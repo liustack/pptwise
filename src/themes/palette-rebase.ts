@@ -3,7 +3,9 @@
  * palette's plane and its text, the derivation `theme fork` rebuilds a whole
  * palette with (`cli/theme-fork.ts`). Lightness keeps its share of the way
  * from plane to text, hue keeps its offset from the plane's hue, saturation
- * keeps its difference from the plane's.
+ * keeps its difference from the plane's. The renderer moves a painted page's
+ * neutral tokens with the same hue and saturation step
+ * (`render/page-palette.ts`).
  */
 import { HexTokenSchema } from "./hex"
 

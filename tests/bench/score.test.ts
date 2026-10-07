@@ -156,7 +156,7 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     expect(score.deterministic).toBeNull()
   })
 
-  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (paragraph on an authored dark page on homeroom)", async () => {
+  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (statement claim on an authored dark page on ink)", async () => {
     // This fixture needs a low-contrast source that is real, theme-stable
     // and out of scope for whatever fix round is running — and it has now
     // outlived two of them. It started as kpi_cards' hardcoded delta-arrow
@@ -176,10 +176,15 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     // took the tone's raw amber at 2.55:1 on the page, until the run was
     // lifted against the page it sits on.
     //
-    // Now a `paragraph` on a page whose author painted it `#1A1A1A`: the
-    // heading reads the slide's own background, but the paragraph keeps
-    // homeroom's dark text ink and lands at 1.17:1 on it. When that is
-    // fixed too, the next real source goes here.
+    // Then a `paragraph` on a homeroom page whose author painted it
+    // `#1A1A1A`, which kept the theme's dark text ink at 1.17:1, until the
+    // theme's neutral ladder moved onto a painted page (`paletteOnGround`).
+    //
+    // Now ink's statement face on a page painted `#1A1A1A`: it sets the
+    // claim in the theme's `primary`, its ink black, and never measures that
+    // brand colour against the page, so the claim lands at 1.03:1. The
+    // ladder does not carry brand colours, so this stays. When that is fixed
+    // too, the next real source goes here.
     // `kpi_cards` stays in the fixture for `coverageHits` below.
     const metas = await loadQuestionMetas(QUESTIONS_DIR)
     const meta = metas.find((m) => m.id === "fx03")!
