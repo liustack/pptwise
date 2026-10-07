@@ -12,15 +12,12 @@
  * not a mark, and are skipped.
  *
  * Slanted tile (B3): at most one chip-sized 1°–20° tile per page. Motif
- * count is the lock. Playbill motif is empty. The cover date chip lives on
- * bill-head as foreground. Content layouts that already paint a unit chip
- * (stat-hero) stay at one tile. Ending has no chip.
+ * count is the lock.
  */
 import { describe, expect, it } from "vitest"
 import type { PptxIR, Slide } from "@/ir"
 import { blendOver, contrastRatio } from "../render/ink"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
-import { renderSlideSvg } from "../api"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { resolveStyle } from "../themes"
 import { THEME_DEFINITIONS } from "../themes/definitions"
@@ -148,36 +145,5 @@ describe("B3 at most one slanted tile per page", () => {
       }
     }
     expect(over, over.join(" | ")).toEqual([])
-  })
-
-  it("playbill motif paints no date chip — cover chip lives on bill-head", () => {
-    expect(countSlantedTiles(drawMotif("playbill-motif", "cover").root)).toBe(0)
-    expect(countSlantedTiles(drawMotif("playbill-motif", "ending").root)).toBe(0)
-    expect(countSlantedTiles(drawMotif("playbill-motif", "content").root)).toBe(0)
-    expect(countSlantedTiles(drawMotif("playbill-motif", "chapter").root)).toBe(0)
-  })
-
-  it("playbill stat-hero page paints at most one slanted tile (layout chip, not a second date chip)", () => {
-    const ir = {
-      version: "5",
-      filename: "playbill-stat.pptx",
-      theme: { id: "playbill" },
-      meta: { date: "2026-07-15" },
-      assets: { images: {} },
-      seed: 20260815,
-      slides: [
-        {
-          type: "content",
-          kind: "points",
-          layout: "stat-hero",
-          heading: "-43%",
-          subheading: "unplanned downtime, 90-day pilot",
-          components: [],
-        },
-      ],
-    } as unknown as PptxIR
-    const svg = renderSlideSvg(ir, 0)
-    const root = parseSvgRoot(svg)
-    expect(countSlantedTiles(root)).toBeLessThanOrEqual(1)
   })
 })

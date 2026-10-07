@@ -113,8 +113,8 @@ function renderMasthead(
 }
 
 describe("EditorialMastheadCover — cover knobs (board-cover-restore wave 2)", () => {
-  it("heritage start: title x=96, underline 96-240", () => {
-    const { root } = renderMasthead("heritage", { textAnchor: "start" })
+  it("start: title x=96, underline 96-240", () => {
+    const { root } = renderMasthead("luxe", { textAnchor: "start" })
     const heading = Array.from(root.querySelectorAll("text")).find(
       (t) => t.textContent === "数据驱动的增长引擎",
     )!

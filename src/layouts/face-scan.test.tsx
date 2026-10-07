@@ -140,9 +140,11 @@ describe.sequential("the registry scan and what it covers", () => {
       // A sample whose face left the registry would silently stop being
       // rendered, so match the registration list both ways.
       expect(new Set(legacy.map((f) => f.id))).toEqual(new Set(LEGACY_FACE_SAMPLES.map((s) => s.id)))
-      // The 74 faces, plus the second input the three faces whose subset sweep
-      // and determinism check rendered different pages were each written with.
-      expect(new Set(legacy.map((f) => f.id)).size).toBe(74)
+      // The 74 faces, less the nine that left with arena, playbill and
+      // heritage in 2026-10, plus the second input the three faces whose
+      // subset sweep and determinism check rendered different pages were each
+      // written with.
+      expect(new Set(legacy.map((f) => f.id)).size).toBe(65)
       for (const face of legacy) {
         expect(face.sample.slides[face.sample.index]?.type, face.label).toBe(face.slideType)
       }
@@ -153,9 +155,12 @@ describe.sequential("the registry scan and what it covers", () => {
     // Runs after the scan above — the parent suite is sequential — and counts
     // the combinations that scan finished asserting on rather than the ones the
     // registration table promises.
-    it("covers at least the 1,776 face x theme combinations the deleted copies held", () => {
-      expect(CANONICAL_THEME_IDS.length).toBe(25)
-      expect(LEGACY_COMBINATIONS.size).toBeGreaterThanOrEqual(1776)
+    // The copies held 1,776 (74 faces on 24 themes). Nine of those faces and
+    // three themes were deleted with the 2026-10 fold, so the floor is what
+    // the copies would hold today: 65 faces on 22 themes.
+    it("covers at least the 1,430 face x theme combinations the deleted copies would hold today", () => {
+      expect(CANONICAL_THEME_IDS.length).toBe(22)
+      expect(LEGACY_COMBINATIONS.size).toBeGreaterThanOrEqual(1430)
       expect(SCANNED_COMBINATIONS.size).toBeGreaterThanOrEqual(3120)
     })
   })

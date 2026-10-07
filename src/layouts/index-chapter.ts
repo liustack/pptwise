@@ -18,7 +18,6 @@ import { FolioGhostChapter } from "./chapter-folio-ghost-chapter"
 import { LessonBoxChapter } from "./chapter-lesson-box-chapter"
 import { StickerNumeralChapter } from "./chapter-sticker-numeral-chapter"
 import { FascicleGhostChapter } from "./chapter-fascicle-ghost-chapter"
-import { MirrorVolumeChapter } from "./chapter-mirror-volume-chapter"
 import { VolumeSlipChapter } from "./chapter-volume-slip-chapter"
 import { GiltOrdinalChapter } from "./chapter-gilt-ordinal-chapter"
 import { LookRangeChapter } from "./chapter-look-range-chapter"
@@ -32,12 +31,10 @@ import { ManuscriptChapter } from "./chapter-manuscript-chapter"
 import { ScrollChapter } from "./chapter-scroll-chapter"
 import { FieldBandChapter } from "./chapter-field-band-chapter"
 import { SubjectRuleChapter } from "./chapter-subject-rule-chapter"
-import { RoundMarkChapter } from "./chapter-round-mark-chapter"
 import { OneWordChapter } from "./chapter-one-word-chapter"
 import { ChalkRuleChapter } from "./chapter-chalk-rule-chapter"
 import { DecimalIndexChapter } from "./chapter-decimal-index-chapter"
 import { IssueLineChapter } from "./chapter-issue-line-chapter"
-import { DayBillChapter } from "./chapter-day-bill-chapter"
 import { HallLabelChapter } from "./chapter-hall-label-chapter"
 import { GaugeSectionChapter } from "./chapter-gauge-section"
 import { CrayonboxStickerChapter } from "./chapter-crayonbox-sticker"
@@ -68,19 +65,16 @@ export const CHAPTER_LAYOUTS: Record<ChapterLayoutId, ChapterLayout> = {
   "lesson-box-chapter": LessonBoxChapter,
   "sticker-numeral-chapter": StickerNumeralChapter,
   "fascicle-ghost-chapter": FascicleGhostChapter,
-  "mirror-volume-chapter": MirrorVolumeChapter,
   "volume-slip-chapter": VolumeSlipChapter,
   "gilt-ordinal-chapter": GiltOrdinalChapter,
   "look-range-chapter": LookRangeChapter,
   "seal-numeral-chapter": SealNumeralChapter,
   "field-band-chapter": FieldBandChapter,
   "subject-rule-chapter": SubjectRuleChapter,
-  "round-mark-chapter": RoundMarkChapter,
   "one-word-chapter": OneWordChapter,
   "chalk-rule-chapter": ChalkRuleChapter,
   "decimal-index-chapter": DecimalIndexChapter,
   "issue-line-chapter": IssueLineChapter,
-  "day-bill-chapter": DayBillChapter,
   "hall-label-chapter": HallLabelChapter,
   "gauge-section": GaugeSectionChapter,
   "crayonbox-sticker": CrayonboxStickerChapter,

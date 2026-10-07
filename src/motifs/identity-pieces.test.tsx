@@ -110,9 +110,6 @@ function themeForMotif(id: MotifId): string {
     "luxe-motif": "luxe",
     "vermilion-motif": "vermilion",
     "memo-motif": "memo",
-    "heritage-motif": "heritage",
-    "playbill-motif": "playbill",
-    "arena-motif": "arena",
     "clinic-motif": "clinic",
     "almanac-motif": "almanac",
     "corner-ornament-motif": "journal",
@@ -188,15 +185,6 @@ describe("decor piece role roster", () => {
     const steps = root.querySelector('[data-decor-piece="ikb-steps"]')!
     expect(steps.getAttribute(DECOR_ROLE_ATTR)).toBe("identity")
     expect(steps.getAttribute(IDENTITY_ATTR)).toBe("true")
-  })
-
-  it("heritage, playbill, and arena motifs mark neither structure nor identity", () => {
-    for (const id of ["heritage-motif", "playbill-motif", "arena-motif"] as const) {
-      for (const type of TYPES) {
-        expect(pieceIds(draw(id, type), "structure"), `${id} ${type} structure`).toEqual([])
-        expect(pieceIds(draw(id, type), "identity"), `${id} ${type} identity`).toEqual([])
-      }
-    }
   })
 
   it("ledger's status bar is page chrome, on every page, and nothing else is", () => {

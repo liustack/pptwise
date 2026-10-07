@@ -51,7 +51,6 @@ describe("componentsForKind", () => {
       ["brief", "statement"],
       ["thesis", "quote"],
       ["thesis", "photo"],
-      ["playbill", "statement"],
     ]
     for (const [theme, kind] of pairs) {
       const listed = new Set(componentsForKind(kind, { theme }).components)
@@ -81,10 +80,6 @@ describe("componentsForKind", () => {
 
   it("expands a face that takes any component to the whole vocabulary", () => {
     expect(componentsForKind("points", { theme: "brief" }).components).toEqual([...COMPONENT_TYPES])
-  })
-
-  it("reports an empty list for a face that draws no authored component", () => {
-    expect(componentsForKind("statement", { theme: "playbill" }).components).toEqual([])
   })
 
   it("unions every installed theme when no theme is named", () => {
@@ -126,17 +121,6 @@ describe("kindJsonSchema", () => {
     expect(doc.components).toEqual(componentsForKind("fact", { theme: "brief" }).components)
     expect(doc.oneOf).toEqual((doc.components as string[]).map((type) => ({ $ref: `#/$defs/${type}` })))
     expect(Object.keys(doc.$defs as object).sort()).toEqual(["IconName", "Tag", "Tone", "kpi_cards", "paragraph"])
-  })
-
-  it("prints a legal refusal instead of an empty oneOf when the face takes no component", () => {
-    // Draft 2020-12 requires a non-empty `oneOf` array, so an empty list
-    // must be expressed as `not: {}` (matches nothing) with a description.
-    const doc = kindJsonSchema("statement", { theme: "playbill" })
-    expect(doc.components).toEqual([])
-    expect(doc).not.toHaveProperty("oneOf")
-    expect(doc.not).toEqual({})
-    expect(doc.description).toMatch(/statement.*playbill.*no component/i)
-    expect(doc).not.toHaveProperty("$defs")
   })
 
   it("keeps the icon enum out of the printed schema", () => {

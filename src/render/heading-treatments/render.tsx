@@ -3,7 +3,6 @@ import type { SvgTemplateProps } from "../../layouts/types"
 import type { ContentRect } from "../layout"
 import type { ComponentCtx } from "../../components/types"
 import { chapterNumberFor, sectionNameFor } from "../../lib/derive"
-import { hasCjk } from "../../layouts/minimal-shared"
 import { stacksVertically } from "../../lib/text-script"
 import {
   fitEmphasisHeading,
@@ -49,26 +48,6 @@ interface BandRect {
 
 function aabbIntersect(a: BandRect, b: BandRect): boolean {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
-}
-
-/** Shift a heading-band chrome box right of any reserved rect it hits, or
- * that it shares a column with inside `RESERVE_GAP`. tag_box sat 2px above
- * the rail-numbered `{chapter}.{n}` badge (bulletin p06 / playbill / arena)
- * because the boxes did not AABB-intersect, so `leftTitleX` left the chip
- * on the badge. */
-function nudgeXForReserve(box: BandRect, reserve: HeadingBandReserve | undefined): number {
-  if (!reserve?.rects.length) return box.x
-  let x = box.x
-  for (const r of reserve.rects) {
-    const shifted = { ...box, x }
-    const overlapX = shifted.x < r.x + r.w && shifted.x + shifted.w > r.x
-    const closeY =
-      shifted.y < r.y + r.h + RESERVE_GAP && r.y < shifted.y + shifted.h + RESERVE_GAP
-    if (aabbIntersect(shifted, r) || (overlapX && closeY)) {
-      x = Math.max(x, r.x + r.w + RESERVE_GAP)
-    }
-  }
-  return x
 }
 
 function glyphBox(
@@ -258,7 +237,7 @@ export function tryContentHeadingTreatment(
   if (!assignment) return null
   const { treatment, knobs } = assignment
   const chapterNumber = chapterNumberFor(ir.slides, index)
-  if ((treatment === "ghost_index" || treatment === "tag_box") && chapterNumber === 0) return null
+  if (treatment === "ghost_index" && chapterNumber === 0) return null
 
   const heading = slide.heading?.trim() ?? ""
   const subheading = slide.subheading?.trim() ?? ""
@@ -284,8 +263,6 @@ export function tryContentHeadingTreatment(
       return renderGhostIndex(args)
     case "baseline":
       return renderBaseline(args)
-    case "tag_box":
-      return renderTagBox(args)
     case "lead_accent":
       return renderLeadAccent(args)
     case "vertical_kicker":
@@ -540,7 +517,7 @@ function renderBaseline(args: RenderArgs): HeadingTreatmentPaint {
   const hasSub = args.subheading.length > 0
   const rule = args.knobs.rule ?? "hairline"
   const rightSlot = args.knobs.rightSlot ?? "none"
-  const journalEnhanced = (rule === "double-tone" || rule === "wenwu") && hasSub
+  const journalEnhanced = rule === "double-tone" && hasSub
   const insightSide = rule === "hairline" && hasSub
   const sidePhrase = insightSide
     ? fitEmphasisLine(args.subheading, {
@@ -612,12 +589,6 @@ function renderBaseline(args: RenderArgs): HeadingTreatmentPaint {
             <rect x={96} y={162 + lift} width={1088} height={1} fill={borderFill(colors)} />
           </g>
         )}
-        {rule === "wenwu" && (
-          <g data-decor="">
-            <rect x={96} y={158 + lift} width={1088} height={2} fill={colors.primary} />
-            <rect x={96} y={164 + lift} width={1088} height={1} fill={colors.primary} />
-          </g>
-        )}
         {rule === "double-tone" && (
           <g data-decor="">
             <rect x={96} y={158 + lift} width={1088} height={1} fill={colors.text} />
@@ -634,76 +605,6 @@ function renderBaseline(args: RenderArgs): HeadingTreatmentPaint {
               fontSize={18}
               fontFamily={fonts.body}
               fill={ink(colors.muted, args.ctx, 18)}
-              dominantBaseline="alphabetic"
-            />,
-          )}
-      </>
-    ),
-  }
-}
-
-function renderTagBox(args: RenderArgs): { chrome: ReactNode; contentRect: ContentRect } {
-  const { colors, fonts } = args.ctx
-  const hasSub = args.subheading.length > 0
-  const box = args.knobs.box ?? "solid-invert"
-  const hud = box === "hud-brackets"
-  const boxH = hud ? 30 : 38
-  const boxFill = box === "solid-invert" ? colors.text : colors.surface
-  const labelFill = box === "solid-invert" ? colors.bg : colors.accent
-  const labelKind = args.knobs.chapterLabel ?? "act"
-  const label = formatChapterLabel(labelKind, args.chapterNumber, hasCjk(args.sectionName ?? ""))
-  const labelY = hud ? 77 : 82
-  const labelSize = hud ? 16 : 18
-  const chipW = 150
-  const chipY = 56
-  const chipX = nudgeXForReserve({ x: PAGE_LEFT, y: chipY, w: chipW, h: boxH }, args.reserve)
-  const titleX = leftTitleX(PAGE_LEFT, 150, 44, args.heading, fonts.heading, args.reserve)
-  const title = fitTitle(args.heading, 44, titleMaxWidthFor(titleX), fonts.heading)
-  const lift = extraTitleY(title)
-  return {
-    contentRect: bodyRect(PAGE_LEFT, (hasSub ? 240 : 206) + lift),
-    chrome: (
-      <>
-        <rect x={chipX} y={chipY} width={chipW} height={boxH} fill={boxFill} />
-        <text
-          x={chipX + chipW / 2}
-          y={labelY}
-          fontSize={labelSize}
-          fontWeight={700}
-          fontFamily={hud ? fonts.mono : fonts.heading}
-          fill={labelFill}
-          textAnchor="middle"
-          dominantBaseline="alphabetic"
-          {...(hud ? { letterSpacing: 4 } : {})}
-        >
-          {label}
-        </text>
-        {renderEmphasisHeading(
-          title,
-          titlePaint(args, title, ink(colors.text, args.ctx, title.fontSize)),
-          (_line, i) => (
-            <text
-              key={i}
-              x={titleX}
-              y={150 + i * title.lineHeight}
-              fontSize={title.fontSize}
-              fontWeight={700}
-              fontFamily={fonts.heading}
-              fill={ink(colors.text, args.ctx, title.fontSize)}
-              dominantBaseline="alphabetic"
-            />
-          ),
-        )}
-        {hasSub &&
-          renderEmphasisText(
-            parseEmphasis(args.subheading),
-            subPaint(args, 19, ink(colors.muted, args.ctx, 19)),
-            <text
-              x={96}
-              y={190 + lift}
-              fontSize={19}
-              fontFamily={fonts.body}
-              fill={ink(colors.muted, args.ctx, 19)}
               dominantBaseline="alphabetic"
             />,
           )}

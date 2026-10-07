@@ -182,12 +182,12 @@ describe("LuxeMotif（请柬金框）", () => {
   })
 
   it("换一家 tokens 渲染时颜色跟着换，luxe 的色一处不残留", () => {
-    const heritage = resolveStyle("heritage")
-    const ctx = buildCtx(heritage, {})
-    const { markup } = render(<LuxeMotif ir={ir("heritage")} slide={coverSlide} ctx={ctx} />)
-    expect(markup).toContain(heritage.colors.accent)
+    const journal = resolveStyle("journal")
+    const ctx = buildCtx(journal, {})
+    const { markup } = render(<LuxeMotif ir={ir("journal")} slide={coverSlide} ctx={ctx} />)
+    expect(markup).toContain(journal.colors.accent)
     for (const hex of LUXE_HEX) {
-      expect(markup, `luxe token ${hex} leaked into heritage render`).not.toContain(hex)
+      expect(markup, `luxe token ${hex} leaked into journal render`).not.toContain(hex)
     }
   })
 

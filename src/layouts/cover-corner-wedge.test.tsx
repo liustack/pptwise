@@ -11,7 +11,7 @@ import { CornerWedgeCover, layoutDef } from "./cover-corner-wedge"
 import type { SvgTemplateProps } from "./types"
 import type { PptxIR, Slide } from "@/ir"
 
-const HEADING_ARENA = "巅峰之夜"
+const HEADING_CENTERED = "巅峰之夜"
 const HEADING_EMBER = "云觅科技 2026 年第二季度业务评审"
 const SUBHEADING = "八强出炉 · 决赛日程与观赛指南"
 
@@ -63,10 +63,10 @@ function renderCover(
 }
 
 describe("cover-corner-wedge — board geometry", () => {
-  it("arena: centered title and the small board wedge", () => {
+  it("centered title and the small wedge of arena's board", () => {
     const { root, tokens } = renderCover(
-      "arena",
-      slide(HEADING_ARENA),
+      "rally",
+      slide(HEADING_CENTERED),
       { textAnchor: "middle", wedgePeakY: 340, wedgeStartX: 980 },
     )
     const paths = Array.from(root.querySelectorAll("path"))
@@ -101,12 +101,12 @@ describe("cover-corner-wedge — board geometry", () => {
   })
 
   it("inner knobs paint a second wedge band and leave the default overlay pair intact", () => {
-    const base = renderCover("arena", slide(HEADING_ARENA), {
+    const base = renderCover("rally", slide(HEADING_CENTERED), {
       textAnchor: "middle",
       wedgePeakY: 340,
       wedgeStartX: 980,
     })
-    const dual = renderCover("arena", slide(HEADING_ARENA), {
+    const dual = renderCover("rally", slide(HEADING_CENTERED), {
       textAnchor: "middle",
       wedgePeakY: 340,
       wedgeStartX: 980,
@@ -142,7 +142,7 @@ describe("cover-corner-wedge — board geometry", () => {
 
   it("title box and the wedge AABB do not intersect, and a wrapped title clears its subtitle", () => {
     const heading = "云觅科技 2026 年第二季度业务评审"
-    const { root } = renderCover("arena", slide(heading), {
+    const { root } = renderCover("rally", slide(heading), {
       textAnchor: "middle",
       wedgePeakY: 340,
       wedgeStartX: 980,
@@ -183,7 +183,7 @@ describe("cover-corner-wedge — board geometry", () => {
   })
 
   it("does not draw HUD brackets", () => {
-    const { root } = renderCover("arena", slide(HEADING_ARENA), { textAnchor: "middle", wedgePeakY: 340, wedgeStartX: 980 })
+    const { root } = renderCover("rally", slide(HEADING_CENTERED), { textAnchor: "middle", wedgePeakY: 340, wedgeStartX: 980 })
     expect(root.querySelectorAll("circle")).toHaveLength(0)
     const bracketish = Array.from(root.querySelectorAll("path")).filter((p) => (p.getAttribute("d") ?? "").includes("M12,"))
     expect(bracketish).toHaveLength(0)
@@ -200,7 +200,7 @@ describe("cover-corner-wedge — shared pool", () => {
 
   it("every text run clears its contrast tier against the field it sits on", () => {
     for (const themeId of CANONICAL_THEME_IDS) {
-      const { root, tokens } = renderCover(themeId, slide(HEADING_ARENA))
+      const { root, tokens } = renderCover(themeId, slide(HEADING_CENTERED))
       const pageBg = resolveBackgroundHex(tokens.defaultBackgrounds.cover, tokens.colors.surface)
       for (const el of Array.from(root.querySelectorAll("text"))) {
         const onWedge = el.getAttribute("x") === "1108"
@@ -216,7 +216,7 @@ describe("cover-corner-wedge — shared pool", () => {
 
   it("emits only export-safe primitives", () => {
     for (const themeId of SUBSET_SAMPLE_THEME_IDS) {
-      expect(() => assertSubset(renderCover(themeId, slide(HEADING_ARENA)).root), themeId).not.toThrow()
+      expect(() => assertSubset(renderCover(themeId, slide(HEADING_CENTERED)).root), themeId).not.toThrow()
     }
   })
 })

@@ -26,7 +26,6 @@ const WAVE2 = [
   { id: "ink", face: "scroll-cover" },
   { id: "museum", face: "poster-center" },
   { id: "almanac", face: "yearbook-cover" },
-  { id: "heritage", face: "double-frame-cover" },
 ] as const
 
 type BoundaryType = "cover" | "chapter" | "ending"
@@ -112,9 +111,6 @@ const WAVE8_B2_LOCKS = [
   { id: "journal", type: "cover" as const, face: "periodical-cover" },
   { id: "journal", type: "chapter" as const, face: "fascicle-ghost-chapter" },
   { id: "journal", type: "ending" as const, face: "periodical-ending" },
-  { id: "heritage", type: "cover" as const, face: "double-frame-cover" },
-  { id: "heritage", type: "chapter" as const, face: "mirror-volume-chapter" },
-  { id: "heritage", type: "ending" as const, face: "invite-field-ending" },
   { id: "ink", type: "cover" as const, face: "scroll-cover" },
   { id: "ink", type: "chapter" as const, face: "scroll-chapter" },
   { id: "ink", type: "ending" as const, face: "scroll-ending" },
@@ -156,9 +152,6 @@ const WAVE8_B3_LOCKS = [
   { id: "clinic", type: "cover" as const, face: "dossier-cover" },
   { id: "clinic", type: "chapter" as const, face: "subject-rule-chapter" },
   { id: "clinic", type: "ending" as const, face: "dossier-ending" },
-  { id: "arena", type: "cover" as const, face: "cut-panel-cover" },
-  { id: "arena", type: "chapter" as const, face: "round-mark-chapter" },
-  { id: "arena", type: "ending" as const, face: "seat-cta-ending" },
 ] as const
 
 describe("wave 8 batch 3 — locked cover / chapter / ending faces", () => {
@@ -195,9 +188,6 @@ const WAVE8_B4_LOCKS = [
   { id: "memo", type: "cover" as const, face: "memo-cover" },
   { id: "memo", type: "chapter" as const, face: "issue-line-chapter" },
   { id: "memo", type: "ending" as const, face: "memo-ending" },
-  { id: "playbill", type: "cover" as const, face: "bill-head" },
-  { id: "playbill", type: "chapter" as const, face: "day-bill-chapter" },
-  { id: "playbill", type: "ending" as const, face: "ticket-cta-ending" },
   { id: "museum", type: "cover" as const, face: "poster-center" },
   { id: "museum", type: "chapter" as const, face: "hall-label-chapter" },
   { id: "museum", type: "ending" as const, face: "exit-word-ending" },
@@ -300,43 +290,5 @@ describe("wave 8 batch 3 — midground identity survives FullSlideSvg", () => {
     expect(foot!.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
     expect(Array.from(foot!.querySelectorAll("rect")).map((rect) => rect.getAttribute("y"))).toEqual(["668", "674"])
     expect(mid.querySelectorAll("rect, line")).toHaveLength(0)
-  })
-
-  it.each(["cover", "content", "ending"] as const)("arena %s keeps three energy bars at y 708 in mid", (type) => {
-    const { mid } = renderPage("arena", type)
-    const bars = mid.querySelector('[data-decor-piece="energy-bar"]')
-    expect(bars).not.toBeNull()
-    const rects = bars!.querySelectorAll("rect")
-    expect(rects).toHaveLength(3)
-    for (const rect of Array.from(rects)) {
-      expect(rect.getAttribute("y")).toBe("708")
-      expect(Number(rect.getAttribute("height"))).toBe(8)
-      expect(Number(rect.getAttribute("x")) + Number(rect.getAttribute("width"))).toBeLessThanOrEqual(1280)
-      expect(Number(rect.getAttribute("y")) + Number(rect.getAttribute("height"))).toBeLessThan(720)
-    }
-  })
-
-  it("arena content after a chapter keeps the ROUND chip and drops HUD corner brackets", () => {
-    const chapter: Slide = { type: "chapter", heading: "增长战略", components: [] } as Slide
-    const slide: Slide = {
-      type: "content",
-      kind: "points",
-      heading: COVER.heading,
-      subheading: COVER.subheading,
-      components: [{ type: "paragraph", text: "证据。" }],
-    } as Slide
-    const doc = { ...ir("arena"), slides: [chapter, slide] } as PptxIR
-    const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={1} />)
-    expect(container.textContent).toContain("ROUND")
-    expect(container.querySelectorAll("path")).toHaveLength(0)
-    expect(container.innerHTML).not.toContain("M 96 56 l 0 -8 l 8 0")
-    expect(container.innerHTML).not.toContain("M 246 86 l 0 8 l -8 0")
-  })
-
-  it("arena chapter has no energy-bar rects in mid", () => {
-    const { mid } = renderPage("arena", "chapter")
-    expect(mid.querySelector('[data-decor-piece="energy-bar"]')).toBeNull()
-    const energy = Array.from(mid.querySelectorAll("rect")).filter((el) => el.getAttribute("y") === "708")
-    expect(energy).toHaveLength(0)
   })
 })

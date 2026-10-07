@@ -14,13 +14,11 @@
 import type { Lexicon } from "../lexicon"
 import { LEXICONS } from "../lexicon"
 import { ACADEMIC_LEXICON } from "./thesis"
-import { ARENA_LEXICON } from "./arena"
 import { CAMPAIGN_LEXICON } from "./rally"
 import { CLASSROOM_LEXICON } from "./homeroom"
 import { CRAYON_LEXICON } from "./crayon"
 import { EMBER_LEXICON } from "./ember"
 import { ENTERPRISE_LEXICON } from "./bulletin"
-import { HERITAGE_LEXICON } from "./heritage"
 import { INK_LEXICON } from "./ink"
 import { INSIGHT_LEXICON } from "./ledger"
 import { JOURNAL_LEXICON } from "./journal"
@@ -28,7 +26,6 @@ import { LECTURE_LEXICON } from "./lecture"
 import { LUXE_LEXICON } from "./luxe"
 import { MEMO_LEXICON } from "./memo"
 import { MUSEUM_LEXICON } from "./museum"
-import { PLAYBILL_LEXICON } from "./playbill"
 import { PULSE_LEXICON } from "./clinic"
 import { PROPOSAL_LEXICON } from "./proposal"
 import { RUNWAY_LEXICON } from "./runway"
@@ -40,13 +37,11 @@ import { VERMILION_LEXICON } from "./vermilion"
 
 export const NATIVE_LEXICONS: Readonly<Record<string, Lexicon>> = {
   thesis: ACADEMIC_LEXICON,
-  arena: ARENA_LEXICON,
   rally: CAMPAIGN_LEXICON,
   homeroom: CLASSROOM_LEXICON,
   crayon: CRAYON_LEXICON,
   ember: EMBER_LEXICON,
   bulletin: ENTERPRISE_LEXICON,
-  heritage: HERITAGE_LEXICON,
   ink: INK_LEXICON,
   ledger: INSIGHT_LEXICON,
   journal: JOURNAL_LEXICON,
@@ -54,7 +49,6 @@ export const NATIVE_LEXICONS: Readonly<Record<string, Lexicon>> = {
   luxe: LUXE_LEXICON,
   memo: MEMO_LEXICON,
   museum: MUSEUM_LEXICON,
-  playbill: PLAYBILL_LEXICON,
   proposal: PROPOSAL_LEXICON,
   clinic: PULSE_LEXICON,
   runway: RUNWAY_LEXICON,

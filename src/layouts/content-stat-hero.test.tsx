@@ -232,8 +232,8 @@ describe("a hero figure is never cut", () => {
       .filter((run) => run.text.includes(head))
   }
 
-  it("covers all eighteen theme skins", () => {
-    expect(SKINNED).toHaveLength(18)
+  it("covers all fifteen theme skins", () => {
+    expect(SKINNED).toHaveLength(15)
   })
 
   it("keeps swiss' figure whole beside a long unit (the reported page)", () => {

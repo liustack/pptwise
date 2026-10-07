@@ -123,10 +123,6 @@ describe("tryContentHeadingTreatment null cases", () => {
     expect(treat("brief", [contentSlide({ heading: HEADING })], 0).treated).toBeNull()
   })
 
-  it("returns null for tag_box without a chapter", () => {
-    expect(treat("playbill", [contentSlide({ heading: HEADING })], 0).treated).toBeNull()
-  })
-
   it("returns null when the slide is not content", () => {
     expect(treat("ledger", [coverSlide()], 0).treated).toBeNull()
   })
@@ -266,30 +262,6 @@ describe("baseline ledger", () => {
   })
 })
 
-describe("baseline heritage", () => {
-  it("wenwu double rule", () => {
-    const { treated, colors } = withChapter("heritage")
-    expect(treated!.contentRect.y).toBe(210)
-    const root = rootOf(treated!.chrome)
-    const thick = rectAt(root, 96, 158, 1088, 2)
-    const thin = rectAt(root, 96, 164, 1088, 1)
-    expect(thick.getAttribute("fill")).toBe(colors.primary)
-    expect(thin.getAttribute("fill")).toBe(colors.primary)
-  })
-
-  it("enhanced: sub sits under the wenwu rule, contentRect y=248", () => {
-    const { treated, colors } = withChapter("heritage", { subheading: SUB })
-    expect(treated!.contentRect.y).toBe(248)
-    const root = rootOf(treated!.chrome)
-    const sub = textContaining(root, SUB)
-    expect(num(sub, "y")).toBe(188)
-    expect(num(sub, "font-size")).toBe(18)
-    expect(sub.getAttribute("fill")).toBe(colors.muted)
-    rectAt(root, 96, 158, 1088, 2)
-    rectAt(root, 96, 164, 1088, 1)
-  })
-})
-
 describe("baseline journal", () => {
   it("double-tone + numero-name right slot", () => {
     const { treated, colors } = withChapter("journal")
@@ -316,55 +288,6 @@ describe("baseline journal", () => {
     expect(num(sub, "y")).toBe(188)
     expect(num(sub, "font-size")).toBe(18)
     expect(sub.getAttribute("fill")).toBe(colors.muted)
-  })
-})
-
-describe("tag_box playbill", () => {
-  it("solid-invert box + 第N幕", () => {
-    const { treated, colors } = withChapter("playbill")
-    expect(treated!.contentRect.y).toBe(206)
-    const root = rootOf(treated!.chrome)
-    const box = rectAt(root, 96, 56, 150, 38)
-    expect(box.getAttribute("fill")).toBe(colors.text)
-    const label = textContaining(root, "第一幕")
-    expect(label.getAttribute("fill")).toBe(colors.bg)
-    expect(label.getAttribute("text-anchor")).toBe("middle")
-    expect(num(label, "x")).toBe(171)
-    const title = textContaining(root, HEADING)
-    expect(num(title, "y")).toBe(150)
-    expect(num(title, "font-size")).toBe(44)
-    expect(title.getAttribute("font-weight")).toBe("700")
-  })
-
-  it("enhanced sub y=190, contentRect y=240", () => {
-    const { treated, colors } = withChapter("playbill", { subheading: SUB })
-    expect(treated!.contentRect.y).toBe(240)
-    const root = rootOf(treated!.chrome)
-    const sub = textContaining(root, SUB)
-    expect(num(sub, "y")).toBe(190)
-    expect(num(sub, "font-size")).toBe(19)
-    expect(sub.getAttribute("fill")).toBe(colors.muted)
-  })
-
-  it("no-title: no anchor", () => {
-    const { treated } = withChapter("playbill", { heading: "" })
-    expect(treated!.contentRect.y).toBe(64)
-    const root = rootOf(treated!.chrome)
-    expect(texts(root).some((t) => (t.textContent ?? "").includes("第一幕"))).toBe(false)
-  })
-})
-
-describe("tag_box arena", () => {
-  it("ROUND N chip + mono tracking, no HUD corner brackets", () => {
-    const { treated, colors, fonts } = withChapter("arena")
-    const root = rootOf(treated!.chrome)
-    const box = rectAt(root, 96, 56, 150, 30)
-    expect(box.getAttribute("fill")).toBe(colors.surface)
-    const label = textContaining(root, "ROUND 1")
-    expect(label.getAttribute("fill")).toBe(colors.accent)
-    expect(label.getAttribute("font-family")).toBe(fonts.mono)
-    expect(label.getAttribute("letter-spacing")).toBe("4")
-    expect(root.querySelectorAll("path")).toHaveLength(0)
   })
 })
 
@@ -694,7 +617,7 @@ describe("engine", () => {
   })
 
   it("CJK text nodes have no letter-spacing", () => {
-    for (const themeId of ["brief", "luxe", "playbill", "ink", "journal"] as const) {
+    for (const themeId of ["brief", "luxe", "rally", "ink", "journal"] as const) {
       const { treated } = withChapter(themeId)
       const root = rootOf(treated!.chrome)
       for (const t of texts(root)) {
@@ -707,7 +630,7 @@ describe("engine", () => {
   })
 
   it("font-weight only 400/700/bold", () => {
-    for (const themeId of ["brief", "playbill", "thesis", "luxe", "arena"] as const) {
+    for (const themeId of ["brief", "rally", "thesis", "luxe", "vermilion"] as const) {
       const { treated } = withChapter(themeId)
       const root = rootOf(treated!.chrome)
       for (const el of Array.from(root.querySelectorAll("[font-weight]"))) {

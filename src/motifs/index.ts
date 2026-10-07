@@ -11,17 +11,14 @@ import { HomeroomMotif } from "./motif-homeroom-motif"
 import { InkMotif } from "./motif-ink-motif"
 import { LuxeMotif } from "./motif-luxe-motif"
 import { BulletinMotif } from "./motif-bulletin-motif"
-import { HeritageMotif } from "./motif-heritage-motif"
 import { ClinicMotif } from "./motif-clinic-motif"
 import { AlmanacMotif } from "./motif-almanac-motif"
 import { EmberMotif } from "./motif-ember-motif"
 import { VermilionMotif } from "./motif-vermilion-motif"
 import { CrayonMotif } from "./motif-crayon-motif"
-import { ArenaMotif } from "./motif-arena-motif"
 import { LectureMotif } from "./motif-lecture-motif"
 import { SwissMotif } from "./motif-swiss-motif"
 import { MemoMotif } from "./motif-memo-motif"
-import { PlaybillMotif } from "./motif-playbill-motif"
 import { GaugeMotif } from "./motif-gauge-motif"
 import { CrayonboxMotif } from "./motif-crayonbox-motif"
 import { FolioMotif } from "./motif-folio-motif"
@@ -44,17 +41,14 @@ export const MOTIFS: Record<MotifId, Motif> = {
   "ink-motif": InkMotif,
   "luxe-motif": LuxeMotif,
   "bulletin-motif": BulletinMotif,
-  "heritage-motif": HeritageMotif,
   "clinic-motif": ClinicMotif,
   "almanac-motif": AlmanacMotif,
   "ember-motif": EmberMotif,
   "vermilion-motif": VermilionMotif,
   "crayon-motif": CrayonMotif,
-  "arena-motif": ArenaMotif,
   "lecture-motif": LectureMotif,
   "swiss-motif": SwissMotif,
   "memo-motif": MemoMotif,
-  "playbill-motif": PlaybillMotif,
   "gauge-motif": GaugeMotif,
   "crayonbox-motif": CrayonboxMotif,
   "folio-motif": FolioMotif,

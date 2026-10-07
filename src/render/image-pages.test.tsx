@@ -127,7 +127,7 @@ describe("image-split / image-top gallery English heading overflow", () => {
   it("image-top wraps a longer English heading instead of shrinking one overflowing line, and the band grows", () => {
     const heading = `${GALLERY_EN_HEADING} across every region`
     const slide = makeSlide(heading)
-    const root = renderRoot("heritage", "image-top", slide)
+    const root = renderRoot("luxe", "image-top", slide)
     const titles = titleNodes(root, heading)
     expect(titles.length).toBeGreaterThanOrEqual(2)
     for (const t of titles) {
@@ -153,14 +153,14 @@ describe("image-split / image-top gallery English heading overflow", () => {
 
 describe("image-top title band", () => {
   // The band around the title kept the flat 42px / 12px of the 30px title it
-  // was drawn for. stage sets that title at 45px and playbill at 39px: the
+  // was drawn for. stage sets that title at 45px: the
   // comma of "续航十四小时，从早会撑到夜航" came to rest on the rule, and the
   // glyph tops ran to within 3px of the picture's bottom edge.
   const HEADING = "续航十四小时，从早会撑到夜航"
   const DESCENT = 0.25
   const CJK_ASCENT = 0.88
 
-  it.each(["journal", "playbill", "stage"] as const)("%s keeps the title clear of the picture and the rule", (theme) => {
+  it.each(["journal", "stage"] as const)("%s keeps the title clear of the picture and the rule", (theme) => {
     for (const slide of [
       makeSlide(HEADING),
       { ...makeSlide(HEADING), components: [makeSlide(HEADING).components[0]!] } as Slide,

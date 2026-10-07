@@ -3,24 +3,21 @@ import * as stage from "./stage"
 import * as lecture from "./lecture"
 import * as swiss from "./swiss"
 import * as memo from "./memo"
-import * as playbill from "./playbill"
 import * as museum from "./museum"
 import * as luxe from "./luxe"
 import * as ink from "./ink"
 import * as brief from "./brief"
 import * as ledger from "./ledger"
 import * as terminal from "./terminal"
-import * as heritage from "./heritage"
 import * as vermilion from "./vermilion"
 import * as journal from "./journal"
 import * as rally from "./rally"
-import * as arena from "./arena"
 import * as almanac from "./almanac"
 import * as thesis from "./thesis"
 
 export type SparseLayoutId = Extract<
   ContentLayoutId,
-  "statement" | "pull-quote" | "stat-hero" | "one-evidence" | "mono-bleed"
+  "statement" | "pull-quote" | "stat-hero" | "one-evidence"
 >
 
 type FaceMap = Partial<Record<SparseLayoutId, ContentLayout>>
@@ -49,11 +46,6 @@ export const FACES: Partial<Record<string, FaceMap>> = {
     "pull-quote": memo.pullQuote,
     "stat-hero": memo.statHero,
     statement: memo.statement,
-  },
-  playbill: {
-    statement: playbill.statement,
-    "stat-hero": playbill.statHero,
-    "mono-bleed": playbill.monoBleed,
   },
   museum: {
     statement: museum.statement,
@@ -85,11 +77,6 @@ export const FACES: Partial<Record<string, FaceMap>> = {
     statement: terminal.statement,
     "one-evidence": terminal.oneEvidence,
   },
-  heritage: {
-    "pull-quote": heritage.pullQuote,
-    statement: heritage.statement,
-    "stat-hero": heritage.statHero,
-  },
   vermilion: {
     statement: vermilion.statement,
     "stat-hero": vermilion.statHero,
@@ -104,11 +91,6 @@ export const FACES: Partial<Record<string, FaceMap>> = {
     statement: rally.statement,
     "stat-hero": rally.statHero,
     "one-evidence": rally.oneEvidence,
-  },
-  arena: {
-    "stat-hero": arena.statHero,
-    statement: arena.statement,
-    "one-evidence": arena.oneEvidence,
   },
   almanac: {
     statement: almanac.statement,

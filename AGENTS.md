@@ -14,7 +14,7 @@ intent -> narrative -> theme -> spec -> fill -> render
 
 The four public nouns are:
 
-- **theme**: one complete self-contained v2 file with style, optional brand configuration, occasion metadata, identity strength, and a menu. The 25 built-ins are factory presets for copying.
+- **theme**: one complete self-contained v2 file with style, optional brand configuration, occasion metadata, identity strength, and a menu. The 22 built-ins are factory presets for copying.
 - **spec**: a version 1 semantic contract that binds one theme and locks narrative, page order, id, type, heading, and content kind.
 - **component**: one of 63 typed units that fill a page.
 - **kind**: one of 11 content-page moves. The vocabulary is `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `evidence`, and `hierarchy`.

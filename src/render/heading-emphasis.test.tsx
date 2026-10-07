@@ -65,9 +65,9 @@ function contentPage(themeId: string, heading: string, face?: string): string {
 }
 
 describe("a tint theme paints its marked heading instead of printing it", () => {
-  // arena carries a tag_box treatment, memo has no treatment at all: the two
-  // sides of the split that used to decide whether markers reached the page.
-  it.each(["arena", "memo"])("%s", (themeId) => {
+  // luxe carries a center_mirror treatment, memo has no treatment at all: the
+  // two sides of the split that used to decide whether markers reached the page.
+  it.each(["luxe", "memo"])("%s", (themeId) => {
     const svg = contentPage(themeId, MARKED)
     expect(paintedText(svg)).not.toContain("*")
     expect(paintedText(svg)).toContain(PLAIN)

@@ -7,6 +7,7 @@ import { hasTakeoverRenderer } from "../render/image-pages"
 import { contrastRatio } from "../render/ink"
 import { getLayout, type LayoutParamDeclaration } from "../layouts/registry"
 import { REGISTERED_THEMES } from "./registered-themes"
+import { foldedFaceIdMessage } from "./retired-ids"
 import {
   StructuralThemeFileSchema,
   ThemeFileSchema,
@@ -383,7 +384,10 @@ function assertMenuContract(themeId: string, menu: Menu): void {
   for (const { path, slideType, entry } of menuEntryLocations(menu)) {
     const layout = getLayout(entry.face)
     if (!layout) {
-      throw new PptwiseError(`theme "${themeId}" ${path}.face references unknown layout id "${entry.face}"`)
+      const folded = foldedFaceIdMessage(entry.face)
+      throw new PptwiseError(
+        `theme "${themeId}" ${path}.face references unknown layout id "${entry.face}"${folded !== undefined ? `. ${folded}` : ""}`,
+      )
     }
     if (!layout.slideTypes.includes(slideType)) {
       throw new PptwiseError(

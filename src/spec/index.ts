@@ -39,7 +39,7 @@ import { type SlideType } from "../layouts/registry"
 import { offeredContentKinds, resolveLayoutId } from "../render/layout-selection"
 import type { ThemeDefinition } from "../themes/definitions"
 import { resolveBoundThemeResult } from "../themes/resolve-ir-theme"
-import { RETIRED_THEME_IDS } from "../themes/retired-ids"
+import { RETIRED_THEME_IDS, foldedThemeTarget, foldedThemeWarning } from "../themes/retired-ids"
 
 // ── schema ───────────────────────────────────────────────────────────────
 
@@ -196,10 +196,13 @@ export function formatInvalidSpecError(errors: SpecValidationIssue[]): string {
 
 /**
  * Bound theme id on a validated spec. Theme is required. There is no
- * brief fallback.
+ * brief fallback. A folded id (`themes/retired-ids.ts`) binds the theme
+ * that absorbed it. The spec itself keeps the id its author wrote, so the
+ * deck it assembles names it too and IR validation warns about it again
+ * where the deck is rendered.
  */
 export function resolveSpecThemeId(spec: DeckSpec): string {
-  return spec.theme
+  return foldedThemeTarget(spec.theme) ?? spec.theme
 }
 
 // ── hard gate: pages non-empty ──────────────────────────────────────────
@@ -610,6 +613,15 @@ function pageIdFromRawInput(input: unknown, index: number): string | undefined {
  * "informational, never gates `ok`" contract `ValidateResult.normalized`
  * has.
  */
+/** The warning a spec gets for binding a folded theme id, read off the raw input. */
+function specThemeFoldWarning(input: unknown): SpecValidationIssue | undefined {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) return undefined
+  const theme = (input as { theme?: unknown }).theme
+  if (typeof theme !== "string") return undefined
+  const message = foldedThemeWarning(theme)
+  return message === undefined ? undefined : { path: "theme", message }
+}
+
 /**
  * `opts.theme` is the bound theme's definition passed by value (the CLI's
  * name lookup hands it over). Omitted, `spec.theme` must name a built-in or
@@ -620,8 +632,13 @@ export function validateSpec(input: unknown, opts?: { theme?: ThemeDefinition })
   const narrativeShapePass = normalizeNarrativeShape(rootAliasPass.value)
   const normalizedInput = narrativeShapePass.value
   const normalized = [...rootAliasPass.normalized, ...narrativeShapePass.normalized]
-  const withNormalized = (result: SpecValidateResult): SpecValidateResult =>
-    normalized.length > 0 ? { ...result, normalized } : result
+  const foldWarning = specThemeFoldWarning(normalizedInput)
+  // The fold warning rides every return path, as it does in `validateIr`.
+  const withNormalized = (result: SpecValidateResult): SpecValidateResult => {
+    const noted = normalized.length > 0 ? { ...result, normalized } : result
+    if (foldWarning === undefined) return noted
+    return { ...noted, warnings: [foldWarning, ...(noted.warnings ?? [])] }
+  }
 
   const r = DeckSpecSchema.safeParse(normalizedInput)
   if (!r.success) {

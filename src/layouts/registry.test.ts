@@ -39,7 +39,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     }
   }
 
-  it("has exactly 168 layout-kind entries, all traceable to one of the four real registries", () => {
+  it("has exactly 175 layout-kind entries, all traceable to one of the four real registries", () => {
     const knownIds = new Set([
       ...Object.keys(COVER_LAYOUTS),
       ...Object.keys(CHAPTER_LAYOUTS),
@@ -75,8 +75,12 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // journal redesign adds periodical-cover, periodical-sheet,
     // periodical-quote and periodical-ending: 180. The ink redesign adds
     // scroll-cover, scroll-chapter, scroll-sheet, scroll-quote and
-    // scroll-ending: 185.
-    expect(layoutEntries).toHaveLength(185)
+    // scroll-ending: 185. The arena, playbill and heritage fold deletes the
+    // ten faces only those themes drew (cut-panel-cover, round-mark-chapter,
+    // seat-cta-ending, bill-head, day-bill-chapter, ticket-cta-ending,
+    // mono-bleed, double-frame-cover, mirror-volume-chapter,
+    // invite-field-ending): 175.
+    expect(layoutEntries).toHaveLength(175)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -204,7 +208,6 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
         id === "pull-quote" ||
         id === "stat-hero" ||
         id === "one-evidence" ||
-        id === "mono-bleed" ||
         id === "gauge-point" ||
         id === "gauge-exhibit" ||
         id === "gauge-figure" ||
@@ -272,10 +275,9 @@ describe("capacity metadata: only where the inventory gives hard numbers", () =>
     expect(LAYOUT_REGISTRY["show-statement"].slots.some((slot) => slot.name === "subheading")).toBe(false)
   })
 
-  it("speech-layout body capacities: stat-hero 1, one-evidence 1, mono-bleed 0", () => {
+  it("speech-layout body capacities: stat-hero 1, one-evidence 1", () => {
     expect(LAYOUT_REGISTRY["stat-hero"].slots.find((s) => s.name === "body")?.capacity).toBe(1)
     expect(LAYOUT_REGISTRY["one-evidence"].slots.find((s) => s.name === "body")?.capacity).toBe(1)
-    expect(LAYOUT_REGISTRY["mono-bleed"].slots.find((s) => s.name === "body")?.capacity).toBe(0)
   })
 })
 
@@ -298,18 +300,18 @@ describe("layoutsForSlideType", () => {
     for (const l of covers) expect(l.slideTypes).toContain("cover")
   })
 
-  it("cover, chapter, and ending expose 48, 43, and 45 registered layouts with no takeovers", () => {
+  it("cover, chapter, and ending expose 45, 40, and 42 registered layouts with no takeovers", () => {
     // The shared automatic pools are unchanged by the gauge family: 19, 8, 7.
-    expect(layoutsForSlideType("cover")).toHaveLength(48)
+    expect(layoutsForSlideType("cover")).toHaveLength(45)
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
-    expect(layoutsForSlideType("chapter")).toHaveLength(43)
-    expect(layoutsForSlideType("ending")).toHaveLength(45)
+    expect(layoutsForSlideType("chapter")).toHaveLength(40)
+    expect(layoutsForSlideType("ending")).toHaveLength(42)
   })
 
-  it("content includes both the 49 layouts and the 4 takeovers", () => {
+  it("content includes both the 48 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(49)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(48)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(53)
+    expect(contents).toHaveLength(52)
   })
 })

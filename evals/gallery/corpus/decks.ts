@@ -76,10 +76,10 @@ function statCoverHeading(lex: Lexicon): string {
 }
 
 /**
- * cut-panel-cover and lookbook-open-cover lock a single display line
- * (36pt / 48pt floor). The corpus deck title still truncates at that
- * floor in English and mixed, which hard-blocks validate. A chapter
- * title is the length those faces actually carry.
+ * lookbook-open-cover locks a single display line (48pt floor). The
+ * corpus deck title still truncates at that floor in English and mixed,
+ * which hard-blocks validate. A chapter title is the length that face
+ * actually carries.
  */
 function oneLineCoverHeading(lex: Lexicon): string {
   return lex.chapters[0]!
@@ -369,10 +369,8 @@ function thickenThemeContent(themeId: string, slotIndex: number, lex: Lexicon, l
   // rect, and the full list did not fit in the ~124px left over — so the
   // companion meant to fill the band under the plot was dropped whole.
   if (themeId === "swiss" && slotIndex === 0) return [sliceBullets(COMPONENT_BUILDERS.bullets!(lex), 2)]
-  if (themeId === "arena" && slotIndex === 2) return [shortParagraph]
   if (themeId === "clinic" && slotIndex === 3) return [shortParagraph]
   if (themeId === "runway" && slotIndex === 5) return [shortParagraph]
-  if (themeId === "heritage" && slotIndex === 3) return [shortParagraph]
   return []
 }
 
@@ -388,7 +386,7 @@ function bodyCapacity(def: LayoutDefinition): number {
   // component (menu-model review BLOCKER B2).
   const body = def.slots.find((s) => s.name === "body")
   if (typeof body?.capacity === "number") {
-    // A declared 0 is a real value (mono-bleed's body slot accepts nothing) —
+    // A declared 0 is a real value (a body slot that accepts nothing) —
     // clamping it up to 1 authors a page validate-core rejects outright.
     return Math.max(0, body.capacity)
   }
@@ -762,7 +760,6 @@ const CONTENT_FACE_KINDS: Record<string, PageKind> = {
   "image-bottom": "photo",
   "image-split": "photo",
   "image-top": "photo",
-  "mono-bleed": "statement",
   "narrow-column": "points",
   "one-evidence": "evidence",
   "pull-quote": "quote",
@@ -844,7 +841,7 @@ export function layoutPage(
               ? statCoverHeading(lex)
               : def.id === "show-headline"
                 ? showHeadlineCoverHeading(lex)
-                : def.id === "cut-panel-cover" || def.id === "lookbook-open-cover"
+                : def.id === "lookbook-open-cover"
                   ? oneLineCoverHeading(lex)
                   : lex.deckTitle,
           subheading: lex.deckSubtitle,

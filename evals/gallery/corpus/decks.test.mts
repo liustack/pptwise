@@ -29,18 +29,12 @@ describe("themeDeck corpus thicken (gallery r2 D10/D11/D12/D21)", () => {
     expect(page.components[1]?.type).toBe("bullets")
   })
 
-  it("arena p05 / clinic p06 / runway p08 / heritage p06 carry a companion paragraph", () => {
-    const arena = themeDeck("arena", zh, emptyAssets).slides[4]!
-    expect(arena.components.map((c) => c.type)).toEqual(["insight_panel", "paragraph"])
-
+  it("clinic p06 / runway p08 carry a companion paragraph", () => {
     const clinic = themeDeck("clinic", zh, emptyAssets).slides[5]!
     expect(clinic.components.map((c) => c.type)).toEqual(["people_cards", "paragraph"])
 
     const runway = themeDeck("runway", zh, emptyAssets).slides[7]!
     expect(runway.components.map((c) => c.type)).toEqual(["verdict_banner", "paragraph"])
-
-    const heritage = themeDeck("heritage", zh, emptyAssets).slides[5]!
-    expect(heritage.components.map((c) => c.type)).toEqual(["image_grid", "paragraph"])
   })
 })
 

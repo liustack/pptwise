@@ -43,6 +43,10 @@ installNodePlatform()
 // under `branding: "full"`, so the locator leaves these omitted-branding
 // pages. The heading treatment table is unchanged. Only the fifteen brief
 // keys move. Every other key and the emphasis fixture stay byte-identical.
+//
+// Pruned (theme fold, 2026-10-07). arena and playbill were folded into rally
+// and leave the keep-native list with their thirty keys. Nothing was
+// recaptured: every other key stays byte-identical.
 const fixture = JSON.parse(
   readFileSync(HEADING_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }
@@ -50,9 +54,9 @@ const fixture = JSON.parse(
 describe("unassigned heading bytes stay pinned to the depth-contract fixture", () => {
   const pages = computeHeadingUnassignedPages()
 
-  it("captures 315 keys matching the fixture", () => {
-    expect(Object.keys(pages)).toHaveLength(315)
-    expect(Object.keys(fixture.pages)).toHaveLength(315)
+  it("captures 285 keys matching the fixture", () => {
+    expect(Object.keys(pages)).toHaveLength(285)
+    expect(Object.keys(fixture.pages)).toHaveLength(285)
   })
 
   it.each(Object.keys(fixture.pages))("%s", (key) => {

@@ -59,8 +59,9 @@ export const THEME_OCCASIONS: Record<BuiltinThemeId, ThemeOccasionRecord> = {
   thesis: { occasions: ["education"], identity: "medium" },
   // 行情屏财经洞察，专业表达（任务书点名 medium）
   ledger: { occasions: ["finance"], identity: "medium" },
-  // 幕布深紫营销剧场，荧光主音，强表达
-  rally: { occasions: ["marketing", "event"], identity: "high" },
+  // 幕布深紫营销剧场，荧光主音，强表达。2026-10 接住并入的 arena 与
+  // playbill，电竞、演出、粉丝活动也走这里
+  rally: { occasions: ["marketing", "event", "entertainment"], identity: "high" },
   // 讲义雾蓝，亲和教与学，不是蜡笔戏服
   homeroom: { occasions: ["education"], identity: "medium" },
   // 水墨国风，任务书点名强表达
@@ -73,8 +74,6 @@ export const THEME_OCCASIONS: Record<BuiltinThemeId, ThemeOccasionRecord> = {
   journal: { occasions: ["editorial"], identity: "medium" },
   // 请柬烫金奢侈品戏服，年会盛典也走这里
   luxe: { occasions: ["luxury", "event"], identity: "high" },
-  // 藏书票轻奢传承，比 luxe 克制
-  heritage: { occasions: ["culture", "luxury"], identity: "medium" },
   // 清洁诊疗生命科学，可信专业件
   clinic: { occasions: ["health"], identity: "medium" },
   // ESG 田野纸，朴素长期主义
@@ -85,8 +84,6 @@ export const THEME_OCCASIONS: Record<BuiltinThemeId, ThemeOccasionRecord> = {
   vermilion: { occasions: ["government", "institutional"], identity: "low" },
   // 蜡笔卡纸低龄教育，任务书点名强表达
   crayon: { occasions: ["kids", "education"], identity: "high" },
-  // 电竞紫黑场馆，任务书点名强表达
-  arena: { occasions: ["entertainment"], identity: "high" },
   // 博物厅堂，任务书点名强表达
   museum: { occasions: ["museum", "culture"], identity: "high" },
   // 黑场发布会，任务书点名强表达
@@ -97,8 +94,6 @@ export const THEME_OCCASIONS: Record<BuiltinThemeId, ThemeOccasionRecord> = {
   swiss: { occasions: ["institutional"], identity: "low" },
   // 打字机决定备忘录，任务书点名机构低调档
   memo: { occasions: ["business", "institutional"], identity: "low" },
-  // 荧光嗓门活动宣发，任务书点名强表达
-  playbill: { occasions: ["event", "entertainment"], identity: "high" },
   // 递到客户管理层手里的提案书：提案、解决方案、投标，比 brief 暖、敢用橘
   proposal: { occasions: ["sales", "business"], identity: "medium" },
 }

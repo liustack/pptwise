@@ -54,7 +54,7 @@ function withRows(n: number, note = true) {
 
 describe("pros_cons component", () => {
   it("draws two columns, a verdict band, and one mark per point", () => {
-    const { container } = svg(prosCons.render(four, { x: 80, y: 80, w: 1088 }, themed("arena")))
+    const { container } = svg(prosCons.render(four, { x: 80, y: 80, w: 1088 }, themed("rally")))
     // two column cards + the verdict band
     expect(container.querySelectorAll("rect").length).toBe(3)
     // one rule under each column title
@@ -64,7 +64,7 @@ describe("pros_cons component", () => {
   })
 
   it("prints every point, every note, both titles and the verdict", () => {
-    const { container } = svg(prosCons.render(four, { x: 80, y: 80, w: 1088 }, themed("arena")))
+    const { container } = svg(prosCons.render(four, { x: 80, y: 80, w: 1088 }, themed("rally")))
     const joined = Array.from(container.querySelectorAll("text"))
       .map((t) => t.textContent)
       .join("|")
@@ -79,7 +79,7 @@ describe("pros_cons component", () => {
   })
 
   it("tells the sides apart by the shape of the mark, not by a colour outside the theme", () => {
-    const ctx = themed("arena")
+    const ctx = themed("rally")
     const { container } = svg(prosCons.render(four, { x: 80, y: 80, w: 1088 }, ctx))
     const palette = new Set([
       ctx.colors.primary,
@@ -106,7 +106,7 @@ describe("pros_cons component", () => {
   })
 
   it("fills the verdict band in primary and reverses its text", () => {
-    const ctx = themed("arena")
+    const ctx = themed("rally")
     const { container } = svg(prosCons.render(four, { x: 80, y: 80, w: 1088 }, ctx))
     const band = Array.from(container.querySelectorAll("rect")).find(
       (r) => r.getAttribute("fill") === ctx.colors.primary,
@@ -143,7 +143,7 @@ describe("pros_cons component", () => {
         ],
       },
     }
-    const { container } = svg(prosCons.render(long, { x: 0, y: 0, w: 700 }, themed("arena")))
+    const { container } = svg(prosCons.render(long, { x: 0, y: 0, w: 700 }, themed("rally")))
     const marker = container.querySelector("[data-dropped]")!
     expect(marker).not.toBeNull()
     expect(marker.getAttribute("data-dropped-kind")).toBe("row")
@@ -151,7 +151,7 @@ describe("pros_cons component", () => {
   })
 
   it("declares instead of drawing past a height it was given", () => {
-    const { container } = svg(prosCons.render(four, { x: 0, y: 0, w: 1088, h: 200 }, themed("arena")))
+    const { container } = svg(prosCons.render(four, { x: 0, y: 0, w: 1088, h: 200 }, themed("rally")))
     expect(container.querySelector("[data-dropped]")).not.toBeNull()
     expect(container.querySelectorAll("rect")).toHaveLength(0)
   })
@@ -171,8 +171,8 @@ describe("pros_cons component", () => {
         .map((el) => el.tagName.toLowerCase())
         .join(",")
     }
-    const baseline = shapesOf("arena")
-    for (const theme of ["thesis", "rally", "terminal", "heritage", "brief"]) {
+    const baseline = shapesOf("rally")
+    for (const theme of ["thesis", "luxe", "terminal", "ledger", "brief"]) {
       expect(shapesOf(theme), theme).toBe(baseline)
     }
   })

@@ -24,9 +24,7 @@ export const UNASSIGNED = [
 export const KEEP_NATIVE_WITHOUT_CHAPTER = [
   "brief",
   "terminal",
-  "playbill",
   "bulletin",
-  "arena",
 ] as const
 
 export const LAYOUTS = [

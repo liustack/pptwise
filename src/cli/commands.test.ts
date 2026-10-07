@@ -742,12 +742,6 @@ describe("runSchema / runThemes", () => {
       await expect(runSchema({ kind: "quote", deck: cwd, cwd })).rejects.toThrow(/--deck requires --theme/)
     })
   })
-  it("never prints an empty oneOf for a kind whose face takes no component", async () => {
-    const doc = JSON.parse(await runSchema({ kind: "statement", theme: "playbill" })) as Record<string, unknown>
-    expect(doc.components).toEqual([])
-    expect(doc.oneOf).toBeUndefined()
-    expect(doc.not).toEqual({})
-  })
   it("does not offer --full", async () => {
     const source = await readFile(join(process.cwd(), "src/cli.ts"), "utf8")
     expect(source).not.toMatch(/\.option\("--full"/)
@@ -767,9 +761,9 @@ describe("runSchema / runThemes", () => {
     expect(lines).toContain("alarm-clock")
     expect(JSON.parse(runIcons(true))).toEqual(lines)
   })
-  it("prints 25 themes, json mode parses", async () => {
-    expect((await runThemes(false)).split("\n")).toHaveLength(25)
-    expect(JSON.parse(await runThemes(true))).toHaveLength(25)
+  it("prints 22 themes, json mode parses", async () => {
+    expect((await runThemes(false)).split("\n")).toHaveLength(22)
+    expect(JSON.parse(await runThemes(true))).toHaveLength(22)
   })
   it("JSON objects include occasions and identity without replacing listThemes label", async () => {
     const rows = JSON.parse(await runThemes(true)) as Array<{
@@ -780,7 +774,7 @@ describe("runSchema / runThemes", () => {
       identity: unknown
       source: unknown
     }>
-    expect(rows).toHaveLength(25)
+    expect(rows).toHaveLength(22)
     expect(Object.keys(rows[0]!)).toEqual(expect.arrayContaining(["id", "label", "colors", "occasions", "identity", "source"]))
     expect(rows.every((row) => row.source === "builtin")).toBe(true)
     for (const row of rows) {

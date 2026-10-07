@@ -47,7 +47,6 @@ export type CoverLayoutId =
   | "institutional-block"
   | "memo-head"
   | "board-head"
-  | "bill-head"
   // 封面还原第一波（2026-08-22，cover 池 13 -> 19）：六家板面构图在池里
   // 不存在，按构造进共享池。verdict-index = 结论句+强调色块+编号论据，
   // band-title = 通栏色带承反白标题，header-band = 顶栏只承 meta、标题落纸面，
@@ -72,7 +71,6 @@ export type CoverLayoutId =
   | "chalk-band-cover"
   | "capsule-open-cover"
   | "issue-head-cover"
-  | "double-frame-cover"
   | "vertical-title-cover"
   // Wave 8 batch 3 (2026-08-23): luxe / runway / vermilion / almanac / clinic / arena board locks.
   | "invitation-plate-cover"
@@ -80,7 +78,6 @@ export type CoverLayoutId =
   | "red-head-cover"
   | "pledge-open-cover"
   | "report-open-cover"
-  | "cut-panel-cover"
   | "gauge-verdict"
   | "crayonbox-open"
   | "show-headline"
@@ -126,7 +123,6 @@ export type ChapterLayoutId =
   | "lesson-box-chapter"
   | "sticker-numeral-chapter"
   | "fascicle-ghost-chapter"
-  | "mirror-volume-chapter"
   | "volume-slip-chapter"
   // Wave 8 batch 3 pinOnly chapter faces.
   | "gilt-ordinal-chapter"
@@ -134,13 +130,11 @@ export type ChapterLayoutId =
   | "seal-numeral-chapter"
   | "field-band-chapter"
   | "subject-rule-chapter"
-  | "round-mark-chapter"
   // Wave 8 batch 4 pinOnly chapter faces.
   | "one-word-chapter"
   | "chalk-rule-chapter"
   | "decimal-index-chapter"
   | "issue-line-chapter"
-  | "day-bill-chapter"
   | "hall-label-chapter"
   | "gauge-section"
   | "crayonbox-sticker"
@@ -175,7 +169,6 @@ export type EndingLayoutId =
   | "homework-close-ending"
   | "reminder-list-ending"
   | "afterword-ending"
-  | "invite-field-ending"
   | "seal-close-ending"
   // Wave 8 batch 3 pinOnly ending faces.
   | "gilt-word-ending"
@@ -183,13 +176,11 @@ export type EndingLayoutId =
   | "deliberation-ending"
   | "scorecard-ending"
   | "care-plan-ending"
-  | "seat-cta-ending"
   // Wave 8 batch 4 pinOnly ending faces.
   | "release-close-ending"
   | "next-lecture-ending"
   | "resolution-ending"
   | "decision-close-ending"
-  | "ticket-cta-ending"
   | "exit-word-ending"
   | "gauge-next"
   | "crayonbox-todo"
@@ -242,12 +233,11 @@ export type ContentLayoutId =
   // Neither enters the auto-pick pool.
   | "statement"
   | "pull-quote"
-  // speech-layouts wave: three more pinOnly content members (stat-hero =
-  // whole-page number, one-evidence = assertion + one visual, mono-bleed =
-  // full-bleed primary field). None enter the auto-pick pool.
+  // speech-layouts wave: pinOnly content members (stat-hero = whole-page
+  // number, one-evidence = assertion + one visual). None enter the auto-pick
+  // pool. The wave's third, mono-bleed, left with playbill in 2026-10.
   | "stat-hero"
   | "one-evidence"
-  | "mono-bleed"
   | "gauge-stats"
   | "gauge-point"
   // brief sample redesign: the board's ordinary content page, its evidence

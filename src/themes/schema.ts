@@ -9,7 +9,7 @@ import {
 } from "@/ir"
 import { findForbiddenNameWords, validateDesignStory, type DesignStory } from "../design-story"
 import { isLegacyThemeName } from "./legacy-names"
-import { retiredMotifIdMessage, retiredThemeIdMessage } from "./retired-ids"
+import { foldedMotifIdMessage, retiredMotifIdMessage, retiredThemeIdMessage } from "./retired-ids"
 import type { MotifId } from "../motifs/types"
 import { OCCASION_VOCAB, type Occasion } from "./occasions"
 import type { StyleTokens } from "./tokens"
@@ -183,9 +183,9 @@ function checkNameRule(text: string | undefined, path: (string | number)[], ctx:
 export type ThemeNameEnforcement = "named" | "structural"
 
 /**
- * A retired theme id is not a free name. Refused at the public contract, so
- * a theme file, a registration, an install, a preset copy, and a colour fork
- * all get the same answer with the new name in it.
+ * A retired theme id, renamed or folded, is not a free name. Refused at the
+ * public contract, so a theme file, a registration, an install, a preset
+ * copy, and a colour fork all get the same answer with the new name in it.
  */
 function checkRetiredId(id: string, ctx: z.RefinementCtx): void {
   const message = retiredThemeIdMessage(id)
@@ -224,17 +224,14 @@ export const MOTIF_IDS = [
   "ink-motif",
   "luxe-motif",
   "bulletin-motif",
-  "heritage-motif",
   "clinic-motif",
   "almanac-motif",
   "ember-motif",
   "vermilion-motif",
   "crayon-motif",
-  "arena-motif",
   "lecture-motif",
   "swiss-motif",
   "memo-motif",
-  "playbill-motif",
   "gauge-motif",
   "crayonbox-motif",
   "folio-motif",
@@ -256,12 +253,13 @@ export const MenuParamValueSchema = z.union([z.string(), z.number().finite(), z.
 /**
  * A motif id, with the retired names answered by name rather than by a bare
  * "invalid option". The five motifs that carried a renamed theme's word were
- * renamed with it, and a theme file written before that says so.
+ * renamed with it, the three only a folded theme drew were deleted with it,
+ * and a theme file written before either says so.
  */
 const MotifIdSchema: z.ZodType<MotifId> = z
   .string()
   .superRefine((id, ctx) => {
-    const retired = retiredMotifIdMessage(id)
+    const retired = retiredMotifIdMessage(id) ?? foldedMotifIdMessage(id)
     if (retired !== undefined) {
       ctx.addIssue({ code: "custom", message: retired })
       return

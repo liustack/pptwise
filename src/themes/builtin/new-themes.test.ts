@@ -9,16 +9,13 @@ import { TERRA_TOKENS } from "./almanac"
 import { EMBER_TOKENS } from "./ember"
 import { VERMILION_TOKENS } from "./vermilion"
 import { CRAYON_TOKENS } from "./crayon"
-import { ARENA_TOKENS } from "./arena"
 import { MUSEUM_TOKENS } from "./museum"
 import { STAGE_TOKENS } from "./stage"
 import { LECTURE_TOKENS } from "./lecture"
 import { CANONICAL_THEME_IDS, THEME_STYLES } from "../index"
 import { SWISS_TOKENS } from "./swiss"
 import { MEMO_TOKENS } from "./memo"
-import { HERITAGE_TOKENS } from "./heritage"
 import { THEME_DEFINITIONS } from "../definitions"
-import { PLAYBILL_TOKENS } from "./playbill"
 import type { StyleTokens } from "../tokens"
 
 // Task 1 of the theme redesign landed only the token objects here; Task 5
@@ -279,27 +276,6 @@ describe("crayon tokens", () => {
   })
 })
 
-// sixth-wave themes (2026-08-21, scene audit #27): arena (娱乐电竞 ·
-// 竞技场紫黑). Same shape-only assertions as the blocks above — registry
-// wiring (CANONICAL_THEME_IDS/THEME_STYLES/BUILTIN_THEME_IDS) is covered
-// separately by themes/index.test.ts.
-describe("arena tokens", () => {
-  it("satisfies the StyleTokens shape", () => {
-    const t: StyleTokens = ARENA_TOKENS
-    expect(t.id).toBe("arena")
-  })
-
-  it("heading font resolves to Microsoft YaHei (exact width table, CJK-safe sans)", () => {
-    expect(resolveFontFace(ARENA_TOKENS.fonts.heading, "heading")).toBe(
-      "Microsoft YaHei",
-    )
-  })
-
-  it("does not set an accentPool (single, restrained electric-green accent)", () => {
-    expect(ARENA_TOKENS.colors.accentPool).toBeUndefined()
-  })
-})
-
 // museum（博物，2026-08-21）：棕黑厅堂 + 衬线 + 展签铜金。Same shape-only
 // assertions as the blocks above — registry wiring is covered separately by
 // themes/index.test.ts.
@@ -309,7 +285,7 @@ describe("museum tokens", () => {
     expect(t.id).toBe("museum")
   })
 
-  it("heading font resolves to SimSun (CJK serif, journal/heritage/luxe precedent, no tofu on export)", () => {
+  it("heading font resolves to SimSun (CJK serif, journal/luxe precedent, no tofu on export)", () => {
     expect(resolveFontFace(MUSEUM_TOKENS.fonts.heading, "heading")).toBe("SimSun")
   })
 
@@ -590,27 +566,24 @@ describe("memo tokens", () => {
   })
 })
 
-describe("memo vs heritage vs vermilion (warm-paper / red-family split)", () => {
-  it("three papers stay distinct", () => {
+describe("memo vs vermilion (warm-paper / red-family split)", () => {
+  it("two papers stay distinct", () => {
     expect(MEMO_TOKENS.colors.bg).toBe("#F6F1E7")
-    expect(HERITAGE_TOKENS.colors.bg).toBe("#F4EDE2")
     expect(VERMILION_TOKENS.colors.bg).toBe("#F6EFE3")
-    expect(new Set([MEMO_TOKENS.colors.bg, HERITAGE_TOKENS.colors.bg, VERMILION_TOKENS.colors.bg]).size).toBe(3)
+    expect(MEMO_TOKENS.colors.bg).not.toBe(VERMILION_TOKENS.colors.bg)
   })
 
-  it("heading: memo and heritage are Song serif (memo's Latin in Times New Roman), vermilion is YaHei sans (red banner carrying white type)", () => {
+  it("heading: memo is Song serif (its Latin in Times New Roman), vermilion is YaHei sans (red banner carrying white type)", () => {
     expect(pairedEaFace(MEMO_TOKENS.fonts.heading, "heading")).toBe("SimSun")
-    expect(resolveFontFace(HERITAGE_TOKENS.fonts.heading, "heading")).toBe("SimSun")
     expect(resolveFontFace(VERMILION_TOKENS.fonts.heading, "heading")).toBe("Microsoft YaHei")
   })
 
   it("only memo carries a typewriter mono stack headed by Courier New", () => {
     expect(resolveFontFace(MEMO_TOKENS.fonts.mono ?? [], "mono")).toBe("Courier New")
-    expect(HERITAGE_TOKENS.fonts.mono).toBeUndefined()
     expect(VERMILION_TOKENS.fonts.mono).toBeUndefined()
   })
 
-  it("vermilion chapter stays on rice paper like memo and heritage, red is structure not a bleed", () => {
+  it("vermilion chapter stays on rice paper like memo, red is structure not a bleed", () => {
     expect(VERMILION_TOKENS.defaultBackgrounds.chapter).toEqual({
       kind: "color",
       value: VERMILION_TOKENS.colors.bg,
@@ -619,10 +592,6 @@ describe("memo vs heritage vs vermilion (warm-paper / red-family split)", () => 
       kind: "color",
       value: MEMO_TOKENS.colors.bg,
     })
-    expect(HERITAGE_TOKENS.defaultBackgrounds.chapter).toEqual({
-      kind: "color",
-      value: HERITAGE_TOKENS.colors.bg,
-    })
   })
 
   it("red three-family: vermilion fill red, memo line red, neither shares the other's hex", () => {
@@ -630,79 +599,6 @@ describe("memo vs heritage vs vermilion (warm-paper / red-family split)", () => 
     expect(MEMO_TOKENS.colors.accent).toBe("#A63A2B")
     expect(MEMO_TOKENS.colors.accent).not.toBe(VERMILION_TOKENS.colors.primary)
     expect(MEMO_TOKENS.colors.primary).not.toBe(VERMILION_TOKENS.colors.primary)
-    expect(HERITAGE_TOKENS.colors.accent).toBe("#B8742C")
-  })
-})
-
-// playbill（荧光嗓门，2026-08-21 第七波）：荧光黄整版 + 硬黑特粗字，无 motif。
-// Same shape-only assertions as the blocks above — registry wiring is
-// covered separately by themes/index.test.ts.
-describe("playbill tokens", () => {
-  it("satisfies the StyleTokens shape", () => {
-    const t: StyleTokens = PLAYBILL_TOKENS
-    expect(t.id).toBe("playbill")
-  })
-
-  it("keeps the playbill-motif id even though the cover chip lives on bill-head", () => {
-    expect(THEME_DEFINITIONS.playbill.motif).toBe("playbill-motif")
-  })
-
-  it("heading font resolves to Microsoft YaHei (exact width table, extra-bold sans)", () => {
-    expect(resolveFontFace(PLAYBILL_TOKENS.fonts.heading, "heading")).toBe("Microsoft YaHei")
-  })
-
-  it("body font resolves to Microsoft YaHei (exact width table)", () => {
-    expect(resolveFontFace(PLAYBILL_TOKENS.fonts.body, "body")).toBe("Microsoft YaHei")
-  })
-
-  it("does not set an accentPool (single, restrained kraft-ochre accent)", () => {
-    expect(PLAYBILL_TOKENS.colors.accentPool).toBeUndefined()
-  })
-
-  it("shape.radius is 0 (ticket-stock square) and gapScale is 1 (medium)", () => {
-    expect(PLAYBILL_TOKENS.shape?.radius).toBe(0)
-    expect(PLAYBILL_TOKENS.shape?.gapScale).toBe(1)
-  })
-
-  it("typeScale is 1.3 — poster-grade display type (wired at merge once the mechanism landed)", () => {
-    expect(PLAYBILL_TOKENS.shape?.typeScale).toBe(1.3)
-  })
-
-  it("four page types share the fluorescent yellow ground (the page is the decoration)", () => {
-    for (const slideType of ["cover", "chapter", "content", "ending"] as const) {
-      expect(PLAYBILL_TOKENS.defaultBackgrounds[slideType]).toEqual({
-        kind: "color",
-        value: PLAYBILL_TOKENS.colors.bg,
-      })
-    }
-  })
-
-  it("bg is the warehouse's only fluorescent yellow, distinct from crayon's chart sunshine yellow", () => {
-    expect(PLAYBILL_TOKENS.colors.bg).toBe("#F4DD1B")
-    expect(PLAYBILL_TOKENS.colors.chartPalette).not.toContain("#FFD100")
-    expect(PLAYBILL_TOKENS.colors.chartPalette).not.toContain("#F4DD1B")
-  })
-
-  it("primary and text are the same hard black, and black-on-yellow clears 12:1", () => {
-    expect(PLAYBILL_TOKENS.colors.primary).toBe("#131313")
-    expect(PLAYBILL_TOKENS.colors.text).toBe("#131313")
-    expect(contrastRatio(PLAYBILL_TOKENS.colors.primary, PLAYBILL_TOKENS.colors.bg)).toBeGreaterThanOrEqual(12)
-  })
-
-  it("accent is kraft ochre, not the hard black and not crayon's sunshine yellow", () => {
-    expect(PLAYBILL_TOKENS.colors.accent).toBe("#8B6914")
-    expect(PLAYBILL_TOKENS.colors.accent).not.toBe(PLAYBILL_TOKENS.colors.primary)
-    expect(PLAYBILL_TOKENS.colors.accent).not.toBe("#FFD100")
-  })
-
-  it("semantic trio is derived from the yellow-paper register and clears the surface floors", () => {
-    const { danger, warning, success, surface } = PLAYBILL_TOKENS.colors
-    expect(danger).toBe("#8C1810")
-    expect(warning).toBe("#7A5A18")
-    expect(success).toBe("#3D5A32")
-    expect(contrastRatio(danger!, surface)).toBeGreaterThanOrEqual(4.5)
-    expect(contrastRatio(success!, surface)).toBeGreaterThanOrEqual(4.5)
-    expect(contrastRatio(warning!, surface)).toBeGreaterThanOrEqual(3)
   })
 })
 
@@ -713,7 +609,7 @@ describe("lecture tokens", () => {
     expect(t.id).toBe("lecture")
   })
 
-  it("heading font resolves to SimSun (CJK serif, journal/heritage/luxe/museum precedent, no tofu on export)", () => {
+  it("heading font resolves to SimSun (CJK serif, journal/luxe/museum precedent, no tofu on export)", () => {
     expect(resolveFontFace(LECTURE_TOKENS.fonts.heading, "heading")).toBe("SimSun")
   })
 
@@ -791,7 +687,6 @@ describe("lecture tokens", () => {
       ledger: "#0F1216",
       luxe: "#0B0908",
       terminal: "#0A0F1E",
-      arena: "#120B22",
     } as const
     for (const [id, hex] of Object.entries(darkNeighbors)) {
       expect(deltaE(lectureBg, hex), `${id} ${hex} sits on lecture's green board`).toBeGreaterThan(9)

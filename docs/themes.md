@@ -80,7 +80,7 @@ The menu must contain one entry for every boundary page and at least one content
 
 ## Start from a factory preset
 
-List the 25 preset starting points with their occasion and identity metadata, followed by the themes of any installed content pack (`"source": "pack"`):
+List the 22 preset starting points with their occasion and identity metadata, followed by the themes of any installed content pack (`"source": "pack"`):
 
 ```bash
 pptwise themes --json
@@ -128,7 +128,7 @@ Name resolution uses four levels in order:
 1. The deck directory. It checks `theme.json`, `<name>.theme.json`, and a matching complete `<name>.json`.
 2. Workspace `themes/` directories while walking upward from the starting directory.
 3. Installed content packs under `$PPTWISE_HOME/packs/`. See [Content packs](./packs.md).
-4. The 25 factory presets.
+4. The 22 factory presets.
 
 Deck and workspace files may shadow a factory preset or a pack theme by keeping the same id. A pack theme never takes a preset's id, since `pptwise packs sync` refuses such a pack. Freeze is a copy that preserves the bound name, for example `pptwise theme new --from brief -o deck-dir/theme.json --id brief`. Unknown names fail loudly and report the searched locations.
 

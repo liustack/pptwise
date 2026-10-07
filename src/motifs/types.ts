@@ -32,17 +32,14 @@ export type MotifId =
   | "ink-motif" // 2026-07-10：古籍版框+印章+远山（ink 专属新表达）
   | "luxe-motif" // 2026-07-10 全覆盖：烫金细线（luxe 专属）
   | "bulletin-motif" // 2026-07-10 全覆盖：IKB 方块秩序（bulletin 专属）
-  | "heritage-motif" // 2026-07-10 全覆盖：典藏纹饰（heritage 专属）
   | "clinic-motif" // 2026-07-28 themes-16 wave T1：细脉搏线+胶囊/细胞圆点簇（clinic 专属，第 14 主题）
   | "almanac-motif" // 2026-07-28 themes-16 wave T2：等高线+叶脉/种子点簇（almanac 专属，第 15 主题）
   | "ember-motif" // 2026-07-28 themes-16 wave T3：上升火花（渐隐圆点粒子沿弧线上升，ember 专属，第 16 主题）
   | "vermilion-motif" // 2026-08-06 gov-theme wave：旗帜感绸带弧线 + 金色光芒细线（vermilion 专属，第 17 主题；刻意不用政治符号）
   | "crayon-motif" // 2026-08-21：蜡笔描边（顶缘涂边 + 太阳涂鸦 + 底带彩虹划，crayon 专属，单锚不借用）
-  | "arena-motif" // 2026-08-21：HUD 括弧＋速度线（arena 专属，单锚不借用。密页降档撤速度线，只留括弧与底能量条）
   | "lecture-motif" // 2026-08-21：粉笔槽细框（lecture 专属，单锚。26px 内缩 1px 走 border，黄粉笔弧不进 motif）
   | "swiss-motif" // 2026-08-21 wave7：顶边 12px 红条 + 右缘三格灰刻度（swiss 专属，单锚不借用。板上整高裸格线不进 motif）
   | "memo-motif" // 2026-08-21：顶部红双线 + Latin 等宽眉字 MEMORANDUM（memo 专属，单锚不借用。红只成线与字）
-  | "playbill-motif" // 空 motif。封面日期贴片由 bill-head 当前景画
   | "gauge-motif" // 2026-08-25：brief 量规定位角标，左上两条直线构成 ⌐
   | "crayonbox-motif" // 2026-08-25：一盒蜡笔右上角阳光黄太阳与星贴纸组
   | "folio-motif" // 2026-10-02：brief 定稿页脚，y664 细线 + 左机构名右保密级别，不印页码

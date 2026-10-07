@@ -146,7 +146,7 @@ describe("segmented_wheel component", () => {
         .join(",")
     }
     const baseline = shapesOf("museum")
-    for (const theme of ["thesis", "rally", "terminal", "heritage", "brief"]) {
+    for (const theme of ["thesis", "rally", "terminal", "luxe", "brief"]) {
       expect(shapesOf(theme), theme).toBe(baseline)
     }
   })

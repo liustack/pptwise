@@ -13,7 +13,6 @@ import { StatementContent } from "./content-statement"
 import { PullQuoteContent } from "./content-pull-quote"
 import { StatHeroContent } from "./content-stat-hero"
 import { OneEvidenceContent } from "./content-one-evidence"
-import { MonoBleedContent } from "./content-mono-bleed"
 import { GaugeStatsContent } from "./content-gauge-stats"
 import { GaugePointContent } from "./content-gauge-point"
 import { GaugeSheetContent } from "./content-gauge-sheet"
@@ -58,7 +57,8 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // `LAYOUT_REGISTRY`/`CONTENT_LAYOUT_DEFS` 的声明顺序一致，见 registry.ts）。
 // Content-layout expansion wave, task T2：新增 split-band。
 // quote-stage / editorial-verse / speech-layouts waves：pinOnly members
-// (quote-stage, statement, pull-quote, stat-hero, one-evidence, mono-bleed).
+// (quote-stage, statement, pull-quote, stat-hero, one-evidence). mono-bleed
+// left with playbill in 2026-10.
 // Gallery r2 D10 retired image-lead-split. side-highlight retired next.
 // This change retires banner-heading. Auto-selectable content pool is 9.
 // brief, crayon, and runway families bring the pin-only count to 14,
@@ -96,7 +96,6 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "pull-quote": PullQuoteContent,
   "stat-hero": StatHeroContent,
   "one-evidence": OneEvidenceContent,
-  "mono-bleed": MonoBleedContent,
   "gauge-stats": GaugeStatsContent,
   "gauge-point": GaugePointContent,
   "crayonbox-cards": CrayonboxCardsContent,

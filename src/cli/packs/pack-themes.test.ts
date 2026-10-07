@@ -195,17 +195,17 @@ describe("pptwise themes with installed packs", () => {
   it("lists pack themes after the presets, each marked with its source", async () => {
     await installSample(["sample-brief", "sample-memo"])
     const rows = JSON.parse(await runThemes(true)) as Array<Record<string, unknown>>
-    expect(rows).toHaveLength(27)
-    expect(rows.slice(0, 25).every((row) => row.source === "builtin" && row.pack === undefined)).toBe(true)
-    expect(rows.slice(25)).toEqual([
+    expect(rows).toHaveLength(24)
+    expect(rows.slice(0, 22).every((row) => row.source === "builtin" && row.pack === undefined)).toBe(true)
+    expect(rows.slice(22)).toEqual([
       expect.objectContaining({ id: "sample-brief", label: "Pack sample-brief", source: "pack", pack: "sample", occasions: expect.any(Array) }),
       expect.objectContaining({ id: "sample-memo", source: "pack", pack: "sample" }),
     ])
-    expect(rows[25]).toHaveProperty("colors.primary")
-    expect(rows[25]).toHaveProperty("identity")
+    expect(rows[22]).toHaveProperty("colors.primary")
+    expect(rows[22]).toHaveProperty("identity")
     const text = (await runThemes(false)).split("\n")
-    expect(text).toHaveLength(27)
-    expect(text[25]).toMatch(/^sample-brief\s+Pack sample-brief\s+\(pack sample\)$/)
+    expect(text).toHaveLength(24)
+    expect(text[22]).toMatch(/^sample-brief\s+Pack sample-brief\s+\(pack sample\)$/)
   })
 
   it("lists what it can read and reports each unreadable pack as an error entry", async () => {
@@ -218,16 +218,16 @@ describe("pptwise themes with installed packs", () => {
       JSON.stringify({ pack: 1, id: "odd", version: "1", title: "Odd", engine: "*", themes: ["themes/odd-one.theme.json"] }),
     )
     const rows = JSON.parse(await runThemes(true)) as Array<Record<string, unknown>>
-    expect(rows.slice(0, 25).every((row) => row.source === "builtin")).toBe(true)
-    expect(rows.slice(25)).toEqual([
+    expect(rows.slice(0, 22).every((row) => row.source === "builtin")).toBe(true)
+    expect(rows.slice(22)).toEqual([
       { source: "pack", pack: "broken", error: expect.stringMatching(/broken.*pptwise packs sync/s) },
       { source: "pack", pack: "odd", error: expect.stringMatching(/odd-one\.theme\.json.*pptwise packs sync/s) },
       expect.objectContaining({ id: "sample-brief", source: "pack", pack: "sample" }),
     ])
     const text = (await runThemes(false)).split("\n")
-    expect(text).toHaveLength(28)
-    expect(text[25]).toMatch(/^\(pack broken\) installed pack .*broken cannot be read: /)
-    expect(text[27]).toMatch(/^sample-brief\s/)
+    expect(text).toHaveLength(25)
+    expect(text[22]).toMatch(/^\(pack broken\) installed pack .*broken cannot be read: /)
+    expect(text[24]).toMatch(/^sample-brief\s/)
   })
 })
 

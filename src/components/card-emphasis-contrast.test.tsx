@@ -106,7 +106,7 @@ describe("emphasised cards keep every line readable on every theme", () => {
   const themeIds = listThemes().map((theme) => theme.id)
 
   it("covers every installed theme", () => {
-    expect(themeIds.length).toBeGreaterThanOrEqual(24)
+    expect(themeIds.length).toBeGreaterThanOrEqual(22)
   })
 
   for (const themeId of themeIds) {
