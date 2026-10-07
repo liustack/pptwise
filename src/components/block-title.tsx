@@ -20,7 +20,7 @@ import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./type
 /** The title's line box: a 16px line on a 20px baseline, 12px of air under it. */
 export const BLOCK_TITLE = { size: 16, baseline: 20, band: 32 } as const
 
-type Titled = Extract<Component, { type: "data_table" | "comparison" | "timeline" | "icon_cards" | "chart" | "matrix" }>
+type Titled = Extract<Component, { type: "data_table" | "comparison" | "timeline" | "icon_cards" | "chart" | "matrix" | "waterfall" }>
 
 function titleOf(component: Titled): string | undefined {
   return component.title?.trim() || undefined

@@ -7,6 +7,8 @@ import { BLOCK_TITLE } from "./block-title"
 import { renderDef as comparisonDef } from "./comparison"
 import { renderDef as dataTableDef } from "./data-table"
 import { renderDef as timelineDef } from "./timeline"
+import { renderDef as waterfallDef } from "./waterfall"
+import { compose } from "../layouts/compositions"
 import { recordsComposition } from "../layouts/compositions/records"
 import { tableComposition } from "../layouts/compositions/table"
 import { lanesComposition } from "../layouts/compositions/lanes"
@@ -64,6 +66,27 @@ describe("a block's own title", () => {
       )
     })
   }
+
+  it("prints a waterfall's title over the bridge, and the bridge in the rest of its box", () => {
+    const bridge = {
+      type: "waterfall" as const,
+      unit: "元",
+      items: [
+        { label: "民办园每月收费", value: 800 },
+        { label: "同类公办园标准，免", value: -500 },
+        { label: "家长交差额", value: 300, kind: "total" as const },
+      ],
+    }
+    const box = { x: 96, y: 200, w: 1088, h: 320 }
+    const titled = renderToStaticMarkup(<svg>{waterfallDef.render({ ...bridge, title: "官方举的例子：民办园怎么算" }, box, ctx)}</svg>)
+    expect(titled).toContain(">官方举的例子：民办园怎么算</text>")
+    const below = renderToStaticMarkup(<svg>{waterfallDef.render(bridge, { ...box, y: box.y + BLOCK_TITLE.band, h: box.h - BLOCK_TITLE.band }, ctx)}</svg>)
+    expect(titled).toContain(below.replace(/^<svg>|<\/svg>$/g, ""))
+    // No hand-set bridge takes a titled one, so the ordinary waterfall prints the title.
+    const rect = { x: 96, y: 180, w: 1088, h: 460 }
+    expect(compose({ components: [bridge], ctx, rect })).not.toBeNull()
+    expect(compose({ components: [{ ...bridge, title: "官方举的例子" }], ctx, rect })).toBeNull()
+  })
 
   it("is declined by the compositions that have no place for it, so the ordinary block prints it", () => {
     expect(renderComposition(recordsComposition, [{ ...table, title: "自由现金流" }], { theme: "bulletin", setting: "notice" }).root).toBeNull()

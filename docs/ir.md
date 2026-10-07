@@ -272,6 +272,7 @@ A page usually argues about one thing. These fields let the author say which, an
 | `timeline.milestones[].status` | `"pending"` for a milestone that has not come to pass, such as a survey round carried out whose data is not out yet: its node is drawn hollow | |
 | `callout.title` and `callout.tag` | a short bold line over the note ("Who pays"), and what the note rests on as a small tag under its text (`{ "text": "Company figure, as reported", "evidence": "company" }`) | |
 | `waterfall.items[].note` | a short line under a bar's label, such as the quantity it stands for ("3.187 t") | |
+| `waterfall.title` | a short name set over the bridge, as on a table ("How a private kindergarten's fee is worked out") | |
 | `roadmap.items[].rows[].basis` | what a row's value rests on, such as `"pending"` for a budget line still to be set. A value that is not settled is marked dashed | |
 | `roadmap.items[].duration` and `roadmap.duration_unit` | how long each phase lasts and the unit they are counted in (`15` and `"min"`), on every phase or none. The ordinary roadmap adds the length to the period line ("Part 1 · 15 min"), and a face that lays phases to scale draws each as long as it lasts | |
 | `roadmap.items[].checkpoint` and `roadmap.items[].points` | a check held as the phase ends ("Quiz 1"), as a tag on its card, and one to three short lines on what it covers | |

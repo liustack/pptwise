@@ -5,6 +5,7 @@ import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-lay
 import { recededMarkFill } from "../render/chart-palette"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk, graphicInk } from "../render/ink"
+import { withBlockTitle } from "./block-title"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { mostlyChinese } from "../lib/text-script"
@@ -559,5 +560,5 @@ function renderBracket(
   )
 }
 
-
-export const renderDef: RenderDef<WaterfallComponent> = { type: "waterfall", measure: waterfall.measure, render: waterfall.render }
+// A title, when the bridge carries one, is set over it as on a table.
+export const renderDef: RenderDef<WaterfallComponent> = withBlockTitle({ type: "waterfall", measure: waterfall.measure, render: waterfall.render })

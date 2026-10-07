@@ -655,6 +655,17 @@ function asksForGanttMoments(components: readonly CompositionProps["components"]
 }
 
 /**
+ * The compositions that draw a waterfall's title (`title`), the name set
+ * over the bridge. A page whose waterfall carries one is offered to these
+ * alone; the ordinary waterfall sets the title over it as a table does.
+ */
+const WATERFALL_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForWaterfallTitle(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "waterfall" && Boolean(component.title?.trim()))
+}
+
+/**
  * The compositions that draw a bar worked out from published figures
  * (`data[].status: "estimate"`). A page whose chart carries one is offered
  * to these alone, so no hand-set plot draws an estimate as a reported bar;
@@ -715,6 +726,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const gapped = asksForChartGaps(props.components)
   const sideBanded = asksForSideBands(props.components)
   const estimated = asksForChartEstimate(props.components)
+  const bridged = asksForWaterfallTitle(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -739,6 +751,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (gapped && !CHART_GAP_COMPOSITIONS.has(id)) continue
     if (sideBanded && !CHART_SIDE_BAND_COMPOSITIONS.has(id)) continue
     if (estimated && !CHART_ESTIMATE_COMPOSITIONS.has(id)) continue
+    if (bridged && !WATERFALL_TITLE_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue
