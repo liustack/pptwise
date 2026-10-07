@@ -134,6 +134,13 @@ function consultingPadDeck(): PptxIR {
 // Pruned (theme fold, 2026-10-07). arena, playbill and heritage were folded
 // into rally and luxe and leave the matrix: 20 themes × five paths = 100
 // hashes. Only their fifteen keys go. Nothing was recaptured.
+//
+// Recaptured (verdict marked-run ink, 2026-10-07). A verdict's marked run is
+// lifted against the page until it clears the floor its size needs. Page 5
+// is a positive verdict, and its green reads under 3:1 on six themes:
+// homeroom, runway, journal, almanac, vermilion and memo. Only those six
+// `*|5` keys move, and only the run's fill on each. The other 94 paths stay
+// byte-identical.
 const fixture = JSON.parse(
   readFileSync(EMPHASIS_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }

@@ -301,13 +301,17 @@ export const conceptEquation: SvgComponent<ConceptEquationComponent> = {
       <g transform={`translate(${box.x},${box.y})`}>
         {terms.map((text, i) => panel(geom.terms[i]!, text, false, `term-${i}`))}
         {panel(geom.result, result, true, "result")}
+        {/* Each sign states its baseline, 0.35 em below the panels' middle.
+            `dominant-baseline="middle"` centered it in the preview only: the
+            export lands the baseline on `y`, so in the deck the plus and the
+            equals sign rode a third of an em above the line they join. */}
         {geom.operators.map((x, i) => (
           <text
             key={`op-${i}`}
             x={x + OPERATOR_W / 2}
-            y={h / 2}
+            y={h / 2 + OPERATOR_SIZE * 0.35}
             textAnchor="middle"
-            dominantBaseline="middle"
+            dominantBaseline="alphabetic"
             fontFamily={ctx.fonts.heading}
             fontSize={OPERATOR_SIZE}
             fontWeight="700"

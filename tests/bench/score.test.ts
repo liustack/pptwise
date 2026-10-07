@@ -156,7 +156,7 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     expect(score.deterministic).toBeNull()
   })
 
-  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (verdict emphasis on homeroom)", async () => {
+  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (paragraph on an authored dark page on homeroom)", async () => {
     // This fixture needs a low-contrast source that is real, theme-stable
     // and out of scope for whatever fix round is running — and it has now
     // outlived two of them. It started as kpi_cards' hardcoded delta-arrow
@@ -172,10 +172,14 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     // and sat 1.05:1 on the disc under them, until the badge number was
     // checked against its disc.
     //
-    // Now a `verdict_banner` emphasis run on `homeroom`: the marked words
-    // take the theme's emphasis amber and land at 2.55:1 on the page, under
-    // the 3:1 their size asks for. When that is fixed too, the next real
-    // source goes here.
+    // Then a `verdict_banner` emphasis run on `homeroom`, whose marked words
+    // took the tone's raw amber at 2.55:1 on the page, until the run was
+    // lifted against the page it sits on.
+    //
+    // Now a `paragraph` on a page whose author painted it `#1A1A1A`: the
+    // heading reads the slide's own background, but the paragraph keeps
+    // homeroom's dark text ink and lands at 1.17:1 on it. When that is
+    // fixed too, the next real source goes here.
     // `kpi_cards` stays in the fixture for `coverageHits` below.
     const metas = await loadQuestionMetas(QUESTIONS_DIR)
     const meta = metas.find((m) => m.id === "fx03")!

@@ -70,6 +70,20 @@ export function assertSubset(root: Element): void {
       throw new Error(`subset violation: stroke="${stroke}" (gradient/pattern is not exportable)`)
     }
 
+    // svg2pptx lands a run's baseline on its text's `y` (`pptx/svg2pptx/
+    // baseline.ts`) and reads no `dominant-baseline`. Any other baseline
+    // moves the glyphs in the preview and leaves them where they were in the
+    // deck: flowchart labels, hub_spoke badge numbers and concept_equation
+    // signs were centered with "middle" and rose a third of an em once
+    // exported. Text centered on a point states its alphabetic baseline
+    // instead, about 0.35 em below the point.
+    const baseline = el.getAttribute("dominant-baseline")
+    if (baseline !== null && baseline !== "alphabetic" && baseline !== "auto") {
+      throw new Error(
+        `subset violation: dominant-baseline="${baseline}" (the export places text by its alphabetic baseline only)`,
+      )
+    }
+
     // fill gradients are allowed, but only when they resolve to a gradient
     // actually declared in this document — an unresolved reference is exactly
     // the "silent drop" divergence this guard exists to catch.

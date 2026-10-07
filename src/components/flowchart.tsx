@@ -100,6 +100,19 @@ const LABEL_CHIP_PAD_X = 4
 const LABEL_CHIP_PAD_Y = 2
 const LABEL_CHIP_RX = 2
 /**
+ * How far below a line's vertical center its alphabetic baseline sits, in
+ * ems. A node label and an edge label are each centered on a point, and they
+ * used to say so with `dominant-baseline="middle"`. The export does not read
+ * that attribute: it lands every run's baseline on the SVG `y`
+ * (`pptx/svg2pptx/baseline.ts`), so in the deck each label rose by about a
+ * third of an em above where the preview put it. At the 12pt floor in a
+ * squeezed chart the glyphs cleared the top of the node and sat on the
+ * incoming arrow. The labels now state the baseline itself, the same 0.35 em
+ * every other centered label in this folder uses, so the preview, the export
+ * and the audit all put the glyphs in the same place.
+ */
+const CENTER_TO_BASELINE_EM = 0.35
+/**
  * Below this width, `computeEdgeLabel` omits the label instead of fitting it.
  *
  * `truncateToUnits` (svg-text-layout.ts) reserves a flat 1.0-unit budget for
@@ -1269,9 +1282,9 @@ export const flowchart: SvgComponent<FlowchartComponent> = {
                   key={i}
                   data-truncated={fitted.truncated ? "1" : undefined}
                   x={nx + nw / 2}
-                  y={firstLineY + i * pitch}
+                  y={firstLineY + i * pitch + sharedFont * CENTER_TO_BASELINE_EM}
                   textAnchor="middle"
-                  dominantBaseline="middle"
+                  dominantBaseline="alphabetic"
                   fontFamily={ctx.fonts.body}
                   fontSize={sharedFont}
                   fill={paints.text}
@@ -1316,9 +1329,9 @@ export const flowchart: SvgComponent<FlowchartComponent> = {
               <text
                 data-truncated={label.truncated ? "1" : undefined}
                 x={label.x}
-                y={label.y}
+                y={label.y + label.fontSize * CENTER_TO_BASELINE_EM}
                 textAnchor="middle"
-                dominantBaseline="middle"
+                dominantBaseline="alphabetic"
                 fontFamily={ctx.fonts.body}
                 fontSize={label.fontSize}
                 fill={ctx.colors.muted}

@@ -10,6 +10,7 @@ import {
   type EmphasisSegment,
 } from "../render/emphasis"
 import { Icon } from "../render/icons"
+import { liftedInk } from "../render/ink"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type VerdictBannerComponent = Extract<Component, { type: "verdict_banner" }>
@@ -190,6 +191,14 @@ export const verdictBanner: SvgComponent<VerdictBannerComponent> = {
     )
     const hasIcon = Boolean(component.icon)
     const tone = toneColor(component.tone, ctx)
+    // The marked run is words set in the tone, so it owes the page the
+    // contrast its size asks for. On the light themes' paper the raw tones
+    // sat between 2.42:1 and just under 3:1, short of the 3:1 a 26px run
+    // needs. `liftedInk` darkens the tone only as far as that floor and
+    // keeps the hue, so the run still reads as the verdict's tone beside the
+    // plain words. The mark and the icon are shapes and keep the raw tone,
+    // the way `callout` paints its rule and icon.
+    const runInk = liftedInk(tone, ctx.defaultBg ?? ctx.colors.bg, g.fontSize)
     const tx = textX(hasIcon)
     const textTopY = RULE_HEIGHT + g.verticalGap
     return (
@@ -228,7 +237,7 @@ export const verdictBanner: SvgComponent<VerdictBannerComponent> = {
               // reading `colors.accent` here ignored a theme that named a
               // separate emphasis ink precisely because its accent cannot
               // separate from its own text.
-              accent: tone,
+              accent: runInk,
               padFill: emphasisRunInk(ctx.colors),
               baseFill: ctx.colors.text,
               fontWeight: "700",

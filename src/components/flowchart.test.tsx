@@ -415,14 +415,48 @@ describe("flowchart edge label clearance (layer order + fit + backing chip)", ()
     expect(Number(chip!.getAttribute("width"))).toBeCloseTo(expectedW, 5)
     expect(Number(chip!.getAttribute("height"))).toBeCloseTo(expectedH, 5)
 
-    // Chip and text share the same center point (text uses dominant-baseline
-    // "middle", so this is what keeps the chip from drifting off the glyphs).
+    // Chip and line share the same center point. The text states its
+    // alphabetic baseline, 0.35 em below that center, the way the export
+    // reads `y`, so this is what keeps the chip from drifting off the glyphs.
     const chipX = Number(chip!.getAttribute("x"))
     const chipW = Number(chip!.getAttribute("width"))
     const chipY = Number(chip!.getAttribute("y"))
     const chipH = Number(chip!.getAttribute("height"))
+    expect(text!.getAttribute("dominant-baseline")).toBe("alphabetic")
     expect(chipX + chipW / 2).toBeCloseTo(Number(text!.getAttribute("x")), 5)
-    expect(chipY + chipH / 2).toBeCloseTo(Number(text!.getAttribute("y")), 5)
+    expect(chipY + chipH / 2 + fontSize * 0.35).toBeCloseTo(Number(text!.getAttribute("y")), 5)
+  })
+
+  it("sets every label on the baseline the export reads, so a squeezed node still holds its glyphs", () => {
+    // The export lands a run's baseline on the SVG `y` whatever
+    // `dominant-baseline` says, and the contrast audit grades the band
+    // 0.75 em above it to 0.25 em below. The labels used to put `y` on the
+    // node's center under `dominant-baseline="middle"`, so in the deck an
+    // eight-node chain at the 12pt floor pushed every label's top above its
+    // node and onto the arrow coming in.
+    const chain = {
+      type: "flowchart" as const,
+      direction: "TB" as const,
+      nodes: Array.from({ length: 8 }, (_, i) => ({ id: `n${i}`, label: `基于 Kubernetes Operat${i}` })),
+      edges: Array.from({ length: 7 }, (_, i) => ({ from: `n${i}`, to: `n${i + 1}` })),
+    }
+    // 640 is the slot the stress deck's flowchart page gets, where each node
+    // is 21px tall around a 16px label.
+    const { container } = svg(flowchart.render(chain, { x: 0, y: 0, w: 640 }, ctx))
+    const nodes = Array.from(container.querySelectorAll("g[data-flow-node]"))
+    expect(nodes).toHaveLength(8)
+    for (const node of nodes) {
+      const rect = node.querySelector(":scope > rect")!
+      const top = Number(rect.getAttribute("y"))
+      const bottom = top + Number(rect.getAttribute("height"))
+      for (const text of Array.from(node.querySelectorAll("text"))) {
+        const baseline = Number(text.getAttribute("y"))
+        const size = Number(text.getAttribute("font-size"))
+        expect(baseline - size * 0.75).toBeGreaterThanOrEqual(top)
+        expect(baseline + size * 0.25).toBeLessThanOrEqual(bottom)
+        expect(text.getAttribute("dominant-baseline")).toBe("alphabetic")
+      }
+    }
   })
 
   it("stays within the controlled SVG subset with a labeled edge (LR)", () => {

@@ -321,11 +321,15 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
                 strokeWidth={1.25}
               />
               <circle cx={badgeCx} cy={badgeCy} r={badgeR} fill={badgeFill} />
+              {/* The badge number states its baseline, 0.35 em below the
+                  disc's center. `dominant-baseline="middle"` centered it in
+                  the preview only: the export lands the baseline on `y`, so
+                  in the deck the number rose a third of an em in its disc. */}
               <text
                 x={badgeCx}
-                y={badgeCy}
+                y={badgeCy + glyphSize * 0.35}
                 textAnchor="middle"
-                dominantBaseline="middle"
+                dominantBaseline="alphabetic"
                 fontFamily={ctx.fonts.heading}
                 fontSize={glyphSize}
                 fontWeight="700"
