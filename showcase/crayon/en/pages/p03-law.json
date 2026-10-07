@@ -1,0 +1,59 @@
+{
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "ban",
+          "title": "No entrance tests",
+          "text": "Apart from a health check, no test of any kind to get in",
+          "tag": {
+            "text": "Article 15"
+          }
+        },
+        {
+          "icon": "stethoscope",
+          "title": "Tell us about health",
+          "text": "Tell us of any special condition or illness your child has",
+          "tag": {
+            "text": "Article 15"
+          }
+        },
+        {
+          "icon": "monitor-smartphone",
+          "title": "Limit screen time",
+          "text": "Home and school both teach sensible use and limit it",
+          "tag": {
+            "text": "Article 20"
+          }
+        },
+        {
+          "icon": "puzzle",
+          "title": "No school lessons",
+          "text": "Play comes first, and primary school lessons are not taught",
+          "tag": {
+            "text": "Articles 56 and 59"
+          }
+        },
+        {
+          "icon": "receipt",
+          "title": "Fees in the open",
+          "text": "Meal money buys only meals, and fees and refunds are posted",
+          "tag": {
+            "text": "Article 69"
+          }
+        },
+        {
+          "icon": "messages-square",
+          "title": "Keep talking",
+          "text": "We tell you how your child is doing and ask for your support",
+          "tag": {
+            "text": "Article 58"
+          }
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Preschool Education Law of the PRC, passed November 8, 2024, in force since June 1, 2025",
+  "notes": "China's first law just for preschool education took effect on June 1 last year. Six parts of it involve parents most closely. Apart from a necessary health check, no kindergarten may set any kind of test or exam to get in. If your child has an allergy, a special condition or an illness, the law asks parents to tell the kindergarten promptly, so please tell your child's teacher this week. Limiting screen time is a job the law gives to both families and kindergartens. It names no number of minutes, and later tonight we put the advice of several bodies side by side. Play is the basic activity, kindergartens may not teach primary school courses, and primary school starts from zero. Meal money may only be spent on meals, and fees, standards and refund rules must be posted. We will keep you informed about how your child is doing, and we ask for your support. The law also requires a parents' committee, and we would welcome volunteers."
+}

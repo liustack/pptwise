@@ -1,0 +1,49 @@
+{
+  "components": [
+    {
+      "type": "from_to",
+      "from": {
+        "kicker": "Youngest",
+        "title": "ages 3 to 4"
+      },
+      "to": {
+        "kicker": "Oldest",
+        "title": "ages 5 to 6"
+      },
+      "rows": [
+        {
+          "label": "Health",
+          "icon": "heart",
+          "from": "Dresses and puts on shoes with help",
+          "to": "Ties their own shoelaces"
+        },
+        {
+          "label": "Language",
+          "icon": "message-circle",
+          "from": "Talks in front of people they know",
+          "to": "Tells what happened, clearly and in order"
+        },
+        {
+          "label": "Social",
+          "icon": "users",
+          "from": "Curious about kindergarten, likes going",
+          "to": "Settles quarrels with friends on their own"
+        },
+        {
+          "label": "Science",
+          "icon": "shapes",
+          "from": "Counts up to 5, touching each one",
+          "to": "Adds and takes away to 10 with real things"
+        },
+        {
+          "label": "Art",
+          "icon": "palette",
+          "from": "Loves to scribble, cut and stick",
+          "to": "Shows ideas with many tools and materials"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Ministry of Education, Guidelines for Children Aged 3 to 6 (2012). Rough expectations at the end of each age, not pass marks",
+  "notes": "The guidelines describe development in five areas: health, language, social, science and art. For each, they say roughly what a child can do by the end of three to four, four to five, and five to six. We picked one example per area, the end of the youngest class on the left and the end of the oldest class on the right. In health, for example, a younger child dresses with help, and by the oldest class ties their own shoelaces. One word on science: adding and taking away within ten, the guidelines say, is done by handling real objects, not by reciting or drilling. These are rough expectations, not pass marks. A little earlier or a little later is normal."
+}

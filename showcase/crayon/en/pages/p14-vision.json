@@ -1,0 +1,51 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "title": "Short-sighted 6-year-olds in China. 2018 is read back from “1.8 points lower than in 2018”",
+      "axes": {
+        "y_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Short-sighted 6-year-olds",
+          "data": [
+            {
+              "x": "2018",
+              "y": 14.5,
+              "status": "estimate"
+            },
+            {
+              "x": "2020",
+              "y": 14.3
+            },
+            {
+              "x": "2022",
+              "y": 12.7,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "insight_panel",
+      "icon": "sun",
+      "title": "2 hours outside",
+      "rows": [
+        {
+          "label": "The Health Commission",
+          "text": "advises ages 4 to 6 to spend 2 hours or more outdoors a day, the main way to keep their eyes' reserve"
+        },
+        {
+          "label": "At a check-up:",
+          "text": "Age 4: usually 0.6 or better\nAge 5 and up: 0.8 or better"
+        }
+      ],
+      "footnote": "Eyesight is checked every six months (Work Regulations, Article 19)"
+    }
+  ],
+  "footnote": "Source: Health Commission briefing (May 31, 2024), Education ministry Q&A (June 16, 2023), eye care standard (2021, No. 11)",
+  "notes": "Now eyesight. In 2022, 12.7% of six-year-olds in China were short-sighted, 1.8 points lower than in 2018. The 2018 figure is worked out from those two numbers. In 2020 it was 14.3%. The National Health Commission's 2021 eye care standard advises children aged four to six to spend two hours or more outdoors every day, and that is the main advice for protecting their eyes. The kindergarten checks eyesight every six months, and here is how to read the result: at four, eyesight usually reaches 0.6 or better, and from five, 0.8 or better. There are several different measures of hyperopia reserve out there, so if you have questions, please ask an eye doctor."
+}

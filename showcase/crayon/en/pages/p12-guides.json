@@ -1,0 +1,88 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "org",
+          "label": "Who advises (ages)"
+        },
+        {
+          "key": "sleep",
+          "label": "Sleep"
+        },
+        {
+          "key": "screen",
+          "label": "Screens"
+        },
+        {
+          "key": "out",
+          "label": "Outdoors and activity"
+        }
+      ],
+      "rows": [
+        {
+          "icon": "school",
+          "cells": {
+            "org": "Ministry guidelines, 3 to 6",
+            "sleep": "11 to 12 h, nap about 2 h",
+            "screen": "15, 20 or 30 min at a stretch, by age",
+            "out": "Usually 2 h or more outdoors"
+          }
+        },
+        {
+          "icon": "stethoscope",
+          "cells": {
+            "org": "Health Commission, preschool",
+            "sleep": "Not covered",
+            "screen": "20 min a time, or 15 at most",
+            "out": "2 h or more a day"
+          }
+        },
+        {
+          "icon": "moon",
+          "cells": {
+            "org": "Patriotic Health office",
+            "sleep": "10 to 13 h",
+            "screen": "Not covered",
+            "out": "Not covered"
+          }
+        },
+        {
+          "icon": "apple",
+          "cells": {
+            "org": "Nutrition Society, 2 to 5",
+            "sleep": "10 to 13 h, 1 to 2 h nap",
+            "screen": "1 h a day at most",
+            "out": "120 min or more outdoors"
+          }
+        },
+        {
+          "icon": "sun",
+          "cells": {
+            "org": "WHO, 3 to 4",
+            "sleep": "10 to 13 h",
+            "screen": "1 h at most, less is better",
+            "out": "180 min or more of activity"
+          }
+        },
+        {
+          "icon": "clipboard-check",
+          "emphasis": "highlight",
+          "tag": {
+            "text": "Rule"
+          },
+          "cells": {
+            "org": "Work Regulations, at school",
+            "sleep": "Not covered",
+            "screen": "Not covered",
+            "out": "2 h outdoors, 1 h of it exercise"
+          }
+        }
+      ],
+      "source": "Only the Work Regulations are a rule, the rest is advice. WHO covers ages 3 to 4 only, the Nutrition Society 2 to 5"
+    }
+  ],
+  "footnote": "Source: Education ministry 2012, Health Commission 2021 (two papers), Patriotic Health office 2025, Nutrition Society 2022, WHO 2019, Order No. 39",
+  "notes": "This table puts the advice side by side. Sleep first. The Ministry of Education's guidelines suggest 11 to 12 hours a day for ages three to six, with a nap of about two hours. The National Patriotic Health Campaign Committee office, the Chinese Nutrition Society and the WHO say 10 to 13 hours. Both are fine, there is no need to merge them into one number. Screens: the guidelines say no more than 15, 20 or 30 minutes at a stretch for ages three to four, four to five and five to six. The National Health Commission published two papers in 2021. Its eye-care standard for ages four to six says avoid screens where possible, 20 minutes a time and no more than an hour a day in total. Its myopia prevention guide says no more than 15 minutes a time for anything other than learning. The nutrition society and the WHO both say no more than an hour a day in total. Outdoors: only the Kindergarten Work Regulations, Ministry of Education Order No. 39, are a binding rule, at least two hours outdoors a day at kindergarten including one hour of exercise. Everything else is advice. Mind the ages too: the WHO guideline covers three to four only, and the nutrition society's covers two to five."
+}

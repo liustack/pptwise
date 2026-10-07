@@ -1,0 +1,30 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "crayons"
+  },
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "calendar",
+          "title": "Open day",
+          "text": "See a day in class, the date comes in the group chat"
+        },
+        {
+          "icon": "messages-square",
+          "title": "Class group chat",
+          "text": "Weekly menus and every notice go here"
+        },
+        {
+          "icon": "users",
+          "title": "Parents' committee",
+          "text": "Sign up and help decide school matters"
+        }
+      ]
+    }
+  ],
+  "footnote": "Background: AI-generated illustration",
+  "notes": "Our next meeting is the open day. We will post the date in the class group chat well ahead, and you are welcome to come and see a day in class. Weekly menus and all notices go to the class group chat. And please do sign up for the parents' committee. Thank you all. Here is to a good term, growing up together. The background is an AI-generated illustration."
+}

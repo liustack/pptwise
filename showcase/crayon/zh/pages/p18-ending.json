@@ -1,0 +1,30 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "crayons"
+  },
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "calendar",
+          "title": "家长开放日",
+          "text": "来班里看看孩子的一天，日期提前在班级群通知"
+        },
+        {
+          "icon": "messages-square",
+          "title": "班级群",
+          "text": "每周食谱和通知都发在这里"
+        },
+        {
+          "icon": "users",
+          "title": "家长委员会",
+          "text": "欢迎报名，一起商量园里的事"
+        }
+      ]
+    }
+  ],
+  "footnote": "背景为 AI 生成的示意图",
+  "notes": "下一次见面是家长开放日，具体时间我们会提前在班级群里通知，欢迎您来班里看看孩子的一天。每周的食谱和各种通知都会发在班级群里。家长委员会也欢迎大家报名。谢谢各位家长，新学期我们一起陪孩子长大。背景是 AI 生成的示意图。"
+}

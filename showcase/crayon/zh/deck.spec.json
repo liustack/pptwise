@@ -1,0 +1,158 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "briefing",
+    "pacing": "dense",
+    "audience": "public"
+  },
+  "theme": "crayon",
+  "filename": "kindergarten-parents-meeting-zh",
+  "meta": {
+    "organization": "全园新学期家长会",
+    "date": "2026 年秋季学期"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "2026 年秋季学期"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "全园新学期家长会",
+      "heading": "新学期好！\n我们一起陪孩子长大",
+      "summary": "新规定、孩子的成长、在家怎么配合、安全，今天一次说清"
+    },
+    {
+      "id": "p02-agenda",
+      "type": "content",
+      "kind": "process",
+      "kicker": "新规定",
+      "heading": "今天和您聊五件事",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p03-law",
+      "type": "content",
+      "kind": "list",
+      "kicker": "新规定",
+      "heading": "《学前教育法》施行，这六条和您有关",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p04-free",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "新规定",
+      "heading": "大班免的是保育教育费，伙食费等照常交",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p05-trend",
+      "type": "content",
+      "kind": "data",
+      "kicker": "新规定",
+      "heading": "在园孩子五年少了三分之一，毛入园率反而升到 92.9%",
+      "focus": "chart"
+    },
+    {
+      "id": "p06-ch-grow",
+      "type": "chapter",
+      "heading": "孩子会长成什么样",
+      "summary": "教育部《3-6 岁儿童学习与发展指南》的五大领域"
+    },
+    {
+      "id": "p07-domains",
+      "type": "content",
+      "kind": "list",
+      "kicker": "孩子会长成什么样",
+      "heading": "五个领域一起长，3 岁到 6 岁这样变化",
+      "focus": "from_to"
+    },
+    {
+      "id": "p08-ruler",
+      "type": "content",
+      "kind": "statement",
+      "kicker": "孩子会长成什么样",
+      "heading": "不用一把尺子量孩子，\n也不抢跑小学内容"
+    },
+    {
+      "id": "p09-day",
+      "type": "content",
+      "kind": "process",
+      "kicker": "孩子会长成什么样",
+      "heading": "在园的一天：户外每天不少于 2 小时",
+      "focus": "timeline"
+    },
+    {
+      "id": "p10-ch-home",
+      "type": "chapter",
+      "heading": "家园共育",
+      "summary": "在家这样做：睡眠、屏幕、户外、吃饭、视力、入园适应"
+    },
+    {
+      "id": "p11-fridge",
+      "type": "content",
+      "kind": "list",
+      "kicker": "家园共育",
+      "heading": "贴在冰箱上的三件事：睡够、少屏、多出门",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p12-guides",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "家园共育",
+      "heading": "睡多久、看屏多久、户外多久：几家机构的建议",
+      "focus": "data_table"
+    },
+    {
+      "id": "p13-food",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "家园共育",
+      "heading": "吃得好：每天喝奶、喝白水，少盐，不喝含糖饮料",
+      "focus": "image"
+    },
+    {
+      "id": "p14-vision",
+      "type": "content",
+      "kind": "data",
+      "kicker": "家园共育",
+      "heading": "6 岁孩子近视率 12.7%，护眼先从多出门开始",
+      "focus": "chart"
+    },
+    {
+      "id": "p15-adapt",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "家园共育",
+      "heading": "入园头几周孩子真有压力，陪着慢慢分开有研究支持",
+      "focus": "image"
+    },
+    {
+      "id": "p16-safety",
+      "type": "content",
+      "kind": "list",
+      "kicker": "安全小贴士",
+      "heading": "安全小贴士：接送、校车、吃饭、玩水、走失",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p17-checklist",
+      "type": "content",
+      "kind": "points",
+      "kicker": "请您配合",
+      "heading": "请您配合的五件小事",
+      "focus": "row_cards"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "kicker": "下次见",
+      "heading": "下次见面：家长开放日",
+      "summary": "有事随时找老师"
+    }
+  ]
+}

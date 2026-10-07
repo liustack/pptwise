@@ -1,0 +1,158 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "briefing",
+    "pacing": "dense",
+    "audience": "public"
+  },
+  "theme": "crayon",
+  "filename": "kindergarten-parents-meeting-en",
+  "meta": {
+    "organization": "New term parents' meeting",
+    "date": "Autumn term 2026"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "Autumn term 2026"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "New term parents' meeting",
+      "heading": "Welcome back!\nLet's grow together",
+      "summary": "New rules, how children grow, home habits and safety, all in one go"
+    },
+    {
+      "id": "p02-agenda",
+      "type": "content",
+      "kind": "process",
+      "kicker": "New rules",
+      "heading": "Five things to talk about today",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p03-law",
+      "type": "content",
+      "kind": "list",
+      "kicker": "New rules",
+      "heading": "The new preschool law: six parts for you",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p04-free",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "New rules",
+      "heading": "Final-year fees waived, meals still paid",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p05-trend",
+      "type": "content",
+      "kind": "data",
+      "kicker": "New rules",
+      "heading": "A third fewer children, yet enrolment hit 92.9%",
+      "focus": "chart"
+    },
+    {
+      "id": "p06-ch-grow",
+      "type": "chapter",
+      "heading": "How children grow",
+      "summary": "Five areas in the ministry's guidelines for ages 3 to 6"
+    },
+    {
+      "id": "p07-domains",
+      "type": "content",
+      "kind": "list",
+      "kicker": "How children grow",
+      "heading": "Five areas grow together from age 3 to 6",
+      "focus": "from_to"
+    },
+    {
+      "id": "p08-ruler",
+      "type": "content",
+      "kind": "statement",
+      "kicker": "How children grow",
+      "heading": "No single ruler,\nno head start on school"
+    },
+    {
+      "id": "p09-day",
+      "type": "content",
+      "kind": "process",
+      "kicker": "How children grow",
+      "heading": "A day at kindergarten: at least 2 hours outdoors",
+      "focus": "timeline"
+    },
+    {
+      "id": "p10-ch-home",
+      "type": "chapter",
+      "heading": "Home and school",
+      "summary": "What helps at home: sleep, screens, outdoors, meals, eyes, settling in"
+    },
+    {
+      "id": "p11-fridge",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Home and school",
+      "heading": "For the fridge: sleep, screens, outdoors",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p12-guides",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Home and school",
+      "heading": "Sleep, screens, outdoors: what each body advises",
+      "focus": "data_table"
+    },
+    {
+      "id": "p13-food",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "Home and school",
+      "heading": "Milk, water, little salt, no sugary drinks",
+      "focus": "image"
+    },
+    {
+      "id": "p14-vision",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Home and school",
+      "heading": "12.7% of 6-year-olds short-sighted: go outside",
+      "focus": "chart"
+    },
+    {
+      "id": "p15-adapt",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "Home and school",
+      "heading": "The first weeks are stressful: ease in slowly",
+      "focus": "image"
+    },
+    {
+      "id": "p16-safety",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Safety tips",
+      "heading": "Safety: pick-up, bus, meals, water, getting lost",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p17-checklist",
+      "type": "content",
+      "kind": "points",
+      "kicker": "A few favours",
+      "heading": "Five small favours we ask of you",
+      "focus": "row_cards"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "kicker": "See you soon",
+      "heading": "Next time: the open day",
+      "summary": "Ask a teacher any time"
+    }
+  ]
+}

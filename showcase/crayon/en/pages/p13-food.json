@@ -1,0 +1,45 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "lunch",
+      "fit": "cover",
+      "caption": "Illustration: lunch (AI-generated)"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "icon": "milk",
+          "value": "350 to 500",
+          "unit": "g",
+          "label": "Milk a day",
+          "note": "The same for ages 2 to 5"
+        },
+        {
+          "icon": "glass-water",
+          "value": "600 to 800",
+          "unit": "ml",
+          "label": "Plain water a day",
+          "note": "Ages 4 to 5: 700 to 800"
+        },
+        {
+          "icon": "cooking-pot",
+          "value": "<2 / <3",
+          "unit": "g",
+          "label": "Salt a day",
+          "note": "Ages 2 to 3, then 4 to 5"
+        },
+        {
+          "icon": "salad",
+          "value": "12+",
+          "unit": "foods",
+          "label": "Kinds of food a day",
+          "note": "25 or more a week"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Chinese Nutrition Society, Dietary Guidelines for Preschool Children (2022), for ages 2 to 5",
+  "notes": "For food we follow the Chinese Nutrition Society's 2022 dietary guidelines for preschool children, which cover ages two to five and are still the current edition. A few easy numbers. Milk: 350 to 500 grams a day. Plain water: 600 to 700 millilitres a day at two to three, 700 to 800 at four to five. Salt: under 2 grams a day at two to three, under 3 grams at four to five. Variety: 12 or more different foods a day and 25 or more a week. Three more: no sugary drinks. No whole beans or nuts for now, so they can't go down the wrong way. And no snacks in the 30 minutes before bed. The picture is an AI-generated illustration of lunch."
+}

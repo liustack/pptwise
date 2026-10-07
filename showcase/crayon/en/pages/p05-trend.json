@@ -1,0 +1,91 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "combo",
+      "axes": {
+        "y_unit": "m",
+        "y2_unit": "%"
+      },
+      "series": [
+        {
+          "name": "Children enrolled (million)",
+          "data": [
+            {
+              "x": "2020",
+              "y": 48.2
+            },
+            {
+              "x": "2021",
+              "y": 48.1
+            },
+            {
+              "x": "2022",
+              "y": 46.3
+            },
+            {
+              "x": "2023",
+              "y": 40.9
+            },
+            {
+              "x": "2024",
+              "y": 35.8
+            },
+            {
+              "x": "2025",
+              "y": 32.3
+            }
+          ]
+        },
+        {
+          "name": "Gross enrolment, ages 3 to 5",
+          "plot": "line",
+          "axis": "right",
+          "data": [
+            {
+              "x": "2020",
+              "y": 85.2
+            },
+            {
+              "x": "2021",
+              "y": 88.1
+            },
+            {
+              "x": "2022",
+              "y": 89.7
+            },
+            {
+              "x": "2023",
+              "y": 91.1
+            },
+            {
+              "x": "2024",
+              "y": 92.0
+            },
+            {
+              "x": "2025",
+              "y": 92.9
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "icon": "trending-down",
+          "value": "−33.1%",
+          "label": "Children enrolled, 2020 to 2025"
+        },
+        {
+          "icon": "hand-heart",
+          "value": "91.49%",
+          "label": "In affordable kindergartens, 2025"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Ministry of Education statistical bulletins, 2020 to 2025. Gross enrolment is measured against children aged 3 to 5, the affordable share against children enrolled",
+  "notes": "A quick word on the bigger picture. The number of children in kindergarten across China fell from 48.18 million in 2020 to 32.26 million last year, a third fewer in five years. Over the same years the gross enrolment rate rose from 85.2% to 92.9%, and 91.49% of children now attend an affordable kindergarten, meaning a public one or a licensed affordable private one. Fewer children, but more of them can get a place they can afford. Two notes. Gross enrolment divides all children in kindergarten by the number of children aged three to five, while the affordable share is a share of children enrolled, so the two rates are worked out differently and should not be compared. And the affordable share dipped by 0.12 points last year, so it does not rise every single year."
+}

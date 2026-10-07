@@ -1,0 +1,37 @@
+{
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "hand-heart",
+          "title": "Pick-up",
+          "text": "Only you or an adult you name. Tell us before someone new comes"
+        },
+        {
+          "icon": "bus",
+          "title": "School bus",
+          "text": "A proper preschool bus, a minder on board until every child is off"
+        },
+        {
+          "icon": "utensils",
+          "title": "Meals",
+          "text": "A leader eats every meal with the children, 125 g of each dish kept 48 hours"
+        },
+        {
+          "icon": "waves",
+          "title": "Water",
+          "text": "Drowning is the top injury death for ages 1 to 14. Nothing replaces watching",
+          "tone": "danger"
+        },
+        {
+          "icon": "map-pin",
+          "title": "Getting lost",
+          "text": "Teach your address, phone and your names, and to ask the police"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Kindergarten Work Regulations, School Bus Safety Regulations (Order No. 617), school food safety rules, China CDC, Guidelines for Ages 3 to 6",
+  "notes": "Five safety tips. Pick-up: under the Kindergarten Work Regulations, children are collected by a guardian or an adult the guardian names. Please tell the teacher before someone new comes, because we will not hand your child to anyone we don't know. School bus: under the School Bus Safety Regulations, children ride a dedicated school bus with a minder on board the whole way, who leaves the bus only after making sure every child is off. Meals: under the 2019 rules on school food safety and nutrition, a kindergarten leader eats with the children at every meal, and at least 125 grams of each dish is kept chilled for 48 hours or more. Water: China CDC says drowning is the leading cause of injury death for children and teenagers aged 1 to 14 in China. Drowning is often fast and silent, a swim ring is not a proper flotation aid, and nothing replaces an adult actually watching. Getting lost: the guidelines suggest teaching children their home address, phone number and parents' names, and to ask the police for help. Never leave a child alone at home or in a car."
+}
