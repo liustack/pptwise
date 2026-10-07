@@ -6,7 +6,7 @@ import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { steps } from "./steps"
 import { CANONICAL_THEME_IDS } from "../themes"
-import { readableOn } from "../render/ink"
+import { contrastRatio, readableOn } from "../render/ink"
 
 function svg(node: React.ReactElement) {
   return render(<svg>{node}</svg>)
@@ -177,6 +177,30 @@ describe("steps on every theme", () => {
     for (const id of CANONICAL_THEME_IDS) {
       expect(shapesOf(id), id).toBe(baseline)
     }
+  })
+
+  // The badge is a disc painted in the page ground. On a theme whose primary
+  // is a block fill rather than an ink, the number used to come out in that
+  // fill: rally's 01 sat at 1.08:1 on its own disc.
+  it("sets every number in an ink its own disc can read", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      const ctx = boundThemeCtx(id, {})
+      const { container } = svg(steps.render(threeSteps, { x: 0, y: 0, w: 1088, h: 360 }, ctx))
+      const discs = Array.from(container.querySelectorAll("circle"))
+      const numbers = Array.from(container.querySelectorAll("text")).filter((t) => /^\d{2}$/.test(t.textContent ?? ""))
+      expect(numbers, id).toHaveLength(discs.length)
+      numbers.forEach((number, i) => {
+        const ratio = contrastRatio(number.getAttribute("fill")!, discs[i]!.getAttribute("fill")!)
+        expect(ratio, `${id} ${number.textContent}`).toBeGreaterThanOrEqual(4.5)
+      })
+    }
+  })
+
+  it("keeps the theme's primary on the number where it already reads", () => {
+    const ctx = boundThemeCtx("runway", {})
+    const { container } = svg(steps.render(threeSteps, { x: 0, y: 0, w: 1088, h: 360 }, ctx))
+    const first = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "01")!
+    expect(first.getAttribute("fill")).toBe(ctx.colors.primary)
   })
 
   it("keeps a step's whole sentence under its chevron when side by side, and measures for it", () => {

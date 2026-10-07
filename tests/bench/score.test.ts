@@ -156,7 +156,7 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     expect(score.deterministic).toBeNull()
   })
 
-  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (steps on ledger)", async () => {
+  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (verdict emphasis on homeroom)", async () => {
     // This fixture needs a low-contrast source that is real, theme-stable
     // and out of scope for whatever fix round is running — and it has now
     // outlived two of them. It started as kpi_cards' hardcoded delta-arrow
@@ -168,10 +168,14 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     // Then `architecture`'s primary-on-panel pairing on `ledger`, until the
     // 2026-10 terminal round checked its layer inks against their band.
     //
-    // Now `steps` on `ledger`: its step numbers are painted in a fill colour
-    // that sits 1.05:1 on the chevron under them, the same root cause
-    // architecture had (a dark theme's primary is a fill, not an ink). When
-    // that is fixed too, the next real source goes here.
+    // Then `steps` on `ledger`, whose step numbers took the chevron's fill
+    // and sat 1.05:1 on the disc under them, until the badge number was
+    // checked against its disc.
+    //
+    // Now a `verdict_banner` emphasis run on `homeroom`: the marked words
+    // take the theme's emphasis amber and land at 2.55:1 on the page, under
+    // the 3:1 their size asks for. When that is fixed too, the next real
+    // source goes here.
     // `kpi_cards` stays in the fixture for `coverageHits` below.
     const metas = await loadQuestionMetas(QUESTIONS_DIR)
     const meta = metas.find((m) => m.id === "fx03")!

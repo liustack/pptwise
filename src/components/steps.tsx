@@ -93,12 +93,19 @@ function measureSteps(component: StepsComponent, w: number, ctx: ComponentCtx): 
 
 /** An icon drawn in the badge in place of the number. */
 const BADGE_ICON = 22
+const BADGE_NUMBER_SIZE = 16
 
 /**
  * The step's badge: its number, or its icon where the number would stand
  * (the chevrons already say the order). A step with a `tone` rings its badge
  * and sets its number or icon in the theme's ink for that kind of step, a
  * check that can stop the process in its danger ink.
+ *
+ * The disc is painted in the page ground, so the number and the icon are
+ * measured against that ground, toned or not. The chevron fill is a block
+ * colour first: rally's primary is its stage dark, 1.08:1 against its own
+ * page, and a number set straight in it vanished into the disc. Where the
+ * fill already reads on the disc the number keeps it.
  */
 function renderBadge(
   cx: number,
@@ -121,9 +128,9 @@ function renderBadge(
           x={cx}
           y={cy + 7}
           textAnchor="middle"
-          fontSize={16}
+          fontSize={BADGE_NUMBER_SIZE}
           fontWeight="700"
-          fill={item.tone ? accessibleInk(mark, pageBg, 16) : fill}
+          fill={accessibleInk(mark, pageBg, BADGE_NUMBER_SIZE)}
           fontFamily={ctx.fonts.body}
           dominantBaseline="alphabetic"
         >
