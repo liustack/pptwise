@@ -50,7 +50,7 @@
 import type { Component, PptxIR, Slide } from "@/ir"
 import type { LayoutDefinition } from "@/layouts/registry"
 import { stripEmphasis } from "@/render/emphasis"
-import { horizontalForm } from "@/layouts/compositions/scroll"
+import { horizontalText } from "@/layouts/compositions/scroll"
 import { resolveEffectiveFace } from "@/render/layout-selection"
 import { getPlatform } from "@/platform/registry"
 import type { ThemeDefinition } from "@/themes/definitions"
@@ -162,9 +162,7 @@ export function authoredTexts(slide: Slide): AuthoredText[] {
  * (「《」 as 「︽」); it is read back as the mark the author wrote.
  */
 export function normalize(text: string): string {
-  return Array.from(text)
-    .map(horizontalForm)
-    .join("")
+  return horizontalText(text)
     .toLowerCase()
     .replace(/\s+/g, "")
     .replace(/…/g, "")

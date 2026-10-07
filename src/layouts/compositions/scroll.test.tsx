@@ -5,6 +5,7 @@ import {
   fitColumnLabel,
   fitVertical,
   horizontalForm,
+  horizontalText,
   joinColumnLabels,
   nameAndCount,
   paintVertical,
@@ -98,6 +99,11 @@ describe("standing upright", () => {
     expect(verticalForm("…").turn).toBe(true)
     expect(verticalForm("文")).toMatchObject({ ch: "文", dx: 0, dy: 0, turn: false })
     for (const ch of Array.from("《》「」『』（）")) expect(horizontalForm(verticalForm(ch).ch)).toBe(ch)
+    // A form two marks share reads back as the first one listed.
+    expect(horizontalForm("﹃")).toBe("『")
+    expect(horizontalForm("﹁")).toBe("「")
+    expect(horizontalForm("文")).toBe("文")
+    expect(horizontalText("﹁非遗﹂︱︽法︾")).toBe("「非遗」—《法》")
   })
 
   it("paints a column a character a cell, read from the right", () => {
