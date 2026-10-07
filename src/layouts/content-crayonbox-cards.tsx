@@ -3,7 +3,7 @@ import type { SvgTemplateProps } from "./types"
 import { stepAside } from "../render/step-aside"
 import type { LayoutDefinition } from "./registry"
 import { sectionNameFor } from "../lib/derive"
-import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
+import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import { stripEmphasis } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
 import { SvgContent } from "../render/svg-content"
@@ -66,6 +66,9 @@ function cardBodyLines(item: NumberedCards["items"][number], fontFamily: string)
   }))
 }
 
+/** The section capsule: at least its board width of 196, its words 20px in from either end, as wide as the heading's measure at most. */
+const SECTION = { minW: 196, pad: 20, maxText: 880 } as const
+
 /** crayonbox-cards：三张图画纸卡片组成的满密度内容页。 */
 /** The band a non-card page gets, between the header block and the closing line. */
 const CARDS_FALLBACK_RECT = { x: 96, y: 248, w: 1088, h: 330 } as const
@@ -75,14 +78,17 @@ export function CrayonboxCardsContent({ ir, slide, index, ctx }: SvgTemplateProp
   const bg = ctx.defaultBg ?? colors.bg
   const border = colors.border ?? colors.muted
   const sectionSource = sectionNameFor(ir.slides, index)
+  // The capsule grows with the section's name, up to the heading's measure:
+  // a name is cut only past that, and says so.
   const section = sectionSource
     ? fitSvgLine(sectionSource, {
-        maxWidth: 156,
+        maxWidth: SECTION.maxText,
         fontSize: 17,
         minFontSize: 16,
         fontFamily: fonts.body,
       })
     : null
+  const sectionW = section ? Math.max(SECTION.minW, Math.ceil(measureTextUnits(section.text, { fontFamily: fonts.body }) * section.fontSize) + SECTION.pad * 2) : 0
   const titleSource = stripEmphasis(slide.heading ?? "")
   const title = titleSource.trim()
     ? fitSvgLine(titleSource, {
@@ -141,7 +147,7 @@ export function CrayonboxCardsContent({ ir, slide, index, ctx }: SvgTemplateProp
 
       {section && (
         <>
-          <rect x={96} y={94} width={196} height={36} rx={18} fill={SKY_BLUE} />
+          <rect x={96} y={94} width={sectionW} height={36} rx={18} fill={SKY_BLUE} />
           <text
             data-truncated={section.truncated ? "1" : undefined}
             x={116}
