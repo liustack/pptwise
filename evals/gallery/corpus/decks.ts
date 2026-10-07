@@ -17,6 +17,7 @@ import type { CompositionId } from "@/layouts/compositions"
 import { LAYOUT_REGISTRY, type LayoutDefinition } from "@/layouts/registry"
 import { fitSvgLine } from "@/lib/svg-text-layout"
 import { resolveFontStack } from "@/render/fonts"
+import { deckWritesChinese } from "@/lib/conf-labels"
 import { CANONICAL_THEME_IDS, resolveStyle, type CanonicalThemeId } from "@/themes"
 import { getInstalledThemeIds, getThemeDefinition } from "@/themes/definitions"
 import { registerTestTheme, type TestThemeFaces } from "@/themes/test-fixtures"
@@ -963,8 +964,11 @@ const NARROW_HEADING_W = 496
 const NARROW_HEADING_FLOOR = 36
 
 function headingThatFitsAnywhere(lex: Lexicon, themeId: string): string {
-  const fontFamily = resolveFontStack(resolveStyle(themeId).fonts.heading, "heading")
+  const stack = resolveStyle(themeId).fonts.heading
   for (const heading of lex.headings) {
+    // The page is a deck of one, so its heading is the deck's language, which
+    // picks the face the heading is set in (`resolveFontStack`).
+    const fontFamily = resolveFontStack(stack, "heading", deckWritesChinese({ slides: [{ heading } as Slide] }))
     const fitted = fitSvgLine(heading, {
       maxWidth: NARROW_HEADING_W,
       fontSize: 56,

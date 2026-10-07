@@ -81,6 +81,13 @@ const WIN_METRICS: ReadonlyMap<string, WinMetrics> = new Map([
   ["lucida console", win(1616, 432)],
   ["microsoft yahei", win(2167, 536)],
   ["微软雅黑", win(2167, 536)],
+  // YaHei's Western cut, the second face of the same msyh.ttc. Its own win
+  // metrics (2080, 521) would put the baseline at 0.960 em, but PowerPoint
+  // for Mac set it where it sets YaHei's, regular and bold, from 9 to 200 pt
+  // (2026-10-07, same rig as above, 0.24 pt PDF resolution), so it takes
+  // YaHei's numbers. One size stood apart: at 25.5 pt the cut sat 0.96 pt
+  // higher than YaHei, which itself sat 0.5 pt under the formula there.
+  ["microsoft yahei ui", win(2167, 536)],
   ["simsun", CJK_GB],
   ["宋体", CJK_GB],
   ["simhei", CJK_GB],

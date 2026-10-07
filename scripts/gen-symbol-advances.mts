@@ -37,6 +37,12 @@
  * at or under the bounds here, which err wide for them, and "×", "°", "±"
  * and "÷" painted from YaHei, the `<a:ea>` face, which the bounds hold.
  *
+ * Microsoft YaHei UI, the Western cut a deck not written in Chinese sets
+ * YaHei's text in (`fonts.ts` `WESTERN_CUT`), is the second face of the same
+ * two collections. Its advances are YaHei's but for the four curly quotation
+ * marks, so its marks are its own and its bounds take YaHei behind it, the
+ * `<a:ea>` face its runs carry.
+ *
  * Needs the genuine binaries: macOS Georgia and the Office for Mac copies of
  * Microsoft YaHei, SimSun and KaiTi. Each file's `name` table is checked
  * before it is read.
@@ -57,6 +63,8 @@ interface FaceFile {
   file: string
   family: string
   subfamily: string
+  /** The face's position in a .ttc collection, 0 when omitted. */
+  index?: number
 }
 
 const FACES = {
@@ -64,6 +72,8 @@ const FACES = {
   georgiaBold: { file: `${SYSTEM}Georgia Bold.ttf`, family: "Georgia", subfamily: "Bold" },
   yahei: { file: `${OFFICE}msyh.ttc`, family: "Microsoft YaHei", subfamily: "Regular" },
   yaheiBold: { file: `${OFFICE}msyhbd.ttc`, family: "Microsoft YaHei", subfamily: "Bold" },
+  yaheiUi: { file: `${OFFICE}msyh.ttc`, family: "Microsoft YaHei UI", subfamily: "Regular", index: 1 },
+  yaheiUiBold: { file: `${OFFICE}msyhbd.ttc`, family: "Microsoft YaHei UI", subfamily: "Bold", index: 1 },
   simsun: { file: `${OFFICE}Simsun.ttc`, family: "SimSun", subfamily: "Regular" },
   kaiti: { file: `${OFFICE}Kaiti.ttf`, family: "KaiTi", subfamily: "Regular" },
   times: { file: `${OFFICE}times.ttf`, family: "Times New Roman", subfamily: "Regular" },
@@ -102,7 +112,7 @@ const RANGES: readonly (readonly [number, number])[] = [
 /** Advance widths in em for the BMP code points a face maps, read from `cmap` (3,1) format 4 and `hmtx`. */
 function readFace(face: FaceFile): (cp: number) => number | undefined {
   const b = readFileSync(face.file)
-  const base = b.toString("latin1", 0, 4) === "ttcf" ? b.readUInt32BE(12) : 0
+  const base = b.toString("latin1", 0, 4) === "ttcf" ? b.readUInt32BE(12 + 4 * (face.index ?? 0)) : 0
   const tables = new Map<string, number>()
   for (let i = 0; i < b.readUInt16BE(base + 4); i++) {
     const o = base + 12 + 16 * i
@@ -200,12 +210,14 @@ const TABLES = {
   yahei: { regular: ["yahei"], bold: ["yaheiBold"] },
   "simsun-kaiti": { regular: ["simsun", "kaiti"], bold: ["simsun", "kaiti"] },
   times: { regular: ["times", "yahei", "simsun"], bold: ["timesBold", "yaheiBold", "simsun"] },
+  "yahei-ui": { regular: ["yaheiUi", "yahei"], bold: ["yaheiUiBold", "yaheiBold"] },
 } as const satisfies Record<string, Record<"regular" | "bold", readonly FaceName[]>>
 const SUBSTITUTES: Record<keyof typeof TABLES, readonly FaceName[]> = {
   georgia: ALL,
   yahei: ALL,
   "simsun-kaiti": ALL,
   times: ALL_WITH_TIMES,
+  "yahei-ui": ALL,
 }
 
 const codePoints: number[] = []
@@ -243,6 +255,7 @@ const LATIN_FACE_MARK_FACES = {
   yahei: { regular: ["yahei"], bold: ["yaheiBold"] },
   "simsun-kaiti": { regular: ["simsun", "kaiti"], bold: ["simsun", "kaiti"] },
   times: { regular: ["times"], bold: ["timesBold"] },
+  "yahei-ui": { regular: ["yaheiUi"], bold: ["yaheiUiBold"] },
 } as const satisfies Record<keyof typeof TABLES, Record<"regular" | "bold", readonly FaceName[]>>
 
 /** The advance every one of `faces` gives the code point, or `undefined` when one lacks it or they differ. */
@@ -275,7 +288,7 @@ writeFileSync(
 // generator for which faces each bound is the widest of, and why.
 
 export const SYMBOL_ADVANCE_BOUNDS: Readonly<
-  Record<"georgia" | "yahei" | "simsun-kaiti" | "times", Readonly<Record<"regular" | "bold", Readonly<Record<number, number>>>>>
+  Record<"georgia" | "yahei" | "simsun-kaiti" | "times" | "yahei-ui", Readonly<Record<"regular" | "bold", Readonly<Record<number, number>>>>>
 > = {
 ${body}
 }
@@ -286,7 +299,7 @@ ${body}
 // bound. A mark the face lacks is left out.
 
 export const LATIN_FACE_MARK_ADVANCES: Readonly<
-  Record<"georgia" | "yahei" | "simsun-kaiti" | "times", Readonly<Record<"regular" | "bold", Readonly<Record<number, number>>>>>
+  Record<"georgia" | "yahei" | "simsun-kaiti" | "times" | "yahei-ui", Readonly<Record<"regular" | "bold", Readonly<Record<number, number>>>>>
 > = {
 ${markBody}
 }

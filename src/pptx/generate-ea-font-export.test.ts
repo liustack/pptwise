@@ -79,6 +79,25 @@ describe("generatePptxBlob CJK east-asian font-slot (a:ea)", () => {
     expect(xml).toMatch(/<a:latin typeface="Microsoft YaHei"[^>]*\/><a:ea typeface="Microsoft YaHei"/)
   }, 30000)
 
+  it("an English deck on a YaHei theme names YaHei's Western cut for its Latin text, over YaHei for its CJK", async () => {
+    const { generatePptxBlob } = await import("./generate")
+    const ir = makeIR("terminal", [contentSlide("How “45 in total” is counted", "The bulletin only says “45 in total”, not 非遗 rankings", false)])
+
+    const xml = await slideXml(await generatePptxBlob(ir))
+    expect(xml).toContain("The bulletin only says “45 in total”")
+    expect(xml).toMatch(/<a:latin typeface="Microsoft YaHei UI"[^>]*\/><a:ea typeface="Microsoft YaHei"/)
+    expect(xml).not.toMatch(/<a:latin typeface="Microsoft YaHei"/)
+  }, 30000)
+
+  it("a Chinese deck on the same theme keeps Microsoft YaHei in its Latin slot, so its quotes stay on the full em", async () => {
+    const { generatePptxBlob } = await import("./generate")
+    const ir = makeIR("terminal", [contentSlide("“共 45 个”的口径", "统计公报只写“共 45 个”，教科文组织不发布排名", false)])
+
+    const xml = await slideXml(await generatePptxBlob(ir))
+    expect(xml).toMatch(/<a:latin typeface="Microsoft YaHei"[^>]*\/><a:ea typeface="Microsoft YaHei"/)
+    expect(xml).not.toContain("Microsoft YaHei UI")
+  }, 30000)
+
   it("every theme's Consolas code block: <a:ea> falls back to Microsoft YaHei regardless of the deck's own theme", async () => {
     const { generatePptxBlob } = await import("./generate")
     for (const themeId of ["brief", "terminal"] as const) {

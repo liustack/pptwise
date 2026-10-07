@@ -37,38 +37,38 @@ describe("resolveFontFace", () => {
 
 describe("resolveFontStack", () => {
   it("leads with the resolveFontFace result, unchanged, for svg2pptx's firstFontFamily", () => {
-    const stack = resolveFontStack(["Sectra", "Georgia", "Source Han Serif SC", "serif"], "heading")
+    const stack = resolveFontStack(["Sectra", "Georgia", "Source Han Serif SC", "serif"], "heading", true)
     expect(stack.split(",")[0].trim()).toBe(resolveFontFace(["Sectra", "Georgia"], "heading"))
   })
 
   it("appends a CJK serif preview fallback for a serif-resolved face", () => {
     // magazine's heading stack resolves to SimSun.
-    const stack = resolveFontStack(["Sectra", "SimSun"], "heading")
+    const stack = resolveFontStack(["Sectra", "SimSun"], "heading", true)
     expect(stack).toBe("SimSun, Songti SC, STSong, serif")
     expect(stack).not.toMatch(/Kaiti/i)
   })
 
   it("inserts macOS Kaiti SC/STKaiti before Songti for a KaiTi heading stack", () => {
-    expect(resolveFontStack(["KaiTi", "楷体", "SimSun"], "heading")).toBe(
+    expect(resolveFontStack(["KaiTi", "楷体", "SimSun"], "heading", true)).toBe(
       "KaiTi, Kaiti SC, STKaiti, Songti SC, STSong, serif",
     )
   })
 
   it("inserts the same macOS kaiti preview fallback for the 楷体 alias", () => {
-    expect(resolveFontStack(["楷体"], "heading")).toBe(
+    expect(resolveFontStack(["楷体"], "heading", true)).toBe(
       "楷体, Kaiti SC, STKaiti, Songti SC, STSong, serif",
     )
   })
 
   it("keeps Georgia on the generic serif preview fallback, with no kaiti names", () => {
-    const stack = resolveFontStack(["Georgia"], "heading")
+    const stack = resolveFontStack(["Georgia"], "heading", true)
     expect(stack).toBe("Georgia, Songti SC, STSong, serif")
     expect(stack).not.toMatch(/Kaiti/i)
   })
 
   it("keeps FangSong on the Songti preview fallback, with no kaiti or FangSong SC names", () => {
     // macOS has no FangSong SC / STFangsong counterpart to Kaiti SC / STKaiti.
-    const stack = resolveFontStack(["FangSong"], "heading")
+    const stack = resolveFontStack(["FangSong"], "heading", true)
     expect(stack).toBe("FangSong, Songti SC, STSong, serif")
     expect(stack).not.toMatch(/Kaiti/i)
     expect(stack).not.toMatch(/FangSong SC/i)
@@ -77,32 +77,96 @@ describe("resolveFontStack", () => {
   it("keeps the KaiTi export face as the stack's first member", () => {
     const faces = ["KaiTi", "楷体"] as const
     expect(resolveFontFace([...faces], "heading")).toBe("KaiTi")
-    expect(resolveFontStack([...faces], "heading").split(",")[0].trim()).toBe(
+    expect(resolveFontStack([...faces], "heading", true).split(",")[0].trim()).toBe(
       resolveFontFace([...faces], "heading"),
     )
   })
 
   it("appends a sans-serif preview fallback for a sans-resolved face", () => {
     // terminal's heading stack resolves to Microsoft YaHei.
-    const stack = resolveFontStack(["Inter", "Microsoft YaHei"], "heading")
+    const stack = resolveFontStack(["Inter", "Microsoft YaHei"], "heading", true)
     expect(stack).toBe("Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif")
   })
 
   it("names a Latin face's paired East Asian face second, before the preview fallback", () => {
     // memo's Song heading: Western text in Times New Roman, Chinese in SimSun.
-    expect(resolveFontStack(["Times New Roman", "SimSun", "宋体", "Songti SC", "STSong", "serif"], "heading")).toBe(
+    expect(resolveFontStack(["Times New Roman", "SimSun", "宋体", "Songti SC", "STSong", "serif"], "heading", true)).toBe(
       "Times New Roman, SimSun, Songti SC, STSong, serif",
     )
   })
 
   it("pairs nothing when the first drawable face carries CJK itself, or the stack names no CJK face after it", () => {
-    expect(resolveFontStack(["SimSun", "宋体", "Georgia", "serif"], "heading")).toBe("SimSun, Songti SC, STSong, serif")
-    expect(resolveFontStack(["Bower", "Georgia", "Source Han Serif SC", "serif"], "heading")).toBe("Georgia, Songti SC, STSong, serif")
-    expect(resolveFontStack(["Courier New", "Consolas"], "mono")).toBe("Courier New, Menlo, monospace")
+    expect(resolveFontStack(["SimSun", "宋体", "Georgia", "serif"], "heading", true)).toBe("SimSun, Songti SC, STSong, serif")
+    expect(resolveFontStack(["Bower", "Georgia", "Source Han Serif SC", "serif"], "heading", true)).toBe("Georgia, Songti SC, STSong, serif")
+    expect(resolveFontStack(["Courier New", "Consolas"], "mono", true)).toBe("Courier New, Menlo, monospace")
   })
 
   it("appends a monospace preview fallback for the mono role", () => {
-    expect(resolveFontStack(["Fira Code"], "mono")).toBe("Consolas, Menlo, monospace")
+    expect(resolveFontStack(["Fira Code"], "mono", true)).toBe("Consolas, Menlo, monospace")
+  })
+})
+
+// The deck's language picks the cut of Microsoft YaHei (`WESTERN_CUT`):
+// YaHei sets the curly quotes on the full em, and PowerPoint paints them from
+// the run's Latin face, so an English deck's YaHei text leads with the
+// Western cut and keeps YaHei second, for its CJK.
+describe("resolveFontStack in a deck not written in Chinese", () => {
+  it("sets a stack that resolves to Microsoft YaHei in its Western cut, with YaHei for the CJK", () => {
+    // almanac, clinic and ember lead with YaHei and name Latin faces after it.
+    expect(resolveFontStack(["Microsoft YaHei", "Helvetica Neue", "Arial", "system-ui"], "body", false)).toBe(
+      "Microsoft YaHei UI, Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif",
+    )
+    expect(resolveFontStack(["Microsoft YaHei", "Verdana", "Segoe UI", "Arial"], "heading", false)).toBe(
+      "Microsoft YaHei UI, Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif",
+    )
+  })
+
+  it("does the same for the 微软雅黑 alias and for the role default a designer stack falls back to", () => {
+    expect(resolveFontStack(["微软雅黑", "PingFang SC"], "body", false)).toBe(
+      "Microsoft YaHei UI, 微软雅黑, PingFang SC, Helvetica Neue, sans-serif",
+    )
+    // thesis and ledger name no safe body face, so their body is the role default.
+    expect(resolveFontStack(["Inter", "PingFang SC", "system-ui"], "body", false)).toBe(
+      "Microsoft YaHei UI, Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif",
+    )
+  })
+
+  it("keeps Microsoft YaHei itself in a Chinese deck", () => {
+    expect(resolveFontStack(["Microsoft YaHei", "Helvetica Neue", "Arial", "system-ui"], "body", true)).toBe(
+      "Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif",
+    )
+    expect(resolveFontStack(["Inter", "PingFang SC", "system-ui"], "body", true)).toBe(
+      "Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif",
+    )
+  })
+
+  it("leaves every other face as it is in either language", () => {
+    for (const chinese of [true, false]) {
+      // brief: Georgia, with no CJK face of its own.
+      expect(resolveFontStack(["Bower", "Georgia", "Source Han Serif SC", "serif"], "body", chinese)).toBe(
+        "Georgia, Songti SC, STSong, serif",
+      )
+      // journal's heading: Times New Roman over SimSun.
+      expect(resolveFontStack(["Times New Roman", "SimSun", "宋体", "Songti SC", "STSong", "serif"], "heading", chinese)).toBe(
+        "Times New Roman, SimSun, Songti SC, STSong, serif",
+      )
+      // ink's heading: Times New Roman over KaiTi.
+      expect(resolveFontStack(["Times New Roman", "KaiTi", "楷体", "Kaiti SC", "STKaiti", "serif"], "heading", chinese)).toBe(
+        "Times New Roman, KaiTi, Kaiti SC, STKaiti, Songti SC, STSong, serif",
+      )
+      // A Song heading has no Western cut to take.
+      expect(resolveFontStack(["SimSun", "宋体", "Songti SC", "STSong", "serif"], "heading", chinese)).toBe(
+        "SimSun, Songti SC, STSong, serif",
+      )
+      expect(resolveFontStack(["Consolas", "Courier New"], "mono", chinese)).toBe("Consolas, Menlo, monospace")
+    }
+  })
+
+  it("is read back as the Western cut over YaHei, which the export writes as <a:latin> and <a:ea>", () => {
+    const family = resolveFontStack(["Microsoft YaHei", "PingFang SC"], "body", false)
+    expect(family.split(",")[0]).toBe("Microsoft YaHei UI")
+    expect(pairedEaFamily(family)).toBe("Microsoft YaHei")
+    expect(eaFontFaceFor("Microsoft YaHei UI")).toBe("Microsoft YaHei")
   })
 })
 
@@ -117,20 +181,20 @@ describe("isMonoFontFamily", () => {
     // stack still resolves to Consolas. memo lists Courier New first
     // (typewriter eyebrow). Both must be recognized — the role decides
     // the width model, not the specific face name.
-    expect(isMonoFontFamily(resolveFontStack([], "mono"))).toBe(true)
+    expect(isMonoFontFamily(resolveFontStack([], "mono", true))).toBe(true)
     // A hypothetical theme whose stack resolves to a *different* SAFE_FONTS
     // mono member must still be recognized — the role decides the width
     // model, not the specific face name (see this function's derivation
     // comment in fonts.ts).
-    expect(isMonoFontFamily(resolveFontStack(["Courier New"], "mono"))).toBe(true)
-    expect(isMonoFontFamily(resolveFontStack(["Lucida Console"], "mono"))).toBe(true)
+    expect(isMonoFontFamily(resolveFontStack(["Courier New"], "mono", true))).toBe(true)
+    expect(isMonoFontFamily(resolveFontStack(["Lucida Console"], "mono", true))).toBe(true)
   })
 
   it("rejects every resolveFontStack('heading'|'body', ...) output", () => {
-    expect(isMonoFontFamily(resolveFontStack(["Georgia"], "heading"))).toBe(false)
-    expect(isMonoFontFamily(resolveFontStack(["Microsoft YaHei"], "body"))).toBe(false)
-    expect(isMonoFontFamily(resolveFontStack([], "heading"))).toBe(false)
-    expect(isMonoFontFamily(resolveFontStack([], "body"))).toBe(false)
+    expect(isMonoFontFamily(resolveFontStack(["Georgia"], "heading", true))).toBe(false)
+    expect(isMonoFontFamily(resolveFontStack(["Microsoft YaHei"], "body", true))).toBe(false)
+    expect(isMonoFontFamily(resolveFontStack([], "heading", true))).toBe(false)
+    expect(isMonoFontFamily(resolveFontStack([], "body", true))).toBe(false)
   })
 
   it("rejects a bare face name with no fallback suffix (e.g. a hand-built test ctx)", () => {
@@ -193,8 +257,10 @@ describe("eaFontFaceFor completeness over SAFE_FONTS", () => {
     "FangSong",
     "仿宋",
   ]
-  // The 11 Latin-only SAFE_FONTS members (fall back to Microsoft YaHei).
+  // The 11 Latin-only SAFE_FONTS members, and YaHei's Western cut, which a
+  // run names as its Latin face (all fall back to Microsoft YaHei).
   const LATIN_ONLY_FACES = [
+    "Microsoft YaHei UI",
     "Arial",
     "Calibri",
     "Tahoma",
