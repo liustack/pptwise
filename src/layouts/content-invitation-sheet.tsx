@@ -25,7 +25,7 @@ import {
  * face's), and inside it the body: one of the shared compositions in the
  * invitation setting (`INVITATION_COMPOSITIONS`), which places the claim and
  * the source itself, centred over the body, beside a photograph that runs
- * to the page's edge, or inside a reply card; or the claim over the page and
+ * to the page's edge, or inside a reply card. Or the claim over the page and
  * the ordinary component renderer under it. A page the band cannot hold
  * steps aside.
  *

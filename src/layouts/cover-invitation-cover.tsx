@@ -25,11 +25,11 @@ import {
  * invitation-cover：请柬封面，luxe 2026-10 定稿（p01）。
  *
  * 左边一张双层金框的请柬卡（x48、y48、560×624）：顶上活动名，13px 金色、
- * 字距 8px（页面的 `kicker`，没写就取 deck 的机构名，「年度经销商大会」）；下面
- * 一枚金菱夹两段 40px 金短线；再下面标题 46/66 金色衬线粗体、字距 2px，居中，
- * 作者写的换行就是断行处，没写就一行放不下在逗号处断；副题（`subheading`，
- * 「品牌总部 敬致全国经销商伙伴」）18px 象牙白衬线、字距 3px；一道 120px 金
- * 短线；日期（deck 页脚的 `label`，作者写的年月，没写就取 `meta.date`）15px
+ * 字距 8px（页面的 `kicker`，没写就取 deck 的机构名，「年度经销商大会」）。下面
+ * 一枚金菱夹两段 40px 金短线。再下面标题 46/66 金色衬线粗体、字距 2px，居中，
+ * 作者写的换行就是断行处，没写就一行放不下在逗号处断。副题（`subheading`，
+ * 「品牌总部 敬致全国经销商伙伴」）18px 象牙白衬线、字距 3px。一道 120px 金
+ * 短线。日期（deck 页脚的 `label`，作者写的年月，没写就取 `meta.date`）15px
  * 旧金衬线、字距 6px。没有照片时请柬卡居中。右半版是页面自己的 `background` 照片（x640 起到右缘），
  * 左缘 260px 渐隐进黑底。右下角是页面的 `footnote`（「示意图：古法金手镯（AI
  * 生成）」），10px 暗金。
@@ -57,7 +57,7 @@ export function InvitationCover({ ir, slide, ctx, index }: SvgTemplateProps) {
   const occasion = stripEmphasis(slide.kicker ?? ir.meta.organization ?? "").trim()
   const footer = resolveDeckFooter(ir)
   const date = stripEmphasis(footer.label ?? ir.meta.date ?? "").trim()
-  // The author's line break is where the title breaks; otherwise one line, or two at a comma, as large as fits.
+  // The author's line break is where the title breaks. Otherwise one line, or two at a comma, as large as fits.
   const title = fitTrackedTitle(slide.heading, { width: TITLE.w, size: TITLE.size, minPt: TITLE.minPt, lineHeight: TITLE.lineHeight, tracking: TITLE.tracking, maxLines: TITLE.maxLines }, ctx)
   const titleLines = title?.lines ?? []
   const titleFits = title !== null
@@ -117,7 +117,7 @@ export function InvitationCover({ ir, slide, ctx, index }: SvgTemplateProps) {
 export const layoutDef = {
   // cover-invitation-cover.tsx: luxe's cover. A gilt invitation card at the
   // left with the occasion, a diamond, the title in gold, the line under it
-  // and the date; the page's photograph down the right half fading into the
+  // and the date. The page's photograph down the right half fading into the
   // black.
   id: "invitation-cover",
   kind: "standard",

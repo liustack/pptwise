@@ -32,7 +32,7 @@ type FromTo = Extract<Component, { type: "from_to" }>
  * earlier state is a card outlined in the dim gold, the later one a gilt
  * card with its double rule, a gold arrow between them. Each card opens
  * with when it held, small and tracked (its `kicker`, the later one's in
- * gold), and what it is in the serif; then a line for each measure, the
+ * gold), and what it is in the serif. Then a line for each measure, the
  * value centred in the serif with a hairline under it, the measures named at
  * the left beside the cards. The measure the page is about (`emphasis`, the
  * last) is set large: the earlier value in ivory, the later in gold, each
@@ -41,7 +41,7 @@ type FromTo = Extract<Component, { type: "from_to" }>
  * (`label_column`) stands small over their names.
  *
  * Takes, in the invitation setting: one `from_to` of three measures, the
- * last marked, with no icons, tags or span; then nothing else.
+ * last marked, with no icons, tags or span. Then nothing else.
  *
  * Declines: a mark on any other measure, a value, name, note or heading
  * past its room.

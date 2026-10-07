@@ -23,7 +23,7 @@ type Chart = Extract<Component, { type: "chart" }>
  * descent: a value falling from its high, drawn as one gold line, luxe's
  * 2026-10 board (p04, beside the figure `solo` sets). The line leaves its
  * first point (a solid gold dot) and comes to rest at its last (a hollow
- * one), easing out of the one and into the other; the first value in the
+ * one), easing out of the one and into the other. The first value in the
  * serif lifted toward the ivory with what it is and when over it, the last
  * in ivory with what it is and when under it. A level the line is read
  * against (a second series that holds one value throughout, such as last

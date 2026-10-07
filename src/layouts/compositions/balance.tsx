@@ -26,7 +26,7 @@ type Callout = Extract<Component, { type: "callout" }>
 
 /*
  * balance: two quantities weighed against each other, luxe's 2026-10 board
- * (p07). The claim centred over the page; under it a gold hairline down the
+ * (p07). The claim centred over the page. Under it a gold hairline down the
  * middle with a balance at its head. Each side is one quantity, named over
  * its column in the gold serif (the figures' `tag`, shared by the figures
  * on that side): under the name each period small and tracked, its figure
@@ -38,7 +38,7 @@ type Callout = Extract<Component, { type: "callout" }>
  * Takes, in the invitation setting: one `kpi_cards` of four figures, the
  * first two sharing one tag and the last two another, each with its period
  * as its label, its change as its note and the direction in `delta`, and
- * none with an icon, a tone or a source; then optionally a `callout` of
+ * none with an icon, a tone or a source. Then optionally a `callout` of
  * words alone.
  *
  * Declines: tags that do not pair the figures two and two, a figure, period,

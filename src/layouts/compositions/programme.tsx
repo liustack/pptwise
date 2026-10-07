@@ -24,7 +24,7 @@ type Numbered = Extract<Component, { type: "numbered_cards" }>
 
 /*
  * programme: the order of the day set like a gala's programme, luxe's
- * 2026-10 board (p02). The claim centred over the page; under it each item
+ * 2026-10 board (p02). The claim centred over the page. Under it each item
  * on a line of its own: its numeral large in the heading serif in gold (壹
  * 贰 叁 肆 in a Chinese deck, I II III IV in any other), its name in the
  * serif, a dotted leader running from the name to the page it opens on (the

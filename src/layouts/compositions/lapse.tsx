@@ -39,7 +39,7 @@ type Callout = Extract<Component, { type: "callout" }>
  *
  * Takes, in the invitation setting: one `timeline` across the page of three
  * to seven milestones with no icon, tone, tag, source or lane, and no
- * periods; then optionally a `callout` with no icon or tag.
+ * periods. Then optionally a `callout` with no icon or tag.
  *
  * Declines: a date, title or line wider than its place, a callout past two
  * lines.

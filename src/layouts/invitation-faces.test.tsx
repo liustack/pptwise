@@ -16,7 +16,7 @@ await installNodePlatform()
  * the invitation card beside its photograph on the cover, the card stock
  * round every content page with the chapter, the claim and its diamond, the
  * occasion and the hallmark folio, a part opening under a veil with its
- * Roman numeral, and the card signed at the close; in Chinese and in English.
+ * Roman numeral, and the card signed at the close. In Chinese and in English.
  */
 
 const PHOTO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="

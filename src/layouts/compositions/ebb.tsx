@@ -27,7 +27,7 @@ type Chart = Extract<Component, { type: "chart" }>
  * the page. One row a house: its name in the serif (ivory where it closed,
  * gold where it opened) and under it, small, what its figure counts and over
  * which stretch (the parenthesis its category closes with), the change from
- * its first count to its last (the point's `note`); the brackets are
+ * its first count to its last (the point's `note`). The brackets are
  * declared on the name and the line (`data-gloss-break`) rather than printed, right-aligned beside the
  * name, and its bar from the line down the middle: bronze to the left for
  * the first series (what was closed), gold to the right for the second
@@ -36,7 +36,7 @@ type Chart = Extract<Component, { type: "chart" }>
  *
  * Takes, in the invitation setting: one `bar` chart on its side of two
  * series, the first's values all at or below zero and the second's all at
- * or above it, no category in both, three to seven rows in all; each point
+ * or above it, no category in both, three to seven rows in all. Each point
  * may carry a `note`.
  *
  * Declines: series that share a category or run the wrong way, any other
@@ -81,7 +81,7 @@ export const ebbComposition: Composition = ({ components, ctx, rect, setting, cl
   const split = rows.map((r) => splitDetail(String(r.d.x)))
   if (split.some((s) => invitationWidth(s.name, NAME.size, ctx, { serif: true, bold: true }) > NAME.w || (s.detail !== undefined && invitationWidth(s.detail, DETAIL.size, ctx) > DETAIL.w))) return null
   if (rows.some((r) => r.d.note && invitationWidth(stripEmphasis(r.d.note), NOTE.size, ctx) > NOTE.w)) return null
-  // A closing bar's figure stays clear of the note column; an opening one inside the page.
+  // A closing bar's figure stays clear of the note column. An opening one inside the page.
   if (rows.some((r) => r.side < 0 && rect.x + ZERO.x - Math.abs(r.d.y) * scale - FIGURE.gap - invitationWidth(figureText(r.d.y), FIGURE.size, ctx, { serif: true, bold: true }) < rect.x + NOTE.right + 12)) return null
   if (rows.some((r) => r.side > 0 && rect.x + ZERO.x + Math.max(BAR.min, r.d.y * scale) + FIGURE.gap + invitationWidth(figureText(r.d.y), FIGURE.size, ctx, { serif: true, bold: true }) > rect.x + ROW.right)) return null
   const headLeft = `← ${stripEmphasis(closed.name).trim()}`

@@ -24,7 +24,7 @@ type Callout = Extract<Component, { type: "callout" }>
 
 /*
  * mirror: two ways of doing one thing set either side of a gold hairline,
- * luxe's 2026-10 board (p15). The claim centred over the page; under it a
+ * luxe's 2026-10 board (p15). The claim centred over the page. Under it a
  * balance at the head of a gold hairline down the middle. The first way is
  * named at the left in the gold serif, set against the line, the second at
  * the right in the ivory serif. Each row's question stands small and tracked

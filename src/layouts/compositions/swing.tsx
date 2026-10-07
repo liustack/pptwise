@@ -41,8 +41,8 @@ type Paragraph = Extract<Component, { type: "paragraph" }>
  *
  * Takes, in the invitation setting: a `row_cards` of two or three houses,
  * each a title, what it measures as its text and what moved as its `sub`,
- * with no icon, highlight or tone; then two `dumbbell` charts with a title,
- * each over some of the houses by name; then optionally a `paragraph`.
+ * with no icon, highlight or tone. Then two `dumbbell` charts with a title,
+ * each over some of the houses by name. Then optionally a `paragraph`.
  *
  * Declines: a chart category that names no house, a name, measure, line or
  * key past its room, any other chart mark.

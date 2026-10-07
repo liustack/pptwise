@@ -422,7 +422,7 @@ export type CompositionId =
  * - `invitation`: luxe's 2026-10 board. A house's gilt invitation to guests
  *   it already knows: warm black stock, champagne gold (the theme's accent)
  *   for rules, letters and the one figure a page is about, ivory words, old
- *   gold labels, and nothing filled solid but a bar; what came before or is
+ *   gold labels, and nothing filled solid but a bar. What came before or is
  *   quieter is drawn as an outline, a card is a gilt frame. Titles, names,
  *   numerals and figures are set in the heading serif, labels and sources
  *   in the body sans. A composition offered this setting is handed the

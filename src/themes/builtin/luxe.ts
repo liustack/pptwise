@@ -55,14 +55,14 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 一张金箔请柬。内容页四周一圈离页边 24px 的发丝内框（`luxe-motif` v2），
  * 顶上居中小字章名夹两段金短线（页面的 `kicker`），标题居中 30px 金色衬线、
  * 一行放得下就一行、放不下在逗号冒号处断、底对齐 y142，标题下一枚金菱
- * 跟着末行走；左下场合与年月，右下页码打成双线圆角的金印记。除 statement、
+ * 跟着末行走。左下场合与年月，右下页码打成双线圆角的金印记。除 statement、
  * quote 外的内容 kind 全交给 `invitation-sheet`，它把正文交给 invitation
- * 设定的构图；封面、章节、结尾换成 `invitation-cover`（双层金框请柬卡加
+ * 设定的构图。封面、章节、结尾换成 `invitation-cover`（双层金框请柬卡加
  * 右半版照片）、`invitation-chapter`（满版照片压黑、罗马数字章号）、
  * `invitation-ending`（请柬落款）。金只给线、字和一处重点，不铺实心卡片，
  * 不用象牙白实心块。标题字体改为 Times New Roman 配宋体：大数字、拉丁文
  * 和英文标题走 Times（衬线数字，英文标题里的弯引号也随之是西文的），中文
- * 走宋体（SimSun，Windows 与 PowerPoint 自带；预览机没有时落 Songti SC）。
+ * 走宋体（SimSun，Windows 与 PowerPoint 自带，预览机没有时落 Songti SC）。
  * statement 与 quote 两页不变，定稿没画，只多了内容页的内框和印记页码。
  */
 export const LUXE_TOKENS: StyleTokens = {
@@ -85,7 +85,7 @@ export const LUXE_TOKENS: StyleTokens = {
   },
   fonts: {
     // 请柬衬线：Times New Roman 管拉丁文与数字，SimSun/宋体 管中文（导出把
-    // 两者配成一对）；Songti SC/STSong 是设计稿点名的面，留作 macOS 预览回退。
+    // 两者配成一对）。Songti SC/STSong 是设计稿点名的面，留作 macOS 预览回退。
     heading: ["Times New Roman", "SimSun", "宋体", "Songti SC", "STSong", "serif"],
     body: ["Microsoft YaHei", "Helvetica Neue", "Arial", "system-ui"],
   },

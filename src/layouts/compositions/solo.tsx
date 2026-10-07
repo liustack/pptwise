@@ -22,7 +22,7 @@ type Kpi = Extract<Component, { type: "kpi_cards" }>
  * solo: one figure is the page, and a drawing beside it says how it came
  * about, luxe's 2026-10 board (p04 and p06). The claim centred over the
  * page. At the left the figure set huge in gold in the serif, its symbol
- * (× or %) hung on it at half its size; under it what it is in ivory, a
+ * (× or %) hung on it at half its size. Under it what it is in ivory, a
  * short gold rule, and its note in old gold. A hairline stands down the page
  * past the words, and the drawing at its right is handed on to the
  * composition that takes it (`handOn`): a fall from a high drawn as one line
@@ -48,7 +48,7 @@ const DIVIDER = { top: 230, bottom: 580 } as const
 /**
  * The drawing's band: from y230, 350px tall, ending at x1170 for a line and
  * at x1200 for bars, whose figures run past their ends. A line takes 530px,
- * bars 630px; the hairline and the words take what is left.
+ * bars 630px. The hairline and the words take what is left.
  */
 const DRAWING = { top: 230, h: 350 } as const
 function drawingBand(component: Component): { w: number; right: number } {

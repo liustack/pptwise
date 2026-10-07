@@ -24,7 +24,7 @@ type Rows = Extract<Component, { type: "row_cards" }>
  * reply: the things a house asks its guests to settle, set as the reply
  * card an invitation carries, luxe's 2026-10 board (p17). A gilt card in the
  * middle of the page with a stub at its left torn off along a dashed gold
- * line; down the stub the card's stamp (the page's `stamp`, 「回执 · 敬请回复」)
+ * line. Down the stub the card's stamp (the page's `stamp`, 「回执 · 敬请回复」)
  * stands in small gold type, upright in Chinese and turned to read from the
  * top in any other script, centred on the stub. On the card the chapter
  * small and tracked, the claim in the gold serif set from the left, then

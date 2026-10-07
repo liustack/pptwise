@@ -34,7 +34,7 @@ type Kpi = Extract<Component, { type: "kpi_cards" }>
  * comes to, luxe's 2026-10 board (p03). The claim centred over the page. At
  * the left the bars, each a step deeper gold than the year before, the value
  * over each in the serif (the gridlines cut clear of it) and the last one
- * lifted toward the ivory; where the
+ * lifted toward the ivory. Where the
  * run goes on in a second series (figures the author worked out rather than
  * ones the source published) its bars are hatched in gold inside a gold
  * outline. A reference the bars are read against (`reference`, a record
