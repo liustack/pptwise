@@ -99,6 +99,22 @@ describe("concept_equation component", () => {
     }
   })
 
+  it("sets the plus and equals signs on the baseline the export reads, a third of an em under the panels' middle", () => {
+    // The export lands a run's baseline on the SVG `y` and ignores
+    // `dominant-baseline`. A sign placed at the middle under "middle" sat
+    // on the line in the preview and a third of an em above it in the deck.
+    const ctx = themed("brief")
+    const h = conceptEquation.measure(two, 1104, ctx)
+    const { container } = svg(conceptEquation.render(two, { x: 0, y: 0, w: 1104 }, ctx))
+    const signs = Array.from(container.querySelectorAll("text")).filter((t) => t.textContent === "+" || t.textContent === "=")
+    expect(signs).toHaveLength(2)
+    for (const sign of signs) {
+      expect(sign.getAttribute("dominant-baseline")).toBe("alphabetic")
+      const size = Number(sign.getAttribute("font-size"))
+      expect(Number(sign.getAttribute("y"))).toBeCloseTo(h / 2 + size * 0.35, 5)
+    }
+  })
+
   it("declares instead of printing operators over four blank panels", () => {
     const three = {
       type: "concept_equation" as const,

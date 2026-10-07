@@ -68,6 +68,23 @@ describe("hub_spoke component", () => {
     expect(container.querySelectorAll("polygon").length).toBe(0)
   })
 
+  it("sets each badge number on the baseline the export reads, a third of an em under the disc's center", () => {
+    // The export lands a run's baseline on the SVG `y` and ignores
+    // `dominant-baseline`. A number placed at the disc's center under
+    // "middle" sat centered in the preview and a third of an em high in the
+    // deck.
+    const { container } = svg(hubSpoke.render(four, { x: 80, y: 80, w: 1088 }, themed("ledger")))
+    const badges = Array.from(container.querySelectorAll("circle")).slice(1)
+    expect(badges).toHaveLength(4)
+    for (const disc of badges) {
+      const number = disc.nextElementSibling!
+      expect(number.tagName.toLowerCase()).toBe("text")
+      expect(number.getAttribute("dominant-baseline")).toBe("alphabetic")
+      const size = Number(number.getAttribute("font-size"))
+      expect(Number(number.getAttribute("y"))).toBeCloseTo(Number(disc.getAttribute("cy")) + size * 0.35, 5)
+    }
+  })
+
   it("spoke endpoints sit on the hub circle and on a capsule", () => {
     const ctx = themed("ledger")
     const box = { x: 80, y: 80, w: 1088 }
