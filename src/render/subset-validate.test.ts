@@ -31,6 +31,19 @@ describe("assertSubset", () => {
     expect(() => assertSubset(el)).toThrow(/nested svg/i)
   })
 
+  it("rejects a text baseline the export does not read", () => {
+    // svg2pptx puts a run's baseline on `y` whatever this attribute says, so
+    // "middle" centered a label in the preview and not in the deck.
+    for (const value of ["middle", "central", "hanging", "mathematical"]) {
+      const el = parse(`<svg ${NS}><text x="0" y="9" font-size="12" dominant-baseline="${value}">hi</text></svg>`)
+      expect(() => assertSubset(el), value).toThrow(/dominant-baseline/)
+    }
+    for (const value of ["alphabetic", "auto"]) {
+      const el = parse(`<svg ${NS}><text x="0" y="9" font-size="12" dominant-baseline="${value}">hi</text></svg>`)
+      expect(() => assertSubset(el), value).not.toThrow()
+    }
+  })
+
   it("rejects filter / clipPath / use / pattern", () => {
     expect(() => assertSubset(parse(`<svg ${NS}><filter id="f"></filter></svg>`))).toThrow(/filter/i)
     expect(() => assertSubset(parse(`<svg ${NS}><use href="#x"/></svg>`))).toThrow(/use/i)
