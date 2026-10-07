@@ -368,6 +368,37 @@ describe("auditDeck — B-group ink fixes (bench-driven fix round, defect A hand
   })
 })
 
+// The marked words of a verdict take the verdict's tone. The tone was a raw
+// palette hex, and on every light theme's paper the warning amber sat between
+// 2.42:1 and 2.93:1, the positive green on six of them between 2.79:1 and
+// just under 3:1, all short of the 3:1 a 26px run needs. Short marked verdicts, so the
+// run is painted on every theme and not truncated away before it.
+describe("verdict_banner's marked run reads on every theme's page", () => {
+  for (const themeId of CANONICAL_THEME_IDS) {
+    it(themeId, () => {
+      const ir = deck(
+        themeId,
+        (["warning", "positive"] as const).flatMap((tone): Slide[] => [
+          {
+            type: "content",
+            kind: "points",
+            heading: "verdict",
+            components: [{ type: "verdict_banner", tone, text: "结论：**关键提升**，符合预期" }],
+          },
+          {
+            type: "content",
+            kind: "points",
+            heading: "verdict",
+            components: [{ type: "verdict_banner", tone, text: "Roll out to **ten percent** first" }],
+          },
+        ]),
+      )
+      const contrast = auditDeck(ir).findings.filter((f) => f.code === "low-contrast")
+      expect(contrast.map((f) => `p${f.page} ${f.message}`)).toEqual([])
+    })
+  }
+})
+
 /** Long enough to overflow any content rect on its own — see the first test. */
 const CODE_OVERFLOW = Array.from({ length: 60 }, (_, i) => `const line${i} = ${i};`).join("\n")
 

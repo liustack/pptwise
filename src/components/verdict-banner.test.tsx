@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
+import { contrastRatio, liftedInk, readableOn } from "../render/ink"
 import { TECH_TOKENS } from "../themes/builtin/terminal"
 import { LEGACY_CUSTOM_TOKENS } from "../layouts/legacy-custom-tokens"
 import { INSIGHT_TOKENS } from "../themes/builtin/ledger"
@@ -446,5 +447,51 @@ describe("verdict_banner component emphasis", () => {
       (t) => t.textContent === "关键提升",
     )
     expect(run?.getAttribute("fill")).toBe("#2E9E6B")
+  })
+})
+
+describe("verdict_banner component: the marked run reads on the page", () => {
+  const WARNING = "#D9822B"
+  const marked = { ...component("warning", "结论：**关键提升**，符合预期"), icon: "triangle-alert" as const }
+
+  function markedRun(container: HTMLElement): Element {
+    const run = Array.from(container.querySelectorAll("tspan")).find((t) => t.textContent === "关键提升")
+    expect(run).toBeDefined()
+    return run!
+  }
+
+  it("lifts a tone that cannot read on the page until it clears 3:1, and keeps the hue", () => {
+    // The fixture has to exercise the lift: the raw amber is under 3:1 on white.
+    expect(contrastRatio(WARNING, ctx.colors.bg)).toBeLessThan(3)
+    const { container } = svg(verdictBanner.render(marked, { x: 0, y: 0, w: 1088 }, ctx))
+    const fill = markedRun(container).getAttribute("fill")!
+    expect(fill).not.toBe(WARNING)
+    expect(contrastRatio(fill, ctx.colors.bg)).toBeGreaterThanOrEqual(3)
+    // Still the verdict's tone beside the plain words, not the plain ink.
+    expect(fill).toBe(liftedInk(WARNING, ctx.colors.bg, 26))
+    expect(fill).not.toBe(readableOn(ctx.colors.bg))
+    expect(fill).not.toBe(ctx.colors.text)
+    // The mark and the icon are shapes and keep the raw tone.
+    expect(container.querySelector("rect")!.getAttribute("fill")).toBe(WARNING)
+    expect(container.querySelector("path")!.getAttribute("stroke")).toBe(WARNING)
+  })
+
+  it("holds a body-size run to 4.5:1", () => {
+    // A dense deck in a column-width slot sets the verdict at 22px, under
+    // the large-text cutoff.
+    const dense = { ...ctx, bodyFontPx: 20 }
+    const { container } = svg(verdictBanner.render(marked, { x: 0, y: 0, w: 528 }, dense))
+    expect(container.querySelector("text")!.getAttribute("font-size")).toBe("22")
+    const fill = markedRun(container).getAttribute("fill")!
+    expect(contrastRatio(fill, ctx.colors.bg)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it("measures the run against the page the slide paints, not the token", () => {
+    const paper = "#EFE9DC"
+    const onPaper = { ...ctx, defaultBg: paper }
+    const { container } = svg(verdictBanner.render(marked, { x: 0, y: 0, w: 1088 }, onPaper))
+    const fill = markedRun(container).getAttribute("fill")!
+    expect(fill).toBe(liftedInk(WARNING, paper, 26))
+    expect(contrastRatio(fill, paper)).toBeGreaterThanOrEqual(3)
   })
 })
