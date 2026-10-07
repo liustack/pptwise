@@ -528,6 +528,23 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "ink", kind: "list", composition: "excerpts" },
   { theme: "ink", kind: "list", composition: "glyphs" },
   { theme: "ink", kind: "quote", composition: "statute" },
+  // luxe's invitation sheet sets the shapes as a house's gilt invitation sets
+  // them, and draws the fourteen its own board added; a figure hands its
+  // drawing on, and descent and doubles are shown on pages of their own.
+  { theme: "luxe", kind: "points", composition: "programme" },
+  { theme: "luxe", kind: "data", composition: "climb" },
+  { theme: "luxe", kind: "fact", composition: "solo" },
+  { theme: "luxe", kind: "fact", composition: "descent" },
+  { theme: "luxe", kind: "fact", composition: "doubles" },
+  { theme: "luxe", kind: "data", composition: "balance" },
+  { theme: "luxe", kind: "comparison", composition: "swing" },
+  { theme: "luxe", kind: "data", composition: "ebb" },
+  { theme: "luxe", kind: "comparison", composition: "facing" },
+  { theme: "luxe", kind: "process", composition: "lapse" },
+  { theme: "luxe", kind: "list", composition: "triptych" },
+  { theme: "luxe", kind: "comparison", composition: "mirror" },
+  { theme: "luxe", kind: "photo", composition: "vitrine" },
+  { theme: "luxe", kind: "list", composition: "reply" },
 ]
 
 export function buildMatrix(

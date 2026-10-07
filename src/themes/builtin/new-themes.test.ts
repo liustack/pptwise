@@ -391,7 +391,8 @@ describe("stage tokens", () => {
     expect(luxeBg[0]).toBeGreaterThan(luxeBg[2])
 
     expect(resolveFontFace(STAGE_TOKENS.fonts.heading, "heading")).toBe("Microsoft YaHei")
-    expect(resolveFontFace(LUXE_TOKENS.fonts.heading, "heading")).toBe("SimSun")
+    // luxe pairs Times New Roman with SimSun since its 2026-10-08 redesign: still a serif against stage's sans.
+    expect(resolveFontFace(LUXE_TOKENS.fonts.heading, "heading")).toBe("Times New Roman")
 
     expect(STAGE_TOKENS.colors.accent).not.toBe(LUXE_TOKENS.colors.accent)
     expect(hslSat(STAGE_TOKENS.colors.accent)).toBeLessThan(0.2)

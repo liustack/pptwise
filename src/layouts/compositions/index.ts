@@ -156,6 +156,20 @@ import { pledgesComposition } from "./pledges"
 import { openingComposition } from "./opening"
 import { strataComposition } from "./strata"
 import { handscrollComposition } from "./handscroll"
+import { programmeComposition } from "./programme"
+import { climbComposition } from "./climb"
+import { soloComposition } from "./solo"
+import { descentComposition } from "./descent"
+import { doublesComposition } from "./doubles"
+import { balanceComposition } from "./balance"
+import { swingComposition } from "./swing"
+import { ebbComposition } from "./ebb"
+import { facingComposition } from "./facing"
+import { lapseComposition } from "./lapse"
+import { triptychComposition } from "./triptych"
+import { mirrorComposition } from "./mirror"
+import { vitrineComposition } from "./vitrine"
+import { replyComposition } from "./reply"
 import { revivalComposition } from "./revival"
 import { nationsComposition } from "./nations"
 import { genresComposition } from "./genres"
@@ -347,6 +361,20 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   excerpts: excerptsComposition,
   glyphs: glyphsComposition,
   statute: statuteComposition,
+  programme: programmeComposition,
+  climb: climbComposition,
+  solo: soloComposition,
+  descent: descentComposition,
+  doubles: doublesComposition,
+  balance: balanceComposition,
+  swing: swingComposition,
+  ebb: ebbComposition,
+  facing: facingComposition,
+  lapse: lapseComposition,
+  triptych: triptychComposition,
+  mirror: mirrorComposition,
+  vitrine: vitrineComposition,
+  reply: replyComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -418,7 +446,7 @@ function asksForTimelineDetail(components: readonly CompositionProps["components
  * line or note leaves them off. The ordinary callout sets the title bold over
  * its text and the tag under it.
  */
-const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods", "funnel", "crest", "branch", "regions", "levers", "cycles", "checkpoints", "cadence", "nations"])
+const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods", "funnel", "crest", "branch", "regions", "levers", "cycles", "checkpoints", "cadence", "nations", "lapse", "mirror"])
 
 function asksForCalloutDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "callout" && (component.title !== undefined || component.tag !== undefined))
@@ -442,7 +470,7 @@ function asksForWaterfallNote(components: readonly CompositionProps["components"
  * carries one is offered to these alone; the ordinary chart draws the line
  * and names it in its legend.
  */
-const CHART_REFERENCE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["benchmark"])
+const CHART_REFERENCE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["benchmark", "climb"])
 
 function asksForChartReference(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.reference !== undefined)
@@ -454,7 +482,7 @@ function asksForChartReference(components: readonly CompositionProps["components
  * offered to these alone; the ordinary chart prints every note after its
  * value.
  */
-const CHART_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["magnitude", "segments", "survey", "levers", "backdrop", "partition", "chronicle", "elapsed"])
+const CHART_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["magnitude", "segments", "survey", "levers", "backdrop", "partition", "chronicle", "elapsed", "solo", "descent", "ebb"])
 
 function asksForChartNote(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.series.some((s) => s.data.some((d) => d.note !== undefined)))
@@ -565,7 +593,7 @@ function asksForIconCardDetail(components: readonly CompositionProps["components
  * it. A page whose chart carries one is offered to these alone; the ordinary
  * chart sets the title over it as a table does.
  */
-const CHART_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["ladder", "backdrop", "thresholds", "partition", "chronicle", "measures", "headline", "census", "contrast", "bracket", "mix", "twins", "bases"])
+const CHART_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["ladder", "backdrop", "thresholds", "partition", "chronicle", "measures", "headline", "census", "contrast", "bracket", "mix", "twins", "bases", "swing"])
 
 function asksForChartTitle(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && Boolean(component.title?.trim()))
@@ -599,7 +627,7 @@ function asksForChartSteps(components: readonly CompositionProps["components"][n
  * whose timeline carries one is offered to these alone; the ordinary
  * timeline draws its node hollow.
  */
-const MILESTONE_STATUS_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["cadence"])
+const MILESTONE_STATUS_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["cadence", "lapse"])
 
 function asksForMilestoneStatus(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "timeline" && component.milestones.some((m) => m.status !== undefined))
@@ -661,6 +689,14 @@ function asksForGanttMoments(components: readonly CompositionProps["components"]
  */
 const BALLOT_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["quiz", "asks"])
 
+/**
+ * The compositions that set the page's stamp (`Slide.stamp`) where their
+ * board drew it: luxe's reply card down its torn stub. A page with one is
+ * offered to these alone; the face declares the stamp dropped when none
+ * takes the page.
+ */
+const STAMP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["reply"])
+
 function asksForRoadmapBasis(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "roadmap" && component.items.some((item) => (item.rows ?? []).some((row) => row.basis !== undefined)))
 }
@@ -676,7 +712,7 @@ function asksForChartTag(components: readonly CompositionProps["components"][num
 export function compose(props: CompositionProps, ids: readonly CompositionId[] = COMPOSITION_IDS): React.ReactElement | null {
   // What a composition hands on is drawn under the page's tag it has set.
   const handOn: CompositionProps["handOn"] = (components, rect) =>
-    compose({ ...props, components, rect, pageTag: undefined, ballot: undefined, claim: undefined, source: undefined }, ids)
+    compose({ ...props, components, rect, pageTag: undefined, ballot: undefined, stamp: undefined, claim: undefined, source: undefined }, ids)
   const marked = asksForChartMarks(props.components)
   const tagged = asksForChartTag(props.components)
   const banded = (props.tagBand ?? 0) > 0
@@ -728,6 +764,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue
     if (props.ballot && !BALLOT_COMPOSITIONS.has(id)) continue
+    if (props.stamp && !STAMP_COMPOSITIONS.has(id)) continue
     const drawn = COMPOSITIONS[id]({ ...props, handOn })
     if (drawn) return drawn
   }

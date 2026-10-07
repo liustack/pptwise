@@ -34,6 +34,9 @@ import type { MotifId } from "./types"
  *   ink-motif is ink's scroll folio: the page number against the right
  *   edge at the foot, the notice at the left, and the organization and the
  *   deck's `label` standing upright down the right margin.
+ *   luxe-motif is luxe's card stock folio: the organization and the
+ *   deck's `label` at the bottom left, the page number struck as a
+ *   hallmark at the bottom right.
  * - `"organization"`: the motif prints the organization somewhere of its
  *   own, and the shared row carries everything else.
  *
@@ -56,5 +59,6 @@ export const MOTIF_FOOTER_ROLES: Partial<Record<MotifId, MotifFooterRole>> = {
   "rail-motif": "row",
   "corner-ornament-motif": "row",
   "ink-motif": "row",
+  "luxe-motif": "row",
   "poster-motif": "organization",
 }

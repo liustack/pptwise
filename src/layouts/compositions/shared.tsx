@@ -203,6 +203,20 @@ export type CompositionId =
   | "daily"
   | "excerpts"
   | "glyphs"
+  | "programme"
+  | "climb"
+  | "solo"
+  | "descent"
+  | "doubles"
+  | "balance"
+  | "swing"
+  | "ebb"
+  | "facing"
+  | "lapse"
+  | "triptych"
+  | "mirror"
+  | "vitrine"
+  | "reply"
   | "statute"
 
 /**
@@ -405,10 +419,29 @@ export type CompositionId =
  *   characters each over its column of words, and a statute set upright.
  *   See `./scroll.tsx`.
  *
+ * - `invitation`: luxe's 2026-10 board. A house's gilt invitation to guests
+ *   it already knows: warm black stock, champagne gold (the theme's accent)
+ *   for rules, letters and the one figure a page is about, ivory words, old
+ *   gold labels, and nothing filled solid but a bar; what came before or is
+ *   quieter is drawn as an outline, a card is a gilt frame. Titles, names,
+ *   numerals and figures are set in the heading serif, labels and sources
+ *   in the body sans. A composition offered this setting is handed the
+ *   whole card and places the page's claim (`claim`) and its source
+ *   (`source`) itself, centred over the body, beside a photograph that runs
+ *   to the page's edge, or inside a reply card, and draws the shapes that
+ *   board drew and no other did: a programme with its numerals and pages,
+ *   a run of bars carried on hatched beside the figure it comes to, one
+ *   figure beside a drawing of how it came about (a fall from a high, pairs
+ *   of bars), two quantities on a balance, dumbbells in two stretches, bars
+ *   that run left and right from one line, a rule before and after as two
+ *   cards, a rule's dates with the long years cut short, a catalogue of
+ *   pieces, two ways of doing one thing either side of a line, a half page
+ *   photograph beside its items, and a reply card. See `./invitation.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll" | "invitation"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */
@@ -470,18 +503,41 @@ export interface CompositionProps {
    * than under the claim, and a composition offered it draws it once. A
    * board that sets the claim larger beside a photograph names its `size`
    * and the `foot` its last line ends on; a face whose board has one claim
-   * size reads neither.
+   * size reads neither. A board that sets the claim from the left in a
+   * column of its own (luxe's beside a photograph, or inside a reply card)
+   * names its line height, `align: "start"`, where the chapter over it
+   * stands and how it is tracked, and whether its diamond follows it.
    */
-  claim?: (column: { x: number; w: number; size?: number; foot?: number }) => React.ReactElement | null
+  claim?: (column: {
+    x: number
+    w: number
+    size?: number
+    foot?: number
+    lineHeight?: number
+    align?: "center" | "start"
+    labelTop?: number
+    labelTracking?: number
+    mark?: "center" | "start" | "none"
+    markGap?: number
+  }) => React.ReactElement | null
   /**
    * The page's source line, drawn by the face's own rules into the column a
    * composition gives it (`x` from the band's left, `w` its measure), or
    * `null` when it does not fit that column, in which case the composition
    * declines. Handed down only when the page has a source, by a face whose
    * board moves the source under the column beside a photograph (ink's
-   * scroll sheet); a composition offered it draws it once.
+   * scroll sheet); a composition offered it draws it once. A board that
+   * sets the source higher than the face's foot names the `top` of its
+   * first line.
    */
-  source?: (column: { x: number; w: number }) => React.ReactElement | null
+  source?: (column: { x: number; w: number; top?: number }) => React.ReactElement | null
+  /**
+   * The page's stamp (`Slide.stamp`), handed to a setting that sets it where
+   * its board drew it: luxe's reply card stands it down the card's torn
+   * stub. A page with one is offered to the compositions that draw it alone;
+   * the face declares it dropped when none takes the page.
+   */
+  stamp?: Slide["stamp"]
 }
 
 export interface CompositionInks {

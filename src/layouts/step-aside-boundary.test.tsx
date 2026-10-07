@@ -54,6 +54,7 @@ import { PeriodicalSheetContent } from "./content-periodical-sheet"
 import { PeriodicalQuoteContent } from "./content-periodical-quote"
 import { ScrollSheetContent } from "./content-scroll-sheet"
 import { ScrollQuoteContent } from "./content-scroll-quote"
+import { InvitationSheetContent } from "./content-invitation-sheet"
 import { MarqueeStatementContent } from "./content-marquee-statement"
 import { PitchPhotoContent } from "./content-pitch-photo"
 import { GridStatementContent } from "./content-grid-statement"
@@ -230,6 +231,9 @@ const CASES: FaceCase[] = [
   // A chart is not a passage, so the quotation page sets the claim over the
   // page and the body under it, in the sheet's own band.
   { face: "scroll-quote", Face: ScrollQuoteContent, themeId: "ink", regions: ["face", "declined"] },
+  // luxe's invitation sheet: the same, under the claim and its diamond from
+  // y186 down to y616, over the source line.
+  { face: "invitation-sheet", Face: InvitationSheetContent, themeId: "luxe", regions: ["face", "declined"] },
   // A chart is not the one-line plan's row of touchpoints, so the page goes
   // straight to the sheet, and is declined once that cannot hold it either.
   { face: "marquee-statement", Face: MarqueeStatementContent, themeId: "rally", regions: ["aside", "declined"] },

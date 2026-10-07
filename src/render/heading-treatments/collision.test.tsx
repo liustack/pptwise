@@ -228,7 +228,8 @@ function expectBadgeClear(themeId: string, root: Element, heading: string): void
 
 describe("rail-numbered badge vs heading treatment", () => {
   it("luxe title does not intersect the {chapter}.{n} badge", () => {
-    const { root } = renderRailPage("luxe")
+    // luxe's own process page is its invitation sheet since the 2026-10-08 redesign; its treatment still reaches rail-numbered put there by value.
+    const { root } = renderAssignedRailPage("luxe")
     expectBadgeClear("luxe", root, GALLERY_HEADING)
   })
 

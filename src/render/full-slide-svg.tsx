@@ -17,6 +17,7 @@ import { CHAPTER_LAYOUTS } from "../layouts/index-chapter"
 import { CONTENT_LAYOUTS } from "../layouts/index-content"
 import { ENDING_LAYOUTS } from "../layouts/index-ending"
 import { MOTIFS } from "../motifs"
+import { treeFrameLeft } from "./frame-left"
 import { treeStepsAside } from "./step-aside"
 import type { ThemeDefinition } from "../themes/definitions"
 import type { EmphasisTreatment } from "../themes/schema"
@@ -437,11 +438,13 @@ export function FullSlideSvg({
       : { ...ir, meta: ir.meta.animation === undefined ? {} : { animation: ir.meta.animation } }
   }
   const Decor = page.motifOn && page.motifId !== undefined ? MOTIFS[page.motifId] : undefined
+  // A face that runs a photograph from the page's left edge says where the page's frame starts.
+  const frameLeft = treeFrameLeft(pageBody)
   const motifOpacity = page.motifIntensity === "subtle" ? 0.62 : undefined
   const motif =
     Decor && !imageCoverTakeover ? (
       <g data-decor>
-        <Decor ir={renderIr} slide={slide} ctx={ctx} page={page} index={index} />
+        <Decor ir={renderIr} slide={slide} ctx={ctx} page={page} index={index} {...(frameLeft !== undefined ? { frameLeft } : {})} />
       </g>
     ) : null
   const motifDepth: SvgDepthLayers = motif
