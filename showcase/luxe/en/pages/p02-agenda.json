@@ -1,0 +1,31 @@
+{
+  "components": [
+    {
+      "type": "numbered_cards",
+      "items": [
+        {
+          "title": "Gold",
+          "text": "How high it went, and how far it has fallen since",
+          "sub": "03"
+        },
+        {
+          "title": "Customers",
+          "text": "Less jewellery, more bars and coins, fixed prices and per-gram swinging",
+          "sub": "05"
+        },
+        {
+          "title": "The trade",
+          "text": "Who is closing stores, and what the tax change and purity standard bring",
+          "sub": "09"
+        },
+        {
+          "title": "Us",
+          "text": "Product, pricing, store service and gold risk, and five things to settle together",
+          "sub": "13",
+          "emphasis": true
+        }
+      ]
+    }
+  ],
+  "notes": "Four things today. The first three are changes outside our walls: where the gold price stands, how customers buy gold now, and who in the trade is closing stores along with the new tax and standards. The fourth is us: how we shape next year's range, how we price, how we run store services and how we manage gold-price risk. The last few items are not decisions head office has already made. We want to make them with you."
+}

@@ -1,0 +1,69 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "reference": {
+        "value": 1256,
+        "label": "Record 1,256.00 · intraday, 29 Jan 2026"
+      },
+      "series": [
+        {
+          "name": "Annual average, China Gold Association",
+          "data": [
+            {
+              "x": "2019",
+              "y": 308.7
+            },
+            {
+              "x": "2020",
+              "y": 388.13
+            },
+            {
+              "x": "2021",
+              "y": 373.66
+            },
+            {
+              "x": "2022",
+              "y": 390.58
+            },
+            {
+              "x": "2023",
+              "y": 449.05
+            },
+            {
+              "x": "2024",
+              "y": 548.49
+            }
+          ]
+        },
+        {
+          "name": "Calculated from SGE Au99.99 daily quotes",
+          "data": [
+            {
+              "x": "2025",
+              "y": 798.12
+            },
+            {
+              "x": "2026 Jan-Sep",
+              "y": 1025.08
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "3.3",
+          "unit": "×",
+          "label": "2019 average 308.70 yuan/g\nJan-Sep 2026 average 1,025.08 yuan/g",
+          "note": "In yuan per gram. The multiple is calculated"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: China Gold Association annual releases, Shanghai Gold Exchange Au99.99 daily quotes. From 2025 the average is calculated from daily quotes by the association's own method",
+  "notes": "First, where the price stands. These are annual volume-weighted averages for the Shanghai Gold Exchange's Au99.99 contract, in yuan per gram. 308.70 in 2019 and 548.49 in 2024 are figures published by the China Gold Association. The association has not published a 2025 average, so the last two bars are ours, worked from the exchange's daily turnover and volume by the association's own method: 798.12 for 2025 and 1,025.08 for January to September this year. We checked that method against four averages the association did publish, including the whole of 2024 and the first half of 2025, and it matches. The average so far this year is 3.3 times 2019's. The record came on 29 January: 1,256 intraday, with a close of 1,243.02."
+}

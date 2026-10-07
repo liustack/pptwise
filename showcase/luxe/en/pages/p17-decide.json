@@ -1,0 +1,33 @@
+{
+  "stamp": {
+    "text": "Reply · RSVP"
+  },
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "title": "New-line mix",
+          "text": "How much heritage, design and light pieces in next year's lines, by region"
+        },
+        {
+          "title": "Pricing rules",
+          "text": "Which pieces are fixed-price, how often to review, and what move in gold triggers a change"
+        },
+        {
+          "title": "Trade-ins",
+          "text": "One standard in every store, and who supplies the testing kit and receipt forms"
+        },
+        {
+          "title": "Gold risk",
+          "text": "An exposure ledger in every store, and leasing and hedging for dealers who opt in"
+        },
+        {
+          "title": "Tax and sourcing",
+          "text": "Check each withdrawal's use and invoice, and which channel bars come through"
+        }
+      ]
+    }
+  ],
+  "notes": "Finally, five things we would like to decide with you. We will discuss them in groups after this session and settle them next month. One, the new-line mix: how much heritage gold, design pieces and light pieces, set region by region because customers differ. Two, pricing rules: which pieces carry a fixed price and which are sold by weight, how often fixed prices are reviewed, and how big a gold move triggers a change. Three, trade-ins: whether every store works to the industry standard, and who provides testing equipment and receipt templates. Four, gold-price risk: every store keeps a ledger of its gold exposure, and we ask whether head office should arrange bank gold leasing and hedging for dealers who choose to join. Five, tax and sourcing: check what each withdrawal of gold is for and the invoice that goes with it. The World Gold Council found that after the tax change gold bars from non-member channels, such as independent gold shops and brand franchise stores, rose by about 13%, while member channels such as banks and brands' own stores were not affected. So which channel our bars come through is worth working out together. None of these has a ready answer. They all need your experience."
+}

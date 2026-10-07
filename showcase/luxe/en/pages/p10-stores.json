@@ -1,0 +1,58 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "series": [
+        {
+          "name": "Net closures",
+          "data": [
+            {
+              "x": "Chow Tai Fook (mainland POS · Mar 2024 to Jun 2026)",
+              "y": -2123,
+              "note": "7,170 → 5,047"
+            },
+            {
+              "x": "China Gold (stores · 2025)",
+              "y": -925,
+              "note": "4,236 → 3,311"
+            },
+            {
+              "x": "Lao Feng Xiang (outlets · end 2024 to Jun 2026)",
+              "y": -922,
+              "note": "5,838 → 4,916"
+            },
+            {
+              "x": "Luk Fook (mainland · Mar 2025 to Mar 2026)",
+              "y": -299,
+              "note": "3,179 → 2,880"
+            },
+            {
+              "x": "Chow Sang Sang (mainland · end 2024 to Jun 2026)",
+              "y": -165,
+              "note": "842 → 677"
+            }
+          ]
+        },
+        {
+          "name": "Net openings",
+          "data": [
+            {
+              "x": "Laopu Gold (own stores · end 2024 to Jun 2026)",
+              "y": 9,
+              "note": "36 → 45"
+            },
+            {
+              "x": "CHJ (jewellery stores · end 2024 to Jun 2026)",
+              "y": 171,
+              "note": "1,511 → 1,682"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: company annual, interim and quarterly reports. Company figures with different periods and store definitions, so read direction, not size",
+  "notes": "Who is closing stores and who is opening them. Every figure here is what the listed companies themselves report. Fiscal years and store definitions differ, so each row carries its own period, and we read the direction rather than rank them. Chow Tai Fook's mainland points of sale went from 7,170 at the end of March 2024 to 5,047 at the end of June this year, a net 2,123 fewer in just over two years. Lao Feng Xiang, China Gold, Luk Fook and Chow Sang Sang are all shrinking too. The two adding stores are CHJ and Laopu Gold, which runs 45 stores of its own. What kind of stores are closing? Of the 1,073 Chow Tai Fook closed in FY2026, 524 were in third-tier cities and below, and franchised stores fell by a net 949. Lao Feng Xiang closed 342 franchised stores in third and fourth-tier cities in the first half while opening 71 in first and second-tier cities. China Gold's annual report also cites industry association data: the 11 jewellery companies listed in Shanghai and Shenzhen had a net 1,704 fewer stores than at the end of 2024, down 7.19%. Lao Feng Xiang's and China Gold's starting counts are worked out from their year-end counts and net closures. The trade is shrinking, and what it is shedding is stores that did not pay their way."
+}

@@ -1,0 +1,155 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "storytelling",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "luxe",
+  "filename": "gold-dealer-conference-zh",
+  "meta": {
+    "organization": "年度经销商大会",
+    "date": "二〇二六年十月"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "二〇二六年十月"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "金价新高之后\n我们卖什么",
+      "summary": "品牌总部 敬致全国经销商伙伴"
+    },
+    {
+      "id": "p02-agenda",
+      "type": "content",
+      "kind": "points",
+      "heading": "今天讲四件事，最后一件请大家一起定",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p03-price",
+      "type": "content",
+      "kind": "data",
+      "heading": "金价七年涨到 3.3 倍，盘中最高到过 1,256 元/克",
+      "focus": "chart"
+    },
+    {
+      "id": "p04-retreat",
+      "type": "content",
+      "kind": "fact",
+      "heading": "高点之后回落 27%，仍比去年均价高 14%",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p05-ch-customers",
+      "type": "chapter",
+      "kicker": "第一章",
+      "heading": "顾客变了",
+      "summary": "首饰少了，金条金币多了，一口价在回摆"
+    },
+    {
+      "id": "p06-flip",
+      "type": "content",
+      "kind": "fact",
+      "kicker": "第一章　顾客变了",
+      "heading": "金条金币第一次超过首饰，今年上半年已是首饰的 2.6 倍",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p07-lighter",
+      "type": "content",
+      "kind": "data",
+      "kicker": "第一章　顾客变了",
+      "heading": "金饰用金一年少了四分之一，花的钱反而多了 8%",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p08-swing",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "第一章　顾客变了",
+      "heading": "一口价做上去了，金价一回落，按克计价又回来了",
+      "focus": "chart"
+    },
+    {
+      "id": "p09-ch-industry",
+      "type": "chapter",
+      "kicker": "第二章",
+      "heading": "行业变了",
+      "summary": "同行在关店，税和标准在改"
+    },
+    {
+      "id": "p10-stores",
+      "type": "content",
+      "kind": "data",
+      "kicker": "第二章　行业变了",
+      "heading": "上市同行大多在关店，逆势开店的是老铺和潮宏基",
+      "focus": "chart"
+    },
+    {
+      "id": "p11-tax",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "第二章　行业变了",
+      "heading": "每 100 元原料可抵税从约 11.50 元降到 6.00 元",
+      "focus": "from_to"
+    },
+    {
+      "id": "p12-standard",
+      "type": "content",
+      "kind": "process",
+      "kicker": "第二章　行业变了",
+      "heading": "纯度国标仍用 2012 版，新版还在批准",
+      "focus": "timeline"
+    },
+    {
+      "id": "p13-ch-together",
+      "type": "chapter",
+      "kicker": "第三章",
+      "heading": "我们一起做什么",
+      "summary": "产品、定价、门店服务和金价风险"
+    },
+    {
+      "id": "p14-product",
+      "type": "content",
+      "kind": "list",
+      "kicker": "第三章　我们一起做什么",
+      "heading": "明年上新往三处走：古法金、设计款、小克重",
+      "focus": "image_grid"
+    },
+    {
+      "id": "p15-pricing",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "第三章　我们一起做什么",
+      "heading": "定价两条腿走：设计和手艺走一口价，素金和金条按克卖",
+      "focus": "comparison"
+    },
+    {
+      "id": "p16-service",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "第三章　我们一起做什么",
+      "heading": "以旧换新和回收按标准做，\n金价风险先记清再对冲",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p17-decide",
+      "type": "content",
+      "kind": "list",
+      "kicker": "第三章　我们一起做什么",
+      "heading": "请与我们一起定的五件事",
+      "focus": "row_cards"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "heading": "金价我们定不了，\n卖什么、怎么卖，我们**一起**定。",
+      "summary": "品牌总部 敬上"
+    }
+  ]
+}

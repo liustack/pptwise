@@ -1,0 +1,155 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "storytelling",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "luxe",
+  "filename": "gold-dealer-conference-en",
+  "meta": {
+    "organization": "Annual Dealer Conference",
+    "date": "October 2026"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "October 2026"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "After Gold's Record High,\nWhat Do We Sell?",
+      "summary": "From head office to our dealer partners across China"
+    },
+    {
+      "id": "p02-agenda",
+      "type": "content",
+      "kind": "points",
+      "heading": "Four things today, the last we settle together",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p03-price",
+      "type": "content",
+      "kind": "data",
+      "heading": "Gold rose 3.3× in 7 years, peak 1,256 yuan/g",
+      "focus": "chart"
+    },
+    {
+      "id": "p04-retreat",
+      "type": "content",
+      "kind": "fact",
+      "heading": "27% off the high, still 14% above 2025's average",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p05-ch-customers",
+      "type": "chapter",
+      "kicker": "Chapter One",
+      "heading": "Our customers have changed",
+      "summary": "Less jewellery, more bars and coins, fixed prices swinging back"
+    },
+    {
+      "id": "p06-flip",
+      "type": "content",
+      "kind": "fact",
+      "kicker": "Chapter One · Our customers have changed",
+      "heading": "Bars and coins overtook jewellery, now 2.6× it",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p07-lighter",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Chapter One · Our customers have changed",
+      "heading": "A quarter less gold in jewellery, 8% more spent",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p08-swing",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Chapter One · Our customers have changed",
+      "heading": "Fixed prices climbed, then per-gram came back",
+      "focus": "chart"
+    },
+    {
+      "id": "p09-ch-industry",
+      "type": "chapter",
+      "kicker": "Chapter Two",
+      "heading": "The trade has changed",
+      "summary": "Peers are closing stores, and tax and standards are changing"
+    },
+    {
+      "id": "p10-stores",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Chapter Two · The trade has changed",
+      "heading": "Most peers close stores, Laopu and CHJ open more",
+      "focus": "chart"
+    },
+    {
+      "id": "p11-tax",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Chapter Two · The trade has changed",
+      "heading": "VAT credit per 100 yuan: about 11.50 to 6.00",
+      "focus": "from_to"
+    },
+    {
+      "id": "p12-standard",
+      "type": "content",
+      "kind": "process",
+      "kicker": "Chapter Two · The trade has changed",
+      "heading": "Purity rules date from 2012, new ones pending",
+      "focus": "timeline"
+    },
+    {
+      "id": "p13-ch-together",
+      "type": "chapter",
+      "kicker": "Chapter Three",
+      "heading": "What we do together",
+      "summary": "Product, pricing, store service and gold risk"
+    },
+    {
+      "id": "p14-product",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Chapter Three · What we do together",
+      "heading": "New lines go three ways: heritage, design, light",
+      "focus": "image_grid"
+    },
+    {
+      "id": "p15-pricing",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Chapter Three · What we do together",
+      "heading": "Fixed price for craft, by weight for plain gold",
+      "focus": "comparison"
+    },
+    {
+      "id": "p16-service",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "Chapter Three · What we do together",
+      "heading": "Trade-ins to standard,\ngold risk logged first",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p17-decide",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Chapter Three · What we do together",
+      "heading": "Five things we would like to settle with you",
+      "focus": "row_cards"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "heading": "Gold sets the price.\nThe rest we set **together**.",
+      "summary": "With thanks, head office"
+    }
+  ]
+}

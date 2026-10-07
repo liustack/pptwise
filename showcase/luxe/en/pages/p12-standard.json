@@ -1,0 +1,47 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "milestones": [
+        {
+          "date": "2013-05",
+          "title": "GB 11887-2012 in force",
+          "desc": "Mandatory, still current"
+        },
+        {
+          "date": "2022-07",
+          "title": "Price-marking rules",
+          "desc": "No charges beyond the tag"
+        },
+        {
+          "date": "2024-01",
+          "title": "Review: revise it"
+        },
+        {
+          "date": "2024-10",
+          "title": "Revision planned",
+          "desc": "Name adds labelling"
+        },
+        {
+          "date": "2025-05",
+          "title": "Hard-gold standard",
+          "desc": "QB/T 5793-2024"
+        },
+        {
+          "date": "2026-10",
+          "title": "Still in approval",
+          "desc": "Not yet published",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "tip",
+      "title": "What to do now",
+      "text": "Tags and receipts follow the current rules and show purity, weight, pricing method and labour charge. Once the new version is out, head office issues one set of changes to tags and hallmarks"
+    }
+  ],
+  "footnote": "Source: National Public Service Platform for Standards Information (checked 7 Oct 2026), SAMR Order No. 56, industry standards information platform",
+  "notes": "Purity standards. Stores still work to GB 11887-2012, the mandatory national standard on precious metal purity and naming for jewellery, in force since May 2013. A review in January 2024 concluded it should be revised, and a revision plan followed that October. The new title adds labelling to purity and naming, and several leading brands are among the drafters. As of 7 October the national standards platform lists it as awaiting approval. It has not been published, so neither its final text nor its start date is known. Two current rules also bear on tags. The price-marking rules in force since July 2022 forbid charging anything beyond the marked price or any fee that is not shown. And at last year's consumer rights day, the market regulator reminded shoppers to ask whether a piece is priced by weight or at a fixed price. Hard gold has its own industry standard, in force since May last year. Our approach: write tags in full under today's rules now, and when the new standard is out, head office issues one set of changes for tags and hallmarks, so stores do not each go their own way."
+}
