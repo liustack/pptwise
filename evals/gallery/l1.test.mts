@@ -127,6 +127,30 @@ describe("auditL1 planted defects", () => {
     expect(codes(svg)).toContain("label-collision")
   })
 
+  // rally's steps badge before its number was checked: a chevron in the
+  // theme's primary, a disc painted in the page colour on it, and the number
+  // set in that same primary. Against the page the disc sits on, 1.08:1.
+  const rallyBadge = (numberFill: string) =>
+    wrap(
+      `<rect width="1280" height="720" fill="#2A1E3F"/>` +
+        `<path d="M 64 230 L 280 230 L 280 205 L 336 254 L 280 303 L 280 278 L 64 278 Z" fill="#23173A"/>` +
+        `<circle cx="102" cy="254" r="22" fill="#2A1E3F" stroke="#23173A" stroke-width="2.5"/>` +
+        `<text x="102" y="261" text-anchor="middle" font-size="16" font-weight="700" fill="${numberFill}">01</text>` +
+        `<text x="134" y="260" font-size="20" font-weight="700" fill="#FFFFFF">三月</text>`,
+    )
+
+  it("flags a number set in a colour its own badge disc swallows as low-contrast", () => {
+    const result = auditL1(rallyBadge("#23173A"))
+    const contrast = result.findings.filter((f) => f.code === "low-contrast")
+    expect(contrast).toHaveLength(1)
+    expect(contrast[0]!.message).toContain('"01"')
+    expect(contrast[0]!.message).toContain("1.08:1 on #2A1E3F")
+  })
+
+  it("does not flag the same badge once the number reads on its disc", () => {
+    expect(codes(rallyBadge("#FFFFFF"))).not.toContain("low-contrast")
+  })
+
   it("does not flag two data-value-label boxes that sit a line apart", () => {
     const svg = wrap(
       `<text data-value-label="1" x="1000" y="160" font-size="16" text-anchor="end">90</text>` +
@@ -601,6 +625,15 @@ describe("auditL1 live sample", () => {
       const svg = renderSlideSvg(ir, index)
       expect(classifyL1(auditL1(svg)), `p${String(index + 1).padStart(2, "0")}`).not.toContain("isolated-mid-piece")
       expect(svg, `p${String(index + 1).padStart(2, "0")}`).not.toMatch(/<g data-decor="">\s*<circle[^>]*r="3"/)
+    }
+  })
+
+  it("live steps pages set every badge number in an ink its disc can read", async () => {
+    const assets = await corpusAssets(LEXICONS.zh)
+    for (const theme of ["rally", "luxe", "ledger", "crayon"]) {
+      const svg = renderSlideSvg(componentPage("steps", COMPONENT_BUILDERS.steps!, LEXICONS.zh, assets, theme), 0)
+      expect(svg, theme).toContain(">01<")
+      expect(classifyL1(auditL1(svg)), theme).not.toContain("low-contrast")
     }
   })
 
