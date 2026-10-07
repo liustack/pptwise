@@ -777,7 +777,10 @@ describe("B-group ink fixes — full 13-theme sweep (bench-driven fix round, def
   for (const themeId of CANONICAL_THEME_IDS) {
     it(`${themeId}: steps.tsx badge digit clears contrast against its own circle`, () => {
       const findings = auditFindings(deckFor(themeId, STEPS_SLIDE))
-      expect(findings.filter((f) => f.code === "low-contrast" && f.detail?.text === "1")).toEqual([])
+      // The badge prints a padded "01". Matched against a bare "1", this
+      // filter found nothing on any theme, so it passed while the digit sat
+      // at 1.08:1 on rally's disc.
+      expect(findings.filter((f) => f.code === "low-contrast" && f.detail?.text === "01")).toEqual([])
     })
 
     it(`${themeId}: roadmap.tsx badge digit clears contrast against its own circle`, () => {

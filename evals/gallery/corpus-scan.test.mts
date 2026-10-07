@@ -337,6 +337,25 @@ describe("gallery SVG text respects the readable font floor", () => {
   })
 })
 
+// Every gallery page's text reads against the shape painted under it. L1
+// carries the deck auditor's contrast walk for this, and it found 50 pages
+// when it arrived: rally's steps numbers at 1.08:1 on their own disc, the
+// same badge on seven other themes, device captions on a dark primary band,
+// every quote_wall's open-quote mark, one bold card laid out regular, and a
+// slanted panel graded by its box. There is no allowlist: a page here either
+// reads or is fixed.
+describe("gallery text reads against what it is painted on", () => {
+  it("scans every theme/layout/component/density page in zh/en/mixed", () => {
+    expect(corpus.pages.length).toBeGreaterThan(0)
+    const low = corpus.pages
+      .filter((page) => page.l1Codes.includes("low-contrast"))
+      .flatMap((page) =>
+        page.l1.findings.filter((f) => f.code === "low-contrast").map((f) => `${page.id}: ${f.message}`),
+      )
+    expect(low, low.slice(0, 20).join("\n")).toEqual([])
+  })
+})
+
 // ---------------------------------------------------------------------------
 // device-frame.test.mts
 // ---------------------------------------------------------------------------

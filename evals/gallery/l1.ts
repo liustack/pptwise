@@ -1,8 +1,10 @@
 /**
  * L1 gallery audit: geometry and taboo markers, zero model.
  *
- * Reuses `auditSvgMarkup` (overflow / page-overflow), `findOverlapIssues` and
- * `findRunMisfits` (the runs of one line colliding, reported as overlap).
+ * Reuses `auditSvgMarkup` (overflow / page-overflow), `findOverlapIssues`,
+ * `findRunMisfits` (the runs of one line colliding, reported as overlap) and
+ * `findContrastIssues` (text graded against the shape actually painted under
+ * it, the walk `pptwise audit` runs, reported as low-contrast).
  * Extra checks: strikethrough vs underline, ink-box overlap, boxless card
  * overflow, page-edge stick, font-size floor, overflow markers, declared
  * content drops, Latin vertical type, axis-title vs data-mark intersection, isolated midground
@@ -18,7 +20,7 @@
 import { META_FONT_FLOOR_PT, META_FONT_FLOOR_PX, pxToPt } from "@/constants"
 import { findOverflowVocabulary } from "@/ir/overflow-vocabulary"
 import { getPlatform } from "@/platform/registry"
-import { __pathBoundingBox, findOverlapIssues } from "@/audit/deck-audit"
+import { __pathBoundingBox, findContrastIssues, findOverlapIssues } from "@/audit/deck-audit"
 import { printsMark } from "@/audit/printed-marks"
 import { auditSvgMarkup, findRunMisfits, parseTransform, textLineWidth, textRuns, type TextRun } from "@/audit/svg-audit"
 import {
@@ -55,6 +57,7 @@ export const L1_CODES = [
   "isolated-mid-piece",
   "axis-title-overlap",
   "label-collision",
+  "low-contrast",
 ] as const
 
 export type L1Code = (typeof L1_CODES)[number]
@@ -1168,6 +1171,17 @@ export function auditL1(svg: string): L1Result {
     findings.push({
       code: "overlap",
       message: `two regions overlap by ${pct}% of the smaller region's area — near "${issue.a.label}" and "${issue.b.label}"`,
+    })
+  }
+  // Text against whatever is painted under its own glyphs, not against the
+  // page: a badge disc, a caption band, a card. L1 had no contrast check of
+  // its own, so a number set in the chevron fill on a disc the colour of the
+  // page (rally's steps, 1.08:1) passed every gallery audit while the deck
+  // auditor reported it on the same page.
+  for (const issue of findContrastIssues(svg)) {
+    findings.push({
+      code: "low-contrast",
+      message: `text "${issue.text}" reads at ${issue.ratio.toFixed(2)}:1 on ${issue.background}, under the ${issue.required}:1 its size needs`,
     })
   }
   for (const issue of findRunMisfits(svg)) {

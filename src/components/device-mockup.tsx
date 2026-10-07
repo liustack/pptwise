@@ -1,7 +1,7 @@
 import type { Component } from "@/ir"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { DroppedContentMarker } from "../render/drop-marker"
-import { metaInk, readableOn } from "../render/ink"
+import { accessibleInk, metaInk, readableOn } from "../render/ink"
 import { mixHex } from "./color-mix"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -193,10 +193,18 @@ function ScreenPlaceholder({ w, h, ctx }: { w: number; h: number; ctx: Component
   )
 }
 
-/** Caption band — verbatim style copy of `image.tsx`'s bottom color band
- * (primary bg 88% opacity + centered white text), rendered inside the
+/** Caption band — the same bottom color band `image.tsx` draws (an opaque
+ * primary strip with its words centered on it), rendered inside the
  * screen's own local coordinate space so it never collides with either
- * device's own frame (browser's top bar, phone's bezel/home-indicator). */
+ * device's own frame (browser's top bar, phone's bezel/home-indicator).
+ *
+ * The words are measured against the band, the colour this component paints
+ * under them, and the band is opaque so that colour is the one on the page.
+ * `colors.surface` is light on most themes and reads on their primary, but
+ * where primary is a dark block fill on a dark theme both are dark: rally's
+ * caption sat at 1.25:1 and luxe's at 1.02:1. At 0.88 the strip was primary
+ * blended with whatever the screenshot had under it, a colour the ink was
+ * never checked against, which is why `image.tsx` made its band opaque. */
 function CaptionBand({
   caption,
   w,
@@ -209,16 +217,17 @@ function CaptionBand({
   ctx: ComponentCtx
 }) {
   const fitted = fitSvgLine(caption, { maxWidth: w - 24, fontSize: 16, minFontSize: 16 })
+  const ink = accessibleInk(ctx.colors.surface, ctx.colors.primary, fitted.fontSize)
   return (
     <>
-      <rect x={0} y={h - 32} width={w} height={32} fill={ctx.colors.primary} fillOpacity={0.88} />
+      <rect x={0} y={h - 32} width={w} height={32} fill={ctx.colors.primary} />
       <text
         data-truncated={fitted.truncated ? "1" : undefined}
         x={w / 2}
         y={h - 11}
         textAnchor="middle"
         fontSize={fitted.fontSize}
-        fill={ctx.colors.surface}
+        fill={ink}
         fontFamily={ctx.fonts.body}
         dominantBaseline="alphabetic"
       >

@@ -1268,6 +1268,41 @@ describe("<polygon> joins the same registration gate as rect/path (sweep2 T4)", 
   })
 })
 
+// horizon-wedge's subtitle sits on the light page just above the slanted top
+// edge of its navy wedge. Registered by its bounding box, the wedge claimed
+// the subtitle and the audit graded gray on the page as gray on navy, 2.24:1.
+describe("a straight-edged <path> is graded against its own outline, not its box", () => {
+  const page = `<rect x="0" y="0" width="1280" height="720" fill="#F7F6F2"/>`
+
+  for (const d of ["M0,720 L0,600 L1280,440 L1280,720 Z", "m0 720 v-120 l1280 -160 v280 z"]) {
+    it(`leaves text above the slanted edge on the page (${d})`, () => {
+      const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${page}
+        <path d="${d}" fill="#1E2A4A"/>
+        <text x="96" y="500" font-size="24" fill="#6B6B6B">subtitle above the wedge</text>
+      </svg>`
+      expect(findContrastIssues(markup)).toEqual([])
+    })
+
+    it(`still grades text inside the wedge against the wedge (${d})`, () => {
+      const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${page}
+        <path d="${d}" fill="#1E2A4A"/>
+        <text x="900" y="690" font-size="20" fill="#2B3550">signature inside the wedge</text>
+      </svg>`
+      const issues = findContrastIssues(markup)
+      expect(issues).toHaveLength(1)
+      expect(issues[0]).toMatchObject({ background: "#1E2A4A", fill: "#2B3550" })
+    })
+  }
+
+  it("keeps a curved path on its box, where no exact outline is computed", () => {
+    const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${page}
+      <path d="M0,720 L0,600 Q640,300 1280,600 L1280,720 Z" fill="#1E2A4A"/>
+      <text x="96" y="480" font-size="24" fill="#6B6B6B">over the curve's box</text>
+    </svg>`
+    expect(findContrastIssues(markup)).toHaveLength(1)
+  })
+})
+
 // Task-2 review (bench-driven fix round, defect A), Moderate #2: every real
 // circle/ellipse the shipped component suite renders puts text dead-center
 // (rings.tsx's "Core" label sits ~40px² from its circle's center — nowhere

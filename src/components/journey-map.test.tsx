@@ -8,6 +8,7 @@ import { parseSvgRoot } from "../render/serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { journeyMap } from "./journey-map"
 import { FORM_BODY_FLOOR } from "./legibility"
+import { measureTextUnits } from "../lib/svg-text-layout"
 import { listThemes } from "../api"
 import { contrastRatio } from "../render/ink"
 import type { ComponentCtx } from "./types"
@@ -144,6 +145,37 @@ describe("journey_map component", () => {
       const fill = Array.from(container.querySelectorAll("rect")).slice(-5)[2]!.getAttribute("fill")!
       expect(fill, theme).not.toBe(ctx.colors.surface)
       expect(contrastRatio(fill, ctx.colors.surface), theme).toBeGreaterThanOrEqual(2)
+    }
+  })
+
+  // The dip's card is painted bold. Laid out at the regular width, brief's
+  // "Channel partner enablement" ran past its card's right edge and under the
+  // next card, white words on the page.
+  it("lays out the dip's opportunity in the bold it paints it in, so it stays on its card", () => {
+    const english = {
+      type: "journey_map" as const,
+      stages: [
+        { label: "Scoping", emotion: 4, opportunity: "Staffing-path automation" },
+        { label: "Solutioning", emotion: 2, opportunity: "Channel partner enablement" },
+        { label: "Seat setup", emotion: 3, opportunity: "Faster build iteration" },
+        { label: "Access setup", emotion: 5, opportunity: "Data quality governance" },
+      ],
+    }
+    for (const theme of listThemes().map((t) => t.id)) {
+      const ctx = themed(theme)
+      const { container } = svg(journeyMap.render(english, { x: 0, y: 0, w: 1104 }, ctx))
+      const card = Array.from(container.querySelectorAll("rect")).slice(-4)[1]!
+      const right = Number(card.getAttribute("x")) + Number(card.getAttribute("width"))
+      const lines = Array.from(card.parentElement!.querySelectorAll("text"))
+      expect(lines.length, theme).toBeGreaterThan(0)
+      expect(lines.map((t) => t.textContent).join(" "), theme).toBe("Channel partner enablement")
+      for (const line of lines) {
+        expect(line.getAttribute("font-weight"), theme).toBe("700")
+        const width =
+          measureTextUnits(line.textContent!, { bold: true, fontFamily: ctx.fonts.body }) *
+          Number(line.getAttribute("font-size"))
+        expect(Number(line.getAttribute("x")) + width, `${theme} ${line.textContent}`).toBeLessThanOrEqual(right)
+      }
     }
   })
 
