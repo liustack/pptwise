@@ -1,0 +1,46 @@
+{
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "stethoscope",
+          "title": "Tell us of allergies, conditions or illness",
+          "text": "Preschool Education Law, Article 15"
+        },
+        {
+          "icon": "hand-heart",
+          "title": "You or an adult you name picks up, tell us first",
+          "text": "Work Regulations, Article 13"
+        },
+        {
+          "icon": "receipt",
+          "title": "Medicine here needs your written consent",
+          "text": "Work Regulations, Article 20"
+        },
+        {
+          "icon": "ban",
+          "title": "No early pinyin, characters or sums, just play",
+          "text": "Ministry notice No. 57, 2018"
+        },
+        {
+          "icon": "calendar",
+          "title": "Come to parents' meetings and open days",
+          "text": "Work Regulations, Article 53"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "crayons",
+      "fit": "cover",
+      "caption": "Illustration: crayons (AI-generated)"
+    },
+    {
+      "type": "callout",
+      "variant": "tip",
+      "text": "Not sure about something? Ask in the class group chat first"
+    }
+  ],
+  "notes": "Finally, five small favours, each backed by a rule. One, tell us about allergies, special conditions or illness, as Article 15 of the Preschool Education Law asks. Two, pick-up is by you or an adult you name, and please tell us of any change. Three, if your child needs medicine at kindergarten, please give us written consent first. Under the Kindergarten Work Regulations we cannot give medicine without a guardian's consent. Four, there is no need to drill pinyin, characters or sums early. A 2018 Ministry of Education notice bars kindergartens from teaching them in advance, and there is no need to race ahead at home either. Five, come to parents' meetings and open days. If you are unsure about anything, just ask in the class group chat."
+}

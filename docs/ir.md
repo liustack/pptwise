@@ -247,7 +247,7 @@ A page usually argues about one thing. These fields let the author say which, an
 
 | field | marks | limits |
 | --- | --- | --- |
-| `chart.series[].data[].status` | `"forecast"` hatches the bar, `"target"` draws it as a dashed outline over a pale tint. A series that mixes statuses gets a Forecast or Target legend entry, and a forecast's value label says so. | `bar` and `stacked` only |
+| `chart.series[].data[].status` | `"forecast"` hatches the bar, `"target"` draws it as a dashed outline over a pale tint, `"estimate"` (a past value worked out from published ones) draws it pale inside a heavier dashed outline. A series that mixes statuses gets a Forecast, Target or Estimate legend entry, and a forecast's value label says so. | `bar` and `stacked` only |
 | `chart.series[].data[].emphasis` | the one bar the page is about, such as the latest year in a run of years: it keeps its series' colour and the other bars step back | `bar` only, one point per chart, not beside a marked series |
 | `chart.bands` | `[{ "from": 4.5, "to": 5, "label": "Target range" }]` tints a value range across the plot behind the data, labelled inside it, and the value axis grows to hold it. Write a target range this way rather than as two flat series. On a bar chart on its side a range runs down the rows and is named in a row over the plot, such as what a value below zero means (`{ "from": -0.4, "to": 0, "label": "← Screens did worse" }`) | `line`, `area` and `bar`, at most 2 |
 | `chart.gaps` | `[{ "after": "2017", "x": "2018", "label": "Not published" }]` keeps a place on the category axis for a value nobody published, such as a year a survey skipped. `after` names the category it follows, or an earlier gap. A bar chart draws a dashed outline there, about as tall as the bars run, with the label over it, and a line breaks there with the label over the axis | upright `bar` and `line`, at most 3. `x` is not a category the series have |
@@ -272,6 +272,7 @@ A page usually argues about one thing. These fields let the author say which, an
 | `timeline.milestones[].status` | `"pending"` for a milestone that has not come to pass, such as a survey round carried out whose data is not out yet: its node is drawn hollow | |
 | `callout.title` and `callout.tag` | a short bold line over the note ("Who pays"), and what the note rests on as a small tag under its text (`{ "text": "Company figure, as reported", "evidence": "company" }`) | |
 | `waterfall.items[].note` | a short line under a bar's label, such as the quantity it stands for ("3.187 t") | |
+| `waterfall.title` | a short name set over the bridge, as on a table ("How a private kindergarten's fee is worked out") | |
 | `roadmap.items[].rows[].basis` | what a row's value rests on, such as `"pending"` for a budget line still to be set. A value that is not settled is marked dashed | |
 | `roadmap.items[].duration` and `roadmap.duration_unit` | how long each phase lasts and the unit they are counted in (`15` and `"min"`), on every phase or none. The ordinary roadmap adds the length to the period line ("Part 1 · 15 min"), and a face that lays phases to scale draws each as long as it lasts | |
 | `roadmap.items[].checkpoint` and `roadmap.items[].points` | a check held as the phase ends ("Quiz 1"), as a tag on its card, and one to three short lines on what it covers | |

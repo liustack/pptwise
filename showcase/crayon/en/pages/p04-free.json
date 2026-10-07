@@ -1,0 +1,51 @@
+{
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "check",
+          "title": "Waived",
+          "text": "Public, final year: the care and education fee\nPrivate, final year: cut by the local public rate\nFrom the autumn 2025 term"
+        },
+        {
+          "icon": "x",
+          "title": "Still paid",
+          "text": "Meals, boarding and sundries, as usual\nWhat a private school charges above that rate\nYounger classes: the rules cover the final year"
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "14",
+          "unit": "million",
+          "label": "Children covered in 2025 (2026 Government Work Report)"
+        }
+      ]
+    },
+    {
+      "type": "waterfall",
+      "title": "The official example: a private kindergarten",
+      "unit": "yuan",
+      "items": [
+        {
+          "label": "Private fee a month",
+          "value": 800
+        },
+        {
+          "label": "Public rate, waived",
+          "value": -500
+        },
+        {
+          "label": "Parents pay",
+          "value": 300,
+          "kind": "total"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: State Council General Office, Opinions on Free Preschool Education (No. 27, 2025), briefing of August 7, 2025, 2026 Government Work Report. There is no single national amount",
+  "notes": "Next, free preschool education. Under a State Council General Office document issued in August last year, from the autumn 2025 term the care and education fee is waived for children in the final year at public kindergartens. Children in the final year at a private kindergarten licensed by the education authorities get a reduction at the level of a local public kindergarten of the same type, and the private kindergarten may still charge anything above that. Please note that only the care and education fee is waived. Meals, boarding and sundry fees are not. There is no single national amount either, it depends on the local public rate. At the official briefing the example given was this: a private kindergarten charges 800 yuan a month and a public one of the same type 500, so 500 is waived and parents pay the 300 difference. This year's Government Work Report says the policy now covers 14 million children, and that this year the policy will be improved. So far national rules cover the final year only. If anything changes for the younger classes, we will post it in the class group chat as soon as we have an official notice."
+}

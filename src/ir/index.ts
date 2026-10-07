@@ -796,8 +796,8 @@ export type ChartSeries = {
     x: string | number
     y: number
     size?: number
-    /** Bar and stacked only: a forecast (hatched) or a target (dashed outline), not a reported figure. */
-    status?: "forecast" | "target"
+    /** Bar and stacked only: a forecast (hatched), a target (dashed outline) or an estimate (pale in a dashed outline), not a reported figure. */
+    status?: "forecast" | "target" | "estimate"
     /** Bar only: the one bar the page is about. It keeps its series' colour and the other bars step back. */
     emphasis?: boolean
     /** Bars on their side, share-bar parts and line points only: a few words printed with the value. */

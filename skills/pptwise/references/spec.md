@@ -98,7 +98,7 @@ This section is generated from the preset library and each preset menu. `identit
 | `almanac` | Almanac | sustainability | medium | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
 | `ember` | Ember | startup | high | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `hierarchy` |
 | `vermilion` | Vermilion | government, institutional | low | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
-| `crayon` | Crayon | kids, education | high | 6 | `points`, `list`, `comparison`, `process`, `photo`, `statement` |
+| `crayon` | Crayon | kids, education | high | 7 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement` |
 | `museum` | Museum | museum, culture | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
 | `stage` | Stage | keynote | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `hierarchy` |
 | `lecture` | Lecture | education | high | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |

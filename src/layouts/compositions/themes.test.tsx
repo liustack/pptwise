@@ -56,6 +56,8 @@ const MANUSCRIPT_ONLY = ["inquiry", "ladder", "reach", "backdrop", "thresholds",
 const PERIODICAL_ONLY = ["foreword", "chronicle", "measures", "elapsed", "headline", "witness", "census", "contrast", "bracket", "mix", "twins", "parallel", "effects", "longform", "pledges"] as const
 /** The same for the scroll setting's own: `scroll-pages.test.tsx` puts them on these themes. */
 const SCROLL_ONLY = ["opening", "strata", "handscroll", "revival", "nations", "genres", "bases", "ages", "archive", "scenes", "daily", "excerpts", "glyphs", "statute"] as const
+/** The same for the crayonbox setting's own: `crayonbox-pages.test.tsx` puts them on these themes. */
+const CRAYONBOX_ONLY = ["crayons", "stickies", "waiver", "storeys", "swatches", "yardstick", "arc", "magnets", "crosscheck", "tray", "checkup", "backing", "badges", "ticks"] as const
 type BoardId = Exclude<
   CompositionId,
   | (typeof PANEL_ONLY)[number]
@@ -71,8 +73,9 @@ type BoardId = Exclude<
   | (typeof MANUSCRIPT_ONLY)[number]
   | (typeof PERIODICAL_ONLY)[number]
   | (typeof SCROLL_ONLY)[number]
+  | (typeof CRAYONBOX_ONLY)[number]
 >
-const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY, ...CONSOLE_ONLY, ...MEMO_ONLY, ...DOSSIER_ONLY, ...YEARBOOK_ONLY, ...LESSON_ONLY, ...PITCH_ONLY, ...MARQUEE_ONLY, ...BINDER_ONLY, ...MANUSCRIPT_ONLY, ...PERIODICAL_ONLY, ...SCROLL_ONLY]
+const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY, ...CONSOLE_ONLY, ...MEMO_ONLY, ...DOSSIER_ONLY, ...YEARBOOK_ONLY, ...LESSON_ONLY, ...PITCH_ONLY, ...MARQUEE_ONLY, ...BINDER_ONLY, ...MANUSCRIPT_ONLY, ...PERIODICAL_ONLY, ...SCROLL_ONLY, ...CRAYONBOX_ONLY]
 const BOARD_IDS = COMPOSITION_IDS.filter((id): id is BoardId => !SETTING_ONLY.includes(id))
 
 /** One page per composition, in the shape each one takes. */

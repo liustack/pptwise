@@ -1,0 +1,52 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "milestones": [
+        {
+          "date": "Arrival",
+          "title": "Brought by you or an adult you name",
+          "icon": "door-open"
+        },
+        {
+          "date": "Meals",
+          "title": "3.5 to 4 hours between main meals",
+          "icon": "utensils"
+        },
+        {
+          "date": "Outdoors",
+          "title": "At least 2 hours a day, 1 hour of it exercise",
+          "icon": "sun",
+          "highlight": true
+        },
+        {
+          "date": "Nap",
+          "title": "Usually about 2 hours",
+          "icon": "bed"
+        },
+        {
+          "date": "Home time",
+          "title": "Handed to you or an adult you name",
+          "icon": "footprints"
+        }
+      ]
+    },
+    {
+      "type": "image_grid",
+      "items": [
+        {
+          "asset_id": "playground",
+          "caption": "Illustrations: outdoors, blocks, nap room (AI-generated)"
+        },
+        {
+          "asset_id": "blocks"
+        },
+        {
+          "asset_id": "nap"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Kindergarten Work Regulations (Order No. 39), Articles 13, 18 and 23: outdoor time is a rule. Nap length is advice from the Guidelines for Ages 3 to 6",
+  "notes": "Some parts of a kindergarten day are set by regulation. Under the Kindergarten Work Regulations, children normally spend at least two hours a day outdoors, and at least one hour of that is physical exercise. The one hour is part of the two, not on top. Main meals are three and a half to four hours apart. Children are brought in and collected by a guardian or an adult the guardian names. A nap of about two hours is the guidelines' advice, adjusted for age, season and the child. Play is the basic activity, which is also what the Preschool Education Law asks. The weekly menu is posted for you to see. The three pictures are AI-generated illustrations, not photos of our kindergarten."
+}

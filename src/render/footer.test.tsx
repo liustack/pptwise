@@ -113,8 +113,8 @@ describe("no footer by default", () => {
 })
 
 describe("the footer row, when the deck asks for it", () => {
-  // memo, clinic, almanac, homeroom, ember, rally, proposal, thesis, journal and ink set their folios rather than printing the shared row: their own cases below.
-  const OWN_FOLIO_THEMES = new Set(["memo", "clinic", "almanac", "homeroom", "ember", "rally", "proposal", "thesis", "journal", "ink"])
+  // memo, clinic, almanac, homeroom, ember, rally, proposal, thesis, journal, ink and crayon set their folios rather than printing the shared row: their own cases below.
+  const OWN_FOLIO_THEMES = new Set(["memo", "clinic", "almanac", "homeroom", "ember", "rally", "proposal", "thesis", "journal", "ink", "crayon"])
   const SHARED_ROW_THEMES = CANONICAL_THEME_IDS.filter((theme) => !OWN_FOLIO_THEMES.has(theme))
 
   it.each(SHARED_ROW_THEMES)("%s: every mark in its place, on content pages only", (theme) => {
@@ -377,6 +377,25 @@ describe("the footer row, when the deck asks for it", () => {
       // The organization and the label stand upright down the right margin, a character a cell.
       expect(root.querySelector("[data-scroll-hall]")!.getAttribute("data-scroll-hall")).toBe(`${ORG}\u3000二〇二六年八月`)
       expect(texts(root).filter((t) => t.includes(ORG))).toHaveLength(0)
+    })
+  })
+
+  it("crayon: every word at the bottom left, the number in a pale disc of the page's section crayon, on content pages only", () => {
+    const ir = zhDeck("crayon", { footer: ALL_MARKS })
+    ir.slides.forEach((slide, index) => {
+      const root = page(ir, index)
+      if (slide.type !== "content") {
+        expect(root.querySelectorAll('[data-field="slidenum"]'), `crayon ${slide.type}: page number`).toHaveLength(0)
+        expect(root.querySelector("[data-footer]"), `crayon ${slide.type}: footer row`).toBeNull()
+        return
+      }
+      const row = root.querySelector('[data-footer="row"]')!
+      const [left, number] = texts(row)
+      expect(left).toBe(`${ORG} · 2026 年中期业绩 | 2026.08 · 讨论稿 · 内部资料，请勿外传`)
+      expect(number).toBe(String(index + 1))
+      expect(row.querySelector("[data-crayon-folio] circle")).not.toBeNull()
+      for (const t of Array.from(row.querySelectorAll("text"))) expect(t.getAttribute("data-contrast-tier")).toBe("meta")
+      expect(footerRules(root)).toHaveLength(0)
     })
   })
 

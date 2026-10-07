@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { render } from "@testing-library/react"
 import { BoundSlideSvg } from "../render/__fixtures__/bound-slide"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import type { PptxIR, Slide } from "@/ir"
 import { resolveStyle } from "../themes"
 import { MAX_DECOR_PIECES } from "../motifs/decor-budget"
@@ -15,11 +15,29 @@ import {
 import { __resetRegisteredThemes } from "../themes/definitions"
 import { registerTestTheme } from "../themes/test-fixtures"
 
+/*
+ * crayon's first dedicated faces (the open cover, the sticker chapter, the
+ * cards, the point and the to-do close) left crayon's menu for the 2026-10
+ * crayonbox faces and stay registered for any theme that names them. These
+ * tests set them on crayon's own tokens through a menu that still names
+ * them, so the depth contract they were drawn to keeps holding.
+ */
+const FIRST_CRAYON = "crayon-first-faces"
+
+beforeEach(() => {
+  registerTestTheme(FIRST_CRAYON, "crayon", {
+    cover: { face: "crayonbox-open" },
+    chapter: { face: "crayonbox-sticker" },
+    content: { list: { face: "crayonbox-cards" }, statement: { face: "crayonbox-point" }, points: { face: "narrow-column" } },
+    ending: { face: "crayonbox-todo" },
+  })
+})
+
 afterEach(() => {
   __resetRegisteredThemes()
 })
 
-function deck(slide: Slide, theme = "crayon"): PptxIR {
+function deck(slide: Slide, theme = FIRST_CRAYON): PptxIR {
   return {
     version: "5",
     filename: "crayonbox-full-slide.pptx",
@@ -30,7 +48,7 @@ function deck(slide: Slide, theme = "crayon"): PptxIR {
   } as PptxIR
 }
 
-function draw(slide: Slide, theme = "crayon") {
+function draw(slide: Slide, theme = FIRST_CRAYON) {
   return render(<BoundSlideSvg ir={deck(slide, theme)} slide={slide} index={0} />).container
 }
 
@@ -130,23 +148,24 @@ describe("crayonbox final depth contract", () => {
     expect(numbers.every((number) => number.closest('[data-depth="fg"]') !== null)).toBe(true)
   })
 
-  it("keeps the shared-layout motif at the specified yellow, pink, and purple", () => {
+  it("keeps the shared-layout motif's sun at the yellow and its stars at the box's orange and purple", () => {
     const slide: Slide = {
       type: "content",
       kind: "points",
       heading: "共享内容页",
       components: [{ type: "paragraph", text: "正文" }],
     }
-    const container = draw(slide)
+    const tokens = resolveStyle("crayon")
+    const container = draw(slide, "crayon")
     const sun = container.querySelector('[data-decor-piece="crayonbox-sun"]')!
     const stars = container.querySelector('[data-decor-piece="crayonbox-stars"]')!
 
     expect(sun.getAttribute("data-decor-role")).toBe("identity")
     expect(stars.getAttribute("data-decor-role")).toBe("identity")
     expect(sun.querySelector("circle")?.getAttribute("stroke")).toBe(SUN_YELLOW)
-    expect(Array.from(stars.querySelectorAll("text"), (star) => star.getAttribute("fill"))).toEqual([
-      CANDY_PINK,
-      CREATIVE_PURPLE,
+    expect(Array.from(stars.querySelectorAll("polygon"), (star) => star.getAttribute("fill"))).toEqual([
+      tokens.colors.accentPool![2],
+      tokens.colors.accentPool![4],
     ])
   })
 

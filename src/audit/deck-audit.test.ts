@@ -484,6 +484,11 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
     expect(truncated[0]).toMatchObject({ page: 1, slideId: "s1", code: "content-truncated" })
     expect(truncated[0].message).toMatch(/was truncated/)
     expect((truncated[0].detail as { text?: string }).text).not.toMatch(/…$/)
+    // The message quotes the whole line as it stands on the page, so an
+    // author can find which line was cut, not only its first words.
+    const drawn = (truncated[0].detail as { text: string }).text
+    expect(drawn.length).toBeGreaterThan(24)
+    expect(truncated[0].message).toContain(`"${drawn}"`)
   })
 
   it("surfaces a clipped assigned icon-card form body as content-truncated", () => {

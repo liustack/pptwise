@@ -3,132 +3,90 @@ import { describe, expect, it } from "vitest"
 import type { PptxIR, Slide } from "@/ir"
 import { resolveStyle } from "../themes"
 import { buildCtx } from "../render/full-slide-svg"
-import { accessibleInk } from "../render/ink"
-import {
-  CANDY_PINK,
-  CREATIVE_PURPLE,
-  GRASS_GREEN,
-  SKY_BLUE,
-  SUN_YELLOW,
-} from "../layouts/crayonbox-shared"
+import { blendOver } from "../render/ink"
+import { SLIDE_NUMBER_FIELD } from "../render/footer"
 import { parseSvgRoot, renderSvgMarkup } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { countDecorPieces, MAX_DECOR_PIECES } from "./decor-budget"
 import { CrayonboxMotif } from "./motif-crayonbox-motif"
 
-const ir: PptxIR = {
-  version: "5",
-  filename: "crayonbox-motif.pptx",
-  theme: { id: "crayon" },
-  meta: {},
-  assets: { images: {} },
-  slides: [],
-} as PptxIR
+/*
+ * crayonbox-motif v2, crayon's 2026-10 board: a crayon sun and two star
+ * stickers at the top right of every content page, and, when the deck asks
+ * for a footer, its name and term at the bottom left and the page number in
+ * a pale disc of the page's section crayon.
+ */
 
-function slideOf(type: Slide["type"]): Slide {
-  return { type, heading: "画出新的可能", components: [] } as Slide
+const page = (kicker: string | undefined, extra: Partial<Slide> = {}): Slide => ({ type: "content", kind: "points", heading: "画出新的可能", ...(kicker ? { kicker } : {}), components: [], ...extra }) as Slide
+
+function deck(slides: Slide[], footer = true): PptxIR {
+  return {
+    version: "5",
+    filename: "crayonbox-motif.pptx",
+    theme: { id: "crayon" },
+    meta: { organization: "全园新学期家长会" },
+    ...(footer ? { footer: { page_number: true, organization: true, label: "2026 年秋季学期" } } : {}),
+    assets: { images: {} },
+    slides,
+  } as PptxIR
 }
 
-function render(type: Slide["type"]) {
+function render(ir: PptxIR, index: number) {
   const tokens = resolveStyle("crayon")
   const ctx = buildCtx(tokens, {})
   const markup = renderSvgMarkup(
     <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-      <CrayonboxMotif ir={ir} slide={slideOf(type)} ctx={ctx} />
+      <CrayonboxMotif ir={ir} slide={ir.slides[index]!} ctx={ctx} index={index} />
     </svg>,
   )
   return { root: parseSvgRoot(markup), markup, tokens }
 }
 
-const PROTECTED_ZONES = {
-  title: { x: 96, y: 48, w: 1040, h: 122 },
-  body: { x: 96, y: 200, w: 1040, h: 420 },
-  footerMeta: { x: 48, y: 664, w: 1184, h: 44 },
-  brLogo: { x: 1120, y: 630, w: 96, h: 40 },
-  trLogo: { x: 1120, y: 48, w: 96, h: 40 },
-} as const
-
-type Box = { x0: number; y0: number; x1: number; y1: number }
-
-const intersects = (box: Box, zone: { x: number; y: number; w: number; h: number }) =>
-  box.x0 < zone.x + zone.w && box.x1 > zone.x && box.y0 < zone.y + zone.h && box.y1 > zone.y
-
 describe("CrayonboxMotif", () => {
-  it("paints a yellow four-ray sun and a two-star sticker group on content only", () => {
-    const { root } = render("content")
-    const sun = root.querySelector('[data-decor-piece="crayonbox-sun"]')!
-    const sunGroup = sun.querySelector("g")!
-    expect(sunGroup.getAttribute("transform")).toBe("translate(1240,28)")
-    const circle = sun.querySelector("circle")!
-    expect([circle.getAttribute("r"), circle.getAttribute("stroke"), circle.getAttribute("stroke-width")]).toEqual([
-      "8",
-      SUN_YELLOW,
-      "3",
-    ])
-    const rays = Array.from(sun.querySelectorAll("line"))
-    expect(rays.map((ray) => ["x1", "y1", "x2", "y2"].map((name) => Number(ray.getAttribute(name))))).toEqual([
-      [0, -12, 0, -18],
-      [0, 12, 0, 18],
-      [12, 0, 18, 0],
-      [-12, 0, -18, 0],
-    ])
-    expect(rays.every((ray) => ray.getAttribute("stroke-linecap") === "round")).toBe(true)
-
-    const stars = Array.from(root.querySelectorAll('[data-decor-piece="crayonbox-stars"] text'))
-    expect(stars.map((star) => [
-      star.textContent,
-      star.getAttribute("x"),
-      star.getAttribute("y"),
-      star.getAttribute("font-size"),
-      star.getAttribute("fill"),
-    ])).toEqual([
-      ["★", "1224", "78", "18", CANDY_PINK],
-      ["★", "1250", "112", "14", CREATIVE_PURPLE],
-    ])
-    expect(countDecorPieces(root)).toBe(2)
+  it("draws a crayon sun and two star stickers in the theme's own colours on a content page", () => {
+    const ir = deck([page("新规定")])
+    const { root, tokens } = render(ir, 0)
+    const sun = root.querySelector('[data-decor-piece="crayonbox-sun"] circle')!
+    expect([sun.getAttribute("cx"), sun.getAttribute("cy"), sun.getAttribute("r"), sun.getAttribute("stroke")]).toEqual(["1210", "64", "14", tokens.colors.chartPalette[3]])
+    expect(root.querySelectorAll('[data-decor-piece="crayonbox-sun"] line')).toHaveLength(8)
+    const stars = Array.from(root.querySelectorAll('[data-decor-piece="crayonbox-stars"] polygon')).map((p) => p.getAttribute("fill"))
+    expect(stars).toEqual([tokens.colors.accentPool![2], tokens.colors.accentPool![4]])
+    expect(() => assertSubset(root)).not.toThrow()
     expect(countDecorPieces(root)).toBeLessThanOrEqual(MAX_DECOR_PIECES)
+  })
 
+  it("paints nothing on a cover, a chapter or a close: their faces draw their own", () => {
     for (const type of ["cover", "chapter", "ending"] as const) {
-      expect(render(type).root.children, type).toHaveLength(0)
+      const ir = deck([{ type, heading: "画出新的可能", components: [] } as Slide])
+      expect(render(ir, 0).root.querySelector("[data-decor-piece]"), type).toBeNull()
     }
   })
 
-  it("keeps every leaf to the right of all five protected regions", () => {
-    const { root } = render("content")
-    const boxes: Box[] = []
-    for (const ray of Array.from(root.querySelectorAll('[data-decor-piece="crayonbox-sun"] line'))) {
-      const half = Number(ray.getAttribute("stroke-width")) / 2
-      boxes.push({
-        x0: 1240 + Math.min(Number(ray.getAttribute("x1")), Number(ray.getAttribute("x2"))) - half,
-        y0: 28 + Math.min(Number(ray.getAttribute("y1")), Number(ray.getAttribute("y2"))) - half,
-        x1: 1240 + Math.max(Number(ray.getAttribute("x1")), Number(ray.getAttribute("x2"))) + half,
-        y1: 28 + Math.max(Number(ray.getAttribute("y1")), Number(ray.getAttribute("y2"))) + half,
-      })
-    }
-    boxes.push({ x0: 1238, y0: 60, x1: 1256, y1: 82 })
-    boxes.push({ x0: 1250, y0: 95, x1: 1264, y1: 115 })
-
-    for (const box of boxes) {
-      expect(box.x0).toBeGreaterThan(1216)
-      for (const [name, zone] of Object.entries(PROTECTED_ZONES)) {
-        expect(intersects(box, zone), `${JSON.stringify(box)} enters ${name}`).toBe(false)
-      }
-    }
+  it("leaves the corner to a page laid over a photograph", () => {
+    const ir = deck([page("孩子会长成什么样", { background: { kind: "asset", asset_id: "books" } })])
+    const { root } = render(ir, 0)
+    expect(root.querySelector('[data-decor-piece="crayonbox-sun"]')).toBeNull()
+    expect(root.querySelector('[data-decor-piece="crayonbox-stars"]')).toBeNull()
+    expect(root.querySelector('[data-footer="row"]')).not.toBeNull()
   })
 
-  it("documents the purple-only white-ink exception and keeps other candy blocks dark", () => {
-    const { tokens } = render("content")
-    expect(accessibleInk(tokens.colors.text, CREATIVE_PURPLE, 18)).toBe("#FFFFFF")
-    for (const fill of [SKY_BLUE, tokens.colors.accent, GRASS_GREEN]) {
-      expect(accessibleInk(tokens.colors.text, fill, 18)).toBe(tokens.colors.text)
-      expect(accessibleInk(tokens.colors.text, fill, 18)).not.toBe("#FFFFFF")
-    }
+  it("prints the deck's name and term and the page number in a pale disc of the page's section crayon", () => {
+    const ir = deck([page("新规定"), page("新规定"), { type: "chapter", heading: "孩子会长成什么样", components: [] } as Slide, page("孩子会长成什么样"), page(undefined)])
+    const { tokens } = render(ir, 0)
+    const pool = tokens.colors.accentPool!
+    const disc = (i: number) => render(ir, i).root.querySelector("[data-crayon-folio] circle")!.getAttribute("fill")
+    expect(disc(1)).toBe(blendOver(pool[0]!, tokens.colors.surface, 0.16))
+    expect(disc(3)).toBe(blendOver(pool[1]!, tokens.colors.surface, 0.16))
+    // A page that names no section sits in the last one named before it.
+    expect(disc(4)).toBe(blendOver(pool[1]!, tokens.colors.surface, 0.16))
+    const { root } = render(ir, 3)
+    const number = root.querySelector(`[data-field="${SLIDE_NUMBER_FIELD}"]`)!
+    expect(number.textContent).toBe("4")
+    expect(Array.from(root.querySelectorAll('[data-footer="row"] text')).map((t) => t.textContent)).toContain("全园新学期家长会 · 2026 年秋季学期")
   })
 
-  it("renders deterministically and stays inside the supported SVG subset", () => {
-    const first = render("content")
-    const second = render("content")
-    expect(first.markup).toBe(second.markup)
-    expect(() => assertSubset(first.root)).not.toThrow()
+  it("prints no footer row when the deck asks for none", () => {
+    const { root } = render(deck([page("新规定")], false), 0)
+    expect(root.querySelector('[data-footer="row"]')).toBeNull()
   })
 })

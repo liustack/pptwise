@@ -21,6 +21,8 @@ export interface IconProps {
   size: number
   /** Stroke colour — must be a hex string (no CSS var / gradient). */
   color: string
+  /** Stroke width in the icon's 24px space. 2, lucide's own, when omitted. */
+  strokeWidth?: number
 }
 
 const STROKE_PROPS = {
@@ -34,6 +36,7 @@ function renderPrimitive(
   prim: PptxIconPrimitive,
   i: number,
   color: string,
+  strokeWidth?: number,
 ): React.ReactElement {
   const [tag, attrs] = prim
   // 目录里 fill 只会是 "currentColor"（codegen 逐值校验）：散点类图标的
@@ -55,6 +58,7 @@ function renderPrimitive(
   const common = {
     stroke: color,
     ...STROKE_PROPS,
+    ...(strokeWidth !== undefined ? { strokeWidth } : {}),
     ...(attrs.fill === "currentColor" ? { fill: color } : {}),
   }
   switch (tag) {
@@ -95,7 +99,7 @@ function renderPrimitive(
  * SVG subset. The icon is scaled from its native 24px coordinate space to
  * `size` and placed at `(x, y)`.
  */
-export function Icon({ name, x, y, size, color }: IconProps): React.ReactElement {
+export function Icon({ name, x, y, size, color, strokeWidth }: IconProps): React.ReactElement {
   const primitives = PPTX_ICONS[name]
   if (!primitives) {
     throw new Error(`Icon: unknown icon name "${name}"`)
@@ -103,7 +107,7 @@ export function Icon({ name, x, y, size, color }: IconProps): React.ReactElement
   const scale = size / 24
   return (
     <g transform={`translate(${x},${y}) scale(${scale})`}>
-      {primitives.map((prim, i) => renderPrimitive(prim, i, color))}
+      {primitives.map((prim, i) => renderPrimitive(prim, i, color, strokeWidth))}
     </g>
   )
 }

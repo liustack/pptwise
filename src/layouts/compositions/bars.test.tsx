@@ -159,3 +159,14 @@ describe("a bar on its side with value ranges marked", () => {
     expect(compose({ ...props, components: [banded as never] }, ["bars"])).toBeNull()
   })
 })
+
+describe("an estimated bar through compose", () => {
+  it("is offered to no hand-set plot that would draw it as a reported bar, so the ordinary chart draws it", async () => {
+    const { compose } = await import(".")
+    const { testCtx } = await import("./__fixtures__/kit")
+    const { ctx } = testCtx("bulletin")
+    const base = share() as unknown as { series: { data: Record<string, unknown>[] }[] }
+    const estimated = { ...base, series: base.series.map((s, i) => (i === 0 ? { ...s, data: s.data.map((d, k) => (k === 0 ? { ...d, status: "estimate" } : d)) } : s)) }
+    expect(compose({ components: [estimated] as never, ctx, rect: NOTICE_PLOT, setting: "notice" })).toBeNull()
+  })
+})

@@ -1,0 +1,52 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "gate",
+      "fit": "cover",
+      "caption": "Illustration: arriving (AI-generated)"
+    },
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "book-open",
+          "title": "70 children, 15 months",
+          "text": "Stress hormones rose in the first 9 days. More days easing in, more secure bonds",
+          "tag": {
+            "text": "Ahnert et al., Child Development 2004"
+          }
+        },
+        {
+          "icon": "book-open",
+          "title": "168 children, average 3.27",
+          "text": "Over 10 weeks in new care, the rise in stress at school grew",
+          "tag": {
+            "text": "Bernard et al., Child Development 2015"
+          }
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "The studies differ in who and what age. There is no official number of days to settle in"
+    },
+    {
+      "type": "paragraph",
+      "text": "What parents can do"
+    },
+    {
+      "type": "bullets",
+      "style": "checklist",
+      "items": [
+        "Stay a while, then leave a little longer each day",
+        "Watch their eating, sleep and play",
+        "Meet new people and places together",
+        "No tears does not mean settled, talk to us"
+      ]
+    }
+  ],
+  "footnote": "Source: each study as named on its card. What parents can do: Ministry of Education, Guidelines for Ages 3 to 6",
+  "notes": "Parents of the youngest children care most about settling in. To be clear first: there is no national standard for how many days it should take, and no official figure for how many children have separation anxiety. The percentages you see online have no source we could find, so we won't quote them. What we can share are two peer-reviewed studies. One followed 70 children aged 15 months. In the first nine days after their mothers left, the children's cortisol, a stress hormone, rose within an hour to 75 to 100 percent above home levels. The more days a mother spent easing the child in, the more likely the attachment stayed or became secure. The other, a US sample of 168 children with an average age of 3.27, found that over the first 10 weeks in a new childcare setting, the rise in cortisol at childcare grew. A high cortisol level is not a diagnosis of anxiety. So our advice: stay a while at first, then leave a little longer each day. Watch how your child eats, sleeps and plays, which is what the guidelines advise. No tears doesn't mean fully settled, so keep talking to us. And we won't promise no tears within a week, because every child is different. The picture is an AI-generated illustration."
+}

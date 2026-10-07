@@ -9,6 +9,14 @@ import { CHART_AXIS_LIMIT } from "./chart"
 export const schema = z
   .object({
     type: z.literal("waterfall"),
+    /** A short name printed over the bridge. See the describe below. */
+    title: z
+      .string()
+      .refine((value) => value.trim().length > 0, {
+        error: "waterfall title is blank. Write the bridge's name, or remove the field.",
+      })
+      .optional()
+      .describe("A name printed over the bridge."),
     /** 瀑布桥图条目：`value` 是带符号增量（相对上一条运行合计的涨跌），
      * `kind` 缺省即普通涨跌делта；显式 "total" 表示该条不是增量而是绝对
      * 合计检查点（渲染层从 0 画到 `value` 本身，不参与增量累加）。3-8

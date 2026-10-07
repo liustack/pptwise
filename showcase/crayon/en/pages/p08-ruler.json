@@ -1,0 +1,15 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "books"
+  },
+  "components": [
+    {
+      "type": "blockquote",
+      "text": "“Never measure every child with one ruler.” “No early lessons or drilling that pull seedlings up to make them grow.”",
+      "attribution": "Ministry of Education, Guidelines for Ages 3 to 6 (our translation). The law bans primary school lessons too (Article 59)"
+    }
+  ],
+  "footnote": "Background: AI-generated illustration",
+  "notes": "These two lines come straight from the guidelines, and we would like every parent to remember them. Every child has their own pace. In one class some children talk first and some run first, and both are fine. Please also don't rush your child into primary school content. Article 59 of the Preschool Education Law says kindergartens may not teach primary school courses, and primary school teaching starts from zero. The guidelines add that teaching young children to read characters early through rote memory and drilling does not suit how they learn. Playing together and reading picture books at home will do more good than early pinyin or sums. The background is an AI-generated illustration of a picture-book corner."
+}

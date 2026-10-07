@@ -179,3 +179,26 @@ describe("content-crayonbox-cards", () => {
     expect(() => assertSubset(renderContent().root)).not.toThrow()
   })
 })
+
+describe("content-crayonbox-cards section capsule", () => {
+  it("widens to hold a long section name whole instead of cutting it", () => {
+    const tokens = resolveStyle("crayon")
+    const bg = resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.surface)
+    const ctx = buildCtx(tokens, {}, undefined, bg)
+    const longChapter: Slide = { type: "chapter", heading: "孩子会长成什么样，五个领域", components: [] } as Slide
+    const ir = { version: "5", filename: "c.pptx", theme: { id: "crayon" }, meta: {}, assets: { images: {} }, slides: [longChapter, slide] } as PptxIR
+    const root = parseSvgRoot(
+      renderSvgMarkup(
+        <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+          <CrayonboxCardsContent ir={ir} slide={slide} index={1} ctx={ctx} />
+        </svg>,
+      ),
+    )
+    const label = textBy(root, "孩子会长成什么样，五个领域")
+    expect(label, "the whole section name").toBeDefined()
+    expect(label!.getAttribute("data-truncated")).toBeNull()
+    const capsule = label!.previousElementSibling!
+    const right = Number(capsule.getAttribute("x")) + Number(capsule.getAttribute("width"))
+    expect(Number(label!.getAttribute("x")) + 12 * 17).toBeLessThanOrEqual(right)
+  })
+})

@@ -1,0 +1,29 @@
+{
+  "components": [
+    {
+      "type": "numbered_cards",
+      "items": [
+        {
+          "icon": "moon",
+          "title": "Sleep",
+          "text": "Regular bedtime and wake-up. Naps count toward the day",
+          "sub": "10 to 13 h (health office, nutrition society, WHO)\n11 to 12 h (ministry guidelines)"
+        },
+        {
+          "icon": "tv",
+          "title": "Screens",
+          "text": "Under 1 hour a day in all, less is better. None at bedtime",
+          "sub": "Health commission, nutrition society and WHO agree"
+        },
+        {
+          "icon": "sun",
+          "title": "Outside",
+          "text": "Run around outdoors every day. 2 hours here, and at weekends",
+          "sub": "Outdoors comes first for the eyes"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Education ministry 2012, Patriotic Health office 2025, Nutrition Society 2022, WHO 2019, Health Commission 2021 (two papers), Work Regulations",
+  "notes": "If you remember only three things tonight, make it these three, and stick them on the fridge. One, sleep enough: a regular bedtime and wake-up time, and naps count toward the day's sleep. Two, less screen time: the National Health Commission, the Chinese Nutrition Society and the World Health Organization all advise no more than an hour a day in total, and less is better. Three, get outside: children have two hours outdoors here every day, so keep it up at weekends and in the holidays. The exact hours differ a little between these bodies, and the next slide shows them side by side."
+}

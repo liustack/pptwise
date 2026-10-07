@@ -31,7 +31,7 @@ This section is generated from the IR v5 kind vocabulary and the 22 preset menus
 | `list` | List | Present peer items whose order may change. | Use points when the sequence carries the reasoning. | 22/22 |
 | `comparison` | Comparison | Place alternatives, sides, or dimensions in direct contrast. | Containment belongs to hierarchy and direction belongs to process. | 22/22 |
 | `process` | Process | Show directed steps, a timeline, or a closed cycle. | An ordered argument without motion is points. | 22/22 |
-| `data` | Data | Make a set of numbers, a chart, or a table the subject. | Use fact when one number is the whole message. | 21/22 |
+| `data` | Data | Make a set of numbers, a chart, or a table the subject. | Use fact when one number is the whole message. | 22/22 |
 | `photo` | Photo | Make the image itself the content. | Use evidence when an exhibit exists to support a claim. | 22/22 |
 | `statement` | Statement | Give the deck author's own proposition a full page. | Words attributed to someone else are quote. | 17/22 |
 | `quote` | Quote | Center words attributed to another speaker or source. | The deck author's own proposition is statement. | 7/22 |

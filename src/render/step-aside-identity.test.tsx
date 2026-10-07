@@ -18,6 +18,7 @@ import { parseSvgRoot, renderSvgMarkup } from "./serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { GaugeStatsContent } from "../layouts/content-gauge-stats"
 import { registerTestTheme } from "../themes/test-fixtures"
+import { THEME_DEFINITIONS } from "../themes/definitions"
 
 const CANVAS_W = 1280
 
@@ -101,7 +102,14 @@ describe("a stepped-aside page keeps the theme it belongs to", () => {
   it("paints the motif a suppressing face had turned off", () => {
     // `crayonbox-cards` and `show-figures` declare `suppressMotif` about
     // their own artwork. A page with none of that artwork on it has no
-    // reason to keep the theme's decoration off.
+    // reason to keep the theme's decoration off. A theme-wide motif is a
+    // built-in's alone (a public theme decorates entry by entry), and since
+    // crayon's list page left `crayonbox-cards` for its crayonbox sheet in
+    // 2026-10 no built-in pairs one with a face that steps aside, so crayon's
+    // list page is pointed back at it for this test.
+    const menu = THEME_DEFINITIONS.crayon.menu.content
+    const list = menu.list
+    menu.list = { face: "crayonbox-cards" }
     const ir = {
       version: "5",
       filename: "motif.pptx",
@@ -130,7 +138,12 @@ describe("a stepped-aside page keeps the theme it belongs to", () => {
         },
       ],
     } as unknown as PptxIR
-    const markup = page(ir)
+    let markup: string
+    try {
+      markup = page(ir)
+    } finally {
+      menu.list = list
+    }
     expect(markup).toContain('data-face-stepped-aside="crayonbox-cards"')
     // Named, not sniffed. `data-decor` alone does not even distinguish the
     // attribute: this face paints its own `data-decor-piece="sun"` on the

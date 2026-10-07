@@ -1,0 +1,35 @@
+{
+  "components": [
+    {
+      "type": "numbered_cards",
+      "items": [
+        {
+          "icon": "scale",
+          "title": "New rules",
+          "text": "The preschool law, the free final year"
+        },
+        {
+          "icon": "sprout",
+          "title": "How children grow",
+          "text": "Five areas, a day at school"
+        },
+        {
+          "icon": "heart-handshake",
+          "title": "Home and school",
+          "text": "Sleep, screens, outdoors, meals, eyes"
+        },
+        {
+          "icon": "shield-check",
+          "title": "Safety tips",
+          "text": "Pick-up, bus, water, getting lost"
+        },
+        {
+          "icon": "list-checks",
+          "title": "A few favours",
+          "text": "Five small things, and next time"
+        }
+      ]
+    }
+  ],
+  "notes": "We have five things to talk about. First the new rules, especially the free final year that started last autumn. Then how children grow between three and six, and what a day at kindergarten looks like. The third part is the heart of tonight: what helps at home with sleep, screens, outdoor time, food and eyesight, and how the youngest children settle in. Then safety. Last, a few small favours we would like to ask."
+}

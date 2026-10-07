@@ -25,8 +25,9 @@ await installNodePlatform()
  *
  * `svg.includes("data-decor")` was not an identity assertion. It does not
  * even distinguish the attribute: a face's own `data-decor-piece="sun"`
- * satisfies it, and crayon's *un*-stepped-aside control page carries exactly
- * that while carrying no motif at all. A wrong motif, an empty decor
+ * satisfies it, and crayon's *un*-stepped-aside control page (the corpus's
+ * third until crayon left `crayonbox-cards` in 2026-10) carried exactly that
+ * while carrying no motif at all. A wrong motif, an empty decor
  * container or leftover face decoration all passed. These are the pieces the
  * motif actually paints, by name.
  *
@@ -35,8 +36,7 @@ await installNodePlatform()
  * 正式的、可测试的身份值"), so the page must have no decor at all.
  *
  * `gainsMotif` says the motif arrives *because* the face stepped aside.
- * `crayonbox-cards` and `show-figures` declare `suppressMotif`, so their
- * ordinary page has none. `gauge-sheet` does not, so its motif is on both
+ * `show-figures` declares `suppressMotif`, so its ordinary page has none. `gauge-sheet` does not, so its motif is on both
  * pages: brief's motif is its footer (`folio-motif`), which carries the
  * organization and the confidentiality label on every content page.
  *
@@ -46,7 +46,6 @@ await installNodePlatform()
  */
 const EXPECTED: Record<string, { motifPieces: readonly string[]; gainsMotif: boolean }> = {
   brief: { motifPieces: ["folio"], gainsMotif: false },
-  crayon: { motifPieces: ["crayonbox-sun", "crayonbox-stars"], gainsMotif: true },
   runway: { motifPieces: [], gainsMotif: false },
 }
 

@@ -11,6 +11,20 @@ import { rowsComposition } from "./rows"
 import { shareComposition } from "./share"
 import { shiftsComposition } from "./shifts"
 import type { Composition, CompositionId, CompositionProps } from "./shared"
+import { crayonsComposition } from "./crayons"
+import { stickiesComposition } from "./stickies"
+import { waiverComposition } from "./waiver"
+import { storeysComposition } from "./storeys"
+import { swatchesComposition } from "./swatches"
+import { yardstickComposition } from "./yardstick"
+import { arcComposition } from "./arc"
+import { magnetsComposition } from "./magnets"
+import { crosscheckComposition } from "./crosscheck"
+import { trayComposition } from "./tray"
+import { checkupComposition } from "./checkup"
+import { backingComposition } from "./backing"
+import { badgesComposition } from "./badges"
+import { ticksComposition } from "./ticks"
 import { stackComposition } from "./stack"
 import { tilesComposition } from "./tiles"
 import { tableComposition } from "./table"
@@ -347,6 +361,20 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   excerpts: excerptsComposition,
   glyphs: glyphsComposition,
   statute: statuteComposition,
+  crayons: crayonsComposition,
+  stickies: stickiesComposition,
+  waiver: waiverComposition,
+  storeys: storeysComposition,
+  swatches: swatchesComposition,
+  yardstick: yardstickComposition,
+  arc: arcComposition,
+  magnets: magnetsComposition,
+  crosscheck: crosscheckComposition,
+  tray: trayComposition,
+  checkup: checkupComposition,
+  backing: backingComposition,
+  badges: badgesComposition,
+  ticks: ticksComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -554,7 +582,7 @@ function asksForGanttBands(components: readonly CompositionProps["components"][n
  * to these alone; the ordinary cards set the title over them and draw a
  * card's icon in the theme's ink for its news.
  */
-const ICON_CARD_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["safeguards"])
+const ICON_CARD_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["safeguards", "badges"])
 
 function asksForIconCardDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "icon_cards" && (Boolean(component.title?.trim()) || component.items.some((item) => item.tone !== undefined)))
@@ -565,7 +593,7 @@ function asksForIconCardDetail(components: readonly CompositionProps["components
  * it. A page whose chart carries one is offered to these alone; the ordinary
  * chart sets the title over it as a table does.
  */
-const CHART_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["ladder", "backdrop", "thresholds", "partition", "chronicle", "measures", "headline", "census", "contrast", "bracket", "mix", "twins", "bases"])
+const CHART_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["ladder", "backdrop", "thresholds", "partition", "chronicle", "measures", "headline", "census", "contrast", "bracket", "mix", "twins", "bases", "checkup"])
 
 function asksForChartTitle(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && Boolean(component.title?.trim()))
@@ -655,6 +683,30 @@ function asksForGanttMoments(components: readonly CompositionProps["components"]
 }
 
 /**
+ * The compositions that draw a waterfall's title (`title`), the name set
+ * over the bridge. A page whose waterfall carries one is offered to these
+ * alone; the ordinary waterfall sets the title over it as a table does.
+ */
+const WATERFALL_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["waiver"])
+
+function asksForWaterfallTitle(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "waterfall" && Boolean(component.title?.trim()))
+}
+
+/**
+ * The compositions that draw a bar worked out from published figures
+ * (`data[].status: "estimate"`). A page whose chart carries one is offered
+ * to these alone, so no hand-set plot draws an estimate as a reported bar;
+ * the ordinary chart draws it pale inside a dashed outline and names it in
+ * its legend.
+ */
+const CHART_ESTIMATE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["checkup"])
+
+function asksForChartEstimate(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => component.type === "chart" && component.series.some((s) => s.data.some((d) => d.status === "estimate")))
+}
+
+/**
  * The compositions that draw the page's ballot (`Slide.ballot`), a box for
  * each choice beside every question. A page with one is offered to these
  * alone; the face declares the ballot dropped when none takes the page.
@@ -701,6 +753,8 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const iconed = asksForChartIcons(props.components)
   const gapped = asksForChartGaps(props.components)
   const sideBanded = asksForSideBands(props.components)
+  const estimated = asksForChartEstimate(props.components)
+  const bridged = asksForWaterfallTitle(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -724,6 +778,8 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (iconed && !CHART_ICON_COMPOSITIONS.has(id)) continue
     if (gapped && !CHART_GAP_COMPOSITIONS.has(id)) continue
     if (sideBanded && !CHART_SIDE_BAND_COMPOSITIONS.has(id)) continue
+    if (estimated && !CHART_ESTIMATE_COMPOSITIONS.has(id)) continue
+    if (bridged && !WATERFALL_TITLE_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue
