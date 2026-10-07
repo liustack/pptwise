@@ -132,6 +132,8 @@ Name resolution uses four levels in order:
 
 Deck and workspace files may shadow a factory preset or a pack theme by keeping the same id. A pack theme never takes a preset's id, since `pptwise packs sync` refuses such a pack. Freeze is a copy that preserves the bound name, for example `pptwise theme new --from brief -o deck-dir/theme.json --id brief`. Unknown names fail loudly and report the searched locations.
 
+A folded name is read as the preset it folded into before the first level is searched: `arena` and `playbill` resolve as `rally`, and `heritage` as `luxe`. Validation then draws the deck exactly as the new name would and prints a warning that names the edit to make. No file can take a folded or renamed id back, so a `theme.json` that still carries one is refused with the name to use instead.
+
 The lookup result travels with the command that asked for it. A resolved file is compiled into a definition once and handed down to validation, rendering, audit, and export as a plain argument. Nothing is written into a process-wide table, so deleting or editing a workspace file is seen by the next command exactly, and two decks rendered in one process can each bind a different file under the same id. The factory presets are constants. `registerTheme` in the SDK is the one process-level registration, meant for an embedder configuring its own preset shelf at startup, not for per-request state.
 
 To freeze a workspace theme for one deck, copy it into the deck directory as `theme.json` while preserving its id:

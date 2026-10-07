@@ -122,7 +122,7 @@ brief's sheets offer every composition except `pairs` (`SHEET_COMPOSITIONS` in [
 | face | what changed | code | used by | board |
 | :-- | :-- | :-- | :-- | :-- |
 | `gauge-figure` | the kpi_cards' second and third items stand right of a hairline beside the lead figure | [content-gauge-figure.tsx](../src/layouts/content-gauge-figure.tsx) | brief | [design/faces/gauge-figure](../design/faces/gauge-figure/README.md) |
-| `image-split` | a `column` parameter: `report` sets a 600px photograph, a 40px regular title, a 48 by 6 bar and the facts as `pairs`. Every other theme keeps `standard` | [image-pages.tsx](../src/render/image-pages.tsx) (`SPLIT_COLUMNS`) | brief (`report`), bulletin (`notice`), ember, heritage, journal, luxe, museum | [design/faces/image-split](../design/faces/image-split/README.md) |
+| `image-split` | a `column` parameter: `report` sets a 600px photograph, a 40px regular title, a 48 by 6 bar and the facts as `pairs`. Every other theme keeps `standard` | [image-pages.tsx](../src/render/image-pages.tsx) (`SPLIT_COLUMNS`) | brief (`report`), bulletin (`notice`), ember, journal, luxe, museum | [design/faces/image-split](../design/faces/image-split/README.md) |
 
 A takeover face now receives its menu entry's `params`, the way a standard face always has.
 
