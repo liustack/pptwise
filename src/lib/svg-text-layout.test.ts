@@ -1376,7 +1376,7 @@ describe("non-ASCII marks never measure narrower than the face draws them", () =
 
   it("covers the marks and symbols a Chinese or English deck carries", () => {
     for (const ch of "·—–…“”‘’《》、。，×°‰¥€") {
-      for (const face of ["georgia", "yahei", "simsun-kaiti", "times"] as const) {
+      for (const face of ["georgia", "yahei", "yahei-ui", "simsun-kaiti", "times"] as const) {
         expect(SYMBOL_ADVANCE_BOUNDS[face].regular[ch.charCodeAt(0)], `${face} ${ch}`).toBeDefined()
         expect(SYMBOL_ADVANCE_BOUNDS[face].bold[ch.charCodeAt(0)], `${face} bold ${ch}`).toBeDefined()
       }
@@ -1384,7 +1384,7 @@ describe("non-ASCII marks never measure narrower than the face draws them", () =
   })
 
   it("never measures a covered character below its bound or below the class average", () => {
-    const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "simsun-kaiti": "SimSun", times: "Times New Roman" } as const
+    const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "yahei-ui": "Microsoft YaHei UI", "simsun-kaiti": "SimSun", times: "Times New Roman" } as const
     for (const [face, weights] of Object.entries(SYMBOL_ADVANCE_BOUNDS) as [keyof typeof families, (typeof SYMBOL_ADVANCE_BOUNDS)["georgia"]][]) {
       for (const [weight, table] of Object.entries(weights) as ["regular" | "bold", Record<number, number>][]) {
         for (const [cp, w] of Object.entries(table)) {
@@ -1442,7 +1442,7 @@ describe("curly quotes measure in the face that paints them", () => {
   })
 
   it("measures every quote, dash and dot a face carries at that face's own advance", () => {
-    const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "simsun-kaiti": "SimSun", times: "Times New Roman" } as const
+    const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "yahei-ui": "Microsoft YaHei UI", "simsun-kaiti": "SimSun", times: "Times New Roman" } as const
     for (const [face, weights] of Object.entries(LATIN_FACE_MARK_ADVANCES) as [keyof typeof families, (typeof LATIN_FACE_MARK_ADVANCES)["georgia"]][]) {
       for (const [weight, table] of Object.entries(weights) as ["regular" | "bold", Record<number, number>][]) {
         for (const [cp, w] of Object.entries(table)) {
@@ -1456,6 +1456,36 @@ describe("curly quotes measure in the face that paints them", () => {
   it("counts a quoted sentence in a tabled face as measured exactly", () => {
     expect(measuresExactly("“Sales fell.”", { fontFamily: "Georgia" })).toBe(true)
     expect(measuresExactly("“销量下滑。”", { fontFamily: "Microsoft YaHei" })).toBe(true)
+    expect(measuresExactly("“Sales fell.”", { fontFamily: "Microsoft YaHei UI, Microsoft YaHei" })).toBe(true)
+  })
+})
+
+describe("YaHei's Western cut measures as YaHei but for its quotes", () => {
+  // A deck not written in Chinese sets YaHei text in Microsoft YaHei UI
+  // (`fonts.ts` `WESTERN_CUT`), whose advances are YaHei's on every code
+  // point but ‘ ’ “ ”, which it sets at Western width. PowerPoint paints
+  // those from the run's <a:latin> face, so that is the width they take.
+  const ui = { fontFamily: "Microsoft YaHei UI, Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" }
+  const yahei = { fontFamily: "Microsoft YaHei, PingFang SC, Helvetica Neue, sans-serif" }
+
+  it("prices the four curly quotes at the cut's own advance", () => {
+    expect(measureTextUnits("“", ui)).toBeCloseTo(772 / 2048, 3) // YaHei: 1
+    expect(measureTextUnits("”", ui)).toBeCloseTo(772 / 2048, 3)
+    expect(measureTextUnits("‘", ui)).toBeCloseTo(469 / 2048, 3)
+    expect(measureTextUnits("’", { ...ui, bold: true })).toBeCloseTo(594 / 2048, 3)
+    expect(measureTextUnits("“", { ...ui, bold: true })).toBeCloseTo(1010 / 2048, 3)
+  })
+
+  it("measures every other character exactly as YaHei does", () => {
+    for (const text of ["Each country's own page", "be added up. 45 in total", "统计公报只写「共 45 个」", "甲——乙·丙", "×°‰é"]) {
+      expect(measureTextUnits(text, ui), text).toBe(measureTextUnits(text, yahei))
+      expect(measureTextUnits(text, { ...ui, bold: true }), text).toBe(measureTextUnits(text, { ...yahei, bold: true }))
+    }
+  })
+
+  it("narrows a quoted English sentence by the full-em quotes' surplus", () => {
+    const sentence = "“Most in the world” is how"
+    expect(measureTextUnits(sentence, yahei) - measureTextUnits(sentence, ui)).toBeCloseTo(2 * (1 - 0.377), 3)
   })
 })
 

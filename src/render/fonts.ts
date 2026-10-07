@@ -114,6 +114,10 @@ export const SAFE_FONTS: Set<string> = new Set(
     "Consolas",
     "Courier New",
     "Lucida Console",
+    // Microsoft YaHei's Western cut (`WESTERN_CUT` below): the second face of
+    // the same msyh.ttc, so it ships wherever Microsoft YaHei does on Windows
+    // 8 and later, and inside Office for Mac.
+    "Microsoft YaHei UI",
     // CJK (Windows)
     "Microsoft YaHei",
     "微软雅黑",
@@ -155,6 +159,10 @@ export function resolveFontFace(stack: string[], role: FontRole): string {
  * completeness assertion fails the moment a new member isn't accounted for
  * on either side (this set's "yes," or the implicit "no" of everything
  * else in SAFE_FONTS).
+ *
+ * Microsoft YaHei UI carries CJK glyphs but stays out: it is the Western
+ * cut a run names in its `<a:latin>` slot (`WESTERN_CUT` below), and that
+ * run's `<a:ea>` is Microsoft YaHei, like any Latin face's.
  */
 const CJK_SAFE_FACES = new Set(
   ["Microsoft YaHei", "微软雅黑", "SimSun", "宋体", "SimHei", "黑体", "KaiTi", "楷体", "FangSong", "仿宋"].map(
@@ -197,7 +205,8 @@ const EA_FALLBACK_FACE = ROLE_DEFAULT.heading
  *   exactly the gap `slides_maker`'s `CJK_NO_EA` lint (competitive
  *   research, borrow wave) flags.
  * - Every other `SAFE_FONTS` member (the 11 Latin-only sans/serif/mono
- *   faces -- Georgia, Consolas, Arial, etc.) resolves to the fixed
+ *   faces, Georgia, Consolas, Arial, etc., and Microsoft YaHei UI, YaHei's
+ *   Western cut) resolves to the fixed
  *   `EA_FALLBACK_FACE`, regardless of that Latin face's own role
  *   (heading/body/mono) or design register (serif vs sans vs mono). This is
  *   a deliberately role-agnostic, pragmatic default, not a font-matching
@@ -252,16 +261,59 @@ const PREVIEW_FALLBACK = {
 } as const
 
 /**
+ * The face a deck that is not written in Chinese sets Microsoft YaHei's
+ * Western text in: Microsoft YaHei UI, the second face of the same msyh.ttc.
+ *
+ * Microsoft YaHei draws the four curly quotation marks (‘ ’ “ ”) on the full
+ * em, the way GB 2312 sets them beside Chinese, with the mark pushed to one
+ * side of its square. PowerPoint paints those four marks from a run's
+ * `<a:latin>` face when the run's `lang` is a Western one, and the export
+ * writes every run as lang="en-US", so an English sentence set in YaHei
+ * opened in PowerPoint with a gap the width of a Chinese character before
+ * each opening quote and after each closing one. The SVG preview never
+ * showed it: macOS has no Microsoft YaHei outside Office's own bundle, so a
+ * browser falls through to PingFang SC, whose quotes are Western.
+ *
+ * Microsoft YaHei UI is the same design for Western text. Its advance table
+ * matches Microsoft YaHei's on every code point but those four marks, which
+ * it sets at Western width (‘ ’ 0.229 em, “ ” 0.377 em, Bold 0.290 and
+ * 0.493), and its outlines match YaHei's to a font unit (msyh.ttc and
+ * msyhbd.ttc, read 2026-10-07). PowerPoint sets its baseline where it sets
+ * YaHei's (`svg2pptx/baseline.ts`). So the change reaches the quotation
+ * marks and nothing else a reader sees, and the width tables stay exact
+ * (`svg-text-layout.ts` measures it with YaHei's tables and its own four
+ * marks).
+ *
+ * A Chinese deck keeps Microsoft YaHei: beside Chinese the full-em mark is
+ * the right one, and that deck's runs paint it from the same `<a:latin>`
+ * slot. The run's CJK keeps Microsoft YaHei either way, through the pairing
+ * `resolveFontStack` writes and `pptx-ea-fonts.ts` turns into `<a:ea>`.
+ * SimSun, SimHei, KaiTi and FangSong have no Western cut, so a stack that
+ * resolves to one of them is left as it is.
+ */
+const WESTERN_CUT: ReadonlyMap<string, string> = new Map([
+  ["microsoft yahei", "Microsoft YaHei UI"],
+  ["微软雅黑", "Microsoft YaHei UI"],
+])
+
+/**
  * Resolve `stack` to a CSS font-family list: the Windows-safe face `resolveFontFace`
- * picks (unchanged — svg2pptx's `firstFontFamily` still reads this as the exported
- * `fontFace`) followed by a macOS-available fallback so the in-app SVG preview
+ * picks (svg2pptx's `firstFontFamily` reads it as the exported `<a:latin>`
+ * face) followed by a macOS-available fallback so the in-app SVG preview
  * doesn't silently drop to a generic sans-serif when the resolved face (e.g.
  * SimSun) isn't installed on the machine rendering the preview.
+ *
+ * `chinese` is the deck's language (`deckWritesChinese`). In a deck that is
+ * not written in Chinese, a stack that resolves to Microsoft YaHei leads with
+ * its Western cut and names Microsoft YaHei second, as the run's East Asian
+ * face (`WESTERN_CUT`).
  */
-export function resolveFontStack(stack: string[], role: FontRole): string {
-  const face = resolveFontFace(stack, role)
-  const key = face.toLowerCase()
-  const ea = pairedEaFace(stack, role)
+export function resolveFontStack(stack: string[], role: FontRole, chinese: boolean): string {
+  const resolved = resolveFontFace(stack, role)
+  const westernCut = chinese ? undefined : WESTERN_CUT.get(resolved.toLowerCase())
+  const face = westernCut ?? resolved
+  const key = resolved.toLowerCase()
+  const ea = westernCut ? resolved : pairedEaFace(stack, role)
   const fallback =
     role === "mono"
       ? PREVIEW_FALLBACK.mono

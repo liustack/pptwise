@@ -460,11 +460,15 @@ interface ExactFaceTable {
   bold: Readonly<Record<number, number>>
 }
 
-type FaceKey = "georgia" | "yahei" | "simsun-kaiti" | "times" | "unknown"
+type FaceKey = "georgia" | "yahei" | "yahei-ui" | "simsun-kaiti" | "times" | "unknown"
 
 const CLASS_TABLE_FOR: Readonly<Record<FaceKey, FaceFactorTable>> = {
   georgia: GEORGIA,
   yahei: YAHEI,
+  // Microsoft YaHei's Western cut (`fonts.ts` `WESTERN_CUT`): YaHei's own
+  // advances on every code point but the four curly quotation marks, which
+  // `LATIN_FACE_MARK_ADVANCES` holds at its own Western width.
+  "yahei-ui": YAHEI,
   "simsun-kaiti": SIMSUN_KAITI,
   // Its printable ASCII is exact and its symbols are bounded, so the class
   // path only meets what neither covers, and there the envelope errs wide.
@@ -479,6 +483,7 @@ const CLASS_TABLE_FOR: Readonly<Record<FaceKey, FaceFactorTable>> = {
 const EXACT_TABLE_FOR: Readonly<Partial<Record<FaceKey, ExactFaceTable>>> = {
   georgia: { regular: GEORGIA_REGULAR_EXACT, bold: GEORGIA_BOLD_EXACT },
   yahei: { regular: YAHEI_REGULAR_EXACT, bold: YAHEI_BOLD_EXACT },
+  "yahei-ui": { regular: YAHEI_REGULAR_EXACT, bold: YAHEI_BOLD_EXACT },
   times: { regular: TIMES_REGULAR_EXACT, bold: TIMES_BOLD_EXACT },
 }
 
@@ -486,6 +491,7 @@ const EXACT_TABLE_FOR: Readonly<Partial<Record<FaceKey, ExactFaceTable>>> = {
 const REGULAR_EXACT_TABLE_FOR: Readonly<Partial<Record<FaceKey, Readonly<Record<number, number>>>>> = {
   georgia: GEORGIA_REGULAR_EXACT,
   yahei: YAHEI_REGULAR_EXACT,
+  "yahei-ui": YAHEI_REGULAR_EXACT,
   "simsun-kaiti": SIMSUN_KAITI_REGULAR_EXACT,
   times: TIMES_REGULAR_EXACT,
 }
@@ -512,6 +518,7 @@ function classifyFaceKey(fontFamily: string | undefined): FaceKey {
   if (!first) return "unknown"
   if (first === "georgia") return "georgia"
   if (first === "microsoft yahei" || first === "微软雅黑") return "yahei"
+  if (first === "microsoft yahei ui") return "yahei-ui"
   if (first === "simsun" || first === "宋体" || first === "kaiti" || first === "楷体") return "simsun-kaiti"
   if (first === "times new roman") return "times"
   return "unknown"
@@ -2033,6 +2040,9 @@ export function measuresExactly(text: string, weight?: TextWeightHint): boolean 
  * forwarding re-export next to `isMonoFontFamily`/`isBold`) can warn a theme
  * author that their chosen heading/body face falls back to that envelope,
  * without duplicating `classifyFaceKey`'s own matching rules.
+ *
+ * The list has grown since: Times New Roman, and Microsoft YaHei UI, YaHei's
+ * Western cut, which measures with YaHei's tables (`fonts.ts` `WESTERN_CUT`).
  */
 export function hasExactWidthTable(fontFamily: string): boolean {
   return EXACT_TABLE_FOR[classifyFaceKey(fontFamily)] !== undefined

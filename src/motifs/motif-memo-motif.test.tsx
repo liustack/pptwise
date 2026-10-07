@@ -99,7 +99,7 @@ describe("MemoMotif（打字机备忘录的页眉与页脚）", () => {
   it("MEMORANDUM 是等宽、加粗、12px、拉开 6px 字距，基线在双线之上", () => {
     const t = resolveStyle("memo")
     const { eyebrow } = parts(draw("memo", contentSlide).root)
-    expect(eyebrow.getAttribute("font-family")).toBe(resolveFontStack(t.fonts.mono ?? [], "mono"))
+    expect(eyebrow.getAttribute("font-family")).toBe(resolveFontStack(t.fonts.mono ?? [], "mono", true))
     expect(resolveFontFace(t.fonts.mono ?? [], "mono")).toBe("Courier New")
     expect(eyebrow.getAttribute("font-size")).toBe("12")
     expect(eyebrow.getAttribute("font-weight")).toBe("700")

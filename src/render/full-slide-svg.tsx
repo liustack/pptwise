@@ -22,6 +22,7 @@ import type { ThemeDefinition } from "../themes/definitions"
 import type { EmphasisTreatment } from "../themes/schema"
 import type { FigureStyle } from "../lib/quantity-format"
 import { deckFigureStyle } from "../lib/figure-style"
+import { deckWritesChinese } from "../lib/conf-labels"
 import { resolveEffectiveFace } from "./layout-selection"
 import { partitionSvgDepth, type SvgDepthLayers } from "./depth-contract/partition"
 import { enforceMidgroundContract, resolveMidgroundBackground } from "./depth-contract/safety"
@@ -168,6 +169,12 @@ export function resolveOverrideBackgroundHex(
  * never rotated here — motifs that destructure it by fixed position for
  * decoration must see the theme's declared order. FullSlideSvg always
  * passes `0`, so the declared `chartPalette` order is the series order.
+ *
+ * `chinese`: the deck's language (`deckWritesChinese`), which picks the cut
+ * of Microsoft YaHei its text is set in (`fonts.ts` `resolveFontStack`).
+ * `FullSlideSvg` passes the deck's own answer. Omitting it (as the
+ * `buildCtx(...)`-calling tests do) keeps Microsoft YaHei itself, the face
+ * every deck was set in before the Western cut existed.
  */
 export function buildCtx(
   tokens: StyleTokens,
@@ -178,14 +185,15 @@ export function buildCtx(
   chartPaletteOffset?: number,
   emphasis?: EmphasisTreatment,
   figures?: FigureStyle,
+  chinese = true,
 ): ComponentCtx {
   return {
     colors: tokens.colors,
     shape: tokens.shape,
     fonts: {
-      heading: resolveFontStack(tokens.fonts.heading, "heading"),
-      body: resolveFontStack(tokens.fonts.body, "body"),
-      mono: resolveFontStack(tokens.fonts.mono ?? [], "mono"),
+      heading: resolveFontStack(tokens.fonts.heading, "heading", chinese),
+      body: resolveFontStack(tokens.fonts.body, "body", chinese),
+      mono: resolveFontStack(tokens.fonts.mono ?? [], "mono", chinese),
     },
     images,
     blockIndex: components ? new Map(components.map((component, i) => [component, i])) : undefined,
@@ -316,6 +324,7 @@ export function FullSlideSvg({
     chartPaletteOffset,
     themeDef.emphasis,
     deckFigureStyle(ir),
+    deckWritesChinese(ir),
   )
   // This is the only face resolution performed by the renderer. Capacity
   // checks and validation consume the same route record from

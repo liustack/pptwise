@@ -35,6 +35,7 @@ import { checkIrQuality, type QualityIssue } from "./render/ir-quality"
 import { footerFitIssues } from "./render/footer-marks"
 import { courseStageIssues } from "./render/course-marks"
 import { resolveFontStack } from "./render/fonts"
+import { deckWritesChinese } from "./lib/conf-labels"
 import { componentFace, resolveEffectiveFace } from "./render/layout-selection"
 import { boundarySlotBlocks, drawableItems } from "./layouts/boundary-content"
 import { findImageSelection } from "./layouts/find-image"
@@ -902,7 +903,10 @@ export function validateIr(input: unknown, opts?: { theme?: ThemeDefinition }): 
   if (boundaryPageErrors.length > 0) return withNormalized({ ok: false, errors: boundaryPageErrors })
   const kickerErrors = checkKickerDrawn(r.data, theme)
   if (kickerErrors.length > 0) return withNormalized({ ok: false, errors: kickerErrors })
-  const stageErrors = courseStageIssues(r.data, resolveFontStack(theme.style.fonts.body, "body"))
+  // The body face these two measure in is the one the deck renders in,
+  // whose cut follows the deck's language (`resolveFontStack`).
+  const bodyFamily = resolveFontStack(theme.style.fonts.body, "body", deckWritesChinese(r.data))
+  const stageErrors = courseStageIssues(r.data, bodyFamily)
   if (stageErrors.length > 0) return withNormalized({ ok: false, errors: stageErrors })
   const boundarySlotErrors = checkBoundarySlotCapacity(r.data, theme)
   if (boundarySlotErrors.length > 0) return withNormalized({ ok: false, errors: boundarySlotErrors })
@@ -916,7 +920,7 @@ export function validateIr(input: unknown, opts?: { theme?: ThemeDefinition }): 
   // legal classification in the wrong place), then whether the row the
   // deck asked for fits on one line. A footer never trims an author's text
   // to make room, so a row that does not fit is refused here.
-  const footerErrors = [...footerSettingIssues(r.data), ...footerFitIssues(r.data, resolveFontStack(theme.style.fonts.body, "body"))]
+  const footerErrors = [...footerSettingIssues(r.data), ...footerFitIssues(r.data, bodyFamily)]
   if (footerErrors.length > 0) return withNormalized({ ok: false, errors: footerErrors })
   // Asset byte validation (borrow wave, Task 2 — D3): a broken image is
   // content loss, so this is a hard gate at the same short-circuiting

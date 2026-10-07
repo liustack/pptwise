@@ -191,10 +191,10 @@ describe("auditSvgMarkup", () => {
 // hand-built `data-audit-box` envelope that mirrors `svg-content.tsx`'s own
 // per-component wrapper (the one piece this test builds by hand, since
 // `code.render()` alone never emits its own box — see that component's own
-// file). `ctx.fonts.mono` comes from a real `resolveFontStack([], "mono")`
+// file). `ctx.fonts.mono` comes from a real `resolveFontStack([], "mono", true)`
 // call, not a hand-typed literal, so this test exercises the exact family
 // string production code emits (confirmed against `fonts.test.ts`'s own
-// pin: `resolveFontStack([], "mono")` === `"Consolas, Menlo, monospace"`).
+// pin: `resolveFontStack([], "mono", true)` === `"Consolas, Menlo, monospace"`).
 //
 // Before this round's fix (bf6131e..17a459a), `code.tsx` sized this text
 // with the exact `measureMonoTextUnits` model while this file's
@@ -218,7 +218,7 @@ describe("auditSvgMarkup — mono/proportional alignment with the real code rend
       muted: "#5D6B65",
       chartPalette: ["#006A4E", "#00A878"],
     },
-    fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: resolveFontStack([], "mono") },
+    fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: resolveFontStack([], "mono", true) },
     bodyFontPx: 24,
   }
 
@@ -293,7 +293,7 @@ describe("auditSvgMarkup — bold-weight alignment with the real exporter (bold-
       muted: "#5D6B65",
       chartPalette: ["#051C2C", "#FFC72C"],
     },
-    fonts: { heading: "Georgia, Songti SC, STSong, serif", body: "Georgia, Songti SC, STSong, serif", mono: resolveFontStack([], "mono") },
+    fonts: { heading: "Georgia, Songti SC, STSong, serif", body: "Georgia, Songti SC, STSong, serif", mono: resolveFontStack([], "mono", true) },
     bodyFontPx: 24,
   }
 

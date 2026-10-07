@@ -27,6 +27,10 @@ describe("firstBaselineEm", () => {
     expect(firstBaselineEm("楷体")).toBe(firstBaselineEm("KaiTi"))
   })
 
+  it("sets YaHei's Western cut where PowerPoint set it, on YaHei's baseline, not its own win metrics'", () => {
+    expect(firstBaselineEm("Microsoft YaHei UI")).toBe(firstBaselineEm("Microsoft YaHei"))
+  })
+
   it("takes Calibri for a missing or unknown face, which is what PowerPoint draws", () => {
     expect(firstBaselineEm(undefined)).toBe(firstBaselineEm("Calibri"))
     expect(firstBaselineEm("NoSuchFace")).toBe(firstBaselineEm("Calibri"))
