@@ -1334,6 +1334,64 @@ describe("a straight-edged <path> is graded against its own outline, not its box
   })
 })
 
+// The ink box used to hang a quarter em below every run. A people card's
+// initials ("MC", "SW") are wide enough that the corners of that quarter em
+// fall outside their 16px disc, onto the white card, and the walk reported
+// the badge's white letters at 1.00:1 on 20 themes. Capitals have no
+// descender: the box now stops at the baseline's overshoot unless a
+// character in the run hangs below it (`./ink-descent.ts`).
+describe("a run's ink box reaches below the baseline only as far as its glyphs do", () => {
+  // A navy band whose bottom edge sits 3px under a 20px baseline, on a white page.
+  const band = (text: string) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+    <rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+    <rect x="80" y="60" width="600" height="43" fill="#1E2A4A"/>
+    <text x="100" y="100" font-size="20" fill="#FFFFFF">${text}</text>
+  </svg>`
+
+  it("leaves capitals that end on the baseline on the band", () => {
+    expect(findContrastIssues(band("MAKE IT LAST"))).toEqual([])
+  })
+
+  it("still grades descenders that hang past the band's edge against the page", () => {
+    const issues = findContrastIssues(band("going deeper"))
+    expect(issues).toHaveLength(1)
+    expect(issues[0]).toMatchObject({ background: "#FFFFFF", fill: "#FFFFFF" })
+  })
+
+  it("gives a whole run the quarter em when one of its characters needs it", () => {
+    expect(findContrastIssues(band("MAKE IT LAST, AGAIN"))).toHaveLength(1)
+  })
+
+  it("hands the pixel layer the same depth for a run over a photo", () => {
+    const photo = (text: string) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+      <image href="data:image/png;base64,x" x="0" y="0" width="1280" height="720"/>
+      <text x="100" y="100" font-size="20" fill="#FFFFFF">${text}</text>
+    </svg>`
+    expect(__collectImageBackedTextRuns(photo("MC"))[0]!.descent).toBeCloseTo(0.6)
+    expect(__collectImageBackedTextRuns(photo("Mg"))[0]!.descent).toBeCloseTo(5)
+  })
+
+  it("reads a people card's initials inside their disc on every theme", () => {
+    const team = {
+      type: "people_cards",
+      people: [
+        { name: "Mara Chen", role: "Engineering Manager", org: "Platform" },
+        { name: "Diego Alvarez", role: "Staff Engineer", org: "Runtime" },
+        { name: "Priya Nair", role: "SRE Lead", org: "Reliability" },
+        { name: "Tom Okafor", role: "Backend Engineer", org: "Runtime" },
+        { name: "Lena Fischer", role: "Backend Engineer", org: "Delivery" },
+        { name: "Sam Whitaker", role: "Intern", org: "Delivery" },
+      ],
+    } as Component
+    for (const themeId of CANONICAL_THEME_IDS) {
+      const ir = deck(themeId, [{ type: "content", kind: "points", heading: "The team", components: [team] }])
+      expect(renderSlideSvg(ir, 0), themeId).toContain(">MC</text>")
+      const contrast = auditDeck(ir).findings.filter((f) => f.code === "low-contrast")
+      expect(contrast.map((f) => `${themeId} ${f.message}`)).toEqual([])
+    }
+  })
+})
+
 // Task-2 review (bench-driven fix round, defect A), Moderate #2: every real
 // circle/ellipse the shipped component suite renders puts text dead-center
 // (rings.tsx's "Core" label sits ~40px² from its circle's center — nowhere

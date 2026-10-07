@@ -27,6 +27,7 @@ import { resolveEffectiveFace } from "./layout-selection"
 import { partitionSvgDepth, type SvgDepthLayers } from "./depth-contract/partition"
 import { enforceMidgroundContract, resolveMidgroundBackground } from "./depth-contract/safety"
 import { resolvePageRenderContext } from "./page-context"
+import { paletteOnGround } from "./page-palette"
 
 /**
  * Reduce a `BackgroundSpec` to one representative hex color — a color spec
@@ -312,11 +313,20 @@ export function FullSlideSvg({
   // Theme `chartPalette` declared order is the series order. Offset 0 is
   // the identity rotation (`./chart-palette.ts`).
   const chartPaletteOffset = 0
+  // A page its author painted takes the theme's neutral ladder onto that
+  // paint wherever the theme's own inks no longer read on it
+  // (`paletteOnGround`). Every component, layout and motif takes its ink from
+  // `ctx.colors`, so this is the one place the page's ink follows the page.
+  // A page whose ground is still the theme's own for its type (no override,
+  // an asset under the theme's scrim, a colour equal to the default) keeps
+  // the theme's palette: its faces were drawn for that ground.
+  const paintedOver = defaultBg.toUpperCase() !== themeDefaultBg.toUpperCase()
+  const pageTokens = paintedOver ? { ...tokens, colors: paletteOnGround(tokens.colors, defaultBg) } : tokens
   // The emphasis stroke comes from the definition in hand, never from a
   // lookup by id: a deck or workspace theme file that keeps a built-in id
   // may declare a different stroke from the factory preset.
   const ctx: ComponentCtx = buildCtx(
-    tokens,
+    pageTokens,
     ir.assets.images,
     ir.meta.animation?.elements === "auto" ? slide.components : undefined,
     defaultBg,
@@ -497,7 +507,7 @@ export function FullSlideSvg({
     midground,
     foreground,
     background: midgroundBackground,
-    colors: tokens.colors,
+    colors: ctx.colors,
   })
 
   return (

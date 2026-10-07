@@ -268,8 +268,8 @@ one bare-IR question, one deck-project question, one audit-sensitive question) s
 `tests/bench/fixtures/results/green-model/` (all three questions validate clean, audit clean, render
 deterministically) and `tests/bench/fixtures/results/degraded-model/` (one malformed-JSON artifact, one
 validate-failing IR — an unknown theme id, one validate-clean but audit-positive IR — a real
-low-contrast finding from `luxe` theme + `kpi_cards` `delta: "down"`, the same source
-`src/svg/audit/deck-audit.test.ts` pins). The suite asserts exact metric values per fixture
+low-contrast finding, whose current source and the ones it moved off `score.test.ts`'s fx03 case
+records). The suite asserts exact metric values per fixture
 question, report shape, and — the scorer-reproducibility requirement — that two independent
 `runScoring` calls over the same fixture tree produce byte-identical report content, plus a
 `normalizedPptxSha1` unit suite proving the determinism hash both ignores a

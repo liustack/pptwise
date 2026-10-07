@@ -90,20 +90,23 @@ const IR_WITH_PLACEHOLDER = {
   ],
 }
 
-// Slide background matches brief's body ink, so heading and paragraph
-// (both painted with colors.text) fail auditDeck's contrast check.
+// An ink statement page its author painted near-black. The statement face
+// sets the claim in ink's primary, its ink black, without measuring it
+// against the page, so the claim fails auditDeck's contrast check. (This
+// fixture used to paint a brief page in brief's own text ink, until a
+// painted page started carrying the theme's text inks onto its paint.)
 const IR_LOW_CONTRAST = {
   version: "5",
   filename: "cli-test-low-contrast",
-  theme: { id: "brief" },
+  theme: { id: "ink" },
   slides: [
     {
       type: "content",
-      kind: "points",
+      kind: "statement",
       id: "p-body",
-      heading: "readable heading",
-      background: { kind: "color", value: "#1C1E23" },
-      components: [{ type: "paragraph", text: "some body copy" }],
+      heading: "No judges at the gathering, only tea",
+      background: { kind: "color", value: "#1A1A1A" },
+      components: [{ type: "paragraph", text: "Visitors leave a note instead of a fee." }],
     },
   ],
 }
