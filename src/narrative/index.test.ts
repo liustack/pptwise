@@ -131,7 +131,7 @@ describe("NARRATIVE_PRESETS", () => {
     expect(NARRATIVE_PRESETS.training.themeRecommendations).toEqual(["homeroom", "thesis", "terminal"])
     expect(NARRATIVE_PRESETS["product-launch"].themeRecommendations).toEqual(["rally", "runway", "terminal"])
     expect(NARRATIVE_PRESETS["weekly-brief"].themeRecommendations).toEqual(["bulletin", "brief"])
-    expect(NARRATIVE_PRESETS["annual-review"].themeRecommendations).toEqual(["journal", "heritage", "ledger"])
+    expect(NARRATIVE_PRESETS["annual-review"].themeRecommendations).toEqual(["journal", "luxe", "ledger"])
     expect(NARRATIVE_PRESETS.general.themeRecommendations).toEqual(["brief"])
   })
 })

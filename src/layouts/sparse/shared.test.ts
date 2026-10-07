@@ -33,7 +33,7 @@ function parsePoints(points: string): { x: number; y: number }[] {
 }
 
 describe("rotateRectPolygon", () => {
-  it("bakes a clockwise 4° playbill chip (top-right corner drops in y-down)", () => {
+  it("bakes a clockwise 4° chip (top-right corner drops in y-down)", () => {
     const points = rotateRectPolygon(1100, 152, 180, 64, 4)
     expect(points).toBe(bakeClockwise(1100, 152, 180, 64, 4))
     expect(points).not.toBe(bakeClockwise(1100, 152, 180, 64, -4))

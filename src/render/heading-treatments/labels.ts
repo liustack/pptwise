@@ -54,8 +54,6 @@ export function formatChapterLabel(kind: ChapterLabelKind, n: number, cjk: boole
       return cjk ? `第${casualHan(n)}幕` : `ACT ${n}`
     case "part":
       return cjk ? `第${casualHan(n)}部分` : `PART ${n}`
-    case "round":
-      return `ROUND ${n}`
     case "chapter":
       return cjk ? `第${casualHan(n)}章` : `CHAPTER ${padded(n)}`
     case "lecture":

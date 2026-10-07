@@ -130,18 +130,22 @@ function consultingPadDeck(): PptxIR {
 // Recaptured (proposal theme, 2026-10-06). proposal joins the unassigned
 // matrix: 23 themes × five paths = 115 hashes. Only the five `proposal|*`
 // keys are new. The other 110 paths stay byte-identical.
+//
+// Pruned (theme fold, 2026-10-07). arena, playbill and heritage were folded
+// into rally and luxe and leave the matrix: 20 themes × five paths = 100
+// hashes. Only their fifteen keys go. Nothing was recaptured.
 const fixture = JSON.parse(
   readFileSync(EMPHASIS_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }
 
 describe("unassigned emphasis forms stay pinned to the depth-contract fixture", () => {
   const pages = auditEmphasisUnassignedPages()
-  it("covers 23 themes across five real render paths", () => {
+  it("covers 20 themes across five real render paths", () => {
     expect(UNASSIGNED).not.toContain("lecture")
     expect(UNASSIGNED).not.toContain("brief")
-    expect(UNASSIGNED).toHaveLength(23)
-    expect(Object.keys(pages)).toHaveLength(115)
-    expect(Object.keys(fixture.pages)).toHaveLength(115)
+    expect(UNASSIGNED).toHaveLength(20)
+    expect(Object.keys(pages)).toHaveLength(100)
+    expect(Object.keys(fixture.pages)).toHaveLength(100)
   })
 
   it.each(Object.keys(fixture.pages))("%s", (key) => {
@@ -160,9 +164,9 @@ describe("unassigned emphasis forms stay pinned to the depth-contract fixture", 
   // pass. A theme that declares no stroke still has one (`resolveEmphasisForm`
   // defaults to `tint`), so the content pages have to *paint* their runs.
   //
-  // Covers are excluded on purpose: seven of the bespoke cover plates
-  // (thesis-plate, cut-panel, chalk-band, crayonbox-open, double-frame,
-  // issue-head, show-headline) have always stripped instead of tinting, a
+  // Covers are excluded on purpose: the bespoke cover plates (thesis-plate,
+  // chalk-band, crayonbox-open, issue-head, show-headline, and before them
+  // cut-panel and double-frame) have always stripped instead of tinting, a
   // decision that predates this matrix and belongs to those faces.
   const contentKeys = Object.keys(fixture.pages).filter((key) => !key.endsWith("|0"))
   it.each(contentKeys)("%s paints its runs as tspans", (key) => {

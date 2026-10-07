@@ -221,7 +221,7 @@ export const NARRATIVE_PRESETS: Record<string, NarrativePreset> = {
   "annual-review": {
     id: "annual-review",
     axes: Object.freeze({ strategy: "storytelling", pacing: "balanced", audience: "public" }),
-    themeRecommendations: ["journal", "heritage", "ledger"],
+    themeRecommendations: ["journal", "luxe", "ledger"],
   },
 }
 

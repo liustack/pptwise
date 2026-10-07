@@ -13,7 +13,7 @@ export const LUXE_FRAME_BOTTOM_BOARD = 696
  * horizontal furniture yield on these faces so the face stays
  * inside the 2-group budget (gallery review r2 B4).
  */
-export const SPARSE_FACES = ["statement", "pull-quote", "stat-hero", "one-evidence", "mono-bleed"] as const
+export const SPARSE_FACES = ["statement", "pull-quote", "stat-hero", "one-evidence"] as const
 
 export function yieldsOnSparseFace(_slide: Slide): boolean {
   return false

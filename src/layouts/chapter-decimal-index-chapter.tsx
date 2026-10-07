@@ -120,7 +120,7 @@ export const layoutDef = {
     story: "The chapter number stands very large in the signal colour on the left. On the right, the chapter's name and what it covers sit on a heavy black rule, and under the rule the chapter's pages are listed by number and heading.",
     positioning: "A report's chapter break that doubles as the chapter's contents, so a reader sees where each page sits before turning to it.",
     audience: "Readers of a report who quote page numbers back when they want to point at a finding.",
-    notFor: "Decks that need a warm or dramatic entrance, which suit Day Bill or Stage Word.",
+    notFor: "Decks that need a warm or dramatic entrance, which suit Color Block or Stage Word.",
   },
   slideTypes: ["chapter"],
   slots: [

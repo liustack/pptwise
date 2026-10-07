@@ -21,7 +21,6 @@ const THEMES = [
   "journal",
   "runway",
   "luxe",
-  "heritage",
   "homeroom",
   "clinic",
   "almanac",

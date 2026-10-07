@@ -8,7 +8,6 @@ import { resolveFontFace, resolveFontStack } from "../render/fonts"
 import { resolveStyle } from "../themes"
 import { THEME_DEFINITIONS } from "../themes/definitions"
 import { memoInks } from "../layouts/compositions/memo"
-import { HeritageMotif } from "./motif-heritage-motif"
 import { VermilionMotif } from "./motif-vermilion-motif"
 import { MemoMotif } from "./motif-memo-motif"
 import type { PptxIR, Slide } from "@/ir"
@@ -211,22 +210,18 @@ describe("MemoMotif（打字机备忘录的页眉与页脚）", () => {
   })
 })
 
-describe("memo vs heritage vs vermilion（同是纸面双线，几何分家）", () => {
-  it("memo 2px@y48 加 1px@y53 的红双线，heritage 退役双线，vermilion 金线 2px@y26", () => {
+describe("memo vs vermilion（同是纸面双线，几何分家）", () => {
+  it("memo 2px@y48 加 1px@y53 的红双线，vermilion 金线 2px@y26", () => {
     const memo = parts(draw("memo", contentSlide).root)
-    const heritageRoot = render(<HeritageMotif ir={ir("heritage")} slide={coverSlide} ctx={boundThemeCtx("heritage", {})} />).root
     const vermilionRoot = render(<VermilionMotif ir={ir("vermilion")} slide={contentSlide} ctx={boundThemeCtx("vermilion", {})} />).root
     const vermilionThick = Array.from(vermilionRoot.querySelectorAll("rect")).find((r) => r.getAttribute("height") === "2")!
     expect(num(memo.thickRule, "y")).toBe(48)
-    expect(heritageRoot.querySelector("line")).toBeNull()
     expect(num(vermilionThick, "y")).toBe(26)
     expect(vermilionThick.getAttribute("fill")).toBe(resolveStyle("vermilion").colors.accent)
   })
 
-  it("只有 memo 写 MEMORANDUM，heritage motif 封面空，vermilion chapter 整页退让", () => {
+  it("只有 memo 写 MEMORANDUM，vermilion chapter 整页退让", () => {
     expect(parts(draw("memo", chapterSlide).root).eyebrow).toBeTruthy()
-    const heritageRoot = render(<HeritageMotif ir={ir("heritage")} slide={coverSlide} ctx={boundThemeCtx("heritage", {})} />).root
-    expect(heritageRoot.querySelector("text")).toBeNull()
     const vermilionChapter = render(<VermilionMotif ir={ir("vermilion")} slide={chapterSlide} ctx={boundThemeCtx("vermilion", {})} />).root
     expect(vermilionChapter.children).toHaveLength(0)
   })

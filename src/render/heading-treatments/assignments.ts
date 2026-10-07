@@ -1,19 +1,18 @@
 /**
  * Render-side content-page heading treatment assignment table. Treatments
  * are not IR: one theme maps to at most one treatment, looked up here.
- * 15 rows. homeroom, bulletin and swiss are not listed: bulletin's and
+ * 12 rows. homeroom, bulletin and swiss are not listed: bulletin's and
  * swiss's content pages draw their own heading (`notice-sheet`, the grid
  * faces).
  *
- * ghost_index and tag_box need a chapter page. Runtime falls back to the
- * native heading when `chapterNumberFor === 0`. The table still lists those
+ * ghost_index needs a chapter page. Runtime falls back to the native
+ * heading when `chapterNumberFor === 0`. The table still lists those
  * themes.
  */
 
 export const HEADING_TREATMENTS = [
   "ghost_index",
   "baseline",
-  "tag_box",
   "lead_accent",
   "vertical_kicker",
   "center_mirror",
@@ -31,11 +30,10 @@ export interface HeadingKnobs {
   /** ghost_index */
   indexStyle?: "ghost-bleed" | "stroke-corner"
   /** baseline */
-  rule?: "hairline" | "wenwu" | "double-tone"
+  rule?: "hairline" | "double-tone"
   rightSlot?: "none" | "numero-name"
-  /** tag_box */
-  box?: "solid-invert" | "hud-brackets"
-  chapterLabel?: "act" | "part" | "round" | "chapter" | "lecture"
+  /** center_mirror's eyebrow, and the chapter faces that borrow it */
+  chapterLabel?: "act" | "part" | "chapter" | "lecture"
   /** lead_accent */
   accentStyle?: "color" | "typeface-shift"
   tail?: "none" | "olive-rule"
@@ -72,25 +70,9 @@ const ASSIGNMENTS: Record<string, HeadingAssignment> = {
     treatment: "baseline",
     knobs: { rule: "hairline", rightSlot: "none", noTitleAnchor: "none" },
   },
-  heritage: {
-    treatment: "baseline",
-    knobs: { rule: "wenwu", rightSlot: "none" },
-  },
   journal: {
     treatment: "baseline",
     knobs: { rule: "double-tone", rightSlot: "numero-name" },
-  },
-  // Needs a chapter page. Runtime falls back to the native heading when
-  // chapterNumberFor === 0.
-  playbill: {
-    treatment: "tag_box",
-    knobs: { box: "solid-invert", chapterLabel: "act" },
-  },
-  // Needs a chapter page. Runtime falls back to the native heading when
-  // chapterNumberFor === 0.
-  arena: {
-    treatment: "tag_box",
-    knobs: { box: "hud-brackets", chapterLabel: "round" },
   },
   thesis: {
     treatment: "lead_accent",

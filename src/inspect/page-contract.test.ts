@@ -81,7 +81,7 @@ describe("pageContract: components (T7, one route with validate)", () => {
     ["brief", { type: "content", kind: "photo" }],
     ["thesis", { type: "content", kind: "quote" }],
     ["thesis", { type: "content", kind: "photo" }],
-    ["playbill", { type: "content", kind: "statement" }],
+    ["luxe", { type: "chapter" }],
     ["brief", { type: "cover" }],
     ["bulletin", { type: "ending" }],
     ["museum", { type: "chapter" }],
@@ -102,7 +102,7 @@ describe("pageContract: components (T7, one route with validate)", () => {
   })
 
   it("says why a face that draws the heading alone takes nothing", () => {
-    const contract = contractOf("playbill", { type: "content", kind: "statement" })
+    const contract = contractOf("luxe", { type: "chapter" })
     expect(contract.components.legal).toEqual([])
     expect(contract.components.notes.join(" ")).toMatch(/heading alone/)
   })

@@ -23,19 +23,19 @@ A theme menu binds each boundary page and each offered content kind to one face.
 <!-- generated:begin kinds -->
 ### Complete kind vocabulary
 
-This section is generated from the IR v5 kind vocabulary and the 25 preset menus. The final column shows how many preset menus offer each kind.
+This section is generated from the IR v5 kind vocabulary and the 22 preset menus. The final column shows how many preset menus offer each kind.
 
 | kind | name | use it when | boundary | preset menus |
 | --- | --- | --- | --- | ---: |
-| `points` | Points | Advance an ordered argument whose sequence matters. | Use list when the items are peers that can be reordered. | 25/25 |
-| `list` | List | Present peer items whose order may change. | Use points when the sequence carries the reasoning. | 25/25 |
-| `comparison` | Comparison | Place alternatives, sides, or dimensions in direct contrast. | Containment belongs to hierarchy and direction belongs to process. | 25/25 |
-| `process` | Process | Show directed steps, a timeline, or a closed cycle. | An ordered argument without motion is points. | 25/25 |
-| `data` | Data | Make a set of numbers, a chart, or a table the subject. | Use fact when one number is the whole message. | 24/25 |
-| `photo` | Photo | Make the image itself the content. | Use evidence when an exhibit exists to support a claim. | 25/25 |
-| `statement` | Statement | Give the deck author's own proposition a full page. | Words attributed to someone else are quote. | 20/25 |
-| `quote` | Quote | Center words attributed to another speaker or source. | The deck author's own proposition is statement. | 8/25 |
-| `fact` | Fact | Build the page around one number. | A numeric set whose structure matters is data. | 19/25 |
-| `evidence` | Evidence | Pair one assertion with one exhibit that supports it. | Use photo when the image stands on its own. | 12/25 |
-| `hierarchy` | Hierarchy | Express containment, levels, or composition. | Sequence belongs to process and side-by-side contrast to comparison. | 23/25 |
+| `points` | Points | Advance an ordered argument whose sequence matters. | Use list when the items are peers that can be reordered. | 22/22 |
+| `list` | List | Present peer items whose order may change. | Use points when the sequence carries the reasoning. | 22/22 |
+| `comparison` | Comparison | Place alternatives, sides, or dimensions in direct contrast. | Containment belongs to hierarchy and direction belongs to process. | 22/22 |
+| `process` | Process | Show directed steps, a timeline, or a closed cycle. | An ordered argument without motion is points. | 22/22 |
+| `data` | Data | Make a set of numbers, a chart, or a table the subject. | Use fact when one number is the whole message. | 21/22 |
+| `photo` | Photo | Make the image itself the content. | Use evidence when an exhibit exists to support a claim. | 22/22 |
+| `statement` | Statement | Give the deck author's own proposition a full page. | Words attributed to someone else are quote. | 17/22 |
+| `quote` | Quote | Center words attributed to another speaker or source. | The deck author's own proposition is statement. | 7/22 |
+| `fact` | Fact | Build the page around one number. | A numeric set whose structure matters is data. | 16/22 |
+| `evidence` | Evidence | Pair one assertion with one exhibit that supports it. | Use photo when the image stands on its own. | 11/22 |
+| `hierarchy` | Hierarchy | Express containment, levels, or composition. | Sequence belongs to process and side-by-side contrast to comparison. | 20/22 |
 <!-- generated:end kinds -->

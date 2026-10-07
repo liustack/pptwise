@@ -10,7 +10,7 @@
 
 ## 禁止串皮
 
-主题不得借用另一主题的招牌件。thesis 的学者轴、playbill 的倾斜日期贴、vermilion 的直角朱印、crayon 的手绘星、bulletin 的工业横幅块，都只属于自己。
+主题不得借用另一主题的招牌件。thesis 的学者轴、vermilion 的直角朱印、crayon 的手绘星、bulletin 的工业横幅块，都只属于自己。
 
 判定：在 A 主题页上出现 B 主题的可指名装饰（形状和位置都像），记 `rework`。共享版式池里的几何（paper-masthead 的巨字和右缘年份）是版式，不是串皮。
 

@@ -182,13 +182,13 @@ describe("VermilionMotif（文件金线）", () => {
   })
 
   it("换一家 tokens 渲染时颜色跟着换，vermilion 的色一处不残留", () => {
-    const heritage = resolveStyle("heritage")
-    const ctx = buildCtx(heritage, {})
-    const { markup } = render(<VermilionMotif ir={ir("heritage")} slide={contentSlide} ctx={ctx} />)
-    expect(markup).toContain(heritage.colors.accent)
-    expect(markup).not.toContain(heritage.colors.primary)
+    const journal = resolveStyle("journal")
+    const ctx = buildCtx(journal, {})
+    const { markup } = render(<VermilionMotif ir={ir("journal")} slide={contentSlide} ctx={ctx} />)
+    expect(markup).toContain(journal.colors.accent)
+    expect(markup).not.toContain(journal.colors.primary)
     for (const hex of ["#F6EFE3", "#FCF8EF", "#B02318", "#C79A3B", "#33231C", "#6E5B4B", "#E0D2B8"]) {
-      expect(markup, `vermilion token ${hex} leaked into the heritage render`).not.toContain(hex)
+      expect(markup, `vermilion token ${hex} leaked into the journal render`).not.toContain(hex)
     }
   })
 

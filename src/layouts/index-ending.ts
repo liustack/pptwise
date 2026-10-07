@@ -16,7 +16,6 @@ import { DefenseCloseEnding } from "./ending-defense-close-ending"
 import { HomeworkCloseEnding } from "./ending-homework-close-ending"
 import { ReminderListEnding } from "./ending-reminder-list-ending"
 import { AfterwordEnding } from "./ending-afterword-ending"
-import { InviteFieldEnding } from "./ending-invite-field-ending"
 import { SealCloseEnding } from "./ending-seal-close-ending"
 import { GiltWordEnding } from "./ending-gilt-word-ending"
 import { WindowCloseEnding } from "./ending-window-close-ending"
@@ -34,12 +33,10 @@ import { PeriodicalEnding } from "./ending-periodical-ending"
 import { ScrollEnding } from "./ending-scroll-ending"
 import { ScorecardEnding } from "./ending-scorecard-ending"
 import { CarePlanEnding } from "./ending-care-plan-ending"
-import { SeatCtaEnding } from "./ending-seat-cta-ending"
 import { ReleaseCloseEnding } from "./ending-release-close-ending"
 import { NextLectureEnding } from "./ending-next-lecture-ending"
 import { ResolutionEnding } from "./ending-resolution-ending"
 import { DecisionCloseEnding } from "./ending-decision-close-ending"
-import { TicketCtaEnding } from "./ending-ticket-cta-ending"
 import { ExitWordEnding } from "./ending-exit-word-ending"
 import { GaugeNextEnding } from "./ending-gauge-next"
 import { EndingCrayonboxTodo } from "./ending-crayonbox-todo"
@@ -67,19 +64,16 @@ export const ENDING_LAYOUTS: Record<EndingLayoutId, EndingLayout> = {
   "homework-close-ending": HomeworkCloseEnding,
   "reminder-list-ending": ReminderListEnding,
   "afterword-ending": AfterwordEnding,
-  "invite-field-ending": InviteFieldEnding,
   "seal-close-ending": SealCloseEnding,
   "gilt-word-ending": GiltWordEnding,
   "window-close-ending": WindowCloseEnding,
   "deliberation-ending": DeliberationEnding,
   "scorecard-ending": ScorecardEnding,
   "care-plan-ending": CarePlanEnding,
-  "seat-cta-ending": SeatCtaEnding,
   "release-close-ending": ReleaseCloseEnding,
   "next-lecture-ending": NextLectureEnding,
   "resolution-ending": ResolutionEnding,
   "decision-close-ending": DecisionCloseEnding,
-  "ticket-cta-ending": TicketCtaEnding,
   "exit-word-ending": ExitWordEnding,
   "gauge-next": GaugeNextEnding,
   "crayonbox-todo": EndingCrayonboxTodo,

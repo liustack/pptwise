@@ -49,13 +49,13 @@ describe("THEME_OCCASIONS", () => {
   it("pins the brief's identity-band examples", () => {
     const low = ["swiss", "bulletin", "memo", "vermilion"] as const
     const medium = ["brief", "thesis", "ledger"] as const
-    const high = ["runway", "stage", "crayon", "arena", "playbill", "ink", "museum"] as const
+    const high = ["runway", "stage", "crayon", "ink", "museum"] as const
     for (const id of low) expect(THEME_OCCASIONS[id].identity).toBe("low")
     for (const id of medium) expect(THEME_OCCASIONS[id].identity).toBe("medium")
     for (const id of high) expect(THEME_OCCASIONS[id].identity).toBe("high")
   })
 
-  it("pins unique occasion owners from the 24-theme catalog", () => {
+  it("pins unique occasion owners from the catalog", () => {
     expect(THEME_OCCASIONS.ledger.occasions).toEqual(["finance"])
     expect(THEME_OCCASIONS.clinic.occasions).toEqual(["health"])
     expect(THEME_OCCASIONS.almanac.occasions).toEqual(["sustainability"])
@@ -67,6 +67,8 @@ describe("THEME_OCCASIONS", () => {
     expect(THEME_OCCASIONS.vermilion.occasions).toContain("government")
     expect(THEME_OCCASIONS.crayon.occasions).toContain("kids")
     expect(THEME_OCCASIONS.museum.occasions).toContain("museum")
+    // arena and playbill were folded into rally, which now answers their room.
+    expect(THEME_OCCASIONS.rally.occasions).toContain("entertainment")
   })
 })
 

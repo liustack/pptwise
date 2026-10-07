@@ -96,10 +96,11 @@ export function componentsForKind(kind: string, options: KindComponentsOptions =
  * the legal component list, the theme faces behind it, a `oneOf` over those
  * components, and only the `$defs` they need.
  *
- * A face that draws no authored component (playbill's statement page, for
- * one) leaves the list empty. Draft 2020-12 requires a non-empty `oneOf`,
- * so that case is written as `not: {}`, the schema that matches nothing,
- * with a description saying why.
+ * A face that draws no authored component leaves the list empty. No
+ * built-in face does since mono-bleed left with playbill, but a face may
+ * declare a body that takes nothing. Draft 2020-12 requires a non-empty
+ * `oneOf`, so that case is written as `not: {}`, the schema that matches
+ * nothing, with a description saying why.
  */
 export function kindJsonSchema(kind: string, options: KindComponentsOptions = {}): JsonSchemaDocument {
   const offer = componentsForKind(kind, { theme: options.theme, extraThemes: options.extraThemes })

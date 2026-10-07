@@ -1,6 +1,6 @@
 /**
  * Layout registry (W2 task 1, spec §3/§6/§8): an explicit, statically-checked
- * description of what the render chain's 185 standard layouts and 4
+ * description of what the render chain's 175 standard layouts and 4
  * page-level image takeovers already draw. This is a metadata layer only.
  * It formalizes today's implicit page structure (layout JSX + the
  * FullSlideSvg takeover dispatch) into named `slots`, it does not change any
@@ -83,7 +83,6 @@ import { layoutDef as coverColophon } from "./cover-colophon"
 import { layoutDef as coverInstitutionalBlock } from "./cover-institutional-block"
 import { layoutDef as coverMemoHead } from "./cover-memo-head"
 import { layoutDef as coverBoardHead } from "./cover-board-head"
-import { layoutDef as coverBillHead } from "./cover-bill-head"
 import { layoutDef as coverVerdictIndex } from "./cover-verdict-index"
 import { layoutDef as coverBandTitle } from "./cover-band-title"
 import { layoutDef as coverHeaderBand } from "./cover-header-band"
@@ -97,7 +96,6 @@ import { layoutDef as coverThesisPlateCover } from "./cover-thesis-plate-cover"
 import { layoutDef as coverChalkBandCover } from "./cover-chalk-band-cover"
 import { layoutDef as coverCapsuleOpenCover } from "./cover-capsule-open-cover"
 import { layoutDef as coverIssueHeadCover } from "./cover-issue-head-cover"
-import { layoutDef as coverDoubleFrameCover } from "./cover-double-frame-cover"
 import { layoutDef as coverVerticalTitleCover } from "./cover-vertical-title-cover"
 import { layoutDef as coverInvitationPlateCover } from "./cover-invitation-plate-cover"
 import { layoutDef as coverLookbookOpenCover } from "./cover-lookbook-open-cover"
@@ -115,7 +113,6 @@ import { layoutDef as coverPeriodicalCover } from "./cover-periodical-cover"
 import { layoutDef as coverScrollCover } from "./cover-scroll-cover"
 import { layoutDef as coverPledgeOpenCover } from "./cover-pledge-open-cover"
 import { layoutDef as coverReportOpenCover } from "./cover-report-open-cover"
-import { layoutDef as coverCutPanelCover } from "./cover-cut-panel-cover"
 import { layoutDef as coverGaugeVerdict } from "./cover-gauge-verdict"
 import { layoutDef as coverCrayonboxOpen } from "./cover-crayonbox-open"
 import { layoutDef as coverShowHeadline } from "./cover-show-headline"
@@ -139,7 +136,6 @@ import { layoutDef as chapterFolioGhostChapter } from "./chapter-folio-ghost-cha
 import { layoutDef as chapterLessonBoxChapter } from "./chapter-lesson-box-chapter"
 import { layoutDef as chapterStickerNumeralChapter } from "./chapter-sticker-numeral-chapter"
 import { layoutDef as chapterFascicleGhostChapter } from "./chapter-fascicle-ghost-chapter"
-import { layoutDef as chapterMirrorVolumeChapter } from "./chapter-mirror-volume-chapter"
 import { layoutDef as chapterVolumeSlipChapter } from "./chapter-volume-slip-chapter"
 import { layoutDef as chapterGiltOrdinalChapter } from "./chapter-gilt-ordinal-chapter"
 import { layoutDef as chapterLookRangeChapter } from "./chapter-look-range-chapter"
@@ -153,12 +149,10 @@ import { layoutDef as chapterManuscriptChapter } from "./chapter-manuscript-chap
 import { layoutDef as chapterScrollChapter } from "./chapter-scroll-chapter"
 import { layoutDef as chapterFieldBandChapter } from "./chapter-field-band-chapter"
 import { layoutDef as chapterSubjectRuleChapter } from "./chapter-subject-rule-chapter"
-import { layoutDef as chapterRoundMarkChapter } from "./chapter-round-mark-chapter"
 import { layoutDef as chapterOneWordChapter } from "./chapter-one-word-chapter"
 import { layoutDef as chapterChalkRuleChapter } from "./chapter-chalk-rule-chapter"
 import { layoutDef as chapterDecimalIndexChapter } from "./chapter-decimal-index-chapter"
 import { layoutDef as chapterIssueLineChapter } from "./chapter-issue-line-chapter"
-import { layoutDef as chapterDayBillChapter } from "./chapter-day-bill-chapter"
 import { layoutDef as chapterHallLabelChapter } from "./chapter-hall-label-chapter"
 import { layoutDef as chapterGaugeSection } from "./chapter-gauge-section"
 import { layoutDef as chapterCrayonboxSticker } from "./chapter-crayonbox-sticker"
@@ -181,7 +175,6 @@ import { layoutDef as endingDefenseCloseEnding } from "./ending-defense-close-en
 import { layoutDef as endingHomeworkCloseEnding } from "./ending-homework-close-ending"
 import { layoutDef as endingReminderListEnding } from "./ending-reminder-list-ending"
 import { layoutDef as endingAfterwordEnding } from "./ending-afterword-ending"
-import { layoutDef as endingInviteFieldEnding } from "./ending-invite-field-ending"
 import { layoutDef as endingSealCloseEnding } from "./ending-seal-close-ending"
 import { layoutDef as endingGiltWordEnding } from "./ending-gilt-word-ending"
 import { layoutDef as endingWindowCloseEnding } from "./ending-window-close-ending"
@@ -199,12 +192,10 @@ import { layoutDef as endingPeriodicalEnding } from "./ending-periodical-ending"
 import { layoutDef as endingScrollEnding } from "./ending-scroll-ending"
 import { layoutDef as endingScorecardEnding } from "./ending-scorecard-ending"
 import { layoutDef as endingCarePlanEnding } from "./ending-care-plan-ending"
-import { layoutDef as endingSeatCtaEnding } from "./ending-seat-cta-ending"
 import { layoutDef as endingReleaseCloseEnding } from "./ending-release-close-ending"
 import { layoutDef as endingNextLectureEnding } from "./ending-next-lecture-ending"
 import { layoutDef as endingResolutionEnding } from "./ending-resolution-ending"
 import { layoutDef as endingDecisionCloseEnding } from "./ending-decision-close-ending"
-import { layoutDef as endingTicketCtaEnding } from "./ending-ticket-cta-ending"
 import { layoutDef as endingExitWordEnding } from "./ending-exit-word-ending"
 import { layoutDef as endingGaugeNext } from "./ending-gauge-next"
 import { layoutDef as endingCrayonboxTodo } from "./ending-crayonbox-todo"
@@ -224,7 +215,6 @@ import { layoutDef as contentStatement } from "./content-statement"
 import { layoutDef as contentPullQuote } from "./content-pull-quote"
 import { layoutDef as contentStatHero } from "./content-stat-hero"
 import { layoutDef as contentOneEvidence } from "./content-one-evidence"
-import { layoutDef as contentMonoBleed } from "./content-mono-bleed"
 import { layoutDef as contentGaugeStats } from "./content-gauge-stats"
 import { layoutDef as contentGaugePoint } from "./content-gauge-point"
 import { layoutDef as contentCrayonboxCards } from "./content-crayonbox-cards"
@@ -511,9 +501,8 @@ export interface LayoutDefinition {
    * `../lib/slide-edge.ts` for the other half of the same defect, on the
    * frame side of the SVG.
    *
-   * `undefined` (every layout but the three `fashion-*` members and
-   * `mono-bleed`) means the ordinary arrangement: `Background` paints, the
-   * layout draws on top of it.
+   * `undefined` (most layouts) means the ordinary arrangement: `Background`
+   * paints, the layout draws on top of it.
    */
   paintsOwnBackground?: boolean
   /**
@@ -605,7 +594,6 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverInstitutionalBlock.id]: coverInstitutionalBlock,
   [coverMemoHead.id]: coverMemoHead,
   [coverBoardHead.id]: coverBoardHead,
-  [coverBillHead.id]: coverBillHead,
   // Board-cover-restore wave 1 (2026-08-22, cover pool 13 -> 19): appended
   // at the end of the cover group. Key insertion order used to feed a
   // `weightedPickBySeed` lottery. That lottery is historical. New members
@@ -623,7 +611,6 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverChalkBandCover.id]: coverChalkBandCover,
   [coverCapsuleOpenCover.id]: coverCapsuleOpenCover,
   [coverIssueHeadCover.id]: coverIssueHeadCover,
-  [coverDoubleFrameCover.id]: coverDoubleFrameCover,
   [coverVerticalTitleCover.id]: coverVerticalTitleCover,
   // Wave 8 batch 3 (2026-08-23): luxe / runway / vermilion / almanac / clinic / arena board locks.
   [coverInvitationPlateCover.id]: coverInvitationPlateCover,
@@ -631,7 +618,6 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverRedHeadCover.id]: coverRedHeadCover,
   [coverPledgeOpenCover.id]: coverPledgeOpenCover,
   [coverReportOpenCover.id]: coverReportOpenCover,
-  [coverCutPanelCover.id]: coverCutPanelCover,
   [coverGaugeVerdict.id]: coverGaugeVerdict,
   [coverCrayonboxOpen.id]: coverCrayonboxOpen,
   [coverShowHeadline.id]: coverShowHeadline,
@@ -685,19 +671,16 @@ const CHAPTER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [chapterLessonBoxChapter.id]: chapterLessonBoxChapter,
   [chapterStickerNumeralChapter.id]: chapterStickerNumeralChapter,
   [chapterFascicleGhostChapter.id]: chapterFascicleGhostChapter,
-  [chapterMirrorVolumeChapter.id]: chapterMirrorVolumeChapter,
   [chapterVolumeSlipChapter.id]: chapterVolumeSlipChapter,
   [chapterGiltOrdinalChapter.id]: chapterGiltOrdinalChapter,
   [chapterLookRangeChapter.id]: chapterLookRangeChapter,
   [chapterSealNumeralChapter.id]: chapterSealNumeralChapter,
   [chapterFieldBandChapter.id]: chapterFieldBandChapter,
   [chapterSubjectRuleChapter.id]: chapterSubjectRuleChapter,
-  [chapterRoundMarkChapter.id]: chapterRoundMarkChapter,
   [chapterOneWordChapter.id]: chapterOneWordChapter,
   [chapterChalkRuleChapter.id]: chapterChalkRuleChapter,
   [chapterDecimalIndexChapter.id]: chapterDecimalIndexChapter,
   [chapterIssueLineChapter.id]: chapterIssueLineChapter,
-  [chapterDayBillChapter.id]: chapterDayBillChapter,
   [chapterHallLabelChapter.id]: chapterHallLabelChapter,
   [chapterGaugeSection.id]: chapterGaugeSection,
   [chapterCrayonboxSticker.id]: chapterCrayonboxSticker,
@@ -741,19 +724,16 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingHomeworkCloseEnding.id]: endingHomeworkCloseEnding,
   [endingReminderListEnding.id]: endingReminderListEnding,
   [endingAfterwordEnding.id]: endingAfterwordEnding,
-  [endingInviteFieldEnding.id]: endingInviteFieldEnding,
   [endingSealCloseEnding.id]: endingSealCloseEnding,
   [endingGiltWordEnding.id]: endingGiltWordEnding,
   [endingWindowCloseEnding.id]: endingWindowCloseEnding,
   [endingDeliberationEnding.id]: endingDeliberationEnding,
   [endingScorecardEnding.id]: endingScorecardEnding,
   [endingCarePlanEnding.id]: endingCarePlanEnding,
-  [endingSeatCtaEnding.id]: endingSeatCtaEnding,
   [endingReleaseCloseEnding.id]: endingReleaseCloseEnding,
   [endingNextLectureEnding.id]: endingNextLectureEnding,
   [endingResolutionEnding.id]: endingResolutionEnding,
   [endingDecisionCloseEnding.id]: endingDecisionCloseEnding,
-  [endingTicketCtaEnding.id]: endingTicketCtaEnding,
   [endingExitWordEnding.id]: endingExitWordEnding,
   [endingGaugeNext.id]: endingGaugeNext,
   [endingCrayonboxTodo.id]: endingCrayonboxTodo,
@@ -902,7 +882,6 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [contentPullQuote.id]: contentPullQuote,
   [contentStatHero.id]: contentStatHero,
   [contentOneEvidence.id]: contentOneEvidence,
-  [contentMonoBleed.id]: contentMonoBleed,
   [contentGaugeStats.id]: contentGaugeStats,
   [contentGaugePoint.id]: contentGaugePoint,
   [contentCrayonboxCards.id]: contentCrayonboxCards,
@@ -976,8 +955,8 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Image takeover layouts (4). With the 49 standard content layouts above,
-// the content page type has 53 registered entries. These are `slide.layout`
+// Image takeover layouts (4). With the 48 standard content layouts above,
+// the content page type has 52 registered entries. These are `slide.layout`
 // ids for the page-level
 // `image-split`/`image-top`/`image-bottom`/`image-annotate` takeovers
 // (full-slide-svg.tsx's splitTakeover branch, keyed off `getLayout(slide.
@@ -998,7 +977,7 @@ const TAKEOVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [imageAnnotateLayoutDef.id]: imageAnnotateLayoutDef,
 }
 
-/** All 185 standard layouts and 4 takeover layouts, 189 entries keyed by id.
+/** All 175 standard layouts and 4 takeover layouts, 179 entries keyed by id.
  *  `kind` still spells the standard tier `"standard"`, a wire-format fossil. See
  *  {@link LayoutDefinition.kind}. */
 export const LAYOUT_REGISTRY: Record<string, LayoutDefinition> = {

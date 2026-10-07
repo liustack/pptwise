@@ -432,8 +432,8 @@ describe("rail-numbered badge in a deck with no chapters", () => {
 
 describe("rail-numbered under a treated heading", () => {
   it("ends its body band above the source line", async () => {
-    // A heading treatment (heritage's, as journal's, thesis's and vermilion's
-    // did before their menus moved to their own sheets) sends this face down its treated branch, whose
+    // A heading treatment (luxe's, as heritage's, journal's, thesis's and
+    // vermilion's did before their menus moved on) sends this face down its treated branch, whose
     // band used to be held at 480px: from y257 to y737, under the source
     // line, so a two-line closing note sat its panel on the source.
     const { renderSlideSvg } = await import("../api")
@@ -447,7 +447,7 @@ describe("rail-numbered under a treated heading", () => {
       ],
       footnote: "Source: State Council, MIIT and Ministry of Finance, January–September 2026",
     } as Slide
-    const deck = { version: "5", filename: "x.pptx", theme: { id: "heritage" }, meta: {}, assets: { images: {} }, slides: [slide] } as unknown as PptxIR
+    const deck = { version: "5", filename: "x.pptx", theme: { id: "luxe" }, meta: {}, assets: { images: {} }, slides: [slide] } as unknown as PptxIR
     const markup = renderSlideSvg(deck, 0)
     expect(markup).toContain('data-face="rail-numbered"')
     const rect = /data-audit-rect="([\d.]+),([\d.]+),([\d.]+),([\d.]+)"/.exec(markup)!

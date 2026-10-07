@@ -76,7 +76,7 @@ describe("iceberg component", () => {
   })
 
   it("keeps the water and the ice apart from the page on a light and a dark theme", () => {
-    for (const id of ["brief", "terminal", "arena", "crayon"]) {
+    for (const id of ["brief", "terminal", "rally", "crayon"]) {
       const ctx = themed(id)
       const { container } = svg(iceberg.render(berg, BOX, ctx))
       const water = container.querySelector("rect")!.getAttribute("fill")!

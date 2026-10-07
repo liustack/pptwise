@@ -662,7 +662,7 @@ describe("BentoPanelContent", () => {
   // beside one figure. Kept whole, the four shared one cell, four across, and
   // lost their titles and text to its width.
   it("explodes tagged icon cards and sets each tag beside its card's icon, every word whole", () => {
-    for (const theme of ["thesis", "arena"]) {
+    for (const theme of ["thesis", "luxe"]) {
       const ctx = boundThemeCtx(theme, {})
       const cities: Component = {
         type: "icon_cards",

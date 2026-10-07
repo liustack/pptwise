@@ -192,7 +192,6 @@ const ONE_EVIDENCE_FACES = [
   "terminal",
   "vermilion",
   "rally",
-  "arena",
   "almanac",
 ] as const
 

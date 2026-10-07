@@ -5,7 +5,7 @@ import { parseBrandThemeFile } from "../themes/brand-theme-file"
 import { compileThemeDefinition, THEME_DEFINITIONS, type ThemeDefinition } from "../themes/definitions"
 import { CANONICAL_THEME_IDS, type CanonicalThemeId } from "../themes"
 import { copyThemePreset } from "../themes/presets"
-import { assertNotRetiredThemeId } from "../themes/retired-ids"
+import { assertNotRetiredThemeId, foldedThemeTarget } from "../themes/retired-ids"
 import {
   ThemeFileSchema,
   type Menu,
@@ -56,16 +56,28 @@ export function menusEqual(a: Menu, b: Menu): boolean {
 }
 
 /**
- * The CLI's own theme-id gate: shape first, then the retired names. Every
- * command that writes or looks up a theme by name runs it, and
- * `resolveThemeByName` runs it before it searches a directory, so a
+ * The CLI's own theme-id gate: shape first, then the retired names, renamed
+ * or folded. Every command that writes or looks up a theme by name runs it,
+ * and `resolveThemeByName` runs it before it searches a directory, so a
  * `consulting.theme.json` a workspace kept cannot answer to the old name.
+ * A lookup reads a folded name as its target first ({@link lookupThemeName}),
+ * so the gate refuses a folded name only where one is being given out.
  */
 export function assertThemeId(id: string): void {
   if (!THEME_ID_PATTERN.test(id)) {
     throw new PptwiseError(`invalid theme id "${id}". ${THEME_ID_CONSTRAINT}`)
   }
   assertNotRetiredThemeId(id)
+}
+
+/**
+ * The name a lookup searches for: a folded id's target
+ * (`themes/retired-ids.ts`), every other name as written. A deck that binds
+ * arena is drawn with rally, so its lookup is rally's lookup from the first
+ * level on, and a file that kept the folded name cannot answer to it.
+ */
+export function lookupThemeName(name: string): string {
+  return foldedThemeTarget(name) ?? name
 }
 
 /** A theme file read strictly: a malformed file is an error. */
@@ -274,12 +286,13 @@ async function resolvePackTheme(name: string): Promise<{ hit: ResolvedTheme | un
  *
  * A preset's name skips the pack level. `packs sync` refuses a pack theme
  * with a preset's id, so no pack can answer it, and a damaged pack must not
- * stand between a deck and a built-in theme. (A retired id never gets this
- * far: `assertThemeId` refuses it first.) Any other name reads every pack,
- * and a pack that cannot be read fails the lookup, since the name may be
- * in it.
+ * stand between a deck and a built-in theme. (A renamed id never gets this
+ * far: `assertThemeId` refuses it first. A folded id is looked up as the
+ * built-in it folded into.) Any other name reads every pack, and a pack that
+ * cannot be read fails the lookup, since the name may be in it.
  */
-export async function resolveThemeByName(name: string, opts: ThemeLookupOptions): Promise<ResolvedTheme> {
+export async function resolveThemeByName(requested: string, opts: ThemeLookupOptions): Promise<ResolvedTheme> {
+  const name = lookupThemeName(requested)
   assertThemeId(name)
   const fileHit = await resolveThemeFileFrom(themeCandidates(name, opts), name)
   if (fileHit !== undefined) return fileHit

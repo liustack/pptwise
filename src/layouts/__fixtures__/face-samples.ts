@@ -162,32 +162,6 @@ export const LEGACY_FACE_SAMPLES = [
     ],
   },
   {
-    id: "day-bill-chapter",
-    slideType: "chapter",
-    index: 2,
-    meta: {},
-    slides: [
-      {
-        type: "chapter",
-        heading: "开场",
-        subheading: "午后两点开闸 · 三个舞台 · 十一组演出",
-        components: [],
-      },
-      {
-        type: "content",
-        kind: "points",
-        heading: "阵容",
-        components: [],
-      },
-      {
-        type: "chapter",
-        heading: "野台不散场",
-        subheading: "午后两点开闸 · 三个舞台 · 十一组演出",
-        components: [],
-      },
-    ],
-  },
-  {
     id: "decimal-index-chapter",
     slideType: "chapter",
     index: 2,
@@ -474,30 +448,6 @@ export const LEGACY_FACE_SAMPLES = [
     ],
   },
   {
-    id: "mirror-volume-chapter",
-    slideType: "chapter",
-    forbiddenHex: {
-      ownerTheme: "heritage",
-      hexes: ["#6E1F2A", "#B8742C", "#F4EDE2"],
-    },
-    index: 1,
-    meta: {},
-    slides: [
-      {
-        type: "chapter",
-        heading: "开篇",
-        subheading: "从七位先生到三万八千名毕业生",
-        components: [],
-      },
-      {
-        type: "chapter",
-        heading: "传承篇",
-        subheading: "从七位先生到三万八千名毕业生",
-        components: [],
-      },
-    ],
-  },
-  {
     id: "one-word-chapter",
     slideType: "chapter",
     index: 1,
@@ -513,32 +463,6 @@ export const LEGACY_FACE_SAMPLES = [
         type: "chapter",
         heading: "性能",
         subheading: "快，是一种诚意",
-        components: [],
-      },
-    ],
-  },
-  {
-    id: "round-mark-chapter",
-    slideType: "chapter",
-    index: 2,
-    meta: {},
-    slides: [
-      {
-        type: "chapter",
-        heading: "流量在哪里",
-        subheading: "直播峰值 · 短视频二创 · 城市线下人流",
-        components: [],
-      },
-      {
-        type: "content",
-        kind: "points",
-        heading: "现状",
-        components: [],
-      },
-      {
-        type: "chapter",
-        heading: "流量在哪里",
-        subheading: "直播峰值 · 短视频二创 · 城市线下人流",
         components: [],
       },
     ],
@@ -732,23 +656,6 @@ export const LEGACY_FACE_SAMPLES = [
     ],
   },
   {
-    id: "bill-head",
-    slideType: "cover",
-    index: 0,
-    meta: {
-      organization: "城市青年戏剧节 · 主单元",
-      date: "9.20—28",
-    },
-    slides: [
-      {
-        type: "cover",
-        heading: "开演前十分钟",
-        subheading: "RIVERSIDE WAREHOUSE",
-        components: [],
-      },
-    ],
-  },
-  {
     id: "board-head",
     slideType: "cover",
     index: 0,
@@ -880,47 +787,6 @@ export const LEGACY_FACE_SAMPLES = [
         type: "cover",
         heading: "巅峰之夜",
         subheading: "八强出炉 · 决赛日程与观赛指南",
-        components: [],
-      },
-    ],
-  },
-  {
-    id: "cut-panel-cover",
-    slideType: "cover",
-    index: 0,
-    meta: {
-      organization: "星环杯 · 城市邀请赛",
-      date: "2026.10 - 2027.01",
-    },
-    slides: [
-      {
-        type: "cover",
-        heading: "S3 点火",
-        subheading: "八城海选 · 十六强线下 · 总决赛主场馆",
-        components: [],
-      },
-    ],
-  },
-  {
-    id: "double-frame-cover",
-    slideType: "cover",
-    index: 0,
-    branding: "full",
-    requiredText: ["一九〇六 · 二〇二六"],
-    meta: {
-      organization: "明川大学建校一百二十周年",
-      date: "一九〇六 · 二〇二六",
-      authors: [
-        {
-          name: "校庆筹备委员会",
-          role: "谨制",
-        },
-      ],
-    },
-    slides: [
-      {
-        type: "cover",
-        heading: "百廿明川",
         components: [],
       },
     ],
@@ -1530,22 +1396,6 @@ export const LEGACY_FACE_SAMPLES = [
     ],
   },
   {
-    id: "invite-field-ending",
-    slideType: "ending",
-    index: 0,
-    meta: {
-      organization: "校庆筹备委员会",
-    },
-    slides: [
-      {
-        type: "ending",
-        heading: "十月十日，回明川看看",
-        subheading: "庆典大会 · 院系开放日 · 老照片展 · 校友晚宴",
-        components: [],
-      },
-    ],
-  },
-  {
     id: "next-lecture-ending",
     slideType: "ending",
     index: 0,
@@ -1718,26 +1568,6 @@ export const LEGACY_FACE_SAMPLES = [
     ],
   },
   {
-    id: "seat-cta-ending",
-    slideType: "ending",
-    index: 0,
-    meta: {
-      organization: "商务组",
-      contact: {
-        name: "预约席位",
-        email: "biz@starloop.gg",
-      },
-    },
-    slides: [
-      {
-        type: "ending",
-        heading: "主赞助席位，只剩两个",
-        subheading: "十月十五日海选开票前锁定，权益按 S2 实测数据对赌",
-        components: [],
-      },
-    ],
-  },
-  {
     id: "signoff-ending",
     slideType: "ending",
     index: 0,
@@ -1748,25 +1578,6 @@ export const LEGACY_FACE_SAMPLES = [
       {
         type: "ending",
         heading: "三件事，下周一前回签",
-        components: [],
-      },
-    ],
-  },
-  {
-    id: "ticket-cta-ending",
-    slideType: "ending",
-    index: 0,
-    meta: {
-      organization: "野台音乐节",
-      contact: {
-        name: "即刻入场",
-      },
-    },
-    slides: [
-      {
-        type: "ending",
-        heading: "开闸入场",
-        subheading: "九月十日零点开售 · 售完即止",
         components: [],
       },
     ],

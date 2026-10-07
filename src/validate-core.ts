@@ -41,7 +41,7 @@ import { boundarySlotBlocks, drawableItems } from "./layouts/boundary-content"
 import { findImageSelection } from "./layouts/find-image"
 import type { LayoutDefinition } from "./layouts/registry"
 import { CANONICAL_THEME_IDS, THEME_LABELS, THEME_STYLES } from "./themes"
-import { retiredThemeHint } from "./themes/retired-ids"
+import { foldedThemeTarget, foldedThemeWarning, retiredThemeHint } from "./themes/retired-ids"
 import type { ThemeDefinition } from "./themes/definitions"
 import { resolveBoundThemeResult } from "./themes/resolve-ir-theme"
 
@@ -769,6 +769,28 @@ function checkAssetReferences(ir: PptxIR, theme: ThemeDefinition): ValidationIss
 }
 
 /**
+ * A deck that binds a folded theme id (`themes/retired-ids.ts`) binds the
+ * theme that absorbed it. The rewrite happens before the schema parse, like
+ * the alias passes, so everything downstream of validation, the render
+ * chain included, sees the current id and draws exactly what a deck naming
+ * it draws. The author is told in a warning rather than an error: the deck
+ * still renders, and one edit makes the warning go away.
+ */
+function foldIrThemeId(input: unknown): { value: unknown; warning?: ValidationIssue } {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) return { value: input }
+  const theme = (input as { theme?: unknown }).theme
+  if (typeof theme !== "object" || theme === null || Array.isArray(theme)) return { value: input }
+  const id = (theme as { id?: unknown }).id
+  if (typeof id !== "string") return { value: input }
+  const target = foldedThemeTarget(id)
+  if (target === undefined) return { value: input }
+  return {
+    value: { ...input, theme: { ...theme, id: target } },
+    warning: { path: "theme.id", message: foldedThemeWarning(id)! },
+  }
+}
+
+/**
  * Validate raw JSON against the IR schema, then — once it parses — resolve
  * `narrative` (`resolveNarrative`, spec §5: an unrecognized preset name is a
  * `narrative`-path error, page-less) and run the content-quality gate
@@ -843,10 +865,17 @@ export function validateIr(input: unknown, opts?: { theme?: ThemeDefinition }): 
   const rootAliasPass = normalizeDeckRootAliases(input)
   const componentAliasPass = normalizeComponentAliases(rootAliasPass.value)
   const narrativeShapePass = normalizeNarrativeShape(componentAliasPass.value)
-  const normalizedInput = narrativeShapePass.value
+  const themeFold = foldIrThemeId(narrativeShapePass.value)
+  const normalizedInput = themeFold.value
   const normalized = [...rootAliasPass.normalized, ...componentAliasPass.normalized, ...narrativeShapePass.normalized]
-  const withNormalized = (result: ValidateResult): ValidateResult =>
-    normalized.length > 0 ? { ...result, normalized } : result
+  // The fold warning rides every return path below, a rejected deck's
+  // included: the author learns which theme the deck now binds whatever
+  // else is wrong with it.
+  const withNormalized = (result: ValidateResult): ValidateResult => {
+    const noted = normalized.length > 0 ? { ...result, normalized } : result
+    if (themeFold.warning === undefined) return noted
+    return { ...noted, warnings: [themeFold.warning, ...(noted.warnings ?? [])] }
+  }
 
   const r = PptxIRSchema.safeParse(normalizedInput)
   if (!r.success) {

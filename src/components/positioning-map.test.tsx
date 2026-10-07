@@ -334,7 +334,7 @@ describe("positioning_map component", () => {
         .join(",")
     }
     const baseline = shapesOf("brief")
-    for (const theme of ["thesis", "rally", "terminal", "heritage", "ledger"]) {
+    for (const theme of ["thesis", "rally", "terminal", "luxe", "ledger"]) {
       expect(shapesOf(theme), theme).toBe(baseline)
     }
   })

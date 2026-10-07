@@ -1014,7 +1014,7 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
   it("pacing binds but the layout allows more (bento-panel exception): names both sides", () => {
     const v = validateIr({
       ...raw,
-      theme: { id: "arena" },
+      theme: { id: "luxe" },
       narrative: { pacing: "balanced" },
       slides: [raw.slides[0], denseSlide(5, { kind: "list" })],
     })
@@ -2574,9 +2574,9 @@ describe("checkAssetReferences: dangling asset_id warning (Task 2, borrow wave â
 })
 
 describe("listThemes", () => {
-  it("lists 25 canonical themes with labels and color tokens", () => {
+  it("lists 22 canonical themes with labels and color tokens", () => {
     const themes = listThemes()
-    expect(themes).toHaveLength(25)
+    expect(themes).toHaveLength(22)
     expect(themes.map((t) => t.id)).not.toContain("bloom")
     expect(themes.map((t) => t.id)).toContain("homeroom")
     expect(themes.map((t) => t.id)).toContain("brief")
@@ -2586,7 +2586,9 @@ describe("listThemes", () => {
     expect(themes.map((t) => t.id)).toContain("lecture")
     expect(themes.map((t) => t.id)).toContain("swiss")
     expect(themes.map((t) => t.id)).toContain("memo")
-    expect(themes.map((t) => t.id)).toContain("playbill")
+    expect(themes.map((t) => t.id)).toContain("proposal")
+    // Folded into rally and luxe: a deck may still name them, the catalog does not list them.
+    for (const folded of ["arena", "playbill", "heritage"]) expect(themes.map((t) => t.id)).not.toContain(folded)
     for (const t of themes) {
       expect(t.label.length).toBeGreaterThan(0)
       expect(Object.keys(t.colors).length).toBeGreaterThan(0)

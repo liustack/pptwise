@@ -156,10 +156,10 @@ describe("AsymmetricTriptychContent: which block leads", () => {
     expect(regionText(root, 740)).toContain("次项一")
   })
 
-  it("keeps English rings whole under playbill's and stage's two-line headings", () => {
+  it("keeps English rings whole under stage's and luxe's two-line headings", () => {
     // The rings used to get the 424px panel here, and under a heading that
     // takes two lines the panel had no room for three English descriptions.
-    for (const themeId of ["playbill", "stage"]) {
+    for (const themeId of ["stage", "luxe"]) {
       const deck: PptxIR = {
         version: "5",
         filename: "rings.pptx",

@@ -157,7 +157,7 @@ describe("pyramid component", () => {
 
 describe("pyramid ramp spread", () => {
   it("separates adjacent levels on a dark theme, where primary and the page are neighbours", () => {
-    for (const id of ["terminal", "arena", "ledger", "brief", "swiss"]) {
+    for (const id of ["terminal", "rally", "ledger", "brief", "swiss"]) {
       const { container } = svg(pyramid.render(four, BOX, themed(id)))
       const fills = Array.from(container.querySelectorAll("polygon")).map((p) => p.getAttribute("fill")!)
       expect(new Set(fills).size, `${id} draws ${fills.join(" ")}`).toBe(fills.length)

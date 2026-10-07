@@ -44,19 +44,16 @@ const BOARD: Record<string, { cover: string; chapter: string; ending: string }> 
   runway: { cover: "show-headline", chapter: "show-plate", ending: "show-finale" },
   journal: { cover: "periodical-cover", chapter: "fascicle-ghost-chapter", ending: "periodical-ending" },
   luxe: { cover: "invitation-plate-cover", chapter: "gilt-ordinal-chapter", ending: "gilt-word-ending" },
-  heritage: { cover: "double-frame-cover", chapter: "mirror-volume-chapter", ending: "invite-field-ending" },
   clinic: { cover: "dossier-cover", chapter: "subject-rule-chapter", ending: "dossier-ending" },
   almanac: { cover: "yearbook-cover", chapter: "field-band-chapter", ending: "yearbook-ending" },
   ember: { cover: "pitch-cover", chapter: "pitch-chapter", ending: "pitch-ending" },
   vermilion: { cover: "red-head-cover", chapter: "seal-numeral-chapter", ending: "deliberation-ending" },
   crayon: { cover: "crayonbox-open", chapter: "crayonbox-sticker", ending: "crayonbox-todo" },
-  arena: { cover: "cut-panel-cover", chapter: "round-mark-chapter", ending: "seat-cta-ending" },
   museum: { cover: "poster-center", chapter: "hall-label-chapter", ending: "exit-word-ending" },
   stage: { cover: "poster-center", chapter: "one-word-chapter", ending: "release-close-ending" },
   lecture: { cover: "board-head", chapter: "chalk-rule-chapter", ending: "next-lecture-ending" },
   swiss: { cover: "institutional-block", chapter: "decimal-index-chapter", ending: "resolution-ending" },
   memo: { cover: "memo-cover", chapter: "issue-line-chapter", ending: "memo-ending" },
-  playbill: { cover: "bill-head", chapter: "day-bill-chapter", ending: "ticket-cta-ending" },
   proposal: { cover: "binder-cover", chapter: "binder-chapter", ending: "binder-ending" },
 }
 
@@ -490,14 +487,14 @@ describe("registerTheme: unmeasured-font-width console.warn", () => {
     warnSpy.mockRestore()
   })
 
-  // Five builtins resolve their *heading* to SimSun or KaiTi — deliberate
+  // Four builtins resolve their *heading* to SimSun or KaiTi — deliberate
   // CJK-serif design choices with no exact width table. Every builtin's
   // *body* resolves to a face that has one. This never reaches console.warn
   // because builtins never call registerTheme; the test locks both halves.
-  it("regression: heritage/lecture/luxe/museum/runway's heading has no exact table, every builtin's body does — but builtins never call registerTheme, so this never reaches console.warn", () => {
+  it("regression: lecture/luxe/museum/runway's heading has no exact table, every builtin's body does — but builtins never call registerTheme, so this never reaches console.warn", () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
     // memo's, thesis's and journal's headings resolve to Times New Roman over SimSun, and ink's over KaiTi, which is measured.
-    const nonExactHeadingBuiltins = new Set(["heritage", "lecture", "luxe", "museum", "runway"])
+    const nonExactHeadingBuiltins = new Set(["lecture", "luxe", "museum", "runway"])
     for (const id of CANONICAL_THEME_IDS) {
       const style = THEME_DEFINITIONS[id].style
       const headingFace = resolveFontFace(style.fonts.heading, "heading")

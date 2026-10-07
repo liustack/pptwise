@@ -77,7 +77,7 @@ read_when:
 
 ## 从出厂预设起步
 
-列出 25 个起点及其场合和个性强度：
+列出 22 个起点及其场合和个性强度：
 
 ```bash
 pptwise themes --json
@@ -125,9 +125,11 @@ Deck spec 按名称绑定主题：
 1. Deck 目录。依次检查 `theme.json`、`<name>.theme.json` 和能够完整解析且 id 匹配的 `<name>.json`。
 2. 从起始目录向上查找各级工作区 `themes/`。
 3. `$PPTWISE_HOME/packs/` 下已装的内容包。见 [内容包](./packs.zh-CN.md)。
-4. 25 个出厂预设。
+4. 22 个出厂预设。
 
 Deck 与工作区文件可以保名遮蔽出厂预设或包内主题。包内主题不会占用预设的 id，`pptwise packs sync` 会拒装这样的包。冻结就是下沉拷贝并保留绑定名，例如 `pptwise theme new --from brief -o deck-dir/theme.json --id brief`。未知名称会明确报错，并列出查过的位置。
+
+合并退役的旧名在查第一级之前就读成承接它的预设：`arena` 与 `playbill` 按 `rally` 解析，`heritage` 按 `luxe` 解析。验证时这份 deck 画出来与写新名完全相同，并打出一条警告，写明该怎么改。合并或改名退役的 id 不能再被任何主题文件占用，仍带着旧 id 的 `theme.json` 会被拒绝，并给出该用的新名。
 
 要把工作区主题冻结给一份 deck，保留 id 并拷入 deck 目录的 `theme.json`：
 

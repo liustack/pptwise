@@ -62,11 +62,6 @@ describe("formatChapterLabel", () => {
     expect(formatChapterLabel("part", 3, false)).toBe("PART 3")
   })
 
-  it("round is always Latin ROUND N", () => {
-    expect(formatChapterLabel("round", 3, true)).toBe("ROUND 3")
-    expect(formatChapterLabel("round", 1, false)).toBe("ROUND 1")
-  })
-
   it("chapter: CJK 第N章 with no extra spaces / Latin CHAPTER 0N", () => {
     expect(formatChapterLabel("chapter", 1, true)).toBe("第一章")
     expect(formatChapterLabel("chapter", 3, true)).toBe("第三章")

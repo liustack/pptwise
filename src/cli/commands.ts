@@ -30,7 +30,7 @@ import { extractBrandTheme, slugify } from "../themes/extract/brand-extract"
 import { ThemeFileSchema, type ThemeFile } from "../themes/schema"
 import { THEME_OCCASIONS } from "../themes/occasions"
 import { CANONICAL_THEME_IDS } from "../themes/index"
-import { RETIRED_THEME_IDS } from "../themes/retired-ids"
+import { RETIRED_THEME_IDS, foldedThemeTarget } from "../themes/retired-ids"
 import { LAYOUT_REGISTRY } from "../layouts/registry"
 import { CONFIG_FILENAME, findConfig, findUserConfig } from "./config"
 import {
@@ -66,6 +66,7 @@ import {
 import {
   assertThemeId,
   deckThemeCandidates,
+  lookupThemeName,
   readThemeFile,
   resolveThemeSelection,
   resolveThemeByName,
@@ -76,6 +77,7 @@ import {
 } from "./theme-resolve"
 import { damagedPackError, installedPackIds, packsRoot, readInstalledPack } from "./packs/store"
 import {
+  boundThemeName,
   collectThemeInputs,
   guardThemeRebind,
   sourceFromInputs,
@@ -176,9 +178,12 @@ export async function applyDeckConfig(raw: unknown, themeInputs: ThemeInputs): P
   const resolved = themeFromInputs(themeInputs)
   if (resolved === undefined) return undefined
   guardThemeRebind(themeInputs.localTheme, resolved)
+  // The deck carries the name it bound, not the id the lookup answered. The
+  // two differ only for a folded name (arena resolves to rally), and
+  // `validateIr` is where that is read as its target and said in a warning.
   deck.theme = {
     ...irTheme,
-    id: resolved.id,
+    id: boundThemeName(themeInputs) ?? resolved.id,
   }
   return resolved
 }
@@ -988,8 +993,9 @@ export async function runSchema(opts: SchemaCommandOptions = {}): Promise<string
     if (opts.theme !== undefined && opts.theme.length > 0) {
       // Same gate the resolver runs first: a name it would refuse never
       // reaches the filesystem as part of a candidate path.
-      assertThemeId(opts.theme)
-      deckDir = await schemaDeckDir(cwd, opts.deck, opts.theme)
+      const name = lookupThemeName(opts.theme)
+      assertThemeId(name)
+      deckDir = await schemaDeckDir(cwd, opts.deck, name)
     }
     const resolved = await resolveThemeSelection(opts.theme, { startDir: cwd, deckDir })
     schema = kindJsonSchema(opts.kind, {
@@ -1061,7 +1067,7 @@ async function readInstalledPackThemes(): Promise<InstalledPackRead[]> {
         if ((CANONICAL_THEME_IDS as readonly string[]).includes(file.id)) {
           throw damagedPackError(dir, `it ships theme "${file.id}", which is a factory preset name`)
         }
-        const renamed = RETIRED_THEME_IDS[file.id]
+        const renamed = RETIRED_THEME_IDS[file.id] ?? foldedThemeTarget(file.id)
         if (renamed !== undefined) {
           throw damagedPackError(dir, `it ships theme "${file.id}", a retired id (now "${renamed}")`)
         }

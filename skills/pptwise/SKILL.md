@@ -69,7 +69,7 @@ Resolve theme names in this order:
 1. The deck directory.
 2. A workspace `themes/` directory while walking upward.
 3. Installed content packs (`pptwise packs list`).
-4. The 25 factory presets.
+4. The 22 factory presets.
 
 Use request and workspace signals to shortlist themes by `occasions` and `identity`. Compare two to four candidates with the fixed fitting-room sample:
 

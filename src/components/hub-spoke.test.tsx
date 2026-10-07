@@ -158,7 +158,7 @@ describe("hub_spoke component", () => {
         .join(",")
     }
     const baseline = shapesOf("ledger")
-    for (const theme of ["thesis", "rally", "terminal", "heritage", "brief"]) {
+    for (const theme of ["thesis", "rally", "terminal", "luxe", "brief"]) {
       expect(shapesOf(theme), theme).toBe(baseline)
     }
   })

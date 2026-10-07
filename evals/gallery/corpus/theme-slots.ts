@@ -138,22 +138,23 @@ function chart(chart_type: ThemeChartType, direction?: "horizontal"): ThemeConte
  */
 export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = {
   thesis: [slot("icon_cards"), slot("paragraph"), chart("funnel"), slot("quote_wall"), slot("sketch"), slot("code"), slot("insight_panel")],
-  arena: [chart("scatter"), slot("verdict_banner"), slot("insight_panel"), slot("pros_cons"), slot("waterfall"), slot("heatmap"), slot("gantt")],
-  rally: [chart("dumbbell"), slot("hub_spoke"), slot("insight_panel"), slot("swot"), slot("pest"), slot("five_forces"), slot("bmc")],
+  // word_cloud came over from playbill when it was folded into rally: no
+  // other theme's deck leads with it.
+  rally: [chart("dumbbell"), slot("hub_spoke"), slot("insight_panel"), slot("swot"), slot("pest"), slot("five_forces"), slot("word_cloud")],
   homeroom: [chart("gauge"), slot("image_grid"), slot("image"), slot("image_compare"), slot("device_mockup"), slot("data_table"), slot("pillar_model")],
   brief: [chart("bar"), slot("bullets"), slot("kpi_cards"), slot("positioning_map"), slot("heatmap"), slot("row_cards"), slot("architecture")],
   crayon: [slot("numbered_cards"), slot("bullets"), slot("swot"), slot("gantt"), slot("callout"), slot("image_grid"), slot("comparison")],
   ember: [slot("numbered_cards"), slot("data_table"), slot("flowchart"), slot("rings"), slot("image"), slot("pest"), slot("fishbone")],
   bulletin: [slot("waterfall"), slot("bullets"), slot("icon_cards"), slot("bmc"), slot("timeline"), slot("architecture"), slot("device_mockup")],
-  heritage: [slot("cycle"), slot("data_table"), slot("people_cards"), slot("image_grid"), slot("image_compare"), slot("five_forces"), slot("paragraph")],
   ink: [chart("bar", "horizontal"), slot("row_cards"), slot("blockquote"), slot("steps"), slot("callout"), slot("heatmap"), slot("image_grid")],
   ledger: [slot("cycle"), slot("kpi_cards"), slot("staircase"), slot("concept_equation"), slot("sankey"), slot("harvey_balls"), slot("value_chain")],
   journal: [chart("line"), slot("numbered_cards"), slot("comparison"), slot("blockquote"), slot("roadmap"), slot("callout"), slot("journey_map")],
   lecture: [chart("area"), slot("timeline"), slot("bmc"), slot("bullets"), slot("image_grid"), slot("matrix"), slot("paragraph")],
-  luxe: [slot("progress_donuts"), slot("swot"), slot("gantt"), slot("blockquote"), slot("device_mockup"), slot("flowchart"), slot("timeline")],
+  // The scatter chart came over from arena when arena was folded away: no
+  // other theme's deck leads with it, and rally's deck already has its chart.
+  luxe: [slot("progress_donuts"), slot("swot"), slot("gantt"), slot("blockquote"), slot("device_mockup"), slot("flowchart"), chart("scatter")],
   memo: [chart("donut"), slot("paragraph"), slot("icon_cards"), slot("pest"), slot("blockquote"), slot("rings"), slot("waterfall")],
   museum: [slot("cycle"), slot("kpi_cards"), slot("org_tree"), slot("heatmap"), slot("segmented_wheel"), slot("logo_wall"), slot("architecture")],
-  playbill: [slot("image_grid"), slot("data_table"), slot("word_cloud"), slot("steps"), slot("five_forces"), slot("image"), slot("row_cards")],
   clinic: [slot("numbered_cards"), slot("comparison"), slot("sankey"), slot("people_cards"), slot("image_compare"), slot("issue_tree"), slot("swimlane")],
   runway: [slot("steps"), slot("data_table"), slot("product_cards"), slot("image_grid"), slot("chevron_process"), slot("verdict_banner"), slot("gantt")],
   stage: [slot("timeline"), slot("kpi_cards"), slot("pyramid"), slot("bmc"), slot("image"), slot("blockquote"), slot("architecture")],

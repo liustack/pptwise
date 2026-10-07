@@ -39,11 +39,6 @@ export function splitTrailingPercent(value: string): { body: string; percent: bo
   return { body: trimmed, percent: false }
 }
 
-/** True when the hero value is a short signed number / percent, not a sentence. */
-export function isNumericHero(value: string): boolean {
-  return /^-?\d+(?:[.,]\d+)?%?$/.test(value.trim())
-}
-
 /**
  * The hero figure's type size, with whatever the skin sets after it on the
  * same line, or `null` when the figure cannot be set whole.

@@ -223,7 +223,7 @@ describe("staircase component", () => {
         .join(",")
     }
     const baseline = shapesOf("brief")
-    for (const theme of ["ink", "rally", "terminal", "heritage", "luxe"]) {
+    for (const theme of ["ink", "rally", "terminal", "journal", "luxe"]) {
       expect(shapesOf(theme), theme).toBe(baseline)
     }
   })

@@ -366,7 +366,7 @@ describe("gallery deck band corpus", () => {
     }
   })
 
-  it("covers every required surface at least once across the 24×7 union", async () => {
+  it("covers every required surface at least once across the 22×7 union", async () => {
     const jobs = buildMatrix(themeIds, await assets(), { only: "deck" })
     const drawn = themeTableSurfaces(jobs)
     const required = [...THEME_TABLE_REQUIRED_SURFACES].sort()

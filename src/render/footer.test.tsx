@@ -410,7 +410,7 @@ describe("the footer row, when the deck asks for it", () => {
       return page(result.ir!, 1)
     }
     // image-split: a full-height bleed column with its caption bar at the bottom.
-    for (const theme of ["heritage", "museum"]) {
+    for (const theme of ["luxe", "museum"]) {
       expect(photo(theme).querySelector("[data-footer]"), theme).toBeNull()
     }
     // image-top: the photo stays at the top, the footer has its line.

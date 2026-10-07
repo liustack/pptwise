@@ -227,9 +227,9 @@ function expectBadgeClear(themeId: string, root: Element, heading: string): void
 }
 
 describe("rail-numbered badge vs heading treatment", () => {
-  it("playbill title does not intersect the {chapter}.{n} badge", () => {
-    const { root } = renderRailPage("playbill")
-    expectBadgeClear("playbill", root, GALLERY_HEADING)
+  it("luxe title does not intersect the {chapter}.{n} badge", () => {
+    const { root } = renderRailPage("luxe")
+    expectBadgeClear("luxe", root, GALLERY_HEADING)
   })
 
   it("ink title and vertical-kicker chars do not intersect the badge", () => {
@@ -273,27 +273,6 @@ describe("assigned themes on rail-numbered", () => {
     )
     expect(ghost).toBeDefined()
   })
-})
-
-describe("tag_box chapter chip vs rail-numbered badge", () => {
-  it.each(["playbill", "arena"] as const)(
-    "%s: chapter chip stays a full reserve-gap clear of the {chapter}.{n} badge",
-    (themeId) => {
-      const { root } = renderRailPage(themeId)
-      const badge = findRailBadge(root)
-      expect(badge, `${themeId}: rail-numbered badge must still be painted`).not.toBeNull()
-      const tagBox = findTagBox(root)
-      expect(tagBox, `${themeId}: tag_box chapter chip must still be painted`).not.toBeNull()
-      expect(
-        aabbIntersect(badge!, tagBox!),
-        `${themeId}: tag_box intersects badge\n  badge ${fmt(badge!)}\n  tag-box ${fmt(tagBox!)}`,
-      ).toBe(false)
-      expect(
-        clearance(badge!, tagBox!),
-        `${themeId}: tag_box vs badge clearance ${clearance(badge!, tagBox!).toFixed(1)}px\n  badge ${fmt(badge!)}\n  tag-box ${fmt(tagBox!)}`,
-      ).toBeGreaterThanOrEqual(TAG_BOX_CLEARANCE)
-    },
-  )
 })
 
 describe("gallery theme-table rail-numbered pages", () => {
@@ -350,9 +329,9 @@ describe("gallery theme-table rail-numbered pages", () => {
 })
 
 describe("no-reserve path", () => {
-  it("playbill title still starts at x=96 when tryContentHeadingTreatment is called without a reserve", () => {
-    const ir = deck("playbill", [chapterSlide(), contentSlide()])
-    const ctx = boundThemeCtx("playbill", {})
+  it("ledger title still starts at x=96 when tryContentHeadingTreatment is called without a reserve", () => {
+    const ir = deck("ledger", [chapterSlide(), contentSlide()])
+    const ctx = boundThemeCtx("ledger", {})
     const treated = tryContentHeadingTreatment({ ir, slide: ir.slides[1]!, index: 1, ctx })
     expect(treated).not.toBeNull()
     const root = parseSvgRoot(

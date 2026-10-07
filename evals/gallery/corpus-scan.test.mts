@@ -132,15 +132,13 @@ const SENTENCE_END = /[。．.！!？?]$/
 /**
  * The labels the corpus repeats today, page by page.
  *
- * Corpus writing, not a lead-in drawn from the wrong end: playbill's
- * `icon_cards` title opens one of its own sentences, and one page reuses one
- * phrase in two rows. Those are pinned here and the set can only shrink: an
+ * Corpus writing, not a lead-in drawn from the wrong end: one page reuses
+ * one phrase in two rows. That is pinned here and the set can only shrink: an
  * entry leaves when someone writes the missing line, as `show-gallery`'s did
  * when its six frames got six captions. Nothing may join it, and a repeated
  * *sentence* may never be listed at all.
  */
 const KNOWN_LABEL_REPEATS: readonly string[] = [
-  "playbill--comp--icon-cards--zh\t首演两场七百张票三天售罄",
   "terminal--deck--p04\t三次重写RFC与否决记录",
 ]
 
@@ -344,15 +342,15 @@ describe("gallery SVG text respects the readable font floor", () => {
 // ---------------------------------------------------------------------------
 
 /**
- * What the corpus holds today: 27 component-band specimens per device — the
+ * What the corpus holds today: 24 component-band specimens per device — the
  * component band draws this type twice, once as a browser window and once as a
  * phone — plus the four sample-deck pages whose narrative includes a product
  * screenshot, and terminal's console window on its composition page
  * (`screen`). Pinned per device, because a corpus that covered only browsers
  * left the phone branch of both the component and this test unexecuted.
  */
-const EXPECTED_DEVICE_PAGES = 59
-const EXPECTED_BY_DEVICE = { browser: 32, phone: 27 }
+const EXPECTED_DEVICE_PAGES = 53
+const EXPECTED_BY_DEVICE = { browser: 29, phone: 24 }
 const EXPECTED_DECK_PAGES = [
   "bulletin--deck--p09",
   "homeroom--deck--p07",

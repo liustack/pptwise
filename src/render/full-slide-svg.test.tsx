@@ -933,7 +933,7 @@ describe("menu decoration determinism", () => {
   })
 
   it("same (ir, slide, index) renders byte-identical decor markup across repeated renders (double-render determinism)", () => {
-    const themeId = registerTestTheme(`full-slide-svg-${testThemeSerial++}`, "heritage")
+    const themeId = registerTestTheme(`full-slide-svg-${testThemeSerial++}`, "clinic")
     const doc: PptxIR = { ...ir([]), theme: { id: themeId } } as PptxIR
     const slide: Slide = { type: "chapter", id: "p1", heading: "x", components: [] } as Slide
     doc.slides = [slide]
@@ -1031,22 +1031,13 @@ describe("layouts that paint their own full-bleed field (LayoutDefinition.paints
     ["fashion-masthead", "cover"],
     ["fashion-chapter", "chapter"],
     ["fashion-ending", "ending"],
-    ["mono-bleed", "content"],
   ] as const
 
   for (const [layout, type] of CASES) {
     it(`${layout} is the only full-bleed paint on the page`, () => {
-      const slide =
-        type === "content"
-          ? ({ type, kind: "statement", heading: "标题", components: [] } satisfies Slide)
-          : ({ type, heading: "标题", components: [] } satisfies Slide)
-      // ink does not offer mono-bleed (boarded faces are statement /
-      // stat-hero / pull-quote). playbill does, and its face still paints
-      // one full-bleed field, which is what this paintsOwnBackground check needs.
-      const theme = layout === "mono-bleed" ? "playbill" : "ink"
-      const faces: TestThemeFaces =
-        type === "content" ? { content: { statement: layout } } : { [type]: layout }
-      const doc = irWithFace(slide, theme, faces)
+      const slide: Slide = { type, heading: "标题", components: [] }
+      const faces: TestThemeFaces = { [type]: layout }
+      const doc = irWithFace(slide, "ink", faces)
       const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
       expect(container.querySelector(`[data-face="${layout}"]`)).not.toBeNull()
       expect(fullBleedFills(container)).toHaveLength(1)

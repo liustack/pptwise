@@ -2,7 +2,7 @@
 
 The top takeover: a photograph across the top of the page, the heading and the page's other blocks under it.
 
-Code: [`src/render/image-pages.tsx`](../../../src/render/image-pages.tsx) (`ImageTopPage`, `GridTopPage`). Shared by almanac, arena, crayon, homeroom, rally, stage, playbill and swiss.
+Code: [`src/render/image-pages.tsx`](../../../src/render/image-pages.tsx) (`ImageTopPage`, `GridTopPage`). Shared by almanac, crayon, homeroom, rally, stage and swiss.
 
 ## swiss, power sample, 2026-10
 

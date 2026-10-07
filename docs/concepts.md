@@ -118,6 +118,12 @@ it became. A workspace theme, a preset copy, or a colour fork cannot take one
 back: a reissued word would make every deck that names it read as valid again
 while meaning a different theme.
 
+Three themes were later folded into others: arena and playbill into rally,
+heritage into luxe (`FOLDED_THEME_IDS` in the same file). A fold keeps old
+decks working. Validation reads a folded id as the theme that absorbed it,
+draws exactly what that theme draws, and warns with the one edit to make. The
+freed word is reserved the same way a renamed one is.
+
 ## The menu model
 
 A theme menu is a pure table. It maps `cover`, `chapter`, each offered content kind, and `ending` to exactly one face. A theme may offer only a subset of the eleven content kinds. Omission is a design decision, not an incomplete theme.
