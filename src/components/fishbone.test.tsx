@@ -134,11 +134,21 @@ describe("fishbone component", () => {
       expect(Number(el.getAttribute("y")) + Number(el.getAttribute("height"))).toBeLessThanOrEqual(box.h + 1)
     }
     // Two causes on one rib clear each other at the size they are painted.
-    const ys = Array.from(container.querySelectorAll("circle")).map((c) => Number(c.getAttribute("cy")))
-    const sorted = [...ys].sort((a, b) => a - b)
-    for (let i = 1; i < sorted.length; i += 1) {
-      const gap = sorted[i]! - sorted[i - 1]!
-      if (gap > 0.5) expect(gap).toBeGreaterThanOrEqual(FORM_BODY_FLOOR)
+    // A rib's dots sit within one run of each other and ribs a step apart,
+    // so the dots fall into one cluster a rib along the spine.
+    const dots = Array.from(container.querySelectorAll("circle"))
+      .map((c) => ({ x: Number(c.getAttribute("cx")), y: Number(c.getAttribute("cy")) }))
+      .sort((a, b) => a.x - b.x)
+    const ribs: { x: number; y: number }[][] = []
+    for (const dot of dots) {
+      const last = ribs[ribs.length - 1]
+      if (last && dot.x - last[last.length - 1]!.x < 60) last.push(dot)
+      else ribs.push([dot])
+    }
+    expect(ribs).toHaveLength(6)
+    for (const rib of ribs) {
+      const ys = rib.map((d) => d.y).sort((a, b) => a - b)
+      for (let i = 1; i < ys.length; i += 1) expect(ys[i]! - ys[i - 1]!).toBeGreaterThanOrEqual(FORM_BODY_FLOOR)
     }
   })
 
@@ -169,5 +179,40 @@ describe("fishbone component", () => {
     const a = renderToStaticMarkup(<svg>{fishbone.render(four, box, ctx)}</svg>)
     const b = renderToStaticMarkup(<svg>{fishbone.render(four, box, ctx)}</svg>)
     expect(a).toBe(b)
+  })
+})
+
+describe("fishbone — the effect box and the causes beside it", () => {
+  it("hangs the last rib's causes clear of an effect set on three lines", () => {
+    const deep = {
+      ...four,
+      effect: "在册患者的规律服药率只有六成四",
+      ribs: [
+        ...four.ribs.slice(0, 3),
+        { label: "随访", causes: ["回访电话总在白天打", "血压本回收不到一半"] },
+      ],
+    }
+    const box = { x: 96, y: 200, w: 1088, h: 350 }
+    const { container } = svg(fishbone.render(deep, box, themed("clinic")))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    const rects = Array.from(container.querySelectorAll("rect"))
+    const head = rects[rects.length - 1]!
+    const hx = Number(head.getAttribute("x"))
+    const hy = Number(head.getAttribute("y"))
+    const hh = Number(head.getAttribute("height"))
+    const lines = Array.from(container.querySelectorAll("text")).filter((t) => (t.textContent ?? "").length > 0 && deep.ribs[3]!.causes.includes(t.textContent!))
+    expect(lines).toHaveLength(2)
+    for (const line of lines) {
+      const baseline = Number(line.getAttribute("y"))
+      const size = Number(line.getAttribute("font-size"))
+      const top = baseline - size * 0.88
+      const x = Number(line.getAttribute("x"))
+      const runsUnder = x < hx + 170 && top < hy + hh && baseline + size * 0.2 > hy
+      if (runsUnder) {
+        // Only a line that ends before the box may share its height.
+        expect(x + (line.textContent ?? "").length * size, line.textContent!).toBeLessThanOrEqual(hx)
+      }
+    }
+    assertSubset(container.querySelector("svg")!)
   })
 })

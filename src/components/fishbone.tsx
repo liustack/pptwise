@@ -114,6 +114,54 @@ function resolveFishbone(component: FishboneComponent, w: number, allowedH: numb
   }
 }
 
+/** Air a cause moved clear of the effect box keeps from it. */
+const HEAD_AIR = 6
+/** How far a cause's ink rises above the point it hangs from: its baseline sits 0.35em under, its cap height 0.88em over that. */
+const INK_ABOVE_CENTRE = 0.53
+
+/**
+ * Where along each rib its causes hang, or `null` when the last rib's cannot
+ * clear the effect box.
+ *
+ * The effect box stands on the spine at the head, as tall as its lines make
+ * it, and the last rib starts just short of it. Its first cause hangs close
+ * to the spine and runs right toward the head, so with the effect on three
+ * lines that cause ran under the box and its words were hidden behind it.
+ * The last rib's causes now hang further out along the rib, spread from
+ * clear of the box to as near the chip as the chip allows, whenever one of
+ * them would run under the box. Spaced too tight to read that way, the
+ * drawing declines instead.
+ */
+function causeStops(
+  component: FishboneComponent,
+  g: FishboneGeom,
+  causes: readonly (readonly { text: string; fontSize: number }[])[],
+  headH: number,
+  size: number,
+  fontFamily: string,
+): (readonly number[])[] | null {
+  const plain = component.ribs.map((rib) => CAUSE_STOPS[rib.causes.length] ?? CAUSE_STOPS[3]!)
+  const last = g.ribs.length - 1
+  const rib = g.ribs[last]!
+  const labels = causes[last] ?? []
+  const stops = plain[last]!
+  const underHead = (t: number, label: { text: string; fontSize: number }) => {
+    const x = rib.x - g.run * t + TICK + LABEL_GAP
+    const w = paintedWidthCeiling(label.text, label.fontSize, { bold: false, fontFamily })
+    const rise = g.rise * t
+    return x + w > g.headX && rise - label.fontSize * INK_ABOVE_CENTRE < headH / 2
+  }
+  if (!labels.some((label, j) => underHead(stops[j] ?? 0.5, label))) return plain
+  // As far out as the chip at the rib's end allows (`resolveFishbone`'s own bound).
+  const outer = Math.max(stops[stops.length - 1]!, 1 - (size * 0.6) / g.rise)
+  const inner = Math.min(outer, (headH / 2 + HEAD_AIR + size * INK_ABOVE_CENTRE) / g.rise)
+  const moved = stops.length === 1 ? [outer] : stops.map((_t, j) => inner + ((outer - inner) * j) / (stops.length - 1))
+  const tightest = Math.min(...moved.slice(1).map((t, j) => t - moved[j]!))
+  if (moved.length > 1 && g.rise * tightest < size * LINE_RATIO) return null
+  if (labels.some((label, j) => underHead(moved[j] ?? 0.5, label))) return null
+  return plain.map((s, i) => (i === last ? moved : s))
+}
+
 /** The height this drawing asks for when nothing constrains it. */
 function naturalHeight(): number {
   return MAX_H
@@ -170,6 +218,8 @@ export const fishbone: SvgComponent<FishboneComponent> = {
     if (anyCut([head, ...chips, ...causes.flat()]) || head.lines.length === 0 || headH > g.h) {
       return <DroppedContentMarker count={component.ribs.length} kind="item" />
     }
+    const stopsOf = causeStops(component, g, causes, headH, causeSize, ctx.fonts.body)
+    if (!stopsOf) return <DroppedContentMarker count={component.ribs.length} kind="item" />
 
     const chipInk = accessibleInk(ctx.colors.text, ctx.colors.surface, chipSize)
     const headInk = accessibleInk(ctx.colors.surface, ctx.colors.primary, head.fontSize)
@@ -228,7 +278,7 @@ export const fishbone: SvgComponent<FishboneComponent> = {
           )
         })}
         {g.ribs.flatMap((rib, i) => {
-          const stops = CAUSE_STOPS[component.ribs[i]!.causes.length] ?? CAUSE_STOPS[3]!
+          const stops = stopsOf[i]!
           return causes[i]!.map((label, j) => {
             const t = stops[j] ?? 0.5
             const cx = rib.x - g.run * t
