@@ -13,7 +13,9 @@ import {
   STALE_AFTER_MS,
   openRunRoot,
   processAlive,
+  runRootParent,
   sweepStaleRunRoots,
+  tsxSocketPathLength,
 } from "./test-run-root"
 
 const DEAD = 1_000_001
@@ -136,5 +138,25 @@ throw new Error("leg failed")`
 
   it("knows this process is alive", () => {
     expect(processAlive(process.pid)).toBe(true)
+  })
+})
+
+describe("runRootParent", () => {
+  it("keeps the tsx socket a run opens well under macOS's cap", () => {
+    const macosTemp = "/var/folders/p8/vpkbx_ss5j7c4yfn4p0jvqlm0000gn/T"
+    // Rooted in macOS's own temp directory the socket ran to about 91 bytes of 103.
+    expect(tsxSocketPathLength(macosTemp)).toBeGreaterThan(103 - 24)
+    const parent = runRootParent(macosTemp, "darwin")
+    expect(parent).toBe("/tmp")
+    expect(tsxSocketPathLength(parent)).toBeLessThanOrEqual(103 - 24)
+  })
+
+  it("keeps the leak check's short private directory, where that check looks for the root", () => {
+    const leakCheck = "/tmp/pptwise-leak-check-AbC123"
+    expect(runRootParent(leakCheck, "darwin")).toBe(leakCheck)
+  })
+
+  it("leaves Windows on its own temp directory", () => {
+    expect(runRootParent("C:\\Users\\someone\\AppData\\Local\\Temp\\a\\very\\long\\path\\indeed", "win32")).toContain("AppData")
   })
 })

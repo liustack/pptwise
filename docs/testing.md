@@ -34,7 +34,7 @@ Do not replace the configured commands with a guessed build tool.
 
 ## Temp directories
 
-Vitest runs inside one temp root. `src/test-run-root.ts`, the globalSetup, creates `pptwise-test-run-*` in the system temp directory, points `TMPDIR`, `TEMP`, and `TMP` at it before any worker starts, and removes it when the run ends. A test can make temp directories with `os.tmpdir()` and leave them, and so can the CLI children it spawns. A root left by a killed run is removed by a later run once the process that owned it is gone.
+Vitest runs inside one temp root. `src/test-run-root.ts`, the globalSetup, creates `pptwise-test-run-*` in the system temp directory, or in `/tmp` when the system one is so long that the IPC socket tsx opens under the root would come near macOS's 104-byte cap on a socket path (macOS's own temp directory puts it at about 91), points `TMPDIR`, `TEMP`, and `TMP` at it before any worker starts, and removes it when the run ends. A test can make temp directories with `os.tmpdir()` and leave them, and so can the CLI children it spawns. A root left by a killed run is removed by a later run once the process that owned it is gone.
 
 `pnpm check` runs the suite through `scripts/tmp-leak-check.mts`, which gives the run a private temp directory and fails when anything named `pptwise-*` is left in it. The same script measures any other command:
 

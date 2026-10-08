@@ -147,6 +147,42 @@ export function openRunRoot(parent: string): RunRoot {
   }
 }
 
+/**
+ * The longest a Unix socket path may be on macOS, `sun_path`'s 104 bytes,
+ * with its terminating NUL taken out.
+ */
+const SOCKET_PATH_MAX = 103
+/** Room kept free under that cap for whatever a run nests below its root. */
+const SOCKET_PATH_SPARE = 24
+
+/**
+ * The length of the IPC socket tsx opens for a run rooted under `parent`:
+ * `<parent>/pptwise-test-run-XXXXXX/tsx-<uid>/<pid>.pipe`, with a six-digit
+ * uid and a seven-digit pid as the widest the run will meet.
+ */
+export function tsxSocketPathLength(parent: string): number {
+  return `${parent}/${RUN_ROOT_PREFIX}XXXXXX/tsx-000000/0000000.pipe`.length
+}
+
+/**
+ * Where a run's root goes: under the inherited temp directory, unless the
+ * tsx socket a CLI child opens under that root would come within
+ * `SOCKET_PATH_SPARE` bytes of macOS's cap, and then under `/tmp`.
+ *
+ * Every test that spawns the CLI runs it through tsx, and tsx opens its IPC
+ * socket at `<os.tmpdir()>/tsx-<uid>/<pid>.pipe`. Inside a run that temp
+ * directory is the run root. macOS's own temp directory already takes 49 of
+ * the 103 bytes, and a run rooted there put the socket at about 91, 13 short
+ * of the cap. `/tmp` takes 4. `pnpm check`'s leak check hands the run a
+ * temp directory under `/tmp` already, short enough to keep, so the root
+ * stays where that check looks for it. Windows uses named pipes, whose names
+ * do not follow the temp path.
+ */
+export function runRootParent(inherited: string = tmpdir(), platform: NodeJS.Platform = process.platform): string {
+  if (platform === "win32") return inherited
+  return tsxSocketPathLength(inherited) + SOCKET_PATH_SPARE <= SOCKET_PATH_MAX ? inherited : "/tmp"
+}
+
 export default function setup(): () => void {
-  return openRunRoot(tmpdir()).teardown
+  return openRunRoot(runRootParent()).teardown
 }
