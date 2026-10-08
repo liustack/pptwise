@@ -2723,3 +2723,44 @@ describe("value ranges on a bar on its side", () => {
     expect(container.querySelector("[data-truncated]")).toBeNull()
   })
 })
+
+describe("a reference line and the values beside it", () => {
+  const ROWS = ["钢铁", "铝", "水泥", "化肥", "氢"]
+  const VALUES = [1.42, 1.37, 1.3, 1.5, 1.36]
+  const bars = (direction?: "horizontal") => ({
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    ...(direction ? { direction } : {}),
+    series: [{ name: "排放强度", data: ROWS.map((x, i) => ({ x, y: VALUES[i]! })) }],
+    reference: { value: 1.37, label: "欧盟基准 1.370" },
+  })
+  const draw = (component: ReturnType<typeof bars>) =>
+    svg(chart.render(component, { ...box, h: chart.measure(component, box.w, ctx) }, ctx)).container
+
+  it("starts a value past the line down a plot on its side instead of under it", () => {
+    const container = draw(bars("horizontal"))
+    const line = container.querySelector("[data-chart-reference]")!
+    const at = Number(line.getAttribute("x1"))
+    const labels = Array.from(container.querySelectorAll('text[data-value-label="1"]'))
+    expect(labels).toHaveLength(ROWS.length)
+    for (const label of labels) {
+      const x = Number(label.getAttribute("x"))
+      const w = measureTextUnits(label.textContent ?? "", { bold: true, fontFamily: ctx.fonts.body }) * 16
+      expect(x >= at + 2 || x + w <= at - 2, `${label.textContent} at ${x}, line at ${at}`).toBe(true)
+    }
+  })
+
+  it("sets a value over the line across an upright plot instead of on it", () => {
+    const container = draw(bars())
+    const line = container.querySelector("[data-chart-reference]")!
+    const at = Number(line.getAttribute("y1"))
+    const labels = Array.from(container.querySelectorAll('text[data-value-label="1"]'))
+    expect(labels).toHaveLength(ROWS.length)
+    for (const label of labels) {
+      const y = Number(label.getAttribute("y"))
+      const top = y - 16 * 0.75
+      const bottom = y + 16 * 0.15
+      expect(top >= at + 2 || bottom <= at - 2, `${label.textContent} at ${y}, line at ${at}`).toBe(true)
+    }
+  })
+})

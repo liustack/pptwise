@@ -720,6 +720,30 @@ function renderReferenceLine(opts: {
   return <line data-chart-reference="" x1={x} y1={opts.plotY} x2={x} y2={opts.plotY + opts.plotH} stroke={opts.color} strokeWidth={REFERENCE_STROKE} strokeDasharray={REFERENCE_DASH} />
 }
 
+/** Air a value label keeps from the reference line on either side of it. */
+const REFERENCE_LABEL_AIR = 4
+
+/**
+ * A bar's value label moved clear of the reference line, or as it was.
+ *
+ * The line is drawn over the bars, and a bar ending just short of it set its
+ * value right where the line runs: past the end of a bar on its side, over the
+ * top of an upright one. The dashes struck through the digits. A label the
+ * line would cross starts past the line instead, or sits over it. Where the
+ * line is is the chart's to say: `at` is its x on a plot on its side, its y
+ * on an upright one.
+ */
+function clearOfReference(spec: ValueLabelSpec, at: number | null, across: boolean): ValueLabelSpec {
+  if (at === null) return spec
+  const box = valueLabelBox(spec)
+  if (across) {
+    if (box.y >= at + REFERENCE_LABEL_AIR || box.y + box.h <= at - REFERENCE_LABEL_AIR) return spec
+    return { ...spec, y: at - REFERENCE_LABEL_AIR - (box.y + box.h - spec.y) }
+  }
+  if (box.x >= at + REFERENCE_LABEL_AIR || box.x + box.w <= at - REFERENCE_LABEL_AIR) return spec
+  return { ...spec, x: at + REFERENCE_LABEL_AIR + (spec.x - box.x) }
+}
+
 /** A band's label: 16px, one line, inside the range's top-left corner when it is tall enough to hold it. */
 const BAND_LABEL_SIZE = 16
 const BAND_LABEL_INSET = 12
@@ -1581,6 +1605,7 @@ export function renderBar(
   // A gap's outline stands as tall as the bars run on average, its label over it.
   const gapTop = verticalBarExtent(gapHeight(model), domain, geom.plotY, geom.plotH)
   const gapBoxes = new Map<number, DepthBox>()
+  const referenceY = component?.reference ? mapToPlotY(component.reference.value, yAxis.domain, geom.plotY, geom.plotH) : null
   for (let i = 0; i < categories.length; i++) {
     const groupX0 = geom.plotX + i * groupW + BAR_GROUP_EDGE_GAP
     const usableW = groupW - BAR_GROUP_EDGE_GAP * 2
@@ -1603,7 +1628,7 @@ export function renderBar(
       barBoxes.push({ x: barX, y: barY, w: perBarW, h: barH })
       barLabelSpecs.push(
         risingBand(
-          {
+          clearOfReference({
             id: `bar-${i}-${s.seriesIndex}`,
             text: chartFigure(value, meta.figures),
             x: barX + perBarW / 2,
@@ -1612,7 +1637,7 @@ export function renderBar(
             fontSize: VALUE_FONT_SIZE,
             fontFamily,
             priority: 100 - s.seriesIndex,
-          },
+          }, referenceY, true),
           top,
         ),
       )
@@ -3167,6 +3192,7 @@ export function renderBarHorizontal(
   // step up or down, and it stays inside the chart.
   const hBarSpecs: ValueLabelSpec[] = []
   const hBarBoxes: DepthBox[] = []
+  const referenceX = component?.reference ? mapToPlotX(component.reference.value, xAxis.domain, plotX, plotW) : null
   for (let i = 0; i < categories.length; i++) {
     const rowY0 = plotY + i * rowH + BAR_H_ROW_EDGE_GAP
     const usableH = rowH - BAR_H_ROW_EDGE_GAP * 2
@@ -3184,18 +3210,24 @@ export function renderBarHorizontal(
       const reachW = upper === undefined ? barW : horizontalBarExtent(upper, domain, plotX, plotW).barW
       hBarBoxes.push({ x: barX, y: barY, w: reachW, h: perBarH })
       const labelY = barY + perBarH / 2 + 4
-      hBarSpecs.push({
-        id: `hbar-${i}-${s.seriesIndex}`,
-        text: labelText(i, s.seriesIndex, value),
-        x: barX + reachW + BAR_H_VALUE_GAP,
-        y: labelY,
-        anchor: "start",
-        fontSize: VALUE_FONT_SIZE,
-        fontFamily,
-        priority: 100 - s.seriesIndex,
-        yMin: labelY,
-        yMax: labelY,
-      })
+      hBarSpecs.push(
+        clearOfReference(
+          {
+            id: `hbar-${i}-${s.seriesIndex}`,
+            text: labelText(i, s.seriesIndex, value),
+            x: barX + reachW + BAR_H_VALUE_GAP,
+            y: labelY,
+            anchor: "start",
+            fontSize: VALUE_FONT_SIZE,
+            fontFamily,
+            priority: 100 - s.seriesIndex,
+            yMin: labelY,
+            yMax: labelY,
+          },
+          referenceX,
+          false,
+        ),
+      )
     }
   }
   const placedHLabels = placeValueLabelsTogether(hBarSpecs, hBarBoxes, {
