@@ -52,6 +52,19 @@ describe("image_grid component", () => {
     expect(h).toBeLessThanOrEqual(340 + 26)
   })
 
+  it("sets seven or eight pictures in one row, each as wide as its share", () => {
+    for (const n of [7, 8]) {
+      const component = { type: "image_grid" as const, items: Array.from({ length: n }, (_, i) => ({ asset_id: "abcd"[i % 4]!, caption: `LOOK 0${i + 1}` })) }
+      const { container } = svg(imageGrid.render(component, box, ctx))
+      const images = Array.from(container.querySelectorAll("image"))
+      expect(images).toHaveLength(n)
+      const xs = Array.from(container.querySelectorAll("g[transform]")).map((g) => Number(/translate\(([\d.]+)/.exec(g.getAttribute("transform")!)?.[1]))
+      expect(new Set(images.map((img) => img.getAttribute("height")))).toHaveProperty("size", 1)
+      expect(xs.filter((x) => !Number.isNaN(x)).length).toBeGreaterThanOrEqual(n)
+      expect(Number(images[0]!.getAttribute("width")) * n).toBeLessThanOrEqual(box.w)
+    }
+  })
+
   it("2x2 layout for 4 items keeps the grid height budget and still paints captions", () => {
     const component = {
       type: "image_grid" as const,

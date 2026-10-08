@@ -1,0 +1,36 @@
+{
+  "components": [
+    {
+      "type": "numbered_cards",
+      "items": [
+        {
+          "icon": "factory",
+          "title": "Why old denim",
+          "text": "How much textile waste, and the water in one pair"
+        },
+        {
+          "icon": "palette",
+          "title": "Inspiration",
+          "text": "Fading, creases and pocket marks as pattern"
+        },
+        {
+          "icon": "scissors",
+          "title": "Fabric",
+          "text": "Unpick, grade by shade, piece together"
+        },
+        {
+          "icon": "shirt",
+          "title": "Collection",
+          "text": "Seven looks, walking from dark to light",
+          "emphasis": true
+        },
+        {
+          "icon": "scale",
+          "title": "Limits",
+          "text": "What it does, and what it cannot do"
+        }
+      ]
+    }
+  ],
+  "notes": "I'll go through this in five parts. The first two pages are background, and every figure on them is one I checked against the original document. The middle three parts are the design itself and take most of the time. The last page is about limits: I want to say plainly what this collection cannot prove."
+}

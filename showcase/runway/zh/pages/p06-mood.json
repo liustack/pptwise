@@ -1,0 +1,39 @@
+{
+  "components": [
+    {
+      "type": "image_grid",
+      "items": [
+        {
+          "asset_id": "mood-ghost",
+          "caption": "口袋印"
+        },
+        {
+          "asset_id": "mood-knee",
+          "caption": "膝盖磨白"
+        },
+        {
+          "asset_id": "mood-seam",
+          "caption": "明线卷边"
+        },
+        {
+          "asset_id": "mood-fray",
+          "caption": "毛边"
+        },
+        {
+          "asset_id": "mood-mend",
+          "caption": "补丁"
+        },
+        {
+          "asset_id": "mood-indigo",
+          "caption": "靛蓝色阶"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "被穿过的地方，\n就是这个系列的图案"
+    }
+  ],
+  "footnote": "图片均为 AI 生成示意",
+  "notes": "灵感来自旧裤子身上被穿出来的东西。口袋拆掉以后，下面那块布没晒过、没磨过，会留下一个深色的口袋形状。膝盖反复弯折，会磨出一片白。还有明线、卷边的裤脚、毛边和补丁。我不想把这些痕迹洗掉或者遮住，而是把它们当成这个系列的图案。最后一张是靛蓝的色阶，后面面料分档就是从这里来的。"
+}

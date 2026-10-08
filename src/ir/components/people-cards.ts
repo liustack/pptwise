@@ -77,10 +77,9 @@ export const schema = z
   // test that decides between them.
   .describe(
     "Lays 2-12 people out on an equal-weight card grid, each with a deterministic initials badge in place " +
-      "of a photo, for content that is fundamentally about *people* — a team roster, a speaker lineup, a " +
-      "judging panel, an author list. Use people_cards when every item names a person; keep `row_cards`/" +
-      "`icon_cards` (both capped at 6 items) for non-person enumerations — features, milestones, topics — " +
-      "even when they happen to share the same name/role/org-shaped fields.",
+      "of a photo, for a page about *people*: a team roster, a speaker lineup, a judging panel, an author " +
+      "list. Use people_cards when every item names a person, and keep `row_cards`/`icon_cards` (at most 6 " +
+      "items) for anything else, such as features, milestones or topics, even with name/role/org-shaped fields.",
   )
 
 export const aliases = {} satisfies ComponentAliasSpec

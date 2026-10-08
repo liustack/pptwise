@@ -296,7 +296,7 @@ describe("runway show layouts", () => {
   })
 
   it("show-spotlight wraps a heading its column cannot hold, keeping the last line on the rule's baseline", () => {
-    const heading = "第九个 look 是整个系列的转折"
+    const heading = "第九个 look 是整个系列真正的转折点"
     const root = draw(3, { ...slides[3]!, heading } as Slide)
     expect(root.querySelector('[data-show-mode="spotlight"]')).not.toBeNull()
     const lines = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") === "700" && t.getAttribute("x") === "720")
@@ -314,7 +314,7 @@ describe("runway show layouts", () => {
   })
 
   it("show-spotlight fits a fallback heading to the full line it is set on", () => {
-    const heading = "第九个 look 是整个系列的转折"
+    const heading = "第九个 look 是整个系列真正的转折点"
     const slide = {
       ...slides[3]!,
       heading,
@@ -377,13 +377,13 @@ describe("runway show layouts", () => {
   it("places show-figures on the approved three-stat grid and accents the first delta item", () => {
     const root = draw(5)
     const tokens = resolveStyle("runway")
-    // "2.4×" sets smaller than its neighbours. Runway's figures are SimSun,
-    // which draws "×" on the full em: at 140px the figure is 350px wide in a
-    // 336px column. The estimate used to price "×" at 0.563em and let it
-    // overflow, and now fits it at the size the column holds.
+    // "2.4×" sets at its neighbours' size. Runway's figures were SimSun until
+    // 2026-10, which draws "×" on the full em, so the figure set smaller to
+    // fit its 336px column; Times New Roman draws it narrower and it fits at
+    // 140px.
     expect(["38%", "2.4×", "91%"].map((value) => attrs(textBy(root, value), ["x", "y", "font-size", "fill"]))).toEqual([
       ["64", "392", "140", tokens.colors.primary],
-      ["512", "392", "122", tokens.colors.accent],
+      ["512", "392", "140", tokens.colors.accent],
       ["960", "392", "140", tokens.colors.primary],
     ])
     expect(Array.from(root.querySelectorAll('[data-show-divider="figures"]')).map((line) => attrs(line, ["x1", "y1", "x2", "y2"]))).toEqual([
@@ -517,5 +517,25 @@ describe("runway show layouts", () => {
       expect(root.textContent, FACE_BY_INDEX[index]).toContain("回退正文")
       expect(root.querySelectorAll('[data-show-accent="true"]'), FACE_BY_INDEX[index]).toHaveLength(1)
     }
+  })
+})
+
+describe("show-spotlight with a row it cannot hold", () => {
+  it("leaves the spotlight for its fallback rather than cutting the row", () => {
+    const panel = slides[3]!.components[1] as Extract<Slide["components"][number], { type: "insight_panel" }>
+    const long = { ...panel, rows: [panel.rows[0]!, panel.rows[1]!, { label: "结果", text: "协作活跃率提升到百分之八十八，直接把客户的跨团队协同时间压低了一大半" }] }
+    const root = draw(3, { ...slides[3]!, components: [slides[3]!.components[0]!, long] } as Slide)
+    expect(root.querySelector("[data-truncated]")).toBeNull()
+    expect(root.querySelector('[data-show-mode="fallback"]')).not.toBeNull()
+    expect(root.textContent).toContain("协作活跃率提升到百分之八十八")
+  })
+})
+
+describe("show-statement on a page with no section before it", () => {
+  it("draws no section square on its own", () => {
+    const statement = slides.find((s) => s.type === "content" && s.kind === "statement")!
+    const root = draw(slides.indexOf(statement), { ...statement, kicker: undefined } as Slide)
+    // The deck's only page: no chapter before it names a section.
+    expect(root.querySelector('[data-show-kicker="true"]')).toBeNull()
   })
 })

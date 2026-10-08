@@ -232,6 +232,17 @@ export type CompositionId =
   | "backing"
   | "badges"
   | "ticks"
+  | "order"
+  | "standfirst"
+  | "duet"
+  | "collage"
+  | "thread"
+  | "lengths"
+  | "shades"
+  | "atelier"
+  | "parade"
+  | "look"
+  | "bounds"
 
 /**
  * The type a composition sets its page in.
@@ -468,10 +479,28 @@ export type CompositionId =
  *   pieces, two ways of doing one thing either side of a line, a half page
  *   photograph beside its items, and a reply card. See `./invitation.tsx`.
  *
+ * - `lineup`: runway's 2026-10 board. A fashion show's running order:
+ *   show-white paper, the ink of the type for words, rules and numerals, a
+ *   stone grey for what is quieter, hairlines between rows, and one drop of
+ *   crimson (the theme's accent) a page on the one figure or word it is
+ *   about. Nothing sits on a card: rules, air and large serif numerals order
+ *   the page, the pictures argue and the words caption them. Titles,
+ *   numerals, figures and names are set in the heading serif at its regular
+ *   weight, labels and captions small in the body sans. A composition
+ *   offered this setting is handed the whole page and places the page's
+ *   claim (`claim`) and its source (`source`) itself, and draws the shapes
+ *   that board drew and no other did: a running order of parts, an editor's
+ *   standfirst over its figures, two figures never added, a moodboard of six
+ *   pictures, steps along one hairline over their photographs, quantities as
+ *   lines to scale, a picture bracketed into grades, a sample beside the ways
+ *   it was made, the looks in a row, one look on a page of its own, and what
+ *   a piece of work did and did not do. It keeps the part of a picture an
+ *   author crops to. See `./lineup.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll" | "crayonbox" | "invitation"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll" | "crayonbox" | "invitation" | "lineup"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */

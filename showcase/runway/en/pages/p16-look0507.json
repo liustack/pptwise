@@ -1,0 +1,29 @@
+{
+  "components": [
+    {
+      "type": "insight_panel",
+      "title": "LOOK 05–07",
+      "rows": [
+        {
+          "label": "LOOK 05",
+          "text": "Pieced shirt, raw edges left out at the yoke and cuffs"
+        },
+        {
+          "label": "LOOK 06",
+          "text": "Dress patterned with the dark marks of removed pockets"
+        },
+        {
+          "label": "LOOK 07",
+          "text": "Workwear jumpsuit, a mid to dark body and pale pockets"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "look0507",
+      "fit": "cover",
+      "caption": "Left to right: LOOK 05, 06, 07 (AI-generated)"
+    }
+  ],
+  "notes": "The last three looks. LOOK 05 is a pieced shirt with raw edges left showing at the yoke and cuffs. LOOK 06 uses the dark marks left by unpicked pockets as a pattern across the front of a dress, the same trace as the first image on the moodboard. LOOK 07 is a workwear jumpsuit with a dark and mid body and pale pockets, and it closes the collection."
+}

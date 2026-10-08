@@ -151,3 +151,20 @@ export const TagSchema = z
       ctx.addIssue({ code: "custom", path: ["evidence"], message: `a tag with basis "${tag.basis}" already says what it rests on, and evidence "${tag.evidence}" says it a second time. Keep one of them.` })
     }
   })
+
+/**
+ * The part of a picture to keep when it is cropped to its frame: left, top,
+ * width and height, each a fraction of the whole picture. Shared by `image`
+ * and `image_grid` items, so one group photograph can show each of its
+ * people in a frame of their own. The frame is filled from that part and
+ * trimmed evenly from its sides where their shapes differ, so the part's
+ * centre stays the frame's centre. See `render/cropped-image.tsx`.
+ */
+export const CropSchema = z
+  .array(z.number().min(0).max(1))
+  .length(4)
+  .superRefine(([left = 0, top = 0, width = 0, height = 0], ctx) => {
+    if (width <= 0 || height <= 0) ctx.addIssue({ code: "custom", message: "a crop's width and height must be more than 0." })
+    if (left + width > 1.0001 || top + height > 1.0001) ctx.addIssue({ code: "custom", message: "a crop must stay inside the picture: left + width and top + height are at most 1." })
+  })
+  .describe("The part of the picture to keep when it is cropped to its frame: [left, top, width, height], each a fraction of the whole picture.")

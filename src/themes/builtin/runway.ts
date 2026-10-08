@@ -6,7 +6,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 裁决时尚主题不叫 magazine；magazine 转为 legacy id 指向 journal，存量
  * 人文观感 deck 回放不再突变）。高对比秀场风：秀场米白 + 秀场黑报头 +
  * 绯红一滴。runway 是氛围，不预设时装题材，观点页和数据页保持通用。
- * 当前由七张 pinOnly show 版式承担身份。主题级 motif 保持空值。
+ * 2026-08 起由七张 pinOnly show 版式承担身份，主题级 motif 留空（2026-10-08 出场单定稿改了这两条，见文末）。
  * 报头字体保持衬线（SimSun 承载 CJK，Didot 类报头是时尚杂志国际惯例），
  * 正文无衬线。
  *
@@ -78,6 +78,25 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * accent。`show-finale` 自绘满版 primary，主题级 motif 继续留空。
  *
  * **菜单分派（S1-B）**：秀场自带 show 家族：statement 用 show-statement，data 用 show-figures，photo 用单主图的 show-spotlight。大数字与单证据的报告腔不属于秀场，不上。
+ *
+ * **出场单定稿（2026-10-08，设计源 `design/rounds/2026-10-08-runway/`）**：
+ * 整套重画成一份秀场出场单。内容页全部走 `lineup-sheet`，正文交给 lineup
+ * 设定下的构图（出场顺序、编辑导语、并列巨数、情绪板拼贴、细线步骤、比例
+ * 线、色阶括号、小样加拼法、出场队列、整版造型页、做到做不到）；封面
+ * `lineup-cover`（杂志封面），章节 `lineup-chapter`（满版照片或出场队列），
+ * 结尾 `lineup-ending`（黑底谢幕）。statement 与 data 一样交给 lineup-sheet，
+ * 新增 fact（单个巨数）。七张 show 脸保留注册，供点名它们的主题副本使用。
+ *
+ * 与 decor=none 裁决的关系：2026-08 撤掉的是装饰。这一轮加的 `runway-motif`
+ * 只画出场单的报头（左 deck 标签、右分区与页码、一根黑细线），是结构不是
+ * 装饰，没有任何图形，标为 `structure`。它在 `footer-roles.ts` 里登记为
+ * `"row"`：页脚的标记印在报头里，页码按出场号的位置放在右上。
+ *
+ * 字体：标题从 SimSun 打头改成 Times New Roman 配 SimSun（与 luxe 同一对）。
+ * 原来按 SimSun 的西文字宽排英文标题，PowerPoint 里折行比预览早，弯引号
+ * 走全角；配上拉丁衬线后西文、数字和引号都由 Times New Roman 来画。设计稿
+ * 写的是 Didot / Bodoni，这两款 Windows 都不带，Times New Roman 是能落地的
+ * 最近一款高反差衬线。
  */
 export const RUNWAY_TOKENS: StyleTokens = {
   id: "runway",
@@ -98,7 +117,9 @@ export const RUNWAY_TOKENS: StyleTokens = {
     chartPalette: ["#141414", "#B0483C", "#8A8A84", "#C4C0B4"], // 黑/绯红/石灰/亚麻
   },
   fonts: {
-    heading: ["SimSun", "宋体", "Georgia", "serif"],
+    // 出场单衬线：Times New Roman 管拉丁文与数字，SimSun/宋体 管中文（导出把
+    // 两者配成一对）。Songti SC/STSong 是 macOS 预览回退。
+    heading: ["Times New Roman", "SimSun", "宋体", "Songti SC", "STSong", "serif"],
     body: ["Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Arial", "system-ui"],
   },
   shape: { radius: 0, gapScale: 0.95 }, // 时尚硬朗+密排（spec 提案）
@@ -123,18 +144,20 @@ export const RUNWAY_THEME = {
     lineage: "The fashion show program and the lookbook.",
   },
   style: RUNWAY_TOKENS,
+  motif: { id: "runway-motif" },
   menu: {
-    cover: { face: "show-headline" },
-    chapter: { face: "show-plate" },
+    cover: { face: "lineup-cover" },
+    chapter: { face: "lineup-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "show-figures" },
-      photo: { face: "show-spotlight" },
-      statement: { face: "show-statement" },
+      points: { face: "lineup-sheet" },
+      list: { face: "lineup-sheet" },
+      comparison: { face: "lineup-sheet" },
+      process: { face: "lineup-sheet" },
+      data: { face: "lineup-sheet" },
+      photo: { face: "lineup-sheet" },
+      statement: { face: "lineup-sheet" },
+      fact: { face: "lineup-sheet" },
     },
-    ending: { face: "show-finale" },
+    ending: { face: "lineup-ending" },
   },
 } satisfies BuiltinThemeDeclaration;

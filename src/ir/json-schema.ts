@@ -20,7 +20,7 @@
  */
 import { z } from "zod"
 import { PptwiseError } from "../errors"
-import { IconNameSchema, TagSchema, ToneSchema } from "./components/shared"
+import { CropSchema, IconNameSchema, TagSchema, ToneSchema } from "./components/shared"
 import { BallotSchema, COMPONENT_TYPES, ComponentSchema, FieldsSchema, KickerSchema, PptxIRSchema, StageSchema, StampSchema, YearsSchema } from "./index"
 
 export const COMPONENT_UNION_DEF_ID = "Component"
@@ -33,6 +33,7 @@ export const KICKER_DEF_ID = "Kicker"
 export const FIELDS_DEF_ID = "Fields"
 export const STAMP_DEF_ID = "Stamp"
 export const STAGE_DEF_ID = "Stage"
+export const CROP_DEF_ID = "Crop"
 
 /** What the model view says where the closed enum used to be. */
 export const ICON_NAME_MODEL_DESCRIPTION =
@@ -57,6 +58,7 @@ function registerDefIds(): void {
   withId(FieldsSchema, FIELDS_DEF_ID)
   withId(StampSchema, STAMP_DEF_ID)
   withId(StageSchema, STAGE_DEF_ID)
+  withId(CropSchema, CROP_DEF_ID)
   withId(ComponentSchema, COMPONENT_UNION_DEF_ID)
   for (const option of ComponentSchema.options) withId(option, option.shape.type.value)
   idsRegistered = true

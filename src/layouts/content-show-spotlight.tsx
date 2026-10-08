@@ -17,7 +17,22 @@ import { joinSources } from "./minimal-shared"
 type ImageComponent = Extract<Component, { type: "image" }>
 type InsightPanel = Extract<Component, { type: "insight_panel" }>
 
-function exactSpotlight(slide: SvgTemplateProps["slide"]): {
+/**
+ * Whether every row of the panel fits the spotlight column on one line, as
+ * the composition sets it: the label at 12px tracked 3px, the words from 22px
+ * down to 16px. A row that does not would be cut, so the page takes the
+ * fallback, where the ordinary panel wraps it.
+ */
+const ROW_LABEL = { maxWidth: 496, fontSize: 12, minFontSize: 12, letterSpacing: 3 } as const
+const ROW_VALUE = { maxWidth: 496, fontSize: 22, minFontSize: 16 } as const
+
+function rowsFit(panel: InsightPanel | undefined, fonts: SvgTemplateProps["ctx"]["fonts"]): boolean {
+  return (panel?.rows ?? []).every(
+    (row) => !fitSvgLine(row.label, { ...ROW_LABEL, fontFamily: fonts.body }).truncated && !fitSvgLine(row.text, { ...ROW_VALUE, fontFamily: fonts.body }).truncated,
+  )
+}
+
+function exactSpotlight(slide: SvgTemplateProps["slide"], fonts: SvgTemplateProps["ctx"]["fonts"]): {
   image: ImageComponent
   panel?: InsightPanel
 } | null {
@@ -29,6 +44,7 @@ function exactSpotlight(slide: SvgTemplateProps["slide"]): {
   if ((panels[0]?.rows.length ?? 0) > 3) return null
   // A panel's icon has no place on the spotlight: the ordinary panel draws it.
   if (panels[0]?.icon) return null
+  if (!rowsFit(panels[0], fonts)) return null
   return { image: images[0]!, panel: panels[0] }
 }
 
@@ -56,7 +72,7 @@ const WRAPPED_TITLE_LH = 1.2
 export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const exact = exactSpotlight(slide)
+  const exact = exactSpotlight(slide, fonts)
   const asset = exact ? ctx.images?.[exact.image.asset_id] : undefined
   const titleSource = stripEmphasis(slide.heading ?? "").trim()
   const title = titleSource
@@ -293,19 +309,8 @@ export function ShowSpotlightContent({ slide, ctx }: SvgTemplateProps) {
           ))}
           <line x1={720} y1={296} x2={1216} y2={296} stroke={colors.border ?? colors.muted} strokeWidth={1} />
           {rows.map((row, rowIndex) => {
-            const label = fitSvgLine(row.label, {
-              maxWidth: 496,
-              fontSize: 12,
-              minFontSize: 12,
-              letterSpacing: 3,
-              fontFamily: fonts.body,
-            })
-            const value = fitSvgLine(row.text, {
-              maxWidth: 496,
-              fontSize: 22,
-              minFontSize: 16,
-              fontFamily: fonts.body,
-            })
+            const label = fitSvgLine(row.label, { ...ROW_LABEL, fontFamily: fonts.body })
+            const value = fitSvgLine(row.text, { ...ROW_VALUE, fontFamily: fonts.body })
             return (
               <g key={rowIndex}>
                 <text
@@ -439,7 +444,7 @@ export const layoutDef = {
   story: {
     name: "Feature Frame",
     story: "A large framed image sits on one side, decorative corner brackets cropping its edges. A bold heading and up to three parameter rows stand across a vertical divide.",
-    positioning: "Serves photo at one image plus up to two body blocks, and the photo page of the Runway preset uses it. Choose it to feature one photograph and annotate it with specs or insight alongside.",
+    positioning: "Serves photo at one image plus up to two body blocks. Choose it to feature one photograph and annotate it with specs or insight alongside.",
     audience: "A creative review where one image needs commentary on the same page.",
     notFor: "Multiple images shown as a collection, which belong in Strip Grid.",
   },

@@ -41,6 +41,7 @@ import { PeriodicalCover } from "./cover-periodical-cover"
 import { ScrollCover } from "./cover-scroll-cover"
 import { CrayonboxCover } from "./cover-crayonbox-cover"
 import { InvitationCover } from "./cover-invitation-cover"
+import { LineupCover } from "./cover-lineup-cover"
 import { PledgeOpenCover } from "./cover-pledge-open-cover"
 import { ReportOpenCover } from "./cover-report-open-cover"
 import { GaugeVerdictCover } from "./cover-gauge-verdict"
@@ -99,4 +100,5 @@ export const COVER_LAYOUTS: Record<CoverLayoutId, CoverLayout> = {
   "scroll-cover": ScrollCover,
   "crayonbox-cover": CrayonboxCover,
   "invitation-cover": InvitationCover,
+  "lineup-cover": LineupCover,
 }

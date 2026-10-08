@@ -225,6 +225,18 @@ function collectForegroundBoxes(
     return
   }
 
+  // A cropped picture (`render/cropped-image.tsx`) is drawn whole and cut by
+  // its clip's one rectangle: it covers the rectangle, not the whole picture.
+  if (node.props["data-crop"] !== undefined) {
+    const clip = Children.toArray(node.props.children).find((child) => isValidElement<ElementProps>(child) && child.type === "clipPath") as ReactElement<ElementProps> | undefined
+    const rect = clip ? (Children.toArray(clip.props.children).find((child) => isValidElement<ElementProps>(child) && child.type === "rect") as ReactElement<ElementProps> | undefined) : undefined
+    if (rect) {
+      const box = globalLeafBox("image", rect.props, inheritedPaint(parentPaint, node.props, true), matrix)
+      if (box && box.w >= 0 && box.h >= 0) boxes.push(box)
+      return
+    }
+  }
+
   const paint = inheritedPaint(parentPaint, node.props, true)
   Children.forEach(node.props.children, (child) => collectForegroundBoxes(child, boxes, matrix, paint))
 }

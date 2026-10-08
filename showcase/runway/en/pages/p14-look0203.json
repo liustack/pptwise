@@ -1,0 +1,29 @@
+{
+  "components": [
+    {
+      "type": "insight_panel",
+      "title": "LOOK 02 03",
+      "rows": [
+        {
+          "label": "LOOK 02",
+          "text": "Cropped jacket of stacked waistbands, wide trousers with seams out"
+        },
+        {
+          "label": "LOOK 03",
+          "text": "Legs cut into long panels, dark and light in turn, as a long skirt"
+        },
+        {
+          "label": "SHARED",
+          "text": "The old waistbands, side seams and yellow stitching kept"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "look0203",
+      "fit": "cover",
+      "caption": "LOOK 02 (left) and LOOK 03 (right), AI-generated"
+    }
+  ],
+  "notes": "LOOKs 02 and 03 share one idea: the parts that make jeans recognisable, moved somewhere new. The cropped jacket in LOOK 02 is built from the waistbands of many pairs stacked in rows, and the wide trousers turn the old side seams outwards as a detail. LOOK 03 cuts jeans legs into long tapering panels and alternates dark and light into a long skirt, keeping the original yellow topstitching on every panel."
+}

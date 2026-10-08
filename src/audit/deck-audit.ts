@@ -1,4 +1,5 @@
 import type { PptxIR, Slide } from "@/ir"
+import { visibleImageBox } from "../lib/svg-image-box"
 import { renderSlideSvg } from "../api"
 import type { ThemeDefinition } from "../themes/definitions"
 import { resolveIrTheme } from "../themes/resolve-ir-theme"
@@ -1966,6 +1967,13 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
           localW = bbox.w
           localH = bbox.h
         }
+      } else if (tag === "image") {
+        // A cropped picture is drawn whole and cut by a clip: it lies where it paints.
+        const painted = visibleImageBox(el)
+        x = painted.x
+        y = painted.y
+        localW = painted.w
+        localH = painted.h
       } else {
         x = Number(el.getAttribute("x") ?? 0)
         y = Number(el.getAttribute("y") ?? 0)
@@ -2415,8 +2423,9 @@ function collectLeafBoxes(root: Element, owners: readonly Element[] = []): Deriv
 
     const tag = el.tagName.toLowerCase()
     if (tag === "rect" || tag === "image") {
-      const y = Number(el.getAttribute("y") ?? 0)
-      const h = Number(el.getAttribute("height") ?? 0)
+      const box = tag === "image" ? visibleImageBox(el) : null
+      const y = box ? box.y : Number(el.getAttribute("y") ?? 0)
+      const h = box ? box.h : Number(el.getAttribute("height") ?? 0)
       extend(ay + (y + h) * as)
     } else if (tag === "circle") {
       const cy = Number(el.getAttribute("cy") ?? 0)
@@ -2620,8 +2629,10 @@ function droppedFindings(markup: string, page: number, slideId: string | undefin
 // Monotony — IR-level consecutive lead-component streak (C-stream). Walks
 // `ir.slides` in order; no SVG. Dominant type is `components[0].type`.
 // Placeholder pages are skipped (same as geometry) and break a streak.
-// Pages with zero components still count as audited for geometry, but
-// break / never start a monotony streak (covers/chapters/endings).
+// Covers, chapters and endings break a streak and never start one: they are
+// not content pages, whatever they carry. They used to be kept out only by
+// carrying no components, so a chapter that draws its photograph from an
+// `image` component joined the photo pages after it into a run.
 // ────────────────────────────────────────────────────────────────────────
 
 // ────────────────────────────────────────────────────────────────────────
@@ -2770,7 +2781,7 @@ function monotonyFindings(ir: PptxIR): AuditFinding[] {
       flush()
       return
     }
-    const componentType = slide.components?.[0]?.type
+    const componentType = slide.type === "content" ? slide.components?.[0]?.type : undefined
     if (!componentType) {
       flush()
       return

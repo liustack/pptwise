@@ -4,6 +4,7 @@ import { COMPONENT_TYPES } from "@/ir"
 import {
   BALLOT_DEF_ID,
   COMPONENT_UNION_DEF_ID,
+  CROP_DEF_ID,
   FIELDS_DEF_ID,
   ICON_NAME_DEF_ID,
   KICKER_DEF_ID,
@@ -26,6 +27,7 @@ import {
 const EXPECTED_DEFS = [
   "Ballot",
   "Component",
+  "Crop",
   "Fields",
   "IconName",
   "Kicker",
@@ -128,7 +130,7 @@ describe("irJsonSchema", () => {
   it("hoists every component, the component union, the icon enum, the shared tag and the strip of years into named $defs", () => {
     const schema = irJsonSchema()
     expect(Object.keys(defsOf(schema)).sort()).toEqual(EXPECTED_DEFS)
-    expect(EXPECTED_DEFS).toEqual([BALLOT_DEF_ID, COMPONENT_UNION_DEF_ID, FIELDS_DEF_ID, ICON_NAME_DEF_ID, KICKER_DEF_ID, STAGE_DEF_ID, STAMP_DEF_ID, TAG_DEF_ID, TONE_DEF_ID, YEARS_DEF_ID, ...[...COMPONENT_TYPES].sort()])
+    expect(EXPECTED_DEFS).toEqual([BALLOT_DEF_ID, COMPONENT_UNION_DEF_ID, CROP_DEF_ID, FIELDS_DEF_ID, ICON_NAME_DEF_ID, KICKER_DEF_ID, STAGE_DEF_ID, STAMP_DEF_ID, TAG_DEF_ID, TONE_DEF_ID, YEARS_DEF_ID, ...[...COMPONENT_TYPES].sort()])
   })
 
   it("keeps each use site's own words about its tag beside the shared definition", () => {
@@ -145,6 +147,12 @@ describe("irJsonSchema", () => {
     expect(tone.$ref).toBe(`#/$defs/${TONE_DEF_ID}`)
     expect(tone.description).toMatch(/^What kind of step it is/)
     expect(steps.$defs).toHaveProperty(TONE_DEF_ID)
+  })
+
+  it("keeps a picture's crop once, the image and every grid item pointing at it", () => {
+    const json = JSON.stringify(irJsonSchema())
+    expect(json.match(new RegExp(`"\\$ref":"#/\\$defs/${CROP_DEF_ID}"`, "g"))).toHaveLength(2)
+    expect(json.match(/The part of the picture to keep when it is cropped to its frame/g)).toHaveLength(1)
   })
 
   it("keeps the page's ballot once, every page type pointing at it beside its own description", () => {

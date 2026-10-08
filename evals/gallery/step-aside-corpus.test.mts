@@ -31,9 +31,8 @@ await installNodePlatform()
  * container or leftover face decoration all passed. These are the pieces the
  * motif actually paints, by name.
  *
- * `motifPieces: []` is runway's, and it is a claim, not a gap: runway carries
- * no theme motif on purpose (`themes/builtin/runway.ts` — "decor=none 成为
- * 正式的、可测试的身份值"), so the page must have no decor at all.
+ * runway's page left this table in its 2026-10 sample redesign: its lineup
+ * sheet holds the corpus's pages in a band no lead-in sentence tips over.
  *
  * `gainsMotif` says the motif arrives *because* the face stepped aside.
  * `show-figures` declares `suppressMotif`, so its ordinary page has none. `gauge-sheet` does not, so its motif is on both
@@ -46,7 +45,6 @@ await installNodePlatform()
  */
 const EXPECTED: Record<string, { motifPieces: readonly string[]; gainsMotif: boolean }> = {
   brief: { motifPieces: ["folio"], gainsMotif: false },
-  runway: { motifPieces: [], gainsMotif: false },
 }
 
 describe("the corpus pages that exercise the step-aside", () => {
@@ -112,18 +110,6 @@ describe("the corpus pages that exercise the step-aside", () => {
       }
     })
   }
-
-  it("keeps runway's accent rather than the show family's neutralised one", async () => {
-    // The show faces hand their own fallback a ctx whose accent is swapped
-    // for `primary`. That is a decision about the show composition, and this
-    // page is not one. Asserted on runway alone because it is the theme
-    // whose accent this page actually spends: a chart palette on
-    // `brief` may legitimately never reach for one.
-    const spec = STEP_ASIDE_PAGES.find((p) => p.theme === "runway")!
-    const lex = nativeLexiconFor(spec.theme)
-    const svg = renderSlideSvg(stepAsidePage(lex, await corpusAssets(lex), spec.theme, spec.kind, spec.component), 0)
-    expect(svg.toUpperCase()).toContain(resolveStyle(spec.theme).colors.accent.toUpperCase())
-  })
 
   it("never prints the same sentence twice on one page", async () => {
     // The runway page used to say "系列共十四个 look，女装十一个，无性别三个。"

@@ -1,8 +1,9 @@
 import type { Component } from "@/ir"
 import { cloneElement } from "react"
 import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisTspans, renderEmphasisText, type EmphasisSegment } from "../render/emphasis"
-import type { RenderDef, SvgComponent } from "./types"
+import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { accessibleInk } from "../render/ink"
+import { CroppedImage } from "../render/cropped-image"
 
 type ImageComponent = Extract<Component, { type: "image" }>
 
@@ -36,17 +37,7 @@ export const image: SvgComponent<ImageComponent> = {
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         {src ? (
-          <image
-            href={src}
-            x={0}
-            y={0}
-            width={box.w}
-            height={imgH}
-            preserveAspectRatio={
-              component.fit === "cover" ? "xMidYMid slice" : "xMidYMid meet"
-            }
-            aria-label={alt || undefined}
-          />
+          <CroppedImage src={src} box={{ x: 0, y: 0, w: box.w, h: imgH }} crop={component.crop} fit={component.fit === "cover" ? "cover" : "contain"} alt={alt} assetKey={component.asset_id} />
         ) : (
           <>
             <rect
@@ -162,4 +153,18 @@ function dropLead(segments: EmphasisSegment[], label: string): EmphasisSegment[]
   return tail ? [{ ...first, text: tail }, ...rest] : rest
 }
 
-export const renderDef: RenderDef<ImageComponent> = { type: "image", measure: image.measure, render: image.render }
+/**
+ * How short a cover photograph may be drawn when its page is tight: a band a
+ * fifth as tall as it is wide, never under 96px. A photograph set to fill its
+ * box is cropped anyway, so a page that runs short of height crops it further
+ * rather than dropping it (`layout.ts`'s `shrinkStack`). A contained picture,
+ * a chart or a screenshot that must be seen whole, keeps its height.
+ */
+const COVER_FLOOR = { share: 0.2, min: 96 } as const
+
+function imageMinHeight(component: ImageComponent, w: number, ctx: ComponentCtx): number {
+  const measured = image.measure(component, w, ctx)
+  return component.fit === "cover" ? Math.min(measured, Math.max(COVER_FLOOR.min, Math.round(w * COVER_FLOOR.share))) : measured
+}
+
+export const renderDef: RenderDef<ImageComponent> = { type: "image", measure: image.measure, render: image.render, minHeight: imageMinHeight }

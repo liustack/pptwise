@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { IconNameSchema, TagSchema } from "./shared"
+import { CropSchema, IconNameSchema, TagSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -18,11 +18,12 @@ export const schema = z
               "A symbol drawn before the picture's caption, such as zap or map-pin. Only with a caption. Run `pptwise icons` for the names.",
             ),
             tag: TagSchema.optional().describe('A few words on the picture, such as "选配" or "Optional".'),
+            crop: CropSchema.optional(),
           })
           .strict()
       )
       .min(2)
-      .max(6),
+      .max(8),
     emphasis: z.enum(["none", "first"]).optional(),
   })
   .strict()
@@ -38,7 +39,7 @@ export const schema = z
     })
   })
   .describe(
-    "A 2-6 photo/screenshot grid with cover-crop cells.",
+    "A 2-8 photo/screenshot grid with cover-crop cells.",
   )
 
 export const aliases = {} satisfies ComponentAliasSpec
@@ -54,7 +55,7 @@ export const traits = {
 
 export const story: DesignStory = {
   name: "Contact Sheet",
-  story: "Two to six pictures cropped into a grid, working as one set. The contact sheet a photographer lays out to show a whole shoot at once.",
+  story: "Two to eight pictures cropped into a grid, working as one set. The contact sheet a photographer lays out to show a whole shoot at once.",
   positioning: "Choose it when a set of images works together and no single one carries the page. Use image for one picture and image_compare for a pair set against each other.",
   audience: "Viewers taking in a body of work rather than a single frame.",
   notFor: "One picture that deserves the page, which belongs in image.",

@@ -742,3 +742,30 @@ describe("layoutContentFit: a chart gives up height before the page loses a bloc
     expect(dropped).toBe(1)
   })
 })
+
+describe("a cropped photograph gives up height before it is dropped", () => {
+  const table: Component = {
+    type: "data_table",
+    columns: [
+      { key: "a", label: "拼法" },
+      { key: "b", label: "用在" },
+    ],
+    rows: [{ cells: { a: "平接压明线", b: "肩、腰" } }, { cells: { a: "叠拼留毛边", b: "衣身" } }, { cells: { a: "窄条拼", b: "碎片" } }],
+  }
+  const photo: Component = { type: "image", asset_id: "a", fit: "cover", caption: "拼接小样" }
+  const band: ContentRect = { x: 96, y: 180, w: 1088, h: 440 }
+
+  it("keeps a table and a captioned photo on a two-column page, the photo cropped shorter", () => {
+    const { placed, dropped } = layoutContentFit("two_column", [table, photo], band, ctx)
+    expect(dropped).toBe(0)
+    expect(placed.map((p) => p.component.type)).toEqual(["data_table", "image"])
+    const last = placed[1]!
+    const h = last.box.h ?? measureComponent(photo, last.box.w, ctx)
+    expect(last.box.y + h).toBeLessThanOrEqual(band.y + band.h + 1)
+  })
+
+  it("never crops a cover photo shorter than a fifth of its width, nor a contained one at all", () => {
+    expect(minComponentHeight(photo, 1088, ctx)).toBe(Math.round(1088 * 0.2))
+    expect(minComponentHeight({ ...photo, fit: "contain" }, 1088, ctx)).toBe(measureComponent(photo, 1088, ctx))
+  })
+})

@@ -275,7 +275,7 @@ function componentEntries(): ComponentEntry[] {
  * case.
  *
  * Each is one ordinary corpus component under a lead-in sentence: a
- * from-to shift, a three-ring onion. Nothing here is inflated to force the outcome — every one of them
+ * from-to shift. Nothing here is inflated to force the outcome — every one of them
  * fits its face on its own, and it is the sentence above it that takes the
  * page past what the face can hold, which is exactly the shape a real deck
  * runs into. `step-aside-corpus.test.mts` holds both halves.
@@ -287,7 +287,6 @@ export const STEP_ASIDE_PAGES: readonly {
   readonly component: string
 }[] = [
   { theme: "brief", kind: "data", face: "gauge-sheet", component: "from_to" },
-  { theme: "runway", kind: "data", face: "show-figures", component: "rings" },
 ]
 
 /**
@@ -562,6 +561,20 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "luxe", kind: "comparison", composition: "mirror" },
   { theme: "luxe", kind: "photo", composition: "vitrine" },
   { theme: "luxe", kind: "list", composition: "reply" },
+  // runway's lineup sheet sets the shapes as a show's running order sets
+  // them, and draws the eleven its own board added; the looks in a row are
+  // shown on a content page of their own.
+  { theme: "runway", kind: "list", composition: "order" },
+  { theme: "runway", kind: "statement", composition: "standfirst" },
+  { theme: "runway", kind: "data", composition: "duet" },
+  { theme: "runway", kind: "photo", composition: "collage" },
+  { theme: "runway", kind: "process", composition: "thread" },
+  { theme: "runway", kind: "data", composition: "lengths" },
+  { theme: "runway", kind: "photo", composition: "shades" },
+  { theme: "runway", kind: "comparison", composition: "atelier" },
+  { theme: "runway", kind: "photo", composition: "parade" },
+  { theme: "runway", kind: "photo", composition: "look" },
+  { theme: "runway", kind: "comparison", composition: "bounds" },
 ]
 
 export function buildMatrix(

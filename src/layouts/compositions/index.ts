@@ -184,6 +184,17 @@ import { triptychComposition } from "./triptych"
 import { mirrorComposition } from "./mirror"
 import { vitrineComposition } from "./vitrine"
 import { replyComposition } from "./reply"
+import { orderComposition } from "./order"
+import { standfirstComposition } from "./standfirst"
+import { duetComposition } from "./duet"
+import { collageComposition } from "./collage"
+import { threadComposition } from "./thread"
+import { lengthsComposition } from "./lengths"
+import { shadesComposition } from "./shades"
+import { atelierComposition } from "./atelier"
+import { paradeComposition } from "./parade"
+import { lookComposition } from "./look"
+import { boundsComposition } from "./bounds"
 import { revivalComposition } from "./revival"
 import { nationsComposition } from "./nations"
 import { genresComposition } from "./genres"
@@ -403,6 +414,17 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   mirror: mirrorComposition,
   vitrine: vitrineComposition,
   reply: replyComposition,
+  order: orderComposition,
+  standfirst: standfirstComposition,
+  duet: duetComposition,
+  collage: collageComposition,
+  thread: threadComposition,
+  lengths: lengthsComposition,
+  shades: shadesComposition,
+  atelier: atelierComposition,
+  parade: paradeComposition,
+  look: lookComposition,
+  bounds: boundsComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -749,6 +771,17 @@ const BALLOT_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([
  */
 const STAMP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["reply"])
 
+/**
+ * The compositions that keep the part of a picture an author named
+ * (`image.crop`, `image_grid.items[].crop`). A page whose picture carries
+ * one is offered to these alone; the ordinary image and grid crop it.
+ */
+const IMAGE_CROP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["collage", "thread", "shades", "atelier", "parade", "look"])
+
+function asksForImageCrop(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => (component.type === "image" && component.crop !== undefined) || (component.type === "image_grid" && component.items.some((item) => item.crop !== undefined)))
+}
+
 function asksForRoadmapBasis(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "roadmap" && component.items.some((item) => (item.rows ?? []).some((row) => row.basis !== undefined)))
 }
@@ -791,6 +824,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const sideBanded = asksForSideBands(props.components)
   const estimated = asksForChartEstimate(props.components)
   const bridged = asksForWaterfallTitle(props.components)
+  const cropped = asksForImageCrop(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -816,6 +850,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (sideBanded && !CHART_SIDE_BAND_COMPOSITIONS.has(id)) continue
     if (estimated && !CHART_ESTIMATE_COMPOSITIONS.has(id)) continue
     if (bridged && !WATERFALL_TITLE_COMPOSITIONS.has(id)) continue
+    if (cropped && !IMAGE_CROP_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue

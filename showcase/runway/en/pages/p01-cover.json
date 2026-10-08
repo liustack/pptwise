@@ -1,0 +1,20 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "hero",
+      "fit": "cover",
+      "crop": [
+        0,
+        0.1875,
+        1,
+        0.375
+      ]
+    }
+  ],
+  "tag": {
+    "text": "Seven looks"
+  },
+  "footnote": "LOOK 01 (AI-generated)",
+  "notes": "Good morning. My final project is called Wear It Again. I took used jeans apart, sorted the pieces by shade and pieced them back together into a collection of seven looks. The coat on the cover is LOOK 01. One note before I start: the cover and every picture of the work and the process in this deck are AI-generated illustrations."
+}

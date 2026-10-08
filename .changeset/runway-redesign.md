@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+Runway has a new look, a show's running order. Every content page uses `lineup-sheet`: a masthead across the top with the deck's organization and footer label at the left, the page's `kicker` and the page number at the right over a black hairline, a serif claim across the whole measure, and the body drawn in the `lineup` setting. The cover uses `lineup-cover`, a magazine cover over the page's photograph with the page's `tag` in crimson. A chapter uses `lineup-chapter`: a full-page photograph with the part's number set huge, or the part's looks in a row when the page carries an `image_grid`. The ending uses `lineup-ending`, a bow on a black stage. Runway now offers the `fact` kind, its heading pairs Times New Roman with SimSun so English titles take a Latin serif and Western quotation marks in PowerPoint, and its motif, `runway-motif`, prints the footer's marks in the masthead. If you copied runway into your own theme file, its menu still names the old show faces and keeps working as before.

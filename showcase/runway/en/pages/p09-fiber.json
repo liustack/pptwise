@@ -1,0 +1,28 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "28.3",
+          "unit": "mm",
+          "label": "Virgin cotton fibre, upper quartile length",
+          "source": "Arafat & Uddin, Heliyon, 2022"
+        },
+        {
+          "value": "18.9",
+          "delta": "down",
+          "unit": "mm",
+          "label": "Post-consumer recycled cotton, same measure",
+          "source": "Same trial"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "In the same trial, a 30s ring-spun yarn took at most **25%** recycled cotton. So this collection is remade as fabric, with the fibre left whole"
+    }
+  ],
+  "footnote": "Source: Arafat & Uddin, Heliyon (2022), industrial-scale spinning-mill trial. A third shorter is calculated: (28.3 − 18.9) ÷ 28.3. The lines are drawn to scale",
+  "notes": "Why I only unpick and never shred. Mechanical recycling chops cotton fibres short. In an industrial-scale trial at a spinning mill, virgin cotton had an upper quartile length of 28.3 millimetres and post-consumer recycled cotton only 18.9, about a third shorter by my own calculation from those two figures. Short fibre has to be blended with new cotton, and in a 30s ring-spun yarn recycled cotton could make up at most 25%. Unpick a whole piece and sew it again, and its colour, its wear and its original fibre are all still there. That is why this project stays at the level of fabric."
+}

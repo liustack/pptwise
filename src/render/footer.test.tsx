@@ -113,8 +113,8 @@ describe("no footer by default", () => {
 })
 
 describe("the footer row, when the deck asks for it", () => {
-  // memo, clinic, almanac, homeroom, ember, rally, proposal, thesis, journal, ink, crayon and luxe set their folios rather than printing the shared row: their own cases below.
-  const OWN_FOLIO_THEMES = new Set(["memo", "clinic", "almanac", "homeroom", "ember", "rally", "proposal", "thesis", "journal", "ink", "crayon", "luxe"])
+  // memo, clinic, almanac, homeroom, ember, rally, proposal, thesis, journal, ink, crayon, luxe and runway set their folios rather than printing the shared row: their own cases below.
+  const OWN_FOLIO_THEMES = new Set(["memo", "clinic", "almanac", "homeroom", "ember", "rally", "proposal", "thesis", "journal", "ink", "crayon", "luxe", "runway"])
   const SHARED_ROW_THEMES = CANONICAL_THEME_IDS.filter((theme) => !OWN_FOLIO_THEMES.has(theme))
 
   it.each(SHARED_ROW_THEMES)("%s: every mark in its place, on content pages only", (theme) => {
@@ -414,6 +414,25 @@ describe("the footer row, when the deck asks for it", () => {
       expect([number.getAttribute("x"), number.getAttribute("text-anchor")]).toEqual(["1192", "middle"])
       expect(number.closest("[data-invitation-hallmark]")).not.toBeNull()
       for (const t of Array.from(row.querySelectorAll("text"))) expect(t.getAttribute("data-contrast-tier")).toBe("meta")
+      expect(footerRules(root)).toHaveLength(0)
+    })
+  })
+
+  it("runway: the organization and the label at the top left of the masthead, the marks before the section, the number at the top right, on content pages only", () => {
+    const ir = zhDeck("runway", { footer: ALL_MARKS })
+    ir.slides.forEach((slide, index) => {
+      const root = page(ir, index)
+      if (slide.type !== "content") {
+        expect(root.querySelectorAll('[data-field="slidenum"]'), `runway ${slide.type}: page number`).toHaveLength(0)
+        expect(root.querySelector("[data-footer]"), `runway ${slide.type}: footer row`).toBeNull()
+        return
+      }
+      const row = root.querySelector('[data-footer="row"]')!
+      expect(row.querySelector("[data-lineup-label]")!.getAttribute("data-lineup-label")).toBe(`${ORG} · 2026 年中期业绩 | 2026.08`)
+      expect(row.querySelector("[data-lineup-section]")!.getAttribute("data-lineup-section")!.startsWith("讨论稿 · 内部资料，请勿外传")).toBe(true)
+      const number = row.querySelector('[data-field="slidenum"]')!
+      expect(number.textContent).toBe(String(index + 1))
+      expect([number.getAttribute("x"), number.getAttribute("text-anchor"), number.getAttribute("y")]).toEqual(["1216", "end", "43"])
       expect(footerRules(root)).toHaveLength(0)
     })
   })

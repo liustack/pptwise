@@ -30,6 +30,7 @@ import { PERIODICAL_BODIES } from "./periodical-bodies"
 import { SCROLL_BODIES } from "./scroll-bodies"
 import { CRAYONBOX_BODIES } from "./crayonbox-bodies"
 import { INVITATION_BODIES } from "./invitation-bodies"
+import { LINEUP_BODIES } from "./lineup-bodies"
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/images")
 
@@ -587,6 +588,8 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   if (def.id === "crayonbox-sheet") return COMPOSITION_BODIES.swatches(lex).components
   // luxe's invitation sheet: the board's run of bars beside its figure.
   if (def.id === "invitation-sheet") return COMPOSITION_BODIES.climb(lex).components
+  // runway's lineup sheet: the board's running order of parts.
+  if (def.id === "lineup-sheet") return COMPOSITION_BODIES.order(lex).components
   if (def.id === "marquee-statement") {
     return [{ type: "icon_cards", items: [0, 1, 2].map((i) => ({ icon: (["cup-soda", "package", "ticket"] as const)[i]!, title: lex.labels[i]!, text: lex.bullets[i]! })) }]
   }
@@ -1196,6 +1199,11 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
   // a catalogue of pieces, two ways of pricing, the half page photograph and
   // the reply card.
   ...INVITATION_BODIES,
+  // runway's lineup sheet: the running order, the standfirst, two figures
+  // never added, the moodboard, steps along a hairline, lengths to scale,
+  // a picture bracketed into grades, a sample beside its joins, the looks in
+  // a row, one look a page and what the work did and did not do.
+  ...LINEUP_BODIES,
   rows: (lex) => ({
     heading: lex.headings[1]!,
     components: [

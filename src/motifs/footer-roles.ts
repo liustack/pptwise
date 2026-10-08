@@ -40,6 +40,10 @@ import type { MotifId } from "./types"
  *   luxe-motif is luxe's card stock folio: the organization and the
  *   deck's `label` at the bottom left, the page number struck as a
  *   hallmark at the bottom right.
+ *   runway-motif is runway's running order: the organization and the
+ *   deck's `label` at the top left of the masthead, the page number at its
+ *   top right, the notice after the label and the draft and confidentiality
+ *   marks before the page's section.
  * - `"organization"`: the motif prints the organization somewhere of its
  *   own, and the shared row carries everything else.
  *
@@ -64,5 +68,6 @@ export const MOTIF_FOOTER_ROLES: Partial<Record<MotifId, MotifFooterRole>> = {
   "ink-motif": "row",
   "crayonbox-motif": "row",
   "luxe-motif": "row",
+  "runway-motif": "row",
   "poster-motif": "organization",
 }

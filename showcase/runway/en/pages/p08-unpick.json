@@ -1,0 +1,48 @@
+{
+  "components": [
+    {
+      "type": "steps",
+      "items": [
+        {
+          "title": "Wash and dry",
+          "text": "Then see what is torn and what can be used"
+        },
+        {
+          "title": "Unpick",
+          "text": "Open the seams, never cut, to keep whole pieces"
+        },
+        {
+          "title": "Press flat",
+          "text": "Fronts, backs, waistbands and pockets apart"
+        },
+        {
+          "title": "Grade",
+          "text": "Sort into three shades, each kept together"
+        },
+        {
+          "title": "Lay out and piece",
+          "text": "Piece whole lengths, then cut the pattern"
+        }
+      ]
+    },
+    {
+      "type": "image_grid",
+      "items": [
+        {
+          "asset_id": "unpick",
+          "caption": "02 Unpicking a seam"
+        },
+        {
+          "asset_id": "panels",
+          "caption": "03 Pressed by part"
+        },
+        {
+          "asset_id": "sort",
+          "caption": "04 Sorted by shade"
+        }
+      ]
+    }
+  ],
+  "footnote": "Process images are AI-generated",
+  "notes": "Turning an old pair of jeans into fabric I can cut takes five steps. The key one is the second: I open the original seams rather than cutting across them, so every piece keeps its full size and the old topstitching and seam marks survive. In the fifth step I join whole lengths of fabric first and only then cut the pattern, so I decide where the seams fall."
+}
