@@ -33,6 +33,21 @@ function svg(node: React.ReactElement) {
 const box = { x: 0, y: 0, w: 1012 }
 
 describe("image_grid component", () => {
+  it("paints a caption's marked run instead of printing its asterisks", () => {
+    const component = {
+      type: "image_grid" as const,
+      items: [
+        { asset_id: "a", caption: "**老人**的手" },
+        { asset_id: "b", caption: "租房" },
+      ],
+    }
+    const { container } = svg(<>{imageGrid.render(component, box, ctx)}</>)
+    expect(container.textContent).not.toContain("**")
+    expect(container.textContent).toContain("老人的手")
+    const run = Array.from(container.querySelectorAll("tspan")).find((t) => t.textContent === "老人")
+    expect(run).toBeDefined()
+  })
+
   it("renders one <image> per item, side by side for 2 items, with captions", () => {
     const component = {
       type: "image_grid" as const,

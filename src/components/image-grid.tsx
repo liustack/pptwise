@@ -1,5 +1,5 @@
 import type { Component } from "@/ir"
-import { fitSvgLine } from "../lib/svg-text-layout"
+import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText } from "../render/emphasis"
 import { graphicInk } from "../render/ink"
 import { Icon } from "../render/icons"
 import { CroppedImage } from "../render/cropped-image"
@@ -188,11 +188,16 @@ function renderDefault(component: ImageGridComponent, box: Parameters<SvgCompone
               {item.tag ? <PictureTag tag={item.tag} cell={imageCell} ctx={ctx} /> : null}
               {item.caption &&
                 (() => {
-                  const fitted = fitSvgLine(item.caption, {
+                  // Fitted with its marks stripped, so a marked run is painted
+                  // as one rather than printing its asterisks. A caption with
+                  // no mark keeps the measure and the bytes it had.
+                  const fitted = fitEmphasisLine(item.caption, {
                     maxWidth: cell.w - 26,
                     fontSize: 16,
                     minFontSize: 16,
                   })
+                  if (!fitted) return null
+                  const paint = headingEmphasisPaint(ctx, fitted, { baseFill: ctx.colors.text, bold: false, bg: ctx.defaultBg ?? ctx.colors.bg })
                   const ruleY = inset ? cell.y + cell.h - inset + 10 : cell.y + cell.h + 10
                   return (
                     // caption 左对齐 + accent 短线前缀（杂志图注惯例），
@@ -204,17 +209,19 @@ function renderDefault(component: ImageGridComponent, box: Parameters<SvgCompone
                       ) : (
                         <rect x={cell.x} y={ruleY} width={16} height={3} fill={ctx.colors.accent} />
                       )}
-                      <text
-                        data-truncated={fitted.truncated ? "1" : undefined}
-                        x={cell.x + 24}
-                        y={ruleY + 10}
-                        fontSize={fitted.fontSize}
-                        fill={ctx.colors.text}
-                        fontFamily={ctx.fonts.body}
-                        dominantBaseline="alphabetic"
-                      >
-                        {fitted.text}
-                      </text>
+                      {renderEmphasisText(
+                        fitted.segments,
+                        paint,
+                        <text
+                          data-truncated={fitted.truncated ? "1" : undefined}
+                          x={cell.x + 24}
+                          y={ruleY + 10}
+                          fontSize={fitted.fontSize}
+                          fill={ctx.colors.text}
+                          fontFamily={ctx.fonts.body}
+                          dominantBaseline="alphabetic"
+                        />,
+                      )}
                     </>
                   )
                 })()}
