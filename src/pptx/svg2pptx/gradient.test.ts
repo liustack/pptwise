@@ -206,6 +206,19 @@ describe("gradientFillXml", () => {
     expect(xml).toContain('<a:path path="circle">')
     expect(xml).toContain('<a:fillToRect l="50000" t="50000" r="50000" b="50000"/>')
   })
+
+  it("ends a radial gradient on the shape's inscribed circle, as the SVG default radius does, and holds its last stop to the corners", () => {
+    const xml = gradientFillXml({
+      kind: "radial",
+      stops: [
+        { pos: 0, hex: "F4DCAA", alpha: 0.2 },
+        { pos: 1, hex: "F4DCAA", alpha: 0 },
+      ],
+    })
+    const positions = Array.from(xml.matchAll(/<a:gs pos="(\d+)">/g)).map((m) => Number(m[1]))
+    expect(positions).toEqual([0, 70711, 100000])
+    expect(xml.match(/<a:alpha val="0"\/>/g)).toHaveLength(2)
+  })
 })
 
 describe("withElementOpacity", () => {
