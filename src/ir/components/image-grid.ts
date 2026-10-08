@@ -23,7 +23,7 @@ export const schema = z
           .strict()
       )
       .min(2)
-      .max(6),
+      .max(8),
     emphasis: z.enum(["none", "first"]).optional(),
   })
   .strict()
@@ -39,7 +39,7 @@ export const schema = z
     })
   })
   .describe(
-    "A 2-6 photo/screenshot grid with cover-crop cells.",
+    "A 2-8 photo/screenshot grid with cover-crop cells.",
   )
 
 export const aliases = {} satisfies ComponentAliasSpec
@@ -55,7 +55,7 @@ export const traits = {
 
 export const story: DesignStory = {
   name: "Contact Sheet",
-  story: "Two to six pictures cropped into a grid, working as one set. The contact sheet a photographer lays out to show a whole shoot at once.",
+  story: "Two to eight pictures cropped into a grid, working as one set. The contact sheet a photographer lays out to show a whole shoot at once.",
   positioning: "Choose it when a set of images works together and no single one carries the page. Use image for one picture and image_compare for a pair set against each other.",
   audience: "Viewers taking in a body of work rather than a single frame.",
   notFor: "One picture that deserves the page, which belongs in image.",

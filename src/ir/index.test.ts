@@ -108,14 +108,14 @@ describe("image_grid component", () => {
     items: Array.from({ length: count }, (_, index) => ({ asset_id: `image-${index + 1}` })),
   })
 
-  it("accepts 2 to 6 images and rejects a seventh", () => {
-    for (const count of [2, 4, 6]) {
+  it("accepts 2 to 8 images and rejects a ninth", () => {
+    for (const count of [2, 4, 6, 7, 8]) {
       const d: any = minimal()
       d.slides = [{ type: "content", kind: "points", components: [imageGrid(count)] }]
       expect(parsePptxIR(d).success, String(count)).toBe(true)
     }
     const d: any = minimal()
-    d.slides = [{ type: "content", kind: "points", components: [imageGrid(7)] }]
+    d.slides = [{ type: "content", kind: "points", components: [imageGrid(9)] }]
     expect(parsePptxIR(d).success).toBe(false)
   })
 })
