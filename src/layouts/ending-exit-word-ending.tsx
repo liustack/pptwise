@@ -30,6 +30,8 @@ const SUB_SIZE = 21
 const SUB_DROP = 80
 const SUB_MAX_W = 960
 const SUB_MIN_PT = 16
+/** The pitch between two lines of the subtitle the author broke. */
+const SUB_LINE = 32
 
 const RULE_Y = 450
 const RULE_W = 160
@@ -57,7 +59,12 @@ export function ExitWordEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const bg = ctx.defaultBg ?? colors.bg
   const headingSource = stripEmphasis(slide.heading ?? "")
   const showTitle = headingSource.trim().length > 0
-  const subSource = stripEmphasis(slide.subheading ?? "").trim()
+  // The author's own line breaks are kept, a line of its own each. An SVG
+  // text collapses a newline into a space, which ran two lines into one.
+  const subSources = stripEmphasis(slide.subheading ?? "")
+    .split(/\n+/u)
+    .map((line) => line.trim())
+    .filter(Boolean)
 
   const title = fitHeadingLines(headingSource, {
     maxWidth: TITLE_MAX_W,
@@ -72,17 +79,18 @@ export function ExitWordEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const headingLastY = TITLE_Y + Math.max(0, title.lines.length - 1) * title.lineHeight
   const subY = showTitle && title.lines.length > 1 ? headingLastY + SUB_DROP : SUB_Y
 
-  const subtitle = subSource
-    ? fitSvgLine(subSource, {
-        maxWidth: SUB_MAX_W,
-        fontSize: SUB_SIZE,
-        minFontSize: SUB_MIN_PT,
-        fontFamily: fonts.heading,
-      })
-    : null
-  const subPainted = subtitle ? cutMarks(subtitle.text) : ""
+  const subtitles = subSources.map((line) =>
+    fitSvgLine(line, {
+      maxWidth: SUB_MAX_W,
+      fontSize: SUB_SIZE,
+      minFontSize: SUB_MIN_PT,
+      fontFamily: fonts.heading,
+    }),
+  )
+  const subPainted = subtitles.map((subtitle) => cutMarks(subtitle.text))
+  const subLast = subY + Math.max(0, subtitles.length - 1) * SUB_LINE
 
-  const ruleY = showTitle ? (subPainted ? subY + RULE_AFTER_SUB : headingLastY + RULE_AFTER_TITLE) : RULE_Y
+  const ruleY = showTitle ? (subPainted.some(Boolean) ? subLast + RULE_AFTER_SUB : headingLastY + RULE_AFTER_TITLE) : RULE_Y
 
   const footRaw = footSource(ir.meta)
   const foot = footRaw
@@ -119,20 +127,23 @@ export function ExitWordEnding({ ir, slide, ctx }: SvgTemplateProps) {
           )
         })}
 
-      {subtitle && subPainted && (
-        <text
-          data-contrast-tier="meta"
-          data-truncated={subtitle.truncated ? "1" : undefined}
-          x={CENTER_X}
-          y={subY}
-          textAnchor="middle"
-          fontFamily={fonts.heading}
-          fontSize={subtitle.fontSize}
-          fill={metaInk(colors.muted, bg)}
-          dominantBaseline="alphabetic"
-        >
-          {subPainted}
-        </text>
+      {subtitles.map((subtitle, i) =>
+        subPainted[i] ? (
+          <text
+            key={`sub-${i}`}
+            data-contrast-tier="meta"
+            data-truncated={subtitle.truncated ? "1" : undefined}
+            x={CENTER_X}
+            y={subY + i * SUB_LINE}
+            textAnchor="middle"
+            fontFamily={fonts.heading}
+            fontSize={subtitle.fontSize}
+            fill={metaInk(colors.muted, bg)}
+            dominantBaseline="alphabetic"
+          >
+            {subPainted[i]}
+          </text>
+        ) : null,
       )}
 
       {showTitle && (
