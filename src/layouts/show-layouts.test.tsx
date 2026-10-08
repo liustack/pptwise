@@ -519,3 +519,14 @@ describe("runway show layouts", () => {
     }
   })
 })
+
+describe("show-spotlight with a row it cannot hold", () => {
+  it("leaves the spotlight for its fallback rather than cutting the row", () => {
+    const panel = slides[3]!.components[1] as Extract<Slide["components"][number], { type: "insight_panel" }>
+    const long = { ...panel, rows: [panel.rows[0]!, panel.rows[1]!, { label: "结果", text: "协作活跃率提升到百分之八十八，直接把客户的跨团队协同时间压低了一大半" }] }
+    const root = draw(3, { ...slides[3]!, components: [slides[3]!.components[0]!, long] } as Slide)
+    expect(root.querySelector("[data-truncated]")).toBeNull()
+    expect(root.querySelector('[data-show-mode="fallback"]')).not.toBeNull()
+    expect(root.textContent).toContain("协作活跃率提升到百分之八十八")
+  })
+})
