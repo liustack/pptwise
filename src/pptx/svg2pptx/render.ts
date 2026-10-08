@@ -230,6 +230,8 @@ export function renderOp(
       const opts: Record<string, unknown> = { x: op.x, y: op.y, w: op.w, h: op.h, data: op.data }
       if (op.sizing) opts.sizing = op.sizing
       if (op.rotate) opts.rotate = op.rotate
+      // A round picture: pptxgenjs's `rounding` sets the ellipse geometry.
+      if (op.round) opts.rounding = true
       // A11Y-01 alt 链路：pptxgenjs 的 `altText` 落到导出 XML 的
       // `p:cNvPr@descr`（PowerPoint「编辑替换文字」读写的就是它，见
       // node_modules/pptxgenjs 的 image 分支）。没有 alt 的资产不设这个 key

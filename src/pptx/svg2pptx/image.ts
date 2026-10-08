@@ -1,6 +1,6 @@
 import { pxToIn } from "../../constants"
 import { dataUriDimensions } from "../../lib/image-size"
-import { clipFor, drawnImageBox, visibleImageBox } from "../../lib/svg-image-box"
+import { clipFor, drawnImageBox, roundImage, visibleImageBox } from "../../lib/svg-image-box"
 
 /**
  * A pptxgenjs image draw, produced from an SVG `<image>` element.
@@ -38,6 +38,8 @@ export interface ImageOp {
   rotate?: number
   /** Set by `svg2pptx/dispatch.ts` when this leaf lives under a `data-blk`-tagged `<g>` (wave-C S3, `elements === "auto"` only). */
   blockIndex?: number
+  /** A picture cut round (a clip of one circle or ellipse): PowerPoint draws it as an oval picture. */
+  round?: boolean
 }
 
 const XLINK_NS = "http://www.w3.org/1999/xlink"
@@ -90,6 +92,9 @@ export function imageToOp(el: Element): ImageOp {
   // this file that needs the workaround.
   const alt = el.getAttributeNode("aria-label")?.value
   if (alt) op.alt = alt
+  // A round picture is the same picture in an oval frame: PowerPoint's
+  // ellipse geometry cuts it where the clip's circle does.
+  if (roundImage(el)) op.round = true
   // A cropped picture (`render/cropped-image.tsx`) is drawn whole at its own
   // shape and cut by a one-rectangle clip. PowerPoint draws the clip's box
   // and crops the picture to it: pptxgenjs's `crop` sizing takes the whole
