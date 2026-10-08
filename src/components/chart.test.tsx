@@ -302,24 +302,15 @@ describe("chart component", () => {
   // Task 8: chart.tsx must thread ctx.colors.accent through to the renderer
   // for the gradient/emphasis work in chart-svg.tsx to use the real theme
   // accent (not a stand-in) — see chart-svg.test.tsx for the full behavior.
-  it("wires ctx.colors.accent through to the bar renderer's max-bar highlight", () => {
+  it("draws a single unmarked bar series flat in the lead colour, lighting no bar on its own", () => {
     const component = {
       type: "chart" as const,
       chart_type: "bar" as const,
-      series: [
-        {
-          name: "Revenue",
-          data: [
-            { x: "Q1", y: 100 },
-            { x: "Q2", y: 200 },
-          ],
-        },
-      ],
+      series: [{ name: "Revenue", data: [{ x: "Q1", y: 100 }, { x: "Q2", y: 200 }] }],
     }
     const { container } = svg(chart.render(component, box, ctx))
-    const rects = Array.from(container.querySelectorAll("rect"))
-    const maxBar = rects.find((r) => r.getAttribute("fill") === ctx.colors.accent)
-    expect(maxBar).toBeTruthy()
+    const fills = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]')).map((r) => r.getAttribute("fill"))
+    expect(new Set(fills)).toEqual(new Set([ctx.colors.chartPalette[0]]))
   })
 
   // The line renderer's endpoint dot now carries its own series color, so

@@ -34,7 +34,6 @@ type ChartComponentFixture = Extract<Component, { type: "chart" }>
 // computed against that same convention.
 
 const ACCENT = "#00A878"
-const ACCENT_SHADE = "#007654" // scaleHexBrightness(ACCENT, 0.7), verified in node
 const MUTED = "#5D6B65"
 const TEXT = "#1A2421"
 const PALETTE = ["#006A4E", "#00A878", "#FF6B35", "#FFD166"]
@@ -73,57 +72,21 @@ function paddedPlot(values: number[], mode: "zero-max" | "fit" = "zero-max") {
   return { domain: axis.domain, ...geom }
 }
 
-describe("renderBar — gradient bars", () => {
-  it("gives the max-value bar a solid accent fill and other bars a gradient fill at opacity 0.75", () => {
-    const { container } = svg(
-      renderBar(seriesOf(100, 200, 150), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT),
-    )
-    const rects = Array.from(container.querySelectorAll("rect"))
-    expect(rects).toHaveLength(3)
-
-    const gradient = container.querySelector("linearGradient")!
-    const gradId = gradient.getAttribute("id")!
-    expect(gradId).toBeTruthy()
-
-    // Q2 bar (y=200) is the max — solid accent, full opacity.
-    expect(rects[1].getAttribute("fill")).toBe(ACCENT)
-    expect(rects[1].getAttribute("opacity")).toBe("1")
-
-    // Q1/Q3 bars reference the shared gradient at opacity 0.75.
-    expect(rects[0].getAttribute("fill")).toBe(`url(#${gradId})`)
-    expect(rects[0].getAttribute("opacity")).toBe("0.75")
-    expect(rects[2].getAttribute("fill")).toBe(`url(#${gradId})`)
-    expect(rects[2].getAttribute("opacity")).toBe("0.75")
-  })
-
-  it("declares one shared vertical gradient (x1=0,y1=0,x2=0,y2=1) with accent -> 70%-brightness stops", () => {
-    const { container } = svg(
-      renderBar(seriesOf(10, 20), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT),
-    )
-    const gradients = container.querySelectorAll("linearGradient")
-    expect(gradients).toHaveLength(1)
-    const gradient = gradients[0]
-    expect(gradient.getAttribute("x1")).toBe("0")
-    expect(gradient.getAttribute("y1")).toBe("0")
-    expect(gradient.getAttribute("x2")).toBe("0")
-    expect(gradient.getAttribute("y2")).toBe("1")
-
-    const stops = gradient.querySelectorAll("stop")
-    expect(stops).toHaveLength(2)
-    expect(stops[0].getAttribute("offset")).toBe("0%")
-    expect(stops[0].getAttribute("stop-color")).toBe(ACCENT)
-    expect(stops[1].getAttribute("offset")).toBe("100%")
-    expect(stops[1].getAttribute("stop-color")).toBe(ACCENT_SHADE)
-  })
-
-  it("ties for the max value all render solid (no arbitrary single-bar tie-break)", () => {
-    const { container } = svg(
-      renderBar(seriesOf(50, 50), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT),
-    )
-    const rects = Array.from(container.querySelectorAll("rect"))
-    for (const rect of rects) {
-      expect(rect.getAttribute("fill")).toBe(ACCENT)
-      expect(rect.getAttribute("opacity")).toBe("1")
+describe("renderBar — a single series", () => {
+  // The tallest bar used to be lit in the accent and the rest drawn in a
+  // gradient of it at 0.75 opacity. That guessed the page's point, and the
+  // rest fell under 3:1 on seven themes. The one series is flat in its lead
+  // colour now, and the bar a page is about is the author's to mark.
+  it("draws every bar flat in the lead colour, with no gradient and no lit bar", () => {
+    for (const draw of [renderBar, renderBarHorizontal]) {
+      const { container } = svg(draw(seriesOf(100, 200, 150), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
+      expect(container.querySelector("linearGradient")).toBeNull()
+      const rects = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]'))
+      expect(rects).toHaveLength(3)
+      for (const rect of rects) {
+        expect(rect.getAttribute("fill")).toBe(PALETTE[0])
+        expect(rect.getAttribute("opacity")).toBe("1")
+      }
     }
   })
 
@@ -148,51 +111,7 @@ describe("renderBar — gradient bars", () => {
   })
 })
 
-describe("renderBar: a palette without the accent", () => {
-  // A face that keeps the accent for what the author marks takes it out of
-  // the chart palette (brief's sheet). The tallest-bar highlight is drawn in
-  // the accent, so on that palette there is none: the one series is drawn
-  // flat in the lead colour, like any series of a grouped chart.
-  const withoutAccent = PALETTE.filter((color) => color !== ACCENT)
-
-  it("draws a single series flat in the lead colour, with no gradient", () => {
-    const { container } = svg(renderBar(seriesOf(100, 200, 150), withoutAccent, 0, 0, W, H, MUTED, TEXT, ACCENT))
-    expect(container.querySelector("linearGradient")).toBeNull()
-    const rects = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]'))
-    expect(rects.map((rect) => [rect.getAttribute("fill"), rect.getAttribute("opacity")])).toEqual([
-      [withoutAccent[0], "1"],
-      [withoutAccent[0], "1"],
-      [withoutAccent[0], "1"],
-    ])
-  })
-
-  it("does the same for a single horizontal series", () => {
-    const { container } = svg(renderBarHorizontal(seriesOf(100, 200, 150), withoutAccent, 0, 0, W, H, MUTED, TEXT, ACCENT))
-    expect(container.querySelector("linearGradient")).toBeNull()
-    const rects = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]'))
-    expect(new Set(rects.map((rect) => `${rect.getAttribute("fill")} ${rect.getAttribute("opacity")}`))).toEqual(
-      new Set([`${withoutAccent[0]} 1`]),
-    )
-  })
-})
-
 describe("gradient id uniqueness across chart instances on one page", () => {
-  it("gives two different-data chart instances distinct gradient ids", () => {
-    const { container: a } = svg(renderBar(seriesOf(1, 2), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
-    const { container: b } = svg(renderBar(seriesOf(9, 3), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
-    const idA = a.querySelector("linearGradient")!.getAttribute("id")
-    const idB = b.querySelector("linearGradient")!.getAttribute("id")
-    expect(idA).not.toBe(idB)
-  })
-
-  it("gives the same chart instance (identical props) the same gradient id both times (reproducible for preview/export)", () => {
-    const { container: a } = svg(renderBar(seriesOf(1, 2), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
-    const { container: b } = svg(renderBar(seriesOf(1, 2), PALETTE, 0, 0, W, H, MUTED, TEXT, ACCENT))
-    const idA = a.querySelector("linearGradient")!.getAttribute("id")
-    const idB = b.querySelector("linearGradient")!.getAttribute("id")
-    expect(idA).toBe(idB)
-  })
-
   // R1 evidence wave, Task T2: multi-series line no longer draws an
   // area-fill gradient per series at all ("no stacked area fills, only line
   // strokes when n>=2" — transparent regions would inter-blend once more

@@ -69,16 +69,19 @@ describe("generatePptxBlob real theme decor gradients", () => {
   // 2026-10 ledger 样例改版后，ledger 的要点页把图表画进自己的平涂数据面板
   // （`compositions/columns-panel.tsx`），不再经过图表组件的渐变柱，这条用例
   // 的主题随之换成 thesis：它的要点页仍由图表组件画单系列柱。
-  it("chart bar 渐变柱导出为真实 a:gradFill（2026-07-12 光晕移除后渐变链 fixture 换 chart——ledger 的 poster-motif 光晕已按用户裁决删除，渐变导出链由图表渐变持续覆盖）", async () => {
+  // 2026-10 单系列柱图不再自动点亮最高柱、也不再画渐变（作者用
+  // `data[].emphasis` 标出要讲的那一根），渐变导出链改由单系列折线图的面积
+  // 渐变覆盖。
+  it("chart line 面积渐变导出为真实 a:gradFill（2026-07-12 光晕移除后渐变链 fixture 换 chart——ledger 的 poster-motif 光晕已按用户裁决删除，渐变导出链由图表渐变持续覆盖）", async () => {
     const { generatePptxBlob } = await import("./generate")
     const chartSlide: Slide = {
       type: "content",
       kind: "points",
-      heading: "渐变柱",
+      heading: "面积渐变",
       components: [
         {
           type: "chart",
-          chart_type: "bar",
+          chart_type: "line",
           series: [
             { name: "s", data: [{ x: "甲", y: 3 }, { x: "乙", y: 7 }, { x: "丙", y: 5 }] },
           ],
