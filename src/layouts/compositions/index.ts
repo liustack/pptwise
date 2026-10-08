@@ -195,6 +195,17 @@ import { atelierComposition } from "./atelier"
 import { paradeComposition } from "./parade"
 import { lookComposition } from "./look"
 import { boundsComposition } from "./bounds"
+import { floorplanComposition } from "./floorplan"
+import { jarsComposition } from "./jars"
+import { squaresComposition } from "./squares"
+import { specimenComposition } from "./specimen"
+import { decadesComposition } from "./decades"
+import { lensesComposition } from "./lenses"
+import { haloComposition } from "./halo"
+import { datelineComposition } from "./dateline"
+import { sliceComposition } from "./slice"
+import { blanksComposition } from "./blanks"
+import { cabinetComposition } from "./cabinet"
 import { revivalComposition } from "./revival"
 import { nationsComposition } from "./nations"
 import { genresComposition } from "./genres"
@@ -425,6 +436,17 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   parade: paradeComposition,
   look: lookComposition,
   bounds: boundsComposition,
+  floorplan: floorplanComposition,
+  jars: jarsComposition,
+  squares: squaresComposition,
+  specimen: specimenComposition,
+  decades: decadesComposition,
+  lenses: lensesComposition,
+  halo: haloComposition,
+  dateline: datelineComposition,
+  slice: sliceComposition,
+  blanks: blanksComposition,
+  cabinet: cabinetComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -532,7 +554,7 @@ function asksForChartReference(components: readonly CompositionProps["components
  * offered to these alone; the ordinary chart prints every note after its
  * value.
  */
-const CHART_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["magnitude", "segments", "survey", "levers", "backdrop", "partition", "chronicle", "elapsed", "solo", "descent", "ebb"])
+const CHART_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["magnitude", "segments", "survey", "levers", "backdrop", "partition", "chronicle", "elapsed", "solo", "descent", "ebb", "squares", "decades"])
 
 function asksForChartNote(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.series.some((s) => s.data.some((d) => d.note !== undefined)))
@@ -544,7 +566,7 @@ function asksForChartNote(components: readonly CompositionProps["components"][nu
  * alone; the ordinary chart draws the bar solid to its low end and dashed on
  * to its high one, its label naming both ends.
  */
-const CHART_RANGE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["diptych"])
+const CHART_RANGE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["diptych", "decades"])
 
 function asksForChartRange(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.series.some((s) => s.data.some((d) => d.upper !== undefined)))
@@ -556,7 +578,7 @@ function asksForChartRange(components: readonly CompositionProps["components"][n
  * these alone; the ordinary share bar sets it where its computed total
  * would stand.
  */
-const CHART_RUN_LABEL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["breakdown", "segments", "makeup", "allotment", "ages", "archive"])
+const CHART_RUN_LABEL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["breakdown", "segments", "makeup", "allotment", "ages", "archive", "slice"])
 
 function asksForChartRunLabel(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.emphasis_label !== undefined)
@@ -579,7 +601,7 @@ const ROADMAP_BASIS_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<Compositi
  * the length to the period line, the points under the title and the
  * checkpoint as a tag under them.
  */
-const ROADMAP_PHASE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["syllabus", "runway"])
+const ROADMAP_PHASE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["syllabus", "runway", "floorplan"])
 
 function asksForRoadmapPhases(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some(
@@ -713,7 +735,7 @@ function asksForChartGaps(components: readonly CompositionProps["components"][nu
  * carries them is offered to these alone; the ordinary bar on its side tints
  * each range down the rows and names it in a row over the plot.
  */
-const CHART_SIDE_BAND_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["effects"])
+const CHART_SIDE_BAND_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["effects", "decades"])
 
 function asksForSideBands(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.chart_type === "bar" && component.direction === "horizontal" && (component.bands?.length ?? 0) > 0)
@@ -776,7 +798,7 @@ const STAMP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["
  * (`image.crop`, `image_grid.items[].crop`). A page whose picture carries
  * one is offered to these alone; the ordinary image and grid crop it.
  */
-const IMAGE_CROP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["collage", "thread", "shades", "atelier", "parade", "look"])
+const IMAGE_CROP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["collage", "thread", "shades", "atelier", "parade", "look", "specimen", "lenses", "cabinet"])
 
 function asksForImageCrop(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => (component.type === "image" && component.crop !== undefined) || (component.type === "image_grid" && component.items.some((item) => item.crop !== undefined)))

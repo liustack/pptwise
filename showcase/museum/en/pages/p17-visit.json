@@ -1,0 +1,22 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "vitrine",
+      "caption": "Display case, AI-generated, label left blank",
+      "fit": "cover"
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "Origin: Which mission, near side or far side",
+        "Method: Scooped or drilled",
+        "Colour: Chang'e-6 soil is a little lighter",
+        "Weight: Most displays are counted in grams",
+        "Microscope: Most grains are under 10 μm"
+      ]
+    }
+  ],
+  "footnote": "Based on: National Astronomical Observatories (2022), National Science Review (2022, 2024), National Museum of China and Beijing Planetarium notices",
+  "notes": "Our last exhibit, number seven, is Moon soil in a display case. Next time you see Moon soil here or in another museum, look for five things on the label. Origin: was it Chang'e-5 or Chang'e-6, near side or far side? Method: scooped soil comes from the surface. Drilled soil keeps the layers underground. Colour: Chang'e-5 soil is grey-black. Chang'e-6 soil is also mostly grey-black but a little lighter, with more feldspar and glass. Weight: displays are usually measured in grams. The Beijing Planetarium shows 0.6 grams, and the National Museum of China holds 100 grams. And if there is a microscope nearby, use it: counted grain by grain, 95 percent of Chang'e-5 grains are between 1.4 and 9.4 micrometres, far finer than a hair. Then ask yourself: what did this exhibit teach us? The image is an AI-generated illustration."
+}

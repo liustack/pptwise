@@ -62,6 +62,8 @@ const CRAYONBOX_ONLY = ["crayons", "stickies", "waiver", "storeys", "swatches", 
 const INVITATION_ONLY = ["programme", "climb", "solo", "descent", "doubles", "balance", "swing", "ebb", "facing", "lapse", "triptych", "mirror", "vitrine", "reply"] as const
 /** The same for the lineup setting's own: `lineup-pages.test.tsx` puts them on these themes. */
 const LINEUP_ONLY = ["order", "standfirst", "duet", "collage", "thread", "lengths", "shades", "atelier", "parade", "look", "bounds"] as const
+/** The same for the placard setting's own: `placard-pages.test.tsx` puts them on these themes. */
+const PLACARD_ONLY = ["floorplan", "jars", "squares", "specimen", "decades", "lenses", "halo", "dateline", "slice", "blanks", "cabinet"] as const
 type BoardId = Exclude<
   CompositionId,
   | (typeof PANEL_ONLY)[number]
@@ -80,8 +82,9 @@ type BoardId = Exclude<
   | (typeof CRAYONBOX_ONLY)[number]
   | (typeof INVITATION_ONLY)[number]
   | (typeof LINEUP_ONLY)[number]
+  | (typeof PLACARD_ONLY)[number]
 >
-const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY, ...CONSOLE_ONLY, ...MEMO_ONLY, ...DOSSIER_ONLY, ...YEARBOOK_ONLY, ...LESSON_ONLY, ...PITCH_ONLY, ...MARQUEE_ONLY, ...BINDER_ONLY, ...MANUSCRIPT_ONLY, ...PERIODICAL_ONLY, ...SCROLL_ONLY, ...CRAYONBOX_ONLY, ...INVITATION_ONLY, ...LINEUP_ONLY]
+const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY, ...CONSOLE_ONLY, ...MEMO_ONLY, ...DOSSIER_ONLY, ...YEARBOOK_ONLY, ...LESSON_ONLY, ...PITCH_ONLY, ...MARQUEE_ONLY, ...BINDER_ONLY, ...MANUSCRIPT_ONLY, ...PERIODICAL_ONLY, ...SCROLL_ONLY, ...CRAYONBOX_ONLY, ...INVITATION_ONLY, ...LINEUP_ONLY, ...PLACARD_ONLY]
 const BOARD_IDS = COMPOSITION_IDS.filter((id): id is BoardId => !SETTING_ONLY.includes(id))
 
 /** One page per composition, in the shape each one takes. */

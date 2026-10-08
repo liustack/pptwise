@@ -904,9 +904,9 @@ describe("menu decoration determinism", () => {
     expect([...markups][0]).not.toBeNull()
   })
 
-  it("museum 的静默菜单条目不渲染装饰", () => {
+  it("stage 的静默菜单条目不渲染装饰", () => {
     for (let i = 0; i < 10; i++) {
-      expect(decorMarkup("museum", `page-${i}`)).toBeNull()
+      expect(decorMarkup("stage", `page-${i}`)).toBeNull()
     }
   })
 

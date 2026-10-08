@@ -109,6 +109,8 @@ export type CoverLayoutId =
   | "invitation-cover"
   // runway sample redesign (2026-10-08): a fashion magazine's cover.
   | "lineup-cover"
+  // museum sample redesign (2026-10-08): an exhibition catalogue's cover.
+  | "placard-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -165,6 +167,8 @@ export type ChapterLayoutId =
   | "invitation-chapter"
   // runway sample redesign (2026-10-08): a part opens on a photograph or on its looks in a row.
   | "lineup-chapter"
+  // museum sample redesign (2026-10-08): the doorway to the next hall, in a pool of warm light.
+  | "placard-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -225,6 +229,8 @@ export type EndingLayoutId =
   | "invitation-ending"
   // runway sample redesign (2026-10-08): the bow on a black stage.
   | "lineup-ending"
+  // museum sample redesign (2026-10-08): the lights go down and one label stays lit.
+  | "placard-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -309,6 +315,8 @@ export type ContentLayoutId =
   | "invitation-sheet"
   // runway sample redesign: the board's ordinary content page. Theme-locked.
   | "lineup-sheet"
+  // museum sample redesign: the board's ordinary content page. Theme-locked.
+  | "placard-sheet"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

@@ -1,0 +1,57 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "milestones": [
+        {
+          "date": "2020-12",
+          "title": "Chang'e-5 returns",
+          "desc": "About 1,731 g",
+          "highlight": true
+        },
+        {
+          "date": "2021-10",
+          "title": "Basalt ages",
+          "desc": "Science, Nature"
+        },
+        {
+          "date": "2022-09",
+          "title": "Changesite",
+          "desc": "A new mineral"
+        },
+        {
+          "date": "2023-03",
+          "title": "Water in beads",
+          "desc": "Nature Geoscience"
+        },
+        {
+          "date": "2024-06",
+          "title": "Chang'e-6 returns",
+          "desc": "1,935.3 g",
+          "highlight": true
+        },
+        {
+          "date": "2024-11",
+          "title": "Far-side basalts",
+          "desc": "Nature, Science"
+        },
+        {
+          "date": "2025-04",
+          "title": "Far-side mantle",
+          "desc": "Nature"
+        },
+        {
+          "date": "2026-04",
+          "title": "Two more minerals",
+          "desc": "3 new minerals in all"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "The first far-side ages came out less than five months after the samples landed"
+    }
+  ],
+  "footnote": "Papers by first online date, only those in this talk. Large copper dots mark the returns",
+  "notes": "Let's put the exhibits back in time. Chang'e-5 returned in December 2020. In October 2021 the 2-billion-year basalt papers appeared in Science and Nature. Changesite was announced in September 2022. The impact-bead water paper came out in March 2023. Chang'e-6 returned in June 2024, and less than five months later, in November, papers on the 2.8- and 4.2-billion-year far-side basalts appeared together. Then came the far-side magnetic field and far-side mantle water, and in July 2025 these far-side papers were presented together as cover articles in one issue of Nature. 2025 also brought the more reduced far-side mantle, an age of about 4.25 billion years for the South Pole–Aitken basin, and fragments of CI-like meteorites in far-side soil. CI chondrites are rich in water and organic matter and rare among meteorites found on Earth, and the Moon has kept pieces of them for us. In April 2026 two more minerals, magnesiochangesite-(Y) and changesite-(Ce), were announced. This chart only shows what we covered today. CCTV reported in August 2025 that the two missions had produced more than 150 results."
+}

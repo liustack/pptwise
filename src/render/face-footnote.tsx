@@ -13,7 +13,13 @@ import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText } from "./emp
  * `data-truncated` only past that, and paints a marked run in the theme's
  * emphasis. A footnote that fits at the face's own size keeps the bytes the
  * face drew before.
+ *
+ * A line with Chinese in it is set upright: Chinese has no italic, and a
+ * renderer that slants it draws a synthetic oblique of the whole line.
  */
+
+/** Han characters, CJK punctuation and full-width forms: a line holding any is never slanted. */
+const UPRIGHT = /[\u3000-\u303f\u3400-\u9fff\uf900-\ufaff\uff00-\uffef]/u
 export function FaceFootnote({
   text,
   ctx,
@@ -50,7 +56,7 @@ export function FaceFootnote({
       fontSize={fitted.fontSize}
       fill={fill}
       letterSpacing={letterSpacing}
-      fontStyle={italic ? "italic" : undefined}
+      fontStyle={italic && !UPRIGHT.test(source) ? "italic" : undefined}
       dominantBaseline="alphabetic"
     />,
   )

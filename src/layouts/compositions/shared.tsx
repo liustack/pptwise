@@ -243,6 +243,17 @@ export type CompositionId =
   | "parade"
   | "look"
   | "bounds"
+  | "floorplan"
+  | "jars"
+  | "squares"
+  | "specimen"
+  | "decades"
+  | "lenses"
+  | "halo"
+  | "dateline"
+  | "slice"
+  | "blanks"
+  | "cabinet"
 
 /**
  * The type a composition sets its page in.
@@ -497,10 +508,28 @@ export type CompositionId =
  *   a piece of work did and did not do. It keeps the part of a picture an
  *   author crops to. See `./lineup.tsx`.
  *
+ * - `placard`: museum's 2026-10 board. An exhibition label in a darkened
+ *   gallery: a brown-black hall, lifted boards for labels and rooms, warm
+ *   paper words, an old paper grey for what is quieter and a dimmer one for
+ *   captions and sources, seams for what divides, and copper (the theme's
+ *   accent) on the one thing a page is about. Exhibits stand in pools of
+ *   warm light, photographs cut round like objects under a lamp. Titles,
+ *   names, figures and the lines a label reads aloud are set in the heading
+ *   serif at its regular weight, labels small and tracked wide in the body
+ *   sans. A composition offered this setting is handed the whole page and
+ *   places the page's claim (`claim`) and its source (`source`) itself, and
+ *   draws the shapes that board drew and no other did: the visit as a floor
+ *   plan, two samples side by side, quantities as squares to scale, one
+ *   exhibit beside its label, ranges on a log scale, exhibits under a
+ *   microscope, one figure in a pool of light, events at their true
+ *   distance in time, a whole with its part cut out beside where it went,
+ *   open questions on blank labels, and a case beside what to look for in
+ *   it. See `./placard.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll" | "crayonbox" | "invitation" | "lineup"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll" | "crayonbox" | "invitation" | "lineup" | "placard"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */
@@ -594,7 +623,17 @@ export interface CompositionProps {
    * sets the source higher than the face's foot names the `top` of its
    * first line.
    */
-  source?: (column: { x: number; w: number; top?: number }) => React.ReactElement | null
+  source?: (column: {
+    x: number
+    w: number
+    top?: number
+    /** The source's line box, for a board that sets it looser. */
+    lineHeight?: number
+    /** Centred on the column, for a board that centres it. */
+    align?: "center"
+    /** What it sits on, for a board that sets it inside a label. */
+    ground?: string
+  }) => React.ReactElement | null
   /**
    * The page's stamp (`Slide.stamp`), handed to a setting that sets it where
    * its board drew it: luxe's reply card stands it down the card's torn

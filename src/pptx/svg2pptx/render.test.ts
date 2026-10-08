@@ -205,6 +205,14 @@ describe("renderOp", () => {
     expect(slide.calls[0].args[0]).toMatchObject({ data: "data:image/png;base64,AAA" })
   })
 
+  it("draws a round picture with pptxgenjs's rounding, its ellipse geometry", () => {
+    const slide = recorder()
+    renderOp(slide, { kind: "image", x: 0, y: 0, w: 1, h: 1, data: "data:image/png;base64,AAA", round: true } as Op)
+    expect(slide.calls[0].args[0]).toMatchObject({ rounding: true })
+    renderOp(slide, { kind: "image", x: 0, y: 0, w: 1, h: 1, data: "data:image/png;base64,AAA" } as Op)
+    expect(slide.calls[1].args[0]).not.toHaveProperty("rounding")
+  })
+
   it("passes op.alt through as pptxgenjs's altText (A11Y-01 alt chain)", () => {
     const slide = recorder()
     renderOp(slide, {

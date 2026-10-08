@@ -525,6 +525,18 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
   })
 
 
+  it("surfaces a figure whose unit could not be set whole as 'content-truncated'", () => {
+    // A unit too long for its card at any size the figure may take used to
+    // be cut short or left off with nothing on the page to say so. The
+    // figure's line now carries the mark, and the audit reads it.
+    const unit = "非常非常非常非常非常非常非常非常非常非常长的单位文字说明超长内容单位"
+    const figures = (theme: string) =>
+      deck(theme, [{ type: "content", kind: "data", id: "kpi-unit", heading: "单位过长", components: [{ type: "kpi_cards", items: [{ value: "9", unit, label: "短标签" }, { value: "12", unit, label: "短标签" }, { value: "3", unit, label: "短标签" }, { value: "7", unit, label: "短标签" }] }] }])
+    const ir = figures("swiss")
+    expect(renderSlideSvg(ir, 0)).not.toContain(unit)
+    expect(auditDeck(ir).findings).toEqual(expect.arrayContaining([expect.objectContaining({ page: 1, slideId: "kpi-unit", code: "content-truncated" })]))
+  })
+
   it("surfaces layoutContentFit's fully-dropped components as 'content-dropped' findings", () => {
     // Same fixture shape as svg-content.test.tsx's own "renders a
     // dropped-count marker" case, run through the real auditDeck path

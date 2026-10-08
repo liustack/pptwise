@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+The shared compositions gain a `placard` setting: an exhibition label in a darkened gallery, warm paper words on a brown-black hall, exhibits in pools of warm light with their photographs cut round, and copper on the one thing a page is about. Eleven compositions come with it: `floorplan` (a visit's rooms and exhibits as a floor plan, from a `roadmap`), `jars` (two samples side by side, each as large as what it weighs), `squares` (quantities as squares whose areas are to scale), `specimen` (one exhibit beside its label, its number from a `kpi_cards` item's `tag`), `decades` (ranges spanning orders of magnitude on one log scale), `lenses` (exhibits under a microscope), `halo` (one figure in a pool of light under a page's claim, which lets a `fact` page carry both), `dateline` (events at their true distance in time), `slice` (a whole with its part cut out beside where it went), `blanks` (open questions on blank labels) and `cabinet` (a case photographed tall beside what to look for). Any face can offer them, and museum's content pages use them.

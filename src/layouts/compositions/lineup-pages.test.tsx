@@ -5,7 +5,7 @@ import { contrastRatio, requiredContrastRatio } from "../../render/ink"
 import type { ComponentCtx } from "../../components/types"
 import type { Component } from "@/ir"
 import { compose, type CompositionId } from "."
-import { lineupInks, lineupTracking } from "./lineup"
+import { lineupInks, lineupTracking, paintLineupTracked } from "./lineup"
 import { lookNumber } from "./look"
 import { lineupBandRect, lineupClaimIn, lineupSourceIn } from "../lineup-shared"
 import { LINEUP_COMPOSITIONS } from "../content-lineup-sheet"
@@ -245,6 +245,12 @@ describe("the lineup setting's limits", () => {
     const page = LINEUP_BOARD["p02-agenda"]!
     const { ctx } = testCtx("runway")
     expect(compose({ components: page.components, ctx, rect: lineupBandRect(), setting: "invitation" }, LINEUP_COMPOSITIONS)).toBeNull()
+  })
+
+  it("keeps the full-width spaces an author set between the parts of a tracked line", () => {
+    const { ctx } = testCtx("runway")
+    const { root } = renderNode(<svg>{paintLineupTracked({ ctx, text: "样品去了哪里　还有什么不知道", x: 64, y: 100, size: 16, tracking: 2, fill: "#000000" })}</svg>)
+    expect(root.querySelector("text")!.getAttribute("xml:space")).toBe("preserve")
   })
 
   it("tracks a lower-case Latin line a quarter as wide, and keeps capitals and Chinese at the board's tracking", () => {

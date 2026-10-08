@@ -24,7 +24,13 @@
  *   collapsing to a focal point, which isn't a 1:1 match for SVG's focal-point
  *   circle model. Modeling that correctly is real work with no current
  *   consumer (YAGNI) — every radial gradient renders as a centered circle
- *   (`fillToRect l/t/r/b = 50000`, matching the SVG default cx=cy=r=50%).
+ *   (`fillToRect l/t/r/b = 50000`, matching the SVG default cx=cy=50%).
+ * - The SVG default r=50% ends the gradient on the circle inside the shape's
+ *   box. DrawingML's circle path ends it on the circle through the box's
+ *   corners, half the diagonal away, so a stop is moved in by that ratio
+ *   (1/√2 on a square box) and the last stop is held out to the corners. A
+ *   pool of light that fades to nothing at its rim in the preview used to
+ *   stop short of nothing there in PowerPoint and showed a hard edge.
  */
 
 /** One color stop, already normalized to a 0–1 position. */
@@ -197,13 +203,22 @@ function gsXml(stop: GradientStop): string {
  * bounding box regardless of the shape's own transform.
  */
 export function gradientFillXml(def: GradientDef): string {
-  const gsLst = `<a:gsLst>${def.stops.map(gsXml).join("")}</a:gsLst>`
   if (def.kind === "linear") {
+    const gsLst = `<a:gsLst>${def.stops.map(gsXml).join("")}</a:gsLst>`
     const ang = Math.round(def.angleDeg * 60000) % 21600000
     return `<a:gradFill rotWithShape="1">${gsLst}<a:lin ang="${ang}" scaled="1"/></a:gradFill>`
   }
+  // The SVG circle ends on the box's inscribed circle, DrawingML's on the
+  // circle through its corners: move every stop in, and hold the last out.
+  const inner = def.stops.map((s) => ({ ...s, pos: s.pos * RADIAL_EXTENT }))
+  const last = def.stops[def.stops.length - 1]!
+  const stops = last.pos * RADIAL_EXTENT < 1 ? [...inner, { ...last, pos: 1 }] : inner
+  const gsLst = `<a:gsLst>${stops.map(gsXml).join("")}</a:gsLst>`
   return `<a:gradFill rotWithShape="1">${gsLst}<a:path path="circle"><a:fillToRect l="50000" t="50000" r="50000" b="50000"/></a:path></a:gradFill>`
 }
+
+/** The inscribed circle's radius over the circumscribed one's, on the square box a round pool of light is drawn in. */
+const RADIAL_EXTENT = Math.SQRT1_2
 
 function hexToRgb(hex: string): [number, number, number] {
   return [

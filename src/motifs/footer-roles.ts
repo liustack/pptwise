@@ -44,6 +44,9 @@ import type { MotifId } from "./types"
  *   deck's `label` at the top left of the masthead, the page number at its
  *   top right, the notice after the label and the draft and confidentiality
  *   marks before the page's section.
+ *   museum-motif is museum's gallery wall: the organization and the deck's
+ *   `label` at the bottom left with the notice, draft and confidentiality
+ *   marks after them, the page number on a door plate at the bottom right.
  * - `"organization"`: the motif prints the organization somewhere of its
  *   own, and the shared row carries everything else.
  *
@@ -69,5 +72,6 @@ export const MOTIF_FOOTER_ROLES: Partial<Record<MotifId, MotifFooterRole>> = {
   "crayonbox-motif": "row",
   "luxe-motif": "row",
   "runway-motif": "row",
+  "museum-motif": "row",
   "poster-motif": "organization",
 }

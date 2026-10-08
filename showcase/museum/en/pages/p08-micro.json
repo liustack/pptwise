@@ -1,0 +1,35 @@
+{
+  "components": [
+    {
+      "type": "image_grid",
+      "items": [
+        {
+          "asset_id": "beads",
+          "caption": "Impact glass beads"
+        },
+        {
+          "asset_id": "volcanic",
+          "caption": "**Volcanic glass beads**"
+        },
+        {
+          "asset_id": "crystal",
+          "caption": "Changesite-(Y)"
+        }
+      ]
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "117 from about 1 g of soil, 32 measured",
+        "3 of about 3,000 volcanic, 120 million years",
+        "One 10 μm crystal, a yttrium phosphate"
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Two more approved in 2026, magnesiochangesite-(Y) and changesite-(Ce): **3 new minerals** from Chang'e-5"
+    }
+  ],
+  "footnote": "Source: Nature Geoscience (2023), Science (2024), CNSA (2022-09, 2026-09), IMA new mineral newsletters. All three micrographs are AI-generated illustrations, not real samples",
+  "notes": "Now a few small exhibits under the microscope. The first image shows impact glass beads, the kind we just talked about. The second shows volcanic glass beads. Among about 3,000 glass beads from Chang'e-5, a team used their structure, chemistry and sulfur isotopes to identify three that came from volcanic eruptions, not impacts, about 120 million years old. That suggests the Moon may have had small eruptions surprisingly late. But the evidence is three beads less than a millimetre across, not a 120-million-year-old lava plain, and it certainly doesn't mean the Moon is erupting today. The third image stands for changesite-(Y), announced in September 2022. The team separated a single crystal about 10 micrometres across, less than a tenth the width of a hair, from 140,000 grains. It is a phosphate mineral containing yttrium. The same press event also reported helium-3 measurements, but that was separate work: changesite is not a helium-3 ore. In 2026 the International Mineralogical Association approved two more, magnesiochangesite-(Y) and changesite-(Ce), so Chang'e-5 samples have yielded three new minerals. All three images are AI-generated illustrations, not sample photographs."
+}

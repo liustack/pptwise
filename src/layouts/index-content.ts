@@ -43,6 +43,7 @@ import { ScrollQuoteContent } from "./content-scroll-quote"
 import { CrayonboxSheetContent } from "./content-crayonbox-sheet"
 import { InvitationSheetContent } from "./content-invitation-sheet"
 import { LineupSheetContent } from "./content-lineup-sheet"
+import { PlacardSheetContent } from "./content-placard-sheet"
 import { SealFigureContent } from "./content-seal-figure"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { CrayonboxPointContent } from "./content-crayonbox-point"
@@ -86,7 +87,8 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // scroll-sheet and scroll-quote: 40 pin-only, 49 in all. The crayon sample
 // redesign adds crayonbox-sheet: 49 in all after the three retired themes.
 // The luxe sample redesign adds invitation-sheet: 50 in all. The runway
-// sample redesign adds lineup-sheet: 51 in all.
+// sample redesign adds lineup-sheet: 51 in all. The museum sample redesign
+// adds placard-sheet: 52 in all.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
   "two-column": TwoColumnContent,
@@ -139,4 +141,5 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "crayonbox-sheet": CrayonboxSheetContent,
   "invitation-sheet": InvitationSheetContent,
   "lineup-sheet": LineupSheetContent,
+  "placard-sheet": PlacardSheetContent,
 }

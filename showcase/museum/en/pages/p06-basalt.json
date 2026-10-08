@@ -1,0 +1,36 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "basalt",
+      "caption": "Basalt thin section, AI-generated, not a real sample",
+      "fit": "cover"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "About 2.0",
+          "unit": "billion years",
+          "label": "Chang'e-5 basalt",
+          "tag": {
+            "text": "Exhibit 1"
+          }
+        }
+      ]
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "Two papers: 2.030 and 1.963 billion years",
+        "Field then: 2 to 4 μT, weak but present"
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "What it tells us: Lunar volcanism lasted 800 to 900 million years longer than we knew"
+    }
+  ],
+  "footnote": "Source: Li et al. (Nature, 2021), Che et al. (Science, 2021), Cai et al. (Science Advances, 2025)",
+  "notes": "Our first exhibit is a fragment of basalt from Chang'e-5. Basalt is rock formed when lava cools. In 2021 two teams dated it by different methods: a Nature paper used lead-lead dating and got 2.030 billion years, give or take 4 million, and a Science paper got 1.963 billion. So, about 2 billion years. Before this, no returned sample had shown volcanic activity younger than about 2.9 billion years. In the paper's own words, this extends the duration of lunar volcanism by about 800 to 900 million years. Some press releases said it extended the Moon's geological life by a billion years. We follow the paper, and what it extends is known volcanic activity, not the Moon's life. Two more Nature papers found that the source of this magma was neither rich in heat-producing radioactive elements nor wet, so why the Moon was still erupting this late remains open. The rock also kept a magnetic record: when lava cools, its magnetic minerals lock in the field around them. Nine millimetre-sized fragments show the Moon still had a magnetic field 2 billion years ago, about 2 to 4 microtesla, weak but present. The image is an AI-generated illustration, not a photograph of this sample."
+}

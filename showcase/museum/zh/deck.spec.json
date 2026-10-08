@@ -1,0 +1,160 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "storytelling",
+    "pacing": "balanced",
+    "audience": "public"
+  },
+  "theme": "museum",
+  "filename": "lunar-farside-soil-lecture-zh",
+  "meta": {
+    "organization": "周末科普讲座",
+    "date": "二〇二六年十月"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "从月球背面带回来的土"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "周末科普讲座",
+      "heading": "从月球背面\n带回来的土",
+      "summary": "嫦娥五号、嫦娥六号的月球样品，一件一件看"
+    },
+    {
+      "id": "p02-guide",
+      "type": "content",
+      "kind": "process",
+      "kicker": "导览",
+      "heading": "今天走四个展厅，看七件展品",
+      "focus": "roadmap"
+    },
+    {
+      "id": "p03-missions",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "序厅",
+      "heading": "两次任务，两罐土：一罐来自正面，一罐来自背面",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p04-apollo",
+      "type": "content",
+      "kind": "data",
+      "kicker": "序厅",
+      "heading": "论重量不到阿波罗的百分之一，论地点是第一次到月背",
+      "focus": "chart"
+    },
+    {
+      "id": "p05-hall1",
+      "type": "chapter",
+      "kicker": "第一展厅",
+      "heading": "月球正面的土",
+      "summary": "嫦娥五号　2020 年　风暴洋北部"
+    },
+    {
+      "id": "p06-basalt",
+      "type": "content",
+      "kind": "evidence",
+      "kicker": "第一展厅 · 月球正面的土",
+      "heading": "约 20 亿年的玄武岩：月球的火山熄得比原以为晚",
+      "focus": "image"
+    },
+    {
+      "id": "p07-water",
+      "type": "content",
+      "kind": "data",
+      "kicker": "第一展厅 · 月球正面的土",
+      "heading": "说月壤里有水，先问是哪里的水",
+      "focus": "chart"
+    },
+    {
+      "id": "p08-micro",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "第一展厅 · 月球正面的土",
+      "heading": "显微镜下：玻璃珠和三种新矿物",
+      "focus": "image_grid"
+    },
+    {
+      "id": "p09-hall2",
+      "type": "chapter",
+      "kicker": "第二展厅",
+      "heading": "月球背面的土",
+      "summary": "嫦娥六号　2024 年　南极–艾特肯盆地"
+    },
+    {
+      "id": "p10-farbasalt",
+      "type": "content",
+      "kind": "evidence",
+      "kicker": "第二展厅 · 月球背面的土",
+      "heading": "约 28 亿年前，月球背面也喷发过",
+      "focus": "image"
+    },
+    {
+      "id": "p11-oldest",
+      "type": "content",
+      "kind": "fact",
+      "kicker": "第二展厅 · 月球背面的土",
+      "heading": "一块高铝玄武岩碎屑，返回样品里最老的玄武岩",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p12-mantle",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "第二展厅 · 月球背面的土",
+      "heading": "月背的月幔可能更干，也更「还原」",
+      "focus": "chart"
+    },
+    {
+      "id": "p13-hall3",
+      "type": "chapter",
+      "kicker": "第三展厅",
+      "heading": "土的去向，和留下的问题",
+      "summary": "样品去了哪里　还有什么不知道　下次来看什么"
+    },
+    {
+      "id": "p14-timeline",
+      "type": "content",
+      "kind": "process",
+      "kicker": "第三展厅 · 去向和问题",
+      "heading": "2020 到 2026 年：两次任务，一串论文",
+      "focus": "timeline"
+    },
+    {
+      "id": "p15-where",
+      "type": "content",
+      "kind": "list",
+      "kicker": "第三展厅 · 去向和问题",
+      "heading": "约 148 克发给了科研团队，约占两次总量的 4%",
+      "focus": "chart"
+    },
+    {
+      "id": "p16-unknown",
+      "type": "content",
+      "kind": "points",
+      "kicker": "第三展厅 · 去向和问题",
+      "heading": "我们还不知道的五件事",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p17-visit",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "第三展厅 · 去向和问题",
+      "heading": "下次来馆里看月壤，留意展签上的这几处",
+      "focus": "image"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "kicker": "周末科普讲座",
+      "heading": "土很少，问题很多",
+      "summary": "谢谢各位，下面是提问时间"
+    }
+  ]
+}

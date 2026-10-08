@@ -18,6 +18,11 @@ const draw = (text: string, maxWidth: number, extra: { letterSpacing?: number } 
 const painted = (el: Element) => measureTextUnits(el.textContent ?? "", { fontFamily: ctx.fonts.body }) * Number(el.getAttribute("font-size"))
 
 describe("FaceFootnote", () => {
+  it("slants a Latin source and sets a Chinese one upright", () => {
+    expect(draw("Source: CPCA, October 2026", 1088).getAttribute("font-style")).toBe("italic")
+    expect(draw("来源：国家航天局（2024），Nature（2021）", 1088).getAttribute("font-style")).toBeNull()
+  })
+
   it("keeps a footnote that fits at the face's own 20px", () => {
     const line = draw("Source: CPCA, October 2026", 1088)
     expect(line.getAttribute("font-size")).toBe("20")

@@ -20,6 +20,11 @@ import { dataUriDimensions } from "../lib/image-size"
  * picture whose size cannot be read from its data (a remote address, an
  * unknown format) is drawn as an uncropped one: its shape is what places the
  * part.
+ *
+ * A round picture (`round`), an object seen through a lens or set in an
+ * oval frame, is cut by one circle (or an ellipse in a frame that is not
+ * square) instead of the rectangle, cropped or not. The export draws it as
+ * an oval picture.
  */
 
 export type Crop = readonly number[]
@@ -49,9 +54,17 @@ export function cropPlacement(src: string, box: FrameBox, crop: Crop, fit: "cove
 }
 
 /** A clip id that two frames on one page share only when they would clip the same picture the same way. */
-function clipId(box: FrameBox, crop: Crop, assetKey: string): string {
+function clipId(box: FrameBox, crop: Crop, assetKey: string, round = false): string {
   const n = (v: number) => String(Math.round(v * 1000) / 1000).replace(/[^0-9]/g, "_")
-  return `crop-${assetKey.replace(/[^A-Za-z0-9_-]/g, "_")}-${[box.x, box.y, box.w, box.h, ...crop].map(n).join("-")}`
+  return `${round ? "round" : "crop"}-${assetKey.replace(/[^A-Za-z0-9_-]/g, "_")}-${[box.x, box.y, box.w, box.h, ...crop].map(n).join("-")}`
+}
+
+/** The one shape a frame is cut by: its rectangle, or the circle or ellipse inside it. */
+function ClipShape({ box, round }: { box: FrameBox; round: boolean }): React.ReactElement {
+  if (!round) return <rect x={box.x} y={box.y} width={box.w} height={box.h} />
+  const cx = box.x + box.w / 2
+  const cy = box.y + box.h / 2
+  return box.w === box.h ? <circle cx={cx} cy={cy} r={box.w / 2} /> : <ellipse cx={cx} cy={cy} rx={box.w / 2} ry={box.h / 2} />
 }
 
 /**
@@ -66,6 +79,7 @@ export function CroppedImage({
   fit = "cover",
   alt,
   assetKey = "photo",
+  round = false,
 }: {
   src: string
   box: FrameBox
@@ -74,16 +88,28 @@ export function CroppedImage({
   alt?: string
   /** The asset's id, to keep two crops of different pictures apart. */
   assetKey?: string
+  /** Cut the picture by the circle (or ellipse) inside its frame. */
+  round?: boolean
 }): React.ReactElement {
   const placed = crop ? cropPlacement(src, box, crop, fit) : null
   if (!crop || !placed) {
-    return <image href={src} x={box.x} y={box.y} width={box.w} height={box.h} preserveAspectRatio={fit === "cover" ? "xMidYMid slice" : "xMidYMid meet"} aria-label={alt || undefined} />
+    const plain = (clip?: string) => <image href={src} x={box.x} y={box.y} width={box.w} height={box.h} preserveAspectRatio={fit === "cover" ? "xMidYMid slice" : "xMidYMid meet"} clipPath={clip} aria-label={alt || undefined} />
+    if (!round) return plain()
+    const id = clipId(box, [], assetKey, true)
+    return (
+      <g data-crop="" data-round="">
+        <clipPath id={id}>
+          <ClipShape box={box} round />
+        </clipPath>
+        {plain(`url(#${id})`)}
+      </g>
+    )
   }
-  const id = clipId(box, crop, assetKey)
+  const id = clipId(box, crop, assetKey, round)
   return (
-    <g data-crop="">
+    <g data-crop="" data-round={round ? "" : undefined}>
       <clipPath id={id}>
-        <rect x={box.x} y={box.y} width={box.w} height={box.h} />
+        <ClipShape box={box} round={round} />
       </clipPath>
       <image href={src} x={placed.x} y={placed.y} width={placed.w} height={placed.h} preserveAspectRatio="none" clipPath={`url(#${id})`} aria-label={alt || undefined} />
     </g>

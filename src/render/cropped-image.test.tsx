@@ -69,10 +69,41 @@ describe("a cropped picture", () => {
     expect(root.querySelector("image")!.getAttribute("preserveAspectRatio")).toBe("xMidYMid slice")
   })
 
-  it("is refused by the subset when the clip is anything but one rectangle, or cuts anything but a picture", () => {
+  it("is refused by the subset when the clip is anything but one rectangle, circle or ellipse, or cuts anything but a picture", () => {
     const parse = (inner: string) => new DOMParser().parseFromString(`<svg xmlns="http://www.w3.org/2000/svg">${inner}</svg>`, "image/svg+xml").documentElement
-    expect(() => assertSubset(parse(`<clipPath id="c"><circle r="4"/></clipPath><image href="${GROUP}" clip-path="url(#c)"/>`))).toThrow(/one untransformed rectangle/)
+    expect(() => assertSubset(parse(`<clipPath id="c"><path d="M0 0L4 4"/></clipPath><image href="${GROUP}" clip-path="url(#c)"/>`))).toThrow(/one untransformed rectangle, circle or ellipse/)
+    expect(() => assertSubset(parse(`<clipPath id="c"><circle r="4"/><rect width="4" height="4"/></clipPath><image href="${GROUP}" clip-path="url(#c)"/>`))).toThrow(/one untransformed/)
     expect(() => assertSubset(parse(`<clipPath id="c"><rect width="4" height="4"/></clipPath><rect width="9" height="9" clip-path="url(#c)"/>`))).toThrow(/only a picture/)
+  })
+})
+
+describe("a round picture", () => {
+  it("cuts an uncropped picture by the circle inside its square frame, and reads its box as the frame", () => {
+    const root = svgRoot(<CroppedImage src={GROUP} box={{ x: 120, y: 190, w: 420, h: 420 }} round assetKey="basalt" />)
+    expect(() => assertSubset(root)).not.toThrow()
+    const circle = root.querySelector("clipPath circle")!
+    expect([circle.getAttribute("cx"), circle.getAttribute("cy"), circle.getAttribute("r")]).toEqual(["330", "400", "210"])
+    const image = root.querySelector("image")!
+    expect(image.getAttribute("preserveAspectRatio")).toBe("xMidYMid slice")
+    expect(visibleImageBox(image)).toEqual({ x: 120, y: 190, w: 420, h: 420 })
+  })
+
+  it("cuts a cropped picture by the ellipse inside a frame that is not square", () => {
+    const root = svgRoot(<CroppedImage src={GROUP} box={{ x: 0, y: 0, w: 200, h: 100 }} crop={[0, 0, 1, 0.5]} round />)
+    expect(() => assertSubset(root)).not.toThrow()
+    expect(root.querySelector("clipPath ellipse")).not.toBeNull()
+    expect(visibleImageBox(root.querySelector("image")!)).toEqual({ x: 0, y: 0, w: 200, h: 100 })
+  })
+
+  it("is exported as an oval picture, cropped where it is cropped", () => {
+    const plain = imageToOp(svgRoot(<CroppedImage src={GROUP} box={{ x: 96, y: 96, w: 192, h: 192 }} round />).querySelector("image")!)
+    expect(plain.round).toBe(true)
+    expect(plain.sizing).toMatchObject({ type: "cover" })
+    const cropped = imageToOp(svgRoot(<CroppedImage src={GROUP} box={{ x: 96, y: 96, w: 192, h: 288 }} crop={[0.5, 0, 0.5, 1]} round />).querySelector("image")!)
+    expect(cropped.round).toBe(true)
+    expect(cropped.sizing).toMatchObject({ type: "crop", w: 2, h: 3 })
+    const square = imageToOp(svgRoot(<CroppedImage src={GROUP} box={{ x: 96, y: 96, w: 192, h: 288 }} crop={[0.5, 0, 0.5, 1]} />).querySelector("image")!)
+    expect(square.round).toBeUndefined()
   })
 })
 

@@ -83,8 +83,9 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // crayonbox-chapter, crayonbox-sheet and crayonbox-ending: 179. The luxe
     // redesign adds invitation-cover, invitation-chapter, invitation-sheet and
     // invitation-ending: 183. The runway redesign adds lineup-cover,
-    // lineup-chapter, lineup-sheet and lineup-ending: 187.
-    expect(layoutEntries).toHaveLength(187)
+    // lineup-chapter, lineup-sheet and lineup-ending: 187. The museum redesign
+    // adds placard-cover, placard-chapter, placard-sheet and placard-ending: 191.
+    expect(layoutEntries).toHaveLength(191)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -309,18 +310,18 @@ describe("layoutsForSlideType", () => {
     for (const l of covers) expect(l.slideTypes).toContain("cover")
   })
 
-  it("cover, chapter, and ending expose 48, 43, and 45 registered layouts with no takeovers", () => {
+  it("cover, chapter, and ending expose 49, 44, and 46 registered layouts with no takeovers", () => {
     // The shared automatic pools are unchanged by the gauge family: 19, 8, 7.
-    expect(layoutsForSlideType("cover")).toHaveLength(48)
+    expect(layoutsForSlideType("cover")).toHaveLength(49)
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
-    expect(layoutsForSlideType("chapter")).toHaveLength(43)
-    expect(layoutsForSlideType("ending")).toHaveLength(45)
+    expect(layoutsForSlideType("chapter")).toHaveLength(44)
+    expect(layoutsForSlideType("ending")).toHaveLength(46)
   })
 
-  it("content includes both the 51 layouts and the 4 takeovers", () => {
+  it("content includes both the 52 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(51)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(52)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(55)
+    expect(contents).toHaveLength(56)
   })
 })

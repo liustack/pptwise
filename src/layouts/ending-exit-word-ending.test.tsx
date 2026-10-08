@@ -174,4 +174,12 @@ describe("ending-exit-word-ending — shared pool", () => {
     noOverflowMarks(renderEnding("museum").markup)
     noOverflowMarks(renderEnding("museum", slide("看".repeat(80), { subheading: "线".repeat(80) })).markup)
   })
+
+  it("keeps each line the author broke the subtitle into, the rule under the last", () => {
+    const { root } = renderEnding("museum", slide(HEADING, { subheading: "谢谢各位\n下面是提问时间" }))
+    const lines = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("data-contrast-tier") === "meta" && !(t.textContent ?? "").includes("市博物馆"))
+    expect(lines.map((t) => t.textContent)).toEqual(["谢谢各位", "下面是提问时间"])
+    const rule = root.querySelector('[data-decor-piece="exit-rule"] line')!
+    expect(Number(rule.getAttribute("y1"))).toBeGreaterThan(Number(lines[1]!.getAttribute("y")))
+  })
 })

@@ -64,15 +64,16 @@ export function assertSubset(root: Element): void {
     if (FORBIDDEN_TAGS.has(tag)) {
       throw new Error(`subset violation: forbidden element <${el.tagName}>`)
     }
-    // One clip is exportable: a <clipPath> of one rectangle cutting an
-    // <image>, the shape a cropped picture is drawn with
-    // (`cropped-image.tsx`). The export turns it into the picture's crop.
+    // One clip is exportable: a <clipPath> of one rectangle, circle or
+    // ellipse cutting an <image>, the shapes a cropped or round picture is
+    // drawn with (`cropped-image.tsx`). The export turns it into the
+    // picture's crop, and a round one into an oval picture.
     if (tag === "clippath" && !clipRect(el)) {
-      throw new Error(`subset violation: <clipPath id="${el.getAttribute("id")}"> holds anything but one untransformed rectangle`)
+      throw new Error(`subset violation: <clipPath id="${el.getAttribute("id")}"> holds anything but one untransformed rectangle, circle or ellipse`)
     }
     if (el.hasAttribute("clip-path")) {
       if (tag !== "image") throw new Error(`subset violation: clip-path on <${el.tagName}> (only a picture may be clipped)`)
-      if (!clipRect(clipFor(el))) throw new Error(`subset violation: clip-path="${el.getAttribute("clip-path")}" does not name a <clipPath> of one rectangle`)
+      if (!clipRect(clipFor(el))) throw new Error(`subset violation: clip-path="${el.getAttribute("clip-path")}" does not name a <clipPath> of one rectangle, circle or ellipse`)
     }
 
     // stroke gradients/patterns stay forbidden outright — svg2pptx never

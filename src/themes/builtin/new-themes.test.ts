@@ -286,8 +286,9 @@ describe("museum tokens", () => {
     expect(t.id).toBe("museum")
   })
 
-  it("heading font resolves to SimSun (CJK serif, journal/luxe precedent, no tofu on export)", () => {
-    expect(resolveFontFace(MUSEUM_TOKENS.fonts.heading, "heading")).toBe("SimSun")
+  it("heading font pairs Times New Roman for Latin and figures with SimSun for Chinese (2026-10 redesign, runway precedent)", () => {
+    expect(resolveFontFace(MUSEUM_TOKENS.fonts.heading, "heading")).toBe("Times New Roman")
+    expect(MUSEUM_TOKENS.fonts.heading.slice(0, 2)).toEqual(["Times New Roman", "SimSun"])
   })
 
   it("body font resolves to Microsoft YaHei (exact width table)", () => {

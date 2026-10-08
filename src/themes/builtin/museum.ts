@@ -37,18 +37,26 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 面打头保导出无 tofu。body 仍是雅黑。圆角 0 + gapScale 1.3（airy 档，
  * ink 同值）。
  *
- * 装饰：无 motif。2026-08-21 用户裁撤四角针点。第八波批 4 角标 tick
- * 再次退役，不要加回来。展签细框是内容页版式结构件，不升成页缘 motif。
- * 加 motif 会改封面，禁止。
+ * 装饰：2026-08-21 用户裁撤四角针点，第八波批 4 角标 tick 再次退役，这两
+ * 样都不要加回来。2026-10 定稿（`design/rounds/2026-10-08-museum/`）起
+ * 内容页有 museum-motif：左上厅名（页面的 `kicker`）与 y58 接缝、左下讲座
+ * 标签、右下门牌页码。它是展厅的结构（字、一根线、一个细框），标为
+ * `structure`，不是装饰，只上内容页，封面、章节页和结尾页的脸自己画。
  *
- * 第八波批 4（封面 poster-center 锁板不动）：章节 hall-label-chapter
- * （展厅号当章号，铜金只给厅号），ending exit-word-ending（中轴铜金
- * 短线依附标题簇）。内容倾向 split-band / two-column / quiet-frame。
+ * 2026-10 定稿「展签」：封面 placard-cover（展览图录封面，满版展品照左侧
+ * 渐隐），章节 placard-chapter（一圈暖光里的厅名与厅题，放不放图都不丢
+ * 厅名），结尾 placard-ending（熄灯后只剩一张展签亮着），所有内容页
+ * placard-sheet（衬线标题横过整个版心，正文交给 placard 设定的构图：平面
+ * 导览、两罐对照、面积方块、展品窗加展签、对数范围条、显微圆视野、光晕
+ * 大字、按比例时间线、比例切片、空展签、展柜要点）。铜色每页只给一处重点。
+ * 第八波批 4 的 poster-center / hall-label-chapter / exit-word-ending 锁板
+ * 由这次定稿接替。
  *
  * 可拉伸性：铜金即参数（自然科普可换成氧化绿 `#5E8A62`，人文讲座 bg 可
  * 收到石黑 `#1A1814`、accent 收到旧银 `#C4B8A0`）。
  *
- * **菜单分派（S1-B）**：厅堂靠留白与展签，points 用居中的 quiet-frame，evidence 正是一件展品配一句说明的展签格式，photo 用图文对开的 image-split，quote 不上。
+ * **菜单分派**：所有内容 kind 都交给 placard-sheet，由构图认内容形状，认不
+ * 出的页由普通组件渲染器画在同一个厅名、标题和出处之下。quote 不上。
  */
 export const MUSEUM_TOKENS: StyleTokens = {
   id: "museum",
@@ -68,9 +76,11 @@ export const MUSEUM_TOKENS: StyleTokens = {
     chartPalette: ["#BE7A28", "#7A8B4A", "#C45A45", "#9A8E78"], // 铜金/苔绿/氧化红/暖石
   },
   fonts: {
-    // 展签衬线：SimSun/宋体 是 SAFE_FONTS 里的 CJK 衬线，放首位保导出。
-    // Songti SC/STSong 留作 macOS 预览回退（journal/heritage/luxe 同款）。
-    heading: ["SimSun", "宋体", "Songti SC", "STSong", "serif"],
+    // 展签衬线：Times New Roman 管拉丁文与数字，SimSun/宋体 管中文（导出把
+    // 两者配成一对，runway 同款）。2026-10 定稿前只有 SimSun，PowerPoint 用
+    // 它的等宽西文排数字，「1,731」排成「1, 731」。Songti SC/STSong 留作
+    // macOS 预览回退。
+    heading: ["Times New Roman", "SimSun", "宋体", "Songti SC", "STSong", "serif"],
     body: ["Microsoft YaHei", "Helvetica Neue", "Arial", "system-ui"],
   },
   shape: {
@@ -99,21 +109,22 @@ export const MUSEUM_THEME = {
     lineage: "The exhibition label and the museum catalog.",
   },
   style: MUSEUM_TOKENS,
+  motif: { id: "museum-motif" },
   menu: {
-    cover: { face: "poster-center" },
-    chapter: { face: "hall-label-chapter" },
+    cover: { face: "placard-cover" },
+    chapter: { face: "placard-chapter" },
     content: {
-      points: { face: "quiet-frame" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "split-band" },
-      photo: { face: "image-split" },
-      statement: { face: "statement" },
-      fact: { face: "stat-hero" },
-      evidence: { face: "one-evidence" },
-      hierarchy: { face: "asymmetric-triptych" },
+      points: { face: "placard-sheet" },
+      list: { face: "placard-sheet" },
+      comparison: { face: "placard-sheet" },
+      process: { face: "placard-sheet" },
+      data: { face: "placard-sheet" },
+      photo: { face: "placard-sheet" },
+      statement: { face: "placard-sheet" },
+      fact: { face: "placard-sheet" },
+      evidence: { face: "placard-sheet" },
+      hierarchy: { face: "placard-sheet" },
     },
-    ending: { face: "exit-word-ending" },
+    ending: { face: "placard-ending" },
   },
 } satisfies BuiltinThemeDeclaration;

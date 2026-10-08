@@ -57,6 +57,7 @@ import { CrayonboxSheetContent } from "./content-crayonbox-sheet"
 import { ScrollQuoteContent } from "./content-scroll-quote"
 import { InvitationSheetContent } from "./content-invitation-sheet"
 import { LineupSheetContent } from "./content-lineup-sheet"
+import { PlacardSheetContent } from "./content-placard-sheet"
 import { MarqueeStatementContent } from "./content-marquee-statement"
 import { PitchPhotoContent } from "./content-pitch-photo"
 import { GridStatementContent } from "./content-grid-statement"
@@ -242,6 +243,9 @@ const CASES: FaceCase[] = [
   // runway's lineup sheet: the same, under the claim from y190 down to y650,
   // over the source line.
   { face: "lineup-sheet", Face: LineupSheetContent, themeId: "runway", regions: ["face", "declined"] },
+  // museum's placard sheet: the same, under the claim from y190 down to y616,
+  // over the source line.
+  { face: "placard-sheet", Face: PlacardSheetContent, themeId: "museum", regions: ["face", "declined"] },
   // A chart is not the one-line plan's row of touchpoints, so the page goes
   // straight to the sheet, and is declined once that cannot hold it either.
   { face: "marquee-statement", Face: MarqueeStatementContent, themeId: "rally", regions: ["aside", "declined"] },

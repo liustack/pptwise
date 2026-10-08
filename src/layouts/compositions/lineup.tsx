@@ -231,7 +231,7 @@ export function paintLineupTracked(opts: { ctx: ComponentCtx; text: string; x: n
       fill={opts.fill}
       dominantBaseline="alphabetic"
       data-tracking={tracking || undefined}
-      xmlSpace={opts.text.includes(" ") ? "preserve" : undefined}
+      xmlSpace={opts.text.includes(" ") || keepsSpaces(opts.text) ? "preserve" : undefined}
     >
       {tracking ? (
         <>

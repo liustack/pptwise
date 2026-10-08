@@ -1,0 +1,48 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "series": [
+        {
+          "name": "Lunar samples returned",
+          "data": [
+            {
+              "x": "Apollo, 6 crewed landings",
+              "y": 382000,
+              "note": "About 382 kg"
+            },
+            {
+              "x": "Chang'e-5 + 6",
+              "y": 3666.3,
+              "note": "3.67 kg",
+              "emphasis": true
+            },
+            {
+              "x": "Luna, 3 missions",
+              "y": 300,
+              "note": "About 0.3 kg"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "About 104",
+          "unit": "times",
+          "label": "Apollo's total over both Chang'e missions"
+        },
+        {
+          "value": "**First**",
+          "label": "Every earlier sample return was from the near side"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: NASA lunar sample collection and NSSDC landing sites, CNSA. Square areas are drawn to scale by mass. Luna is rounded: its parts add up to 321 to 326 g, depending on whether Luna 20 counts as 50 or 55 g",
+  "notes": "Let's put this in history. The six Apollo landings brought back about 382 kilograms. The three robotic Soviet Luna missions brought back about 0.3 kilograms. Their individual figures add up to 321 or 326 grams, depending on whether Luna 20 is counted as 50 or 55 grams, because two NASA sources differ. Chang'e-5 and Chang'e-6 together brought 3,666.3 grams. So by weight, Apollo's haul is about 104 times larger, and the two Chang'e missions together are under one percent of it. Please don't say China has brought back the most Moon soil. It hasn't. The value is in where the soil came from. Chang'e-5 landed farther north than any earlier mission and brought back the youngest lunar basalt ever dated by radiometric methods. Before Chang'e-6, all ten sample-return missions had landed on the near side. Chang'e-6 was the first to bring soil home from the far side."
+}

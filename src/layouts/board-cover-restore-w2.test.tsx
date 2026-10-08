@@ -24,7 +24,7 @@ const WAVE2 = [
   { id: "luxe", face: "invitation-cover" },
   { id: "journal", face: "periodical-cover" },
   { id: "ink", face: "scroll-cover" },
-  { id: "museum", face: "poster-center" },
+  { id: "museum", face: "placard-cover" },
   { id: "almanac", face: "yearbook-cover" },
 ] as const
 
@@ -188,9 +188,9 @@ const WAVE8_B4_LOCKS = [
   { id: "memo", type: "cover" as const, face: "memo-cover" },
   { id: "memo", type: "chapter" as const, face: "issue-line-chapter" },
   { id: "memo", type: "ending" as const, face: "memo-ending" },
-  { id: "museum", type: "cover" as const, face: "poster-center" },
-  { id: "museum", type: "chapter" as const, face: "hall-label-chapter" },
-  { id: "museum", type: "ending" as const, face: "exit-word-ending" },
+  { id: "museum", type: "cover" as const, face: "placard-cover" },
+  { id: "museum", type: "chapter" as const, face: "placard-chapter" },
+  { id: "museum", type: "ending" as const, face: "placard-ending" },
 ] as const
 
 describe("wave 8 batch 4 — locked cover / chapter / ending faces", () => {

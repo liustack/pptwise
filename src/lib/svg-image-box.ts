@@ -2,10 +2,11 @@
  * The part of the page an `<image>` actually paints.
  *
  * An `<image>` paints its `x`, `y`, `width` and `height`, unless it is cut by
- * a `clip-path` that names a `<clipPath>` of one rectangle: the shape a
- * cropped picture is drawn with (`render/cropped-image.tsx`), the only clip
- * the exportable subset admits (`render/subset-validate.ts`). Then it paints
- * where the two boxes overlap. Everything that reads where a picture lies
+ * a `clip-path` that names a `<clipPath>` of one rectangle, or of one circle
+ * or ellipse: the shapes a cropped or round picture is drawn with
+ * (`render/cropped-image.tsx`), the only clips the exportable subset admits
+ * (`render/subset-validate.ts`). Then it paints where the two boxes overlap,
+ * a round clip read as the box around it. Everything that reads where a picture lies
  * reads it here: the export's crop (`pptx/svg2pptx/image.ts`), the audit's
  * backgrounds and the depth contract, so none of them takes a picture drawn
  * whole and cut down for one that covers the page.
@@ -27,17 +28,32 @@ export function clipRefId(value: string | null | undefined): string | null {
   return m ? m[2]! : null
 }
 
-/** The one rectangle a `<clipPath>` holds, or `null` when it holds anything else. */
-export function clipRect(clip: Element | null | undefined): ImageBox | null {
+/** The one shape a `<clipPath>` holds: a rectangle, or a circle or an ellipse (`round`), as the box around it, or `null` when it holds anything else. */
+export function imageClip(clip: Element | null | undefined): (ImageBox & { round: boolean }) | null {
   if (!clip || clip.tagName.toLowerCase() !== "clippath") return null
   const children = Array.from(clip.children)
   if (children.length !== 1) return null
-  const rect = children[0]!
-  if (rect.tagName.toLowerCase() !== "rect" || rect.hasAttribute("transform") || clip.hasAttribute("transform")) return null
+  const shape = children[0]!
+  const tag = shape.tagName.toLowerCase()
+  if (shape.hasAttribute("transform") || clip.hasAttribute("transform")) return null
   const units = clip.getAttribute("clipPathUnits")
   if (units && units !== "userSpaceOnUse") return null
-  const n = (name: string) => Number(rect.getAttribute(name) ?? 0) || 0
-  return { x: n("x"), y: n("y"), w: n("width"), h: n("height") }
+  const n = (name: string) => Number(shape.getAttribute(name) ?? 0) || 0
+  if (tag === "rect") return { x: n("x"), y: n("y"), w: n("width"), h: n("height"), round: false }
+  if (tag === "circle") return { x: n("cx") - n("r"), y: n("cy") - n("r"), w: 2 * n("r"), h: 2 * n("r"), round: true }
+  if (tag === "ellipse") return { x: n("cx") - n("rx"), y: n("cy") - n("ry"), w: 2 * n("rx"), h: 2 * n("ry"), round: true }
+  return null
+}
+
+/** The box of the one shape a `<clipPath>` holds (`imageClip`), or `null` when it holds anything else. */
+export function clipRect(clip: Element | null | undefined): ImageBox | null {
+  const shape = imageClip(clip)
+  return shape ? { x: shape.x, y: shape.y, w: shape.w, h: shape.h } : null
+}
+
+/** Whether an `<image>` is cut round: its clip is one circle or ellipse. */
+export function roundImage(el: Element): boolean {
+  return imageClip(clipFor(el))?.round === true
 }
 
 /** The `<clipPath>` element an element's `clip-path` names, looked up in its document. */

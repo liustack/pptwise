@@ -52,3 +52,4 @@ export type MotifId =
   | "folio-motif" // 2026-10-02：brief 定稿页脚，y664 细线 + 左机构名右保密级别，不印页码
   | "proposal-motif" // 2026-10-06：proposal 提案书页眉标签与页码（左上 deck 标签，右下页码字段）
   | "runway-motif" // 2026-10-08：runway 秀场出场单报头（左 deck 标签、右分区与页码字段、y54 黑细线）
+  | "museum-motif" // 2026-10-08：museum 展厅墙面（左上厅名与 y58 接缝、左下讲座标签、右下门牌页码字段）

@@ -1,0 +1,53 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "stacked",
+      "direction": "horizontal",
+      "emphasis_label": "About 148 g · about 4%",
+      "series": [
+        {
+          "name": "Research loans",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "Both missions, 3,666.3 g",
+              "y": 148.26
+            }
+          ]
+        },
+        {
+          "name": "The rest",
+          "data": [
+            {
+              "x": "Both missions, 3,666.3 g",
+              "y": 3518.04
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "microscope",
+          "title": "Research loans",
+          "text": "Ten domestic rounds, mostly in milligrams. The first foreign round: 2.18 g to 7 institutions in 6 countries"
+        },
+        {
+          "icon": "gift",
+          "title": "Gifts",
+          "text": "1.5 g each to Russia and France. Far-side soil given to the United Nations in September 2026"
+        },
+        {
+          "icon": "landmark",
+          "title": "Public display",
+          "text": "National Museum of China: 100 g since 2021. Beijing Planetarium: 0.6 g on show since 2024"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: CNSA loan notices (2021–2026), CCTV (2025-08), National Museum of China, Beijing Planetarium. About 148 g is the official running total",
+  "notes": "Where did the 3,666.3 grams go? Think of three separate ledgers. The first is research loans. CNSA reviews applications twice a year, and by February 2026 it had made ten rounds, about 148 grams by the official running totals, roughly 4 percent of everything brought back. As one researcher put it, getting one or two grams is a lot. Most samples are handed out in milligrams. The first international round, announced in 2025, gave 2.18 grams of Chang'e-5 samples to seven institutions in six countries. The second ledger is gifts: 1.5 grams to Russia in 2022, which sent back 1.5 grams of Luna 16 soil in return, and 1.5 grams to France in 2023. In September 2026 China gave Chang'e-6 far-side soil to the United Nations, now on permanent display at its Vienna headquarters. The amount wasn't published. The third ledger is public display. The National Museum of China took in 100 grams of Chang'e-5 soil in February 2021, and the Beijing Planetarium has shown 0.6 grams since December 2024. Keep the three ledgers apart, and remember that the amount approved for a loan is not necessarily the amount already collected."
+}

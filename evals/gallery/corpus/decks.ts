@@ -31,6 +31,7 @@ import { SCROLL_BODIES } from "./scroll-bodies"
 import { CRAYONBOX_BODIES } from "./crayonbox-bodies"
 import { INVITATION_BODIES } from "./invitation-bodies"
 import { LINEUP_BODIES } from "./lineup-bodies"
+import { PLACARD_BODIES } from "./placard-bodies"
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/images")
 
@@ -590,6 +591,8 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   if (def.id === "invitation-sheet") return COMPOSITION_BODIES.climb(lex).components
   // runway's lineup sheet: the board's running order of parts.
   if (def.id === "lineup-sheet") return COMPOSITION_BODIES.order(lex).components
+  // museum's placard sheet: the board's floor plan of the visit.
+  if (def.id === "placard-sheet") return COMPOSITION_BODIES.floorplan(lex).components
   if (def.id === "marquee-statement") {
     return [{ type: "icon_cards", items: [0, 1, 2].map((i) => ({ icon: (["cup-soda", "package", "ticket"] as const)[i]!, title: lex.labels[i]!, text: lex.bullets[i]! })) }]
   }
@@ -1204,6 +1207,12 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
   // a picture bracketed into grades, a sample beside its joins, the looks in
   // a row, one look a page and what the work did and did not do.
   ...LINEUP_BODIES,
+  // museum's placard sheet: the floor plan, two samples side by side,
+  // squares to scale, an exhibit beside its label, ranges on a log scale,
+  // exhibits under a microscope, one figure in a pool of light, a timeline
+  // to scale, a whole and its part, open questions on blank labels and a case
+  // beside what to look for.
+  ...PLACARD_BODIES,
   rows: (lex) => ({
     heading: lex.headings[1]!,
     components: [
