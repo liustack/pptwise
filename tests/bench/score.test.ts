@@ -180,11 +180,14 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     // `#1A1A1A`, which kept the theme's dark text ink at 1.17:1, until the
     // theme's neutral ladder moved onto a painted page (`paletteOnGround`).
     //
-    // Now ink's statement face on a page painted `#1A1A1A`: it sets the
-    // claim in the theme's `primary`, its ink black, and never measures that
-    // brand colour against the page, so the claim lands at 1.03:1. The
-    // ladder does not carry brand colours, so this stays. When that is fixed
-    // too, the next real source goes here.
+    // Then ink's statement face on a page painted `#1A1A1A`, its claim in the
+    // theme's black `primary` at 1.03:1, until a skin's brand colours were
+    // held to a painted page (`brandInkOnGround`).
+    //
+    // Now the same page painted `#777777`, a grey no ink reads on at body
+    // size: white and near-black both stop at about 4.48:1 against it, under
+    // the 4.5:1 its source line needs. No renderer can fix that, only the
+    // author's choice of paint, so this source should outlive the rest.
     // `kpi_cards` stays in the fixture for `coverageHits` below.
     const metas = await loadQuestionMetas(QUESTIONS_DIR)
     const meta = metas.find((m) => m.id === "fx03")!

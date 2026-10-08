@@ -190,3 +190,43 @@ describe("a quote's or a figure's source and the page's footnote under it", () =
     expect(auditSvgMarkup(markup), theme).toEqual([])
   })
 })
+
+// A skin sets its claim, quote or figure straight onto the page in the
+// theme's brand colours, and on a page the author painted those stood at
+// 1.2 to 2.9:1 (ink's and journal's statements, ledger's and luxe's quotes,
+// almanac's and vermilion's claims). They are held to the painted ground now,
+// and the theme's own pages keep their colours.
+describe("a skin's brand colours on a page the author painted", () => {
+  const GROUNDS = ["#F7F3EA", "#1F2A44", "#C8102E", "#FFD400"]
+  const slides = (kind: "statement" | "quote" | "fact"): Slide[] =>
+    GROUNDS.map((value) => ({
+      type: "content",
+      kind,
+      heading: kind === "fact" ? undefined : "设备不会突然坏，只是没人听它说话",
+      background: { kind: "color", value },
+      components:
+        kind === "statement"
+          ? [{ type: "paragraph", text: "去年对账全文" }]
+          : kind === "quote"
+            ? [{ type: "blockquote", text: "最贵的停机，是没人预料到的那一次。", attribution: "设备主管" }]
+            : [{ type: "kpi_cards", items: [{ value: "62%", label: "设备开机率" }] }],
+    })) as unknown as Slide[]
+
+  it.each([
+    ["ink", "statement"],
+    ["journal", "statement"],
+    ["almanac", "statement"],
+    ["vermilion", "statement"],
+    ["ledger", "statement"],
+    ["luxe", "statement"],
+    ["ledger", "quote"],
+    ["luxe", "quote"],
+    ["thesis", "quote"],
+    ["terminal", "fact"],
+  ] as const)("%s %s", async (theme, kind) => {
+    const { auditDeck } = await import("../../audit/deck-audit")
+    const deck = ir(theme, [{ type: "cover", heading: "封面", components: [] } as unknown as Slide, ...slides(kind)])
+    const low = auditDeck(deck).findings.filter((f) => f.code === "low-contrast")
+    expect(low.map((f) => f.message)).toEqual([])
+  })
+})

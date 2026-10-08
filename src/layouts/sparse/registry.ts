@@ -1,4 +1,5 @@
 import type { ContentLayoutId, SvgTemplateProps } from "../types"
+import { brandInkOnGround } from "../../render/page-palette"
 import * as stage from "./stage"
 import * as lecture from "./lecture"
 import * as swiss from "./swiss"
@@ -114,5 +115,14 @@ export const FACES: Partial<Record<string, FaceMap>> = {
 
 export function sparseFace(layoutId: string, themeId: string | undefined): SparseSkin | undefined {
   if (!themeId) return undefined
-  return FACES[themeId]?.[layoutId as SparseLayoutId]
+  const skin = FACES[themeId]?.[layoutId as SparseLayoutId]
+  if (!skin) return undefined
+  // Every skin sets its claim, quote or figure straight onto the page in the
+  // theme's brand colours, so on a page the author painted those colours are
+  // held to the ground the page is painted (`brandInkOnGround`).
+  return (props) => {
+    const { ctx } = props
+    if (!ctx.themeGround || !ctx.defaultBg) return skin(props)
+    return skin({ ...props, ctx: { ...ctx, colors: brandInkOnGround(ctx.colors, ctx.themeGround, ctx.defaultBg) } })
+  }
 }
