@@ -162,4 +162,18 @@ function dropLead(segments: EmphasisSegment[], label: string): EmphasisSegment[]
   return tail ? [{ ...first, text: tail }, ...rest] : rest
 }
 
-export const renderDef: RenderDef<ImageComponent> = { type: "image", measure: image.measure, render: image.render }
+/**
+ * How short a cover photograph may be drawn when its page is tight: a band a
+ * fifth as tall as it is wide, never under 96px. A photograph set to fill its
+ * box is cropped anyway, so a page that runs short of height crops it further
+ * rather than dropping it (`layout.ts`'s `shrinkStack`). A contained picture,
+ * a chart or a screenshot that must be seen whole, keeps its height.
+ */
+const COVER_FLOOR = { share: 0.2, min: 96 } as const
+
+function imageMinHeight(component: ImageComponent, w: number): number {
+  const measured = image.measure(component, w)
+  return component.fit === "cover" ? Math.min(measured, Math.max(COVER_FLOOR.min, Math.round(w * COVER_FLOOR.share))) : measured
+}
+
+export const renderDef: RenderDef<ImageComponent> = { type: "image", measure: image.measure, render: image.render, minHeight: imageMinHeight }
