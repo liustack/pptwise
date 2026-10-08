@@ -1,3 +1,4 @@
+import { markedLineSegments, paintMarkedLine, stripEmphasis } from "../render/emphasis"
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk, graphicInk } from "../render/ink"
@@ -78,7 +79,7 @@ function panelLayout(
   bodyFontFamily?: string,
 ): PanelLayout {
   const contentW = w - PAD_X * 2
-  const title = fitSvgLine(component.title, {
+  const title = fitSvgLine(stripEmphasis(component.title), {
     maxWidth: contentW - (component.icon ? ICON_SHIFT : 0),
     fontSize: TITLE_SIZE,
     minFontSize: 16,
@@ -162,18 +163,23 @@ export const insightPanel: SvgComponent<InsightPanelComponent> = {
             color={graphicInk(ctx.colors.accent, ctx.colors.surface)}
           />
         ) : null}
-        <text
-          data-truncated={layout.title.truncated ? "1" : undefined}
-          x={box.x + PAD_X + (component.icon ? ICON_SHIFT : 0)}
-          y={titleBaseline}
-          fontSize={layout.title.fontSize}
-          fontWeight="700"
-          fill={accessibleInk(ctx.colors.accent, ctx.colors.surface, layout.title.fontSize)}
-          fontFamily={ctx.fonts.heading}
-          dominantBaseline="alphabetic"
-        >
-          {layout.title.text}
-        </text>
+        {paintMarkedLine(
+          ctx,
+          markedLineSegments(component.title, [layout.title.text])[0]!,
+          { baseFill: accessibleInk(ctx.colors.accent, ctx.colors.surface, layout.title.fontSize), fontWeight: "700", fontFamily: ctx.fonts.heading, bg: ctx.colors.surface },
+          <text
+            data-truncated={layout.title.truncated ? "1" : undefined}
+            x={box.x + PAD_X + (component.icon ? ICON_SHIFT : 0)}
+            y={titleBaseline}
+            fontSize={layout.title.fontSize}
+            fontWeight="700"
+            fill={accessibleInk(ctx.colors.accent, ctx.colors.surface, layout.title.fontSize)}
+            fontFamily={ctx.fonts.heading}
+            dominantBaseline="alphabetic"
+          >
+            {layout.title.text}
+          </text>,
+        )}
         {layout.rows.map((row, ri) => {
           const rowTop = rowY
           rowY += row.height + ROW_GAP

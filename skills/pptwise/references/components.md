@@ -178,6 +178,8 @@ Four components let the author single out the part the page argues for. Every ma
 - `comparison`: a row can carry a `tag`, a few words saying what happened to it (`{ "text": "Unchanged", "quiet": true }`), printed as a small label after its cells, with `tag_column` as the header over the tags. Mark the one row the page is about with `emphasis`: it sits on a pale tint and its tag fills in the emphasis colour. Set `quiet` on a tag that says nothing changed.
 - `roadmap`: `emphasis: true` on one item keeps the accent bar on that card and turns the other cards' bars primary. Only one item may carry it.
 
+A run written `**…**` is set in the theme's emphasis in a heading and in `paragraph`, `bullets`, `callout` and `blockquote` text, `comparison` labels and cells, `numbered_cards` titles and text, `verdict_banner` text, a `kpi_cards` value or note, image captions, `steps` titles and text, `icon_cards` titles and text, and an `insight_panel` title. Validate refuses one in any other field.
+
 ```json
 {
   "type": "waterfall",

@@ -1,3 +1,4 @@
+import { markedLineSegments, paintMarkedLine, stripEmphasis } from "../render/emphasis"
 import type React from "react"
 import type { Component } from "@/ir"
 import { Icon } from "../render/icons"
@@ -39,7 +40,7 @@ function layoutItemText(
   titleMaxLines: number,
   bodyMaxLines: number,
 ) {
-  const title = layoutFormTitle(item.title, {
+  const title = layoutFormTitle(stripEmphasis(item.title), {
     maxWidth: contentW,
     fontSize: titleSize,
     fontFamily: ctx.fonts.heading,
@@ -47,7 +48,7 @@ function layoutItemText(
   })
   const text =
     bodyMaxLines > 0
-      ? layoutFormBody(item.text, {
+      ? layoutFormBody(stripEmphasis(item.text), {
           maxWidth: contentW,
           fontSize: bodySize,
           titleSize,
@@ -249,7 +250,7 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
         return (
           <g
             key={i}
-            data-truncated={formTextOmissionMarker(item.text, layout.text)}
+            data-truncated={formTextOmissionMarker(stripEmphasis(item.text), layout.text)}
             data-audit-box={`${col * g.colW},${rowY},${g.colW}`}
           >
             <circle cx={cx} cy={cy} r={g.nodeR} fill={fill} {...strokeProps} />
@@ -262,37 +263,47 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
               item.tone ? graphicInk(resolveSemanticColor(item.tone, ctx.colors), fill) : ink,
             )}
             {item.tag ? paintCardTag(item.tag, cx, stackTop + g.nodeSize + GAP_NODE_TITLE, g.contentW, ctx) : null}
-            {layout.title.lines.map((line, li) => (
-              <text
-                key={`t-${li}`}
-                data-truncated={formTextClipMarker(layout.title, li)}
-                x={cx}
-                y={titleTop + li * layout.title.lineHeight + layout.title.fontSize}
-                textAnchor="middle"
-                fontSize={layout.title.fontSize}
-                fontWeight="700"
-                fill={ctx.colors.text}
-                fontFamily={ctx.fonts.heading}
-                dominantBaseline="alphabetic"
-              >
-                {line}
-              </text>
-            ))}
-            {layout.text.lines.map((line, li) => (
-              <text
-                key={li}
-                data-truncated={formTextClipMarker(layout.text, li)}
-                x={cx}
-                y={textTop + li * layout.text.lineHeight + layout.text.fontSize}
-                textAnchor="middle"
-                fontSize={layout.text.fontSize}
-                fill={ctx.colors.muted}
-                fontFamily={ctx.fonts.body}
-                dominantBaseline="alphabetic"
-              >
-                {line}
-              </text>
-            ))}
+            {layout.title.lines.map((line, li) =>
+              paintMarkedLine(
+                ctx,
+                markedLineSegments(item.title, layout.title.lines)[li]!,
+                { baseFill: ctx.colors.text, fontWeight: "700", fontFamily: ctx.fonts.heading, bg: fill },
+                <text
+                  key={`t-${li}`}
+                  data-truncated={formTextClipMarker(layout.title, li)}
+                  x={cx}
+                  y={titleTop + li * layout.title.lineHeight + layout.title.fontSize}
+                  textAnchor="middle"
+                  fontSize={layout.title.fontSize}
+                  fontWeight="700"
+                  fill={ctx.colors.text}
+                  fontFamily={ctx.fonts.heading}
+                  dominantBaseline="alphabetic"
+                >
+                  {line}
+                </text>,
+              ),
+            )}
+            {layout.text.lines.map((line, li) =>
+              paintMarkedLine(
+                ctx,
+                markedLineSegments(item.text, layout.text.lines)[li]!,
+                { baseFill: ctx.colors.muted, fontWeight: "700", fontFamily: ctx.fonts.body, bold: false, bg: fill },
+                <text
+                  key={li}
+                  data-truncated={formTextClipMarker(layout.text, li)}
+                  x={cx}
+                  y={textTop + li * layout.text.lineHeight + layout.text.fontSize}
+                  textAnchor="middle"
+                  fontSize={layout.text.fontSize}
+                  fill={ctx.colors.muted}
+                  fontFamily={ctx.fonts.body}
+                  dominantBaseline="alphabetic"
+                >
+                  {line}
+                </text>,
+              ),
+            )}
           </g>
         )
       })}

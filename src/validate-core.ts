@@ -26,6 +26,7 @@ import {
   OVERFLOW_VOCABULARY_MESSAGE,
   visitStringLeaves,
 } from "./ir/overflow-vocabulary"
+import { MARKED_COMPONENT_FIELDS, carriesMark, fieldDrawsMarks, markFieldKey } from "./ir/mark-fields"
 import { isSlideLevelPath, renameHintsFor, SLIDE_LEVEL_UNKNOWN_KEY_HINT } from "./ir/rename-hints"
 import { normalizeNarrativeShape, resolveNarrative, type NarrativeProfile } from "./narrative"
 import { CAPACITY } from "./audit/capacity"
@@ -642,6 +643,31 @@ function checkOverflowVocabulary(ir: PptxIR): ValidationIssue[] {
 }
 
 /**
+ * A `**…**` mark in a component field that draws its text as written
+ * (`ir/mark-fields.ts`). The renderer would print the asterisks, so the deck
+ * is refused here, by field, with the fields that do draw a mark named.
+ */
+function checkMarkedFields(ir: PptxIR): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    slide.components.forEach((component, c) => {
+      visitStringLeaves(component, "", (path, text) => {
+        if (!carriesMark(text)) return
+        const segments = path.split(".").filter(Boolean)
+        if (fieldDrawsMarks(component.type, segments)) return
+        errors.push({
+          path: `slides.${i}.components.${c}.${path}`,
+          message: `${markFieldKey(component.type, segments)} draws its text as written, so a **…** mark would print its asterisks. Remove the asterisks. A mark is drawn in ${[...MARKED_COMPONENT_FIELDS].join(", ")}, and in a page's heading.`,
+          page: i + 1,
+          ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+        })
+      })
+    })
+  })
+  return errors
+}
+
+/**
  * Byte-level validation of every inline (`data:`) image asset in
  * `assets.images` (borrow wave, Task 2 — D3): magic-byte sniffing catches a
  * zero-byte or corrupt-header asset before it ever reaches the render/export
@@ -945,6 +971,8 @@ export function validateIr(input: unknown, opts?: { theme?: ThemeDefinition }): 
   if (duplicateIdErrors.length > 0) return withNormalized({ ok: false, errors: duplicateIdErrors })
   const overflowVocabularyErrors = checkOverflowVocabulary(r.data)
   if (overflowVocabularyErrors.length > 0) return withNormalized({ ok: false, errors: overflowVocabularyErrors })
+  const markErrors = checkMarkedFields(r.data)
+  if (markErrors.length > 0) return withNormalized({ ok: false, errors: markErrors })
   // Footer marks: cross-field rules first (a mark with nothing to print, a
   // legal classification in the wrong place), then whether the row the
   // deck asked for fits on one line. A footer never trims an author's text

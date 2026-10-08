@@ -1,3 +1,4 @@
+import { markedLineSegments, paintMarkedLine, stripEmphasis } from "../render/emphasis"
 import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, truncateToUnits } from "../lib/svg-text-layout"
@@ -79,7 +80,7 @@ function layoutIconCard(
   const titleLineHeight = Math.round(titleFontSize * TITLE_LINE_HEIGHT_RATIO)
   let title: IconCardTextLayout["title"]
   if (titleMaxLines === 1) {
-    const fitted = fitSvgLine(item.title, {
+    const fitted = fitSvgLine(stripEmphasis(item.title), {
       maxWidth: contentW,
       fontSize: titleFontSize,
       minFontSize: TITLE_MIN_FONT_SIZE,
@@ -92,7 +93,7 @@ function layoutIconCard(
       truncated: fitted.truncated,
     }
   } else {
-    const laid = layoutSvgText(item.title, {
+    const laid = layoutSvgText(stripEmphasis(item.title), {
       maxWidth: contentW,
       fontSize: titleFontSize,
       maxLines: titleMaxLines,
@@ -108,7 +109,7 @@ function layoutIconCard(
       truncated: laid.truncated,
     }
   }
-  const wrapped = layoutSvgText(item.text, {
+  const wrapped = layoutSvgText(stripEmphasis(item.text), {
     maxWidth: contentW,
     fontSize: TEXT_FONT_SIZE,
     maxLines: TEXT_MAX_LINES,
@@ -194,35 +195,45 @@ export function renderIconCardBody(
           <g data-dropped={1} data-dropped-kind="label" />
         )
       ) : null}
-      {title.lines.map((line, i) => (
-        <text
-          key={`title-${i}`}
-          data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
-          x={box.x}
-          y={titleTopY + i * title.lineHeight + title.fontSize}
-          fontSize={title.fontSize}
-          fontWeight="600"
-          fill={ctx.colors.text}
-          fontFamily={ctx.fonts.heading}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
-      {text.lines.map((line, li) => (
-        <text
-          key={li}
-          data-truncated={text.truncated && li === text.lines.length - 1 ? "1" : undefined}
-          x={box.x}
-          y={textTopY + li * text.lineHeight + text.fontSize}
-          fontSize={text.fontSize}
-          fill={ctx.colors.muted}
-          fontFamily={ctx.fonts.body}
-          dominantBaseline="alphabetic"
-        >
-          {line}
-        </text>
-      ))}
+      {title.lines.map((line, i) =>
+        paintMarkedLine(
+          ctx,
+          markedLineSegments(item.title, title.lines)[i]!,
+          { baseFill: ctx.colors.text, fontWeight: "700", fontFamily: ctx.fonts.heading, bg: ctx.colors.surface },
+          <text
+            key={`title-${i}`}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
+            x={box.x}
+            y={titleTopY + i * title.lineHeight + title.fontSize}
+            fontSize={title.fontSize}
+            fontWeight="600"
+            fill={ctx.colors.text}
+            fontFamily={ctx.fonts.heading}
+            dominantBaseline="alphabetic"
+          >
+            {line}
+          </text>,
+        ),
+      )}
+      {text.lines.map((line, li) =>
+        paintMarkedLine(
+          ctx,
+          markedLineSegments(item.text, text.lines)[li]!,
+          { baseFill: ctx.colors.muted, fontWeight: "700", fontFamily: ctx.fonts.body, bold: false, bg: ctx.colors.surface },
+          <text
+            key={li}
+            data-truncated={text.truncated && li === text.lines.length - 1 ? "1" : undefined}
+            x={box.x}
+            y={textTopY + li * text.lineHeight + text.fontSize}
+            fontSize={text.fontSize}
+            fill={ctx.colors.muted}
+            fontFamily={ctx.fonts.body}
+            dominantBaseline="alphabetic"
+          >
+            {line}
+          </text>,
+        ),
+      )}
     </>
   )
 }
