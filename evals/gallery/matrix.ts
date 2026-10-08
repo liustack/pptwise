@@ -588,6 +588,20 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "museum", kind: "list", composition: "slice" },
   { theme: "museum", kind: "points", composition: "blanks" },
   { theme: "museum", kind: "photo", composition: "cabinet" },
+  // stage's keynote sheet sets the shapes as a talk on a dark stage sets
+  // them, and draws the twelve its own board added.
+  { theme: "stage", kind: "statement", composition: "hush" },
+  { theme: "stage", kind: "fact", composition: "giant" },
+  { theme: "stage", kind: "data", composition: "contour" },
+  { theme: "stage", kind: "comparison", composition: "faceoff" },
+  { theme: "stage", kind: "data", composition: "tilt" },
+  { theme: "stage", kind: "comparison", composition: "podiums" },
+  { theme: "stage", kind: "data", composition: "gulf" },
+  { theme: "stage", kind: "fact", composition: "crowd" },
+  { theme: "stage", kind: "photo", composition: "tower" },
+  { theme: "stage", kind: "comparison", composition: "toll" },
+  { theme: "stage", kind: "list", composition: "arches" },
+  { theme: "stage", kind: "points", composition: "slate" },
 ]
 
 export function buildMatrix(

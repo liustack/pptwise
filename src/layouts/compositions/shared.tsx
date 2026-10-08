@@ -254,6 +254,18 @@ export type CompositionId =
   | "slice"
   | "blanks"
   | "cabinet"
+  | "hush"
+  | "giant"
+  | "contour"
+  | "faceoff"
+  | "tilt"
+  | "podiums"
+  | "gulf"
+  | "crowd"
+  | "tower"
+  | "toll"
+  | "arches"
+  | "slate"
 
 /**
  * The type a composition sets its page in.
@@ -526,10 +538,26 @@ export type CompositionId =
  *   open questions on blank labels, and a case beside what to look for in
  *   it. See `./placard.tsx`.
  *
+ * - `keynote`: stage's 2026-10 board. A talk on a dark stage: a cold black
+ *   field, words set large and bold in a warm paper white, what is quieter
+ *   in a warm sand and a dimmer sand for sources, hairlines and axes in a
+ *   cool grey a few steps up from the black, and a matte silver (the theme's
+ *   accent) on the one thing a page is about. A sentence or a figure that
+ *   carries a page alone stands in a faint follow spot. A composition offered
+ *   this setting is handed the whole page and places the page's claim
+ *   (`claim`), its source (`source`) and its chapter (`kicker`) itself, and
+ *   draws the shapes that board drew and no other did: one sentence alone,
+ *   one figure under the line that leads into it, a decade as one line with
+ *   its fall marked, two figures face to face, a slope chart, two
+ *   leaderboards side by side, quantities to scale however far apart, a
+ *   share as a hundred dots, a photograph beside stacked figures, two bars
+ *   beside the sentence they say, gates as doors, and a short list said one
+ *   line at a time. See `./keynote.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll" | "crayonbox" | "invitation" | "lineup" | "placard"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll" | "crayonbox" | "invitation" | "lineup" | "placard" | "keynote"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */
@@ -608,6 +636,14 @@ export interface CompositionProps {
     /** The stroke a crayonbox claim is underlined with: its length, its gap under the foot and its width. */
     underline?: { w: number; gap: number; stroke: number }
     align?: "center" | "start"
+    /** The top of the claim's first line, for a board that hangs it from the top (stage's keynote sheet). */
+    top?: number
+    /** A claim set quieter, as the line that leads into a figure. */
+    tone?: "ink" | "muted"
+    /** A claim set at its regular weight, as the line under a figure. */
+    weight?: "bold" | "regular"
+    /** The size below which the claim will not shrink to stay on one line. */
+    minPt?: number
     labelTop?: number
     labelTracking?: number
     mark?: "center" | "start" | "none"
@@ -633,7 +669,18 @@ export interface CompositionProps {
     align?: "center"
     /** What it sits on, for a board that sets it inside a label. */
     ground?: string
+    /** The lowest its last line may end, for a board whose source rises a line when it takes two. */
+    foot?: number
   }) => React.ReactElement | null
+  /**
+   * The page's chapter (`Slide.kicker`), drawn by the face's own rules into
+   * the column a composition gives it (`x` and `top` on the page, `w` the
+   * room it has), or `null` when it does not fit that room, in which case the
+   * composition declines. Handed down only when the page has one, by a face
+   * whose board moves the chapter beside a photograph (stage's keynote
+   * sheet); a composition offered it draws it once.
+   */
+  kicker?: (column: { x: number; top: number; w: number }) => React.ReactElement | null
   /**
    * The page's stamp (`Slide.stamp`), handed to a setting that sets it where
    * its board drew it: luxe's reply card stands it down the card's torn

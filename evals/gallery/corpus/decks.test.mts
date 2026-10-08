@@ -14,7 +14,7 @@ describe("themeDeck corpus thicken (gallery r2 D10/D11/D12/D21)", () => {
     expect(page.type).toBe("content")
     if (page.type !== "content") throw new Error("expected content page")
     expect(page.kind).toBe("process")
-    expect(getThemeDefinition("stage").menu.content[page.kind]?.face).toBe("rail-numbered")
+    expect(getThemeDefinition("stage").menu.content[page.kind]?.face).toBe("keynote-sheet")
     expect(page.components.map((c) => c.type)).toEqual(["timeline", "paragraph"])
   })
 

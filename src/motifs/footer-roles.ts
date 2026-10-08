@@ -47,6 +47,10 @@ import type { MotifId } from "./types"
  *   museum-motif is museum's gallery wall: the organization and the deck's
  *   `label` at the bottom left with the notice, draft and confidentiality
  *   marks after them, the page number on a door plate at the bottom right.
+ *   stage-motif is stage's presenter's clicker: the page number and the
+ *   deck's length at the end of the progress line along the foot, and the
+ *   organization, the deck's `label`, the notice and the draft and
+ *   confidentiality marks moved up to the top right.
  * - `"organization"`: the motif prints the organization somewhere of its
  *   own, and the shared row carries everything else.
  *
@@ -73,5 +77,6 @@ export const MOTIF_FOOTER_ROLES: Partial<Record<MotifId, MotifFooterRole>> = {
   "luxe-motif": "row",
   "runway-motif": "row",
   "museum-motif": "row",
+  "stage-motif": "row",
   "poster-motif": "organization",
 }

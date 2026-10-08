@@ -176,9 +176,9 @@ describe("wave 8 batch 3 — locked cover / chapter / ending faces", () => {
 })
 
 const WAVE8_B4_LOCKS = [
-  { id: "stage", type: "cover" as const, face: "poster-center" },
-  { id: "stage", type: "chapter" as const, face: "one-word-chapter" },
-  { id: "stage", type: "ending" as const, face: "release-close-ending" },
+  { id: "stage", type: "cover" as const, face: "keynote-cover" },
+  { id: "stage", type: "chapter" as const, face: "keynote-chapter" },
+  { id: "stage", type: "ending" as const, face: "keynote-ending" },
   { id: "lecture", type: "cover" as const, face: "board-head" },
   { id: "lecture", type: "chapter" as const, face: "chalk-rule-chapter" },
   { id: "lecture", type: "ending" as const, face: "next-lecture-ending" },

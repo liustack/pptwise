@@ -76,8 +76,8 @@ function structuralSignature(id: CanonicalThemeId): string {
 }
 
 describe("absent motifs are identity values, not holes", () => {
-  it("stage declares no motif: an undecorated black field", () => {
-    expect(THEME_DEFINITIONS.stage.motif).toBeUndefined()
+  it("stage's motif is the presenter's clicker: one progress line and the count, no frame (2026-10 sample redesign)", () => {
+    expect(THEME_DEFINITIONS.stage.motif).toBe("stage-motif")
   })
 
   it("museum's motif is its gallery wall: the hall sign, the talk's label and the door plate, no decoration (2026-10 sample redesign)", () => {
@@ -88,9 +88,9 @@ describe("absent motifs are identity values, not holes", () => {
     expect(THEME_DEFINITIONS.runway.motif).toBe("runway-motif")
   })
 
-  it("every other theme does declare one — the no-motif theme is settled, not a gap list", () => {
+  it("every theme declares one: the last no-motif theme, stage, took its clicker in 2026-10", () => {
     const noMotif = CANONICAL_THEME_IDS.filter((id) => THEME_DEFINITIONS[id].motif === undefined)
-    expect([...noMotif].sort()).toEqual(["stage"])
+    expect(noMotif).toEqual([])
   })
 })
 

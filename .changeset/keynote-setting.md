@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+The shared compositions gain a `keynote` setting: a talk on a dark stage, words large and bold in a warm white on the black, hairlines in a cool grey and a matte silver on the one thing a page is about. Twelve compositions come with it: `hush` (one sentence alone in a follow spot), `giant` (one figure under the claim that leads into it, with the two ends of a climb when its label is written `A → B`), `contour` (a decade as one line, only its ends labelled and the run of falls before a noted point banded), `faceoff` (two figures face to face), `tilt` (a slope chart from a `from_to`), `podiums` (two leaderboards on one scale), `gulf` (quantities to scale however far apart, the smallest bar drawn too), `crowd` (a figure written as a fraction beside a hundred dots), `tower` (a photograph beside two or three stacked figures), `toll` (two bars beside the sentence their gap says and a quote), `arches` (gates as round-headed doors, each with a symbol and a figure) and `slate` (three to six bets said one line at a time). Any face can offer them, and stage's content pages use them.

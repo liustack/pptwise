@@ -1,6 +1,6 @@
 /**
  * Layout registry (W2 task 1, spec §3/§6/§8): an explicit, statically-checked
- * description of what the render chain's 191 standard layouts and 4
+ * description of what the render chain's 195 standard layouts and 4
  * page-level image takeovers already draw. This is a metadata layer only.
  * It formalizes today's implicit page structure (layout JSX + the
  * FullSlideSvg takeover dispatch) into named `slots`, it does not change any
@@ -115,6 +115,7 @@ import { layoutDef as coverCrayonboxCover } from "./cover-crayonbox-cover"
 import { layoutDef as coverInvitationCover } from "./cover-invitation-cover"
 import { layoutDef as coverLineupCover } from "./cover-lineup-cover"
 import { layoutDef as coverPlacardCover } from "./cover-placard-cover"
+import { layoutDef as coverKeynoteCover } from "./cover-keynote-cover"
 import { layoutDef as coverPledgeOpenCover } from "./cover-pledge-open-cover"
 import { layoutDef as coverReportOpenCover } from "./cover-report-open-cover"
 import { layoutDef as coverGaugeVerdict } from "./cover-gauge-verdict"
@@ -155,6 +156,7 @@ import { layoutDef as chapterCrayonboxChapter } from "./chapter-crayonbox-chapte
 import { layoutDef as chapterInvitationChapter } from "./chapter-invitation-chapter"
 import { layoutDef as chapterLineupChapter } from "./chapter-lineup-chapter"
 import { layoutDef as chapterPlacardChapter } from "./chapter-placard-chapter"
+import { layoutDef as chapterKeynoteChapter } from "./chapter-keynote-chapter"
 import { layoutDef as chapterFieldBandChapter } from "./chapter-field-band-chapter"
 import { layoutDef as chapterSubjectRuleChapter } from "./chapter-subject-rule-chapter"
 import { layoutDef as chapterOneWordChapter } from "./chapter-one-word-chapter"
@@ -202,6 +204,7 @@ import { layoutDef as endingCrayonboxEnding } from "./ending-crayonbox-ending"
 import { layoutDef as endingInvitationEnding } from "./ending-invitation-ending"
 import { layoutDef as endingLineupEnding } from "./ending-lineup-ending"
 import { layoutDef as endingPlacardEnding } from "./ending-placard-ending"
+import { layoutDef as endingKeynoteEnding } from "./ending-keynote-ending"
 import { layoutDef as endingScorecardEnding } from "./ending-scorecard-ending"
 import { layoutDef as endingCarePlanEnding } from "./ending-care-plan-ending"
 import { layoutDef as endingReleaseCloseEnding } from "./ending-release-close-ending"
@@ -264,6 +267,7 @@ import { layoutDef as contentCrayonboxSheet } from "./content-crayonbox-sheet"
 import { layoutDef as contentInvitationSheet } from "./content-invitation-sheet"
 import { layoutDef as contentLineupSheet } from "./content-lineup-sheet"
 import { layoutDef as contentPlacardSheet } from "./content-placard-sheet"
+import { layoutDef as contentKeynoteSheet } from "./content-keynote-sheet"
 import { layoutDef as contentSealFigure } from "./content-seal-figure"
 
 import {
@@ -667,6 +671,8 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverLineupCover.id]: coverLineupCover,
   // museum sample redesign (2026-10-08).
   [coverPlacardCover.id]: coverPlacardCover,
+  // stage sample redesign (2026-10-08).
+  [coverKeynoteCover.id]: coverKeynoteCover,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -731,6 +737,8 @@ const CHAPTER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [chapterLineupChapter.id]: chapterLineupChapter,
   // museum sample redesign (2026-10-08): the doorway to the next hall, in a pool of warm light.
   [chapterPlacardChapter.id]: chapterPlacardChapter,
+  // stage sample redesign (2026-10-08): an act of the talk opens over its photograph.
+  [chapterKeynoteChapter.id]: chapterKeynoteChapter,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -800,6 +808,8 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingLineupEnding.id]: endingLineupEnding,
   // museum sample redesign (2026-10-08): the lights go down and one label stays lit.
   [endingPlacardEnding.id]: endingPlacardEnding,
+  // stage sample redesign (2026-10-08): the last sentence alone on the black.
+  [endingKeynoteEnding.id]: endingKeynoteEnding,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -1004,11 +1014,14 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   // museum sample redesign (2026-10-08): the board's ordinary content page,
   // theme-locked.
   [contentPlacardSheet.id]: contentPlacardSheet,
+  // stage sample redesign (2026-10-08): the board's ordinary content page,
+  // theme-locked.
+  [contentKeynoteSheet.id]: contentKeynoteSheet,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Image takeover layouts (4). With the 52 standard content layouts above,
-// the content page type has 56 registered entries. These are `slide.layout`
+// Image takeover layouts (4). With the 53 standard content layouts above,
+// the content page type has 57 registered entries. These are `slide.layout`
 // ids for the page-level
 // `image-split`/`image-top`/`image-bottom`/`image-annotate` takeovers
 // (full-slide-svg.tsx's splitTakeover branch, keyed off `getLayout(slide.
@@ -1029,7 +1042,7 @@ const TAKEOVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [imageAnnotateLayoutDef.id]: imageAnnotateLayoutDef,
 }
 
-/** All 191 standard layouts and 4 takeover layouts, 195 entries keyed by id.
+/** All 195 standard layouts and 4 takeover layouts, 199 entries keyed by id.
  *  `kind` still spells the standard tier `"standard"`, a wire-format fossil. See
  *  {@link LayoutDefinition.kind}. */
 export const LAYOUT_REGISTRY: Record<string, LayoutDefinition> = {

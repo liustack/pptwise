@@ -44,6 +44,7 @@ import { CrayonboxSheetContent } from "./content-crayonbox-sheet"
 import { InvitationSheetContent } from "./content-invitation-sheet"
 import { LineupSheetContent } from "./content-lineup-sheet"
 import { PlacardSheetContent } from "./content-placard-sheet"
+import { KeynoteSheetContent } from "./content-keynote-sheet"
 import { SealFigureContent } from "./content-seal-figure"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { CrayonboxPointContent } from "./content-crayonbox-point"
@@ -88,7 +89,8 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // redesign adds crayonbox-sheet: 49 in all after the three retired themes.
 // The luxe sample redesign adds invitation-sheet: 50 in all. The runway
 // sample redesign adds lineup-sheet: 51 in all. The museum sample redesign
-// adds placard-sheet: 52 in all.
+// adds placard-sheet: 52 in all. The stage sample redesign adds
+// keynote-sheet: 53 in all.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
   "two-column": TwoColumnContent,
@@ -142,4 +144,5 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "invitation-sheet": InvitationSheetContent,
   "lineup-sheet": LineupSheetContent,
   "placard-sheet": PlacardSheetContent,
+  "keynote-sheet": KeynoteSheetContent,
 }

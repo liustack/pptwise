@@ -1012,9 +1012,10 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
   })
 
   it("pacing binds but the layout allows more (bento-panel exception): names both sides", () => {
+    const themeId = registerTestTheme("api-bento-exception", "stage", { content: { list: "bento-panel" } })
     const v = validateIr({
       ...raw,
-      theme: { id: "stage" },
+      theme: { id: themeId },
       narrative: { pacing: "balanced" },
       slides: [raw.slides[0], denseSlide(5, { kind: "list" })],
     })

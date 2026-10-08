@@ -49,6 +49,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *
  * 装饰：无。`THEME_DEFINITIONS.stage.motif` 留空，照 runway 先例。
  * 无框就是身份，一件极轻的框都会把黑场读成 luxe / museum 的亲戚。
+ *（2026-10 起 motif 是进度线 `stage-motif`，见文末，仍然无框。）
  *
  * **第八波批 4（2026-08-23，`.issues/design-boards/wave8/b4/Stage.dc.html`）**：
  * 封面继续锁 `poster-center`，几何不动。章节锁 pinOnly `one-word-chapter`
@@ -58,6 +59,21 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * defaultBackgrounds 仍是冷玄黑 `#0F0F12`。角色色 hex 与 fonts 一处不改。
  *
  * **菜单分派（S1-B）**：黑场发布会一页一件事，points 用透气的 quiet-frame，data 用单张主角图的 stacked-poster，evidence 的举证腔与台上节奏相斥，不上。
+ *
+ * **2026-10 样例重画（设计源 `design/rounds/2026-10-08-stage/`）**：按游戏
+ * 开发者大会主题演讲的定稿整套重画，配色与字体一处不改。内容页（quote 以外
+ * 的九种）都交给 `keynote-sheet`，正文交给 keynote 设定的构图：一句话、主张
+ * 大数、单线走势、巨数对峙、斜率图、双榜、比例三条、点阵、半版三数、两柱一
+ * 句、拱门、五件事。封面 `keynote-cover`、章节 `keynote-chapter`、结尾
+ * `keynote-ending`。quote 留在已定的 `pull-quote`。
+ *
+ * motif 从无到有：`stage-motif` 是演讲遥控器的进度线，每页底部 y676 一根
+ * 轨道，已讲比例那段哑银，右端「5 / 18」。2026-08「无框就是身份」那条裁决
+ * 不要的是框和装饰，进度线只有一根线和页码，是讲台结构，标为 `structure`。
+ *
+ * 强调：设计稿把 `**…**` 的词（「人数」「留得住」）和每页唯一的重点都给了
+ * 哑银。keynote 设定的构图照稿用 accent 画强调词。`emphasisInk` 暖砂仍管共享
+ * 版式里的 `**…**`（哑银在正文小字里压纸白只有 1.60:1），本轮不动。
  */
 export const STAGE_TOKENS: StyleTokens = {
   id: "stage",
@@ -106,21 +122,22 @@ export const STAGE_THEME = {
     lineage: "The keynote tradition of one giant line per slide.",
   },
   style: STAGE_TOKENS,
+  motif: { id: "stage-motif" },
   menu: {
-    cover: { face: "poster-center" },
-    chapter: { face: "one-word-chapter" },
+    cover: { face: "keynote-cover" },
+    chapter: { face: "keynote-chapter" },
     content: {
-      points: { face: "quiet-frame" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "stacked-poster" },
-      photo: { face: "image-top" },
-      statement: { face: "statement" },
+      points: { face: "keynote-sheet" },
+      list: { face: "keynote-sheet" },
+      comparison: { face: "keynote-sheet" },
+      process: { face: "keynote-sheet" },
+      data: { face: "keynote-sheet" },
+      photo: { face: "keynote-sheet" },
+      statement: { face: "keynote-sheet" },
       quote: { face: "pull-quote" },
-      fact: { face: "stat-hero" },
-      hierarchy: { face: "asymmetric-triptych" },
+      fact: { face: "keynote-sheet" },
+      hierarchy: { face: "keynote-sheet" },
     },
-    ending: { face: "release-close-ending" },
+    ending: { face: "keynote-ending" },
   },
 } satisfies BuiltinThemeDeclaration;

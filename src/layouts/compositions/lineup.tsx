@@ -135,15 +135,17 @@ export interface LineupPaint {
   /** A marked run set in the heading serif, at this size, as the board sets 「25%」 inside a line of sans. */
   litSerif?: boolean
   litSize?: number
+  /** A marked run set bold inside a line that is not, as stage's board sets 「787 倍」. */
+  litBold?: boolean
   attrs?: Record<string, string>
   lastAttrs?: Record<string, string>
 }
 
-function paintRuns(segments: readonly EmphasisSegment[], opts: { lit: string; litFamily?: string; litSize?: number }): React.ReactNode {
+function paintRuns(segments: readonly EmphasisSegment[], opts: { lit: string; litFamily?: string; litSize?: number; litBold?: boolean }): React.ReactNode {
   if (segments.every((s) => !s.emphasized)) return segments.map((s) => s.text).join("")
   return segments.map((s, i) =>
     s.emphasized ? (
-      <tspan key={i} fill={opts.lit} fontFamily={opts.litFamily} fontSize={opts.litSize} data-lineup-lit="">
+      <tspan key={i} fill={opts.lit} fontFamily={opts.litFamily} fontSize={opts.litSize} fontWeight={opts.litBold ? "700" : undefined} data-lineup-lit="">
         {s.text}
       </tspan>
     ) : (
@@ -174,7 +176,7 @@ export function paintLineup(layout: EmphasisHeadingLayout, opts: LineupPaint): R
       dominantBaseline="alphabetic"
       xmlSpace={keepsSpaces(line) ? "preserve" : undefined}
     >
-      {paintRuns(layout.segments[i] ?? [{ text: line, emphasized: false }], { lit, litFamily: opts.litSerif ? opts.ctx.fonts.heading : undefined, litSize: opts.litSize })}
+      {paintRuns(layout.segments[i] ?? [{ text: line, emphasized: false }], { lit, litFamily: opts.litSerif ? opts.ctx.fonts.heading : undefined, litSize: opts.litSize, litBold: opts.litBold })}
     </text>
   ))
 }

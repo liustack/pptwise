@@ -63,6 +63,7 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
   // cover, the chapter pages and the bow set their own.
   "runway-motif": { content: ["masthead"] },
   "museum-motif": { content: ["hall"] },
+  "stage-motif": { content: ["clicker"] },
   // ledger's status bar runs across the top of every page, like a market
   // terminal's title row (2026-10 sample redesign).
   "poster-motif": {
@@ -118,6 +119,7 @@ function themeForMotif(id: MotifId): string {
     "luxe-motif": "luxe",
     "runway-motif": "runway",
     "museum-motif": "museum",
+    "stage-motif": "stage",
     "vermilion-motif": "vermilion",
     "memo-motif": "memo",
     "clinic-motif": "clinic",

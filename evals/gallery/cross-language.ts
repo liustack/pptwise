@@ -14,23 +14,16 @@ import { ADJACENCY_PAGES } from "./matrix"
  * | crayon | high | YaHei / PingFang grotesk sans | owns architecture adjacency. Header of the old test names crayon as a tight face |
  * | ink | high | KaiTi / 楷体 | a different CJK family from YaHei and the serifs |
  *
- * stage stays out of the sample (it is the ratchet hit). The full-theme
- * evals pass still covers it.
+ * stage stays out of the sample: it was the ratchet's one hit until its
+ * 2026-10 redesign. The full-theme evals pass still covers it.
  */
 export const CROSS_LANGUAGE_SAMPLE_THEME_IDS = ["swiss", "thesis", "crayon", "ink"] as const
 
 /** Theme/component/language triples known to overflow, with what they lose. */
 export const KNOWN_OVERFLOWS: readonly string[] = [
-  // `stage` routes the `comparison` kind to a two-column face,
-  // which hands its body 528px. A from_to table is three columns and a
-  // gutter: a row name, a number with its unit, and a delta beside the second
-  // number, all on one line. Under about 600px they stop holding their own
-  // content, so the component declines the box rather than printing three
-  // columns of stubs (`from-to.tsx`'s own `MIN_W`). The theme reads Chinese
-  // on its own gallery pages, where the same face is wide enough; this is
-  // the English pairing an author can still reach, and closing it needs the
-  // step-aside AGENTS.md names.
-  "stage · from_to · en: 1×component",
+  // stage's English from_to on a two-column face was the last entry. Since
+  // its 2026-10 redesign every stage content kind but quote is set by the
+  // keynote sheet, whose band is the whole measure, and the table fits.
 ]
 
 /** Entries in `KNOWN_OVERFLOWS` whose theme id (the part before ` · `) is in `themeIds`. */
