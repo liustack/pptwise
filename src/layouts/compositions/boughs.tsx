@@ -46,7 +46,8 @@ const QUESTION = { x: 64, w: 200, centre: 347, size: 24, lineHeight: 34, maxLine
 const TRUNK = { from: 280, x: 330, reach: 370 } as const
 const BRANCH = { x: 380, centres: [250, 450], size: 22, lineHeight: 30, sub: { size: 13, lineHeight: 22 }, out: 490, fork: 540, forkStep: 50, spread: 50 } as const
 const OUTCOME = { end: 700, label: { dx: 14, size: 13 }, x: 716, w: 480, size: 22, lineHeight: 30, detail: { size: 13, lineHeight: 22 } } as const
-const RING = { pad: 24, dx: 6, ry: 24 } as const
+// The ring hugs the outcome's title and its detail steps down below the ring.
+const RING = { pad: 24, dx: 6, ry: 18, detail: 24 } as const
 const CLOSE = { top: 580, size: 15, lineHeight: 26, maxLines: 2 } as const
 
 export const boughsComposition: Composition = ({ components, ctx, setting, rect, claim, source }) => {
@@ -107,7 +108,7 @@ export const boughsComposition: Composition = ({ components, ctx, setting, rect,
                     {chalkLine(fork, oy, OUTCOME.end, oy, stroke, 2)}
                     {paintChalkLine(o.edge, { ctx, x: fork + OUTCOME.label.dx, baseline: oy - 8, size: OUTCOME.label.size, fill: chalkText(inks.muted, ground, OUTCOME.label.size) })}
                     {paintChalkLine(o.title, { ctx, x: OUTCOME.x, top: oy - 16, lineHeight: OUTCOME.lineHeight, size: OUTCOME.size, serif: true, fill: chalkText(hot ? inks.yellow : inks.chalk, ground, OUTCOME.size) })}
-                    {o.detail?.trim() ? paintChalkLine(o.detail, { ctx, x: OUTCOME.x, top: oy + 16, lineHeight: OUTCOME.detail.lineHeight, size: OUTCOME.detail.size, fill: chalkText(inks.muted, ground, OUTCOME.detail.size) }) : null}
+                    {o.detail?.trim() ? paintChalkLine(o.detail, { ctx, x: OUTCOME.x, top: oy + (hot ? RING.detail : 16), lineHeight: OUTCOME.detail.lineHeight, size: OUTCOME.detail.size, fill: chalkText(inks.muted, ground, OUTCOME.detail.size) }) : null}
                     {hot ? <ChalkRing cx={OUTCOME.x + titleW / 2 + RING.dx} cy={oy} rx={titleW / 2 + RING.pad} ry={RING.ry} ink={chalkMark(inks.yellow, ground)} /> : null}
                   </g>
                 )
