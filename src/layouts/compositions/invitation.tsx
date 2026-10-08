@@ -87,7 +87,7 @@ const BRONZE_MIX = 0.62
 
 export function invitationInks(ctx: ComponentCtx): InvitationInks {
   const { colors } = ctx
-  const ground = colors.bg
+  const ground = ctx.defaultBg ?? colors.bg
   const palette = colors.chartPalette
   return {
     ground,

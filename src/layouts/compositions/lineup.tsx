@@ -63,7 +63,7 @@ const LIGHT_QUIET_MIX = 0.84
 
 export function lineupInks(ctx: ComponentCtx): LineupInks {
   const { colors } = ctx
-  const ground = colors.bg
+  const ground = ctx.defaultBg ?? colors.bg
   const stage = colors.primary
   // The paper on the stage, as the board sets the bow's words, where it reads there.
   const light = contrastRatio(ground, stage) >= 4.5 ? ground : readableOn(stage)

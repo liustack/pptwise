@@ -83,7 +83,7 @@ const PANEL_MIX = 0.62
 
 export function chalkboardInks(ctx: ComponentCtx): ChalkboardInks {
   const { colors } = ctx
-  const ground = colors.bg
+  const ground = ctx.defaultBg ?? colors.bg
   return {
     ground,
     panel: blendOver(colors.surface, ground, PANEL_MIX),
