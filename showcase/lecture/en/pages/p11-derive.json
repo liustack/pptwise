@@ -1,0 +1,24 @@
+{
+  "stamp": {
+    "text": "Example · figures made up"
+  },
+  "components": [
+    {
+      "type": "bullets",
+      "style": "numbered",
+      "items": [
+        "Income = 180,000 + 10,000 × 80% = 188,000",
+        "Deductions = 60,000 + 32,400 + 36,000 = 128,400",
+        "Taxable = 188,000 − 128,400 = 59,600",
+        "Tax due = 59,600 × 10% − 2,520 = 3,440",
+        "Refund = 4,240 paid − 3,440 = **RMB 800**"
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Social insurance 2,700 × 12 = 32,400. Special additional (1,500 + 1,500) × 12 = 36,000. Paid 4,240 = salary withholding 2,640 + design fee withholding 1,600"
+    }
+  ],
+  "footnote": "Example, figures are made up. Basis: STA Order No. 57, Art. 3, STA Announcement No. 61 of 2018, Arts. 6 and 8",
+  "notes": "Line by line. Income: salary counts in full at 180,000, the design fee at 80%, so 8,000, total 188,000. Deductions: 60,000 basic, social insurance 2,700 times 12 is 32,400, and the two special additional deductions, 1,500 plus 1,500 for 12 months, are 36,000. Total 128,400. Taxable income: 188,000 minus 128,400 is 59,600. That lands in bracket 2: times 10% minus 2,520 gives tax due of 3,440. If you don't trust the quick deduction, do it in pieces: 36,000 at 3% is 1,080, the remaining 23,600 at 10% is 2,360, total 3,440. Already paid: the employer withheld 2,640 over the year and the design job had 1,600 withheld, 4,240 in all. 4,240 minus 3,440: they overpaid by 800 and can claim RMB 800 back. Side note: their take-home pay drops from September, because cumulative taxable income passes 36,000 and moves into the 10% bracket. The employer has not made a mistake."
+}

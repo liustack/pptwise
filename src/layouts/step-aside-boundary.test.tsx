@@ -59,6 +59,7 @@ import { InvitationSheetContent } from "./content-invitation-sheet"
 import { LineupSheetContent } from "./content-lineup-sheet"
 import { PlacardSheetContent } from "./content-placard-sheet"
 import { KeynoteSheetContent } from "./content-keynote-sheet"
+import { ChalkboardSheetContent } from "./content-chalkboard-sheet"
 import { MarqueeStatementContent } from "./content-marquee-statement"
 import { PitchPhotoContent } from "./content-pitch-photo"
 import { GridStatementContent } from "./content-grid-statement"
@@ -250,6 +251,9 @@ const CASES: FaceCase[] = [
   // stage's keynote sheet: the same, under the claim from y160 down to y610,
   // over the source line.
   { face: "keynote-sheet", Face: KeynoteSheetContent, themeId: "stage", regions: ["face", "declined"] },
+  // lecture's chalkboard sheet: the same, under the title from y172 down to y636,
+  // over the source line.
+  { face: "chalkboard-sheet", Face: ChalkboardSheetContent, themeId: "lecture", regions: ["face", "declined"] },
   // A chart is not the one-line plan's row of touchpoints, so the page goes
   // straight to the sheet, and is declined once that cannot hold it either.
   { face: "marquee-statement", Face: MarqueeStatementContent, themeId: "rally", regions: ["aside", "declined"] },

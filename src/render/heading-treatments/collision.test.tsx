@@ -15,6 +15,7 @@ import { assignedThemeIds } from "./assignments"
 import { BUILTIN_THEME_FILES, type CanonicalThemeId } from "../../themes"
 import { compileBuiltinTheme } from "../../themes/definitions"
 import { tryContentHeadingTreatment } from "./render"
+import { registerTestTheme } from "../../themes/test-fixtures"
 
 installNodePlatform()
 
@@ -293,9 +294,13 @@ describe("gallery theme-table rail-numbered pages", () => {
     const assets = await corpusAssets(LEXICONS.zh)
     const dirty: string[] = []
     let scanned = 0
-    for (const themeId of listThemes().map((t) => t.id)) {
+    // No built-in menu offers rail-numbered since lecture's 2026-10 redesign, so
+    // lecture's own deck is drawn once more with its process pages on it.
+    const railTheme = registerTestTheme("collision-rail-numbered", "lecture", { content: { process: "rail-numbered" } })
+    for (const themeId of [...listThemes().map((t) => t.id), railTheme]) {
       // The gallery feeds each theme its native lexicon; test the same decks.
-      const ir = themeDeck(themeId, nativeLexiconFor(themeId), assets)
+      const deck = themeDeck(themeId === railTheme ? "lecture" : themeId, nativeLexiconFor(themeId === railTheme ? "lecture" : themeId), assets)
+      const ir = themeId === railTheme ? { ...deck, theme: { ...deck.theme, id: railTheme } } : deck
       for (let i = 0; i < ir.slides.length; i++) {
         if (ir.slides[i]!.type !== "content") continue
         const svg = renderSlideSvg(ir, i)

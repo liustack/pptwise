@@ -1,0 +1,49 @@
+{
+  "components": [
+    {
+      "type": "decision_tree",
+      "question": "What did the sums show?",
+      "branches": [
+        {
+          "edge": "Overpaid",
+          "title": "Refund due",
+          "outcomes": [
+            {
+              "edge": "Want it back",
+              "title": "File",
+              "detail": "No claim, no refund",
+              "recommended": true
+            },
+            {
+              "edge": "Skip it",
+              "title": "Optional",
+              "detail": "You give up the refund"
+            }
+          ]
+        },
+        {
+          "edge": "Underpaid",
+          "title": "Top-up due",
+          "outcomes": [
+            {
+              "edge": "Small",
+              "title": "Optional",
+              "detail": "Income up to RMB 120,000, or a top-up up to RMB 400"
+            },
+            {
+              "edge": "Larger",
+              "title": "File",
+              "detail": "Declare and pay in full by June 30"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Note: **the RMB 120,000 is income before tax**. If a payer failed to withhold as required, you still have to file"
+    }
+  ],
+  "footnote": "Source: STA Order No. 57, Arts. 6 and 7, MOF and STA Announcement No. 32 of 2023 (income received 2024 to 2027)",
+  "notes": "Who has to file depends on the result. If you overpaid, you only get the money back by claiming it. The tax office does not refund on its own, and you may choose not to claim. If you underpaid, you can skip filing when your comprehensive income for the year is no more than RMB 120,000, or the top-up is no more than RMB 400. That comes from Announcement No. 32 of 2023 by the Ministry of Finance and the State Taxation Administration and covers income received up to the end of 2027, so tax years 2025 and 2026 both qualify. It does not apply if the shortfall exists because a payer failed to withhold as required. Otherwise you must declare and pay in full by June 30. Two points: RMB 120,000 means gross income, your pre-tax pay, not what is left after deductions. And the line about income under 120,000 only waives top-ups. If you want a refund, you still file."
+}

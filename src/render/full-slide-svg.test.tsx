@@ -75,7 +75,7 @@ describe("FullSlideSvg", () => {
   })
 
   it("emits one bg, mid, and fg group in fixed paint order", () => {
-    const doc: PptxIR = { ...irWithFace(contentSlide, "lecture", {}), branding: "full" }
+    const doc: PptxIR = { ...irWithFace(contentSlide, "vermilion", {}), branding: "full" }
     const { container } = render(<BoundSlideSvg ir={doc} slide={contentSlide} index={0} />)
     const groups = Array.from(container.querySelectorAll("svg > g[data-depth]"))
 
@@ -381,7 +381,7 @@ describe("asset background auto scrim (image-layouts P1)", () => {
     // cover 压图页由 ImageCoverPage 接管：暗遮罩（低透，图清晰可辨）+ 白字，
     // 模型的 overlay 被忽略，P1 的雾面 scrim 不再用于 cover/chapter。
     const { container } = render(
-      <BoundSlideSvg ir={withAsset("lecture")} slide={bgSlide} index={0} />,
+      <BoundSlideSvg ir={withAsset("vermilion")} slide={bgSlide} index={0} />,
     )
     const rects = Array.from(container.querySelectorAll("rect"))
     expect(rects.some((r) => r.getAttribute("fill") === "#000000")).toBe(false)
@@ -415,7 +415,7 @@ describe("asset background auto scrim (image-layouts P1)", () => {
       ...bgSlide,
       components: [{ type: "bullets", items: ["Bound face content"] }],
     }
-    const doc: PptxIR = { ...withAsset("lecture"), slides: [slide] }
+    const doc: PptxIR = { ...withAsset("vermilion"), slides: [slide] }
 
     expect(slideToRender(doc, slide, 0, getThemeDefinition(doc.theme.id)).dropped).toBe(1)
   })
@@ -1098,13 +1098,13 @@ describe("deck branding posture vs theme motif", () => {
   })
 
   it("explicit branding full still draws the content-page footer rule", () => {
-    const full: PptxIR = { ...ir([pinnedContent]), theme: { id: "lecture" }, branding: "full" }
+    const full: PptxIR = { ...ir([pinnedContent]), theme: { id: "vermilion" }, branding: "full" }
     const markup = renderSvgMarkup(<BoundSlideSvg ir={full} slide={pinnedContent} index={0} />)
     expect(markup).toContain('y1="664"')
     expect(markup).toContain("ACME")
   })
 
-  it("uses the effective brand silence when sizing the lecture frame", () => {
+  it("keeps lecture's board whole under branding full, the footer row on its ledge rather than a shared rule", () => {
     const slide: Slide = {
       type: "content",
       kind: "statement",
@@ -1117,9 +1117,10 @@ describe("deck branding posture vs theme motif", () => {
       branding: "full",
     }
     const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
-    const frame = container.querySelector('[data-decor-piece="frame"] rect')
+    const frame = container.querySelector("[data-chalk-frame]")
 
-    expect(frame?.getAttribute("height")).toBe(String(694 - 26))
+    expect(frame?.getAttribute("height")).toBe("700")
+    expect(container.querySelector('[data-decor-piece="board"] [data-chalk-course]')?.getAttribute("data-chalk-course")).toContain("ACME")
     expect(container.querySelector('line[y1="664"]')).toBeNull()
   })
 })

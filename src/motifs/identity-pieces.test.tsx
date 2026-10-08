@@ -64,6 +64,9 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
   "runway-motif": { content: ["masthead"] },
   "museum-motif": { content: ["hall"] },
   "stage-motif": { content: ["clicker"] },
+  // lecture's blackboard frames every page in wood with its chalk ledge (2026-10
+  // sample redesign): the board itself, photograph pages too.
+  "lecture-motif": { cover: ["board"], chapter: ["board"], content: ["board"], ending: ["board"] },
   // ledger's status bar runs across the top of every page, like a market
   // terminal's title row (2026-10 sample redesign).
   "poster-motif": {

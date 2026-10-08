@@ -113,6 +113,8 @@ export type CoverLayoutId =
   | "placard-cover"
   // stage sample redesign (2026-10-08): the hall from the back row.
   | "keynote-cover"
+  // lecture sample redesign (2026-10-08): the board before an evening class begins.
+  | "chalkboard-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -173,6 +175,8 @@ export type ChapterLayoutId =
   | "placard-chapter"
   // stage sample redesign (2026-10-08): an act of the talk opens over its photograph.
   | "keynote-chapter"
+  // lecture sample redesign (2026-10-08): the board wiped for the next part of the lesson.
+  | "chalkboard-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -237,6 +241,8 @@ export type EndingLayoutId =
   | "placard-ending"
   // stage sample redesign (2026-10-08): the last sentence alone on the black.
   | "keynote-ending"
+  // lecture sample redesign (2026-10-08): homework under the lit school at night.
+  | "chalkboard-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -325,6 +331,8 @@ export type ContentLayoutId =
   | "placard-sheet"
   // stage sample redesign: the board's ordinary content page. Theme-locked.
   | "keynote-sheet"
+  // lecture sample redesign: the board's ordinary content page. Theme-locked.
+  | "chalkboard-sheet"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

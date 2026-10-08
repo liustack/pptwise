@@ -42,11 +42,12 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *   - `success` `#7AAB7E`：粉笔鼠尾草（4.93:1），不是 arena 电光绿。
  *
  * 字体：heading SimSun 族（journal / heritage / luxe / museum 先例），
- * Windows 安全面打头保导出无 tofu。body 仍是雅黑。圆角 0 + gapScale 0.9
+ * Windows 安全面打头保导出无 tofu（2026-10 起 Times New Roman 打头配宋体，
+ * 见文末）。body 仍是雅黑。圆角 0 + gapScale 0.9
  * （tight 档，arena 同值）。
  *
- * 装饰见 `../../motifs/motif-lecture-motif.tsx`（26px 内缩 1px 粉笔槽细框。
- * light 档，单锚。板上标题下的黄粉笔弧不进 motif，见该文件头）。
+ * 装饰见 `../../motifs/motif-lecture-motif.tsx`（2026-08 是 26px 内缩 1px
+ * 粉笔槽细框，2026-10 起是整块黑板，见文末）。
  *
  * 第八波批 4：封面 `board-head` 锁板不动。章节 pinOnly `chalk-rule-chapter`
  * （讲次 kicker + 黄粉笔弧是版式标题附着件）。ending pinOnly
@@ -61,6 +62,25 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 细框几何不动，不升级成双线，不加印章。
  *
  * **菜单分派（S1-B）**：黑板课用的是有框脸池，data 落在满幅收边的 tone-adaptive-content，photo 用能挂角注的 image-annotate，课堂不引名人语录，quote 不上。
+ *
+ * **2026-10 样例重画（设计源 `design/rounds/2026-10-08-lecture/`）**：按青年
+ * 夜校「一节课学会个税年度汇算」的定稿整套重画，配色一处不改。上面几轮「封
+ * 面锁 board-head」「motif 粉笔槽框几何不动」「黄粉笔弧不进 motif」的裁决
+ * 让位给这一稿：
+ *   - motif 换成整块黑板：10px 木框、底边粉笔槽（一截白粉笔、一截黄粉笔、
+ *     一块板擦）、槽上写课名、右上「3 / 18」课时，四种页型都画，图片页也
+ *     在。木头色由黄粉笔推出（`chalkboardLedge`），仍是零 hex。缩略图里一
+ *     眼是一块黑板。
+ *   - 内容页（十种 kind）都交给 `chalkboard-sheet`，正文交给 chalkboard 设
+ *     定的构图：三件事粉笔框、两条路汇入、公式花括号、决策树、乘数排、减号
+ *     排、扣除卡、税率阶梯、例题条件、等号板书、瀑布、练习题、答案栏、打叉
+ *     清单、划掉的大数、比例时间线。封面 `chalkboard-cover`、章节
+ *     `chalkboard-chapter`、结尾 `chalkboard-ending`。quote 仍不上。
+ *   - 黄粉笔弧进了版式：每页一处黄色重点由构图自己划（两遍错开的手绘线、粉
+ *     笔圈、花括号），跟着字走，不进 motif。
+ *   - 字体：heading 改成 Times New Roman 打头配宋体（thesis、journal 先
+ *     例）。宋体没有西文字形，英文 deck 的标题和弯引号原来会走全角，现在
+ *     西文和数字走 Times New Roman，中文仍由 SimSun 承担，导出不会豆腐块。
  */
 export const LECTURE_TOKENS: StyleTokens = {
   id: "lecture",
@@ -82,7 +102,10 @@ export const LECTURE_TOKENS: StyleTokens = {
   fonts: {
     // 板书衬线：SimSun/宋体 是 SAFE_FONTS 里的 CJK 衬线，放首位保导出。
     // Songti SC/STSong 留作 macOS 预览回退（journal/heritage/luxe/museum 同款）。
-    heading: ["SimSun", "宋体", "Songti SC", "STSong", "serif"],
+    // Times New Roman for the Latin and its figures, SimSun for the Chinese
+    // (thesis and journal's pairing): SimSun has no Latin of its own, and an
+    // English title's curly quotes came out full width in it.
+    heading: ["Times New Roman", "SimSun", "宋体", "Songti SC", "STSong", "serif"],
     body: ["Microsoft YaHei", "Helvetica Neue", "Arial", "system-ui"],
   },
   shape: { radius: 0, gapScale: 0.9 }, // 黑板直角 + tight 留白（arena 同档）
@@ -111,21 +134,21 @@ export const LECTURE_THEME = {
   // this theme is named after.
   emphasis: "underline",
   menu: {
-    cover: { face: "board-head" },
-    chapter: { face: "chalk-rule-chapter" },
+    cover: { face: "chalkboard-cover" },
+    chapter: { face: "chalkboard-chapter" },
     content: {
-      points: { face: "narrow-column" },
-      list: { face: "bento-panel" },
-      comparison: { face: "two-column" },
-      process: { face: "rail-numbered" },
-      data: { face: "tone-adaptive-content" },
-      photo: { face: "image-annotate" },
-      statement: { face: "statement" },
-      fact: { face: "stat-hero" },
-      evidence: { face: "one-evidence" },
-      hierarchy: { face: "asymmetric-triptych" },
+      points: { face: "chalkboard-sheet" },
+      list: { face: "chalkboard-sheet" },
+      comparison: { face: "chalkboard-sheet" },
+      process: { face: "chalkboard-sheet" },
+      data: { face: "chalkboard-sheet" },
+      photo: { face: "chalkboard-sheet" },
+      statement: { face: "chalkboard-sheet" },
+      fact: { face: "chalkboard-sheet" },
+      evidence: { face: "chalkboard-sheet" },
+      hierarchy: { face: "chalkboard-sheet" },
     },
-    ending: { face: "next-lecture-ending" },
+    ending: { face: "chalkboard-ending" },
   },
   motif: { id: "lecture-motif" },
 } satisfies BuiltinThemeDeclaration;

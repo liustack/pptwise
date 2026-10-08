@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { registerTestTheme } from "../themes/test-fixtures"
 import { describe, expect, it } from "vitest"
 import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { BoundSlideSvg } from "../render/__fixtures__/bound-slide"
@@ -225,7 +226,8 @@ describe("chapter-chalk-rule-chapter — shared pool", () => {
       layout: "chalk-rule-chapter",
       components: [],
     } as Slide
-    const deck = ir("lecture", [slide])
+    // lecture's own chapter is the chalkboard's since 2026-10: a copy of lecture still offers this one.
+    const deck = ir(registerTestTheme("chalk-rule-lecture", "lecture", { chapter: "chalk-rule-chapter" }, { keepEmphasis: true }), [slide])
     const { container } = render(<BoundSlideSvg ir={deck} slide={slide} index={0} />)
     const arc = container.querySelector("[data-emphasis-underline]")
     expect(arc).not.toBeNull()

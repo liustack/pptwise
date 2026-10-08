@@ -1,0 +1,35 @@
+{
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "smartphone",
+          "title": "Platform gigs are no longer a flat 20% per job",
+          "text": "From October 1, 2025, internet platforms withhold on freelance pay cumulatively, as an employer does",
+          "tone": "danger"
+        },
+        {
+          "icon": "baby",
+          "title": "The childcare subsidy is not the infant care deduction",
+          "text": "The subsidy is tax-free from 2025. The deduction is RMB 2,000 per child a month. You can have both",
+          "tone": "danger"
+        },
+        {
+          "icon": "ban",
+          "title": "“Under RMB 120,000, no need to file” is half true",
+          "text": "It only waives a small top-up. To get a refund you still have to file",
+          "tone": "danger"
+        },
+        {
+          "icon": "alert-triangle",
+          "title": "Paying a top-up after June 30",
+          "text": "A late fee of 0.05% a day from July 1: RMB 3,600 paid 30 days late costs RMB 54 more",
+          "tone": "danger"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: STA Announcement No. 16 of 2025, MOF and STA Announcements No. 6 of 2025 and No. 32 of 2023, STA Order No. 57, Tax Collection Law, Art. 32, and its Implementing Rules, Art. 75",
+  "notes": "Four traps. One, platform gigs. People used to say side income is always withheld at 20% per job. From October 1, 2025, freelance pay from internet platform companies is withheld cumulatively by the platform: 5,000 off for each consecutive month, at the seven rates from 3% to 45%. So the flat 20% story is out of date. Two, the childcare subsidy. It has been exempt from income tax since January 1, 2025. It is tax-free income, a different thing from the infant care special additional deduction, and you can have both. Three, under RMB 120,000 you don't need to file: that only waives top-ups. To get a refund you still file. Four, the deadline. If you owe, you must declare and pay by June 30. From July 1 a late fee of 0.05% a day applies. The 3,600 from problem B paid 30 days late adds 3,600 times 0.05% times 30, 54 yuan. That is only an illustration. And if you made a mistake on a form, correcting it yourself, or promptly once reminded, can qualify for no penalty on a first offence. That only waives the fine. The tax is still owed."
+}

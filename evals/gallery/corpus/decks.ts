@@ -33,6 +33,7 @@ import { INVITATION_BODIES } from "./invitation-bodies"
 import { LINEUP_BODIES } from "./lineup-bodies"
 import { PLACARD_BODIES } from "./placard-bodies"
 import { KEYNOTE_BODIES } from "./keynote-bodies"
+import { CHALKBOARD_BODIES } from "./chalkboard-bodies"
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/images")
 
@@ -596,6 +597,8 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   if (def.id === "placard-sheet") return COMPOSITION_BODIES.floorplan(lex).components
   // stage's keynote sheet: the board's five bets said one line at a time.
   if (def.id === "keynote-sheet") return COMPOSITION_BODIES.slate(lex).components
+  // lecture's chalkboard sheet: the board's answers worked in columns.
+  if (def.id === "chalkboard-sheet") return COMPOSITION_BODIES.solutions(lex).components
   if (def.id === "marquee-statement") {
     return [{ type: "icon_cards", items: [0, 1, 2].map((i) => ({ icon: (["cup-soda", "package", "ticket"] as const)[i]!, title: lex.labels[i]!, text: lex.bullets[i]! })) }]
   }
@@ -1222,6 +1225,11 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
   // stacked figures, two bars beside their sentence, gates as doors and five
   // bets.
   ...KEYNOTE_BODIES,
+  // lecture's chalkboard sheet: what tonight covers, two paths meeting, a
+  // formula with braces, a decision tree, factors, a row of minus signs,
+  // cards, a staircase of rates, an example's givens, a derivation, a bridge,
+  // exercises, answers, pitfalls, a struck figure and a timeline to scale.
+  ...CHALKBOARD_BODIES,
   rows: (lex) => ({
     heading: lex.headings[1]!,
     components: [

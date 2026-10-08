@@ -1,0 +1,49 @@
+{
+  "components": [
+    {
+      "type": "comparison",
+      "columns": [
+        "Rent left off",
+        "Two jobs",
+        "A small fee"
+      ],
+      "rows": [
+        {
+          "label": "Paid",
+          "cells": [
+            "4,440 + 1,600 = 6,040",
+            "2,640 + 0 = 2,640",
+            "(3,000 − 800) × 20% = 440"
+          ]
+        },
+        {
+          "label": "Year",
+          "cells": [
+            "Still 3,440 due",
+            "87,600 × 10% − 2,520 = 6,240",
+            "Counts as 3,000 × 80% = 2,400"
+          ]
+        },
+        {
+          "label": "Result",
+          "cells": [
+            "RMB 2,600 back",
+            "RMB 3,600 owed",
+            "Two rule sets"
+          ],
+          "emphasis": true
+        },
+        {
+          "label": "Why",
+          "cells": [
+            "The extra 1,800 = 18,000 × 10%",
+            "RMB 60,000 was taken off twice",
+            "The 800 allowance is not used at year end"
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Example, figures are made up. Basis: STA Announcement No. 61 of 2018, Arts. 6 and 8, Individual Income Tax Law, Art. 6, Implementing Regulations, Art. 25",
+  "notes": "Answers. A, rent left off: only the parents deduction was used in withholding, so salary withholding rises to 4,440, plus 1,600 on the design fee, 6,040 paid. Add the rent at year end and tax due is still 3,440, so 2,600 comes back. The extra 1,800 compared with the main example is exactly 18,000 of rent deduction times 10%. Again, a deduction is not a refund. B, two jobs: paid is still the main employer's 2,640 plus zero. At year end income is 180,000 plus 36,000, 216,000. Take off 60,000, 32,400 and 36,000 and taxable income is 87,600. Tax due 87,600 times 10% minus 2,520, 6,240. Owed: 3,600. Why? Both employers took 5,000 a month off, so the 60,000 was used twice, and the law allows it once. Their income of 216,000 is over 120,000 and the top-up is over 400, so no exemption: declare and pay by June 30. C, small fee: withholding is 3,000 minus 800, times 20%, 440. At year end it counts as 3,000 times 80%, 2,400, taxed at your own rate. The 800 allowance belongs to withholding only."
+}

@@ -71,7 +71,7 @@ describe("Branding footer suppression (W1: theme brand.suppressFooterOnCardConte
     expect(container.textContent).not.toContain("ACME")
   })
 
-  it.each(["swiss", "lecture", "terminal"] as const)(
+  it.each(["swiss", "vermilion", "terminal"] as const)(
     "%s: the same page keeps its footer (the theme does not set the flag)",
     (themeId) => {
       const doc = ir(themeId, [cardBgContentSlide], "full")
@@ -92,7 +92,7 @@ describe("Branding footer suppression (W1: theme brand.suppressFooterOnCardConte
 
 describe('the older footer of branding: "full"', () => {
   it("reads as the organization left and the confidentiality mark right, on the shared row", () => {
-    const doc = ir("lecture", [plainContentSlide], "full")
+    const doc = ir("vermilion", [plainContentSlide], "full")
     const { container } = drawBranding(doc, plainContentSlide)
     const texts = Array.from(container.querySelectorAll("text"))
     const left = texts.find((el) => el.getAttribute("x") === "96")

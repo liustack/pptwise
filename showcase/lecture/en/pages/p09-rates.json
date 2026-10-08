@@ -1,0 +1,79 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "range",
+          "label": "Taxable income (RMB)"
+        },
+        {
+          "key": "rate",
+          "label": "Rate"
+        },
+        {
+          "key": "quick",
+          "label": "Quick deduction (RMB)"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "range": "Up to 36,000",
+            "rate": "3%",
+            "quick": "minus 0"
+          }
+        },
+        {
+          "cells": {
+            "range": "36,000 to 144,000",
+            "rate": "10%",
+            "quick": "minus 2,520"
+          },
+          "emphasis": "highlight"
+        },
+        {
+          "cells": {
+            "range": "144,000 to 300,000",
+            "rate": "20%",
+            "quick": "minus 16,920"
+          }
+        },
+        {
+          "cells": {
+            "range": "300,000 to 420,000",
+            "rate": "25%",
+            "quick": "minus 31,920"
+          }
+        },
+        {
+          "cells": {
+            "range": "420,000 to 660,000",
+            "rate": "30%",
+            "quick": "minus 52,920"
+          }
+        },
+        {
+          "cells": {
+            "range": "660,000 to 960,000",
+            "rate": "35%",
+            "quick": "minus 85,920"
+          }
+        },
+        {
+          "cells": {
+            "range": "Over 960,000",
+            "rate": "45%",
+            "quick": "minus 181,920"
+          }
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "The quick deduction is a shortcut: 36,000 × (10% − 3%) = 2,520. The example falls in the 10% bracket"
+    }
+  ],
+  "footnote": "Source: Individual Income Tax Law, Schedule 1, STA Announcement No. 2 of 2024, Annex 1. Each bracket includes its upper limit, not its lower",
+  "notes": "This is the annual rate table for comprehensive income, seven progressive brackets from 3% to 45%. Read the header first: annual taxable income, what is left after the 60,000 and all deductions. Not salary. Progressive means only the part above 36,000 is taxed at 10%. The first 36,000 is still at 3%. Adding bracket by bracket is tedious, hence the quick deduction. Where does 2,520 come from? Multiplying everything by 10% overcharges the first 36,000 by 7 points, which is 2,520, so you take it back off. Every bracket works the same way. Tonight's example lands in bracket 2, so I have marked it."
+}

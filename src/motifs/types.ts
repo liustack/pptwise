@@ -44,7 +44,7 @@ export type MotifId =
   | "ember-motif" // 2026-07-28 themes-16 wave T3：上升火花（渐隐圆点粒子沿弧线上升，ember 专属，第 16 主题）
   | "vermilion-motif" // 2026-08-06 gov-theme wave：旗帜感绸带弧线 + 金色光芒细线（vermilion 专属，第 17 主题；刻意不用政治符号）
   | "crayon-motif" // 2026-08-21：蜡笔描边（顶缘涂边 + 太阳涂鸦 + 底带彩虹划，crayon 专属，单锚不借用）
-  | "lecture-motif" // 2026-08-21：粉笔槽细框（lecture 专属，单锚。26px 内缩 1px 走 border，黄粉笔弧不进 motif）
+  | "lecture-motif" // 2026-08-21：粉笔槽细框。2026-10-08 起是整块黑板（10px 木框、底边粉笔槽带粉笔和板擦、槽上课名、右上课时页码字段）
   | "swiss-motif" // 2026-08-21 wave7：顶边 12px 红条 + 右缘三格灰刻度（swiss 专属，单锚不借用。板上整高裸格线不进 motif）
   | "memo-motif" // 2026-08-21：顶部红双线 + Latin 等宽眉字 MEMORANDUM（memo 专属，单锚不借用。红只成线与字）
   | "gauge-motif" // 2026-08-25：brief 量规定位角标，左上两条直线构成 ⌐

@@ -612,8 +612,9 @@ describe("lecture tokens", () => {
     expect(t.id).toBe("lecture")
   })
 
-  it("heading font resolves to SimSun (CJK serif, journal/luxe/museum precedent, no tofu on export)", () => {
-    expect(resolveFontFace(LECTURE_TOKENS.fonts.heading, "heading")).toBe("SimSun")
+  it("heading font leads with Times New Roman over SimSun (thesis/journal pairing since the 2026-10 redesign: Latin and curly quotes in Times, Chinese in SimSun)", () => {
+    expect(resolveFontFace(LECTURE_TOKENS.fonts.heading, "heading")).toBe("Times New Roman")
+    expect(LECTURE_TOKENS.fonts.heading.slice(0, 2)).toEqual(["Times New Roman", "SimSun"])
   })
 
   it("body font resolves to Microsoft YaHei (exact width table)", () => {

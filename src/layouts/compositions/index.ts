@@ -229,6 +229,22 @@ import { towerComposition } from "./tower"
 import { tollComposition } from "./toll"
 import { archesComposition } from "./arches"
 import { slateComposition } from "./slate"
+import { agendaComposition } from "./agenda"
+import { confluenceComposition } from "./confluence"
+import { bracesComposition } from "./braces"
+import { boughsComposition } from "./boughs"
+import { factorsComposition } from "./factors"
+import { subtractionsComposition } from "./subtractions"
+import { flashcardsComposition } from "./flashcards"
+import { risersComposition } from "./risers"
+import { givensComposition } from "./givens"
+import { derivationComposition } from "./derivation"
+import { cascadeComposition } from "./cascade"
+import { exercisesComposition } from "./exercises"
+import { solutionsComposition } from "./solutions"
+import { pitfallsComposition } from "./pitfalls"
+import { strikeoutComposition } from "./strikeout"
+import { chronologyComposition } from "./chronology"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -471,6 +487,22 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   toll: tollComposition,
   arches: archesComposition,
   slate: slateComposition,
+  agenda: agendaComposition,
+  confluence: confluenceComposition,
+  braces: bracesComposition,
+  boughs: boughsComposition,
+  factors: factorsComposition,
+  subtractions: subtractionsComposition,
+  flashcards: flashcardsComposition,
+  risers: risersComposition,
+  givens: givensComposition,
+  derivation: derivationComposition,
+  cascade: cascadeComposition,
+  exercises: exercisesComposition,
+  solutions: solutionsComposition,
+  pitfalls: pitfallsComposition,
+  strikeout: strikeoutComposition,
+  chronology: chronologyComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -526,7 +558,7 @@ const PAGE_TAG_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>
  * ordinary timeline draws them all: the spans as a row of named spans under
  * its milestones, a source and a tag under a milestone's words.
  */
-const TIMELINE_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "outlook", "checkpoints", "cadence", "handscroll"])
+const TIMELINE_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "outlook", "checkpoints", "cadence", "handscroll", "chronology"])
 
 function asksForTimelineDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some(
@@ -542,7 +574,7 @@ function asksForTimelineDetail(components: readonly CompositionProps["components
  * line or note leaves them off. The ordinary callout sets the title bold over
  * its text and the tag under it.
  */
-const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods", "funnel", "crest", "branch", "regions", "levers", "cycles", "checkpoints", "cadence", "nations", "lapse", "mirror", "toll"])
+const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods", "funnel", "crest", "branch", "regions", "levers", "cycles", "checkpoints", "cadence", "nations", "lapse", "mirror", "toll", "strikeout"])
 
 function asksForCalloutDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "callout" && (component.title !== undefined || component.tag !== undefined))
@@ -815,14 +847,14 @@ const BALLOT_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([
  * offered to these alone; the face declares the stamp dropped when none
  * takes the page.
  */
-const STAMP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["reply"])
+const STAMP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["reply", "givens", "derivation", "cascade", "exercises"])
 
 /**
  * The compositions that keep the part of a picture an author named
  * (`image.crop`, `image_grid.items[].crop`). A page whose picture carries
  * one is offered to these alone; the ordinary image and grid crop it.
  */
-const IMAGE_CROP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["collage", "thread", "shades", "atelier", "parade", "look", "specimen", "lenses", "cabinet", "tower"])
+const IMAGE_CROP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["collage", "thread", "shades", "atelier", "parade", "look", "specimen", "lenses", "cabinet", "tower", "confluence", "givens", "exercises"])
 
 function asksForImageCrop(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => (component.type === "image" && component.crop !== undefined) || (component.type === "image_grid" && component.items.some((item) => item.crop !== undefined)))

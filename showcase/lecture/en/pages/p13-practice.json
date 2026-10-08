@@ -1,0 +1,32 @@
+{
+  "stamp": {
+    "text": "Example · figures made up"
+  },
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "title": "Rent left off",
+          "text": "Rent was not reported at work, only added at year end. How much comes back?"
+        },
+        {
+          "title": "Two jobs",
+          "text": "No design job, a second job at 3,000 a month, none withheld. How much is owed?"
+        },
+        {
+          "title": "A small fee",
+          "text": "One job paying 3,000. How much is withheld? How much counts at year end?"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "tax-classroom",
+      "fit": "cover",
+      "caption": "Illustration (AI-generated)"
+    }
+  ],
+  "footnote": "Anything not stated is as in the main example",
+  "notes": "Practice time. Anything not stated is the same as the main example. A: they forgot to tell their employer about the rent, so only the parents deduction was used each month, and they add the rent at year end. How much comes back? Hint: the monthly salary withholding was a little higher. B: no design job this year, but a second job paying RMB 3,000 a month. The second employer takes no social insurance and also takes 5,000 off a month, so it withholds nothing all year. How much is owed? Hint: both employers took 5,000 a month off. C: a single freelance job paying 3,000. How much is withheld, and how much counts as income at year end? Hint: how is a payment under 4,000 treated. Five minutes, your phone calculator is fine."
+}
