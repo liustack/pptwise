@@ -107,6 +107,8 @@ export type CoverLayoutId =
   | "crayonbox-cover"
   // luxe sample redesign (2026-10-08): a gilt invitation card beside a photograph.
   | "invitation-cover"
+  // runway sample redesign (2026-10-08): a fashion magazine's cover.
+  | "lineup-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -161,6 +163,8 @@ export type ChapterLayoutId =
   | "crayonbox-chapter"
   // luxe sample redesign (2026-10-08): a part opens under a veil inside a gilt frame.
   | "invitation-chapter"
+  // runway sample redesign (2026-10-08): a part opens on a photograph or on its looks in a row.
+  | "lineup-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -219,6 +223,8 @@ export type EndingLayoutId =
   | "crayonbox-ending"
   // luxe sample redesign (2026-10-08): the invitation signed by the house.
   | "invitation-ending"
+  // runway sample redesign (2026-10-08): the bow on a black stage.
+  | "lineup-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -301,6 +307,8 @@ export type ContentLayoutId =
   | "crayonbox-sheet"
   // luxe sample redesign: the board's ordinary content page. Theme-locked.
   | "invitation-sheet"
+  // runway sample redesign: the board's ordinary content page. Theme-locked.
+  | "lineup-sheet"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

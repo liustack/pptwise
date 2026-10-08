@@ -184,6 +184,17 @@ import { triptychComposition } from "./triptych"
 import { mirrorComposition } from "./mirror"
 import { vitrineComposition } from "./vitrine"
 import { replyComposition } from "./reply"
+import { orderComposition } from "./order"
+import { standfirstComposition } from "./standfirst"
+import { duetComposition } from "./duet"
+import { collageComposition } from "./collage"
+import { threadComposition } from "./thread"
+import { lengthsComposition } from "./lengths"
+import { shadesComposition } from "./shades"
+import { atelierComposition } from "./atelier"
+import { paradeComposition } from "./parade"
+import { lookComposition } from "./look"
+import { boundsComposition } from "./bounds"
 import { revivalComposition } from "./revival"
 import { nationsComposition } from "./nations"
 import { genresComposition } from "./genres"
@@ -403,6 +414,17 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   mirror: mirrorComposition,
   vitrine: vitrineComposition,
   reply: replyComposition,
+  order: orderComposition,
+  standfirst: standfirstComposition,
+  duet: duetComposition,
+  collage: collageComposition,
+  thread: threadComposition,
+  lengths: lengthsComposition,
+  shades: shadesComposition,
+  atelier: atelierComposition,
+  parade: paradeComposition,
+  look: lookComposition,
+  bounds: boundsComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -754,7 +776,7 @@ const STAMP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["
  * (`image.crop`, `image_grid.items[].crop`). A page whose picture carries
  * one is offered to these alone; the ordinary image and grid crop it.
  */
-const IMAGE_CROP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+const IMAGE_CROP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["collage", "thread", "shades", "atelier", "parade", "look"])
 
 function asksForImageCrop(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => (component.type === "image" && component.crop !== undefined) || (component.type === "image_grid" && component.items.some((item) => item.crop !== undefined)))

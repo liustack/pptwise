@@ -40,7 +40,7 @@ mirror_of: skills/pptwise/references/layouts.md
 | `photo` | 图像 | 让画面本身成为内容。 | 展品是为断言服务时用 evidence。 | 22/22 |
 | `statement` | 宣言 | 让作者自己的一句话立论占据整页。 | 借别人之口时用 quote。 | 17/22 |
 | `quote` | 引用 | 以他人或外部来源的话为中心。 | 作者自己的立论用 statement。 | 7/22 |
-| `fact` | 大数字 | 让一个数字承担整页冲击。 | 要看一组数字的结构时用 data。 | 16/22 |
+| `fact` | 大数字 | 让一个数字承担整页冲击。 | 要看一组数字的结构时用 data。 | 17/22 |
 | `evidence` | 单证据 | 把一个断言与一件支持它的展品配对。 | 画面自己就是内容时用 photo。 | 11/22 |
 | `hierarchy` | 层级 | 表达包含、层级或组成关系。 | 先后关系用 process，并排对照用 comparison。 | 20/22 |
 <!-- generated:end kinds -->

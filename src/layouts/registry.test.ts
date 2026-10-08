@@ -82,8 +82,9 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // invite-field-ending): 175. The crayon redesign adds crayonbox-cover,
     // crayonbox-chapter, crayonbox-sheet and crayonbox-ending: 179. The luxe
     // redesign adds invitation-cover, invitation-chapter, invitation-sheet and
-    // invitation-ending: 183.
-    expect(layoutEntries).toHaveLength(183)
+    // invitation-ending: 183. The runway redesign adds lineup-cover,
+    // lineup-chapter, lineup-sheet and lineup-ending: 187.
+    expect(layoutEntries).toHaveLength(187)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -308,18 +309,18 @@ describe("layoutsForSlideType", () => {
     for (const l of covers) expect(l.slideTypes).toContain("cover")
   })
 
-  it("cover, chapter, and ending expose 47, 42, and 44 registered layouts with no takeovers", () => {
+  it("cover, chapter, and ending expose 48, 43, and 45 registered layouts with no takeovers", () => {
     // The shared automatic pools are unchanged by the gauge family: 19, 8, 7.
-    expect(layoutsForSlideType("cover")).toHaveLength(47)
+    expect(layoutsForSlideType("cover")).toHaveLength(48)
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
-    expect(layoutsForSlideType("chapter")).toHaveLength(42)
-    expect(layoutsForSlideType("ending")).toHaveLength(44)
+    expect(layoutsForSlideType("chapter")).toHaveLength(43)
+    expect(layoutsForSlideType("ending")).toHaveLength(45)
   })
 
-  it("content includes both the 50 layouts and the 4 takeovers", () => {
+  it("content includes both the 51 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(50)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(51)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(54)
+    expect(contents).toHaveLength(55)
   })
 })

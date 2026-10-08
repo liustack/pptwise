@@ -158,8 +158,13 @@ describe("a stepped-aside page keeps the theme it belongs to", () => {
   it("keeps the theme accent rather than the face's neutralised one", () => {
     // The show family hands its own fallback a ctx whose accent is swapped
     // for `primary`. That is a decision about the show composition, and a
-    // page drawn without it should still be runway's.
+    // page drawn without it should still be runway's. runway's data page left
+    // `show-figures` for its lineup sheet in 2026-10, so it is pointed back at
+    // it for this test.
     const tokens = resolveStyle("runway")
+    const menu = THEME_DEFINITIONS.runway.menu.content
+    const data = menu.data
+    menu.data = { face: "show-figures" }
     const ir = {
       version: "5",
       filename: "accent.pptx",
@@ -188,7 +193,12 @@ describe("a stepped-aside page keeps the theme it belongs to", () => {
         },
       ],
     } as unknown as PptxIR
-    const markup = page(ir)
+    let markup: string
+    try {
+      markup = page(ir)
+    } finally {
+      menu.data = data
+    }
     expect(markup).toContain('data-face-stepped-aside="show-figures"')
     expect(markup.toUpperCase()).toContain(tokens.colors.accent.toUpperCase())
   })

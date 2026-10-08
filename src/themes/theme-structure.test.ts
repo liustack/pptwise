@@ -81,13 +81,13 @@ describe("absent motifs are identity values, not holes", () => {
     expect(THEME_DEFINITIONS.stage.motif).toBeUndefined()
   })
 
-  it("runway declares no motif either — its own five faces carry the show", () => {
-    expect(THEME_DEFINITIONS.runway.motif).toBeUndefined()
+  it("runway's motif is its running order's masthead: words and one hairline, no decoration (2026-10 sample redesign)", () => {
+    expect(THEME_DEFINITIONS.runway.motif).toBe("runway-motif")
   })
 
-  it("every other theme does declare one — the no-motif trio is settled, not a gap list", () => {
+  it("every other theme does declare one — the no-motif pair is settled, not a gap list", () => {
     const noMotif = CANONICAL_THEME_IDS.filter((id) => THEME_DEFINITIONS[id].motif === undefined)
-    expect([...noMotif].sort()).toEqual(["museum", "runway", "stage"])
+    expect([...noMotif].sort()).toEqual(["museum", "stage"])
   })
 })
 

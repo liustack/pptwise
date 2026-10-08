@@ -37,7 +37,7 @@ describe("当前渲染契约", () => {
   })
 
   it("无 motif 的内置主题没有主题级装饰", () => {
-    for (const id of ["runway", "museum", "stage"] as const) {
+    for (const id of ["museum", "stage"] as const) {
       expect(THEME_DEFINITIONS[id].motif, id).toBeUndefined()
     }
   })

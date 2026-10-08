@@ -58,6 +58,10 @@ const STRUCTURE_BY_MOTIF: Partial<Record<MotifId, Partial<Record<Slide["type"], 
   // redesign); the hall and the folio join them on a deck that asks for
   // footer marks, and the cover, the chapter and the close draw their own.
   "ink-motif": { content: ["edges"] },
+  // runway's running order heads every content page (2026-10 sample
+  // redesign): words and one hairline, structure rather than decoration. The
+  // cover, the chapter pages and the bow set their own.
+  "runway-motif": { content: ["masthead"] },
   // ledger's status bar runs across the top of every page, like a market
   // terminal's title row (2026-10 sample redesign).
   "poster-motif": {
@@ -111,6 +115,7 @@ function themeForMotif(id: MotifId): string {
     "ink-motif": "ink",
     "swiss-motif": "swiss",
     "luxe-motif": "luxe",
+    "runway-motif": "runway",
     "vermilion-motif": "vermilion",
     "memo-motif": "memo",
     "clinic-motif": "clinic",

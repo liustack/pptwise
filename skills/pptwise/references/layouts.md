@@ -35,7 +35,7 @@ This section is generated from the IR v5 kind vocabulary and the 22 preset menus
 | `photo` | Photo | Make the image itself the content. | Use evidence when an exhibit exists to support a claim. | 22/22 |
 | `statement` | Statement | Give the deck author's own proposition a full page. | Words attributed to someone else are quote. | 17/22 |
 | `quote` | Quote | Center words attributed to another speaker or source. | The deck author's own proposition is statement. | 7/22 |
-| `fact` | Fact | Build the page around one number. | A numeric set whose structure matters is data. | 16/22 |
+| `fact` | Fact | Build the page around one number. | A numeric set whose structure matters is data. | 17/22 |
 | `evidence` | Evidence | Pair one assertion with one exhibit that supports it. | Use photo when the image stands on its own. | 11/22 |
 | `hierarchy` | Hierarchy | Express containment, levels, or composition. | Sequence belongs to process and side-by-side contrast to comparison. | 20/22 |
 <!-- generated:end kinds -->
