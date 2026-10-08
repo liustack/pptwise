@@ -1984,35 +1984,47 @@ describe("chart series emphasis", () => {
     series: c.series.map(({ emphasis: _emphasis, ...s }) => s),
   })
 
-  it("gives the marked series the lead color and every other series one grey that still clears 3:1", () => {
+  it("gives the marked series the lead color and each other series a grey of its own that still clears 3:1", () => {
     for (const type of ["bar", "stacked"] as const) {
       const fills = Array.from(draw(three(type)).querySelectorAll('rect[data-plot-mark="1"]')).map((r) =>
         r.getAttribute("fill"),
       )
       const distinct = [...new Set(fills)]
-      expect(distinct, type).toHaveLength(2)
+      expect(distinct, type).toHaveLength(3)
       expect(distinct, type).toContain(PALETTE[0])
-      const grey = distinct.find((f) => f !== PALETTE[0])!
-      expect(contrastRatio(grey, ctx.colors.bg)).toBeGreaterThanOrEqual(3)
+      for (const grey of distinct.filter((f) => f !== PALETTE[0])) {
+        expect(contrastRatio(grey!, ctx.colors.bg)).toBeGreaterThanOrEqual(3)
+      }
       // A third of the marks are the marked series'.
       expect(fills.filter((f) => f === PALETTE[0])).toHaveLength(fills.length / 3)
     }
   })
 
+  it("keeps one grey for the one series that steps back beside a marked one", () => {
+    const two = { ...three("bar"), series: three("bar").series.slice(0, 2) }
+    const fills = Array.from(draw(two).querySelectorAll('rect[data-plot-mark="1"]')).map((r) => r.getAttribute("fill"))
+    expect(new Set(fills).size).toBe(2)
+  })
+
   it("paints the legend swatches with the same colors as the marks", () => {
     const container = draw(three("bar"))
     const swatches = Array.from(container.querySelectorAll("rect")).filter((r) => !r.hasAttribute("data-plot-mark"))
-    const grey = swatches[0]!.getAttribute("fill")
-    expect(swatches.map((r) => r.getAttribute("fill"))).toEqual([grey, PALETTE[0], grey])
+    const [first, lead, last] = swatches.map((r) => r.getAttribute("fill"))
+    expect(lead).toBe(PALETTE[0])
+    expect(first).not.toBe(last)
+    const marks = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]')).map((r) => r.getAttribute("fill"))
+    expect(marks).toContain(first)
+    expect(marks).toContain(last)
   })
 
-  it("strokes the marked line in the lead color and greys the others", () => {
+  it("strokes the marked line in the lead color and the others in greys of their own", () => {
     const strokes = Array.from(draw(three("line")).querySelectorAll("polyline"))
       .map((p) => p.getAttribute("stroke"))
       .filter((s) => s !== ctx.colors.bg)
     expect(strokes[1]).toBe(PALETTE[0])
-    expect(strokes[0]).toBe(strokes[2])
+    expect(strokes[0]).not.toBe(strokes[2])
     expect(strokes[0]).not.toBe(PALETTE[0])
+    expect(strokes[2]).not.toBe(PALETTE[0])
   })
 
   it("is byte-identical to an unmarked chart when no series is marked", () => {

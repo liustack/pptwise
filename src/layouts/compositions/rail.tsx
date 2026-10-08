@@ -2,7 +2,7 @@ import type { Component } from "@/ir"
 import { figureStyleOf, groupDigits, isPercentUnit, joinUnit, type FigureStyle } from "../../lib/quantity-format"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { mostlyChinese } from "../../lib/text-script"
-import { emphasisSeriesPalette, recededMarkFill, rotateChartPalette } from "../../render/chart-palette"
+import { emphasisSeriesPalette, recededMarkFills, rotateChartPalette } from "../../render/chart-palette"
 import { headingEmphasisPaint, renderEmphasisText } from "../../render/emphasis"
 import { accessibleInk } from "../../render/ink"
 import { SvgContent } from "../../render/svg-content"
@@ -294,7 +294,7 @@ export const railComposition: Composition = (props) => {
   const palette =
     marked < 0
       ? rotated
-      : emphasisSeriesPalette(rotated, chart.series.length, marked, recededMarkFill(colors.muted, bg))
+      : emphasisSeriesPalette(rotated, chart.series.length, marked, recededMarkFills(colors.muted, bg, chart.series.length - 1, rotated[0]!))
 
   const figures = ctx.figures ?? figureStyleOf(chartWritesChinese(chart))
   const chinese = figures.chinese

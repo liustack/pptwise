@@ -9,6 +9,7 @@ import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout";
 import {
   emphasisSeriesPalette,
   recededMarkFill,
+  recededMarkFills,
   rotateChartPalette,
 } from "../render/chart-palette";
 import { accessibleInk, resolveSemanticColor } from "../render/ink";
@@ -826,7 +827,7 @@ export const chart: SvgComponent<ChartComponent> = {
             rotated,
             component.series.length,
             marked,
-            receded
+            recededMarkFills(ctx.colors.muted, legendBg, component.series.length - 1, rotated[0]!)
           ),
       marked,
       ctx.colors
