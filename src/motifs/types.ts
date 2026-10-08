@@ -53,3 +53,4 @@ export type MotifId =
   | "proposal-motif" // 2026-10-06：proposal 提案书页眉标签与页码（左上 deck 标签，右下页码字段）
   | "runway-motif" // 2026-10-08：runway 秀场出场单报头（左 deck 标签、右分区与页码字段、y54 黑细线）
   | "museum-motif" // 2026-10-08：museum 展厅墙面（左上厅名与 y58 接缝、左下讲座标签、右下门牌页码字段）
+  | "stage-motif" // 2026-10-08：stage 演讲遥控器进度线（y676 轨道、已讲比例哑银、右端页码字段与总页数）

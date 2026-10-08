@@ -217,6 +217,18 @@ import { dailyComposition } from "./daily"
 import { excerptsComposition } from "./excerpts"
 import { glyphsComposition } from "./glyphs"
 import { statuteComposition } from "./statute"
+import { hushComposition } from "./hush"
+import { giantComposition } from "./giant"
+import { contourComposition } from "./contour"
+import { faceoffComposition } from "./faceoff"
+import { tiltComposition } from "./tilt"
+import { podiumsComposition } from "./podiums"
+import { gulfComposition } from "./gulf"
+import { crowdComposition } from "./crowd"
+import { towerComposition } from "./tower"
+import { tollComposition } from "./toll"
+import { archesComposition } from "./arches"
+import { slateComposition } from "./slate"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -447,6 +459,18 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   slice: sliceComposition,
   blanks: blanksComposition,
   cabinet: cabinetComposition,
+  hush: hushComposition,
+  giant: giantComposition,
+  contour: contourComposition,
+  faceoff: faceoffComposition,
+  tilt: tiltComposition,
+  podiums: podiumsComposition,
+  gulf: gulfComposition,
+  crowd: crowdComposition,
+  tower: towerComposition,
+  toll: tollComposition,
+  arches: archesComposition,
+  slate: slateComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -518,7 +542,7 @@ function asksForTimelineDetail(components: readonly CompositionProps["components
  * line or note leaves them off. The ordinary callout sets the title bold over
  * its text and the tag under it.
  */
-const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods", "funnel", "crest", "branch", "regions", "levers", "cycles", "checkpoints", "cadence", "nations", "lapse", "mirror"])
+const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods", "funnel", "crest", "branch", "regions", "levers", "cycles", "checkpoints", "cadence", "nations", "lapse", "mirror", "toll"])
 
 function asksForCalloutDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "callout" && (component.title !== undefined || component.tag !== undefined))
@@ -554,7 +578,7 @@ function asksForChartReference(components: readonly CompositionProps["components
  * offered to these alone; the ordinary chart prints every note after its
  * value.
  */
-const CHART_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["magnitude", "segments", "survey", "levers", "backdrop", "partition", "chronicle", "elapsed", "solo", "descent", "ebb", "squares", "decades"])
+const CHART_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["magnitude", "segments", "survey", "levers", "backdrop", "partition", "chronicle", "elapsed", "solo", "descent", "ebb", "squares", "decades", "contour"])
 
 function asksForChartNote(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.series.some((s) => s.data.some((d) => d.note !== undefined)))
@@ -665,7 +689,7 @@ function asksForIconCardDetail(components: readonly CompositionProps["components
  * it. A page whose chart carries one is offered to these alone; the ordinary
  * chart sets the title over it as a table does.
  */
-const CHART_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["ladder", "backdrop", "thresholds", "partition", "chronicle", "measures", "headline", "census", "contrast", "bracket", "mix", "twins", "bases", "checkup", "swing"])
+const CHART_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["ladder", "backdrop", "thresholds", "partition", "chronicle", "measures", "headline", "census", "contrast", "bracket", "mix", "twins", "bases", "checkup", "swing", "podiums", "toll"])
 
 function asksForChartTitle(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && Boolean(component.title?.trim()))
@@ -798,7 +822,7 @@ const STAMP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["
  * (`image.crop`, `image_grid.items[].crop`). A page whose picture carries
  * one is offered to these alone; the ordinary image and grid crop it.
  */
-const IMAGE_CROP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["collage", "thread", "shades", "atelier", "parade", "look", "specimen", "lenses", "cabinet"])
+const IMAGE_CROP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["collage", "thread", "shades", "atelier", "parade", "look", "specimen", "lenses", "cabinet", "tower"])
 
 function asksForImageCrop(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => (component.type === "image" && component.crop !== undefined) || (component.type === "image_grid" && component.items.some((item) => item.crop !== undefined)))
@@ -819,7 +843,7 @@ function asksForChartTag(components: readonly CompositionProps["components"][num
 export function compose(props: CompositionProps, ids: readonly CompositionId[] = COMPOSITION_IDS): React.ReactElement | null {
   // What a composition hands on is drawn under the page's tag it has set.
   const handOn: CompositionProps["handOn"] = (components, rect) =>
-    compose({ ...props, components, rect, pageTag: undefined, ballot: undefined, stamp: undefined, claim: undefined, source: undefined }, ids)
+    compose({ ...props, components, rect, pageTag: undefined, ballot: undefined, stamp: undefined, claim: undefined, source: undefined, kicker: undefined }, ids)
   const marked = asksForChartMarks(props.components)
   const tagged = asksForChartTag(props.components)
   const banded = (props.tagBand ?? 0) > 0

@@ -36,9 +36,9 @@ describe("当前渲染契约", () => {
     })
   })
 
-  it("无 motif 的内置主题没有主题级装饰", () => {
-    for (const id of ["stage"] as const) {
-      expect(THEME_DEFINITIONS[id].motif, id).toBeUndefined()
+  it("内置主题都有自己的主题级 motif（stage 2026-10 起是进度线）", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      expect(THEME_DEFINITIONS[id].motif, id).toBeDefined()
     }
   })
 

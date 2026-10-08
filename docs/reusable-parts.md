@@ -1405,3 +1405,70 @@ No field was added: the IR schema stood 88 characters under its budget. The boar
 | A tracked line keeps its full-width spaces | `paintLineupTracked` preserves the spaces between the parts of a line | [lineup.tsx](../src/layouts/compositions/lineup.tsx) | none |
 | A paired heading | museum's heading pairs Times New Roman with SimSun, so its figures print proportionally in PowerPoint | [museum.ts](../src/themes/builtin/museum.ts) | none |
 | The placard's small type is an approved size | captions, labels, the hall sign, the source and the door plate at 10 to 15px carry the `placard-spec` exemption the L1 audit knows | [l1.ts](../evals/gallery/l1.ts) | none |
+
+## stage game developers keynote sample, 2026-10
+
+The round redrew stage to an eighteen-page Chinese and English keynote at a game developers' conference on what will carry Chinese games abroad next: the hall from the back row, one sentence, one figure under its lead-in, three acts each opening over a photograph, a decade as one line, two rates face to face, a slope chart, two leaderboards, peaks hundreds of times apart, a quarter as a hundred dots, small teams beside a photograph, the bill as two bars, three gates as doors, five bets and the last sentence. Its decisions, the design system every stage page follows, and every place the engine departs from the board are in [`design/rounds/2026-10-08-stage/`](../design/rounds/2026-10-08-stage/README.md). The rules are restated for the next design session in [Designing for stage](./design-stage.md).
+
+### Compositions
+
+The compositions take a twenty-first `setting`, `keynote` (`CompositionSetting` in [shared.tsx](../src/layouts/compositions/shared.tsx)): a talk on a dark stage. Words are large and bold in a warm paper white on a cold black, what is quieter a warm sand, sources and ticks a dimmer sand, hairlines and axes the black lifted a few steps, a sentence or a figure that carries a page alone stands in a faint follow spot, and silver goes to the one thing a page is about. The composition is handed the whole page and places the page's claim (`claim`, with a `top`, `size`, `lineHeight`, `maxLines`, `align: "center"`, a quieter `tone` and a regular `weight`), its source (`source`, with a `top`, the `foot` it rises from when it takes two lines and `align: "center"`) and its chapter (`kicker`, a new placer the face hands down) itself.
+
+New:
+
+| composition | what it draws | takes | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| `hush` | one sentence at 72px bold centred on two lines in a follow spot, its marked words in silver, a short silver rule, one line under it | a page with a claim and nothing else, or one `paragraph` of up to two lines. The keynote setting only | [hush.tsx](../src/layouts/compositions/hush.tsx) | stage | [design/compositions/hush](../design/compositions/hush/README.md) |
+| `giant` | one figure at 220px under the claim that leads into it in a follow spot, and what it rests on: two ends on a hairline (a label written `A → B`) or a short line tracked in silver | a `kpi_cards` of one with a value, an optional unit and a label, on a page with a claim. The keynote setting only | [giant.tsx](../src/layouts/compositions/giant.tsx) | stage | [design/compositions/giant](../design/compositions/giant/README.md) |
+| `contour` | a decade as one white line over a faint fill, only its ends labelled, the run of falls ending at the noted point banded, the unit and series at the bottom left, the summing figure at the bottom right | a `line` chart of one series of 3 to 16 positive values with at most one `note`, and a `kpi_cards` of one. The keynote setting only | [contour.tsx](../src/layouts/compositions/contour.tsx) | stage | [design/compositions/contour](../design/compositions/contour/README.md) |
+| `faceoff` | two figures at 150px face to face across a hairline under a centred claim, each with its name tracked over it and what was counted under it, the marked one in silver | a `kpi_cards` of two. The keynote setting only | [faceoff.tsx](../src/layouts/compositions/faceoff.tsx) | stage | [design/compositions/faceoff](../design/compositions/faceoff/README.md) |
+| `tilt` | a slope chart on two upright axes, rows that moved thick in the paper white, rows that held thin in the sand, the marked row in silver, labels spread apart | a `from_to` of three to six numeric rows. The keynote setting only | [tilt.tsx](../src/layouts/compositions/tilt.tsx) | stage | [design/compositions/tilt](../design/compositions/tilt/README.md) |
+| `podiums` | two leaderboards side by side on one scale, each headed by its chart's title and series, a large rank, a name, a thin bar and the value, the marked place in silver | two bar charts on their side of two to four places each, largest first. The keynote setting only | [podiums.tsx](../src/layouts/compositions/podiums.tsx) | stage | [design/compositions/podiums](../design/compositions/podiums/README.md) |
+| `gulf` | two or three thick bars on one scale however far apart, the smallest drawn even at a pixel, what they count over them, the line that says how far apart and a quieter line | a bar chart on its side of two or three positive values, one or two `paragraph`s. The keynote setting only | [gulf.tsx](../src/layouts/compositions/gulf.tsx) | stage | [design/compositions/gulf](../design/compositions/gulf/README.md) |
+| `crowd` | a figure written as a fraction at 200px beside a hundred dots, the exact share its label states lit in silver | a `kpi_cards` of one whose value is a fraction, on a page with a claim. The keynote setting only | [crowd.tsx](../src/layouts/compositions/crowd.tsx) | stage | [design/compositions/crowd](../design/compositions/crowd/README.md) |
+| `tower` | a photograph across the left half fading into the black beside the chapter, the claim and two or three stacked figures under hairlines | an `image` and one `kpi_cards` of two or three, or two or three `kpi_cards` of one. The keynote setting only | [tower.tsx](../src/layouts/compositions/tower.tsx) | stage | [design/compositions/tower](../design/compositions/tower/README.md) |
+| `toll` | two or three bars standing on a line beside what they count, the sentence their gap says and a quote behind a silver rule | a bar chart of two or three values, a `paragraph` and an informing `callout` with a title. The keynote setting only | [toll.tsx](../src/layouts/compositions/toll.tsx) | stage | [design/compositions/toll](../design/compositions/toll/README.md) |
+| `arches` | gates as round-headed doors side by side, each with a symbol, a tracked name, a figure and what it means | a `kpi_cards` of two to four items with an icon and a note each. The keynote setting only | [arches.tsx](../src/layouts/compositions/arches.tsx) | stage | [design/compositions/arches](../design/compositions/arches/README.md) |
+| `slate` | three to six bets under hairlines, a large number in silver, a bold judgement and its reason at the right edge | a `numbered_cards` of three to six with no icon and no sub. The keynote setting only | [slate.tsx](../src/layouts/compositions/slate.tsx) | stage | [design/compositions/slate](../design/compositions/slate/README.md) |
+
+The shared pieces are in [keynote.tsx](../src/layouts/compositions/keynote.tsx): `keynoteInks` for the inks, `keynoteText`, `keynoteMeta` and `keynoteMark` for words and marks that read on what they sit on, `fitKeynote`, `keynoteWidth`, `keynoteTrackedWidth`, `keynoteBaseline`, `paintKeynote`, `paintKeynoteLine` and `paintKeynoteTracked` for text at its exact size (the lineup setting's helpers with this setting's exemption and silver marks), `keynoteFigureWidth` and `paintKeynoteFigure` for a bold figure closed up, `keynoteNumber`, `keynoteDecimals` and `keynoteWithUnit` for printing values, `keynoteCeiling` for a round axis ceiling, `KeynoteSpot` for a follow spot, `paintKeynotePhoto`, `paintKeynoteIcon`, `placeKeynoteClaim`, `placeKeynoteSource` and `placeKeynoteKicker` for the frame in the column a composition gives it, `wholePage`, and `KEYNOTE_SPEC` and `KEYNOTE_META` for the small type's exemption and the 3:1 meta tier. The clicker, the chapter, the claim, the source and the bands are in [keynote-shared.tsx](../src/layouts/keynote-shared.tsx). Any face can call them.
+
+The tests draw every board page on stage and on runway and crayon, two pale themes that share nothing with it ([keynote-pages.test.tsx](../src/layouts/compositions/keynote-pages.test.tsx)), and check that each page is drawn whole, inside the page, legible, and prints every word the author wrote. The gallery's 构图 band has a stage page for every new composition.
+
+### Faces
+
+| face | what it is | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- |
+| `keynote-sheet` | the ordinary content page: the chapter at the top left, the bold claim across the whole measure from y76, the body handed to the compositions in the keynote setting, the source over the clicker | [content-keynote-sheet.tsx](../src/layouts/content-keynote-sheet.tsx), [keynote-shared.tsx](../src/layouts/keynote-shared.tsx) | stage (every content kind it offers but `quote`) | [design/faces/keynote-sheet](../design/faces/keynote-sheet/README.md) |
+| `keynote-cover` | the hall from the back row: the photograph darkening from the left, the occasion in silver, the title at 76px bold, the date and the clicker | [cover-keynote-cover.tsx](../src/layouts/cover-keynote-cover.tsx) | stage | [design/faces/keynote-cover](../design/faces/keynote-cover/README.md) |
+| `keynote-chapter` | an act opens: its number in silver over its name at 150px bold and a line, over the page's photograph or on the black in a follow spot | [chapter-keynote-chapter.tsx](../src/layouts/chapter-keynote-chapter.tsx) | stage | [design/faces/keynote-chapter](../design/faces/keynote-chapter/README.md) |
+| `keynote-ending` | the last sentence alone at 64px bold in a follow spot, its marked words in silver, the occasion tracked at the foot, the clicker at its end | [ending-keynote-ending.tsx](../src/layouts/ending-keynote-ending.tsx) | stage | [design/faces/keynote-ending](../design/faces/keynote-ending/README.md) |
+
+`poster-center`, `one-word-chapter`, `release-close-ending`, `quiet-frame`, `bento-panel`, `two-column`, `rail-numbered`, `stacked-poster`, `image-top`, `statement`, `stat-hero` and `asymmetric-triptych`, stage's earlier faces, stay registered for any theme that names them, and those no menu offers now appear in the gallery's appendix. stage's `quote` stays on `pull-quote`.
+
+### Motif
+
+`stage-motif` is new, stage's first: on every content page the presenter's clicker along the foot, a 2px track on y676 with the part of the talk given in silver and the count at its end, the page number PowerPoint's slide-number field, and the deck's other footer marks at the top right. It paints the footer row itself. stage took no motif since 2026-08 (no frame is its identity): this is one line and a count, a structural piece. Board: [design/motifs/stage-motif](../design/motifs/stage-motif/README.md).
+
+### Page and component fields
+
+No field was added: the IR schema stood 88 characters under its budget. The board's marks reuse fields that existed.
+
+| field | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| `kicker` on every stage content page | the chapter at the top left, or at the top of the column beside a photograph | [keynote-shared.tsx](../src/layouts/keynote-shared.tsx) | [design/faces/keynote-sheet](../design/faces/keynote-sheet/README.md) |
+| `kicker` on a stage chapter page | the act's number in silver over its name | [chapter-keynote-chapter.tsx](../src/layouts/chapter-keynote-chapter.tsx) | [design/faces/keynote-chapter](../design/faces/keynote-chapter/README.md) |
+| a `kpi_cards` item's label written `A → B` | the figure's two ends on a hairline, the arrow read back by the scans as `data-gloss-break` | [giant.tsx](../src/layouts/compositions/giant.tsx) | [design/compositions/giant](../design/compositions/giant/README.md) |
+| a `note` on a line chart's point | the run of falls ending there banded, the note over the band | [contour.tsx](../src/layouts/compositions/contour.tsx) | [design/compositions/contour](../design/compositions/contour/README.md) |
+| a `kpi_cards` value written as a fraction with one percentage in its label | a hundred dots, that share lit | [crowd.tsx](../src/layouts/compositions/crowd.tsx) | [design/compositions/crowd](../design/compositions/crowd/README.md) |
+| `icon` on a `kpi_cards` item | the symbol at the head of a door | [arches.tsx](../src/layouts/compositions/arches.tsx) | [design/compositions/arches](../design/compositions/arches/README.md) |
+
+### Engine behaviour
+
+| behaviour | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| A marked run may be bold in a regular line | `litBold` on the lineup painter sets a `**…**` run bold, as stage's board sets 「787 倍」 | [lineup.tsx](../src/layouts/compositions/lineup.tsx) | [design/compositions/gulf](../design/compositions/gulf/README.md) |
+| A fact page carries a lead-in and a figure | `giant` takes a `kpi_cards` of one on a page with a claim, so a deck project's `fact` page sets both | [giant.tsx](../src/layouts/compositions/giant.tsx) | [design/compositions/giant](../design/compositions/giant/README.md) |
+| Each deck has its own workspace | `.pptwise/` folders are named for the deck's path from the project root, so two decks in folders of the same name no longer share pinned and generated photos | [workspace.ts](../src/cli/workspace.ts) | none |
+| The cross-language ratchet is empty | stage's English `from_to`, the last known overflow, is held by the keynote sheet | [cross-language.ts](../evals/gallery/cross-language.ts) | none |
+| The keynote's small type is an approved size | the chapter, captions, ticks, the source and the count at 11 to 15px carry the `keynote-spec` exemption the L1 audit knows | [l1.ts](../evals/gallery/l1.ts) | none |

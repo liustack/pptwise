@@ -904,10 +904,17 @@ describe("menu decoration determinism", () => {
     expect([...markups][0]).not.toBeNull()
   })
 
-  it("stage 的静默菜单条目不渲染装饰", () => {
-    for (let i = 0; i < 10; i++) {
-      expect(decorMarkup("stage", `page-${i}`)).toBeNull()
+  it("stage 的进度线是结构件，不随页面 id 改变", () => {
+    const clicker = (pageId: string) => {
+      const doc: PptxIR = { ...ir([]), theme: { id: "stage" } } as PptxIR
+      const slide: Slide = { type: "content", kind: "points", id: pageId, heading: "x", components: [] } as Slide
+      doc.slides = [slide]
+      const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
+      return container.querySelector('[data-decor-piece="clicker"]')?.outerHTML ?? null
     }
+    const markups = new Set(Array.from({ length: 10 }, (_, i) => clicker(`page-${i}`)))
+    expect(markups.size).toBe(1)
+    expect([...markups][0]).toContain("data-keynote-clicker")
   })
 
   it("runway 的报头是结构件，不随页面 id 改变", () => {

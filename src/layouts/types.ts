@@ -111,6 +111,8 @@ export type CoverLayoutId =
   | "lineup-cover"
   // museum sample redesign (2026-10-08): an exhibition catalogue's cover.
   | "placard-cover"
+  // stage sample redesign (2026-10-08): the hall from the back row.
+  | "keynote-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -169,6 +171,8 @@ export type ChapterLayoutId =
   | "lineup-chapter"
   // museum sample redesign (2026-10-08): the doorway to the next hall, in a pool of warm light.
   | "placard-chapter"
+  // stage sample redesign (2026-10-08): an act of the talk opens over its photograph.
+  | "keynote-chapter"
 export type EndingLayoutId =
   | "banner-ending" | "rail-ending" | "poster-ending"
   | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
@@ -231,6 +235,8 @@ export type EndingLayoutId =
   | "lineup-ending"
   // museum sample redesign (2026-10-08): the lights go down and one label stays lit.
   | "placard-ending"
+  // stage sample redesign (2026-10-08): the last sentence alone on the black.
+  | "keynote-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -317,6 +323,8 @@ export type ContentLayoutId =
   | "lineup-sheet"
   // museum sample redesign: the board's ordinary content page. Theme-locked.
   | "placard-sheet"
+  // stage sample redesign: the board's ordinary content page. Theme-locked.
+  | "keynote-sheet"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

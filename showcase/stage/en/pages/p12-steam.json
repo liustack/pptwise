@@ -1,0 +1,15 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "1 in 4",
+          "label": "Roughly, in a normal month: the past 12 months average 24.2% with February removed. It counts the client's language, not nationality"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Valve, Steam Hardware & Software Survey. Average calculated, one dot is about 1%",
+  "notes": "How many Chinese-language users are on Steam? Valve's own survey says that in a normal month about a quarter run the Simplified Chinese client, and a little over a third run English. Two traps. First, this is the client language in a voluntary survey, not nationality. Second, every February it jumps to around half and falls back the next month, so never read a single month as a trend. I used the twelve months from October 2025 to September 2026, February removed: 24.2% on average. What it means for us: one store sells to both home and abroad, but most of its users are not on the Chinese client."
+}

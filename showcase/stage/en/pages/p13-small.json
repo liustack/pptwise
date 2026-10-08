@@ -1,0 +1,28 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "studio",
+      "fit": "cover"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "3 million+",
+          "label": "Escape from Duckov, first month, publisher's figure"
+        },
+        {
+          "value": "301,322",
+          "label": "Escape from Duckov, Steam all-time peak"
+        },
+        {
+          "value": "5 people",
+          "label": "Dyson Sphere Program: 200,000 in 4 days of early access"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Bilibili Q3 2025 earnings call, SteamDB snapshot August 2026, Dyson Sphere Program publisher's release. Photo AI-generated",
+  "notes": "Below the ceiling, small teams have their own road. Escape from Duckov launched on October 16, 2025. On its Q3 2025 earnings call the publisher said it sold more than 3 million copies across platforms in under a month. That is the publisher's figure. Its Steam peak was about 300,000, per a SteamDB snapshot from August 2026. Dyson Sphere Program was made by a team of five and sold 200,000 copies in its first four days of early access, according to the publisher's January 2021 release. Neither is a triple-A game. Both have a clear core loop and a scope the team could hold. The photo is AI-generated."
+}

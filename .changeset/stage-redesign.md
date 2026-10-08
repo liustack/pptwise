@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+Stage has a new look, a keynote on a dark stage. Every content page but a quote uses `keynote-sheet`: the page's `kicker` as the chapter small at the top left, a bold claim across the whole measure, and the body drawn in the `keynote` setting. The cover uses `keynote-cover`, the hall's photograph darkening from the left with the occasion in silver, the title large and bold and the date. A chapter uses `keynote-chapter`: the act's number over its name in one huge word, over the page's photograph or on the black. The ending uses `keynote-ending`, the last sentence alone with its marked words in silver. Stage's first motif, `stage-motif`, draws the presenter's clicker along the foot of every page: the part of the talk already given in silver and the count 「5 / 18」, its number PowerPoint's slide-number field. A `fact` page can now set a lead-in claim and one figure together. If you copied stage into your own theme file, its menu still names the old faces and keeps working as before.

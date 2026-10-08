@@ -16,6 +16,7 @@ import {
   prepareWorkspaceDir,
   pruneRenderedSvgs,
   resolveWorkspaceLocation,
+  workspaceStockAssetsDir,
   type GitRunner,
   type WorkspaceLocation,
 } from "./workspace"
@@ -55,12 +56,39 @@ function scriptedGit(handlers: {
 function location(partial: Partial<WorkspaceLocation> & Pick<WorkspaceLocation, "anchor" | "root" | "dir">): WorkspaceLocation {
   return {
     slug: "deck",
+    name: "deck",
     configured: false,
     ...partial,
   }
 }
 
 describe("deckSlug", () => {
+  it("keys a deck by its path from the anchor, so two decks both called zh/ stay apart", () => {
+    const zh = deckSlug("/tmp/proj/game-deck/zh", true, "/tmp/proj")
+    const other = deckSlug("/tmp/proj/lunar-deck/zh", true, "/tmp/proj")
+    expect(zh).toBe("game-deck-zh")
+    expect(other).toBe("lunar-deck-zh")
+  })
+
+  it("keeps the name of a deck at the anchor's top level", () => {
+    expect(deckSlug("/tmp/proj/launch-deck", true, "/tmp/proj")).toBe("launch-deck")
+    expect(deckSlug("/tmp/proj/q3-review.json", false, "/tmp/proj")).toBe("q3-review")
+  })
+
+  it("names a deck outside the anchor by its name and a hash of its path", () => {
+    const a = deckSlug("/srv/a/zh", true, "/tmp/proj")
+    const b = deckSlug("/srv/b/zh", true, "/tmp/proj")
+    expect(a).toMatch(/^zh-[0-9a-f]{6}$/)
+    expect(a).not.toBe(b)
+  })
+
+  it("keeps a CJK directory apart from its namesakes under other parents", () => {
+    const a = deckSlug("/tmp/proj/季度/zh", true, "/tmp/proj")
+    const b = deckSlug("/tmp/proj/年度/zh", true, "/tmp/proj")
+    expect(a).toMatch(/^zh-[0-9a-f]{6}$/)
+    expect(a).not.toBe(b)
+  })
+
   it("uses the directory name for a deck project", () => {
     expect(deckSlug("/tmp/launch-deck", true)).toBe("launch-deck")
   })
@@ -69,8 +97,9 @@ describe("deckSlug", () => {
     expect(deckSlug("/tmp/q3-review.json", false)).toBe("q3-review")
   })
 
-  it("falls back to 'deck' for a CJK-only name that slugify would empty", () => {
-    expect(deckSlug("/tmp/季度回顾", true)).toBe("deck")
+  it("falls back to 'deck' and a hash of the path for a CJK-only name that slugify would empty", () => {
+    expect(deckSlug("/tmp/季度回顾", true)).toMatch(/^deck-[0-9a-f]{6}$/)
+    expect(deckSlug("/tmp/季度回顾", true)).not.toBe(deckSlug("/tmp/年度回顾", true))
   })
 
   it("hyphenates mixed names the same way brand extract does", () => {
@@ -105,7 +134,18 @@ describe("resolveWorkspaceLocation (anchor rules)", () => {
     })
     expect(asPosix(loc.anchor)).toBe("/tmp/proj")
     expect(asPosix(loc.root)).toBe("/tmp/proj/.pptwise")
-    expect(asPosix(loc.dir)).toBe("/tmp/proj/.pptwise/hello")
+    // The deck sits in nested/, so its workspace is named for that path.
+    expect(asPosix(loc.dir)).toBe("/tmp/proj/.pptwise/nested-hello")
+  })
+
+  it("gives two decks of the same name under different parents their own workspace and asset directory", () => {
+    const at = (target: string) => resolveWorkspaceLocation({ cwd: "/tmp/proj", target, isDir: true })
+    const zh = at("/tmp/proj/game-deck/zh")
+    const other = at("/tmp/proj/lunar-deck/zh")
+    expect(asPosix(zh.dir)).toBe("/tmp/proj/.pptwise/game-deck-zh")
+    expect(asPosix(other.dir)).toBe("/tmp/proj/.pptwise/lunar-deck-zh")
+    expect(asPosix(workspaceStockAssetsDir(zh))).not.toBe(asPosix(workspaceStockAssetsDir(other)))
+    expect([zh.name, other.name]).toEqual(["zh", "zh"])
   })
 
   it("resolves a relative outDir against the config file's directory, not cwd", () => {

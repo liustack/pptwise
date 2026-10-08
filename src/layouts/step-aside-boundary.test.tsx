@@ -58,6 +58,7 @@ import { ScrollQuoteContent } from "./content-scroll-quote"
 import { InvitationSheetContent } from "./content-invitation-sheet"
 import { LineupSheetContent } from "./content-lineup-sheet"
 import { PlacardSheetContent } from "./content-placard-sheet"
+import { KeynoteSheetContent } from "./content-keynote-sheet"
 import { MarqueeStatementContent } from "./content-marquee-statement"
 import { PitchPhotoContent } from "./content-pitch-photo"
 import { GridStatementContent } from "./content-grid-statement"
@@ -246,6 +247,9 @@ const CASES: FaceCase[] = [
   // museum's placard sheet: the same, under the claim from y190 down to y616,
   // over the source line.
   { face: "placard-sheet", Face: PlacardSheetContent, themeId: "museum", regions: ["face", "declined"] },
+  // stage's keynote sheet: the same, under the claim from y160 down to y610,
+  // over the source line.
+  { face: "keynote-sheet", Face: KeynoteSheetContent, themeId: "stage", regions: ["face", "declined"] },
   // A chart is not the one-line plan's row of touchpoints, so the page goes
   // straight to the sheet, and is declined once that cannot hold it either.
   { face: "marquee-statement", Face: MarqueeStatementContent, themeId: "rally", regions: ["aside", "declined"] },

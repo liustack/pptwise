@@ -113,8 +113,8 @@ describe("no footer by default", () => {
 })
 
 describe("the footer row, when the deck asks for it", () => {
-  // memo, clinic, almanac, homeroom, ember, rally, proposal, thesis, journal, ink, crayon, luxe, runway and museum set their folios rather than printing the shared row: their own cases below.
-  const OWN_FOLIO_THEMES = new Set(["memo", "clinic", "almanac", "homeroom", "ember", "rally", "proposal", "thesis", "journal", "ink", "crayon", "luxe", "runway", "museum"])
+  // memo, clinic, almanac, homeroom, ember, rally, proposal, thesis, journal, ink, crayon, luxe, runway, museum and stage set their folios rather than printing the shared row: their own cases below.
+  const OWN_FOLIO_THEMES = new Set(["memo", "clinic", "almanac", "homeroom", "ember", "rally", "proposal", "thesis", "journal", "ink", "crayon", "luxe", "runway", "museum", "stage"])
   const SHARED_ROW_THEMES = CANONICAL_THEME_IDS.filter((theme) => !OWN_FOLIO_THEMES.has(theme))
 
   it.each(SHARED_ROW_THEMES)("%s: every mark in its place, on content pages only", (theme) => {
@@ -450,6 +450,27 @@ describe("the footer row, when the deck asks for it", () => {
       const number = row.querySelector('[data-field="slidenum"]')!
       expect(number.textContent).toBe(String(index + 1))
       expect([number.getAttribute("x"), number.getAttribute("text-anchor")]).toEqual(["1186", "middle"])
+      expect(footerRules(root)).toHaveLength(0)
+    })
+  })
+
+  it("stage: the count at the end of the clicker on every page, the other marks at the top right of content pages", () => {
+    const ir = zhDeck("stage", { footer: ALL_MARKS })
+    const total = ir.slides.length
+    ir.slides.forEach((slide, index) => {
+      const root = page(ir, index)
+      const clicker = root.querySelector("[data-keynote-clicker]")!
+      expect(clicker, `stage ${slide.type}: clicker`).not.toBeNull()
+      expect(clicker.querySelector("[data-keynote-progress]")!.getAttribute("data-keynote-progress")).toBe(`${index + 1}/${total}`)
+      const number = clicker.querySelector('[data-field="slidenum"]')!
+      expect(number.textContent).toBe(String(index + 1))
+      expect(number.getAttribute("text-anchor")).toBe("end")
+      if (slide.type !== "content") {
+        expect(root.querySelector("[data-footer]"), `stage ${slide.type}: footer row`).toBeNull()
+        return
+      }
+      const row = root.querySelector('[data-footer="row"]')!
+      expect(row.querySelector("[data-keynote-marks]")!.getAttribute("data-keynote-marks")).toBe(`${ORG} · 2026 年中期业绩 | 2026.08 · 讨论稿 · 内部资料，请勿外传`)
       expect(footerRules(root)).toHaveLength(0)
     })
   })

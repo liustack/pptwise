@@ -32,6 +32,7 @@ import { CRAYONBOX_BODIES } from "./crayonbox-bodies"
 import { INVITATION_BODIES } from "./invitation-bodies"
 import { LINEUP_BODIES } from "./lineup-bodies"
 import { PLACARD_BODIES } from "./placard-bodies"
+import { KEYNOTE_BODIES } from "./keynote-bodies"
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/images")
 
@@ -593,6 +594,8 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   if (def.id === "lineup-sheet") return COMPOSITION_BODIES.order(lex).components
   // museum's placard sheet: the board's floor plan of the visit.
   if (def.id === "placard-sheet") return COMPOSITION_BODIES.floorplan(lex).components
+  // stage's keynote sheet: the board's five bets said one line at a time.
+  if (def.id === "keynote-sheet") return COMPOSITION_BODIES.slate(lex).components
   if (def.id === "marquee-statement") {
     return [{ type: "icon_cards", items: [0, 1, 2].map((i) => ({ icon: (["cup-soda", "package", "ticket"] as const)[i]!, title: lex.labels[i]!, text: lex.bullets[i]! })) }]
   }
@@ -1213,6 +1216,12 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
   // to scale, a whole and its part, open questions on blank labels and a case
   // beside what to look for.
   ...PLACARD_BODIES,
+  // stage's keynote sheet: one sentence alone, one figure under its lead-in,
+  // a decade as one line, two figures face to face, a slope chart, two
+  // leaderboards, quantities to scale, a share as dots, a photograph beside
+  // stacked figures, two bars beside their sentence, gates as doors and five
+  // bets.
+  ...KEYNOTE_BODIES,
   rows: (lex) => ({
     heading: lex.headings[1]!,
     components: [

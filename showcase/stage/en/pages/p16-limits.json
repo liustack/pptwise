@@ -1,0 +1,29 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "icon": "ticket",
+          "label": "Licences",
+          "value": "1,525",
+          "note": "Domestic game licences, January to September 2026, about 169 a month. Only 46 for imports. Overseas-only releases need none"
+        },
+        {
+          "icon": "shield-check",
+          "label": "Compliance",
+          "value": "4%",
+          "note": "GDPR fines reach 4% of global turnover. Korea makes foreign firms disclose gacha odds too"
+        },
+        {
+          "icon": "languages",
+          "label": "Localization",
+          "value": "A tenth",
+          "note": "Germany, UK and France are now a tenth of mobile revenue abroad. No industry price list, so do your own math"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: National Press and Publication Administration lists as they stand (counted October 8, 2026), GDPR, Korea MCST, CADPA H1 2026 report",
+  "notes": "Three gates. Licences are back to a monthly rhythm: 1,525 domestic licences from January to September, about 169 a month. I counted them one by one from the National Press and Publication Administration's lists as they stand today, which is not the same set as the media tallies at the time. But only 46 import licences in nine months, and both past freezes came without warning. A game released only abroad needs no Chinese licence. Bring it home and you need one. Compliance is harder: since March 22, 2024, Korea requires probability disclosure for paid random items, foreign companies explicitly included, with up to two years in prison for refusing to correct. In the EU, GDPR fines go up to 4% of global turnover, and the Digital Services Act up to 6%. Localization has no industry price list. Nobody will do that math for you."
+}

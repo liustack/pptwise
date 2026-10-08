@@ -35,6 +35,7 @@ import { CrayonboxEnding } from "./ending-crayonbox-ending"
 import { InvitationEnding } from "./ending-invitation-ending"
 import { LineupEnding } from "./ending-lineup-ending"
 import { PlacardEnding } from "./ending-placard-ending"
+import { KeynoteEnding } from "./ending-keynote-ending"
 import { ScorecardEnding } from "./ending-scorecard-ending"
 import { CarePlanEnding } from "./ending-care-plan-ending"
 import { ReleaseCloseEnding } from "./ending-release-close-ending"
@@ -97,4 +98,5 @@ export const ENDING_LAYOUTS: Record<EndingLayoutId, EndingLayout> = {
   "invitation-ending": InvitationEnding,
   "lineup-ending": LineupEnding,
   "placard-ending": PlacardEnding,
+  "keynote-ending": KeynoteEnding,
 }

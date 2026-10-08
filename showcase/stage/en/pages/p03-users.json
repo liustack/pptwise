@@ -1,0 +1,16 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "57",
+          "unit": "million",
+          "label": "2018　626 million → 2025　683 million"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: CADPA, China Game Industry Reports 2018 and 2025. Difference calculated",
+  "notes": "Seven years, from 626 million to 683 million players. Only 57 million more, a 9.1% rise. That is my subtraction from the association's two reports. Since 2021 the number has moved between 664 and 684 million. Growth from new people is done at home."
+}

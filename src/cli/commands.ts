@@ -459,7 +459,7 @@ export async function runRender(irPath: string, opts: RenderOptions): Promise<st
       isDir,
     })
     extraNotes.push(...(await prepareWorkspaceDir(location, { gitIgnore: opts.gitIgnore, runGit: opts.runGit })))
-    output = join(location.dir, `${location.slug}.pptx`)
+    output = join(location.dir, `${location.name}.pptx`)
   }
   await writeFile(output, bytes)
   const ok = `wrote ${output} (${v.ir!.slides.length} slides, ${bytes.length} bytes)`

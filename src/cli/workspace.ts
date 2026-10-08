@@ -40,7 +40,8 @@
  */
 import { existsSync } from "node:fs"
 import { appendFile, mkdir, readFile, readdir, stat, unlink } from "node:fs/promises"
-import { basename, dirname, extname, join, resolve } from "node:path"
+import { createHash } from "node:crypto"
+import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path"
 import { PptwiseError } from "../errors"
 import { slugify } from "../themes/extract/brand-extract"
 import { runChild } from "./child"
@@ -94,8 +95,10 @@ export interface WorkspaceLocation {
   root: string
   /** `<root>/<slug>` — this deck's own subdirectory. */
   dir: string
-  /** The deck's directory/file name, slugified. */
+  /** The deck's place in the project, slugified: the workspace's own name ({@link deckSlug}). */
   slug: string
+  /** The deck's own directory or file name, slugified: what its pptx is called. */
+  name: string
   /** True when {@link root} came from a project config's `outDir`. An
    *  explicit `outDir` is the user having already said where artifacts go,
    *  so the git-ignore step stays out of it (see {@link prepareWorkspaceDir}). */
@@ -103,22 +106,43 @@ export interface WorkspaceLocation {
 }
 
 /**
- * `<deck target> → <directory name>`. A deck project directory contributes
- * its directory name, a single IR file its filename without the extension,
- * and a bare deck name resolves to one or the other before it ever gets here
- * (`resolveDeckTarget`, `./deck-dir.ts`), so this only ever sees a real path.
+ * `<deck target> → <directory name>`: the deck's own place in the project,
+ * so two decks never share a workspace. A deck project directory contributes
+ * its path from the anchor (`decks/q3-review` → `decks-q3-review`, a deck at
+ * the anchor's top level keeps its own name), a single IR file the same
+ * without its extension, and a bare deck name resolves to one or the other
+ * before it ever gets here (`resolveDeckTarget`, `./deck-dir.ts`).
  *
- * `slugify` already strips every character that could mean anything to a path
- * (it keeps `[a-z0-9-]` and nothing else), which makes an escape impossible by
+ * Keyed by the directory name alone, two decks both called `zh/` under
+ * different parents shared `.pptwise/zh/`, and one deck's pinned and
+ * generated photos turned up in the other's asset list. A name `slugify`
+ * cannot carry whole (a Chinese directory name, which it empties) and a deck
+ * outside the anchor, whose path from it climbs out, take a short hash of
+ * that path after the name, so they stay apart too.
+ *
+ * `slugify` strips every character that could mean anything to a path (it
+ * keeps `[a-z0-9-]` and nothing else), which makes an escape impossible by
  * construction; {@link assertSafeFileSegment} runs anyway, as the same
  * belt-and-braces posture `./deck-dir.ts` applies to every other id it joins
  * into a write path — a future change to either function then fails loudly
  * here instead of quietly writing outside the workspace.
  */
-export function deckSlug(target: string, isDir: boolean): string {
-  const base = basename(target)
-  const name = isDir ? base : base.slice(0, base.length - extname(base).length)
-  const slug = slugify(name, "deck")
+export function deckSlug(target: string, isDir: boolean, anchor?: string): string {
+  const withoutExt = (p: string) => (isDir ? p : p.slice(0, p.length - extname(p).length))
+  const name = withoutExt(basename(target))
+  let key = name
+  let hashed: string | undefined
+  if (anchor !== undefined && isAbsolute(target)) {
+    const rel = relative(resolve(anchor), withoutExt(resolve(target)))
+    if (rel === "") key = name
+    else if (rel.startsWith("..") || isAbsolute(rel)) hashed = withoutExt(resolve(target))
+    else key = rel
+  }
+  const words = key.split(/[\\/]+/u).join("-")
+  // A name slugify can only carry part of keeps the rest as a hash of the whole path.
+  if (hashed === undefined && /[^A-Za-z0-9 ._-]/u.test(words.replace(/-/gu, ""))) hashed = key
+  const base = slugify(hashed === undefined ? words : name, "deck")
+  const slug = hashed === undefined ? base : `${base}-${createHash("sha1").update(hashed.split(sep).join("/")).digest("hex").slice(0, 6)}`
   assertSafeFileSegment(slug, "deck slug")
   return slug
 }
@@ -151,8 +175,8 @@ export function resolveWorkspaceLocation(opts: {
   isDir: boolean
 }): WorkspaceLocation {
   const { anchor, root, configured } = resolveWorkspaceRoot(opts)
-  const slug = deckSlug(opts.target, opts.isDir)
-  return { anchor, root, dir: join(root, slug), slug, configured }
+  const slug = deckSlug(opts.target, opts.isDir, anchor)
+  return { anchor, root, dir: join(root, slug), slug, name: deckSlug(opts.target, opts.isDir), configured }
 }
 
 // ── git ignore ──────────────────────────────────────────────────────────

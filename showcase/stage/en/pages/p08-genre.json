@@ -1,0 +1,63 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "title": "Abroad",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "x_unit": "%"
+      },
+      "series": [
+        {
+          "name": "top 100 China-developed mobile games",
+          "data": [
+            {
+              "x": "Strategy",
+              "y": 49.96,
+              "emphasis": true
+            },
+            {
+              "x": "Shooter",
+              "y": 9.69
+            },
+            {
+              "x": "RPG",
+              "y": 9.39
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "chart",
+      "title": "At home",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "x_unit": "%"
+      },
+      "series": [
+        {
+          "name": "top 100 mobile games in China",
+          "data": [
+            {
+              "x": "MOBA",
+              "y": 19.45
+            },
+            {
+              "x": "Shooter",
+              "y": 18.29
+            },
+            {
+              "x": "RPG",
+              "y": 15.1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: CADPA, China Game Industry Report 2025. Shares of revenue within each top 100",
+  "notes": "What sells abroad. Among the top 100 China-developed mobile games by overseas revenue in 2025, strategy games, SLG included, took 49.96%. At home, the top three genres in the top 100 are MOBA, shooters and RPGs. The two charts barely overlap. In the association's words, strategy and card games are numerous at home but earn no advantage in revenue share. So don't carry a home hit's playbook straight abroad. And this half is half of the top 100, not proof that other genres are dead. When I get to my bets, I'll come back to merge games, the new genre that just showed up."
+}

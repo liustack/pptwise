@@ -50,7 +50,7 @@ const BOARD: Record<string, { cover: string; chapter: string; ending: string }> 
   vermilion: { cover: "red-head-cover", chapter: "seal-numeral-chapter", ending: "deliberation-ending" },
   crayon: { cover: "crayonbox-cover", chapter: "crayonbox-chapter", ending: "crayonbox-ending" },
   museum: { cover: "placard-cover", chapter: "placard-chapter", ending: "placard-ending" },
-  stage: { cover: "poster-center", chapter: "one-word-chapter", ending: "release-close-ending" },
+  stage: { cover: "keynote-cover", chapter: "keynote-chapter", ending: "keynote-ending" },
   lecture: { cover: "board-head", chapter: "chalk-rule-chapter", ending: "next-lecture-ending" },
   swiss: { cover: "institutional-block", chapter: "decimal-index-chapter", ending: "resolution-ending" },
   memo: { cover: "memo-cover", chapter: "issue-line-chapter", ending: "memo-ending" },
