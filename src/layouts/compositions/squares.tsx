@@ -1,5 +1,6 @@
 import type { Component } from "@/ir"
 import { stripEmphasis } from "../../render/emphasis"
+import { blendOver } from "../../render/ink"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import {
   PLACARD_META,
@@ -29,8 +30,10 @@ type Kpi = Extract<Component, { type: "kpi_cards" }>
 /*
  * squares: quantities as squares whose areas are to scale, museum's 2026-10
  * board (p04). The claim over the page. The largest quantity as a square
- * 360px a side standing on a floor line at the left, a case-dark square
- * with a seam round it, its name and amount under it. The smaller ones
+ * 360px a side standing on a floor line at the left, filled in a quiet
+ * tone of old paper and edged in it, so it reads as a quantity and not as an
+ * empty panel, its name and amount written inside its top left corner. The
+ * smaller ones
  * stand on the same floor to its right at the same scale, the marked one
  * in copper and the rest in the dim, each named at the end of a thin line
  * rising from it, so a speck still carries its words. At the right one or
@@ -52,7 +55,7 @@ type Kpi = Extract<Component, { type: "kpi_cards" }>
 
 const FLOOR = { x: 64, y: 560, side: 360, beside: 460, pitch: 100, small: 80 } as const
 const SERIES = { x: 64, top: 172, size: 11, lineHeight: 18, tracking: 1 } as const
-const BIG = { top: 574, size: 13, lineHeight: 18, note: 12 } as const
+const BIG = { inset: 18, name: 30, noteGap: 22, size: 15, note: 13, tone: 0.24 } as const
 const LEADER = { top: 420, step: 50, dx: 15, gap: 6, label: 9, size: 13, note: 12, lineHeight: 18 } as const
 const SIDE = { x: 780, w: 436 } as const
 const FIRST = { top: 210, size: 110, lineHeight: 130, unit: 30, label: { top: 344, size: 14, lineHeight: 24 } } as const
@@ -82,7 +85,7 @@ export const squaresComposition: Composition = ({ components, ctx, rect, setting
     const from = xs[i]! + Math.min(LEADER.dx, sides[i]! / 2) + LEADER.label
     if (from + Math.max(placardWidth(names[i]!, LEADER.size, ctx), placardWidth(notes[i]!, LEADER.note, ctx)) > SIDE.x - 24) return null
   }
-  if (placardWidth(names[0]!, BIG.size, ctx) > FLOOR.side + 20) return null
+  if (Math.max(placardWidth(names[0]!, BIG.size, ctx), placardWidth(notes[0]!, BIG.note, ctx)) > FLOOR.side - 2 * BIG.inset) return null
   // A figure gives up to three tenths of its size to stay on its line.
   const specs = figures.map((f, i) => {
     const base = i === 0 ? FIRST : SECOND
@@ -105,6 +108,11 @@ export const squaresComposition: Composition = ({ components, ctx, rect, setting
   const ground = inks.ground
   const floor = rect.y + FLOOR.y
   const marked = data.map((d) => d.emphasis === true)
+  // The largest square is the yardstick the others are read against: it has
+  // to show as a body, so it takes a tone of old paper over the ground rather
+  // than the case colour, which sits within a step of the ground itself.
+  const yard = marked[0] ? placardMark(inks.copper, ground) : blendOver(inks.muted, ground, BIG.tone)
+  const yardTop = floor - sides[0]!
   return (
     <g {...compositionTag("squares")}>
       {head}
@@ -113,11 +121,11 @@ export const squaresComposition: Composition = ({ components, ctx, rect, setting
         {data.map((d, i) => {
           const side = sides[i]!
           const x = rect.x + xs[i]!
-          const fill = i === 0 && !marked[0] ? inks.vitrine : marked[i] ? placardMark(inks.copper, ground) : placardMark(inks.dim, ground)
-          return <rect key={i} data-placard-square={names[i]} x={x} y={floor - side} width={side} height={side} fill={fill} stroke={i === 0 && !marked[0] ? inks.line : fill} strokeWidth={1} />
+          const fill = i === 0 ? yard : marked[i] ? placardMark(inks.copper, ground) : placardMark(inks.dim, ground)
+          return <rect key={i} data-placard-square={names[i]} x={x} y={floor - side} width={side} height={side} fill={fill} stroke={i === 0 && !marked[0] ? placardMark(inks.muted, ground) : fill} strokeWidth={1} />
         })}
-        {paintPlacardLine(names[0]!, { ctx, x: rect.x + FLOOR.x, baseline: rect.y + 588, size: BIG.size, fill: placardText(marked[0] ? inks.lit : inks.ink, ground, BIG.size) })}
-        {paintPlacardLine(notes[0]!, { ctx, x: rect.x + FLOOR.x, baseline: rect.y + 606, size: BIG.note, fill: placardText(inks.muted, ground, BIG.note) })}
+        {paintPlacardLine(names[0]!, { ctx, x: rect.x + FLOOR.x + BIG.inset, baseline: yardTop + BIG.name, size: BIG.size, fill: placardText(inks.ink, yard, BIG.size) })}
+        {paintPlacardLine(notes[0]!, { ctx, x: rect.x + FLOOR.x + BIG.inset, baseline: yardTop + BIG.name + BIG.noteGap, size: BIG.note, fill: placardText(inks.muted, yard, BIG.note) })}
         {data.slice(1).map((d, j) => {
           const i = j + 1
           const side = sides[i]!
