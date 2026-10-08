@@ -662,9 +662,19 @@ export function measureTextUnits(text: string, weight?: TextWeightHint): number 
 // cross-reference).
 const MONO_ADVANCE_EM = 1126 / 2048
 
+/**
+ * The marks a Consolas run has painted from Microsoft YaHei, the `<a:ea>`
+ * face behind it, in PowerPoint for Mac: "×", "°", "±" and "÷". Counted at
+ * Consolas's own advance they came out about 0.19em narrower than drawn, and
+ * a run of them painted past its box.
+ */
+const MONO_EA_MARK_RE = /[°±×÷]/
+
 export function measureMonoTextUnits(text: string): number {
   return Array.from(text).reduce((sum, char) => {
     if (WIDE_CHAR_RE.test(char)) return sum + 1
+    // The wider of the two: YaHei's "°" is narrower than a Consolas cell, and an estimate may err wide, never narrow.
+    if (MONO_EA_MARK_RE.test(char)) return sum + Math.max(SYMBOL_ADVANCE_BOUNDS.yahei.regular[char.charCodeAt(0)] ?? 0, MONO_ADVANCE_EM)
     return sum + MONO_ADVANCE_EM
   }, 0)
 }
@@ -775,6 +785,11 @@ export function allowsLineBreakBetween(
   if (DIGIT.test(before) && UNIT_AFTER_NUMBER.test(after)) return false
   if (MAGNITUDE.test(before) && UNIT_AFTER_MAGNITUDE.test(after)) return false
   if (before === "瓦" && after === "时") return false
+  // An em dash stays with the word before it, and 「——」 is never split: a
+  // Georgia run paints the pair as two short dashes with a gap between them
+  // (its "—" is 0.86em), and a break between or before them left a line
+  // opening on a dash.
+  if (after === "\u2014") return false
   return !LINE_START_FORBIDDEN.test(after) && !LINE_END_FORBIDDEN.test(before)
 }
 
