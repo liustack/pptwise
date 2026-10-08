@@ -31,9 +31,9 @@ type Paragraph = Extract<Component, { type: "paragraph" }>
  * 2026-10 board (p03). The claim over the page. Two halves split by a seam.
  * In each, a small round plate like a specimen dish with a copper mark and
  * a ring where the sample was taken, the side or place it stands for under
- * it; beside it the sample's name in the serif, where it came from in old
+ * it. Beside it the sample's name in the serif, where it came from in old
  * paper and its quantity set large in the serif with its unit after it (the
- * marked one in copper); under a seam the particulars, one a line, each
+ * marked one in copper). Under a seam the particulars, one a line, each
  * after its name small and dim. A line in the serif closes the page, its
  * marked run in copper, and a note in the dim under it.
  *

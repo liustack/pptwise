@@ -30,7 +30,7 @@ type Bullets = Extract<Component, { type: "bullets" }>
  *
  * Takes, in the placard setting: an `image` and a `bullets` of three to five
  * items, in either order. An item that opens with a short name and a colon
- * (「看出处：哪次任务，正面还是背面」) sets the name over the rest; one that
+ * (「看出处：哪次任务，正面还是背面」) sets the name over the rest. One that
  * does not is a name alone.
  *
  * Declines: a name or a line past one line in the column, a claim past two
