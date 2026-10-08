@@ -1392,7 +1392,7 @@ function isLatinSentenceBreak(before: string, after: string): boolean {
  * anywhere else, which for Chinese is between any two characters of a phrase
  * (「四」+「季度」).
  */
-function breakScore(before: string, after: string): number {
+function breakScore(before: string, after: string, insideWord = false): number {
   const a = before.trimEnd().slice(-1)
   const b = after.trimStart().charAt(0)
   if (CJK_CLAUSE_END_RE.test(a)) return 2
@@ -1400,13 +1400,44 @@ function breakScore(before: string, after: string): number {
   const asciiA = ASCII_GLYPH_RE.test(a)
   const asciiB = ASCII_GLYPH_RE.test(b)
   if ((asciiA && WIDE_CHAR_RE.test(b)) || (WIDE_CHAR_RE.test(a) && asciiB)) return 1
-  if (asciiA && asciiB) return -1
+  // After a comma or a colon an English line ends on a pause, the way a
+  // Chinese one does after 「，」.
+  if (asciiA && asciiB) return LATIN_CLAUSE_END_RE.test(a) ? 1 : -1
+  // Between two Chinese characters of one word (「季度」, 「新能源」), as the
+  // word segmenter reads it, a break splits the word.
+  if (insideWord) return -1
   return 0
 }
 
-function linesScore(lines: readonly string[]): number {
+/** English clause punctuation a line may end on: a comma or a colon. */
+const LATIN_CLAUSE_END_RE = /[,:]/
+
+/** An English break after a comma or a colon, in text with a word after it. */
+const LATIN_CLAUSE_BREAK_RE = /[A-Za-z0-9)"'\u2019\u201d][,:] +["'\u2018\u201c(]*[A-Za-z0-9]/
+
+/**
+ * The UTF-16 offsets inside Chinese words, where a break would split one, as
+ * `Intl.Segmenter` reads the text. Empty for text with no Chinese in it, or
+ * where the runtime has no segmenter.
+ */
+function insideWordOffsets(content: string): ReadonlySet<number> {
+  const inside = new Set<number>()
+  if (!WIDE_CHAR_RE.test(content) || typeof Intl === "undefined" || typeof Intl.Segmenter !== "function") return inside
+  for (const { segment, index, isWordLike } of new Intl.Segmenter("zh", { granularity: "word" }).segment(content)) {
+    if (!isWordLike || !WIDE_CHAR_RE.test(segment)) continue
+    for (let at = index + 1; at < index + segment.length; at += 1) inside.add(at)
+  }
+  return inside
+}
+
+function linesScore(lines: readonly string[], content: string, inside: ReadonlySet<number>): number {
   let score = 0
-  for (let i = 1; i < lines.length; i += 1) score += breakScore(lines[i - 1], lines[i])
+  let cursor = 0
+  for (let i = 0; i < lines.length; i += 1) {
+    const at = content.indexOf(lines[i]!, cursor)
+    if (i > 0) score += breakScore(lines[i - 1]!, lines[i]!, at >= 0 && inside.has(at))
+    if (at >= 0) cursor = at + lines[i]!.length
+  }
   return score
 }
 
@@ -1473,8 +1504,10 @@ function preferScriptBoundaries(
   // in it scores every break 0.
   if (balanced.length < 2) return balanced
   const wide = WIDE_CHAR_RE.test(content)
-  if (!wide && !LATIN_SENTENCE_BREAK_RE.test(content)) return balanced
-  if (wide && !ASCII_GLYPH_RE.test(content) && !CJK_CLAUSE_END_RE.test(content)) return balanced
+  const clauses = !wide && LATIN_CLAUSE_BREAK_RE.test(content)
+  if (!wide && !clauses && !LATIN_SENTENCE_BREAK_RE.test(content)) return balanced
+  const inside = insideWordOffsets(content)
+  if (wide && inside.size === 0 && !ASCII_GLYPH_RE.test(content) && !CJK_CLAUSE_END_RE.test(content)) return balanced
   const pieces: WrapPiece[] = tokenize(content).tokens
   const count = pieces.length
   const n = balanced.length
@@ -1482,7 +1515,14 @@ function preferScriptBoundaries(
   const sentenceAt: boolean[] = [false]
   for (let i = 1; i < count; i += 1) sentenceAt.push(isLatinSentenceBreak(pieces[i - 1].text, pieces[i].text))
   const sentences = sentenceAt.includes(true)
-  if (!wide && !sentences) return balanced
+  if (!wide && !sentences && !clauses) return balanced
+  // Where each piece starts in `content`, to read the word segmenter's offsets.
+  const startOf: number[] = []
+  for (let i = 0, cursor = 0; i < count; i += 1) {
+    const at = content.indexOf(pieces[i].text, cursor)
+    startOf.push(at)
+    if (at >= 0) cursor = at + pieces[i].text.length
+  }
 
   // Widths by prefix sums. `measureTextUnits` is a per-character sum, so a
   // line's width is the pieces' own widths plus the spaces between them.
@@ -1499,7 +1539,7 @@ function preferScriptBoundaries(
   for (let i = 1; i < count; i += 1) {
     const before = pieces[i - 1].text
     const after = pieces[i].text
-    breakAt.push(allowsLineBreakBetween(before[before.length - 1], after[0]) ? breakScore(before, after) : null)
+    breakAt.push(allowsLineBreakBetween(before[before.length - 1], after[0]) ? breakScore(before, after, inside.has(startOf[i]!)) : null)
   }
 
   const balancedWidest = Math.max(...balanced.map((l) => measureTextUnits(l, weight)))
@@ -1507,11 +1547,11 @@ function preferScriptBoundaries(
   // +「按三季度实际走势重定」 over 「四季度国内目标，按」+「三季度实际走势重定」.
   const tolerance = sentences
     ? SENTENCE_BREAK_TOLERANCE
-    : CJK_CLAUSE_END_RE.test(content)
+    : CJK_CLAUSE_END_RE.test(content) || clauses
       ? CLAUSE_BREAK_TOLERANCE
       : SCRIPT_BREAK_TOLERANCE
   const cap = Math.min(limit, balancedWidest * (1 + tolerance)) + 1e-9
-  const baselineScore = linesScore(balanced)
+  const baselineScore = linesScore(balanced, content, inside)
   let budget = SCRIPT_BREAK_BUDGET
 
   // A split is better with a higher score, then more even lines, then

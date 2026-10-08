@@ -382,7 +382,8 @@ describe("layoutSvgText balanceLines (widow avoidance)", () => {
       maxLines: 3,
       balanceLines: true,
     })
-    expect(r.lines).toEqual(["年度战略回", "顾报告"])
+    // The word segmenter keeps 「回顾」 whole: 4+4 within the widest line, not 5+3.
+    expect(r.lines).toEqual(["年度战略", "回顾报告"])
   })
 
   it("evens Latin lines even when the last one is not a widow (brief en p04 heading)", () => {
@@ -491,7 +492,8 @@ describe("layoutSvgText balanceLines (English sentence breaks)", () => {
 
   it("evens the lines a sentence break leaves", () => {
     const r = heading("Solar passed coal in China. Wind is next, and storage after it.", 700, 48, 3)
-    expect(r.lines).toEqual(["Solar passed coal in China.", "Wind is next, and", "storage after it."])
+    // After the comma, not between two words of the clause.
+    expect(r.lines).toEqual(["Solar passed coal in China.", "Wind is next,", "and storage after it."])
     expect(r.fontSize).toBe(48)
   })
 
@@ -957,7 +959,8 @@ describe("CJK line-break prohibition (kinsoku)", () => {
     // Pre-fix: ["毕业公演《", "候鸟旅馆》"] — line 1 ended on the opening mark.
     const r = layoutSvgText("毕业公演《候鸟旅馆》", HEADING)
     expectNoProhibitedBoundary(r.lines)
-    expect(r.lines).toEqual(["毕业公演《候", "鸟旅馆》"])
+    // And the title stays whole on its line, 「候鸟旅馆」 being one word.
+    expect(r.lines).toEqual(["毕业公演", "《候鸟旅馆》"])
     expect(r.lines[0]).not.toMatch(/《$/)
     expect(r.truncated).toBe(false)
   })
