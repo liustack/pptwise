@@ -1,7 +1,7 @@
 import type { Component } from "@/ir"
 import { cloneElement } from "react"
 import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisTspans, renderEmphasisText, type EmphasisSegment } from "../render/emphasis"
-import type { RenderDef, SvgComponent } from "./types"
+import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { accessibleInk } from "../render/ink"
 
 type ImageComponent = Extract<Component, { type: "image" }>
@@ -171,8 +171,8 @@ function dropLead(segments: EmphasisSegment[], label: string): EmphasisSegment[]
  */
 const COVER_FLOOR = { share: 0.2, min: 96 } as const
 
-function imageMinHeight(component: ImageComponent, w: number): number {
-  const measured = image.measure(component, w)
+function imageMinHeight(component: ImageComponent, w: number, ctx: ComponentCtx): number {
+  const measured = image.measure(component, w, ctx)
   return component.fit === "cover" ? Math.min(measured, Math.max(COVER_FLOOR.min, Math.round(w * COVER_FLOOR.share))) : measured
 }
 
