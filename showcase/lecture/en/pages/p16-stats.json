@@ -1,0 +1,37 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "Over 200",
+          "unit": "million",
+          "label": "people filed",
+          "note": "up 4.38% on the year"
+        },
+        {
+          "value": "**Over 100**",
+          "unit": "million",
+          "label": "claimed a refund"
+        },
+        {
+          "value": "Over RMB 150",
+          "unit": "billion",
+          "label": "refunded in total"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "title": "126 million",
+      "text": "This often-quoted figure is the number of people using special additional deductions in the first half of 2026, not refund claims"
+    },
+    {
+      "type": "paragraph",
+      "text": "Tax year 2024: over 100 million people claimed more than RMB 130 billion back, and more than 7 million declared more than RMB 48 billion owed"
+    }
+  ],
+  "footnote": "Source: State Council Information Office press conferences (July 28, 2026 for tax year 2025, July 28, 2025 for tax year 2024). Officials gave these as lower bounds, not exact figures",
+  "notes": "Some national numbers. For tax year 2025, the round filed between March and June this year, a State Council Information Office press conference on July 28, 2026 reported that over 200 million people filed, up 4.38% on the year, over 100 million claimed refunds, and refunds totalled over 150 billion yuan. The year before, tax year 2024: over 100 million people claimed refunds of more than 130 billion yuan, and more than 7 million declared top-ups of more than 48 billion. Officials said over and more than, so these are not exact, and you should not compute precise growth rates from them. One number often gets mixed in: 126 million. That is the number of people using special additional deductions in the first half of 2026, not refund claims. So if you claim a refund, you are one of a hundred million."
+}

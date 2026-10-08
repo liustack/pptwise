@@ -1,0 +1,29 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "tax-desk2",
+      "fit": "cover",
+      "caption": "Illustration (AI-generated)"
+    },
+    {
+      "type": "concept_equation",
+      "operands": [
+        {
+          "label": "Salary",
+          "note": "Your employer withholds monthly, sees only its own pay and takes RMB 5,000 off a month"
+        },
+        {
+          "label": "Freelance and author's fees",
+          "note": "Withheld per payment, from 20%, without the RMB 60,000 or special additional deductions"
+        }
+      ],
+      "result": {
+        "label": "Reconciliation",
+        "note": "All four incomes\nworked out for the year\nrefund or top-up"
+      }
+    }
+  ],
+  "footnote": "Source: STA Announcement No. 61 of 2018, Arts. 6 and 8, STA Order No. 57, Art. 3",
+  "notes": "Why recalculate at all? Because during the year tax is withheld in separate pieces. Your employer withholds on salary every month using the cumulative method. It only sees its own payroll so far this year, and it takes RMB 5,000 off for each month. Freelance fees, author's fees and royalties are withheld by whoever pays you, payment by payment. Freelance fees start at a 20% withholding rate, and at that point nobody takes off the RMB 60,000 annual allowance or your special additional deductions. So each piece is a bit off. The annual reconciliation pools the four kinds of income, recalculates the whole year, refunds what was overpaid and collects what was underpaid. Serious illness costs can only be deducted at this stage."
+}

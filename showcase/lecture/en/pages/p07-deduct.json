@@ -1,0 +1,41 @@
+{
+  "components": [
+    {
+      "type": "steps",
+      "items": [
+        {
+          "icon": "wallet",
+          "title": "Basic deduction",
+          "text": "**RMB 60,000 a year**\nOnly once, even with two jobs"
+        },
+        {
+          "icon": "receipt",
+          "title": "Special deductions",
+          "text": "Your own social insurance\nAs on your payslip"
+        },
+        {
+          "icon": "list-checks",
+          "title": "Special additional",
+          "text": "Seven items\nOne by one on the next page"
+        },
+        {
+          "icon": "piggy-bank",
+          "title": "Other deductions",
+          "text": "Such as a private pension, up to RMB 12,000 a year"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "warn",
+      "icon": "alert-triangle",
+      "text": "A deduction is not a refund: RMB 12,000 more off saves only RMB 1,200 in the 10% bracket"
+    },
+    {
+      "type": "paragraph",
+      "text": "Deductions stop at that year's taxable income. Anything unused does not carry over to the next year"
+    }
+  ],
+  "footnote": "Source: Individual Income Tax Law, Art. 6, Implementing Regulations, Art. 13, MOF and STA Announcement No. 21 of 2024",
+  "notes": "From income you take off four things. One, the basic deduction: RMB 60,000 a year. The famous 5,000 a month threshold is this amount spread over twelve months, and it can only be taken once a year, even if you have two employers. Two, special deductions: your own contributions to social insurance and the housing fund. There is no national figure, so use your payslip. Three, the seven special additional deductions on the next page. Four, other deductions, the most common being the private pension, deductible up to RMB 12,000 a year nationwide since 2024. It is an other deduction, not an eighth special additional deduction. And remember, a deduction is not a refund. Another 12,000 off in the 10% bracket saves 1,200, not 12,000."
+}

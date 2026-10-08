@@ -1,0 +1,18 @@
+{
+  "components": [
+    {
+      "type": "paragraph",
+      "text": "Tax due = taxable income × rate − **quick deduction**"
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "taxable income: Income − 60,000 − deductions",
+        "rate: From the table\non page 9",
+        "quick deduction: Goes with the rate"
+      ]
+    }
+  ],
+  "footnote": "Source: STA Order No. 57, Art. 3, Individual Income Tax Law, Schedule 1",
+  "notes": "This is the one line to copy down tonight. Tax due equals taxable income times the rate, minus the quick deduction. Taxable income is not your salary. It is what is left of the year's income after the RMB 60,000 basic deduction, social insurance and housing fund, special additional deductions and other deductions. Work out the tax due for the year, subtract what was already withheld, and a negative result is a refund while a positive one is a top-up. This is Article 3 of the State Taxation Administration's Order No. 57, the measures on annual reconciliation. The quick deduction is explained with the rate table."
+}

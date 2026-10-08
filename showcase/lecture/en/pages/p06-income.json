@@ -1,0 +1,40 @@
+{
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "briefcase",
+          "title": "Wages and salaries",
+          "text": "Pay, bonuses, allowances, subsidies",
+          "sub": "× 100%"
+        },
+        {
+          "icon": "pen-tool",
+          "title": "Freelance fees",
+          "text": "Design, consulting, teaching, translation",
+          "sub": "× 80%",
+          "highlight": true
+        },
+        {
+          "icon": "book-open",
+          "title": "Author's fees",
+          "text": "Published books and articles",
+          "sub": "× 80% × 70%"
+        },
+        {
+          "icon": "key-round",
+          "title": "Royalties",
+          "text": "Patents, trademarks, copyright",
+          "sub": "× 80%"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Example: RMB 10,000 of author's fees counts as 10,000 × 80% × 70% = RMB 5,600"
+    }
+  ],
+  "footnote": "Source: Individual Income Tax Law, Arts. 2 and 6, Implementing Regulations, Art. 6, STA Announcement No. 61 of 2018, Art. 8",
+  "notes": "What gets pooled is called comprehensive income, and it has four parts: wages and salaries, freelance fees (the law calls them remuneration for personal services), author's fees, and royalties. Look at the right-hand column. Salary counts in full. Freelance fees and royalties count at 80%. Author's fees count at 80% and then 70% of that, so 56%. RMB 10,000 of author's fees counts as 5,600. The middle column is withholding, which uses different rules. A freelance payment of up to RMB 4,000 has 800 taken off, a larger one has 20% taken off, and the rest is withheld at 20%, 30% or 40%. A common mistake is to use the 800 at year end. It only applies to withholding. At year end it is always 80%. One exception: since October 1, 2025, freelance pay through internet platforms is withheld cumulatively. More on that under traps."
+}

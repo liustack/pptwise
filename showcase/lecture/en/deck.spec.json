@@ -1,0 +1,147 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "instructional",
+    "pacing": "balanced",
+    "audience": "public"
+  },
+  "theme": "lecture",
+  "filename": "annual-tax-reconciliation-lecture-en",
+  "meta": {
+    "organization": "Youth Evening School",
+    "date": "October 2026"
+  },
+  "footer": {
+    "page_number": true,
+    "label": "Annual tax reconciliation in one class",
+    "organization": true
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "Youth Evening School · Lesson 1",
+      "heading": "One class on\n**annual tax reconciliation**",
+      "summary": "Redo the year's sums: get back what was overpaid, pay any shortfall on time\nBy the end of class you can tell whether you get money back or owe more"
+    },
+    {
+      "id": "p02-goals",
+      "type": "content",
+      "kind": "points",
+      "kicker": "Tonight",
+      "heading": "Tonight: understand it, work it out, file it"
+    },
+    {
+      "id": "p03-why",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Part 1 · Understand",
+      "heading": "Withheld in pieces, so the year needs a recount"
+    },
+    {
+      "id": "p04-formula",
+      "type": "content",
+      "kind": "statement",
+      "kicker": "Part 2 · Work it out",
+      "heading": "Tonight, remember one line"
+    },
+    {
+      "id": "p05-who",
+      "type": "content",
+      "kind": "points",
+      "kicker": "Part 3 · File it",
+      "heading": "File for a refund. Small top-ups can be skipped"
+    },
+    {
+      "id": "p06-income",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Part 2 · Work it out",
+      "heading": "Four incomes pooled, three of them discounted"
+    },
+    {
+      "id": "p07-deduct",
+      "type": "content",
+      "kind": "process",
+      "kicker": "Part 2 · Work it out",
+      "heading": "RMB 60,000 off once, then three more deductions"
+    },
+    {
+      "id": "p08-seven",
+      "type": "content",
+      "kind": "hierarchy",
+      "kicker": "Part 2 · Work it out",
+      "heading": "Seven special deductions, three raised in 2023"
+    },
+    {
+      "id": "p09-rates",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Part 2 · Work it out",
+      "heading": "Rates apply to taxable income, not to salary"
+    },
+    {
+      "id": "p10-example",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Part 2 · Work it out",
+      "heading": "Example: RMB 15,000 a month and one design job"
+    },
+    {
+      "id": "p11-derive",
+      "type": "content",
+      "kind": "points",
+      "kicker": "Part 2 · Work it out",
+      "heading": "Step by step: 3,440 due, 4,240 paid, 800 back"
+    },
+    {
+      "id": "p12-why800",
+      "type": "content",
+      "kind": "evidence",
+      "kicker": "Part 2 · Work it out",
+      "heading": "The RMB 800 refund all comes from the design fee"
+    },
+    {
+      "id": "p13-practice",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Try it now",
+      "heading": "Try it now: three variations, five minutes"
+    },
+    {
+      "id": "p14-answers",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Try it now",
+      "heading": "Answers: A gets RMB 2,600 back, B owes RMB 3,600"
+    },
+    {
+      "id": "p15-traps",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Part 3 · File it",
+      "heading": "Four traps that cost money or make you late"
+    },
+    {
+      "id": "p16-stats",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Part 3 · File it",
+      "heading": "Tax year 2025: over 100 million claimed refunds"
+    },
+    {
+      "id": "p17-when",
+      "type": "content",
+      "kind": "process",
+      "kicker": "Part 3 · File it",
+      "heading": "Next reconciliation: March 1 to June 30, 2027"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "kicker": "Homework",
+      "heading": "Class dismissed.",
+      "summary": "Next window: **March 1 to June 30, 2027**"
+    }
+  ]
+}

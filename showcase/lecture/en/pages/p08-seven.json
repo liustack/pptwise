@@ -1,0 +1,60 @@
+{
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "baby",
+          "title": "Infant care (under 3)",
+          "text": "RMB 2,000 per child a month\nWas RMB 1,000",
+          "tag": {
+            "text": "Raised"
+          }
+        },
+        {
+          "icon": "graduation-cap",
+          "title": "Children's education",
+          "text": "RMB 2,000 per child a month\nWas RMB 1,000",
+          "tag": {
+            "text": "Raised"
+          }
+        },
+        {
+          "icon": "hand-heart",
+          "title": "Elderly parents",
+          "text": "RMB 3,000 a month\nSiblings share it, up to RMB 1,500 each. Was RMB 2,000",
+          "tag": {
+            "text": "Raised"
+          }
+        }
+      ]
+    },
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "book-open",
+          "title": "Further education",
+          "text": "Degree: RMB 400 a month\nCertificate year: RMB 3,600"
+        },
+        {
+          "icon": "heart-pulse",
+          "title": "Serious illness",
+          "text": "Own costs above 15,000\nUp to RMB 80,000 a year"
+        },
+        {
+          "icon": "house",
+          "title": "Mortgage interest",
+          "text": "RMB 1,000 a month\nFirst home only"
+        },
+        {
+          "icon": "building",
+          "title": "Rent",
+          "text": "RMB 800 to 1,500 a month\nThree tiers by city: 1,500, 1,100 or 800"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: State Council Guofa [2018] No. 41, [2022] No. 8 and [2023] No. 13 (in force from January 1, 2023)",
+  "notes": "There are seven special additional deductions, and in 2023 the State Council raised three of them, not all seven. Infant care for children under 3 and children's education each went from RMB 1,000 to 2,000 per child a month. Support for elderly parents went from 2,000 to 3,000 a month, and siblings who share it can take at most 1,500 each. The other four did not change. Further education: RMB 400 a month for a degree course, or 3,600 in the year you obtain a vocational or professional certificate. Serious illness: the part of your own out-of-pocket costs under the medical insurance list above RMB 15,000, up to 80,000, and only at year end. Mortgage interest on a first home: 1,000 a month. Rent: 1,500, 1,100 or 800 a month depending on the city. Watch out: one child means 2,000 a month in total, taken by one parent or split in half. Mortgage interest and rent cannot both be claimed in the same year, and a couple working in the same city can only claim rent once."
+}

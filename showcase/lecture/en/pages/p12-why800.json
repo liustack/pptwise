@@ -1,0 +1,33 @@
+{
+  "stamp": {
+    "text": "Example · figures made up"
+  },
+  "components": [
+    {
+      "type": "waterfall",
+      "items": [
+        {
+          "label": "Withheld: 8,000 × 20%",
+          "value": 1600,
+          "kind": "total"
+        },
+        {
+          "label": "Actually due: 8,000 × 10%",
+          "value": 800,
+          "kind": "total"
+        },
+        {
+          "label": "Overpaid, refunded at year end",
+          "value": 800,
+          "emphasis": true
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "The design fee counts as RMB 8,000. It was withheld at 20%, and at year end it falls in the 10% bracket"
+    }
+  ],
+  "footnote": "Source: STA Announcement No. 61 of 2018, Art. 8 and withholding rate table 2",
+  "notes": "Where does the 800 come from? Take salary alone: taxable income would be 180,000 minus 128,400, which is 51,600, and the tax 51,600 times 10% minus 2,520, which is 2,640. Exactly what the employer withheld. So salary breaks even. The whole refund comes from the design fee. When it was paid, 20% was taken off as expenses, leaving 8,000, and 20% of that was withheld: 1,600. Pooled with the year, this person's top rate is only 10%, so those 8,000 should bear 800. The extra 800 comes back. The 20% on freelance pay is a withholding rate, not the tax rate. At year end it is recalculated at your own rate."
+}

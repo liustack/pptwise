@@ -1,0 +1,59 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "periods": [
+        {
+          "from": "2026-03-01",
+          "to": "2026-06-30",
+          "label": "Tax year 2025"
+        },
+        {
+          "from": "2027-03-01",
+          "to": "2027-06-30",
+          "label": "Tax year 2026"
+        }
+      ],
+      "milestones": [
+        {
+          "date": "2026-02-25",
+          "title": "Booking opens",
+          "desc": "For tax year 2025"
+        },
+        {
+          "date": "2026-03-01",
+          "title": "Filing opens",
+          "desc": "Book ahead for March 1 to 20"
+        },
+        {
+          "date": "2026-06-30",
+          "title": "Last day",
+          "desc": "Top-ups paid in full"
+        },
+        {
+          "date": "2026-07-01",
+          "title": "Late fees start",
+          "desc": "0.05% a day"
+        },
+        {
+          "date": "2027-03-01",
+          "title": "Tax year 2026 opens",
+          "desc": "Booking date not out yet",
+          "highlight": true
+        },
+        {
+          "date": "2027-06-30",
+          "title": "Tax year 2026 closes",
+          "desc": "Top-ups paid in full",
+          "highlight": true
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Where: yourself in the IIT app or on the tax bureau's website for individuals, through your employer once you confirm, or through someone you authorize"
+    }
+  ],
+  "footnote": "Source: STA Notice No. 1 of 2026, Individual Income Tax Law, Art. 11, STA Order No. 57, Arts. 5, 14 and 15, Tax Collection Law Implementing Rules, Art. 75",
+  "notes": "Finally, when and where. Use tax year 2025, which has just finished, as the model. On February 3, 2026 the State Taxation Administration published its booking notice. From February 25 you could book a slot in the IIT app. Filing opened on March 1, with booking required from March 1 to 20 and not after the 21st. It closed on June 30, by which any top-up had to be paid, and late fees started on July 1. It is October now, so tax year 2025 is over. Next is tax year 2026, legally from March 1 to June 30, 2027. The booking date has not been announced, so watch for the app's notice. Where: first choice is the IIT app or the Natural Person Electronic Taxation Bureau website, doing it yourself. Your employer can file for you, but only after you confirm in writing or electronically. You can also authorise a tax agent or another person in writing. If your comprehensive income amount is no more than 60,000 and tax was withheld, a simplified return can claim the refund. Keep your records for five years."
+}

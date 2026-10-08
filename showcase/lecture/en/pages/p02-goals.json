@@ -1,0 +1,29 @@
+{
+  "components": [
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "book-open",
+          "title": "Understand",
+          "text": "Why tax withheld every month is worked out again at year end"
+        },
+        {
+          "icon": "calculator",
+          "title": "**Work it out**",
+          "text": "One worked example, from a year's income to the refund"
+        },
+        {
+          "icon": "smartphone",
+          "title": "File it",
+          "text": "Whether you need to, and when and where to do it"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "The people and figures in the examples are made up. Every rule cites its source at the foot of the page"
+    }
+  ],
+  "notes": "Three things tonight. First, understand why your employer withholds tax every month and the year still has to be recalculated. Second, calculate: one worked example, line by line, from income to refund. Third, file: do you need to, when, and where. Halfway through you get three practice problems, so have a pen or your phone's calculator ready."
+}

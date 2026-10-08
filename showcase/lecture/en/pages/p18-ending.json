@@ -1,0 +1,23 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "tax-building"
+  },
+  "components": [
+    {
+      "type": "steps",
+      "items": [
+        {
+          "title": "Check the deductions you filed in the app",
+          "text": "Rent, parents, children: is anything missing or wrong?"
+        },
+        {
+          "title": "Use tonight's formula on your own payslip",
+          "text": "Tax due = taxable income × rate − quick deduction"
+        }
+      ]
+    }
+  ],
+  "footnote": "General teaching, not personal tax advice. The IIT app and your tax office have the final word. The photograph is an AI-generated illustration",
+  "notes": "Two pieces of homework. One, open the IIT app and check the special additional deductions you have entered this year. Note anything missing, you can add it when you file in 2027. Two, take tonight's formula and your payslip and estimate whether tax year 2026 means a refund or a top-up. Class dismissed. Once more: this is general teaching, not personal tax advice. The IIT app and your tax office have the final word."
+}

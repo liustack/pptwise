@@ -1,0 +1,147 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "instructional",
+    "pacing": "balanced",
+    "audience": "public"
+  },
+  "theme": "lecture",
+  "filename": "annual-tax-reconciliation-lecture-zh",
+  "meta": {
+    "organization": "青年夜校",
+    "date": "2026 年 10 月"
+  },
+  "footer": {
+    "page_number": true,
+    "label": "一节课学会个税年度汇算",
+    "organization": true
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "青年夜校　第 1 讲",
+      "heading": "一节课学会\n**个税年度汇算**",
+      "summary": "把全年的账重算一遍，多交的退回来，少交的按时补上\n下课前，你能自己算出是退还是补"
+    },
+    {
+      "id": "p02-goals",
+      "type": "content",
+      "kind": "points",
+      "kicker": "本节课",
+      "heading": "今晚学会三件事：看懂、算对、自己去办"
+    },
+    {
+      "id": "p03-why",
+      "type": "content",
+      "kind": "list",
+      "kicker": "一　看懂",
+      "heading": "每月扣了税还要汇算，因为平时是分开预扣的"
+    },
+    {
+      "id": "p04-formula",
+      "type": "content",
+      "kind": "statement",
+      "kicker": "二　算对",
+      "heading": "今晚只要记住一个式子"
+    },
+    {
+      "id": "p05-who",
+      "type": "content",
+      "kind": "points",
+      "kicker": "三　去办",
+      "heading": "想退税就得自己办，补税不多的可以不办"
+    },
+    {
+      "id": "p06-income",
+      "type": "content",
+      "kind": "data",
+      "kicker": "二　算对",
+      "heading": "四项收入合起来算：劳务和特许权打八折，稿酬再乘七成"
+    },
+    {
+      "id": "p07-deduct",
+      "type": "content",
+      "kind": "process",
+      "kicker": "二　算对",
+      "heading": "6 万元全年只减一次，再减三险一金、专项附加和其他扣除"
+    },
+    {
+      "id": "p08-seven",
+      "type": "content",
+      "kind": "hierarchy",
+      "kicker": "二　算对",
+      "heading": "专项附加扣除有七项，2023 年只提高了其中三项"
+    },
+    {
+      "id": "p09-rates",
+      "type": "content",
+      "kind": "data",
+      "kicker": "二　算对",
+      "heading": "税率表看的是扣完之后的全年应纳税所得额，不是年薪"
+    },
+    {
+      "id": "p10-example",
+      "type": "content",
+      "kind": "list",
+      "kicker": "二　算对",
+      "heading": "例题：月薪 15000 元，租房，赡养父母，8 月接了一单设计"
+    },
+    {
+      "id": "p11-derive",
+      "type": "content",
+      "kind": "points",
+      "kicker": "二　算对",
+      "heading": "一步步算：全年应纳 3440 元，已预缴 4240 元，应退 800 元"
+    },
+    {
+      "id": "p12-why800",
+      "type": "content",
+      "kind": "evidence",
+      "kicker": "二　算对",
+      "heading": "这 800 元退税，全是设计费多预扣的"
+    },
+    {
+      "id": "p13-practice",
+      "type": "content",
+      "kind": "list",
+      "kicker": "当场练",
+      "heading": "当场练：三道变式，先自己算，五分钟后对答案"
+    },
+    {
+      "id": "p14-answers",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "当场练",
+      "heading": "对答案：漏报租金退 2600 元，两处工资补 3600 元"
+    },
+    {
+      "id": "p15-traps",
+      "type": "content",
+      "kind": "list",
+      "kicker": "三　去办",
+      "heading": "四个常见的坑，踩中就可能多交或交晚"
+    },
+    {
+      "id": "p16-stats",
+      "type": "content",
+      "kind": "data",
+      "kicker": "三　去办",
+      "heading": "2025 年度超过 2 亿人办了汇算，超过 1 亿人申报退税"
+    },
+    {
+      "id": "p17-when",
+      "type": "content",
+      "kind": "process",
+      "kicker": "三　去办",
+      "heading": "下一次汇算：2027 年 3 月 1 日至 6 月 30 日"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "kicker": "课后作业",
+      "heading": "下课。",
+      "summary": "下次窗口：**2027 年 3 月 1 日至 6 月 30 日**"
+    }
+  ]
+}

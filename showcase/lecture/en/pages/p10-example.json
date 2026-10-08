@@ -1,0 +1,42 @@
+{
+  "stamp": {
+    "text": "Example · figures made up"
+  },
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "title": "Pay",
+          "text": "RMB 15,000 a month before tax, social insurance RMB 2,700 a month"
+        },
+        {
+          "title": "Rent",
+          "text": "A provincial capital, rent deduction RMB 1,500 a month, reported at work in January"
+        },
+        {
+          "title": "Parents",
+          "text": "Shared with a brother, RMB 1,500 a month each"
+        },
+        {
+          "title": "Side job",
+          "text": "One design job in August, RMB 10,000 before tax, withheld per payment"
+        }
+      ]
+    },
+    {
+      "type": "image_grid",
+      "items": [
+        {
+          "asset_id": "tax-apartment"
+        },
+        {
+          "asset_id": "tax-hands",
+          "caption": "Illustration (AI-generated)"
+        }
+      ]
+    }
+  ],
+  "footnote": "Example, figures are made up. Social insurance is set for the example, use your own payslip",
+  "notes": "Now the example. The figures are made up. Our person is a tax resident with one employer all year, working in a provincial capital with no home of their own there, so they rent. Gross pay is RMB 15,000 a month, 180,000 a year, with no year-end bonus. Their own social insurance and housing fund contribution is 2,700 a month, which is set for the example, so check your own payslip. They told their employer about two special additional deductions at the start of the year: rent, 1,500 a month in a provincial capital, and elderly parents. Both parents are over 60 and they share the 3,000 with a brother, 1,500 each. In August they did one design job for another company, RMB 10,000 before tax, paid directly rather than through a platform, with tax withheld on that payment. No author's fees, private pension or donations. Quick guess before we start: refund or top-up?"
+}
