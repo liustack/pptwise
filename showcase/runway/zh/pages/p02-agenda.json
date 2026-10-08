@@ -1,0 +1,36 @@
+{
+  "components": [
+    {
+      "type": "numbered_cards",
+      "items": [
+        {
+          "icon": "factory",
+          "title": "为什么是旧牛仔",
+          "text": "旧纺织品的规模，一条牛仔裤的水"
+        },
+        {
+          "icon": "palette",
+          "title": "灵感",
+          "text": "把磨白、褶痕和口袋印当成图案"
+        },
+        {
+          "icon": "scissors",
+          "title": "面料",
+          "text": "拆线、分档、拼接，做出新面料"
+        },
+        {
+          "icon": "shirt",
+          "title": "系列",
+          "text": "七个造型，按色阶从深走到浅",
+          "emphasis": true
+        },
+        {
+          "icon": "scale",
+          "title": "边界",
+          "text": "做到了什么，做不到什么"
+        }
+      ]
+    }
+  ],
+  "notes": "今天分五段讲。前两页是背景，只放我对过原文的数字。中间三段是设计本身，占答辩的大部分时间。最后一页讲边界，我想主动说清楚这个系列不能证明什么。"
+}

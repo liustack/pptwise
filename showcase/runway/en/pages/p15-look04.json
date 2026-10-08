@@ -1,0 +1,35 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "look04",
+      "fit": "cover",
+      "caption": "LOOK 04, back (AI-generated)",
+      "crop": [
+        0,
+        0.057,
+        1,
+        0.857
+      ]
+    },
+    {
+      "type": "insight_panel",
+      "title": "LOOK 04",
+      "rows": [
+        {
+          "label": "FABRIC",
+          "text": "Horizontal strips by shade, dark at the top, pale at the hem"
+        },
+        {
+          "label": "MAKE",
+          "text": "Strips overlapped, their edges left unfinished"
+        },
+        {
+          "label": "SHAPE",
+          "text": "Sleeveless, falling to the floor"
+        }
+      ]
+    }
+  ],
+  "notes": "LOOK 04 is a sleeveless maxi dress that turns the shade scale into horizontal strips, darkest at the top and nearly white where the hem meets the floor. The strip edges are deliberately left unfinished, so with wear and washing the fraying keeps changing. That is what I wanted to keep: the garment is still being worn, and its marks are still growing."
+}

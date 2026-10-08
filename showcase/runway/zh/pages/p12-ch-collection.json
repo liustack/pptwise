@@ -1,0 +1,70 @@
+{
+  "components": [
+    {
+      "type": "image_grid",
+      "emphasis": "first",
+      "items": [
+        {
+          "asset_id": "hero",
+          "caption": "LOOK 01"
+        },
+        {
+          "asset_id": "look0203",
+          "caption": "LOOK 02",
+          "crop": [
+            0.06,
+            0.05,
+            0.385,
+            0.9
+          ]
+        },
+        {
+          "asset_id": "look0203",
+          "caption": "LOOK 03",
+          "crop": [
+            0.555,
+            0.05,
+            0.385,
+            0.9
+          ]
+        },
+        {
+          "asset_id": "look04",
+          "caption": "LOOK 04"
+        },
+        {
+          "asset_id": "look0507",
+          "caption": "LOOK 05",
+          "crop": [
+            0.004,
+            0.117,
+            0.328,
+            0.766
+          ]
+        },
+        {
+          "asset_id": "look0507",
+          "caption": "LOOK 06",
+          "crop": [
+            0.336,
+            0.117,
+            0.328,
+            0.766
+          ]
+        },
+        {
+          "asset_id": "look0507",
+          "caption": "LOOK 07",
+          "crop": [
+            0.668,
+            0.117,
+            0.328,
+            0.766
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "AI 生成示意，第 2 与第 3、第 5 至第 7 号为同一张合影的局部",
+  "notes": "第三部分，系列本身。七个造型按色阶排出场，从深靛走到浅蓝。章节图是 AI 生成的示意图。"
+}

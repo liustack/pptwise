@@ -1,0 +1,11 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "ch-inspire",
+      "fit": "cover"
+    }
+  ],
+  "footnote": "AI 生成示意",
+  "notes": "第一部分，灵感。章节图是 AI 生成的示意图。"
+}

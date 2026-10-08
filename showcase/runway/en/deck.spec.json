@@ -1,0 +1,138 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "showcase",
+    "pacing": "balanced",
+    "audience": "public"
+  },
+  "theme": "runway",
+  "filename": "wear-it-again-en",
+  "meta": {
+    "organization": "Final Project"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "Wear It Again"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "Final Project · BA Fashion",
+      "heading": "Wear It Again",
+      "summary": "Used jeans, taken apart and made into a collection"
+    },
+    {
+      "id": "p02-agenda",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Running order",
+      "heading": "Five parts: from old jeans to a collection"
+    },
+    {
+      "id": "p03-why",
+      "type": "content",
+      "kind": "statement",
+      "kicker": "Why old denim",
+      "heading": "Plenty of old clothes,\nfew ways to **reuse them**"
+    },
+    {
+      "id": "p04-cost",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Why old denim",
+      "heading": "A new pair of jeans has already paid in water"
+    },
+    {
+      "id": "p05-ch-inspire",
+      "type": "chapter",
+      "heading": "Inspiration: the marks of wear",
+      "summary": "Fading, creases and pocket marks are proof of wear"
+    },
+    {
+      "id": "p06-mood",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "Inspiration",
+      "heading": "Moodboard: wear as pattern"
+    },
+    {
+      "id": "p07-ch-fabric",
+      "type": "chapter",
+      "heading": "Fabric: unpick, grade, piece",
+      "summary": "All the main fabric comes from used jeans"
+    },
+    {
+      "id": "p08-unpick",
+      "type": "content",
+      "kind": "process",
+      "kicker": "Fabric",
+      "heading": "Five steps turn an old pair of jeans into fabric"
+    },
+    {
+      "id": "p09-fiber",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Fabric",
+      "heading": "Shredding shortens fibre by a third, so I unpick"
+    },
+    {
+      "id": "p10-grade",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "Fabric",
+      "heading": "Every piece is graded into three shades"
+    },
+    {
+      "id": "p11-joins",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Fabric",
+      "heading": "Three joins, each for its own part of a garment"
+    },
+    {
+      "id": "p12-ch-collection",
+      "type": "chapter",
+      "heading": "Collection: seven looks",
+      "summary": "They walk in order of shade, dark to light"
+    },
+    {
+      "id": "p13-look01",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Graded patchwork trench"
+    },
+    {
+      "id": "p14-look0203",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Waistbands and legs, used again elsewhere"
+    },
+    {
+      "id": "p15-look04",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Gradient maxi dress"
+    },
+    {
+      "id": "p16-look0507",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Raw edges, pocket marks, workwear"
+    },
+    {
+      "id": "p17-limits",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Limits",
+      "heading": "A method, **not an environmental fix**"
+    },
+    {
+      "id": "p18-end",
+      "type": "ending",
+      "heading": "Thank you",
+      "summary": "Wear It Again · Questions welcome"
+    }
+  ]
+}

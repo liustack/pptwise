@@ -1,0 +1,44 @@
+{
+  "components": [
+    {
+      "type": "pros_cons",
+      "pros": {
+        "title": "What it does",
+        "items": [
+          {
+            "label": "Keeps the colour, wear and seams of old denim",
+            "note": "Remade as fabric, the fibre left whole"
+          },
+          {
+            "label": "Turns mismatched jeans into one collection",
+            "note": "Graded into dark, mid and light"
+          },
+          {
+            "label": "Sets out a way to unpick, grade and piece",
+            "note": "Three joins, each for its own part"
+          }
+        ]
+      },
+      "cons": {
+        "title": "What it cannot do",
+        "items": [
+          {
+            "label": "Labour-heavy, uneven supply, hard to scale",
+            "note": "The Ellen MacArthur Foundation's view of such methods"
+          },
+          {
+            "label": "No environmental accounting, no claim of water saved",
+            "note": "Washing, trims and offcuts all have costs"
+          },
+          {
+            "label": "About 5.55 million t recycled a year, this counts pairs",
+            "note": "2025 figure, China National Resources Recycling Association"
+          }
+        ]
+      },
+      "verdict": "It can claim a method, not an environmental gain"
+    }
+  ],
+  "footnote": "Source: Ellen MacArthur Foundation, A New Textiles Economy (2017), China National Resources Recycling Association (2025 recovery)",
+  "notes": "Finally, I want to be clear about the limits. What the collection achieves is a method: the colour and wear of old denim survive, and mismatched jeans become one collection through grading. What it cannot do comes in three parts. First, the Ellen MacArthur Foundation says plainly that this kind of remaking, taking cloth apart and sewing it again, is labour-intensive, has an unreliable supply, cannot be mass-produced and often leaves pieces too small or too worn. Second, I have not done the environmental accounting. Washing, trims and offcuts all have costs, and a 2018 peer-reviewed review found that reuse only pays off if the garment is actually worn and replaces a new purchase. Third, scale: the China National Resources Recycling Association puts the country's 2025 recovery of waste textiles at about 5.55 million tonnes, while a graduate collection uses jeans by the pair. So I do not claim this collection solves an environmental problem. It shows a design method."
+}

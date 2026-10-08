@@ -1,0 +1,31 @@
+{
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "icon": "ruler",
+          "title": "Flat seam",
+          "text": "For shoulders, waist and crotch, where it pulls. Strong, but slow to stitch"
+        },
+        {
+          "icon": "layers",
+          "title": "Raw overlap",
+          "text": "For body panels and hems. Both shades stay in view"
+        },
+        {
+          "icon": "scissors",
+          "title": "Narrow strips",
+          "text": "Uses even the smallest scraps. The most seams, the most hours"
+        }
+      ]
+    },
+    {
+      "type": "image",
+      "asset_id": "samples",
+      "fit": "cover",
+      "caption": "Joining samples (AI-generated)"
+    }
+  ],
+  "notes": "In the fabric experiments I made a set of joining samples and kept three methods, each for its own part of a garment. Where the garment takes strain I use a flat seam with topstitching, the strongest. On large body panels I overlap the pieces and leave the edges raw, so both shades show. Scraps too small for anything else are cut into narrow strips, which wastes nothing but means the most seams and the most hours."
+}

@@ -1,0 +1,39 @@
+{
+  "components": [
+    {
+      "type": "image_grid",
+      "items": [
+        {
+          "asset_id": "mood-ghost",
+          "caption": "Pocket mark"
+        },
+        {
+          "asset_id": "mood-knee",
+          "caption": "Faded knee"
+        },
+        {
+          "asset_id": "mood-seam",
+          "caption": "Stitched hem"
+        },
+        {
+          "asset_id": "mood-fray",
+          "caption": "Raw edge"
+        },
+        {
+          "asset_id": "mood-mend",
+          "caption": "Mend"
+        },
+        {
+          "asset_id": "mood-indigo",
+          "caption": "Indigo shades"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Where the jeans were worn\nis the pattern of the collection"
+    }
+  ],
+  "footnote": "All images are AI-generated",
+  "notes": "The inspiration is what wearing leaves on a pair of jeans. Unpick a back pocket and the cloth underneath, never sunned or rubbed, stays dark in the shape of the pocket. Knees bent thousands of times fade to white. Then there is the topstitching, the rolled hem, raw edges and old mends. I did not want to wash these away or hide them. I wanted them to be the pattern of the collection. The last image is a run of indigo shades, which is where the grading of the fabric later comes from."
+}

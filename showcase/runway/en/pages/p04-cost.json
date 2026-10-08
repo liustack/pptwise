@@ -1,0 +1,27 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**3,781**",
+          "unit": "L",
+          "label": "One pair of Levi's 501, from cotton field to disposal",
+          "source": "Levi's life cycle assessment, 2015, company figure"
+        },
+        {
+          "value": "10,850",
+          "unit": "L",
+          "label": "Virtual water in 1,000 g of jeans, global average",
+          "source": "Chapagain et al., UNESCO-IHE, 2005"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "The two are counted differently, one over a pair's whole life, one as virtual water per kilogram. Read them side by side, never added or ranked"
+    }
+  ],
+  "footnote": "Source: Levi Strauss & Co., The Life Cycle of a Jean (2015), Chapagain et al., The water footprint of cotton consumption (2005)",
+  "notes": "There are at least two ways to count the water in a pair of jeans, and I keep them side by side rather than merging them. On the left is Levi's own 2015 life cycle assessment of one stonewashed 501: 3,781 litres of net water use, 68% of it in growing the cotton. That is the company's figure. On the right is a 2005 virtual water study: for 1,000 grams of jeans, a global average of 10,850 litres, which also counts rainwater and the water needed to dilute pollution. A larger figure that circulates online comes with no method, so I left it out. And to be clear, both numbers describe the cost of a new pair of jeans. Neither is water this collection saved."
+}

@@ -1,0 +1,24 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "About 22",
+          "unit": "million t",
+          "label": "Textile waste in China in 2020, when about 20% was recycled"
+        },
+        {
+          "value": "25%  30%",
+          "label": "China's recycling-rate targets for 2025 and 2030"
+        },
+        {
+          "value": "Easy to unpick",
+          "label": "The same policy asks for textiles easier to take apart, sort and recycle"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: National Development and Reform Commission et al., NDRC Huanzi [2022] No. 526, and expert commentary on the NDRC website, April 2022",
+  "notes": "Why this topic. In 2022 three ministries, led by the National Development and Reform Commission, set targets for recycling waste textiles: a 25% recycling rate by 2025 and 30% by 2030. An expert commentary published on the NDRC website gives the starting point: about 22 million tonnes of textile waste in 2020, about 20% of it recycled. I could not find any official figure on whether the 2025 target was met, so I only show the target. The same document asks for textiles that are easier to take apart, sort and recycle, and mentions collection drives on campus in graduation season and design competitions. Taking jeans apart and remaking them sits right on that first point."
+}

@@ -1,0 +1,11 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "ch-inspire",
+      "fit": "cover"
+    }
+  ],
+  "footnote": "AI-generated",
+  "notes": "Part one, inspiration. The section image is an AI-generated illustration."
+}

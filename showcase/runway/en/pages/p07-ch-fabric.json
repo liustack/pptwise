@@ -1,0 +1,17 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "ch-fabric",
+      "fit": "cover",
+      "crop": [
+        0,
+        0.231,
+        1,
+        0.422
+      ]
+    }
+  ],
+  "footnote": "AI-generated",
+  "notes": "Part two, fabric. All the main fabric in this collection comes from used jeans. Linings and trims are separate. The section image is an AI-generated illustration."
+}

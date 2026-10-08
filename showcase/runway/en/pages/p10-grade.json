@@ -1,0 +1,28 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "gradient",
+      "fit": "cover",
+      "caption": "Pieces from one batch of jeans, laid out dark to light (AI-generated)"
+    },
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "title": "Dark",
+          "text": "Waistband backs and under pockets, out of the light"
+        },
+        {
+          "title": "Mid",
+          "text": "Large pieces from the fronts of thighs and shins"
+        },
+        {
+          "title": "Light",
+          "text": "Knees, seat and creases, worn pale"
+        }
+      ]
+    }
+  ],
+  "notes": "Jeans from different sources differ a lot in colour, and pieced at random they look like a mess. So I grade every piece into three shades. Dark pieces mostly come from places that saw little light, like the back of the waistband and under the pockets. Light pieces come from the knees, the seat and the creases. Grading gave me one rule: dark goes at the shoulder, light falls to the hem, and the running order of the collection follows the same scale."
+}

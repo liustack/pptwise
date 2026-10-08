@@ -1,0 +1,35 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "hero",
+      "fit": "cover",
+      "caption": "LOOK 01 (AI-generated)",
+      "crop": [
+        0,
+        0.043,
+        1,
+        0.857
+      ]
+    },
+    {
+      "type": "insight_panel",
+      "title": "LOOK **01**",
+      "rows": [
+        {
+          "label": "FABRIC",
+          "text": "Large pieces from several pairs, laid on the bias by shade"
+        },
+        {
+          "label": "MAKE",
+          "text": "Flat seams where it pulls, raw overlaps on the body"
+        },
+        {
+          "label": "SHADE",
+          "text": "Dark at the shoulder, a shade lighter each step to the hem"
+        }
+      ]
+    }
+  ],
+  "notes": "LOOK 01 is a long dropped-shoulder trench, and the whole collection in one garment: dark at the shoulders, a shade lighter at each step, pale at the hem. The pieces run on the diagonal, so the seams step down the coat like a line of slashes. Shoulder seams and armholes, which take strain, are flat seams with topstitching. The body panels overlap with raw edges."
+}

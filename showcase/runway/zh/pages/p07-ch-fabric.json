@@ -1,0 +1,17 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "ch-fabric",
+      "fit": "cover",
+      "crop": [
+        0,
+        0.231,
+        1,
+        0.422
+      ]
+    }
+  ],
+  "footnote": "AI 生成示意",
+  "notes": "第二部分，面料。这个系列的主面料全部取自回收的旧牛仔裤，里布和辅料另配。章节图是 AI 生成的示意图。"
+}

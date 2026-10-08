@@ -1,0 +1,138 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "showcase",
+    "pacing": "balanced",
+    "audience": "public"
+  },
+  "theme": "runway",
+  "filename": "wear-it-again-zh",
+  "meta": {
+    "organization": "毕业设计"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "再穿一次"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "毕业设计　服装设计 · 本科",
+      "heading": "再穿一次",
+      "summary": "把回收的旧牛仔裤拆开，再做成一个系列"
+    },
+    {
+      "id": "p02-agenda",
+      "type": "content",
+      "kind": "list",
+      "kicker": "出场顺序",
+      "heading": "答辩分五段：从一条旧裤子讲到一个系列"
+    },
+    {
+      "id": "p03-why",
+      "type": "content",
+      "kind": "statement",
+      "kicker": "为什么是旧牛仔",
+      "heading": "旧衣不缺，\n缺的是让它**再被用一次**的办法"
+    },
+    {
+      "id": "p04-cost",
+      "type": "content",
+      "kind": "data",
+      "kicker": "为什么是旧牛仔",
+      "heading": "一条牛仔裤在被剪开之前，已经付过一次水的代价"
+    },
+    {
+      "id": "p05-ch-inspire",
+      "type": "chapter",
+      "heading": "灵感：穿过的痕迹",
+      "summary": "磨白、褶痕、口袋印，都是被穿过的证据"
+    },
+    {
+      "id": "p06-mood",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "灵感",
+      "heading": "情绪板：把磨损当成图案"
+    },
+    {
+      "id": "p07-ch-fabric",
+      "type": "chapter",
+      "heading": "面料：拆、分、拼",
+      "summary": "主面料全部取自回收的旧牛仔裤"
+    },
+    {
+      "id": "p08-unpick",
+      "type": "content",
+      "kind": "process",
+      "kicker": "面料",
+      "heading": "一条旧裤子变成面料，要走五步"
+    },
+    {
+      "id": "p09-fiber",
+      "type": "content",
+      "kind": "data",
+      "kicker": "面料",
+      "heading": "打碎重纺会让纤维短三分之一，所以这次只拆不打碎"
+    },
+    {
+      "id": "p10-grade",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "面料",
+      "heading": "按深浅把裁片分成三档"
+    },
+    {
+      "id": "p11-joins",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "面料",
+      "heading": "三种拼法，各管一类部位"
+    },
+    {
+      "id": "p12-ch-collection",
+      "type": "chapter",
+      "heading": "系列：七个造型",
+      "summary": "按色阶出场，从深走到浅"
+    },
+    {
+      "id": "p13-look01",
+      "type": "content",
+      "kind": "photo",
+      "heading": "渐变拼片长风衣"
+    },
+    {
+      "id": "p14-look0203",
+      "type": "content",
+      "kind": "photo",
+      "heading": "腰头和裤腿，换个位置再用"
+    },
+    {
+      "id": "p15-look04",
+      "type": "content",
+      "kind": "photo",
+      "heading": "色阶长裙"
+    },
+    {
+      "id": "p16-look0507",
+      "type": "content",
+      "kind": "photo",
+      "heading": "毛边、口袋印和工装"
+    },
+    {
+      "id": "p17-limits",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "边界",
+      "heading": "这个系列示范了一种做法，**没有解决环境问题**"
+    },
+    {
+      "id": "p18-end",
+      "type": "ending",
+      "heading": "谢谢各位老师",
+      "summary": "再穿一次 · 答辩结束，请老师提问"
+    }
+  ]
+}
