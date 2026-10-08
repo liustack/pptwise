@@ -39,7 +39,7 @@ export function dataUriDimensions(uri: string): { w: number; h: number } | null 
     return { w: bytes[6] | (bytes[7] << 8), h: bytes[8] | (bytes[9] << 8) }
   }
   // WebP: "RIFF" .... "WEBP", then a VP8 / VP8L / VP8X chunk. The preview
-  // sees a WebP asset as it is; the export recodes it to PNG first.
+  // sees a WebP asset as it is. The export recodes it to PNG first.
   if (bytes.length > 30 && bytes[0] === 0x52 && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) {
     const chunk = String.fromCharCode(bytes[12]!, bytes[13]!, bytes[14]!, bytes[15]!)
     if (chunk === "VP8X") return { w: 1 + (bytes[24]! | (bytes[25]! << 8) | (bytes[26]! << 16)), h: 1 + (bytes[27]! | (bytes[28]! << 8) | (bytes[29]! << 16)) }
