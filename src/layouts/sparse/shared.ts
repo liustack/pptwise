@@ -4,7 +4,7 @@ import { measureTextUnits } from "../../lib/svg-text-layout"
 import type { PptxIR, Slide } from "@/ir"
 import { deckWritesChinese } from "../../lib/conf-labels"
 import type { EmphasisSegment } from "../../render/emphasis"
-import { statementLines } from "../minimal-shared"
+import { heroSourceParts, pullQuoteSourceParts, statementLines } from "../minimal-shared"
 import { fitSourceBlock, type SourceBlock, type SourceFitOptions } from "../source-lines"
 
 export function pad2(n: number): string {
@@ -162,6 +162,39 @@ export function rotateRectPolygon(
 export function fitStatementSource(slide: Slide, opts: SourceFitOptions): SourceBlock | null {
   const { quote, source } = statementLines(slide)
   return fitSourceBlock(source ?? quote, slide.footnote, opts)
+}
+
+/** The lines under a hero figure (`heroSourceParts`), fitted the way a statement's are. */
+export function fitHeroSource(slide: Slide, opts: SourceFitOptions): SourceBlock | null {
+  const { primary, footnote } = heroSourceParts(slide)
+  return fitSourceBlock(primary, footnote, opts)
+}
+
+/**
+ * The lines under a quote: its attribution after the skin's own `lead`
+ * (「—— 」, 「[1] 」), and the page's footnote under it on lines of its own.
+ * With no attribution the footnote takes the lead, as it always has.
+ */
+export function fitPullQuoteSource(slide: Slide, opts: SourceFitOptions, lead = ""): SourceBlock | null {
+  const { attribution, footnote } = pullQuoteSourceParts(slide)
+  if (attribution) return fitSourceBlock(lead + attribution, footnote, opts)
+  return fitSourceBlock(undefined, footnote ? lead + footnote : undefined, opts)
+}
+
+/**
+ * The lowest a skin's source may set its last baseline: the foot of the type
+ * area, where the footer row begins. A block that would pass it hands the
+ * page to the shared face, which sets every text whole.
+ */
+export const SOURCE_FOOT = 676
+
+/**
+ * Whether a source block set down from `y` takes a line past `SOURCE_FOOT`.
+ * Its first line stands where the skin has always set its one line, so only
+ * the lines it adds are held to the foot.
+ */
+export function sourcePastFoot(block: SourceBlock | null, y: number): boolean {
+  return block !== null && block.lines.length > 1 && y + (block.lines.length - 1) * block.lineHeight > SOURCE_FOOT
 }
 
 export function evidenceSource(slide: Slide): string | undefined {

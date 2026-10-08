@@ -4,13 +4,14 @@ import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import {
   hasCjk,
   heroCaption,
-  heroUnit, heroSource, heroValue,
-  pullQuoteAttribution,
+  heroUnit,
+  heroValue,
   pullQuoteContext,
+  pullQuoteSourceParts,
   pullQuoteText,
   trackingPx,
 } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, rotateRectPolygon } from "./shared"
+import { fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, rotateRectPolygon, sourcePastFoot } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** luxe 稀排脸：金菱引文、发丝巨数、一行金字。不画金框。 */
@@ -26,10 +27,14 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
     lineHeightRatio: 1.44,
   })
   const context = pullQuoteContext(slide)
-  const attr = pullQuoteAttribution(slide)
-  const attrTracking = attr && !hasCjk(attr) ? trackingPx(17, 0.35) : undefined
+  const attrText = pullQuoteSourceParts(slide)
+  const attrTracking = !hasCjk(attrText.attribution ?? attrText.footnote ?? "") ? trackingPx(17, 0.35) : undefined
+  const attr = fitPullQuoteSource(slide, { maxWidth: 1000, fontSize: 17, fontFamily: fonts.body, letterSpacing: attrTracking })
   const last = quote.lines.length - 1
   const firstY = quoteBlockBaseline(392, quote)
+  const attrY = Math.round(firstY + last * quote.lineHeight) + 96
+  // A source too long for the room under the quote hands the page to the shared face.
+  if (sourcePastFoot(attr, attrY)) return null
   return (
     <>
       <polygon points={DIAMOND} fill={colors.accent} />
@@ -66,20 +71,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
-      {attr && (
-        <text
-          x={640}
-          y={Math.round(firstY + last * quote.lineHeight) + 96}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={17}
-          fill={colors.muted}
-          letterSpacing={attrTracking}
-          dominantBaseline="alphabetic"
-        >
-          {attr}
-        </text>
-      )}
+      <SourceLines block={attr} x={640} y={attrY} textAnchor="middle" fontFamily={fonts.body} fill={colors.muted} letterSpacing={attrTracking} />
     </>
   )
 }
@@ -92,7 +84,9 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   if (!fitted) return StatHeroFallbackContent({ slide, ctx })
   const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
-  const source = heroSource(slide)
+  const source = fitHeroSource(slide, { maxWidth: 1088, fontSize: 16, fontFamily: fonts.body })
+  // A source too long for the room under the caption hands the page over whole.
+  if (sourcePastFoot(source, 616)) return StatHeroFallbackContent({ slide, ctx })
   return (
     <>
       <line x1={360} y1={200} x2={920} y2={200} stroke={colors.border} strokeWidth={1} />
@@ -119,19 +113,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
           {caption}
         </text>
       )}
-      {source && (
-        <text
-          x={640}
-          y={616}
-        textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={16}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source}
-        </text>
-      )}
+      <SourceLines block={source} x={640} y={616} textAnchor="middle" fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }

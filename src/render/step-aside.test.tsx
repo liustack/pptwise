@@ -71,3 +71,23 @@ describe("the sheet's fit is a geometry twin of its paint", () => {
     expect(footnote!.segments.some((s) => s.emphasized)).toBe(true)
   })
 })
+
+describe("the step-aside sheet's source line", () => {
+  it("takes a second line for a source one line cannot hold, and gives the body that much less", () => {
+    const ctx = ctxFor("brief")
+    const short = { type: "content", kind: "data", heading: "Renewal", footnote: "Source: internal review", components: [] } as unknown as Slide
+    const long = {
+      ...short,
+      footnote:
+        "来源：国家统计局《2025 年全国规模以上工业产能利用率》，中国机械工业联合会《2025 年机械工业经济运行报告》，作者整理与测算，数据截至 2026 年 6 月，部分口径经调整",
+    } as unknown as Slide
+    const one = stepAsideGeometry(short, ctx)
+    const two = stepAsideGeometry(long, ctx)
+    expect(one.footnoteLines).toBeNull()
+    expect(two.footnote).toBeNull()
+    expect(two.footnoteLines!.lines).toHaveLength(2)
+    expect(two.footnoteLines!.truncated).toBe(false)
+    expect(two.footnoteLines!.lines.join("").replace(/\s/g, "")).toBe((long.footnote ?? "").replace(/\s/g, ""))
+    expect(two.rect.y + two.rect.h).toBe(one.rect.y + one.rect.h - two.footnoteLines!.lineHeight)
+  })
+})

@@ -3,10 +3,10 @@ import type { SvgTemplateProps } from "../types"
 import { footerOrganization, showsDocumentMeta } from "../../render/document-meta"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans } from "../../render/emphasis"
-import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
+import { heroCaption, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { deckWord, evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
+import { deckWord, evidenceSource, fitHeroLine, fitHeroSource, fitSparseHeading, fitStatementSource, sourcePastFoot, pad2 } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** vermilion 稀排脸：金双线批示、金菱巨数、案卷卡。不画顶缘金双线、金芒、底菱。 */
@@ -110,11 +110,13 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   // 16px apart, so the source ran into the caption's descenders, and a long
   // caption ran off the page.
   const captionText = heroCaption(slide)
-  const sourceText = heroSource(slide)
   const caption = captionText
     ? fitSvgLine(captionText, { maxWidth: HERO_TEXT_W, fontSize: CAPTION_SIZE, minFontSize: 16, fontFamily: fonts.body })
     : null
-  const source = sourceText ? fitSvgLine(sourceText, { maxWidth: HERO_TEXT_W, fontSize: 16, minFontSize: 16, fontFamily: fonts.body }) : null
+  const source = fitHeroSource(slide, { maxWidth: HERO_TEXT_W, fontSize: 16, minFontSize: 16, fontFamily: fonts.body })
+  const sourceY = caption ? CAPTION_Y + SOURCE_DROP : CAPTION_Y
+  // A source too long for the room under the caption hands the page over whole.
+  if (sourcePastFoot(source, sourceY)) return StatHeroFallbackContent({ slide, ctx })
   return (
     <>
       <text
@@ -149,20 +151,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
           {caption.text}
         </text>
       )}
-      {source && (
-        <text
-          data-truncated={source.truncated ? "1" : undefined}
-          x={640}
-          y={caption ? CAPTION_Y + SOURCE_DROP : CAPTION_Y}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={source.fontSize}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source.text}
-        </text>
-      )}
+      <SourceLines block={source} x={640} y={sourceY} textAnchor="middle" fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }

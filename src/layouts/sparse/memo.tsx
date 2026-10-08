@@ -4,13 +4,14 @@ import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import {
   hasCjk,
   heroCaption,
-  heroUnit, heroSource, heroValue,
-  pullQuoteAttribution,
+  heroUnit,
+  heroValue,
   pullQuoteContext,
+  pullQuoteSourceParts,
   pullQuoteText,
   trackingPx,
 } from "../minimal-shared"
-import { firstEmphasisRun, fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline } from "./shared"
+import { firstEmphasisRun, fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, sourcePastFoot } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** memo 稀排脸：打字机引文、文武夹巨数、宋体格言+印章。不画 MEMORANDUM / 顶缘红双线。 */
@@ -54,10 +55,13 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
     bold: false,
   })
   const context = pullQuoteContext(slide)
-  const attr = pullQuoteAttribution(slide)
-  const from = attr ? `FROM:  ${attr}` : null
-  const fromTracking = from && !hasCjk(from) ? trackingPx(19, 0.2) : undefined
+  const fromText = pullQuoteSourceParts(slide)
+  const fromTracking = !hasCjk(`FROM:  ${fromText.attribution ?? fromText.footnote ?? ""}`) ? trackingPx(19, 0.2) : undefined
+  const attr = fitPullQuoteSource(slide, { maxWidth: 1088, fontSize: 19, fontFamily: fonts.mono, letterSpacing: fromTracking }, "FROM:  ")
   const last = quote.lines.length - 1
+  const attrY = Math.round(firstY + last * quote.lineHeight) + 84
+  // A source too long for the room under the quote hands the page to the shared face.
+  if (sourcePastFoot(attr, attrY)) return null
   return (
     <>
       <InkDouble x={96} width={1088} yThick={96} yThin={102} stroke={colors.text} />
@@ -102,19 +106,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
           strokeWidth={3}
         />
       )}
-      {from && (
-        <text
-          x={96}
-          y={Math.round(firstY + last * quote.lineHeight) + 84}
-          fontFamily={fonts.mono}
-          fontSize={19}
-          fill={colors.muted}
-          letterSpacing={fromTracking}
-          dominantBaseline="alphabetic"
-        >
-          {from}
-        </text>
-      )}
+      <SourceLines block={attr} x={96} y={attrY} fontFamily={fonts.mono} fill={colors.muted} letterSpacing={fromTracking} />
     </>
   )
 }
@@ -127,7 +119,9 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   if (!fitted) return StatHeroFallbackContent({ slide, ctx })
   const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
-  const source = heroSource(slide)
+  const source = fitHeroSource(slide, { maxWidth: 1088, fontSize: 16, fontFamily: fonts.mono })
+  // A source too long for the room under the caption hands the page over whole.
+  if (sourcePastFoot(source, 626)) return StatHeroFallbackContent({ slide, ctx })
   return (
     <>
       <InkDouble x={96} width={1088} yThick={170} yThin={176} stroke={colors.text} />
@@ -154,18 +148,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
           {`RE:  ${caption}`}
         </text>
       )}
-      {source && (
-        <text
-          x={96}
-          y={626}
-          fontFamily={fonts.mono}
-          fontSize={16}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source}
-        </text>
-      )}
+      <SourceLines block={source} x={96} y={626} fontFamily={fonts.mono} fill={colors.muted} />
     </>
   )
 }

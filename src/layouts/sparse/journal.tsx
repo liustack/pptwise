@@ -2,8 +2,8 @@ import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
-import { heroCaption, heroUnit, heroSource, heroValue, pullQuoteAttribution, pullQuoteContext, pullQuoteText } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, pad2, quoteBlockBaseline } from "./shared"
+import { heroCaption, heroUnit, heroValue, pullQuoteContext, pullQuoteText } from "../minimal-shared"
+import { fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, pad2, quoteBlockBaseline, sourcePastFoot } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** journal 稀排脸：巨引号、期号巨数、报头格言。不画 motif 报头双线。 */
@@ -17,9 +17,12 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
     lineHeightRatio: 1.44,
   })
   const context = pullQuoteContext(slide)
-  const attr = pullQuoteAttribution(slide)
+  const attr = fitPullQuoteSource(slide, { maxWidth: 880, fontSize: 19, fontFamily: fonts.heading }, "\u2014\u2014 ")
   const last = quote.lines.length - 1
   const firstY = quoteBlockBaseline(396, quote)
+  const attrY = Math.round(firstY + last * quote.lineHeight) + 76
+  // A source too long for the room under the quote hands the page to the shared face.
+  if (sourcePastFoot(attr, attrY)) return null
   return (
     <>
       <text
@@ -57,18 +60,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
-      {attr && (
-        <text
-          x={300}
-          y={Math.round(firstY + last * quote.lineHeight) + 76}
-          fontFamily={fonts.heading}
-          fontSize={19}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {`\u2014\u2014 ${attr}`}
-        </text>
-      )}
+      <SourceLines block={attr} x={300} y={attrY} fontFamily={fonts.heading} fill={colors.muted} />
     </>
   )
 }
@@ -83,7 +75,9 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   if (!fitted) return StatHeroFallbackContent({ slide, ctx })
   const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
-  const source = heroSource(slide)
+  const source = fitHeroSource(slide, { maxWidth: 1088, fontSize: 16, fontFamily: fonts.heading })
+  // A source too long for the room under the caption hands the page over whole.
+  if (sourcePastFoot(source, 628)) return StatHeroFallbackContent({ slide, ctx })
   return (
     <>
       <text
@@ -128,19 +122,7 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
           {caption}
         </text>
       )}
-      {source && (
-        <text
-          x={640}
-          y={628}
-        textAnchor="middle"
-          fontFamily={fonts.heading}
-          fontSize={16}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source}
-        </text>
-      )}
+      <SourceLines block={source} x={640} y={628} textAnchor="middle" fontFamily={fonts.heading} fill={colors.muted} />
     </>
   )
 }

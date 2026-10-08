@@ -4,9 +4,9 @@ import { sectionNameFor } from "../../lib/derive"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { fitSvgLine } from "../../lib/svg-text-layout"
-import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
+import { heroCaption, heroUnit, heroValue } from "../minimal-shared"
 import { renderFittedEvidence } from "../fitted-evidence"
-import { evidenceSource, firstEmphasisRun, fitHeroLine, fitSparseHeading, fitStatementSource } from "./shared"
+import { evidenceSource, firstEmphasisRun, fitHeroLine, fitHeroSource, fitSparseHeading, fitStatementSource, sourcePastFoot } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** lecture 稀排脸：左轴板书、粉笔巨数、虚线证据框。不画整页粉笔槽细框。 */
@@ -78,7 +78,9 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   if (!fitted) return StatHeroFallbackContent({ slide, ctx })
   const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
-  const source = heroSource(slide)
+  const source = fitHeroSource(slide, { maxWidth: 1040, fontSize: 16, fontFamily: fonts.body })
+  // A source too long for the room under the caption hands the page over whole.
+  if (sourcePastFoot(source, 626)) return StatHeroFallbackContent({ slide, ctx })
   return (
     <>
       {kicker && (
@@ -115,18 +117,7 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
           {caption}
         </text>
       )}
-      {source && (
-        <text
-          x={120}
-          y={626}
-          fontFamily={fonts.body}
-          fontSize={16}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source}
-        </text>
-      )}
+      <SourceLines block={source} x={120} y={626} fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }

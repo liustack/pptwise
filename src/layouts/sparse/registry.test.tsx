@@ -4,6 +4,9 @@ import { boundThemeCtx } from "../../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
 import { StatementContent } from "../content-statement"
 import { OneEvidenceContent } from "../content-one-evidence"
+import { PullQuoteContent } from "../content-pull-quote"
+import { StatHeroContent } from "../content-stat-hero"
+import { auditSvgMarkup } from "../../audit/svg-audit"
 import { sparseFace } from "./registry"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -132,5 +135,58 @@ describe("a statement page's source under the sentence it closes", () => {
     const source = texts.filter((t) => Number(t.getAttribute("font-size")) <= 20 && SOURCE.includes(t.textContent ?? "\u0000") && t.textContent !== NOTE)
     expect(source.map((t) => t.textContent ?? "").join("").replace(/\s/g, "")).toBe(SOURCE.replace(/\s/g, ""))
     for (const line of source) expect(Number(line.getAttribute("y"))).not.toBe(Number(note!.getAttribute("y")))
+  })
+})
+
+// A quote's attribution and a hero figure's source used to take the page's
+// footnote onto their one line, which ran off the page (most skins set it as
+// written) or was cut at about seventy characters. Each sets the footnote on
+// lines of its own now, or hands the page over whole.
+describe("a quote's or a figure's source and the page's footnote under it", () => {
+  const SOURCE =
+    "Source: National Bureau of Statistics, 2025 industrial capacity utilisation survey; China Machinery Industry Federation annual report 2025; author's calculations"
+  const footnoteWhole = (root: Element) =>
+    Array.from(root.querySelectorAll("text"))
+      .map((t) => t.textContent ?? "")
+      .filter((t) => t.length > 0 && SOURCE.includes(t))
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .includes(SOURCE.replace(/\s+/g, " ").slice(0, 120))
+
+  it.each(["thesis", "ledger", "luxe", "stage", "ink", "journal", "memo"])("%s pull quote", (theme) => {
+    const slide: Slide = {
+      type: "content",
+      kind: "quote",
+      heading: "What they said",
+      components: [{ type: "blockquote", text: "The most expensive outage is the one nobody saw coming.", attribution: "Plant maintenance lead" }],
+      footnote: SOURCE,
+    }
+    const markup = renderSvgMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+        <PullQuoteContent ir={ir(theme, [slide])} slide={slide} index={0} ctx={boundThemeCtx(theme, {})} />
+      </svg>,
+    )
+    const root = parseSvgRoot(markup)
+    expect(root.querySelector('[data-truncated="1"]'), theme).toBeNull()
+    expect(footnoteWhole(root), theme).toBe(true)
+    expect(auditSvgMarkup(markup), theme).toEqual([])
+  })
+
+  it.each(["terminal", "almanac", "journal", "ledger", "luxe", "memo", "museum", "rally", "stage", "swiss", "thesis", "vermilion", "ink", "lecture"])("%s hero figure", (theme) => {
+    const slide: Slide = {
+      type: "content",
+      kind: "fact",
+      components: [{ type: "kpi_cards", items: [{ value: "62%", label: "Utilisation", source: "NBS survey" }] }],
+      footnote: SOURCE,
+    }
+    const markup = renderSvgMarkup(
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+        <StatHeroContent ir={ir(theme, [slide])} slide={slide} index={0} ctx={boundThemeCtx(theme, {})} />
+      </svg>,
+    )
+    const root = parseSvgRoot(markup)
+    expect(root.querySelector('[data-truncated="1"]'), theme).toBeNull()
+    expect(footnoteWhole(root), theme).toBe(true)
+    expect(auditSvgMarkup(markup), theme).toEqual([])
   })
 })

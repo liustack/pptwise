@@ -6,17 +6,20 @@ import { fitSvgLine } from "../../lib/svg-text-layout"
 import {
   hasCjk,
   heroCaption,
-  heroUnit, heroSource, heroValue,
-  pullQuoteAttribution,
+  heroUnit,
+  heroValue,
   pullQuoteContext,
   pullQuoteText,
 } from "../minimal-shared"
 import {
   fitHeroLine,
+  fitHeroSource,
+  fitPullQuoteSource,
   fitSparseHeading,
   fitSparseQuote,
   fitStatementSource,
   quoteBlockBaseline,
+  sourcePastFoot,
   splitTrailingPercent,
 } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
@@ -77,7 +80,9 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   if (!fitted) return StatHeroFallbackContent({ slide, ctx })
   const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
-  const source = heroSource(slide)
+  const source = fitHeroSource(slide, { maxWidth: 1088, fontSize: 16, fontFamily: fonts.body })
+  // A source too long for the room under the caption hands the page over whole.
+  if (sourcePastFoot(source, 616)) return StatHeroFallbackContent({ slide, ctx })
   return (
     <>
       {kicker && (
@@ -129,19 +134,7 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
           {caption}
         </text>
       )}
-      {source && (
-        <text
-          x={640}
-          y={616}
-        textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={16}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source}
-        </text>
-      )}
+      <SourceLines block={source} x={640} y={616} textAnchor="middle" fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }
@@ -155,7 +148,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
     lineHeightRatio: 1.4,
   })
   const context = pullQuoteContext(slide)
-  const attr = pullQuoteAttribution(slide)
+  const attr = fitPullQuoteSource(slide, { maxWidth: 920, fontSize: 20, fontFamily: fonts.body })
   const last = quote.lines.length - 1
   // The two rules are the frame the quote sits in, so they follow the block
   // instead of pinning it: a four-line quote inside a fixed 190px band would
@@ -163,6 +156,8 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   const titleY = quoteBlockBaseline(372, quote)
   const ruleTop = Math.round(titleY - quote.fontSize - 40)
   const ruleBot = Math.round(titleY + last * quote.lineHeight + 46)
+  // A source too long for the room under the quote hands the page to the shared face.
+  if (sourcePastFoot(attr, ruleBot + 54)) return null
   return (
     <>
       {context && (
@@ -200,19 +195,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
         </text>
       ))}
       <line x1={240} y1={ruleBot} x2={1040} y2={ruleBot} stroke={colors.border} strokeWidth={1.5} />
-      {attr && (
-        <text
-          x={1040}
-          y={ruleBot + 54}
-          textAnchor="end"
-          fontFamily={fonts.body}
-          fontSize={20}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {attr}
-        </text>
-      )}
+      <SourceLines block={attr} x={1040} y={ruleBot + 54} textAnchor="end" fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }

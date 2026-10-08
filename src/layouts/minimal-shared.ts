@@ -169,16 +169,18 @@ export function pullQuoteContext(slide: Slide): string | undefined {
 }
 
 /**
- * Attribution line for `pull-quote`: the quote's own field.
+ * The texts under a `pull-quote`: the quote's own attribution, and the
+ * page's `footnote`, which stands under it on lines of its own
+ * (`fitPullQuoteSource`).
  *
  * There is no `subheading` fallback. A subheading is the page's structure,
  * not the quote's source, and printing it under a quote credits a line the
  * author never attributed to anyone.
  */
-export function pullQuoteAttribution(slide: Slide): string | undefined {
+export function pullQuoteSourceParts(slide: Slide): { attribution?: string; footnote?: string } {
   const component = slide.components[0]
-  const fromQuote = component?.type === "blockquote" ? component.attribution?.trim() : undefined
-  return joinSources(fromQuote, slide.footnote)
+  const attribution = component?.type === "blockquote" ? component.attribution?.trim() || undefined : undefined
+  return { attribution, footnote: slide.footnote?.trim() || undefined }
 }
 
 /** Body prose for `pull-quote`: only a paragraph component, never the quote itself. */
@@ -232,17 +234,19 @@ export function heroCaption(slide: Slide): string | undefined {
   return slide.subheading?.trim() || undefined
 }
 
-export function heroSource(slide: Slide): string | undefined {
+/**
+ * The two texts under a hero figure: the line that says where the figure
+ * came from (the card's `source`, the paragraph, or with neither and no
+ * footnote the subheading), and the page's own `footnote`, which stands under
+ * it on lines of its own (`fitSourceBlock`).
+ */
+export function heroSourceParts(slide: Slide): { primary?: string; footnote?: string } {
   const kpi = kpiHero(slide)
   const component = slide.components[0]
   const paragraph = !kpi && component?.type === "paragraph" ? component.text.trim() : undefined
-  const joined = joinSources(kpi?.source?.trim() || paragraph || undefined, slide.footnote)
-  if (joined) return joined
-  if (kpi) {
-    const sub = slide.subheading?.trim()
-    if (sub) return sub
-  }
-  return undefined
+  const footnote = slide.footnote?.trim() || undefined
+  const primary = kpi?.source?.trim() || paragraph || (kpi && !footnote ? slide.subheading?.trim() : undefined) || undefined
+  return { primary, footnote }
 }
 
 /**

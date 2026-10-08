@@ -43,8 +43,7 @@ export function StatementContent(props: SvgTemplateProps) {
   // A quote with its source is two texts, and the skin printed the source
   // alone, so the quote went unpainted with nothing to say so. That page
   // steps aside to this face's own drawing, which sets both.
-  if (Face && !quotesWithSource(props.slide)) return Face(props)
-  return GenericStatementContent(props)
+  return (Face && !quotesWithSource(props.slide) ? Face(props) : null) ?? GenericStatementContent(props)
 }
 
 /** Whether the page quotes someone and names them: two texts under the claim. */

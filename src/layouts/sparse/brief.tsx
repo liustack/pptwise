@@ -3,10 +3,10 @@ import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisText } from "../../render/emphasis"
-import { heroCaption, heroSource, heroUnit, heroValue } from "../minimal-shared"
+import { heroCaption, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { deckWord, evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
+import { deckWord, evidenceSource, fitHeroLine, fitHeroSource, fitSparseHeading, fitStatementSource, sourcePastFoot, pad2 } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 import { underlineYFromBaseline } from "../underline"
 
@@ -71,7 +71,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   if (!fitted) return StatHeroFallbackContent({ slide, ctx })
   const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
-  const source = heroSource(slide)
+  const source = fitHeroSource(slide, { maxWidth: 1088, fontSize: 17, fontFamily: fonts.body })
   const numberY = 450
   const barY = underlineYFromBaseline(numberY, fitted.fontSize, fitted.text)
   const barW = Math.round(measureTextUnits(fitted.text, { bold: true, fontFamily: fonts.heading }) * fitted.fontSize)
@@ -81,6 +81,8 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   // so the baseline is one caption em plus a little air under the bar.
   const captionY = barY + BAR_H + CAPTION_SIZE + 10
   const sourceY = captionY + 42
+  // A source too long for the room under the caption hands the page over whole.
+  if (sourcePastFoot(source, sourceY)) return StatHeroFallbackContent({ slide, ctx })
   return (
     <>
       <text
@@ -105,11 +107,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
           {caption}
         </text>
       )}
-      {source && (
-        <text x={96} y={sourceY} fontFamily={fonts.body} fontSize={17} fill={colors.muted} dominantBaseline="alphabetic">
-          {source}
-        </text>
-      )}
+      <SourceLines block={source} x={96} y={sourceY} fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }

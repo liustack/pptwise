@@ -3,13 +3,12 @@ import type { SvgTemplateProps } from "../types"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import {
   heroCaption,
-  heroSource,
-  heroUnit, heroValue,
-  pullQuoteAttribution,
+  heroUnit,
+  heroValue,
   pullQuoteContext,
   pullQuoteText,
 } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, yearQuarter } from "./shared"
+import { fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, sourcePastFoot, yearQuarter } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** ledger 稀排脸：行情格言、幽灵季度、折线引文。不画顶缘刻度尺和底缘面积线。 */
@@ -87,7 +86,9 @@ export function statHero({ ir, slide, ctx }: SvgTemplateProps) {
   if (!fitted) return StatHeroFallbackContent({ slide, ctx })
   const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
-  const source = heroSource(slide)
+  const source = fitHeroSource(slide, { maxWidth: 1088, fontSize: 16, fontFamily: fonts.mono })
+  // A source too long for the room under the caption hands the page over whole.
+  if (sourcePastFoot(source, 602)) return StatHeroFallbackContent({ slide, ctx })
   return (
     <>
       {quarter && (
@@ -125,11 +126,7 @@ export function statHero({ ir, slide, ctx }: SvgTemplateProps) {
           {caption}
         </text>
       )}
-      {source && (
-        <text x={96} y={602} fontFamily={fonts.mono} fontSize={16} fill={colors.muted} dominantBaseline="alphabetic">
-          {source}
-        </text>
-      )}
+      <SourceLines block={source} x={96} y={602} fontFamily={fonts.mono} fill={colors.muted} />
     </>
   )
 }
@@ -143,9 +140,12 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
     lineHeightRatio: 1.38,
   })
   const context = pullQuoteContext(slide)
-  const attr = pullQuoteAttribution(slide)
+  const attr = fitPullQuoteSource(slide, { maxWidth: 1088, fontSize: 18, fontFamily: fonts.heading })
   const last = quote.lines.length - 1
   const firstY = quoteBlockBaseline(398, quote)
+  const attrY = Math.round(firstY + last * quote.lineHeight) + 76
+  // A source too long for the room under the quote hands the page to the shared face.
+  if (sourcePastFoot(attr, attrY)) return null
   return (
     <>
       {/* 行情走线是内容无关装饰，走中景，不与引言抢前景。 */}
@@ -190,19 +190,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
-      {attr && (
-        <text
-          x={640}
-          y={Math.round(firstY + last * quote.lineHeight) + 76}
-          textAnchor="middle"
-          fontFamily={fonts.heading}
-          fontSize={18}
-          fill={colors.accent}
-          dominantBaseline="alphabetic"
-        >
-          {attr}
-        </text>
-      )}
+      <SourceLines block={attr} x={640} y={attrY} textAnchor="middle" fontFamily={fonts.heading} fill={colors.accent} />
     </>
   )
 }

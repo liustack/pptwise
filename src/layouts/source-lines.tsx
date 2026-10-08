@@ -22,6 +22,13 @@ export interface SourceLine {
   readonly text: string
   readonly fontSize: number
   readonly truncated: boolean
+  /**
+   * Whether the line is set with the face's tracking. A face tracks its one
+   * short line; a source wrapped to a second line, or set under that line,
+   * is prose and is set untracked, since tracking a sentence wide enough to
+   * wrap spends its measure on air.
+   */
+  readonly tracked: boolean
 }
 
 /** The lines of a source block, top to bottom, and the distance between their baselines. */
@@ -56,19 +63,19 @@ export function fitSourceLines(text: string, opts: SourceFitOptions): SourceLine
   const minFontSize = opts.minFontSize ?? Math.min(16, opts.fontSize)
   const weight = { fontFamily: opts.fontFamily, bold: opts.bold }
   const one = fitSvgLine(content, { maxWidth: opts.maxWidth, fontSize: opts.fontSize, minFontSize, letterSpacing: opts.letterSpacing, ...weight })
-  if (!one.truncated) return [one]
+  if (!one.truncated) return [{ ...one, tracked: true }]
   const wrapped = layoutSvgText(content, {
     maxWidth: opts.maxWidth,
     fontSize: Math.max(opts.fontSize, minFontSize),
     minPt: minFontSize,
     maxLines: SOURCE_MAX_LINES,
-    letterSpacing: opts.letterSpacing,
     ...weight,
   })
   return wrapped.lines.map((line, i) => ({
     text: line,
     fontSize: wrapped.fontSize,
     truncated: wrapped.truncated && i === wrapped.lines.length - 1,
+    tracked: false,
   }))
 }
 
@@ -81,8 +88,8 @@ export function fitSourceBlock(primary: string | undefined, footnote: string | u
   const lines: SourceLine[] = []
   const first = primary?.trim()
   if (first) {
-    lines.push(
-      fitSvgLine(opts.transform ? opts.transform(first) : first, {
+    lines.push({
+      ...fitSvgLine(opts.transform ? opts.transform(first) : first, {
         maxWidth: opts.maxWidth,
         fontSize: opts.fontSize,
         minFontSize: opts.minFontSize ?? Math.min(16, opts.fontSize),
@@ -90,10 +97,12 @@ export function fitSourceBlock(primary: string | undefined, footnote: string | u
         fontFamily: opts.fontFamily,
         bold: opts.bold,
       }),
-    )
+      tracked: true,
+    })
   }
   const note = footnote?.trim()
-  if (note) lines.push(...fitSourceLines(note, opts))
+  // Under a line of the face's own, the footnote is prose and set untracked.
+  if (note) lines.push(...fitSourceLines(note, first ? { ...opts, letterSpacing: undefined } : opts))
   if (lines.length === 0) return null
   const size = Math.max(...lines.map((line) => line.fontSize))
   return { lines, lineHeight: Math.round(size * SOURCE_LINE_RATIO) }
@@ -141,7 +150,7 @@ export function SourceLines({
           fontSize={line.fontSize}
           fontStyle={fontStyle}
           fill={typeof fill === "function" ? fill(line.fontSize) : fill}
-          letterSpacing={letterSpacing}
+          letterSpacing={line.tracked ? letterSpacing : undefined}
           dominantBaseline="alphabetic"
         >
           {line.text}

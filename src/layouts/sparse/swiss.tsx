@@ -2,10 +2,10 @@ import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
-import { heroCaption, heroSource, heroUnit, heroValue } from "../minimal-shared"
+import { heroCaption, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, fitHeroSource, fitSparseHeading, fitStatementSource, sourcePastFoot, pad2 } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** swiss 稀排脸：左对齐超黑。不画顶边红条（motif 已画）。 */
@@ -18,8 +18,10 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
   if (!fitted) return StatHeroFallbackContent({ slide, ctx })
   const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
-  const source = heroSource(slide)
+  const source = fitHeroSource(slide, { maxWidth: 1096, fontSize: 18, fontFamily: fonts.body })
   const page = `${pad2(index + 1)} / ${pad2(ir.slides.length)}`
+  // A source too long for the room under the caption hands the page over whole.
+  if (sourcePastFoot(source, 600)) return StatHeroFallbackContent({ slide, ctx })
   return (
     <>
       <text
@@ -43,11 +45,7 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
           {caption}
         </text>
       )}
-      {source && (
-        <text x={92} y={600} fontFamily={fonts.body} fontSize={18} fill={colors.muted} dominantBaseline="alphabetic">
-          {source}
-        </text>
-      )}
+      <SourceLines block={source} x={92} y={600} fontFamily={fonts.body} fill={colors.muted} />
       <text x={1188} y={600} textAnchor="end" fontFamily={fonts.body} fontSize={16} fill={colors.muted} dominantBaseline="alphabetic">
         {page}
       </text>
