@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { CropSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -10,6 +11,7 @@ export const schema = z
     // 默认 cover（2026-07-09 用户反馈：模型常选 contain letterbox 不铺满
     // ——照片一律等比铺满裁切；contain 留给图表截图等不可裁切的图）
     fit: z.enum(["contain", "cover"]).default("cover"),
+    crop: CropSchema.optional(),
   })
   .strict()
 

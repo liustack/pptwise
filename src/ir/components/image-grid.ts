@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { IconNameSchema, TagSchema } from "./shared"
+import { CropSchema, IconNameSchema, TagSchema } from "./shared"
 import type { ComponentAliasSpec, ComponentTraits } from "./types"
 import type { DesignStory } from "../../design-story"
 
@@ -18,6 +18,7 @@ export const schema = z
               "A symbol drawn before the picture's caption, such as zap or map-pin. Only with a caption. Run `pptwise icons` for the names.",
             ),
             tag: TagSchema.optional().describe('A few words on the picture, such as "选配" or "Optional".'),
+            crop: CropSchema.optional(),
           })
           .strict()
       )

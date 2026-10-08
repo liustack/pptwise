@@ -283,6 +283,7 @@ pptwise schema --kind data --theme brief
 | `from_to.rows[].tag` 与 `emphasis` | 行尾数值后的标签，以及这一页讲的那一项，和 `comparison` 的行一样 | 最多标一行 |
 | `icon_cards.title` 与 `icon_cards.items[].tone` | 印在卡片上方的短名，比如一页里某一栏的栏头（「按什么做」），以及一张卡是哪一类消息（`danger`、`warning`、`success`），它的图标用主题给这类消息的颜色，比如一起过去的事故 | |
 | `matrix.columns`、`matrix.rows`、`matrix.title` 与 `matrix.items[].empty` | 网格各列的名字印在列上方，各行的名字印在行左边，每行可带图标（`{ "label": "国际改革评估", "icon": "globe" }`），网格上方一行短名，以及一个什么都还没找到的格子，画成虚线框、字在中间。配 `"tone": "accent"` 时虚线用强调色，表示这一页要说的空白 | 列名个数等于 `cols`，每行一个行名 |
+| `image.crop` 与 `image_grid.items[].crop` | 图片裁进画框时要留下的那一块，写成 `[左, 上, 宽, 高]`，都是占整张图的比例，这样一张合影可以把每个人各放进一个框。画框从这一块铺满，形状不一样时两边匀着裁。普通图片和图片网格照这一块裁，不会照着裁的手排构图让给它们。自己给照片取景的封面和章节页仍按居中裁 | 每个数在 0 到 1 之间，这一块不出图 |
 | `image_grid.items[].tag` | 图上的几个字，比如选配的那一张（`{ "text": "选配", "basis": "pending" }`），垫一块页面底色印在图的右上角，描边还是填色和别处的标签一样 | |
 | `from_to.rows[].icon` 与 `note` | 指标名前的图标（`"clock"`），以及名字下面一行小字，比如数字从哪来（「CNESA 估算，426 号新政前后」） | |
 | `comparison.rows[].emphasis` | 这一页讲的那一行：整行落在强调色的浅底上 | 最多一行 |

@@ -349,15 +349,15 @@ export const schema = z
         "combo",
       ])
       .describe(
-        "How to plot the series. bar/line: a category axis of trends or comparisons. " +
-          "stacked: each category's series piled into one column, so the total and its parts show together (two or more series, negative values pile down from zero, and the column total is printed above it). " +
-          "percent_stacked: the same piles scaled so every column reaches 100%, to compare make-up rather than size (two or more series, no negative values, every category must add up above zero). " +
-          "combo: bars and lines on one category axis, for two measures that share a period, such as revenue as columns and margin as a line. Mark each line series with `plot: \"line\"` (the rest are bars). It needs at least one of each. Put a series on `axis: \"right\"` to give it its own scale on a right-hand axis, titled by axes.y2_title / axes.y2_unit. " +
-          "scatter: a numeric x-y point cloud — use when BOTH axes are quantities (add an optional per-point `size` to make it a bubble chart); if x is a category label, use line/bar instead. " +
-          "area: a line with the region under it filled to the baseline, for volume/cumulative emphasis. " +
-          "pie: part-to-whole share. donut: the ring form of pie (set `center_total: true` to print the summed total big in the middle). " +
+        "How to plot the series. bar/line: categories on one axis, for trends or comparisons. " +
+          "stacked: each category's series piled into one column with its total printed above (two or more series, negatives pile down from zero). " +
+          "percent_stacked: the same piles scaled to 100%, to compare make-up rather than size (two or more series, no negatives, every category above zero). " +
+          "combo: bars and lines on one category axis for two measures over one period, such as revenue and margin. Mark each line series `plot: \"line\"`, the rest are bars, at least one of each. `axis: \"right\"` gives a series its own right-hand scale, titled by axes.y2_title / axes.y2_unit. " +
+          "scatter: a numeric x-y point cloud (a per-point `size` makes bubbles); a category x takes line or bar. " +
+          "area: a line filled down to the baseline, for volume or a running total. " +
+          "pie: part-to-whole share. donut: the ring form of pie (`center_total: true` prints the total in the middle). " +
           "funnel: one value narrowing across ordered stages. dumbbell: a from→to change per row. " +
-          "gauge: ONE value's progress toward a target, drawn as a filled half-ring with the number centered — reach for it for a single completion metric (e.g. 62% of goal). For several independent headline metrics side by side use `kpi_cards`, never a row of gauges.",
+          "gauge: ONE value's progress toward a target as a half-ring with the number centred, such as 62% of goal. Several headline metrics side by side are `kpi_cards`, never a row of gauges.",
       ),
     direction: z
       .enum(["horizontal", "vertical"])
@@ -437,10 +437,10 @@ export const schema = z
       .max(MAX_CHART_CHANGES)
       .optional()
       .describe(
-        "Up to three changes the chart states between two of its bars, each printed as a figure: a relative change (\"+11%\"), or a change in points when the value axis is in percent. " +
-          "Without `at`, from and to name two categories (x values), and the change runs between their columns, set as a bracket over them: each category must carry one bar, or the chart must be stacked. " +
-          "With `at`, from and to name two series and `at` the category where their bars are compared. The change is set beside the later bar. " +
-          "A change that ends on the marked series is set in the lead colour. Bar and stacked charts only.",
+        "Up to three changes between two of the chart's bars, each printed as a figure: a relative change (\"+11%\"), or points when the value axis is in percent. " +
+          "Without `at`, from and to name two categories (x values) and the change is bracketed over their columns: each category carries one bar, or the chart is stacked. " +
+          "With `at`, from and to name two series compared at that category, the change set beside the later bar. " +
+          "A change ending on the marked series takes the lead colour. Bar and stacked charts only.",
       ),
     /** Value ranges marked across the plot. See the describe below. */
     bands: z

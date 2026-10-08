@@ -72,8 +72,7 @@ export const schema = z
     "Lays 3-8 stages out on a closed ring with arrow connectors, for a process that has no endpoint — it " +
       "loops back to its own start (PDCA, a product lifecycle, a flywheel, a seasonal cycle). Use cycle when " +
       "the last stage leads back into the first; use `flowchart` instead when the process reaches a real " +
-      "endpoint, even if it branches on the way — forcing a closed loop through flowchart draws the closing " +
-      "edge as a stray line crossing the whole diagram, not a ring."
+      "endpoint, even if it branches, since a loop forced through flowchart closes on a stray line."
   )
 
 export const aliases = {} satisfies ComponentAliasSpec

@@ -3,6 +3,7 @@ import { cloneElement } from "react"
 import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisTspans, renderEmphasisText, type EmphasisSegment } from "../render/emphasis"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { accessibleInk } from "../render/ink"
+import { CroppedImage } from "../render/cropped-image"
 
 type ImageComponent = Extract<Component, { type: "image" }>
 
@@ -36,17 +37,7 @@ export const image: SvgComponent<ImageComponent> = {
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         {src ? (
-          <image
-            href={src}
-            x={0}
-            y={0}
-            width={box.w}
-            height={imgH}
-            preserveAspectRatio={
-              component.fit === "cover" ? "xMidYMid slice" : "xMidYMid meet"
-            }
-            aria-label={alt || undefined}
-          />
+          <CroppedImage src={src} box={{ x: 0, y: 0, w: box.w, h: imgH }} crop={component.crop} fit={component.fit === "cover" ? "cover" : "contain"} alt={alt} assetKey={component.asset_id} />
         ) : (
           <>
             <rect

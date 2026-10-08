@@ -1,3 +1,5 @@
+import { clipFor, clipRect } from "../lib/svg-image-box"
+
 /**
  * Development-time guard asserting a rendered slide SVG stays within the subset
  * svg2pptx can faithfully export. This is not a runtime fallback — it is a tripwire
@@ -11,13 +13,13 @@
  * `gradient.ts` converts them to native `a:gradFill` (see `fill="url(#…)"`
  * handling below) — only `pattern`/`filter`/etc remain forbidden.
  */
+
 const FORBIDDEN_TAGS = new Set([
   "foreignobject",
   "style",
   "use",
   "mask",
   "filter",
-  "clippath",
   "pattern",
   "symbol",
 ])
@@ -61,6 +63,16 @@ export function assertSubset(root: Element): void {
     }
     if (FORBIDDEN_TAGS.has(tag)) {
       throw new Error(`subset violation: forbidden element <${el.tagName}>`)
+    }
+    // One clip is exportable: a <clipPath> of one rectangle cutting an
+    // <image>, the shape a cropped picture is drawn with
+    // (`cropped-image.tsx`). The export turns it into the picture's crop.
+    if (tag === "clippath" && !clipRect(el)) {
+      throw new Error(`subset violation: <clipPath id="${el.getAttribute("id")}"> holds anything but one untransformed rectangle`)
+    }
+    if (el.hasAttribute("clip-path")) {
+      if (tag !== "image") throw new Error(`subset violation: clip-path on <${el.tagName}> (only a picture may be clipped)`)
+      if (!clipRect(clipFor(el))) throw new Error(`subset violation: clip-path="${el.getAttribute("clip-path")}" does not name a <clipPath> of one rectangle`)
     }
 
     // stroke gradients/patterns stay forbidden outright — svg2pptx never

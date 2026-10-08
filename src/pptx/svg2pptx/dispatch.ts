@@ -122,6 +122,7 @@ function scaleOp(op: Op, sx: number, sy: number): Op {
       // A fitted picture paints into its sizing box. Its own w/h are the
       // picture's natural size, which only sets the crop, so the box scales
       // with it and the crop stays the same.
+      if (op.sizing?.type === "crop") return { ...op, ...box, sizing: { ...op.sizing, x: op.sizing.x * sx, y: op.sizing.y * sy, w: op.sizing.w * sx, h: op.sizing.h * sy } }
       return { ...op, ...box, ...(op.sizing ? { sizing: { ...op.sizing, w: op.sizing.w * sx, h: op.sizing.h * sy } } : {}) }
   }
 }

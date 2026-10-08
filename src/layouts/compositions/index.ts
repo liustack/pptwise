@@ -749,6 +749,17 @@ const BALLOT_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([
  */
 const STAMP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["reply"])
 
+/**
+ * The compositions that keep the part of a picture an author named
+ * (`image.crop`, `image_grid.items[].crop`). A page whose picture carries
+ * one is offered to these alone; the ordinary image and grid crop it.
+ */
+const IMAGE_CROP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>([])
+
+function asksForImageCrop(components: readonly CompositionProps["components"][number][]): boolean {
+  return components.some((component) => (component.type === "image" && component.crop !== undefined) || (component.type === "image_grid" && component.items.some((item) => item.crop !== undefined)))
+}
+
 function asksForRoadmapBasis(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "roadmap" && component.items.some((item) => (item.rows ?? []).some((row) => row.basis !== undefined)))
 }
@@ -791,6 +802,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
   const sideBanded = asksForSideBands(props.components)
   const estimated = asksForChartEstimate(props.components)
   const bridged = asksForWaterfallTitle(props.components)
+  const cropped = asksForImageCrop(props.components)
   for (const id of ids) {
     if (marked && !CHART_MARK_COMPOSITIONS.has(id)) continue
     if (detailed && !TIMELINE_DETAIL_COMPOSITIONS.has(id)) continue
@@ -816,6 +828,7 @@ export function compose(props: CompositionProps, ids: readonly CompositionId[] =
     if (sideBanded && !CHART_SIDE_BAND_COMPOSITIONS.has(id)) continue
     if (estimated && !CHART_ESTIMATE_COMPOSITIONS.has(id)) continue
     if (bridged && !WATERFALL_TITLE_COMPOSITIONS.has(id)) continue
+    if (cropped && !IMAGE_CROP_COMPOSITIONS.has(id)) continue
     if (tagged && !CHART_TAG_COMPOSITIONS.has(id)) continue
     if (banded && !TAG_BAND_COMPOSITIONS.has(id)) continue
     if (props.pageTag && !PAGE_TAG_COMPOSITIONS.has(id)) continue

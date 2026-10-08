@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { graphicInk } from "../render/ink"
 import { Icon } from "../render/icons"
+import { CroppedImage } from "../render/cropped-image"
 import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -94,8 +95,13 @@ function renderCell({
   alt,
   cell,
   ctx,
+  crop,
+  assetKey,
 }: {
   src: string | undefined
+  /** The part of the picture to keep (`items[].crop`). */
+  crop?: readonly number[]
+  assetKey?: string
   /** A11Y-01 alt 链路（follow-up）：每格自己资产的 alt，只在存在时发 `aria-label`。 */
   alt: string | undefined
   cell: { x: number; y: number; w: number; h: number }
@@ -104,15 +110,7 @@ function renderCell({
   return (
     <g transform={`translate(${cell.x},${cell.y})`}>
       {src ? (
-        <image
-          href={src}
-          x={0}
-          y={0}
-          width={cell.w}
-          height={cell.h}
-          preserveAspectRatio="xMidYMid slice"
-          aria-label={alt || undefined}
-        />
+        <CroppedImage src={src} box={{ x: 0, y: 0, w: cell.w, h: cell.h }} crop={crop} alt={alt} assetKey={assetKey} />
       ) : (
         <>
           <rect x={0} y={0} width={cell.w} height={cell.h} fill={ctx.colors.surface} />
@@ -186,7 +184,7 @@ function renderDefault(component: ImageGridComponent, box: Parameters<SvgCompone
           const imageCell = { ...cell, h: cell.h - inset }
           return (
             <g key={i}>
-              {renderCell({ src, alt, cell: imageCell, ctx })}
+              {renderCell({ src, alt, cell: imageCell, ctx, crop: item.crop, assetKey: item.asset_id })}
               {item.tag ? <PictureTag tag={item.tag} cell={imageCell} ctx={ctx} /> : null}
               {item.caption &&
                 (() => {
