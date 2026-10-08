@@ -32,6 +32,7 @@ import { ScrollChapter } from "./chapter-scroll-chapter"
 import { CrayonboxChapter } from "./chapter-crayonbox-chapter"
 import { InvitationChapter } from "./chapter-invitation-chapter"
 import { LineupChapter } from "./chapter-lineup-chapter"
+import { PlacardChapter } from "./chapter-placard-chapter"
 import { FieldBandChapter } from "./chapter-field-band-chapter"
 import { SubjectRuleChapter } from "./chapter-subject-rule-chapter"
 import { OneWordChapter } from "./chapter-one-word-chapter"
@@ -92,4 +93,5 @@ export const CHAPTER_LAYOUTS: Record<ChapterLayoutId, ChapterLayout> = {
   "crayonbox-chapter": CrayonboxChapter,
   "invitation-chapter": InvitationChapter,
   "lineup-chapter": LineupChapter,
+  "placard-chapter": PlacardChapter,
 }

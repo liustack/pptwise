@@ -575,6 +575,19 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "runway", kind: "photo", composition: "parade" },
   { theme: "runway", kind: "photo", composition: "look" },
   { theme: "runway", kind: "comparison", composition: "bounds" },
+  // museum's placard sheet sets the shapes as a darkened gallery sets them,
+  // and draws the eleven its own board added.
+  { theme: "museum", kind: "process", composition: "floorplan" },
+  { theme: "museum", kind: "comparison", composition: "jars" },
+  { theme: "museum", kind: "data", composition: "squares" },
+  { theme: "museum", kind: "evidence", composition: "specimen" },
+  { theme: "museum", kind: "data", composition: "decades" },
+  { theme: "museum", kind: "photo", composition: "lenses" },
+  { theme: "museum", kind: "fact", composition: "halo" },
+  { theme: "museum", kind: "process", composition: "dateline" },
+  { theme: "museum", kind: "list", composition: "slice" },
+  { theme: "museum", kind: "points", composition: "blanks" },
+  { theme: "museum", kind: "photo", composition: "cabinet" },
 ]
 
 export function buildMatrix(

@@ -49,7 +49,7 @@ const BOARD: Record<string, { cover: string; chapter: string; ending: string }> 
   ember: { cover: "pitch-cover", chapter: "pitch-chapter", ending: "pitch-ending" },
   vermilion: { cover: "red-head-cover", chapter: "seal-numeral-chapter", ending: "deliberation-ending" },
   crayon: { cover: "crayonbox-cover", chapter: "crayonbox-chapter", ending: "crayonbox-ending" },
-  museum: { cover: "poster-center", chapter: "hall-label-chapter", ending: "exit-word-ending" },
+  museum: { cover: "placard-cover", chapter: "placard-chapter", ending: "placard-ending" },
   stage: { cover: "poster-center", chapter: "one-word-chapter", ending: "release-close-ending" },
   lecture: { cover: "board-head", chapter: "chalk-rule-chapter", ending: "next-lecture-ending" },
   swiss: { cover: "institutional-block", chapter: "decimal-index-chapter", ending: "resolution-ending" },
@@ -488,10 +488,11 @@ describe("registerTheme: unmeasured-font-width console.warn", () => {
   // CJK-serif design choices with no exact width table. Every builtin's
   // *body* resolves to a face that has one. This never reaches console.warn
   // because builtins never call registerTheme; the test locks both halves.
-  it("regression: lecture/museum's heading has no exact table, every builtin's body does — but builtins never call registerTheme, so this never reaches console.warn", () => {
+  it("regression: lecture's heading has no exact table, every builtin's body does — but builtins never call registerTheme, so this never reaches console.warn", () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
     // memo's, thesis's, journal's, luxe's and runway's headings resolve to Times New Roman over SimSun, and ink's over KaiTi, which is measured.
-    const nonExactHeadingBuiltins = new Set(["lecture", "museum"])
+    // museum's heading leads with Times New Roman since its 2026-10 redesign.
+    const nonExactHeadingBuiltins = new Set(["lecture"])
     for (const id of CANONICAL_THEME_IDS) {
       const style = THEME_DEFINITIONS[id].style
       const headingFace = resolveFontFace(style.fonts.heading, "heading")

@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+Museum has a new look, a darkened gallery. Every content page uses `placard-sheet`: the page's `kicker` as the hall in copper at the top left over a seam, a serif claim across the whole measure, the body drawn in the `placard` setting, the deck's organization and footer label at the bottom left and the page number on a door plate at the bottom right. The cover uses `placard-cover`, an exhibition catalogue's cover over the page's photograph with the date. A chapter uses `placard-chapter`: the hall's name over its title in a pool of warm light, kept when the page carries a photograph. The ending uses `placard-ending`, the lights going down, keeping every line you break its subheading into. Museum's heading pairs Times New Roman with SimSun, so its figures print proportionally in PowerPoint, and its new motif, `museum-motif`, prints the footer's marks. If you copied museum into your own theme file, its menu still names the old faces and keeps working as before.
