@@ -79,7 +79,7 @@ pptwise render <target> \
   [--no-git-ignore]
 ```
 
-省略 `-o` 时，输出写到项目根目录下的 `.pptwise/<deck>/<deck>.pptx`。改颜色用 `pptwise theme fork`，它写出一份完整主题。Render 不接受局部改色覆盖。
+省略 `-o` 时，输出写到项目根目录下的 `.pptwise/<place>/<deck>.pptx`。`<place>` 是 deck 相对项目根目录的路径，用连字符连起来，所以 `decks/q3/zh` 和 `decks/q4/zh` 各有自己的目录（`decks-q3-zh`、`decks-q4-zh`）和各自的图片素材。放在项目根目录下一层的 deck 保持原名。项目外的 deck，或路径里有拉丁字母和数字以外字符的 deck，名字后面加一段路径的短哈希。改颜色用 `pptwise theme fork`，它写出一份完整主题。Render 不接受局部改色覆盖。
 
 `--draft` 允许占位页。`--allow-dropped-content` 允许已知内容丢失，只能在用户明确同意时使用。正常处理方式是缩短或拆页。
 

@@ -1942,7 +1942,8 @@ describe("workspace artifacts (default -o)", () => {
     await mkdir(nested)
     await writeFile(join(nested, "hello.json"), JSON.stringify(VALID_IR))
     await runRender(join(nested, "hello.json"), { cwd: nested, gitIgnore: false })
-    await expect(stat(join(root, ".pptwise", "hello", "hello.pptx"))).resolves.toBeDefined()
+    // The workspace is named for the deck's place in the project, the pptx for the deck.
+    await expect(stat(join(root, ".pptwise", "nested-hello", "hello.pptx"))).resolves.toBeDefined()
     await expect(stat(join(nested, ".pptwise"))).rejects.toThrow()
   })
 
