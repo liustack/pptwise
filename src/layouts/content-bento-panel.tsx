@@ -25,8 +25,7 @@ import { Icon } from "../render/icons"
 import {
   deltaProps,
   kpiFigure,
-  fitKpiUnit,
-  splitKpiValueWidths,
+  fitKpiFigure,
   type KpiValueScale,
 } from "../components/kpi"
 import { iconCardContentHeight, renderIconCardBody } from "../components/icon-card-body"
@@ -301,24 +300,12 @@ function fitBentoKpiValue(
     unitRatio: BENTO_KPI_UNIT_RATIO,
     fontFamily: ctx.fonts.heading,
   }
-  const { valueMaxWidth, unitMaxWidth } = splitKpiValueWidths(
-    valueStr,
-    unit,
-    innerW,
-    valueScale,
-  )
   // This text and its unit tspan both render bold in the heading face, so
-  // the fit must use the same weight and family as the emitted SVG.
-  const fittedValue = fitSvgLine(valueStr, {
-    maxWidth: valueMaxWidth,
-    fontSize: valueSize,
-    minFontSize: BENTO_KPI_VALUE_MIN_SIZE,
-    bold: true,
-    fontFamily: ctx.fonts.heading,
-  })
-  const unitFontSize = Math.round(fittedValue.fontSize * BENTO_KPI_UNIT_RATIO)
-  const fittedUnit = fitKpiUnit(unit, unitMaxWidth, unitFontSize, ctx.fonts.heading)
-  return { hero, innerW, valueSize, fittedValue, unitFontSize, fittedUnit }
+  // the fit must use the same weight and family as the emitted SVG. The
+  // figure gives a few points of type before its unit is cut, and a cut
+  // unit marks the figure's line (`fitKpiFigure`).
+  const { fittedValue, unitFontSize, fittedUnit, unitCut } = fitKpiFigure(valueStr, unit, innerW, valueSize, valueScale)
+  return { hero, innerW, valueSize, fittedValue, unitFontSize, fittedUnit, unitCut }
 }
 
 type BentoKpiValueLayout = ReturnType<typeof fitBentoKpiValue>
@@ -408,6 +395,7 @@ function renderKpiCardBody(
     fittedValue,
     unitFontSize,
     fittedUnit,
+    unitCut,
   } = valuePaint.layout
   const hasIcon = Boolean(item.icon)
   const sourceText = item.source?.trim() ?? ""
@@ -517,7 +505,7 @@ function renderKpiCardBody(
         />
       )}
       <text
-        data-truncated={fittedValue.truncated ? "1" : undefined}
+        data-truncated={fittedValue.truncated || unitCut ? "1" : undefined}
         x={innerX}
         y={valueBaselineY}
         fontSize={fittedValue.fontSize}

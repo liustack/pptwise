@@ -195,6 +195,55 @@ export function fitKpiUnit(
   return fitted === "" ? null : `${gap}${fitted}`
 }
 
+/** Whether `fitted`, what `fitKpiUnit` set, is less than the whole `unit`: cut short or left off. */
+export function kpiUnitCut(unit: string | undefined, fitted: string | null): boolean {
+  if (!unit) return false
+  return fitted !== `${unitGap(unit)}${unit}`
+}
+
+/**
+ * A figure and its unit fitted together: the figure at the largest size from
+ * `fontSize` down to the scale's floor at which it and its whole unit both
+ * fit their shares of the line. The unit gives way only once the figure is
+ * at its floor, and then `unitCut` says so, so the card can mark the cut
+ * (`data-truncated`) rather than print a figure that lost its unit with
+ * nothing to say it did. A unit that used to be cut short or dropped while
+ * the figure stood at its design size ("2.0" left without "billion years")
+ * now costs the figure a few points of type instead.
+ */
+export function fitKpiFigure(
+  value: string,
+  unit: string | undefined,
+  availableWidth: number,
+  fontSize: number,
+  scale: KpiValueScale,
+): { fittedValue: { text: string; fontSize: number; truncated: boolean }; unitFontSize: number; fittedUnit: string | null; unitCut: boolean } {
+  const fitWith = (size: number, widths: { valueMaxWidth: number; unitMaxWidth: number }) => {
+    const fittedValue = fitSvgLine(value, { maxWidth: widths.valueMaxWidth, fontSize: size, minFontSize: scale.minFontSize, bold: true, fontFamily: scale.fontFamily })
+    const unitFontSize = Math.round(fittedValue.fontSize * scale.unitRatio)
+    const fittedUnit = fitKpiUnit(unit, widths.unitMaxWidth, unitFontSize, scale.fontFamily)
+    return { fittedValue, unitFontSize, fittedUnit, unitCut: kpiUnitCut(unit, fittedUnit) }
+  }
+  // The line shared as it always was: where the number and its whole unit
+  // fit that way, nothing moves.
+  const shared = fitWith(fontSize, splitKpiValueWidths(value, unit, availableWidth, scale))
+  if (!shared.unitCut) return shared
+  // Otherwise the number steps down a point at a time, and at each size takes
+  // only the width it is drawn at, so its unit has the rest of the line. The
+  // overflow audit measures a unit at its own size (`textRuns`), so the
+  // unit's share no longer has to be priced at the figure's.
+  const ink: TextWeightHint = { bold: true, fontFamily: scale.fontFamily }
+  const valueUnits = measureTextUnits(value, ink)
+  const unitUnits = measureTextUnits(`${unitGap(unit!)}${unit}`, ink)
+  for (let size = Math.min(fontSize, shared.fittedValue.fontSize); size >= scale.minFontSize; size -= 1) {
+    const valueW = Math.ceil(valueUnits * size)
+    if (valueW + Math.ceil(unitUnits * Math.round(size * scale.unitRatio)) > availableWidth) continue
+    const whole = fitWith(size, { valueMaxWidth: valueW, unitMaxWidth: availableWidth - valueW })
+    if (!whole.unitCut && !whole.fittedValue.truncated) return whole
+  }
+  return shared
+}
+
 /**
  * The one type size every card in a row sets its number at: the smallest
  * size at which *all* of them still state their number in full.
@@ -228,14 +277,8 @@ export function rowValueFontSize(
   let smallest = scale.fontSize
   for (const item of items) {
     const { text: value, unit } = kpiFigure(item.value, item.unit)
-    const { valueMaxWidth } = splitKpiValueWidths(value, unit, availableWidth - reserve(item), scale)
-    const { fontSize } = fitSvgLine(value, {
-      maxWidth: valueMaxWidth,
-      fontSize: scale.fontSize,
-      minFontSize: scale.minFontSize,
-      bold: true,
-      fontFamily: scale.fontFamily,
-    })
+    // The size its number and its whole unit both fit at (`fitKpiFigure`).
+    const { fontSize } = fitKpiFigure(value, unit, availableWidth - reserve(item), scale.fontSize, scale).fittedValue
     if (fontSize < smallest) smallest = fontSize
   }
   return smallest
@@ -480,12 +523,6 @@ export const kpi: SvgComponent<KpiComponent> = {
           // was allotted at its own (smaller) font size — together the two
           // bounds keep the card from overflowing at any value/unit length.
           const { text: valueStr, marked, unit } = kpiFigure(item.value, item.unit)
-          const { valueMaxWidth, unitMaxWidth } = splitKpiValueWidths(
-            valueStr,
-            unit,
-            availableWidth - reserve(item),
-            valueScale,
-          )
           // bold-metrics fix (2026-07-24): this text renders `fontWeight=
           // "bold"` in `ctx.fonts.heading` below — audit-baseline.test.ts's
           // ink/journal/runway "kpi" cases caught this the same way
@@ -503,15 +540,9 @@ export const kpi: SvgComponent<KpiComponent> = {
           // smaller ceiling can only ever make the line fit more easily, so
           // the card that *set* the row's size renders exactly as it did
           // before and no card is pushed into truncation by the change.
-          const fittedValue = fitSvgLine(valueStr, {
-            maxWidth: valueMaxWidth,
-            fontSize: rowFontSize,
-            minFontSize: valueScale.minFontSize,
-            bold: true,
-            fontFamily: ctx.fonts.heading,
-          })
-          const unitFontSize = Math.round(fittedValue.fontSize * valueScale.unitRatio)
-          const fittedUnit = fitKpiUnit(unit, unitMaxWidth, unitFontSize, ctx.fonts.heading)
+          // A unit that cannot be set whole even with its figure at the floor
+          // is cut, and the figure's line says so (`data-truncated`).
+          const { fittedValue, unitFontSize, fittedUnit, unitCut } = fitKpiFigure(valueStr, unit, availableWidth - reserve(item), rowFontSize, valueScale)
           const fittedLabel = fitSvgLine(item.label, {
             maxWidth: cardW - 40,
             fontSize: 16,
@@ -554,7 +585,7 @@ export const kpi: SvgComponent<KpiComponent> = {
                 />
               )}
               <text
-                data-truncated={fittedValue.truncated ? "1" : undefined}
+                data-truncated={fittedValue.truncated || unitCut ? "1" : undefined}
                 x={cardX + 20}
                 y={valueY}
                 fontSize={fittedValue.fontSize}

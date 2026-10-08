@@ -563,10 +563,11 @@ describe("kpi value/unit width split puts the number first", () => {
     }
   }
 
-  it("keeps the whole number and abbreviates a long unit instead of the other way round", () => {
+  it("keeps the whole number, and marks a unit too long to set whole at any size the number may take", () => {
     // Pre-fix this rendered an empty value element next to a 24-character
     // unit: the proportional split gave the number 4px of a 260px line,
-    // because the unit had 33 characters to the number's one.
+    // because the unit had 33 characters to the number's one. The unit was
+    // then cut short with nothing on the page to say so.
     const card = oneCard(
       {
         value: "9",
@@ -576,31 +577,38 @@ describe("kpi value/unit width split puts the number first", () => {
       300,
     )
     expect(card.value).toBe("9")
-    expect(card.valueTruncated).toBe(false)
     expect(card.valueFontSize).toBe(40)
     expect(card.unit).not.toMatch(/…$/)
-    expect(card.unit!.length).toBeLessThan(10)
+    expect(card.unit!.length).toBeLessThan(20)
+    expect(card.valueTruncated).toBe(true)
   })
 
-  it("lets the unit step aside entirely rather than let the number lose a digit", () => {
+  it("gives the number a few points of type before it cuts the unit", () => {
     // The reviewer's own case, at the reviewer's own geometry: the gallery's
     // two-column right rail drew four cards 123px wide, i.e. an 83px text
-    // line. Pre-fix: "…" for the number, and a full "weeks" beside it.
+    // line. Pre-fix: "…" for the number, and a full "weeks" beside it, and
+    // later the number alone with "weeks" dropped and nothing to say so.
     const card = oneCard({ value: "5", unit: "weeks", label: "Average delivery time" }, 123)
     expect(card.value).toBe("5")
+    expect(card.unit).toBe(" weeks")
     expect(card.valueTruncated).toBe(false)
-    if (card.unit) {
-      // The unit is set a space after its figure (`unitGap`).
-      expect(card.unit.startsWith(" ")).toBe(true)
-      expect("weeks".startsWith(card.unit.slice(1))).toBe(true)
-      expect(card.unit).not.toContain("…")
-    }
+    expect(card.valueFontSize).toBeLessThan(40)
   })
 
-  it("never leaves a bare ellipsis where the unit was — it reads as part of the number", () => {
-    const card = oneCard({ value: "5", unit: "weeks", label: "Average delivery time" }, 84)
+  it("sets a long English unit whole beside its figure rather than leave it off", () => {
+    // A writer's "2.0 billion years" in an evidence page's narrow column came
+    // out as "2.0", the unit gone and nothing on the page to say so.
+    const card = oneCard({ value: "2.0", unit: "billion years", label: "Age" }, 200)
+    expect(card.value).toBe("2.0")
+    expect(card.unit).toBe(" billion years")
+    expect(card.valueTruncated).toBe(false)
+  })
+
+  it("never leaves a bare ellipsis where the unit was, and marks the figure that lost its unit", () => {
+    const card = oneCard({ value: "5", unit: "weeks", label: "Average delivery time" }, 64)
     expect(card.value).toBe("5")
     expect(card.unit).toBeNull()
+    expect(card.valueTruncated).toBe(true)
   })
 
   it("cuts the number itself only as a last resort, and cuts it from the small end", () => {
