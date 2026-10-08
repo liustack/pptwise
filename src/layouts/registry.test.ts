@@ -86,8 +86,9 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // lineup-chapter, lineup-sheet and lineup-ending: 187. The museum redesign
     // adds placard-cover, placard-chapter, placard-sheet and placard-ending: 191.
     // The stage redesign adds keynote-cover, keynote-chapter, keynote-sheet and
-    // keynote-ending: 195.
-    expect(layoutEntries).toHaveLength(195)
+    // keynote-ending: 195. The lecture redesign adds chalkboard-cover,
+    // chalkboard-chapter, chalkboard-sheet and chalkboard-ending: 199.
+    expect(layoutEntries).toHaveLength(199)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -171,7 +172,8 @@ describe("content family: body slot", () => {
           id === "binder-cover" ||
           id === "binder-chapter" ||
           id === "binder-ending" ||
-          id === "manuscript-ending"
+          id === "manuscript-ending" ||
+          id === "chalkboard-ending"
         ) {
           expect(entry.slots.some((s) => s.name === "body")).toBe(true)
           continue
@@ -312,18 +314,18 @@ describe("layoutsForSlideType", () => {
     for (const l of covers) expect(l.slideTypes).toContain("cover")
   })
 
-  it("cover, chapter, and ending expose 50, 45, and 47 registered layouts with no takeovers", () => {
+  it("cover, chapter, and ending expose 51, 46, and 48 registered layouts with no takeovers", () => {
     // The shared automatic pools are unchanged by the gauge family: 19, 8, 7.
-    expect(layoutsForSlideType("cover")).toHaveLength(50)
+    expect(layoutsForSlideType("cover")).toHaveLength(51)
     // Wave 8 batch 4: +6 chapter +6 ending pinOnly faces.
-    expect(layoutsForSlideType("chapter")).toHaveLength(45)
-    expect(layoutsForSlideType("ending")).toHaveLength(47)
+    expect(layoutsForSlideType("chapter")).toHaveLength(46)
+    expect(layoutsForSlideType("ending")).toHaveLength(48)
   })
 
-  it("content includes both the 53 layouts and the 4 takeovers", () => {
+  it("content includes both the 54 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(53)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(54)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(57)
+    expect(contents).toHaveLength(58)
   })
 })

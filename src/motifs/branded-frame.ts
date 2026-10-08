@@ -3,8 +3,6 @@ import type { Slide } from "@/ir"
 
 /** Outer frame bottom when branding paints the logo/footer strip. */
 export const FRAME_BOTTOM_BRANDED = 624
-/** Lecture board inset: 26px from the 720 canvas. */
-export const LECTURE_FRAME_BOTTOM_BOARD = 694
 /** Luxe top inset is 24px. Match that on the bottom when branding is off. */
 export const LUXE_FRAME_BOTTOM_BOARD = 696
 

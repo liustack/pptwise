@@ -57,6 +57,7 @@ export function registerTestTheme(
   id: string,
   sourceThemeId: CanonicalThemeId,
   faces: TestThemeFaces = {},
+  opts: { keepEmphasis?: boolean } = {},
 ): string {
   const source = THEME_DEFINITIONS[sourceThemeId]
   const fallbackDecor = sourceDecor(sourceThemeId)
@@ -89,6 +90,8 @@ export function registerTestTheme(
     brand: structuredClone(source.brand),
     occasions: source.occasions === undefined ? undefined : [...source.occasions],
     identity: source.identity,
+    // The source's emphasis treatment, when a test is about how a face draws it.
+    ...(opts.keepEmphasis && source.emphasis !== undefined ? { emphasis: source.emphasis } : {}),
     menu,
   } satisfies ThemeFile)
   return id

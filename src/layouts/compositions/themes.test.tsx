@@ -66,6 +66,8 @@ const LINEUP_ONLY = ["order", "standfirst", "duet", "collage", "thread", "length
 const PLACARD_ONLY = ["floorplan", "jars", "squares", "specimen", "decades", "lenses", "halo", "dateline", "slice", "blanks", "cabinet"] as const
 /** The same for the keynote setting's own: `keynote-pages.test.tsx` puts them on these themes. */
 const KEYNOTE_ONLY = ["hush", "giant", "contour", "faceoff", "tilt", "podiums", "gulf", "crowd", "tower", "toll", "arches", "slate"] as const
+/** The same for the chalkboard setting's own: `chalkboard-pages.test.tsx` puts them on these themes. */
+const CHALKBOARD_ONLY = ["agenda", "confluence", "braces", "boughs", "factors", "subtractions", "flashcards", "risers", "givens", "derivation", "cascade", "exercises", "solutions", "pitfalls", "strikeout", "chronology"] as const
 type BoardId = Exclude<
   CompositionId,
   | (typeof PANEL_ONLY)[number]
@@ -86,8 +88,9 @@ type BoardId = Exclude<
   | (typeof LINEUP_ONLY)[number]
   | (typeof PLACARD_ONLY)[number]
   | (typeof KEYNOTE_ONLY)[number]
+  | (typeof CHALKBOARD_ONLY)[number]
 >
-const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY, ...CONSOLE_ONLY, ...MEMO_ONLY, ...DOSSIER_ONLY, ...YEARBOOK_ONLY, ...LESSON_ONLY, ...PITCH_ONLY, ...MARQUEE_ONLY, ...BINDER_ONLY, ...MANUSCRIPT_ONLY, ...PERIODICAL_ONLY, ...SCROLL_ONLY, ...CRAYONBOX_ONLY, ...INVITATION_ONLY, ...LINEUP_ONLY, ...PLACARD_ONLY, ...KEYNOTE_ONLY]
+const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY, ...CONSOLE_ONLY, ...MEMO_ONLY, ...DOSSIER_ONLY, ...YEARBOOK_ONLY, ...LESSON_ONLY, ...PITCH_ONLY, ...MARQUEE_ONLY, ...BINDER_ONLY, ...MANUSCRIPT_ONLY, ...PERIODICAL_ONLY, ...SCROLL_ONLY, ...CRAYONBOX_ONLY, ...INVITATION_ONLY, ...LINEUP_ONLY, ...PLACARD_ONLY, ...KEYNOTE_ONLY, ...CHALKBOARD_ONLY]
 const BOARD_IDS = COMPOSITION_IDS.filter((id): id is BoardId => !SETTING_ONLY.includes(id))
 
 /** One page per composition, in the shape each one takes. */

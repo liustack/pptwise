@@ -51,6 +51,10 @@ import type { MotifId } from "./types"
  *   deck's length at the end of the progress line along the foot, and the
  *   organization, the deck's `label`, the notice and the draft and
  *   confidentiality marks moved up to the top right.
+ *   lecture-motif is lecture's blackboard: the organization, the deck's
+ *   `label`, the notice and the draft and confidentiality marks written on
+ *   the chalk ledge along the foot, the page number and the deck's length
+ *   at the top right as the period's count.
  * - `"organization"`: the motif prints the organization somewhere of its
  *   own, and the shared row carries everything else.
  *
@@ -78,5 +82,6 @@ export const MOTIF_FOOTER_ROLES: Partial<Record<MotifId, MotifFooterRole>> = {
   "runway-motif": "row",
   "museum-motif": "row",
   "stage-motif": "row",
+  "lecture-motif": "row",
   "poster-motif": "organization",
 }

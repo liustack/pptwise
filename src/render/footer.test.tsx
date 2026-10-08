@@ -113,8 +113,8 @@ describe("no footer by default", () => {
 })
 
 describe("the footer row, when the deck asks for it", () => {
-  // memo, clinic, almanac, homeroom, ember, rally, proposal, thesis, journal, ink, crayon, luxe, runway, museum and stage set their folios rather than printing the shared row: their own cases below.
-  const OWN_FOLIO_THEMES = new Set(["memo", "clinic", "almanac", "homeroom", "ember", "rally", "proposal", "thesis", "journal", "ink", "crayon", "luxe", "runway", "museum", "stage"])
+  // memo, clinic, almanac, homeroom, ember, rally, proposal, thesis, journal, ink, crayon, luxe, runway, museum, stage and lecture set their folios rather than printing the shared row: their own cases below.
+  const OWN_FOLIO_THEMES = new Set(["memo", "clinic", "almanac", "homeroom", "ember", "rally", "proposal", "thesis", "journal", "ink", "crayon", "luxe", "runway", "museum", "stage", "lecture"])
   const SHARED_ROW_THEMES = CANONICAL_THEME_IDS.filter((theme) => !OWN_FOLIO_THEMES.has(theme))
 
   it.each(SHARED_ROW_THEMES)("%s: every mark in its place, on content pages only", (theme) => {
@@ -471,6 +471,22 @@ describe("the footer row, when the deck asks for it", () => {
       }
       const row = root.querySelector('[data-footer="row"]')!
       expect(row.querySelector("[data-keynote-marks]")!.getAttribute("data-keynote-marks")).toBe(`${ORG} · 2026 年中期业绩 | 2026.08 · 讨论稿 · 内部资料，请勿外传`)
+      expect(footerRules(root)).toHaveLength(0)
+    })
+  })
+
+  it("lecture: the course on the chalk ledge and the period's count at the top right of every page", () => {
+    const ir = zhDeck("lecture", { footer: ALL_MARKS })
+    const total = ir.slides.length
+    ir.slides.forEach((slide, index) => {
+      const root = page(ir, index)
+      const count = root.querySelector("[data-chalk-count]")!
+      expect(count, `lecture ${slide.type}: count`).not.toBeNull()
+      expect(count.getAttribute("data-chalk-count")).toBe(`${index + 1} / ${total}`)
+      expect(count.querySelector('[data-field="slidenum"]')!.textContent).toBe(String(index + 1))
+      const course = root.querySelector("[data-chalk-course]")!.getAttribute("data-chalk-course")
+      // The confidentiality mark stands on the cover's own mark, and on the ledge of content pages.
+      expect(course).toBe(slide.type === "content" ? `${ORG} · 2026 年中期业绩 | 2026.08 · 讨论稿 · 内部资料，请勿外传` : `${ORG} · 2026 年中期业绩 | 2026.08 · 讨论稿`)
       expect(footerRules(root)).toHaveLength(0)
     })
   })

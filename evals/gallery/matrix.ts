@@ -602,6 +602,24 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "stage", kind: "comparison", composition: "toll" },
   { theme: "stage", kind: "list", composition: "arches" },
   { theme: "stage", kind: "points", composition: "slate" },
+  // lecture's chalkboard sheet sets the shapes as a night class writes them
+  // on the board, and draws the sixteen its own board added.
+  { theme: "lecture", kind: "points", composition: "agenda" },
+  { theme: "lecture", kind: "list", composition: "confluence" },
+  { theme: "lecture", kind: "statement", composition: "braces" },
+  { theme: "lecture", kind: "points", composition: "boughs" },
+  { theme: "lecture", kind: "data", composition: "factors" },
+  { theme: "lecture", kind: "process", composition: "subtractions" },
+  { theme: "lecture", kind: "hierarchy", composition: "flashcards" },
+  { theme: "lecture", kind: "data", composition: "risers" },
+  { theme: "lecture", kind: "list", composition: "givens" },
+  { theme: "lecture", kind: "points", composition: "derivation" },
+  { theme: "lecture", kind: "evidence", composition: "cascade" },
+  { theme: "lecture", kind: "list", composition: "exercises" },
+  { theme: "lecture", kind: "comparison", composition: "solutions" },
+  { theme: "lecture", kind: "list", composition: "pitfalls" },
+  { theme: "lecture", kind: "data", composition: "strikeout" },
+  { theme: "lecture", kind: "process", composition: "chronology" },
 ]
 
 export function buildMatrix(

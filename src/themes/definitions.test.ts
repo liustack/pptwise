@@ -51,7 +51,7 @@ const BOARD: Record<string, { cover: string; chapter: string; ending: string }> 
   crayon: { cover: "crayonbox-cover", chapter: "crayonbox-chapter", ending: "crayonbox-ending" },
   museum: { cover: "placard-cover", chapter: "placard-chapter", ending: "placard-ending" },
   stage: { cover: "keynote-cover", chapter: "keynote-chapter", ending: "keynote-ending" },
-  lecture: { cover: "board-head", chapter: "chalk-rule-chapter", ending: "next-lecture-ending" },
+  lecture: { cover: "chalkboard-cover", chapter: "chalkboard-chapter", ending: "chalkboard-ending" },
   swiss: { cover: "institutional-block", chapter: "decimal-index-chapter", ending: "resolution-ending" },
   memo: { cover: "memo-cover", chapter: "issue-line-chapter", ending: "memo-ending" },
   proposal: { cover: "binder-cover", chapter: "binder-chapter", ending: "binder-ending" },
@@ -484,15 +484,15 @@ describe("registerTheme: unmeasured-font-width console.warn", () => {
     warnSpy.mockRestore()
   })
 
-  // Three builtins resolve their *heading* to SimSun — deliberate
-  // CJK-serif design choices with no exact width table. Every builtin's
-  // *body* resolves to a face that has one. This never reaches console.warn
-  // because builtins never call registerTheme; the test locks both halves.
-  it("regression: lecture's heading has no exact table, every builtin's body does — but builtins never call registerTheme, so this never reaches console.warn", () => {
+  // Every builtin's heading and body resolve to a face with an exact width
+  // table. This never reaches console.warn because builtins never call
+  // registerTheme; the test locks both halves.
+  it("regression: every builtin's heading and body have an exact table, and builtins never call registerTheme, so this never reaches console.warn", () => {
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
     // memo's, thesis's, journal's, luxe's and runway's headings resolve to Times New Roman over SimSun, and ink's over KaiTi, which is measured.
-    // museum's heading leads with Times New Roman since its 2026-10 redesign.
-    const nonExactHeadingBuiltins = new Set(["lecture"])
+    // museum's heading leads with Times New Roman since its 2026-10 redesign,
+    // and lecture's since its own: the last SimSun heading.
+    const nonExactHeadingBuiltins = new Set<string>()
     for (const id of CANONICAL_THEME_IDS) {
       const style = THEME_DEFINITIONS[id].style
       const headingFace = resolveFontFace(style.fonts.heading, "heading")

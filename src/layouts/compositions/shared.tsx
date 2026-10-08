@@ -266,6 +266,22 @@ export type CompositionId =
   | "toll"
   | "arches"
   | "slate"
+  | "agenda"
+  | "confluence"
+  | "braces"
+  | "boughs"
+  | "factors"
+  | "subtractions"
+  | "flashcards"
+  | "risers"
+  | "givens"
+  | "derivation"
+  | "cascade"
+  | "exercises"
+  | "solutions"
+  | "pitfalls"
+  | "strikeout"
+  | "chronology"
 
 /**
  * The type a composition sets its page in.
@@ -554,10 +570,31 @@ export type CompositionId =
  *   beside the sentence they say, gates as doors, and a short list said one
  *   line at a time. See `./keynote.tsx`.
  *
+ * - `chalkboard`: lecture's 2026-10 board. A night class at a green board:
+ *   an ink-green field, words written in chalk white, what is quieter in a
+ *   half wiped chalk grey, ruled and dashed lines a breath off the board, and
+ *   one stroke of yellow chalk (the theme's accent) a page under the thing
+ *   that matters, drawn by hand: a line laid twice, boxes whose edges skip, a
+ *   ring around a word and braces under the terms of a formula. Titles,
+ *   terms, figures and the working are set in the heading serif at its
+ *   regular weight. A composition offered this setting is handed the whole
+ *   page and places the page's title (`claim`) and its source (`source`)
+ *   itself, sets the page's stamp (an example's 「例题 · 数字为虚构」) where
+ *   its board drew it, and draws the shapes that board drew and no other did:
+ *   what tonight covers in chalk boxes, two paths that meet in one result, a
+ *   formula with a brace under each term, a decision tree in chalk, factors
+ *   beside what they multiply, what is taken off in a row of minus signs,
+ *   cards with the raised ones ringed, rates as a staircase, an example's
+ *   givens beside its photographs, a derivation with its equals signs in a
+ *   column, a sum bridged as bars, exercises with room for the answer, the
+ *   answers worked in columns, pitfalls struck through, figures with a
+ *   misquoted one struck out, and dates laid on a line at their true
+ *   distance. See `./chalkboard.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll" | "crayonbox" | "invitation" | "lineup" | "placard" | "keynote"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll" | "crayonbox" | "invitation" | "lineup" | "placard" | "keynote" | "chalkboard"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */
@@ -644,6 +681,8 @@ export interface CompositionProps {
     weight?: "bold" | "regular"
     /** The size below which the claim will not shrink to stay on one line. */
     minPt?: number
+    /** Px between the characters, for a lead-in tracked wide (the chalkboard's line over a formula). */
+    tracking?: number
     labelTop?: number
     labelTracking?: number
     mark?: "center" | "start" | "none"
@@ -671,6 +710,8 @@ export interface CompositionProps {
     ground?: string
     /** The lowest its last line may end, for a board whose source rises a line when it takes two. */
     foot?: number
+    /** Set a size up in the quieter ink, as the note a board writes under an example's stamp (the chalkboard's exercises). */
+    note?: boolean
   }) => React.ReactElement | null
   /**
    * The page's chapter (`Slide.kicker`), drawn by the face's own rules into
