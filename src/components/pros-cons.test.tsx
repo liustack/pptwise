@@ -150,6 +150,34 @@ describe("pros_cons component", () => {
     expect(container.querySelectorAll("text")).toHaveLength(0)
   })
 
+  it("wraps a point too long for one line onto a second, and moves the rows under it down", () => {
+    const point = "旧牛仔的颜色、磨痕和缝线留了下来，还有很多别的东西也都一起留了下来"
+    const long = { ...four, pros: { ...four.pros, items: [{ label: point, note: "面料层级再造" }, ...four.pros.items.slice(1)] } }
+    const ctx = themed("rally")
+    const box = { x: 0, y: 0, w: 1088 }
+    const { container } = svg(prosCons.render(long, box, ctx))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    expect(container.querySelector("[data-truncated]")).toBeNull()
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "")
+    const first = texts.findIndex((t) => point.startsWith(t) && t.length > 0)
+    expect(first).toBeGreaterThan(-1)
+    expect(texts[first]! + texts[first + 1]!).toBe(point)
+    // The note sits under the second line, and the next row under the note.
+    const ys = (text: string) => Number(Array.from(container.querySelectorAll("text")).find((t) => t.textContent === text)!.getAttribute("y"))
+    expect(ys("面料层级再造")).toBeGreaterThan(ys(texts[first + 1]!))
+    expect(ys("中小客户门槛下移")).toBeGreaterThan(ys("面料层级再造"))
+    // The cons column's second row stands level with the pros column's.
+    expect(ys("小客群单价被摊薄")).toBe(ys("中小客户门槛下移"))
+    expect(prosCons.measure(long, box.w, ctx)).toBeLessThanOrEqual(350)
+  })
+
+  it("draws a weighing whose points each fit one line exactly as before", () => {
+    const ctx = themed("rally")
+    const markup = renderToStaticMarkup(<svg>{prosCons.render(four, { x: 0, y: 0, w: 1088 }, ctx)}</svg>)
+    expect(markup).not.toContain("data-dropped")
+    expect((markup.match(/<text/g) ?? []).length).toBe(2 + 8 + 8 + 1)
+  })
+
   it("declares instead of drawing past a height it was given", () => {
     const { container } = svg(prosCons.render(four, { x: 0, y: 0, w: 1088, h: 200 }, themed("rally")))
     expect(container.querySelector("[data-dropped]")).not.toBeNull()

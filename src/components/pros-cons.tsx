@@ -5,6 +5,7 @@ import { accessibleInk } from "../render/ink"
 import { anyCut } from "./declared-fit"
 import { Icon } from "../render/icons"
 import { FORM_BODY_FLOOR, fitFormLine } from "./legibility"
+import { layoutSvgText } from "../lib/svg-text-layout"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type ProsConsComponent = Extract<Component, { type: "pros_cons" }>
@@ -22,6 +23,12 @@ type Side = ProsConsComponent["pros"]
  * 行距是唯一会被压缩的量。两栏各五条又都带一行说明时，自然高度会超过内容
  * 区的最窄一档，所以行距先让步（到 0 为止），字号不动——字号有可读下限，
  * 呼吸没有。
+ *
+ * A point that will not fit one line, even at the floor, takes a second line
+ * at its own size rather than costing the whole weighing: the row grows by a
+ * line and the rows under it move down, the other column's row moving with
+ * it so the two sides stay level. A point that needs a third line is still
+ * declared, and the page steps aside.
  */
 
 const COL_GAP = 32
@@ -42,28 +49,56 @@ function hasNotes(side: Side): boolean {
   return side.items.some((item) => item.note?.trim())
 }
 
-function resolveProsCons(component: ProsConsComponent, w: number) {
+/** The sizes a point's label is set at. */
+const LABEL_SIZE = Math.max(FORM_BODY_FLOOR, 17)
+
+/** The width a point's words have beside its mark. */
+function labelWidth(colW: number): number {
+  return colW - PAD_X * 2 - MARK - MARK_GAP
+}
+
+/**
+ * A point's label as it is set: on one line when it fits there at the floor
+ * or above, as before, and otherwise on two lines at its own size. `truncated`
+ * when two lines do not hold it either.
+ */
+function fitLabel(label: string, maxWidth: number, ctx: ComponentCtx | undefined): { lines: string[]; fontSize: number; truncated: boolean } {
+  const fontFamily = ctx?.fonts.body
+  const one = fitFormLine(label, { maxWidth, fontSize: LABEL_SIZE, floor: FORM_BODY_FLOOR, bold: true, fontFamily })
+  if (!one.truncated) return { lines: [one.text], fontSize: one.fontSize, truncated: false }
+  const two = layoutSvgText(label, { maxWidth, fontSize: LABEL_SIZE, minPt: LABEL_SIZE, maxLines: 2, bold: true, fontFamily })
+  return { lines: two.lines, fontSize: two.fontSize, truncated: two.truncated }
+}
+
+function resolveProsCons(component: ProsConsComponent, w: number, ctx?: ComponentCtx) {
   const colW = (w - COL_GAP) / 2
   const rows = Math.max(component.pros.items.length, component.cons.items.length)
   const noted = hasNotes(component.pros) || hasNotes(component.cons)
   const rowH = LABEL_LH + (noted ? NOTE_LH : 0)
+  // A row is as tall as the taller of its two points: a label on two lines adds a line.
+  const lineCount = (side: Side, i: number) => {
+    const item = side.items[i]
+    return item ? Math.max(1, Math.min(2, fitLabel(item.label, labelWidth(colW), ctx).lines.length)) : 1
+  }
+  const rowHeights = Array.from({ length: rows }, (_, i) => rowH + (Math.max(lineCount(component.pros, i), lineCount(component.cons, i)) - 1) * LABEL_LH)
   const cardBudget = MAX_H - VERDICT_H - VERDICT_GAP
-  const fixed = PAD_Y * 2 + HEADER_H + rows * rowH
+  const fixed = PAD_Y * 2 + HEADER_H + rowHeights.reduce((sum, h) => sum + h, 0)
   const rowGap = rows > 1 ? Math.max(0, Math.min(ROW_GAP_MAX, (cardBudget - fixed) / (rows - 1))) : 0
   const cardH = fixed + rowGap * Math.max(0, rows - 1)
-  return { colW, rows, noted, rowH, rowGap, cardH, h: cardH + VERDICT_GAP + VERDICT_H }
+  const rowTops = rowHeights.map((_, i) => PAD_Y + HEADER_H + rowHeights.slice(0, i).reduce((sum, h) => sum + h, 0) + i * rowGap)
+  return { colW, rows, noted, rowH, rowGap, rowTops, cardH, h: cardH + VERDICT_GAP + VERDICT_H }
 }
 
 export const prosCons: SvgComponent<ProsConsComponent> = {
-  measure(component, w) {
-    return resolveProsCons(component, w).h
+  measure(component, w, ctx) {
+    return resolveProsCons(component, w, ctx).h
   },
 
   render(component, box, ctx: ComponentCtx): ReactElement {
-    const g = resolveProsCons(component, box.w)
+    const g = resolveProsCons(component, box.w, ctx)
     const border = ctx.colors.border ?? ctx.colors.muted
     const titleSize = Math.max(FORM_BODY_FLOOR, 19)
-    const labelSize = Math.max(FORM_BODY_FLOOR, 17)
+    const labelSize = LABEL_SIZE
     const noteSize = FORM_BODY_FLOOR
     const innerW = g.colW - PAD_X * 2
     const textW = innerW - MARK - MARK_GAP
@@ -81,13 +116,7 @@ export const prosCons: SvgComponent<ProsConsComponent> = {
         fontFamily: ctx.fonts.heading,
       }),
       ...side.items.flatMap((item) => [
-        fitFormLine(item.label, {
-          maxWidth: textW,
-          fontSize: labelSize,
-          floor: FORM_BODY_FLOOR,
-          bold: true,
-          fontFamily: ctx.fonts.body,
-        }),
+        fitLabel(item.label, textW, ctx),
         item.note?.trim()
           ? fitFormLine(item.note, {
               maxWidth: textW,
@@ -163,14 +192,9 @@ export const prosCons: SvgComponent<ProsConsComponent> = {
             strokeWidth={1}
           />
           {side.items.map((item, i) => {
-            const top = PAD_Y + HEADER_H + i * (g.rowH + g.rowGap)
-            const label = fitFormLine(item.label, {
-              maxWidth: textW,
-              fontSize: labelSize,
-              floor: FORM_BODY_FLOOR,
-              bold: true,
-              fontFamily: ctx.fonts.body,
-            })
+            const top = g.rowTops[i]!
+            const label = fitLabel(item.label, textW, ctx)
+            const labelBottom = (label.lines.length - 1) * LABEL_LH
             const note = item.note?.trim()
               ? fitFormLine(item.note, {
                   maxWidth: textW,
@@ -182,20 +206,23 @@ export const prosCons: SvgComponent<ProsConsComponent> = {
             return (
               <g key={`row-${i}`}>
                 <Icon name={mark} x={x + PAD_X} y={top + 2} size={MARK} color={markColor} />
-                <text
-                  x={x + PAD_X + MARK + MARK_GAP}
-                  y={top + label.fontSize}
-                  fontFamily={ctx.fonts.body}
-                  fontSize={label.fontSize}
-                  fontWeight="700"
-                  fill={cardInk}
-                >
-                  {label.text}
-                </text>
+                {label.lines.map((line, j) => (
+                  <text
+                    key={j}
+                    x={x + PAD_X + MARK + MARK_GAP}
+                    y={top + j * LABEL_LH + label.fontSize}
+                    fontFamily={ctx.fonts.body}
+                    fontSize={label.fontSize}
+                    fontWeight="700"
+                    fill={cardInk}
+                  >
+                    {line}
+                  </text>
+                ))}
                 {note ? (
                   <text
                     x={x + PAD_X + MARK + MARK_GAP}
-                    y={top + LABEL_LH + note.fontSize}
+                    y={top + labelBottom + LABEL_LH + note.fontSize}
                     fontFamily={ctx.fonts.body}
                     fontSize={note.fontSize}
                     fill={noteInk}
