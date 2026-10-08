@@ -116,7 +116,7 @@ function labelPlacement(
 }
 
 /**
- * title 2 行 / desc 3 行换行排布（2026-07-09 用户反馈：版面宽却单行截断
+ * title 3 行 / desc 3 行换行排布（2026-07-09 用户反馈：版面宽却单行截断
  * 加省略号——所有主题共用本块，一处修复全主题生效）。
  */
 /** How many lines a milestone's title and description may take. */
@@ -124,7 +124,13 @@ interface LineCaps {
   title: number
   desc: number
 }
-const FULL_CAPS: LineCaps = { title: 2, desc: 3 }
+/**
+ * A title takes a third line before it is cut. With six milestones on the
+ * axis a label has about 170px, and a title of fifteen characters cut at two
+ * lines lost its last words on a page with room to spare under it. A title
+ * that fits in two lines lays out exactly as before.
+ */
+const FULL_CAPS: LineCaps = { title: 3, desc: 3 }
 
 function milestoneLayout(component: TimelineComponent, w: number, fontFamily: string, caps: LineCaps = FULL_CAPS) {
   const n = component.milestones.length
@@ -495,7 +501,8 @@ export const timeline: SvgComponent<TimelineComponent> = {
     let rows = milestoneLayout(component, box.w, ctx.fonts.body)
     if (box.h !== undefined && box.h > 0 && depth(rows) + BOTTOM_PAD > box.h) {
       const ladder: LineCaps[] = [
-        { title: 2, desc: 2 },
+        { title: 3, desc: 2 },
+        { title: 3, desc: 1 },
         { title: 2, desc: 1 },
         { title: 1, desc: 1 },
       ]
