@@ -530,3 +530,12 @@ describe("show-spotlight with a row it cannot hold", () => {
     expect(root.textContent).toContain("协作活跃率提升到百分之八十八")
   })
 })
+
+describe("show-statement on a page with no section before it", () => {
+  it("draws no section square on its own", () => {
+    const statement = slides.find((s) => s.type === "content" && s.kind === "statement")!
+    const root = draw(slides.indexOf(statement), { ...statement, kicker: undefined } as Slide)
+    // The deck's only page: no chapter before it names a section.
+    expect(root.querySelector('[data-show-kicker="true"]')).toBeNull()
+  })
+})

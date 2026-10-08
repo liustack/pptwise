@@ -104,7 +104,8 @@ export function ShowStatementContent({ ir, slide, index, ctx }: SvgTemplateProps
 
   return (
     <g data-show-mode={block ? "statement" : "fallback"}>
-      <rect data-show-kicker="true" x={64} y={88} width={12} height={12} fill={colors.primary} />
+      {/* The square marks the section's name, and stands only beside one. */}
+      {section && <rect data-show-kicker="true" x={64} y={88} width={12} height={12} fill={colors.primary} />}
       {section && (
         <text
           data-font-floor-exempt="show-spec"
