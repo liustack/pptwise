@@ -1,3 +1,4 @@
+import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
@@ -88,19 +89,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
         </text>
       ))}
       <rect x={88} y={490} width={120} height={6} fill={colors.text} />
-      {source && (
-        <text
-          data-truncated={source.truncated ? "1" : undefined}
-          x={88}
-          y={560}
-          fontFamily={fonts.body}
-          fontSize={source.fontSize}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source.text}
-        </text>
-      )}
+      <SourceLines block={source} x={88} y={560} fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }

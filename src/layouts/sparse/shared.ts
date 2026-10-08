@@ -1,10 +1,11 @@
 import { parseEmphasis, sliceEmphasisForLines, stripEmphasis } from "../../render/emphasis"
 import { fitHeadingLines } from "../../render/heading-fit"
-import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
+import { measureTextUnits } from "../../lib/svg-text-layout"
 import type { PptxIR, Slide } from "@/ir"
 import { deckWritesChinese } from "../../lib/conf-labels"
 import type { EmphasisSegment } from "../../render/emphasis"
-import { statementAttribution } from "../minimal-shared"
+import { statementLines } from "../minimal-shared"
+import { fitSourceBlock, type SourceBlock, type SourceFitOptions } from "../source-lines"
 
 export function pad2(n: number): string {
   return String(n).padStart(2, "0")
@@ -138,11 +139,12 @@ export function rotateRectPolygon(
 }
 
 /**
- * The closing line every `statement` skin sets under the claim.
+ * The closing lines every `statement` skin sets under the claim.
  *
- * The claim is the heading. This is the small line beneath it that says
- * where the claim came from, and it carries the author's own words:
- * the source they cited, the speaker they quoted, the sentence they wrote.
+ * The claim is the heading. Under it a small line says where the claim came
+ * from, and it carries the author's own words: the source they cited, the
+ * speaker they quoted, the sentence they wrote. The page's `footnote` stands
+ * under that line on lines of its own (`fitSourceBlock`).
  *
  * Eighteen skins used to close the page with a line this repository invented
  * — a masthead, a stamp, an aphorism, a session tag. On a slide there is
@@ -152,34 +154,14 @@ export function rotateRectPolygon(
  * sentence took its place.
  *
  * A skin still owns the register — family, size, colour, tracking, where on
- * the page the line sits. What it no longer owns is whose words go there.
+ * the page the lines sit. What it no longer owns is whose words go there.
  *
  * Returns null when the page has no source to set, and the skin then closes
  * on its own rule or glyph.
  */
-export function fitStatementSource(
-  slide: Slide,
-  opts: {
-    maxWidth: number
-    fontSize: number
-    minFontSize?: number
-    letterSpacing?: number
-    fontFamily?: string
-    bold?: boolean
-    /** Case or furniture the skin's register asks for, e.g. `latinUpper`. */
-    transform?: (source: string) => string
-  },
-): { text: string; fontSize: number; truncated: boolean } | null {
-  const source = statementAttribution(slide)
-  if (!source) return null
-  return fitSvgLine(opts.transform ? opts.transform(source) : source, {
-    maxWidth: opts.maxWidth,
-    fontSize: opts.fontSize,
-    minFontSize: opts.minFontSize ?? Math.min(16, opts.fontSize),
-    letterSpacing: opts.letterSpacing,
-    fontFamily: opts.fontFamily,
-    bold: opts.bold,
-  })
+export function fitStatementSource(slide: Slide, opts: SourceFitOptions): SourceBlock | null {
+  const { quote, source } = statementLines(slide)
+  return fitSourceBlock(source ?? quote, slide.footnote, opts)
 }
 
 export function evidenceSource(slide: Slide): string | undefined {

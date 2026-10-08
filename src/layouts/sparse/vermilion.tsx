@@ -1,3 +1,4 @@
+import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { footerOrganization, showsDocumentMeta } from "../../render/document-meta"
 import { pickEvidence } from "../../render/component-traits"
@@ -72,20 +73,7 @@ export function statement({ ir, slide, ctx, page }: SvgTemplateProps) {
           })}
         </text>
       ))}
-      {source && (
-        <text
-          data-truncated={source.truncated ? "1" : undefined}
-          x={640}
-          y={470}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={source.fontSize}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source.text}
-        </text>
-      )}
+      <SourceLines block={source} x={640} y={470} textAnchor="middle" fontFamily={fonts.body} fill={colors.muted} />
       <InkDouble x={240} width={800} yThick={564} yThin={560} stroke={colors.accent} />
       {meta && (
         <text

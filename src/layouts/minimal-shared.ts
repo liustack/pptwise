@@ -111,7 +111,8 @@ export interface StatementLines {
  * one. `gauge-point` and `crayonbox-point` used to read the attribution and
  * leave `text` — the quote itself — unpainted, which put a speaker's name on
  * a page that never showed what they said. Faces with room for both read
- * both fields here; the one-line skins read `statementAttribution` below.
+ * both fields here; the skins read them through `fitStatementSource`
+ * (`sparse/shared.ts`).
  */
 export function statementLines(slide: Slide): StatementLines {
   const component = slide.components[0]
@@ -125,20 +126,6 @@ export function statementLines(slide: Slide): StatementLines {
     if (text) return { source: text }
   }
   return { source: slide.subheading?.trim() || undefined }
-}
-
-/**
- * The one line a single-line statement skin sets.
- *
- * The source when the page has one. A quote with no attribution falls back to
- * the quote itself rather than leaving the line blank and the words nowhere.
- *
- * Read it alongside `fitStatementSource` (`sparse/shared.ts`), which is where
- * every skin picks the line up.
- */
-export function statementAttribution(slide: Slide): string | undefined {
-  const { quote, source } = statementLines(slide)
-  return joinSources(source ?? quote, slide.footnote)
 }
 
 /**

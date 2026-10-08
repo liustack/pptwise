@@ -1,11 +1,12 @@
+import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisText } from "../../render/emphasis"
-import { heroCaption, heroSource, heroUnit, heroValue, statementAttribution } from "../minimal-shared"
+import { heroCaption, heroSource, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { deckWord, evidenceSource, fitHeroLine, fitSparseHeading, pad2 } from "./shared"
+import { deckWord, evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 import { underlineYFromBaseline } from "../underline"
 
@@ -22,7 +23,7 @@ export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: true,
   })
-  const attr = statementAttribution(slide)
+  const attr = fitStatementSource(slide, { maxWidth: 1088, fontSize: 18, fontFamily: fonts.body })
   // 眉头是这页在牌记里的位置，不是本仓给它起的口号。原本刷的「结论先行」
   // 是咨询件的方法论标签，观众读到的却是这份 deck 自己在说话。
   const section = sectionNameFor(ir.slides, index)
@@ -57,11 +58,7 @@ export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
           />,
         ),
       )}
-      {attr && (
-        <text x={96} y={600} fontFamily={fonts.body} fontSize={18} fill={colors.muted} dominantBaseline="alphabetic">
-          {attr}
-        </text>
-      )}
+      <SourceLines block={attr} x={96} y={600} fontFamily={fonts.body} fill={colors.muted} rise />
     </>
   )
 }

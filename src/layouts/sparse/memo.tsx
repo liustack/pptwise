@@ -1,3 +1,4 @@
+import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import {
@@ -201,19 +202,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
-      {source && (
-        <text
-          data-truncated={source.truncated ? "1" : undefined}
-          x={96}
-          y={430}
-          fontFamily={fonts.mono}
-          fontSize={source.fontSize}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source.text}
-        </text>
-      )}
+      <SourceLines block={source} x={96} y={430} fontFamily={fonts.mono} fill={colors.muted} />
       {/* 骑缝章：空框是印记本身，不落字。原本框里刷的「已阅 / 存档」是本仓
           写的两个词，在观众眼里与作者写的字没有分别——一张宣言页凭空多出
           一条「这份东西已经批过存档了」的记录。印框留白，作者的出处落在

@@ -1,3 +1,4 @@
+import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { footerOrganization, showsDocumentMeta } from "../../render/document-meta"
 import { sectionNameFor } from "../../lib/derive"
@@ -65,20 +66,7 @@ export function statement({ ir, slide, index, ctx, page }: SvgTemplateProps) {
           })}
         </text>
       ))}
-      {source && (
-        <text
-          data-truncated={source.truncated ? "1" : undefined}
-          x={640}
-          y={528}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={source.fontSize}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source.text}
-        </text>
-      )}
+      <SourceLines block={source} x={640} y={528} textAnchor="middle" fontFamily={fonts.body} fill={colors.muted} />
       {footer && (
         <text x={640} y={580} textAnchor="middle" fontFamily={fonts.body} fontSize={17} fill={colors.muted} dominantBaseline="alphabetic">
           {footer}

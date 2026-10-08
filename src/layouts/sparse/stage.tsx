@@ -1,3 +1,4 @@
+import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
@@ -9,12 +10,12 @@ import {
   pullQuoteAttribution,
   pullQuoteContext,
   pullQuoteText,
-  statementAttribution,
 } from "../minimal-shared"
 import {
   fitHeroLine,
   fitSparseHeading,
   fitSparseQuote,
+  fitStatementSource,
   quoteBlockBaseline,
   splitTrailingPercent,
 } from "./shared"
@@ -33,10 +34,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: false,
   })
-  const attr = statementAttribution(slide)
-  const attrLine = attr
-    ? fitSvgLine(attr, { maxWidth: 920, fontSize: 20, minFontSize: 16, fontFamily: fonts.body })
-    : null
+  const attrLine = fitStatementSource(slide, { maxWidth: 920, fontSize: 20, minFontSize: 16, fontFamily: fonts.body })
   return (
     <>
       {heading.lines.map((line, i) => (
@@ -60,20 +58,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
         </text>
       ))}
       <line x1={616} y1={484} x2={664} y2={484} stroke={colors.border} strokeWidth={2} />
-      {attrLine && (
-        <text
-          data-truncated={attrLine.truncated ? "1" : undefined}
-          x={640}
-          y={540}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={attrLine.fontSize}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {attrLine.text}
-        </text>
-      )}
+      <SourceLines block={attrLine} x={640} y={540} textAnchor="middle" fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }

@@ -105,3 +105,32 @@ describe("sparseFace dispatch", () => {
     expect(root.querySelector("rect[stroke-dasharray]")).toBeNull()
   })
 })
+
+// A statement page's footnote used to be joined onto the line under the
+// claim after a middle dot and fitted to one line with it, so a cited source
+// was cut at about seventy characters. It stands on its own now, whole.
+describe("a statement page's source under the sentence it closes", () => {
+  const SOURCE =
+    "来源：国家统计局《2025 年全国规模以上工业产能利用率》，中国机械工业联合会《2025 年机械工业经济运行报告》，作者整理与测算"
+  const NOTE = "不是新建产线，而是把已有设备的开机率从六成拉到八成。"
+  const THEMES = ["almanac", "ink", "journal", "ledger", "luxe", "memo", "terminal", "thesis", "vermilion", "brief", "lecture", "stage", "swiss", "museum", "rally"]
+
+  it.each(THEMES)("%s sets the paragraph and the whole footnote on lines of their own", (theme) => {
+    const slide: Slide = {
+      type: "content",
+      kind: "statement",
+      heading: VERSE,
+      components: [{ type: "paragraph", text: NOTE }],
+      footnote: SOURCE,
+    }
+    const root = render(<StatementContent ir={ir(theme, [slide])} slide={slide} index={0} ctx={boundThemeCtx(theme, {})} />)
+    const texts = Array.from(root.querySelectorAll("text"))
+    expect(texts.some((t) => (t.textContent ?? "").includes("·"))).toBe(false)
+    expect(root.querySelector('[data-truncated="1"]')).toBeNull()
+    const note = texts.find((t) => t.textContent === NOTE)
+    expect(note, theme).toBeDefined()
+    const source = texts.filter((t) => Number(t.getAttribute("font-size")) <= 20 && SOURCE.includes(t.textContent ?? "\u0000") && t.textContent !== NOTE)
+    expect(source.map((t) => t.textContent ?? "").join("").replace(/\s/g, "")).toBe(SOURCE.replace(/\s/g, ""))
+    for (const line of source) expect(Number(line.getAttribute("y"))).not.toBe(Number(note!.getAttribute("y")))
+  })
+})

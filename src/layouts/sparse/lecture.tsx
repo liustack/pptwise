@@ -1,11 +1,12 @@
+import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { fitSvgLine } from "../../lib/svg-text-layout"
-import { heroCaption, heroUnit, heroSource, heroValue, statementAttribution } from "../minimal-shared"
+import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
 import { renderFittedEvidence } from "../fitted-evidence"
-import { evidenceSource, firstEmphasisRun, fitHeroLine, fitSparseHeading } from "./shared"
+import { evidenceSource, firstEmphasisRun, fitHeroLine, fitSparseHeading, fitStatementSource } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** lecture 稀排脸：左轴板书、粉笔巨数、虚线证据框。不画整页粉笔槽细框。 */
@@ -29,10 +30,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: false,
   })
-  const attr = statementAttribution(slide)
-  const attrLine = attr
-    ? fitSvgLine(attr, { maxWidth: 1040, fontSize: 20, minFontSize: 16, fontFamily: fonts.body })
-    : null
+  const attrLine = fitStatementSource(slide, { maxWidth: 1040, fontSize: 20, minFontSize: 16, fontFamily: fonts.body })
   return (
     <>
       {heading.lines.map((line, i) => (
@@ -63,19 +61,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
           strokeLinecap="round"
         />
       )}
-      {attrLine && (
-        <text
-          data-truncated={attrLine.truncated ? "1" : undefined}
-          x={120}
-          y={560}
-          fontFamily={fonts.body}
-          fontSize={attrLine.fontSize}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {attrLine.text}
-        </text>
-      )}
+      <SourceLines block={attrLine} x={120} y={560} fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }

@@ -1,3 +1,4 @@
+import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
@@ -202,21 +203,7 @@ export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
-      {source && (
-        <text
-          data-truncated={source.truncated ? "1" : undefined}
-          x={640}
-          y={500}
-          textAnchor="middle"
-          fontFamily={fonts.heading}
-          fontSize={source.fontSize}
-          fontStyle="italic"
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source.text}
-        </text>
-      )}
+      <SourceLines block={source} x={640} y={500} textAnchor="middle" fontFamily={fonts.heading} fontStyle="italic" fill={colors.muted} />
     </>
   )
 }

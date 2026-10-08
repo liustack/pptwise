@@ -1,3 +1,4 @@
+import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import {
@@ -72,19 +73,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
         </tspan>
       </text>
       <rect x={96} y={420} width={26} height={6} fill={colors.accent} />
-      {source && (
-        <text
-          data-truncated={source.truncated ? "1" : undefined}
-          x={96}
-          y={662}
-          fontFamily={fonts.mono}
-          fontSize={source.fontSize}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source.text}
-        </text>
-      )}
+      <SourceLines block={source} x={96} y={662} fontFamily={fonts.mono} fill={colors.muted} rise />
     </>
   )
 }

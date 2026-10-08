@@ -1,3 +1,4 @@
+import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { pickEvidence } from "../../render/component-traits"
@@ -45,20 +46,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
         </text>
       ))}
       <rect x={576} y={490} width={128} height={6} fill={colors.accent} />
-      {source && (
-        <text
-          data-truncated={source.truncated ? "1" : undefined}
-          x={640}
-          y={552}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={source.fontSize}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source.text}
-        </text>
-      )}
+      <SourceLines block={source} x={640} y={552} textAnchor="middle" fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }

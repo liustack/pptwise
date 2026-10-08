@@ -1,3 +1,4 @@
+import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import type { EmphasisSegment } from "../../render/emphasis"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
@@ -109,20 +110,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
             })}
           </text>
         ))}
-        {cited && (
-          <text
-            data-truncated={cited.truncated ? "1" : undefined}
-            x={640}
-            y={470}
-            textAnchor="middle"
-            fontFamily={fonts.body}
-            fontSize={cited.fontSize}
-            fill={colors.muted}
-            dominantBaseline="alphabetic"
-          >
-            {cited.text}
-          </text>
-        )}
+        <SourceLines block={cited} x={640} y={470} textAnchor="middle" fontFamily={fonts.body} fill={colors.muted} />
         <rect x={163} y={600} width={34} height={34} fill="none" stroke={colors.accent} strokeWidth={2} />
       </>
     )
@@ -158,19 +146,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
           />
         </g>
       ))}
-      {cited && (
-        <text
-          data-truncated={cited.truncated ? "1" : undefined}
-          x={240}
-          y={664}
-          fontFamily={fonts.body}
-          fontSize={cited.fontSize}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {cited.text}
-        </text>
-      )}
+      <SourceLines block={cited} x={240} y={664} fontFamily={fonts.body} fill={colors.muted} rise />
       <rect x={163} y={600} width={34} height={34} fill="none" stroke={colors.accent} strokeWidth={2} />
     </>
   )
