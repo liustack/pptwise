@@ -146,6 +146,29 @@ describe("auditDeck — monotony", () => {
     expect(report.pagesSkipped).toBe(0)
   })
 
+  it("breaks a streak at a chapter whose photograph is a component", () => {
+    // A chapter page draws its photograph from an `image` component. The
+    // chapter is not a content page, so it neither joins nor starts a run:
+    // two photo pages after it are two, not three.
+    const photo = (id: string): Slide => ({ type: "content", kind: "photo", id, heading: id, components: [{ type: "image", asset_id: "p", fit: "cover" }] })
+    const ir = deck("brief", [
+      { type: "chapter", id: "c1", heading: "Part one", components: [{ type: "image", asset_id: "p", fit: "cover" }] },
+      photo("s2"),
+      photo("s3"),
+    ], { assets: { images: { p: { src: "data:image/png;base64,AAAA" } } } })
+    expect(monotony(ir)).toEqual([])
+  })
+
+  it("does not carry a run across a chapter: two pages before it and one after are not three", () => {
+    const ir = deck("brief", [
+      bulletsSlide("a"),
+      bulletsSlide("b"),
+      { type: "chapter", heading: "Part two", components: [{ type: "bullets", items: ["x", "y"] }] },
+      bulletsSlide("c"),
+    ])
+    expect(monotony(ir)).toEqual([])
+  })
+
   it("treats a placeholder in the middle as a streak break, not a skipped-but-continued run", () => {
     // Without the break this would be 3 consecutive bullets. The placeholder
     // is not an audited consecutive page, so the run splits 2 + 1.

@@ -2620,8 +2620,10 @@ function droppedFindings(markup: string, page: number, slideId: string | undefin
 // Monotony — IR-level consecutive lead-component streak (C-stream). Walks
 // `ir.slides` in order; no SVG. Dominant type is `components[0].type`.
 // Placeholder pages are skipped (same as geometry) and break a streak.
-// Pages with zero components still count as audited for geometry, but
-// break / never start a monotony streak (covers/chapters/endings).
+// Covers, chapters and endings break a streak and never start one: they are
+// not content pages, whatever they carry. They used to be kept out only by
+// carrying no components, so a chapter that draws its photograph from an
+// `image` component joined the photo pages after it into a run.
 // ────────────────────────────────────────────────────────────────────────
 
 // ────────────────────────────────────────────────────────────────────────
@@ -2770,7 +2772,7 @@ function monotonyFindings(ir: PptxIR): AuditFinding[] {
       flush()
       return
     }
-    const componentType = slide.components?.[0]?.type
+    const componentType = slide.type === "content" ? slide.components?.[0]?.type : undefined
     if (!componentType) {
       flush()
       return
