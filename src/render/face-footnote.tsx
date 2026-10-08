@@ -14,8 +14,11 @@ import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText } from "./emp
  * emphasis. A footnote that fits at the face's own size keeps the bytes the
  * face drew before.
  *
- * A line with Chinese in it is set upright: Chinese has no italic, and a
- * renderer that slants it draws a synthetic oblique of the whole line.
+ * Set upright unless the face asks for italic. Chinese has no italic, and a
+ * renderer that slants it draws a synthetic oblique of the whole line, so a
+ * line with Chinese in it is upright even then. The default used to be
+ * italic, which put every face that called this without a word on it into
+ * a slant it never chose.
  */
 
 /** Han characters, CJK punctuation and full-width forms: a line holding any is never slanted. */
@@ -27,7 +30,7 @@ export function FaceFootnote({
   maxWidth,
   fontSize = 20,
   fill,
-  italic = true,
+  italic = false,
   letterSpacing,
 }: {
   text: string | undefined
