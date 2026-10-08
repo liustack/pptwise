@@ -160,10 +160,12 @@ describe("the invitation faces on another theme", () => {
       expect(svg, face).toContain(`data-face="${face}"`)
       expect(svg, face).not.toContain("data-dropped")
       expect(svg, face).not.toContain("data-truncated")
-      // The gold of the theme is its accent: the claim, the numeral and the occasion read on its page.
+      // The gold of the theme is its accent: the claim, the numeral and the occasion read on its page,
+      // the stock a face lays when it lays one (brief's chapter stock is its navy chapter ground).
       const root = parseSvgRoot(svg)
+      const ground = root.querySelector("[data-invitation-stock]")?.getAttribute("fill") ?? compiled.style.colors.bg
       for (const t of Array.from(root.querySelectorAll("[data-invitation-claim] text, [data-invitation-occasion] text"))) {
-        expect(contrastRatio(t.getAttribute("fill")!, compiled.style.colors.bg), face).toBeGreaterThanOrEqual(3)
+        expect(contrastRatio(t.getAttribute("fill")!, ground), face).toBeGreaterThanOrEqual(3)
       }
     })
   })

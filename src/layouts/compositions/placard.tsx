@@ -116,7 +116,7 @@ function litCopper(accent: string, ground: string): string {
 
 export function placardInks(ctx: ComponentCtx): PlacardInks {
   const { colors } = ctx
-  const ground = colors.bg
+  const ground = ctx.defaultBg ?? colors.bg
   return {
     ground,
     board: colors.surface,

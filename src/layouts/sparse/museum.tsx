@@ -1,12 +1,13 @@
+import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { footerOrganization, showsDocumentMeta } from "../../render/document-meta"
 import { sectionNameFor } from "../../lib/derive"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
-import { heroCaption, heroUnit, heroSource, heroValue } from "../minimal-shared"
+import { heroCaption, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { renderFittedEvidence } from "../fitted-evidence"
-import { deckWord, evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
+import { deckWord, evidenceSource, fitHeroLine, fitHeroSource, fitSparseHeading, fitStatementSource, sourcePastFoot, pad2 } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 import { SIBLING_AIR_PX } from "../../render/spacing"
 
@@ -65,20 +66,7 @@ export function statement({ ir, slide, index, ctx, page }: SvgTemplateProps) {
           })}
         </text>
       ))}
-      {source && (
-        <text
-          data-truncated={source.truncated ? "1" : undefined}
-          x={640}
-          y={528}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={source.fontSize}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source.text}
-        </text>
-      )}
+      <SourceLines block={source} x={640} y={528} textAnchor="middle" fontFamily={fonts.body} fill={colors.muted} />
       {footer && (
         <text x={640} y={580} textAnchor="middle" fontFamily={fonts.body} fontSize={17} fill={colors.muted} dominantBaseline="alphabetic">
           {footer}
@@ -165,7 +153,9 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   if (!fitted) return StatHeroFallbackContent({ slide, ctx })
   const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
-  const source = heroSource(slide)
+  const source = fitHeroSource(slide, { maxWidth: 1088, fontSize: 16, fontFamily: fonts.body })
+  // A source too long for the room under the caption hands the page over whole.
+  if (sourcePastFoot(source, 616)) return StatHeroFallbackContent({ slide, ctx })
   return (
     <>
       <text
@@ -191,19 +181,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
           {caption}
         </text>
       )}
-      {source && (
-        <text
-          x={640}
-          y={616}
-        textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={16}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source}
-        </text>
-      )}
+      <SourceLines block={source} x={640} y={616} textAnchor="middle" fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }

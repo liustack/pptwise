@@ -100,7 +100,7 @@ const FAINT_MIX = 0.23
 
 export function scrollInks(ctx: ComponentCtx): ScrollInks {
   const { colors } = ctx
-  const ground = colors.bg
+  const ground = ctx.defaultBg ?? colors.bg
   const line = colors.border ?? blendOver(colors.muted, ground, 0.25)
   const palette = colors.chartPalette
   const taupe = palette[2] ?? colors.muted

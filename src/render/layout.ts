@@ -606,6 +606,23 @@ export function layoutContentFit(
     // 0px). Measured at 38%: 61px.
     if (single.dropped === 0) return single
   }
+  // A table or a comparison spans the row of a two-column page, the blocks
+  // around it in columns above and under it. That costs height, and on a
+  // band too short for both rows the spanning block ran off the bottom and
+  // was dropped, while the two blocks side by side, the split this
+  // arrangement stood for before anything spanned, would have held them
+  // both. It is tried before anything is given up.
+  if (arrangement === "two_column" && components.some((c) => COLUMN_SPANNING_TYPES.has(c.type))) {
+    for (const gap of scaledTiers) {
+      const side = twoColumnRun(components, rect, rect.y, ctx, gap).placed
+      if (stackBottom(side, ctx) <= rect.y + rect.h + 1) {
+        return restackIfKpiSqueezed(arrangement, components, rect, ctx, {
+          placed: side.length >= 2 ? settleToGolden(side, rect, ctx) : side,
+          dropped: 0,
+        })
+      }
+    }
+  }
 
   const tightestGap = GAP_TIERS[GAP_TIERS.length - 1]
   const placed = layoutContent(arrangement, components, rect, ctx, tightestGap)

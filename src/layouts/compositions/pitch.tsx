@@ -83,7 +83,7 @@ function quieterInks(ctx: ComponentCtx): string[] {
 
 export function pitchInks(ctx: ComponentCtx): PitchInks {
   const { colors } = ctx
-  const ground = colors.bg
+  const ground = ctx.defaultBg ?? colors.bg
   const line = colors.border ?? blendOver(colors.muted, ground, 0.35)
   const quiet = quieterInks(ctx)
   return {

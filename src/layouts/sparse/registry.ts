@@ -1,4 +1,5 @@
-import type { ContentLayout, ContentLayoutId } from "../types"
+import type { ContentLayoutId, SvgTemplateProps } from "../types"
+import { brandInkOnGround } from "../../render/page-palette"
 import * as stage from "./stage"
 import * as lecture from "./lecture"
 import * as swiss from "./swiss"
@@ -20,7 +21,15 @@ export type SparseLayoutId = Extract<
   "statement" | "pull-quote" | "stat-hero" | "one-evidence"
 >
 
-type FaceMap = Partial<Record<SparseLayoutId, ContentLayout>>
+/**
+ * A theme's skin of a shared face. `null` hands the page back to the shared
+ * face: a skin whose fixed composition cannot hold what the page carries
+ * (a source too long for the room under its quote) steps aside for the
+ * shared drawing, which can.
+ */
+export type SparseSkin = (p: SvgTemplateProps) => React.ReactElement | null
+
+type FaceMap = Partial<Record<SparseLayoutId, SparseSkin>>
 
 /**
  * `(themeId, layoutId)` → theme face. Theme ids live only in this table.
@@ -104,7 +113,16 @@ export const FACES: Partial<Record<string, FaceMap>> = {
   },
 }
 
-export function sparseFace(layoutId: string, themeId: string | undefined): ContentLayout | undefined {
+export function sparseFace(layoutId: string, themeId: string | undefined): SparseSkin | undefined {
   if (!themeId) return undefined
-  return FACES[themeId]?.[layoutId as SparseLayoutId]
+  const skin = FACES[themeId]?.[layoutId as SparseLayoutId]
+  if (!skin) return undefined
+  // Every skin sets its claim, quote or figure straight onto the page in the
+  // theme's brand colours, so on a page the author painted those colours are
+  // held to the ground the page is painted (`brandInkOnGround`).
+  return (props) => {
+    const { ctx } = props
+    if (!ctx.themeGround || !ctx.defaultBg) return skin(props)
+    return skin({ ...props, ctx: { ...ctx, colors: brandInkOnGround(ctx.colors, ctx.themeGround, ctx.defaultBg) } })
+  }
 }

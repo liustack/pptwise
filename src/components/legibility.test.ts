@@ -413,8 +413,9 @@ describe("fitFormUnit headroom", () => {
   })
 
   it("keeps the headroom for a unit the estimator can only guess", () => {
-    // "‰" has no advance table entry, so the class estimate is padded.
-    const fit = fitFormUnit("‰", { room: 100, fontSize: 16, fontFamily: "Georgia" })
-    expect(fit!.width).toBeCloseTo(measureTextUnits("‰", { fontFamily: "Georgia" }) * 16 * 1.5, 6)
+    // "×" has no advance table entry in Georgia, so the class estimate is
+    // padded. ("‰" was the example until Georgia's own advance for it was read.)
+    const fit = fitFormUnit("×", { room: 100, fontSize: 16, fontFamily: "Georgia" })
+    expect(fit!.width).toBeCloseTo(measureTextUnits("×", { fontFamily: "Georgia" }) * 16 * 1.5, 6)
   })
 })

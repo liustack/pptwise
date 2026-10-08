@@ -129,11 +129,6 @@ function pointStatusAt(series: readonly ChartSeries[], seriesIndex: number, x: s
   return series[seriesIndex]?.data.find((d) => d.x === x)?.status
 }
 
-/** Whether any point of the chart carries a status. */
-function hasPointStatus(series: readonly ChartSeries[]): boolean {
-  return series.some((s) => s.data.some((d) => d.status !== undefined))
-}
-
 /**
  * A bar as its point's status says: a plain rectangle, a hatched forecast, or
  * a dashed target (`render/mark-status.tsx`), tagged as a plot mark either way.
@@ -401,9 +396,6 @@ function clampChartExtent(px: number): number {
   return Math.max(-MAX_CHART_GEOMETRY_PX, Math.min(MAX_CHART_GEOMETRY_PX, px))
 }
 
-/** Bar gradient's lower stop keeps this fraction of the accent's original
- * per-channel brightness (0.7 → "70% 亮度变体" per the Task 8 brief). */
-const BAR_GRADIENT_SHADE_FACTOR = 0.7
 /** Line chart endpoint-emphasis geometry: inner solid dot / outer soft ring. */
 const ENDPOINT_DOT_R = 4
 const ENDPOINT_RING_R = 8
@@ -551,40 +543,17 @@ function chartGradientId(prefix: string, w: number, h: number, seed: unknown): s
   return `${prefix}-${stableHash(`${w}x${h}:${JSON.stringify(seed)}`)}`
 }
 
-/**
- * Scale a `#RRGGBB` hex color's channels to `factor` of their original value
- * (e.g. 0.7 → a darker 70%-brightness shade). Theme tokens are always baked
- * hex by the time they reach component renderers (`themes/tokens.ts`'s
- * `StyleColors`), so no other CSS color syntax needs handling here.
+/*
+ * A single bar series is drawn flat in its lead colour, the way every series
+ * of a grouped chart is. It used to light its tallest bar in the accent and
+ * draw the rest in a gradient of that accent at 0.75 opacity, wherever the
+ * palette carried the accent. That guessed the page's point for the author,
+ * and it read poorly: the lit bar stood only 1.1 to 1.7:1 from the others,
+ * and on seven themes the others fell under the 3:1 a graphic owes the page
+ * (brief 1.37:1, vermilion 1.82:1). The bar a page is about is the author's
+ * to mark (`data[].emphasis`), and a marked bar keeps its colour while the
+ * rest step back to grey (`markedPointFill`).
  */
-function scaleHexBrightness(hex: string, factor: number): string {
-  const match = /^#([0-9a-fA-F]{6})$/.exec(hex)
-  if (!match) return hex
-  const value = parseInt(match[1], 16)
-  const scale = (channel: number) => Math.round(Math.min(255, Math.max(0, channel * factor)))
-  const r = scale((value >> 16) & 0xff)
-  const g = scale((value >> 8) & 0xff)
-  const b = scale(value & 0xff)
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0").toUpperCase()}`
-}
-
-/**
- * Whether a single bar series highlights its tallest bar: that bar solid in
- * the accent, the rest in a gradient of it.
- *
- * The highlight is the accent, so it is drawn only where the accent is one of
- * the colours this chart was handed. Every built-in theme's chart palette
- * carries its accent, and there nothing changes. A face that keeps the accent
- * for what the author marks takes it out of the palette it hands its charts
- * (brief's sheet, `paletteWithoutAccent`), and its unmarked single series is
- * drawn flat in the lead colour, the way every series of a grouped chart is.
- * Reading `accentColor` here regardless was how one unmarked series of three
- * bars came out in brief's highlight yellow.
- */
-function highlightsTallestBar(palette: readonly string[], accentColor: string): boolean {
-  const accent = accentColor.toUpperCase()
-  return palette.some((color) => color.toUpperCase() === accent)
-}
 
 /** The one bar an author marked (`data[].emphasis`): its series and its category, or null. */
 function markedPointOf(series: readonly ChartSeries[]): { seriesIndex: number; x: string | number } | null {
@@ -718,6 +687,30 @@ function renderReferenceLine(opts: {
   }
   const x = mapToPlotX(reference.value, opts.domain, opts.plotX, opts.plotW)
   return <line data-chart-reference="" x1={x} y1={opts.plotY} x2={x} y2={opts.plotY + opts.plotH} stroke={opts.color} strokeWidth={REFERENCE_STROKE} strokeDasharray={REFERENCE_DASH} />
+}
+
+/** Air a value label keeps from the reference line on either side of it. */
+const REFERENCE_LABEL_AIR = 4
+
+/**
+ * A bar's value label moved clear of the reference line, or as it was.
+ *
+ * The line is drawn over the bars, and a bar ending just short of it set its
+ * value right where the line runs: past the end of a bar on its side, over the
+ * top of an upright one. The dashes struck through the digits. A label the
+ * line would cross starts past the line instead, or sits over it. Where the
+ * line is is the chart's to say: `at` is its x on a plot on its side, its y
+ * on an upright one.
+ */
+function clearOfReference(spec: ValueLabelSpec, at: number | null, across: boolean): ValueLabelSpec {
+  if (at === null) return spec
+  const box = valueLabelBox(spec)
+  if (across) {
+    if (box.y >= at + REFERENCE_LABEL_AIR || box.y + box.h <= at - REFERENCE_LABEL_AIR) return spec
+    return { ...spec, y: at - REFERENCE_LABEL_AIR - (box.y + box.h - spec.y) }
+  }
+  if (box.x >= at + REFERENCE_LABEL_AIR || box.x + box.w <= at - REFERENCE_LABEL_AIR) return spec
+  return { ...spec, x: at + REFERENCE_LABEL_AIR + (spec.x - box.x) }
 }
 
 /** A band's label: 16px, one line, inside the range's top-left corner when it is tall enough to hold it. */
@@ -1525,7 +1518,6 @@ export function renderBar(
   // place on the axis as a dashed outline with its label.
   const { model, gapAt } = insertGaps(buildChartModel(series), component?.gaps)
   const { categories } = model
-  const n = model.series.length
   const meta = cartesianMeta(component, series, figures)
   if (pastAxisLimit(keptValues(model.series))) return <WholeShareDeclined />
   const yAxis = buildNumericAxis([...keptValues(model.series), ...bandEnds(component), ...referenceEnds(component)], "zero-max", meta.yUnit, meta.figures)
@@ -1563,15 +1555,9 @@ export function renderBar(
       fontSize: category.fontSize,
     }
   })
-  const gradientId = chartGradientId("chart-bar-grad", w, h, series)
-  // A forecast or a target is drawn in its series' colour, never in the
-  // tallest-bar highlight, and a bar the author marked replaces it.
   const marked = markedPointOf(series)
   const receded = recededMarkFill(mutedColor, _bgHex ?? "#FFFFFF")
-  const highlight = !marked && n <= 1 && highlightsTallestBar(palette, accentColor) && !hasPointStatus(series)
   const group = fullestGroup(model.series, categories.length)
-  const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
-  const dataMax = Math.max(...keptValues(model.series), Number.NEGATIVE_INFINITY)
   // Every bar prints its value above itself, all of them or none: see
   // `placeValueLabelsTogether`. The labels may use the chart body between the
   // legend row and the x-axis, across the plot's own width.
@@ -1581,6 +1567,7 @@ export function renderBar(
   // A gap's outline stands as tall as the bars run on average, its label over it.
   const gapTop = verticalBarExtent(gapHeight(model), domain, geom.plotY, geom.plotH)
   const gapBoxes = new Map<number, DepthBox>()
+  const referenceY = component?.reference ? mapToPlotY(component.reference.value, yAxis.domain, geom.plotY, geom.plotH) : null
   for (let i = 0; i < categories.length; i++) {
     const groupX0 = geom.plotX + i * groupW + BAR_GROUP_EDGE_GAP
     const usableW = groupW - BAR_GROUP_EDGE_GAP * 2
@@ -1603,7 +1590,7 @@ export function renderBar(
       barBoxes.push({ x: barX, y: barY, w: perBarW, h: barH })
       barLabelSpecs.push(
         risingBand(
-          {
+          clearOfReference({
             id: `bar-${i}-${s.seriesIndex}`,
             text: chartFigure(value, meta.figures),
             x: barX + perBarW / 2,
@@ -1612,7 +1599,7 @@ export function renderBar(
             fontSize: VALUE_FONT_SIZE,
             fontFamily,
             priority: 100 - s.seriesIndex,
-          },
+          }, referenceY, true),
           top,
         ),
       )
@@ -1628,14 +1615,6 @@ export function renderBar(
   const placedBars = new Map((placedLabels ?? []).map((label) => [label.id, label]))
   return (
     <>
-      {highlight && (
-        <defs>
-          <linearGradient id={gradientId} x1={0} y1={0} x2={0} y2={1}>
-            <stop offset="0%" stopColor={accentColor} />
-            <stop offset="100%" stopColor={gradientShade} />
-          </linearGradient>
-        </defs>
-      )}
       {renderCartesianFrame({
         plotX: geom.plotX,
         plotY: geom.plotY,
@@ -1671,11 +1650,10 @@ export function renderBar(
           const value = s.values[i]
           if (value == null) continue
           const barX = groupX0 + slots.get(s.seriesIndex)!
-          const isMax = highlight && value === dataMax
           const { barY, barH } = verticalBarExtent(value, domain, geom.plotY, geom.plotH)
           const fill =
             markedPointFill(marked, s.seriesIndex, cat.x, palette, receded) ??
-            (highlight ? (isMax ? accentColor : `url(#${gradientId})`) : palette[s.seriesIndex % palette.length])
+            palette[s.seriesIndex % palette.length]
           const placed = placedBars.get(`bar-${i}-${s.seriesIndex}`)
           barElements.push(
             barMark({
@@ -1687,7 +1665,7 @@ export function renderBar(
               fill,
               status: pointStatusAt(series, s.seriesIndex, cat.x),
               bg: _bgHex ?? "#FFFFFF",
-              opacity: highlight ? (isMax ? 1 : 0.75) : 1,
+              opacity: 1,
             }),
           )
           if (placed) {
@@ -3077,7 +3055,6 @@ export function renderBarHorizontal(
   const model = buildChartModel(series)
   const { categories } = model
   if (categories.length === 0) return <></>
-  const n = model.series.length
   const meta = cartesianMeta(component, series, figures)
   const values = keptValues(model.series)
   if (pastAxisLimit(values)) return <WholeShareDeclined />
@@ -3093,7 +3070,6 @@ export function renderBarHorizontal(
   if (pastAxisLimit([...upperAt.values()])) return <WholeShareDeclined />
   const xAxis = buildNumericAxis([...values, ...upperAt.values(), ...referenceEnds(component), ...bandEnds(component)], "zero-max", meta.xUnit ?? meta.yUnit, meta.figures)
   const domain: ChartDomain = { min: xAxis.domain.min, max: xAxis.domain.max, degenerate: false }
-  const dataMax = Math.max(...values, Number.NEGATIVE_INFINITY)
   // A change the author asked for at a category is printed after the later
   // bar's own value, so its text widens that bar's label.
   const chinese = meta.chinese
@@ -3151,12 +3127,9 @@ export function renderBarHorizontal(
   const plotY = y0 + BAR_H_PLOT_TOP_PAD + bandRow
   const plotH = Math.max(1, h - meta.titleH - X_TICK_BAND - BAR_H_PLOT_TOP_PAD - bandRow)
   const rowH = plotH / categories.length
-  const gradientId = chartGradientId("chart-barh-grad", w, h, series)
   const marked = markedPointOf(series)
   const receded = recededMarkFill(mutedColor, _bgHex ?? "#FFFFFF")
-  const highlight = !marked && n <= 1 && highlightsTallestBar(palette, accentColor) && !hasPointStatus(series)
   const group = fullestGroup(model.series, categories.length)
-  const gradientShade = scaleHexBrightness(accentColor, BAR_GRADIENT_SHADE_FACTOR)
   const xTicks = xAxis.ticks.map((t, i) => ({
     label: formatAxisTick(t, meta.xUnit ?? meta.yUnit, meta.figures),
     pos: mapToPlotX(t, xAxis.domain, plotX, plotW),
@@ -3167,6 +3140,7 @@ export function renderBarHorizontal(
   // step up or down, and it stays inside the chart.
   const hBarSpecs: ValueLabelSpec[] = []
   const hBarBoxes: DepthBox[] = []
+  const referenceX = component?.reference ? mapToPlotX(component.reference.value, xAxis.domain, plotX, plotW) : null
   for (let i = 0; i < categories.length; i++) {
     const rowY0 = plotY + i * rowH + BAR_H_ROW_EDGE_GAP
     const usableH = rowH - BAR_H_ROW_EDGE_GAP * 2
@@ -3184,18 +3158,24 @@ export function renderBarHorizontal(
       const reachW = upper === undefined ? barW : horizontalBarExtent(upper, domain, plotX, plotW).barW
       hBarBoxes.push({ x: barX, y: barY, w: reachW, h: perBarH })
       const labelY = barY + perBarH / 2 + 4
-      hBarSpecs.push({
-        id: `hbar-${i}-${s.seriesIndex}`,
-        text: labelText(i, s.seriesIndex, value),
-        x: barX + reachW + BAR_H_VALUE_GAP,
-        y: labelY,
-        anchor: "start",
-        fontSize: VALUE_FONT_SIZE,
-        fontFamily,
-        priority: 100 - s.seriesIndex,
-        yMin: labelY,
-        yMax: labelY,
-      })
+      hBarSpecs.push(
+        clearOfReference(
+          {
+            id: `hbar-${i}-${s.seriesIndex}`,
+            text: labelText(i, s.seriesIndex, value),
+            x: barX + reachW + BAR_H_VALUE_GAP,
+            y: labelY,
+            anchor: "start",
+            fontSize: VALUE_FONT_SIZE,
+            fontFamily,
+            priority: 100 - s.seriesIndex,
+            yMin: labelY,
+            yMax: labelY,
+          },
+          referenceX,
+          false,
+        ),
+      )
     }
   }
   const placedHLabels = placeValueLabelsTogether(hBarSpecs, hBarBoxes, {
@@ -3221,14 +3201,6 @@ export function renderBarHorizontal(
   })
   return (
     <>
-      {highlight && (
-        <defs>
-          <linearGradient id={gradientId} x1={0} y1={0} x2={1} y2={0}>
-            <stop offset="0%" stopColor={gradientShade} />
-            <stop offset="100%" stopColor={accentColor} />
-          </linearGradient>
-        </defs>
-      )}
       {renderCartesianFrame({
         plotX,
         plotY,
@@ -3262,11 +3234,10 @@ export function renderBarHorizontal(
           const value = s.values[i]
           if (value == null) continue
           const barY = rowY0 + slots.get(s.seriesIndex)!
-          const isMax = highlight && value === dataMax
           const { barX, barW } = horizontalBarExtent(value, domain, plotX, plotW)
           const fill =
             markedPointFill(marked, s.seriesIndex, cat.x, palette, receded) ??
-            (highlight ? (isMax ? accentColor : `url(#${gradientId})`) : palette[s.seriesIndex % palette.length])
+            palette[s.seriesIndex % palette.length]
           barElements.push(
             barMark({
               key: `r-${s.seriesIndex}`,
@@ -3277,7 +3248,7 @@ export function renderBarHorizontal(
               fill,
               status: pointStatusAt(series, s.seriesIndex, cat.x),
               bg: _bgHex ?? "#FFFFFF",
-              opacity: highlight ? (isMax ? 1 : 0.75) : 1,
+              opacity: 1,
             }),
           )
           const upper = upperAt.get(`${i}-${s.seriesIndex}`)

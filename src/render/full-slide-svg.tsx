@@ -188,6 +188,7 @@ export function buildCtx(
   emphasis?: EmphasisTreatment,
   figures?: FigureStyle,
   chinese = true,
+  themeGround?: string,
 ): ComponentCtx {
   return {
     colors: tokens.colors,
@@ -205,6 +206,7 @@ export function buildCtx(
     themeId: tokens.id,
     emphasis,
     ...(figures ? { figures } : {}),
+    ...(themeGround ? { themeGround } : {}),
   }
 }
 
@@ -336,6 +338,7 @@ export function FullSlideSvg({
     themeDef.emphasis,
     deckFigureStyle(ir),
     deckWritesChinese(ir),
+    themeDefaultBg,
   )
   // This is the only face resolution performed by the renderer. Capacity
   // checks and validation consume the same route record from

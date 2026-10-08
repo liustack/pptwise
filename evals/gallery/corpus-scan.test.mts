@@ -5,15 +5,19 @@
 // Six files used to each call listThemes → corpusAssets → buildMatrix →
 // renderMatrix, each writing the matrix to its own temp dir. Vitest gives
 // each file a worker, so a full gate paid for six copies of the same
-// ~2450-page paint. `beforeAll` paints it once. The describes below read
-// that paint. `scripts/gallery.test.mts` and
-// `cross-language-capacity.test.mts` are a different job and stay put.
+// ~2450-page paint. Each section of the matrix (a theme, or the appendix of
+// faces no menu offers) is painted once, the first time a scan asks for it,
+// and every scan runs once per section under a timeout of its own. A
+// `beforeAll` used to paint the whole matrix under one fixed 300 seconds,
+// which a slow machine came within reach of and every new theme pushed
+// closer. `scripts/gallery.test.mts` and `cross-language-capacity.test.mts`
+// are a different job and stay put.
 
 import { mkdtempSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { Fragment, createElement } from "react"
-import { beforeAll, describe, expect, it } from "vitest"
+import { describe, expect, it } from "vitest"
 import { listThemes, renderSlideSvg, validateIr } from "@/api"
 import { MIN_CARTESIAN_BOX_W } from "@/components/cartesian-axis"
 import { chart } from "@/components/chart"
@@ -62,16 +66,21 @@ interface CorpusScan {
   readonly pages: readonly CorpusPage[]
 }
 
-let corpus: CorpusScan
+const THEME_IDS = listThemes()
+  .map((t) => t.id)
+  .sort()
+const ASSETS = Object.fromEntries(
+  await Promise.all(LANGUAGE_IDS.map(async (id) => [id, await corpusAssets(LEXICONS[id])])),
+) as Record<LanguageId, CorpusAssets>
+const ALL_JOBS = buildMatrix(THEME_IDS, ASSETS)
+/** The matrix's sections, each painted and scanned on its own. */
+const SECTIONS = [...new Set(ALL_JOBS.map((job) => job.section))]
+/** One section's paint plus its scans, well inside this for any section on any machine the gate runs on. */
+const SECTION_TIMEOUT = 120_000
+const SECTION_OF = new Map(ALL_JOBS.map((job) => [job.id, job.section]))
 
-beforeAll(async () => {
-  const themeIds = listThemes()
-    .map((t) => t.id)
-    .sort()
-  const assets = Object.fromEntries(
-    await Promise.all(LANGUAGE_IDS.map(async (id) => [id, await corpusAssets(LEXICONS[id])])),
-  ) as Record<LanguageId, CorpusAssets>
-  const jobs = buildMatrix(themeIds, assets)
+/** Paint `jobs` and read each page's L1 verdict. */
+function paint(jobs: readonly Job[]): CorpusScan {
   const outDir = mkdtempSync(join(tmpdir(), "pptwise-corpus-scan-"))
   const { svgs, manifest } = renderMatrix(jobs, outDir, "corpus-scan")
   const pages: CorpusPage[] = []
@@ -89,8 +98,20 @@ beforeAll(async () => {
       l1Codes: classifyL1(l1),
     })
   }
-  corpus = { jobs, svgs, manifest, assets, pages }
-}, 300_000)
+  return { jobs, svgs, manifest, assets: ASSETS, pages }
+}
+
+const PAINTED = new Map<string, CorpusScan>()
+
+/** One section of the matrix, painted the first time a scan asks for it. */
+function corpusOf(section: string): CorpusScan {
+  let corpus = PAINTED.get(section)
+  if (!corpus) {
+    corpus = paint(ALL_JOBS.filter((job) => job.section === section))
+    PAINTED.set(section, corpus)
+  }
+  return corpus
+}
 
 // ---------------------------------------------------------------------------
 // no-drops.test.mts
@@ -179,7 +200,13 @@ const KNOWN_LABEL_REPEATS: readonly string[] = [
 // nothing about — `cross-language-capacity.test.mts` is the sweep that does,
 // and it holds a ratchet of the shapes that still overflow there.
 describe("the gallery corpus", () => {
-  it("declares no content drops, and repeats no sentence", () => {
+  it("pins only repeats of pages the matrix paints", () => {
+    expect(KNOWN_LABEL_REPEATS.filter((entry) => !SECTION_OF.has(entry.split("\t")[0]!))).toEqual([])
+  })
+
+
+  it.each(SECTIONS)("declares no content drops, and repeats no sentence (%s)", (section) => {
+    const corpus = corpusOf(section)
     const { svgs, manifest, jobs } = corpus
     expect(svgs.size).toBeGreaterThan(0)
     expect(manifest.pages.length).toBe(jobs.length)
@@ -196,8 +223,9 @@ describe("the gallery corpus", () => {
     }
     expect(declared, "a page lost authored content").toEqual([])
     expect(sentences, "a page says the same sentence twice").toEqual([])
-    expect(labels.sort(), "a page repeats a label the pinned list does not name").toEqual([...KNOWN_LABEL_REPEATS].sort())
-  })
+    const known = KNOWN_LABEL_REPEATS.filter((entry) => SECTION_OF.get(entry.split("\t")[0]!) === section)
+    expect(labels.sort(), "a page repeats a label the pinned list does not name").toEqual([...known].sort())
+  }, SECTION_TIMEOUT)
 })
 
 // ---------------------------------------------------------------------------
@@ -219,7 +247,8 @@ describe("the gallery corpus", () => {
  * reached, not fewer.
  */
 describe("every page in the corpus stays inside the exportable SVG subset", () => {
-  it("scans every theme/layout/component/density page in zh/en/mixed", () => {
+  it.each(SECTIONS)("scans every theme/layout/component/density page in zh/en/mixed (%s)", (section) => {
+    const corpus = corpusOf(section)
     const Parser = getPlatform().domParser ?? globalThis.DOMParser
     if (!Parser) throw new Error("DOMParser unavailable")
     expect(corpus.svgs.size).toBeGreaterThan(0)
@@ -234,7 +263,7 @@ describe("every page in the corpus stays inside the exportable SVG subset", () =
       }
     }
     expect(violations, "a page paints a primitive svg2pptx cannot export").toEqual([])
-  })
+  }, SECTION_TIMEOUT)
 })
 
 // ---------------------------------------------------------------------------
@@ -263,7 +292,8 @@ function textContents(svg: string): string[] {
 //     unicode ellipsis or a standalone three-dot ellipsis. It does not trim,
 //     and it does not look at leftover-count phrases.
 describe("gallery SVG text never paints an overflow ellipsis", () => {
-  it("scans every theme/layout/component/density page in zh/en/mixed", () => {
+  it.each(SECTIONS)("scans every theme/layout/component/density page in zh/en/mixed (%s)", (section) => {
+    const corpus = corpusOf(section)
     expect(corpus.svgs.size).toBeGreaterThan(0)
     expect(corpus.manifest.pages.length).toBe(corpus.jobs.length)
 
@@ -284,7 +314,7 @@ describe("gallery SVG text never paints an overflow ellipsis", () => {
       }
     }
     expect(hits).toEqual([])
-  })
+  }, SECTION_TIMEOUT)
 })
 
 // ---------------------------------------------------------------------------
@@ -305,7 +335,8 @@ function hasDecor(el: Element): boolean {
 // floored at 18pt in bullets.tsx. This scan is the gate that stops a
 // new minFontSize of 8 from shipping.
 describe("gallery SVG text respects the readable font floor", () => {
-  it("scans every theme/layout/component/density/heading page", () => {
+  it.each(SECTIONS)("scans every theme/layout/component/density/heading page (%s)", (section) => {
+    const corpus = corpusOf(section)
     expect(corpus.svgs.size).toBeGreaterThan(0)
     expect(corpus.manifest.pages.length).toBe(corpus.jobs.length)
 
@@ -334,7 +365,7 @@ describe("gallery SVG text respects the readable font floor", () => {
     }
     expect(undersized, undersized.slice(0, 20).join("\n")).toEqual([])
     expect(l1Font, l1Font.slice(0, 20).join("\n")).toEqual([])
-  })
+  }, SECTION_TIMEOUT)
 })
 
 // Every gallery page's text reads against the shape painted under it. L1
@@ -345,7 +376,8 @@ describe("gallery SVG text respects the readable font floor", () => {
 // slanted panel graded by its box. There is no allowlist: a page here either
 // reads or is fixed.
 describe("gallery text reads against what it is painted on", () => {
-  it("scans every theme/layout/component/density page in zh/en/mixed", () => {
+  it.each(SECTIONS)("scans every theme/layout/component/density page in zh/en/mixed (%s)", (section) => {
+    const corpus = corpusOf(section)
     expect(corpus.pages.length).toBeGreaterThan(0)
     const low = corpus.pages
       .filter((page) => page.l1Codes.includes("low-contrast"))
@@ -353,7 +385,7 @@ describe("gallery text reads against what it is painted on", () => {
         page.l1.findings.filter((f) => f.code === "low-contrast").map((f) => `${page.id}: ${f.message}`),
       )
     expect(low, low.slice(0, 20).join("\n")).toEqual([])
-  })
+  }, SECTION_TIMEOUT)
 })
 
 // ---------------------------------------------------------------------------
@@ -512,7 +544,9 @@ function offsetOf(el: Element): { x: number; y: number } {
 // to put it in.
 describe("every device_mockup page in the corpus shows its frame", () => {
   it("draws a real window or bezel on each one", () => {
-    const { jobs, svgs } = corpus
+    const jobs = ALL_JOBS
+    // Only the pages that carry a device are painted for this scan.
+    const svgs = paint(ALL_JOBS.filter((job) => job.ir.slides[job.slideIndex]?.components.some((c) => c.type === "device_mockup"))).svgs
 
     // Which pages carry a device comes from the IR, never from the page id,
     // and the authored component travels with it so the assertions can ask
@@ -701,49 +735,62 @@ function contractPages(lex: (typeof LEXICONS)[LanguageId], assets: CorpusAssets)
 }
 
 describe("every face renders the content it was given, or says what it dropped", () => {
-  it("scans the gallery corpus and the face contract pages", () => {
-    expect(corpus.svgs.size).toBeGreaterThan(0)
+  type FidelityPage = { id: string; svg: string; ir: PptxIR; slideIndex: number }
 
-    const pages: { id: string; svg: string; ir: PptxIR; slideIndex: number }[] = []
-    for (const job of corpus.jobs) {
-      const svg = corpus.svgs.get(job.id)
-      if (svg) pages.push({ id: job.id, svg, ir: job.ir, slideIndex: job.slideIndex })
-    }
-    for (const page of contractPages(LEXICONS.zh, corpus.assets.zh)) {
-      const validated = validateIr(page.ir)
-      expect(validated.ok, `${page.id}: ${validated.ok ? "" : JSON.stringify(validated.errors)}`).toBe(true)
-      pages.push({ ...page, svg: renderSlideSvg(validated.ir!, page.slideIndex) })
-    }
-
-    let scannedPages = 0
-    let widenedPages = 0
-    const losses: string[] = []
+  function losses(pages: readonly FidelityPage[]): string[] {
+    const found: string[] = []
     for (const page of pages) {
       const slide = page.ir.slides[page.slideIndex]!
       const face = faceOf(page.ir, slide, getThemeDefinition(page.ir.theme.id))
       const fieldPicking = scanned(face)
-      if (fieldPicking) scannedPages += 1
-      else widenedPages += 1
       for (const missing of checkPageFidelity(page.svg, slide).missing) {
         // A field-picking face answers for every authored field on its page.
         // Any other face answers for the fields `WIDENED_PATHS` names — the
         // ones whose shared renderer was fixed and is now held to it.
         if (fieldPicking ? exempt(face?.id, missing.path) : !widened(missing.path, slide)) continue
-        losses.push(
-          `${page.id} [${face?.id}] ${missing.path}: ${JSON.stringify(missing.text.slice(0, 60))}`,
-        )
+        found.push(`${page.id} [${face?.id}] ${missing.path}: ${JSON.stringify(missing.text.slice(0, 60))}`)
       }
     }
+    return found
+  }
 
-    // A scope that has silently collapsed would pass this sweep without ever
-    // looking at a page. 284 of the corpus' 1820 pages are drawn by a
-    // field-picking face today, and the rest are now read for the widened
-    // fields; both floors are well under the real counts so an ordinary
-    // corpus edit does not trip them, and well over zero so a broken scope
-    // does.
+  it.each(SECTIONS)("scans the gallery corpus (%s)", (section) => {
+    const corpus = corpusOf(section)
+    expect(corpus.svgs.size).toBeGreaterThan(0)
+    const pages: FidelityPage[] = []
+    for (const job of corpus.jobs) {
+      const svg = corpus.svgs.get(job.id)
+      if (svg) pages.push({ id: job.id, svg, ir: job.ir, slideIndex: job.slideIndex })
+    }
+    expect(losses(pages)).toEqual([])
+  }, SECTION_TIMEOUT)
+
+  it("scans the face contract pages", () => {
+    const pages: FidelityPage[] = []
+    for (const page of contractPages(LEXICONS.zh, ASSETS.zh)) {
+      const validated = validateIr(page.ir)
+      expect(validated.ok, `${page.id}: ${validated.ok ? "" : JSON.stringify(validated.errors)}`).toBe(true)
+      pages.push({ ...page, svg: renderSlideSvg(validated.ir!, page.slideIndex) })
+    }
+    expect(losses(pages)).toEqual([])
+  })
+
+  // A scope that has silently collapsed would pass the sweep without ever
+  // looking at a page. 284 of the corpus' 1820 pages are drawn by a
+  // field-picking face today, and the rest are now read for the widened
+  // fields; both floors are well under the real counts so an ordinary corpus
+  // edit does not trip them, and well over zero so a broken scope does. The
+  // count reads the matrix's IR and needs no paint.
+  it("reads enough pages each way to be a sweep at all", () => {
+    let scannedPages = 0
+    let widenedPages = 0
+    for (const job of ALL_JOBS) {
+      const slide = job.ir.slides[job.slideIndex]!
+      if (scanned(faceOf(job.ir, slide, getThemeDefinition(job.ir.theme.id)))) scannedPages += 1
+      else widenedPages += 1
+    }
     expect(scannedPages).toBeGreaterThan(200)
     expect(widenedPages).toBeGreaterThan(1000)
-    expect(losses).toEqual([])
   })
 })
 
@@ -1313,7 +1360,8 @@ describe("the walker keeps the current text position", () => {
     expect(findings[0]!.px).toBeCloseTo(17.2, 1)
   })
 
-  it("no page in the corpus asks the walker to read a per-glyph dx or dy list", () => {
+  it.each(SECTIONS)("no page in the corpus asks the walker to read a per-glyph dx or dy list (%s)", (section) => {
+    const corpus = corpusOf(section)
     // The walker reads a `dx`/`dy` list as no shift, which under-reports a
     // real per-glyph offset — and asserting *that* is asserting the
     // simplification. What makes the simplification safe is the fact
@@ -1329,7 +1377,7 @@ describe("the walker keeps the current text position", () => {
       }
     }
     expect(offenders, offenders.slice(0, 10).join("\n")).toEqual([])
-  })
+  }, SECTION_TIMEOUT)
 })
 
 describe("the walker resolves whitespace the way SVG does", () => {
@@ -1770,20 +1818,22 @@ describe("the label-on-mark check sees radial marks and follows a stroke", () =>
 })
 
 describe("gallery geometry", () => {
-  it("no component paints outside the box it accepted", () => {
+  it.each(SECTIONS)("no component paints outside the box it accepted (%s)", (section) => {
+    const corpus = corpusOf(section)
     expect(corpus.svgs.size).toBeGreaterThan(0)
     const offenders: string[] = []
     for (const [id, svg] of corpus.svgs) {
       for (const finding of collectInkFindings(svg)) offenders.push(`${id}: ${finding.message}`)
     }
     expect(offenders, offenders.slice(0, 20).join("\n")).toEqual([])
-  })
+  }, SECTION_TIMEOUT)
 
-  it("no data label lands on another label or on a data mark", () => {
+  it.each(SECTIONS)("no data label lands on another label or on a data mark (%s)", (section) => {
+    const corpus = corpusOf(section)
     const offenders: string[] = []
     for (const [id, svg] of corpus.svgs) {
       for (const finding of collectLabelFindings(svg)) offenders.push(`${id}: ${finding.message}`)
     }
     expect(offenders, offenders.slice(0, 20).join("\n")).toEqual([])
-  })
+  }, SECTION_TIMEOUT)
 })

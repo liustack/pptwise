@@ -125,7 +125,7 @@ function shade(ground: string, step: number): string {
 
 export function keynoteInks(ctx: ComponentCtx): KeynoteInks {
   const { colors } = ctx
-  const ground = colors.bg
+  const ground = ctx.defaultBg ?? colors.bg
   return {
     ground,
     door: colors.surface,

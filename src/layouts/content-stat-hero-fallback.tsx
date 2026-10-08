@@ -6,6 +6,7 @@ import { fitHeadingLines } from "../render/heading-fit"
 import { stepAside } from "../render/step-aside"
 import { footnoteBaselineFor } from "../render/branding-geometry"
 import { fitSvgLine } from "../lib/svg-text-layout"
+import { SourceLines, fitSourceBlock } from "./source-lines"
 
 /**
  * The page stat-hero hands over when its hero construction cannot hold what
@@ -52,15 +53,15 @@ export function StatHeroFallbackContent({ slide, ctx }: Pick<SvgTemplateProps, "
   const subheading = subheadingText
     ? fitSvgLine(subheadingText, { maxWidth: COLUMN_W, fontSize: SUBHEADING_SIZE, minFontSize: 16, fontFamily: fonts.body })
     : null
-  const footnoteText = stripEmphasis(slide.footnote ?? "").trim()
-  const footnote = footnoteText
-    ? fitSvgLine(footnoteText, { maxWidth: COLUMN_W, fontSize: FOOTNOTE_SIZE, minFontSize: 16, fontFamily: fonts.body })
-    : null
-  const footnoteY = footnote ? footnoteBaselineFor(footnote.fontSize) : 0
+  // On up to two lines, the last on the footnote baseline (`fitSourceBlock`).
+  const footnote = fitSourceBlock(undefined, stripEmphasis(slide.footnote ?? ""), { maxWidth: COLUMN_W, fontSize: FOOTNOTE_SIZE, minFontSize: 16, fontFamily: fonts.body })
+  const footnoteSize = footnote ? Math.max(...footnote.lines.map((line) => line.fontSize)) : 0
+  const footnoteY = footnote ? footnoteBaselineFor(footnoteSize) : 0
+  const footnoteTop = footnote ? footnoteY - (footnote.lines.length - 1) * footnote.lineHeight : 0
   const bodyRect = footnote
     ? {
         ...FALLBACK_RECT,
-        h: Math.min(FALLBACK_RECT.h, footnoteY - footnote.fontSize - FOOTNOTE_AIR - FALLBACK_RECT.y),
+        h: Math.min(FALLBACK_RECT.h, footnoteTop - footnoteSize - FOOTNOTE_AIR - FALLBACK_RECT.y),
       }
     : FALLBACK_RECT
   // A fixed band of at most 400px inside a 960px column. The hero page gives
@@ -98,19 +99,14 @@ export function StatHeroFallbackContent({ slide, ctx }: Pick<SvgTemplateProps, "
         </text>
       )}
       <SvgContent components={slide.components} rect={bodyRect} ctx={ctx} />
-      {footnote && (
-        <text
-          data-truncated={footnote.truncated ? "1" : undefined}
-          x={COLUMN_X}
-          y={footnoteY}
-          fontFamily={fonts.body}
-          fontSize={footnote.fontSize}
-          fill={accessibleInk(colors.muted, defaultBg, footnote.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {footnote.text}
-        </text>
-      )}
+      <SourceLines
+        block={footnote}
+        x={COLUMN_X}
+        y={footnoteY}
+        rise
+        fontFamily={fonts.body}
+        fill={(size) => accessibleInk(colors.muted, defaultBg, size)}
+      />
     </g>
   )
 }

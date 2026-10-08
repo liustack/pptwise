@@ -4,6 +4,7 @@ import { wrapClip } from "./clip-text"
 import { accessibleInk, graphicInk, readableOn, resolveSemanticColor } from "../render/ink"
 import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
+import { markedLineSegments, paintMarkedLine, stripEmphasis } from "../render/emphasis"
 import {
   FORM_BODY_FLOOR,
   FORM_TITLE_FLOOR,
@@ -77,7 +78,7 @@ function footnoteH(text: string, maxWidth: number, fontFamily: string, maxLines:
 }
 
 function itemFootH(component: StepsComponent, slotW: number, fontFamily: string, maxLines: number): number {
-  return Math.max(FOOT_SIZE, ...component.items.map((item) => footnoteH(item.text, slotW, fontFamily, maxLines)))
+  return Math.max(FOOT_SIZE, ...component.items.map((item) => footnoteH(stripEmphasis(item.text), slotW, fontFamily, maxLines)))
 }
 
 function measureSteps(component: StepsComponent, w: number, ctx: ComponentCtx): number {
@@ -194,12 +195,12 @@ export const steps: SvgComponent<StepsComponent> = {
         const y = vertical ? i * stride : 0
         const cx = x + BADGE_R + BADGE_INSET
         const cy = y + arrowH / 2
-        const title = fitFormTitleLine(item.title, {
+        const title = fitFormTitleLine(stripEmphasis(item.title), {
           maxWidth: titleMaxW,
           fontSize: TITLE_SIZE,
           fontFamily: ctx.fonts.heading,
         })
-        const foot = wrapClip(item.text, {
+        const foot = wrapClip(stripEmphasis(item.text), {
           maxWidth: Math.max(1, slotW),
           fontSize: FOOT_SIZE,
           minPt: FORM_BODY_FLOOR,
@@ -212,32 +213,42 @@ export const steps: SvgComponent<StepsComponent> = {
           <g key={i}>
             <path d={chevronPath(x, y, slotW, arrowH)} fill={fill} />
             {renderBadge(cx, cy, i, fill, ctx, item)}
-            <text
-              data-truncated={title.truncated ? "1" : undefined}
-              x={titleX}
-              y={cy + 6}
-              fontSize={title.fontSize}
-              fontWeight="700"
-              fill={ink}
-              fontFamily={ctx.fonts.heading}
-              dominantBaseline="alphabetic"
-            >
-              {title.text}
-            </text>
-            {foot.lines.map((line, li) => (
+            {paintMarkedLine(
+              ctx,
+              markedLineSegments(item.title, [title.text])[0]!,
+              { baseFill: ink, fontWeight: "700", fontFamily: ctx.fonts.heading, bg: fill },
               <text
-                key={li}
-                data-truncated={formTextClipMarker(foot, li)}
-                x={x}
-                y={y + arrowH + FOOT_GAP + (li + 1) * foot.lineHeight}
-                fontSize={foot.fontSize}
-                fill={ctx.colors.muted}
-                fontFamily={ctx.fonts.body}
+                data-truncated={title.truncated ? "1" : undefined}
+                x={titleX}
+                y={cy + 6}
+                fontSize={title.fontSize}
+                fontWeight="700"
+                fill={ink}
+                fontFamily={ctx.fonts.heading}
                 dominantBaseline="alphabetic"
               >
-                {line}
-              </text>
-            ))}
+                {title.text}
+              </text>,
+            )}
+            {foot.lines.map((line, li) =>
+              paintMarkedLine(
+                ctx,
+                markedLineSegments(item.text, foot.lines)[li]!,
+                { baseFill: ctx.colors.muted, fontWeight: "700", fontFamily: ctx.fonts.body, bold: false },
+                <text
+                  key={li}
+                  data-truncated={formTextClipMarker(foot, li)}
+                  x={x}
+                  y={y + arrowH + FOOT_GAP + (li + 1) * foot.lineHeight}
+                  fontSize={foot.fontSize}
+                  fill={ctx.colors.muted}
+                  fontFamily={ctx.fonts.body}
+                  dominantBaseline="alphabetic"
+                >
+                  {line}
+                </text>,
+              ),
+            )}
           </g>
         )
       })}

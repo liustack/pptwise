@@ -302,24 +302,15 @@ describe("chart component", () => {
   // Task 8: chart.tsx must thread ctx.colors.accent through to the renderer
   // for the gradient/emphasis work in chart-svg.tsx to use the real theme
   // accent (not a stand-in) — see chart-svg.test.tsx for the full behavior.
-  it("wires ctx.colors.accent through to the bar renderer's max-bar highlight", () => {
+  it("draws a single unmarked bar series flat in the lead colour, lighting no bar on its own", () => {
     const component = {
       type: "chart" as const,
       chart_type: "bar" as const,
-      series: [
-        {
-          name: "Revenue",
-          data: [
-            { x: "Q1", y: 100 },
-            { x: "Q2", y: 200 },
-          ],
-        },
-      ],
+      series: [{ name: "Revenue", data: [{ x: "Q1", y: 100 }, { x: "Q2", y: 200 }] }],
     }
     const { container } = svg(chart.render(component, box, ctx))
-    const rects = Array.from(container.querySelectorAll("rect"))
-    const maxBar = rects.find((r) => r.getAttribute("fill") === ctx.colors.accent)
-    expect(maxBar).toBeTruthy()
+    const fills = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]')).map((r) => r.getAttribute("fill"))
+    expect(new Set(fills)).toEqual(new Set([ctx.colors.chartPalette[0]]))
   })
 
   // The line renderer's endpoint dot now carries its own series color, so
@@ -1984,35 +1975,47 @@ describe("chart series emphasis", () => {
     series: c.series.map(({ emphasis: _emphasis, ...s }) => s),
   })
 
-  it("gives the marked series the lead color and every other series one grey that still clears 3:1", () => {
+  it("gives the marked series the lead color and each other series a grey of its own that still clears 3:1", () => {
     for (const type of ["bar", "stacked"] as const) {
       const fills = Array.from(draw(three(type)).querySelectorAll('rect[data-plot-mark="1"]')).map((r) =>
         r.getAttribute("fill"),
       )
       const distinct = [...new Set(fills)]
-      expect(distinct, type).toHaveLength(2)
+      expect(distinct, type).toHaveLength(3)
       expect(distinct, type).toContain(PALETTE[0])
-      const grey = distinct.find((f) => f !== PALETTE[0])!
-      expect(contrastRatio(grey, ctx.colors.bg)).toBeGreaterThanOrEqual(3)
+      for (const grey of distinct.filter((f) => f !== PALETTE[0])) {
+        expect(contrastRatio(grey!, ctx.colors.bg)).toBeGreaterThanOrEqual(3)
+      }
       // A third of the marks are the marked series'.
       expect(fills.filter((f) => f === PALETTE[0])).toHaveLength(fills.length / 3)
     }
   })
 
+  it("keeps one grey for the one series that steps back beside a marked one", () => {
+    const two = { ...three("bar"), series: three("bar").series.slice(0, 2) }
+    const fills = Array.from(draw(two).querySelectorAll('rect[data-plot-mark="1"]')).map((r) => r.getAttribute("fill"))
+    expect(new Set(fills).size).toBe(2)
+  })
+
   it("paints the legend swatches with the same colors as the marks", () => {
     const container = draw(three("bar"))
     const swatches = Array.from(container.querySelectorAll("rect")).filter((r) => !r.hasAttribute("data-plot-mark"))
-    const grey = swatches[0]!.getAttribute("fill")
-    expect(swatches.map((r) => r.getAttribute("fill"))).toEqual([grey, PALETTE[0], grey])
+    const [first, lead, last] = swatches.map((r) => r.getAttribute("fill"))
+    expect(lead).toBe(PALETTE[0])
+    expect(first).not.toBe(last)
+    const marks = Array.from(container.querySelectorAll('rect[data-plot-mark="1"]')).map((r) => r.getAttribute("fill"))
+    expect(marks).toContain(first)
+    expect(marks).toContain(last)
   })
 
-  it("strokes the marked line in the lead color and greys the others", () => {
+  it("strokes the marked line in the lead color and the others in greys of their own", () => {
     const strokes = Array.from(draw(three("line")).querySelectorAll("polyline"))
       .map((p) => p.getAttribute("stroke"))
       .filter((s) => s !== ctx.colors.bg)
     expect(strokes[1]).toBe(PALETTE[0])
-    expect(strokes[0]).toBe(strokes[2])
+    expect(strokes[0]).not.toBe(strokes[2])
     expect(strokes[0]).not.toBe(PALETTE[0])
+    expect(strokes[2]).not.toBe(PALETTE[0])
   })
 
   it("is byte-identical to an unmarked chart when no series is marked", () => {
@@ -2709,5 +2712,46 @@ describe("value ranges on a bar on its side", () => {
     expect(Number(bands[1]!.querySelector("text")!.getAttribute("x"))).toBeCloseTo(Number(above!.getAttribute("x")), 3)
     expect(below!.getAttribute("fill")).not.toBe(above!.getAttribute("fill"))
     expect(container.querySelector("[data-truncated]")).toBeNull()
+  })
+})
+
+describe("a reference line and the values beside it", () => {
+  const ROWS = ["钢铁", "铝", "水泥", "化肥", "氢"]
+  const VALUES = [1.42, 1.37, 1.3, 1.5, 1.36]
+  const bars = (direction?: "horizontal") => ({
+    type: "chart" as const,
+    chart_type: "bar" as const,
+    ...(direction ? { direction } : {}),
+    series: [{ name: "排放强度", data: ROWS.map((x, i) => ({ x, y: VALUES[i]! })) }],
+    reference: { value: 1.37, label: "欧盟基准 1.370" },
+  })
+  const draw = (component: ReturnType<typeof bars>) =>
+    svg(chart.render(component, { ...box, h: chart.measure(component, box.w, ctx) }, ctx)).container
+
+  it("starts a value past the line down a plot on its side instead of under it", () => {
+    const container = draw(bars("horizontal"))
+    const line = container.querySelector("[data-chart-reference]")!
+    const at = Number(line.getAttribute("x1"))
+    const labels = Array.from(container.querySelectorAll('text[data-value-label="1"]'))
+    expect(labels).toHaveLength(ROWS.length)
+    for (const label of labels) {
+      const x = Number(label.getAttribute("x"))
+      const w = measureTextUnits(label.textContent ?? "", { bold: true, fontFamily: ctx.fonts.body }) * 16
+      expect(x >= at + 2 || x + w <= at - 2, `${label.textContent} at ${x}, line at ${at}`).toBe(true)
+    }
+  })
+
+  it("sets a value over the line across an upright plot instead of on it", () => {
+    const container = draw(bars())
+    const line = container.querySelector("[data-chart-reference]")!
+    const at = Number(line.getAttribute("y1"))
+    const labels = Array.from(container.querySelectorAll('text[data-value-label="1"]'))
+    expect(labels).toHaveLength(ROWS.length)
+    for (const label of labels) {
+      const y = Number(label.getAttribute("y"))
+      const top = y - 16 * 0.75
+      const bottom = y + 16 * 0.15
+      expect(top >= at + 2 || bottom <= at - 2, `${label.textContent} at ${y}, line at ${at}`).toBe(true)
+    }
   })
 })

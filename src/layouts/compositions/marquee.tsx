@@ -70,7 +70,7 @@ const ON_FIRE_MIX = 0.75
 
 export function marqueeInks(ctx: ComponentCtx): MarqueeInks {
   const { colors } = ctx
-  const ground = colors.bg
+  const ground = ctx.defaultBg ?? colors.bg
   const line = colors.border ?? blendOver(colors.muted, ground, 0.35)
   const darkened = blendOver(colors.primary, "#000000", ON_FIRE_MIX)
   const onFire = contrastRatio(darkened, colors.accent) >= 4.5 ? darkened : readableOn(colors.accent)

@@ -93,11 +93,34 @@ describe("pyramid component", () => {
     }
   })
 
-  it("declares a decline when notes are authored and the box has no column for the legend", () => {
-    const { container } = svg(pyramid.render(four, { ...BOX, w: 520 }, themed("brief")))
-    const marker = container.querySelector("[data-dropped]")
-    expect(marker).not.toBeNull()
-    expect(Number(marker!.getAttribute("data-dropped"))).toBe(4)
+  it("sets the legend under the drawing when the box has no column for it", () => {
+    const ctx = themed("brief")
+    const narrow = { x: 88, y: 200, w: 520 }
+    const h = pyramid.measure(four, narrow.w, ctx)
+    expect(h).toBeGreaterThan(four.layers.length * 64)
+    const { container } = svg(pyramid.render(four, { ...narrow, h }, ctx))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "")
+    for (const layer of four.layers) {
+      expect(texts.filter((t) => t === layer.label)).toHaveLength(1)
+      expect(texts.join("")).toContain(layer.note)
+    }
+    const bandBottom = Math.max(
+      ...Array.from(container.querySelectorAll("polygon")).flatMap((p) =>
+        p.getAttribute("points")!.split(" ").map((pair) => Number(pair.split(",")[1])),
+      ),
+    )
+    const rows = Array.from(container.querySelectorAll("rect")).filter((r) => Number(r.getAttribute("width")) === narrow.w)
+    expect(rows).toHaveLength(4)
+    for (const row of rows) expect(Number(row.getAttribute("y"))).toBeGreaterThan(bandBottom)
+    const last = rows[rows.length - 1]!
+    expect(Number(last.getAttribute("y")) + Number(last.getAttribute("height"))).toBeLessThanOrEqual(h + 0.5)
+    assertSubset(container.querySelector("svg")!)
+  })
+
+  it("still declines a narrow box too short for its legend", () => {
+    const { container } = svg(pyramid.render(four, { ...BOX, w: 520, h: 300 }, themed("brief")))
+    expect(container.querySelector("[data-dropped]")).not.toBeNull()
     expect(container.querySelectorAll("text")).toHaveLength(0)
   })
 

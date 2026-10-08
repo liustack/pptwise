@@ -1,10 +1,11 @@
+import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
-import { heroCaption, heroSource, heroUnit, heroValue } from "../minimal-shared"
+import { heroCaption, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitSparseHeading, fitStatementSource, pad2 } from "./shared"
+import { evidenceSource, fitHeroLine, fitHeroSource, fitSparseHeading, fitStatementSource, sourcePastFoot, pad2 } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** terminal 稀排脸：青光巨数、轨道格言、节点证据卡。不画右缘星座链。 */
@@ -34,9 +35,11 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   if (!fitted) return StatHeroFallbackContent({ slide, ctx })
   const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
-  const source = heroSource(slide)
+  const source = fitHeroSource(slide, { maxWidth: 1088, fontSize: 17, fontFamily: fonts.body })
   const heroWidth = measureTextUnits(fitted.text, { bold: true, fontFamily: fonts.heading }) * fitted.fontSize
   const track = starTrack(heroWidth)
+  // A source too long for the room under the caption hands the page over whole.
+  if (sourcePastFoot(source, 614)) return StatHeroFallbackContent({ slide, ctx })
   return (
     <>
       <text
@@ -64,11 +67,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
           {caption}
         </text>
       )}
-      {source && (
-        <text x={96} y={614} fontFamily={fonts.body} fontSize={17} fill={colors.muted} dominantBaseline="alphabetic">
-          {source}
-        </text>
-      )}
+      <SourceLines block={source} x={96} y={614} fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }
@@ -109,19 +108,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
-      {source && (
-        <text
-          data-truncated={source.truncated ? "1" : undefined}
-          x={96}
-          y={528}
-          fontFamily={fonts.body}
-          fontSize={source.fontSize}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source.text}
-        </text>
-      )}
+      <SourceLines block={source} x={96} y={528} fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }

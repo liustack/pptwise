@@ -1,15 +1,15 @@
+import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import {
   heroCaption,
-  heroSource,
-  heroUnit, heroValue,
-  pullQuoteAttribution,
+  heroUnit,
+  heroValue,
   pullQuoteContext,
   pullQuoteText,
 } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, splitTrailingPercent } from "./shared"
+import { fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, sourcePastFoot, splitTrailingPercent } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 import { underlineDescentRatio } from "../underline"
 
@@ -23,11 +23,13 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
   })
   const context = pullQuoteContext(slide)
-  const attr = pullQuoteAttribution(slide)
+  const attr = fitPullQuoteSource(slide, { maxWidth: 960, fontSize: 18, fontFamily: fonts.heading }, "[1] ")
   const last = quote.lines.length - 1
   const firstY = quoteBlockBaseline(394, quote)
   const blockTop = firstY - quote.fontSize
   const blockBottom = firstY + last * quote.lineHeight + quote.fontSize * 0.3
+  // A source too long for the room under the quote hands the page to the shared face.
+  if (sourcePastFoot(attr, Math.round(blockBottom) + 68)) return null
   return (
     <>
       <rect x={96} y={blockTop} width={6} height={Math.round(blockBottom - blockTop)} fill={colors.primary} />
@@ -60,18 +62,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
           )}
         </text>
       ))}
-      {attr && (
-        <text
-          x={160}
-          y={Math.round(blockBottom) + 68}
-          fontFamily={fonts.heading}
-          fontSize={18}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {`[1] ${attr}`}
-        </text>
-      )}
+      <SourceLines block={attr} x={160} y={Math.round(blockBottom) + 68} fontFamily={fonts.heading} fill={colors.muted} />
     </>
   )
 }
@@ -91,7 +82,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   if (!fitted) return StatHeroFallbackContent({ slide, ctx })
   const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
-  const source = heroSource(slide)
+  const source = fitHeroSource(slide, { maxWidth: 1088, fontSize: 17, fontFamily: fonts.body })
   // The rule hangs from the numeral's ink floor rather than a fixed y.
   // thesis's heading serif sets old-style figures — 3 4 5 7 9 hang below the
   // baseline — so a 300px "4" puts ink 66px under a baseline the frozen y=448
@@ -103,6 +94,8 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   // three survives wherever the rule lands.
   const captionY = ruleY + RULE_CAPTION_GAP
   const sourceY = captionY + CAPTION_SOURCE_GAP
+  // A source too long for the room under the caption hands the page over whole.
+  if (sourcePastFoot(source, sourceY)) return StatHeroFallbackContent({ slide, ctx })
   return (
     <>
       <text
@@ -137,19 +130,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
           {caption}
         </text>
       )}
-      {source && (
-        <text
-          x={640}
-          y={sourceY}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={17}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source}
-        </text>
-      )}
+      <SourceLines block={source} x={640} y={sourceY} textAnchor="middle" fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }
@@ -202,21 +183,7 @@ export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
           })}
         </text>
       ))}
-      {source && (
-        <text
-          data-truncated={source.truncated ? "1" : undefined}
-          x={640}
-          y={500}
-          textAnchor="middle"
-          fontFamily={fonts.heading}
-          fontSize={source.fontSize}
-          fontStyle="italic"
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source.text}
-        </text>
-      )}
+      <SourceLines block={source} x={640} y={500} textAnchor="middle" fontFamily={fonts.heading} fontStyle="italic" fill={colors.muted} />
     </>
   )
 }

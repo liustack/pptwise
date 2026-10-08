@@ -32,6 +32,13 @@ const SWATCH = 12
 const TWO_COLUMN_MIN_W = 780
 const PYRAMID_MIN_W = 320
 const LEGEND_MIN_W = 300
+/** Under the drawing, in a box too narrow for a legend column: the air above the legend, between its rows, inside each. */
+const STACK_GAP = 16
+const STACK_ROW_GAP = 8
+const STACK_PAD = 12
+const STACK_NOTE_MAX_LINES = 3
+/** A band's height over a stacked legend: the drawing is narrower there, and a 96px band on a 520px drawing is a tower. */
+const STACK_LAYER_H = 64
 
 function hasNotes(component: PyramidComponent): boolean {
   return component.layers.some((layer) => layer.note !== undefined && layer.note.trim() !== "")
@@ -89,20 +96,57 @@ function layerFill(ctx: ComponentCtx, i: number, n: number, tone?: PyramidCompon
   return legibleBand(mixHex(ctx.colors.primary, rampEnd(ctx), t), LABEL_PX)
 }
 
+/**
+ * The legend set under the drawing, for a box with no column beside it.
+ *
+ * A legend used to need 780px for a column of its own, and a pyramid with
+ * notes in anything narrower declined outright: every level gone from a page
+ * whose only fault was a half-width slot. Under the drawing the legend has
+ * the box's whole width, one row per level, each note on as many lines as it
+ * takes up to three.
+ */
+function stackedNotes(component: PyramidComponent, w: number, ctx: ComponentCtx) {
+  return component.layers.map((layer) =>
+    layer.note
+      ? layoutFormBody(layer.note, {
+          maxWidth: w - STACK_PAD * 2 - SWATCH - 12,
+          fontSize: LEGEND_NOTE_PX,
+          maxLines: STACK_NOTE_MAX_LINES,
+          fontFamily: ctx.fonts.body,
+        })
+      : null,
+  )
+}
+
+function stackedRowH(note: ReturnType<typeof stackedNotes>[number]): number {
+  return Math.max(SWATCH, note ? note.lines.length * note.lineHeight : 0) + STACK_PAD * 2
+}
+
+function stackedLegendH(notes: ReturnType<typeof stackedNotes>): number {
+  return STACK_GAP + notes.reduce((sum, note) => sum + stackedRowH(note), 0) + (notes.length - 1) * STACK_ROW_GAP
+}
+
+function stacks(component: PyramidComponent, w: number): boolean {
+  return hasNotes(component) && w < TWO_COLUMN_MIN_W
+}
+
 export const pyramid: SvgComponent<PyramidComponent> = {
-  measure(component) {
-    return component.layers.length * LAYER_H
+  measure(component, w, ctx) {
+    if (!stacks(component, w)) return component.layers.length * LAYER_H
+    return component.layers.length * STACK_LAYER_H + stackedLegendH(stackedNotes(component, w, ctx))
   },
 
   render(component, box, ctx) {
     const n = component.layers.length
-    const h = box.h ?? n * LAYER_H
     const legend = hasNotes(component)
     const twoColumn = legend && box.w >= TWO_COLUMN_MIN_W
+    const stacked = stacks(component, box.w)
+    const stackNotes = stacked ? stackedNotes(component, box.w, ctx) : null
+    const stackH = stackNotes ? stackedLegendH(stackNotes) : 0
+    const h = (box.h ?? n * (stacked ? STACK_LAYER_H : LAYER_H) + stackH) - stackH
 
-    // A legend the box has no column for is content with nowhere to go, and
-    // a pyramid under 320px wide has an apex band narrower than one glyph.
-    if ((legend && !twoColumn) || (twoColumn ? box.w * 0.5 : box.w) < PYRAMID_MIN_W) {
+    // A pyramid under 320px wide has an apex band narrower than one glyph.
+    if ((twoColumn ? box.w * 0.5 : box.w) < PYRAMID_MIN_W) {
       return <DroppedContentMarker count={n} kind="item" />
     }
 
@@ -140,7 +184,9 @@ export const pyramid: SvgComponent<PyramidComponent> = {
     const noteLines = twoColumn
       ? Math.floor((legendCardH - LEGEND_PAD * 2) / (LEGEND_NOTE_PX * NOTE_LINE_RATIO))
       : 0
-    const notes = twoColumn
+    const notes = stackNotes
+      ? stackNotes
+      : twoColumn
       ? component.layers.map((layer) =>
           layer.note
             ? layoutFormBody(layer.note, {
@@ -157,9 +203,10 @@ export const pyramid: SvgComponent<PyramidComponent> = {
       anyCut([...bands, ...notes]) ||
       Math.max(...bands.map((b) => b.fontSize)) * NOTE_LINE_RATIO > bandH - LAYER_GAP ||
       (twoColumn && noteLines < 1) ||
-      notes.some(
-        (note) => note !== null && note.lines.length * note.lineHeight + LEGEND_PAD * 2 > legendCardH,
-      )
+      (twoColumn &&
+        notes.some(
+          (note) => note !== null && note.lines.length * note.lineHeight + LEGEND_PAD * 2 > legendCardH,
+        ))
     ) {
       return <DroppedContentMarker count={n} kind="item" />
     }
@@ -224,6 +271,39 @@ export const pyramid: SvgComponent<PyramidComponent> = {
                     <text
                       key={`n${k}`}
                       x={legendX + LEGEND_PAD + SWATCH + 12}
+                      y={firstY + k * note.lineHeight + note.fontSize * 0.35}
+                      fontSize={note.fontSize}
+                      fill={ctx.colors.text}
+                      fontFamily={ctx.fonts.body}
+                      dominantBaseline="alphabetic"
+                    >
+                      {line}
+                    </text>
+                  ))}
+                </g>
+              )
+            })
+          : null}
+
+        {stackNotes
+          ? stackNotes.map((note, i) => {
+              const y = h + STACK_GAP + stackNotes.slice(0, i).reduce((sum, prev) => sum + stackedRowH(prev) + STACK_ROW_GAP, 0)
+              const rowH = stackedRowH(note)
+              const firstY = y + rowH / 2 - ((note?.lines.length ?? 1) - 1) * (note?.lineHeight ?? 0) / 2
+              return (
+                <g key={`s${i}`}>
+                  <rect x={0} y={y} width={box.w} height={rowH} rx={radius} fill={surface} stroke={rule} strokeWidth={1} />
+                  <rect
+                    x={STACK_PAD}
+                    y={y + rowH / 2 - SWATCH / 2}
+                    width={SWATCH}
+                    height={SWATCH}
+                    fill={layerFill(ctx, i, n, component.layers[i]!.tone)}
+                  />
+                  {note?.lines.map((line, k) => (
+                    <text
+                      key={`n${k}`}
+                      x={STACK_PAD + SWATCH + 12}
                       y={firstY + k * note.lineHeight + note.fontSize * 0.35}
                       fontSize={note.fontSize}
                       fill={ctx.colors.text}

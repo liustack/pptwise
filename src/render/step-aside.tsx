@@ -13,6 +13,7 @@ import {
   headingEmphasisPaint,
   renderEmphasisHeading,
   renderEmphasisText,
+  type EmphasisHeadingLayout,
 } from "./emphasis"
 import { scaleTypePx } from "./heading-fit"
 import { accessibleInk } from "./ink"
@@ -71,6 +72,9 @@ const TITLE_WEIGHT = "600"
 const SUB_PX = 18
 const SUB_MAX_LINES = 2
 const FOOTNOTE_PX = 16
+const FOOTNOTE_LINE_RATIO = 1.45
+/** A source takes two lines before it is cut, as under every claim (`layouts/source-lines.tsx`). */
+const FOOTNOTE_MAX_LINES = 2
 /** Air between the heading block and the subheading, and before the body. */
 const TITLE_TO_SUB = 8
 const SUB_TO_BODY = 6
@@ -126,6 +130,8 @@ interface StepAsideGeometry {
   title: ReturnType<typeof fitEmphasisHeading>
   sub: ReturnType<typeof fitEmphasisText>
   footnote: ReturnType<typeof fitEmphasisLine>
+  /** The footnote on two lines, when one could not hold it. */
+  footnoteLines: EmphasisHeadingLayout | null
   titleY: number
   subY: number
   rect: ContentRect
@@ -168,18 +174,38 @@ export function stepAsideGeometry(slide: Slide, ctx: ComponentCtx): StepAsideGeo
   const subY = cursor + sub.lineHeight - 8
   if (sub.lines.length > 0) cursor += sub.lines.length * sub.lineHeight + SUB_TO_BODY
   const bodyTop = cursor + HEAD_TO_BODY
-  const footnote = fitEmphasisLine(slide.footnote, {
+  const line = fitEmphasisLine(slide.footnote, {
     maxWidth: CONTENT_W,
     fontSize: FOOTNOTE_PX,
     minFontSize: FOOTNOTE_PX,
     fontFamily: fonts.body,
     bold: false,
   })
-  const bottom = footnote ? BODY_BOTTOM_WITH_FOOTNOTE : BODY_BOTTOM
+  // A source too long for one line takes a second, rising from the
+  // footnote baseline, and only past two is it cut, as under every claim
+  // (`layouts/source-lines.tsx`).
+  const wrapped = line?.truncated
+    ? fitEmphasisText(slide.footnote, {
+        maxWidth: CONTENT_W,
+        fontSize: FOOTNOTE_PX,
+        minPt: FOOTNOTE_PX,
+        maxLines: FOOTNOTE_MAX_LINES,
+        lineHeightRatio: FOOTNOTE_LINE_RATIO,
+        fontFamily: fonts.body,
+        bold: false,
+      })
+    : null
+  const footnote = wrapped ? null : line
+  const bottom = wrapped
+    ? BODY_BOTTOM_WITH_FOOTNOTE - (wrapped.lines.length - 1) * wrapped.lineHeight
+    : footnote
+      ? BODY_BOTTOM_WITH_FOOTNOTE
+      : BODY_BOTTOM
   return {
     title,
     sub,
     footnote,
+    footnoteLines: wrapped,
     titleY,
     subY,
     rect: { x: MARGIN_X, y: bodyTop, w: CONTENT_W, h: Math.max(80, bottom - bodyTop) },
@@ -267,9 +293,10 @@ function StepAsidePage({
 }) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const { title, sub, titleY, subY, rect, footnote } = geometry
+  const { title, sub, titleY, subY, rect, footnote, footnoteLines } = geometry
   const titleFill = accessibleInk(colors.text, bg, title.fontSize)
-  const footnoteFill = footnote ? accessibleInk(colors.muted, bg, footnote.fontSize) : colors.muted
+  const footnoteSize = footnote?.fontSize ?? footnoteLines?.fontSize
+  const footnoteFill = footnoteSize !== undefined ? accessibleInk(colors.muted, bg, footnoteSize) : colors.muted
   return (
     <g data-face-mode="fallback" data-face-stepped-aside={face}>
       <line
@@ -337,6 +364,23 @@ function StepAsidePage({
             fill={footnoteFill}
             dominantBaseline="alphabetic"
           />,
+        )}
+      {footnoteLines &&
+        renderEmphasisHeading(
+          footnoteLines,
+          { accent: colors.accent, padFill: colors.accent, baseFill: footnoteFill, fontWeight: "700", emphasis: ctx.emphasis },
+          (_line, i) => (
+            <text
+              key={i}
+              data-truncated={footnoteLines.truncated && i === footnoteLines.lines.length - 1 ? "1" : undefined}
+              x={MARGIN_X}
+              y={footnoteBaselineFor(footnoteLines.fontSize) - (footnoteLines.lines.length - 1 - i) * footnoteLines.lineHeight}
+              fontFamily={fonts.body}
+              fontSize={footnoteLines.fontSize}
+              fill={footnoteFill}
+              dominantBaseline="alphabetic"
+            />
+          ),
         )}
     </g>
   )

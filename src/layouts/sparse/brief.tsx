@@ -1,11 +1,12 @@
+import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisText } from "../../render/emphasis"
-import { heroCaption, heroSource, heroUnit, heroValue, statementAttribution } from "../minimal-shared"
+import { heroCaption, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
 import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { deckWord, evidenceSource, fitHeroLine, fitSparseHeading, pad2 } from "./shared"
+import { deckWord, evidenceSource, fitHeroLine, fitHeroSource, fitSparseHeading, fitStatementSource, sourcePastFoot, pad2 } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 import { underlineYFromBaseline } from "../underline"
 
@@ -22,7 +23,7 @@ export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: true,
   })
-  const attr = statementAttribution(slide)
+  const attr = fitStatementSource(slide, { maxWidth: 1088, fontSize: 18, fontFamily: fonts.body })
   // 眉头是这页在牌记里的位置，不是本仓给它起的口号。原本刷的「结论先行」
   // 是咨询件的方法论标签，观众读到的却是这份 deck 自己在说话。
   const section = sectionNameFor(ir.slides, index)
@@ -57,11 +58,7 @@ export function statement({ ir, slide, index, ctx }: SvgTemplateProps) {
           />,
         ),
       )}
-      {attr && (
-        <text x={96} y={600} fontFamily={fonts.body} fontSize={18} fill={colors.muted} dominantBaseline="alphabetic">
-          {attr}
-        </text>
-      )}
+      <SourceLines block={attr} x={96} y={600} fontFamily={fonts.body} fill={colors.muted} rise />
     </>
   )
 }
@@ -74,7 +71,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   if (!fitted) return StatHeroFallbackContent({ slide, ctx })
   const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
-  const source = heroSource(slide)
+  const source = fitHeroSource(slide, { maxWidth: 1088, fontSize: 17, fontFamily: fonts.body })
   const numberY = 450
   const barY = underlineYFromBaseline(numberY, fitted.fontSize, fitted.text)
   const barW = Math.round(measureTextUnits(fitted.text, { bold: true, fontFamily: fonts.heading }) * fitted.fontSize)
@@ -84,6 +81,8 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   // so the baseline is one caption em plus a little air under the bar.
   const captionY = barY + BAR_H + CAPTION_SIZE + 10
   const sourceY = captionY + 42
+  // A source too long for the room under the caption hands the page over whole.
+  if (sourcePastFoot(source, sourceY)) return StatHeroFallbackContent({ slide, ctx })
   return (
     <>
       <text
@@ -108,11 +107,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
           {caption}
         </text>
       )}
-      {source && (
-        <text x={96} y={sourceY} fontFamily={fonts.body} fontSize={17} fill={colors.muted} dominantBaseline="alphabetic">
-          {source}
-        </text>
-      )}
+      <SourceLines block={source} x={96} y={sourceY} fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }

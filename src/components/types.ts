@@ -48,6 +48,13 @@ export interface ComponentCtx {
    */
   defaultBg?: string
   /**
+   * The ground the theme's palette was drawn for on this page: its default
+   * background for the page type. Differs from `defaultBg` only on a page
+   * the author painted. A face that sets the theme's brand colours as type
+   * on the page reads both (`brandInkOnGround`). Unset in a hand-built ctx.
+   */
+  themeGround?: string
+  /**
    * Body-text baseline font size (px, 1280×720 slide geometry) for the
    * paragraph/bullets/callout trio — "正文" = continuous running text, per
    * spec §5's pacing table body-baseline column (W4 design decision 9).

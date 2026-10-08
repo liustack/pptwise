@@ -98,7 +98,7 @@ const TICK_MIX = 0.2
 
 export function binderInks(ctx: ComponentCtx): BinderInks {
   const { colors } = ctx
-  const ground = colors.bg
+  const ground = ctx.defaultBg ?? colors.bg
   const line = colors.border ?? blendOver(colors.muted, ground, 0.25)
   const palette = colors.chartPalette
   const data = palette[0] ?? colors.primary

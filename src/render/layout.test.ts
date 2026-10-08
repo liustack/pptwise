@@ -93,6 +93,38 @@ describe("layoutContent variants", () => {
     }
   })
 
+  it("two_column sets a spanning table beside the other block when the full row leaves it no room", () => {
+    // A chart over a six-row table: the table spanning the row under the
+    // chart runs off the band, and so does one full-width stack. Side by
+    // side both fit, and that used to be the one placement nobody tried, so
+    // the table was dropped.
+    const contentRect: ContentRect = { x: 96, y: 244, w: 1088, h: 376 }
+    const chart: Component = {
+      type: "chart",
+      chart_type: "bar",
+      series: [
+        { name: "2025", data: ["华东", "华南", "华北", "西南"].map((x, i) => ({ x, y: [12, 9, 7, 5][i]! })) },
+        { name: "2026", data: ["华东", "华南", "华北", "西南"].map((x, i) => ({ x, y: [14, 10, 6, 6][i]! })) },
+      ],
+    }
+    const table: Component = {
+      type: "data_table",
+      columns: [{ key: "r", label: "地区" }, { key: "v", label: "销量" }, { key: "g", label: "同比" }],
+      rows: ["华东", "华南", "华北", "西南", "西北", "东北"].map((r, i) => ({ cells: { r, v: String(12 - i), g: "+1%" } })),
+    }
+    const spanned = layoutContent("two_column", [chart, table], contentRect, ctx)
+    expect(spanned[1]!.box.w).toBe(1088)
+    expect(spanned[1]!.box.y + measureComponent(table, 1088, ctx)).toBeGreaterThan(contentRect.y + contentRect.h)
+
+    const { placed, dropped } = layoutContentFit("two_column", [chart, table], contentRect, ctx)
+    expect(dropped).toBe(0)
+    const colW = (contentRect.w - COLUMN_GAP) / 2
+    expect(placed.map((p) => [p.component.type, p.box.x, p.box.w])).toEqual([
+      ["chart", 96, colW],
+      ["data_table", 96 + colW + COLUMN_GAP, colW],
+    ])
+  })
+
   it("kpi_focus hoists kpi_cards to a full-width top row", () => {
     const placed = layoutContent("kpi_focus", [para, kpi, list], rect, ctx)
     expect(placed[0].component.type).toBe("kpi_cards")

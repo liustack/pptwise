@@ -761,3 +761,29 @@ export function fitEmphasisLine(
   // cut happened, not just where.
   return { fontSize: fitted.fontSize, segments, truncated: fitted.truncated }
 }
+
+/**
+ * A line a component fitted on its field's text with the marks stripped,
+ * painted with the marks the author wrote: the marked runs in the theme's
+ * emphasis (`headingEmphasisPaint`), the rest in the element's own fill. A
+ * line with no marked run keeps the element as it was, child text and all,
+ * so a field without marks paints the bytes it always did.
+ *
+ * The fields that draw a mark (`ir/mark-fields.ts`) are drawn through this
+ * or through a layout that already carries segments, never as raw text.
+ */
+export function paintMarkedLine(
+  ctx: Pick<ComponentCtx, "colors" | "defaultBg" | "emphasis">,
+  segments: EmphasisSegment[],
+  style: { baseFill: string; fontWeight?: string; fontFamily?: string; bold?: boolean; bg?: string },
+  textElement: React.ReactElement<React.SVGProps<SVGTextElement>>,
+): React.ReactElement {
+  if (!segments.some((segment) => segment.emphasized)) return textElement
+  const fontSize = Number(textElement.props.fontSize)
+  return renderEmphasisText(segments, headingEmphasisPaint(ctx, { fontSize }, style), React.cloneElement(textElement, undefined))
+}
+
+/** The segments of each painted line of a field whose marks were stripped before it was wrapped. */
+export function markedLineSegments(source: string, lines: readonly string[]): EmphasisSegment[][] {
+  return sliceEmphasisForLines(parseEmphasis(source), [...lines])
+}

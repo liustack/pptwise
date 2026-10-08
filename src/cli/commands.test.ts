@@ -90,11 +90,12 @@ const IR_WITH_PLACEHOLDER = {
   ],
 }
 
-// An ink statement page its author painted near-black. The statement face
-// sets the claim in ink's primary, its ink black, without measuring it
-// against the page, so the claim fails auditDeck's contrast check. (This
-// fixture used to paint a brief page in brief's own text ink, until a
-// painted page started carrying the theme's text inks onto its paint.)
+// An ink statement page its author painted `#777777`, a grey no ink reads on
+// at body size: white and near-black both stop at about 4.48:1 against it,
+// so the source line fails auditDeck's contrast check whatever the renderer
+// does. (This fixture painted brief's own text ink, then ink's black claim on
+// near-black, until a painted page carried the theme's text inks and then a
+// skin's brand colours onto its paint.)
 const IR_LOW_CONTRAST = {
   version: "5",
   filename: "cli-test-low-contrast",
@@ -105,7 +106,7 @@ const IR_LOW_CONTRAST = {
       kind: "statement",
       id: "p-body",
       heading: "No judges at the gathering, only tea",
-      background: { kind: "color", value: "#1A1A1A" },
+      background: { kind: "color", value: "#777777" },
       components: [{ type: "paragraph", text: "Visitors leave a note instead of a fee." }],
     },
   ],

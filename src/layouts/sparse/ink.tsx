@@ -1,15 +1,17 @@
+import { SourceLines, fitSourceBlock } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import type { EmphasisSegment } from "../../render/emphasis"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import {
   hasCjk,
   heroCaption,
-  heroUnit, heroSource, heroValue,
-  pullQuoteAttribution,
+  heroUnit,
+  heroValue,
   pullQuoteContext,
   pullQuoteText,
+  pullQuoteSourceParts,
 } from "../minimal-shared"
-import { fitHeroLine, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline } from "./shared"
+import { fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, sourcePastFoot } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 import { verticalForm } from "../compositions/scroll"
 
@@ -109,20 +111,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
             })}
           </text>
         ))}
-        {cited && (
-          <text
-            data-truncated={cited.truncated ? "1" : undefined}
-            x={640}
-            y={470}
-            textAnchor="middle"
-            fontFamily={fonts.body}
-            fontSize={cited.fontSize}
-            fill={colors.muted}
-            dominantBaseline="alphabetic"
-          >
-            {cited.text}
-          </text>
-        )}
+        <SourceLines block={cited} x={640} y={470} textAnchor="middle" fontFamily={fonts.body} fill={colors.muted} />
         <rect x={163} y={600} width={34} height={34} fill="none" stroke={colors.accent} strokeWidth={2} />
       </>
     )
@@ -158,19 +147,7 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
           />
         </g>
       ))}
-      {cited && (
-        <text
-          data-truncated={cited.truncated ? "1" : undefined}
-          x={240}
-          y={664}
-          fontFamily={fonts.body}
-          fontSize={cited.fontSize}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {cited.text}
-        </text>
-      )}
+      <SourceLines block={cited} x={240} y={664} fontFamily={fonts.body} fill={colors.muted} rise />
       <rect x={163} y={600} width={34} height={34} fill="none" stroke={colors.accent} strokeWidth={2} />
     </>
   )
@@ -184,7 +161,9 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
   if (!fitted) return StatHeroFallbackContent({ slide, ctx })
   const unitMark = fitted.unitMark
   const caption = heroCaption(slide)
-  const source = heroSource(slide)
+  const source = fitHeroSource(slide, { maxWidth: 1000, fontSize: 16, fontFamily: fonts.body })
+  // A source too long for the room under the caption hands the page over whole.
+  if (sourcePastFoot(source, 606)) return StatHeroFallbackContent({ slide, ctx })
   return (
     <>
       <text
@@ -220,18 +199,7 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
           {caption}
         </text>
       )}
-      {source && (
-        <text
-          x={140}
-          y={606}
-          fontFamily={fonts.body}
-          fontSize={16}
-          fill={colors.muted}
-          dominantBaseline="alphabetic"
-        >
-          {source}
-        </text>
-      )}
+      <SourceLines block={source} x={140} y={606} fontFamily={fonts.body} fill={colors.muted} />
     </>
   )
 }
@@ -240,7 +208,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const source = pullQuoteText(slide)
   const context = pullQuoteContext(slide)
-  const attr = pullQuoteAttribution(slide)
+  const parts = pullQuoteSourceParts(slide)
   const latin = !hasCjk(source)
 
   if (latin) {
@@ -254,6 +222,9 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
     const firstY = quoteBlockBaseline(360, quote)
     const barTop = Math.round(firstY - quote.fontSize - 12)
     const barBottom = Math.round(firstY + last * quote.lineHeight + quote.fontSize * 0.3)
+    const attr = fitPullQuoteSource(slide, { maxWidth: 880, fontSize: 19, fontFamily: fonts.body })
+    // A source too long for the room under the quote hands the page to the shared face.
+    if (sourcePastFoot(attr, barBottom + 62)) return null
     return (
       <>
         <rect x={150} y={barTop} width={4} height={barBottom - barTop} fill={colors.accent} />
@@ -281,18 +252,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
             })}
           </text>
         ))}
-        {attr && (
-          <text
-            x={200}
-            y={barBottom + 62}
-            fontFamily={fonts.body}
-            fontSize={19}
-            fill={colors.muted}
-            dominantBaseline="alphabetic"
-          >
-            {attr}
-          </text>
-        )}
+        <SourceLines block={attr} x={200} y={barBottom + 62} fontFamily={fonts.body} fill={colors.muted} />
       </>
     )
   }
@@ -312,6 +272,10 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   })
   const columns = quote.lines
   const xs = [900, 780, 660, 540]
+  // The page's footnote reads across, at the foot of the left margin, the
+  // way the statement page sets its source: a source set down a column
+  // would run off the page.
+  const footnote = fitSourceBlock(undefined, parts.footnote, { maxWidth: 840, fontSize: 16, fontFamily: fonts.body })
   return (
     <>
       <rect x={942} y={110} width={14} height={56} fill={colors.accent} />
@@ -339,9 +303,9 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
           />
         </g>
       ))}
-      {attr && (
+      {parts.attribution && (
         <VerticalRun
-          segments={[{ text: attr, emphasized: false }]}
+          segments={[{ text: parts.attribution, emphasized: false }]}
           x={180}
           y={440}
           size={18}
@@ -350,6 +314,7 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
           fontFamily={fonts.heading}
         />
       )}
+      <SourceLines block={footnote} x={240} y={664} fontFamily={fonts.body} fill={colors.muted} rise />
     </>
   )
 }

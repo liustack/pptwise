@@ -4,7 +4,8 @@ import { sectionNameFor } from "../lib/derive"
 import { fitEmphasisHeading, fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
-import { joinSources, latinUpper, statementLines, trackingPx } from "./minimal-shared"
+import { latinUpper, statementLines, trackingPx } from "./minimal-shared"
+import { SourceLines, fitSourceBlock } from "./source-lines"
 import { sparseFace } from "./sparse/registry"
 
 /**
@@ -38,12 +39,11 @@ const QUOTE_ATTR_GAP = 40
 
 export function StatementContent(props: SvgTemplateProps) {
   const Face = sparseFace("statement", props.ir.theme.id)
-  // A theme's skin sets one line under the claim (`statementAttribution`).
+  // A theme's skin sets one line under the claim (`fitStatementSource`).
   // A quote with its source is two texts, and the skin printed the source
   // alone, so the quote went unpainted with nothing to say so. That page
   // steps aside to this face's own drawing, which sets both.
-  if (Face && !quotesWithSource(props.slide)) return Face(props)
-  return GenericStatementContent(props)
+  return (Face && !quotesWithSource(props.slide) ? Face(props) : null) ?? GenericStatementContent(props)
 }
 
 /** Whether the page quotes someone and names them: two texts under the claim. */
@@ -94,17 +94,15 @@ function GenericStatementContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const quoteLastY = quote
     ? quoteFirstY + Math.max(0, quote.lines.length - 1) * quote.lineHeight
     : quoteFirstY
-  // The page's own footnote shares the caption (see `joinSources`).
-  const attrSource = joinSources(lines.source, slide.footnote)
+  // The page's own footnote stands under the caption (`fitSourceBlock`).
   const attrTracking = trackingPx(ATTR_SIZE, ATTR_TRACKING_EM)
-  const attribution = attrSource
-    ? fitSvgLine(latinUpper(attrSource), {
-        maxWidth: CONTENT_MAX_W,
-        fontSize: ATTR_SIZE,
-        minFontSize: 16,
-        letterSpacing: attrTracking,
-      })
-    : null
+  const attribution = fitSourceBlock(lines.source, slide.footnote, {
+    maxWidth: CONTENT_MAX_W,
+    fontSize: ATTR_SIZE,
+    minFontSize: 16,
+    letterSpacing: attrTracking,
+    transform: latinUpper,
+  })
   // With no quote the caption keeps the baseline this face has always used,
   // so every page that never had one stays where it was.
   const attrY = quote ? quoteLastY + QUOTE_ATTR_GAP : titleLastY + ATTR_GAP
@@ -171,21 +169,15 @@ function GenericStatementContent({ ir, slide, index, ctx }: SvgTemplateProps) {
           ),
         )}
 
-      {attribution && (
-        <text
-          data-truncated={attribution.truncated ? "1" : undefined}
-          x={CENTER_X}
-          y={attrY}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={attribution.fontSize}
-          fill={accessibleInk(colors.accent, defaultBg, attribution.fontSize)}
-          letterSpacing={attrTracking}
-          dominantBaseline="alphabetic"
-        >
-          {attribution.text}
-        </text>
-      )}
+      <SourceLines
+        block={attribution}
+        x={CENTER_X}
+        y={attrY}
+        textAnchor="middle"
+        fontFamily={fonts.body}
+        fill={(size) => accessibleInk(colors.accent, defaultBg, size)}
+        letterSpacing={attrTracking}
+      />
     </>
   )
 }

@@ -183,6 +183,8 @@ pptwise schema --component <type>
 - `comparison`：每一行可以带一个 `tag`，用几个字说这一行发生了什么（`{ "text": "不变", "quiet": true }`），印成行尾的小标签，`tag_column` 是标签列的表头。这一页讲的那一行写 `emphasis`：整行落在浅底上，它的标签用强调色填满。说「没有变化」的标签写 `quiet`。
 - `roadmap`：在某个阶段上写 `emphasis: true`，只有这张卡保留强调色顶条，其余卡的顶条改为主色。只能标一个阶段。
 
+用 `**…**` 标出的一段按主题的强调方式画，只在这些地方生效：标题，`paragraph`、`bullets`、`callout`、`blockquote` 的正文，`comparison` 的行名与单元格，`numbered_cards` 的标题与正文，`verdict_banner` 正文，`kpi_cards` 的数值与 note，图片说明，`steps` 的标题与正文，`icon_cards` 的标题与正文，`insight_panel` 的标题。写在其他字段里，validate 会拒绝。
+
 ```json
 {
   "type": "waterfall",

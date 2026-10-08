@@ -76,7 +76,7 @@ export interface CrayonInks {
 export function crayonInks(ctx: ComponentCtx): CrayonInks {
   const { colors } = ctx
   const palette = colors.chartPalette
-  const ground = colors.bg
+  const ground = ctx.defaultBg ?? colors.bg
   const pool = colors.accentPool && colors.accentPool.length >= 5 ? colors.accentPool : null
   const sky = pool?.[0] ?? palette[0] ?? colors.primary
   const green = pool?.[1] ?? palette[2] ?? palette[1] ?? colors.primary

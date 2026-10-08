@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest"
 import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { timeline } from "./timeline"
+import { renderSvgMarkup } from "../render/serialize"
 import type { ComponentCtx } from "./types"
 import { contrastRatio } from "../render/ink"
 import { measureTextUnits } from "../lib/svg-text-layout"
@@ -181,11 +182,11 @@ describe("timeline component", () => {
     const descTexts = texts.filter(
       (t) => t.getAttribute("fill") === "#5D6B65" && !dates.has(t.textContent ?? ""),
     )
-    // 2026-07-09 改多行：长标题/描述换行（每 milestone title ≤2 行、desc ≤3 行）
+    // 2026-07-09 改多行：长标题/描述换行（每 milestone title ≤3 行、desc ≤3 行）
     // 而不是缩到 10px 再省略号——text 元素数超过 milestone 数即证明换行生效
     expect(titleTexts.length).toBeGreaterThan(6)
     expect(descTexts.length).toBeGreaterThan(6)
-    expect(titleTexts.length).toBeLessThanOrEqual(12)
+    expect(titleTexts.length).toBeLessThanOrEqual(18)
     expect(descTexts.length).toBeLessThanOrEqual(18)
   })
 
@@ -594,5 +595,27 @@ describe("a milestone still to come", () => {
     expect(ring.getAttribute("fill")).toBe(ctx.defaultBg ?? ctx.colors.bg)
     expect(ring.getAttribute("stroke")).toBeTruthy()
     expect(container.querySelectorAll("circle:not([data-milestone-pending])").length).toBeGreaterThanOrEqual(1)
+  })
+})
+
+describe("timeline — a title too long for two lines of its label", () => {
+  it("takes a third line rather than cutting the title, with room under the axis", () => {
+    const component = {
+      type: "timeline" as const,
+      milestones: [
+        { date: "2026-01", title: "启动存量设备普查与分级", desc: "覆盖全部 12 个厂区" },
+        { date: "2026-04", title: "首批 300 台设备接入监测平台", desc: "华东两厂先行" },
+        { date: "2026-07", title: "设备管家制度全面推开", desc: "每条产线一人" },
+        { date: "2026-10", title: "开机率复盘与第二批改造立项", desc: "目标八成" },
+        { date: "2027-01", title: "年度评估与预算重排", desc: "董事会审议" },
+        { date: "2027-04", title: "第二批 800 台设备改造完成验收", desc: "全部厂区" },
+      ],
+    }
+    const ctx = boundThemeCtx("memo", {})
+    const w = 1000
+    const markup = renderSvgMarkup(<svg>{timeline.render(component, { x: 0, y: 0, w, h: timeline.measure(component, w, ctx) }, ctx)}</svg>)
+    expect(markup).not.toContain('data-truncated="1"')
+    const painted = (markup.match(/<text[\s\S]*?<\/text>/g) ?? []).map((t) => t.replace(/<[^>]+>/g, "")).join("").replace(/\s/g, "")
+    expect(painted).toContain("第二批800台设备改造完成验收")
   })
 })

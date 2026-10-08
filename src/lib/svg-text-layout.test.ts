@@ -382,7 +382,8 @@ describe("layoutSvgText balanceLines (widow avoidance)", () => {
       maxLines: 3,
       balanceLines: true,
     })
-    expect(r.lines).toEqual(["年度战略回", "顾报告"])
+    // The word segmenter keeps 「回顾」 whole: 4+4 within the widest line, not 5+3.
+    expect(r.lines).toEqual(["年度战略", "回顾报告"])
   })
 
   it("evens Latin lines even when the last one is not a widow (brief en p04 heading)", () => {
@@ -491,7 +492,8 @@ describe("layoutSvgText balanceLines (English sentence breaks)", () => {
 
   it("evens the lines a sentence break leaves", () => {
     const r = heading("Solar passed coal in China. Wind is next, and storage after it.", 700, 48, 3)
-    expect(r.lines).toEqual(["Solar passed coal in China.", "Wind is next, and", "storage after it."])
+    // After the comma, not between two words of the clause.
+    expect(r.lines).toEqual(["Solar passed coal in China.", "Wind is next,", "and storage after it."])
     expect(r.fontSize).toBe(48)
   })
 
@@ -957,7 +959,8 @@ describe("CJK line-break prohibition (kinsoku)", () => {
     // Pre-fix: ["毕业公演《", "候鸟旅馆》"] — line 1 ended on the opening mark.
     const r = layoutSvgText("毕业公演《候鸟旅馆》", HEADING)
     expectNoProhibitedBoundary(r.lines)
-    expect(r.lines).toEqual(["毕业公演《候", "鸟旅馆》"])
+    // And the title stays whole on its line, 「候鸟旅馆」 being one word.
+    expect(r.lines).toEqual(["毕业公演", "《候鸟旅馆》"])
     expect(r.lines[0]).not.toMatch(/《$/)
     expect(r.truncated).toBe(false)
   })
@@ -1352,10 +1355,10 @@ describe("measuresExactly", () => {
   })
 
   it("is false where a character falls back to a class average", () => {
-    // SimSun has no Bold binary, Cambria no table, and "‰"/"×" no entry.
+    // SimSun has no Bold binary, Cambria no table, and "×" no entry.
     expect(measuresExactly("Q2", { fontFamily: "SimSun", bold: true })).toBe(false)
     expect(measuresExactly("accounts", { fontFamily: "Cambria" })).toBe(false)
-    expect(measuresExactly("3‰", { fontFamily: "Georgia" })).toBe(false)
+    expect(measuresExactly("3 × 4", { fontFamily: "Georgia" })).toBe(false)
     expect(measuresExactly("甲 × 乙", { fontFamily: "Microsoft YaHei" })).toBe(false)
   })
 })
@@ -1368,10 +1371,24 @@ describe("non-ASCII marks never measure narrower than the face draws them", () =
     expect(measureTextUnits("·", { fontFamily: "SimSun" })).toBe(1) // was 0.563
     expect(measureTextUnits("·", { fontFamily: "KaiTi, 楷体, serif" })).toBe(1)
     expect(measureTextUnits("—", { fontFamily: "Microsoft YaHei" })).toBeCloseTo(1.0801, 4) // was 1
-    expect(measureTextUnits("‰", { fontFamily: "Georgia" })).toBeCloseTo(1.3125, 4) // was 0.46
-    expect(measureTextUnits("…", { fontFamily: "Georgia", bold: true })).toBeCloseTo(0.9629, 4) // was 0.421
+    // "‰" and "…" are painted from Georgia itself (PowerPoint for Mac probe),
+    // so they measure at Georgia's own advance, no longer at YaHei's wider bound.
+    expect(measureTextUnits("‰", { fontFamily: "Georgia" })).toBeCloseTo(1.2056, 4) // was 0.46, then YaHei's 1.3125
+    expect(measureTextUnits("…", { fontFamily: "Georgia", bold: true })).toBeCloseTo(0.9419, 4) // was 0.421, then 0.9629
     expect(measureTextUnits("\u3000", { fontFamily: "Microsoft YaHei" })).toBe(1) // was 0.35
     expect(measureTextUnits("é", { fontFamily: "Microsoft YaHei" })).toBeCloseTo(0.5674, 4) // was 0.46
+  })
+
+  it("measures the marks PowerPoint paints from another face at that face's width", () => {
+    // Georgia paints "′" and "•" itself, narrower than the YaHei bound they took.
+    expect(measureTextUnits("′", { fontFamily: "Georgia" })).toBeCloseTo(0.3213, 4)
+    expect(measureTextUnits("•", { fontFamily: "Georgia" })).toBeCloseTo(0.3926, 4)
+    // KaiTi has no "•", and PowerPoint draws it from Courier New at 0.6em.
+    expect(measureTextUnits("•", { fontFamily: "KaiTi, 楷体, serif" })).toBeCloseTo(0.6001, 4)
+    // A Consolas run paints "×", "±" and "÷" from YaHei, 0.19em past its own cell.
+    expect(measureMonoTextUnits("×")).toBeCloseTo(0.7417, 4)
+    expect(measureMonoTextUnits("a")).toBeCloseTo(1126 / 2048, 4)
+    expect(measureMonoTextUnits("°")).toBeCloseTo(1126 / 2048, 4)
   })
 
   it("covers the marks and symbols a Chinese or English deck carries", () => {
@@ -1646,5 +1663,18 @@ describe("a no-break space", () => {
   it("still folds every other run of white space to one space", () => {
     const layout = layoutSvgText("Warm   standby,  \t not active-active", { maxWidth: 2000, fontSize: 31, maxLines: 1, fontFamily: "Microsoft YaHei" })
     expect(layout.lines).toEqual(["Warm standby, not active-active"])
+  })
+})
+
+describe("an em dash stays with the word before it", () => {
+  it("never opens a line on a dash, nor splits 「——」", () => {
+    expect(allowsLineBreakBetween("d", "—")).toBe(false)
+    expect(allowsLineBreakBetween("—", "—")).toBe(false)
+    for (const text of ["清洁电力满足了全部新增需求——但还没有定局", "Clean power met all new demand—not settled yet"]) {
+      for (let width = 160; width <= 700; width += 20) {
+        const { lines } = layoutSvgText(text, { maxWidth: width, fontSize: 32, maxLines: 4, fontFamily: "Georgia" })
+        for (const line of lines.slice(1)) expect(line.startsWith("—"), `${width}: ${lines.join(" | ")}`).toBe(false)
+      }
+    }
   })
 })

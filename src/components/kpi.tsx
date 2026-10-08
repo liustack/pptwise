@@ -6,7 +6,7 @@ import {
   type TextWeightHint,
 } from "../lib/svg-text-layout"
 import { accessibleInk, accessibleOpacity, graphicInk, resolveSemanticColor, type SemanticColorTokens } from "../render/ink"
-import { emphasisRunInk, parseEmphasis, stripEmphasis } from "../render/emphasis"
+import { emphasisRunInk, markedLineSegments, paintMarkedLine, parseEmphasis, stripEmphasis } from "../render/emphasis"
 import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { isMagnitudeUnit, isMultiplierUnit, isPercentUnit, joinUnit } from "../lib/quantity-format"
@@ -349,7 +349,7 @@ function fitSource(source: string, cardW: number, maxLines = SOURCE_MAX_LINES): 
 const NOTE_MAX_LINES = 2
 
 function noteLines(item: KpiComponent["items"][number], cardW: number): { lines: string[]; truncated: boolean } | null {
-  return item.note?.trim() ? fitSource(item.note.trim(), cardW, NOTE_MAX_LINES) : null
+  return item.note?.trim() ? fitSource(stripEmphasis(item.note.trim()), cardW, NOTE_MAX_LINES) : null
 }
 
 /**
@@ -640,20 +640,25 @@ export const kpi: SvgComponent<KpiComponent> = {
                 ) : (
                   <g data-dropped={1} data-dropped-kind="label" />
                 ))}
-              {fittedNote?.lines.map((line, li) => (
-                <text
-                  key={`note-${li}`}
-                  data-truncated={fittedNote.truncated && li === fittedNote.lines.length - 1 ? "1" : undefined}
-                  x={cardX + 20}
-                  y={cardY + 114 + tagShift + li * SOURCE_LINE + contentShift}
-                  fontSize={16}
-                  fill={accessibleInk(ctx.colors.text, ctx.colors.surface, 16)}
-                  fontFamily={ctx.fonts.body}
-                  dominantBaseline="alphabetic"
-                >
-                  {line}
-                </text>
-              ))}
+              {fittedNote?.lines.map((line, li) =>
+                paintMarkedLine(
+                  ctx,
+                  markedLineSegments(item.note ?? "", fittedNote.lines)[li]!,
+                  { baseFill: accessibleInk(ctx.colors.text, ctx.colors.surface, 16), fontWeight: "700", fontFamily: ctx.fonts.body, bold: false, bg: ctx.colors.surface },
+                  <text
+                    key={`note-${li}`}
+                    data-truncated={fittedNote.truncated && li === fittedNote.lines.length - 1 ? "1" : undefined}
+                    x={cardX + 20}
+                    y={cardY + 114 + tagShift + li * SOURCE_LINE + contentShift}
+                    fontSize={16}
+                    fill={accessibleInk(ctx.colors.text, ctx.colors.surface, 16)}
+                    fontFamily={ctx.fonts.body}
+                    dominantBaseline="alphabetic"
+                  >
+                    {line}
+                  </text>,
+                ),
+              )}
               {fittedSource?.lines.map((line, li) => (
                 <text
                   key={`source-${li}`}

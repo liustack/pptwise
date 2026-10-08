@@ -9,7 +9,8 @@ import {
 } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
-import { heroCaption, heroSetsPageText, heroSource, heroUnit, heroValue, latinUpper, trackingPx } from "./minimal-shared"
+import { heroCaption, heroSetsPageText, heroSourceParts, heroUnit, heroValue, latinUpper, trackingPx } from "./minimal-shared"
+import { SourceLines, fitSourceBlock } from "./source-lines"
 import { sparseFace } from "./sparse/registry"
 import { StatHeroFallbackContent } from "./content-stat-hero-fallback"
 
@@ -81,8 +82,7 @@ function heroExact(slide: SvgTemplateProps["slide"]): boolean {
 export function StatHeroContent(props: SvgTemplateProps) {
   if (!heroExact(props.slide)) return StatHeroFallbackContent(props)
   const Face = sparseFace("stat-hero", props.ir.theme.id)
-  if (Face) return Face(props)
-  return GenericStatHeroContent(props)
+  return (Face ? Face(props) : null) ?? GenericStatHeroContent(props)
 }
 
 function GenericStatHeroContent({ ir, slide, index, ctx }: SvgTemplateProps) {
@@ -128,14 +128,14 @@ function GenericStatHeroContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   })
   const captionStartY = (unit ? unitY : titleLastY) + CAPTION_GAP
 
-  const sourceSource = heroSource(slide)
-  const source = sourceSource
-    ? fitSvgLine(sourceSource, {
-        maxWidth: CONTENT_MAX_W,
-        fontSize: SOURCE_SIZE,
-        minFontSize: 16,
-      })
-    : null
+  // The figure's source, and under it the page's footnote on lines of its
+  // own, set up from the foot so a second line rises toward the caption.
+  const sourceParts = heroSourceParts(slide)
+  const source = fitSourceBlock(sourceParts.primary, sourceParts.footnote, {
+    maxWidth: CONTENT_MAX_W,
+    fontSize: SOURCE_SIZE,
+    minFontSize: 16,
+  })
 
   return (
     <>
@@ -208,19 +208,14 @@ function GenericStatHeroContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         ),
       )}
 
-      {source && (
-        <text
-          data-truncated={source.truncated ? "1" : undefined}
-          x={PAD_X}
-          y={SOURCE_Y}
-          fontFamily={fonts.body}
-          fontSize={source.fontSize}
-          fill={accessibleInk(colors.muted, defaultBg, source.fontSize)}
-          dominantBaseline="alphabetic"
-        >
-          {source.text}
-        </text>
-      )}
+      <SourceLines
+        block={source}
+        x={PAD_X}
+        y={SOURCE_Y}
+        rise
+        fontFamily={fonts.body}
+        fill={(size) => accessibleInk(colors.muted, defaultBg, size)}
+      />
     </>
   )
 }

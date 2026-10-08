@@ -68,8 +68,7 @@ function evidenceExact(slide: SvgTemplateProps["slide"]): boolean {
 export function OneEvidenceContent(props: SvgTemplateProps) {
   if (!evidenceExact(props.slide)) return OneEvidenceFallbackContent(props)
   const Face = sparseFace("one-evidence", props.ir.theme.id)
-  if (Face) return Face(props)
-  return GenericOneEvidenceContent(props)
+  return (Face ? Face(props) : null) ?? GenericOneEvidenceContent(props)
 }
 
 /**

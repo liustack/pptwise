@@ -312,6 +312,14 @@ A page usually argues about one thing. These fields let the author say which, an
 }
 ```
 
+## Marking a run with `**…**`
+
+A run written `**…**` is set in the theme's emphasis, in a page's heading and in these component fields only:
+
+`paragraph.text`, `bullets.items[]`, `callout.text`, `blockquote.text`, `comparison.rows[].label`, `comparison.rows[].cells[]`, `numbered_cards.items[].title`, `numbered_cards.items[].text`, `verdict_banner.text`, `kpi_cards.items[].value`, `kpi_cards.items[].note`, `image.caption`, `image_grid.items[].caption`, `steps.items[].title`, `steps.items[].text`, `icon_cards.items[].title`, `icon_cards.items[].text` and `insight_panel.title`.
+
+Every other component field draws its text as written, and validate refuses a mark in one rather than print its asterisks. The list lives in `src/ir/mark-fields.ts`. The deck audit reports a mark that reaches a page as asterisks anyway.
+
 ## Footer marks
 
 A deck prints no footer unless `footer` asks for it: no page number, no organization, no date, no confidentiality line. Each mark is opt-in, and every text is the author's own or the deck's own `meta`.

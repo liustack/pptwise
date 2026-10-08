@@ -34,8 +34,11 @@
  * Bounding them wide instead put Georgia's "—" at YaHei's 1.08em.
  *
  * The same probe found "…", "•", "‰", "′" and "–" painted from Georgia too,
- * at or under the bounds here, which err wide for them, and "×", "°", "±"
- * and "÷" painted from YaHei, the `<a:ea>` face, which the bounds hold.
+ * so they are measured from the run's face with the marks above rather than
+ * bounded wide, which put Georgia's "‰" at 1.31em and its "′" and "•" at
+ * YaHei's. "×", "°", "±" and "÷" were painted from YaHei, the `<a:ea>` face,
+ * which the bounds hold, and in a Consolas run too, where the mono model
+ * reads them from YaHei (`measureMonoTextUnits`).
  *
  * Microsoft YaHei UI, the Western cut a deck not written in Chinese sets
  * YaHei's text in (`fonts.ts` `WESTERN_CUT`), is the second face of the same
@@ -78,6 +81,8 @@ const FACES = {
   kaiti: { file: `${OFFICE}Kaiti.ttf`, family: "KaiTi", subfamily: "Regular" },
   times: { file: `${OFFICE}times.ttf`, family: "Times New Roman", subfamily: "Regular" },
   timesBold: { file: `${OFFICE}timesbd.ttf`, family: "Times New Roman", subfamily: "Bold" },
+  courier: { file: `${SYSTEM}Courier New.ttf`, family: "Courier New", subfamily: "Regular" },
+  courierBold: { file: `${SYSTEM}Courier New Bold.ttf`, family: "Courier New", subfamily: "Bold" },
 } as const satisfies Record<string, FaceFile>
 
 type FaceName = keyof typeof FACES
@@ -184,13 +189,27 @@ const ceil4 = (n: number): number => Math.ceil(n * 10000 - 1e-6) / 10000
  * The widest of `primary` that carry the code point, or when none does, the
  * widest of `substitutes` that do.
  */
-function bound(cp: number, primary: readonly FaceName[], substitutes: readonly FaceName[]): number | undefined {
+function bound(cp: number, primary: readonly FaceName[], substitutes: readonly FaceName[], missing: readonly FaceName[] = []): number | undefined {
   const widest = (faces: readonly FaceName[]) => {
     const found = faces.map((f) => advance[f](cp)).filter((w): w is number => w !== undefined)
     return found.length ? Math.max(...found) : undefined
   }
-  const w = widest(primary) ?? widest(substitutes)
+  // A primary face that lacks the code point has PowerPoint paint it from a
+  // face of its own choosing, `missing` names the one it was seen to use.
+  const lacking = MISSING_GLYPH_CODE_POINTS.has(cp) && primary.some((f) => advance[f](cp) === undefined)
+  const w = widest(lacking ? [...primary, ...missing] : primary) ?? widest(substitutes)
   return w === undefined ? undefined : ceil4(w)
+}
+
+/**
+ * The face PowerPoint for Mac paints a code point from when a key's face
+ * lacks it, for the code points a probe saw it do so
+ * (`MISSING_GLYPH_CODE_POINTS`). KaiTi has no "•", and PowerPoint drew it
+ * from Courier New at 0.6em, past SimSun's bound by 0.04em.
+ */
+const MISSING_GLYPH_CODE_POINTS: ReadonlySet<number> = new Set([0x2022])
+const MISSING_GLYPH_FACE: Partial<Record<keyof typeof TABLES, Record<"regular" | "bold", readonly FaceName[]>>> = {
+  "simsun-kaiti": { regular: ["courier"], bold: ["courierBold"] },
 }
 
 /**
@@ -223,10 +242,10 @@ const SUBSTITUTES: Record<keyof typeof TABLES, readonly FaceName[]> = {
 const codePoints: number[] = []
 for (const [from, to] of RANGES) for (let cp = from; cp <= to; cp++) codePoints.push(cp)
 
-const literal = (primary: readonly FaceName[], substitutes: readonly FaceName[]): string => {
+const literal = (primary: readonly FaceName[], substitutes: readonly FaceName[], missing: readonly FaceName[] = []): string => {
   const entries: string[] = []
   for (const cp of codePoints) {
-    const w = bound(cp, primary, substitutes)
+    const w = bound(cp, primary, substitutes, missing)
     if (w !== undefined) entries.push(`${cp}:${w}`)
   }
   return `{${entries.join(",")}}`
@@ -235,7 +254,7 @@ const literal = (primary: readonly FaceName[], substitutes: readonly FaceName[])
 const body = Object.entries(TABLES)
   .map(
     ([key, weights]) =>
-      `  ${JSON.stringify(key)}: {\n    regular: ${literal(weights.regular, SUBSTITUTES[key as keyof typeof TABLES])},\n    bold: ${literal(weights.bold, SUBSTITUTES[key as keyof typeof TABLES])},\n  },`,
+      `  ${JSON.stringify(key)}: {\n    regular: ${literal(weights.regular, SUBSTITUTES[key as keyof typeof TABLES], MISSING_GLYPH_FACE[key as keyof typeof TABLES]?.regular)},\n    bold: ${literal(weights.bold, SUBSTITUTES[key as keyof typeof TABLES], MISSING_GLYPH_FACE[key as keyof typeof TABLES]?.bold)},\n  },`,
   )
   .join("\n")
 
@@ -243,7 +262,16 @@ const body = Object.entries(TABLES)
  * The marks PowerPoint paints from the run's Latin face: the middle dot, the
  * em dash, and the curly quotation marks U+2018 to U+201F.
  */
-const LATIN_FACE_MARKS: readonly number[] = [0x00b7, 0x2014, ...Array.from({ length: 8 }, (_, i) => 0x2018 + i)]
+const LATIN_FACE_MARKS: readonly number[] = [
+  0x00b7,
+  0x2013,
+  0x2014,
+  ...Array.from({ length: 8 }, (_, i) => 0x2018 + i),
+  0x2022,
+  0x2026,
+  0x2030,
+  0x2032,
+]
 
 /**
  * The faces behind each estimator key, for those marks: the key's own face

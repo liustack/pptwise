@@ -1,4 +1,4 @@
-import { blendOver, contrastRatio, graphicInk } from "./ink"
+import { blendOver, contrastRatio, graphicInk, readableOn } from "./ink"
 
 /**
  * Cyclic rotation of a chart series palette. Applied only at the chart
@@ -81,18 +81,77 @@ export function recededMarkFill(mutedHex: string, bgHex: string): string {
   return mutedHex
 }
 
+/** How far toward the page's readable ink the darkest of several receded greys may go from the lightest. */
+const RECEDED_SPREAD = 0.6
+/** The walk toward that ink, in steps of this share. */
+const RECEDED_SPREAD_STEP = 0.02
+/** How far, as a CIE76 colour difference, every receded grey stays from the lead colour. */
+const RECEDED_LEAD_DISTANCE = 15
+
+/** CIE L*a*b* of an opaque sRGB hex, D65. */
+function lab(hex: string): [number, number, number] {
+  const n = parseInt(hex.replace("#", ""), 16)
+  const lin = (c: number) => {
+    const v = c / 255
+    return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
+  }
+  const [r, g, b] = [lin((n >> 16) & 255), lin((n >> 8) & 255), lin(n & 255)]
+  const f = (t: number) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116)
+  const x = f((0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047)
+  const y = f(0.2126 * r + 0.7152 * g + 0.0722 * b)
+  const z = f((0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883)
+  return [116 * y - 16, 500 * (x - y), 200 * (y - z)]
+}
+
+function labDistance(a: string, b: string): number {
+  const [la, aa, ba] = lab(a)
+  const [lb, ab, bb] = lab(b)
+  return Math.hypot(la - lb, aa - ab, ba - bb)
+}
+
+/**
+ * `count` receding greys, one for each series that steps back when the
+ * author singles one out, the first of them `recededMarkFill`'s.
+ *
+ * One grey for every unmarked series reads as one context when there is
+ * one: two series, one marked. With three or more, the series that step
+ * back were drawn in the same grey, and nothing on the page, not the marks
+ * and not the legend swatches that read the same palette, told them apart.
+ * So each one gets its own step of grey, from the lightest that still clears
+ * 3:1 toward the page's readable ink. The walk stops short of the lead
+ * colour: on a theme whose lead is itself a near-neutral (stage's warm
+ * grey, memo's near-black) a grey that came too close would read as the
+ * marked series.
+ */
+export function recededMarkFills(mutedHex: string, bgHex: string, count: number, leadHex: string): string[] {
+  const lightest = recededMarkFill(mutedHex, bgHex)
+  if (count <= 1) return [lightest]
+  const toward = readableOn(bgHex)
+  let reach = 0
+  if (labDistance(lightest, leadHex) >= RECEDED_LEAD_DISTANCE) {
+    for (let t = RECEDED_SPREAD_STEP; t <= RECEDED_SPREAD + 1e-9; t += RECEDED_SPREAD_STEP) {
+      if (labDistance(blendOver(toward, lightest, t), leadHex) < RECEDED_LEAD_DISTANCE) break
+      reach = t
+    }
+  } else {
+    reach = RECEDED_SPREAD
+  }
+  return Array.from({ length: count }, (_, j) => blendOver(toward, lightest, (reach * j) / (count - 1)))
+}
+
 /**
  * The series palette when one series is singled out: that series takes the
- * lead color (`palette[0]`, after any rotation), and every other series the
- * receded grey. Indexed by series, the way every cartesian renderer reads it
- * (`palette[seriesIndex % palette.length]`), so the legend swatches that read
- * the same array agree with the marks.
+ * lead color (`palette[0]`, after any rotation), and the others the receded
+ * greys in order (`recededMarkFills`). Indexed by series, the way every
+ * cartesian renderer reads it (`palette[seriesIndex % palette.length]`), so
+ * the legend swatches that read the same array agree with the marks.
  */
 export function emphasisSeriesPalette(
   palette: readonly string[],
   seriesCount: number,
   markedIndex: number,
-  recededFill: string,
+  receded: readonly string[],
 ): string[] {
-  return Array.from({ length: seriesCount }, (_, i) => (i === markedIndex ? palette[0]! : recededFill))
+  let next = 0
+  return Array.from({ length: seriesCount }, (_, i) => (i === markedIndex ? palette[0]! : receded[next++]!))
 }

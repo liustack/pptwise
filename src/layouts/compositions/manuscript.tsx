@@ -80,7 +80,7 @@ const TRACK_MIX = 0.6
 
 export function manuscriptInks(ctx: ComponentCtx): ManuscriptInks {
   const { colors } = ctx
-  const ground = colors.bg
+  const ground = ctx.defaultBg ?? colors.bg
   const card = colors.surface
   const line = colors.border ?? blendOver(colors.muted, ground, 0.25)
   const palette = colors.chartPalette

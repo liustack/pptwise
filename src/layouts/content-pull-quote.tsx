@@ -12,13 +12,14 @@ import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import {
   latinUpper,
-  pullQuoteAttribution,
+  pullQuoteSourceParts,
   pullQuoteBody,
   pullQuoteContext,
   pullQuoteText,
   trackingPx,
 } from "./minimal-shared"
 import { sparseFace } from "./sparse/registry"
+import { SourceLines, fitSourceBlock } from "./source-lines"
 
 /**
  * 未注册的 (themeId, layoutId) 与自定义主题仍走此脸。
@@ -55,8 +56,11 @@ const BODY_LINE_RATIO = 1.8
 
 export function PullQuoteContent(props: SvgTemplateProps) {
   const Face = sparseFace("pull-quote", props.ir.theme.id)
-  if (Face) return Face(props)
-  return GenericPullQuoteContent(props)
+  // A skin whose source would run past the foot of the page answers null,
+  // and this face, which sets the source under the quote with room to grow,
+  // draws the page.
+  const drawn = Face ? Face(props) : null
+  return drawn ?? GenericPullQuoteContent(props)
 }
 
 function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
@@ -97,17 +101,18 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   )
   const titleLastY = titleY + Math.max(0, heading.lines.length - 1) * heading.lineHeight
 
-  const attrSource = pullQuoteAttribution(slide)
+  const attrParts = pullQuoteSourceParts(slide)
   const attrTracking = trackingPx(ATTR_SIZE, ATTR_TRACKING_EM)
-  const attribution = attrSource
-    ? fitSvgLine(latinUpper(attrSource), {
-        maxWidth: HEADING_MAX_W,
-        fontSize: ATTR_SIZE,
-        minFontSize: 16,
-        letterSpacing: attrTracking,
-      })
-    : null
+  // The attribution, and the page's footnote under it on lines of its own.
+  const attribution = fitSourceBlock(attrParts.attribution, attrParts.footnote, {
+    maxWidth: HEADING_MAX_W,
+    fontSize: ATTR_SIZE,
+    minFontSize: 16,
+    letterSpacing: attrTracking,
+    transform: latinUpper,
+  })
   const attrY = titleLastY + ATTR_GAP
+  const attrLastY = attribution ? attrY + (attribution.lines.length - 1) * attribution.lineHeight : attrY
 
   const bodySource = pullQuoteBody(slide)
   const bodyLayout = bodySource
@@ -120,7 +125,7 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         fontFamily: fonts.body,
       })
     : null
-  const bodyStartY = (attribution ? attrY : titleLastY) + BODY_GAP
+  const bodyStartY = (attribution ? attrLastY : titleLastY) + BODY_GAP
 
   return (
     <>
@@ -181,21 +186,15 @@ function GenericPullQuoteContent({ ir, slide, index, ctx }: SvgTemplateProps) {
         ),
       )}
 
-      {attribution && (
-        <text
-          data-truncated={attribution.truncated ? "1" : undefined}
-          x={CENTER_X}
-          y={attrY}
-          textAnchor="middle"
-          fontFamily={fonts.body}
-          fontSize={attribution.fontSize}
-          fill={accessibleInk(colors.accent, defaultBg, attribution.fontSize)}
-          letterSpacing={attrTracking}
-          dominantBaseline="alphabetic"
-        >
-          {attribution.text}
-        </text>
-      )}
+      <SourceLines
+        block={attribution}
+        x={CENTER_X}
+        y={attrY}
+        textAnchor="middle"
+        fontFamily={fonts.body}
+        fill={(size) => accessibleInk(colors.accent, defaultBg, size)}
+        letterSpacing={attrTracking}
+      />
 
       {bodyLayout &&
         bodyLayout.lines.map((line, i) => (

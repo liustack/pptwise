@@ -77,7 +77,7 @@ const GHOST_MIX = 0.19
 
 export function periodicalInks(ctx: ComponentCtx): PeriodicalInks {
   const { colors } = ctx
-  const ground = colors.bg
+  const ground = ctx.defaultBg ?? colors.bg
   const line = colors.border ?? blendOver(colors.muted, ground, 0.25)
   const palette = colors.chartPalette
   const taupe = palette[3] ?? colors.muted

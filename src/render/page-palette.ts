@@ -1,6 +1,6 @@
 import { hslToHex, rebasedHueSaturation } from "../themes/palette-rebase"
 import type { StyleColors } from "../themes/tokens"
-import { contrastRatio, readableOn, relativeLuminance } from "./ink"
+import { contrastRatio, liftedInk, readableOn, relativeLuminance } from "./ink"
 
 /** Body text's floor, the one `text` and `muted` are painted at. */
 const BODY_TEXT_RATIO = 4.5
@@ -78,4 +78,33 @@ function atContrast({ h, s }: { h: number; s: number }, ratio: number, plane: st
   }
   // The side of the bisection that keeps the ratio: at or past it, never short.
   return hslToHex({ h, s, l: lighter ? hi : lo })
+}
+
+/**
+ * The theme's brand colours as type on a page its author painted `ground`.
+ *
+ * `paletteOnGround` keeps `primary` and `accent` as they are, since a block
+ * filled with one reads the same on any page. A face that sets a claim, a
+ * quote or a hero figure straight onto the page in one of them is another
+ * matter: on a painted page the brand gold or ink stood at 1.2 to 2.9:1
+ * against the author's ground. So for such a face each brand ink keeps the
+ * tier it held on the theme's own ground (body text's 4.5:1 or large text's
+ * 3:1), lifted toward the ground's readable ink by the least that holds it
+ * there (`liftedInk`), its hue kept. On the theme's own ground nothing moves,
+ * and a colour that never read as type there (under 3:1) is left alone.
+ */
+export function brandInkOnGround(colors: StyleColors, themeGround: string, ground: string): StyleColors {
+  if (themeGround.toUpperCase() === ground.toUpperCase()) return colors
+  const onGround = (ink: string): string => {
+    const own = contrastRatio(ink, themeGround)
+    if (own < 3) return ink
+    // The size `liftedInk` reads its floor from: body text's 4.5:1 below 24px, large text's 3:1 at it.
+    return liftedInk(ink, ground, own >= BODY_TEXT_RATIO ? 16 : 24)
+  }
+  return {
+    ...colors,
+    primary: onGround(colors.primary),
+    accent: onGround(colors.accent),
+    ...(colors.emphasisInk !== undefined ? { emphasisInk: onGround(colors.emphasisInk) } : {}),
+  }
 }

@@ -509,3 +509,34 @@ describe("a matrix's names, title and empty cells", () => {
     expect(container.querySelector("[data-block-title] > text")!.textContent).toBe("已有证据覆盖了什么")
   })
 })
+
+describe("matrix — a cell's words on a page the author painted", () => {
+  it("holds every cell's title and tag to the tinted cell it stands on", async () => {
+    const { boundThemeCtx } = await import("../render/__fixtures__/theme-ctx")
+    const { paletteOnGround } = await import("../render/page-palette")
+    const { contrastRatio, requiredContrastRatio } = await import("../render/ink")
+    for (const ground of ["#1F2A44", "#6B7B8C"]) {
+      const base = boundThemeCtx("clinic", {})
+      const ctx: ComponentCtx = { ...base, colors: paletteOnGround(base.colors, ground), defaultBg: ground }
+      const component = {
+        type: "matrix" as const,
+        x_title: "成本",
+        y_title: "疗效",
+        cols: 3,
+        items: ["司美格鲁肽", "替尔泊肽", "奥利司他", "利拉鲁肽", "生活方式", "手术"].map((title, i) => ({
+          title,
+          tag: ["一线", "二线", "备选"][i % 3]!,
+          tone: (["accent", "neutral", "info"] as const)[i % 3],
+        })),
+      }
+      const root = parseSvgRoot(renderSvgMarkup(<svg>{matrix.render(component, { x: 80, y: 120, w: 1100, h: 420 }, ctx)}</svg>))
+      for (const cell of Array.from(root.querySelectorAll("g[data-audit-box]"))) {
+        const fill = cell.querySelector("rect")!.getAttribute("fill")!
+        for (const t of Array.from(cell.querySelectorAll("text"))) {
+          const size = Number(t.getAttribute("font-size"))
+          expect(contrastRatio(t.getAttribute("fill")!, fill), `${ground} ${t.textContent}`).toBeGreaterThanOrEqual(requiredContrastRatio(size))
+        }
+      }
+    }
+  })
+})
