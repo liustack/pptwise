@@ -1,0 +1,39 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "series": [
+        {
+          "name": "Steam all-time concurrent peak",
+          "data": [
+            {
+              "x": "Black Myth: Wukong",
+              "y": 2415714
+            },
+            {
+              "x": "Wuchang: Fallen Feathers",
+              "y": 131518
+            },
+            {
+              "x": "Lost Soul Aside",
+              "y": 3070,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Top and bottom about **787 times** apart　Players online at once, not sales"
+    },
+    {
+      "type": "paragraph",
+      "text": "Console game revenue in China fell 7.06% to RMB 961 million in H1 2026. CADPA blames Black Myth cooling off and too few follow-ups"
+    }
+  ],
+  "footnote": "Source: SteamDB via Internet Archive snapshots (December 2025 to August 2026), CADPA H1 2026 report. Multiple calculated",
+  "notes": "But the ceiling is not the norm. Three Chinese premium action games, all-time Steam peaks: Black Myth at 2.41 million, Wuchang: Fallen Feathers at about 132,000, Lost Soul Aside at 3,070. Hundreds of times apart. These are SteamDB records, read from Internet Archive copies of its pages, snapshots from December 2025 to August 2026. Concurrent players are not sales, but the gap in scale is real. And at home, console game revenue fell 7.06% in the first half. The association names the reason itself: Black Myth cooling off, and too few new releases to follow. One hit does not make a market."
+}

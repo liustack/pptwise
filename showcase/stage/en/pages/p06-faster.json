@@ -1,0 +1,21 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**30.22%**",
+          "label": "Overseas",
+          "note": "US$12.372 billion from China-developed games"
+        },
+        {
+          "value": "12.17%",
+          "label": "China",
+          "note": "RMB 188.45 billion in domestic revenue"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: CADPA, China Game Industry Report, January to June 2026. Ratio calculated: 30.22 ÷ 12.17. Growth rates only, not size",
+  "notes": "In the first half of this year, overseas revenue grew 30.22% and home revenue grew 12.17%. Overseas grew about two and a half times as fast. I am comparing growth rates only, not size. One side is in dollars, the other in renminbi, and I won't convert them on stage. Please don't take this slide as saying overseas is now bigger than home."
+}

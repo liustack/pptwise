@@ -1,0 +1,16 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "10",
+          "unit": "million copies",
+          "label": "Developer's figure"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: developer's announcement, via The Paper, August 23, 2024",
+  "notes": "Someone has already touched the ceiling for buy-to-play. Black Myth: Wukong launched on the morning of August 20, 2024. By 9 pm on the 23rd, the developer announced more than 10 million copies across platforms. That is the developer's own figure. Its all-time peak on Steam was over 2.41 million concurrent players, on August 22, per SteamDB. The 20 and 30 million figures you see online were never published by the developer, so I don't use them."
+}

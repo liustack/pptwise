@@ -1,0 +1,139 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "storytelling",
+    "pacing": "balanced",
+    "audience": "technical"
+  },
+  "theme": "stage",
+  "filename": "game-overseas-keynote-en",
+  "meta": {
+    "date": "October 2026"
+  },
+  "footer": {
+    "page_number": true
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "Game developers conference · Keynote",
+      "heading": "What will carry Chinese games abroad next?"
+    },
+    {
+      "id": "p02-peak",
+      "type": "content",
+      "kind": "statement",
+      "heading": "Revenue is still growing.\n**Players** have peaked."
+    },
+    {
+      "id": "p03-users",
+      "type": "content",
+      "kind": "fact",
+      "heading": "From 2018 to 2025, players in China grew by only"
+    },
+    {
+      "id": "p04-ch-decade",
+      "type": "chapter",
+      "kicker": "Act one",
+      "heading": "Abroad",
+      "summary": "Ten years: where it went, what sells"
+    },
+    {
+      "id": "p05-trend",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Act one　Abroad",
+      "heading": "Ten years abroad: nearly 4 times, two down years"
+    },
+    {
+      "id": "p06-faster",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Act one　Abroad",
+      "heading": "This half, abroad grew 2.5 times as fast as home"
+    },
+    {
+      "id": "p07-map",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Act one　Abroad",
+      "heading": "Japan is shrinking, Europe is growing"
+    },
+    {
+      "id": "p08-genre",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Act one　Abroad",
+      "heading": "Strategy earns half abroad. Home is another list"
+    },
+    {
+      "id": "p09-ch-premium",
+      "type": "chapter",
+      "kicker": "Act two",
+      "heading": "Premium",
+      "summary": "Buy-to-play, and small teams"
+    },
+    {
+      "id": "p10-wukong",
+      "type": "content",
+      "kind": "fact",
+      "heading": "Black Myth: Wukong, all platforms, under 4 days"
+    },
+    {
+      "id": "p11-peaks",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Act two　Premium",
+      "heading": "Same genre, peaks hundreds of times apart"
+    },
+    {
+      "id": "p12-steam",
+      "type": "content",
+      "kind": "fact",
+      "kicker": "Act two　Premium",
+      "heading": "Steam users on the Simplified Chinese client"
+    },
+    {
+      "id": "p13-small",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "Act two　Premium",
+      "heading": "Small teams have\na road of their own"
+    },
+    {
+      "id": "p14-ch-bets",
+      "type": "chapter",
+      "kicker": "Act three",
+      "heading": "Bets",
+      "summary": "Count the cost, then bet"
+    },
+    {
+      "id": "p15-cost",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Act three　Bets",
+      "heading": "Abroad, the big bill is traffic, not development"
+    },
+    {
+      "id": "p16-limits",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Act three　Bets",
+      "heading": "Three gates: licences, compliance, localization"
+    },
+    {
+      "id": "p17-bets",
+      "type": "content",
+      "kind": "points",
+      "kicker": "Act three　Bets",
+      "heading": "My five bets for the next decade"
+    },
+    {
+      "id": "p18-end",
+      "type": "ending",
+      "heading": "Not who arrives first.\nWho **keeps** their players.",
+      "summary": "Game developers conference　October 2026"
+    }
+  ]
+}

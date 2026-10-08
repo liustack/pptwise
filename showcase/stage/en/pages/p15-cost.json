@@ -1,0 +1,36 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "series": [
+        {
+          "name": "Out of every RMB 100 of revenue, 2025",
+          "data": [
+            {
+              "x": "Selling",
+              "y": 48.6,
+              "emphasis": true
+            },
+            {
+              "x": "R&D",
+              "y": 4.3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "At one listed game company that sells a lot abroad, selling expenses ran more than 11 times R&D"
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "title": "From its annual report",
+      "text": "selling expenses fell \"mainly because internet traffic costs fell\""
+    }
+  ],
+  "footnote": "Source: 37 Interactive Entertainment, 2025 Annual Report. Shares of revenue and multiple calculated, selling expenses are group-wide",
+  "notes": "Going abroad, the biggest bill is not development. It is traffic. Take the annual report of one listed game company with a large overseas business: in 2025, out of every RMB 100 of revenue, RMB 48.6 went to selling expenses and only RMB 4.3 to R&D, less than a ninth of it. Its own report says selling expenses fell mainly because internet traffic costs fell. To be fair about it: this is group-wide, not all overseas user acquisition, and it is one company. The ratio was 55.7% in 2024 and 51.7% in the first half of 2026. The direction is clear: user acquisition is the single biggest cost of going abroad."
+}

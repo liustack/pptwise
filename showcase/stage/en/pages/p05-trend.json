@@ -1,0 +1,74 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "line",
+      "axes": {
+        "y_unit": "US$ bn"
+      },
+      "series": [
+        {
+          "name": "Overseas revenue of China-developed games",
+          "data": [
+            {
+              "x": "2015",
+              "y": 5.31
+            },
+            {
+              "x": "2016",
+              "y": 7.23
+            },
+            {
+              "x": "2017",
+              "y": 8.28
+            },
+            {
+              "x": "2018",
+              "y": 9.59
+            },
+            {
+              "x": "2019",
+              "y": 11.59
+            },
+            {
+              "x": "2020",
+              "y": 15.45
+            },
+            {
+              "x": "2021",
+              "y": 18.013
+            },
+            {
+              "x": "2022",
+              "y": 17.346
+            },
+            {
+              "x": "2023",
+              "y": 16.366,
+              "note": "Down in 2022 and 2023"
+            },
+            {
+              "x": "2024",
+              "y": 18.557
+            },
+            {
+              "x": "2025",
+              "y": 20.455
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "3.85×",
+          "label": "about 14.4% a year"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: CADPA, China Game Industry Reports 2015 to 2025. Multiple and annual growth calculated",
+  "notes": "In ten years, overseas revenue from China-developed games went from US$5.31 billion to US$20.455 billion. That is 3.85 times, about 14.4% a year, against about 9.6% a year at home. Both rates are my calculations. But it is not a one-way street. It fell 3.70% in 2022 and another 5.65% in 2023, a year when the home market grew 13.95%. Overseas revenue can fall, and it can fall while home is doing well. One note on definitions: until 2018 the association counted self-developed online games, from 2019 self-developed games. The year-on-year rates connect, but the name changed."
+}

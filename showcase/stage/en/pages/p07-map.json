@@ -1,0 +1,42 @@
+{
+  "components": [
+    {
+      "type": "from_to",
+      "from": {
+        "title": "H1 2025"
+      },
+      "to": {
+        "title": "H1 2026"
+      },
+      "rows": [
+        {
+          "label": "United States",
+          "from": "31.96",
+          "to": "32.31",
+          "unit": "%"
+        },
+        {
+          "label": "Japan",
+          "from": "16.20",
+          "to": "14.05",
+          "unit": "%"
+        },
+        {
+          "label": "Germany, UK, France",
+          "from": "8.78",
+          "to": "10.14",
+          "unit": "%",
+          "emphasis": true
+        },
+        {
+          "label": "South Korea",
+          "from": "7.47",
+          "to": "7.48",
+          "unit": "%"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: CADPA, January to June reports 2025 and 2026. Shares of overseas revenue of China-developed mobile games",
+  "notes": "Where the money comes from. The US has not changed in ten years. It sits around a third, 32.31% this half. The same figure appears for 2022 and full-year 2025 too, that is how the reports print it. What changed is Japan: 23.91% in 2020, 16.20% a year ago, 14.05% now. Germany, the UK and France together went from 8.78% to 10.14%. The association does not publish the three separately. Note the base: overseas revenue of China-developed mobile games, so PC and console are not in it. The Middle East and Latin America get talked about a lot, but there is no published share to chart, so they are not here."
+}

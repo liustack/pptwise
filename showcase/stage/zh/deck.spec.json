@@ -1,0 +1,139 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "storytelling",
+    "pacing": "balanced",
+    "audience": "technical"
+  },
+  "theme": "stage",
+  "filename": "game-overseas-keynote-zh",
+  "meta": {
+    "date": "二〇二六年十月"
+  },
+  "footer": {
+    "page_number": true
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "游戏开发者大会　主题演讲",
+      "heading": "中国游戏，下一个十年靠什么出海"
+    },
+    {
+      "id": "p02-peak",
+      "type": "content",
+      "kind": "statement",
+      "heading": "国内收入还在涨，\n到顶的是**人数**"
+    },
+    {
+      "id": "p03-users",
+      "type": "content",
+      "kind": "fact",
+      "heading": "2018 年到 2025 年，七年里国内游戏用户只多了"
+    },
+    {
+      "id": "p04-ch-decade",
+      "type": "chapter",
+      "kicker": "第一章",
+      "heading": "出海",
+      "summary": "十年，去了哪里，卖什么"
+    },
+    {
+      "id": "p05-trend",
+      "type": "content",
+      "kind": "data",
+      "kicker": "第一章　出海",
+      "heading": "出海十年放大近 4 倍，中间跌过两年"
+    },
+    {
+      "id": "p06-faster",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "第一章　出海",
+      "heading": "今年上半年，出海增速是国内的 2.5 倍"
+    },
+    {
+      "id": "p07-map",
+      "type": "content",
+      "kind": "data",
+      "kicker": "第一章　出海",
+      "heading": "日本在变小，欧洲在变大"
+    },
+    {
+      "id": "p08-genre",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "第一章　出海",
+      "heading": "出海手游一半的钱来自策略类，和国内是两张榜"
+    },
+    {
+      "id": "p09-ch-premium",
+      "type": "chapter",
+      "kicker": "第二章",
+      "heading": "单机",
+      "summary": "买断制，和小团队"
+    },
+    {
+      "id": "p10-wukong",
+      "type": "content",
+      "kind": "fact",
+      "heading": "《黑神话：悟空》发售不到 4 天，全平台卖出"
+    },
+    {
+      "id": "p11-peaks",
+      "type": "content",
+      "kind": "data",
+      "kicker": "第二章　单机",
+      "heading": "同样是国产动作大作，峰值能差几百倍"
+    },
+    {
+      "id": "p12-steam",
+      "type": "content",
+      "kind": "fact",
+      "kicker": "第二章　单机",
+      "heading": "平常月份，Steam 用户里选简体中文客户端的比例"
+    },
+    {
+      "id": "p13-small",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "第二章　单机",
+      "heading": "小团队，\n也有自己的路"
+    },
+    {
+      "id": "p14-ch-bets",
+      "type": "chapter",
+      "kicker": "第三章",
+      "heading": "押注",
+      "summary": "先算账，再下注"
+    },
+    {
+      "id": "p15-cost",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "第三章　押注",
+      "heading": "出海最贵的不是研发，是流量"
+    },
+    {
+      "id": "p16-limits",
+      "type": "content",
+      "kind": "list",
+      "kicker": "第三章　押注",
+      "heading": "出海要过三道门：版号、合规、本地化"
+    },
+    {
+      "id": "p17-bets",
+      "type": "content",
+      "kind": "points",
+      "kicker": "第三章　押注",
+      "heading": "下一个十年，我押这五件事"
+    },
+    {
+      "id": "p18-end",
+      "type": "ending",
+      "heading": "下一个十年，\n不比谁去得早，比谁**留得住**",
+      "summary": "游戏开发者大会　二〇二六年十月"
+    }
+  ]
+}
