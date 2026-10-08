@@ -6,7 +6,7 @@ import { boxTooShort, formTextClipMarker, layoutAtSize } from "./legibility"
 import { mixHex } from "./color-mix"
 import { withBlockTitle } from "./block-title"
 import { Icon } from "../render/icons"
-import { accessibleInk, graphicInk } from "../render/ink"
+import { accessibleInk, graphicInk, liftedInk } from "../render/ink"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type MatrixComponent = Extract<Component, { type: "matrix" }>
@@ -257,6 +257,11 @@ export const matrix: SvgComponent<MatrixComponent> = {
               </g>
             )
           }
+          // A cell is tinted toward its tone, and its words are held to the
+          // tint they stand on. Graded against nothing, the theme's text and
+          // muted inks fell a hair short on a cell tinted over a page the
+          // author painted (clinic, 4.47:1 against 4.5).
+          const cellFill = toneFill(item.tone, ctx)
           return (
             <g key={i} data-audit-box={`${x},${y},${cardW}`}>
               <rect
@@ -266,7 +271,7 @@ export const matrix: SvgComponent<MatrixComponent> = {
                 width={cardW}
                 height={rowH}
                 rx={r}
-                fill={toneFill(item.tone, ctx)}
+                fill={cellFill}
                 {...(ctx.colors.cardStroke
                   ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 }
                   : {})}
@@ -279,7 +284,7 @@ export const matrix: SvgComponent<MatrixComponent> = {
                   y={titleBaseline + li * TITLE_LH}
                   fontSize={cell.title.fontSize}
                   fontWeight="700"
-                  fill={ctx.colors.text}
+                  fill={liftedInk(ctx.colors.text, cellFill, cell.title.fontSize)}
                   fontFamily={ctx.fonts.heading}
                   dominantBaseline="alphabetic"
                 >
@@ -292,7 +297,7 @@ export const matrix: SvgComponent<MatrixComponent> = {
                   x={x + PAD_X}
                   y={titleBaseline + (cell.title.lines.length - 1) * TITLE_LH + GAP_TITLE_TAG + TAG_SIZE}
                   fontSize={cell.tag.fontSize}
-                  fill={ctx.colors.muted}
+                  fill={liftedInk(ctx.colors.muted, cellFill, cell.tag.fontSize)}
                   fontFamily={ctx.fonts.body}
                   dominantBaseline="alphabetic"
                 >
