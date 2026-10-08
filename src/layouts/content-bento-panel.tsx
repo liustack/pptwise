@@ -481,10 +481,14 @@ function renderKpiCardBody(
   // `BENTO_KPI_GLOW_DELTA_RESERVE` px so a shrunk-to-the-clamp value's glow
   // can't visually collide with it (see that constant's own comment —
   // vc-task-7 review Important #1).
+  // Measured as they are painted, bold in the heading face: measured plain
+  // in the body face, a wide figure ran past its estimate and the glow's dot
+  // sat on its last digit.
+  const valueInk = { bold: true, fontFamily: ctx.fonts.heading }
   const valueRenderedW =
-    measureTextUnits(fittedValue.text) * fittedValue.fontSize
+    measureTextUnits(fittedValue.text, valueInk) * fittedValue.fontSize
   const unitRenderedW =
-    fittedUnit != null ? measureTextUnits(fittedUnit) * unitFontSize : 0
+    fittedUnit != null ? measureTextUnits(fittedUnit, valueInk) * unitFontSize : 0
   const deltaReserve = dp ? BENTO_KPI_GLOW_DELTA_RESERVE : 0
   const glowMaxCx = box.x + box.w - BENTO_CARD_PAD - ring2R - deltaReserve
   const glowCx = Math.min(
