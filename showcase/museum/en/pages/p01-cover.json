@@ -1,0 +1,11 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "jar",
+      "fit": "cover"
+    }
+  ],
+  "footnote": "Sample jar, AI-generated, not a real sample",
+  "notes": "Welcome. Today's talk is called Soil from the Far Side of the Moon. We will treat the samples brought back by China's Chang'e-5 and Chang'e-6 missions as exhibits and look at them one at a time, asking the same question of each: what did it teach us? Every figure comes from the China National Space Administration's announcements or from peer-reviewed papers, and each page names its source. Where a press release and the paper say different things, we follow the paper. The jar on the cover is an AI-generated illustration, not a photograph of a real sample."
+}

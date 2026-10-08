@@ -1,0 +1,36 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "fragment",
+      "caption": "Basalt fragment, AI-generated, not a real sample",
+      "fit": "cover"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "About 2.8",
+          "unit": "billion years",
+          "label": "Chang'e-6 main basalt",
+          "tag": {
+            "text": "Exhibit 4"
+          }
+        }
+      ]
+    },
+    {
+      "type": "bullets",
+      "items": [
+        "Papers: 2.807, 2.823 and 2.830 billion years",
+        "Field then: 5 to 21 μT, stronger than later"
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "What it tells us: The far side erupted about 2.8 billion years ago, and the Moon's field had weakened, then picked up again"
+    }
+  ],
+  "footnote": "Source: Zhang et al. (Nature, 2024), Cui et al. (Science, 2024), Che et al. (Science, 2025), Cai et al. (Nature, 2024)",
+  "notes": "Exhibit four is a fragment of Chang'e-6 basalt. One team dated 108 basalt fragments and found a main age of 2.807 billion years. Two other teams, using different methods, got 2.830 and 2.823 billion. The methods differ and the error bars don't all overlap, so we say about 2.8 billion years and don't average the three. So the far side had volcanic eruptions around 2.8 billion years ago. There is a bonus: scientists estimate the age of lunar surfaces by counting craters, and that ruler was calibrated with near-side samples. The Chang'e-6 basalt age matches the crater-count age, which suggests the ruler works on the far side too. These basalts also kept a magnetic record. Four millimetre-sized fragments show a field of about 5 to 21 microtesla 2.8 billion years ago, with a median around 13. Earlier work showed the field dropped sharply around 3.1 billion years ago. These samples show it picked up again by 2.8 billion. Some reports said this overturned the idea of a steady decline. What the paper actually argues against is one specific scenario, in which the field stayed weak after 3 billion years until it died out. Put next to the 2 to 4 microtesla from Chang'e-5, we can only say the field was stronger at 2.8 billion years and weaker at 2 billion. Two points don't make a curve. The image is an AI-generated illustration."
+}

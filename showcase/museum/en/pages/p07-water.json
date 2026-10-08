@@ -1,0 +1,50 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "y_unit": "μg per g"
+      },
+      "series": [
+        {
+          "name": "Amount",
+          "data": [
+            {
+              "x": "Outermost 100 nm of grains\nHydrogen from the solar wind",
+              "y": 1116,
+              "upper": 2516,
+              "note": "PNAS, 2022"
+            },
+            {
+              "x": "Impact glass beads\nSolar wind, refilled in under 15 years",
+              "y": 0,
+              "upper": 1909,
+              "note": "Nature Geoscience, 2023",
+              "emphasis": true
+            },
+            {
+              "x": "Bulk soil, several methods\nUpper end at least 170",
+              "y": 28.5,
+              "upper": 170,
+              "note": "Nature Communications, 2022"
+            },
+            {
+              "x": "Chang'e-5 mantle source\nCarried up in magma",
+              "y": 1,
+              "upper": 5,
+              "note": "Nature, 2021"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "All of it is hydrogen and hydroxyl locked in minerals and glass, not water you could drink"
+    }
+  ],
+  "footnote": "Source: PNAS (2022), Nature Geoscience (2023), Nature Communications (2022), Nature (2021). The impact beads' lower end is 0, drawn at the start of the scale",
+  "notes": "Our second exhibit is the impact glass bead, and we will use it to talk about water. When a meteorite hits the Moon, molten rock splashes out and cools into tiny glass beads. A team picked 117 beads out of about one gram of Chang'e-5 soil and measured 32 of them. Their water content ranged from 0 to 1,909 micrograms per gram, up to about 2,000 at the rim and less toward the centre, which shows the water seeped in from outside. Where does it come from? Hydrogen in the solar wind is driven into the glass and combines with oxygen. The paper estimates the supply is refilled in under 15 years, so the lunar surface holds a store that the solar wind keeps topping up. But whenever someone says the Moon has water, ask which water. In the outermost 100 nanometres of soil grains, hydrogen reaches 1,116 to 2,516 micrograms per gram. Averaged over the bulk soil, different papers using different methods give 28.5 to at least 170. Deep down, the mantle source holds only 1 to 5. These differ by orders of magnitude and can't be merged into one number. And all of it is hydrogen and hydroxyl locked in minerals and glass. As CNSA itself pointed out, this is not water in the everyday sense. The headline figure of 270 billion tonnes for the glass beads is the top of an estimate that spans three orders of magnitude, so we leave it out."
+}

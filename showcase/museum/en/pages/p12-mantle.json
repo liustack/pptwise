@@ -1,0 +1,66 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "y_unit": "μg per g"
+      },
+      "bands": [
+        {
+          "from": 1,
+          "to": 1.5
+        }
+      ],
+      "series": [
+        {
+          "name": "Water in the mantle source",
+          "data": [
+            {
+              "x": "Near side, overall",
+              "y": 1,
+              "upper": 200
+            },
+            {
+              "x": "Chang'e-5",
+              "y": 1,
+              "upper": 5
+            },
+            {
+              "x": "Chang'e-6 (far side)",
+              "y": 1,
+              "upper": 1.5,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "The copper band is Chang'e-6's range: at the bottom of the near-side range, overlapping the Chang'e-5 estimate. The paper says “potentially drier”"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "−0.80 ± 0.64",
+          "label": "Oxygen fugacity ΔIW · near side",
+          "note": "Apollo and Chang'e-5 basalts"
+        },
+        {
+          "value": "**−1.93 ± 0.58**",
+          "label": "Oxygen fugacity ΔIW · far side",
+          "note": "Chang'e-6, 23 basalt fragments"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "“More reduced” means less oxygen was available when the magma formed"
+    }
+  ],
+  "footnote": "Source: He et al. (Nature, 2025), Zhang et al. (Nature Communications, 2025), Hu et al. (Nature, 2021)",
+  "notes": "Exhibit six: looking through the basalt at the mantle beneath it. A team sieved 578 grains from 5 grams of Chang'e-6 soil and worked out that the mantle source of this far-side basalt held 1 to 1.5 micrograms of water per gram, at the very bottom of the range estimated from near-side samples. The paper's own wording is that the far-side mantle is potentially drier. Some reports said it was markedly drier than the near side, which goes too far: Chang'e-5 put the near-side mantle source at 1 to 5 micrograms per gram, so the two overlap. Another paper studied 23 Chang'e-6 basalt fragments and measured oxygen fugacity, a gauge of how much oxygen was available when the magma formed. The far side came out at minus 1.93, lower than the minus 0.80 for Apollo and Chang'e-5 basalts, which means more reduced. Taken together, the far-side mantle may differ from the near side, but each result still rests on samples from one place."
+}

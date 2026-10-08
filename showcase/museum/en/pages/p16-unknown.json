@@ -1,0 +1,36 @@
+{
+  "components": [
+    {
+      "type": "numbered_cards",
+      "items": [
+        {
+          "title": "Why did the Moon still have magma 2 billion years ago?",
+          "text": "Its source was neither rich in heat-producing elements nor wet",
+          "sub": "Not settled"
+        },
+        {
+          "title": "Two far-side episodes, or one long run?",
+          "text": "Between 4.2 and 2.8 billion years, the samples can't say",
+          "sub": "Not settled"
+        },
+        {
+          "title": "How old is the South Pole–Aitken basin?",
+          "text": "Chang'e-6 gives about 4.25 billion years, another study about 4.33",
+          "sub": "Not settled"
+        },
+        {
+          "title": "What kept the magnetic field going?",
+          "text": "A magma ocean at the mantle's base, precession, or something else",
+          "sub": "Not settled"
+        },
+        {
+          "title": "Why is the far-side mantle so depleted?",
+          "text": "Born that way, or stripped of melt by the giant impact",
+          "sub": "Not settled"
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Nature (2021, 2024, 2025), National Science Review (2025), Nature Astronomy (2024)",
+  "notes": "What I most want to leave you with are the questions. One: the Moon is small and should have cooled early, so why was there still magma 2 billion years ago? The Chang'e-5 papers found its source was neither rich in heat-producing elements nor wet, so the question is open. Two: on the far side, were the 4.2- and 2.8-billion-year episodes two separate eruptions, or one long run? The samples can't say. Three: how old is the South Pole–Aitken basin? A Chang'e-6 norite fragment gives about 4.25 billion years. Another study using a lunar meteorite gives about 4.32 to 4.33 billion. The debate continues. Four: what kept the Moon's magnetic field going until 2 billion years ago? The papers suggest a magma ocean at the base of the mantle, precession, or other mechanisms. Five: the source of the far-side basalt is extremely depleted, meaning it lacks the elements that most readily enter a melt. Was the mantle born that way when the magma ocean crystallised, or did the giant impact strip the melt away? The paper sets out both explanations and does not choose."
+}

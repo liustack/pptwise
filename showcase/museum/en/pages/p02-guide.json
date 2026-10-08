@@ -1,0 +1,41 @@
+{
+  "components": [
+    {
+      "type": "roadmap",
+      "items": [
+        {
+          "title": "Foyer",
+          "period": "Two missions, beside Apollo and Luna",
+          "icon": "rocket"
+        },
+        {
+          "title": "Hall 1",
+          "period": "Near-side soil",
+          "points": [
+            "Basalt",
+            "Water in glass beads",
+            "Beads and new minerals"
+          ]
+        },
+        {
+          "title": "Hall 2",
+          "period": "Far-side soil",
+          "points": [
+            "2.8-billion-year basalt",
+            "The oldest fragment",
+            "The mantle"
+          ]
+        },
+        {
+          "title": "Hall 3",
+          "period": "Where it went, what is open",
+          "points": [
+            "Moon soil in a case"
+          ]
+        }
+      ]
+    }
+  ],
+  "footnote": "The dotted line is the route",
+  "notes": "Here is today's route: four halls and seven exhibits. In the foyer we look at the two missions: where they collected soil, how much they brought home, and how that compares with the American Apollo and Soviet Luna samples. Hall 1 is near-side soil from Chang'e-5, with three exhibits: a basalt about 2 billion years old, the water in impact glass beads, and the beads and new minerals under the microscope. Hall 2 is far-side soil from Chang'e-6, with three more: a basalt about 2.8 billion years old, the oldest fragment, and what the basalts tell us about the mantle. Hall 3 covers where the samples went and the questions scientists still can't answer, and its one exhibit is Moon soil in a display case: what to look for the next time you see some. The dotted line is our route."
+}

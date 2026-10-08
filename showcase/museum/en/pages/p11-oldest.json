@@ -1,0 +1,19 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "4.203",
+          "unit": "billion years",
+          "label": "This one fragment is the only evidence so far that the far side had volcanism 4.2 billion years ago",
+          "tag": {
+            "text": "Exhibit 5"
+          }
+        }
+      ]
+    }
+  ],
+  "footnote": "Source: Zhang et al. (Nature, 2024)",
+  "notes": "Exhibit five is a single fragment. In the same batch of Chang'e-6 samples, the team found one high-aluminium basalt fragment 4.203 billion years old, the oldest basalt among all returned samples. The paper argues it formed locally on the far side, most likely from an ancient buried mare near the landing site, rather than being thrown over from the near side. So this part of the far side had at least two episodes of volcanism, about 4.2 and about 2.8 billion years ago, some 1.4 billion years apart. Two cautions. First, the evidence for the older episode is this one fragment. Second, the samples can't tell us whether eruptions continued in between, so we can't say the far side erupted continuously for 1.4 billion years."
+}

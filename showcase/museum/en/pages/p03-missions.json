@@ -1,0 +1,60 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "1,731",
+          "unit": "g",
+          "label": "Chang'e-5",
+          "note": "Northern Oceanus Procellarum, about 43°N",
+          "tag": {
+            "text": "Near side"
+          }
+        },
+        {
+          "value": "**1,935.3**",
+          "unit": "g",
+          "label": "Chang'e-6",
+          "note": "Apollo basin, inside the South Pole–Aitken basin",
+          "tag": {
+            "text": "Far side"
+          }
+        }
+      ]
+    },
+    {
+      "type": "comparison",
+      "columns": [
+        "Chang'e-5",
+        "Chang'e-6"
+      ],
+      "rows": [
+        {
+          "label": "Trip",
+          "cells": [
+            "Launched 2020-11-24, home 12-17, 23 days",
+            "Launched 2024-05-03, home 06-25, about 53 days"
+          ]
+        },
+        {
+          "label": "Sampled",
+          "cells": [
+            "Scooped about 1,480 g, drilled about 250 g (estimated)",
+            "Scooped about 1,610 g, drilled about 325 g (estimated)"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Together, 3,666.3 g. Chang'e-6 brought back **the first sample from the far side**"
+    },
+    {
+      "type": "paragraph",
+      "text": "The drilled amounts were never published: they are the total minus the scooped amount"
+    }
+  ],
+  "footnote": "Source: China National Space Administration sample handovers (2020-12, 2024-06), National Astronomical Observatories report (2022), National Science Review (2024)",
+  "notes": "Two missions, two jars of soil. Chang'e-5 launched on 24 November 2020 and landed on the near side, north of Mons Rümker in Oceanus Procellarum, at about 43 degrees north, farther north than any of the nine earlier Apollo and Luna landing sites. It came home to Inner Mongolia on 17 December, 23 days in all, and the first weighing at handover gave about 1,731 grams. Chang'e-6 launched on 3 May 2024 and landed on the far side, in the Apollo basin inside the South Pole–Aitken basin. It came home on 25 June, about 53 days in all, with 1,935.3 grams, the first sample ever taken from the far side. You may see 1,953.3 grams in some reports. That is a typo. Both missions scooped soil from the surface and drilled into it. Chang'e-5 scooped about 1,480 grams and Chang'e-6 about 1,610 grams, figures from a National Astronomical Observatories report and the first Chang'e-6 sample paper. The drilled amounts have never been published, so we estimate them as the total minus the scooped amount: roughly 250 and 325 grams. Chang'e-6 drilled a little over one metre before hitting what looked like a rock."
+}

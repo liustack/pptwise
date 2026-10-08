@@ -1,0 +1,160 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "storytelling",
+    "pacing": "balanced",
+    "audience": "public"
+  },
+  "theme": "museum",
+  "filename": "lunar-farside-soil-lecture-en",
+  "meta": {
+    "organization": "Weekend Science Talk",
+    "date": "October 2026"
+  },
+  "footer": {
+    "page_number": true,
+    "organization": true,
+    "label": "Soil from the Far Side of the Moon"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "kicker": "Weekend Science Talk",
+      "heading": "Soil from the Far Side\nof the Moon",
+      "summary": "Chang'e-5 and Chang'e-6 lunar samples, one exhibit at a time"
+    },
+    {
+      "id": "p02-guide",
+      "type": "content",
+      "kind": "process",
+      "kicker": "Guide",
+      "heading": "Four halls, seven exhibits",
+      "focus": "roadmap"
+    },
+    {
+      "id": "p03-missions",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Foyer",
+      "heading": "Two missions, two jars: near side and far side",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p04-apollo",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Foyer",
+      "heading": "Under 1% of Apollo's haul, but from the far side",
+      "focus": "chart"
+    },
+    {
+      "id": "p05-hall1",
+      "type": "chapter",
+      "kicker": "Hall 1",
+      "heading": "Near-side soil",
+      "summary": "Chang'e-5 · 2020 · northern Oceanus Procellarum"
+    },
+    {
+      "id": "p06-basalt",
+      "type": "content",
+      "kind": "evidence",
+      "kicker": "Hall 1 · Near-side soil",
+      "heading": "A 2-billion-year basalt: volcanoes ran late",
+      "focus": "image"
+    },
+    {
+      "id": "p07-water",
+      "type": "content",
+      "kind": "data",
+      "kicker": "Hall 1 · Near-side soil",
+      "heading": "Water on the Moon? First ask which water",
+      "focus": "chart"
+    },
+    {
+      "id": "p08-micro",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "Hall 1 · Near-side soil",
+      "heading": "Under the microscope: beads and new minerals",
+      "focus": "image_grid"
+    },
+    {
+      "id": "p09-hall2",
+      "type": "chapter",
+      "kicker": "Hall 2",
+      "heading": "Far-side soil",
+      "summary": "Chang'e-6 · 2024 · South Pole–Aitken basin"
+    },
+    {
+      "id": "p10-farbasalt",
+      "type": "content",
+      "kind": "evidence",
+      "kicker": "Hall 2 · Far-side soil",
+      "heading": "The far side erupted 2.8 billion years ago",
+      "focus": "image"
+    },
+    {
+      "id": "p11-oldest",
+      "type": "content",
+      "kind": "fact",
+      "kicker": "Hall 2 · Far-side soil",
+      "heading": "One fragment: the oldest basalt brought back",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p12-mantle",
+      "type": "content",
+      "kind": "comparison",
+      "kicker": "Hall 2 · Far-side soil",
+      "heading": "The far-side mantle: maybe drier, more reduced",
+      "focus": "chart"
+    },
+    {
+      "id": "p13-hall3",
+      "type": "chapter",
+      "kicker": "Hall 3",
+      "heading": "Where the soil went, and what is left to ask",
+      "summary": "Where it went · What we don't know · What to look for"
+    },
+    {
+      "id": "p14-timeline",
+      "type": "content",
+      "kind": "process",
+      "kicker": "Hall 3 · Where it went, what is open",
+      "heading": "2020 to 2026: two missions, a run of papers",
+      "focus": "timeline"
+    },
+    {
+      "id": "p15-where",
+      "type": "content",
+      "kind": "list",
+      "kicker": "Hall 3 · Where it went, what is open",
+      "heading": "About 148 g went to research, 4% of the total",
+      "focus": "chart"
+    },
+    {
+      "id": "p16-unknown",
+      "type": "content",
+      "kind": "points",
+      "kicker": "Hall 3 · Where it went, what is open",
+      "heading": "Five things we still don't know",
+      "focus": "numbered_cards"
+    },
+    {
+      "id": "p17-visit",
+      "type": "content",
+      "kind": "photo",
+      "kicker": "Hall 3 · Where it went, what is open",
+      "heading": "Next time, read the Moon-soil label for these",
+      "focus": "image"
+    },
+    {
+      "id": "p18-ending",
+      "type": "ending",
+      "kicker": "Weekend Science Talk",
+      "heading": "So little soil, so many questions",
+      "summary": "Thank you. Questions are welcome."
+    }
+  ]
+}
