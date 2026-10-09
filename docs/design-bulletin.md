@@ -1,7 +1,7 @@
 ---
 summary: 'The settled bulletin design system handed to a design tool together with the general design brief: the IKB field pages, the one content header, how a page spends its one mark, the type sizes, and the parts a new bulletin page starts from'
 read_when:
-  - drawing a bulletin page, face or composition that the 2026-10 board did not draw
+  - drawing a bulletin page, face or composition that the 2026-10 boards did not draw
   - changing anything bulletin paints, before opening the code
   - judging whether a bulletin page in a showcase or the gallery follows the board
 ---
@@ -39,7 +39,7 @@ The cover and the ending paint the whole page IKB. Everything on them is white o
 
 ## The content header
 
-Every content page, whatever its kind, has one header and nothing else at the top.
+Every content page but a statement, whatever its kind, has one header and nothing else at the top. A statement page's sentence takes the header's place (see the last section).
 
 - The claim: black, bold, 34/46, at most two lines in a 1040px box from x80, y44 to y144, bottom-aligned, so the last line always sits on the same baseline.
 - Under it, a 1px hairline in the border colour from x80 to x1200 at y163, and a 96 by 3 IKB bar on its left end.
@@ -74,7 +74,8 @@ A closing note is not a mark. It sits on the light panel in 20px ink, with a str
 | claim | 34 bold |
 | body, table cells, closing note | 19 to 20 |
 | labels, legends, units, categories | 16 to 17 |
-| headline figures | 50 beside a chart, 76 in a figure column, 40 for a marked pair |
+| headline figures | 50 beside a chart, 76 in a figure column, 40 for a marked pair, 210 alone on a fact page |
+| a statement's sentence | 60 bold |
 | source | 14 |
 
 One family, the theme's body face, everywhere. No letter spacing: the export does not carry it.
@@ -85,6 +86,17 @@ The board draws its charts by hand, and so does the engine on bulletin: no value
 
 ## Where a new page starts
 
-Before drawing, find the closest part in [Reusable parts](./reusable-parts.md#bulletin-nev-sample-2026-10). bulletin's content pages are one face, `notice-sheet`, which hands its body to a composition in the notice setting: `rows`, `table`, `records`, `rail` with `columns`, `bars` or `bridge`, `stack`, `window` and `lanes`. A new page is usually a new composition in that setting, drawn inside the band from y196 to the source line, with the header above it untouched.
+Before drawing, find the closest part in [Reusable parts](./reusable-parts.md#bulletin-nev-sample-2026-10). bulletin's ordinary content pages are one face, `notice-sheet`, which hands its body to a composition in the notice setting: `rows`, `table`, `records`, `rail` with `columns`, `bars` or `bridge`, `stack`, `window` and `lanes`. The statement, fact and evidence pages have a face each (`notice-statement`, `notice-figure`, `notice-exhibit`) over the compositions `sentence`, `billboard` and `proof` ([Reusable parts](./reusable-parts.md#bulletin-statement-fact-and-evidence-pages-2026-10)). A new page is usually a new composition in that setting, drawn inside the band from y196 to the source line, with the header above it untouched.
 
-bulletin offers no statement, fact or evidence page yet. Each of those needs its own board before it is built.
+The statement, fact and evidence pages have their own faces, settled on the 2026-10 kinds board (below). bulletin still offers no quote page.
+
+## Statement, fact and evidence pages
+
+Drawn to the kinds board, [`design/rounds/2026-10-09-bulletin-kinds/`](../design/rounds/2026-10-09-bulletin-kinds/README.md). Each keeps the motif's steps and the 14px source line, and spends IKB once.
+
+- **Statement** (`notice-statement`, composition `sentence`): no content header. A 96 by 6 IKB bar, 30px under it the sentence bold at 60/80 in a 1080px measure, its `**marked**` words in IKB, a hairline across the type area 30px under its last line, and 22px under that the one paragraph that backs it at 22/34 muted in 960px. The block is centred between y110 and y610, so a one-line sentence sits lower than a two-line one. One or two lines, three at most.
+- **Fact** (`notice-figure`, composition `billboard`): the content header, then what the figure counts at 22/30 from y212, the figure bold at 210px in IKB from x72 closed up 6px with its baseline on y431 and its unit 18px after it at 60px (a percent sign too), a hairline at y500, and two or three figures under it in equal columns, 34/44 bold over 16/24 muted labels, hairlines between them. Write it as one `kpi_cards`, the first item the figure.
+- **Evidence** (`notice-exhibit`, composition `proof`): the content header, then a 740 by 420 white card from y196 holding one titled chart or table under its number (「图 1」, 「表 1」, "Exhibit 1", counted across the deck) at 15px, and one 2.5px IKB ring with 10px corners round the place that proves the claim: the category of the bar marked with `data[].emphasis`, or the row marked `highlight`. A 1.5px leader runs level to a 13px IKB disc with a white 「1」 at x884, and from x908 「怎么看」 ("How to read it") at 16px muted, the reading level with the disc at 21/32 bold IKB, and up to three notes at 17/27 between hairlines 90px apart. Charts in the card follow the chart rules above: no value axis, every bar valued, the marked bar's series in IKB and the other receded.
+- **Words kept whole.** The sentence, its paragraph, the reading and the notes break only at a space or after a clause mark (「，」「。」「：」), never inside a word or a figure and never after the enumeration comma 「、」.
+
+A page one of these faces cannot set whole (a statement with a chart, a fact with notes, an exhibit with nothing marked) is drawn by the notice sheet instead, the claim in the ordinary header.

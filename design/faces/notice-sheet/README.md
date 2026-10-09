@@ -17,3 +17,7 @@ Every content page of the board carries this frame. See the boards of the compos
 - A body no composition takes is drawn by the ordinary component renderer in the same band, and a page the band cannot hold steps aside.
 - The 14px source is below the engine's 16px floor. The audit exempts it by name (`data-font-floor-exempt="notice-spec"`), and nothing else on the page may go that small.
 - bulletin's menu sends points, list, comparison, process, data and hierarchy pages here. It offers no statement, fact or evidence page: those need their own boards first.
+
+## bulletin, kinds round, 2026-10
+
+The statement, fact and evidence pages got boards and faces of their own ([faces/notice-statement](../notice-statement/README.md), [faces/notice-figure](../notice-figure/README.md), [faces/notice-exhibit](../notice-exhibit/README.md)). A page those faces cannot set whole comes here, and steps aside in the face's own name when the sheet cannot hold it either (`noticeSheetPage`). bulletin still offers no quote page.
