@@ -40,6 +40,9 @@ function plainBlock(type: string, block: Record<string, unknown>): Record<string
   return out
 }
 
+/** The drawn gate's last resort, which names no reason (`checkBoundaryBlocksDrawn`). */
+const FALLBACK = /Write them in a shape this face draws/
+
 const dropped = (ir: PptxIR) => droppedIn(parseSvgRoot(renderSlideSvg(ir, 0))).dropped
 
 const assets = {} as Record<LanguageId, CorpusAssets>
@@ -61,6 +64,7 @@ describe("a boundary page validate passes is one its face draws whole", () => {
     const base = layoutPage(face, lex, assets[lex.id], theme, undefined)
     const page = base.slides[0]!
     const lost: string[] = []
+    const unexplained: string[] = []
     for (const slot of LAYOUT_REGISTRY[face]!.slots) {
       if (slot.accepts === "any" || slot.accepts.length === 0) continue
       const others = page.components.filter((c) => !(slot.accepts as readonly string[]).includes(c.type))
@@ -73,16 +77,23 @@ describe("a boundary page validate passes is one its face draws whole", () => {
           for (let i = 1; i <= n; i++) {
             const component = (key ? { ...block, [key]: (block[key] as unknown[]).slice(0, i) } : block) as unknown as Slide["components"][number]
             const result = validateIr({ ...base, slides: [{ ...page, components: [...others, component] }] })
-            if (result.ok && dropped(result.ir!) > 0) lost.push(`${type} of ${i}${block === full ? "" : ", bare"}`)
+            const name = `${type} of ${i}${block === full ? "" : ", bare"}`
+            if (result.ok && dropped(result.ir!) > 0) lost.push(name)
+            // A refusal names what the face needs or has no place for. The
+            // drawn gate's last resort says only that the face cannot draw
+            // the block as written: a face that declares its needs on its
+            // slot (`LayoutSlot.declines`) never reaches it.
+            if (result.errors.some((e) => FALLBACK.test(e.message))) unexplained.push(name)
           }
         }
       }
     }
     expect(lost).toEqual([])
+    expect(unexplained).toEqual([])
   })
 })
 
-describe("the four pairings validate now refuses, and why", () => {
+describe("the pairings validate refuses, and why", () => {
   const deck = (theme: string, slide: Record<string, unknown>): PptxIR =>
     ({ version: "5", filename: "pairings.pptx", theme: { id: theme }, meta: {}, assets: { images: {} }, slides: [slide] }) as PptxIR
 
@@ -112,6 +123,38 @@ describe("the four pairings validate now refuses, and why", () => {
       expect(result.errors[0]!.message).toMatch(new RegExp(`^face "${face}" holds the first \\d+ \\("续约率[^"]*"\\) of the 15 characters in item 1 of this page's bullets`))
     })
   }
+
+  it("marquee-ending names the fields of a step it has no place for, and draws a step without them", () => {
+    expect(getThemeDefinition("rally").menu.ending.face).toBe("marquee-ending")
+    const steps = (desc?: string) => [
+      { date: "6 月 1 日", title: "开票", ...(desc ? { desc } : {}) },
+      { date: "6 月 8 日", title: "公布嘉宾" },
+    ]
+    const close = (desc?: string) => deck("rally", { type: "ending", heading: "下一步", components: [{ type: "timeline", milestones: steps(desc) }] })
+    expect(validateIr(close("首批两千张")).errors).toEqual([
+      {
+        path: "slides.0.components",
+        page: 1,
+        message:
+          'face "marquee-ending" cannot draw this ending page\'s "timeline" block as written: the close sets each step as its date and its title on a dotted line, so leave out desc, tag, source, highlight, tone, lane, icon, status, lanes, periods and title (milestone 1 has desc). Rewrite it that way, or move it to a content slide.',
+      },
+    ])
+    const plain = validateIr(close())
+    expect(plain.ok).toBe(true)
+    expect(dropped(plain.ir!)).toBe(0)
+  })
+
+  it("stat-cover names what a ticker has no place for", () => {
+    expect(getThemeDefinition("ledger").menu.cover.face).toBe("stat-cover")
+    const cover = deck("ledger", {
+      type: "cover",
+      heading: "AI 资本开支",
+      components: [{ type: "kpi_cards", items: [{ label: "四家合计", value: "4000", unit: "亿美元", icon: "trending-up" }, { label: "同比", value: "+62%" }] }],
+    })
+    const errors = validateIr(cover).errors
+    expect(errors.map((e) => e.path)).toEqual(["slides.0.components"])
+    expect(errors[0]!.message).toContain("a ticker sets each figure as its label, its value, its unit and its move, so leave out icon, source, tag and tone (item 1 has icon)")
+  })
 
   it("yearbook-cover refuses a timeline that is not dated by year, and draws one that is", () => {
     const milestones = (dates: string[]) => dates.map((date, i) => ({ date, title: ["免费配额 30%", "免费配额 20%", "免费配额 10%"][i]! }))

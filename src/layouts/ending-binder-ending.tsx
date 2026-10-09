@@ -4,7 +4,7 @@ import type { SvgTemplateProps } from "./types"
 import { stripEmphasis } from "../render/emphasis"
 import { blockTag } from "./compositions/shared"
 import { Lead, binderInks, binderText, binderWidth, binderBaseline, fitBinder, paintBinder, paintBinderCard, paintBinderLine, paintBinderTracked, paintCheckbox } from "./compositions/binder"
-import { boundarySlotBlock } from "./boundary-content"
+import { boundarySlotBlock, fieldsLeftOut } from "./boundary-content"
 import { BinderLabelLine, BinderTabsFor, BinderTitle } from "./binder-shared"
 import { dossierTitleSet } from "./dossier-shared"
 
@@ -32,6 +32,11 @@ const TITLE = { foot: 156, size: 44, lineHeight: 60, minPt: 32 } as const
 const CARDS = { top: 206, gap: 14, h: 268, pad: 28, number: { top: 20, size: 15, lineHeight: 22, tracking: 1 }, title: { top: 50, size: 21, lineHeight: 32, maxLines: 2 }, text: { top: 120, size: 14, lineHeight: 22, maxLines: 2 }, rule: 190, box: { top: 212, size: 22, r: 4, label: { dx: 30, size: 15, baseline: 17 }, after: 26 }, max: 4 } as const
 const BUTTON = { top: 512, h: 56, minW: 220, pad: 40, size: 19, line: { gap: 22, size: 16 } } as const
 
+/** Why the close cannot set `block` as its cards, or undefined when it can: each is its number, its title and a line of text over the ballot's boxes. */
+function cardsLeftOut(block: Component): string | undefined {
+  return block.type === "numbered_cards" ? fieldsLeftOut(block, "the close sets each card as its number, its title and a line of text over the ballot's boxes", { items: ["sub", "icon", "emphasis"] }) : undefined
+}
+
 export function BinderEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const inks = binderInks(ctx)
   const cards = boundarySlotBlock(slide, ["numbered_cards"]) as NumberedCards | undefined
@@ -45,10 +50,10 @@ export function BinderEnding({ ir, slide, ctx }: SvgTemplateProps) {
     const text = it.text?.trim() ? fitBinder(it.text, { width: inner, size: CARDS.text.size, lineHeight: CARDS.text.lineHeight, maxLines: CARDS.text.maxLines }, ctx) : null
     const choices = (overrides.get(i + 1) ?? ballot?.choices ?? []).map((c) => c.trim())
     const boxesW = choices.reduce((sum, c) => sum + CARDS.box.label.dx + binderWidth(c, CARDS.box.label.size, ctx, true) + CARDS.box.after, 0) - CARDS.box.after
-    const whole = title && (!it.text?.trim() || text) && !it.sub?.trim() && !it.icon && !it.emphasis && boxesW <= inner + 12
+    const whole = title && (!it.text?.trim() || text) && boxesW <= inner + 12
     return whole ? { it, title, text, choices } : null
   })
-  const cardsFit = cards !== undefined && n >= 2 && n <= CARDS.max && laid.every(Boolean) && [...overrides.keys()].every((k) => k >= 1 && k <= n) && !ballot?.signature
+  const cardsFit = cards !== undefined && cardsLeftOut(cards) === undefined && n >= 2 && n <= CARDS.max && laid.every(Boolean) && [...overrides.keys()].every((k) => k >= 1 && k <= n) && !ballot?.signature
   const ask = boundarySlotBlock(slide, ["paragraph"]) as Paragraph | undefined
   const askText = ask ? stripEmphasis(ask.text).trim() : ""
   const askW = Math.max(BUTTON.minW, Math.ceil(binderWidth(askText, BUTTON.size, ctx, true)) + BUTTON.pad * 2)
@@ -136,7 +141,7 @@ export const layoutDef = {
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["numbered_cards", "paragraph"], capacity: 2, itemCapacity: CARDS.max },
+    { name: "body", accepts: ["numbered_cards", "paragraph"], capacity: 2, itemCapacity: CARDS.max, declines: cardsLeftOut },
   ],
   pageFields: ["kicker", "stage", "ballot"],
   suppressMotif: true,

@@ -8,7 +8,7 @@ import { DecorPiece } from "../motifs/decor-piece"
 import { PitchScrim } from "./compositions/pitch"
 import { blockTag } from "./compositions/shared"
 import { Confetti, fitMarquee, marqueeBaseline, marqueeInks, marqueeText, marqueeWidth, paintMarquee, paintMarqueeIcon, paintMarqueeLine, ticketWidths, type Box, type MarqueeInks } from "./compositions/marquee"
-import { boundarySlotBlock, drawableItems } from "./boundary-content"
+import { boundarySlotBlock, drawableItems, fieldsLeftOut } from "./boundary-content"
 import { MarqueeTicket } from "./marquee-shared"
 import { fitDossierTitle, dossierTitleSet } from "./dossier-shared"
 import { headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
@@ -77,9 +77,14 @@ export function pillItems(slide: SvgTemplateProps["slide"]): { block: Bullets | 
   return { block, items: block.items.map((item) => ({ text: stripEmphasis(item.title).trim(), icon: item.icon })) }
 }
 
+/** Why a `row_cards` cannot be set as pills, or undefined when it can: a pill shows a title and an icon. */
+export function pillsLeftOut(block: Component): string | undefined {
+  return block.type === "row_cards" ? fieldsLeftOut(block, "the page sets each row card as a pill of its icon and its title", { items: ["text", "sub", "highlight", "tone"] }) : undefined
+}
+
 /** Whether a `row_cards` carries only what a pill can show: a title and an icon. */
 export function pillsWhole(block: Bullets | RowCards): boolean {
-  return block.type === "bullets" || block.items.every((item) => !item.text?.trim() && !item.sub?.trim() && !item.highlight && !item.tone)
+  return pillsLeftOut(block) === undefined
 }
 
 export function Pills({ items, block, ctx, inks, top }: { items: { text: string; icon?: string }[]; block: Bullets | RowCards; ctx: ComponentCtx; inks: MarqueeInks; top: number }): React.ReactElement {
@@ -162,7 +167,7 @@ export const layoutDef = {
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
     { name: "meta", accepts: [] },
-    { name: "body", accepts: ["row_cards", "bullets"], capacity: 1, itemCapacity: PILLS.max },
+    { name: "body", accepts: ["row_cards", "bullets"], capacity: 1, itemCapacity: PILLS.max, declines: pillsLeftOut },
   ],
   pageFields: ["kicker"],
   drawsPhoto: true,

@@ -5,7 +5,7 @@ import { stripEmphasis } from "../render/emphasis"
 import { PitchScrim } from "./compositions/pitch"
 import { blockTag } from "./compositions/shared"
 import { Lead, fitMarquee, marqueeInks, marqueeText, marqueeWidth, paintMarquee, paintMarqueeLine } from "./compositions/marquee"
-import { boundarySlotBlock } from "./boundary-content"
+import { boundarySlotBlock, fieldsLeftOut } from "./boundary-content"
 import { MarqueeBigTitle } from "./cover-marquee-cover"
 import { MarqueeTicket } from "./marquee-shared"
 import { dossierTitleSet } from "./dossier-shared"
@@ -39,6 +39,13 @@ const SCRIM = [
   { offset: "100%", opacity: 0.3 },
 ] as const
 
+/** Why the close cannot set `block` as its next steps, or undefined when it can: each is its date and its title, on a dotted line. */
+function stepsLeftOut(block: Component): string | undefined {
+  return block.type === "timeline"
+    ? fieldsLeftOut(block, "the close sets each step as its date and its title on a dotted line", { items: ["desc", "tag", "source", "highlight", "tone", "lane", "icon", "status"], block: ["lanes", "periods", "title"] })
+    : undefined
+}
+
 export function MarqueeEnding({ slide, index, ctx }: SvgTemplateProps) {
   const inks = marqueeInks(ctx)
   const photo = slide.background?.kind === "asset"
@@ -54,10 +61,8 @@ export function MarqueeEnding({ slide, index, ctx }: SvgTemplateProps) {
   }))
   const stepsFit =
     milestones.length <= STEPS.max &&
-    fitted.every((f) => f.date && f.title && !f.m.desc?.trim() && !f.m.tag && !f.m.source && !f.m.highlight && !f.m.tone && !f.m.lane && !f.m.icon && !f.m.status) &&
-    !steps?.lanes &&
-    !steps?.periods &&
-    !steps?.title
+    fitted.every((f) => f.date && f.title) &&
+    (steps === undefined || stepsLeftOut(steps) === undefined)
   const ask = boundarySlotBlock(slide, ["paragraph"]) as Paragraph | undefined
   const askText = ask ? stripEmphasis(ask.text).trim() : ""
   const askW = Math.max(BUTTON.minW, Math.ceil(marqueeWidth(askText, BUTTON.size, ctx, true)) + BUTTON.pad * 2)
@@ -126,7 +131,7 @@ export const layoutDef = {
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["timeline", "paragraph"], capacity: 2, itemCapacity: STEPS.max },
+    { name: "body", accepts: ["timeline", "paragraph"], capacity: 2, itemCapacity: STEPS.max, declines: stepsLeftOut },
   ],
   pageFields: ["kicker"],
   // It lays its own darkening over the page's photograph.

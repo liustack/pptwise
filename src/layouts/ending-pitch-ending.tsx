@@ -2,7 +2,7 @@ import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
 import type { Component } from "@/ir"
 import { stripEmphasis } from "../render/emphasis"
-import { boundarySlotBlock } from "./boundary-content"
+import { boundarySlotBlock, fieldsLeftOut } from "./boundary-content"
 import { blockTag } from "./compositions/shared"
 import { Fire, fitPitch, paintPitch, paintPitchCard, paintPitchIcon, paintPitchLine, paintWedge, pitchInks, pitchText, pitchWidth } from "./compositions/pitch"
 import { PitchTitle } from "./pitch-shared"
@@ -30,6 +30,13 @@ const SUB = { top: 392, size: 20, lineHeight: 32, maxLines: 2, w: 1100 } as cons
 const STEPS = { top: 466, pitch: 260, max: 4, icon: { dy: 4, size: 22 }, x: 34, date: { size: 14, lineHeight: 24 }, title: { top: 28, size: 19, lineHeight: 30, w: 220 } } as const
 const BUTTON = { top: 580, h: 56, minW: 220, padX: 40, size: 20 } as const
 
+/** Why the close cannot set `block` as the steps the round pays for, or undefined when it can: each is its icon, its date and its title. */
+function stepsLeftOut(block: Component): string | undefined {
+  return block.type === "timeline"
+    ? fieldsLeftOut(block, "the close sets each step as its icon, its date and its title", { items: ["desc", "tag", "source", "highlight", "tone", "lane", "status"], block: ["lanes", "periods", "title"] })
+    : undefined
+}
+
 export function PitchEnding({ slide, ctx }: SvgTemplateProps) {
   const inks = pitchInks(ctx)
   const sub = slide.subheading?.trim() ? fitPitch(slide.subheading, { width: SUB.w, size: SUB.size, lineHeight: SUB.lineHeight, maxLines: SUB.maxLines }, ctx) : null
@@ -42,10 +49,8 @@ export function PitchEnding({ slide, ctx }: SvgTemplateProps) {
   }))
   const stepsFit =
     milestones.length <= STEPS.max &&
-    fitted.every((f) => f.date && f.title && !f.m.desc?.trim() && !f.m.tag && !f.m.source && !f.m.highlight && !f.m.tone && !f.m.lane && !f.m.status) &&
-    !steps?.lanes &&
-    !steps?.periods &&
-    !steps?.title
+    fitted.every((f) => f.date && f.title) &&
+    (steps === undefined || stepsLeftOut(steps) === undefined)
   const ask = boundarySlotBlock(slide, ["paragraph"]) as Paragraph | undefined
   const askText = ask ? stripEmphasis(ask.text).trim() : ""
   const askW = Math.max(BUTTON.minW, Math.ceil(pitchWidth(askText, BUTTON.size, ctx, true)) + BUTTON.padX * 2)
@@ -108,7 +113,7 @@ export const layoutDef = {
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
     { name: "meta", accepts: [] },
-    { name: "body", accepts: ["timeline", "paragraph"], capacity: 2, itemCapacity: STEPS.max },
+    { name: "body", accepts: ["timeline", "paragraph"], capacity: 2, itemCapacity: STEPS.max, declines: stepsLeftOut },
   ],
   suppressMotif: true,
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },

@@ -2,7 +2,7 @@ import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
 import type { Component } from "@/ir"
 import { chapterNumberFor } from "../lib/derive"
-import { boundarySlotBlock } from "./boundary-content"
+import { boundarySlotBlock, fieldsLeftOut } from "./boundary-content"
 import { blockTag } from "./compositions/shared"
 import { Fire, fitPitch, paintPitch, paintPitchIcon, PitchScrim, pitchBaseline, pitchInks, pitchText } from "./compositions/pitch"
 import { PitchTitle } from "./pitch-shared"
@@ -33,6 +33,11 @@ const SCRIM = [
   { offset: "100%", opacity: 0.15 },
 ] as const
 
+/** Why the act cannot list `block` as what it covers, or undefined when it can: each is its icon and its title on one line. */
+function pointsLeftOut(block: Component): string | undefined {
+  return block.type === "row_cards" ? fieldsLeftOut(block, "the act lists each point as its icon and its title on one line", { items: ["text", "sub", "tone", "highlight"] }) : undefined
+}
+
 export function PitchChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const inks = pitchInks(ctx)
   const photo = slide.background?.kind === "asset"
@@ -40,7 +45,7 @@ export function PitchChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const block = boundarySlotBlock(slide, ["row_cards"]) as RowCards | undefined
   const items = block?.items ?? []
   const points = items.map((item) => fitPitch(item.title, { width: POINTS.text.w, size: POINTS.text.size, lineHeight: POINTS.text.lineHeight, maxLines: 1 }, ctx))
-  const pointsFit = items.length <= POINTS.max && points.every(Boolean) && items.every((item) => !item.text?.trim() && !item.sub?.trim() && !item.tone && !item.highlight)
+  const pointsFit = items.length <= POINTS.max && points.every(Boolean) && (block === undefined || pointsLeftOut(block) === undefined)
   const numeralBaseline = pitchBaseline(NUMERAL.top, NUMERAL.lineHeight, NUMERAL.size)
   return (
     <>
@@ -105,7 +110,7 @@ export const layoutDef = {
   slideTypes: ["chapter"],
   slots: [
     { name: "heading", accepts: [] },
-    { name: "body", accepts: ["row_cards"], capacity: 1, itemCapacity: POINTS.max },
+    { name: "body", accepts: ["row_cards"], capacity: 1, itemCapacity: POINTS.max, declines: pointsLeftOut },
   ],
   drawsPhoto: true,
   suppressMotif: true,
