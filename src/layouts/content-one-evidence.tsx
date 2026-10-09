@@ -2,7 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import type { ContentRect } from "../render/layout"
 import { pickEvidence } from "../render/component-traits"
-import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
+import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading, stripEmphasis } from "../render/emphasis"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { SvgContent } from "../render/svg-content"
@@ -37,6 +37,44 @@ const FOOTNOTE_Y = 656
  * every source line came back marked as cut.
  */
 const FOOTNOTE_SIZE = 16
+
+/**
+ * The page's subheading, under the claim, in the source line's type: the
+ * face's one other text, 16px in the muted ink. This face used to draw no
+ * subheading at all, and every theme skin of it in `sparse/` sets one as a
+ * muted line under its claim, so a page that wrote one lost it on the
+ * generic face with no mark. The evidence moves down under it.
+ */
+const STANDFIRST_GAP = 8
+
+function fitStandfirst(slide: SvgTemplateProps["slide"], fontFamily: string) {
+  const source = stripEmphasis(slide.subheading ?? "").trim()
+  return source ? fitSvgLine(source, { maxWidth: HEADING_MAX_W, fontSize: FOOTNOTE_SIZE, minFontSize: 16, fontFamily }) : null
+}
+
+/** The standfirst's baseline under a claim whose last line box ends at `headingBottom`, and the foot of the text above the evidence. */
+function standfirstAt(headingBottom: number, standfirst: ReturnType<typeof fitStandfirst>): { baseline: number; bottom: number } {
+  if (!standfirst) return { baseline: headingBottom, bottom: headingBottom }
+  const baseline = Math.ceil(headingBottom + STANDFIRST_GAP + standfirst.fontSize)
+  return { baseline, bottom: baseline + standfirst.fontSize * 0.25 }
+}
+
+function Standfirst({ standfirst, y, ctx }: { standfirst: NonNullable<ReturnType<typeof fitStandfirst>>; y: number; ctx: SvgTemplateProps["ctx"] }) {
+  const defaultBg = ctx.defaultBg ?? ctx.colors.bg
+  return (
+    <text
+      data-truncated={standfirst.truncated ? "1" : undefined}
+      x={HEADING_X}
+      y={y}
+      fontFamily={ctx.fonts.body}
+      fontSize={standfirst.fontSize}
+      fill={accessibleInk(ctx.colors.muted, defaultBg, standfirst.fontSize)}
+      dominantBaseline="alphabetic"
+    >
+      {standfirst.text}
+    </text>
+  )
+}
 
 /**
  * Whether this page is the one thing this face can draw: a single piece of
@@ -99,7 +137,9 @@ function OneEvidenceFallbackContent({ slide, ctx }: SvgTemplateProps) {
     FALLBACK_HEADING_Y +
     Math.max(0, heading.lines.length - 1) * heading.lineHeight +
     heading.fontSize * 0.25
-  const bodyTop = Math.ceil(headingBottom + 24)
+  const standfirst = fitStandfirst(slide, fonts.body)
+  const under = standfirstAt(headingBottom, standfirst)
+  const bodyTop = Math.ceil(under.bottom + 24)
 
   const footnoteSource = slide.footnote?.trim()
   const footnote = footnoteSource
@@ -138,6 +178,7 @@ function OneEvidenceFallbackContent({ slide, ctx }: SvgTemplateProps) {
           />
         ),
       )}
+      {standfirst && <Standfirst standfirst={standfirst} y={under.baseline} ctx={ctx} />}
       <SvgContent
         components={slide.components}
         rect={bodyRect}
@@ -178,7 +219,9 @@ function GenericOneEvidenceContent({ slide, ctx }: SvgTemplateProps) {
   const evidence = pickEvidence(slide.components)
   const headingBottom =
     HEADING_Y + Math.max(0, heading.lines.length - 1) * heading.lineHeight + heading.fontSize * 0.25
-  const evidenceY = Math.max(EVIDENCE_TOP, Math.ceil(headingBottom + 16))
+  const standfirst = fitStandfirst(slide, fonts.body)
+  const under = standfirstAt(headingBottom, standfirst)
+  const evidenceY = Math.max(EVIDENCE_TOP, Math.ceil(under.bottom + 16))
   const evidenceRect: ContentRect = {
     x: EVIDENCE_X,
     y: evidenceY,
@@ -218,6 +261,8 @@ function GenericOneEvidenceContent({ slide, ctx }: SvgTemplateProps) {
           ),
         )}
       </g>
+
+      {standfirst && <Standfirst standfirst={standfirst} y={under.baseline} ctx={ctx} />}
 
       {evidence && renderFittedEvidence(evidence, evidenceRect, ctx)}
 

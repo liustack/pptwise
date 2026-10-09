@@ -292,7 +292,6 @@ const allBut = (...themes: string[]) => CANONICAL_THEME_IDS.filter((theme) => !t
  * longer happens: a fix takes its entry out.
  */
 const PENDING: Record<string, readonly string[]> = {
-  "evidence (one-evidence) × subheading": CANONICAL_THEME_IDS,
   "statement (show-statement) × subheading": CANONICAL_THEME_IDS,
   // swiss serves image-top with its grid band, which sets a subheading.
   "photo (image-top) × subheading": allBut("swiss"),
