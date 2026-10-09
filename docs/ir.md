@@ -181,6 +181,8 @@ See the [SKILL component guide](../skills/pptwise/references/components.md) for 
 
 `axes` titles and units apply to `bar`, `stacked`, `percent_stacked`, `combo`, `line`, `area`, and `scatter`. Within one series, a category may appear once.
 
+A chart of one series may leave that series' `name` off the page, except a `line` or `area` chart, which names it where the line ends. The page heading says what the chart shows, and a one-entry legend would say it again. `validate` and `audit` do not report it, since nothing was lost that the page does not already say. Write anything the reader needs that the heading does not say into the heading, the `subheading` or an `axes` title. A chart of two or more series names every series.
+
 A `scatter` series with `steps: true` joins its points as a staircase, each value held until the next point and then jumping to it, such as a statutory age by date of birth: write the points in order of x, one where each step begins. Its points are not dotted.
 
 `markers` draws up to three dashed lines down a `line` chart where a category begins, such as the ages a rule changes at: `[{ "before": "Age 50-54", "label": "Women, 50" }]`. Each stands halfway between the category it names and the one before it, its label over the plot.
