@@ -354,10 +354,10 @@ function pageLimits(
   return kept.filter((limit) => !kept.some((other) => other !== limit && outranks(other, limit)))
 }
 
-/** Whether a component type carries an `items` list, the list a face's item capacity counts. */
+/** Whether a component type carries an `items` list, or a timeline's `milestones`: the list a face's item capacity counts, as validate counts it. */
 function holdsItems(full: JsonSchemaDocument, type: string): boolean {
-  const def = (full.$defs ?? {})[type] as { properties?: { items?: { type?: string } } } | undefined
-  return def?.properties?.items?.type === "array"
+  const def = (full.$defs ?? {})[type] as { properties?: { items?: { type?: string }; milestones?: { type?: string } } } | undefined
+  return def?.properties?.items?.type === "array" || def?.properties?.milestones?.type === "array"
 }
 
 /**

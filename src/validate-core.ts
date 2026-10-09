@@ -45,7 +45,10 @@ import { findImageSelection } from "./layouts/find-image"
 import { bodyStatementLines } from "./layouts/minimal-shared"
 import { headingRoom, headingVerdict, type HeadingCtx, type HeadingPage } from "./layouts/heading-set"
 import { textRoom, type TextRoom } from "./layouts/text-room"
-import { headingCrowding, subheadingSet } from "./render/boundary-loss"
+import { blockTextCrowding, blocksLoss, fieldsCrowdingBlocks, headingCrowding, subheadingSet } from "./render/boundary-loss"
+import { dropPhrase } from "./render/drop-marker"
+import { droppedIn, slideToSvgMarkup } from "./render/render-slide"
+import { parseSvgRoot } from "./render/serialize"
 import { IMAGE_COVER_HEADING } from "./render/image-pages"
 import { deckFigureStyle } from "./lib/figure-style"
 import { stripEmphasis } from "./render/emphasis"
@@ -810,6 +813,121 @@ function checkBoundaryHeadingRoom(ir: PptxIR, theme: ThemeDefinition): Validatio
 }
 
 /**
+ * Boundary-page block-shape hard gate.
+ *
+ * A face may need more of a block than its type and its count: yearbook-
+ * cover lays a timeline as a scale of years, and a timeline dated by
+ * quarter passed validate and was left off the cover with a mark only the
+ * export read. Such a face declares what it needs on its slot
+ * (`LayoutSlot.declines`), its drawing asks the same function, and the
+ * page is refused here with the face's own reason.
+ */
+function checkBoundaryBlockShape(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder) return
+    if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
+    const layout = componentFace(ir, slide, theme)
+    if (!layout) return
+    for (const slot of layout.slots) {
+      if (slot.declines === undefined || slot.accepts === "any") continue
+      for (const block of boundarySlotBlocks(slide, slot.accepts)) {
+        const why = slot.declines(block)
+        if (why === undefined) continue
+        errors.push({
+          path: `slides.${i}.components`,
+          page: i + 1,
+          ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+          message: `face "${layout.id}" cannot draw this ${slide.type} page's "${block.type}" block as written: ${why}. Rewrite it that way, or move it to a content slide.`,
+        })
+      }
+    }
+  })
+  return errors
+}
+
+/** Where a text sits in a page's blocks, for a message: `item 2 of this page's bullets`, `the text of item 3 of this page's icon_cards`. */
+function blockTextPlace(field: string, slide: PptxIR["slides"][number]): string {
+  const [, at, ...rest] = field.split(".")
+  const block = `this page's ${slide.components[Number(at)]!.type}`
+  const named: string[] = []
+  for (let k = 0; k < rest.length; k++) {
+    const key = rest[k]!
+    const next = rest[k + 1]
+    if (next !== undefined && /^\d+$/.test(next)) {
+      named.push(`${key.replace(/s$/, "")} ${Number(next) + 1}`)
+      k++
+    } else named.push(`the ${key}`)
+  }
+  return [...named.reverse(), block].join(" of ")
+}
+
+/**
+ * Boundary-page block hard gate, the last one: what a face would still
+ * leave off.
+ *
+ * Every gate above asks a face a question it can answer before drawing.
+ * What is left is what only the drawing knows: a list item too long for the
+ * one-line label close-word-ending sets it as, a button's words wider than
+ * the pill binder-ending draws them on. Each of those passed validate and
+ * reached the export as a data-dropped mark. The page is drawn
+ * (`render/boundary-loss.ts`), with its blocks and without them. When the
+ * face leaves more off with them, the texts
+ * in its blocks are cut short to see whether their length is the cost, and
+ * each text the face cannot hold is refused, quoting the part it holds.
+ * Otherwise a page field the face has no room for beside the blocks (a
+ * ballot's signature line beside binder-ending's cards) is refused by
+ * name. Whatever is still left off is a shape the face does not draw, and
+ * the page is refused naming what would be lost.
+ * A page this gate passes is one its face draws with nothing dropped.
+ */
+function checkBoundaryBlocksDrawn(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder) return
+    if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
+    if (slide.components.length === 0) return
+    const loss = blocksLoss(ir, i, theme)
+    if (loss <= 0) return
+    const drawer = boundaryDrawer(resolveEffectiveFace(ir, slide, theme), slide.type)
+    const where = { page: i + 1, ...(slide.id !== undefined ? { slideId: slide.id } : {}) }
+    const crowded = blockTextCrowding(ir, i, theme)
+    if (crowded !== undefined && crowded.length > 0) {
+      for (const { field, text, holds } of crowded) {
+        const room = textRoom(text, holds)
+        errors.push({
+          path: `slides.${i}.${field}`,
+          ...where,
+          message: `${drawer} holds ${heldPart(room)} of the ${room.count} ${room.unit} in ${blockTextPlace(field, slide)}, so the face would leave the block off the page. Shorten it, or move the block to a content slide.`,
+        })
+      }
+      return
+    }
+    const lost = droppedIn(parseSvgRoot(slideToSvgMarkup(ir, slide, i, theme)))
+      .drops.map(({ kind, count }) => dropPhrase(kind, count))
+      .join(" and ")
+    const blocks = [...new Set(slide.components.map((c) => c.type))].join(" and ")
+    const fields = fieldsCrowdingBlocks(ir, i, theme, loss)
+    if (fields.length > 0) {
+      for (const field of fields) {
+        errors.push({
+          path: `slides.${i}.${field}`,
+          ...where,
+          message: `${drawer} cannot draw this ${slide.type} page's ${blocks} beside its ${field} as written and would leave ${lost} off the page. Remove the ${field}, or move the ${blocks} to a content slide.`,
+        })
+      }
+      return
+    }
+    errors.push({
+      path: `slides.${i}.components`,
+      ...where,
+      message: `${drawer} cannot draw this ${slide.type} page's ${blocks} as written and would leave ${lost} off the page. Write them in a shape this face draws, or move them to a content slide.`,
+    })
+  })
+  return errors
+}
+
+/**
  * Duplicate slide id hard gate (W5 task 1): `slide.id` is a stable page
  * identity spec/assemble stamps on (spec-adjacent — see `ir/index.ts`'s
  * `id` docstring), so two slides sharing one within the same deck is always
@@ -1211,6 +1329,8 @@ export function validateIr(
   if (boundarySlotErrors.length > 0) return withNormalized({ ok: false, errors: boundarySlotErrors })
   const boundaryItemErrors = checkBoundaryItemCapacity(r.data, theme)
   if (boundaryItemErrors.length > 0) return withNormalized({ ok: false, errors: boundaryItemErrors })
+  const boundaryShapeErrors = checkBoundaryBlockShape(r.data, theme)
+  if (boundaryShapeErrors.length > 0) return withNormalized({ ok: false, errors: boundaryShapeErrors })
   const boundaryHeadingErrors = checkBoundaryHeadingFit(r.data, theme)
   if (boundaryHeadingErrors.length > 0) return withNormalized({ ok: false, errors: boundaryHeadingErrors })
   const duplicateIdErrors = checkDuplicateSlideIds(r.data)
@@ -1237,6 +1357,8 @@ export function validateIr(
   if (boundarySubheadingErrors.length > 0) return withNormalized({ ok: false, errors: boundarySubheadingErrors })
   const boundaryHeadingRoomErrors = checkBoundaryHeadingRoom(r.data, theme)
   if (boundaryHeadingRoomErrors.length > 0) return withNormalized({ ok: false, errors: boundaryHeadingRoomErrors })
+  const boundaryBlockErrors = checkBoundaryBlocksDrawn(r.data, theme)
+  if (boundaryBlockErrors.length > 0) return withNormalized({ ok: false, errors: boundaryBlockErrors })
   // Narrative resolution (spec §5's defaults chain, W3 task 2; renamed from
   // "scenario resolution" spec §8.1). Both branches of the schema's
   // `narrative` union (NarrativeProfileInputSchema in ir/index.ts) are open

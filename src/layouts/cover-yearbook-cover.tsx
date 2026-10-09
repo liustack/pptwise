@@ -44,7 +44,7 @@ const COLUMN = 560
 const HEAD = { top: 64, size: 14, lineHeight: 22, tracking: 2 } as const
 const TITLE = { foot: 380, size: 50, lineHeight: 66, minPt: 36, w: 470 } as const
 const BAR = { y: 396, w: 60, h: 4 } as const
-const SCALE = { minYears: 2, x0: 64, x1: 500, y: 520, r: 4, stroke: 1.5, year: { rise: 14, size: 13 }, value: { drop: 24, size: 13 } } as const
+const SCALE = { minYears: 2, maxSpan: 12, x0: 64, x1: 500, y: 520, r: 4, stroke: 1.5, year: { rise: 14, size: 13 }, value: { drop: 24, size: 13 } } as const
 const CAPTION = { top: 556, size: 13, lineHeight: 20 } as const
 const DATE = { top: 620, size: 15, lineHeight: 22 } as const
 /** The board's contour lines: six curves across the column's lower half, the ghost at 60%. */
@@ -56,16 +56,35 @@ function contourPath(i: number): string {
   return `M 0 ${r(yy + 20)} C ${r(COLUMN * 0.3)} ${r(yy - 18 + i * 3)}, ${r(COLUMN * 0.65)} ${r(yy + 40 - i * 4)}, ${COLUMN} ${r(yy + 6)}`
 }
 
+/** The years a timeline's milestones are dated, or null for a date that is not a year. */
+function yearsOf(block: Timeline): (number | null)[] {
+  return block.milestones.map((m) => (/^\s*\d{4}\s*$/.test(m.date) ? yearOf(m.date) : null))
+}
+
+/** Why the cover cannot lay `block` as its year scale, said to the author, or undefined when it can. */
+function scaleRefusal(block: Timeline): string | undefined {
+  const years = yearsOf(block)
+  if (years.some((y) => y === null)) return 'the cover lays a timeline as a scale of years, so every milestone\'s date has to be a year, such as "2024"'
+  if (years.length < SCALE.minYears) return `the scale needs at least ${SCALE.minYears} years`
+  const span = Math.max(...(years as number[])) - Math.min(...(years as number[]))
+  if (span < 1) return "the scale needs milestones in two different years"
+  if (span > SCALE.maxSpan) return `the scale runs ${SCALE.maxSpan} years at most, from the first year to the last`
+  return undefined
+}
+
+/** What of the timeline the year scale has no line for: it prints each year and its milestone's title. */
+function scaleLeftovers(block: Timeline): string | undefined {
+  return block.milestones.some((m) => m.desc || m.tag || m.source || m.icon || m.lane || m.status) || block.periods
+    ? "the year scale prints each milestone's year and title only, so leave out desc, tag, source, icon, lane, status and periods"
+    : undefined
+}
+
 /** The cover's year scale: a timeline whose every date is a year, laid from its first year to its last. */
 function scaleOf(slide: SvgTemplateProps["slide"]): { timeline: Timeline; from: number; to: number; marks: Map<number, Timeline["milestones"][number]> } | null {
   const block = boundarySlotBlock(slide, ["timeline"])
-  if (block?.type !== "timeline") return null
-  const years = block.milestones.map((m) => (/^\s*\d{4}\s*$/.test(m.date) ? yearOf(m.date) : null))
-  if (years.some((y) => y === null) || years.length < SCALE.minYears) return null
-  const from = Math.min(...(years as number[]))
-  const to = Math.max(...(years as number[]))
-  if (to - from < 1 || to - from > 12) return null
-  return { timeline: block, from, to, marks: new Map(block.milestones.map((m, i) => [years[i]!, m])) }
+  if (block?.type !== "timeline" || scaleRefusal(block) !== undefined) return null
+  const years = yearsOf(block) as number[]
+  return { timeline: block, from: Math.min(...years), to: Math.max(...years), marks: new Map(block.milestones.map((m, i) => [years[i]!, m])) }
 }
 
 export function YearbookCover({ ir, slide, ctx }: SvgTemplateProps) {
@@ -165,7 +184,7 @@ export function YearbookCover({ ir, slide, ctx }: SvgTemplateProps) {
                 />
               ))
             : null}
-          {scale.timeline.milestones.some((m) => m.desc || m.tag || m.source || m.icon || m.lane || m.status) || scale.timeline.periods ? (
+          {scaleLeftovers(scale.timeline) !== undefined ? (
             <g data-dropped={1} data-dropped-kind="label" />
           ) : null}
         </g>
@@ -196,7 +215,14 @@ export const layoutDef = {
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
     { name: "meta", accepts: [] },
-    { name: "body", accepts: ["timeline"], capacity: 1, itemMinimum: SCALE.minYears, itemCapacity: 13 },
+    {
+      name: "body",
+      accepts: ["timeline"],
+      capacity: 1,
+      itemMinimum: SCALE.minYears,
+      itemCapacity: 13,
+      declines: (block) => (block.type === "timeline" ? (scaleRefusal(block) ?? scaleLeftovers(block)) : undefined),
+    },
   ],
   drawsPhoto: true,
   paintsOwnBackground: true,

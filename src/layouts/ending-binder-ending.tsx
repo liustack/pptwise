@@ -52,8 +52,14 @@ export function BinderEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const ask = boundarySlotBlock(slide, ["paragraph"]) as Paragraph | undefined
   const askText = ask ? stripEmphasis(ask.text).trim() : ""
   const askW = Math.max(BUTTON.minW, Math.ceil(binderWidth(askText, BUTTON.size, ctx, true)) + BUTTON.pad * 2)
-  const line = slide.subheading?.trim() ? fitBinder(slide.subheading, { width: W - askW - BUTTON.line.gap, size: BUTTON.line.size, lineHeight: BUTTON.h, maxLines: 1 }, ctx) : null
-  const lineX = LEFT + (askText ? askW + BUTTON.line.gap : 0)
+  // The button holds its words on one line across the measure at most. Words
+  // past that ran the pill off the page with nothing to say so: they are
+  // declared lost instead, the way marquee-ending's and pitch-ending's
+  // buttons declare theirs.
+  const askFits = askW <= W
+  // A button too long to draw leaves the line the room it has with none.
+  const line = slide.subheading?.trim() ? fitBinder(slide.subheading, { width: W - (askFits ? askW : BUTTON.minW) - BUTTON.line.gap, size: BUTTON.line.size, lineHeight: BUTTON.h, maxLines: 1 }, ctx) : null
+  const lineX = LEFT + (askText && askFits ? askW + BUTTON.line.gap : 0)
   return (
     <>
       <BinderTabsFor ir={ir} slide={slide} ctx={ctx} />
@@ -94,12 +100,16 @@ export function BinderEnding({ ir, slide, ctx }: SvgTemplateProps) {
       ) : null}
       {ballot && !cards ? <g data-dropped={1} data-dropped-kind="label" /> : null}
       {ask && askText ? (
-        <g {...blockTag(ctx, ask)}>
-          <Lead id="ask">
-            <rect x={LEFT} y={BUTTON.top} width={askW} height={BUTTON.h} rx={BUTTON.h / 2} fill={inks.fire} />
-            {paintBinderLine(askText, { ctx, x: LEFT + askW / 2, top: BUTTON.top, lineHeight: BUTTON.h, size: BUTTON.size, bold: true, anchor: "middle", fill: binderText(inks.onFire, inks.fire, BUTTON.size) })}
-          </Lead>
-        </g>
+        askFits ? (
+          <g {...blockTag(ctx, ask)}>
+            <Lead id="ask">
+              <rect x={LEFT} y={BUTTON.top} width={askW} height={BUTTON.h} rx={BUTTON.h / 2} fill={inks.fire} />
+              {paintBinderLine(askText, { ctx, x: LEFT + askW / 2, top: BUTTON.top, lineHeight: BUTTON.h, size: BUTTON.size, bold: true, anchor: "middle", fill: binderText(inks.onFire, inks.fire, BUTTON.size) })}
+            </Lead>
+          </g>
+        ) : (
+          <g data-dropped={1} data-dropped-kind="label" />
+        )
       ) : null}
       {line ? <g data-binder-ending-line="">{paintBinder(line, { ctx, x: lineX, top: BUTTON.top, fill: binderText(inks.muted, inks.ground, BUTTON.line.size) })}</g> : null}
       {slide.subheading?.trim() && !line ? <g data-dropped={1} data-dropped-kind="label" /> : null}

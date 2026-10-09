@@ -226,7 +226,28 @@ function minimal(type: string, i: number, items = 1): Component {
   // block count being probed.
   if (type === "kpi_cards") return { type: "kpi_cards", items: Array.from({ length: items }, (_, j) => ({ value: `${i}${j}`, label: `Figure ${i}.${j}` })) }
   if (type === "blockquote") return { type: "blockquote", text: `Words ${i}` }
-  return sample(type)
+  // Any other block in its bare required shape with short words, so a
+  // boundary face that draws only that shape draws the probe: the sample's
+  // icons, notes and sentences would have it refused for the block's shape
+  // or its words, not the count being probed. A timeline is dated by year,
+  // the one dating every face that sets a timeline reads.
+  const schema = componentJsonSchema(type) as { required?: string[]; properties?: Record<string, { minItems?: number; items?: { required?: string[] } }> }
+  const required = new Set(schema.required ?? [])
+  const full = sample(type) as unknown as Record<string, unknown>
+  const words = new Set(["title", "text", "label", "caption", "desc", "name"])
+  const short = (entry: Record<string, unknown>, j: number) =>
+    Object.fromEntries(Object.entries(entry).map(([field, value]) => [field, words.has(field) && typeof value === "string" ? `${value.split(/\s+/)[0]!.slice(0, 8)} ${i}.${j}` : value]))
+  const block = short(Object.fromEntries(Object.entries(full).filter(([field]) => required.has(field))), 0)
+  const key = ["items", "milestones"].find((k) => Array.isArray(full[k]) && required.has(k))
+  if (key !== undefined) {
+    const itemRequired = schema.properties?.[key]?.items?.required ?? []
+    const list = (full[key] as Record<string, unknown>[]).map((item) => Object.fromEntries(Object.entries(item).filter(([field]) => itemRequired.includes(field))))
+    block[key] = Array.from({ length: Math.max(items, schema.properties?.[key]?.minItems ?? 1) }, (_, j) => {
+      const item = short(list[j % list.length]!, j)
+      return key === "milestones" ? { ...item, date: String(2020 + j) } : item
+    })
+  }
+  return block as unknown as Component
 }
 
 /**
@@ -248,9 +269,8 @@ function atCount(limit: PageLimit, legal: readonly string[], n: number, limits: 
     case "items": {
       if (of.includes("bullets")) return [{ type: "bullets", items: Array.from({ length: n }, (_, i) => `Point ${i}`) }]
       if (of.includes("numbered_cards")) return [{ type: "numbered_cards", items: Array.from({ length: n }, (_, i) => ({ title: `Task ${i}` })) }]
-      if (!of.includes("kpi_cards")) return undefined
-      const base = sample("kpi_cards") as Extract<Component, { type: "kpi_cards" }>
-      return [{ ...base, items: Array.from({ length: n }, (_, i) => ({ ...base.items[0]!, label: `Figure ${i}` })) }]
+      const type = of.find((t) => t !== "paragraph")
+      return type === undefined ? undefined : [minimal(type, 0, n)]
     }
     case "item width":
       return [{ type: "bullets", items: ["测".repeat(n)] }]
@@ -306,6 +326,10 @@ describe("pageContract: limits flip validate exactly at max (T7)", () => {
       const past = atCount(limit, contract.components.legal, limit.max + 1, contract.limits)
       const below = atCount(limit, contract.components.legal, Math.max(limit.max - 1, 0), contract.limits)
       expect(atMax && past && below, `${label} has no probe`).toBeDefined()
+      // A warning on a text's width is advice for the faces whose own room is
+      // wider. A face that sets the text in less refuses the probe outright,
+      // an error before any advice is given.
+      if (limit.level === "warning" && verdict(atMax!, "error").length > 0) continue
       const before = verdict(atMax!, limit.level)
       // One past the limit raises a finding at the stated level that the
       // limit itself did not.
@@ -323,6 +347,9 @@ describe("pageContract: limits flip validate exactly at max (T7)", () => {
         expect(verdict(short, limit.level).filter((line) => !atFloor.includes(line)), `${label} under its floor`).not.toEqual([])
       }
       if (tighter) continue
+      // A face whose own room for the text is tighter than this limit has
+      // refused the text one under it already, quoting what it holds.
+      if (verdict(below!, "error").some((line) => line.includes(" holds the first "))) continue
       const under = verdict(below!, limit.level)
       expect(before.filter((line) => !under.includes(line)), label).toEqual([])
     }

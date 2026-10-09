@@ -58,6 +58,7 @@
 // no cast is ever needed where the two meet (`layout-selection.ts`'s
 // `resolveLayoutId`).
 import type { DesignStory } from "@/design-story"
+import type { Component } from "@/ir"
 import type { STRATEGY_VALUES } from "@/ir/narrative-values"
 import type { HeadingSet } from "./heading-set"
 
@@ -365,6 +366,14 @@ export interface LayoutSlot {
    * `undefined` means the slot draws as few as the schema allows.
    */
   itemMinimum?: number
+  /**
+   * What the face needs of an accepted block beyond its type and its count,
+   * said to the author: a year scale whose every date is a year. Returns
+   * why the face would leave `block` (or part of it) off, or undefined when
+   * it draws it whole. The face's drawing asks the same function, and
+   * `checkBoundaryBlockShape` refuses the page with the reason.
+   */
+  declines?: (block: Component) => string | undefined
   /**
    * The face sets the page's heading in this slot's first item row when the
    * page carries a `bullets` block, the way it sets a heading written as the
