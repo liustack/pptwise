@@ -11,7 +11,7 @@ import {
   pullQuoteText,
   pullQuoteSourceParts,
 } from "../minimal-shared"
-import { fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, sourcePastFoot } from "./shared"
+import { contextFits, fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, SOURCE_FOOT, sourcePastFoot } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 import { verticalForm } from "../compositions/scroll"
 
@@ -75,6 +75,11 @@ function VerticalRun({
   )
 }
 
+/** Whether a {@link VerticalRun} of `text` set down from `y` keeps its last character above the foot of the type area. */
+function verticalRunFits(text: string | undefined, y: number, size: number): boolean {
+  return text === undefined || y + (Array.from(text).length - 1) * size <= SOURCE_FOOT
+}
+
 export function statement({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const verse = slide.heading ?? ""
@@ -90,6 +95,8 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
       fontFamily: fonts.heading,
       bold: false,
     })
+    // A claim these lines cannot hold whole goes to the shared face, which marks what it still cuts.
+    if (heading.truncated) return null
     return (
       <>
         <rect x={1042} y={110} width={18} height={66} fill={colors.accent} />
@@ -126,6 +133,8 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: false,
   })
+  // A verse these two columns cannot hold whole goes to the shared face, which marks what it still cuts.
+  if (heading.truncated) return null
   const columns = heading.lines.slice(0, 2)
   const xs = [1000, 880]
   // The organization stands down the right margin with the date, where the
@@ -225,6 +234,8 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
     const attr = fitPullQuoteSource(slide, { maxWidth: 880, fontSize: 19, fontFamily: fonts.body })
     // A source too long for the room under the quote hands the page to the shared face.
     if (sourcePastFoot(attr, barBottom + 62)) return null
+    // So does a context line this page cannot set whole.
+    if (!contextFits(context, { maxWidth: 880, fontSize: 18, fontFamily: fonts.body })) return null
     return (
       <>
         <rect x={150} y={barTop} width={4} height={barBottom - barTop} fill={colors.accent} />
@@ -276,6 +287,11 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
   // way the statement page sets its source: a source set down a column
   // would run off the page.
   const footnote = fitSourceBlock(undefined, parts.footnote, { maxWidth: 840, fontSize: 16, fontFamily: fonts.body })
+  // The context and the attribution stand down a column each, one character
+  // to a cell, with no second column to go to. One that would run past the
+  // foot of the type area hands the page to the shared face, which sets
+  // both across and marks what it still has to cut.
+  if (!verticalRunFits(context, 176, 17) || !verticalRunFits(parts.attribution, 440, 18)) return null
   return (
     <>
       <rect x={942} y={110} width={14} height={56} fill={colors.accent} />

@@ -11,7 +11,7 @@ import {
   pullQuoteText,
   trackingPx,
 } from "../minimal-shared"
-import { firstEmphasisRun, fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, sourcePastFoot } from "./shared"
+import { contextFits, firstEmphasisRun, fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, sourcePastFoot } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** memo 稀排脸：打字机引文、文武夹巨数、宋体格言+印章。不画 MEMORANDUM / 顶缘红双线。 */
@@ -55,6 +55,8 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
     bold: false,
   })
   const context = pullQuoteContext(slide)
+  // A context line this page cannot set whole goes to the shared face.
+  if (!contextFits(context === undefined ? undefined : `RE:  ${context}`, { maxWidth: 1088, fontSize: 18, fontFamily: fonts.mono })) return null
   const fromText = pullQuoteSourceParts(slide)
   const fromTracking = !hasCjk(`FROM:  ${fromText.attribution ?? fromText.footnote ?? ""}`) ? trackingPx(19, 0.2) : undefined
   const attr = fitPullQuoteSource(slide, { maxWidth: 1088, fontSize: 19, fontFamily: fonts.mono, letterSpacing: fromTracking }, "FROM:  ")
@@ -164,6 +166,8 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: false,
   })
+  // A claim this line cannot hold whole goes to the shared face, which marks what it still cuts.
+  if (heading.truncated) return null
   const source = fitStatementSource(slide, { maxWidth: 960, fontSize: 16, fontFamily: fonts.mono })
   return (
     <>

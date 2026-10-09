@@ -95,11 +95,14 @@ export function oneEvidence({ ir, slide, index, ctx }: SvgTemplateProps) {
   const headingLast = headingY + Math.max(0, heading.lines.length - 1) * heading.lineHeight
   const noteY = evidence ? headingLast + 18 : 366
   const note = slide.subheading
-    ? evidence
-      ? fitSvgLine(slide.subheading, { maxWidth: 720, fontSize: 22, minFontSize: 16, fontFamily: fonts.body })
-      : { text: slide.subheading, fontSize: 22 }
+    ? fitSvgLine(slide.subheading, { maxWidth: 720, fontSize: 22, minFontSize: 16, fontFamily: fonts.body })
     : null
-  const source = evidenceSource(slide)
+  const sourceRaw = evidenceSource(slide)
+  const source = sourceRaw ? fitSvgLine(sourceRaw, { maxWidth: 720, fontSize: 16, minFontSize: 16, fontFamily: fonts.body }) : null
+  // The panel sets every line whole or hands the page over: a line it would
+  // cut goes to the shared face, which sets it at its own measure and marks
+  // what it still cannot hold.
+  if (heading.truncated || note?.truncated || source?.truncated) return null
   const textBottom = note ? noteY + note.fontSize * 0.25 : headingLast + heading.fontSize * 0.25
   const panelBottom = 500
   const evidenceY = Math.min(Math.max(Math.ceil(textBottom + 14), 340), panelBottom - 140)
@@ -137,8 +140,8 @@ export function oneEvidence({ ir, slide, index, ctx }: SvgTemplateProps) {
         {`${deckWord(ir, "展品", "Exhibit")} № ${pad2(index + 1)}`}
       </text>
       {source && (
-        <text x={640} y={620} textAnchor="middle" fontFamily={fonts.body} fontSize={16} fill={colors.muted} dominantBaseline="alphabetic">
-          {source}
+        <text x={640} y={620} textAnchor="middle" fontFamily={fonts.body} fontSize={source.fontSize} fill={colors.muted} dominantBaseline="alphabetic">
+          {source.text}
         </text>
       )}
     </>

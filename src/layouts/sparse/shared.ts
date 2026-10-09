@@ -1,6 +1,6 @@
 import { parseEmphasis, sliceEmphasisForLines, stripEmphasis } from "../../render/emphasis"
 import { fitHeadingLines } from "../../render/heading-fit"
-import { measureTextUnits } from "../../lib/svg-text-layout"
+import { fitSvgLine, measureTextUnits } from "../../lib/svg-text-layout"
 import type { PptxIR, Slide } from "@/ir"
 import { deckWritesChinese } from "../../lib/conf-labels"
 import type { EmphasisSegment } from "../../render/emphasis"
@@ -195,6 +195,16 @@ export const SOURCE_FOOT = 676
  */
 export function sourcePastFoot(block: SourceBlock | null, y: number): boolean {
   return block !== null && block.lines.length > 1 && y + (block.lines.length - 1) * block.lineHeight > SOURCE_FOOT
+}
+
+/**
+ * Whether the small line a skin sets over its quote (`pullQuoteContext`)
+ * stands whole at the skin's own size on its measure. A skin that cannot set
+ * it whole hands the page to the shared face (`PullQuoteContent`), which
+ * fits the line and marks what it still has to cut.
+ */
+export function contextFits(context: string | undefined, opts: { maxWidth: number; fontSize: number; fontFamily: string }): boolean {
+  return context === undefined || !fitSvgLine(context, { ...opts, minFontSize: opts.fontSize }).truncated
 }
 
 export function evidenceSource(slide: Slide): string | undefined {

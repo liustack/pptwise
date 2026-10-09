@@ -370,6 +370,8 @@ Each `assets.images` entry contains `src` and may include `alt` or `error`. `src
 
 Backgrounds are `color`, `gradient`, or `asset`. Cover and chapter asset backgrounds use the dedicated readable image treatment. Run `pptwise asset-brief <target>` before sourcing image content so the real frame and crop are known.
 
+Paint a `color` background clearly light or clearly dark. On a mid-tone about as light as `#777777` or `#6B7B8C`, neither white nor the near-black ink the renderer falls back to reaches the 4.5:1 that body-size text needs, so on many themes the text lands just under it and `pptwise audit` reports `low-contrast`. Text color is the theme's to set, so the fix is the background: move it lighter or darker.
+
 ## Validation
 
 `pptwise validate` is the live contract. Authored strings must write the value itself. Never stand in for content with a leftover count or an ellipsis. validate rejects it.

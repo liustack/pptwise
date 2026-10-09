@@ -9,7 +9,7 @@ import {
   pullQuoteContext,
   pullQuoteText,
 } from "../minimal-shared"
-import { fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, sourcePastFoot, splitTrailingPercent } from "./shared"
+import { contextFits, fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, sourcePastFoot, splitTrailingPercent } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 import { underlineDescentRatio } from "../underline"
 
@@ -23,6 +23,8 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
   })
   const context = pullQuoteContext(slide)
+  // A context line this page cannot set whole goes to the shared face.
+  if (!contextFits(context, { maxWidth: 960, fontSize: 18, fontFamily: fonts.body })) return null
   const attr = fitPullQuoteSource(slide, { maxWidth: 960, fontSize: 18, fontFamily: fonts.heading }, "[1] ")
   const last = quote.lines.length - 1
   const firstY = quoteBlockBaseline(394, quote)

@@ -11,7 +11,7 @@ import {
   pullQuoteText,
   trackingPx,
 } from "../minimal-shared"
-import { fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, rotateRectPolygon, sourcePastFoot } from "./shared"
+import { contextFits, fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, quoteBlockBaseline, rotateRectPolygon, sourcePastFoot } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** luxe 稀排脸：金菱引文、发丝巨数、一行金字。不画金框。 */
@@ -27,6 +27,8 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
     lineHeightRatio: 1.44,
   })
   const context = pullQuoteContext(slide)
+  // A context line this page cannot set whole goes to the shared face.
+  if (!contextFits(context, { maxWidth: 1000, fontSize: 17, fontFamily: fonts.body })) return null
   const attrText = pullQuoteSourceParts(slide)
   const attrTracking = !hasCjk(attrText.attribution ?? attrText.footnote ?? "") ? trackingPx(17, 0.35) : undefined
   const attr = fitPullQuoteSource(slide, { maxWidth: 1000, fontSize: 17, fontFamily: fonts.body, letterSpacing: attrTracking })
@@ -129,6 +131,8 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
     fontFamily: fonts.heading,
     bold: false,
   })
+  // A claim this line cannot hold whole goes to the shared face, which marks what it still cuts.
+  if (heading.truncated) return null
   const source = fitStatementSource(slide, { maxWidth: 1000, fontSize: 17, fontFamily: fonts.body })
   return (
     <>
