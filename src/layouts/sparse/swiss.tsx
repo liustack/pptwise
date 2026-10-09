@@ -108,16 +108,14 @@ export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
     bold: true,
   })
   const note = slide.subheading
-    ? evidence
-      ? fitSvgLine(slide.subheading, { maxWidth: textW, fontSize: 22, minFontSize: 16, fontFamily: fonts.body })
-      : { text: slide.subheading, fontSize: 22 }
+    ? fitSvgLine(slide.subheading, { maxWidth: textW, fontSize: 22, minFontSize: 16, fontFamily: fonts.body })
     : null
   const sourceRaw = evidenceSource(slide)
-  const source = sourceRaw
-    ? evidence
-      ? fitSvgLine(sourceRaw, { maxWidth: textW, fontSize: 16, minFontSize: 16, fontFamily: fonts.body })
-      : { text: sourceRaw, fontSize: 16 }
-    : null
+  const source = sourceRaw ? fitSvgLine(sourceRaw, { maxWidth: textW, fontSize: 16, minFontSize: 16, fontFamily: fonts.body }) : null
+  // The card sets every line whole or hands the page over: a line it would
+  // cut goes to the shared face, which sets it at its own measure and marks
+  // what it still cannot hold.
+  if (heading.truncated || note?.truncated || source?.truncated) return null
   return (
     <>
       <rect x={160} y={180} width={960} height={340} fill={colors.surface} stroke={colors.border} strokeWidth={1} />

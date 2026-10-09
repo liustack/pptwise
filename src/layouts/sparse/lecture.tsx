@@ -137,7 +137,13 @@ export function oneEvidence({ slide, ctx }: SvgTemplateProps) {
   const note = slide.subheading
     ? fitSvgLine(slide.subheading, { maxWidth: 800, fontSize: 24, minFontSize: 16, fontFamily: fonts.body })
     : null
-  const source = evidenceSource(slide)
+  const sourceRaw = evidenceSource(slide)
+  const source = sourceRaw ? fitSvgLine(sourceRaw, { maxWidth: 800, fontSize: 18, minFontSize: 18, fontFamily: fonts.body }) : null
+  // The frame sets every line whole or hands the page over: a line it would
+  // cut, or a subheading beside an exhibit, which this frame has no room
+  // for, goes to the shared face, which sets it at its own measure and marks
+  // what it still cannot hold.
+  if (heading.truncated || note?.truncated || source?.truncated || (evidence && note)) return null
   return (
     <>
       <rect
@@ -196,8 +202,8 @@ export function oneEvidence({ slide, ctx }: SvgTemplateProps) {
         </text>
       )}
       {source && (
-        <text x={640} y={560} textAnchor="middle" fontFamily={fonts.body} fontSize={18} fill={colors.muted} dominantBaseline="alphabetic">
-          {source}
+        <text x={640} y={560} textAnchor="middle" fontFamily={fonts.body} fontSize={source.fontSize} fill={colors.muted} dominantBaseline="alphabetic">
+          {source.text}
         </text>
       )}
     </>
