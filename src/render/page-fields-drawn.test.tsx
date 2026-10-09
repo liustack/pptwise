@@ -32,6 +32,7 @@ import { corpusAssets, layoutFaceSlot, layoutPage, type CorpusAssets } from "../
 import { LEXICONS, type LanguageId } from "../../evals/gallery/corpus/lexicon"
 import { nativeLexiconFor } from "../../evals/gallery/corpus/native"
 import { menuFaces } from "../../evals/gallery/matrix"
+import { isDropKind } from "./drop-marker"
 import { parseSvgRoot } from "./serialize"
 
 beforeAll(() => {
@@ -219,6 +220,15 @@ interface Silent {
   probe: Probe
 }
 
+/**
+ * Every unit the sweep's pages declared a drop in. A page here carries
+ * every field at once, so the faces that cannot set one of them declare it,
+ * and each unit they name has to be one the drop table names
+ * (`drop-marker.tsx`): an unnamed one used to reach authors as content
+ * blocks.
+ */
+const DROP_KINDS_SEEN = new Set<string>()
+
 /** Validate a deck whose page 1 is `slide`, with `deck` merged in. */
 function validated(base: PptxIR, slide: Record<string, unknown>, deck: Record<string, unknown>) {
   return validateIr({ ...base, ...deck, slides: [slide] })
@@ -264,6 +274,7 @@ function sweep(route: Route, assets: Record<LanguageId, CorpusAssets>): Silent[]
   }
   if (result.errors.length > 0) throw new Error(`${route.theme} ${route.slot} ${route.face}: ${result.errors.map((e) => `${e.path}: ${e.message}`).join("; ")}`)
   const markup = renderSlideSvg(result.ir!, 0)
+  for (const el of Array.from(parseSvgRoot(markup).querySelectorAll("[data-dropped-kind]"))) DROP_KINDS_SEEN.add(el.getAttribute("data-dropped-kind")!)
   const text = pageText(markup)
 
   const silent: Silent[] = []
@@ -297,4 +308,10 @@ describe("a page's own fields reach the page, or the engine says they did not", 
       expect([...new Set(silent)]).toEqual([])
     })
   }
+
+  // After every theme above: the tests in a file run in order.
+  it("names every dropped unit by the drop table", () => {
+    expect(DROP_KINDS_SEEN.size).toBeGreaterThan(0)
+    expect([...DROP_KINDS_SEEN].filter((kind) => !isDropKind(kind)).sort()).toEqual([])
+  })
 })

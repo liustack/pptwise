@@ -40,6 +40,10 @@ export type DropKind =
   | "stage-name"
   | "title-character"
   | "asset"
+  | "stamp"
+  | "footnote"
+  | "heading"
+  | "tag"
 
 const DROP_UNITS: Record<DropKind, readonly [singular: string, plural: string]> = {
   component: ["content block", "content blocks"],
@@ -59,17 +63,38 @@ const DROP_UNITS: Record<DropKind, readonly [singular: string, plural: string]> 
   // deck's asset map does not resolve. Nothing is invented in its place, and
   // "picture" is the word an author fixing it would use.
   asset: ["picture", "pictures"],
+  // The page fields a face declares it could not set. Each is named by the
+  // field an author wrote, and none of them is a block of the body: a memo
+  // cover that could not press its stamp used to say it lost "1 content
+  // block", and its author looked for one in vain.
+  stamp: ["stamp", "stamps"],
+  footnote: ["footnote", "footnotes"],
+  heading: ["heading", "headings"],
+  tag: ["tag", "tags"],
+}
+
+/** Whether `raw` is a unit this table names. */
+export function isDropKind(raw: string): raw is DropKind {
+  return Object.hasOwn(DROP_UNITS, raw)
 }
 
 /** `14 series names`, `1 content block` — the phrase an error message uses. */
 export function dropPhrase(kind: DropKind, count: number): string {
-  const unit = DROP_UNITS[kind] ?? DROP_UNITS.component
+  const unit = DROP_UNITS[kind]
   return `${count} ${count === 1 ? unit[0] : unit[1]}`
 }
 
-/** A kind read back off markup, falling back to the page-level unit. */
+/**
+ * A kind read back off markup. A mark with no kind is the page-level unit,
+ * `DroppedContentMarker`'s default. A kind this table does not name is a
+ * render site that wrote one, and it throws rather than be reported as
+ * content blocks: that fallback is how a dropped stamp reached authors as
+ * "1 content block".
+ */
 export function parseDropKind(raw: string | null | undefined): DropKind {
-  return raw !== null && raw !== undefined && raw in DROP_UNITS ? (raw as DropKind) : "component"
+  if (raw === null || raw === undefined) return "component"
+  if (isDropKind(raw)) return raw
+  throw new Error(`data-dropped-kind "${raw}" is not a unit the drop table names (render/drop-marker.tsx)`)
 }
 
 /**
