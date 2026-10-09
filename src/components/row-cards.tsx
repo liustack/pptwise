@@ -2,7 +2,7 @@ import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { Icon } from "../render/icons"
 import type { RenderDef, SvgComponent } from "./types"
-import { accessibleInk, graphicInk, resolveSemanticColor } from "../render/ink"
+import { accessibleInk, accessibleOpacity, graphicInk, resolveSemanticColor } from "../render/ink"
 
 type RowCardsComponent = Extract<Component, { type: "row_cards" }>
 
@@ -241,7 +241,10 @@ export const rowCards: SvgComponent<RowCardsComponent> = {
                       y={textTop + (li + 1) * text.lineHeight - 4}
                       fontSize={text.fontSize}
                       fill={ctx.colors.text}
-                      fillOpacity={0.85}
+                      // Dimmed a step under the title, as far as the card
+                      // lets the words still read: on a mid-tone ground
+                      // the ink has no room to give and goes at full.
+                      fillOpacity={accessibleOpacity(ctx.colors.text, ctx.colors.surface, text.fontSize, 0.85)}
                       fontFamily={ctx.fonts.body}
                       dominantBaseline="alphabetic"
                     >

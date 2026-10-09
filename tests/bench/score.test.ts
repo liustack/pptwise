@@ -156,7 +156,7 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     expect(score.deterministic).toBeNull()
   })
 
-  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (softened row-card text on a mid-grey page on swiss)", async () => {
+  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (an ember chapter numeral on a mid-grey page)", async () => {
     // This fixture needs a low-contrast source that is real, theme-stable
     // and out of scope for whatever fix round is running — and it has now
     // outlived two of them. It started as kpi_cards' hardcoded delta-arrow
@@ -191,9 +191,13 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     // darker than the page, its label in black at 4.18:1, until such a card
     // took its step on the side where its labels read.
     //
-    // Now swiss's row cards on a page painted `#777777`: their descriptions
-    // are set in a softened black and stop at about 4.45:1 on the card.
-    // `row_cards` is also what `coverageHits` below reads.
+    // Then swiss's row cards on a page painted `#777777`, their descriptions
+    // in a softened black at about 4.45:1 on the card, until a softened ink
+    // went to full strength where softened it does not read.
+    //
+    // Now an ember chapter painted `#777777`: its numeral is set in the
+    // theme's orange at about 1.37:1 on the grey. The deck's row cards, on
+    // the theme's own page, are what `coverageHits` below reads.
     const metas = await loadQuestionMetas(QUESTIONS_DIR)
     const meta = metas.find((m) => m.id === "fx03")!
     const score = await scoreQuestion("fx03", join(RESULTS_DIR, "degraded-model", "fx03"), meta)

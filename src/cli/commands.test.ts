@@ -90,33 +90,23 @@ const IR_WITH_PLACEHOLDER = {
   ],
 }
 
-// A swiss row-cards page its author painted `#777777`. The renderer sets
-// the descriptions in pure black, the one ink that reads on that grey, but
-// softens them on the card, and there they stop at about 4.45:1, under the
-// 4.5:1 they need. (This fixture was an ink statement page on the same grey
-// until mid-tone grounds got pure black, then a rally KPI page until a card
-// on such a ground took its step where its labels read.)
+// An ember chapter its author painted `#777777`. The face sets the chapter's
+// numeral huge in the theme's orange, and on that grey it stands at about
+// 1.37:1, under the 3:1 large text needs. (This fixture was an ink statement
+// page on the same grey until mid-tone grounds got pure black, then a rally
+// KPI page until a card on such a ground took its step where its labels
+// read, then a swiss row-cards page until a card's softened description
+// went to full strength where softened it does not read.)
 const IR_LOW_CONTRAST = {
   version: "5",
   filename: "cli-test-low-contrast",
-  theme: { id: "swiss" },
+  theme: { id: "ember" },
   slides: [
     {
-      type: "content",
-      kind: "points",
+      type: "chapter",
       id: "p-body",
       heading: "Three things",
       background: { kind: "color", value: "#777777" },
-      components: [
-        {
-          type: "row_cards",
-          items: [
-            { title: "Signed", text: "New contract value grew by a fifth" },
-            { title: "Active", text: "Team activity rose to eighty eight percent" },
-            { title: "Onboarded", text: "Setup time fell from nine weeks to five" },
-          ],
-        },
-      ],
     },
   ],
 }

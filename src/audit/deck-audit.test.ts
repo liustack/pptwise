@@ -3103,32 +3103,15 @@ describe("findSourceLineCrossings", () => {
 
 describe("auditDeck — low-contrast says what an author can change", () => {
   it("points at the background and the theme, the two things an author sets, not at the text color", () => {
-    // swiss's row cards on a mid-tone page: their descriptions are set in a
-    // softened black on the card and land just under 4.5:1.
+    // ember's chapter on a mid-tone page: its numeral is set in the theme's
+    // orange and stands at about 1.37:1 on the grey.
     const ir = {
       version: "5",
       filename: "low-contrast.pptx",
-      theme: { id: "swiss" },
+      theme: { id: "ember" },
       meta: {},
       assets: { images: {} },
-      slides: [
-        {
-          type: "content",
-          kind: "points",
-          heading: "三件事",
-          background: { kind: "color", value: "#777777" },
-          components: [
-            {
-              type: "row_cards",
-              items: [
-                { title: "签约", text: "新签合同额同比增长两成三" },
-                { title: "活跃", text: "协作活跃率提升到百分之八十八" },
-                { title: "开通", text: "开通周期从九周压缩到五周" },
-              ],
-            },
-          ],
-        },
-      ],
+      slides: [{ type: "chapter", heading: "三件事", background: { kind: "color", value: "#777777" }, components: [] }],
     } as PptxIR
     const low = auditDeck(ir).findings.filter((f) => f.code === "low-contrast")
     expect(low.length).toBeGreaterThan(0)
