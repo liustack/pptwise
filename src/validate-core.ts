@@ -44,6 +44,7 @@ import { boundaryBulletItems, boundarySlotBlocks, drawableItems, slotItemRoom } 
 import { findImageSelection } from "./layouts/find-image"
 import { bodyStatementLines } from "./layouts/minimal-shared"
 import { headingRoom, headingVerdict, type HeadingCtx, type HeadingPage } from "./layouts/heading-set"
+import type { TextRoom } from "./layouts/text-room"
 import { deckFigureStyle } from "./lib/figure-style"
 import { stripEmphasis } from "./render/emphasis"
 import type { LayoutDefinition } from "./layouts/registry"
@@ -643,6 +644,11 @@ function checkBoundaryItemCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
   return errors
 }
 
+/** How much of a text a face holds, for a message: `the first 9 ("Same store growth …")`, or `none`. */
+function heldPart(room: TextRoom): string {
+  return room.limit === 0 ? "none" : `the first ${room.limit} ("${room.held}")`
+}
+
 /**
  * Boundary-page heading hard gate.
  *
@@ -656,9 +662,11 @@ function checkBoundaryItemCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
  * here, with the length the face holds and what to do about it.
  *
  * The length is measured on this page, in this deck's fonts and the
- * theme's type scale, by lengthening a plain heading in the heading's own
- * script until the face stops setting it whole: the number an author can
- * write to, not the face's geometry.
+ * theme's type scale, on the heading itself: the face is handed the
+ * heading's own first characters (a Chinese heading) or words (any other)
+ * until it stops setting them whole (`layouts/text-room.ts`). The message
+ * quotes the part it holds, so the number it gives is one this heading
+ * fits to, not one counted on other words of another width.
  */
 function checkBoundaryHeadingFit(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
   const errors: ValidationIssue[] = []
@@ -690,8 +698,8 @@ function checkBoundaryHeadingFit(ir: PptxIR, theme: ThemeDefinition): Validation
       path: `slides.${i}.heading`,
       page: i + 1,
       ...(slide.id !== undefined ? { slideId: slide.id } : {}),
-      message: `face "${layout.id}" sets a ${slide.type} heading of about ${room.limit} ${room.unit} at most, and this one has ${room.count}, so the face would ${
-        verdict === "cut" ? "cut its end off" : "refuse the page"
+      message: `face "${layout.id}" holds ${heldPart(room)} of this ${slide.type} heading's ${room.count} ${room.unit}, so the face would ${
+        verdict === "cut" ? "cut the rest off" : "refuse the page"
       }. Shorten the heading${where}.`,
     })
   })

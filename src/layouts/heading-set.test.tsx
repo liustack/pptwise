@@ -12,7 +12,8 @@ import { parseSvgRoot } from "../render/serialize"
 import { CANONICAL_THEME_IDS } from "../themes"
 import { getThemeDefinition, type ThemeDefinition } from "../themes/definitions"
 import { LEGACY_FACE_SAMPLES_BY_ID } from "./__fixtures__/face-samples"
-import { headingVerdict, type HeadingVerdict } from "./heading-set"
+import { headingRoom, headingVerdict, type HeadingPage, type HeadingVerdict } from "./heading-set"
+import { prefixOf } from "./text-room"
 import { LAYOUT_REGISTRY, type LayoutDefinition } from "./registry"
 
 /**
@@ -37,12 +38,17 @@ const HEADINGS = {
   ),
   // Chinese with Latin words and figures in it.
   mixed: Array.from("云觅科技 2026 年 Q3 业务评审：SaaS 席位订阅 ARR 增长 38% 而 NRR 回到 112% 我们建议把 2027 年的第一目标定为 Enterprise 客户扩容并为此调整 Sales 考核与 PLG 节奏"),
+  // English of long words, wider a word than ordinary prose.
+  enLong:
+    "Internationalization Responsibilities Accountabilities Interoperability Characteristics Telecommunications Infrastructure Considerations Organizational Transformation Recommendations Implementation".split(
+      " ",
+    ),
 } as const
 
 type Family = keyof typeof HEADINGS
 
 function heading(family: Family, n: number): string {
-  return HEADINGS[family].slice(0, n).join(family === "en" ? " " : "")
+  return HEADINGS[family].slice(0, n).join(family === "en" || family === "enLong" ? " " : "")
 }
 
 const BOUNDARY_FACES = Object.values(LAYOUT_REGISTRY).filter((layout) => (["cover", "chapter", "ending"] as const).some((type) => layout.slideTypes.includes(type)))
@@ -63,18 +69,23 @@ function withHeading(ir: PptxIR, index: number, text: string): PptxIR {
   return { ...ir, slides: ir.slides.map((slide, i) => (i === index ? { ...slide, heading: text } : slide)) }
 }
 
-/** What validate's face says about the page's heading. */
-function asked(face: LayoutDefinition, ir: PptxIR, index: number, theme: ThemeDefinition): HeadingVerdict | undefined {
+/** The page validate asks the face about. */
+function pageOf(ir: PptxIR, index: number, theme: ThemeDefinition): HeadingPage {
   const slide = ir.slides[index]!
   const effective = resolveEffectiveFace(ir, slide, theme)
-  return headingVerdict(face, {
+  return {
     ir,
     slide,
     index,
     params: effective.entry?.params,
     page: resolvePageRenderContext(ir, slide, effective, theme),
     ctx: { fonts: deckFonts(theme.style.fonts, deckWritesChinese(ir)), shape: theme.style.shape, figures: deckFigureStyle(ir) },
-  })
+  }
+}
+
+/** What validate's face says about the page's heading. */
+function asked(face: LayoutDefinition, ir: PptxIR, index: number, theme: ThemeDefinition): HeadingVerdict | undefined {
+  return headingVerdict(face, pageOf(ir, index, theme))
 }
 
 /** What the drawing did with the page's heading. "silent" is a heading that lost text with no mark on the page. */
@@ -107,13 +118,13 @@ function probes(face: LayoutDefinition): Probe[] {
   const out: Probe[] = []
   for (const typeScale of [undefined, 1.5]) {
     const theme = homeTheme(face, type, typeScale)
-    for (const family of typeScale === undefined ? (Object.keys(HEADINGS) as Family[]) : (["zh", "en"] as const)) {
+    for (const family of typeScale === undefined ? (Object.keys(HEADINGS) as Family[]) : (["zh", "en", "enLong"] as const)) {
       out.push({ label: `${family}, bare page, typeScale ${typeScale ?? "theme"}`, theme, ir: deck(theme, [{ type, heading: "x", components: [] } as Slide]), index: 0, family })
     }
   }
   const theme = homeTheme(face, type)
   for (const sample of LEGACY_FACE_SAMPLES_BY_ID.get(face.id) ?? []) {
-    for (const family of ["zh", "en"] as const) {
+    for (const family of ["zh", "en", "enLong"] as const) {
       out.push({ label: `${family}, sample ${sample.variant ?? "page"}`, theme, ir: deck(theme, sample.slides, sample.meta), index: sample.index, family })
     }
   }
@@ -139,6 +150,27 @@ describe("a boundary face's heading answer holds to its drawing", () => {
         const said = asked(face, at(limit + 1), probe.index, probe.theme)
         expect(drawn(at(limit + 1), probe.index, probe.theme), `${probe.label}: validate says ${said} at ${limit + 1}`).toBe(said)
       }
+      checked += 1
+    }
+    expect(checked).toBeGreaterThan(0)
+  })
+
+  // The room validate reports is a prefix of the refused heading itself: the
+  // face draws that much whole and one character or word more cut or
+  // declined, whatever the width of the heading's words.
+  it.each(DECLARED.map((face) => [face.id, face] as const))("%s says how much of the heading itself it holds", (_id, face) => {
+    let checked = 0
+    for (const probe of probes(face)) {
+      const whole = heading(probe.family, HEADINGS[probe.family].length)
+      const ir = withHeading(probe.ir, probe.index, whole)
+      if (resolveEffectiveFace(ir, ir.slides[probe.index]!, probe.theme).route === "image-cover") continue
+      if (drawn(withHeading(probe.ir, probe.index, heading(probe.family, 1)), probe.index, probe.theme) !== "whole") continue
+      if (asked(face, ir, probe.index, probe.theme) === "whole") continue
+      const room = headingRoom(face, pageOf(ir, probe.index, probe.theme))
+      expect(room.count, probe.label).toBe(probe.family === "en" || probe.family === "enLong" ? HEADINGS[probe.family].length : whole.replace(/\s+/g, "").length)
+      expect(room.limit, `${probe.label}: holds ${room.limit} of ${room.count}`).toBeLessThan(room.count)
+      if (room.limit > 0) expect(drawn(withHeading(probe.ir, probe.index, prefixOf(whole, room.limit)), probe.index, probe.theme), `${probe.label}: ${room.limit} ${room.unit}`).toBe("whole")
+      expect(drawn(withHeading(probe.ir, probe.index, prefixOf(whole, room.limit + 1)), probe.index, probe.theme), `${probe.label}: ${room.limit + 1} ${room.unit}`).not.toBe("whole")
       checked += 1
     }
     expect(checked).toBeGreaterThan(0)
@@ -173,20 +205,34 @@ describe("validate refuses a boundary heading its face would not set whole", () 
         path: "slides.0.heading",
         page: 1,
         message:
-          'face "yearbook-cover" sets a cover heading of about 26 Chinese characters at most, and this one has 31, so the face would cut its end off. Shorten the heading, or move part of it into the subheading.',
+          'face "yearbook-cover" holds the first 26 ("同店增速回到正区间而且这一次不是靠促销拉起来的是复购") of this cover heading\'s 31 characters, so the face would cut the rest off. Shorten the heading, or move part of it into the subheading.',
       },
     ])
   })
 
-  it("counts an English heading in words", () => {
+  it("counts an English heading in its own words", () => {
     const result = validateIr(cover(heading("en", 12)), { theme: almanac })
-    expect(result.errors[0]?.message).toContain("of about 9 words at most, and this one has 12")
+    expect(result.errors[0]?.message).toContain('holds the first 9 ("Same store growth is back above zero and this") of this cover heading\'s 12 words')
+  })
+
+  // Six words wider than ordinary prose: the room is found on these words, so
+  // it is never more than the heading has.
+  it("says how many of a heading's own long words the face holds", () => {
+    const text = heading("enLong", 6)
+    const result = validateIr(cover(text), { theme: almanac })
+    const said = /^face "yearbook-cover" holds the first (\d+) \("([^"]+)"\) of this cover heading's 6 words, so the face would cut the rest off\./.exec(result.errors[0]?.message ?? "")
+    expect(said, result.errors[0]?.message).not.toBeNull()
+    const held = Number(said![1])
+    expect(held).toBeLessThan(6)
+    expect(said![2]).toBe(heading("enLong", held))
+    expect(validateIr(cover(heading("enLong", held)), { theme: almanac }).ok).toBe(true)
+    expect(validateIr(cover(heading("enLong", held + 1)), { theme: almanac }).ok).toBe(false)
   })
 
   it("says the page would be refused when the face declines a heading it cannot hold", () => {
     const stage = getThemeDefinition("stage")
     const result = validateIr(deck(stage, [{ type: "cover", heading: heading("zh", 40), components: [] } as Slide]), { theme: stage })
-    expect(result.errors[0]?.message).toMatch(/^face "keynote-cover" sets a cover heading of about \d+ Chinese characters at most, and this one has 40, so the face would refuse the page\./)
+    expect(result.errors[0]?.message).toMatch(/^face "keynote-cover" holds the first \d+ \("同店[^"]*"\) of this cover heading's 40 characters, so the face would refuse the page\./)
   })
 
   it("leaves out the subheading advice on a face with no place for one", () => {

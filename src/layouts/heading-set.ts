@@ -27,9 +27,9 @@
  */
 import type { ComponentCtx } from "../components/types"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { isChineseText } from "../lib/text-script"
-import { fitEmphasisHeading, stripEmphasis } from "../render/emphasis"
+import { fitEmphasisHeading } from "../render/emphasis"
 import type { LayoutDefinition } from "./registry"
+import { textRoom, type TextRoom } from "./text-room"
 import type { SvgTemplateProps } from "./types"
 
 /** What a face's heading fit reads off the render context: the deck's fonts, the theme's shape tokens and the deck's figure style. */
@@ -86,46 +86,14 @@ export function headingVerdict(layout: LayoutDefinition, page: HeadingPage): Hea
 }
 
 /**
- * Plain headings validate lengthens to find how much a face holds: one in
- * Chinese with no punctuation to break on, one in English of ordinary words.
- * What a face holds of these is what `headingRoom` reports.
+ * How much of this page's own heading `layout` sets whole: the heading's
+ * first characters (a Chinese heading) or words (any other), found by
+ * handing the face prefixes of the heading itself on this same page
+ * (`./text-room.ts`). Asked only about a heading the face would not set
+ * whole.
  */
-const ROOM_ZH = Array.from(
-  "同店增速回到正区间而且这一次不是靠促销拉起来的是复购率和客单价一起抬上来的结果我们建议把明年的第一目标定为同店增长并为此调整门店考核与新品节奏试点覆盖华东三个区域共四十二家门店再往后看还要把会员体系和供应链一起改造",
-)
-const ROOM_EN =
-  "Same store growth is back above zero and this time it came from repeat visits and ticket size rather than discounts so we propose making same store growth the first target for next year and changing how stores are measured across every region we serve".split(
-    " ",
-  )
-
-/** How long a heading the face sets whole on this page, and how long this one is, in the heading's own script. */
-export interface HeadingRoom {
-  /** The longest plain heading in this script the face sets whole. */
-  limit: number
-  /** This page's heading, counted the same way. */
-  count: number
-  /** What `limit` and `count` count: "Chinese characters" or "words". */
-  unit: string
-}
-
-/**
- * How long a heading `layout` sets whole on `slide`, counted in the script
- * the heading is written in: Chinese characters for a Chinese heading,
- * words for any other. Found by lengthening a plain heading one step at a
- * time on this same page until the face stops setting it whole.
- */
-export function headingRoom(layout: LayoutDefinition, page: HeadingPage): HeadingRoom {
-  const plain = stripEmphasis(page.slide.heading ?? "").trim()
-  const chinese = isChineseText(plain)
-  const units = chinese ? ROOM_ZH : ROOM_EN
-  const text = (n: number) => (chinese ? units.slice(0, n).join("") : units.slice(0, n).join(" "))
-  let limit = 0
-  for (let n = 1; n <= units.length; n++) {
-    if (headingVerdict(layout, withHeading(page, text(n))) !== "whole") break
-    limit = n
-  }
-  const count = chinese ? Array.from(plain.replace(/\s+/g, "")).length : plain.split(/\s+/).filter(Boolean).length
-  return { limit, count, unit: chinese ? "Chinese characters" : "words" }
+export function headingRoom(layout: LayoutDefinition, page: HeadingPage): TextRoom {
+  return textRoom(page.slide.heading ?? "", (prefix) => headingVerdict(layout, withHeading(page, prefix)) === "whole")
 }
 
 /** `page` with its slide's heading replaced, in the deck as well as on the page. */
