@@ -18,9 +18,12 @@ import {
 import { scaleTypePx } from "./heading-fit"
 import { accessibleInk } from "./ink"
 import { footnoteBaselineFor } from "./branding-geometry"
-import { FIELDS_THE_SHEET_CANNOT_DRAW } from "../ir/truncation-tiers"
 import { cutsHardField } from "./cut-fields"
 import { parseSvgRoot } from "./serialize"
+import { stripEmphasis } from "./emphasis"
+import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
+import { ORDINARY_TAG_HEIGHT, ordinaryTagSpec, paintTag, tagInks, tagWidth } from "../components/tag"
+import type { LayoutDefinition } from "../layouts/registry"
 
 /**
  * The step-aside a content face owes content its own composition cannot hold.
@@ -39,6 +42,14 @@ import { parseSvgRoot } from "./serialize"
  * the face's composition. A narrow magazine column, a poster band, a bento
  * grid are all constructions that cost room, and room is the one thing the
  * page is short of.
+ *
+ * The page's own fields go with it or the page does not
+ * ({@link SHEET_DRAWS_PAGE_FIELD}). The sheet sets a kicker over the heading
+ * in its source line's type, and a page tag beside it as every renderer sets
+ * a tag (`components/tag.tsx`). A stamp, a ballot, a strip of years, a
+ * course stage and a form's header lines are each a face's own construction,
+ * with nothing shared to draw them in, so a page that carries one keeps its
+ * face and whatever that face could not hold stays declared.
  *
  * Theme identity does not go with it. `FullSlideSvg` reads
  * {@link treeStepsAside} off the body it just built and resolves the page's
@@ -82,8 +93,41 @@ const FOOTNOTE_MAX_LINES = 2
 const TITLE_TO_SUB = 8
 const SUB_TO_BODY = 6
 const HEAD_TO_BODY = 26
+/** The kicker: the source line's type, muted, on the row the tag takes. */
+const KICKER_PX = FOOTNOTE_PX
+/** Air between the kicker and the tag beside it, and under their row before the heading. */
+const EYEBROW_GAP = 12
+const EYEBROW_TO_TITLE = 8
 
 const CONTENT_W = CANVAS_W_PX - MARGIN_X * 2
+
+/** The page fields a face may declare a place for (`LayoutDefinition.pageFields`), less the source line every content page has. */
+type FacePageField = Exclude<NonNullable<LayoutDefinition["pageFields"]>[number], "footnote">
+
+/**
+ * Which of those fields the sheet draws: the one answer both ways into the
+ * sheet read (`stepAside`, `stepAsideForCut`). Keyed by every field, so a
+ * field a face learns to draw has to be answered here before it compiles.
+ */
+export const SHEET_DRAWS_PAGE_FIELD: Readonly<Record<FacePageField, boolean>> = {
+  kicker: true,
+  tag: true,
+  fields: false,
+  stamp: false,
+  ballot: false,
+  years: false,
+  stage: false,
+}
+
+/**
+ * Whether the sheet can draw every field the page carries: none it has no
+ * place for, and a tag it can print whole on its row, as a tag always is.
+ */
+export function sheetDrawsPageFields(slide: Slide, ctx: ComponentCtx): boolean {
+  const page = slide as unknown as Record<string, unknown>
+  for (const [field, drawn] of Object.entries(SHEET_DRAWS_PAGE_FIELD)) if (!drawn && page[field] !== undefined) return false
+  return slide.tag === undefined || tagWidth(slide.tag.text, ordinaryTagSpec(ctx)) <= CONTENT_W
+}
 
 /** A `data-dropped` count that is actually a loss. Zero is never emitted. */
 const DROPPED = /data-dropped="[1-9]/
@@ -130,6 +174,12 @@ export function bodySlotDropsContent(
 }
 
 interface StepAsideGeometry {
+  /** The kicker over the heading, unless the page's motif sets it (`ComponentCtx.motifSetsKicker`). */
+  kicker: ReturnType<typeof fitSvgLine> | null
+  /** The page tag on the kicker's row, after the kicker when there is one. */
+  tag: { x: number; width: number } | null
+  /** Top of the row the kicker and the tag share. */
+  eyebrowTop: number
   title: ReturnType<typeof fitEmphasisHeading>
   sub: ReturnType<typeof fitEmphasisText>
   footnote: ReturnType<typeof fitEmphasisLine>
@@ -154,6 +204,23 @@ interface StepAsideGeometry {
  */
 export function stepAsideGeometry(slide: Slide, ctx: ComponentCtx): StepAsideGeometry {
   const { fonts } = ctx
+  // The kicker and the tag share one row over the heading, the tag's height,
+  // the kicker's words on the tag's centre line. The tag is printed whole
+  // (`sheetDrawsPageFields`), and the kicker takes what the row has left.
+  const tagW = slide.tag ? tagWidth(slide.tag.text, ordinaryTagSpec(ctx)) : 0
+  const kickerWords = ctx.motifSetsKicker ? "" : stripEmphasis(slide.kicker ?? "").trim()
+  const kicker = kickerWords
+    ? fitSvgLine(kickerWords, {
+        maxWidth: CONTENT_W - (tagW > 0 ? tagW + EYEBROW_GAP : 0),
+        fontSize: KICKER_PX,
+        minFontSize: KICKER_PX,
+        fontFamily: fonts.body,
+        bold: false,
+      })
+    : null
+  const kickerW = kicker ? Math.ceil(measureTextUnits(kicker.text, { bold: false, fontFamily: fonts.body }) * kicker.fontSize) : 0
+  const tag = slide.tag ? { x: MARGIN_X + (kicker ? kickerW + EYEBROW_GAP : 0), width: tagW } : null
+  const eyebrowTop = HEAD_TOP
   const title = fitEmphasisHeading(slide.heading, {
     maxWidth: CONTENT_W,
     fontSize: scaleTypePx(TITLE_PX, ctx.shape?.typeScale),
@@ -171,7 +238,7 @@ export function stepAsideGeometry(slide: Slide, ctx: ComponentCtx): StepAsideGeo
     fontFamily: fonts.body,
     bold: false,
   })
-  let cursor = HEAD_TOP
+  let cursor = kicker || tag ? eyebrowTop + ORDINARY_TAG_HEIGHT + EYEBROW_TO_TITLE : HEAD_TOP
   const titleY = cursor + title.lineHeight - 10
   cursor += title.lines.length * title.lineHeight + TITLE_TO_SUB
   const subY = cursor + sub.lineHeight - 8
@@ -205,6 +272,9 @@ export function stepAsideGeometry(slide: Slide, ctx: ComponentCtx): StepAsideGeo
       ? BODY_BOTTOM_WITH_FOOTNOTE
       : BODY_BOTTOM
   return {
+    kicker,
+    tag,
+    eyebrowTop,
     title,
     sub,
     footnote,
@@ -239,15 +309,17 @@ export interface StepAsideProps {
  * help. A body slot that loses something, on a page the *full* sheet would
  * lose something on too, gets none: stepping aside there would trade a
  * face's composition for a plain one and still end in a declared drop, so
- * the face keeps its page and the component's own decline stands. The
- * step-aside never ships a loss of its own, which is what lets a face call
- * it without checking.
+ * the face keeps its page and the component's own decline stands. A page
+ * carrying a field the sheet has no place for ({@link sheetDrawsPageFields})
+ * is one the sheet would lose something on. The step-aside never ships a
+ * loss of its own, which is what lets a face call it without checking.
  */
 export function stepAside(props: StepAsideProps): React.ReactElement | null {
   const { face, slide, ctx, bodyRect, arrangement, cramped } = props
   const short =
     cramped ?? (bodyRect !== undefined && bodySlotDropsContent(slide.components, bodyRect, ctx, arrangement))
   if (!short) return null
+  if (!sheetDrawsPageFields(slide, ctx)) return null
   const geometry = stepAsideGeometry(slide, ctx)
   if (bodySlotDropsContent(slide.components, geometry.rect, ctx)) return null
   // Called, not mounted. `FullSlideSvg` reads {@link treeStepsAside} off the
@@ -260,17 +332,16 @@ export function stepAside(props: StepAsideProps): React.ReactElement | null {
 /**
  * The step-aside for a face that cut one of the page's hard fields
  * (`../ir/truncation-tiers.ts`), or `null` when the sheet cannot take the
- * page: the page carries a field the sheet has no place for (a kicker, a
- * stamp, a page tag...), which stepping aside would drop outright, or the
- * sheet would lose content of its own or cut a hard field too. Asked by
- * drawing the sheet once, the way {@link bodySlotDropsContent} asks.
- * `FullSlideSvg` draws it when `slideToSvgMarkup` (`./render-slide.tsx`)
- * found the face's cut.
+ * page: the page carries a field the sheet has no place for
+ * ({@link sheetDrawsPageFields}, the same answer {@link stepAside} reads),
+ * which stepping aside would drop outright, or the sheet would lose content
+ * of its own or cut a hard field too. Asked by drawing the sheet once, the
+ * way {@link bodySlotDropsContent} asks. `FullSlideSvg` draws it when
+ * `slideToSvgMarkup` (`./render-slide.tsx`) found the face's cut.
  */
 export function stepAsideForCut(props: { face: string; slide: Slide; ctx: ComponentCtx }): React.ReactElement | null {
   const { face, slide, ctx } = props
-  const page = slide as unknown as Record<string, unknown>
-  if (FIELDS_THE_SHEET_CANNOT_DRAW.some((field) => page[field] !== undefined)) return null
+  if (!sheetDrawsPageFields(slide, ctx)) return null
   const sheet = StepAsidePage({ face, slide, ctx, geometry: stepAsideGeometry(slide, ctx) })
   const markup = renderToStaticMarkup(<svg>{sheet}</svg>)
   if (DROPPED.test(markup)) return null
@@ -317,8 +388,11 @@ function StepAsidePage({
 }) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const { title, sub, titleY, subY, rect, footnote, footnoteLines } = geometry
+  const { kicker, tag, eyebrowTop, title, sub, titleY, subY, rect, footnote, footnoteLines } = geometry
   const titleFill = accessibleInk(colors.text, bg, title.fontSize)
+  const tagSpec = ordinaryTagSpec(ctx)
+  // The kicker's words on the row's centre line, where a tag's words sit (`paintTag`).
+  const eyebrowBaseline = Math.round(eyebrowTop + ORDINARY_TAG_HEIGHT / 2 + KICKER_PX * 0.385)
   const footnoteSize = footnote?.fontSize ?? footnoteLines?.fontSize
   const footnoteFill = footnoteSize !== undefined ? accessibleInk(colors.muted, bg, footnoteSize) : colors.muted
   return (
@@ -331,6 +405,20 @@ function StepAsidePage({
         stroke={colors.border ?? colors.muted}
         strokeWidth="1.2"
       />
+      {kicker && (
+        <text
+          data-truncated={kicker.truncated ? "1" : undefined}
+          x={MARGIN_X}
+          y={eyebrowBaseline}
+          fontSize={kicker.fontSize}
+          fontFamily={fonts.body}
+          fill={accessibleInk(colors.muted, bg, kicker.fontSize)}
+          dominantBaseline="alphabetic"
+        >
+          {kicker.text}
+        </text>
+      )}
+      {tag && slide.tag && paintTag({ tag: slide.tag, x: tag.x, y: eyebrowTop, spec: tagSpec, width: tag.width, inks: tagInks(ctx, slide.tag, false, bg, tagSpec.size) })}
       {renderEmphasisHeading(
         title,
         headingEmphasisPaint(ctx, title, {

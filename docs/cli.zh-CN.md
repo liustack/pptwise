@@ -105,7 +105,9 @@ Audit 渲染确定性 SVG，并检查：
 
 任意发现都会让退出码变为 1。`--pixels` 增加压图文字的像素对比度采样，需要 `sharp`。
 
-截断按被截的字段分级。页面的标题、副标题、来源行（`footnote`），以及组件里除标签以外的每一段文字，都是读者必须看全的硬内容。主题版式截掉其中任何一段时，改由一个能把它们画全的朴素版式接手这一页，audit 报 `stepped-aside`。之后 `content-truncated` 只报哪个版式都躲不开的截断，`detail` 里写明字段和分级（`"tier": "hard"`）。眉题、印章、标签这类装饰性文字被截时仍留在主题版式上，报为 `"tier": "declared"`。页面带 kicker、`fields`、印章、页面标签、选票、`stage` 或 `years` 时也一样，因为朴素版式没有它们的位置。字段清单在 `src/ir/truncation-tiers.ts`。
+截断按被截的字段分级。页面的标题、副标题、来源行（`footnote`），以及组件里除标签以外的每一段文字，都是读者必须看全的硬内容。主题版式截掉其中任何一段时，改由一个能把它们画全的朴素版式接手这一页，audit 报 `stepped-aside`。之后 `content-truncated` 只报哪个版式都躲不开的截断，`detail` 里写明字段和分级（`"tier": "hard"`）。眉题、印章、标签这类装饰性文字被截时仍留在主题版式上，报为 `"tier": "declared"`。
+
+朴素版式接手一页时，不论是因为截断还是因为主题版式放不下内容，都会把页面的 kicker 画成标题上方的眉题，把页面标签画在眉题旁边。它没有 `fields`、印章、选票、`stage` 和 `years` 的位置，所以带着其中任何一个的页面留在主题版式上，主题版式放不下的部分照常上报：截断报 `content-truncated`，正文超容量报 `content-dropped`。分级清单在 `src/ir/truncation-tiers.ts`，朴素版式画哪些页面字段在 `src/render/step-aside.tsx`。
 
 ## Schema 与 spec
 

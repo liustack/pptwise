@@ -28,6 +28,7 @@ import { resolveEffectiveFace } from "./layout-selection"
 import { partitionSvgDepth, type SvgDepthLayers } from "./depth-contract/partition"
 import { enforceMidgroundContract, resolveMidgroundBackground } from "./depth-contract/safety"
 import { resolvePageRenderContext } from "./page-context"
+import { MOTIFS_THAT_SET_THE_KICKER } from "../motifs/kicker-roles"
 import { paletteOnGround } from "./page-palette"
 
 /**
@@ -333,21 +334,6 @@ export function FullSlideSvg({
   // the theme's palette: its faces were drawn for that ground.
   const paintedOver = defaultBg.toUpperCase() !== themeDefaultBg.toUpperCase()
   const pageTokens = paintedOver ? { ...tokens, colors: paletteOnGround(tokens.colors, defaultBg) } : tokens
-  // The emphasis stroke comes from the definition in hand, never from a
-  // lookup by id: a deck or workspace theme file that keeps a built-in id
-  // may declare a different stroke from the factory preset.
-  const ctx: ComponentCtx = buildCtx(
-    pageTokens,
-    ir.assets.images,
-    ir.meta.animation?.elements === "auto" ? slide.components : undefined,
-    defaultBg,
-    bodyFontPx,
-    chartPaletteOffset,
-    themeDef.emphasis,
-    deckFigureStyle(ir),
-    deckWritesChinese(ir),
-    themeDefaultBg,
-  )
   // This is the only face resolution performed by the renderer. Capacity
   // checks and validation consume the same route record from
   // `layout-selection.ts`, so takeover precedence cannot drift between
@@ -355,6 +341,30 @@ export function FullSlideSvg({
   const effectiveFace = resolveEffectiveFace(ir, slide, themeDef)
   if (effectiveFace.route === "unresolved") {
     throw new Error(effectiveFace.error ?? `cannot resolve a theme-menu face for "${slide.type}" page`)
+  }
+  // The page's decisions as they stand if its face steps aside
+  // (`resolvePageRenderContext`'s `steppedAside`). Resolved before the body
+  // because the step-aside sheet reads one of them: whether the motif that
+  // will paint over it sets the page's kicker itself.
+  const asidePage = resolvePageRenderContext(ir, slide, effectiveFace, themeDef, true)
+  const motifSetsKicker = asidePage.motifOn && asidePage.motifId !== undefined && MOTIFS_THAT_SET_THE_KICKER.has(asidePage.motifId)
+  // The emphasis stroke comes from the definition in hand, never from a
+  // lookup by id: a deck or workspace theme file that keeps a built-in id
+  // may declare a different stroke from the factory preset.
+  const ctx: ComponentCtx = {
+    ...buildCtx(
+      pageTokens,
+      ir.assets.images,
+      ir.meta.animation?.elements === "auto" ? slide.components : undefined,
+      defaultBg,
+      bodyFontPx,
+      chartPaletteOffset,
+      themeDef.emphasis,
+      deckFigureStyle(ir),
+      deckWritesChinese(ir),
+      themeDefaultBg,
+    ),
+    ...(motifSetsKicker ? { motifSetsKicker: true as const } : {}),
   }
   let page = resolvePageRenderContext(ir, slide, effectiveFace, themeDef)
   let renderIr: PptxIR = page.metadataOn
@@ -450,7 +460,7 @@ export function FullSlideSvg({
   // is already built and consults neither, so nothing needs re-rendering.
   const steppedAside = pageBody !== null && treeStepsAside(pageBody)
   if (steppedAside) {
-    page = resolvePageRenderContext(ir, slide, effectiveFace, themeDef, true)
+    page = asidePage
     renderIr = page.metadataOn
       ? ir
       : { ...ir, meta: ir.meta.animation === undefined ? {} : { animation: ir.meta.animation } }
