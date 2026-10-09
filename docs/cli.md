@@ -105,6 +105,8 @@ Audit renders deterministic SVG and checks:
 
 Any finding exits with code 1. `--pixels` adds image-backed text contrast sampling and requires `sharp`.
 
+A cut is weighed by the field it cut. The page's heading, subheading and source line (`footnote`), and every word a component carries except its tags, are text a reader needs whole. When the theme's layout cuts one of them, a plainer layout that draws them whole takes the page, and audit reports `stepped-aside`. `content-truncated` then names a cut no layout could avoid, with the field and its tier in `detail` (`"tier": "hard"`). A cut kicker, stamp, tag or other label stays on the theme's layout and is reported as `"tier": "declared"`. So does a cut on a page that carries a kicker, `fields`, a stamp, a page tag, a ballot, `stage` or `years`, since the plainer layout has no place for those. The list of fields lives in `src/ir/truncation-tiers.ts`.
+
 ## Schemas and specs
 
 ```bash

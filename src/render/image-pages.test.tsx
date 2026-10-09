@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest"
-import { boundSlideToSvgMarkup, boundSlideToRender } from "./__fixtures__/bound-slide"
+import { BoundSlideSvg, boundSlideToSvgMarkup, boundSlideToRender } from "./__fixtures__/bound-slide"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { CANVAS_W_PX } from "../constants"
 import { isBold } from "./fonts"
-import { parseSvgRoot } from "./serialize"
+import { parseSvgRoot, renderSvgMarkup } from "./serialize"
 import type { PptxIR, Slide } from "@/ir"
 import type { CanonicalThemeId } from "../themes"
 import { __resetRegisteredThemes } from "../themes/definitions"
@@ -432,9 +432,14 @@ describe("image takeover dropped-content propagation", () => {
     const doc = makeIr(themeId, slide)
     // Four items or fewer, so nothing is dropped. The one item the face
     // accepted is set into one or two lines and the tail is gone, which the
-    // page has to say on the line that carries the cut.
+    // face has to say on the line that carries the cut.
     expect(boundSlideToRender(doc, slide, 0).dropped).toBe(0)
-    expect(boundSlideToSvgMarkup(doc, slide, 0)).toContain('data-truncated="1"')
+    expect(renderSvgMarkup(<BoundSlideSvg ir={doc} slide={slide} index={0} />)).toContain('data-truncated="1"')
+    // The item is the author's own sentence, so the page as exported goes to
+    // the step-aside sheet, which sets it whole (`../ir/truncation-tiers.ts`).
+    const page = boundSlideToSvgMarkup(doc, slide, 0)
+    expect(page).toContain('data-face-stepped-aside="image-annotate"')
+    expect(page).not.toContain("data-truncated")
   })
 
   it("image-bottom propagates components rejected by layoutContentFit", () => {

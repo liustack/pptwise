@@ -1,0 +1,130 @@
+// @vitest-environment node
+import { beforeAll, describe, expect, it } from "vitest"
+import { renderSlideSvg, validateIr } from "@/api"
+import type { PptxIR, Slide } from "@/ir"
+import { auditDeck } from "@/audit/deck-audit"
+import { truncationSources } from "@/ir/truncation-tiers"
+import { installNodePlatform } from "@/platform/node"
+import { cutLines } from "./cut-fields"
+import { parseSvgRoot } from "./serialize"
+
+beforeAll(() => {
+  installNodePlatform()
+})
+
+const LONG_HEADING =
+  "The board should approve the second plant before the window on the cheaper financing closes at the end of the third quarter of next year, and before the competitor locks the supplier"
+const LONG_KICKER = "第一章　顾客变了，而且变得比我们任何一个人预想的都要快得多，快到门店的陈列和库存都来不及跟上"
+
+function deck(theme: string, page: Record<string, unknown>): PptxIR {
+  const v = validateIr({
+    version: "5",
+    filename: "cuts",
+    theme: { id: theme },
+    slides: [{ type: "cover", heading: "Cover" }, { type: "content", ...page }, { type: "ending", heading: "End" }],
+  })
+  expect(v.errors).toEqual([])
+  return v.ir!
+}
+
+const bullets = { type: "bullets", items: ["Every shape stays editable", "Pictures travel with the deck"] }
+
+function drawn(ir: PptxIR): { markup: string; root: Element; slide: Slide } {
+  const markup = renderSlideSvg(ir, 1)
+  return { markup, root: parseSvgRoot(markup), slide: ir.slides[1]! }
+}
+
+describe("truncationSources", () => {
+  it("holds the heading, the source and a component's words hard, and a kicker, a stamp and a tag declared", () => {
+    const slide = {
+      type: "content",
+      kind: "points",
+      heading: "Heading",
+      subheading: "Sub",
+      footnote: "Source: a study",
+      kicker: "Chapter one",
+      stamp: { text: "Approved", date: "2026" },
+      components: [{ type: "kpi_cards", items: [{ value: "12", label: "Plants", tag: { text: "Estimate" }, source: "Company filing" }] }],
+    } as unknown as Slide
+    const tiers = Object.fromEntries(truncationSources(slide).map((s) => [s.field, s.tier]))
+    expect(tiers).toEqual({
+      heading: "hard",
+      subheading: "hard",
+      footnote: "hard",
+      kicker: "declared",
+      "stamp.text": "declared",
+      "stamp.date": "declared",
+      "components.0.items.0.value": "hard",
+      "components.0.items.0.label": "hard",
+      "components.0.items.0.tag.text": "declared",
+      "components.0.items.0.source": "hard",
+    })
+  })
+})
+
+describe("a face that cuts a hard field", () => {
+  it("gives the page to the step-aside sheet, which draws the heading whole", () => {
+    const { markup, root, slide } = drawn(deck("brief", { kind: "points", heading: LONG_HEADING, components: [bullets] }))
+    expect(markup).toContain('data-face-stepped-aside="gauge-sheet"')
+    expect(cutLines(root, slide)).toEqual([])
+    const words = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "").join(" ")
+    expect(words.replace(/\s+/g, " ")).toContain("competitor locks the supplier")
+  })
+
+  it("keeps its page when the sheet would cut the heading too, and the cut stays declared as hard", () => {
+    const endless = Array.from({ length: 4 }, () => LONG_HEADING).join(" ")
+    const ir = deck("brief", { kind: "points", heading: endless, components: [bullets] })
+    const { markup, root, slide } = drawn(ir)
+    expect(markup).not.toContain("data-face-stepped-aside")
+    expect(cutLines(root, slide)).toEqual([expect.objectContaining({ field: "heading", tier: "hard" })])
+    const found = auditDeck(ir).findings.filter((f) => f.code === "content-truncated")
+    expect(found).toEqual([expect.objectContaining({ page: 2, detail: expect.objectContaining({ field: "heading", tier: "hard" }) })])
+    expect(found[0]!.message).toMatch(/a reader needs whole/)
+  })
+
+  it("keeps its page when the page carries a kicker the sheet has no place for", () => {
+    const { markup, root, slide } = drawn(deck("memo", { kind: "points", heading: LONG_HEADING, kicker: "Chapter one", components: [bullets] }))
+    expect(markup).not.toContain("data-face-stepped-aside")
+    expect(cutLines(root, slide).some((cut) => cut.field === "heading" && cut.tier === "hard")).toBe(true)
+  })
+})
+
+describe("a face that cuts a declared field", () => {
+  it("keeps its page and declares the cut", () => {
+    const ir = deck("memo", { kind: "points", heading: "短标题", kicker: LONG_KICKER, components: [{ type: "bullets", items: ["一", "二"] }] })
+    const { markup, root, slide } = drawn(ir)
+    expect(markup).not.toContain("data-face-stepped-aside")
+    expect(cutLines(root, slide)).toEqual([expect.objectContaining({ field: "kicker", tier: "declared" })])
+    const found = auditDeck(ir).findings.filter((f) => f.code === "content-truncated")
+    expect(found).toEqual([expect.objectContaining({ detail: expect.objectContaining({ field: "kicker", tier: "declared" }) })])
+  })
+})
+
+describe("cutLines", () => {
+  const slide = {
+    type: "content",
+    kind: "points",
+    heading: "Quarterly revenue rose on the back of the new plant",
+    kicker: "Quarterly revenue",
+    footnote: "Source: company filings for the third quarter",
+    components: [],
+  } as unknown as Slide
+  const page = (texts: string[]) =>
+    parseSvgRoot(`<svg xmlns="http://www.w3.org/2000/svg">${texts.map((t) => `<text data-truncated="1">${t}</text>`).join("")}</svg>`)
+
+  it("names the field a cut line came from by its tail, after the face's own words", () => {
+    expect(cutLines(page(["Note 1 · Source: company filings for…"]), slide)).toEqual([{ text: "Note 1 · Source: company filings for…", field: "footnote", tier: "hard" }])
+  })
+
+  it("lets a hard field win a tie with a declared one", () => {
+    expect(cutLines(page(["Quarterly reven…"]), slide)[0]).toMatchObject({ field: "heading", tier: "hard" })
+  })
+
+  it("reads a line that is none of the page's own words as the face's furniture", () => {
+    expect(cutLines(page(["Northwind Holdings Group…"]), slide)).toEqual([{ text: "Northwind Holdings Group…", tier: "declared" }])
+  })
+
+  it("does not read a field shown whole as cut", () => {
+    expect(cutLines(page(["Quarterly revenue"]), { ...slide, heading: "Short" } as Slide)).toEqual([{ text: "Quarterly revenue", tier: "declared" }])
+  })
+})

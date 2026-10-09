@@ -105,6 +105,8 @@ Audit 渲染确定性 SVG，并检查：
 
 任意发现都会让退出码变为 1。`--pixels` 增加压图文字的像素对比度采样，需要 `sharp`。
 
+截断按被截的字段分级。页面的标题、副标题、来源行（`footnote`），以及组件里除标签以外的每一段文字，都是读者必须看全的硬内容。主题版式截掉其中任何一段时，改由一个能把它们画全的朴素版式接手这一页，audit 报 `stepped-aside`。之后 `content-truncated` 只报哪个版式都躲不开的截断，`detail` 里写明字段和分级（`"tier": "hard"`）。眉题、印章、标签这类装饰性文字被截时仍留在主题版式上，报为 `"tier": "declared"`。页面带 kicker、`fields`、印章、页面标签、选票、`stage` 或 `years` 时也一样，因为朴素版式没有它们的位置。字段清单在 `src/ir/truncation-tiers.ts`。
+
 ## Schema 与 spec
 
 ```bash

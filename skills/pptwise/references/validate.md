@@ -39,7 +39,7 @@ After every page is filled, run:
 pptwise audit deck-dir/
 ```
 
-The deterministic audit checks overflow, out-of-bounds content, low contrast, overlap, truncation, dropped content, and repeated lead components. A finding exits with code 1 and names the page. Restructure the content, rerun assemble and validate when source files changed, then rerun audit until it exits 0.
+The deterministic audit checks overflow, out-of-bounds content, low contrast, overlap, truncation, dropped content, and repeated lead components. A finding exits with code 1 and names the page. A heading, source line or component text the theme's layout would cut makes a plainer layout draw the page whole (`stepped-aside`). A `content-truncated` finding with `"tier": "hard"` is text no layout could fit: shorten it or split the page. Restructure the content, rerun assemble and validate when source files changed, then rerun audit until it exits 0.
 
 Add `--pixels` when cover or chapter pages use photo backgrounds. Pixel sampling catches text placed on an unsafe part of a real image.
 

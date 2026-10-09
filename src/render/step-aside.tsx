@@ -18,6 +18,9 @@ import {
 import { scaleTypePx } from "./heading-fit"
 import { accessibleInk } from "./ink"
 import { footnoteBaselineFor } from "./branding-geometry"
+import { FIELDS_THE_SHEET_CANNOT_DRAW } from "../ir/truncation-tiers"
+import { cutsHardField } from "./cut-fields"
+import { parseSvgRoot } from "./serialize"
 
 /**
  * The step-aside a content face owes content its own composition cannot hold.
@@ -252,6 +255,27 @@ export function stepAside(props: StepAsideProps): React.ReactElement | null {
   // (the marker included) inside an unrendered component — the same reason
   // `FullSlideSvg` calls a face's own component rather than mounting it.
   return StepAsidePage({ face, slide, ctx, geometry })
+}
+
+/**
+ * The step-aside for a face that cut one of the page's hard fields
+ * (`../ir/truncation-tiers.ts`), or `null` when the sheet cannot take the
+ * page: the page carries a field the sheet has no place for (a kicker, a
+ * stamp, a page tag...), which stepping aside would drop outright, or the
+ * sheet would lose content of its own or cut a hard field too. Asked by
+ * drawing the sheet once, the way {@link bodySlotDropsContent} asks.
+ * `FullSlideSvg` draws it when `slideToSvgMarkup` (`./render-slide.tsx`)
+ * found the face's cut.
+ */
+export function stepAsideForCut(props: { face: string; slide: Slide; ctx: ComponentCtx }): React.ReactElement | null {
+  const { face, slide, ctx } = props
+  const page = slide as unknown as Record<string, unknown>
+  if (FIELDS_THE_SHEET_CANNOT_DRAW.some((field) => page[field] !== undefined)) return null
+  const sheet = StepAsidePage({ face, slide, ctx, geometry: stepAsideGeometry(slide, ctx) })
+  const markup = renderToStaticMarkup(<svg>{sheet}</svg>)
+  if (DROPPED.test(markup)) return null
+  if (markup.includes('data-truncated="1"') && cutsHardField(parseSvgRoot(markup), slide)) return null
+  return sheet
 }
 
 /** The attribute `FullSlideSvg` reads to know a face handed its page over. */

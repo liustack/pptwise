@@ -18,7 +18,7 @@ import { CONTENT_LAYOUTS } from "../layouts/index-content"
 import { ENDING_LAYOUTS } from "../layouts/index-ending"
 import { MOTIFS } from "../motifs"
 import { treeFrameLeft } from "./frame-left"
-import { treeStepsAside } from "./step-aside"
+import { stepAsideForCut, treeStepsAside } from "./step-aside"
 import type { ThemeDefinition } from "../themes/definitions"
 import type { EmphasisTreatment } from "../themes/schema"
 import type { FigureStyle } from "../lib/quantity-format"
@@ -222,6 +222,13 @@ export interface FullSlideSvgProps {
   theme: ThemeDefinition
   className?: string
   preserveAspectRatio?: string
+  /**
+   * Draw a content page on the step-aside sheet (`stepAsideForCut`) instead
+   * of its face, or draw nothing when the sheet cannot take it.
+   * `slideToSvgMarkup` (`./render-slide.tsx`) asks for it after the face's
+   * own rendering cut a hard field (`../ir/truncation-tiers.ts`).
+   */
+  yieldCutFace?: boolean
 }
 
 /** 四页型 layout 共用同一签名（layouts/types.ts 逐个定义但结构相同）。 */
@@ -276,6 +283,7 @@ export function FullSlideSvg({
   theme: themeDef,
   className,
   preserveAspectRatio,
+  yieldCutFace,
 }: FullSlideSvgProps) {
   const tokens = themeDef.style
   // The theme's own default background for this slide type, independent of
@@ -407,7 +415,14 @@ export function FullSlideSvg({
   // `LayoutDefinition.paintsOwnBackground` (`../layouts/registry.ts`).
   const layoutPaintsBackground = effectiveFace.route === "layout" && effectiveFace.layout?.paintsOwnBackground === true
   let pageBody: ReactNode = null
-  if (imageCoverTakeover) {
+  if (yieldCutFace === true) {
+    // The face's own rendering of this page cut a hard field, so the page
+    // goes to the step-aside sheet, or to nobody: an empty rendering tells
+    // `slideToSvgMarkup` to keep the face's page with its cut declared.
+    const sheet = slide.type === "content" ? stepAsideForCut({ face: effectiveFace.layoutId ?? effectiveFace.route, slide, ctx }) : null
+    if (sheet === null) return null
+    pageBody = sheet
+  } else if (imageCoverTakeover) {
     pageBody = ImageCoverPage({ ir: renderIr, slide, index, ctx, page })
   } else if (effectiveFace.route === "takeover" && effectiveFace.layoutId !== null) {
     const renderTakeover = getTakeoverRenderer(effectiveFace.layoutId)
