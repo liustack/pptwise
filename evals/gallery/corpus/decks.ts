@@ -34,6 +34,7 @@ import { LINEUP_BODIES } from "./lineup-bodies"
 import { PLACARD_BODIES } from "./placard-bodies"
 import { KEYNOTE_BODIES } from "./keynote-bodies"
 import { CHALKBOARD_BODIES } from "./chalkboard-bodies"
+import { NOTICE_BODIES, NOTICE_PROOF_TABLE } from "./notice-bodies"
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/images")
 
@@ -609,6 +610,10 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   if (def.id === "keynote-sheet") return COMPOSITION_BODIES.slate(lex).components
   // lecture's chalkboard sheet: the board's answers worked in columns.
   if (def.id === "chalkboard-sheet") return COMPOSITION_BODIES.solutions(lex).components
+  // bulletin's statement, fact and evidence faces: the board's own pages.
+  if (def.id === "notice-statement") return COMPOSITION_BODIES.sentence(lex).components
+  if (def.id === "notice-figure") return COMPOSITION_BODIES.billboard(lex).components
+  if (def.id === "notice-exhibit") return COMPOSITION_BODIES.proof(lex).components
   if (def.id === "marquee-statement") {
     return [{ type: "icon_cards", items: [0, 1, 2].map((i) => ({ icon: (["cup-soda", "package", "ticket"] as const)[i]!, title: lex.labels[i]!, text: lex.bullets[i]! })) }]
   }
@@ -779,6 +784,9 @@ const CONTENT_FACE_KINDS: Record<string, PageKind> = {
   "gauge-figure": "fact",
   "gauge-sheet": "points",
   "notice-sheet": "points",
+  "notice-statement": "statement",
+  "notice-figure": "fact",
+  "notice-exhibit": "evidence",
   "grid-sheet": "data",
   "grid-statement": "statement",
   "grid-figure": "fact",
@@ -1240,6 +1248,10 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
   // cards, a staircase of rates, an example's givens, a derivation, a bridge,
   // exercises, answers, pitfalls, a struck figure and a timeline to scale.
   ...CHALKBOARD_BODIES,
+  // bulletin's statement, fact and evidence faces: one sentence as the page,
+  // one figure as large as the page allows, and one exhibit with its proof
+  // ringed and read beside it.
+  ...NOTICE_BODIES,
   rows: (lex) => ({
     heading: lex.headings[1]!,
     components: [
@@ -3337,9 +3349,11 @@ function figureItems(lex: Lexicon, count: number) {
  * instead of the changes it computes, and `table` at its dense size, four
  * options over a closing line.
  */
-export type CompositionVariant = "figures" | "dense" | "answer" | "console" | "memo" | "dossier"
+export type CompositionVariant = "figures" | "dense" | "answer" | "console" | "memo" | "dossier" | "table"
 
 const COMPOSITION_VARIANT_BODIES: Record<`${CompositionId}-${CompositionVariant}`, ((lex: Lexicon) => CompositionBody) | undefined> = {
+  // bulletin's evidence page on a table: the highlighted row ringed.
+  "proof-table": NOTICE_PROOF_TABLE,
   "rail-figures": (lex) => ({
     heading: lex.headings[0]!,
     components: [CHART_VARIANTS["chart · bar"]!(lex), { type: "kpi_cards", items: figureItems(lex, 2) }],

@@ -1,6 +1,6 @@
 /**
  * Layout registry (W2 task 1, spec §3/§6/§8): an explicit, statically-checked
- * description of what the render chain's 199 standard layouts and 4
+ * description of what the render chain's 202 standard layouts and 4
  * page-level image takeovers already draw. This is a metadata layer only.
  * It formalizes today's implicit page structure (layout JSX + the
  * FullSlideSvg takeover dispatch) into named `slots`, it does not change any
@@ -272,6 +272,9 @@ import { layoutDef as contentLineupSheet } from "./content-lineup-sheet"
 import { layoutDef as contentPlacardSheet } from "./content-placard-sheet"
 import { layoutDef as contentKeynoteSheet } from "./content-keynote-sheet"
 import { layoutDef as contentChalkboardSheet } from "./content-chalkboard-sheet"
+import { layoutDef as contentNoticeStatement } from "./content-notice-statement"
+import { layoutDef as contentNoticeFigure } from "./content-notice-figure"
+import { layoutDef as contentNoticeExhibit } from "./content-notice-exhibit"
 import { layoutDef as contentSealFigure } from "./content-seal-figure"
 
 import {
@@ -1042,11 +1045,16 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   // lecture sample redesign (2026-10-08): the board's ordinary content page,
   // theme-locked.
   [contentChalkboardSheet.id]: contentChalkboardSheet,
+  // bulletin kinds round (2026-10-09): the statement, fact and evidence
+  // pages, theme-locked.
+  [contentNoticeStatement.id]: contentNoticeStatement,
+  [contentNoticeFigure.id]: contentNoticeFigure,
+  [contentNoticeExhibit.id]: contentNoticeExhibit,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Image takeover layouts (4). With the 54 standard content layouts above,
-// the content page type has 58 registered entries. These are `slide.layout`
+// Image takeover layouts (4). With the 57 standard content layouts above,
+// the content page type has 61 registered entries. These are `slide.layout`
 // ids for the page-level
 // `image-split`/`image-top`/`image-bottom`/`image-annotate` takeovers
 // (full-slide-svg.tsx's splitTakeover branch, keyed off `getLayout(slide.
@@ -1067,7 +1075,7 @@ const TAKEOVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [imageAnnotateLayoutDef.id]: imageAnnotateLayoutDef,
 }
 
-/** All 199 standard layouts and 4 takeover layouts, 203 entries keyed by id.
+/** All 202 standard layouts and 4 takeover layouts, 206 entries keyed by id.
  *  `kind` still spells the standard tier `"standard"`, a wire-format fossil. See
  *  {@link LayoutDefinition.kind}. */
 export const LAYOUT_REGISTRY: Record<string, LayoutDefinition> = {

@@ -46,6 +46,9 @@ import { LineupSheetContent } from "./content-lineup-sheet"
 import { PlacardSheetContent } from "./content-placard-sheet"
 import { KeynoteSheetContent } from "./content-keynote-sheet"
 import { ChalkboardSheetContent } from "./content-chalkboard-sheet"
+import { NoticeStatementContent } from "./content-notice-statement"
+import { NoticeFigureContent } from "./content-notice-figure"
+import { NoticeExhibitContent } from "./content-notice-exhibit"
 import { SealFigureContent } from "./content-seal-figure"
 import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { CrayonboxPointContent } from "./content-crayonbox-point"
@@ -92,7 +95,8 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // sample redesign adds lineup-sheet: 51 in all. The museum sample redesign
 // adds placard-sheet: 52 in all. The stage sample redesign adds
 // keynote-sheet: 53 in all. The lecture sample redesign adds
-// chalkboard-sheet: 54 in all.
+// chalkboard-sheet: 54 in all. The bulletin kinds round adds
+// notice-statement, notice-figure and notice-exhibit: 57 in all.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "narrow-column": NarrowColumnContent,
   "two-column": TwoColumnContent,
@@ -148,4 +152,7 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "placard-sheet": PlacardSheetContent,
   "keynote-sheet": KeynoteSheetContent,
   "chalkboard-sheet": ChalkboardSheetContent,
+  "notice-statement": NoticeStatementContent,
+  "notice-figure": NoticeFigureContent,
+  "notice-exhibit": NoticeExhibitContent,
 }

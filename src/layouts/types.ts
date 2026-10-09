@@ -333,6 +333,11 @@ export type ContentLayoutId =
   | "keynote-sheet"
   // lecture sample redesign: the board's ordinary content page. Theme-locked.
   | "chalkboard-sheet"
+  // bulletin kinds round (2026-10-09): the statement, fact and evidence
+  // pages the notice board lacked. Theme-locked, never auto-picked.
+  | "notice-statement"
+  | "notice-figure"
+  | "notice-exhibit"
   | "crayonbox-cards"
   | "crayonbox-point"
   | "show-gallery"

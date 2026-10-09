@@ -60,6 +60,9 @@ import { LineupSheetContent } from "./content-lineup-sheet"
 import { PlacardSheetContent } from "./content-placard-sheet"
 import { KeynoteSheetContent } from "./content-keynote-sheet"
 import { ChalkboardSheetContent } from "./content-chalkboard-sheet"
+import { NoticeStatementContent } from "./content-notice-statement"
+import { NoticeFigureContent } from "./content-notice-figure"
+import { NoticeExhibitContent } from "./content-notice-exhibit"
 import { MarqueeStatementContent } from "./content-marquee-statement"
 import { PitchPhotoContent } from "./content-pitch-photo"
 import { GridStatementContent } from "./content-grid-statement"
@@ -254,6 +257,12 @@ const CASES: FaceCase[] = [
   // lecture's chalkboard sheet: the same, under the title from y172 down to y636,
   // over the source line.
   { face: "chalkboard-sheet", Face: ChalkboardSheetContent, themeId: "lecture", regions: ["face", "declined"] },
+  // bulletin's statement, fact and evidence faces: a line chart is no page
+  // their compositions set, so it goes to the notice sheet, in the face's
+  // name, and on as the sheet does.
+  { face: "notice-statement", Face: NoticeStatementContent, themeId: "bulletin", regions: ["face", "aside", "declined"] },
+  { face: "notice-figure", Face: NoticeFigureContent, themeId: "bulletin", regions: ["face", "aside", "declined"] },
+  { face: "notice-exhibit", Face: NoticeExhibitContent, themeId: "bulletin", regions: ["face", "aside", "declined"] },
   // A chart is not the one-line plan's row of touchpoints, so the page goes
   // straight to the sheet, and is declined once that cannot hold it either.
   { face: "marquee-statement", Face: MarqueeStatementContent, themeId: "rally", regions: ["aside", "declined"] },

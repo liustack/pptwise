@@ -1,9 +1,12 @@
 import type React from "react"
 import type { ComponentCtx } from "../../components/types"
+import { measureTextUnits } from "../../lib/svg-text-layout"
 import {
+  attachEmphasis,
   fitEmphasisText,
   headingEmphasisPaint,
   renderEmphasisHeading,
+  stripEmphasis,
   type EmphasisHeadingLayout,
 } from "../../render/emphasis"
 
@@ -63,6 +66,70 @@ export function fitFixed(text: string | undefined, spec: FixedTextSpec): Emphasi
   })
   if (layout.truncated || layout.fontSize !== spec.size || layout.lines.length > spec.maxLines) return null
   return { ...layout, lineHeight: spec.lineHeight }
+}
+
+/**
+ * The places a line may break when words are kept whole (CSS
+ * `word-break: keep-all`): at a space, which the break swallows, or after a
+ * Chinese clause or sentence mark (「，」「。」「：」「；」「！」「？」 and the
+ * closing brackets). Never between two Chinese characters, never inside a
+ * Latin word or a figure, and never after the enumeration comma 「、」, which
+ * holds a list together (「吉利、长安、特斯拉中国」 stays on one line).
+ */
+const KEEP_ALL_BREAK_AFTER = /[，。：；！？）」』》〉]/u
+
+/** `text` cut into the pieces a keep-all wrap never breaks inside, each with the space after it, if any. */
+export function keepAllPieces(text: string): string[] {
+  const pieces: string[] = []
+  let piece = ""
+  for (const ch of Array.from(text)) {
+    if (/\s/u.test(ch)) {
+      if (piece) pieces.push(`${piece} `)
+      piece = ""
+      continue
+    }
+    piece += ch
+    if (KEEP_ALL_BREAK_AFTER.test(ch)) {
+      pieces.push(piece)
+      piece = ""
+    }
+  }
+  if (piece) pieces.push(piece)
+  return pieces
+}
+
+/**
+ * `text` set at `spec.size` with every word kept whole: lines break only at
+ * a space or after a Chinese clause mark (`keepAllPieces`), each line as full
+ * as it can be, so a sentence reads in its own phrases (「份额在挪：比亚迪少了约
+ * 4.5 个点，」 over 「拿走份额的是新势力」). `null` when the words need more than
+ * `spec.maxLines` lines. A piece wider than the whole measure on its own (a
+ * long run of Chinese with no mark in it) cannot be kept whole on any line,
+ * so the text is wrapped the ordinary way instead (`fitFixed`). A line break
+ * the author wrote is kept.
+ */
+export function fitKeepAll(text: string | undefined, spec: FixedTextSpec): EmphasisHeadingLayout | null {
+  const source = text?.trim() ?? ""
+  const plain = stripEmphasis(source)
+  const weight = { fontFamily: spec.fontFamily, bold: spec.bold }
+  const width = (line: string) => measureTextUnits(line.trimEnd(), weight) * spec.size
+  // A line the author broke stays broken there.
+  const paragraphs = plain.split(/\n/u).map((part) => keepAllPieces(part))
+  if (paragraphs.some((pieces) => pieces.some((piece) => width(piece) > spec.width))) return fitFixed(text, spec)
+  const lines: string[] = []
+  for (const pieces of paragraphs) {
+    let line = ""
+    for (const piece of pieces) {
+      if (line && width(line + piece) > spec.width) {
+        lines.push(line.trimEnd())
+        line = ""
+      }
+      line += piece
+    }
+    if (line.trimEnd()) lines.push(line.trimEnd())
+  }
+  if (lines.length > spec.maxLines) return null
+  return attachEmphasis(source, { lines, fontSize: spec.size, lineHeight: spec.lineHeight, truncated: false })
 }
 
 export interface PaintSpec {

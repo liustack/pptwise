@@ -282,6 +282,9 @@ export type CompositionId =
   | "pitfalls"
   | "strikeout"
   | "chronology"
+  | "sentence"
+  | "billboard"
+  | "proof"
 
 /**
  * The type a composition sets its page in.
@@ -294,7 +297,12 @@ export type CompositionId =
  *   item or series with `emphasis`, a highlighted row), and closing lines on
  *   a light panel. A composition offered this setting also takes the shapes
  *   that board drew and the first one did not, such as `numbered_cards` as
- *   rows with the marked item reversed out of a primary block.
+ *   rows with the marked item reversed out of a primary block. Three
+ *   compositions only this setting draws, from bulletin's 2026-10 board for
+ *   the kinds it lacked: one sentence as the page (`sentence`), one figure
+ *   as large as the page allows over the figures it is read against
+ *   (`billboard`), and one exhibit with the place that proves the claim
+ *   ringed and read beside it (`proof`).
  *
  * - `grid`: swiss's 2026-10 board. The notice shapes on the notice band,
  *   recoloured for a page whose data is black: unmarked data in the text
@@ -610,7 +618,9 @@ export interface CompositionProps {
   /**
    * The number the page's first exhibit takes (「附图 N」), counted across the
    * deck by the face that sets the page: one more than the pictures on the
-   * pages before it. 1 when omitted. Only the memo setting numbers exhibits.
+   * pages before it. 1 when omitted. The memo setting numbers its pictures
+   * this way, and the notice setting the one exhibit an evidence page
+   * carries (「图 2」, 「表 1」, "Exhibit 3").
    */
   exhibitNumber?: number
   /**

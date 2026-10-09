@@ -1541,3 +1541,43 @@ No field was added to the IR. The board's marks reuse fields that existed.
 | :-- | :-- | :-- | :-- |
 | A face may let a `paragraph` stand beside a full-body component | `chalkboard-sheet` declares `fullBodyCompanions: ["paragraph"]`, so a `waterfall` closes on the line that explains it | [content-chalkboard-sheet.tsx](../src/layouts/content-chalkboard-sheet.tsx) | [design/compositions/cascade](../design/compositions/cascade/README.md) |
 | lecture's heading leads with Times New Roman over SimSun | an English title and its curly quotes are set in Times New Roman rather than full width in SimSun | [lecture.ts](../src/themes/builtin/lecture.ts) | [design/rounds/2026-10-08-lecture](../design/rounds/2026-10-08-lecture/README.md) |
+
+## bulletin statement, fact and evidence pages, 2026-10
+
+The round gave bulletin the three content kinds its menu refused, drawn to a nine-page board on the NEV sample's own data: two statements, two facts and two evidence pages in Chinese, one of each in English. Its decisions, and every place the engine departs from the board, are in [`design/rounds/2026-10-09-bulletin-kinds/`](../design/rounds/2026-10-09-bulletin-kinds/README.md). The rules are added to [Designing for bulletin](./design-bulletin.md#statement-fact-and-evidence-pages).
+
+### Compositions
+
+New, in the notice setting only:
+
+| composition | what it draws | takes | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| `sentence` | the page's claim as the page: a short bar of the brand colour, the claim at 60px bold kept whole word by word, a hairline and the line that backs it, the block centred in the band. The face places the claim (`claim`) | a page with a claim and nothing else, or one `paragraph` of up to three lines | [sentence.tsx](../src/layouts/compositions/sentence.tsx) | bulletin (`notice-statement`) | [design/compositions/sentence](../design/compositions/sentence/README.md) |
+| `billboard` | one figure at 210px in the brand colour closed up 6px, its unit small after it, what it counts over it, and two or three figures under a hairline | one `kpi_cards` of one to four plain items with no note, the first the figure | [billboard.tsx](../src/layouts/compositions/billboard.tsx) | bulletin (`notice-figure`) | [design/compositions/billboard](../design/compositions/billboard/README.md) |
+| `proof` | one exhibit on a white card under its number, a ring round the place that proves the claim, a leader to a numbered disc, the reading beside it and up to three notes | a titled upright `bar` chart of one or two series with one marked bar, or a titled `data_table` of up to six rows with one highlighted row, then a `paragraph` and up to three notes as paragraphs or one `bullets`. The face numbers the exhibit (`exhibitNumber`) | [proof.tsx](../src/layouts/compositions/proof.tsx) | bulletin (`notice-exhibit`) | [design/compositions/proof](../design/compositions/proof/README.md) |
+
+The tests draw every board page on bulletin and on stage and crayon, a dark theme and a rounded light one that share nothing with it ([notice-kinds.test.tsx](../src/layouts/compositions/notice-kinds.test.tsx)). The gallery's 构图 band has a bulletin page for each, and a second `proof` page on a table.
+
+`fitKeepAll` in [type.tsx](../src/layouts/compositions/type.tsx) sets text with its words kept whole, the way CSS `word-break: keep-all` does: a line breaks at a space or after a Chinese clause mark, never inside a word or a figure and never after the enumeration comma 「、」, which holds a list together. A piece wider than the whole measure falls back to the ordinary wrap. Any composition can call it.
+
+### Faces
+
+| face | what it is | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- |
+| `notice-statement` | no claim header: the sentence large where the header would be, over `sentence`, the source at 14px | [content-notice-statement.tsx](../src/layouts/content-notice-statement.tsx) | bulletin (statement) | [design/faces/notice-statement](../design/faces/notice-statement/README.md) |
+| `notice-figure` | the notice header over `billboard`, the source at 14px | [content-notice-figure.tsx](../src/layouts/content-notice-figure.tsx) | bulletin (fact) | [design/faces/notice-figure](../design/faces/notice-figure/README.md) |
+| `notice-exhibit` | the notice header over `proof`, exhibits numbered across the deck (「图 1」 and 「表 1」 apart in Chinese, "Exhibit n" on one count in English) | [content-notice-exhibit.tsx](../src/layouts/content-notice-exhibit.tsx) | bulletin (evidence) | [design/faces/notice-exhibit](../design/faces/notice-exhibit/README.md) |
+
+A page one of these faces cannot set whole is drawn by the notice sheet (`noticeSheetPage` in [content-notice-sheet.tsx](../src/layouts/content-notice-sheet.tsx)), which steps aside in the face's own name when its band cannot hold the page either.
+
+### Page and component fields
+
+No field was added to the IR. The board's marks reuse fields that existed.
+
+| field | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| `chart.series[].data[].emphasis` on an evidence page | where the ring goes: round the marked bar's whole category, its series in the brand colour | [proof.tsx](../src/layouts/compositions/proof.tsx) | [design/compositions/proof](../design/compositions/proof/README.md) |
+| `data_table.rows[].emphasis: "highlight"` on an evidence page | where the ring goes: round the highlighted row | [proof.tsx](../src/layouts/compositions/proof.tsx) | [design/compositions/proof](../design/compositions/proof/README.md) |
+| `title` on `chart` and `data_table` on an evidence page | the exhibit's title after its number, a chart's unit after it when its values do not carry one | [proof.tsx](../src/layouts/compositions/proof.tsx) | [design/compositions/proof](../design/compositions/proof/README.md) |
+| a `kpi_cards` item's `unit` on a fact page | set at 60px after the 210px figure, a percent sign too | [billboard.tsx](../src/layouts/compositions/billboard.tsx) | [design/compositions/billboard](../design/compositions/billboard/README.md) |
+

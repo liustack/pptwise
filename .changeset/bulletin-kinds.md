@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+Bulletin now offers `statement`, `fact` and `evidence` pages, which it used to refuse. A statement uses `notice-statement`: no claim header, the sentence itself set large and bold where the header would be, over a short IKB bar, with the paragraph that backs it under a hairline. A fact uses `notice-figure`: the usual claim header, then one figure as large as the page allows in IKB with its unit small after it, the line that says what it counts above it, and the two or three figures it is read against under a hairline. Evidence uses `notice-exhibit`: the usual claim header, then one chart or table on a white card numbered across the deck (「图 1」, 「表 1」, "Exhibit 1"), an IKB ring round the bar group you marked with `data[].emphasis` or the row you marked `highlight`, and your reading beside it, numbered to the ring, with up to three notes. A page these faces cannot set whole goes to the ordinary notice sheet. The shared compositions behind them, `sentence`, `billboard` and `proof`, work in the `notice` setting, so any face that sets its pages that way can offer them.
