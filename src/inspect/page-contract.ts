@@ -66,7 +66,8 @@ export interface InspectedPage {
  * `per` says what one count covers: the whole page, one component, or one
  * item. `of` names the component types counted; absent, the count is over
  * every component on the page. `source` says in words where the number
- * comes from.
+ * comes from. `min`, where a face draws a block only from so many items
+ * up, is the fewest: under it validate rejects the page too.
  */
 export interface PageLimit {
   level: "error" | "warning"
@@ -74,6 +75,7 @@ export interface PageLimit {
   per: "page" | "component" | "item"
   of?: string[]
   max: number
+  min?: number
   source: string
 }
 
@@ -311,6 +313,7 @@ function pageLimits(
           per: "component",
           of: listed,
           max: headed ? slot.itemCapacity - 1 : slot.itemCapacity,
+          ...(slot.itemMinimum !== undefined ? { min: slot.itemMinimum } : {}),
           source: `the face's ${slot.name} slot, blank items not counted${headed ? ", its first row set with the heading" : ""}`,
         })
       }
@@ -351,10 +354,10 @@ function pageLimits(
   return kept.filter((limit) => !kept.some((other) => other !== limit && outranks(other, limit)))
 }
 
-/** Whether a component type carries an `items` list, the list a face's item capacity counts. */
+/** Whether a component type carries an `items` list, or a timeline's `milestones`: the list a face's item capacity counts, as validate counts it. */
 function holdsItems(full: JsonSchemaDocument, type: string): boolean {
-  const def = (full.$defs ?? {})[type] as { properties?: { items?: { type?: string } } } | undefined
-  return def?.properties?.items?.type === "array"
+  const def = (full.$defs ?? {})[type] as { properties?: { items?: { type?: string }; milestones?: { type?: string } } } | undefined
+  return def?.properties?.items?.type === "array" || def?.properties?.milestones?.type === "array"
 }
 
 /**

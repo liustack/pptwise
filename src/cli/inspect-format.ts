@@ -28,14 +28,14 @@ function pageHeader(page: InspectedPage, theme: string | undefined, file: string
   return lines
 }
 
-/** `at most 3 items in each bullets (the face's body slot)`. The caller groups lines by level. */
+/** `at most 3 items in each bullets (the face's body slot)`, `at least 2 and at most 4 items in each kpi_cards (…)`. The caller groups lines by level. */
 export function formatLimit(limit: PageLimit): string {
   const of = limit.of?.join(" or ")
   let what: string
   if (limit.per === "page") {
     what = `at most ${limit.max} ${limit.measure}${of !== undefined ? ` (${of})` : ""} on the page`
   } else if (limit.per === "component") {
-    what = `at most ${limit.max} ${limit.measure} in each ${of ?? "component"}`
+    what = `${limit.min !== undefined ? `at least ${limit.min} and ` : ""}at most ${limit.max} ${limit.measure} in each ${of ?? "component"}`
   } else {
     what = `at most ${limit.max} width units in each ${of ?? "component"} item`
   }

@@ -44,6 +44,12 @@ import { boundaryBulletItems, boundarySlotBlocks, drawableItems, slotItemRoom } 
 import { findImageSelection } from "./layouts/find-image"
 import { bodyStatementLines } from "./layouts/minimal-shared"
 import { headingRoom, headingVerdict, type HeadingCtx, type HeadingPage } from "./layouts/heading-set"
+import { textRoom, type TextRoom } from "./layouts/text-room"
+import { blockTextCrowding, blocksLoss, fieldsCrowdingBlocks, headingCrowding, subheadingSet } from "./render/boundary-loss"
+import { dropPhrase } from "./render/drop-marker"
+import { droppedIn, slideToSvgMarkup } from "./render/render-slide"
+import { parseSvgRoot } from "./render/serialize"
+import { IMAGE_COVER_HEADING } from "./render/image-pages"
 import { deckFigureStyle } from "./lib/figure-style"
 import { stripEmphasis } from "./render/emphasis"
 import type { LayoutDefinition } from "./layouts/registry"
@@ -599,6 +605,11 @@ function checkBoundarySlotCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
  * is bound, what it holds, and how many items the page has, and decides what
  * to cut. The render is not the place that decision gets made silently.
  *
+ * A face declares its floor the same way (`itemMinimum`): a ticker of at
+ * least two figures, a line-up of at least three looks. A block the schema
+ * lets hold fewer used to be left off whole, with a mark only the export
+ * read. It is refused here with the floor.
+ *
  * Only the exact bound face is consulted (`componentFace`), so a page
  * whose theme routes it to an asset cover — which draws no bullets at all —
  * is never measured against a cap it does not use.
@@ -611,7 +622,7 @@ function checkBoundaryItemCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
     const layout = componentFace(ir, slide, theme)
     if (!layout) return
     for (const slot of layout.slots) {
-      if (slot.itemCapacity === undefined || slot.accepts === "any") continue
+      if ((slot.itemCapacity === undefined && slot.itemMinimum === undefined) || slot.accepts === "any") continue
       for (const component of boundarySlotBlocks(slide, slot.accepts)) {
         // A timeline's items are its milestones.
         const list: unknown = "items" in component ? component.items : "milestones" in component ? component.milestones : undefined
@@ -624,11 +635,22 @@ function checkBoundaryItemCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
         const raw: readonly unknown[] = list
         const strings = raw.filter((item): item is string => typeof item === "string")
         const count = strings.length === raw.length ? drawableItems(strings).length : raw.length
+        if (slot.itemMinimum !== undefined && count < slot.itemMinimum) {
+          errors.push({
+            path: `slides.${i}.components`,
+            page: i + 1,
+            ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+            message: `face "${layout.id}" draws a "${component.type}" block of at least ${slot.itemMinimum} items, and this "${slide.type}" page has ${count} — add ${
+              slot.itemMinimum - count === 1 ? "one" : slot.itemMinimum - count
+            } more or move it to a content slide`,
+          })
+          continue
+        }
         // A face that sets the heading in the list's first row has one row
         // fewer for the list on a page with a heading.
-        const room = slotItemRoom(slot, slide)!
-        if (count <= room) continue
-        const headed = room < slot.itemCapacity
+        const room = slotItemRoom(slot, slide)
+        if (room === undefined || count <= room) continue
+        const headed = room < slot.itemCapacity!
         errors.push({
           path: `slides.${i}.components`,
           page: i + 1,
@@ -641,6 +663,16 @@ function checkBoundaryItemCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
     }
   })
   return errors
+}
+
+/** What draws a boundary page, for a message: its face, or the shared photo page a cover or chapter over a photograph goes to. */
+function boundaryDrawer(effective: { route: string; layoutId: string | null }, type: string): string {
+  return effective.route === "image-cover" ? `a ${type} over a photograph` : `face "${effective.layoutId}"`
+}
+
+/** How much of a text a face holds, for a message: `the first 9 ("Same store growth …")`, or `none`. */
+function heldPart(room: TextRoom): string {
+  return room.limit === 0 ? "none" : `the first ${room.limit} ("${room.held}")`
 }
 
 /**
@@ -656,9 +688,11 @@ function checkBoundaryItemCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
  * here, with the length the face holds and what to do about it.
  *
  * The length is measured on this page, in this deck's fonts and the
- * theme's type scale, by lengthening a plain heading in the heading's own
- * script until the face stops setting it whole: the number an author can
- * write to, not the face's geometry.
+ * theme's type scale, on the heading itself: the face is handed the
+ * heading's own first characters (a Chinese heading) or words (any other)
+ * until it stops setting them whole (`layouts/text-room.ts`). The message
+ * quotes the part it holds, so the number it gives is one this heading
+ * fits to, not one counted on other words of another width.
  */
 function checkBoundaryHeadingFit(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
   const errors: ValidationIssue[] = []
@@ -672,8 +706,12 @@ function checkBoundaryHeadingFit(ir: PptxIR, theme: ThemeDefinition): Validation
     if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
     if (!stripEmphasis(slide.heading ?? "").trim()) return
     const effective = resolveEffectiveFace(ir, slide, theme)
+    // A cover or chapter over a photograph is drawn by the shared photo
+    // page, not by its menu face, and is asked that page's fit.
+    const photo = effective.route === "image-cover"
     const layout = componentFace(ir, slide, theme)
-    if (!layout) return
+    if (!layout && !photo) return
+    const asked = photo ? IMAGE_COVER_HEADING : layout!
     const page: HeadingPage = {
       ir,
       slide,
@@ -682,17 +720,208 @@ function checkBoundaryHeadingFit(ir: PptxIR, theme: ThemeDefinition): Validation
       page: resolvePageRenderContext(ir, slide, effective, theme),
       ctx,
     }
-    const verdict = headingVerdict(layout, page)
+    const verdict = headingVerdict(asked, page)
     if (verdict === undefined || verdict === "whole") return
-    const room = headingRoom(layout, page)
-    const where = layout.subheading === undefined ? ", or move part of it into the subheading" : ""
+    const room = headingRoom(asked, page)
+    const where = photo || layout!.subheading === undefined ? ", or move part of it into the subheading" : ""
     errors.push({
       path: `slides.${i}.heading`,
       page: i + 1,
       ...(slide.id !== undefined ? { slideId: slide.id } : {}),
-      message: `face "${layout.id}" sets a ${slide.type} heading of about ${room.limit} ${room.unit} at most, and this one has ${room.count}, so the face would ${
-        verdict === "cut" ? "cut its end off" : "refuse the page"
+      message: `${boundaryDrawer(effective, slide.type)} holds ${heldPart(room)} of this ${slide.type} heading's ${room.count} ${room.unit}, so the ${photo ? "page" : "face"} would ${
+        verdict === "cut" ? "cut the rest off" : "refuse the page"
       }. Shorten the heading${where}.`,
+    })
+  })
+  return errors
+}
+
+/**
+ * Boundary-page subheading hard gate.
+ *
+ * A cover, chapter or ending face sets the subheading in a place of its own
+ * design: a line under the title, a pill at the foot, a grey line beside a
+ * button. Where it could not hold the words it cut them or left them off
+ * with a mark, and validate passed the page: only the audit or the export
+ * said so, after the deck was written. How much room the subheading gets
+ * moves with the rest of the page (the button's own words, the lines the
+ * title took), so the face is asked by drawing the page
+ * (`render/boundary-loss.ts`), the same drawing the export reads, and a
+ * subheading it would not set whole is refused here, quoting how much of
+ * it the face holds.
+ */
+function checkBoundarySubheadingFit(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder) return
+    if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
+    const text = slide.subheading ?? ""
+    if (!stripEmphasis(text).trim()) return
+    const verdict = subheadingSet(ir, i, theme)
+    const said = verdict(text)
+    if (said === "whole") return
+    const room = textRoom(text, (prefix) => verdict(prefix) === "whole")
+    const effective = resolveEffectiveFace(ir, slide, theme)
+    const face = boundaryDrawer(effective, slide.type)
+    const loses = said === "cut" ? "cut the rest off" : "leave it off the page"
+    const message =
+      room.limit === 0
+        ? `${face} has no room for this ${slide.type} page's subheading beside what else the page carries, so it would ${said === "cut" ? "cut it" : "leave it off the page"}. Remove the subheading, or shorten the heading and what shares the page with it.`
+        : `${face} holds ${heldPart(room)} of this ${slide.type} subheading's ${room.count} ${room.unit}, so the ${effective.route === "image-cover" ? "page" : "face"} would ${loses}. Shorten the subheading.`
+    errors.push({
+      path: `slides.${i}.subheading`,
+      page: i + 1,
+      ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+      message: `${message} (a deck project's spec writes it as the page's summary)`,
+    })
+  })
+  return errors
+}
+
+/**
+ * Boundary-page heading-and-body hard gate.
+ *
+ * A face whose components stand under the heading has room for them only
+ * under so many heading lines. crayonbox-ending set three contact cards
+ * under a one-line title and left them all off under a two-line one, with
+ * a mark, while the heading gate passed the title (the face does set it
+ * whole) and validate passed the page. The page is drawn under its own
+ * heading and under that heading's first character or word
+ * (`render/boundary-loss.ts`). When the short heading keeps what the long
+ * one loses, the page is refused, quoting how much of the heading the face
+ * holds with the rest of the page in place.
+ */
+function checkBoundaryHeadingRoom(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder || slide.components.length === 0) return
+    if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
+    const heading = slide.heading ?? ""
+    if (!stripEmphasis(heading).trim()) return
+    const holds = headingCrowding(ir, i, theme)
+    if (!holds) return
+    const room = textRoom(heading, holds)
+    const blocks = [...new Set(slide.components.map((c) => c.type))].join(" and ")
+    errors.push({
+      path: `slides.${i}.heading`,
+      page: i + 1,
+      ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+      message: `${boundaryDrawer(resolveEffectiveFace(ir, slide, theme), slide.type)} draws this page's ${blocks} only under a shorter heading: it holds them under ${heldPart(room)} of this ${slide.type} heading's ${room.count} ${room.unit}, and a longer heading takes the room they stand in, so the face would leave them off. Shorten the heading, or take the ${blocks} off this page.`,
+    })
+  })
+  return errors
+}
+
+/**
+ * Boundary-page block-shape hard gate.
+ *
+ * A face may need more of a block than its type and its count: yearbook-
+ * cover lays a timeline as a scale of years, and a timeline dated by
+ * quarter passed validate and was left off the cover with a mark only the
+ * export read. Such a face declares what it needs on its slot
+ * (`LayoutSlot.declines`), its drawing asks the same function, and the
+ * page is refused here with the face's own reason.
+ */
+function checkBoundaryBlockShape(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder) return
+    if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
+    const layout = componentFace(ir, slide, theme)
+    if (!layout) return
+    for (const slot of layout.slots) {
+      if (slot.declines === undefined || slot.accepts === "any") continue
+      for (const block of boundarySlotBlocks(slide, slot.accepts)) {
+        const why = slot.declines(block)
+        if (why === undefined) continue
+        errors.push({
+          path: `slides.${i}.components`,
+          page: i + 1,
+          ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+          message: `face "${layout.id}" cannot draw this ${slide.type} page's "${block.type}" block as written: ${why}. Rewrite it that way, or move it to a content slide.`,
+        })
+      }
+    }
+  })
+  return errors
+}
+
+/** Where a text sits in a page's blocks, for a message: `item 2 of this page's bullets`, `the text of item 3 of this page's icon_cards`. */
+function blockTextPlace(field: string, slide: PptxIR["slides"][number]): string {
+  const [, at, ...rest] = field.split(".")
+  const block = `this page's ${slide.components[Number(at)]!.type}`
+  const named: string[] = []
+  for (let k = 0; k < rest.length; k++) {
+    const key = rest[k]!
+    const next = rest[k + 1]
+    if (next !== undefined && /^\d+$/.test(next)) {
+      named.push(`${key.replace(/s$/, "")} ${Number(next) + 1}`)
+      k++
+    } else named.push(`the ${key}`)
+  }
+  return [...named.reverse(), block].join(" of ")
+}
+
+/**
+ * Boundary-page block hard gate, the last one: what a face would still
+ * leave off.
+ *
+ * Every gate above asks a face a question it can answer before drawing.
+ * What is left is what only the drawing knows: a list item too long for the
+ * one-line label close-word-ending sets it as, a button's words wider than
+ * the pill binder-ending draws them on. Each of those passed validate and
+ * reached the export as a data-dropped mark. The page is drawn
+ * (`render/boundary-loss.ts`), with its blocks and without them. When the
+ * face leaves more off with them, the texts
+ * in its blocks are cut short to see whether their length is the cost, and
+ * each text the face cannot hold is refused, quoting the part it holds.
+ * Otherwise a page field the face has no room for beside the blocks (a
+ * ballot's signature line beside binder-ending's cards) is refused by
+ * name. Whatever is still left off is a shape the face does not draw, and
+ * the page is refused naming what would be lost.
+ * A page this gate passes is one its face draws with nothing dropped.
+ */
+function checkBoundaryBlocksDrawn(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder) return
+    if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
+    if (slide.components.length === 0) return
+    const loss = blocksLoss(ir, i, theme)
+    if (loss <= 0) return
+    const drawer = boundaryDrawer(resolveEffectiveFace(ir, slide, theme), slide.type)
+    const where = { page: i + 1, ...(slide.id !== undefined ? { slideId: slide.id } : {}) }
+    const crowded = blockTextCrowding(ir, i, theme)
+    if (crowded !== undefined && crowded.length > 0) {
+      for (const { field, text, holds } of crowded) {
+        const room = textRoom(text, holds)
+        errors.push({
+          path: `slides.${i}.${field}`,
+          ...where,
+          message: `${drawer} holds ${heldPart(room)} of the ${room.count} ${room.unit} in ${blockTextPlace(field, slide)}, so the face would leave the block off the page. Shorten it, or move the block to a content slide.`,
+        })
+      }
+      return
+    }
+    const lost = droppedIn(parseSvgRoot(slideToSvgMarkup(ir, slide, i, theme)))
+      .drops.map(({ kind, count }) => dropPhrase(kind, count))
+      .join(" and ")
+    const blocks = [...new Set(slide.components.map((c) => c.type))].join(" and ")
+    const fields = fieldsCrowdingBlocks(ir, i, theme, loss)
+    if (fields.length > 0) {
+      for (const field of fields) {
+        errors.push({
+          path: `slides.${i}.${field}`,
+          ...where,
+          message: `${drawer} cannot draw this ${slide.type} page's ${blocks} beside its ${field} as written and would leave ${lost} off the page. Remove the ${field}, or move the ${blocks} to a content slide.`,
+        })
+      }
+      return
+    }
+    errors.push({
+      path: `slides.${i}.components`,
+      ...where,
+      message: `${drawer} cannot draw this ${slide.type} page's ${blocks} as written and would leave ${lost} off the page. Write them in a shape this face draws, or move them to a content slide.`,
     })
   })
   return errors
@@ -1100,6 +1329,8 @@ export function validateIr(
   if (boundarySlotErrors.length > 0) return withNormalized({ ok: false, errors: boundarySlotErrors })
   const boundaryItemErrors = checkBoundaryItemCapacity(r.data, theme)
   if (boundaryItemErrors.length > 0) return withNormalized({ ok: false, errors: boundaryItemErrors })
+  const boundaryShapeErrors = checkBoundaryBlockShape(r.data, theme)
+  if (boundaryShapeErrors.length > 0) return withNormalized({ ok: false, errors: boundaryShapeErrors })
   const boundaryHeadingErrors = checkBoundaryHeadingFit(r.data, theme)
   if (boundaryHeadingErrors.length > 0) return withNormalized({ ok: false, errors: boundaryHeadingErrors })
   const duplicateIdErrors = checkDuplicateSlideIds(r.data)
@@ -1120,6 +1351,14 @@ export function validateIr(
   // checkIrQuality's editorial-budget warn/error split below.
   const assetByteErrors = checkAssetBytes(r.data)
   if (assetByteErrors.length > 0) return withNormalized({ ok: false, errors: assetByteErrors })
+  // Drawn last among the hard gates: it draws the page, so every structural
+  // gate above has passed by then and the drawing reads a sound page.
+  const boundarySubheadingErrors = checkBoundarySubheadingFit(r.data, theme)
+  if (boundarySubheadingErrors.length > 0) return withNormalized({ ok: false, errors: boundarySubheadingErrors })
+  const boundaryHeadingRoomErrors = checkBoundaryHeadingRoom(r.data, theme)
+  if (boundaryHeadingRoomErrors.length > 0) return withNormalized({ ok: false, errors: boundaryHeadingRoomErrors })
+  const boundaryBlockErrors = checkBoundaryBlocksDrawn(r.data, theme)
+  if (boundaryBlockErrors.length > 0) return withNormalized({ ok: false, errors: boundaryBlockErrors })
   // Narrative resolution (spec §5's defaults chain, W3 task 2; renamed from
   // "scenario resolution" spec §8.1). Both branches of the schema's
   // `narrative` union (NarrativeProfileInputSchema in ir/index.ts) are open

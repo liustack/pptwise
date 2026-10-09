@@ -40,13 +40,16 @@ const LABEL = { gap: 8, size: 18, lineHeight: 24 } as const
 /** On a content page: the windows from y200, the row ending on y646. */
 const PAGE = { top: 200, bottom: 646, left: 64, w: 1152 } as const
 
+/** How many looks a parade lines up: a face that sets one declares these as its slot's item floor and ceiling. */
+export const PARADE_LOOKS = { min: 3, max: 8 } as const
+
 export const paradeComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "lineup") return null
   const [grid, ...rest] = components
   if (grid?.type !== "image_grid" || rest.length > 0) return null
   const g = grid as Grid
   const n = g.items.length
-  if (n < 3 || n > 8 || g.items.some((it) => it.icon || it.tag || !it.caption?.trim())) return null
+  if (n < PARADE_LOOKS.min || n > PARADE_LOOKS.max || g.items.some((it) => it.icon || it.tag || !it.caption?.trim())) return null
   const page = wholePage(rect)
   const band = page ? { x: rect.x + PAGE.left, y: rect.y + PAGE.top, w: PAGE.w, h: PAGE.bottom - PAGE.top } : rect
   const w = (band.w - GAP * (n - 1)) / n

@@ -198,7 +198,9 @@ export const iceberg: SvgComponent<IcebergComponent> = {
     const mass = massFill(ctx)
     const outline = graphicInk(ctx.colors.primary, water)
     const tipFill = ctx.colors.surface
-    const lineInk = accessibleInk(ctx.colors.primary, water, SIDE_PX)
+    // The waterline's name stands above the line, on the page rather than
+    // on the water, so its ink is measured against the page.
+    const lineInk = accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, SIDE_PX)
     const aboveInk = accessibleInk(ctx.colors.text, tipFill, ITEM_PX)
     const belowInk = accessibleInk(ctx.colors.text, mass, ITEM_PX)
     const sideInk = accessibleInk(ctx.colors.muted, ctx.defaultBg ?? ctx.colors.bg, SIDE_PX)

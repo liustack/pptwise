@@ -17,7 +17,7 @@ pptwise validate deck-dir/
 
 `validate` applies schema, component, asset, narrative, physical capacity, and editorial checks. Authored leftover-count phrasing and ellipsis substitutes are rejected here, before a page is painted. Fix errors until it prints `OK`. Warnings do not block output, but long headings, excessive density, dangling assets, and repetitive choices should normally be tightened before delivery.
 
-A cover, chapter or ending sets its heading in a fixed place, and how long a heading fits there differs by theme, from about a dozen Chinese characters to over seventy. validate refuses a heading the bound face would cut or drop, and the error names the face, how much it holds on that page (in Chinese characters for a Chinese heading, in words otherwise) and how long this heading is. Shorten the heading, or move part of it into the subheading when the face has one.
+A cover, chapter or ending sets its heading in a fixed place, and how long a heading fits there differs by theme, from about a dozen Chinese characters to over seventy. validate refuses a heading the bound face would cut or drop, and the error names the face and quotes how much of this very heading it holds on that page, counted in the heading's own characters (a Chinese heading) or words (any other), beside how long the heading is. Shorten the heading, or move part of it into the subheading when the face has one. The subheading is held the same way: validate draws the page with its face and refuses a subheading the face would cut or leave off, quoting how much of it fits there. A heading the face sets whole can still take the room its cards or list stand in, and validate refuses that page too, quoting the heading the face keeps them under. Last, validate draws each cover, chapter and ending page and refuses one its face would leave anything off: a list item or a button's words too long for the line the face sets them on, quoting the part that fits, or a block in a shape the face does not draw, such as a year-scale cover's timeline dated by quarter.
 
 Speaker `notes` export as native PowerPoint notes and never paint on the slide.
 
@@ -45,7 +45,7 @@ The deterministic audit checks overflow, out-of-bounds content, low contrast, ov
 
 Add `--pixels` when cover or chapter pages use photo backgrounds. Pixel sampling catches text placed on an unsafe part of a real image.
 
-A `low-contrast` finding on a page painted a mid-tone `background` color, about as light as `#777777` or `#6B7B8C`, is fixed at the background, not the text: the renderer already sets text the theme's ink cannot carry there in pure black and shades cards to the side where that black still reads, and what still falls short is softened text or a label on a tinted band. Move the color lighter or darker.
+A `low-contrast` finding on a page painted a mid-tone `background` color, about as light as `#777777` or `#6B7B8C`, is fixed at the background, not the text: the renderer already sets text the theme's ink cannot carry there in pure black and shades cards to the side where that black still reads, and what still falls short is a mark a face sets in the theme's own color, such as a large chapter numeral. Move the color lighter or darker.
 
 ## Review the whole deck
 

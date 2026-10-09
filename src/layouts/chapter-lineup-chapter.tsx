@@ -21,6 +21,7 @@ import {
   paintLineupTracked,
 } from "./compositions/lineup"
 import { LineupMasthead, mastheadLabel } from "./lineup-shared"
+import { PARADE_LOOKS } from "./compositions/parade"
 import type { HeadingCtx } from "./heading-set"
 
 type Image = Extract<Component, { type: "image" }>
@@ -166,7 +167,7 @@ export const layoutDef = {
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "image", accepts: ["image", "image_grid"], capacity: 1, selection: "first" },
+    { name: "image", accepts: ["image", "image_grid"], capacity: 1, selection: "first", itemMinimum: PARADE_LOOKS.min, itemCapacity: PARADE_LOOKS.max },
   ],
   pageFields: ["kicker", "footnote"],
   drawsPhoto: true,
