@@ -1,10 +1,11 @@
 import type { Component } from "@/ir"
 import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
-import { stripEmphasis } from "../render/emphasis"
+import { stripEmphasis, type EmphasisHeadingLayout } from "../render/emphasis"
 import { resolveDeckFooter } from "../render/footer-marks"
 import { KEYNOTE_META, KeynoteWash, fitKeynote, keynoteBaseline, keynoteInks, keynoteMeta, keynoteText, keynoteTrackedWidth, paintKeynote, paintKeynoteLine, paintKeynotePhoto, paintKeynoteTracked } from "./compositions/keynote"
 import { KeynoteClicker, fitKeynoteClaim } from "./keynote-shared"
+import type { HeadingCtx } from "./heading-set"
 
 type Image = Extract<Component, { type: "image" }>
 
@@ -33,6 +34,11 @@ const SUB = { x: 64, top: 556, size: 17, lineHeight: 26, w: 900, maxLines: 1 } a
 const DATE = { x: 64, top: 560, size: 14, lineHeight: 22, w: 900 } as const
 const NOTE = { right: 1216, top: 640, size: 11, lineHeight: 16, w: 700 } as const
 
+/** The talk's title in the serif, bold, over up to two lines. */
+function fitTitle(heading: string, ctx: HeadingCtx): EmphasisHeadingLayout {
+  return fitKeynoteClaim(heading, ctx, TITLE.w, TITLE.size, TITLE.lineHeight, 2)
+}
+
 export function KeynoteCover({ ir, slide, ctx, index }: SvgTemplateProps) {
   const inks = keynoteInks(ctx)
   const ground = inks.ground
@@ -40,7 +46,7 @@ export function KeynoteCover({ ir, slide, ctx, index }: SvgTemplateProps) {
   const asset = image?.asset_id ?? (slide.background?.kind === "asset" ? slide.background.asset_id : undefined)
   const kicker = stripEmphasis(slide.kicker ?? "").trim()
   const kickerFits = !kicker || keynoteTrackedWidth(kicker, KICKER.size, KICKER.tracking, ctx, { bold: true }) <= KICKER.w
-  const title = slide.heading?.trim() ? fitKeynoteClaim(slide.heading, ctx, TITLE.w, TITLE.size, TITLE.lineHeight, 2) : null
+  const title = slide.heading?.trim() ? fitTitle(slide.heading, ctx) : null
   const titleFits = !title || (!title.truncated && title.lines.length <= 2)
   const sub = slide.subheading?.trim() ? fitKeynote(slide.subheading, { width: SUB.w, size: SUB.size, lineHeight: SUB.lineHeight, maxLines: SUB.maxLines }, ctx) : undefined
   const date = stripEmphasis(ir.meta?.date ?? "").trim()
@@ -100,4 +106,8 @@ export const layoutDef = {
   paintsOwnBackground: true,
   coverMark: { x: 64, y: 24 },
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: ({ slide, ctx }) => {
+    const title = slide.heading?.trim() ? fitTitle(slide.heading, ctx) : null
+    return title && (title.truncated || title.lines.length > 2) ? "declined" : "whole"
+  },
 } satisfies LayoutDefinition

@@ -3100,3 +3100,31 @@ describe("findSourceLineCrossings", () => {
     expect(findSourceLineCrossings(framed, { footnote: source })).toEqual([])
   })
 })
+
+describe("auditDeck — low-contrast says what an author can change", () => {
+  it("points at the background and the theme, the two things an author sets, not at the text color", () => {
+    // rally's KPI cards on a mid-tone page: the card is shaded from the
+    // ground and its labels land just under 4.5:1.
+    const ir = {
+      version: "5",
+      filename: "low-contrast.pptx",
+      theme: { id: "rally" },
+      meta: {},
+      assets: { images: {} },
+      slides: [
+        {
+          type: "content",
+          kind: "data",
+          heading: "数据页",
+          background: { kind: "color", value: "#777777" },
+          components: [{ type: "kpi_cards", items: [{ value: "62%", label: "产能利用率" }, { value: "8.4", label: "周转天数" }] }],
+        },
+      ],
+    } as PptxIR
+    const low = auditDeck(ir).findings.filter((f) => f.code === "low-contrast")
+    expect(low.length).toBeGreaterThan(0)
+    for (const finding of low) {
+      expect(finding.message).toMatch(/\(needs [\d.]+:1\)\. Text takes its color from the theme, so move the page's background lighter or darker, or bind a theme whose colors read on it$/)
+    }
+  })
+})

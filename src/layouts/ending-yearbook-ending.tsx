@@ -15,7 +15,7 @@ import {
   yearbookText,
   yearbookTrackedWidth,
 } from "./compositions/yearbook"
-import { fitDossierTitle } from "./dossier-shared"
+import { fitDossierTitle, dossierTitleSet } from "./dossier-shared"
 import { YearbookSection } from "./yearbook-shared"
 
 /**
@@ -196,4 +196,5 @@ export const layoutDef = {
   drawsPhoto: true,
   suppressMotif: true,
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: dossierTitleSet(TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w),
 } satisfies LayoutDefinition

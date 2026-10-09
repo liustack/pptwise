@@ -6,6 +6,7 @@ import { accessibleInk, metaInk, readableOn } from "../render/ink"
 import { hasCjk, sealStudioGlyph } from "./minimal-shared"
 import { asciiDigitsToHan } from "../render/heading-treatments/labels"
 import { stripEmphasis } from "../render/emphasis"
+import { fitVerdict } from "./heading-set"
 
 /**
  * vertical-title-cover（第八波 pinOnly）：右轴逐字竖排标题，副题短竖列，
@@ -157,6 +158,16 @@ function glyphColumnX(originX: number, index: number, perColumn: number, colGap:
 function glyphRowY(firstY: number, index: number, perColumn: number, step: number): number {
   return firstY + (index % perColumn) * step
 }
+
+/** The across title's fit, for a heading that cannot stand upright: the face's `headingFit`. */
+const LATIN_FIT = {
+  maxWidth: LATIN_MAX_W,
+  fontSize: LATIN_SIZE,
+  maxLines: LATIN_MAX_LINES,
+  minPt: LATIN_MIN_PT,
+  bold: false,
+  lineHeightRatio: LATIN_LINE_HEIGHT / LATIN_SIZE,
+} as const
 
 export function VerticalTitleCover({ ir, slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
@@ -392,12 +403,13 @@ export const layoutDef = {
     { name: "rule", accepts: [] },
     { name: "meta", accepts: [] },
   ],
-  headingFit: {
-    maxWidth: LATIN_MAX_W,
-    fontSize: LATIN_SIZE,
-    maxLines: LATIN_MAX_LINES,
-    minPt: LATIN_MIN_PT,
-    bold: false,
-    lineHeightRatio: LATIN_LINE_HEIGHT / LATIN_SIZE,
+  headingFit: LATIN_FIT,
+  // A heading that can stand upright is set in columns and loses the glyphs
+  // past them (`data-dropped`). Any other is set across in `LATIN_FIT`.
+  headingSet: ({ slide, ctx }) => {
+    const plain = stripEmphasis(slide.heading ?? "")
+    if (!plain.trim()) return "whole"
+    if (canSetVertical(plain)) return fitVerticalSet(asciiDigitsToHan(plain)).dropped > 0 ? "declined" : "whole"
+    return fitVerdict(plain, LATIN_FIT, ctx)
   },
 } satisfies LayoutDefinition

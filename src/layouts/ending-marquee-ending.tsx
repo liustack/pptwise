@@ -8,6 +8,7 @@ import { Lead, fitMarquee, marqueeInks, marqueeText, marqueeWidth, paintMarquee,
 import { boundarySlotBlock } from "./boundary-content"
 import { MarqueeBigTitle } from "./cover-marquee-cover"
 import { MarqueeTicket } from "./marquee-shared"
+import { dossierTitleSet } from "./dossier-shared"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -132,4 +133,5 @@ export const layoutDef = {
   drawsPhoto: true,
   suppressMotif: true,
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: dossierTitleSet(TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w),
 } satisfies LayoutDefinition

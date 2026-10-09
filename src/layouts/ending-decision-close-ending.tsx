@@ -5,6 +5,7 @@ import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
 import { hasCjk } from "./minimal-shared"
 import { stripEmphasis } from "../render/emphasis"
+import type { HeadingCtx } from "./heading-set"
 
 /**
  * decision-close-ending（第八波 pinOnly）：决定两条收口。kicker CJK「决定」/
@@ -52,16 +53,22 @@ function dropOverflowMark(text: string): string {
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 2
 
-function splitDecisionLines(text: string): string[] {
+/** Every decision line the heading writes: by line break, by 「一、」 numbering, or by "1." numbering, else the heading as one line. */
+function splitDecisionLinesAll(text: string): string[] {
   const trimmed = text.trim()
   if (!trimmed) return []
   const byNewline = trimmed.split(/\n+/).map((line) => line.trim()).filter(Boolean)
-  if (byNewline.length > 1) return byNewline.slice(0, 2)
+  if (byNewline.length > 1) return byNewline
   const byCn = trimmed.split(/(?=[一二三四五六七八九十]+、)/).map((line) => line.trim()).filter(Boolean)
-  if (byCn.length > 1) return byCn.slice(0, 2)
+  if (byCn.length > 1) return byCn
   const byDot = trimmed.split(/(?=(?:^|\s)\d+[.、]\s*)/).map((line) => line.trim()).filter(Boolean)
-  if (byDot.length > 1) return byDot.slice(0, 2)
+  if (byDot.length > 1) return byDot
   return [trimmed]
+}
+
+/** The lines this face draws of them: the first two. */
+function splitDecisionLines(text: string): string[] {
+  return splitDecisionLinesAll(text).slice(0, ITEM_MAX)
 }
 
 function decisionItems(slide: SvgTemplateProps["slide"]): string[] {
@@ -85,6 +92,17 @@ function scriptIsCjk(slide: SvgTemplateProps["slide"], items: string[]): boolean
   return items.some((item) => hasCjk(item))
 }
 
+/** One decision line, on one line in the bold heading face, its marks stripped. */
+function fitItem(item: string, fonts: HeadingCtx["fonts"]) {
+  return fitSvgLine(stripEmphasis(item), {
+    maxWidth: ITEM_MAX_W,
+    fontSize: ITEM_SIZE,
+    minFontSize: ITEM_MIN_PT,
+    fontFamily: fonts.heading,
+    bold: true,
+  })
+}
+
 export function DecisionCloseEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -104,13 +122,7 @@ export function DecisionCloseEnding({ slide, ctx }: SvgTemplateProps) {
   const kickerPainted = dropOverflowMark(kicker.text)
 
   const lines = items.map((item, i) => {
-    const body = fitSvgLine(stripEmphasis(item), {
-      maxWidth: ITEM_MAX_W,
-      fontSize: ITEM_SIZE,
-      minFontSize: ITEM_MIN_PT,
-      fontFamily: fonts.heading,
-      bold: true,
-    })
+    const body = fitItem(item, fonts)
     return { y: ITEM_YS[i]!, body, painted: dropOverflowMark(body.text) }
   })
 
@@ -220,4 +232,12 @@ export const layoutDef: LayoutDefinition = {
     { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "rule", accepts: [] },
   ],
+  headingSet: ({ slide, ctx }) => {
+    // With bullets the face sets them and reads the heading for its language
+    // only. Without, the heading is the list itself: a line per item, each on
+    // one line, no more than the face draws.
+    if (boundaryBulletItems(slide, ITEM_MAX).length > 0) return "whole"
+    const lines = splitDecisionLinesAll(stripEmphasis(slide.heading ?? ""))
+    return lines.length > ITEM_MAX || lines.some((line) => fitItem(line, ctx.fonts).truncated) ? "cut" : "whole"
+  },
 }

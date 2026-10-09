@@ -2,7 +2,7 @@ import type { Component } from "@/ir"
 import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
 import { resolveDeckFooter } from "../render/footer-marks"
-import { stripEmphasis } from "../render/emphasis"
+import { stripEmphasis, type EmphasisHeadingLayout } from "../render/emphasis"
 import { LineupWash } from "./compositions/lineup"
 import { fitLineupClaim } from "./lineup-shared"
 import {
@@ -20,6 +20,7 @@ import {
   placardTrackedWidth,
 } from "./compositions/placard"
 import { PlacardFoot, PlacardHall } from "./placard-shared"
+import type { HeadingCtx } from "./heading-set"
 
 type Image = Extract<Component, { type: "image" }>
 
@@ -49,6 +50,16 @@ const RULE = { y: 416, w: 120, stroke: 1.4 } as const
 const SUB = { x: 64, top: 436, size: 16, lineHeight: 28, tracking: 2, w: 1000 } as const
 const NOTE = { right: 1136, top: 678, size: 10, lineHeight: 16, tracking: 0.5, w: 700 } as const
 
+/** The hall's name in the serif, on one line or the two its author broke it into. */
+function fitClaim(heading: string | undefined, ctx: HeadingCtx): EmphasisHeadingLayout {
+  return fitLineupClaim(heading, ctx, TITLE.w, TITLE.size, TITLE.lineHeight, 2)
+}
+
+/** Whether the name sits whole on its two lines at 52px or more. */
+function claimFits(title: EmphasisHeadingLayout): boolean {
+  return !title.truncated && title.lines.length <= 2 && title.fontSize >= TITLE.minPt
+}
+
 export function PlacardChapter({ ir, slide, ctx, index }: SvgTemplateProps) {
   const inks = placardInks(ctx)
   const ground = inks.ground
@@ -60,8 +71,8 @@ export function PlacardChapter({ ir, slide, ctx, index }: SvgTemplateProps) {
   const hallFits = !hall || placardTrackedWidth(hall, HALL.size, HALL.tracking, ctx) <= HALL.w
   const titleText = stripEmphasis(slide.heading ?? "").trim()
   // One line whenever it fits, a few points smaller to stay there, else two lines broken at a comma or a colon, the last on the board's line.
-  const fitted = titleText ? fitLineupClaim(slide.heading, ctx, TITLE.w, TITLE.size, TITLE.lineHeight, 2) : null
-  const title = fitted && !fitted.truncated && fitted.lines.length <= 2 && fitted.fontSize >= TITLE.minPt ? fitted : undefined
+  const fitted = titleText ? fitClaim(slide.heading, ctx) : null
+  const title = fitted && claimFits(fitted) ? fitted : undefined
   const rise = title ? (title.lines.length - 1) * TITLE.lineHeight : 0
   const sub = stripEmphasis(slide.subheading ?? "").trim()
   const subFits = !sub || placardTrackedWidth(sub, SUB.size, SUB.tracking, ctx) <= SUB.w
@@ -117,4 +128,5 @@ export const layoutDef = {
   paintsOwnBackground: true,
   branding: "none",
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: false, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: ({ slide, ctx }) => (stripEmphasis(slide.heading ?? "").trim() && !claimFits(fitClaim(slide.heading, ctx)) ? "declined" : "whole"),
 } satisfies LayoutDefinition

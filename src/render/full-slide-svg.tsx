@@ -3,7 +3,7 @@ import type { BackgroundSpec, Component, PptxIR, Slide } from "@/ir"
 import { PACING_BUDGETS, resolveNarrative, type NarrativeProfile } from "@/narrative"
 import type { StyleTokens } from "../themes/tokens"
 import { CANVAS_W_PX, CANVAS_H_PX } from "../constants"
-import { resolveFontStack } from "./fonts"
+import { deckFonts } from "./fonts"
 import type { ComponentCtx } from "../components/types"
 import type { SvgTemplateProps } from "../layouts/types"
 import { Background } from "./background"
@@ -194,11 +194,7 @@ export function buildCtx(
   return {
     colors: tokens.colors,
     shape: tokens.shape,
-    fonts: {
-      heading: resolveFontStack(tokens.fonts.heading, "heading", chinese),
-      body: resolveFontStack(tokens.fonts.body, "body", chinese),
-      mono: resolveFontStack(tokens.fonts.mono ?? [], "mono", chinese),
-    },
+    fonts: deckFonts(tokens.fonts, chinese),
     images,
     blockIndex: components ? new Map(components.map((component, i) => [component, i])) : undefined,
     defaultBg: defaultBg ?? tokens.colors.bg,

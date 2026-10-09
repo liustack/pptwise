@@ -23,6 +23,7 @@ import {
   uprightText,
   type VerticalColumns,
 } from "./compositions/scroll"
+import type { HeadingCtx } from "./heading-set"
 
 /**
  * scroll-cover：讲座的封面，ink 2026-10 定稿（p01）。
@@ -63,13 +64,36 @@ const NOTE = { x: 24, top: 680, size: 11, lineHeight: 20, w: 560 } as const
 const MARK_BAND = { h: 64, from: 0.6, to: 0 } as const
 const COVER_MARK = { x: 24, y: 36 } as const
 
+/**
+ * The title as the cover sets it: upright in the slip, one column at 54px or
+ * two at 40px, when it and the subtitle can stand upright, and otherwise
+ * across the widened card. `titleDropped` when neither holds it whole.
+ */
+function setTitle(slide: Pick<SvgTemplateProps["slide"], "heading" | "subheading">, ctx: HeadingCtx) {
+  const title = stripEmphasis(slide.heading ?? "").trim()
+  const subtitle = stripEmphasis(slide.subheading ?? "").trim()
+  const upright = uprightText(title) && (!subtitle || uprightText(subtitle))
+  let columns: VerticalColumns | null = null
+  let columnSpec: { size: number; tracking: number; pitch: number } = { ...SLIP.title.one, pitch: SLIP.w }
+  if (upright && title) {
+    const one = fitVertical(slide.heading, { ...SLIP.title.one, capacity: Math.floor((SLIP.title.length - SLIP.title.one.size) / (SLIP.title.one.size + SLIP.title.one.tracking)) + 1, pitch: SLIP.w, maxColumns: 1 })
+    if (one) columns = one
+    else {
+      columnSpec = SLIP.title.two
+      columns = fitVertical(slide.heading, { ...SLIP.title.two, capacity: Math.floor((SLIP.title.length - SLIP.title.two.size) / (SLIP.title.two.size + SLIP.title.two.tracking)) + 1, maxColumns: 2 })
+    }
+  }
+  // A Latin title across the widened slip.
+  const cardTitle = !upright && title ? fitScroll(slide.heading, { width: CARD.w - CARD.pad * 2, size: CARD.title.size, lineHeight: CARD.title.lineHeight, maxLines: CARD.title.maxLines, serif: true }, ctx) : null
+  const titleDropped = title !== "" && (upright ? columns === null : cardTitle === null)
+  return { title, subtitle, upright, columns, columnSpec, cardTitle, titleDropped }
+}
+
 export function ScrollCover({ ir, slide, ctx, index }: SvgTemplateProps) {
   const inks = scrollInks(ctx)
   const ground = inks.ground
   const photo = slide.background?.kind === "asset" ? slide.background.asset_id : null
-  const title = stripEmphasis(slide.heading ?? "").trim()
-  const subtitle = stripEmphasis(slide.subheading ?? "").trim()
-  const upright = uprightText(title) && (!subtitle || uprightText(subtitle))
+  const { subtitle, upright, columns, columnSpec, cardTitle, titleDropped } = setTitle(slide, ctx)
   const seal = sealOf(slide.stamp, ir.meta.organization)
   const hall = joinColumnLabels([ir.meta.organization, slide.kicker])
   const footer = resolveDeckFooter(ir)
@@ -84,22 +108,8 @@ export function ScrollCover({ ir, slide, ctx, index }: SvgTemplateProps) {
   const noteGround = inks.lead
   const labels = upright ? LABELS : { ...LABELS, hall: CARD.labels.hall, date: CARD.labels.date }
 
-  // The title upright in the slip: one column at 54px, or two at 40px.
-  let columns: VerticalColumns | null = null
-  let columnSpec: { size: number; tracking: number; pitch: number } = { ...SLIP.title.one, pitch: SLIP.w }
-  if (upright && title) {
-    const one = fitVertical(slide.heading, { ...SLIP.title.one, capacity: Math.floor((SLIP.title.length - SLIP.title.one.size) / (SLIP.title.one.size + SLIP.title.one.tracking)) + 1, pitch: SLIP.w, maxColumns: 1 })
-    if (one) columns = one
-    else {
-      columnSpec = SLIP.title.two
-      columns = fitVertical(slide.heading, { ...SLIP.title.two, capacity: Math.floor((SLIP.title.length - SLIP.title.two.size) / (SLIP.title.two.size + SLIP.title.two.tracking)) + 1, maxColumns: 2 })
-    }
-  }
   const subColumns = upright && subtitle ? fitVertical(slide.subheading, { size: SUB.size, tracking: SUB.tracking, capacity: Math.floor((SUB.length - SUB.size) / (SUB.size + SUB.tracking)) + 1, pitch: SUB.lineHeight, maxColumns: SUB.maxColumns }) : null
-  // A Latin title across the widened slip.
-  const cardTitle = !upright && title ? fitScroll(slide.heading, { width: CARD.w - CARD.pad * 2, size: CARD.title.size, lineHeight: CARD.title.lineHeight, maxLines: CARD.title.maxLines, serif: true }, ctx) : null
   const cardSub = !upright && subtitle ? fitScroll(slide.subheading, { width: CARD.w - CARD.pad * 2, size: CARD.sub.size, lineHeight: CARD.sub.lineHeight, maxLines: CARD.sub.maxLines, serif: true }, ctx) : null
-  const titleDropped = title !== "" && (upright ? columns === null : cardTitle === null)
   const subDropped = subtitle !== "" && (upright ? subColumns === null : cardSub === null)
   const slip = upright ? { x: SLIP.x, y: SLIP.y, w: SLIP.w, h: SLIP.h } : { x: CARD.x, y: CARD.y, w: CARD.w, h: CARD.h }
   const sealX = upright ? SLIP.x + (SLIP.w - SLIP.seal.size) / 2 : CARD.x + CARD.pad
@@ -170,4 +180,5 @@ export const layoutDef = {
   // Over the photograph's top left, on the ink the face lays there when the deck prints a mark.
   coverMark: { ...COVER_MARK, ground: "primary" },
   headingFit: { maxWidth: CARD.w - CARD.pad * 2, fontSize: CARD.title.size, maxLines: CARD.title.maxLines, minPt: CARD.title.size, bold: false, lineHeightRatio: CARD.title.lineHeight / CARD.title.size },
+  headingSet: ({ slide, ctx }) => (setTitle(slide, ctx).titleDropped ? "declined" : "whole"),
 } satisfies LayoutDefinition

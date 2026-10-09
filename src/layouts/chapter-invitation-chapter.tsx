@@ -22,6 +22,7 @@ import {
   paintInvitationTracked,
   paintRule,
 } from "./compositions/invitation"
+import type { HeadingCtx } from "./heading-set"
 
 /**
  * invitation-chapter：请柬的章节页，luxe 2026-10 定稿（p05、p09、p13）。
@@ -53,6 +54,11 @@ const RULE = { x: 100, gap: 20, w: 120, stroke: 1.2 } as const
 const SUB = { x: 100, gap: 18, w: 520, size: 15, lineHeight: 26, maxLines: 2 } as const
 const NOTE = { right: 1220, top: 664, size: 10, lineHeight: 16, w: 400 } as const
 
+/** The part's title tracked in the serif: the author's own break kept, otherwise one line or two at a comma, as large as fits. `null` when no size from 52 down to 40 holds it whole. */
+function fitTitle(heading: string | undefined, ctx: HeadingCtx): { lines: string[]; size: number } | null {
+  return fitTrackedTitle(heading, { width: TITLE.w, size: TITLE.size, minPt: TITLE.minPt, lineHeight: TITLE.lineHeight, tracking: TITLE.tracking, maxLines: TITLE.maxLines }, ctx)
+}
+
 export function InvitationChapter({ ir, slide, ctx, index }: SvgTemplateProps) {
   const inks = invitationInks(ctx)
   const ground = inks.ground
@@ -63,7 +69,7 @@ export function InvitationChapter({ ir, slide, ctx, index }: SvgTemplateProps) {
   const chapterIndex = ir.slides.slice(0, pageIndex).filter((s) => s.type === "chapter").length
   const numeral = chapterNumeral(chapterIndex)
   const kicker = stripEmphasis(slide.kicker ?? "").trim()
-  const title = fitTrackedTitle(slide.heading, { width: TITLE.w, size: TITLE.size, minPt: TITLE.minPt, lineHeight: TITLE.lineHeight, tracking: TITLE.tracking, maxLines: TITLE.maxLines }, ctx)
+  const title = fitTitle(slide.heading, ctx)
   const lines = title?.lines ?? []
   const size = title?.size ?? TITLE.size
   const titleFits = title !== null
@@ -132,4 +138,5 @@ export const layoutDef = {
   paintsOwnBackground: true,
   branding: "none",
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: TITLE.maxLines, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: ({ slide, ctx }) => (slide.heading?.trim() && fitTitle(slide.heading, ctx) === null ? "declined" : "whole"),
 } satisfies LayoutDefinition

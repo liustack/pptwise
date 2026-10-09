@@ -1,6 +1,6 @@
 import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
-import { stripEmphasis } from "../render/emphasis"
+import { stripEmphasis, type EmphasisHeadingLayout } from "../render/emphasis"
 import { fitMemoTitle } from "./compositions/memo"
 import {
   cjkOnly,
@@ -14,6 +14,7 @@ import {
   periodicalTrackedWidth,
 } from "./compositions/periodical"
 import { PERIODICAL_LEFT } from "./periodical-shared"
+import { cutOrWhole, type HeadingCtx } from "./heading-set"
 
 /**
  * periodical-cover：期刊的封面，journal 2026-10 定稿（p01）。
@@ -47,6 +48,12 @@ function mastheadSize(width: number, measure: (size: number) => number): number 
   return 0
 }
 
+/** The cover story on one line, smaller, then broken at a comma or a colon over two. */
+function fitStory(heading: string | undefined, ctx: HeadingCtx): EmphasisHeadingLayout {
+  const one = fitMemoTitle(heading, { maxWidth: STORY.w, fontSize: STORY.size, minPt: STORY.minSize, lineHeight: STORY.lineHeight, fontFamily: ctx.fonts.heading })
+  return one.lines.length <= 1 ? one : { ...fitMemoTitle(heading, { maxWidth: STORY.w, fontSize: STORY.minSize, minPt: STORY.minSize, lineHeight: STORY.twoLineHeight, fontFamily: ctx.fonts.heading }) }
+}
+
 export function PeriodicalCover({ ir, slide, ctx }: SvgTemplateProps) {
   const inks = periodicalInks(ctx)
   const ground = inks.ground
@@ -59,9 +66,7 @@ export function PeriodicalCover({ ir, slide, ctx }: SvgTemplateProps) {
   const issue = slide.kicker ? stripEmphasis(slide.kicker).trim() : ""
   const issueTracking = cjkOnly(issue) ? ISSUE.tracking.cjk : ISSUE.tracking.latin
   const issueFits = !issue || periodicalTrackedWidth(issue, ISSUE.size, issueTracking, ctx) <= width
-  // The cover story on one line, smaller, then broken at a comma or a colon over two.
-  const one = fitMemoTitle(slide.heading, { maxWidth: STORY.w, fontSize: STORY.size, minPt: STORY.minSize, lineHeight: STORY.lineHeight, fontFamily: ctx.fonts.heading })
-  const story = one.lines.length <= 1 ? one : { ...fitMemoTitle(slide.heading, { maxWidth: STORY.w, fontSize: STORY.minSize, minPt: STORY.minSize, lineHeight: STORY.twoLineHeight, fontFamily: ctx.fonts.heading }) }
+  const story = fitStory(slide.heading, ctx)
   const storyBottom = STORY.top + story.lines.length * story.lineHeight
   const dek = slide.subheading?.trim() ? fitPeriodical(slide.subheading, { width: DEK.w, size: DEK.size, lineHeight: DEK.lineHeight, maxLines: DEK.maxLines, serif: true }, ctx) : null
   const dekTop = storyBottom + DEK.gap
@@ -169,4 +174,5 @@ export const layoutDef = {
   // Over the masthead's rules, in the cover's left column.
   coverMark: { x: PERIODICAL_LEFT, y: 44 },
   headingFit: { maxWidth: STORY.w, fontSize: STORY.size, maxLines: 2, minPt: STORY.minSize, bold: true, lineHeightRatio: STORY.lineHeight / STORY.size },
+  headingSet: ({ slide, ctx }) => cutOrWhole(fitStory(slide.heading, ctx)),
 } satisfies LayoutDefinition

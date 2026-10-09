@@ -5,7 +5,7 @@ import { stripEmphasis } from "../render/emphasis"
 import { boundarySlotBlock, drawableItems } from "./boundary-content"
 import { splitLabel } from "./compositions/manuscript"
 import { CRAYON_META, CRAYON_SPEC, CrayonLine, DrawnBox, Star, Sun, crayonBaseline, crayonInks, crayonMeta, crayonSectionColor, crayonText, crayonWidth, fitCrayon, inkOn, paintCrayon, paintCrayonIcon, paintCrayonLine } from "./compositions/crayonbox"
-import { CrayonClaimText, SectionCapsule, fitCrayonClaim } from "./crayonbox-frame"
+import { CrayonClaimText, SectionCapsule, fitCrayonClaim, crayonClaimSet, CLAIM } from "./crayonbox-frame"
 
 type IconCards = Extract<Component, { type: "icon_cards" }>
 type Bullets = Extract<Component, { type: "bullets" }>
@@ -175,5 +175,6 @@ export const layoutDef = {
   pageFields: ["kicker", "footnote"],
   drawsPhoto: true,
   suppressMotif: true,
-  headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: 40, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: CLAIM.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: crayonClaimSet(TITLE.w, TITLE.size, TITLE.lineHeight),
 } satisfies LayoutDefinition

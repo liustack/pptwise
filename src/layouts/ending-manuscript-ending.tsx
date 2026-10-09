@@ -15,7 +15,8 @@ import {
   paintManuscriptLine,
   paintManuscriptTracked,
 } from "./compositions/manuscript"
-import { MANUSCRIPT_LEFT, MANUSCRIPT_W, ManuscriptTitle } from "./manuscript-shared"
+import { MANUSCRIPT_LEFT, MANUSCRIPT_W, ManuscriptTitle, fitManuscriptTitle } from "./manuscript-shared"
+import { cutOrWhole } from "./heading-set"
 
 /**
  * manuscript-ending：开题报告的结尾，thesis 2026-10 定稿（p18）。
@@ -110,4 +111,5 @@ export const layoutDef = {
   subheading: { none: "set it as the kicker, the small title over the points, or fold it into the closing line" },
   suppressMotif: true,
   headingFit: { maxWidth: MANUSCRIPT_W, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: ({ slide, ctx }) => cutOrWhole(fitManuscriptTitle(slide.heading, ctx, TITLE.size, TITLE.lineHeight, TITLE.minPt)),
 } satisfies LayoutDefinition

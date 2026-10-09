@@ -370,13 +370,15 @@ Each `assets.images` entry contains `src` and may include `alt` or `error`. `src
 
 Backgrounds are `color`, `gradient`, or `asset`. Cover and chapter asset backgrounds use the dedicated readable image treatment. Run `pptwise asset-brief <target>` before sourcing image content so the real frame and crop are known.
 
-Paint a `color` background clearly light or clearly dark. On a mid-tone about as light as `#777777` or `#6B7B8C`, neither white nor the near-black ink the renderer falls back to reaches the 4.5:1 that body-size text needs, so on many themes the text lands just under it and `pptwise audit` reports `low-contrast`. Text color is the theme's to set, so the fix is the background: move it lighter or darker.
+Paint a `color` background clearly light or clearly dark. On a mid-tone about as light as `#777777` or `#6B7B8C`, white and near-black both miss the 4.5:1 that body-size text needs, so where the theme's own ink does not read the renderer sets the text in pure black, which does. Some layouts also set text on a card or band shaded from the background, and on a mid-tone that shade can still fall just short, so `pptwise audit` may report `low-contrast` there. Text color is the theme's to set, so the fix is the background: move it lighter or darker.
 
 ## Validation
 
 `pptwise validate` is the live contract. Authored strings must write the value itself. Never stand in for content with a leftover count or an ellipsis. validate rejects it.
 
 The check walks every string leaf under `slides` and `meta`, so a new component field is covered automatically. Spec headings get the same check.
+
+A cover, chapter or ending heading must fit the place the bound face gives it. A heading the face would cut or drop is refused, and the error says how long a heading the face holds on that page, in Chinese characters for a Chinese heading and in words otherwise. The face answers with the same fit it draws with (`src/layouts/heading-set.ts`).
 
 ## Deck project or bare IR
 

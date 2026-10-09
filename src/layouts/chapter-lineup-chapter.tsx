@@ -21,6 +21,7 @@ import {
   paintLineupTracked,
 } from "./compositions/lineup"
 import { LineupMasthead, mastheadLabel } from "./lineup-shared"
+import type { HeadingCtx } from "./heading-set"
 
 type Image = Extract<Component, { type: "image" }>
 type Grid = Extract<Component, { type: "image_grid" }>
@@ -68,7 +69,7 @@ const ROW = {
 const FOREGROUND = { "data-depth": "fg" } as const
 
 /** The largest size from `size` down to `min` that sets `text` on one line in the serif across `w`, or `null`. */
-function oneLine(text: string, size: number, min: number, w: number, ctx: SvgTemplateProps["ctx"]): number | null {
+function oneLine(text: string, size: number, min: number, w: number, ctx: HeadingCtx): number | null {
   for (let s = size; s >= min; s -= 1) if (lineupWidth(text, s, ctx, { serif: true }) <= w) return s
   return null
 }
@@ -173,4 +174,10 @@ export const layoutDef = {
   paintsOwnBackground: true,
   branding: "none",
   headingFit: { maxWidth: PHOTO.title.w, fontSize: PHOTO.title.size, maxLines: 1, minPt: PHOTO.title.min, bold: false, lineHeightRatio: PHOTO.title.lineHeight / PHOTO.title.size },
+  headingSet: ({ slide, ctx }) => {
+    const title = stripEmphasis(slide.heading ?? "").trim()
+    // The row of looks sets the title in its own column, the photograph in another.
+    const box = slide.components.some((c) => c.type === "image_grid") ? ROW.title : PHOTO.title
+    return title && oneLine(title, box.size, box.min, box.w, ctx) === null ? "declined" : "whole"
+  },
 } satisfies LayoutDefinition

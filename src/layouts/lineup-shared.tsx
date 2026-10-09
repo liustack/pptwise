@@ -132,7 +132,7 @@ export function LineupMasthead({
  * fits, down to a twelfth under its size. Otherwise on two lines broken at
  * the last comma or colon that lets both fit.
  */
-export function fitLineupClaim(heading: string | undefined, ctx: ComponentCtx, width: number = CLAIM.w, size: number = CLAIM.size, lineHeight: number = CLAIM.lineHeight, maxLines: number = CLAIM.maxLines): EmphasisHeadingLayout {
+export function fitLineupClaim(heading: string | undefined, ctx: Pick<ComponentCtx, "fonts">, width: number = CLAIM.w, size: number = CLAIM.size, lineHeight: number = CLAIM.lineHeight, maxLines: number = CLAIM.maxLines): EmphasisHeadingLayout {
   const plain = stripEmphasis(heading ?? "").trim()
   const floor = Math.round(size * CLAIM.oneLineFloor)
   const fontFamily = ctx.fonts.heading

@@ -2,7 +2,7 @@ import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
 import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { boundaryBulletItems } from "./boundary-content"
-import { fitMemoTitle, memoBaseline, memoChinese, memoInks, memoMeta, memoNumeral, memoText, paintMemo, paintMemoLine } from "./compositions/memo"
+import { fitMemoTitle, memoBaseline, memoChinese, memoInks, memoMeta, memoNumeral, memoText, paintMemo, paintMemoLine, memoTitleSet } from "./compositions/memo"
 import { fitStamp, paintStamp } from "./compositions/stamp"
 import { blockTag } from "./compositions/shared"
 import { MEMO_LEFT, MEMO_W, MemoMargin } from "./memo-shared"
@@ -192,4 +192,5 @@ export const layoutDef = {
   ],
   pageFields: ["kicker", "fields", "stamp"],
   headingFit: { maxWidth: MEMO_W, fontSize: TITLE.size, maxLines: TITLE.maxLines, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: memoTitleSet({ maxWidth: MEMO_W, fontSize: TITLE.size, minPt: TITLE.minPt, lineHeight: TITLE.lineHeight }),
 } satisfies LayoutDefinition

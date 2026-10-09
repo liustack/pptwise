@@ -127,7 +127,7 @@ export function manuscriptBaseline(top: number, lineHeight: number, size: number
 }
 
 /** The family a run is set in: the heading serif or the body sans. */
-export function manuscriptFamily(ctx: ComponentCtx, serif: boolean): string {
+export function manuscriptFamily(ctx: Pick<ComponentCtx, "fonts">, serif: boolean): string {
   return serif ? ctx.fonts.heading : ctx.fonts.body
 }
 
@@ -149,7 +149,7 @@ const FULL_WIDTH_SPACE = "\u3000"
 const HELD_SPACE = "\u25a1"
 
 /** `text` set at exactly `spec.size`, or `null` when it does not fit whole. */
-export function fitManuscript(text: string | undefined, spec: ManuscriptTextSpec, ctx: ComponentCtx): EmphasisHeadingLayout | null {
+export function fitManuscript(text: string | undefined, spec: ManuscriptTextSpec, ctx: Pick<ComponentCtx, "fonts">): EmphasisHeadingLayout | null {
   const held = text?.includes(FULL_WIDTH_SPACE) ? text.split(FULL_WIDTH_SPACE).join(HELD_SPACE) : text
   const layout = fitFixed(held, {
     width: spec.width,
@@ -165,7 +165,7 @@ export function fitManuscript(text: string | undefined, spec: ManuscriptTextSpec
 }
 
 /** The width `text` takes on one line at `size`, its marks stripped. */
-export function manuscriptWidth(text: string, size: number, ctx: ComponentCtx, opts: { serif?: boolean; bold?: boolean } = {}): number {
+export function manuscriptWidth(text: string, size: number, ctx: Pick<ComponentCtx, "fonts">, opts: { serif?: boolean; bold?: boolean } = {}): number {
   return measureTextUnits(stripEmphasis(text), { fontFamily: manuscriptFamily(ctx, opts.serif === true), bold: opts.bold === true }) * size
 }
 
@@ -334,7 +334,7 @@ export function paintManuscriptTracked(opts: { ctx: ComponentCtx; text: string; 
 }
 
 /** The tracked width of `text`, as `paintManuscriptTracked` sets it. */
-export function manuscriptTrackedWidth(text: string, size: number, tracking: number, ctx: ComponentCtx, opts: { serif?: boolean; bold?: boolean } = {}): number {
+export function manuscriptTrackedWidth(text: string, size: number, tracking: number, ctx: Pick<ComponentCtx, "fonts">, opts: { serif?: boolean; bold?: boolean } = {}): number {
   return manuscriptWidth(text, size, ctx, opts) + Math.max(0, Array.from(text).length - 1) * tracking
 }
 

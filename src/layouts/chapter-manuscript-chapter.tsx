@@ -15,6 +15,7 @@ import {
   paintManuscriptTracked,
 } from "./compositions/manuscript"
 import { MANUSCRIPT_LEFT, ManuscriptTitle, fitManuscriptTitle, manuscriptSection, sectionPages } from "./manuscript-shared"
+import { cutOrWhole } from "./heading-set"
 
 /**
  * manuscript-chapter：开题报告的章节页，thesis 2026-10 定稿（p07）。
@@ -153,4 +154,5 @@ export const layoutDef = {
   drawsPhoto: true,
   suppressMotif: true,
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: ({ slide, ctx }) => cutOrWhole(fitManuscriptTitle(slide.heading, ctx, TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w)),
 } satisfies LayoutDefinition

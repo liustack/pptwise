@@ -1,8 +1,9 @@
 import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
-import { stripEmphasis } from "../render/emphasis"
+import { stripEmphasis, type EmphasisHeadingLayout } from "../render/emphasis"
 import { ChalkUnder, chalkBaseline, chalkText, chalkTrackedWidth, chalkWidth, chalkboardInks, fitChalk, paintChalk, paintChalkTracked } from "./compositions/chalkboard"
 import { fitChalkClaim } from "./chalkboard-shared"
+import type { HeadingCtx } from "./heading-set"
 
 /**
  * chalkboard-chapter：课的下一段，lecture 2026-10 定稿的章节页（定稿没有
@@ -19,12 +20,17 @@ const KICKER = { x: 64, top: 64, size: 13, lineHeight: 20, tracking: 6, w: 1100 
 const TITLE = { x: 64, w: 1100, foot: 380, size: 72, lineHeight: 90, floor: 0.6, under: { gap: 16, dx: 6, tail: 32, width: 6 } } as const
 const SUB = { x: 64, top: 430, w: 1000, size: 22, lineHeight: 34, maxLines: 2 } as const
 
+/** The part's name in chalk, over up to two lines, shrunk no further than three fifths of its size. */
+function fitTitle(heading: string, ctx: HeadingCtx): EmphasisHeadingLayout {
+  return fitChalkClaim(heading, ctx, TITLE.w, TITLE.size, TITLE.lineHeight, 2, Math.round(TITLE.size * TITLE.floor))
+}
+
 export function ChalkboardChapter({ slide, ctx }: SvgTemplateProps) {
   const inks = chalkboardInks(ctx)
   const ground = inks.ground
   const kicker = stripEmphasis(slide.kicker ?? "").trim()
   const kickerFits = !kicker || chalkTrackedWidth(kicker, KICKER.size, KICKER.tracking, ctx) <= KICKER.w
-  const title = slide.heading?.trim() ? fitChalkClaim(slide.heading, ctx, TITLE.w, TITLE.size, TITLE.lineHeight, 2, Math.round(TITLE.size * TITLE.floor)) : null
+  const title = slide.heading?.trim() ? fitTitle(slide.heading, ctx) : null
   const titleFits = !title || (!title.truncated && title.lines.length <= 2)
   const sub = slide.subheading?.trim() ? fitChalk(slide.subheading, { width: SUB.w, size: SUB.size, lineHeight: SUB.lineHeight, maxLines: SUB.maxLines, serif: true }, ctx) : undefined
   const top = title ? TITLE.foot - title.lines.length * title.lineHeight : TITLE.foot
@@ -70,4 +76,8 @@ export const layoutDef = {
   paintsOwnBackground: true,
   branding: "none",
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: Math.round(TITLE.size * TITLE.floor), bold: false, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: ({ slide, ctx }) => {
+    const title = slide.heading?.trim() ? fitTitle(slide.heading, ctx) : null
+    return title && (title.truncated || title.lines.length > 2) ? "declined" : "whole"
+  },
 } satisfies LayoutDefinition

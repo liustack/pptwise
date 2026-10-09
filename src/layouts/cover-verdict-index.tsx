@@ -6,6 +6,7 @@ import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
 import { fitEmphasisText, headingEmphasisPaint, parseEmphasis, renderEmphasisHeading, renderEmphasisText, sliceEmphasisForLines, stripEmphasis } from "../render/emphasis"
 import { faceParam } from "./face-params"
+import { fitVerdict } from "./heading-set"
 
 /**
  * verdict-index cover layout（2026-08-22 封面还原第一波，新表达）：
@@ -310,4 +311,11 @@ export const layoutDef: LayoutDefinition = {
     { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "meta", accepts: [] },
   ],
+  headingSet: ({ slide, ctx, params }) =>
+    fitVerdict(
+      slide.heading,
+      // The size is the menu's, as in the drawing.
+      { maxWidth: TITLE_MAX_W, fontSize: faceParam(params, "verdictTitleSize", TITLE_SIZE), maxLines: TITLE_MAX_LINES, minPt: TITLE_MIN_PT, lineHeightRatio: TITLE_LINE_HEIGHT / TITLE_SIZE },
+      ctx,
+    ),
 }

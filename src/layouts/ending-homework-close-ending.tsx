@@ -5,6 +5,7 @@ import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
 import { hasCjk } from "./minimal-shared"
 import { stripEmphasis } from "../render/emphasis"
+import type { HeadingCtx } from "./heading-set"
 
 /**
  * homework-close-ending（第八波 pinOnly）：accent 作业盒 + 三条清单 + 底
@@ -47,16 +48,22 @@ const HOMEWORK_LATIN = "HOMEWORK"
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 3
 
-function splitActionLines(text: string): string[] {
+/** Every homework line the heading writes: by line break, by 「一、」 numbering, or by "1." numbering, else the heading as one line. */
+function splitActionLinesAll(text: string): string[] {
   const trimmed = text.trim()
   if (!trimmed) return []
   const byNewline = trimmed.split(/\n+/).map((line) => line.trim()).filter(Boolean)
-  if (byNewline.length > 1) return byNewline.slice(0, 3)
+  if (byNewline.length > 1) return byNewline
   const byCn = trimmed.split(/(?=[一二三四五六七八九十]+、)/).map((line) => line.trim()).filter(Boolean)
-  if (byCn.length > 1) return byCn.slice(0, 3)
+  if (byCn.length > 1) return byCn
   const byDot = trimmed.split(/(?=(?:^|\s)\d+[.、]\s*)/).map((line) => line.trim()).filter(Boolean)
-  if (byDot.length > 1) return byDot.slice(0, 3)
+  if (byDot.length > 1) return byDot
   return [trimmed]
+}
+
+/** The lines this face draws of them: the first three. */
+function splitActionLines(text: string): string[] {
+  return splitActionLinesAll(text).slice(0, ITEM_MAX)
 }
 
 function homeworkItems(slide: SvgTemplateProps["slide"]): string[] {
@@ -68,6 +75,16 @@ function homeworkItems(slide: SvgTemplateProps["slide"]): string[] {
 function homeworkLabel(slide: SvgTemplateProps["slide"], items: string[]): string {
   const scriptSrc = slide.heading || items[0] || ""
   return hasCjk(scriptSrc) ? HOMEWORK_CJK : HOMEWORK_LATIN
+}
+
+/** One homework line, on one line in the heading face. */
+function fitItem(item: string, fonts: HeadingCtx["fonts"]) {
+  return fitSvgLine(item, {
+    maxWidth: ITEM_MAX_W,
+    fontSize: ITEM_SIZE,
+    minFontSize: ITEM_MIN_PT,
+    fontFamily: fonts.heading,
+  })
 }
 
 export function HomeworkCloseEnding({ slide, ctx }: SvgTemplateProps) {
@@ -88,12 +105,7 @@ export function HomeworkCloseEnding({ slide, ctx }: SvgTemplateProps) {
 
   const lines = items.map((item, i) => ({
     y: ITEM_YS[i]!,
-    body: fitSvgLine(item, {
-      maxWidth: ITEM_MAX_W,
-      fontSize: ITEM_SIZE,
-      minFontSize: ITEM_MIN_PT,
-      fontFamily: fonts.heading,
-    }),
+    body: fitItem(item, fonts),
   }))
 
   const previewSource = (slide.subheading ?? "").trim()
@@ -187,4 +199,12 @@ export const layoutDef: LayoutDefinition = {
     { name: "subheading", accepts: [] },
     { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
   ],
+  headingSet: ({ slide, ctx }) => {
+    // With bullets the face sets them and reads the heading for its language
+    // only. Without, the heading is the list itself: a line per item, each on
+    // one line, no more than the face draws.
+    if (boundaryBulletItems(slide, ITEM_MAX).length > 0) return "whole"
+    const lines = splitActionLinesAll(slide.heading ?? "")
+    return lines.length > ITEM_MAX || lines.some((line) => fitItem(line, ctx.fonts).truncated) ? "cut" : "whole"
+  },
 }

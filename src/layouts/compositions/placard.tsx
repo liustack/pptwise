@@ -154,12 +154,12 @@ export function fitPlacard(text: string | undefined, spec: LineupTextSpec, ctx: 
 }
 
 /** The width `text` takes on one line at `size`, its marks stripped. */
-export function placardWidth(text: string, size: number, ctx: ComponentCtx, opts: { serif?: boolean; bold?: boolean } = {}): number {
+export function placardWidth(text: string, size: number, ctx: Pick<ComponentCtx, "fonts">, opts: { serif?: boolean; bold?: boolean } = {}): number {
   return lineupWidth(text, size, ctx, opts)
 }
 
 /** The tracked width of `text`, as `paintPlacardTracked` sets it. */
-export function placardTrackedWidth(text: string, size: number, tracking: number, ctx: ComponentCtx, opts: { serif?: boolean; bold?: boolean } = {}): number {
+export function placardTrackedWidth(text: string, size: number, tracking: number, ctx: Pick<ComponentCtx, "fonts">, opts: { serif?: boolean; bold?: boolean } = {}): number {
   return lineupTrackedWidth(text, size, tracking, ctx, opts)
 }
 

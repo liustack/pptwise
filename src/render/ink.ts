@@ -83,10 +83,18 @@ export function requiredContrastRatio(fontSizePx: number): number {
   return fontSizePx >= LARGE_TEXT_MIN_PX ? CONTRAST_RATIO_LARGE : CONTRAST_RATIO_BODY
 }
 
-/** The two neutral inks `readableOn` ever returns — never a theme color, see
+/** The neutral inks `readableOn` ever returns — never a theme color, see
  * that function's own doc comment. */
 const DARK_INK = "#0A0E14"
 const LIGHT_INK = "#FFFFFF"
+/**
+ * The dark ink of last resort. On a mid-tone ground, about as light as
+ * `#777777` or `#6B7B8C`, neither the near-black above nor white reaches the
+ * 4.5:1 body text needs (4.32:1 and 4.48:1 on `#777777`), while pure black
+ * does (4.69:1). Black or white always clears it on any ground: the two
+ * meet at about 4.58:1.
+ */
+const BLACK_INK = "#000000"
 
 /**
  * A readable, theme-neutral ink for text painted directly on `bgHex` —
@@ -106,13 +114,21 @@ const LIGHT_INK = "#FFFFFF"
  * replaces the fixed cutover entirely; every consumer already goes through
  * this one function, so no call site needed updating.
  *
+ * On a mid-tone ground where neither of the pair reaches the 4.5:1 body
+ * text needs, it returns whichever of white and pure black (`BLACK_INK`)
+ * measures higher, which always reaches it. Every ground where the pair
+ * already reads keeps the ink it had.
+ *
  * Returns a neutral black/white pair, never a theme color — see
  * `accessibleInk` below for "keep the theme's own color when it already
  * works, only fall back to neutral ink when it doesn't."
  */
-export function readableOn(bgHex: string): "#FFFFFF" | "#0A0E14" {
+export function readableOn(bgHex: string): "#FFFFFF" | "#0A0E14" | "#000000" {
   const darkContrast = contrastRatio(DARK_INK, bgHex)
   const lightContrast = contrastRatio(LIGHT_INK, bgHex)
+  if (Math.max(darkContrast, lightContrast) < CONTRAST_RATIO_BODY) {
+    return contrastRatio(BLACK_INK, bgHex) > lightContrast ? BLACK_INK : LIGHT_INK
+  }
   if (darkContrast === lightContrast) {
     return relativeLuminance(bgHex) > LUMINANCE_INK_THRESHOLD ? DARK_INK : LIGHT_INK
   }

@@ -8,7 +8,7 @@ Use `kind: "photo"` when the image itself is the subject. Use `kind: "evidence"`
 
 Cover and chapter pages can use an asset background. The renderer applies the dedicated image-cover treatment with a dark readability scrim. Content and ending asset backgrounds retain the theme-toned scrim. Use a background image only when the page truly needs a full-canvas scene.
 
-A `color` background should be clearly light or clearly dark. On a mid-tone such as `#777777` or `#6B7B8C`, neither white nor near-black text reaches the 4.5:1 body text needs, so the text lands just under it on many themes and `audit` reports `low-contrast`. Pick a lighter or darker color.
+A `color` background should be clearly light or clearly dark. On a mid-tone such as `#777777` or `#6B7B8C`, white and near-black text both miss the 4.5:1 body text needs. The renderer sets such text in pure black, which reads, but text on a card or band shaded from the background can still fall just short, and `audit` reports `low-contrast`. Pick a lighter or darker color.
 
 Declare each image once in `assets.images`, then reference it by `asset_id` from `image`, `image_grid`, `image_compare`, or `device_mockup`. Check every key. `validate` reports a dangling reference, and an unresolved source cannot become a real image.
 

@@ -4,6 +4,7 @@ import { stripEmphasis } from "../render/emphasis"
 import { fitLineupClaim } from "./lineup-shared"
 import { PLACARD_META, PlacardGlow, paintPlacard, paintPlacardRule, paintPlacardTracked, placardBaseline, placardInks, placardMark, placardMeta, placardText, placardTrackedWidth } from "./compositions/placard"
 import { PlacardHall } from "./placard-shared"
+import type { HeadingCtx } from "./heading-set"
 
 /**
  * placard-ending：展厅熄灯，只剩一张展签亮着，museum 2026-10 定稿（p18）。
@@ -22,13 +23,19 @@ const RULE = { y: 392, w: 80, stroke: 1.4 } as const
 const SUB = { top: 416, size: 16, lineHeight: 28, tracking: 4, w: 1152, maxLines: 3 } as const
 const DATE = { top: 600, size: 13, lineHeight: 20, tracking: 6, w: 1152 } as const
 
+/** The closing words: on one tracked line, or else on the two lines their author broke them into, at 48px or more. */
+function fitWords(heading: string | undefined, ctx: HeadingCtx) {
+  const plain = stripEmphasis(heading ?? "").trim()
+  const oneLine = plain && !plain.includes("\n") && placardTrackedWidth(plain, WORDS.size, WORDS.tracking, ctx, { serif: true }) <= WORDS.w
+  const broken = plain && !oneLine ? fitLineupClaim(heading, ctx, WORDS.w, WORDS.size, WORDS.lineHeight, 2) : null
+  const wordsFit = !plain || oneLine || (broken && !broken.truncated && broken.lines.length <= 2 && broken.fontSize >= WORDS.minPt)
+  return { plain, oneLine, broken, wordsFit }
+}
+
 export function PlacardEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const inks = placardInks(ctx)
   const ground = inks.ground
-  const plain = stripEmphasis(slide.heading ?? "").trim()
-  const oneLine = plain && !plain.includes("\n") && placardTrackedWidth(plain, WORDS.size, WORDS.tracking, ctx, { serif: true }) <= WORDS.w
-  const broken = plain && !oneLine ? fitLineupClaim(slide.heading, ctx, WORDS.w, WORDS.size, WORDS.lineHeight, 2) : null
-  const wordsFit = !plain || oneLine || (broken && !broken.truncated && broken.lines.length <= 2 && broken.fontSize >= WORDS.minPt)
+  const { plain, oneLine, broken, wordsFit } = fitWords(slide.heading, ctx)
   // The author's own breaks are kept, a line of its own each.
   const subLines = (slide.subheading ?? "").split(/\n+/u).map((line) => stripEmphasis(line).trim()).filter(Boolean)
   const subFits = subLines.length <= SUB.maxLines && subLines.every((line) => placardTrackedWidth(line, SUB.size, SUB.tracking, ctx) <= SUB.w)
@@ -82,4 +89,5 @@ export const layoutDef = {
   paintsOwnBackground: true,
   branding: "none",
   headingFit: { maxWidth: WORDS.w, fontSize: WORDS.size, maxLines: 2, minPt: WORDS.minPt, bold: false, lineHeightRatio: WORDS.lineHeight / WORDS.size },
+  headingSet: ({ slide, ctx }) => (fitWords(slide.heading, ctx).wordsFit ? "whole" : "declined"),
 } satisfies LayoutDefinition

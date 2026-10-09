@@ -5,7 +5,7 @@ import { headingEmphasisPaint, renderEmphasisHeading, stripEmphasis } from "../r
 import { blendOver } from "../render/ink"
 import { boundarySlotBlock, drawableItems } from "./boundary-content"
 import { blockTag } from "./compositions/shared"
-import { fitDossierTitle } from "./dossier-shared"
+import { fitDossierTitle, dossierTitleSet } from "./dossier-shared"
 import {
   fitLesson,
   lessonBaseline,
@@ -165,4 +165,5 @@ export const layoutDef = {
   // Over the office's line, on the board.
   coverMark: { x: LEFT, y: 44, ground: "primary" },
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: dossierTitleSet(TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w),
 } satisfies LayoutDefinition

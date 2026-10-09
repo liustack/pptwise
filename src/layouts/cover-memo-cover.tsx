@@ -2,7 +2,7 @@ import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
 import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 import { exhibitCaptionLayout, paintExhibit, type ExhibitSpec } from "./compositions/exhibit"
-import { fitMemoTitle, memoBaseline, memoChinese, memoInks, memoMeta, memoText, paintMemo, paintMemoLine, paintTracked } from "./compositions/memo"
+import { fitMemoTitle, memoBaseline, memoChinese, memoInks, memoMeta, memoText, paintMemo, paintMemoLine, paintTracked, memoTitleSet } from "./compositions/memo"
 import { fitStamp, paintStamp } from "./compositions/stamp"
 import { blockTag } from "./compositions/shared"
 import { exhibitNumberAt } from "./memo-shared"
@@ -174,4 +174,5 @@ export const layoutDef = {
   suppressMotif: true,
   coverMark: { x: LEFT, y: 50 },
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: TITLE.maxLines, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: memoTitleSet({ maxWidth: TITLE.w, fontSize: TITLE.size, minPt: TITLE.minPt, lineHeight: TITLE.lineHeight }),
 } satisfies LayoutDefinition

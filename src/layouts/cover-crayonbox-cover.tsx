@@ -2,7 +2,7 @@ import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
 import { stripEmphasis } from "../render/emphasis"
 import { CrayonLine, CrayonPhoto, PHOTO_NOTE, PhotoNote, Star, Sun, crayonInks, crayonText, fitCrayon, fitPhotoNote, paintCrayon } from "./compositions/crayonbox"
-import { CrayonClaimText, SectionCapsule, fitCrayonClaim } from "./crayonbox-frame"
+import { CrayonClaimText, SectionCapsule, fitCrayonClaim, crayonClaimSet, CLAIM } from "./crayonbox-frame"
 
 /**
  * crayonbox-cover：一盒蜡笔的封面，crayon 2026-10 定稿（p01）。
@@ -97,5 +97,6 @@ export const layoutDef = {
   // The paper is laid edge to edge first: the page's photograph sits in its frame, not under the page.
   paintsOwnBackground: true,
   suppressMotif: true,
-  headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: 40, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: CLAIM.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: crayonClaimSet(TITLE.w, TITLE.size, TITLE.lineHeight),
 } satisfies LayoutDefinition

@@ -77,7 +77,7 @@ export function ChalkStep({ ctx, text, column = STEP }: { ctx: ComponentCtx; tex
  * its size. Otherwise on lines broken at the last comma or colon that lets
  * both fit.
  */
-export function fitChalkClaim(heading: string | undefined, ctx: ComponentCtx, width: number = TITLE.w, size: number = TITLE.size, lineHeight: number = TITLE.lineHeight, maxLines: number = TITLE.maxLines, minPt: number = Math.round(size * TITLE.oneLineFloor)): EmphasisHeadingLayout {
+export function fitChalkClaim(heading: string | undefined, ctx: Pick<ComponentCtx, "fonts">, width: number = TITLE.w, size: number = TITLE.size, lineHeight: number = TITLE.lineHeight, maxLines: number = TITLE.maxLines, minPt: number = Math.round(size * TITLE.oneLineFloor)): EmphasisHeadingLayout {
   const plain = stripEmphasis(heading ?? "").trim()
   const fontFamily = ctx.fonts.heading
   const parts = (heading ?? "").split(/\n+/u).map((part) => part.trim()).filter(Boolean)

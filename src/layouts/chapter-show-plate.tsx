@@ -11,6 +11,7 @@ import {
   withoutOverflowMark,
 } from "./show-shared"
 import type { SvgTemplateProps } from "./types"
+import { lineVerdict } from "./heading-set"
 
 type ImageComponent = Extract<Component, { type: "image" }>
 
@@ -19,6 +20,9 @@ function firstImage(components: readonly Component[]): ImageComponent | undefine
 }
 
 /** show-plate。左侧图板与右侧巨号形成章节开场。 */
+/** The title on one line in the bold heading face, shrunk no further than its floor. */
+const TITLE_LINE = { maxWidth: 464, fontSize: 48, minFontSize: 32, bold: true } as const
+
 export function ShowPlateChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -28,13 +32,7 @@ export function ShowPlateChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const number = String(chapterNumber).padStart(2, "0")
   const titleSource = stripEmphasis(slide.heading ?? "").trim()
   const title = titleSource
-    ? fitSvgLine(titleSource, {
-        maxWidth: 464,
-        fontSize: 48,
-        minFontSize: 32,
-        fontFamily: fonts.heading,
-        bold: true,
-      })
+    ? fitSvgLine(titleSource, { ...TITLE_LINE, fontFamily: fonts.heading })
     : null
   const subtitleSource = stripEmphasis(slide.subheading ?? "").trim()
   const subtitle = subtitleSource
@@ -203,4 +201,5 @@ export const layoutDef = {
     { name: "watermark", accepts: [] },
     { name: "decor", accepts: [] },
   ],
+  headingSet: ({ slide, ctx }) => lineVerdict(stripEmphasis(slide.heading ?? "").trim(), TITLE_LINE, ctx),
 } satisfies LayoutDefinition

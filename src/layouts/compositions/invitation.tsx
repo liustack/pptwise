@@ -122,12 +122,12 @@ export function invitationMark(ink: string, ground: string): string {
 export type InvitationTextSpec = ManuscriptTextSpec
 
 /** `text` set at exactly `spec.size`, or `null` when it does not fit whole. `serif` is the heading face. */
-export function fitInvitation(text: string | undefined, spec: InvitationTextSpec, ctx: ComponentCtx): EmphasisHeadingLayout | null {
+export function fitInvitation(text: string | undefined, spec: InvitationTextSpec, ctx: Pick<ComponentCtx, "fonts">): EmphasisHeadingLayout | null {
   return fitManuscript(text, spec, ctx)
 }
 
 /** The width `text` takes on one line at `size`, its marks stripped. */
-export function invitationWidth(text: string, size: number, ctx: ComponentCtx, opts: { serif?: boolean; bold?: boolean } = {}): number {
+export function invitationWidth(text: string, size: number, ctx: Pick<ComponentCtx, "fonts">, opts: { serif?: boolean; bold?: boolean } = {}): number {
   return manuscriptWidth(text, size, ctx, opts)
 }
 
@@ -164,7 +164,7 @@ export function paintInvitationTracked(opts: Parameters<typeof paintManuscriptTr
 }
 
 /** The tracked width of `text`, as `paintInvitationTracked` sets it. */
-export function invitationTrackedWidth(text: string, size: number, tracking: number, ctx: ComponentCtx, opts: { serif?: boolean; bold?: boolean } = {}): number {
+export function invitationTrackedWidth(text: string, size: number, tracking: number, ctx: Pick<ComponentCtx, "fonts">, opts: { serif?: boolean; bold?: boolean } = {}): number {
   return manuscriptTrackedWidth(text, size, invitationTracking(text, tracking), ctx, opts)
 }
 
@@ -483,13 +483,18 @@ export function invitationChinese(ctx: ComponentCtx, words: readonly string[]): 
   return manuscriptChinese(ctx, words)
 }
 
+/** A fitted title's lines, or none when the fit cut its end off: a title is set whole or not at all. */
+function wholeLines(layout: EmphasisHeadingLayout): string[] {
+  return layout.truncated ? [] : layout.lines
+}
+
 /**
  * A boundary page's title set tracked in the serif: the author's own breaks
  * kept, each part on a line of its own, and otherwise one line or two broken
  * at a comma or a colon, at the largest size from `size` down to `minPt`
  * whose tracked lines all fit `width`. `null` when none does.
  */
-export function fitTrackedTitle(text: string | undefined, spec: { width: number; size: number; minPt: number; lineHeight: number; tracking: number; maxLines: number; bold?: boolean }, ctx: ComponentCtx): { lines: string[]; size: number } | null {
+export function fitTrackedTitle(text: string | undefined, spec: { width: number; size: number; minPt: number; lineHeight: number; tracking: number; maxLines: number; bold?: boolean }, ctx: Pick<ComponentCtx, "fonts">): { lines: string[]; size: number } | null {
   const plain = text?.trim() ?? ""
   if (!plain) return null
   const parts = plain.split(/\n+/u).map((p) => stripEmphasis(p).trim()).filter(Boolean)
@@ -501,7 +506,7 @@ export function fitTrackedTitle(text: string | undefined, spec: { width: number;
     const lines =
       parts.length > 1
         ? parts.flatMap((p) => fitMemoTitle(p, { maxWidth, fontSize: size, minPt: size, lineHeight: spec.lineHeight, fontFamily: ctx.fonts.heading, bold }).lines.map((l) => (l === p ? l : "\u0000")))
-        : fitMemoTitle(parts[0], { maxWidth, fontSize: size, minPt: size, lineHeight: spec.lineHeight, fontFamily: ctx.fonts.heading, bold }).lines
+        : wholeLines(fitMemoTitle(parts[0], { maxWidth, fontSize: size, minPt: size, lineHeight: spec.lineHeight, fontFamily: ctx.fonts.heading, bold }))
     if (lines.length === 0 || lines.length > spec.maxLines || lines.some((l) => l === "\u0000")) continue
     if (lines.every((l) => invitationTrackedWidth(l, size, spec.tracking, ctx, { serif: true, bold }) <= spec.width)) return { lines: lines.map(stripEmphasis), size }
   }

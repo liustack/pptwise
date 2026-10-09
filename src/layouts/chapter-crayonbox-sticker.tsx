@@ -12,6 +12,7 @@ import {
   doodleRays,
   withoutOverflowMark,
 } from "./crayonbox-shared"
+import { lineVerdict } from "./heading-set"
 
 const TITLE_X = 352
 const TITLE_Y = 356
@@ -25,6 +26,9 @@ const SUBTITLE_SIZE = 24
 const SUBTITLE_MAX_W = 760
 
 /** crayonbox-sticker：斜贴纸章节号、天空蓝章节胶囊与左齐标题。 */
+/** The title on one line in the bold heading face, shrunk no further than its floor. */
+const TITLE_LINE = { maxWidth: TITLE_MAX_W, fontSize: TITLE_SIZE, minFontSize: TITLE_MIN_PT, bold: true } as const
+
 export function CrayonboxStickerChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -38,13 +42,7 @@ export function CrayonboxStickerChapter({ ir, slide, index, ctx }: SvgTemplatePr
   })
   const titleSource = stripEmphasis(slide.heading ?? "")
   const title = titleSource.trim()
-    ? fitSvgLine(titleSource, {
-        maxWidth: TITLE_MAX_W,
-        fontSize: TITLE_SIZE,
-        minFontSize: TITLE_MIN_PT,
-        fontFamily: fonts.heading,
-        bold: true,
-      })
+    ? fitSvgLine(titleSource, { ...TITLE_LINE, fontFamily: fonts.heading })
     : null
   const subtitleSource = slide.subheading?.trim() ?? ""
   const subtitle = subtitleSource
@@ -154,4 +152,5 @@ export const layoutDef = {
     maxLines: 1,
     minPt: TITLE_MIN_PT,
   },
+  headingSet: ({ slide, ctx }) => lineVerdict(stripEmphasis(slide.heading ?? ""), TITLE_LINE, ctx),
 } satisfies LayoutDefinition

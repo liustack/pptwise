@@ -3,7 +3,7 @@ import type { SvgTemplateProps } from "./types"
 import { DecorPiece } from "../motifs/decor-piece"
 import { PitchScrim } from "./compositions/pitch"
 import { Confetti, fitMarquee, marqueeInks, marqueeText, marqueeWidth, paintMarquee, ticketWidths, type Box } from "./compositions/marquee"
-import { fitDossierTitle } from "./dossier-shared"
+import { fitDossierTitle, dossierTitleSet } from "./dossier-shared"
 import { MarqueeBigTitle, Pills, pillItems, pillsFit, pillsWhole } from "./cover-marquee-cover"
 import { MarqueeTicket, sectionTicket } from "./marquee-shared"
 
@@ -87,4 +87,5 @@ export const layoutDef = {
   drawsPhoto: true,
   suppressMotif: true,
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: dossierTitleSet(TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w),
 } satisfies LayoutDefinition

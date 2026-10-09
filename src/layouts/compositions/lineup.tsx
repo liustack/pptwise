@@ -99,12 +99,12 @@ export function lineupMark(ink: string, ground: string): string {
 export type LineupTextSpec = ManuscriptTextSpec
 
 /** `text` set at exactly `spec.size`, or `null` when it does not fit whole. `serif` is the heading face. */
-export function fitLineup(text: string | undefined, spec: LineupTextSpec, ctx: ComponentCtx): EmphasisHeadingLayout | null {
+export function fitLineup(text: string | undefined, spec: LineupTextSpec, ctx: Pick<ComponentCtx, "fonts">): EmphasisHeadingLayout | null {
   return fitManuscript(text, spec, ctx)
 }
 
 /** The width `text` takes on one line at `size`, its marks stripped. */
-export function lineupWidth(text: string, size: number, ctx: ComponentCtx, opts: { serif?: boolean; bold?: boolean } = {}): number {
+export function lineupWidth(text: string, size: number, ctx: Pick<ComponentCtx, "fonts">, opts: { serif?: boolean; bold?: boolean } = {}): number {
   return manuscriptWidth(text, size, ctx, opts)
 }
 
@@ -114,7 +114,7 @@ export function lineupBaseline(top: number, lineHeight: number, size: number, se
 }
 
 /** The family a run is set in: the heading serif or the body sans. */
-export function lineupFamily(ctx: ComponentCtx, serif: boolean): string {
+export function lineupFamily(ctx: Pick<ComponentCtx, "fonts">, serif: boolean): string {
   return manuscriptFamily(ctx, serif)
 }
 
@@ -252,7 +252,7 @@ export function paintLineupTracked(opts: { ctx: ComponentCtx; text: string; x: n
 }
 
 /** The tracked width of `text`, as `paintLineupTracked` sets it. */
-export function lineupTrackedWidth(text: string, size: number, tracking: number, ctx: ComponentCtx, opts: { serif?: boolean; bold?: boolean } = {}): number {
+export function lineupTrackedWidth(text: string, size: number, tracking: number, ctx: Pick<ComponentCtx, "fonts">, opts: { serif?: boolean; bold?: boolean } = {}): number {
   return lineupWidth(text, size, ctx, opts) + Math.max(0, Array.from(text).length - 1) * lineupTracking(text, tracking)
 }
 

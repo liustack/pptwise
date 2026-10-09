@@ -1,7 +1,7 @@
 import type { Component } from "@/ir"
 import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
-import { stripEmphasis } from "../render/emphasis"
+import { stripEmphasis, type EmphasisHeadingLayout } from "../render/emphasis"
 import { fitLineupClaim } from "./lineup-shared"
 import { LineupWash } from "./compositions/lineup"
 import {
@@ -18,6 +18,7 @@ import {
   placardText,
   placardTrackedWidth,
 } from "./compositions/placard"
+import type { HeadingCtx } from "./heading-set"
 
 type Image = Extract<Component, { type: "image" }>
 
@@ -47,14 +48,24 @@ const SUB = { x: 64, top: 470, size: 17, lineHeight: 28, w: 600, maxLines: 2 } a
 const DATE = { x: 64, top: 610, size: 14, lineHeight: 20, tracking: 6, w: 600 } as const
 const NOTE = { right: 1216, top: 690, size: 10, lineHeight: 16, tracking: 0.5, w: 600 } as const
 
+/** The catalogue's title in the serif, on one line or the two its author broke it into. */
+function fitClaim(heading: string, ctx: HeadingCtx): EmphasisHeadingLayout {
+  return fitLineupClaim(heading, ctx, TITLE.w, TITLE.size, TITLE.lineHeight, 2)
+}
+
+/** Whether the title sits whole on its two lines at 52px or more. */
+function claimFits(title: EmphasisHeadingLayout): boolean {
+  return !title.truncated && title.lines.length <= 2 && title.fontSize >= TITLE.minPt
+}
+
 export function PlacardCover({ ir, slide, ctx }: SvgTemplateProps) {
   const inks = placardInks(ctx)
   const ground = inks.ground
   const image = slide.components.find((c) => c.type === "image") as Image | undefined
   const asset = image?.asset_id ?? (slide.background?.kind === "asset" ? slide.background.asset_id : undefined)
   const kicker = stripEmphasis(slide.kicker ?? "").trim()
-  const title = slide.heading?.trim() ? fitLineupClaim(slide.heading, ctx, TITLE.w, TITLE.size, TITLE.lineHeight, 2) : null
-  const titleFits = !title || (!title.truncated && title.lines.length <= 2 && title.fontSize >= TITLE.minPt)
+  const title = slide.heading?.trim() ? fitClaim(slide.heading, ctx) : null
+  const titleFits = !title || claimFits(title)
   const sub = slide.subheading?.trim() ? fitPlacard(slide.subheading, { width: SUB.w, size: SUB.size, lineHeight: SUB.lineHeight, maxLines: SUB.maxLines }, ctx) : undefined
   const date = stripEmphasis(ir.meta?.date ?? "").trim()
   const note = stripEmphasis(slide.footnote ?? "").trim()
@@ -114,4 +125,5 @@ export const layoutDef = {
   paintsOwnBackground: true,
   coverMark: { x: 64, y: 24 },
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: false, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: ({ slide, ctx }) => (slide.heading?.trim() && !claimFits(fitClaim(slide.heading, ctx)) ? "declined" : "whole"),
 } satisfies LayoutDefinition

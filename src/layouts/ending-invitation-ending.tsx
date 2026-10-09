@@ -1,7 +1,7 @@
 import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
 import { resolveDeckFooter } from "../render/footer-marks"
-import { stripEmphasis } from "../render/emphasis"
+import { stripEmphasis, type EmphasisHeadingLayout } from "../render/emphasis"
 import {
   INVITATION_META,
   fitInvitation,
@@ -17,6 +17,7 @@ import {
   paintInvitationTracked,
   paintRule,
 } from "./compositions/invitation"
+import type { HeadingCtx } from "./heading-set"
 
 /**
  * invitation-ending：请柬的结尾，luxe 2026-10 定稿（p18）。
@@ -40,6 +41,11 @@ const RULE = { gap: 64, w: 120, stroke: 0.7 } as const
 const SIGN = { gap: 22, size: 16, lineHeight: 28, tracking: 4, w: 1000 } as const
 const DATE = { gap: 4, size: 14, lineHeight: 24, tracking: 6, w: 1000 } as const
 
+/** The closing words in the ivory serif at 44px over up to three lines, or `null` when they do not fit whole. */
+function fitWords(heading: string, ctx: HeadingCtx): EmphasisHeadingLayout | null {
+  return fitInvitation(heading, { width: WORDS.w, size: WORDS.size, lineHeight: WORDS.lineHeight, maxLines: WORDS.maxLines, serif: true }, ctx)
+}
+
 export function InvitationEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const inks = invitationInks(ctx)
   const ground = inks.ground
@@ -47,7 +53,7 @@ export function InvitationEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const occasion = stripEmphasis(slide.kicker ?? ir.meta.organization ?? "").trim()
   const date = stripEmphasis(resolveDeckFooter(ir).label ?? ir.meta.date ?? "").trim()
   const sign = stripEmphasis(slide.subheading ?? "").trim()
-  const words = slide.heading?.trim() ? fitInvitation(slide.heading, { width: WORDS.w, size: WORDS.size, lineHeight: WORDS.lineHeight, maxLines: WORDS.maxLines, serif: true }, ctx) : undefined
+  const words = slide.heading?.trim() ? fitWords(slide.heading, ctx) : undefined
   const wordsBottom = WORDS.top + Math.max(2, words?.lines.length ?? 2) * WORDS.lineHeight
   const ruleY = wordsBottom + RULE.gap
   const signTop = ruleY + SIGN.gap
@@ -99,4 +105,5 @@ export const layoutDef = {
   suppressMotif: true,
   paintsOwnBackground: true,
   headingFit: { maxWidth: WORDS.w, fontSize: WORDS.size, maxLines: WORDS.maxLines, minPt: WORDS.size, bold: false, lineHeightRatio: WORDS.lineHeight / WORDS.size },
+  headingSet: ({ slide, ctx }) => (slide.heading?.trim() && fitWords(slide.heading, ctx) === null ? "declined" : "whole"),
 } satisfies LayoutDefinition

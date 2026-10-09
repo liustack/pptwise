@@ -12,6 +12,7 @@ import {
   doodleRays,
   withoutOverflowMark,
 } from "./crayonbox-shared"
+import { lineVerdict } from "./heading-set"
 
 const ITEM_BADGE_YS = [292, 378, 464] as const
 const ITEM_TEXT_YS = [329, 415, 501] as const
@@ -33,16 +34,13 @@ function kickerFor(slide: SvgTemplateProps["slide"]): string {
 }
 
 /** crayonbox-todo：三步行动清单，以糖果号牌收束一盒蜡笔主题。 */
+/** The title on one line in the bold heading face, shrunk no further than its floor. */
+const TITLE_LINE = { maxWidth: 930, fontSize: 46, minFontSize: 30, bold: true } as const
+
 export function EndingCrayonboxTodo({ ir, slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const title = fitSvgLine(stripEmphasis(slide.heading ?? ""), {
-    maxWidth: 930,
-    fontSize: 46,
-    minFontSize: 30,
-    fontFamily: fonts.heading,
-    bold: true,
-  })
+  const title = fitSvgLine(stripEmphasis(slide.heading ?? ""), { ...TITLE_LINE, fontFamily: fonts.heading })
   const items = boundaryBulletItems(slide, ITEM_MAX).map((value) =>
     fitSvgLine(stripEmphasis(value), {
       maxWidth: 980,
@@ -185,4 +183,5 @@ export const layoutDef = {
     { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "subheading", accepts: [] },
   ],
+  headingSet: ({ slide, ctx }) => lineVerdict(stripEmphasis(slide.heading ?? ""), TITLE_LINE, ctx),
 } satisfies LayoutDefinition

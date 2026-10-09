@@ -35,7 +35,7 @@ import { FULL_BODY_TYPES } from "./render/component-traits"
 import { checkIrQuality, type QualityIssue } from "./render/ir-quality"
 import { footerFitIssues } from "./render/footer-marks"
 import { courseStageIssues } from "./render/course-marks"
-import { resolveFontStack } from "./render/fonts"
+import { deckFonts, resolveFontStack } from "./render/fonts"
 import { deckWritesChinese } from "./lib/conf-labels"
 import { componentFace, resolveEffectiveFace } from "./render/layout-selection"
 import { resolvePageRenderContext } from "./render/page-context"
@@ -43,6 +43,9 @@ import { MOTIFS_THAT_SET_THE_KICKER } from "./motifs/kicker-roles"
 import { boundarySlotBlocks, drawableItems } from "./layouts/boundary-content"
 import { findImageSelection } from "./layouts/find-image"
 import { bodyStatementLines } from "./layouts/minimal-shared"
+import { headingRoom, headingVerdict, type HeadingCtx, type HeadingPage } from "./layouts/heading-set"
+import { deckFigureStyle } from "./lib/figure-style"
+import { stripEmphasis } from "./render/emphasis"
 import type { LayoutDefinition } from "./layouts/registry"
 import { CANONICAL_THEME_IDS, THEME_LABELS, THEME_STYLES } from "./themes"
 import { foldedThemeTarget, foldedThemeWarning, retiredThemeHint } from "./themes/retired-ids"
@@ -634,6 +637,61 @@ function checkBoundaryItemCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
 }
 
 /**
+ * Boundary-page heading hard gate.
+ *
+ * A cover, chapter or ending face has a fixed place for its heading and no
+ * page to give a heading it cannot hold, so a heading too long for the face
+ * used to come out cut, its tail gone and the cut only marked in the
+ * markup, or the face declined the page and the export refused the deck
+ * with no word of how long a heading would have fit. The bound face now
+ * answers before anything is drawn (`layouts/heading-set.ts`), with the same
+ * fit its drawing runs, and a heading it would not set whole is refused
+ * here, with the length the face holds and what to do about it.
+ *
+ * The length is measured on this page, in this deck's fonts and the
+ * theme's type scale, by lengthening a plain heading in the heading's own
+ * script until the face stops setting it whole: the number an author can
+ * write to, not the face's geometry.
+ */
+function checkBoundaryHeadingFit(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  const ctx: HeadingCtx = {
+    fonts: deckFonts(theme.style.fonts, deckWritesChinese(ir)),
+    ...(theme.style.shape !== undefined ? { shape: theme.style.shape } : {}),
+    figures: deckFigureStyle(ir),
+  }
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder) return
+    if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
+    if (!stripEmphasis(slide.heading ?? "").trim()) return
+    const effective = resolveEffectiveFace(ir, slide, theme)
+    const layout = componentFace(ir, slide, theme)
+    if (!layout) return
+    const page: HeadingPage = {
+      ir,
+      slide,
+      index: i,
+      ...(effective.entry?.params !== undefined ? { params: effective.entry.params } : {}),
+      page: resolvePageRenderContext(ir, slide, effective, theme),
+      ctx,
+    }
+    const verdict = headingVerdict(layout, page)
+    if (verdict === undefined || verdict === "whole") return
+    const room = headingRoom(layout, page)
+    const where = layout.subheading === undefined ? ", or move part of it into the subheading" : ""
+    errors.push({
+      path: `slides.${i}.heading`,
+      page: i + 1,
+      ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+      message: `face "${layout.id}" sets a ${slide.type} heading of about ${room.limit} ${room.unit} at most, and this one has ${room.count}, so the face would ${
+        verdict === "cut" ? "cut its end off" : "refuse the page"
+      }. Shorten the heading${where}.`,
+    })
+  })
+  return errors
+}
+
+/**
  * Duplicate slide id hard gate (W5 task 1): `slide.id` is a stable page
  * identity spec/assemble stamps on (spec-adjacent — see `ir/index.ts`'s
  * `id` docstring), so two slides sharing one within the same deck is always
@@ -1035,6 +1093,8 @@ export function validateIr(
   if (boundarySlotErrors.length > 0) return withNormalized({ ok: false, errors: boundarySlotErrors })
   const boundaryItemErrors = checkBoundaryItemCapacity(r.data, theme)
   if (boundaryItemErrors.length > 0) return withNormalized({ ok: false, errors: boundaryItemErrors })
+  const boundaryHeadingErrors = checkBoundaryHeadingFit(r.data, theme)
+  if (boundaryHeadingErrors.length > 0) return withNormalized({ ok: false, errors: boundaryHeadingErrors })
   const duplicateIdErrors = checkDuplicateSlideIds(r.data)
   if (duplicateIdErrors.length > 0) return withNormalized({ ok: false, errors: duplicateIdErrors })
   const overflowVocabularyErrors = checkOverflowVocabulary(r.data)

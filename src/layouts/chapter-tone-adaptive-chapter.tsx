@@ -156,4 +156,5 @@ export const layoutDef: LayoutDefinition = {
     { name: "watermark", accepts: [] },
     { name: "heading", accepts: [] },
   ],
+  headingFit: { maxWidth: 1152, fontSize: 88, maxLines: 2, minPt: 40 },
 }

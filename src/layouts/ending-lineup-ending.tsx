@@ -4,6 +4,7 @@ import { resolveDeckFooter } from "../render/footer-marks"
 import { stripEmphasis } from "../render/emphasis"
 import { lineupBaseline, lineupInks, lineupMark, lineupText, lineupTrackedWidth, paintLineupRule, paintLineupTracked } from "./compositions/lineup"
 import { LineupMasthead, mastheadLabel } from "./lineup-shared"
+import type { HeadingCtx } from "./heading-set"
 
 /**
  * lineup-ending：秀场出场单的谢幕，runway 2026-10 定稿（p18）。秀场黑底
@@ -18,17 +19,19 @@ const WORDS = { top: 230, size: 110, minPt: 64, lineHeight: 150, tracking: 6, w:
 const RULE = { y: 420, w: 80, stroke: 2 } as const
 const SUB = { top: 446, size: 15, lineHeight: 28, tracking: 6, w: 1152 } as const
 
+/** The size from 110 down to 64 that sets the closing words on one tracked line, or `null` when none does. */
+function wordsSize(words: string, ctx: HeadingCtx): number | null {
+  for (let s = WORDS.size; s >= WORDS.minPt && words; s -= 2) {
+    if (lineupTrackedWidth(words, s, WORDS.tracking, ctx, { serif: true }) <= WORDS.w) return s
+  }
+  return null
+}
+
 export function LineupEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const inks = lineupInks(ctx)
   const stage = inks.stage
   const words = stripEmphasis(slide.heading ?? "").trim()
-  let size: number | null = null
-  for (let s = WORDS.size; s >= WORDS.minPt && words; s -= 2) {
-    if (lineupTrackedWidth(words, s, WORDS.tracking, ctx, { serif: true }) <= WORDS.w) {
-      size = s
-      break
-    }
-  }
+  const size = wordsSize(words, ctx)
   const sub = stripEmphasis(slide.subheading ?? "").trim()
   const subFits = !sub || lineupTrackedWidth(sub, SUB.size, SUB.tracking, ctx) <= SUB.w
   return (
@@ -65,4 +68,8 @@ export const layoutDef = {
   paintsOwnBackground: true,
   branding: "none",
   headingFit: { maxWidth: WORDS.w, fontSize: WORDS.size, maxLines: 1, minPt: WORDS.minPt, bold: false, lineHeightRatio: WORDS.lineHeight / WORDS.size },
+  headingSet: ({ slide, ctx }) => {
+    const words = stripEmphasis(slide.heading ?? "").trim()
+    return words && wordsSize(words, ctx) === null ? "declined" : "whole"
+  },
 } satisfies LayoutDefinition

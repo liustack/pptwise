@@ -6,6 +6,7 @@ import { SLIDE_NUMBER_FIELD } from "../render/footer"
 import type { ContentRect } from "../render/layout"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { fitMemoTitle } from "./compositions/memo"
+import { cutOrWhole, type HeadingSet } from "./heading-set"
 import {
   CRAYON_META,
   CRAYON_SPEC,
@@ -139,7 +140,7 @@ export function CrayonSection({ ir, slide, index, ctx }: { ir: PptxIR; slide: Sl
  * last comma or colon that lets both fit. A claim the author broke in two
  * keeps the author's break.
  */
-export function fitCrayonClaim(heading: string | undefined, ctx: ComponentCtx, width: number = CLAIM_W, size: number = CLAIM.size, lineHeight: number = CLAIM.lineHeight): EmphasisHeadingLayout {
+export function fitCrayonClaim(heading: string | undefined, ctx: Pick<ComponentCtx, "fonts">, width: number = CLAIM_W, size: number = CLAIM.size, lineHeight: number = CLAIM.lineHeight): EmphasisHeadingLayout {
   const plain = stripEmphasis(heading ?? "").trim()
   const floor = Math.round(size * CLAIM.oneLineFloor)
   const parts = (heading ?? "").split(/\n+/u).map((part) => part.trim()).filter(Boolean)
@@ -159,6 +160,11 @@ export function fitCrayonClaim(heading: string | undefined, ctx: ComponentCtx, w
   }
   const layout = fitMemoTitle(heading, { maxWidth: width, fontSize: size, minPt: Math.min(CLAIM.minPt, size), lineHeight, fontFamily: ctx.fonts.heading, bold: true })
   return { ...layout, lineHeight }
+}
+
+/** The heading set of a face whose claim is `fitCrayonClaim` over these numbers (`LayoutDefinition.headingSet`). */
+export function crayonClaimSet(width: number, size: number, lineHeight: number): HeadingSet {
+  return ({ slide, ctx }) => cutOrWhole(fitCrayonClaim(slide.heading, ctx, width, size, lineHeight))
 }
 
 /** The claim's lines in its column, the last line's box ending on `foot`. A claim cut to fit says so on its last line. */

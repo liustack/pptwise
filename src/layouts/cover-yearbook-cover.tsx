@@ -17,7 +17,7 @@ import {
   yearbookTrackedWidth,
   yearOf,
 } from "./compositions/yearbook"
-import { fitDossierTitle } from "./dossier-shared"
+import { fitDossierTitle, dossierTitleSet } from "./dossier-shared"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 
@@ -204,4 +204,5 @@ export const layoutDef = {
   // Over the office's line, where nothing else stands.
   coverMark: { x: LEFT, y: 44 },
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: dossierTitleSet(TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w),
 } satisfies LayoutDefinition

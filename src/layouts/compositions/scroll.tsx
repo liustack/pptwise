@@ -160,7 +160,7 @@ export function scrollMark(ink: string, ground: string): string {
 export type ScrollTextSpec = ManuscriptTextSpec
 
 /** `text` set at exactly `spec.size`, or `null` when it does not fit whole. `serif` is the heading face. */
-export function fitScroll(text: string | undefined, spec: ScrollTextSpec, ctx: ComponentCtx): EmphasisHeadingLayout | null {
+export function fitScroll(text: string | undefined, spec: ScrollTextSpec, ctx: Pick<ComponentCtx, "fonts">): EmphasisHeadingLayout | null {
   return fitManuscript(text, spec, ctx)
 }
 

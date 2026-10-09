@@ -5,7 +5,7 @@ import { stripEmphasis } from "../render/emphasis"
 import { blockTag } from "./compositions/shared"
 import { binderInks, binderMeta, binderText, binderTrackedWidth, binderBaseline, fitBinder, paintBinder, paintBinderTracked } from "./compositions/binder"
 import { boundarySlotBlock } from "./boundary-content"
-import { fitDossierTitle } from "./dossier-shared"
+import { fitDossierTitle, dossierTitleSet } from "./dossier-shared"
 import { headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -136,4 +136,5 @@ export const layoutDef = {
   // Over the date, in the page's left column.
   coverMark: { x: LEFT, y: 40 },
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: dossierTitleSet(TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w),
 } satisfies LayoutDefinition

@@ -6,6 +6,7 @@ import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
 import { casualHan } from "../render/heading-treatments/labels"
 import { hasCjk } from "./minimal-shared"
+import { fitVerdict, type HeadingCtx } from "./heading-set"
 import { stripEmphasis } from "../render/emphasis"
 
 /**
@@ -52,16 +53,22 @@ function withoutOverflowMark(text: string): string {
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 3
 
-function splitPlanLines(text: string): string[] {
+/** Every line the heading writes as a list: by line break, by 「一、」 numbering, or by "1." numbering. */
+function splitPlanLinesAll(text: string): string[] {
   const trimmed = text.trim()
   if (!trimmed) return []
   const byNewline = trimmed.split(/\n+/).map((line) => line.trim()).filter(Boolean)
-  if (byNewline.length > 1) return byNewline.slice(0, 3)
+  if (byNewline.length > 1) return byNewline
   const byCn = trimmed.split(/(?=[一二三四五六七八九十]+、)/).map((line) => line.trim()).filter(Boolean)
-  if (byCn.length > 1) return byCn.slice(0, 3)
+  if (byCn.length > 1) return byCn
   const byDot = trimmed.split(/(?=(?:^|\s)\d+[.、]\s*)/).map((line) => line.trim()).filter(Boolean)
-  if (byDot.length > 1) return byDot.slice(0, 3)
+  if (byDot.length > 1) return byDot
   return []
+}
+
+/** The heading's list lines this face draws: the first three. */
+function splitPlanLines(text: string): string[] {
+  return splitPlanLinesAll(text).slice(0, ITEM_MAX)
 }
 
 function planItems(slide: SvgTemplateProps["slide"]): string[] {
@@ -81,14 +88,42 @@ function numberedItem(item: string, index: number, cjk: boolean): string {
   return cjk ? `${casualHan(index + 1)}、${item}` : `${index + 1}. ${item}`
 }
 
-export function CarePlanEnding({ slide, ctx }: SvgTemplateProps) {
-  const { colors, fonts } = ctx
-  const bg = ctx.defaultBg ?? colors.bg
+/**
+ * The plan as the face sets it: the page's bullets under the heading, or,
+ * with no bullets, the heading's own list lines numbered in its place. Each
+ * line is fitted to one line.
+ */
+function setPlan(slide: SvgTemplateProps["slide"], fonts: HeadingCtx["fonts"]) {
   const items = planItems(slide).map((item) => stripEmphasis(item))
   const fromBullets = boundaryBulletItems(slide, ITEM_MAX).length > 0
   const headingSource = fromBullets || items.length === 0 ? stripEmphasis(slide.heading ?? "") : ""
-  const showTitle = headingSource.trim().length > 0
   const cjk = hasCjk([headingSource, ...items].join(""))
+  const lines = items.map((item, i) => ({
+    y: ITEM_YS[i]!,
+    body: fitSvgLine(numberedItem(item, i, cjk), {
+      maxWidth: ITEM_MAX_W,
+      fontSize: ITEM_SIZE,
+      minFontSize: ITEM_MIN_PT,
+      fontFamily: fonts.body,
+    }),
+  }))
+  return { fromBullets, headingSource, lines }
+}
+
+/** The title's fit when the heading is set as a title. */
+const TITLE_FIT = {
+  maxWidth: TITLE_MAX_W,
+  fontSize: TITLE_SIZE,
+  maxLines: TITLE_MAX_LINES,
+  minPt: TITLE_MIN_PT,
+  lineHeightRatio: TITLE_LINE_HEIGHT / TITLE_SIZE,
+} as const
+
+export function CarePlanEnding({ slide, ctx }: SvgTemplateProps) {
+  const { colors, fonts } = ctx
+  const bg = ctx.defaultBg ?? colors.bg
+  const { headingSource, lines } = setPlan(slide, fonts)
+  const showTitle = headingSource.trim().length > 0
 
   const title = fitHeadingLines(headingSource, {
     maxWidth: TITLE_MAX_W,
@@ -102,16 +137,6 @@ export function CarePlanEnding({ slide, ctx }: SvgTemplateProps) {
   const titleInk = accessibleInk(colors.text, bg, title.fontSize)
   const itemInk = accessibleInk(colors.text, bg, ITEM_SIZE)
   const ruleStroke = colors.border ?? colors.muted
-
-  const lines = items.map((item, i) => ({
-    y: ITEM_YS[i]!,
-    body: fitSvgLine(numberedItem(item, i, cjk), {
-      maxWidth: ITEM_MAX_W,
-      fontSize: ITEM_SIZE,
-      minFontSize: ITEM_MIN_PT,
-      fontFamily: fonts.body,
-    }),
-  }))
 
   const footSource = (slide.subheading ?? "").trim()
   const foot = footSource
@@ -205,11 +230,11 @@ export const layoutDef: LayoutDefinition = {
     { name: "subheading", accepts: [] },
     { name: "rule", accepts: [] },
   ],
-  headingFit: {
-    maxWidth: TITLE_MAX_W,
-    fontSize: TITLE_SIZE,
-    maxLines: TITLE_MAX_LINES,
-    minPt: TITLE_MIN_PT,
-    lineHeightRatio: TITLE_LINE_HEIGHT / TITLE_SIZE,
+  headingFit: TITLE_FIT,
+  headingSet: ({ slide, ctx }) => {
+    const { fromBullets, headingSource, lines } = setPlan(slide, ctx.fonts)
+    if (fromBullets || lines.length === 0) return fitVerdict(headingSource, TITLE_FIT, ctx)
+    // A heading written as a list is set in the list's place: three numbered lines at most, each on one line.
+    return splitPlanLinesAll(slide.heading ?? "").length > ITEM_MAX || lines.some((line) => line.body.truncated) ? "cut" : "whole"
   },
 }

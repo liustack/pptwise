@@ -7,7 +7,7 @@ import { PitchScrim } from "./compositions/pitch"
 import { blockTag } from "./compositions/shared"
 import { binderInks, binderText, binderTrackedWidth, binderBaseline, fitBinder, paintBinder, paintBinderIcon, paintBinderTracked } from "./compositions/binder"
 import { boundarySlotBlock } from "./boundary-content"
-import { fitDossierTitle } from "./dossier-shared"
+import { fitDossierTitle, dossierTitleSet } from "./dossier-shared"
 import { BinderTabsFor, BinderTitle } from "./binder-shared"
 
 type RowCards = Extract<Component, { type: "row_cards" }>
@@ -125,4 +125,5 @@ export const layoutDef = {
   drawsPhoto: true,
   suppressMotif: true,
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: dossierTitleSet(TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w),
 } satisfies LayoutDefinition

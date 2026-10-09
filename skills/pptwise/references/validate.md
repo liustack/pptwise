@@ -17,6 +17,8 @@ pptwise validate deck-dir/
 
 `validate` applies schema, component, asset, narrative, physical capacity, and editorial checks. Authored leftover-count phrasing and ellipsis substitutes are rejected here, before a page is painted. Fix errors until it prints `OK`. Warnings do not block output, but long headings, excessive density, dangling assets, and repetitive choices should normally be tightened before delivery.
 
+A cover, chapter or ending sets its heading in a fixed place, and how long a heading fits there differs by theme, from about a dozen Chinese characters to over seventy. validate refuses a heading the bound face would cut or drop, and the error names the face, how much it holds on that page (in Chinese characters for a Chinese heading, in words otherwise) and how long this heading is. Shorten the heading, or move part of it into the subheading when the face has one.
+
 Speaker `notes` export as native PowerPoint notes and never paint on the slide.
 
 ## Render only from the binding
@@ -43,7 +45,7 @@ The deterministic audit checks overflow, out-of-bounds content, low contrast, ov
 
 Add `--pixels` when cover or chapter pages use photo backgrounds. Pixel sampling catches text placed on an unsafe part of a real image.
 
-A `low-contrast` finding on a page painted a mid-tone `background` color, about as light as `#777777` or `#6B7B8C`, is fixed at the background, not the text: no text color the theme can set there reaches 4.5:1 reliably. Move the color lighter or darker.
+A `low-contrast` finding on a page painted a mid-tone `background` color, about as light as `#777777` or `#6B7B8C`, is fixed at the background, not the text: the renderer already sets text the theme's ink cannot carry there in pure black, and what still falls short sits on a card or band shaded from that ground. Move the color lighter or darker.
 
 ## Review the whole deck
 

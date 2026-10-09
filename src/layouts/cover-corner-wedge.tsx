@@ -5,6 +5,7 @@ import { fitSvgLine } from "../lib/svg-text-layout"
 import { latinUpper, trackingPx } from "./minimal-shared"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
 import { faceParam, optionalFaceParam } from "./face-params"
+import { fitVerdict } from "./heading-set"
 
 /**
  * corner-wedge cover layout（2026-08-22 封面还原第一波，新表达）：
@@ -84,6 +85,26 @@ function innerBandPath(
   return `M${innerStartX},720 L1280,${innerPeakY} L1280,${outerPeakY} L${outerStartX},720 Z`
 }
 
+/** The title's fit on this menu's wedge: its size and leading follow the alignment, its measure stops short of the wedge. */
+function coverTitleFit(params: SvgTemplateProps["params"]) {
+  const startX = faceParam(params, "wedgeStartX", DEFAULT_START_X)
+  const innerStartX = optionalFaceParam<number>(params, "wedgeInnerStartX")
+  const centered = faceParam<"start" | "middle">(params, "textAnchor", "middle") === "middle"
+  const fontSize = centered ? TITLE_SIZE_CENTER : TITLE_SIZE_START
+  const lineHeightRatio = centered ? TITLE_LINE_HEIGHT_CENTER / TITLE_SIZE_CENTER : TITLE_LINE_HEIGHT_START / TITLE_SIZE_START
+  // Title stays on paper. The wedge's leftmost point is startX at y=720,
+  // and the hypotenuse climbs up-right, so anything left of startX cannot
+  // sit on the primary field. When an inner band is set, its AABB starts
+  // further left than the outer wedge, so the title budget uses the more
+  // left of the two. Default knobs omit inner, so arena geometry is
+  // unchanged. Long CJK headings at display size would otherwise spill
+  // onto the wedge and fail large-text 3:1 (thesis 2.10, ink 1.10,
+  // journal 1.09 on the matrix heading).
+  const titleBoundX = innerStartX !== undefined ? Math.min(startX, innerStartX) : startX
+  const maxWidth = centered ? Math.max(320, 2 * (titleBoundX - TITLE_CENTER_X - 24)) : Math.max(320, titleBoundX - TITLE_START_X - 24)
+  return { maxWidth, fontSize, maxLines: TITLE_MAX_LINES, minPt: TITLE_MIN_PT, lineHeightRatio }
+}
+
 export function CornerWedgeCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -97,22 +118,8 @@ export function CornerWedgeCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   const centered = textAnchor === "middle"
   const titleX = centered ? TITLE_CENTER_X : TITLE_START_X
   const titleY = centered ? TITLE_CENTER_Y : TITLE_START_Y
-  const titleSize = centered ? TITLE_SIZE_CENTER : TITLE_SIZE_START
-  const lineHeightRatio = centered
-    ? TITLE_LINE_HEIGHT_CENTER / TITLE_SIZE_CENTER
-    : TITLE_LINE_HEIGHT_START / TITLE_SIZE_START
-  // Title stays on paper. The wedge's leftmost point is startX at y=720,
-  // and the hypotenuse climbs up-right, so anything left of startX cannot
-  // sit on the primary field. When an inner band is set, its AABB starts
-  // further left than the outer wedge, so the title budget uses the more
-  // left of the two. Default knobs omit inner, so arena geometry is
-  // unchanged. Long CJK headings at display size would otherwise spill
-  // onto the wedge and fail large-text 3:1 (thesis 2.10, ink 1.10,
-  // journal 1.09 on the matrix heading).
-  const titleBoundX = innerStartX !== undefined ? Math.min(startX, innerStartX) : startX
-  const titleMaxW = centered
-    ? Math.max(320, 2 * (titleBoundX - TITLE_CENTER_X - 24))
-    : Math.max(320, titleBoundX - TITLE_START_X - 24)
+  const titleFit = coverTitleFit(params)
+  const titleMaxW = titleFit.maxWidth
   const kickerY = centered ? 248 : 262
   const designedSubtitleY = centered ? 446 : 496
   const onWedge = readableOn(colors.primary)
@@ -123,11 +130,7 @@ export function CornerWedgeCover({ ir, slide, ctx, params }: SvgTemplateProps) {
   const version = ir.meta.version
 
   const title = fitEmphasisHeading(slide.heading, {
-    maxWidth: titleMaxW,
-    fontSize: titleSize,
-    maxLines: TITLE_MAX_LINES,
-    minPt: TITLE_MIN_PT,
-    lineHeightRatio,
+    ...titleFit,
     fontFamily: fonts.heading,
     typeScale: ctx.shape?.typeScale,
   })
@@ -304,4 +307,5 @@ export const layoutDef: LayoutDefinition = {
     { name: "subheading", accepts: [] },
     { name: "meta", accepts: [] },
   ],
+  headingSet: ({ slide, ctx, params }) => fitVerdict(slide.heading, coverTitleFit(params), ctx),
 }

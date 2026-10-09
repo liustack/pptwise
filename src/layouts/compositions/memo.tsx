@@ -7,6 +7,7 @@ import { allowsLineBreakBetween, measureTextUnits } from "../../lib/svg-text-lay
 import { fitMono, monoWidth } from "./console"
 import { chineseNumeral } from "./numerals"
 import { fitFixed, paintLines } from "./type"
+import { cutOrWhole, type HeadingSet } from "../heading-set"
 
 /*
  * The memo setting: a typed memorandum on paper. Settled on memo's 2026-10
@@ -419,4 +420,9 @@ export function fitMemoTitle(
     fontFamily: opts.fontFamily,
     bold: opts.bold ?? true,
   })
+}
+
+/** The heading set of a face whose title is `fitMemoTitle` over these numbers in the heading face (`LayoutDefinition.headingSet`). */
+export function memoTitleSet(opts: Omit<Parameters<typeof fitMemoTitle>[1], "fontFamily">): HeadingSet {
+  return ({ slide, ctx }) => cutOrWhole(fitMemoTitle(slide.heading, { ...opts, fontFamily: ctx.fonts.heading }))
 }

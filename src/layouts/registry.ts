@@ -59,6 +59,7 @@
 // `resolveLayoutId`).
 import type { DesignStory } from "@/design-story"
 import type { STRATEGY_VALUES } from "@/ir/narrative-values"
+import type { HeadingSet } from "./heading-set"
 
 // layoutDef imports (src domain reorg wave 1, task T1d): 154 layout files
 // (one `layoutDef` each) plus image-pages.tsx's 4 uniquely named takeover
@@ -585,6 +586,12 @@ export interface LayoutDefinition {
    * `fontFamily` is deliberately absent: it comes from the bound theme
    * through the render `ctx`, so it is not a property of the face.
    *
+   * On a cover, chapter or ending face the declaration is also what validate
+   * reads to refuse a heading the face would cut (`./heading-set.ts`): a
+   * face that declares it sets its heading with `fitHeadingLines` over these
+   * numbers, scaled by the theme's `typeScale`. A boundary face that sets its
+   * heading any other way declares `headingSet` as well.
+   *
    * `undefined` means the face makes no declaration and fits its heading
    * however its render code sees fit.
    */
@@ -599,6 +606,16 @@ export interface LayoutDefinition {
     bold?: boolean
     lineHeightRatio?: number
   }
+  /**
+   * A cover, chapter or ending face's own heading fit, for a face that does
+   * not set its heading with `fitHeadingLines` over `headingFit` alone: a
+   * memo's clause-breaking fit, a tracked or vertical title, a title box
+   * that moves with what else the page carries. It reads the page the way the
+   * face's drawing does and says whether the heading comes out whole, cut or
+   * declined. validate refuses a page whose heading would not come out whole
+   * (`./heading-set.ts`).
+   */
+  headingSet?: HeadingSet
 }
 
 // ─────────────────────────────────────────────────────────────────────────
