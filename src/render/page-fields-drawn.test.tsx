@@ -292,8 +292,6 @@ const allBut = (...themes: string[]) => CANONICAL_THEME_IDS.filter((theme) => !t
  * longer happens: a fix takes its entry out.
  */
 const PENDING: Record<string, readonly string[]> = {
-  // swiss serves image-top with its grid band, which sets a subheading.
-  "photo (image-top) × subheading": allBut("swiss"),
   // museum's and runway's motifs set a content page's kicker themselves.
   "points (lineup-sheet) × kicker": allBut("museum", "runway"),
   "points (placard-sheet) × kicker": allBut("museum", "runway"),

@@ -854,6 +854,10 @@ const TOP_TITLE_SIZE = 30
 function titleBandGap(gap: number, titleFontSize: number): number {
   return Math.max(gap, Math.round((titleFontSize * gap) / TOP_TITLE_SIZE))
 }
+/** The subheading's measure under the title, the plain page's own (`TakeoverFallbackPage`). */
+const TOP_SUB_MAX_W = 900
+/** Air between the title's last baseline and the subheading's first line box. */
+const TOP_SUB_GAP = 6
 /** 页底安全边距。 */
 const TOP_SAFE_BOTTOM = 84
 const BAND_PAD_X = 96
@@ -923,15 +927,25 @@ export function ImageTopPage({
   // 给它的框，反推出来的高度只会等于框本身。
   const naturalH = rest.slice(0, 3).reduce((max, block) => Math.max(max, measureComponent(block, colW, ctx)), 0)
   const neededH = Math.max(naturalH, TOP_BODY_MIN_H)
+  // The page's subheading under the title, set the way this face's own
+  // plain page sets it (`TakeoverFallbackPage`): 18px muted body, up to two
+  // lines. The band grows by its height, which the picture gives up.
+  const sub = fitEmphasisText(slide.subheading, {
+    maxWidth: Math.min(titleMaxW, TOP_SUB_MAX_W),
+    fontSize: 18,
+    maxLines: 2,
+    lineHeightRatio: 1.3,
+  })
+  const subExtra = sub.lines.length ? sub.lines.length * sub.lineHeight + TOP_SUB_GAP : 0
   const titleExtra = Math.max(0, title.lines.length - 1) * title.lineHeight
   const titleGap = titleBandGap(TOP_TITLE_GAP, title.fontSize)
   const captionTitleGap = titleBandGap(TOP_CAPTION_TITLE_GAP, title.fontSize)
   const ruleGap = titleBandGap(TOP_RULE_GAP, title.fontSize)
-  const headBandH = titleGap + titleExtra + ruleGap + TOP_BODY_GAP
+  const headBandH = titleGap + titleExtra + subExtra + ruleGap + TOP_BODY_GAP
   // 图吃掉正文带和标题带之外的所有空间，上下界见常量注释。分栏里一个块都没有
   // 的时候不预留分栏带，图直接长到标题带上沿（见 TOP_IMG_H_MAX_CAPTION_ONLY）。
   const captionOnly = rest.length === 0
-  const captionBandH = captionTitleGap + titleExtra + ruleGap + TOP_CAPTION_RULE_GAP_BOTTOM
+  const captionBandH = captionTitleGap + titleExtra + subExtra + ruleGap + TOP_CAPTION_RULE_GAP_BOTTOM
   const imgH = captionOnly
     ? Math.min(TOP_IMG_H_MAX_CAPTION_ONLY, Math.max(TOP_IMG_H_MIN, bodyBottom - captionBandH))
     : Math.min(TOP_IMG_H_MAX, Math.max(TOP_IMG_H_MIN, bodyBottom - neededH - headBandH))
@@ -940,7 +954,8 @@ export function ImageTopPage({
   // 换行时发丝和分栏整体下移。
   const firstTitleY = imgH + (captionOnly ? captionTitleGap : titleGap)
   const lastTitleY = firstTitleY + Math.max(0, title.lines.length - 1) * title.lineHeight
-  const ruleY = lastTitleY + ruleGap
+  const firstSubY = lastTitleY + TOP_SUB_GAP + sub.lineHeight
+  const ruleY = lastTitleY + subExtra + ruleGap
   const componentsTop = ruleY + TOP_BODY_GAP
   const componentsH = bodyBottom - componentsTop
   const fits = rest.slice(0, 3).map((b, i) => {
@@ -999,6 +1014,22 @@ export function ImageTopPage({
             fontWeight={600}
             fontFamily={ctx.fonts.heading}
             fill={accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, title.fontSize)}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
+      {renderEmphasisHeading(
+        sub,
+        headingEmphasisPaint(ctx, sub, { baseFill: ctx.colors.muted, fontFamily: ctx.fonts.body, bold: false }),
+        (_line, i) => (
+          <text
+            key={i}
+            data-truncated={sub.truncated && i === sub.lines.length - 1 ? "1" : undefined}
+            x={BAND_PAD_X + 26}
+            y={firstSubY + i * sub.lineHeight}
+            fontSize={sub.fontSize}
+            fontFamily={ctx.fonts.body}
+            fill={ctx.colors.muted}
             dominantBaseline="alphabetic"
           />
         ),
