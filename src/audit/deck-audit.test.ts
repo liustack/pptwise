@@ -3103,21 +3103,30 @@ describe("findSourceLineCrossings", () => {
 
 describe("auditDeck — low-contrast says what an author can change", () => {
   it("points at the background and the theme, the two things an author sets, not at the text color", () => {
-    // rally's KPI cards on a mid-tone page: the card is shaded from the
-    // ground and its labels land just under 4.5:1.
+    // swiss's row cards on a mid-tone page: their descriptions are set in a
+    // softened black on the card and land just under 4.5:1.
     const ir = {
       version: "5",
       filename: "low-contrast.pptx",
-      theme: { id: "rally" },
+      theme: { id: "swiss" },
       meta: {},
       assets: { images: {} },
       slides: [
         {
           type: "content",
-          kind: "data",
-          heading: "数据页",
+          kind: "points",
+          heading: "三件事",
           background: { kind: "color", value: "#777777" },
-          components: [{ type: "kpi_cards", items: [{ value: "62%", label: "产能利用率" }, { value: "8.4", label: "周转天数" }] }],
+          components: [
+            {
+              type: "row_cards",
+              items: [
+                { title: "签约", text: "新签合同额同比增长两成三" },
+                { title: "活跃", text: "协作活跃率提升到百分之八十八" },
+                { title: "开通", text: "开通周期从九周压缩到五周" },
+              ],
+            },
+          ],
         },
       ],
     } as PptxIR

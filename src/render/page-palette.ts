@@ -29,7 +29,9 @@ const BODY_TEXT_RATIO = 4.5
  * `theme fork` moves them onto a new `bg` (`rebasedHueSaturation`). So text
  * keeps its 13:1 and muted its 5:1 on the new page, a card that sat a step
  * lighter than a light page sits the same step darker than a dark one, and
- * every pairing the theme already measured reads the same on it.
+ * every pairing the theme already measured reads the same on it. A card
+ * that the side it sat on would take under its inks' floor, on a ground
+ * that leaves the inks no room, steps to the other side instead (`card`).
  *
  * The brand tokens (`primary`, `accent`, the chart and accent pools, the
  * status colours) are the theme itself and stay as they are. A block filled
@@ -41,19 +43,37 @@ export function paletteOnGround(colors: StyleColors, ground: string): StyleColor
 
   const inkLighter = readableOn(ground) === "#FFFFFF"
   const textLighter = relativeLuminance(colors.text) > relativeLuminance(colors.bg)
-  const onto = (token: string, plane: string, newPlane: string): string => {
+  const onto = (token: string, plane: string, newPlane: string, side: "kept" | "turned" = "kept"): string => {
     const towardInk = relativeLuminance(token) > relativeLuminance(plane) === textLighter
-    const lighter = towardInk === inkLighter
+    const lighter = towardInk === inkLighter === (side === "kept")
     return atContrast(rebasedHueSaturation(token, plane, ground), contrastRatio(token, plane), newPlane, lighter)
   }
-  const surface = onto(colors.surface, colors.bg, ground)
+  const text = onto(colors.text, colors.bg, ground)
+  const muted = onto(colors.muted, colors.bg, ground)
+  // A card carries the same inks as the page. Where the page leaves the inks
+  // no room past the one they stand on (a mid-tone ground, where pure black
+  // reads at about 4.7:1 and nothing reads further), a card a step toward
+  // the ink takes them under the floor they read at on the theme's own card.
+  // Such a card takes its step on the other side of the page, where they do.
+  const inksRead = (card: string, own: string) =>
+    [
+      [colors.text, text],
+      [colors.muted, muted],
+    ].every(([was, now]) => contrastRatio(now!, card) >= Math.min(BODY_TEXT_RATIO, contrastRatio(was!, own)))
+  const card = (token: string): string => {
+    const kept = onto(token, colors.bg, ground)
+    if (inksRead(kept, token)) return kept
+    const turned = onto(token, colors.bg, ground, "turned")
+    return inksRead(turned, token) ? turned : kept
+  }
+  const surface = card(colors.surface)
   return {
     ...colors,
     bg: ground,
     surface,
-    ...(colors.panel !== undefined ? { panel: onto(colors.panel, colors.bg, ground) } : {}),
-    text: onto(colors.text, colors.bg, ground),
-    muted: onto(colors.muted, colors.bg, ground),
+    ...(colors.panel !== undefined ? { panel: card(colors.panel) } : {}),
+    text,
+    muted,
     ...(colors.emphasisInk !== undefined ? { emphasisInk: onto(colors.emphasisInk, colors.bg, ground) } : {}),
     ...(colors.border !== undefined ? { border: onto(colors.border, colors.surface, surface) } : {}),
     ...(colors.cardStroke !== undefined ? { cardStroke: onto(colors.cardStroke, colors.surface, surface) } : {}),

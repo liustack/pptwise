@@ -101,3 +101,48 @@ describe("a page its author painted reads in the theme's inks moved onto that pa
     })
   }
 })
+
+// On a mid-tone ground pure black reads at about 4.7:1 and nothing reads
+// further, so the inks stand at black on the page. A card that kept its
+// side, a step toward that black, took them under body text's 4.5:1 on
+// every dark theme: a KPI label at 4.0:1 on rally, and 966 runs over 22
+// themes and every component on #777777. The card takes its step on the
+// other side there.
+const MID_TONES = ["#777777", "#6B7B8C"] as const
+
+describe("a card on a mid-tone page carries the page's inks", () => {
+  for (const themeId of CANONICAL_THEME_IDS) {
+    it(`${themeId}: text and muted read on the card and the panel`, () => {
+      const colors = resolveStyle(themeId).colors
+      for (const ground of MID_TONES) {
+        const moved = paletteOnGround(colors, ground)
+        for (const card of ["surface", "panel"] as const) {
+          if (colors[card] === undefined) continue
+          for (const ink of ["text", "muted"] as const) {
+            const floor = Math.min(4.5, contrastRatio(colors[ink], colors[card]!))
+            expect(contrastRatio(moved[ink], moved[card]!), `${ground} ${ink} on ${card}`).toBeGreaterThanOrEqual(floor)
+          }
+        }
+        // The card keeps the size of its step off the page, whichever side it takes it on.
+        expect(contrastRatio(moved.surface, ground), ground).toBeCloseTo(contrastRatio(colors.surface, colors.bg), 1)
+      }
+    })
+
+    it(`${themeId}: a KPI page painted a mid-tone reads`, () => {
+      const slides = MID_TONES.map(
+        (value) =>
+          ({
+            type: "content",
+            kind: "data",
+            heading: "产能与周转",
+            background: { kind: "color", value },
+            components: [{ type: "kpi_cards", items: [{ value: "62%", label: "产能利用率" }, { value: "8.4", label: "周转天数" }] }],
+          }) as Slide,
+      )
+      const v = validateIr({ version: "5", filename: "mid-tone", theme: { id: themeId }, meta: {}, slides })
+      if (!v.ok) return expect(v.errors[0]!.message).toMatch(/is not offered by theme/)
+      const contrast = auditDeck(v.ir as PptxIR).findings.filter((f) => f.code === "low-contrast")
+      expect(contrast.map((f) => `p${f.page} ${f.message}`)).toEqual([])
+    })
+  }
+})
