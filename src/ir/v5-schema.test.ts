@@ -163,3 +163,22 @@ describe("component namespace in IR v5", () => {
     expect(message).toMatch(/bullets or icon_cards/)
   })
 })
+
+describe("kpi_cards delta_good", () => {
+  const figure = (item: Record<string, unknown>) =>
+    parsePptxIR(deck([{ type: "content", kind: "data", heading: "Costs", components: [{ type: "kpi_cards", items: [{ value: "12", label: "Unit cost", ...item }] }] }]))
+
+  it("accepts a move the author calls good or bad news", () => {
+    expect(figure({ delta: "down", delta_good: true }).success).toBe(true)
+    expect(figure({ delta: "up", delta_good: false }).success).toBe(true)
+  })
+
+  it.each([
+    ["with no delta", {}],
+    ["on a figure that held level", { delta: "flat" }],
+  ])("refuses delta_good %s, since there is no move to judge", (_, item) => {
+    const result = figure({ ...item, delta_good: true })
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error).toMatch(/delta_good/)
+  })
+})

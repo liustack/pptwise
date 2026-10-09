@@ -4,6 +4,7 @@ import { kpiFigure } from "../../components/kpi"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { parseEmphasis, stripEmphasis } from "../../render/emphasis"
+import { deltaNews, type DeltaNews } from "../../render/delta-news"
 import { accessibleInk } from "../../render/ink"
 import { PANEL_SPEC, SmallText, deltaGlyph, panelInks, serifBaseline } from "./panel"
 import { blockTag, ruleInk, type CompositionProps } from "./shared"
@@ -62,7 +63,7 @@ interface Cell {
   marked: boolean
   label: EmphasisHeadingLayout
   unit: EmphasisHeadingLayout | null
-  last: { text: string; tone: "up" | "down" | "mark" | "quiet" } | null
+  last: { text: string; tone: DeltaNews | "mark" | "quiet" } | null
 }
 
 function tickerShape(components: readonly Component[]): KpiCards | null {
@@ -76,9 +77,10 @@ function tickerShape(components: readonly Component[]): KpiCards | null {
 
 function lastLine(item: KpiItem): Cell["last"] {
   const note = item.note?.trim()
-  if (item.delta && item.delta !== "flat") {
+  const news = deltaNews(item)
+  if (item.delta && news) {
     const text = note ? `${deltaGlyph(item.delta)} ${stripEmphasis(note)}` : deltaGlyph(item.delta)
-    return { text, tone: item.delta }
+    return { text, tone: news }
   }
   if (!note) return null
   const segments = parseEmphasis(note)
@@ -126,7 +128,7 @@ export function drawTicker({ components, ctx, rect }: Pick<CompositionProps, "co
       cell.last === null
         ? muted
         : accessibleInk(
-            cell.last.tone === "up" ? inks.up : cell.last.tone === "down" ? inks.down : cell.last.tone === "mark" ? inks.mark : colors.muted,
+            cell.last.tone === "good" ? inks.up : cell.last.tone === "bad" ? inks.down : cell.last.tone === "mark" ? inks.mark : colors.muted,
             bg,
             CELL.last.size,
           )

@@ -145,6 +145,15 @@ describe("content-gauge-stats", () => {
     }
   })
 
+  it("colours a note by the news its move is: a shorter wait that is good news stays quiet, a rise that is bad news turns danger", () => {
+    const [kpis] = slide.components as [Extract<Slide["components"][number], { type: "kpi_cards" }>]
+    const items = kpis.items.map((item, index) => (index === 3 ? { ...item, delta_good: true } : index === 0 ? { ...item, delta_good: false } : item))
+    const { root, tokens } = renderContent({ ...slide, components: [{ ...kpis, items }] } as Slide)
+    const danger = resolveSemanticColor("danger", tokens.colors)
+    expect(textBy(root, "环比 -7%")!.getAttribute("fill")).toBe(tokens.colors.muted)
+    expect(textBy(root, "同比 +12%")!.getAttribute("fill")).toBe(danger)
+  })
+
   it("places the conclusion and shared top-right meta, with export-safe primitives", () => {
     const { root, tokens } = renderContent()
     const conclusion = textBy(root, "增长质量与交付效率同步改善。")!

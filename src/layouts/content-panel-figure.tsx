@@ -5,6 +5,7 @@ import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
 import { kpiFigure, kpiValueText } from "../components/kpi"
 import { measureTextUnits } from "../lib/svg-text-layout"
+import { deltaNewsInk } from "../render/delta-news"
 import { accessibleInk } from "../render/ink"
 import { stepAside } from "../render/step-aside"
 import { compareBarsPanel, barsChart } from "./compositions/bars-panel"
@@ -149,7 +150,7 @@ function drawPage(slide: Slide, ctx: ComponentCtx, page: SvgTemplateProps["page"
       const { text: figure } = kpiValueText(move.value)
       const arrow = move.delta && move.delta !== "flat" ? `${deltaGlyph(move.delta)} ` : ""
       const text = `${arrow}${figure}`
-      const ink = move.delta === "down" ? inks.down : move.delta === "up" ? inks.up : colors.text
+      const ink = deltaNewsInk(move, colors) ?? colors.text
       const y = bars.below + MOVE.gap
       const x = side.x + 22
       const w = measureTextUnits(text, { fontFamily: fonts.heading }) * MOVE.size

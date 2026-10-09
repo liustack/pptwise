@@ -63,7 +63,7 @@ Evidence sits in panels: the surface colour, a 1px border edge, square corners. 
 | a milestone (`highlight`) | a larger amber node, its date and title in amber |
 | a run of text (`**…**`) | amber |
 
-A figure written with its sign ("+15.5%", "−7.1%") is itself a change and takes its direction's colour. A negative figure in a table is red. A `delta` puts an arrow after the figure in its direction's colour.
+A figure written with its sign ("+15.5%", "−7.1%") is itself a change and takes the colour of its news. A negative figure in a table is red. A `delta` puts an arrow after the figure in the colour of its news: a rise good and a fall bad, unless `delta_good` says otherwise.
 
 ## Type
 

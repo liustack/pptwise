@@ -110,6 +110,16 @@ describe.each(THEMES)("ledger's own shapes on %s", (theme) => {
   })
 })
 
+describe("the ticker's change line", () => {
+  it("takes the colour of the news the author says the move is", () => {
+    const { ctx } = testCtx("ledger")
+    const items = [{ ...ticker.items[0], delta: "down", delta_good: true, note: "12%" }, ...ticker.items.slice(1)]
+    const drawn = drawTicker({ components: [{ ...ticker, items }] as never, ctx, rect: { x: 64, y: 494, w: 1152, h: 150 } })
+    const { root } = renderNode(drawn)
+    expect(byText(root, "▼ 12%")!.getAttribute("fill")).toBe(panelInks(ctx).up)
+  })
+})
+
 describe("ledger's own shapes, where they decline", () => {
   it("are offered only in the panel setting", () => {
     const { ctx } = testCtx("ledger")
