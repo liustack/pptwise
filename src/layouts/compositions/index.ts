@@ -245,6 +245,9 @@ import { solutionsComposition } from "./solutions"
 import { pitfallsComposition } from "./pitfalls"
 import { strikeoutComposition } from "./strikeout"
 import { chronologyComposition } from "./chronology"
+import { sentenceComposition } from "./sentence"
+import { billboardComposition } from "./billboard"
+import { proofComposition } from "./proof"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -503,6 +506,9 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   pitfalls: pitfallsComposition,
   strikeout: strikeoutComposition,
   chronology: chronologyComposition,
+  sentence: sentenceComposition,
+  billboard: billboardComposition,
+  proof: proofComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -721,7 +727,7 @@ function asksForIconCardDetail(components: readonly CompositionProps["components
  * it. A page whose chart carries one is offered to these alone; the ordinary
  * chart sets the title over it as a table does.
  */
-const CHART_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["ladder", "backdrop", "thresholds", "partition", "chronicle", "measures", "headline", "census", "contrast", "bracket", "mix", "twins", "bases", "checkup", "swing", "podiums", "toll"])
+const CHART_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["ladder", "backdrop", "thresholds", "partition", "chronicle", "measures", "headline", "census", "contrast", "bracket", "mix", "twins", "bases", "checkup", "swing", "podiums", "toll", "proof"])
 
 function asksForChartTitle(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && Boolean(component.title?.trim()))

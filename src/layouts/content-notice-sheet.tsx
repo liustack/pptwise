@@ -63,7 +63,7 @@ export interface NoticeSheet {
 }
 
 /** The source's last baseline: the board's, or above the footer rule when the page carries a footer row. */
-function sourceBaseline(page: PageRenderContext | undefined): number {
+export function sourceBaseline(page: PageRenderContext | undefined): number {
   return page?.footerRow ? footnoteBaselineFor(14) : NOTICE_SOURCE_BASELINE
 }
 
@@ -112,10 +112,21 @@ export function noticeStandfirst(text: string | undefined, ctx: ComponentCtx, pl
 }
 
 /** Frames the page and asks the compositions whether one of them takes its body. */
-export function composeNotice(slide: Slide, ctx: ComponentCtx, page?: PageRenderContext): NoticeSheet {
+/**
+ * The page's source line and the body band under the notice head, before any
+ * standfirst: x80 to x1200 from y196 down to the source line, the footer row
+ * or the foot clearance.
+ */
+export function noticeBand(slide: Pick<Slide, "footnote">, ctx: ComponentCtx, page?: PageRenderContext): { source: NoticeSourceLayout | null; rect: ContentRect } {
   const source = fitNoticeSource(slide.footnote, ctx, NOTICE_RIGHT - NOTICE_LEFT, sourceBaseline(page))
   const floor = page?.footerRow ? footnoteBaselineFor(14) - 26 : source ? NOTICE_BODY_BOTTOM_WITH_SOURCE : NOTICE_BODY_BOTTOM
   const bottom = source ? Math.min(floor, source.top - 12) : floor
+  return { source, rect: { x: NOTICE_LEFT, y: NOTICE_BODY_TOP, w: NOTICE_RIGHT - NOTICE_LEFT, h: bottom - NOTICE_BODY_TOP } }
+}
+
+export function composeNotice(slide: Slide, ctx: ComponentCtx, page?: PageRenderContext): NoticeSheet {
+  const { source, rect: band } = noticeBand(slide, ctx, page)
+  const bottom = band.y + band.h
   let top = NOTICE_BODY_TOP
   const standfirstBlock = noticeStandfirst(slide.subheading, ctx, { x: NOTICE_LEFT, w: NOTICE_RIGHT - NOTICE_LEFT, top })
   const standfirst = standfirstBlock?.node ?? null
@@ -125,11 +136,18 @@ export function composeNotice(slide: Slide, ctx: ComponentCtx, page?: PageRender
   return { standfirst, rect, source, composed }
 }
 
-export function NoticeSheetContent({ slide, ctx, page }: SvgTemplateProps) {
+/**
+ * The notice sheet's page: the sheet itself, or a face of bulletin's that
+ * hands a page its own composition cannot hold to the sheet
+ * (`notice-statement`, `notice-figure`, `notice-exhibit`). A page the sheet
+ * cannot hold either steps aside the way the calling face says (`aside`, the
+ * face's own `stepAside` call, so the step-aside names that face).
+ */
+export function noticeSheetPage({ slide, ctx, page }: Pick<SvgTemplateProps, "slide" | "ctx" | "page">, aside: (bodyRect: ContentRect) => React.ReactElement | null) {
   const sheet = composeNotice(slide, ctx, page)
   if (!sheet.composed) {
-    const aside = stepAside({ face: "notice-sheet", slide, ctx, bodyRect: sheet.rect })
-    if (aside) return aside
+    const stepped = aside(sheet.rect)
+    if (stepped) return stepped
   }
   return (
     <>
@@ -139,6 +157,11 @@ export function NoticeSheetContent({ slide, ctx, page }: SvgTemplateProps) {
       <NoticeSource source={sheet.source} ctx={ctx} />
     </>
   )
+}
+
+export function NoticeSheetContent(props: SvgTemplateProps) {
+  const { slide, ctx } = props
+  return noticeSheetPage(props, (bodyRect) => stepAside({ face: "notice-sheet", slide, ctx, bodyRect }))
 }
 
 export const layoutDef = {

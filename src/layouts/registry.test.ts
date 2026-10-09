@@ -87,8 +87,10 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     // adds placard-cover, placard-chapter, placard-sheet and placard-ending: 191.
     // The stage redesign adds keynote-cover, keynote-chapter, keynote-sheet and
     // keynote-ending: 195. The lecture redesign adds chalkboard-cover,
-    // chalkboard-chapter, chalkboard-sheet and chalkboard-ending: 199.
-    expect(layoutEntries).toHaveLength(199)
+    // chalkboard-chapter, chalkboard-sheet and chalkboard-ending: 199. The
+    // bulletin kinds round adds notice-statement, notice-figure and
+    // notice-exhibit: 202.
+    expect(layoutEntries).toHaveLength(202)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -322,10 +324,10 @@ describe("layoutsForSlideType", () => {
     expect(layoutsForSlideType("ending")).toHaveLength(48)
   })
 
-  it("content includes both the 54 layouts and the 4 takeovers", () => {
+  it("content includes both the 57 layouts and the 4 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(54)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(57)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(4)
-    expect(contents).toHaveLength(58)
+    expect(contents).toHaveLength(61)
   })
 })

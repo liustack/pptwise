@@ -98,6 +98,16 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 画廊白墙。
  *
  * **菜单分派（S1-B）**：企业蓝白墙是机构低调档，只上七道常规讲法（编号轨承 process，卡组承 list），宣言、引用、大数字、单证据这类高潮页原本就不在它的供给里，一律不上。
+ *
+ * **2026-10-09 补三种页（维护者批准的设计稿，`design/rounds/2026-10-09-bulletin-kinds/`）**：
+ * 上面那条「一律不上」改了一半。作者写 statement、fact、evidence 时 bulletin
+ * 没有对应的脸，只能退回别的页，一句话被压成页眉、大数字挤进图表旁的数字栏。
+ * 新加三张专用脸：`notice-statement`（去掉页眉，句子本身占页眉的位置放大到 60px，
+ * 下面细线和一行说明）、`notice-figure`（照常页眉，210px 的 IKB 大数字带小单位，
+ * 细线下三格对照数）、`notice-exhibit`（照常页眉，白底展品卡，IKB 圆角框圈住
+ * 作者标出的那组柱子或那一行，引线连到右栏编号 1 的结论）。三张脸都只在 IKB
+ * 上花一处，和 notice-sheet 同一套页眉与 14px 来源行。quote 仍然不上：
+ * 引语页在这面白墙上没有设计稿。
  */
 export const ENTERPRISE_TOKENS: StyleTokens = {
   id: "bulletin",
@@ -163,6 +173,9 @@ export const ENTERPRISE_THEME = {
       process: { face: "notice-sheet" },
       data: { face: "notice-sheet" },
       photo: { face: "image-split", params: { column: "notice" } },
+      statement: { face: "notice-statement" },
+      fact: { face: "notice-figure" },
+      evidence: { face: "notice-exhibit" },
       hierarchy: { face: "notice-sheet" },
     },
     ending: { face: "signoff-ending" },

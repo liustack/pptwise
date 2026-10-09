@@ -338,6 +338,11 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "bulletin", kind: "list", composition: "window" },
   { theme: "bulletin", kind: "process", composition: "lanes" },
   { theme: "bulletin", kind: "data", composition: "share" },
+  // bulletin's statement, fact and evidence faces, drawn to the kinds board.
+  { theme: "bulletin", kind: "statement", composition: "sentence" },
+  { theme: "bulletin", kind: "fact", composition: "billboard" },
+  { theme: "bulletin", kind: "evidence", composition: "proof" },
+  { theme: "bulletin", kind: "evidence", composition: "proof", variant: "table" },
   // ledger's panel sheet sets the shapes in panels, and draws the two its
   // own board added.
   { theme: "ledger", kind: "points", composition: "tiles" },

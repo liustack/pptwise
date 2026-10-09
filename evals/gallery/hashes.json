@@ -1881,6 +1881,21 @@
       "geometry": "zevj8f",
       "color": "fbjqrl"
     },
+    "bulletin--face--statement--notice-statement": {
+      "hash": "arp3sd",
+      "geometry": "1tphxpc",
+      "color": "13oekgi"
+    },
+    "bulletin--face--fact--notice-figure": {
+      "hash": "o1fosr",
+      "geometry": "cuen5z",
+      "color": "kywt3l"
+    },
+    "bulletin--face--evidence--notice-exhibit": {
+      "hash": "1pduc7p",
+      "geometry": "4u1urf",
+      "color": "vca5cp"
+    },
     "bulletin--face--ending--signoff-ending": {
       "hash": "17ltsq8",
       "geometry": "1kf2gmj",
@@ -1945,6 +1960,26 @@
       "hash": "21dfqd",
       "geometry": "giac5u",
       "color": "12q99xq"
+    },
+    "bulletin--compose--sentence": {
+      "hash": "p9c3np",
+      "geometry": "1xmghll",
+      "color": "8tpm9z"
+    },
+    "bulletin--compose--billboard": {
+      "hash": "72di9q",
+      "geometry": "fbjq1y",
+      "color": "kywt3l"
+    },
+    "bulletin--compose--proof": {
+      "hash": "1jatbtu",
+      "geometry": "97leok",
+      "color": "vca5cp"
+    },
+    "bulletin--compose--proof-table": {
+      "hash": "u1qgd5",
+      "geometry": "1l79xd6",
+      "color": "1cj2fez"
     },
     "bulletin--comp--architecture--zh": {
       "hash": "aws01w",
@@ -2042,9 +2077,9 @@
       "color": "1kxz4i8"
     },
     "bulletin--comp--code--zh": {
-      "hash": "13272h3",
-      "geometry": "1xwya4f",
-      "color": "4zx531"
+      "hash": "1xkqo0y",
+      "geometry": "1tw2skd",
+      "color": "1yead6p"
     },
     "bulletin--comp--comparison--zh": {
       "hash": "161vlf5",
@@ -2147,9 +2182,9 @@
       "color": "1i05m44"
     },
     "bulletin--comp--insight-panel--zh": {
-      "hash": "lm9z1p",
-      "geometry": "1jmgcdm",
-      "color": "l7saaw"
+      "hash": "lp4h4c",
+      "geometry": "3f06qo",
+      "color": "9sowas"
     },
     "bulletin--comp--issue-tree--zh": {
       "hash": "1jxn8ar",
@@ -2237,9 +2272,9 @@
       "color": "168fpzh"
     },
     "bulletin--comp--quote-wall--zh": {
-      "hash": "bz4e1x",
-      "geometry": "n9sbm4",
-      "color": "17uq5uz"
+      "hash": "9h6fvu",
+      "geometry": "e9lfh2",
+      "color": "1c6ewiy"
     },
     "bulletin--comp--rings--zh": {
       "hash": "aqrvyq",
@@ -2272,9 +2307,9 @@
       "color": "slx92d"
     },
     "bulletin--comp--sketch--zh": {
-      "hash": "1s9h8d2",
-      "geometry": "pd8jmw",
-      "color": "ywps1n"
+      "hash": "asnesu",
+      "geometry": "8b8thv",
+      "color": "11chyfj"
     },
     "bulletin--comp--staircase--zh": {
       "hash": "5bt6hs",

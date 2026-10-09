@@ -250,9 +250,10 @@ describe("runThemeTry", () => {
   it("leaves a kind a theme does not offer out of its column and says so in the cell", async () => {
     const cwd = await tmp("pptwise-theme-try-menu-")
     const out = join(cwd, "sheet")
-    await runThemeTry("bulletin,brief", { output: out, cwd, gitIgnore: false })
+    // crayon offers no fact page, and the sample carries one.
+    await runThemeTry("crayon,brief", { output: out, cwd, gitIgnore: false })
     const html = await readFile(join(out, "contact-sheet.html"), "utf8")
-    expect(html.match(/not in bulletin&#39;s menu|not in bulletin's menu/g)).toHaveLength(2)
+    expect(html.match(/not in crayon&#39;s menu|not in crayon's menu/g)).toHaveLength(1)
     expect(html).not.toMatch(/not in brief/)
   })
 
