@@ -320,6 +320,29 @@ function isIdentityMark(props: ElementProps): boolean {
   return value !== undefined && value !== null && value !== false && value !== "false"
 }
 
+/** How many `<text>` leaves a node holds. */
+function countTexts(node: ReactNode): number {
+  let n = 0
+  Children.forEach(node, (child) => {
+    if (!isValidElement<ElementProps>(child)) return
+    if (child.type === Fragment) n += countTexts(child.props.children)
+    else if (typeof child.type === "string") n += child.type.toLowerCase() === "text" ? 1 : countTexts(child.props.children)
+  })
+  return n
+}
+
+/**
+ * Words an author put on the page through the midground (`data-page-words`,
+ * the decor corner tag in `slide-decor.tsx`). Ornament that runs into the
+ * foreground yields without a trace, but these are the author's words: a
+ * group that would lose any of its text yields whole and leaves a
+ * `data-dropped` mark in its place, which audit reports and the export
+ * refuses (`render/drop-marker.tsx`).
+ */
+function isPageWords(props: ElementProps): boolean {
+  return props["data-page-words"] !== undefined
+}
+
 function processMidgroundNode(
   node: ReactNode,
   foregroundBoxes: readonly DepthBox[],
@@ -417,6 +440,9 @@ function processMidgroundNode(
     )
     .filter((child) => child !== null && child !== undefined && child !== false)
     .map((child, index) => <Fragment key={`mid-${index}`}>{child}</Fragment>)
+  if (isPageWords(node.props) && countTexts(processedChildren) < countTexts(originalChildren)) {
+    return <g data-dropped={1} data-dropped-kind="label" />
+  }
   if (
     originalChildren.length > 0 &&
     processedChildren.length === 0 &&

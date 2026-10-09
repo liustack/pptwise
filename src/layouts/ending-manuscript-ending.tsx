@@ -107,6 +107,7 @@ export const layoutDef = {
     { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: POINTS.max },
   ],
   pageFields: ["kicker"],
+  subheading: { none: "set it as the kicker, the small title over the points, or fold it into the closing line" },
   suppressMotif: true,
   headingFit: { maxWidth: MANUSCRIPT_W, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
 } satisfies LayoutDefinition

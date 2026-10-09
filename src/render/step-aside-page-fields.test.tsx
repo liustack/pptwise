@@ -82,12 +82,15 @@ const FIELD_VALUES: Record<string, { value: unknown; words: string }> = {
 const COURSE = { stages: [{ label: "Unit A" }, { label: "Unit B" }] }
 
 function deck(theme: string, kind: string, page: Record<string, unknown>): PptxIR {
+  // A face with no place for a subheading is refused one (`LayoutDefinition.subheading`).
+  const face = (THEME_DEFINITIONS[theme as keyof typeof THEME_DEFINITIONS].menu.content as Record<string, { face: string }>)[kind]!.face
+  const standfirst = typeof getLayout(face)?.subheading === "object" ? {} : { subheading: "Standfirst words" }
   const v = validateIr({
     version: "5",
     filename: "fields",
     theme: { id: theme },
     ...("stage" in page ? { course: COURSE } : {}),
-    slides: [{ type: "content", kind, heading: "Heading words", subheading: "Standfirst words", ...page }],
+    slides: [{ type: "content", kind, heading: "Heading words", ...standfirst, ...page }],
   })
   expect(v.errors).toEqual([])
   return v.ir!

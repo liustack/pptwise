@@ -176,5 +176,7 @@ export const layoutDef = {
     { name: "heading", accepts: [] },
     { name: "body", accepts: ["blockquote", "paragraph"], capacity: 1 },
   ],
+  // The body block takes the subheading only when no paragraph or quote fills it.
+  subheading: "in-body",
   headingFit: TITLE_FIT,
 } satisfies LayoutDefinition

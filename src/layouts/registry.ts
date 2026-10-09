@@ -465,6 +465,18 @@ export interface LayoutDefinition {
    */
   pageFields?: readonly ("kicker" | "footnote" | "fields" | "stamp" | "tag" | "ballot" | "years" | "stage")[]
   /**
+   * Structural fact of a face that does not draw the page's `subheading`
+   * with its heading, as every other face does. Omitted, the face draws it.
+   *
+   * - `"in-body"`: the face sets one text under its claim, and a body
+   *   component fills it first (`statementLines`). The subheading takes
+   *   that line only on a page whose body leaves it free, so validate
+   *   refuses a subheading beside a component that fills it.
+   * - `{ none }`: the face has no place for a subheading. validate refuses
+   *   one, and `none` tells the author where to write it instead.
+   */
+  subheading?: "in-body" | { none: string }
+  /**
    * Structural fact of a cover or chapter face: it draws its own page over a
    * photograph background (`background.kind: "asset"`).
    *

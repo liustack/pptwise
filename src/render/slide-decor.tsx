@@ -74,8 +74,10 @@ export function SlideDecor({
       const label = (decor.text ?? "").slice(0, 12)
       if (!label) return null
       const w = 24 + label.length * 15
+      // The author's words: the midground contract declares them lost rather
+      // than let them yield to the face without a trace.
       return (
-        <g>
+        <g data-page-words="">
           <rect
             x={W - 96 - w}
             y={64}

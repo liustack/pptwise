@@ -3,7 +3,6 @@ import type { SvgTemplateProps } from "./types"
 import { coverConfidentialityText, resolveDeckFooter } from "../render/footer-marks"
 import { stripEmphasis } from "../render/emphasis"
 import { readableOn } from "../render/ink"
-import { sealStudioGlyph } from "./minimal-shared"
 import {
   PHOTO_NOTE,
   SCROLL_META,
@@ -16,6 +15,7 @@ import {
   paintScroll,
   paintScrollPhoto,
   paintSeal,
+  sealOf,
   paintVertical,
   scrollInks,
   scrollMeta,
@@ -32,7 +32,8 @@ import {
  * 面板纸色的竖条（x760、宽 120、高 600），右下错开 4px 一道淡墨的影子，
  * 题目竖排在条里，54px 楷书、字距 8px，一列放不下就两列 40px；条底一方
  * 40px 朱砂印，印文取页面的 `stamp.text`，没写就取机构名的首字（「文化讲堂」
- * 取「文」）。题签右边三列竖排小字：副题（`subheading`，20px 楷书，按逗号
+ * 取「文」）。印只刻一个字：多于一个字或带日期行的 `stamp` 刻不下，印照样取
+ * 机构名的首字，并声明丢弃（`data-dropped`），不刻半个印文（`sealOf`）。题签右边三列竖排小字：副题（`subheading`，20px 楷书，按逗号
  * 那样的标点转竖排写法），机构名接页面的 `kicker`（「文化讲堂」「公众讲座」，
  * 14px 灰褐），deck 页脚的 `label`（「二〇二六年十月」，作者写的年月）。左下
  * 角是页面的 `footnote`（「示意图（AI 生成）」），白字压在照片底部一道由浅到
@@ -69,7 +70,7 @@ export function ScrollCover({ ir, slide, ctx, index }: SvgTemplateProps) {
   const title = stripEmphasis(slide.heading ?? "").trim()
   const subtitle = stripEmphasis(slide.subheading ?? "").trim()
   const upright = uprightText(title) && (!subtitle || uprightText(subtitle))
-  const glyph = slide.stamp?.text?.trim() || sealStudioGlyph(ir.meta.organization)
+  const seal = sealOf(slide.stamp, ir.meta.organization)
   const hall = joinColumnLabels([ir.meta.organization, slide.kicker])
   const footer = resolveDeckFooter(ir)
   const date = footer.label
@@ -123,9 +124,10 @@ export function ScrollCover({ ir, slide, ctx, index }: SvgTemplateProps) {
         {cardSub && cardTitle ? (
           <g data-scroll-subtitle="">{paintScroll(cardSub, { ctx, x: CARD.x + CARD.pad, top: CARD.title.top + cardTitle.lines.length * CARD.title.lineHeight + CARD.sub.gap, serif: true, fill: scrollText(inks.ink2, inks.card, CARD.sub.size), ground: inks.card })}</g>
         ) : null}
-        {paintSeal(sealX, SLIP.seal.y, SLIP.seal.size, glyph, ctx)}
+        {paintSeal(sealX, SLIP.seal.y, SLIP.seal.size, seal.glyph, ctx)}
       </g>
       {titleDropped ? <g data-dropped={1} data-dropped-kind="label" /> : null}
+      {seal.dropped ? <g data-dropped={1} data-dropped-kind="label" /> : null}
       {subColumns ? <g data-scroll-subtitle="">{paintVertical(subColumns, { ctx, x: SUB.right - SUB.lineHeight / 2, top: SUB.top, spec: { size: SUB.size, tracking: SUB.tracking, pitch: SUB.lineHeight }, fill: scrollText(inks.ink2, ground, SUB.size) })}</g> : null}
       {subDropped ? <g data-dropped={1} data-dropped-kind="label" /> : null}
       {hallLabel ? <g data-scroll-hall={hall}>{paintColumnLabel(hallLabel, { ctx, right: labels.hall, top: LABELS.top, fill: labelInk, attrs: { ...SCROLL_META } })}</g> : hall ? <g data-dropped={1} data-dropped-kind="label" /> : null}

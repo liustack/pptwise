@@ -115,6 +115,43 @@ describe("the manuscript faces on thesis", () => {
     expect(root.querySelector("[data-manuscript-folio]")).toBeNull()
   })
 
+  it("cover: sets the subtitle under the title in the fields' value type, moving the gold rule and the fields down only as far as it needs", () => {
+    const rule = (root: Element) => Number(root.querySelector("[data-manuscript-gold]")!.getAttribute("y"))
+    const firstRule = (root: Element) => Number(root.querySelector("[data-manuscript-field] rect")!.getAttribute("y"))
+    const bare = page(ir, 0)
+    expect(bare.querySelector("[data-manuscript-subtitle]")).toBeNull()
+
+    // A one-line title leaves the subtitle room over the rule where it stands.
+    const short = page(deck([cover({ heading: "延退与就业", subheading: "开题报告 · 劳动经济学" })]), 0)
+    const sub = short.querySelector("[data-manuscript-subtitle] text")!
+    expect(sub.textContent).toBe("开题报告 · 劳动经济学")
+    expect([sub.getAttribute("font-size"), sub.getAttribute("font-weight"), sub.getAttribute("font-family")]).toEqual([
+      byText(short, "劳动经济学")!.getAttribute("font-size"),
+      "700",
+      byText(short, "劳动经济学")!.getAttribute("font-family"),
+    ])
+    expect(Number(sub.getAttribute("y"))).toBeGreaterThan(Number(short.querySelector("[data-manuscript-title] text")!.getAttribute("y")))
+    expect(Number(sub.getAttribute("y"))).toBeLessThan(rule(short))
+    expect(rule(short)).toBe(rule(bare))
+    expect(firstRule(short)).toBe(firstRule(bare))
+
+    // Under a two-line title the rule and the fields move down together, all four fields kept.
+    const two = page(deck([cover({ subheading: "开题报告 · 劳动经济学" })]), 0)
+    const shift = rule(two) - rule(bare)
+    expect(shift).toBeGreaterThan(0)
+    expect(firstRule(two) - firstRule(bare)).toBe(shift)
+    expect(two.querySelectorAll("[data-manuscript-field]")).toHaveLength(4)
+    expect(two.querySelector("[data-dropped]")).toBeNull()
+  })
+
+  it("cover: declares a subtitle it cannot set whole over four fields, and never cuts it", () => {
+    const long = "基于中国健康与养老追踪调查 2011 至 2020 年数据的双重差分与事件研究设计，兼论政策评估方法的适用边界"
+    const root = page(deck([cover({ subheading: long })]), 0)
+    expect(root.querySelector("[data-manuscript-subtitle]")).toBeNull()
+    expect(root.querySelector("[data-dropped][data-dropped-kind='label']")).not.toBeNull()
+    expect(flat(root)).not.toContain("基于中国健康")
+  })
+
   it("cover: spreads a shorter Chinese field name to the longest one's width", () => {
     const root = page(ir, 0)
     const span = (name: string) => {

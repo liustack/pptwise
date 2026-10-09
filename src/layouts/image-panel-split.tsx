@@ -10,7 +10,7 @@ import { SvgContent } from "../render/svg-content"
 import { bodySlotDropsContent } from "../render/step-aside"
 import { panelFigureItem, panelInks, serifBaseline } from "./compositions/panel"
 import { centredBaseline, fitFixed, paintLines } from "./compositions/type"
-import { PanelHead, PanelSource, fitPanelSource, type PanelSourceLayout } from "./panel-shared"
+import { PanelHead, PanelSource, PanelStandfirst, fitPanelSource, fitPanelStandfirst, type PanelSourceLayout } from "./panel-shared"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 
@@ -24,7 +24,8 @@ type KpiCards = Extract<Component, { type: "kpi_cards" }>
  * at 15px. The figure the author marked (`**…**`) takes the mark (ledger's
  * amber). Anything else the column carries is drawn by the component
  * renderer, and the source sits at the foot of the column in the frame's
- * 13px. A caption the author gave the photograph sits right above the
+ * 13px. A subheading is the frame's standfirst under the claim, as on every
+ * ledger page, set on the column's measure, and the rows start under it. A caption the author gave the photograph sits right above the
  * source in the same 13px, so the photograph itself stays clean.
  */
 
@@ -56,11 +57,12 @@ function figureRows(
   x: number,
   w: number,
   ctx: ComponentCtx,
+  rowsTop: number,
   bottom: number,
 ): React.ReactElement | null {
   const n = kpis.items.length
   if (n < 2 || n > 5 || !kpis.items.every(panelFigureItem)) return null
-  const pitch = Math.min(COLUMN.pitch, (bottom - COLUMN.rowsTop) / n)
+  const pitch = Math.min(COLUMN.pitch, (bottom - rowsTop) / n)
   if (pitch < 92) return null
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -68,7 +70,7 @@ function figureRows(
   const valueW = COLUMN.note.x - 20
   const nodes: React.ReactNode[] = []
   for (const [i, item] of kpis.items.entries()) {
-    const top = COLUMN.rowsTop + i * pitch
+    const top = rowsTop + i * pitch
     const { text: value, marked, unit } = kpiFigure(item.value, item.unit)
     if (measureTextUnits(value, { fontFamily: fonts.heading }) * COLUMN.value.size > valueW) return null
     const label = fitFixed(item.label, { width: w, size: COLUMN.label.size, lineHeight: COLUMN.label.box, maxLines: 1, fontFamily: fonts.body, bold: false })
@@ -155,10 +157,12 @@ export function PanelSplitPage({
   const caption = captionAbove(image.caption, source, ctx, page, textW)
   const foot = caption ?? source
   const bottom = foot ? foot.top - 12 : COLUMN.foot
+  const standfirst = fitPanelStandfirst(slide.subheading, ctx, textW, COLUMN.headFoot)
+  const rowsTop = standfirst ? standfirst.bodyTop : COLUMN.rowsTop
   const kpis = rest.length === 1 && rest[0]!.type === "kpi_cards" ? rest[0]! : null
-  let body = kpis ? figureRows(kpis, textX, textW, ctx, bottom) : null
+  let body = kpis ? figureRows(kpis, textX, textW, ctx, rowsTop, bottom) : null
   if (!body && rest.length > 0) {
-    const rect = { x: textX, y: COLUMN.rowsTop, w: textW, h: bottom - COLUMN.rowsTop }
+    const rect = { x: textX, y: rowsTop, w: textW, h: bottom - rowsTop }
     if (bodySlotDropsContent(rest, rect, ctx)) return null
     body = <SvgContent components={rest} rect={rect} ctx={ctx} />
   }
@@ -180,6 +184,7 @@ export function PanelSplitPage({
         <rect x={imgX} y={COLUMN.imageTop} width={COLUMN.imageW} height={H - COLUMN.imageTop} fill={ctx.colors.surface} />
       )}
       <PanelHead heading={slide.heading} ctx={ctx} x={textX} maxWidth={textW} foot={COLUMN.headFoot} size={COLUMN.headSize} />
+      {standfirst ? <PanelStandfirst layout={standfirst} ctx={ctx} x={textX} /> : null}
       {body}
       {caption && (
         <g data-image-caption="">

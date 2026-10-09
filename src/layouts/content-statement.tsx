@@ -204,6 +204,8 @@ export const layoutDef = {
     { name: "body", accepts: ["paragraph", "blockquote"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
+  // The one line under the claim takes the subheading only when no body fills it.
+  subheading: "in-body",
   headingFit: {
     maxWidth: CONTENT_MAX_W,
     fontSize: 48,

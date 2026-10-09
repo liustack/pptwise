@@ -109,5 +109,6 @@ export const layoutDef = {
   ],
   drawsPhoto: true,
   suppressMotif: true,
+  subheading: { none: "list what the act covers as its row_cards, or fold it into the heading" },
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
 } satisfies LayoutDefinition

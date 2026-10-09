@@ -66,6 +66,23 @@ describe("midground safety contract", () => {
     expect(root.querySelector('[data-probe="clear"]')).not.toBeNull()
   })
 
+  it("declares an author's words that would yield to the foreground, whole, instead of dropping them without a trace", () => {
+    const words = (
+      <g data-page-words="">
+        <rect data-probe="tag" x={1000} y={64} width={120} height={30} fill="#777777" />
+        <text data-probe="words" x={1060} y={84} fontSize={16}>季报专刊</text>
+      </g>
+    )
+    const clear = renderContract(words, <rect x={30} y={30} width={80} height={80} fill="#101010" />)
+    expect(clear.querySelector('[data-probe="words"]')?.textContent).toBe("季报专刊")
+    expect(clear.querySelector("[data-dropped]")).toBeNull()
+
+    const blocked = renderContract(words, <rect x={1040} y={60} width={200} height={40} fill="#101010" />)
+    expect(blocked.querySelector('[data-probe="words"]')).toBeNull()
+    expect(blocked.querySelector('[data-probe="tag"]')).toBeNull()
+    expect(blocked.querySelector("[data-dropped='1'][data-dropped-kind='label']")).not.toBeNull()
+  })
+
   it("keeps identity-marked midground paint at the theme color, without the intensity ceiling", () => {
     const root = renderContract(
       <g data-decor>

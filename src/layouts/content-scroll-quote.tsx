@@ -87,5 +87,6 @@ export const layoutDef = {
     { name: "body", accepts: ["blockquote"], capacity: 1 },
   ],
   pageFields: ["kicker"],
+  subheading: { none: "fold it into the heading, what the speaker draws from the passage, or remove it" },
   headingFit: { maxWidth: LEAD_ACROSS.w, fontSize: LEAD_ACROSS.size, maxLines: LEAD_ACROSS.maxLines, minPt: LEAD_ACROSS.size, bold: false, lineHeightRatio: LEAD_ACROSS.lineHeight / LEAD_ACROSS.size },
 } satisfies LayoutDefinition

@@ -40,6 +40,7 @@ import { deckWritesChinese } from "./lib/conf-labels"
 import { componentFace, resolveEffectiveFace } from "./render/layout-selection"
 import { boundarySlotBlocks, drawableItems } from "./layouts/boundary-content"
 import { findImageSelection } from "./layouts/find-image"
+import { bodyStatementLines } from "./layouts/minimal-shared"
 import type { LayoutDefinition } from "./layouts/registry"
 import { CANONICAL_THEME_IDS, THEME_LABELS, THEME_STYLES } from "./themes"
 import { foldedThemeTarget, foldedThemeWarning, retiredThemeHint } from "./themes/retired-ids"
@@ -476,6 +477,40 @@ function checkKickerDrawn(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[]
         message: `${layout ? `face "${layout.id}"` : "this page's face"} has no place for ${name} — ${fix}`,
       })
     }
+  })
+  return errors
+}
+
+/**
+ * A subheading on a face that has no place for one, or beside a body that
+ * fills the one line a face would set it in (`LayoutDefinition.subheading`),
+ * would leave the page with nothing to say so. The page is refused, naming
+ * the face and where the words can go. On a cover, chapter or ending the
+ * subheading is what a deck project's spec wrote as the page's summary, so
+ * the message says that too. An empty subheading asks for nothing.
+ */
+function checkSubheadingDrawn(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder || !slide.subheading?.trim()) return
+    const layout = componentFace(ir, slide, theme)
+    const place = layout?.subheading
+    if (layout === undefined || place === undefined) return
+    let message: string
+    if (place === "in-body") {
+      if (bodyStatementLines(slide) === undefined) return
+      const body = slide.components[0]!.type
+      message = `face "${layout.id}" sets one line under its claim, and this page's ${body} fills it — fold the subheading into the heading or the ${body}, or remove it`
+    } else {
+      message = `face "${layout.id}" has no place for a subheading — ${place.none}`
+    }
+    if (slide.type !== "content") message += ` (a deck project's spec writes it as the page's summary)`
+    errors.push({
+      path: `slides.${i}.subheading`,
+      page: i + 1,
+      ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+      message,
+    })
   })
   return errors
 }
@@ -969,7 +1004,7 @@ export function validateIr(
   if (fullBodyErrors.length > 0) return withNormalized({ ok: false, errors: fullBodyErrors })
   const boundaryPageErrors = checkBoundaryPageContent(r.data, theme)
   if (boundaryPageErrors.length > 0) return withNormalized({ ok: false, errors: boundaryPageErrors })
-  const kickerErrors = checkKickerDrawn(r.data, theme)
+  const kickerErrors = [...checkKickerDrawn(r.data, theme), ...checkSubheadingDrawn(r.data, theme)]
   if (kickerErrors.length > 0) return withNormalized({ ok: false, errors: kickerErrors })
   // The body face these two measure in is the one the deck renders in,
   // whose cut follows the deck's language (`resolveFontStack`).

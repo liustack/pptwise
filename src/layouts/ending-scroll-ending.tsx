@@ -2,7 +2,6 @@ import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
 import { resolveDeckFooter } from "../render/footer-marks"
 import { stripEmphasis } from "../render/emphasis"
-import { sealStudioGlyph } from "./minimal-shared"
 import {
   SCROLL_META,
   fitColumnLabel,
@@ -13,6 +12,7 @@ import {
   paintScroll,
   paintScrollPhoto,
   paintSeal,
+  sealOf,
   paintVertical,
   scrollInks,
   scrollMeta,
@@ -29,7 +29,8 @@ import {
  * 发丝线（x600），线左两列竖排落款：机构名接页面的 `kicker`（「文化讲堂」「公众
  * 讲座」）、deck 页脚的 `label`（「二〇二六年十月」，作者写的年月），20px
  * 楷书；落款下一方 44px 朱砂印，印文取页面的 `stamp.text`，没写就取机构名
- * 的首字。左下是页面的 `subheading`（「文化和自然遗产日」换行「每年 6 月
+ * 的首字。印只刻一个字：多于一个字或带日期行的 `stamp` 刻不下，印照样取机构名
+ * 的首字，并声明丢弃（`data-dropped`），不刻半个印文（`sealOf`）。左下是页面的 `subheading`（「文化和自然遗产日」换行「每年 6 月
  * 第二个星期六」，作者写的换行），最下角是 `footnote`（「背景为 AI 生成的
  * 示意图」）。
  *
@@ -83,7 +84,7 @@ export function ScrollEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const labelSpec = { size: LABELS.size, tracking: LABELS.tracking, length: LABELS.length, lineHeight: LABELS.lineHeight, maxColumns: 1, latinTracking: LABELS.latinTracking }
   const hallLabel = hall ? fitColumnLabel(hall, labelSpec, ctx) : null
   const dateLabel = date ? fitColumnLabel(date, labelSpec, ctx) : null
-  const glyph = slide.stamp?.text?.trim() || sealStudioGlyph(ir.meta.organization)
+  const seal = sealOf(slide.stamp, ir.meta.organization)
   const sign = slide.subheading?.trim() ? fitScroll(slide.subheading, { width: SIGN.w, size: SIGN.size, lineHeight: SIGN.lineHeight, maxLines: SIGN.maxLines }, ctx) : null
   const note = slide.footnote?.trim() ? fitScroll(slide.footnote, { width: NOTE.w, size: NOTE.size, lineHeight: NOTE.lineHeight, maxLines: 1 }, ctx) : null
   const labelInk = scrollText(inks.ink2, ground, LABELS.size)
@@ -101,7 +102,8 @@ export function ScrollEnding({ ir, slide, ctx }: SvgTemplateProps) {
       <rect x={DIVIDER.x - 0.5} y={DIVIDER.top} width={1} height={DIVIDER.bottom - DIVIDER.top} fill={inks.line} />
       {hallLabel ? <g data-scroll-hall={hall}>{paintColumnLabel(hallLabel, { ctx, right: LABELS.hall, top: LABELS.top, fill: labelInk })}</g> : hall ? <g data-dropped={1} data-dropped-kind="label" /> : null}
       {dateLabel ? <g data-scroll-date={date}>{paintColumnLabel(dateLabel, { ctx, right: LABELS.date, top: LABELS.top, fill: labelInk })}</g> : date ? <g data-dropped={1} data-dropped-kind="label" /> : null}
-      {paintSeal(SEAL.x, SEAL.y, SEAL.size, glyph, ctx)}
+      {paintSeal(SEAL.x, SEAL.y, SEAL.size, seal.glyph, ctx)}
+      {seal.dropped ? <g data-dropped={1} data-dropped-kind="label" /> : null}
       {sign ? <g data-scroll-sign="">{paintScroll(sign, { ctx, x: SIGN.x, top: SIGN.top, fill: scrollText(inks.muted, ground, SIGN.size) })}</g> : null}
       {slide.subheading?.trim() && !sign ? <g data-dropped={1} data-dropped-kind="label" /> : null}
       {note ? <g data-scroll-ending-note="">{paintScroll(note, { ctx, x: NOTE.x, top: NOTE.top, fill: scrollMeta(inks.muted, ground), attrs: { ...SCROLL_META } })}</g> : null}
