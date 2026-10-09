@@ -202,3 +202,29 @@ describe("content-crayonbox-cards section capsule", () => {
     expect(Number(label!.getAttribute("x")) + 12 * 17).toBeLessThanOrEqual(right)
   })
 })
+
+describe("content-crayonbox-cards past three cards", () => {
+  // The page holds three sheets of drawing paper. A fourth card used to be
+  // left off with a drop mark only the export read, and validate passed the
+  // page. Now a block of more cards is drawn the way the face draws any
+  // other block, as the ordinary cards in its band, every card whole.
+  it("draws four cards as ordinary cards, all four", () => {
+    const four = {
+      ...slide,
+      components: [
+        {
+          type: "numbered_cards",
+          items: [
+            { title: "抬头看天空", text: "找到最亮的蓝" },
+            { title: "低头找果实", text: "挑一颗暖橘" },
+            { title: "蹲下摸草叶", text: "数一数绿色" },
+            { title: "回头看影子", text: "量一量长短" },
+          ],
+        },
+      ],
+    } as Slide
+    const { root, markup } = renderContent(four)
+    expect(markup).not.toContain("data-dropped")
+    for (const title of ["抬头看天空", "低头找果实", "蹲下摸草叶", "回头看影子"]) expect(root.textContent).toContain(title)
+  })
+})
