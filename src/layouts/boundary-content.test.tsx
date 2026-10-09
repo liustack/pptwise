@@ -4,7 +4,7 @@ import type { PptxIR, Slide } from "@/ir"
 import { resolveStyle } from "../themes"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { parseSvgRoot, renderSvgMarkup } from "../render/serialize"
-import { boundaryBulletItems, boundarySlotBlock, boundarySlotBlocks, drawableItems } from "./boundary-content"
+import { boundaryBulletItems, boundarySlotBlock, boundarySlotBlocks, drawableItems, slotItemRoom } from "./boundary-content"
 import { COVER_LAYOUTS } from "./index-cover"
 import { ENDING_LAYOUTS } from "./index-ending"
 import { LAYOUT_REGISTRY } from "./registry"
@@ -102,13 +102,13 @@ describe("boundary faces draw the items validate counts", () => {
   it.each(FACES.map((face) => [face.id, face] as const))(
     "%s draws its full capacity when the block also holds blank items",
     (id, layout) => {
-      const capacity = layout.slots.find((slot) => slot.itemCapacity !== undefined)!.itemCapacity!
+      const slot = layout.slots.find((slot) => slot.itemCapacity !== undefined)!
+      const type = layout.slideTypes.includes("cover") ? "cover" : "ending"
+      // The room on this page: one row fewer on a face that sets the page's heading in the list's first row.
+      const capacity = slotItemRoom(slot, slideWith([{ type: "bullets", items: ["A"] }], type))!
       const sentinels = Array.from({ length: capacity }, (_, i) => `SENTINEL${i + 1}`)
       const items = ["", ...sentinels.flatMap((sentinel) => [sentinel, "   "])]
-      const slide = slideWith(
-        [{ type: "bullets", items }],
-        layout.slideTypes.includes("cover") ? "cover" : "ending",
-      )
+      const slide = slideWith([{ type: "bullets", items }], type)
       const text = parseSvgRoot(renderFace(id, slide)).textContent ?? ""
       for (const sentinel of sentinels) {
         expect(text, `${id} lost ${sentinel}`).toContain(sentinel)

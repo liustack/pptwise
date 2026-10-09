@@ -1,5 +1,5 @@
 import type { SvgTemplateProps } from "./types"
-import { boundaryBulletItems } from "./boundary-content"
+import { headedBulletRows, writesHeading } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
@@ -12,8 +12,8 @@ import type { HeadingCtx } from "./heading-set"
  * border 线。构图抄 `.issues/design-boards/wave8/b2/Classroom.dc.html`
  * ending：盒 (96,96,176×56)，三条 y256/336/416，底线 y500，预告 y580。
  *
- * 清单优先取 bullets 前三项，否则按换行或「一、/1.」切 heading。预告句取
- * subheading。盒内白字按标题脚本切：CJK「课后作业」，Latin `HOMEWORK`。
+ * 有 bullets 时 heading 占第一行（与 heading 当清单时同字号同位置），bullets
+ * 接在后面，否则按换行或「一、/1.」切 heading。预告句取 subheading。盒内白字按标题脚本切：CJK「课后作业」，Latin `HOMEWORK`。
  * 不写死课本页码，无 Thank you。
  *
  * 进共享池，不是 homeroom 专用。零 theme id、零 baked hex。批改红盒只此一处。
@@ -66,12 +66,6 @@ function splitActionLines(text: string): string[] {
   return splitActionLinesAll(text).slice(0, ITEM_MAX)
 }
 
-function homeworkItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = boundaryBulletItems(slide, ITEM_MAX)
-  if (bullets.length > 0) return bullets
-  return splitActionLines(slide.heading ?? "")
-}
-
 function homeworkLabel(slide: SvgTemplateProps["slide"], items: string[]): string {
   const scriptSrc = slide.heading || items[0] || ""
   return hasCjk(scriptSrc) ? HOMEWORK_CJK : HOMEWORK_LATIN
@@ -91,7 +85,8 @@ export function HomeworkCloseEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
   const field = colors.accent
-  const items = homeworkItems(slide).map((item) => stripEmphasis(item))
+  const headed = headedBulletRows(slide, ITEM_MAX)
+  const items = (headed?.lines ?? splitActionLines(slide.heading ?? "")).map((item) => stripEmphasis(item))
   const labelSource = homeworkLabel(slide, items)
   const label = fitSvgLine(labelSource, {
     maxWidth: BOX_LABEL_MAX_W,
@@ -151,6 +146,8 @@ export function HomeworkCloseEnding({ slide, ctx }: SvgTemplateProps) {
         </text>
       ))}
 
+      {headed && headed.dropped > 0 ? <g data-dropped={headed.dropped} data-dropped-kind="item" /> : null}
+
       <line
         x1={RULE_X1}
         y1={RULE_Y}
@@ -197,13 +194,14 @@ export const layoutDef: LayoutDefinition = {
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX, headingRow: true },
   ],
   headingSet: ({ slide, ctx }) => {
-    // With bullets the face sets them and reads the heading for its language
-    // only. Without, the heading is the list itself: a line per item, each on
-    // one line, no more than the face draws.
-    if (boundaryBulletItems(slide, ITEM_MAX).length > 0) return "whole"
+    // With bullets the heading is the list's first row, set on one line like
+    // an item. Without, the heading is the list itself: a line per item, each
+    // on one line, no more than the face draws.
+    const headed = headedBulletRows(slide, ITEM_MAX)
+    if (headed) return writesHeading(slide) && fitItem(headed.lines[0]!, ctx.fonts).truncated ? "cut" : "whole"
     const lines = splitActionLinesAll(slide.heading ?? "")
     return lines.length > ITEM_MAX || lines.some((line) => fitItem(line, ctx.fonts).truncated) ? "cut" : "whole"
   },

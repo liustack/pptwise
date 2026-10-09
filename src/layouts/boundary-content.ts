@@ -72,3 +72,34 @@ export function boundaryBulletItems(slide: HasComponents, itemCapacity: number):
   if (block?.type !== "bullets") return []
   return drawableItems(block.items).slice(0, itemCapacity)
 }
+
+/** Whether the page's heading has anything for a face to draw. */
+export function writesHeading(slide: { heading?: string }): boolean {
+  return stripEmphasis(slide.heading ?? "").trim().length > 0
+}
+
+/**
+ * How many items of an accepted block `slot` draws on this page: its
+ * `itemCapacity`, one fewer on a page whose heading takes the slot's first
+ * row (`LayoutSlot.headingRow`). The face draws this many and validate
+ * holds the page to it, so the two never disagree.
+ */
+export function slotItemRoom(slot: { itemCapacity?: number; headingRow?: true }, slide: HasComponents & { heading?: string }): number | undefined {
+  if (slot.itemCapacity === undefined) return undefined
+  return slot.headingRow && writesHeading(slide) && boundaryBulletItems(slide, Infinity).length > 0 ? slot.itemCapacity - 1 : slot.itemCapacity
+}
+
+/**
+ * The rows a face with `rows` fixed list rows sets from the page's bullets:
+ * the heading in the first row when the page has one (`LayoutSlot.headingRow`),
+ * on one line, then the bullets' drawable items, and how many items had no
+ * row left. The rows keep the authored strings, markers and all. Undefined
+ * on a page with no drawable bullets, where the face sets its heading as the
+ * list.
+ */
+export function headedBulletRows(slide: HasComponents & { heading?: string }, rows: number): { lines: string[]; dropped: number } | undefined {
+  const items = boundaryBulletItems(slide, Infinity)
+  if (items.length === 0) return undefined
+  const all = writesHeading(slide) ? [(slide.heading ?? "").trim().replace(/\s+/gu, " "), ...items] : items
+  return { lines: all.slice(0, rows), dropped: Math.max(0, all.length - rows) }
+}

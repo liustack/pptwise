@@ -1271,7 +1271,6 @@ export const LEGACY_FACE_SAMPLES = [
     slides: [
       {
         type: "ending",
-        heading: "海外仓",
         subheading: "拟稿：运营部 · 审定：总经理办公会\n抄送：财务部 · 供应链部 · 二〇二六年八月二十三日",
         components: [
           {
@@ -1403,7 +1402,6 @@ export const LEGACY_FACE_SAMPLES = [
     slides: [
       {
         type: "ending",
-        heading: "课后",
         subheading: "下一讲 · 信号与承诺：怎么让威胁可信",
         components: [
           {

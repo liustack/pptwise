@@ -92,15 +92,28 @@ describe("ending-defense-close-ending — board geometry", () => {
 
   it("reads bullets as the list and subheading as the sign-off", () => {
     const withBullets = slide({
-      heading: "ignored as list",
+      heading: undefined,
       subheading: SIGNOFF,
       components: [{ type: "bullets", items: ITEMS }],
     })
     const { root } = renderEnding("thesis", withBullets)
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
-    expect(texts).toContain(ITEMS[0])
-    expect(texts).toContain(SIGNOFF)
-    expect(texts).not.toContain("ignored as list")
+    expect(texts).toEqual(expect.arrayContaining([...ITEMS, SIGNOFF]))
+  })
+
+  it("sets a heading beside bullets in the list's first row", () => {
+    const withBullets = slide({
+      heading: "研究结论",
+      subheading: SIGNOFF,
+      components: [{ type: "bullets", items: ITEMS.slice(0, 2) }],
+    })
+    const { root } = renderEnding("thesis", withBullets)
+    const rows = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("font-weight") === "700")
+    expect(rows.map((t) => [t.getAttribute("y"), t.textContent])).toEqual([
+      ["240", "研究结论"],
+      ["316", ITEMS[0]],
+      ["392", ITEMS[1]],
+    ])
   })
 
   it("uses tokens, not baked thesis hex, when another theme draws it", () => {

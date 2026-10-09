@@ -16,7 +16,6 @@ const LECTURE_HEX = ["#1C2823", "#26342E", "#2E4038", "#E9C46A", "#EFF3EC", "#A9
 function slide(extras: Partial<Slide> = {}): Slide {
   return {
     type: "ending",
-    heading: "课后",
     subheading: NEXT,
     components: [{ type: "bullets", items: ITEMS }],
     ...extras,
@@ -100,17 +99,28 @@ describe("ending-next-lecture-ending — board geometry", () => {
     expect(joined).toContain("AFTER")
   })
 
-  it("reads the first two bullets as the list and keeps 课后 as the kicker", () => {
+  it("reads the first two bullets as the list, declares the rest, and keeps 课后 as the kicker", () => {
     const three = slide({
-      components: [{ type: "bullets", items: [...ITEMS, "第三项不该出现"] }],
+      components: [{ type: "bullets", items: [...ITEMS, "第三项没有行"] }],
     })
     const { root } = renderEnding("lecture", three)
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
     expect(texts).toContain("课后")
     expect(texts).toContain(ITEMS[0])
     expect(texts).toContain(ITEMS[1])
-    expect(texts).not.toContain("第三项不该出现")
+    expect(texts).not.toContain("第三项没有行")
     expect(texts).toContain(NEXT)
+    const mark = root.querySelector("[data-dropped]")
+    expect([mark?.getAttribute("data-dropped"), mark?.getAttribute("data-dropped-kind")]).toEqual(["1", "item"])
+  })
+
+  it("sets a heading beside bullets in the list's first row", () => {
+    const { root } = renderEnding("lecture", slide({ heading: "本周", components: [{ type: "bullets", items: ITEMS.slice(0, 1) }] }))
+    const rows = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("x") === "96" && t.textContent !== "课后" && t.textContent !== NEXT)
+    expect(rows.map((t) => [t.getAttribute("y"), t.textContent])).toEqual([
+      ["270", "本周"],
+      ["350", ITEMS[0]],
+    ])
   })
 
   it("falls back to newline-split heading when bullets are missing", () => {
@@ -131,7 +141,6 @@ describe("ending-next-lecture-ending — board geometry", () => {
   it("Latin heading uses AFTER with tracking", () => {
     const latin = {
       type: "ending",
-      heading: "Read chapters 1 and 2",
       subheading: "Next: signaling",
       components: [{ type: "bullets", items: ["Read chapters 1 and 2", "Finish problem set 3.1"] }],
     } as Slide
@@ -194,7 +203,6 @@ describe("ending-next-lecture-ending — shared pool", () => {
 
   it("does not paint an overflow mark", () => {
     const long = slide({
-      heading: "课后",
       components: [{ type: "bullets", items: ["读".repeat(80), "做".repeat(80)] }],
     })
     const { markup } = renderEnding("lecture", long)

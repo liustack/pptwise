@@ -252,6 +252,12 @@ export const layoutDef: LayoutDefinition = {
     { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "meta", accepts: [] },
   ],
+  // The pad holds one call to action: the subheading on a page whose heading
+  // is the list, the heading on a page whose bullets are.
+  subheading: {
+    beside: "bullets",
+    none: "with bullets the list comes from them and the heading is the call to action in the pad, so fold the subheading into the heading or a bullet, or remove it",
+  },
   headingSet: ({ slide, ctx }) => {
     // With bullets the heading is the call to action in the pad. Without, it
     // is the action list itself: three lines at most, each on one line (a

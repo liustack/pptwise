@@ -40,7 +40,7 @@ import { deckWritesChinese } from "./lib/conf-labels"
 import { componentFace, resolveEffectiveFace } from "./render/layout-selection"
 import { resolvePageRenderContext } from "./render/page-context"
 import { MOTIFS_THAT_SET_THE_KICKER } from "./motifs/kicker-roles"
-import { boundarySlotBlocks, drawableItems } from "./layouts/boundary-content"
+import { boundaryBulletItems, boundarySlotBlocks, drawableItems, slotItemRoom } from "./layouts/boundary-content"
 import { findImageSelection } from "./layouts/find-image"
 import { bodyStatementLines } from "./layouts/minimal-shared"
 import { headingRoom, headingVerdict, type HeadingCtx, type HeadingPage } from "./layouts/heading-set"
@@ -524,6 +524,9 @@ function checkSubheadingDrawn(ir: PptxIR, theme: ThemeDefinition): ValidationIss
       if (bodyStatementLines(slide) === undefined) return
       const body = slide.components[0]!.type
       message = `face "${layout.id}" sets one line under its claim, and this page's ${body} fills it — fold the subheading into the heading or the ${body}, or remove it`
+    } else if (place.beside === "bullets") {
+      if (boundaryBulletItems(slide, Infinity).length === 0) return
+      message = `face "${layout.id}" has no place for a subheading on a page with bullets — ${place.none}`
     } else {
       message = `face "${layout.id}" has no place for a subheading — ${place.none}`
     }
@@ -621,14 +624,18 @@ function checkBoundaryItemCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
         const raw: readonly unknown[] = list
         const strings = raw.filter((item): item is string => typeof item === "string")
         const count = strings.length === raw.length ? drawableItems(strings).length : raw.length
-        if (count <= slot.itemCapacity) continue
+        // A face that sets the heading in the list's first row has one row
+        // fewer for the list on a page with a heading.
+        const room = slotItemRoom(slot, slide)!
+        if (count <= room) continue
+        const headed = room < slot.itemCapacity
         errors.push({
           path: `slides.${i}.components`,
           page: i + 1,
           ...(slide.id !== undefined ? { slideId: slide.id } : {}),
-          message: `face "${layout.id}" draws at most ${slot.itemCapacity} item${
-            slot.itemCapacity === 1 ? "" : "s"
-          } from a "${component.type}" block, and this "${slide.type}" page has ${count} — shorten the list or move it to a content slide`,
+          message: `face "${layout.id}" draws at most ${room} item${room === 1 ? "" : "s"} from a "${component.type}" block${
+            headed ? ", since it sets the heading in the list's first row," : ""
+          } and this "${slide.type}" page has ${count} — shorten the list${headed ? ", remove the heading" : ""} or move it to a content slide`,
         })
       }
     }

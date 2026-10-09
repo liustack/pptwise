@@ -87,15 +87,28 @@ describe("ending-homework-close-ending — board geometry", () => {
 
   it("reads bullets as the list and subheading as the preview", () => {
     const withBullets = slide({
-      heading: "ignored as list",
+      heading: undefined,
       subheading: PREVIEW,
       components: [{ type: "bullets", items: ITEMS }],
     })
     const { root } = renderEnding("homeroom", withBullets)
     const texts = Array.from(root.querySelectorAll("text")).map((t) => t.textContent ?? "")
-    expect(texts).toContain(ITEMS[0])
-    expect(texts).toContain(PREVIEW)
-    expect(texts).not.toContain("ignored as list")
+    expect(texts).toEqual(expect.arrayContaining([...ITEMS, PREVIEW]))
+  })
+
+  it("sets a heading beside bullets in the list's first row", () => {
+    const withBullets = slide({
+      heading: "今晚作业",
+      subheading: PREVIEW,
+      components: [{ type: "bullets", items: ITEMS.slice(0, 2) }],
+    })
+    const { root } = renderEnding("homeroom", withBullets)
+    const rows = Array.from(root.querySelectorAll("text")).filter((t) => t.getAttribute("x") === "96" && t.getAttribute("font-weight") === "700")
+    expect(rows.map((t) => [t.getAttribute("y"), t.textContent])).toEqual([
+      ["256", "今晚作业"],
+      ["336", ITEMS[0]],
+      ["416", ITEMS[1]],
+    ])
   })
 
   it("uses HOMEWORK when the heading is Latin", () => {
