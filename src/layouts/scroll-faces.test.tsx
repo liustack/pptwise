@@ -177,6 +177,26 @@ describe("scroll-chapter", () => {
   })
 })
 
+describe("the seal on the cover and the close", () => {
+  // The seal is cut with one character. It used to print a stamp's first
+  // character and never its date, with nothing to say so.
+  it.each([
+    ["scroll-cover", 0],
+    ["scroll-ending", 1],
+  ] as const)("%s cuts a one-character stamp, and declares one it cannot hold instead of cutting part of it", (_face, index) => {
+    const pages = (stamp: Slide["stamp"]) => deck([cover({ stamp }), ending({ stamp })])
+    const one = draw(pages({ text: "讲" }), index)
+    expect(one.querySelector("[data-scroll-seal]")!.getAttribute("data-scroll-seal")).toBe("讲")
+    expect(one.querySelector("[data-dropped]")).toBeNull()
+    for (const stamp of [{ text: "已决定" }, { text: "讲", date: "二〇二六" }]) {
+      const root = draw(pages(stamp), index)
+      // The seal stays the hall's, as on a page with no stamp, and the stamp is declared lost.
+      expect(root.querySelector("[data-scroll-seal]")!.getAttribute("data-scroll-seal")).toBe("文")
+      expect(root.querySelector("[data-dropped='1'][data-dropped-kind='label']")).not.toBeNull()
+    }
+  })
+})
+
 describe("scroll-ending", () => {
   it("signs the scroll off a clause a column, with the hall, the date and the seal", () => {
     const root = draw(deck([cover(), ending()]), 1)

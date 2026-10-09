@@ -1,5 +1,7 @@
 import type React from "react"
+import type { Slide } from "@/ir"
 import type { ComponentCtx } from "../../components/types"
+import { sealStudioGlyph } from "../minimal-shared"
 import { inkToward } from "../../components/tag"
 import { parseEmphasis, stripEmphasis, type EmphasisHeadingLayout } from "../../render/emphasis"
 import { Icon } from "../../render/icons"
@@ -564,6 +566,20 @@ export function joinColumnLabels(parts: readonly (string | null | undefined)[]):
 
 /** A seal's corner and its character's size against the seal's. */
 const SEAL = { r: 3, glyph: 0.62 } as const
+
+/**
+ * The character a seal is cut with: the page's `stamp` when the seal holds
+ * it whole, one character with no date line, and otherwise the hall's first
+ * character, as on a page without a stamp. A seal used to print a stamp's
+ * first character and never its date, so 「已决定」 came out as 「已」 with
+ * nothing to say so. `dropped` is true for a stamp the seal cannot hold,
+ * which the face declares (`data-dropped`) instead of printing part of it.
+ */
+export function sealOf(stamp: Slide["stamp"], organization: string | undefined): { glyph: string | undefined; dropped: boolean } {
+  const text = stamp ? stripEmphasis(stamp.text).trim() : ""
+  if (stamp && Array.from(text).length === 1 && !stamp.date?.trim()) return { glyph: text, dropped: false }
+  return { glyph: sealStudioGlyph(organization), dropped: stamp !== undefined }
+}
 
 /**
  * A square seal in cinnabar with one character cut in white, the way a
