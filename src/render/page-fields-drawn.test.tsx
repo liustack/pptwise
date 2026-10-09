@@ -286,7 +286,6 @@ const PENDING = new Set([
   "ledger × photo (image-split) × subheading",
   "swiss × photo (image-top) × decor.text",
   "swiss × photo (image-top) × subheading",
-  "thesis × cover (manuscript-cover) × subheading",
 ])
 
 describe("a page's own fields reach the page, or the engine says they did not", () => {

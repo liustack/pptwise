@@ -22,8 +22,11 @@ import { fitManuscriptTitle, MANUSCRIPT_LEFT } from "./manuscript-shared"
  * 报告」），13px 灰色粗体、字距 4px，下面一条学者金细线到 x760。题目 40/60
  * 衬线粗体祖母绿，从 y190 起，作者在标题里写的换行就是折行处（「渐进式延迟
  * 法定退休年龄」换行「对 50 至 60 岁……」），没写换行时一行放得下就一行、放不
- * 下在逗号或冒号处断。题目下一条 60px 宽、3px 粗的金线（y352）。再下面是页面
- * 的 `fields`，最多四行：字段名 15/30 灰色粗体、字距 2px，中文字段名按最长
+ * 下在逗号或冒号处断。题目下一条 60px 宽、3px 粗的金线（y352）。页面有
+ * `subheading` 时，副题排在题目下、金线上方，用字段值那一级的 17/30 衬线粗体
+ * 墨色，最多两行，金线和 fields 按需整体下移，副题下到金线至少留出两行题目下
+ * 的 42px。下移后 fields 压到页脚说明上方的底线，就少排一行副题，一行也放不下
+ * 就声明丢弃（`data-dropped`），不截半句。再下面是页面的 `fields`，最多四行：字段名 15/30 灰色粗体、字距 2px，中文字段名按最长
  * 的一个分散对齐（「日  期」），字段值 17/30 衬线粗体墨色，值下一条发丝线。
  * 左下角是页面的 `footnote`（「图为 AI 生成的示意图」）。右边 460 宽满高一张
  * 照片（页面自己的 `background` 资产）。
@@ -37,7 +40,32 @@ const TITLE = { top: 190, size: 40, lineHeight: 60, minPt: 30, w: 720, maxLines:
 const SHORT_RULE = { y: 352, w: 60, h: 3 } as const
 const FIELDS = { top: 400, pitch: 46, h: 30, label: { size: 15, tracking: 2, w: 120 }, value: { x: 196, size: 17, w: 404 }, rule: { dy: 34, right: 600 }, max: 4 } as const
 const CAPTION = { top: 640, size: 11, lineHeight: 20, w: 600 } as const
+/**
+ * The subtitle under the title, in the fields' value type. `gap` is the air
+ * under the title's last line box, `ruleGap` the room a two-line title
+ * leaves over the gold rule (352 under 310), kept under the subtitle.
+ */
+const SUBTITLE = { gap: 8, size: 17, lineHeight: 30, maxLines: 2, ruleGap: 42 } as const
+/** The lowest a field's hairline may sit once the subtitle moves the fields down: 24px over the caption's box. */
+const FIELDS_FLOOR = CAPTION.top - 24
 const PHOTO = { x: 820 } as const
+
+/**
+ * The subtitle set whole under the title, and how far it moves the gold rule
+ * and the fields down: two lines, or one, whichever keeps the last field's
+ * hairline over `FIELDS_FLOOR`. `null` when neither does.
+ */
+function placeSubtitle(text: string, titleBottom: number, rows: number, ctx: SvgTemplateProps["ctx"]) {
+  const top = titleBottom + SUBTITLE.gap
+  const lastRule = rows > 0 ? FIELDS.top + (rows - 1) * FIELDS.pitch + FIELDS.rule.dy : null
+  for (let lines = SUBTITLE.maxLines; lines >= 1; lines--) {
+    const layout = fitManuscript(text, { width: TITLE.w, size: SUBTITLE.size, lineHeight: SUBTITLE.lineHeight, maxLines: lines, serif: true, bold: true }, ctx)
+    if (!layout) continue
+    const shift = Math.max(0, top + layout.lines.length * SUBTITLE.lineHeight + SUBTITLE.ruleGap - SHORT_RULE.y)
+    if (lastRule === null || lastRule + shift <= FIELDS_FLOOR) return { layout, top, shift }
+  }
+  return null
+}
 
 /** Whether a label is all Chinese, so it can be spread to the width of the longest. */
 function cjkLabel(text: string): boolean {
@@ -57,6 +85,9 @@ export function ManuscriptCover({ ir, slide, ctx }: SvgTemplateProps) {
   const title = authoredFit ? { lines: authored, fontSize: TITLE.size, lineHeight: TITLE.lineHeight, truncated: false } : fitManuscriptTitle(authored.join(""), ctx, TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w)
   const titleInk = manuscriptText(inks.deep, ground, title.fontSize)
   const fields = (slide.fields ?? []).slice(0, FIELDS.max)
+  const subtitleText = slide.subheading?.trim() ? slide.subheading : null
+  const subtitle = subtitleText ? placeSubtitle(subtitleText, TITLE.top + title.lines.length * title.lineHeight, fields.length, ctx) : null
+  const shift = subtitle?.shift ?? 0
   const labelWidths = fields.map((f) => manuscriptTrackedWidth(f.label.trim(), FIELDS.label.size, FIELDS.label.tracking, ctx, { bold: true }))
   const spread = Math.max(0, ...labelWidths)
   const allCjk = fields.length > 0 && fields.every((f) => cjkLabel(f.label.trim()))
@@ -93,11 +124,13 @@ export function ManuscriptCover({ ir, slide, ctx }: SvgTemplateProps) {
           </text>
         ))}
       </g>
-      <rect data-manuscript-gold="" x={MANUSCRIPT_LEFT} y={SHORT_RULE.y - SHORT_RULE.h / 2} width={SHORT_RULE.w} height={SHORT_RULE.h} fill={inks.gold} />
+      {subtitle ? <g data-manuscript-subtitle="">{paintManuscript(subtitle.layout, { ctx, x: MANUSCRIPT_LEFT, top: subtitle.top, serif: true, bold: true, fill: manuscriptText(inks.ink, ground, SUBTITLE.size) })}</g> : null}
+      {subtitleText && !subtitle ? <g data-dropped={1} data-dropped-kind="label" /> : null}
+      <rect data-manuscript-gold="" x={MANUSCRIPT_LEFT} y={SHORT_RULE.y + shift - SHORT_RULE.h / 2} width={SHORT_RULE.w} height={SHORT_RULE.h} fill={inks.gold} />
       {fields.length > 0 ? (
         <g data-manuscript-fields="">
           {fields.map((f, i) => {
-            const top = FIELDS.top + i * FIELDS.pitch
+            const top = FIELDS.top + shift + i * FIELDS.pitch
             const name = f.label.trim()
             const chars = Array.from(name).length
             // A shorter Chinese name is spread to the longest one's width, as a form sets 「日  期」.
