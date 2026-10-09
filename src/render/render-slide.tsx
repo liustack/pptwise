@@ -68,6 +68,11 @@ export interface DrawnSlide extends SlideDrops {
  */
 export function drawSlide(ir: PptxIR, slide: Slide, index: number, theme: ThemeDefinition): DrawnSlide {
   const root = parseSvgRoot(slideToSvgMarkup(ir, slide, index, theme))
+  return { root, ...droppedIn(root) }
+}
+
+/** The content a drawn page declared dropped: every `data-dropped` marker under `root`, summed and by unit. */
+export function droppedIn(root: Element): SlideDrops {
   const byKind = new Map<DropKind, number>()
   let dropped = 0
   for (const el of Array.from(root.querySelectorAll("[data-dropped]"))) {
@@ -78,7 +83,7 @@ export function drawSlide(ir: PptxIR, slide: Slide, index: number, theme: ThemeD
     dropped += count
   }
   const drops = Array.from(byKind, ([kind, count]) => ({ kind, count }))
-  return { root, dropped, drops }
+  return { dropped, drops }
 }
 
 /**

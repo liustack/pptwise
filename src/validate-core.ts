@@ -44,7 +44,8 @@ import { boundaryBulletItems, boundarySlotBlocks, drawableItems, slotItemRoom } 
 import { findImageSelection } from "./layouts/find-image"
 import { bodyStatementLines } from "./layouts/minimal-shared"
 import { headingRoom, headingVerdict, type HeadingCtx, type HeadingPage } from "./layouts/heading-set"
-import type { TextRoom } from "./layouts/text-room"
+import { textRoom, type TextRoom } from "./layouts/text-room"
+import { subheadingSet } from "./render/boundary-loss"
 import { deckFigureStyle } from "./lib/figure-style"
 import { stripEmphasis } from "./render/emphasis"
 import type { LayoutDefinition } from "./layouts/registry"
@@ -707,6 +708,48 @@ function checkBoundaryHeadingFit(ir: PptxIR, theme: ThemeDefinition): Validation
 }
 
 /**
+ * Boundary-page subheading hard gate.
+ *
+ * A cover, chapter or ending face sets the subheading in a place of its own
+ * design: a line under the title, a pill at the foot, a grey line beside a
+ * button. Where it could not hold the words it cut them or left them off
+ * with a mark, and validate passed the page: only the audit or the export
+ * said so, after the deck was written. How much room the subheading gets
+ * moves with the rest of the page (the button's own words, the lines the
+ * title took), so the face is asked by drawing the page
+ * (`render/boundary-loss.ts`), the same drawing the export reads, and a
+ * subheading it would not set whole is refused here, quoting how much of
+ * it the face holds.
+ */
+function checkBoundarySubheadingFit(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder) return
+    if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
+    const text = slide.subheading ?? ""
+    if (!stripEmphasis(text).trim()) return
+    const verdict = subheadingSet(ir, i, theme)
+    const said = verdict(text)
+    if (said === "whole") return
+    const room = textRoom(text, (prefix) => verdict(prefix) === "whole")
+    const effective = resolveEffectiveFace(ir, slide, theme)
+    const face = `face "${effective.layoutId}"`
+    const loses = said === "cut" ? "cut the rest off" : "leave it off the page"
+    const message =
+      room.limit === 0
+        ? `${face} has no room for this ${slide.type} page's subheading beside what else the page carries, so it would ${said === "cut" ? "cut it" : "leave it off the page"}. Remove the subheading, or shorten the heading and what shares the page with it.`
+        : `${face} holds ${heldPart(room)} of this ${slide.type} subheading's ${room.count} ${room.unit}, so the face would ${loses}. Shorten the subheading.`
+    errors.push({
+      path: `slides.${i}.subheading`,
+      page: i + 1,
+      ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+      message: `${message} (a deck project's spec writes it as the page's summary)`,
+    })
+  })
+  return errors
+}
+
+/**
  * Duplicate slide id hard gate (W5 task 1): `slide.id` is a stable page
  * identity spec/assemble stamps on (spec-adjacent — see `ir/index.ts`'s
  * `id` docstring), so two slides sharing one within the same deck is always
@@ -1128,6 +1171,10 @@ export function validateIr(
   // checkIrQuality's editorial-budget warn/error split below.
   const assetByteErrors = checkAssetBytes(r.data)
   if (assetByteErrors.length > 0) return withNormalized({ ok: false, errors: assetByteErrors })
+  // Drawn last among the hard gates: it draws the page, so every structural
+  // gate above has passed by then and the drawing reads a sound page.
+  const boundarySubheadingErrors = checkBoundarySubheadingFit(r.data, theme)
+  if (boundarySubheadingErrors.length > 0) return withNormalized({ ok: false, errors: boundarySubheadingErrors })
   // Narrative resolution (spec §5's defaults chain, W3 task 2; renamed from
   // "scenario resolution" spec §8.1). Both branches of the schema's
   // `narrative` union (NarrativeProfileInputSchema in ir/index.ts) are open

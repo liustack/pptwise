@@ -153,6 +153,12 @@ export interface Lexicon {
    * whose measure cannot set it whole would have validate refuse the page.
    */
   readonly faceTitles?: Readonly<Record<string, string>>
+  /**
+   * The subheading a face with a narrower subheading measure than the
+   * others is shown with, by face id, its meaning kept. validate refuses a
+   * cover, chapter or ending subheading its face would cut.
+   */
+  readonly faceSubtitles?: Readonly<Record<string, string>>
   /** Page headings — at least 12. */
   readonly headings: Pool
   /** Short sub-headings / eyebrow lines. */
@@ -895,6 +901,10 @@ const en: Lexicon = {
   faceTitles: {
     "left-anchor": "CloudSeek Collaboration Q2 2026 Review",
     "show-plate": "Customer and Revenue Mix",
+  },
+  // show-finale's closing line runs one line short of the verdict sentence.
+  faceSubtitles: {
+    "show-finale": "Renewals and activity both improved. The quarter beat plan.",
   },
 
   chapters: [
