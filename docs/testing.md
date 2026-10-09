@@ -189,17 +189,7 @@ osascript scripts/ppt-repair-check.applescript "$PWD/.e2e-out/page-numbers.pptx"
 
 The required result is `OK`. A repair dialog, repaired-title window, or timeout is a release blocker. Record which representative files were probed when handing off an export change.
 
-PowerPoint for Mac is sandboxed. A file outside its container opens a "Grant File Access" prompt the probe cannot answer, and the probe then reports an AppleEvent timeout or error -9074 that says nothing about the file. Copy the files into the container first and probe them there:
-
-```bash
-D=~/Library/Containers/com.microsoft.Powerpoint/Data/Documents/pptwise-probe
-mkdir -p "$D" && cp .e2e-out/basic.pptx .e2e-out/webp.pptx .e2e-out/page-numbers.pptx "$D"/
-osascript scripts/ppt-repair-check.applescript "$D/basic.pptx"
-osascript scripts/ppt-repair-check.applescript "$D/webp.pptx"
-osascript scripts/ppt-repair-check.applescript "$D/page-numbers.pptx"
-```
-
-If an earlier run left PowerPoint stuck on that prompt, quit it before probing again.
+The probe leaves the maintainer's PowerPoint alone. It copies the file under a unique name into PowerPoint's sandbox temp folder (`~/Library/Containers/com.microsoft.Powerpoint/Data/tmp/`), because PowerPoint for Mac is sandboxed and a file outside its container opens a "Grant File Access" prompt the probe cannot answer. It opens that copy, reads the verdict off the copy's own window, and closes only that presentation. A PowerPoint that was already running stays open with its other files untouched. One the probe had to launch is quit again. When the copy cannot be closed (a repair dialog is still up, or the open timed out), the probe leaves the copy and PowerPoint as they are for a person to look at.
 
 ## Acceptance by change type
 
