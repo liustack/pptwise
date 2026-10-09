@@ -12,6 +12,7 @@ import {
   pullQuoteText,
 } from "../minimal-shared"
 import {
+  contextFits,
   fitHeroLine,
   fitHeroSource,
   fitPullQuoteSource,
@@ -148,6 +149,8 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
     lineHeightRatio: 1.4,
   })
   const context = pullQuoteContext(slide)
+  // A context line this page cannot set whole goes to the shared face.
+  if (!contextFits(context, { maxWidth: 920, fontSize: 18, fontFamily: fonts.body })) return null
   const attr = fitPullQuoteSource(slide, { maxWidth: 920, fontSize: 20, fontFamily: fonts.body })
   const last = quote.lines.length - 1
   // The two rules are the frame the quote sits in, so they follow the block

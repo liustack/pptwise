@@ -3,7 +3,7 @@ import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroValue, pullQuoteContext, pullQuoteText } from "../minimal-shared"
-import { fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, pad2, quoteBlockBaseline, sourcePastFoot } from "./shared"
+import { contextFits, fitHeroLine, fitHeroSource, fitPullQuoteSource, fitSparseHeading, fitSparseQuote, fitStatementSource, pad2, quoteBlockBaseline, sourcePastFoot } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** journal 稀排脸：巨引号、期号巨数、报头格言。不画 motif 报头双线。 */
@@ -17,6 +17,8 @@ export function pullQuote({ slide, ctx }: SvgTemplateProps) {
     lineHeightRatio: 1.44,
   })
   const context = pullQuoteContext(slide)
+  // A context line this page cannot set whole goes to the shared face.
+  if (!contextFits(context, { maxWidth: 880, fontSize: 18, fontFamily: fonts.body })) return null
   const attr = fitPullQuoteSource(slide, { maxWidth: 880, fontSize: 19, fontFamily: fonts.heading }, "\u2014\u2014 ")
   const last = quote.lines.length - 1
   const firstY = quoteBlockBaseline(396, quote)
