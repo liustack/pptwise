@@ -24,10 +24,11 @@
 import { beforeAll, describe, expect, it } from "vitest"
 import { renderSlideSvg, validateIr } from "@/api"
 import type { PageKind, PptxIR, Slide } from "@/ir"
-import { irJsonSchema } from "@/ir/json-schema"
+import { componentJsonSchema, irJsonSchema } from "@/ir/json-schema"
 import { installNodePlatform } from "@/platform/node"
 import { CANONICAL_THEME_IDS } from "@/themes"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
+import { COMPONENT_BUILDERS } from "../../evals/gallery/corpus/components"
 import { corpusAssets, layoutFaceSlot, layoutPage, type CorpusAssets } from "../../evals/gallery/corpus/decks"
 import { LEXICONS, type LanguageId } from "../../evals/gallery/corpus/lexicon"
 import { nativeLexiconFor } from "../../evals/gallery/corpus/native"
@@ -179,6 +180,11 @@ function marks(markup: string): number {
   return n
 }
 
+/** How many `data-dropped` elements the page carries: what its face declined. */
+function drops(markup: string): number {
+  return Array.from(parseSvgRoot(markup).querySelectorAll("[data-dropped]")).filter((el) => Number(el.getAttribute("data-dropped")) > 0).length
+}
+
 /** A refusal validate gave this field on page 1. */
 function refusesField(errors: readonly { path: string; message: string }[], field: string): boolean {
   const named = new RegExp(`\\b${field}\\b`, "u")
@@ -217,6 +223,8 @@ function routes(): Route[] {
 /** A loss nothing declared: the theme, the slot, the face, the field and the words that went missing. */
 interface Silent {
   route: Route
+  /** The block the page carried besides its gallery body, when the loss was found with one (`companions`). */
+  beside?: string
   probe: Probe
 }
 
@@ -235,19 +243,99 @@ function validated(base: PptxIR, slide: Record<string, unknown>, deck: Record<st
 }
 
 /**
- * The silent losses on one route: the face's own gallery page, every
- * schema field filled, refused fields taken off, rendered once with all of
- * them and once without each one that went missing.
+ * `block` with only the properties its schema requires, on the block and on
+ * each item of its lists: the plainest block of its type, for a face that
+ * takes a block's bare shape and declines the corpus's fuller one.
+ */
+function plainBlock(type: string, block: Record<string, unknown>): Record<string, unknown> {
+  const schema = componentJsonSchema(type) as { required?: string[]; properties?: Record<string, { items?: { required?: string[] } }> }
+  const required = new Set(schema.required ?? [])
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(block)) {
+    if (!required.has(key)) continue
+    const itemRequired = schema.properties?.[key]?.items?.required
+    out[key] =
+      Array.isArray(value) && itemRequired !== undefined
+        ? value.map((item: Record<string, unknown>) => Object.fromEntries(Object.entries(item).filter(([field]) => itemRequired.includes(field))))
+        : value
+  }
+  return out
+}
+
+/** The list a block carries, by the name its schema gives it. */
+function listOf(component: Record<string, unknown>): { key: string; list: unknown[] } | undefined {
+  for (const key of ["items", "milestones"]) if (Array.isArray(component[key])) return { key, list: component[key] as unknown[] }
+  return undefined
+}
+
+/**
+ * The gallery page of a cover, chapter or ending face, once more for each
+ * body slot the gallery page leaves empty, with a block that slot accepts.
+ *
+ * A boundary face's gallery page is its plainest page, and on many of them
+ * that is a page with no block at all. A face that reads a field one way
+ * when the page is bare and another way when a block is there was only ever
+ * swept bare: four ending faces set the heading as their list when a page
+ * had no bullets and drew no heading at all when it had some, and the sweep
+ * never wrote that page. So each empty slot gets the corpus's own block of
+ * each type it accepts, one at a time, holding as few items as the face
+ * draws whole on this page, the corpus's own items first and then their
+ * bare required shape, and the fields are swept again with it there. A
+ * block validate refuses, or the face declines, at every length and shape
+ * is not a page an author can ship.
+ */
+function companions(route: Route, base: PptxIR): { beside: string; slide: Record<string, unknown> }[] {
+  const page = base.slides[0] as unknown as Record<string, unknown>
+  if (!["cover", "chapter", "ending"].includes(page.type as string)) return []
+  const lex = route.own ? nativeLexiconFor(route.theme) : LEXICONS.zh
+  const carried = (page.components as { type: string }[]) ?? []
+  const bare = validated(base, page, {})
+  const bareDrops = bare.errors.length === 0 ? drops(renderSlideSvg(bare.ir!, 0)) : 0
+  const out: { beside: string; slide: Record<string, unknown> }[] = []
+  for (const slot of LAYOUT_REGISTRY[route.face]!.slots) {
+    if (slot.accepts === "any" || slot.accepts.length === 0) continue
+    if (carried.some((component) => slot.accepts.includes(component.type))) continue
+    for (const type of slot.accepts) {
+      const full = COMPONENT_BUILDERS[type]!(lex) as unknown as Record<string, unknown>
+      const found = [full, plainBlock(type, full)]
+        .flatMap((built) => {
+          const list = listOf(built)
+          return Array.from({ length: list?.list.length ?? 1 }, (_, i) => (list ? { ...built, [list.key]: list.list.slice(0, i + 1) } : built))
+        })
+        .map((block) => ({ ...page, components: [...carried, block] }))
+        .find((slide) => {
+          const result = validated(base, slide, {})
+          return result.errors.length === 0 && drops(renderSlideSvg(result.ir!, 0)) <= bareDrops
+        })
+      if (found) out.push({ beside: type, slide: found })
+    }
+  }
+  return out
+}
+
+/**
+ * The silent losses on one route: the face's own gallery page, and each of
+ * its `companions`, every schema field filled, refused fields taken off,
+ * rendered once with all of them and once without each one that went
+ * missing.
  */
 function sweep(route: Route, assets: Record<LanguageId, CorpusAssets>): Silent[] {
+  const lex = route.own ? nativeLexiconFor(route.theme) : LEXICONS.zh
+  const kind = ["cover", "chapter", "ending"].includes(route.slot) ? undefined : (route.slot as PageKind)
+  const base = layoutPage(route.face, lex, assets[lex.id], route.theme, kind)
+  return [
+    ...sweepPage(route, base, base.slides[0] as unknown as Record<string, unknown>),
+    ...companions(route, base).flatMap(({ beside, slide }) => sweepPage(route, base, slide).map((silent) => ({ ...silent, beside }))),
+  ]
+}
+
+/** The silent losses on one page of `route`, its fields filled over `page`. */
+function sweepPage(route: Route, base: PptxIR, page: Record<string, unknown>): Silent[] {
   // A swapped-in face gets the shared lexicon its gallery page is built
   // from: the corpus sizes some faces' bodies to it (six captions for
   // show-gallery's six frames), and the fields under test are the same
   // words either way.
   const lex = route.own ? nativeLexiconFor(route.theme) : LEXICONS.zh
-  const kind = ["cover", "chapter", "ending"].includes(route.slot) ? undefined : (route.slot as PageKind)
-  const base = layoutPage(route.face, lex, assets[lex.id], route.theme, kind)
-  const page = base.slides[0] as unknown as Record<string, unknown>
   const all = samples(lex.id === "en" ? EN : ZH)
   const offered = schemaFields(page.type as Slide["type"])
   const unanswered = offered.filter((field) => !(field in all) && !(field in NOT_WORDS_ON_THE_PAGE))
@@ -304,7 +392,7 @@ describe("a page's own fields reach the page, or the engine says they did not", 
       const silent = routes()
         .filter((route) => route.theme === theme)
         .flatMap((route) => sweep(route, assets))
-        .map(({ route, probe }) => `${route.theme} × ${route.slot} (${route.face}) × ${probe.field}${probe.part ? `.${probe.part}` : ""}`)
+        .map(({ route, beside, probe }) => `${route.theme} × ${route.slot} (${route.face}${beside ? ` + ${beside}` : ""}) × ${probe.field}${probe.part ? `.${probe.part}` : ""}`)
       expect([...new Set(silent)]).toEqual([])
     })
   }

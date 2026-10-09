@@ -18,7 +18,6 @@ const MEMO_HEX = ["#F6F1E7", "#FBF8F1", "#A63A2B", "#675E51", "#E4DFD2"]
 function slide(extras: Partial<Slide> = {}): Slide {
   return {
     type: "ending",
-    heading: "海外仓",
     subheading: SIGNOFF,
     components: [{ type: "bullets", items: ITEMS }],
     ...extras,
@@ -117,7 +116,17 @@ describe("ending-decision-close-ending — board geometry", () => {
     expect(texts).toContain(ITEMS[0])
     expect(texts).toContain(SIGNOFF_1)
     expect(texts).not.toContain("DECISION")
-    expect(texts).not.toContain("海外仓")
+  })
+
+  it("sets a heading beside bullets in the list's first row", () => {
+    const { root } = renderEnding("memo", slide({ heading: "海外仓", components: [{ type: "bullets", items: ITEMS.slice(0, 1) }] }))
+    const rows = Array.from(root.querySelectorAll("text")).filter(
+      (t) => t.getAttribute("font-weight") === "700" && t.getAttribute("x") === "96" && t.textContent !== "决定",
+    )
+    expect(rows.map((t) => [t.getAttribute("y"), t.textContent])).toEqual([
+      ["280", "海外仓"],
+      ["360", ITEMS[0]],
+    ])
   })
 
   it("falls back to splitting heading when bullets are absent", () => {
@@ -138,7 +147,6 @@ describe("ending-decision-close-ending — board geometry", () => {
   it("Latin copy uses DECISION and may track", () => {
     const latin = {
       type: "ending",
-      heading: "Hold the lease",
       subheading: "Draft: Ops",
       components: [{ type: "bullets", items: ["Renew East for two years", "Defer South build"] }],
     } as Slide
@@ -196,7 +204,6 @@ describe("ending-decision-close-ending — shared pool", () => {
 
   it("does not paint an overflow mark", () => {
     const long = slide({
-      heading: "海外仓",
       components: [{ type: "bullets", items: ["项".repeat(80), "条".repeat(80)] }],
     })
     const { markup } = renderEnding("memo", long)

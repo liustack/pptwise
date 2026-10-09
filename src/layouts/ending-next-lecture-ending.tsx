@@ -1,5 +1,5 @@
 import type { SvgTemplateProps } from "./types"
-import { boundaryBulletItems } from "./boundary-content"
+import { headedBulletRows, listRows, writesHeading } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
@@ -9,8 +9,8 @@ import type { HeadingCtx } from "./heading-set"
 
 /**
  * next-lecture-ending（第八波 pinOnly）：课后清单 + 下讲预告。kicker 按标
- * 题脚本切：CJK「课后」/ Latin `AFTER`。清单优先 bullets 前两项，否则按
- * 换行切 heading。底 border 细线 y430。下一讲取 subheading。构图抄
+ * 题脚本切：CJK「课后」/ Latin `AFTER`。有 bullets 时 heading 占第一行（与
+ * heading 当清单时同字号同位置），bullets 接在后面，否则按换行切 heading。底 border 细线 y430。下一讲取 subheading。构图抄
  * `.issues/design-boards/wave8/b4/Lecture.dc.html` ending：kicker y160 /
  * 22px，两条 y270/350，线 x96–1184 y430，预告 y510。
  *
@@ -63,17 +63,6 @@ function splitHomeworkLinesAll(text: string): string[] {
   return (byNewline.length > 1 ? byNewline : [trimmed]).filter((line) => !isKickerWord(line))
 }
 
-/** The lines this face draws of them: the first two. */
-function splitHomeworkLines(text: string): string[] {
-  return splitHomeworkLinesAll(text).slice(0, ITEM_MAX)
-}
-
-function homeworkItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = boundaryBulletItems(slide, ITEM_MAX)
-  if (bullets.length > 0) return bullets
-  return splitHomeworkLines(stripEmphasis(slide.heading ?? ""))
-}
-
 function scriptIsCjk(slide: SvgTemplateProps["slide"], items: string[]): boolean {
   if (hasCjk(slide.heading ?? "")) return true
   if (items.some((item) => hasCjk(item))) return true
@@ -93,7 +82,8 @@ function fitItem(item: string, fonts: HeadingCtx["fonts"]) {
 export function NextLectureEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const items = homeworkItems(slide)
+  const rows = headedBulletRows(slide, ITEM_MAX) ?? listRows(splitHomeworkLinesAll(stripEmphasis(slide.heading ?? "")), ITEM_MAX)
+  const items = rows.lines
   const cjk = scriptIsCjk(slide, items)
   const kickerText = cjk ? KICKER_CJK : KICKER_LATIN
   const kickerTracking = cjk ? undefined : KICKER_TRACKING
@@ -160,6 +150,8 @@ export function NextLectureEnding({ slide, ctx }: SvgTemplateProps) {
         ) : null,
       )}
 
+      {rows.dropped > 0 ? <g data-dropped={rows.dropped} data-dropped-kind="item" /> : null}
+
       <line
         data-depth="mid"
         x1={RULE_X1}
@@ -206,15 +198,16 @@ export const layoutDef: LayoutDefinition = {
   slideTypes: ["ending"],
   slots: [
     { name: "kicker", accepts: [] },
-    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX, headingRow: true },
     { name: "rule", accepts: [] },
     { name: "subheading", accepts: [] },
   ],
   headingSet: ({ slide, ctx }) => {
-    // With bullets the face sets them and reads the heading for its language
-    // only. Without, the heading is the list itself: a line per item, each on
-    // one line, no more than the face draws.
-    if (boundaryBulletItems(slide, ITEM_MAX).length > 0) return "whole"
+    // With bullets the heading is the list's first row, set on one line like
+    // an item. Without, the heading is the list itself: a line per item, each
+    // on one line, no more than the face draws.
+    const headed = headedBulletRows(slide, ITEM_MAX)
+    if (headed) return writesHeading(slide) && fitItem(headed.lines[0]!, ctx.fonts).truncated ? "cut" : "whole"
     const lines = splitHomeworkLinesAll(stripEmphasis(slide.heading ?? ""))
     return lines.length > ITEM_MAX || lines.some((line) => fitItem(line, ctx.fonts).truncated) ? "cut" : "whole"
   },

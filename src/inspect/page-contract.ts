@@ -35,6 +35,7 @@ import { CAPACITY } from "../audit/capacity"
 import { PACING_BUDGETS, resolveNarrative, type Pacing } from "../narrative"
 import { FULL_BODY_TYPES } from "../render/component-traits"
 import { contentPageDensity } from "../render/ir-quality"
+import { writesHeading } from "../layouts/boundary-content"
 import { componentFace, faceAcceptedComponentTypes, resolveEffectiveFace } from "../render/layout-selection"
 import type { PageSpec } from "../spec"
 import { PAGE_FILL_FIELDS } from "../spec/assemble"
@@ -302,13 +303,15 @@ function pageLimits(
       }
       const listed = slot.accepts.filter((type) => holdsItems(full, type))
       if (slot.itemCapacity !== undefined && listed.length > 0) {
+        // The heading takes the list's first row on a face that sets it there.
+        const headed = slot.headingRow === true && writesHeading(slide)
         limits.push({
           level: "error",
           measure: "items",
           per: "component",
           of: listed,
-          max: slot.itemCapacity,
-          source: `the face's ${slot.name} slot, blank items not counted`,
+          max: headed ? slot.itemCapacity - 1 : slot.itemCapacity,
+          source: `the face's ${slot.name} slot, blank items not counted${headed ? ", its first row set with the heading" : ""}`,
         })
       }
     }

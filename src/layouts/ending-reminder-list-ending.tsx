@@ -1,5 +1,5 @@
 import type { SvgTemplateProps } from "./types"
-import { boundaryBulletItems } from "./boundary-content"
+import { boundaryBulletItems, listRows } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
@@ -51,15 +51,10 @@ function splitActionLinesAll(text: string): string[] {
   return []
 }
 
-/** The heading's list lines this face draws: the first three. */
-function splitActionLines(text: string): string[] {
-  return splitActionLinesAll(text).slice(0, ITEM_MAX)
-}
-
-function reminderItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = boundaryBulletItems(slide, ITEM_MAX)
-  if (bullets.length > 0) return bullets
-  return splitActionLines(slide.heading ?? "")
+/** The reminder rows, from the bullets or from the heading written as a list, and how many lines had no row. */
+function reminderRows(slide: SvgTemplateProps["slide"]) {
+  const bullets = boundaryBulletItems(slide, Infinity)
+  return listRows(bullets.length > 0 ? bullets : splitActionLinesAll(slide.heading ?? ""), ITEM_MAX)
 }
 
 function numberedItem(item: string, index: number): string {
@@ -73,7 +68,8 @@ function numberedItem(item: string, index: number): string {
  * Each line is fitted to one line.
  */
 function setReminders(slide: SvgTemplateProps["slide"], fonts: HeadingCtx["fonts"]) {
-  const items = reminderItems(slide)
+  const rows = reminderRows(slide)
+  const items = rows.lines
   const fromBullets = boundaryBulletItems(slide, ITEM_MAX).length > 0
   const headingSource = fromBullets || items.length === 0 ? stripEmphasis(slide.heading ?? "") : ""
   const lines = items.map((item, i) => ({
@@ -85,7 +81,7 @@ function setReminders(slide: SvgTemplateProps["slide"], fonts: HeadingCtx["fonts
       fontFamily: fonts.body,
     }),
   }))
-  return { fromBullets, headingSource, lines }
+  return { fromBullets, headingSource, lines, dropped: rows.dropped }
 }
 
 /** The title's fit when the heading is set as a title. */
@@ -100,7 +96,7 @@ const TITLE_FIT = {
 export function ReminderListEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const { headingSource, lines } = setReminders(slide, fonts)
+  const { headingSource, lines, dropped } = setReminders(slide, fonts)
   const showTitle = headingSource.trim().length > 0
 
   const title = fitHeadingLines(headingSource, {
@@ -159,6 +155,8 @@ export function ReminderListEnding({ slide, ctx }: SvgTemplateProps) {
           {line.body.text}
         </text>
       ))}
+
+      {dropped > 0 ? <g data-dropped={dropped} data-dropped-kind="item" /> : null}
 
       {foot && renderEmphasisText(
         foot.segments,

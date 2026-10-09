@@ -90,28 +90,30 @@ const IR_WITH_PLACEHOLDER = {
   ],
 }
 
-// A rally KPI page its author painted `#777777`. The renderer sets the
-// labels in pure black, the one ink that reads on that grey, but the card
-// under them is shaded a step darker than the page, and there black stops at
-// about 4.06:1, under the 4.5:1 the labels need. (This fixture was an ink
-// statement page on the same grey until mid-tone grounds got pure black.)
+// A swiss row-cards page its author painted `#777777`. The renderer sets
+// the descriptions in pure black, the one ink that reads on that grey, but
+// softens them on the card, and there they stop at about 4.45:1, under the
+// 4.5:1 they need. (This fixture was an ink statement page on the same grey
+// until mid-tone grounds got pure black, then a rally KPI page until a card
+// on such a ground took its step where its labels read.)
 const IR_LOW_CONTRAST = {
   version: "5",
   filename: "cli-test-low-contrast",
-  theme: { id: "rally" },
+  theme: { id: "swiss" },
   slides: [
     {
       type: "content",
-      kind: "data",
+      kind: "points",
       id: "p-body",
-      heading: "Visits by quarter",
+      heading: "Three things",
       background: { kind: "color", value: "#777777" },
       components: [
         {
-          type: "kpi_cards",
+          type: "row_cards",
           items: [
-            { value: "62%", label: "Capacity used" },
-            { value: "8.4", label: "Days of stock" },
+            { title: "Signed", text: "New contract value grew by a fifth" },
+            { title: "Active", text: "Team activity rose to eighty eight percent" },
+            { title: "Onboarded", text: "Setup time fell from nine weeks to five" },
           ],
         },
       ],

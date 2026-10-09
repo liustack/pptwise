@@ -303,7 +303,10 @@ const WIDE_COMPONENT_TYPES = new Set<Component["type"]>(["architecture", "positi
  * the face never drew one, so the page shows the same without it.
  */
 function subheadingFor(layoutId: string, text: string | undefined): { subheading?: string } {
-  return typeof LAYOUT_REGISTRY[layoutId]?.subheading === "object" ? {} : { subheading: text }
+  // A face with no place for a subheading at all gets none. One that only
+  // has none beside bullets gets one, since its gallery page carries none.
+  const place = LAYOUT_REGISTRY[layoutId]?.subheading
+  return typeof place === "object" && place.beside === undefined ? {} : { subheading: text }
 }
 
 /**
@@ -880,7 +883,7 @@ export function layoutPage(
                 ? showHeadlineCoverHeading(lex)
                 : def.id === "lookbook-open-cover"
                   ? oneLineCoverHeading(lex)
-                  : lex.deckTitle,
+                  : lex.faceTitles?.[def.id] ?? lex.deckTitle,
           ...subheadingFor(layoutId, lex.deckSubtitle),
           components:
             def.id === "gauge-verdict" || def.id === "pitch-cover"
@@ -893,7 +896,7 @@ export function layoutPage(
       : slideType === "chapter"
         ? {
             type: "chapter",
-            heading: lex.chapters[1]!,
+            heading: lex.faceTitles?.[def.id] ?? lex.chapters[1]!,
             ...subheadingFor(layoutId, lex.kickers[1]),
             // homeroom's part of a lesson says what the part covers on three cards.
             components:

@@ -1,5 +1,5 @@
 import type { SvgTemplateProps } from "./types"
-import { boundaryBulletItems } from "./boundary-content"
+import { headedBulletRows, listRows, writesHeading } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
@@ -9,7 +9,8 @@ import type { HeadingCtx } from "./heading-set"
 
 /**
  * defense-close-ending（第八波 pinOnly）：结论三行收口。kicker 公开英文
- * CONCLUSIONS。清单优先取 bullets 前三项，否则按换行或「一、/1.」切 heading。
+ * CONCLUSIONS。有 bullets 时 heading 占第一行（与 heading 当清单时同字号同位置），
+ * bullets 接在后面，否则按换行或「一、/1.」切 heading。
  * 落款句取 subheading，不写死「恳请各位老师批评指正」。无 Thank you。
  *
  * 构图抄 thesis 设计板 ending：kicker y140（中文「结论」、拉丁 CONCLUSIONS），
@@ -53,17 +54,6 @@ function splitConclusionLinesAll(text: string): string[] {
   return [trimmed]
 }
 
-/** The lines this face draws of them: the first three. */
-function splitConclusionLines(text: string): string[] {
-  return splitConclusionLinesAll(text).slice(0, ITEM_MAX)
-}
-
-function conclusionItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = boundaryBulletItems(slide, ITEM_MAX)
-  if (bullets.length > 0) return bullets
-  return splitConclusionLines(stripEmphasis(slide.heading ?? ""))
-}
-
 function conclusionsKicker(slide: SvgTemplateProps["slide"], items: string[]): string {
   const corpus = [slide.heading, slide.subheading, ...items].join("")
   return hasCjk(corpus) ? CONCLUSIONS_KICKER_CJK : CONCLUSIONS_KICKER_LATIN
@@ -82,7 +72,8 @@ function fitItem(item: string, fonts: HeadingCtx["fonts"]) {
 export function DefenseCloseEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const items = conclusionItems(slide)
+  const rows = headedBulletRows(slide, ITEM_MAX) ?? listRows(splitConclusionLinesAll(stripEmphasis(slide.heading ?? "")), ITEM_MAX)
+  const items = rows.lines
   const signoffSource = (slide.subheading ?? "").trim()
 
   const kicker = fitSvgLine(conclusionsKicker(slide, items), {
@@ -142,6 +133,8 @@ export function DefenseCloseEnding({ slide, ctx }: SvgTemplateProps) {
         </text>
       ))}
 
+      {rows.dropped > 0 ? <g data-dropped={rows.dropped} data-dropped-kind="item" /> : null}
+
       <line
         x1={FOOT_X}
         y1={FOOT_RULE_Y}
@@ -193,14 +186,15 @@ export const layoutDef: LayoutDefinition = {
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX, headingRow: true },
     { name: "meta", accepts: [] },
   ],
   headingSet: ({ slide, ctx }) => {
-    // With bullets the face sets them and reads the heading for its language
-    // only. Without, the heading is the list itself: a line per item, each on
-    // one line, no more than the face draws.
-    if (boundaryBulletItems(slide, ITEM_MAX).length > 0) return "whole"
+    // With bullets the heading is the list's first row, set on one line like
+    // a conclusion. Without, the heading is the list itself: a line per item,
+    // each on one line, no more than the face draws.
+    const headed = headedBulletRows(slide, ITEM_MAX)
+    if (headed) return writesHeading(slide) && fitItem(headed.lines[0]!, ctx.fonts).truncated ? "cut" : "whole"
     const lines = splitConclusionLinesAll(stripEmphasis(slide.heading ?? ""))
     return lines.length > ITEM_MAX || lines.some((line) => fitItem(line, ctx.fonts).truncated) ? "cut" : "whole"
   },

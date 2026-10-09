@@ -156,7 +156,7 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     expect(score.deterministic).toBeNull()
   })
 
-  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (a KPI label on a card shaded from a mid-grey page on museum)", async () => {
+  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (softened row-card text on a mid-grey page on swiss)", async () => {
     // This fixture needs a low-contrast source that is real, theme-stable
     // and out of scope for whatever fix round is running — and it has now
     // outlived two of them. It started as kpi_cards' hardcoded delta-arrow
@@ -187,16 +187,20 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     // Then the same page painted `#777777`, where white and near-black both
     // stopped at about 4.48:1, until a mid-tone ground got pure black.
     //
-    // Now a museum KPI card on a page painted `#777777`: the card is shaded a
-    // step darker than the page, and its label in black stops at 4.18:1 there.
-    // `kpi_cards` is also what `coverageHits` below reads.
+    // Then a museum KPI card on a page painted `#777777`, shaded a step
+    // darker than the page, its label in black at 4.18:1, until such a card
+    // took its step on the side where its labels read.
+    //
+    // Now swiss's row cards on a page painted `#777777`: their descriptions
+    // are set in a softened black and stop at about 4.45:1 on the card.
+    // `row_cards` is also what `coverageHits` below reads.
     const metas = await loadQuestionMetas(QUESTIONS_DIR)
     const meta = metas.find((m) => m.id === "fx03")!
     const score = await scoreQuestion("fx03", join(RESULTS_DIR, "degraded-model", "fx03"), meta)
     expect(score.validatePass).toBe(true)
     expect(score.auditFindingCount).toBeGreaterThan(0)
     expect(score.renderOk).toBe(true)
-    expect(score.coverageHits).toEqual(["kpi_cards"])
+    expect(score.coverageHits).toEqual(["row_cards"])
   })
 })
 

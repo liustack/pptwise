@@ -181,6 +181,8 @@ See the [SKILL component guide](../skills/pptwise/references/components.md) for 
 
 `axes` titles and units apply to `bar`, `stacked`, `percent_stacked`, `combo`, `line`, `area`, and `scatter`. Within one series, a category may appear once.
 
+A chart of one series may leave that series' `name` off the page, except a `line` or `area` chart, which names it where the line ends. The page heading says what the chart shows, and a one-entry legend would say it again. `validate` and `audit` do not report it, since nothing was lost that the page does not already say. Write anything the reader needs that the heading does not say into the heading, the `subheading` or an `axes` title. A chart of two or more series names every series.
+
 A `scatter` series with `steps: true` joins its points as a staircase, each value held until the next point and then jumping to it, such as a statutory age by date of birth: write the points in order of x, one where each step begins. Its points are not dotted.
 
 `markers` draws up to three dashed lines down a `line` chart where a category begins, such as the ages a rule changes at: `[{ "before": "Age 50-54", "label": "Women, 50" }]`. Each stands halfway between the category it names and the one before it, its label over the plot.
@@ -370,7 +372,7 @@ Each `assets.images` entry contains `src` and may include `alt` or `error`. `src
 
 Backgrounds are `color`, `gradient`, or `asset`. Cover and chapter asset backgrounds use the dedicated readable image treatment. Run `pptwise asset-brief <target>` before sourcing image content so the real frame and crop are known.
 
-Paint a `color` background clearly light or clearly dark. On a mid-tone about as light as `#777777` or `#6B7B8C`, white and near-black both miss the 4.5:1 that body-size text needs, so where the theme's own ink does not read the renderer sets the text in pure black, which does. Some layouts also set text on a card or band shaded from the background, and on a mid-tone that shade can still fall just short, so `pptwise audit` may report `low-contrast` there. Text color is the theme's to set, so the fix is the background: move it lighter or darker.
+Paint a `color` background clearly light or clearly dark. On a mid-tone about as light as `#777777` or `#6B7B8C`, white and near-black both miss the 4.5:1 that body-size text needs, so where the theme's own ink does not read the renderer sets the text in pure black, which does. A card shaded from the background takes its shade on the side where that black still reads. A few marks can still fall just short, such as softened description text or a label on a tinted band, so `pptwise audit` may report `low-contrast` there. Text color is the theme's to set, so the fix is the background: move it lighter or darker.
 
 ## Validation
 

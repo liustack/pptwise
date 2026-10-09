@@ -354,6 +354,14 @@ export interface LayoutSlot {
    * `undefined` means the slot makes no item-level promise.
    */
   itemCapacity?: number
+  /**
+   * The face sets the page's heading in this slot's first item row when the
+   * page carries a `bullets` block, the way it sets a heading written as the
+   * list itself, so a page with both has one row fewer for its items.
+   * `slotItemRoom` (`./boundary-content.ts`) is the count the face draws and
+   * validate holds a page to.
+   */
+  headingRow?: true
   /** for image slots: today's two coexisting conventions (inventory §variant 速查) */
   selection?: "first" | "all"
 }
@@ -478,8 +486,12 @@ export interface LayoutDefinition {
    *   refuses a subheading beside a component that fills it.
    * - `{ none }`: the face has no place for a subheading. validate refuses
    *   one, and `none` tells the author where to write it instead.
+   * - `{ none, beside: "bullets" }`: the face has no place for a
+   *   subheading on a page that carries bullets, whose list moves the
+   *   words the subheading would take into the heading. validate refuses
+   *   one there.
    */
-  subheading?: "in-body" | { none: string }
+  subheading?: "in-body" | { none: string; beside?: "bullets" }
   /**
    * Structural fact of a cover or chapter face: it draws its own page over a
    * photograph background (`background.kind: "asset"`).

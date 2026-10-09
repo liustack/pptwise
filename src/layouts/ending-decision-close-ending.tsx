@@ -1,5 +1,5 @@
 import type { SvgTemplateProps } from "./types"
-import { boundaryBulletItems } from "./boundary-content"
+import { headedBulletRows, listRows, writesHeading } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
@@ -9,8 +9,8 @@ import type { HeadingCtx } from "./heading-set"
 
 /**
  * decision-close-ending（第八波 pinOnly）：决定两条收口。kicker CJK「决定」/
- * Latin DECISION，accent 只成字。清单优先 bullets 前两项，否则按换行或
- * 「一、/1.」切 heading。底 border 细线。拟稿审定抄送取 subheading（可多行），
+ * Latin DECISION，accent 只成字。有 bullets 时 heading 占第一行（与 heading
+ * 当清单时同字号同位置），bullets 接在后面，否则按换行或「一、/1.」切 heading。底 border 细线。拟稿审定抄送取 subheading（可多行），
  * 不写死部门。无 Thank you。构图抄
  * `.issues/design-boards/wave8/b4/Memo.dc.html` ending：kicker y170 / 22px，
  * 两条 y280/360 / 36px，线 y440 x96–1184，落款 y520 / 19px。
@@ -66,17 +66,6 @@ function splitDecisionLinesAll(text: string): string[] {
   return [trimmed]
 }
 
-/** The lines this face draws of them: the first two. */
-function splitDecisionLines(text: string): string[] {
-  return splitDecisionLinesAll(text).slice(0, ITEM_MAX)
-}
-
-function decisionItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = boundaryBulletItems(slide, ITEM_MAX)
-  if (bullets.length > 0) return bullets
-  return splitDecisionLines(stripEmphasis(slide.heading ?? ""))
-}
-
 function signoffLines(text: string): string[] {
   const trimmed = text.trim()
   if (!trimmed) return []
@@ -106,7 +95,8 @@ function fitItem(item: string, fonts: HeadingCtx["fonts"]) {
 export function DecisionCloseEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const items = decisionItems(slide)
+  const rows = headedBulletRows(slide, ITEM_MAX) ?? listRows(splitDecisionLinesAll(stripEmphasis(slide.heading ?? "")), ITEM_MAX)
+  const items = rows.lines
   const kickerText = scriptIsCjk(slide, items) ? DECISION_KICKER_CJK : DECISION_KICKER_LATIN
   const kickerTracking = hasCjk(kickerText) ? undefined : KICKER_TRACKING
   const signoffSource = stripEmphasis(slide.subheading ?? "")
@@ -178,6 +168,8 @@ export function DecisionCloseEnding({ slide, ctx }: SvgTemplateProps) {
         ) : null,
       )}
 
+      {rows.dropped > 0 ? <g data-dropped={rows.dropped} data-dropped-kind="item" /> : null}
+
       <line
         data-depth="mid"
         x1={RULE_X1}
@@ -229,14 +221,15 @@ export const layoutDef: LayoutDefinition = {
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
+    { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX, headingRow: true },
     { name: "rule", accepts: [] },
   ],
   headingSet: ({ slide, ctx }) => {
-    // With bullets the face sets them and reads the heading for its language
-    // only. Without, the heading is the list itself: a line per item, each on
-    // one line, no more than the face draws.
-    if (boundaryBulletItems(slide, ITEM_MAX).length > 0) return "whole"
+    // With bullets the heading is the list's first row, set on one line like
+    // an item. Without, the heading is the list itself: a line per item, each
+    // on one line, no more than the face draws.
+    const headed = headedBulletRows(slide, ITEM_MAX)
+    if (headed) return writesHeading(slide) && fitItem(headed.lines[0]!, ctx.fonts).truncated ? "cut" : "whole"
     const lines = splitDecisionLinesAll(stripEmphasis(slide.heading ?? ""))
     return lines.length > ITEM_MAX || lines.some((line) => fitItem(line, ctx.fonts).truncated) ? "cut" : "whole"
   },

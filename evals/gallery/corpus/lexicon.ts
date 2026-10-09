@@ -146,6 +146,13 @@ export interface Lexicon {
 
   /** Section/chapter titles — at least 6. */
   readonly chapters: Pool
+  /**
+   * The deck or chapter title a face with a narrower measure than the
+   * others is shown with, by face id, its meaning kept. A face's gallery
+   * page carries the track's own `deckTitle` or `chapters[1]`, and a face
+   * whose measure cannot set it whole would have validate refuse the page.
+   */
+  readonly faceTitles?: Readonly<Record<string, string>>
   /** Page headings — at least 12. */
   readonly headings: Pool
   /** Short sub-headings / eyebrow lines. */
@@ -882,6 +889,13 @@ const en: Lexicon = {
   deckSubtitle: "Growth quality in paid workspace seating and where the second half goes",
   author: "Strategy & Operations",
   date: "July 2026",
+
+  // left-anchor's cover and show-plate's chapter set their title in a
+  // narrower measure than the deck title and "Customers and Revenue Mix" take.
+  faceTitles: {
+    "left-anchor": "CloudSeek Collaboration Q2 2026 Review",
+    "show-plate": "Customer and Revenue Mix",
+  },
 
   chapters: [
     "Quarter at a Glance",

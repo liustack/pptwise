@@ -1,5 +1,5 @@
 import type { SvgTemplateProps } from "./types"
-import { boundaryBulletItems } from "./boundary-content"
+import { boundaryBulletItems, listRows } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
@@ -66,15 +66,10 @@ function splitPlanLinesAll(text: string): string[] {
   return []
 }
 
-/** The heading's list lines this face draws: the first three. */
-function splitPlanLines(text: string): string[] {
-  return splitPlanLinesAll(text).slice(0, ITEM_MAX)
-}
-
-function planItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = boundaryBulletItems(slide, ITEM_MAX)
-  if (bullets.length > 0) return bullets
-  return splitPlanLines(slide.heading ?? "")
+/** The plan's rows, from the bullets or from the heading written as a list, and how many lines had no row. */
+function planRows(slide: SvgTemplateProps["slide"]) {
+  const bullets = boundaryBulletItems(slide, Infinity)
+  return listRows(bullets.length > 0 ? bullets : splitPlanLinesAll(slide.heading ?? ""), ITEM_MAX)
 }
 
 function numberedItem(item: string, index: number, cjk: boolean): string {
@@ -94,7 +89,8 @@ function numberedItem(item: string, index: number, cjk: boolean): string {
  * line is fitted to one line.
  */
 function setPlan(slide: SvgTemplateProps["slide"], fonts: HeadingCtx["fonts"]) {
-  const items = planItems(slide).map((item) => stripEmphasis(item))
+  const rows = planRows(slide)
+  const items = rows.lines.map((item) => stripEmphasis(item))
   const fromBullets = boundaryBulletItems(slide, ITEM_MAX).length > 0
   const headingSource = fromBullets || items.length === 0 ? stripEmphasis(slide.heading ?? "") : ""
   const cjk = hasCjk([headingSource, ...items].join(""))
@@ -107,7 +103,7 @@ function setPlan(slide: SvgTemplateProps["slide"], fonts: HeadingCtx["fonts"]) {
       fontFamily: fonts.body,
     }),
   }))
-  return { fromBullets, headingSource, lines }
+  return { fromBullets, headingSource, lines, dropped: rows.dropped }
 }
 
 /** The title's fit when the heading is set as a title. */
@@ -122,7 +118,7 @@ const TITLE_FIT = {
 export function CarePlanEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const { headingSource, lines } = setPlan(slide, fonts)
+  const { headingSource, lines, dropped } = setPlan(slide, fonts)
   const showTitle = headingSource.trim().length > 0
 
   const title = fitHeadingLines(headingSource, {
@@ -181,6 +177,8 @@ export function CarePlanEnding({ slide, ctx }: SvgTemplateProps) {
           {withoutOverflowMark(line.body.text)}
         </text>
       ))}
+
+      {dropped > 0 ? <g data-dropped={dropped} data-dropped-kind="item" /> : null}
 
       <line
         x1={RULE_X1}
