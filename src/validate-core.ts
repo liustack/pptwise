@@ -45,7 +45,7 @@ import { findImageSelection } from "./layouts/find-image"
 import { bodyStatementLines } from "./layouts/minimal-shared"
 import { headingRoom, headingVerdict, type HeadingCtx, type HeadingPage } from "./layouts/heading-set"
 import { textRoom, type TextRoom } from "./layouts/text-room"
-import { subheadingSet } from "./render/boundary-loss"
+import { headingCrowding, subheadingSet } from "./render/boundary-loss"
 import { IMAGE_COVER_HEADING } from "./render/image-pages"
 import { deckFigureStyle } from "./lib/figure-style"
 import { stripEmphasis } from "./render/emphasis"
@@ -760,6 +760,40 @@ function checkBoundarySubheadingFit(ir: PptxIR, theme: ThemeDefinition): Validat
 }
 
 /**
+ * Boundary-page heading-and-body hard gate.
+ *
+ * A face whose components stand under the heading has room for them only
+ * under so many heading lines. crayonbox-ending set three contact cards
+ * under a one-line title and left them all off under a two-line one, with
+ * a mark, while the heading gate passed the title (the face does set it
+ * whole) and validate passed the page. The page is drawn under its own
+ * heading and under that heading's first character or word
+ * (`render/boundary-loss.ts`). When the short heading keeps what the long
+ * one loses, the page is refused, quoting how much of the heading the face
+ * holds with the rest of the page in place.
+ */
+function checkBoundaryHeadingRoom(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder || slide.components.length === 0) return
+    if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
+    const heading = slide.heading ?? ""
+    if (!stripEmphasis(heading).trim()) return
+    const holds = headingCrowding(ir, i, theme)
+    if (!holds) return
+    const room = textRoom(heading, holds)
+    const blocks = [...new Set(slide.components.map((c) => c.type))].join(" and ")
+    errors.push({
+      path: `slides.${i}.heading`,
+      page: i + 1,
+      ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+      message: `${boundaryDrawer(resolveEffectiveFace(ir, slide, theme), slide.type)} draws this page's ${blocks} only under a shorter heading: it holds them under ${heldPart(room)} of this ${slide.type} heading's ${room.count} ${room.unit}, and a longer heading takes the room they stand in, so the face would leave them off. Shorten the heading, or take the ${blocks} off this page.`,
+    })
+  })
+  return errors
+}
+
+/**
  * Duplicate slide id hard gate (W5 task 1): `slide.id` is a stable page
  * identity spec/assemble stamps on (spec-adjacent — see `ir/index.ts`'s
  * `id` docstring), so two slides sharing one within the same deck is always
@@ -1185,6 +1219,8 @@ export function validateIr(
   // gate above has passed by then and the drawing reads a sound page.
   const boundarySubheadingErrors = checkBoundarySubheadingFit(r.data, theme)
   if (boundarySubheadingErrors.length > 0) return withNormalized({ ok: false, errors: boundarySubheadingErrors })
+  const boundaryHeadingRoomErrors = checkBoundaryHeadingRoom(r.data, theme)
+  if (boundaryHeadingRoomErrors.length > 0) return withNormalized({ ok: false, errors: boundaryHeadingRoomErrors })
   // Narrative resolution (spec §5's defaults chain, W3 task 2; renamed from
   // "scenario resolution" spec §8.1). Both branches of the schema's
   // `narrative` union (NarrativeProfileInputSchema in ir/index.ts) are open

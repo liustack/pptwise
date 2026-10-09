@@ -19,6 +19,7 @@
  * draws without those marks, by construction.
  */
 import type { PptxIR, Slide } from "@/ir"
+import { prefixOf } from "../layouts/text-room"
 import type { ThemeDefinition } from "../themes/definitions"
 import { cutLines } from "./cut-fields"
 import { droppedIn, slideToSvgMarkup } from "./render-slide"
@@ -75,4 +76,24 @@ export function subheadingSet(ir: PptxIR, index: number, theme: ThemeDefinition)
     bare ??= drawnLoss(withPageFields(ir, index, { subheading: undefined }), index, theme).dropped
     return loss.dropped > bare ? "declined" : "whole"
   }
+}
+
+/**
+ * Whether the page's heading takes room its face needs for the rest of the
+ * page: a row of cards that stands under however many lines the heading
+ * took, and is left off when a longer heading pushes it past the foot.
+ *
+ * Asked by drawing the page under the heading's first character or word.
+ * When that drops less than the page as written, the heading's length is
+ * what costs the rest, and the answer is a test for any heading in its
+ * place: does the page drop no more than under that shortest one. Undefined
+ * when the page drops nothing, or drops as much under any heading.
+ */
+export function headingCrowding(ir: PptxIR, index: number, theme: ThemeDefinition): ((heading: string) => boolean) | undefined {
+  const heading = ir.slides[index]!.heading ?? ""
+  const dropped = drawnLoss(ir, index, theme).dropped
+  if (dropped === 0) return undefined
+  const floor = drawnLoss(withPageFields(ir, index, { heading: prefixOf(heading, 1) }), index, theme).dropped
+  if (floor >= dropped) return undefined
+  return (text) => drawnLoss(withPageFields(ir, index, { heading: text }), index, theme).dropped <= floor
 }

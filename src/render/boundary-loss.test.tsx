@@ -97,3 +97,39 @@ describe("validate refuses a boundary subheading its face would not set whole", 
     ])
   })
 })
+
+describe("validate refuses a boundary heading that takes the room the rest of the page needs", () => {
+  const crayon = getThemeDefinition("crayon")
+  const cards = [
+    { icon: "phone", title: "班主任", text: "电话 138 0000 0000" },
+    { icon: "mail", title: "教务处", text: "邮箱 jw@school.cn" },
+    { icon: "users", title: "家委会", text: "每周三下午" },
+  ]
+  const LONG = "下次课我们一起把复习计划落到每一天的作业里"
+  const ending = (heading: string): PptxIR =>
+    ({
+      version: "5",
+      filename: "crowding.pptx",
+      theme: { id: "crayon" },
+      meta: {},
+      assets: { images: {} },
+      slides: [{ type: "ending", heading, components: [{ type: "icon_cards", items: cards }] }],
+    }) as PptxIR
+  const dropped = (ir: PptxIR) => drawSlide(ir, ir.slides[0]!, 0, crayon).dropped
+
+  it("refuses crayonbox-ending's two-line title over three contact cards, quoting the heading that keeps them", () => {
+    expect(dropped(ending(LONG))).toBeGreaterThan(0)
+    const result = validateIr(ending(LONG), { theme: crayon })
+    expect(result.errors).toEqual([
+      {
+        path: "slides.0.heading",
+        page: 1,
+        message:
+          'face "crayonbox-ending" draws this page\'s icon_cards only under a shorter heading: it holds them under the first 14 ("下次课我们一起把复习计划落到") of this ending heading\'s 21 characters, and a longer heading takes the room they stand in, so the face would leave them off. Shorten the heading, or take the icon_cards off this page.',
+      },
+    ])
+    expect(validateIr(ending(prefixOf(LONG, 14)), { theme: crayon }).ok).toBe(true)
+    expect(dropped(ending(prefixOf(LONG, 14)))).toBe(0)
+    expect(dropped(ending(prefixOf(LONG, 15)))).toBeGreaterThan(0)
+  })
+})
