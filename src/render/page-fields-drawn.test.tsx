@@ -254,32 +254,6 @@ function sweep(route: Route, assets: Record<LanguageId, CorpusAssets>): Silent[]
   return silent
 }
 
-/**
- * Silent losses found when this sweep was written, each waiting on its own
- * fix. The sweep holds every theme to exactly this list: a new loss fails,
- * and so does an entry that no longer happens, so a fix takes its entry out.
- */
-const PENDING = new Set([
-  "brief × photo (image-split) × decor.text",
-  "bulletin × photo (image-split) × decor.text",
-  "ink × chapter (scroll-chapter) × decor.text",
-  "lecture × chapter (chalkboard-chapter) × decor.text",
-  "lecture × comparison (chalkboard-sheet) × decor.text",
-  "lecture × cover (chalkboard-cover) × decor.text",
-  "lecture × data (chalkboard-sheet) × decor.text",
-  "lecture × ending (chalkboard-ending) × decor.text",
-  "lecture × evidence (chalkboard-sheet) × decor.text",
-  "lecture × fact (chalkboard-sheet) × decor.text",
-  "lecture × hierarchy (chalkboard-sheet) × decor.text",
-  "lecture × list (chalkboard-sheet) × decor.text",
-  "lecture × photo (chalkboard-sheet) × decor.text",
-  "lecture × points (chalkboard-sheet) × decor.text",
-  "lecture × process (chalkboard-sheet) × decor.text",
-  "lecture × statement (chalkboard-sheet) × decor.text",
-  "ledger × photo (image-split) × decor.text",
-  "swiss × photo (image-top) × decor.text",
-])
-
 describe("a page's own fields reach the page, or the engine says they did not", () => {
   const assets = {} as Record<LanguageId, CorpusAssets>
   beforeAll(async () => {
@@ -292,7 +266,7 @@ describe("a page's own fields reach the page, or the engine says they did not", 
         .filter((route) => route.theme === theme)
         .flatMap((route) => sweep(route, assets))
         .map(({ route, probe }) => `${route.theme} × ${route.slot} (${route.face}) × ${probe.field}${probe.part ? `.${probe.part}` : ""}`)
-      expect([...new Set(silent)].sort()).toEqual([...PENDING].filter((entry) => entry.startsWith(`${theme} × `)).sort())
+      expect([...new Set(silent)]).toEqual([])
     })
   }
 })
