@@ -43,6 +43,8 @@ The deterministic audit checks overflow, out-of-bounds content, low contrast, ov
 
 Add `--pixels` when cover or chapter pages use photo backgrounds. Pixel sampling catches text placed on an unsafe part of a real image.
 
+A `low-contrast` finding on a page painted a mid-tone `background` color, about as light as `#777777` or `#6B7B8C`, is fixed at the background, not the text: no text color the theme can set there reaches 4.5:1 reliably. Move the color lighter or darker.
+
 ## Review the whole deck
 
 When an in-conversation deck preview tool exists, use it. Otherwise generate the self-contained review file:
