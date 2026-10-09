@@ -23,10 +23,12 @@ import type { Slide } from "./index"
  *   chapter or ending page, which no shared sheet draws, the face keeps the
  *   page and the cut stays declared.
  * - **declared**: `kicker`, `fields`, `stamp`, `tag`, `ballot`, `stage` and
- *   `decor`, and a component's tag. A cut there stays a declaration. The
- *   step-aside sheet has no place for these page fields at all, so stepping
- *   aside could only lose more of them: a page that carries one keeps its
- *   face whatever is cut.
+ *   `decor`, and a component's tag. A cut there stays a declaration. A
+ *   page that carries a field the step-aside sheet has no place for (a
+ *   stamp, a ballot, a strip of years, a course stage, a form's header
+ *   lines: `SHEET_DRAWS_PAGE_FIELD` in `render/step-aside.tsx`) keeps its
+ *   face whatever is cut, because stepping aside would drop that field
+ *   outright. The sheet sets a kicker and a page tag itself.
  *
  * Text a face sets that is not one of the page's own fields (a section name
  * taken from the chapter before, the organization, a page number) is the
@@ -51,9 +53,6 @@ export const PAGE_FIELD_TIERS = {
   stage: "declared",
   decor: "declared",
 } as const satisfies Record<string, TruncationTier>
-
-/** The page fields the step-aside sheet has no place for. A page that carries one keeps its face. */
-export const FIELDS_THE_SHEET_CANNOT_DRAW = ["kicker", "fields", "stamp", "tag", "ballot", "stage", "years"] as const
 
 /** A component field's tier: hard, except the words of a tag (`items[].tag.text`, `matrix.items[].tag`). */
 export function componentFieldTier(path: readonly (string | number)[]): TruncationTier {

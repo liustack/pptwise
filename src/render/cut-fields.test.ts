@@ -82,8 +82,16 @@ describe("a face that cuts a hard field", () => {
     expect(found[0]!.message).toMatch(/a reader needs whole/)
   })
 
-  it("keeps its page when the page carries a kicker the sheet has no place for", () => {
+  it("takes the page's kicker to the sheet, which sets it over the heading", () => {
     const { markup, root, slide } = drawn(deck("memo", { kind: "points", heading: LONG_HEADING, kicker: "Chapter one", components: [bullets] }))
+    expect(markup).toContain('data-face-stepped-aside="memo-sheet"')
+    expect(cutLines(root, slide)).toEqual([])
+    const sheet = root.querySelector("[data-face-stepped-aside]")!
+    expect(Array.from(sheet.querySelectorAll("text")).map((t) => t.textContent)).toContain("Chapter one")
+  })
+
+  it("keeps its page when the page carries a stamp the sheet has no place for", () => {
+    const { markup, root, slide } = drawn(deck("lecture", { kind: "points", heading: LONG_HEADING, stamp: { text: "Approved" }, components: [bullets] }))
     expect(markup).not.toContain("data-face-stepped-aside")
     expect(cutLines(root, slide).some((cut) => cut.field === "heading" && cut.tier === "hard")).toBe(true)
   })

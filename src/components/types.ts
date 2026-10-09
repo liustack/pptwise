@@ -159,6 +159,14 @@ export interface ComponentCtx {
    * everywhere else, so nothing is numbered.
    */
   exhibitLabels?: ReadonlyMap<Component, string>
+  /**
+   * The motif on this page, as the page stands when its face steps aside,
+   * sets the page's kicker in a running head of its own
+   * (`motifs/kicker-roles.ts`), so the step-aside sheet does not set it over
+   * the heading as well (`render/step-aside.tsx`). Set by `FullSlideSvg`.
+   * Unset everywhere else, where the sheet sets the kicker itself.
+   */
+  motifSetsKicker?: true
 }
 
 /**
