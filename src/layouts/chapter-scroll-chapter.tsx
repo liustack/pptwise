@@ -1,7 +1,7 @@
 import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
 import { resolveDeckFooter } from "../render/footer-marks"
-import { stripEmphasis } from "../render/emphasis"
+import { stripEmphasis, type EmphasisHeadingLayout } from "../render/emphasis"
 import { fitMemoTitle } from "./compositions/memo"
 import {
   SCROLL_META,
@@ -15,6 +15,7 @@ import {
   scrollMeta,
   scrollText,
 } from "./compositions/scroll"
+import type { HeadingCtx } from "./heading-set"
 
 /**
  * scroll-chapter：讲座分卷的卷首页，ink 2026-10 定稿（p05、p10）。
@@ -38,6 +39,11 @@ const SUB = { gap: 14, size: 20, lineHeight: 30, maxLines: 2 } as const
 const RULE = { gap: 26, w: 150 } as const
 const NOTE = { x: 110, top: 680, size: 11, lineHeight: 20, w: 600 } as const
 
+/** The volume's title in the serif, on one line or broken at a comma over two, from 52 down to 40. */
+function fitTitle(heading: string, ctx: HeadingCtx): EmphasisHeadingLayout {
+  return fitMemoTitle(heading, { maxWidth: TITLE.w, fontSize: TITLE.size, minPt: TITLE.minPt, lineHeight: TITLE.lineHeight, fontFamily: ctx.fonts.heading, bold: false })
+}
+
 export function ScrollChapter({ ir, slide, ctx }: SvgTemplateProps) {
   const inks = scrollInks(ctx)
   const ground = inks.ground
@@ -47,7 +53,7 @@ export function ScrollChapter({ ir, slide, ctx }: SvgTemplateProps) {
   const volume = stripEmphasis(slide.kicker ?? "").trim()
   const volumeLabel = volume ? fitColumnLabel(volume, { size: VOLUME.size, tracking: VOLUME.tracking, length: VOLUME.length, lineHeight: VOLUME.lineHeight, maxColumns: 1, latinTracking: VOLUME.latinTracking }, ctx) : null
   // On one line when it fits, otherwise broken at its last comma or colon, as the claim is.
-  const fitted = slide.heading?.trim() ? fitMemoTitle(slide.heading, { maxWidth: TITLE.w, fontSize: TITLE.size, minPt: TITLE.minPt, lineHeight: TITLE.lineHeight, fontFamily: ctx.fonts.heading, bold: false }) : null
+  const fitted = slide.heading?.trim() ? fitTitle(slide.heading, ctx) : null
   const title = fitted && !fitted.truncated && fitted.lines.length <= TITLE.maxLines ? { ...fitted, lineHeight: TITLE.lineHeight } : null
   const titleBottom = TITLE.top + (title?.lines.length ?? 1) * TITLE.lineHeight
   const sub = slide.subheading?.trim() ? fitScroll(slide.subheading, { width: TITLE.w, size: SUB.size, lineHeight: SUB.lineHeight, maxLines: SUB.maxLines, serif: true }, ctx) : null
@@ -104,5 +110,9 @@ export const layoutDef = {
   drawsPhoto: true,
   suppressMotif: true,
   branding: "none",
-  headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: TITLE.maxLines, minPt: TITLE.size, bold: false, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: TITLE.maxLines, minPt: TITLE.minPt, bold: false, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: ({ slide, ctx }) => {
+    const fitted = fitTitle(slide.heading ?? "", ctx)
+    return fitted.truncated || fitted.lines.length > TITLE.maxLines ? "declined" : "whole"
+  },
 } satisfies LayoutDefinition

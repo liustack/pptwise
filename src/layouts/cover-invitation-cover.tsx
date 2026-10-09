@@ -20,6 +20,7 @@ import {
   paintInvitationTracked,
   paintRule,
 } from "./compositions/invitation"
+import type { HeadingCtx } from "./heading-set"
 
 /**
  * invitation-cover：请柬封面，luxe 2026-10 定稿（p01）。
@@ -47,6 +48,11 @@ const RULE = { gap: 42, w: 120, stroke: 0.7 } as const
 const DATE = { gap: 24, size: 15, lineHeight: 24, tracking: 6 } as const
 const NOTE = { right: 1260, top: 694, size: 10, lineHeight: 16, w: 560, band: 40 } as const
 
+/** The invitation's title tracked in the serif: the author's own break kept, otherwise one line or two at a comma, as large as fits. `null` when no size from 46 down to 38 holds it whole. */
+function fitTitle(heading: string | undefined, ctx: HeadingCtx): { lines: string[]; size: number } | null {
+  return fitTrackedTitle(heading, { width: TITLE.w, size: TITLE.size, minPt: TITLE.minPt, lineHeight: TITLE.lineHeight, tracking: TITLE.tracking, maxLines: TITLE.maxLines }, ctx)
+}
+
 export function InvitationCover({ ir, slide, ctx, index }: SvgTemplateProps) {
   const inks = invitationInks(ctx)
   const ground = inks.ground
@@ -58,7 +64,7 @@ export function InvitationCover({ ir, slide, ctx, index }: SvgTemplateProps) {
   const footer = resolveDeckFooter(ir)
   const date = stripEmphasis(footer.label ?? ir.meta.date ?? "").trim()
   // The author's line break is where the title breaks. Otherwise one line, or two at a comma, as large as fits.
-  const title = fitTrackedTitle(slide.heading, { width: TITLE.w, size: TITLE.size, minPt: TITLE.minPt, lineHeight: TITLE.lineHeight, tracking: TITLE.tracking, maxLines: TITLE.maxLines }, ctx)
+  const title = fitTitle(slide.heading, ctx)
   const titleLines = title?.lines ?? []
   const titleFits = title !== null
   const titleSize = title?.size ?? TITLE.size
@@ -142,4 +148,5 @@ export const layoutDef = {
   // Over the card's top edge at the left, where the stock is plain.
   coverMark: { x: 48, y: 30 },
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: TITLE.maxLines, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: ({ slide, ctx }) => (slide.heading?.trim() && fitTitle(slide.heading, ctx) === null ? "declined" : "whole"),
 } satisfies LayoutDefinition

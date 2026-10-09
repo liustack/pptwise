@@ -6,6 +6,7 @@ import { latinUpper, trackingPx } from "./minimal-shared"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
 import { coverConfidentiality, showsDocumentMeta } from "../render/document-meta"
 import { faceParam } from "./face-params"
+import { fitVerdict } from "./heading-set"
 
 /**
  * band-title cover layout（2026-08-22 封面还原第一波，新表达）：
@@ -261,4 +262,11 @@ export const layoutDef: LayoutDefinition = {
     { name: "subheading", accepts: [] },
     { name: "meta", accepts: [] },
   ],
+  headingSet: ({ slide, ctx, params }) =>
+    fitVerdict(
+      slide.heading,
+      // The measure follows the alignment, as in the drawing.
+      { maxWidth: faceParam<"start" | "middle">(params, "textAnchor", "start") === "middle" ? 1120 : 1088, fontSize: TITLE_SIZE, maxLines: TITLE_MAX_LINES, minPt: TITLE_MIN_PT, lineHeightRatio: TITLE_LINE_HEIGHT_RATIO },
+      ctx,
+    ),
 }

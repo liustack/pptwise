@@ -125,7 +125,7 @@ export function keynoteKickerIn(slide: Pick<Slide, "kicker">, ctx: ComponentCtx)
  * it fits, down to a twelfth under its size. Otherwise on lines broken at the
  * last comma or colon that lets both fit.
  */
-export function fitKeynoteClaim(heading: string | undefined, ctx: ComponentCtx, width: number = CLAIM.w, size: number = CLAIM.size, lineHeight: number = CLAIM.lineHeight, maxLines: number = CLAIM.maxLines, minPt: number = Math.round(size * CLAIM.oneLineFloor)): EmphasisHeadingLayout {
+export function fitKeynoteClaim(heading: string | undefined, ctx: Pick<ComponentCtx, "fonts">, width: number = CLAIM.w, size: number = CLAIM.size, lineHeight: number = CLAIM.lineHeight, maxLines: number = CLAIM.maxLines, minPt: number = Math.round(size * CLAIM.oneLineFloor)): EmphasisHeadingLayout {
   const plain = stripEmphasis(heading ?? "").trim()
   const fontFamily = ctx.fonts.heading
   const parts = (heading ?? "").split(/\n+/u).map((part) => part.trim()).filter(Boolean)
@@ -168,19 +168,25 @@ export function KeynoteClaim({ ctx, layout, column }: { ctx: ComponentCtx; layou
   )
 }
 
+/** The claim fitted to a column of its own, or `null` when it would not fit that column whole. */
+export function fitKeynoteClaimIn(heading: string | undefined, ctx: Pick<ComponentCtx, "fonts">, column: KeynoteClaimColumn): EmphasisHeadingLayout | null {
+  if (!stripEmphasis(heading ?? "").trim()) return null
+  const size = column.size ?? CLAIM.size
+  const lineHeight = column.lineHeight ?? CLAIM.lineHeight
+  const maxLines = column.maxLines ?? 1
+  const layout =
+    regularClaim(column)
+      ? fitEmphasisText(heading, { maxWidth: column.w, fontSize: size, minPt: size, maxLines, lineHeightRatio: lineHeight / size, fontFamily: ctx.fonts.heading, bold: false })
+      : fitKeynoteClaim(heading, ctx, column.w, size, lineHeight, maxLines, column.minPt)
+  if (layout.truncated || layout.lines.length > maxLines) return null
+  return { ...layout, lineHeight }
+}
+
 /** The claim a composition places in a column of its own, or `null` when it would not fit that column whole. */
 export function keynoteClaimIn(slide: Pick<Slide, "heading">, ctx: ComponentCtx): (column: KeynoteClaimColumn) => React.ReactElement | null {
   return (column) => {
-    if (!stripEmphasis(slide.heading ?? "").trim()) return null
-    const size = column.size ?? CLAIM.size
-    const lineHeight = column.lineHeight ?? CLAIM.lineHeight
-    const maxLines = column.maxLines ?? 1
-    const layout =
-      regularClaim(column)
-        ? fitEmphasisText(slide.heading, { maxWidth: column.w, fontSize: size, minPt: size, maxLines, lineHeightRatio: lineHeight / size, fontFamily: ctx.fonts.heading, bold: false })
-        : fitKeynoteClaim(slide.heading, ctx, column.w, size, lineHeight, maxLines, column.minPt)
-    if (layout.truncated || layout.lines.length > maxLines) return null
-    return <KeynoteClaim ctx={ctx} layout={{ ...layout, lineHeight }} column={column} />
+    const layout = fitKeynoteClaimIn(slide.heading, ctx, column)
+    return layout ? <KeynoteClaim ctx={ctx} layout={layout} column={column} /> : null
   }
 }
 

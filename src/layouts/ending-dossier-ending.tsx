@@ -15,7 +15,7 @@ import {
   paintDossierLine,
   paintDossierTracked,
 } from "./compositions/dossier"
-import { DOSSIER_LEFT, DOSSIER_RIGHT, DOSSIER_W, DossierSection, fitDossierTitle } from "./dossier-shared"
+import { DOSSIER_LEFT, DOSSIER_RIGHT, DOSSIER_W, DossierSection, fitDossierTitle, dossierTitleSet } from "./dossier-shared"
 
 /**
  * dossier-ending：临床评估档案的表决页，clinic 2026-10 定稿（p18）重画。
@@ -224,4 +224,5 @@ export const layoutDef = {
   ],
   pageFields: ["kicker", "fields", "ballot"],
   headingFit: { maxWidth: DOSSIER_W, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: dossierTitleSet(TITLE.size, TITLE.lineHeight, TITLE.minPt),
 } satisfies LayoutDefinition

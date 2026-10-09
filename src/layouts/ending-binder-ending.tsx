@@ -6,6 +6,7 @@ import { blockTag } from "./compositions/shared"
 import { Lead, binderInks, binderText, binderWidth, binderBaseline, fitBinder, paintBinder, paintBinderCard, paintBinderLine, paintBinderTracked, paintCheckbox } from "./compositions/binder"
 import { boundarySlotBlock } from "./boundary-content"
 import { BinderLabelLine, BinderTabsFor, BinderTitle } from "./binder-shared"
+import { dossierTitleSet } from "./dossier-shared"
 
 type NumberedCards = Extract<Component, { type: "numbered_cards" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -130,4 +131,5 @@ export const layoutDef = {
   pageFields: ["kicker", "stage", "ballot"],
   suppressMotif: true,
   headingFit: { maxWidth: W, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: dossierTitleSet(TITLE.size, TITLE.lineHeight, TITLE.minPt, W),
 } satisfies LayoutDefinition

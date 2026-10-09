@@ -161,4 +161,5 @@ export const layoutDef = {
     { name: "rule", accepts: [] },
     { name: "meta", accepts: [] },
   ],
+  headingFit: { maxWidth: TITLE_MAX_W, fontSize: TITLE_SIZE, maxLines: TITLE_MAX_LINES, minPt: TITLE_MIN_PT, lineHeightRatio: TITLE_LINE_HEIGHT / TITLE_SIZE },
 } satisfies LayoutDefinition

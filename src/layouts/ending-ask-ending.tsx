@@ -185,4 +185,5 @@ export const layoutDef: LayoutDefinition = {
     // The button's words: one bullet, or a paragraph.
     { name: "body", accepts: ["bullets", "paragraph"], capacity: 1, itemCapacity: ITEM_MAX },
   ],
+  headingFit: { maxWidth: TITLE_MAX_W, fontSize: TITLE_SIZE, maxLines: TITLE_MAX_LINES, minPt: TITLE_MIN_PT, lineHeightRatio: TITLE_LINE_HEIGHT / TITLE_SIZE },
 }

@@ -5,6 +5,7 @@ import { stripEmphasis, type EmphasisHeadingLayout } from "../render/emphasis"
 import { resolveDeckFooter } from "../render/footer-marks"
 import { KEYNOTE_META, KeynoteSpot, KeynoteWash, keynoteBaseline, keynoteInks, keynoteMeta, keynoteText, keynoteTrackedWidth, paintKeynote, paintKeynoteLine, paintKeynotePhoto, paintKeynoteTracked } from "./compositions/keynote"
 import { KeynoteClicker, fitKeynoteClaim } from "./keynote-shared"
+import type { HeadingCtx } from "./heading-set"
 
 type Image = Extract<Component, { type: "image" }>
 
@@ -37,7 +38,7 @@ const NOTE = { right: 1216, top: 640, size: 11, lineHeight: 16, w: 700 } as cons
  * line down to 100px, else one or two lines at the first of the smaller
  * sizes that holds it whole, for an act named in a phrase rather than a word.
  */
-function fitChapterTitle(heading: string, ctx: SvgTemplateProps["ctx"]): EmphasisHeadingLayout | undefined {
+function fitChapterTitle(heading: string, ctx: HeadingCtx): EmphasisHeadingLayout | undefined {
   for (const size of TITLE.sizes) {
     const lineHeight = Math.round((size * TITLE.lineHeight) / TITLE.size)
     const fitted = fitKeynoteClaim(heading, ctx, TITLE.w, size, lineHeight, 2, size === TITLE.size ? TITLE.minPt : undefined)
@@ -110,4 +111,5 @@ export const layoutDef = {
   paintsOwnBackground: true,
   branding: "none",
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: ({ slide, ctx }) => (slide.heading?.trim() && !fitChapterTitle(slide.heading, ctx) ? "declined" : "whole"),
 } satisfies LayoutDefinition

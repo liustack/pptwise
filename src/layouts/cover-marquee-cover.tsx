@@ -10,7 +10,7 @@ import { blockTag } from "./compositions/shared"
 import { Confetti, fitMarquee, marqueeBaseline, marqueeInks, marqueeText, marqueeWidth, paintMarquee, paintMarqueeIcon, paintMarqueeLine, ticketWidths, type Box, type MarqueeInks } from "./compositions/marquee"
 import { boundarySlotBlock, drawableItems } from "./boundary-content"
 import { MarqueeTicket } from "./marquee-shared"
-import { fitDossierTitle } from "./dossier-shared"
+import { fitDossierTitle, dossierTitleSet } from "./dossier-shared"
 import { headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 
 type Bullets = Extract<Component, { type: "bullets" }>
@@ -170,4 +170,5 @@ export const layoutDef = {
   // Over the ticket.
   coverMark: { x: LEFT, y: 44 },
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: dossierTitleSet(TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w),
 } satisfies LayoutDefinition

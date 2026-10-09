@@ -87,7 +87,7 @@ export function ManuscriptSection({ ir, slide, ctx }: { ir: Pick<PptxIR, "course
 }
 
 /** The claim fitted to the measure, broken at a comma or a colon when it takes two lines. */
-export function fitManuscriptTitle(heading: string | undefined, ctx: ComponentCtx, size: number = HEAD.size, lineHeight: number = HEAD.lineHeight, minPt: number = HEAD.minPt, width: number = MANUSCRIPT_W): EmphasisHeadingLayout {
+export function fitManuscriptTitle(heading: string | undefined, ctx: Pick<ComponentCtx, "fonts">, size: number = HEAD.size, lineHeight: number = HEAD.lineHeight, minPt: number = HEAD.minPt, width: number = MANUSCRIPT_W): EmphasisHeadingLayout {
   return fitMemoTitle(heading, { maxWidth: width, fontSize: size, minPt, lineHeight, fontFamily: ctx.fonts.heading })
 }
 

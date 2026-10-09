@@ -4,6 +4,7 @@ import type { ComponentCtx } from "../components/types"
 import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading, type EmphasisHeadingLayout } from "../render/emphasis"
 import type { ContentRect } from "../render/layout"
 import { fitMemoTitle } from "./compositions/memo"
+import { cutOrWhole, type HeadingSet } from "./heading-set"
 import {
   chipInk,
   chipWidth,
@@ -76,8 +77,13 @@ export function DossierSection({ slide, ctx }: { slide: Pick<Slide, "kicker">; c
 }
 
 /** The claim fitted the way the board sets it: one line when it fits, else two broken at a comma. */
-export function fitDossierTitle(heading: string | undefined, ctx: ComponentCtx, size: number = HEAD.size, lineHeight: number = HEAD.lineHeight, minPt: number = HEAD.minPt, maxWidth: number = DOSSIER_W): EmphasisHeadingLayout {
+export function fitDossierTitle(heading: string | undefined, ctx: Pick<ComponentCtx, "fonts">, size: number = HEAD.size, lineHeight: number = HEAD.lineHeight, minPt: number = HEAD.minPt, maxWidth: number = DOSSIER_W): EmphasisHeadingLayout {
   return fitMemoTitle(heading, { maxWidth, fontSize: size, minPt, lineHeight, fontFamily: ctx.fonts.heading })
+}
+
+/** The heading set of a face whose title is `fitDossierTitle` over these numbers (`LayoutDefinition.headingSet`). */
+export function dossierTitleSet(size: number = HEAD.size, lineHeight: number = HEAD.lineHeight, minPt: number = HEAD.minPt, maxWidth: number = DOSSIER_W): HeadingSet {
+  return ({ slide, ctx }) => cutOrWhole(fitDossierTitle(slide.heading, ctx, size, lineHeight, minPt, maxWidth))
 }
 
 /**

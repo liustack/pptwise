@@ -198,4 +198,5 @@ export const layoutDef: LayoutDefinition = {
     { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "rule", accepts: [] },
   ],
+  headingFit: { maxWidth: MEASURE, fontSize: TITLE.size, maxLines: TITLE.maxLines, minPt: TITLE.minPt, lineHeightRatio: TITLE.lineHeight / TITLE.size, bold: true },
 }

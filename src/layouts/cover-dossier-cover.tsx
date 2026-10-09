@@ -16,7 +16,7 @@ import {
   paintDossierLine,
   paintDossierTracked,
 } from "./compositions/dossier"
-import { fitDossierTitle } from "./dossier-shared"
+import { fitDossierTitle, dossierTitleSet } from "./dossier-shared"
 
 /**
  * dossier-cover：临床评估档案的封面，clinic 2026-10 定稿（p01）重画。
@@ -175,4 +175,5 @@ export const layoutDef = {
   suppressMotif: true,
   coverMark: { x: LEFT, y: 44 },
   headingFit: { maxWidth: COL_W, fontSize: TITLE.size, maxLines: TITLE.maxLines, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: dossierTitleSet(TITLE.size, TITLE.lineHeight, TITLE.minPt, COL_W),
 } satisfies LayoutDefinition

@@ -3,7 +3,7 @@ import type { SvgTemplateProps } from "./types"
 import { stripEmphasis } from "../render/emphasis"
 import { resolveDeckFooter } from "../render/footer-marks"
 import { KEYNOTE_META, KeynoteSpot, keynoteBaseline, keynoteInks, keynoteMeta, keynoteTrackedWidth, paintKeynoteTracked } from "./compositions/keynote"
-import { KeynoteClicker, KeynoteKicker, KICKER, keynoteClaimIn } from "./keynote-shared"
+import { KeynoteClicker, KeynoteKicker, KICKER, keynoteClaimIn, fitKeynoteClaimIn } from "./keynote-shared"
 
 /**
  * keynote-ending：最后一句，stage 2026-10 定稿（p18）。黑场正中一圈极淡的
@@ -18,14 +18,15 @@ import { KeynoteClicker, KeynoteKicker, KICKER, keynoteClaimIn } from "./keynote
 const SPOT = { cx: 640, cy: 340, r: 460, strength: 0.07 } as const
 const WORDS = { x: 64, w: 1152, top: 250, size: 64, lineHeight: 90 } as const
 const SIGN = { top: 600, size: 13, lineHeight: 22, tracking: 6, w: 1152 } as const
+/** The closing words on one line where the middle of two would be, or else on two lines from y250. */
+const ONE_LINE = { ...WORDS, top: WORDS.top + WORDS.lineHeight / 2, maxLines: 1, align: "center" } as const
+const TWO_LINES = { ...WORDS, maxLines: 2, align: "center" } as const
 
 export function KeynoteEnding({ ir, slide, ctx, index }: SvgTemplateProps) {
   const inks = keynoteInks(ctx)
   const ground = inks.ground
   const place = keynoteClaimIn(slide, ctx)
-  // Two lines from y250, or one line where the middle of two would be.
-  let words = slide.heading?.trim() ? place({ ...WORDS, top: WORDS.top + WORDS.lineHeight / 2, maxLines: 1, align: "center" }) : null
-  if (slide.heading?.trim() && !words) words = place({ ...WORDS, maxLines: 2, align: "center" })
+  const words = slide.heading?.trim() ? (place(ONE_LINE) ?? place(TWO_LINES)) : null
   const sign = stripEmphasis(slide.subheading ?? "").replace(/\s*\n+\s*/gu, "\u3000").trim()
   const signFits = !sign || keynoteTrackedWidth(sign, SIGN.size, SIGN.tracking, ctx) <= SIGN.w
   const kicker = slide.kicker?.trim() ? <KeynoteKicker ctx={ctx} text={slide.kicker} column={{ x: KICKER.x, top: KICKER.top, w: KICKER.w }} /> : null
@@ -68,4 +69,5 @@ export const layoutDef = {
   paintsOwnBackground: true,
   branding: "none",
   headingFit: { maxWidth: WORDS.w, fontSize: WORDS.size, maxLines: 2, minPt: 58, bold: true, lineHeightRatio: WORDS.lineHeight / WORDS.size },
+  headingSet: ({ slide, ctx }) => (slide.heading?.trim() && !fitKeynoteClaimIn(slide.heading, ctx, ONE_LINE) && !fitKeynoteClaimIn(slide.heading, ctx, TWO_LINES) ? "declined" : "whole"),
 } satisfies LayoutDefinition

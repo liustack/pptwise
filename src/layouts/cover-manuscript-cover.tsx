@@ -14,6 +14,7 @@ import {
   paintManuscriptTracked,
 } from "./compositions/manuscript"
 import { fitManuscriptTitle, MANUSCRIPT_LEFT } from "./manuscript-shared"
+import { cutOrWhole, type HeadingCtx } from "./heading-set"
 
 /**
  * manuscript-cover：开题报告的题名页，thesis 2026-10 定稿（p01）。
@@ -72,17 +73,21 @@ function cjkLabel(text: string): boolean {
   return /^[㐀-鿿豈-﫿]+$/u.test(text)
 }
 
+/** The title: the author's own line breaks first, up to three lines; a line too long for the measure is then set as one fitted title over two. */
+function fitTitle(heading: string | undefined, ctx: HeadingCtx): { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean } {
+  const plain = stripEmphasis(heading ?? "").trim()
+  const authored = plain.split(/\n+/).map((line) => line.trim()).filter(Boolean)
+  const authoredFit = authored.length > 1 && authored.length <= TITLE.maxLines && authored.every((line) => manuscriptWidth(line, TITLE.size, ctx, { serif: true, bold: true }) <= TITLE.w)
+  return authoredFit ? { lines: authored, fontSize: TITLE.size, lineHeight: TITLE.lineHeight, truncated: false } : fitManuscriptTitle(authored.join(""), ctx, TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w)
+}
+
 export function ManuscriptCover({ ir, slide, ctx }: SvgTemplateProps) {
   const inks = manuscriptInks(ctx)
   const ground = inks.ground
   const photo = slide.background?.kind === "asset" ? ctx.images?.[slide.background.asset_id] : undefined
   const label = resolveDeckFooter(ir).label
   const labelFits = label !== null && manuscriptTrackedWidth(label, LABEL.size, LABEL.tracking, ctx, { bold: true }) <= TOP_RULE.right - MANUSCRIPT_LEFT
-  // The author's own line breaks first; a line too long for the measure is then set as one fitted title.
-  const heading = stripEmphasis(slide.heading ?? "").trim()
-  const authored = heading.split(/\n+/).map((line) => line.trim()).filter(Boolean)
-  const authoredFit = authored.length > 1 && authored.length <= TITLE.maxLines && authored.every((line) => manuscriptWidth(line, TITLE.size, ctx, { serif: true, bold: true }) <= TITLE.w)
-  const title = authoredFit ? { lines: authored, fontSize: TITLE.size, lineHeight: TITLE.lineHeight, truncated: false } : fitManuscriptTitle(authored.join(""), ctx, TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w)
+  const title = fitTitle(slide.heading, ctx)
   const titleInk = manuscriptText(inks.deep, ground, title.fontSize)
   const fields = (slide.fields ?? []).slice(0, FIELDS.max)
   const subtitleText = slide.subheading?.trim() ? slide.subheading : null
@@ -177,5 +182,6 @@ export const layoutDef = {
   suppressMotif: true,
   // Over the deck's label, in the page's left column.
   coverMark: { x: MANUSCRIPT_LEFT, y: 44 },
-  headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: TITLE.maxLines, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: ({ slide, ctx }) => cutOrWhole(fitTitle(slide.heading, ctx)),
 } satisfies LayoutDefinition

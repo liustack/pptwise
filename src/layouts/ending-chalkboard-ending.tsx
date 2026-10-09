@@ -17,6 +17,7 @@ import {
   paintChalkPhoto,
   paintChalkTracked,
 } from "./compositions/chalkboard"
+import type { HeadingCtx } from "./heading-set"
 
 type Image = Extract<Component, { type: "image" }>
 type Bullets = Extract<Component, { type: "bullets" }>
@@ -49,7 +50,7 @@ const WORDS = { x: 64, top: 520, w: 760, size: 52, lineHeight: 70, minSize: 32, 
 const NOTE = { x: 64, top: 610, w: 760, size: 13, lineHeight: 20, maxLines: 2 } as const
 
 /** The dismissal: one line at 52px, a point smaller at a time down to 32px to stay on one, else two lines at 32/44. */
-function fitEndingWords(heading: string, ctx: SvgTemplateProps["ctx"]) {
+function fitEndingWords(heading: string, ctx: HeadingCtx) {
   for (let size: number = WORDS.size; size >= WORDS.minSize; size -= 2) {
     const one = fitChalk(heading, { width: WORDS.w, size, lineHeight: Math.round((WORDS.lineHeight * size) / WORDS.size), maxLines: 1, serif: true }, ctx)
     if (one) return one
@@ -142,4 +143,5 @@ export const layoutDef = {
   paintsOwnBackground: true,
   branding: "none",
   headingFit: { maxWidth: WORDS.w, fontSize: WORDS.size, maxLines: 2, minPt: WORDS.minSize, bold: false, lineHeightRatio: WORDS.lineHeight / WORDS.size },
+  headingSet: ({ slide, ctx }) => (slide.heading?.trim() && !fitEndingWords(slide.heading, ctx) ? "declined" : "whole"),
 } satisfies LayoutDefinition

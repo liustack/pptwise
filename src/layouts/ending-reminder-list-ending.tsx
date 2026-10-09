@@ -5,6 +5,7 @@ import { fitHeadingLines } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
+import { fitVerdict, type HeadingCtx } from "./heading-set"
 
 /**
  * reminder-list-ending（第八波 pinOnly）：三件小事清单，零装饰。构图抄
@@ -37,16 +38,22 @@ const FOOT_MAX_W = 1088
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 3
 
-function splitActionLines(text: string): string[] {
+/** Every line the heading writes as a list: by line break, by 「一、」 numbering, or by "1." numbering. */
+function splitActionLinesAll(text: string): string[] {
   const trimmed = text.trim()
   if (!trimmed) return []
   const byNewline = trimmed.split(/\n+/).map((line) => line.trim()).filter(Boolean)
-  if (byNewline.length > 1) return byNewline.slice(0, 3)
+  if (byNewline.length > 1) return byNewline
   const byCn = trimmed.split(/(?=[一二三四五六七八九十]+、)/).map((line) => line.trim()).filter(Boolean)
-  if (byCn.length > 1) return byCn.slice(0, 3)
+  if (byCn.length > 1) return byCn
   const byDot = trimmed.split(/(?=(?:^|\s)\d+[.、]\s*)/).map((line) => line.trim()).filter(Boolean)
-  if (byDot.length > 1) return byDot.slice(0, 3)
+  if (byDot.length > 1) return byDot
   return []
+}
+
+/** The heading's list lines this face draws: the first three. */
+function splitActionLines(text: string): string[] {
+  return splitActionLinesAll(text).slice(0, ITEM_MAX)
 }
 
 function reminderItems(slide: SvgTemplateProps["slide"]): string[] {
@@ -60,12 +67,40 @@ function numberedItem(item: string, index: number): string {
   return `${index + 1}. ${item}`
 }
 
-export function ReminderListEnding({ slide, ctx }: SvgTemplateProps) {
-  const { colors, fonts } = ctx
-  const bg = ctx.defaultBg ?? colors.bg
+/**
+ * The reminders as the face sets them: the page's bullets under the heading,
+ * or, with no bullets, the heading's own list lines numbered in its place.
+ * Each line is fitted to one line.
+ */
+function setReminders(slide: SvgTemplateProps["slide"], fonts: HeadingCtx["fonts"]) {
   const items = reminderItems(slide)
   const fromBullets = boundaryBulletItems(slide, ITEM_MAX).length > 0
   const headingSource = fromBullets || items.length === 0 ? stripEmphasis(slide.heading ?? "") : ""
+  const lines = items.map((item, i) => ({
+    y: ITEM_YS[i]!,
+    body: fitSvgLine(numberedItem(item, i), {
+      maxWidth: ITEM_MAX_W,
+      fontSize: ITEM_SIZE,
+      minFontSize: ITEM_MIN_PT,
+      fontFamily: fonts.body,
+    }),
+  }))
+  return { fromBullets, headingSource, lines }
+}
+
+/** The title's fit when the heading is set as a title. */
+const TITLE_FIT = {
+  maxWidth: TITLE_MAX_W,
+  fontSize: TITLE_SIZE,
+  maxLines: TITLE_MAX_LINES,
+  minPt: TITLE_MIN_PT,
+  lineHeightRatio: TITLE_LINE_HEIGHT / TITLE_SIZE,
+} as const
+
+export function ReminderListEnding({ slide, ctx }: SvgTemplateProps) {
+  const { colors, fonts } = ctx
+  const bg = ctx.defaultBg ?? colors.bg
+  const { headingSource, lines } = setReminders(slide, fonts)
   const showTitle = headingSource.trim().length > 0
 
   const title = fitHeadingLines(headingSource, {
@@ -79,16 +114,6 @@ export function ReminderListEnding({ slide, ctx }: SvgTemplateProps) {
   })
   const titleInk = accessibleInk(colors.text, bg, title.fontSize)
   const itemInk = accessibleInk(colors.text, bg, ITEM_SIZE)
-
-  const lines = items.map((item, i) => ({
-    y: ITEM_YS[i]!,
-    body: fitSvgLine(numberedItem(item, i), {
-      maxWidth: ITEM_MAX_W,
-      fontSize: ITEM_SIZE,
-      minFontSize: ITEM_MIN_PT,
-      fontFamily: fonts.body,
-    }),
-  }))
 
   const footSource = (slide.subheading ?? "").trim()
   const foot = footSource
@@ -177,11 +202,11 @@ export const layoutDef: LayoutDefinition = {
     { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "subheading", accepts: [] },
   ],
-  headingFit: {
-    maxWidth: TITLE_MAX_W,
-    fontSize: TITLE_SIZE,
-    maxLines: TITLE_MAX_LINES,
-    minPt: TITLE_MIN_PT,
-    lineHeightRatio: TITLE_LINE_HEIGHT / TITLE_SIZE,
+  headingFit: TITLE_FIT,
+  headingSet: ({ slide, ctx }) => {
+    const { fromBullets, headingSource, lines } = setReminders(slide, ctx.fonts)
+    if (fromBullets || lines.length === 0) return fitVerdict(headingSource, TITLE_FIT, ctx)
+    // A heading written as a list is set in the list's place: three numbered lines at most, each on one line.
+    return splitActionLinesAll(slide.heading ?? "").length > ITEM_MAX || lines.some((line) => line.body.truncated) ? "cut" : "whole"
   },
 }

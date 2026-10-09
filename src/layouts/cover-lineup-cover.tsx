@@ -18,6 +18,7 @@ import {
   paintLineupRule,
   paintLineupTracked,
 } from "./compositions/lineup"
+import type { HeadingCtx } from "./heading-set"
 
 type Image = Extract<Component, { type: "image" }>
 
@@ -54,7 +55,7 @@ const NOTE = { right: 1216, top: 690, size: 10, lineHeight: 16, tracking: 0.5, w
  * line, or else on two lines broken at a comma or a colon, from 96 down to 64.
  * `null` when two lines at 64 do not hold it.
  */
-function fitTitle(text: string, ctx: SvgTemplateProps["ctx"]): { lines: string[]; size: number } | null {
+function fitTitle(text: string, ctx: HeadingCtx): { lines: string[]; size: number } | null {
   const width = (line: string, size: number) => lineupWidth(line, size, ctx, { serif: true }) + Math.max(0, Array.from(line).length - 1) * TITLE.tracking
   for (let size = TITLE.size; size >= TITLE.minPt; size -= 2) if (width(text, size) <= TITLE.w) return { lines: [text], size }
   for (let size = TITLE.minPt; size >= TITLE.twoLineMin; size -= 2) {
@@ -142,4 +143,8 @@ export const layoutDef = {
   // Over the photograph's dark left edge, above the occasion.
   coverMark: { x: 64, y: 24 },
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.twoLineMin, bold: false, lineHeightRatio: TITLE.lineHeight / TITLE.size },
+  headingSet: ({ slide, ctx }) => {
+    const title = stripEmphasis(slide.heading ?? "").trim()
+    return title && fitTitle(title, ctx) === null ? "declined" : "whole"
+  },
 } satisfies LayoutDefinition

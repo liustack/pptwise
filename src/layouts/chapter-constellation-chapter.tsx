@@ -158,4 +158,6 @@ export const layoutDef: LayoutDefinition = {
     { name: "subheading", accepts: [] },
     { name: "rule", accepts: [] },
   ],
+  // The measure runs from the title's x320 to the page's right margin at x1184.
+  headingFit: { maxWidth: 1184 - 320, fontSize: 56, maxLines: 2, minPt: 28 },
 }

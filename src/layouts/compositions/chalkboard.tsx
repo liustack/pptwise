@@ -113,7 +113,7 @@ export function chalkMark(ink: string, ground: string): string {
 // ── Text ────────────────────────────────────────────────────────────────
 
 /** `text` set at exactly `spec.size`, or `null` when it does not fit whole. `serif` is the heading face. */
-export function fitChalk(text: string | undefined, spec: LineupTextSpec, ctx: ComponentCtx): EmphasisHeadingLayout | null {
+export function fitChalk(text: string | undefined, spec: LineupTextSpec, ctx: Pick<ComponentCtx, "fonts">): EmphasisHeadingLayout | null {
   return fitLineup(text, spec, ctx)
 }
 
@@ -141,12 +141,12 @@ export function fitChalkBroken(text: string | undefined, spec: LineupTextSpec, c
 }
 
 /** The width `text` takes on one line at `size`, its marks stripped. */
-export function chalkWidth(text: string, size: number, ctx: ComponentCtx, opts: { serif?: boolean; bold?: boolean } = {}): number {
+export function chalkWidth(text: string, size: number, ctx: Pick<ComponentCtx, "fonts">, opts: { serif?: boolean; bold?: boolean } = {}): number {
   return lineupWidth(text, size, ctx, opts)
 }
 
 /** The tracked width of `text`, as `paintChalkTracked` sets it. */
-export function chalkTrackedWidth(text: string, size: number, tracking: number, ctx: ComponentCtx, opts: { serif?: boolean; bold?: boolean } = {}): number {
+export function chalkTrackedWidth(text: string, size: number, tracking: number, ctx: Pick<ComponentCtx, "fonts">, opts: { serif?: boolean; bold?: boolean } = {}): number {
   return lineupTrackedWidth(text, size, tracking, ctx, opts)
 }
 

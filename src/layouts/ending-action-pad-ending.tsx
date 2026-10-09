@@ -4,6 +4,7 @@ import type { LayoutDefinition } from "./registry"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
+import type { HeadingCtx } from "./heading-set"
 
 /**
  * action-pad-ending（第八波 pinOnly）：下一步清单，不是致谢页。黄垫块是
@@ -48,16 +49,22 @@ const NEXT_KICKER = "NEXT"
 /** Items of the accepted `bullets` block this face has room to draw. */
 const ITEM_MAX = 3
 
-function splitActionLines(text: string): string[] {
+/** Every action line the heading writes: by line break, by 「一、」 numbering, or by "1." numbering, else the heading as one line. */
+function splitActionLinesAll(text: string): string[] {
   const trimmed = text.trim()
   if (!trimmed) return []
   const byNewline = trimmed.split(/\n+/).map((line) => line.trim()).filter(Boolean)
-  if (byNewline.length > 1) return byNewline.slice(0, 3)
+  if (byNewline.length > 1) return byNewline
   const byCn = trimmed.split(/(?=[一二三四五六七八九十]+、)/).map((line) => line.trim()).filter(Boolean)
-  if (byCn.length > 1) return byCn.slice(0, 3)
+  if (byCn.length > 1) return byCn
   const byDot = trimmed.split(/(?=(?:^|\s)\d+[.、]\s*)/).map((line) => line.trim()).filter(Boolean)
-  if (byDot.length > 1) return byDot.slice(0, 3)
+  if (byDot.length > 1) return byDot
   return [trimmed]
+}
+
+/** The heading's action lines this face draws: the first three. */
+function splitActionLines(text: string): string[] {
+  return splitActionLinesAll(text).slice(0, ITEM_MAX)
 }
 
 function actionItems(slide: SvgTemplateProps["slide"]): string[] {
@@ -69,6 +76,26 @@ function actionItems(slide: SvgTemplateProps["slide"]): string[] {
 function actionCta(slide: SvgTemplateProps["slide"]): string {
   if (boundaryBulletItems(slide, ITEM_MAX).length > 0) return (slide.heading ?? "").trim()
   return (slide.subheading ?? "").trim()
+}
+
+/** One action line, on one line in the heading face. */
+function fitActionLine(item: string, fonts: HeadingCtx["fonts"]) {
+  return fitEmphasisLine(item, {
+    maxWidth: ITEM_MAX_W,
+    fontSize: ITEM_SIZE,
+    minFontSize: ITEM_MIN_PT,
+    fontFamily: fonts.heading,
+  })
+}
+
+/** The call to action in the pad, its marks stripped. */
+function fitCta(text: string, fonts: HeadingCtx["fonts"]) {
+  return fitSvgLine(stripEmphasis(text), {
+    maxWidth: 1000,
+    fontSize: PAD_TEXT_SIZE,
+    minFontSize: 16,
+    fontFamily: fonts.body,
+  })
 }
 
 export function ActionPadEnding({ ir, slide, ctx }: SvgTemplateProps) {
@@ -90,12 +117,7 @@ export function ActionPadEnding({ ir, slide, ctx }: SvgTemplateProps) {
 
   const lines = items.map((item, i) => ({
     y: ITEM_YS[i]!,
-    body: fitEmphasisLine(item, {
-      maxWidth: ITEM_MAX_W,
-      fontSize: ITEM_SIZE,
-      minFontSize: ITEM_MIN_PT,
-      fontFamily: fonts.heading,
-    }),
+    body: fitActionLine(item, fonts),
   }))
 
   // The CTA sits inside the accent pad, so it is the one heading-fed string
@@ -103,14 +125,7 @@ export function ActionPadEnding({ ir, slide, ctx }: SvgTemplateProps) {
   // accent tint (or an accent pad, or an accent underline) on an accent
   // field has no contrast left to spend. The action lines above carry the
   // emphasis.
-  const cta = ctaSource
-    ? fitSvgLine(stripEmphasis(ctaSource), {
-        maxWidth: 1000,
-        fontSize: PAD_TEXT_SIZE,
-        minFontSize: 16,
-        fontFamily: fonts.body,
-      })
-    : null
+  const cta = ctaSource ? fitCta(ctaSource, fonts) : null
   const ctaWidth = cta
     ? measureTextUnits(cta.text, { bold: true, fontFamily: fonts.body }) * cta.fontSize
     : 0
@@ -237,4 +252,12 @@ export const layoutDef: LayoutDefinition = {
     { name: "body", accepts: ["bullets"], capacity: 1, itemCapacity: ITEM_MAX },
     { name: "meta", accepts: [] },
   ],
+  headingSet: ({ slide, ctx }) => {
+    // With bullets the heading is the call to action in the pad. Without, it
+    // is the action list itself: three lines at most, each on one line (a
+    // line with nothing to set fits as nothing).
+    if (boundaryBulletItems(slide, ITEM_MAX).length > 0) return fitCta(actionCta(slide), ctx.fonts).truncated ? "cut" : "whole"
+    const lines = splitActionLinesAll(slide.heading ?? "")
+    return lines.length > ITEM_MAX || lines.some((line) => fitActionLine(line, ctx.fonts)?.truncated) ? "cut" : "whole"
+  },
 }

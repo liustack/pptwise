@@ -13,6 +13,7 @@ import {
   periodicalTrackedWidth,
 } from "./compositions/periodical"
 import { MastheadColumn, MastheadIssue, MastheadRules, MastheadSection, PERIODICAL_LEFT, PERIODICAL_RIGHT, PERIODICAL_W } from "./periodical-shared"
+import type { HeadingCtx } from "./heading-set"
 
 /**
  * periodical-ending：期刊的后记页，journal 2026-10 定稿（p18）。
@@ -33,7 +34,7 @@ const TEXT = { top: 200, size: 44, minSize: 34, lineHeight: 74, maxLines: 2 } as
 const SIGN = { rule: { y: 470, x: 900, w: 0.8 }, name: { top: 484, lineHeight: 40, size: 26, tracking: { cjk: 6, latin: 1 } }, date: { top: 528, lineHeight: 26, size: 15, tracking: { cjk: 3, latin: 0.5 } }, maxW: PERIODICAL_W } as const
 
 /** The closing words as the author broke them, each line fitted to the measure at one size. */
-function fitClosing(heading: string, ctx: SvgTemplateProps["ctx"]) {
+function fitClosing(heading: string, ctx: HeadingCtx) {
   const parts = stripEmphasis(heading)
     .split(/\n+/)
     .map((part) => part.trim())
@@ -114,4 +115,5 @@ export const layoutDef = {
   pageFields: ["kicker"],
   suppressMotif: true,
   headingFit: { maxWidth: PERIODICAL_W, fontSize: TEXT.size, maxLines: TEXT.maxLines, minPt: TEXT.minSize, bold: true, lineHeightRatio: TEXT.lineHeight / TEXT.size },
+  headingSet: ({ slide, ctx }) => (slide.heading?.trim() && fitClosing(slide.heading, ctx) === null ? "declined" : "whole"),
 } satisfies LayoutDefinition

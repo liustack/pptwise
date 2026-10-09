@@ -299,4 +299,5 @@ export const layoutDef: LayoutDefinition = {
     { name: "rule", accepts: [] },
     { name: "meta", accepts: [] },
   ],
+  headingFit: { maxWidth: 1088, fontSize: 88, maxLines: 2, minPt: 44 },
 }

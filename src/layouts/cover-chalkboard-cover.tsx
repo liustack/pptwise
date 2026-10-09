@@ -20,6 +20,7 @@ import {
   paintChalkPhoto,
   paintChalkTracked,
 } from "./compositions/chalkboard"
+import type { HeadingCtx } from "./heading-set"
 
 type Image = Extract<Component, { type: "image" }>
 
@@ -54,7 +55,7 @@ interface TitleLine {
 }
 
 /** The title's lines: each part the author wrote on a line of its own at its size, shrunk to fit the measure, a part too long for one line broken at a comma. */
-function fitCoverTitle(heading: string, ctx: SvgTemplateProps["ctx"]): TitleLine[] | null {
+function fitCoverTitle(heading: string, ctx: HeadingCtx): TitleLine[] | null {
   const parts = heading.split(/\n+/u).map((p) => p.trim()).filter(Boolean)
   if (parts.length === 0 || parts.length > 3) return null
   const out: TitleLine[] = []
@@ -186,4 +187,5 @@ export const layoutDef = {
   branding: "none",
   coverMark: { x: 64, y: 40 },
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.small.size, maxLines: 3, minPt: Math.round(TITLE.small.size * TITLE.floor), bold: false, lineHeightRatio: TITLE.small.lineHeight / TITLE.small.size },
+  headingSet: ({ slide, ctx }) => (slide.heading?.trim() && !fitCoverTitle(slide.heading, ctx) ? "declined" : "whole"),
 } satisfies LayoutDefinition

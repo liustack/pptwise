@@ -257,4 +257,5 @@ export const layoutDef: LayoutDefinition = {
     { name: "subheading", accepts: [] },
     { name: "meta", accepts: [] },
   ],
+  headingFit: { maxWidth: 1168, fontSize: 150, maxLines: 2, minPt: 72 },
 }

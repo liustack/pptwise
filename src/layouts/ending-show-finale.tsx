@@ -10,8 +10,12 @@ import {
   withoutOverflowMark,
 } from "./show-shared"
 import type { SvgTemplateProps } from "./types"
+import { lineVerdict } from "./heading-set"
 
 /** show-finale。T 台中线只属于本版式，不上升为主题 motif。 */
+/** The title on one line in the bold heading face, shrunk no further than its floor. */
+const TITLE_LINE = { maxWidth: 1000, fontSize: 96, minFontSize: 54, bold: true } as const
+
 export function ShowFinaleEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const kickerSource = ir.meta.version?.trim() ?? ""
@@ -26,13 +30,7 @@ export function ShowFinaleEnding({ ir, slide, ctx }: SvgTemplateProps) {
     : null
   const titleSource = stripEmphasis(slide.heading ?? "").trim()
   const title = titleSource
-    ? fitSvgLine(titleSource, {
-        maxWidth: 1000,
-        fontSize: 96,
-        minFontSize: 54,
-        fontFamily: fonts.heading,
-        bold: true,
-      })
+    ? fitSvgLine(titleSource, { ...TITLE_LINE, fontFamily: fonts.heading })
     : null
   const subtitleSource = stripEmphasis(slide.subheading ?? "").trim()
   const subtitle = subtitleSource
@@ -157,4 +155,5 @@ export const layoutDef = {
     { name: "meta", accepts: [] },
     { name: "decor", accepts: [] },
   ],
+  headingSet: ({ slide, ctx }) => lineVerdict(stripEmphasis(slide.heading ?? "").trim(), TITLE_LINE, ctx),
 } satisfies LayoutDefinition

@@ -120,7 +120,7 @@ export function periodicalMark(ink: string, ground: string): string {
 export type PeriodicalTextSpec = ManuscriptTextSpec
 
 /** `text` set at exactly `spec.size`, or `null` when it does not fit whole. */
-export function fitPeriodical(text: string | undefined, spec: PeriodicalTextSpec, ctx: ComponentCtx): EmphasisHeadingLayout | null {
+export function fitPeriodical(text: string | undefined, spec: PeriodicalTextSpec, ctx: Pick<ComponentCtx, "fonts">): EmphasisHeadingLayout | null {
   return fitManuscript(text, spec, ctx)
 }
 

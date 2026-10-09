@@ -378,6 +378,8 @@ Paint a `color` background clearly light or clearly dark. On a mid-tone about as
 
 The check walks every string leaf under `slides` and `meta`, so a new component field is covered automatically. Spec headings get the same check.
 
+A cover, chapter or ending heading must fit the place the bound face gives it. A heading the face would cut or drop is refused, and the error says how long a heading the face holds on that page, in Chinese characters for a Chinese heading and in words otherwise. The face answers with the same fit it draws with (`src/layouts/heading-set.ts`).
+
 ## Deck project or bare IR
 
 Use a bare IR for a small generated input or a direct API boundary. Use a deck project for iterative work. A project keeps theme binding and page semantics in `deck.spec.json`, stores content in `pages/<id>.json`, and assembles the same IR v5 without writing rendering choices back into source files.

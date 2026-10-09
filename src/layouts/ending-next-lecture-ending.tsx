@@ -5,6 +5,7 @@ import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
 import { hasCjk } from "./minimal-shared"
 import { stripEmphasis } from "../render/emphasis"
+import type { HeadingCtx } from "./heading-set"
 
 /**
  * next-lecture-ending（第八波 pinOnly）：课后清单 + 下讲预告。kicker 按标
@@ -54,12 +55,17 @@ function isKickerWord(text: string): boolean {
   return text === KICKER_CJK || text === KICKER_LATIN
 }
 
-function splitHomeworkLines(text: string): string[] {
+/** Every homework line the heading writes, by line break, past a line that only repeats the kicker. */
+function splitHomeworkLinesAll(text: string): string[] {
   const trimmed = text.trim()
   if (!trimmed) return []
   const byNewline = trimmed.split(/\n+/).map((line) => line.trim()).filter(Boolean)
-  const lines = (byNewline.length > 1 ? byNewline : [trimmed]).filter((line) => !isKickerWord(line))
-  return lines.slice(0, 2)
+  return (byNewline.length > 1 ? byNewline : [trimmed]).filter((line) => !isKickerWord(line))
+}
+
+/** The lines this face draws of them: the first two. */
+function splitHomeworkLines(text: string): string[] {
+  return splitHomeworkLinesAll(text).slice(0, ITEM_MAX)
 }
 
 function homeworkItems(slide: SvgTemplateProps["slide"]): string[] {
@@ -72,6 +78,16 @@ function scriptIsCjk(slide: SvgTemplateProps["slide"], items: string[]): boolean
   if (hasCjk(slide.heading ?? "")) return true
   if (items.some((item) => hasCjk(item))) return true
   return hasCjk(slide.subheading ?? "")
+}
+
+/** One homework line, on one line in the heading face, its marks stripped. */
+function fitItem(item: string, fonts: HeadingCtx["fonts"]) {
+  return fitSvgLine(stripEmphasis(item), {
+    maxWidth: ITEM_MAX_W,
+    fontSize: ITEM_SIZE,
+    minFontSize: ITEM_MIN_PT,
+    fontFamily: fonts.heading,
+  })
 }
 
 export function NextLectureEnding({ slide, ctx }: SvgTemplateProps) {
@@ -95,12 +111,7 @@ export function NextLectureEnding({ slide, ctx }: SvgTemplateProps) {
   const kickerPainted = withoutOverflowMark(kicker.text)
 
   const lines = items.map((item, i) => {
-    const body = fitSvgLine(stripEmphasis(item), {
-      maxWidth: ITEM_MAX_W,
-      fontSize: ITEM_SIZE,
-      minFontSize: ITEM_MIN_PT,
-      fontFamily: fonts.heading,
-    })
+    const body = fitItem(item, fonts)
     return { y: ITEM_YS[i]!, body, painted: withoutOverflowMark(body.text) }
   })
 
@@ -199,4 +210,12 @@ export const layoutDef: LayoutDefinition = {
     { name: "rule", accepts: [] },
     { name: "subheading", accepts: [] },
   ],
+  headingSet: ({ slide, ctx }) => {
+    // With bullets the face sets them and reads the heading for its language
+    // only. Without, the heading is the list itself: a line per item, each on
+    // one line, no more than the face draws.
+    if (boundaryBulletItems(slide, ITEM_MAX).length > 0) return "whole"
+    const lines = splitHomeworkLinesAll(stripEmphasis(slide.heading ?? ""))
+    return lines.length > ITEM_MAX || lines.some((line) => fitItem(line, ctx.fonts).truncated) ? "cut" : "whole"
+  },
 }

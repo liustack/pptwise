@@ -19,6 +19,7 @@ import {
   scrollText,
   uprightText,
 } from "./compositions/scroll"
+import type { HeadingCtx } from "./heading-set"
 
 /**
  * scroll-ending：讲座的落款页，ink 2026-10 定稿（p18）。
@@ -50,7 +51,7 @@ const SIGN = { x: 110, top: 600, w: 340, size: 13, lineHeight: 20, maxLines: 3 }
 const NOTE = { x: 24, top: 680, size: 11, lineHeight: 20, w: 560 } as const
 
 /** Latin closing words a sentence a line, each wrapped to the measure when it runs long, or `null` past six lines. */
-function fitSentences(text: string, ctx: SvgTemplateProps["ctx"]) {
+function fitSentences(text: string, ctx: HeadingCtx) {
   const parts = text
     .trim()
     .split(/\n+|(?<=[.!?])\s+/u)
@@ -68,16 +69,22 @@ function clauses(text: string): string {
   return text.trim().replace(/([，。；：！？])(?=[^\n])/gu, "$1\n")
 }
 
+/** The closing words upright a clause a column when they can stand upright, otherwise across a sentence a line. `verseDropped` when neither holds them whole. */
+function setVerse(heading: string | undefined, ctx: HeadingCtx) {
+  const verse = stripEmphasis(heading ?? "").trim()
+  const upright = verse !== "" && uprightText(verse)
+  const capacity = Math.floor((VERSE.length - VERSE.size) / (VERSE.size + VERSE.tracking)) + 1
+  const columns = upright ? fitVertical(clauses(heading ?? ""), { size: VERSE.size, tracking: VERSE.tracking, capacity, pitch: VERSE.pitch, maxColumns: VERSE.maxColumns }) : null
+  const across = !upright && verse ? fitSentences(heading ?? "", ctx) : null
+  const verseDropped = verse !== "" && !columns && !across
+  return { columns, across, verseDropped }
+}
+
 export function ScrollEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const inks = scrollInks(ctx)
   const ground = inks.ground
   const photo = slide.background?.kind === "asset" ? slide.background.asset_id : null
-  const verse = stripEmphasis(slide.heading ?? "").trim()
-  const upright = verse !== "" && uprightText(verse)
-  const capacity = Math.floor((VERSE.length - VERSE.size) / (VERSE.size + VERSE.tracking)) + 1
-  const columns = upright ? fitVertical(clauses(slide.heading ?? ""), { size: VERSE.size, tracking: VERSE.tracking, capacity, pitch: VERSE.pitch, maxColumns: VERSE.maxColumns }) : null
-  const across = !upright && verse ? fitSentences(slide.heading ?? "", ctx) : null
-  const verseDropped = verse !== "" && !columns && !across
+  const { columns, across, verseDropped } = setVerse(slide.heading, ctx)
   const footer = resolveDeckFooter(ir)
   const hall = joinColumnLabels([ir.meta.organization, slide.kicker])
   const date = footer.label
@@ -135,4 +142,5 @@ export const layoutDef = {
   drawsPhoto: true,
   suppressMotif: true,
   headingFit: { maxWidth: VERSE_ACROSS.w, fontSize: VERSE_ACROSS.size, maxLines: VERSE_ACROSS.maxLines, minPt: VERSE_ACROSS.size, bold: false, lineHeightRatio: VERSE_ACROSS.lineHeight / VERSE_ACROSS.size },
+  headingSet: ({ slide, ctx }) => (setVerse(slide.heading, ctx).verseDropped ? "declined" : "whole"),
 } satisfies LayoutDefinition

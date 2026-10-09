@@ -95,6 +95,8 @@
  * metric miss.
  */
 
+import type { StyleFonts } from "../themes/tokens"
+
 export type FontRole = "heading" | "body" | "mono"
 
 /** Lower-cased names of fonts preinstalled on a stock Windows (and, for Latin, macOS). */
@@ -323,6 +325,20 @@ export function resolveFontStack(stack: string[], role: FontRole, chinese: boole
           ? PREVIEW_FALLBACK.serif
           : PREVIEW_FALLBACK.sans
   return ea ? `${face}, ${ea}, ${fallback}` : `${face}, ${fallback}`
+}
+
+/**
+ * The three font lists a deck's pages are set in: the theme's stacks, each
+ * resolved for the deck's language. `buildCtx` (`./full-slide-svg.tsx`) hands
+ * them to every face, and validate measures a heading in the same three
+ * (`../layouts/heading-set.ts`).
+ */
+export function deckFonts(fonts: StyleFonts, chinese: boolean): { heading: string; body: string; mono: string } {
+  return {
+    heading: resolveFontStack(fonts.heading, "heading", chinese),
+    body: resolveFontStack(fonts.body, "body", chinese),
+    mono: resolveFontStack(fonts.mono ?? [], "mono", chinese),
+  }
 }
 
 /** Lower-cases a stack member the way `resolveFontFace` reads it. */
