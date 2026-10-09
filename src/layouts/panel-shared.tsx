@@ -192,20 +192,31 @@ export function panelBodyRect(source: PanelSourceLayout | null, page?: PageRende
   return { x: PANEL_LEFT, y: top, w: PANEL_W, h: bottom - top }
 }
 
-/** A subheading, when a page carries one: muted lines under the claim, the body moved down under them. */
-const STANDFIRST = { top: 142, size: 17, lineHeight: 24, maxLines: 2, gap: 14 } as const
+/**
+ * A subheading, when a page carries one: muted lines under the claim, the
+ * body moved down under them. Its box starts `under` px below the claim's
+ * foot (y142 under the sheet's y130).
+ */
+const STANDFIRST = { under: 12, size: 17, lineHeight: 24, maxLines: 2, gap: 14 } as const
 
 export interface PanelStandfirstLayout {
   layout: EmphasisHeadingLayout
+  /** Top of its first line box. */
+  top: number
   /** Where the body starts under it. */
   bodyTop: number
 }
 
-export function fitPanelStandfirst(text: string | undefined, ctx: ComponentCtx): PanelStandfirstLayout | null {
+/**
+ * `width` and `headFoot` are the measure it is set on and the claim's foot
+ * over it: the sheet's, or the column's beside a photograph
+ * (`image-panel-split.tsx`).
+ */
+export function fitPanelStandfirst(text: string | undefined, ctx: ComponentCtx, width: number = PANEL_W, headFoot: number = HEAD.foot): PanelStandfirstLayout | null {
   const sub = text?.trim()
   if (!sub) return null
   const layout = fitEmphasisText(sub, {
-    maxWidth: PANEL_W,
+    maxWidth: width,
     fontSize: STANDFIRST.size,
     minPt: STANDFIRST.size,
     maxLines: STANDFIRST.maxLines,
@@ -213,13 +224,14 @@ export function fitPanelStandfirst(text: string | undefined, ctx: ComponentCtx):
     fontFamily: ctx.fonts.body,
     bold: false,
   })
-  return { layout: { ...layout, lineHeight: STANDFIRST.lineHeight }, bodyTop: STANDFIRST.top + layout.lines.length * STANDFIRST.lineHeight + STANDFIRST.gap }
+  const top = headFoot + STANDFIRST.under
+  return { layout: { ...layout, lineHeight: STANDFIRST.lineHeight }, top, bodyTop: top + layout.lines.length * STANDFIRST.lineHeight + STANDFIRST.gap }
 }
 
-export function PanelStandfirst({ layout, ctx }: { layout: PanelStandfirstLayout; ctx: ComponentCtx }) {
+export function PanelStandfirst({ layout, ctx, x = PANEL_LEFT }: { layout: PanelStandfirstLayout; ctx: ComponentCtx; x?: number }) {
   const { colors, fonts } = ctx
   const ink = accessibleInk(colors.muted, ctx.defaultBg ?? colors.bg, STANDFIRST.size)
-  const first = centredBaseline(STANDFIRST.top, STANDFIRST.lineHeight, STANDFIRST.size)
+  const first = centredBaseline(layout.top, STANDFIRST.lineHeight, STANDFIRST.size)
   return (
     <g data-panel-standfirst="">
       {renderEmphasisHeading(
@@ -229,7 +241,7 @@ export function PanelStandfirst({ layout, ctx }: { layout: PanelStandfirstLayout
           <text
             key={index}
             data-truncated={layout.layout.truncated && index === layout.layout.lines.length - 1 ? "1" : undefined}
-            x={PANEL_LEFT}
+            x={x}
             y={first + index * STANDFIRST.lineHeight}
             fontFamily={fonts.body}
             fontSize={layout.layout.fontSize}

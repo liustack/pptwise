@@ -262,8 +262,6 @@ function sweep(route: Route, assets: Record<LanguageId, CorpusAssets>): Silent[]
 const PENDING = new Set([
   "brief × photo (image-split) × decor.text",
   "bulletin × photo (image-split) × decor.text",
-  "bulletin × photo (image-split) × subheading",
-  "ember × photo (pitch-photo) × subheading",
   "ink × chapter (scroll-chapter) × decor.text",
   "ink × cover (scroll-cover) × stamp.date",
   "ink × cover (scroll-cover) × stamp.text",
@@ -283,9 +281,7 @@ const PENDING = new Set([
   "lecture × process (chalkboard-sheet) × decor.text",
   "lecture × statement (chalkboard-sheet) × decor.text",
   "ledger × photo (image-split) × decor.text",
-  "ledger × photo (image-split) × subheading",
   "swiss × photo (image-top) × decor.text",
-  "swiss × photo (image-top) × subheading",
 ])
 
 describe("a page's own fields reach the page, or the engine says they did not", () => {

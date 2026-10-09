@@ -24,8 +24,8 @@ import { faceParam, type FaceParams } from "../layouts/face-params"
 import { SvgContent } from "./svg-content"
 import type { PageRenderContext } from "./page-context"
 import { NOTICE_BODY_BOTTOM, NOTICE_BODY_TOP, NoticeHead, NoticeSource, fitNoticeSource } from "../layouts/notice-shared"
-import { NoticeSheetContent } from "../layouts/content-notice-sheet"
-import { GridSheetContent } from "../layouts/content-grid-sheet"
+import { NoticeSheetContent, noticeStandfirst } from "../layouts/content-notice-sheet"
+import { GridSheetContent, gridStandfirst } from "../layouts/content-grid-sheet"
 import { PanelSheetContent } from "../layouts/content-panel-sheet"
 import { PanelSplitPage } from "../layouts/image-panel-split"
 import { SealSheetContent } from "../layouts/content-seal-sheet"
@@ -650,7 +650,9 @@ const NOTICE_SPLIT = { imageW: 560, textX: 624, headW: 520, right: 80, sourceFir
  * short primary bar), so a photo page reads as the same notice as the pages
  * around it. Under the frame, a list of "Label: value" facts is set as the
  * notice pairs, any other content by the component renderer, and the source
- * sits at the foot of the column in the frame's 14px.
+ * sits at the foot of the column in the frame's 14px. A subheading is the
+ * frame's standfirst at the top of the column's body, as on every notice
+ * page, and the body moves down under it.
  */
 function NoticeSplitPage({
   slide,
@@ -675,7 +677,9 @@ function NoticeSplitPage({
     ? fitNoticeSource(slide.footnote, ctx, textW, NOTICE_SPLIT.sourceFirstBaseline + (probe.layout.lines.length - 1) * 20)
     : null
   const bottom = source ? source.top - 12 : NOTICE_BODY_BOTTOM
-  const rect = { x: textX, y: NOTICE_BODY_TOP, w: textW, h: bottom - NOTICE_BODY_TOP }
+  const standfirst = noticeStandfirst(slide.subheading, ctx, { x: textX, w: textW, top: NOTICE_BODY_TOP })
+  const top = NOTICE_BODY_TOP + (standfirst?.h ?? 0)
+  const rect = { x: textX, y: top, w: textW, h: bottom - top }
   const pairs = compose({ components: rest, ctx, rect, setting: "notice" }, ["pairs"])
   const { placed, dropped } = pairs ? { placed: [], dropped: 0 } : layoutContentFit("single", rest, rect, ctx)
   return (
@@ -705,6 +709,7 @@ function NoticeSplitPage({
           )
         })()}
       <NoticeHead heading={slide.heading} ctx={ctx} place={{ x: textX, w: Math.min(NOTICE_SPLIT.headW, textW), right: textRight }} />
+      {standfirst?.node}
       {pairs}
       {placed.map((p, i) => (
         <Fragment key={i}>{renderComponent(p.component, p.box, ctx)}</Fragment>
@@ -733,8 +738,10 @@ const GRID_TOP = {
  * shows, two to four in columns (`figures` in the grid setting), or anything
  * else the page carries drawn by the component renderer, and the source at
  * the foot in the frame's 14px. A two-line claim takes its second line out
- * of the photograph, not out of the figures. A page that is not one
- * photograph, or whose rest the band cannot hold, is drawn as a grid sheet.
+ * of the photograph, not out of the figures. A subheading is the frame's
+ * standfirst under the rule, as on every grid page, and the figures move
+ * down under it. A page that is not one photograph, or whose rest the band
+ * cannot hold, is drawn as a grid sheet.
  */
 function GridTopPage({ ir, slide, index, ctx, page }: { ir: PptxIR; slide: Slide; index: number; ctx: ComponentCtx; page: PageRenderContext }) {
   const plain = () => <GridSheetContent ir={ir} slide={slide} index={index} ctx={ctx} page={page} />
@@ -761,7 +768,8 @@ function GridTopPage({ ir, slide, index, ctx, page }: { ir: PptxIR; slide: Slide
   const imgH = GRID_TOP.imageH - extra
   const lastBaseline = centredBaseline(GRID_TOP.title.foot - GRID_TOP.title.lineHeight, GRID_TOP.title.lineHeight, title.fontSize)
   const source = fitGridSource(slide, ctx, page)
-  const rect = gridBodyRect(source, page, GRID_TOP.bodyTop)
+  const standfirst = gridStandfirst(slide.subheading, ctx, { x: GRID_LEFT, w: GRID_W, top: GRID_TOP.bodyTop })
+  const rect = gridBodyRect(source, page, GRID_TOP.bodyTop + (standfirst?.h ?? 0))
   const composed = rest.length > 0 ? compose({ components: rest, ctx, rect, setting: "grid" }, ["figures"]) : null
   if (rest.length > 0 && !composed && bodySlotDropsContent(rest, rect, ctx)) return plain()
   return (
@@ -791,6 +799,7 @@ function GridTopPage({ ir, slide, index, ctx, page }: { ir: PptxIR; slide: Slide
         bold
       />
       <rect x={GRID_LEFT} y={GRID_TOP.rule.y} width={GRID_W} height={GRID_TOP.rule.h} fill={accessibleInk(colors.text, bg, GRID_TOP.title.size)} />
+      {standfirst?.node}
       {composed ?? (rest.length > 0 && <SvgContent components={rest} rect={rect} ctx={ctx} />)}
       <GridSource source={source} ctx={ctx} />
     </g>

@@ -45,48 +45,57 @@ export interface GridSheet {
   composed: React.ReactElement | null
 }
 
+/**
+ * The page's subheading as the frame's standfirst, set at `place` on its
+ * measure: the sheet's body top, or the column beside a photograph
+ * (`render/image-pages.tsx`). `h` is how far it moves the body down.
+ */
+export function gridStandfirst(text: string | undefined, ctx: ComponentCtx, place: { x: number; w: number; top: number }): { node: React.ReactElement; h: number } | null {
+  const sub = text?.trim()
+  if (!sub) return null
+  const { colors, fonts } = ctx
+  const bg = ctx.defaultBg ?? colors.bg
+  const layout = fitEmphasisText(sub, {
+    maxWidth: place.w,
+    fontSize: STANDFIRST.size,
+    minPt: STANDFIRST.size,
+    maxLines: STANDFIRST.maxLines,
+    lineHeightRatio: STANDFIRST.box / STANDFIRST.size,
+    fontFamily: fonts.body,
+    bold: false,
+  })
+  const ink = accessibleInk(colors.muted, bg, layout.fontSize)
+  const first = centredBaseline(place.top, STANDFIRST.box, STANDFIRST.size)
+  const node = (
+    <g data-grid-standfirst="">
+      {renderEmphasisHeading(
+        layout,
+        headingEmphasisPaint(ctx, layout, { baseFill: ink, fontWeight: "700", fontFamily: fonts.body, bold: false }),
+        (_line, index) => (
+          <text
+            key={index}
+            data-truncated={layout.truncated && index === layout.lines.length - 1 ? "1" : undefined}
+            x={place.x}
+            y={first + index * STANDFIRST.box}
+            fontFamily={fonts.body}
+            fontSize={layout.fontSize}
+            fill={ink}
+            dominantBaseline="alphabetic"
+          />
+        ),
+      )}
+    </g>
+  )
+  return { node, h: layout.lines.length * STANDFIRST.box + STANDFIRST.gap }
+}
+
 /** Frames the page and asks the compositions whether one of them takes its body. */
 export function composeGrid(slide: Slide, ctx: ComponentCtx, page?: PageRenderContext): GridSheet {
   const source = fitGridSource(slide, ctx, page)
   let top = GRID_BODY_TOP
-  let standfirst: React.ReactElement | null = null
-  const sub = slide.subheading?.trim()
-  if (sub) {
-    const { colors, fonts } = ctx
-    const bg = ctx.defaultBg ?? colors.bg
-    const layout = fitEmphasisText(sub, {
-      maxWidth: GRID_W,
-      fontSize: STANDFIRST.size,
-      minPt: STANDFIRST.size,
-      maxLines: STANDFIRST.maxLines,
-      lineHeightRatio: STANDFIRST.box / STANDFIRST.size,
-      fontFamily: fonts.body,
-      bold: false,
-    })
-    const ink = accessibleInk(colors.muted, bg, layout.fontSize)
-    const first = centredBaseline(top, STANDFIRST.box, STANDFIRST.size)
-    standfirst = (
-      <g data-grid-standfirst="">
-        {renderEmphasisHeading(
-          layout,
-          headingEmphasisPaint(ctx, layout, { baseFill: ink, fontWeight: "700", fontFamily: fonts.body, bold: false }),
-          (_line, index) => (
-            <text
-              key={index}
-              data-truncated={layout.truncated && index === layout.lines.length - 1 ? "1" : undefined}
-              x={GRID_LEFT}
-              y={first + index * STANDFIRST.box}
-              fontFamily={fonts.body}
-              fontSize={layout.fontSize}
-              fill={ink}
-              dominantBaseline="alphabetic"
-            />
-          ),
-        )}
-      </g>
-    )
-    top += layout.lines.length * STANDFIRST.box + STANDFIRST.gap
-  }
+  const standfirstBlock = gridStandfirst(slide.subheading, ctx, { x: GRID_LEFT, w: GRID_W, top })
+  const standfirst = standfirstBlock?.node ?? null
+  if (standfirstBlock) top += standfirstBlock.h
   const rect = gridBodyRect(source, page, top)
   const composed = compose({ components: slide.components, ctx, rect, setting: "grid" }, GRID_COMPOSITIONS)
   return { standfirst, rect, source, composed }

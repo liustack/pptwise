@@ -6,7 +6,7 @@ import { bodySlotDropsContent, stepAside } from "../render/step-aside"
 import { compose } from "./compositions"
 import { blockTag } from "./compositions/shared"
 import { fitPitch, paintPitch, paintPitchPhoto, pitchInks, pitchText } from "./compositions/pitch"
-import { fitPitchSource, PITCH_RIGHT, PitchRailHead, PitchSource, PitchTitle } from "./pitch-shared"
+import { fitPitchSource, fitPitchStandfirst, PITCH_RIGHT, PitchRailHead, PitchSource, PitchStandfirst, PitchTitle } from "./pitch-shared"
 import { PitchSheetContent } from "./content-pitch-sheet"
 
 type Image = Extract<Component, { type: "image" }>
@@ -19,7 +19,9 @@ type Image = Extract<Component, { type: "image" }>
  * the page's beat lit, the claim bold at 34/46 ending at y220, a hairline,
  * and under it the body (the spotlight composition, the figure the page is
  * about set huge in the fire with the others beside it, or the ordinary
- * component renderer), the source at the foot.
+ * component renderer), the source at the foot. A subheading is the pitch
+ * standfirst at the top of the body, as on every pitch page, set on the
+ * column's measure, and the body moves down under it.
  *
  * Takes the page's first `image` component as the photograph and sets the
  * rest in the right column. A page with no image is set as an ordinary
@@ -36,7 +38,9 @@ export function PitchPhotoContent(props: SvgTemplateProps) {
   if (!image) return <PitchSheetContent {...props} />
   const rest = slide.components.filter((c) => c !== image)
   const w = PITCH_RIGHT - COLUMN.x
-  const rect = { x: COLUMN.x, y: COLUMN.top, w, h: COLUMN.bottom - COLUMN.top }
+  const standfirst = fitPitchStandfirst(slide, ctx, w)
+  const top = COLUMN.top + (standfirst?.h ?? 0)
+  const rect = { x: COLUMN.x, y: top, w, h: COLUMN.bottom - top }
   const composed = compose({ components: rest, ctx, rect, setting: "pitch" }, ["spotlight"])
   if (!composed) {
     // Only what the column carries is probed: the photograph has its own half.
@@ -60,6 +64,7 @@ export function PitchPhotoContent(props: SvgTemplateProps) {
       <PitchRailHead ir={ir} slide={slide} ctx={ctx} />
       <PitchTitle heading={slide.heading} ctx={ctx} x={COLUMN.x} width={w} foot={COLUMN.title.foot} />
       <rect x={COLUMN.x} y={COLUMN.rule} width={w} height={1} fill={inks.line} />
+      <PitchStandfirst standfirst={standfirst} ctx={ctx} x={COLUMN.x} top={COLUMN.top} />
       {composed ?? <SvgContent components={rest} rect={rect} ctx={ctx} />}
       <PitchSource source={source} ctx={ctx} x={COLUMN.x} />
     </>
