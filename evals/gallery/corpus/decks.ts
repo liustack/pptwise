@@ -883,7 +883,7 @@ export function layoutPage(
                 ? showHeadlineCoverHeading(lex)
                 : def.id === "lookbook-open-cover"
                   ? oneLineCoverHeading(lex)
-                  : lex.deckTitle,
+                  : lex.faceTitles?.[def.id] ?? lex.deckTitle,
           ...subheadingFor(layoutId, lex.deckSubtitle),
           components:
             def.id === "gauge-verdict" || def.id === "pitch-cover"
@@ -896,7 +896,7 @@ export function layoutPage(
       : slideType === "chapter"
         ? {
             type: "chapter",
-            heading: lex.chapters[1]!,
+            heading: lex.faceTitles?.[def.id] ?? lex.chapters[1]!,
             ...subheadingFor(layoutId, lex.kickers[1]),
             // homeroom's part of a lesson says what the part covers on three cards.
             components:

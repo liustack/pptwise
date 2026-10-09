@@ -10,7 +10,7 @@ describe("stat-cover corpus heading", () => {
       const kpi = `${lex.metrics[1]!.value}${lex.metrics[1]!.unit ?? ""}`
       expect(themeDeck("ledger", lex, emptyAssets).slides[0]!.heading).toBe(kpi)
       expect(layoutPage("stat-cover", lex, emptyAssets).slides[0]!.heading).toBe(kpi)
-      expect(layoutPage("left-anchor", lex, emptyAssets).slides[0]!.heading).toBe(lex.deckTitle)
+      expect(layoutPage("left-anchor", lex, emptyAssets).slides[0]!.heading).toBe(lex.faceTitles?.["left-anchor"] ?? lex.deckTitle)
     }
   })
 })
