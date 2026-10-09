@@ -79,7 +79,7 @@ export function lineVerdict(text: string, line: { maxWidth: number; fontSize: nu
  * How `layout` sets the page's heading, or undefined when the face declares
  * neither a fit nor a set.
  */
-export function headingVerdict(layout: LayoutDefinition, page: HeadingPage): HeadingVerdict | undefined {
+export function headingVerdict(layout: Pick<LayoutDefinition, "headingFit" | "headingSet">, page: HeadingPage): HeadingVerdict | undefined {
   if (layout.headingSet) return layout.headingSet(page)
   if (layout.headingFit) return fitVerdict(page.slide.heading, layout.headingFit, page.ctx)
   return undefined
@@ -92,7 +92,7 @@ export function headingVerdict(layout: LayoutDefinition, page: HeadingPage): Hea
  * (`./text-room.ts`). Asked only about a heading the face would not set
  * whole.
  */
-export function headingRoom(layout: LayoutDefinition, page: HeadingPage): TextRoom {
+export function headingRoom(layout: Pick<LayoutDefinition, "headingFit" | "headingSet">, page: HeadingPage): TextRoom {
   return textRoom(page.slide.heading ?? "", (prefix) => headingVerdict(layout, withHeading(page, prefix)) === "whole")
 }
 

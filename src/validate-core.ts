@@ -46,6 +46,7 @@ import { bodyStatementLines } from "./layouts/minimal-shared"
 import { headingRoom, headingVerdict, type HeadingCtx, type HeadingPage } from "./layouts/heading-set"
 import { textRoom, type TextRoom } from "./layouts/text-room"
 import { subheadingSet } from "./render/boundary-loss"
+import { IMAGE_COVER_HEADING } from "./render/image-pages"
 import { deckFigureStyle } from "./lib/figure-style"
 import { stripEmphasis } from "./render/emphasis"
 import type { LayoutDefinition } from "./layouts/registry"
@@ -645,6 +646,11 @@ function checkBoundaryItemCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
   return errors
 }
 
+/** What draws a boundary page, for a message: its face, or the shared photo page a cover or chapter over a photograph goes to. */
+function boundaryDrawer(effective: { route: string; layoutId: string | null }, type: string): string {
+  return effective.route === "image-cover" ? `a ${type} over a photograph` : `face "${effective.layoutId}"`
+}
+
 /** How much of a text a face holds, for a message: `the first 9 ("Same store growth …")`, or `none`. */
 function heldPart(room: TextRoom): string {
   return room.limit === 0 ? "none" : `the first ${room.limit} ("${room.held}")`
@@ -681,8 +687,12 @@ function checkBoundaryHeadingFit(ir: PptxIR, theme: ThemeDefinition): Validation
     if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
     if (!stripEmphasis(slide.heading ?? "").trim()) return
     const effective = resolveEffectiveFace(ir, slide, theme)
+    // A cover or chapter over a photograph is drawn by the shared photo
+    // page, not by its menu face, and is asked that page's fit.
+    const photo = effective.route === "image-cover"
     const layout = componentFace(ir, slide, theme)
-    if (!layout) return
+    if (!layout && !photo) return
+    const asked = photo ? IMAGE_COVER_HEADING : layout!
     const page: HeadingPage = {
       ir,
       slide,
@@ -691,15 +701,15 @@ function checkBoundaryHeadingFit(ir: PptxIR, theme: ThemeDefinition): Validation
       page: resolvePageRenderContext(ir, slide, effective, theme),
       ctx,
     }
-    const verdict = headingVerdict(layout, page)
+    const verdict = headingVerdict(asked, page)
     if (verdict === undefined || verdict === "whole") return
-    const room = headingRoom(layout, page)
-    const where = layout.subheading === undefined ? ", or move part of it into the subheading" : ""
+    const room = headingRoom(asked, page)
+    const where = photo || layout!.subheading === undefined ? ", or move part of it into the subheading" : ""
     errors.push({
       path: `slides.${i}.heading`,
       page: i + 1,
       ...(slide.id !== undefined ? { slideId: slide.id } : {}),
-      message: `face "${layout.id}" holds ${heldPart(room)} of this ${slide.type} heading's ${room.count} ${room.unit}, so the face would ${
+      message: `${boundaryDrawer(effective, slide.type)} holds ${heldPart(room)} of this ${slide.type} heading's ${room.count} ${room.unit}, so the ${photo ? "page" : "face"} would ${
         verdict === "cut" ? "cut the rest off" : "refuse the page"
       }. Shorten the heading${where}.`,
     })
@@ -733,12 +743,12 @@ function checkBoundarySubheadingFit(ir: PptxIR, theme: ThemeDefinition): Validat
     if (said === "whole") return
     const room = textRoom(text, (prefix) => verdict(prefix) === "whole")
     const effective = resolveEffectiveFace(ir, slide, theme)
-    const face = `face "${effective.layoutId}"`
+    const face = boundaryDrawer(effective, slide.type)
     const loses = said === "cut" ? "cut the rest off" : "leave it off the page"
     const message =
       room.limit === 0
         ? `${face} has no room for this ${slide.type} page's subheading beside what else the page carries, so it would ${said === "cut" ? "cut it" : "leave it off the page"}. Remove the subheading, or shorten the heading and what shares the page with it.`
-        : `${face} holds ${heldPart(room)} of this ${slide.type} subheading's ${room.count} ${room.unit}, so the face would ${loses}. Shorten the subheading.`
+        : `${face} holds ${heldPart(room)} of this ${slide.type} subheading's ${room.count} ${room.unit}, so the ${effective.route === "image-cover" ? "page" : "face"} would ${loses}. Shorten the subheading.`
     errors.push({
       path: `slides.${i}.subheading`,
       page: i + 1,

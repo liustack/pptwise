@@ -261,6 +261,31 @@ const PHOTO_COVER_GROUND = blendOver(SCRIM_INK, "#808080", SCRIM_ALPHA)
 /**
  * cover/chapter 的 asset 背景页：清晰大图 + 暗遮罩 + 白字（左下构图）。
  */
+/**
+ * The title a cover or chapter over a photograph sets: up to two lines,
+ * shrunk toward the meta floor, and cut past that. The page draws it from
+ * here, and validate asks the same fit through {@link IMAGE_COVER_HEADING},
+ * so a heading validate passes is one this page sets whole.
+ */
+function imageCoverTitle(slide: Slide, ctx: Pick<ComponentCtx, "shape">) {
+  return fitEmphasisText(slide.heading, {
+    maxWidth: 1030,
+    fontSize: scaleTypePx(slide.type === "chapter" ? 60 : 68, ctx.shape?.typeScale),
+    maxLines: 2,
+    lineHeightRatio: 1.12,
+  })
+}
+
+/**
+ * The heading fit of the shared photo page (`image-cover` route), for
+ * validate's boundary heading gate: a cover or chapter over a photograph is
+ * drawn here rather than by its menu face, which declares a fit for a page
+ * it never draws.
+ */
+export const IMAGE_COVER_HEADING: Pick<LayoutDefinition, "headingSet"> = {
+  headingSet: ({ slide, ctx }) => (imageCoverTitle(slide, ctx).truncated ? "cut" : "whole"),
+}
+
 export function ImageCoverPage({
   ir,
   slide,
@@ -280,12 +305,7 @@ export function ImageCoverPage({
   const org = page.metadataOn ? ir.meta.organization : undefined
   const date = showsDocumentMeta(page, ir, slide) ? ir.meta.date : undefined
 
-  const title = fitEmphasisText(slide.heading, {
-    maxWidth: 1030,
-    fontSize: scaleTypePx(isChapter ? 60 : 68, ctx.shape?.typeScale),
-    maxLines: 2,
-    lineHeightRatio: 1.12,
-  })
+  const title = imageCoverTitle(slide, ctx)
   const sub = fitEmphasisText(slide.subheading, {
     maxWidth: 980,
     fontSize: 27,
@@ -340,6 +360,7 @@ export function ImageCoverPage({
         (_line, i) => (
           <text
             key={i}
+            data-truncated={title.truncated && i === title.lines.length - 1 ? "1" : undefined}
             x={96}
             y={titleTopY + i * title.lineHeight}
             fontSize={title.fontSize}
@@ -357,6 +378,7 @@ export function ImageCoverPage({
         (_line, i) => (
           <text
             key={i}
+            data-truncated={sub.truncated && i === sub.lines.length - 1 ? "1" : undefined}
             x={96}
             y={baseY + 52 + i * sub.lineHeight}
             fontSize={sub.fontSize}
