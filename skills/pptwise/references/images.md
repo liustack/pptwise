@@ -52,4 +52,4 @@ pptwise config set images.generators.codex.enabled true
 pptwise config set images.generators.antigravity.enabled true
 ```
 
-Fetched and generated files live under `.pptwise/<deck>/assets/` with sidecars. Do not delete that directory to rerun a step because it contains selected assets. Without an available source, leave the asset missing and report it. Do not invent a photo or scrape an unsupported provider. Print required attribution in the terminal unless the license or user asks for on-slide credit.
+For a deck project, fetched and generated pictures go into the deck's own `assets/` as `<asset_id>.jpg` with a `<asset_id>.json` sidecar, and move with the deck. For a single IR file they go under `.pptwise/<deck>/assets/`. Do not delete either directory to rerun a step because it holds selected assets. When validate warns that an `asset_id` is not defined, it names the path the picture belongs at. Without an available source, leave the asset missing and report it. Do not invent a photo or scrape an unsupported provider. Print required attribution in the terminal unless the license or user asks for on-slide credit.

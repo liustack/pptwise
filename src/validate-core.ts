@@ -774,7 +774,7 @@ function checkAssetBytes(ir: PptxIR): ValidationIssue[] {
  * render-time placeholder behavior itself is unchanged — this only makes its
  * cause visible instead of silent.
  */
-function checkAssetReferences(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+function checkAssetReferences(ir: PptxIR, theme: ThemeDefinition, missingAssetPath?: (assetId: string) => string): ValidationIssue[] {
   const known = Object.keys(ir.assets.images)
   const available = known.length > 0 ? known.map((k) => `"${k}"`).join(", ") : "(none defined)"
   const issues: ValidationIssue[] = []
@@ -784,9 +784,10 @@ function checkAssetReferences(ir: PptxIR, theme: ThemeDefinition): ValidationIss
   // the author sees every page the missing picture would have covered.
   for (const ref of listAssetReferences(ir, theme)) {
     if (known.includes(ref.asset_id)) continue
+    const place = missingAssetPath ? `. Put the picture at ${missingAssetPath(ref.asset_id)}.jpg (or a .png, .webp or .gif of that name), or pin one there with pptwise images fetch or generate --as ${ref.asset_id}` : ""
     issues.push({
       path: ref.path,
-      message: `asset_id "${ref.asset_id}" is not defined in assets.images — available: ${available}`,
+      message: `asset_id "${ref.asset_id}" is not defined in assets.images — available: ${available}${place}`,
       ...(ref.slide !== undefined ? { page: ref.slide + 1 } : {}),
       ...(ref.slideId !== undefined ? { slideId: ref.slideId } : {}),
     })
@@ -878,7 +879,19 @@ function foldIrThemeId(input: unknown): { value: unknown; warning?: ValidationIs
  * parsing. The error states the current v5 contract and intentionally offers
  * no compatibility rewrite or migration command.
  */
-export function validateIr(input: unknown, opts?: { theme?: ThemeDefinition }): ValidateResult {
+export function validateIr(
+  input: unknown,
+  opts?: {
+    theme?: ThemeDefinition
+    /**
+     * Where a picture the deck names but nobody supplied belongs, without its
+     * extension: a deck project's `assets/<id>`, as the CLI shows the path.
+     * With it, a dangling `asset_id` warning says where to put the file.
+     * The browser has no such folder and leaves it out.
+     */
+    missingAssetPath?: (assetId: string) => string
+  },
+): ValidateResult {
   const version = typeof input === "object" && input !== null ? (input as Record<string, unknown>).version : undefined
 
   if (typeof version === "string" && ["1", "2", "3", "4"].includes(version)) {
@@ -1036,7 +1049,7 @@ export function validateIr(input: unknown, opts?: { theme?: ThemeDefinition }): 
   // rejected (`ok: false`) deck's warnings are still worth seeing, not just
   // a clean one's.
   const warnFindings = quality.filter((issue) => issue.severity === "warn").map(toIssue)
-  const assetRefWarnings = checkAssetReferences(r.data, theme)
+  const assetRefWarnings = checkAssetReferences(r.data, theme, opts?.missingAssetPath)
   const allWarnings = [...warnFindings, ...assetRefWarnings]
   const warnings = allWarnings.length > 0 ? allWarnings : undefined
   const errorFindings = quality.filter((issue) => issue.severity === "error")

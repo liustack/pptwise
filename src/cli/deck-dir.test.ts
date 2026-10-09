@@ -420,6 +420,16 @@ describe("readDeckDir", () => {
       expect(ir.assets.images).toEqual({})
     })
 
+    it("leaves a photo's provenance sidecar beside it unregistered", async () => {
+      const dir = await tmp()
+      await writeDeckSpec(dir)
+      await mkdir(join(dir, "assets"))
+      await writeFile(join(dir, "assets", "hero.jpg"), "fake-jpeg-bytes")
+      await writeFile(join(dir, "assets", "hero.json"), JSON.stringify({ provider: "pexels", photo_id: "123" }))
+      const { ir } = await readDeckDir(dir)
+      expect(ir.assets.images).toEqual({ hero: { src: "assets/hero.jpg" } })
+    })
+
     it("rejects two files that normalize to the same asset id, naming both files", async () => {
       const dir = await tmp()
       await writeDeckSpec(dir)

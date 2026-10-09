@@ -79,7 +79,7 @@ pptwise render <target> \
   [--no-git-ignore]
 ```
 
-Without `-o`, output goes to `.pptwise/<place>/<deck>.pptx` under the project root. `<place>` is the deck's path from the project root joined with hyphens, so `decks/q3/zh` and `decks/q4/zh` keep separate folders (`decks-q3-zh`, `decks-q4-zh`) and separate image assets. A deck at the top level keeps its own name. A deck outside the project, or one whose path has characters other than Latin letters and digits, adds a short hash of its path. Change colors with `pptwise theme fork`. That writes a complete theme. Render does not take a partial recolor overlay.
+Without `-o`, output goes to `.pptwise/<place>/<deck>.pptx` under the project root. `<place>` is the deck's path from the project root joined with hyphens, so `decks/q3/zh` and `decks/q4/zh` keep separate folders (`decks-q3-zh`, `decks-q4-zh`). A deck at the top level keeps its own name. A deck outside the project, or one whose path has characters other than Latin letters and digits, adds a short hash of its path. Change colors with `pptwise theme fork`. That writes a complete theme. Render does not take a partial recolor overlay.
 
 `--draft` permits placeholder pages. `--allow-dropped-content` permits known content loss and should be used only with explicit user approval. The normal response is to shorten or split the page.
 
@@ -211,7 +211,9 @@ pptwise images list --deck <dir>
 pptwise images generate --deck <dir> --as <asset_id> [--prompt <text>]
 ```
 
-Search checks Pexels, then configured Pixabay, then commercially filtered Openverse sources. Fetching pins the chosen file and provenance sidecar under `.pptwise/<deck>/assets/`. Generate uses an enabled local generator and falls back to the asset brief prompt when `--prompt` is omitted.
+Search checks Pexels, then configured Pixabay, then commercially filtered Openverse sources. Fetch and generate pin the picture as `<asset_id>.jpg` with a provenance sidecar `<asset_id>.json`. For a deck project they go into the deck's own `assets/`, which the deck registers by file name, so the pictures move with the deck. For a single IR file they go under `.pptwise/<place>/assets/`. Pictures an earlier version pinned under `.pptwise/<place>/assets/` for a deck project still count while the deck stays where it was. To keep them after a move, copy them into the deck's `assets/`. Generate uses an enabled local generator and falls back to the asset brief prompt when `--prompt` is omitted.
+
+When a page names an `asset_id` no file supplies, validate warns with the path the picture belongs at, such as `decks/q3/zh/assets/hero.jpg`.
 
 ## Preview and serve
 

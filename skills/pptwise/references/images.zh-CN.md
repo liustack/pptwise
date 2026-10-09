@@ -57,4 +57,4 @@ pptwise config set images.generators.codex.enabled true
 pptwise config set images.generators.antigravity.enabled true
 ```
 
-拉取与生成的文件存放在 `.pptwise/<deck>/assets/`，旁边带 sidecar。不要为了重跑某一步而删除整个目录，因为其中保存了已经选定的资产。没有可用来源时，保留缺失状态并如实汇报。不要虚构照片，也不要抓取未支持的提供方。除非许可或用户要求在页面署名，归属信息默认打印在终端。
+目标是 deck 项目时，拉取与生成的图存进这个 deck 自己的 `assets/`，文件名是 `<asset_id>.jpg`，旁边带 `<asset_id>.json` sidecar，deck 换目录图也跟着走。目标是单个 IR 文件时，图存到 `.pptwise/<deck>/assets/`。不要为了重跑某一步而删除这两个目录，因为其中保存了已经选定的资产。validate 警告某个 `asset_id` 没有定义时，会给出这张图该放的路径。没有可用来源时，保留缺失状态并如实汇报。不要虚构照片，也不要抓取未支持的提供方。除非许可或用户要求在页面署名，归属信息默认打印在终端。
