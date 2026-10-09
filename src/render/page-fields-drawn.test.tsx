@@ -10,17 +10,25 @@
 // with no mark, and validate and audit both passed the page.
 //
 // So this sweep fills every page field the IR schema offers, each with words
-// found nowhere else, on every face of every built-in theme's menu, and holds
+// found nowhere else, on every registered face, and holds
 // each field to one of three outcomes: its words are on the page, validate
 // refuses the field on this page, or the page carries a mark that the field
 // itself put there. Words that are simply gone fail.
+//
+// Every registered face, not every face on a built-in menu. A theme file may
+// put any face on its menu, so a face no built-in serves is one theme file
+// away from a customer's deck. Each built-in theme's own menu is swept with
+// its own content, and every other face is swept on a copy of that theme
+// with the face swapped into its slot, the way a theme file copied from it
+// would pick it up.
 import { beforeAll, describe, expect, it } from "vitest"
 import { renderSlideSvg, validateIr } from "@/api"
 import type { PageKind, PptxIR, Slide } from "@/ir"
 import { irJsonSchema } from "@/ir/json-schema"
 import { installNodePlatform } from "@/platform/node"
 import { CANONICAL_THEME_IDS } from "@/themes"
-import { corpusAssets, layoutPage, type CorpusAssets } from "../../evals/gallery/corpus/decks"
+import { LAYOUT_REGISTRY } from "@/layouts/registry"
+import { corpusAssets, layoutFaceSlot, layoutPage, type CorpusAssets } from "../../evals/gallery/corpus/decks"
 import { LEXICONS, type LanguageId } from "../../evals/gallery/corpus/lexicon"
 import { nativeLexiconFor } from "../../evals/gallery/corpus/native"
 import { menuFaces } from "../../evals/gallery/matrix"
@@ -180,12 +188,28 @@ interface Route {
   theme: string
   slot: string
   face: string
+  /** The face is on this theme's own menu, and the page is written in the theme's own words. */
+  own: boolean
 }
 
-/** Every face of every built-in theme's menu, slot by slot: a face that dispatches by content is reached once per kind that names it. */
+/**
+ * Every registered face on every built-in theme. A theme's own menu, slot by
+ * slot: a face that dispatches by content is reached once per kind that
+ * names it. Then every face that menu does not offer, swapped into the slot
+ * a built-in menu first gives it, or the one the gallery files it under when
+ * no menu does (`layoutFaceSlot`).
+ */
 function routes(): Route[] {
   const out: Route[] = []
-  for (const theme of CANONICAL_THEME_IDS) for (const [slot, face] of Object.entries(menuFaces(theme))) out.push({ theme, slot, face })
+  for (const theme of CANONICAL_THEME_IDS) for (const [slot, face] of Object.entries(menuFaces(theme))) out.push({ theme, slot, face, own: true })
+  const firstSlot = new Map<string, string>()
+  for (const route of out) if (!firstSlot.has(route.face)) firstSlot.set(route.face, route.slot)
+  for (const theme of CANONICAL_THEME_IDS) {
+    const own = new Set(Object.values(menuFaces(theme)))
+    for (const face of Object.keys(LAYOUT_REGISTRY).sort()) {
+      if (!own.has(face)) out.push({ theme, slot: firstSlot.get(face) ?? layoutFaceSlot(face), face, own: false })
+    }
+  }
   return out
 }
 
@@ -206,7 +230,11 @@ function validated(base: PptxIR, slide: Record<string, unknown>, deck: Record<st
  * them and once without each one that went missing.
  */
 function sweep(route: Route, assets: Record<LanguageId, CorpusAssets>): Silent[] {
-  const lex = nativeLexiconFor(route.theme)
+  // A swapped-in face gets the shared lexicon its gallery page is built
+  // from: the corpus sizes some faces' bodies to it (six captions for
+  // show-gallery's six frames), and the fields under test are the same
+  // words either way.
+  const lex = route.own ? nativeLexiconFor(route.theme) : LEXICONS.zh
   const kind = ["cover", "chapter", "ending"].includes(route.slot) ? undefined : (route.slot as PageKind)
   const base = layoutPage(route.face, lex, assets[lex.id], route.theme, kind)
   const page = base.slides[0] as unknown as Record<string, unknown>
@@ -254,6 +282,43 @@ function sweep(route: Route, assets: Record<LanguageId, CorpusAssets>): Silent[]
   return silent
 }
 
+/** Every built-in theme but the ones named. */
+const allBut = (...themes: string[]) => CANONICAL_THEME_IDS.filter((theme) => !themes.includes(theme))
+
+/**
+ * Losses known when the sweep reached every registered face, each with the
+ * themes it happens on, waiting for their fix. The sweep holds each theme to
+ * exactly its entries, so a new loss fails it and so does an entry that no
+ * longer happens: a fix takes its entry out.
+ */
+const PENDING: Record<string, readonly string[]> = {
+  "chapter (fashion-chapter) × subheading": CANONICAL_THEME_IDS,
+  "chapter (gilt-ordinal-chapter) × subheading": CANONICAL_THEME_IDS,
+  "chapter (poster-chapter) × subheading": CANONICAL_THEME_IDS,
+  "chapter (tone-adaptive-chapter) × subheading": CANONICAL_THEME_IDS,
+  "cover (pledge-open-cover) × subheading": CANONICAL_THEME_IDS,
+  "cover (thesis-plate-cover) × subheading": CANONICAL_THEME_IDS,
+  "ending (gilt-word-ending) × subheading": CANONICAL_THEME_IDS,
+  "ending (rule-close-ending) × subheading": CANONICAL_THEME_IDS,
+  "ending (tone-adaptive-ending) × subheading": CANONICAL_THEME_IDS,
+  "evidence (one-evidence) × subheading": CANONICAL_THEME_IDS,
+  "list (crayonbox-cards) × footnote": CANONICAL_THEME_IDS,
+  "photo (show-gallery) × footnote": CANONICAL_THEME_IDS,
+  "statement (show-statement) × subheading": CANONICAL_THEME_IDS,
+  // swiss serves image-top with its grid band, which sets a subheading.
+  "photo (image-top) × subheading": allBut("swiss"),
+  // museum's and runway's motifs set a content page's kicker themselves.
+  "points (lineup-sheet) × kicker": allBut("museum", "runway"),
+  "points (placard-sheet) × kicker": allBut("museum", "runway"),
+}
+
+function pendingFor(theme: string): string[] {
+  return Object.entries(PENDING)
+    .filter(([, themes]) => themes.includes(theme))
+    .map(([entry]) => `${theme} × ${entry}`)
+    .sort()
+}
+
 describe("a page's own fields reach the page, or the engine says they did not", () => {
   const assets = {} as Record<LanguageId, CorpusAssets>
   beforeAll(async () => {
@@ -266,7 +331,7 @@ describe("a page's own fields reach the page, or the engine says they did not", 
         .filter((route) => route.theme === theme)
         .flatMap((route) => sweep(route, assets))
         .map(({ route, probe }) => `${route.theme} × ${route.slot} (${route.face}) × ${probe.field}${probe.part ? `.${probe.part}` : ""}`)
-      expect([...new Set(silent)]).toEqual([])
+      expect([...new Set(silent)].sort()).toEqual(pendingFor(theme))
     })
   }
 })
