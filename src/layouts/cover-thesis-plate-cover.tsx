@@ -187,6 +187,7 @@ export const layoutDef = {
     notFor: "Covers that omit authorship and rely on color alone, which belong on Signal Field.",
   },
   slideTypes: ["cover"],
+  subheading: { none: "fold it into the title, which this face sets on up to two lines, or remove it" },
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },

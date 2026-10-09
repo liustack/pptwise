@@ -159,6 +159,7 @@ export const layoutDef: LayoutDefinition = {
   },
   paintsOwnBackground: true,
   slideTypes: ["chapter"],
+  subheading: { none: "fold it into the chapter title, or remove it" },
   slots: [
     { name: "kicker", accepts: [] },
     { name: "watermark", accepts: [] },

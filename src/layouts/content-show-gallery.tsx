@@ -5,6 +5,7 @@ import { stripEmphasis } from "../render/emphasis"
 import { accessibleInk, groupValueInks } from "../render/ink"
 import { SvgContent } from "../render/svg-content"
 import { stepAside } from "../render/step-aside"
+import { joinSources } from "./minimal-shared"
 import type { LayoutDefinition } from "./registry"
 import {
   SHOW_IMAGE_FILL,
@@ -75,7 +76,13 @@ export function ShowGalleryContent({ ir, slide, index, ctx }: SvgTemplateProps) 
         bold: true,
       })
     : null
-  const summarySource = stripEmphasis(slide.subheading ?? slide.footnote ?? "").trim()
+  // The page's summary and its footnote shared this one line as
+  // `subheading ?? footnote`, so a page that wrote both printed the summary
+  // and the footnote reached nobody, with no mark anywhere. The captions
+  // run down to the line's own band, so there is no room for a second line
+  // here as show-figures has: both go on this one, the summary first
+  // (`joinSources`).
+  const summarySource = joinSources(stripEmphasis(slide.subheading ?? ""), stripEmphasis(slide.footnote ?? "")) ?? ""
   const summary = summarySource
     ? fitSvgLine(summarySource, {
         maxWidth: 1040,

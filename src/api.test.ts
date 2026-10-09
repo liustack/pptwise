@@ -758,6 +758,22 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     expect(page([{ type: "blockquote", text: "Words.", attribution: "Someone" }]).errors[0]!.message).toMatch(/this page's blockquote fills it/)
   })
 
+  it("takes a kicker on a content face only where the face or the motif over it sets one", () => {
+    // placard-sheet leaves the kicker to museum's hall sign. On a copy of
+    // brief nothing sets it, so the page is refused.
+    const themeId = registerTestTheme("api-kicker-motif", "brief", { content: { points: "placard-sheet" } })
+    try {
+      const page = (theme: string) =>
+        validateIr({ ...raw, theme: { id: theme }, slides: [{ type: "content", kind: "points", heading: "H", kicker: "Hall one", components: [{ type: "paragraph", text: "x" }] }] })
+      expect(page("museum").errors).toEqual([])
+      const refused = page(themeId)
+      expect(refused.errors[0]!.path).toBe("slides.0.kicker")
+      expect(refused.errors[0]!.message).toMatch(/^face "placard-sheet" has no place for a kicker/)
+    } finally {
+      __resetRegisteredThemes()
+    }
+  })
+
   it("hard-rejects a page tag on a face with no place for it, naming the face", () => {
     const v = validateIr({
       ...raw,

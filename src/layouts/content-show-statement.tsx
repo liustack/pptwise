@@ -47,6 +47,16 @@ const STATEMENT_FALLBACK_RECT = { x: 64, y: 230, w: 1152, h: 390 } as const
  */
 const FOOTNOTE_Y = 672
 const FOOTNOTE_SIZE = 16
+/**
+ * The page's subheading, in the same 16px muted body type as the source
+ * line and the columns' text. This face used to draw none. On the
+ * statement it sits in the air between the claim's bar and the rule over
+ * the columns. On the plain page it sits under the rule, and the body moves
+ * down under it.
+ */
+const STANDFIRST_Y = 402
+const FALLBACK_STANDFIRST_Y = 228
+const FALLBACK_STANDFIRST_SHIFT = 24
 
 export function ShowStatementContent({ ir, slide, index, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
@@ -93,9 +103,16 @@ export function ShowStatementContent({ ir, slide, index, ctx }: SvgTemplateProps
   // Past this face's own guard the page is already drawn plainly, into a
   // fixed band. A band is a constant and a constant never asks what it is
   // about to hold, so ask here.
+  const standfirstSource = stripEmphasis(slide.subheading ?? "").trim()
+  const standfirst = standfirstSource
+    ? fitSvgLine(standfirstSource, { maxWidth: 1152, fontSize: FOOTNOTE_SIZE, minFontSize: FOOTNOTE_SIZE, fontFamily: fonts.body })
+    : null
+  const fallbackRect = standfirst
+    ? { ...STATEMENT_FALLBACK_RECT, y: STATEMENT_FALLBACK_RECT.y + FALLBACK_STANDFIRST_SHIFT, h: STATEMENT_FALLBACK_RECT.h - FALLBACK_STANDFIRST_SHIFT }
+    : STATEMENT_FALLBACK_RECT
   const aside = block
     ? null
-    : stepAside({ face: "show-statement", slide, ctx, bodyRect: STATEMENT_FALLBACK_RECT })
+    : stepAside({ face: "show-statement", slide, ctx, bodyRect: fallbackRect })
   if (aside) return aside
   const footnoteSource = stripEmphasis(slide.footnote ?? "").trim()
   const footnote = footnoteSource
@@ -224,10 +241,23 @@ export function ShowStatementContent({ ir, slide, index, ctx }: SvgTemplateProps
           <line x1={64} y1={200} x2={1216} y2={200} stroke={colors.border ?? colors.muted} strokeWidth={1} />
           <SvgContent
             components={slide.components}
-            rect={STATEMENT_FALLBACK_RECT}
+            rect={fallbackRect}
             ctx={showNeutralFallbackCtx(ctx)}
           />
         </>
+      )}
+      {standfirst && (
+        <text
+          data-truncated={standfirst.truncated ? "1" : undefined}
+          x={64}
+          y={block ? STANDFIRST_Y : FALLBACK_STANDFIRST_Y}
+          fontFamily={fonts.body}
+          fontSize={standfirst.fontSize}
+          fill={accessibleInk(colors.muted, bg, standfirst.fontSize)}
+          dominantBaseline="alphabetic"
+        >
+          {withoutOverflowMark(standfirst.text)}
+        </text>
       )}
       {footnote && (
         <text

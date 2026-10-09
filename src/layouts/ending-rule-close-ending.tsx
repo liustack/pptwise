@@ -155,6 +155,7 @@ export const layoutDef = {
     notFor: "Endings that need a colored field or a CTA button, which belong in Field Roster or Capsule Button.",
   },
   slideTypes: ["ending"],
+  subheading: { none: "fold it into the closing sentence, which this face sets on up to two lines, or remove it" },
   slots: [
     { name: "heading", accepts: [] },
     { name: "rule", accepts: [] },

@@ -111,7 +111,7 @@ export function ChalkboardEnding({ slide, ctx }: SvgTemplateProps) {
       {words ? <g data-chalk-ending-words="">{paintChalk(words, { ctx, x: WORDS.x, top: WORDS.top, serif: true, fill: chalkText(inks.chalk, ground, WORDS.size) })}</g> : null}
       {note ? <g data-chalk-ending-note="">{paintChalk(note, { ctx, x: NOTE.x, top: NOTE.top, fill: chalkText(inks.muted, ground, NOTE.size) })}</g> : null}
       {(kicker && !kickerFits) || (slide.subheading?.trim() && !next) || (slide.heading?.trim() && !words) ? <g data-dropped={1} data-dropped-kind="label" /> : null}
-      {list && !tasksFit ? <g data-dropped={1} data-dropped-kind="content" /> : null}
+      {list && !tasksFit ? <g data-dropped={1} data-dropped-kind="component" /> : null}
       {slide.footnote?.trim() && !note ? <g data-dropped={1} data-dropped-kind="footnote" /> : null}
     </>
   )

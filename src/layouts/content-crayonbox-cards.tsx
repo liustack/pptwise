@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import type { SvgTemplateProps } from "./types"
 import { stepAside } from "../render/step-aside"
 import type { LayoutDefinition } from "./registry"
+import { joinSources } from "./minimal-shared"
 import { sectionNameFor } from "../lib/derive"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import { stripEmphasis } from "../render/emphasis"
@@ -99,7 +100,11 @@ export function CrayonboxCardsContent({ ir, slide, index, ctx }: SvgTemplateProp
         bold: true,
       })
     : null
-  const conclusionSource = slide.subheading?.trim() || slide.footnote?.trim() || ""
+  // The page's conclusion and its footnote shared this one closing line as
+  // `subheading || footnote`, so a page that wrote both printed the
+  // conclusion and lost the footnote with no mark. Both go on the line now,
+  // the conclusion first (`joinSources`).
+  const conclusionSource = joinSources(slide.subheading, slide.footnote) ?? ""
   const conclusion = conclusionSource
     ? fitSvgLine(stripEmphasis(conclusionSource), {
         maxWidth: 1088,

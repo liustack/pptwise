@@ -10,20 +10,29 @@
 // with no mark, and validate and audit both passed the page.
 //
 // So this sweep fills every page field the IR schema offers, each with words
-// found nowhere else, on every face of every built-in theme's menu, and holds
+// found nowhere else, on every registered face, and holds
 // each field to one of three outcomes: its words are on the page, validate
 // refuses the field on this page, or the page carries a mark that the field
 // itself put there. Words that are simply gone fail.
+//
+// Every registered face, not every face on a built-in menu. A theme file may
+// put any face on its menu, so a face no built-in serves is one theme file
+// away from a customer's deck. Each built-in theme's own menu is swept with
+// its own content, and every other face is swept on a copy of that theme
+// with the face swapped into its slot, the way a theme file copied from it
+// would pick it up.
 import { beforeAll, describe, expect, it } from "vitest"
 import { renderSlideSvg, validateIr } from "@/api"
 import type { PageKind, PptxIR, Slide } from "@/ir"
 import { irJsonSchema } from "@/ir/json-schema"
 import { installNodePlatform } from "@/platform/node"
 import { CANONICAL_THEME_IDS } from "@/themes"
-import { corpusAssets, layoutPage, type CorpusAssets } from "../../evals/gallery/corpus/decks"
+import { LAYOUT_REGISTRY } from "@/layouts/registry"
+import { corpusAssets, layoutFaceSlot, layoutPage, type CorpusAssets } from "../../evals/gallery/corpus/decks"
 import { LEXICONS, type LanguageId } from "../../evals/gallery/corpus/lexicon"
 import { nativeLexiconFor } from "../../evals/gallery/corpus/native"
 import { menuFaces } from "../../evals/gallery/matrix"
+import { isDropKind } from "./drop-marker"
 import { parseSvgRoot } from "./serialize"
 
 beforeAll(() => {
@@ -180,12 +189,28 @@ interface Route {
   theme: string
   slot: string
   face: string
+  /** The face is on this theme's own menu, and the page is written in the theme's own words. */
+  own: boolean
 }
 
-/** Every face of every built-in theme's menu, slot by slot: a face that dispatches by content is reached once per kind that names it. */
+/**
+ * Every registered face on every built-in theme. A theme's own menu, slot by
+ * slot: a face that dispatches by content is reached once per kind that
+ * names it. Then every face that menu does not offer, swapped into the slot
+ * a built-in menu first gives it, or the one the gallery files it under when
+ * no menu does (`layoutFaceSlot`).
+ */
 function routes(): Route[] {
   const out: Route[] = []
-  for (const theme of CANONICAL_THEME_IDS) for (const [slot, face] of Object.entries(menuFaces(theme))) out.push({ theme, slot, face })
+  for (const theme of CANONICAL_THEME_IDS) for (const [slot, face] of Object.entries(menuFaces(theme))) out.push({ theme, slot, face, own: true })
+  const firstSlot = new Map<string, string>()
+  for (const route of out) if (!firstSlot.has(route.face)) firstSlot.set(route.face, route.slot)
+  for (const theme of CANONICAL_THEME_IDS) {
+    const own = new Set(Object.values(menuFaces(theme)))
+    for (const face of Object.keys(LAYOUT_REGISTRY).sort()) {
+      if (!own.has(face)) out.push({ theme, slot: firstSlot.get(face) ?? layoutFaceSlot(face), face, own: false })
+    }
+  }
   return out
 }
 
@@ -194,6 +219,15 @@ interface Silent {
   route: Route
   probe: Probe
 }
+
+/**
+ * Every unit the sweep's pages declared a drop in. A page here carries
+ * every field at once, so the faces that cannot set one of them declare it,
+ * and each unit they name has to be one the drop table names
+ * (`drop-marker.tsx`): an unnamed one used to reach authors as content
+ * blocks.
+ */
+const DROP_KINDS_SEEN = new Set<string>()
 
 /** Validate a deck whose page 1 is `slide`, with `deck` merged in. */
 function validated(base: PptxIR, slide: Record<string, unknown>, deck: Record<string, unknown>) {
@@ -206,7 +240,11 @@ function validated(base: PptxIR, slide: Record<string, unknown>, deck: Record<st
  * them and once without each one that went missing.
  */
 function sweep(route: Route, assets: Record<LanguageId, CorpusAssets>): Silent[] {
-  const lex = nativeLexiconFor(route.theme)
+  // A swapped-in face gets the shared lexicon its gallery page is built
+  // from: the corpus sizes some faces' bodies to it (six captions for
+  // show-gallery's six frames), and the fields under test are the same
+  // words either way.
+  const lex = route.own ? nativeLexiconFor(route.theme) : LEXICONS.zh
   const kind = ["cover", "chapter", "ending"].includes(route.slot) ? undefined : (route.slot as PageKind)
   const base = layoutPage(route.face, lex, assets[lex.id], route.theme, kind)
   const page = base.slides[0] as unknown as Record<string, unknown>
@@ -236,6 +274,7 @@ function sweep(route: Route, assets: Record<LanguageId, CorpusAssets>): Silent[]
   }
   if (result.errors.length > 0) throw new Error(`${route.theme} ${route.slot} ${route.face}: ${result.errors.map((e) => `${e.path}: ${e.message}`).join("; ")}`)
   const markup = renderSlideSvg(result.ir!, 0)
+  for (const el of Array.from(parseSvgRoot(markup).querySelectorAll("[data-dropped-kind]"))) DROP_KINDS_SEEN.add(el.getAttribute("data-dropped-kind")!)
   const text = pageText(markup)
 
   const silent: Silent[] = []
@@ -269,4 +308,10 @@ describe("a page's own fields reach the page, or the engine says they did not", 
       expect([...new Set(silent)]).toEqual([])
     })
   }
+
+  // After every theme above: the tests in a file run in order.
+  it("names every dropped unit by the drop table", () => {
+    expect(DROP_KINDS_SEEN.size).toBeGreaterThan(0)
+    expect([...DROP_KINDS_SEEN].filter((kind) => !isDropKind(kind)).sort()).toEqual([])
+  })
 })
