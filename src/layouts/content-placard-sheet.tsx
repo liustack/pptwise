@@ -75,6 +75,8 @@ export const layoutDef = {
     { name: "subheading", accepts: [] },
     { name: "body", accepts: "any", capacity: 4 },
   ],
-  pageFields: ["kicker"],
+  // No `pageFields`: the kicker is museum's hall sign, which sets it over any face
+  // (`motifs/kicker-roles.ts`). This face never draws it, so validate takes a
+  // kicker only where that motif is on the page.
   headingFit: PLACARD_HEAD_FIT,
 } satisfies LayoutDefinition

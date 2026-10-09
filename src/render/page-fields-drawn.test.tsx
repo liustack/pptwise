@@ -282,28 +282,6 @@ function sweep(route: Route, assets: Record<LanguageId, CorpusAssets>): Silent[]
   return silent
 }
 
-/** Every built-in theme but the ones named. */
-const allBut = (...themes: string[]) => CANONICAL_THEME_IDS.filter((theme) => !themes.includes(theme))
-
-/**
- * Losses known when the sweep reached every registered face, each with the
- * themes it happens on, waiting for their fix. The sweep holds each theme to
- * exactly its entries, so a new loss fails it and so does an entry that no
- * longer happens: a fix takes its entry out.
- */
-const PENDING: Record<string, readonly string[]> = {
-  // museum's and runway's motifs set a content page's kicker themselves.
-  "points (lineup-sheet) × kicker": allBut("museum", "runway"),
-  "points (placard-sheet) × kicker": allBut("museum", "runway"),
-}
-
-function pendingFor(theme: string): string[] {
-  return Object.entries(PENDING)
-    .filter(([, themes]) => themes.includes(theme))
-    .map(([entry]) => `${theme} × ${entry}`)
-    .sort()
-}
-
 describe("a page's own fields reach the page, or the engine says they did not", () => {
   const assets = {} as Record<LanguageId, CorpusAssets>
   beforeAll(async () => {
@@ -316,7 +294,7 @@ describe("a page's own fields reach the page, or the engine says they did not", 
         .filter((route) => route.theme === theme)
         .flatMap((route) => sweep(route, assets))
         .map(({ route, probe }) => `${route.theme} × ${route.slot} (${route.face}) × ${probe.field}${probe.part ? `.${probe.part}` : ""}`)
-      expect([...new Set(silent)].sort()).toEqual(pendingFor(theme))
+      expect([...new Set(silent)]).toEqual([])
     })
   }
 })

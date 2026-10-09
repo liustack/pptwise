@@ -38,6 +38,8 @@ import { courseStageIssues } from "./render/course-marks"
 import { resolveFontStack } from "./render/fonts"
 import { deckWritesChinese } from "./lib/conf-labels"
 import { componentFace, resolveEffectiveFace } from "./render/layout-selection"
+import { resolvePageRenderContext } from "./render/page-context"
+import { MOTIFS_THAT_SET_THE_KICKER } from "./motifs/kicker-roles"
 import { boundarySlotBlocks, drawableItems } from "./layouts/boundary-content"
 import { findImageSelection } from "./layouts/find-image"
 import { bodyStatementLines } from "./layouts/minimal-shared"
@@ -457,10 +459,27 @@ function asksFor(slide: PptxIR["slides"][number], field: (typeof FACE_PAGE_FIELD
 }
 
 /**
+ * Whether the motif that paints over this content page's face sets the
+ * page's kicker itself (`MOTIFS_THAT_SET_THE_KICKER`): museum's hall sign and
+ * runway's masthead print it over any content face, and a face under them
+ * leaves it to them. The same page decision the renderer makes
+ * (`resolvePageRenderContext`).
+ */
+function motifSetsKicker(ir: PptxIR, slide: PptxIR["slides"][number], theme: ThemeDefinition): boolean {
+  // Both motifs paint content pages only. A cover, chapter or ending face draws its own kicker.
+  if (slide.type !== "content") return false
+  const face = resolveEffectiveFace(ir, slide, theme)
+  if (face.route === "unresolved") return false
+  const page = resolvePageRenderContext(ir, slide, face, theme)
+  return page.motifOn && page.motifId !== undefined && MOTIFS_THAT_SET_THE_KICKER.has(page.motifId)
+}
+
+/**
  * A `kicker`, `fields`, a `stamp`, a page `tag`, a `ballot`, `years` or a `stage` is drawn only by a face that declares a
- * place for it (`LayoutDefinition.pageFields`), on any page type. Every
- * other face would leave it off the page with nothing to say so, so the page
- * is refused, naming the face. An empty kicker asks for nothing.
+ * place for it (`LayoutDefinition.pageFields`), on any page type, or, for a
+ * kicker, by a motif that sets it over the face. Every other page would
+ * leave it off with nothing to say so, so the page is refused, naming the
+ * face. An empty kicker asks for nothing.
  */
 function checkKickerDrawn(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
   const errors: ValidationIssue[] = []
@@ -470,6 +489,7 @@ function checkKickerDrawn(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[]
       if (!asksFor(slide, field)) continue
       const layout = componentFace(ir, slide, theme)
       if (layout?.pageFields?.includes(field)) continue
+      if (field === "kicker" && motifSetsKicker(ir, slide, theme)) continue
       errors.push({
         path: `slides.${i}.${field}`,
         page: i + 1,
