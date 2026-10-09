@@ -1,5 +1,5 @@
 import type { SvgTemplateProps } from "./types"
-import { headedBulletRows, writesHeading } from "./boundary-content"
+import { headedBulletRows, listRows, writesHeading } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
@@ -61,11 +61,6 @@ function splitActionLinesAll(text: string): string[] {
   return [trimmed]
 }
 
-/** The lines this face draws of them: the first three. */
-function splitActionLines(text: string): string[] {
-  return splitActionLinesAll(text).slice(0, ITEM_MAX)
-}
-
 function homeworkLabel(slide: SvgTemplateProps["slide"], items: string[]): string {
   const scriptSrc = slide.heading || items[0] || ""
   return hasCjk(scriptSrc) ? HOMEWORK_CJK : HOMEWORK_LATIN
@@ -85,8 +80,8 @@ export function HomeworkCloseEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
   const field = colors.accent
-  const headed = headedBulletRows(slide, ITEM_MAX)
-  const items = (headed?.lines ?? splitActionLines(slide.heading ?? "")).map((item) => stripEmphasis(item))
+  const rows = headedBulletRows(slide, ITEM_MAX) ?? listRows(splitActionLinesAll(slide.heading ?? ""), ITEM_MAX)
+  const items = rows.lines.map((item) => stripEmphasis(item))
   const labelSource = homeworkLabel(slide, items)
   const label = fitSvgLine(labelSource, {
     maxWidth: BOX_LABEL_MAX_W,
@@ -146,7 +141,7 @@ export function HomeworkCloseEnding({ slide, ctx }: SvgTemplateProps) {
         </text>
       ))}
 
-      {headed && headed.dropped > 0 ? <g data-dropped={headed.dropped} data-dropped-kind="item" /> : null}
+      {rows.dropped > 0 ? <g data-dropped={rows.dropped} data-dropped-kind="item" /> : null}
 
       <line
         x1={RULE_X1}

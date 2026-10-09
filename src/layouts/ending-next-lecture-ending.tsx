@@ -1,5 +1,5 @@
 import type { SvgTemplateProps } from "./types"
-import { headedBulletRows, writesHeading } from "./boundary-content"
+import { headedBulletRows, listRows, writesHeading } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
@@ -63,11 +63,6 @@ function splitHomeworkLinesAll(text: string): string[] {
   return (byNewline.length > 1 ? byNewline : [trimmed]).filter((line) => !isKickerWord(line))
 }
 
-/** The lines this face draws of them: the first two. */
-function splitHomeworkLines(text: string): string[] {
-  return splitHomeworkLinesAll(text).slice(0, ITEM_MAX)
-}
-
 function scriptIsCjk(slide: SvgTemplateProps["slide"], items: string[]): boolean {
   if (hasCjk(slide.heading ?? "")) return true
   if (items.some((item) => hasCjk(item))) return true
@@ -87,8 +82,8 @@ function fitItem(item: string, fonts: HeadingCtx["fonts"]) {
 export function NextLectureEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const headed = headedBulletRows(slide, ITEM_MAX)
-  const items = headed?.lines ?? splitHomeworkLines(stripEmphasis(slide.heading ?? ""))
+  const rows = headedBulletRows(slide, ITEM_MAX) ?? listRows(splitHomeworkLinesAll(stripEmphasis(slide.heading ?? "")), ITEM_MAX)
+  const items = rows.lines
   const cjk = scriptIsCjk(slide, items)
   const kickerText = cjk ? KICKER_CJK : KICKER_LATIN
   const kickerTracking = cjk ? undefined : KICKER_TRACKING
@@ -155,7 +150,7 @@ export function NextLectureEnding({ slide, ctx }: SvgTemplateProps) {
         ) : null,
       )}
 
-      {headed && headed.dropped > 0 ? <g data-dropped={headed.dropped} data-dropped-kind="item" /> : null}
+      {rows.dropped > 0 ? <g data-dropped={rows.dropped} data-dropped-kind="item" /> : null}
 
       <line
         data-depth="mid"

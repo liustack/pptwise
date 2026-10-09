@@ -97,9 +97,25 @@ export function slotItemRoom(slot: { itemCapacity?: number; headingRow?: true },
  * on a page with no drawable bullets, where the face sets its heading as the
  * list.
  */
-export function headedBulletRows(slide: HasComponents & { heading?: string }, rows: number): { lines: string[]; dropped: number } | undefined {
+export function headedBulletRows(slide: HasComponents & { heading?: string }, rows: number): ListRows | undefined {
   const items = boundaryBulletItems(slide, Infinity)
   if (items.length === 0) return undefined
-  const all = writesHeading(slide) ? [(slide.heading ?? "").trim().replace(/\s+/gu, " "), ...items] : items
+  return listRows(writesHeading(slide) ? [(slide.heading ?? "").trim().replace(/\s+/gu, " "), ...items] : items, rows)
+}
+
+/** The lines a face with fixed list rows draws, and how many it had no row for. */
+export interface ListRows {
+  lines: string[]
+  /** Lines past the last row: declared as `data-dropped` items, never drawn. */
+  dropped: number
+}
+
+/**
+ * `all` set into `rows` fixed rows: the first `rows` lines, and a count of
+ * the rest. A face that sets a list in fixed rows, from bullets or from a
+ * heading written as the list, takes its lines from here, so a line it has
+ * no row for is counted and declared, never sliced off unseen.
+ */
+export function listRows(all: readonly string[], rows: number): ListRows {
   return { lines: all.slice(0, rows), dropped: Math.max(0, all.length - rows) }
 }

@@ -1,5 +1,5 @@
 import type { SvgTemplateProps } from "./types"
-import { boundaryBulletItems } from "./boundary-content"
+import { boundaryBulletItems, listRows, type ListRows } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisText, stripEmphasis } from "../render/emphasis"
@@ -62,15 +62,10 @@ function splitActionLinesAll(text: string): string[] {
   return [trimmed]
 }
 
-/** The heading's action lines this face draws: the first three. */
-function splitActionLines(text: string): string[] {
-  return splitActionLinesAll(text).slice(0, ITEM_MAX)
-}
-
-function actionItems(slide: SvgTemplateProps["slide"]): string[] {
-  const bullets = boundaryBulletItems(slide, ITEM_MAX)
-  if (bullets.length > 0) return bullets
-  return splitActionLines(slide.heading ?? "")
+/** The action rows this face sets, from the bullets or from the heading written as the list, and how many lines had no row. */
+function actionRows(slide: SvgTemplateProps["slide"]): ListRows {
+  const bullets = boundaryBulletItems(slide, Infinity)
+  return listRows(bullets.length > 0 ? bullets : splitActionLinesAll(slide.heading ?? ""), ITEM_MAX)
 }
 
 function actionCta(slide: SvgTemplateProps["slide"]): string {
@@ -104,7 +99,8 @@ export function ActionPadEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const org = ir.meta.organization
   const author = ir.meta.authors?.[0]
   const authorText = author ? [author.name, author.role].filter(Boolean).join(" · ") : null
-  const items = actionItems(slide)
+  const rows = actionRows(slide)
+  const items = rows.lines
   const ctaSource = actionCta(slide)
 
   const kicker = fitSvgLine(NEXT_KICKER, {
@@ -184,6 +180,8 @@ export function ActionPadEnding({ ir, slide, ctx }: SvgTemplateProps) {
           )
         ),
       )}
+
+      {rows.dropped > 0 ? <g data-dropped={rows.dropped} data-dropped-kind="item" /> : null}
 
       {cta && (
         <>

@@ -1,5 +1,5 @@
 import type { SvgTemplateProps } from "./types"
-import { headedBulletRows, writesHeading } from "./boundary-content"
+import { headedBulletRows, listRows, writesHeading } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
@@ -66,11 +66,6 @@ function splitDecisionLinesAll(text: string): string[] {
   return [trimmed]
 }
 
-/** The lines this face draws of them: the first two. */
-function splitDecisionLines(text: string): string[] {
-  return splitDecisionLinesAll(text).slice(0, ITEM_MAX)
-}
-
 function signoffLines(text: string): string[] {
   const trimmed = text.trim()
   if (!trimmed) return []
@@ -100,8 +95,8 @@ function fitItem(item: string, fonts: HeadingCtx["fonts"]) {
 export function DecisionCloseEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const headed = headedBulletRows(slide, ITEM_MAX)
-  const items = headed?.lines ?? splitDecisionLines(stripEmphasis(slide.heading ?? ""))
+  const rows = headedBulletRows(slide, ITEM_MAX) ?? listRows(splitDecisionLinesAll(stripEmphasis(slide.heading ?? "")), ITEM_MAX)
+  const items = rows.lines
   const kickerText = scriptIsCjk(slide, items) ? DECISION_KICKER_CJK : DECISION_KICKER_LATIN
   const kickerTracking = hasCjk(kickerText) ? undefined : KICKER_TRACKING
   const signoffSource = stripEmphasis(slide.subheading ?? "")
@@ -173,7 +168,7 @@ export function DecisionCloseEnding({ slide, ctx }: SvgTemplateProps) {
         ) : null,
       )}
 
-      {headed && headed.dropped > 0 ? <g data-dropped={headed.dropped} data-dropped-kind="item" /> : null}
+      {rows.dropped > 0 ? <g data-dropped={rows.dropped} data-dropped-kind="item" /> : null}
 
       <line
         data-depth="mid"

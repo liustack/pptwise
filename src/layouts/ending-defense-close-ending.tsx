@@ -1,5 +1,5 @@
 import type { SvgTemplateProps } from "./types"
-import { headedBulletRows, writesHeading } from "./boundary-content"
+import { headedBulletRows, listRows, writesHeading } from "./boundary-content"
 import type { LayoutDefinition } from "./registry"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk } from "../render/ink"
@@ -54,11 +54,6 @@ function splitConclusionLinesAll(text: string): string[] {
   return [trimmed]
 }
 
-/** The lines this face draws of them: the first three. */
-function splitConclusionLines(text: string): string[] {
-  return splitConclusionLinesAll(text).slice(0, ITEM_MAX)
-}
-
 function conclusionsKicker(slide: SvgTemplateProps["slide"], items: string[]): string {
   const corpus = [slide.heading, slide.subheading, ...items].join("")
   return hasCjk(corpus) ? CONCLUSIONS_KICKER_CJK : CONCLUSIONS_KICKER_LATIN
@@ -77,8 +72,8 @@ function fitItem(item: string, fonts: HeadingCtx["fonts"]) {
 export function DefenseCloseEnding({ slide, ctx }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
-  const headed = headedBulletRows(slide, ITEM_MAX)
-  const items = headed?.lines ?? splitConclusionLines(stripEmphasis(slide.heading ?? ""))
+  const rows = headedBulletRows(slide, ITEM_MAX) ?? listRows(splitConclusionLinesAll(stripEmphasis(slide.heading ?? "")), ITEM_MAX)
+  const items = rows.lines
   const signoffSource = (slide.subheading ?? "").trim()
 
   const kicker = fitSvgLine(conclusionsKicker(slide, items), {
@@ -138,7 +133,7 @@ export function DefenseCloseEnding({ slide, ctx }: SvgTemplateProps) {
         </text>
       ))}
 
-      {headed && headed.dropped > 0 ? <g data-dropped={headed.dropped} data-dropped-kind="item" /> : null}
+      {rows.dropped > 0 ? <g data-dropped={rows.dropped} data-dropped-kind="item" /> : null}
 
       <line
         x1={FOOT_X}
