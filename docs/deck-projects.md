@@ -125,7 +125,7 @@ Placeholders let the author confirm the whole page sequence before writing every
 
 ## Assets are project-local
 
-Files under `assets/` are registered by filename. Components reference the basename as `asset_id`. Keep human-selected stock and generated assets under this directory or the managed `.pptwise/<deck>/assets/` directory used by image commands.
+Files under `assets/` are registered by filename. Components reference the basename as `asset_id`. A `.json` file there is a picture's provenance sidecar and is not registered. `pptwise images fetch` and `pptwise images generate` pin pictures into this directory, so a deck keeps its pictures when it moves. Pictures an earlier version pinned under `.pptwise/<place>/assets/` still count while the deck stays where it was, and a picture of the same id in `assets/` wins.
 
 Run `pptwise asset-brief my-deck/` before sourcing images. It resolves the bound theme and real page face, then reports actual frames, crop posture, palette, safe zones, and generation prompts.
 

@@ -79,7 +79,7 @@ pptwise render <target> \
   [--no-git-ignore]
 ```
 
-省略 `-o` 时，输出写到项目根目录下的 `.pptwise/<place>/<deck>.pptx`。`<place>` 是 deck 相对项目根目录的路径，用连字符连起来，所以 `decks/q3/zh` 和 `decks/q4/zh` 各有自己的目录（`decks-q3-zh`、`decks-q4-zh`）和各自的图片素材。放在项目根目录下一层的 deck 保持原名。项目外的 deck，或路径里有拉丁字母和数字以外字符的 deck，名字后面加一段路径的短哈希。改颜色用 `pptwise theme fork`，它写出一份完整主题。Render 不接受局部改色覆盖。
+省略 `-o` 时，输出写到项目根目录下的 `.pptwise/<place>/<deck>.pptx`。`<place>` 是 deck 相对项目根目录的路径，用连字符连起来，所以 `decks/q3/zh` 和 `decks/q4/zh` 各有自己的目录（`decks-q3-zh`、`decks-q4-zh`）。放在项目根目录下一层的 deck 保持原名。项目外的 deck，或路径里有拉丁字母和数字以外字符的 deck，名字后面加一段路径的短哈希。改颜色用 `pptwise theme fork`，它写出一份完整主题。Render 不接受局部改色覆盖。
 
 `--draft` 允许占位页。`--allow-dropped-content` 允许已知内容丢失，只能在用户明确同意时使用。正常处理方式是缩短或拆页。
 
@@ -104,6 +104,8 @@ Audit 渲染确定性 SVG，并检查：
 - `monotony`
 
 任意发现都会让退出码变为 1。`--pixels` 增加压图文字的像素对比度采样，需要 `sharp`。
+
+截断按被截的字段分级。页面的标题、副标题、来源行（`footnote`），以及组件里除标签以外的每一段文字，都是读者必须看全的硬内容。主题版式截掉其中任何一段时，改由一个能把它们画全的朴素版式接手这一页，audit 报 `stepped-aside`。之后 `content-truncated` 只报哪个版式都躲不开的截断，`detail` 里写明字段和分级（`"tier": "hard"`）。眉题、印章、标签这类装饰性文字被截时仍留在主题版式上，报为 `"tier": "declared"`。页面带 kicker、`fields`、印章、页面标签、选票、`stage` 或 `years` 时也一样，因为朴素版式没有它们的位置。字段清单在 `src/ir/truncation-tiers.ts`。
 
 ## Schema 与 spec
 
@@ -211,7 +213,9 @@ pptwise images list --deck <dir>
 pptwise images generate --deck <dir> --as <asset_id> [--prompt <text>]
 ```
 
-搜索依次检查 Pexels、已配置的 Pixabay 和经过商业用途过滤的 Openverse 来源。Fetch 把选定文件与来源 sidecar 固定在 `.pptwise/<deck>/assets/`。Generate 使用已启用的本地生成器，省略 `--prompt` 时读取 asset brief 提示词。
+搜索依次检查 Pexels、已配置的 Pixabay 和经过商业用途过滤的 Openverse 来源。Fetch 和 generate 把图存成 `<asset_id>.jpg`，旁边带来源 sidecar `<asset_id>.json`。目标是 deck 项目时，图写进这个 deck 自己的 `assets/`，deck 按文件名登记它们，所以 deck 换目录图也跟着走。目标是单个 IR 文件时，图写到 `.pptwise/<place>/assets/`。旧版本给 deck 项目存在 `.pptwise/<place>/assets/` 的图，deck 不挪位置时照样能用。要挪位置，先把它们复制进 deck 的 `assets/`。Generate 使用已启用的本地生成器，省略 `--prompt` 时读取 asset brief 提示词。
+
+页面引用的 `asset_id` 没有对应文件时，validate 会警告，并给出这张图该放的路径，比如 `decks/q3/zh/assets/hero.jpg`。
 
 ## Preview 与 serve
 

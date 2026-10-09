@@ -1,9 +1,9 @@
 /** End-to-end: CLI renders the examples, output must be a well-formed pptx.
  *  Requires `pnpm build` first (wired via the `e2e` npm script). */
 import { execFileSync } from "node:child_process"
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join, resolve } from "node:path"
+import { dirname, join, resolve } from "node:path"
 import JSZip from "jszip"
 import type * as Sharp from "sharp"
 import { openRunRoot } from "../src/test-run-root"
@@ -1149,6 +1149,67 @@ if (!Object.keys(stockZip.files).some((k) => k.startsWith("ppt/media/"))) {
 }
 rmSync(stockRoot, { recursive: true, force: true })
 console.log("workspace stock-asset render leg OK")
+
+// A deck project keeps the pictures pinned for it in its own assets/, so
+// moving the deck to another folder keeps them. The generator is a stand-in
+// on PATH that writes a 1px PNG where the generator contract asks for one:
+// no model is ever called, and only grok is enabled in a throwaway home.
+console.log("--- moved deck keeps its pictures leg ---")
+{
+  const root = mkdtempSync(join(tmpdir(), "pptwise-e2e-moved-"))
+  const home = mkdtempSync(join(tmpdir(), "pptwise-e2e-moved-home-"))
+  const bin = join(root, "bin")
+  mkdirSync(bin)
+  writeFileSync(
+    join(bin, "grok"),
+    `#!${process.execPath}\nrequire("node:fs").writeFileSync("generated.jpg", Buffer.from("${PNG_1PX_STOCK.toString("base64")}", "base64"))\n`,
+  )
+  chmodSync(join(bin, "grok"), 0o755)
+  const env: NodeJS.ProcessEnv = { ...process.env, PPTWISE_HOME: home, PATH: [bin, dirname(process.execPath), "/usr/bin", "/bin"].join(":") }
+  const pptwise = (args: string[]) => execFileSync("node", [cli, ...args], { cwd: root, env, encoding: "utf8" })
+  try {
+    const drafted = join(root, "drafts", "moving")
+    mkdirSync(join(drafted, "pages"), { recursive: true })
+    writeFileSync(
+      join(drafted, "deck.spec.json"),
+      JSON.stringify({
+        ...deckSpec,
+        filename: "moving",
+        pages: [
+          { id: "p-cover", type: "cover", heading: "Moving deck" },
+          { id: "p-hero", type: "content", kind: "photo", heading: "Hero" },
+          { id: "p-why", type: "content", kind: "points", heading: "Why" },
+          { id: "p-end", type: "ending", heading: "End" },
+        ],
+      }),
+    )
+    writeFileSync(join(drafted, "pages", "p-cover.json"), "{}")
+    writeFileSync(join(drafted, "pages", "p-hero.json"), JSON.stringify({ components: [{ type: "image", asset_id: "hero" }] }))
+    writeFileSync(join(drafted, "pages", "p-why.json"), JSON.stringify({ components: [{ type: "bullets", items: ["Every shape stays editable", "Pictures travel with the deck"] }] }))
+    writeFileSync(join(drafted, "pages", "p-end.json"), "{}")
+    pptwise(["config", "set", "images.generators.grok.enabled", "true"])
+    pptwise(["images", "generate", "--deck", "drafts/moving", "--as", "hero", "--prompt", "a harbour at dawn"])
+    if (!existsSync(join(drafted, "assets", "hero.jpg")) || !existsSync(join(drafted, "assets", "hero.json"))) {
+      throw new Error("e2e: moved deck leg — images generate did not write the picture and its sidecar into the deck's assets/")
+    }
+    mkdirSync(join(root, "decks"))
+    renameSync(drafted, join(root, "decks", "moving"))
+    const validated = pptwise(["validate", "decks/moving"])
+    if (validated.includes('asset_id "hero"')) {
+      throw new Error(`e2e: moved deck leg — the moved deck lost its picture:\n${validated}`)
+    }
+    const moved = join(root, "moved.pptx")
+    pptwise(["render", "decks/moving", "-o", moved])
+    const zip = await JSZip.loadAsync(readFileSync(moved))
+    if (!Object.keys(zip.files).some((k) => k.startsWith("ppt/media/"))) {
+      throw new Error("e2e: moved deck leg — no ppt/media/* part, the moved deck's picture was not embedded")
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+    rmSync(home, { recursive: true, force: true })
+  }
+}
+console.log("moved deck keeps its pictures leg OK")
 
 // Content packs through the built binary: sync without a license is a quiet
 // success, a licensed sync against an in-process pack server installs the

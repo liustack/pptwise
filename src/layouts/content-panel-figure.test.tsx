@@ -48,6 +48,14 @@ describe("content-panel-figure", () => {
     expect(byText(root, "一年多出约 3,200 亿美元")).toBeDefined()
   })
 
+  it("colours the move by the news the author says it is, a rise that is bad news in the danger ink", () => {
+    const told = { ...FIGURES, items: [FIGURES.items[0], { ...FIGURES.items[1], delta_good: false }] }
+    const { root, ctx } = face([told, BARS])
+    const move = root.querySelector("[data-figure-move] text")!
+    expect(textOf(move)).toBe("▲ 79%")
+    expect(move.getAttribute("fill")).toBe(panelInks(ctx).down)
+  })
+
   it("sets the other figures as figure panels when no chart comes with them", () => {
     const three = { type: "kpi_cards", items: [FIGURES.items[0], { value: "+79%", label: "比 2025 年", delta: "up" }, { value: "1,701 亿", label: "二季度" }] }
     const { root } = face([three])

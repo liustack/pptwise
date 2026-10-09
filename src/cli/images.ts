@@ -381,10 +381,37 @@ function parsePhotoRef(ref: string): { provider: PhotoRefProvider; photoId: stri
   return { provider: m[1] as PhotoRefProvider, photoId }
 }
 
+/**
+ * Where `images fetch` and `images generate` pin a picture for `deckArg`,
+ * and where `images list` reads.
+ *
+ * A deck project keeps its pictures in its own `assets/`, the folder it
+ * already registers pictures from by file name (`./deck-dir.ts`), so a
+ * pinned picture moves with the deck and the IR names it by a path inside
+ * the deck (`assets/hero.jpg`). They used to go to the workspace,
+ * `.pptwise/<deck>/assets/`, a folder named for where the deck sat in the
+ * project: a deck moved to another folder looked for its pictures in a new,
+ * empty workspace and drew empty frames. `earlier` is that workspace folder,
+ * still read (`loadWorkspaceStock` in `./commands.ts`, `images list` here)
+ * so a picture pinned there before keeps counting while the deck stays put.
+ *
+ * A single IR file has no folder of its own, so its pictures stay in the
+ * workspace.
+ */
+async function resolveImageHome(
+  deckArg: string,
+  cwd: string,
+): Promise<{ assetsDir: string; earlier?: string }> {
+  const { location, isDir, target } = await resolveDeckWorkspace(deckArg, cwd)
+  const workspace = join(location.dir, ASSETS_DIRNAME)
+  if (!isDir) return { assetsDir: workspace }
+  return { assetsDir: join(resolve(target), ASSETS_DIRNAME), earlier: workspace }
+}
+
 async function resolveDeckWorkspace(
   deckArg: string,
   cwd: string,
-): Promise<{ location: WorkspaceLocation; assetsDir: string }> {
+): Promise<{ location: WorkspaceLocation; isDir: boolean; target: string }> {
   const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
   const decksDirSource =
     projectHit?.config.decksDir !== undefined
@@ -399,7 +426,7 @@ async function resolveDeckWorkspace(
     target,
     isDir,
   })
-  return { location, assetsDir: join(location.dir, ASSETS_DIRNAME) }
+  return { location, isDir, target }
 }
 
 function assertSafeDownloadUrl(url: string): URL {
@@ -592,7 +619,7 @@ export async function runImagesFetch(ref: string, opts: ImagesFetchOptions): Pro
     if (!apiKey) throw missingKeysError(provider)
   }
 
-  const { assetsDir } = await resolveDeckWorkspace(opts.deck, cwd)
+  const { assetsDir } = await resolveImageHome(opts.deck, cwd)
   const jpgPath = join(assetsDir, `${opts.as}.jpg`)
   const jsonPath = join(assetsDir, `${opts.as}.json`)
   if ((await pathExists(jpgPath)) && (await pathExists(jsonPath))) {
@@ -674,24 +701,33 @@ export async function runImagesFetch(ref: string, opts: ImagesFetchOptions): Pro
 
 export async function runImagesList(opts: ImagesListOptions): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
-  const { assetsDir } = await resolveDeckWorkspace(opts.deck, cwd)
-  let names: string[]
-  try {
-    names = (await readdir(assetsDir)).filter((n) => n.endsWith(".json") && !n.startsWith(".")).sort()
-  } catch (e) {
-    if ((e as NodeJS.ErrnoException).code === "ENOENT") return "No pinned stock photos."
-    throw e
-  }
+  const { assetsDir, earlier } = await resolveImageHome(opts.deck, cwd)
   const lines: string[] = []
-  for (const name of names) {
-    const sidecar = await readSidecar(join(assetsDir, name))
-    if (!sidecar) continue
-    const assetId = name.slice(0, -".json".length)
-    const id = sidecar.photo_id ? `${sidecar.provider}:${sidecar.photo_id}` : sidecar.provider
-    const rest = [sidecar.author, sidecar.license, sidecar.page_url ?? sidecar.generated_at].filter(Boolean)
-    lines.push(`${assetId}  ${id}  ${rest.join("  ")}`)
+  const listed = new Set<string>()
+  // The deck's own pictures first, then any pinned in the workspace before,
+  // which the deck still reads unless its own folder has one of that id.
+  for (const dir of earlier === undefined ? [assetsDir] : [assetsDir, earlier]) {
+    for (const name of await sidecarNames(dir)) {
+      const assetId = name.slice(0, -".json".length)
+      if (listed.has(assetId)) continue
+      const sidecar = await readSidecar(join(dir, name))
+      if (!sidecar) continue
+      listed.add(assetId)
+      const id = sidecar.photo_id ? `${sidecar.provider}:${sidecar.photo_id}` : sidecar.provider
+      const rest = [sidecar.author, sidecar.license, sidecar.page_url ?? sidecar.generated_at].filter(Boolean)
+      lines.push(`${assetId}  ${id}  ${rest.join("  ")}`)
+    }
   }
   return lines.length === 0 ? "No pinned stock photos." : lines.join("\n")
+}
+
+async function sidecarNames(dir: string): Promise<string[]> {
+  try {
+    return (await readdir(dir)).filter((n) => n.endsWith(".json") && !n.startsWith(".")).sort()
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") return []
+    throw e
+  }
 }
 
 async function writePinnedAsset(
@@ -764,7 +800,7 @@ export async function runImagesGenerate(opts: ImagesGenerateOptions): Promise<st
     throw new PptwiseError(`No image generator is enabled. Found but disabled: ${listed}`)
   }
 
-  const { assetsDir } = await resolveDeckWorkspace(opts.deck, cwd)
+  const { assetsDir } = await resolveImageHome(opts.deck, cwd)
   const workdir = await mkdtemp(join(tmpdir(), "pptwise-gen-"))
   const dest = join(workdir, "generated.jpg")
   const run = opts.run ?? defaultProcessRunner

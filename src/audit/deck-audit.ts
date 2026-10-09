@@ -8,6 +8,7 @@ import { measureMonoTextUnits, measureTextUnits } from "../lib/svg-text-layout"
 import { getPlatform } from "../platform/registry"
 import { isBold, isMonoFontFamily } from "../render/fonts"
 import { dropPhrase, parseDropKind, type DropKind } from "../render/drop-marker"
+import { cutLines, type CutLine } from "../render/cut-fields"
 import { sourceLineElements, sourceLineMissing } from "./source-line"
 import { printedMarks } from "./printed-marks"
 import { inkDescentEm } from "./ink-descent"
@@ -2575,26 +2576,35 @@ function overlapFindings(markup: string, page: number, slideId: string | undefin
  * find a label; a cut line is often a long one, and its opening words alone
  * did not tell an author which of several similar lines was cut.
  */
-function truncatedMessage(line: string): string {
+function truncatedMessage(cut: CutLine): string {
+  // A hard field (`../ir/truncation-tiers.ts`) reaches the audit only when
+  // the face cut it and the step-aside sheet could not take the page.
+  if (cut.tier === "hard") {
+    return (
+      `text "${cut.text}" (${cut.field}) was truncated to fit, and it is text a reader needs whole. ` +
+      `The theme's layout cut it and no plainer layout could take the page: shorten it or split the page`
+    )
+  }
   return (
-    `text "${line}" was truncated to fit — widen the layout, shorten the source ` +
+    `text "${cut.text}" was truncated to fit — widen the layout, shorten the source ` +
     `content, or accept the cut if the tail wasn't essential`
   )
 }
 
-function truncatedFindings(markup: string, page: number, slideId: string | undefined): AuditFinding[] {
-  const root = parseSvg(markup)
-  const els = Array.from(root.querySelectorAll('[data-truncated="1"]'))
-  return els.map((el) => {
-    const text = (el.textContent ?? "").trim()
-    return {
-      page,
-      ...(slideId !== undefined ? { slideId } : {}),
-      code: "content-truncated" as const,
-      message: truncatedMessage(text),
-      detail: { text },
-    }
-  })
+/**
+ * Every cut line on the page, with the field it was cut from and that
+ * field's tier, read by the same `cutLines` the renderer decides a
+ * step-aside with (`../render/cut-fields.ts`).
+ */
+function truncatedFindings(markup: string, slide: Slide, page: number, slideId: string | undefined): AuditFinding[] {
+  if (!markup.includes('data-truncated="1"')) return []
+  return cutLines(parseSvg(markup), slide).map((cut) => ({
+    page,
+    ...(slideId !== undefined ? { slideId } : {}),
+    code: "content-truncated" as const,
+    message: truncatedMessage(cut),
+    detail: { text: cut.text, tier: cut.tier, ...(cut.field !== undefined ? { field: cut.field } : {}) },
+  }))
 }
 
 function droppedMessage(count: number, kind: DropKind): string {
@@ -2845,7 +2855,7 @@ function runDeterministicAudit(
     findings.push(...overflowFindings(markup, page, slideId))
     findings.push(...contrastFindings(markup, page, slideId))
     findings.push(...overlapFindings(markup, page, slideId))
-    findings.push(...truncatedFindings(markup, page, slideId))
+    findings.push(...truncatedFindings(markup, slide, page, slideId))
     findings.push(...droppedFindings(markup, page, slideId))
     findings.push(...steppedAsideFindings(markup, page, slideId))
     findings.push(...sourceLineFindings(markup, slide, page, slideId))

@@ -57,7 +57,7 @@ export const schema = z
   })
   .strict()
   .describe(
-    "Sets 4-12 organization marks on one grid of equal tiles, every tile the same size and the same weight, " +
+    "Sets 4-12 organization marks on one grid of tiles of equal size and weight, " +
       "so the page says 'these names are together' and nothing more. Use logo_wall when the set of names IS " +
       "the claim — customers, partners, sponsors, funders, accreditations. The test: would each tile be " +
       "replaced by that organization's own logo file? If each name needs a line of its own explaining what it " +

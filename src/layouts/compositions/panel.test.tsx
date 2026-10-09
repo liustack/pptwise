@@ -402,6 +402,16 @@ describe("the panel setting, as ledger's board draws it", () => {
     expect(byText(levels.root!, "167 亿美元")!.getAttribute("fill")).toBe(ctx.colors.text)
   })
 
+  it("colours a change by the news the author says it is, the fall that is good news in the success ink", () => {
+    const told = [{ ...market[0], items: market[0]!.items!.map((item) => (item.value === "−7.1%" ? { ...item, delta_good: true } : item.value === "+15.3%" ? { ...item, delta_good: false } : item)) }, ...market.slice(1)]
+    const { root, ctx } = renderComposition(figuresComposition, told, { ...panel, theme: "ledger" })
+    const inks = panelInks(ctx)
+    expect(byText(root!, "−7.1%")!.getAttribute("fill")).toBe(inks.up)
+    expect(byText(root!, "+15.3%")!.getAttribute("fill")).toBe(inks.down)
+    expect(byText(root!, "+15.5%")!.getAttribute("fill")).toBe(inks.up)
+    expect(byText(root!, "−8.0%")!.getAttribute("fill")).toBe(inks.down)
+  })
+
   it("leaves the other settings alone: a titled table there is declined, an untitled one drawn as before", () => {
     expect(renderComposition(recordsComposition, fcf, { theme: "bulletin", setting: "notice" }).root).toBeNull()
     expect(renderComposition(barsComposition, [leases[0]], { theme: "bulletin", setting: "notice" }).root).not.toBeNull()

@@ -6,6 +6,7 @@ import type { LayoutDefinition } from "./registry"
 import { sectionNameFor } from "../lib/derive"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { SvgContent } from "../render/svg-content"
+import { deltaNews } from "../render/delta-news"
 import { accessibleInk, resolveSemanticColor } from "../render/ink"
 import { paletteWithoutAccent } from "../render/chart-palette"
 import { stripEmphasis } from "../render/emphasis"
@@ -202,7 +203,7 @@ export function GaugeStatsContent({ ir, slide, index, ctx, page }: SvgTemplatePr
           fontFamily: fonts.body,
         })
       : null,
-    decline: item.delta === "down",
+    bad: deltaNews(item) === "bad",
   }))
   const danger = resolveSemanticColor("danger", colors)
   const fallbackArrangement = "single" as const
@@ -315,7 +316,7 @@ export function GaugeStatsContent({ ir, slide, index, ctx, page }: SvgTemplatePr
                   y={NOTE_Y}
                   fontFamily={fonts.body}
                   fontSize={stat.note.fontSize}
-                  fill={accessibleInk(stat.decline ? danger : colors.muted, bg, stat.note.fontSize)}
+                  fill={accessibleInk(stat.bad ? danger : colors.muted, bg, stat.note.fontSize)}
                   dominantBaseline="alphabetic"
                 >
                   {withoutOverflowMark(stat.note.text)}

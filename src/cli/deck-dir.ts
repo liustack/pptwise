@@ -284,7 +284,10 @@ async function readPages(dir: string): Promise<Record<string, unknown>> {
  * `assets/` directory (`ENOENT`) is zero assets, same as a missing `pages/`
  * above — anything else (`ENOTDIR`, a permission error, ...) throws
  * {@link PptwiseError} naming the path rather than silently reading as "no
- * assets here" (see {@link readPages}'s own note on this). Dotfiles
+ * assets here" (see {@link readPages}'s own note on this). A `.json` file
+ * is the provenance sidecar `pptwise images fetch` and `generate` pin beside
+ * a picture (`hero.json` beside `hero.jpg`), never a picture, so it is not
+ * registered either: it would claim its picture's id. Dotfiles
  * (`.DS_Store` and friends — `extname` returns `""` for these, so their
  * "id" would otherwise be the whole filename) are skipped: they are never a
  * legitimate image, and `resolveLocalAssets` inlines *every* registered
@@ -310,6 +313,7 @@ async function scanAssets(dir: string): Promise<Record<string, { src: string }>>
   const images: Record<string, { src: string }> = {}
   const sourceFile = new Map<string, string>()
   for (const entry of entries) {
+    if (extname(entry).toLowerCase() === ".json") continue
     const id = basename(entry, extname(entry))
     const previous = sourceFile.get(id)
     if (previous !== undefined) {

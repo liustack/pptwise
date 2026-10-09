@@ -372,9 +372,11 @@ describe("icon_cards item tag", () => {
   // The same cards on the page itself, the way the deck drew them. The audit
   // used to read the mark left on a card with no text as a cut title,
   // quoting the tag and the title back. Under a standfirst the band is
-  // shorter still: each card now keeps a line of its text, and what the
-  // audit quotes is that line, the text that was cut.
-  it("draws them whole on brief's page, and the audit names the text it cuts, not the title", () => {
+  // shorter still, and the face could keep only a line of each card's text.
+  // A card's text is the author's own words (`../ir/truncation-tiers.ts`),
+  // so the face now gives the page to the step-aside sheet, which has the
+  // room to draw every card whole.
+  it("draws them whole on brief's page, and under a standfirst steps aside rather than cut a card's text", () => {
     const page = (subheading?: string): PptxIR =>
       ({
         version: "5",
@@ -394,13 +396,9 @@ describe("icon_cards item tag", () => {
         ],
       }) as unknown as PptxIR
     expect(auditDeck(page()).findings).toEqual([])
-    const cut = auditDeck(page("五家公开记录，一家待补")).findings.filter((f) => f.code === "content-truncated")
-    expect(cut.length).toBeGreaterThan(0)
-    for (const finding of cut) {
-      const quoted = String((finding.detail as { text: string }).text)
-      expect(references.items.some((item) => item.text.startsWith(quoted.replace(/…$/, "")))).toBe(true)
-      expect(references.items.some((item) => quoted.includes(item.title))).toBe(false)
-    }
+    const findings = auditDeck(page("五家公开记录，一家待补")).findings
+    expect(findings.map((f) => f.code)).toEqual(["stepped-aside"])
+    expect(findings[0]!.detail).toEqual({ face: "gauge-sheet" })
   })
 
   it("explodes tagged cards into a bento's tiles, which set each tag beside its icon", () => {

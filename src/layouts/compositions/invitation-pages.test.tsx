@@ -188,6 +188,15 @@ describe("the luxe board's pages on luxe", () => {
     expect(pills[2]).toBe(invitationInks(ctx).gold)
   })
 
+  it("balance outlines a fall the author calls good news in gold, and a rise called bad news dim", () => {
+    const [kpi, ...rest] = INVITATION_BOARD["p07-lighter"]!.components as [{ items: Record<string, unknown>[] }, ...Component[]]
+    const told = [{ ...kpi, items: kpi.items.map((it) => ({ ...it, delta_good: it.delta === "down" })) }, ...rest] as Component[]
+    const { root, ctx } = draw("p07-lighter", "luxe", INVITATION_BOARD, told)
+    const pills = Array.from(root!.querySelectorAll("[data-invitation-figure] > rect")).map((r) => r.getAttribute("stroke"))
+    expect(pills[0]).toBe(invitationInks(ctx).gold)
+    expect(pills[2]).not.toBe(invitationInks(ctx).gold)
+  })
+
   it("swing keys each stretch by its series and leaves a house a stretch has no figures for empty", () => {
     const { root } = draw("p08-swing")
     expect(textOf(root!.querySelectorAll("[data-invitation-stretch] text")[1]!)).toBe("上一财年 ○ → ● 本财年")

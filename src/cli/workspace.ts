@@ -10,7 +10,9 @@
  *     001-cover.svg       preview                 (regenerable)
  *     002-content.svg
  *     <deck-slug>.pptx    render                  (regenerable)
- *     assets/             pinned stock photos     (not regenerable)
+ *     assets/             pinned photos of an IR file, or of a deck
+ *                         project from before they moved into its own
+ *                         assets/                 (not regenerable)
  *       hero.jpg
  *       hero.json         sidecar
  * ```
@@ -25,7 +27,9 @@
  * 2. **Two zones live here.** Render output (pptx, preview.html, `NNN-*.svg`,
  *    manifest.json) is regenerable: delete those files and re-run, they grow
  *    back. Stock-photo assets (`.pptwise/<deck>/assets/` plus sidecars) are
- *    pinned downloads, not garbage. Deleting the whole `.pptwise/` directory
+ *    pinned downloads, not garbage. A deck project's pictures are pinned
+ *    into its own `assets/` (`resolveImageHome`, `./images.ts`), and this
+ *    folder is still read for the ones pinned here before. Deleting the whole `.pptwise/` directory
  *    drops those photos. Deck sources (`deck.spec.json`, `pages/`, project
  *    `assets/`, `theme.json`) stay where the user put them.
  * 3. **The directory ignores itself, once.** The first time this CLI creates

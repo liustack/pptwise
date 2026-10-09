@@ -324,6 +324,24 @@ describe("kpi semantic color tokens", () => {
     expect(flat).toBe(ctx.colors.muted)
   })
 
+  it("paints a move in the colour of the news the author says it is, whichever way it went", () => {
+    const themed: ComponentCtx = {
+      ...ctx,
+      colors: { ...ctx.colors, danger: "#7A0B12", success: "#0B5D2E" },
+    }
+    const costs = {
+      type: "kpi_cards" as const,
+      items: [
+        { value: "4.2", unit: "天", label: "平均交付周期", delta: "down" as const, delta_good: true },
+        { value: "18%", label: "退货率", delta: "up" as const, delta_good: false },
+      ],
+    }
+    const { container } = svg(kpi.render(costs, { x: 80, y: 200, w: 1120 }, themed))
+    const arrows = Array.from(container.querySelectorAll("text[data-kpi-delta]"))
+    expect(arrows.map((t) => t.textContent)).toEqual(["↓", "↑"])
+    expect(arrows.map((t) => t.getAttribute("fill"))).toEqual(["#0B5D2E", "#7A0B12"])
+  })
+
   it("still hands the token to accessibleInk, which overrides one that fails on this surface", () => {
     // A token is a theme's preference, not a license to render illegibly:
     // #34D399 measures 1.83:1 against #F4F4F4, so the guard still fires.

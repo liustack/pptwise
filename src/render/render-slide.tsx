@@ -4,6 +4,7 @@ import { svgToOps, type Op } from "../pptx/svg2pptx/dispatch"
 import { FullSlideSvg } from "./full-slide-svg"
 import { renderSvgMarkup, parseSvgRoot } from "./serialize"
 import { parseDropKind, type DropKind } from "./drop-marker"
+import { cutsHardField } from "./cut-fields"
 import type { ThemeDefinition } from "../themes/definitions"
 
 /**
@@ -12,7 +13,18 @@ import type { ThemeDefinition } from "../themes/definitions"
  * preview by construction. Lives in a `.tsx` so `pptx-generate.ts` stays JSX-free.
  */
 export function slideToSvgMarkup(ir: PptxIR, slide: Slide, index: number, theme: ThemeDefinition): string {
-  return renderSvgMarkup(createElement(FullSlideSvg, { ir, slide, index, theme }))
+  const markup = renderSvgMarkup(createElement(FullSlideSvg, { ir, slide, index, theme }))
+  // A content face that cut one of the page's hard fields (a heading, a
+  // source, a sentence in a card: `../ir/truncation-tiers.ts`) gives the
+  // page to the step-aside sheet, and the sheet keeps it only when it draws
+  // every hard field whole. Otherwise the face keeps its page and the cut
+  // stays declared. A page with no cut pays for nothing past the first test.
+  // A face that already stepped aside drew the sheet, which would cut the
+  // same field again.
+  if (slide.type !== "content" || !markup.includes('data-truncated="1"') || markup.includes("data-face-stepped-aside")) return markup
+  if (!cutsHardField(parseSvgRoot(markup), slide)) return markup
+  const yielded = renderSvgMarkup(createElement(FullSlideSvg, { ir, slide, index, theme, yieldCutFace: true }))
+  return yielded === "" ? markup : yielded
 }
 
 /** What one slide's drawing lost: the content-drop verdict for that page. */

@@ -1,5 +1,5 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
-import { basename, dirname, join, relative, resolve } from "node:path"
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path"
 import {
   formatIssues,
   formatWarnings,
@@ -313,6 +313,10 @@ interface LoadedDeckTarget {
   isDir: boolean
   resolvedTarget: string
   workspaceAssetsDir: string
+  /** Where a picture the deck names but nobody supplied belongs, for
+   *  validate to say so (`validateIr`'s `missingAssetPath`): a deck
+   *  project's own `assets/`, an IR file's workspace `assets/`. */
+  missingAssetPath: (assetId: string) => string
   themeInputs: ThemeInputs
   /** The deck project's spec as assembly parsed it. Absent for a bare IR file. */
   spec?: DeckSpec
@@ -344,6 +348,7 @@ async function readDeckTarget(
       isDir: true,
       resolvedTarget: deckDir,
       workspaceAssetsDir: stock.workspaceAssetsDir,
+      missingAssetPath: assetPathIn(join(deckDir, ASSETS_DIRNAME), cwd),
       themeInputs,
       spec,
     }
@@ -355,7 +360,17 @@ async function readDeckTarget(
     isDir: false,
     resolvedTarget,
     workspaceAssetsDir: stock.workspaceAssetsDir,
+    missingAssetPath: assetPathIn(stock.workspaceAssetsDir, cwd),
     themeInputs,
+  }
+}
+
+/** `<dir>/<asset id>`, shown from `cwd` when it lies under it. */
+function assetPathIn(dir: string, cwd: string): (assetId: string) => string {
+  return (assetId) => {
+    const path = join(dir, assetId)
+    const rel = relative(resolve(cwd), path)
+    return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel) ? rel : path
   }
 }
 
@@ -378,9 +393,9 @@ export async function loadValidatedDeckIr(
   cwd: string,
 ): Promise<{ ir: PptxIR; theme: ThemeDefinition | undefined }> {
   const [projectHit, userHit] = await readConfigs(cwd)
-  const { raw, baseDir, workspaceAssetsDir, themeInputs } = await loadDeckTarget(target, cwd, projectHit, userHit)
+  const { raw, baseDir, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
-  const v = validateIr(raw, { theme })
+  const v = validateIr(raw, { theme, missingAssetPath })
   if (!v.ok) {
     throw new PptwiseError(
       `invalid IR (${v.errors.length} issue${v.errors.length === 1 ? "" : "s"}):\n${formatIssues(v.errors)}`,
@@ -435,9 +450,9 @@ export interface RenderOptions {
 export async function runRender(irPath: string, opts: RenderOptions): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await readConfigs(cwd)
-  const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, themeInputs } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
+  const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
-  const v = validateIr(raw, { theme })
+  const v = validateIr(raw, { theme, missingAssetPath })
   if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
   await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
   const bytes = await generatePptx(v.ir!, {
@@ -570,9 +585,9 @@ export async function runValidate(
   cwd = process.cwd(),
 ): Promise<string> {
   const [projectHit, userHit] = await readConfigs(cwd)
-  const { raw, baseDir, isDir, workspaceAssetsDir, themeInputs } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
+  const { raw, baseDir, isDir, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
-  const v = validateIr(raw, { theme })
+  const v = validateIr(raw, { theme, missingAssetPath })
   if (!v.ok)
     throw new PptwiseError(
       `invalid IR (${v.errors.length} issue${v.errors.length === 1 ? "" : "s"}):\n${formatIssues(v.errors)}`,
@@ -698,9 +713,9 @@ export interface AuditCliResult {
 export async function runAudit(target: string, opts: AuditOptions = {}): Promise<AuditCliResult> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await readConfigs(cwd)
-  const { raw, baseDir, workspaceAssetsDir, themeInputs } = await loadDeckTarget(target, cwd, projectHit, userHit)
+  const { raw, baseDir, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
-  const v = validateIr(raw, { theme })
+  const v = validateIr(raw, { theme, missingAssetPath })
   if (!v.ok) {
     throw new PptwiseError(
       `invalid IR (${v.errors.length} issue${v.errors.length === 1 ? "" : "s"}):\n${formatIssues(v.errors)}`,
@@ -764,7 +779,7 @@ export async function runInspect(target: string, opts: InspectOptions): Promise<
   const theme = (await applyDeckConfig(loaded.raw, themeInputs))?.definition
   if (theme === undefined) throw new PptwiseError(`${SPEC_FILENAME} binds no theme`)
   const ir = loaded.raw as PptxIR
-  const validation = validateIr(ir, { theme })
+  const validation = validateIr(ir, { theme, missingAssetPath: loaded.missingAssetPath })
   const pageSpec = loaded.spec?.pages.find((page) => page.id === opts.page)
   const contractOpts = { theme, validation, ...(pageSpec !== undefined ? { pageSpec } : {}) }
   if (opts.component !== undefined) {
@@ -877,9 +892,9 @@ export interface AssetBriefOptions {
 export async function runAssetBrief(target: string, opts: AssetBriefOptions = {}): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit, userHit] = await readConfigs(cwd)
-  const { raw, baseDir, workspaceAssetsDir, themeInputs } = await loadDeckTarget(target, cwd, projectHit, userHit)
+  const { raw, baseDir, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
-  const v = validateIr(raw, { theme })
+  const v = validateIr(raw, { theme, missingAssetPath })
   if (!v.ok) {
     throw new PptwiseError(
       `invalid IR (${v.errors.length} issue${v.errors.length === 1 ? "" : "s"}):\n${formatIssues(v.errors)}`,
@@ -1626,9 +1641,9 @@ async function renderDeckSlides(
   }
   const themeInputs = await collectThemeInputs({ startDir: cwd, ...location })
   try {
-    const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir } = await readDeckTarget(location, themeInputs, cwd, projectHit)
+    const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, missingAssetPath } = await readDeckTarget(location, themeInputs, cwd, projectHit)
     const theme = (await applyDeckConfig(raw, themeInputs))?.definition
-    const v = validateIr(raw, { theme })
+    const v = validateIr(raw, { theme, missingAssetPath })
     if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
     await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
     const ir = v.ir!

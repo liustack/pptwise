@@ -1,4 +1,5 @@
 import type { Component } from "@/ir"
+import { deltaNews } from "../../render/delta-news"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import {
@@ -32,7 +33,8 @@ type Callout = Extract<Component, { type: "callout" }>
  * on that side): under the name each period small and tracked, its figure
  * in the ivory serif (the first period's larger) with its unit in old gold,
  * and its change in a capsule, outlined in gold and lettered in gold when
- * it went up, outlined and lettered dim when it went down. Under a hairline
+ * the change is good news, outlined and lettered dim when it is not
+ * (`deltaNews`: a rise unless the figure's `delta_good` says otherwise). Under a hairline
  * across the page the basis both sides rest on, small and centred.
  *
  * Takes, in the invitation setting: one `kpi_cards` of four figures, the
@@ -99,17 +101,17 @@ export const balanceComposition: Composition = ({ components, ctx, rect, setting
               {paintInvitationTracked({ ctx, text: names[s]!, x: cx, y: invitationBaseline(rect.y + NAME.top, NAME.lineHeight, NAME.size, true), size: NAME.size, tracking: NAME.tracking, serif: true, bold: true, anchor: "middle", fill: invitationText(inks.gold, ground, NAME.size) })}
               {side.map((it, j) => {
                 const y = rect.y + ROW.top + j * ROW.pitch
-                const up = it.delta === "up"
+                const good = deltaNews(it) === "good"
                 const note = stripEmphasis(it.note!).trim()
                 const pillW = Math.max(PILL.minW, invitationWidth(note, PILL.size, ctx, { bold: true }) + PILL.pad * 2)
-                const pillInk = up ? gold : invitationMark(inks.dim, ground)
+                const pillInk = good ? gold : invitationMark(inks.dim, ground)
                 const size = FIGURE.sizes[j]!
                 return (
                   <g key={j} data-invitation-figure={stripEmphasis(it.value).trim()}>
                     {paintInvitationTracked({ ctx, text: stripEmphasis(it.label).trim(), x: cx, y: invitationBaseline(y, PERIOD.lineHeight, PERIOD.size), size: PERIOD.size, tracking: PERIOD.tracking, anchor: "middle", fill: invitationText(inks.muted, ground, PERIOD.size) })}
                     {paintInvitationFigure({ ctx, value: it.value, unit: it.unit, x: cx, baseline: invitationBaseline(y + FIGURE.dy, FIGURE.lineHeight, size, true), spec: { size, symbol: FIGURE.symbol, word: FIGURE.word }, fill: invitationText(inks.ivory, ground, size), ground, anchor: "middle", bold: true })}
                     <rect x={cx - pillW / 2 + 0.5} y={y + PILL.dy + 0.5} width={pillW - 1} height={PILL.h - 1} rx={(PILL.h - 1) / 2} fill="none" stroke={pillInk} strokeWidth={1} />
-                    {paintInvitationLine(note, { ctx, x: cx, baseline: invitationBaseline(y + PILL.dy, PILL.h, PILL.size), size: PILL.size, bold: true, anchor: "middle", fill: up ? invitationText(inks.gold, ground, PILL.size) : invitationText(inks.muted, ground, PILL.size) })}
+                    {paintInvitationLine(note, { ctx, x: cx, baseline: invitationBaseline(y + PILL.dy, PILL.h, PILL.size), size: PILL.size, bold: true, anchor: "middle", fill: good ? invitationText(inks.gold, ground, PILL.size) : invitationText(inks.muted, ground, PILL.size) })}
                   </g>
                 )
               })}

@@ -786,6 +786,7 @@ export type KpiItem = {
   unit?: string
   label: string
   delta?: "up" | "down" | "flat"
+  delta_good?: boolean
 }
 export type ChartSeries = {
   name: string

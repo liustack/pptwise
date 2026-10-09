@@ -5,6 +5,7 @@ import { kpiFigure, kpiValueText } from "../../components/kpi"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { emphasisRunInk, parseEmphasis } from "../../render/emphasis"
+import { deltaNewsInk } from "../../render/delta-news"
 import { accessibleInk, blendOver, contrastRatio, resolveSemanticColor } from "../../render/ink"
 import { splitRow } from "./rows"
 import { blockTag } from "./shared"
@@ -328,12 +329,12 @@ export function figureCaption(item: KpiItem, chinese: boolean): string {
   return parts.join(chinese ? "，" : ", ")
 }
 
-/** The figure's ink: the mark when the author marked it, a direction's colour when the figure is itself a change, the ink otherwise. */
+/** The figure's ink: the mark when the author marked it, the colour of its news when the figure is itself a change (`deltaNews`), the ink otherwise. */
 export function figureInk(ctx: ComponentCtx, item: KpiItem, marked: boolean, value: string): string {
   const inks = panelInks(ctx)
   if (marked) return inks.mark
   const sign = signedValue(value)
-  if (sign && item.delta === sign) return sign === "up" ? inks.up : inks.down
+  if (sign && item.delta === sign) return deltaNewsInk(item, ctx.colors)!
   return ctx.colors.text
 }
 
@@ -373,7 +374,7 @@ export function fitFigurePanel(item: KpiItem, place: Place, ctx: ComponentCtx, c
     value,
     size,
     valueInk: panelText(figureInk(ctx, item, marked, value), inks.surface, size),
-    arrow: arrow ? { glyph: arrow, ink: panelText(item.delta === "up" ? inks.up : inks.down, inks.surface, FIGURE.arrowSize) } : null,
+    arrow: arrow ? { glyph: arrow, ink: panelText(deltaNewsInk(item, ctx.colors)!, inks.surface, FIGURE.arrowSize) } : null,
     note,
   }
 }

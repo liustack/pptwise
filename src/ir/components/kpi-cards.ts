@@ -16,12 +16,13 @@ export const schema = z
             .string()
             .optional()
             .describe(
-              "One short line that puts the figure in context: the base it is measured from, the period, or the counts behind it. Where the figure came from belongs in source.",
+              "One short line of context: the base, the period, or the counts behind the figure. Where it came from belongs in source.",
             ),
           tag: TagSchema.optional().describe(
-            "What the figure is, in a few words printed as a small tag with it, such as 约束性指标 or Binding. A tag on the figure the page marks fills in the emphasis colour.",
+            "What the figure is, as a small tag, such as 约束性指标 or Binding. Filled in the emphasis colour on the marked figure.",
           ),
           delta: z.enum(["up", "down", "flat"]).optional(),
+          delta_good: z.boolean().optional().describe("Whether the delta is good news. Unset: up is good, down bad."),
           icon: IconNameSchema.optional(),
           /** What kind of news the figure is. See `ToneSchema`. */
           tone: ToneSchema.optional(),
@@ -30,6 +31,15 @@ export const schema = z
           source: z.string().optional(),
         })
         .strict()
+        .superRefine((item, ctx) => {
+          if (item.delta_good !== undefined && (item.delta === undefined || item.delta === "flat")) {
+            ctx.addIssue({
+              code: "custom",
+              path: ["delta_good"],
+              message: "delta_good says whether a move up or down is good news, and this figure has no such move. Set delta to \"up\" or \"down\", or remove delta_good.",
+            })
+          }
+        })
     ),
   })
   .strict()
