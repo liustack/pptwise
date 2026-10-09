@@ -54,8 +54,10 @@ const CELL = {
   /** The hairlines run this tall. */
   ruleH: 150,
 } as const
-const MIN_ITEMS = 2
-const MAX_ITEMS = 4
+/** How many figures a ticker row holds: a face that sets one declares these as its slot's item floor and ceiling. */
+export const TICKER_ITEMS = { min: 2, max: 4 } as const
+const MIN_ITEMS = TICKER_ITEMS.min
+const MAX_ITEMS = TICKER_ITEMS.max
 
 interface Cell {
   item: KpiItem

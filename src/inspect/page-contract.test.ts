@@ -218,12 +218,13 @@ describe("pageContract: errors and warnings", () => {
 })
 
 /** The smallest instance of a type that raises nothing on its own. */
-function minimal(type: string, i: number): Component {
+function minimal(type: string, i: number, items = 1): Component {
   if (type === "paragraph") return { type: "paragraph", text: `Block ${i}` }
-  if (type === "bullets") return { type: "bullets", items: [`Point ${i}`] }
-  // One plain figure: the sample's four, with icons and deltas, would count
-  // against a face's item limit too, not just the block count being probed.
-  if (type === "kpi_cards") return { type: "kpi_cards", items: [{ value: `${i}`, label: `Figure ${i}` }] }
+  if (type === "bullets") return { type: "bullets", items: Array.from({ length: items }, (_, j) => `Point ${i}.${j}`) }
+  // Plain figures, as few as the face draws: the sample's four, with icons
+  // and deltas, would count against a face's item limit too, not just the
+  // block count being probed.
+  if (type === "kpi_cards") return { type: "kpi_cards", items: Array.from({ length: items }, (_, j) => ({ value: `${i}${j}`, label: `Figure ${i}.${j}` })) }
   if (type === "blockquote") return { type: "blockquote", text: `Words ${i}` }
   return sample(type)
 }
@@ -233,14 +234,16 @@ function minimal(type: string, i: number): Component {
  * page's components with the limit's measure set to `n`. Undefined when the
  * page cannot hold a probe for this limit.
  */
-function atCount(limit: PageLimit, legal: readonly string[], n: number): Component[] | undefined {
+function atCount(limit: PageLimit, legal: readonly string[], n: number, limits: readonly PageLimit[] = []): Component[] | undefined {
   const of = limit.of?.filter((type) => legal.includes(type)) ?? []
   switch (limit.measure) {
     case "components": {
       // A face that takes only a quote is probed with quotes.
       const type = limit.of === undefined ? ["paragraph", "bullets", "kpi_cards", "blockquote"].find((t) => legal.includes(t)) : of[0]
       if (type === undefined) return undefined
-      return Array.from({ length: n }, (_, i) => minimal(type, i))
+      // Each block holds as many items as the face draws a block from.
+      const floor = limits.find((other) => other.measure === "items" && other.min !== undefined && other.of?.includes(type))?.min ?? 1
+      return Array.from({ length: n }, (_, i) => minimal(type, i, floor))
     }
     case "items": {
       if (of.includes("bullets")) return [{ type: "bullets", items: Array.from({ length: n }, (_, i) => `Point ${i}`) }]
@@ -299,9 +302,9 @@ describe("pageContract: limits flip validate exactly at max (T7)", () => {
       findings(validateIr(probeDeck(theme, page, [...base(components), ...components]), { theme: bound }), level)
     for (const limit of contract.limits) {
       const label = `${theme} ${JSON.stringify(page)} ${JSON.stringify(limit)}`
-      const atMax = atCount(limit, contract.components.legal, limit.max)
-      const past = atCount(limit, contract.components.legal, limit.max + 1)
-      const below = atCount(limit, contract.components.legal, Math.max(limit.max - 1, 0))
+      const atMax = atCount(limit, contract.components.legal, limit.max, contract.limits)
+      const past = atCount(limit, contract.components.legal, limit.max + 1, contract.limits)
+      const below = atCount(limit, contract.components.legal, Math.max(limit.max - 1, 0), contract.limits)
       expect(atMax && past && below, `${label} has no probe`).toBeDefined()
       const before = verdict(atMax!, limit.level)
       // One past the limit raises a finding at the stated level that the
@@ -312,6 +315,13 @@ describe("pageContract: limits flip validate exactly at max (T7)", () => {
       const tighter = contract.limits.some(
         (other) => other !== limit && other.level === limit.level && other.measure === limit.measure && other.max < limit.max,
       )
+      if (limit.min !== undefined) {
+        // At the floor validate passes the count, and one under it refuses it.
+        const atMin = atCount(limit, contract.components.legal, limit.min, contract.limits)!
+        const short = atCount(limit, contract.components.legal, limit.min - 1, contract.limits)!
+        const atFloor = verdict(atMin, limit.level)
+        expect(verdict(short, limit.level).filter((line) => !atFloor.includes(line)), `${label} under its floor`).not.toEqual([])
+      }
       if (tighter) continue
       const under = verdict(below!, limit.level)
       expect(before.filter((line) => !under.includes(line)), label).toEqual([])

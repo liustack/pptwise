@@ -44,7 +44,7 @@ const COLUMN = 560
 const HEAD = { top: 64, size: 14, lineHeight: 22, tracking: 2 } as const
 const TITLE = { foot: 380, size: 50, lineHeight: 66, minPt: 36, w: 470 } as const
 const BAR = { y: 396, w: 60, h: 4 } as const
-const SCALE = { x0: 64, x1: 500, y: 520, r: 4, stroke: 1.5, year: { rise: 14, size: 13 }, value: { drop: 24, size: 13 } } as const
+const SCALE = { minYears: 2, x0: 64, x1: 500, y: 520, r: 4, stroke: 1.5, year: { rise: 14, size: 13 }, value: { drop: 24, size: 13 } } as const
 const CAPTION = { top: 556, size: 13, lineHeight: 20 } as const
 const DATE = { top: 620, size: 15, lineHeight: 22 } as const
 /** The board's contour lines: six curves across the column's lower half, the ghost at 60%. */
@@ -61,7 +61,7 @@ function scaleOf(slide: SvgTemplateProps["slide"]): { timeline: Timeline; from: 
   const block = boundarySlotBlock(slide, ["timeline"])
   if (block?.type !== "timeline") return null
   const years = block.milestones.map((m) => (/^\s*\d{4}\s*$/.test(m.date) ? yearOf(m.date) : null))
-  if (years.some((y) => y === null) || years.length < 2) return null
+  if (years.some((y) => y === null) || years.length < SCALE.minYears) return null
   const from = Math.min(...(years as number[]))
   const to = Math.max(...(years as number[]))
   if (to - from < 1 || to - from > 12) return null
@@ -196,7 +196,7 @@ export const layoutDef = {
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
     { name: "meta", accepts: [] },
-    { name: "body", accepts: ["timeline"], capacity: 1, itemCapacity: 13 },
+    { name: "body", accepts: ["timeline"], capacity: 1, itemMinimum: SCALE.minYears, itemCapacity: 13 },
   ],
   drawsPhoto: true,
   paintsOwnBackground: true,

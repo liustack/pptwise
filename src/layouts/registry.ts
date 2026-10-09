@@ -355,6 +355,17 @@ export interface LayoutSlot {
    */
   itemCapacity?: number
   /**
+   * The fewest items *inside* one accepted component this slot draws: a
+   * ticker of at least two figures, a line-up of at least three looks. The
+   * IR schema lets some of those blocks hold fewer, and the face used to
+   * leave such a block off with a mark that only the export read.
+   * `checkBoundaryItemCapacity` refuses a block with fewer, naming the
+   * floor. The face's own drawing reads the same number.
+   *
+   * `undefined` means the slot draws as few as the schema allows.
+   */
+  itemMinimum?: number
+  /**
    * The face sets the page's heading in this slot's first item row when the
    * page carries a `bullets` block, the way it sets a heading written as the
    * list itself, so a page with both has one row fewer for its items.

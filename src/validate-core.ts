@@ -602,6 +602,11 @@ function checkBoundarySlotCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
  * is bound, what it holds, and how many items the page has, and decides what
  * to cut. The render is not the place that decision gets made silently.
  *
+ * A face declares its floor the same way (`itemMinimum`): a ticker of at
+ * least two figures, a line-up of at least three looks. A block the schema
+ * lets hold fewer used to be left off whole, with a mark only the export
+ * read. It is refused here with the floor.
+ *
  * Only the exact bound face is consulted (`componentFace`), so a page
  * whose theme routes it to an asset cover — which draws no bullets at all —
  * is never measured against a cap it does not use.
@@ -614,7 +619,7 @@ function checkBoundaryItemCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
     const layout = componentFace(ir, slide, theme)
     if (!layout) return
     for (const slot of layout.slots) {
-      if (slot.itemCapacity === undefined || slot.accepts === "any") continue
+      if ((slot.itemCapacity === undefined && slot.itemMinimum === undefined) || slot.accepts === "any") continue
       for (const component of boundarySlotBlocks(slide, slot.accepts)) {
         // A timeline's items are its milestones.
         const list: unknown = "items" in component ? component.items : "milestones" in component ? component.milestones : undefined
@@ -627,11 +632,22 @@ function checkBoundaryItemCapacity(ir: PptxIR, theme: ThemeDefinition): Validati
         const raw: readonly unknown[] = list
         const strings = raw.filter((item): item is string => typeof item === "string")
         const count = strings.length === raw.length ? drawableItems(strings).length : raw.length
+        if (slot.itemMinimum !== undefined && count < slot.itemMinimum) {
+          errors.push({
+            path: `slides.${i}.components`,
+            page: i + 1,
+            ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+            message: `face "${layout.id}" draws a "${component.type}" block of at least ${slot.itemMinimum} items, and this "${slide.type}" page has ${count} — add ${
+              slot.itemMinimum - count === 1 ? "one" : slot.itemMinimum - count
+            } more or move it to a content slide`,
+          })
+          continue
+        }
         // A face that sets the heading in the list's first row has one row
         // fewer for the list on a page with a heading.
-        const room = slotItemRoom(slot, slide)!
-        if (count <= room) continue
-        const headed = room < slot.itemCapacity
+        const room = slotItemRoom(slot, slide)
+        if (room === undefined || count <= room) continue
+        const headed = room < slot.itemCapacity!
         errors.push({
           path: `slides.${i}.components`,
           page: i + 1,

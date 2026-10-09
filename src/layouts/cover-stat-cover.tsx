@@ -8,7 +8,7 @@ import {
   renderEmphasisHeading,
 } from "../render/emphasis"
 import { accessibleInk } from "../render/ink"
-import { drawTicker } from "./compositions/ticker"
+import { TICKER_ITEMS, drawTicker } from "./compositions/ticker"
 import { serifBaseline } from "./compositions/panel"
 import { centredBaseline } from "./compositions/type"
 import { PANEL_LEFT, PANEL_W } from "./panel-shared"
@@ -135,7 +135,7 @@ export const layoutDef = {
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "strip", accepts: ["kpi_cards"], capacity: 1, itemCapacity: 4 },
+    { name: "strip", accepts: ["kpi_cards"], capacity: 1, itemMinimum: TICKER_ITEMS.min, itemCapacity: TICKER_ITEMS.max },
   ],
   pageFields: ["kicker"],
   headingFit: {

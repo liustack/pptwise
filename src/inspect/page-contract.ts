@@ -66,7 +66,8 @@ export interface InspectedPage {
  * `per` says what one count covers: the whole page, one component, or one
  * item. `of` names the component types counted; absent, the count is over
  * every component on the page. `source` says in words where the number
- * comes from.
+ * comes from. `min`, where a face draws a block only from so many items
+ * up, is the fewest: under it validate rejects the page too.
  */
 export interface PageLimit {
   level: "error" | "warning"
@@ -74,6 +75,7 @@ export interface PageLimit {
   per: "page" | "component" | "item"
   of?: string[]
   max: number
+  min?: number
   source: string
 }
 
@@ -311,6 +313,7 @@ function pageLimits(
           per: "component",
           of: listed,
           max: headed ? slot.itemCapacity - 1 : slot.itemCapacity,
+          ...(slot.itemMinimum !== undefined ? { min: slot.itemMinimum } : {}),
           source: `the face's ${slot.name} slot, blank items not counted${headed ? ", its first row set with the heading" : ""}`,
         })
       }
