@@ -117,5 +117,6 @@ export const layoutDef = {
     { name: "body", accepts: ["blockquote"], capacity: 1 },
   ],
   pageFields: ["kicker"],
+  subheading: { none: "fold it into the heading, the line over the quotation that says whose words these are, or remove it" },
   headingFit: { maxWidth: LABEL.w, fontSize: LABEL.size, maxLines: 1, minPt: LABEL.size, bold: true },
 } satisfies LayoutDefinition

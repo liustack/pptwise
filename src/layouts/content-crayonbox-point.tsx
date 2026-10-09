@@ -208,6 +208,8 @@ export const layoutDef = {
     { name: "body", accepts: ["blockquote", "paragraph"], capacity: 1 },
     { name: "meta", accepts: [] },
   ],
+  // The source line takes the subheading only when no paragraph or quote fills it.
+  subheading: "in-body",
   headingFit: {
     maxWidth: TITLE_MAX_W,
     fontSize: TITLE_SIZE,

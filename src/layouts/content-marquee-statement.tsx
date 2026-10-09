@@ -194,6 +194,7 @@ export const layoutDef = {
     { name: "body", accepts: ["icon_cards", "paragraph"], capacity: 1, itemCapacity: POINTS.max },
   ],
   pageFields: ["kicker"],
+  subheading: { none: "fold it into the heading before its last comma, where this face sets its grey lead-in, or remove it" },
   decorKeepOut: [PILE_KEEP_OUT],
   headingFit: { maxWidth: MARQUEE_W, fontSize: BIG.size, maxLines: 3, minPt: LEAD.size, bold: true, lineHeightRatio: BIG.pitch / BIG.size },
 } satisfies LayoutDefinition

@@ -115,6 +115,16 @@ export interface StatementLines {
  * (`sparse/shared.ts`).
  */
 export function statementLines(slide: Slide): StatementLines {
+  return bodyStatementLines(slide) ?? { source: slide.subheading?.trim() || undefined }
+}
+
+/**
+ * The lines the page's body component fills under the claim, or `undefined`
+ * when it leaves them to the subheading. A face that sets the subheading
+ * only there declares it (`LayoutDefinition.subheading: "in-body"`), and
+ * validate refuses a subheading on a page whose body fills them.
+ */
+export function bodyStatementLines(slide: Pick<Slide, "components">): StatementLines | undefined {
   const component = slide.components[0]
   if (component?.type === "blockquote") {
     const quote = component.text.trim() || undefined
@@ -125,7 +135,7 @@ export function statementLines(slide: Slide): StatementLines {
     const text = component.text.trim()
     if (text) return { source: text }
   }
-  return { source: slide.subheading?.trim() || undefined }
+  return undefined
 }
 
 /**

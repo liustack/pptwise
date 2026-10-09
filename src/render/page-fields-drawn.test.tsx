@@ -260,22 +260,15 @@ function sweep(route: Route, assets: Record<LanguageId, CorpusAssets>): Silent[]
  * and so does an entry that no longer happens, so a fix takes its entry out.
  */
 const PENDING = new Set([
-  "almanac × statement (statement) × subheading",
   "brief × photo (image-split) × decor.text",
-  "brief × statement (gauge-point) × subheading",
   "bulletin × photo (image-split) × decor.text",
   "bulletin × photo (image-split) × subheading",
-  "ember × chapter (pitch-chapter) × subheading",
   "ember × photo (pitch-photo) × subheading",
   "ink × chapter (scroll-chapter) × decor.text",
   "ink × cover (scroll-cover) × stamp.date",
   "ink × cover (scroll-cover) × stamp.text",
   "ink × ending (scroll-ending) × stamp.date",
   "ink × ending (scroll-ending) × stamp.text",
-  "ink × quote (scroll-quote) × subheading",
-  "ink × statement (statement) × subheading",
-  "journal × quote (periodical-quote) × subheading",
-  "journal × statement (statement) × subheading",
   "lecture × chapter (chalkboard-chapter) × decor.text",
   "lecture × comparison (chalkboard-sheet) × decor.text",
   "lecture × cover (chalkboard-cover) × decor.text",
@@ -291,17 +284,9 @@ const PENDING = new Set([
   "lecture × statement (chalkboard-sheet) × decor.text",
   "ledger × photo (image-split) × decor.text",
   "ledger × photo (image-split) × subheading",
-  "ledger × statement (statement) × subheading",
-  "luxe × statement (statement) × subheading",
-  "memo × statement (statement) × subheading",
-  "rally × statement (marquee-statement) × subheading",
   "swiss × photo (image-top) × decor.text",
   "swiss × photo (image-top) × subheading",
-  "terminal × statement (statement) × subheading",
   "thesis × cover (manuscript-cover) × subheading",
-  "thesis × ending (manuscript-ending) × subheading",
-  "thesis × statement (statement) × subheading",
-  "vermilion × statement (statement) × subheading",
 ])
 
 describe("a page's own fields reach the page, or the engine says they did not", () => {

@@ -297,6 +297,15 @@ const WIDE_COMPONENT_TYPES = new Set<Component["type"]>(["architecture", "positi
 // ─────────────────────────────────────────────────────────────────────────
 
 /**
+ * A boundary page's subheading, unless its face has no place for one
+ * (`LayoutDefinition.subheading`): validate refuses a subheading there, and
+ * the face never drew one, so the page shows the same without it.
+ */
+function subheadingFor(layoutId: string, text: string | undefined): { subheading?: string } {
+  return typeof LAYOUT_REGISTRY[layoutId]?.subheading === "object" ? {} : { subheading: text }
+}
+
+/**
  * The ten pages a real deck actually contains, in the order it contains
  * them: an opening, a section break, seven content pages each led by a
  * different component (looked up in `THEME_CONTENT_SLOTS`), then a close.
@@ -310,6 +319,7 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
     throw new Error(`theme table has no 7-slot assignment for ${themeId}`)
   }
   const emphasis = THEME_EMPHASIS_PHRASES[themeId]?.[lex.id]
+  const menu = getThemeDefinition(themeId).menu
   const content: Slide[] = slots.map((spec, i) => {
     const built = buildThemeSlot(spec, lex)
     const component = emphasis ? emphasizedLead(themeId, built, i, lex) : built
@@ -337,22 +347,22 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
             : emphasis
               ? emphasizePhrase(lex.deckTitle, emphasis.cover)
               : lex.deckTitle,
-      subheading: lex.deckSubtitle,
+      ...subheadingFor(menu.cover.face, lex.deckSubtitle),
       components:
         themeId === "brief"
           ? [{ type: "bullets", items: [lex.bullets[0]!, lex.bullets[1]!, lex.bullets[2]!] }]
           : [],
     },
-    { type: "chapter", heading: lex.chapters[0]!, subheading: lex.kickers[0], components: [] },
+    { type: "chapter", heading: lex.chapters[0]!, ...subheadingFor(menu.chapter.face, lex.kickers[0]), components: [] },
     ...content,
     themeId === "thesis" || themeId === "brief" || themeId === "crayon" || themeId === "clinic" || themeId === "almanac"
       ? {
           type: "ending" as const,
           heading: lex.chapters[5]!,
-          subheading: lex.verdicts.positive,
+          ...subheadingFor(menu.ending.face, lex.verdicts.positive),
           components: [{ type: "bullets" as const, items: lex.bullets.slice(0, 3) }],
         }
-      : { type: "ending" as const, heading: lex.chapters[5]!, subheading: lex.verdicts.positive, components: [] },
+      : { type: "ending" as const, heading: lex.chapters[5]!, ...subheadingFor(menu.ending.face, lex.verdicts.positive), components: [] },
   ]
   return deckShell(lex, assets, themeId, `theme-${themeId}-${lex.id}`, slides)
 }
@@ -863,7 +873,7 @@ export function layoutPage(
                 : def.id === "lookbook-open-cover"
                   ? oneLineCoverHeading(lex)
                   : lex.deckTitle,
-          subheading: lex.deckSubtitle,
+          ...subheadingFor(layoutId, lex.deckSubtitle),
           components:
             def.id === "gauge-verdict" || def.id === "pitch-cover"
               ? [{ type: "bullets", items: lex.bullets.slice(0, 3) }]
@@ -876,7 +886,7 @@ export function layoutPage(
         ? {
             type: "chapter",
             heading: lex.chapters[1]!,
-            subheading: lex.kickers[1],
+            ...subheadingFor(layoutId, lex.kickers[1]),
             // homeroom's part of a lesson says what the part covers on three cards.
             components:
               def.id === "lesson-chapter"
@@ -890,7 +900,7 @@ export function layoutPage(
           ? {
               type: "ending",
               heading: lex.chapters[5]!,
-              subheading: lex.verdicts.positive,
+              ...subheadingFor(layoutId, lex.verdicts.positive),
               components:
                 def.id === "gauge-next" || def.id === "crayonbox-todo" || def.id === "dossier-ending" || def.id === "yearbook-ending"
                   ? [{ type: "bullets", items: lex.bullets.slice(0, 3) }]

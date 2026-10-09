@@ -729,6 +729,35 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     expect(v.errors[0]!.message).toMatch(message)
   })
 
+  it("hard-rejects a subheading on a face with no place for one, saying where to write it", () => {
+    const chapter = validateIr({ ...raw, theme: { id: "ember" }, slides: [{ type: "chapter", heading: "H", subheading: "What this act covers" }] })
+    expect(chapter.ok).toBe(false)
+    expect(chapter.errors[0]!.path).toBe("slides.0.subheading")
+    expect(chapter.errors[0]!.message).toBe(
+      'face "pitch-chapter" has no place for a subheading — list what the act covers as its row_cards, or fold it into the heading (a deck project\'s spec writes it as the page\'s summary)',
+    )
+    const quote = validateIr({
+      ...raw,
+      theme: { id: "journal" },
+      slides: [{ type: "content", kind: "quote", heading: "H", subheading: "S", components: [{ type: "blockquote", text: "Words.", attribution: "Someone" }] }],
+    })
+    expect(quote.errors[0]!.message).toMatch(/^face "periodical-quote" has no place for a subheading — fold it into the heading/)
+    expect(quote.errors[0]!.message).not.toMatch(/summary/)
+    // An empty subheading asks for nothing, and a placeholder page is not filled yet.
+    expect(validateIr({ ...raw, theme: { id: "ember" }, slides: [{ type: "chapter", heading: "H", subheading: " " }] }).ok).toBe(true)
+    expect(validateIr({ ...raw, theme: { id: "ember" }, slides: [{ type: "chapter", heading: "H", subheading: "S", placeholder: true }] }).errors).toEqual([])
+  })
+
+  it("takes a statement page's subheading under the claim only when no body fills that line", () => {
+    const page = (components: unknown[]) =>
+      validateIr({ ...raw, theme: { id: "thesis" }, slides: [{ type: "content", kind: "statement", heading: "H", subheading: "Under the claim", components }] })
+    expect(page([]).errors).toEqual([])
+    const paragraph = page([{ type: "paragraph", text: "x" }])
+    expect(paragraph.errors[0]!.path).toBe("slides.0.subheading")
+    expect(paragraph.errors[0]!.message).toBe('face "statement" sets one line under its claim, and this page\'s paragraph fills it — fold the subheading into the heading or the paragraph, or remove it')
+    expect(page([{ type: "blockquote", text: "Words.", attribution: "Someone" }]).errors[0]!.message).toMatch(/this page's blockquote fills it/)
+  })
+
   it("hard-rejects a page tag on a face with no place for it, naming the face", () => {
     const v = validateIr({
       ...raw,
