@@ -151,6 +151,7 @@ export const layoutDef: LayoutDefinition = {
     notFor: "Chapters that carry a subtitle or need a visible number, which belong in Progress Dots or Underline Banner.",
   },
   slideTypes: ["chapter"],
+  subheading: { none: "fold it into the chapter title, or remove it" },
   slots: [
     { name: "watermark", accepts: [] },
     { name: "heading", accepts: [] },

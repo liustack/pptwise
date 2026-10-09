@@ -292,15 +292,6 @@ const allBut = (...themes: string[]) => CANONICAL_THEME_IDS.filter((theme) => !t
  * longer happens: a fix takes its entry out.
  */
 const PENDING: Record<string, readonly string[]> = {
-  "chapter (fashion-chapter) × subheading": CANONICAL_THEME_IDS,
-  "chapter (gilt-ordinal-chapter) × subheading": CANONICAL_THEME_IDS,
-  "chapter (poster-chapter) × subheading": CANONICAL_THEME_IDS,
-  "chapter (tone-adaptive-chapter) × subheading": CANONICAL_THEME_IDS,
-  "cover (pledge-open-cover) × subheading": CANONICAL_THEME_IDS,
-  "cover (thesis-plate-cover) × subheading": CANONICAL_THEME_IDS,
-  "ending (gilt-word-ending) × subheading": CANONICAL_THEME_IDS,
-  "ending (rule-close-ending) × subheading": CANONICAL_THEME_IDS,
-  "ending (tone-adaptive-ending) × subheading": CANONICAL_THEME_IDS,
   "evidence (one-evidence) × subheading": CANONICAL_THEME_IDS,
   "list (crayonbox-cards) × footnote": CANONICAL_THEME_IDS,
   "photo (show-gallery) × footnote": CANONICAL_THEME_IDS,

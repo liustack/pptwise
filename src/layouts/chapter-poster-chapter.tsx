@@ -168,6 +168,7 @@ export const layoutDef: LayoutDefinition = {
     notFor: "Decks that need a centered or symmetrical section break, which belong in Progress Dots or Underline Banner.",
   },
   slideTypes: ["chapter"],
+  subheading: { none: "fold it into the chapter title, or remove it" },
   slots: [
     { name: "kicker", accepts: [] },
     { name: "rule", accepts: [] },

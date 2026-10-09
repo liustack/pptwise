@@ -151,6 +151,7 @@ export const layoutDef = {
     notFor: "Decks that need a bold visual reset, which suit Numeral Seal or Color Field.",
   },
   slideTypes: ["chapter"],
+  subheading: { none: "fold it into the chapter title, or remove it" },
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },

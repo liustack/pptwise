@@ -147,6 +147,7 @@ export const layoutDef = {
     notFor: "Closings that need a border frame, since the double frame belongs to the motif, not this page.",
   },
   slideTypes: ["ending"],
+  subheading: { none: "fold it into the two-line close the heading carries, or remove it" },
   slots: [
     { name: "heading", accepts: [] },
     { name: "meta", accepts: [] },

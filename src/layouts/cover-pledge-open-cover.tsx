@@ -164,6 +164,7 @@ export const layoutDef = {
     notFor: "Covers that need a subtitle or a meta attribution block, which belong on Title Plate.",
   },
   slideTypes: ["cover"],
+  subheading: { none: "fold it into the pledge the heading states, which this face sets on up to two lines, or remove it" },
   slots: [
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
