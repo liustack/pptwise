@@ -2276,7 +2276,7 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
 function contrastMessage(issue: ContrastIssue): string {
   return (
     `text "${issue.text}" has a contrast ratio of ${issue.ratio.toFixed(2)}:1 against its background ` +
-    `${issue.background} (needs ${issue.required}:1) — choose a text or background color with more contrast`
+    `${issue.background} (needs ${issue.required}:1). Text takes its color from the theme, so move the page's background lighter or darker, or bind a theme whose colors read on it`
   )
 }
 

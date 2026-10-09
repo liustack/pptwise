@@ -2,7 +2,7 @@ import type { Component } from "@/ir"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { mixHex } from "./color-mix"
 import { axisTitlePairHeight, renderAxisTitlePair } from "./axis-titles"
-import { accessibleInk, contrastRatio, graphicInk, liftedInk, readableOn } from "../render/ink"
+import { accessibleInk, graphicInk, liftedInk } from "../render/ink"
 import { Icon } from "../render/icons"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -142,120 +142,15 @@ function resolveDomain(component: HeatmapComponent): { min: number; max: number 
   return { min: Math.min(...flat), max: Math.max(...flat) }
 }
 
-/** `requiredContrastRatio(fontSizePx)`'s own body-text floor — always the
- * applicable one here since `VALUE_FONT`/`VALUE_MIN_FONT` (12/9) both sit
- * far under `LARGE_TEXT_MIN_PX` (24), so the relaxed 3:1 large-text ratio
- * never applies to a heatmap cell's value text. Hard-coded rather than
- * threaded through as a parameter for that reason — see `ink.ts`'s own
- * `requiredContrastRatio`. */
-const INK_SAFE_RATIO = 4.5
-
-/** Deterministic step size (in `eased` units) `safeEased`'s search advances
- * by — small enough that the resulting fill visibly still reads as
- * "adjacent" to the raw lerp's own color, large enough that the whole
- * [0,1] range resolves in well under `EASED_STEP`'s own iteration cap. */
-const EASED_STEP = 0.01
-
-/**
- * WCAG's own worst-case contrast band (empirically confirmed against real
- * theme tokens, not just derived on paper — see the fix-round test failures
- * this constant's introduction closed): for a background whose relative
- * luminance sits in ≈0.183-0.194 (scanned directly against this codebase's
- * real `DARK_INK`/`LIGHT_INK` constants, `ink.ts` — not a paper estimate),
- * *neither* `readableOn`'s near-black (`#0A0E14`, not literally
- * 0-luminance) nor pure white clears 4.5:1 — the two-ink comparison's own
- * break-even point (`ink.ts`'s `LUMINANCE_INK_THRESHOLD` doc comment names
- * ~0.19) sits exactly where the *achievable* contrast from either candidate
- * dips to ~4.4, just under the body-text floor. A continuous
- * `colors.surface`→`colors.primary` lerp necessarily crosses this band at
- * some `eased` value between its two endpoints (surface is high-luminance,
- * primary is typically low — a monotonic luminance descent must pass
- * through every luminance in between, intermediate value theorem), so this
- * is not a bug in one specific theme's token choice — it is unavoidable for
- * *any* continuous light→dark ramp under this codebase's binary black/white
- * ink model, confirmed by the initial (unguarded) version of this ramp
- * failing `full-matrix-contrast.test.ts`: the representative content sweep
- * passed clean with no nudge at all, but the schema-max 10×10 sweep (dense
- * enough to statistically hit the ~1-in-50 dead-zone width on some cell)
- * failed on 12/13 themes, and the negative-distribution cell-ink probe
- * failed on 3/13 — 12/13 themes affected somewhere across the full battery
- * (review fix round measurement; supersedes an earlier, narrower "5/13"
- * figure from before those two sweeps existed). `safeEased` below is the
- * fix: when `show_values` will actually paint text on a cell (the only case
- * this matters — no text, no contrast requirement), nudge that cell's own
- * `eased` fraction away from the dead zone rather than accepting whichever
- * color the raw lerp landed on.
- *
- * **Confinement is a real, disclosed residual, not silently swallowed**
- * (review fix round finding 1): a theme whose *entire* surface→primary path
- * sits inside the band (both endpoints confined, or `surface === primary`
- * exactly in-band) has no `eased` value `safeEased` can escape to — the
- * search degrades to whichever boundary it hits, still the
- * `accessibleInk`-chosen best-available ink, never a wrong/unreadable
- * color. No canonical theme does this (all 13 green,
- * `full-matrix-contrast.test.ts`), and `registerTheme` currently performs
- * no color/contrast validation on a caller-supplied `style` at all — a
- * systemic extensibility gap this component doesn't own or fix. What this
- * component *does* guarantee: the confined case is deterministically
- * **audit-visible**, not silent — `findContrastIssues` measures each
- * cell's value text against that cell's own real rendered fill and reports
- * it as a `low-contrast` finding every time, on every affected value, at
- * the same ~4.38-4.44 ratio this comment names
- * (`heatmap-deadzone.test.ts` pins this against a real `registerTheme` +
- * `auditDeck` reconstruction of the confined case, plus a straddling
- * control that stays clean). `pptwise audit` is the deterministic backstop
- * for the residual this loop's own boundary clamp cannot itself close.
- */
-function hasSafeInk(hex: string): boolean {
-  return contrastRatio(readableOn(hex), hex) >= INK_SAFE_RATIO
-}
-
-/**
- * Push `eased` out of the dead zone (see `hasSafeInk`'s own doc comment)
- * when it lands there, by stepping further in whichever direction `eased`
- * was already heading — toward `colors.surface` (lighter, black-ink-safe)
- * below the ramp's midpoint, toward `colors.primary` (darker,
- * white-ink-safe) at or above it. Deterministic and monotonicity-preserving
- * on either side of the midpoint: two cells that were already ordered
- * before this nudge stay ordered after it, the nudge only ever narrows the
- * *visual* distance between a handful of near-dead-zone values, never
- * reverses their relative order. A pure function of `eased` and the
- * theme's own two anchor colors — no dependency on which specific value
- * produced `eased`, so it's exactly as deterministic as the ramp itself.
- * Bounded to 100 steps (the full [0,1] range at `EASED_STEP`'s own
- * resolution) — every one of the 13 canonical themes' `colors.primary`
- * clears the dead zone well before either boundary in practice (confirmed
- * by the 13-theme sweep this function's introduction turned green), so the
- * loop's own boundary clamp is the fallback for the confined case
- * `hasSafeInk`'s own doc comment discloses above — best-available ink, not
- * a guarantee — never the expected exit path for any theme this codebase
- * currently ships.
- */
-function safeEased(eased: number, ctx: ComponentCtx): number {
-  const hex = (e: number) => mixHex(ctx.colors.surface, ctx.colors.primary, e)
-  if (hasSafeInk(hex(eased))) return eased
-  const dir = eased < 0.5 ? -1 : 1
-  let e = eased
-  for (let i = 0; i < 100; i++) {
-    const next = Math.max(0, Math.min(1, e + dir * EASED_STEP))
-    if (next === e) break // hit the [0,1] boundary, can't push further
-    e = next
-    if (hasSafeInk(hex(e))) return e
-  }
-  return e
-}
-
 /** Deterministic value → color: single-hue luminance interpolation from
  * `colors.surface` toward `colors.primary`, floored at `RAMP_MIN_T` (see
- * that constant's own doc comment). `forInk` (default false) additionally
- * routes the interpolation fraction through `safeEased` — only worth paying
- * for when this exact fill is about to have text painted on top of it
- * (`show_values`); the pure, undistorted ramp is otherwise the right
- * answer, since there is no ink to contrast against a cell with no value
- * text on it. */
-function cellFill(t: number, ctx: ComponentCtx, forInk = false): string {
+ * that constant's own doc comment). A value painted on its cell reads on
+ * any fill the ramp lands on: `readableOn` gives every ground an ink that
+ * clears 4.5:1, a mid-tone one included, so the ramp is never bent to
+ * make room for the value's text. */
+function cellFill(t: number, ctx: ComponentCtx): string {
   const eased = RAMP_MIN_T + (1 - RAMP_MIN_T) * t
-  return mixHex(ctx.colors.surface, ctx.colors.primary, forInk ? safeEased(eased, ctx) : eased)
+  return mixHex(ctx.colors.surface, ctx.colors.primary, eased)
 }
 
 /** The row label column: `ROW_LABEL_W` when every name fits it, otherwise as
@@ -329,7 +224,7 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
       fitSvgLine(label, { maxWidth: labelRoom - COL_LABEL_PAD * 2, fontSize: COL_LABEL_FONT, minFontSize: COL_LABEL_MIN_FONT }),
     )
     const steps = component.steps
-    const stepFill = (i: number) => cellFill(heatmapStepT(i, steps!.length), ctx, true)
+    const stepFill = (i: number) => cellFill(heatmapStepT(i, steps!.length), ctx)
     const key = steps
       ? (() => {
           let cursor = box.x + gridX0
@@ -396,7 +291,7 @@ export const heatmap: SvgComponent<HeatmapComponent> = {
             const y = gridTop + row * (rowH + CELL_GAP)
             const step = steps ? heatmapStepOf(v, steps) : -1
             const cellText = component.show_values ? String(v) : steps ? (steps[step]!.short?.trim() ?? "") : ""
-            const fill = steps ? stepFill(step) : cellFill(valueT(v, domain), ctx, component.show_values)
+            const fill = steps ? stepFill(step) : cellFill(valueT(v, domain), ctx)
             const valueFit = cellText
               ? fitSvgLine(cellText, { maxWidth: cellW - CELL_PAD * 2, fontSize: VALUE_FONT, minFontSize: VALUE_MIN_FONT })
               : null

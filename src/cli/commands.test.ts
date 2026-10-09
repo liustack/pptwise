@@ -90,24 +90,31 @@ const IR_WITH_PLACEHOLDER = {
   ],
 }
 
-// An ink statement page its author painted `#777777`, a grey no ink reads on
-// at body size: white and near-black both stop at about 4.48:1 against it,
-// so the source line fails auditDeck's contrast check whatever the renderer
-// does. (This fixture painted brief's own text ink, then ink's black claim on
-// near-black, until a painted page carried the theme's text inks and then a
-// skin's brand colours onto its paint.)
+// A rally KPI page its author painted `#777777`. The renderer sets the
+// labels in pure black, the one ink that reads on that grey, but the card
+// under them is shaded a step darker than the page, and there black stops at
+// about 4.06:1, under the 4.5:1 the labels need. (This fixture was an ink
+// statement page on the same grey until mid-tone grounds got pure black.)
 const IR_LOW_CONTRAST = {
   version: "5",
   filename: "cli-test-low-contrast",
-  theme: { id: "ink" },
+  theme: { id: "rally" },
   slides: [
     {
       type: "content",
-      kind: "statement",
+      kind: "data",
       id: "p-body",
-      heading: "No judges at the gathering, only tea",
+      heading: "Visits by quarter",
       background: { kind: "color", value: "#777777" },
-      components: [{ type: "paragraph", text: "Visitors leave a note instead of a fee." }],
+      components: [
+        {
+          type: "kpi_cards",
+          items: [
+            { value: "62%", label: "Capacity used" },
+            { value: "8.4", label: "Days of stock" },
+          ],
+        },
+      ],
     },
   ],
 }

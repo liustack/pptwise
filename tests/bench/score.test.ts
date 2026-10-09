@@ -156,7 +156,7 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     expect(score.deterministic).toBeNull()
   })
 
-  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (statement claim on an authored dark page on ink)", async () => {
+  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (a KPI label on a card shaded from a mid-grey page on museum)", async () => {
     // This fixture needs a low-contrast source that is real, theme-stable
     // and out of scope for whatever fix round is running — and it has now
     // outlived two of them. It started as kpi_cards' hardcoded delta-arrow
@@ -184,11 +184,12 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     // theme's black `primary` at 1.03:1, until a skin's brand colours were
     // held to a painted page (`brandInkOnGround`).
     //
-    // Now the same page painted `#777777`, a grey no ink reads on at body
-    // size: white and near-black both stop at about 4.48:1 against it, under
-    // the 4.5:1 its source line needs. No renderer can fix that, only the
-    // author's choice of paint, so this source should outlive the rest.
-    // `kpi_cards` stays in the fixture for `coverageHits` below.
+    // Then the same page painted `#777777`, where white and near-black both
+    // stopped at about 4.48:1, until a mid-tone ground got pure black.
+    //
+    // Now a museum KPI card on a page painted `#777777`: the card is shaded a
+    // step darker than the page, and its label in black stops at 4.18:1 there.
+    // `kpi_cards` is also what `coverageHits` below reads.
     const metas = await loadQuestionMetas(QUESTIONS_DIR)
     const meta = metas.find((m) => m.id === "fx03")!
     const score = await scoreQuestion("fx03", join(RESULTS_DIR, "degraded-model", "fx03"), meta)

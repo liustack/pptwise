@@ -30,9 +30,34 @@ describe("readableOn", () => {
     expect(readableOn("#FFCF")).toBe("#0A0E14")
   })
 
-  it("never returns a theme color, only the neutral black/white pair", () => {
-    for (const bg of ["#006A4E", "#2DD4E6", "#3D2E78", "#F6F1EA", "#161310"]) {
-      expect(["#FFFFFF", "#0A0E14"]).toContain(readableOn(bg))
+  it("never returns a theme color, only a neutral ink", () => {
+    for (const bg of ["#006A4E", "#2DD4E6", "#3D2E78", "#F6F1EA", "#161310", "#777777"]) {
+      expect(["#FFFFFF", "#0A0E14", "#000000"]).toContain(readableOn(bg))
+    }
+  })
+
+  it("falls back to pure black on a mid-tone ground where neither white nor near-black reads", () => {
+    // White and the near-black both miss 4.5:1 here. Pure black clears it.
+    expect(contrastRatio("#FFFFFF", "#777777")).toBeLessThan(4.5)
+    expect(contrastRatio("#0A0E14", "#777777")).toBeLessThan(4.5)
+    expect(readableOn("#777777")).toBe("#000000")
+    expect(contrastRatio(readableOn("#777777"), "#777777")).toBeCloseTo(4.69, 2)
+    expect(contrastRatio("#FFFFFF", "#6B7B8C")).toBeLessThan(4.5)
+    expect(contrastRatio("#0A0E14", "#6B7B8C")).toBeLessThan(4.5)
+    expect(readableOn("#6B7B8C")).toBe("#000000")
+    expect(contrastRatio(readableOn("#6B7B8C"), "#6B7B8C")).toBeCloseTo(4.84, 2)
+  })
+
+  it("reads at 4.5:1 on every grey, and keeps the old ink wherever the old ink already read", () => {
+    // The pick before the fallback, the higher of the two (no grey here ties).
+    const old = (bg: string) => (contrastRatio("#0A0E14", bg) > contrastRatio("#FFFFFF", bg) ? "#0A0E14" : "#FFFFFF")
+    for (let v = 0; v < 256; v++) {
+      const h = v.toString(16).padStart(2, "0").toUpperCase()
+      for (const bg of [`#${h}${h}${h}`, `#${h}${h}FF`, `#FF${h}${h}`, `#${h}A0${h}`]) {
+        const ink = readableOn(bg)
+        expect(contrastRatio(ink, bg), bg).toBeGreaterThanOrEqual(4.5)
+        if (contrastRatio(old(bg), bg) >= 4.5) expect(ink, bg).toBe(old(bg))
+      }
     }
   })
 })

@@ -1,6 +1,6 @@
 import type { Component } from "@/ir"
 import { DroppedContentMarker } from "../render/drop-marker"
-import { contrastRatio, readableOn, relativeLuminance, requiredContrastRatio, resolveSemanticColor } from "../render/ink"
+import { readableOn, relativeLuminance, resolveSemanticColor } from "../render/ink"
 import { mixHex } from "./color-mix"
 import { anyCut } from "./declared-fit"
 import { FORM_BODY_FLOOR, fitFormLine, layoutFormBody } from "./legibility"
@@ -45,27 +45,6 @@ function hasNotes(component: PyramidComponent): boolean {
 }
 
 /**
- * The ramp's own middle is the problem: a band whose fill lands near
- * mid-luminance has no legible ink at all — neither white nor near-black
- * clears 4.5:1 on it, and `readableOn` picking the better of two failures is
- * still a failure. So a band that lands there is pushed further the way its
- * own ink already points, in small steps, until the ink it will actually be
- * painted with clears the floor for its own type size.
- *
- * Deterministic and theme-agnostic: same tokens in, same hexes out, and a
- * theme whose ramp never crosses the middle is untouched.
- */
-function legibleBand(fill: string, fontSizePx: number): string {
-  let current = fill
-  for (let step = 0; step < 16; step += 1) {
-    const ink = readableOn(current)
-    if (contrastRatio(ink, current) >= requiredContrastRatio(fontSizePx)) return current
-    current = mixHex(current, ink === "#FFFFFF" ? "#000000" : "#FFFFFF", 0.08)
-  }
-  return current
-}
-
-/**
  * Where the ramp ends.
  *
  * A level below the apex is a step toward the page, and on paper that reads
@@ -87,13 +66,13 @@ function rampEnd(ctx: ComponentCtx): string {
 /**
  * A band's fill: the theme's own ink for the level's tone when the author
  * gave one (`layers[].tone`), so a ramp of risk reads danger, warning,
- * success; otherwise its step down the primary's ramp. Either way pushed
- * until its label reads.
+ * success; otherwise its step down the primary's ramp. Its label reads on
+ * either: `readableOn` gives every ground an ink that clears 4.5:1.
  */
 function layerFill(ctx: ComponentCtx, i: number, n: number, tone?: PyramidComponent["layers"][number]["tone"]): string {
-  if (tone) return legibleBand(resolveSemanticColor(tone, ctx.colors), LABEL_PX)
+  if (tone) return resolveSemanticColor(tone, ctx.colors)
   const t = n <= 1 ? 0 : (i / (n - 1)) * 0.78
-  return legibleBand(mixHex(ctx.colors.primary, rampEnd(ctx), t), LABEL_PX)
+  return mixHex(ctx.colors.primary, rampEnd(ctx), t)
 }
 
 /**

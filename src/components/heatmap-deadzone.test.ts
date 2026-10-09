@@ -1,34 +1,18 @@
 // @vitest-environment node
 //
-// Regression pin for the review-round finding on `heatmap.tsx`'s `safeEased`
-// (structure-components wave 2 task 2, post-approval fix round): a theme
-// whose entire `colors.surface`→`colors.primary` interpolation path is
-// *confined* inside the ~0.183-0.194 relative-luminance dead zone (see
-// `heatmap.tsx`'s own `hasSafeInk` doc comment) has no `eased` value the
-// 100-step search can escape to — `safeEased` degrades to "best-available
-// ink" rather than a guaranteed-safe one. No canonical theme does this
-// today (`full-matrix-contrast.test.ts` covers all 13 green), and
-// `registerTheme` (`themes/definitions.ts`) checks raw text tokens against
-// `surface`, but it cannot validate every generated heatmap interpolation
-// cell. The remaining gap is specific to the component's derived fills.
+// A heatmap ramp used to have a dead zone: a cell fill with relative
+// luminance about 0.183 to 0.194 had no ink that read on it, because
+// `readableOn` chose between white and the near-black `#0A0E14` and both
+// fall just under 4.5:1 there. `heatmap.tsx` bent the ramp around it, and a
+// theme whose whole surface to primary path sat inside the band could not
+// be bent out, so every value on it was reported `low-contrast`.
 //
-// This file answers the question the review protocol asked first:
-// **is the confined case audit-visible?** Runs the reviewer's own two
-// synthetic constructions (adjacent-but-both-confined, and flat) through a
-// real `registerTheme` + `renderSlideSvg` + `auditDeck` — never a mock —
-// with a *realistic* `colors.text` token (a real theme's own value,
-// `brief`'s `#051C2C` — not literally `#000000`, which is darker than
-// this codebase's own `DARK_INK` and would silently mask the exact defect
-// this pin exists to catch, a mistake this fix round's own investigation
-// made and corrected before writing this file). Answer: **yes** —
-// `findContrastIssues` correctly attributes each cell's value text to that
-// cell's own real fill (not the page background) and reports it as
-// `low-contrast` at the expected ~4.38-4.44 ratio, below the 4.5 floor.
-// The confinement case is therefore already deterministic and
-// audit-visible, not silent — `pptwise audit` (and this suite) both catch
-// it every time, on every value, with no escape. A third control case
-// (endpoints straddling the band) confirms this isn't a general
-// over-triggering — it passes clean.
+// `readableOn` now falls back to pure black where neither of the pair
+// reads, and black clears 4.5:1 on every ground in that band. The two
+// confined themes the review built are kept here, run through a real
+// `registerTheme`, `renderSlideSvg` and `auditDeck`: every value cell on
+// them now reads, with a realistic `colors.text` (brief's `#051C2C`), and
+// the straddling control stays clean.
 import { afterEach, beforeAll, describe, expect, it } from "vitest"
 import type { PptxIR, Slide } from "@/ir"
 import { auditDeck } from "../audit/deck-audit"
@@ -109,34 +93,26 @@ function deckFor(themeId: string): PptxIR {
   } as PptxIR
 }
 
-describe("heatmap cell-ink dead-zone confinement — audit-visibility pin (review fix round)", () => {
-  it("a theme confined to the dead zone (surface/primary 1 hex unit apart, both inside the band) is caught by auditDeck as low-contrast on every value cell — not silent", () => {
+describe("heatmap values on a ramp inside the old dead zone", () => {
+  it("a theme confined to the band (surface and primary one hex unit apart, both inside it) reads on every value cell", () => {
     registerTheme(confinedTheme("deadzone-adjacent", "#787878", "#797979"))
     const report = auditDeck(deckFor("deadzone-adjacent")) as { findings: { code: string; detail?: { text?: string } }[] }
     const cellFindings = report.findings.filter(
       (f) => f.code === "low-contrast" && ["0", "25", "50", "75", "100"].includes(f.detail?.text ?? ""),
     )
-    // Every one of the 5 value cells is flagged — full coverage, not a
-    // partial/lucky catch.
-    expect(cellFindings.map((f) => f.detail!.text).sort()).toEqual(["0", "100", "25", "50", "75"])
-    for (const f of cellFindings) {
-      const detail = f.detail as unknown as { ratio: number; required: number }
-      expect(detail.ratio).toBeLessThan(4.5)
-      expect(detail.ratio).toBeGreaterThan(4.3) // matches the reviewer's own measured ~4.38-4.44 band, not some unrelated failure
-      expect(detail.required).toBe(4.5)
-    }
+    expect(cellFindings).toEqual([])
   })
 
-  it("a theme flat-confined to the dead zone (surface === primary, exactly in-band) is equally caught, every value cell", () => {
+  it("a theme flat inside the band (surface === primary) reads on every value cell", () => {
     registerTheme(confinedTheme("deadzone-flat", "#787878", "#787878"))
     const report = auditDeck(deckFor("deadzone-flat")) as { findings: { code: string; detail?: { text?: string } }[] }
     const cellFindings = report.findings.filter(
       (f) => f.code === "low-contrast" && ["0", "25", "50", "75", "100"].includes(f.detail?.text ?? ""),
     )
-    expect(cellFindings.map((f) => f.detail!.text).sort()).toEqual(["0", "100", "25", "50", "75"])
+    expect(cellFindings).toEqual([])
   })
 
-  it("control: a theme whose ramp straddles (rather than is confined to) the dead zone passes clean — this isn't a general over-trigger", () => {
+  it("control: a theme whose ramp straddles the band passes clean", () => {
     registerTheme(confinedTheme("deadzone-control", "#767676", "#7b7b7b"))
     const report = auditDeck(deckFor("deadzone-control")) as { findings: { code: string; detail?: { text?: string } }[] }
     const cellFindings = report.findings.filter(

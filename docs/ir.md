@@ -370,7 +370,7 @@ Each `assets.images` entry contains `src` and may include `alt` or `error`. `src
 
 Backgrounds are `color`, `gradient`, or `asset`. Cover and chapter asset backgrounds use the dedicated readable image treatment. Run `pptwise asset-brief <target>` before sourcing image content so the real frame and crop are known.
 
-Paint a `color` background clearly light or clearly dark. On a mid-tone about as light as `#777777` or `#6B7B8C`, neither white nor the near-black ink the renderer falls back to reaches the 4.5:1 that body-size text needs, so on many themes the text lands just under it and `pptwise audit` reports `low-contrast`. Text color is the theme's to set, so the fix is the background: move it lighter or darker.
+Paint a `color` background clearly light or clearly dark. On a mid-tone about as light as `#777777` or `#6B7B8C`, white and near-black both miss the 4.5:1 that body-size text needs, so where the theme's own ink does not read the renderer sets the text in pure black, which does. Some layouts also set text on a card or band shaded from the background, and on a mid-tone that shade can still fall just short, so `pptwise audit` may report `low-contrast` there. Text color is the theme's to set, so the fix is the background: move it lighter or darker.
 
 ## Validation
 
