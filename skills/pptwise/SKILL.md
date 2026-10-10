@@ -50,7 +50,7 @@ Scan the workspace before asking questions. An existing `deck.spec.json` already
 
 ## Show the user before you check it yourself
 
-Two decisions belong to the user: the theme and the outline. At each, show it in the conversation and ask before going on. When the user has said to go ahead without asking ("just do it", "you decide"), do not ask, but still show the theme wall and the outline, say what you picked, and continue.
+Write every message to the user in the language they wrote in, from the first status line to the final answer. Two decisions belong to the user: the theme and the outline. At each, show it in the conversation and ask before going on. When the user has said to go ahead without asking ("just do it", "you decide"), do not ask, but still show the theme wall and the outline, say what you picked, and continue.
 
 Show pages early and often. The user should see a page within the first minute, not at the end. Your own checks run on `pptwise build` reports. Never convert pages to PNG or read page images to judge them: the report already names every problem, and the pictures are for the user.
 
@@ -161,7 +161,7 @@ Add `pptwise audit deck-dir/ --pixels` when text sits over photo backgrounds. Us
 
 - Never edit or post-process the generated `.pptx`.
 - Never add coordinates, SVG, page face names, or geometry controls to authored content.
-- Keep public deck copy in the user's language. Keep schema keys and enum values in English.
+- Talk to the user in their language throughout, including progress notes and questions, and keep public deck copy in it too. Keep schema keys and enum values in English.
 - Never claim that `chart` or `data_table` values are native PowerPoint data objects. They export as editable grouped shapes and text. Change figures in the source and rerender.
 - Write the value itself. Never stand in for content with a leftover count or an ellipsis. validate rejects it.
 - Preview is read-only. Revisions go back into `deck.spec.json`, `pages/*.json`, assets, or the bound theme file.

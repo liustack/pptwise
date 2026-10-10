@@ -127,6 +127,15 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
     }
   })
 
+  it("talks to the user in their language from the first message to the last", () => {
+    const en = read(EN_REL)
+    const zh = read(ZH_REL)
+    expect(en).toContain("Write every message to the user in the language they wrote in, from the first status line to the final answer.")
+    expect(en).toContain("- Talk to the user in their language throughout, including progress notes and questions")
+    expect(zh).toContain("给用户的每一条消息都用他写话所用的语言，从第一句进度说明到最后的回答。")
+    expect(zh).toContain("- 和用户说话始终用他的语言，进度说明和提问也一样")
+  })
+
   it("lists the outline page by page before any page is written, even when the user said to go ahead", () => {
     const en = read(EN_REL)
     const zh = read(ZH_REL)
