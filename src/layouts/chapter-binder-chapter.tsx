@@ -6,7 +6,7 @@ import { stripEmphasis } from "../render/emphasis"
 import { PitchScrim } from "./compositions/pitch"
 import { blockTag } from "./compositions/shared"
 import { binderInks, binderText, binderTrackedWidth, binderBaseline, fitBinder, paintBinder, paintBinderIcon, paintBinderTracked } from "./compositions/binder"
-import { boundarySlotBlock } from "./boundary-content"
+import { boundarySlotBlock, fieldsLeftOut } from "./boundary-content"
 import { fitDossierTitle, dossierTitleSet } from "./dossier-shared"
 import { BinderTabsFor, BinderTitle } from "./binder-shared"
 
@@ -41,6 +41,11 @@ const SCRIM = [
   { offset: "100%", opacity: 0.1 },
 ] as const
 
+/** Why the chapter cannot list `block` as its questions, or undefined when it can: it sets each as its icon and its title. */
+function questionsLeftOut(block: Component): string | undefined {
+  return block.type === "row_cards" ? fieldsLeftOut(block, "the chapter lists each question as its icon and its title on one line", { items: ["text", "sub", "highlight", "tone"] }) : undefined
+}
+
 /** The chapter's number: how many chapter pages run up to and including this one, two digits. */
 export function chapterNumber(slides: readonly { type: string }[], index: number): string {
   const n = slides.slice(0, index + 1).filter((s) => s.type === "chapter").length
@@ -50,7 +55,10 @@ export function chapterNumber(slides: readonly { type: string }[], index: number
 export function BinderChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const inks = binderInks(ctx)
   const photo = slide.background?.kind === "asset"
-  const ground = inks.deep
+  // The page the words stand on: the theme's petrol on its own chapter page,
+  // the scrim's petrol over a photograph, and the author's paint on a page
+  // painted another colour, where the petrol is not there to read on.
+  const ground = inks.ground
   const white = (alpha: number) => blendOver(inks.onDeep, ground, alpha)
   const number = chapterNumber(ir.slides, index)
   const kicker = slide.kicker?.trim() ? stripEmphasis(slide.kicker).trim() : ""
@@ -61,7 +69,7 @@ export function BinderChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   // A title on two lines keeps its first line where a one-line title stands
   // and moves what follows down a line.
   const drop = (fitDossierTitle(slide.heading, ctx, TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w).lines.length - 1) * TITLE.lineHeight
-  const itemsFit = block !== undefined && items.length <= ITEMS.max && items.every((i) => i.text && !i.it.text?.trim() && !i.it.sub?.trim() && !i.it.highlight && !i.it.tone)
+  const itemsFit = block !== undefined && items.length <= ITEMS.max && items.every((i) => i.text) && questionsLeftOut(block) === undefined
   return (
     <>
       {photo ? <PitchScrim id={`binder-chapter-scrim-${index}`} ink={ground} axis="x" stops={SCRIM} /> : null}
@@ -119,7 +127,7 @@ export const layoutDef = {
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["row_cards"], capacity: 1, itemCapacity: ITEMS.max },
+    { name: "body", accepts: ["row_cards"], capacity: 1, itemCapacity: ITEMS.max, declines: questionsLeftOut },
   ],
   pageFields: ["kicker", "stage"],
   drawsPhoto: true,

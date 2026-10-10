@@ -19,7 +19,7 @@
 import { PptwiseError } from "./errors"
 import { footerSettingIssues, OLD_IR_VERSION_ERROR, PptxIRSchema, themeIssueMessage, type PptxIR } from "./ir"
 import { listAssetReferences } from "./ir/asset-references"
-import { decodeDataUriBytes, dataUriMime, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "./ir/asset-sniff"
+import { dataUriHead, dataUriMime, FORMAT_BY_MIME, MIME_BY_SNIFFED_FORMAT, sniffImageFormat } from "./ir/asset-sniff"
 import { normalizeComponentAliases, normalizeDeckRootAliases } from "./ir/field-aliases"
 import {
   findOverflowVocabulary,
@@ -1071,7 +1071,7 @@ function checkAssetBytes(ir: PptxIR): ValidationIssue[] {
   const issues: ValidationIssue[] = []
   for (const [id, asset] of Object.entries(ir.assets.images)) {
     if (!asset.src.startsWith("data:")) continue
-    const bytes = decodeDataUriBytes(asset.src)
+    const bytes = dataUriHead(asset.src)
     if (bytes === null) {
       issues.push({
         path: `assets.images.${id}`,
@@ -1086,7 +1086,7 @@ function checkAssetBytes(ir: PptxIR): ValidationIssue[] {
       })
       continue
     }
-    const sniffed = sniffImageFormat(bytes)
+    const sniffed = sniffImageFormat(bytes.head)
     if (sniffed === null) {
       issues.push({
         path: `assets.images.${id}`,

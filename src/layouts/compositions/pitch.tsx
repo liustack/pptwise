@@ -6,6 +6,7 @@ import { coursePillWidth, COURSE_STRIP, stageIndex } from "../../render/course-m
 import { stripEmphasis, type EmphasisHeadingLayout } from "../../render/emphasis"
 import { Icon } from "../../render/icons"
 import { blendOver, graphicInk, metaInk, readableOn } from "../../render/ink"
+import { brandInkOnGround } from "../../render/page-palette"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { centredBaseline, fitFixed, paintLines } from "./type"
 
@@ -60,6 +61,12 @@ export interface PitchInks {
   deep: string
   /** The one light on stage: the theme's accent. */
   fire: string
+  /**
+   * The fire set as type straight on the page, such as an act's outlined
+   * numeral: the accent, held on a page its author painted to the tier it
+   * reads at on the theme's own stage (`brandInkOnGround`).
+   */
+  fireType: string
   /** Words on the light: the dark ink that reads on it. */
   onFire: string
   /** A bar or a level that is not the page's: the palette's quietest ink. */
@@ -95,6 +102,7 @@ export function pitchInks(ctx: ComponentCtx): PitchInks {
     dim: blendOver(line, ground, DIM_MIX),
     deep: blendOver(line, ground, DEEP_MIX),
     fire: colors.accent,
+    fireType: ctx.themeGround === undefined ? colors.accent : brandInkOnGround(colors, ctx.themeGround, ground).accent,
     onFire: readableOn(colors.accent),
     quiet: quiet[quiet.length - 1] ?? colors.muted,
     rail: inkToward(blendOver(colors.muted, ground, RAIL_MIX), colors.muted, ground, RAIL.size),

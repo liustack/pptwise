@@ -119,3 +119,47 @@ export interface ListRows {
 export function listRows(all: readonly string[], rows: number): ListRows {
   return { lines: all.slice(0, rows), dropped: Math.max(0, all.length - rows) }
 }
+
+/** Whether a field asks for anything: a non-blank string, `true`, or any other value set. */
+function asksForField(value: unknown): boolean {
+  if (value === undefined || value === null || value === false) return false
+  return typeof value !== "string" || value.trim() !== ""
+}
+
+/** `a, b and c` */
+function andList(words: readonly string[]): string {
+  return words.length <= 1 ? (words[0] ?? "") : `${words.slice(0, -1).join(", ")} and ${words[words.length - 1]}`
+}
+
+/** The fields of a block, and of each item in its list, that a face has no place for. */
+export interface FieldsLeftOut {
+  /** Fields of each item in the block's list (`items`, or `milestones` for a timeline). */
+  items?: readonly string[]
+  /** Fields of the block itself. */
+  block?: readonly string[]
+}
+
+/**
+ * Why a face that sets only part of a block cannot draw it, said to the
+ * author, or undefined when the block carries nothing the face has no place
+ * for. `sets` says what the face draws ("the chapter lists each question as
+ * its icon and its title"), `leftOut` the fields it has no place for, in the
+ * order the message names them. The face draws the block only when this is
+ * undefined, and validate refuses the page with the same words
+ * (`LayoutSlot.declines`), so the two cannot disagree about a block.
+ */
+export function fieldsLeftOut(block: Component, sets: string, leftOut: FieldsLeftOut): string | undefined {
+  const record = block as unknown as Record<string, unknown>
+  const key = "milestones" in record ? "milestones" : "items"
+  const noun = key === "milestones" ? "milestone" : "item"
+  const list = Array.isArray(record[key]) ? (record[key] as Record<string, unknown>[]) : []
+  const found: string[] = []
+  const own = (leftOut.block ?? []).filter((field) => asksForField(record[field]))
+  if (own.length > 0) found.push(`the block has ${andList(own)}`)
+  list.forEach((item, i) => {
+    const fields = (leftOut.items ?? []).filter((field) => asksForField(item[field]))
+    if (fields.length > 0) found.push(`${noun} ${i + 1} has ${andList(fields)}`)
+  })
+  if (found.length === 0) return undefined
+  return `${sets}, so leave out ${andList([...(leftOut.items ?? []), ...(leftOut.block ?? [])])} (${found.join(", ")})`
+}

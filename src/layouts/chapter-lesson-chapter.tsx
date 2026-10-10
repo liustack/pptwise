@@ -3,7 +3,7 @@ import type { SvgTemplateProps } from "./types"
 import type { Component } from "@/ir"
 import { fitEmphasisHeading, headingEmphasisPaint, renderEmphasisHeading, stripEmphasis } from "../render/emphasis"
 import { blendOver } from "../render/ink"
-import { boundarySlotBlock } from "./boundary-content"
+import { boundarySlotBlock, fieldsLeftOut } from "./boundary-content"
 import { blockTag } from "./compositions/shared"
 import {
   fitLesson,
@@ -48,6 +48,11 @@ const SUB = { top: 280, size: 18, lineHeight: 30, maxLines: 2, w: 1100 } as cons
 const LABEL = { top: 420, size: 13, lineHeight: 22, tracking: 2 } as const
 const CARDS = { top: 456, h: 104, w: 368, gap: 24, icon: { x: 20, top: 20, size: 24 }, text: { x: 58, top: 18, size: 16, lineHeight: 26, maxLines: 2 } } as const
 
+/** Why the part cannot set `block` as its cards, or undefined when it can: each is its icon and its title, its text after a colon. */
+function cardsLeftOut(block: Component): string | undefined {
+  return block.type === "row_cards" ? fieldsLeftOut(block, "the part sets each card as its icon and its title, its text after a colon", { items: ["sub", "tone", "highlight"] }) : undefined
+}
+
 export function LessonChapter({ ir, slide, ctx }: SvgTemplateProps) {
   const inks = lessonInks(ctx)
   const board = inks.board
@@ -61,7 +66,7 @@ export function LessonChapter({ ir, slide, ctx }: SvgTemplateProps) {
   const block = boundarySlotBlock(slide, ["row_cards"]) as RowCards | undefined
   const items = block?.items ?? []
   const cards = items.map((item) => fitLesson(item.text?.trim() ? `${item.title.trim()}${ctx.figures?.chinese ? "：" : ": "}${item.text.trim()}` : item.title, { width: CARDS.w - CARDS.text.x - 16, size: CARDS.text.size, lineHeight: CARDS.text.lineHeight, maxLines: CARDS.text.maxLines, bold: true }, ctx))
-  const cardsFit = items.length <= 3 && cards.every(Boolean) && items.every((item) => !item.sub?.trim() && !item.tone && !item.highlight)
+  const cardsFit = items.length <= 3 && cards.every(Boolean) && (block === undefined || cardsLeftOut(block) === undefined)
   const label = ctx.figures?.chinese ? "这一环节学什么" : "In this part"
   const photo = slide.background?.kind === "asset" ? ctx.images?.[slide.background.asset_id] : undefined
   return (
@@ -142,7 +147,7 @@ export const layoutDef = {
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["row_cards"], capacity: 1, itemCapacity: 3 },
+    { name: "body", accepts: ["row_cards"], capacity: 1, itemCapacity: 3, declines: cardsLeftOut },
   ],
   pageFields: ["kicker", "stage"],
   drawsPhoto: true,

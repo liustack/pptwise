@@ -2,7 +2,7 @@ import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
 import type { Component } from "@/ir"
 import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading, type EmphasisHeadingLayout } from "../render/emphasis"
-import { boundarySlotBlock } from "./boundary-content"
+import { boundarySlotBlock, fieldsLeftOut } from "./boundary-content"
 import { blockTag } from "./compositions/shared"
 import {
   fitLesson,
@@ -75,6 +75,16 @@ export function leadSentence(text: string): { lead: string; rest: string } {
   return { lead: m[1]!.trim(), rest: m[2]!.trim() }
 }
 
+/** Why the close cannot set `block` as its homework, or undefined when it can: each task is its title and a line of text. */
+function tasksLeftOut(block: Component): string | undefined {
+  return block.type === "numbered_cards" ? fieldsLeftOut(block, "the close sets each task as its title and a line of text", { items: ["sub", "emphasis", "icon"] }) : undefined
+}
+
+/** Why the close cannot set `block` as its note, or undefined when it can: a title, a lead sentence and the rest. */
+function noteLeftOut(block: Component): string | undefined {
+  return block.type === "callout" ? fieldsLeftOut(block, "the close sets the callout as its title, a lead sentence and the rest", { block: ["tag", "icon"] }) : undefined
+}
+
 export function LessonEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const inks = lessonInks(ctx)
   const block = boundarySlotBlock(slide, ["numbered_cards"]) as NumberedCards | undefined
@@ -88,7 +98,7 @@ export function LessonEnding({ ir, slide, ctx }: SvgTemplateProps) {
     title: fitLesson(item.title, { width: textW, size: TASKS.title.size, lineHeight: TASKS.title.lineHeight, maxLines: TASKS.title.maxLines, bold: true }, ctx),
     text: item.text?.trim() ? fitLesson(item.text, { width: textW, size: TASKS.text.size, lineHeight: TASKS.text.lineHeight, maxLines: TASKS.text.maxLines }, ctx) : null,
   }))
-  const tasksFit = n >= TASKS.min && n <= TASKS.max && pitch >= 76 && items.every((item) => !item.sub?.trim() && !item.emphasis && !item.icon) && tasks.every((t, i) => t.title && (!items[i]!.text?.trim() || t.text))
+  const tasksFit = n >= TASKS.min && n <= TASKS.max && pitch >= 76 && (block === undefined || tasksLeftOut(block) === undefined) && tasks.every((t, i) => t.title && (!items[i]!.text?.trim() || t.text))
   const noteText = note ? leadSentence(note.text) : null
   const noteFit = note
     ? {
@@ -97,7 +107,7 @@ export function LessonEnding({ ir, slide, ctx }: SvgTemplateProps) {
         rest: noteText!.rest ? fitLesson(noteText!.rest, { width: NOTE.w - NOTE.pad * 2, size: NOTE.rest.size, lineHeight: NOTE.rest.lineHeight, maxLines: NOTE.rest.maxLines }, ctx) : null,
       }
     : null
-  const noteFits = !note || (noteFit!.lead && (!note.title?.trim() || noteFit!.label) && (!noteText!.rest || noteFit!.rest) && !note.tag && !note.icon)
+  const noteFits = !note || (noteFit!.lead && (!note.title?.trim() || noteFit!.label) && (!noteText!.rest || noteFit!.rest) && noteLeftOut(note) === undefined)
   const stamp = slide.stamp?.text.trim()
   const stampW = stamp ? stampWidth(stamp, ctx, false) : 0
   const sign = [ir.meta.organization?.trim(), ir.meta.date?.trim()].filter(Boolean).join(" · ")
@@ -186,8 +196,8 @@ export const layoutDef = {
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
     { name: "rule", accepts: [] },
-    { name: "body", accepts: ["numbered_cards"], capacity: 1, itemCapacity: TASKS.max },
-    { name: "aside", accepts: ["callout"], capacity: 1 },
+    { name: "body", accepts: ["numbered_cards"], capacity: 1, itemCapacity: TASKS.max, declines: tasksLeftOut },
+    { name: "aside", accepts: ["callout"], capacity: 1, declines: noteLeftOut },
     { name: "meta", accepts: [] },
   ],
   pageFields: ["kicker", "stage", "stamp"],

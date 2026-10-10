@@ -43,13 +43,28 @@ const PAGE = { top: 200, bottom: 646, left: 64, w: 1152 } as const
 /** How many looks a parade lines up: a face that sets one declares these as its slot's item floor and ceiling. */
 export const PARADE_LOOKS = { min: 3, max: 8 } as const
 
+/**
+ * Why a parade cannot line up `block`, or undefined when it can: each look
+ * is a window over its caption, with no icon or tag. A face that sets a
+ * parade declares this on its slot (`LayoutSlot.declines`), and validate
+ * refuses the page with the same words.
+ */
+export function paradeLeftOut(block: Component): string | undefined {
+  if (block.type !== "image_grid") return undefined
+  const found = block.items.flatMap((it, i) => {
+    const wrong = [...(it.caption?.trim() ? [] : ["no caption"]), ...(it.icon ? ["an icon"] : []), ...(it.tag ? ["a tag"] : [])]
+    return wrong.length > 0 ? [`item ${i + 1} has ${wrong.join(" and ")}`] : []
+  })
+  return found.length === 0 ? undefined : `the row labels each look with its caption under its window, so give every picture a caption and leave out icon and tag (${found.join(", ")})`
+}
+
 export const paradeComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "lineup") return null
   const [grid, ...rest] = components
   if (grid?.type !== "image_grid" || rest.length > 0) return null
   const g = grid as Grid
   const n = g.items.length
-  if (n < PARADE_LOOKS.min || n > PARADE_LOOKS.max || g.items.some((it) => it.icon || it.tag || !it.caption?.trim())) return null
+  if (n < PARADE_LOOKS.min || n > PARADE_LOOKS.max || paradeLeftOut(g) !== undefined) return null
   const page = wholePage(rect)
   const band = page ? { x: rect.x + PAGE.left, y: rect.y + PAGE.top, w: PAGE.w, h: PAGE.bottom - PAGE.top } : rect
   const w = (band.w - GAP * (n - 1)) / n

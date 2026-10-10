@@ -33,8 +33,31 @@ export interface PageLoss {
   cut: readonly string[]
 }
 
+/**
+ * What each page of a deck object lost, by page and theme. validate's gates
+ * ask the same page more than once (a heading's room and a block's loss
+ * both start from the page as written, and a subheading is asked as
+ * written), and a deck object here is never changed after it is drawn:
+ * validate draws the deck it parsed, and every variant it asks about is a
+ * new object (`withPageFields`, `withBlockText`). So each page is drawn
+ * once per deck object.
+ */
+const DRAWN = new WeakMap<PptxIR, Map<number, Map<ThemeDefinition, PageLoss>>>()
+
 /** Draw page `index` of `ir` and read what it lost. */
 export function drawnLoss(ir: PptxIR, index: number, theme: ThemeDefinition): PageLoss {
+  let pages = DRAWN.get(ir)
+  if (pages === undefined) DRAWN.set(ir, (pages = new Map()))
+  let themes = pages.get(index)
+  if (themes === undefined) pages.set(index, (themes = new Map()))
+  const known = themes.get(theme)
+  if (known !== undefined) return known
+  const loss = drawPageLoss(ir, index, theme)
+  themes.set(theme, loss)
+  return loss
+}
+
+function drawPageLoss(ir: PptxIR, index: number, theme: ThemeDefinition): PageLoss {
   const slide = ir.slides[index]!
   const markup = slideToSvgMarkup(ir, slide, index, theme)
   if (!markup.includes("data-dropped") && !markup.includes('data-truncated="1"')) return { dropped: 0, cut: [] }
@@ -45,8 +68,10 @@ export function drawnLoss(ir: PptxIR, index: number, theme: ThemeDefinition): Pa
   }
 }
 
-/** `ir` with page `index`'s own fields replaced, a field set to undefined taken off. */
+/** `ir` with page `index`'s own fields replaced, a field set to undefined taken off: `ir` itself when they are already so. */
 export function withPageFields(ir: PptxIR, index: number, fields: Partial<Pick<Slide, "heading" | "subheading">>): PptxIR {
+  const current = ir.slides[index]! as unknown as Record<string, unknown>
+  if (Object.entries(fields).every(([key, value]) => current[key] === value && (value !== undefined || !(key in current)))) return ir
   const slides = ir.slides.map((slide, i) => {
     if (i !== index) return slide
     const next = { ...slide, ...fields } as Record<string, unknown>

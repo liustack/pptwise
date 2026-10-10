@@ -24,11 +24,12 @@
 import { beforeAll, describe, expect, it } from "vitest"
 import { renderSlideSvg, validateIr } from "@/api"
 import type { PageKind, PptxIR, Slide } from "@/ir"
-import { componentJsonSchema, irJsonSchema } from "@/ir/json-schema"
+import { irJsonSchema } from "@/ir/json-schema"
 import { installNodePlatform } from "@/platform/node"
 import { CANONICAL_THEME_IDS } from "@/themes"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { COMPONENT_BUILDERS } from "../../evals/gallery/corpus/components"
+import { plainBlock } from "../../evals/gallery/corpus/block-shapes"
 import { corpusAssets, layoutFaceSlot, layoutPage, type CorpusAssets } from "../../evals/gallery/corpus/decks"
 import { LEXICONS, type LanguageId } from "../../evals/gallery/corpus/lexicon"
 import { nativeLexiconFor } from "../../evals/gallery/corpus/native"
@@ -153,9 +154,12 @@ function samples(w: Words): Record<string, Sample> {
   }
 }
 
+/** The IR's JSON schema, built once: the sweep only reads it. */
+const IR_SCHEMA = irJsonSchema() as { properties: { slides: { items: { oneOf: { properties: Record<string, { const?: string }> }[] } } } }
+
 /** The slide properties the schema offers on a page of `type`. */
 function schemaFields(type: Slide["type"]): string[] {
-  const full = irJsonSchema() as { properties: { slides: { items: { oneOf: { properties: Record<string, { const?: string }> }[] } } } }
+  const full = IR_SCHEMA
   const variant = full.properties.slides.items.oneOf.find((option) => option.properties.type?.const === type)
   if (variant === undefined) throw new Error(`IR schema has no slide variant for "${type}"`)
   return Object.keys(variant.properties)
@@ -242,25 +246,6 @@ function validated(base: PptxIR, slide: Record<string, unknown>, deck: Record<st
   return validateIr({ ...base, ...deck, slides: [slide] })
 }
 
-/**
- * `block` with only the properties its schema requires, on the block and on
- * each item of its lists: the plainest block of its type, for a face that
- * takes a block's bare shape and declines the corpus's fuller one.
- */
-function plainBlock(type: string, block: Record<string, unknown>): Record<string, unknown> {
-  const schema = componentJsonSchema(type) as { required?: string[]; properties?: Record<string, { items?: { required?: string[] } }> }
-  const required = new Set(schema.required ?? [])
-  const out: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(block)) {
-    if (!required.has(key)) continue
-    const itemRequired = schema.properties?.[key]?.items?.required
-    out[key] =
-      Array.isArray(value) && itemRequired !== undefined
-        ? value.map((item: Record<string, unknown>) => Object.fromEntries(Object.entries(item).filter(([field]) => itemRequired.includes(field))))
-        : value
-  }
-  return out
-}
 
 /** The list a block carries, by the name its schema gives it. */
 function listOf(component: Record<string, unknown>): { key: string; list: unknown[] } | undefined {

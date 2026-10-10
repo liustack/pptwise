@@ -35,7 +35,9 @@ function exactCardBlock(slide: SvgTemplateProps["slide"]): NumberedCards | null 
   if (slide.components.length !== 1) return null
   const only = slide.components[0]
   // A card's icon has no place on the stickers: the ordinary cards draw it.
-  return only?.type === "numbered_cards" && !only.items.some((item) => item.icon) ? only : null
+  // Nor has a fourth card: the page holds three sheets of drawing paper, and
+  // a block of more steps aside whole rather than leave its tail off.
+  return only?.type === "numbered_cards" && only.items.length <= CARD_X.length && !only.items.some((item) => item.icon) ? only : null
 }
 
 function cardBodyLines(item: NumberedCards["items"][number], fontFamily: string) {
@@ -114,8 +116,7 @@ export function CrayonboxCardsContent({ ir, slide, index, ctx }: SvgTemplateProp
       })
     : null
   const block = exactCardBlock(slide)
-  const dropped = block ? Math.max(0, block.items.length - 3) : 0
-  const cards = (block?.items.slice(0, 3) ?? []).map((item, cardIndex) => ({
+  const cards = (block?.items ?? []).map((item, cardIndex) => ({
     item,
     x: CARD_X[cardIndex]!,
     innerX: INNER_X[cardIndex]!,
@@ -184,10 +185,7 @@ export function CrayonboxCardsContent({ ir, slide, index, ctx }: SvgTemplateProp
       )}
 
       {block ? (
-        <g
-          data-dropped={dropped > 0 ? dropped : undefined}
-          data-dropped-kind={dropped > 0 ? "card" : undefined}
-        >
+        <g>
           {cards.map((card, cardIndex) => (
             <g key={cardIndex}>
               <rect

@@ -1,5 +1,5 @@
 import { PptwiseError } from "../errors"
-import { getInstalledThemeIds, getThemeDefinition, type ThemeDefinition } from "./definitions"
+import { getInstalledThemeIds, getThemeDefinition, isInstalledThemeId, type ThemeDefinition } from "./definitions"
 import { retiredThemeHint } from "./retired-ids"
 
 /**
@@ -31,8 +31,7 @@ export function resolveBoundThemeResult(boundThemeId: string, theme?: ThemeDefin
   if (theme !== undefined) {
     return theme.id === boundThemeId ? { ok: true, theme } : { ok: false, reason: "mismatch", suppliedId: theme.id }
   }
-  const installed = getInstalledThemeIds()
-  if (!installed.includes(boundThemeId)) return { ok: false, reason: "unknown", installed }
+  if (!isInstalledThemeId(boundThemeId)) return { ok: false, reason: "unknown", installed: getInstalledThemeIds() }
   return { ok: true, theme: getThemeDefinition(boundThemeId) }
 }
 

@@ -17,7 +17,8 @@
 // and every face — the 56 that never had a test of their own included — is
 // rendered against all 24 canonical themes. That is 3,120 face x theme
 // combinations, over the 1,776 the deleted copies held between them.
-import { describe, expect, it } from "vitest"
+import { beforeAll, describe, expect, it } from "vitest"
+import { installNodePlatform } from "../platform/node"
 import { SCANNED_FACES, renderFaceSampleRoot } from "./__fixtures__/scan"
 import { LEGACY_FACE_SAMPLES } from "./__fixtures__/face-samples"
 import { assertSubset } from "../render/subset-validate"
@@ -176,6 +177,11 @@ describe.sequential("the registry scan and what it covers", () => {
  * on these faces under bulletin or rally, so a scan that stopped at those
  * two themes never rendered them.
  */
+
+beforeAll(() => {
+  installNodePlatform()
+})
+
 describe("a theme can change the primitives a face emits", () => {
   const NAILS = [
     { id: "look-range-chapter", tag: "path", themes: ["brief", "lecture"] },

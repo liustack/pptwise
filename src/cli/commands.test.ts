@@ -90,20 +90,24 @@ const IR_WITH_PLACEHOLDER = {
   ],
 }
 
-// An ember chapter its author painted `#777777`. The face sets the chapter's
-// numeral huge in the theme's orange, and on that grey it stands at about
-// 1.37:1, under the 3:1 large text needs. (This fixture was an ink statement
-// page on the same grey until mid-tone grounds got pure black, then a rally
-// KPI page until a card on such a ground took its step where its labels
-// read, then a swiss row-cards page until a card's softened description
-// went to full strength where softened it does not read.)
+// A runway cover its author painted `#777777`, marked internal. The cover
+// takes the mark's ink from the grey page, pure black, and sets it on its
+// own near-black band, where it stands at about 1.14:1. (This fixture was
+// an ink statement page on the same grey until mid-tone grounds got pure
+// black, then a rally KPI page until a card on such a ground took its step
+// where its labels read, then a swiss row-cards page until a card's
+// softened description went to full strength where softened it does not
+// read, then an ember chapter until its numeral's fire was held to the
+// painted page.)
 const IR_LOW_CONTRAST = {
   version: "5",
   filename: "cli-test-low-contrast",
-  theme: { id: "ember" },
+  theme: { id: "runway" },
+  meta: { confidentiality: "internal" },
+  footer: { confidentiality: "cover" },
   slides: [
     {
-      type: "chapter",
+      type: "cover",
       id: "p-body",
       heading: "Three things",
       background: { kind: "color", value: "#777777" },

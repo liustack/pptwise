@@ -9,6 +9,7 @@ import { accessibleInk } from "../../render/ink"
 import { PANEL_SPEC, SmallText, deltaGlyph, panelInks, serifBaseline } from "./panel"
 import { blockTag, ruleInk, type CompositionProps } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
+import { fieldsLeftOut } from "../boundary-content"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 type KpiItem = KpiCards["items"][number]
@@ -68,12 +69,22 @@ interface Cell {
   last: { text: string; tone: DeltaNews | "mark" | "quiet" } | null
 }
 
+/**
+ * Why a ticker cannot set `block`, or undefined when it can: a cell is a
+ * figure's label, its value, its unit and its move. A face that sets a
+ * ticker declares this on its slot (`LayoutSlot.declines`), and validate
+ * refuses the page with the same words.
+ */
+export function tickerLeftOut(block: Component): string | undefined {
+  return block.type === "kpi_cards" ? fieldsLeftOut(block, "a ticker sets each figure as its label, its value, its unit and its move", { items: ["icon", "source", "tag", "tone"] }) : undefined
+}
+
 function tickerShape(components: readonly Component[]): KpiCards | null {
   if (components.length !== 1) return null
   const kpis = components[0]!
   if (kpis.type !== "kpi_cards") return null
   if (kpis.items.length < MIN_ITEMS || kpis.items.length > MAX_ITEMS) return null
-  if (kpis.items.some((item) => item.icon !== undefined || item.source !== undefined || item.tag !== undefined || item.tone !== undefined)) return null
+  if (tickerLeftOut(kpis) !== undefined) return null
   return kpis
 }
 

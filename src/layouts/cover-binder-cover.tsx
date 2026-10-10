@@ -4,7 +4,7 @@ import type { SvgTemplateProps } from "./types"
 import { stripEmphasis } from "../render/emphasis"
 import { blockTag } from "./compositions/shared"
 import { binderInks, binderMeta, binderText, binderTrackedWidth, binderBaseline, fitBinder, paintBinder, paintBinderTracked } from "./compositions/binder"
-import { boundarySlotBlock } from "./boundary-content"
+import { boundarySlotBlock, fieldsLeftOut } from "./boundary-content"
 import { fitDossierTitle, dossierTitleSet } from "./dossier-shared"
 import { headingEmphasisPaint, renderEmphasisHeading } from "../render/emphasis"
 
@@ -33,6 +33,11 @@ const RULE = { y: 440, w: 600 } as const
 const FACTS = { pitch: 208, value: { top: 466, size: 26, lineHeight: 36, w: 200 }, label: { top: 508, size: 13, lineHeight: 20, w: 200 }, max: 3 } as const
 const CAPTION = { top: 640, size: 12, lineHeight: 20, w: 600 } as const
 
+/** Why the cover cannot set `block` as its facts, or undefined when it can: it sets each as its figure and its label, the note under it. */
+function factsLeftOut(block: Component): string | undefined {
+  return block.type === "kpi_cards" ? fieldsLeftOut(block, "the cover sets each fact as its figure and its label, with its note under it", { items: ["icon", "delta", "tag", "tone", "source"] }) : undefined
+}
+
 export function BinderCover({ ir, slide, ctx }: SvgTemplateProps) {
   const inks = binderInks(ctx)
   const photo = slide.background?.kind === "asset" ? ctx.images?.[slide.background.asset_id] : undefined
@@ -51,7 +56,7 @@ export function BinderCover({ ir, slide, ctx }: SvgTemplateProps) {
     label: fitBinder(it.note?.trim() ? `${it.label.trim()}\n${it.note.trim()}` : it.label, { width: FACTS.label.w, size: FACTS.label.size, lineHeight: FACTS.label.lineHeight, maxLines: 2 }, ctx),
     it,
   }))
-  const factsFit = facts !== undefined && factItems.length <= FACTS.max && factItems.every((f) => f.value && f.label && !f.it.icon && !f.it.delta && !f.it.tag && !f.it.tone && !f.it.source)
+  const factsFit = facts !== undefined && factItems.length <= FACTS.max && factItems.every((f) => f.value && f.label) && factsLeftOut(facts) === undefined
   const caption = slide.footnote?.trim() ? fitBinder(slide.footnote, { width: CAPTION.w, size: CAPTION.size, lineHeight: CAPTION.lineHeight, maxLines: 1 }, ctx) : null
   return (
     <>
@@ -128,7 +133,7 @@ export const layoutDef = {
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
     { name: "meta", accepts: [] },
-    { name: "body", accepts: ["kpi_cards"], capacity: 1, itemCapacity: FACTS.max },
+    { name: "body", accepts: ["kpi_cards"], capacity: 1, itemCapacity: FACTS.max, declines: factsLeftOut },
   ],
   pageFields: ["kicker", "footnote"],
   drawsPhoto: true,

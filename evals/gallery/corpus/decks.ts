@@ -19,7 +19,7 @@ import { fitSvgLine } from "@/lib/svg-text-layout"
 import { resolveFontStack } from "@/render/fonts"
 import { deckWritesChinese } from "@/lib/conf-labels"
 import { CANONICAL_THEME_IDS, resolveStyle, type CanonicalThemeId } from "@/themes"
-import { getInstalledThemeIds, getThemeDefinition } from "@/themes/definitions"
+import { getThemeDefinition, isInstalledThemeId } from "@/themes/definitions"
 import { registerTestTheme, type TestThemeFaces } from "@/themes/test-fixtures"
 import { CHART_VARIANTS, COMPONENT_BUILDERS, PHOTO_ASSETS, PHONE_SCREENSHOT_ASSET, SCREENSHOT_ASSET } from "./components"
 import type { LanguageId, Lexicon } from "./lexicon"
@@ -854,7 +854,7 @@ function ensureGalleryFaceTheme(
 
   const canonical = sourceThemeId as CanonicalThemeId
   const id = galleryThemeId(canonical, layoutId, slideType, kind)
-  if (getInstalledThemeIds().includes(id)) return id
+  if (isInstalledThemeId(id)) return id
   const faces: TestThemeFaces =
     slideType === "content" && kind !== undefined ? { content: { [kind]: layoutId } } : { [slideType]: layoutId }
   return registerTestTheme(id, canonical, faces)

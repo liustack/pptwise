@@ -21,7 +21,8 @@
 // A face with no first region on this fixture (its band is short for a
 // two-series chart already, even with the chart drawn down to its floor) is
 // still checked for the other two.
-import { describe, expect, it } from "vitest"
+import { beforeAll, describe, expect, it } from "vitest"
+import { installNodePlatform } from "../platform/node"
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import type { PptxIR, Slide } from "@/ir"
@@ -447,6 +448,11 @@ function sweep(c: FaceCase): { verdicts: Verdict[]; from: number } {
   const to = 40
   return { verdicts: Array.from({ length: to - from + 1 }, (_, i) => verdictAt(c, from + i)), from }
 }
+
+
+beforeAll(() => {
+  installNodePlatform()
+})
 
 describe("a wired face steps aside exactly where its body slot starts costing content", () => {
   for (const c of CASES) {

@@ -14,13 +14,13 @@
 import { beforeAll, describe, expect, it } from "vitest"
 import { renderSlideSvg, validateIr } from "@/api"
 import type { PptxIR, Slide } from "@/ir"
-import { componentJsonSchema } from "@/ir/json-schema"
 import { installNodePlatform } from "@/platform/node"
 import { droppedIn } from "@/render/render-slide"
 import { parseSvgRoot } from "@/render/serialize"
 import { CANONICAL_THEME_IDS } from "@/themes"
 import { getThemeDefinition, type ThemeDefinition } from "@/themes/definitions"
 import { COMPONENT_BUILDERS } from "../../evals/gallery/corpus/components"
+import { blockSchema, plainBlock } from "../../evals/gallery/corpus/block-shapes"
 import { corpusAssets, layoutFaceSlot, type CorpusAssets } from "../../evals/gallery/corpus/decks"
 import { LEXICONS } from "../../evals/gallery/corpus/lexicon"
 import { LAYOUT_REGISTRY } from "./registry"
@@ -31,21 +31,6 @@ beforeAll(async () => {
   assets = await corpusAssets(LEXICONS.zh)
 })
 
-/** `block` with only the properties its schema requires, on the block and on each item of its lists. */
-function plainBlock(type: string, block: Record<string, unknown>): Record<string, unknown> {
-  const schema = componentJsonSchema(type) as { required?: string[]; properties?: Record<string, { items?: { required?: string[] } }> }
-  const required = new Set(schema.required ?? [])
-  const out: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(block)) {
-    if (!required.has(key)) continue
-    const itemRequired = schema.properties?.[key]?.items?.required
-    out[key] =
-      Array.isArray(value) && itemRequired !== undefined
-        ? value.map((item: Record<string, unknown>) => Object.fromEntries(Object.entries(item).filter(([field]) => itemRequired.includes(field))))
-        : value
-  }
-  return out
-}
 
 /** The built-in theme that offers the face, or brief, with the face put in its slot. */
 function themeFor(face: string, slot: string): ThemeDefinition {
@@ -76,8 +61,7 @@ describe("validate refuses a block with fewer items than its face draws", () => 
         const key = ["items", "milestones"].find((k) => Array.isArray(block[k]))
         if (!key) continue
         const list = block[key] as unknown[]
-        const schema = componentJsonSchema(type) as { properties?: Record<string, { minItems?: number }> }
-        const min = schema.properties?.[key]?.minItems ?? 1
+        const min = blockSchema(type).properties?.[key]?.minItems ?? 1
         const page = (n: number): PptxIR =>
           ({
             version: "5",

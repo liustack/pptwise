@@ -4,7 +4,7 @@ import { DecorPiece } from "../motifs/decor-piece"
 import { PitchScrim } from "./compositions/pitch"
 import { Confetti, fitMarquee, marqueeInks, marqueeText, marqueeWidth, paintMarquee, ticketWidths, type Box } from "./compositions/marquee"
 import { fitDossierTitle, dossierTitleSet } from "./dossier-shared"
-import { MarqueeBigTitle, Pills, pillItems, pillsFit, pillsWhole } from "./cover-marquee-cover"
+import { MarqueeBigTitle, Pills, pillItems, pillsFit, pillsLeftOut, pillsWhole } from "./cover-marquee-cover"
 import { MarqueeTicket, sectionTicket } from "./marquee-shared"
 
 /**
@@ -81,7 +81,7 @@ export const layoutDef = {
     { name: "kicker", accepts: [] },
     { name: "heading", accepts: [] },
     { name: "subheading", accepts: [] },
-    { name: "body", accepts: ["row_cards", "bullets"], capacity: 1, itemCapacity: 5 },
+    { name: "body", accepts: ["row_cards", "bullets"], capacity: 1, itemCapacity: 5, declines: pillsLeftOut },
   ],
   pageFields: ["kicker"],
   drawsPhoto: true,
