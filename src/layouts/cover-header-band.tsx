@@ -229,6 +229,8 @@ export function HeaderBandCover({ ir, slide, ctx, page }: SvgTemplateProps) {
 
 export const layoutDef: LayoutDefinition = {
   coverMark: "face",
+  // A legal classification still takes the default corner. The primary band across the top.
+  coverMarkGround: (ctx) => ctx.colors.primary,
   // cover-header-band.tsx: top tone band carries meta only. Title sits on
   // paper below the band. Emphasized run uses accent, optional q-curve
   // under that run.

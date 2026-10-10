@@ -142,6 +142,8 @@ export const layoutDef = {
   paintsOwnBackground: true,
   // Over the photograph's dark left edge, above the occasion.
   coverMark: { x: 64, y: 24 },
+  // The stage the face paints over the whole page, and the dark of its fade over a photograph.
+  coverMarkGround: (ctx) => lineupInks(ctx).stage,
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.twoLineMin, bold: false, lineHeightRatio: TITLE.lineHeight / TITLE.size },
   headingSet: ({ slide, ctx }) => {
     const title = stripEmphasis(slide.heading ?? "").trim()

@@ -11,7 +11,7 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { beforeAll, describe, expect, it } from "vitest"
 import { PptxIRSchema, type ChartSeries, type Component, type PptxIR, type Slide } from "@/ir"
-import { renderSlideSvg } from "../api"
+import { renderSlideSvg, validateIr } from "../api"
 import { PptwiseError } from "../errors"
 import { installNodePlatform } from "../platform/node"
 import { CANONICAL_THEME_IDS, type CanonicalThemeId } from "../themes"
@@ -29,7 +29,8 @@ import {
 } from "./deck-audit"
 import { STRESS_DECKS } from "./stress-fixtures"
 import { contrastRatio } from "../render/ink"
-import { getThemeDefinition } from "../themes/definitions"
+import { compileThemeDefinition, getThemeDefinition } from "../themes/definitions"
+import { GREYCARD_THEME_FILE, LOW_CONTRAST_IR } from "./__fixtures__/low-contrast"
 import { registerTestTheme } from "../themes/test-fixtures"
 
 beforeAll(() => {
@@ -3103,19 +3104,13 @@ describe("findSourceLineCrossings", () => {
 
 describe("auditDeck — low-contrast says what an author can change", () => {
   it("points at the background and the theme, the two things an author sets, not at the text color", () => {
-    // runway's cover on a mid-tone page, marked internal: the mark takes its
-    // ink from the grey page and stands at about 1.14:1 on the cover's own
-    // near-black band.
-    const ir = {
-      version: "5",
-      filename: "low-contrast.pptx",
-      theme: { id: "runway" },
-      meta: { confidentiality: "internal" },
-      footer: { confidentiality: "cover" },
-      assets: { images: {} },
-      slides: [{ type: "cover", heading: "三件事", background: { kind: "color", value: "#777777" }, components: [] }],
-    } as PptxIR
-    const low = auditDeck(ir).findings.filter((f) => f.code === "low-contrast")
+    // A theme file whose text does not read on its own cards
+    // (`__fixtures__/low-contrast.ts`): the cards' words stand at about
+    // 3.4:1, under body text's 4.5:1.
+    const theme = compileThemeDefinition(GREYCARD_THEME_FILE)
+    const v = validateIr(LOW_CONTRAST_IR, { theme })
+    expect(v.errors).toEqual([])
+    const low = auditDeck(v.ir!, { theme }).findings.filter((f) => f.code === "low-contrast")
     expect(low.length).toBeGreaterThan(0)
     for (const finding of low) {
       expect(finding.message).toMatch(/\(needs [\d.]+:1\)\. Text takes its color from the theme, so move the page's background lighter or darker, or bind a theme whose colors read on it$/)

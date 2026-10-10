@@ -167,7 +167,9 @@ export function IkbFieldCover({ ir, slide, ctx, page }: SvgTemplateProps) {
 export const layoutDef = {
   branding: "none",
   // The shared top-left mark sits on the primary field this face paints.
-  coverMark: { x: 80, y: 56, ground: "primary" },
+  coverMark: { x: 80, y: 56 },
+  // The field, the primary across the whole page.
+  coverMarkGround: (ctx) => ctx.colors.primary,
   // cover-ikb-field-cover.tsx: full-bleed primary field, a small line over a
   // left-aligned inverted title, a short bar under its last line, the
   // subtitle and the date. Motif owns the square steps. Empty heading draws

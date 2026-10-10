@@ -61,6 +61,7 @@ import type { DesignStory } from "@/design-story"
 import type { Component } from "@/ir"
 import type { STRATEGY_VALUES } from "@/ir/narrative-values"
 import type { HeadingSet } from "./heading-set"
+import type { ComponentCtx } from "../components/types"
 
 // layoutDef imports (src domain reorg wave 1, task T1d): 154 layout files
 // (one `layoutDef` each) plus image-pages.tsx's 4 uniquely named takeover
@@ -421,7 +422,6 @@ export interface DecorKeepOutRect {
 export interface CoverMarkAnchor {
   x: number
   y: number
-  ground?: "primary" | "accent" | "surface"
 }
 
 export interface LayoutDefinition {
@@ -471,16 +471,26 @@ export interface LayoutDefinition {
    *   `coverConfidentiality` (`render/document-meta.ts`). The shared mark
    *   then stays off unless it carries a legal classification, which only
    *   ever goes top left.
-   * - `{ x, y, ground? }`: the shared mark's baseline start on this face,
-   *   when the default top-left spot would sit on the face's own furniture
-   *   (a frame line, a band). `ground` names the theme color the face paints
-   *   under that spot when it is not the page's own background (a full-bleed
-   *   primary field), so the mark's ink is measured against what is really
-   *   there.
+   * - `{ x, y }`: the shared mark's baseline start on this face, when the
+   *   default top-left spot would sit on the face's own furniture (a frame
+   *   line, a band).
    *
    * Omitted, the shared mark takes the default top-left spot.
    */
   coverMark?: "face" | CoverMarkAnchor
+  /**
+   * The colour this cover face paints under the shared top-left mark: at its
+   * own `coverMark` spot, or at the default corner, which a legal
+   * classification takes on every face. The mark's ink is measured against
+   * it (`CoverMark`, `render/footer.tsx`). Read from the face's own inks, the
+   * same call its drawing makes, so it is what is really there on any page:
+   * a stage, a board shaded from the primary, a full-bleed primary field. A
+   * page painted a colour of the author's own changes the page's ground and
+   * not the face's own bands, and a mark measured against the page stood on
+   * the band at 1.14:1. Omitted, the face paints nothing there and the mark
+   * stands on the page's own ground.
+   */
+  coverMarkGround?: (ctx: ComponentCtx) => string
   /**
    * The page fields this face draws beyond its heading, subheading and
    * components: `kicker`, the short label over the heading, `fields`, the

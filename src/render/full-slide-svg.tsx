@@ -504,12 +504,14 @@ export function FullSlideSvg({
   // a photo by the image-cover renderer, draws none of the face's own
   // furniture, so the shared mark stands in for it.
   const faceCoverMark = steppedAside || imageCoverTakeover ? undefined : effectiveFace.layout?.coverMark
+  const faceCoverMarkGround = steppedAside || imageCoverTakeover ? undefined : effectiveFace.layout?.coverMarkGround?.(ctx)
   const coverMark =
     slide.type === "cover" && page.metadataOn ? (
       <CoverMark
         footer={page.footer}
         faceDrawsConfidentiality={faceCoverMark === "face"}
         {...(typeof faceCoverMark === "object" ? { anchor: faceCoverMark } : {})}
+        {...(faceCoverMarkGround !== undefined ? { ground: faceCoverMarkGround } : {})}
         ctx={ctx}
         onImage={imageCoverTakeover}
       />

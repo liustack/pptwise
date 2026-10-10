@@ -269,6 +269,8 @@ export function ShowHeadlineCover({ ir, slide, ctx, page }: SvgTemplateProps) {
 
 export const layoutDef = {
   coverMark: "face",
+  // A legal classification still takes the default corner. The primary across the page, the accent only on its right.
+  coverMarkGround: (ctx) => ctx.colors.primary,
   suppressMotif: true,
   id: "show-headline",
   kind: "standard",

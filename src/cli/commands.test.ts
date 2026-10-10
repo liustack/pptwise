@@ -9,6 +9,7 @@ import { afterAll, afterEach, describe, expect, it, beforeAll } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { NARRATIVE_PRESETS } from "../narrative"
 import { CAPACITY } from "../audit/capacity"
+import { GREYCARD_THEME_FILE, LOW_CONTRAST_IR } from "../audit/__fixtures__/low-contrast"
 import { __resetRegisteredThemes, getThemeDefinition } from "../themes/definitions"
 import { resolveThemeByName } from "./theme-resolve"
 import { THEME_OCCASIONS } from "../themes/occasions"
@@ -90,30 +91,15 @@ const IR_WITH_PLACEHOLDER = {
   ],
 }
 
-// A runway cover its author painted `#777777`, marked internal. The cover
-// takes the mark's ink from the grey page, pure black, and sets it on its
-// own near-black band, where it stands at about 1.14:1. (This fixture was
-// an ink statement page on the same grey until mid-tone grounds got pure
-// black, then a rally KPI page until a card on such a ground took its step
-// where its labels read, then a swiss row-cards page until a card's
-// softened description went to full strength where softened it does not
-// read, then an ember chapter until its numeral's fire was held to the
-// painted page.)
-const IR_LOW_CONTRAST = {
-  version: "5",
-  filename: "cli-test-low-contrast",
-  theme: { id: "runway" },
-  meta: { confidentiality: "internal" },
-  footer: { confidentiality: "cover" },
-  slides: [
-    {
-      type: "cover",
-      id: "p-body",
-      heading: "Three things",
-      background: { kind: "color", value: "#777777" },
-    },
-  ],
-}
+// A deck that validates clean and audits low-contrast, on a theme file
+// written beside it whose text does not read on its own cards
+// (`../audit/__fixtures__/low-contrast.ts`). (This fixture was an ink
+// statement page on a grey page until mid-tone grounds got pure black,
+// then a rally KPI page, then a swiss row-cards page, then an ember chapter,
+// then a runway cover whose mark took its ink from the grey page it was
+// painted, each until its case was fixed. No real case was left after the
+// last.)
+const IR_LOW_CONTRAST = LOW_CONTRAST_IR
 
 // kpi_cards item uses "title" instead of "label" — W5 task 4's field-alias
 // normalizer should silently adopt it and runValidate should note it.
@@ -224,6 +210,7 @@ beforeAll(async () => {
   await writeFile(join(dir, "deck-with-corrupt-asset.json"), JSON.stringify(IR_WITH_CORRUPT_LOCAL_ASSET))
   await writeFile(join(dir, "deck-with-placeholder.json"), JSON.stringify(IR_WITH_PLACEHOLDER))
   await writeFile(join(dir, "deck-low-contrast.json"), JSON.stringify(IR_LOW_CONTRAST))
+  await writeFile(join(dir, "greycard.theme.json"), JSON.stringify(GREYCARD_THEME_FILE))
   await writeFile(join(dir, "deck-with-alias.json"), JSON.stringify(IR_WITH_FIELD_ALIAS))
   await writeFile(join(dir, "deck-warn-only.json"), JSON.stringify(IR_WITH_WARN_ONLY))
   await writeFile(join(dir, "deck-bullet-overflow.json"), JSON.stringify(IR_WITH_BULLET_OVERFLOW))

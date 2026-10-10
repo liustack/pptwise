@@ -178,7 +178,8 @@ export const layoutDef = {
   drawsPhoto: true,
   suppressMotif: true,
   // Over the photograph's top left, on the ink the face lays there when the deck prints a mark.
-  coverMark: { ...COVER_MARK, ground: "primary" },
+  coverMark: COVER_MARK,
+  coverMarkGround: (ctx) => ctx.colors.primary,
   headingFit: { maxWidth: CARD.w - CARD.pad * 2, fontSize: CARD.title.size, maxLines: CARD.title.maxLines, minPt: CARD.title.size, bold: false, lineHeightRatio: CARD.title.lineHeight / CARD.title.size },
   headingSet: ({ slide, ctx }) => (setTitle(slide, ctx).titleDropped ? "declined" : "whole"),
 } satisfies LayoutDefinition

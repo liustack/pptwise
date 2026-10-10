@@ -156,7 +156,7 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     expect(score.deterministic).toBeNull()
   })
 
-  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (a runway cover's confidentiality mark on a mid-grey page)", async () => {
+  it("fx03 (degraded): validates clean but auditDeck flags a low-contrast finding (a theme file whose text does not read on its own cards)", async () => {
     // This fixture needs a low-contrast source that is real, theme-stable
     // and out of scope for whatever fix round is running — and it has now
     // outlived two of them. It started as kpi_cards' hardcoded delta-arrow
@@ -199,10 +199,18 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     // orange at about 1.37:1 on the grey, until the fire as type was held to
     // a painted page (`brandInkOnGround`).
     //
-    // Now a runway cover painted `#777777` and marked internal: the mark
-    // takes its ink from the grey page, pure black, and stands at about
-    // 1.14:1 on the cover's own near-black band. The deck's row cards, on
-    // the theme's own page, are what `coverageHits` below reads.
+    // Then a runway cover painted `#777777` and marked internal: the mark
+    // took its ink from the grey page, pure black, and stood at about
+    // 1.14:1 on the cover's own near-black band, until the mark read its
+    // ground off the face (`coverMarkGround`).
+    //
+    // No real case was left after that (every face, the stress decks and
+    // every built-in theme on ten painted grounds with every mark on), so
+    // the low contrast is now built on purpose: the deck binds `greycard`,
+    // a theme file beside it (brief's copy) whose text reads 5.7:1 on its
+    // page and 3.4:1 on its own cards. The theme check holds a theme's inks
+    // to 3:1 and passes it. The row cards' words are body text, held to
+    // 4.5:1, and are also what `coverageHits` below reads.
     const metas = await loadQuestionMetas(QUESTIONS_DIR)
     const meta = metas.find((m) => m.id === "fx03")!
     const score = await scoreQuestion("fx03", join(RESULTS_DIR, "degraded-model", "fx03"), meta)
