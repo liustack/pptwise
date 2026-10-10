@@ -623,6 +623,25 @@ describe("dsh preview card — the viewer", () => {
 })
 
 describe("dsh preview card — the export button", () => {
+  it("saves a deck whose title already ends in .pptx under one extension", async () => {
+    // The title is the IR's `filename`, and authors often write the extension
+    // into it. The browser used to save `Q3 review.pptx.pptx`.
+    fetchMock.mockResolvedValue(routeAnswer({ status: 200 }))
+    const Card = makeCard()
+    render(<Card block={blockWith(bundleOf([page(1)], "Q3 review.pptx"), "abc123")} />)
+    fireEvent.click(await screen.findByText("Download .pptx"))
+    await waitFor(() => expect(anchorClicks).toHaveLength(1))
+    expect(anchorClicks[0]!.download).toBe("Q3 review.pptx")
+
+    cleanup()
+    anchorClicks.length = 0
+    const Draft = makeCard()
+    render(<Draft block={blockWith({ ...bundleOf([page(1)], "Q3 review.PPTX"), draft: true }, "abc124")} />)
+    fireEvent.click(await screen.findByText("Download .pptx"))
+    await waitFor(() => expect(anchorClicks).toHaveLength(1))
+    expect(anchorClicks[0]!.download).toBe("Q3 review-draft.pptx")
+  })
+
   it("fetches the pptx route and hands the browser a real .pptx", async () => {
     fetchMock.mockResolvedValue(routeAnswer({ status: 200 }))
     const Card = makeCard()

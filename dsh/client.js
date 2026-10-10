@@ -765,7 +765,10 @@ window.__ModuleLoader__.load({
               // Matches the name the host half gave the file it is serving
               // (`exportName`, preview-tool.js): a deck with unfilled pages
               // must not be saved under a name that reads as finished work.
-              a.download = (props.name || 'deck') + (props.draft ? '-draft' : '') + '.pptx'
+              // The title is the deck's `filename`, often written with its
+              // extension already, which used to save `deck.pptx.pptx`.
+              var stem = (props.name || 'deck').replace(/\.pptx$/i, '') || 'deck'
+              a.download = stem + (props.draft ? '-draft' : '') + '.pptx'
               document.body.appendChild(a)
               a.click()
               a.remove()

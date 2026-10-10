@@ -3195,6 +3195,21 @@ describe("export filename", () => {
       expect(name).not.toMatch(/["/\\]/)
     }
   })
+
+  it("adds no second extension to a deck whose filename already has one", async () => {
+    // The title is the IR's `filename`, written with or without `.pptx`. The
+    // export used to come out as `Q3-Review.pptx.pptx` for the second kind.
+    const { __testing } = await loadPreviewTool()
+    expect(__testing.exportName({ title: "Q3 Review.pptx" }, "/x/deck.json")).toBe("Q3-Review.pptx")
+    expect(__testing.exportName({ title: "Q3 Review.PPTX" }, "/x/deck.json")).toBe("Q3-Review.pptx")
+    expect(__testing.exportName({ title: "Q3 Review.pptx", draft: true }, "/x/deck.json")).toBe(
+      "Q3-Review-draft.pptx",
+    )
+    // Only a trailing extension is the file's own: a name that merely
+    // mentions one keeps it.
+    expect(__testing.exportName({ title: "notes.pptx v2" }, "/x/deck.json")).toBe("notes.pptx-v2.pptx")
+    expect(__testing.exportName({ title: ".pptx" }, "/x/deck.json")).toBe("deck.pptx")
+  })
 })
 
 describe("preview deck snapshot", () => {

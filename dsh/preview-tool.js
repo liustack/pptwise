@@ -1372,11 +1372,19 @@ function describeIncomplete(error, dir) {
  * a badge, but the file outlives the card: it gets mailed, uploaded and opened
  * by people who never saw this conversation, and `-draft` is the one part of
  * it that travels with the bytes.
+ *
+ * The title is the deck's `filename`, which authors write with or without the
+ * extension (`"q3-review"` and `"q3-review.pptx"` are both common), so an
+ * extension already there comes off before the one this adds. Without that the
+ * export was saved as `q3-review.pptx.pptx`.
  */
 function exportName(bundle, target) {
   const raw =
     (bundle && bundle.title) || String(target).split(/[\\/]/).pop().replace(/\.[^.]+$/, '') || 'deck'
-  const safe = raw.replace(/[^\w.-]+/g, '-').replace(/^[.-]+/, '')
+  const safe = raw
+    .replace(/\.pptx$/i, '')
+    .replace(/[^\w.-]+/g, '-')
+    .replace(/^[.-]+/, '')
   return `${safe || 'deck'}${bundle && bundle.draft ? '-draft' : ''}.pptx`
 }
 
