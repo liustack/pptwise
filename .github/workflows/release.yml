@@ -77,6 +77,9 @@ jobs:
             echo "No CHANGELOG section for $version" >&2
             exit 1
           fi
+          # GitHub refuses a release body over 125,000 characters.
+          heading="$(grep -m1 -E "^## $version( |\$)" CHANGELOG.md | sed 's/^## //')"
+          pnpm exec tsx scripts/fit-release-notes.mts "$RUNNER_TEMP/release-notes.md" "$version" "$heading"
       # Idempotent: a version a maintainer already published by hand (a
       # registry or Actions incident) must not turn this run red.
       - name: Publish to npm (skipped when the version is already live)

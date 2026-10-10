@@ -96,6 +96,9 @@ PowerPoint repair-dialog probe before `pnpm release` (`docs/testing.md`).
 2. Runs typecheck, lint, the full test suite, and `pnpm e2e` with LibreOffice
    installed, so the visual gate is not silently skipped.
 3. Extracts this version's `CHANGELOG` section, and fails if there is none.
+   A section over GitHub's 125,000-character release cap is cut at the last
+   bullet that fits and links to the full section
+   (`scripts/fit-release-notes.mts`). 0.41.0 was the first to hit the cap.
    All of this happens before the one irreversible step.
 4. Publishes with provenance through npm trusted publishing (OIDC), skipped
    when the version is already on npm, so a hand publish never turns the run
