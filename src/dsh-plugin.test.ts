@@ -546,7 +546,9 @@ type ClientBundle = {
     stripPages: (pages: { svg?: string | null; page?: number }[]) => { svg?: string | null; page?: number }[]
     hasMarkup: (page: { svg?: string | null } | undefined) => boolean
     pageNumberOf: (page: { page?: number } | undefined, index: number) => number
-    previewHtmlUrl: (previewId: string, startPage?: number) => string
+    pageUrl: (previewId: string, index: number) => string
+    paneAddress: (target: { view: string; id: string; priorId?: string }) => string
+    parsePaneAddress: (address: string) => { view: string; id: string; priorId?: string } | null
     verdictOf: (
       res:
         | { ok?: boolean; status?: number; headers?: { get: (name: string) => string | null }; json?: () => Promise<unknown> }
@@ -686,12 +688,12 @@ describe("pptwise preview card (browser half)", () => {
     ])
   })
 
-  it("points the viewer at the html the CLI already wrote", async () => {
-    // The one string the card and the route have to agree on for the modal to
-    // show anything at all.
+  it("asks the route for each page the viewer shows", async () => {
+    // The one string the card and the route have to agree on for the
+    // full-screen view to show anything at all. Pages count from one there.
     const bundle = await loadClientBundle(() => ({}))
     const { PREVIEW_ROUTE } = await loadPreviewTool()
-    expect(bundle.__testing.previewHtmlUrl("abc-123")).toBe(`${PREVIEW_ROUTE}/abc-123/html`)
+    expect(bundle.__testing.pageUrl("abc-123", 0)).toBe(`${PREVIEW_ROUTE}/abc-123/page/1`)
   })
 
   it("returns nothing only when the deck itself has no pages", async () => {
@@ -3841,14 +3843,16 @@ describe("what the card does with a bad answer", () => {
   })
 
   it("opens the viewer on the page the reader clicked", async () => {
-    // `#page=N` is honoured by the html itself (`src/cli/preview-html.ts`), so
-    // the card's only job is to put it in the URL. Clicking page 3 and landing
-    // on page 1 is the kind of small lie that makes a strip feel decorative.
+    // The sidebar tab is addressed by deck and handed the page as a
+    // navigation parameter, so the address round-trips without it, and an
+    // address that is not one of ours is nobody's.
     const client = await loadClientBundle(() => ({}))
     const { PREVIEW_ROUTE } = await loadPreviewTool()
-    expect(client.__testing.previewHtmlUrl("abc-123")).toBe(`${PREVIEW_ROUTE}/abc-123/html`)
-    expect(client.__testing.previewHtmlUrl("abc-123", 1)).toBe(`${PREVIEW_ROUTE}/abc-123/html`)
-    expect(client.__testing.previewHtmlUrl("abc-123", 4)).toBe(`${PREVIEW_ROUTE}/abc-123/html#page=4`)
+    const { paneAddress, parsePaneAddress, pageUrl } = client.__testing
+    expect(parsePaneAddress(paneAddress({ view: "deck", id: "abc-123" }))).toEqual({ view: "deck", id: "abc-123" })
+    expect(parsePaneAddress(paneAddress({ view: "compare", id: "b", priorId: "a" }))).toEqual({ view: "compare", id: "b", priorId: "a" })
+    expect(parsePaneAddress("dsh-resource://file/abc-123")).toBeNull()
+    expect(pageUrl("abc-123", 3)).toBe(`${PREVIEW_ROUTE}/abc-123/page/4`)
   })
 })
 
