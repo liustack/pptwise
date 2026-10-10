@@ -409,7 +409,7 @@ window.__ModuleLoader__.load({
         })
     }
 
-    function PreviewCard(react) {
+    function PreviewCard(react, reactDom) {
       var h = react.createElement
       var useState = react.useState
       var useEffect = react.useEffect
@@ -519,13 +519,37 @@ window.__ModuleLoader__.load({
       }
 
       /**
+       * Mount a full-screen layer on `document.body`, outside the card.
+       *
+       * `position: fixed` alone does not escape an ancestor that clips. From
+       * DSH 0.1.7 the card sits inside a collapsible work group whose body has
+       * a `max-height`, scrolls, and paints a `mask-image` fade while it
+       * scrolls, and a mask crops fixed descendants along with everything
+       * else. The viewer opened as a 680x400 window inside the chat column. A
+       * portal moves the layer's DOM to the body, where nothing clips it, while
+       * React keeps it in this card's tree, so its state and events stay here.
+       *
+       * `react-dom` comes from the shell's module table, as `react` does (the
+       * shipped Tooltip portals to `document.body` the same way). A shell
+       * whose table has no `createPortal` gets the layer in place, which is
+       * what every build before the work group drew correctly.
+       */
+      function inBody(node) {
+        if (reactDom && typeof reactDom.createPortal === 'function') {
+          return reactDom.createPortal(node, document.body)
+        }
+        return node
+      }
+
+      /**
        * Full-size viewer: the deck's own `preview.html`, in an iframe.
        *
        * Everything a reader does inside it — ←/→, the filmstrip, the
        * light/dark surround, the audit findings panel — belongs to that page,
        * which was written, tested and shipped for the harnesses that have no
        * plugin UI. This modal contributes the two things the page has no way
-       * to offer from inside itself: a way out, and the export.
+       * to offer from inside itself: a way out, and the export. It renders on
+       * the body (`inBody`), never inside the card.
        */
       function Modal(props) {
         var frameRef = react.useRef(null)
@@ -563,7 +587,7 @@ window.__ModuleLoader__.load({
           [props.onClose, props.src],
         )
 
-        return h(
+        return inBody(h(
           'div',
           {
             style: {
@@ -663,7 +687,7 @@ window.__ModuleLoader__.load({
               },
             }),
           ),
-        )
+        ))
       }
 
       /**
@@ -1347,7 +1371,15 @@ window.__ModuleLoader__.load({
         console.error('[pptwise] preview card skipped: ' + error)
         return
       }
-      var Card = PreviewCard(react)
+      // Optional, unlike `react`: it only lifts the viewer out of a clipping
+      // ancestor (see `inBody`), and a shell without it still gets a card.
+      var reactDom = null
+      try {
+        reactDom = require('react-dom')
+      } catch (error) {
+        console.warn('[pptwise] react-dom unavailable, the viewer opens inside the card: ' + error)
+      }
+      var Card = PreviewCard(react, reactDom)
       ctx.slots.inject('tool.call.toolview', function* () {
         yield ctx.slots.register({ name: 'tool.call.toolview', key: TOOL_NAME }, Card)
       })

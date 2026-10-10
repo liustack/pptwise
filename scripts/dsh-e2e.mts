@@ -399,8 +399,12 @@ async function loadDshClientBundle(clientPath: string): Promise<{ moduleId: stri
     useEffect: () => undefined,
     useRef: () => ({ current: null }),
   }
+  // The viewer portals onto the page body with `react-dom`, which the shell's
+  // module table has always carried beside `react`.
+  const fakeReactDom = { createPortal: (node: unknown) => node }
   const exportsObject = registration.factory((id: string) => {
     if (id === "react") return fakeReact
+    if (id === "react-dom") return fakeReactDom
     throw new Error(`the preview card bundle required an unexpected module: ${id}`)
   })
   if (typeof exportsObject.apply !== "function") {
