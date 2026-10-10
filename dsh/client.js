@@ -840,8 +840,11 @@ window.__ModuleLoader__.load({
         '.pw-edit:hover{background:var(--pw-hover)}',
         '.pw-edit:focus-visible{outline:none;box-shadow:' + FOCUS_RING + '}',
         '@media (hover:none){.pw-edit{opacity:1;pointer-events:auto}}',
-        '.pw-rows{margin:0;padding:0;list-style:none;border-top:0.5px solid var(--dsw-alias-border-l1)}',
-        '.pw-row{display:grid;grid-template-columns:22px 40px minmax(0,1fr);align-items:baseline;gap:8px;padding:7px 12px 7px 10px;font-size:13px;line-height:20px}',
+        // One type column for the whole list, as wide as its longest label
+        // ("Content" is wider than two Chinese characters), so every heading
+        // starts at the same place in every language.
+        '.pw-rows{display:grid;grid-template-columns:22px max-content minmax(0,1fr);column-gap:8px;margin:0;padding:0;list-style:none;border-top:0.5px solid var(--dsw-alias-border-l1)}',
+        '.pw-row{grid-column:1/-1;display:grid;grid-template-columns:subgrid;align-items:baseline;padding:7px 12px 7px 10px;font-size:13px;line-height:20px}',
         '.pw-row+.pw-row{border-top:0.5px solid var(--dsw-alias-border-l1)}',
         '.pw-row-n{color:var(--dsw-alias-label-tertiary);text-align:right;font-variant-numeric:tabular-nums}',
         '.pw-row-type{color:var(--dsw-alias-label-tertiary);font-size:12px}',

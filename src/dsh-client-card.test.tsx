@@ -2242,6 +2242,19 @@ describe("dsh outline card", () => {
     expect(screen.queryByText("Download .pptx")).toBeNull()
   })
 
+  it("sizes the page type column to its longest label, shared by every row", async () => {
+    // A fixed width sized for two Chinese characters let "Content" run into
+    // the heading. jsdom does no layout, so this pins the rule that avoids it:
+    // the list owns the columns and each row follows them.
+    const Card = makeCard({ key: "pptwise_outline" })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: outline }))
+    const { container } = render(<Card block={block} />)
+    await waitFor(() => expect(container.querySelectorAll("li[data-page]")).toHaveLength(4))
+    const css = document.querySelector("#pptwise-dsh-style")!.textContent ?? ""
+    expect(css).toMatch(/\.pw-rows\{[^}]*grid-template-columns:22px max-content minmax\(0,1fr\)/)
+    expect(css).toMatch(/\.pw-row\{[^}]*grid-template-columns:subgrid/)
+  })
+
   it("says the outline is no longer there when the route has never heard of it", async () => {
     const Card = makeCard({ key: "pptwise_outline" })
     fetchMock.mockImplementation(async () => routeAnswer({ status: 404, code: "preview_unknown" }))
