@@ -229,6 +229,35 @@ describe("dsh plugin bundle manifest", () => {
     expect(pkg.keywords).toEqual(expect.arrayContaining(["dsh", "dsh-plugin"]))
   })
 
+  it("gives DSH's plugin page the product name and the brand icon", () => {
+    // DSH 0.1.7+ titles a plugin card from `locale/<lang>.json` `meta.title`
+    // and draws `package.json.icon`; without them the card read
+    // `@liustack/pptwise` beside the default artwork. The description is left
+    // to package.json, which the DSH market already reads.
+    const pkg = readJson("package.json") as {
+      icon?: string
+      exports?: Record<string, unknown>
+      files?: string[]
+    }
+    const locale = readJson("locale/en.json") as { meta?: Record<string, unknown> }
+    expect(locale.meta).toEqual({ title: "pptwise" })
+    expect(pkg.exports?.["./locale/*.json"]).toBe("./locale/*.json")
+    expect(pkg.exports?.["./package.json"]).toBe("./package.json")
+    expect(pkg.files).toContain("locale")
+
+    // The rules DSH applies before it will draw the icon: a relative path
+    // inside the package, a supported image type, at most 256 KiB, and a file
+    // the published package actually carries.
+    const icon = pkg.icon
+    expect(icon).toMatch(/^\.\/[^.][^:]*\.(svg|png|jpe?g|webp)$/)
+    const iconPath = join(ROOT, icon!)
+    const bytes = readFileSync(iconPath)
+    expect(bytes.length).toBeLessThanOrEqual(256 * 1024)
+    expect(bytes.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a")
+    const shipped = icon!.slice(2).split("/")[0]!
+    expect(pkg.files).toContain(shipped)
+  })
+
   it("cordis.patch.yml mounts the plugin under the scoped package name (card shows 'pptwise')", () => {
     const patch = readFileSync(join(ROOT, "cordis.patch.yml"), "utf8")
     expect(patch).toContain("name: '@liustack/pptwise'")

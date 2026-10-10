@@ -3,6 +3,7 @@
   "version": "0.40.0",
   "description": "A real PowerPoint, not HTML. Editable .pptx decks for AI agents, rendered on your own machine.",
   "homepage": "https://pptwise.com",
+  "icon": "./dsh/icon.png",
   "type": "module",
   "sideEffects": false,
   "license": "MIT",
@@ -13,6 +14,7 @@
   "exports": {
     ".": "./dsh/index.js",
     "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
     "./client": "./dsh/client.js"
   },
   "dsh": {
@@ -31,6 +33,7 @@
     "dist",
     "dsh",
     "cordis.patch.yml",
+    "locale",
     "skills/pptwise/SKILL.md",
     "skills/pptwise/SKILL.zh-CN.md",
     "skills/pptwise/scripts",
