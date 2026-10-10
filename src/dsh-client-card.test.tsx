@@ -2303,22 +2303,47 @@ describe("dsh draft desk — bookkeeping from the session log", () => {
     expect(definition.buildViewNode(ctxOf([{ event: start, role: "start" }], {}))).toBeNull()
   })
 
-  it("counts versions per deck from the earlier calls the log holds, and points at the last one", () => {
+  // A build call and its result, placed in a turn the way DSH places them.
+  function build(id: string, target: string, turn: number) {
+    const location = { kind: "step", turn: { turn }, step: { turn, step: 1 } }
+    return [
+      { event: { type: "tool/call", seq: 1, data: { callId: id, name: "pptwise_build", arguments: JSON.stringify({ target }) } }, role: "start", location },
+      { event: { type: "tool/result", seq: 2, data: { message: { source: { callId: id }, content: [{ text: `pptwise-preview:${id}-deck` }] } } }, role: "update", location },
+    ]
+  }
+
+  it("counts versions per deck by turn, and points at the last deck of an earlier turn", () => {
     const { definition, testing } = makeTail()
     expect(testing.deckKey("/ws/weekly/")).toBe("weekly")
     expect(testing.deckKey("weekly/deck.spec.json")).toBe("weekly")
-    const build = (id: string, target: string) => [
-      { event: { type: "tool/call", seq: 1, data: { callId: id, name: "pptwise_build", arguments: JSON.stringify({ target }) } }, role: "start" },
-      { event: { type: "tool/result", seq: 2, data: { message: { source: { callId: id }, content: [{ text: `pptwise-preview:${id}-deck` }] } } }, role: "update" },
-    ]
-    // First build of "weekly", then a build of another deck, then "weekly" again.
+    // Turn 1 builds "weekly", turn 2 builds another deck, turn 3 "weekly" again.
     const s1 = definition.start({}, {}, { previous: () => undefined })
-    const s2 = definition.start({}, {}, { previous: () => ({ state: s1, matches: build("one", "weekly") }) })
-    const s3 = definition.start({}, {}, { previous: () => ({ state: s2, matches: build("two", "/abs/other") }) })
-    const node = definition.buildViewNode(ctxOf(build("three", "/ws/weekly/"), s3))!
+    const s2 = definition.start({}, {}, { previous: () => ({ state: s1, matches: build("one", "weekly", 1) }) })
+    const s3 = definition.start({}, {}, { previous: () => ({ state: s2, matches: build("two", "/abs/other", 2) }) })
+    const node = definition.buildViewNode(ctxOf(build("three", "/ws/weekly/", 3), s3))!
     expect(node.data).toMatchObject({ id: "three-deck", version: 2, priorId: "one-deck" })
-    const other = definition.buildViewNode(ctxOf(build("four", "other"), definition.start({}, {}, { previous: () => ({ state: s3, matches: build("three", "weekly") }) })))!
+    const s4 = definition.start({}, {}, { previous: () => ({ state: s3, matches: build("three", "weekly", 3) }) })
+    const other = definition.buildViewNode(ctxOf(build("four", "other", 4), s4))!
     expect(other.data).toMatchObject({ version: 2, priorId: "two-deck" })
+  })
+
+  it("gives every build in one turn that turn's version, so a first turn is version 1 however often it built", () => {
+    // What a real turn did: a draft that needed revision, the clean build,
+    // then a preview of it. The user was handed one deck, version 1, with
+    // nothing earlier to compare it to.
+    const { definition } = makeTail()
+    const s1 = definition.start({}, {}, { previous: () => undefined })
+    const s2 = definition.start({}, {}, { previous: () => ({ state: s1, matches: build("draft", "launch/", 1) }) })
+    const s3 = definition.start({}, {}, { previous: () => ({ state: s2, matches: build("clean", "launch/", 1) }) })
+    for (const [id, state] of [["draft", s1], ["clean", s2], ["again", s3]] as const) {
+      expect(definition.buildViewNode(ctxOf(build(id, "launch/", 1), state))!.data).toMatchObject({ version: 1, priorId: null })
+    }
+    // The next turn's edit is version 2, compared with what turn 1 ended on,
+    // and stays version 2 through its own rebuilds.
+    const s4 = definition.start({}, {}, { previous: () => ({ state: s3, matches: build("again", "launch/", 1) }) })
+    expect(definition.buildViewNode(ctxOf(build("edit", "launch/", 2), s4))!.data).toMatchObject({ version: 2, priorId: "again-deck" })
+    const s5 = definition.start({}, {}, { previous: () => ({ state: s4, matches: build("edit", "launch/", 2) }) })
+    expect(definition.buildViewNode(ctxOf(build("edit2", "launch/", 2), s5))!.data).toMatchObject({ version: 2, priorId: "again-deck" })
   })
 })
 

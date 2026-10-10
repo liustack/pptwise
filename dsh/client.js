@@ -563,10 +563,15 @@ window.__ModuleLoader__.load({
     // session or a replayed one gets exactly the cards its own log implies,
     // and no plugin event is ever written into a session.
     //
-    // The version number comes from the same log: each call's state carries,
-    // per deck, how many decks came before it and the id of the last one,
+    // The version number comes from the same log and counts turns, not
+    // builds: a version is what one turn handed the user. The model may
+    // build three times in a turn (a draft that needs revision, the clean
+    // build, a preview of it), and the user still sees one deck, so every
+    // deck call in a turn shares that turn's number, and "the last version"
+    // is the last deck of an earlier turn. Each call's state carries, per
+    // deck, the turn and version of the latest call and the id it drew,
     // handed forward from the nearest earlier pptwise call. Only the events
-    // the client has loaded take part, so a deck whose earlier builds lie
+    // the client has loaded take part, so a deck whose earlier turns lie
     // before the loaded window counts from there.
     var ARTIFACT_KIND = 'pptwise-artifact'
     var ARTIFACT_TOOLS = {
@@ -666,15 +671,45 @@ window.__ModuleLoader__.load({
       return (parts[parts.length - 1] || '').replace(/\.json$/, '')
     }
 
-    /** The per-deck count and last id after the previous pptwise call. */
+    /**
+     * The turn a matched event belongs to, or null where DSH placed it in no
+     * turn. A call with no turn counts as a turn of its own.
+     */
+    function turnOf(match) {
+      var location = match && match.location
+      if (!location || (location.kind !== 'turn' && location.kind !== 'step')) return null
+      return location.turn ? location.turn.turn : null
+    }
+
+    function startOf(matches) {
+      for (var i = 0; i < matches.length; i++) if (matches[i].role === 'start') return matches[i]
+      return matches[0]
+    }
+
+    /**
+     * Which version a deck call in `turn` belongs to, given the record the
+     * earlier calls left for that deck: the same one as an earlier call in
+     * the same turn, otherwise one more than the last, compared with the
+     * deck that last one drew.
+     */
+    function placeVersion(record, turn) {
+      if (!record) return { version: 1, priorId: null }
+      if (turn !== null && record.turn === turn) return { version: record.version, priorId: record.priorId }
+      return { version: record.version + 1, priorId: record.lastId }
+    }
+
+    /** The per-deck record after the previous pptwise call. */
     function decksAfter(previous) {
       if (!previous) return {}
       var base = (previous.state && previous.state.decks) || {}
-      var info = artifactInfo(previous.matches || [])
+      var matches = previous.matches || []
+      var info = artifactInfo(matches)
       if (info.kind !== 'deck' || !info.id) return base
       var key = deckKey(info.target)
+      var turn = turnOf(startOf(matches))
+      var placed = placeVersion(base[key], turn)
       var next = Object.assign({}, base)
-      next[key] = { count: (base[key] ? base[key].count : 0) + 1, lastId: info.id }
+      next[key] = { turn: turn, version: placed.version, priorId: placed.priorId, lastId: info.id }
       return next
     }
 
@@ -695,7 +730,7 @@ window.__ModuleLoader__.load({
         var info = artifactInfo(context.matches)
         if (!info.id || !info.kind) return null
         var decks = (context.state && context.state.decks) || {}
-        var before = info.kind === 'deck' ? decks[deckKey(info.target)] : undefined
+        var placed = info.kind === 'deck' ? placeVersion(decks[deckKey(info.target)], turnOf(start)) : { version: 1, priorId: null }
         return {
           key: context.key,
           kind: ARTIFACT_KIND,
@@ -710,8 +745,8 @@ window.__ModuleLoader__.load({
             kind: info.kind,
             id: info.id,
             target: info.target,
-            version: before ? before.count + 1 : 1,
-            priorId: before ? before.lastId : null,
+            version: placed.version,
+            priorId: placed.priorId,
           },
         }
       },
