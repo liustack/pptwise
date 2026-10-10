@@ -13,8 +13,8 @@ import {
 import { CANVAS_H_PX, CANVAS_W_PX } from "../constants"
 import { PptwiseError } from "../errors"
 import { VERSION } from "../version"
-import type { PptxIR } from "../ir"
-import { compileThemeDefinition, type ThemeDefinition } from "../themes/definitions"
+import type { PageKind, PptxIR } from "../ir"
+import { compileThemeDefinition, THEME_DEFINITIONS, type ThemeDefinition } from "../themes/definitions"
 import { componentJsonSchema } from "../ir/json-schema"
 import { PPTX_ICON_NAMES } from "../icons/catalog"
 import { kindJsonSchema } from "../kind-components"
@@ -27,7 +27,7 @@ import { auditDeck, type AuditChecks, type AuditFinding, type AuditReport } from
 import { buildAssetBrief, type AssetBrief, type AssetBriefItem } from "../render/asset-brief"
 import { dropPhrase, parseDropKind, type DropKind } from "../render/drop-marker"
 import { extractBrandTheme, slugify } from "../themes/extract/brand-extract"
-import { ThemeFileSchema, type ThemeFile } from "../themes/schema"
+import { ThemeFileSchema, type Menu, type ThemeFile } from "../themes/schema"
 import { THEME_OCCASIONS } from "../themes/occasions"
 import { CANONICAL_THEME_IDS } from "../themes/index"
 import { RETIRED_THEME_IDS, foldedThemeTarget } from "../themes/retired-ids"
@@ -1028,6 +1028,26 @@ export function runIcons(asJson: boolean): string {
   return asJson ? JSON.stringify([...PPTX_ICON_NAMES], null, 2) : PPTX_ICON_NAMES.join("\n")
 }
 
+/**
+ * What a theme's menu offers, as `themes --json` lists it: the face each
+ * boundary page type resolves to, and the face each offered content kind
+ * resolves to, in the kind vocabulary's own order. A kind the theme does not
+ * offer is absent. Read off the compiled menu, the same table validate and
+ * render resolve pages through, so it cannot list a page the theme refuses.
+ */
+interface ThemeMenuFaces {
+  cover: string
+  chapter: string
+  ending: string
+  content: Partial<Record<PageKind, string>>
+}
+
+function menuFaces(menu: Menu): ThemeMenuFaces {
+  const content: Partial<Record<PageKind, string>> = {}
+  for (const kind of offeredContentKinds(menu)) content[kind] = menu.content[kind]!.face
+  return { cover: menu.cover.face, chapter: menu.chapter.face, ending: menu.ending.face, content }
+}
+
 interface ThemeListRow {
   id: string
   label: string
@@ -1038,6 +1058,7 @@ interface ThemeListRow {
   source: "builtin" | "pack"
   /** The pack id, for a pack theme. */
   pack?: string
+  menu: ThemeMenuFaces
 }
 
 /** An installed pack that could not be read, listed in place of its themes. */
@@ -1129,7 +1150,7 @@ async function readablePackDefinitions(): Promise<ThemeDefinition[]> {
  *  cannot be read (see {@link readInstalledPackThemes}). */
 function packThemeRows(read: InstalledPackRead): (ThemeListRow | PackErrorRow)[] {
   if (!read.ok) return [{ source: "pack", pack: read.id, error: read.error }]
-  return read.themes.map(({ file }) => ({
+  return read.themes.map(({ file, definition }) => ({
     id: file.id,
     label: file.label ?? file.id,
     colors: { ...file.style.colors },
@@ -1137,6 +1158,7 @@ function packThemeRows(read: InstalledPackRead): (ThemeListRow | PackErrorRow)[]
     identity: file.identity ?? null,
     source: "pack",
     pack: read.id,
+    menu: menuFaces(definition.menu),
   }))
 }
 
@@ -1156,6 +1178,7 @@ export async function runThemes(asJson: boolean): Promise<string> {
       occasions: rec?.occasions ?? [],
       identity: rec?.identity ?? null,
       source: "builtin" as const,
+      menu: menuFaces(THEME_DEFINITIONS[t.id as keyof typeof THEME_DEFINITIONS].menu),
     }
   })
   for (const read of await readInstalledPackThemes()) rows.push(...packThemeRows(read))

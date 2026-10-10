@@ -5,6 +5,7 @@ import { join } from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { THEME_DEFINITIONS } from "../../themes/definitions"
+import { offeredContentKinds } from "../../render/layout-selection"
 import { VERSION } from "../../version"
 import { runRender, runSchema, runSpecValidate, runThemeNew, runThemes } from "../commands"
 import { resolveThemeByName } from "../theme-resolve"
@@ -203,6 +204,11 @@ describe("pptwise themes with installed packs", () => {
     ])
     expect(rows[22]).toHaveProperty("colors.primary")
     expect(rows[22]).toHaveProperty("identity")
+    // A pack theme's menu comes from its own compiled file, not a preset's.
+    const packMenu = (await resolveThemeByName("sample-brief", { startDir: cwd })).definition.menu
+    expect(rows[22]!.menu).toMatchObject({ cover: packMenu.cover.face, ending: packMenu.ending.face })
+    expect(Object.keys(rows[22]!.menu as { content: object }).length).toBe(4)
+    expect(Object.keys((rows[22]!.menu as { content: object }).content)).toEqual(offeredContentKinds(packMenu))
     const text = (await runThemes(false)).split("\n")
     expect(text).toHaveLength(24)
     expect(text[22]).toMatch(/^sample-brief\s+Pack sample-brief\s+\(pack sample\)$/)

@@ -18,6 +18,8 @@ pptwise narratives --json
 pptwise themes --json
 ```
 
+Each theme row in `themes --json` carries its `menu`. The keys of `menu.content` are the content kinds the theme offers, so read them there to learn whether a theme serves a kind. A kind missing from `menu.content` fails `spec validate` for that theme. Never search the installed package's files for menus.
+
 The IR component contract is read per page during fill with `pptwise inspect deck-dir/ --page <id>`. See `components.md`.
 
 The command output and workspace files outrank this guide. Scan for an existing `deck.spec.json`, deck-local `theme.json`, workspace `themes/`, and supplied Office brand files before asking questions.

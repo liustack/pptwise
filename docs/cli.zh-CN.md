@@ -184,6 +184,17 @@ pptwise theme try <id,id,...> [-o <dir>]
 
 `themes --json` 为每一行标出 `source`：出厂预设是 `builtin`，已装内容包提供的主题是 `pack`，并带上 `pack` id。读不出来的包列为一条带 `error` 字段的条目，不影响其余条目。
 
+每个主题行还带 `menu`：`cover`、`chapter`、`ending` 各自落到的版式，以及 `content` 下这个主题提供的每种内容 kind 落到的版式，按 kind 词表的顺序排列。主题不提供的 kind 不出现在 `content` 里，spec 里写了这种 kind 的页会被 `spec validate` 拒绝。这份列表读自 validate 和 render 解析页面所用的同一份编译后菜单。crayon 那一行的一部分：
+
+```json
+"menu": {
+  "cover": "crayonbox-cover",
+  "chapter": "crayonbox-chapter",
+  "ending": "crayonbox-ending",
+  "content": { "points": "crayonbox-sheet", "list": "crayonbox-sheet", "statement": "crayonbox-sheet" }
+}
+```
+
 主题名称先从 deck 目录解析，再从向上查找的工作区 `themes/` 目录解析，再查已装内容包，最后查出厂预设。未知名称报错，并列出查过的每个位置，包括每个已装包的目录。Deck 与工作区文件可以保名遮蔽出厂预设或包内主题。主题 id 必须匹配 `^[a-z0-9-]+$`。覆盖已有主题文件需要 `--force`。
 
 ## 品牌抽取

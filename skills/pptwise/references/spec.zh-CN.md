@@ -23,6 +23,8 @@ pptwise narratives --json
 pptwise themes --json
 ```
 
+`themes --json` 的每个主题行都带 `menu`。`menu.content` 的键就是这个主题提供的内容 kind，想知道某个主题支不支持某种 kind，就读这里。`menu.content` 里没有的 kind，用这个主题时 `spec validate` 会报错。不要去翻已安装包的文件找菜单。
+
 IR 组件契约在填页时用 `pptwise inspect deck-dir/ --page <id>` 按页读取。见 `components.md`。
 
 命令输出与工作区文件优先于本指南。提问前先找已有 `deck.spec.json`、deck 内 `theme.json`、工作区 `themes/`，以及用户递来的 Office 品牌文件。
