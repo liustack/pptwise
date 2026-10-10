@@ -1,10 +1,10 @@
 // Browser half of the pptwise dsh plugin: the deck preview card.
 //
-// The host half (`./preview-tool.js`) registers `pptwise_preview` and puts
-// the rendered bundle on `output.presentationMeta` — a channel persisted with
-// the session log and never shown to the model. This file is what turns that
-// payload into something a person can look at: a thumbnail strip in the tool
-// card, and a full-size modal on click. No new tab, no localhost URL, no
+// The host half (`./preview-tool.js`) registers `pptwise_preview`, stamps a
+// preview id into the tool's result text, and serves the rendered bundle from
+// its own route under that id. This file is what turns that payload into
+// something a person can look at: a thumbnail strip in the tool card, and a
+// full-size modal on click. No new tab, no localhost URL, no
 // "open this link yourself", which is the whole reason the tool exists.
 //
 // `dsh.client.immediately` is not optional for this plugin. The client module
@@ -338,11 +338,13 @@ window.__ModuleLoader__.load({
     /**
      * Pull the preview bundle out of a frozen tool-call node.
      *
-     * `presentationMeta` is projected into the result's view/meta by the
-     * host; the exact field the runtime lands it on has moved between rc
+     * Only sessions saved by an older host half have one: it used to put the
+     * whole bundle on `presentationMeta`, and those logs still carry it. The
+     * current host half sends the id alone (the bundle in the tool's value
+     * reached the model under Code Mode), so a new card always comes from the
+     * route. The exact field the runtime lands meta on has moved between rc
      * builds, so this reads the handful of shapes it can appear under rather
-     * than pinning one. Returning null simply falls through to the route,
-     * which is where a Code Mode sub-call's deck has to come from anyway.
+     * than pinning one. Returning null falls through to the route.
      */
     function bundleOf(block) {
       if (!block) return null
@@ -1058,9 +1060,9 @@ window.__ModuleLoader__.load({
         // refused request both told the user their deck had been deleted.
         var settled = isFinal(verdict)
 
-        // Structured payload when the runtime computed one (native-mode,
-        // top-level call); otherwise fetch it by id from the plugin's own
-        // route, which is what Code Mode's sub-calls need.
+        // A bundle a saved session already carries (see `bundleOf`); otherwise
+        // fetch it by id from the plugin's own route, which is how every card
+        // the current host half produces gets its deck, in both modes.
         useEffect(
           function () {
             // `!mine` is the render between arriving at a deck and

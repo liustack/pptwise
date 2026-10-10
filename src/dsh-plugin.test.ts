@@ -212,10 +212,11 @@ interface PreviewRecord {
 interface PreviewValue {
   previewId: string
   outDir: string
+  title?: string
   pageCount: number
   findingCount: number
   audited: boolean
-  bundle: { title?: string; draft?: boolean; pages: { svg?: string | null }[] }
+  draft: boolean
 }
 
 interface RouteRegistration {
@@ -235,8 +236,9 @@ interface PreviewService {
     name: string
     description: string
     output: {
+      schema: { properties: Record<string, unknown>; required: string[]; additionalProperties: boolean }
       render: (a: unknown, v: unknown) => { type: string; text: string }[]
-      presentationMeta: (a: unknown, v: unknown) => { card: string; bundle: { pages: unknown[] } }
+      presentationMeta: (a: unknown, v: unknown) => Record<string, unknown>
     }
     execute: (args: { target: string }, exec?: unknown) => Promise<PreviewValue>
   }
@@ -314,20 +316,20 @@ async function loadPreviewTool(): Promise<PreviewModule> {
 }
 
 describe("pptwise_preview tool", () => {
-  it("shows the model one line and the card the whole deck", async () => {
+  it("shows the model one line and hands the card the id it fetches the deck by", async () => {
     // The split this tool exists for. A deck's markup is tens of kilobytes
-    // and tells the model nothing it can act on, so it rides
-    // `presentationMeta` (persisted, card-facing) while the model gets a
-    // summary. Putting the deck in the model-facing content instead would
-    // spend the context window on SVG.
+    // and tells the model nothing it can act on, so the model gets a summary
+    // and the card gets an id. `presentationMeta` is a pure projection of the
+    // value, so it can carry no more than the value does.
     const { definePreviewTool } = await loadPreviewTool()
     const tool = definePreviewTool("/does/not/run/here.js")
     const value = {
+      previewId: "abc-123",
       outDir: "/tmp/x",
       pageCount: 9,
       findingCount: 0,
       audited: true,
-      bundle: { pages: [{ id: "page-001", svg: "<svg/>" }] },
+      draft: false,
     }
 
     const modelText = tool.output.render({}, value)[0]!.text
@@ -335,9 +337,7 @@ describe("pptwise_preview tool", () => {
     expect(modelText).toContain("audit clean")
     expect(modelText).not.toContain("<svg")
 
-    const meta = tool.output.presentationMeta({}, value)
-    expect(meta.card).toBe("pptwise-preview")
-    expect(meta.bundle.pages).toHaveLength(1)
+    expect(tool.output.presentationMeta({}, value)).toEqual({ card: "pptwise-preview", previewId: "abc-123" })
   })
 
   it("never reports an unaudited deck as clean", async () => {
@@ -351,7 +351,7 @@ describe("pptwise_preview tool", () => {
       pageCount: 3,
       findingCount: 0,
       audited: false,
-      bundle: { pages: [] },
+      draft: false,
     })[0]!.text
     expect(text).toContain("audit skipped")
     expect(text).not.toContain("clean")
@@ -559,7 +559,7 @@ describe("preview payload channel", () => {
       pageCount: 4,
       findingCount: 0,
       audited: true,
-      bundle: { pages: [] },
+      draft: false,
     })[0]!.text
     expect(text).toContain("pptwise-preview:abc-123")
     expect(text).not.toContain("<svg")
@@ -1585,6 +1585,41 @@ describe("preview route (the handler DSH actually calls)", () => {
     }
   })
 
+  it("hands a Code Mode program the deck's facts, never its pages", async () => {
+    // Under Code Mode the value `execute` returns is what the model's
+    // `run_code` program receives, and models print it back. When it carried
+    // the bundle, a four-page deck put 14 KB of SVG into the context window
+    // on DSH 0.2.0-rc.2, and a long deck with photos far more. The pages are
+    // the route's to serve.
+    const { handler, route, value, svc } = await servedPreview("route-value-small")
+    const json = JSON.stringify(value)
+
+    expect(json).not.toMatch(/<svg|svg"|"pages"/)
+    expect(json.length).toBeLessThan(600)
+    expect(Object.keys(value).sort()).toEqual(
+      ["audited", "draft", "findingCount", "outDir", "pageCount", "previewId", "title"].sort(),
+    )
+    expect(value).toMatchObject({ title: "e2e", pageCount: 1, draft: false })
+
+    // Every key is one the declared schema names, and the schema admits no
+    // others, so DSH's own output validation holds the line too.
+    const { schema } = svc.tool.output
+    expect(schema.additionalProperties).toBe(false)
+    for (const key of Object.keys(value)) expect(Object.keys(schema.properties)).toContain(key)
+    for (const key of schema.required) expect(value).toHaveProperty(key)
+
+    // The card's channel, in both modes: the id, and the route behind it.
+    expect(svc.tool.output.presentationMeta({}, value)).toEqual({
+      card: "pptwise-preview",
+      previewId: value.previewId,
+    })
+    const bundle = JSON.parse((await request(handler, `${route}/${value.previewId}`)).body.toString("utf8")) as {
+      pages: { svg: string }[]
+    }
+    expect(bundle.pages).toHaveLength(1)
+    expect(bundle.pages[0]!.svg).toContain("LOGO-V1")
+  })
+
   it("serves the rendered bundle to the card", async () => {
     const { handler, route, value } = await servedPreview("route-bundle")
     const res = await request(handler, `${route}/${value.previewId}`)
@@ -1782,7 +1817,7 @@ describe("preview route (the handler DSH actually calls)", () => {
     // ...and everything the user sees says "draft": the card badge rides the
     // bundle, the saved file's own name carries it, and so does the line the
     // model reads.
-    expect(value.bundle.draft).toBe(true)
+    expect(value.draft).toBe(true)
     expect(res.headers["content-disposition"]).toBe('attachment; filename="e2e-draft.pptx"')
     const { definePreviewTool } = await loadPreviewTool()
     expect(definePreviewTool("/x.js").output.render({}, value)[0]!.text).toContain("draft")
@@ -1794,7 +1829,7 @@ describe("preview route (the handler DSH actually calls)", () => {
     // consequence of what the preview showed.
     const { cliPath, value } = await servedPreview("route-no-draft")
     expect((await cliInvocations(cliPath)).some((line) => line.includes("--draft"))).toBe(false)
-    expect(value.bundle.draft).toBe(false)
+    expect(value.draft).toBe(false)
   })
 
   it("answers an unknown id with 404 and a malformed one with the same, never a stack trace", async () => {
@@ -3628,7 +3663,7 @@ describe("what the card does with a bad answer", () => {
         pageCount,
         findingCount: 0,
         audited: true,
-        bundle: { pages: [] },
+        draft: false,
       })[0]!.text
       expect(parse.pageCountOf({ content: [{ type: "text", text }] })).toBe(pageCount)
     }

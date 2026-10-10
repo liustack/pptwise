@@ -24,6 +24,10 @@
 // - the MODEL sees one short line from `output.render`, plus a preview id.
 //   A deck's SVG runs to tens of kilobytes and carries nothing the model can
 //   act on, so it never enters the transcript.
+// - the canonical VALUE `execute` returns is small facts only: the id, the
+//   page count, the title. Under Code Mode that value is what the model's
+//   program receives (and usually prints back), not the `render` line, so a
+//   bundle carried in it put every page's SVG into the context window.
 // - the CARD reads that id out of the result text and fetches from the route:
 //   the bundle for its thumbnail strip, and `preview.html` for the viewer it
 //   opens in an iframe. Same-origin loopback only.
@@ -1398,7 +1402,7 @@ function modelSummary(value) {
   bits.unshift(`pptwise-preview:${value.previewId}`)
   // The model is the one who can act on this: the pages are still unfilled,
   // and the export it just handed the user is labelled a draft.
-  if (value.bundle && value.bundle.draft) bits.push('draft — some pages are unfilled placeholders')
+  if (value.draft) bits.push('draft — some pages are unfilled placeholders')
   if (value.findingCount > 0) bits.push(`${value.findingCount} audit finding${value.findingCount === 1 ? '' : 's'}`)
   else if (value.audited) bits.push('audit clean')
   else bits.push('audit skipped')
@@ -1850,18 +1854,24 @@ export function createPreviewService(cliPath) {
       additionalProperties: false,
     },
     output: {
+      // The canonical value, and under Code Mode the model's own copy of this
+      // call: a `run_code` program receives exactly this object. So it holds
+      // facts the model can act on and nothing else. The pages live on disk
+      // and reach the card through the route, keyed by `previewId`; closed to
+      // extra properties so a bundle cannot ride back in unnoticed.
       schema: {
         type: 'object',
         properties: {
           previewId: { type: 'string' },
           outDir: { type: 'string' },
+          title: { type: 'string' },
           pageCount: { type: 'number' },
           findingCount: { type: 'number' },
           audited: { type: 'boolean' },
-          bundle: { type: 'object', additionalProperties: true },
+          draft: { type: 'boolean' },
         },
-        required: ['previewId', 'outDir', 'pageCount', 'findingCount', 'audited', 'bundle'],
-        additionalProperties: true,
+        required: ['previewId', 'outDir', 'pageCount', 'findingCount', 'audited', 'draft'],
+        additionalProperties: false,
       },
       // Model-facing: one line. The deck itself is not information the model
       // can act on, and putting it here would spend the context window on
@@ -1869,11 +1879,13 @@ export function createPreviewService(cliPath) {
       render(_args, value) {
         return [{ type: 'text', text: modelSummary(value) }]
       },
-      // Still declared: on a top-level (native-mode) call this is the better
-      // channel, and the card prefers it when present. Code Mode simply never
-      // computes it, which is why the route exists as well.
+      // A pure projection of the value (DSH computes it from `value` alone, for
+      // top-level calls only), so it can carry no more than the value does:
+      // the id, which the card fetches the deck by in both modes. Cards in
+      // sessions saved before this carry a whole bundle here, and the card
+      // still draws those from it.
       presentationMeta(_args, value) {
-        return { card: 'pptwise-preview', previewId: value.previewId, bundle: value.bundle }
+        return { card: 'pptwise-preview', previewId: value.previewId }
       },
     },
     async execute(args, exec) {
@@ -1914,13 +1926,14 @@ export function createPreviewService(cliPath) {
       return {
         previewId,
         outDir,
+        ...(typeof bundle.title === 'string' ? { title: bundle.title } : {}),
         pageCount: bundle.pages.length,
         findingCount,
         // `checks` is present only when the audit actually ran. Absent is not
         // "clean" — the preview manifest goes out of its way to keep those two
         // apart, and collapsing them here would undo that.
         audited: Boolean(bundle.checks),
-        bundle,
+        draft: bundle.draft,
       }
     },
     timeoutMs: 120_000,

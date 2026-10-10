@@ -779,6 +779,24 @@ describe("dsh preview card — fetching by id (Code Mode)", () => {
     expect(screen.getByText("2 pages")).toBeInTheDocument()
   })
 
+  it("draws a top-level call's deck from the route too, since its meta carries only the id", async () => {
+    // The host half's `presentationMeta` is now `{ card, previewId }`: the
+    // bundle left the tool's value so it stops reaching the model under Code
+    // Mode, and meta is projected from that value. A native-mode card must
+    // still draw, and it does it the Code Mode way.
+    respondWith({ A: bundleOf([page(1), page(2)], "Deck A") })
+    const Card = makeCard()
+    const block = {
+      content: [{ text: "pptwise-preview:A · rendered 2 pages to /tmp/out" }],
+      meta: { card: "pptwise-preview", previewId: "A" },
+    }
+    const { container } = render(<Card block={block} />)
+
+    expect(await screen.findByText("Deck A")).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/A")
+    expect(container.querySelectorAll("svg")).toHaveLength(2)
+  })
+
   it("re-fetches and stops showing the old deck when the same instance moves to another preview", async () => {
     respondWith({ A: bundleOf([page(1)], "Deck A"), B: bundleOf([page(1), page(2)], "Deck B") })
     const Card = makeCard()
