@@ -105,7 +105,7 @@ Audit renders deterministic SVG and checks:
 
 Any finding exits with code 1. `--pixels` adds image-backed text contrast sampling and requires `sharp`.
 
-A `low-contrast` finding on a page whose `background` is a mid-tone color, about as light as `#777777` or `#6B7B8C`, is fixed at the background. The renderer already sets text the theme's ink cannot carry there in pure black and shades cards to the side where that black still reads, so what is left is a mark a face sets in the theme's own color straight on the page, such as a large chapter numeral, and the text color is the theme's, so move the background lighter or darker.
+A `low-contrast` finding on a page whose `background` is a mid-tone color, about as light as `#777777` or `#6B7B8C`, is fixed at the background. The renderer already sets text the theme's ink cannot carry there in pure black and shades cards to the side where that black still reads, so what is left is a mark a face measures against the page while it stands on a band of the face's own, such as a cover's confidentiality mark, and the text color is the theme's, so move the background lighter or darker.
 
 A cut is weighed by the field it cut. The page's heading, subheading and source line (`footnote`), and every word a component carries except its tags, are text a reader needs whole. When the theme's layout cuts one of them, a plainer layout that draws them whole takes the page, and audit reports `stepped-aside`. `content-truncated` then names a cut no layout could avoid, with the field and its tier in `detail` (`"tier": "hard"`). A cut kicker, stamp, tag or other label stays on the theme's layout and is reported as `"tier": "declared"`.
 

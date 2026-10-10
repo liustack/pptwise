@@ -65,7 +65,7 @@ export function PitchChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
           fontWeight="700"
           letterSpacing={NUMERAL.tracking}
           fill="none"
-          stroke={inks.fire}
+          stroke={inks.fireType}
           strokeWidth={NUMERAL.stroke}
           dominantBaseline="alphabetic"
         >

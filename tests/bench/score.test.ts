@@ -156,7 +156,7 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     expect(score.deterministic).toBeNull()
   })
 
-  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (an ember chapter numeral on a mid-grey page)", async () => {
+  it("fx03 (degraded): validates clean but auditDeck flags a real low-contrast finding (a runway cover's confidentiality mark on a mid-grey page)", async () => {
     // This fixture needs a low-contrast source that is real, theme-stable
     // and out of scope for whatever fix round is running — and it has now
     // outlived two of them. It started as kpi_cards' hardcoded delta-arrow
@@ -195,8 +195,13 @@ describe("scoreQuestion — degraded-model (validate-failing / audit-positive / 
     // in a softened black at about 4.45:1 on the card, until a softened ink
     // went to full strength where softened it does not read.
     //
-    // Now an ember chapter painted `#777777`: its numeral is set in the
-    // theme's orange at about 1.37:1 on the grey. The deck's row cards, on
+    // Then an ember chapter painted `#777777`, its numeral in the theme's
+    // orange at about 1.37:1 on the grey, until the fire as type was held to
+    // a painted page (`brandInkOnGround`).
+    //
+    // Now a runway cover painted `#777777` and marked internal: the mark
+    // takes its ink from the grey page, pure black, and stands at about
+    // 1.14:1 on the cover's own near-black band. The deck's row cards, on
     // the theme's own page, are what `coverageHits` below reads.
     const metas = await loadQuestionMetas(QUESTIONS_DIR)
     const meta = metas.find((m) => m.id === "fx03")!

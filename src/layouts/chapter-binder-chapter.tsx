@@ -55,7 +55,10 @@ export function chapterNumber(slides: readonly { type: string }[], index: number
 export function BinderChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const inks = binderInks(ctx)
   const photo = slide.background?.kind === "asset"
-  const ground = inks.deep
+  // The page the words stand on: the theme's petrol on its own chapter page,
+  // the scrim's petrol over a photograph, and the author's paint on a page
+  // painted another colour, where the petrol is not there to read on.
+  const ground = inks.ground
   const white = (alpha: number) => blendOver(inks.onDeep, ground, alpha)
   const number = chapterNumber(ir.slides, index)
   const kicker = slide.kicker?.trim() ? stripEmphasis(slide.kicker).trim() : ""
