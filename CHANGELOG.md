@@ -1,5 +1,15 @@
 # @liustack/pptwise
 
+## 0.42.0 - 2026-10-10
+
+### Minor Changes
+
+- 4127e73: New `pptwise build <deck> [--json]` runs assemble, validate, audit, preview and render in one pass. It reports every problem in one list, each with its page, the file and field to edit, and the check's own advice, and exits 1 while the deck needs revision. The pages are drawn whenever validate passes. The `.pptx` is written only when every check passes, at the same `.pptwise/<deck>/<deck>.pptx` path `render` uses, and a build that does not pass removes the one an earlier build left there, so a deck has one final file and it always matches its sources.
+- 8f8268b: The DSH plugin adds two tools. `pptwise_themes` draws the user's own title as a cover, plus one content page, in every theme and shows them side by side in the conversation, so a theme is picked by looking rather than by reading names. `pptwise_build` runs `pptwise build` in the conversation's workspace, shows the drawn pages in the same card as `pptwise_preview`, and hands the model either the deck's one `.pptx` or each problem with its page, file and field. Both return small facts to the model and serve the pages to the card by id, so they work the same in Code Mode and in direct calls. A build that needs revision shows its pages without a download button.
+- e6c5d13: The skill now shows the user the theme and the outline before going on: a theme wall drawn with their own cover title (`pptwise_themes`, or `theme try --title` outside DSH) and the validated spec as a page list, previewed as soon as it exists. A user who says to go ahead is not asked, but still sees both. The agent checks its work through `pptwise build --json` (or `pptwise_build`) after each batch instead of converting pages to images, and delivers only the one `.pptx` that build wrote, through `present` on DSH.
+- 0cbf0d8: `pptwise theme try` can draw your own deck instead of the fixed English sample. Pass `--title` (and optionally `--subtitle`, `--lang zh|en`, or `--page <file>` with one content page) and each named theme, or `all` of them, draws that cover and one content page. Every page is written as its own SVG next to `manifest.json` and the contact sheet, so an agent or a chat host can show the pages directly. A page a theme cannot draw, such as a title its cover would cut, is left out of that theme with validate's reason. Without `--title` the command works as before.
+- 7d25a42: `pptwise themes --json` now lists each theme's menu: the face its cover, chapter and ending use, and the face of every content kind it offers under `content`. A kind a theme does not offer is absent, so an agent can tell whether a theme serves a page before it writes the spec.
+
 ## 0.41.0 - 2026-10-10
 
 ### Minor Changes
