@@ -61,6 +61,12 @@ window.__ModuleLoader__.load({
 
     var TOOL_NAME = 'pptwise_preview'
 
+    /** The one-pass build. Its result carries the same preview stamp, so the deck card draws it. */
+    var BUILD_TOOL_NAME = 'pptwise_build'
+
+    /** The theme wall, drawn by its own card below. */
+    var THEMES_TOOL_NAME = 'pptwise_themes'
+
     /**
      * How many thumbnails the strip draws.
      *
@@ -308,6 +314,12 @@ window.__ModuleLoader__.load({
     /** The preview id the tool stamped into its own result text. */
     function previewIdOf(block) {
       var m = /pptwise-preview:([A-Za-z0-9-]+)/.exec(resultTextOf(block))
+      return m ? m[1] : null
+    }
+
+    /** The theme wall's id, stamped the same way by `pptwise_themes`. */
+    function wallIdOf(block) {
+      var m = /pptwise-themes:([A-Za-z0-9-]+)/.exec(resultTextOf(block))
       return m ? m[1] : null
     }
 
@@ -992,7 +1004,7 @@ window.__ModuleLoader__.load({
       }
 
       /** The card itself: a strip of thumbnails, and a button that opens the viewer. */
-      return function PptwisePreviewCard(props) {
+      function PptwisePreviewCard(props) {
         var direct = bundleOf(props.block)
         var previewId = previewIdOf(props.block)
         var pageCount = pageCountOf(props.block)
@@ -1228,6 +1240,9 @@ window.__ModuleLoader__.load({
         var findingCount = bundle.pages.reduce(function (n, p) {
           return n + ((p.findings && p.findings.length) || 0)
         }, 0)
+        // Only a build that needs revision says false: it drew the pages and
+        // wrote no .pptx, so there is nothing for a download button to fetch.
+        var exportable = bundle.exportable !== false
 
         return h(
           'div',
@@ -1265,6 +1280,24 @@ window.__ModuleLoader__.load({
                   'draft',
                 )
               : null,
+            exportable
+              ? null
+              : h(
+                  'span',
+                  {
+                    title: 'This build needs revision, so it wrote no .pptx',
+                    style: {
+                      border: '1px solid ' + COLORS.line,
+                      borderRadius: 5,
+                      padding: '0 6px',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      fontSize: 10,
+                      letterSpacing: '0.04em',
+                    },
+                  },
+                  'needs revision',
+                ),
             h('span', null, bundle.pages.length + ' pages'),
             findingCount > 0 ? h('span', null, findingCount + ' audit findings') : null,
             // No viewer without an id, and none for an id the route has
@@ -1291,7 +1324,7 @@ window.__ModuleLoader__.load({
                   'Open',
                 )
               : null,
-            previewId
+            previewId && exportable
               ? h(ExportButton, {
                   previewId: previewId,
                   name: bundle.title,
@@ -1343,7 +1376,7 @@ window.__ModuleLoader__.load({
           deck.viewerOpen && previewId && !settled
             ? h(Modal, {
                 src: previewHtmlUrl(previewId, deck.viewerPage),
-                previewId: previewId,
+                previewId: exportable ? previewId : null,
                 name: bundle.title,
                 draft: bundle.draft,
                 downloadStatus: deck.download,
@@ -1355,6 +1388,176 @@ window.__ModuleLoader__.load({
             : null,
         )
       }
+
+      /** What the theme card says once the route has said it cannot serve the wall. */
+      function wallHintFor(verdict) {
+        if (verdict === 'gone') {
+          return 'This theme wall is no longer on disk where this session looks for it. Run pptwise_themes again to draw it.'
+        }
+        return hintFor(verdict)
+      }
+
+      /**
+       * The theme wall: one column per theme, its cover over its content
+       * page, in the same thumbnail strip the deck card draws. Open shows the
+       * contact sheet full size. No download: a wall has no deck behind it.
+       *
+       * Simpler than the deck card on purpose. There is no export to race and
+       * no viewer page to remember, so one fetch per wall id is the whole of
+       * its state, and an answer for an id the card has left is dropped.
+       */
+      function PptwiseThemesCard(props) {
+        var wallId = wallIdOf(props.block)
+        var state = useState({ id: null, bundle: null, verdict: null, open: false, attempt: 0 })
+        var wall = wallId !== null && state[0].id === wallId ? state[0] : { id: null, bundle: null, verdict: null, open: false, attempt: 0 }
+        var setWall = state[1]
+        var attempt = state[0].attempt
+
+        useEffect(
+          function () {
+            if (!wallId) return undefined
+            var left = false
+            fetch(previewBundleUrl(wallId))
+              .then(function (r) {
+                return verdictOf(r).then(function (answer) {
+                  if (answer !== 'alive') return { verdict: answer, bundle: null }
+                  return r.json().then(function (b) {
+                    return { verdict: 'alive', bundle: b }
+                  })
+                })
+              })
+              .catch(function () {
+                return { verdict: UNREACHABLE_VERDICT, bundle: null }
+              })
+              .then(function (next) {
+                if (left) return
+                setWall(function (prev) {
+                  return { id: wallId, bundle: next.bundle, verdict: next.verdict, open: false, attempt: prev.attempt }
+                })
+              })
+            return function () {
+              left = true
+            }
+          },
+          [wallId, attempt],
+        )
+
+        function update(change) {
+          setWall(function (prev) {
+            return Object.assign({}, prev, change)
+          })
+        }
+
+        var bundle = wall.bundle
+        var buttonStyle = {
+          marginLeft: 'auto',
+          font: 'inherit',
+          fontSize: 12,
+          padding: '3px 10px',
+          borderRadius: 7,
+          border: '1px solid ' + COLORS.line,
+          background: 'transparent',
+          color: COLORS.text,
+          cursor: 'pointer',
+        }
+
+        if (!bundle || !Array.isArray(bundle.themes)) {
+          if (wall.verdict === null || wall.verdict === 'alive') return null
+          return h(
+            'div',
+            { style: { display: 'flex', flexDirection: 'column', gap: 4, padding: '2px 0 6px' } },
+            h(
+              'div',
+              { style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: COLORS.dim } },
+              h('span', { style: { color: COLORS.text, fontWeight: 600 } }, 'themes'),
+              isFinal(wall.verdict) ? h(VerdictBadge, { verdict: wall.verdict }) : null,
+              isRetryable(wall.verdict)
+                ? h(
+                    'button',
+                    {
+                      onClick: function () {
+                        update({ attempt: attempt + 1 })
+                      },
+                      style: buttonStyle,
+                    },
+                    'Retry',
+                  )
+                : null,
+            ),
+            h('div', { style: { fontSize: 12, color: COLORS.dim, paddingTop: 2 } }, wallHintFor(wall.verdict)),
+          )
+        }
+
+        var slide = bundle.slide || { width: 1280, height: 720 }
+        var stamp = wallId.slice(0, 8)
+        function open() {
+          update({ open: true })
+        }
+
+        return h(
+          'div',
+          { style: { display: 'flex', flexDirection: 'column', gap: 8, padding: '2px 0 6px' } },
+          h(
+            'div',
+            { style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: COLORS.dim } },
+            h('span', { style: { color: COLORS.text, fontWeight: 600 } }, bundle.title || 'themes'),
+            h('span', null, bundle.themes.length + ' themes'),
+            h('button', { onClick: open, style: buttonStyle }, 'Open'),
+          ),
+          h(
+            'div',
+            { style: { display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 } },
+            bundle.themes.map(function (theme, i) {
+              var pages = Array.isArray(theme.pages) ? theme.pages.filter(hasMarkup) : []
+              return h(
+                'div',
+                {
+                  key: theme.id || i,
+                  'data-theme': theme.id,
+                  style: { flex: '0 0 auto', width: 132, display: 'flex', flexDirection: 'column', gap: 4 },
+                },
+                pages.map(function (page, j) {
+                  return h(Frame, {
+                    key: page.type || j,
+                    page: page,
+                    prefix: 'ptw' + stamp + '-' + i + '-' + j + '-',
+                    width: slide.width,
+                    height: slide.height,
+                    title: theme.id + ' ' + (page.type || 'page'),
+                    onClick: open,
+                  })
+                }),
+                h(
+                  'div',
+                  {
+                    title: theme.label,
+                    style: {
+                      fontSize: 11,
+                      color: COLORS.dim,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    },
+                  },
+                  h('span', { style: { color: COLORS.text, fontWeight: 600 } }, theme.id),
+                  theme.label && theme.label !== theme.id ? ' ' + theme.label : null,
+                ),
+              )
+            }),
+          ),
+          wall.open
+            ? h(Modal, {
+                src: previewHtmlUrl(wallId, 1),
+                previewId: null,
+                onClose: function () {
+                  update({ open: false })
+                },
+              })
+            : null,
+        )
+      }
+
+      return { deck: PptwisePreviewCard, themes: PptwiseThemesCard }
     }
 
     function registerCard(ctx) {
@@ -1384,9 +1587,18 @@ window.__ModuleLoader__.load({
       } catch (error) {
         console.warn('[pptwise] react-dom unavailable, the viewer opens inside the card: ' + error)
       }
-      var Card = PreviewCard(react, reactDom)
-      ctx.slots.inject('tool.call.toolview', function* () {
-        yield ctx.slots.register({ name: 'tool.call.toolview', key: TOOL_NAME }, Card)
+      var cards = PreviewCard(react, reactDom)
+      // One registration per wire name. `pptwise_build` stamps the same
+      // preview id `pptwise_preview` does, so the deck card draws both.
+      var seats = [
+        [TOOL_NAME, cards.deck],
+        [BUILD_TOOL_NAME, cards.deck],
+        [THEMES_TOOL_NAME, cards.themes],
+      ]
+      seats.forEach(function (seat) {
+        ctx.slots.inject('tool.call.toolview', function* () {
+          yield ctx.slots.register({ name: 'tool.call.toolview', key: seat[0] }, seat[1])
+        })
       })
     }
 
@@ -1410,6 +1622,7 @@ window.__ModuleLoader__.load({
     exports.__testing = {
       bundleOf: bundleOf,
       previewIdOf: previewIdOf,
+      wallIdOf: wallIdOf,
       pageCountOf: pageCountOf,
       verdictOf: verdictOf,
       isRetryable: isRetryable,
@@ -1429,6 +1642,8 @@ window.__ModuleLoader__.load({
       previewBundleUrl: previewBundleUrl,
       STRIP_PAGES: STRIP_PAGES,
       TOOL_NAME: TOOL_NAME,
+      BUILD_TOOL_NAME: BUILD_TOOL_NAME,
+      THEMES_TOOL_NAME: THEMES_TOOL_NAME,
     }
     return module.exports
   },

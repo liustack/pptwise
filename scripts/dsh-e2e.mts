@@ -12,7 +12,7 @@
  *  red, and each was proven that way by breaking the plugin on purpose.
  */
 import { execFileSync } from "node:child_process"
-import { access, mkdtemp, readFile, readdir, realpath, rm, stat, writeFile } from "node:fs/promises"
+import { access, mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, writeFile } from "node:fs/promises"
 import { homedir, tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import { createRequire } from "node:module"
@@ -22,6 +22,11 @@ const PACKAGE_NAME = "@liustack/pptwise"
 
 /** The tool the card's slot key, the route and the model summary all agree on. */
 const PREVIEW_TOOL_NAME = "pptwise_preview"
+
+/** The theme wall and the one-pass build: two more tools, each with its own card seat. */
+const THEMES_TOOL_NAME = "pptwise_themes"
+const BUILD_TOOL_NAME = "pptwise_build"
+const TOOL_NAMES = [PREVIEW_TOOL_NAME, THEMES_TOOL_NAME, BUILD_TOOL_NAME]
 
 /** The slot the browser half must claim, or the call renders in the generic row. */
 const TOOLVIEW_SLOT = "tool.call.toolview"
@@ -131,7 +136,7 @@ export interface DshToolRegistration {
     render?: (args: unknown, value: unknown) => unknown
     presentationMeta?: (args: unknown, value: unknown) => unknown
   }
-  execute?: (args: { target: string }, exec?: unknown) => Promise<Record<string, unknown>>
+  execute?: (args: Record<string, unknown>, exec?: unknown) => Promise<Record<string, unknown>>
 }
 
 export interface AppliedDshPlugin {
@@ -240,11 +245,11 @@ export async function verifyInstalledDshSkill(
  * renders from. A tool missing any one of them still registers cleanly and
  * still fails in the conversation, which is why all three are named here.
  */
-export function verifyInstalledDshTool(applied: AppliedDshPlugin): DshToolRegistration {
-  const tool = applied.tools.find((t) => t.name === PREVIEW_TOOL_NAME)
+export function verifyInstalledDshTool(applied: AppliedDshPlugin, name = PREVIEW_TOOL_NAME): DshToolRegistration {
+  const tool = applied.tools.find((t) => t.name === name)
   if (!tool) {
     throw new Error(
-      `The installed pptwise DSH plugin did not register the ${PREVIEW_TOOL_NAME} tool (registered: ${applied.tools.map((t) => String(t.name)).join(", ") || "no tools at all"})`,
+      `The installed pptwise DSH plugin did not register the ${name} tool (registered: ${applied.tools.map((t) => String(t.name)).join(", ") || "no tools at all"})`,
     )
   }
   const missing = [
@@ -253,7 +258,7 @@ export function verifyInstalledDshTool(applied: AppliedDshPlugin): DshToolRegist
     typeof tool.output?.presentationMeta === "function" ? undefined : "output.presentationMeta",
   ].filter((name): name is string => name !== undefined)
   if (missing.length > 0) {
-    throw new Error(`The ${PREVIEW_TOOL_NAME} tool is missing required members: ${missing.join(", ")}`)
+    throw new Error(`The ${name} tool is missing required members: ${missing.join(", ")}`)
   }
   return tool
 }
@@ -341,10 +346,12 @@ export async function verifyInstalledDshClient(installed: InstalledDshPlugin): P
   }
 
   const loaded = await loadDshClientBundle(clientPath)
-  if (!loaded.slotKeys.includes(PREVIEW_TOOL_NAME)) {
-    throw new Error(
-      `The preview card bundle did not register a ${TOOLVIEW_SLOT} slot keyed ${PREVIEW_TOOL_NAME} (registered keys: ${loaded.slotKeys.join(", ") || "none"})`,
-    )
+  for (const name of TOOL_NAMES) {
+    if (!loaded.slotKeys.includes(name)) {
+      throw new Error(
+        `The preview card bundle did not register a ${TOOLVIEW_SLOT} slot keyed ${name} (registered keys: ${loaded.slotKeys.join(", ") || "none"})`,
+      )
+    }
   }
   return { clientPath, moduleId: loaded.moduleId, slotKeys: loaded.slotKeys }
 }
@@ -440,8 +447,8 @@ export interface PreviewToolRun {
   valueBytes: number
 }
 
-/** Ask the registered route for a preview's bundle, as the card's fetch does. */
-async function routeBundlePages(route: DshRouteRegistration, previewId: string): Promise<unknown[]> {
+/** Ask the registered route for one path under it, as the card's fetch does. */
+async function routeGet(route: DshRouteRegistration, rest: string): Promise<{ status: number; body: string }> {
   const handler = route.handler as (
     req: { url: string },
     res: { writeHead: (status: number, headers: Record<string, unknown>) => void; end: (body?: unknown) => void },
@@ -449,7 +456,7 @@ async function routeBundlePages(route: DshRouteRegistration, previewId: string):
   let status = 0
   let body = ""
   await handler(
-    { url: `${String(route.path)}/${previewId}` },
+    { url: `${String(route.path)}/${rest}` },
     {
       writeHead(s) {
         status = s
@@ -459,6 +466,12 @@ async function routeBundlePages(route: DshRouteRegistration, previewId: string):
       },
     },
   )
+  return { status, body }
+}
+
+/** Ask the registered route for a preview's bundle, as the card's fetch does. */
+async function routeBundlePages(route: DshRouteRegistration, previewId: string): Promise<unknown[]> {
+  const { status, body } = await routeGet(route, previewId)
   if (status !== 200) {
     throw new Error(`The preview route answered ${status} for ${previewId}, which the card would show as a dead deck`)
   }
@@ -621,6 +634,169 @@ export async function verifyPreviewToolRun(
   }
 }
 
+/** The model-facing text a tool's `output.render` produced for one value. */
+function modelTextOf(tool: DshToolRegistration, args: unknown, value: unknown): string {
+  const rendered = tool.output?.render?.(args, value)
+  return Array.isArray(rendered)
+    ? rendered
+        .map((block) => (typeof (block as { text?: unknown }).text === "string" ? (block as { text: string }).text : ""))
+        .join("\n")
+    : ""
+}
+
+export interface ThemesToolRun {
+  wallId: string
+  themeCount: number
+  pageCount: number
+  valueBytes: number
+}
+
+/**
+ * Run `pptwise_themes` on the installed CLI: two themes, the gate's own title.
+ *
+ * Asserts the split the tool exists for. The value and the model's text name
+ * the themes and carry no markup, and the route serves every page's SVG and
+ * the contact sheet to the card by the wall's id.
+ */
+export async function verifyThemesToolRun(
+  tool: DshToolRegistration,
+  route: DshRouteRegistration,
+): Promise<ThemesToolRun> {
+  const args = { title: "pptwise DSH preflight", themes: ["brief", "swiss"] }
+  let wallId: string | undefined
+  try {
+    const value = (await tool.execute?.(args)) as { wallId?: unknown; themeCount?: unknown }
+    if (typeof value?.wallId !== "string" || value.wallId === "") {
+      throw new Error(`${THEMES_TOOL_NAME}.execute returned no wallId — the card finds the wall by that id`)
+    }
+    wallId = value.wallId
+    if (value.themeCount !== 2) {
+      throw new Error(`${THEMES_TOOL_NAME}.execute drew ${String(value.themeCount)} themes, expected 2`)
+    }
+    const valueJson = JSON.stringify(value)
+    if (/<svg|<\/svg>/i.test(valueJson) || valueJson.length > 1000) {
+      throw new Error(`${THEMES_TOOL_NAME}.execute returned page markup in its value (${valueJson.length} bytes)`)
+    }
+    const modelText = modelTextOf(tool, args, value)
+    if (!modelText.includes(`pptwise-themes:${wallId}`) || /<svg/i.test(modelText)) {
+      throw new Error(`${THEMES_TOOL_NAME} output.render must carry the wall id and no markup`)
+    }
+    const bundle = await routeGet(route, wallId)
+    if (bundle.status !== 200) throw new Error(`The preview route answered ${bundle.status} for theme wall ${wallId}`)
+    const themes = (JSON.parse(bundle.body) as { themes?: { pages?: { svg?: unknown }[] }[] }).themes
+    if (!Array.isArray(themes) || themes.length !== 2) throw new Error(`The preview route served no themes for wall ${wallId}`)
+    const pages = themes.flatMap((theme) => theme.pages ?? [])
+    if (pages.length !== 4 || !pages.every((page) => typeof page.svg === "string")) {
+      throw new Error(`The preview route served ${pages.length} theme pages for wall ${wallId}, expected 4 with markup`)
+    }
+    const sheet = await routeGet(route, `${wallId}/html`)
+    if (sheet.status !== 200 || !/<html|<!doctype/i.test(sheet.body)) {
+      throw new Error(`The preview route did not serve the contact sheet for wall ${wallId} (status ${sheet.status})`)
+    }
+    return { wallId, themeCount: themes.length, pageCount: pages.length, valueBytes: valueJson.length }
+  } finally {
+    if (wallId !== undefined) await removeGeneratedPreview(join(previewRootForGate(), wallId))
+  }
+}
+
+export interface BuildToolRun {
+  previewId: string
+  pageCount: number
+  pptxPath: string
+  modelText: string
+}
+
+/** A six-page deck project every check passes: the same one `src/cli/build.test.ts` builds. */
+async function writeGateDeckProject(dir: string): Promise<void> {
+  const spec = {
+    version: "1",
+    filename: "weekly",
+    narrative: "general",
+    theme: "brief",
+    pages: [
+      { id: "cover", type: "cover", heading: "Weekly review" },
+      { id: "why", type: "content", kind: "points", heading: "Why we change it" },
+      { id: "numbers", type: "content", kind: "data", heading: "Where the hour goes" },
+      { id: "how", type: "content", kind: "list", heading: "What changes" },
+      { id: "who", type: "content", kind: "comparison", heading: "Who runs it" },
+      { id: "end", type: "ending", heading: "Starting Monday" },
+    ],
+  }
+  const pages: Record<string, unknown> = {
+    cover: {},
+    why: { components: [{ type: "bullets", items: ["Status goes in writing first", "The meeting is for blockers", "Notes go out within ten minutes"] }] },
+    numbers: { components: [{ type: "kpi_cards", items: [{ value: "60", label: "minutes today" }, { value: "30", label: "minutes from Monday" }] }] },
+    how: {
+      components: [
+        {
+          type: "row_cards",
+          items: [
+            { title: "Before", text: "Three lines each" },
+            { title: "During", text: "Blockers only" },
+            { title: "After", text: "Notes in ten minutes" },
+          ],
+        },
+      ],
+    },
+    who: { components: [{ type: "comparison", columns: ["Now", "From Monday"], rows: [{ label: "Chair", cells: ["Manager", "Rotating"] }] }] },
+    end: {},
+  }
+  await mkdir(join(dir, "pages"), { recursive: true })
+  await writeFile(join(dir, "deck.spec.json"), JSON.stringify(spec))
+  for (const [id, page] of Object.entries(pages)) await writeFile(join(dir, "pages", `${id}.json`), JSON.stringify(page))
+}
+
+/**
+ * Run `pptwise_build` on the installed CLI against a deck project, inside a
+ * stand-in session whose working directory is a throwaway workspace.
+ *
+ * Asserts the deck's one .pptx lands in that workspace's `.pptwise/`, where
+ * the CLI from the model's own terminal would have put it, and that the card
+ * can fetch the drawn pages by the stamped id.
+ */
+export async function verifyBuildToolRun(
+  tool: DshToolRegistration,
+  route: DshRouteRegistration,
+): Promise<BuildToolRun> {
+  const workDir = await realpath(await mkdtemp(join(tmpdir(), "pptwise-dsh-gate-build-")))
+  let previewId: string | undefined
+  try {
+    const deckDir = join(workDir, "weekly")
+    await writeGateDeckProject(deckDir)
+    const args = { target: deckDir }
+    const session = { agent: { session: { header: { cwd: workDir } } } }
+    const value = (await tool.execute?.(args, session)) as {
+      status?: unknown
+      pptx?: unknown
+      previewId?: unknown
+      pageCount?: unknown
+      errors?: unknown
+    }
+    if (typeof value?.previewId === "string") previewId = value.previewId
+    if (value?.status !== "ok") {
+      throw new Error(`${BUILD_TOOL_NAME}.execute reported ${String(value?.status)}: ${JSON.stringify(value?.errors)}`)
+    }
+    const expectedPptx = join(workDir, ".pptwise", "weekly", "weekly.pptx")
+    if (value.pptx !== expectedPptx) {
+      throw new Error(`${BUILD_TOOL_NAME}.execute wrote ${String(value.pptx)}, expected ${expectedPptx} in the session's workspace`)
+    }
+    if ((await stat(expectedPptx)).size < 1024) throw new Error(`The built deck ${expectedPptx} is implausibly small for a pptx`)
+    if (previewId === undefined) throw new Error(`${BUILD_TOOL_NAME}.execute returned no previewId for a deck it drew`)
+    const pages = await routeBundlePages(route, previewId)
+    if (pages.length !== 6 || value.pageCount !== 6) {
+      throw new Error(`${BUILD_TOOL_NAME} drew ${pages.length} pages (value says ${String(value.pageCount)}), expected 6`)
+    }
+    const modelText = modelTextOf(tool, args, value)
+    if (!modelText.includes(`pptwise-preview:${previewId}`) || !modelText.includes(expectedPptx) || /<svg/i.test(modelText)) {
+      throw new Error(`${BUILD_TOOL_NAME} output.render must carry the preview id and the .pptx path, and no markup`)
+    }
+    return { previewId, pageCount: pages.length, pptxPath: expectedPptx, modelText }
+  } finally {
+    await rm(workDir, { recursive: true, force: true }).catch(() => {})
+    if (previewId !== undefined) await removeGeneratedPreview(join(previewRootForGate(), previewId))
+  }
+}
+
 /** Assert that DSH's composed profile config mounts the installed bundle. */
 export function assertPptwiseMountedInDshConfig(dump: string): void {
   const mounted = dump.split(/(?=^- id:)/m).some((row) => {
@@ -713,9 +889,13 @@ async function main(): Promise<void> {
     const applied = await applyInstalledDshPlugin(installed)
     await verifyInstalledDshSkill(installed, applied)
     const tool = verifyInstalledDshTool(applied)
+    const themesTool = verifyInstalledDshTool(applied, THEMES_TOOL_NAME)
+    const buildTool = verifyInstalledDshTool(applied, BUILD_TOOL_NAME)
     const route = verifyInstalledDshRoute(applied)
     const client = await verifyInstalledDshClient(installed)
     const run = await verifyPreviewToolRun(tool, route)
+    const themesRun = await verifyThemesToolRun(themesTool, route)
+    const buildRun = await verifyBuildToolRun(buildTool, route)
     const invocation = buildDshDumpConfigInvocation(canonicalWorkspace, options.profile)
     const dump = execFileSync(invocation.command, invocation.args, {
       cwd: invocation.cwd,
@@ -733,6 +913,8 @@ async function main(): Promise<void> {
         `route: ${String(route.path)}`,
         `card: ${client.clientPath} -> ${TOOLVIEW_SLOT}:${client.slotKeys.join(",")}`,
         `live run: ${run.pageCount} pages + ${run.pptxPath.split("/").pop()}, model text ${run.modelText.length} bytes, value ${run.valueBytes} bytes, no markup`,
+        `themes run: ${themesRun.themeCount} themes, ${themesRun.pageCount} pages served by the route, value ${themesRun.valueBytes} bytes, no markup`,
+        `build run: ${buildRun.pageCount} pages + ${buildRun.pptxPath.split("/").pop()} in the session workspace, model text ${buildRun.modelText.length} bytes`,
         `requested workspace: ${options.workspace}`,
         `canonical workspace: ${canonicalWorkspace}`,
         "Use the canonical workspace path for any automated workspace fixture.",

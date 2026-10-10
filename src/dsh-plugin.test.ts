@@ -336,6 +336,9 @@ interface PreviewModule {
   definePreviewTool: (cliPath: string) => PreviewService["tool"]
   previewRoot: (opts?: { homedir?: () => string; env?: NodeJS.ProcessEnv }) => string
   PREVIEW_ROUTE: string
+  TOOL_NAME: string
+  BUILD_TOOL_NAME: string
+  THEMES_TOOL_NAME: string
   ROUTE_HEADER: string
   ROUTE_HEADER_VALUE: string
   FAILURE_CODES: { unknown: string; missing: string; damaged: string; unreadable: string }
@@ -513,18 +516,25 @@ describe("pptwise preview card (browser half)", () => {
     // The card and the tool have to agree on one wire name; a typo here
     // simply never renders, which is silent — so it is pinned from both
     // sides against the same constant.
-    let spec: { name?: string; key?: string } | undefined
+    const specs: { name?: string; key?: string }[] = []
     const bundle = await loadClientBundle((id) => (id === "react" ? fakeReact : {}))
     bundle.apply({
       slots: {
         inject: (_name: string, gen: () => Iterable<unknown>) => {
           for (const _ of gen()) { /* drain the generator */ }
         },
-        register: (s: { name: string; key: string }) => { spec = s },
+        register: (s: { name: string; key: string }) => { specs.push(s) },
       },
     })
-    expect(spec).toEqual({ name: "tool.call.toolview", key: "pptwise_preview" })
+    expect(specs).toEqual([
+      { name: "tool.call.toolview", key: "pptwise_preview" },
+      { name: "tool.call.toolview", key: "pptwise_build" },
+      { name: "tool.call.toolview", key: "pptwise_themes" },
+    ])
     expect(bundle.__testing.TOOL_NAME).toBe("pptwise_preview")
+    // Pinned from the host side too: the names the tools register under.
+    const host = await loadPreviewTool()
+    expect([host.TOOL_NAME, host.BUILD_TOOL_NAME, host.THEMES_TOOL_NAME]).toEqual(specs.map((s) => s.key))
   })
 
   it("degrades to a console line rather than taking the turn down with it", async () => {
