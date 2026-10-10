@@ -36,6 +36,9 @@ import { BUILD_TOOL_NAME, cliLauncher, createPreviewService, THEMES_TOOL_NAME, T
 const SKILL_FILE_URL = new URL('../skills/pptwise/SKILL.md', import.meta.url)
 const SKILL_DIR = fileURLToPath(new URL('../skills/pptwise/', import.meta.url))
 const CLI_PATH = fileURLToPath(new URL('../dist/cli.js', import.meta.url))
+// The version this module was loaded as. apply() compares it with the
+// package.json on disk to tell an upgrade the host has not reloaded yet.
+const LOADED_VERSION = packageVersion()
 
 export const name = 'pptwise'
 export const inject = ['skills', 'tools']
@@ -107,6 +110,37 @@ export function dshRuntimePreamble(cliPath, launcher = cliLauncher(), platform =
     '```',
     '',
     'That CLI ships inside this plugin\'s own package, version-locked to this skill, so it wins over the "Run it" section below: ignore the launcher scripts there, this line is the mapping.',
+    '',
+    dshToolRouting(),
+  ].join('\n')
+}
+
+/**
+ * Which steps go through this plugin's tools rather than the terminal. The
+ * user sees pages only through the tools' cards: a `build` or `theme try`
+ * run in bash leaves them looking at a log. Said here, next to the command
+ * mapping, because the playbook body is shared with harnesses that have no
+ * such tools and can only say "when the tool exists".
+ */
+export function dshToolRouting() {
+  return [
+    `This plugin also gives you tools, and the user sees the pages only through them. Draw the theme wall with \`${THEMES_TOOL_NAME}\`, build after each batch with \`${BUILD_TOOL_NAME}\`, and show a deck with \`${TOOL_NAME}\`. Never run \`build\` or \`theme try\` in the terminal here. Inside \`run_code\` call them like any other tool, for example \`await tools.${BUILD_TOOL_NAME}({ target: "deck-dir/" })\`. Every other command (\`themes\`, \`init\`, \`validate\`, \`schema\`, \`inspect\`) runs through the line above.`,
+  ].join('\n')
+}
+
+/**
+ * The note for a plugin upgraded while DSH kept running. The host caches the
+ * plugin's modules for the life of the process, so the tools and this note
+ * stay the old version's while the skill body is read fresh from disk: the
+ * model then follows a playbook for tools that are not there. Only a restart
+ * loads the new code, and only the user can do that.
+ */
+export function dshStaleNote(loadedVersion, diskVersion) {
+  if (loadedVersion === diskVersion) return ''
+  return [
+    '## DSH restart needed (injected by the pptwise DSH plugin)',
+    '',
+    `pptwise was upgraded to ${diskVersion} while DeepSeek Harness kept running, and it still runs the ${loadedVersion} plugin code, so the tools this playbook names may be missing or out of date. Before making a deck, tell the user in their language to quit DeepSeek Harness fully and open it again (or restart \`dsh web\`).`,
   ].join('\n')
 }
 
@@ -193,7 +227,7 @@ export function apply(ctx) {
       name: SKILL_NAME,
       description: skill.description,
       source: 'bundled',
-      content: `${dshPreamble(CLI_PATH)}\n\n${skill.body}`,
+      content: [dshStaleNote(LOADED_VERSION, packageVersion()), dshPreamble(CLI_PATH), skill.body].filter(Boolean).join('\n\n'),
       path: fileURLToPath(SKILL_FILE_URL),
       resourceBase: { kind: 'directory', path: SKILL_DIR },
     })

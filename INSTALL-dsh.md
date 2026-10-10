@@ -122,6 +122,10 @@ fine, a wildly different one is not.
 - **The plugin installed but cannot make a deck, or `doctor` says it has no
   built engine**: it was added from the GitHub address, whose source does not
   carry `dist/`. Remove it and add it again by package name, as in Step 1.
+- **After an upgrade the deck skill says a restart is needed, or the
+  `pptwise_build` and `pptwise_themes` tools are missing**: dsh kept running
+  the old plugin code. Quit dsh fully (on Desktop, quit the app, not just the
+  window) and open it again.
 - **The user turns out not to be on dsh after all** — stop and follow
   [`INSTALL.md`](./INSTALL.md) instead. Do not run both procedures.
 

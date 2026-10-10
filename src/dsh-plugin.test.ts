@@ -151,6 +151,31 @@ describe("dsh plugin (skill registration, v0)", () => {
     )
   })
 
+  it("routes the theme wall and the build through the plugin's tools, never through bash", () => {
+    // A real Desktop session ran `cli.js build` in bash twenty times: the user
+    // saw logs, not pages. The note sits next to the command mapping and
+    // names each tool, including the Code Mode call shape.
+    const preamble = plugin.dshRuntimePreamble("/p/dist/cli.js", { command: "node", runAsNode: false }, "darwin")
+    expect(preamble).toContain(plugin.dshToolRouting())
+    for (const tool of [plugin.THEMES_TOOL_NAME, plugin.BUILD_TOOL_NAME, plugin.PREVIEW_TOOL_NAME]) {
+      expect(preamble).toContain(`\`${tool}\``)
+    }
+    expect(preamble).toContain("Never run `build` or `theme try` in the terminal here")
+    expect(preamble).toContain(`await tools.${plugin.BUILD_TOOL_NAME}({ target: "deck-dir/" })`)
+  })
+
+  it("asks for a restart when the package on disk is newer than the code DSH loaded", () => {
+    // The host keeps the old modules after an in-place upgrade while the
+    // skill body is read fresh, so the playbook names tools the old code
+    // never registered. Same version: no note at all.
+    expect(plugin.dshStaleNote("0.42.0", "0.42.0")).toBe("")
+    const note = plugin.dshStaleNote("0.40.0", "0.42.0")
+    expect(note.startsWith("## DSH restart needed")).toBe(true)
+    expect(note).toContain("upgraded to 0.42.0")
+    expect(note).toContain("still runs the 0.40.0 plugin code")
+    expect(note).toContain("quit DeepSeek Harness fully and open it again")
+  })
+
   it("tells the model to send the user back to the package name when the engine is missing", () => {
     // A plugin added from the GitHub address has no dist/cli.js. The note
     // replaces the command mapping: there is nothing to map onto.
