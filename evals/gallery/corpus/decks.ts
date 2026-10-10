@@ -495,9 +495,10 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
     // Six frames over four photos, and a caption of its own under each. The
     // captions used to cycle the four-line pool, so frames five and six
     // printed the captions of frames one and two.
-    const captions = lex.captions.slice(0, SHOW_GALLERY_FRAMES)
+    const pool = lex.faceCaptions?.["show-gallery"] ?? lex.captions
+    const captions = pool.slice(0, SHOW_GALLERY_FRAMES)
     if (captions.length < SHOW_GALLERY_FRAMES) {
-      throw new Error(`show-gallery draws ${SHOW_GALLERY_FRAMES} frames, and lexicon "${lex.id}" has ${lex.captions.length} captions`)
+      throw new Error(`show-gallery draws ${SHOW_GALLERY_FRAMES} frames, and lexicon "${lex.id}" has ${pool.length} captions`)
     }
     return [{
       type: "image_grid",
@@ -718,8 +719,11 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   if (def.id === "bento-panel") {
     const kpi = b.kpi_cards!(lex)
     const icons = b.icon_cards!(lex)
-    if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 3)
-    if (icons.type === "icon_cards") icons.items = icons.items.slice(0, 3)
+    const source = lex.faceSources?.["bento-panel"]
+    if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 3).map((item, i) => (i === 0 && source !== undefined && item.source !== undefined ? { ...item, source } : item))
+    const titles = lex.faceCardTitles?.["bento-panel"]
+    const texts = lex.faceCardTexts?.["bento-panel"]
+    if (icons.type === "icon_cards") icons.items = icons.items.slice(0, 3).map((item, i) => ({ ...item, title: titles?.[i] ?? item.title, text: texts?.[i] ?? item.text }))
     return [kpi, icons]
   }
   if (def.id === "stacked-poster") {
@@ -942,7 +946,7 @@ export function layoutPage(
               // stat-hero sets no heading over its figure: one written
               // there has nowhere on the hero to go, and the face steps
               // aside for it.
-              heading: def.id === "stat-hero" ? undefined : lex.headings[7]!,
+              heading: def.id === "stat-hero" ? undefined : lex.faceHeadings?.[def.id] ?? lex.headings[7]!,
               components: bodyFor(def, lex),
               footnote: lex.sources[1]!.label,
               ...(def.kind === "takeover" ? { image_side: "right" as const } : {}),

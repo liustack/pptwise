@@ -241,9 +241,15 @@ interface Silent {
  */
 const DROP_KINDS_SEEN = new Set<string>()
 
-/** Validate a deck whose page 1 is `slide`, with `deck` merged in. */
+/**
+ * Validate a deck whose page 1 is `slide`, with `deck` merged in. A page
+ * here carries every field at once, and a face that cannot set one of them
+ * declares it on the page. validate's drawn gate refuses such a page as a
+ * whole, so it is skipped: a field reaching the page or leaving a mark is
+ * what this sweep holds each field to.
+ */
 function validated(base: PptxIR, slide: Record<string, unknown>, deck: Record<string, unknown>) {
-  return validateIr({ ...base, ...deck, slides: [slide] })
+  return validateIr({ ...base, ...deck, slides: [slide] }, { allowDroppedContent: true })
 }
 
 

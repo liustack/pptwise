@@ -6,6 +6,7 @@ import { DroppedContentMarker } from "../render/drop-marker"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
 import { withBlockTitle } from "./block-title"
+import { OmittedText } from "./omitted-text"
 import { graphicInk, resolveSemanticColor } from "../render/ink"
 import {
   boardTypeScale,
@@ -13,7 +14,7 @@ import {
   formIconColumnCols,
   formLineHeight,
   formTextClipMarker,
-  formTextOmissionMarker,
+  formTextOmission,
   layoutFormBody,
   layoutFormTitle,
   linesThatFit,
@@ -248,11 +249,8 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
         const textTop =
           titleTop + layout.title.lines.length * layout.title.lineHeight + GAP_TITLE_TEXT
         return (
-          <g
-            key={i}
-            data-truncated={formTextOmissionMarker(stripEmphasis(item.text), layout.text)}
-            data-audit-box={`${col * g.colW},${rowY},${g.colW}`}
-          >
+          <g key={i} data-audit-box={`${col * g.colW},${rowY},${g.colW}`}>
+            <OmittedText text={formTextOmission(item.text, layout.text)} />
             <circle cx={cx} cy={cy} r={g.nodeR} fill={fill} {...strokeProps} />
             {renderGlyph(
               item.icon,

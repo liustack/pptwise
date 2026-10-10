@@ -45,7 +45,8 @@ import { findImageSelection } from "./layouts/find-image"
 import { bodyStatementLines } from "./layouts/minimal-shared"
 import { headingRoom, headingVerdict, type HeadingCtx, type HeadingPage } from "./layouts/heading-set"
 import { textRoom, type TextRoom } from "./layouts/text-room"
-import { blockTextCrowding, blocksLoss, fieldsCrowdingBlocks, headingCrowding, subheadingSet } from "./render/boundary-loss"
+import { blockTextCrowding, blocksLoss, fieldsCrowdingBlocks, headingCrowding, subheadingSet, type PageLoss } from "./render/boundary-loss"
+import { contentLoss, contentRemedy, losesContent, PAGE_FIELD_DROPS } from "./render/content-loss"
 import { dropPhrase } from "./render/drop-marker"
 import { droppedIn, slideToSvgMarkup } from "./render/render-slide"
 import { parseSvgRoot } from "./render/serialize"
@@ -927,6 +928,110 @@ function checkBoundaryBlocksDrawn(ir: PptxIR, theme: ThemeDefinition): Validatio
   return errors
 }
 
+/** Where a text sits on a content page, for a message: `this page's heading`, `item 2 of this page's bullets`. */
+function contentTextPlace(field: string, slide: PptxIR["slides"][number]): string {
+  if (field === "heading" || field === "subheading") return `this page's ${field}`
+  if (field === "footnote") return "this page's source line (footnote)"
+  return blockTextPlace(field, slide)
+}
+
+/**
+ * What a drawing of a content page would lose, for a message: `leave 2
+ * cards of this page's numbered_cards off the page and cut the label of
+ * item 3 of this page's kpi_cards`. A drop mark does not say which block it
+ * came from, so a page of several blocks names them all.
+ */
+function contentLossPhrase(loss: PageLoss, slide: PptxIR["slides"][number]): string {
+  const parts: string[] = []
+  if (loss.dropped > 0) {
+    const types = [...new Set(slide.components.map((c) => c.type))]
+    const ofBlocks = types.length === 0 ? "" : ` of this page's ${types.join(" and ")}`
+    const what = loss.drops.map(({ kind, count }) => {
+      const field = PAGE_FIELD_DROPS[kind]
+      if (field !== undefined) return `its ${field === "footnote" ? "source line (footnote)" : field}`
+      return kind === "component" ? dropPhrase(kind, count) : `${dropPhrase(kind, count)}${ofBlocks}`
+    })
+    parts.push(`leave ${what.join(" and ")} off the page`)
+  }
+  if (loss.hardCut.length > 0) parts.push(`cut ${loss.hardCut.map((field) => contentTextPlace(field, slide)).join(", ")}`)
+  return parts.join(" and ")
+}
+
+/**
+ * Content-page hard gate, the last one: what the drawing would still lose.
+ *
+ * A content face takes any block in its body, so no slot of its declares
+ * how much it holds, and a page it could not hold passed validate: a fifth
+ * annotation on image-annotate, a six-rib fishbone in a sheet's band, an
+ * image_compare beside bullets on a picture page, a KPI label wider than
+ * its card. The face, or the shared sheet it steps aside to, left the rest
+ * off with a mark the export refused, or cut a field a reader needs whole.
+ * Each content page is drawn here as the export draws it
+ * (`render/content-loss.ts`), and a page that would lose anything is
+ * refused, naming what it would lose. One more drawing at most looks for
+ * what to take off (`contentRemedy`). When it finds nothing, the message
+ * stops at what would be lost.
+ *
+ * `allowDroppedContent` skips this gate and nothing else, for the export's
+ * own opt-in (`generatePptx` in `./api.ts`): a deck its author knowingly
+ * ships short reaches the export, which names the drops again.
+ */
+function checkContentPagesDrawn(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+  const errors: ValidationIssue[] = []
+  ir.slides.forEach((slide, i) => {
+    if (slide.placeholder || slide.type !== "content") return
+    const loss = contentLoss(ir, i, theme)
+    if (!losesContent(loss)) return
+    const face = `face "${resolveEffectiveFace(ir, slide, theme).layoutId}"`
+    const where = { page: i + 1, ...(slide.id !== undefined ? { slideId: slide.id } : {}) }
+    const lost = contentLossPhrase(loss, slide)
+    const remedy = contentRemedy(ir, i, theme, loss)
+    if (remedy?.kind === "shorten") {
+      for (const field of remedy.fields) {
+        errors.push({
+          path: `slides.${i}.${field}`,
+          ...where,
+          message: `${face} cannot set ${contentTextPlace(field, slide)} whole beside the rest of this page, so it would cut it. Shorten it, or split the page.`,
+        })
+      }
+      return
+    }
+    if (remedy?.kind === "list") {
+      errors.push({
+        path: `slides.${i}.${remedy.field}`,
+        ...where,
+        message: `${face} draws ${remedy.keep} of the ${remedy.count} ${remedy.key} in this page's ${remedy.type} with the rest of the page as written, so it would ${lost}. Keep ${remedy.keep}, or split the ${remedy.type} across two pages.`,
+      })
+      return
+    }
+    if (remedy?.kind === "fields") {
+      for (const field of remedy.fields) {
+        errors.push({
+          path: `slides.${i}.${field}`,
+          ...where,
+          message: `${face} has no place for this page's ${field} beside the rest of the page, so it would ${lost}. Remove the ${field}, or write the page in a shape this face sets it with.`,
+        })
+      }
+      return
+    }
+    if (remedy?.kind === "blocks") {
+      const rest = [...new Set(slide.components.slice(remedy.keep).map((c) => c.type))].join(" and ")
+      errors.push({
+        path: `slides.${i}.components`,
+        ...where,
+        message: `${face} draws the first ${remedy.keep} of this page's ${remedy.count} blocks, so it would ${lost}. Move the ${rest} to another page.`,
+      })
+      return
+    }
+    errors.push({
+      path: `slides.${i}.components`,
+      ...where,
+      message: `${face} cannot draw this page as written: it would ${lost}.`,
+    })
+  })
+  return errors
+}
+
 /**
  * Duplicate slide id hard gate (W5 task 1): `slide.id` is a stable page
  * identity spec/assemble stamps on (spec-adjacent — see `ir/index.ts`'s
@@ -1239,6 +1344,12 @@ export function validateIr(
      * The browser has no such folder and leaves it out.
      */
     missingAssetPath?: (assetId: string) => string
+    /**
+     * Skip the content-page drawn gate (`checkContentPagesDrawn`), and only
+     * that one: the export's `allowDroppedContent` opt-in, which has to reach
+     * the export to mean anything. Nothing else should set it.
+     */
+    allowDroppedContent?: boolean
   },
 ): ValidateResult {
   const version = typeof input === "object" && input !== null ? (input as Record<string, unknown>).version : undefined
@@ -1416,6 +1527,12 @@ export function validateIr(
   const errorFindings = quality.filter((issue) => issue.severity === "error")
   if (errorFindings.length > 0) {
     return withNormalized({ ok: false, errors: errorFindings.map(toIssue), ...(warnings ? { warnings } : {}) })
+  }
+  // Drawn after every other gate: a page they refuse is not drawn, and a
+  // page they pass is drawn as the export will draw it.
+  const contentDrawnErrors = opts?.allowDroppedContent === true ? [] : checkContentPagesDrawn(r.data, theme)
+  if (contentDrawnErrors.length > 0) {
+    return withNormalized({ ok: false, errors: contentDrawnErrors, ...(warnings ? { warnings } : {}) })
   }
   return withNormalized({ ok: true, ir: r.data, theme, errors: [], ...(warnings ? { warnings } : {}) })
 }

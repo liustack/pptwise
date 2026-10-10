@@ -92,6 +92,8 @@ pptwise audit <target> [--json] [--pixels]
 
 Validation covers strict IR v5 shape, installed theme, theme-menu kinds, effective boundary faces, component rules, duplicate ids, assets, narrative, physical capacity, and editorial warnings. Errors block `OK`. Warnings do not.
 
+Validation also draws every page the way `render` draws it. Content pages are drawn too, a plainer layout taking over included, and a page that would leave anything off or cut a heading, source line or a component's words is refused, naming what would be lost and, when one more drawing finds it, what to take off. `render`, `preview` and `inspect` validate the same way. `render --allow-dropped-content` skips this drawing of content pages along with the export's own content-drop gate.
+
 Audit renders deterministic SVG and checks:
 
 - `overflow`
@@ -105,7 +107,7 @@ Audit renders deterministic SVG and checks:
 
 Any finding exits with code 1. `--pixels` adds image-backed text contrast sampling and requires `sharp`.
 
-A `low-contrast` finding on a page whose `background` is a mid-tone color, about as light as `#777777` or `#6B7B8C`, is fixed at the background. The renderer already sets text the theme's ink cannot carry there in pure black and shades cards to the side where that black still reads, so what is left is a mark a face measures against the page while it stands on a band of the face's own, such as a cover's confidentiality mark, and the text color is the theme's, so move the background lighter or darker.
+A `low-contrast` finding on a page whose `background` is a mid-tone color, about as light as `#777777` or `#6B7B8C`, is fixed at the background. The renderer already sets text the theme's ink cannot carry there in pure black, shades cards to the side where that black still reads, and sets a cover's top-left mark against the band of the cover's own it stands on. Text color is the theme's, so a finding that is still left is fixed by moving the background lighter or darker.
 
 A cut is weighed by the field it cut. The page's heading, subheading and source line (`footnote`), and every word a component carries except its tags, are text a reader needs whole. When the theme's layout cuts one of them, a plainer layout that draws them whole takes the page, and audit reports `stepped-aside`. `content-truncated` then names a cut no layout could avoid, with the field and its tier in `detail` (`"tier": "hard"`). A cut kicker, stamp, tag or other label stays on the theme's layout and is reported as `"tier": "declared"`.
 
@@ -144,7 +146,7 @@ The default report shows the spec's locked fields and fill hints, the page file 
 
 `--component <type>` expands one component the page may hold: its design story, the page's limits on it, whether it must be the page's only component, and the schema `schema --component` prints for it. A type the page's face does not draw fails and lists the types it does draw.
 
-Counts do not prove that content fits the drawn page. `--fit` draws the page with the same renderer and reads the same drop count as the content-drop gate in `render`, so a page it reports as fitting is a page `render` accepts. It also reports text cut to fit, which `render` allows and `audit` reports, and a face that stepped aside so a plainer layout could draw the whole page. It exits 1 when content would be dropped or the page has a validate error. A page not written yet, or one `validate` refuses, is not drawn, and the report says why.
+Counts do not prove that content fits the drawn page. `--fit` draws the page with the same renderer and reads the same drop count as the content-drop gate in `render`, so a page it reports as fitting is a page `render` accepts. It also reports text cut to fit and a face that stepped aside so a plainer layout could draw the whole page. It exits 1 when content would be dropped or the page has a validate error. A page not written yet, or one `validate` refuses, is not drawn, and the report says why. Since `validate` draws content pages too, a page that would lose content is one `validate` refuses, and its errors say what would be lost.
 
 `--json` prints the report as one line of JSON.
 

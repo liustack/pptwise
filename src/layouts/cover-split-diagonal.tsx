@@ -190,6 +190,8 @@ export function SplitDiagonalCover({ ir, slide, ctx, page }: SvgTemplateProps) {
 // registry.ts's slot-`accepts` convention doc for what `[]` means.
 export const layoutDef: LayoutDefinition = {
   coverMark: "face",
+  // A legal classification still takes the default corner. The primary block over the top left.
+  coverMarkGround: (ctx) => ctx.colors.primary,
   // cover-split-diagonal.tsx: diagonal-cut primary block carries an org
   // kicker + decorative accent dot (decor); heading/rule/subheading/meta
   // sit in the right clear zone.

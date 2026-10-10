@@ -53,6 +53,7 @@ import type { PptxIR } from "@/ir"
 import { generatePptx, renderSlideSvg, validateIr } from "@/api"
 import { installNodePlatform } from "../platform/node"
 import { CAPACITY } from "../audit/capacity"
+import { exportPastDrawnGate } from "./__fixtures__/export-past-drawn-gate"
 
 beforeAll(() => {
   installNodePlatform()
@@ -182,7 +183,10 @@ describe("extreme bullets item count: bullets_count_overflow blocks at validate 
   })
 
   it(`does NOT report bullets_count_overflow at exactly the threshold (${threshold} items) — still ok:true`, () => {
-    const v = validateIr(extremeIr(threshold))
+    // The count gate's threshold is what this pins. The page still cannot
+    // draw that many items, and validate's drawn gate refuses it for that,
+    // so that one gate is skipped.
+    const v = validateIr(extremeIr(threshold), { allowDroppedContent: true })
     expect(v.ok).toBe(true)
   })
 })
@@ -250,9 +254,13 @@ describe("kpi_cards horizontal-axis sibling: 50-item deck with delta (review rou
     ],
   })
 
-  it("validateIr passes with zero warnings (kpi_cards has no ir-quality count gate — matches the reviewer's own finding)", () => {
+  // This passed validate while the page drew a fraction of the cards. kpi_cards
+  // still has no ir-quality count gate, and validate's drawn gate now
+  // refuses the page for the cards it would leave off.
+  it("validateIr refuses it for the cards it would leave off, with zero warnings (kpi_cards has no ir-quality count gate)", () => {
     const v = validateIr(ir)
-    expect(v.ok).toBe(true)
+    expect(v.ok).toBe(false)
+    expect(v.errors).toEqual([expect.objectContaining({ path: "slides.1.components.0.items", message: expect.stringMatching(/draws \d+ of the 50 items in this page's kpi_cards/) })])
     expect(v.warnings ?? []).toHaveLength(0)
   })
 
@@ -296,8 +304,9 @@ describe("kpi_cards horizontal-axis sibling: 50-item deck with delta (review rou
 })
 
 // The drop gate on the same two fixtures, without the structural opt-in:
-// content cut this hard is never announced on the slide, so the export is
-// where an author is told to shorten it.
+// content cut this hard is never announced on the slide, so validate refuses
+// it first, and the export gate behind it (reached past validate's drawn
+// gate, `exportPastDrawnGate`) still names it.
 describe("pathological content is refused by the export, not quietly shortened", () => {
   it("the 50-KPI deck is refused without --allow-dropped-content, in cards", async () => {
     // The horizontal sibling of the bullets case below. Its structural probe
@@ -315,7 +324,8 @@ describe("pathological content is refused by the export, not quietly shortened",
         { type: "ending", heading: "Thanks" },
       ],
     })
-    await expect(generatePptx(ir)).rejects.toThrow(/deck drops content.*: \d+ cards\./s)
+    await expect(generatePptx(ir)).rejects.toThrow(/invalid IR:.*kpi_cards/s)
+    await expect(exportPastDrawnGate(ir)).rejects.toThrow(/deck drops content.*: \d+ cards\./s)
   })
 
   it("the 500-item bullets deck is refused without --allow-dropped-content", async () => {
@@ -330,6 +340,7 @@ describe("pathological content is refused by the export, not quietly shortened",
         },
       ],
     })
-    await expect(generatePptx(ir)).rejects.toThrow(/deck drops content.*: \d+ items\./s)
+    await expect(generatePptx(ir)).rejects.toThrow(/invalid IR:.*bullets/s)
+    await expect(exportPastDrawnGate(ir)).rejects.toThrow(/deck drops content.*: \d+ items\./s)
   })
 })

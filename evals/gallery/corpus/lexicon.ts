@@ -159,6 +159,35 @@ export interface Lexicon {
    * cover, chapter or ending subheading its face would cut.
    */
   readonly faceSubtitles?: Readonly<Record<string, string>>
+  /**
+   * The page heading a content face with a narrower heading measure than
+   * the others is shown with, by face id, its meaning kept. validate refuses
+   * a content page whose face would cut its heading.
+   */
+  readonly faceHeadings?: Readonly<Record<string, string>>
+  /**
+   * The card titles a face with narrower cards than the others is shown
+   * with, by face id, in card order, their meaning kept. validate refuses a
+   * content page whose face would cut a card's title.
+   */
+  readonly faceCardTitles?: Readonly<Record<string, Pool>>
+  /**
+   * The card sentences a face with smaller cards than the others is shown
+   * with, by face id, in card order, their meaning kept. validate refuses a
+   * content page whose face would cut a card's sentence.
+   */
+  readonly faceCardTexts?: Readonly<Record<string, Pool>>
+  /**
+   * The source line a face's first figure card is shown with, by face id,
+   * its meaning kept, where the card sets its source on a narrower line.
+   */
+  readonly faceSources?: Readonly<Record<string, string>>
+  /**
+   * The picture captions a face with a narrower caption measure than the
+   * others is shown with, by face id, in frame order, their meaning kept.
+   * validate refuses a content page whose face would cut a caption.
+   */
+  readonly faceCaptions?: Readonly<Record<string, Pool>>
   /** Page headings — at least 12. */
   readonly headings: Pool
   /** Short sub-headings / eyebrow lines. */
@@ -905,6 +934,36 @@ const en: Lexicon = {
   // show-finale's closing line runs one line short of the verdict sentence.
   faceSubtitles: {
     "show-finale": "Renewals and activity both improved. The quarter beat plan.",
+  },
+  // show-spotlight sets its heading on one line beside the picture.
+  faceHeadings: {
+    "show-spotlight": "Mid-market rivals are pricing below cost",
+  },
+  // bento-panel's tiles set a card's title, its sentence and a figure's
+  // source in less room than a card row or a figure strip gives them.
+  faceCardTitles: {
+    "bento-panel": ["In-house compute", "Vertical playbooks", "Staffing automation"],
+  },
+  faceCardTexts: {
+    "bento-panel": [
+      "Moving off public cloud cut per-seat monthly cost 31%.",
+      "East China penetration is half that of South China.",
+      "Client managers are near their load ceiling.",
+    ],
+  },
+  faceSources: {
+    "bento-panel": "CloudSeek Workspaces Q2 2026 data",
+  },
+  // show-gallery prints a caption under each of its six frames on one line.
+  faceCaptions: {
+    "show-gallery": [
+      "Onboarding with team three",
+      "Template gallery placement",
+      "Live usage wall",
+      "Seat grant from mobile",
+      "Quarterly rollout review",
+      "On-call uptime monitor",
+    ],
   },
 
   chapters: [

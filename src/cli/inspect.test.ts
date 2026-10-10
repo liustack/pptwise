@@ -209,32 +209,38 @@ describe("runInspect --fit", () => {
     return dir
   }
 
-  it("gives each page the verdict render's content-drop gate gives it (T8)", async () => {
+  // T8 drew a page here that validate passed and render refused. validate
+  // draws every content page now and refuses one that would lose content,
+  // so such a page is refused by validate itself: inspect reports its
+  // errors and does not draw it, and render and validate refuse the deck
+  // with the same errors.
+  it("refuses, with validate's own errors, each page render would refuse", async () => {
     const dir = await fitDeck(FIT_PAGES)
-    const refs: string[] = []
-    for (const [number, page] of FIT_SPEC.pages.entries()) {
+    const refused: string[] = []
+    for (const page of FIT_SPEC.pages) {
       const { output, failed } = await runInspect(dir, { page: page.id, fit: true, json: true })
       const report = JSON.parse(output)
-      expect(report.fit.checked, page.id).toBe(true)
-      expect(failed, page.id).toBe(!report.fit.fits)
-      if (!report.fit.fits) {
-        refs.push(`${page.id} (page ${number + 1}): ${report.fit.dropped.map((d: { what: string }) => d.what).join(", ")}`)
+      if (report.errors.length === 0) {
+        expect(report.fit, page.id).toMatchObject({ checked: true, fits: true })
+        expect(failed, page.id).toBe(false)
+        continue
       }
+      expect(report.fit, page.id).toEqual({ checked: false, reason: "fix the page's validate errors first" })
+      expect(failed, page.id).toBe(true)
+      expect(report.errors.map((e: { message: string }) => e.message).join(" "), page.id).toMatch(/would leave \d+ (content blocks|items)/)
+      refused.push(page.id)
     }
-    expect(refs.map((ref) => ref.split(" ")[0])).toEqual(["blocks", "items"])
-    await expect(runRender(dir, { output: join(dir, "out.pptx") })).rejects.toThrow(
-      `deck drops content that does not fit the content area, on 2 pages — ${refs.join("; ")}. `,
-    )
-    // Validate keeps its structural boundary: the same deck passes it.
-    await expect(runValidate(dir)).resolves.toMatch(/^OK/)
+    expect(refused).toEqual(["blocks", "items"])
+    await expect(runRender(dir, { output: join(dir, "out.pptx") })).rejects.toThrow(/invalid IR:.*blocks.*items/s)
+    await expect(runValidate(dir)).rejects.toThrow(/invalid IR \(2 issues\)/)
   })
 
-  it("prints the verdict and what to do without --json", async () => {
+  it("prints the refusal and what is wrong without --json", async () => {
     const dir = await fitDeck(FIT_PAGES)
     const blocks = await runInspect(dir, { page: "blocks", fit: true })
     expect(blocks.failed).toBe(true)
-    expect(blocks.output).toMatch(/fit: does not fit, \d+ content blocks dropped/)
-    expect(blocks.output).toContain("render refuses a deck that drops content")
+    expect(blocks.output).toContain("fit: not checked, fix the page's validate errors first")
+    expect(blocks.output).toMatch(/would leave \d+ content blocks off the page/)
     const fits = await runInspect(dir, { page: "fits", fit: true })
     expect(fits.failed).toBe(false)
     expect(fits.output).toContain("fit: fits, nothing dropped")

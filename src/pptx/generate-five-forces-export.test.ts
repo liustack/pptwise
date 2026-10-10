@@ -17,6 +17,7 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest"
 import type { Component, PptxIR } from "@/ir"
 import { generatePptx, renderSlideSvg, validateIr } from "@/api"
+import { exportPastDrawnGate } from "./__fixtures__/export-past-drawn-gate"
 import { installNodePlatform } from "../platform/node"
 import { __resetRegisteredThemes } from "../themes/definitions"
 import { registerTestTheme } from "../themes/test-fixtures"
@@ -87,7 +88,7 @@ async function expectExports(components: Component[]): Promise<void> {
  */
 async function expectExportsOverCapacity(components: Component[]): Promise<void> {
   const ir = makeIr(components, CROWDED_HEADING)
-  expect(renderSlideSvg(validateIr(ir).ir!, 1), "fixture is expected to overflow").toMatch(/data-dropped="[1-9]/)
+  expect(renderSlideSvg(validateIr(ir, { allowDroppedContent: true }).ir!, 1), "fixture is expected to overflow").toMatch(/data-dropped="[1-9]/)
   const bytes = await generatePptx(ir, { allowDroppedContent: true })
   expect(bytes.length).toBeGreaterThan(10_000)
   expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
@@ -238,6 +239,7 @@ describe("five_forces over-capacity content is refused, not quietly shortened", 
       ],
       CROWDED_HEADING,
     )
-    await expect(generatePptx(ir)).rejects.toThrow(/deck drops content.*: \d+ items\./s)
+    await expect(generatePptx(ir)).rejects.toThrow(/invalid IR:.*items/s)
+    await expect(exportPastDrawnGate(ir)).rejects.toThrow(/deck drops content.*: \d+ items\./s)
   })
 })

@@ -303,12 +303,18 @@ export function formTextClipMarker(
   return layout.truncated && lineIndex === layout.lines.length - 1 ? "1" : undefined
 }
 
-/** A zero-line fit is still content loss and must remain visible to audit. */
-export function formTextOmissionMarker(
-  sourceText: string,
-  layout: Pick<FormTextLayout, "lines">,
-): "1" | undefined {
-  return sourceText.trim() && layout.lines.length === 0 ? "1" : undefined
+/**
+ * A zero-line fit is still content loss and must remain visible to audit.
+ *
+ * The words it left out, when a fit gave `sourceText` no line at all, or
+ * undefined. A clip leaves its mark on the last line it set, and the line
+ * names its field by the words it shows (`render/cut-fields.ts`). An
+ * omission sets no line, and a mark on the card or row around it showed
+ * that card's other words, so it named no field, or the wrong one. The mark
+ * carries the words instead (`OmittedText`, `./omitted-text.tsx`).
+ */
+export function formTextOmission(sourceText: string, layout: Pick<FormTextLayout, "lines">): string | undefined {
+  return sourceText.trim() && layout.lines.length === 0 ? sourceText : undefined
 }
 
 /** Single-line fit that will truncate rather than drop below `floor`. */

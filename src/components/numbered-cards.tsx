@@ -9,6 +9,7 @@ import {
   stripEmphasis,
   type EmphasisSegment,
 } from "../render/emphasis"
+import { OmittedText } from "./omitted-text"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { TEXT_INK_ASCENT, TEXT_INK_DESCENT } from "../render/depth-contract/geometry"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -17,7 +18,7 @@ import {
   FORM_TITLE_FLOOR,
   formLineHeight,
   formTextClipMarker,
-  formTextOmissionMarker,
+  formTextOmission,
 } from "./legibility"
 
 type NumberedCardsComponent = Extract<Component, { type: "numbered_cards" }>
@@ -365,9 +366,8 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
         // and the body and the sub then go unbuilt. Both are authored words,
         // so both leave the same mark on the pill they could not fit in —
         // the sub used to leave none at all.
-        const omitted =
-          formTextOmissionMarker(item.text ?? "", body ?? { lines: [] }) ??
-          formTextOmissionMarker(item.sub ?? "", { lines: sub ? [sub.text] : [] })
+        const omittedText = formTextOmission(item.text ?? "", body ?? { lines: [] })
+        const omittedSub = formTextOmission(item.sub ?? "", { lines: sub ? [sub.text] : [] })
         // The item the page lands on (`emphasis`) fills its pill in primary
         // and reverses its words out of it. On a theme whose primary does not
         // stand off its cards (rally's is its stage's shadow, a step darker
@@ -389,7 +389,9 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
             ...(marked ? { accent: onPill } : {}),
           })
         return (
-          <g key={i} data-truncated={omitted} data-card-marked={marked ? "1" : undefined}>
+          <g key={i} data-card-marked={marked ? "1" : undefined}>
+            <OmittedText text={omittedText} />
+            <OmittedText text={omittedSub} />
             <rect
               x={pillX}
               y={pillY}

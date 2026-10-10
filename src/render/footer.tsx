@@ -165,12 +165,15 @@ export function CoverMark({
   faceDrawsConfidentiality,
   anchor = COVER_MARK_ANCHOR,
   ctx,
+  ground: faceGround,
   onImage = false,
 }: {
   footer: DeckFooter
   faceDrawsConfidentiality: boolean
   anchor?: CoverMarkAnchor
   ctx: Pick<ComponentCtx, "colors" | "defaultBg" | "fonts">
+  /** The colour the face paints under the mark (`LayoutDefinition.coverMarkGround`), when it paints one there. */
+  ground?: string
   /** The cover is a photo under a dark scrim: paint the mark white, as the rest of that page's type. */
   onImage?: boolean
 }) {
@@ -179,7 +182,7 @@ export function CoverMark({
   const text = classification ?? confidentiality
   if (!text) return null
   const font = ctx.fonts.body
-  const ground = anchor.ground ? ctx.colors[anchor.ground] : (ctx.defaultBg ?? ctx.colors.bg)
+  const ground = faceGround ?? ctx.defaultBg ?? ctx.colors.bg
   const fitted = fitSvgLine(text, {
     maxWidth: 480,
     fontSize: FOOTER_FONT_SIZE,

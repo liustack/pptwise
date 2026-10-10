@@ -236,6 +236,8 @@ export function FashionMastheadCover({ ir, slide, ctx, page }: SvgTemplateProps)
 // registry.ts's slot-`accepts` convention doc for what `[]` means.
 export const layoutDef: LayoutDefinition = {
   coverMark: "face",
+  // A legal classification still takes the default corner. The primary across the whole page.
+  coverMarkGround: (ctx) => ctx.colors.primary,
   suppressMotif: true,
   // cover-fashion-masthead.tsx: full-bleed primary block, org kicker, thin
   // rule above the masthead heading, accent color band, subheading, meta.

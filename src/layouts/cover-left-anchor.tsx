@@ -347,6 +347,8 @@ export function LeftAnchorCover({ ir, slide, ctx, page, params }: SvgTemplatePro
 // registry.ts's slot-`accepts` convention doc for what `[]` means.
 export const layoutDef: LayoutDefinition = {
   coverMark: "face",
+  // A legal classification still takes the default corner. The primary block down the left.
+  coverMarkGround: (ctx) => ctx.colors.primary,
   // cover-left-anchor.tsx: 40%-width primary color block carries the
   // heading (white, product-logic exempt); right panel has org kicker,
   // conf badge, subheading, meta divider + author/date/version. The

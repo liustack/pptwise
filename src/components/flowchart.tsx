@@ -13,6 +13,7 @@ import {
   type Rankdir,
   type SizedNode,
 } from "./flowchart-layout"
+import { OmittedText } from "./omitted-text"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type FlowchartComponent = Extract<Component, { type: "flowchart" }>
@@ -1201,6 +1202,7 @@ export const flowchart: SvgComponent<FlowchartComponent> = {
     // 宽屏画布下水平居中，避免整图贴左留出大片死白
     const dx = Math.max(0, (box.w - flow.width) / 2)
     const focalId = focalNodeId(component)
+    const labelById = new Map(component.nodes.map((node) => [node.id, node.label]))
 
     return (
       <g transform={`translate(${box.x + dx},${box.y})`}>
@@ -1277,7 +1279,11 @@ export const flowchart: SvgComponent<FlowchartComponent> = {
                   strokeWidth={STROKE_W}
                 />
               )}
-              {fits.map((fitted, i) => (
+              {/* A line its node had no room for at all shows no word of the
+                  label, and a cut mark on an empty line names no field. The
+                  label is marked left out whole instead, once, with its words. */}
+              {fits.some((fitted) => fitted.truncated && fitted.text.trim() === "") ? <OmittedText text={labelById.get(n.id)} /> : null}
+              {fits.map((fitted, i) => fitted.truncated && fitted.text.trim() === "" ? null : (
                 <text
                   key={i}
                   data-truncated={fitted.truncated ? "1" : undefined}

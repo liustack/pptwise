@@ -6,6 +6,7 @@ import { formatIssues, formatWarnings, generatePptx, irJsonSchema, listThemes, r
 import { ENUM_ERROR_MESSAGE_MAX_LENGTH } from "./ir/schema-error-hints"
 import { CAPACITY } from "./audit/capacity"
 import { __describeQualityIssue } from "./validate-core"
+import { exportPastDrawnGate } from "./pptx/__fixtures__/export-past-drawn-gate"
 import { __resetRegisteredThemes, registerTheme } from "./themes/definitions"
 import { registerTestTheme } from "./themes/test-fixtures"
 import { decodeImageWithSharp } from "@/platform/node"
@@ -1205,13 +1206,16 @@ describe("bullets count geometric hard error (P0 hardening, robustness deep-revi
 
   it(`does NOT report bullets_count_overflow at exactly ${CAPACITY.bullets.countOverflowItems} items — still ok:true`, () => {
     const atCeiling = Array.from({ length: CAPACITY.bullets.countOverflowItems }, (_, i) => `item ${i}`)
+    // At the ceiling the count gate stays quiet, which is what this pins. The
+    // page still could not draw them all, and the drawn gate would refuse it
+    // for that, so it is skipped here.
     const v = validateIr({
       ...raw,
       slides: [
         raw.slides[0],
         { type: "content", kind: "points", heading: "At count ceiling", components: [{ type: "bullets", items: atCeiling }] },
       ],
-    })
+    }, { allowDroppedContent: true })
     expect(v.ok).toBe(true)
   })
 
@@ -1633,10 +1637,13 @@ describe("comparison/architecture count geometric hard error (carried-items wave
 
   it(`does NOT report comparison_count_overflow at exactly ${CAPACITY.comparison.errorRows} rows — still ok:true`, () => {
     const atCeiling = Array.from({ length: CAPACITY.comparison.errorRows }, (_, i) => ({ label: `row ${i}`, cells: ["x", "y"] }))
+    // At the ceiling the count gate stays quiet, which is what this pins. The
+    // page still could not draw them all, and the drawn gate would refuse it
+    // for that, so it is skipped here.
     const v = validateIr({
       ...raw,
       slides: [raw.slides[0], { type: "content", kind: "points", heading: "At ceiling", components: [{ type: "comparison", columns: ["A", "B"], rows: atCeiling }] }],
-    })
+    }, { allowDroppedContent: true })
     expect(v.ok).toBe(true)
   })
 
@@ -2328,6 +2335,11 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
   // `svg/layout.test.ts`'s own drop case). Nothing on the rendered slide
   // says the missing blocks ever existed — which is the whole reason the
   // export refuses.
+  //
+  // validate draws every content page now and refuses this one first, so
+  // the export gate behind it is reached past that gate, out loud
+  // (`exportPastDrawnGate`). What the export gate says and lets through is
+  // what this block pins.
   const LONG =
     "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及跨可用区容灾演练的完整落地路径说明"
   const overfull = (n: number) =>
@@ -2341,15 +2353,23 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
   }
 
   it("the fixture really does lose content silently — no marker text on the rendered slide", () => {
-    const v = validateIr(dropping)
+    const v = validateIr(dropping, { allowDroppedContent: true })
     expect(v.ok).toBe(true)
     const svg = renderSlideSvg(v.ir!, 1)
     expect(svg).toMatch(/data-dropped="[1-9]/)
     expect(svg).not.toContain("more")
   })
 
+  it("is refused by validate first, which names the page and what it would lose", async () => {
+    const v = validateIr(dropping)
+    expect(v.ok).toBe(false)
+    expect(v.errors[0]).toMatchObject({ page: 2, slideId: "p-2" })
+    expect(v.errors[0]!.message).toMatch(/would leave \d+ content blocks off the page/)
+    await expect(generatePptx(dropping)).rejects.toThrow(/invalid IR:.*would leave \d+ content blocks off the page/s)
+  })
+
   it("throws PptwiseError naming the page, the count and the way out", async () => {
-    await expect(generatePptx(dropping)).rejects.toThrow(
+    await expect(exportPastDrawnGate(dropping)).rejects.toThrow(
       /deck drops content that does not fit the content area, on 1 page — p-2 \(page 2\): \d+ content blocks\. Shorten the content, split the page in two, or pass --allow-dropped-content/,
     )
   })
@@ -2380,8 +2400,8 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
       ],
     }
 
-    expect(validateIr(takeoverDropping).ok).toBe(true)
-    await expect(generatePptx(takeoverDropping)).rejects.toThrow(
+    expect(validateIr(takeoverDropping, { allowDroppedContent: true }).ok).toBe(true)
+    await expect(exportPastDrawnGate(takeoverDropping)).rejects.toThrow(
       /deck drops content.*photo-2 \(page 2\): 1 content block\..*--allow-dropped-content/,
     )
   })
@@ -2391,7 +2411,7 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
       ...raw,
       slides: [raw.slides[0], { type: "content" as const, kind: "points", heading: "Too much", components: overfull(8) }],
     }
-    await expect(generatePptx(noId)).rejects.toThrow(/on 1 page — page 2: \d+ content blocks\./)
+    await expect(exportPastDrawnGate(noId)).rejects.toThrow(/on 1 page — page 2: \d+ content blocks\./)
   })
 
   it("exports when { allowDroppedContent: true } is passed", async () => {
@@ -2406,7 +2426,7 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
   })
 
   it("renderSlideSvg never gates on dropped content (preview shows work in progress)", () => {
-    const v = validateIr(dropping)
+    const v = validateIr(dropping, { allowDroppedContent: true })
     expect(() => renderSlideSvg(v.ir!, 1)).not.toThrow()
   })
 
@@ -2430,14 +2450,14 @@ describe("generatePptx content-drop gate (deep-review P1)", () => {
         },
       ],
     }
-    const v = validateIr(manyBullets)
+    const v = validateIr(manyBullets, { allowDroppedContent: true })
     expect(v.ok).toBe(true)
     const svg = renderSlideSvg(v.ir!, 1)
     expect(svg).toMatch(/data-dropped="[1-9]/)
     // Nothing on the page admits the cut.
     expect(svg).not.toMatch(/>[^<]*\+\s*\d+[^<]*</)
     // Bullets cut their own items, and the message says items, not blocks.
-    await expect(generatePptx(manyBullets)).rejects.toThrow(/deck drops content.*: \d+ items\./s)
+    await expect(exportPastDrawnGate(manyBullets)).rejects.toThrow(/deck drops content.*: \d+ items\./s)
     const bytes = await generatePptx(manyBullets, { allowDroppedContent: true })
     expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
   })
@@ -2597,6 +2617,9 @@ describe("checkAssetReferences: dangling asset_id warning (Task 2, borrow wave �
   })
 
   it("catches a dangling asset_id on a product_cards item", () => {
+    // The card whose picture never arrived is drawn without it, and the
+    // drawn gate refuses the page for that. This pins the warning that names
+    // the id, so that gate is skipped.
     const v = validateIr({
       ...raw,
       assets: { images: { p1: { src: realPngDataUri } } },
@@ -2611,7 +2634,7 @@ describe("checkAssetReferences: dangling asset_id warning (Task 2, borrow wave �
           ],
         },
       ],
-    })
+    }, { allowDroppedContent: true })
     expect(v.ok).toBe(true)
     const dangling = (v.warnings ?? []).filter((x) => /is not defined in assets.images/.test(x.message))
     expect(dangling.map((x) => x.path)).toEqual(["slides.1.components.0.items.1.asset_id"])

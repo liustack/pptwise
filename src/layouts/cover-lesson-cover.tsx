@@ -163,7 +163,9 @@ export const layoutDef = {
   paintsOwnBackground: true,
   suppressMotif: true,
   // Over the office's line, on the board.
-  coverMark: { x: LEFT, y: 44, ground: "primary" },
+  coverMark: { x: LEFT, y: 44 },
+  // The board, the primary shaded darker, runs under it.
+  coverMarkGround: (ctx) => lessonInks(ctx).board,
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },
   headingSet: dossierTitleSet(TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w),
 } satisfies LayoutDefinition

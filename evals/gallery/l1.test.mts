@@ -699,7 +699,9 @@ describe("auditL1 on a page whose component declines outright", () => {
   // 24 series, not 16: through 20 the face steps aside and the sheet holds
   // the chart (`render/step-aside.tsx`), so there is nothing to report.
   it("cannot pass: a 24-series line chart declines on every rendering and L1 reports the drop", () => {
-    const v = validateIr(declinedChartDeck)
+    // validate refuses this page now for the chart it would lose. L1 reading
+    // a page that lost it is what this pins, so that one gate is skipped.
+    const v = validateIr(declinedChartDeck, { allowDroppedContent: true })
     expect(v.ok).toBe(true)
     const svg = renderSlideSvg(v.ir!, 0)
     // The page really does lose the chart, and really does say nothing.

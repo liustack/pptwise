@@ -71,10 +71,12 @@ describe("validate refuses a block with fewer items than its face draws", () => 
             assets,
             slides: [{ ...(boundary ? { type: slot } : { type: "content", kind: slot }), heading: "下一步", components: [{ ...block, [key]: list.slice(0, n) }] } as Slide],
           }) as PptxIR
-        // What the face draws at each length, validate set aside.
+        // What the face draws at each length, validate set aside. Its drawing
+        // of content pages is set aside too: it would draw each page once more
+        // before this does. validate is asked whole below.
         const drawn = new Map<number, boolean>()
         for (let n = min; n <= list.length; n++) {
-          const result = validateIr(page(n), { theme })
+          const result = validateIr(page(n), { theme, allowDroppedContent: true })
           const ir = result.ir ?? (result.errors.every((e) => e.path.startsWith("slides.0")) ? page(n) : undefined)
           if (!ir) continue
           try {

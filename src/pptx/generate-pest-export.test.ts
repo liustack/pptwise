@@ -19,6 +19,7 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest"
 import type { Component, PptxIR } from "@/ir"
 import { generatePptx, renderSlideSvg, validateIr } from "@/api"
+import { exportPastDrawnGate } from "./__fixtures__/export-past-drawn-gate"
 import { installNodePlatform } from "../platform/node"
 import { __resetRegisteredThemes } from "../themes/definitions"
 import { registerTestTheme } from "../themes/test-fixtures"
@@ -60,6 +61,20 @@ async function expectExports(components: Component[]): Promise<void> {
   const ir = makeIr(components)
   expect(renderSlideSvg(validateIr(ir).ir!, 1), "fixture is expected to fit").not.toContain("data-dropped")
   const bytes = await generatePptx(ir)
+  expect(bytes.length).toBeGreaterThan(10_000)
+  expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
+}
+
+/**
+ * A real export of a page whose words the face cuts. validate refuses a cut
+ * in words a reader needs whole now, so the page is reached past validate's
+ * drawn gate (`exportPastDrawnGate`), with the export's own drop gate still
+ * on: whether a cut still writes a clean package is what such a case pins.
+ */
+async function expectCutExports(components: Component[]): Promise<void> {
+  const ir = makeIr(components)
+  expect(validateIr(ir).ok, "fixture is expected to be cut").toBe(false)
+  const bytes = await exportPastDrawnGate(ir)
   expect(bytes.length).toBeGreaterThan(10_000)
   expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
 }
@@ -142,10 +157,10 @@ describe("pest pathological content through the real generatePptx", () => {
     ])
   })
 
-  it("over-long quadrant titles and items truncate and still export cleanly", async () => {
+  it("over-long quadrant titles and items truncate, and the cut still exports cleanly past validate", async () => {
     const longTitle = "一个相当长的象限标题用于测试截断行为一个相当长的象限标题"
     const longItem = "一条相当长的条目内容用于测试截断行为一条相当长的条目内容一条相当长的条目内容"
-    await expectExports([
+    await expectCutExports([
       {
         type: "pest",
         political: { title: longTitle, items: [longItem, "b"] },

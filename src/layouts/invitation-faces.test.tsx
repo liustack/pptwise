@@ -22,7 +22,7 @@ await installNodePlatform()
 const PHOTO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
 const GOLD = resolveStyle("luxe").colors.accent
 
-function deck(slides: Slide[], english = false, theme = "luxe"): PptxIR {
+function deck(slides: Slide[], english = false, theme = "luxe", allowDroppedContent = false): PptxIR {
   const result = validateIr({
     version: "5",
     filename: "luxe.pptx",
@@ -31,7 +31,7 @@ function deck(slides: Slide[], english = false, theme = "luxe"): PptxIR {
     footer: { page_number: true, organization: true, label: english ? "October 2026" : "二〇二六年十月" },
     assets: { images: { bangle: { src: PHOTO }, counter: { src: PHOTO }, tray: { src: PHOTO } } },
     slides,
-  })
+  }, { allowDroppedContent })
   if (!result.ok) throw new Error(result.errors.map((e) => `${e.path}: ${e.message}`).join("\n"))
   return result.ir!
 }
@@ -113,9 +113,12 @@ describe("invitation-sheet", () => {
     expect(svg).not.toContain("data-dropped")
   })
 
-  it("declares a stamp dropped when no reply card takes the page", () => {
-    const { svg } = render(deck([cover(), sheet({ stamp: { text: "回执" } })]), 1)
+  it("declares a stamp dropped when no reply card takes the page, and validate refuses the stamp", () => {
+    // The mark is what this pins, so the page is drawn past validate's drawn
+    // gate, which refuses it for the stamp it leaves off.
+    const { svg } = render(deck([cover(), sheet({ stamp: { text: "回执" } })], false, "luxe", true), 1)
     expect(svg).toContain('data-dropped-kind="stamp"')
+    expect(() => deck([cover(), sheet({ stamp: { text: "回执" } })])).toThrow(/slides\.1\.stamp: face "invitation-sheet" has no place for this page's stamp/)
   })
 
   it("frames only the right half beside a photograph that runs from the page's left edge", () => {
