@@ -111,6 +111,59 @@ describe("dsh plugin (skill registration, v0)", () => {
     expect(reg!.content).toContain("npx -y @liustack/pptwise")
   })
 
+  it("keeps the plain node line wherever a shell can find node", () => {
+    const preamble = plugin.dshRuntimePreamble("/p/dist/cli.js", { command: "node", runAsNode: false }, "darwin")
+    expect(preamble).toContain('```bash\nnode "/p/dist/cli.js" <args>\n```')
+    // The same line on Windows: PowerShell reads a bare `node` call as Bash does.
+    expect(plugin.dshRuntimePreamble("C:\\p\\cli.js", { command: "node", runAsNode: false }, "win32")).toContain(
+      'node "C:\\p\\cli.js" <args>',
+    )
+  })
+
+  it("names Electron in Node mode where no node is on PATH, as on DSH Desktop", () => {
+    // Desktop keeps its bundled Node off the agent shell's PATH, so `node`
+    // fails there for every user who never installed one. Electron with
+    // ELECTRON_RUN_AS_NODE=1 is the runtime Desktop's own host runs on.
+    const electron = { command: "/Applications/DeepSeek Harness.app/Contents/MacOS/DeepSeek Harness", runAsNode: true }
+    expect(plugin.dshRuntimePreamble("/p/dist/cli.js", electron, "darwin")).toContain(
+      '```bash\nELECTRON_RUN_AS_NODE=1 "/Applications/DeepSeek Harness.app/Contents/MacOS/DeepSeek Harness" "/p/dist/cli.js" <args>\n```',
+    )
+    // Windows agents run PowerShell, where a quoted executable needs `&`.
+    expect(
+      plugin.dshRuntimePreamble("C:\\p\\cli.js", { command: "C:\\DSH\\DeepSeek Harness.exe", runAsNode: true }, "win32"),
+    ).toContain(
+      "```powershell\n$env:ELECTRON_RUN_AS_NODE='1'; & \"C:\\DSH\\DeepSeek Harness.exe\" \"C:\\p\\cli.js\" <args>\n```",
+    )
+    // A plain Node host without node on PATH: its own absolute path, no flag.
+    expect(plugin.dshRuntimePreamble("/p/dist/cli.js", { command: "/opt/node/bin/node", runAsNode: false }, "linux")).toContain(
+      '"/opt/node/bin/node" "/p/dist/cli.js" <args>',
+    )
+  })
+
+  it("decides the launcher from the PATH the agent's shell inherits", async () => {
+    const { cliLauncher } = (await loadPreviewTool()) as unknown as {
+      cliLauncher: (o: { env?: Record<string, string>; versions?: Record<string, string>; execPath?: string }) => {
+        command: string
+        runAsNode: boolean
+      }
+    }
+    const noNode = { PATH: "/nonexistent-pptwise-dir", Path: "C:\\nonexistent-pptwise-dir" }
+    expect(cliLauncher({ env: noNode, versions: { electron: "44.0.0" }, execPath: "/App/Electron" })).toEqual({
+      command: "/App/Electron",
+      runAsNode: true,
+    })
+    expect(cliLauncher({ env: noNode, versions: {}, execPath: "/opt/node/bin/node" })).toEqual({
+      command: "/opt/node/bin/node",
+      runAsNode: false,
+    })
+    // The node running this test is on a PATH somewhere: that keeps the line.
+    const withNode = { PATH: dirname(process.execPath), Path: dirname(process.execPath) }
+    expect(cliLauncher({ env: withNode, versions: { electron: "44.0.0" }, execPath: "/App/Electron" })).toEqual({
+      command: "node",
+      runAsNode: false,
+    })
+  })
+
   it("points path/resourceBase at the shipped skill directory", () => {
     const [reg] = applyWithFakeCtx()
     expect(reg!.path.endsWith(join("skills", "pptwise", "SKILL.md"))).toBe(true)

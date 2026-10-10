@@ -83,10 +83,10 @@
 //    and friends): still fetched or read per run. See `inlineLocalImages`.
 
 import { randomUUID } from 'node:crypto'
-import { cpSync, existsSync, realpathSync, renameSync, rmSync } from 'node:fs'
+import { accessSync, constants as fsConstants, cpSync, existsSync, realpathSync, renameSync, rmSync, statSync } from 'node:fs'
 import { copyFile, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
-import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
+import { basename, delimiter, dirname, isAbsolute, join, resolve } from 'node:path'
 import { runChild } from './spawnHidden.js'
 
 /**
@@ -993,11 +993,72 @@ async function readRecord(root, id) {
   return record
 }
 
-function resolveCliCommand() {
-  if (process.versions.electron) {
-    return process.env.npm_node_execpath || 'node'
+/**
+ * The `node` a shell started from this process's environment would run, as an
+ * absolute path, or undefined when there is none.
+ *
+ * Looked up here rather than left to `spawn('node')` so that "no Node at all"
+ * is a value this plugin can act on before anything fails. DSH Desktop is the
+ * case that needs it: it runs on Electron and does not put a Node on the PATH
+ * its host and agent shells inherit, so a user who never installed Node has
+ * none. On Windows only `node.exe` counts: a `node.cmd` cannot be spawned
+ * without a shell, which is what Desktop's own package-script launcher is.
+ */
+function findNodeOnPath(env = process.env, platform = process.platform) {
+  const pathValue = platform === 'win32' ? (env.Path ?? env.PATH ?? env.path) : env.PATH
+  if (!pathValue) return undefined
+  const name = platform === 'win32' ? 'node.exe' : 'node'
+  for (const dir of pathValue.split(platform === 'win32' ? ';' : delimiter)) {
+    if (!dir) continue
+    const candidate = join(dir, name)
+    try {
+      if (!statSync(candidate).isFile()) continue
+      if (platform !== 'win32') accessSync(candidate, fsConstants.X_OK)
+      return candidate
+    } catch {
+      // Not here, or not runnable: the next PATH entry decides.
+    }
   }
-  return process.execPath
+  return undefined
+}
+
+/**
+ * The executable the preview tool runs the CLI with.
+ *
+ * Outside Electron that is the Node already running this plugin. Inside it
+ * (DSH Desktop, and third-party desktop shells) a real Node is preferred when
+ * there is one, and Electron itself is the fallback: run with
+ * `ELECTRON_RUN_AS_NODE=1` (`cliChildEnv`) it is a Node, and it is the one
+ * runtime Desktop guarantees, since its own host runs on it the same way. The
+ * fallback used to be the bare string `node`, which failed with ENOENT for
+ * every Desktop user without a Node install.
+ *
+ * Every branch is a child process. Issue #1 was two libvips in one Electron
+ * process; a child Electron in Node mode loads only the CLI's sharp.
+ */
+function resolveCliCommand(opts = {}) {
+  const env = opts.env ?? process.env
+  const versions = opts.versions ?? process.versions
+  const execPath = opts.execPath ?? process.execPath
+  if (!versions.electron) return execPath
+  return env.npm_node_execpath || findNodeOnPath(env, opts.platform) || execPath
+}
+
+/**
+ * How the skill tells the model to run the CLI from the agent's shell.
+ *
+ * `node` when a shell from this environment can find one, which is every
+ * setup that worked before. Otherwise the absolute runtime `resolveCliCommand`
+ * falls back to, with `runAsNode` when that runtime is Electron and needs
+ * `ELECTRON_RUN_AS_NODE=1` to behave as Node. The agent's shell inherits this
+ * host's PATH, so what this process can find is what the shell can find.
+ */
+export function cliLauncher(opts = {}) {
+  const env = opts.env ?? process.env
+  const versions = opts.versions ?? process.versions
+  const execPath = opts.execPath ?? process.execPath
+  if (findNodeOnPath(env, opts.platform)) return { command: 'node', runAsNode: false }
+  return { command: execPath, runAsNode: Boolean(versions.electron) }
 }
 
 function cliChildEnv() {
@@ -1007,10 +1068,10 @@ function cliChildEnv() {
 /** Run the packaged CLI, resolving with its combined output.
  *
  * GitHub issue #1: two libvips in one Electron process crash the renderer.
- * The plugin must never import() the CLI. Electron's process.execPath is not
- * a Node binary, so the child is a real node when inside Electron, and
- * ELECTRON_RUN_AS_NODE is always set so an Electron fallback cannot boot as
- * an app.
+ * The plugin must never import() the CLI. Inside Electron the child is a real
+ * node when one is installed and Electron itself otherwise, and
+ * ELECTRON_RUN_AS_NODE is always set so an Electron child runs as Node rather
+ * than booting as an app.
  */
 function runCli(cliPath, args, signal) {
   return runChild(resolveCliCommand(), [cliPath, ...args], {
@@ -1999,4 +2060,5 @@ export const __testing = {
   PreviewDamaged,
   resolveCliCommand,
   cliChildEnv,
+  findNodeOnPath,
 }
