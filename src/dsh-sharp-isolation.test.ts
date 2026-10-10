@@ -4,8 +4,9 @@
 // with `new URL(..., import.meta.url)` + `fileURLToPath` at module scope,
 // which the repo-default jsdom environment breaks (jsdom swaps global URL —
 // same reason plugin-manifest.test.ts reads files by process.cwd()).
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
-import { dirname, join, relative } from "node:path"
+import { chmodSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { delimiter, dirname, join, relative } from "node:path"
 
 // The plugin is plain dependency-free JS by design (no build step, no dsh
 // type imports) — see dsh/index.js's own header comment.
@@ -207,7 +208,7 @@ describe("CLI child isolation in dsh/preview-tool.js", () => {
     expect(__testing.resolveCliCommand()).toBe(process.execPath)
   })
 
-  it("uses a real Node binary when process.versions.electron is set", () => {
+  it("uses a real Node binary when process.versions.electron is set and one is installed", () => {
     Object.defineProperty(process.versions, "electron", {
       value: "2.0.0",
       configurable: true,
@@ -216,9 +217,48 @@ describe("CLI child isolation in dsh/preview-tool.js", () => {
     })
     process.env.npm_node_execpath = "/usr/local/bin/node"
     expect(__testing.resolveCliCommand()).toBe("/usr/local/bin/node")
-    delete process.env.npm_node_execpath
-    expect(__testing.resolveCliCommand()).toBe("node")
-    expect(__testing.resolveCliCommand()).not.toBe(process.execPath)
+
+    // Found on PATH, and handed over as the absolute path a shell would run.
+    const dir = mkdtempSync(join(tmpdir(), "pptwise-fake-node-"))
+    try {
+      const fakeNode = join(dir, process.platform === "win32" ? "node.exe" : "node")
+      writeFileSync(fakeNode, "")
+      chmodSync(fakeNode, 0o755)
+      const env = { PATH: ["/nonexistent-pptwise-dir", dir].join(delimiter), Path: ["/nonexistent-pptwise-dir", dir].join(";") }
+      expect(__testing.resolveCliCommand({ env, versions: { electron: "44.0.0" }, execPath: "/App/Electron" })).toBe(
+        fakeNode,
+      )
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it("falls back to Electron itself in Node mode when no Node is installed (DSH Desktop)", () => {
+    // DSH Desktop runs on Electron and keeps its bundled Node off the PATH its
+    // host inherits. Without a Node install the old fallback, the bare string
+    // "node", failed with ENOENT on every preview. Electron with
+    // ELECTRON_RUN_AS_NODE=1 is a Node, and Desktop runs its own host on it.
+    const command = __testing.resolveCliCommand({
+      env: { PATH: "/nonexistent-pptwise-dir", Path: "C:\\nonexistent-pptwise-dir" },
+      versions: { electron: "44.0.0" },
+      execPath: "/Applications/DeepSeek Harness.app/Contents/MacOS/DeepSeek Harness",
+    })
+    expect(command).toBe("/Applications/DeepSeek Harness.app/Contents/MacOS/DeepSeek Harness")
+    // Still a child process with RunAsNode set: issue #1 stays fixed, because
+    // the CLI's sharp never shares a process with the host's.
+    expect(__testing.cliChildEnv().ELECTRON_RUN_AS_NODE).toBe("1")
+  })
+
+  it("does not count a node.cmd shim on Windows, which cannot be spawned without a shell", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pptwise-fake-node-cmd-"))
+    try {
+      writeFileSync(join(dir, "node.cmd"), "")
+      expect(__testing.findNodeOnPath({ Path: dir }, "win32")).toBeUndefined()
+      writeFileSync(join(dir, "node.exe"), "")
+      expect(__testing.findNodeOnPath({ Path: dir }, "win32")).toBe(join(dir, "node.exe"))
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
   })
 
   it("always sets ELECTRON_RUN_AS_NODE to 1 on the child env without mutating process.env", () => {

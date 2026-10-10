@@ -399,8 +399,12 @@ async function loadDshClientBundle(clientPath: string): Promise<{ moduleId: stri
     useEffect: () => undefined,
     useRef: () => ({ current: null }),
   }
+  // The viewer portals onto the page body with `react-dom`, which the shell's
+  // module table has always carried beside `react`.
+  const fakeReactDom = { createPortal: (node: unknown) => node }
   const exportsObject = registration.factory((id: string) => {
     if (id === "react") return fakeReact
+    if (id === "react-dom") return fakeReactDom
     throw new Error(`the preview card bundle required an unexpected module: ${id}`)
   })
   if (typeof exportsObject.apply !== "function") {
@@ -433,6 +437,34 @@ export interface PreviewToolRun {
   pageCount: number
   pptxPath: string
   modelText: string
+  valueBytes: number
+}
+
+/** Ask the registered route for a preview's bundle, as the card's fetch does. */
+async function routeBundlePages(route: DshRouteRegistration, previewId: string): Promise<unknown[]> {
+  const handler = route.handler as (
+    req: { url: string },
+    res: { writeHead: (status: number, headers: Record<string, unknown>) => void; end: (body?: unknown) => void },
+  ) => Promise<void>
+  let status = 0
+  let body = ""
+  await handler(
+    { url: `${String(route.path)}/${previewId}` },
+    {
+      writeHead(s) {
+        status = s
+      },
+      end(chunk) {
+        if (chunk !== undefined) body += String(chunk)
+      },
+    },
+  )
+  if (status !== 200) {
+    throw new Error(`The preview route answered ${status} for ${previewId}, which the card would show as a dead deck`)
+  }
+  const pages = (JSON.parse(body) as { pages?: unknown }).pages
+  if (!Array.isArray(pages)) throw new Error(`The preview route served no pages for ${previewId}`)
+  return pages
 }
 
 /** Where the plugin keeps previews. Requires the isolated `PPTWISE_HOME`
@@ -478,11 +510,16 @@ async function removeGeneratedPreview(outDir: string): Promise<void> {
  * the ONE RENDER WINDOW note in dsh/preview-tool.js).
  *
  * It also asserts what must NOT be there: a deck's SVG runs to tens of
- * kilobytes and carries nothing the model can act on, so `output.render` has
- * to stay a short line. Markup leaking into it is a silent context-window
- * regression that no other check would notice.
+ * kilobytes and carries nothing the model can act on, so neither
+ * `output.render` nor the value `execute` returns may carry it. Under Code
+ * Mode that value is what the model's program receives. Markup leaking into
+ * either is a silent context-window regression that no other check would
+ * notice. The pages are fetched the way the card fetches them, from the route.
  */
-export async function verifyPreviewToolRun(tool: DshToolRegistration): Promise<PreviewToolRun> {
+export async function verifyPreviewToolRun(
+  tool: DshToolRegistration,
+  route: DshRouteRegistration,
+): Promise<PreviewToolRun> {
   const workDir = await mkdtemp(join(tmpdir(), "pptwise-dsh-gate-"))
   const target = join(workDir, "gate-deck.json")
   await writeFile(
@@ -504,7 +541,6 @@ export async function verifyPreviewToolRun(tool: DshToolRegistration): Promise<P
       previewId?: unknown
       outDir?: unknown
       pageCount?: unknown
-      bundle?: { pages?: unknown[] }
     }
     if (typeof value?.previewId !== "string" || value.previewId === "") {
       throw new Error(`${PREVIEW_TOOL_NAME}.execute returned no previewId — the card finds its deck by that id`)
@@ -513,14 +549,23 @@ export async function verifyPreviewToolRun(tool: DshToolRegistration): Promise<P
       throw new Error(`${PREVIEW_TOOL_NAME}.execute returned no outDir`)
     }
     outDir = value.outDir
-    const pages = value.bundle?.pages
-    if (!Array.isArray(pages) || pages.length !== 2) {
+    if (value.pageCount !== 2) {
       throw new Error(
-        `${PREVIEW_TOOL_NAME}.execute returned ${Array.isArray(pages) ? pages.length : "no"} preview pages, expected 2 (one per slide in the gate deck)`,
+        `${PREVIEW_TOOL_NAME}.execute reported ${String(value.pageCount)} pages, expected 2 (one per slide in the gate deck)`,
       )
     }
+    const valueJson = JSON.stringify(value)
+    if (/<svg|<\/svg>|"pages"/i.test(valueJson) || valueJson.length > 1000) {
+      throw new Error(
+        `${PREVIEW_TOOL_NAME}.execute returned deck markup in its value (${valueJson.length} bytes) — under Code Mode that value reaches the model`,
+      )
+    }
+    const pages = await routeBundlePages(route, value.previewId)
+    if (pages.length !== 2) {
+      throw new Error(`The preview route served ${pages.length} pages for ${value.previewId}, expected 2`)
+    }
     if (!pages.every((page) => typeof (page as { svg?: unknown }).svg === "string")) {
-      throw new Error(`${PREVIEW_TOOL_NAME}.execute returned a preview page without inlined SVG markup`)
+      throw new Error(`The preview route served a page without inlined SVG markup`)
     }
 
     const produced = await readdir(outDir)
@@ -551,7 +596,14 @@ export async function verifyPreviewToolRun(tool: DshToolRegistration): Promise<P
         `output.render leaked deck markup into model-facing text (${modelText.length} bytes) — it must stay one short line`,
       )
     }
-    return { previewId: value.previewId, outDir, pageCount: pages.length, pptxPath, modelText }
+    return {
+      previewId: value.previewId,
+      outDir,
+      pageCount: pages.length,
+      pptxPath,
+      modelText,
+      valueBytes: valueJson.length,
+    }
   } finally {
     await rm(workDir, { recursive: true, force: true }).catch(() => {})
     // The gate's own deck, not the user's, and nothing deletes it on its own:
@@ -663,7 +715,7 @@ async function main(): Promise<void> {
     const tool = verifyInstalledDshTool(applied)
     const route = verifyInstalledDshRoute(applied)
     const client = await verifyInstalledDshClient(installed)
-    const run = await verifyPreviewToolRun(tool)
+    const run = await verifyPreviewToolRun(tool, route)
     const invocation = buildDshDumpConfigInvocation(canonicalWorkspace, options.profile)
     const dump = execFileSync(invocation.command, invocation.args, {
       cwd: invocation.cwd,
@@ -680,7 +732,7 @@ async function main(): Promise<void> {
         `tool: ${String(tool.name)} (render, presentationMeta, execute)`,
         `route: ${String(route.path)}`,
         `card: ${client.clientPath} -> ${TOOLVIEW_SLOT}:${client.slotKeys.join(",")}`,
-        `live run: ${run.pageCount} pages + ${run.pptxPath.split("/").pop()}, model text ${run.modelText.length} bytes, no markup`,
+        `live run: ${run.pageCount} pages + ${run.pptxPath.split("/").pop()}, model text ${run.modelText.length} bytes, value ${run.valueBytes} bytes, no markup`,
         `requested workspace: ${options.workspace}`,
         `canonical workspace: ${canonicalWorkspace}`,
         "Use the canonical workspace path for any automated workspace fixture.",

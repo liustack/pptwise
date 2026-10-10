@@ -111,6 +111,59 @@ describe("dsh plugin (skill registration, v0)", () => {
     expect(reg!.content).toContain("npx -y @liustack/pptwise")
   })
 
+  it("keeps the plain node line wherever a shell can find node", () => {
+    const preamble = plugin.dshRuntimePreamble("/p/dist/cli.js", { command: "node", runAsNode: false }, "darwin")
+    expect(preamble).toContain('```bash\nnode "/p/dist/cli.js" <args>\n```')
+    // The same line on Windows: PowerShell reads a bare `node` call as Bash does.
+    expect(plugin.dshRuntimePreamble("C:\\p\\cli.js", { command: "node", runAsNode: false }, "win32")).toContain(
+      'node "C:\\p\\cli.js" <args>',
+    )
+  })
+
+  it("names Electron in Node mode where no node is on PATH, as on DSH Desktop", () => {
+    // Desktop keeps its bundled Node off the agent shell's PATH, so `node`
+    // fails there for every user who never installed one. Electron with
+    // ELECTRON_RUN_AS_NODE=1 is the runtime Desktop's own host runs on.
+    const electron = { command: "/Applications/DeepSeek Harness.app/Contents/MacOS/DeepSeek Harness", runAsNode: true }
+    expect(plugin.dshRuntimePreamble("/p/dist/cli.js", electron, "darwin")).toContain(
+      '```bash\nELECTRON_RUN_AS_NODE=1 "/Applications/DeepSeek Harness.app/Contents/MacOS/DeepSeek Harness" "/p/dist/cli.js" <args>\n```',
+    )
+    // Windows agents run PowerShell, where a quoted executable needs `&`.
+    expect(
+      plugin.dshRuntimePreamble("C:\\p\\cli.js", { command: "C:\\DSH\\DeepSeek Harness.exe", runAsNode: true }, "win32"),
+    ).toContain(
+      "```powershell\n$env:ELECTRON_RUN_AS_NODE='1'; & \"C:\\DSH\\DeepSeek Harness.exe\" \"C:\\p\\cli.js\" <args>\n```",
+    )
+    // A plain Node host without node on PATH: its own absolute path, no flag.
+    expect(plugin.dshRuntimePreamble("/p/dist/cli.js", { command: "/opt/node/bin/node", runAsNode: false }, "linux")).toContain(
+      '"/opt/node/bin/node" "/p/dist/cli.js" <args>',
+    )
+  })
+
+  it("decides the launcher from the PATH the agent's shell inherits", async () => {
+    const { cliLauncher } = (await loadPreviewTool()) as unknown as {
+      cliLauncher: (o: { env?: Record<string, string>; versions?: Record<string, string>; execPath?: string }) => {
+        command: string
+        runAsNode: boolean
+      }
+    }
+    const noNode = { PATH: "/nonexistent-pptwise-dir", Path: "C:\\nonexistent-pptwise-dir" }
+    expect(cliLauncher({ env: noNode, versions: { electron: "44.0.0" }, execPath: "/App/Electron" })).toEqual({
+      command: "/App/Electron",
+      runAsNode: true,
+    })
+    expect(cliLauncher({ env: noNode, versions: {}, execPath: "/opt/node/bin/node" })).toEqual({
+      command: "/opt/node/bin/node",
+      runAsNode: false,
+    })
+    // The node running this test is on a PATH somewhere: that keeps the line.
+    const withNode = { PATH: dirname(process.execPath), Path: dirname(process.execPath) }
+    expect(cliLauncher({ env: withNode, versions: { electron: "44.0.0" }, execPath: "/App/Electron" })).toEqual({
+      command: "node",
+      runAsNode: false,
+    })
+  })
+
   it("points path/resourceBase at the shipped skill directory", () => {
     const [reg] = applyWithFakeCtx()
     expect(reg!.path.endsWith(join("skills", "pptwise", "SKILL.md"))).toBe(true)
@@ -176,6 +229,35 @@ describe("dsh plugin bundle manifest", () => {
     expect(pkg.keywords).toEqual(expect.arrayContaining(["dsh", "dsh-plugin"]))
   })
 
+  it("gives DSH's plugin page the product name and the brand icon", () => {
+    // DSH 0.1.7+ titles a plugin card from `locale/<lang>.json` `meta.title`
+    // and draws `package.json.icon`; without them the card read
+    // `@liustack/pptwise` beside the default artwork. The description is left
+    // to package.json, which the DSH market already reads.
+    const pkg = readJson("package.json") as {
+      icon?: string
+      exports?: Record<string, unknown>
+      files?: string[]
+    }
+    const locale = readJson("locale/en.json") as { meta?: Record<string, unknown> }
+    expect(locale.meta).toEqual({ title: "pptwise" })
+    expect(pkg.exports?.["./locale/*.json"]).toBe("./locale/*.json")
+    expect(pkg.exports?.["./package.json"]).toBe("./package.json")
+    expect(pkg.files).toContain("locale")
+
+    // The rules DSH applies before it will draw the icon: a relative path
+    // inside the package, a supported image type, at most 256 KiB, and a file
+    // the published package actually carries.
+    const icon = pkg.icon
+    expect(icon).toMatch(/^\.\/[^.][^:]*\.(svg|png|jpe?g|webp)$/)
+    const iconPath = join(ROOT, icon!)
+    const bytes = readFileSync(iconPath)
+    expect(bytes.length).toBeLessThanOrEqual(256 * 1024)
+    expect(bytes.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a")
+    const shipped = icon!.slice(2).split("/")[0]!
+    expect(pkg.files).toContain(shipped)
+  })
+
   it("cordis.patch.yml mounts the plugin under the scoped package name (card shows 'pptwise')", () => {
     const patch = readFileSync(join(ROOT, "cordis.patch.yml"), "utf8")
     expect(patch).toContain("name: '@liustack/pptwise'")
@@ -212,10 +294,11 @@ interface PreviewRecord {
 interface PreviewValue {
   previewId: string
   outDir: string
+  title?: string
   pageCount: number
   findingCount: number
   audited: boolean
-  bundle: { title?: string; draft?: boolean; pages: { svg?: string | null }[] }
+  draft: boolean
 }
 
 interface RouteRegistration {
@@ -235,8 +318,9 @@ interface PreviewService {
     name: string
     description: string
     output: {
+      schema: { properties: Record<string, unknown>; required: string[]; additionalProperties: boolean }
       render: (a: unknown, v: unknown) => { type: string; text: string }[]
-      presentationMeta: (a: unknown, v: unknown) => { card: string; bundle: { pages: unknown[] } }
+      presentationMeta: (a: unknown, v: unknown) => Record<string, unknown>
     }
     execute: (args: { target: string }, exec?: unknown) => Promise<PreviewValue>
   }
@@ -314,20 +398,20 @@ async function loadPreviewTool(): Promise<PreviewModule> {
 }
 
 describe("pptwise_preview tool", () => {
-  it("shows the model one line and the card the whole deck", async () => {
+  it("shows the model one line and hands the card the id it fetches the deck by", async () => {
     // The split this tool exists for. A deck's markup is tens of kilobytes
-    // and tells the model nothing it can act on, so it rides
-    // `presentationMeta` (persisted, card-facing) while the model gets a
-    // summary. Putting the deck in the model-facing content instead would
-    // spend the context window on SVG.
+    // and tells the model nothing it can act on, so the model gets a summary
+    // and the card gets an id. `presentationMeta` is a pure projection of the
+    // value, so it can carry no more than the value does.
     const { definePreviewTool } = await loadPreviewTool()
     const tool = definePreviewTool("/does/not/run/here.js")
     const value = {
+      previewId: "abc-123",
       outDir: "/tmp/x",
       pageCount: 9,
       findingCount: 0,
       audited: true,
-      bundle: { pages: [{ id: "page-001", svg: "<svg/>" }] },
+      draft: false,
     }
 
     const modelText = tool.output.render({}, value)[0]!.text
@@ -335,9 +419,7 @@ describe("pptwise_preview tool", () => {
     expect(modelText).toContain("audit clean")
     expect(modelText).not.toContain("<svg")
 
-    const meta = tool.output.presentationMeta({}, value)
-    expect(meta.card).toBe("pptwise-preview")
-    expect(meta.bundle.pages).toHaveLength(1)
+    expect(tool.output.presentationMeta({}, value)).toEqual({ card: "pptwise-preview", previewId: "abc-123" })
   })
 
   it("never reports an unaudited deck as clean", async () => {
@@ -351,7 +433,7 @@ describe("pptwise_preview tool", () => {
       pageCount: 3,
       findingCount: 0,
       audited: false,
-      bundle: { pages: [] },
+      draft: false,
     })[0]!.text
     expect(text).toContain("audit skipped")
     expect(text).not.toContain("clean")
@@ -559,7 +641,7 @@ describe("preview payload channel", () => {
       pageCount: 4,
       findingCount: 0,
       audited: true,
-      bundle: { pages: [] },
+      draft: false,
     })[0]!.text
     expect(text).toContain("pptwise-preview:abc-123")
     expect(text).not.toContain("<svg")
@@ -1585,6 +1667,41 @@ describe("preview route (the handler DSH actually calls)", () => {
     }
   })
 
+  it("hands a Code Mode program the deck's facts, never its pages", async () => {
+    // Under Code Mode the value `execute` returns is what the model's
+    // `run_code` program receives, and models print it back. When it carried
+    // the bundle, a four-page deck put 14 KB of SVG into the context window
+    // on DSH 0.2.0-rc.2, and a long deck with photos far more. The pages are
+    // the route's to serve.
+    const { handler, route, value, svc } = await servedPreview("route-value-small")
+    const json = JSON.stringify(value)
+
+    expect(json).not.toMatch(/<svg|svg"|"pages"/)
+    expect(json.length).toBeLessThan(600)
+    expect(Object.keys(value).sort()).toEqual(
+      ["audited", "draft", "findingCount", "outDir", "pageCount", "previewId", "title"].sort(),
+    )
+    expect(value).toMatchObject({ title: "e2e", pageCount: 1, draft: false })
+
+    // Every key is one the declared schema names, and the schema admits no
+    // others, so DSH's own output validation holds the line too.
+    const { schema } = svc.tool.output
+    expect(schema.additionalProperties).toBe(false)
+    for (const key of Object.keys(value)) expect(Object.keys(schema.properties)).toContain(key)
+    for (const key of schema.required) expect(value).toHaveProperty(key)
+
+    // The card's channel, in both modes: the id, and the route behind it.
+    expect(svc.tool.output.presentationMeta({}, value)).toEqual({
+      card: "pptwise-preview",
+      previewId: value.previewId,
+    })
+    const bundle = JSON.parse((await request(handler, `${route}/${value.previewId}`)).body.toString("utf8")) as {
+      pages: { svg: string }[]
+    }
+    expect(bundle.pages).toHaveLength(1)
+    expect(bundle.pages[0]!.svg).toContain("LOGO-V1")
+  })
+
   it("serves the rendered bundle to the card", async () => {
     const { handler, route, value } = await servedPreview("route-bundle")
     const res = await request(handler, `${route}/${value.previewId}`)
@@ -1782,7 +1899,7 @@ describe("preview route (the handler DSH actually calls)", () => {
     // ...and everything the user sees says "draft": the card badge rides the
     // bundle, the saved file's own name carries it, and so does the line the
     // model reads.
-    expect(value.bundle.draft).toBe(true)
+    expect(value.draft).toBe(true)
     expect(res.headers["content-disposition"]).toBe('attachment; filename="e2e-draft.pptx"')
     const { definePreviewTool } = await loadPreviewTool()
     expect(definePreviewTool("/x.js").output.render({}, value)[0]!.text).toContain("draft")
@@ -1794,7 +1911,7 @@ describe("preview route (the handler DSH actually calls)", () => {
     // consequence of what the preview showed.
     const { cliPath, value } = await servedPreview("route-no-draft")
     expect((await cliInvocations(cliPath)).some((line) => line.includes("--draft"))).toBe(false)
-    expect(value.bundle.draft).toBe(false)
+    expect(value.draft).toBe(false)
   })
 
   it("answers an unknown id with 404 and a malformed one with the same, never a stack trace", async () => {
@@ -3195,6 +3312,21 @@ describe("export filename", () => {
       expect(name).not.toMatch(/["/\\]/)
     }
   })
+
+  it("adds no second extension to a deck whose filename already has one", async () => {
+    // The title is the IR's `filename`, written with or without `.pptx`. The
+    // export used to come out as `Q3-Review.pptx.pptx` for the second kind.
+    const { __testing } = await loadPreviewTool()
+    expect(__testing.exportName({ title: "Q3 Review.pptx" }, "/x/deck.json")).toBe("Q3-Review.pptx")
+    expect(__testing.exportName({ title: "Q3 Review.PPTX" }, "/x/deck.json")).toBe("Q3-Review.pptx")
+    expect(__testing.exportName({ title: "Q3 Review.pptx", draft: true }, "/x/deck.json")).toBe(
+      "Q3-Review-draft.pptx",
+    )
+    // Only a trailing extension is the file's own: a name that merely
+    // mentions one keeps it.
+    expect(__testing.exportName({ title: "notes.pptx v2" }, "/x/deck.json")).toBe("notes.pptx-v2.pptx")
+    expect(__testing.exportName({ title: ".pptx" }, "/x/deck.json")).toBe("deck.pptx")
+  })
 })
 
 describe("preview deck snapshot", () => {
@@ -3613,7 +3745,7 @@ describe("what the card does with a bad answer", () => {
         pageCount,
         findingCount: 0,
         audited: true,
-        bundle: { pages: [] },
+        draft: false,
       })[0]!.text
       expect(parse.pageCountOf({ content: [{ type: "text", text }] })).toBe(pageCount)
     }

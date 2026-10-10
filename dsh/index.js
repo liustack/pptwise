@@ -18,7 +18,9 @@
 //   body gets a runtime preamble that maps `pptwise <args>` onto
 //   `node <abs path to this package's dist/cli.js> <args>` — no PATH
 //   lookup, no npx, plugin and engine version-locked together (the
-//   modlens precedent).
+//   modlens precedent). Where no `node` is on PATH (DSH Desktop without a
+//   Node install) the preamble names Electron's own executable in Node mode
+//   instead (`cliCommandLine`).
 // - Registered names carry the pptwise identity ("pptwise") and collide
 //   with no built-in skill (`dsh-badge`, `cordis-plugin-development`,
 //   `editing-cordis-compositions`) or provider (`runtime`, `filesystem`,
@@ -28,7 +30,7 @@
 // no build step, no dsh type imports, resilient to rc surface drift.
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { createPreviewService, TOOL_NAME } from './preview-tool.js'
+import { cliLauncher, createPreviewService, TOOL_NAME } from './preview-tool.js'
 
 const SKILL_FILE_URL = new URL('../skills/pptwise/SKILL.md', import.meta.url)
 const SKILL_DIR = fileURLToPath(new URL('../skills/pptwise/', import.meta.url))
@@ -63,18 +65,43 @@ export function parseSkillMarkdown(raw) {
 }
 
 /**
- * The DSH-specific note prepended to the skill body. Kept as a function of
- * the CLI path so tests can pin the contract without touching the module
- * constant.
+ * The command line that runs the packaged CLI, in the agent shell's syntax.
+ *
+ * `node` when the shell has one, a line Bash and PowerShell read alike. DSH
+ * Desktop's shell may not have one: Desktop runs on Electron and keeps its
+ * bundled Node off the agent's PATH, so there the launcher is Electron's own
+ * executable with `ELECTRON_RUN_AS_NODE=1`, which Desktop runs its own host
+ * with. That line is shell-specific: POSIX agents get Bash, and Windows agents
+ * get PowerShell, where a quoted executable needs `&` and an environment
+ * variable is set with `$env:`.
  */
-export function dshRuntimePreamble(cliPath) {
+export function cliCommandLine(cliPath, launcher, platform = process.platform) {
+  const windows = platform === 'win32'
+  if (launcher.command === 'node') return { shell: 'bash', line: `node "${cliPath}" <args>` }
+  const run = `"${launcher.command}" "${cliPath}" <args>`
+  if (windows) {
+    return {
+      shell: 'powershell',
+      line: `${launcher.runAsNode ? "$env:ELECTRON_RUN_AS_NODE='1'; " : ''}& ${run}`,
+    }
+  }
+  return { shell: 'bash', line: `${launcher.runAsNode ? 'ELECTRON_RUN_AS_NODE=1 ' : ''}${run}` }
+}
+
+/**
+ * The DSH-specific note prepended to the skill body. Kept as a function of
+ * the CLI path and the launcher so tests can pin the contract without
+ * touching the module constant or the machine's PATH.
+ */
+export function dshRuntimePreamble(cliPath, launcher = cliLauncher(), platform = process.platform) {
+  const { shell, line } = cliCommandLine(cliPath, launcher, platform)
   return [
     '## DSH runtime note (injected by the pptwise DSH plugin)',
     '',
     'The `pptwise` bin is not on PATH in this environment. Whenever this playbook says `pptwise <args>`, run this in the terminal instead:',
     '',
-    '```bash',
-    `node "${cliPath}" <args>`,
+    '```' + shell,
+    line,
     '```',
     '',
     'That CLI ships inside this plugin\'s own package, version-locked to this skill, so it wins over the "Run it" section below: ignore the launcher scripts there, this line is the mapping. Only if that file is missing, fall back to `npx -y @liustack/pptwise <args>`.',

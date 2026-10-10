@@ -24,6 +24,10 @@
 // - the MODEL sees one short line from `output.render`, plus a preview id.
 //   A deck's SVG runs to tens of kilobytes and carries nothing the model can
 //   act on, so it never enters the transcript.
+// - the canonical VALUE `execute` returns is small facts only: the id, the
+//   page count, the title. Under Code Mode that value is what the model's
+//   program receives (and usually prints back), not the `render` line, so a
+//   bundle carried in it put every page's SVG into the context window.
 // - the CARD reads that id out of the result text and fetches from the route:
 //   the bundle for its thumbnail strip, and `preview.html` for the viewer it
 //   opens in an iframe. Same-origin loopback only.
@@ -79,10 +83,10 @@
 //    and friends): still fetched or read per run. See `inlineLocalImages`.
 
 import { randomUUID } from 'node:crypto'
-import { cpSync, existsSync, realpathSync, renameSync, rmSync } from 'node:fs'
+import { accessSync, constants as fsConstants, cpSync, existsSync, realpathSync, renameSync, rmSync, statSync } from 'node:fs'
 import { copyFile, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
-import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
+import { basename, delimiter, dirname, isAbsolute, join, resolve } from 'node:path'
 import { runChild } from './spawnHidden.js'
 
 /**
@@ -989,11 +993,72 @@ async function readRecord(root, id) {
   return record
 }
 
-function resolveCliCommand() {
-  if (process.versions.electron) {
-    return process.env.npm_node_execpath || 'node'
+/**
+ * The `node` a shell started from this process's environment would run, as an
+ * absolute path, or undefined when there is none.
+ *
+ * Looked up here rather than left to `spawn('node')` so that "no Node at all"
+ * is a value this plugin can act on before anything fails. DSH Desktop is the
+ * case that needs it: it runs on Electron and does not put a Node on the PATH
+ * its host and agent shells inherit, so a user who never installed Node has
+ * none. On Windows only `node.exe` counts: a `node.cmd` cannot be spawned
+ * without a shell, which is what Desktop's own package-script launcher is.
+ */
+function findNodeOnPath(env = process.env, platform = process.platform) {
+  const pathValue = platform === 'win32' ? (env.Path ?? env.PATH ?? env.path) : env.PATH
+  if (!pathValue) return undefined
+  const name = platform === 'win32' ? 'node.exe' : 'node'
+  for (const dir of pathValue.split(platform === 'win32' ? ';' : delimiter)) {
+    if (!dir) continue
+    const candidate = join(dir, name)
+    try {
+      if (!statSync(candidate).isFile()) continue
+      if (platform !== 'win32') accessSync(candidate, fsConstants.X_OK)
+      return candidate
+    } catch {
+      // Not here, or not runnable: the next PATH entry decides.
+    }
   }
-  return process.execPath
+  return undefined
+}
+
+/**
+ * The executable the preview tool runs the CLI with.
+ *
+ * Outside Electron that is the Node already running this plugin. Inside it
+ * (DSH Desktop, and third-party desktop shells) a real Node is preferred when
+ * there is one, and Electron itself is the fallback: run with
+ * `ELECTRON_RUN_AS_NODE=1` (`cliChildEnv`) it is a Node, and it is the one
+ * runtime Desktop guarantees, since its own host runs on it the same way. The
+ * fallback used to be the bare string `node`, which failed with ENOENT for
+ * every Desktop user without a Node install.
+ *
+ * Every branch is a child process. Issue #1 was two libvips in one Electron
+ * process; a child Electron in Node mode loads only the CLI's sharp.
+ */
+function resolveCliCommand(opts = {}) {
+  const env = opts.env ?? process.env
+  const versions = opts.versions ?? process.versions
+  const execPath = opts.execPath ?? process.execPath
+  if (!versions.electron) return execPath
+  return env.npm_node_execpath || findNodeOnPath(env, opts.platform) || execPath
+}
+
+/**
+ * How the skill tells the model to run the CLI from the agent's shell.
+ *
+ * `node` when a shell from this environment can find one, which is every
+ * setup that worked before. Otherwise the absolute runtime `resolveCliCommand`
+ * falls back to, with `runAsNode` when that runtime is Electron and needs
+ * `ELECTRON_RUN_AS_NODE=1` to behave as Node. The agent's shell inherits this
+ * host's PATH, so what this process can find is what the shell can find.
+ */
+export function cliLauncher(opts = {}) {
+  const env = opts.env ?? process.env
+  const versions = opts.versions ?? process.versions
+  const execPath = opts.execPath ?? process.execPath
+  if (findNodeOnPath(env, opts.platform)) return { command: 'node', runAsNode: false }
+  return { command: execPath, runAsNode: Boolean(versions.electron) }
 }
 
 function cliChildEnv() {
@@ -1003,10 +1068,10 @@ function cliChildEnv() {
 /** Run the packaged CLI, resolving with its combined output.
  *
  * GitHub issue #1: two libvips in one Electron process crash the renderer.
- * The plugin must never import() the CLI. Electron's process.execPath is not
- * a Node binary, so the child is a real node when inside Electron, and
- * ELECTRON_RUN_AS_NODE is always set so an Electron fallback cannot boot as
- * an app.
+ * The plugin must never import() the CLI. Inside Electron the child is a real
+ * node when one is installed and Electron itself otherwise, and
+ * ELECTRON_RUN_AS_NODE is always set so an Electron child runs as Node rather
+ * than booting as an app.
  */
 function runCli(cliPath, args, signal) {
   return runChild(resolveCliCommand(), [cliPath, ...args], {
@@ -1372,11 +1437,19 @@ function describeIncomplete(error, dir) {
  * a badge, but the file outlives the card: it gets mailed, uploaded and opened
  * by people who never saw this conversation, and `-draft` is the one part of
  * it that travels with the bytes.
+ *
+ * The title is the deck's `filename`, which authors write with or without the
+ * extension (`"q3-review"` and `"q3-review.pptx"` are both common), so an
+ * extension already there comes off before the one this adds. Without that the
+ * export was saved as `q3-review.pptx.pptx`.
  */
 function exportName(bundle, target) {
   const raw =
     (bundle && bundle.title) || String(target).split(/[\\/]/).pop().replace(/\.[^.]+$/, '') || 'deck'
-  const safe = raw.replace(/[^\w.-]+/g, '-').replace(/^[.-]+/, '')
+  const safe = raw
+    .replace(/\.pptx$/i, '')
+    .replace(/[^\w.-]+/g, '-')
+    .replace(/^[.-]+/, '')
   return `${safe || 'deck'}${bundle && bundle.draft ? '-draft' : ''}.pptx`
 }
 
@@ -1390,7 +1463,7 @@ function modelSummary(value) {
   bits.unshift(`pptwise-preview:${value.previewId}`)
   // The model is the one who can act on this: the pages are still unfilled,
   // and the export it just handed the user is labelled a draft.
-  if (value.bundle && value.bundle.draft) bits.push('draft — some pages are unfilled placeholders')
+  if (value.draft) bits.push('draft — some pages are unfilled placeholders')
   if (value.findingCount > 0) bits.push(`${value.findingCount} audit finding${value.findingCount === 1 ? '' : 's'}`)
   else if (value.audited) bits.push('audit clean')
   else bits.push('audit skipped')
@@ -1842,18 +1915,24 @@ export function createPreviewService(cliPath) {
       additionalProperties: false,
     },
     output: {
+      // The canonical value, and under Code Mode the model's own copy of this
+      // call: a `run_code` program receives exactly this object. So it holds
+      // facts the model can act on and nothing else. The pages live on disk
+      // and reach the card through the route, keyed by `previewId`; closed to
+      // extra properties so a bundle cannot ride back in unnoticed.
       schema: {
         type: 'object',
         properties: {
           previewId: { type: 'string' },
           outDir: { type: 'string' },
+          title: { type: 'string' },
           pageCount: { type: 'number' },
           findingCount: { type: 'number' },
           audited: { type: 'boolean' },
-          bundle: { type: 'object', additionalProperties: true },
+          draft: { type: 'boolean' },
         },
-        required: ['previewId', 'outDir', 'pageCount', 'findingCount', 'audited', 'bundle'],
-        additionalProperties: true,
+        required: ['previewId', 'outDir', 'pageCount', 'findingCount', 'audited', 'draft'],
+        additionalProperties: false,
       },
       // Model-facing: one line. The deck itself is not information the model
       // can act on, and putting it here would spend the context window on
@@ -1861,11 +1940,13 @@ export function createPreviewService(cliPath) {
       render(_args, value) {
         return [{ type: 'text', text: modelSummary(value) }]
       },
-      // Still declared: on a top-level (native-mode) call this is the better
-      // channel, and the card prefers it when present. Code Mode simply never
-      // computes it, which is why the route exists as well.
+      // A pure projection of the value (DSH computes it from `value` alone, for
+      // top-level calls only), so it can carry no more than the value does:
+      // the id, which the card fetches the deck by in both modes. Cards in
+      // sessions saved before this carry a whole bundle here, and the card
+      // still draws those from it.
       presentationMeta(_args, value) {
-        return { card: 'pptwise-preview', previewId: value.previewId, bundle: value.bundle }
+        return { card: 'pptwise-preview', previewId: value.previewId }
       },
     },
     async execute(args, exec) {
@@ -1906,13 +1987,14 @@ export function createPreviewService(cliPath) {
       return {
         previewId,
         outDir,
+        ...(typeof bundle.title === 'string' ? { title: bundle.title } : {}),
         pageCount: bundle.pages.length,
         findingCount,
         // `checks` is present only when the audit actually ran. Absent is not
         // "clean" — the preview manifest goes out of its way to keep those two
         // apart, and collapsing them here would undo that.
         audited: Boolean(bundle.checks),
-        bundle,
+        draft: bundle.draft,
       }
     },
     timeoutMs: 120_000,
@@ -1978,4 +2060,5 @@ export const __testing = {
   PreviewDamaged,
   resolveCliCommand,
   cliChildEnv,
+  findNodeOnPath,
 }

@@ -1,10 +1,10 @@
 // Browser half of the pptwise dsh plugin: the deck preview card.
 //
-// The host half (`./preview-tool.js`) registers `pptwise_preview` and puts
-// the rendered bundle on `output.presentationMeta` — a channel persisted with
-// the session log and never shown to the model. This file is what turns that
-// payload into something a person can look at: a thumbnail strip in the tool
-// card, and a full-size modal on click. No new tab, no localhost URL, no
+// The host half (`./preview-tool.js`) registers `pptwise_preview`, stamps a
+// preview id into the tool's result text, and serves the rendered bundle from
+// its own route under that id. This file is what turns that payload into
+// something a person can look at: a thumbnail strip in the tool card, and a
+// full-size modal on click. No new tab, no localhost URL, no
 // "open this link yourself", which is the whole reason the tool exists.
 //
 // `dsh.client.immediately` is not optional for this plugin. The client module
@@ -338,11 +338,13 @@ window.__ModuleLoader__.load({
     /**
      * Pull the preview bundle out of a frozen tool-call node.
      *
-     * `presentationMeta` is projected into the result's view/meta by the
-     * host; the exact field the runtime lands it on has moved between rc
+     * Only sessions saved by an older host half have one: it used to put the
+     * whole bundle on `presentationMeta`, and those logs still carry it. The
+     * current host half sends the id alone (the bundle in the tool's value
+     * reached the model under Code Mode), so a new card always comes from the
+     * route. The exact field the runtime lands meta on has moved between rc
      * builds, so this reads the handful of shapes it can appear under rather
-     * than pinning one. Returning null simply falls through to the route,
-     * which is where a Code Mode sub-call's deck has to come from anyway.
+     * than pinning one. Returning null falls through to the route.
      */
     function bundleOf(block) {
       if (!block) return null
@@ -409,7 +411,7 @@ window.__ModuleLoader__.load({
         })
     }
 
-    function PreviewCard(react) {
+    function PreviewCard(react, reactDom) {
       var h = react.createElement
       var useState = react.useState
       var useEffect = react.useEffect
@@ -519,13 +521,37 @@ window.__ModuleLoader__.load({
       }
 
       /**
+       * Mount a full-screen layer on `document.body`, outside the card.
+       *
+       * `position: fixed` alone does not escape an ancestor that clips. From
+       * DSH 0.1.7 the card sits inside a collapsible work group whose body has
+       * a `max-height`, scrolls, and paints a `mask-image` fade while it
+       * scrolls, and a mask crops fixed descendants along with everything
+       * else. The viewer opened as a 680x400 window inside the chat column. A
+       * portal moves the layer's DOM to the body, where nothing clips it, while
+       * React keeps it in this card's tree, so its state and events stay here.
+       *
+       * `react-dom` comes from the shell's module table, as `react` does (the
+       * shipped Tooltip portals to `document.body` the same way). A shell
+       * whose table has no `createPortal` gets the layer in place, which is
+       * what every build before the work group drew correctly.
+       */
+      function inBody(node) {
+        if (reactDom && typeof reactDom.createPortal === 'function') {
+          return reactDom.createPortal(node, document.body)
+        }
+        return node
+      }
+
+      /**
        * Full-size viewer: the deck's own `preview.html`, in an iframe.
        *
        * Everything a reader does inside it — ←/→, the filmstrip, the
        * light/dark surround, the audit findings panel — belongs to that page,
        * which was written, tested and shipped for the harnesses that have no
        * plugin UI. This modal contributes the two things the page has no way
-       * to offer from inside itself: a way out, and the export.
+       * to offer from inside itself: a way out, and the export. It renders on
+       * the body (`inBody`), never inside the card.
        */
       function Modal(props) {
         var frameRef = react.useRef(null)
@@ -563,7 +589,7 @@ window.__ModuleLoader__.load({
           [props.onClose, props.src],
         )
 
-        return h(
+        return inBody(h(
           'div',
           {
             style: {
@@ -663,7 +689,7 @@ window.__ModuleLoader__.load({
               },
             }),
           ),
-        )
+        ))
       }
 
       /**
@@ -741,7 +767,10 @@ window.__ModuleLoader__.load({
               // Matches the name the host half gave the file it is serving
               // (`exportName`, preview-tool.js): a deck with unfilled pages
               // must not be saved under a name that reads as finished work.
-              a.download = (props.name || 'deck') + (props.draft ? '-draft' : '') + '.pptx'
+              // The title is the deck's `filename`, often written with its
+              // extension already, which used to save `deck.pptx.pptx`.
+              var stem = (props.name || 'deck').replace(/\.pptx$/i, '') || 'deck'
+              a.download = stem + (props.draft ? '-draft' : '') + '.pptx'
               document.body.appendChild(a)
               a.click()
               a.remove()
@@ -1031,9 +1060,9 @@ window.__ModuleLoader__.load({
         // refused request both told the user their deck had been deleted.
         var settled = isFinal(verdict)
 
-        // Structured payload when the runtime computed one (native-mode,
-        // top-level call); otherwise fetch it by id from the plugin's own
-        // route, which is what Code Mode's sub-calls need.
+        // A bundle a saved session already carries (see `bundleOf`); otherwise
+        // fetch it by id from the plugin's own route, which is how every card
+        // the current host half produces gets its deck, in both modes.
         useEffect(
           function () {
             // `!mine` is the render between arriving at a deck and
@@ -1347,7 +1376,15 @@ window.__ModuleLoader__.load({
         console.error('[pptwise] preview card skipped: ' + error)
         return
       }
-      var Card = PreviewCard(react)
+      // Optional, unlike `react`: it only lifts the viewer out of a clipping
+      // ancestor (see `inBody`), and a shell without it still gets a card.
+      var reactDom = null
+      try {
+        reactDom = require('react-dom')
+      } catch (error) {
+        console.warn('[pptwise] react-dom unavailable, the viewer opens inside the card: ' + error)
+      }
+      var Card = PreviewCard(react, reactDom)
       ctx.slots.inject('tool.call.toolview', function* () {
         yield ctx.slots.register({ name: 'tool.call.toolview', key: TOOL_NAME }, Card)
       })

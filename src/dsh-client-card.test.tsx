@@ -16,6 +16,7 @@ import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vite
 import type { Node as TsNode } from "typescript"
 import { render, screen, fireEvent, waitFor, cleanup, act } from "@testing-library/react"
 import * as React from "react"
+import * as ReactDOM from "react-dom"
 
 interface Page {
   id?: string
@@ -35,7 +36,7 @@ interface Bundle {
 type CardProps = { block: unknown }
 type Card = React.ComponentType<CardProps>
 
-let makeCard: () => Card
+let makeCard: (options?: { reactDom?: boolean }) => Card
 let makeTesting: () => { isZip: (blob: Blob) => Promise<boolean> }
 
 beforeAll(async () => {
@@ -58,9 +59,13 @@ beforeAll(async () => {
     ).__testing
 
   // The module body only evaluates once; the factory may run per test.
-  makeCard = () => {
+  // `react-dom` is in the shell's module table from 0.1.x on, and the card
+  // asks for it to lift the viewer out of the chat column. `reactDom: false`
+  // is a shell whose table does not have it.
+  makeCard = (options = {}) => {
     const exportsObj = mod.factory((id: string) => {
       if (id === "react") return React
+      if (id === "react-dom" && options.reactDom !== false) return ReactDOM
       throw new Error("unexpected require: " + id)
     }) as { apply: (ctx: unknown) => void; inject: string[] }
 
@@ -193,9 +198,14 @@ function thumbnails(container: HTMLElement) {
   return Array.from(container.querySelectorAll('[role="button"]'))
 }
 
-/** The viewer, when it is open: one iframe holding the deck's own preview.html. */
+/**
+ * The viewer, when it is open: one iframe holding the deck's own preview.html.
+ *
+ * Looked for in the whole document, not the card's container: the viewer is
+ * portalled onto `document.body` so that no ancestor of the card can clip it.
+ */
 function viewer(container: HTMLElement) {
-  return container.querySelector("iframe")
+  return container.ownerDocument.querySelector("iframe")
 }
 
 let fetchMock: ReturnType<typeof vi.fn>
@@ -462,7 +472,7 @@ describe("dsh preview card — the viewer", () => {
 
   it("closes on a click on the backdrop, but never on one on the deck", async () => {
     const { container } = await openViewer()
-    const backdrop = container.querySelector('[style*="position: fixed"]') as HTMLElement
+    const backdrop = document.querySelector('[style*="position: fixed"]') as HTMLElement
     expect(backdrop).toBeTruthy()
 
     // A click that started on the frame bubbles to the same element and must
@@ -552,6 +562,52 @@ describe("dsh preview card — the viewer", () => {
     expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/abc123/pptx")
   })
 
+  it("opens on the page body, where the chat column's work group cannot crop it", async () => {
+    // DSH 0.1.7 and later put the card in a collapsible work group whose body
+    // has a max-height, scrolls, and fades its edges with a mask. A mask crops
+    // fixed descendants too, so a viewer drawn inside the card opened as a
+    // small window in the chat column. The wrapper below copies that body's
+    // rules, and the viewer must not end up anywhere under it.
+    routeIsAlive()
+    const Card = makeCard()
+    const { container } = render(
+      <div
+        data-testid="work-group-body"
+        style={{ maxHeight: 400, overflowY: "auto", maskImage: "linear-gradient(#000, transparent)" }}
+      >
+        <Card block={blockWith(bundleOf(nine()), "abc")} />
+      </div>,
+    )
+    fireEvent.click(await screen.findByText("Open"))
+    await waitFor(() => expect(viewer(container)).not.toBeNull())
+
+    const layer = viewer(container)!.closest('[style*="position: fixed"]') as HTMLElement
+    expect(layer.parentElement).toBe(document.body)
+    expect(screen.getByTestId("work-group-body").contains(layer)).toBe(false)
+    expect(container.contains(viewer(container))).toBe(false)
+
+    // Still part of the card: closing it takes the layer off the body.
+    fireEvent.click(screen.getByText("Close"))
+    expect(viewer(container)).toBeNull()
+    expect(document.querySelector('[style*="position: fixed"]')).toBeNull()
+  })
+
+  it("opens inside the card on a shell whose module table has no react-dom", async () => {
+    // Not a supported DSH today, but the card must still open a viewer rather
+    // than lose it, which is what every build drew before the work group.
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    routeIsAlive()
+    const Card = makeCard({ reactDom: false })
+    const { container } = render(<Card block={blockWith(bundleOf(nine()), "abc")} />)
+    fireEvent.click(await screen.findByText("Open"))
+    await waitFor(() => expect(viewer(container)).not.toBeNull())
+
+    expect(container.contains(viewer(container))).toBe(true)
+    expect(warn.mock.calls.some(([line]) => String(line).includes("react-dom unavailable"))).toBe(true)
+    fireEvent.click(screen.getByText("Close"))
+    expect(viewer(container)).toBeNull()
+  })
+
   it("offers no viewer at all without a preview id, rather than an empty frame", () => {
     // The viewer is a route keyed by that id. A button that opened a 404
     // would be worse than no button.
@@ -567,6 +623,25 @@ describe("dsh preview card — the viewer", () => {
 })
 
 describe("dsh preview card — the export button", () => {
+  it("saves a deck whose title already ends in .pptx under one extension", async () => {
+    // The title is the IR's `filename`, and authors often write the extension
+    // into it. The browser used to save `Q3 review.pptx.pptx`.
+    fetchMock.mockResolvedValue(routeAnswer({ status: 200 }))
+    const Card = makeCard()
+    render(<Card block={blockWith(bundleOf([page(1)], "Q3 review.pptx"), "abc123")} />)
+    fireEvent.click(await screen.findByText("Download .pptx"))
+    await waitFor(() => expect(anchorClicks).toHaveLength(1))
+    expect(anchorClicks[0]!.download).toBe("Q3 review.pptx")
+
+    cleanup()
+    anchorClicks.length = 0
+    const Draft = makeCard()
+    render(<Draft block={blockWith({ ...bundleOf([page(1)], "Q3 review.PPTX"), draft: true }, "abc124")} />)
+    fireEvent.click(await screen.findByText("Download .pptx"))
+    await waitFor(() => expect(anchorClicks).toHaveLength(1))
+    expect(anchorClicks[0]!.download).toBe("Q3 review-draft.pptx")
+  })
+
   it("fetches the pptx route and hands the browser a real .pptx", async () => {
     fetchMock.mockResolvedValue(routeAnswer({ status: 200 }))
     const Card = makeCard()
@@ -702,6 +777,24 @@ describe("dsh preview card — fetching by id (Code Mode)", () => {
     expect(await screen.findByText("Deck A")).toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/A")
     expect(screen.getByText("2 pages")).toBeInTheDocument()
+  })
+
+  it("draws a top-level call's deck from the route too, since its meta carries only the id", async () => {
+    // The host half's `presentationMeta` is now `{ card, previewId }`: the
+    // bundle left the tool's value so it stops reaching the model under Code
+    // Mode, and meta is projected from that value. A native-mode card must
+    // still draw, and it does it the Code Mode way.
+    respondWith({ A: bundleOf([page(1), page(2)], "Deck A") })
+    const Card = makeCard()
+    const block = {
+      content: [{ text: "pptwise-preview:A · rendered 2 pages to /tmp/out" }],
+      meta: { card: "pptwise-preview", previewId: "A" },
+    }
+    const { container } = render(<Card block={block} />)
+
+    expect(await screen.findByText("Deck A")).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/A")
+    expect(container.querySelectorAll("svg")).toHaveLength(2)
   })
 
   it("re-fetches and stops showing the old deck when the same instance moves to another preview", async () => {
