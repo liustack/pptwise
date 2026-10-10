@@ -82,7 +82,7 @@
 //  - http(s) assets, and local images in formats that need a recode (webp
 //    and friends): still fetched or read per run. See `inlineLocalImages`.
 
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { accessSync, constants as fsConstants, cpSync, existsSync, realpathSync, renameSync, rmSync, statSync } from 'node:fs'
 import { copyFile, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
@@ -1439,14 +1439,23 @@ async function readPreviewBundle(outDir) {
     // and this loop has no validation left to do. Reading a name only when it
     // is about to be used is what let the pages past the strip through
     // unchecked.
+    // Every page is read for its hash, and only the strip's pages travel
+    // with their markup. The hash is what the draft card compares two
+    // versions of a page by: same markup, same page as far as the user can see.
     const drawn = pages.length < THUMBNAIL_STRIP_PAGES
-    pages.push({ ...page, svg: drawn ? await readFile(join(outDir, page.file), 'utf8') : null })
+    const svg = await readFile(join(outDir, page.file), 'utf8')
+    pages.push({ ...page, hash: pageHash(svg), svg: drawn ? svg : null })
   }
   // `draft` travels with the bundle rather than with the record, so a card
   // reopened after a restart still says so: `recallAnywhere` rebuilds the
   // bundle from this manifest, and the manifest is where the unfilled pages
   // are named in the first place.
   return { ...manifest, pages, draft: pages.some((p) => p.placeholder === true) }
+}
+
+/** A short fingerprint of one page's markup, for telling a changed page from an unchanged one. */
+function pageHash(svg) {
+  return createHash('sha256').update(svg).digest('hex').slice(0, 16)
 }
 
 /**
@@ -1920,8 +1929,11 @@ export function createPreviewService(cliPath) {
         // whatever is left, and then shape-checked before anything touches the
         // filesystem — a traversal attempt has to fail on all three paths, not
         // only on the bare one.
-        const want = rest.endsWith('/pptx') ? 'pptx' : rest.endsWith('/html') ? 'html' : 'bundle'
-        const id = want === 'bundle' ? rest : rest.slice(0, -(want.length + 1))
+        // `<id>/page/<n>` is one page's markup, for the pages past the strip
+        // and the draft card's side-by-side comparison of two versions.
+        const pageMatch = /^(.*)\/page\/([1-9][0-9]{0,3})$/.exec(rest)
+        const want = pageMatch ? 'page' : rest.endsWith('/pptx') ? 'pptx' : rest.endsWith('/html') ? 'html' : 'bundle'
+        const id = pageMatch ? pageMatch[1] : want === 'bundle' ? rest : rest.slice(0, -(want.length + 1))
         // Every answer this handler writes carries the same stamp, success and
         // failure alike, and the card refuses to read a verdict off a response
         // without it. The reason is that a 404 is not self-identifying: a
@@ -2018,6 +2030,25 @@ export function createPreviewService(cliPath) {
         }
         if (want === 'bundle') {
           send(200, { 'content-type': 'application/json' }, JSON.stringify(entry.bundle))
+          return
+        }
+        if (want === 'page') {
+          const n = Number(pageMatch[2])
+          const page = Array.isArray(entry.bundle.pages) ? entry.bundle.pages[n - 1] : undefined
+          if (!page || typeof page.file !== 'string') {
+            fail(404, FAILURE_CODES.unknown, `this preview has no page ${n}`)
+            return
+          }
+          // `parseManifest` already checked every page's file name.
+          const pagePath = join(entry.outDir, page.file)
+          let svg
+          try {
+            svg = await readFile(pagePath)
+          } catch (error) {
+            failReading(error, pagePath, `page ${n} of this preview is gone (${pagePath})`)
+            return
+          }
+          send(200, { 'content-type': 'image/svg+xml', 'content-length': svg.length }, svg)
           return
         }
         if (want === 'html') {

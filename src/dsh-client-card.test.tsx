@@ -39,6 +39,23 @@ type Card = React.ComponentType<CardProps>
 let makeCard: (options?: { reactDom?: boolean; key?: string }) => Card
 let makeTesting: () => { isZip: (blob: Blob) => Promise<boolean> }
 
+interface TailEntry { callId: string; tool: string; kind: string; id: string; target: string; version: number; priorId: string | null }
+type TailProps = { turn: { turn: number }; useArtifacts: (turn: string) => TailEntry[] | undefined; editPage?: (n: number) => void }
+interface TailKit {
+  Tail: React.ComponentType<TailProps>
+  definition: {
+    kind: string
+    match: (event: unknown) => { id: string; role: string } | null
+    start: (context: unknown, match: unknown, reader: unknown) => unknown
+    update: (context: unknown, match: unknown) => unknown
+    buildViewNode: (context: unknown) => { data: TailEntry; location: unknown; anchorSeq: number; visibility: string } | null
+  }
+  registeredDefinitions: unknown[]
+  inject: (sessionId: string) => { editPage: (n: number) => void; keyedHooks: { artifacts: (turn: string) => unknown } }
+  testing: { editPageIn: (sessions: unknown, sessionId: string, n: number) => void; deckKey: (target: string) => string }
+}
+let makeTail: (session?: { conversation?: unknown; snapshot?: unknown }) => TailKit
+
 beforeAll(async () => {
   let captured: { factory: (require: (id: string) => unknown) => unknown } | null = null
   ;(window as unknown as { __ModuleLoader__: unknown }).__ModuleLoader__ = {
@@ -91,6 +108,53 @@ beforeAll(async () => {
     const found = seats.get(options.key ?? "pptwise_preview")
     if (!found) throw new Error("the plugin registered no card")
     return found
+  }
+
+  // The session-scope half: a ctx whose scoped `inject` hands over slots,
+  // the Conversation service and the session registry, the way the web
+  // shell does once a session is open.
+  makeTail = (session = {}) => {
+    const exportsObj = mod.factory((id: string) => {
+      if (id === "react") return React
+      if (id === "react-dom") return ReactDOM
+      throw new Error("unexpected require: " + id)
+    }) as { apply: (ctx: unknown) => void; __testing: TailKit["testing"] & { artifactDefinition: TailKit["definition"] } }
+    const registeredDefinitions: unknown[] = []
+    let tail: { component: TailKit["Tail"]; descriptor: { inject: TailKit["inject"]; name: string } } | undefined
+    const binding = { ctx: { get: (name: string) => (name === "conversation" ? session.conversation : undefined) } }
+    const scope = {
+      effect: (fn: () => unknown) => fn(),
+      slots: {
+        inject(_name: string, run: () => Generator<unknown>) {
+          for (const _ of run()) {
+            /* drain */
+          }
+        },
+        register(descriptor: { name: string; inject: TailKit["inject"] }, component: TailKit["Tail"]) {
+          if (descriptor.name === "conversation.chat.turnTail") tail = { component, descriptor }
+          return () => {}
+        },
+      },
+      uiConversation: {
+        events: { register: (definition: unknown) => { registeredDefinitions.push(definition); return () => {} } },
+        binding: () => ({ target: () => ({ getSnapshot: () => session.snapshot }) }),
+      },
+      sessions: { binding: (id: string) => (id === "s1" ? binding : undefined) },
+    }
+    exportsObj.apply({
+      slots: scope.slots,
+      inject(names: string[], cb: (scope: unknown) => void) {
+        if (names.includes("uiConversation")) cb(scope)
+      },
+    })
+    if (!tail) throw new Error("the plugin registered no turn tail")
+    return {
+      Tail: tail.component,
+      definition: exportsObj.__testing.artifactDefinition,
+      registeredDefinitions,
+      inject: tail.descriptor.inject,
+      testing: exportsObj.__testing,
+    }
   }
 })
 
@@ -1065,10 +1129,18 @@ describe("dsh preview card — a deck with unfilled pages", () => {
     expect(screen.getByText("draft")).toBeInTheDocument()
   })
 
+  it("says how many pages are written so far, build by build", () => {
+    const Card = makeCard({ key: "pptwise_build" })
+    const pages = [page(1, "cover"), { ...page(2), placeholder: true }, { ...page(3), placeholder: true }]
+    const { container } = render(<Card block={blockWith({ ...bundleOf(pages), draft: true }, "abc")} />)
+    expect(container.querySelector("[data-written]")!.textContent).toBe("1 of 3 pages written")
+  })
+
   it("keeps quiet about drafts on a finished deck", () => {
     const Card = makeCard()
-    render(<Card block={blockWith(bundleOf([page(1)]), "abc")} />)
+    const { container } = render(<Card block={blockWith(bundleOf([page(1)]), "abc")} />)
     expect(screen.queryByText("draft")).toBeNull()
+    expect(container.querySelector("[data-written]")).toBeNull()
   })
 
   it("saves the file under a name that says draft too", async () => {
@@ -1460,6 +1532,7 @@ describe("dsh preview card — the store", () => {
     // the deck card's store, the theme wall's one fetch, and the one fetch
     // the newer cards share.
     expect(calls.filter((c) => c.callee === "useState").map((c) => c.inside).sort()).toEqual([
+      "DraftDesk",
       "PptwisePreviewCard",
       "PptwiseThemesCard",
       "useRouteBundle",
@@ -2127,5 +2200,203 @@ describe("dsh outline card", () => {
     const { container } = render(<Card block={{ content: [{ text: "the spec is not valid yet: 1 problem" }] }} />)
     expect(container).toBeEmptyDOMElement()
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+})
+
+describe("dsh draft desk — bookkeeping from the session log", () => {
+  const turn1 = { kind: "turn", turn: { turn: 1 } }
+  function ctxOf(matches: { event: unknown; role: string; location?: unknown }[], state?: unknown) {
+    const withLocation = matches.map((m) => ({ location: turn1, ...m }))
+    return { key: "k", kind: "pptwise-artifact", id: "c1", matches: withLocation, start: withLocation.find((m) => m.role === "start"), state, current: new Map() }
+  }
+
+  it("follows a top-level build from its call to the stamped result", () => {
+    const { definition, registeredDefinitions } = makeTail()
+    expect(registeredDefinitions).toEqual([definition])
+    const call = { type: "tool/call", seq: 10, data: { callId: "c1", name: "pptwise_build", arguments: JSON.stringify({ target: "weekly/" }), turn: 1 } }
+    const result = {
+      type: "tool/result",
+      seq: 11,
+      data: { message: { source: { callId: "c1" }, content: [{ type: "text", text: "pptwise-preview:aaaa-1111 · rendered 4 pages" }] }, turn: 1 },
+    }
+    expect(definition.match(call)).toEqual({ id: "c1", role: "start" })
+    expect(definition.match(result)).toEqual({ id: "c1", role: "update" })
+    // Results of other tools, and pptwise results without a stamp, are not ours.
+    expect(definition.match({ type: "tool/call", data: { callId: "x", name: "bash", arguments: "{}" } })).toBeNull()
+    expect(definition.match({ type: "tool/result", data: { message: { source: { callId: "x" }, content: [{ text: "ok" }] } } })).toBeNull()
+
+    const state = definition.start({}, {}, { previous: () => undefined })
+    const node = definition.buildViewNode(ctxOf([{ event: call, role: "start" }, { event: result, role: "update" }], state))!
+    expect(node.visibility).toBe("hidden")
+    expect(node.anchorSeq).toBe(10)
+    expect(node.location).toBe(turn1)
+    expect(node.data).toEqual({ callId: "c1", tool: "pptwise_build", kind: "deck", id: "aaaa-1111", target: "weekly/", version: 1, priorId: null })
+  })
+
+  it("follows a Code Mode sub-call through its dispatch pair, with object arguments", () => {
+    const { definition } = makeTail()
+    const start = { type: "tool/ptc-dispatch-start", seq: 20, data: { rootCallId: "r", parentCallId: "r", subCallId: "r:ptc:2", name: "pptwise_outline", arguments: { target: "weekly" } } }
+    const done = {
+      type: "tool/ptc-dispatch",
+      seq: 21,
+      data: { rootCallId: "r", parentCallId: "r", subCallId: "r:ptc:2", name: "pptwise_outline", arguments: { target: "weekly" }, isError: false, content: [{ type: "text", text: 'pptwise-outline:bbbb-2222 · 4 pages, theme "brief"' }] },
+    }
+    expect(definition.match(start)).toEqual({ id: "r:ptc:2", role: "start" })
+    expect(definition.match(done)).toEqual({ id: "r:ptc:2", role: "update" })
+    const node = definition.buildViewNode(ctxOf([{ event: start, role: "start" }, { event: done, role: "update" }], {}))!
+    expect(node.data).toMatchObject({ kind: "outline", id: "bbbb-2222", version: 1 })
+    // A call that failed stamps nothing and leaves no node.
+    expect(definition.buildViewNode(ctxOf([{ event: start, role: "start" }], {}))).toBeNull()
+  })
+
+  it("counts versions per deck from the earlier calls the log holds, and points at the last one", () => {
+    const { definition, testing } = makeTail()
+    expect(testing.deckKey("/ws/weekly/")).toBe("weekly")
+    expect(testing.deckKey("weekly/deck.spec.json")).toBe("weekly")
+    const build = (id: string, target: string) => [
+      { event: { type: "tool/call", seq: 1, data: { callId: id, name: "pptwise_build", arguments: JSON.stringify({ target }) } }, role: "start" },
+      { event: { type: "tool/result", seq: 2, data: { message: { source: { callId: id }, content: [{ text: `pptwise-preview:${id}-deck` }] } } }, role: "update" },
+    ]
+    // First build of "weekly", then a build of another deck, then "weekly" again.
+    const s1 = definition.start({}, {}, { previous: () => undefined })
+    const s2 = definition.start({}, {}, { previous: () => ({ state: s1, matches: build("one", "weekly") }) })
+    const s3 = definition.start({}, {}, { previous: () => ({ state: s2, matches: build("two", "/abs/other") }) })
+    const node = definition.buildViewNode(ctxOf(build("three", "/ws/weekly/"), s3))!
+    expect(node.data).toMatchObject({ id: "three-deck", version: 2, priorId: "one-deck" })
+    const other = definition.buildViewNode(ctxOf(build("four", "other"), definition.start({}, {}, { previous: () => ({ state: s3, matches: build("three", "weekly") }) })))!
+    expect(other.data).toMatchObject({ version: 2, priorId: "two-deck" })
+  })
+})
+
+describe("dsh draft desk — the card under the turn", () => {
+  function hashed(n: number, hash: string, type = "content") {
+    return { ...page(n, type), slideId: "s" + n, hash }
+  }
+  const entry = (over: Partial<TailEntry> = {}): TailEntry => ({
+    callId: "c",
+    tool: "pptwise_build",
+    kind: "deck",
+    id: "new-0001",
+    target: "weekly",
+    version: 2,
+    priorId: "old-0001",
+    ...over,
+  })
+
+  it("shows the version, page count and the pages changed since the last version, matched by slide id", async () => {
+    const { Tail } = makeTail()
+    const now = { ...bundleOf([hashed(1, "a", "cover"), hashed(2, "B2"), hashed(4, "d")], "weekly"), exportable: true }
+    const before = bundleOf([hashed(1, "a", "cover"), hashed(2, "b"), hashed(3, "c")], "weekly")
+    fetchMock.mockImplementation(async (url: string) => routeAnswer({ status: 200, json: url.includes("old-0001") ? before : now }))
+    const { container } = render(<Tail turn={{ turn: 1 }} useArtifacts={() => [entry()]} editPage={vi.fn()} />)
+
+    await waitFor(() => expect(container.querySelector("[data-desk-diff]")).not.toBeNull())
+    expect(container.querySelector("[data-desk-version]")!.textContent).toBe("Version 2")
+    expect(screen.getByText("3 pages")).toBeInTheDocument()
+    expect(container.querySelector("[data-desk-diff]")!.textContent).toBe("2 pages changed · 1 pages removed")
+    const marks = Array.from(container.querySelectorAll("[data-desk-page]")).map((el) => el.getAttribute("data-desk-mark"))
+    expect(marks).toEqual([null, "changed", "added"])
+    expect(screen.getByText("Download .pptx")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText("Compare with last version"))
+    const compare = await waitFor(() => {
+      const el = document.querySelector("[data-pptwise-compare]")
+      if (!el) throw new Error("no compare view")
+      return el
+    })
+    const rows = Array.from(compare.querySelectorAll("[data-compare-row]")).map((el) => el.getAttribute("data-compare-row"))
+    expect(rows).toEqual(["changed", "added", "removed"])
+    const srcs = Array.from(compare.querySelectorAll("img")).map((img) => img.getAttribute("src"))
+    expect(srcs).toEqual([
+      "/pptwise/preview/old-0001/page/2",
+      "/pptwise/preview/new-0001/page/2",
+      "/pptwise/preview/new-0001/page/3",
+      "/pptwise/preview/old-0001/page/3",
+    ])
+    fireEvent.click(screen.getByText("Close"))
+    await waitFor(() => expect(document.querySelector("[data-pptwise-compare]")).toBeNull())
+  })
+
+  it("marks nothing and offers no comparison on the first version", async () => {
+    const { Tail } = makeTail()
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: bundleOf([hashed(1, "a", "cover"), hashed(2, "b")]) }))
+    const { container } = render(<Tail turn={{ turn: 1 }} useArtifacts={() => [entry({ version: 1, priorId: null })]} />)
+    await waitFor(() => expect(container.querySelectorAll("[data-desk-page]")).toHaveLength(2))
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(container.querySelector("[data-desk-diff]")).toBeNull()
+    expect(screen.queryByText("Compare with last version")).toBeNull()
+  })
+
+  it("says how many pages are written while some are still placeholders, and has no download for a build that needs revision", async () => {
+    const { Tail } = makeTail()
+    const pages = [hashed(1, "a", "cover"), { ...hashed(2, "b"), placeholder: true }, hashed(3, "c")]
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: { ...bundleOf(pages), draft: true, exportable: false } }))
+    const { container } = render(<Tail turn={{ turn: 1 }} useArtifacts={() => [entry({ version: 1, priorId: null })]} />)
+    await waitFor(() => expect(container.querySelector("[data-desk-written]")).not.toBeNull())
+    expect(container.querySelector("[data-desk-written]")!.textContent).toBe("2 of 3 pages written")
+    expect(screen.getByText("Needs revision, no .pptx yet")).toBeInTheDocument()
+    expect(screen.queryByText("Download .pptx")).toBeNull()
+  })
+
+  it("draws every page, the ones past the strip from the page route, and opens full screen on the page clicked", async () => {
+    const { Tail } = makeTail()
+    const pages = Array.from({ length: 14 }, (_, i) => (i < 12 ? hashed(i + 1, "h" + i) : { ...beyondStrip(i + 1), slideId: "s" + (i + 1), hash: "h" + i }))
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: bundleOf(pages) }))
+    const { container } = render(<Tail turn={{ turn: 1 }} useArtifacts={() => [entry({ version: 1, priorId: null })]} />)
+    await waitFor(() => expect(container.querySelectorAll("[data-desk-page]")).toHaveLength(14))
+    expect(container.querySelector('[data-desk-page="14"] img')!.getAttribute("src")).toBe("/pptwise/preview/new-0001/page/14")
+    fireEvent.click(container.querySelector('[data-desk-page="3"] [role="button"]')!)
+    await waitFor(() => expect(viewer(container)).not.toBeNull())
+    expect(viewer(container)!.getAttribute("src")).toBe("/pptwise/preview/new-0001/html#page=3")
+  })
+
+  it("hands the page number to the composer when the user asks to edit that page", async () => {
+    const { Tail } = makeTail()
+    const editPage = vi.fn()
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: bundleOf([hashed(1, "a", "cover"), hashed(2, "b")]) }))
+    const { container } = render(<Tail turn={{ turn: 1 }} useArtifacts={() => [entry({ version: 1, priorId: null })]} editPage={editPage} />)
+    await waitFor(() => expect(container.querySelector('[data-desk-edit="2"]')).not.toBeNull())
+    fireEvent.click(container.querySelector('[data-desk-edit="2"]')!)
+    expect(editPage).toHaveBeenCalledWith(2)
+  })
+
+  it("prefills the composer with the page and gives it the keyboard, keeping what was typed", () => {
+    const calls: string[] = []
+    let draft = ""
+    const input = {
+      state: { getSnapshot: () => ({ draft }) },
+      setDraft: (text: string) => { calls.push("set:" + text); draft = text },
+      focus: () => calls.push("focus"),
+    }
+    const conversation = { input: { for: () => input } }
+    const kit = makeTail({ conversation })
+    kit.inject("s1").editPage(3)
+    expect(calls).toEqual(["set:Page 3: ", "focus"])
+    draft = "make it shorter  "
+    kit.inject("s1").editPage(5)
+    expect(calls.slice(2)).toEqual(["set:make it shorter\nPage 5: ", "focus"])
+  })
+
+  it("reads this turn's nodes from the chat target, keyed by the turn number", () => {
+    const seen: unknown[] = []
+    const snapshot = { nodes: { turnDataSource: (turn: number, kind: string) => { seen.push([turn, kind]); return "source" } } }
+    const kit = makeTail({ snapshot })
+    expect(kit.inject("s1").keyedHooks.artifacts("4")).toBe("source")
+    expect(seen).toEqual([[4, "pptwise-artifact"]])
+  })
+
+  it("falls back to the turn's outline or theme wall when the turn drew no deck, and to nothing for a turn without pptwise", async () => {
+    const { Tail } = makeTail()
+    fetchMock.mockImplementation(async () =>
+      routeAnswer({ status: 200, json: { kind: "outline", theme: "brief", pages: [{ page: 1, id: "c", type: "cover", heading: "Hi" }] } }),
+    )
+    const { container } = render(
+      <Tail turn={{ turn: 1 }} useArtifacts={() => [entry({ kind: "outline", tool: "pptwise_outline", id: "out-1", version: 1, priorId: null })]} />,
+    )
+    await waitFor(() => expect(container.querySelectorAll("li[data-page]")).toHaveLength(1))
+    expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/out-1")
+    cleanup()
+    const empty = render(<Tail turn={{ turn: 2 }} useArtifacts={() => []} />)
+    expect(empty.container).toBeEmptyDOMElement()
   })
 })

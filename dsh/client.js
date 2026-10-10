@@ -87,6 +87,27 @@ window.__ModuleLoader__.load({
         'type.ending': '结尾',
         'card.unavailable': '这份内容已不在本机的预览目录里。',
         'card.retry': '重试',
+        'desk.version': '第 {n} 版',
+        'desk.pages': '{n} 页',
+        'desk.written': '已写 {x}/{n} 页',
+        'desk.needsRevision': '待修改，未出 .pptx',
+        'desk.changed': '改了 {n} 页',
+        'desk.unchanged': '与上一版相同',
+        'desk.removed': '删了 {n} 页',
+        'desk.open': '全屏翻看',
+        'desk.download': '下载 .pptx',
+        'desk.compare': '对比上一版',
+        'desk.page': '第 {n} 页',
+        'desk.edit': '改这页',
+        'desk.changedMark': '改过',
+        'desk.addedMark': '新增',
+        'compare.title': '第 {from} 版 → 第 {to} 版',
+        'compare.before': '上一版',
+        'compare.after': '这一版',
+        'compare.none': '没有这一页',
+        'compare.removed': '这一版删掉了',
+        'compare.close': '关闭',
+        'edit.prefix': '第 {n} 页：',
       },
       en: {
         'outline.title': 'Outline',
@@ -98,6 +119,27 @@ window.__ModuleLoader__.load({
         'type.ending': 'Ending',
         'card.unavailable': 'This is no longer in the preview folder on this machine.',
         'card.retry': 'Retry',
+        'desk.version': 'Version {n}',
+        'desk.pages': '{n} pages',
+        'desk.written': '{x} of {n} pages written',
+        'desk.needsRevision': 'Needs revision, no .pptx yet',
+        'desk.changed': '{n} pages changed',
+        'desk.unchanged': 'Same as the last version',
+        'desk.removed': '{n} pages removed',
+        'desk.open': 'Full screen',
+        'desk.download': 'Download .pptx',
+        'desk.compare': 'Compare with last version',
+        'desk.page': 'Page {n}',
+        'desk.edit': 'Edit this page',
+        'desk.changedMark': 'Changed',
+        'desk.addedMark': 'New',
+        'compare.title': 'Version {from} → version {to}',
+        'compare.before': 'Last version',
+        'compare.after': 'This version',
+        'compare.none': 'Not in this version',
+        'compare.removed': 'Removed in this version',
+        'compare.close': 'Close',
+        'edit.prefix': 'Page {n}: ',
       },
     }
     var localeT = null
@@ -481,6 +523,172 @@ window.__ModuleLoader__.load({
         .replace(/\b(xlink:href|href)="#([^"]*)"/g, function (_m, attr, id) {
           return attr + '="#' + prefix + id + '"'
         })
+    }
+
+    // THE DRAFT DESK'S BOOKKEEPING.
+    //
+    // Which turn produced which deck, outline or theme wall is read off the
+    // session log, never kept by this plugin. A Conversation definition
+    // matches the pptwise tool calls (top-level `tool/call` and `tool/result`,
+    // and the `tool/ptc-dispatch` pair a Code Mode sub-call writes), and turns
+    // each into a hidden chat node carrying the id stamped in its result
+    // text. The turn tail then asks the chat target for this turn's nodes.
+    // Because everything is derived from events already in the log, a forked
+    // session or a replayed one gets exactly the cards its own log implies,
+    // and no plugin event is ever written into a session.
+    //
+    // The version number comes from the same log: each call's state carries,
+    // per deck, how many decks came before it and the id of the last one,
+    // handed forward from the nearest earlier pptwise call. Only the events
+    // the client has loaded take part, so a deck whose earlier builds lie
+    // before the loaded window counts from there.
+    var ARTIFACT_KIND = 'pptwise-artifact'
+    var ARTIFACT_TOOLS = {
+      pptwise_preview: 'deck',
+      pptwise_build: 'deck',
+      pptwise_themes: 'themes',
+      pptwise_outline: 'outline',
+    }
+    var STAMP_KINDS = { preview: 'deck', themes: 'themes', outline: 'outline' }
+
+    function isRecord(value) {
+      return typeof value === 'object' && value !== null && !Array.isArray(value)
+    }
+
+    function contentText(content) {
+      if (typeof content === 'string') return content
+      if (!Array.isArray(content)) return ''
+      var text = ''
+      for (var i = 0; i < content.length; i++) {
+        if (content[i] && typeof content[i].text === 'string') text += content[i].text
+      }
+      return text
+    }
+
+    function argsOf(raw) {
+      if (isRecord(raw)) return raw
+      if (typeof raw !== 'string') return {}
+      try {
+        var parsed = JSON.parse(raw)
+        return isRecord(parsed) ? parsed : {}
+      } catch {
+        return {}
+      }
+    }
+
+    /** The stamp a pptwise result carries: `{ kind, id }`, or null. */
+    function stampOf(text) {
+      var m = /pptwise-(preview|themes|outline):([A-Za-z0-9-]+)/.exec(text)
+      return m ? { kind: STAMP_KINDS[m[1]], id: m[2] } : null
+    }
+
+    /** Identity and role of one event for the definition, or null. */
+    function artifactMatch(event) {
+      var data = event && event.data
+      if (!isRecord(data)) return null
+      if (event.type === 'tool/call') {
+        if (!ARTIFACT_TOOLS[data.name] || typeof data.callId !== 'string') return null
+        return { id: data.callId, role: 'start' }
+      }
+      if (event.type === 'tool/ptc-dispatch-start' || event.type === 'tool/ptc-dispatch') {
+        if (!ARTIFACT_TOOLS[data.name] || typeof data.subCallId !== 'string') return null
+        return { id: data.subCallId, role: event.type === 'tool/ptc-dispatch-start' ? 'start' : 'update' }
+      }
+      if (event.type === 'tool/result') {
+        var message = data.message
+        var callId = isRecord(message) && isRecord(message.source) ? message.source.callId : undefined
+        if (typeof callId !== 'string' || !stampOf(contentText(message.content))) return null
+        return { id: callId, role: 'update' }
+      }
+      return null
+    }
+
+    /** What the matched events say about one call: tool, target, and the id its result stamped. */
+    function artifactInfo(matches) {
+      var info = { name: null, kind: null, target: '', id: null }
+      for (var i = 0; i < matches.length; i++) {
+        var event = matches[i].event
+        var data = event && event.data
+        if (!isRecord(data)) continue
+        if (event.type === 'tool/call' || event.type === 'tool/ptc-dispatch-start' || event.type === 'tool/ptc-dispatch') {
+          info.name = data.name
+          info.kind = ARTIFACT_TOOLS[data.name] || null
+          var args = argsOf(data.arguments)
+          info.target = String(args.target || args.title || '')
+        }
+        var text = event.type === 'tool/ptc-dispatch'
+          ? contentText(data.content)
+          : event.type === 'tool/result' && isRecord(data.message)
+            ? contentText(data.message.content)
+            : ''
+        var stamp = text ? stampOf(text) : null
+        if (stamp) {
+          info.id = stamp.id
+          if (!info.kind) info.kind = stamp.kind
+        }
+      }
+      return info
+    }
+
+    /** Which deck a target names: its last path segment, whatever the spelling of the rest. */
+    function deckKey(target) {
+      var parts = String(target || '')
+        .replace(/\\/g, '/')
+        .replace(/\/(deck\.spec\.json|deck\.json)$/, '')
+        .replace(/\/+$/, '')
+        .split('/')
+      return (parts[parts.length - 1] || '').replace(/\.json$/, '')
+    }
+
+    /** The per-deck count and last id after the previous pptwise call. */
+    function decksAfter(previous) {
+      if (!previous) return {}
+      var base = (previous.state && previous.state.decks) || {}
+      var info = artifactInfo(previous.matches || [])
+      if (info.kind !== 'deck' || !info.id) return base
+      var key = deckKey(info.target)
+      var next = Object.assign({}, base)
+      next[key] = { count: (base[key] ? base[key].count : 0) + 1, lastId: info.id }
+      return next
+    }
+
+    var artifactDefinition = {
+      kind: ARTIFACT_KIND,
+      target: 'chat',
+      match: artifactMatch,
+      start: function (_context, _match, reader) {
+        var previous = reader && typeof reader.previous === 'function' ? reader.previous(ARTIFACT_KIND) : undefined
+        return { decks: decksAfter(previous) }
+      },
+      update: function (context) {
+        return context.state
+      },
+      buildViewNode: function (context) {
+        var start = context.start || context.matches[0]
+        if (!start) return null
+        var info = artifactInfo(context.matches)
+        if (!info.id || !info.kind) return null
+        var decks = (context.state && context.state.decks) || {}
+        var before = info.kind === 'deck' ? decks[deckKey(info.target)] : undefined
+        return {
+          key: context.key,
+          kind: ARTIFACT_KIND,
+          id: context.id,
+          target: 'chat',
+          anchorSeq: start.event.seq,
+          location: start.location,
+          visibility: 'hidden',
+          data: {
+            callId: context.id,
+            tool: info.name,
+            kind: info.kind,
+            id: info.id,
+            target: info.target,
+            version: before ? before.count + 1 : 1,
+            priorId: before ? before.lastId : null,
+          },
+        }
+      },
     }
 
     function PreviewCard(react, reactDom) {
@@ -882,7 +1090,7 @@ window.__ModuleLoader__.load({
               ? exportLabelFor(status)
               : status === 'failed'
                 ? 'Retry download'
-                : 'Download .pptx',
+                : props.label || 'Download .pptx',
         )
       }
 
@@ -1359,6 +1567,18 @@ window.__ModuleLoader__.load({
                   'needs revision',
                 ),
             h('span', null, bundle.pages.length + ' pages'),
+            // Build by build, how far the writing has got: the pages still
+            // standing as placeholders are the ones not written yet.
+            bundle.draft
+              ? h(
+                  'span',
+                  { 'data-written': '' },
+                  t('desk.written', {
+                    x: bundle.pages.filter(function (p) { return p.placeholder !== true }).length,
+                    n: bundle.pages.length,
+                  }),
+                )
+              : null,
             findingCount > 0 ? h('span', null, findingCount + ' audit findings') : null,
             // No viewer without an id, and none for an id the route has
             // already disowned: the full-size view is a route keyed by it. A
@@ -1781,7 +2001,385 @@ window.__ModuleLoader__.load({
         return h(OutlineList, { outline: got.bundle })
       }
 
-      return { deck: PptwisePreviewCard, themes: PptwiseThemesCard, outline: PptwiseOutlineCard }
+      /** The key two versions of a page are matched by: its slide id, else its page id. */
+      function pageKey(page) {
+        return (page && (page.slideId || page.id)) || null
+      }
+
+      /**
+       * Which pages of this version differ from the last one, matched by
+       * slide id. A page whose markup hash moved is changed, a key the last
+       * version did not have is new, and a key only the last version had was
+       * removed. Without a hash on every page (a deck from before hashes) the
+       * two cannot be compared, and the card says nothing rather than guess.
+       */
+      function diffPages(bundle, prior) {
+        var result = { comparable: false, marks: {}, changed: [], removed: [] }
+        if (!bundle || !prior || !Array.isArray(bundle.pages) || !Array.isArray(prior.pages)) return result
+        var all = bundle.pages.concat(prior.pages)
+        for (var i = 0; i < all.length; i++) {
+          if (!all[i] || typeof all[i].hash !== 'string' || !pageKey(all[i])) return result
+        }
+        result.comparable = true
+        var before = {}
+        prior.pages.forEach(function (page, index) {
+          before[pageKey(page)] = { page: page, index: index }
+        })
+        var seen = {}
+        bundle.pages.forEach(function (page, index) {
+          var key = pageKey(page)
+          seen[key] = true
+          var old = before[key]
+          if (!old) {
+            result.marks[key] = 'added'
+            result.changed.push({ key: key, index: index, priorIndex: null, mark: 'added' })
+          } else if (old.page.hash !== page.hash) {
+            result.marks[key] = 'changed'
+            result.changed.push({ key: key, index: index, priorIndex: old.index, mark: 'changed' })
+          }
+        })
+        prior.pages.forEach(function (page, index) {
+          if (!seen[pageKey(page)]) result.removed.push({ key: pageKey(page), priorIndex: index })
+        })
+        return result
+      }
+
+      /** One page's markup from the route, for pages that did not travel with the bundle. */
+      function pageUrl(id, index) {
+        return previewBundleUrl(id) + '/page/' + (index + 1)
+      }
+
+      /** A 16:9 tile holding a page: its inline markup when the bundle has it, else the page from the route. */
+      function PageTile(props) {
+        if (hasMarkup(props.page)) {
+          return h(Frame, {
+            page: props.page,
+            prefix: props.prefix,
+            width: props.width,
+            height: props.height,
+            title: props.title,
+            onClick: props.onClick,
+          })
+        }
+        return h(
+          'div',
+          {
+            role: props.onClick ? 'button' : undefined,
+            tabIndex: props.onClick ? 0 : undefined,
+            onClick: props.onClick,
+            title: props.title,
+            style: {
+              position: 'relative',
+              aspectRatio: (props.width || 1280) + ' / ' + (props.height || 720),
+              background: COLORS.stage,
+              borderRadius: 6,
+              overflow: 'hidden',
+              border: '1px solid ' + COLORS.line,
+              cursor: props.onClick ? 'zoom-in' : 'default',
+              width: '100%',
+            },
+          },
+          props.src
+            ? h('img', { src: props.src, alt: '', loading: 'lazy', style: { position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block' } })
+            : null,
+        )
+      }
+
+      /** Two versions of every changed page, side by side, full screen. */
+      function CompareModal(props) {
+        useEffect(
+          function () {
+            ensureModalStyles()
+            function onKey(e) {
+              if (e.key === 'Escape') props.onClose()
+            }
+            document.addEventListener('keydown', onKey)
+            return function () {
+              document.removeEventListener('keydown', onKey)
+            }
+          },
+          [props.onClose],
+        )
+        var slide = props.slide
+        var rows = props.diff.changed
+          .map(function (row) {
+            return { label: t('desk.page', { n: row.index + 1 }), mark: row.mark, before: row.priorIndex, after: row.index }
+          })
+          .concat(
+            props.diff.removed.map(function (row) {
+              return { label: t('compare.removed'), mark: 'removed', before: row.priorIndex, after: null }
+            }),
+          )
+        function side(id, index, empty) {
+          if (index === null) {
+            return h(
+              'div',
+              {
+                style: {
+                  aspectRatio: slide.width + ' / ' + slide.height,
+                  border: '1px dashed rgba(255,255,255,0.3)',
+                  borderRadius: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'rgba(255,255,255,0.6)',
+                  fontSize: 13,
+                },
+              },
+              empty,
+            )
+          }
+          return h('img', {
+            src: pageUrl(id, index),
+            alt: '',
+            style: { display: 'block', width: '100%', aspectRatio: slide.width + ' / ' + slide.height, borderRadius: 6, background: '#222' },
+          })
+        }
+        return inBody(
+          h(
+            'div',
+            {
+              'data-pptwise-compare': '',
+              style: { position: 'fixed', inset: 0, zIndex: 9999, background: '#000', color: '#fff', display: 'flex', flexDirection: 'column', padding: 24, gap: 14 },
+              onClick: function (e) {
+                if (e.target === e.currentTarget) props.onClose()
+              },
+            },
+            h(
+              'div',
+              { style: { display: 'flex', alignItems: 'center', gap: 12, flex: '0 0 auto' } },
+              h('span', { style: { fontSize: 15, fontWeight: 600 } }, t('compare.title', { from: props.version - 1, to: props.version })),
+              h('button', { onClick: props.onClose, className: 'pf-mbtn', style: { marginLeft: 'auto' } }, t('compare.close')),
+            ),
+            h(
+              'div',
+              { style: { flex: '1 1 auto', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 18 } },
+              h(
+                'div',
+                { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, fontSize: 12, color: 'rgba(255,255,255,0.7)' } },
+                h('span', null, t('compare.before')),
+                h('span', null, t('compare.after')),
+              ),
+              rows.map(function (row, i) {
+                return h(
+                  'div',
+                  { key: i, 'data-compare-row': row.mark, style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+                  h(
+                    'div',
+                    { style: { fontSize: 13, fontWeight: 600 } },
+                    row.label,
+                    row.mark === 'added' ? ' · ' + t('desk.addedMark') : row.mark === 'changed' ? ' · ' + t('desk.changedMark') : '',
+                  ),
+                  h(
+                    'div',
+                    { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 } },
+                    side(props.priorId, row.before, t('compare.none')),
+                    side(props.id, row.after, t('compare.removed')),
+                  ),
+                )
+              }),
+            ),
+          ),
+        )
+      }
+
+      var deskFrame = {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        padding: '10px 12px 12px',
+        border: '0.5px solid var(--dsw-alias-border-l1, ' + COLORS.line + ')',
+        borderRadius: 'var(--dsw-radius-xl, 12px)',
+        color: COLORS.text,
+      }
+
+      var deskTag = {
+        border: '1px solid ' + COLORS.line,
+        borderRadius: 5,
+        padding: '0 6px',
+        fontSize: 11,
+        color: COLORS.dim,
+      }
+
+      /**
+       * The draft desk: this turn's deck, kept below the turn where the work
+       * group cannot fold it away. The strip shows every page, marks the ones
+       * that changed since the last version of the same deck, and lets the
+       * user open it full screen, download it, compare it with the last
+       * version, or start a message about one page.
+       */
+      function DraftDesk(props) {
+        var entry = props.entry
+        var got = useRouteBundle(entry.id)
+        var prior = useRouteBundle(entry.priorId || null)
+        var ui = useState({ viewer: 0, compare: false, download: 'idle' })
+        function set(change) {
+          ui[1](function (prev) {
+            return Object.assign({}, prev, change)
+          })
+        }
+        var bundle = got.bundle
+        if (!bundle || !Array.isArray(bundle.pages)) {
+          if (got.verdict === null || got.verdict === 'alive') return null
+          return h('div', { 'data-pptwise-desk': '', style: deskFrame }, h(Unavailable, { verdict: got.verdict, onRetry: got.retry }))
+        }
+        var pages = viewablePages(bundle)
+        var slide = bundle.slide || { width: 1280, height: 720 }
+        var exportable = bundle.exportable !== false
+        var written = pages.filter(function (page) {
+          return page.placeholder !== true
+        }).length
+        var diff = entry.priorId ? diffPages(bundle, prior.bundle) : { comparable: false, marks: {}, changed: [], removed: [] }
+        var differs = diff.changed.length > 0 || diff.removed.length > 0
+        var button = {
+          font: 'inherit',
+          fontSize: 12,
+          padding: '3px 10px',
+          borderRadius: 7,
+          border: '1px solid ' + COLORS.line,
+          background: 'transparent',
+          color: COLORS.text,
+          cursor: 'pointer',
+        }
+        var stamp = entry.id.slice(0, 8)
+        return h(
+          'div',
+          { 'data-pptwise-desk': entry.id, style: deskFrame },
+          h(
+            'div',
+            { style: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, fontSize: 12, color: COLORS.dim } },
+            h('span', { style: { color: COLORS.text, fontWeight: 600, fontSize: 13 } }, bundle.title || 'deck'),
+            h('span', { 'data-desk-version': entry.version, style: deskTag }, t('desk.version', { n: entry.version })),
+            h('span', null, t('desk.pages', { n: pages.length })),
+            bundle.draft ? h('span', { 'data-desk-written': '' }, t('desk.written', { x: written, n: pages.length })) : null,
+            exportable ? null : h('span', { style: deskTag }, t('desk.needsRevision')),
+            diff.comparable
+              ? h(
+                  'span',
+                  { 'data-desk-diff': '' },
+                  differs
+                    ? [diff.changed.length > 0 ? t('desk.changed', { n: diff.changed.length }) : null, diff.removed.length > 0 ? t('desk.removed', { n: diff.removed.length }) : null]
+                        .filter(Boolean)
+                        .join(' · ')
+                    : t('desk.unchanged'),
+                )
+              : null,
+            h(
+              'span',
+              { style: { marginLeft: 'auto', display: 'flex', gap: 8 } },
+              h('button', { onClick: function () { set({ viewer: 1 }) }, style: button }, t('desk.open')),
+              exportable
+                ? h(ExportButton, {
+                    previewId: entry.id,
+                    name: bundle.title,
+                    draft: bundle.draft,
+                    verdict: got.verdict,
+                    status: ui[0].download,
+                    onStatus: function (next) { set({ download: next }) },
+                    label: t('desk.download'),
+                    style: button,
+                  })
+                : null,
+              diff.comparable && differs
+                ? h('button', { onClick: function () { set({ compare: true }) }, style: button }, t('desk.compare'))
+                : null,
+            ),
+          ),
+          h(
+            'div',
+            { style: { display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 } },
+            pages.map(function (page, i) {
+              var n = pageNumberOf(page, i)
+              var mark = diff.comparable ? diff.marks[pageKey(page)] : undefined
+              return h(
+                'div',
+                { key: pageKey(page) || i, 'data-desk-page': n, 'data-desk-mark': mark || undefined, style: { flex: '0 0 auto', width: 168, display: 'flex', flexDirection: 'column', gap: 4 } },
+                h(
+                  'div',
+                  { style: { position: 'relative', borderRadius: 7, outline: mark ? '2px solid var(--dsw-alias-state-business-primary, #3b82f6)' : 'none', outlineOffset: 1 } },
+                  h(PageTile, {
+                    page: page,
+                    src: pageUrl(entry.id, i),
+                    prefix: 'pwd' + stamp + '-' + i + '-',
+                    width: slide.width,
+                    height: slide.height,
+                    title: t('desk.page', { n: n }),
+                    onClick: function () { set({ viewer: n }) },
+                  }),
+                ),
+                h(
+                  'div',
+                  { style: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: COLORS.dim, whiteSpace: 'nowrap' } },
+                  h('span', null, t('desk.page', { n: n })),
+                  mark
+                    ? h('span', { style: { color: 'var(--dsw-alias-state-business-primary, #3b82f6)', fontWeight: 600 } }, t(mark === 'added' ? 'desk.addedMark' : 'desk.changedMark'))
+                    : null,
+                  props.editPage
+                    ? h(
+                        'button',
+                        {
+                          'data-desk-edit': n,
+                          onClick: function () { props.editPage(n) },
+                          style: { marginLeft: 'auto', font: 'inherit', fontSize: 11, padding: '1px 6px', border: '1px solid ' + COLORS.line, borderRadius: 5, background: 'transparent', color: COLORS.text, cursor: 'pointer' },
+                        },
+                        t('desk.edit'),
+                      )
+                    : null,
+                ),
+              )
+            }),
+          ),
+          ui[0].viewer > 0
+            ? h(Modal, {
+                src: previewHtmlUrl(entry.id, ui[0].viewer),
+                previewId: exportable ? entry.id : null,
+                name: bundle.title,
+                draft: bundle.draft,
+                downloadStatus: ui[0].download,
+                onDownloadStatus: function (next) { set({ download: next }) },
+                onClose: function () { set({ viewer: 0 }) },
+              })
+            : null,
+          ui[0].compare && diff.comparable
+            ? h(CompareModal, {
+                id: entry.id,
+                priorId: entry.priorId,
+                version: entry.version,
+                slide: slide,
+                diff: diff,
+                onClose: function () { set({ compare: false }) },
+              })
+            : null,
+        )
+      }
+
+      /**
+       * The turn tail: this turn's last deck as the draft desk, or, in a turn
+       * that drew no deck, its last outline or theme wall, so a card made
+       * inside Code Mode is still in view once the turn's work folds away.
+       */
+      function DraftTail(props) {
+        var list = props.useArtifacts(String(props.turn.turn))
+        if (!list || list.length === 0) return null
+        var entry = null
+        for (var i = list.length - 1; i >= 0; i--) {
+          if (list[i] && list[i].kind === 'deck') {
+            entry = list[i]
+            break
+          }
+        }
+        if (!entry) entry = list[list.length - 1]
+        if (!entry || !entry.id) return null
+        if (entry.kind === 'deck') return h(DraftDesk, { key: entry.id, entry: entry, editPage: props.editPage })
+        var block = { content: [{ type: 'text', text: (entry.kind === 'outline' ? 'pptwise-outline:' : 'pptwise-themes:') + entry.id }] }
+        return h(
+          'div',
+          { 'data-pptwise-tail': entry.kind, style: deskFrame },
+          h(entry.kind === 'outline' ? PptwiseOutlineCard : PptwiseThemesCard, { key: entry.id, block: block }),
+        )
+      }
+
+      return { deck: PptwisePreviewCard, themes: PptwiseThemesCard, outline: PptwiseOutlineCard, tail: DraftTail }
     }
 
     function registerCard(ctx) {
@@ -1824,6 +2422,77 @@ window.__ModuleLoader__.load({
         ctx.slots.inject('tool.call.toolview', function* () {
           yield ctx.slots.register({ name: 'tool.call.toolview', key: seat[0] }, seat[1])
         })
+      })
+      registerTail(ctx, cards.tail)
+    }
+
+    /**
+     * Start a message about one page: the composer gets "Page N: " (in the
+     * harness's language) and the keyboard. Whatever the user had already
+     * typed stays, with the prefix on a new line after it.
+     */
+    function editPageIn(sessions, sessionId, n) {
+      var binding = sessions.binding(sessionId)
+      var conversation = binding && binding.ctx && typeof binding.ctx.get === 'function' ? binding.ctx.get('conversation') : undefined
+      if (!conversation || !conversation.input || typeof conversation.input.for !== 'function') {
+        console.warn('[pptwise] no composer to prefill for this session')
+        return
+      }
+      var input = conversation.input.for(binding.ctx)
+      var prefix = t('edit.prefix', { n: n })
+      var current = ''
+      try {
+        var snapshot = input.state && typeof input.state.getSnapshot === 'function' ? input.state.getSnapshot() : undefined
+        current = (snapshot && typeof snapshot.draft === 'string' && snapshot.draft) || ''
+      } catch {
+        current = ''
+      }
+      var kept = current.replace(/\s+$/, '')
+      input.setDraft(kept === '' ? prefix : kept + '\n' + prefix)
+      input.focus()
+    }
+
+    /**
+     * The draft desk under each finished turn. Rides a scoped `ctx.inject`
+     * because the Conversation and session services exist only in the web
+     * shell's session scope: a shell without them still gets every tool card.
+     */
+    function registerTail(ctx, DraftTail) {
+      if (typeof ctx.inject !== 'function') return
+      ctx.inject(['slots', 'uiConversation', 'sessions'], function (scope) {
+        try {
+          scope.effect(function () {
+            return scope.uiConversation.events.register(artifactDefinition)
+          }, 'pptwise: conversation definition')
+          scope.slots.inject('conversation.chat.turnTail', function* () {
+            yield scope.slots.register(
+              {
+                name: 'conversation.chat.turnTail',
+                id: '@liustack/pptwise',
+                inject: function (sessionId) {
+                  var binding = scope.sessions.binding(sessionId)
+                  if (binding === undefined) throw new Error('pptwise: unknown session "' + sessionId + '"')
+                  var chat = scope.uiConversation.binding(binding).target('chat')
+                  return {
+                    editPage: function (n) {
+                      editPageIn(scope.sessions, sessionId, n)
+                    },
+                    keyedHooks: {
+                      artifacts: function (turn) {
+                        var snapshot = chat.getSnapshot()
+                        if (snapshot === undefined) throw new Error('pptwise: Chat target is unavailable')
+                        return snapshot.nodes.turnDataSource(Number(turn), ARTIFACT_KIND)
+                      },
+                    },
+                  }
+                },
+              },
+              DraftTail,
+            )
+          })
+        } catch (error) {
+          console.error('[pptwise] draft desk skipped: ' + error)
+        }
       })
     }
 
@@ -1877,6 +2546,9 @@ window.__ModuleLoader__.load({
       previewIdOf: previewIdOf,
       wallIdOf: wallIdOf,
       outlineIdOf: outlineIdOf,
+      artifactDefinition: artifactDefinition,
+      deckKey: deckKey,
+      editPageIn: editPageIn,
       t: t,
       STRINGS: STRINGS,
       pageCountOf: pageCountOf,

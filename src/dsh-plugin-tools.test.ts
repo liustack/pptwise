@@ -424,6 +424,34 @@ describe("pptwise_build", () => {
   })
 })
 
+describe("the page route and page fingerprints", () => {
+  it("serves each drawn page on its own, with a fingerprint per page in the bundle", async () => {
+    const { svc, workspace, route, handler } = await setup("page-route")
+    const target = await deck(workspace)
+    const value = await svc.buildTool.execute({ target }, inSession(workspace))
+    const id = value.previewId!
+    const bundle = JSON.parse((await request(handler, `${route}/${id}`)).body.toString("utf8")) as { pages: { hash: string }[] }
+    expect(bundle.pages.map((p) => p.hash)).toHaveLength(2)
+    for (const p of bundle.pages) expect(p.hash).toMatch(/^[0-9a-f]{16}$/)
+    expect(bundle.pages[0]!.hash).not.toBe(bundle.pages[1]!.hash)
+
+    const second = await request(handler, `${route}/${id}/page/2`)
+    expect(second.status).toBe(200)
+    expect(second.body.toString("utf8")).toBe("<svg>why</svg>")
+    expect((await request(handler, `${route}/${id}/page/3`)).status).toBe(404)
+    // The same deck built again keeps each unchanged page's fingerprint.
+    const again = await svc.buildTool.execute({ target }, inSession(workspace))
+    const rebuilt = JSON.parse((await request(handler, `${route}/${again.previewId}`)).body.toString("utf8")) as { pages: { hash: string }[] }
+    expect(rebuilt.pages.map((p) => p.hash)).toEqual(bundle.pages.map((p) => p.hash))
+  })
+
+  it("has no page route for an id it does not know, or a path that is not a page number", async () => {
+    const { route, handler } = await setup("page-route-bad")
+    expect((await request(handler, `${route}/00000000-0000-4000-8000-000000000999/page/1`)).status).toBe(404)
+    expect((await request(handler, `${route}/../../etc/page/1`)).status).toBe(404)
+  })
+})
+
 describe("pptwise_outline", () => {
   const SPEC = {
     theme: "brief",
