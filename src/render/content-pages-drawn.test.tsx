@@ -120,3 +120,28 @@ describe("every corpus block on brief's sheet: validate passes it only when the 
     expect(passedButLost).toEqual([])
   })
 })
+
+// A flowchart of many nodes in image-split's narrow body set some node
+// labels on no line at all: an empty, cut <text> per line, which named no
+// field. The content sweep's last pages that passed validate and lost words
+// were these. The node now marks its label left out whole (`OmittedText`),
+// which reads back to the label.
+describe("a flowchart node whose label gets no room at all", () => {
+  it("names the label it leaves out, and validate refuses the page", () => {
+    const base = layoutPage("image-split", LEXICONS.zh, assets.zh, "brief", "photo")
+    const page = base.slides[0]!
+    const full = COMPONENT_BUILDERS.flowchart!(LEXICONS.zh) as unknown as { nodes: { id: string; label: string }[]; edges: unknown[] }
+    const nodes = Array.from({ length: 19 }, (_, i) => {
+      const node = full.nodes[i % full.nodes.length]!
+      const round = Math.floor(i / full.nodes.length)
+      return { id: round > 0 ? `${node.id}-${round}` : node.id, label: node.label }
+    })
+    const ir = { ...base, slides: [{ ...page, components: [...page.components.filter((c) => c.type === "image"), { type: "flowchart", nodes, edges: full.edges }] } as unknown as Slide] }
+    const drawn = validateIr(ir, { allowDroppedContent: true }).ir!
+    const cuts = cutLines(parseSvgRoot(renderSlideSvg(drawn, 0)), drawn.slides[0]!)
+    expect(cuts.length).toBeGreaterThan(0)
+    expect(cuts.filter((cut) => cut.field === undefined)).toEqual([])
+    expect(cuts.every((cut) => /^components\.1\.nodes\.\d+\.label$/.test(cut.field!) && cut.tier === "hard")).toBe(true)
+    expect(validateIr(ir).ok).toBe(false)
+  })
+})
