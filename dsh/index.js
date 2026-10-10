@@ -30,6 +30,7 @@
 // no build step, no dsh type imports, resilient to rc surface drift.
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { engineReady, missingEngineMessage, packageVersion } from './engine.js'
 import { cliLauncher, createPreviewService, TOOL_NAME } from './preview-tool.js'
 
 const SKILL_FILE_URL = new URL('../skills/pptwise/SKILL.md', import.meta.url)
@@ -104,8 +105,31 @@ export function dshRuntimePreamble(cliPath, launcher = cliLauncher(), platform =
     line,
     '```',
     '',
-    'That CLI ships inside this plugin\'s own package, version-locked to this skill, so it wins over the "Run it" section below: ignore the launcher scripts there, this line is the mapping. Only if that file is missing, fall back to `npx -y @liustack/pptwise <args>`.',
+    'That CLI ships inside this plugin\'s own package, version-locked to this skill, so it wins over the "Run it" section below: ignore the launcher scripts there, this line is the mapping.',
   ].join('\n')
+}
+
+/**
+ * The note that replaces the runtime preamble when the package has no
+ * `dist/cli.js`, i.e. it was added from the GitHub source. No deck can be made
+ * then, and every workaround (building it, npx, hand-written slides) leaves the
+ * user with a broken plugin they do not know about. So the model hears one
+ * job: tell the user how to reinstall.
+ */
+export function dshMissingEnginePreamble(cliPath, version) {
+  return [
+    '## DSH runtime note (injected by the pptwise DSH plugin)',
+    '',
+    `**pptwise cannot run here.** ${missingEngineMessage(cliPath, version)}`,
+    '',
+    'When the user asks for a deck, tell them this in their language and stop. Do not try to work around it: do not build the engine, do not run pptwise through npx, and do not make the slides some other way. The playbook below only applies once the plugin is reinstalled.',
+  ].join('\n')
+}
+
+/** The note the skill body gets: the command mapping when the engine is
+ *  there, the reinstall note when it is not. */
+export function dshPreamble(cliPath) {
+  return engineReady(cliPath) ? dshRuntimePreamble(cliPath) : dshMissingEnginePreamble(cliPath, packageVersion())
 }
 
 export function apply(ctx) {
@@ -158,7 +182,7 @@ export function apply(ctx) {
       name: SKILL_NAME,
       description: skill.description,
       source: 'bundled',
-      content: `${dshRuntimePreamble(CLI_PATH)}\n\n${skill.body}`,
+      content: `${dshPreamble(CLI_PATH)}\n\n${skill.body}`,
       path: fileURLToPath(SKILL_FILE_URL),
       resourceBase: { kind: 'directory', path: SKILL_DIR },
     })

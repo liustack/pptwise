@@ -119,6 +119,9 @@ fine, a wildly different one is not.
 - **The card does not appear on DeepSeek Harness Desktop**: the plugin most
   likely went into the `web` profile, which Desktop never loads. Install it
   the Desktop way from Step 1.
+- **The plugin installed but cannot make a deck, or `doctor` says it has no
+  built engine**: it was added from the GitHub address, whose source does not
+  carry `dist/`. Remove it and add it again by package name, as in Step 1.
 - **The user turns out not to be on dsh after all** — stop and follow
   [`INSTALL.md`](./INSTALL.md) instead. Do not run both procedures.
 

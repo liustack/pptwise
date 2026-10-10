@@ -148,6 +148,10 @@ export interface DoctorDshProfile {
    *  package is declared but not installed yet). */
   source: "node_modules" | "package.json" | null
   stale: boolean
+  /** The package is installed but has no built engine (`dist/cli.js`), which
+   *  is what adding it from the GitHub source leaves behind. The skill still
+   *  registers, so the plugin looks fine until the first deck fails. */
+  engineMissing: boolean
 }
 
 export interface DoctorDsh {
@@ -333,8 +337,12 @@ export async function scanSkillCopies(home: string, currentVersion: string): Pro
  *  it is the package that would really load — and it works through the `link:`
  *  symlink a locally-developed plugin uses, since the symlink target's own
  *  `package.json` is what gets read. */
+function installedPluginDir(profileDir: string): string {
+  return join(profileDir, "node_modules", ...PACKAGE_NAME.split("/"))
+}
+
 async function readInstalledPluginVersion(profileDir: string): Promise<string | null> {
-  const pkgPath = join(profileDir, "node_modules", ...PACKAGE_NAME.split("/"), "package.json")
+  const pkgPath = join(installedPluginDir(profileDir), "package.json")
   try {
     const pkg = JSON.parse(await readFile(pkgPath, "utf8")) as { version?: unknown }
     return typeof pkg.version === "string" ? pkg.version : null
@@ -399,6 +407,7 @@ export async function inspectDsh(home: string, currentVersion: string): Promise<
       version,
       source: installedVersion !== null ? "node_modules" : declaredVersion !== null ? "package.json" : null,
       stale: installed && version !== null && isOlder(version, currentVersion),
+      engineMissing: installedVersion !== null && !(await pathExists(join(installedPluginDir(profileDir), "dist", "cli.js"))),
     })
   }
   return { applicable: true, home: dshHome, profiles }
@@ -407,9 +416,16 @@ export async function inspectDsh(home: string, currentVersion: string): Promise<
 /** `npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptwise@0.18.0`
  *  — the pinned form INSTALL.md step 0 insists on, because dsh installs through
  *  a pnpm that holds back fresh releases and silently resolves `@latest` to an
- *  older one. A named version is a deliberate request. */
-function dshInstallCommand(profile: string, version: string): string {
-  return `npx -y @deepseek-ai/dsh plugin --profile ${profile} add ${PACKAGE_NAME}@${version}`
+ *  older one. A named version is a deliberate request.
+ *
+ *  Desktop's `desktop` profile is the exception: the npm `dsh` cannot change
+ *  it (INSTALL-dsh.md), so the fix there is Desktop's own Add plugin. */
+export function dshInstallCommand(profile: string, version: string): string {
+  const spec = `${PACKAGE_NAME}@${version}`
+  if (profile === "desktop") {
+    return `in DeepSeek Harness Desktop open Plugins, choose Add plugin and enter ${spec} (or quit Desktop and run \`dsh plugin --profile desktop add ${spec}\`)`
+  }
+  return `npx -y @deepseek-ai/dsh plugin --profile ${profile} add ${spec}`
 }
 
 /** Both optional capabilities, each with the exact consequence of not having
@@ -621,7 +637,13 @@ export async function buildDoctorReport(input: DoctorInput = {}): Promise<Doctor
   }
 
   for (const profile of dsh.profiles) {
-    if (profile.stale) {
+    if (profile.engineMissing) {
+      warnings.push({
+        check: "dsh plugin",
+        message: `profile "${profile.name}" has ${PACKAGE_NAME} without its built engine (dist/cli.js), so it cannot make a deck. This is what adding it from the GitHub address leaves`,
+        fix: `remove it, then add it by package name: ${dshInstallCommand(profile.name, version)}`,
+      })
+    } else if (profile.stale) {
       warnings.push({
         check: "dsh plugin",
         message: `profile "${profile.name}" has ${PACKAGE_NAME} ${profile.version}, behind this CLI's ${version}`,
@@ -704,6 +726,11 @@ export function renderDoctorReport(report: DoctorReport): string {
         continue
       }
       const version = profile.version ?? "version unknown"
+      if (profile.engineMissing) {
+        lines.push(`  ${mark("warn")} ${profile.name}: ${version} (no built engine, cannot make a deck)`)
+        lines.push(`      fix: remove it, then add it by package name: ${dshInstallCommand(profile.name, report.version)}`)
+        continue
+      }
       lines.push(`  ${mark(profile.stale ? "warn" : "ok")} ${profile.name}: ${version}${profile.source ? ` (via ${profile.source})` : ""}${profile.stale ? " (behind this CLI)" : ""}`)
       if (profile.stale) {
         lines.push(`      fix: ${dshInstallCommand(profile.name, report.version)}`)

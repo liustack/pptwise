@@ -87,6 +87,7 @@ import { accessSync, constants as fsConstants, cpSync, existsSync, realpathSync,
 import { copyFile, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, delimiter, dirname, isAbsolute, join, resolve } from 'node:path'
+import { engineReady, missingEngineMessage, packageVersion } from './engine.js'
 import { runChild } from './spawnHidden.js'
 
 /**
@@ -1074,6 +1075,9 @@ function cliChildEnv() {
  * than booting as an app.
  */
 function runCli(cliPath, args, signal) {
+  // Checked before spawning: a missing engine otherwise surfaces as Node's
+  // "Cannot find module", which tells the user nothing about the fix.
+  if (!engineReady(cliPath)) return Promise.reject(new Error(missingEngineMessage(cliPath, packageVersion())))
   return runChild(resolveCliCommand(), [cliPath, ...args], {
     env: cliChildEnv(),
     signal,
@@ -2018,6 +2022,7 @@ export function definePreviewTool(cliPath) {
 
 /** Exposed for the plugin's own tests — not part of any DSH contract. */
 export const __testing = {
+  runCli,
   readPreviewBundle,
   modelSummary,
   captureSnapshot,

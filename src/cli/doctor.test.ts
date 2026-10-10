@@ -7,6 +7,7 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import {
   buildDoctorReport,
+  dshInstallCommand,
   inspectDsh,
   MIN_NODE,
   readPinnedVersion,
@@ -80,7 +81,7 @@ async function writePartialSkillCopy(home: string, relative: string): Promise<st
 async function writeDshProfile(
   home: string,
   name: string,
-  opts: { declared?: string; installed?: string } = {},
+  opts: { declared?: string; installed?: string; engine?: boolean } = {},
 ): Promise<void> {
   const profileDir = join(home, ".dsh", "profiles", name)
   await mkdir(profileDir, { recursive: true })
@@ -96,6 +97,10 @@ async function writeDshProfile(
     const pkgDir = join(profileDir, "node_modules", "@liustack", "pptwise")
     await mkdir(pkgDir, { recursive: true })
     await writeFile(join(pkgDir, "package.json"), JSON.stringify({ name: "@liustack/pptwise", version: opts.installed }))
+    if (opts.engine !== false) {
+      await mkdir(join(pkgDir, "dist"), { recursive: true })
+      await writeFile(join(pkgDir, "dist", "cli.js"), "")
+    }
   }
 }
 
@@ -316,6 +321,30 @@ describe("inspectDsh", () => {
     }
   })
 
+  it("flags a plugin installed without its built engine, as a GitHub install leaves it", async () => {
+    const home = await makeHome()
+    try {
+      await writeDshProfile(home, "desktop", { declared: "github:liustack/pptwise", installed: CURRENT, engine: false })
+      await writeDshProfile(home, "web", { declared: CURRENT, installed: CURRENT })
+      const dsh = await inspectDsh(home, CURRENT)
+      expect(dsh.profiles.find((p) => p.name === "desktop")).toMatchObject({ installed: true, engineMissing: true, stale: false })
+      expect(dsh.profiles.find((p) => p.name === "web")).toMatchObject({ engineMissing: false })
+    } finally {
+      await rm(home, { recursive: true, force: true })
+    }
+  })
+
+  it("never calls a declared but uninstalled plugin engine-less", async () => {
+    const home = await makeHome()
+    try {
+      await writeDshProfile(home, "web", { declared: "0.15.1" })
+      const [profile] = (await inspectDsh(home, CURRENT)).profiles
+      expect(profile).toMatchObject({ installed: true, engineMissing: false })
+    } finally {
+      await rm(home, { recursive: true, force: true })
+    }
+  })
+
   it("reports a link: dependency as installed with no comparable version", async () => {
     const home = await makeHome()
     try {
@@ -325,6 +354,19 @@ describe("inspectDsh", () => {
     } finally {
       await rm(home, { recursive: true, force: true })
     }
+  })
+})
+
+describe("dshInstallCommand", () => {
+  it("pins the version through the npm dsh for an ordinary profile", () => {
+    expect(dshInstallCommand("web", "1.2.3")).toBe("npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptwise@1.2.3")
+  })
+
+  it("sends the desktop profile to Desktop's own Add plugin, which the npm dsh cannot reach", () => {
+    const fix = dshInstallCommand("desktop", "1.2.3")
+    expect(fix).toContain("Plugins, choose Add plugin and enter @liustack/pptwise@1.2.3")
+    expect(fix).toContain("dsh plugin --profile desktop add @liustack/pptwise@1.2.3")
+    expect(fix).not.toContain("npx")
   })
 })
 
@@ -384,6 +426,23 @@ describe("buildDoctorReport", () => {
       expect(report.errors).toEqual([])
       const warning = report.warnings.find((w) => w.check === "dsh plugin")
       expect(warning?.fix).toBe(`npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptwise@${CURRENT}`)
+    } finally {
+      await rm(home, { recursive: true, force: true })
+    }
+  })
+
+  it("warns about an engine-less plugin with a reinstall by package name, in the report and its text", async () => {
+    const home = await makeHome()
+    try {
+      await writeDshProfile(home, "desktop", { declared: "github:liustack/pptwise", installed: CURRENT, engine: false })
+      const report = await buildDoctorReport({ home, env: { PATH: "" }, version: CURRENT })
+      expect(report.errors).toEqual([])
+      const warning = report.warnings.find((w) => w.check === "dsh plugin")
+      expect(warning?.message).toContain("without its built engine")
+      expect(warning?.fix).toContain(`remove it, then add it by package name: in DeepSeek Harness Desktop open Plugins`)
+      const text = renderDoctorReport(report)
+      expect(text).toContain("desktop: " + CURRENT + " (no built engine, cannot make a deck)")
+      expect(text).toContain(`Add plugin and enter @liustack/pptwise@${CURRENT}`)
     } finally {
       await rm(home, { recursive: true, force: true })
     }

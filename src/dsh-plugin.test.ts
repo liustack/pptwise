@@ -4,7 +4,7 @@
 // with `new URL(..., import.meta.url)` + `fileURLToPath` at module scope,
 // which the repo-default jsdom environment breaks (jsdom swaps global URL —
 // same reason plugin-manifest.test.ts reads files by process.cwd()).
-import { mkdtempSync, readFileSync, rmSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import {
@@ -98,17 +98,28 @@ describe("dsh plugin (skill registration, v0)", () => {
     expect(reg!.source).toBe("bundled")
   })
 
-  it("prepends the DSH runtime preamble mapping `pptwise` onto the package's own CLI (核实 B: profile .bin never enters PATH)", () => {
+  it("prepends the DSH runtime preamble for the package's own CLI (核实 B: profile .bin never enters PATH)", () => {
     const [reg] = applyWithFakeCtx()
-    // The preamble comes first — the model must read the command mapping
-    // before any `pptwise <cmd>` instruction in the body.
+    // The preamble comes first: the model must read the command mapping
+    // before any `pptwise <cmd>` instruction in the body. Which preamble
+    // depends on whether this checkout has built dist, so it is pinned by
+    // the package's own CLI path, not by the text.
+    const cliPath = join(dirname(reg!.path), "..", "..", "dist", "cli.js")
+    expect(reg!.content.startsWith(`${plugin.dshPreamble(cliPath)}\n\n`)).toBe(true)
     expect(reg!.content.startsWith("## DSH runtime note")).toBe(true)
-    const cliPath = reg!.content.match(/node "([^"]+)" <args>/)?.[1]
-    expect(cliPath, "preamble must carry an absolute node invocation of the packaged CLI").toBeTruthy()
-    expect(cliPath!.endsWith(join("dist", "cli.js"))).toBe(true)
-    expect(cliPath!.startsWith("/") || /^[A-Za-z]:[\\/]/.test(cliPath!)).toBe(true)
-    // npx fallback stays documented for a missing dist
-    expect(reg!.content).toContain("npx -y @liustack/pptwise")
+  })
+
+  it("maps `pptwise` onto the CLI when it is there, and asks for a reinstall when it is not", () => {
+    const present = join(FILE_HOME, "engine", "dist", "cli.js")
+    mkdirSync(dirname(present), { recursive: true })
+    writeFileSync(present, "")
+    const mapped = plugin.dshPreamble(present)
+    expect(mapped, "preamble must carry an absolute invocation of the packaged CLI").toContain(`"${present}" <args>`)
+    // No npx detour: a missing dist gets its own note, never a workaround.
+    expect(mapped).not.toContain("npx -y @liustack/pptwise")
+    const missing = join(FILE_HOME, "nothing", "dist", "cli.js")
+    expect(plugin.dshPreamble(missing)).toContain(`${missing} is missing`)
+    expect(plugin.dshPreamble(missing)).not.toContain("<args>")
   })
 
   it("keeps the plain node line wherever a shell can find node", () => {
@@ -137,6 +148,35 @@ describe("dsh plugin (skill registration, v0)", () => {
     // A plain Node host without node on PATH: its own absolute path, no flag.
     expect(plugin.dshRuntimePreamble("/p/dist/cli.js", { command: "/opt/node/bin/node", runAsNode: false }, "linux")).toContain(
       '"/opt/node/bin/node" "/p/dist/cli.js" <args>',
+    )
+  })
+
+  it("tells the model to send the user back to the package name when the engine is missing", () => {
+    // A plugin added from the GitHub address has no dist/cli.js. The note
+    // replaces the command mapping: there is nothing to map onto.
+    const note = plugin.dshMissingEnginePreamble("/p/dist/cli.js", "9.9.9")
+    expect(note.startsWith("## DSH runtime note")).toBe(true)
+    expect(note).toContain("/p/dist/cli.js is missing")
+    expect(note).toContain("GitHub address")
+    expect(note).toContain("Plugins, remove pptwise, choose Add plugin, and enter `@liustack/pptwise@9.9.9`")
+    expect(note).toContain("npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptwise@9.9.9")
+    expect(note).toContain("Do not try to work around it")
+  })
+
+  it("pins the reinstall line to this package's own version", async () => {
+    // @ts-expect-error untyped on purpose
+    const { packageVersion } = await import("../dsh/engine.js")
+    const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as { version: string }
+    expect(packageVersion()).toBe(pkg.version)
+  })
+
+  it("fails a preview on a missing engine with the reinstall message, not a module error", async () => {
+    const { __testing } = (await loadPreviewTool()) as unknown as {
+      __testing: { runCli: (cliPath: string, args: string[]) => Promise<unknown> }
+    }
+    const missing = join(FILE_HOME, "no-engine", "dist", "cli.js")
+    await expect(__testing.runCli(missing, ["--version"])).rejects.toThrow(
+      `${missing} is missing). That happens when it is added from the GitHub address`,
     )
   })
 
@@ -2855,6 +2895,7 @@ describe("publishing a preview", () => {
     const patched = original.replace(/ from 'node:fs\/promises'/, " from './fs-hook.mjs'")
     if (patched === original) throw new Error("the fs import moved — this hook patches one exact line")
     await writeFile(join(dir, "spawnHidden.js"), await readFile(join(dshDir, "spawnHidden.js"), "utf8"))
+    await writeFile(join(dir, "engine.js"), await readFile(join(dshDir, "engine.js"), "utf8"))
     const copy = join(dir, "preview-tool.js")
     await writeFile(copy, patched)
     return copy
