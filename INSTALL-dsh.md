@@ -13,12 +13,32 @@ ships inside it.
 There is nothing to configure to render a PPTX. pptwise renders entirely
 locally: no API key, no account, no network calls at render time. Optional
 stock-photo search needs the user's own Pexels key. The only prerequisite is
-Node 22.19+ (or Bun).
+Node 22.19+ (or Bun). DeepSeek Harness Desktop needs none: the plugin runs on
+the runtime Desktop ships.
 
 ## Step 1: Install the plugin
 
+Ask the user which DeepSeek Harness they run, because each keeps its plugins
+in its own profile and a plugin installed into the other one never loads.
+
+**dsh started from a terminal (`dsh web` or the CLI)** uses the `web` profile:
+
 ```sh
 npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptwise@0.40.0
+```
+
+**DeepSeek Harness Desktop** uses its own `desktop` profile, which the npm `dsh`
+above cannot change. Have the user install from inside Desktop: open
+**Plugins**, choose **Add plugin**, enter `@liustack/pptwise@0.40.0`, choose
+**Install**, then **Enable now**. You cannot do this for them from a Desktop
+session, since the terminal route needs Desktop fully quit.
+
+That terminal route, for a user who prefers it: Desktop's own `dsh` command,
+registered from its **Manage dsh Command…** menu. Launch Desktop once so the
+profile exists, quit it fully, run the line below, then reopen Desktop.
+
+```sh
+dsh plugin --profile desktop add @liustack/pptwise@0.40.0
 ```
 
 The version is named on purpose: dsh installs plugins through pnpm 11, which
@@ -35,8 +55,11 @@ Tell the user to restart dsh and look at the plugin list. A card named
 **pptwise** means the plugin is live and the deck skill is registered.
 
 The skill it registers opens with a runtime note giving the exact
-`node <path>/dist/cli.js` command that stands in for `pptwise` inside dsh. You
-need that command for the next step.
+`node <path>/dist/cli.js` command that stands in for `pptwise` inside dsh. On
+Desktop without a Node install the note names Desktop's own executable with
+`ELECTRON_RUN_AS_NODE=1` instead. Use whichever line the note gives wherever
+this guide writes `node <path>/dist/cli.js`. You need that command for the next
+step.
 
 ## Step 3: Health check
 
@@ -93,6 +116,9 @@ fine, a wildly different one is not.
   command with that version.
 - **The plugin card does not appear after a restart** — re-run the install
   command, which is safe to repeat, then restart dsh again.
+- **The card does not appear on DeepSeek Harness Desktop**: the plugin most
+  likely went into the `web` profile, which Desktop never loads. Install it
+  the Desktop way from Step 1.
 - **The user turns out not to be on dsh after all** — stop and follow
   [`INSTALL.md`](./INSTALL.md) instead. Do not run both procedures.
 
@@ -107,3 +133,6 @@ Uninstalling removes the skill with no residue:
 ```sh
 npx -y @deepseek-ai/dsh plugin --profile web remove @liustack/pptwise
 ```
+
+On Desktop, uninstall from the plugin's page under **Plugins**, or quit Desktop
+and run `dsh plugin --profile desktop remove @liustack/pptwise`.
