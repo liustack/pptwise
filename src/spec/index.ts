@@ -207,8 +207,22 @@ export function resolveSpecThemeId(spec: DeckSpec): string {
 
 // ── hard gate: pages non-empty ──────────────────────────────────────────
 
+/**
+ * The structural floor: a cover first and an ending last. A one-page request
+ * cannot be met, and the message says so in a way that keeps the page count
+ * the user's call instead of sending an agent off to add pages.
+ */
 function checkPagesNonEmpty(spec: DeckSpec): SpecValidationIssue[] {
-  if (spec.pages.length > 0) return []
+  if (spec.pages.length > 1) return []
+  if (spec.pages.length === 1) {
+    return [
+      {
+        path: "pages",
+        message:
+          "spec has 1 page — a deck opens with a cover and closes with an ending page, so the shortest deck is 2 pages (cover and ending) or 3 (with one content page). If the user asked for one page, ask them which of those they want. Do not add pages on your own",
+      },
+    ]
+  }
   return [{ path: "pages", message: "spec has no pages — a spec needs at least a cover page and an ending page" }]
 }
 
@@ -547,19 +561,18 @@ function checkKindDistribution(spec: DeckSpec): SpecValidationIssue[] {
   return warnings
 }
 
-// ── hard gate: page count vs pacing ─────────────────────────────────────
+// ── advisory: page count vs pacing ──────────────────────────────────────
 
 /**
- * Deck-level page-count range per pacing (spec §5's pacing table,
- * initial values — "dense 8-30 / balanced 6-24 / spacious 4-16", not yet
- * tuned against real usage). Independent of `PACING_BUDGETS`
- * (`narrative/index.ts`, per-slide component-count/bullets editorial
- * budget) — this is a separate, deck-wide page-count concern the spec calls
- * out as its own hard gate ("page count vs. pacing recommended range").
- * Message wording renamed from "delivery" to "pacing" (vocabulary-v4
- * residual, routed from the task 1 review) — the axis itself was already
- * `Pacing` at the type level, this closes the last stale word in the
- * error text.
+ * The page counts each pacing usually spans (spec §5's pacing table, initial
+ * values "dense 8-30 / balanced 6-24 / spacious 4-16"). Independent of
+ * `PACING_BUDGETS` (`narrative/index.ts`), which budgets each slide.
+ *
+ * Advice, not a gate. The deck's length is the user's call: a four-page
+ * weekly brief is a real request, and when this range was a hard error an
+ * agent asked for four pages delivered six to get past it. Pacing sets how
+ * much each page carries, not how many pages there are. Out of range, the
+ * warning says to keep a count the user gave.
  */
 export const SPEC_PAGE_COUNT_RANGE: Record<Pacing, { min: number; max: number }> = {
   dense: { min: 8, max: 30 },
@@ -574,7 +587,7 @@ function checkPageCount(spec: DeckSpec, pacing: Pacing): SpecValidationIssue[] {
   return [
     {
       path: "pages",
-      message: `spec has ${n} pages — "${pacing}" pacing expects ${min}-${max} pages, change pacing or add/remove pages`,
+      message: `spec has ${n} pages, outside the ${min}-${max} that "${pacing}" pacing usually spans. If the user asked for ${n} pages, keep ${n}: this is advice, not an error. Otherwise reconsider the page count`,
     },
   ]
 }
@@ -596,8 +609,8 @@ function pageIdFromRawInput(input: unknown, index: number): string | undefined {
 
 /**
  * Parse raw JSON, then run isolated hard-gate categories in order. A hard
- * failure short-circuits later categories. Kind distribution runs last as an
- * editorial advisory and never changes `ok`.
+ * failure short-circuits later categories. Page count against pacing and kind
+ * distribution run last as editorial advisories and never change `ok`.
  *
  * Before the schema parse, {@link normalizeNarrativeShape} (`../narrative`,
  * T0b fix 2 scope extension) runs on the raw input, exactly mirroring
@@ -702,10 +715,7 @@ export function validateSpec(input: unknown, opts?: { theme?: ThemeDefinition })
   const focusErrors = checkFocusVocabulary(spec)
   if (focusErrors.length > 0) return withNormalized({ ok: false, errors: focusErrors })
 
-  const pageCountErrors = checkPageCount(spec, resolvedAxes.pacing)
-  if (pageCountErrors.length > 0) return withNormalized({ ok: false, errors: pageCountErrors })
-
-  const warnings = checkKindDistribution(spec)
+  const warnings = [...checkPageCount(spec, resolvedAxes.pacing), ...checkKindDistribution(spec)]
   return withNormalized({
     ok: true,
     spec,

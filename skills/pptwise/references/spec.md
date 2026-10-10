@@ -164,7 +164,7 @@ Run:
 pptwise spec validate deck.spec.json
 ```
 
-Fix hard errors until the command prints `OK`. Page count is checked against pacing. Three or more consecutive content pages with the same `kind` produce an editorial warning.
+Fix hard errors until the command prints `OK`. A page count outside the range the pacing usually spans is a warning, not an error. When the user asked for a page count, keep it. Three or more consecutive content pages with the same `kind` produce an editorial warning.
 
 ## Menu mismatch handling
 

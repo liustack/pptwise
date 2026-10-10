@@ -102,6 +102,8 @@ A deck prints no page number, organization, date, or confidentiality line unless
 - Authors write only a semantic `kind`, never a page face or geometry choice.
 - `focus` and `summary` are optional writing hints.
 
+When the user names a page count, the spec has exactly that many pages, the cover and the ending included. Never add or drop pages to get past a check.
+
 Run `pptwise spec validate deck.spec.json` until it prints `OK`. A content `kind` outside the bound theme menu is a hard error that lists what the menu offers. Do not relabel the page merely to silence the error. Change the page's intent only when that is semantically honest, or return to the theme step.
 
 The validated spec is the outline. Show it to the user as one line per page: number, page type or `kind`, heading, and what the page says. Call `pptwise_preview` on the deck directory as well when it exists, so the user sees the cover and the page sequence before any page is written. Ask for changes unless the user said to go ahead.

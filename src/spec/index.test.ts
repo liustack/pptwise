@@ -305,7 +305,7 @@ describe("deck spec hard gates", () => {
     expect(text).not.toMatch(/pptwise migrate/)
   })
 
-  it("keeps pacing page-count budgets unchanged", () => {
+  it("keeps pacing page-count ranges as advice, so a user's page count stands", () => {
     expect(SPEC_PAGE_COUNT_RANGE.spacious).toEqual({ min: 4, max: 16 })
     const fourPages = {
       narrative: { pacing: "spacious" },
@@ -313,7 +313,30 @@ describe("deck spec hard gates", () => {
       pages: [cover(), content("a"), content("b"), ending()],
     }
     expect(validateSpec(fourPages).ok).toBe(true)
-    expect(validateSpec({ ...fourPages, narrative: { pacing: "dense" } }).ok).toBe(false)
+    expect(validateSpec(fourPages).warnings ?? []).toEqual([])
+    // A four-page weekly brief on dense pacing: valid, with a warning that
+    // tells the agent to keep the count the user asked for.
+    const dense = validateSpec({ ...fourPages, narrative: { pacing: "dense" } })
+    expect(dense.ok).toBe(true)
+    expect(dense.spec?.pages).toHaveLength(4)
+    const text = (dense.warnings ?? []).map((w) => w.message).join("\n")
+    expect(text).toContain('spec has 4 pages, outside the 8-30 that "dense" pacing usually spans')
+    expect(text).toContain("If the user asked for 4 pages, keep 4")
+    // Too long is advice too.
+    const long = validateSpec({
+      ...fourPages,
+      pages: [cover(), ...Array.from({ length: 18 }, (_, i) => content(`p${i}`)), ending()],
+    })
+    expect(long.ok).toBe(true)
+    expect((long.warnings ?? []).some((w) => w.message.includes("outside the 4-16"))).toBe(true)
+  })
+
+  it("explains that a one-page deck cannot be built instead of asking for more pages", () => {
+    const result = validateSpec({ theme: TEST_THEME_ID, pages: [cover()] })
+    expect(result.ok).toBe(false)
+    expect(result.errors).toHaveLength(1)
+    expect(result.errors[0]!.message).toContain("the shortest deck is 2 pages (cover and ending) or 3")
+    expect(result.errors[0]!.message).toContain("Do not add pages on your own")
   })
 })
 
