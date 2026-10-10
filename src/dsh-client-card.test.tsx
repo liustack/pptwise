@@ -2039,6 +2039,11 @@ describe("dsh theme wall card", () => {
       "memo",
     ])
     expect(screen.getByText("3 themes")).toBeInTheDocument()
+    // Numbered in the order the result tells the model, so "2" in the
+    // question panel is the second column here.
+    expect(
+      Array.from(container.querySelectorAll("[data-theme]")).map((el) => el.querySelector("[data-theme-number]")?.textContent),
+    ).toEqual(["1", "2", "3"])
     // Each mounted page keeps its ids to itself.
     const ids = Array.from(container.querySelectorAll("[id]")).map((el) => el.id)
     expect(new Set(ids).size).toBe(ids.length)

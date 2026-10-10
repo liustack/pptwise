@@ -1599,6 +1599,27 @@ window.__ModuleLoader__.load({
                       textOverflow: 'ellipsis',
                     },
                   },
+                  // The number the question panel's options start with
+                  // ("1 brief"): the model is told this order in the result.
+                  h(
+                    'span',
+                    {
+                      'data-theme-number': i + 1,
+                      style: {
+                        display: 'inline-block',
+                        minWidth: 16,
+                        marginRight: 5,
+                        padding: '0 4px',
+                        borderRadius: 4,
+                        background: COLORS.stage,
+                        color: COLORS.text,
+                        fontWeight: 700,
+                        textAlign: 'center',
+                        fontVariantNumeric: 'tabular-nums',
+                      },
+                    },
+                    String(i + 1),
+                  ),
                   h('span', { style: { color: COLORS.text, fontWeight: 600 } }, theme.id),
                   theme.label && theme.label !== theme.id ? ' ' + theme.label : null,
                 ),
