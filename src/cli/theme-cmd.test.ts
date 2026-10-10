@@ -346,6 +346,7 @@ describe("runThemeTry --title (the caller's own pages)", () => {
     expect((await readFile(join(out, "brief-content.svg"), "utf8")).replace(/<[^>]+>/g, "")).toContain("38%")
     expect(crayon!.pages).toEqual([{ type: "cover", file: "crayon-cover.svg" }])
     expect(crayon!.skipped).toEqual([{ type: "content", kind: "fact", reason: expect.stringMatching(/fact/) }])
+    expect((manifest as WallManifest & { notes?: string[] }).notes).toEqual([expect.stringMatching(/^note: crayon left out its content \(fact\) page: /)])
     expect(await readdir(out)).not.toContain("crayon-content.svg")
     expect(await readFile(join(out, "contact-sheet.html"), "utf8")).toContain("tw-missing")
   })
@@ -368,6 +369,37 @@ describe("runThemeTry --title (the caller's own pages)", () => {
     await writeFile(page, JSON.stringify({ kind: "fact", heading: "Revenue", components: [] }))
     await runThemeTry("crayon", { output: out, cwd, title: "Q3 review", page })
     expect(await readdir(out)).not.toContain("crayon-content.svg")
+  })
+
+  it("draws a shortlist of four to six themes when no ids are named", async () => {
+    const cwd = await tmp("pptwise-theme-wall-shortlist-")
+    const plain = JSON.parse(await runThemeTry(undefined, { output: join(cwd, "a"), cwd, title: "Q3 review", json: true })) as WallManifest
+    expect(plain.themes.map((theme) => theme.id)).toEqual(["brief", "swiss", "journal", "terminal"])
+    const weekly = JSON.parse(
+      await runThemeTry(undefined, { output: join(cwd, "b"), cwd, title: "周会改版", occasion: "weekly-brief", json: true }),
+    ) as WallManifest
+    expect(weekly.themes.map((theme) => theme.id)).toEqual(["bulletin", "brief", "swiss", "journal"])
+    const business = JSON.parse(
+      await runThemeTry("", { output: join(cwd, "c"), cwd, title: "Q3", occasion: "business,institutional", json: true }),
+    ) as WallManifest
+    expect(business.themes.length).toBeGreaterThanOrEqual(4)
+    expect(business.themes.length).toBeLessThanOrEqual(6)
+    expect(business.themes[0]!.id).toBe("bulletin")
+    await expect(runThemeTry(undefined, { cwd, title: "Q3", occasion: "wedding" })).rejects.toThrow(/unknown --occasion "wedding"/)
+    await expect(runThemeTry("brief", { cwd, title: "Q3", occasion: "business" })).rejects.toThrow(/not both/)
+    await expect(runThemeTry(undefined, { cwd })).rejects.toThrow(/expects 2-4 theme ids, or --title/)
+    await expect(runThemeTry("brief,swiss", { cwd, occasion: "business" })).rejects.toThrow(/--occasion draw .* need --title/)
+  })
+
+  it("says once that a content page failed in every theme, instead of once per theme", async () => {
+    const cwd = await tmp("pptwise-theme-wall-badpage-")
+    const page = join(cwd, "page.json")
+    await writeFile(page, JSON.stringify({ kind: "points", heading: "Why", components: [{ type: "bullets", items: [{ text: "a" }] }] }))
+    const summary = await runThemeTry("brief,swiss,memo", { output: join(cwd, "w"), cwd, title: "Q3", page })
+    const notes = summary.split("\n").filter((line) => line.startsWith("note:"))
+    expect(notes).toHaveLength(1)
+    expect(notes[0]).toMatch(/^note: every theme left out its content \(points\) page: .*items\.0.*Fix the page, or leave it out/)
+    expect(summary).toContain("themes: brief, swiss, memo")
   })
 
   it("refuses the caller-page flags without --title, and keeps the fixed sample's limits there", async () => {

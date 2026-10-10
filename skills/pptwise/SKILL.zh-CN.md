@@ -79,13 +79,13 @@ pptwise themes --json
 3. 已装的内容包（`pptwise packs list`）。
 4. 22 个出厂预设。
 
-按请求用 `occasions`、`identity` 和 `menu` 筛出四到六个候选，再让用户看到自己的封面标题在这些主题里的样子。有 `pptwise_themes` 工具时，传入 deck 的封面标题、副标题，并把候选放进 `themes`：用户会在对话里看到每个主题的封面和一张正文页，你拿回主题 id。没有这个工具时，用 CLI 出同样的墙，id 用逗号分隔，或写 `all`：
+让用户看到自己的封面标题在四到六个主题里的样子。有 `pptwise_themes` 工具时，传入 deck 的封面标题、副标题和 `occasion`：从 `themes --json` 里挑与请求相符的场合词，或相符的叙事预设。它自己选出短名单，在对话里按编号画出每个主题的封面和一张正文页，并按同样顺序返回主题 id。只有用户点名了主题才传 `themes`。`page` 不要传，除非它是这份 deck 里已经校验过的一页。没有这个工具时，用 CLI 出同样的墙：
 
 ```bash
-pptwise theme try <ids> --title "<cover title>" --subtitle "<subtitle>" --json
+pptwise theme try --title "<cover title>" --subtitle "<subtitle>" --occasion <words> --json
 ```
 
-它打印一份清单，列出每个主题的一张封面 SVG 和一张正文 SVG，外加 `contact-sheet.html`。宿主能显示图片时把这些 SVG 给用户看，否则交出联系表的路径。然后问用户要哪个主题，用户让你定时就说明你选了哪个。
+它打印一份清单，列出每个主题的一张封面 SVG 和一张正文 SVG，外加 `contact-sheet.html`。宿主能显示图片时把这些 SVG 给用户看，否则交出联系表的路径。然后问用户要哪个主题，每个主题一个选项，顺序和墙上一致，用户让你定时就说明你选了哪个。
 
 创建就是拷贝：把最接近的预设拷进工作区、从 Office 文件抽取品牌，或为改色 fork 一份。命令见 `references/spec.md`。
 

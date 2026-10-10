@@ -220,18 +220,41 @@ export function buildThemeWall(input: ThemeWallInput): ThemeWall {
   }
 }
 
+/**
+ * The pages a wall left out, one line per distinct reason, naming every theme
+ * it applies to. A page the caller wrote wrong fails the same way in every
+ * theme, and twenty-two copies of one schema error hide the one fact that
+ * matters: the page itself needs fixing, or leaving out.
+ */
+export function themeWallSkipNotes(themes: readonly Pick<ThemeWallTheme, "id" | "skipped">[]): string[] {
+  const groups = new Map<string, { what: string; type: string; reason: string; ids: string[] }>()
+  for (const theme of themes) {
+    for (const skip of theme.skipped ?? []) {
+      const what = skip.kind !== undefined ? `${skip.type} (${skip.kind})` : skip.type
+      const reason = skip.reason.replace(/\n/g, " ")
+      const key = `${what}\u0000${reason}`
+      const group = groups.get(key) ?? { what, type: skip.type, reason, ids: [] }
+      group.ids.push(theme.id)
+      groups.set(key, group)
+    }
+  }
+  return [...groups.values()].map((group) => {
+    if (group.ids.length === themes.length && themes.length > 1) {
+      const fix = group.type === "content" ? " Fix the page, or leave it out to draw the default sample page" : ""
+      return `note: every theme left out its ${group.what} page: ${group.reason}.${fix}`
+    }
+    return `note: ${group.ids.join(", ")} left out ${group.ids.length === 1 ? "its" : "their"} ${group.what} page: ${group.reason}`
+  })
+}
+
 /** The human summary `theme try --title` prints without `--json`. */
 export function formatThemeWall(manifest: ThemeWallManifest, dir: string): string {
   const lines = [
     `wrote ${manifest.themes.length} theme${manifest.themes.length === 1 ? "" : "s"} (cover and one content page each) to ${dir}`,
+    `  themes: ${manifest.themes.map((theme) => theme.id).join(", ")}`,
     `  manifest: ${THEME_WALL_MANIFEST_FILE}`,
     `  contact sheet: ${manifest.contactSheet}`,
+    ...themeWallSkipNotes(manifest.themes),
   ]
-  for (const theme of manifest.themes) {
-    for (const skip of theme.skipped ?? []) {
-      const what = skip.kind !== undefined ? `${skip.type} (${skip.kind})` : skip.type
-      lines.push(`note: ${theme.id} left out its ${what} page: ${skip.reason.replace(/\n/g, " ")}`)
-    }
-  }
   return lines.join("\n")
 }

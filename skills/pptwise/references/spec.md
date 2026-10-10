@@ -47,7 +47,7 @@ Shortlist four to six candidates by occasion first, identity strength second, an
 pptwise theme try brief,swiss,memo --title "Q3 review" --subtitle "Board meeting" --json
 ```
 
-With `--title`, `theme try` draws the cover and one content page in each named theme, any number of them or `all`, and prints a manifest that names one SVG per page plus `contact-sheet.html`. `--lang zh` or `--lang en` sets the language of the default content page. `--page <file>` draws one of the deck's own content pages instead, written as a page carries it, with its `kind`. A page a theme cannot draw is left out of that theme's row, and the manifest says why. Show the user the SVGs or the contact sheet. They are for the user: do not read them yourself to judge a theme. Without `--title`, `theme try` renders a fixed English sample deck under two to four themes.
+With `--title`, `theme try` draws the cover and one content page in each named theme, any number of them or `all`, or with no names a shortlist of four to six for `--occasion <words>`, and prints a manifest that names one SVG per page plus `contact-sheet.html`. `--lang zh` or `--lang en` sets the language of the default content page. `--page <file>` draws one of the deck's own content pages instead, written as a page carries it, with its `kind`. A page a theme cannot draw is left out of that theme's row, and the manifest says why. Show the user the SVGs or the contact sheet. They are for the user: do not read them yourself to judge a theme. Without `--title`, `theme try` renders a fixed English sample deck under two to four themes.
 
 Create means copy. Prefer a workspace-owned theme even when the starting point is a factory preset:
 

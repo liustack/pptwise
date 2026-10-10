@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { suggestThemes } from "./select"
+import { suggestThemes, themeShortlist, THEME_SHORTLIST_MAX, THEME_SHORTLIST_MIN } from "./select"
 
 describe("suggestThemes", () => {
   it("ranks occasion hits by intersection size", () => {
@@ -64,5 +64,31 @@ describe("suggestThemes", () => {
 
   it("returns identity-band builtins in catalog order when identity is the only live signal", () => {
     expect(suggestThemes({ identity: "low" })).toEqual(["bulletin", "vermilion", "swiss", "memo"])
+  })
+})
+
+describe("themeShortlist", () => {
+  it("puts the occasion's own themes first and fills a short list from the spread", () => {
+    expect(themeShortlist({ occasions: ["finance"] })).toEqual(["ledger", "brief", "swiss", "journal"])
+    expect(themeShortlist({ strategy: "weekly-brief" })).toEqual(["bulletin", "brief", "swiss", "journal"])
+  })
+
+  it("draws a spread of voices when the caller gives nothing", () => {
+    expect(themeShortlist({})).toEqual(["brief", "swiss", "journal", "terminal"])
+  })
+
+  it("cuts a long ranked list at six", () => {
+    const list = themeShortlist({ occasions: ["business", "institutional", "education"] })
+    expect(list).toHaveLength(THEME_SHORTLIST_MAX)
+    expect(list).toEqual(suggestThemes({ occasions: ["business", "institutional", "education"] }).slice(0, 6))
+  })
+
+  it("always offers four to six distinct themes", () => {
+    for (const signals of [{}, { occasions: ["kids"] }, { strategy: "pitch" }, { occasions: ["tech"], strategy: "product-launch" }]) {
+      const list = themeShortlist(signals)
+      expect(list.length).toBeGreaterThanOrEqual(THEME_SHORTLIST_MIN)
+      expect(list.length).toBeLessThanOrEqual(THEME_SHORTLIST_MAX)
+      expect(new Set(list).size).toBe(list.length)
+    }
   })
 })

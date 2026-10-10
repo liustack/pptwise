@@ -134,7 +134,8 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
     // with the user's own title everywhere else.
     for (const text of [en, zh]) {
       expect(text).toContain("`pptwise_themes`")
-      expect(text).toContain('pptwise theme try <ids> --title "<cover title>" --subtitle "<subtitle>" --json')
+      expect(text).toContain('pptwise theme try --title "<cover title>" --subtitle "<subtitle>" --occasion <words> --json')
+      expect(text).toContain("`occasion`")
       expect(text).toContain("`pptwise_preview`")
       expect(text).toContain("`pptwise_build`")
       expect(text).toContain("pptwise build deck-dir/ --json")

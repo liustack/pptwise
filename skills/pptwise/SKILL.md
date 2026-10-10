@@ -77,13 +77,13 @@ Resolve theme names in this order:
 3. Installed content packs (`pptwise packs list`).
 4. The 22 factory presets.
 
-Shortlist four to six themes with `occasions`, `identity`, and `menu` against the request. Then show the user their own cover title in them. When a `pptwise_themes` tool exists, call it with the deck's cover title, subtitle, and the shortlist as `themes`: the user sees each theme's cover and one content page in the conversation, and you get the theme ids back. Otherwise draw the same wall from the CLI, with comma-separated ids or `all`:
+Show the user their own cover title in four to six themes. When a `pptwise_themes` tool exists, call it with the deck's cover title, subtitle, and `occasion`: the occasion words from `themes --json` or the narrative preset that fit the request. It picks the shortlist and draws each theme's cover and one content page in the conversation, numbered, and returns the theme ids in that order. Pass `themes` only when the user named themes. Leave `page` out unless it is a page of this deck you already validated. Otherwise draw the same wall from the CLI:
 
 ```bash
-pptwise theme try <ids> --title "<cover title>" --subtitle "<subtitle>" --json
+pptwise theme try --title "<cover title>" --subtitle "<subtitle>" --occasion <words> --json
 ```
 
-It prints a manifest naming one cover and one content SVG per theme, plus `contact-sheet.html`. Show the user those SVGs where the host can display images, or hand over the contact sheet's path. Then ask which theme they want, or name your pick when they left it to you.
+It prints a manifest naming one cover and one content SVG per theme, plus `contact-sheet.html`. Show the user those SVGs where the host can display images, or hand over the contact sheet's path. Then ask which theme they want, one option per theme in the wall's order, or name your pick when they left it to you.
 
 Create means copy: copy the closest preset into the workspace, extract a brand from an Office file, or fork for a color change. The commands are in `references/spec.md`.
 

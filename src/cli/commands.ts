@@ -22,13 +22,14 @@ import { disassembleDeck, type PageContent } from "../spec/assemble"
 import { formatInvalidSpecError, specJsonSchema, resolveSpecThemeId, validateSpec, type DeckSpec } from "../spec"
 import { pageComponentContract, pageContract } from "../inspect/page-contract"
 import { pageFit } from "../inspect/page-fit"
-import { AUDIENCE_VALUES, PACING_BUDGETS, STRATEGY_DEFINITIONS, NARRATIVE_PRESETS, resolveNarrative, type NarrativeProfile } from "../narrative"
+import { AUDIENCE_VALUES, PACING_BUDGETS, STRATEGY_DEFINITIONS, STRATEGY_VALUES, NARRATIVE_PRESETS, resolveNarrative, type NarrativeProfile } from "../narrative"
 import { auditDeck, type AuditChecks, type AuditFinding, type AuditReport } from "../audit/deck-audit"
 import { buildAssetBrief, type AssetBrief, type AssetBriefItem } from "../render/asset-brief"
 import { dropPhrase, parseDropKind, type DropKind } from "../render/drop-marker"
 import { extractBrandTheme, slugify } from "../themes/extract/brand-extract"
 import { ThemeFileSchema, type Menu, type ThemeFile } from "../themes/schema"
-import { THEME_OCCASIONS } from "../themes/occasions"
+import { OCCASION_VOCAB, THEME_OCCASIONS } from "../themes/occasions"
+import { themeShortlist } from "../themes/select"
 import { CANONICAL_THEME_IDS } from "../themes/index"
 import { RETIRED_THEME_IDS, foldedThemeTarget } from "../themes/retired-ids"
 import { LAYOUT_REGISTRY } from "../layouts/registry"
@@ -67,6 +68,7 @@ import { buildContactSheetHtml, buildPreviewHtml, buildThemeWallHtml } from "./p
 import {
   buildThemeWall,
   formatThemeWall,
+  themeWallSkipNotes,
   themeWallContentPage,
   themeWallLang,
   THEME_WALL_MANIFEST_FILE,
@@ -1454,6 +1456,36 @@ export interface ThemeTryOptions {
   page?: string
   /** `--json`: print the manifest instead of a summary. Needs `title`. */
   json?: boolean
+  /**
+   * `--occasion`: with `title` and no ids, the occasion words or narrative
+   * that pick a shortlist of four to six themes.
+   */
+  occasion?: string
+}
+
+/**
+ * The themes a wall draws when the caller names none: a shortlist for the
+ * occasion words and narrative in `--occasion` (comma-separated), or a spread
+ * of voices when that is empty too. See {@link themeShortlist}.
+ */
+export function themeTryShortlist(occasion: string | undefined): string[] {
+  const occasions: string[] = []
+  let strategy: string | undefined
+  for (const word of (occasion ?? "").split(",").map((part) => part.trim()).filter((part) => part.length > 0)) {
+    if (Object.hasOwn(OCCASION_VOCAB, word)) {
+      occasions.push(word)
+      continue
+    }
+    if (Object.hasOwn(NARRATIVE_PRESETS, word) || (STRATEGY_VALUES as readonly string[]).includes(word)) {
+      if (strategy !== undefined) throw new PptwiseError(`--occasion names two narratives, "${strategy}" and "${word}". Keep one`)
+      strategy = word
+      continue
+    }
+    throw new PptwiseError(
+      `unknown --occasion "${word}". Use occasion words (${Object.keys(OCCASION_VOCAB).join(", ")}) or a narrative preset (${Object.keys(NARRATIVE_PRESETS).join(", ")})`,
+    )
+  }
+  return themeShortlist({ occasions, ...(strategy !== undefined ? { strategy } : {}) })
 }
 
 function parseThemeTryIds(raw: string): string[] {
@@ -1483,17 +1515,25 @@ function contactSheetSlidesFromIr(
 /** `pptwise theme try <ids>` renders the fitting-room sample in each named
  *  theme and writes a contact sheet. Bound decks still render only their
  *  bound theme. */
-export async function runThemeTry(idsRaw: string, opts: ThemeTryOptions = {}): Promise<string> {
-  if (opts.title !== undefined) return runThemeWall(idsRaw, { ...opts, title: opts.title })
+export async function runThemeTry(idsRaw: string | undefined, opts: ThemeTryOptions = {}): Promise<string> {
+  const named = idsRaw !== undefined && idsRaw.trim() !== ""
+  if (opts.title !== undefined) {
+    if (named && opts.occasion !== undefined) {
+      throw new PptwiseError("--occasion picks the themes when none are named. Pass theme ids or --occasion, not both")
+    }
+    return runThemeWall(named ? idsRaw : themeTryShortlist(opts.occasion).join(","), { ...opts, title: opts.title })
+  }
   const needsTitle = [
     ["--subtitle", opts.subtitle],
     ["--lang", opts.lang],
     ["--page", opts.page],
     ["--json", opts.json || undefined],
+    ["--occasion", opts.occasion],
   ].filter(([, value]) => value !== undefined)
   if (needsTitle.length > 0) {
     throw new PptwiseError(`${needsTitle.map(([flag]) => flag).join(", ")} draw the caller's own pages and need --title`)
   }
+  if (!named) throw new PptwiseError("pptwise theme try expects 2-4 theme ids, or --title to draw your own cover")
   const cwd = opts.cwd ?? process.cwd()
   const ids = parseThemeTryIds(idsRaw)
   const columns: { id: string; slides: { type: string; label: string; svg: string }[] }[] = []
@@ -1615,7 +1655,10 @@ async function runThemeWall(idsRaw: string, opts: ThemeTryOptions & { title: str
     buildThemeWallHtml({ title, columns: ["cover", "content"], rows: wall.rows }),
   )
   await writeFile(join(resolvedOut, THEME_WALL_MANIFEST_FILE), `${JSON.stringify(wall.manifest, null, 2)}\n`)
-  if (opts.json) return JSON.stringify({ dir: resolvedOut, ...wall.manifest }, null, 2)
+  if (opts.json) {
+    const notes = themeWallSkipNotes(wall.manifest.themes)
+    return JSON.stringify({ dir: resolvedOut, ...wall.manifest, ...(notes.length > 0 ? { notes } : {}) }, null, 2)
+  }
   const summary = formatThemeWall(wall.manifest, resolvedOut)
   return extraNotes.length > 0 ? `${summary}\n${extraNotes.join("\n")}` : summary
 }

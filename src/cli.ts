@@ -319,21 +319,22 @@ theme
   .description(
     "Render the fitting-room sample across 2-4 themes into a contact sheet, or, with --title, your own cover and one content page in any number of themes as SVG files with a manifest",
   )
-  .argument("<ids>", "comma-separated theme ids (2-4 for the fixed sample), or all with --title")
+  .argument("[ids]", "comma-separated theme ids (2-4 for the fixed sample), or all with --title. With --title and no ids, a shortlist of four to six")
   .option("-o, --output <dir>", "output directory (default: .pptwise/theme-try/)")
   .option("--title <text>", "draw this cover title, plus one content page, instead of the fixed sample")
   .option("--subtitle <text>", "with --title: the cover's subheading")
   .option("--lang <lang>", "with --title: language of the default content page, zh or en (default: zh when the title has Chinese, Japanese or Korean characters)")
   .option("--page <file>", "with --title: one content page as a deck page carries it (type, kind, heading, components), in place of the default")
   .option("--json", "with --title: print the manifest as JSON")
+  .option("--occasion <words>", "with --title and no ids: occasion words or a narrative preset, comma-separated, that pick the shortlist")
   .addHelpText(
     "after",
-    "\nExamples:\n  $ pptwise theme try brief,swiss,memo\n  $ pptwise theme try all --title \"Q3 review\" --subtitle \"Board meeting\" --json",
+    "\nExamples:\n  $ pptwise theme try brief,swiss,memo\n  $ pptwise theme try all --title \"Q3 review\" --subtitle \"Board meeting\" --json\n  $ pptwise theme try --title \"Q3 review\" --occasion business --json",
   )
   .action(
     async (
-      ids: string,
-      opts: { output?: string; title?: string; subtitle?: string; lang?: string; page?: string; json?: boolean },
+      ids: string | undefined,
+      opts: { output?: string; title?: string; subtitle?: string; lang?: string; page?: string; json?: boolean; occasion?: string },
     ) => {
       try {
         console.log(
@@ -345,6 +346,7 @@ theme
             lang: opts.lang,
             page: opts.page,
             json: opts.json,
+            occasion: opts.occasion,
           }),
         )
       } catch (e) {

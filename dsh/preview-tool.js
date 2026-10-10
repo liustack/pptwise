@@ -1582,11 +1582,18 @@ function buildSummary(value) {
 function themesSummary(value) {
   const lines = [
     `pptwise-themes:${value.wallId} · drew ${value.themeCount} theme${value.themeCount === 1 ? '' : 's'} for "${value.title}", a cover and one content page each`,
-    'The user is looking at them in this card. Ask which theme they want, or, if they left the choice to you, name the one you picked and why. Do not describe the pages or tell them to open a URL.',
+    `In the card, numbered: ${value.themes.map((theme, i) => `${i + 1} ${theme.id}`).join(', ')}.`,
+    'The user is looking at them in this card. Ask which theme they want with ask_user_question, one option per theme in this order, each label starting with its number ("1 brief"), or, if they left the choice to you, name the one you picked and why. Do not describe the pages or tell them to open a URL.',
   ]
-  for (const theme of value.themes) {
-    for (const skip of theme.skipped ?? []) {
-      lines.push(`note: ${theme.id} left out its ${skip.type} page: ${skip.reason.replace(/\n/g, ' ')}`)
+  // The CLI groups the pages it left out by reason, so a page that failed in
+  // every theme reads as one line. A CLI from before that grouping sends none,
+  // and the per-theme lines stand in.
+  if (Array.isArray(value.notes)) lines.push(...value.notes)
+  else {
+    for (const theme of value.themes) {
+      for (const skip of theme.skipped ?? []) {
+        lines.push(`note: ${theme.id} left out its ${skip.type} page: ${skip.reason.replace(/\n/g, ' ')}`)
+      }
     }
   }
   return lines.join('\n')
@@ -2240,9 +2247,10 @@ export function createPreviewService(cliPath) {
   const themesTool = {
     name: THEMES_TOOL_NAME,
     description:
-      "Draw the user's own deck title as a cover, plus one content page, in every pptwise theme (or the ones named), " +
-      'and show them to the user side by side in this conversation. Use it when a theme is being chosen. ' +
-      'The pages reach the user, not you: the result tells you which themes were drawn.',
+      "Draw the user's own deck title as a cover, plus one content page, in four to six pptwise themes, " +
+      'and show them to the user side by side in this conversation, numbered in the order the result lists them. ' +
+      'Call it whenever a theme is being chosen, before writing deck.spec.json. ' +
+      'Without `themes` it draws a shortlist for `occasion`. The pages reach the user, not you: the result lists the themes in card order.',
     parameters: {
       type: 'object',
       properties: {
@@ -2252,23 +2260,26 @@ export function createPreviewService(cliPath) {
           type: 'string',
           description: 'zh or en: the language of the default content page. Default: zh when the title has Chinese, Japanese or Korean characters, en otherwise.',
         },
+        occasion: {
+          type: 'string',
+          description:
+            'Without `themes`: what the deck is for, as occasion words from `pptwise themes --json` (business, tech, education, ...) or a narrative preset from `pptwise narratives --json` (weekly-brief, pitch, ...), comma-separated. It picks the four to six themes drawn. Omitted, the wall is a spread of quiet to bold general themes.',
+        },
         themes: {
           type: 'array',
           items: { type: 'string' },
-          description: 'Theme ids to draw. Default: every theme, built-in and installed.',
+          description: 'Theme ids to draw instead of the shortlist, when the user named themes or you have a reason to compare particular ones.',
         },
         page: {
           type: 'object',
           description:
-            'One content page of this deck as a deck page carries it ({ "type": "content", "kind": ..., "heading": ..., "components": [...] }), drawn in place of the default sample page.',
+            'Usually leave this out: a sample content page in the deck\'s language is drawn. Pass one only when it is a page of this deck you already wrote and validated, in the shape a page file holds plus "kind" and "heading" ({ "kind": "points", "heading": "...", "components": [{ "type": "bullets", "items": ["...", "..."] }] }). Check a component\'s fields with `pptwise schema --component <type>` first. A page that fails is left out of every theme and the result says why.',
         },
       },
       required: ['title'],
       additionalProperties: false,
     },
     output: {
-      // Facts about the wall and nothing drawn: the SVGs reach the card
-      // through the route, keyed by `wallId`, in both modes.
       schema: {
         type: 'object',
         properties: {
@@ -2296,6 +2307,7 @@ export function createPreviewService(cliPath) {
               additionalProperties: false,
             },
           },
+          notes: { type: 'array', items: { type: 'string' } },
         },
         required: ['wallId', 'title', 'themeCount', 'themes'],
         additionalProperties: false,
@@ -2309,11 +2321,12 @@ export function createPreviewService(cliPath) {
     },
     async execute(args, exec) {
       const title = String(args.title)
-      const names = Array.isArray(args.themes) && args.themes.length > 0 ? args.themes.map(String).join(',') : 'all'
+      const named = Array.isArray(args.themes) && args.themes.length > 0 ? args.themes.map(String).join(',') : undefined
       const { id, filled: manifest } = await publishNew(async (stageDir) => {
-        const cliArgs = ['theme', 'try', names, '--title', title, '--json', '-o', stageDir]
+        const cliArgs = ['theme', 'try', ...(named ? [named] : []), '--title', title, '--json', '-o', stageDir]
         if (typeof args.subtitle === 'string' && args.subtitle !== '') cliArgs.push('--subtitle', args.subtitle)
         if (typeof args.lang === 'string' && args.lang !== '') cliArgs.push('--lang', args.lang)
+        if (!named && typeof args.occasion === 'string' && args.occasion.trim() !== '') cliArgs.push('--occasion', args.occasion)
         if (args.page !== undefined) {
           const pagePath = join(stageDir, SAMPLE_PAGE_FILE)
           await writeFile(pagePath, JSON.stringify(args.page))
@@ -2321,8 +2334,6 @@ export function createPreviewService(cliPath) {
         }
         const wall = await runCliJson(cliPath, cliArgs, { signal: exec?.signal, cwd: sessionCwd(exec) })
         if (!wall || !Array.isArray(wall.themes)) throw new Error('pptwise theme try printed a report this plugin cannot read')
-        // A wall has no deck behind it, so its export route says so rather
-        // than reporting a lost file.
         await writeRecordInto(stageDir, recordFrom({ kind: 'themes', target: title, pptxError: 'a theme wall has no deck to download' }))
         return wall
       })
@@ -2337,6 +2348,7 @@ export function createPreviewService(cliPath) {
             ? { skipped: theme.skipped.map((skip) => ({ type: String(skip.type), reason: String(skip.reason) })) }
             : {}),
         })),
+        ...(Array.isArray(manifest.notes) && manifest.notes.length > 0 ? { notes: manifest.notes.map(String) } : {}),
       }
     },
     timeoutMs: 120_000,

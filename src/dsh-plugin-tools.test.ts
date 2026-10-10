@@ -26,6 +26,7 @@ interface ThemesValue {
   title: string
   themeCount: number
   themes: { id: string; label: string; skipped?: { type: string; reason: string }[] }[]
+  notes?: string[]
 }
 
 interface BuildValue {
@@ -58,7 +59,7 @@ interface FakeResponse {
 }
 
 interface Service {
-  themesTool: Tool<{ title: string; subtitle?: string; lang?: string; themes?: string[]; page?: unknown }, ThemesValue>
+  themesTool: Tool<{ title: string; subtitle?: string; lang?: string; occasion?: string; themes?: string[]; page?: unknown }, ThemesValue>
   buildTool: Tool<{ target: string }, BuildValue>
   registerRoute: (ctx: { webServer: { register: (r: RouteRegistration) => void } }) => void
   root: string
@@ -100,7 +101,8 @@ if (argv[0] === "theme" && argv[1] === "try") {
   const title = opt("--title")
   if (title === "FAIL") { process.stderr.write("unknown theme \\"nope\\"\\n"); process.exit(1) }
   const out = opt("-o")
-  const ids = argv[2] === "all" ? ["brief", "swiss", "crayon"] : argv[2].split(",")
+  // No ids: the CLI draws its own shortlist, here the same three.
+  const ids = argv[2].startsWith("--") ? ["brief", "swiss", "crayon"] : argv[2].split(",")
   const page = opt("--page") ? JSON.parse(readFileSync(opt("--page"), "utf8")) : null
   mkdirSync(out, { recursive: true })
   const themes = ids.map((id) => {
@@ -117,7 +119,8 @@ if (argv[0] === "theme" && argv[1] === "try") {
   writeFileSync(join(out, "contact-sheet.html"), "<!doctype html><title>sheet " + title + "</title>")
   const manifest = { manifestVersion: 1, generator: "pptwise theme try", title, ...(opt("--subtitle") ? { subtitle: opt("--subtitle") } : {}), lang: opt("--lang") || "en", slide: { width: 1280, height: 720 }, contactSheet: "contact-sheet.html", themes }
   writeFileSync(join(out, "manifest.json"), JSON.stringify(manifest))
-  process.stdout.write(JSON.stringify({ dir: out, ...manifest }, null, 2) + "\\n")
+  const notes = ids.includes("crayon") ? { notes: ["note: crayon left out its content (points) page: kind: not offered"] } : {}
+  process.stdout.write(JSON.stringify({ dir: out, ...manifest, ...notes }, null, 2) + "\\n")
 } else if (argv[0] === "build") {
   const target = resolve(argv[1])
   const name = basename(target)
@@ -228,6 +231,7 @@ describe("pptwise_themes", () => {
         { id: "swiss", label: "SWISS" },
         { id: "crayon", label: "CRAYON", skipped: [{ type: "content", reason: "kind: not offered" }] },
       ],
+      notes: ["note: crayon left out its content (points) page: kind: not offered"],
     })
     expect(JSON.stringify(value)).not.toMatch(/<svg/)
     matchesSchema(value, svc.themesTool.output.schema)
@@ -236,7 +240,7 @@ describe("pptwise_themes", () => {
     expect(call!.cwd).toBe(await realpath(workspace))
     const stage = call!.argv[call!.argv.indexOf("-o") + 1]!
     expect(call!.argv).toEqual([
-      "theme", "try", "all", "--title", "Q3 review", "--json", "-o", stage,
+      "theme", "try", "--title", "Q3 review", "--json", "-o", stage,
       "--subtitle", "Board", "--lang", "en", "--page", join(stage, "sample-page.json"),
     ])
     // Published under the wall's own id, with the staging name gone.
@@ -252,6 +256,18 @@ describe("pptwise_themes", () => {
     expect((await calls(cliPath))[0]!.argv.slice(0, 3)).toEqual(["theme", "try", "brief,swiss"])
   })
 
+  it("passes the occasion so the CLI picks the shortlist, and ignores it when themes are named", async () => {
+    const { svc, cliPath, workspace } = await setup("themes-occasion")
+    await svc.themesTool.execute({ title: "周会", occasion: "weekly-brief" }, inSession(workspace))
+    await svc.themesTool.execute({ title: "周会", occasion: "weekly-brief", themes: ["brief", "swiss"] }, inSession(workspace))
+    const [shortlist, named] = await calls(cliPath)
+    expect(shortlist!.argv.slice(0, 4)).toEqual(["theme", "try", "--title", "周会"])
+    expect(shortlist!.argv).toContain("--occasion")
+    expect(shortlist!.argv[shortlist!.argv.indexOf("--occasion") + 1]).toBe("weekly-brief")
+    expect(named!.argv.slice(0, 3)).toEqual(["theme", "try", "brief,swiss"])
+    expect(named!.argv).not.toContain("--occasion")
+  })
+
   it("tells the model the user is choosing, and stamps the id the card fetches the wall by", async () => {
     const { svc, workspace } = await setup("themes-text")
     const value = await svc.themesTool.execute({ title: "Q3 review" }, inSession(workspace))
@@ -259,7 +275,9 @@ describe("pptwise_themes", () => {
 
     expect(text.split("\n")[0]).toBe(`pptwise-themes:${value.wallId} · drew 3 themes for "Q3 review", a cover and one content page each`)
     expect(text).toMatch(/Ask which theme they want/)
-    expect(text).toContain("note: crayon left out its content page: kind: not offered")
+    expect(text.split("\n")[1]).toBe("In the card, numbered: 1 brief, 2 swiss, 3 crayon.")
+    expect(text).toMatch(/one option per theme in this order, each label starting with its number/)
+    expect(text).toContain("note: crayon left out its content (points) page: kind: not offered")
     expect(svc.themesTool.output.presentationMeta({}, value)).toEqual({ card: "pptwise-themes", wallId: value.wallId })
   })
 
