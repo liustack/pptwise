@@ -13,7 +13,7 @@
  * Tool surface (deliberately minimal and neutral, plan 裁定 1): no general
  * shell. `run_pptwise` only accepts a whitelisted, read-only/artifact
  * subcommand (see `ALLOWED_SUBCOMMANDS` / `ALLOWED_GROUPS` — every command
- * the SKILL playbook asks the model to run is on it, including
+ * the SKILL playbook asks the model to run is on it, including `build`,
  * `theme try|new|fork`, `spec validate`, `brand extract`, and `doctor`) —
  * no `serve` (interactive), no `plan`/`scenarios` (removed vocabulary-v4
  * aliases), no `check-update`/`self-update`/`images`/`config` (network side
@@ -240,8 +240,11 @@ function pathishToken(token: string): string | null {
  *  `icons` was added to the playbook and missed here (codex review R6): the
  *  playbook runs `schema`, `schema --spec|--kind|--component`, `inspect
  *  --page [--component|--fit]`, `icons`, `narratives`, `themes`, `theme
- *  try|new|fork`, `brand extract`, `spec validate`, `assemble`, `validate`,
- *  `audit`, `preview`, `render`, `doctor`, and `serve` — everything but
+ *  try|new|fork`, `brand extract`, `spec validate`, `build`, `assemble`,
+ *  `validate`, `audit`, `preview`, `render`, `doctor`, and `serve`. `build`
+ *  runs assemble, validate, audit, preview and render in one pass and writes
+ *  under the workspace's `.pptwise/`, so it needs nothing the others do not.
+ *  Everything but
  *  `serve` (interactive/long-running) is reachable. `layouts` is a plain listing and comes along. Excluded on
  *  purpose: `plan`/`scenarios`
  *  (removed vocabulary-v4 aliases that only exist to print a rename
@@ -254,6 +257,7 @@ function pathishToken(token: string): string | null {
  *  already says a failed sync is relayed and the work continues). `migrate` was on the first list and
  *  no longer exists as a CLI command (`76180bbf`). */
 const ALLOWED_SUBCOMMANDS = new Set([
+  "build",
   "render",
   "validate",
   "audit",

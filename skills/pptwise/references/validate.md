@@ -1,12 +1,20 @@
 # Validation and review loop
 
-Read this when filling pages, assembling a deck project, rendering, auditing, previewing, serving, or revising.
+Read this when filling pages, building, assembling a deck project, rendering, auditing, previewing, serving, or revising.
 
 ## Fill small batches
 
 For each confirmed spec page, write `pages/<page-id>.json`. A page file may contain only `components`, `background`, `image_side`, `footnote`, `fields`, `stamp`, `tag`, `ballot`, `years`, `stage`, and `notes`. The spec owns `type`, content `kind`, `heading`, and page order. Repeating any locked field in a page file is a hard error.
 
-Fill at most four pages, then run:
+Fill at most four pages, then build. Use a `pptwise_build` tool when the host has one, which also shows the user the pages drawn so far. Otherwise run:
+
+```bash
+pptwise build deck-dir/ --json
+```
+
+`build` runs assemble, validate, audit, preview, and render in one pass and prints one report. `status` is `ok` only when every check passed and the `.pptx` was written. Otherwise it is `needs_revision` and the command exits 1. Each entry in `errors` carries `stage`, `page`, `pageId`, the `file` to edit (`pages/<id>.json` for page content, `deck.spec.json` for what the spec locks), the `field`, and the check's own `message`, which says what to change. Audit findings add their `code`. Warnings sit in `warnings` and never block. A page not written yet is reported as such, and the audit waits until every page is written. `preview` names the drawn pages whenever validate passed. Fix every error at the named file, then build again. Do not convert the pages to PNG or read them as images to check them: the report is the check.
+
+To run one check alone while working on a page:
 
 ```bash
 pptwise assemble deck-dir/
@@ -23,27 +31,29 @@ Content pages are drawn too. validate draws each content page the way render dra
 
 Speaker `notes` export as native PowerPoint notes and never paint on the slide.
 
-## Render only from the binding
+## One deck, one final file
+
+`build` writes the `.pptx` at `.pptwise/<deck>/<deck>.pptx`, the same path `render` uses, and only when every check passes. A build that does not pass removes the file an earlier build left there, so the file on disk always matches the sources. Deliver the `pptx` path from the report as it is: do not render it again, copy it, rename it, or export a second one. On DSH, hand it over with `present`. There is no render-time theme switch. The project spec is the binding.
+
+`render` alone is for the two compromises below:
 
 ```bash
 pptwise render deck-dir/
 ```
 
-The `.pptx` is written under `.pptwise/<deck>/`, and the command prints its absolute path. There is no render-time theme switch. The project spec is the binding.
-
 An unfinished project requires explicit `--draft`. Content that would be dropped remains blocked unless the user explicitly accepts `--allow-dropped-content`, which also lets the deck past validate's drawing of its content pages. Prefer fixing or splitting the page.
 
-When changing themes, compare candidates with `pptwise theme try`. A same-menu fork can replace the binding and proceed through assemble, validate, audit, and render. A different menu requires returning to theme selection, then revising the spec and affected page fills before those checks.
+When changing themes, show the candidates with `pptwise_themes` or `pptwise theme try --title`. A same-menu fork can replace the binding and build again. A different menu requires returning to theme selection, then revising the spec and affected page fills before those checks.
 
 ## Audit geometry
 
-After every page is filled, run:
+`build` runs the audit once every page is written. To run it alone:
 
 ```bash
 pptwise audit deck-dir/
 ```
 
-The deterministic audit checks overflow, out-of-bounds content, low contrast, overlap, truncation, dropped content, and repeated lead components. A finding exits with code 1 and names the page. A heading, source line or component text the theme's layout would cut makes a plainer layout draw the page whole (`stepped-aside`). A `content-truncated` finding with `"tier": "hard"` is text no layout could fit: shorten it or split the page. Restructure the content, rerun assemble and validate when source files changed, then rerun audit until it exits 0.
+The deterministic audit checks overflow, out-of-bounds content, low contrast, overlap, truncation, dropped content, and repeated lead components. A finding exits with code 1 and names the page. A heading, source line or component text the theme's layout would cut makes a plainer layout draw the page whole (`stepped-aside`). A `content-truncated` finding with `"tier": "hard"` is text no layout could fit: shorten it or split the page. Restructure the content, then build again until it passes.
 
 Add `--pixels` when cover or chapter pages use photo backgrounds. Pixel sampling catches text placed on an unsafe part of a real image.
 
@@ -51,7 +61,7 @@ A `low-contrast` finding on a page painted a mid-tone `background` color, about 
 
 ## Review the whole deck
 
-When an in-conversation deck preview tool exists, use it. Otherwise generate the self-contained review file:
+Show the user pages early. When an in-conversation preview tool exists, call `pptwise_preview` on the deck directory as soon as the spec validates, so the user sees the cover and the page sequence before pages are written, and use `pptwise_build` after each batch. Otherwise give the user the `preview.html` path from the build report, or generate the self-contained review file:
 
 ```bash
 pptwise preview deck-dir/ --html
@@ -69,7 +79,7 @@ Share the exact localhost URL, keep the process for the review round, and stop o
 
 ## Revise at the source
 
-- For a content change, edit only the affected `pages/<id>.json`, then assemble, validate, audit, and render again.
+- For a content change, edit only the affected `pages/<id>.json`, then build again.
 - For page order, page type, kind, heading, or theme binding, edit `deck.spec.json`, run `pptwise spec validate`, then repeat the project checks.
 - For a different topic or audience, create a new project and restart from intent and narrative.
 

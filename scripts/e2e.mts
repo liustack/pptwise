@@ -1,7 +1,7 @@
 /** End-to-end: CLI renders the examples, output must be a well-formed pptx.
  *  Requires `pnpm build` first (wired via the `e2e` npm script). */
 import { execFileSync } from "node:child_process"
-import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs"
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import JSZip from "jszip"
@@ -1260,6 +1260,86 @@ console.log("--- content packs leg ---")
     rmSync(packsWork, { recursive: true, force: true })
   }
   console.log("content packs leg OK (quiet without a license, installed then current, listed as a pack theme, bound and rendered)")
+}
+
+// The three entry points a host uses to show a deck being made, through the
+// built CLI: each theme's menu, the user's own cover drawn in each theme, and
+// the one-pass build that ends in the deck's one .pptx or a list of problems.
+console.log("--- theme menu, theme wall and build leg ---")
+{
+  const themeRows = JSON.parse(sh("node", [cli, "themes", "--json"])) as { id: string; menu?: { cover?: string; content?: Record<string, unknown> } }[]
+  const briefRow = themeRows.find((row) => row.id === "brief")
+  if (!briefRow?.menu?.cover || !briefRow.menu.content || !("points" in briefRow.menu.content)) {
+    throw new Error(`e2e: theme menu leg — themes --json carries no menu for brief: ${JSON.stringify(briefRow)}`)
+  }
+
+  const wallDir = join(OUT, "theme-wall")
+  rmSync(wallDir, { recursive: true, force: true })
+  const wall = JSON.parse(sh("node", [cli, "theme", "try", "brief,swiss", "--title", "pptwise e2e", "--json", "-o", wallDir])) as {
+    themes: { id: string; pages: { type: string; file: string }[] }[]
+    contactSheet: string
+  }
+  if (wall.themes.map((theme) => theme.id).join(",") !== "brief,swiss") {
+    throw new Error(`e2e: theme wall leg — expected brief and swiss, got: ${JSON.stringify(wall.themes.map((t) => t.id))}`)
+  }
+  for (const theme of wall.themes) {
+    if (theme.pages.map((page) => page.type).join(",") !== "cover,content") {
+      throw new Error(`e2e: theme wall leg — ${theme.id} did not draw a cover and a content page`)
+    }
+    for (const page of theme.pages) {
+      const svg = readFileSync(join(wallDir, page.file), "utf8")
+      if (!svg.startsWith("<svg")) throw new Error(`e2e: theme wall leg — ${page.file} is not an SVG`)
+      if (page.type === "cover" && !svg.includes("pptwise e2e")) {
+        throw new Error(`e2e: theme wall leg — ${page.file} does not carry the caller's title`)
+      }
+    }
+  }
+  if (!existsSync(join(wallDir, wall.contactSheet)) || !existsSync(join(wallDir, "manifest.json"))) {
+    throw new Error("e2e: theme wall leg — the contact sheet or the manifest is missing")
+  }
+  console.log("theme menu and theme wall leg OK (menu listed, two themes, two SVGs each, manifest and contact sheet)")
+
+  // Built in a workspace of its own, so the deck's .pptwise/ folder lands there.
+  // The CLI reports real paths, and the temp directory may sit behind a link.
+  const buildWork = realpathSync(mkdtempSync(join(tmpdir(), "pptwise-e2e-build-")))
+  try {
+    const buildDeck = join(buildWork, "deck")
+    mkdirSync(join(buildDeck, "pages"), { recursive: true })
+    copyFileSync(join(deckDir, "deck.spec.json"), join(buildDeck, "deck.spec.json"))
+    for (const name of readdirSync(join(deckDir, "pages"))) copyFileSync(join(deckDir, "pages", name), join(buildDeck, "pages", name))
+    const build = (): { status: number; report: { status: string; pptx: string | null; errors: { file?: string }[] } } => {
+      const run = (() => {
+        try {
+          return { status: 0, stdout: execFileSync("node", [cli, "build", "deck", "--json", "--no-git-ignore"], { cwd: buildWork, encoding: "utf8" }) }
+        } catch (e) {
+          const { status, stdout } = e as { status?: number; stdout?: string }
+          if (status === undefined) throw e
+          return { status, stdout: stdout ?? "" }
+        }
+      })()
+      return { status: run.status, report: JSON.parse(run.stdout) }
+    }
+    const passed = build()
+    const pptx = join(buildWork, ".pptwise", "deck", "deck.pptx")
+    if (passed.status !== 0 || passed.report.status !== "ok" || passed.report.pptx !== pptx) {
+      throw new Error(`e2e: build leg — expected a passing build writing ${pptx}, got exit ${passed.status}: ${JSON.stringify(passed.report)}`)
+    }
+    const builtZip = await JSZip.loadAsync(readFileSync(pptx))
+    if (!builtZip.file("ppt/slides/slide4.xml")) throw new Error("e2e: build leg — the built .pptx has no fourth slide")
+
+    writeFileSync(join(buildDeck, "pages", "p-roadmap.json"), "{not json")
+    const refused = build()
+    if (refused.status !== 1 || refused.report.status !== "needs_revision" || refused.report.pptx !== null) {
+      throw new Error(`e2e: build leg — expected a refused build, got exit ${refused.status}: ${JSON.stringify(refused.report)}`)
+    }
+    if (refused.report.errors[0]?.file !== "pages/p-roadmap.json") {
+      throw new Error(`e2e: build leg — the problem is not placed on its page file: ${JSON.stringify(refused.report.errors)}`)
+    }
+    if (existsSync(pptx)) throw new Error("e2e: build leg — a failing build left the earlier .pptx in place")
+  } finally {
+    rmSync(buildWork, { recursive: true, force: true })
+  }
+  console.log("build leg OK (pass writes the one .pptx, a broken page exits 1, names its file and removes the .pptx)")
 }
 
 // A temp directory the CLI does not remove stays on the user's machine until

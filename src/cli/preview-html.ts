@@ -718,3 +718,70 @@ export function buildContactSheetHtml(input: ContactSheetInput): string {
 </html>
 `
 }
+
+export interface ThemeWallSheetRow {
+  id: string
+  label: string
+  /** The drawn pages, in order, or the reason a page was left out. */
+  cells: ({ type: string; svg: string } | { type: string; reason: string })[]
+}
+
+const THEME_WALL_CSS = `
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font: 14px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  color: #111;
+  background: #f4f4f1;
+  padding: 24px;
+}
+h1 { font-size: 18px; font-weight: 600; margin: 0 0 16px; }
+table.tw { width: 100%; max-width: 1200px; border-collapse: collapse; table-layout: fixed; }
+table.tw th, table.tw td { vertical-align: top; padding: 8px; }
+table.tw thead th { text-align: left; font-size: 13px; font-weight: 600; color: #555; }
+table.tw tr > th:first-child { text-align: left; width: 120px; }
+table.tw tbody th span { display: block; font-weight: 600; }
+table.tw tbody th code { font-size: 12px; color: #777; }
+td.tw-missing { color: #8a8a85; font-size: 12px; }
+.tw-cell svg { display: block; width: 100%; height: auto; background: #fff; }
+`.trim()
+
+/**
+ * Self-contained HTML for `theme try --title`: one row per theme, the
+ * caller's cover and content page side by side. Rows rather than the fixed
+ * sample's columns, because a wall can hold every installed theme and a
+ * column each would leave every page a few dozen pixels wide.
+ */
+export function buildThemeWallHtml(input: { title: string; columns: readonly string[]; rows: readonly ThemeWallSheetRow[] }): string {
+  const head = input.columns.map((column) => `<th scope="col">${escapeHtml(column)}</th>`).join("")
+  const body = input.rows
+    .map((row, rowIdx) => {
+      const cells = row.cells
+        .map((cell) => {
+          if ("reason" in cell) return `<td class="tw-missing">${escapeHtml(cell.reason)}</td>`
+          return `<td class="tw-cell">${namespaceSvgIds(cell.svg, `w${rowIdx}-${cell.type}-`)}</td>`
+        })
+        .join("")
+      return `<tr><th scope="row"><span>${escapeHtml(row.label)}</span><code>${escapeHtml(row.id)}</code></th>${cells}</tr>`
+    })
+    .join("")
+  const escapedTitle = escapeHtml(input.title)
+  return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapedTitle} — themes</title>
+<style>${THEME_WALL_CSS}</style>
+</head>
+<body>
+<h1>${escapedTitle}</h1>
+<table class="tw">
+<thead><tr><th></th>${head}</tr></thead>
+<tbody>${body}</tbody>
+</table>
+</body>
+</html>
+`
+}

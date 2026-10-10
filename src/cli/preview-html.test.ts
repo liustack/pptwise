@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   buildContactSheetHtml,
   buildPreviewHtml,
+  buildThemeWallHtml,
   type PreviewHtmlChecks,
   type PreviewHtmlFinding,
   type PreviewHtmlSlideInput,
@@ -553,5 +554,25 @@ describe("buildContactSheetHtml", () => {
     expect(html).toContain("points-brief")
     expect(html).toContain("list-brief")
     expect((html.match(/<svg\b/g) ?? []).length).toBe(2)
+  })
+})
+
+describe("buildThemeWallHtml", () => {
+  it("sets one row per theme, escapes every caller string, and namespaces each page's ids", () => {
+    const svg = '<svg><defs><linearGradient id="g"/></defs><rect fill="url(#g)"/></svg>'
+    const html = buildThemeWallHtml({
+      title: "<Q3> & co",
+      columns: ["cover", "content"],
+      rows: [
+        { id: "brief", label: "Brief", cells: [{ type: "cover", svg }, { type: "content", svg }] },
+        { id: "crayon", label: "Crayon", cells: [{ type: "cover", svg }, { type: "content", reason: "kind: <fact> is not offered" }] },
+      ],
+    })
+    expect(html).toContain("&lt;Q3&gt; &amp; co")
+    expect(html).toContain("kind: &lt;fact&gt; is not offered")
+    expect(html.match(/<tr><th scope="row">/g)).toHaveLength(2)
+    expect(html).toContain('id="w0-cover-g"')
+    expect(html).toContain('id="w1-cover-g"')
+    expect(html).not.toContain('id="g"')
   })
 })

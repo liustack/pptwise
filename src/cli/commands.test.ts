@@ -11,6 +11,9 @@ import { NARRATIVE_PRESETS } from "../narrative"
 import { CAPACITY } from "../audit/capacity"
 import { GREYCARD_THEME_FILE, LOW_CONTRAST_IR } from "../audit/__fixtures__/low-contrast"
 import { __resetRegisteredThemes, getThemeDefinition } from "../themes/definitions"
+import { KIND_VALUES } from "../ir"
+import { LAYOUT_REGISTRY } from "../layouts/registry"
+import { resolveLayoutId } from "../render/layout-selection"
 import { resolveThemeByName } from "./theme-resolve"
 import { THEME_OCCASIONS } from "../themes/occasions"
 import { buildThmxBytes, DEFAULT_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
@@ -777,6 +780,36 @@ describe("runSchema / runThemes", () => {
       expect(typeof row.label).toBe("string")
       expect(row.label.length).toBeGreaterThan(0)
     }
+  })
+})
+
+describe("runThemes --json menu", () => {
+  // A model that needed to know whether a theme offers a kind grepped the
+  // bundled dist for it: the list named no page a theme serves. The menu
+  // each row carries is read off the compiled definition validate and render
+  // resolve pages through, so it can be checked against that route directly.
+  it("lists each theme's boundary faces and offered content kinds from the menu validate resolves", async () => {
+    const rows = JSON.parse(await runThemes(true)) as Array<{
+      id: string
+      menu: { cover: string; chapter: string; ending: string; content: Record<string, string> }
+    }>
+    expect(rows).toHaveLength(22)
+    for (const row of rows) {
+      const menu = getThemeDefinition(row.id).menu
+      expect(row.menu.cover).toBe(resolveLayoutId("cover", undefined, menu))
+      expect(row.menu.chapter).toBe(resolveLayoutId("chapter", undefined, menu))
+      expect(row.menu.ending).toBe(resolveLayoutId("ending", undefined, menu))
+      for (const kind of KIND_VALUES) {
+        expect(row.menu.content[kind] ?? null).toBe(resolveLayoutId("content", kind, menu))
+      }
+      expect(Object.keys(row.menu.content)).toEqual(KIND_VALUES.filter((kind) => row.menu.content[kind] !== undefined))
+      for (const face of [row.menu.cover, row.menu.chapter, row.menu.ending, ...Object.values(row.menu.content)]) {
+        expect(LAYOUT_REGISTRY).toHaveProperty(face)
+      }
+    }
+    const crayon = rows.find((row) => row.id === "crayon")!
+    expect(crayon.menu.content).not.toHaveProperty("fact")
+    expect(Object.keys(rows.find((row) => row.id === "memo")!.menu.content)).toHaveLength(11)
   })
 })
 

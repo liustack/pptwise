@@ -26,12 +26,15 @@ pptwise render deck-dir/
 pptwise preview deck-dir/ --html
 ```
 
+`pptwise build deck-dir/ --json` 一次跑完 assemble、validate、audit、preview 和 render，把所有问题列在一份清单里。见 [Build](#build)。
+
 每轮验证之间最多填四页，写每一页之前先用 `inspect` 读它的契约。需要用户在浏览器中实时评审时使用 `serve`。
 
 ## 命令索引
 
 | command | 作用 |
 | --- | --- |
+| `build <target>` | 一次跑完 assemble、validate、audit、preview 和 render，返回一份结构化结论。 |
 | `render <target>` | 渲染原生可编辑 PPTX。 |
 | `validate <target>` | 验证 IR、主题绑定、菜单 kind、组件、资产与内容质量。 |
 | `audit <target>` | 运行确定性视觉与几何检查。 |
@@ -44,7 +47,7 @@ pptwise preview deck-dir/ --html
 | `themes` | 列出 22 个出厂预设与已装内容包的主题，附元数据。 |
 | `theme new` | 把命名主题拷贝为自包含 v2 文件。 |
 | `theme fork` | 拷贝主题，并围绕新锚色重推导配色。 |
-| `theme try` | 用两到四个主题渲染固定试衣样稿。 |
+| `theme try` | 用两到四个主题渲染固定试衣样稿，或用任意多个主题渲染调用方自己的封面和一页正文。 |
 | `brand extract` | 从 Office 文件抽取颜色与字体，产出完整 v2 主题。 |
 | `narratives` | 列出命名叙事预设与三轴。 |
 | `icons` | 列出 `icon` 字段接受的全部图标名。 |
@@ -68,6 +71,50 @@ pptwise preview deck-dir/ --html
 | `self-update` | 更新全局安装。 |
 
 `layouts` 暴露的是维护者使用的引擎词汇。Deck 作者与创作 agent 只选择内容 `kind`，不写内部脸 id。
+
+## Build
+
+```bash
+pptwise build <target> [--json] [--no-git-ignore]
+```
+
+`build` 组装 deck 工程（或读取 IR 文件），校验，画出每一页，检查画出来的结果，再渲染 `.pptx`，全部在一个进程里、基于对源文件的同一次读取完成。deck 通过全部检查时以 0 退出，需要修改时以 1 退出。
+
+输出位置就是 `render` 和 `preview` 的默认位置：页面、`preview.html` 和 `manifest.json` 写到 `.pptwise/<place>/`，deck 唯一的 `.pptx` 写到 `.pptwise/<place>/<deck>.pptx`，和 `render` 写的是同一个路径。没有 `-o`。只有全部检查通过才写 `.pptx`，没通过的 build 会删掉上一次 build 留在这个路径的文件，所以那里的文件永远和最近一次 build 读到的源文件一致。只要 validate 通过就会画出页面，有 audit 问题的 deck 也照样能看。
+
+`--json` 打印结论。`status` 是 `ok` 或 `needs_revision`。`errors` 的每一条写明是哪项检查报的（`stage`：`assemble`、`validate`、`audit` 或 `render`），落在哪里（`page`、`pageId`，deck 工程还有要改的 `file`，即 `pages/<id>.json` 或 `deck.spec.json`，以及其中的 `field`），以及检查自己的 `message`，检查知道怎么改时会写在里面。audit 的条目另带 `code` 和 `detail`。没写的页面算一条错误，会写明要写哪个页面文件，在所有页面写完之前不跑 audit。`warnings` 是 validate 的警告，从不阻止写出 `.pptx`。
+
+```json
+{
+  "status": "needs_revision",
+  "target": "/work/weekly",
+  "theme": "brief",
+  "pageCount": 6,
+  "audited": true,
+  "errors": [
+    {
+      "stage": "audit",
+      "page": 2,
+      "pageId": "why",
+      "file": "pages/why.json",
+      "code": "monotony",
+      "message": "pages 2-4 repeat component type \"bullets\" (3 consecutive pages) — vary the lead component across neighbouring pages (mix bullets, chart, kpi, blockquote) so the deck does not read as a repeating template",
+      "detail": { "componentType": "bullets", "fromPage": 2, "toPage": 4, "length": 3 }
+    }
+  ],
+  "warnings": [],
+  "preview": {
+    "dir": "/work/.pptwise/weekly",
+    "html": "/work/.pptwise/weekly/preview.html",
+    "manifest": "/work/.pptwise/weekly/manifest.json",
+    "pages": [{ "page": 1, "id": "cover", "type": "cover", "file": "/work/.pptwise/weekly/001-cover.svg" }]
+  },
+  "pptx": null,
+  "notes": []
+}
+```
+
+通过的 build 是 `"status": "ok"`，`errors` 为空，`pptx` 是这份 deck 的 `.pptx` 的绝对路径。目标不存在、配置文件读不了时，命令直接失败，不产出结论。
 
 ## Render
 
@@ -174,6 +221,8 @@ pptwise theme fork <name> --primary "#0B5FFF" \
   [-o <theme.json>] [--id <id>] [--label <label>]
 
 pptwise theme try <id,id,...> [-o <dir>]
+pptwise theme try <id,...|all> --title <text> \
+  [--subtitle <text>] [--lang zh|en] [--page <page.json>] [--json] [-o <dir>]
 ```
 
 `theme new` 拷贝一个预设或已解析的工作区主题。输出路径与 id 至少传一个。新主题是完整且独立的对象。
@@ -182,7 +231,45 @@ pptwise theme try <id,id,...> [-o <dir>]
 
 `theme try` 要求两个到四个互不重复的名称。默认把对比图写到 `.pptwise/theme-try/`。它永远不会修改 deck 绑定。
 
+带 `--title` 时，`theme try` 不画固定样稿，改画调用方自己的页面：一张用这个标题的封面（`--subtitle` 作副题），加一页正文。正文默认是三条短要点，语言由 `--lang` 指定，可选 `zh` 或 `en`，不传时标题里有中日韩文字就用 `zh`，否则用 `en`。`--page <file>` 用一页自己的正文替换它，写法和 IR 里的 deck 页面一样：`kind`、`heading`、`components`，`type` 可写可不写，写的话必须是 `content`。主题名可以是一个或多个，也可以写 `all`，表示 `themes` 列出的全部主题。
+
+每一页单独按每个主题校验。主题拒绝的页面，比如封面会截断的标题、菜单里没有的 kind，会从这个主题里去掉，列在 `skipped` 下，并附上 validate 的原话。输出目录里每张画出的页面一个 SVG，命名为 `<theme>-cover.svg` 和 `<theme>-content.svg`，另有每个主题一行的 `contact-sheet.html` 和 `manifest.json`。`--json` 把清单打印出来，并用 `dir` 给出输出目录的绝对路径。画完 22 个预设约需半秒。
+
+```json
+{
+  "manifestVersion": 1,
+  "generator": "pptwise theme try",
+  "pptwiseVersion": "0.40.0",
+  "title": "Q3 review",
+  "lang": "en",
+  "slide": { "width": 1280, "height": 720 },
+  "contactSheet": "contact-sheet.html",
+  "themes": [
+    {
+      "id": "crayon",
+      "label": "Crayon",
+      "source": "builtin",
+      "pages": [{ "type": "cover", "file": "crayon-cover.svg" }],
+      "skipped": [{ "type": "content", "kind": "fact", "reason": "kind: ..." }]
+    }
+  ]
+}
+```
+
+`source` 是 `builtin`、`pack`，或 deck 与工作区主题文件对应的 `file`。页面文件路径相对于清单所在目录。
+
 `themes --json` 为每一行标出 `source`：出厂预设是 `builtin`，已装内容包提供的主题是 `pack`，并带上 `pack` id。读不出来的包列为一条带 `error` 字段的条目，不影响其余条目。
+
+每个主题行还带 `menu`：`cover`、`chapter`、`ending` 各自落到的版式，以及 `content` 下这个主题提供的每种内容 kind 落到的版式，按 kind 词表的顺序排列。主题不提供的 kind 不出现在 `content` 里，spec 里写了这种 kind 的页会被 `spec validate` 拒绝。这份列表读自 validate 和 render 解析页面所用的同一份编译后菜单。crayon 那一行的一部分：
+
+```json
+"menu": {
+  "cover": "crayonbox-cover",
+  "chapter": "crayonbox-chapter",
+  "ending": "crayonbox-ending",
+  "content": { "points": "crayonbox-sheet", "list": "crayonbox-sheet", "statement": "crayonbox-sheet" }
+}
+```
 
 主题名称先从 deck 目录解析，再从向上查找的工作区 `themes/` 目录解析，再查已装内容包，最后查出厂预设。未知名称报错，并列出查过的每个位置，包括每个已装包的目录。Deck 与工作区文件可以保名遮蔽出厂预设或包内主题。主题 id 必须匹配 `^[a-z0-9-]+$`。覆盖已有主题文件需要 `--force`。
 

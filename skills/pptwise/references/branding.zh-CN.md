@@ -86,10 +86,10 @@ pptwise brand extract corp-template.pptx \
 
 输出是自包含的版本 2 主题，包含样式 token、品牌 token、场合、个性强度和完整菜单。它没有基础引用，加载时也不继承任何东西。在 `deck.spec.json` 中绑定 `acme` 后，项目命令会自动解析 `deck-dir/theme.json`。
 
-要与其他命名主题比较，在所有名称都能解析的目录运行固定试衣样稿：
+要把结果和其他命名主题并排给用户看，在所有名称都能解析的目录里，用用户自己的封面把每个主题画一遍：
 
 ```bash
-pptwise theme try acme,brief,swiss
+pptwise theme try acme,brief,swiss --title "Q3 review"
 ```
 
 装载器会检查对比度。抽取结果若产生不安全的文字与背景组合，应调整主题或创建配色分叉，不要增加临时的单页颜色覆盖。

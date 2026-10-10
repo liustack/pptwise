@@ -236,6 +236,12 @@ function escapeHtml(value) {
 
 export const TOOL_NAME = 'pptwise_preview'
 
+/** The theme wall: the user's own title drawn in every theme, from `theme try --title`. */
+export const THEMES_TOOL_NAME = 'pptwise_themes'
+
+/** One pass of assemble, validate, audit, preview and render, from `build --json`. */
+export const BUILD_TOOL_NAME = 'pptwise_build'
+
 export const PREVIEW_ROUTE = '/pptwise/preview'
 
 /**
@@ -413,6 +419,25 @@ const RECORD_FILE = 'record.json'
 
 /** The page index `preview --html` writes, and the file a bundle is read from. */
 const MANIFEST_FILE = 'manifest.json'
+
+/**
+ * What a record can say it holds, besides a preview. Absent means a preview
+ * from `pptwise_preview`, which is every record written before the other two
+ * tools existed, so no older record needs rewriting.
+ *
+ *  - `themes`: a theme wall. Its `manifest.json` is the one `theme try --title`
+ *    writes, a different shape from a deck's, and its viewer page is the
+ *    contact sheet rather than `preview.html`.
+ *  - `build`: the pages `pptwise build` drew, copied here so the card can show
+ *    them. Same files as a preview, and an export only when the build passed.
+ */
+const RECORD_KINDS = new Set(['themes', 'build'])
+
+/** The contact sheet `theme try --title` writes beside its manifest. */
+const THEME_SHEET_FILE = 'contact-sheet.html'
+
+/** Where `pptwise_themes` writes the caller's content page for `--page`. */
+const SAMPLE_PAGE_FILE = 'sample-page.json'
 
 // NOTHING HERE EXPIRES A PREVIEW.
 //
@@ -834,6 +859,7 @@ function entryFromRecord(dir, record) {
  */
 function recordFrom(entry) {
   return {
+    kind: entry.kind,
     target: String(entry.target ?? ''),
     themeFile: entry.themeFile ? basename(entry.themeFile) : undefined,
     pptxFile: entry.pptxPath ? basename(entry.pptxPath) : undefined,
@@ -991,6 +1017,11 @@ async function readRecord(root, id) {
   if (record.created !== undefined && typeof record.created !== 'number') {
     throw new PreviewDamaged(`this preview's record has an unusable "created": ${path}`)
   }
+  // A kind this version does not know is a record written by a newer one.
+  // Reading it as a preview would serve the wrong files under the right id.
+  if (record.kind !== undefined && !RECORD_KINDS.has(record.kind)) {
+    throw new PreviewDamaged(`this preview's record has an unusable "kind": ${path}`)
+  }
   return record
 }
 
@@ -1085,6 +1116,45 @@ function runCli(cliPath, args, signal) {
     if (code === 0) return { stdout, stderr }
     throw new Error(stderr.trim() || stdout.trim() || `pptwise exited with code ${code}`)
   })
+}
+
+/**
+ * Run the packaged CLI for a JSON report, and hand back the parsed report.
+ *
+ * `okCodes` is the exits that still carry a report. `build` exits 1 when the
+ * deck needs revision and prints the full report anyway, because "not yet" is
+ * an answer and not a crash. A command that failed outright prints its reason
+ * on stderr and no JSON, and that reason is what this throws.
+ *
+ * `cwd` is the conversation's workspace. It decides where `build` writes the
+ * deck's `.pptwise/` folder and which project config a theme wall reads, so
+ * the files land where the model would have put them from its own terminal.
+ */
+async function runCliJson(cliPath, args, options = {}) {
+  const { code, stdout, stderr } = await runChild(resolveCliCommand(), [cliPath, ...args], {
+    env: cliChildEnv(),
+    signal: options.signal,
+    ...(options.cwd !== undefined ? { cwd: options.cwd } : {}),
+  })
+  const okCodes = options.okCodes ?? [0]
+  if (!okCodes.includes(code)) throw new Error(stderr.trim() || stdout.trim() || `pptwise exited with code ${code}`)
+  try {
+    return JSON.parse(stdout)
+  } catch {
+    throw new Error(stderr.trim() || `pptwise printed no JSON report (exit code ${code})`)
+  }
+}
+
+/**
+ * The conversation's working directory, when the harness hands one over.
+ *
+ * DSH puts it on the session header (`present` reads the same field). A tool
+ * call outside a session has none, and then the CLI runs where this process
+ * runs, which is what `pptwise_preview` has always done.
+ */
+function sessionCwd(exec) {
+  const cwd = exec && exec.agent && exec.agent.session && exec.agent.session.header && exec.agent.session.header.cwd
+  return typeof cwd === 'string' && cwd !== '' ? cwd : undefined
 }
 
 /**
@@ -1405,6 +1475,115 @@ function parseManifest(raw, path) {
 }
 
 /**
+ * A theme wall's manifest, or a clear statement that this one is not usable.
+ *
+ * The same discipline as `parseManifest`, for the other shape: every theme and
+ * every page is checked before any file name in it becomes a path.
+ */
+function parseThemeWallManifest(raw, path) {
+  let manifest
+  try {
+    manifest = JSON.parse(raw)
+  } catch {
+    throw new PreviewDamaged(`${path} is present but unreadable`)
+  }
+  if (!manifest || typeof manifest !== 'object' || !Array.isArray(manifest.themes)) {
+    throw new PreviewDamaged(`${path} is not in a shape this version understands`)
+  }
+  for (const [index, theme] of manifest.themes.entries()) {
+    if (!theme || typeof theme !== 'object' || typeof theme.id !== 'string' || !Array.isArray(theme.pages)) {
+      throw new PreviewDamaged(`${path} has a theme ${index + 1} this version cannot read`)
+    }
+    for (const page of theme.pages) {
+      if (!page || typeof page !== 'object' || !isSafeFileName(page.file)) {
+        throw new PreviewDamaged(`${path} names a ${theme.id} page this version will not open`)
+      }
+    }
+  }
+  return manifest
+}
+
+/**
+ * What the theme wall's card draws: every theme, each with its pages' markup.
+ *
+ * Every page is inlined, not only a strip's worth. A wall is two small pages
+ * per theme, about 160 KB for all 22 built-in themes, and the user is choosing
+ * among all of them, so a wall cut short would hide the choice it exists for.
+ */
+async function readThemesBundle(dir) {
+  const manifestPath = join(dir, MANIFEST_FILE)
+  const manifest = parseThemeWallManifest(await readFile(manifestPath, 'utf8'), manifestPath)
+  const themes = []
+  for (const theme of manifest.themes) {
+    const pages = []
+    for (const page of theme.pages) pages.push({ ...page, svg: await readFile(join(dir, page.file), 'utf8') })
+    themes.push({ ...theme, pages })
+  }
+  return {
+    kind: 'themes',
+    title: manifest.title,
+    ...(typeof manifest.subtitle === 'string' ? { subtitle: manifest.subtitle } : {}),
+    slide: manifest.slide,
+    themes,
+  }
+}
+
+/** One build problem on one line: where it is, then the check's own words. */
+function buildIssueLine(issue) {
+  const where = []
+  if (typeof issue.page === 'number') where.push(issue.pageId ? `page ${issue.page} (${issue.pageId})` : `page ${issue.page}`)
+  else if (issue.pageId) where.push(`page "${issue.pageId}"`)
+  if (issue.file) where.push(issue.field ? `${issue.file} ${issue.field}` : issue.file)
+  else if (issue.field) where.push(issue.field)
+  const code = issue.code ? `[${issue.code}] ` : ''
+  return `${where.length > 0 ? `${where.join(' — ')}: ` : ''}${code}${issue.message} (${issue.stage})`
+}
+
+/** The fields of a build problem the model acts on. The audit's `detail` stays in the CLI's report. */
+function buildIssueValue(issue) {
+  const value = { stage: String(issue.stage), message: String(issue.message) }
+  for (const key of ['pageId', 'file', 'field', 'code']) if (typeof issue[key] === 'string') value[key] = issue[key]
+  if (typeof issue.page === 'number') value.page = issue.page
+  return value
+}
+
+/** The model-facing text of `pptwise_build`. */
+function buildSummary(value) {
+  const lines = []
+  const head = []
+  if (value.previewId) head.push(`pptwise-preview:${value.previewId}`)
+  if (typeof value.pageCount === 'number') head.push(`rendered ${value.pageCount} page${value.pageCount === 1 ? '' : 's'}`)
+  if (value.status === 'ok') {
+    head.push('build passed: every check is clean')
+    lines.push(head.join(' · '))
+    lines.push(`The deck's one .pptx is ${value.pptx}. Deliver this file as it is. Do not render, copy or rename another .pptx.`)
+  } else {
+    const n = value.errors.length
+    head.push(`needs revision: ${n} problem${n === 1 ? '' : 's'}, no .pptx written`)
+    lines.push(head.join(' · '))
+    for (const issue of value.errors) lines.push(`- ${buildIssueLine(issue)}`)
+    lines.push('Fix each file named above, then call pptwise_build again.')
+  }
+  for (const issue of value.warnings) lines.push(`warning: ${buildIssueLine(issue)}`)
+  if (value.previewId) lines.push('The user can page through the drawn pages in this card. Do not tell them to open a URL.')
+  return lines.join('\n')
+}
+
+/** The model-facing text of `pptwise_themes`. */
+function themesSummary(value) {
+  const lines = [
+    `pptwise-themes:${value.wallId} · drew ${value.themeCount} theme${value.themeCount === 1 ? '' : 's'} for "${value.title}", a cover and one content page each`,
+    'The user is looking at them in this card. Ask which theme they want, or, if they left the choice to you, name the one you picked and why. Do not describe the pages or tell them to open a URL.',
+  ]
+  for (const theme of value.themes) {
+    for (const skip of theme.skipped ?? []) {
+      lines.push(`note: ${theme.id} left out its ${skip.type} page: ${skip.reason.replace(/\n/g, ' ')}`)
+    }
+  }
+  return lines.join('\n')
+}
+
+/**
  * Name what is wrong with a preview directory whose record survived.
  *
  * This becomes the body of a 410, and the difference between "your preview is
@@ -1619,7 +1798,14 @@ export function createPreviewService(cliPath) {
 
     let bundle
     try {
-      bundle = await readPreviewBundle(dir)
+      if (record.kind === 'themes') bundle = await readThemesBundle(dir)
+      else {
+        bundle = await readPreviewBundle(dir)
+        // A build's pages are worth showing whether or not it passed, and its
+        // export exists only when it did. The card hides its download button
+        // on this, rather than offering one the route would refuse.
+        if (record.kind === 'build') bundle = { ...bundle, exportable: typeof record.pptxFile === 'string' }
+      }
     } catch (error) {
       // Three outcomes, from the one classifier. A page that is not there is
       // final and is a deletion. A page this process could not open right now
@@ -1774,7 +1960,8 @@ export function createPreviewService(cliPath) {
           // the card ended up with a page-count budget, a stand-in for
           // "missing" pages and its own arrow keys, none of which the real
           // preview has.
-          const htmlPath = join(entry.outDir, PREVIEW_HTML_FILE)
+          // A theme wall's viewer is its contact sheet, every theme in rows.
+          const htmlPath = join(entry.outDir, entry.kind === 'themes' ? THEME_SHEET_FILE : PREVIEW_HTML_FILE)
           let html
           try {
             html = await readFile(htmlPath)
@@ -2004,10 +2191,239 @@ export function createPreviewService(cliPath) {
     timeoutMs: 120_000,
   }
 
+  /**
+   * Fill a new directory under a fresh id and publish it in one rename, the
+   * way `execute` above does. `fill` writes everything, record included, into
+   * the staging directory it is handed. A failure removes that directory and
+   * publishes nothing.
+   */
+  async function publishNew(fill) {
+    const id = randomUUID()
+    const outDir = requirePreviewDir(root, id)
+    const stageDir = partialDir(root, id)
+    let filled
+    try {
+      await createOwnedDir(root, stageDir)
+      filled = await fill(stageDir)
+      await rename(stageDir, outDir)
+    } catch (error) {
+      await discardOwnedDir(stageDir)
+      throw error
+    }
+    return { id, outDir, filled }
+  }
+
+  const ISSUE_SCHEMA = {
+    type: 'object',
+    properties: {
+      stage: { type: 'string' },
+      page: { type: 'number' },
+      pageId: { type: 'string' },
+      file: { type: 'string' },
+      field: { type: 'string' },
+      code: { type: 'string' },
+      message: { type: 'string' },
+    },
+    required: ['stage', 'message'],
+    additionalProperties: false,
+  }
+
+  const themesTool = {
+    name: THEMES_TOOL_NAME,
+    description:
+      "Draw the user's own deck title as a cover, plus one content page, in every pptwise theme (or the ones named), " +
+      'and show them to the user side by side in this conversation. Use it when a theme is being chosen. ' +
+      'The pages reach the user, not you: the result tells you which themes were drawn.',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: "The deck's cover title, as it will appear on the cover." },
+        subtitle: { type: 'string', description: "The cover's subheading, if the deck has one." },
+        lang: {
+          type: 'string',
+          description: 'zh or en: the language of the default content page. Default: zh when the title has Chinese, Japanese or Korean characters, en otherwise.',
+        },
+        themes: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Theme ids to draw. Default: every theme, built-in and installed.',
+        },
+        page: {
+          type: 'object',
+          description:
+            'One content page of this deck as a deck page carries it ({ "type": "content", "kind": ..., "heading": ..., "components": [...] }), drawn in place of the default sample page.',
+        },
+      },
+      required: ['title'],
+      additionalProperties: false,
+    },
+    output: {
+      // Facts about the wall and nothing drawn: the SVGs reach the card
+      // through the route, keyed by `wallId`, in both modes.
+      schema: {
+        type: 'object',
+        properties: {
+          wallId: { type: 'string' },
+          title: { type: 'string' },
+          themeCount: { type: 'number' },
+          themes: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                label: { type: 'string' },
+                skipped: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: { type: { type: 'string' }, reason: { type: 'string' } },
+                    required: ['type', 'reason'],
+                    additionalProperties: false,
+                  },
+                },
+              },
+              required: ['id', 'label'],
+              additionalProperties: false,
+            },
+          },
+        },
+        required: ['wallId', 'title', 'themeCount', 'themes'],
+        additionalProperties: false,
+      },
+      render(_args, value) {
+        return [{ type: 'text', text: themesSummary(value) }]
+      },
+      presentationMeta(_args, value) {
+        return { card: 'pptwise-themes', wallId: value.wallId }
+      },
+    },
+    async execute(args, exec) {
+      const title = String(args.title)
+      const names = Array.isArray(args.themes) && args.themes.length > 0 ? args.themes.map(String).join(',') : 'all'
+      const { id, filled: manifest } = await publishNew(async (stageDir) => {
+        const cliArgs = ['theme', 'try', names, '--title', title, '--json', '-o', stageDir]
+        if (typeof args.subtitle === 'string' && args.subtitle !== '') cliArgs.push('--subtitle', args.subtitle)
+        if (typeof args.lang === 'string' && args.lang !== '') cliArgs.push('--lang', args.lang)
+        if (args.page !== undefined) {
+          const pagePath = join(stageDir, SAMPLE_PAGE_FILE)
+          await writeFile(pagePath, JSON.stringify(args.page))
+          cliArgs.push('--page', pagePath)
+        }
+        const wall = await runCliJson(cliPath, cliArgs, { signal: exec?.signal, cwd: sessionCwd(exec) })
+        if (!wall || !Array.isArray(wall.themes)) throw new Error('pptwise theme try printed a report this plugin cannot read')
+        // A wall has no deck behind it, so its export route says so rather
+        // than reporting a lost file.
+        await writeRecordInto(stageDir, recordFrom({ kind: 'themes', target: title, pptxError: 'a theme wall has no deck to download' }))
+        return wall
+      })
+      return {
+        wallId: id,
+        title,
+        themeCount: manifest.themes.length,
+        themes: manifest.themes.map((theme) => ({
+          id: String(theme.id),
+          label: String(theme.label),
+          ...(Array.isArray(theme.skipped) && theme.skipped.length > 0
+            ? { skipped: theme.skipped.map((skip) => ({ type: String(skip.type), reason: String(skip.reason) })) }
+            : {}),
+        })),
+      }
+    },
+    timeoutMs: 120_000,
+  }
+
+  const buildTool = {
+    name: BUILD_TOOL_NAME,
+    description:
+      'Build a pptwise deck project in one pass: assemble, validate, audit, draw the pages and, only when every check passes, write the deck\'s one .pptx. ' +
+      'Shows the drawn pages to the user in this conversation. Returns either the .pptx path or every problem with the page, file and field to fix. ' +
+      'Use it as the self-check after writing or editing pages, instead of running those steps one by one.',
+    parameters: {
+      type: 'object',
+      properties: {
+        target: {
+          type: 'string',
+          description: 'Deck project directory (or IR json file, or bare deck name), the same target the CLI takes.',
+        },
+      },
+      required: ['target'],
+      additionalProperties: false,
+    },
+    output: {
+      schema: {
+        type: 'object',
+        properties: {
+          status: { type: 'string', enum: ['ok', 'needs_revision'] },
+          pptx: { type: 'string' },
+          previewId: { type: 'string' },
+          pageCount: { type: 'number' },
+          errors: { type: 'array', items: ISSUE_SCHEMA },
+          warnings: { type: 'array', items: ISSUE_SCHEMA },
+        },
+        required: ['status', 'errors', 'warnings'],
+        additionalProperties: false,
+      },
+      render(_args, value) {
+        return [{ type: 'text', text: buildSummary(value) }]
+      },
+      presentationMeta(_args, value) {
+        return { card: 'pptwise-build', status: value.status, ...(value.previewId ? { previewId: value.previewId } : {}) }
+      },
+    },
+    async execute(args, exec) {
+      const target = String(args.target)
+      const report = await runCliJson(cliPath, ['build', target, '--json'], {
+        signal: exec?.signal,
+        cwd: sessionCwd(exec),
+        okCodes: [0, 1],
+      })
+      if (!report || (report.status !== 'ok' && report.status !== 'needs_revision') || !Array.isArray(report.errors)) {
+        throw new Error('pptwise build printed a report this plugin cannot read')
+      }
+      const ok = report.status === 'ok'
+      let previewId
+      if (report.preview) {
+        // The drawn pages are copied, not pointed at: the next build rewrites
+        // the workspace folder, and this card has to keep showing this build.
+        const { id } = await publishNew(async (stageDir) => {
+          const manifestPath = String(report.preview.manifest)
+          const manifest = parseManifest(await readFile(manifestPath, 'utf8'), manifestPath)
+          const fromDir = dirname(manifestPath)
+          await copyFile(manifestPath, join(stageDir, MANIFEST_FILE))
+          await copyFile(String(report.preview.html), join(stageDir, PREVIEW_HTML_FILE))
+          for (const page of manifest.pages) await copyFile(join(fromDir, page.file), join(stageDir, page.file))
+          let pptxFile
+          if (ok && typeof report.pptx === 'string' && isSafeFileName(basename(report.pptx))) {
+            pptxFile = basename(report.pptx)
+            await copyFile(report.pptx, join(stageDir, pptxFile))
+          }
+          const record = recordFrom({
+            kind: 'build',
+            target,
+            pptxPath: pptxFile,
+            pptxError: pptxFile ? undefined : 'this build needs revision, so it wrote no .pptx',
+          })
+          await writeRecordInto(stageDir, record)
+        })
+        previewId = id
+      }
+      return {
+        status: report.status,
+        ...(ok && typeof report.pptx === 'string' ? { pptx: report.pptx } : {}),
+        ...(previewId ? { previewId } : {}),
+        ...(typeof report.pageCount === 'number' ? { pageCount: report.pageCount } : {}),
+        errors: report.errors.map(buildIssueValue),
+        warnings: Array.isArray(report.warnings) ? report.warnings.map(buildIssueValue) : [],
+      }
+    },
+    timeoutMs: 180_000,
+  }
+
   // No `recall` any more, and its absence is the point: there is no second,
   // faster way to ask this service about an id. Everything goes through
   // `recallAnywhere`, which goes to disk.
-  return { tool, registerRoute, remember, recallAnywhere, root }
+  return { tool, themesTool, buildTool, registerRoute, remember, recallAnywhere, root }
 }
 
 /**
@@ -2024,7 +2440,12 @@ export function definePreviewTool(cliPath) {
 export const __testing = {
   runCli,
   readPreviewBundle,
+  readThemesBundle,
+  parseThemeWallManifest,
   modelSummary,
+  buildSummary,
+  themesSummary,
+  sessionCwd,
   captureSnapshot,
   exportName,
   readRecord,
@@ -2051,6 +2472,7 @@ export const __testing = {
   RETRYABLE_ERRNOS,
   THUMBNAIL_STRIP_PAGES,
   PREVIEW_HTML_FILE,
+  THEME_SHEET_FILE,
   PREVIEW_DIR,
   RECORD_FILE,
   MANIFEST_FILE,

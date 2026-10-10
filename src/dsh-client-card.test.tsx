@@ -36,7 +36,7 @@ interface Bundle {
 type CardProps = { block: unknown }
 type Card = React.ComponentType<CardProps>
 
-let makeCard: (options?: { reactDom?: boolean }) => Card
+let makeCard: (options?: { reactDom?: boolean; key?: string }) => Card
 let makeTesting: () => { isZip: (blob: Blob) => Promise<boolean> }
 
 beforeAll(async () => {
@@ -69,7 +69,7 @@ beforeAll(async () => {
       throw new Error("unexpected require: " + id)
     }) as { apply: (ctx: unknown) => void; inject: string[] }
 
-    let found: Card | null = null
+    const seats = new Map<string, Card>()
     exportsObj.apply({
       slots: {
         inject(_name: string, run: () => Generator<unknown>) {
@@ -79,12 +79,16 @@ beforeAll(async () => {
         },
         register(descriptor: { name: string; key: string }, component: Card) {
           expect(descriptor.name).toBe("tool.call.toolview")
-          expect(descriptor.key).toBe("pptwise_preview")
-          found = component
+          seats.set(descriptor.key, component)
           return () => {}
         },
       },
     })
+    // One seat per tool, and the build shares the deck card because its
+    // result carries the same preview stamp.
+    expect([...seats.keys()].sort()).toEqual(["pptwise_build", "pptwise_preview", "pptwise_themes"])
+    expect(seats.get("pptwise_build")).toBe(seats.get("pptwise_preview"))
+    const found = seats.get(options.key ?? "pptwise_preview")
     if (!found) throw new Error("the plugin registered no card")
     return found
   }
@@ -1452,8 +1456,12 @@ describe("dsh preview card — the store", () => {
     }
     walk(tree)
 
-    // One state container, whatever spelling is used to reach it.
-    expect(calls.filter((c) => c.callee === "useState")).toHaveLength(1)
+    // One state container per card, whatever spelling is used to reach it:
+    // the deck card's store, and the theme wall's one fetch.
+    expect(calls.filter((c) => c.callee === "useState").map((c) => c.inside).sort()).toEqual([
+      "PptwisePreviewCard",
+      "PptwiseThemesCard",
+    ])
     // No second one under another name.
     for (const hook of ["useReducer", "useSyncExternalStore", "useDeferredValue"]) {
       expect(calls.filter((c) => c.callee === hook), hook).toHaveLength(0)
@@ -1963,5 +1971,105 @@ describe("dsh preview card — two requests for the same deck", () => {
       expect(screen.getAllByText("Download .pptx").length).toBeGreaterThan(0)
       expect(screen.queryByText("Saving…")).toBeNull()
     })
+  })
+})
+
+describe("dsh build card", () => {
+  it("shows a build that needs revision without offering a .pptx it never wrote", async () => {
+    const Card = makeCard({ key: "pptwise_build" })
+    const bundle = { ...bundleOf([page(1, "cover"), page(2)], "weekly"), exportable: false }
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: bundle }))
+    const block = {
+      content: [{ text: "pptwise-preview:bbb · rendered 2 pages · needs revision: 1 problem, no .pptx written\n- page 2 (why) pages/why.json: too many (validate)" }],
+    }
+    const { container } = render(<Card block={block} />)
+
+    await waitFor(() => expect(thumbnails(container)).toHaveLength(2))
+    expect(screen.getByText("needs revision")).toBeInTheDocument()
+    expect(screen.queryByText("Download .pptx")).toBeNull()
+    fireEvent.click(screen.getByText("Open"))
+    await waitFor(() => expect(viewer(container)).not.toBeNull())
+    // The viewer opens on the drawn pages, still with no download in it.
+    expect(screen.queryByText("Download .pptx")).toBeNull()
+  })
+
+  it("offers the download for a build that passed", async () => {
+    const Card = makeCard({ key: "pptwise_build" })
+    const bundle = { ...bundleOf([page(1, "cover")], "weekly"), exportable: true }
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: bundle }))
+    const block = { content: [{ text: "pptwise-preview:ccc · rendered 1 page · build passed: every check is clean" }] }
+    const { container } = render(<Card block={block} />)
+
+    await waitFor(() => expect(thumbnails(container)).toHaveLength(1))
+    expect(screen.getByText("Download .pptx")).toBeInTheDocument()
+    expect(screen.queryByText("needs revision")).toBeNull()
+  })
+})
+
+describe("dsh theme wall card", () => {
+  function wall(ids: string[]) {
+    return {
+      kind: "themes",
+      title: "Q3 review",
+      slide: { width: 1280, height: 720 },
+      themes: ids.map((id, n) => ({
+        id,
+        label: id.toUpperCase(),
+        pages: [
+          { type: "cover", file: `${id}-cover.svg`, svg: `<svg id="c${n}"><rect id="x"/></svg>` },
+          { type: "content", kind: "points", file: `${id}-content.svg`, svg: `<svg id="p${n}"/>` },
+        ],
+      })),
+    }
+  }
+  const block = { content: [{ text: 'pptwise-themes:0123abcd-0000 · drew 3 themes for "Q3 review"' }] }
+
+  it("draws every theme as a column of its cover and content page, fetched by the stamped id", async () => {
+    const Card = makeCard({ key: "pptwise_themes" })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: wall(["brief", "swiss", "memo"]) }))
+    const { container } = render(<Card block={block} />)
+
+    await waitFor(() => expect(thumbnails(container)).toHaveLength(6))
+    expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/0123abcd-0000")
+    expect(Array.from(container.querySelectorAll("[data-theme]")).map((el) => el.getAttribute("data-theme"))).toEqual([
+      "brief",
+      "swiss",
+      "memo",
+    ])
+    expect(screen.getByText("3 themes")).toBeInTheDocument()
+    // Each mounted page keeps its ids to itself.
+    const ids = Array.from(container.querySelectorAll("[id]")).map((el) => el.id)
+    expect(new Set(ids).size).toBe(ids.length)
+    // No download anywhere: a wall has no deck behind it.
+    expect(screen.queryByText("Download .pptx")).toBeNull()
+  })
+
+  it("opens the contact sheet full size, still without a download", async () => {
+    const Card = makeCard({ key: "pptwise_themes" })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: wall(["brief"]) }))
+    const { container } = render(<Card block={block} />)
+
+    await waitFor(() => expect(thumbnails(container)).toHaveLength(2))
+    fireEvent.click(thumbnails(container)[1]!)
+    await waitFor(() => expect(viewer(container)).not.toBeNull())
+    expect(viewer(container)!.getAttribute("src")).toBe("/pptwise/preview/0123abcd-0000/html")
+    expect(screen.queryByText("Download .pptx")).toBeNull()
+    fireEvent.click(screen.getByText("Close"))
+    await waitFor(() => expect(viewer(container)).toBeNull())
+  })
+
+  it("says the wall is gone when the route has never heard of it", async () => {
+    const Card = makeCard({ key: "pptwise_themes" })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 404, code: "preview_unknown" }))
+    render(<Card block={block} />)
+
+    await waitFor(() => expect(screen.getByText(/Run pptwise_themes again/)).toBeInTheDocument())
+  })
+
+  it("renders nothing for a result with no wall stamp", () => {
+    const Card = makeCard({ key: "pptwise_themes" })
+    const { container } = render(<Card block={{ content: [{ text: "pptwise theme try failed" }] }} />)
+    expect(container).toBeEmptyDOMElement()
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })

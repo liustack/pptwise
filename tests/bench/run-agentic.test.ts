@@ -257,7 +257,7 @@ describe("checkPptwiseArgs covers every command SKILL.md asks for", () => {
 
   it("finds the playbook's commands (sanity: the parser is not matching nothing)", () => {
     const heads = new Set(commands.map((c) => c[0]))
-    for (const expected of ["schema", "validate", "render", "audit", "icons", "theme", "serve"]) {
+    for (const expected of ["schema", "build", "audit", "icons", "theme", "serve"]) {
       expect(heads.has(expected), `SKILL.md should still run \`pptwise ${expected}\``).toBe(true)
     }
   })

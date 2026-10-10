@@ -5,13 +5,21 @@ mirror_of: skills/pptwise/references/validate.md
 
 # 验证与评审循环
 
-何时读：填充页面，组装 deck 项目，渲染，审计，预览，启动评审服务，或修订内容时。
+何时读：填充页面，构建，组装 deck 项目，渲染，审计，预览，启动评审服务，或修订内容时。
 
 ## 小批量填充
 
 为 spec 中每张已确认页面编写 `pages/<page-id>.json`。页面文件只能包含 `components`、`background`、`image_side`、`footnote`、`fields`、`stamp`、`tag`、`ballot`、`years`、`stage` 与 `notes`。Spec 拥有 `type`、内容页 `kind`、`heading` 和页面顺序。在页面文件中重复任何锁定字段都会硬报错。
 
-每次最多填四页，然后运行：
+每次最多填四页，然后 build。宿主有 `pptwise_build` 工具时用它，它同时把目前画好的页面展示给用户。否则运行：
+
+```bash
+pptwise build deck-dir/ --json
+```
+
+`build` 一次跑完 assemble、validate、audit、preview 和 render，打印一份报告。只有每项检查都通过并写出 `.pptx` 时 `status` 才是 `ok`。否则是 `needs_revision`，命令以 1 退出。`errors` 里的每一项带 `stage`、`page`、`pageId`、要改的 `file`（页面内容是 `pages/<id>.json`，spec 锁定的内容是 `deck.spec.json`）、`field`，以及检查自己的 `message`，写明要改什么。audit 发现另带 `code`。警告放在 `warnings` 里，从不拦输出。还没写的页会被报为尚未写，audit 要等所有页写完才跑。只要 validate 通过，`preview` 就列出画好的页面。到指定文件修完每个错误，再 build。不要把页面转成 PNG 或当图片读来检查：报告就是检查结果。
+
+处理某一页时想单独跑一项检查：
 
 ```bash
 pptwise assemble deck-dir/
@@ -28,27 +36,29 @@ pptwise validate deck-dir/
 
 演讲者 `notes` 会导出为原生 PowerPoint 备注，从不画在页面上。
 
-## 只按绑定渲染
+## 一份 deck，一个最终文件
+
+`build` 把 `.pptx` 写到 `.pptwise/<deck>/<deck>.pptx`，与 `render` 用的是同一路径，而且只在每项检查都通过时才写。没通过的 build 会删掉之前 build 留在那里的文件，所以磁盘上的文件总是和源文件一致。按报告里的 `pptx` 路径原样交付：不要再渲染、复制、改名，也不要另导出一份。在 DSH 上用 `present` 交给用户。渲染阶段没有临时换主题的开关。项目 spec 就是绑定。
+
+单独的 `render` 只用于下面两种妥协：
 
 ```bash
 pptwise render deck-dir/
 ```
 
-`.pptx` 写到 `.pptwise/<deck>/`，命令会打印绝对路径。渲染阶段没有临时换主题的开关。项目 spec 就是绑定。
-
 未填完的项目需要显式使用 `--draft`。可能丢失的内容仍会被拦截，除非用户明确接受 `--allow-dropped-content`，这个开关也让内容页越过 validate 的画页检查。应优先修复或拆页。
 
-更换主题前，用 `pptwise theme try` 比较候选。菜单相同的分叉可以换绑，再依次运行 assemble、validate、audit 和 render。菜单不同则要回到主题选择，修订 spec 与受影响的页面填充，再重复这些检查。
+更换主题前，用 `pptwise_themes` 或 `pptwise theme try --title` 把候选给用户看。菜单相同的分叉可以换绑，再 build 一次。菜单不同则要回到主题选择，修订 spec 与受影响的页面填充，再重复这些检查。
 
 ## 审计几何
 
-全部页面填完后运行：
+所有页写完后 `build` 会跑 audit。单独运行：
 
 ```bash
 pptwise audit deck-dir/
 ```
 
-确定性审计会检查溢出、越界、低对比度、重叠、截断、内容丢失和连续使用相同首组件。发现问题时退出码为 1，并指出页面。标题、来源行或组件文字会被主题版式截断时，改由朴素版式把这一页画全（`stepped-aside`）。`content-truncated` 带 `"tier": "hard"` 时，说明没有哪个版式放得下这段字：缩短它或拆页。重组内容，源文件改变后重跑 assemble 与 validate，再重复 audit，直到退出码为 0。
+确定性审计会检查溢出、越界、低对比度、重叠、截断、内容丢失和连续使用相同首组件。发现问题时退出码为 1，并指出页面。标题、来源行或组件文字会被主题版式截断时，改由朴素版式把这一页画全（`stepped-aside`）。`content-truncated` 带 `"tier": "hard"` 时，说明没有哪个版式放得下这段字：缩短它或拆页。重组内容，再 build，直到通过。
 
 封面或章节页使用照片背景时，加上 `--pixels`。像素采样能发现文字落在真实图片不安全区域的问题。
 
@@ -56,7 +66,7 @@ pptwise audit deck-dir/
 
 ## 评审整份 deck
 
-运行环境若有对话内 deck 预览工具，优先使用。否则生成自包含评审文件：
+尽早给用户看页面。有对话内预览工具时，spec 一校验通过就对 deck 目录调用 `pptwise_preview`，让用户在写页之前看到封面和页序，之后每批写完用 `pptwise_build`。否则把 build 报告里的 `preview.html` 路径给用户，或生成自包含评审文件：
 
 ```bash
 pptwise preview deck-dir/ --html
@@ -74,7 +84,7 @@ pptwise serve deck-dir/ --no-open
 
 ## 在源头修订
 
-- 内容变化只编辑受影响的 `pages/<id>.json`，再依次运行 assemble、validate、audit 和 render。
+- 内容变化只编辑受影响的 `pages/<id>.json`，再 build 一次。
 - 页面顺序、页型、kind、标题或主题绑定变化时，编辑 `deck.spec.json`，运行 `pptwise spec validate`，再重复项目检查。
 - 主题或受众完全不同的新任务应创建新项目，从意图与叙事重新开始。
 

@@ -23,6 +23,8 @@ pptwise narratives --json
 pptwise themes --json
 ```
 
+`themes --json` 的每个主题行都带 `menu`。`menu.content` 的键就是这个主题提供的内容 kind，想知道某个主题支不支持某种 kind，就读这里。`menu.content` 里没有的 kind，用这个主题时 `spec validate` 会报错。不要去翻已安装包的文件找菜单。
+
 IR 组件契约在填页时用 `pptwise inspect deck-dir/ --page <id>` 按页读取。见 `components.md`。
 
 命令输出与工作区文件优先于本指南。提问前先找已有 `deck.spec.json`、deck 内 `theme.json`、工作区 `themes/`，以及用户递来的 Office 品牌文件。
@@ -38,19 +40,19 @@ IR 组件契约在填页时用 `pptwise inspect deck-dir/ --page <id>` 按页读
 3. 论证应该结论先行、按故事展开、分步教学、突出一个画面或数字，还是写成紧凑简报？
 4. 页面应该密、均衡，还是留白？
 
-用 `pptwise narratives --json` 把答案映射成具名预设，或显式的 `strategy`、`pacing`、`audience`。不要从品牌配色推导叙事。先确认这份叙事包，再选择主题。
+用 `pptwise narratives --json` 把答案映射成具名预设，或显式的 `strategy`、`pacing`、`audience`。不要从品牌配色推导叙事。给用户看主题墙时用一句话说出这份叙事包，让用户一次回答同时定下两者。
 
 ## 选择、创建并绑定主题
 
 主题是第二个决定，必须早于 spec。主题是一个完整文件，包含样式、页面菜单、可选品牌规则、`occasions` 与 `identity`。菜单只服务 11 种内容页讲法中的一个明确子集。
 
-先按场合筛选，再按视觉个性强度筛选。用固定样张比较 2 到 4 个候选：
+先按场合，再按视觉个性强度，最后按 `menu` 筛出四到六个候选。让用户看着用自己封面标题画出的候选来选。宿主有 `pptwise_themes` 工具时用它，否则用 CLI 出主题墙：
 
 ```bash
-pptwise theme try brief,swiss,memo
+pptwise theme try brief,swiss,memo --title "Q3 review" --subtitle "Board meeting" --json
 ```
 
-`theme try` 用每个候选渲染同一份固定样张 deck。只有这里会在不绑定 deck 的情况下比较主题。按图选，不要只看名字。
+带 `--title` 时，`theme try` 给每个点名的主题画一张封面和一张正文页，主题数不限，也可以写 `all`，并打印一份清单，列出每页一个 SVG，外加 `contact-sheet.html`。`--lang zh` 或 `--lang en` 决定默认正文页的语言。`--page <file>` 改画这份 deck 自己的一张正文页，写法同页面，带上它的 `kind`。某个主题画不了的页会从该主题那一行里拿掉，清单写明原因。把 SVG 或联系表给用户看。图是给用户的：不要自己读图来评判主题。不带 `--title` 时，`theme try` 用 2 到 4 个主题渲染一份固定的英文样张。
 
 创建就是拷贝。即使从出厂预设开始，也优先创建工作区自有主题：
 
@@ -181,7 +183,7 @@ spec 请求了绑定主题没有提供的 `kind` 时，校验会失败并列出�
 
 ## 开工后的换绑
 
-菜单相同的配色 fork 可以替换绑定主题。更新绑定名称，再重跑 spec validate、assemble、validate、audit 与 render。
+菜单相同的配色 fork 可以替换绑定主题。更新绑定名称，重跑 spec validate，再 build 一次。
 
 菜单不同的主题不是换色，必须回到主题层重写 spec。CLI 会直接比较规范化后的菜单，并拒绝流程内换绑到不同菜单。
 

@@ -13,8 +13,8 @@ import {
 import { CANVAS_H_PX, CANVAS_W_PX } from "../constants"
 import { PptwiseError } from "../errors"
 import { VERSION } from "../version"
-import type { PptxIR } from "../ir"
-import { compileThemeDefinition, type ThemeDefinition } from "../themes/definitions"
+import type { PageKind, PptxIR } from "../ir"
+import { compileThemeDefinition, THEME_DEFINITIONS, type ThemeDefinition } from "../themes/definitions"
 import { componentJsonSchema } from "../ir/json-schema"
 import { PPTX_ICON_NAMES } from "../icons/catalog"
 import { kindJsonSchema } from "../kind-components"
@@ -27,7 +27,7 @@ import { auditDeck, type AuditChecks, type AuditFinding, type AuditReport } from
 import { buildAssetBrief, type AssetBrief, type AssetBriefItem } from "../render/asset-brief"
 import { dropPhrase, parseDropKind, type DropKind } from "../render/drop-marker"
 import { extractBrandTheme, slugify } from "../themes/extract/brand-extract"
-import { ThemeFileSchema, type ThemeFile } from "../themes/schema"
+import { ThemeFileSchema, type Menu, type ThemeFile } from "../themes/schema"
 import { THEME_OCCASIONS } from "../themes/occasions"
 import { CANONICAL_THEME_IDS } from "../themes/index"
 import { RETIRED_THEME_IDS, foldedThemeTarget } from "../themes/retired-ids"
@@ -53,8 +53,26 @@ import {
   type PageFitReport,
 } from "./inspect-format"
 import { writeThemeFile } from "./theme-write"
+import {
+  assembleIssues,
+  auditIssue,
+  formatBuildReport,
+  placeholderIssues,
+  validateIssue,
+  type BuildIssue,
+  type BuildReport,
+} from "./build-report"
 import { loadIrFile, resolveLocalAssets } from "./load-ir"
-import { buildContactSheetHtml, buildPreviewHtml } from "./preview-html"
+import { buildContactSheetHtml, buildPreviewHtml, buildThemeWallHtml } from "./preview-html"
+import {
+  buildThemeWall,
+  formatThemeWall,
+  themeWallContentPage,
+  themeWallLang,
+  THEME_WALL_MANIFEST_FILE,
+  THEME_WALL_SHEET_FILE,
+  type ThemeWallInput,
+} from "./theme-wall"
 import { buildPreviewManifest } from "./preview-manifest"
 import {
   prepareWorkspaceDir,
@@ -1028,6 +1046,26 @@ export function runIcons(asJson: boolean): string {
   return asJson ? JSON.stringify([...PPTX_ICON_NAMES], null, 2) : PPTX_ICON_NAMES.join("\n")
 }
 
+/**
+ * What a theme's menu offers, as `themes --json` lists it: the face each
+ * boundary page type resolves to, and the face each offered content kind
+ * resolves to, in the kind vocabulary's own order. A kind the theme does not
+ * offer is absent. Read off the compiled menu, the same table validate and
+ * render resolve pages through, so it cannot list a page the theme refuses.
+ */
+interface ThemeMenuFaces {
+  cover: string
+  chapter: string
+  ending: string
+  content: Partial<Record<PageKind, string>>
+}
+
+function menuFaces(menu: Menu): ThemeMenuFaces {
+  const content: Partial<Record<PageKind, string>> = {}
+  for (const kind of offeredContentKinds(menu)) content[kind] = menu.content[kind]!.face
+  return { cover: menu.cover.face, chapter: menu.chapter.face, ending: menu.ending.face, content }
+}
+
 interface ThemeListRow {
   id: string
   label: string
@@ -1038,6 +1076,7 @@ interface ThemeListRow {
   source: "builtin" | "pack"
   /** The pack id, for a pack theme. */
   pack?: string
+  menu: ThemeMenuFaces
 }
 
 /** An installed pack that could not be read, listed in place of its themes. */
@@ -1129,7 +1168,7 @@ async function readablePackDefinitions(): Promise<ThemeDefinition[]> {
  *  cannot be read (see {@link readInstalledPackThemes}). */
 function packThemeRows(read: InstalledPackRead): (ThemeListRow | PackErrorRow)[] {
   if (!read.ok) return [{ source: "pack", pack: read.id, error: read.error }]
-  return read.themes.map(({ file }) => ({
+  return read.themes.map(({ file, definition }) => ({
     id: file.id,
     label: file.label ?? file.id,
     colors: { ...file.style.colors },
@@ -1137,6 +1176,7 @@ function packThemeRows(read: InstalledPackRead): (ThemeListRow | PackErrorRow)[]
     identity: file.identity ?? null,
     source: "pack",
     pack: read.id,
+    menu: menuFaces(definition.menu),
   }))
 }
 
@@ -1156,6 +1196,7 @@ export async function runThemes(asJson: boolean): Promise<string> {
       occasions: rec?.occasions ?? [],
       identity: rec?.identity ?? null,
       source: "builtin" as const,
+      menu: menuFaces(THEME_DEFINITIONS[t.id as keyof typeof THEME_DEFINITIONS].menu),
     }
   })
   for (const read of await readInstalledPackThemes()) rows.push(...packThemeRows(read))
@@ -1403,6 +1444,16 @@ export interface ThemeTryOptions {
   cwd?: string
   gitIgnore?: boolean
   runGit?: GitRunner
+  /** `--title`: draw the caller's cover and one content page instead of the fixed sample. */
+  title?: string
+  /** `--subtitle`: the cover's subheading. Needs `title`. */
+  subtitle?: string
+  /** `--lang`: the default content page's language. Needs `title`. */
+  lang?: string
+  /** `--page <file>`: one content page, as a deck page carries it, in place of the default. Needs `title`. */
+  page?: string
+  /** `--json`: print the manifest instead of a summary. Needs `title`. */
+  json?: boolean
 }
 
 function parseThemeTryIds(raw: string): string[] {
@@ -1433,6 +1484,16 @@ function contactSheetSlidesFromIr(
  *  theme and writes a contact sheet. Bound decks still render only their
  *  bound theme. */
 export async function runThemeTry(idsRaw: string, opts: ThemeTryOptions = {}): Promise<string> {
+  if (opts.title !== undefined) return runThemeWall(idsRaw, { ...opts, title: opts.title })
+  const needsTitle = [
+    ["--subtitle", opts.subtitle],
+    ["--lang", opts.lang],
+    ["--page", opts.page],
+    ["--json", opts.json || undefined],
+  ].filter(([, value]) => value !== undefined)
+  if (needsTitle.length > 0) {
+    throw new PptwiseError(`${needsTitle.map(([flag]) => flag).join(", ")} draw the caller's own pages and need --title`)
+  }
   const cwd = opts.cwd ?? process.cwd()
   const ids = parseThemeTryIds(idsRaw)
   const columns: { id: string; slides: { type: string; label: string; svg: string }[] }[] = []
@@ -1455,27 +1516,108 @@ export async function runThemeTry(idsRaw: string, opts: ThemeTryOptions = {}): P
     const svgs = ir.slides.map((_, index) => renderSlideSvg(ir, index, { theme: resolved.definition }))
     columns.push({ id: resolved.id, slides: contactSheetSlidesFromIr(ir, svgs) })
   }
-  let resolvedOut: string
-  const extraNotes: string[] = []
-  if (opts.output !== undefined) {
-    resolvedOut = resolve(cwd, opts.output)
-    await mkdir(resolvedOut, { recursive: true })
-  } else {
-    const projectHit = await findConfig(cwd)
-    const location = resolveWorkspaceLocation({
-      cwd,
-      projectConfigPath: projectHit?.path,
-      outDir: projectHit?.config.outDir,
-      target: "theme-try",
-      isDir: true,
-    })
-    extraNotes.push(...(await prepareWorkspaceDir(location, { gitIgnore: opts.gitIgnore, runGit: opts.runGit })))
-    resolvedOut = location.dir
-  }
+  const { resolvedOut, extraNotes } = await themeTryOutDir(cwd, opts)
   const htmlPath = join(resolvedOut, "contact-sheet.html")
   await writeFile(htmlPath, buildContactSheetHtml({ title: "theme try", themes: columns }))
   const ok = `wrote contact sheet to ${htmlPath}`
   return extraNotes.length > 0 ? `${ok}\n${extraNotes.join("\n")}` : ok
+}
+
+/** `-o`, or `.pptwise/theme-try/` under the project root. */
+async function themeTryOutDir(cwd: string, opts: ThemeTryOptions): Promise<{ resolvedOut: string; extraNotes: string[] }> {
+  if (opts.output !== undefined) {
+    const resolvedOut = resolve(cwd, opts.output)
+    await mkdir(resolvedOut, { recursive: true })
+    return { resolvedOut, extraNotes: [] }
+  }
+  const projectHit = await findConfig(cwd)
+  const location = resolveWorkspaceLocation({
+    cwd,
+    projectConfigPath: projectHit?.path,
+    outDir: projectHit?.config.outDir,
+    target: "theme-try",
+    isDir: true,
+  })
+  const extraNotes = await prepareWorkspaceDir(location, { gitIgnore: opts.gitIgnore, runGit: opts.runGit })
+  return { resolvedOut: location.dir, extraNotes }
+}
+
+/**
+ * The names a wall draws: a comma-separated list of one or more, or `all`
+ * for every theme `pptwise themes` lists (the presets, then every readable
+ * pack theme). An unreadable pack is left out with its reason on stderr,
+ * the way `schema --kind` leaves it out.
+ */
+async function themeWallNames(raw: string): Promise<string[]> {
+  if (raw.trim() === "all") {
+    return [...CANONICAL_THEME_IDS, ...(await readablePackDefinitions()).map((definition) => definition.id)]
+  }
+  const ids = raw.split(",").map((part) => part.trim()).filter((part) => part.length > 0)
+  if (ids.length === 0) throw new PptwiseError("pptwise theme try expects theme ids, or all")
+  const seen = new Set<string>()
+  for (const id of ids) {
+    if (seen.has(id)) throw new PptwiseError(`pptwise theme try has duplicate theme id "${id}"`)
+    seen.add(id)
+  }
+  return ids
+}
+
+/**
+ * `pptwise theme try <ids|all> --title <text>`: the caller's cover and one
+ * content page in each named theme, as SVG files, a manifest naming them,
+ * and a contact sheet. See `./theme-wall.ts`.
+ */
+async function runThemeWall(idsRaw: string, opts: ThemeTryOptions & { title: string }): Promise<string> {
+  const cwd = opts.cwd ?? process.cwd()
+  const title = opts.title.trim()
+  if (title === "") throw new PptwiseError("--title is empty. Pass the deck's cover title")
+  const names = await themeWallNames(idsRaw)
+  const themes: ThemeWallInput["themes"][number][] = []
+  for (const name of names) {
+    const resolved = await resolveThemeByName(name, { startDir: cwd })
+    const source = resolved.kind === "builtin" ? "builtin" : resolved.pack !== undefined ? "pack" : "file"
+    themes.push({ id: resolved.id, label: resolved.definition.label ?? resolved.id, source, definition: resolved.definition })
+  }
+  let contentPage: Record<string, unknown> | undefined
+  if (opts.page !== undefined) {
+    const pagePath = resolve(cwd, opts.page)
+    let text: string
+    try {
+      text = await readFile(pagePath, "utf8")
+    } catch {
+      throw new PptwiseError(`cannot read --page file: ${pagePath}`)
+    }
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(text)
+    } catch (e) {
+      throw new PptwiseError(`--page file is not JSON: ${pagePath}: ${e instanceof Error ? e.message : String(e)}`)
+    }
+    contentPage = themeWallContentPage(parsed, pagePath)
+  }
+  const subtitle = opts.subtitle?.trim()
+  const wall = buildThemeWall({
+    title,
+    ...(subtitle ? { subtitle } : {}),
+    lang: themeWallLang(title, opts.lang),
+    ...(contentPage !== undefined ? { contentPage } : {}),
+    themes,
+  })
+  const { resolvedOut, extraNotes } = await themeTryOutDir(cwd, opts)
+  // A page this run left out must not leave the last run's drawing of it
+  // under the name the manifest would have given it.
+  for (const theme of themes) {
+    for (const type of ["cover", "content"]) await rm(join(resolvedOut, `${theme.id}-${type}.svg`), { force: true })
+  }
+  for (const file of wall.files) await writeFile(join(resolvedOut, file.name), file.svg)
+  await writeFile(
+    join(resolvedOut, THEME_WALL_SHEET_FILE),
+    buildThemeWallHtml({ title, columns: ["cover", "content"], rows: wall.rows }),
+  )
+  await writeFile(join(resolvedOut, THEME_WALL_MANIFEST_FILE), `${JSON.stringify(wall.manifest, null, 2)}\n`)
+  if (opts.json) return JSON.stringify({ dir: resolvedOut, ...wall.manifest }, null, 2)
+  const summary = formatThemeWall(wall.manifest, resolvedOut)
+  return extraNotes.length > 0 ? `${summary}\n${extraNotes.join("\n")}` : summary
 }
 
 /**
@@ -1828,6 +1970,63 @@ function droppedContentNote(ir: PptxIR, svgs: readonly string[]): string | null 
   )
 }
 
+/** One SVG per page, `NNN-<type>.svg`, the names `preview` has always used. */
+async function writeSlideSvgs(outDir: string, ir: PptxIR, svgs: readonly string[]): Promise<string[]> {
+  const svgNames: string[] = []
+  for (let i = 0; i < ir.slides.length; i++) {
+    const name = `${String(i + 1).padStart(3, "0")}-${ir.slides[i]!.type}.svg`
+    svgNames.push(name)
+    await writeFile(join(outDir, name), svgs[i]!)
+  }
+  return svgNames
+}
+
+/**
+ * `preview.html` and `manifest.json` beside the SVGs `writeSlideSvgs` wrote,
+ * with the audit run once for both (skipped while a page is unfilled, see
+ * {@link buildDeckAuditAndHtml}). `preview --html` and `build` both write
+ * through here, so the two bundles are the same files.
+ */
+async function writePreviewReview(
+  outDir: string,
+  ir: PptxIR,
+  svgs: string[],
+  svgNames: readonly string[],
+  theme: ThemeDefinition | undefined,
+): Promise<{ htmlPath: string; manifestPath: string; findings: AuditFinding[]; checks?: AuditChecks }> {
+  const { html, findings, checks } = buildDeckAuditAndHtml(ir, svgs, theme)
+  const htmlPath = join(outDir, "preview.html")
+  await writeFile(htmlPath, html)
+
+  // The machine-readable half of the same bundle (`./preview-manifest.ts`).
+  // A harness with its own UI reads this and draws the deck however it
+  // likes; one without a UI opens the HTML sitting next to it. Neither has
+  // to re-implement the renderer, which is the only way there stays exactly
+  // one rendering path.
+  const hasPlaceholder = ir.slides.some((s) => s.placeholder)
+  const manifest = buildPreviewManifest({
+    title: ir.filename,
+    pptwiseVersion: VERSION,
+    width: CANVAS_W_PX,
+    height: CANVAS_H_PX,
+    slides: ir.slides.map((slide, i) => ({
+      index: i,
+      type: slide.type ?? "content",
+      id: slide.id,
+      placeholder: slide.placeholder,
+      file: svgNames[i]!,
+    })),
+    findings: findings.map((f) => ({ page: f.page, code: f.code, message: f.message })),
+    checks,
+    auditNote: hasPlaceholder
+      ? "audit skipped — deck has unfilled placeholder pages"
+      : undefined,
+  })
+  const manifestPath = join(outDir, "manifest.json")
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+  return { htmlPath, manifestPath, findings, ...(checks !== undefined ? { checks } : {}) }
+}
+
 export async function runPreview(irPath: string, outDir?: string, opts: PreviewOptions = {}): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
   const { ir, theme, svgs, normalized, isDir, resolvedTarget } = await renderDeckSlides(irPath, {
@@ -1835,12 +2034,7 @@ export async function runPreview(irPath: string, outDir?: string, opts: PreviewO
   })
   // After render, not before (S1 review carry) — see this function's own doc comment.
   const { resolvedOut, extraNotes } = await resolvePreviewOutDir(cwd, outDir, resolvedTarget, isDir, opts)
-  const svgNames: string[] = []
-  for (let i = 0; i < ir.slides.length; i++) {
-    const name = `${String(i + 1).padStart(3, "0")}-${ir.slides[i]!.type}.svg`
-    svgNames.push(name)
-    await writeFile(join(resolvedOut, name), svgs[i]!)
-  }
+  const svgNames = await writeSlideSvgs(resolvedOut, ir, svgs)
   const ok = `wrote ${ir.slides.length} SVG files to ${resolvedOut}`
   const notes: string[] = [...extraNotes]
   const aliasNote = normalizedNote(normalized)
@@ -1848,37 +2042,7 @@ export async function runPreview(irPath: string, outDir?: string, opts: PreviewO
   const dropNote = droppedContentNote(ir, svgs)
   if (dropNote) notes.push(dropNote)
   if (opts.htmlOut) {
-    const { html, findings, checks } = buildDeckAuditAndHtml(ir, svgs, theme)
-    const htmlPath = join(resolvedOut, "preview.html")
-    await writeFile(htmlPath, html)
-
-    // The machine-readable half of the same bundle (`./preview-manifest.ts`).
-    // A harness with its own UI reads this and draws the deck however it
-    // likes; one without a UI opens the HTML sitting next to it. Neither has
-    // to re-implement the renderer, which is the only way there stays exactly
-    // one rendering path.
-    const hasPlaceholder = ir.slides.some((s) => s.placeholder)
-    const manifest = buildPreviewManifest({
-      title: ir.filename,
-      pptwiseVersion: VERSION,
-      width: CANVAS_W_PX,
-      height: CANVAS_H_PX,
-      slides: ir.slides.map((slide, i) => ({
-        index: i,
-        type: slide.type ?? "content",
-        id: slide.id,
-        placeholder: slide.placeholder,
-        file: svgNames[i]!,
-      })),
-      findings: findings.map((f) => ({ page: f.page, code: f.code, message: f.message })),
-      checks,
-      auditNote: hasPlaceholder
-        ? "audit skipped — deck has unfilled placeholder pages"
-        : undefined,
-    })
-    const manifestPath = join(resolvedOut, "manifest.json")
-    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
-
+    const { htmlPath, manifestPath, findings } = await writePreviewReview(resolvedOut, ir, svgs, svgNames, theme)
     notes.push(`note: wrote self-contained preview to ${htmlPath}`)
     notes.push(`note: wrote machine-readable page manifest to ${manifestPath}`)
     if (findings.length > 0) {
@@ -1886,6 +2050,149 @@ export async function runPreview(irPath: string, outDir?: string, opts: PreviewO
     }
   }
   return notes.length > 0 ? `${ok}\n${notes.join("\n")}` : ok
+}
+
+export interface BuildOptions {
+  /** `--json`: print the {@link BuildReport} instead of a summary. */
+  json?: boolean
+  cwd?: string
+  /** `--no-git-ignore` sets this false. */
+  gitIgnore?: boolean
+  /** Injectable git runner for tests. Production leaves this unset. */
+  runGit?: GitRunner
+}
+
+export interface BuildCliResult {
+  output: string
+  /** `false` when the deck needs revision. The CLI exits 1 on it. */
+  ok: boolean
+}
+
+/**
+ * `pptwise build <target> [--json]`: assemble, validate, audit, preview and
+ * render in one pass, reported as one {@link BuildReport} (`./build-report.ts`).
+ *
+ * Everything lands in the deck's workspace folder, `.pptwise/<place>/`, the
+ * one `render` and `preview` default to. There is no `-o`: a deck has one
+ * final .pptx, at `.pptwise/<place>/<deck>.pptx`, and `build` is the command
+ * that keeps it honest. It is written only when every check passes, and a
+ * build that does not pass removes the one an earlier build left there, so a
+ * .pptx at that path always matches the sources the last build read. Nothing
+ * else in that folder, or anywhere else, is removed.
+ *
+ * The pages are drawn whenever validate passes, audit findings or not, so the
+ * deck can be looked at while it is being fixed. A target that cannot be
+ * found, or a configuration that cannot be read, is not a deck to revise:
+ * those fail the command as every other one does.
+ */
+export async function runBuild(target: string, opts: BuildOptions = {}): Promise<BuildCliResult> {
+  const report = await buildDeck(target, opts)
+  return {
+    output: opts.json ? JSON.stringify(report, null, 2) : formatBuildReport(report),
+    ok: report.status === "ok",
+  }
+}
+
+/**
+ * The page ids `deck.spec.json` lists, in order, read only to place an
+ * assemble failure on its page. A spec that cannot be read or parsed gives
+ * none: assemble's own message already says what is wrong with it.
+ */
+async function specPageIds(deckDir: string): Promise<string[]> {
+  try {
+    const spec = JSON.parse(await readFile(join(deckDir, SPEC_FILENAME), "utf8")) as { pages?: { id?: unknown }[] }
+    return Array.isArray(spec.pages) ? spec.pages.map((page) => (typeof page?.id === "string" ? page.id : "")) : []
+  } catch {
+    return []
+  }
+}
+
+async function buildDeck(target: string, opts: BuildOptions): Promise<BuildReport> {
+  const cwd = opts.cwd ?? process.cwd()
+  const [projectHit, userHit] = await readConfigs(cwd)
+  const location = await locateDeckTarget(target, cwd, projectHit, userHit)
+  const { isDir, resolvedTarget } = location
+  if (!(await pathExists(resolvedTarget))) {
+    throw new PptwiseError(`nothing to build at ${resolvedTarget}: pass a deck project directory, an IR JSON file, or a deck name`)
+  }
+  const workspace = resolveWorkspaceLocation({
+    cwd,
+    projectConfigPath: projectHit?.path,
+    outDir: projectHit?.config.outDir,
+    target: resolvedTarget,
+    isDir,
+  })
+  const pptxPath = join(workspace.dir, `${workspace.name}.pptx`)
+  const report: BuildReport = {
+    status: "needs_revision",
+    target: resolvedTarget,
+    theme: undefined,
+    pageCount: undefined,
+    audited: false,
+    errors: [],
+    warnings: [],
+    preview: null,
+    pptx: null,
+    notes: [],
+  }
+  const needsRevision = async (errors: BuildIssue[]): Promise<BuildReport> => {
+    // The .pptx an earlier build wrote describes sources that no longer pass.
+    await rm(pptxPath, { force: true })
+    return { ...report, status: "needs_revision", errors }
+  }
+
+  const themeInputs = await collectThemeInputs({ startDir: cwd, ...location })
+  let loaded: LoadedDeckTarget
+  let theme: ThemeDefinition | undefined
+  try {
+    loaded = await readDeckTarget(location, themeInputs, cwd, projectHit)
+    theme = (await applyDeckConfig(loaded.raw, themeInputs))?.definition
+  } catch (e) {
+    if (!(e instanceof PptwiseError)) throw e
+    return needsRevision(assembleIssues(e.message, isDir ? await specPageIds(resolvedTarget) : []))
+  }
+  const v = validateIr(loaded.raw, { theme, missingAssetPath: loaded.missingAssetPath })
+  report.warnings = (v.warnings ?? []).map((issue) => validateIssue(issue, isDir))
+  if (!v.ok) return needsRevision(v.errors.map((issue) => validateIssue(issue, isDir)))
+  const ir = v.ir!
+  report.theme = ir.theme.id
+  report.pageCount = ir.slides.length
+  try {
+    await resolveLocalAssets(ir, loaded.baseDir, loaded.workspaceAssetsDir)
+  } catch (e) {
+    if (!(e instanceof PptwiseError)) throw e
+    return needsRevision([{ stage: "validate", message: e.message }])
+  }
+
+  const svgs = ir.slides.map((_, i) => renderSlideSvg(ir, i, { theme }))
+  report.notes.push(...(await prepareWorkspaceDir(workspace, { gitIgnore: opts.gitIgnore, runGit: opts.runGit })))
+  await pruneRenderedSvgs(workspace.dir)
+  const svgNames = await writeSlideSvgs(workspace.dir, ir, svgs)
+  const review = await writePreviewReview(workspace.dir, ir, svgs, svgNames, theme)
+  report.audited = review.checks !== undefined
+  report.preview = {
+    dir: workspace.dir,
+    html: review.htmlPath,
+    manifest: review.manifestPath,
+    pages: ir.slides.map((slide, i) => ({
+      page: i + 1,
+      ...(slide.id !== undefined ? { id: slide.id } : {}),
+      type: slide.type ?? "content",
+      file: join(workspace.dir, svgNames[i]!),
+    })),
+  }
+  const errors = [...placeholderIssues(ir, isDir), ...review.findings.map((finding) => auditIssue(finding, isDir))]
+  if (errors.length > 0) return needsRevision(errors)
+
+  let bytes: Uint8Array
+  try {
+    bytes = await generatePptx(ir, { theme })
+  } catch (e) {
+    if (!(e instanceof PptwiseError)) throw e
+    return needsRevision([{ stage: "render", message: e.message }])
+  }
+  await writeFile(pptxPath, bytes)
+  return { ...report, status: "ok", pptx: pptxPath }
 }
 
 export interface AssembleOptions {

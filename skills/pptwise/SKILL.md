@@ -44,9 +44,15 @@ pptwise packs sync
 pptwise themes --json
 ```
 
-`packs sync` installs or updates the user's content packs when a license is configured, so `themes --json` lists their themes with `"source": "pack"`. Without a license it prints one line and exits 0. If it fails, relay its message and continue with what is installed. The IR component contract is read per page while filling, never whole. See step 5.
+`packs sync` installs or updates the user's content packs when a license is configured, so `themes --json` lists their themes with `"source": "pack"`. Without a license it prints one line and exits 0. If it fails, relay its message and continue with what is installed. Each theme row carries its `menu`: the keys of `menu.content` are the content kinds it offers. The IR component contract is read per page while filling, never whole. See step 5.
 
 Scan the workspace before asking questions. An existing `deck.spec.json` already records the narrative, bound theme, page order, headings, and content kinds. A deck-local `theme.json`, a workspace `themes/` file, a named theme, or a supplied `.thmx`, `.potx`, or branded `.pptx` is a theme signal.
+
+## Show the user before you check it yourself
+
+Two decisions belong to the user: the theme and the outline. At each, show it in the conversation and ask before going on. When the user has said to go ahead without asking ("just do it", "you decide"), do not ask, but still show the theme wall and the outline, say what you picked, and continue.
+
+Show pages early and often. The user should see a page within the first minute, not at the end. Your own checks run on `pptwise build` reports. Never convert pages to PNG or read page images to judge them: the report already names every problem, and the pictures are for the user.
 
 ## Workflow
 
@@ -58,7 +64,7 @@ Record four facts before choosing how to tell the story: audience, desired outco
 
 Choose the narrative before the theme. The narrative decides argument strategy, pacing, and tone. Use a named preset when it matches, or write explicit `strategy`, `pacing`, and `audience` axes. Pacing controls editorial budgets and the body-text baseline. Narrative never chooses a page face.
 
-Confirm the narrative package before continuing. See `references/spec.md` for the compact interview and spec example.
+Say the narrative you chose in one line when you show the theme wall, so one answer from the user settles both. See `references/spec.md` for the compact interview and spec example.
 
 ### 3. Bind a theme
 
@@ -71,19 +77,15 @@ Resolve theme names in this order:
 3. Installed content packs (`pptwise packs list`).
 4. The 22 factory presets.
 
-Use request and workspace signals to shortlist themes by `occasions` and `identity`. Compare two to four candidates with the fixed fitting-room sample:
+Shortlist four to six themes with `occasions`, `identity`, and `menu` against the request. Then show the user their own cover title in them. When a `pptwise_themes` tool exists, call it with the deck's cover title, subtitle, and the shortlist as `themes`: the user sees each theme's cover and one content page in the conversation, and you get the theme ids back. Otherwise draw the same wall from the CLI, with comma-separated ids or `all`:
 
 ```bash
-pptwise theme try brief,swiss,memo
+pptwise theme try <ids> --title "<cover title>" --subtitle "<subtitle>" --json
 ```
 
-Create means copy. With no existing asset, copy the closest preset into the workspace. With an Office brand file, extract its colors and fonts while copying a suitable donor menu. For a color change, fork the current theme so the whole palette is rederived and the original stays untouched.
+It prints a manifest naming one cover and one content SVG per theme, plus `contact-sheet.html`. Show the user those SVGs where the host can display images, or hand over the contact sheet's path. Then ask which theme they want, or name your pick when they left it to you.
 
-```bash
-pptwise theme new --from brief --id acme-report
-pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief
-pptwise theme fork acme --primary '#0B5FFF' --id acme-blue
-```
+Create means copy: copy the closest preset into the workspace, extract a brand from an Office file, or fork for a color change. The commands are in `references/spec.md`.
 
 Write the selected theme name into `deck.spec.json` before writing page content. Bound deck commands use that name. There is no render-time theme switch.
 
@@ -102,6 +104,8 @@ A deck prints no page number, organization, date, or confidentiality line unless
 
 Run `pptwise spec validate deck.spec.json` until it prints `OK`. A content `kind` outside the bound theme menu is a hard error that lists what the menu offers. Do not relabel the page merely to silence the error. Change the page's intent only when that is semantically honest, or return to the theme step.
 
+The validated spec is the outline. Show it to the user as one line per page: number, page type or `kind`, heading, and what the page says. Call `pptwise_preview` on the deck directory as well when it exists, so the user sees the cover and the page sequence before any page is written. Ask for changes unless the user said to go ahead.
+
 The 11 words and their boundaries are in `references/layouts.md`. Full spec guidance and theme creation are in `references/spec.md`.
 
 ### 5. Fill pages
@@ -119,28 +123,21 @@ pptwise inspect deck-dir/ --page <id> --fit
 pptwise icons
 ```
 
-After each batch:
+After each batch, build the deck. Use the `pptwise_build` tool when it exists: it shows the user the pages drawn so far. Otherwise run:
 
 ```bash
-pptwise assemble deck-dir/
-pptwise validate deck-dir/
+pptwise build deck-dir/ --json
 ```
 
-Fix every error and rerun both commands. Restructure content instead of deleting what validation caught.
+Each entry in `errors` names its `page`, the `file` and `field` to edit, and the check's own fix. Fix every error and build again. Restructure content instead of deleting what a check caught. Pages not written yet are reported as such, which is expected until the last batch.
 
-### 6. Audit, review, and render
+### 6. Build, review, and deliver
 
-When all pages are filled, run:
+When every page is written, build until `status` is `ok`. Build runs assemble, validate, audit, preview, and render in one pass, and writes the `.pptx` only when all of them pass. `pptx` in the report is the deck's one final file, under `.pptwise/<deck>/`.
 
-```bash
-pptwise audit deck-dir/
-pptwise preview deck-dir/ --html
-pptwise render deck-dir/
-```
+Deliver exactly that file. Do not run `render` again, copy, rename, or export another `.pptx`. On DSH, hand it over with `present`. Elsewhere report its absolute path. Without an in-conversation preview tool, also give the report's `preview.html` path, or run `pptwise serve deck-dir/ --no-open` for a live browser review.
 
-`audit` must exit 0 before delivery. Add `--pixels` when text sits over photo backgrounds. Use an available `pptwise_preview` tool first. Otherwise hand over the printed `preview.html` path, or run `pptwise serve deck-dir/ --no-open` for a live browser review. Report the absolute `.pptx` path printed by `render`.
-
-Use `--draft` or `--allow-dropped-content` only when the user explicitly requests that compromise.
+Add `pptwise audit deck-dir/ --pixels` when text sits over photo backgrounds. Use `render --draft` or `--allow-dropped-content` only when the user explicitly requests that compromise.
 
 ## Fast component routing
 
@@ -175,4 +172,4 @@ Use `--draft` or `--allow-dropped-content` only when the user explicitly request
 - `references/density.md`: pacing, capacity, full-page components, and local decoration.
 - `references/branding.md`: footer marks (page numbers, organization, confidentiality), deck branding posture, frameless pages, logos, and brand extraction.
 - `references/images.md`: image assets, stock search, generation, and `photo` versus `evidence`.
-- `references/validate.md`: assemble, validate, audit, preview, serve, render, and revision loops.
+- `references/validate.md`: build, assemble, validate, audit, preview, serve, render, and revision loops.

@@ -31,7 +31,7 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { engineReady, missingEngineMessage, packageVersion } from './engine.js'
-import { cliLauncher, createPreviewService, TOOL_NAME } from './preview-tool.js'
+import { BUILD_TOOL_NAME, cliLauncher, createPreviewService, THEMES_TOOL_NAME, TOOL_NAME } from './preview-tool.js'
 
 const SKILL_FILE_URL = new URL('../skills/pptwise/SKILL.md', import.meta.url)
 const SKILL_DIR = fileURLToPath(new URL('../skills/pptwise/', import.meta.url))
@@ -42,6 +42,7 @@ export const inject = ['skills', 'tools']
 
 export const SKILL_NAME = 'pptwise'
 export const PREVIEW_TOOL_NAME = TOOL_NAME
+export { BUILD_TOOL_NAME, THEMES_TOOL_NAME }
 
 /**
  * Split SKILL.md into { description, body }. DSH's runtime registry does
@@ -157,6 +158,16 @@ export function apply(ctx) {
     ctx.tools.register(preview.tool)
   } catch (error) {
     console.error(`[pptwise] preview tool registration skipped: ${error}`)
+  }
+  // The theme wall and the one-pass build share the preview's store and
+  // route: their cards fetch by id from the same place. Each registers on
+  // its own, so one failing costs only itself.
+  for (const tool of [preview.themesTool, preview.buildTool]) {
+    try {
+      ctx.tools.register(tool)
+    } catch (error) {
+      console.error(`[pptwise] ${tool.name} tool registration skipped: ${error}`)
+    }
   }
 
   // The route the preview card fetches a rendered deck from. `webServer`

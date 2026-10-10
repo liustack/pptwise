@@ -122,8 +122,35 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
     const zh = read(ZH_REL)
     expect(en).toContain("intent -> narrative -> theme binding -> spec with kind -> fill -> render")
     expect(zh).toContain("意图 -> 叙事 -> 主题绑定 -> 带 kind 的 spec -> 填充 -> 渲染")
-    for (const heading of ["### 1. Intent", "### 2. Narrative", "### 3. Bind a theme", "### 4. Write the spec with `kind`", "### 5. Fill pages", "### 6. Audit, review, and render"]) {
+    for (const heading of ["### 1. Intent", "### 2. Narrative", "### 3. Bind a theme", "### 4. Write the spec with `kind`", "### 5. Fill pages", "### 6. Build, review, and deliver"]) {
       expect(en).toContain(heading)
+    }
+  })
+
+  it("shows the user the theme and the outline, checks through build, and delivers its one file", () => {
+    const en = read(EN_REL)
+    const zh = read(ZH_REL)
+    // The theme wall comes from the tool where there is one, and from the CLI
+    // with the user's own title everywhere else.
+    for (const text of [en, zh]) {
+      expect(text).toContain("`pptwise_themes`")
+      expect(text).toContain('pptwise theme try <ids> --title "<cover title>" --subtitle "<subtitle>" --json')
+      expect(text).toContain("`pptwise_preview`")
+      expect(text).toContain("`pptwise_build`")
+      expect(text).toContain("pptwise build deck-dir/ --json")
+      expect(text).toContain("`present`")
+      // The old five-command tail is gone from the playbook: build runs it.
+      expect(text).not.toMatch(/^pptwise render deck-dir\/$/m)
+      expect(text).not.toMatch(/^pptwise audit deck-dir\/$/m)
+    }
+    expect(en).toContain("Two decisions belong to the user: the theme and the outline.")
+    expect(en).toContain("Never convert pages to PNG or read page images to judge them")
+    expect(en).toContain("Deliver exactly that file. Do not run `render` again, copy, rename, or export another `.pptx`.")
+    expect(zh).toContain("主题和大纲两个决定归用户。")
+    expect(zh).toContain("不要把页面转成 PNG 或读页面图片来判断")
+    expect(zh).toContain("只交付这一份文件。")
+    for (const rel of [REF("validate.md"), REF("validate.zh-CN.md")]) {
+      expect(read(rel)).toContain("pptwise build deck-dir/ --json")
     }
   })
 
