@@ -6,6 +6,7 @@ import {
   runAssetBrief,
   runAudit,
   runBrandExtract,
+  runBuild,
   runDisassemble,
   runIcons,
   runInspect,
@@ -80,6 +81,27 @@ program
       }
     },
   )
+
+program
+  .command("build")
+  .description(
+    "Assemble, validate, audit, preview and render a deck in one pass. Writes the pages and, only when every check passes, the deck's one .pptx under .pptwise/<deck>/ — exits 1 when the deck needs revision",
+  )
+  .argument("<target>", "deck project directory, IR JSON file, or bare name under ~/.pptwise/decks")
+  .option("--json", "print the full report: status, every problem with its page, file and field, the preview, and the .pptx path")
+  .option("--no-git-ignore", "do not add .pptwise/ to this repository's local exclude file")
+  .addHelpText("after", "\nExample:\n  $ pptwise build my-deck/ --json")
+  .action(async (target: string, opts: { json?: boolean; gitIgnore?: boolean }) => {
+    try {
+      const { output, ok } = await runBuild(target, { json: opts.json, gitIgnore: opts.gitIgnore, cwd: process.cwd() })
+      console.log(output)
+      // exitCode rather than exit(): a long --json report piped to another
+      // process is flushed in full before the process ends.
+      if (!ok) process.exitCode = 1
+    } catch (e) {
+      fail(e)
+    }
+  })
 
 program
   .command("validate")

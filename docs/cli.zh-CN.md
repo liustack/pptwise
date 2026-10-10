@@ -26,12 +26,15 @@ pptwise render deck-dir/
 pptwise preview deck-dir/ --html
 ```
 
+`pptwise build deck-dir/ --json` 一次跑完 assemble、validate、audit、preview 和 render，把所有问题列在一份清单里。见 [Build](#build)。
+
 每轮验证之间最多填四页，写每一页之前先用 `inspect` 读它的契约。需要用户在浏览器中实时评审时使用 `serve`。
 
 ## 命令索引
 
 | command | 作用 |
 | --- | --- |
+| `build <target>` | 一次跑完 assemble、validate、audit、preview 和 render，返回一份结构化结论。 |
 | `render <target>` | 渲染原生可编辑 PPTX。 |
 | `validate <target>` | 验证 IR、主题绑定、菜单 kind、组件、资产与内容质量。 |
 | `audit <target>` | 运行确定性视觉与几何检查。 |
@@ -68,6 +71,50 @@ pptwise preview deck-dir/ --html
 | `self-update` | 更新全局安装。 |
 
 `layouts` 暴露的是维护者使用的引擎词汇。Deck 作者与创作 agent 只选择内容 `kind`，不写内部脸 id。
+
+## Build
+
+```bash
+pptwise build <target> [--json] [--no-git-ignore]
+```
+
+`build` 组装 deck 工程（或读取 IR 文件），校验，画出每一页，检查画出来的结果，再渲染 `.pptx`，全部在一个进程里、基于对源文件的同一次读取完成。deck 通过全部检查时以 0 退出，需要修改时以 1 退出。
+
+输出位置就是 `render` 和 `preview` 的默认位置：页面、`preview.html` 和 `manifest.json` 写到 `.pptwise/<place>/`，deck 唯一的 `.pptx` 写到 `.pptwise/<place>/<deck>.pptx`，和 `render` 写的是同一个路径。没有 `-o`。只有全部检查通过才写 `.pptx`，没通过的 build 会删掉上一次 build 留在这个路径的文件，所以那里的文件永远和最近一次 build 读到的源文件一致。只要 validate 通过就会画出页面，有 audit 问题的 deck 也照样能看。
+
+`--json` 打印结论。`status` 是 `ok` 或 `needs_revision`。`errors` 的每一条写明是哪项检查报的（`stage`：`assemble`、`validate`、`audit` 或 `render`），落在哪里（`page`、`pageId`，deck 工程还有要改的 `file`，即 `pages/<id>.json` 或 `deck.spec.json`，以及其中的 `field`），以及检查自己的 `message`，检查知道怎么改时会写在里面。audit 的条目另带 `code` 和 `detail`。没写的页面算一条错误，会写明要写哪个页面文件，在所有页面写完之前不跑 audit。`warnings` 是 validate 的警告，从不阻止写出 `.pptx`。
+
+```json
+{
+  "status": "needs_revision",
+  "target": "/work/weekly",
+  "theme": "brief",
+  "pageCount": 6,
+  "audited": true,
+  "errors": [
+    {
+      "stage": "audit",
+      "page": 2,
+      "pageId": "why",
+      "file": "pages/why.json",
+      "code": "monotony",
+      "message": "pages 2-4 repeat component type \"bullets\" (3 consecutive pages) — vary the lead component across neighbouring pages (mix bullets, chart, kpi, blockquote) so the deck does not read as a repeating template",
+      "detail": { "componentType": "bullets", "fromPage": 2, "toPage": 4, "length": 3 }
+    }
+  ],
+  "warnings": [],
+  "preview": {
+    "dir": "/work/.pptwise/weekly",
+    "html": "/work/.pptwise/weekly/preview.html",
+    "manifest": "/work/.pptwise/weekly/manifest.json",
+    "pages": [{ "page": 1, "id": "cover", "type": "cover", "file": "/work/.pptwise/weekly/001-cover.svg" }]
+  },
+  "pptx": null,
+  "notes": []
+}
+```
+
+通过的 build 是 `"status": "ok"`，`errors` 为空，`pptx` 是这份 deck 的 `.pptx` 的绝对路径。目标不存在、配置文件读不了时，命令直接失败，不产出结论。
 
 ## Render
 

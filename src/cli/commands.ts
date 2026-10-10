@@ -53,6 +53,15 @@ import {
   type PageFitReport,
 } from "./inspect-format"
 import { writeThemeFile } from "./theme-write"
+import {
+  assembleIssues,
+  auditIssue,
+  formatBuildReport,
+  placeholderIssues,
+  validateIssue,
+  type BuildIssue,
+  type BuildReport,
+} from "./build-report"
 import { loadIrFile, resolveLocalAssets } from "./load-ir"
 import { buildContactSheetHtml, buildPreviewHtml, buildThemeWallHtml } from "./preview-html"
 import {
@@ -1961,6 +1970,63 @@ function droppedContentNote(ir: PptxIR, svgs: readonly string[]): string | null 
   )
 }
 
+/** One SVG per page, `NNN-<type>.svg`, the names `preview` has always used. */
+async function writeSlideSvgs(outDir: string, ir: PptxIR, svgs: readonly string[]): Promise<string[]> {
+  const svgNames: string[] = []
+  for (let i = 0; i < ir.slides.length; i++) {
+    const name = `${String(i + 1).padStart(3, "0")}-${ir.slides[i]!.type}.svg`
+    svgNames.push(name)
+    await writeFile(join(outDir, name), svgs[i]!)
+  }
+  return svgNames
+}
+
+/**
+ * `preview.html` and `manifest.json` beside the SVGs `writeSlideSvgs` wrote,
+ * with the audit run once for both (skipped while a page is unfilled, see
+ * {@link buildDeckAuditAndHtml}). `preview --html` and `build` both write
+ * through here, so the two bundles are the same files.
+ */
+async function writePreviewReview(
+  outDir: string,
+  ir: PptxIR,
+  svgs: string[],
+  svgNames: readonly string[],
+  theme: ThemeDefinition | undefined,
+): Promise<{ htmlPath: string; manifestPath: string; findings: AuditFinding[]; checks?: AuditChecks }> {
+  const { html, findings, checks } = buildDeckAuditAndHtml(ir, svgs, theme)
+  const htmlPath = join(outDir, "preview.html")
+  await writeFile(htmlPath, html)
+
+  // The machine-readable half of the same bundle (`./preview-manifest.ts`).
+  // A harness with its own UI reads this and draws the deck however it
+  // likes; one without a UI opens the HTML sitting next to it. Neither has
+  // to re-implement the renderer, which is the only way there stays exactly
+  // one rendering path.
+  const hasPlaceholder = ir.slides.some((s) => s.placeholder)
+  const manifest = buildPreviewManifest({
+    title: ir.filename,
+    pptwiseVersion: VERSION,
+    width: CANVAS_W_PX,
+    height: CANVAS_H_PX,
+    slides: ir.slides.map((slide, i) => ({
+      index: i,
+      type: slide.type ?? "content",
+      id: slide.id,
+      placeholder: slide.placeholder,
+      file: svgNames[i]!,
+    })),
+    findings: findings.map((f) => ({ page: f.page, code: f.code, message: f.message })),
+    checks,
+    auditNote: hasPlaceholder
+      ? "audit skipped — deck has unfilled placeholder pages"
+      : undefined,
+  })
+  const manifestPath = join(outDir, "manifest.json")
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
+  return { htmlPath, manifestPath, findings, ...(checks !== undefined ? { checks } : {}) }
+}
+
 export async function runPreview(irPath: string, outDir?: string, opts: PreviewOptions = {}): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
   const { ir, theme, svgs, normalized, isDir, resolvedTarget } = await renderDeckSlides(irPath, {
@@ -1968,12 +2034,7 @@ export async function runPreview(irPath: string, outDir?: string, opts: PreviewO
   })
   // After render, not before (S1 review carry) — see this function's own doc comment.
   const { resolvedOut, extraNotes } = await resolvePreviewOutDir(cwd, outDir, resolvedTarget, isDir, opts)
-  const svgNames: string[] = []
-  for (let i = 0; i < ir.slides.length; i++) {
-    const name = `${String(i + 1).padStart(3, "0")}-${ir.slides[i]!.type}.svg`
-    svgNames.push(name)
-    await writeFile(join(resolvedOut, name), svgs[i]!)
-  }
+  const svgNames = await writeSlideSvgs(resolvedOut, ir, svgs)
   const ok = `wrote ${ir.slides.length} SVG files to ${resolvedOut}`
   const notes: string[] = [...extraNotes]
   const aliasNote = normalizedNote(normalized)
@@ -1981,37 +2042,7 @@ export async function runPreview(irPath: string, outDir?: string, opts: PreviewO
   const dropNote = droppedContentNote(ir, svgs)
   if (dropNote) notes.push(dropNote)
   if (opts.htmlOut) {
-    const { html, findings, checks } = buildDeckAuditAndHtml(ir, svgs, theme)
-    const htmlPath = join(resolvedOut, "preview.html")
-    await writeFile(htmlPath, html)
-
-    // The machine-readable half of the same bundle (`./preview-manifest.ts`).
-    // A harness with its own UI reads this and draws the deck however it
-    // likes; one without a UI opens the HTML sitting next to it. Neither has
-    // to re-implement the renderer, which is the only way there stays exactly
-    // one rendering path.
-    const hasPlaceholder = ir.slides.some((s) => s.placeholder)
-    const manifest = buildPreviewManifest({
-      title: ir.filename,
-      pptwiseVersion: VERSION,
-      width: CANVAS_W_PX,
-      height: CANVAS_H_PX,
-      slides: ir.slides.map((slide, i) => ({
-        index: i,
-        type: slide.type ?? "content",
-        id: slide.id,
-        placeholder: slide.placeholder,
-        file: svgNames[i]!,
-      })),
-      findings: findings.map((f) => ({ page: f.page, code: f.code, message: f.message })),
-      checks,
-      auditNote: hasPlaceholder
-        ? "audit skipped — deck has unfilled placeholder pages"
-        : undefined,
-    })
-    const manifestPath = join(resolvedOut, "manifest.json")
-    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
-
+    const { htmlPath, manifestPath, findings } = await writePreviewReview(resolvedOut, ir, svgs, svgNames, theme)
     notes.push(`note: wrote self-contained preview to ${htmlPath}`)
     notes.push(`note: wrote machine-readable page manifest to ${manifestPath}`)
     if (findings.length > 0) {
@@ -2019,6 +2050,149 @@ export async function runPreview(irPath: string, outDir?: string, opts: PreviewO
     }
   }
   return notes.length > 0 ? `${ok}\n${notes.join("\n")}` : ok
+}
+
+export interface BuildOptions {
+  /** `--json`: print the {@link BuildReport} instead of a summary. */
+  json?: boolean
+  cwd?: string
+  /** `--no-git-ignore` sets this false. */
+  gitIgnore?: boolean
+  /** Injectable git runner for tests. Production leaves this unset. */
+  runGit?: GitRunner
+}
+
+export interface BuildCliResult {
+  output: string
+  /** `false` when the deck needs revision. The CLI exits 1 on it. */
+  ok: boolean
+}
+
+/**
+ * `pptwise build <target> [--json]`: assemble, validate, audit, preview and
+ * render in one pass, reported as one {@link BuildReport} (`./build-report.ts`).
+ *
+ * Everything lands in the deck's workspace folder, `.pptwise/<place>/`, the
+ * one `render` and `preview` default to. There is no `-o`: a deck has one
+ * final .pptx, at `.pptwise/<place>/<deck>.pptx`, and `build` is the command
+ * that keeps it honest. It is written only when every check passes, and a
+ * build that does not pass removes the one an earlier build left there, so a
+ * .pptx at that path always matches the sources the last build read. Nothing
+ * else in that folder, or anywhere else, is removed.
+ *
+ * The pages are drawn whenever validate passes, audit findings or not, so the
+ * deck can be looked at while it is being fixed. A target that cannot be
+ * found, or a configuration that cannot be read, is not a deck to revise:
+ * those fail the command as every other one does.
+ */
+export async function runBuild(target: string, opts: BuildOptions = {}): Promise<BuildCliResult> {
+  const report = await buildDeck(target, opts)
+  return {
+    output: opts.json ? JSON.stringify(report, null, 2) : formatBuildReport(report),
+    ok: report.status === "ok",
+  }
+}
+
+/**
+ * The page ids `deck.spec.json` lists, in order, read only to place an
+ * assemble failure on its page. A spec that cannot be read or parsed gives
+ * none: assemble's own message already says what is wrong with it.
+ */
+async function specPageIds(deckDir: string): Promise<string[]> {
+  try {
+    const spec = JSON.parse(await readFile(join(deckDir, SPEC_FILENAME), "utf8")) as { pages?: { id?: unknown }[] }
+    return Array.isArray(spec.pages) ? spec.pages.map((page) => (typeof page?.id === "string" ? page.id : "")) : []
+  } catch {
+    return []
+  }
+}
+
+async function buildDeck(target: string, opts: BuildOptions): Promise<BuildReport> {
+  const cwd = opts.cwd ?? process.cwd()
+  const [projectHit, userHit] = await readConfigs(cwd)
+  const location = await locateDeckTarget(target, cwd, projectHit, userHit)
+  const { isDir, resolvedTarget } = location
+  if (!(await pathExists(resolvedTarget))) {
+    throw new PptwiseError(`nothing to build at ${resolvedTarget}: pass a deck project directory, an IR JSON file, or a deck name`)
+  }
+  const workspace = resolveWorkspaceLocation({
+    cwd,
+    projectConfigPath: projectHit?.path,
+    outDir: projectHit?.config.outDir,
+    target: resolvedTarget,
+    isDir,
+  })
+  const pptxPath = join(workspace.dir, `${workspace.name}.pptx`)
+  const report: BuildReport = {
+    status: "needs_revision",
+    target: resolvedTarget,
+    theme: undefined,
+    pageCount: undefined,
+    audited: false,
+    errors: [],
+    warnings: [],
+    preview: null,
+    pptx: null,
+    notes: [],
+  }
+  const needsRevision = async (errors: BuildIssue[]): Promise<BuildReport> => {
+    // The .pptx an earlier build wrote describes sources that no longer pass.
+    await rm(pptxPath, { force: true })
+    return { ...report, status: "needs_revision", errors }
+  }
+
+  const themeInputs = await collectThemeInputs({ startDir: cwd, ...location })
+  let loaded: LoadedDeckTarget
+  let theme: ThemeDefinition | undefined
+  try {
+    loaded = await readDeckTarget(location, themeInputs, cwd, projectHit)
+    theme = (await applyDeckConfig(loaded.raw, themeInputs))?.definition
+  } catch (e) {
+    if (!(e instanceof PptwiseError)) throw e
+    return needsRevision(assembleIssues(e.message, isDir ? await specPageIds(resolvedTarget) : []))
+  }
+  const v = validateIr(loaded.raw, { theme, missingAssetPath: loaded.missingAssetPath })
+  report.warnings = (v.warnings ?? []).map((issue) => validateIssue(issue, isDir))
+  if (!v.ok) return needsRevision(v.errors.map((issue) => validateIssue(issue, isDir)))
+  const ir = v.ir!
+  report.theme = ir.theme.id
+  report.pageCount = ir.slides.length
+  try {
+    await resolveLocalAssets(ir, loaded.baseDir, loaded.workspaceAssetsDir)
+  } catch (e) {
+    if (!(e instanceof PptwiseError)) throw e
+    return needsRevision([{ stage: "validate", message: e.message }])
+  }
+
+  const svgs = ir.slides.map((_, i) => renderSlideSvg(ir, i, { theme }))
+  report.notes.push(...(await prepareWorkspaceDir(workspace, { gitIgnore: opts.gitIgnore, runGit: opts.runGit })))
+  await pruneRenderedSvgs(workspace.dir)
+  const svgNames = await writeSlideSvgs(workspace.dir, ir, svgs)
+  const review = await writePreviewReview(workspace.dir, ir, svgs, svgNames, theme)
+  report.audited = review.checks !== undefined
+  report.preview = {
+    dir: workspace.dir,
+    html: review.htmlPath,
+    manifest: review.manifestPath,
+    pages: ir.slides.map((slide, i) => ({
+      page: i + 1,
+      ...(slide.id !== undefined ? { id: slide.id } : {}),
+      type: slide.type ?? "content",
+      file: join(workspace.dir, svgNames[i]!),
+    })),
+  }
+  const errors = [...placeholderIssues(ir, isDir), ...review.findings.map((finding) => auditIssue(finding, isDir))]
+  if (errors.length > 0) return needsRevision(errors)
+
+  let bytes: Uint8Array
+  try {
+    bytes = await generatePptx(ir, { theme })
+  } catch (e) {
+    if (!(e instanceof PptwiseError)) throw e
+    return needsRevision([{ stage: "render", message: e.message }])
+  }
+  await writeFile(pptxPath, bytes)
+  return { ...report, status: "ok", pptx: pptxPath }
 }
 
 export interface AssembleOptions {

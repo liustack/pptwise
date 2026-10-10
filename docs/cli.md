@@ -26,12 +26,15 @@ pptwise render deck-dir/
 pptwise preview deck-dir/ --html
 ```
 
+`pptwise build deck-dir/ --json` runs assemble, validate, audit, preview, and render in one pass and reports every problem in one list. See [Build](#build).
+
 Fill no more than four pages between validation passes, and read each page's contract with `inspect` before writing it. Use `serve` when a reviewer needs a live browser round.
 
 ## Command index
 
 | command | purpose |
 | --- | --- |
+| `build <target>` | Assemble, validate, audit, preview, and render in one pass, with one structured report. |
 | `render <target>` | Render native editable PPTX. |
 | `validate <target>` | Validate IR, theme binding, menu kinds, components, assets, and content quality. |
 | `audit <target>` | Run deterministic visual and geometry checks. |
@@ -68,6 +71,50 @@ Fill no more than four pages between validation passes, and read each page's con
 | `self-update` | Update the global installation. |
 
 `layouts` exposes engine vocabulary for maintainers. Deck authors and authoring agents choose content `kind`, never internal face ids.
+
+## Build
+
+```bash
+pptwise build <target> [--json] [--no-git-ignore]
+```
+
+`build` assembles a deck project (or reads an IR file), validates it, draws every page, audits the drawing, and renders the `.pptx`, in one process from one read of the sources. It exits 0 when the deck passed every check and 1 when it needs revision.
+
+Output goes where `render` and `preview` put it by default: the pages, `preview.html`, and `manifest.json` in `.pptwise/<place>/`, and the deck's one `.pptx` at `.pptwise/<place>/<deck>.pptx`, the same path `render` writes. There is no `-o`. The `.pptx` is written only when every check passes, and a build that does not pass removes the one an earlier build left at that path, so the file there always matches the sources the last build read. The pages are drawn whenever validate passes, so a deck with audit findings can still be looked at.
+
+`--json` prints the report. `status` is `ok` or `needs_revision`. Each entry in `errors` says which check raised it (`stage`: `assemble`, `validate`, `audit`, or `render`), where it is (`page`, `pageId`, and for a deck project the `file` to edit, `pages/<id>.json` or `deck.spec.json`, with the `field` inside it), and the check's own `message`, which says how to fix it when the check knows. An audit entry adds its `code` and `detail`. An unwritten page is an error that names the page file to write, and the audit is skipped until every page is written. `warnings` are validate's warnings and never block the `.pptx`.
+
+```json
+{
+  "status": "needs_revision",
+  "target": "/work/weekly",
+  "theme": "brief",
+  "pageCount": 6,
+  "audited": true,
+  "errors": [
+    {
+      "stage": "audit",
+      "page": 2,
+      "pageId": "why",
+      "file": "pages/why.json",
+      "code": "monotony",
+      "message": "pages 2-4 repeat component type \"bullets\" (3 consecutive pages) — vary the lead component across neighbouring pages (mix bullets, chart, kpi, blockquote) so the deck does not read as a repeating template",
+      "detail": { "componentType": "bullets", "fromPage": 2, "toPage": 4, "length": 3 }
+    }
+  ],
+  "warnings": [],
+  "preview": {
+    "dir": "/work/.pptwise/weekly",
+    "html": "/work/.pptwise/weekly/preview.html",
+    "manifest": "/work/.pptwise/weekly/manifest.json",
+    "pages": [{ "page": 1, "id": "cover", "type": "cover", "file": "/work/.pptwise/weekly/001-cover.svg" }]
+  },
+  "pptx": null,
+  "notes": []
+}
+```
+
+A passing build has `"status": "ok"`, an empty `errors`, and `pptx` set to the absolute path of the deck's `.pptx`. A target that does not exist, or a configuration file that cannot be read, fails the command instead of producing a report.
 
 ## Render
 
