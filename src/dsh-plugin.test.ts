@@ -157,7 +157,7 @@ describe("dsh plugin (skill registration, v0)", () => {
     // names each tool, including the Code Mode call shape.
     const preamble = plugin.dshRuntimePreamble("/p/dist/cli.js", { command: "node", runAsNode: false }, "darwin")
     expect(preamble).toContain(plugin.dshToolRouting())
-    for (const tool of [plugin.THEMES_TOOL_NAME, plugin.BUILD_TOOL_NAME, plugin.PREVIEW_TOOL_NAME]) {
+    for (const tool of [plugin.THEMES_TOOL_NAME, plugin.OUTLINE_TOOL_NAME, plugin.BUILD_TOOL_NAME, plugin.PREVIEW_TOOL_NAME]) {
       expect(preamble).toContain(`\`${tool}\``)
     }
     expect(preamble).toContain("Never run `build` or `theme try` in the terminal here")
@@ -414,6 +414,7 @@ interface PreviewModule {
   TOOL_NAME: string
   BUILD_TOOL_NAME: string
   THEMES_TOOL_NAME: string
+  OUTLINE_TOOL_NAME: string
   ROUTE_HEADER: string
   ROUTE_HEADER_VALUE: string
   FAILURE_CODES: { unknown: string; missing: string; damaged: string; unreadable: string }
@@ -605,11 +606,12 @@ describe("pptwise preview card (browser half)", () => {
       { name: "tool.call.toolview", key: "pptwise_preview" },
       { name: "tool.call.toolview", key: "pptwise_build" },
       { name: "tool.call.toolview", key: "pptwise_themes" },
+      { name: "tool.call.toolview", key: "pptwise_outline" },
     ])
     expect(bundle.__testing.TOOL_NAME).toBe("pptwise_preview")
     // Pinned from the host side too: the names the tools register under.
     const host = await loadPreviewTool()
-    expect([host.TOOL_NAME, host.BUILD_TOOL_NAME, host.THEMES_TOOL_NAME]).toEqual(specs.map((s) => s.key))
+    expect([host.TOOL_NAME, host.BUILD_TOOL_NAME, host.THEMES_TOOL_NAME, host.OUTLINE_TOOL_NAME]).toEqual(specs.map((s) => s.key))
   })
 
   it("degrades to a console line rather than taking the turn down with it", async () => {

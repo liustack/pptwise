@@ -31,7 +31,7 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { engineReady, missingEngineMessage, packageVersion } from './engine.js'
-import { BUILD_TOOL_NAME, cliLauncher, createPreviewService, THEMES_TOOL_NAME, TOOL_NAME } from './preview-tool.js'
+import { BUILD_TOOL_NAME, cliLauncher, createPreviewService, OUTLINE_TOOL_NAME, THEMES_TOOL_NAME, TOOL_NAME } from './preview-tool.js'
 
 const SKILL_FILE_URL = new URL('../skills/pptwise/SKILL.md', import.meta.url)
 const SKILL_DIR = fileURLToPath(new URL('../skills/pptwise/', import.meta.url))
@@ -45,7 +45,7 @@ export const inject = ['skills', 'tools']
 
 export const SKILL_NAME = 'pptwise'
 export const PREVIEW_TOOL_NAME = TOOL_NAME
-export { BUILD_TOOL_NAME, THEMES_TOOL_NAME }
+export { BUILD_TOOL_NAME, OUTLINE_TOOL_NAME, THEMES_TOOL_NAME }
 
 /**
  * Split SKILL.md into { description, body }. DSH's runtime registry does
@@ -124,7 +124,7 @@ export function dshRuntimePreamble(cliPath, launcher = cliLauncher(), platform =
  */
 export function dshToolRouting() {
   return [
-    `This plugin also gives you tools, and the user sees the pages only through them. Draw the theme wall with \`${THEMES_TOOL_NAME}\`, build after each batch with \`${BUILD_TOOL_NAME}\`, and show a deck with \`${TOOL_NAME}\`. Never run \`build\` or \`theme try\` in the terminal here. Inside \`run_code\` call them like any other tool, for example \`await tools.${BUILD_TOOL_NAME}({ target: "deck-dir/" })\`. Every other command (\`themes\`, \`init\`, \`validate\`, \`schema\`, \`inspect\`) runs through the line above.`,
+    `This plugin also gives you tools, and the user sees the pages only through them. Draw the theme wall with \`${THEMES_TOOL_NAME}\`, show the outline with \`${OUTLINE_TOOL_NAME}\` once the spec validates, build after each batch with \`${BUILD_TOOL_NAME}\`, and show a deck with \`${TOOL_NAME}\`. Never run \`build\` or \`theme try\` in the terminal here. Inside \`run_code\` call them like any other tool, for example \`await tools.${BUILD_TOOL_NAME}({ target: "deck-dir/" })\`. Every other command (\`themes\`, \`init\`, \`validate\`, \`schema\`, \`inspect\`) runs through the line above.`,
   ].join('\n')
 }
 
@@ -196,7 +196,7 @@ export function apply(ctx) {
   // The theme wall and the one-pass build share the preview's store and
   // route: their cards fetch by id from the same place. Each registers on
   // its own, so one failing costs only itself.
-  for (const tool of [preview.themesTool, preview.buildTool]) {
+  for (const tool of [preview.themesTool, preview.outlineTool, preview.buildTool]) {
     try {
       ctx.tools.register(tool)
     } catch (error) {

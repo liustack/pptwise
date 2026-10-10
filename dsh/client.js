@@ -67,6 +67,60 @@ window.__ModuleLoader__.load({
     /** The theme wall, drawn by its own card below. */
     var THEMES_TOOL_NAME = 'pptwise_themes'
 
+    /** The outline: the checked spec's pages, one row each. */
+    var OUTLINE_TOOL_NAME = 'pptwise_outline'
+
+    // The words the newer cards show, in the harness's own language. DSH's
+    // locale service gets the two dictionaries when it is there (`apply`),
+    // and `t` reads through it, so a card follows the language the user set.
+    // Before it is up, or in a shell without one, the page's own language
+    // decides. Keys and dictionaries live here, beside the cards that use them.
+    var LOCALE_NS = 'pptwise'
+    var STRINGS = {
+      zh: {
+        'outline.title': '大纲',
+        'outline.pages': '{n} 页',
+        'outline.theme': '主题 {theme}',
+        'type.cover': '封面',
+        'type.chapter': '章节',
+        'type.content': '正文',
+        'type.ending': '结尾',
+        'card.unavailable': '这份内容已不在本机的预览目录里。',
+        'card.retry': '重试',
+      },
+      en: {
+        'outline.title': 'Outline',
+        'outline.pages': '{n} pages',
+        'outline.theme': 'Theme {theme}',
+        'type.cover': 'Cover',
+        'type.chapter': 'Section',
+        'type.content': 'Content',
+        'type.ending': 'Ending',
+        'card.unavailable': 'This is no longer in the preview folder on this machine.',
+        'card.retry': 'Retry',
+      },
+    }
+    var localeT = null
+
+    function pageLanguage() {
+      var lang = ''
+      try {
+        lang = (document.documentElement && document.documentElement.lang) || (window.navigator && window.navigator.language) || ''
+      } catch {
+        lang = ''
+      }
+      return /^zh/i.test(lang) ? 'zh' : 'en'
+    }
+
+    function t(key, params) {
+      if (localeT) return localeT(key, params)
+      var template = STRINGS[pageLanguage()][key] || STRINGS.en[key] || key
+      if (!params) return template
+      return template.replace(/\{(\w+)\}/g, function (match, name) {
+        return Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
+      })
+    }
+
     /**
      * How many thumbnails the strip draws.
      *
@@ -320,6 +374,12 @@ window.__ModuleLoader__.load({
     /** The theme wall's id, stamped the same way by `pptwise_themes`. */
     function wallIdOf(block) {
       var m = /pptwise-themes:([A-Za-z0-9-]+)/.exec(resultTextOf(block))
+      return m ? m[1] : null
+    }
+
+    /** The outline's id, stamped the same way by `pptwise_outline`. */
+    function outlineIdOf(block) {
+      var m = /pptwise-outline:([A-Za-z0-9-]+)/.exec(resultTextOf(block))
       return m ? m[1] : null
     }
 
@@ -1557,7 +1617,150 @@ window.__ModuleLoader__.load({
         )
       }
 
-      return { deck: PptwisePreviewCard, themes: PptwiseThemesCard }
+      /**
+       * One fetch of whatever the route keeps under an id: a deck, a wall or
+       * an outline. The newer cards need nothing more than this, since they
+       * have no export to race and no viewer page to remember. An answer for
+       * an id the card has left is dropped.
+       */
+      function useRouteBundle(id) {
+        var state = useState({ id: null, bundle: null, verdict: null, attempt: 0 })
+        var setState = state[1]
+        var attempt = state[0].attempt
+        useEffect(
+          function () {
+            if (!id) return undefined
+            var left = false
+            fetch(previewBundleUrl(id))
+              .then(function (r) {
+                return verdictOf(r).then(function (answer) {
+                  if (answer !== 'alive') return { verdict: answer, bundle: null }
+                  return r.json().then(function (b) {
+                    return { verdict: 'alive', bundle: b }
+                  })
+                })
+              })
+              .catch(function () {
+                return { verdict: UNREACHABLE_VERDICT, bundle: null }
+              })
+              .then(function (next) {
+                if (left) return
+                setState(function (prev) {
+                  return { id: id, bundle: next.bundle, verdict: next.verdict, attempt: prev.attempt }
+                })
+              })
+            return function () {
+              left = true
+            }
+          },
+          [id, attempt],
+        )
+        var mine = id !== null && state[0].id === id
+        return {
+          bundle: mine ? state[0].bundle : null,
+          verdict: mine ? state[0].verdict : null,
+          retry: function () {
+            setState(function (prev) {
+              return Object.assign({}, prev, { attempt: prev.attempt + 1 })
+            })
+          },
+        }
+      }
+
+      var smallButton = {
+        font: 'inherit',
+        fontSize: 12,
+        padding: '3px 10px',
+        borderRadius: 7,
+        border: '1px solid ' + COLORS.line,
+        background: 'transparent',
+        color: COLORS.text,
+        cursor: 'pointer',
+      }
+
+      /** What a card says when the route cannot serve what it was asked for. */
+      function Unavailable(props) {
+        return h(
+          'div',
+          { style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: COLORS.dim, padding: '2px 0 6px' } },
+          h('span', null, isFinal(props.verdict) ? t('card.unavailable') : UNREACHABLE_HINT),
+          isRetryable(props.verdict) ? h('button', { onClick: props.onRetry, style: smallButton }, t('card.retry')) : null,
+        )
+      }
+
+      /** The outline itself: one row per page, number, page type, heading, and what the page says. */
+      function OutlineList(props) {
+        var outline = props.outline
+        var pages = Array.isArray(outline.pages) ? outline.pages : []
+        return h(
+          'div',
+          { 'data-pptwise-outline': '', style: { display: 'flex', flexDirection: 'column', gap: 6, padding: '2px 0 6px' } },
+          h(
+            'div',
+            { style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: COLORS.dim } },
+            h('span', { style: { color: COLORS.text, fontWeight: 600 } }, outline.title || t('outline.title')),
+            h('span', null, t('outline.pages', { n: pages.length })),
+            outline.theme ? h('span', null, t('outline.theme', { theme: outline.theme })) : null,
+          ),
+          h(
+            'ol',
+            {
+              style: {
+                listStyle: 'none',
+                margin: 0,
+                padding: 0,
+                border: '1px solid ' + COLORS.line,
+                borderRadius: 8,
+                overflow: 'hidden',
+              },
+            },
+            pages.map(function (page, i) {
+              return h(
+                'li',
+                {
+                  key: page.id || i,
+                  'data-page': page.page,
+                  style: {
+                    display: 'grid',
+                    gridTemplateColumns: '28px 52px minmax(0, 1fr)',
+                    alignItems: 'baseline',
+                    gap: 8,
+                    padding: '7px 10px',
+                    borderTop: i === 0 ? 'none' : '1px solid ' + COLORS.line,
+                    fontSize: 13,
+                    lineHeight: '20px',
+                  },
+                },
+                h('span', { style: { color: COLORS.dim, fontVariantNumeric: 'tabular-nums', textAlign: 'right' } }, String(page.page || i + 1)),
+                h(
+                  'span',
+                  { title: page.kind || undefined, style: { color: COLORS.dim, fontSize: 12 } },
+                  t('type.' + (page.type || 'content')),
+                ),
+                h(
+                  'span',
+                  { style: { minWidth: 0 } },
+                  h('span', { style: { color: COLORS.text, fontWeight: 500 } }, page.heading),
+                  page.summary ? h('span', { style: { color: COLORS.dim, marginLeft: 8 } }, page.summary) : null,
+                ),
+              )
+            }),
+          ),
+        )
+      }
+
+      /** The outline card in the tool row: the rows `pptwise_outline` checked, fetched by id. */
+      function PptwiseOutlineCard(props) {
+        var id = outlineIdOf(props.block)
+        var got = useRouteBundle(id)
+        if (!got.bundle || !Array.isArray(got.bundle.pages)) {
+          if (got.verdict === null || got.verdict === 'alive') return null
+          return h(Unavailable, { verdict: got.verdict, onRetry: got.retry })
+        }
+        return h(OutlineList, { outline: got.bundle })
+      }
+
+      return { deck: PptwisePreviewCard, themes: PptwiseThemesCard, outline: PptwiseOutlineCard }
     }
 
     function registerCard(ctx) {
@@ -1594,6 +1797,7 @@ window.__ModuleLoader__.load({
         [TOOL_NAME, cards.deck],
         [BUILD_TOOL_NAME, cards.deck],
         [THEMES_TOOL_NAME, cards.themes],
+        [OUTLINE_TOOL_NAME, cards.outline],
       ]
       seats.forEach(function (seat) {
         ctx.slots.inject('tool.call.toolview', function* () {
@@ -1602,10 +1806,38 @@ window.__ModuleLoader__.load({
       })
     }
 
+    /**
+     * Hand the cards' words to DSH's locale service, when there is one. Rides
+     * a scoped `ctx.inject` so a shell without the service, and this repo's
+     * tests, still get cards, worded in the page's own language.
+     */
+    function registerLocale(ctx) {
+      if (typeof ctx.inject !== 'function') return
+      ctx.inject(['locale'], function (scope) {
+        try {
+          scope.effect(function () {
+            var off = scope.locale.register(LOCALE_NS, STRINGS)
+            localeT = scope.locale.bind(LOCALE_NS)
+            return function () {
+              localeT = null
+              off()
+            }
+          }, 'pptwise: dictionaries')
+        } catch (error) {
+          console.warn('[pptwise] card words stay in the page language: ' + error)
+        }
+      })
+    }
+
     function apply(ctx) {
       // A card that fails to register is a console line, not a dead turn —
       // the generic tool row still renders the call, same posture the host
       // half takes for its own registrations.
+      try {
+        registerLocale(ctx)
+      } catch (error) {
+        console.error('[pptwise] card dictionaries skipped: ' + error)
+      }
       try {
         registerCard(ctx)
       } catch (error) {
@@ -1623,6 +1855,9 @@ window.__ModuleLoader__.load({
       bundleOf: bundleOf,
       previewIdOf: previewIdOf,
       wallIdOf: wallIdOf,
+      outlineIdOf: outlineIdOf,
+      t: t,
+      STRINGS: STRINGS,
       pageCountOf: pageCountOf,
       verdictOf: verdictOf,
       isRetryable: isRetryable,
@@ -1644,6 +1879,7 @@ window.__ModuleLoader__.load({
       TOOL_NAME: TOOL_NAME,
       BUILD_TOOL_NAME: BUILD_TOOL_NAME,
       THEMES_TOOL_NAME: THEMES_TOOL_NAME,
+      OUTLINE_TOOL_NAME: OUTLINE_TOOL_NAME,
     }
     return module.exports
   },

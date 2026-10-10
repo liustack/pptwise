@@ -242,6 +242,9 @@ export const THEMES_TOOL_NAME = 'pptwise_themes'
 /** One pass of assemble, validate, audit, preview and render, from `build --json`. */
 export const BUILD_TOOL_NAME = 'pptwise_build'
 
+/** The outline: the checked spec's pages, one row each, before any page is written. */
+export const OUTLINE_TOOL_NAME = 'pptwise_outline'
+
 export const PREVIEW_ROUTE = '/pptwise/preview'
 
 /**
@@ -430,8 +433,13 @@ const MANIFEST_FILE = 'manifest.json'
  *    contact sheet rather than `preview.html`.
  *  - `build`: the pages `pptwise build` drew, copied here so the card can show
  *    them. Same files as a preview, and an export only when the build passed.
+ *  - `outline`: the page list `spec validate --json` printed, kept as
+ *    `outline.json`. No pages are drawn, so there is no viewer and no export.
  */
-const RECORD_KINDS = new Set(['themes', 'build'])
+const RECORD_KINDS = new Set(['themes', 'build', 'outline'])
+
+/** What an outline record keeps: the report `spec validate --json` printed. */
+const OUTLINE_FILE = 'outline.json'
 
 /** The contact sheet `theme try --title` writes beside its manifest. */
 const THEME_SHEET_FILE = 'contact-sheet.html'
@@ -1537,6 +1545,50 @@ async function readThemesBundle(dir) {
   }
 }
 
+/**
+ * What the outline card draws: the page rows `spec validate --json` printed.
+ * Checked the way every other file here is, since it sits on disk between runs.
+ */
+async function readOutlineBundle(dir) {
+  const path = join(dir, OUTLINE_FILE)
+  let outline
+  try {
+    outline = JSON.parse(await readFile(path, 'utf8'))
+  } catch (error) {
+    if (error instanceof SyntaxError) throw new PreviewDamaged(`${path} is present but unreadable`)
+    throw error
+  }
+  if (!outline || typeof outline !== 'object' || !Array.isArray(outline.pages)) {
+    throw new PreviewDamaged(`${path} is not in a shape this version understands`)
+  }
+  return { kind: 'outline', ...outline }
+}
+
+/** One page of an outline, as the model reads it back. */
+function outlinePageLine(page) {
+  const kind = page.kind ? `${page.type}/${page.kind}` : page.type
+  return `${page.page}. [${kind}] ${page.heading}${page.summary ? ` (${page.summary})` : ''}`
+}
+
+/** The model-facing text of `pptwise_outline`. */
+function outlineSummary(value) {
+  if (value.status !== 'ok') {
+    const lines = [`the spec is not valid yet: ${value.errors.length} problem${value.errors.length === 1 ? '' : 's'}, no outline card drawn`]
+    for (const issue of value.errors) lines.push(`- ${issue.path ? `${issue.path}: ` : ''}${issue.message}`)
+    lines.push('Fix deck.spec.json, then call pptwise_outline again.')
+    return lines.join('\n')
+  }
+  const lines = [
+    `pptwise-outline:${value.outlineId} · ${value.pageCount} page${value.pageCount === 1 ? '' : 's'}, theme "${value.theme}"`,
+    ...value.pages.map(outlinePageLine),
+  ]
+  for (const issue of value.warnings) lines.push(`warning: ${issue.path ? `${issue.path}: ` : ''}${issue.message}`)
+  lines.push(
+    'The user sees this outline as a card, one row per page. Unless they told you to go ahead, ask them to confirm or change it with ask_user_question before writing pages.',
+  )
+  return lines.join('\n')
+}
+
 /** One build problem on one line: where it is, then the check's own words. */
 function buildIssueLine(issue) {
   const where = []
@@ -1815,6 +1867,7 @@ export function createPreviewService(cliPath) {
     let bundle
     try {
       if (record.kind === 'themes') bundle = await readThemesBundle(dir)
+      else if (record.kind === 'outline') bundle = await readOutlineBundle(dir)
       else {
         bundle = await readPreviewBundle(dir)
         // A build's pages are worth showing whether or not it passed, and its
@@ -1977,6 +2030,10 @@ export function createPreviewService(cliPath) {
           // "missing" pages and its own arrow keys, none of which the real
           // preview has.
           // A theme wall's viewer is its contact sheet, every theme in rows.
+          if (entry.kind === 'outline') {
+            fail(404, FAILURE_CODES.unknown, 'an outline has no viewer page')
+            return
+          }
           const htmlPath = join(entry.outDir, entry.kind === 'themes' ? THEME_SHEET_FILE : PREVIEW_HTML_FILE)
           let html
           try {
@@ -2441,10 +2498,114 @@ export function createPreviewService(cliPath) {
     timeoutMs: 180_000,
   }
 
+  const SPEC_ISSUE_SCHEMA = {
+    type: 'object',
+    properties: { path: { type: 'string' }, message: { type: 'string' }, pageId: { type: 'string' } },
+    required: ['path', 'message'],
+    additionalProperties: false,
+  }
+
+  const outlineTool = {
+    name: OUTLINE_TOOL_NAME,
+    description:
+      "Check a deck's deck.spec.json and show the user its outline in this conversation, one row per page: number, page type, heading and what the page says. " +
+      'Call it after writing or changing the spec and before writing any page file. It draws no pages. ' +
+      'Returns the page list, or every problem with the spec to fix.',
+    parameters: {
+      type: 'object',
+      properties: {
+        target: {
+          type: 'string',
+          description: 'Deck project directory, or the path of its deck.spec.json.',
+        },
+      },
+      required: ['target'],
+      additionalProperties: false,
+    },
+    output: {
+      schema: {
+        type: 'object',
+        properties: {
+          status: { type: 'string', enum: ['ok', 'invalid'] },
+          outlineId: { type: 'string' },
+          title: { type: 'string' },
+          theme: { type: 'string' },
+          pageCount: { type: 'number' },
+          pages: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                page: { type: 'number' },
+                id: { type: 'string' },
+                type: { type: 'string' },
+                kind: { type: 'string' },
+                heading: { type: 'string' },
+                summary: { type: 'string' },
+              },
+              required: ['page', 'id', 'type', 'heading'],
+              additionalProperties: false,
+            },
+          },
+          errors: { type: 'array', items: SPEC_ISSUE_SCHEMA },
+          warnings: { type: 'array', items: SPEC_ISSUE_SCHEMA },
+        },
+        required: ['status', 'errors', 'warnings'],
+        additionalProperties: false,
+      },
+      render(_args, value) {
+        return [{ type: 'text', text: outlineSummary(value) }]
+      },
+      presentationMeta(_args, value) {
+        return { card: 'pptwise-outline', ...(value.outlineId ? { outlineId: value.outlineId } : {}) }
+      },
+    },
+    async execute(args, exec) {
+      const target = String(args.target)
+      const cwd = sessionCwd(exec)
+      const absolute = resolve(cwd ?? process.cwd(), target)
+      const specPath = (await directoryState(absolute)) === 'directory' ? join(absolute, 'deck.spec.json') : absolute
+      const report = await runCliJson(cliPath, ['spec', 'validate', specPath, '--json'], {
+        signal: exec?.signal,
+        cwd,
+        okCodes: [0, 1],
+      })
+      if (!report || typeof report.ok !== 'boolean') throw new Error('pptwise spec validate printed a report this plugin cannot read')
+      const issue = (i) => ({ path: String(i.path ?? ''), message: String(i.message), ...(typeof i.pageId === 'string' ? { pageId: i.pageId } : {}) })
+      const warnings = Array.isArray(report.warnings) ? report.warnings.map(issue) : []
+      if (!report.ok || !Array.isArray(report.pages)) {
+        return { status: 'invalid', errors: Array.isArray(report.errors) ? report.errors.map(issue) : [], warnings }
+      }
+      const pages = report.pages.map((page) => ({
+        page: Number(page.page),
+        id: String(page.id),
+        type: String(page.type),
+        ...(typeof page.kind === 'string' ? { kind: page.kind } : {}),
+        heading: String(page.heading),
+        ...(typeof page.summary === 'string' ? { summary: page.summary } : {}),
+      }))
+      const { id } = await publishNew(async (stageDir) => {
+        await writeFile(join(stageDir, OUTLINE_FILE), JSON.stringify(report))
+        await writeRecordInto(stageDir, recordFrom({ kind: 'outline', target, pptxError: 'an outline has no deck to download' }))
+      })
+      return {
+        status: 'ok',
+        outlineId: id,
+        ...(typeof report.title === 'string' ? { title: report.title } : {}),
+        theme: String(report.theme),
+        pageCount: pages.length,
+        pages,
+        errors: [],
+        warnings,
+      }
+    },
+    timeoutMs: 60_000,
+  }
+
   // No `recall` any more, and its absence is the point: there is no second,
   // faster way to ask this service about an id. Everything goes through
   // `recallAnywhere`, which goes to disk.
-  return { tool, themesTool, buildTool, registerRoute, remember, recallAnywhere, root }
+  return { tool, themesTool, buildTool, outlineTool, registerRoute, remember, recallAnywhere, root }
 }
 
 /**

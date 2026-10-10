@@ -29,6 +29,17 @@ interface ThemesValue {
   notes?: string[]
 }
 
+interface OutlineValue {
+  status: "ok" | "invalid"
+  outlineId?: string
+  title?: string
+  theme?: string
+  pageCount?: number
+  pages?: { page: number; id: string; type: string; kind?: string; heading: string; summary?: string }[]
+  errors: { path: string; message: string }[]
+  warnings: { path: string; message: string }[]
+}
+
 interface BuildValue {
   status: "ok" | "needs_revision"
   pptx?: string
@@ -61,6 +72,7 @@ interface FakeResponse {
 interface Service {
   themesTool: Tool<{ title: string; subtitle?: string; lang?: string; occasion?: string; themes?: string[]; page?: unknown }, ThemesValue>
   buildTool: Tool<{ target: string }, BuildValue>
+  outlineTool: Tool<{ target: string }, OutlineValue>
   registerRoute: (ctx: { webServer: { register: (r: RouteRegistration) => void } }) => void
   root: string
 }
@@ -148,6 +160,15 @@ if (argv[0] === "theme" && argv[1] === "try") {
   const report = { status: errors.length === 0 ? "ok" : "needs_revision", target, theme: "brief", ...(unassembled ? {} : { pageCount: 2 }), audited: !unassembled, errors, warnings: [{ stage: "validate", page: 1, pageId: "cover", field: "heading", message: "long heading" }], preview, pptx: errors.length === 0 ? pptx : null, notes: [] }
   process.stdout.write(JSON.stringify(report, null, 2) + "\\n")
   if (errors.length > 0) process.exitCode = 1
+} else if (argv[0] === "spec" && argv[1] === "validate") {
+  const spec = JSON.parse(readFileSync(argv[2], "utf8"))
+  if (!Array.isArray(spec.pages) || spec.pages.length === 0) {
+    process.stdout.write(JSON.stringify({ ok: false, errors: [{ path: "pages", message: "spec has no pages" }], warnings: [] }) + "\\n")
+    process.exitCode = 1
+  } else {
+    const pages = spec.pages.map((p, i) => ({ page: i + 1, id: p.id, type: p.type, ...(p.kind ? { kind: p.kind } : {}), heading: p.heading, ...(p.summary ? { summary: p.summary } : {}) }))
+    process.stdout.write(JSON.stringify({ ok: true, theme: spec.theme, narrative: { strategy: "briefing", pacing: "balanced", audience: "public" }, title: pages[0].heading, pageCount: pages.length, pages, warnings: [] }) + "\\n")
+  }
 } else {
   process.stderr.write("unsupported command\\n")
   process.exit(3)
@@ -400,6 +421,55 @@ describe("pptwise_build", () => {
     const { svc, workspace } = await setup("build-crash")
     const target = await deck(workspace, ["crash"])
     await expect(svc.buildTool.execute({ target }, inSession(workspace))).rejects.toThrow(/nothing to build at/)
+  })
+})
+
+describe("pptwise_outline", () => {
+  const SPEC = {
+    theme: "brief",
+    pages: [
+      { id: "cover", type: "cover", heading: "周会" },
+      { id: "done", type: "content", kind: "points", heading: "本周完成", summary: "三件事" },
+      { id: "next", type: "content", kind: "points", heading: "下周计划" },
+      { id: "end", type: "ending", heading: "谢谢" },
+    ],
+  }
+
+  it("reads the spec of a deck directory and shows every page as a row, with the id the card fetches by", async () => {
+    const { svc, cliPath, workspace, route, handler } = await setup("outline")
+    const dir = await deck(workspace)
+    await writeFile(join(dir, "deck.spec.json"), JSON.stringify(SPEC))
+    const value = await svc.outlineTool.execute({ target: "weekly" }, inSession(workspace))
+    matchesSchema(value, svc.outlineTool.output.schema)
+    expect(value).toMatchObject({ status: "ok", theme: "brief", title: "周会", pageCount: 4 })
+    expect(value.pages!.map((p) => p.heading)).toEqual(["周会", "本周完成", "下周计划", "谢谢"])
+    expect((await calls(cliPath)).at(-1)!.argv).toEqual(["spec", "validate", join(dir, "deck.spec.json"), "--json"])
+
+    const text = svc.outlineTool.output.render({}, value)[0]!.text
+    const lines = text.split("\n")
+    expect(lines[0]).toBe(`pptwise-outline:${value.outlineId} · 4 pages, theme "brief"`)
+    expect(lines[2]).toBe("2. [content/points] 本周完成 (三件事)")
+    expect(text).toContain("ask_user_question")
+    expect(svc.outlineTool.output.presentationMeta({}, value)).toEqual({ card: "pptwise-outline", outlineId: value.outlineId })
+
+    const bundle = await request(handler, `${route}/${value.outlineId}`)
+    expect(bundle.status).toBe(200)
+    expect(JSON.parse(bundle.body.toString("utf8"))).toMatchObject({ kind: "outline", pageCount: 4, pages: value.pages })
+    // No pages drawn, so nothing to view and nothing to download.
+    expect((await request(handler, `${route}/${value.outlineId}/html`)).status).toBe(404)
+    expect((await request(handler, `${route}/${value.outlineId}/pptx`)).status).toBe(410)
+  })
+
+  it("hands an invalid spec's problems to the model and draws no card", async () => {
+    const { svc, workspace } = await setup("outline-bad")
+    const dir = await deck(workspace)
+    await writeFile(join(dir, "deck.spec.json"), JSON.stringify({ theme: "brief", pages: [] }))
+    const before = await readdir(svc.root).catch(() => [])
+    const value = await svc.outlineTool.execute({ target: join(dir, "deck.spec.json") }, inSession(workspace))
+    matchesSchema(value, svc.outlineTool.output.schema)
+    expect(value).toEqual({ status: "invalid", errors: [{ path: "pages", message: "spec has no pages" }], warnings: [] })
+    expect(svc.outlineTool.output.render({}, value)[0]!.text).toMatch(/^the spec is not valid yet: 1 problem, no outline card drawn\n- pages: spec has no pages/)
+    expect(await readdir(svc.root).catch(() => [])).toEqual(before)
   })
 })
 

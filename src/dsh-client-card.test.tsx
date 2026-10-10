@@ -86,7 +86,7 @@ beforeAll(async () => {
     })
     // One seat per tool, and the build shares the deck card because its
     // result carries the same preview stamp.
-    expect([...seats.keys()].sort()).toEqual(["pptwise_build", "pptwise_preview", "pptwise_themes"])
+    expect([...seats.keys()].sort()).toEqual(["pptwise_build", "pptwise_outline", "pptwise_preview", "pptwise_themes"])
     expect(seats.get("pptwise_build")).toBe(seats.get("pptwise_preview"))
     const found = seats.get(options.key ?? "pptwise_preview")
     if (!found) throw new Error("the plugin registered no card")
@@ -1457,10 +1457,12 @@ describe("dsh preview card — the store", () => {
     walk(tree)
 
     // One state container per card, whatever spelling is used to reach it:
-    // the deck card's store, and the theme wall's one fetch.
+    // the deck card's store, the theme wall's one fetch, and the one fetch
+    // the newer cards share.
     expect(calls.filter((c) => c.callee === "useState").map((c) => c.inside).sort()).toEqual([
       "PptwisePreviewCard",
       "PptwiseThemesCard",
+      "useRouteBundle",
     ])
     // No second one under another name.
     for (const hook of ["useReducer", "useSyncExternalStore", "useDeferredValue"]) {
@@ -2069,6 +2071,55 @@ describe("dsh theme wall card", () => {
   it("renders nothing for a result with no wall stamp", () => {
     const Card = makeCard({ key: "pptwise_themes" })
     const { container } = render(<Card block={{ content: [{ text: "pptwise theme try failed" }] }} />)
+    expect(container).toBeEmptyDOMElement()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+})
+
+describe("dsh outline card", () => {
+  const outline = {
+    kind: "outline",
+    ok: true,
+    theme: "brief",
+    title: "周会",
+    pageCount: 4,
+    pages: [
+      { page: 1, id: "cover", type: "cover", heading: "周会" },
+      { page: 2, id: "done", type: "content", kind: "points", heading: "本周完成", summary: "三件事" },
+      { page: 3, id: "next", type: "content", kind: "points", heading: "下周计划" },
+      { page: 4, id: "end", type: "ending", heading: "谢谢" },
+    ],
+  }
+  const block = { content: [{ text: 'pptwise-outline:0123abcd-0001 · 4 pages, theme "brief"' }] }
+
+  it("lists every page as a row, number, page type, heading and what it says, fetched by the stamped id", async () => {
+    const Card = makeCard({ key: "pptwise_outline" })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: outline }))
+    const { container } = render(<Card block={block} />)
+
+    await waitFor(() => expect(container.querySelectorAll("li[data-page]")).toHaveLength(4))
+    expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/0123abcd-0001")
+    const rows = Array.from(container.querySelectorAll("li[data-page]")).map((li) => li.textContent)
+    expect(rows[0]).toBe("1Cover周会")
+    expect(rows[1]).toBe("2Content本周完成三件事")
+    expect(rows[3]).toBe("4Ending谢谢")
+    expect(screen.getByText("4 pages")).toBeInTheDocument()
+    expect(screen.getByText("Theme brief")).toBeInTheDocument()
+    // Only a list: no viewer and no download, there are no pages yet.
+    expect(screen.queryByText("Open")).toBeNull()
+    expect(screen.queryByText("Download .pptx")).toBeNull()
+  })
+
+  it("says the outline is no longer there when the route has never heard of it", async () => {
+    const Card = makeCard({ key: "pptwise_outline" })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 404, code: "preview_unknown" }))
+    render(<Card block={block} />)
+    await waitFor(() => expect(screen.getByText(/no longer in the preview folder/)).toBeInTheDocument())
+  })
+
+  it("renders nothing for a result with no outline stamp, such as an invalid spec", () => {
+    const Card = makeCard({ key: "pptwise_outline" })
+    const { container } = render(<Card block={{ content: [{ text: "the spec is not valid yet: 1 problem" }] }} />)
     expect(container).toBeEmptyDOMElement()
     expect(fetchMock).not.toHaveBeenCalled()
   })

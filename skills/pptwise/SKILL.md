@@ -106,7 +106,7 @@ When the user names a page count, the spec has exactly that many pages, the cove
 
 Run `pptwise spec validate deck.spec.json` until it prints `OK`. A content `kind` outside the bound theme menu is a hard error that lists what the menu offers. Do not relabel the page merely to silence the error. Change the page's intent only when that is semantically honest, or return to the theme step.
 
-The validated spec is the outline. Before you write any page file, list it in the conversation, one line per page: page number, page type or `kind`, heading, and what the page says. This step is never skipped, whatever the deck's length. When the user said to go ahead or let you decide, list the outline and continue in the same reply. Otherwise ask them to confirm or change it, and wait for the answer before writing pages. Call `pptwise_preview` on the deck directory as well when it exists, so the user sees the cover and the page sequence before any page is written.
+The validated spec is the outline. Before you write any page file, list it in the conversation, one line per page: page number, page type or `kind`, heading, and what the page says. This step is never skipped, whatever the deck's length. When a `pptwise_outline` tool exists, call it on the deck directory too, so the user sees the same list as a card. When the user said to go ahead or let you decide, list the outline and continue in the same reply. Otherwise ask them to confirm or change it, with `ask_user_question` when that tool exists, and wait for the answer before writing pages.
 
 The 11 words and their boundaries are in `references/layouts.md`. Full spec guidance and theme creation are in `references/spec.md`.
 
