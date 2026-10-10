@@ -26,6 +26,18 @@ interface ThemesValue {
   title: string
   themeCount: number
   themes: { id: string; label: string; skipped?: { type: string; reason: string }[] }[]
+  notes?: string[]
+}
+
+interface OutlineValue {
+  status: "ok" | "invalid"
+  outlineId?: string
+  title?: string
+  theme?: string
+  pageCount?: number
+  pages?: { page: number; id: string; type: string; kind?: string; heading: string; summary?: string }[]
+  errors: { path: string; message: string }[]
+  warnings: { path: string; message: string }[]
 }
 
 interface BuildValue {
@@ -58,8 +70,9 @@ interface FakeResponse {
 }
 
 interface Service {
-  themesTool: Tool<{ title: string; subtitle?: string; lang?: string; themes?: string[]; page?: unknown }, ThemesValue>
+  themesTool: Tool<{ title: string; subtitle?: string; lang?: string; occasion?: string; themes?: string[]; page?: unknown }, ThemesValue>
   buildTool: Tool<{ target: string }, BuildValue>
+  outlineTool: Tool<{ target: string }, OutlineValue>
   registerRoute: (ctx: { webServer: { register: (r: RouteRegistration) => void } }) => void
   root: string
 }
@@ -100,7 +113,8 @@ if (argv[0] === "theme" && argv[1] === "try") {
   const title = opt("--title")
   if (title === "FAIL") { process.stderr.write("unknown theme \\"nope\\"\\n"); process.exit(1) }
   const out = opt("-o")
-  const ids = argv[2] === "all" ? ["brief", "swiss", "crayon"] : argv[2].split(",")
+  // No ids: the CLI draws its own shortlist, here the same three.
+  const ids = argv[2].startsWith("--") ? ["brief", "swiss", "crayon"] : argv[2].split(",")
   const page = opt("--page") ? JSON.parse(readFileSync(opt("--page"), "utf8")) : null
   mkdirSync(out, { recursive: true })
   const themes = ids.map((id) => {
@@ -117,7 +131,8 @@ if (argv[0] === "theme" && argv[1] === "try") {
   writeFileSync(join(out, "contact-sheet.html"), "<!doctype html><title>sheet " + title + "</title>")
   const manifest = { manifestVersion: 1, generator: "pptwise theme try", title, ...(opt("--subtitle") ? { subtitle: opt("--subtitle") } : {}), lang: opt("--lang") || "en", slide: { width: 1280, height: 720 }, contactSheet: "contact-sheet.html", themes }
   writeFileSync(join(out, "manifest.json"), JSON.stringify(manifest))
-  process.stdout.write(JSON.stringify({ dir: out, ...manifest }, null, 2) + "\\n")
+  const notes = ids.includes("crayon") ? { notes: ["note: crayon left out its content (points) page: kind: not offered"] } : {}
+  process.stdout.write(JSON.stringify({ dir: out, ...manifest, ...notes }, null, 2) + "\\n")
 } else if (argv[0] === "build") {
   const target = resolve(argv[1])
   const name = basename(target)
@@ -145,6 +160,15 @@ if (argv[0] === "theme" && argv[1] === "try") {
   const report = { status: errors.length === 0 ? "ok" : "needs_revision", target, theme: "brief", ...(unassembled ? {} : { pageCount: 2 }), audited: !unassembled, errors, warnings: [{ stage: "validate", page: 1, pageId: "cover", field: "heading", message: "long heading" }], preview, pptx: errors.length === 0 ? pptx : null, notes: [] }
   process.stdout.write(JSON.stringify(report, null, 2) + "\\n")
   if (errors.length > 0) process.exitCode = 1
+} else if (argv[0] === "spec" && argv[1] === "validate") {
+  const spec = JSON.parse(readFileSync(argv[2], "utf8"))
+  if (!Array.isArray(spec.pages) || spec.pages.length === 0) {
+    process.stdout.write(JSON.stringify({ ok: false, errors: [{ path: "pages", message: "spec has no pages" }], warnings: [] }) + "\\n")
+    process.exitCode = 1
+  } else {
+    const pages = spec.pages.map((p, i) => ({ page: i + 1, id: p.id, type: p.type, ...(p.kind ? { kind: p.kind } : {}), heading: p.heading, ...(p.summary ? { summary: p.summary } : {}) }))
+    process.stdout.write(JSON.stringify({ ok: true, theme: spec.theme, narrative: { strategy: "briefing", pacing: "balanced", audience: "public" }, title: pages[0].heading, pageCount: pages.length, pages, warnings: [] }) + "\\n")
+  }
 } else {
   process.stderr.write("unsupported command\\n")
   process.exit(3)
@@ -228,6 +252,7 @@ describe("pptwise_themes", () => {
         { id: "swiss", label: "SWISS" },
         { id: "crayon", label: "CRAYON", skipped: [{ type: "content", reason: "kind: not offered" }] },
       ],
+      notes: ["note: crayon left out its content (points) page: kind: not offered"],
     })
     expect(JSON.stringify(value)).not.toMatch(/<svg/)
     matchesSchema(value, svc.themesTool.output.schema)
@@ -236,7 +261,7 @@ describe("pptwise_themes", () => {
     expect(call!.cwd).toBe(await realpath(workspace))
     const stage = call!.argv[call!.argv.indexOf("-o") + 1]!
     expect(call!.argv).toEqual([
-      "theme", "try", "all", "--title", "Q3 review", "--json", "-o", stage,
+      "theme", "try", "--title", "Q3 review", "--json", "-o", stage,
       "--subtitle", "Board", "--lang", "en", "--page", join(stage, "sample-page.json"),
     ])
     // Published under the wall's own id, with the staging name gone.
@@ -252,6 +277,18 @@ describe("pptwise_themes", () => {
     expect((await calls(cliPath))[0]!.argv.slice(0, 3)).toEqual(["theme", "try", "brief,swiss"])
   })
 
+  it("passes the occasion so the CLI picks the shortlist, and ignores it when themes are named", async () => {
+    const { svc, cliPath, workspace } = await setup("themes-occasion")
+    await svc.themesTool.execute({ title: "周会", occasion: "weekly-brief" }, inSession(workspace))
+    await svc.themesTool.execute({ title: "周会", occasion: "weekly-brief", themes: ["brief", "swiss"] }, inSession(workspace))
+    const [shortlist, named] = await calls(cliPath)
+    expect(shortlist!.argv.slice(0, 4)).toEqual(["theme", "try", "--title", "周会"])
+    expect(shortlist!.argv).toContain("--occasion")
+    expect(shortlist!.argv[shortlist!.argv.indexOf("--occasion") + 1]).toBe("weekly-brief")
+    expect(named!.argv.slice(0, 3)).toEqual(["theme", "try", "brief,swiss"])
+    expect(named!.argv).not.toContain("--occasion")
+  })
+
   it("tells the model the user is choosing, and stamps the id the card fetches the wall by", async () => {
     const { svc, workspace } = await setup("themes-text")
     const value = await svc.themesTool.execute({ title: "Q3 review" }, inSession(workspace))
@@ -259,7 +296,9 @@ describe("pptwise_themes", () => {
 
     expect(text.split("\n")[0]).toBe(`pptwise-themes:${value.wallId} · drew 3 themes for "Q3 review", a cover and one content page each`)
     expect(text).toMatch(/Ask which theme they want/)
-    expect(text).toContain("note: crayon left out its content page: kind: not offered")
+    expect(text.split("\n")[1]).toBe("In the card, numbered: 1 brief, 2 swiss, 3 crayon.")
+    expect(text).toMatch(/one option per theme in this order, each label starting with its number/)
+    expect(text).toContain("note: crayon left out its content (points) page: kind: not offered")
     expect(svc.themesTool.output.presentationMeta({}, value)).toEqual({ card: "pptwise-themes", wallId: value.wallId })
   })
 
@@ -382,6 +421,83 @@ describe("pptwise_build", () => {
     const { svc, workspace } = await setup("build-crash")
     const target = await deck(workspace, ["crash"])
     await expect(svc.buildTool.execute({ target }, inSession(workspace))).rejects.toThrow(/nothing to build at/)
+  })
+})
+
+describe("the page route and page fingerprints", () => {
+  it("serves each drawn page on its own, with a fingerprint per page in the bundle", async () => {
+    const { svc, workspace, route, handler } = await setup("page-route")
+    const target = await deck(workspace)
+    const value = await svc.buildTool.execute({ target }, inSession(workspace))
+    const id = value.previewId!
+    const bundle = JSON.parse((await request(handler, `${route}/${id}`)).body.toString("utf8")) as { pages: { hash: string }[] }
+    expect(bundle.pages.map((p) => p.hash)).toHaveLength(2)
+    for (const p of bundle.pages) expect(p.hash).toMatch(/^[0-9a-f]{16}$/)
+    expect(bundle.pages[0]!.hash).not.toBe(bundle.pages[1]!.hash)
+
+    const second = await request(handler, `${route}/${id}/page/2`)
+    expect(second.status).toBe(200)
+    expect(second.body.toString("utf8")).toBe("<svg>why</svg>")
+    expect((await request(handler, `${route}/${id}/page/3`)).status).toBe(404)
+    // The same deck built again keeps each unchanged page's fingerprint.
+    const again = await svc.buildTool.execute({ target }, inSession(workspace))
+    const rebuilt = JSON.parse((await request(handler, `${route}/${again.previewId}`)).body.toString("utf8")) as { pages: { hash: string }[] }
+    expect(rebuilt.pages.map((p) => p.hash)).toEqual(bundle.pages.map((p) => p.hash))
+  })
+
+  it("has no page route for an id it does not know, or a path that is not a page number", async () => {
+    const { route, handler } = await setup("page-route-bad")
+    expect((await request(handler, `${route}/00000000-0000-4000-8000-000000000999/page/1`)).status).toBe(404)
+    expect((await request(handler, `${route}/../../etc/page/1`)).status).toBe(404)
+  })
+})
+
+describe("pptwise_outline", () => {
+  const SPEC = {
+    theme: "brief",
+    pages: [
+      { id: "cover", type: "cover", heading: "周会" },
+      { id: "done", type: "content", kind: "points", heading: "本周完成", summary: "三件事" },
+      { id: "next", type: "content", kind: "points", heading: "下周计划" },
+      { id: "end", type: "ending", heading: "谢谢" },
+    ],
+  }
+
+  it("reads the spec of a deck directory and shows every page as a row, with the id the card fetches by", async () => {
+    const { svc, cliPath, workspace, route, handler } = await setup("outline")
+    const dir = await deck(workspace)
+    await writeFile(join(dir, "deck.spec.json"), JSON.stringify(SPEC))
+    const value = await svc.outlineTool.execute({ target: "weekly" }, inSession(workspace))
+    matchesSchema(value, svc.outlineTool.output.schema)
+    expect(value).toMatchObject({ status: "ok", theme: "brief", title: "周会", pageCount: 4 })
+    expect(value.pages!.map((p) => p.heading)).toEqual(["周会", "本周完成", "下周计划", "谢谢"])
+    expect((await calls(cliPath)).at(-1)!.argv).toEqual(["spec", "validate", join(dir, "deck.spec.json"), "--json"])
+
+    const text = svc.outlineTool.output.render({}, value)[0]!.text
+    const lines = text.split("\n")
+    expect(lines[0]).toBe(`pptwise-outline:${value.outlineId} · 4 pages, theme "brief"`)
+    expect(lines[2]).toBe("2. [content/points] 本周完成 (三件事)")
+    expect(text).toContain("ask_user_question")
+    expect(svc.outlineTool.output.presentationMeta({}, value)).toEqual({ card: "pptwise-outline", outlineId: value.outlineId })
+
+    const bundle = await request(handler, `${route}/${value.outlineId}`)
+    expect(bundle.status).toBe(200)
+    expect(JSON.parse(bundle.body.toString("utf8"))).toMatchObject({ kind: "outline", pageCount: 4, pages: value.pages })
+    // No pages drawn, so nothing to view and nothing to download.
+    expect((await request(handler, `${route}/${value.outlineId}/html`)).status).toBe(404)
+    expect((await request(handler, `${route}/${value.outlineId}/pptx`)).status).toBe(410)
+  })
+
+  it("hands an invalid spec's problems to the model and draws no card", async () => {
+    const { svc, workspace } = await setup("outline-bad")
+    const dir = await deck(workspace)
+    await writeFile(join(dir, "deck.spec.json"), JSON.stringify({ theme: "brief", pages: [] }))
+    const before = await readdir(svc.root).catch(() => [])
+    const value = await svc.outlineTool.execute({ target: join(dir, "deck.spec.json") }, inSession(workspace))
+    matchesSchema(value, svc.outlineTool.output.schema)
+    expect(value).toEqual({ status: "invalid", errors: [{ path: "pages", message: "spec has no pages" }], warnings: [] })
+    expect(svc.outlineTool.output.render({}, value)[0]!.text).toMatch(/^the spec is not valid yet: 1 problem, no outline card drawn\n- pages: spec has no pages/)
+    expect(await readdir(svc.root).catch(() => [])).toEqual(before)
   })
 })
 

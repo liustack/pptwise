@@ -61,7 +61,7 @@ A `low-contrast` finding on a page painted a mid-tone `background` color, about 
 
 ## Review the whole deck
 
-Show the user pages early. When an in-conversation preview tool exists, call `pptwise_preview` on the deck directory as soon as the spec validates, so the user sees the cover and the page sequence before pages are written, and use `pptwise_build` after each batch. Otherwise give the user the `preview.html` path from the build report, or generate the self-contained review file:
+Show the user pages early. When in-conversation tools exist, call `pptwise_outline` on the deck directory as soon as the spec validates, so the user sees the outline before pages are written, and use `pptwise_build` after each batch. Otherwise give the user the `preview.html` path from the build report, or generate the self-contained review file:
 
 ```bash
 pptwise preview deck-dir/ --html

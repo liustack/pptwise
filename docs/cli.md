@@ -168,12 +168,14 @@ pptwise schema --spec [--pretty]
 pptwise schema --component <type> [--pretty]
 pptwise schema --kind <kind> [--theme <name> [--deck <dir>]] [--pretty]
 pptwise icons [--json]
-pptwise spec validate deck-dir/deck.spec.json
+pptwise spec validate deck-dir/deck.spec.json [--json]
 ```
 
 The IR schema keeps every shared piece in `$defs` once: each component under its own type name, the component union as `Component`, the icon-name enum as `IconName`, the tag rows, figures, cards, charts and pages share as `Tag`, the kind of news a figure, row or milestone is as `Tone`, a page's strip of years as `Years`, a page's ballot as `Ballot`, and the page fields only some faces draw as `Kicker`, `Fields`, `Stamp` and `Stage`. Output is one line unless `--pretty` is passed.
 
 `--component` prints one component's schema with only the `$defs` it needs. `--kind` prints the components a page of that kind may hold, the face each built-in theme and each installed pack theme binds to it (a pack that cannot be read is left out, with a note on stderr), a `oneOf` over those components, and their `$defs`. Add `--theme` to answer for the bound theme alone. The name resolves the way `validate` resolves a spec's theme: the deck directory first (`theme.json`, `<name>.theme.json`), then workspace `themes/`, then installed packs, then the presets. The deck directory is `--deck <dir>`, or the cwd when it holds `deck.spec.json` or a deck-local file for that name (`theme.json`, `<name>.theme.json`, `<name>.json`), which is where `validate deck.json` reads a bare IR's theme from. A face that draws no component prints an empty list and `not: {}` in place of the `oneOf`. The list comes from the same theme-menu route validate uses, so a component outside it fails `validate`. An unknown type, kind, or theme fails and lists the valid names.
+
+`spec validate --json` prints the result as one JSON object. A valid spec gives `ok: true`, the theme, the resolved narrative, the cover heading as `title`, and `pages` in order, each with its number, `id`, `type`, `kind` for content pages, `heading` and `summary` when the spec has one, plus any warnings. An invalid spec gives `ok: false` with every error and its path, and exits 1.
 
 Icon fields print as a string that points at `pptwise icons`. Validation always checks the closed enum.
 
@@ -221,7 +223,7 @@ pptwise theme fork <name> --primary "#0B5FFF" \
   [-o <theme.json>] [--id <id>] [--label <label>]
 
 pptwise theme try <id,id,...> [-o <dir>]
-pptwise theme try <id,...|all> --title <text> \
+pptwise theme try [<id,...|all>] --title <text> [--occasion <words>] \
   [--subtitle <text>] [--lang zh|en] [--page <page.json>] [--json] [-o <dir>]
 ```
 
@@ -231,9 +233,9 @@ pptwise theme try <id,...|all> --title <text> \
 
 `theme try` requires two to four distinct names. It writes a contact sheet under `.pptwise/theme-try/` by default. It never changes a deck binding.
 
-With `--title`, `theme try` draws the caller's own pages instead of the fixed sample: a cover with that title (and `--subtitle` as its subheading), and one content page. The content page is three short points in the language `--lang` names, `zh` or `en`, by default `zh` when the title has Chinese, Japanese or Korean characters and `en` otherwise. `--page <file>` replaces it with one content page written the way a deck page is in IR: `kind`, `heading`, `components`, and `type` if you like, which must be `content`. The names may be one or more, or `all` for every theme `themes` lists.
+With `--title`, `theme try` draws the caller's own pages instead of the fixed sample: a cover with that title (and `--subtitle` as its subheading), and one content page. The content page is three short points in the language `--lang` names, `zh` or `en`, by default `zh` when the title has Chinese, Japanese or Korean characters and `en` otherwise. `--page <file>` replaces it with one content page written the way a deck page is in IR: `kind`, `heading`, `components`, and `type` if you like, which must be `content`. The names may be one or more, or `all` for every theme `themes` lists. With no names, `theme try` draws a shortlist of four to six: the themes whose occasions match `--occasion` (occasion words such as `business` or `tech`, or a narrative preset such as `weekly-brief`, comma-separated), filled from a spread of quiet to bold general themes when fewer than four match. Without `--occasion` it draws that spread: brief, swiss, journal, terminal. The language decides only the sample page, never which themes are drawn.
 
-Each page is validated alone against each theme. A page a theme refuses, such as a title its cover would cut or a kind its menu does not offer, is left out of that theme and listed under `skipped` with validate's own message. The output directory gets one SVG per drawn page, named `<theme>-cover.svg` and `<theme>-content.svg`, a `contact-sheet.html` with one row per theme, and `manifest.json`. `--json` prints the manifest with the absolute output directory as `dir`. Drawing all 22 presets takes about half a second.
+Each page is validated alone against each theme. A page a theme refuses, such as a title its cover would cut or a kind its menu does not offer, is left out of that theme and listed under `skipped` with validate's own message. `--json` adds `notes`, one line per distinct reason naming the themes it applies to, so a page that fails in every theme reads as one line. The output directory gets one SVG per drawn page, named `<theme>-cover.svg` and `<theme>-content.svg`, a `contact-sheet.html` with one row per theme, and `manifest.json`. `--json` prints the manifest with the absolute output directory as `dir`. Drawing all 22 presets takes about half a second.
 
 ```json
 {

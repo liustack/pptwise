@@ -151,6 +151,31 @@ describe("dsh plugin (skill registration, v0)", () => {
     )
   })
 
+  it("routes the theme wall and the build through the plugin's tools, never through bash", () => {
+    // A real Desktop session ran `cli.js build` in bash twenty times: the user
+    // saw logs, not pages. The note sits next to the command mapping and
+    // names each tool, including the Code Mode call shape.
+    const preamble = plugin.dshRuntimePreamble("/p/dist/cli.js", { command: "node", runAsNode: false }, "darwin")
+    expect(preamble).toContain(plugin.dshToolRouting())
+    for (const tool of [plugin.THEMES_TOOL_NAME, plugin.OUTLINE_TOOL_NAME, plugin.BUILD_TOOL_NAME, plugin.PREVIEW_TOOL_NAME]) {
+      expect(preamble).toContain(`\`${tool}\``)
+    }
+    expect(preamble).toContain("Never run `build` or `theme try` in the terminal here")
+    expect(preamble).toContain(`await tools.${plugin.BUILD_TOOL_NAME}({ target: "deck-dir/" })`)
+  })
+
+  it("asks for a restart when the package on disk is newer than the code DSH loaded", () => {
+    // The host keeps the old modules after an in-place upgrade while the
+    // skill body is read fresh, so the playbook names tools the old code
+    // never registered. Same version: no note at all.
+    expect(plugin.dshStaleNote("0.42.0", "0.42.0")).toBe("")
+    const note = plugin.dshStaleNote("0.40.0", "0.42.0")
+    expect(note.startsWith("## DSH restart needed")).toBe(true)
+    expect(note).toContain("upgraded to 0.42.0")
+    expect(note).toContain("still runs the 0.40.0 plugin code")
+    expect(note).toContain("quit DeepSeek Harness fully and open it again")
+  })
+
   it("tells the model to send the user back to the package name when the engine is missing", () => {
     // A plugin added from the GitHub address has no dist/cli.js. The note
     // replaces the command mapping: there is nothing to map onto.
@@ -389,6 +414,7 @@ interface PreviewModule {
   TOOL_NAME: string
   BUILD_TOOL_NAME: string
   THEMES_TOOL_NAME: string
+  OUTLINE_TOOL_NAME: string
   ROUTE_HEADER: string
   ROUTE_HEADER_VALUE: string
   FAILURE_CODES: { unknown: string; missing: string; damaged: string; unreadable: string }
@@ -520,7 +546,9 @@ type ClientBundle = {
     stripPages: (pages: { svg?: string | null; page?: number }[]) => { svg?: string | null; page?: number }[]
     hasMarkup: (page: { svg?: string | null } | undefined) => boolean
     pageNumberOf: (page: { page?: number } | undefined, index: number) => number
-    previewHtmlUrl: (previewId: string, startPage?: number) => string
+    pageUrl: (previewId: string, index: number) => string
+    paneAddress: (target: { view: string; id: string; priorId?: string }) => string
+    parsePaneAddress: (address: string) => { view: string; id: string; priorId?: string } | null
     verdictOf: (
       res:
         | { ok?: boolean; status?: number; headers?: { get: (name: string) => string | null }; json?: () => Promise<unknown> }
@@ -580,11 +608,12 @@ describe("pptwise preview card (browser half)", () => {
       { name: "tool.call.toolview", key: "pptwise_preview" },
       { name: "tool.call.toolview", key: "pptwise_build" },
       { name: "tool.call.toolview", key: "pptwise_themes" },
+      { name: "tool.call.toolview", key: "pptwise_outline" },
     ])
     expect(bundle.__testing.TOOL_NAME).toBe("pptwise_preview")
     // Pinned from the host side too: the names the tools register under.
     const host = await loadPreviewTool()
-    expect([host.TOOL_NAME, host.BUILD_TOOL_NAME, host.THEMES_TOOL_NAME]).toEqual(specs.map((s) => s.key))
+    expect([host.TOOL_NAME, host.BUILD_TOOL_NAME, host.THEMES_TOOL_NAME, host.OUTLINE_TOOL_NAME]).toEqual(specs.map((s) => s.key))
   })
 
   it("degrades to a console line rather than taking the turn down with it", async () => {
@@ -659,12 +688,12 @@ describe("pptwise preview card (browser half)", () => {
     ])
   })
 
-  it("points the viewer at the html the CLI already wrote", async () => {
-    // The one string the card and the route have to agree on for the modal to
-    // show anything at all.
+  it("asks the route for each page the viewer shows", async () => {
+    // The one string the card and the route have to agree on for the
+    // full-screen view to show anything at all. Pages count from one there.
     const bundle = await loadClientBundle(() => ({}))
     const { PREVIEW_ROUTE } = await loadPreviewTool()
-    expect(bundle.__testing.previewHtmlUrl("abc-123")).toBe(`${PREVIEW_ROUTE}/abc-123/html`)
+    expect(bundle.__testing.pageUrl("abc-123", 0)).toBe(`${PREVIEW_ROUTE}/abc-123/page/1`)
   })
 
   it("returns nothing only when the deck itself has no pages", async () => {
@@ -3814,14 +3843,16 @@ describe("what the card does with a bad answer", () => {
   })
 
   it("opens the viewer on the page the reader clicked", async () => {
-    // `#page=N` is honoured by the html itself (`src/cli/preview-html.ts`), so
-    // the card's only job is to put it in the URL. Clicking page 3 and landing
-    // on page 1 is the kind of small lie that makes a strip feel decorative.
+    // The sidebar tab is addressed by deck and handed the page as a
+    // navigation parameter, so the address round-trips without it, and an
+    // address that is not one of ours is nobody's.
     const client = await loadClientBundle(() => ({}))
     const { PREVIEW_ROUTE } = await loadPreviewTool()
-    expect(client.__testing.previewHtmlUrl("abc-123")).toBe(`${PREVIEW_ROUTE}/abc-123/html`)
-    expect(client.__testing.previewHtmlUrl("abc-123", 1)).toBe(`${PREVIEW_ROUTE}/abc-123/html`)
-    expect(client.__testing.previewHtmlUrl("abc-123", 4)).toBe(`${PREVIEW_ROUTE}/abc-123/html#page=4`)
+    const { paneAddress, parsePaneAddress, pageUrl } = client.__testing
+    expect(parsePaneAddress(paneAddress({ view: "deck", id: "abc-123" }))).toEqual({ view: "deck", id: "abc-123" })
+    expect(parsePaneAddress(paneAddress({ view: "compare", id: "b", priorId: "a" }))).toEqual({ view: "compare", id: "b", priorId: "a" })
+    expect(parsePaneAddress("dsh-resource://file/abc-123")).toBeNull()
+    expect(pageUrl("abc-123", 3)).toBe(`${PREVIEW_ROUTE}/abc-123/page/4`)
   })
 })
 

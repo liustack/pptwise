@@ -14,7 +14,7 @@
 // it names turns it red.
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vitest"
 import type { Node as TsNode } from "typescript"
-import { render, screen, fireEvent, waitFor, cleanup, act } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor, cleanup, act, within } from "@testing-library/react"
 import * as React from "react"
 import * as ReactDOM from "react-dom"
 
@@ -38,6 +38,35 @@ type Card = React.ComponentType<CardProps>
 
 let makeCard: (options?: { reactDom?: boolean; key?: string }) => Card
 let makeTesting: () => { isZip: (blob: Blob) => Promise<boolean> }
+
+interface TailEntry { callId: string; tool: string; kind: string; id: string; target: string; version: number; priorId: string | null }
+type TailProps = { turn: { turn: number }; useArtifacts: (turn: string) => TailEntry[] | undefined; editPage?: (n: number) => void }
+interface TailKit {
+  Tail: React.ComponentType<TailProps>
+  definition: {
+    kind: string
+    match: (event: unknown) => { id: string; role: string } | null
+    start: (context: unknown, match: unknown, reader: unknown) => unknown
+    update: (context: unknown, match: unknown) => unknown
+    buildViewNode: (context: unknown) => { data: TailEntry; location: unknown; anchorSeq: number; visibility: string } | null
+  }
+  registeredDefinitions: unknown[]
+  inject: (sessionId: string) => { editPage: (n: number) => void; keyedHooks: { artifacts: (turn: string) => unknown } }
+  testing: { editPageIn: (sessions: unknown, sessionId: string, n: number) => void; deckKey: (target: string) => string }
+  /** The tool cards from the same plugin instance, so they see its sidebar. */
+  seats: Map<string, Card>
+  /** What the plugin asked DSH's right sidebar to open. */
+  opened: { address: string; options: { kind?: string; params?: { page?: number; version?: number } } }[]
+  /** The sidebar tab type it registered, when there was a sidebar. */
+  tabTypes: { id: string; kind: string; patterns: string[]; canOpen: (address: string) => boolean; title: (address: string) => string }[]
+  PaneTab?: React.ComponentType<{ useTabInfo: () => TabInfo }>
+  PaneTitle?: React.ComponentType<{ useTabInfo: () => TabInfo }>
+}
+interface TabInfo {
+  sidebar: { expanded: boolean; fullscreen: boolean }
+  tab: { title: string; navigation: { address: string; params?: { page?: number; version?: number }; revision: number }; actions: { close: () => void } }
+}
+let makeTail: (session?: { conversation?: unknown; snapshot?: unknown; sidebar?: boolean; primitives?: Record<string, unknown> | null }) => TailKit
 
 beforeAll(async () => {
   let captured: { factory: (require: (id: string) => unknown) => unknown } | null = null
@@ -66,6 +95,7 @@ beforeAll(async () => {
     const exportsObj = mod.factory((id: string) => {
       if (id === "react") return React
       if (id === "react-dom" && options.reactDom !== false) return ReactDOM
+      if (id === "@deepseek-ai/dsh-client-ui-primitives") return {}
       throw new Error("unexpected require: " + id)
     }) as { apply: (ctx: unknown) => void; inject: string[] }
 
@@ -86,11 +116,89 @@ beforeAll(async () => {
     })
     // One seat per tool, and the build shares the deck card because its
     // result carries the same preview stamp.
-    expect([...seats.keys()].sort()).toEqual(["pptwise_build", "pptwise_preview", "pptwise_themes"])
+    expect([...seats.keys()].sort()).toEqual(["pptwise_build", "pptwise_outline", "pptwise_preview", "pptwise_themes"])
     expect(seats.get("pptwise_build")).toBe(seats.get("pptwise_preview"))
     const found = seats.get(options.key ?? "pptwise_preview")
     if (!found) throw new Error("the plugin registered no card")
     return found
+  }
+
+  // The session-scope half: a ctx whose scoped `inject` hands over slots,
+  // the Conversation service and the session registry, the way the web
+  // shell does once a session is open.
+  makeTail = (session = {}) => {
+    const exportsObj = mod.factory((id: string) => {
+      if (id === "react") return React
+      if (id === "react-dom") return ReactDOM
+      // DSH's primitives: the given stand-ins, an empty module by default,
+      // and a module table without them when `primitives` is null.
+      if (id === "@deepseek-ai/dsh-client-ui-primitives" && session.primitives !== null) return session.primitives ?? {}
+      throw new Error("unexpected require: " + id)
+    }) as { apply: (ctx: unknown) => void; __testing: TailKit["testing"] & { artifactDefinition: TailKit["definition"] } }
+    const registeredDefinitions: unknown[] = []
+    const seats = new Map<string, Card>()
+    const opened: TailKit["opened"] = []
+    const tabTypes: TailKit["tabTypes"] = []
+    const panes = new Map<string, React.ComponentType<{ useTabInfo: () => TabInfo }>>()
+    let tail: { component: TailKit["Tail"]; descriptor: { inject: TailKit["inject"]; name: string } } | undefined
+    const binding = { ctx: { get: (name: string) => (name === "conversation" ? session.conversation : undefined) } }
+    const scope = {
+      effect: (fn: () => unknown) => fn(),
+      slots: {
+        inject(_name: string, run: () => Generator<unknown>) {
+          for (const _ of run()) {
+            /* drain */
+          }
+        },
+        register(descriptor: { name: string; key?: string; inject: TailKit["inject"] }, component: TailKit["Tail"]) {
+          if (descriptor.name === "conversation.chat.turnTail") tail = { component, descriptor }
+          if (descriptor.name === "tool.call.toolview") seats.set(descriptor.key!, component as unknown as Card)
+          if (descriptor.name.startsWith("sidebar.right.pane.tab")) {
+            expect(descriptor.key).toBe("@liustack/pptwise:viewer")
+            panes.set(descriptor.name, component as unknown as React.ComponentType<{ useTabInfo: () => TabInfo }>)
+          }
+          return () => {}
+        },
+      },
+      sidebarRight: {
+        openResource: (address: string, options: TailKit["opened"][number]["options"]) => {
+          opened.push({ address, options })
+        },
+        mounted: { getSnapshot: () => "s1" },
+      },
+      sidebarRightTabs: {
+        register: (definition: TailKit["tabTypes"][number]) => {
+          tabTypes.push(definition)
+          return () => {}
+        },
+      },
+      uiConversation: {
+        events: { register: (definition: unknown) => { registeredDefinitions.push(definition); return () => {} } },
+        binding: () => ({ target: () => ({ getSnapshot: () => session.snapshot }) }),
+      },
+      sessions: { binding: (id: string) => (id === "s1" ? binding : undefined) },
+    }
+    exportsObj.apply({
+      slots: scope.slots,
+      inject(names: string[], cb: (scope: unknown) => void) {
+        if (names.includes("uiConversation")) cb(scope)
+        // A shell without the right sidebar never applies the viewer's half.
+        if (names.includes("sidebarRight") && session.sidebar) cb(scope)
+      },
+    })
+    if (!tail) throw new Error("the plugin registered no turn tail")
+    return {
+      Tail: tail.component,
+      definition: exportsObj.__testing.artifactDefinition,
+      registeredDefinitions,
+      inject: tail.descriptor.inject,
+      testing: exportsObj.__testing,
+      seats,
+      opened,
+      tabTypes,
+      PaneTab: panes.get("sidebar.right.pane.tab"),
+      PaneTitle: panes.get("sidebar.right.pane.tab.title"),
+    }
   }
 })
 
@@ -203,13 +311,23 @@ function thumbnails(container: HTMLElement) {
 }
 
 /**
- * The viewer, when it is open: one iframe holding the deck's own preview.html.
+ * The full-screen viewer, when it is open: the deck pane.
  *
- * Looked for in the whole document, not the card's container: the viewer is
- * portalled onto `document.body` so that no ancestor of the card can clip it.
+ * Looked for in the whole document, not the card's container: without DSH's
+ * sidebar the pane is portalled onto `document.body` so that no ancestor of
+ * the card can clip it.
  */
 function viewer(container: HTMLElement) {
-  return container.ownerDocument.querySelector("iframe")
+  return container.ownerDocument.querySelector("[data-pptwise-viewer]") as HTMLElement | null
+}
+
+/** Wait for the viewer to show deck `id`, on page `n`. */
+async function viewerOn(container: HTMLElement, id: string, n: number) {
+  await waitFor(() => {
+    const pane = viewer(container)
+    expect(pane).toHaveAttribute("data-pptwise-viewer", id)
+    expect(pane).toHaveAttribute("data-page", String(n))
+  })
 }
 
 let fetchMock: ReturnType<typeof vi.fn>
@@ -337,33 +455,28 @@ describe("dsh preview card — the viewer", () => {
     )
   }
 
-  /**
-   * Open the viewer and wait until it is actually usable.
-   *
-   * The frame appearing is not enough. Opening is asynchronous now — the card
-   * asks the route whether the id is still live before it renders anything —
-   * and `waitFor` can return on the render that mounts the frame, one turn
-   * before React runs the modal's effect. That effect is what registers the
-   * Escape listener, so a test that pressed Escape on the strength of the
-   * frame alone was pressing it into a document nobody was listening to.
-   */
+  /** Open the viewer from the card's Open button and wait until it shows a page. */
   async function openViewer(id = "abc") {
     routeIsAlive()
     const Card = makeCard()
     const view = render(<Card block={blockWith(bundleOf(nine()), id)} />)
     fireEvent.click(await screen.findByText("Open"))
-    await waitFor(() => expect(viewer(view.container)).not.toBeNull())
-    await act(async () => {})
+    await viewerOn(view.container, id, 1)
     return view
+  }
+
+  /** The page the viewer is on, read off the page it shows rather than its own attribute. */
+  function shownPage(container: HTMLElement) {
+    const slide = viewer(container)!.querySelector(".pw-slide")!
+    return /\/page\/(\d+)$/.exec(slide.getAttribute("src") ?? "")?.[1]
   }
 
   it("checks the id is still live before opening, instead of walking into a wall", async () => {
     // The failure this exists for: a browser tab left open across a harness
-    // restart. The card is drawing a bundle it fetched minutes ago, the
-    // record behind the id is gone, and the viewer's iframe navigates to a
-    // route that answers 404 — which the browser renders as a document. The
-    // deck stays on screen, because those thumbnails are real; what goes is
-    // the promise that clicking them leads anywhere.
+    // restart. The card is drawing a bundle it fetched minutes ago and the
+    // record behind the id is gone. The deck stays on screen, because those
+    // thumbnails are real; what goes is the promise that clicking them leads
+    // anywhere.
     fetchMock.mockResolvedValue(routeAnswer({ status: 404 }))
     const Card = makeCard()
     const { container } = render(<Card block={blockWith(bundleOf(nine()), "abc")} />)
@@ -383,42 +496,111 @@ describe("dsh preview card — the viewer", () => {
     expect(viewer(container)).toBeNull()
   })
 
-  it("loads the deck's own preview.html instead of paging slides itself", async () => {
-    // The whole point of the change. That page already has a filmstrip,
-    // ←/→, a light/dark surround and an audit panel, was written once and is
-    // what every harness without a plugin UI is told to open. The card used
-    // to run a thinner copy of it beside the original.
+  it("shows one page at a time from the page route, with Page N of M and every page below", async () => {
     const { container } = await openViewer("abc123")
+    const pane = viewer(container)!
 
-    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/abc123/html")
-    // None of the second implementation is left: no counter, no arrows...
-    expect(screen.queryByText(/^\d+ \/ \d+/)).toBeNull()
-    expect(screen.queryByText("←")).toBeNull()
-    expect(screen.queryByText("→")).toBeNull()
-    // ...and no second copy of any slide mounted next to the strip's nine.
-    expect(container.querySelectorAll("svg")).toHaveLength(9)
+    expect(pane.querySelector(".pw-slide")!.getAttribute("src")).toBe("/pptwise/preview/abc123/page/1")
+    expect(within(pane).getByText("Page 1 of 9")).toBeInTheDocument()
+    const strip = Array.from(pane.querySelectorAll("[data-viewer-thumb]"))
+    expect(strip).toHaveLength(9)
+    expect(strip[8]!.querySelector("img")!.getAttribute("src")).toBe("/pptwise/preview/abc123/page/9")
+    expect(strip[0]).toHaveAttribute("aria-current", "true")
+    // No iframe, so nothing in the pane has a document of its own to swallow keys.
+    expect(document.querySelector("iframe")).toBeNull()
+  })
+
+  it("takes the keyboard the moment it opens", async () => {
+    // The bug this replaced: the old viewer was an iframe nobody focused, so
+    // ←/→ went to the chat's document and the deck never moved until the
+    // reader clicked into it.
+    const { container } = await openViewer()
+    expect(document.activeElement).toBe(viewer(container))
+  })
+
+  it("pages with ←/→, PageUp/PageDown, Space and Shift+Space, and jumps with Home and End", async () => {
+    const { container } = await openViewer()
+    const pane = () => viewer(container)!
+    const press = (key: string, extra: Record<string, unknown> = {}) => fireEvent.keyDown(document.activeElement!, { key, ...extra })
+
+    press("ArrowRight")
+    expect(shownPage(container)).toBe("2")
+    press("PageDown")
+    expect(shownPage(container)).toBe("3")
+    press(" ")
+    expect(shownPage(container)).toBe("4")
+    press(" ", { shiftKey: true })
+    expect(shownPage(container)).toBe("3")
+    press("PageUp")
+    expect(shownPage(container)).toBe("2")
+    press("ArrowLeft")
+    expect(shownPage(container)).toBe("1")
+    // The first page stays put rather than wrapping round.
+    press("ArrowLeft")
+    expect(shownPage(container)).toBe("1")
+    press("End")
+    expect(shownPage(container)).toBe("9")
+    expect(within(pane()).getByText("Page 9 of 9")).toBeInTheDocument()
+    press("ArrowRight")
+    expect(shownPage(container)).toBe("9")
+    press("Home")
+    expect(shownPage(container)).toBe("1")
+    // A shortcut with a modifier belongs to the browser or the harness.
+    press("ArrowRight", { metaKey: true })
+    expect(shownPage(container)).toBe("1")
+  })
+
+  it("pages with the previous and next areas and the strip, and keeps the keyboard afterwards", async () => {
+    const { container } = await openViewer()
+    const pane = viewer(container)!
+    const prev = pane.querySelector('[data-side="prev"]') as HTMLButtonElement
+    const next = pane.querySelector('[data-side="next"]') as HTMLButtonElement
+    expect(prev).toBeDisabled()
+
+    fireEvent.click(next)
+    expect(shownPage(container)).toBe("2")
+    expect(prev).not.toBeDisabled()
+    fireEvent.click(prev)
+    expect(shownPage(container)).toBe("1")
+
+    fireEvent.click(pane.querySelector('[data-viewer-thumb="7"]')!)
+    expect(shownPage(container)).toBe("7")
+    expect(pane.querySelector('[data-viewer-thumb="7"]')).toHaveAttribute("aria-current", "true")
+    expect(within(pane).getByText("Page 7 of 9")).toBeInTheDocument()
+    // A click hands the keyboard back to the pane, so the next arrow still pages.
+    expect(document.activeElement).toBe(pane)
+    fireEvent.keyDown(document.activeElement!, { key: "ArrowRight" })
+    expect(shownPage(container)).toBe("8")
+    fireEvent.click(pane.querySelector('[data-viewer-thumb="9"]')!)
+    expect(next).toBeDisabled()
+  })
+
+  it("pages on a sideways trackpad swipe, once per swipe", async () => {
+    const { container } = await openViewer()
+    const stage = viewer(container)!.querySelector(".pw-stage")!
+    fireEvent.wheel(stage, { deltaX: 80, deltaY: 4 })
+    expect(shownPage(container)).toBe("2")
+    // The rest of the same swipe's burst does not page again.
+    fireEvent.wheel(stage, { deltaX: 90, deltaY: 2 })
+    expect(shownPage(container)).toBe("2")
+    // A vertical scroll is not a swipe.
+    stage.removeAttribute("data-swiped-at")
+    fireEvent.wheel(stage, { deltaX: 50, deltaY: 120 })
+    expect(shownPage(container)).toBe("2")
+    fireEvent.wheel(stage, { deltaX: -80, deltaY: 0 })
+    expect(shownPage(container)).toBe("1")
   })
 
   it("opens the viewer on the thumbnail that was clicked", async () => {
-    // `#page=N` is the html's own way in (`src/cli/preview-html.ts` reads it
-    // off `location.hash`), and a URL is the only thing this card can hand a
-    // document. Clicking page five and landing on page one is the kind of
-    // small lie that makes a strip feel decorative.
+    // Clicking page five and landing on page one is the kind of small lie
+    // that makes a strip feel decorative.
     routeIsAlive()
     const Card = makeCard()
     const { container } = render(<Card block={blockWith(bundleOf(nine()), "abc")} />)
     fireEvent.click(thumbnails(container)[4]!)
-    await waitFor(() => expect(viewer(container)).not.toBeNull())
-    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/abc/html#page=5")
-  })
-
-  it("opens on page one from the header button, with no hash to undo", async () => {
-    routeIsAlive()
-    const Card = makeCard()
-    const { container } = render(<Card block={blockWith(bundleOf(nine()), "abc")} />)
-    fireEvent.click(await screen.findByText("Open"))
-    await waitFor(() => expect(viewer(container)).not.toBeNull())
-    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/abc/html")
+    await viewerOn(container, "abc", 5)
+    expect(shownPage(container)).toBe("5")
+    expect(screen.getByText("Page 5 of 9")).toBeInTheDocument()
   })
 
   it("opens from the keyboard on the thumbnail that has focus", async () => {
@@ -432,7 +614,7 @@ describe("dsh preview card — the viewer", () => {
       expect(thumb).toHaveAttribute("tabIndex", "0")
 
       fireEvent.keyDown(thumb, { key })
-      await waitFor(() => expect(viewer(container), key).not.toBeNull())
+      await viewerOn(container, "abc", 3)
       unmount()
       cleanup()
     }
@@ -447,24 +629,9 @@ describe("dsh preview card — the viewer", () => {
     expect(viewer(container)).toBeNull()
   })
 
-  it("closes on Escape", async () => {
+  it("closes on Escape, where the keyboard already is", async () => {
     const { container } = await openViewer()
-    fireEvent.keyDown(document, { key: "Escape" })
-    expect(viewer(container)).toBeNull()
-  })
-
-  it("closes on Escape pressed inside the frame, where the deck actually has focus", async () => {
-    // The keystroke a reader really makes: they click the deck first, so the
-    // keydown lands on the frame's own document and never reaches this one.
-    // Listen on the outer document alone and Escape stops working the moment
-    // the viewer is touched, which is the only moment it is wanted.
-    const { container } = await openViewer()
-    const frame = viewer(container)!
-    fireEvent.load(frame)
-    const inner = frame.contentDocument!
-    expect(inner).toBeTruthy()
-
-    fireEvent.keyDown(inner, { key: "Escape" })
+    fireEvent.keyDown(document.activeElement!, { key: "Escape" })
     expect(viewer(container)).toBeNull()
   })
 
@@ -474,88 +641,39 @@ describe("dsh preview card — the viewer", () => {
     expect(viewer(container)).toBeNull()
   })
 
-  it("closes on a click on the backdrop, but never on one on the deck", async () => {
+  it("closes on a click on the surround, but never on one on the deck", async () => {
     const { container } = await openViewer()
-    const backdrop = document.querySelector('[style*="position: fixed"]') as HTMLElement
-    expect(backdrop).toBeTruthy()
+    const layer = document.querySelector("[data-pptwise-layer]") as HTMLElement
+    expect(layer).toBeTruthy()
 
-    // A click that started on the frame bubbles to the same element and must
-    // not be mistaken for one on the backdrop — that would dismiss the viewer
+    // A click that started on the pane bubbles to the same element and must
+    // not be mistaken for one on the surround — that would dismiss the viewer
     // every time somebody clicked the deck they came to read.
-    fireEvent.click(viewer(container)!)
+    fireEvent.click(viewer(container)!.querySelector(".pw-slide")!)
     expect(viewer(container)).not.toBeNull()
 
-    fireEvent.click(backdrop)
+    fireEvent.click(layer)
     expect(viewer(container)).toBeNull()
   })
 
-  it("closes on a click on any dark surface, including the button row's own", async () => {
-    // Every black area in the viewer dismisses it — except, before this,
-    // the band the buttons sit in, which looks exactly like the rest of the
-    // backdrop and is nearly a thousand pixels wide.
+  it("draws itself from DSH's design variables, with no light or dark switch of its own", async () => {
     const { container } = await openViewer()
-    const row = screen.getByText("Close").parentElement as HTMLElement
-    expect(row).toBeTruthy()
-
-    fireEvent.click(row)
-    expect(viewer(container)).toBeNull()
-  })
-
-  it("gives the viewer's buttons a hover state, which inline styles cannot", async () => {
-    // A solid white button that does not answer the pointer reads as broken
-    // before it reads as plain, and `:hover` is unreachable from the inline
-    // styles the rest of this card is built from.
-    const { container } = await openViewer()
-    // Waited for rather than read straight off: the sheet is appended by the
-    // modal's own effect, one turn after the frame it is asserted through.
-    await waitFor(() => expect(document.querySelectorAll("#pptwise-modal-style")).toHaveLength(1))
-    const css = document.querySelector("#pptwise-modal-style")!.textContent ?? ""
-    expect(css).toContain(".pf-mbtn:hover")
-    expect(css).toContain(".pf-mbtn-primary:hover")
-
-    const close = screen.getByText("Close")
-    expect(close.className).toBe("pf-mbtn")
-    // The card carries a download button too, so reach the viewer's through
-    // the row it shares with Close rather than by its label.
-    const row = close.parentElement as HTMLElement
-    const download = row.querySelector(".pf-mbtn-primary") as HTMLElement
-    expect(download?.textContent).toBe("Download .pptx")
-
-    // The part a passing className does not prove, and the reason the first
-    // version of this shipped broken: an element's own `style` attribute
-    // outranks any sheet, so a `background` or `border` left inline wins
-    // every hover. The transition still runs, so it looks wired up while the
-    // colour never moves. Both buttons must take their whole appearance from
-    // the sheet, or the rules above are decoration.
-    for (const btn of [close, download]) {
-      expect(btn.style.background).toBe("")
-      expect(btn.style.backgroundColor).toBe("")
-      expect(btn.style.border).toBe("")
-      expect(btn.style.borderColor).toBe("")
-    }
-    expect(css).toContain("background:#fff")
-    expect(css).toContain("background:transparent")
-
-    // Opening a second viewer must not stack a second copy in the head.
-    fireEvent.keyDown(document, { key: "Escape" })
-    expect(viewer(container)).toBeNull()
+    const css = document.querySelector("#pptwise-dsh-style")!.textContent ?? ""
+    // DSH's tokens, and DSH's own dark-theme switch: nothing here picks a colour.
+    expect(css).toContain("var(--dsw-alias-bg-layer-1)")
+    expect(css).toContain("var(--dsw-alias-border-l1)")
+    expect(css).toContain("body[data-ds-dark-theme]")
+    expect(css).not.toMatch(/#000\b|#fff\b|background:#/)
+    const pane = viewer(container)!
+    expect(within(pane).queryByText(/^(Light|Dark)$/)).toBeNull()
+    // One sheet however many viewers open.
+    fireEvent.click(screen.getByText("Close"))
     fireEvent.click(await screen.findByText("Open"))
-    await waitFor(() => expect(viewer(container)).not.toBeNull())
-    await act(async () => {})
-    expect(document.querySelectorAll("#pptwise-modal-style")).toHaveLength(1)
+    await viewerOn(container, "abc", 1)
+    expect(document.querySelectorAll("#pptwise-dsh-style")).toHaveLength(1)
   })
 
-  it("stays closed once it is closed", async () => {
-    const { container } = await openViewer()
-    fireEvent.keyDown(document, { key: "Escape" })
-    // Keys that land after the viewer is gone belong to the page, not to it.
-    expect(() => fireEvent.keyDown(document, { key: "Escape" })).not.toThrow()
-    expect(viewer(container)).toBeNull()
-  })
-
-  it("keeps the download inside the viewer, since the html cannot offer it", async () => {
-    // The one card ability the page has no way to reach: it is a static file
-    // on a route of its own, with no idea an export exists.
+  it("keeps the download inside the viewer", async () => {
     await openViewer("abc123")
 
     const buttons = await screen.findAllByText("Download .pptx")
@@ -583,9 +701,9 @@ describe("dsh preview card — the viewer", () => {
       </div>,
     )
     fireEvent.click(await screen.findByText("Open"))
-    await waitFor(() => expect(viewer(container)).not.toBeNull())
+    await viewerOn(container, "abc", 1)
 
-    const layer = viewer(container)!.closest('[style*="position: fixed"]') as HTMLElement
+    const layer = viewer(container)!.closest("[data-pptwise-layer]") as HTMLElement
     expect(layer.parentElement).toBe(document.body)
     expect(screen.getByTestId("work-group-body").contains(layer)).toBe(false)
     expect(container.contains(viewer(container))).toBe(false)
@@ -593,7 +711,7 @@ describe("dsh preview card — the viewer", () => {
     // Still part of the card: closing it takes the layer off the body.
     fireEvent.click(screen.getByText("Close"))
     expect(viewer(container)).toBeNull()
-    expect(document.querySelector('[style*="position: fixed"]')).toBeNull()
+    expect(document.querySelector("[data-pptwise-layer]")).toBeNull()
   })
 
   it("opens inside the card on a shell whose module table has no react-dom", async () => {
@@ -604,7 +722,7 @@ describe("dsh preview card — the viewer", () => {
     const Card = makeCard({ reactDom: false })
     const { container } = render(<Card block={blockWith(bundleOf(nine()), "abc")} />)
     fireEvent.click(await screen.findByText("Open"))
-    await waitFor(() => expect(viewer(container)).not.toBeNull())
+    await viewerOn(container, "abc", 1)
 
     expect(container.contains(viewer(container))).toBe(true)
     expect(warn.mock.calls.some(([line]) => String(line).includes("react-dom unavailable"))).toBe(true)
@@ -612,7 +730,7 @@ describe("dsh preview card — the viewer", () => {
     expect(viewer(container)).toBeNull()
   })
 
-  it("offers no viewer at all without a preview id, rather than an empty frame", () => {
+  it("offers no viewer at all without a preview id, rather than an empty one", () => {
     // The viewer is a route keyed by that id. A button that opened a 404
     // would be worse than no button.
     const Card = makeCard()
@@ -1065,10 +1183,18 @@ describe("dsh preview card — a deck with unfilled pages", () => {
     expect(screen.getByText("draft")).toBeInTheDocument()
   })
 
+  it("says how many pages are written so far, build by build", () => {
+    const Card = makeCard({ key: "pptwise_build" })
+    const pages = [page(1, "cover"), { ...page(2), placeholder: true }, { ...page(3), placeholder: true }]
+    const { container } = render(<Card block={blockWith({ ...bundleOf(pages), draft: true }, "abc")} />)
+    expect(container.querySelector("[data-written]")!.textContent).toBe("1 of 3 pages written")
+  })
+
   it("keeps quiet about drafts on a finished deck", () => {
     const Card = makeCard()
-    render(<Card block={blockWith(bundleOf([page(1)]), "abc")} />)
+    const { container } = render(<Card block={blockWith(bundleOf([page(1)]), "abc")} />)
     expect(screen.queryByText("draft")).toBeNull()
+    expect(container.querySelector("[data-written]")).toBeNull()
   })
 
   it("saves the file under a name that says draft too", async () => {
@@ -1329,8 +1455,7 @@ describe("dsh preview card — one instance, decks going past", () => {
     const { container, rerender } = render(<Card block={blockWith(bundleOf([page(1), page(2)]), "A")} />)
 
     fireEvent.click(await screen.findByText("Open"))
-    await waitFor(() => expect(viewer(container)).not.toBeNull())
-    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/A/html")
+    await viewerOn(container, "A", 1)
 
     rerender(<Card block={blockWith(bundleOf([page(1)], "Deck B"), "B")} />)
     await act(async () => {})
@@ -1345,14 +1470,12 @@ describe("dsh preview card — one instance, decks going past", () => {
     const { container, rerender } = render(<Card block={blockWith(bundleOf([page(1), page(2)]), "A")} />)
 
     fireEvent.click(thumbnails(container)[1]!)
-    await waitFor(() => expect(viewer(container)).not.toBeNull())
-    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/A/html#page=2")
+    await viewerOn(container, "A", 2)
 
     rerender(<Card block={blockWith(bundleOf([page(1), page(2)], "Deck B"), "B")} />)
     await act(async () => {})
     fireEvent.click(await screen.findByText("Open"))
-    await waitFor(() => expect(viewer(container)).not.toBeNull())
-    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/B/html")
+    await viewerOn(container, "B", 1)
   })
 
   it("does not let a stale answer close the viewer the user is looking at", async () => {
@@ -1378,15 +1501,14 @@ describe("dsh preview card — one instance, decks going past", () => {
 
     rerender(<Card block={blockWith(bundleOf([page(1)], "Deck B"), "B")} />)
     fireEvent.click(await screen.findByText("Open"))
-    await waitFor(() => expect(viewer(container)).not.toBeNull())
-    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/B/html")
+    await viewerOn(container, "B", 1)
 
     // A finally answers, minutes late and about a deck nobody is looking at.
     answerA(routeAnswer({ status: 200, json: bundleOf([page(1), page(2)], "Deck A") }))
     await act(async () => {})
 
     expect(viewer(container)).not.toBeNull()
-    expect(viewer(container)).toHaveAttribute("src", "/pptwise/preview/B/html")
+    await viewerOn(container, "B", 1)
   })
 })
 
@@ -1457,10 +1579,14 @@ describe("dsh preview card — the store", () => {
     walk(tree)
 
     // One state container per card, whatever spelling is used to reach it:
-    // the deck card's store, and the theme wall's one fetch.
+    // the deck card's store, the theme wall's one fetch, the one fetch the
+    // newer cards share, and the page the full-screen viewer is on.
     expect(calls.filter((c) => c.callee === "useState").map((c) => c.inside).sort()).toEqual([
+      "DeckViewer",
+      "DraftDesk",
       "PptwisePreviewCard",
       "PptwiseThemesCard",
+      "useRouteBundle",
     ])
     // No second one under another name.
     for (const hook of ["useReducer", "useSyncExternalStore", "useDeferredValue"]) {
@@ -1469,7 +1595,7 @@ describe("dsh preview card — the store", () => {
     // `useRef` only where it holds a DOM node. A ref holding deck state is the
     // shape that broke under a discarded render.
     const refs = calls.filter((c) => c.callee === "useRef").map((c) => c.inside)
-    expect(refs.sort()).toEqual(["Modal", "Slide"])
+    expect(refs.sort()).toEqual(["Slide", "useAutoFocus"])
     // `commit` touches one entry and does not survey the store. A capacity rule
     // is the shape that turned an isolated write into a cross-deck effect: a
     // late answer re-inserted its own entry and pushed the deck on screen out,
@@ -2037,6 +2163,11 @@ describe("dsh theme wall card", () => {
       "memo",
     ])
     expect(screen.getByText("3 themes")).toBeInTheDocument()
+    // Numbered in the order the result tells the model, so "2" in the
+    // question panel is the second column here.
+    expect(
+      Array.from(container.querySelectorAll("[data-theme]")).map((el) => el.querySelector("[data-theme-number]")?.textContent),
+    ).toEqual(["1", "2", "3"])
     // Each mounted page keeps its ids to itself.
     const ids = Array.from(container.querySelectorAll("[id]")).map((el) => el.id)
     expect(new Set(ids).size).toBe(ids.length)
@@ -2051,11 +2182,14 @@ describe("dsh theme wall card", () => {
 
     await waitFor(() => expect(thumbnails(container)).toHaveLength(2))
     fireEvent.click(thumbnails(container)[1]!)
-    await waitFor(() => expect(viewer(container)).not.toBeNull())
-    expect(viewer(container)!.getAttribute("src")).toBe("/pptwise/preview/0123abcd-0000/html")
+    const wallPane = () => document.querySelector("[data-pptwise-wall]") as HTMLElement | null
+    await waitFor(() => expect(wallPane()?.querySelectorAll("[data-theme]")).toHaveLength(1))
+    expect(wallPane()).toHaveAttribute("data-pptwise-wall", "0123abcd-0000")
+    expect(document.activeElement).toBe(wallPane())
+    expect(within(wallPane()!).getByText("1")).toHaveAttribute("data-theme-number", "1")
     expect(screen.queryByText("Download .pptx")).toBeNull()
     fireEvent.click(screen.getByText("Close"))
-    await waitFor(() => expect(viewer(container)).toBeNull())
+    await waitFor(() => expect(wallPane()).toBeNull())
   })
 
   it("says the wall is gone when the route has never heard of it", async () => {
@@ -2071,5 +2205,503 @@ describe("dsh theme wall card", () => {
     const { container } = render(<Card block={{ content: [{ text: "pptwise theme try failed" }] }} />)
     expect(container).toBeEmptyDOMElement()
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+})
+
+describe("dsh outline card", () => {
+  const outline = {
+    kind: "outline",
+    ok: true,
+    theme: "brief",
+    title: "周会",
+    pageCount: 4,
+    pages: [
+      { page: 1, id: "cover", type: "cover", heading: "周会" },
+      { page: 2, id: "done", type: "content", kind: "points", heading: "本周完成", summary: "三件事" },
+      { page: 3, id: "next", type: "content", kind: "points", heading: "下周计划" },
+      { page: 4, id: "end", type: "ending", heading: "谢谢" },
+    ],
+  }
+  const block = { content: [{ text: 'pptwise-outline:0123abcd-0001 · 4 pages, theme "brief"' }] }
+
+  it("lists every page as a row, number, page type, heading and what it says, fetched by the stamped id", async () => {
+    const Card = makeCard({ key: "pptwise_outline" })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: outline }))
+    const { container } = render(<Card block={block} />)
+
+    await waitFor(() => expect(container.querySelectorAll("li[data-page]")).toHaveLength(4))
+    expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/0123abcd-0001")
+    const rows = Array.from(container.querySelectorAll("li[data-page]")).map((li) => li.textContent)
+    expect(rows[0]).toBe("1Cover周会")
+    expect(rows[1]).toBe("2Content本周完成三件事")
+    expect(rows[3]).toBe("4Ending谢谢")
+    expect(screen.getByText("4 pages")).toBeInTheDocument()
+    expect(screen.getByText("Theme brief")).toBeInTheDocument()
+    // Only a list: no viewer and no download, there are no pages yet.
+    expect(screen.queryByText("Open")).toBeNull()
+    expect(screen.queryByText("Download .pptx")).toBeNull()
+  })
+
+  it("sizes the page type column to its longest label, shared by every row", async () => {
+    // A fixed width sized for two Chinese characters let "Content" run into
+    // the heading. jsdom does no layout, so this pins the rule that avoids it:
+    // the list owns the columns and each row follows them.
+    const Card = makeCard({ key: "pptwise_outline" })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: outline }))
+    const { container } = render(<Card block={block} />)
+    await waitFor(() => expect(container.querySelectorAll("li[data-page]")).toHaveLength(4))
+    const css = document.querySelector("#pptwise-dsh-style")!.textContent ?? ""
+    expect(css).toMatch(/\.pw-rows\{[^}]*grid-template-columns:22px max-content minmax\(0,1fr\)/)
+    expect(css).toMatch(/\.pw-row\{[^}]*grid-template-columns:subgrid/)
+  })
+
+  it("says the outline is no longer there when the route has never heard of it", async () => {
+    const Card = makeCard({ key: "pptwise_outline" })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 404, code: "preview_unknown" }))
+    render(<Card block={block} />)
+    await waitFor(() => expect(screen.getByText(/no longer in the preview folder/)).toBeInTheDocument())
+  })
+
+  it("renders nothing for a result with no outline stamp, such as an invalid spec", () => {
+    const Card = makeCard({ key: "pptwise_outline" })
+    const { container } = render(<Card block={{ content: [{ text: "the spec is not valid yet: 1 problem" }] }} />)
+    expect(container).toBeEmptyDOMElement()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+})
+
+describe("dsh draft desk — bookkeeping from the session log", () => {
+  const turn1 = { kind: "turn", turn: { turn: 1 } }
+  function ctxOf(matches: { event: unknown; role: string; location?: unknown }[], state?: unknown) {
+    const withLocation = matches.map((m) => ({ location: turn1, ...m }))
+    return { key: "k", kind: "pptwise-artifact", id: "c1", matches: withLocation, start: withLocation.find((m) => m.role === "start"), state, current: new Map() }
+  }
+
+  it("follows a top-level build from its call to the stamped result", () => {
+    const { definition, registeredDefinitions } = makeTail()
+    expect(registeredDefinitions).toEqual([definition])
+    const call = { type: "tool/call", seq: 10, data: { callId: "c1", name: "pptwise_build", arguments: JSON.stringify({ target: "weekly/" }), turn: 1 } }
+    const result = {
+      type: "tool/result",
+      seq: 11,
+      data: { message: { source: { callId: "c1" }, content: [{ type: "text", text: "pptwise-preview:aaaa-1111 · rendered 4 pages" }] }, turn: 1 },
+    }
+    expect(definition.match(call)).toEqual({ id: "c1", role: "start" })
+    expect(definition.match(result)).toEqual({ id: "c1", role: "update" })
+    // Results of other tools, and pptwise results without a stamp, are not ours.
+    expect(definition.match({ type: "tool/call", data: { callId: "x", name: "bash", arguments: "{}" } })).toBeNull()
+    expect(definition.match({ type: "tool/result", data: { message: { source: { callId: "x" }, content: [{ text: "ok" }] } } })).toBeNull()
+
+    const state = definition.start({}, {}, { previous: () => undefined })
+    const node = definition.buildViewNode(ctxOf([{ event: call, role: "start" }, { event: result, role: "update" }], state))!
+    expect(node.visibility).toBe("hidden")
+    expect(node.anchorSeq).toBe(10)
+    expect(node.location).toBe(turn1)
+    expect(node.data).toEqual({ callId: "c1", tool: "pptwise_build", kind: "deck", id: "aaaa-1111", target: "weekly/", version: 1, priorId: null })
+  })
+
+  it("follows a Code Mode sub-call through its dispatch pair, with object arguments", () => {
+    const { definition } = makeTail()
+    const start = { type: "tool/ptc-dispatch-start", seq: 20, data: { rootCallId: "r", parentCallId: "r", subCallId: "r:ptc:2", name: "pptwise_outline", arguments: { target: "weekly" } } }
+    const done = {
+      type: "tool/ptc-dispatch",
+      seq: 21,
+      data: { rootCallId: "r", parentCallId: "r", subCallId: "r:ptc:2", name: "pptwise_outline", arguments: { target: "weekly" }, isError: false, content: [{ type: "text", text: 'pptwise-outline:bbbb-2222 · 4 pages, theme "brief"' }] },
+    }
+    expect(definition.match(start)).toEqual({ id: "r:ptc:2", role: "start" })
+    expect(definition.match(done)).toEqual({ id: "r:ptc:2", role: "update" })
+    const node = definition.buildViewNode(ctxOf([{ event: start, role: "start" }, { event: done, role: "update" }], {}))!
+    expect(node.data).toMatchObject({ kind: "outline", id: "bbbb-2222", version: 1 })
+    // A call that failed stamps nothing and leaves no node.
+    expect(definition.buildViewNode(ctxOf([{ event: start, role: "start" }], {}))).toBeNull()
+  })
+
+  // A build call and its result, placed in a turn the way DSH places them.
+  function build(id: string, target: string, turn: number) {
+    const location = { kind: "step", turn: { turn }, step: { turn, step: 1 } }
+    return [
+      { event: { type: "tool/call", seq: 1, data: { callId: id, name: "pptwise_build", arguments: JSON.stringify({ target }) } }, role: "start", location },
+      { event: { type: "tool/result", seq: 2, data: { message: { source: { callId: id }, content: [{ text: `pptwise-preview:${id}-deck` }] } } }, role: "update", location },
+    ]
+  }
+
+  it("counts versions per deck by turn, and points at the last deck of an earlier turn", () => {
+    const { definition, testing } = makeTail()
+    expect(testing.deckKey("/ws/weekly/")).toBe("weekly")
+    expect(testing.deckKey("weekly/deck.spec.json")).toBe("weekly")
+    // Turn 1 builds "weekly", turn 2 builds another deck, turn 3 "weekly" again.
+    const s1 = definition.start({}, {}, { previous: () => undefined })
+    const s2 = definition.start({}, {}, { previous: () => ({ state: s1, matches: build("one", "weekly", 1) }) })
+    const s3 = definition.start({}, {}, { previous: () => ({ state: s2, matches: build("two", "/abs/other", 2) }) })
+    const node = definition.buildViewNode(ctxOf(build("three", "/ws/weekly/", 3), s3))!
+    expect(node.data).toMatchObject({ id: "three-deck", version: 2, priorId: "one-deck" })
+    const s4 = definition.start({}, {}, { previous: () => ({ state: s3, matches: build("three", "weekly", 3) }) })
+    const other = definition.buildViewNode(ctxOf(build("four", "other", 4), s4))!
+    expect(other.data).toMatchObject({ version: 2, priorId: "two-deck" })
+  })
+
+  it("gives every build in one turn that turn's version, so a first turn is version 1 however often it built", () => {
+    // What a real turn did: a draft that needed revision, the clean build,
+    // then a preview of it. The user was handed one deck, version 1, with
+    // nothing earlier to compare it to.
+    const { definition } = makeTail()
+    const s1 = definition.start({}, {}, { previous: () => undefined })
+    const s2 = definition.start({}, {}, { previous: () => ({ state: s1, matches: build("draft", "launch/", 1) }) })
+    const s3 = definition.start({}, {}, { previous: () => ({ state: s2, matches: build("clean", "launch/", 1) }) })
+    for (const [id, state] of [["draft", s1], ["clean", s2], ["again", s3]] as const) {
+      expect(definition.buildViewNode(ctxOf(build(id, "launch/", 1), state))!.data).toMatchObject({ version: 1, priorId: null })
+    }
+    // The next turn's edit is version 2, compared with what turn 1 ended on,
+    // and stays version 2 through its own rebuilds.
+    const s4 = definition.start({}, {}, { previous: () => ({ state: s3, matches: build("again", "launch/", 1) }) })
+    expect(definition.buildViewNode(ctxOf(build("edit", "launch/", 2), s4))!.data).toMatchObject({ version: 2, priorId: "again-deck" })
+    const s5 = definition.start({}, {}, { previous: () => ({ state: s4, matches: build("edit", "launch/", 2) }) })
+    expect(definition.buildViewNode(ctxOf(build("edit2", "launch/", 2), s5))!.data).toMatchObject({ version: 2, priorId: "again-deck" })
+  })
+})
+
+describe("dsh draft desk — the card under the turn", () => {
+  function hashed(n: number, hash: string, type = "content") {
+    return { ...page(n, type), slideId: "s" + n, hash }
+  }
+  const entry = (over: Partial<TailEntry> = {}): TailEntry => ({
+    callId: "c",
+    tool: "pptwise_build",
+    kind: "deck",
+    id: "new-0001",
+    target: "weekly",
+    version: 2,
+    priorId: "old-0001",
+    ...over,
+  })
+
+  it("shows the version, page count and the pages changed since the last version, matched by slide id", async () => {
+    const { Tail } = makeTail()
+    const now = { ...bundleOf([hashed(1, "a", "cover"), hashed(2, "B2"), hashed(4, "d")], "weekly"), exportable: true }
+    const before = bundleOf([hashed(1, "a", "cover"), hashed(2, "b"), hashed(3, "c")], "weekly")
+    fetchMock.mockImplementation(async (url: string) => routeAnswer({ status: 200, json: url.includes("old-0001") ? before : now }))
+    const { container } = render(<Tail turn={{ turn: 1 }} useArtifacts={() => [entry()]} editPage={vi.fn()} />)
+
+    await waitFor(() => expect(container.querySelector("[data-desk-diff]")).not.toBeNull())
+    expect(container.querySelector("[data-desk-version]")!.textContent).toBe("Version 2")
+    expect(screen.getByText("3 pages")).toBeInTheDocument()
+    expect(container.querySelector("[data-desk-diff]")!.textContent).toBe("2 pages changed · 1 pages removed")
+    const marks = Array.from(container.querySelectorAll("[data-desk-page]")).map((el) => el.getAttribute("data-desk-mark"))
+    expect(marks).toEqual([null, "changed", "added"])
+    expect(screen.getByText("Download .pptx")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText("Compare with last version"))
+    const compare = await waitFor(() => {
+      const el = document.querySelector("[data-pptwise-compare]")
+      if (!el) throw new Error("no compare view")
+      return el
+    })
+    const rows = Array.from(compare.querySelectorAll("[data-compare-row]")).map((el) => el.getAttribute("data-compare-row"))
+    expect(rows).toEqual(["changed", "added", "removed"])
+    const srcs = Array.from(compare.querySelectorAll("img")).map((img) => img.getAttribute("src"))
+    expect(srcs).toEqual([
+      "/pptwise/preview/old-0001/page/2",
+      "/pptwise/preview/new-0001/page/2",
+      "/pptwise/preview/new-0001/page/3",
+      "/pptwise/preview/old-0001/page/3",
+    ])
+    fireEvent.click(screen.getByText("Close"))
+    await waitFor(() => expect(document.querySelector("[data-pptwise-compare]")).toBeNull())
+  })
+
+  it("marks nothing and offers no comparison on the first version", async () => {
+    const { Tail } = makeTail()
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: bundleOf([hashed(1, "a", "cover"), hashed(2, "b")]) }))
+    const { container } = render(<Tail turn={{ turn: 1 }} useArtifacts={() => [entry({ version: 1, priorId: null })]} />)
+    await waitFor(() => expect(container.querySelectorAll("[data-desk-page]")).toHaveLength(2))
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(container.querySelector("[data-desk-diff]")).toBeNull()
+    expect(screen.queryByText("Compare with last version")).toBeNull()
+  })
+
+  it("says how many pages are written while some are still placeholders, and has no download for a build that needs revision", async () => {
+    const { Tail } = makeTail()
+    const pages = [hashed(1, "a", "cover"), { ...hashed(2, "b"), placeholder: true }, hashed(3, "c")]
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: { ...bundleOf(pages), draft: true, exportable: false } }))
+    const { container } = render(<Tail turn={{ turn: 1 }} useArtifacts={() => [entry({ version: 1, priorId: null })]} />)
+    await waitFor(() => expect(container.querySelector("[data-desk-written]")).not.toBeNull())
+    expect(container.querySelector("[data-desk-written]")!.textContent).toBe("2 of 3 pages written")
+    expect(screen.getByText("Needs revision, no .pptx yet")).toBeInTheDocument()
+    expect(screen.queryByText("Download .pptx")).toBeNull()
+  })
+
+  it("draws every page, the ones past the strip from the page route, and opens full screen on the page clicked", async () => {
+    const { Tail } = makeTail()
+    const pages = Array.from({ length: 14 }, (_, i) => (i < 12 ? hashed(i + 1, "h" + i) : { ...beyondStrip(i + 1), slideId: "s" + (i + 1), hash: "h" + i }))
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: bundleOf(pages) }))
+    const { container } = render(<Tail turn={{ turn: 1 }} useArtifacts={() => [entry({ version: 1, priorId: null })]} />)
+    await waitFor(() => expect(container.querySelectorAll("[data-desk-page]")).toHaveLength(14))
+    expect(container.querySelector('[data-desk-page="14"] img')!.getAttribute("src")).toBe("/pptwise/preview/new-0001/page/14")
+    fireEvent.click(container.querySelector('[data-desk-page="3"] [role="button"]')!)
+    await viewerOn(container, "new-0001", 3)
+    expect(document.activeElement).toBe(viewer(container))
+  })
+
+  it("hands the page number to the composer when the user asks to edit that page", async () => {
+    const { Tail } = makeTail()
+    const editPage = vi.fn()
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: bundleOf([hashed(1, "a", "cover"), hashed(2, "b")]) }))
+    const { container } = render(<Tail turn={{ turn: 1 }} useArtifacts={() => [entry({ version: 1, priorId: null })]} editPage={editPage} />)
+    await waitFor(() => expect(container.querySelector('[data-desk-edit="2"]')).not.toBeNull())
+    fireEvent.click(container.querySelector('[data-desk-edit="2"]')!)
+    expect(editPage).toHaveBeenCalledWith(2)
+  })
+
+  it("prefills the composer with the page and gives it the keyboard, keeping what was typed", () => {
+    const calls: string[] = []
+    let draft = ""
+    const input = {
+      state: { getSnapshot: () => ({ draft }) },
+      setDraft: (text: string) => { calls.push("set:" + text); draft = text },
+      focus: () => calls.push("focus"),
+    }
+    const conversation = { input: { for: () => input } }
+    const kit = makeTail({ conversation })
+    kit.inject("s1").editPage(3)
+    expect(calls).toEqual(["set:Page 3: ", "focus"])
+    draft = "make it shorter  "
+    kit.inject("s1").editPage(5)
+    expect(calls.slice(2)).toEqual(["set:make it shorter\nPage 5: ", "focus"])
+    // The same page again only gives the composer the keyboard back.
+    kit.inject("s1").editPage(5)
+    expect(calls.slice(4)).toEqual(["focus"])
+    draft = "Page 3: "
+    kit.inject("s1").editPage(3)
+    expect(calls.slice(5)).toEqual(["focus"])
+  })
+
+  it("reads this turn's nodes from the chat target, keyed by the turn number", () => {
+    const seen: unknown[] = []
+    const snapshot = { nodes: { turnDataSource: (turn: number, kind: string) => { seen.push([turn, kind]); return "source" } } }
+    const kit = makeTail({ snapshot })
+    expect(kit.inject("s1").keyedHooks.artifacts("4")).toBe("source")
+    expect(seen).toEqual([[4, "pptwise-artifact"]])
+  })
+
+  it("falls back to the turn's outline or theme wall when the turn drew no deck, and to nothing for a turn without pptwise", async () => {
+    const { Tail } = makeTail()
+    fetchMock.mockImplementation(async () =>
+      routeAnswer({ status: 200, json: { kind: "outline", theme: "brief", pages: [{ page: 1, id: "c", type: "cover", heading: "Hi" }] } }),
+    )
+    const { container } = render(
+      <Tail turn={{ turn: 1 }} useArtifacts={() => [entry({ kind: "outline", tool: "pptwise_outline", id: "out-1", version: 1, priorId: null })]} />,
+    )
+    await waitFor(() => expect(container.querySelectorAll("li[data-page]")).toHaveLength(1))
+    expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/out-1")
+    cleanup()
+    const empty = render(<Tail turn={{ turn: 2 }} useArtifacts={() => []} />)
+    expect(empty.container).toBeEmptyDOMElement()
+  })
+})
+
+describe("dsh full screen — DSH's right sidebar", () => {
+  function hashed(n: number, hash: string, type = "content") {
+    return { ...page(n, type), slideId: "s" + n, hash }
+  }
+  const deck = () => bundleOf([hashed(1, "a", "cover"), hashed(2, "b"), hashed(3, "c"), hashed(4, "d"), hashed(5, "e"), hashed(6, "f", "ending")], "weekly")
+  const entry: TailEntry = { callId: "c", tool: "pptwise_build", kind: "deck", id: "new-0001", target: "weekly", version: 1, priorId: null }
+
+  /** A tab's live information, the way the sidebar hands it to a body. */
+  function tabInfo(address: string, params: { page?: number; version?: number } | undefined, revision: number, close = vi.fn()): TabInfo {
+    return { sidebar: { expanded: true, fullscreen: false }, tab: { title: "Slides", navigation: { address, params, revision }, actions: { close } } }
+  }
+
+  it("registers a tab type for pptwise addresses, with a body and a title under its id", () => {
+    const kit = makeTail({ sidebar: true })
+    expect(kit.tabTypes).toHaveLength(1)
+    const type = kit.tabTypes[0]!
+    expect(type).toMatchObject({ id: "@liustack/pptwise:viewer", kind: "pptwise", patterns: ["dsh-resource://pptwise/**"] })
+    expect(type.canOpen("dsh-resource://pptwise/deck/new-0001")).toBe(true)
+    expect(type.canOpen("dsh-resource://pptwise/compare/new-0001/old-0001")).toBe(true)
+    expect(type.canOpen("dsh-resource://pptwise/deck/../etc")).toBe(false)
+    expect(type.title("dsh-resource://pptwise/themes/w-1")).toBe("Themes")
+    expect(kit.PaneTab).toBeDefined()
+    expect(kit.PaneTitle).toBeDefined()
+  })
+
+  it("opens a desk thumbnail in the sidebar on its page, with no layer of the card's own", async () => {
+    const kit = makeTail({ sidebar: true })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: deck() }))
+    const { container } = render(<kit.Tail turn={{ turn: 1 }} useArtifacts={() => [entry]} />)
+    await waitFor(() => expect(container.querySelectorAll("[data-desk-page]")).toHaveLength(6))
+
+    fireEvent.click(container.querySelector('[data-desk-page="4"] [role="button"]')!)
+    expect(kit.opened).toEqual([{ address: "dsh-resource://pptwise/deck/new-0001", options: { kind: "pptwise", params: { page: 4 } } }])
+    fireEvent.click(screen.getByText("Full screen"))
+    expect(kit.opened[1]!.options.params).toEqual({ page: 1 })
+    await act(async () => {})
+    expect(document.querySelector("[data-pptwise-layer]")).toBeNull()
+  })
+
+  it("hands the tool card's Open to the sidebar once the route says the deck is there", async () => {
+    const kit = makeTail({ sidebar: true })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: deck() }))
+    const Card = kit.seats.get("pptwise_build")!
+    const { container } = render(<Card block={blockWith(deck(), "new-0001")} />)
+    fireEvent.click(thumbnails(container)[2]!)
+    await waitFor(() => expect(kit.opened).toHaveLength(1))
+    expect(kit.opened[0]).toEqual({ address: "dsh-resource://pptwise/deck/new-0001", options: { kind: "pptwise", params: { page: 3 } } })
+    await act(async () => {})
+    expect(document.querySelector("[data-pptwise-layer]")).toBeNull()
+    // Opening again opens again: the hand-over left nothing behind to block it.
+    fireEvent.click(screen.getByText("Open"))
+    await waitFor(() => expect(kit.opened).toHaveLength(2))
+    expect(kit.opened[1]!.options.params).toEqual({ page: 1 })
+  })
+
+  it("shows the page the tab was opened on, takes the keyboard, and moves when the chat opens another page", async () => {
+    const kit = makeTail({ sidebar: true })
+    const PaneTab = kit.PaneTab!
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: deck() }))
+    const close = vi.fn()
+    const address = "dsh-resource://pptwise/deck/new-0001"
+    const { container, rerender } = render(<PaneTab useTabInfo={() => tabInfo(address, { page: 4 }, 1, close)} />)
+    await viewerOn(container, "new-0001", 4)
+    expect(screen.getByText("Page 4 of 6")).toBeInTheDocument()
+    expect(document.activeElement).toBe(viewer(container))
+
+    fireEvent.keyDown(document.activeElement!, { key: "ArrowRight" })
+    await viewerOn(container, "new-0001", 5)
+
+    // The user clicks page 2 in the chat while the tab is open: the sidebar
+    // reveals the same tab with a new revision and the page it carried.
+    document.body.focus()
+    rerender(<PaneTab useTabInfo={() => tabInfo(address, { page: 2 }, 2, close)} />)
+    await viewerOn(container, "new-0001", 2)
+    expect(document.activeElement).toBe(viewer(container))
+
+    // Esc closes the tab through the sidebar, the way its own close does.
+    fireEvent.keyDown(document.activeElement!, { key: "Escape" })
+    expect(close).toHaveBeenCalledTimes(1)
+    // The tab already has DSH's close button, so the pane draws none of its own.
+    expect(screen.queryByText("Close")).toBeNull()
+  })
+
+  it("starts a message about the page on screen from inside the tab", async () => {
+    const calls: string[] = []
+    const input = { state: { getSnapshot: () => ({ draft: "" }) }, setDraft: (text: string) => calls.push("set:" + text), focus: () => calls.push("focus") }
+    const kit = makeTail({ sidebar: true, conversation: { input: { for: () => input } } })
+    const PaneTab = kit.PaneTab!
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: deck() }))
+    const { container } = render(<PaneTab useTabInfo={() => tabInfo("dsh-resource://pptwise/deck/new-0001", { page: 3 }, 1)} />)
+    await viewerOn(container, "new-0001", 3)
+    fireEvent.click(within(viewer(container)!).getByText("Edit this page"))
+    expect(calls).toEqual(["set:Page 3: ", "focus"])
+  })
+
+  it("titles the tab with the deck's own title", async () => {
+    const kit = makeTail({ sidebar: true })
+    const PaneTitle = kit.PaneTitle!
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: deck() }))
+    render(<PaneTitle useTabInfo={() => tabInfo("dsh-resource://pptwise/deck/new-0001", undefined, 1)} />)
+    expect(await screen.findByText("weekly")).toBeInTheDocument()
+  })
+
+  it("opens the comparison in the sidebar too", async () => {
+    const kit = makeTail({ sidebar: true })
+    const now = bundleOf([hashed(1, "a", "cover"), hashed(2, "B2")], "weekly")
+    const before = bundleOf([hashed(1, "a", "cover"), hashed(2, "b")], "weekly")
+    fetchMock.mockImplementation(async (url: string) => routeAnswer({ status: 200, json: url.includes("old-0001") ? before : now }))
+    render(<kit.Tail turn={{ turn: 1 }} useArtifacts={() => [{ ...entry, version: 2, priorId: "old-0001" }]} />)
+    fireEvent.click(await screen.findByText("Compare with last version"))
+    expect(kit.opened).toEqual([
+      { address: "dsh-resource://pptwise/compare/new-0001/old-0001", options: { kind: "pptwise", params: { version: 2 } } },
+    ])
+    cleanup()
+    const PaneTab = kit.PaneTab!
+    render(<PaneTab useTabInfo={() => tabInfo("dsh-resource://pptwise/compare/new-0001/old-0001", { version: 2 }, 1)} />)
+    const compare = await waitFor(() => {
+      const el = document.querySelector("[data-pptwise-compare]")
+      if (!el?.querySelector("[data-compare-row]")) throw new Error("no rows yet")
+      return el
+    })
+    expect(within(compare as HTMLElement).getByText("Version 1 → version 2")).toBeInTheDocument()
+    expect(document.activeElement).toBe(compare)
+  })
+})
+
+describe("dsh cards — DSH's own look", () => {
+  function hashed(n: number, hash: string, type = "content") {
+    return { ...page(n, type), slideId: "s" + n, hash }
+  }
+  /** Stand-ins for DSH's primitives that say who drew them. */
+  const primitives = {
+    Button: ({ variant, size, icon: _icon, children, ...rest }: { variant: string; size: string; icon?: unknown; children?: React.ReactNode }) => (
+      <button type="button" data-dsh="Button" data-variant={variant} data-size={size} {...rest}>
+        {children}
+      </button>
+    ),
+    Tag: ({ tone, children }: { tone: string; children?: React.ReactNode }) => (
+      <span data-dsh="Tag" data-tone={tone}>
+        {children}
+      </span>
+    ),
+    FileTypeIcon: ({ kind }: { kind: string }) => <span data-dsh="FileTypeIcon" data-kind={kind} />,
+  }
+  const entry: TailEntry = { callId: "c", tool: "pptwise_build", kind: "deck", id: "new-0001", target: "weekly", version: 2, priorId: "old-0001" }
+
+  it("draws its buttons, tags and file icon with DSH's own components", async () => {
+    const kit = makeTail({ primitives })
+    const now = bundleOf([hashed(1, "a", "cover"), hashed(2, "B2"), hashed(3, "c")], "weekly")
+    const before = bundleOf([hashed(1, "a", "cover"), hashed(2, "b"), hashed(3, "c")], "weekly")
+    fetchMock.mockImplementation(async (url: string) => routeAnswer({ status: 200, json: url.includes("old-0001") ? before : now }))
+    const { container } = render(<kit.Tail turn={{ turn: 1 }} useArtifacts={() => [entry]} editPage={vi.fn()} />)
+    await waitFor(() => expect(container.querySelector('[data-desk-mark="changed"]')).not.toBeNull())
+
+    for (const label of ["Full screen", "Download .pptx", "Compare with last version"]) {
+      const button = screen.getByText(label).closest("button")!
+      expect(button, label).toHaveAttribute("data-dsh", "Button")
+      expect(button, label).toHaveAttribute("data-size", "sm")
+    }
+    expect(container.querySelector('[data-dsh="FileTypeIcon"]')).toHaveAttribute("data-kind", "ppt")
+    expect(screen.getByText("Version 2").closest('[data-dsh="Tag"]')).toHaveAttribute("data-tone", "neutral")
+  })
+
+  it("marks a changed page with one tag in its caption, and nothing else there", async () => {
+    // The thick outline that used to ring a changed page read as a selection,
+    // and the caption carried a button that ran into the next tile.
+    const kit = makeTail({ primitives })
+    const now = bundleOf([hashed(1, "a", "cover"), hashed(2, "B2"), hashed(3, "c"), hashed(4, "d")], "weekly")
+    const before = bundleOf([hashed(1, "a", "cover"), hashed(2, "b"), hashed(3, "c")], "weekly")
+    fetchMock.mockImplementation(async (url: string) => routeAnswer({ status: 200, json: url.includes("old-0001") ? before : now }))
+    const { container } = render(<kit.Tail turn={{ turn: 1 }} useArtifacts={() => [entry]} editPage={vi.fn()} />)
+    await waitFor(() => expect(container.querySelector("[data-desk-diff]")).not.toBeNull())
+
+    // The header says two pages changed, and exactly two tiles carry a tag.
+    expect(container.querySelector("[data-desk-diff]")!.textContent).toBe("2 pages changed")
+    const tagged = Array.from(container.querySelectorAll("[data-desk-page]")).filter((tile) => tile.querySelector('.pw-cap [data-dsh="Tag"]'))
+    expect(tagged.map((tile) => tile.getAttribute("data-desk-page"))).toEqual(["2", "4"])
+    expect(container.querySelector('[data-desk-page="2"] .pw-cap [data-dsh="Tag"]')).toHaveAttribute("data-tone", "info")
+    expect(container.querySelector('[data-desk-page="4"] .pw-cap [data-dsh="Tag"]')).toHaveAttribute("data-tone", "success")
+    for (const tile of Array.from(container.querySelectorAll("[data-desk-page]"))) {
+      const caption = tile.querySelector(".pw-cap")!
+      // Page number plus at most the tag: no button, no third thing.
+      expect(caption.querySelector("button")).toBeNull()
+      expect(caption.children.length).toBeLessThanOrEqual(2)
+      expect((tile.querySelector(".pw-thumb") as HTMLElement).style.outline).toBe("")
+    }
+    // "Edit this page" sits over the tile, and only the stylesheet decides when it shows.
+    const edit = container.querySelector('[data-desk-edit="2"]')!
+    expect(edit.closest(".pw-shot")).not.toBeNull()
+    const css = document.querySelector("#pptwise-dsh-style")!.textContent ?? ""
+    expect(css).toContain(".pw-shot:hover .pw-edit,.pw-shot:focus-within .pw-edit{opacity:1")
+    // A caption can never push past its tile: it clips, it does not wrap.
+    expect(css).toMatch(/\.pw-cap\{[^}]*overflow:hidden[^}]*white-space:nowrap/)
+  })
+
+  it("draws stand-ins on the same tokens when the shell has no primitives", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const kit = makeTail({ primitives: null })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: bundleOf([hashed(1, "a", "cover")], "weekly") }))
+    render(<kit.Tail turn={{ turn: 1 }} useArtifacts={() => [{ ...entry, version: 1, priorId: null }]} />)
+    const open = (await screen.findByText("Full screen")).closest("button")!
+    expect(open).toHaveClass("pw-btn")
+    expect(open).toHaveAttribute("data-variant", "outline")
+    expect(warn.mock.calls.some(([line]) => String(line).includes("DSH primitives unavailable"))).toBe(true)
   })
 })

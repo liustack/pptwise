@@ -151,3 +151,33 @@ export function suggestThemes(signals: ThemeSelectSignals): string[] {
 
   return [FALLBACK_THEME_ID]
 }
+
+/** The fewest and most themes a shortlist offers. */
+export const THEME_SHORTLIST_MIN = 4
+export const THEME_SHORTLIST_MAX = 6
+
+/**
+ * The spread a short shortlist is filled from: two quiet, two house-style and
+ * two loud themes for general work, so a wall shows the user a real range of
+ * voices instead of four near twins.
+ */
+const SHORTLIST_SPREAD: readonly BuiltinThemeId[] = ["brief", "swiss", "journal", "terminal", "ember", "rally"]
+
+/**
+ * Four to six themes to show a user who has not named any: the wall a host
+ * draws when the caller gives an occasion, a narrative, or nothing at all.
+ *
+ * The ranked {@link suggestThemes} list comes first, cut at six. A list shorter
+ * than four (no signal gives `brief` alone, a preset gives two or three) is
+ * filled from {@link SHORTLIST_SPREAD} in order. The deck's language plays no
+ * part: every built-in theme sets Chinese and English alike, and the language
+ * only decides the sample page a wall draws.
+ */
+export function themeShortlist(signals: ThemeSelectSignals): string[] {
+  const picked = suggestThemes(signals).slice(0, THEME_SHORTLIST_MAX)
+  for (const id of SHORTLIST_SPREAD) {
+    if (picked.length >= THEME_SHORTLIST_MIN) break
+    if (!picked.includes(id)) picked.push(id)
+  }
+  return picked
+}

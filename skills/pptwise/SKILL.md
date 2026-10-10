@@ -50,7 +50,7 @@ Scan the workspace before asking questions. An existing `deck.spec.json` already
 
 ## Show the user before you check it yourself
 
-Two decisions belong to the user: the theme and the outline. At each, show it in the conversation and ask before going on. When the user has said to go ahead without asking ("just do it", "you decide"), do not ask, but still show the theme wall and the outline, say what you picked, and continue.
+Write every message to the user in the language they wrote in, from the first status line to the final answer. Two decisions belong to the user: the theme and the outline. At each, show it in the conversation and ask before going on. When the user has said to go ahead without asking ("just do it", "you decide"), do not ask, but still show the theme wall and the outline, say what you picked, and continue.
 
 Show pages early and often. The user should see a page within the first minute, not at the end. Your own checks run on `pptwise build` reports. Never convert pages to PNG or read page images to judge them: the report already names every problem, and the pictures are for the user.
 
@@ -77,13 +77,13 @@ Resolve theme names in this order:
 3. Installed content packs (`pptwise packs list`).
 4. The 22 factory presets.
 
-Shortlist four to six themes with `occasions`, `identity`, and `menu` against the request. Then show the user their own cover title in them. When a `pptwise_themes` tool exists, call it with the deck's cover title, subtitle, and the shortlist as `themes`: the user sees each theme's cover and one content page in the conversation, and you get the theme ids back. Otherwise draw the same wall from the CLI, with comma-separated ids or `all`:
+Show the user their own cover title in four to six themes. When a `pptwise_themes` tool exists, call it with the deck's cover title, subtitle, and `occasion`: the occasion words from `themes --json` or the narrative preset that fit the request. It picks the shortlist and draws each theme's cover and one content page in the conversation, numbered, and returns the theme ids in that order. Pass `themes` only when the user named themes. Leave `page` out unless it is a page of this deck you already validated. Otherwise draw the same wall from the CLI:
 
 ```bash
-pptwise theme try <ids> --title "<cover title>" --subtitle "<subtitle>" --json
+pptwise theme try --title "<cover title>" --subtitle "<subtitle>" --occasion <words> --json
 ```
 
-It prints a manifest naming one cover and one content SVG per theme, plus `contact-sheet.html`. Show the user those SVGs where the host can display images, or hand over the contact sheet's path. Then ask which theme they want, or name your pick when they left it to you.
+It prints a manifest naming one cover and one content SVG per theme, plus `contact-sheet.html`. Show the user those SVGs where the host can display images, or hand over the contact sheet's path. Then ask which theme they want, one option per theme in the wall's order, or name your pick when they left it to you.
 
 Create means copy: copy the closest preset into the workspace, extract a brand from an Office file, or fork for a color change. The commands are in `references/spec.md`.
 
@@ -102,9 +102,11 @@ A deck prints no page number, organization, date, or confidentiality line unless
 - Authors write only a semantic `kind`, never a page face or geometry choice.
 - `focus` and `summary` are optional writing hints.
 
+When the user names a page count, the spec has exactly that many pages, the cover and the ending included. Never add or drop pages to get past a check.
+
 Run `pptwise spec validate deck.spec.json` until it prints `OK`. A content `kind` outside the bound theme menu is a hard error that lists what the menu offers. Do not relabel the page merely to silence the error. Change the page's intent only when that is semantically honest, or return to the theme step.
 
-The validated spec is the outline. Show it to the user as one line per page: number, page type or `kind`, heading, and what the page says. Call `pptwise_preview` on the deck directory as well when it exists, so the user sees the cover and the page sequence before any page is written. Ask for changes unless the user said to go ahead.
+The validated spec is the outline. Before you write any page file, list it in the conversation, one line per page: page number, page type or `kind`, heading, and what the page says. This step is never skipped, whatever the deck's length. When a `pptwise_outline` tool exists, call it on the deck directory too, so the user sees the same list as a card. When the user said to go ahead or let you decide, list the outline and continue in the same reply. Otherwise ask them to confirm or change it, with `ask_user_question` when that tool exists, and wait for the answer before writing pages.
 
 The 11 words and their boundaries are in `references/layouts.md`. Full spec guidance and theme creation are in `references/spec.md`.
 
@@ -159,7 +161,7 @@ Add `pptwise audit deck-dir/ --pixels` when text sits over photo backgrounds. Us
 
 - Never edit or post-process the generated `.pptx`.
 - Never add coordinates, SVG, page face names, or geometry controls to authored content.
-- Keep public deck copy in the user's language. Keep schema keys and enum values in English.
+- Talk to the user in their language throughout, including progress notes and questions, and keep public deck copy in it too. Keep schema keys and enum values in English.
 - Never claim that `chart` or `data_table` values are native PowerPoint data objects. They export as editable grouped shapes and text. Change figures in the source and rerender.
 - Write the value itself. Never stand in for content with a leftover count or an ellipsis. validate rejects it.
 - Preview is read-only. Revisions go back into `deck.spec.json`, `pages/*.json`, assets, or the bound theme file.

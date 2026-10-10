@@ -26,7 +26,8 @@ const PREVIEW_TOOL_NAME = "pptwise_preview"
 /** The theme wall and the one-pass build: two more tools, each with its own card seat. */
 const THEMES_TOOL_NAME = "pptwise_themes"
 const BUILD_TOOL_NAME = "pptwise_build"
-const TOOL_NAMES = [PREVIEW_TOOL_NAME, THEMES_TOOL_NAME, BUILD_TOOL_NAME]
+const OUTLINE_TOOL_NAME = "pptwise_outline"
+const TOOL_NAMES = [PREVIEW_TOOL_NAME, THEMES_TOOL_NAME, BUILD_TOOL_NAME, OUTLINE_TOOL_NAME]
 
 /** The slot the browser half must claim, or the call renders in the generic row. */
 const TOOLVIEW_SLOT = "tool.call.toolview"
@@ -706,6 +707,46 @@ export interface BuildToolRun {
   modelText: string
 }
 
+export interface OutlineToolRun {
+  outlineId: string
+  pageCount: number
+}
+
+/**
+ * Run `pptwise_outline` on the installed CLI against the gate's deck project,
+ * and ask the route for the outline the card draws.
+ */
+export async function verifyOutlineToolRun(
+  tool: DshToolRegistration,
+  route: DshRouteRegistration,
+): Promise<OutlineToolRun> {
+  const workDir = await realpath(await mkdtemp(join(tmpdir(), "pptwise-dsh-gate-outline-")))
+  let outlineId: string | undefined
+  try {
+    const deckDir = join(workDir, "weekly")
+    await writeGateDeckProject(deckDir)
+    const args = { target: "weekly" }
+    const session = { agent: { session: { header: { cwd: workDir } } } }
+    const value = (await tool.execute?.(args, session)) as { status?: unknown; outlineId?: unknown; pageCount?: unknown; errors?: unknown }
+    if (typeof value?.outlineId === "string") outlineId = value.outlineId
+    if (value?.status !== "ok" || outlineId === undefined) {
+      throw new Error(`${OUTLINE_TOOL_NAME}.execute reported ${String(value?.status)}: ${JSON.stringify(value?.errors)}`)
+    }
+    const pages = await routeBundlePages(route, outlineId)
+    if (pages.length !== 6 || value.pageCount !== 6) {
+      throw new Error(`${OUTLINE_TOOL_NAME} listed ${pages.length} pages (value says ${String(value.pageCount)}), expected 6`)
+    }
+    const modelText = modelTextOf(tool, args, value)
+    if (!modelText.startsWith(`pptwise-outline:${outlineId}`)) {
+      throw new Error(`${OUTLINE_TOOL_NAME} output.render must open with the outline id the card fetches by`)
+    }
+    return { outlineId, pageCount: pages.length }
+  } finally {
+    await rm(workDir, { recursive: true, force: true }).catch(() => {})
+    if (outlineId !== undefined) await removeGeneratedPreview(join(previewRootForGate(), outlineId))
+  }
+}
+
 /** A six-page deck project every check passes: the same one `src/cli/build.test.ts` builds. */
 async function writeGateDeckProject(dir: string): Promise<void> {
   const spec = {
@@ -891,11 +932,13 @@ async function main(): Promise<void> {
     const tool = verifyInstalledDshTool(applied)
     const themesTool = verifyInstalledDshTool(applied, THEMES_TOOL_NAME)
     const buildTool = verifyInstalledDshTool(applied, BUILD_TOOL_NAME)
+    const outlineTool = verifyInstalledDshTool(applied, OUTLINE_TOOL_NAME)
     const route = verifyInstalledDshRoute(applied)
     const client = await verifyInstalledDshClient(installed)
     const run = await verifyPreviewToolRun(tool, route)
     const themesRun = await verifyThemesToolRun(themesTool, route)
     const buildRun = await verifyBuildToolRun(buildTool, route)
+    const outlineRun = await verifyOutlineToolRun(outlineTool, route)
     const invocation = buildDshDumpConfigInvocation(canonicalWorkspace, options.profile)
     const dump = execFileSync(invocation.command, invocation.args, {
       cwd: invocation.cwd,
@@ -915,6 +958,7 @@ async function main(): Promise<void> {
         `live run: ${run.pageCount} pages + ${run.pptxPath.split("/").pop()}, model text ${run.modelText.length} bytes, value ${run.valueBytes} bytes, no markup`,
         `themes run: ${themesRun.themeCount} themes, ${themesRun.pageCount} pages served by the route, value ${themesRun.valueBytes} bytes, no markup`,
         `build run: ${buildRun.pageCount} pages + ${buildRun.pptxPath.split("/").pop()} in the session workspace, model text ${buildRun.modelText.length} bytes`,
+        `outline run: ${outlineRun.pageCount} pages served by the route`,
         `requested workspace: ${options.workspace}`,
         `canonical workspace: ${canonicalWorkspace}`,
         "Use the canonical workspace path for any automated workspace fixture.",

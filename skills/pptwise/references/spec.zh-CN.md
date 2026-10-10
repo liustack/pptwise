@@ -52,7 +52,7 @@ IR 组件契约在填页时用 `pptwise inspect deck-dir/ --page <id>` 按页读
 pptwise theme try brief,swiss,memo --title "Q3 review" --subtitle "Board meeting" --json
 ```
 
-带 `--title` 时，`theme try` 给每个点名的主题画一张封面和一张正文页，主题数不限，也可以写 `all`，并打印一份清单，列出每页一个 SVG，外加 `contact-sheet.html`。`--lang zh` 或 `--lang en` 决定默认正文页的语言。`--page <file>` 改画这份 deck 自己的一张正文页，写法同页面，带上它的 `kind`。某个主题画不了的页会从该主题那一行里拿掉，清单写明原因。把 SVG 或联系表给用户看。图是给用户的：不要自己读图来评判主题。不带 `--title` 时，`theme try` 用 2 到 4 个主题渲染一份固定的英文样张。
+带 `--title` 时，`theme try` 给每个点名的主题画一张封面和一张正文页，主题数不限，也可以写 `all`，不点名时按 `--occasion <words>` 画四到六个的短名单，并打印一份清单，列出每页一个 SVG，外加 `contact-sheet.html`。`--lang zh` 或 `--lang en` 决定默认正文页的语言。`--page <file>` 改画这份 deck 自己的一张正文页，写法同页面，带上它的 `kind`。某个主题画不了的页会从该主题那一行里拿掉，清单写明原因。把 SVG 或联系表给用户看。图是给用户的：不要自己读图来评判主题。不带 `--title` 时，`theme try` 用 2 到 4 个主题渲染一份固定的英文样张。
 
 创建就是拷贝。即使从出厂预设开始，也优先创建工作区自有主题：
 
@@ -169,7 +169,7 @@ spec 不含页面几何或渲染选择状态。不要加入已退役的作者字
 pptwise spec validate deck.spec.json
 ```
 
-修完硬错误，直到命令打印 `OK`。页数会按 `pacing` 检查。连续三张或更多内容页使用同一个 `kind` 时，会产生编辑提示。
+修完硬错误，直到命令打印 `OK`。页数超出 `pacing` 通常的范围只是提示，不是错误。用户给了页数就保持那个页数。连续三张或更多内容页使用同一个 `kind` 时，会产生编辑提示。
 
 ## 菜单不匹配怎么处理
 

@@ -25,6 +25,7 @@ import {
   runDisassemble,
   runInit,
   runSpecValidate,
+  runSpecValidateJson,
   runPreview,
   runRender,
   runIcons,
@@ -516,6 +517,35 @@ describe("runSpecValidate", () => {
     const badJsonPath = join(dir, "not-json-plan.json")
     await writeFile(badJsonPath, "{ not json")
     await expect(runSpecValidate(badJsonPath)).rejects.toThrow(/not valid JSON/)
+  })
+})
+
+describe("runSpecValidateJson", () => {
+  it("lists every page in order with its number, type, kind and heading, for an outline a card can draw", async () => {
+    const { ok, output } = await runSpecValidateJson(join(dir, "plan.json"))
+    expect(ok).toBe(true)
+    const report = JSON.parse(output)
+    expect(report).toMatchObject({
+      ok: true,
+      theme: "brief",
+      title: "CLI Plan",
+      narrative: { strategy: "pyramid", pacing: "spacious", audience: "executive" },
+      pageCount: 4,
+    })
+    expect(report.pages).toEqual([
+      { page: 1, id: "p-cover", type: "cover", heading: "CLI Plan" },
+      { page: 2, id: "p-kpi", type: "content", kind: "points", heading: "Body content page" },
+      { page: 3, id: "p-detail", type: "content", kind: "points", heading: "More detail" },
+      { page: 4, id: "p-ending", type: "ending", heading: "Thanks" },
+    ])
+  })
+  it("reports an invalid spec as ok false with every error, instead of throwing", async () => {
+    const { ok, output } = await runSpecValidateJson(join(dir, "bad-plan.json"))
+    expect(ok).toBe(false)
+    const report = JSON.parse(output)
+    expect(report.ok).toBe(false)
+    expect(report.errors.map((e: { message: string }) => e.message).join("\n")).toMatch(/no pages/)
+    expect(report.pages).toBeUndefined()
   })
 })
 

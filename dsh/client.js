@@ -4,7 +4,7 @@
 // preview id into the tool's result text, and serves the rendered bundle from
 // its own route under that id. This file is what turns that payload into
 // something a person can look at: a thumbnail strip in the tool card, and a
-// full-size modal on click. No new tab, no localhost URL, no
+// full-screen view on click. No new tab, no localhost URL, no
 // "open this link yourself", which is the whole reason the tool exists.
 //
 // `dsh.client.immediately` is not optional for this plugin. The client module
@@ -45,14 +45,15 @@
 // not work" — see `verdictOf`. Collapsing the two meant one flaky response
 // permanently retired a deck that was sitting on disk the whole time.
 //
-// It also *views* nothing of its own any more. The modal used to be a small
-// React slideshow — arrow keys, a page counter, prev/next buttons, a stand-in
-// for pages the server had declined to send — sitting next to the finished
-// `preview.html` that `pptwise preview --html` writes for every run and that
-// harnesses without a plugin UI are told to open. Two viewers, one deck, and
-// only one of them tested. The modal is now an iframe pointing at that file,
-// and keeps only the two things the file cannot do for itself: close, and hand
-// over the .pptx.
+// Full screen is a tab in DSH's right sidebar, the way DSH opens a presented
+// file: the deck one page at a time, with the keyboard in it from the moment
+// it opens. It used to be an iframe of the finished `preview.html` in a modal
+// of this card's own, and two things were wrong with that inside DSH: nothing
+// moved the keyboard into the frame, so ←/→ never reached the deck until the
+// reader clicked it, and the page brought its own light/dark switch beside
+// DSH's. `preview.html` is still what harnesses without a plugin UI open.
+// Every card here wears DSH's own design variables, buttons and tags (see
+// THE LOOK below), so its colours follow DSH's theme.
 window.__ModuleLoader__.load({
   id: '@liustack/pptwise',
   factory: (require) => {
@@ -67,6 +68,142 @@ window.__ModuleLoader__.load({
     /** The theme wall, drawn by its own card below. */
     var THEMES_TOOL_NAME = 'pptwise_themes'
 
+    /** The outline: the checked spec's pages, one row each. */
+    var OUTLINE_TOOL_NAME = 'pptwise_outline'
+
+    // The words the newer cards show, in the harness's own language. DSH's
+    // locale service gets the two dictionaries when it is there (`apply`),
+    // and `t` reads through it, so a card follows the language the user set.
+    // Before it is up, or in a shell without one, the page's own language
+    // decides. Keys and dictionaries live here, beside the cards that use them.
+    var LOCALE_NS = 'pptwise'
+    var STRINGS = {
+      zh: {
+        'outline.title': '大纲',
+        'outline.pages': '{n} 页',
+        'outline.theme': '主题 {theme}',
+        'type.cover': '封面',
+        'type.chapter': '章节',
+        'type.content': '正文',
+        'type.ending': '结尾',
+        'card.unavailable': '这份内容已不在本机的预览目录里。',
+        'card.retry': '重试',
+        'card.open': '打开',
+        'card.draft': '草稿',
+        'card.needsRevision': '待修改',
+        'card.findings': '{n} 条检查提示',
+        'card.themes': '{n} 个主题',
+        'card.saving': '正在保存…',
+        'card.retryDownload': '重新下载',
+        'card.export.gone': '不可用',
+        'card.export.damaged': '已损坏',
+        'card.export.refused': '被拒绝',
+        'badge.gone': '已不在',
+        'badge.damaged': '已损坏',
+        'badge.refused': '被拒绝',
+        'viewer.counter': '第 {n} / 共 {m} 页',
+        'viewer.prev': '上一页',
+        'viewer.next': '下一页',
+        'viewer.pages': '全部页面',
+        'viewer.close': '关闭',
+        'pane.deck': '幻灯片',
+        'pane.themes': '主题',
+        'pane.compare': '对比上一版',
+        'desk.version': '第 {n} 版',
+        'desk.pages': '{n} 页',
+        'desk.written': '已写 {x}/{n} 页',
+        'desk.needsRevision': '待修改，未出 .pptx',
+        'desk.changed': '改了 {n} 页',
+        'desk.unchanged': '与上一版相同',
+        'desk.removed': '删了 {n} 页',
+        'desk.open': '全屏翻看',
+        'desk.download': '下载 .pptx',
+        'desk.compare': '对比上一版',
+        'desk.page': '第 {n} 页',
+        'desk.edit': '改这页',
+        'desk.changedMark': '改过',
+        'desk.addedMark': '新增',
+        'compare.title': '第 {from} 版 → 第 {to} 版',
+        'compare.before': '上一版',
+        'compare.after': '这一版',
+        'compare.none': '没有这一页',
+        'compare.removed': '这一版删掉了',
+        'edit.prefix': '第 {n} 页：',
+      },
+      en: {
+        'outline.title': 'Outline',
+        'outline.pages': '{n} pages',
+        'outline.theme': 'Theme {theme}',
+        'type.cover': 'Cover',
+        'type.chapter': 'Section',
+        'type.content': 'Content',
+        'type.ending': 'Ending',
+        'card.unavailable': 'This is no longer in the preview folder on this machine.',
+        'card.retry': 'Retry',
+        'card.open': 'Open',
+        'card.draft': 'draft',
+        'card.needsRevision': 'needs revision',
+        'card.findings': '{n} audit findings',
+        'card.themes': '{n} themes',
+        'card.saving': 'Saving…',
+        'card.retryDownload': 'Retry download',
+        'card.export.gone': 'Unavailable',
+        'card.export.damaged': 'Damaged',
+        'card.export.refused': 'Refused',
+        'badge.gone': 'gone',
+        'badge.damaged': 'damaged',
+        'badge.refused': 'refused',
+        'viewer.counter': 'Page {n} of {m}',
+        'viewer.prev': 'Previous page',
+        'viewer.next': 'Next page',
+        'viewer.pages': 'All pages',
+        'viewer.close': 'Close',
+        'pane.deck': 'Slides',
+        'pane.themes': 'Themes',
+        'pane.compare': 'Compare with last version',
+        'desk.version': 'Version {n}',
+        'desk.pages': '{n} pages',
+        'desk.written': '{x} of {n} pages written',
+        'desk.needsRevision': 'Needs revision, no .pptx yet',
+        'desk.changed': '{n} pages changed',
+        'desk.unchanged': 'Same as the last version',
+        'desk.removed': '{n} pages removed',
+        'desk.open': 'Full screen',
+        'desk.download': 'Download .pptx',
+        'desk.compare': 'Compare with last version',
+        'desk.page': 'Page {n}',
+        'desk.edit': 'Edit this page',
+        'desk.changedMark': 'Changed',
+        'desk.addedMark': 'New',
+        'compare.title': 'Version {from} → version {to}',
+        'compare.before': 'Last version',
+        'compare.after': 'This version',
+        'compare.none': 'Not in this version',
+        'compare.removed': 'Removed in this version',
+        'edit.prefix': 'Page {n}: ',
+      },
+    }
+    var localeT = null
+
+    function pageLanguage() {
+      var lang = ''
+      try {
+        lang = (document.documentElement && document.documentElement.lang) || (window.navigator && window.navigator.language) || ''
+      } catch {
+        lang = ''
+      }
+      return /^zh/i.test(lang) ? 'zh' : 'en'
+    }
+
+    function t(key, params) {
+      if (localeT) return localeT(key, params)
+      var template = STRINGS[pageLanguage()][key] || STRINGS.en[key] || key
+      if (!params) return template
+      return template.replace(/\{(\w+)\}/g, function (match, name) {
+        return Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
+      })
+    }
+
     /**
      * How many thumbnails the strip draws.
      *
@@ -79,22 +216,14 @@ window.__ModuleLoader__.load({
      */
     var STRIP_PAGES = 12
 
-    /**
-     * Where the full-size viewer lives — the html `preview --html` wrote.
-     *
-     * `#page=N` is that page's own way in, and a URL is the only thing this
-     * card can hand it: the frame is a document, not a component with props.
-     * N counts pages the way a reader does, so it is the thumbnail's own
-     * label rather than its index in a strip that may be a prefix of the deck.
-     */
-    function previewHtmlUrl(previewId, startPage) {
-      var url = '/pptwise/preview/' + previewId + '/html'
-      return startPage > 1 ? url + '#page=' + startPage : url
-    }
-
     /** Where the deck itself lives — the bundle the strip draws from. */
     function previewBundleUrl(previewId) {
       return '/pptwise/preview/' + previewId
+    }
+
+    /** One page from the route, the 0-based `index`th: a thumbnail, or the page full screen. */
+    function pageUrl(id, index) {
+      return previewBundleUrl(id) + '/page/' + (index + 1)
     }
 
     /**
@@ -285,13 +414,6 @@ window.__ModuleLoader__.load({
       return 'gone'
     }
 
-    /** What the export button says once it knows it cannot succeed. */
-    function exportLabelFor(verdict) {
-      if (verdict === 'damaged') return 'Damaged'
-      if (verdict === 'refused') return 'Refused'
-      return 'Unavailable'
-    }
-
     /**
      * Everything the tool said in text, joined.
      *
@@ -320,6 +442,12 @@ window.__ModuleLoader__.load({
     /** The theme wall's id, stamped the same way by `pptwise_themes`. */
     function wallIdOf(block) {
       var m = /pptwise-themes:([A-Za-z0-9-]+)/.exec(resultTextOf(block))
+      return m ? m[1] : null
+    }
+
+    /** The outline's id, stamped the same way by `pptwise_outline`. */
+    function outlineIdOf(block) {
+      var m = /pptwise-outline:([A-Za-z0-9-]+)/.exec(resultTextOf(block))
       return m ? m[1] : null
     }
 
@@ -423,58 +551,437 @@ window.__ModuleLoader__.load({
         })
     }
 
-    function PreviewCard(react, reactDom) {
+    // THE DRAFT DESK'S BOOKKEEPING.
+    //
+    // Which turn produced which deck, outline or theme wall is read off the
+    // session log, never kept by this plugin. A Conversation definition
+    // matches the pptwise tool calls (top-level `tool/call` and `tool/result`,
+    // and the `tool/ptc-dispatch` pair a Code Mode sub-call writes), and turns
+    // each into a hidden chat node carrying the id stamped in its result
+    // text. The turn tail then asks the chat target for this turn's nodes.
+    // Because everything is derived from events already in the log, a forked
+    // session or a replayed one gets exactly the cards its own log implies,
+    // and no plugin event is ever written into a session.
+    //
+    // The version number comes from the same log and counts turns, not
+    // builds: a version is what one turn handed the user. The model may
+    // build three times in a turn (a draft that needs revision, the clean
+    // build, a preview of it), and the user still sees one deck, so every
+    // deck call in a turn shares that turn's number, and "the last version"
+    // is the last deck of an earlier turn. Each call's state carries, per
+    // deck, the turn and version of the latest call and the id it drew,
+    // handed forward from the nearest earlier pptwise call. Only the events
+    // the client has loaded take part, so a deck whose earlier turns lie
+    // before the loaded window counts from there.
+    var ARTIFACT_KIND = 'pptwise-artifact'
+    var ARTIFACT_TOOLS = {
+      pptwise_preview: 'deck',
+      pptwise_build: 'deck',
+      pptwise_themes: 'themes',
+      pptwise_outline: 'outline',
+    }
+    var STAMP_KINDS = { preview: 'deck', themes: 'themes', outline: 'outline' }
+
+    function isRecord(value) {
+      return typeof value === 'object' && value !== null && !Array.isArray(value)
+    }
+
+    function contentText(content) {
+      if (typeof content === 'string') return content
+      if (!Array.isArray(content)) return ''
+      var text = ''
+      for (var i = 0; i < content.length; i++) {
+        if (content[i] && typeof content[i].text === 'string') text += content[i].text
+      }
+      return text
+    }
+
+    function argsOf(raw) {
+      if (isRecord(raw)) return raw
+      if (typeof raw !== 'string') return {}
+      try {
+        var parsed = JSON.parse(raw)
+        return isRecord(parsed) ? parsed : {}
+      } catch {
+        return {}
+      }
+    }
+
+    /** The stamp a pptwise result carries: `{ kind, id }`, or null. */
+    function stampOf(text) {
+      var m = /pptwise-(preview|themes|outline):([A-Za-z0-9-]+)/.exec(text)
+      return m ? { kind: STAMP_KINDS[m[1]], id: m[2] } : null
+    }
+
+    /** Identity and role of one event for the definition, or null. */
+    function artifactMatch(event) {
+      var data = event && event.data
+      if (!isRecord(data)) return null
+      if (event.type === 'tool/call') {
+        if (!ARTIFACT_TOOLS[data.name] || typeof data.callId !== 'string') return null
+        return { id: data.callId, role: 'start' }
+      }
+      if (event.type === 'tool/ptc-dispatch-start' || event.type === 'tool/ptc-dispatch') {
+        if (!ARTIFACT_TOOLS[data.name] || typeof data.subCallId !== 'string') return null
+        return { id: data.subCallId, role: event.type === 'tool/ptc-dispatch-start' ? 'start' : 'update' }
+      }
+      if (event.type === 'tool/result') {
+        var message = data.message
+        var callId = isRecord(message) && isRecord(message.source) ? message.source.callId : undefined
+        if (typeof callId !== 'string' || !stampOf(contentText(message.content))) return null
+        return { id: callId, role: 'update' }
+      }
+      return null
+    }
+
+    /** What the matched events say about one call: tool, target, and the id its result stamped. */
+    function artifactInfo(matches) {
+      var info = { name: null, kind: null, target: '', id: null }
+      for (var i = 0; i < matches.length; i++) {
+        var event = matches[i].event
+        var data = event && event.data
+        if (!isRecord(data)) continue
+        if (event.type === 'tool/call' || event.type === 'tool/ptc-dispatch-start' || event.type === 'tool/ptc-dispatch') {
+          info.name = data.name
+          info.kind = ARTIFACT_TOOLS[data.name] || null
+          var args = argsOf(data.arguments)
+          info.target = String(args.target || args.title || '')
+        }
+        var text = event.type === 'tool/ptc-dispatch'
+          ? contentText(data.content)
+          : event.type === 'tool/result' && isRecord(data.message)
+            ? contentText(data.message.content)
+            : ''
+        var stamp = text ? stampOf(text) : null
+        if (stamp) {
+          info.id = stamp.id
+          if (!info.kind) info.kind = stamp.kind
+        }
+      }
+      return info
+    }
+
+    /** Which deck a target names: its last path segment, whatever the spelling of the rest. */
+    function deckKey(target) {
+      var parts = String(target || '')
+        .replace(/\\/g, '/')
+        .replace(/\/(deck\.spec\.json|deck\.json)$/, '')
+        .replace(/\/+$/, '')
+        .split('/')
+      return (parts[parts.length - 1] || '').replace(/\.json$/, '')
+    }
+
+    /**
+     * The turn a matched event belongs to, or null where DSH placed it in no
+     * turn. A call with no turn counts as a turn of its own.
+     */
+    function turnOf(match) {
+      var location = match && match.location
+      if (!location || (location.kind !== 'turn' && location.kind !== 'step')) return null
+      return location.turn ? location.turn.turn : null
+    }
+
+    function startOf(matches) {
+      for (var i = 0; i < matches.length; i++) if (matches[i].role === 'start') return matches[i]
+      return matches[0]
+    }
+
+    /**
+     * Which version a deck call in `turn` belongs to, given the record the
+     * earlier calls left for that deck: the same one as an earlier call in
+     * the same turn, otherwise one more than the last, compared with the
+     * deck that last one drew.
+     */
+    function placeVersion(record, turn) {
+      if (!record) return { version: 1, priorId: null }
+      if (turn !== null && record.turn === turn) return { version: record.version, priorId: record.priorId }
+      return { version: record.version + 1, priorId: record.lastId }
+    }
+
+    /** The per-deck record after the previous pptwise call. */
+    function decksAfter(previous) {
+      if (!previous) return {}
+      var base = (previous.state && previous.state.decks) || {}
+      var matches = previous.matches || []
+      var info = artifactInfo(matches)
+      if (info.kind !== 'deck' || !info.id) return base
+      var key = deckKey(info.target)
+      var turn = turnOf(startOf(matches))
+      var placed = placeVersion(base[key], turn)
+      var next = Object.assign({}, base)
+      next[key] = { turn: turn, version: placed.version, priorId: placed.priorId, lastId: info.id }
+      return next
+    }
+
+    var artifactDefinition = {
+      kind: ARTIFACT_KIND,
+      target: 'chat',
+      match: artifactMatch,
+      start: function (_context, _match, reader) {
+        var previous = reader && typeof reader.previous === 'function' ? reader.previous(ARTIFACT_KIND) : undefined
+        return { decks: decksAfter(previous) }
+      },
+      update: function (context) {
+        return context.state
+      },
+      buildViewNode: function (context) {
+        var start = context.start || context.matches[0]
+        if (!start) return null
+        var info = artifactInfo(context.matches)
+        if (!info.id || !info.kind) return null
+        var decks = (context.state && context.state.decks) || {}
+        var placed = info.kind === 'deck' ? placeVersion(decks[deckKey(info.target)], turnOf(start)) : { version: 1, priorId: null }
+        return {
+          key: context.key,
+          kind: ARTIFACT_KIND,
+          id: context.id,
+          target: 'chat',
+          anchorSeq: start.event.seq,
+          location: start.location,
+          visibility: 'hidden',
+          data: {
+            callId: context.id,
+            tool: info.name,
+            kind: info.kind,
+            id: info.id,
+            target: info.target,
+            version: placed.version,
+            priorId: placed.priorId,
+          },
+        }
+      },
+    }
+
+    // WHERE FULL SCREEN OPENS. A tab type of DSH's right sidebar claims
+    // `dsh-resource://pptwise/...` addresses (`registerViewer`). The address
+    // names what the pane shows, and the navigation params carry the page to
+    // open on, so clicking page 5 in the chat lands on page 5 even when the
+    // deck's tab is already open.
+    var VIEWER_ID = '@liustack/pptwise:viewer'
+    var VIEWER_KIND = 'pptwise'
+    var PANE_PREFIX = 'dsh-resource://pptwise/'
+
+    /** The address of the pane a target names: `{ view, id, priorId? }`. */
+    function paneAddress(target) {
+      if (target.view === 'compare') return PANE_PREFIX + 'compare/' + target.id + '/' + target.priorId
+      return PANE_PREFIX + (target.view === 'themes' ? 'themes/' : 'deck/') + target.id
+    }
+
+    /** The target an address names, or null for one that is not a pane of ours. */
+    function parsePaneAddress(address) {
+      var m = /^dsh-resource:\/\/pptwise\/(deck|themes)\/([A-Za-z0-9-]+)$/.exec(String(address || ''))
+      if (m) return { view: m[1], id: m[2] }
+      m = /^dsh-resource:\/\/pptwise\/compare\/([A-Za-z0-9-]+)\/([A-Za-z0-9-]+)$/.exec(String(address || ''))
+      return m ? { view: 'compare', id: m[1], priorId: m[2] } : null
+    }
+
+    /**
+     * The sidebar, once `registerViewer` has found it: `open(target)` and
+     * `editPage(n)`. Null in a shell without it, where a card falls back to
+     * its own layer.
+     */
+    var viewerHost = null
+
+    /** Open a pane in DSH's sidebar. False when there is no sidebar to open it in. */
+    function openInSidebar(target) {
+      return viewerHost !== null && viewerHost.open(target)
+    }
+
+    function PreviewCard(react, reactDom, ui) {
       var h = react.createElement
       var useState = react.useState
       var useEffect = react.useEffect
 
-      var COLORS = {
-        line: 'var(--dsw-alias-separator, rgba(127,127,127,0.28))',
-        dim: 'var(--dsw-alias-label-tertiary, rgba(127,127,127,0.85))',
-        text: 'var(--dsw-alias-label-primary, inherit)',
-        stage: 'var(--dsw-alias-fill-quaternary, rgba(127,127,127,0.12))',
+      // THE LOOK. Every card, and every full-screen pane, takes its whole
+      // appearance from DSH's own design variables, so it sits in the chat
+      // like the cards DSH ships and follows DSH's light and dark themes with
+      // no switch of its own. The geometry is the present card's
+      // (`ui-deliverables`): a filled header with a 40px icon tile, a 13px
+      // title over a 10px tertiary line, hairline `border-l1` edges, the
+      // `radius-lg` corner. Buttons, tags and icons are DSH's own, from
+      // `@deepseek-ai/dsh-client-ui-primitives`, when the shell's module table
+      // has it (`ui`). Their CSS-module class names are hashed per build, so
+      // nothing here can reuse them: the stand-ins below repeat the same
+      // tokens for a shell without the module, and the sheet styles only the
+      // layout around them. The slides keep their own colours, which are the
+      // deck's theme and not the harness's.
+      var STYLE_ID = 'pptwise-dsh-style'
+      var FOCUS_RING = '0 0 0 var(--dsw-focus-ring-width, 2px) var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary))'
+      var CSS = [
+        '.pw-card,.pw-pane{--pw-fill:var(--dsw-static-neutral-50);--pw-hover:var(--dsw-static-neutral-100)}',
+        'body[data-ds-dark-theme] .pw-card,body[data-ds-dark-theme] .pw-pane{--pw-fill:var(--dsw-static-neutral-850);--pw-hover:var(--dsw-static-neutral-800)}',
+        '.pw-card{box-sizing:border-box;display:flex;flex-direction:column;min-width:0;margin:4px 0 6px;overflow:hidden;border:0.5px solid var(--dsw-alias-border-l1);border-radius:var(--dsw-radius-lg);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family)}',
+        '.pw-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;box-sizing:border-box;min-height:60px;padding:8px 10px;background:var(--pw-fill)}',
+        '.pw-icon{display:grid;flex:none;place-items:center;box-sizing:border-box;width:40px;height:40px;overflow:hidden;border:0.5px solid var(--dsw-alias-border-l1);border-radius:10px;background:color-mix(in srgb,var(--dsw-static-neutral-00) 50%,transparent);color:var(--dsw-alias-link)}',
+        'body[data-ds-dark-theme] .pw-icon{background:color-mix(in srgb,var(--dsw-static-neutral-00) 5%,transparent)}',
+        '.pw-icon-letter{font-size:13px;font-weight:600}',
+        '.pw-titles{display:flex;flex:1 1 180px;flex-direction:column;justify-content:center;gap:2px;min-width:0}',
+        '.pw-title{overflow:hidden;font-size:13px;font-weight:500;line-height:20px;text-overflow:ellipsis;white-space:nowrap}',
+        '.pw-meta{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;min-width:0;font-size:10px;line-height:16px;color:var(--dsw-alias-label-tertiary)}',
+        '.pw-actions{display:inline-flex;flex:0 1 auto;flex-wrap:wrap;align-items:center;gap:6px;max-width:100%;min-width:0;margin-left:auto}',
+        '.pw-note{padding:8px 10px 10px;font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary)}',
+        '.pw-unavail{display:flex;align-items:center;gap:10px;padding:10px;font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary)}',
+        '.pw-strip{display:flex;gap:10px;overflow-x:auto;padding:10px;border-top:0.5px solid var(--dsw-alias-border-l1)}',
+        '.pw-tile{display:flex;flex:0 0 auto;flex-direction:column;gap:4px;width:132px;min-width:0}',
+        '.pw-tile-desk{width:160px}',
+        '.pw-shot{position:relative}',
+        '.pw-thumb{position:relative;box-sizing:border-box;width:100%;overflow:hidden;border:0.5px solid var(--dsw-alias-border-l1);border-radius:var(--dsw-radius-md);background:var(--pw-fill);transition:border-color 120ms ease}',
+        '.pw-thumb[role=button]{cursor:zoom-in}',
+        '.pw-thumb[role=button]:hover{border-color:var(--dsw-alias-border-l4)}',
+        '.pw-thumb:focus-visible{outline:none;box-shadow:' + FOCUS_RING + '}',
+        '.pw-thumb img{position:absolute;inset:0;display:block;width:100%;height:100%}',
+        '.pw-cap{display:flex;align-items:center;gap:6px;min-width:0;height:18px;overflow:hidden;font-size:11px;line-height:18px;color:var(--dsw-alias-label-tertiary);white-space:nowrap}',
+        '.pw-cap>*{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}',
+        '.pw-cap>:first-child{flex:none}',
+        '.pw-theme-id{color:var(--dsw-alias-label-primary);font-weight:500}',
+        '.pw-num{display:inline-grid;place-items:center;box-sizing:border-box;min-width:18px;height:18px;padding:0 4px;border-radius:var(--dsw-radius-sm);background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-primary);font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}',
+        '.pw-edit{position:absolute;right:6px;bottom:6px;box-sizing:border-box;max-width:calc(100% - 12px);height:22px;padding:0 8px;overflow:hidden;border:0.5px solid var(--dsw-alias-border-l3);border-radius:var(--dsw-radius-sm);background:var(--dsw-alias-bg-layer-3);color:var(--dsw-alias-label-primary);font:inherit;font-size:11px;line-height:20px;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;opacity:0;pointer-events:none;transition:opacity 120ms ease}',
+        '.pw-shot:hover .pw-edit,.pw-shot:focus-within .pw-edit{opacity:1;pointer-events:auto}',
+        '.pw-edit:hover{background:var(--pw-hover)}',
+        '.pw-edit:focus-visible{outline:none;box-shadow:' + FOCUS_RING + '}',
+        '@media (hover:none){.pw-edit{opacity:1;pointer-events:auto}}',
+        // One type column for the whole list, as wide as its longest label
+        // ("Content" is wider than two Chinese characters), so every heading
+        // starts at the same place in every language.
+        '.pw-rows{display:grid;grid-template-columns:22px max-content minmax(0,1fr);column-gap:8px;margin:0;padding:0;list-style:none;border-top:0.5px solid var(--dsw-alias-border-l1)}',
+        '.pw-row{grid-column:1/-1;display:grid;grid-template-columns:subgrid;align-items:baseline;padding:7px 12px 7px 10px;font-size:13px;line-height:20px}',
+        '.pw-row+.pw-row{border-top:0.5px solid var(--dsw-alias-border-l1)}',
+        '.pw-row-n{color:var(--dsw-alias-label-tertiary);text-align:right;font-variant-numeric:tabular-nums}',
+        '.pw-row-type{color:var(--dsw-alias-label-tertiary);font-size:12px}',
+        '.pw-row-text{min-width:0}',
+        '.pw-row-h{font-weight:500}',
+        '.pw-row-s{margin-left:8px;color:var(--dsw-alias-label-secondary)}',
+        '.pw-btn{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:4px;height:28px;padding:0 10px;border:none;border-radius:var(--dsw-radius-sm);background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;line-height:18px;white-space:nowrap;cursor:pointer}',
+        '.pw-btn[data-variant=outline]{border:0.5px solid var(--dsw-alias-border-l3)}',
+        '.pw-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}',
+        '.pw-btn:active:not(:disabled){background:var(--dsw-alias-interactive-bg-active)}',
+        '.pw-btn:disabled{cursor:not-allowed;opacity:0.4}',
+        '.pw-btn-icon{display:inline-flex;width:16px;height:16px;align-items:center;justify-content:center}',
+        '.pw-tag{display:inline-flex;align-items:center;border-radius:999px;padding:1px 8px;font-size:11px;line-height:17px;font-weight:500;white-space:nowrap}',
+        '.pw-tag[data-tone=outline]{border:0.5px solid var(--dsw-alias-border-l4);color:var(--dsw-alias-label-tertiary)}',
+        '.pw-tag[data-tone=neutral]{background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-secondary)}',
+        '.pw-tag[data-tone=success]{background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 10%,transparent);color:var(--dsw-alias-state-success-primary)}',
+        '.pw-tag[data-tone=info]{background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 10%,transparent);color:var(--dsw-alias-state-business-primary)}',
+        '.pw-tag[data-tone=warning]{background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 12%,transparent);color:var(--dsw-alias-state-warn-primary)}',
+        '.pw-tag[data-tone=danger]{background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 10%,transparent);color:var(--dsw-alias-state-error-primary)}',
+        '.pw-pane{box-sizing:border-box;display:flex;flex-direction:column;width:100%;height:100%;min-width:0;min-height:0;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);outline:none}',
+        '.pw-pane-bar{display:flex;flex:0 0 auto;flex-wrap:wrap;align-items:center;gap:4px 10px;box-sizing:border-box;min-height:38px;padding:4px 6px 4px 12px;border-bottom:0.5px solid var(--dsw-alias-border-l3)}',
+        '.pw-pane-title{flex:1 1 120px;min-width:0;overflow:hidden;font-size:13px;font-weight:500;line-height:20px;text-overflow:ellipsis;white-space:nowrap}',
+        '.pw-counter{flex:none;font-size:12px;line-height:18px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums}',
+        '.pw-pane-bar .pw-actions{gap:2px}',
+        '.pw-pane-bar>.pw-counter:last-child{margin-right:6px}',
+        '.pw-stage{position:relative;display:flex;flex:1 1 auto;align-items:center;justify-content:center;min-height:0;padding:16px;overflow:hidden;background:var(--pw-fill)}',
+        '.pw-slide{display:block;max-width:100%;max-height:100%;border-radius:var(--dsw-radius-sm);box-shadow:0 0 0 0.5px var(--dsw-alias-border-l2);user-select:none}',
+        '.pw-zone{position:absolute;top:0;bottom:0;z-index:1;display:flex;align-items:center;box-sizing:border-box;width:max(56px,16%);padding:0 10px;border:0;background:transparent;color:var(--dsw-alias-label-primary);cursor:pointer}',
+        '.pw-zone[data-side=prev]{left:0;justify-content:flex-start}',
+        '.pw-zone[data-side=next]{right:0;justify-content:flex-end}',
+        '.pw-zone:disabled{cursor:default}',
+        '.pw-zone:disabled .pw-zone-knob{visibility:hidden}',
+        '.pw-zone-knob{display:grid;place-items:center;width:32px;height:32px;border-radius:999px;background:var(--dsw-alias-button-floating-fill,var(--dsw-alias-bg-layer-3));box-shadow:var(--dsw-shadow-lv2,0 1px 4px rgba(0,0,0,.12));font-size:18px;opacity:0;transition:opacity 120ms ease}',
+        '.pw-stage:hover .pw-zone-knob,.pw-zone:focus-visible .pw-zone-knob{opacity:1}',
+        '.pw-zone:hover .pw-zone-knob{background:var(--dsw-alias-button-floating-hover,var(--pw-hover))}',
+        '.pw-zone:focus-visible{outline:none}',
+        '.pw-zone:focus-visible .pw-zone-knob{box-shadow:' + FOCUS_RING + '}',
+        '@media (hover:none){.pw-zone-knob{opacity:1}}',
+        '.pw-vstrip{display:flex;flex:0 0 auto;gap:8px;overflow-x:auto;padding:10px 12px;border-top:0.5px solid var(--dsw-alias-border-l3)}',
+        '.pw-vthumb{position:relative;flex:0 0 auto;box-sizing:border-box;width:96px;aspect-ratio:16/9;padding:0;overflow:hidden;border:0.5px solid var(--dsw-alias-border-l1);border-radius:var(--dsw-radius-sm);background:var(--pw-fill);cursor:pointer}',
+        '.pw-vthumb img{display:block;width:100%;height:100%;object-fit:contain}',
+        '.pw-vthumb:hover{border-color:var(--dsw-alias-border-l4)}',
+        '.pw-vthumb[aria-current=true]{border-color:var(--dsw-alias-state-business-primary);box-shadow:0 0 0 1px var(--dsw-alias-state-business-primary)}',
+        '.pw-vthumb:focus-visible{outline:none;box-shadow:' + FOCUS_RING + '}',
+        '.pw-vthumb-n{position:absolute;left:4px;bottom:3px;padding:0 4px;border-radius:4px;background:var(--dsw-alias-bg-layer-3);color:var(--dsw-alias-label-secondary);font-size:10px;line-height:14px}',
+        '.pw-wall{display:grid;flex:1 1 auto;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));align-content:start;gap:16px;min-height:0;overflow:auto;padding:16px}',
+        '.pw-wall-col{display:flex;flex-direction:column;gap:6px;min-width:0}',
+        '.pw-compare{display:flex;flex:1 1 auto;flex-direction:column;gap:16px;min-height:0;overflow:auto;padding:12px 16px 16px}',
+        '.pw-compare-row{display:flex;flex-direction:column;gap:6px}',
+        '.pw-compare-label{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500}',
+        '.pw-compare-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}',
+        '.pw-compare-head{font-size:12px;color:var(--dsw-alias-label-tertiary)}',
+        '.pw-compare-img{display:block;box-sizing:border-box;width:100%;border:0.5px solid var(--dsw-alias-border-l1);border-radius:var(--dsw-radius-md);background:var(--pw-fill)}',
+        '.pw-compare-empty{display:grid;place-items:center;box-sizing:border-box;border:0.5px dashed var(--dsw-alias-border-l3);border-radius:var(--dsw-radius-md);color:var(--dsw-alias-label-tertiary);font-size:12px}',
+        '.pw-layer{position:fixed;inset:0;z-index:9999;display:flex;box-sizing:border-box;padding:24px;background:color-mix(in srgb,var(--dsw-alias-bg-layer-1) 72%,transparent)}',
+        '.pw-layer-panel{display:flex;flex:1 1 auto;min-width:0;overflow:hidden;border:0.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-xl);box-shadow:var(--dsw-shadow-lv3,0 8px 32px rgba(0,0,0,.18))}',
+        '.pw-tab-icon{display:inline-flex;margin-right:6px;vertical-align:-3px}',
+      ].join('\n')
+
+      function ensureStyles() {
+        if (typeof document === 'undefined' || document.getElementById(STYLE_ID)) return
+        var el = document.createElement('style')
+        el.id = STYLE_ID
+        el.textContent = CSS
+        document.head.appendChild(el)
+      }
+      ensureStyles()
+
+      /** One of DSH's icons by its export name, at 14px, or nothing in a shell without them. */
+      function iconNode(name, size) {
+        return ui && typeof ui[name] === 'function' ? h(ui[name], { size: size || 14 }) : null
       }
 
-      /**
-       * The viewer's own two buttons, styled in a sheet rather than inline.
-       *
-       * Everything else in this file styles elements directly, which is fine
-       * until a button has to answer the pointer: a solid white button that
-       * does not change under the cursor reads as broken before it reads as
-       * plain, and `:hover` cannot be written inline at all.
-       *
-       * The colours have to live here too, not just the hover rules. An
-       * element's own `style` attribute outranks any sheet, so leaving
-       * `background` and `border` inline lets them win every hover — the
-       * transition still runs, which is what makes the result look wired up
-       * while the colour never moves. The alternative is `!important` on four
-       * declarations, which is the same bug with an override on top.
-       *
-       * Sized against the harness's shell rather than the card's: these sit
-       * over a full-screen view, so at the card's 13px/23px they read as
-       * smaller than the controls they are covering. Solid marks the errand —
-       * taking the deck away is why the row exists — and the outline marks
-       * the exit.
-       */
-      var MODAL_STYLE_ID = 'pptwise-modal-style'
-      var MODAL_BTN_BASE =
-        'font:inherit;font-size:13px;padding:7px 16px;border-radius:8px;cursor:pointer;'
-      function ensureModalStyles() {
-        if (document.getElementById(MODAL_STYLE_ID)) return
-        var el = document.createElement('style')
-        el.id = MODAL_STYLE_ID
-        el.textContent =
-          '.pf-mbtn{' +
-          MODAL_BTN_BASE +
-          'border:1px solid rgba(255,255,255,0.5);background:transparent;color:#fff;' +
-          'transition:background-color .12s,border-color .12s}' +
-          '.pf-mbtn:hover{background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.8)}' +
-          '.pf-mbtn-primary{' +
-          MODAL_BTN_BASE +
-          'font-weight:600;border:1px solid transparent;background:#fff;color:#111;' +
-          'transition:background-color .12s}' +
-          '.pf-mbtn-primary:hover{background:#e2e2e2}'
-        document.head.appendChild(el)
+      /** What sits in a card's icon tile: DSH's file glyph for a deck, its own icons for the others. */
+      function fileIcon(kind, size) {
+        if (kind === 'deck' && ui && typeof ui.FileTypeIcon === 'function') return h(ui.FileTypeIcon, { kind: 'ppt', size: size || 24 })
+        var name = kind === 'outline' ? 'IconChecklistOutlineRegular' : kind === 'themes' ? 'IconPersonalizationOutlineRegular' : 'IconDeliverDocRegular'
+        return iconNode(name, size || 20) || h('span', { className: 'pw-icon-letter' }, kind === 'outline' ? '≡' : 'P')
+      }
+
+      /** DSH's `Button` (small), or a stand-in wearing the same tokens. `icon` names one of DSH's icons. */
+      function Btn(props) {
+        var rest = {}
+        for (var key in props) {
+          if (key !== 'variant' && key !== 'icon' && key !== 'children') rest[key] = props[key]
+        }
+        var variant = props.variant || 'outline'
+        var icon = props.icon ? iconNode(props.icon) : null
+        if (ui && ui.Button) return h(ui.Button, Object.assign(rest, { variant: variant, size: 'sm', icon: icon }), props.children)
+        return h(
+          'button',
+          Object.assign({ type: 'button' }, rest, { className: 'pw-btn' + (rest.className ? ' ' + rest.className : ''), 'data-variant': variant }),
+          icon ? h('span', { className: 'pw-btn-icon' }, icon) : null,
+          props.children,
+        )
+      }
+
+      /** DSH's `Tag`, or a stand-in with the same tones. */
+      function Badge(props) {
+        if (ui && ui.Tag) return h(ui.Tag, { tone: props.tone }, props.children)
+        return h('span', { className: 'pw-tag', 'data-tone': props.tone }, props.children)
+      }
+
+      /** A list of nodes as children, without the holes the optional ones leave. */
+      function kids(list) {
+        return (list || []).filter(function (node) {
+          return node !== null && node !== undefined && node !== false
+        })
+      }
+
+      /** A card's header, the way the present card lays one out: icon tile, title over one quiet line, actions. */
+      function CardHead(props) {
+        var meta = kids(props.meta)
+        var actions = kids(props.actions)
+        return h(
+          'div',
+          { className: 'pw-head' },
+          h('span', { className: 'pw-icon', 'aria-hidden': true }, fileIcon(props.icon)),
+          h(
+            'div',
+            { className: 'pw-titles' },
+            h('div', { className: 'pw-title', title: props.title }, props.title),
+            meta.length > 0 ? h('div', { className: 'pw-meta' }, meta) : null,
+          ),
+          actions.length > 0 ? h('div', { className: 'pw-actions' }, actions) : null,
+        )
+      }
+
+      /** Enter and Space on a focused `role="button"` element, the keyboard a real button would have had. */
+      function activateOn(onClick) {
+        if (!onClick) return undefined
+        return function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            onClick()
+          }
+        }
       }
 
       /** One slide, mounted as real SVG so it scales with its box. */
@@ -505,27 +1012,12 @@ window.__ModuleLoader__.load({
         return h(
           'div',
           {
-            style: {
-              position: 'relative',
-              aspectRatio: (props.width || 1280) + ' / ' + (props.height || 720),
-              background: COLORS.stage,
-              borderRadius: 6,
-              overflow: 'hidden',
-              border: '1px solid ' + COLORS.line,
-              cursor: props.onClick ? 'zoom-in' : 'default',
-              width: '100%',
-            },
+            className: 'pw-thumb',
+            style: { aspectRatio: (props.width || 1280) + ' / ' + (props.height || 720) },
             onClick: props.onClick,
             role: props.onClick ? 'button' : undefined,
             tabIndex: props.onClick ? 0 : undefined,
-            onKeyDown: props.onClick
-              ? function (e) {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    props.onClick()
-                  }
-                }
-              : undefined,
+            onKeyDown: activateOn(props.onClick),
             title: props.title,
           },
           h(Slide, { svg: props.page.svg, prefix: props.prefix }),
@@ -556,152 +1048,24 @@ window.__ModuleLoader__.load({
       }
 
       /**
-       * Full-size viewer: the deck's own `preview.html`, in an iframe.
-       *
-       * Everything a reader does inside it — ←/→, the filmstrip, the
-       * light/dark surround, the audit findings panel — belongs to that page,
-       * which was written, tested and shipped for the harnesses that have no
-       * plugin UI. This modal contributes the two things the page has no way
-       * to offer from inside itself: a way out, and the export. It renders on
-       * the body (`inBody`), never inside the card.
+       * The full-screen pane where DSH has no right sidebar to put it in: a
+       * layer over the page, on the body (`inBody`), closed by a click on the
+       * surround, by the pane's own Close, or by Esc inside the pane.
        */
-      function Modal(props) {
-        var frameRef = react.useRef(null)
-
-        useEffect(
-          function () {
-            ensureModalStyles()
-            function onKey(e) {
-              if (e.key === 'Escape') props.onClose()
-            }
-            document.addEventListener('keydown', onKey)
-            // Once the reader clicks the deck, keystrokes go to the iframe's
-            // own document and never reach this one — so Escape has to be
-            // heard there too, or it stops working exactly when the modal is
-            // in use. The frame is same-origin by construction (its src is
-            // this plugin's own route), and the access is guarded anyway:
-            // losing Escape is not worth throwing inside an effect for. The
-            // listener needs no removal of its own, since it dies with the
-            // document when this modal unmounts.
-            var frame = frameRef.current
-            function listenInside() {
-              try {
-                var doc = frame.contentDocument
-                if (doc) doc.addEventListener('keydown', onKey)
-              } catch {
-                /* not reachable from here after all — the outer listener stands */
-              }
-            }
-            if (frame) frame.addEventListener('load', listenInside)
-            return function () {
-              document.removeEventListener('keydown', onKey)
-              if (frame) frame.removeEventListener('load', listenInside)
-            }
-          },
-          [props.onClose, props.src],
-        )
-
-        return inBody(h(
-          'div',
-          {
-            style: {
-              position: 'fixed',
-              inset: 0,
-              zIndex: 9999,
-              // Opaque, not the usual translucent backdrop. This covers the
-              // whole viewport with a document, so there is nothing behind it
-              // worth a glimpse of — and a glimpse is all a translucent one
-              // gives. At 0.8 the harness's own composer stayed legible right
-              // under this modal's buttons and the eye read the two as one
-              // strip of controls; at 0.94 its title bar and its `Session
-              // log` pill still ghosted through at 6% white, the pill landing
-              // 14px outside the edge these buttons are aligned to.
-              background: '#000',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 24,
-            },
-            onClick: function (e) {
-              if (e.target === e.currentTarget) props.onClose()
-            },
-          },
+      function Layer(props) {
+        return inBody(
           h(
             'div',
             {
-              style: {
-                width: 'min(100%, 1600px)',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 14,
-              },
+              className: 'pw-layer',
+              'data-pptwise-layer': '',
               onClick: function (e) {
                 if (e.target === e.currentTarget) props.onClose()
               },
             },
-            // Above the frame, not below it. Below, this row lands in the
-            // strip of backdrop the harness's own input area occupies, and
-            // whatever the backdrop lets through sits on the same baseline.
-            h(
-              'div',
-              {
-                style: {
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'flex-end',
-                  gap: 10,
-                  flex: '0 0 auto',
-                  // Lines this row's right edge up with the Light/Dark toggle
-                  // in the previewed page's own header, which sits one row
-                  // below it. That page's own `header` rule reserves the same
-                  // inset (`padding:11px 18px`, preview-html.ts); without
-                  // matching it, two right-aligned rows 14px apart miss each
-                  // other by just enough to look like a mistake, not a choice.
-                  paddingRight: 18,
-                },
-                onClick: function (e) {
-                  if (e.target === e.currentTarget) props.onClose()
-                },
-              },
-              props.previewId
-                ? h(ExportButton, {
-                    previewId: props.previewId,
-                    name: props.name,
-                    draft: props.draft,
-                    status: props.downloadStatus,
-                    onStatus: props.onDownloadStatus,
-                    className: 'pf-mbtn-primary',
-                  })
-                : null,
-              h(
-                'button',
-                { onClick: props.onClose, className: 'pf-mbtn' },
-                'Close',
-              ),
-            ),
-            h('iframe', {
-              ref: frameRef,
-              src: props.src,
-              title: 'pptwise deck preview',
-              style: {
-                // Takes the rest of the dialog and lets the page inside do its
-                // own layout. Its stage carries `aspect-ratio: 16/9` and sizes
-                // itself off the viewport it is handed, so the slide keeps its
-                // shape at any frame size. Pinning the *frame* to 16:9 instead
-                // would have to reserve room for that page's header and
-                // filmstrip, and every guess at how much is wrong the moment
-                // either one changes height.
-                flex: '1 1 auto',
-                width: '100%',
-                minHeight: 0,
-                border: 0,
-                borderRadius: 8,
-                background: COLORS.stage,
-              },
-            }),
+            h('div', { className: 'pw-layer-panel' }, props.children),
           ),
-        ))
+        )
       }
 
       /**
@@ -803,11 +1167,11 @@ window.__ModuleLoader__.load({
         }
 
         return h(
-          'button',
+          Btn,
           {
             onClick: save,
-            className: props.className,
-            style: props.style,
+            variant: props.variant || 'outline',
+            icon: 'IconDownloadOutlineRegular',
             title: isFinal(status)
               ? hintFor(status)
               : status === 'failed'
@@ -817,12 +1181,12 @@ window.__ModuleLoader__.load({
                   : 'Download the editable .pptx',
           },
           status === 'busy'
-            ? 'Saving…'
+            ? t('card.saving')
             : isFinal(status)
-              ? exportLabelFor(status)
+              ? t('card.export.' + status)
               : status === 'failed'
-                ? 'Retry download'
-                : 'Download .pptx',
+                ? t('card.retryDownload')
+                : props.label || t('desk.download'),
         )
       }
 
@@ -833,15 +1197,11 @@ window.__ModuleLoader__.load({
        * exists to answer is a card that told the user nothing at all.
        */
       function VerdictNote(props) {
-        return h(
-          'div',
-          { style: { fontSize: 12, color: COLORS.dim, paddingTop: 2 } },
-          hintFor(props.verdict),
-        )
+        return h('div', { className: 'pw-note' }, hintFor(props.verdict))
       }
 
       /**
-       * The badge that marks a deck the route will not serve, and says which
+       * The tag that marks a deck the route will not serve, and says which
        * kind of "will not".
        *
        * It used to read `gone` whatever had happened, which is how a damaged
@@ -851,19 +1211,8 @@ window.__ModuleLoader__.load({
       function VerdictBadge(props) {
         return h(
           'span',
-          {
-            title: hintFor(props.verdict),
-            style: {
-              border: '1px solid ' + COLORS.line,
-              borderRadius: 5,
-              padding: '0 6px',
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              fontSize: 10,
-              letterSpacing: '0.04em',
-            },
-          },
-          badgeFor(props.verdict),
+          { title: hintFor(props.verdict) },
+          h(Badge, { tone: props.verdict === 'refused' ? 'warning' : 'danger' }, t('badge.' + badgeFor(props.verdict))),
         )
       }
 
@@ -1180,6 +1529,21 @@ window.__ModuleLoader__.load({
             })
         }
 
+        // With DSH's right sidebar, "open" means handing the deck to it: the
+        // store's open flag is the decision (taken by `openViewer` under its
+        // ticket, so every ordering rule above still holds), and this hands it
+        // over once and lowers the flag again. Without the sidebar the flag
+        // keeps the layer below on screen.
+        var hosted = viewerHost !== null
+        useEffect(
+          function () {
+            if (!deck.viewerOpen || !previewId || settled || !hosted) return
+            openInSidebar({ view: 'deck', id: previewId, page: deck.viewerPage })
+            commit({ viewerOpen: false, viewerPage: 1 }, { lane: 'deck', ticket: nextTicket() })
+          },
+          [deck.viewerOpen, deck.viewerPage, previewId, settled, hosted],
+        )
+
         if (!bundle) {
           // Nothing to draw and nothing said about why: the card refusing to
           // invent a deck it does not have.
@@ -1188,9 +1552,9 @@ window.__ModuleLoader__.load({
           // the deck was. That number survives a deleted preview on purpose:
           // the host half keeps no gravestone on disk, so the tool's own
           // summary line, still sitting in the log, is the only evidence this
-          // card can still read that nine pages once existed here. A card that vanishes instead is the one thing worse
-          // than a card reporting a problem: the user is left doubting the deck
-          // was ever generated.
+          // card can still read that nine pages once existed here. A card that
+          // vanishes instead is the one thing worse than a card reporting a
+          // problem: the user is left doubting the deck was ever generated.
           //
           // The Retry button appears only for the one verdict a retry can
           // change. `refused` and the final verdicts get the same row without
@@ -1198,37 +1562,30 @@ window.__ModuleLoader__.load({
           // that just closed is a promise the card cannot keep.
           return h(
             'div',
-            { style: { display: 'flex', flexDirection: 'column', gap: 4, padding: '2px 0 6px' } },
-            h(
-              'div',
-              { style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: COLORS.dim } },
-              h('span', { style: { color: COLORS.text, fontWeight: 600 } }, 'deck'),
-              settled ? h(VerdictBadge, { verdict: verdict }) : null,
-              pageCount !== null ? h('span', null, pageCount + ' pages') : null,
-              isRetryable(verdict)
-                ? h(
-                    'button',
-                    {
-                      onClick: function () {
-                        commit({ attempt: deck.attempt + 1 }, { lane: 'deck', ticket: nextTicket() })
+            { className: 'pw-card' },
+            h(CardHead, {
+              icon: 'deck',
+              title: 'deck',
+              meta: [
+                settled ? h(VerdictBadge, { key: 'v', verdict: verdict }) : null,
+                pageCount !== null ? h('span', { key: 'n' }, t('desk.pages', { n: pageCount })) : null,
+              ],
+              actions: [
+                isRetryable(verdict)
+                  ? h(
+                      Btn,
+                      {
+                        key: 'retry',
+                        onClick: function () {
+                          commit({ attempt: deck.attempt + 1 }, { lane: 'deck', ticket: nextTicket() })
+                        },
+                        title: hintFor(verdict),
                       },
-                      title: hintFor(verdict),
-                      style: {
-                        marginLeft: 'auto',
-                        font: 'inherit',
-                        fontSize: 12,
-                        padding: '3px 10px',
-                        borderRadius: 7,
-                        border: '1px solid ' + COLORS.line,
-                        background: 'transparent',
-                        color: COLORS.text,
-                        cursor: 'pointer',
-                      },
-                    },
-                    'Retry',
-                  )
-                : null,
-            ),
+                      t('card.retry'),
+                    )
+                  : null,
+              ],
+            }),
             h(VerdictNote, { verdict: verdict }),
           )
         }
@@ -1246,112 +1603,80 @@ window.__ModuleLoader__.load({
 
         return h(
           'div',
-          { style: { display: 'flex', flexDirection: 'column', gap: 8, padding: '2px 0 6px' } },
+          { className: 'pw-card' },
+          h(CardHead, {
+            icon: 'deck',
+            title: bundle.title || 'deck',
+            meta: [
+              // The deck is on screen and the route has already said it
+              // cannot serve it any more. Both halves are true, and the
+              // thumbnails are the half worth keeping — they are the deck,
+              // not a picture of a button. What goes is the promise that
+              // clicking them leads anywhere.
+              settled ? h(VerdictBadge, { key: 'v', verdict: verdict }) : null,
+              // The deck still has placeholder pages. The export goes out
+              // anyway (see `--draft` in preview-tool.js's `execute`), so this
+              // tag is what keeps that from being a silent substitution: the
+              // user is looking at unfinished work and the file they save
+              // says so too.
+              bundle.draft
+                ? h(
+                    'span',
+                    { key: 'draft', title: 'Some pages are still unfilled placeholders — the export is labelled a draft' },
+                    h(Badge, { tone: 'warning' }, t('card.draft')),
+                  )
+                : null,
+              exportable
+                ? null
+                : h(
+                    'span',
+                    { key: 'revise', title: 'This build needs revision, so it wrote no .pptx' },
+                    h(Badge, { tone: 'warning' }, t('card.needsRevision')),
+                  ),
+              h('span', { key: 'n' }, t('desk.pages', { n: bundle.pages.length })),
+              // Build by build, how far the writing has got: the pages still
+              // standing as placeholders are the ones not written yet.
+              bundle.draft
+                ? h(
+                    'span',
+                    { key: 'w', 'data-written': '' },
+                    t('desk.written', {
+                      x: bundle.pages.filter(function (p) { return p.placeholder !== true }).length,
+                      n: bundle.pages.length,
+                    }),
+                  )
+                : null,
+              findingCount > 0 ? h('span', { key: 'f' }, t('card.findings', { n: findingCount })) : null,
+            ],
+            actions: [
+              // No viewer without an id, and none for an id the route has
+              // already disowned: the full-size view is a route keyed by it.
+              // A button that opened an empty frame would be worse than an
+              // absent one, and the thumbnails below go inert for the same
+              // reason.
+              previewId && !settled
+                ? h(Btn, { key: 'open', icon: 'IconFullscreenOutlineRegular', onClick: function () { openViewer(1) } }, t('card.open'))
+                : null,
+              previewId && exportable
+                ? h(ExportButton, {
+                    key: 'pptx',
+                    previewId: previewId,
+                    name: bundle.title,
+                    draft: bundle.draft,
+                    verdict: verdict,
+                    status: deck.download,
+                    onStatus: function (next, order) { commit({ download: next }, order) },
+                  })
+                : null,
+            ],
+          }),
           h(
             'div',
-            { style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: COLORS.dim } },
-            h('span', { style: { color: COLORS.text, fontWeight: 600 } }, bundle.title || 'deck'),
-            // The deck is on screen and the route has already said it cannot
-            // serve it any more. Both halves are true, and the thumbnails are
-            // the half worth keeping — they are the deck, not a picture of a
-            // button. What goes is the promise that clicking them leads
-            // anywhere.
-            settled ? h(VerdictBadge, { verdict: verdict }) : null,
-            // The deck still has placeholder pages. The export goes out
-            // anyway (see `--draft` in preview-tool.js's `execute`), so this
-            // badge is what keeps that from being a silent substitution: the
-            // user is looking at unfinished work and the file they save says
-            // so too.
-            bundle.draft
-              ? h(
-                  'span',
-                  {
-                    title: 'Some pages are still unfilled placeholders — the export is labelled a draft',
-                    style: {
-                      border: '1px solid ' + COLORS.line,
-                      borderRadius: 5,
-                      padding: '0 6px',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      fontSize: 10,
-                      letterSpacing: '0.04em',
-                    },
-                  },
-                  'draft',
-                )
-              : null,
-            exportable
-              ? null
-              : h(
-                  'span',
-                  {
-                    title: 'This build needs revision, so it wrote no .pptx',
-                    style: {
-                      border: '1px solid ' + COLORS.line,
-                      borderRadius: 5,
-                      padding: '0 6px',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      fontSize: 10,
-                      letterSpacing: '0.04em',
-                    },
-                  },
-                  'needs revision',
-                ),
-            h('span', null, bundle.pages.length + ' pages'),
-            findingCount > 0 ? h('span', null, findingCount + ' audit findings') : null,
-            // No viewer without an id, and none for an id the route has
-            // already disowned: the full-size view is a route keyed by it. A
-            // button that opened an empty frame would be worse than an absent
-            // one, and the thumbnails below go inert for the same reason.
-            previewId && !settled
-              ? h(
-                  'button',
-                  {
-                    onClick: function () { openViewer(1) },
-                    style: {
-                      marginLeft: 'auto',
-                      font: 'inherit',
-                      fontSize: 12,
-                      padding: '3px 10px',
-                      borderRadius: 7,
-                      border: '1px solid ' + COLORS.line,
-                      background: 'transparent',
-                      color: COLORS.text,
-                      cursor: 'pointer',
-                    },
-                  },
-                  'Open',
-                )
-              : null,
-            previewId && exportable
-              ? h(ExportButton, {
-                  previewId: previewId,
-                  name: bundle.title,
-                  draft: bundle.draft,
-                  verdict: verdict,
-                  status: deck.download,
-                  onStatus: function (next, order) { commit({ download: next }, order) },
-                  style: {
-                    font: 'inherit',
-                    fontSize: 12,
-                    padding: '3px 10px',
-                    borderRadius: 7,
-                    border: '1px solid ' + COLORS.line,
-                    background: 'transparent',
-                    color: COLORS.text,
-                    cursor: 'pointer',
-                  },
-                })
-              : null,
-          ),
-          h(
-            'div',
-            { style: { display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 } },
+            { className: 'pw-strip' },
             stripPages(pages).map(function (page, i) {
               return h(
                 'div',
-                { key: page.id || i, style: { flex: '0 0 auto', width: 132 } },
+                { key: page.id || i, className: 'pw-tile' },
                 h(Frame, {
                   page: page,
                   prefix: 'pft' + i + '-',
@@ -1373,18 +1698,23 @@ window.__ModuleLoader__.load({
           // No id comparison here, and none needed: `deck` is this preview's own
           // entry or the unasked state, so a viewer left open on another deck
           // is not something this can read.
-          deck.viewerOpen && previewId && !settled
-            ? h(Modal, {
-                src: previewHtmlUrl(previewId, deck.viewerPage),
-                previewId: exportable ? previewId : null,
-                name: bundle.title,
-                draft: bundle.draft,
-                downloadStatus: deck.download,
-                onDownloadStatus: function (next, order) { commit({ download: next }, order) },
-                onClose: function () {
-                  commit({ viewerOpen: false, viewerPage: 1 }, { lane: 'deck', ticket: nextTicket() })
+          deck.viewerOpen && previewId && !settled && !hosted
+            ? h(
+                Layer,
+                {
+                  onClose: function () {
+                    commit({ viewerOpen: false, viewerPage: 1 }, { lane: 'deck', ticket: nextTicket() })
+                  },
                 },
-              })
+                h(PaneBody, {
+                  target: { view: 'deck', id: previewId, page: deck.viewerPage },
+                  revision: 0,
+                  closeButton: true,
+                  onClose: function () {
+                    commit({ viewerOpen: false, viewerPage: 1 }, { lane: 'deck', ticket: nextTicket() })
+                  },
+                }),
+              )
             : null,
         )
       }
@@ -1398,9 +1728,25 @@ window.__ModuleLoader__.load({
       }
 
       /**
+       * A theme's caption: the number the question panel's options start
+       * with ("1 brief"), the model is told this order in the result, then
+       * the theme's id and label.
+       */
+      function ThemeLabel(props) {
+        var theme = props.theme
+        return h(
+          'div',
+          { className: 'pw-cap pw-theme-cap', title: theme.label },
+          h('span', { className: 'pw-num', 'data-theme-number': props.n }, String(props.n)),
+          h('span', { className: 'pw-theme-id' }, theme.id),
+          theme.label && theme.label !== theme.id ? h('span', null, theme.label) : null,
+        )
+      }
+
+      /**
        * The theme wall: one column per theme, its cover over its content
        * page, in the same thumbnail strip the deck card draws. Open shows the
-       * contact sheet full size. No download: a wall has no deck behind it.
+       * wall full size. No download: a wall has no deck behind it.
        *
        * Simpler than the deck card on purpose. There is no export to race and
        * no viewer page to remember, so one fetch per wall id is the whole of
@@ -1449,73 +1795,49 @@ window.__ModuleLoader__.load({
         }
 
         var bundle = wall.bundle
-        var buttonStyle = {
-          marginLeft: 'auto',
-          font: 'inherit',
-          fontSize: 12,
-          padding: '3px 10px',
-          borderRadius: 7,
-          border: '1px solid ' + COLORS.line,
-          background: 'transparent',
-          color: COLORS.text,
-          cursor: 'pointer',
-        }
 
         if (!bundle || !Array.isArray(bundle.themes)) {
           if (wall.verdict === null || wall.verdict === 'alive') return null
           return h(
             'div',
-            { style: { display: 'flex', flexDirection: 'column', gap: 4, padding: '2px 0 6px' } },
-            h(
-              'div',
-              { style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: COLORS.dim } },
-              h('span', { style: { color: COLORS.text, fontWeight: 600 } }, 'themes'),
-              isFinal(wall.verdict) ? h(VerdictBadge, { verdict: wall.verdict }) : null,
-              isRetryable(wall.verdict)
-                ? h(
-                    'button',
-                    {
-                      onClick: function () {
-                        update({ attempt: attempt + 1 })
-                      },
-                      style: buttonStyle,
-                    },
-                    'Retry',
-                  )
-                : null,
-            ),
-            h('div', { style: { fontSize: 12, color: COLORS.dim, paddingTop: 2 } }, wallHintFor(wall.verdict)),
+            { className: 'pw-card' },
+            h(CardHead, {
+              icon: 'themes',
+              title: 'themes',
+              meta: [isFinal(wall.verdict) ? h(VerdictBadge, { key: 'v', verdict: wall.verdict }) : null],
+              actions: [
+                isRetryable(wall.verdict)
+                  ? h(Btn, { key: 'retry', onClick: function () { update({ attempt: attempt + 1 }) } }, t('card.retry'))
+                  : null,
+              ],
+            }),
+            h('div', { className: 'pw-note' }, wallHintFor(wall.verdict)),
           )
         }
 
         var slide = bundle.slide || { width: 1280, height: 720 }
         var stamp = wallId.slice(0, 8)
         function open() {
-          update({ open: true })
+          if (!openInSidebar({ view: 'themes', id: wallId })) update({ open: true })
         }
 
         return h(
           'div',
-          { style: { display: 'flex', flexDirection: 'column', gap: 8, padding: '2px 0 6px' } },
+          { className: 'pw-card' },
+          h(CardHead, {
+            icon: 'themes',
+            title: bundle.title || 'themes',
+            meta: [h('span', { key: 'n' }, t('card.themes', { n: bundle.themes.length }))],
+            actions: [h(Btn, { key: 'open', icon: 'IconFullscreenOutlineRegular', onClick: open }, t('card.open'))],
+          }),
           h(
             'div',
-            { style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: COLORS.dim } },
-            h('span', { style: { color: COLORS.text, fontWeight: 600 } }, bundle.title || 'themes'),
-            h('span', null, bundle.themes.length + ' themes'),
-            h('button', { onClick: open, style: buttonStyle }, 'Open'),
-          ),
-          h(
-            'div',
-            { style: { display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 } },
+            { className: 'pw-strip' },
             bundle.themes.map(function (theme, i) {
               var pages = Array.isArray(theme.pages) ? theme.pages.filter(hasMarkup) : []
               return h(
                 'div',
-                {
-                  key: theme.id || i,
-                  'data-theme': theme.id,
-                  style: { flex: '0 0 auto', width: 132, display: 'flex', flexDirection: 'column', gap: 4 },
-                },
+                { key: theme.id || i, className: 'pw-tile', 'data-theme': theme.id },
                 pages.map(function (page, j) {
                   return h(Frame, {
                     key: page.type || j,
@@ -1527,37 +1849,755 @@ window.__ModuleLoader__.load({
                     onClick: open,
                   })
                 }),
-                h(
-                  'div',
-                  {
-                    title: theme.label,
-                    style: {
-                      fontSize: 11,
-                      color: COLORS.dim,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    },
-                  },
-                  h('span', { style: { color: COLORS.text, fontWeight: 600 } }, theme.id),
-                  theme.label && theme.label !== theme.id ? ' ' + theme.label : null,
-                ),
+                h(ThemeLabel, { theme: theme, n: i + 1 }),
               )
             }),
           ),
           wall.open
-            ? h(Modal, {
-                src: previewHtmlUrl(wallId, 1),
-                previewId: null,
-                onClose: function () {
-                  update({ open: false })
-                },
-              })
+            ? h(
+                Layer,
+                { onClose: function () { update({ open: false }) } },
+                h(PaneBody, { target: { view: 'themes', id: wallId }, revision: 0, closeButton: true, onClose: function () { update({ open: false }) } }),
+              )
             : null,
         )
       }
 
-      return { deck: PptwisePreviewCard, themes: PptwiseThemesCard }
+      /**
+       * One fetch of whatever the route keeps under an id: a deck, a wall or
+       * an outline. The newer cards need nothing more than this, since they
+       * have no export to race and no viewer page to remember. An answer for
+       * an id the card has left is dropped.
+       */
+      function useRouteBundle(id) {
+        var state = useState({ id: null, bundle: null, verdict: null, attempt: 0 })
+        var setState = state[1]
+        var attempt = state[0].attempt
+        useEffect(
+          function () {
+            if (!id) return undefined
+            var left = false
+            fetch(previewBundleUrl(id))
+              .then(function (r) {
+                return verdictOf(r).then(function (answer) {
+                  if (answer !== 'alive') return { verdict: answer, bundle: null }
+                  return r.json().then(function (b) {
+                    return { verdict: 'alive', bundle: b }
+                  })
+                })
+              })
+              .catch(function () {
+                return { verdict: UNREACHABLE_VERDICT, bundle: null }
+              })
+              .then(function (next) {
+                if (left) return
+                setState(function (prev) {
+                  return { id: id, bundle: next.bundle, verdict: next.verdict, attempt: prev.attempt }
+                })
+              })
+            return function () {
+              left = true
+            }
+          },
+          [id, attempt],
+        )
+        var mine = id !== null && state[0].id === id
+        return {
+          bundle: mine ? state[0].bundle : null,
+          verdict: mine ? state[0].verdict : null,
+          retry: function () {
+            setState(function (prev) {
+              return Object.assign({}, prev, { attempt: prev.attempt + 1 })
+            })
+          },
+        }
+      }
+
+      /** What a card says when the route cannot serve what it was asked for. */
+      function Unavailable(props) {
+        return h(
+          'div',
+          { className: 'pw-unavail' },
+          h('span', null, isFinal(props.verdict) ? t('card.unavailable') : UNREACHABLE_HINT),
+          isRetryable(props.verdict) ? h(Btn, { onClick: props.onRetry }, t('card.retry')) : null,
+        )
+      }
+
+      /** The outline itself: one row per page, number, page type, heading, and what the page says. */
+      function OutlineList(props) {
+        var outline = props.outline
+        var pages = Array.isArray(outline.pages) ? outline.pages : []
+        return h(
+          'div',
+          { className: 'pw-card', 'data-pptwise-outline': '' },
+          h(CardHead, {
+            icon: 'outline',
+            title: outline.title || t('outline.title'),
+            meta: [
+              h('span', { key: 'n' }, t('outline.pages', { n: pages.length })),
+              outline.theme ? h('span', { key: 'theme' }, t('outline.theme', { theme: outline.theme })) : null,
+            ],
+          }),
+          h(
+            'ol',
+            { className: 'pw-rows' },
+            pages.map(function (page, i) {
+              return h(
+                'li',
+                { key: page.id || i, className: 'pw-row', 'data-page': page.page },
+                h('span', { className: 'pw-row-n' }, String(page.page || i + 1)),
+                h('span', { className: 'pw-row-type', title: page.kind || undefined }, t('type.' + (page.type || 'content'))),
+                h(
+                  'span',
+                  { className: 'pw-row-text' },
+                  h('span', { className: 'pw-row-h' }, page.heading),
+                  page.summary ? h('span', { className: 'pw-row-s' }, page.summary) : null,
+                ),
+              )
+            }),
+          ),
+        )
+      }
+
+      /** The outline card in the tool row: the rows `pptwise_outline` checked, fetched by id. */
+      function PptwiseOutlineCard(props) {
+        var id = outlineIdOf(props.block)
+        var got = useRouteBundle(id)
+        if (!got.bundle || !Array.isArray(got.bundle.pages)) {
+          if (got.verdict === null || got.verdict === 'alive') return null
+          return h('div', { className: 'pw-card' }, h(Unavailable, { verdict: got.verdict, onRetry: got.retry }))
+        }
+        return h(OutlineList, { outline: got.bundle })
+      }
+
+      /** The key two versions of a page are matched by: its slide id, else its page id. */
+      function pageKey(page) {
+        return (page && (page.slideId || page.id)) || null
+      }
+
+      /**
+       * Which pages of this version differ from the last one, matched by
+       * slide id. A page whose markup hash moved is changed, a key the last
+       * version did not have is new, and a key only the last version had was
+       * removed. Without a hash on every page (a deck from before hashes) the
+       * two cannot be compared, and the card says nothing rather than guess.
+       */
+      function diffPages(bundle, prior) {
+        var result = { comparable: false, marks: {}, changed: [], removed: [] }
+        if (!bundle || !prior || !Array.isArray(bundle.pages) || !Array.isArray(prior.pages)) return result
+        var all = bundle.pages.concat(prior.pages)
+        for (var i = 0; i < all.length; i++) {
+          if (!all[i] || typeof all[i].hash !== 'string' || !pageKey(all[i])) return result
+        }
+        result.comparable = true
+        var before = {}
+        prior.pages.forEach(function (page, index) {
+          before[pageKey(page)] = { page: page, index: index }
+        })
+        var seen = {}
+        bundle.pages.forEach(function (page, index) {
+          var key = pageKey(page)
+          seen[key] = true
+          var old = before[key]
+          if (!old) {
+            result.marks[key] = 'added'
+            result.changed.push({ key: key, index: index, priorIndex: null, mark: 'added' })
+          } else if (old.page.hash !== page.hash) {
+            result.marks[key] = 'changed'
+            result.changed.push({ key: key, index: index, priorIndex: old.index, mark: 'changed' })
+          }
+        })
+        prior.pages.forEach(function (page, index) {
+          if (!seen[pageKey(page)]) result.removed.push({ key: pageKey(page), priorIndex: index })
+        })
+        return result
+      }
+
+      /** A 16:9 tile holding a page: its inline markup when the bundle has it, else the page from the route. */
+      function PageTile(props) {
+        if (hasMarkup(props.page)) {
+          return h(Frame, {
+            page: props.page,
+            prefix: props.prefix,
+            width: props.width,
+            height: props.height,
+            title: props.title,
+            onClick: props.onClick,
+          })
+        }
+        return h(
+          'div',
+          {
+            className: 'pw-thumb',
+            role: props.onClick ? 'button' : undefined,
+            tabIndex: props.onClick ? 0 : undefined,
+            onClick: props.onClick,
+            onKeyDown: activateOn(props.onClick),
+            title: props.title,
+            style: { aspectRatio: (props.width || 1280) + ' / ' + (props.height || 720) },
+          },
+          props.src ? h('img', { src: props.src, alt: '', loading: 'lazy', draggable: false }) : null,
+        )
+      }
+
+      /**
+       * Two versions of every changed page, side by side. It opens where the
+       * full-screen view opens: the right sidebar, or the layer without one.
+       */
+      function CompareView(props) {
+        var got = useRouteBundle(props.id)
+        var prior = useRouteBundle(props.priorId)
+        var ref = useAutoFocus(props.revision)
+        var diff = diffPages(got.bundle, prior.bundle)
+        var slide = (got.bundle && got.bundle.slide) || { width: 1280, height: 720 }
+        var ratio = slide.width + ' / ' + slide.height
+        var rows = diff.changed
+          .map(function (row) {
+            return { label: t('desk.page', { n: row.index + 1 }), mark: row.mark, before: row.priorIndex, after: row.index }
+          })
+          .concat(
+            diff.removed.map(function (row) {
+              return { label: t('compare.removed'), mark: 'removed', before: row.priorIndex, after: null }
+            }),
+          )
+        function side(id, index, empty) {
+          if (index === null) return h('div', { className: 'pw-compare-empty', style: { aspectRatio: ratio } }, empty)
+          return h('img', { className: 'pw-compare-img', src: pageUrl(id, index), alt: '', style: { aspectRatio: ratio } })
+        }
+        return h(
+          'div',
+          {
+            ref: ref,
+            className: 'pw-pane',
+            tabIndex: -1,
+            'data-pptwise-compare': props.id,
+            onKeyDown: closeOnEscape(props.onClose),
+          },
+          h(
+            'div',
+            { className: 'pw-pane-bar' },
+            h('span', { className: 'pw-pane-title' }, t('compare.title', { from: props.version - 1, to: props.version })),
+            props.closeButton ? h(Btn, { variant: 'ghost', icon: 'IconCloseOutlineRegular', onClick: props.onClose }, t('viewer.close')) : null,
+          ),
+          !got.bundle || !prior.bundle
+            ? got.verdict === null || prior.verdict === null || (got.verdict === 'alive' && prior.verdict === 'alive')
+              ? null
+              : h(Unavailable, { verdict: got.bundle ? prior.verdict : got.verdict, onRetry: got.bundle ? prior.retry : got.retry })
+            : h(
+                'div',
+                { className: 'pw-compare' },
+                h('div', { className: 'pw-compare-cols pw-compare-head' }, h('span', null, t('compare.before')), h('span', null, t('compare.after'))),
+                rows.map(function (row, i) {
+                  return h(
+                    'div',
+                    { key: i, className: 'pw-compare-row', 'data-compare-row': row.mark },
+                    h(
+                      'div',
+                      { className: 'pw-compare-label' },
+                      h('span', null, row.label),
+                      row.mark === 'added' ? h(Badge, { tone: 'success' }, t('desk.addedMark')) : null,
+                      row.mark === 'changed' ? h(Badge, { tone: 'info' }, t('desk.changedMark')) : null,
+                    ),
+                    h(
+                      'div',
+                      { className: 'pw-compare-cols' },
+                      side(props.priorId, row.before, t('compare.none')),
+                      side(props.id, row.after, t('compare.removed')),
+                    ),
+                  )
+                }),
+              ),
+        )
+      }
+
+      /**
+       * The draft desk: this turn's deck, kept below the turn where the work
+       * group cannot fold it away. The strip shows every page, tags the ones
+       * that changed since the last version of the same deck, and lets the
+       * user open it full screen, download it, compare it with the last
+       * version, or start a message about one page.
+       *
+       * A tile's caption is its page number and, when it changed, one tag:
+       * nothing else, so a caption never runs into the next tile. "Edit this
+       * page" sits over the tile and shows on hover or keyboard focus.
+       */
+      function DraftDesk(props) {
+        var entry = props.entry
+        var got = useRouteBundle(entry.id)
+        var prior = useRouteBundle(entry.priorId || null)
+        var ui = useState({ layer: null, download: 'idle' })
+        function set(change) {
+          ui[1](function (prev) {
+            return Object.assign({}, prev, change)
+          })
+        }
+        function open(target) {
+          if (!openInSidebar(target)) set({ layer: target })
+        }
+        var bundle = got.bundle
+        if (!bundle || !Array.isArray(bundle.pages)) {
+          if (got.verdict === null || got.verdict === 'alive') return null
+          return h('div', { className: 'pw-card', 'data-pptwise-desk': '' }, h(Unavailable, { verdict: got.verdict, onRetry: got.retry }))
+        }
+        var pages = viewablePages(bundle)
+        var slide = bundle.slide || { width: 1280, height: 720 }
+        var exportable = bundle.exportable !== false
+        var written = pages.filter(function (page) {
+          return page.placeholder !== true
+        }).length
+        var diff = entry.priorId ? diffPages(bundle, prior.bundle) : { comparable: false, marks: {}, changed: [], removed: [] }
+        var differs = diff.changed.length > 0 || diff.removed.length > 0
+        var stamp = entry.id.slice(0, 8)
+        var layer = ui[0].layer
+        return h(
+          'div',
+          { className: 'pw-card', 'data-pptwise-desk': entry.id },
+          h(CardHead, {
+            icon: 'deck',
+            title: bundle.title || 'deck',
+            meta: [
+              h(Badge, { key: 'v', tone: 'neutral' }, h('span', { 'data-desk-version': entry.version }, t('desk.version', { n: entry.version }))),
+              h('span', { key: 'n' }, t('desk.pages', { n: pages.length })),
+              bundle.draft ? h('span', { key: 'w', 'data-desk-written': '' }, t('desk.written', { x: written, n: pages.length })) : null,
+              exportable ? null : h(Badge, { key: 'r', tone: 'warning' }, t('desk.needsRevision')),
+              diff.comparable
+                ? h(
+                    'span',
+                    { key: 'd', 'data-desk-diff': '' },
+                    differs
+                      ? [diff.changed.length > 0 ? t('desk.changed', { n: diff.changed.length }) : null, diff.removed.length > 0 ? t('desk.removed', { n: diff.removed.length }) : null]
+                          .filter(Boolean)
+                          .join(' · ')
+                      : t('desk.unchanged'),
+                  )
+                : null,
+            ],
+            actions: [
+              h(Btn, { key: 'open', icon: 'IconFullscreenOutlineRegular', onClick: function () { open({ view: 'deck', id: entry.id, page: 1 }) } }, t('desk.open')),
+              exportable
+                ? h(ExportButton, {
+                    key: 'pptx',
+                    previewId: entry.id,
+                    name: bundle.title,
+                    draft: bundle.draft,
+                    verdict: got.verdict,
+                    status: ui[0].download,
+                    onStatus: function (next) { set({ download: next }) },
+                    label: t('desk.download'),
+                  })
+                : null,
+              diff.comparable && differs
+                ? h(
+                    Btn,
+                    {
+                      key: 'compare',
+                      icon: 'IconCompareSplitOutlineRegular',
+                      onClick: function () { open({ view: 'compare', id: entry.id, priorId: entry.priorId, version: entry.version }) },
+                    },
+                    t('desk.compare'),
+                  )
+                : null,
+            ],
+          }),
+          h(
+            'div',
+            { className: 'pw-strip' },
+            pages.map(function (page, i) {
+              var n = pageNumberOf(page, i)
+              var mark = diff.comparable ? diff.marks[pageKey(page)] : undefined
+              return h(
+                'div',
+                { key: pageKey(page) || i, className: 'pw-tile pw-tile-desk', 'data-desk-page': n, 'data-desk-mark': mark || undefined },
+                h(
+                  'div',
+                  { className: 'pw-shot' },
+                  h(PageTile, {
+                    page: page,
+                    src: pageUrl(entry.id, i),
+                    prefix: 'pwd' + stamp + '-' + i + '-',
+                    width: slide.width,
+                    height: slide.height,
+                    title: t('desk.page', { n: n }),
+                    onClick: function () { open({ view: 'deck', id: entry.id, page: n }) },
+                  }),
+                  props.editPage
+                    ? h(
+                        'button',
+                        {
+                          type: 'button',
+                          className: 'pw-edit',
+                          'data-desk-edit': n,
+                          title: t('desk.edit'),
+                          onClick: function () { props.editPage(n) },
+                        },
+                        t('desk.edit'),
+                      )
+                    : null,
+                ),
+                h(
+                  'div',
+                  { className: 'pw-cap' },
+                  h('span', null, t('desk.page', { n: n })),
+                  mark ? h(Badge, { tone: mark === 'added' ? 'success' : 'info' }, t(mark === 'added' ? 'desk.addedMark' : 'desk.changedMark')) : null,
+                ),
+              )
+            }),
+          ),
+          layer
+            ? h(
+                Layer,
+                { onClose: function () { set({ layer: null }) } },
+                h(PaneBody, { target: layer, revision: 0, closeButton: true, onClose: function () { set({ layer: null }) }, onEditPage: props.editPage }),
+              )
+            : null,
+        )
+      }
+
+      /**
+       * The turn tail: this turn's last deck as the draft desk, or, in a turn
+       * that drew no deck, its last outline or theme wall, so a card made
+       * inside Code Mode is still in view once the turn's work folds away.
+       */
+      function DraftTail(props) {
+        var list = props.useArtifacts(String(props.turn.turn))
+        if (!list || list.length === 0) return null
+        var entry = null
+        for (var i = list.length - 1; i >= 0; i--) {
+          if (list[i] && list[i].kind === 'deck') {
+            entry = list[i]
+            break
+          }
+        }
+        if (!entry) entry = list[list.length - 1]
+        if (!entry || !entry.id) return null
+        if (entry.kind === 'deck') return h(DraftDesk, { key: entry.id, entry: entry, editPage: props.editPage })
+        var block = { content: [{ type: 'text', text: (entry.kind === 'outline' ? 'pptwise-outline:' : 'pptwise-themes:') + entry.id }] }
+        return h(
+          'div',
+          { 'data-pptwise-tail': entry.kind },
+          h(entry.kind === 'outline' ? PptwiseOutlineCard : PptwiseThemesCard, { key: entry.id, block: block }),
+        )
+      }
+
+      // THE FULL-SCREEN VIEW. One pane per kind of thing a card can open: a
+      // deck to page through, a theme wall, or two versions side by side. In
+      // DSH it is a tab in the right sidebar (see `registerViewer`), where the
+      // user can widen the sidebar or switch it to full screen with DSH's own
+      // control. A shell without the sidebar gets the same pane in a layer
+      // over the page.
+      //
+      // The deck view pages the rendered SVGs straight from the route
+      // (`/page/<n>`). It replaced an iframe of `preview.html`, which never
+      // took the keyboard: nothing focused the frame, so ←/→ landed on the
+      // chat's document, and the page carried its own light/dark switch.
+      // `preview.html` stays what harnesses without a plugin UI open.
+
+      /** Move the keyboard into a pane when it opens, and again on every navigation to it. */
+      function useAutoFocus(key) {
+        var ref = react.useRef(null)
+        useEffect(
+          function () {
+            var el = ref.current
+            if (el && typeof el.focus === 'function') el.focus({ preventScroll: true })
+          },
+          [key],
+        )
+        return ref
+      }
+
+      function closeOnEscape(onClose) {
+        return function (e) {
+          if (e.key === 'Escape' && onClose) {
+            e.preventDefault()
+            onClose()
+          }
+        }
+      }
+
+      /** Wheel movement, mostly sideways, that counts as one swipe. */
+      var SWIPE_DELTA = 40
+      var SWIPE_PAUSE_MS = 450
+
+      /**
+       * A deck, one page at a time: the page, previous and next areas on its
+       * left and right, "Page N of M", and every page in a strip below.
+       * ←/→, PageUp/PageDown, Space and Shift+Space page, Home and End jump,
+       * Esc closes. A trackpad's sideways swipe pages too.
+       *
+       * `revision` counts navigations to the pane. A new one (the user clicked
+       * another thumbnail in the chat) moves to the page it carried; paging
+       * inside the pane is remembered against the revision it happened in.
+       */
+      function DeckViewer(props) {
+        var got = useRouteBundle(props.id)
+        var start = props.page > 0 ? props.page : 1
+        var state = useState({ page: start, at: props.revision, download: 'idle' })
+        var ref = useAutoFocus(props.revision)
+        var bundle = got.bundle
+        var pages = bundle && Array.isArray(bundle.pages) ? bundle.pages : []
+        var total = pages.length
+        var page = state[0].at === props.revision ? state[0].page : start
+        if (total > 0) page = Math.min(Math.max(1, page), total)
+
+        useEffect(
+          function () {
+            var root = ref.current
+            var thumb = root && root.querySelector('[data-viewer-thumb="' + page + '"]')
+            if (thumb && typeof thumb.scrollIntoView === 'function') thumb.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+          },
+          [page, total],
+        )
+
+        function go(n) {
+          if (total === 0) return
+          var next = Math.min(Math.max(1, n), total)
+          state[1](function (prev) {
+            return Object.assign({}, prev, { page: next, at: props.revision })
+          })
+        }
+        /** A click on an area or a thumbnail pages and hands the keyboard back to the pane. */
+        function step(n) {
+          go(n)
+          if (ref.current) ref.current.focus({ preventScroll: true })
+        }
+        function onKeyDown(e) {
+          if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return
+          var key = e.key
+          // Space on one of the pane's own buttons (download, close) is that button's.
+          if (key === ' ' && e.target !== e.currentTarget && e.target.tagName === 'BUTTON' && !e.target.hasAttribute('data-viewer-thumb')) return
+          var to = null
+          if (key === 'ArrowRight' || key === 'PageDown' || (key === ' ' && !e.shiftKey)) to = page + 1
+          else if (key === 'ArrowLeft' || key === 'PageUp' || (key === ' ' && e.shiftKey)) to = page - 1
+          else if (key === 'Home') to = 1
+          else if (key === 'End') to = total
+          else if (key === 'Escape') {
+            closeOnEscape(props.onClose)(e)
+            return
+          }
+          if (to === null) return
+          e.preventDefault()
+          go(to)
+        }
+        function onWheel(e) {
+          var dx = e.deltaX
+          if (Math.abs(dx) < SWIPE_DELTA || Math.abs(dx) <= Math.abs(e.deltaY)) return
+          // One swipe sends a burst of wheel events; the stage remembers when it last paged.
+          var stage = e.currentTarget
+          var now = Date.now()
+          var last = Number(stage.getAttribute('data-swiped-at') || 0)
+          if (now - last < SWIPE_PAUSE_MS) return
+          stage.setAttribute('data-swiped-at', String(now))
+          go(dx > 0 ? page + 1 : page - 1)
+        }
+
+        var title = (bundle && bundle.title) || ''
+        var exportable = !!bundle && bundle.exportable !== false
+        var body
+        if (!bundle) {
+          body = got.verdict === null || got.verdict === 'alive' ? null : h(Unavailable, { verdict: got.verdict, onRetry: got.retry })
+        } else {
+          body = [
+            h(
+              'div',
+              { key: 'stage', className: 'pw-stage', onWheel: onWheel },
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'pw-zone',
+                  'data-side': 'prev',
+                  'aria-label': t('viewer.prev'),
+                  title: t('viewer.prev'),
+                  disabled: page <= 1,
+                  onClick: function () { step(page - 1) },
+                },
+                h('span', { className: 'pw-zone-knob' }, iconNode('IconChevronLeftOutlineRegular') || '‹'),
+              ),
+              total > 0 ? h('img', { className: 'pw-slide', src: pageUrl(props.id, page - 1), alt: t('desk.page', { n: page }), draggable: false }) : null,
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'pw-zone',
+                  'data-side': 'next',
+                  'aria-label': t('viewer.next'),
+                  title: t('viewer.next'),
+                  disabled: page >= total,
+                  onClick: function () { step(page + 1) },
+                },
+                h('span', { className: 'pw-zone-knob' }, iconNode('IconChevronRightOutlineRegular') || '›'),
+              ),
+            ),
+            h(
+              'div',
+              { key: 'strip', className: 'pw-vstrip', 'aria-label': t('viewer.pages') },
+              pages.map(function (p, i) {
+                var n = i + 1
+                return h(
+                  'button',
+                  {
+                    key: pageKey(p) || i,
+                    type: 'button',
+                    className: 'pw-vthumb',
+                    'data-viewer-thumb': n,
+                    'aria-current': n === page ? 'true' : undefined,
+                    'aria-label': t('desk.page', { n: n }),
+                    onClick: function () { step(n) },
+                  },
+                  h('img', { src: pageUrl(props.id, i), alt: '', loading: 'lazy', draggable: false }),
+                  h('span', { className: 'pw-vthumb-n' }, String(n)),
+                )
+              }),
+            ),
+          ]
+        }
+        return h(
+          'div',
+          {
+            ref: ref,
+            className: 'pw-pane',
+            tabIndex: -1,
+            role: 'region',
+            'aria-label': title || t('pane.deck'),
+            'data-pptwise-viewer': props.id,
+            'data-page': total > 0 ? page : undefined,
+            onKeyDown: onKeyDown,
+          },
+          h(
+            'div',
+            { className: 'pw-pane-bar' },
+            h('span', { className: 'pw-pane-title', title: title }, title),
+            total > 0 ? h('span', { className: 'pw-counter', 'data-viewer-counter': '', 'aria-live': 'polite' }, t('viewer.counter', { n: page, m: total })) : null,
+            h(
+              'span',
+              { className: 'pw-actions' },
+              props.onEditPage && total > 0
+                ? h(Btn, { variant: 'ghost', icon: 'IconEditOutlineRegular', 'data-viewer-edit': page, onClick: function () { props.onEditPage(page) } }, t('desk.edit'))
+                : null,
+              exportable
+                ? h(ExportButton, {
+                    variant: 'ghost',
+                    previewId: props.id,
+                    name: title,
+                    draft: bundle.draft,
+                    verdict: got.verdict,
+                    status: state[0].download,
+                    onStatus: function (next) {
+                      state[1](function (prev) {
+                        return Object.assign({}, prev, { download: next })
+                      })
+                    },
+                  })
+                : null,
+              props.closeButton ? h(Btn, { variant: 'ghost', icon: 'IconCloseOutlineRegular', onClick: props.onClose }, t('viewer.close')) : null,
+            ),
+          ),
+          body,
+        )
+      }
+
+      /** A theme wall full size: every theme as a numbered column of its cover over its content page. */
+      function WallView(props) {
+        var got = useRouteBundle(props.id)
+        var ref = useAutoFocus(props.revision)
+        var bundle = got.bundle
+        var themes = bundle && Array.isArray(bundle.themes) ? bundle.themes : []
+        var slide = (bundle && bundle.slide) || { width: 1280, height: 720 }
+        var stamp = String(props.id).slice(0, 8)
+        return h(
+          'div',
+          { ref: ref, className: 'pw-pane', tabIndex: -1, 'data-pptwise-wall': props.id, onKeyDown: closeOnEscape(props.onClose) },
+          h(
+            'div',
+            { className: 'pw-pane-bar' },
+            h('span', { className: 'pw-pane-title' }, (bundle && bundle.title) || t('pane.themes')),
+            bundle ? h('span', { className: 'pw-counter' }, t('card.themes', { n: themes.length })) : null,
+            props.closeButton ? h('span', { className: 'pw-actions' }, h(Btn, { variant: 'ghost', icon: 'IconCloseOutlineRegular', onClick: props.onClose }, t('viewer.close'))) : null,
+          ),
+          !bundle
+            ? got.verdict === null || got.verdict === 'alive' ? null : h(Unavailable, { verdict: got.verdict, onRetry: got.retry })
+            : h(
+                'div',
+                { className: 'pw-wall' },
+                themes.map(function (theme, i) {
+                  return h(
+                    'div',
+                    { key: theme.id || i, className: 'pw-wall-col', 'data-theme': theme.id },
+                    h(ThemeLabel, { theme: theme, n: i + 1 }),
+                    (Array.isArray(theme.pages) ? theme.pages.filter(hasMarkup) : []).map(function (page, j) {
+                      return h(Frame, {
+                        key: page.type || j,
+                        page: page,
+                        prefix: 'pwv' + stamp + '-' + i + '-' + j + '-',
+                        width: slide.width,
+                        height: slide.height,
+                        title: theme.id + ' ' + (page.type || 'page'),
+                      })
+                    }),
+                  )
+                }),
+              ),
+        )
+      }
+
+      /** Whichever pane a target names: `{ view: 'deck' | 'themes' | 'compare', id, page?, priorId?, version? }`. */
+      function PaneBody(props) {
+        var target = props.target
+        if (target.view === 'themes') return h(WallView, { id: target.id, revision: props.revision, onClose: props.onClose, closeButton: props.closeButton })
+        if (target.view === 'compare') {
+          return h(CompareView, {
+            id: target.id,
+            priorId: target.priorId,
+            version: target.version,
+            revision: props.revision,
+            onClose: props.onClose,
+            closeButton: props.closeButton,
+          })
+        }
+        return h(DeckViewer, {
+          id: target.id,
+          page: target.page,
+          revision: props.revision,
+          onClose: props.onClose,
+          closeButton: props.closeButton,
+          onEditPage: props.onEditPage,
+        })
+      }
+
+      /** The sidebar tab's body: the pane its address names, opened on the page its navigation carried. */
+      function PaneTab(props) {
+        var info = props.useTabInfo()
+        var navigation = info.tab.navigation
+        var target = parsePaneAddress(navigation.address)
+        if (!target) return null
+        var params = navigation.params || {}
+        if (typeof params.page === 'number') target.page = params.page
+        if (typeof params.version === 'number') target.version = params.version
+        return h(PaneBody, {
+          target: target,
+          revision: navigation.revision,
+          onClose: function () { info.tab.actions.close() },
+          onEditPage: viewerHost && viewerHost.editPage ? viewerHost.editPage : undefined,
+        })
+      }
+
+      /** The sidebar tab's title: the deck's own title once the route has it. */
+      function PaneTitle(props) {
+        var info = props.useTabInfo()
+        var target = parsePaneAddress(info.tab.navigation.address)
+        var got = useRouteBundle(target && target.view !== 'compare' ? target.id : null)
+        var text = target && target.view === 'compare' ? t('pane.compare') : (got.bundle && got.bundle.title) || info.tab.title
+        return h(react.Fragment, null, h('span', { className: 'pw-tab-icon' }, fileIcon(target && target.view === 'themes' ? 'themes' : 'deck', 16)), text)
+      }
+
+      return {
+        deck: PptwisePreviewCard,
+        themes: PptwiseThemesCard,
+        outline: PptwiseOutlineCard,
+        tail: DraftTail,
+        paneTab: PaneTab,
+        paneTitle: PaneTitle,
+      }
     }
 
     function registerCard(ctx) {
@@ -1587,18 +2627,191 @@ window.__ModuleLoader__.load({
       } catch (error) {
         console.warn('[pptwise] react-dom unavailable, the viewer opens inside the card: ' + error)
       }
-      var cards = PreviewCard(react, reactDom)
+      // DSH's own buttons, tags and icons. Optional as well: a shell whose
+      // module table lacks them gets stand-ins wearing the same tokens.
+      var ui = null
+      try {
+        ui = require('@deepseek-ai/dsh-client-ui-primitives')
+      } catch (error) {
+        console.warn('[pptwise] DSH primitives unavailable, the cards draw their own buttons: ' + error)
+      }
+      var cards = PreviewCard(react, reactDom, ui)
       // One registration per wire name. `pptwise_build` stamps the same
       // preview id `pptwise_preview` does, so the deck card draws both.
       var seats = [
         [TOOL_NAME, cards.deck],
         [BUILD_TOOL_NAME, cards.deck],
         [THEMES_TOOL_NAME, cards.themes],
+        [OUTLINE_TOOL_NAME, cards.outline],
       ]
       seats.forEach(function (seat) {
         ctx.slots.inject('tool.call.toolview', function* () {
           yield ctx.slots.register({ name: 'tool.call.toolview', key: seat[0] }, seat[1])
         })
+      })
+      registerTail(ctx, cards.tail)
+      registerViewer(ctx, cards)
+    }
+
+    /**
+     * Start a message about one page: the composer gets "Page N: " (in the
+     * harness's language) and the keyboard. Whatever the user had already
+     * typed stays, with the prefix on a new line after it.
+     */
+    function editPageIn(sessions, sessionId, n) {
+      var binding = sessions.binding(sessionId)
+      var conversation = binding && binding.ctx && typeof binding.ctx.get === 'function' ? binding.ctx.get('conversation') : undefined
+      if (!conversation || !conversation.input || typeof conversation.input.for !== 'function') {
+        console.warn('[pptwise] no composer to prefill for this session')
+        return
+      }
+      var input = conversation.input.for(binding.ctx)
+      var prefix = t('edit.prefix', { n: n })
+      var current = ''
+      try {
+        var snapshot = input.state && typeof input.state.getSnapshot === 'function' ? input.state.getSnapshot() : undefined
+        current = (snapshot && typeof snapshot.draft === 'string' && snapshot.draft) || ''
+      } catch {
+        current = ''
+      }
+      var kept = current.replace(/\s+$/, '')
+      // Asking twice for the same page leaves one prefix, not two in a row.
+      var bare = prefix.replace(/\s+$/, '')
+      if (kept !== bare && kept.slice(-bare.length - 1) !== '\n' + bare) {
+        input.setDraft(kept === '' ? prefix : kept + '\n' + prefix)
+      }
+      input.focus()
+    }
+
+    /**
+     * The draft desk under each finished turn. Rides a scoped `ctx.inject`
+     * because the Conversation and session services exist only in the web
+     * shell's session scope: a shell without them still gets every tool card.
+     */
+    function registerTail(ctx, DraftTail) {
+      if (typeof ctx.inject !== 'function') return
+      ctx.inject(['slots', 'uiConversation', 'sessions'], function (scope) {
+        try {
+          scope.effect(function () {
+            return scope.uiConversation.events.register(artifactDefinition)
+          }, 'pptwise: conversation definition')
+          scope.slots.inject('conversation.chat.turnTail', function* () {
+            yield scope.slots.register(
+              {
+                name: 'conversation.chat.turnTail',
+                id: '@liustack/pptwise',
+                inject: function (sessionId) {
+                  var binding = scope.sessions.binding(sessionId)
+                  if (binding === undefined) throw new Error('pptwise: unknown session "' + sessionId + '"')
+                  var chat = scope.uiConversation.binding(binding).target('chat')
+                  return {
+                    editPage: function (n) {
+                      editPageIn(scope.sessions, sessionId, n)
+                    },
+                    keyedHooks: {
+                      artifacts: function (turn) {
+                        var snapshot = chat.getSnapshot()
+                        if (snapshot === undefined) throw new Error('pptwise: Chat target is unavailable')
+                        return snapshot.nodes.turnDataSource(Number(turn), ARTIFACT_KIND)
+                      },
+                    },
+                  }
+                },
+              },
+              DraftTail,
+            )
+          })
+        } catch (error) {
+          console.error('[pptwise] draft desk skipped: ' + error)
+        }
+      })
+    }
+
+    /**
+     * Full screen in DSH's right sidebar: a tab type for pptwise addresses,
+     * its body and its title. Rides a scoped `ctx.inject` like the turn tail,
+     * so a shell without the sidebar keeps every card, and the cards open
+     * their own layer instead (`openInSidebar` answers false).
+     */
+    function registerViewer(ctx, cards) {
+      if (typeof ctx.inject !== 'function') return
+      ctx.inject(['slots', 'sidebarRight', 'sidebarRightTabs', 'sessions'], function (scope) {
+        try {
+          scope.effect(function () {
+            return scope.sidebarRightTabs.register({
+              id: VIEWER_ID,
+              kind: VIEWER_KIND,
+              patterns: [PANE_PREFIX + '**'],
+              canOpen: function (address) {
+                return parsePaneAddress(address) !== null
+              },
+              title: function (address) {
+                var target = parsePaneAddress(address)
+                return t(target && target.view === 'themes' ? 'pane.themes' : target && target.view === 'compare' ? 'pane.compare' : 'pane.deck')
+              },
+            })
+          }, 'pptwise: sidebar type')
+          scope.slots.inject('sidebar.right.pane.tab', function* () {
+            yield scope.slots.register({ name: 'sidebar.right.pane.tab', key: VIEWER_ID }, cards.paneTab)
+          })
+          scope.slots.inject('sidebar.right.pane.tab.title', function* () {
+            yield scope.slots.register({ name: 'sidebar.right.pane.tab.title', key: VIEWER_ID }, cards.paneTitle)
+          })
+          scope.effect(function () {
+            viewerHost = {
+              open: function (target) {
+                try {
+                  var params = {}
+                  if (typeof target.page === 'number') params.page = target.page
+                  if (typeof target.version === 'number') params.version = target.version
+                  scope.sidebarRight.openResource(paneAddress(target), { kind: VIEWER_KIND, params: params })
+                  return true
+                } catch (error) {
+                  // No session on screen to open it in: the card's own layer will do.
+                  console.warn('[pptwise] sidebar would not open the deck: ' + error)
+                  return false
+                }
+              },
+              editPage: function (n) {
+                var mounted = scope.sidebarRight.mounted
+                var sessionId = mounted && typeof mounted.getSnapshot === 'function' ? mounted.getSnapshot() : undefined
+                if (sessionId === undefined) {
+                  console.warn('[pptwise] no session on screen to write about page ' + n)
+                  return
+                }
+                editPageIn(scope.sessions, sessionId, n)
+              },
+            }
+            return function () {
+              viewerHost = null
+            }
+          }, 'pptwise: sidebar opener')
+        } catch (error) {
+          console.error('[pptwise] full screen stays in the card: ' + error)
+        }
+      })
+    }
+
+    /**
+     * Hand the cards' words to DSH's locale service, when there is one. Rides
+     * a scoped `ctx.inject` so a shell without the service, and this repo's
+     * tests, still get cards, worded in the page's own language.
+     */
+    function registerLocale(ctx) {
+      if (typeof ctx.inject !== 'function') return
+      ctx.inject(['locale'], function (scope) {
+        try {
+          scope.effect(function () {
+            var off = scope.locale.register(LOCALE_NS, STRINGS)
+            localeT = scope.locale.bind(LOCALE_NS)
+            return function () {
+              localeT = null
+              off()
+            }
+          }, 'pptwise: dictionaries')
+        } catch (error) {
+          console.warn('[pptwise] card words stay in the page language: ' + error)
+        }
       })
     }
 
@@ -1606,6 +2819,11 @@ window.__ModuleLoader__.load({
       // A card that fails to register is a console line, not a dead turn —
       // the generic tool row still renders the call, same posture the host
       // half takes for its own registrations.
+      try {
+        registerLocale(ctx)
+      } catch (error) {
+        console.error('[pptwise] card dictionaries skipped: ' + error)
+      }
       try {
         registerCard(ctx)
       } catch (error) {
@@ -1623,6 +2841,12 @@ window.__ModuleLoader__.load({
       bundleOf: bundleOf,
       previewIdOf: previewIdOf,
       wallIdOf: wallIdOf,
+      outlineIdOf: outlineIdOf,
+      artifactDefinition: artifactDefinition,
+      deckKey: deckKey,
+      editPageIn: editPageIn,
+      t: t,
+      STRINGS: STRINGS,
       pageCountOf: pageCountOf,
       verdictOf: verdictOf,
       isRetryable: isRetryable,
@@ -1638,12 +2862,15 @@ window.__ModuleLoader__.load({
       stripPages: stripPages,
       hasMarkup: hasMarkup,
       pageNumberOf: pageNumberOf,
-      previewHtmlUrl: previewHtmlUrl,
       previewBundleUrl: previewBundleUrl,
+      pageUrl: pageUrl,
       STRIP_PAGES: STRIP_PAGES,
       TOOL_NAME: TOOL_NAME,
       BUILD_TOOL_NAME: BUILD_TOOL_NAME,
       THEMES_TOOL_NAME: THEMES_TOOL_NAME,
+      OUTLINE_TOOL_NAME: OUTLINE_TOOL_NAME,
+      paneAddress: paneAddress,
+      parsePaneAddress: parsePaneAddress,
     }
     return module.exports
   },

@@ -66,7 +66,7 @@ pptwise audit deck-dir/
 
 ## 评审整份 deck
 
-尽早给用户看页面。有对话内预览工具时，spec 一校验通过就对 deck 目录调用 `pptwise_preview`，让用户在写页之前看到封面和页序，之后每批写完用 `pptwise_build`。否则把 build 报告里的 `preview.html` 路径给用户，或生成自包含评审文件：
+尽早给用户看页面。有对话内工具时，spec 一校验通过就对 deck 目录调用 `pptwise_outline`，让用户在写页之前看到大纲，之后每批写完用 `pptwise_build`。否则把 build 报告里的 `preview.html` 路径给用户，或生成自包含评审文件：
 
 ```bash
 pptwise preview deck-dir/ --html

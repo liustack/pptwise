@@ -168,12 +168,14 @@ pptwise schema --spec [--pretty]
 pptwise schema --component <type> [--pretty]
 pptwise schema --kind <kind> [--theme <name> [--deck <dir>]] [--pretty]
 pptwise icons [--json]
-pptwise spec validate deck-dir/deck.spec.json
+pptwise spec validate deck-dir/deck.spec.json [--json]
 ```
 
 IR schema 把每个共享片段只放进 `$defs` 一次：每个组件用自己的类型名，组件联合叫 `Component`，图标名枚举叫 `IconName`，行、数字、卡片、图表和页面共用的小标签叫 `Tag`，数字、行和节点是哪一类消息叫 `Tone`，页面的年份刻度叫 `Years`，页面的表决框叫 `Ballot`，只有部分版式会画的页面字段叫 `Kicker`、`Fields`、`Stamp` 和 `Stage`。默认输出一行，加 `--pretty` 才缩进。
 
 `--component` 打印一个组件的 schema，只带它用到的 `$defs`。`--kind` 打印该 kind 页面可以放的组件、每个内置主题和每个已装包内主题为它绑定的脸（读不了的包会被略过，并在 stderr 说明）、这些组件的 `oneOf` 以及它们的 `$defs`。加 `--theme` 只回答绑定主题的情况。主题名按 `validate` 解析 spec 主题的同一顺序查找：先 deck 目录（`theme.json`、`<name>.theme.json`），再工作区 `themes/`，再已装内容包，最后内置预设。deck 目录取 `--deck <dir>`，没给时当前目录含 `deck.spec.json`，或含该主题名的 deck 本地文件（`theme.json`、`<name>.theme.json`、`<name>.json`）就算 deck，`validate deck.json` 也是从裸 IR 所在目录读主题的。脸不画任何组件时，列表为空，`oneOf` 的位置换成 `not: {}`。列表来自 validate 用的同一条主题菜单路线，列表之外的组件会被 `validate` 拒绝。未知的类型、kind 或主题会失败并列出合法名字。
+
+`spec validate --json` 把结果打印成一个 JSON 对象。合法的 spec 给出 `ok: true`、主题、解析后的叙事、封面标题 `title`，以及按顺序排列的 `pages`，每页带页号、`id`、`type`、正文页的 `kind`、`heading`，spec 里有 `summary` 时也带上，另附全部警告。不合法的 spec 给出 `ok: false` 和每条错误及其路径，退出码为 1。
 
 图标字段打印为一个指向 `pptwise icons` 的字符串。校验始终按完整枚举检查。
 
@@ -221,7 +223,7 @@ pptwise theme fork <name> --primary "#0B5FFF" \
   [-o <theme.json>] [--id <id>] [--label <label>]
 
 pptwise theme try <id,id,...> [-o <dir>]
-pptwise theme try <id,...|all> --title <text> \
+pptwise theme try [<id,...|all>] --title <text> [--occasion <words>] \
   [--subtitle <text>] [--lang zh|en] [--page <page.json>] [--json] [-o <dir>]
 ```
 
@@ -231,9 +233,9 @@ pptwise theme try <id,...|all> --title <text> \
 
 `theme try` 要求两个到四个互不重复的名称。默认把对比图写到 `.pptwise/theme-try/`。它永远不会修改 deck 绑定。
 
-带 `--title` 时，`theme try` 不画固定样稿，改画调用方自己的页面：一张用这个标题的封面（`--subtitle` 作副题），加一页正文。正文默认是三条短要点，语言由 `--lang` 指定，可选 `zh` 或 `en`，不传时标题里有中日韩文字就用 `zh`，否则用 `en`。`--page <file>` 用一页自己的正文替换它，写法和 IR 里的 deck 页面一样：`kind`、`heading`、`components`，`type` 可写可不写，写的话必须是 `content`。主题名可以是一个或多个，也可以写 `all`，表示 `themes` 列出的全部主题。
+带 `--title` 时，`theme try` 不画固定样稿，改画调用方自己的页面：一张用这个标题的封面（`--subtitle` 作副题），加一页正文。正文默认是三条短要点，语言由 `--lang` 指定，可选 `zh` 或 `en`，不传时标题里有中日韩文字就用 `zh`，否则用 `en`。`--page <file>` 用一页自己的正文替换它，写法和 IR 里的 deck 页面一样：`kind`、`heading`、`components`，`type` 可写可不写，写的话必须是 `content`。主题名可以是一个或多个，也可以写 `all`，表示 `themes` 列出的全部主题。不写主题名时，`theme try` 画一份四到六个的短名单：场合与 `--occasion` 相符的主题（场合词如 `business`、`tech`，或叙事预设如 `weekly-brief`，逗号分隔），不足四个时从一组从克制到张扬的通用主题里补齐。不传 `--occasion` 时就画这组通用主题：brief、swiss、journal、terminal。语言只决定样例正文页，不影响画哪些主题。
 
-每一页单独按每个主题校验。主题拒绝的页面，比如封面会截断的标题、菜单里没有的 kind，会从这个主题里去掉，列在 `skipped` 下，并附上 validate 的原话。输出目录里每张画出的页面一个 SVG，命名为 `<theme>-cover.svg` 和 `<theme>-content.svg`，另有每个主题一行的 `contact-sheet.html` 和 `manifest.json`。`--json` 把清单打印出来，并用 `dir` 给出输出目录的绝对路径。画完 22 个预设约需半秒。
+每一页单独按每个主题校验。主题拒绝的页面，比如封面会截断的标题、菜单里没有的 kind，会从这个主题里去掉，列在 `skipped` 下，并附上 validate 的原话。`--json` 另给 `notes`，同一个原因只写一行，并列出它涉及的主题，所以一页在所有主题里都失败时只读到一行。输出目录里每张画出的页面一个 SVG，命名为 `<theme>-cover.svg` 和 `<theme>-content.svg`，另有每个主题一行的 `contact-sheet.html` 和 `manifest.json`。`--json` 把清单打印出来，并用 `dir` 给出输出目录的绝对路径。画完 22 个预设约需半秒。
 
 ```json
 {
