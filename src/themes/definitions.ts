@@ -523,6 +523,15 @@ function installParsedThemeFile(file: ThemeFile): ThemeDefinition {
   return def
 }
 
+/**
+ * Whether `id` names an installed theme: a built-in or a registered one.
+ * The same answer as `getInstalledThemeIds().includes(id)`, without listing
+ * and sorting every registered theme to give it.
+ */
+export function isInstalledThemeId(id: string): boolean {
+  return (CANONICAL_THEME_IDS as readonly string[]).includes(id) || REGISTERED_THEMES.has(id)
+}
+
 /** Every installed theme id in deterministic lexical order. */
 export function getInstalledThemeIds(): readonly string[] {
   return [...new Set([...CANONICAL_THEME_IDS, ...REGISTERED_THEMES.keys()])].sort()

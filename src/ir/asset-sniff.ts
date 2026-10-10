@@ -125,6 +125,28 @@ export function decodeDataUriBytes(dataUri: string): Uint8Array | null {
   }
 }
 
+/**
+ * How many bytes a `data:<mime>;base64,<payload>` URI decodes to, and its
+ * first `count`: what a header check needs ({@link sniffImageFormat} reads
+ * twelve at most), or `null` exactly where {@link decodeDataUriBytes} gives
+ * `null`. The payload is decoded the same way, so the two never disagree
+ * about which URIs decode. Only the bytes kept are copied out of the decoded
+ * string: validate checks every inline picture on every call, and copying
+ * each photograph byte by byte was most of what that cost.
+ */
+export function dataUriHead(dataUri: string, count = 12): { length: number; head: Uint8Array } | null {
+  const comma = dataUri.indexOf(",")
+  if (comma === -1 || !dataUri.startsWith("data:") || !dataUri.slice(0, comma).endsWith(";base64")) return null
+  try {
+    const bin = atob(dataUri.slice(comma + 1))
+    const head = new Uint8Array(Math.min(count, bin.length))
+    for (let i = 0; i < head.length; i++) head[i] = bin.charCodeAt(i)
+    return { length: bin.length, head }
+  } catch {
+    return null
+  }
+}
+
 /** The declared MIME of a `data:<mime>;base64,...` URI, or `""` when it
  *  isn't a `data:` URI at all. */
 export function dataUriMime(dataUri: string): string {
