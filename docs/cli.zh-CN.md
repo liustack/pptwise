@@ -44,7 +44,7 @@ pptwise preview deck-dir/ --html
 | `themes` | 列出 22 个出厂预设与已装内容包的主题，附元数据。 |
 | `theme new` | 把命名主题拷贝为自包含 v2 文件。 |
 | `theme fork` | 拷贝主题，并围绕新锚色重推导配色。 |
-| `theme try` | 用两到四个主题渲染固定试衣样稿。 |
+| `theme try` | 用两到四个主题渲染固定试衣样稿，或用任意多个主题渲染调用方自己的封面和一页正文。 |
 | `brand extract` | 从 Office 文件抽取颜色与字体，产出完整 v2 主题。 |
 | `narratives` | 列出命名叙事预设与三轴。 |
 | `icons` | 列出 `icon` 字段接受的全部图标名。 |
@@ -174,6 +174,8 @@ pptwise theme fork <name> --primary "#0B5FFF" \
   [-o <theme.json>] [--id <id>] [--label <label>]
 
 pptwise theme try <id,id,...> [-o <dir>]
+pptwise theme try <id,...|all> --title <text> \
+  [--subtitle <text>] [--lang zh|en] [--page <page.json>] [--json] [-o <dir>]
 ```
 
 `theme new` 拷贝一个预设或已解析的工作区主题。输出路径与 id 至少传一个。新主题是完整且独立的对象。
@@ -181,6 +183,33 @@ pptwise theme try <id,id,...> [-o <dir>]
 `theme fork` 保留菜单，重推导依赖样式 token，并运行对比度门。在把 `#` 识别为注释起点的 shell 中，应给 hex 加引号。
 
 `theme try` 要求两个到四个互不重复的名称。默认把对比图写到 `.pptwise/theme-try/`。它永远不会修改 deck 绑定。
+
+带 `--title` 时，`theme try` 不画固定样稿，改画调用方自己的页面：一张用这个标题的封面（`--subtitle` 作副题），加一页正文。正文默认是三条短要点，语言由 `--lang` 指定，可选 `zh` 或 `en`，不传时标题里有中日韩文字就用 `zh`，否则用 `en`。`--page <file>` 用一页自己的正文替换它，写法和 IR 里的 deck 页面一样：`kind`、`heading`、`components`，`type` 可写可不写，写的话必须是 `content`。主题名可以是一个或多个，也可以写 `all`，表示 `themes` 列出的全部主题。
+
+每一页单独按每个主题校验。主题拒绝的页面，比如封面会截断的标题、菜单里没有的 kind，会从这个主题里去掉，列在 `skipped` 下，并附上 validate 的原话。输出目录里每张画出的页面一个 SVG，命名为 `<theme>-cover.svg` 和 `<theme>-content.svg`，另有每个主题一行的 `contact-sheet.html` 和 `manifest.json`。`--json` 把清单打印出来，并用 `dir` 给出输出目录的绝对路径。画完 22 个预设约需半秒。
+
+```json
+{
+  "manifestVersion": 1,
+  "generator": "pptwise theme try",
+  "pptwiseVersion": "0.40.0",
+  "title": "Q3 review",
+  "lang": "en",
+  "slide": { "width": 1280, "height": 720 },
+  "contactSheet": "contact-sheet.html",
+  "themes": [
+    {
+      "id": "crayon",
+      "label": "Crayon",
+      "source": "builtin",
+      "pages": [{ "type": "cover", "file": "crayon-cover.svg" }],
+      "skipped": [{ "type": "content", "kind": "fact", "reason": "kind: ..." }]
+    }
+  ]
+}
+```
+
+`source` 是 `builtin`、`pack`，或 deck 与工作区主题文件对应的 `file`。页面文件路径相对于清单所在目录。
 
 `themes --json` 为每一行标出 `source`：出厂预设是 `builtin`，已装内容包提供的主题是 `pack`，并带上 `pack` id。读不出来的包列为一条带 `error` 字段的条目，不影响其余条目。
 

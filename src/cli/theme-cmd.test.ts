@@ -271,3 +271,114 @@ describe("runThemeTry", () => {
     expect(await readdir(join(cwd, ".pptwise", "theme-try"))).toContain("contact-sheet.html")
   })
 })
+
+describe("runThemeTry --title (the caller's own pages)", () => {
+  interface WallManifest {
+    generator: string
+    title: string
+    subtitle?: string
+    lang: string
+    slide: { width: number; height: number }
+    contactSheet: string
+    themes: {
+      id: string
+      label: string
+      source: string
+      pages: { type: string; kind?: string; file: string }[]
+      skipped?: { type: string; kind?: string; reason: string }[]
+    }[]
+  }
+
+  it("draws the caller's cover and a content page in every theme, as SVG files a manifest names", async () => {
+    const cwd = await tmp("pptwise-theme-wall-")
+    const out = join(cwd, "wall")
+    const printed = JSON.parse(
+      await runThemeTry("all", { output: out, cwd, title: "账小满：自由职业者的第一本账", subtitle: "新品发布会", json: true }),
+    ) as WallManifest & { dir: string }
+    expect(printed.dir).toBe(out)
+    const manifest = JSON.parse(await readFile(join(out, "manifest.json"), "utf8")) as WallManifest
+    const { dir: _dir, ...rest } = printed
+    expect(rest).toEqual(manifest)
+    expect(manifest).toMatchObject({ generator: "pptwise theme try", lang: "zh", subtitle: "新品发布会", slide: { width: 1280, height: 720 } })
+    expect(manifest.themes).toHaveLength(22)
+    for (const theme of manifest.themes) {
+      expect(theme.source).toBe("builtin")
+      expect(theme.skipped).toBeUndefined()
+      expect(theme.pages.map((page) => page.type)).toEqual(["cover", "content"])
+      for (const page of theme.pages) {
+        const svg = await readFile(join(out, page.file), "utf8")
+        expect(svg).toMatch(/^<svg\b/)
+        // Glyphs may be set one tspan each, so the text is read with the tags taken out.
+        const text = svg.replace(/<[^>]+>/g, "")
+        if (page.type === "cover") expect(text).toContain("账小满")
+        else expect(text).toContain("这一季我们定下的三件事")
+      }
+    }
+    const sheet = await readFile(join(out, manifest.contactSheet), "utf8")
+    expect((sheet.match(/<svg\b/g) ?? []).length).toBe(44)
+    expect(sheet).toContain("账小满")
+  })
+
+  it("defaults the content page to English for a Latin title, and takes --lang over the title", async () => {
+    const cwd = await tmp("pptwise-theme-wall-lang-")
+    const en = JSON.parse(await runThemeTry("brief", { output: join(cwd, "en"), cwd, title: "Q3 review", json: true })) as WallManifest
+    expect(en.lang).toBe("en")
+    expect((await readFile(join(cwd, "en", "brief-content.svg"), "utf8")).replace(/<[^>]+>/g, "")).toContain("What we decided")
+    const zh = JSON.parse(await runThemeTry("brief", { output: join(cwd, "zh"), cwd, title: "Q3 review", lang: "zh-CN", json: true })) as WallManifest
+    expect(zh.lang).toBe("zh")
+    await expect(runThemeTry("brief", { cwd, title: "Q3", lang: "fr" })).rejects.toThrow(/unknown --lang "fr".*zh, en/)
+  })
+
+  it("draws the caller's content page, and leaves it out of a theme whose menu does not offer its kind", async () => {
+    const cwd = await tmp("pptwise-theme-wall-page-")
+    const page = join(cwd, "page.json")
+    await writeFile(
+      page,
+      JSON.stringify({ kind: "fact", heading: "Revenue grew", components: [{ type: "kpi_cards", items: [{ value: "38%", label: "year over year" }] }] }),
+    )
+    const out = join(cwd, "wall")
+    const manifest = JSON.parse(await runThemeTry("brief,crayon", { output: out, cwd, title: "Q3 review", page, json: true })) as WallManifest
+    const [brief, crayon] = manifest.themes
+    expect(brief!.pages).toEqual([
+      { type: "cover", file: "brief-cover.svg" },
+      { type: "content", kind: "fact", file: "brief-content.svg" },
+    ])
+    expect((await readFile(join(out, "brief-content.svg"), "utf8")).replace(/<[^>]+>/g, "")).toContain("38%")
+    expect(crayon!.pages).toEqual([{ type: "cover", file: "crayon-cover.svg" }])
+    expect(crayon!.skipped).toEqual([{ type: "content", kind: "fact", reason: expect.stringMatching(/fact/) }])
+    expect(await readdir(out)).not.toContain("crayon-content.svg")
+    expect(await readFile(join(out, "contact-sheet.html"), "utf8")).toContain("tw-missing")
+  })
+
+  it("leaves out a cover whose face would cut the title, saying how much of it fits", async () => {
+    const cwd = await tmp("pptwise-theme-wall-long-")
+    const out = join(cwd, "wall")
+    const title = "账小满：自由职业者的第一本账，从今天开始按项目记账，公私分开报税一键出"
+    const manifest = JSON.parse(await runThemeTry("stage", { output: out, cwd, title, json: true })) as WallManifest
+    expect(manifest.themes[0]!.pages.map((page) => page.type)).toEqual(["content"])
+    expect(manifest.themes[0]!.skipped![0]).toMatchObject({ type: "cover", reason: expect.stringMatching(/^heading: .*Shorten the heading/) })
+  })
+
+  it("does not leave a page an earlier run drew under a name this run left out", async () => {
+    const cwd = await tmp("pptwise-theme-wall-stale-")
+    const out = join(cwd, "wall")
+    await runThemeTry("crayon", { output: out, cwd, title: "Q3 review" })
+    expect(await readdir(out)).toContain("crayon-content.svg")
+    const page = join(cwd, "page.json")
+    await writeFile(page, JSON.stringify({ kind: "fact", heading: "Revenue", components: [] }))
+    await runThemeTry("crayon", { output: out, cwd, title: "Q3 review", page })
+    expect(await readdir(out)).not.toContain("crayon-content.svg")
+  })
+
+  it("refuses the caller-page flags without --title, and keeps the fixed sample's limits there", async () => {
+    const cwd = await tmp("pptwise-theme-wall-flags-")
+    await expect(runThemeTry("brief,swiss", { cwd, subtitle: "x", json: true })).rejects.toThrow(/--subtitle, --json .*need --title/)
+    await expect(runThemeTry("all", { cwd })).rejects.toThrow(/expects 2-4 theme ids/)
+    await expect(runThemeTry("brief,brief", { cwd, title: "Q3" })).rejects.toThrow(/duplicate/)
+    await expect(runThemeTry("brief", { cwd, title: "  " })).rejects.toThrow(/--title is empty/)
+    const page = join(cwd, "page.json")
+    await writeFile(page, JSON.stringify({ type: "cover", heading: "Q3" }))
+    await expect(runThemeTry("brief", { cwd, title: "Q3", page })).rejects.toThrow(/holds a cover page/)
+  })
+})
+

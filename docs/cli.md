@@ -44,7 +44,7 @@ Fill no more than four pages between validation passes, and read each page's con
 | `themes` | List the 22 factory presets and installed pack themes, with metadata. |
 | `theme new` | Copy a named theme into a self-contained v2 file. |
 | `theme fork` | Copy a theme and rederive its palette around new anchors. |
-| `theme try` | Render the fixed fitting-room sample across two to four themes. |
+| `theme try` | Render the fixed fitting-room sample across two to four themes, or the caller's own cover and one content page across any number of themes. |
 | `brand extract` | Extract Office colors and fonts into a complete v2 theme. |
 | `narratives` | List named narrative presets and axes. |
 | `icons` | List every icon name an `icon` field accepts. |
@@ -174,6 +174,8 @@ pptwise theme fork <name> --primary "#0B5FFF" \
   [-o <theme.json>] [--id <id>] [--label <label>]
 
 pptwise theme try <id,id,...> [-o <dir>]
+pptwise theme try <id,...|all> --title <text> \
+  [--subtitle <text>] [--lang zh|en] [--page <page.json>] [--json] [-o <dir>]
 ```
 
 `theme new` copies a preset or resolved workspace theme. Pass either an output path or an id. A created theme is complete and independent.
@@ -181,6 +183,33 @@ pptwise theme try <id,id,...> [-o <dir>]
 `theme fork` preserves the menu, rederives dependent style tokens, and runs the contrast gate. Quote hex values in shells where `#` begins a comment.
 
 `theme try` requires two to four distinct names. It writes a contact sheet under `.pptwise/theme-try/` by default. It never changes a deck binding.
+
+With `--title`, `theme try` draws the caller's own pages instead of the fixed sample: a cover with that title (and `--subtitle` as its subheading), and one content page. The content page is three short points in the language `--lang` names, `zh` or `en`, by default `zh` when the title has Chinese, Japanese or Korean characters and `en` otherwise. `--page <file>` replaces it with one content page written the way a deck page is in IR: `kind`, `heading`, `components`, and `type` if you like, which must be `content`. The names may be one or more, or `all` for every theme `themes` lists.
+
+Each page is validated alone against each theme. A page a theme refuses, such as a title its cover would cut or a kind its menu does not offer, is left out of that theme and listed under `skipped` with validate's own message. The output directory gets one SVG per drawn page, named `<theme>-cover.svg` and `<theme>-content.svg`, a `contact-sheet.html` with one row per theme, and `manifest.json`. `--json` prints the manifest with the absolute output directory as `dir`. Drawing all 22 presets takes about half a second.
+
+```json
+{
+  "manifestVersion": 1,
+  "generator": "pptwise theme try",
+  "pptwiseVersion": "0.40.0",
+  "title": "Q3 review",
+  "lang": "en",
+  "slide": { "width": 1280, "height": 720 },
+  "contactSheet": "contact-sheet.html",
+  "themes": [
+    {
+      "id": "crayon",
+      "label": "Crayon",
+      "source": "builtin",
+      "pages": [{ "type": "cover", "file": "crayon-cover.svg" }],
+      "skipped": [{ "type": "content", "kind": "fact", "reason": "kind: ..." }]
+    }
+  ]
+}
+```
+
+`source` is `builtin`, `pack`, or `file` for a deck or workspace theme file. Page files are relative to the manifest.
 
 `themes --json` marks each row's `source`: `builtin` for a factory preset, `pack` for a theme an installed content pack ships (with its `pack` id). A pack that cannot be read is listed as one entry with an `error` field, and the rest of the list is unaffected.
 

@@ -109,6 +109,14 @@ pptwise theme try brief,swiss,memo
 
 The sample is independent of any deck. It exists so visual choice happens before the spec. Render and preview commands do not accept a temporary theme override.
 
+To compare with the deck's own title instead, pass `--title`. Each named theme, or `all`, draws that cover and one content page, written as SVG files with a manifest a host can show directly:
+
+```bash
+pptwise theme try all --title "Q3 review" --subtitle "Board meeting" --json
+```
+
+See [CLI](./cli.md#themes) for the flags and the manifest.
+
 ## Bind and freeze
 
 A deck spec binds the theme by name:

@@ -54,7 +54,16 @@ import {
 } from "./inspect-format"
 import { writeThemeFile } from "./theme-write"
 import { loadIrFile, resolveLocalAssets } from "./load-ir"
-import { buildContactSheetHtml, buildPreviewHtml } from "./preview-html"
+import { buildContactSheetHtml, buildPreviewHtml, buildThemeWallHtml } from "./preview-html"
+import {
+  buildThemeWall,
+  formatThemeWall,
+  themeWallContentPage,
+  themeWallLang,
+  THEME_WALL_MANIFEST_FILE,
+  THEME_WALL_SHEET_FILE,
+  type ThemeWallInput,
+} from "./theme-wall"
 import { buildPreviewManifest } from "./preview-manifest"
 import {
   prepareWorkspaceDir,
@@ -1426,6 +1435,16 @@ export interface ThemeTryOptions {
   cwd?: string
   gitIgnore?: boolean
   runGit?: GitRunner
+  /** `--title`: draw the caller's cover and one content page instead of the fixed sample. */
+  title?: string
+  /** `--subtitle`: the cover's subheading. Needs `title`. */
+  subtitle?: string
+  /** `--lang`: the default content page's language. Needs `title`. */
+  lang?: string
+  /** `--page <file>`: one content page, as a deck page carries it, in place of the default. Needs `title`. */
+  page?: string
+  /** `--json`: print the manifest instead of a summary. Needs `title`. */
+  json?: boolean
 }
 
 function parseThemeTryIds(raw: string): string[] {
@@ -1456,6 +1475,16 @@ function contactSheetSlidesFromIr(
  *  theme and writes a contact sheet. Bound decks still render only their
  *  bound theme. */
 export async function runThemeTry(idsRaw: string, opts: ThemeTryOptions = {}): Promise<string> {
+  if (opts.title !== undefined) return runThemeWall(idsRaw, { ...opts, title: opts.title })
+  const needsTitle = [
+    ["--subtitle", opts.subtitle],
+    ["--lang", opts.lang],
+    ["--page", opts.page],
+    ["--json", opts.json || undefined],
+  ].filter(([, value]) => value !== undefined)
+  if (needsTitle.length > 0) {
+    throw new PptwiseError(`${needsTitle.map(([flag]) => flag).join(", ")} draw the caller's own pages and need --title`)
+  }
   const cwd = opts.cwd ?? process.cwd()
   const ids = parseThemeTryIds(idsRaw)
   const columns: { id: string; slides: { type: string; label: string; svg: string }[] }[] = []
@@ -1478,27 +1507,108 @@ export async function runThemeTry(idsRaw: string, opts: ThemeTryOptions = {}): P
     const svgs = ir.slides.map((_, index) => renderSlideSvg(ir, index, { theme: resolved.definition }))
     columns.push({ id: resolved.id, slides: contactSheetSlidesFromIr(ir, svgs) })
   }
-  let resolvedOut: string
-  const extraNotes: string[] = []
-  if (opts.output !== undefined) {
-    resolvedOut = resolve(cwd, opts.output)
-    await mkdir(resolvedOut, { recursive: true })
-  } else {
-    const projectHit = await findConfig(cwd)
-    const location = resolveWorkspaceLocation({
-      cwd,
-      projectConfigPath: projectHit?.path,
-      outDir: projectHit?.config.outDir,
-      target: "theme-try",
-      isDir: true,
-    })
-    extraNotes.push(...(await prepareWorkspaceDir(location, { gitIgnore: opts.gitIgnore, runGit: opts.runGit })))
-    resolvedOut = location.dir
-  }
+  const { resolvedOut, extraNotes } = await themeTryOutDir(cwd, opts)
   const htmlPath = join(resolvedOut, "contact-sheet.html")
   await writeFile(htmlPath, buildContactSheetHtml({ title: "theme try", themes: columns }))
   const ok = `wrote contact sheet to ${htmlPath}`
   return extraNotes.length > 0 ? `${ok}\n${extraNotes.join("\n")}` : ok
+}
+
+/** `-o`, or `.pptwise/theme-try/` under the project root. */
+async function themeTryOutDir(cwd: string, opts: ThemeTryOptions): Promise<{ resolvedOut: string; extraNotes: string[] }> {
+  if (opts.output !== undefined) {
+    const resolvedOut = resolve(cwd, opts.output)
+    await mkdir(resolvedOut, { recursive: true })
+    return { resolvedOut, extraNotes: [] }
+  }
+  const projectHit = await findConfig(cwd)
+  const location = resolveWorkspaceLocation({
+    cwd,
+    projectConfigPath: projectHit?.path,
+    outDir: projectHit?.config.outDir,
+    target: "theme-try",
+    isDir: true,
+  })
+  const extraNotes = await prepareWorkspaceDir(location, { gitIgnore: opts.gitIgnore, runGit: opts.runGit })
+  return { resolvedOut: location.dir, extraNotes }
+}
+
+/**
+ * The names a wall draws: a comma-separated list of one or more, or `all`
+ * for every theme `pptwise themes` lists (the presets, then every readable
+ * pack theme). An unreadable pack is left out with its reason on stderr,
+ * the way `schema --kind` leaves it out.
+ */
+async function themeWallNames(raw: string): Promise<string[]> {
+  if (raw.trim() === "all") {
+    return [...CANONICAL_THEME_IDS, ...(await readablePackDefinitions()).map((definition) => definition.id)]
+  }
+  const ids = raw.split(",").map((part) => part.trim()).filter((part) => part.length > 0)
+  if (ids.length === 0) throw new PptwiseError("pptwise theme try expects theme ids, or all")
+  const seen = new Set<string>()
+  for (const id of ids) {
+    if (seen.has(id)) throw new PptwiseError(`pptwise theme try has duplicate theme id "${id}"`)
+    seen.add(id)
+  }
+  return ids
+}
+
+/**
+ * `pptwise theme try <ids|all> --title <text>`: the caller's cover and one
+ * content page in each named theme, as SVG files, a manifest naming them,
+ * and a contact sheet. See `./theme-wall.ts`.
+ */
+async function runThemeWall(idsRaw: string, opts: ThemeTryOptions & { title: string }): Promise<string> {
+  const cwd = opts.cwd ?? process.cwd()
+  const title = opts.title.trim()
+  if (title === "") throw new PptwiseError("--title is empty. Pass the deck's cover title")
+  const names = await themeWallNames(idsRaw)
+  const themes: ThemeWallInput["themes"][number][] = []
+  for (const name of names) {
+    const resolved = await resolveThemeByName(name, { startDir: cwd })
+    const source = resolved.kind === "builtin" ? "builtin" : resolved.pack !== undefined ? "pack" : "file"
+    themes.push({ id: resolved.id, label: resolved.definition.label ?? resolved.id, source, definition: resolved.definition })
+  }
+  let contentPage: Record<string, unknown> | undefined
+  if (opts.page !== undefined) {
+    const pagePath = resolve(cwd, opts.page)
+    let text: string
+    try {
+      text = await readFile(pagePath, "utf8")
+    } catch {
+      throw new PptwiseError(`cannot read --page file: ${pagePath}`)
+    }
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(text)
+    } catch (e) {
+      throw new PptwiseError(`--page file is not JSON: ${pagePath}: ${e instanceof Error ? e.message : String(e)}`)
+    }
+    contentPage = themeWallContentPage(parsed, pagePath)
+  }
+  const subtitle = opts.subtitle?.trim()
+  const wall = buildThemeWall({
+    title,
+    ...(subtitle ? { subtitle } : {}),
+    lang: themeWallLang(title, opts.lang),
+    ...(contentPage !== undefined ? { contentPage } : {}),
+    themes,
+  })
+  const { resolvedOut, extraNotes } = await themeTryOutDir(cwd, opts)
+  // A page this run left out must not leave the last run's drawing of it
+  // under the name the manifest would have given it.
+  for (const theme of themes) {
+    for (const type of ["cover", "content"]) await rm(join(resolvedOut, `${theme.id}-${type}.svg`), { force: true })
+  }
+  for (const file of wall.files) await writeFile(join(resolvedOut, file.name), file.svg)
+  await writeFile(
+    join(resolvedOut, THEME_WALL_SHEET_FILE),
+    buildThemeWallHtml({ title, columns: ["cover", "content"], rows: wall.rows }),
+  )
+  await writeFile(join(resolvedOut, THEME_WALL_MANIFEST_FILE), `${JSON.stringify(wall.manifest, null, 2)}\n`)
+  if (opts.json) return JSON.stringify({ dir: resolvedOut, ...wall.manifest }, null, 2)
+  const summary = formatThemeWall(wall.manifest, resolvedOut)
+  return extraNotes.length > 0 ? `${summary}\n${extraNotes.join("\n")}` : summary
 }
 
 /**

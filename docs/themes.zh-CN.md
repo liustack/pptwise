@@ -106,6 +106,14 @@ pptwise theme try brief,swiss,memo
 
 样稿独立于任何 deck，用于在 spec 之前做视觉选择。`render` 与 `preview` 命令不接受临时主题覆盖。
 
+想用 deck 自己的标题来比，就传 `--title`。每个命名主题（或 `all`）画出这张封面和一页正文，写成 SVG 文件，外加一份宿主可以直接拿来展示的清单：
+
+```bash
+pptwise theme try all --title "Q3 review" --subtitle "Board meeting" --json
+```
+
+参数和清单格式见 [CLI](./cli.zh-CN.md#主题)。
+
 ## 绑定与冻结
 
 Deck spec 按名称绑定主题：

@@ -294,17 +294,42 @@ theme
   )
 theme
   .command("try")
-  .description("Render the fitting-room sample across 2-4 themes into a contact sheet")
-  .argument("<ids>", "comma-separated theme ids (2-4)")
+  .description(
+    "Render the fitting-room sample across 2-4 themes into a contact sheet, or, with --title, your own cover and one content page in any number of themes as SVG files with a manifest",
+  )
+  .argument("<ids>", "comma-separated theme ids (2-4 for the fixed sample), or all with --title")
   .option("-o, --output <dir>", "output directory (default: .pptwise/theme-try/)")
-  .addHelpText("after", "\nExample:\n  $ pptwise theme try brief,swiss,memo")
-  .action(async (ids: string, opts: { output?: string }) => {
-    try {
-      console.log(await runThemeTry(ids, { output: opts.output, cwd: process.cwd() }))
-    } catch (e) {
-      fail(e)
-    }
-  })
+  .option("--title <text>", "draw this cover title, plus one content page, instead of the fixed sample")
+  .option("--subtitle <text>", "with --title: the cover's subheading")
+  .option("--lang <lang>", "with --title: language of the default content page, zh or en (default: zh when the title has Chinese, Japanese or Korean characters)")
+  .option("--page <file>", "with --title: one content page as a deck page carries it (type, kind, heading, components), in place of the default")
+  .option("--json", "with --title: print the manifest as JSON")
+  .addHelpText(
+    "after",
+    "\nExamples:\n  $ pptwise theme try brief,swiss,memo\n  $ pptwise theme try all --title \"Q3 review\" --subtitle \"Board meeting\" --json",
+  )
+  .action(
+    async (
+      ids: string,
+      opts: { output?: string; title?: string; subtitle?: string; lang?: string; page?: string; json?: boolean },
+    ) => {
+      try {
+        console.log(
+          await runThemeTry(ids, {
+            output: opts.output,
+            cwd: process.cwd(),
+            title: opts.title,
+            subtitle: opts.subtitle,
+            lang: opts.lang,
+            page: opts.page,
+            json: opts.json,
+          }),
+        )
+      } catch (e) {
+        fail(e)
+      }
+    },
+  )
 
 program
   .command("layouts")
