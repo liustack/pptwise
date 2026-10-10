@@ -127,6 +127,17 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
     }
   })
 
+  it("lists the outline page by page before any page is written, even when the user said to go ahead", () => {
+    const en = read(EN_REL)
+    const zh = read(ZH_REL)
+    expect(en).toContain("Before you write any page file, list it in the conversation, one line per page: page number, page type or `kind`, heading, and what the page says.")
+    expect(en).toContain("This step is never skipped")
+    expect(en).toContain("When the user said to go ahead or let you decide, list the outline and continue in the same reply.")
+    expect(zh).toContain("写任何页面文件之前，先在对话里逐页列出：页码、页型或 `kind`、标题、这一页讲什么。")
+    expect(zh).toContain("这一步不论 deck 多短都不能省。")
+    expect(zh).toContain("用户说了直接做或让你定，就列出大纲，在同一条回复里接着做。")
+  })
+
   it("shows the user the theme and the outline, checks through build, and delivers its one file", () => {
     const en = read(EN_REL)
     const zh = read(ZH_REL)
