@@ -180,6 +180,16 @@ describe("dsh plugin (skill registration, v0)", () => {
     )
   })
 
+  it("fails a theme wall or a build on a missing engine with the same message", async () => {
+    const { __testing } = (await loadPreviewTool()) as unknown as {
+      __testing: { runCliJson: (cliPath: string, args: string[]) => Promise<unknown> }
+    }
+    const missing = join(FILE_HOME, "no-engine", "dist", "cli.js")
+    await expect(__testing.runCliJson(missing, ["build", ".", "--json"])).rejects.toThrow(
+      `${missing} is missing). That happens when it is added from the GitHub address`,
+    )
+  })
+
   it("decides the launcher from the PATH the agent's shell inherits", async () => {
     const { cliLauncher } = (await loadPreviewTool()) as unknown as {
       cliLauncher: (o: { env?: Record<string, string>; versions?: Record<string, string>; execPath?: string }) => {

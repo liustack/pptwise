@@ -1097,6 +1097,12 @@ function cliChildEnv() {
   return { ...process.env, ELECTRON_RUN_AS_NODE: '1' }
 }
 
+/** Checked before every spawn: a missing engine otherwise surfaces as Node's
+ *  "Cannot find module", which tells the user nothing about the fix. */
+function requireEngine(cliPath) {
+  if (!engineReady(cliPath)) throw new Error(missingEngineMessage(cliPath, packageVersion()))
+}
+
 /** Run the packaged CLI, resolving with its combined output.
  *
  * GitHub issue #1: two libvips in one Electron process crash the renderer.
@@ -1106,9 +1112,11 @@ function cliChildEnv() {
  * than booting as an app.
  */
 function runCli(cliPath, args, signal) {
-  // Checked before spawning: a missing engine otherwise surfaces as Node's
-  // "Cannot find module", which tells the user nothing about the fix.
-  if (!engineReady(cliPath)) return Promise.reject(new Error(missingEngineMessage(cliPath, packageVersion())))
+  try {
+    requireEngine(cliPath)
+  } catch (error) {
+    return Promise.reject(error)
+  }
   return runChild(resolveCliCommand(), [cliPath, ...args], {
     env: cliChildEnv(),
     signal,
@@ -1131,6 +1139,7 @@ function runCli(cliPath, args, signal) {
  * the files land where the model would have put them from its own terminal.
  */
 async function runCliJson(cliPath, args, options = {}) {
+  requireEngine(cliPath)
   const { code, stdout, stderr } = await runChild(resolveCliCommand(), [cliPath, ...args], {
     env: cliChildEnv(),
     signal: options.signal,
@@ -2439,6 +2448,7 @@ export function definePreviewTool(cliPath) {
 /** Exposed for the plugin's own tests — not part of any DSH contract. */
 export const __testing = {
   runCli,
+  runCliJson,
   readPreviewBundle,
   readThemesBundle,
   parseThemeWallManifest,
