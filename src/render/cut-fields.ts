@@ -17,11 +17,17 @@ import { stripEmphasis } from "./emphasis"
  * field winning a tie. A line that matches no field of the page is the
  * face's own furniture.
  *
+ * A text its block had no line for at all shows nothing to match. Its mark
+ * carries the words it left out (`data-omitted`, `components/omitted-text.tsx`),
+ * and the field holding exactly those words is the one left out.
+ *
  * Read on demand only: a page with no `data-truncated` never reaches here.
  */
 export interface CutLine {
-  /** The cut line as the page shows it. */
+  /** The cut line as the page shows it, or the words left out of it. */
   readonly text: string
+  /** The field had no line at all: `text` is every word of it. */
+  readonly omitted?: true
   /** The slide field it was cut from, such as `heading` or `components.0.items.2.text`. Absent for the face's own furniture. */
   readonly field?: string
   readonly tier: TruncationTier
@@ -54,6 +60,13 @@ export function cutLines(root: Element, slide: Slide): CutLine[] {
   if (elements.length === 0) return []
   const sources = truncationSources(slide).map((source) => ({ ...source, plain: normalize(stripEmphasis(source.text)) }))
   return elements.map((el) => {
+    const omitted = el.getAttribute("data-omitted")
+    if (omitted !== null) {
+      const words = normalize(stripEmphasis(omitted))
+      const matches = sources.filter((source) => source.plain === words)
+      const found = matches.find((source) => source.tier === "hard") ?? matches[0]
+      return found === undefined ? { text: omitted, tier: "declared" as const, omitted: true as const } : { text: omitted, field: found.field, tier: found.tier, omitted: true as const }
+    }
     const text = (el.textContent ?? "").trim()
     const line = normalize(text)
     let best: { field: string; tier: TruncationTier; length: number } | undefined

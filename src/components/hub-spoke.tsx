@@ -8,10 +8,11 @@ import {
   FORM_TITLE_FLOOR,
   capFormBody,
   formTextClipMarker,
-  formTextOmissionMarker,
+  formTextOmission,
   layoutFormBody,
   layoutFormTitle,
 } from "./legibility"
+import { OmittedText } from "./omitted-text"
 import type { RenderDef, SvgComponent } from "./types"
 
 type HubSpokeComponent = Extract<Component, { type: "hub_spoke" }>
@@ -306,10 +307,8 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
           const labelY = cap.y + cap.h / 2 - blockH / 2 + labelFit.fontSize * 0.9
           const descY = labelY + (descLayout ? descLayout.lineHeight : 0)
           return (
-            <g
-              key={`cap-${cap.i}`}
-              data-truncated={formTextOmissionMarker(desc ?? "", descLayout ?? { lines: [] })}
-            >
+            <g key={`cap-${cap.i}`}>
+              <OmittedText text={formTextOmission(desc ?? "", descLayout ?? { lines: [] })} />
               <rect
                 x={cap.x}
                 y={cap.y}

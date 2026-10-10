@@ -2579,6 +2579,12 @@ function overlapFindings(markup: string, page: number, slideId: string | undefin
 function truncatedMessage(cut: CutLine): string {
   // A hard field (`../ir/truncation-tiers.ts`) reaches the audit only when
   // the face cut it and the step-aside sheet could not take the page.
+  if (cut.tier === "hard" && cut.omitted) {
+    return (
+      `text "${cut.text}" (${cut.field}) was left out to fit, and it is text a reader needs whole. ` +
+      `The theme's layout had no line for it and no plainer layout could take the page: shorten the page's text or split the page`
+    )
+  }
   if (cut.tier === "hard") {
     return (
       `text "${cut.text}" (${cut.field}) was truncated to fit, and it is text a reader needs whole. ` +

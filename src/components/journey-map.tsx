@@ -12,8 +12,9 @@ import {
   formLineHeight,
   layoutFormBody,
   formTextClipMarker,
-  formTextOmissionMarker,
+  formTextOmission,
 } from "./legibility"
+import { OmittedText } from "./omitted-text"
 import type { RenderDef, SvgComponent } from "./types"
 
 type JourneyMapComponent = Extract<Component, { type: "journey_map" }>
@@ -289,7 +290,8 @@ export const journeyMap: SvgComponent<JourneyMapComponent> = {
                 fontFamily: ctx.fonts.body,
               })
               return (
-                <g key={`action-${i}`} data-truncated={formTextOmissionMarker(value, layout)}>
+                <g key={`action-${i}`}>
+                  <OmittedText text={formTextOmission(stage.action ?? "", layout)} />
                   {layout.lines.map((line, li) => (
                     <text
                       key={li}
