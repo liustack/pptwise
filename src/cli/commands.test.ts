@@ -570,11 +570,14 @@ describe("runRender", () => {
   })
 
   describe("--allow-dropped-content threading (deep-review P1)", () => {
+    // validate draws every content page and refuses one that would lose
+    // content, before the export gate is reached. The flag skips that one
+    // validate gate and the export gate both.
     it("rejects a deck whose layout silently drops content when the flag is not passed", async () => {
       const out = join(dir, "out-dropped-blocked.pptx")
       await expect(
         runRender(join(dir, "deck-dropped-content.json"), { output: out }),
-      ).rejects.toThrow(/deck drops content.*p-2 \(page 2\): \d+ content blocks.*--allow-dropped-content/s)
+      ).rejects.toThrow(/invalid IR:.*page 2 \(p-2\).*would leave \d+ content blocks off the page/s)
     })
 
     it("renders the deck when --allow-dropped-content is passed", async () => {
@@ -588,20 +591,16 @@ describe("runRender", () => {
       expect(bytes.subarray(0, 2).toString("latin1")).toBe("PK")
     })
 
-    it("still previews the same deck — preview is for looking at work in progress", async () => {
-      const out = join(dir, "dropped-preview.html")
-      await expect(
-        runPreview(join(dir, "deck-dropped-content.json"), out, { htmlOut: true }),
-      ).resolves.toBeTruthy()
-    })
-
     // tea-deck (2026-10-02): at spacious pacing a chart page lost its callout.
     // The preview drew the page without it and said nothing, so the author
-    // only learned of it when render refused the deck.
-    it("names the pages that drop content in the preview's own output", async () => {
-      const msg = await runPreview(join(dir, "deck-dropped-content.json"), join(dir, "dropped-preview-note"))
-      expect(msg).toMatch(/note: 1 page drops content .*render will refuse/)
-      expect(msg).toMatch(/p-2 \(page 2\): \d+ content blocks/)
+    // only learned of it when render refused the deck. Preview validates the
+    // way render does, and validate now draws every content page, so the
+    // same deck is refused at preview, naming the page and what it would
+    // lose, where it used to be drawn with a note.
+    it("refuses the same deck at preview, naming the page that drops content", async () => {
+      await expect(runPreview(join(dir, "deck-dropped-content.json"), join(dir, "dropped-preview-note"))).rejects.toThrow(
+        /invalid IR.*page 2 \(p-2\).*would leave \d+ content blocks off the page/s,
+      )
       const clean = await runPreview(join(dir, "deck.json"), join(dir, "clean-preview-note"))
       expect(clean).not.toContain("drops content")
     })

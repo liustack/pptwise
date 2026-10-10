@@ -16,13 +16,18 @@ const LONG_HEADING =
   "The board should approve the second plant before the window on the cheaper financing closes at the end of the third quarter of next year, and before the competitor locks the supplier"
 const LONG_KICKER = "第一章　顾客变了，而且变得比我们任何一个人预想的都要快得多，快到门店的陈列和库存都来不及跟上"
 
-function deck(theme: string, page: Record<string, unknown>): PptxIR {
+/**
+ * A deck past validate. `allowDroppedContent` skips its drawn gate, for the
+ * pages here that keep a hard cut on purpose: validate refuses those, and
+ * how the cut reads is what is pinned.
+ */
+function deck(theme: string, page: Record<string, unknown>, allowDroppedContent = false): PptxIR {
   const v = validateIr({
     version: "5",
     filename: "cuts",
     theme: { id: theme },
     slides: [{ type: "cover", heading: "Cover" }, { type: "content", ...page }, { type: "ending", heading: "End" }],
-  })
+  }, { allowDroppedContent })
   expect(v.errors).toEqual([])
   return v.ir!
 }
@@ -73,7 +78,7 @@ describe("a face that cuts a hard field", () => {
 
   it("keeps its page when the sheet would cut the heading too, and the cut stays declared as hard", () => {
     const endless = Array.from({ length: 4 }, () => LONG_HEADING).join(" ")
-    const ir = deck("brief", { kind: "points", heading: endless, components: [bullets] })
+    const ir = deck("brief", { kind: "points", heading: endless, components: [bullets] }, true)
     const { markup, root, slide } = drawn(ir)
     expect(markup).not.toContain("data-face-stepped-aside")
     expect(cutLines(root, slide)).toEqual([expect.objectContaining({ field: "heading", tier: "hard" })])
@@ -91,7 +96,7 @@ describe("a face that cuts a hard field", () => {
   })
 
   it("keeps its page when the page carries a stamp the sheet has no place for", () => {
-    const { markup, root, slide } = drawn(deck("lecture", { kind: "points", heading: LONG_HEADING, stamp: { text: "Approved" }, components: [bullets] }))
+    const { markup, root, slide } = drawn(deck("lecture", { kind: "points", heading: LONG_HEADING, stamp: { text: "Approved" }, components: [bullets] }, true))
     expect(markup).not.toContain("data-face-stepped-aside")
     expect(cutLines(root, slide).some((cut) => cut.field === "heading" && cut.tier === "hard")).toBe(true)
   })

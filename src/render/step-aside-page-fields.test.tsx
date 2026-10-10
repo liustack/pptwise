@@ -91,7 +91,10 @@ function deck(theme: string, kind: string, page: Record<string, unknown>): PptxI
     theme: { id: theme },
     ...("stage" in page ? { course: COURSE } : {}),
     slides: [{ type: "content", kind, heading: "Heading words", ...standfirst, ...page }],
-  })
+    // These pages come up short on purpose, so validate's drawn gate, which
+    // refuses a page that loses anything, is skipped: what the face keeps
+    // and what it declares is what this pins.
+  }, { allowDroppedContent: true })
   expect(v.errors).toEqual([])
   return v.ir!
 }

@@ -19,8 +19,9 @@
 // attribute exists to serve: `generatePptx` refuses, and says what was lost.
 import { beforeAll, describe, expect, it } from "vitest"
 import type { PptxIR } from "@/ir"
-import { generatePptx } from "@/api"
+import { generatePptx, validateIr } from "@/api"
 import { installNodePlatform } from "../platform/node"
+import { exportPastDrawnGate } from "./__fixtures__/export-past-drawn-gate"
 
 beforeAll(() => {
   installNodePlatform()
@@ -82,8 +83,11 @@ function crowdedDeck(): PptxIR {
 }
 
 describe("an under-allocated card page blocks the export", () => {
+  // validate draws the page and refuses it first. The export gate behind it
+  // is reached past validate's drawn gate (`exportPastDrawnGate`).
   it("refuses a page that cannot hold everything it was given", async () => {
-    await expect(generatePptx(crowdedDeck())).rejects.toThrow(/deck drops content/s)
+    await expect(generatePptx(crowdedDeck())).rejects.toThrow(/invalid IR:.*would leave/s)
+    await expect(exportPastDrawnGate(crowdedDeck())).rejects.toThrow(/deck drops content/s)
   })
 
   it("still exports the same deck when the caller opts in", async () => {
@@ -91,10 +95,14 @@ describe("an under-allocated card page blocks the export", () => {
     expect(out.byteLength).toBeGreaterThan(0)
   })
 
-  it("exports cleanly when the same wall has the band to itself", async () => {
+  // Alone the wall drops nothing, which the export gate still confirms. Its
+  // quotes run past the five lines a card sets and are cut, and validate
+  // refuses that cut now: a quote is words a reader needs whole.
+  it("drops nothing when the same wall has the band to itself", async () => {
     const [wall] = crowdedDeck().slides[0]!.components
-    const out = await generatePptx(deck([wall]))
+    const out = await exportPastDrawnGate(deck([wall]))
     expect(out.byteLength).toBeGreaterThan(0)
+    expect(validateIr(deck([wall])).errors.map((e) => e.message).join(" ")).toMatch(/would cut the text of quote 1 of this page's quote_wall/)
   })
 })
 
@@ -113,7 +121,8 @@ describe("a product card whose picture never arrived blocks the export", () => {
   )
 
   it("refuses the deck by default, and the message names the picture", async () => {
-    await expect(generatePptx(missing)).rejects.toThrow(/deck drops content.*: 1 picture\./s)
+    await expect(generatePptx(missing)).rejects.toThrow(/invalid IR:.*1 picture/s)
+    await expect(exportPastDrawnGate(missing)).rejects.toThrow(/deck drops content.*: 1 picture\./s)
   })
 
   it("exports once every picture resolves", async () => {

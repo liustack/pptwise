@@ -17,20 +17,26 @@
  * (`slideToSvgMarkup`), with the marks the export and the audit read
  * (`cutLines`, `data-dropped`). A page validate passes is then one the face
  * draws without those marks, by construction.
+ *
+ * A content page is asked the same drawing through {@link drawnLoss}, the
+ * step-aside included (`./content-loss.ts`).
  */
 import type { PptxIR, Slide } from "@/ir"
 import { truncationSources } from "../ir/truncation-tiers"
 import { prefixOf } from "../layouts/text-room"
 import type { ThemeDefinition } from "../themes/definitions"
 import { cutLines } from "./cut-fields"
-import { droppedIn, slideToSvgMarkup } from "./render-slide"
+import { droppedIn, slideToSvgMarkup, type SlideDrops } from "./render-slide"
 import { parseSvgRoot } from "./serialize"
 
-/** What one drawing of a page lost: how much it declared dropped, and which of the page's fields it cut. */
+/** What one drawing of a page lost: how much it declared dropped and in what units, and which of the page's fields it cut. */
 export interface PageLoss {
   dropped: number
+  drops: SlideDrops["drops"]
   /** The slide fields a cut line came from (`heading`, `subheading`, `components.0.items.2`). */
   cut: readonly string[]
+  /** Those of them a reader needs whole (`../ir/truncation-tiers.ts`), once each. */
+  hardCut: readonly string[]
 }
 
 /**
@@ -57,16 +63,21 @@ export function drawnLoss(ir: PptxIR, index: number, theme: ThemeDefinition): Pa
   return loss
 }
 
+const WHOLE: PageLoss = { dropped: 0, drops: [], cut: [], hardCut: [] }
+
 function drawPageLoss(ir: PptxIR, index: number, theme: ThemeDefinition): PageLoss {
   const slide = ir.slides[index]!
   const markup = slideToSvgMarkup(ir, slide, index, theme)
-  if (!markup.includes("data-dropped") && !markup.includes('data-truncated="1"')) return { dropped: 0, cut: [] }
+  if (!markup.includes("data-dropped") && !markup.includes('data-truncated="1"')) return WHOLE
   const root = parseSvgRoot(markup)
+  const lines = cutLines(root, slide)
   return {
-    dropped: droppedIn(root).dropped,
-    cut: cutLines(root, slide).flatMap((line) => (line.field === undefined ? [] : [line.field])),
+    ...droppedIn(root),
+    cut: lines.flatMap((line) => (line.field === undefined ? [] : [line.field])),
+    hardCut: [...new Set(lines.flatMap((line) => (line.tier === "hard" && line.field !== undefined ? [line.field] : [])))],
   }
 }
+
 
 /** `ir` with page `index`'s own fields replaced, a field set to undefined taken off: `ir` itself when they are already so. */
 export function withPageFields(ir: PptxIR, index: number, fields: Partial<Pick<Slide, "heading" | "subheading">>): PptxIR {
@@ -131,7 +142,7 @@ export interface BlockText {
 }
 
 /** `ir` with the text at `field` of page `index` replaced. */
-function withBlockText(ir: PptxIR, index: number, field: string, text: string): PptxIR {
+export function withBlockText(ir: PptxIR, index: number, field: string, text: string): PptxIR {
   const slide = structuredClone(ir.slides[index]!) as unknown as Record<string, unknown>
   const path = field.split(".")
   let at: Record<string, unknown> = slide

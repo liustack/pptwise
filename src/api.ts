@@ -80,36 +80,21 @@ function checkDraftGate(ir: PptxIR): void {
  * there because only a real layout can answer it, and the export renders
  * every slide there already).
  *
- * **Why `validateIr` does not answer the drop question too** (decided
- * 2026-09-04, after a review asked for it and an implementation was built
- * and measured). Validation stays structural: schema, menu, declared
- * capacity — everything answerable without laying the page out. Whether a
- * page's components actually fit the rect its bound face gives them is a
- * different question, and a face declares its body capacity as a count
- * (`capacity: 4`), which cannot express "this rect is 328px tall". So a page
- * of one short paragraph plus a five-row table passes every count-based
- * check and still loses the table at render.
- *
- * That page is not a silent loss. The export refuses it by name and says
- * what it would lose, and the author has to shorten the page or say
- * `allowDroppedContent` out loud. Moving that refusal up into `validateIr`
- * was tried: it makes validate as expensive as a render, and because
- * `generatePptx` validates first it kills the opt-in outright — the deck
- * fails validation before it can ever reach the gate whose whole purpose is
- * to let a caller through. It broke 46 tests across 10 files, all of them
- * pinning that two-stage arrangement.
- *
- * So the split is deliberate, not an oversight: structural answers here,
- * layout-aware refusal at the export, one explicit opt-in between them. A
- * page that renders short is caught loudly, once, at the moment it would
- * become a file. Tightening this means giving faces a real geometric
- * capacity to declare, not making validate render.
+ * **Why `validateIr` answers the drop question too** (decided 2026-10-10,
+ * reversing the 2026-09-04 decision that kept validate structural).
+ * validate now draws every content page as the export will and refuses one
+ * that would lose anything (`checkContentPagesDrawn` in `./validate-core`),
+ * so a deck validate passes is one the export draws whole. That made the
+ * opt-in unreachable, since this function validates first. So
+ * `allowDroppedContent` is handed to `validateIr` as well, where it skips
+ * that one gate and nothing else, and the deck reaches the export gate
+ * whose whole purpose is to let a caller through, naming what is lost.
  */
 export async function generatePptx(
   input: unknown,
   opts?: { draft?: boolean; allowDroppedContent?: boolean } & RenderThemeOptions,
 ): Promise<Uint8Array> {
-  const v = validateIr(input, { theme: opts?.theme })
+  const v = validateIr(input, { theme: opts?.theme, allowDroppedContent: opts?.allowDroppedContent })
   if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
   if (!opts?.draft) checkDraftGate(v.ir!)
   // `v.theme` is what validation just resolved — the caller's own

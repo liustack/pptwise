@@ -452,7 +452,7 @@ export async function runRender(irPath: string, opts: RenderOptions): Promise<st
   const [projectHit, userHit] = await readConfigs(cwd)
   const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
-  const v = validateIr(raw, { theme, missingAssetPath })
+  const v = validateIr(raw, { theme, missingAssetPath, allowDroppedContent: opts.allowDroppedContent })
   if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
   await resolveLocalAssets(v.ir!, baseDir, workspaceAssetsDir)
   const bytes = await generatePptx(v.ir!, {

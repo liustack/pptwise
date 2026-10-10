@@ -457,7 +457,12 @@ function describeNumericRange(title: string, cases: readonly Case[], least: { ac
           assets: { images: {} },
           slides: [{ type: "content", kind: "data", heading: "Numbers", components: [c.component] }],
         } as unknown as PptxIR
-        const v = validateIr(ir)
+        // validate draws the page and refuses one that leaves value labels or
+        // the chart itself off, which some of these extreme ranges do on this
+        // face. What this pins is the numbers on the page, so that one gate is
+        // skipped. The component-level run above holds every chart to drawing
+        // or declaring what it cannot hold.
+        const v = validateIr(ir, { allowDroppedContent: true })
         if (!v.ok) {
           failures.push(`${c.label}\n    validateIr refused what the schema accepted: ${v.errors[0]!.message}`)
           continue

@@ -933,6 +933,9 @@ describe("a live component that declines outright is not fifty unexplained field
   // declines. Past 20 no rendering of the page can hold it and the decline is
   // the honest answer — that is the page this test is about.
   it("a 24-series line chart no rendering can hold reports zero missing fields", () => {
+    // validate refuses this page now for the chart it would lose. What the
+    // fidelity scan says of a page that lost it is what this pins, so that
+    // one gate is skipped.
     const ir = validateIr({
       version: "5",
       filename: "declined-chart",
@@ -959,7 +962,7 @@ describe("a live component that declines outright is not fifty unexplained field
           ],
         },
       ],
-    }).ir!
+    }, { allowDroppedContent: true }).ir!
     const slide = jobSlide(ir, 0)
     const svg = renderSlideSvg(ir, 0)
     // The chart really did decline, inside its own box, painting no field.

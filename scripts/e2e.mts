@@ -650,40 +650,29 @@ const findingsDeck = {
 const findingsPath = join(OUT, "audit-findings.json")
 writeFileSync(findingsPath, JSON.stringify(findingsDeck))
 
+// validate draws every content page now and refuses one that would lose
+// content, and audit validates first. So this deck no longer reaches the
+// audit's own content-dropped and content-truncated findings: it is refused
+// by validate inside audit, naming the same two pages and what each would
+// lose, and audit exits 1 the same.
 const findingsAudit = shCapture("node", ["dist/cli.js", "audit", findingsPath])
-console.log(findingsAudit.stdout)
+console.log(findingsAudit.stderr)
 if (findingsAudit.status !== 1) {
   throw new Error(`e2e: audit leg — expected the findings fixture to exit 1, got exit ${findingsAudit.status}`)
 }
-
-// Bench-driven fix round, defect E: same fixture, same exit-1 report — a
-// 6-item row_cards over capacity must surface as `content-dropped` on
-// page 3 (p-dropped), and verdict_banner's over-budget text must surface as
-// `content-truncated` on page 4 (p-truncated).
-if (!/\[content-dropped\]/.test(findingsAudit.stdout) || !/page 3 \(p-dropped\)/.test(findingsAudit.stdout)) {
-  throw new Error(
-    `e2e: audit leg — expected a content-dropped finding naming page 3 (p-dropped), got: ${findingsAudit.stdout}`,
-  )
+if (!/invalid IR/.test(findingsAudit.stderr) || !/page 3 \(p-dropped\).*would leave \d+ cards/.test(findingsAudit.stderr)) {
+  throw new Error(`e2e: audit leg — expected validate to refuse page 3 (p-dropped) for the cards it would leave off, got: ${findingsAudit.stderr}`)
 }
-if (!/\[content-truncated\]/.test(findingsAudit.stdout) || !/page 4 \(p-truncated\)/.test(findingsAudit.stdout)) {
-  throw new Error(
-    `e2e: audit leg — expected a content-truncated finding naming page 4 (p-truncated), got: ${findingsAudit.stdout}`,
-  )
+if (!/page 4 \(p-truncated\).*would cut it/.test(findingsAudit.stderr)) {
+  throw new Error(`e2e: audit leg — expected validate to refuse page 4 (p-truncated) for the text it would cut, got: ${findingsAudit.stderr}`)
 }
-console.log("audit content-dropped/content-truncated leg OK (exit 1, both advisory codes present)")
+console.log("audit content leg OK (exit 1, validate names the dropping and the cutting page)")
 
 const jsonAudit = shCapture("node", ["dist/cli.js", "audit", findingsPath, "--json"])
-if (jsonAudit.status !== 1) {
-  throw new Error(`e2e: audit leg — expected --json mode to also exit 1, got exit ${jsonAudit.status}`)
+if (jsonAudit.status !== 1 || !/invalid IR/.test(jsonAudit.stderr)) {
+  throw new Error(`e2e: audit leg — expected --json mode to be refused the same way, got exit ${jsonAudit.status}: ${jsonAudit.stderr}`)
 }
-const jsonReport = JSON.parse(jsonAudit.stdout) as { findings: Array<{ code: string }> }
-if (!jsonReport.findings.some((f) => f.code === "content-dropped")) {
-  throw new Error(`e2e: audit leg — expected --json output to include a content-dropped finding, got: ${jsonAudit.stdout}`)
-}
-if (!jsonReport.findings.some((f) => f.code === "content-truncated")) {
-  throw new Error(`e2e: audit leg — expected --json output to include a content-truncated finding, got: ${jsonAudit.stdout}`)
-}
-console.log("audit --json leg OK (machine-readable AuditReport, exit 1, content-dropped/content-truncated codes present)")
+console.log("audit --json leg OK (refused by validate, exit 1)")
 
 // 7b) --pixels leg (audit-v2 phase B, spec §4.3/§11.7): the one CLI surface
 //     genuinely worth an e2e check for this feature — it exercises real

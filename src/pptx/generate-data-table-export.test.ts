@@ -14,6 +14,7 @@ import JSZip from "jszip"
 import type { Component, PptxIR } from "@/ir"
 import { generatePptx, renderSlideSvg, validateIr } from "@/api"
 import { generatePptxBlob } from "./generate"
+import { exportPastDrawnGate } from "./__fixtures__/export-past-drawn-gate"
 import { installNodePlatform } from "../platform/node"
 
 beforeAll(() => {
@@ -63,7 +64,7 @@ async function expectExports(components: Component[]): Promise<void> {
  */
 async function expectExportsOverCapacity(components: Component[]): Promise<void> {
   const ir = makeIr(components)
-  expect(renderSlideSvg(validateIr(ir).ir!, 1), "fixture is expected to overflow").toMatch(/data-dropped="[1-9]/)
+  expect(renderSlideSvg(validateIr(ir, { allowDroppedContent: true }).ir!, 1), "fixture is expected to overflow").toMatch(/data-dropped="[1-9]/)
   const bytes = await generatePptx(ir, { allowDroppedContent: true })
   expect(bytes.length).toBeGreaterThan(10_000)
   expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
@@ -162,11 +163,12 @@ describe("data_table pathological content through the real generatePptx", () => 
       { type: "paragraph", text: "Sibling column content to force a two-column squeeze." },
     ])
     // The squeeze is the point of the fixture: something has to go, and the
-    // slide says nothing about it — so the export now refuses first
-    // (content-drop gate, deep-review P1). What this test is actually about
+    // slide says nothing about it — so validate refuses it, and the export
+    // gate behind validate's drawn gate refuses it too (deep-review P1). What this test is actually about
     // is the other half: once the caller accepts the loss, the drop path
     // still produces a clean package rather than a package-audit rejection.
-    await expect(generatePptx(ir)).rejects.toThrow(/--allow-dropped-content/)
+    await expect(generatePptx(ir)).rejects.toThrow(/invalid IR:.*would leave/s)
+    await expect(exportPastDrawnGate(ir)).rejects.toThrow(/--allow-dropped-content/)
     const bytes = await generatePptx(ir, { allowDroppedContent: true })
     expect(bytes.length).toBeGreaterThan(10_000)
     expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
@@ -196,6 +198,7 @@ describe("data_table native-vector differentiation claim (sankey's own T3 preced
 describe("data_table over-capacity content is refused, not quietly shortened", () => {
   it("the schema-max shape is refused without the opt-in, and the message names the loss", async () => {
     const ir = makeIr([table(8, 12, (r, c) => `r${r}c${c}`)])
-    await expect(generatePptx(ir)).rejects.toThrow(/deck drops content.*: \d+ rows\./s)
+    await expect(generatePptx(ir)).rejects.toThrow(/invalid IR:.*rows/s)
+    await expect(exportPastDrawnGate(ir)).rejects.toThrow(/deck drops content.*: \d+ rows\./s)
   })
 })

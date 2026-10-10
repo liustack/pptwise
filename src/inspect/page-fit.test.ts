@@ -1,9 +1,10 @@
 // @vitest-environment node
 import { beforeAll, describe, expect, it } from "vitest"
-import { generatePptx, validateIr } from "@/api"
+import { validateIr } from "@/api"
 import type { PptxIR } from "@/ir"
 import { installNodePlatform } from "@/platform/node"
 import { getThemeDefinition } from "@/themes/definitions"
+import { exportPastDrawnGate } from "../pptx/__fixtures__/export-past-drawn-gate"
 import { pageFit } from "./page-fit"
 
 beforeAll(() => {
@@ -88,8 +89,13 @@ const DECK = {
 
 const theme = getThemeDefinition("brief")
 
+/**
+ * The deck past every validate gate but the drawn one, which refuses the
+ * pages here that lose content or cut their heading. `pageFit` reads what a
+ * drawing keeps, so those pages are what it is asked about.
+ */
 function validDeck(): PptxIR {
-  const v = validateIr(DECK, { theme })
+  const v = validateIr(DECK, { theme, allowDroppedContent: true })
   expect(v.errors).toEqual([])
   return v.ir!
 }
@@ -128,12 +134,17 @@ describe("pageFit", () => {
       return fit.fits ? [] : [`${slide.id} (page ${index + 1}): ${fit.dropped.map((d) => d.what).join(", ")}`]
     })
     expect(refs.length).toBe(2)
-    await expect(generatePptx(DECK, { theme })).rejects.toThrow(
+    await expect(exportPastDrawnGate(DECK, { theme })).rejects.toThrow(
       `deck drops content that does not fit the content area, on ${refs.length} pages — ${refs.join("; ")}. `,
     )
   })
 
-  it("leaves validate's structural boundary where it was: the dropping deck still validates (T8)", () => {
-    expect(validateIr(DECK, { theme }).ok).toBe(true)
+  it("is answered by validate too: the pages that drop content, and the cut heading, are refused there", () => {
+    // T8 kept validate structural and this deck passed it. validate draws
+    // every content page now, so the pages pageFit says lose something are
+    // the pages validate refuses.
+    const v = validateIr(DECK, { theme })
+    expect(v.ok).toBe(false)
+    expect([...new Set(v.errors.map((e) => e.slideId))]).toEqual(["blocks", "items", "cut"])
   })
 })

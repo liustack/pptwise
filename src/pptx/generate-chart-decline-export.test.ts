@@ -17,6 +17,7 @@
 import { beforeAll, describe, expect, it } from "vitest"
 import type { PptxIR } from "@/ir"
 import { generatePptx, renderSlideSvg, validateIr } from "@/api"
+import { exportPastDrawnGate } from "./__fixtures__/export-past-drawn-gate"
 import { installNodePlatform } from "../platform/node"
 
 beforeAll(() => {
@@ -75,8 +76,11 @@ function declinedChartDeck(seriesCount: number): PptxIR {
 
 describe("a declined chart blocks the export", () => {
   it("refuses a deck whose chart was handed less than its measured minimum", async () => {
-    // The whole chart declined, so the unit is the component itself.
-    await expect(generatePptx(declinedChartDeck(17))).rejects.toThrow(/deck drops content.*: 1 content block\./s)
+    // The whole chart declined, so the unit is the component itself. validate
+    // draws the page and refuses it first, and the export gate behind it is
+    // reached past validate's drawn gate.
+    await expect(generatePptx(declinedChartDeck(17))).rejects.toThrow(/invalid IR:.*would leave 1 content block off the page/s)
+    await expect(exportPastDrawnGate(declinedChartDeck(17))).rejects.toThrow(/deck drops content.*: 1 content block\./s)
   })
 
   it("still exports the same deck when the caller opts in", async () => {
@@ -142,13 +146,14 @@ describe("a legend that cannot name every series stops the export", () => {
   it("refuses a bar chart whose legend cannot name every series, and the message tells the author to shorten it", async () => {
     // The legend lost series names, and the message says so: an author sent
     // looking for "14 content blocks" on a one-component page finds nothing.
-    await expect(generatePptx(manySeriesBarDeck(16, LONG_NAMES))).rejects.toThrow(
+    await expect(generatePptx(manySeriesBarDeck(16, LONG_NAMES))).rejects.toThrow(/invalid IR:.*\d+ series names/s)
+    await expect(exportPastDrawnGate(manySeriesBarDeck(16, LONG_NAMES))).rejects.toThrow(
       /deck drops content that does not fit the content area.*: \d+ series names\./s,
     )
   })
 
   it("paints no overflow count on the page it refuses", () => {
-    const svg = renderSlideSvg(validateIr(manySeriesBarDeck(16, LONG_NAMES)).ir!, 0)
+    const svg = renderSlideSvg(validateIr(manySeriesBarDeck(16, LONG_NAMES), { allowDroppedContent: true }).ir!, 0)
     expect(svg).toMatch(/data-dropped="[1-9]/)
     expect(svg).not.toContain("data-legend-overflow")
     // No text node is a bare plus-and-count.

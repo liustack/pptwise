@@ -170,7 +170,10 @@ describe("IR validation against the bound theme menu", () => {
     },
   )
 
-  it("reports image-annotate items beyond its annotation capacity as density", () => {
+  it("refuses image-annotate items beyond what its picture page draws, and still reports them as density", () => {
+    // The fifth item used to pass with only the density warning, and the
+    // picture page left it off with a mark the export refused. validate
+    // draws content pages now, so it is refused here, naming the list.
     const id = "annotation-capacity"
     installTheme(id, {
       ...BASE_MENU,
@@ -190,7 +193,15 @@ describe("IR validation against the bound theme menu", () => {
       }),
     )
 
-    expect(result.ok).toBe(true)
+    expect(result.ok).toBe(false)
+    expect(result.errors).toEqual([
+      expect.objectContaining({
+        path: "slides.0.components.1.items",
+        page: 1,
+        slideId: "annotated-photo",
+        message: expect.stringContaining('face "image-annotate" draws 4 of the 5 items in this page\'s bullets'),
+      }),
+    ])
     expect(result.warnings).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

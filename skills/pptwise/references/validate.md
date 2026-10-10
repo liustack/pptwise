@@ -19,6 +19,8 @@ pptwise validate deck-dir/
 
 A cover, chapter or ending sets its heading in a fixed place, and how long a heading fits there differs by theme, from about a dozen Chinese characters to over seventy. validate refuses a heading the bound face would cut or drop, and the error names the face and quotes how much of this very heading it holds on that page, counted in the heading's own characters (a Chinese heading) or words (any other), beside how long the heading is. Shorten the heading, or move part of it into the subheading when the face has one. The subheading is held the same way: validate draws the page with its face and refuses a subheading the face would cut or leave off, quoting how much of it fits there. A heading the face sets whole can still take the room its cards or list stand in, and validate refuses that page too, quoting the heading the face keeps them under. Last, validate draws each cover, chapter and ending page and refuses one its face would leave anything off: a list item or a button's words too long for the line the face sets them on, quoting the part that fits, or a block in a shape the face does not draw, such as a year-scale cover's timeline dated by quarter, or one carrying fields the face has no place for, such as text under a row card a cover sets as a pill. The error says what the face draws of each item and names every item that carries something else.
 
+Content pages are drawn too. validate draws each content page the way render draws it, a plainer layout taking over included, and refuses one that would leave anything off or cut a heading, source line or a component's words. The error names the page, what would be lost (which block, how many items, which text is cut) and, when one more drawing finds it, what to take off: a text to shorten, how many items of a list the page holds, or a field the layout has no place for.
+
 Speaker `notes` export as native PowerPoint notes and never paint on the slide.
 
 ## Render only from the binding
@@ -29,7 +31,7 @@ pptwise render deck-dir/
 
 The `.pptx` is written under `.pptwise/<deck>/`, and the command prints its absolute path. There is no render-time theme switch. The project spec is the binding.
 
-An unfinished project requires explicit `--draft`. Content that would be dropped remains blocked unless the user explicitly accepts `--allow-dropped-content`. Prefer fixing or splitting the page.
+An unfinished project requires explicit `--draft`. Content that would be dropped remains blocked unless the user explicitly accepts `--allow-dropped-content`, which also lets the deck past validate's drawing of its content pages. Prefer fixing or splitting the page.
 
 When changing themes, compare candidates with `pptwise theme try`. A same-menu fork can replace the binding and proceed through assemble, validate, audit, and render. A different menu requires returning to theme selection, then revising the spec and affected page fills before those checks.
 

@@ -17,7 +17,8 @@
 import { beforeAll, describe, expect, it } from "vitest"
 import JSZip from "jszip"
 import type { Component, PptxIR } from "@/ir"
-import { generatePptx } from "@/api"
+import { generatePptx, validateIr } from "@/api"
+import { exportPastDrawnGate } from "./__fixtures__/export-past-drawn-gate"
 import { generatePptxBlob } from "./generate"
 import { installNodePlatform } from "../platform/node"
 
@@ -43,6 +44,20 @@ function makeIr(components: Component[]): PptxIR {
 /** A real export (zip magic "PK"), not a thrown PptwiseError. */
 async function expectExports(components: Component[]): Promise<void> {
   const bytes = await generatePptx(makeIr(components))
+  expect(bytes.length).toBeGreaterThan(10_000)
+  expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
+}
+
+/**
+ * A real export of a page whose words the face cuts. validate refuses a cut
+ * in words a reader needs whole now, so the page is reached past validate's
+ * drawn gate (`exportPastDrawnGate`), with the export's own drop gate still
+ * on: whether a cut still writes a clean package is what such a case pins.
+ */
+async function expectCutExports(components: Component[]): Promise<void> {
+  const ir = makeIr(components)
+  expect(validateIr(ir).ok, "fixture is expected to be cut").toBe(false)
+  const bytes = await exportPastDrawnGate(ir)
   expect(bytes.length).toBeGreaterThan(10_000)
   expect([bytes[0], bytes[1]]).toEqual([0x50, 0x4b])
 }
@@ -153,8 +168,8 @@ describe("sankey pathological values through the real generatePptx", () => {
     ])
   })
 
-  it("over-long node labels truncate and still export cleanly", async () => {
-    await expectExports([
+  it("over-long node labels truncate, and the cut still exports cleanly past validate", async () => {
+    await expectCutExports([
       {
         type: "sankey",
         nodes: [
