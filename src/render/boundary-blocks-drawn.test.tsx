@@ -11,12 +11,12 @@
 import { beforeAll, describe, expect, it } from "vitest"
 import { renderSlideSvg, validateIr } from "@/api"
 import type { PptxIR, Slide } from "@/ir"
-import { componentJsonSchema } from "@/ir/json-schema"
 import { installNodePlatform } from "@/platform/node"
 import { CANONICAL_THEME_IDS } from "@/themes"
 import { getThemeDefinition } from "@/themes/definitions"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { COMPONENT_BUILDERS } from "../../evals/gallery/corpus/components"
+import { plainBlock } from "../../evals/gallery/corpus/block-shapes"
 import { corpusAssets, layoutFaceSlot, layoutPage, type CorpusAssets } from "../../evals/gallery/corpus/decks"
 import { LEXICONS, type LanguageId } from "../../evals/gallery/corpus/lexicon"
 import { nativeLexiconFor } from "../../evals/gallery/corpus/native"
@@ -24,21 +24,6 @@ import { menuFaces } from "../../evals/gallery/matrix"
 import { droppedIn } from "./render-slide"
 import { parseSvgRoot } from "./serialize"
 
-/** `block` with only the properties its schema requires, on the block and on each item of its lists. */
-function plainBlock(type: string, block: Record<string, unknown>): Record<string, unknown> {
-  const schema = componentJsonSchema(type) as { required?: string[]; properties?: Record<string, { items?: { required?: string[] } }> }
-  const required = new Set(schema.required ?? [])
-  const out: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(block)) {
-    if (!required.has(key)) continue
-    const itemRequired = schema.properties?.[key]?.items?.required
-    out[key] =
-      Array.isArray(value) && itemRequired !== undefined
-        ? value.map((item: Record<string, unknown>) => Object.fromEntries(Object.entries(item).filter(([field]) => itemRequired.includes(field))))
-        : value
-  }
-  return out
-}
 
 /** The drawn gate's last resort, which names no reason (`checkBoundaryBlocksDrawn`). */
 const FALLBACK = /Write them in a shape this face draws/

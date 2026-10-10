@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest"
+import { beforeAll, describe, expect, it } from "vitest"
+import { installNodePlatform } from "../platform/node"
 import type { PptxIR, Slide } from "@/ir"
 import { validateIr } from "../validate-core"
 import { deckWritesChinese } from "../lib/conf-labels"
@@ -132,6 +133,11 @@ function probes(face: LayoutDefinition): Probe[] {
 }
 
 const DECLARED = BOUNDARY_FACES.filter((face) => face.headingFit !== undefined || face.headingSet !== undefined)
+
+
+beforeAll(() => {
+  installNodePlatform()
+})
 
 describe("a boundary face's heading answer holds to its drawing", () => {
   it.each(DECLARED.map((face) => [face.id, face] as const))("%s", (_id, face) => {

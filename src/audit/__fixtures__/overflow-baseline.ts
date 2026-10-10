@@ -1,0 +1,57 @@
+import { describe, expect, it } from "vitest"
+import { boundSlideToSvgMarkup } from "../../render/__fixtures__/bound-slide"
+import { auditSvgMarkup } from "../svg-audit"
+import { STRESS_DECKS } from "../stress-fixtures"
+
+// 2026-07-10 主题体系重组后更新为全部 canonical id（custom/magazine 等
+// legacy id 经 resolve 渲染的是承接主题，直接列 canonical 才不漏新版式——
+// 尤其 runway 的 fashion 出血排印要过 data-bleed 豁免后的审计）。
+// W4 补齐 homeroom（原 11/13，缺后加入的第 13 主题）——全集放开后
+// 每主题的自动选型池覆盖到该页型全部 layout，这张安全网必须先覆盖全部
+// 十三主题才能如实兜住新可达的 theme×layout 组合（design decision 8）。
+export const BASELINE_THEMES = [
+  "brief",
+  "thesis",
+  "ledger",
+  "rally",
+  "ink",
+  "bulletin",
+  "terminal",
+  "journal",
+  "runway",
+  "luxe",
+  "homeroom",
+  "clinic",
+  "almanac",
+  "ember",
+  "vermilion",
+] as const
+
+/**
+ * Baseline overflow inventory over pathological content (B-2). All renderer
+ * fixes landed, so every case must now report zero issues. Do not "fix" this
+ * test by tuning fixtures or the auditor — if a case fails, the residual
+ * overflow is real and belongs to the renderer, not this assertion.
+ *
+ * Every stress deck on each theme of `themes`. The themes are shared out
+ * over three test files (`audit-baseline*.test.ts`), which run side by side:
+ * one file of every theme ran for over a minute on one worker, the longest
+ * single file of the suite.
+ */
+export function describeOverflowBaseline(themes: readonly (typeof BASELINE_THEMES)[number][]): void {
+  describe("overflow audit baseline", () => {
+    for (const theme of themes) {
+      for (const [name, deck] of Object.entries(STRESS_DECKS)) {
+        it(`${theme} / ${name}`, () => {
+          const ir = { ...deck, theme: { ...deck.theme, id: theme } }
+          const issues = ir.slides.flatMap((slide, i) =>
+            auditSvgMarkup(boundSlideToSvgMarkup(ir, slide, i)).map(
+              (iss) => `s${i} ${iss.kind} ${iss.text}`,
+            ),
+          )
+          expect(issues).toEqual([])
+        })
+      }
+    }
+  })
+}
