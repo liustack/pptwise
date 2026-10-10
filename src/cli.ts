@@ -17,6 +17,7 @@ import {
   runRender,
   runSchema,
   runSpecValidate,
+  runSpecValidateJson,
   runThemeFork,
   runThemeNew,
   runThemeTry,
@@ -212,8 +213,15 @@ spec
   .command("validate")
   .description("Validate a deck spec JSON file against the schema and strategy-aware hard gates")
   .argument("<spec.json>")
-  .action(async (specPath: string) => {
+  .option("--json", "print the result as JSON: the pages in order (number, id, type, kind, heading, summary), theme, narrative and warnings, or every error")
+  .action(async (specPath: string, opts: { json?: boolean }) => {
     try {
+      if (opts.json) {
+        const { output, ok } = await runSpecValidateJson(specPath)
+        console.log(output)
+        if (!ok) process.exitCode = 1
+        return
+      }
       console.log(await runSpecValidate(specPath))
     } catch (e) {
       fail(e)

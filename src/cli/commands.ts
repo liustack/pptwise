@@ -19,7 +19,7 @@ import { componentJsonSchema } from "../ir/json-schema"
 import { PPTX_ICON_NAMES } from "../icons/catalog"
 import { kindJsonSchema } from "../kind-components"
 import { disassembleDeck, type PageContent } from "../spec/assemble"
-import { formatInvalidSpecError, specJsonSchema, resolveSpecThemeId, validateSpec, type DeckSpec } from "../spec"
+import { formatInvalidSpecError, specJsonSchema, resolveSpecThemeId, validateSpec, type DeckSpec, type SpecValidationIssue } from "../spec"
 import { pageComponentContract, pageContract } from "../inspect/page-contract"
 import { pageFit } from "../inspect/page-fit"
 import { AUDIENCE_VALUES, PACING_BUDGETS, STRATEGY_DEFINITIONS, STRATEGY_VALUES, NARRATIVE_PRESETS, resolveNarrative, type NarrativeProfile } from "../narrative"
@@ -961,6 +961,58 @@ export async function runSpecValidate(specPath: string): Promise<string> {
   const aliasNote = normalizedNote(v.normalized)
   if (aliasNote) lines.push(aliasNote)
   return lines.join("\n")
+}
+
+/** One page of a validated spec, as `spec validate --json` lists it. */
+export interface SpecOutlinePage {
+  page: number
+  id: string
+  type: string
+  kind?: string
+  heading: string
+  summary?: string
+}
+
+/**
+ * `spec validate --json`: the same checks as {@link runSpecValidate}, printed
+ * as one JSON object a program can read. A valid spec carries its pages in
+ * order (number, id, type, kind, heading, summary), the theme and the
+ * resolved narrative, so a caller can show the outline without reading the
+ * spec a second time. An invalid one carries `ok: false` and every error with
+ * its path. A file that cannot be read or parsed still throws, as every other
+ * command does.
+ */
+export async function runSpecValidateJson(specPath: string): Promise<{ output: string; ok: boolean }> {
+  const raw = await loadIrFile(specPath, "spec")
+  const specDir = dirname(resolve(specPath))
+  const resolved = await resolveThemeSelection(themeNameFromUnknown(raw), { startDir: specDir, deckDir: specDir })
+  const v = validateSpec(raw, { theme: resolved?.definition })
+  const issue = (i: SpecValidationIssue) => ({ path: i.path, message: i.message, ...(i.pageId ? { pageId: i.pageId } : {}) })
+  if (!v.ok) {
+    return { ok: false, output: JSON.stringify({ ok: false, errors: v.errors.map(issue), warnings: (v.warnings ?? []).map(issue) }, null, 2) }
+  }
+  const spec = v.spec!
+  const axes = resolveNarrative(spec.narrative as string | Partial<NarrativeProfile> | undefined)
+  const pages: SpecOutlinePage[] = spec.pages.map((page, index) => ({
+    page: index + 1,
+    id: page.id,
+    type: page.type,
+    ...(page.type === "content" ? { kind: page.kind } : {}),
+    heading: page.heading,
+    ...(page.summary !== undefined ? { summary: page.summary } : {}),
+  }))
+  const cover = spec.pages.find((page) => page.type === "cover")
+  const report = {
+    ok: true,
+    theme: resolveSpecThemeId(spec),
+    narrative: { strategy: axes.strategy, pacing: axes.pacing, audience: axes.audience },
+    ...(cover ? { title: cover.heading } : {}),
+    pageCount: pages.length,
+    pages,
+    warnings: (v.warnings ?? []).map(issue),
+    ...(v.normalized && v.normalized.length > 0 ? { normalized: v.normalized } : {}),
+  }
+  return { ok: true, output: JSON.stringify(report, null, 2) }
 }
 
 export interface SchemaCommandOptions {
