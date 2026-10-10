@@ -81,10 +81,10 @@ pptwise brand extract corp-template.pptx \
 
 The output is a self-contained version 2 theme with style tokens, brand tokens, occasions, identity, and a complete menu. It has no base reference and inherits nothing at load time. Bind `acme` in `deck.spec.json`, then project commands resolve `deck-dir/theme.json` automatically.
 
-To compare the result against other named themes, run the fixed fitting-room sample from a directory where all names resolve:
+To show the user the result beside other named themes, draw their own cover in each, from a directory where all names resolve:
 
 ```bash
-pptwise theme try acme,brief,swiss
+pptwise theme try acme,brief,swiss --title "Q3 review"
 ```
 
 The loader checks contrast. If extraction produces unsafe text and background pairs, adjust the extracted theme or create a palette fork. Do not add ad hoc per-page color overrides.

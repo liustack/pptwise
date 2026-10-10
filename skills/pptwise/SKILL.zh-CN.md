@@ -46,9 +46,15 @@ pptwise packs sync
 pptwise themes --json
 ```
 
-配置了 license 时，`packs sync` 会安装或更新用户的内容包，`themes --json` 随后会列出包内主题，并标 `"source": "pack"`。没有 license 时它只打印一行并以 0 退出。失败时转告它的信息，用已装的内容继续。IR 组件契约在填页时按页读取，不整份读。见第 5 步。
+配置了 license 时，`packs sync` 会安装或更新用户的内容包，`themes --json` 随后会列出包内主题，并标 `"source": "pack"`。没有 license 时它只打印一行并以 0 退出。失败时转告它的信息，用已装的内容继续。每个主题行都带 `menu`：`menu.content` 的键就是它提供的内容讲法。IR 组件契约在填页时按页读取，不整份读。见第 5 步。
 
 提问前先扫描工作区。已有 `deck.spec.json` 会记录叙事、绑定主题、页面顺序、标题与每张内容页的 `kind`。deck 内 `theme.json`、工作区 `themes/` 文件、用户点名的主题，或递来的 `.thmx`、`.potx`、带品牌 `.pptx` 都是主题信号。
+
+## 先给用户看，再自己查
+
+主题和大纲两个决定归用户。到这两处时，在对话里展示出来，问过再往下走。用户已经说了不用问（「直接做」「你定」），就不问，但仍然展示主题墙和大纲，说明你选了什么，然后继续。
+
+页面要早给、常给。用户应在第一分钟内看到页面，而不是最后才看到。你自己的检查只看 `pptwise build` 的报告。不要把页面转成 PNG 或读页面图片来判断：报告已经点出每个问题，图是给用户看的。
 
 ## 工作流
 
@@ -60,7 +66,7 @@ pptwise themes --json
 
 先定叙事，再定主题。叙事决定论证方式、节奏与语气。完全匹配时使用具名预设，否则显式写 `strategy`、`pacing`、`audience`。`pacing` 控制编辑预算与正文字号基线。叙事从不选择页面的脸。
 
-继续前先确认叙事包。简洁访谈与 spec 示例见 `references/spec.md`。
+展示主题墙时用一句话说明你选的叙事，让用户的一次回答同时定下两者。简洁访谈与 spec 示例见 `references/spec.md`。
 
 ### 3. 绑定主题
 
@@ -73,19 +79,15 @@ pptwise themes --json
 3. 已装的内容包（`pptwise packs list`）。
 4. 22 个出厂预设。
 
-按请求与工作区信号，用 `occasions` 和 `identity` 筛出候选。用固定样张比较 2 到 4 个候选：
+按请求用 `occasions`、`identity` 和 `menu` 筛出四到六个候选，再让用户看到自己的封面标题在这些主题里的样子。有 `pptwise_themes` 工具时，传入 deck 的封面标题、副标题，并把候选放进 `themes`：用户会在对话里看到每个主题的封面和一张正文页，你拿回主题 id。没有这个工具时，用 CLI 出同样的墙，id 用逗号分隔，或写 `all`：
 
 ```bash
-pptwise theme try brief,swiss,memo
+pptwise theme try <ids> --title "<cover title>" --subtitle "<subtitle>" --json
 ```
 
-创建就是拷贝。没有现成资产时，把最接近的预设拷进工作区。有 Office 品牌文件时，抽取配色与字体，同时拷入合适的菜单。要改色时，fork 当前主题，让整套配色重新派生，原主题保持不动。
+它打印一份清单，列出每个主题的一张封面 SVG 和一张正文 SVG，外加 `contact-sheet.html`。宿主能显示图片时把这些 SVG 给用户看，否则交出联系表的路径。然后问用户要哪个主题，用户让你定时就说明你选了哪个。
 
-```bash
-pptwise theme new --from brief --id acme-report
-pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief
-pptwise theme fork acme --primary '#0B5FFF' --id acme-blue
-```
+创建就是拷贝：把最接近的预设拷进工作区、从 Office 文件抽取品牌，或为改色 fork 一份。命令见 `references/spec.md`。
 
 写页面内容之前，把选中的主题名写进 `deck.spec.json`。绑定后的 deck 命令只读这个名字，没有渲染时临时换主题。
 
@@ -104,6 +106,8 @@ spec 的 `footer` 不要，deck 就不印页码、机构名、日期和保密字
 
 运行 `pptwise spec validate deck.spec.json`，直到打印 `OK`。内容页 `kind` 不在绑定主题菜单中时会硬报错，并列出菜单提供的词。不要为了消错给页面贴一个失真的词。只有页面意图确实匹配时才换词，否则回到主题层。
 
+校验通过的 spec 就是大纲。按每页一行展示给用户：页码、页型或 `kind`、标题、这一页讲什么。有 `pptwise_preview` 工具时，同时对 deck 目录调用它，让用户在动笔写页之前就看到封面和整套页序。用户没说直接做就请他提修改。
+
 11 个词及边界见 `references/layouts.md`。完整 spec 与主题创建流程见 `references/spec.md`。
 
 ### 5. 填页面
@@ -121,28 +125,21 @@ pptwise inspect deck-dir/ --page <id> --fit
 pptwise icons
 ```
 
-每批完成后运行：
+每批写完都 build 一次。有 `pptwise_build` 工具时用它，它会把目前画好的页面展示给用户。否则运行：
 
 ```bash
-pptwise assemble deck-dir/
-pptwise validate deck-dir/
+pptwise build deck-dir/ --json
 ```
 
-修完每个错误后重跑两条命令。重组内容，不要删除校验抓到的信息。
+`errors` 里的每一项都写明 `page`、要改的 `file` 与 `field`，以及检查自带的改法。修完每个错误再 build。重组内容，不要删除检查抓到的信息。还没写的页会被报为尚未写，最后一批之前这是正常的。
 
-### 6. 审查、预览与渲染
+### 6. 构建、审阅与交付
 
-所有页面填完后运行：
+所有页面写完后，build 到 `status` 为 `ok`。build 一次跑完 assemble、validate、audit、preview 和 render，全部通过才写出 `.pptx`。报告里的 `pptx` 就是这份 deck 唯一的最终文件，位于 `.pptwise/<deck>/` 下。
 
-```bash
-pptwise audit deck-dir/
-pptwise preview deck-dir/ --html
-pptwise render deck-dir/
-```
+只交付这一份文件。不要再跑 `render`，不要复制、改名或另导出一份 `.pptx`。在 DSH 上用 `present` 交给用户。其他宿主报出它的绝对路径。没有对话内预览工具时，同时给出报告里的 `preview.html` 路径，或运行 `pptwise serve deck-dir/ --no-open` 做实时浏览器审阅。
 
-交付前 `audit` 必须以 0 退出。文字压在照片背景上时加 `--pixels`。有 `pptwise_preview` 工具时优先使用。否则交付命令打印的 `preview.html` 路径，或运行 `pptwise serve deck-dir/ --no-open` 做实时浏览器审阅。把 `render` 打印的 `.pptx` 绝对路径报给用户。
-
-只有用户明确接受妥协时才使用 `--draft` 或 `--allow-dropped-content`。
+文字压在照片背景上时另跑 `pptwise audit deck-dir/ --pixels`。只有用户明确接受妥协时才使用 `render --draft` 或 `--allow-dropped-content`。
 
 ## 快速组件分派
 
@@ -158,7 +155,7 @@ pptwise render deck-dir/
 | 借别人之口 | `quote` | `blockquote` |
 | 一个数字就是全部 | `fact` | 单项 `kpi_cards`、`pictogram`，也可以没有组件 |
 | 断言配一件展品 | `evidence` | `image`、`chart`、`data_table`、`code`、`device_mockup`、`sketch` |
-| 包含或层级 | `hierarchy` | `architecture`、`bmc`、`five_forces`、`rings`、`hub_spoke`、`decision_tree`、`org_tree`、`issue_tree`、`pyramid`、`iceberg`、`pillar_model` |
+| 包含或层级 | `hierarchy` | `architecture`、`bmc`、`five_forces`、`rings`、`hub_spoke`、`decision_tree`、`org_tree`、`issue_tree`、`pyramid`、`iceberg`、`pillar_model`、`fishbone`、`segmented_wheel` |
 
 ## 规则
 
@@ -177,4 +174,4 @@ pptwise render deck-dir/
 - `references/density.md`：节奏、容量、独占页面组件与局部装饰。
 - `references/branding.md`：页脚标记（页码、机构名、保密标识）、deck 品牌姿态、无框页面、logo 与品牌抽取。
 - `references/images.md`：图片资产、图库、生图，以及 `photo` 和 `evidence` 的边界。
-- `references/validate.md`：assemble、validate、audit、preview、serve、render 与修订循环。
+- `references/validate.md`：build、assemble、validate、audit、preview、serve、render 与修订循环。

@@ -35,19 +35,19 @@ When essential facts are missing and a user is present, ask one compact round:
 3. Should the argument lead with a conclusion, unfold as a story, teach a sequence, showcase an image or number, or read as a compact briefing?
 4. Should pages be dense, balanced, or spacious?
 
-Use `pptwise narratives --json` to map the answer to a named preset or to explicit `strategy`, `pacing`, and `audience`. Do not infer the narrative from brand colors. Confirm this package before choosing a theme.
+Use `pptwise narratives --json` to map the answer to a named preset or to explicit `strategy`, `pacing`, and `audience`. Do not infer the narrative from brand colors. Say this package in one line when you show the user the theme wall, so one answer settles both.
 
 ## Choose, create, and bind a theme
 
 Theme is the second decision and must be settled before the spec. A theme is one complete file with style, a page menu, optional brand rules, `occasions`, and `identity`. The menu serves a deliberate subset of the 11 content kinds.
 
-Shortlist by occasion first and identity strength second. Compare two to four candidates with the fixed fitting-room sample:
+Shortlist four to six candidates by occasion first, identity strength second, and `menu` third. The user chooses from the candidates drawn with their own cover title. Use a `pptwise_themes` tool when the host has one. Otherwise draw the wall with the CLI:
 
 ```bash
-pptwise theme try brief,swiss,memo
+pptwise theme try brief,swiss,memo --title "Q3 review" --subtitle "Board meeting" --json
 ```
 
-`theme try` renders the same fixed sample deck under every candidate. It is the only place to compare themes without binding a deck. Choose from the images, not from names alone.
+With `--title`, `theme try` draws the cover and one content page in each named theme, any number of them or `all`, and prints a manifest that names one SVG per page plus `contact-sheet.html`. `--lang zh` or `--lang en` sets the language of the default content page. `--page <file>` draws one of the deck's own content pages instead, written as a page carries it, with its `kind`. A page a theme cannot draw is left out of that theme's row, and the manifest says why. Show the user the SVGs or the contact sheet. They are for the user: do not read them yourself to judge a theme. Without `--title`, `theme try` renders a fixed English sample deck under two to four themes.
 
 Create means copy. Prefer a workspace-owned theme even when the starting point is a factory preset:
 
@@ -178,7 +178,7 @@ Do not force a nearby word merely to pass validation. A menu gap is a theme deci
 
 ## Rebinding after work starts
 
-A color fork with the same menu may replace the bound theme. Update the bound name and rerun spec validation, assemble, validate, audit, and render.
+A color fork with the same menu may replace the bound theme. Update the bound name, rerun spec validation, then build again.
 
 A theme with a different menu is not a repaint. It requires restarting at the theme layer and rewriting the spec. The CLI compares normalized menus directly and refuses an in-place different-menu rebind.
 
