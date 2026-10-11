@@ -61,6 +61,7 @@
 import { describe, expect, it } from "vitest"
 import { THEME_STYLES, CANONICAL_THEME_IDS } from "./index"
 import { contrastRatio } from "@/render/ink"
+import { isVividBlue, isVividOrange } from "./chart-taboo"
 
 function hexToRgb(hex: string): [number, number, number] {
   const v = parseInt(hex.slice(1), 16)
@@ -106,16 +107,6 @@ function deltaE(a: string, b: string): number {
   const x = toLab(a)
   const y = toLab(b)
   return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2])
-}
-
-const VIVID = 0.35
-function isVividOrange(hex: string): boolean {
-  const { hue, sat } = hueSat(hex)
-  return sat >= VIVID && hue >= 15 && hue <= 50
-}
-function isVividBlue(hex: string): boolean {
-  const { hue, sat } = hueSat(hex)
-  return sat >= VIVID && hue >= 195 && hue <= 260
 }
 
 /**
