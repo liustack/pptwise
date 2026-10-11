@@ -60,16 +60,16 @@ pptwise theme try brief,swiss,memo --title "Q3 review" --subtitle "Board meeting
 pptwise theme new --from brief --id acme-report
 ```
 
-有 Office 主题或模板时，先按场合选择菜单来源，再把配色与字体抽进一个完整的 v2 文件：
+有 Office 主题或模板时，先按场合选主题，再用模板的品牌色和字体给它重新上色。主题保留自己的菜单、纸色和文字色：
 
 ```bash
 pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief
 ```
 
-已有主题要改色时，fork 它。fork 保持菜单逐字节相同，并重新派生整套配色：
+已有主题要换成品牌色时，用 `--brand` fork 它。fork 保持菜单逐字节相同，并围绕这个颜色重新上色：
 
 ```bash
-pptwise theme fork acme --primary '#0B5FFF' --id acme-blue
+pptwise theme fork acme --brand '#0B5FFF' --id acme-blue
 ```
 
 主题名按四级解析：

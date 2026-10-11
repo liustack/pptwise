@@ -46,9 +46,9 @@ Fill no more than four pages between validation passes, and read each page's con
 | `disassemble <ir.json>` | Split IR v5 into a spec, page files, and assets. |
 | `themes` | List the 22 factory presets and installed pack themes, with metadata. |
 | `theme new` | Copy a named theme into a self-contained v2 file. |
-| `theme fork` | Copy a theme and rederive its palette around new anchors. |
+| `theme fork` | Copy a theme and repaint it around one brand color, or around exact anchor colors. |
 | `theme try` | Render the fixed fitting-room sample across two to four themes, or the caller's own cover and one content page across any number of themes. |
-| `brand extract` | Extract Office colors and fonts into a complete v2 theme. |
+| `brand extract` | Repaint a theme around an Office template's brand color and fonts. |
 | `narratives` | List named narrative presets and axes. |
 | `icons` | List every icon name an `icon` field accepts. |
 | `layouts` | Inspect the internal face registry for engine maintenance. |
@@ -218,6 +218,9 @@ pptwise themes [--json]
 pptwise theme new --from <preset-or-name> \
   [-o <theme.json>] [--id <id>] [--label <label>]
 
+pptwise theme fork <name> --brand "#C8102E" \
+  [-o <theme.json>] [--id <id>] [--label <label>]
+
 pptwise theme fork <name> --primary "#0B5FFF" \
   [--bg <hex>] [--accent <hex>] [--text <hex>] [--surface <hex>] \
   [-o <theme.json>] [--id <id>] [--label <label>]
@@ -229,7 +232,12 @@ pptwise theme try [<id,...|all>] --title <text> [--occasion <words>] \
 
 `theme new` copies a preset or resolved workspace theme. Pass either an output path or an id. A created theme is complete and independent.
 
-`theme fork` preserves the menu, rederives dependent style tokens, and runs the contrast gate. Quote hex values in shells where `#` begins a comment.
+`theme fork` preserves the menu and runs the contrast gate. It repaints in one of two ways, which do not mix:
+
+- `--brand <hex>` keeps the theme's own ground, text, and surface and puts the brand color where the theme shows color most, then turns the theme's other colors by the same hue step. The command prints where the brand went, and says so when it had to lighten or darken the brand to read on the theme's ground. See [Brand extraction](./brand-extraction.md#repainting-around-a-brand-color) for the rules.
+- `--primary <hex>`, with any of `--accent`, `--bg`, `--text`, `--surface`, sets those tokens exactly and rederives the rest around them. Use it when you need exact control.
+
+Passing `--brand` together with any anchor flag is an error. Quote hex values in shells where `#` begins a comment.
 
 `theme try` requires two to four distinct names. It writes a contact sheet under `.pptwise/theme-try/` by default. It never changes a deck binding.
 
@@ -283,7 +291,7 @@ pptwise brand extract <file.thmx|file.potx|file.pptx> \
   [--id <id>] [--label <label>] [--from <donor>]
 ```
 
-Extraction is local. It copies the donor's complete menu, applies extracted color and font anchors through full palette derivation, and writes a complete v2 theme. `--from` defaults to `brief`.
+Extraction is local. It reads the template's brand color (its `accent1`) and its fonts, repaints the `--from` theme around that color the way `theme fork --brand` does, and writes a complete v2 theme with the template's fonts. The template's background, text, and other accent colors are not used. `--from` defaults to `brief`.
 
 ## Narratives and engine inspection
 

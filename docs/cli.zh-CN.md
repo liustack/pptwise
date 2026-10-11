@@ -46,9 +46,9 @@ pptwise preview deck-dir/ --html
 | `disassemble <ir.json>` | 把 IR v5 拆成 spec、页面文件与资产。 |
 | `themes` | 列出 22 个出厂预设与已装内容包的主题，附元数据。 |
 | `theme new` | 把命名主题拷贝为自包含 v2 文件。 |
-| `theme fork` | 拷贝主题，并围绕新锚色重推导配色。 |
+| `theme fork` | 拷贝主题，围绕一个品牌色或几个指定锚色重新上色。 |
 | `theme try` | 用两到四个主题渲染固定试衣样稿，或用任意多个主题渲染调用方自己的封面和一页正文。 |
-| `brand extract` | 从 Office 文件抽取颜色与字体，产出完整 v2 主题。 |
+| `brand extract` | 用 Office 模板的品牌色和字体给一个主题重新上色。 |
 | `narratives` | 列出命名叙事预设与三轴。 |
 | `icons` | 列出 `icon` 字段接受的全部图标名。 |
 | `layouts` | 为引擎维护检查内部脸注册表。 |
@@ -218,6 +218,9 @@ pptwise themes [--json]
 pptwise theme new --from <preset-or-name> \
   [-o <theme.json>] [--id <id>] [--label <label>]
 
+pptwise theme fork <name> --brand "#C8102E" \
+  [-o <theme.json>] [--id <id>] [--label <label>]
+
 pptwise theme fork <name> --primary "#0B5FFF" \
   [--bg <hex>] [--accent <hex>] [--text <hex>] [--surface <hex>] \
   [-o <theme.json>] [--id <id>] [--label <label>]
@@ -229,7 +232,12 @@ pptwise theme try [<id,...|all>] --title <text> [--occasion <words>] \
 
 `theme new` 拷贝一个预设或已解析的工作区主题。输出路径与 id 至少传一个。新主题是完整且独立的对象。
 
-`theme fork` 保留菜单，重推导依赖样式 token，并运行对比度门。在把 `#` 识别为注释起点的 shell 中，应给 hex 加引号。
+`theme fork` 保留菜单，并运行对比度门。重新上色有两种方式，不能混用：
+
+- `--brand <hex>` 保留主题自己的底色、文字色和面板色，把品牌色放进主题最显眼的彩色位置，主题其余的彩色按同样的色相差一起转。命令会打印品牌色放进了哪里，为了在主题底色上看得清而调过明暗时也会说明。规则见[品牌抽取](./brand-extraction.md#repainting-around-a-brand-color)。
+- `--primary <hex>`，可再加 `--accent`、`--bg`、`--text`、`--surface`，按字面设置这些 token，其余围绕它们重推导。需要精确控制时用它。
+
+`--brand` 与任何锚色旗标一起给会报错。在把 `#` 识别为注释起点的 shell 中，应给 hex 加引号。
 
 `theme try` 要求两个到四个互不重复的名称。默认把对比图写到 `.pptwise/theme-try/`。它永远不会修改 deck 绑定。
 
@@ -283,7 +291,7 @@ pptwise brand extract <file.thmx|file.potx|file.pptx> \
   [--id <id>] [--label <label>] [--from <donor>]
 ```
 
-抽取完全在本机运行。它复制供体的完整菜单，把抽出的颜色与字体锚点送入整套配色推导，并写出完整 v2 主题。`--from` 默认是 `brief`。
+抽取完全在本机运行。它读出模板的品牌色（`accent1`）和字体，按 `theme fork --brand` 的同一套规则给 `--from` 指定的主题重新上色，再换上模板的字体，写出完整 v2 主题。模板的背景色、文字色和其余强调色都不使用。`--from` 默认是 `brief`。
 
 ## 叙事与引擎检查
 

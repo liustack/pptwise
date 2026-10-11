@@ -156,7 +156,13 @@ Project commands load this file automatically. `serve` rereads it and refreshes 
 
 ## Change a palette with a fork
 
-Never edit one shared token as an isolated patch. Fork the theme and let pptwise rederive the complete palette around the chosen anchors:
+Never edit one shared token as an isolated patch. Fork the theme. With one brand color, `--brand` keeps the theme's ground and text and repaints its colored slots around the brand (see [Brand extraction](./brand-extraction.md#repainting-around-a-brand-color)):
+
+```bash
+pptwise theme fork acme-report --brand "#C8102E" -o themes/acme-red.theme.json --id acme-red
+```
+
+For exact control, set the anchors yourself and let pptwise rederive the complete palette around them:
 
 ```bash
 pptwise theme fork acme-report \
@@ -179,6 +185,6 @@ pptwise brand extract corp.pptx \
   --from brief
 ```
 
-Extraction runs locally, reads Office colors and fonts, copies the donor's complete menu, rederives the full token system, and writes a complete v2 file. Choose the donor for its menu and occasion fit, not only its colors. See [Brand extraction](./brand-extraction.md).
+Extraction runs locally, reads the template's brand color and fonts, and repaints the donor around that color the way `theme fork --brand` does, keeping the donor's menu, ground, and text. Choose the donor for its menu, occasion fit, and look, not for its colors. See [Brand extraction](./brand-extraction.md).
 
 Every loaded theme passes strict schema, face-parameter, and contrast checks. Fix the theme at its source when one fails. Do not compensate with per-page color overrides.

@@ -68,9 +68,9 @@ The deck posture is only the broad permission. A face may carry the structural f
 
 This is intentional for faces whose composition has no safe brand frame. It is not a missing logo bug and it must not be repaired with page content. Theme motifs are separate from branding and remain governed by the face and menu decoration rules. A motif never prints footer information the deck did not ask for. Two motifs carry footer marks in a place of their own: brief's footer motif draws the whole footer row, and ink's colophon rail sets the organization down the right edge. A motif that draws in the footer strip, such as homeroom's two notebook lines, leaves it to the footer when the footer row is on.
 
-## Extract a complete v2 theme
+## Repaint a theme in the brand's color
 
-When the user supplies a `.thmx`, `.potx`, or branded `.pptx`, extract colors and fonts locally. Choose a donor whose menu fits the intended story because extraction copies that complete menu.
+When the user supplies a `.thmx`, `.potx`, or branded `.pptx`, extract its brand color and fonts locally. Pick the theme to repaint for its menu and its look: extraction keeps that theme's menu, paper, text, and surface, and only moves its colored slots onto the brand color (the template's `accent1`).
 
 ```bash
 pptwise brand extract corp-template.pptx \
@@ -78,6 +78,14 @@ pptwise brand extract corp-template.pptx \
   --id acme \
   --from brief
 ```
+
+When the user names a brand color instead of a file, fork the theme with `--brand`. It is the same repaint, keeping the theme's fonts:
+
+```bash
+pptwise theme fork ink --brand "#C8102E" -o deck-dir/theme.json --id acme
+```
+
+Both print where the brand went. The brand goes into the color the theme shows most when it reads there, otherwise into the theme's other color, otherwise in a lighter or darker shade of itself. Tell the user when the output says the brand was changed, and show the result. Use `--primary`, `--accent`, `--bg`, `--text`, `--surface` instead of `--brand` only when the user wants those exact tokens.
 
 The output is a self-contained version 2 theme with style tokens, brand tokens, occasions, identity, and a complete menu. It has no base reference and inherits nothing at load time. Bind `acme` in `deck.spec.json`, then project commands resolve `deck-dir/theme.json` automatically.
 
@@ -87,4 +95,4 @@ To show the user the result beside other named themes, draw their own cover in e
 pptwise theme try acme,brief,swiss --title "Q3 review"
 ```
 
-The loader checks contrast. If extraction produces unsafe text and background pairs, adjust the extracted theme or create a palette fork. Do not add ad hoc per-page color overrides.
+Both commands check contrast before writing. Do not add ad hoc per-page color overrides.

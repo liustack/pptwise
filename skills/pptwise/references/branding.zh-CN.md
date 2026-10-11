@@ -73,9 +73,9 @@ Deck 姿态只是广义许可。一张脸可以把 `branding: "none"` 作为不�
 
 这适用于构图本身没有安全品牌框的脸。它不是 logo 丢失，也不应通过页面内容补救。主题装饰与品牌相互独立，仍由脸与菜单的装饰规则决定。装饰不会印 deck 没要的页脚信息。有两个装饰在自己的位置上承担页脚标记：brief 的页脚装饰画整行页脚，ink 的落款列把机构名竖排在右缘。画在页脚带里的装饰（例如 homeroom 的两条作业本横线）在页脚行出现时让位。
 
-## 抽取完整 v2 主题
+## 用品牌色给主题重新上色
 
-用户提供 `.thmx`、`.potx` 或带品牌的 `.pptx` 时，在本机抽取颜色和字体。先选择一个菜单适合目标故事的供体，因为抽取结果会完整复制该菜单。
+用户提供 `.thmx`、`.potx` 或带品牌的 `.pptx` 时，在本机抽取品牌色和字体。按菜单和观感选要上色的主题：抽取保留这个主题的菜单、纸色、文字色和面板色，只把它的彩色位置换成品牌色（模板的 `accent1`）。
 
 ```bash
 pptwise brand extract corp-template.pptx \
@@ -83,6 +83,14 @@ pptwise brand extract corp-template.pptx \
   --id acme \
   --from brief
 ```
+
+用户给的是一个品牌色而不是文件时，用 `--brand` fork 主题。规则相同，字体保留主题自己的：
+
+```bash
+pptwise theme fork ink --brand "#C8102E" -o deck-dir/theme.json --id acme
+```
+
+两条命令都会打印品牌色放进了哪里。品牌色在主题最显眼的彩色位置看得清就放进去，否则放进主题的另一个彩色位置，再不行就调亮或调暗后放进去。输出说品牌色被调过时告诉用户，并给用户看结果。只有用户要精确指定某些 token 时，才用 `--primary`、`--accent`、`--bg`、`--text`、`--surface` 代替 `--brand`。
 
 输出是自包含的版本 2 主题，包含样式 token、品牌 token、场合、个性强度和完整菜单。它没有基础引用，加载时也不继承任何东西。在 `deck.spec.json` 中绑定 `acme` 后，项目命令会自动解析 `deck-dir/theme.json`。
 
@@ -92,4 +100,4 @@ pptwise brand extract corp-template.pptx \
 pptwise theme try acme,brief,swiss --title "Q3 review"
 ```
 
-装载器会检查对比度。抽取结果若产生不安全的文字与背景组合，应调整主题或创建配色分叉，不要增加临时的单页颜色覆盖。
+两条命令写文件前都会检查对比度。不要增加临时的单页颜色覆盖。
