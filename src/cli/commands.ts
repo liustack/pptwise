@@ -106,7 +106,8 @@ import {
   type ThemeInputs,
 } from "./theme-inputs"
 import { forkTheme } from "./theme-fork"
-import { describePlacement, regenerateFromBrand } from "./brand-regen"
+import { describePlacement, parseBrandOption, regenerateFromBrand } from "./brand-regen"
+import { isChromatic } from "./brand-face"
 import { THEME_TRY_SAMPLE_IR } from "./fixtures/theme-try-sample"
 import { offeredContentKinds } from "../render/layout-selection"
 
@@ -1393,8 +1394,9 @@ function rethrowBrandColorError(error: unknown, id: string): never {
 
 /**
  * `pptwise brand extract <file> -o <out.theme.json> [--id] [--label] [--from]`
- * reads the template's brand color (its accent1) and fonts locally, then
- * repaints the donor theme around that one color (`./brand-regen.ts`). The
+ * reads the template's brand color (its accent1), the second color the
+ * company paired with it (accent2), and its fonts locally, then repaints
+ * the donor theme around them (`./brand-regen.ts`). The
  * donor keeps its ground, text, and surface. Contrast failure is a hard
  * error.
  */
@@ -1417,14 +1419,20 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
   const cwd = dirname(resolve(opts.output))
   const donorResolved = await resolveThemeByName(from, { startDir: cwd })
   const donor = await themeFileFromResolved(donorResolved, { id: extracted.id, label: extracted.label })
-  // The template's accent1 is its brand color. Its dk1/lt1 ground and its
-  // other accents are left behind: Office templates nearly all carry plain
-  // black on white there, which says nothing about the brand and would
-  // wipe out the donor's own paper.
+  // The template's accent1 is its brand color and accent2 the second color
+  // the company paired with it. Its dk1/lt1 ground and its other accents
+  // are left behind: Office templates nearly all carry plain black on white
+  // there, which says nothing about the brand and would wipe out the
+  // donor's own paper.
   const brandColor = extracted.style.colors.primary
+  const secondColor = extracted.style.colors.accent
+  const colors =
+    secondColor.toUpperCase() !== brandColor.toUpperCase() && isChromatic(secondColor)
+      ? { brand: brandColor, second: secondColor }
+      : { brand: brandColor }
   let result: ReturnType<typeof regenerateFromBrand>
   try {
-    result = regenerateFromBrand(donor, brandColor, { id: extracted.id, label: extracted.label, fonts: extracted.style.fonts })
+    result = regenerateFromBrand(donor, colors, { id: extracted.id, label: extracted.label, fonts: extracted.style.fonts })
   } catch (error) {
     rethrowBrandColorError(error, id)
   }
@@ -1480,14 +1488,15 @@ export interface ThemeForkOptions {
 const FORK_ANCHOR_FLAGS = ["primary", "accent", "bg", "text", "surface"] as const
 
 /** `pptwise theme fork <name> --brand <#hex>` repaints the source around one
- *  brand color (`./brand-regen.ts`). `--primary <#hex>` and the other anchor
+ *  brand color, or a brand color and its second color joined by a comma
+ *  (`./brand-regen.ts`). `--primary <#hex>` and the other anchor
  *  flags set those tokens literally and rederive the rest. The two ways do
  *  not mix. Contrast failure is a hard error. */
 export async function runThemeFork(name: string, opts: ThemeForkOptions): Promise<string> {
   const anchors = FORK_ANCHOR_FLAGS.filter((flag) => opts[flag] !== undefined)
   if (opts.brand !== undefined && anchors.length > 0) {
     throw new PptwiseError(
-      `--brand repaints the theme around one color and cannot be combined with ${anchors.map((flag) => `--${flag}`).join(", ")}. Use --brand alone, or set the tokens exactly with --primary and friends`,
+      `--brand repaints the theme around a brand color and cannot be combined with ${anchors.map((flag) => `--${flag}`).join(", ")}. Use --brand alone, or set the tokens exactly with --primary and friends`,
     )
   }
   if (opts.brand === undefined && opts.primary === undefined) {
@@ -1498,7 +1507,7 @@ export async function runThemeFork(name: string, opts: ThemeForkOptions): Promis
   const resolved = await resolveThemeByName(name, { startDir: cwd })
   const source = await themeFileFromResolved(resolved, { id, label: opts.label })
   if (opts.brand !== undefined) {
-    const result = regenerateFromBrand(source, opts.brand, { id, label: opts.label ?? source.label })
+    const result = regenerateFromBrand(source, parseBrandOption(opts.brand), { id, label: opts.label ?? source.label })
     await writeThemeFile(output, result.file, opts.force === true)
     return [
       `wrote ${output} (theme "${result.file.id}"). Set spec.theme to "${result.file.id}".`,

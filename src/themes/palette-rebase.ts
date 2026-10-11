@@ -133,3 +133,64 @@ export function oklchChroma(hex: string): number {
   const [, a, b] = hexToOklab(hex)
   return Math.hypot(a, b)
 }
+
+/** A color in OKLCH: lightness 0 to 1, chroma, and hue in degrees. */
+export interface Oklch {
+  L: number
+  C: number
+  h: number
+}
+
+export function hexToOklch(hex: string): Oklch {
+  const [L, a, b] = hexToOklab(hex)
+  return { L, C: Math.hypot(a, b), h: ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360 }
+}
+
+function oklabToLinearRgb(L: number, a: number, b: number): [number, number, number] {
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ]
+}
+
+function inGamut(rgb: readonly number[]): boolean {
+  return rgb.every((v) => v >= -1e-4 && v <= 1 + 1e-4)
+}
+
+function encodeChannel(value: number): string {
+  const v = clamp(value)
+  const encoded = v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055
+  return Math.round(clamp(encoded) * 255).toString(16).padStart(2, "0")
+}
+
+/**
+ * The sRGB hex of an OKLCH color. A color outside sRGB keeps its lightness
+ * and hue and gives up chroma until it fits, so a light blue asked for at a
+ * yellow's chroma comes out the most saturated light blue a screen shows.
+ */
+export function oklchToHex({ L, C, h }: Oklch): string {
+  const rad = (h * Math.PI) / 180
+  const at = (chroma: number) => oklabToLinearRgb(clamp(L), chroma * Math.cos(rad), chroma * Math.sin(rad))
+  let rgb = at(C)
+  if (!inGamut(rgb)) {
+    let lo = 0
+    let hi = C
+    for (let i = 0; i < 30; i++) {
+      const mid = (lo + hi) / 2
+      if (inGamut(at(mid))) lo = mid
+      else hi = mid
+    }
+    rgb = at(lo)
+  }
+  return `#${rgb.map(encodeChannel).join("")}`.toUpperCase()
+}
+
+/** The angle between two hues, 0 to 180 degrees. */
+export function hueDistance(a: number, b: number): number {
+  const d = Math.abs((((a - b) % 360) + 360) % 360)
+  return d > 180 ? 360 - d : d
+}

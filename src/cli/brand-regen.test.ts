@@ -5,15 +5,22 @@ import { contrastRatio } from "../render/ink"
 import { CANONICAL_THEME_IDS } from "../themes"
 import { paletteBreaksTaboo } from "../themes/chart-taboo"
 import { compileThemeDefinition } from "../themes/definitions"
-import { hexToHsl, hueDelta } from "../themes/palette-rebase"
+import { hexToOklch, hueDistance, oklabDistance } from "../themes/palette-rebase"
 import type { ThemeFile } from "../themes/schema"
-import { measureBrandFace, type BrandFace } from "./brand-face"
-import { regenerateFromBrand, type BrandRegenResult } from "./brand-regen"
+import { isChromatic, measureBrandFace, renderBrandSample, type BrandFace } from "./brand-face"
+import { isSingleColorPalette, parseBrandOption, regenerateFromBrand, type BrandColors, type BrandRegenResult } from "./brand-regen"
 import { themeFileFromPreset } from "./theme-resolve"
 
 installNodePlatform()
 
-const BRANDS = ["#F09415", "#156082", "#C8102E", "#00843D"] as const
+const ORANGE = "#F09415" // Berlin's accent1
+const BLUE = "#156082" // Office's accent1
+const RED = "#C8102E"
+const GREEN = "#00843D"
+const OFFICE: BrandColors = { brand: BLUE, second: "#E97132" } // Office's accent1 and accent2
+const SINGLE = [ORANGE, BLUE, RED, GREEN].map((brand) => ({ brand }))
+const ALL: BrandColors[] = [...SINGLE, OFFICE]
+const name = (c: BrandColors) => (c.second ? `${c.brand},${c.second}` : c.brand)
 
 const sources = new Map<string, { file: ThemeFile; face: BrandFace }>()
 function source(id: string): { file: ThemeFile; face: BrandFace } {
@@ -26,93 +33,264 @@ function source(id: string): { file: ThemeFile; face: BrandFace } {
   return hit
 }
 
-function regen(id: string, brand: string): BrandRegenResult {
-  const { file, face } = source(id)
-  return regenerateFromBrand(file, brand, { id: `${id}-brand` }, face)
+const results = new Map<string, BrandRegenResult>()
+function regen(id: string, colors: BrandColors | string): BrandRegenResult {
+  const c = typeof colors === "string" ? { brand: colors } : colors
+  const key = `${id} ${name(c)}`
+  let hit = results.get(key)
+  if (hit === undefined) {
+    const { file, face } = source(id)
+    hit = regenerateFromBrand(file, c, { id: `${id}-brand` }, face)
+    results.set(key, hit)
+  }
+  return hit
 }
 
-const hue = (hex: string) => hexToHsl(hex).h
+/** Every color the repaint wrote that a reader sees as a color: slots, chart, pool, emphasis ink. */
+function written(file: ThemeFile): string[] {
+  const c = file.style.colors
+  return [c.primary, c.accent, ...c.chartPalette, ...(c.accentPool ?? []), ...(c.emphasisInk ? [c.emphasisInk] : [])]
+}
 
-describe("R2: the brand goes where it reads, unchanged when it can", () => {
-  it("goes into the face unchanged when it reads there (ink's seal takes a red)", () => {
-    const { file, placement } = regen("ink", "#C8102E")
-    expect(placement).toMatchObject({ face: "accent", slot: "accent", route: "face", color: "#C8102E" })
-    expect(file.style.colors.accent).toBe("#C8102E")
+/** The theme's own colors the repaint left in their own place. */
+function keptOwn(src: ThemeFile, out: ThemeFile): Set<string> {
+  const a = src.style.colors
+  const b = out.style.colors
+  const kept = new Set<string>()
+  if (a.primary.toUpperCase() === b.primary.toUpperCase()) kept.add(b.primary.toUpperCase())
+  if (a.accent.toUpperCase() === b.accent.toUpperCase()) kept.add(b.accent.toUpperCase())
+  if (a.emphasisInk && b.emphasisInk && a.emphasisInk.toUpperCase() === b.emphasisInk.toUpperCase()) kept.add(b.emphasisInk.toUpperCase())
+  return kept
+}
+
+/**
+ * The hue rule: a color the repaint wrote is an ink or a grey, a color the
+ * theme kept in its own place, or within 30 degrees (OKLCH hue) of the
+ * brand or of the company's second color.
+ */
+function strayHues(id: string, colors: BrandColors): string[] {
+  const out = regen(id, colors).file
+  const kept = keptOwn(source(id).file, out)
+  const family = [colors.brand, ...(colors.second ? [colors.second] : [])].map((hex) => hexToOklch(hex).h)
+  return written(out).filter((hex) => {
+    if (!isChromatic(hex) || kept.has(hex.toUpperCase())) return false
+    const h = hexToOklch(hex).h
+    return !family.some((f) => hueDistance(h, f) <= 30)
+  })
+}
+
+describe("rule 1: the brand goes in as it is, and the words change ink", () => {
+  it("fills bulletin's cover field with Berlin's orange as it is", () => {
+    const { file, placement } = regen("bulletin", ORANGE)
+    expect(file.style.colors.primary).toBe(ORANGE)
+    expect(placement.brand).toMatchObject({ slot: "primary", written: ORANGE, ground: true })
+    const cover = renderBrandSample(file)[0]!
+    expect(cover).toMatch(new RegExp(`<rect[^>]*width="1280"[^>]*height="720"[^>]*fill="${ORANGE}"`))
+    expect(placement.brand.lifted).toBeUndefined()
   })
 
-  it("moves to the theme's other colored slot when the face cannot hold it (brief's orange takes the short rule)", () => {
-    const { file, placement } = regen("brief", "#F09415")
-    expect(placement).toMatchObject({ face: "primary", slot: "accent", route: "other", color: "#F09415" })
-    // brief's primary sets its headings, so it needs body contrast the orange does not have.
-    expect(contrastRatio("#F09415", file.style.colors.bg)).toBeLessThan(4.5)
-    expect(file.style.colors.accent).toBe("#F09415")
+  it("keeps brief's navy headings and puts the orange in the rules and marks, as it is", () => {
+    const { file, placement } = regen("brief", ORANGE)
     expect(file.style.colors.primary).toBe("#1E2A4A")
+    expect(file.style.colors.accent).toBe(ORANGE)
+    expect(placement.brand).toMatchObject({ slot: "accent", written: ORANGE })
+    // Brief's headings are 36px and up: 3:1, and the orange reads 2.17:1.
+    expect(placement.brand.passedOver).toMatchObject({ slot: "primary", need: 3 })
+    expect(placement.brand.passedOver!.ratio).toBeLessThan(3)
   })
 
-  it("keeps hue and saturation and lifts lightness when neither slot can hold it (lecture's chalk turns light blue)", () => {
-    const { file, placement } = regen("lecture", "#156082")
-    expect(placement).toMatchObject({ face: "accent", slot: "accent", route: "lightness", otherIsColor: false })
-    const accent = file.style.colors.accent
-    expect(Math.abs(hueDelta(hue(accent), hue("#156082")))).toBeLessThan(1.5)
-    expect(hexToHsl(accent).s).toBeCloseTo(hexToHsl("#156082").s, 1)
-    // At the chalk yellow's own lightness, and readable on the blackboard.
-    expect(hexToHsl(accent).l).toBeCloseTo(hexToHsl("#E9C46A").l, 2)
-    expect(contrastRatio(accent, file.style.colors.bg)).toBeGreaterThanOrEqual(3)
-    expect(contrastRatio("#156082", file.style.colors.bg)).toBeLessThan(3)
+  it("writes brief's headings in a brand that reads there", () => {
+    for (const brand of [BLUE, RED, GREEN]) {
+      const { file, placement } = regen("brief", brand)
+      expect(file.style.colors.primary, brand).toBe(brand)
+      expect(placement.brand.passedOver, brand).toBeUndefined()
+    }
   })
 
-  it("takes a shade too small to see in the face before it moves the brand to another slot", () => {
-    // #00843D reads 4.45:1 on brief's paper, a hair under the 4.5 its headings need.
-    const { file, placement } = regen("brief", "#00843D")
-    expect(placement).toMatchObject({ slot: "primary", route: "nudged" })
-    expect(file.style.colors.primary).not.toBe("#00843D")
-    expect(contrastRatio(file.style.colors.primary, file.style.colors.bg)).toBeGreaterThanOrEqual(4.5)
-  })
-
-  it("does not count a slot that is a shade of the ground as a place for the brand (rally's plum primary)", () => {
-    const { file, placement } = regen("rally", "#156082")
-    expect(placement).toMatchObject({ face: "accent", slot: "accent", otherIsColor: false })
-    expect(file.style.colors.primary).toBe("#23173A")
+  it("moves the brand's lightness for a heading slot only when the theme has no other color to give it (luxe's gold)", () => {
+    const { file, placement } = regen("luxe", BLUE)
+    expect(contrastRatio(BLUE, file.style.colors.bg)).toBeLessThan(3)
+    expect(placement.brand).toMatchObject({ slot: "accent", lifted: { need: 3 } })
+    expect(file.style.colors.primary).toBe(source("luxe").file.style.colors.primary)
   })
 })
 
-describe("R3: the other colors turn by the brand's hue step, greys and blacks stay", () => {
-  it("turns brief's yellow by the step its navy took to the brand blue", () => {
-    const { file } = regen("brief", "#156082")
-    const step = hueDelta(hue("#1E2A4A"), hue("#156082"))
-    expect(file.style.colors.primary).toBe("#156082")
-    expect(hueDelta(hue("#F5C518") + step, hue(file.style.colors.accent))).toBeCloseTo(0, 0)
-    expect(file.style.colors.chartPalette).toContain("#797D86")
+describe("rule 2: no neon on a dark page", () => {
+  const DARK = CANONICAL_THEME_IDS.filter((id) => hexToOklch(source(id).file.style.colors.bg).L < 0.4)
+
+  it("finds the dark themes", () => {
+    expect(DARK).toEqual(expect.arrayContaining(["ledger", "rally", "terminal", "luxe", "ember", "museum", "stage", "lecture"]))
   })
 
-  it("leaves a near-black primary alone (ink, swiss, memo)", () => {
-    for (const id of ["ink", "swiss", "memo"]) {
-      for (const brand of BRANDS) {
-        expect(regen(id, brand).file.style.colors.primary, `${id} ${brand}`).toBe(source(id).file.style.colors.primary)
+  it("lifts the deep blue on lecture's blackboard just to 3:1, its hue and chroma kept", () => {
+    const { file, placement } = regen("lecture", BLUE)
+    const accent = file.style.colors.accent
+    const ratio = contrastRatio(accent, file.style.colors.bg)
+    expect(ratio).toBeGreaterThanOrEqual(3)
+    expect(ratio).toBeLessThan(3.1)
+    expect(hueDistance(hexToOklch(accent).h, hexToOklch(BLUE).h)).toBeLessThan(2)
+    expect(hexToOklch(accent).C).toBeLessThanOrEqual(hexToOklch(BLUE).C + 0.005)
+    expect(placement.brand.lifted).toMatchObject({ need: 3 })
+  })
+
+  it("never writes a color more saturated than the colors asked for, on any theme", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      for (const colors of ALL) {
+        const out = regen(id, colors).file
+        const kept = keptOwn(source(id).file, out)
+        const cap = Math.max(...[colors.brand, colors.second ?? colors.brand].map((hex) => hexToOklch(hex).C)) + 0.01
+        for (const hex of written(out)) {
+          if (kept.has(hex.toUpperCase())) continue
+          expect(hexToOklch(hex).C, `${id} ${name(colors)} ${hex}`).toBeLessThanOrEqual(cap)
+        }
+      }
+    }
+  })
+
+  it("uses the brand as it is wherever it already stands off the ground", () => {
+    for (const id of DARK) {
+      const { placement } = regen(id, ORANGE)
+      expect(placement.brand.written, id).toBe(ORANGE)
+    }
+  })
+})
+
+describe("rule 3: the other colors are drawn from the brand", () => {
+  it("adds no hue the brand and the theme do not have (thesis orange, brief red and green, almanac, homeroom and proposal green)", () => {
+    const cases: [string, string][] = [
+      ["thesis", ORANGE],
+      ["brief", RED],
+      ["brief", GREEN],
+      ["almanac", ORANGE],
+      ["almanac", BLUE],
+      ["almanac", RED],
+      ["almanac", GREEN],
+      ["homeroom", GREEN],
+      ["proposal", GREEN],
+    ]
+    for (const [id, brand] of cases) expect(strayHues(id, { brand }), `${id} ${brand}`).toEqual([])
+  })
+
+  it("keeps every theme and brand inside the brand's family", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      for (const colors of ALL) expect(strayHues(id, colors), `${id} ${name(colors)}`).toEqual([])
+    }
+  })
+
+  it("gives brief's second slot a clearly lighter shade of the brand", () => {
+    const { file } = regen("brief", BLUE)
+    const accent = hexToOklch(file.style.colors.accent)
+    expect(hueDistance(accent.h, hexToOklch(BLUE).h)).toBeLessThan(2)
+    expect(accent.L - hexToOklch(BLUE).L).toBeGreaterThan(0.12)
+  })
+
+  it("leads every chart that is not one color among inks with the brand, readable at 3:1", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      const src = source(id).file.style.colors
+      if (isSingleColorPalette(src.chartPalette.map((hex) => hex.toUpperCase()))) continue
+      for (const colors of SINGLE) {
+        const { file, placement } = regen(id, colors)
+        expect(file.style.colors.chartPalette[0], `${id} ${colors.brand}`).toBe(placement.brand.chart)
+        expect(contrastRatio(placement.brand.chart, src.bg), `${id} ${colors.brand}`).toBeGreaterThanOrEqual(3)
+      }
+    }
+  })
+
+  it("keeps a single-color chart single-colored: swiss's black and grey stay where they were", () => {
+    for (const colors of ALL) {
+      const palette = regen("swiss", colors).file.style.colors.chartPalette
+      expect(palette[0], name(colors)).toBe(regen("swiss", colors).file.style.colors.accent)
+      expect(palette[1], name(colors)).toBe("#101010")
+      // The grey stays a grey. It moves its lightness only when the brand lands next to it (the deep blue does).
+      expect(isChromatic(palette[2]!), `${name(colors)} ${palette[2]}`).toBe(false)
+    }
+    expect(regen("swiss", RED).file.style.colors.chartPalette[2]).toBe("#5F5F5C")
+  })
+
+  it("keeps ink's seal in the chart's seal position, so the faces that leave the seal out still do", () => {
+    for (const colors of SINGLE) {
+      const { file } = regen("ink", colors)
+      expect(file.style.colors.chartPalette.slice(0, 3), colors.brand).toEqual(["#1F1C18", file.style.colors.accent, "#8A8071"])
+    }
+  })
+
+  it("keeps neighbouring chart series apart", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      const own = new Set(source(id).file.style.colors.chartPalette.map((hex) => hex.toUpperCase()))
+      for (const colors of ALL) {
+        const palette = regen(id, colors).file.style.colors.chartPalette
+        for (let i = 1; i < palette.length; i++) {
+          // Two inks the theme set side by side itself (ledger's slates) are its own call.
+          if (own.has(palette[i - 1]!) && own.has(palette[i]!)) continue
+          expect(oklabDistance(palette[i - 1]!, palette[i]!), `${id} ${name(colors)} ${palette.join(" ")}`).toBeGreaterThanOrEqual(0.09)
+        }
+      }
+    }
+  })
+
+  it("keeps every chart color readable on lecture's blackboard", () => {
+    for (const colors of ALL) {
+      const { file } = regen("lecture", colors)
+      for (const color of file.style.colors.chartPalette) {
+        expect(contrastRatio(color, file.style.colors.bg), `${name(colors)} ${color}`).toBeGreaterThanOrEqual(3)
+      }
+    }
+  })
+
+  it("never puts a blue beside an orange unless the company paired them", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      for (const colors of SINGLE) {
+        const palette = regen(id, colors).file.style.colors.chartPalette
+        expect(paletteBreaksTaboo(palette), `${id} ${colors.brand}: ${palette.join(" ")}`).toBe(false)
       }
     }
   })
 })
 
-describe("R4: the theme keeps its own ground, text, and surface", () => {
+describe("the company's second color", () => {
+  it("takes brief's second slot and the chart's second series", () => {
+    const { file, placement } = regen("brief", OFFICE)
+    expect(file.style.colors.primary).toBe(BLUE)
+    expect(file.style.colors.accent).toBe("#E97132")
+    expect(file.style.colors.chartPalette[0]).toBe(BLUE)
+    expect(file.style.colors.chartPalette[1]).toBe(placement.second!.chart)
+    expect(hexToOklch(placement.second!.chart).h).toBeCloseTo(hexToOklch("#E97132").h, 0)
+  })
+
+  it("is the chart's second series only when the theme has no second colored slot (ledger)", () => {
+    const { file, placement } = regen("ledger", OFFICE)
+    expect(placement.second).toMatchObject({ slot: null, noSlot: "neutral" })
+    expect(file.style.colors.primary).toBe(source("ledger").file.style.colors.primary)
+    expect(file.style.colors.chartPalette[1]).toBe(placement.second!.chart)
+  })
+
+  it("is read from --brand as a second hex after a comma", () => {
+    expect(parseBrandOption("#156082,#e97132")).toEqual(OFFICE)
+    expect(parseBrandOption(" #C8102E ")).toEqual({ brand: RED })
+    expect(() => parseBrandOption("#156082,#E97132,#000000")).toThrow(/at most two colors/)
+    expect(() => parseBrandOption("blue")).toThrow(/hex color/)
+  })
+})
+
+describe("the theme keeps its own ground, text, and surface", () => {
   const KEPT = ["bg", "surface", "text", "muted", "panel", "border", "cardStroke", "danger", "warning", "success"] as const
   for (const id of CANONICAL_THEME_IDS) {
     it(`${id}: every brand keeps the ground tokens, fonts, and menu`, () => {
       const src = source(id).file
-      for (const brand of BRANDS) {
-        const { file } = regen(id, brand)
-        for (const token of KEPT) expect(file.style.colors[token], `${brand} ${token}`).toBe(src.style.colors[token])
+      for (const colors of ALL) {
+        const { file } = regen(id, colors)
+        for (const token of KEPT) expect(file.style.colors[token], `${name(colors)} ${token}`).toBe(src.style.colors[token])
         expect(file.style.fonts).toEqual(src.style.fonts)
         expect(file.menu).toEqual(src.menu)
         for (const type of ["cover", "chapter", "content", "ending"] as const) {
           const before = src.style.defaultBackgrounds[type]
           const after = file.style.defaultBackgrounds[type]
           if (before.kind === "color" && before.value === src.style.colors.primary) {
-            expect(after, `${brand} ${type}`).toEqual({ ...before, value: file.style.colors.primary })
+            expect(after, `${name(colors)} ${type}`).toEqual({ ...before, value: file.style.colors.primary })
           } else if (before.kind === "color" && before.value === src.style.colors.accent) {
-            expect(after, `${brand} ${type}`).toEqual({ ...before, value: file.style.colors.accent })
+            expect(after, `${name(colors)} ${type}`).toEqual({ ...before, value: file.style.colors.accent })
           } else {
-            expect(after, `${brand} ${type}`).toEqual(before)
+            expect(after, `${name(colors)} ${type}`).toEqual(before)
           }
         }
       }
@@ -120,59 +298,29 @@ describe("R4: the theme keeps its own ground, text, and surface", () => {
   }
 
   it("keeps ink's rice paper", () => {
-    for (const brand of BRANDS) {
-      const { file } = regen("ink", brand)
+    for (const colors of ALL) {
+      const { file } = regen("ink", colors)
       expect(file.style.colors.bg).toBe("#F7F2E7")
       expect(file.style.defaultBackgrounds.cover).toEqual({ kind: "color", value: "#F7F2E7" })
     }
   })
-})
 
-describe("R5: the chart keeps the theme's own style", () => {
-  it("keeps swiss's black and grey series black and grey", () => {
-    for (const brand of BRANDS) {
-      const { file } = regen("swiss", brand)
-      expect(file.style.colors.chartPalette.slice(1, 3), brand).toEqual(["#101010", "#5F5F5C"])
-      expect(file.style.colors.chartPalette[0], brand).toBe(file.style.colors.accent)
-    }
-  })
-
-  it("keeps ink's seal in the chart's seal position, so the faces that leave the seal out still do", () => {
-    for (const brand of BRANDS) {
-      const { file } = regen("ink", brand)
-      expect(file.style.colors.chartPalette.slice(0, 3), brand).toEqual(["#1F1C18", file.style.colors.accent, "#8A8071"])
-    }
-  })
-
-  it("keeps every chart color readable on lecture's blackboard", () => {
-    for (const brand of BRANDS) {
-      const { file } = regen("lecture", brand)
-      for (const color of file.style.colors.chartPalette) {
-        expect(contrastRatio(color, file.style.colors.bg), `${brand} ${color}`).toBeGreaterThanOrEqual(3)
-      }
-    }
-  })
-
-  it("never puts a new vivid blue beside a vivid orange", () => {
+  it("writes a marked run's ink that reads as body text", () => {
     for (const id of CANONICAL_THEME_IDS) {
-      if (paletteBreaksTaboo(source(id).file.style.colors.chartPalette)) continue
-      for (const brand of BRANDS) {
-        const palette = regen(id, brand).file.style.colors.chartPalette
-        expect(paletteBreaksTaboo(palette), `${id} ${brand}: ${palette.join(" ")}`).toBe(false)
+      for (const colors of ALL) {
+        const { file } = regen(id, colors)
+        const ink = file.style.colors.emphasisInk
+        if (ink === undefined || ink === source(id).file.style.colors.emphasisInk) continue
+        expect(contrastRatio(ink, file.style.colors.bg), `${id} ${name(colors)}`).toBeGreaterThanOrEqual(4.5)
       }
     }
   })
-
-  it("keeps a pair the theme itself ruled in, in whatever color the brand turns it (brief's navy and accent)", () => {
-    const { file } = regen("brief", "#F09415")
-    expect(file.style.colors.chartPalette.slice(0, 2)).toEqual(["#1E2A4A", "#F09415"])
-  })
 })
 
-describe("R6: the contrast floor stays a hard gate", () => {
+describe("the contrast floor stays a hard gate", () => {
   it("every built-in theme, repainted in each test brand, compiles", () => {
     for (const id of CANONICAL_THEME_IDS) {
-      for (const brand of BRANDS) expect(() => compileThemeDefinition(regen(id, brand).file), `${id} ${brand}`).not.toThrow()
+      for (const colors of ALL) expect(() => compileThemeDefinition(regen(id, colors).file), `${id} ${name(colors)}`).not.toThrow()
     }
   })
 
@@ -180,6 +328,6 @@ describe("R6: the contrast floor stays a hard gate", () => {
     const { file, face } = source("brief")
     const broken = structuredClone(file)
     broken.style.colors.text = "#E8E8E8"
-    expect(() => regenerateFromBrand(broken, "#C8102E", { id: "broken" }, face)).toThrow(/contrast ratio/)
+    expect(() => regenerateFromBrand(broken, { brand: RED }, { id: "broken" }, face)).toThrow(/contrast ratio/)
   })
 })

@@ -287,7 +287,10 @@ theme
   .command("fork")
   .description("Copy a theme and repaint it: around one brand color with --brand, or with exact anchor colors")
   .argument("<name>", "preset or theme name to fork")
-  .option("--brand <hex>", "brand color: the theme keeps its ground and text, the brand takes its most visible color slot, and the other colors turn with it")
+  .option(
+    "--brand <hex[,hex]>",
+    "brand color, and optionally the company's second color after a comma: the theme keeps its ground and text, the brand takes its most visible color slot, and the other colors are drawn from it",
+  )
   .option("--primary <hex>", "set colors.primary exactly (instead of --brand)")
   .option("--bg <hex>", "set colors.bg exactly (with --primary)")
   .option("--accent <hex>", "set colors.accent exactly (with --primary)")
@@ -299,7 +302,7 @@ theme
   .option("--force", "overwrite an existing theme file")
   .addHelpText(
     "after",
-    "\nPass --brand alone, or --primary with any of --accent, --bg, --text, --surface. The two ways do not mix: --brand decides every color slot itself, the anchor flags set the slots you name exactly.\n\nExamples:\n  $ pptwise theme fork ink --brand #C8102E -o themes/acme.theme.json\n  $ pptwise theme fork acme --primary #0B5FFF -o themes/acme-blue.theme.json",
+    "\nPass --brand alone, or --primary with any of --accent, --bg, --text, --surface. The two ways do not mix: --brand decides every color slot itself, the anchor flags set the slots you name exactly.\n\nExamples:\n  $ pptwise theme fork ink --brand #C8102E -o themes/acme.theme.json\n  $ pptwise theme fork brief --brand '#156082,#E97132' -o themes/acme.theme.json\n  $ pptwise theme fork acme --primary #0B5FFF -o themes/acme-blue.theme.json",
   )
   .action(
     async (
@@ -381,7 +384,7 @@ const brand = program.command("brand").description("Brand asset commands — ext
 brand
   .command("extract")
   .description(
-    "Read the brand color (accent1) and fonts from a .thmx/.potx/.pptx file and repaint a theme around them, into a pptwise theme file — runs entirely locally, the file never leaves your machine",
+    "Read the brand color (accent1), its second color (accent2), and fonts from a .thmx/.potx/.pptx file and repaint a theme around them, into a pptwise theme file — runs entirely locally, the file never leaves your machine",
   )
   .argument("<file>", "a .thmx theme, .potx template, or .pptx presentation")
   .requiredOption("-o, --output <file>", "output theme JSON path (e.g. my-brand.theme.json)")

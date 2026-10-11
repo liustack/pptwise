@@ -191,11 +191,17 @@ if (!extractMsg.includes('theme "e2e-brand"')) {
 }
 const brandThemeFile = JSON.parse(readFileSync(brandThemePath, "utf8")) as {
   id: string
-  style: { colors: { primary: string; muted: string } }
+  style: { colors: { primary: string; accent: string; muted: string } }
 }
 if (brandThemeFile.style.colors.primary !== `#${BRAND_THMX_COLORS.accent1}`) {
   throw new Error(
     `e2e: brand leg — extracted primary ${brandThemeFile.style.colors.primary}, expected #${BRAND_THMX_COLORS.accent1}`,
+  )
+}
+// accent2 is the company's second color: brief's rules and marks take it.
+if (brandThemeFile.style.colors.accent !== `#${BRAND_THMX_COLORS.accent2}`) {
+  throw new Error(
+    `e2e: brand leg — extracted accent ${brandThemeFile.style.colors.accent}, expected the template's accent2 #${BRAND_THMX_COLORS.accent2}`,
   )
 }
 const brandPptxPath = join(OUT, "brand-themed.pptx")

@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { CANONICAL_THEME_IDS } from "../themes"
-import { countSlotUse, isChromatic, LARGE_TEXT_PX, measureBrandFace, pickBrandFace, renderBrandSample } from "./brand-face"
+import { countHeadingRuns, countSlotUse, isChromatic, LARGE_TEXT_PX, measureBrandFace, pickBrandFace, renderBrandSample } from "./brand-face"
 import { themeFileFromPreset } from "./theme-resolve"
 
 installNodePlatform()
@@ -98,8 +98,41 @@ describe("countSlotUse", () => {
   })
 })
 
+describe("countSlotUse: headings and grounds", () => {
+  const colors = { primary: "#112233", accent: "#CC3300" }
+
+  it("counts the runs of a page heading a slot sets, wrapped lines included, at their largest size", () => {
+    const svg = [
+      `<svg><text x="0" y="0" font-size="54" fill="#112233">We will not add a fourth</text>`,
+      `<text x="0" y="60" font-size="54" fill="#112233">product line this year</text>`,
+      `<text x="0" y="90" font-size="14" fill="#112233">We will not add a fourth product line this year</text>`,
+      `<text x="0" y="120" font-size="16" fill="#CC3300">Northstar</text></svg>`,
+    ].join("")
+    const use = countSlotUse([svg], colors, ["We will not add a fourth product line this year"])
+    expect(use.primary).toMatchObject({ headings: 3, headingPx: 54 })
+    expect(use.accent.headings).toBe(0)
+    expect(countHeadingRuns([svg], ["We will not add a fourth product line this year"])).toBe(3)
+  })
+
+  it("notes the largest rectangle a slot fills, as a share of the page", () => {
+    const svg = `<svg><rect x="0" y="0" width="1280" height="720" fill="#112233"></rect><rect x="0" y="0" width="640" height="72" fill="#CC3300"></rect></svg>`
+    const use = countSlotUse([svg], colors)
+    expect(use.primary.field).toBe(1)
+    expect(use.accent.field).toBeCloseTo(0.05, 5)
+  })
+
+  it("tells the slot that writes brief's headings and the slot that fills bulletin's cover", () => {
+    const brief = measureBrandFace(themeFileFromPreset("brief", { id: "brief-probe" }))
+    expect(brief.use.primary.headings * 2).toBeGreaterThanOrEqual(brief.headingRuns)
+    expect(brief.use.primary.headingPx).toBeGreaterThanOrEqual(LARGE_TEXT_PX)
+    const bulletin = measureBrandFace(themeFileFromPreset("bulletin", { id: "bulletin-probe" }))
+    expect(bulletin.use.primary.headings).toBe(0)
+    expect(bulletin.use.primary.field).toBe(1)
+  })
+})
+
 describe("pickBrandFace", () => {
-  const use = (area: number) => ({ area, bodyText: 0, largeText: 0 })
+  const use = (area: number) => ({ area, bodyText: 0, largeText: 0, headings: 0, headingPx: 0, field: 0 })
 
   it("weighs area by how far the color stands from the ground", () => {
     // The primary covers twice the area but is a shade of the page.

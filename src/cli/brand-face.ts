@@ -16,7 +16,7 @@ import { offeredContentKinds } from "../render/layout-selection"
 import { compileThemeDefinition } from "../themes/definitions"
 import { oklabDistance, oklchChroma } from "../themes/palette-rebase"
 import type { ThemeFile } from "../themes/schema"
-import { brandSampleIr } from "./brand-sample"
+import { BRAND_SAMPLE_HEADINGS, brandSampleIr } from "./brand-sample"
 
 export type BrandSlot = "primary" | "accent"
 
@@ -30,6 +30,12 @@ export interface SlotUse {
   bodyText: number
   /** Text runs the slot sets at or above {@link LARGE_TEXT_PX}. */
   largeText: number
+  /** Runs of a page heading the slot sets. */
+  headings: number
+  /** The largest size, in px, the slot sets a heading at: 0 when it sets none. A heading's display line, not a running head that repeats it small. */
+  headingPx: number
+  /** The largest single rectangle the slot fills, as a share of the page: 1 is a page-filling ground. */
+  field: number
 }
 
 export interface BrandFace {
@@ -38,6 +44,8 @@ export interface BrandFace {
   /** Whether a slot qualifies at all (see {@link isChromatic}). */
   chromatic: Record<BrandSlot, boolean>
   use: Record<BrandSlot, SlotUse>
+  /** Runs of a page heading the sample sets, in any color. */
+  headingRuns: number
 }
 
 /** Text this size and up reads as large text: 18pt, the WCAG line for 3:1. */
@@ -62,6 +70,8 @@ const TEXT_RE = /<text\b([^>]*)>([\s\S]*?)<\/text>/g
 const TSPAN_RE = /<tspan\b([^>]*)>([^<]*)/g
 const ATTR_RE = /([a-zA-Z][a-zA-Z0-9:-]*)="([^"]*)"/g
 const HEX_RE = /^#[0-9a-fA-F]{6}$/
+/** The page the sample is drawn on, in px. */
+const PAGE_AREA = 1280 * 720
 /** The share of a line of type's box that ink covers, roughly. */
 const TEXT_INK_SHARE = 0.35
 /** A glyph's average advance, in ems. */
@@ -117,17 +127,26 @@ function shapeGeometry(tag: string, a: Map<string, string>): { fill: number; str
   }
 }
 
+/** Whether a run of words is (part of) one of `headings`: a heading wraps into several runs. */
+function isHeadingRun(text: string, headings: readonly string[]): boolean {
+  const run = text.trim().toLowerCase()
+  return run.length >= 3 && headings.some((heading) => heading.toLowerCase().includes(run))
+}
+
 /**
  * Measure each slot across rendered pages: the area painted in its exact
- * color, and how many text runs it sets at body and at display size. Area,
- * not a count of paints: a gold hairline drawn twice on every page is still
- * less of the page than one red bar chart.
+ * color, how many text runs it sets at body and at display size, which of
+ * them are page headings (`headings` names them), and the largest ground
+ * it fills. Area, not a count of paints: a gold hairline drawn twice on
+ * every page is still less of the page than one red bar chart.
  */
-export function countSlotUse(svgs: readonly string[], colors: Record<BrandSlot, string>): Record<BrandSlot, SlotUse> {
-  const use: Record<BrandSlot, SlotUse> = {
-    primary: { area: 0, bodyText: 0, largeText: 0 },
-    accent: { area: 0, bodyText: 0, largeText: 0 },
-  }
+export function countSlotUse(
+  svgs: readonly string[],
+  colors: Record<BrandSlot, string>,
+  headings: readonly string[] = [],
+): Record<BrandSlot, SlotUse> {
+  const empty = (): SlotUse => ({ area: 0, bodyText: 0, largeText: 0, headings: 0, headingPx: 0, field: 0 })
+  const use: Record<BrandSlot, SlotUse> = { primary: empty(), accent: empty() }
   const slotsOf = (hex: string | undefined) =>
     hex === undefined || !HEX_RE.test(hex)
       ? []
@@ -141,13 +160,20 @@ export function countSlotUse(svgs: readonly string[], colors: Record<BrandSlot, 
       use[slot].area += chars * GLYPH_ADVANCE_EM * size * size * TEXT_INK_SHARE * opacity(a, "fill")
       if (size >= LARGE_TEXT_PX) use[slot].largeText++
       else use[slot].bodyText++
+      if (isHeadingRun(text, headings)) {
+        use[slot].headings++
+        use[slot].headingPx = Math.max(use[slot].headingPx, size)
+      }
     }
   }
   for (const svg of svgs) {
     for (const m of svg.matchAll(SHAPE_RE)) {
       const a = attrs(m[2]!)
       const geometry = shapeGeometry(m[1]!, a)
-      for (const slot of slotsOf(a.get("fill"))) use[slot].area += geometry.fill * opacity(a, "fill")
+      for (const slot of slotsOf(a.get("fill"))) {
+        use[slot].area += geometry.fill * opacity(a, "fill")
+        if (m[1] === "rect") use[slot].field = Math.max(use[slot].field, geometry.fill / PAGE_AREA)
+      }
       for (const slot of slotsOf(a.get("stroke"))) {
         use[slot].area += geometry.stroke * num(a, "stroke-width", 1) * opacity(a, "stroke")
       }
@@ -187,7 +213,16 @@ export function pickBrandFace(
   if (candidates.length > 0) {
     slot = candidates.reduce((best, next) => (weight(next) > weight(best) ? next : best))
   }
-  return { slot, chromatic, use }
+  return { slot, chromatic, use, headingRuns: 0 }
+}
+
+/** How many runs of a page heading the pages set, in any color. */
+export function countHeadingRuns(svgs: readonly string[], headings: readonly string[]): number {
+  let runs = 0
+  for (const svg of svgs) {
+    for (const m of svg.matchAll(/<(?:text|tspan)\b[^>]*>([^<]*)/g)) if (isHeadingRun(m[1]!, headings)) runs++
+  }
+  return runs
 }
 
 /** Draw the sample deck in `theme` and return each page's SVG. */
@@ -205,5 +240,7 @@ export function renderBrandSample(theme: ThemeFile): string[] {
 /** Measure `theme`'s brand face from its own sample pages. */
 export function measureBrandFace(theme: ThemeFile): BrandFace {
   const { primary, accent, bg } = theme.style.colors
-  return pickBrandFace({ primary, accent, bg }, countSlotUse(renderBrandSample(theme), { primary, accent }))
+  const svgs = renderBrandSample(theme)
+  const face = pickBrandFace({ primary, accent, bg }, countSlotUse(svgs, { primary, accent }, BRAND_SAMPLE_HEADINGS))
+  return { ...face, headingRuns: countHeadingRuns(svgs, BRAND_SAMPLE_HEADINGS) }
 }

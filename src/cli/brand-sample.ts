@@ -107,6 +107,13 @@ const CONTENT_PAGES: readonly Record<string, unknown>[] = [
   },
 ]
 
+const COVER = { type: "cover", heading: "Third Quarter Review", subheading: "Q3 operating report for the board" }
+const CHAPTER = { type: "chapter", heading: "The Quarter" }
+const ENDING = { type: "ending", heading: "See you Thursday" }
+
+/** Every page heading the sample deck sets, so a measure can tell a heading run from other words. */
+export const BRAND_SAMPLE_HEADINGS: readonly string[] = [COVER, CHAPTER, ...CONTENT_PAGES, ENDING].map((page) => page.heading as string)
+
 /** The sample deck for `themeId`, keeping the content kinds in `offered`. */
 export function brandSampleIr(themeId: string, offered: ReadonlySet<string>): Record<string, unknown> {
   return {
@@ -116,10 +123,10 @@ export function brandSampleIr(themeId: string, offered: ReadonlySet<string>): Re
     meta: { organization: "Northstar", date: "2026-10-01" },
     assets: { images: { [BRAND_SAMPLE_PHOTO]: { src: GREY_PNG, alt: "An office floor" } } },
     slides: [
-      { type: "cover", heading: "Northstar Review", subheading: "Q3 operating report for the board" },
-      { type: "chapter", heading: "The Quarter" },
+      COVER,
+      CHAPTER,
       ...CONTENT_PAGES.filter((page) => offered.has(page.kind as string)).map((page) => ({ type: "content", ...page })),
-      { type: "ending", heading: "See you Thursday" },
+      ENDING,
     ],
   }
 }

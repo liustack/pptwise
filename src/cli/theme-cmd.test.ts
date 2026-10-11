@@ -215,7 +215,26 @@ describe("runThemeFork --brand", () => {
     const out = join(cwd, "themes", "acme.theme.json")
     const msg = await runThemeFork("lecture", { brand: "#156082", output: out, cwd })
     expect(msg).toMatch(/brand: #156082 changed to #[0-9A-F]{6} for colors\.accent/)
-    expect(msg).toContain("needs 3.0:1 on bg #1C2823")
+    expect(msg).toContain("lightness moved to reach 3.0:1 on bg #1C2823")
+  })
+
+  it("keeps the headings in the theme's color and says so when the brand does not read there", async () => {
+    const cwd = await tmp("pptwise-theme-fork-brand-other-")
+    const out = join(cwd, "themes", "acme.theme.json")
+    const msg = await runThemeFork("brief", { brand: "#F09415", output: out, cwd })
+    expect(msg).toContain("brand: #F09415 is colors.accent")
+    expect(msg).toContain("colors.primary keeps the theme's own color: it writes the headings, which need 3.0:1 on bg #F7F6F2")
+    const written = JSON.parse(await readFile(out, "utf8")) as { style: { colors: Record<string, string> } }
+    expect(written.style.colors).toMatchObject({ primary: "#1E2A4A", accent: "#F09415" })
+  })
+
+  it("takes the company's second color after a comma", async () => {
+    const cwd = await tmp("pptwise-theme-fork-brand-second-")
+    const out = join(cwd, "themes", "acme.theme.json")
+    const msg = await runThemeFork("brief", { brand: "#156082,#E97132", output: out, cwd })
+    expect(msg).toContain("second: #E97132 is colors.accent")
+    const written = JSON.parse(await readFile(out, "utf8")) as { style: { colors: Record<string, string> } }
+    expect(written.style.colors).toMatchObject({ primary: "#156082", accent: "#E97132" })
   })
 
   it("does not mix --brand with the exact anchor flags", async () => {

@@ -1749,7 +1749,7 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     await expect(stat(out)).rejects.toMatchObject({ code: "ENOENT" })
   })
 
-  it("brand extract keeps the donor's ground, text, and surface, and takes only the brand color and fonts", async () => {
+  it("brand extract keeps the donor's ground, text, and surface, and takes only the brand colors and fonts", async () => {
     const d = await freshDir()
     const src = await writeFixtureTemplate(d, {
       colors: { ...BRAND_THMX_COLORS, dk1: "101010", lt1: "FAFAFA", lt2: "DDDDDD" },
@@ -1770,6 +1770,19 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     expect(written.style.fonts.heading[0]).toBe("Georgia")
     expect(written.style.fonts.body[0]).toBe("Verdana")
     expect(msg).toContain(`brand: #${BRAND_THMX_COLORS.accent1} is colors.accent`)
+    // ink's other slot is its ink black, so the template's accent2 is the chart's second series.
+    expect(msg).toContain(`second: #${BRAND_THMX_COLORS.accent2} is the chart's second series only`)
+  })
+
+  it("brand extract gives the template's accent2 the theme's second colored slot", async () => {
+    const d = await freshDir()
+    const src = await writeFixtureTemplate(d, { colors: BRAND_THMX_COLORS })
+    const out = join(d, "acme.theme.json")
+    const msg = await runBrandExtract(src, { output: out, from: "brief" })
+    const written = JSON.parse(await readFile(out, "utf8")) as ThemeFile
+    expect(written.style.colors.primary).toBe(`#${BRAND_THMX_COLORS.accent1}`)
+    expect(written.style.colors.accent).toBe(`#${BRAND_THMX_COLORS.accent2}`)
+    expect(msg).toContain(`second: #${BRAND_THMX_COLORS.accent2} is colors.accent`)
   })
 
   it("end to end: extract → workspace themes/ + IR theme.id → exported PPTX carries the extracted brand colors", async () => {
