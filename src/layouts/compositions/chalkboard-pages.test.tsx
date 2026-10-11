@@ -295,9 +295,10 @@ describe("the lecture board's pages on lecture", () => {
     expect(root!.querySelector("[data-chalk-span][data-chalk-lit]")!.getAttribute("data-chalk-span")).toBe("2026 年度汇算")
   })
 
-  it("the ledge's wood is lecture's yellow chalk dulled to a stain", () => {
+  it("the ledge's wood is lecture's warning yellow dulled to a stain, whatever its accent", () => {
     const { ctx } = testCtx("lecture")
     expect(chalkboardLedge(ctx).wood).toBe("#5A4632")
+    expect(chalkboardLedge({ ...ctx, colors: { ...ctx.colors, accent: "#5F8FB0" } }).wood).toBe("#5A4632")
   })
 })
 

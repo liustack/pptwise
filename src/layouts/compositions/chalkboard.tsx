@@ -2,7 +2,7 @@ import type React from "react"
 import type { ComponentCtx } from "../../components/types"
 import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { parseEmphasis, stripEmphasis } from "../../render/emphasis"
-import { blendOver, graphicInk, metaInk } from "../../render/ink"
+import { blendOver, graphicInk, metaInk, resolveSemanticColor } from "../../render/ink"
 import { CroppedImage, type Crop } from "../../render/cropped-image"
 import { Icon } from "../../render/icons"
 import {
@@ -508,13 +508,19 @@ export interface ChalkboardLedge {
 }
 
 /**
- * The wood of the board's frame and its ledge, the theme's yellow chalk
+ * The wood of the board's frame and its ledge, the theme's warning yellow
  * turned a little toward red, two fifths as saturated and darkened to a
  * stain (#5A4632 from lecture's #E9C46A), with the ledge's lit lip, the
  * words written on it, and the eraser's back and felt in the same hue.
+ *
+ * The frame is the board's own material, not the theme's face, so it reads
+ * the warning token and not the accent: a fork that repaints the accent
+ * (`theme fork --brand`) changes the chalk and leaves the wood. lecture's
+ * warning is its yellow chalk, so its own board is unchanged. homeroom's
+ * lesson board takes its wood from the warning token the same way.
  */
 export function chalkboardLedge(ctx: ComponentCtx): ChalkboardLedge {
-  const [h, s] = hexToHsl(ctx.colors.accent)
+  const [h, s] = hexToHsl(resolveSemanticColor("warning", ctx.colors))
   const hue = h - 12.5
   const sat = s * 0.385
   return {

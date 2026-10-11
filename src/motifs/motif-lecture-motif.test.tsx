@@ -61,7 +61,7 @@ describe("LectureMotif（夜校的黑板）", () => {
     expect(draw(chapterSlide).markup).toBe(draw(coverSlide).markup)
   })
 
-  it("槽里一截白粉笔、一截黄粉笔、一块板擦，木头色由黄粉笔推出", () => {
+  it("槽里一截白粉笔、一截黄粉笔、一块板擦，木头色由 warning 的黄粉笔推出", () => {
     const t = resolveStyle("lecture")
     const { root } = draw(contentSlide)
     const rects = Array.from(root.querySelectorAll("[data-chalk-ledge] rect"))
@@ -69,6 +69,17 @@ describe("LectureMotif（夜校的黑板）", () => {
     expect(rects[2]!.getAttribute("fill")).toBe(t.colors.text)
     expect(rects[3]!.getAttribute("fill")).toBe(t.colors.accent)
     expect(root.querySelector("[data-chalk-frame]")!.getAttribute("stroke")).toBe("#5A4632")
+  })
+
+  it("换了 accent 只换粉笔，木框、槽沿、板擦不跟着变", () => {
+    const base = boundThemeCtx("lecture", {})
+    const blue = { ...base, colors: { ...base.colors, accent: "#5F8FB0" } }
+    const own = render(<LectureMotif ir={ir("lecture")} slide={contentSlide} ctx={base} />).root
+    const repainted = render(<LectureMotif ir={ir("lecture")} slide={contentSlide} ctx={blue} />).root
+    const fills = (root: Element) => Array.from(root.querySelectorAll("[data-chalk-ledge] rect")).map((r) => r.getAttribute("fill"))
+    expect(repainted.querySelector("[data-chalk-frame]")!.getAttribute("stroke")).toBe("#5A4632")
+    expect(fills(repainted)[3]).toBe("#5F8FB0")
+    expect(fills(repainted).filter((_, i) => i !== 3)).toEqual(fills(own).filter((_, i) => i !== 3))
   })
 
   it("deck 要页脚时，槽上写课名，右上写课时「3 / 4」，页码是 PowerPoint 的页码字段", () => {

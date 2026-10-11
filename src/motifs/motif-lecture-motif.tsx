@@ -19,9 +19,10 @@ import { CHALKBOARD_META, CHALKBOARD_SPEC, chalkBaseline, chalkMeta, chalkTracke
  *     PowerPoint 的页码字段，挪页自己会变，后面是导出时的总页数。deck 要页
  *     码时才印。
  *
- * 木头的颜色由主题的黄粉笔推出来：色相往红偏一点、饱和度剩四成、压到很暗
- * （lecture 的 #E9C46A 推出 #5A4632），槽沿、槽上的字、板擦同一个色相
- * （`chalkboardLedge`）。木框和粉笔槽是黑板本身的结构，标 `structure`。本
+ * 木头的颜色由主题的 warning 色推出来：色相往红偏一点、饱和度剩四成、压到很暗
+ * （lecture 的 warning 就是黄粉笔 #E9C46A，推出 #5A4632），槽沿、槽上的字、
+ * 板擦同一个色相（`chalkboardLedge`）。木框是黑板的结构，不读 accent：换了
+ * accent 只换粉笔，不换木头。木框和粉笔槽是黑板本身的结构，标 `structure`。本
  * motif 在 `footer-roles.ts` 里记为 `"row"`：页脚这一行由它来印，共享页脚
  * 让位。
  *
