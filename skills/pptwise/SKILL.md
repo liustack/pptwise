@@ -85,7 +85,7 @@ pptwise theme try --title "<cover title>" --subtitle "<subtitle>" --occasion <wo
 
 It prints a manifest naming one cover and one content SVG per theme, plus `contact-sheet.html`. Show the user those SVGs where the host can display images, or hand over the contact sheet's path. Then ask which theme they want, one option per theme in the wall's order, or name your pick when they left it to you.
 
-Create means copy: copy the closest preset into the workspace, extract a brand from an Office file, or fork for a color change. The commands are in `references/spec.md`.
+Pick from the factory themes on the wall by default. Create a theme only when the user names brand colors or hands over a company template or deck. A wish for a look ("cool", "techy", "premium") is a reason to put fitting themes on the wall, not to create one. Create means copy: copy the closest preset into the workspace, extract a brand from an Office file, or fork for a color change. The commands are in `references/spec.md`.
 
 Write the selected theme name into `deck.spec.json` before writing page content. Bound deck commands use that name. There is no render-time theme switch.
 
