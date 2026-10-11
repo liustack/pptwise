@@ -45,7 +45,7 @@
 // not work" — see `verdictOf`. Collapsing the two meant one flaky response
 // permanently retired a deck that was sitting on disk the whole time.
 //
-// Full screen is a tab in DSH's right sidebar, the way DSH opens a presented
+// Preview is a tab in DSH's right sidebar, the way DSH opens a presented
 // file: the deck one page at a time, with the keyboard in it from the moment
 // it opens. It used to be an iframe of the finished `preview.html` in a modal
 // of this card's own, and two things were wrong with that inside DSH: nothing
@@ -88,7 +88,7 @@ window.__ModuleLoader__.load({
         'type.ending': '结尾',
         'card.unavailable': '这份内容已不在本机的预览目录里。',
         'card.retry': '重试',
-        'card.open': '打开',
+        'card.open': '预览',
         'card.draft': '草稿',
         'card.needsRevision': '待修改',
         'card.findings': '{n} 条检查提示',
@@ -116,7 +116,7 @@ window.__ModuleLoader__.load({
         'desk.changed': '改了 {n} 页',
         'desk.unchanged': '与上一版相同',
         'desk.removed': '删了 {n} 页',
-        'desk.open': '全屏翻看',
+        'desk.open': '预览',
         'desk.download': '下载 .pptx',
         'desk.compare': '对比上一版',
         'desk.page': '第 {n} 页',
@@ -140,7 +140,7 @@ window.__ModuleLoader__.load({
         'type.ending': 'Ending',
         'card.unavailable': 'This is no longer in the preview folder on this machine.',
         'card.retry': 'Retry',
-        'card.open': 'Open',
+        'card.open': 'Preview',
         'card.draft': 'draft',
         'card.needsRevision': 'needs revision',
         'card.findings': '{n} audit findings',
@@ -168,7 +168,7 @@ window.__ModuleLoader__.load({
         'desk.changed': '{n} pages changed',
         'desk.unchanged': 'Same as the last version',
         'desk.removed': '{n} pages removed',
-        'desk.open': 'Full screen',
+        'desk.open': 'Preview',
         'desk.download': 'Download .pptx',
         'desk.compare': 'Compare with last version',
         'desk.page': 'Page {n}',
@@ -1655,7 +1655,7 @@ window.__ModuleLoader__.load({
               // absent one, and the thumbnails below go inert for the same
               // reason.
               previewId && !settled
-                ? h(Btn, { key: 'open', icon: 'IconFullscreenOutlineRegular', onClick: function () { openViewer(1) } }, t('card.open'))
+                ? h(Btn, { key: 'open', icon: 'IconBrowseOutlineRegular', onClick: function () { openViewer(1) } }, t('card.open'))
                 : null,
               previewId && exportable
                 ? h(ExportButton, {
@@ -1828,7 +1828,7 @@ window.__ModuleLoader__.load({
             icon: 'themes',
             title: bundle.title || 'themes',
             meta: [h('span', { key: 'n' }, t('card.themes', { n: bundle.themes.length }))],
-            actions: [h(Btn, { key: 'open', icon: 'IconFullscreenOutlineRegular', onClick: open }, t('card.open'))],
+            actions: [h(Btn, { key: 'open', icon: 'IconBrowseOutlineRegular', onClick: open }, t('card.open'))],
           }),
           h(
             'div',
@@ -2173,7 +2173,7 @@ window.__ModuleLoader__.load({
                 : null,
             ],
             actions: [
-              h(Btn, { key: 'open', icon: 'IconFullscreenOutlineRegular', onClick: function () { open({ view: 'deck', id: entry.id, page: 1 }) } }, t('desk.open')),
+              h(Btn, { key: 'open', icon: 'IconBrowseOutlineRegular', onClick: function () { open({ view: 'deck', id: entry.id, page: 1 }) } }, t('desk.open')),
               exportable
                 ? h(ExportButton, {
                     key: 'pptx',
@@ -2728,7 +2728,7 @@ window.__ModuleLoader__.load({
     }
 
     /**
-     * Full screen in DSH's right sidebar: a tab type for pptwise addresses,
+     * Preview in DSH's right sidebar: a tab type for pptwise addresses,
      * its body and its title. Rides a scoped `ctx.inject` like the turn tail,
      * so a shell without the sidebar keeps every card, and the cards open
      * their own layer instead (`openInSidebar` answers false).
