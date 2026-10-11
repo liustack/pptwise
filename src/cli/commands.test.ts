@@ -1771,8 +1771,9 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     // Fonts stay the theme's own unless --brand-fonts asks for the template's.
     expect(written.style.fonts).toEqual(ink.fonts)
     expect(msg).toContain(`brand: #${BRAND_THMX_COLORS.accent1} is colors.accent`)
-    // ink's other slot is its ink black, so the template's accent2 is the chart's second series.
-    expect(msg).toContain(`second: #${BRAND_THMX_COLORS.accent2} is the chart's second series only`)
+    // ink's other slot is its ink black and its charts stay one color among inks, so accent2 goes nowhere and says so.
+    expect(msg).toContain(`second: #${BRAND_THMX_COLORS.accent2} is not used`)
+    expect(written.style.colors.chartPalette).not.toContain(`#${BRAND_THMX_COLORS.accent2}`)
   })
 
   it("brand extract --brand-fonts puts the template's Latin fonts first and keeps the theme's Chinese faces", async () => {

@@ -118,8 +118,8 @@ export interface PlacedColor {
   passedOver?: { slot: BrandSlot; need: number; ratio: number }
   /** Why it has no slot. */
   noSlot?: "neutral" | "one-color" | "headings"
-  /** The chart series drawn in it: the color as it is, since a chart fills its bars and areas with it. */
-  chart: string
+  /** The chart series drawn in it: the color as it is, since a chart fills its bars and areas with it. Null when the chart stays one color among inks and leaves it out. */
+  chart: string | null
 }
 
 export interface BrandPlacement {
@@ -323,6 +323,9 @@ export function regenerateFromBrand(
 
   // 2. The second slot: the company's second color, or a shade of the brand.
   const S2 = otherSlot(brandSlot)
+  // A chart drawn as one color among inks (swiss, ink, journal, memo) stays
+  // so: a second color goes to the theme's marks outside the chart only.
+  const oneColorChart = isSingleColorPalette(src.chartPalette.map(upper))
   let second: PlacedColor | undefined
   if (B2 !== undefined) {
     const free = !oneColor && roles.isColor(S2)
@@ -336,7 +339,7 @@ export function regenerateFromBrand(
       ...(secondFit?.fills ? { fills: true } : {}),
       ...(secondFit?.lifted ? { lifted: secondFit.lifted } : {}),
       ...(secondFit === undefined ? { noSlot: oneColor ? "one-color" : free ? "headings" : "neutral" } : {}),
-      chart: secondFit !== undefined && src.chartPalette.map(upper).includes(own[S2]) ? secondFit.written! : B2,
+      chart: oneColorChart ? null : secondFit !== undefined && src.chartPalette.map(upper).includes(own[S2]) ? secondFit.written! : B2,
     } as PlacedColor
   } else if (brandSlot === F && !oneColor && roles.isColor(S2)) {
     const need = roles.shadeNeed(S2)
@@ -349,6 +352,9 @@ export function regenerateFromBrand(
     for (const s of ["primary", "accent"] as const) if (key === own[s] && slots[s] !== own[s]) return slots[s]
     return undefined
   }
+  // What the chart takes for a slot's own color: the second color stays out of a one-color chart.
+  const chartRepainted = (hex: string): string | undefined =>
+    second?.slot && second.chart === null && upper(hex) === own[second.slot] ? undefined : repainted(hex)
 
   // 3. The chart.
   // Bars, areas, and slices are fields of color: the chart fills them with
@@ -369,9 +375,9 @@ export function regenerateFromBrand(
   }
   const chartPalette = deriveSeries(src.chartPalette.map(upper), {
     lead: chartBrand,
-    second: second?.chart,
-    slotEntries: { [own[brandSlot]]: chartBrand, ...(second?.slot ? { [own[second.slot]]: second.chart } : {}) },
-    repainted,
+    second: second?.chart ?? undefined,
+    slotEntries: { [own[brandSlot]]: chartBrand, ...(second?.slot && second.chart !== null ? { [own[second.slot]]: second.chart } : {}) },
+    repainted: chartRepainted,
     shade,
     tint,
     bg,
@@ -382,9 +388,9 @@ export function regenerateFromBrand(
   if (src.accentPool !== undefined) {
     out.accentPool = deriveSeries(src.accentPool.map(upper), {
       lead: chartBrand,
-      second: second?.chart,
+      second: second?.chart ?? undefined,
       slotEntries: {},
-      repainted,
+      repainted: chartRepainted,
       shade,
       tint,
       bg,
@@ -583,7 +589,11 @@ export function describePlacement(placement: BrandPlacement): string[] {
           : p.noSlot === "headings"
             ? "the free slot writes the headings and the color does not read there"
             : "the theme's other slot is an ink, not a color"
-      lines.push(`  ${label}: ${p.color} is the chart's second series only: ${why}`)
+      lines.push(
+        p.chart === null
+          ? `  ${label}: ${p.color} is not used: ${why}, and this theme keeps its charts one color among inks`
+          : `  ${label}: ${p.color} is the chart's second series only: ${why}`,
+      )
     } else if (p.lifted !== undefined) {
       lines.push(
         `  ${label}: ${p.color} changed to ${p.written} for colors.${p.slot}: same hue, chroma no higher, lightness moved to reach ${p.lifted.need.toFixed(1)}:1 on bg ${bg} (it read ${p.lifted.ratio.toFixed(2)}:1)`,
@@ -599,6 +609,9 @@ export function describePlacement(placement: BrandPlacement): string[] {
     }
     if (p.ground && p.slot !== null) {
       lines.push(`    colors.${p.slot} fills whole pages here, and the words on it take an ink that reads on ${p.color}`)
+    }
+    if (p.slot !== null && p.chart === null) {
+      lines.push(`    the charts leave it out: this theme keeps them one color among inks`)
     }
     if (p.fills && p.slot !== null) {
       lines.push(`    colors.${p.slot} is mostly bars and blocks here, so it keeps ${p.color} as it is, and the words on it take an ink that reads on it`)

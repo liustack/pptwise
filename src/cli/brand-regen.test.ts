@@ -309,14 +309,30 @@ describe("the company's second color", () => {
     expect(file.style.colors.accent).toBe("#E97132")
     expect(file.style.colors.chartPalette[0]).toBe(BLUE)
     expect(file.style.colors.chartPalette[1]).toBe(placement.second!.chart)
-    expect(hexToOklch(placement.second!.chart).h).toBeCloseTo(hexToOklch("#E97132").h, 0)
+    expect(placement.second!.chart).toBe("#E97132")
   })
 
-  it("is the chart's second series only when the theme has no second colored slot (ledger)", () => {
-    const { file, placement } = regen("ledger", OFFICE)
-    expect(placement.second).toMatchObject({ slot: null, noSlot: "neutral" })
-    expect(file.style.colors.primary).toBe(source("ledger").file.style.colors.primary)
-    expect(file.style.colors.chartPalette[1]).toBe(placement.second!.chart)
+  it("is the chart's second series only when the theme has no second colored slot (terminal)", () => {
+    const { file, placement } = regen("terminal", OFFICE)
+    expect(placement.second).toMatchObject({ slot: null, noSlot: "neutral", chart: "#E97132" })
+    expect(file.style.colors.primary).toBe(source("terminal").file.style.colors.primary)
+    expect(file.style.colors.chartPalette[1]).toBe("#E97132")
+  })
+
+  it("stays out of a chart drawn as one color among inks (swiss, ink, journal, memo, ledger, luxe, runway, stage)", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      if (!isSingleColorPalette(source(id).file.style.colors.chartPalette.map((hex) => hex.toUpperCase()))) continue
+      const { file, placement } = regen(id, OFFICE)
+      expect(placement.second!.chart, id).toBeNull()
+      const vivid = file.style.colors.chartPalette.filter((hex) => hexToOklch(hex).C >= 0.08)
+      expect(vivid.every((hex) => hueDistance(hexToOklch(hex).h, hexToOklch(BLUE).h) <= 30), `${id} ${file.style.colors.chartPalette.join(" ")}`).toBe(true)
+    }
+  })
+
+  it("keeps journal's chart black and blue under the blue and orange pair", () => {
+    const palette = regen("journal", OFFICE).file.style.colors.chartPalette
+    expect(palette.slice(0, 2)).toEqual(["#2C2C2A", BLUE])
+    expect(palette.some((hex) => colorName(hex) === "orange")).toBe(false)
   })
 
   it("is read from --brand as a second hex after a comma", () => {

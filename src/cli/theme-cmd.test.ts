@@ -218,6 +218,14 @@ describe("runThemeFork --brand", () => {
     expect(msg).toContain("lightness moved to reach 3.0:1 on bg #F7F7F5")
   })
 
+  it("says a second color is not used where the theme has no slot for it and keeps its charts one color", async () => {
+    const cwd = await tmp("pptwise-theme-fork-brand-mono-")
+    const out = join(cwd, "themes", "acme.theme.json")
+    const msg = await runThemeFork("ink", { brand: "#156082,#E97132", output: out, cwd })
+    expect(msg).toContain("second: #E97132 is not used: the theme's other slot is an ink, not a color, and this theme keeps its charts one color among inks")
+    expect(msg).not.toContain("second series")
+  })
+
   it("keeps the brand as it is in a slot of bars and blocks, and says the words on it change ink", async () => {
     const cwd = await tmp("pptwise-theme-fork-brand-fills-")
     const out = join(cwd, "themes", "acme.theme.json")
