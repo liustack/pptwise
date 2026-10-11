@@ -126,15 +126,22 @@ describe("rule 2: no neon on a dark page", () => {
     expect(DARK).toEqual(expect.arrayContaining(["ledger", "rally", "terminal", "luxe", "ember", "museum", "stage", "lecture"]))
   })
 
-  it("lifts the deep blue on lecture's blackboard just to 3:1, its hue and chroma kept", () => {
-    const { file, placement } = regen("lecture", BLUE)
+  it("lifts Berlin's orange in swiss's red rules just to 3:1, its hue and chroma kept", () => {
+    const { file, placement } = regen("swiss", ORANGE)
     const accent = file.style.colors.accent
     const ratio = contrastRatio(accent, file.style.colors.bg)
     expect(ratio).toBeGreaterThanOrEqual(3)
     expect(ratio).toBeLessThan(3.1)
-    expect(hueDistance(hexToOklch(accent).h, hexToOklch(BLUE).h)).toBeLessThan(2)
-    expect(hexToOklch(accent).C).toBeLessThanOrEqual(hexToOklch(BLUE).C + 0.005)
-    expect(placement.brand.lifted).toMatchObject({ need: 3 })
+    expect(hueDistance(hexToOklch(accent).h, hexToOklch(ORANGE).h)).toBeLessThan(2)
+    expect(hexToOklch(accent).C).toBeLessThanOrEqual(hexToOklch(ORANGE).C + 0.005)
+    expect(placement.brand).toMatchObject({ slot: "accent", lifted: { need: 3 } })
+  })
+
+  it("fills lecture's chalk bars with the deep blue as it is: a field of color is not lifted", () => {
+    const { file, placement } = regen("lecture", BLUE)
+    expect(file.style.colors.accent).toBe(BLUE)
+    expect(placement.brand).toMatchObject({ slot: "accent", written: BLUE, fills: true })
+    expect(placement.brand.lifted).toBeUndefined()
   })
 
   it("never writes a color more saturated than the colors asked for, on any theme", () => {
@@ -188,15 +195,22 @@ describe("rule 3: the other colors are drawn from the brand", () => {
     expect(accent.L - hexToOklch(BLUE).L).toBeGreaterThan(0.12)
   })
 
-  it("leads every chart that is not one color among inks with the brand, readable at 3:1", () => {
+  it("leads every chart that is not one color among inks with the brand as its slot holds it", () => {
     for (const id of CANONICAL_THEME_IDS) {
       const src = source(id).file.style.colors
       if (isSingleColorPalette(src.chartPalette.map((hex) => hex.toUpperCase()))) continue
       for (const colors of SINGLE) {
         const { file, placement } = regen(id, colors)
         expect(file.style.colors.chartPalette[0], `${id} ${colors.brand}`).toBe(placement.brand.chart)
-        expect(contrastRatio(placement.brand.chart, src.bg), `${id} ${colors.brand}`).toBeGreaterThanOrEqual(3)
+        // The bars take the brand as it is unless the chart's lead is a slot that only draws marks.
+        if (placement.brand.lifted === undefined) expect(placement.brand.chart, `${id} ${colors.brand}`).toBe(colors.brand)
       }
+    }
+  })
+
+  it("fills Berlin's orange bars as they are on a light page (thesis, clinic, crayon, bulletin)", () => {
+    for (const id of ["thesis", "clinic", "crayon", "bulletin"]) {
+      expect(regen(id, ORANGE).file.style.colors.chartPalette[0], id).toBe(ORANGE)
     }
   })
 
@@ -232,10 +246,12 @@ describe("rule 3: the other colors are drawn from the brand", () => {
     }
   })
 
-  it("keeps every chart color readable on lecture's blackboard", () => {
+  it("keeps every chart color it derived readable on lecture's blackboard", () => {
     for (const colors of ALL) {
-      const { file } = regen("lecture", colors)
+      const { file, placement } = regen("lecture", colors)
+      const asked = new Set([placement.brand.chart, placement.second?.chart].filter((hex): hex is string => hex !== undefined))
       for (const color of file.style.colors.chartPalette) {
+        if (asked.has(color)) continue
         expect(contrastRatio(color, file.style.colors.bg), `${name(colors)} ${color}`).toBeGreaterThanOrEqual(3)
       }
     }

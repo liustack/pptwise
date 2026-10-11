@@ -79,6 +79,13 @@ describe("countSlotUse", () => {
     expect(use.accent.area).toBe(1600)
   })
 
+  it("tells fields of color from marks: a bar is filled, a rule and a stroke are not", () => {
+    const svg = `<svg><rect x="0" y="0" width="40" height="120" fill="#112233"></rect><rect x="0" y="0" width="200" height="4" fill="#112233"></rect><line x1="0" y1="0" x2="100" y2="0" stroke="#112233" stroke-width="3"></line></svg>`
+    const use = countSlotUse([svg], colors)
+    expect(use.primary.area).toBe(4800 + 800 + 300)
+    expect(use.primary.filled).toBe(4800)
+  })
+
   it("counts strokes by length and width, and opacity scales the area", () => {
     const svg = `<svg><line x1="0" y1="0" x2="100" y2="0" stroke="#112233" stroke-width="3"></line><rect x="0" y="0" width="10" height="10" fill="#CC3300" fill-opacity="0.5"></rect></svg>`
     const use = countSlotUse([svg], colors)
@@ -132,7 +139,7 @@ describe("countSlotUse: headings and grounds", () => {
 })
 
 describe("pickBrandFace", () => {
-  const use = (area: number) => ({ area, bodyText: 0, largeText: 0, headings: 0, headingPx: 0, field: 0 })
+  const use = (area: number) => ({ area, bodyText: 0, largeText: 0, headings: 0, headingPx: 0, field: 0, filled: 0 })
 
   it("weighs area by how far the color stands from the ground", () => {
     // The primary covers twice the area but is a shade of the page.

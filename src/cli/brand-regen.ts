@@ -15,11 +15,12 @@
  *    headings still read in it at their size (`requiredContrastRatio`).
  *    When they would not, that slot keeps the theme's own color and the
  *    brand goes to the theme's other colored slot, the rules and marks.
- * 2. A slot that draws marks takes the brand as it is when it stands off
- *    the ground as well as the theme's own color did, up to 3:1. When it
- *    does not, its lightness moves just far enough, its hue kept and its
- *    OKLCH chroma never above the brand's own. The chart's brand series
- *    is held to 3:1 the same way. Nothing goes neon on a dark page.
+ * 2. A slot that draws marks (rules, short lines, icons) takes the brand
+ *    as it is when it stands off the ground as well as the theme's own
+ *    color did, up to 3:1. When it does not, its lightness moves just far
+ *    enough, its hue kept and its OKLCH chroma never above the brand's
+ *    own. Nothing goes neon on a dark page. A chart fills bars and areas,
+ *    so its series take the brand and the second color as they are.
  * 3. Every other colored token is drawn from the brand, not turned by a
  *    hue step: the theme's own lightness and chroma for that token (chroma
  *    no higher than the brand's), the brand's hue, and a neighbouring hue
@@ -58,6 +59,9 @@ export const GROUND_DISTANCE = 0.15
 
 /** Share of the page one rectangle of a slot must fill for the slot to count as a ground. */
 export const FIELD_SHARE = 0.5
+
+/** Share of a slot's painted area that must be fields of color (bars, blocks) for the slot to count as a fill rather than a mark. */
+export const FILL_SHARE = 0.5
 
 /** OKLab distance the theme's second colored slot keeps from the brand: a shade clearly lighter or darker. */
 export const SHADE_STEP = 0.12
@@ -106,13 +110,15 @@ export interface PlacedColor {
   written: string | null
   /** The slot fills a page as a ground, and words set on it take an ink that reads on it. */
   ground: boolean
+  /** The slot is mostly fields of color (bars, blocks) rather than marks, so it takes the color as it is. */
+  fills?: boolean
   /** Its lightness was moved to reach `need` on the ground, where it read `ratio`. */
   lifted?: { need: number; ratio: number }
   /** A slot that writes the headings kept the theme's own color because this one does not read there. */
   passedOver?: { slot: BrandSlot; need: number; ratio: number }
   /** Why it has no slot. */
   noSlot?: "neutral" | "one-color" | "headings"
-  /** The chart series drawn in it. */
+  /** The chart series drawn in it: the color as it is, since a chart fills its bars and areas with it. */
   chart: string
 }
 
@@ -252,6 +258,8 @@ function slotRoles(face: BrandFace, own: Record<BrandSlot, string>, bg: string) 
     writesHeadings,
     headingNeed: (s: BrandSlot) => requiredContrastRatio(face.use[s].headingPx),
     isGround: (s: BrandSlot) => face.use[s].field >= FIELD_SHARE,
+    /** Mostly bars and blocks, not rules and strokes: a field of color takes the brand as it is. */
+    fills: (s: BrandSlot) => face.use[s].area > 0 && face.use[s].filled / face.use[s].area >= FILL_SHARE,
     /** Marks need 3:1, never more than the theme's own color had. */
     markNeed: (s: BrandSlot) => Math.min(MARK_RATIO, contrastRatio(own[s], bg)),
     /** A derived color in the slot: body contrast when it sets body words, never more than the theme's own had. */
@@ -283,10 +291,11 @@ export function regenerateFromBrand(
   const neutrals = themeNeutrals(src)
 
   /** The value `x` is written as in slot `s`, or undefined when `s` writes headings `x` cannot. */
-  const fit = (x: string, s: BrandSlot): Pick<PlacedColor, "written" | "ground" | "lifted"> | undefined => {
+  const fit = (x: string, s: BrandSlot): Pick<PlacedColor, "written" | "ground" | "fills" | "lifted"> | undefined => {
     const ratio = contrastRatio(x, bg)
     if (roles.writesHeadings(s)) return ratio >= roles.headingNeed(s) ? { written: x, ground: false } : undefined
     if (roles.isGround(s)) return { written: x, ground: true }
+    if (roles.fills(s)) return { written: x, ground: false, fills: true }
     const need = roles.markNeed(s)
     if (ratio >= need) return { written: x, ground: false }
     return { written: liftToContrast(x, bg, need), ground: false, lifted: { need, ratio } }
@@ -324,9 +333,10 @@ export function regenerateFromBrand(
       slot: secondFit === undefined ? null : S2,
       written: secondFit?.written ?? null,
       ground: secondFit?.ground ?? false,
+      ...(secondFit?.fills ? { fills: true } : {}),
       ...(secondFit?.lifted ? { lifted: secondFit.lifted } : {}),
       ...(secondFit === undefined ? { noSlot: oneColor ? "one-color" : free ? "headings" : "neutral" } : {}),
-      chart: liftToContrast(B2, bg, MARK_RATIO),
+      chart: secondFit !== undefined && src.chartPalette.map(upper).includes(own[S2]) ? secondFit.written! : B2,
     } as PlacedColor
   } else if (brandSlot === F && !oneColor && roles.isColor(S2)) {
     const need = roles.shadeNeed(S2)
@@ -341,7 +351,13 @@ export function regenerateFromBrand(
   }
 
   // 3. The chart.
-  const chartBrand = liftToContrast(B, bg, MARK_RATIO)
+  // Bars, areas, and slices are fields of color: the chart fills them with
+  // the brand as it is, and a value set on one takes an ink that reads on it.
+  // Where the chart's entry is the slot's own color it stays the slot's
+  // value exactly, so a face that keeps that slot out of its charts
+  // (`paletteWithoutAccent`, `paletteAfterMark`) still finds it.
+  const ownPalette = new Set(src.chartPalette.map(upper))
+  const chartBrand = ownPalette.has(own[brandSlot]) ? slots[brandSlot] : B
   const shade = (hex: string, taken: readonly string[]) => {
     const need = Math.min(MARK_RATIO, contrastRatio(hex, bg))
     return shadeOf(hexToOklch(hex), brandHue.h, brandHue.C, bg, need, taken, SERIES_DISTANCE, B) ?? neutralFor(hex, neutrals, bg, need, taken, SERIES_DISTANCE)
@@ -428,6 +444,7 @@ export function regenerateFromBrand(
         slot: brandSlot,
         written: brandFit.written,
         ground: brandFit.ground,
+        ...(brandFit.fills ? { fills: true } : {}),
         ...(brandFit.lifted ? { lifted: brandFit.lifted } : {}),
         ...(passedOver ? { passedOver } : {}),
         chart: chartBrand,
@@ -583,8 +600,8 @@ export function describePlacement(placement: BrandPlacement): string[] {
     if (p.ground && p.slot !== null) {
       lines.push(`    colors.${p.slot} fills whole pages here, and the words on it take an ink that reads on ${p.color}`)
     }
-    if (p.chart !== p.color && p.chart !== p.written) {
-      lines.push(`    the chart draws it ${p.chart}, lightness moved to reach ${MARK_RATIO.toFixed(1)}:1 on bg ${bg}`)
+    if (p.fills && p.slot !== null) {
+      lines.push(`    colors.${p.slot} is mostly bars and blocks here, so it keeps ${p.color} as it is, and the words on it take an ink that reads on it`)
     }
     return lines
   }

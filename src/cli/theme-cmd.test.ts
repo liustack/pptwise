@@ -213,9 +213,17 @@ describe("runThemeFork --brand", () => {
   it("says so when the brand had to change to read on the theme's ground", async () => {
     const cwd = await tmp("pptwise-theme-fork-brand-lift-")
     const out = join(cwd, "themes", "acme.theme.json")
+    const msg = await runThemeFork("swiss", { brand: "#F09415", output: out, cwd })
+    expect(msg).toMatch(/brand: #F09415 changed to #[0-9A-F]{6} for colors\.accent/)
+    expect(msg).toContain("lightness moved to reach 3.0:1 on bg #F7F7F5")
+  })
+
+  it("keeps the brand as it is in a slot of bars and blocks, and says the words on it change ink", async () => {
+    const cwd = await tmp("pptwise-theme-fork-brand-fills-")
+    const out = join(cwd, "themes", "acme.theme.json")
     const msg = await runThemeFork("lecture", { brand: "#156082", output: out, cwd })
-    expect(msg).toMatch(/brand: #156082 changed to #[0-9A-F]{6} for colors\.accent/)
-    expect(msg).toContain("lightness moved to reach 3.0:1 on bg #1C2823")
+    expect(msg).toContain("brand: #156082 is colors.accent")
+    expect(msg).toContain("colors.accent is mostly bars and blocks here, so it keeps #156082 as it is")
   })
 
   it("keeps the headings in the theme's color and says so when the brand does not read there", async () => {

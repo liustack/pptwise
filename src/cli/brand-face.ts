@@ -8,7 +8,8 @@
  * menu offers, ending), and the area painted in `primary` and in `accent`
  * exactly is summed: fills, strokes, and text. The same pass notes which
  * slot sets words, and how large, because a slot that sets body-size words
- * must keep body-text contrast.
+ * must keep body-text contrast, and how much of a slot is fields of color
+ * (bars, blocks) rather than marks (rules, strokes, words).
  */
 import { renderSlideSvg, validateIr, formatIssues } from "../api"
 import { PptwiseError } from "../errors"
@@ -36,6 +37,8 @@ export interface SlotUse {
   headingPx: number
   /** The largest single rectangle the slot fills, as a share of the page: 1 is a page-filling ground. */
   field: number
+  /** Square pixels of `area` that are fields of color (a bar, a block, a disc at least {@link FILL_MIN_SIDE}px across), not marks (a rule, a stroke, a word, a dot). */
+  filled: number
 }
 
 export interface BrandFace {
@@ -70,6 +73,8 @@ const TEXT_RE = /<text\b([^>]*)>([\s\S]*?)<\/text>/g
 const TSPAN_RE = /<tspan\b([^>]*)>([^<]*)/g
 const ATTR_RE = /([a-zA-Z][a-zA-Z0-9:-]*)="([^"]*)"/g
 const HEX_RE = /^#[0-9a-fA-F]{6}$/
+/** The narrowest side a filled shape has to be a field of color rather than a mark: a chart's bar is, a 4px rule is not. */
+export const FILL_MIN_SIDE = 16
 /** The page the sample is drawn on, in px. */
 const PAGE_AREA = 1280 * 720
 /** The share of a line of type's box that ink covers, roughly. */
@@ -101,28 +106,28 @@ function pointsBox(source: string): { w: number; h: number } {
   return { w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }
 }
 
-/** Fill area and stroke length of one shape element. */
-function shapeGeometry(tag: string, a: Map<string, string>): { fill: number; stroke: number } {
+/** Fill area, stroke length, and narrowest side of one shape element. */
+function shapeGeometry(tag: string, a: Map<string, string>): { fill: number; stroke: number; side: number } {
   switch (tag) {
     case "rect": {
       const w = num(a, "width")
       const h = num(a, "height")
-      return { fill: w * h, stroke: 2 * (w + h) }
+      return { fill: w * h, stroke: 2 * (w + h), side: Math.min(w, h) }
     }
     case "line":
-      return { fill: 0, stroke: Math.hypot(num(a, "x2") - num(a, "x1"), num(a, "y2") - num(a, "y1")) }
+      return { fill: 0, stroke: Math.hypot(num(a, "x2") - num(a, "x1"), num(a, "y2") - num(a, "y1")), side: 0 }
     case "circle": {
       const r = num(a, "r")
-      return { fill: Math.PI * r * r, stroke: 2 * Math.PI * r }
+      return { fill: Math.PI * r * r, stroke: 2 * Math.PI * r, side: 2 * r }
     }
     case "ellipse": {
       const rx = num(a, "rx")
       const ry = num(a, "ry")
-      return { fill: Math.PI * rx * ry, stroke: Math.PI * (rx + ry) }
+      return { fill: Math.PI * rx * ry, stroke: Math.PI * (rx + ry), side: 2 * Math.min(rx, ry) }
     }
     default: {
       const box = pointsBox(a.get(tag === "path" ? "d" : "points") ?? "")
-      return { fill: (box.w * box.h) / 2, stroke: box.w + box.h }
+      return { fill: (box.w * box.h) / 2, stroke: box.w + box.h, side: Math.min(box.w, box.h) }
     }
   }
 }
@@ -145,7 +150,7 @@ export function countSlotUse(
   colors: Record<BrandSlot, string>,
   headings: readonly string[] = [],
 ): Record<BrandSlot, SlotUse> {
-  const empty = (): SlotUse => ({ area: 0, bodyText: 0, largeText: 0, headings: 0, headingPx: 0, field: 0 })
+  const empty = (): SlotUse => ({ area: 0, bodyText: 0, largeText: 0, headings: 0, headingPx: 0, field: 0, filled: 0 })
   const use: Record<BrandSlot, SlotUse> = { primary: empty(), accent: empty() }
   const slotsOf = (hex: string | undefined) =>
     hex === undefined || !HEX_RE.test(hex)
@@ -171,7 +176,9 @@ export function countSlotUse(
       const a = attrs(m[2]!)
       const geometry = shapeGeometry(m[1]!, a)
       for (const slot of slotsOf(a.get("fill"))) {
-        use[slot].area += geometry.fill * opacity(a, "fill")
+        const painted = geometry.fill * opacity(a, "fill")
+        use[slot].area += painted
+        if (geometry.side >= FILL_MIN_SIDE) use[slot].filled += painted
         if (m[1] === "rect") use[slot].field = Math.max(use[slot].field, geometry.fill / PAGE_AREA)
       }
       for (const slot of slotsOf(a.get("stroke"))) {
