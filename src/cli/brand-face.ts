@@ -15,7 +15,7 @@ import { renderSlideSvg, validateIr, formatIssues } from "../api"
 import { PptwiseError } from "../errors"
 import { offeredContentKinds } from "../render/layout-selection"
 import { compileThemeDefinition } from "../themes/definitions"
-import { oklabDistance, oklchChroma } from "../themes/palette-rebase"
+import { hexToOklch, oklabDistance, oklchChroma, oklchToHex } from "../themes/palette-rebase"
 import type { ThemeFile } from "../themes/schema"
 import { BRAND_SAMPLE_HEADINGS, brandSampleIr } from "./brand-sample"
 
@@ -39,6 +39,14 @@ export interface SlotUse {
   field: number
   /** Square pixels of `area` that are fields of color (a bar, a block, a disc at least {@link FILL_MIN_SIDE}px across), not marks (a rule, a stroke, a word, a dot). */
   filled: number
+  /**
+   * The largest rectangle the pages fill in a color the layouts work out
+   * from this slot rather than the slot's own (homeroom's blackboard is its
+   * primary darkened), found by drawing the sample again with the slot
+   * changed and seeing what follows it. Where it is, and how much of the
+   * page it covers. Absent when no such rectangle follows the slot.
+   */
+  derivedField?: { page: number; ordinal: number; share: number }
 }
 
 export interface BrandFace {
@@ -232,8 +240,8 @@ export function countHeadingRuns(svgs: readonly string[], headings: readonly str
   return runs
 }
 
-/** Draw the sample deck in `theme` and return each page's SVG. */
-export function renderBrandSample(theme: ThemeFile): string[] {
+/** Draw the sample deck in `theme` and return each page's SVG, or only the pages `only` names. */
+export function renderBrandSample(theme: ThemeFile, only?: readonly number[]): string[] {
   const definition = compileThemeDefinition(theme)
   const raw = brandSampleIr(definition.id, new Set<string>(offeredContentKinds(definition.menu)))
   const v = validateIr(raw, { theme: definition })
@@ -241,7 +249,66 @@ export function renderBrandSample(theme: ThemeFile): string[] {
     throw new PptwiseError(`theme "${definition.id}" cannot draw the brand sample deck:\n${formatIssues(v.errors)}`)
   }
   const ir = v.ir!
-  return ir.slides.map((_, index) => renderSlideSvg(ir, index, { theme: definition }))
+  const pages = only ?? ir.slides.map((_, index) => index)
+  return pages.map((index) => renderSlideSvg(ir, index, { theme: definition }))
+}
+
+/** `theme` with `slot` painted `color`: both slots when the theme paints them as one. */
+function withSlot(theme: ThemeFile, slot: BrandSlot, color: string): ThemeFile {
+  const out = structuredClone(theme)
+  const colors = out.style.colors
+  const oneColor = colors.primary.toUpperCase() === colors.accent.toUpperCase()
+  colors[slot] = color
+  if (oneColor) colors[slot === "primary" ? "accent" : "primary"] = color
+  return out
+}
+
+/** Each filled rectangle on a page, in document order: its fill and its share of the page. */
+function filledRects(svg: string): { fill: string; share: number }[] {
+  const out: { fill: string; share: number }[] = []
+  for (const m of svg.matchAll(/<rect\b([^>]*)>/g)) {
+    const a = attrs(m[1]!)
+    out.push({ fill: (a.get("fill") ?? "").toUpperCase(), share: (num(a, "width") * num(a, "height")) / PAGE_AREA })
+  }
+  return out
+}
+
+/**
+ * The largest rectangle whose color follows `slot` without being it: drawn
+ * once as the theme has it and once with the slot turned to the opposite
+ * hue, a rectangle whose fill changed with the slot but was not the slot's
+ * own color is one the layouts work out from it. A page whose rectangles do
+ * not line up between the two drawings is skipped.
+ */
+function findDerivedField(theme: ThemeFile, slot: BrandSlot, own: readonly string[]): SlotUse["derivedField"] {
+  const color = theme.style.colors[slot].toUpperCase()
+  const c = hexToOklch(color)
+  const probe = oklchToHex({ L: c.L, C: Math.max(c.C, 0.12), h: c.h + 180 })
+  const moved = renderBrandSample(withSlot(theme, slot, probe))
+  let best: SlotUse["derivedField"]
+  own.forEach((svg, page) => {
+    const before = filledRects(svg)
+    const after = filledRects(moved[page]!)
+    if (before.length !== after.length) return
+    before.forEach((rect, ordinal) => {
+      if (rect.fill === color || rect.fill === after[ordinal]!.fill || !HEX_RE.test(rect.fill)) return
+      if (best === undefined || rect.share > best.share) best = { page, ordinal, share: rect.share }
+    })
+  })
+  return best
+}
+
+/**
+ * The color the pages actually paint the rectangle `field` names when `slot`
+ * is `color`: homeroom's board for an orange primary is a dark brown.
+ */
+export function paintedField(theme: ThemeFile, slot: BrandSlot, color: string, field: NonNullable<SlotUse["derivedField"]>): string {
+  const [svg] = renderBrandSample(withSlot(theme, slot, color), [field.page])
+  const rect = filledRects(svg!)[field.ordinal]
+  if (rect === undefined || !HEX_RE.test(rect.fill)) {
+    throw new PptwiseError(`theme "${theme.id}" no longer draws the field its ${slot} is worked into on sample page ${field.page + 1}`)
+  }
+  return rect.fill
 }
 
 /** Measure `theme`'s brand face from its own sample pages. */
@@ -249,5 +316,10 @@ export function measureBrandFace(theme: ThemeFile): BrandFace {
   const { primary, accent, bg } = theme.style.colors
   const svgs = renderBrandSample(theme)
   const face = pickBrandFace({ primary, accent, bg }, countSlotUse(svgs, { primary, accent }, BRAND_SAMPLE_HEADINGS))
+  for (const slot of BRAND_SLOTS) {
+    if (!face.chromatic[slot]) continue
+    const derivedField = findDerivedField(theme, slot, svgs)
+    if (derivedField !== undefined) face.use[slot].derivedField = derivedField
+  }
   return { ...face, headingRuns: countHeadingRuns(svgs, BRAND_SAMPLE_HEADINGS) }
 }

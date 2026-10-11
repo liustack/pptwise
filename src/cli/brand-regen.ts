@@ -40,7 +40,7 @@ import { isTabooPair } from "../themes/chart-taboo"
 import { HexTokenSchema } from "../themes/hex"
 import { hexToOklch, oklabDistance, oklchToHex, type Oklch } from "../themes/palette-rebase"
 import { ThemeFileSchema, type ThemeFile } from "../themes/schema"
-import { isChromatic, measureBrandFace, type BrandFace, type BrandSlot } from "./brand-face"
+import { isChromatic, measureBrandFace, paintedField, type BrandFace, type BrandSlot } from "./brand-face"
 import { keepsName } from "./color-name"
 
 /** Contrast a slot that sets body-size words needs against the ground. */
@@ -59,6 +59,14 @@ export const GROUND_DISTANCE = 0.15
 
 /** Share of the page one rectangle of a slot must fill for the slot to count as a ground. */
 export const FIELD_SHARE = 0.5
+
+/**
+ * OKLab distance from the brand beyond which a field the pages work out from
+ * a slot no longer reads as the brand. homeroom darkens its primary into a
+ * blackboard: its own blue-grey moves 0.06, Office blue 0.05, a deep red
+ * 0.07, while Berlin's orange turns brown 0.20 away.
+ */
+export const FIELD_DRIFT = 0.1
 
 /** Share of a slot's painted area that must be fields of color (bars, blocks) for the slot to count as a fill rather than a mark. */
 export const FILL_SHARE = 0.5
@@ -114,13 +122,18 @@ export interface PlacedColor {
   fills?: boolean
   /** Its lightness was moved to reach `need` on the ground, where it read `ratio`. */
   lifted?: { need: number; ratio: number }
-  /** A slot that writes the headings kept the theme's own color because this one does not read there. */
-  passedOver?: { slot: BrandSlot; need: number; ratio: number }
+  /** The face kept the theme's own color, and why: this color does not read in its headings, or the pages work the face into a field that would not look like this color. */
+  passedOver?: { slot: BrandSlot } & Refusal
   /** Why it has no slot. */
-  noSlot?: "neutral" | "one-color" | "headings"
+  noSlot?: "neutral" | "one-color" | "headings" | "repainted"
   /** The chart series drawn in it: the color as it is, since a chart fills its bars and areas with it. Null when the chart stays one color among inks and leaves it out. */
   chart: string | null
 }
+
+/** Why a slot will not take a color. */
+export type Refusal =
+  | { why: "headings"; need: number; ratio: number }
+  | { why: "repainted"; painted: string; distance: number }
 
 export interface BrandPlacement {
   /** The theme's ground every ratio is measured against. */
@@ -290,31 +303,54 @@ export function regenerateFromBrand(
   const brandHue = hexToOklch(B)
   const neutrals = themeNeutrals(src)
 
-  /** The value `x` is written as in slot `s`, or undefined when `s` writes headings `x` cannot. */
-  const fit = (x: string, s: BrandSlot): Pick<PlacedColor, "written" | "ground" | "fills" | "lifted"> | undefined => {
+  type Fitted = Pick<PlacedColor, "written" | "ground" | "fills" | "lifted">
+  const refused = (f: Fitted | Refusal): f is Refusal => "why" in f
+  /**
+   * The value `x` is written as in slot `s`, or why `s` will not take it:
+   * `s` writes headings `x` cannot, or (when `checkField`) the pages work
+   * `s` into a field of the page that would not look like `x`.
+   */
+  const fit = (x: string, s: BrandSlot, checkField = true): Fitted | Refusal => {
     const ratio = contrastRatio(x, bg)
-    if (roles.writesHeadings(s)) return ratio >= roles.headingNeed(s) ? { written: x, ground: false } : undefined
-    if (roles.isGround(s)) return { written: x, ground: true }
-    if (roles.fills(s)) return { written: x, ground: false, fills: true }
-    const need = roles.markNeed(s)
-    if (ratio >= need) return { written: x, ground: false }
-    return { written: liftToContrast(x, bg, need), ground: false, lifted: { need, ratio } }
+    let fitted: Fitted
+    if (roles.writesHeadings(s)) {
+      const need = roles.headingNeed(s)
+      if (ratio < need) return { why: "headings", need, ratio }
+      fitted = { written: x, ground: false }
+    } else if (roles.isGround(s)) fitted = { written: x, ground: true }
+    else if (roles.fills(s)) fitted = { written: x, ground: false, fills: true }
+    else {
+      const need = roles.markNeed(s)
+      fitted = ratio >= need ? { written: x, ground: false } : { written: liftToContrast(x, bg, need), ground: false, lifted: { need, ratio } }
+    }
+    const field = face.use[s].derivedField
+    if (checkField && field !== undefined && field.share >= FIELD_SHARE) {
+      const painted = paintedField(source, s, fitted.written!, field)
+      const distance = oklabDistance(painted, x)
+      if (distance > FIELD_DRIFT) return { why: "repainted", painted, distance }
+    }
+    return fitted
   }
 
   // 1. The brand.
   let brandSlot: BrandSlot = F
-  let brandFit = fit(B, F)
+  const inFace = fit(B, F)
+  let brandFit: Fitted
   let passedOver: PlacedColor["passedOver"]
-  if (brandFit === undefined) {
+  if (!refused(inFace)) brandFit = inFace
+  else {
     const O = otherSlot(F)
     const inOther = !oneColor && roles.isColor(O) ? fit(B, O) : undefined
-    if (inOther !== undefined) {
+    if (inOther !== undefined && !refused(inOther)) {
       brandSlot = O
       brandFit = inOther
-      passedOver = { slot: F, need: roles.headingNeed(F), ratio: contrastRatio(B, bg) }
+      passedOver = { slot: F, ...inFace }
+    } else if (inFace.why === "headings") {
+      brandFit = { written: liftToContrast(B, bg, inFace.need), ground: false, lifted: { need: inFace.need, ratio: inFace.ratio } }
     } else {
-      const need = roles.headingNeed(F)
-      brandFit = { written: liftToContrast(B, bg, need), ground: false, lifted: { need, ratio: contrastRatio(B, bg) } }
+      // Nowhere else to go: the face takes it, worked into its field as the theme works its own color.
+      const kept = fit(B, F, false)
+      brandFit = refused(kept) ? { written: liftToContrast(B, bg, MARK_RATIO), ground: false } : kept
     }
   }
   const slots: Record<BrandSlot, string> = { ...own }
@@ -329,7 +365,8 @@ export function regenerateFromBrand(
   let second: PlacedColor | undefined
   if (B2 !== undefined) {
     const free = !oneColor && roles.isColor(S2)
-    const secondFit = free ? fit(B2, S2) : undefined
+    const tried = free ? fit(B2, S2) : undefined
+    const secondFit = tried !== undefined && !refused(tried) ? tried : undefined
     if (secondFit !== undefined) slots[S2] = secondFit.written!
     second = {
       color: B2,
@@ -338,7 +375,7 @@ export function regenerateFromBrand(
       ground: secondFit?.ground ?? false,
       ...(secondFit?.fills ? { fills: true } : {}),
       ...(secondFit?.lifted ? { lifted: secondFit.lifted } : {}),
-      ...(secondFit === undefined ? { noSlot: oneColor ? "one-color" : free ? "headings" : "neutral" } : {}),
+      ...(secondFit === undefined ? { noSlot: oneColor ? "one-color" : tried !== undefined && refused(tried) ? tried.why : "neutral" } : {}),
       chart: oneColorChart ? null : secondFit !== undefined && src.chartPalette.map(upper).includes(own[S2]) ? secondFit.written! : B2,
     } as PlacedColor
   } else if (brandSlot === F && !oneColor && roles.isColor(S2)) {
@@ -588,7 +625,9 @@ export function describePlacement(placement: BrandPlacement): string[] {
           ? "this theme paints primary and accent as one color"
           : p.noSlot === "headings"
             ? "the free slot writes the headings and the color does not read there"
-            : "the theme's other slot is an ink, not a color"
+            : p.noSlot === "repainted"
+              ? "the pages work the free slot into a field that would not look like it"
+              : "the theme's other slot is an ink, not a color"
       lines.push(
         p.chart === null
           ? `  ${label}: ${p.color} is not used: ${why}, and this theme keeps its charts one color among inks`
@@ -604,7 +643,9 @@ export function describePlacement(placement: BrandPlacement): string[] {
     if (p.passedOver !== undefined) {
       const o = p.passedOver
       lines.push(
-        `    colors.${o.slot} keeps the theme's own color: it writes the headings, which need ${o.need.toFixed(1)}:1 on bg ${bg}, and ${p.color} reads ${o.ratio.toFixed(2)}:1`,
+        o.why === "headings"
+          ? `    colors.${o.slot} keeps the theme's own color: it writes the headings, which need ${o.need.toFixed(1)}:1 on bg ${bg}, and ${p.color} reads ${o.ratio.toFixed(2)}:1`
+          : `    colors.${o.slot} keeps the theme's own color: the pages work it into a larger field, which would come out ${o.painted} for ${p.color} (${o.distance.toFixed(2)} away in OKLab), no longer the brand`,
       )
     }
     if (p.ground && p.slot !== null) {

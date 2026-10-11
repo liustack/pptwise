@@ -99,8 +99,8 @@ describe("rule 1: the brand goes in as it is, and the words change ink", () => {
     expect(file.style.colors.accent).toBe(ORANGE)
     expect(placement.brand).toMatchObject({ slot: "accent", written: ORANGE })
     // Brief's headings are 36px and up: 3:1, and the orange reads 2.17:1.
-    expect(placement.brand.passedOver).toMatchObject({ slot: "primary", need: 3 })
-    expect(placement.brand.passedOver!.ratio).toBeLessThan(3)
+    expect(placement.brand.passedOver).toMatchObject({ slot: "primary", why: "headings", need: 3 })
+    expect((placement.brand.passedOver as { ratio: number }).ratio).toBeLessThan(3)
   })
 
   it("writes brief's headings in a brand that reads there", () => {
@@ -263,6 +263,24 @@ describe("rule 3: the other colors are drawn from the brand", () => {
         const palette = regen(id, colors).file.style.colors.chartPalette
         expect(paletteBreaksTaboo(palette), `${id} ${colors.brand}: ${palette.join(" ")}`).toBe(false)
       }
+    }
+  })
+})
+
+describe("rule D: a face the pages rework must still look like the brand", () => {
+  it("keeps homeroom's blackboard blue-grey and puts Berlin's orange in the accent, as the board would turn it brown", () => {
+    const { file, placement } = regen("homeroom", ORANGE)
+    expect(file.style.colors.primary).toBe(source("homeroom").file.style.colors.primary)
+    expect(file.style.colors.accent).toBe(ORANGE)
+    expect(placement.brand.passedOver).toMatchObject({ slot: "primary", why: "repainted" })
+    expect((placement.brand.passedOver as { distance: number }).distance).toBeGreaterThan(0.1)
+  })
+
+  it("lets a brand the board only darkens a little take homeroom's primary", () => {
+    for (const brand of [BLUE, RED, GREEN]) {
+      const { file, placement } = regen("homeroom", brand)
+      expect(file.style.colors.primary, brand).toBe(brand)
+      expect(placement.brand.passedOver, brand).toBeUndefined()
     }
   })
 })

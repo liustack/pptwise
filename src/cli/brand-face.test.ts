@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { CANONICAL_THEME_IDS } from "../themes"
-import { countHeadingRuns, countSlotUse, isChromatic, LARGE_TEXT_PX, measureBrandFace, pickBrandFace, renderBrandSample } from "./brand-face"
+import { countHeadingRuns, countSlotUse, isChromatic, LARGE_TEXT_PX, measureBrandFace, paintedField, pickBrandFace, renderBrandSample } from "./brand-face"
 import { themeFileFromPreset } from "./theme-resolve"
 
 installNodePlatform()
@@ -50,6 +50,22 @@ describe("measureBrandFace", () => {
       const svgs = renderBrandSample(themeFileFromPreset(id, { id: `${id}-probe` }))
       expect(svgs.length, id).toBeGreaterThanOrEqual(10)
       for (const svg of svgs) expect(svg, id).not.toMatch(/data-dropped|data-truncated/)
+    }
+  })
+})
+
+describe("measureBrandFace: fields the pages work out from a slot", () => {
+  it("finds homeroom's blackboard, its primary darkened, filling the cover", () => {
+    const theme = themeFileFromPreset("homeroom", { id: "homeroom-probe" })
+    const field = measureBrandFace(theme).use.primary.derivedField
+    expect(field).toMatchObject({ page: 0, share: 1 })
+    expect(paintedField(theme, "primary", theme.style.colors.primary, field!)).toBe("#3E5A74")
+  })
+
+  it("finds no page-sized reworked field on a theme that paints its colors as they are", () => {
+    for (const id of ["brief", "bulletin", "proposal"]) {
+      const use = measureBrandFace(themeFileFromPreset(id, { id: `${id}-probe` })).use
+      for (const slot of ["primary", "accent"] as const) expect(use[slot].derivedField?.share ?? 0, `${id} ${slot}`).toBeLessThan(0.5)
     }
   })
 })

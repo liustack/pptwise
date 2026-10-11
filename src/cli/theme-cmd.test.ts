@@ -218,6 +218,14 @@ describe("runThemeFork --brand", () => {
     expect(msg).toContain("lightness moved to reach 3.0:1 on bg #F7F7F5")
   })
 
+  it("keeps a face the pages darken into a board and says the brand would not survive it", async () => {
+    const cwd = await tmp("pptwise-theme-fork-brand-board-")
+    const out = join(cwd, "themes", "acme.theme.json")
+    const msg = await runThemeFork("homeroom", { brand: "#F09415", output: out, cwd })
+    expect(msg).toContain("brand: #F09415 is colors.accent")
+    expect(msg).toMatch(/colors\.primary keeps the theme's own color: the pages work it into a larger field, which would come out #[0-9A-F]{6} for #F09415/)
+  })
+
   it("says a second color is not used where the theme has no slot for it and keeps its charts one color", async () => {
     const cwd = await tmp("pptwise-theme-fork-brand-mono-")
     const out = join(cwd, "themes", "acme.theme.json")
