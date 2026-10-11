@@ -258,7 +258,7 @@ describe("pptwise_themes", () => {
     matchesSchema(value, svc.themesTool.output.schema)
 
     const [call] = await calls(cliPath)
-    expect(call!.cwd).toBe(await realpath(workspace))
+    expect(await realpath(call!.cwd)).toBe(await realpath(workspace))
     const stage = call!.argv[call!.argv.indexOf("-o") + 1]!
     expect(call!.argv).toEqual([
       "theme", "try", "--title", "Q3 review", "--json", "-o", stage,
@@ -339,7 +339,13 @@ describe("pptwise_build", () => {
     const { svc, cliPath, workspace, route, handler } = await setup("build-ok")
     const target = await deck(workspace)
     const value = await svc.buildTool.execute({ target }, inSession(workspace))
-    const pptx = join(await realpath(workspace), ".pptwise", "weekly", "weekly.pptx")
+    const [call] = await calls(cliPath)
+    expect(await realpath(call!.cwd)).toBe(await realpath(workspace))
+    expect(call!.argv).toEqual(["build", target, "--json"])
+    // The path the CLI itself reports: its own working directory, which is the
+    // workspace in whatever spelling the OS hands a child (Windows keeps an 8.3
+    // short name where realpath would expand it).
+    const pptx = join(call!.cwd, ".pptwise", "weekly", "weekly.pptx")
 
     expect(value).toEqual({
       status: "ok",
@@ -350,7 +356,6 @@ describe("pptwise_build", () => {
       warnings: [{ stage: "validate", page: 1, pageId: "cover", field: "heading", message: "long heading" }],
     })
     matchesSchema(value, svc.buildTool.output.schema)
-    expect((await calls(cliPath))[0]).toEqual({ cwd: await realpath(workspace), argv: ["build", target, "--json"] })
 
     const text = svc.buildTool.output.render({}, value)[0]!.text
     expect(text.split("\n")[0]).toBe(`pptwise-preview:${value.previewId} · rendered 2 pages · build passed: every check is clean`)
@@ -523,6 +528,9 @@ describe("records from the newer tools", () => {
   })
 })
 
+/** Both sides of a path comparison go through this: the CLI child reports its
+ *  cwd as the OS spells it (macOS resolves /var to /private/var, Windows keeps
+ *  an 8.3 short name), so only the resolved forms are comparable. */
 async function realpath(path: string): Promise<string> {
   const { realpath: resolveReal } = await import("node:fs/promises")
   return resolveReal(path)
