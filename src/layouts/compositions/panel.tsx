@@ -7,6 +7,7 @@ import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { emphasisRunInk, parseEmphasis } from "../../render/emphasis"
 import { deltaNewsInk } from "../../render/delta-news"
 import { accessibleInk, blendOver, contrastRatio, resolveSemanticColor } from "../../render/ink"
+import { paletteAfterMark } from "../../render/chart-palette"
 import { splitRow } from "./rows"
 import { blockTag } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
@@ -95,22 +96,20 @@ export function panelInks(ctx: ComponentCtx): PanelInks {
 
 /**
  * The colour of the `k`-th series the author did not mark, counted from the
- * one nearest the mark: the chart palette after its lead, in order.
+ * one nearest the mark: the chart palette after the mark (`paletteAfterMark`), in order.
  */
 export function panelSeriesInk(ctx: ComponentCtx, k: number): string {
-  const palette = ctx.colors.chartPalette
-  const rest = palette.length > 1 ? palette.slice(1) : palette
+  const rest = paletteAfterMark(ctx.colors.chartPalette, emphasisRunInk(ctx.colors))
   return rest[k % rest.length]!
 }
 
 /**
  * The ring of a hollow marker and the stroke of an unmarked node: of the
- * palette colours after the lead, the one that stands out most from the
+ * palette colours after the mark, the one that stands out most from the
  * panel, so a ring reads on the surface without taking the mark's colour.
  */
 export function panelOutlineInk(ctx: ComponentCtx): string {
-  const palette = ctx.colors.chartPalette
-  const rest = palette.length > 1 ? palette.slice(1) : palette
+  const rest = paletteAfterMark(ctx.colors.chartPalette, emphasisRunInk(ctx.colors))
   return [...rest].sort((a, b) => contrastRatio(b, ctx.colors.surface) - contrastRatio(a, ctx.colors.surface))[0]!
 }
 

@@ -12,6 +12,7 @@ import { rosterComposition } from "./roster"
 import { rowsComposition } from "./rows"
 import { scoresComposition } from "./scores"
 import { sealInks, sealSeriesInk } from "./seal"
+import { VERMILION_TOKENS } from "../../themes/builtin/vermilion"
 import { tableComposition } from "./table"
 import { targetsComposition } from "./targets"
 import { tilesComposition } from "./tiles"
@@ -384,6 +385,13 @@ describe("the seal setting, as vermilion's board draws it", () => {
     expect([category.getAttribute("fill"), category.getAttribute("font-weight")]).toEqual([inks.mark, "700"])
     expect(byText(root!, "PPI")!.getAttribute("font-weight")).not.toBe("700")
     expect(Array.from(root!.querySelectorAll("rect")).some((rect) => rect.getAttribute("fill") === sealSeriesInk(ctx, 1))).toBe(true)
+  })
+
+  it("draws a brand that leads the chart beside a mark the theme kept, instead of skipping it", () => {
+    const repainted = { ...VERMILION_TOKENS.colors, emphasisInk: "#B02318", chartPalette: ["#C77800", "#978B42", "#4A5C6E"] }
+    const ctx = { colors: repainted } as Parameters<typeof sealSeriesInk>[0]
+    expect([sealSeriesInk(ctx, 0), sealSeriesInk(ctx, 1)]).toEqual(["#C77800", "#978B42"])
+    expect(sealSeriesInk({ colors: VERMILION_TOKENS.colors } as Parameters<typeof sealSeriesInk>[0], 0)).toBe(VERMILION_TOKENS.colors.chartPalette[1])
   })
 
   it("prints a trend's values as written, its target range tinted behind the line", () => {

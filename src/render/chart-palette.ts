@@ -1,3 +1,4 @@
+import { oklabDistance } from "../themes/palette-rebase"
 import { blendOver, contrastRatio, graphicInk, readableOn } from "./ink"
 
 /**
@@ -51,6 +52,26 @@ export function rotateChartPalette(palette: readonly string[], offset: number): 
 export function paletteWithoutAccent(palette: readonly string[], accent: string): string[] {
   const kept = palette.filter((color) => color.toUpperCase() !== accent.toUpperCase())
   return kept.length > 0 ? kept : [...palette]
+}
+
+/** How close (OKLab) a palette's lead may sit to the mark and still be the mark's own entry. */
+const SAME_AS_MARK = 0.05
+
+/**
+ * The colours a face draws the series it did not mark in, when its marked
+ * (or first) series takes the mark itself (`emphasisRunInk`).
+ *
+ * A built-in theme leads its palette with the mark, so the rest is the
+ * palette after its lead. A theme repainted around a brand can keep its own
+ * mark (the brand could not be read as an emphasis ink) and lead the chart
+ * with the brand instead. Dropping that lead would leave the brand off every
+ * chart, so the lead goes only when it is the mark or a colour no one could
+ * tell from it. A palette of one is never emptied.
+ */
+export function paletteAfterMark(palette: readonly string[], mark: string): string[] {
+  const lead = palette[0]
+  if (palette.length < 2 || lead === undefined) return [...palette]
+  return oklabDistance(lead, mark) < SAME_AS_MARK ? palette.slice(1) : [...palette]
 }
 
 /** WCAG 2.1 SC 1.4.11's non-text floor, which a receded mark still owes. */

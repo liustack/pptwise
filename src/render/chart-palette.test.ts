@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { rotateChartPalette } from "./chart-palette"
+import { paletteAfterMark, rotateChartPalette } from "./chart-palette"
 
 describe("rotateChartPalette", () => {
   const palette = ["a", "b", "c", "d"]
@@ -55,5 +55,23 @@ describe("rotateChartPalette", () => {
 
   it("a single-color palette is always its own rotation", () => {
     expect(rotateChartPalette(["only"], 5)).toEqual(["only"])
+  })
+})
+
+describe("paletteAfterMark", () => {
+  it("drops the lead when it is the mark, as every built-in palette has it", () => {
+    expect(paletteAfterMark(["#B02318", "#A89480", "#CDBBA5"], "#B02318")).toEqual(["#A89480", "#CDBBA5"])
+  })
+
+  it("drops a lead no one could tell from the mark", () => {
+    expect(paletteAfterMark(["#00843D", "#57AB6D"], "#007E3A")).toEqual(["#57AB6D"])
+  })
+
+  it("keeps a lead that is some other colour, so a brand that leads the chart still reaches it", () => {
+    expect(paletteAfterMark(["#C77800", "#978B42"], "#B02318")).toEqual(["#C77800", "#978B42"])
+  })
+
+  it("never empties a palette of one", () => {
+    expect(paletteAfterMark(["#B02318"], "#B02318")).toEqual(["#B02318"])
   })
 })

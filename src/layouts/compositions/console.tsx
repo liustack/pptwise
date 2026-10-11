@@ -4,6 +4,7 @@ import type { ComponentCtx } from "../../components/types"
 import { attachEmphasis, emphasisRunInk, stripEmphasis, type EmphasisHeadingLayout } from "../../render/emphasis"
 import { Icon } from "../../render/icons"
 import { accessibleInk, blendOver, graphicInk, metaInk, resolveSemanticColor } from "../../render/ink"
+import { paletteAfterMark } from "../../render/chart-palette"
 import { centredBaseline, fitFixed, paintLines } from "./type"
 
 type Tone = NonNullable<Extract<Component, { type: "timeline" }>["milestones"][number]["tone"]>
@@ -106,11 +107,10 @@ export function toneInk(inks: ConsoleInks, tone: Tone | undefined): string | und
 
 /**
  * The colour of the `k`-th series the author did not mark, counted from the
- * one nearest the mark: the chart palette after its lead, in order.
+ * one nearest the mark: the chart palette after the mark (`paletteAfterMark`), in order.
  */
 export function consoleSeriesInk(ctx: ComponentCtx, k: number): string {
-  const palette = ctx.colors.chartPalette
-  const rest = palette.length > 1 ? palette.slice(1) : palette
+  const rest = paletteAfterMark(ctx.colors.chartPalette, emphasisRunInk(ctx.colors))
   return rest[k % rest.length]!
 }
 

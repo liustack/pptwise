@@ -3,6 +3,7 @@ import type { ComponentCtx } from "../../components/types"
 import { inkToward, type Tag, type TagInks, type TagSpec } from "../../components/tag"
 import { emphasisRunInk } from "../../render/emphasis"
 import { accessibleInk, blendOver, readableOn, resolveSemanticColor } from "../../render/ink"
+import { paletteAfterMark } from "../../render/chart-palette"
 import { itemNumeral } from "./numerals"
 import { centredBaseline } from "./type"
 
@@ -104,11 +105,10 @@ export function sealText(ink: string, ground: string, size: number): string {
 
 /**
  * The colour of the `k`-th series the author did not mark, counted from the
- * one nearest the mark: the chart palette after its lead, in order.
+ * one nearest the mark: the chart palette after the mark (`paletteAfterMark`), in order.
  */
 export function sealSeriesInk(ctx: ComponentCtx, k: number): string {
-  const palette = ctx.colors.chartPalette
-  const rest = palette.length > 1 ? palette.slice(1) : palette
+  const rest = paletteAfterMark(ctx.colors.chartPalette, emphasisRunInk(ctx.colors))
   return rest[k % rest.length]!
 }
 
