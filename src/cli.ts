@@ -384,22 +384,27 @@ const brand = program.command("brand").description("Brand asset commands — ext
 brand
   .command("extract")
   .description(
-    "Read the brand color (accent1), its second color (accent2), and fonts from a .thmx/.potx/.pptx file and repaint a theme around them, into a pptwise theme file — runs entirely locally, the file never leaves your machine",
+    "Read the brand color (accent1) and its second color (accent2) from a .thmx/.potx/.pptx file and repaint a theme around them, into a pptwise theme file — runs entirely locally, the file never leaves your machine",
   )
   .argument("<file>", "a .thmx theme, .potx template, or .pptx presentation")
   .requiredOption("-o, --output <file>", "output theme JSON path (e.g. my-brand.theme.json)")
   .option("--id <id>", "theme id to register under (default: slug of the output filename)")
   .option("--label <label>", "human-readable theme label (default: the source theme's color-scheme name)")
-  .option("--from <preset>", "theme to repaint around the template's brand color, keeping its ground, text, and menu (default: brief)")
+  .option("--from <preset>", "theme to repaint around the template's brand color, keeping its ground, text, fonts, and menu (default: brief)")
+  .option(
+    "--brand-fonts",
+    "put the template's Latin heading and body fonts ahead of the theme's own (Chinese text keeps the theme's faces). A font off the safe font list never reaches the slides, and one without an exact width table may overflow: the command warns about both",
+  )
   .option("--force", "overwrite an existing theme file")
   .addHelpText("after", "\nExample:\n  $ pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief")
-  .action(async (file: string, opts: { output: string; id?: string; label?: string; from?: string; force?: boolean }) => {
+  .action(async (file: string, opts: { output: string; id?: string; label?: string; from?: string; brandFonts?: boolean; force?: boolean }) => {
     try {
       console.log(await runBrandExtract(file, {
         output: opts.output,
         id: opts.id,
         label: opts.label,
         from: opts.from,
+        brandFonts: opts.brandFonts,
         force: opts.force,
       }))
     } catch (e) {

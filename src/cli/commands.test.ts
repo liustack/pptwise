@@ -38,6 +38,7 @@ import {
 } from "./commands"
 import { THEME_FILENAME } from "./deck-dir"
 import { resolveThemeInputs } from "./theme-inputs"
+import { pairedEaFace } from "../render/fonts"
 
 const execFile = promisify(execFileCb)
 
@@ -1767,11 +1768,35 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     // ink shows its cinnabar most, and the template's deep blue reads there.
     expect(written.style.colors.accent).toBe(`#${BRAND_THMX_COLORS.accent1}`)
     expect(written.style.colors.primary).toBe(ink.colors.primary)
-    expect(written.style.fonts.heading[0]).toBe("Georgia")
-    expect(written.style.fonts.body[0]).toBe("Verdana")
+    // Fonts stay the theme's own unless --brand-fonts asks for the template's.
+    expect(written.style.fonts).toEqual(ink.fonts)
     expect(msg).toContain(`brand: #${BRAND_THMX_COLORS.accent1} is colors.accent`)
     // ink's other slot is its ink black, so the template's accent2 is the chart's second series.
     expect(msg).toContain(`second: #${BRAND_THMX_COLORS.accent2} is the chart's second series only`)
+  })
+
+  it("brand extract --brand-fonts puts the template's Latin fonts first and keeps the theme's Chinese faces", async () => {
+    const d = await freshDir()
+    const src = await writeFixtureTemplate(d, { colors: BRAND_THMX_COLORS, majorFont: "Georgia", minorFont: "Verdana" })
+    const out = join(d, "acme.theme.json")
+    const msg = await runBrandExtract(src, { output: out, from: "ink", brandFonts: true })
+    const written = JSON.parse(await readFile(out, "utf8")) as ThemeFile
+    const ink = getThemeDefinition("ink").style
+    expect(written.style.fonts.heading).toEqual(["Georgia", ...ink.fonts.heading])
+    expect(written.style.fonts.body).toEqual(["Verdana", ...ink.fonts.body])
+    // KaiTi still follows the Latin face, so the export pairs it with Georgia for the Chinese.
+    expect(pairedEaFace(written.style.fonts.heading, "heading")).toBe("KaiTi")
+    expect(msg).toContain('warning: body font "Verdana" has no exact width table')
+    expect(msg).not.toContain('heading font "Georgia"')
+  })
+
+  it("brand extract --brand-fonts says when a template font never reaches the slides", async () => {
+    const d = await freshDir()
+    const src = await writeFixtureTemplate(d, { colors: BRAND_THMX_COLORS, majorFont: "Trebuchet MS", minorFont: "Trebuchet MS" })
+    const out = join(d, "acme.theme.json")
+    const msg = await runBrandExtract(src, { output: out, from: "brief", brandFonts: true })
+    expect(msg).toContain('warning: heading font "Trebuchet MS" is not on the safe font list')
+    expect(msg).toContain('so the slides set heading text in "Georgia"')
   })
 
   it("brand extract gives the template's accent2 the theme's second colored slot", async () => {

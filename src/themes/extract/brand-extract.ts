@@ -286,6 +286,20 @@ export function slugify(input: string, fallback = "brand"): string {
 }
 
 /**
+ * The Latin faces a template's font scheme names for headings (major) and
+ * body text (minor), read from the same theme part {@link extractBrandTheme}
+ * reads. A face the template does not name is `undefined`. Its East Asian
+ * faces are not read: a repainted theme never takes them.
+ */
+export async function readTemplateFonts(bytes: Uint8Array | ArrayBuffer): Promise<{ major?: string; minor?: string }> {
+  const zip = await JSZip.loadAsync(bytes)
+  const part = await findThemePart(zip)
+  if (!part) return {}
+  const { major, minor } = parseFonts(part.xml)
+  return { ...(major ? { major } : {}), ...(minor ? { minor } : {}) }
+}
+
+/**
  * Extract a {@link BrandThemeFile} from raw OOXML package bytes (a
  * `.thmx`/`.potx`/`.pptx` file's own bytes — this function only ever reads
  * the theme part inside, nothing else in the package). Deterministic: the

@@ -179,7 +179,7 @@ const { buildThmxBytes, BRAND_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } = await im
 const brandFixturePath = join(OUT, "brand-fixture.pptx")
 writeFileSync(
   brandFixturePath,
-  Buffer.from(await buildThmxBytes({ schemeName: "E2E Brand", colors: BRAND_THMX_COLORS })),
+  Buffer.from(await buildThmxBytes({ schemeName: "E2E Brand", colors: BRAND_THMX_COLORS, majorFont: "Verdana", minorFont: "Verdana" })),
 )
 const brandWorkspace = resolve(OUT, "brand-workspace")
 mkdirSync(join(brandWorkspace, "themes"), { recursive: true })
@@ -191,7 +191,11 @@ if (!extractMsg.includes('theme "e2e-brand"')) {
 }
 const brandThemeFile = JSON.parse(readFileSync(brandThemePath, "utf8")) as {
   id: string
-  style: { colors: { primary: string; accent: string; muted: string } }
+  style: { colors: { primary: string; accent: string; muted: string }; fonts: { heading: string[]; body: string[] } }
+}
+// Fonts stay brief's own: the template's Verdana goes in only with --brand-fonts.
+if (brandThemeFile.style.fonts.heading.includes("Verdana") || brandThemeFile.style.fonts.body.includes("Verdana")) {
+  throw new Error("e2e: brand leg — extract wrote the template's fonts without --brand-fonts")
 }
 if (brandThemeFile.style.colors.primary !== `#${BRAND_THMX_COLORS.accent1}`) {
   throw new Error(

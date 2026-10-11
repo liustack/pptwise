@@ -26,7 +26,9 @@ import { AUDIENCE_VALUES, PACING_BUDGETS, STRATEGY_DEFINITIONS, STRATEGY_VALUES,
 import { auditDeck, type AuditChecks, type AuditFinding, type AuditReport } from "../audit/deck-audit"
 import { buildAssetBrief, type AssetBrief, type AssetBriefItem } from "../render/asset-brief"
 import { dropPhrase, parseDropKind, type DropKind } from "../render/drop-marker"
-import { extractBrandTheme, slugify } from "../themes/extract/brand-extract"
+import { resolveFontFace, SAFE_FONTS } from "../render/fonts"
+import { hasExactWidthTable } from "../lib/svg-text-layout"
+import { extractBrandTheme, readTemplateFonts, slugify } from "../themes/extract/brand-extract"
 import { ThemeFileSchema, type Menu, type ThemeFile } from "../themes/schema"
 import { OCCASION_VOCAB, THEME_OCCASIONS } from "../themes/occasions"
 import { themeShortlist } from "../themes/select"
@@ -1337,7 +1339,41 @@ export interface BrandExtractOptions {
   label?: string
   /** Donor preset whose menu and remaining tokens are copied. Default brief. */
   from?: string
+  /** `--brand-fonts`: set the template's Latin fonts ahead of the theme's own. */
+  brandFonts?: boolean
   force?: boolean
+}
+
+/**
+ * The theme's font stacks with the template's Latin faces put first, and
+ * the warnings a reader needs about them. The theme's East Asian faces stay
+ * where they are in each stack, so Chinese text keeps the theme's face.
+ */
+function withTemplateFonts(
+  fonts: ThemeFile["style"]["fonts"],
+  template: { major?: string; minor?: string },
+): { fonts: ThemeFile["style"]["fonts"]; notes: string[] } {
+  const notes: string[] = []
+  const lead = (role: "heading" | "body", face: string | undefined, stack: string[]): string[] => {
+    if (face === undefined) {
+      notes.push(`  fonts: the template names no ${role} font, so ${role} text keeps the theme's own`)
+      return stack
+    }
+    const next = [face, ...stack.filter((f) => f.toLowerCase() !== face.toLowerCase())]
+    const resolved = resolveFontFace(next, role)
+    if (!SAFE_FONTS.has(face.toLowerCase())) {
+      notes.push(
+        `  warning: ${role} font "${face}" is not on the safe font list (the fonts a stock Windows machine has), so the slides set ${role} text in "${resolved}", the next safe face in the stack`,
+      )
+    } else if (!hasExactWidthTable(face)) {
+      notes.push(`  warning: ${role} font "${face}" has no exact width table: text widths are estimated and long lines may overflow`)
+    }
+    return next
+  }
+  return {
+    fonts: { ...fonts, heading: lead("heading", template.major, fonts.heading), body: lead("body", template.minor ?? template.major, fonts.body) },
+    notes,
+  }
 }
 
 /** `basename(output)` minus a trailing `.theme.json`/`.json`, slugged — the
@@ -1430,9 +1466,13 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
     secondColor.toUpperCase() !== brandColor.toUpperCase() && isChromatic(secondColor)
       ? { brand: brandColor, second: secondColor }
       : { brand: brandColor }
+  // Fonts stay the theme's own unless asked for: a template's Latin face
+  // that is not on the safe list never reaches the slides, and the
+  // template's Chinese face is never used at all.
+  const templateFonts = opts.brandFonts === true ? withTemplateFonts(donor.style.fonts, await readTemplateFonts(bytes)) : undefined
   let result: ReturnType<typeof regenerateFromBrand>
   try {
-    result = regenerateFromBrand(donor, colors, { id: extracted.id, label: extracted.label, fonts: extracted.style.fonts })
+    result = regenerateFromBrand(donor, colors, { id: extracted.id, label: extracted.label, fonts: templateFonts?.fonts })
   } catch (error) {
     rethrowBrandColorError(error, id)
   }
@@ -1444,7 +1484,10 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
     `wrote ${opts.output} (theme "${theme.id}", label "${theme.label}", from "${from}")`,
     ...describePlacement(result.placement),
     `  colors: primary ${c.primary}, accent ${c.accent}, ${c.chartPalette.length} chart colors. bg ${c.bg}, text ${c.text}, surface ${c.surface} stay ${from}'s`,
-    `  fonts: heading "${theme.style.fonts.heading[0]}", body "${theme.style.fonts.body[0]}"`,
+    templateFonts === undefined
+      ? `  fonts: ${from}'s own, heading "${resolveFontFace(theme.style.fonts.heading, "heading")}", body "${resolveFontFace(theme.style.fonts.body, "body")}" (--brand-fonts puts the template's Latin fonts first)`
+      : `  fonts: heading "${theme.style.fonts.heading[0]}", body "${theme.style.fonts.body[0]}" from the template, Chinese text in ${from}'s own faces`,
+    ...(templateFonts?.notes ?? []),
     `Drop the file in a deck ${THEME_FILENAME} or workspace themes/ and set spec.theme to "${theme.id}".`,
   ]
   return lines.join("\n")
