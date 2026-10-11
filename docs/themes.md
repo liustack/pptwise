@@ -156,7 +156,7 @@ Project commands load this file automatically. `serve` rereads it and refreshes 
 
 ## Change a palette with a fork
 
-Never edit one shared token as an isolated patch. Fork the theme. With one brand color, `--brand` keeps the theme's ground and text and repaints its colored slots around the brand (see [Brand extraction](./brand-extraction.md#repainting-around-a-brand-color)):
+Never edit one shared token as an isolated patch. Fork the theme. With a brand color, or two for a company that pairs them, `--brand` keeps the theme's ground and text and repaints its colored slots around the brand (see [Brand extraction](./brand-extraction.md#repainting-around-a-brand-color)):
 
 ```bash
 pptwise theme fork acme-report --brand "#C8102E" -o themes/acme-red.theme.json --id acme-red
@@ -185,6 +185,6 @@ pptwise brand extract corp.pptx \
   --from brief
 ```
 
-Extraction runs locally, reads the template's brand color and fonts, and repaints the donor around that color the way `theme fork --brand` does, keeping the donor's menu, ground, and text. Choose the donor for its menu, occasion fit, and look, not for its colors. See [Brand extraction](./brand-extraction.md).
+Extraction runs locally, reads the template's brand color and second color, and repaints the donor around them the way `theme fork --brand` does, keeping the donor's menu, ground, text, and fonts (`--brand-fonts` puts the template's Latin fonts first). Choose the donor for its menu, occasion fit, and look, not for its colors. See [Brand extraction](./brand-extraction.md).
 
 Every loaded theme passes strict schema, face-parameter, and contrast checks. Fix the theme at its source when one fails. Do not compensate with per-page color overrides.

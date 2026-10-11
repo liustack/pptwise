@@ -218,7 +218,7 @@ pptwise themes [--json]
 pptwise theme new --from <preset-or-name> \
   [-o <theme.json>] [--id <id>] [--label <label>]
 
-pptwise theme fork <name> --brand "#C8102E" \
+pptwise theme fork <name> --brand "#C8102E[,#E97132]" \
   [-o <theme.json>] [--id <id>] [--label <label>]
 
 pptwise theme fork <name> --primary "#0B5FFF" \
@@ -234,7 +234,7 @@ pptwise theme try [<id,...|all>] --title <text> [--occasion <words>] \
 
 `theme fork` preserves the menu and runs the contrast gate. It repaints in one of two ways, which do not mix:
 
-- `--brand <hex>` keeps the theme's own ground, text, and surface and puts the brand color where the theme shows color most, then turns the theme's other colors by the same hue step. The command prints where the brand went, and says so when it had to lighten or darken the brand to read on the theme's ground. See [Brand extraction](./brand-extraction.md#repainting-around-a-brand-color) for the rules.
+- `--brand <hex>[,<hex>]` keeps the theme's own ground, text, surface, and fonts, puts the brand color unchanged where the theme shows color most, and draws the theme's other colors as shades of the brand. A second color, the company's own pairing, takes the theme's second colored slot and the chart's second series. When the brand cannot be read as heading ink, the headings keep the theme's color and the brand goes to rules, marks, and charts. The command prints where each color went, and says so whenever it had to lighten or darken one to read on the theme's ground. See [Brand extraction](./brand-extraction.md#repainting-around-a-brand-color) for the rules.
 - `--primary <hex>`, with any of `--accent`, `--bg`, `--text`, `--surface`, sets those tokens exactly and rederives the rest around them. Use it when you need exact control.
 
 Passing `--brand` together with any anchor flag is an error. Quote hex values in shells where `#` begins a comment.
@@ -288,10 +288,10 @@ Theme names resolve from the deck directory, then workspace `themes/` directorie
 ```bash
 pptwise brand extract <file.thmx|file.potx|file.pptx> \
   -o <theme.json> \
-  [--id <id>] [--label <label>] [--from <donor>]
+  [--id <id>] [--label <label>] [--from <donor>] [--brand-fonts]
 ```
 
-Extraction is local. It reads the template's brand color (its `accent1`) and its fonts, repaints the `--from` theme around that color the way `theme fork --brand` does, and writes a complete v2 theme with the template's fonts. The template's background, text, and other accent colors are not used. `--from` defaults to `brief`.
+Extraction is local. It reads the template's brand color (its `accent1`) and second color (its `accent2`), repaints the `--from` theme around them the way `theme fork --brand` does, and writes a complete v2 theme. The theme keeps its own fonts. `--brand-fonts` puts the template's Latin fonts first instead, never its Chinese ones, and warns when a font is not export-safe (it then has no effect) or has no exact width table (long lines may overflow). The template's background, text, and other accent colors are not used. `--from` defaults to `brief`.
 
 ## Narratives and engine inspection
 

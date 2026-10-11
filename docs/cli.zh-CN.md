@@ -218,7 +218,7 @@ pptwise themes [--json]
 pptwise theme new --from <preset-or-name> \
   [-o <theme.json>] [--id <id>] [--label <label>]
 
-pptwise theme fork <name> --brand "#C8102E" \
+pptwise theme fork <name> --brand "#C8102E[,#E97132]" \
   [-o <theme.json>] [--id <id>] [--label <label>]
 
 pptwise theme fork <name> --primary "#0B5FFF" \
@@ -234,7 +234,7 @@ pptwise theme try [<id,...|all>] --title <text> [--occasion <words>] \
 
 `theme fork` 保留菜单，并运行对比度门。重新上色有两种方式，不能混用：
 
-- `--brand <hex>` 保留主题自己的底色、文字色和面板色，把品牌色放进主题最显眼的彩色位置，主题其余的彩色按同样的色相差一起转。命令会打印品牌色放进了哪里，为了在主题底色上看得清而调过明暗时也会说明。规则见[品牌抽取](./brand-extraction.md#repainting-around-a-brand-color)。
+- `--brand <hex>[,<hex>]` 保留主题自己的底色、文字色、面板色和字体，把品牌色原样放进主题最显眼的彩色位置，主题其余的彩色都从品牌色派生成同色系的深浅。第二个颜色是公司自己的配色，进主题的第二个彩色位置和图表的第二个系列。品牌色当标题字看不清时，标题保留主题原色，品牌色改放到线条、色块和图表里。命令会打印每个颜色放进了哪里，为了在主题底色上看得清而调过明暗时也会说明。规则见[品牌抽取](./brand-extraction.md#repainting-around-a-brand-color)。
 - `--primary <hex>`，可再加 `--accent`、`--bg`、`--text`、`--surface`，按字面设置这些 token，其余围绕它们重推导。需要精确控制时用它。
 
 `--brand` 与任何锚色旗标一起给会报错。在把 `#` 识别为注释起点的 shell 中，应给 hex 加引号。
@@ -288,10 +288,10 @@ pptwise theme try [<id,...|all>] --title <text> [--occasion <words>] \
 ```bash
 pptwise brand extract <file.thmx|file.potx|file.pptx> \
   -o <theme.json> \
-  [--id <id>] [--label <label>] [--from <donor>]
+  [--id <id>] [--label <label>] [--from <donor>] [--brand-fonts]
 ```
 
-抽取完全在本机运行。它读出模板的品牌色（`accent1`）和字体，按 `theme fork --brand` 的同一套规则给 `--from` 指定的主题重新上色，再换上模板的字体，写出完整 v2 主题。模板的背景色、文字色和其余强调色都不使用。`--from` 默认是 `brief`。
+抽取完全在本机运行。它读出模板的品牌色（`accent1`）和第二个颜色（`accent2`），按 `theme fork --brand` 的同一套规则给 `--from` 指定的主题重新上色，写出完整 v2 主题。主题默认保留自己的字体。`--brand-fonts` 改把模板的西文字体排在最前，中文字体永不替换。字体不在导出安全名单上时（这时它根本不生效），或没有精确字宽表时（长行可能溢出），命令会给出警告。模板的背景色、文字色和其余强调色都不使用。`--from` 默认是 `brief`。
 
 ## 叙事与引擎检查
 

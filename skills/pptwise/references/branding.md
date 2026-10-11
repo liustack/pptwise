@@ -70,7 +70,7 @@ This is intentional for faces whose composition has no safe brand frame. It is n
 
 ## Repaint a theme in the brand's color
 
-When the user supplies a `.thmx`, `.potx`, or branded `.pptx`, extract its brand color and fonts locally. Pick the theme to repaint for its menu and its look: extraction keeps that theme's menu, paper, text, and surface, and only moves its colored slots onto the brand color (the template's `accent1`).
+When the user supplies a `.thmx`, `.potx`, or branded `.pptx`, extract its brand colors locally. Pick the theme to repaint for its menu and its look: extraction keeps that theme's menu, paper, text, surface, and fonts, and only redraws its colored slots from the brand color (the template's `accent1`) and the company's second color (its `accent2`). Add `--brand-fonts` only when the user asks for the template's fonts, and pass on any font warning it prints.
 
 ```bash
 pptwise brand extract corp-template.pptx \
@@ -79,13 +79,13 @@ pptwise brand extract corp-template.pptx \
   --from brief
 ```
 
-When the user names a brand color instead of a file, fork the theme with `--brand`. It is the same repaint, keeping the theme's fonts:
+When the user names a brand color instead of a file, fork the theme with `--brand`. It is the same repaint. A company that pairs two colors passes both, the main one first: `--brand '#156082,#E97132'`.
 
 ```bash
 pptwise theme fork ink --brand "#C8102E" -o deck-dir/theme.json --id acme
 ```
 
-Both print where the brand went. The brand goes into the color the theme shows most when it reads there, otherwise into the theme's other color, otherwise in a lighter or darker shade of itself. Tell the user when the output says the brand was changed, and show the result. Use `--primary`, `--accent`, `--bg`, `--text`, `--surface` instead of `--brand` only when the user wants those exact tokens.
+Both print where each color went. The brand goes in unchanged where the theme shows color most. When it cannot be read as heading ink there, the headings keep the theme's color and the brand goes to rules, marks, and charts. Only when no place holds it unchanged is it made lighter or darker, just enough to read. The theme's other colors become shades of the brand. Tell the user when the output says a color was changed, and show the result. Use `--primary`, `--accent`, `--bg`, `--text`, `--surface` instead of `--brand` only when the user wants those exact tokens.
 
 The output is a self-contained version 2 theme with style tokens, brand tokens, occasions, identity, and a complete menu. It has no base reference and inherits nothing at load time. Bind `acme` in `deck.spec.json`, then project commands resolve `deck-dir/theme.json` automatically.
 

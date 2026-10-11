@@ -151,7 +151,7 @@ pptwise theme new --from acme-report \
 
 ## 用 fork 改配色
 
-不要把共享主题中的单个 token 当作孤立补丁直接修改。创建分叉。只有一个品牌色时，`--brand` 保留主题的底色和文字色，围绕品牌色给主题的彩色位置重新上色（见[品牌抽取](./brand-extraction.md#repainting-around-a-brand-color)，英文）：
+不要把共享主题中的单个 token 当作孤立补丁直接修改。创建分叉。有一个品牌色（或公司成对的两个颜色）时，`--brand` 保留主题的底色和文字色，围绕品牌色给主题的彩色位置重新上色（见[品牌抽取](./brand-extraction.md#repainting-around-a-brand-color)，英文）：
 
 ```bash
 pptwise theme fork acme-report --brand "#C8102E" -o themes/acme-red.theme.json --id acme-red
@@ -180,6 +180,6 @@ pptwise brand extract corp.pptx \
   --from brief
 ```
 
-抽取完全在本机运行。它读取模板的品牌色和字体，按 `theme fork --brand` 的规则围绕品牌色给供体重新上色，保留供体的菜单、底色和文字色。供体应按菜单、场合和观感来选，不应看它的配色。详见 [品牌抽取](./brand-extraction.md)（英文）。
+抽取完全在本机运行。它读取模板的品牌色和第二个颜色，按 `theme fork --brand` 的规则围绕它们给供体重新上色，保留供体的菜单、底色、文字色和字体（`--brand-fonts` 改把模板的西文字体排在最前）。供体应按菜单、场合和观感来选，不应看它的配色。详见 [品牌抽取](./brand-extraction.md)（英文）。
 
 每个装载的主题都要通过严格 schema、脸参数和对比度检查。失败时修主题源头，不要用单页颜色覆盖补偿。
