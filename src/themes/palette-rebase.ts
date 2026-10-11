@@ -98,3 +98,38 @@ export function rebaseRelativeColor(
   const lightness = clamp(target.l + progress * (newText.l - target.l))
   return hslToHex({ ...rebasedHueSaturation(color, sourcePlane, targetPlane), l: lightness })
 }
+
+function linearChannel(value: number): number {
+  return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+}
+
+/** A color in OKLab: lightness, then the green-red and blue-yellow axes. */
+export function hexToOklab(hex: string): [number, number, number] {
+  const [r, g, b] = hexToRgb(hex).map(linearChannel) as [number, number, number]
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b)
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b)
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b)
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  ]
+}
+
+/** How different two colors look: their distance in OKLab. */
+export function oklabDistance(a: string, b: string): number {
+  const x = hexToOklab(a)
+  const y = hexToOklab(b)
+  return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2])
+}
+
+/**
+ * Chroma in OKLCH: how far a color sits from the grey of the same
+ * lightness, measured the way the eye sees it. HSL saturation runs high on
+ * near-black colors (a warm ink black reads 0.13), so it cannot tell a deep
+ * petrol from an ink black. OKLCH chroma can.
+ */
+export function oklchChroma(hex: string): number {
+  const [, a, b] = hexToOklab(hex)
+  return Math.hypot(a, b)
+}
