@@ -40,6 +40,7 @@ import { HexTokenSchema } from "../themes/hex"
 import { hexToOklch, oklabDistance, oklchToHex, type Oklch } from "../themes/palette-rebase"
 import { ThemeFileSchema, type ThemeFile } from "../themes/schema"
 import { isChromatic, measureBrandFace, type BrandFace, type BrandSlot } from "./brand-face"
+import { keepsName } from "./color-name"
 
 /** Contrast a slot that sets body-size words needs against the ground. */
 export const BODY_TEXT_RATIO = 4.5
@@ -66,6 +67,9 @@ export const SERIES_DISTANCE = 0.1
 
 /** OKLCH chroma from which a chart color counts as a real color rather than a tinted ink. */
 export const VIVID_CHROMA = 0.08
+
+/** The most chroma a neutral keeps when it is re-tinted toward the brand: under `CHROMA_FLOOR`, so it is still a neutral. */
+const NEUTRAL_TINT_CHROMA = 0.035
 
 /** Hue offsets tried for a shade, in order: the brand's own hue, then neighbours. 25 at most, so rounding to a hex never carries one past 30. */
 const NEIGHBOUR_HUES = [0, 12, -12, 25, -25] as const
@@ -162,7 +166,13 @@ export function liftToContrast(color: string, bg: string, need: number): string 
  * color's lightness and chroma (chroma no higher than `chromaCap`), the
  * brand's hue. Lightness moves, then the hue moves to a neighbour within 30
  * degrees, until the shade reads `need` on `bg` and stands `distance` away
- * from every color in `taken`.
+ * from every color in `taken`. A shade the eye would name as another color
+ * than `name` (a light red is pink, `./color-name.ts`) is never one.
+ *
+ * Undefined when there is none: when a shade that reads and stands apart
+ * exists but only under another color's name, or when nothing reads and
+ * stands apart at all. The caller then takes one of the theme's own
+ * neutrals instead.
  */
 function shadeOf(
   target: Oklch,
@@ -172,9 +182,11 @@ function shadeOf(
   need: number,
   taken: readonly string[],
   distance: number,
+  name: string,
   reach = SERIES_LIGHTNESS_REACH,
-): string {
+): string | undefined {
   const C = Math.min(target.C, chromaCap)
+  let renamedOnly = false
   for (const dh of NEIGHBOUR_HUES) {
     for (const dL of lightnessSteps(reach)) {
       const L = target.L + dL
@@ -182,23 +194,55 @@ function shadeOf(
       const hex = oklchToHex({ L, C, h: hue + dh })
       if (contrastRatio(hex, bg) < need) continue
       if (taken.some((t) => oklabDistance(t, hex) < distance)) continue
+      if (!keepsName(hex, name)) {
+        renamedOnly = true
+        continue
+      }
       return hex
     }
   }
+  if (renamedOnly) return undefined
   // Nothing that near stands far enough apart: the readable shade anywhere
   // in the band and the neighbouring hues that stands furthest from the rest.
   let best: { hex: string; gap: number } | undefined
   for (const dh of NEIGHBOUR_HUES) {
     for (let L = SHADE_LIGHTNESS_BAND[0]; L <= SHADE_LIGHTNESS_BAND[1] + 1e-9; L += 0.02) {
       const hex = oklchToHex({ L, C, h: hue + dh })
-      if (contrastRatio(hex, bg) < need) continue
+      if (contrastRatio(hex, bg) < need || !keepsName(hex, name)) continue
       // Still the color it stands for: a shade too near black or white to hold its chroma is not.
       if (hexToOklch(hex).C < 0.6 * C || Math.abs(L - target.L) > FALLBACK_LIGHTNESS_REACH) continue
       const gap = Math.min(...taken.map((t) => oklabDistance(t, hex)))
       if (best === undefined || gap > best.gap) best = { hex, gap }
     }
   }
-  return best?.hex ?? liftToContrast(oklchToHex({ L: target.L, C, h: hue }), bg, need)
+  return best !== undefined && best.gap >= distance ? best.hex : undefined
+}
+
+/**
+ * The theme's own neutrals: the greys and inks of its chart and pool, then
+ * its text and muted inks, which count even when tinted (rally's lavender
+ * whites), since they are the inks the theme already writes in.
+ */
+function themeNeutrals(src: ThemeFile["style"]["colors"]): string[] {
+  const greys = [...src.chartPalette, ...(src.accentPool ?? [])].map(upper).filter((hex) => !isChromatic(hex))
+  return [...new Set([...greys, upper(src.text), upper(src.muted)])]
+}
+
+/**
+ * The theme's own neutral standing in where no shade of the brand keeps its
+ * name: the one nearest `target`'s lightness that reads `need` on `bg` and
+ * stands `distance` from every color in `taken`, else the nearest that reads.
+ */
+function neutralFor(target: string, neutrals: readonly string[], bg: string, need: number, taken: readonly string[], distance: number): string {
+  const L = hexToOklch(target).L
+  const reads = neutrals.filter((hex) => contrastRatio(hex, bg) >= need && !taken.includes(hex))
+  const byLightness = (list: string[]) => [...list].sort((a, b) => Math.abs(hexToOklch(a).L - L) - Math.abs(hexToOklch(b).L - L))
+  const apart = reads.filter((hex) => taken.every((t) => oklabDistance(t, hex) >= distance))
+  // Every neutral that reads is in use already: the nearest repeats, and the
+  // palette comes out one shorter once repeats are dropped.
+  const pick = byLightness(apart)[0] ?? byLightness(reads)[0] ?? byLightness(neutrals.filter((hex) => contrastRatio(hex, bg) >= need))[0]
+  if (pick !== undefined) return pick
+  throw new PptwiseError(`no neutral of the theme reads ${need.toFixed(1)}:1 on its ground (${bg})`)
 }
 
 /** What a slot does on the sample pages, as the placement rules read it. */
@@ -236,6 +280,7 @@ export function regenerateFromBrand(
   const oneColor = own.primary === own.accent
   const roles = slotRoles(face, own, bg)
   const brandHue = hexToOklch(B)
+  const neutrals = themeNeutrals(src)
 
   /** The value `x` is written as in slot `s`, or undefined when `s` writes headings `x` cannot. */
   const fit = (x: string, s: BrandSlot): Pick<PlacedColor, "written" | "ground" | "lifted"> | undefined => {
@@ -284,7 +329,10 @@ export function regenerateFromBrand(
       chart: liftToContrast(B2, bg, MARK_RATIO),
     } as PlacedColor
   } else if (brandSlot === F && !oneColor && roles.isColor(S2)) {
-    slots[S2] = shadeOf(hexToOklch(own[S2]), brandHue.h, brandHue.C, bg, roles.shadeNeed(S2), [slots[F]], SHADE_STEP, SLOT_LIGHTNESS_REACH)
+    const need = roles.shadeNeed(S2)
+    slots[S2] =
+      shadeOf(hexToOklch(own[S2]), brandHue.h, brandHue.C, bg, need, [slots[F]], SHADE_STEP, B, SLOT_LIGHTNESS_REACH) ??
+      neutralFor(own[S2], neutrals, bg, need, [slots[F]], SHADE_STEP)
   }
   const repainted = (hex: string): string | undefined => {
     const key = upper(hex)
@@ -294,9 +342,15 @@ export function regenerateFromBrand(
 
   // 3. The chart.
   const chartBrand = liftToContrast(B, bg, MARK_RATIO)
-  const shade = (hex: string, taken: readonly string[]) =>
-    shadeOf(hexToOklch(hex), brandHue.h, brandHue.C, bg, Math.min(MARK_RATIO, contrastRatio(hex, bg)), taken, SERIES_DISTANCE)
-  const tint = (hex: string) => oklchToHex({ ...hexToOklch(hex), h: brandHue.h })
+  const shade = (hex: string, taken: readonly string[]) => {
+    const need = Math.min(MARK_RATIO, contrastRatio(hex, bg))
+    return shadeOf(hexToOklch(hex), brandHue.h, brandHue.C, bg, need, taken, SERIES_DISTANCE, B) ?? neutralFor(hex, neutrals, bg, need, taken, SERIES_DISTANCE)
+  }
+  // A neutral re-tinted in the brand's hue stays a neutral: its chroma is held under the floor a color starts at.
+  const tint = (hex: string) => {
+    const c = hexToOklch(hex)
+    return oklchToHex({ ...c, C: Math.min(c.C, NEUTRAL_TINT_CHROMA), h: brandHue.h })
+  }
   const chartPalette = deriveSeries(src.chartPalette.map(upper), {
     lead: chartBrand,
     second: second?.chart,
@@ -305,6 +359,7 @@ export function regenerateFromBrand(
     shade,
     tint,
     bg,
+    neutrals,
   })
 
   const out: ThemeFile["style"]["colors"] = { ...src, primary: slots.primary, accent: slots.accent, chartPalette }
@@ -317,6 +372,7 @@ export function regenerateFromBrand(
       shade,
       tint,
       bg,
+      neutrals,
       keepOrder: true,
     })
   }
@@ -325,9 +381,13 @@ export function regenerateFromBrand(
     const base =
       repainted(e) ??
       (e !== own.primary && e !== own.accent && isChromatic(e)
-        ? shadeOf(hexToOklch(e), brandHue.h, brandHue.C, bg, 0, [], 0)
+        ? shadeOf(hexToOklch(e), brandHue.h, brandHue.C, bg, 0, [], 0, B)
         : undefined)
-    out.emphasisInk = base === undefined ? e : liftToContrast(base, bg, BODY_TEXT_RATIO)
+    const ink = base === undefined ? e : liftToContrast(base, bg, BODY_TEXT_RATIO)
+    // Lifted to read as body text, the brand or a shade of it can cross into
+    // another color's name (Berlin's orange turns brown): marked words then
+    // keep the theme's own ink, as headings do when the brand does not read.
+    out.emphasisInk = ink === e || keepsName(ink, B) ? ink : e
   }
 
   const ground = (hex: string) => repainted(hex) ?? hex
@@ -406,6 +466,8 @@ function deriveSeries(
     keepOrder?: boolean
     /** The same lightness and chroma in the brand's hue. */
     tint: (hex: string) => string
+    /** The theme's own neutrals, which may stand in for a shade. */
+    neutrals: readonly string[]
     bg: string
   },
 ): string[] {
@@ -423,7 +485,7 @@ function deriveSeries(
       const at = out.indexOf(opts.lead)
       out.splice(at < 0 ? 0 : at + 1, 0, lead)
     }
-    return dedupe(keepTaboo(separateNeutrals(out, palette, opts.bg), palette, opts))
+    return dedupe(keepTaboo(separateNeutrals(out, palette, opts.bg), [...palette, ...opts.neutrals], opts))
   }
   const leads = [opts.lead, ...(opts.second ? [opts.second] : [])]
   const out = [...leads]
@@ -442,7 +504,7 @@ function deriveSeries(
     const taken = [...out, ...neutrals]
     out.push(repainted !== undefined && taken.every((t) => oklabDistance(t, repainted) >= SERIES_DISTANCE) ? repainted : opts.shade(hex, taken))
   }
-  return dedupe(keepTaboo(separateNeutrals([...out, ...neutrals], palette, opts.bg), palette, opts))
+  return dedupe(keepTaboo(separateNeutrals([...out, ...neutrals], palette, opts.bg), [...palette, ...opts.neutrals], opts))
 }
 
 /**
@@ -475,7 +537,9 @@ function separateNeutrals(colors: string[], source: readonly string[], bg: strin
  * one brand cannot break it among themselves, but a neutral the theme keeps
  * can read as orange by the ban's measure beside a blue brand (luxe's cream
  * is a pale, warm grey at HSL saturation 0.45). Such a neutral takes the
- * brand's hue at its own lightness and chroma, so it stays a neutral. A
+ * brand's hue at its own lightness and chroma, so it stays a neutral. The
+ * theme's text and muted inks standing in for a shade are such neutrals too
+ * (crayon's navy text beside an orange brand). A
  * company that names both a blue and an orange has paired them itself, and
  * its palette is left as it chose.
  */

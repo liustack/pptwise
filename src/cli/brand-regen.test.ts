@@ -8,6 +8,7 @@ import { compileThemeDefinition } from "../themes/definitions"
 import { hexToOklch, hueDistance, oklabDistance } from "../themes/palette-rebase"
 import type { ThemeFile } from "../themes/schema"
 import { isChromatic, measureBrandFace, renderBrandSample, type BrandFace } from "./brand-face"
+import { colorName } from "./color-name"
 import { isSingleColorPalette, parseBrandOption, regenerateFromBrand, type BrandColors, type BrandRegenResult } from "./brand-regen"
 import { themeFileFromPreset } from "./theme-resolve"
 
@@ -60,6 +61,9 @@ function keptOwn(src: ThemeFile, out: ThemeFile): Set<string> {
   if (a.primary.toUpperCase() === b.primary.toUpperCase()) kept.add(b.primary.toUpperCase())
   if (a.accent.toUpperCase() === b.accent.toUpperCase()) kept.add(b.accent.toUpperCase())
   if (a.emphasisInk && b.emphasisInk && a.emphasisInk.toUpperCase() === b.emphasisInk.toUpperCase()) kept.add(b.emphasisInk.toUpperCase())
+  // The theme's own inks stand in where no shade of the brand keeps its name.
+  kept.add(a.text.toUpperCase())
+  kept.add(a.muted.toUpperCase())
   return kept
 }
 
@@ -243,6 +247,41 @@ describe("rule 3: the other colors are drawn from the brand", () => {
         const palette = regen(id, colors).file.style.colors.chartPalette
         expect(paletteBreaksTaboo(palette), `${id} ${colors.brand}: ${palette.join(" ")}`).toBe(false)
       }
+    }
+  })
+})
+
+describe("rule A: a derived shade keeps the brand's color name", () => {
+  /** Colors the repaint derived (not the brand, the second color, or the theme's own) whose name is not the brand's or the second's. */
+  function renamed(id: string, colors: BrandColors): string[] {
+    const { file, placement } = regen(id, colors)
+    const kept = keptOwn(source(id).file, file)
+    const asked = [placement.brand, ...(placement.second ? [placement.second] : [])]
+    const given = new Set(asked.flatMap((p) => [p.color, p.written, p.chart]).filter((hex): hex is string => hex !== null).map((hex) => hex.toUpperCase()))
+    const names = new Set(asked.map((p) => colorName(p.color)))
+    return written(file).filter((hex) => {
+      const key = hex.toUpperCase()
+      if (kept.has(key) || given.has(key) || colorName(hex) === "neutral") return false
+      return !names.has(colorName(hex))
+    })
+  }
+
+  it("turns no red pink, no orange peach or brown, on any theme", () => {
+    for (const id of CANONICAL_THEME_IDS) {
+      for (const colors of ALL) expect(renamed(id, colors), `${id} ${name(colors)}`).toEqual([])
+    }
+  })
+
+  it("gives brief's accent rule one of brief's greys rather than a pink under a red brand", () => {
+    const { file } = regen("brief", RED)
+    expect(colorName(file.style.colors.accent)).toBe("neutral")
+    expect(source("brief").file.style.colors.chartPalette.map((hex) => hex.toUpperCase())).toContain(file.style.colors.accent.toUpperCase())
+  })
+
+  it("draws no pink series on rally's and stage's dark pages under a red brand", () => {
+    for (const id of ["rally", "stage", "ember", "terminal", "bulletin"]) {
+      const palette = regen(id, RED).file.style.colors.chartPalette
+      expect(palette.filter((hex) => colorName(hex) === "pink"), `${id} ${palette.join(" ")}`).toEqual([])
     }
   })
 })
