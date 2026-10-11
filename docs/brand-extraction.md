@@ -50,7 +50,7 @@ By default the theme keeps its own fonts: ink's kaishu, memo's typewriter serif,
 
 A theme's face is the color slot, `primary` or `accent`, that its own pages show most. It is measured, not declared (`src/cli/brand-face.ts`). The theme draws a sample deck: a cover, a chapter, one page for every content kind its menu offers, and an ending. For each slot, the area painted in its exact color (fills, strokes, and text) is summed and weighed by how far the color stands from the page ground (OKLab distance). Only a slot with real chroma can be the face: OKLCH chroma at least 0.04. Ink's warm black, lecture's blackboard green-grey, and stage's silver do not qualify. Brief's navy and proposal's petrol do. When neither slot has chroma (stage), the accent takes the brand.
 
-The same pass records, for each slot, whether it sets body-size text (under 24px), whether it writes the deck's headings and at what size, and whether it fills a page as a ground (one rectangle covering half the page or more).
+The same pass records, for each slot, whether it sets body-size text (under 24px), whether it writes the deck's headings and at what size, whether it fills a page as a ground (one rectangle covering half the page or more), and how much of its area is fields of color (bars, blocks, and discs at least 16px across) rather than marks (rules, strokes, words). The sample is then drawn once more with each colored slot turned to the opposite hue. A rectangle whose color follows the slot without being it is a field the layouts work out from the slot, like homeroom's blackboard, which is its primary darkened.
 
 `src/cli/brand-face.test.ts` pins the face of all 22 built-in themes:
 
@@ -61,26 +61,30 @@ The same pass records, for each slot, whether it sets body-size text (under 24px
 
 ### Rule 1: the brand stays, the words change ink
 
-- A slot that fills a page as a ground (bulletin's cover) takes the brand unchanged. The words on it take an ink that reads on it (`readableOn`), white or near black. No layout assumes white words on a brand ground.
+- A slot that fills a page as a ground (bulletin's cover), or whose area is mostly fields of color (bars, blocks), takes the brand unchanged. The words and values on it take an ink that reads on it (`readableOn`), white or near black. No layout assumes white words on a brand ground.
 - A slot that writes the headings takes the brand only when a heading reads in it at its size: 3:1 at 24px and above, 4.5:1 below (`requiredContrastRatio`). When it would not, that slot keeps the theme's own color and the brand goes to the theme's other colored slot, which draws rules and marks and writes nothing. Brief with an orange brand keeps its navy headings and puts the orange in its accent rule. A slot that is only a shade of the page (within 0.15 OKLab of `bg`, like rally's plum primary) is not a colored slot.
+- A face the layouts work into a field covering half a page or more takes the brand only when that field still looks like it: the color the field would come out for the brand is drawn, and if it lands more than 0.1 OKLab from the brand, the face keeps the theme's own color and the brand goes to the other colored slot. homeroom's board darkens its own blue-grey 0.06 and a deep red 0.07, so those stay. Berlin's orange would come out brown, 0.20 away, so homeroom keeps its blue-grey board and the orange goes to its accent.
 - When no slot can hold the brand unchanged, it goes into the face with its lightness moved as little as reading needs (rule 2).
 
 The command prints where the brand went, which slot kept the theme's color and why, and every color it had to move with the contrast that forced it.
 
-### Rule 2: marks reach their contrast, no more
+### Rule 2: fields keep the brand, marks reach their contrast
 
-A slot that draws marks, and the chart's brand series, take the brand as it is when it stands off `bg` at 3:1 (or at what the theme's own color had, when that was less). Otherwise only the OKLCH lightness moves, step by step, until it reaches that ratio. The hue stays and the chroma never rises above the brand's own, so a dark brand on a dark page turns a little lighter, never fluorescent. The slot's original lightness is not reused.
+Bars, areas, and blocks are fields of color, and they take the brand exactly as given: the chart's series are the brand and the second color as they are, and so is a slot that is mostly fields. A slot that mostly draws marks (rules, short lines, small icons) takes the brand as it is when it stands off `bg` at 3:1 (or at what the theme's own color had, when that was less). Otherwise only the OKLCH lightness moves, step by step, until it reaches that ratio. The hue stays and the chroma never rises above the brand's own, so nothing turns fluorescent. A chart entry that is a slot's own color stays the slot's value exactly, so a face that keeps that slot out of its charts still finds it.
+
+The theme file has one value per token, so the split is made per slot by what the slot mostly paints, not per mark at render time. A chart line drawn in a light brand therefore stands off the page as little as the brand does, the same as built-in palettes such as crayon's yellow.
 
 ### Rule 3: the palette comes from the brand
 
 Every other colored token is drawn from the brand in OKLCH. Nothing is turned by a global hue step.
 
 - The theme's second colored slot becomes a shade of the brand: the same hue, clearly lighter or darker (at least 0.12 OKLab away), near the lightness and chroma the theme gave that slot, chroma no higher than the brand's. A neighbouring hue within 30° is tried only when the brand's own hue cannot give a distinct shade.
-- `emphasisInk` follows the slot it matched in the theme, or becomes a shade of the brand, lifted to 4.5:1 so emphasized words read.
-- The chart palette leads with the brand, then its shades, then the theme's neutrals (near blacks and greys), with every pair of neighbours at least 0.1 OKLab apart. A theme whose chart is one color among inks and greys (swiss, ink, journal, memo) stays that way: the brand takes its one color and the inks stay. The blue-with-orange ban (`src/themes/chart-taboo.ts`) still holds for derived colors.
+- A shade never changes the color's name. `src/cli/color-name.ts` names a color by OKLCH hue band, and in the warm bands by lightness too: a red from lightness 0.62 up is pink, an orange below 0.6 is brown and from 0.82 up peach, a yellow below 0.6 is olive and from 0.9 up cream. A shade whose name differs from the brand's is not used. The theme's own grey or ink stands in (its chart's neutrals, then its muted and text inks), so brief under a red brand draws its accent rule in its grey, not in pink.
+- `emphasisInk` follows the slot it matched in the theme, or becomes a shade of the brand, lifted to 4.5:1 so emphasized words read. If the lifted ink would change name (Berlin's orange lifted to 4.5:1 is brown), the theme's own emphasis ink stays.
+- The chart palette leads with the brand, then its shades, then the theme's neutrals (near blacks and greys), with every pair of neighbours at least 0.1 OKLab apart. A theme whose chart is one color among inks and greys (swiss, ink, journal, memo, ledger, luxe, runway, stage) stays that way: the brand takes its one color, the inks stay, and a second color never enters it. The blue-with-orange ban (`src/themes/chart-taboo.ts`) still holds for derived colors.
 - `bg`, `surface`, `text`, `muted`, `panel`, `border`, `cardStroke`, and the status colors `danger`, `warning`, `success` stay the theme's own. A default background that was the theme's primary or accent becomes the new one. Every other background stays.
 
-A color outside the brand's family appears only when the company names it. The second color goes to the theme's second colored slot and the chart's second series, under rules 1 and 2. When that slot writes headings it cannot read in, the second color is drawn in the chart only, and the command says so. `src/cli/brand-regen.test.ts` sweeps every theme against several brands and checks that each new color is within 30° of the brand's hue, of the second color's hue, or a neutral.
+A color outside the brand's family appears only when the company names it. The second color goes to the theme's second colored slot and the chart's second series, under rules 1 and 2. When that slot writes headings it cannot read in, the second color is drawn in the chart only. On a theme whose chart is one color among inks, it goes to the second slot only, and with no colored second slot it is not used. The command says which. `src/cli/brand-regen.test.ts` sweeps every theme against several brands and checks that each new color is within 30° of the brand's hue, of the second color's hue, or a neutral.
 
 `--brand` cannot be combined with `--primary`, `--accent`, `--bg`, `--text`, or `--surface`. Those flags set tokens exactly through the anchor fork, for an author who wants exact control.
 
@@ -138,7 +142,7 @@ Project commands load the bound file through normal four-level theme lookup and 
 - Logos are stored in master and media parts rather than the theme part. Extraction does not import them. Add a logo as a deck asset and reference it through `brand.logo_asset_id`.
 - A visible dark slide background may come from a master `<p:bg>` rather than the Office theme part. Extraction never takes the template's ground anyway: pick a dark `--from` theme for a dark brand deck.
 - With `--brand-fonts`, a template font that is not on the export-safe list has no effect: the slides are set in the next safe face in the stack. A safe face without an exact width table is measured by estimate, so long lines can overflow. The command warns about both.
-- A brand that cannot be read as heading ink on a light theme (a bright orange or yellow) lands only in rules, marks, and charts, and the chart draws it darkened to 3:1. On a theme that leads every chart with its own mark (vermilion), the brand is the second series.
-- A theme that paints a darkened primary on purpose (homeroom's blackboard) shows the brand darkened there too.
-- Some faces draw a monochrome chart whatever the palette says (ink, memo). A second color then appears in the palette but not on those charts.
+- A brand that cannot be read as heading ink on a light theme (a bright orange or yellow) lands only in rules, marks, and charts. On a theme that leads every chart with its own mark (vermilion), the brand is the second series. On a theme whose chart faces keep the accent out as a highlight (brief), a brand placed in the accent appears in rules and highlights but not in charts.
+- Raw brand fields stand off the page only as far as the brand does: a deep blue on lecture's blackboard or luxe's black is dim.
+- Where no shade keeps the brand's name, the theme's own ink stands in. On themes with few neutrals that can be an ink tinted the theme's way (rally's lavender) or a near white (ember's cream).
 - The donor menu is copied as a whole. Extraction does not infer a new menu from example slides.
