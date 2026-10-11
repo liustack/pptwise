@@ -11,12 +11,13 @@ import { NARRATIVE_PRESETS } from "../narrative"
 import { CAPACITY } from "../audit/capacity"
 import { GREYCARD_THEME_FILE, LOW_CONTRAST_IR } from "../audit/__fixtures__/low-contrast"
 import { __resetRegisteredThemes, getThemeDefinition } from "../themes/definitions"
+import type { ThemeFile } from "../themes/schema"
 import { KIND_VALUES } from "../ir"
 import { LAYOUT_REGISTRY } from "../layouts/registry"
 import { resolveLayoutId } from "../render/layout-selection"
 import { resolveThemeByName } from "./theme-resolve"
 import { THEME_OCCASIONS } from "../themes/occasions"
-import { buildThmxBytes, DEFAULT_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
+import { buildThmxBytes, BRAND_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
 import {
   applyDeckConfig,
   runAssemble,
@@ -1703,7 +1704,7 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
 
   async function writeFixtureTemplate(d: string, opts: Parameters<typeof buildThmxBytes>[0] = {}): Promise<string> {
     const p = join(d, "corp.pptx")
-    await writeFile(p, Buffer.from(await buildThmxBytes({ schemeName: "Acme", ...opts })))
+    await writeFile(p, Buffer.from(await buildThmxBytes({ schemeName: "Acme", colors: BRAND_THMX_COLORS, ...opts })))
     return p
   }
 
@@ -1722,7 +1723,7 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
       style: { colors: { primary: string } }
     }
     expect(written.id).toBe("my-brand")
-    expect(written.style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+    expect(written.style.colors.primary).toBe(`#${BRAND_THMX_COLORS.accent1}`)
     expect(written.version).toBe(2)
     expect(written).not.toHaveProperty("base")
     expect(written.menu).toEqual(expect.objectContaining({ cover: expect.anything(), chapter: expect.anything() }))
@@ -1748,46 +1749,27 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     await expect(stat(out)).rejects.toMatchObject({ code: "ENOENT" })
   })
 
-  it("brand extract runs the fork contrast gate before writing", async () => {
+  it("brand extract keeps the donor's ground, text, and surface, and takes only the brand color and fonts", async () => {
     const d = await freshDir()
-    const themesDir = join(d, "themes")
-    await mkdir(themesDir)
-    const src = await writeFixtureTemplate(d)
-    const donorPath = join(themesDir, "dark-donor.theme.json")
-    await runBrandExtract(src, { output: donorPath, id: "dark-donor" })
-    const donor = JSON.parse(await readFile(donorPath, "utf8")) as {
-      style: {
-        colors: Record<string, unknown>
-        defaultBackgrounds: Record<string, unknown>
-      }
-    }
-    donor.style.colors = {
-      ...donor.style.colors,
-      bg: "#FFFFFF",
-      surface: "#000000",
-      primary: "#111111",
-      accent: "#666666",
-      text: "#FFFFFF",
-      muted: "#AAAAAA",
-      chartPalette: ["#111111", "#666666"],
-    }
-    donor.style.defaultBackgrounds = {
-      cover: { kind: "color", value: "#111111" },
-      chapter: { kind: "color", value: "#111111" },
-      content: { kind: "color", value: "#111111" },
-      ending: { kind: "color", value: "#111111" },
-    }
-    await writeFile(donorPath, JSON.stringify(donor))
-    __resetRegisteredThemes()
-
-    const badAnchorSource = await writeFixtureTemplate(d, {
-      colors: { ...DEFAULT_THMX_COLORS, accent1: "222222" },
+    const src = await writeFixtureTemplate(d, {
+      colors: { ...BRAND_THMX_COLORS, dk1: "101010", lt1: "FAFAFA", lt2: "DDDDDD" },
+      majorFont: "Georgia",
+      minorFont: "Verdana",
     })
-    const out = join(d, "bad-anchor.theme.json")
-    await expect(
-      runBrandExtract(badAnchorSource, { output: out, from: "dark-donor" }),
-    ).rejects.toThrow(/contrast ratio/)
-    await expect(stat(out)).rejects.toMatchObject({ code: "ENOENT" })
+    const out = join(d, "acme.theme.json")
+    const msg = await runBrandExtract(src, { output: out, from: "ink" })
+    const written = JSON.parse(await readFile(out, "utf8")) as ThemeFile
+    const ink = getThemeDefinition("ink").style
+    for (const token of ["bg", "text", "surface", "muted", "border"] as const) {
+      expect(written.style.colors[token], token).toBe(ink.colors[token])
+    }
+    expect(written.style.defaultBackgrounds).toEqual(ink.defaultBackgrounds)
+    // ink shows its cinnabar most, and the template's deep blue reads there.
+    expect(written.style.colors.accent).toBe(`#${BRAND_THMX_COLORS.accent1}`)
+    expect(written.style.colors.primary).toBe(ink.colors.primary)
+    expect(written.style.fonts.heading[0]).toBe("Georgia")
+    expect(written.style.fonts.body[0]).toBe("Verdana")
+    expect(msg).toContain(`brand: #${BRAND_THMX_COLORS.accent1} is colors.accent`)
   })
 
   it("end to end: extract → workspace themes/ + IR theme.id → exported PPTX carries the extracted brand colors", async () => {
@@ -1822,7 +1804,7 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     // would drop that rule). Accent (accent2) has no paint site on these
     // two layouts, so it is asserted at the theme-file level in the extract
     // test above.
-    expect(slideXml).toContain(DEFAULT_THMX_COLORS.accent1)
+    expect(slideXml).toContain(BRAND_THMX_COLORS.accent1)
   })
 
   it("a workspace theme file does not override an authored IR theme", async () => {
@@ -1869,7 +1851,7 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     const report = await runValidate(join(d, "deck.json"), d)
     expect(report).toContain('theme "brief"')
     const resolved = await resolveThemeByName("brief", { startDir: d, deckDir: d })
-    expect(resolved.definition.style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+    expect(resolved.definition.style.colors.primary).toBe(`#${BRAND_THMX_COLORS.accent1}`)
     expect(getThemeDefinition("brief").style.colors.primary).toBe(factoryPrimary)
   })
 

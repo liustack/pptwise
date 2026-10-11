@@ -5,9 +5,8 @@ import { join } from "node:path"
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import { __resetRegisteredThemes } from "../themes/definitions"
-import { buildThmxBytes } from "../themes/extract/__fixtures__/thmx"
 import { getThemeDefinition } from "../themes/definitions"
-import { DEFAULT_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
+import { buildThmxBytes, BRAND_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
 import { applyDeckConfig, runBrandExtract, runPreview, runSpecValidate, runValidate } from "./commands"
 import { resolveThemeInputs } from "./theme-inputs"
 import { resolveThemeByName } from "./theme-resolve"
@@ -70,7 +69,7 @@ async function writeIrFile(raw: unknown): Promise<string> {
 
 async function extractTheme(dir: string, id: string, filename: string): Promise<string> {
   const src = join(dir, "corp.pptx")
-  await writeFile(src, Buffer.from(await buildThmxBytes({ schemeName: "Acme" })))
+  await writeFile(src, Buffer.from(await buildThmxBytes({ schemeName: "Acme", colors: BRAND_THMX_COLORS })))
   const out = join(dir, filename)
   await runBrandExtract(src, { output: out, id })
   return out
@@ -176,7 +175,7 @@ describe("theme selection chain", () => {
     await expect(runValidate(deckDir, root)).resolves.toMatch(/theme "brief"/)
     const workspaceHit = await resolveThemeByName("brief", { startDir: root, deckDir })
     expect(workspaceHit.kind).toBe("file")
-    expect(workspaceHit.definition.style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+    expect(workspaceHit.definition.style.colors.primary).toBe(`#${BRAND_THMX_COLORS.accent1}`)
     expect(getThemeDefinition("brief").style.colors.primary).toBe(factoryPrimary)
 
     const frozenDeck = await writeDeckDir(makeDeckPlan({ theme: "brief" }))
@@ -184,7 +183,7 @@ describe("theme selection chain", () => {
     await expect(runValidate(frozenDeck, await projectDir())).resolves.toMatch(/theme "brief"/)
     const deckHit = await resolveThemeByName("brief", { startDir: frozenDeck, deckDir: frozenDeck })
     expect(deckHit.kind).toBe("file")
-    expect(deckHit.definition.style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
+    expect(deckHit.definition.style.colors.primary).toBe(`#${BRAND_THMX_COLORS.accent1}`)
     expect(getThemeDefinition("brief").style.colors.primary).toBe(factoryPrimary)
 
     const plainDeck = await writeDeckDir(makeDeckPlan({ theme: "brief" }))
@@ -202,12 +201,12 @@ describe("theme selection chain", () => {
     const shadowed = await runPreview(irPath, join(root, "out-shadowed"), { cwd: root })
     expect(shadowed).toContain("wrote")
     const shadowedSvg = await readFile(join(root, "out-shadowed", "001-cover.svg"), "utf8")
-    expect(shadowedSvg).toContain(`#${DEFAULT_THMX_COLORS.accent1}`)
+    expect(shadowedSvg).toContain(`#${BRAND_THMX_COLORS.accent1}`)
 
     await rm(themePath)
     await runPreview(irPath, join(root, "out-builtin"), { cwd: root })
     const builtinSvg = await readFile(join(root, "out-builtin", "001-cover.svg"), "utf8")
-    expect(builtinSvg).not.toContain(`#${DEFAULT_THMX_COLORS.accent1}`)
+    expect(builtinSvg).not.toContain(`#${BRAND_THMX_COLORS.accent1}`)
   })
 
   it("12. runSpecValidate sees a workspace custom id", async () => {

@@ -199,6 +199,38 @@ describe("runThemeFork", () => {
   })
 })
 
+describe("runThemeFork --brand", () => {
+  it("repaints the theme around the brand and says where the brand went", async () => {
+    const cwd = await tmp("pptwise-theme-fork-brand-")
+    const out = join(cwd, "themes", "acme.theme.json")
+    const msg = await runThemeFork("ink", { brand: "#C8102E", output: out, cwd })
+    expect(msg).toContain('Set spec.theme to "acme"')
+    expect(msg).toContain("brand: #C8102E is colors.accent, the color this theme shows most")
+    const written = JSON.parse(await readFile(out, "utf8")) as { style: { colors: Record<string, string> } }
+    expect(written.style.colors).toMatchObject({ accent: "#C8102E", primary: "#1F1C18", bg: "#F7F2E7" })
+  })
+
+  it("says so when the brand had to change to read on the theme's ground", async () => {
+    const cwd = await tmp("pptwise-theme-fork-brand-lift-")
+    const out = join(cwd, "themes", "acme.theme.json")
+    const msg = await runThemeFork("lecture", { brand: "#156082", output: out, cwd })
+    expect(msg).toMatch(/brand: #156082 changed to #[0-9A-F]{6} for colors\.accent/)
+    expect(msg).toContain("needs 3.0:1 on bg #1C2823")
+  })
+
+  it("does not mix --brand with the exact anchor flags", async () => {
+    const cwd = await tmp("pptwise-theme-fork-brand-mix-")
+    await expect(runThemeFork("brief", { brand: "#C8102E", primary: "#0B5FFF", accent: "#FFCC00", id: "mix", cwd })).rejects.toThrow(
+      /--brand .* cannot be combined with --primary, --accent/,
+    )
+  })
+
+  it("needs --brand or --primary", async () => {
+    const cwd = await tmp("pptwise-theme-fork-none-")
+    await expect(runThemeFork("brief", { id: "none", cwd })).rejects.toThrow(/needs --brand <hex>, or --primary <hex>/)
+  })
+})
+
 describe("runBrandExtract v2 wrap", () => {
   it("writes a complete v2 file with the donor menu and no base", async () => {
     const cwd = await tmp("pptwise-extract-v2-")

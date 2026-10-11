@@ -51,6 +51,14 @@ export const DEFAULT_THMX_COLORS: Required<ThmxColorSlots> = {
   folHlink: "954F72",
 }
 
+/** The default palette with a deep-blue `accent1` that reads as body text
+ *  (8:1 and up) on every light built-in ground. `brand extract` repaints its
+ *  donor around `accent1`, and a brand that reads where the donor shows it
+ *  most goes in unchanged, so a test that follows the brand color through
+ *  to a rendered page can look for this exact hex. Office's own `4472C4`
+ *  reads 4.36:1 on brief's paper and goes in a shade darker. */
+export const BRAND_THMX_COLORS: Required<ThmxColorSlots> = { ...DEFAULT_THMX_COLORS, accent1: "1F4E79" }
+
 /** A deliberately near-monochrome palette (裁定 5's "病态色值" fixture): dk1/
  *  lt1/accent1 are all close-together mid-grays, so no muted derivation step
  *  can ever clear even the 3.0:1 registration floor — the guaranteed-failing

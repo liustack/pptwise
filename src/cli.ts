@@ -285,26 +285,31 @@ theme
   })
 theme
   .command("fork")
-  .description("Copy a theme and rederive tokens around new anchor colors")
+  .description("Copy a theme and repaint it: around one brand color with --brand, or with exact anchor colors")
   .argument("<name>", "preset or theme name to fork")
-  .requiredOption("--primary <hex>", "new primary color")
-  .option("--bg <hex>", "new background color")
-  .option("--accent <hex>", "new accent color")
-  .option("--text <hex>", "new text color")
-  .option("--surface <hex>", "new surface color")
+  .option("--brand <hex>", "brand color: the theme keeps its ground and text, the brand takes its most visible color slot, and the other colors turn with it")
+  .option("--primary <hex>", "set colors.primary exactly (instead of --brand)")
+  .option("--bg <hex>", "set colors.bg exactly (with --primary)")
+  .option("--accent <hex>", "set colors.accent exactly (with --primary)")
+  .option("--text <hex>", "set colors.text exactly (with --primary)")
+  .option("--surface <hex>", "set colors.surface exactly (with --primary)")
   .option("-o, --output <path>", "output theme JSON path")
   .option("--id <id>", "theme id (default: slug of the output filename)")
   .option("--label <label>", "human-readable theme label")
   .option("--force", "overwrite an existing theme file")
-  .addHelpText("after", "\nExample:\n  $ pptwise theme fork acme --primary #0B5FFF -o themes/acme-blue.theme.json")
+  .addHelpText(
+    "after",
+    "\nPass --brand alone, or --primary with any of --accent, --bg, --text, --surface. The two ways do not mix: --brand decides every color slot itself, the anchor flags set the slots you name exactly.\n\nExamples:\n  $ pptwise theme fork ink --brand #C8102E -o themes/acme.theme.json\n  $ pptwise theme fork acme --primary #0B5FFF -o themes/acme-blue.theme.json",
+  )
   .action(
     async (
       name: string,
-      opts: { primary: string; bg?: string; accent?: string; text?: string; surface?: string; output?: string; id?: string; label?: string; force?: boolean },
+      opts: { brand?: string; primary?: string; bg?: string; accent?: string; text?: string; surface?: string; output?: string; id?: string; label?: string; force?: boolean },
     ) => {
       try {
         console.log(
           await runThemeFork(name, {
+            brand: opts.brand,
             primary: opts.primary,
             bg: opts.bg,
             accent: opts.accent,
@@ -376,13 +381,13 @@ const brand = program.command("brand").description("Brand asset commands — ext
 brand
   .command("extract")
   .description(
-    "Extract brand colors and fonts from a .thmx/.potx/.pptx file into a pptwise theme file — runs entirely locally, the file never leaves your machine",
+    "Read the brand color (accent1) and fonts from a .thmx/.potx/.pptx file and repaint a theme around them, into a pptwise theme file — runs entirely locally, the file never leaves your machine",
   )
   .argument("<file>", "a .thmx theme, .potx template, or .pptx presentation")
   .requiredOption("-o, --output <file>", "output theme JSON path (e.g. my-brand.theme.json)")
   .option("--id <id>", "theme id to register under (default: slug of the output filename)")
   .option("--label <label>", "human-readable theme label (default: the source theme's color-scheme name)")
-  .option("--from <preset>", "donor preset whose menu is copied (default: brief)")
+  .option("--from <preset>", "theme to repaint around the template's brand color, keeping its ground, text, and menu (default: brief)")
   .option("--force", "overwrite an existing theme file")
   .addHelpText("after", "\nExample:\n  $ pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief")
   .action(async (file: string, opts: { output: string; id?: string; label?: string; from?: string; force?: boolean }) => {

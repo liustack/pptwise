@@ -167,15 +167,20 @@ console.log("preview --html leg OK (self-contained: 5 embedded svgs, keyboard-na
 // 3d) brand extraction leg (brand-extract wave, 裁定 5's e2e requirement):
 //     programmatically built fixture zip (never a real Microsoft file) →
 //     `pptwise brand extract` via the built CLI → workspace theme lookup →
-//     the exported PPTX's DrawingML must carry the extracted brand colors.
+//     the exported PPTX's DrawingML must carry the extracted brand color.
+//     The fixture's accent1 reads on brief's paper as it is, so the repaint
+//     puts it into brief's face unchanged and the leg can expect it verbatim.
 //     The package-audit hard gate (leg 2b — no skip switch) already vets the
 //     branded package's structure the same way it vets every other render in
 //     this script; the interactive PowerPoint repair-dialog probe stays a
 //     release-time manual step (docs/testing.md), same as for every leg.
 console.log("--- brand extraction leg ---")
-const { buildThmxBytes, DEFAULT_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } = await import("../src/themes/extract/__fixtures__/thmx")
+const { buildThmxBytes, BRAND_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } = await import("../src/themes/extract/__fixtures__/thmx")
 const brandFixturePath = join(OUT, "brand-fixture.pptx")
-writeFileSync(brandFixturePath, Buffer.from(await buildThmxBytes({ schemeName: "E2E Brand" })))
+writeFileSync(
+  brandFixturePath,
+  Buffer.from(await buildThmxBytes({ schemeName: "E2E Brand", colors: BRAND_THMX_COLORS })),
+)
 const brandWorkspace = resolve(OUT, "brand-workspace")
 mkdirSync(join(brandWorkspace, "themes"), { recursive: true })
 const brandThemePath = join(brandWorkspace, "themes", "e2e-brand.theme.json")
@@ -188,9 +193,9 @@ const brandThemeFile = JSON.parse(readFileSync(brandThemePath, "utf8")) as {
   id: string
   style: { colors: { primary: string; muted: string } }
 }
-if (brandThemeFile.style.colors.primary !== `#${DEFAULT_THMX_COLORS.accent1}`) {
+if (brandThemeFile.style.colors.primary !== `#${BRAND_THMX_COLORS.accent1}`) {
   throw new Error(
-    `e2e: brand leg — extracted primary ${brandThemeFile.style.colors.primary}, expected #${DEFAULT_THMX_COLORS.accent1}`,
+    `e2e: brand leg — extracted primary ${brandThemeFile.style.colors.primary}, expected #${BRAND_THMX_COLORS.accent1}`,
   )
 }
 const brandPptxPath = join(OUT, "brand-themed.pptx")
@@ -212,14 +217,11 @@ const brandThemedSlideXml = (
       .map((k) => brandThemedZip.file(k)!.async("string")),
   )
 ).join("")
-const expectedBrandHexes = [DEFAULT_THMX_COLORS.accent1, DEFAULT_THMX_COLORS.accent2]
-if (!expectedBrandHexes.some((hex) => brandThemedSlideXml.includes(hex))) {
-  throw new Error(
-    `e2e: brand leg — none of the extracted accent colors (${expectedBrandHexes.join(", ")}) reached the DrawingML`,
-  )
+if (!brandThemedSlideXml.includes(BRAND_THMX_COLORS.accent1)) {
+  throw new Error(`e2e: brand leg — the extracted brand color ${BRAND_THMX_COLORS.accent1} did not reach the DrawingML`)
 }
 if (!brandThemedSlideXml.includes(brandThemeFile.style.colors.muted.replace("#", ""))) {
-  throw new Error("e2e: brand leg — the derived muted color did not reach the DrawingML")
+  throw new Error("e2e: brand leg — the theme's muted color did not reach the DrawingML")
 }
 
 // 2c) Footer marks leg: a real Chinese deck with every footer mark on,
@@ -293,7 +295,7 @@ const uncheckedStderr = shExpectFail("node", [
 if (!/unknown option.*--unchecked/i.test(uncheckedStderr)) {
   throw new Error(`e2e: brand leg — retired --unchecked option was still accepted: ${uncheckedStderr}`)
 }
-console.log("brand extraction leg OK (fixture → extract → workspace theme lookup → brand colors in DrawingML)")
+console.log("brand extraction leg OK (fixture → extract → workspace theme lookup → brand color in DrawingML)")
 
 // 4) optional visual gate: LibreOffice PDF conversion (skipped when unavailable)
 try {

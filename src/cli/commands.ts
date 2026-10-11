@@ -106,6 +106,7 @@ import {
   type ThemeInputs,
 } from "./theme-inputs"
 import { forkTheme } from "./theme-fork"
+import { describePlacement, regenerateFromBrand } from "./brand-regen"
 import { THEME_TRY_SAMPLE_IR } from "./fixtures/theme-try-sample"
 import { offeredContentKinds } from "../render/layout-selection"
 
@@ -1392,9 +1393,10 @@ function rethrowBrandColorError(error: unknown, id: string): never {
 
 /**
  * `pptwise brand extract <file> -o <out.theme.json> [--id] [--label] [--from]`
- * extracts colors/fonts locally, copies the donor preset's menu, then
- * `forkTheme`s the donor around the extracted anchors. Contrast failure is
- * a hard error.
+ * reads the template's brand color (its accent1) and fonts locally, then
+ * repaints the donor theme around that one color (`./brand-regen.ts`). The
+ * donor keeps its ground, text, and surface. Contrast failure is a hard
+ * error.
  */
 export async function runBrandExtract(file: string, opts: BrandExtractOptions): Promise<string> {
   let bytes: Buffer
@@ -1415,29 +1417,25 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
   const cwd = dirname(resolve(opts.output))
   const donorResolved = await resolveThemeByName(from, { startDir: cwd })
   const donor = await themeFileFromResolved(donorResolved, { id: extracted.id, label: extracted.label })
-  let theme: ThemeFile
+  // The template's accent1 is its brand color. Its dk1/lt1 ground and its
+  // other accents are left behind: Office templates nearly all carry plain
+  // black on white there, which says nothing about the brand and would
+  // wipe out the donor's own paper.
+  const brandColor = extracted.style.colors.primary
+  let result: ReturnType<typeof regenerateFromBrand>
   try {
-    theme = forkTheme(
-      donor,
-      {
-        primary: extracted.style.colors.primary,
-        accent: extracted.style.colors.accent,
-        bg: extracted.style.colors.bg,
-        text: extracted.style.colors.text,
-        surface: extracted.style.colors.surface,
-        chartPalette: extracted.style.colors.chartPalette,
-      },
-      { id: extracted.id, label: extracted.label, fonts: extracted.style.fonts },
-    )
+    result = regenerateFromBrand(donor, brandColor, { id: extracted.id, label: extracted.label, fonts: extracted.style.fonts })
   } catch (error) {
     rethrowBrandColorError(error, id)
   }
+  const theme = result.file
   const outPath = resolve(opts.output)
   await writeThemeFile(outPath, theme, opts.force === true)
   const c = theme.style.colors
   const lines = [
-    `wrote ${opts.output} (theme "${theme.id}", label "${theme.label}")`,
-    `  colors: bg ${c.bg}, text ${c.text}, primary ${c.primary}, accent ${c.accent}, muted ${c.muted} (derived), ${c.chartPalette.length} chart colors`,
+    `wrote ${opts.output} (theme "${theme.id}", label "${theme.label}", from "${from}")`,
+    ...describePlacement(result.placement),
+    `  colors: primary ${c.primary}, accent ${c.accent}, ${c.chartPalette.length} chart colors. bg ${c.bg}, text ${c.text}, surface ${c.surface} stay ${from}'s`,
     `  fonts: heading "${theme.style.fonts.heading[0]}", body "${theme.style.fonts.body[0]}"`,
     `Drop the file in a deck ${THEME_FILENAME} or workspace themes/ and set spec.theme to "${theme.id}".`,
   ]
@@ -1465,7 +1463,9 @@ export async function runThemeNew(opts: ThemeNewOptions): Promise<string> {
 }
 
 export interface ThemeForkOptions {
-  primary: string
+  /** `--brand`: one brand color the whole palette is rederived around. */
+  brand?: string
+  primary?: string
   bg?: string
   accent?: string
   text?: string
@@ -1477,16 +1477,37 @@ export interface ThemeForkOptions {
   force?: boolean
 }
 
-/** `pptwise theme fork <name> --primary <#hex>` copies the source and
- *  rederives tokens around the new anchors. Contrast failure is a hard error. */
+const FORK_ANCHOR_FLAGS = ["primary", "accent", "bg", "text", "surface"] as const
+
+/** `pptwise theme fork <name> --brand <#hex>` repaints the source around one
+ *  brand color (`./brand-regen.ts`). `--primary <#hex>` and the other anchor
+ *  flags set those tokens literally and rederive the rest. The two ways do
+ *  not mix. Contrast failure is a hard error. */
 export async function runThemeFork(name: string, opts: ThemeForkOptions): Promise<string> {
+  const anchors = FORK_ANCHOR_FLAGS.filter((flag) => opts[flag] !== undefined)
+  if (opts.brand !== undefined && anchors.length > 0) {
+    throw new PptwiseError(
+      `--brand repaints the theme around one color and cannot be combined with ${anchors.map((flag) => `--${flag}`).join(", ")}. Use --brand alone, or set the tokens exactly with --primary and friends`,
+    )
+  }
+  if (opts.brand === undefined && opts.primary === undefined) {
+    throw new PptwiseError("pptwise theme fork needs --brand <hex>, or --primary <hex> to set the tokens exactly")
+  }
   const cwd = opts.cwd ?? process.cwd()
   const { id, output } = await resolveThemeWriteTarget({ id: opts.id, output: opts.output, cwd })
   const resolved = await resolveThemeByName(name, { startDir: cwd })
   const source = await themeFileFromResolved(resolved, { id, label: opts.label })
+  if (opts.brand !== undefined) {
+    const result = regenerateFromBrand(source, opts.brand, { id, label: opts.label ?? source.label })
+    await writeThemeFile(output, result.file, opts.force === true)
+    return [
+      `wrote ${output} (theme "${result.file.id}"). Set spec.theme to "${result.file.id}".`,
+      ...describePlacement(result.placement),
+    ].join("\n")
+  }
   const file = forkTheme(
     source,
-    { primary: opts.primary, bg: opts.bg, accent: opts.accent, text: opts.text, surface: opts.surface },
+    { primary: opts.primary!, bg: opts.bg, accent: opts.accent, text: opts.text, surface: opts.surface },
     { id, label: opts.label ?? source.label },
   )
   await writeThemeFile(output, file, opts.force === true)

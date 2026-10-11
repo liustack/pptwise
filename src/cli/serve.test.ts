@@ -4,7 +4,7 @@ import { spawn } from "node:child_process"
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises"
 import { basename, join, parse, resolve, sep } from "node:path"
 import { describe, expect, it } from "vitest"
-import { buildThmxBytes, DEFAULT_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
+import { buildThmxBytes, BRAND_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
 import { runBrandExtract } from "./commands"
 import { THEME_FILENAME } from "./deck-dir"
 import { createServeServer, SERVE_CLIENT_SCRIPT_ID, THEME_POLL_MS, themeWatchRoots, watchRoots } from "./serve"
@@ -614,7 +614,7 @@ describe("createServeServer — IR file sibling theme.json", () => {
   it("resolves a custom id from theme.json next to an IR file", async () => {
     const dir = await makeDir("pptwise-serve-ir-theme-")
     const src = join(dir, "corp.pptx")
-    await writeFile(src, Buffer.from(await buildThmxBytes({ schemeName: "Acme" })))
+    await writeFile(src, Buffer.from(await buildThmxBytes({ schemeName: "Acme", colors: BRAND_THMX_COLORS })))
     await runBrandExtract(src, { output: join(dir, THEME_FILENAME), id: "acme-serve" })
     const irPath = join(dir, "deck.json")
     await writeFile(
@@ -640,7 +640,7 @@ describe("createServeServer — theme-file live reload", () => {
   it("rebuild() re-reads a mutated workspace theme file and serves the new primary color", async () => {
     const dir = await makeDir("pptwise-serve-ws-theme-")
     const src = join(dir, "corp.pptx")
-    await writeFile(src, Buffer.from(await buildThmxBytes({ schemeName: "Acme" })))
+    await writeFile(src, Buffer.from(await buildThmxBytes({ schemeName: "Acme", colors: BRAND_THMX_COLORS })))
     await mkdir(join(dir, "themes"))
     const themePath = join(dir, "themes", "acme-serve.theme.json")
     await runBrandExtract(src, { output: themePath, id: "acme-serve" })
@@ -660,7 +660,7 @@ describe("createServeServer — theme-file live reload", () => {
 
     const handle = await startServe(irPath, { cwd: dir })
     const before = await get(handle.port, "/")
-    const oldPrimary = DEFAULT_THMX_COLORS.accent1
+    const oldPrimary = BRAND_THMX_COLORS.accent1
     expect(before.body.toUpperCase()).toContain(oldPrimary)
 
     const themeFile = JSON.parse(await readFile(themePath, "utf8")) as {
@@ -678,7 +678,7 @@ describe("createServeServer — theme-file live reload", () => {
   it("rebuild() re-reads a mutated deck theme.json and serves the new primary color", async () => {
     const dir = await makeDir("pptwise-serve-theme-")
     const src = join(dir, "corp.pptx")
-    await writeFile(src, Buffer.from(await buildThmxBytes({ schemeName: "Acme" })))
+    await writeFile(src, Buffer.from(await buildThmxBytes({ schemeName: "Acme", colors: BRAND_THMX_COLORS })))
     const themePath = join(dir, THEME_FILENAME)
     await runBrandExtract(src, { output: themePath, id: "acme-serve" })
     await writeFile(
@@ -699,7 +699,7 @@ describe("createServeServer — theme-file live reload", () => {
 
     const handle = await startServe(dir, { cwd: dir })
     const before = await get(handle.port, "/")
-    const oldPrimary = DEFAULT_THMX_COLORS.accent1
+    const oldPrimary = BRAND_THMX_COLORS.accent1
     expect(before.body.toUpperCase()).toContain(oldPrimary)
 
     const themeFile = JSON.parse(await readFile(themePath, "utf8")) as {
