@@ -58,7 +58,7 @@ pptwise theme new --from brief --id acme-report
 With an Office theme or template, choose the theme by occasion, then repaint it in the template's brand color and fonts. The theme keeps its menu, paper, and text:
 
 ```bash
-pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief
+pptwise brand extract corp.pptx -o themes/acme.theme.json --from bulletin
 ```
 
 With an existing theme and a brand color, fork it with `--brand`. The fork keeps the menu byte-identical and repaints the palette around that color:

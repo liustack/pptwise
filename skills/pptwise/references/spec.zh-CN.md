@@ -63,7 +63,7 @@ pptwise theme new --from brief --id acme-report
 有 Office 主题或模板时，先按场合选主题，再用模板的品牌色和字体给它重新上色。主题保留自己的菜单、纸色和文字色：
 
 ```bash
-pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief
+pptwise brand extract corp.pptx -o themes/acme.theme.json --from bulletin
 ```
 
 已有主题要换成品牌色时，用 `--brand` fork 它。fork 保持菜单逐字节相同，并围绕这个颜色重新上色：

@@ -291,7 +291,7 @@ pptwise brand extract <file.thmx|file.potx|file.pptx> \
   [--id <id>] [--label <label>] [--from <donor>] [--brand-fonts]
 ```
 
-Extraction is local. It reads the template's brand color (its `accent1`) and second color (its `accent2`), repaints the `--from` theme around them the way `theme fork --brand` does, and writes a complete v2 theme. The theme keeps its own fonts. `--brand-fonts` puts the template's Latin fonts first instead, never its Chinese ones, and warns when a font is not export-safe (it then has no effect) or has no exact width table (long lines may overflow). The template's background, text, and other accent colors are not used. `--from` defaults to `brief`.
+Extraction is local. It reads the template's brand color (its `accent1`) and second color (its `accent2`), repaints the `--from` theme around them the way `theme fork --brand` does, and writes a complete v2 theme. The theme keeps its own fonts. `--brand-fonts` puts the template's Latin fonts first instead, never its Chinese ones, and warns when a font is not export-safe (it then has no effect) or has no exact width table (long lines may overflow). The template's background, text, and other accent colors are not used. `--from` defaults to `bulletin`, the business theme that keeps a brand color as given and on its face across the colors we tested.
 
 ## Narratives and engine inspection
 

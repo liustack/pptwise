@@ -177,7 +177,7 @@ pptwise theme fork acme-report \
 pptwise brand extract corp.pptx \
   -o themes/acme-brand.theme.json \
   --id acme-brand \
-  --from brief
+  --from bulletin
 ```
 
 抽取完全在本机运行。它读取模板的品牌色和第二个颜色，按 `theme fork --brand` 的规则围绕它们给供体重新上色，保留供体的菜单、底色、文字色和字体（`--brand-fonts` 改把模板的西文字体排在最前）。供体应按菜单、场合和观感来选，不应看它的配色。详见 [品牌抽取](./brand-extraction.md)（英文）。

@@ -15,10 +15,10 @@ pptwise brand extract corp.pptx \
   -o themes/acme.theme.json \
   --id acme \
   --label "Acme" \
-  --from brief
+  --from bulletin
 ```
 
-`--from` names the theme to repaint. It defaults to `brief`. The written theme keeps that theme's complete menu, occasion metadata, identity strength, brand configuration, shape controls, emphasis stroke, fonts, and its own ground, text, and surface colors. Choose it for its menu and its look, not for colors close to the brand's.
+`--from` names the theme to repaint. It defaults to `bulletin`, the business theme that keeps a brand color as given and on its face across the colors we tested. The written theme keeps that theme's complete menu, occasion metadata, identity strength, brand configuration, shape controls, emphasis stroke, fonts, and its own ground, text, and surface colors. Choose it for its menu and its look, not for colors close to the brand's.
 
 From the template, extraction takes the brand color (`accent1`) and, when it is a real color and not the same as `accent1`, the company's second color (`accent2`). The theme is then repainted around them by the same rules as `pptwise theme fork <name> --brand <hex>[,<hex>]`, described below. The output contains:
 

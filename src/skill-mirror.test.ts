@@ -298,7 +298,7 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
       const text = read(rel)
       expect(text).toContain("pptwise theme try brief,swiss,memo")
       expect(text).toContain("pptwise theme new --from brief --id acme-report")
-      expect(text).toContain("pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief")
+      expect(text).toContain("pptwise brand extract corp.pptx -o themes/acme.theme.json --from bulletin")
       expect(text).toContain("pptwise theme fork acme --brand '#0B5FFF' --id acme-blue")
       expect(text).toContain("theme.json")
       expect(text).toContain("kind")

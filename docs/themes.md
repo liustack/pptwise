@@ -182,7 +182,7 @@ A same-menu fork may replace a deck binding inside the workflow. If menus differ
 pptwise brand extract corp.pptx \
   -o themes/acme-brand.theme.json \
   --id acme-brand \
-  --from brief
+  --from bulletin
 ```
 
 Extraction runs locally, reads the template's brand color and second color, and repaints the donor around them the way `theme fork --brand` does, keeping the donor's menu, ground, text, and fonts (`--brand-fonts` puts the template's Latin fonts first). Choose the donor for its menu, occasion fit, and look, not for its colors. See [Brand extraction](./brand-extraction.md).

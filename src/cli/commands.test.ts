@@ -1730,6 +1730,16 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     expect(written.menu).toEqual(expect.objectContaining({ cover: expect.anything(), chapter: expect.anything() }))
   })
 
+  it("brand extract repaints bulletin when no --from is given", async () => {
+    const d = await freshDir()
+    const src = await writeFixtureTemplate(d)
+    const out = join(d, "acme.theme.json")
+    await runBrandExtract(src, { output: out })
+    const written = JSON.parse(await readFile(out, "utf8")) as ThemeFile
+    const faces = (menu: ThemeFile["menu"]) => [menu.cover, menu.chapter, menu.ending, ...Object.values(menu.content)].map((entry) => entry?.face)
+    expect(faces(written.menu)).toEqual(faces(getThemeDefinition("bulletin").menu))
+  })
+
   it("brand extract can freeze onto a builtin id", async () => {
     const d = await freshDir()
     const src = await writeFixtureTemplate(d)

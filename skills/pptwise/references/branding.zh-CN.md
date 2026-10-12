@@ -81,7 +81,7 @@ Deck 姿态只是广义许可。一张脸可以把 `branding: "none"` 作为不�
 pptwise brand extract corp-template.pptx \
   -o deck-dir/theme.json \
   --id acme \
-  --from brief
+  --from bulletin
 ```
 
 用户给的是品牌色而不是文件时，用 `--brand` fork 主题。规则相同。公司有两个配色时两个都传，主色在前：`--brand '#156082,#E97132'`。

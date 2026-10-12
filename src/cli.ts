@@ -390,13 +390,13 @@ brand
   .requiredOption("-o, --output <file>", "output theme JSON path (e.g. my-brand.theme.json)")
   .option("--id <id>", "theme id to register under (default: slug of the output filename)")
   .option("--label <label>", "human-readable theme label (default: the source theme's color-scheme name)")
-  .option("--from <preset>", "theme to repaint around the template's brand color, keeping its ground, text, fonts, and menu (default: brief)")
+  .option("--from <preset>", "theme to repaint around the template's brand color, keeping its ground, text, fonts, and menu (default: bulletin)")
   .option(
     "--brand-fonts",
     "put the template's Latin heading and body fonts ahead of the theme's own (Chinese text keeps the theme's faces). A font off the safe font list never reaches the slides, and one without an exact width table may overflow: the command warns about both",
   )
   .option("--force", "overwrite an existing theme file")
-  .addHelpText("after", "\nExample:\n  $ pptwise brand extract corp.pptx -o themes/acme.theme.json --from brief")
+  .addHelpText("after", "\nExample:\n  $ pptwise brand extract corp.pptx -o themes/acme.theme.json --from bulletin")
   .action(async (file: string, opts: { output: string; id?: string; label?: string; from?: string; brandFonts?: boolean; force?: boolean }) => {
     try {
       console.log(await runBrandExtract(file, {

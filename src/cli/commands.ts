@@ -1451,7 +1451,8 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
   } catch (error) {
     rethrowBrandColorError(error, id)
   }
-  const from = opts.from ?? "brief"
+  // bulletin: the business theme that carries a brand color best, as given and on its face.
+  const from = opts.from ?? "bulletin"
   const cwd = dirname(resolve(opts.output))
   const donorResolved = await resolveThemeByName(from, { startDir: cwd })
   const donor = await themeFileFromResolved(donorResolved, { id: extracted.id, label: extracted.label })

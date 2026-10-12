@@ -76,7 +76,7 @@ When the user supplies a `.thmx`, `.potx`, or branded `.pptx`, extract its brand
 pptwise brand extract corp-template.pptx \
   -o deck-dir/theme.json \
   --id acme \
-  --from brief
+  --from bulletin
 ```
 
 When the user names a brand color instead of a file, fork the theme with `--brand`. It is the same repaint. A company that pairs two colors passes both, the main one first: `--brand '#156082,#E97132'`.
